@@ -143,7 +143,7 @@ inflection==0.5.1
     # via drf-yasg
 iniconfig==1.1.1
     # via pytest
-ipdb==0.13.7
+ipdb==0.13.4
     # via -r requirements-dev.in
 ipython==7.16.1
     # via ipdb

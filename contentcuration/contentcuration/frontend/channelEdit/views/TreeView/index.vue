@@ -396,7 +396,7 @@
     $trs: {
       showSidebar: 'Show sidebar',
       collapseAllButton: 'Collapse all',
-      openCurrentLocationButton: 'Expand to current topic location',
+      openCurrentLocationButton: 'Expand to current folder location',
       updatedResourcesReadyForReview: 'Updated resources are ready for review',
       closeDrawer: 'Close',
     },

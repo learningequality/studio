@@ -660,7 +660,7 @@
       assessmentHeader: 'Assessment options',
       thumbnailHeader: 'Thumbnail',
       titleLabel: 'Title',
-      languageHelpText: 'Leave blank to use the topic language',
+      languageHelpText: 'Leave blank to use the folder language',
       languageChannelHelpText: 'Leave blank to use the channel language',
       importedFromButtonText: 'Imported from {channel}',
       detectedImportText:

@@ -257,11 +257,11 @@
       [TabNames.PREVIEW]: 'Preview',
       [TabNames.QUESTIONS]: 'Questions',
       [TabNames.RELATED]: 'Related',
-      noItemsToEditText: 'Please select resources or topics to edit',
+      noItemsToEditText: 'Please select resources or forders to edit',
       invalidFieldsToolTip: 'Some required information is missing',
       errorBannerText: 'Please provide the required information',
       editingMultipleCount:
-        'Editing details for {topicCount, plural,\n =1 {# topic}\n other {# topics}}, {resourceCount, plural,\n =1 {# resource}\n other {# resources}}',
+        'Editing details for {topicCount, plural,\n =1 {# topic}\n other {# folders}}, {resourceCount, plural,\n =1 {# resource}\n other {# resources}}',
     },
   };
 

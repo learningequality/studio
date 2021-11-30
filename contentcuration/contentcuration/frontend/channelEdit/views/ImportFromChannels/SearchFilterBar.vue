@@ -121,7 +121,7 @@
     $trs: {
       coachContent: 'Resources for coaches',
       assessments: 'Assessments',
-      topicsHidden: 'No topics',
+      topicsHidden: 'No folders',
       createdAfter: "Added after '{date}'",
       clearAll: 'Clear all',
     },

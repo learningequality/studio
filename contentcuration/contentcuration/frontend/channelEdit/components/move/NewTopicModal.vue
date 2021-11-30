@@ -73,9 +73,9 @@
       },
     },
     $trs: {
-      topicTitle: 'Topic title',
-      topicTitleRequired: 'Title is required',
-      createTopic: 'Create new topic',
+      topicTitle: 'Folder title',
+      topicTitleRequired: 'Folder is required',
+      createTopic: 'Create new Folder',
       cancel: 'Cancel',
       create: 'Create',
     },

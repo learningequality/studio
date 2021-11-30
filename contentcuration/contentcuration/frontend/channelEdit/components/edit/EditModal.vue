@@ -500,7 +500,7 @@
       uploadFilesHeader: 'Upload files',
       editFilesHeader: 'Edit files',
       createExerciseHeader: 'New exercise',
-      addTopicsHeader: 'New topic',
+      addTopicsHeader: 'New folder',
       invalidNodesFound:
         '{count, plural,\n =1 {# incomplete resource found}\n other {# incomplete resources found}}',
       invalidNodesFoundText:
@@ -509,7 +509,7 @@
       keepEditingButton: 'Keep editing',
       saveFailedHeader: 'Save failed',
       saveFailedText: 'There was a problem saving your content',
-      addTopic: 'Add new topic',
+      addTopic: 'Add new folder',
       uploadButton: 'Upload more',
       uploadInProgressHeader: 'Upload in progress',
       uploadInProgressText: 'Uploads that are in progress will be lost if you exit',

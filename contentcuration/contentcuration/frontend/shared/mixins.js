@@ -124,7 +124,7 @@ export const constantStrings = createTranslator('ConstantStrings', {
   svg: 'SVG image',
   perseus: 'Perseus Exercise',
   zip: 'HTML5 zip',
-  topic: 'Topic',
+  topic: 'Folder',
   video: 'Video',
   audio: 'Audio',
   document: 'Document',

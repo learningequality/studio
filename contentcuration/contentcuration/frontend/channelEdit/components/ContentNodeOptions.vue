@@ -210,8 +210,8 @@
     },
 
     $trs: {
-      newSubtopic: 'New topic',
-      editTopicDetails: 'Edit topic details',
+      newSubtopic: 'New folder',
+      editTopicDetails: 'Edit folder details',
       editDetails: 'Edit details',
       viewDetails: 'View details',
       move: 'Move',
