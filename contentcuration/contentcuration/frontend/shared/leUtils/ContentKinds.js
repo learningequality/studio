@@ -22,7 +22,7 @@ export const ContentKindsNames = {
   H5P: 'h5p',
   HTML5: 'html5',
   SLIDESHOW: 'slideshow',
-  TOPIC: 'folder',
+  TOPIC: 'topic',
   VIDEO: 'video',
   ZIM: 'zim',
 };
