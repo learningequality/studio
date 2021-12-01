@@ -350,7 +350,6 @@ class ContentNodeViewSetTestCase(StudioAPITestCase):
         self.assertEqual(response.status_code, 403, response.content)
 
     def test_consolidate_extra_fields(self):
-
         user = testdata.user()
         channel = testdata.channel()
         channel.public = True
@@ -409,7 +408,7 @@ class ContentNodeViewSetTestCase(StudioAPITestCase):
         self.assertEqual(response.data["extra_fields"], {})
 
 
-class SyncTestCase(StudioAPITestCase, SyncTestMixin):
+class SyncTestCase(SyncTestMixin, StudioAPITestCase):
 
     def setUp(self):
         super(SyncTestCase, self).setUp()

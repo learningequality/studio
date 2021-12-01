@@ -12,8 +12,9 @@ from rest_framework.views import APIView
 
 from contentcuration.models import Change
 from contentcuration.models import Channel
-from contentcuration.models import Task
-from contentcuration.tasks import get_or_create_async_task
+from contentcuration.models import TaskResult
+from contentcuration.tasks import apply_channel_changes_task
+from contentcuration.tasks import apply_user_changes_task
 from contentcuration.viewsets.sync.constants import CHANNEL
 from contentcuration.viewsets.sync.constants import CREATED
 
@@ -55,9 +56,9 @@ class SyncView(APIView):
                     disallowed_changes.append(c)
             change_models = Change.create_changes(user_only_changes + channel_changes, created_by_id=request.user.id, session_key=session_key)
             if user_only_changes:
-                get_or_create_async_task("apply_user_changes", request.user, user_id=request.user.id)
+                apply_user_changes_task.fetch_or_enqueue(request.user, user_id=request.user.id)
             for channel_id in allowed_ids:
-                get_or_create_async_task("apply_channel_changes", request.user, channel_id=channel_id)
+                apply_channel_changes_task.fetch_or_enqueue(request.user, channel_id=channel_id)
             allowed_changes = [{"rev": c.client_rev, "server_rev": c.server_rev} for c in change_models]
 
             return {"disallowed": disallowed_changes, "allowed": allowed_changes}
@@ -119,15 +120,15 @@ class SyncView(APIView):
         return {"changes": changes, "errors": errors, "successes": successes}
 
     def return_tasks(self, request, channel_revs):
-        tasks = Task.objects.filter(
+        tasks = TaskResult.objects.filter(
             channel_id__in=channel_revs.keys(),
-            status__in=[states.STARTED, states.FAILURE]
-        ).exclude(task_type__in=["apply_channel_changes", "apply_user_changes"])
+            status__in=states.READY_STATES,
+        ).exclude(task_type__in=[apply_channel_changes_task.name, apply_user_changes_task.name])
         return {
             "tasks": tasks.values(
                 "task_id",
-                "task_type",
-                "metadata",
+                "task_name",
+                "traceback",
                 "channel_id",
                 "status",
             )

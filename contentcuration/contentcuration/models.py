@@ -22,6 +22,8 @@ from django.core.exceptions import ValidationError
 from django.core.files.storage import default_storage
 from django.core.files.storage import FileSystemStorage
 from django.core.mail import send_mail
+from django.core.validators import MaxValueValidator
+from django.core.validators import MinValueValidator
 from django.db import IntegrityError
 from django.db import models
 from django.db.models import Count
@@ -45,6 +47,7 @@ from django.db.models.sql import Query
 from django.dispatch import receiver
 from django.utils import timezone
 from django.utils.translation import gettext as _
+from django_celery_results.models import TaskResult
 from django_cte import With
 from le_utils import proquint
 from le_utils.constants import content_kinds
@@ -2236,7 +2239,9 @@ class PrerequisiteContentRelationship(models.Model):
                 % (self.target_node, self.prerequisite))
         # distant cyclic exception
         # elif <this is a nice to have exception, may implement in the future when the priority raises.>
-        #     raise Exception('Note: Prerequisite relationship is acyclic! %s and %s forms a closed loop!' % (self.target_node, self.prerequisite))
+        #     raise Exception('Note: Prerequisite relationship is acyclic! %s and %s forms a closed loop!' % (
+        #         self.target_node, self.prerequisite
+        #     ))
         super(PrerequisiteContentRelationship, self).clean(*args, **kwargs)
 
     def save(self, *args, **kwargs):
@@ -2326,23 +2331,6 @@ class Invitation(models.Model):
         ).distinct()
 
 
-class Task(models.Model):
-    """Asynchronous tasks"""
-    task_id = UUIDField(db_index=True, default=uuid.uuid4)  # This ID is used as the Celery task ID
-    task_type = models.CharField(max_length=50)
-    created = models.DateTimeField(default=timezone.now)
-    status = models.CharField(max_length=10)
-    is_progress_tracking = models.BooleanField(default=False)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="task", on_delete=models.CASCADE)
-    metadata = JSONField()
-    channel_id = DjangoUUIDField(db_index=True, null=True, blank=True)
-
-    @classmethod
-    def find_incomplete(cls, task_type, **filters):
-        filters.update(task_type=task_type, status__in=["QUEUED", states.PENDING, states.RECEIVED, states.STARTED])
-        return cls.objects.filter(**filters)
-
-
 class Change(models.Model):
     server_rev = models.BigAutoField(primary_key=True)
     # We need to store the user who is applying this change
@@ -2423,3 +2411,41 @@ class Change(models.Model):
 
     def serialize_to_change_dict(self):
         return self.serialize(self)
+
+
+class TaskResultCustom(object):
+    """
+    Custom fields to add to django_celery_results's TaskResult model
+    """
+    # user shouldn't be null, but in order to append the field, this needs to be allowed
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="tasks", on_delete=models.CASCADE, null=True)
+    channel_id = DjangoUUIDField(db_index=True, null=True, blank=True)
+    progress = models.IntegerField(null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(100)])
+
+    super_as_dict = TaskResult.as_dict
+
+    def as_dict(self):
+        """
+        :return: A dictionary representation
+        """
+        super_dict = self.super_as_dict()
+        super_dict.update(
+            user_id=self.user_id,
+            channel_id=self.channel_id,
+            progress=self.progress,
+        )
+        return super_dict
+
+    @classmethod
+    def contribute_to_class(cls, model_class=TaskResult):
+        """
+        Adds fields to model, by default TaskResult
+        :param model_class: TaskResult model
+        """
+        for field in dir(cls):
+            if not field.startswith("_"):
+                model_class.add_to_class(field, getattr(cls, field))
+
+
+# trigger class contributions immediately
+TaskResultCustom.contribute_to_class()

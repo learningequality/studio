@@ -122,7 +122,7 @@
       sizeCalculationTask(task) {
         if (task && task.status === 'SUCCESS') {
           this.loading = false;
-          this.size = task.metadata.result;
+          this.size = task.result;
         }
       },
     },

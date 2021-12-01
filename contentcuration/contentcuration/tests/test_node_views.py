@@ -36,7 +36,7 @@ class NodeViewsUtilityTestCase(BaseAPITestCase):
             url = reverse('get_channel_details', [self.channel.id])
             self.get(url)
             # Check that the outdated cache prompts an asynchronous cache update
-            task_mock.apply_async.assert_called_once_with((self.channel.main_tree.id,))
+            task_mock.enqueue.assert_called_once_with(self.user, node_id=self.channel.main_tree.id)
 
 
 class GetTopicDetailsEndpointTestCase(BaseAPITestCase):

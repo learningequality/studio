@@ -2,7 +2,9 @@ import random
 
 from django.urls import reverse
 
+from contentcuration.celery import app
 from contentcuration.models import Change
+from contentcuration.tests.helpers import clear_tasks
 from contentcuration.viewsets.sync.utils import generate_copy_event as base_generate_copy_event
 from contentcuration.viewsets.sync.utils import generate_create_event as base_generate_create_event
 from contentcuration.viewsets.sync.utils import generate_delete_event as base_generate_delete_event
@@ -34,6 +36,24 @@ def generate_update_event(*args, **kwargs):
 
 
 class SyncTestMixin(object):
+    celery_task_always_eager = None
+
+    @classmethod
+    def setUpClass(cls):
+        super(SyncTestMixin, cls).setUpClass()
+        # update celery so tasks are always eager for this test, meaning they'll execute synchronously
+        cls.celery_task_always_eager = app.conf.task_always_eager
+        app.conf.update(task_always_eager=True)
+
+    def setUp(self):
+        super(SyncTestMixin, self).setUp()
+        clear_tasks()
+
+    @classmethod
+    def tearDownClass(cls):
+        super(SyncTestMixin, cls).tearDownClass()
+        app.conf.update(task_always_eager=cls.celery_task_always_eager)
+
     @property
     def sync_url(self):
         return reverse("sync")

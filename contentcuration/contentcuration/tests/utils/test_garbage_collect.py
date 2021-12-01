@@ -1,4 +1,5 @@
 import json
+import uuid
 from datetime import datetime
 from datetime import timedelta
 
@@ -15,7 +16,7 @@ from contentcuration import models as cc
 from contentcuration.api import activate_channel
 from contentcuration.models import ContentNode
 from contentcuration.models import File
-from contentcuration.models import Task
+from contentcuration.models import TaskResult
 from contentcuration.tests.base import BaseAPITestCase
 from contentcuration.tests.base import StudioTestCase
 from contentcuration.tests.testdata import tree
@@ -372,24 +373,26 @@ class CleanupTaskTestCase(StudioTestCase):
 
     def setUp(self):
         user = self.admin_user
-        created = datetime.now() - timedelta(days=8)
-        self.pruned_task = Task.objects.create(status=states.SUCCESS, task_type="pruned_task", created=created, metadata={}, user_id=user.id)
-        self.failed_task = Task.objects.create(status=states.FAILURE, task_type="failed_task", created=created, metadata={}, user_id=user.id)
-        self.recent_task = Task.objects.create(status=states.SUCCESS, task_type="recent_task", created=datetime.now(), metadata={}, user_id=user.id)
+        self.pruned_task = TaskResult.objects.create(task_id=uuid.uuid4().hex, status=states.SUCCESS, task_name="pruned_task", user_id=user.id)
+        self.failed_task = TaskResult.objects.create(task_id=uuid.uuid4().hex, status=states.FAILURE, task_name="failed_task", user_id=user.id)
+        self.recent_task = TaskResult.objects.create(task_id=uuid.uuid4().hex, status=states.SUCCESS, task_name="recent_task", user_id=user.id)
+
+        # `date_done` uses `auto_now`, so manually set it
+        done = datetime.now() - timedelta(days=8)
+        TaskResult.objects.filter(pk__in=[self.pruned_task.pk, self.failed_task.pk]).update(date_done=done)
+        # run
         clean_up_tasks()
 
     def test_pruned_task(self):
-        with self.assertRaises(Task.DoesNotExist):
-            Task.objects.get(pk=self.pruned_task.id)
+        with self.assertRaises(TaskResult.DoesNotExist):
+            TaskResult.objects.get(task_id=self.pruned_task.task_id)
 
     def test_failed_task(self):
-        try:
-            Task.objects.get(pk=self.failed_task.id)
-        except Task.DoesNotExist:
-            self.fail("Task was removed")
+        with self.assertRaises(TaskResult.DoesNotExist):
+            TaskResult.objects.get(task_id=self.pruned_task.task_id)
 
     def test_recent_task(self):
         try:
-            Task.objects.get(pk=self.recent_task.id)
-        except Task.DoesNotExist:
+            TaskResult.objects.get(task_id=self.recent_task.task_id)
+        except TaskResult.DoesNotExist:
             self.fail("Task was removed")

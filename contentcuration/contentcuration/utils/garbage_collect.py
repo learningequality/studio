@@ -18,7 +18,7 @@ from contentcuration.constants import feature_flags
 from contentcuration.db.models.functions import JSONObjectKeys
 from contentcuration.models import ContentNode
 from contentcuration.models import File
-from contentcuration.models import Task
+from contentcuration.models import TaskResult
 from contentcuration.models import User
 
 
@@ -141,5 +141,7 @@ def clean_up_tasks():
     Removes completed tasks that are older than a week
     """
     with DisablePostDeleteSignal():
-        count, _ = Task.objects.filter(created__lt=now() - datetime.timedelta(days=7), status=states.SUCCESS).delete()
-    logging.info("Deleted {} successful task(s) from the task queue".format(count))
+        date_cutoff = now() - datetime.timedelta(days=7)
+        count, _ = TaskResult.objects.filter(date_done__lt=date_cutoff, status__in=states.READY_STATES).delete()
+
+    logging.info("Deleted {} completed task(s) from the task table".format(count))
