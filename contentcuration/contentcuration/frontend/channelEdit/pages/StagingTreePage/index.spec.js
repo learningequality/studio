@@ -399,12 +399,12 @@ describe('StagingTreePage', () => {
 
       it('renders live topics and resources counts', () => {
         const text = getDeployDialogLiveResources(wrapper).text();
-        expect(removeMultipleSpaces(text)).toBe('Live resources: 0 topics , 0 resources');
+        expect(removeMultipleSpaces(text)).toBe('Live resources: 0 folders , 0 resources');
       });
 
       it('renders staged topics and resources counts', () => {
         const text = getDeployDialogStagedResources(wrapper).text();
-        expect(removeMultipleSpaces(text)).toBe('Staged resources: 1 topic , 2 resources');
+        expect(removeMultipleSpaces(text)).toBe('Staged resources: 1 folder , 2 resources');
       });
 
       it('dispatches deploy channel action on deploy channel button click', () => {
