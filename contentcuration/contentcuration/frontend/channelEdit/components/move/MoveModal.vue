@@ -288,13 +288,13 @@
     },
     $trs: {
       moveItems:
-        'Move {topicCount, plural,\n =1 {# topic}\n other {# topics}}, {resourceCount, plural,\n =1 {# resource}\n other {# resources}} into:',
-      addTopic: 'Add new topic',
+        'Move {topicCount, plural,\n =1 {# folder}\n other {# folders}}, {resourceCount, plural,\n =1 {# resource}\n other {# resources}} into:',
+      addTopic: 'Add new folder',
       cancel: 'Cancel',
       moveHere: 'Move here',
       resourcesCount: '{count, plural,\n =1 {# resource}\n other {# resources}}',
       emptyTopicText: 'No resources found',
-      topicCreatedMessage: 'New topic created',
+      topicCreatedMessage: 'New folder created',
       movedMessage: 'Moved to {title}',
       goToLocationButton: 'Go to location',
     },

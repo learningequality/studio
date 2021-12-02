@@ -136,7 +136,7 @@
       headerDiff: 'Net changes',
       typeVersion: 'API version',
       typeFileSize: 'File size',
-      typeTopics: 'Topics',
+      typeTopics: 'Folders',
       typeVideos: 'Videos',
       typeAudios: 'Audios',
       typeExercises: 'Exercises',

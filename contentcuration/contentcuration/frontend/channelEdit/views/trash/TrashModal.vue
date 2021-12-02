@@ -262,11 +262,11 @@
       selectAllHeader: 'Select all',
       deletedHeader: 'Removed',
       selectedCountText:
-        '{topicCount, plural,\n =1 {# topic}\n other {# topics}}, {resourceCount, plural,\n =1 {# resource}\n other {# resources}}',
+        '{topicCount, plural,\n =1 {# folder}\n other {# folders}}, {resourceCount, plural,\n =1 {# resource}\n other {# resources}}',
       deleteButton: 'Delete',
       restoreButton: 'Restore',
       deleteConfirmationHeader:
-        'Permanently delete {topicCount, plural,\n =1 {# topic}\n other {# topics}}, {resourceCount, plural,\n =1 {# resource}\n other {# resources}}?',
+        'Permanently delete {topicCount, plural,\n =1 {# folder}\n other {# folders}}, {resourceCount, plural,\n =1 {# resource}\n other {# resources}}?',
       deleteConfirmationText: 'You cannot undo this action. Are you sure you want to continue?',
       deleteConfirmationDeleteButton: 'Delete permanently',
       deleteConfirmationCancelButton: 'Cancel',
