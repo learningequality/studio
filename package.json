@@ -67,7 +67,7 @@
   "dependencies": {
     "@sentry/browser": "^5.9.1",
     "@toast-ui/editor": "^2.3.1",
-    "axios": "^0.21.1",
+    "axios": "^0.21.2",
     "broadcast-channel": "^3.0.3",
     "clipboard-polyfill": "^2.8.1",
     "codemirror": "5.58.2",
