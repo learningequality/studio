@@ -349,7 +349,7 @@
         'Here you can learn more about the educational resources publicly available for use in Kolibri, which are organized into "channels". Use the filters to browse channels by keyword, language, or formats of the materials inside.',
       channelLink: 'What is a channel?',
       descriptionP2:
-        'Click on a channel to get a preview of what subjects and folders it covers, learn more about its creator, see how many resources the channel contains, and learn how to import it into Kolibri. You can also find coach-specific content (lesson plans, teacher professional guides, and other supplementary facilitation material), assessments and exercises, and captions for accessibility.',
+        'Click on a channel to get a preview of what subjects and topics it covers, learn more about its creator, see how many resources the channel contains, and learn how to import it into Kolibri. You can also find coach-specific content (lesson plans, teacher professional guides, and other supplementary facilitation material), assessments and exercises, and captions for accessibility.',
       descriptionP3:
         "Sharing the work of these resource creators is what inspires Learning Equality's efforts. We hope you find something that excites you about the potential of digital learning, online or off!",
 

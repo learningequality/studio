@@ -257,7 +257,7 @@
       [TabNames.PREVIEW]: 'Preview',
       [TabNames.QUESTIONS]: 'Questions',
       [TabNames.RELATED]: 'Related',
-      noItemsToEditText: 'Please select resources or forders to edit',
+      noItemsToEditText: 'Please select resources or folders to edit',
       invalidFieldsToolTip: 'Some required information is missing',
       errorBannerText: 'Please provide the required information',
       editingMultipleCount:
