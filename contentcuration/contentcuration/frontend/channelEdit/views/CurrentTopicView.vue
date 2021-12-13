@@ -679,7 +679,7 @@
       },
     },
     $trs: {
-      addTopic: 'New topic',
+      addTopic: 'New folder',
       addExercise: 'New exercise',
       uploadFiles: 'Upload files',
       importFromChannels: 'Import from channels',
@@ -696,7 +696,7 @@
       duplicateSelectedButton: 'Make a copy',
       deleteSelectedButton: 'Delete',
       selectionCount:
-        '{topicCount, plural,\n =1 {# topic}\n other {# topics}}, {resourceCount, plural,\n =1 {# resource}\n other {# resources}}',
+        '{topicCount, plural,\n =1 {# folder}\n other {# folders}}, {resourceCount, plural,\n =1 {# resource}\n other {# resources}}',
       undo: 'Undo',
       cancel: 'Cancel',
       creatingCopies: 'Copying...',

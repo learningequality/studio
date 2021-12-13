@@ -92,7 +92,7 @@
       },
     },
     $trs: {
-      topic: 'Topic',
+      topic: 'Folder',
       video: 'Video',
       audio: 'Audio',
       exercise: 'Exercise',

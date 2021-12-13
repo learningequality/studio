@@ -408,7 +408,7 @@
       copiedItemsToClipboard: 'Copied in clipboard',
       emptyDefaultTitle: 'No resources in your clipboard',
       emptyDefaultText:
-        'Use the clipboard to copy resources and move them to other topics and channels',
+        'Use the clipboard to copy resources and move them to other folders and channels',
       backToClipboard: 'Clipboard',
     },
   };

@@ -67,9 +67,9 @@
     $trs: {
       containsNewAndUpdated: 'Contains unpublished resources and changes',
       containsNew: 'Contains unpublished resources',
-      isNewTopic: 'Unpublished topic',
+      isNewTopic: 'Unpublished folder',
       containsUpdated: 'Contains unpublished changes',
-      isUpdatedTopic: 'Topic has been updated since last publish',
+      isUpdatedTopic: 'Folder has been updated since last publish',
       isNewResource: 'Unpublished',
       isUpdatedResource: 'Updated since last publish',
     },

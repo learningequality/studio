@@ -212,7 +212,7 @@
       channelSourceLabel: 'Channel/source',
       filtersHeader: 'Filter options',
       kindLabel: 'Format',
-      hideTopicsLabel: 'Hide topics',
+      hideTopicsLabel: 'Hide folders',
       assessmentsLabel: 'Show assessments only',
       licensesLabel: 'License',
       coachContentLabel: 'Show resources for coaches',

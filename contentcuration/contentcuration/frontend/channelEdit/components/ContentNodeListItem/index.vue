@@ -271,7 +271,7 @@
     $trs: {
       resources: '{value, number, integer} {value, plural, one {resource} other {resources}}',
       questions: '{value, number, integer} {value, plural, one {question} other {questions}}',
-      openTopic: 'Open topic',
+      openTopic: 'Open folder',
       hasCoachTooltip:
         '{value, number, integer} {value, plural, one {resource for coaches} other {resources for coaches}}',
       coachTooltip: 'Resource for coaches',

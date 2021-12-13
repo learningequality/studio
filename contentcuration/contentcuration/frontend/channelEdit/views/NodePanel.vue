@@ -149,7 +149,7 @@
     },
     $trs: {
       emptyViewOnlyChannelText: 'Nothing in this channel yet',
-      emptyTopicText: 'Nothing in this topic yet',
+      emptyTopicText: 'Nothing in this folder yet',
       emptyChannelText: 'Click "ADD" to start building your channel',
       emptyChannelSubText: 'Create, upload, or import resources from other channels',
     },
