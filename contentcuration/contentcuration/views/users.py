@@ -255,12 +255,7 @@ class UserActivationView(ActivationView):
             )
             # Send email to welcome new user
             subject = "Welcome to Kolibri Studio. !"
-            message = render_to_string(
-                "registration/registration_welcome_new_user_email.html",
-                {
-                    "user": user,
-                },
-            )
+            message = render_to_string("registration/registration_welcome_new_user_email.html", {})
             user.email_user(
                 subject,
                 message,
