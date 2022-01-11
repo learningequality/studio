@@ -70,6 +70,13 @@ class ExportChannelTestCase(StudioTestCase):
         new_video.parent = new_node
         new_video.save()
 
+        # Add a node with tags greater than 30 chars to ensure they get excluded.
+        new_video = create_node({'kind_id': 'video', 'tags': [{'tag_name': 'kolbasdasdasrissadasdwzxcztudio'}, {'tag_name': 'kolbasdasdasrissadasdwzxcztudi'},
+                                {'tag_name': 'kolbasdasdasrissadasdwzxc'}], 'title': 'kolibri tag test', 'children': []})
+        new_video.complete = True
+        new_video.parent = self.content_channel.main_tree
+        new_video.save()
+
         set_channel_icon_encoding(self.content_channel)
         self.tempdb = create_content_database(self.content_channel, True, None, True)
 
@@ -119,6 +126,14 @@ class ExportChannelTestCase(StudioTestCase):
 
         for node in incomplete_nodes:
             assert kolibri_nodes.filter(pk=node.node_id).count() == 0
+
+    def test_tags_greater_than_30_excluded(self):
+        tag_node = kolibri_models.ContentNode.objects.filter(title='kolibri tag test').first()
+        published_tags = tag_node.tags.all()
+
+        assert published_tags.count() == 2
+        for t in published_tags:
+            assert len(t.tag_name) <= 30
 
     def test_contentnode_channel_id_data(self):
         channel = kolibri_models.ChannelMetadata.objects.first()
