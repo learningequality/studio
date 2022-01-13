@@ -225,7 +225,7 @@ export function uploadFile(context, { file, preset = null } = {}) {
           })
           .catch(error => {
             let errorType = fileErrors.UPLOAD_FAILED;
-            if (error.response && error.response.status === 418) {
+            if (error.response && error.response.status === 412) {
               errorType = fileErrors.NO_STORAGE;
             }
             const fileObject = {

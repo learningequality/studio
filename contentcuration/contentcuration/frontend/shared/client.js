@@ -43,12 +43,12 @@ client.interceptors.response.use(
       // we should silence those on the front end and try
       // to catch legitimate request issues in the backend.
       //
-      // Allow 418 too as that's specific to out of storage checks
+      // Allow 412 too as that's specific to out of storage checks
       if (
         error.response.status === 403 ||
         error.response.status === 404 ||
         error.response.status === 405 ||
-        error.response.status === 418
+        error.response.status === 412
       ) {
         return Promise.reject(error);
       }
