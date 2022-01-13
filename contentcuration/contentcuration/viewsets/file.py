@@ -136,15 +136,14 @@ class FileViewSet(BulkDeleteMixin, BulkUpdateMixin, ReadOnlyValuesViewset):
             file_format = request.data["file_format"]
             preset = request.data["preset"]
         except KeyError:
-            raise HttpResponseBadRequest(
+            return HttpResponseBadRequest(
                 reason="Must specify: size, checksum, name, file_format, and preset"
             )
 
         try:
             request.user.check_space(float(size), checksum)
-
-        except PermissionDenied as e:
-            return HttpResponseBadRequest(reason=str(e), status=418)
+        except PermissionDenied:
+            return HttpResponseBadRequest(reason="Not enough space. Check your storage under Settings page.", status=400)
 
         might_skip = File.objects.filter(checksum=checksum).exists()
 
