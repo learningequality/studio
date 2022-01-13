@@ -444,7 +444,7 @@ class UploadFileURLTestCase(StudioAPITestCase):
         self.client.force_authenticate(user=self.user)
         response = self.client.post(reverse("file-upload-url"), self.file, format="json",)
 
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, 412)
 
     def test_upload_url(self):
         self.client.force_authenticate(user=self.user)

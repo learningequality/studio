@@ -143,7 +143,7 @@ class FileViewSet(BulkDeleteMixin, BulkUpdateMixin, ReadOnlyValuesViewset):
         try:
             request.user.check_space(float(size), checksum)
         except PermissionDenied:
-            return HttpResponseBadRequest(reason="Not enough space. Check your storage under Settings page.", status=400)
+            return HttpResponseBadRequest(reason="Not enough space. Check your storage under Settings page.", status=412)
 
         might_skip = File.objects.filter(checksum=checksum).exists()
 
