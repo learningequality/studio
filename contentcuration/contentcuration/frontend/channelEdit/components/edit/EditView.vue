@@ -245,11 +245,14 @@
       },
       /*
        * @public
-       * reaches into Details Tab to run save of diffTracker
-       * before the validation pop up is executed
        */
       immediateSaveAll: function() {
-        return this.$refs.detailsTab.immediateSaveAll();
+        if (this.$refs.detailsTabView) {
+          return this.$refs.detailsTabView.immediateSaveAll();
+        } else {
+          /* eslint-disable-next-line no-console */
+          console.error('imediateSaveAll was not passed, detailsTabView is not found');
+        }
       },
     },
     $trs: {
