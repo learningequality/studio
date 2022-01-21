@@ -67,10 +67,16 @@ coverage[toml]==5.5
     #   -r requirements-dev.in
     #   codecov
     #   pytest-cov
-git+https://github.com/someshchaturvedi/customizable-django-profiler.git#customizable-django-profiler
+customizable-django-profiler @ git+https://github.com/someshchaturvedi/customizable-django-profiler.git
     # via -r requirements-dev.in
 distlib==0.3.1
     # via virtualenv
+django==3.2.5
+    # via
+    #   -c requirements.txt
+    #   django-debug-toolbar
+    #   djangorestframework
+    #   drf-yasg
 django-concurrent-test-helper==0.7.0
     # via -r requirements-dev.in
 django-debug-panel==0.8.3
@@ -79,12 +85,6 @@ django-debug-toolbar==1.9.1
     # via
     #   -r requirements-dev.in
     #   django-debug-panel
-django==3.2.5
-    # via
-    #   -c requirements.txt
-    #   django-debug-toolbar
-    #   djangorestframework
-    #   drf-yasg
 djangorestframework==3.12.4
     # via
     #   -c requirements.txt
@@ -101,12 +101,12 @@ filelock==3.0.12
     # via virtualenv
 flake8==3.4.1
     # via -r requirements-dev.in
-flask-basicauth==0.2.0
-    # via locust
 flask==1.1.2
     # via
     #   flask-basicauth
     #   locust
+flask-basicauth==0.2.0
+    # via locust
 flower==0.9.4
     # via -r requirements-dev.in
 fonttools==4.24.0
@@ -215,10 +215,10 @@ pyflakes==1.5.0
     # via
     #   autoflake
     #   flake8
-pyinstrument-cext==0.2.4
-    # via pyinstrument
 pyinstrument==3.4.2
     # via -r requirements-dev.in
+pyinstrument-cext==0.2.4
+    # via pyinstrument
 pylint==2.8.2
     # via -r requirements-dev.in
 pyls-isort==0.2.2
@@ -231,6 +231,15 @@ pyparsing==2.4.7
     # via
     #   -c requirements.txt
     #   packaging
+pytest==6.2.4
+    # via
+    #   -r requirements-dev.in
+    #   pytest-cov
+    #   pytest-django
+    #   pytest-logging
+    #   pytest-pythonpath
+    #   pytest-timeout
+    #   pytest-watch
 pytest-cov==2.12.0
     # via -r requirements-dev.in
 pytest-django==4.3.0
@@ -243,15 +252,6 @@ pytest-timeout==1.4.2
     # via -r requirements-dev.in
 pytest-watch==4.2.0
     # via -r requirements-dev.in
-pytest==6.2.4
-    # via
-    #   -r requirements-dev.in
-    #   pytest-cov
-    #   pytest-django
-    #   pytest-logging
-    #   pytest-pythonpath
-    #   pytest-timeout
-    #   pytest-watch
 python-dateutil==2.8.1
     # via
     #   -c requirements.txt
@@ -284,8 +284,6 @@ requests==2.25.1
     #   locust
 rope==0.19.0
     # via -r requirements-dev.in
-ruamel.yaml.clib==0.2.2
-    # via ruamel.yaml
 ruamel.yaml==0.17.4
     # via drf-yasg
 service-factory==0.1.6
@@ -319,7 +317,7 @@ toml==0.10.2
     #   pytest
 tornado==6.1
     # via flower
-ujson==4.0.2
+ujson==5.1.0
     # via
     #   python-jsonrpc-server
     #   python-language-server
