@@ -1935,6 +1935,8 @@ class StagedFile(models.Model):
 
 FILE_DISTINCT_INDEX_NAME = "file_checksum_file_size_idx"
 FILE_MODIFIED_DESC_INDEX_NAME = "file_modified_desc_idx"
+FILE_DURATION_CONSTRAINT = "file_media_duration_int"
+MEDIA_PRESETS = [format_presets.AUDIO, format_presets.VIDEO_HIGH_RES, format_presets.VIDEO_LOW_RES]
 
 
 class File(models.Model):
@@ -1958,6 +1960,7 @@ class File(models.Model):
     uploaded_by = models.ForeignKey(User, related_name='files', blank=True, null=True, on_delete=models.SET_NULL)
 
     modified = models.DateTimeField(auto_now=True, verbose_name="modified", null=True)
+    duration = models.IntegerField(blank=True, null=True)
 
     objects = CustomManager()
 
@@ -2069,6 +2072,9 @@ class File(models.Model):
             models.Index(fields=['checksum', 'file_size'], name=FILE_DISTINCT_INDEX_NAME),
             models.Index(fields=["-modified"], name=FILE_MODIFIED_DESC_INDEX_NAME),
         ]
+        constraints = [
+            models.CheckConstraint(check=(Q(preset__in=MEDIA_PRESETS, duration__gt=0) | Q(duration__isnull=True)), name=FILE_DURATION_CONSTRAINT)
+        ]
 
 
 @receiver(models.signals.post_delete, sender=File)
@@ -2108,7 +2114,7 @@ class PrerequisiteContentRelationship(models.Model):
             raise IntegrityError('Cannot self reference as prerequisite.')
         # immediate cyclic exception
         if PrerequisiteContentRelationship.objects.using(self._state.db) \
-                        .filter(target_node=self.prerequisite, prerequisite=self.target_node):
+                .filter(target_node=self.prerequisite, prerequisite=self.target_node):
             raise IntegrityError(
                 'Note: Prerequisite relationship is directional! %s and %s cannot be prerequisite of each other!'
                 % (self.target_node, self.prerequisite))
@@ -2141,7 +2147,7 @@ class RelatedContentRelationship(models.Model):
             raise IntegrityError('Cannot self reference as related.')
         # handle immediate cyclic
         if RelatedContentRelationship.objects.using(self._state.db) \
-                        .filter(contentnode_1=self.contentnode_2, contentnode_2=self.contentnode_1):
+                .filter(contentnode_1=self.contentnode_2, contentnode_2=self.contentnode_1):
             return  # silently cancel the save
         super(RelatedContentRelationship, self).save(*args, **kwargs)
 

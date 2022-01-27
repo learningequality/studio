@@ -122,6 +122,9 @@ class ContentNode(MPTTModel):
     # A JSON Dictionary of properties to configure loading, rendering, etc. the file
     options = models.TextField(default="{}")
 
+    # If media, the duration in seconds
+    duration = models.IntegerField(null=True, blank=True)
+
     class Meta:
         ordering = ("lft",)
         index_together = [
