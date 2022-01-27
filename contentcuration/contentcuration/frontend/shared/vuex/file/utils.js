@@ -3,7 +3,11 @@ import { FormatPresetsList, FormatPresetsNames } from 'shared/leUtils/FormatPres
 
 const BLOB_SLICE = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice;
 const CHUNK_SIZE = 2097152;
-const MEDIA_PRESETS = [FormatPresetsNames.AUDIO, FormatPresetsNames.HIGH_RES_VIDEO, FormatPresetsNames.LOW_RES_VIDEO];
+const MEDIA_PRESETS = [
+  FormatPresetsNames.AUDIO,
+  FormatPresetsNames.HIGH_RES_VIDEO,
+  FormatPresetsNames.LOW_RES_VIDEO,
+];
 const VIDEO_PRESETS = [FormatPresetsNames.HIGH_RES_VIDEO, FormatPresetsNames.LOW_RES_VIDEO];
 
 export function getHash(file) {
@@ -62,9 +66,9 @@ export function storageUrl(checksum, file_format) {
  * @param {String|null} preset
  * @return {Promise<{preset: String, duration:Number|null}>}
  */
-export function extractMetadata(file, preset= null) {
+export function extractMetadata(file, preset = null) {
   const metadata = {
-    preset: file.preset || preset
+    preset: file.preset || preset,
   };
 
   if (!metadata.preset) {
@@ -91,9 +95,10 @@ export function extractMetadata(file, preset= null) {
       metadata.duration = mediaElement.duration;
       // Override preset based off video resolution
       if (isVideo) {
-        metadata.preset = mediaElement.videoHeight >= 720
-          ? FormatPresetsNames.HIGH_RES_VIDEO
-          : FormatPresetsNames.LOW_RES_VIDEO;
+        metadata.preset =
+          mediaElement.videoHeight >= 720
+            ? FormatPresetsNames.HIGH_RES_VIDEO
+            : FormatPresetsNames.LOW_RES_VIDEO;
       }
       resolve(metadata);
     });

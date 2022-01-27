@@ -235,7 +235,7 @@ export function uploadFile(context, { file, preset = null } = {}) {
               file_size: file.size,
               original_filename: file.name,
               file_format,
-              preset: presetId,
+              preset: metadata.preset,
               error: errorType,
             };
             context.commit('ADD_FILE', fileObject);
