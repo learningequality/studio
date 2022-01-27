@@ -254,13 +254,13 @@ class UserActivationView(ActivationView):
                 [settings.REGISTRATION_INFORMATION_EMAIL],
             )
             # Send email to welcome new user
-            subject = "Welcome to Kolibri Studio. !"
+            subject = "Thank you for activating your Kolibri Studio account! Let's get started..."
             message = render_to_string("registration/registration_welcome_new_user_email.html", {})
             user.email_user(
                 subject,
                 message,
                 settings.DEFAULT_FROM_EMAIL,
-                html_message = message
+                html_message=message
             )
 
         return user
