@@ -20,6 +20,7 @@ from django.core.files.storage import default_storage as storage
 from django.core.management import call_command
 from django.db import transaction
 from django.db.models import Count
+from django.db.models import Max
 from django.db.models import Q
 from django.db.models import Sum
 from django.db.utils import IntegrityError
@@ -225,6 +226,11 @@ def create_bare_contentnode(ccnode, default_language, channel_id, channel_name):
     if ccnode.language or default_language:
         language, _new = get_or_create_language(ccnode.language or default_language)
 
+    duration = None
+    if ccnode.kind_id in [content_kinds.AUDIO, content_kinds.VIDEO]:
+        # aggregate duration from associated files, choosing maximum if there are multiple, like hi and lo res videos
+        duration = ccnode.files.aggregate(duration=Max("duration")).get("duration")
+
     options = {}
     if ccnode.extra_fields and 'options' in ccnode.extra_fields:
         options = ccnode.extra_fields['options']
@@ -247,6 +253,7 @@ def create_bare_contentnode(ccnode, default_language, channel_id, channel_name):
             'license_name': kolibri_license.license_name if kolibri_license is not None else None,
             'license_description': kolibri_license.license_description if kolibri_license is not None else None,
             'coach_content': ccnode.role_visibility == roles.COACH,
+            'duration': duration,
             'options': json.dumps(options)
         }
     )
