@@ -414,3 +414,39 @@ class CRUDTestCase(StudioAPITestCase):
             self.fail("File was not deleted")
         except models.File.DoesNotExist:
             pass
+
+
+class UploadFileURLTestCase(StudioAPITestCase):
+    def setUp(self):
+        super(UploadFileURLTestCase, self).setUp()
+        self.user = testdata.user()
+        self.file = {
+            "size": 1000,
+            "checksum": uuid.uuid4().hex,
+            "name": "le_studio",
+            "file_format": file_formats.MP3,
+            "preset": format_presets.AUDIO,
+        }
+
+    def test_required_keys(self):
+        del self.file["name"]
+
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(
+            reverse("file-upload-url"), self.file, format="json",
+        )
+
+        self.assertEqual(response.status_code, 400)
+
+    def test_insufficient_storage(self):
+        self.file["size"] = 100000000000000
+
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(reverse("file-upload-url"), self.file, format="json",)
+
+        self.assertEqual(response.status_code, 412)
+
+    def test_upload_url(self):
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(reverse("file-upload-url"), self.file, format="json",)
+        self.assertEqual(response.status_code, 200)
