@@ -5,11 +5,13 @@ import pytest
 from django.conf import settings
 from django.db.utils import IntegrityError
 from le_utils.constants import content_kinds
+from le_utils.constants import format_presets
 
 from contentcuration.models import AssessmentItem
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
 from contentcuration.models import File
+from contentcuration.models import FILE_DURATION_CONSTRAINT
 from contentcuration.models import generate_object_storage_name
 from contentcuration.models import Invitation
 from contentcuration.models import object_storage_name
@@ -568,6 +570,37 @@ class FileTestCase(PermissionQuerysetTestCase):
 
         queryset = File.filter_edit_queryset(self.base_queryset, user=user)
         self.assertQuerysetContains(queryset, pk=node_file.id)
+
+    def test_duration_check_constraint__acceptable(self):
+        channel = testdata.channel()
+        File.objects.create(
+            contentnode=create_contentnode(channel.main_tree_id),
+            preset_id=format_presets.AUDIO,
+            duration=10,
+        )
+        File.objects.create(
+            contentnode=create_contentnode(channel.main_tree_id),
+            preset_id=format_presets.VIDEO_HIGH_RES,
+            duration=1123123,
+        )
+
+    def test_duration_check_constraint__negative(self):
+        channel = testdata.channel()
+        with self.assertRaises(IntegrityError, msg=FILE_DURATION_CONSTRAINT):
+            File.objects.create(
+                contentnode=create_contentnode(channel.main_tree_id),
+                preset_id=format_presets.AUDIO,
+                duration=-10,
+            )
+
+    def test_duration_check_constraint__not_media(self):
+        channel = testdata.channel()
+        with self.assertRaises(IntegrityError, msg=FILE_DURATION_CONSTRAINT):
+            File.objects.create(
+                contentnode=create_contentnode(channel.main_tree_id),
+                preset_id=format_presets.EPUB,
+                duration=10,
+            )
 
 
 class AssessmentItemFilePermissionTestCase(PermissionQuerysetTestCase):
