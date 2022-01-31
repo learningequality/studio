@@ -643,9 +643,10 @@ def create_node(node_data, parent_node, sort_order):  # noqa: C901
         tag_data = node_data["tags"]
         if tag_data is not None:
             for tag in tag_data:
-                tags.append(
-                    ContentTag.objects.get_or_create(tag_name=tag, channel=channel)[0]
-                )
+                if len(tag) <= 30:
+                    tags.append(
+                        ContentTag.objects.get_or_create(tag_name=tag, channel=channel)[0]
+                    )
 
     if len(tags) > 0:
         node.tags.set(tags)
