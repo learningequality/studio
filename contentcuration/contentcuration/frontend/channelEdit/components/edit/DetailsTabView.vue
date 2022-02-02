@@ -295,12 +295,10 @@
 
 <script>
 
-  import ajv from 'ajv';
   import difference from 'lodash/difference';
   import intersection from 'lodash/intersection';
   import uniq from 'lodash/uniq';
   import { mapGetters, mapActions } from 'vuex';
-  import { SCHEMA as COMPLETION_CRITERIA_SCHEMA } from 'kolibri-constants/CompletionCriteria';
   import ContentNodeThumbnail from '../../views/files/thumbnails/ContentNodeThumbnail';
   import FileUpload from '../../views/files/FileUpload';
   import SubtitlesList from '../../views/files/supplementaryLists/SubtitlesList';
@@ -319,6 +317,7 @@
   import Checkbox from 'shared/views/form/Checkbox';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import { NEW_OBJECT, FeatureFlagKeys, ContentModalities } from 'shared/constants';
+  import { validate as validateCompletionCriteria } from 'shared/leUtils/CompletionCriteria';
 
   // Define an object to act as the place holder for non unique values.
   const nonUniqueValue = {};
@@ -355,8 +354,6 @@
       },
     };
   }
-
-  const validateCompletionCriteria = ajv.compile(COMPLETION_CRITERIA_SCHEMA);
 
   export default {
     name: 'DetailsTabView',

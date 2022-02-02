@@ -1,8 +1,10 @@
+import get from 'lodash/get';
 import { AssessmentItemTypes, ValidationErrors } from '../constants';
 import translator from '../translator';
 import Licenses from 'shared/leUtils/Licenses';
 import { MasteryModelsNames } from 'shared/leUtils/MasteryModels';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
+import { validate as validateCompletionCriteria } from 'shared/leUtils/CompletionCriteria';
 
 /**
  * Topic and resource
@@ -53,6 +55,10 @@ export function isNodeComplete({ nodeDetails, assessmentItems, files }) {
     nodeDetails.kind !== ContentKindsNames.EXERCISE
   ) {
     if (getNodeFilesErrors(files).length) {
+      return false;
+    }
+    const completionCriteria = get(nodeDetails, 'extra_fields.options.completion_criteria');
+    if (completionCriteria && !validateCompletionCriteria(completionCriteria)) {
       return false;
     }
   }

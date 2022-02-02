@@ -456,6 +456,21 @@ describe('channelEdit utils', () => {
         expect(isNodeComplete({ nodeDetails, files: [...files, invalidFile] })).toBe(false);
       });
 
+      it('returns false if completion_criteria is invalid', () => {
+        const details = {
+          ...nodeDetails,
+          extra_fields: {
+            options: {
+              completion_criteria: {
+                model: 'pages',
+                threshold: -1,
+              },
+            },
+          },
+        };
+        expect(isNodeComplete({ nodeDetails: details, files })).toBe(false);
+      });
+
       it('returns true if node details and all files are valid', () => {
         expect(isNodeComplete({ nodeDetails, files })).toBe(true);
       });
