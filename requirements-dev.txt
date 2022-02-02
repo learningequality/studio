@@ -69,6 +69,8 @@ coverage[toml]==5.5
     #   pytest-cov
 git+https://github.com/someshchaturvedi/customizable-django-profiler.git#customizable-django-profiler
     # via -r requirements-dev.in
+dataclasses==0.8
+    # via werkzeug
 distlib==0.3.1
     # via virtualenv
 django-concurrent-test-helper==0.7.0
@@ -130,7 +132,16 @@ idna==2.10
 importlib-metadata==1.7.0
     # via
     #   -c requirements.txt
+    #   kombu
+    #   pep517
+    #   pluggy
     #   pre-commit
+    #   pytest
+    #   virtualenv
+importlib-resources==5.4.0
+    # via
+    #   pre-commit
+    #   virtualenv
 importmagic==0.1.7
     # via -r requirements-dev.in
 inflection==0.5.1
@@ -319,6 +330,12 @@ toml==0.10.2
     #   pytest
 tornado==6.1
     # via flower
+typed-ast==1.4.3
+    # via astroid
+typing-extensions==4.0.1
+    # via
+    #   -c requirements.txt
+    #   asgiref
 ujson==4.0.2
     # via
     #   python-jsonrpc-server
@@ -360,6 +377,8 @@ zipp==3.4.1
     # via
     #   -c requirements.txt
     #   importlib-metadata
+    #   importlib-resources
+    #   pep517
 zope.event==4.5.0
     # via gevent
 zope.interface==5.4.0
