@@ -295,10 +295,12 @@
 
 <script>
 
+  import ajv from 'ajv';
   import difference from 'lodash/difference';
   import intersection from 'lodash/intersection';
   import uniq from 'lodash/uniq';
   import { mapGetters, mapActions } from 'vuex';
+  import { SCHEMA as COMPLETION_CRITERIA_SCHEMA } from 'kolibri-constants/CompletionCriteria';
   import ContentNodeThumbnail from '../../views/files/thumbnails/ContentNodeThumbnail';
   import FileUpload from '../../views/files/FileUpload';
   import SubtitlesList from '../../views/files/supplementaryLists/SubtitlesList';
@@ -353,6 +355,8 @@
       },
     };
   }
+
+  const validateCompletionCriteria = ajv.compile(COMPLETION_CRITERIA_SCHEMA);
 
   export default {
     name: 'DetailsTabView',
@@ -495,6 +499,23 @@
         set(val) {
           const options = { modality: val ? ContentModalities.QUIZ : null };
           this.updateExtraFields({ options });
+        },
+      },
+      // TODO remove eslint disable when `completionCriteria` is utilized
+      /* eslint-disable-next-line kolibri/vue-no-unused-properties */
+      completionCriteria: {
+        get() {
+          const options = this.getExtraFieldsValueFromNodes('options') || {};
+          return options.completion_criteria || {};
+        },
+        set(completion_criteria) {
+          // TODO Remove validation if unnecessary after implementing `completionCriteria`
+          if (validateCompletionCriteria(completion_criteria)) {
+            const options = { completion_criteria };
+            this.updateExtraFields({ options });
+          } else {
+            console.warn('Invalid completion criteria', [...validateCompletionCriteria.errors]);
+          }
         },
       },
 
