@@ -57,8 +57,10 @@ export function isNodeComplete({ nodeDetails, assessmentItems, files }) {
     if (getNodeFilesErrors(files).length) {
       return false;
     }
+  }
+  if (nodeDetails.kind !== ContentKindsNames.TOPIC) {
     const completionCriteria = get(nodeDetails, 'extra_fields.options.completion_criteria');
-    if (completionCriteria && !validateCompletionCriteria(completionCriteria)) {
+    if (completionCriteria && !validateCompletionCriteria(completionCriteria, nodeDetails.kind)) {
       return false;
     }
   }
