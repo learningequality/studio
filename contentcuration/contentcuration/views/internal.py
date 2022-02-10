@@ -29,6 +29,7 @@ from rest_framework.response import Response
 from contentcuration import ricecooker_versions as rc
 from contentcuration.api import activate_channel
 from contentcuration.api import write_file_to_storage
+from contentcuration.constants import completion_criteria
 from contentcuration.models import AssessmentItem
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
@@ -62,6 +63,10 @@ VERSION_HARD_WARNING = VersionStatus(
 VERSION_ERROR = VersionStatus(
     version=rc.VERSION_ERROR, status=3, message=rc.VERSION_ERROR_MESSAGE
 )
+
+
+class NodeValidationError(Exception):
+    pass
 
 
 def handle_server_error(request):
@@ -263,7 +268,7 @@ def api_add_nodes_to_tree(request):
     """
     Add the nodes from the `content_data` (list) as children to the parent node
     whose pk is specified in `root_id`. The list `content_data` conatins json
-    dicts obtained from the to_dict serializarion of the ricecooker node class.
+    dicts obtained from the to_dict serialization of the ricecooker node class.
 
     NOTE: It's important that calls made to this API proceed through the tree
     in a linear fashion, from first to last topic, recursively iterating through
@@ -293,6 +298,8 @@ def api_add_nodes_to_tree(request):
         return HttpResponseNotFound("No content matching: {}".format(parent_id))
     except KeyError:
         return HttpResponseBadRequest("Required attribute missing from data: {}".format(data))
+    except NodeValidationError as e:
+        return HttpResponseBadRequest(str(e))
     except Exception as e:
         handle_server_error(request)
         return HttpResponseServerError(content=str(e), reason=str(e))
@@ -601,6 +608,13 @@ def create_node(node_data, parent_node, sort_order):  # noqa: C901
     extra_fields = node_data["extra_fields"] or {}
     if isinstance(extra_fields, basestring):
         extra_fields = json.loads(extra_fields)
+
+    # validate completion criteria
+    if "options" in extra_fields and "completion_criteria" in extra_fields["options"]:
+        try:
+            completion_criteria.validate(extra_fields["options"]["completion_criteria"], kind=node_data['kind'])
+        except completion_criteria.ValidationError:
+            raise NodeValidationError("Node {} has invalid completion criteria".format(node_data["node_id"]))
 
     # Validate title and license fields
     is_complete = True
