@@ -31,6 +31,10 @@ import { validate as validateCompletionCriteria } from 'shared/leUtils/Completio
  * It must have at least one question
  * A question must have right answers
  *
+ * Non-topics
+ * ----------
+ * Completion criteria is validated to ensure it conforms to the schema
+ *   and is valid for the content kind
  */
 export function isNodeComplete({ nodeDetails, assessmentItems, files }) {
   if (!nodeDetails) {

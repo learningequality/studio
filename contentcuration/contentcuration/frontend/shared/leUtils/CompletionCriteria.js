@@ -1,15 +1,12 @@
 import CompletionCriteriaModels, { SCHEMA } from 'kolibri-constants/CompletionCriteria';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 import { compile } from 'shared/utils/jsonSchema';
+import { ValidationErrors } from 'shared/constants';
 
 /**
  * @type {Function<boolean>|ValidateFunction}
  */
 const _validate = compile(SCHEMA);
-
-export const ERRORS = {
-  MODEL_CONTENT_KIND_MISMATCH: 'Completion criteria model invalid for content kind',
-};
 
 /**
  * @param {Object} criteria
@@ -32,7 +29,7 @@ export function validate(criteria, contentKind = null) {
     (criteria.model === CompletionCriteriaModels.MASTERY &&
       contentKind !== ContentKindsNames.EXERCISE)
   ) {
-    validate.errors = [ERRORS.MODEL_CONTENT_KIND_MISMATCH];
+    validate.errors = [ValidationErrors.INVALID_COMPLETION_CRITERIA_MODEL];
     return false;
   }
 
