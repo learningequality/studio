@@ -633,7 +633,7 @@ class PermissionCTE(With):
         queryset = model.objects.filter(user_id=user_id)\
             .annotate(
                 tree_id=Unnest(ArrayRemove(Array(*self.tree_id_fields), None), output_field=models.IntegerField())
-            )
+        )
         super(PermissionCTE, self).__init__(queryset=queryset.values("user_id", "channel_id", "tree_id"), **kwargs)
 
     @classmethod
@@ -1016,7 +1016,7 @@ class ChannelSet(models.Model):
 
 class ContentTag(models.Model):
     id = UUIDField(primary_key=True, default=uuid.uuid4)
-    tag_name = models.CharField(max_length=50)
+    tag_name = models.CharField(max_length=30)
     channel = models.ForeignKey('Channel', related_name='tags', blank=True, null=True, db_index=True, on_delete=models.SET_NULL)
     objects = CustomManager()
 
@@ -2095,7 +2095,7 @@ class PrerequisiteContentRelationship(models.Model):
             raise IntegrityError('Cannot self reference as prerequisite.')
         # immediate cyclic exception
         if PrerequisiteContentRelationship.objects.using(self._state.db) \
-                        .filter(target_node=self.prerequisite, prerequisite=self.target_node):
+                .filter(target_node=self.prerequisite, prerequisite=self.target_node):
             raise IntegrityError(
                 'Note: Prerequisite relationship is directional! %s and %s cannot be prerequisite of each other!'
                 % (self.target_node, self.prerequisite))
@@ -2128,7 +2128,7 @@ class RelatedContentRelationship(models.Model):
             raise IntegrityError('Cannot self reference as related.')
         # handle immediate cyclic
         if RelatedContentRelationship.objects.using(self._state.db) \
-                        .filter(contentnode_1=self.contentnode_2, contentnode_2=self.contentnode_1):
+                .filter(contentnode_1=self.contentnode_2, contentnode_2=self.contentnode_1):
             return  # silently cancel the save
         super(RelatedContentRelationship, self).save(*args, **kwargs)
 
