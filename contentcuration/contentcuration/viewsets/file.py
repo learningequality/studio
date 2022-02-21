@@ -71,6 +71,7 @@ class FileSerializer(BulkModelSerializer):
             "contentnode",
             "assessment_item",
             "preset",
+            "duration"
         )
         list_serializer_class = BulkListSerializer
 
@@ -98,6 +99,7 @@ class FileViewSet(BulkDeleteMixin, BulkUpdateMixin, ReadOnlyValuesViewset):
         "language_id",
         "original_filename",
         "uploaded_by",
+        "duration"
     )
 
     field_map = {
@@ -163,6 +165,7 @@ class FileViewSet(BulkDeleteMixin, BulkUpdateMixin, ReadOnlyValuesViewset):
             file_format_id=file_format,
             preset_id=preset,
             uploaded_by=request.user,
+            duration=request.data.get("duration"),
         )
 
         # Avoid using our file_on_disk attribute for checks
