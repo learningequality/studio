@@ -66,7 +66,7 @@
         </ToolBar>
         <VContainer fluid>
           <VTabsItems v-model="currentTab">
-            <VTabItem :key="tabs.DETAILS" ref="detailswindow" :value="tabs.DETAILS" lazy>
+            <VTabItem :key="tabs.DETAILS" ref="detailswindow" :value="tabs.DETAILS">
               <VAlert v-if="nodeIds.length > 1" :value="true" type="info" color="primary" outline>
                 {{ countText }}
               </VAlert>
@@ -247,12 +247,7 @@
        * @public
        */
       immediateSaveAll: function() {
-        if (this.$refs.detailsTabView) {
-          return this.$refs.detailsTabView.immediateSaveAll();
-        } else {
-          /* eslint-disable-next-line no-console */
-          console.error('imediateSaveAll was not passed, detailsTabView is not found');
-        }
+        return this.$refs.detailsTab.immediateSaveAll();
       },
     },
     $trs: {
