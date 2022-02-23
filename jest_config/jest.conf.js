@@ -25,7 +25,7 @@ module.exports = {
     '^.+\\.js$': '<rootDir>/node_modules/babel-jest',
     '.*\\.(vue)$': '<rootDir>/node_modules/vue-jest',
   },
-  transformIgnorePatterns: ['/node_modules/(?!vuetify|epubjs|kolibri-design-system)'],
+  transformIgnorePatterns: ['/node_modules/(?!vuetify|epubjs|kolibri-design-system|kolibri-constants)'],
   snapshotSerializers: ['<rootDir>/node_modules/jest-serializer-vue'],
   setupFilesAfterEnv: [path.resolve(__dirname, './setup')],
   coverageDirectory: '<rootDir>/coverage',

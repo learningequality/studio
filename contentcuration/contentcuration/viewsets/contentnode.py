@@ -30,6 +30,7 @@ from rest_framework.serializers import IntegerField
 from rest_framework.serializers import ValidationError
 from rest_framework.viewsets import ViewSet
 
+from contentcuration.constants import completion_criteria
 from contentcuration.db.models.expressions import IsNull
 from contentcuration.db.models.query import RIGHT_JOIN
 from contentcuration.db.models.query import With
@@ -246,6 +247,7 @@ class ContentNodeListSerializer(BulkListSerializer):
 
 class ExtraFieldsOptionsSerializer(JSONFieldDictSerializer):
     modality = ChoiceField(choices=(("QUIZ", "Quiz"),), allow_null=True, required=False)
+    completion_criteria = DictField(required=False, validators=[completion_criteria.validate])
 
 
 class ExtraFieldsSerializer(JSONFieldDictSerializer):

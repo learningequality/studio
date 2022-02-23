@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 from django.db.models.query import QuerySet
+from django.test.testcases import SimpleTestCase
 
 from .base import BaseAPITestCase
 from contentcuration.models import Channel
@@ -9,6 +10,7 @@ from contentcuration.models import DEFAULT_CONTENT_DEFAULTS
 from contentcuration.viewsets.channel import ChannelSerializer as BaseChannelSerializer
 from contentcuration.viewsets.common import ContentDefaultsSerializer
 from contentcuration.viewsets.contentnode import ContentNodeSerializer
+from contentcuration.viewsets.contentnode import ExtraFieldsOptionsSerializer
 
 
 def ensure_no_querysets_in_serializer(object):
@@ -19,6 +21,27 @@ def ensure_no_querysets_in_serializer(object):
         assert not isinstance(object[field], QuerySet), "{} is not serialized".format(
             field
         )
+
+
+class ExtraFieldsOptionsSerializerTestCase(SimpleTestCase):
+    def setUp(self):
+        super(ExtraFieldsOptionsSerializerTestCase, self).setUp()
+        self.data = dict(modality="QUIZ")
+
+    @property
+    def serializer(self):
+        return ExtraFieldsOptionsSerializer(data=self.data)
+
+    def test_no_completion_criteria(self):
+        self.assertTrue(self.serializer.is_valid())
+
+    def test_completion_criteria__valid(self):
+        self.data.update(completion_criteria={"model": "time", "threshold": 10, "learner_managed": True})
+        self.assertTrue(self.serializer.is_valid())
+
+    def test_completion_criteria__invalid(self):
+        self.data.update(completion_criteria={"model": "time", "threshold": "test"})
+        self.assertFalse(self.serializer.is_valid())
 
 
 class ContentNodeSerializerTestCase(BaseAPITestCase):

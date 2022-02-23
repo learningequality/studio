@@ -317,6 +317,7 @@
   import Checkbox from 'shared/views/form/Checkbox';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import { NEW_OBJECT, FeatureFlagKeys, ContentModalities } from 'shared/constants';
+  import { validate as validateCompletionCriteria } from 'shared/leUtils/CompletionCriteria';
 
   // Define an object to act as the place holder for non unique values.
   const nonUniqueValue = {};
@@ -495,6 +496,23 @@
         set(val) {
           const options = { modality: val ? ContentModalities.QUIZ : null };
           this.updateExtraFields({ options });
+        },
+      },
+      // TODO remove eslint disable when `completionCriteria` is utilized
+      /* eslint-disable-next-line kolibri/vue-no-unused-properties */
+      completionCriteria: {
+        get() {
+          const options = this.getExtraFieldsValueFromNodes('options') || {};
+          return options.completion_criteria || {};
+        },
+        set(completion_criteria) {
+          // TODO Remove validation if unnecessary after implementing `completionCriteria`
+          if (validateCompletionCriteria(completion_criteria)) {
+            const options = { completion_criteria };
+            this.updateExtraFields({ options });
+          } else {
+            console.warn('Invalid completion criteria', [...validateCompletionCriteria.errors]);
+          }
         },
       },
 

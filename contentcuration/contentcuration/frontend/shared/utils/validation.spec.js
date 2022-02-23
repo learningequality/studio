@@ -1,5 +1,5 @@
 import each from 'jest-each';
-
+import CompletionCriteriaModels from 'kolibri-constants/CompletionCriteria';
 import { AssessmentItemTypes, ValidationErrors } from '../constants';
 import {
   translateValidator,
@@ -349,6 +349,12 @@ describe('channelEdit utils', () => {
           license: { id: 8 },
           extra_fields: {
             mastery_model: MasteryModelsNames.DO_ALL,
+            options: {
+              completion_criteria: {
+                model: CompletionCriteriaModels.TIME,
+                threshold: 10,
+              },
+            },
           },
         };
         assessmentItems = [
@@ -400,11 +406,43 @@ describe('channelEdit utils', () => {
         ).toBe(false);
       });
 
+      it('returns false if completion_criteria is invalid', () => {
+        const details = {
+          ...nodeDetails,
+          extra_fields: {
+            ...nodeDetails.extra_fields,
+            options: {
+              completion_criteria: {
+                // pages model not allowed for exercise
+                model: CompletionCriteriaModels.PAGES,
+                threshold: 12,
+              },
+            },
+          },
+        };
+        expect(isNodeComplete({ nodeDetails: details, assessmentItems })).toBe(false);
+      });
+
       it(`
         returns true if node details are valid,
         there is at least one assessment items,
         and all assessment items are valid`, () => {
-        expect(isNodeComplete({ nodeDetails, assessmentItems })).toBe(true);
+        const details = {
+          ...nodeDetails,
+          extra_fields: {
+            ...nodeDetails.extra_fields,
+            options: {
+              completion_criteria: {
+                // mastery model only allowed for exercise
+                model: CompletionCriteriaModels.MASTERY,
+                threshold: {
+                  mastery_model: 'do_all',
+                },
+              },
+            },
+          },
+        };
+        expect(isNodeComplete({ nodeDetails: details, assessmentItems })).toBe(true);
       });
     });
 
@@ -419,6 +457,14 @@ describe('channelEdit utils', () => {
           title: 'A node',
           license: { id: 8 },
           kind,
+          extra_fields: {
+            options: {
+              completion_criteria: {
+                model: CompletionCriteriaModels.TIME,
+                threshold: 10,
+              },
+            },
+          },
         };
         files = [
           {
@@ -454,6 +500,39 @@ describe('channelEdit utils', () => {
       it('returns false if there is at least one invalid file', () => {
         const invalidFile = { id: 'file-id', error: 'error' };
         expect(isNodeComplete({ nodeDetails, files: [...files, invalidFile] })).toBe(false);
+      });
+
+      it('returns false if completion_criteria is invalid', () => {
+        const details = {
+          ...nodeDetails,
+          extra_fields: {
+            options: {
+              completion_criteria: {
+                model: 'pages',
+                threshold: -1,
+              },
+            },
+          },
+        };
+        expect(isNodeComplete({ nodeDetails: details, files })).toBe(false);
+      });
+
+      it('returns false if completion_criteria is invalid for kind', () => {
+        const details = {
+          ...nodeDetails,
+          extra_fields: {
+            options: {
+              completion_criteria: {
+                // mastery model only allowed for exercise
+                model: CompletionCriteriaModels.MASTERY,
+                threshold: {
+                  mastery_model: 'do_all',
+                },
+              },
+            },
+          },
+        };
+        expect(isNodeComplete({ nodeDetails: details, files })).toBe(false);
       });
 
       it('returns true if node details and all files are valid', () => {
