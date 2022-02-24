@@ -66,7 +66,7 @@
         </ToolBar>
         <VContainer fluid>
           <VTabsItems v-model="currentTab">
-            <VTabItem :key="tabs.DETAILS" ref="detailswindow" :value="tabs.DETAILS" lazy>
+            <VTabItem :key="tabs.DETAILS" ref="detailswindow" :value="tabs.DETAILS">
               <VAlert v-if="nodeIds.length > 1" :value="true" type="info" color="primary" outline>
                 {{ countText }}
               </VAlert>
@@ -245,8 +245,6 @@
       },
       /*
        * @public
-       * reaches into Details Tab to run save of diffTracker
-       * before the validation pop up is executed
        */
       immediateSaveAll: function() {
         return this.$refs.detailsTab.immediateSaveAll();
