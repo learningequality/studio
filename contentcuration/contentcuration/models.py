@@ -1146,6 +1146,19 @@ class ContentNode(MPTTModel, models.Model):
     role_visibility = models.CharField(max_length=50, choices=roles.choices, default=roles.LEARNER)
     freeze_authoring_data = models.BooleanField(default=False)
 
+    # Fields for metadata labels
+    # These fields use a map to store applied labels
+    # {
+    #   "<label_id1>": true,
+    #   "<label_id2>": true,
+    # }
+    grade_levels = models.JSONField(blank=True, null=True)
+    resource_types = models.JSONField(blank=True, null=True)
+    learning_activities = models.JSONField(blank=True, null=True)
+    accessibility_labels = models.JSONField(blank=True, null=True)
+    categories = models.JSONField(blank=True, null=True)
+    learner_needs = models.JSONField(blank=True, null=True)
+
     objects = CustomContentNodeTreeManager()
 
     # Track all updates and ignore a blacklist of attributes
