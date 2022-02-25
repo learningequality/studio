@@ -1,4 +1,5 @@
 import json
+from functools import partial
 from functools import reduce
 
 from django.conf import settings
@@ -20,6 +21,12 @@ from django_filters.rest_framework import UUIDFilter
 from le_utils.constants import content_kinds
 from le_utils.constants import exercises
 from le_utils.constants import roles
+from le_utils.constants.labels import accessibility_categories
+from le_utils.constants.labels import learning_activities
+from le_utils.constants.labels import levels
+from le_utils.constants.labels import needs
+from le_utils.constants.labels import resource_type
+from le_utils.constants.labels import subjects
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -264,6 +271,24 @@ class TagField(DotPathValueMixin, DictField):
     pass
 
 
+class MetadataLabelsField(JSONFieldDictSerializer):
+    def __init__(self, choices, *args, **kwargs):
+        # Instantiate the superclass normally
+        super().__init__(*args, **kwargs)
+
+        self._fields = {}
+
+        for label_id, label_name in choices:
+            field = BooleanField(required=False, label=label_name)
+            field.bind(label_id, self)
+            self._fields[label_id] = field
+            setattr(self, label_id, field)
+
+    @property
+    def fields(self):
+        return self._fields
+
+
 class ContentNodeSerializer(BulkModelSerializer):
     """
     This is a write only serializer - we leverage it to do create and update
@@ -276,6 +301,14 @@ class ContentNodeSerializer(BulkModelSerializer):
     extra_fields = ExtraFieldsSerializer(required=False)
 
     tags = TagField(required=False)
+
+    # Fields for metadata labels
+    grade_levels = MetadataLabelsField(levels.choices, required=False)
+    resource_types = MetadataLabelsField(resource_type.choices, required=False)
+    learning_activities = MetadataLabelsField(learning_activities.choices, required=False)
+    accessibility_labels = MetadataLabelsField(accessibility_categories.choices, required=False)
+    categories = MetadataLabelsField(subjects.choices, required=False)
+    learner_needs = MetadataLabelsField(needs.choices, required=False)
 
     class Meta:
         model = ContentNode
@@ -298,6 +331,12 @@ class ContentNodeSerializer(BulkModelSerializer):
             "complete",
             "changed",
             "tags",
+            "grade_levels",
+            "resource_types",
+            "learning_activities",
+            "accessibility_labels",
+            "categories",
+            "learner_needs",
         )
         list_serializer_class = ContentNodeListSerializer
         nested_writes = True
@@ -513,6 +552,10 @@ class PrerequisitesUpdateHandler(ViewSet):
         return self._handle_relationship_changes(changes)
 
 
+def dict_if_none(obj, field_name=None):
+    return obj[field_name] if obj[field_name] else {}
+
+
 # Apply mixin first to override ValuesViewset
 class ContentNodeViewSet(BulkUpdateMixin, ChangeEventMixin, ValuesViewset):
     queryset = ContentNode.objects.all()
@@ -560,6 +603,12 @@ class ContentNodeViewSet(BulkUpdateMixin, ChangeEventMixin, ValuesViewset):
         "complete",
         "changed",
         "lft",
+        "grade_levels",
+        "resource_types",
+        "learning_activities",
+        "accessibility_labels",
+        "categories",
+        "learner_needs",
     )
 
     field_map = {
@@ -570,6 +619,12 @@ class ContentNodeViewSet(BulkUpdateMixin, ChangeEventMixin, ValuesViewset):
         "thumbnail_src": retrieve_thumbail_src,
         "title": get_title,
         "parent": "parent_id",
+        "grade_levels": partial(dict_if_none, field_name="grade_levels"),
+        "resource_types": partial(dict_if_none, field_name="resource_types"),
+        "learning_activities": partial(dict_if_none, field_name="learning_activities"),
+        "accessibility_labels": partial(dict_if_none, field_name="accessibility_labels"),
+        "categories": partial(dict_if_none, field_name="categories"),
+        "learner_needs": partial(dict_if_none, field_name="learner_needs"),
     }
 
     def _annotate_channel_id(self, queryset):
