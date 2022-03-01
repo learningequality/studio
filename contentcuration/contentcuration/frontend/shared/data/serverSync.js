@@ -1,6 +1,8 @@
 import debounce from 'lodash/debounce';
 import get from 'lodash/get';
 import pick from 'lodash/pick';
+import orderBy from 'lodash/orderBy';
+import uniq from 'lodash/uniq';
 import applyChanges from './applyRemoteChanges';
 import { hasActiveLocks, cleanupLocks } from './changes';
 import {
@@ -10,6 +12,7 @@ import {
   IGNORED_SOURCE,
   CHANNEL_SYNC_KEEP_ALIVE_INTERVAL,
   ACTIVE_CHANNELS,
+  MAX_REV_KEY,
 } from './constants';
 import db from './db';
 import mergeAllChanges from './mergeChanges';
@@ -21,6 +24,10 @@ import urls from 'shared/urls';
 // When this many seconds pass without a syncable
 // change being registered, sync changes!
 const SYNC_IF_NO_CHANGES_FOR = 2;
+
+// When this many seconds pass, repoll the backend to
+// check for any updates to active channels, or the user and sync any current changes
+const SYNC_POLL_INTERVAL = 5;
 
 // Flag to check if a sync is currently active.
 let syncActive = false;
@@ -142,15 +149,32 @@ function handleSuccesses(response) {
   const successes = get(response, ['data', 'successes'], []);
   if (successes.length) {
     return db[CHANGES_TABLE].where('server_rev')
-      .anyOf(successes)
+      .anyOf(successes.map(c => c.server_rev))
       .delete();
   }
   return Promise.resolve();
 }
 
-function handleMaxRev(response) {
-  const max_rev = response.data.max_rev;
-  return Session.updateSession({ max_rev });
+function handleMaxRevs(response, userId) {
+  const allChanges = orderBy(
+    get(response, ['data', 'changes'], [])
+      .concat(get(response, ['data', 'errors'], []))
+      .concat(get(response, ['data', 'successes'], [])),
+    'server_rev',
+    'desc'
+  );
+  const channelIds = uniq(allChanges.map(c => c.channel_id)).filter(Boolean);
+  const maxRevs = {};
+  for (let channelId of channelIds) {
+    maxRevs[`${MAX_REV_KEY}.${channelId}`] = allChanges.find(
+      c => c.channel_id === channelId
+    ).server_rev;
+  }
+  const lastUserChange = allChanges.find(c => c.user_id === userId);
+  if (lastUserChange) {
+    maxRevs.user_rev = lastUserChange.server_rev;
+  }
+  return Session.updateSession(maxRevs);
 }
 
 async function syncChanges() {
@@ -169,26 +193,29 @@ async function syncChanges() {
   // might have come in during processing - leave them for the next cycle.
   // This is the primary key of the change objects, so the collection is ordered by this
   // by default - if we just grab the last object, we can get the key from there.
-  const [lastChange, earliestServerChange, user] = await Promise.all([
+  const [lastChange, user] = await Promise.all([
     db[CHANGES_TABLE].orderBy('rev').last(),
-    db[CHANGES_TABLE].orderBy('server_rev').first(),
     Session.getSession(),
   ]);
   if (!user) {
     // If not logged in, nothing to do.
     return;
   }
+
   const now = Date.now();
-  const currentUser = await Session.getSession();
-  const channel_ids = Object.entries(currentUser[ACTIVE_CHANNELS])
+  const channel_ids = Object.entries(user[ACTIVE_CHANNELS])
     .filter(([id, time]) => id && time > now - CHANNEL_SYNC_KEEP_ALIVE_INTERVAL)
     .map(([id]) => id);
+  const channel_revs = {};
+  console.log(user);
+  for (let channelId of channel_ids) {
+    channel_revs[channelId] = get(user, [MAX_REV_KEY, channelId], 0);
+  }
+
   const requestPayload = {
     changes: [],
-    channel_ids,
-    // Last rev to send to the server is either the earliest change we are still seeking
-    // confirmation on, or the current max_rev that we have synced to the frontend.
-    last_rev: (earliestServerChange && earliestServerChange.server_rev) || user.max_rev,
+    channel_revs,
+    user_rev: user.user_rev || 0,
   };
 
   if (lastChange) {
@@ -216,7 +243,7 @@ async function syncChanges() {
     //   "allowed": [],
     //   "changes": [],
     //   "errors": [],
-    //   "successess": [],
+    //   "successes": [],
     // }
     const response = await client.post(urls['sync'](), requestPayload);
     try {
@@ -226,7 +253,7 @@ async function syncChanges() {
         handleReturnedChanges(response),
         handleErrors(response),
         handleSuccesses(response),
-        handleMaxRev(response),
+        handleMaxRevs(response, user.id),
       ]);
     } catch (err) {
       console.error('There was an error updating change status', err); // eslint-disable-line no-console
@@ -279,15 +306,20 @@ async function handleChanges(changes) {
   }
 }
 
+let intervalTimer;
+
 export function startSyncing() {
   cleanupLocks();
   // Initiate a sync immediately in case any data
   // is left over in the database.
   debouncedSyncChanges();
+  // Start the sync interval
+  intervalTimer = setInterval(debouncedSyncChanges, SYNC_POLL_INTERVAL * 1000);
   db.on('changes', handleChanges);
 }
 
 export function stopSyncing() {
+  clearInterval(intervalTimer);
   debouncedSyncChanges.cancel();
   // Dexie's slightly counterintuitive method for unsubscribing from events
   db.on('changes').unsubscribe(handleChanges);

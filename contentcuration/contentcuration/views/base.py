@@ -90,7 +90,7 @@ def current_user_for_context(user):
 
     user_data = {field: getattr(user, field) for field in user_fields}
 
-    user_data["max_rev"] = Change.objects.filter(applied=True).values_list("server_rev", flat=True).order_by("-server_rev").first() or 0
+    user_data["user_rev"] = Change.objects.filter(applied=True, user=user).values_list("server_rev", flat=True).order_by("-server_rev").first() or 0
 
     return json_for_parse_from_data(user_data)
 
@@ -269,6 +269,7 @@ def accounts(request):
 @permission_classes((IsAuthenticated,))
 def channel(request, channel_id):
     channel_error = ""
+    channel_rev = 0
 
     # Check if channel exists
     try:
@@ -282,13 +283,15 @@ def channel(request, channel_id):
         # an option to restore the channel in the Administration page
         if channel.deleted:
             channel_error = 'CHANNEL_EDIT_ERROR_CHANNEL_DELETED'
+        else:
+            channel_rev = Change.objects.filter(applied=True, channel=channel).values_list("server_rev", flat=True).order_by("-server_rev").first() or 0
 
     return render(
         request,
         "channel_edit.html",
         {
             CHANNEL_EDIT_GLOBAL: json_for_parse_from_data(
-                {"channel_id": channel_id, "channel_error": channel_error}
+                {"channel_id": channel_id, "channel_error": channel_error, "channel_rev": channel_rev}
             ),
             CURRENT_USER: current_user_for_context(request.user),
             PREFERENCES: json_for_parse_from_data(request.user.content_defaults),

@@ -26,6 +26,7 @@ import {
   CURRENT_USER,
   ACTIVE_CHANNELS,
   CHANNEL_SYNC_KEEP_ALIVE_INTERVAL,
+  MAX_REV_KEY,
 } from './constants';
 import applyChanges, { applyMods, collectChanges } from './applyRemoteChanges';
 import mergeAllChanges from './mergeChanges';
@@ -889,10 +890,14 @@ export const Session = new IndexedDBResource({
       ? this.updateSession({ [`${ACTIVE_CHANNELS}.${channelId}`]: Date.now() })
       : null;
   },
-  setChannelScope() {
+  async setChannelScope() {
     const channelId = (window.CHANNEL_EDIT_GLOBAL || {}).channel_id || null;
     if (channelId) {
       channelScope.id = channelId;
+      const channelRev = (window.CHANNEL_EDIT_GLOBAL || {}).channel_rev || 0;
+      await this.updateSession({
+        [`${MAX_REV_KEY}.${window.CHANNEL_EDIT_GLOBAL.channel_id}`]: channelRev,
+      });
       this.channelSyncKeepAlive(channelId);
       setInterval(() => this.channelSyncKeepAlive(channelId), CHANNEL_SYNC_KEEP_ALIVE_INTERVAL);
       window.addEventListener('focus', () => this.channelSyncKeepAlive(channelId));

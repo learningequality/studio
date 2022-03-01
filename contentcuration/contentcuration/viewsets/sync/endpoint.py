@@ -16,7 +16,7 @@ from contentcuration.tasks import get_or_create_async_task
 
 def change_model_values_to_change_dict(c):
     datum = c["kwargs"]
-    datum.update({"server_rev": c["server_rev"], "table": c["table"], "type": c["change_type"]})
+    datum.update({"server_rev": c["server_rev"], "table": c["table"], "type": c["change_type"], "channel_id": c["channel_id"], "user_id": c["user_id"]})
     return datum
 
 
@@ -51,30 +51,33 @@ class SyncView(APIView):
             if user_only_changes:
                 get_or_create_async_task("apply_user_changes", request.user, user_id=request.user.id)
             for channel_id in allowed_ids:
-                print(channel_id)
-                task_info = get_or_create_async_task("apply_channel_changes", request.user, channel_id=channel_id)
-                print(task_info.status)
+                get_or_create_async_task("apply_channel_changes", request.user, channel_id=channel_id)
             allowed_changes = [{"rev": c.client_rev, "server_rev": c.server_rev} for c in change_models]
 
             return {"disallowed": disallowed_changes, "allowed": allowed_changes}
         return {}
 
     def return_changes(self, request):
-        channel_ids = request.data.get("channel_ids", [])
-        last_rev = request.data.get("last_rev") or 0
+        channel_revs = request.data.get("channel_revs", {})
+        user_rev = request.data.get("user_rev") or 0
         session_key = request.session.session_key
-        if channel_ids:
-            channel_ids = Channel.filter_view_queryset(Channel.objects.all(), request.user).filter(id__in=channel_ids).values_list("id", flat=True)
+        if channel_revs:
+            # Filter to only the channels that the user has permissions to view.
+            channel_ids = Channel.filter_view_queryset(Channel.objects.all(), request.user).filter(id__in=channel_revs.keys()).values_list("id", flat=True)
+            channel_revs = {channel_id: channel_revs[channel_id] for channel_id in channel_ids}
 
-        change_filter = (Q(session_id=session_key) & (Q(errored=True) | Q(applied=True))) | Q(user=request.user, applied=True)
+        # Create a filter that returns all applied changes, and any errored changes made by this session
+        relevant_to_session_filter = (Q(applied=True) | Q(errored=True, session_id=session_key))
 
-        if channel_ids:
-            change_filter |= Q(channel_id__in=channel_ids, applied=True)
+        change_filter = (Q(user=request.user, server_rev__gt=user_rev) & relevant_to_session_filter)
+
+        for channel_id, rev in channel_revs.items():
+            change_filter |= (Q(channel_id=channel_id, server_rev__gt=rev) & relevant_to_session_filter)
 
         changes_to_return = list(
             Change.objects.filter(
-                server_rev__gt=last_rev
-            ).filter(change_filter).values("server_rev", "session_id", "applied", "errored", "table", "change_type", "kwargs")
+                change_filter
+            ).values("server_rev", "session_id", "channel_id", "user_id", "applied", "errored", "table", "change_type", "kwargs")
         )
 
         if not changes_to_return:
@@ -87,7 +90,7 @@ class SyncView(APIView):
         for c in changes_to_return:
             if c["applied"]:
                 if c["session_id"] == session_key:
-                    successes.append(c["server_rev"])
+                    successes.append(change_model_values_to_change_dict(c))
                 else:
                     changes.append(change_model_values_to_change_dict(c))
             if c["errored"] and c["session_id"] == session_key:
@@ -107,7 +110,5 @@ class SyncView(APIView):
         response_payload.update(self.handle_changes(request))
 
         response_payload.update(self.return_changes(request))
-
-        response_payload["max_rev"] = Change.objects.filter(applied=True).values_list("server_rev", flat=True).order_by("-server_rev").first() or 0
 
         return Response(response_payload)

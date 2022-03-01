@@ -62,3 +62,5 @@ export const CURRENT_USER = 'CURRENT_USER';
 export const ACTIVE_CHANNELS = 'ACTIVE_CHANNELS';
 
 export const CHANNEL_SYNC_KEEP_ALIVE_INTERVAL = 300 * 1000;
+
+export const MAX_REV_KEY = 'max_rev';
