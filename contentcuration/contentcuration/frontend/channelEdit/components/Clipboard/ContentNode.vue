@@ -23,7 +23,6 @@
                 <VListTile
                   class="content-item py-1"
                   :class="{ hover, selected }"
-                  :style="{ 'padding-left': indentPadding }"
                   inactive
                 >
                   <VListTileAction class="action-col">
@@ -283,7 +282,7 @@
   }
 
   /deep/ .v-list__tile {
-    padding-left: 11px;
+    padding-left: 43px;
   }
 
   /deep/ .v-list__tile__title {
