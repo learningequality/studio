@@ -254,7 +254,14 @@ def create_bare_contentnode(ccnode, default_language, channel_id, channel_name):
             'license_description': kolibri_license.license_description if kolibri_license is not None else None,
             'coach_content': ccnode.role_visibility == roles.COACH,
             'duration': duration,
-            'options': json.dumps(options)
+            'options': json.dumps(options),
+            # Fields for metadata labels
+            "grade_levels": ",".join(ccnode.grade_levels.keys()) if ccnode.grade_levels else None,
+            "resource_types": ",".join(ccnode.resource_types.keys()) if ccnode.resource_types else None,
+            "learning_activities": ",".join(ccnode.learning_activities.keys()) if ccnode.learning_activities else None,
+            "accessibility_labels": ",".join(ccnode.accessibility_labels.keys()) if ccnode.accessibility_labels else None,
+            "categories": ",".join(ccnode.categories.keys()) if ccnode.categories else None,
+            "learner_needs": ",".join(ccnode.learner_needs.keys()) if ccnode.learner_needs else None,
         }
     )
 
