@@ -2,6 +2,7 @@ import Vue from 'vue';
 import sortBy from 'lodash/sortBy';
 import { Task } from 'shared/data/resources';
 import { TABLE_NAMES, CHANGE_TYPES } from 'shared/data';
+import urls from 'shared/urls';
 
 const DEFAULT_CHECK_INTERVAL = 5000;
 const RUNNING_TASK_INTERVAL = 2000;
@@ -63,7 +64,7 @@ export default {
       } else {
         //  for cases where this.$router doesn't exist when user is signed out,
         // use window.Urls to redirect to login
-        window.location.href = window.Urls.login();
+        window.location.href = urls.login();
       }
     },
   },
