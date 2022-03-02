@@ -273,20 +273,16 @@ class TagField(DotPathValueMixin, DictField):
 
 class MetadataLabelsField(JSONFieldDictSerializer):
     def __init__(self, choices, *args, **kwargs):
+        self.choices = choices
         # Instantiate the superclass normally
         super().__init__(*args, **kwargs)
 
-        self._fields = {}
-
-        for label_id, label_name in choices:
+    def get_fields(self):
+        fields = {}
+        for label_id, label_name in self.choices:
             field = BooleanField(required=False, label=label_name)
-            field.bind(label_id, self)
-            self._fields[label_id] = field
-            setattr(self, label_id, field)
-
-    @property
-    def fields(self):
-        return self._fields
+            fields[label_id] = field
+        return fields
 
 
 class ContentNodeSerializer(BulkModelSerializer):
