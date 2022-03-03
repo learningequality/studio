@@ -61,6 +61,7 @@ class ApiAddNodesToTreeTestCase(StudioTestCase):
             "source_domain": random_data.source_domain,
             "source_id": random_data.source_id,
             "author": random_data.author,
+            "tags": ["oer", "edtech"],
             "files": [
                 {
                     "size": fileobj.file_size,
@@ -175,6 +176,25 @@ class ApiAddNodesToTreeTestCase(StudioTestCase):
         self.assertFalse(node_1.complete)
         self.assertFalse(node_2.complete)
         self.assertFalse(node_3.complete)
+
+    def test_tag_greater_than_30_chars_excluded(self):
+        # Node with tag greater than 30 characters
+        invalid_tag_length = self._make_node_data()
+        invalid_tag_length["title"] = "invalid_tag_length"
+        invalid_tag_length["tags"] = ["kolibri studio, kolibri studio!"]
+
+        test_data = {
+            "root_id": self.root_node.id,
+            "content_data": [
+                invalid_tag_length,
+            ],
+        }
+
+        response = self.admin_client().post(
+            reverse_lazy("api_add_nodes_to_tree"), data=test_data, format="json"
+        )
+
+        self.assertEqual(response.status_code, 400, response.content)
 
 
 class ApiAddExerciseNodesToTreeTestCase(StudioTestCase):

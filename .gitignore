@@ -65,10 +65,12 @@ docs/_build/
 # PyBuilder
 target/
 
-# virtualenv
+# virtualenv, pipenv
+.env
 venv
 .venv
 Pipfile
+Pipfile.lock
 
 Thumbs.db
 .DS_Store

@@ -337,6 +337,14 @@ class ContentNodeSerializer(BulkModelSerializer):
         list_serializer_class = ContentNodeListSerializer
         nested_writes = True
 
+    def validate(self, data):
+        tags = data.get("tags")
+        if tags is not None:
+            for tag in tags:
+                if len(tag) > 30:
+                    raise ValidationError("tag is greater than 30 characters")
+        return data
+
     def create(self, validated_data):
         # Creating a new node, by default put it in the orphanage on initial creation.
         if "parent" not in validated_data:

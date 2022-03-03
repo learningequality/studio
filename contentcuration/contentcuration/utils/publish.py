@@ -660,7 +660,8 @@ def map_tags_to_node(kolibrinode, ccnode):
 
     for tag in ccnode.tags.all():
         t, _new = kolibrimodels.ContentTag.objects.get_or_create(pk=tag.pk, tag_name=tag.tag_name)
-        tags_to_add.append(t)
+        if len(t.tag_name) <= 30:
+            tags_to_add.append(t)
 
     kolibrinode.tags.set(tags_to_add)
     kolibrinode.save()

@@ -633,7 +633,7 @@ class PermissionCTE(With):
         queryset = model.objects.filter(user_id=user_id)\
             .annotate(
                 tree_id=Unnest(ArrayRemove(Array(*self.tree_id_fields), None), output_field=models.IntegerField())
-            )
+        )
         super(PermissionCTE, self).__init__(queryset=queryset.values("user_id", "channel_id", "tree_id"), **kwargs)
 
     @classmethod

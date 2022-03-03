@@ -7,6 +7,7 @@ from distutils.version import LooseVersion
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import PermissionDenied
 from django.core.exceptions import SuspiciousOperation
+from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.http import HttpResponseBadRequest
 from django.http import HttpResponseForbidden
@@ -296,6 +297,8 @@ def api_add_nodes_to_tree(request):
         })
     except ContentNode.DoesNotExist:
         return HttpResponseNotFound("No content matching: {}".format(parent_id))
+    except ValidationError as e:
+        return HttpResponseBadRequest(content=str(e))
     except KeyError:
         return HttpResponseBadRequest("Required attribute missing from data: {}".format(data))
     except NodeValidationError as e:
@@ -651,15 +654,19 @@ def create_node(node_data, parent_node, sort_order):  # noqa: C901
         role_visibility=node_data.get('role') or roles.LEARNER,
         complete=is_complete,
     )
+
     tags = []
     channel = node.get_channel()
     if "tags" in node_data:
         tag_data = node_data["tags"]
         if tag_data is not None:
             for tag in tag_data:
-                tags.append(
-                    ContentTag.objects.get_or_create(tag_name=tag, channel=channel)[0]
-                )
+                if len(tag) > 30:
+                    raise ValidationError("tag is greater than 30 characters")
+                else:
+                    tags.append(
+                        ContentTag.objects.get_or_create(tag_name=tag, channel=channel)[0]
+                    )
 
     if len(tags) > 0:
         node.tags.set(tags)
