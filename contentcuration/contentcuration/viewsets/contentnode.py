@@ -301,9 +301,11 @@ class ContentNodeSerializer(BulkModelSerializer):
         nested_writes = True
 
     def validate(self, data):
-        for tag in data["tags"]:
-            if len(tag.tag_name) > 30:
-                raise ValidationError("tag is greater than 30 characters")
+        tags = data.get("tags")
+        if tags is not None:
+            for tag in tags:
+                if len(tag) > 30:
+                    raise ValidationError("tag is greater than 30 characters")
         return data
 
     def create(self, validated_data):

@@ -1367,6 +1367,22 @@ class CRUDTestCase(StudioAPITestCase):
             .exists()
         )
 
+    def test_contentnode_tag_greater_than_30_chars(self):
+        user = testdata.user()
+        tag = "kolibri studio, kolibri studio!"
+
+        self.client.force_authenticate(user=user)
+        contentnode = self.contentnode_metadata
+        contentnode["tags"] = {
+            tag: True,
+        }
+
+        response = self.client.post(
+            reverse("contentnode-list"), contentnode, format="json",
+        )
+
+        self.assertEqual(response.status_code, 400, response.content)
+
     def test_update_contentnode(self):
         user = testdata.user()
         contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)

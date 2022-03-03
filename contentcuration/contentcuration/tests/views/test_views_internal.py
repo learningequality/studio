@@ -110,11 +110,6 @@ class ApiAddNodesToTreeTestCase(StudioTestCase):
         invalid_copyright_holder["title"] = "invalid_copyright_holder"
         invalid_copyright_holder["copyright_holder"] = ""
 
-        # Node with tag greater than 30 characters
-        invalid_tag_length = self._make_node_data()
-        invalid_tag_length["title"] = "invalid_tag_length"
-        invalid_tag_length["tags"] = ["abcd abcd abcd abcd abcd abcd", "abcde abcd abcd abcd abcd abcd", "abcdef abcd abcd abcd abcd abcd"]
-
         self.sample_data = {
             "root_id": self.root_node.id,
             "content_data": [
@@ -122,7 +117,6 @@ class ApiAddNodesToTreeTestCase(StudioTestCase):
                 invalid_title_node,
                 invalid_license_description,
                 invalid_copyright_holder,
-                invalid_tag_length,
             ],
         }
         self.resp = self.admin_client().post(
@@ -184,10 +178,23 @@ class ApiAddNodesToTreeTestCase(StudioTestCase):
         self.assertFalse(node_3.complete)
 
     def test_tag_greater_than_30_chars_excluded(self):
-        node = ContentNode.objects.get(title="invalid_tag_length")
-        tags = node.tags.all()
-        for t in tags:
-            assert len(t.tag_name) <= 30
+        # Node with tag greater than 30 characters
+        invalid_tag_length = self._make_node_data()
+        invalid_tag_length["title"] = "invalid_tag_length"
+        invalid_tag_length["tags"] = ["kolibri studio, kolibri studio!"]
+
+        test_data = {
+            "root_id": self.root_node.id,
+            "content_data": [
+                invalid_tag_length,
+            ],
+        }
+
+        response = self.admin_client().post(
+            reverse_lazy("api_add_nodes_to_tree"), data=test_data, format="json"
+        )
+
+        self.assertEqual(response.status_code, 400, response.content)
 
 
 class ApiAddExerciseNodesToTreeTestCase(StudioTestCase):
