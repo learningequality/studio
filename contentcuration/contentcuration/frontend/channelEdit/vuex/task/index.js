@@ -2,6 +2,7 @@ import Vue from 'vue';
 import sortBy from 'lodash/sortBy';
 import { Task } from 'shared/data/resources';
 import { TABLE_NAMES, CHANGE_TYPES } from 'shared/data';
+import urls from 'shared/urls';
 
 const DEFAULT_CHECK_INTERVAL = 5000;
 const RUNNING_TASK_INTERVAL = 2000;
@@ -47,14 +48,25 @@ export default {
       return Task.deleteModel(task.task_id).then(() => store.dispatch('activateTaskUpdateTimer'));
     },
     updateTaskList(store) {
-      return Task.where({ channel: store.rootState.currentChannel.currentChannelId })
-        .then(tasks => {
-          store.commit('SET_ASYNC_TASKS', tasks);
-          store.dispatch('activateTaskUpdateTimer');
-        })
-        .catch(() => {
-          store.dispatch('activateTaskUpdateTimer');
-        });
+      if (store.rootGetters.loggedIn) {
+        return Task.where({ channel: store.rootState.currentChannel.currentChannelId })
+          .then(tasks => {
+            store.commit('SET_ASYNC_TASKS', tasks);
+            store.dispatch('activateTaskUpdateTimer');
+          })
+          .catch(e => {
+            // if not authorized, redirect to login screen
+            if (e.response.status === 403) {
+              window.location.href = urls.login();
+              return;
+            }
+            store.dispatch('activateTaskUpdateTimer');
+          });
+      } else {
+        //  for cases where this.$router doesn't exist when user is signed out,
+        // use window.Urls to redirect to login
+        window.location.href = urls.login();
+      }
     },
   },
   mutations: {
