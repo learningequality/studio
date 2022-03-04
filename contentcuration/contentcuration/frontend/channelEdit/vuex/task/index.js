@@ -57,7 +57,8 @@ export default {
           .catch(e => {
             // if not authorized, redirect to login screen
             if (e.response.status === 403) {
-              return (window.location.href = urls.login());
+              window.location.href = urls.login();
+              return;
             }
             store.dispatch('activateTaskUpdateTimer');
           });
