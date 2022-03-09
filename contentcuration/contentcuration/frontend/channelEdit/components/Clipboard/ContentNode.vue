@@ -16,6 +16,7 @@
             <DraggableItem
               :draggableMetadata="draggableMetadata"
               :dropEffect="dropEffectAndAllowed"
+              :style="{ 'cursor': 'default' }"
             >
               <DraggableHandle
                 :effectAllowed="dropEffectAndAllowed"
@@ -241,7 +242,6 @@
   .v-list__tile {
     width: 100%;
     max-width: 100%;
-    cursor: pointer;
     transition: background-color ease 0.3s;
   }
 
@@ -284,6 +284,7 @@
 
   /deep/ .v-list__tile {
     padding-left: 11px;
+    cursor: pointer;
   }
 
   /deep/ .v-list__tile__title {
