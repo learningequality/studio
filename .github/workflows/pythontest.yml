@@ -24,7 +24,7 @@ jobs:
       # Label used to access the service container
       postgres:
         # Docker Hub image
-        image: postgres
+        image: postgres:12.10
         # Provide the password for postgres
         env:
           POSTGRES_USER: learningequality
@@ -42,7 +42,7 @@ jobs:
       # Label used to access the service container
       redis:
         # Docker Hub image
-        image: redis
+        image: redis:4.0.9
         # Set health checks to wait until redis has started
         options: >-
           --health-cmd "redis-cli ping"
@@ -53,7 +53,7 @@ jobs:
           # Maps port 6379 on service container to the host
           - 6379:6379
       minio:
-        image: bitnami/minio
+        image: minio/minio:RELEASE.2020-06-22T03-12-50Z
         env:
           MINIO_API_CORS_ALLOW_ORIGIN: http://localhost:8080
           MINIO_ACCESS_KEY: development
