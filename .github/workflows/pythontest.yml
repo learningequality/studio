@@ -15,16 +15,18 @@ jobs:
         with:
           github_token: ${{ github.token }}
           paths: '["**.py", "requirements.txt", "requirements-dev.txt", ".github/workflows/pythontest.yml"]'
+
   unit_test:
     name: Python unit tests
     needs: pre_job
     if: ${{ needs.pre_job.outputs.should_skip != 'true' }}
     runs-on: ubuntu-latest
+
     services:
       # Label used to access the service container
       postgres:
         # Docker Hub image
-        image: postgres:12.10
+        image: postgres:12
         # Provide the password for postgres
         env:
           POSTGRES_USER: learningequality
@@ -52,16 +54,22 @@ jobs:
         ports:
           # Maps port 6379 on service container to the host
           - 6379:6379
-      minio:
-        image: minio/minio:RELEASE.2020-06-22T03-12-50Z
-        env:
-          MINIO_API_CORS_ALLOW_ORIGIN: http://localhost:8080
-          MINIO_ACCESS_KEY: development
-          MINIO_SECRET_KEY: development
-        ports:
-          - 9000:9000
     steps:
     - uses: actions/checkout@v2
+    - name: Set up minio
+      run: |
+          docker run -d -p 9000:9000 --name minio \
+                     -e "MINIO_ACCESS_KEY=minioadmin" \
+                     -e "MINIO_SECRET_KEY=minioadmin" \
+                     -v /tmp/minio_data:/data \
+                     -v /tmp/minio_config:/root/.minio \
+                     minio/minio server /data
+
+          export AWS_ACCESS_KEY_ID=minioadmin
+          export AWS_SECRET_ACCESS_KEY=minioadmin
+          export AWS_EC2_METADATA_DISABLED=true
+
+          aws --endpoint-url http://127.0.0.1:9000/ s3 mb s3://testbucket
     - name: Set up Python 3.6
       uses: actions/setup-python@v2
       with:
@@ -79,6 +87,11 @@ jobs:
         pip install pip-tools
         pip-sync requirements.txt requirements-dev.txt
     - name: Test pytest
+      env:
+        AWS_BUCKET_NAME: testbucket
+        AWS_ACCESS_KEY_ID: minioadmin
+        AWS_SECRET_ACCESS_KEY: minioadmin
+        AWS_S3_ENDPOINT_URL: http://127.0.0.1:9000
       run: |
         sh -c './contentcuration/manage.py makemigrations --check'
         pytest
