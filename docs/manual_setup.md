@@ -1,5 +1,3 @@
-
-
 # Manually installing dependencies
 
 ## Install
@@ -9,7 +7,7 @@ Rather than using Docker, it is also possible to manually install the dependenci
   - [python (2.7)](https://www.python.org/downloads/release/python-2713/)
   - [python-pip](https://pip.pypa.io/en/stable/installing/)
   - [nodejs (10.x)](https://nodejs.org/en/download/)
-  - [Postgres DB](https://www.postgresql.org/download/)
+  - [Postgres DB (12.x)](https://www.postgresql.org/download/)
   - [redis](https://redis.io/topics/quickstart)
   - [minio server](https://www.minio.io/downloads.html)
   - [nginx](https://www.nginx.com/resources/wiki/start/topics/tutorials/install/)
@@ -37,7 +35,7 @@ curl -sL https://deb.nodesource.com/setup_10.x | bash -
 
 # Install packages
 apt-get install -y  python python-pip python-dev python-tk \
-    postgresql-server-dev-all postgresql-contrib postgresql-client postgresql \
+    postgresql-server-dev-all postgresql-contrib postgresql-client postgresql-12 \
     ffmpeg nodejs libmagickwand-dev nginx redis-server wkhtmltopdf
 ```
 
@@ -46,9 +44,9 @@ apt-get install -y  python python-pip python-dev python-tk \
 You can install the corresponding packages using Homebrew:
 
 ```bash
-brew install  postgresql@9.6 redis node ffmpeg imagemagick@6 gs
+brew install  postgresql@12 redis node ffmpeg imagemagick@6 gs
 brew install minio/stable/minio
-brew link --force postgresql@9.6
+brew link --force postgresql@12
 brew link --force imagemagick@6
 ```
 
@@ -62,13 +60,13 @@ Windows is no longer supported due to incompatibilities with some of the require
 
 ## Set up the database
 
-Install [postgres](https://www.postgresql.org/download/) if you don't have it already. If you're using a package manager, you need to make sure you install the following packages: `postgresql`, `postgresql-contrib`, and `postgresql-server-dev-all` which will be required to build `psycopg2` python driver.
+Install [postgres](https://www.postgresql.org/download/) if you don't have it already. If you're using a package manager, you need to make sure you install the following packages: `postgresql-12`, `postgresql-contrib`, and `postgresql-server-dev-all` which will be required to build `psycopg2` python driver.
 
 Make sure postgres is running:
 
 ```bash
 service postgresql start
-# alternatively: pg_ctl -D /usr/local/var/postgresql@9.6 start
+# alternatively: pg_ctl -D /usr/local/var/postgresql@12 start
 ```
 
 Start the client with:
