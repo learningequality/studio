@@ -239,7 +239,7 @@ def create_bare_contentnode(ccnode, default_language, channel_id, channel_name):
     ccnode_completion_criteria = options.get("completion_criteria")
     if ccnode_completion_criteria:
         if ccnode_completion_criteria["model"] == completion_criteria.TIME or ccnode_completion_criteria["model"] == completion_criteria.APPROX_TIME:
-            duration = completion_criteria["threshold"]
+            duration = ccnode_completion_criteria["threshold"]
 
     kolibrinode, is_new = kolibrimodels.ContentNode.objects.update_or_create(
         pk=ccnode.node_id,
