@@ -30,6 +30,7 @@ from django.utils.translation import gettext_lazy as _
 from kolibri_content import models as kolibrimodels
 from kolibri_content.router import get_active_content_database
 from kolibri_content.router import using_content_database
+from le_utils.constants import completion_criteria
 from le_utils.constants import content_kinds
 from le_utils.constants import exercises
 from le_utils.constants import file_formats
@@ -232,12 +233,13 @@ def create_bare_contentnode(ccnode, default_language, channel_id, channel_name):
 
     duration = None
     if ccnode.kind_id in [content_kinds.AUDIO, content_kinds.VIDEO]:
-        completion_criteria = options.get("completion_criteria")
-        if completion_criteria and (completion_criteria["model"] == "time" or completion_criteria["model"] == "approx_time"):
+        # aggregate duration from associated files, choosing maximum if there are multiple, like hi and lo res videos.
+        duration = ccnode.files.aggregate(duration=Max("duration")).get("duration")
+
+    ccnode_completion_criteria = options.get("completion_criteria")
+    if ccnode_completion_criteria:
+        if ccnode_completion_criteria["model"] == completion_criteria.TIME or ccnode_completion_criteria["model"] == completion_criteria.APPROX_TIME:
             duration = completion_criteria["threshold"]
-        else:
-            # aggregate duration from associated files, choosing maximum if there are multiple, like hi and lo res videos.
-            duration = ccnode.files.aggregate(duration=Max("duration")).get("duration")
 
     kolibrinode, is_new = kolibrimodels.ContentNode.objects.update_or_create(
         pk=ccnode.node_id,
