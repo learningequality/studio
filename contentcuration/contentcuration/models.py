@@ -265,7 +265,8 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def get_user_active_files(self):
         active_trees = self.get_user_active_trees()
-        return self.files.filter(contentnode__tree_id__in=active_trees)\
+        return self.files.annotate(in_active_tree=Exists(active_trees.filter(main_tree__tree_id=OuterRef("contentnode__tree_id"))))\
+            .filter(in_active_tree=True)\
             .values('checksum').distinct()
 
     def get_space_used(self, active_files=None):
