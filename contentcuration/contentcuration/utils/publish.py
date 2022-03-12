@@ -54,6 +54,27 @@ PERSEUS_IMG_DIR = exercises.IMG_PLACEHOLDER + "/images"
 THUMBNAIL_DIMENSION = 128
 MIN_SCHEMA_VERSION = "1"
 BLOCKING_TASK_TYPES = ["duplicate-nodes", "move-nodes", "sync-channel"]
+PUBLISHING_UPDATE_THRESHOLD = 3600
+
+
+class SlowPublishError(Exception):
+    """
+    Used to track slow Publishing operations. We don't raise this error,
+    just feed it to Sentry for reporting.
+    """
+
+    def __init__(self, time, channel_id):
+
+        self.time = time
+        self.channel_id = channel_id
+        message = (
+            "publishing the channel with channel_id {} took {} seconds to complete, exceeding {} second threshold."
+        )
+        self.message = message.format(
+            self.channel_id, self.time, PUBLISHING_UPDATE_THRESHOLD
+        )
+
+        super(SlowPublishError, self).__init__(self.message)
 
 
 def send_emails(channel, user_id, version_notes=''):
@@ -766,7 +787,7 @@ def publish_channel(
     """
     channel = ccmodels.Channel.objects.get(pk=channel_id)
     kolibri_temp_db = None
-
+    start = time.time()
     try:
         set_channel_icon_encoding(channel)
         wait_for_async_tasks(channel)
@@ -799,4 +820,12 @@ def publish_channel(
             os.remove(kolibri_temp_db)
         channel.main_tree.publishing = False
         channel.main_tree.save()
+
+    elapsed = time.time() - start
+
+    if elapsed > PUBLISHING_UPDATE_THRESHOLD:
+        try:
+            raise SlowPublishError(elapsed, channel_id)
+        except SlowPublishError as e:
+            report_exception(e)
     return channel
