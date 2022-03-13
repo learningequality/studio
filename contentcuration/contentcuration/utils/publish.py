@@ -236,7 +236,7 @@ def create_bare_contentnode(ccnode, default_language, channel_id, channel_name):
     if ccnode_completion_criteria:
         if ccnode_completion_criteria["model"] == completion_criteria.TIME or ccnode_completion_criteria["model"] == completion_criteria.APPROX_TIME:
             duration = ccnode_completion_criteria["threshold"]
-    elif ccnode.kind_id in [content_kinds.AUDIO, content_kinds.VIDEO]:
+    if duration is None and ccnode.kind_id in [content_kinds.AUDIO, content_kinds.VIDEO]:
         # aggregate duration from associated files, choosing maximum if there are multiple, like hi and lo res videos.
         duration = ccnode.files.aggregate(duration=Max("duration")).get("duration")
 
