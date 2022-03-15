@@ -497,6 +497,7 @@
         return this.getContentNodes(this.nodeIds);
       },
       firstNode() {
+        console.log('firstNode id', this.nodes[0]);
         return this.nodes.length ? this.nodes[0] : null;
       },
       allExercises() {

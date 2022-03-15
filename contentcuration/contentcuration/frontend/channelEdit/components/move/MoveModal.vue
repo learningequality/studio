@@ -264,7 +264,7 @@
         return Promise.resolve();
       },
       createTopic(title) {
-        console.log('in createTopic, title is:', title)
+        console.log('in createTopic, title is:', title);
         this.createContentNode({ parent: this.targetNodeId, kind: 'topic', title }).then(id => {
           this.showNewTopicModal = false;
           this.$store.dispatch('showSnackbar', { text: this.$tr('topicCreatedMessage') });

@@ -54,13 +54,13 @@
           } else {
             this.longMinutes = value;
           }
-          console.log('value of minutes sent up', value)
+          console.log('value of minutes sent up', value);
           this.$emit('input', value);
         },
       },
       maxRange() {
-        return this.shortActivity ? 30 : 120
-      }
+        return this.shortActivity ? 30 : 120;
+      },
     },
     $trs: {
       minutesRequired: 'Minutes',

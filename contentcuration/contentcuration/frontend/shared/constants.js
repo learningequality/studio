@@ -176,10 +176,7 @@ export const ContentModalities = {
 // The rest have no defaults
 
 export const completionDropdownMap = {
-  document: [
-    'All content viewed',
-    'Complete duration',
-  ],
+  document: ['All content viewed', 'Complete duration'],
   exercise: [
     'Practice until goal is met',
     'Short activity',
@@ -191,13 +188,7 @@ export const completionDropdownMap = {
 };
 
 export const durationDropdownMap = {
-
   audio: ['Exact time to complete', 'Short activity', 'Long activity', 'Reference'],
   video: ['Exact time to complete', 'Short activity', 'Long activity', 'Reference'],
-  document: [
-    'Exact time to complete',
-    'Short activity',
-    'Long activity',
-    'Reference',
-  ]
-}
+  document: ['Exact time to complete', 'Short activity', 'Long activity', 'Reference'],
+};
