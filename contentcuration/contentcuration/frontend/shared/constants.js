@@ -1,10 +1,10 @@
 import featureFlagsSchema from 'static/feature_flags.json';
+
 export { default as LearningActivities } from 'kolibri-constants/labels/LearningActivities';
-export {default as CompletionCriteriaModels } from 'kolibri-constants/CompletionCriteria';
+export { default as CompletionCriteriaModels } from 'kolibri-constants/CompletionCriteria';
 export { default as ContentLevel } from 'kolibri-constants/labels/Levels';
 export { default as Categories } from 'kolibri-constants/labels/Subjects';
 export { default as AccessibilityCategories } from 'kolibri-constants/labels/AccessibilityCategories';
-
 
 export const ContentDefaults = {
   author: 'author',

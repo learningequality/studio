@@ -193,10 +193,7 @@ export const constantsTranslationMixin = {
 
 // METADA STRINGS AND RELATED MIXIN
 
-
-
 export const metadataStrings = createTranslator('CommonMetadataStrings', {
-
   // Titles/Headers
 
   learningActivity: {
@@ -580,7 +577,7 @@ export const metadataStrings = createTranslator('CommonMetadataStrings', {
   // ContentLevels
   level: {
     message: 'Level',
-    context: 'Refers to the educational learning level, such a preschool, primary, secondary, etc.'
+    context: 'Refers to the educational learning level, such a preschool, primary, secondary, etc.',
   },
   preschool: {
     message: 'Preschool',
@@ -646,17 +643,15 @@ export const metadataStrings = createTranslator('CommonMetadataStrings', {
     message: 'Long activity',
     context: 'Label with time estimation for learning activities that take more than 30 minutes.',
   },
-
-
-})
+});
 
 export const metadataTranslationMixin = {
   methods: {
     translateMetadataString(string) {
       return metadataStrings.$tr(string);
-    }
-  }
-}
+    },
+  },
+};
 
 /**
  * jayoshih: using a mixin to handle this to handle the translations
