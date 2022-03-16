@@ -838,6 +838,8 @@ class Channel(models.Model):
         # if this change affects the public channel list, clear the channel cache
         if self.public:
             delete_public_channel_cache_keys()
+            cache.delete_many(["public_channel_list", "public_channel_languages", "public_channel_licenses",
+                              "public_channel_kinds", "public_channel_collections"])
 
     def on_update(self):
         from contentcuration.utils.user import calculate_user_storage
@@ -879,6 +881,8 @@ class Channel(models.Model):
         # if this change affects the public channel list, clear the channel cache
         if "public" in original_values:
             delete_public_channel_cache_keys()
+            cache.delete_many(["public_channel_list", "public_channel_languages", "public_channel_licenses",
+                               "public_channel_kinds", "public_channel_collections"])
 
     def save(self, *args, **kwargs):
         if self._state.adding:
