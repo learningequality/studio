@@ -140,6 +140,31 @@
             </span>
           </DetailsRow>
           <DetailsRow :label="$tr('description')" :text="getText('description')" />
+          <DetailsRow
+            :label="translateMetadataString('level')"
+            :text="level(node.level)"
+            notranslate
+          />
+          <DetailsRow
+            :label="translateMetadataString('learningActivity')"
+            :text="learningActivity(node.learning_activities)"
+            notranslate
+          />
+          <DetailsRow
+            :label="translateMetadataString('completion')"
+            :text="completion(node.completion)"
+            notranslate
+          />
+          <DetailsRow
+            :label="translateMetadataString('duration')"
+            :text="duration(node.duration)"
+            notranslate
+          />
+          <DetailsRow
+            :label="translateMetadataString('category')"
+            :text="category(node.categories)"
+            notranslate
+          />
           <DetailsRow :label="$tr('tags')">
             <div v-if="!sortedTags.length">
               {{ defaultText }}
@@ -162,7 +187,11 @@
           </div>
           <DetailsRow :label="$tr('language')" :text="languageName" />
           <DetailsRow v-if="!isTopic" :label="$tr('visibleTo')" :text="roleName" />
-
+          <DetailsRow
+            :label="translateMetadataString('accessibility')"
+            :text="accessibilityOptions(node.accessbility_options)"
+            notranslate
+          />
           <!-- Related resources section -->
           <template v-if="!isTopic">
             <div class="section-header">
@@ -312,8 +341,16 @@
 
   import sortBy from 'lodash/sortBy';
   import { mapActions, mapGetters } from 'vuex';
+  import { camelCase } from 'lodash';
   import { isImportedContent, importedChannelLink } from '../utils';
   import FilePreview from '../views/files/FilePreview';
+  import {
+    CompletionCriteriaModels,
+    ContentLevel,
+    Categories,
+    LearningActivities,
+    AccessibilityCategories,
+  } from '../../shared/constants';
   import AssessmentItemPreview from './AssessmentItemPreview/AssessmentItemPreview';
   import ContentNodeValidator from './ContentNodeValidator';
   import {
@@ -333,7 +370,12 @@
   import Checkbox from 'shared/views/form/Checkbox';
   import Banner from 'shared/views/Banner';
   import Tabs from 'shared/views/Tabs';
-  import { constantsTranslationMixin, fileSizeMixin, titleMixin } from 'shared/mixins';
+  import {
+    constantsTranslationMixin,
+    fileSizeMixin,
+    titleMixin,
+    metadataTranslationMixin,
+  } from 'shared/mixins';
   import { MasteryModelsNames } from 'shared/leUtils/MasteryModels';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
@@ -351,7 +393,7 @@
       Banner,
       Tabs,
     },
-    mixins: [constantsTranslationMixin, fileSizeMixin, titleMixin],
+    mixins: [constantsTranslationMixin, metadataTranslationMixin, fileSizeMixin, titleMixin],
     props: {
       nodeId: {
         type: String,
@@ -553,6 +595,72 @@
       ...mapActions('assessmentItem', ['loadNodeAssessmentItems']),
       getText(field) {
         return this.node[field] || this.defaultText;
+      },
+      matchIdToString(ids) {
+        return ids.map(i => this.translateMetadataString(camelCase(i))).join(', ');
+      },
+      level(level) {
+        const match = Object.keys(ContentLevel).find(k => ContentLevel[k] == level);
+        if (match) {
+          return this.translateMetadataString(camelCase(match));
+        } else {
+          return '-';
+        }
+      },
+      learningActivity(options) {
+        const ids = Object.values(options);
+        const matches = Object.keys(LearningActivities).filter(k =>
+          ids.includes(LearningActivities[k])
+        );
+        if (matches) {
+          return this.matchIdToString(matches);
+        } else {
+          return '-';
+        }
+      },
+      completion(completion) {
+        const match = Object.keys(CompletionCriteriaModels).find(
+          k => CompletionCriteriaModels[k] == completion
+        );
+        if (match) {
+          return this.translateMetadataString(camelCase(match));
+        } else {
+          return '-';
+        }
+      },
+      duration(duration) {
+        const match = Object.keys(CompletionCriteriaModels).find(
+          k => CompletionCriteriaModels[k] == duration
+        );
+        if (match) {
+          return this.translateMetadataString(camelCase(match));
+        } else {
+          return '-';
+        }
+      },
+      accessibilityOptions(options) {
+        if (options) {
+          const ids = Object.values(options);
+          const matches = Object.keys(AccessibilityCategories).filter(k =>
+            ids.includes(AccessibilityCategories[k])
+          );
+          if (matches) {
+            return this.matchIdToString(matches);
+          } else {
+            return '-';
+          }
+        } else {
+          return '-';
+        }
+      },
+      category(options) {
+        const ids = Object.values(options);
+        const matches = Object.keys(Categories).filter(k => ids.includes(Categories[k]));
+        if (matches) {
+          return this.matchIdToString(matches);
+        } else {
+          return '-';
+        }
       },
       loadNode() {
         // Load related models
