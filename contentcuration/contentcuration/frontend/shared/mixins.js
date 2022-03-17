@@ -191,7 +191,7 @@ export const constantsTranslationMixin = {
   },
 };
 
-// METADA STRINGS AND RELATED MIXIN
+// METADATA STRINGS AND RELATED MIXIN
 
 export const metadataStrings = createTranslator('CommonMetadataStrings', {
   // Titles/Headers
