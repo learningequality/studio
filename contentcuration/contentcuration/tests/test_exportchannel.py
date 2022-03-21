@@ -77,6 +77,20 @@ class ExportChannelTestCase(StudioTestCase):
         new_video.parent = self.content_channel.main_tree
         new_video.save()
 
+        # Add a node to test completion criteria.
+        extra_fields = {
+            "options": {
+                "completion_criteria": {
+                    "model": "time",
+                    "threshold": 20
+                }
+            }
+        }
+        new_video = create_node({'kind_id': 'video', 'title': 'Completion criteria test', 'extra_fields': extra_fields, 'children': []})
+        new_video.complete = True
+        new_video.parent = self.content_channel.main_tree
+        new_video.save()
+
         set_channel_icon_encoding(self.content_channel)
         self.tempdb = create_content_database(self.content_channel, True, None, True)
 
@@ -134,6 +148,13 @@ class ExportChannelTestCase(StudioTestCase):
         assert published_tags.count() == 2
         for t in published_tags:
             assert len(t.tag_name) <= 30
+
+    def test_duration_override_on_completion_criteria_time(self):
+        completion_criteria_node = kolibri_models.ContentNode.objects.filter(title='Completion criteria test').first()
+        non_completion_criteria_node = kolibri_models.ContentNode.objects.filter(title='kolibri tag test').first()
+
+        assert completion_criteria_node.duration == 20
+        assert non_completion_criteria_node.duration == 100
 
     def test_contentnode_channel_id_data(self):
         channel = kolibri_models.ChannelMetadata.objects.first()
