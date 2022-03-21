@@ -152,14 +152,16 @@
           />
           <DetailsRow
             :label="translateMetadataString('completion')"
-            :text="completion(node.completion)"
+            :text="completion()"
             notranslate
           />
           <DetailsRow
             :label="translateMetadataString('duration')"
-            :text="duration(node.duration)"
+            :text="duration()"
             notranslate
           />
+          <div>
+          </div>
           <DetailsRow
             :label="translateMetadataString('category')"
             :text="category(node.categories)"
@@ -345,7 +347,6 @@
   import { isImportedContent, importedChannelLink } from '../utils';
   import FilePreview from '../views/files/FilePreview';
   import {
-    CompletionCriteriaModels,
     ContentLevel,
     Categories,
     LearningActivities,
@@ -612,31 +613,17 @@
         const matches = Object.keys(LearningActivities).filter(k =>
           ids.includes(LearningActivities[k])
         );
-        if (matches) {
+        if (matches && matches.length > 0) {
           return this.matchIdToString(matches);
         } else {
           return '-';
         }
       },
-      completion(completion) {
-        const match = Object.keys(CompletionCriteriaModels).find(
-          k => CompletionCriteriaModels[k] == completion
-        );
-        if (match) {
-          return this.translateMetadataString(camelCase(match));
-        } else {
-          return '-';
-        }
+      completion() {
+        return '-';
       },
-      duration(duration) {
-        const match = Object.keys(CompletionCriteriaModels).find(
-          k => CompletionCriteriaModels[k] == duration
-        );
-        if (match) {
-          return this.translateMetadataString(camelCase(match));
-        } else {
-          return '-';
-        }
+      duration() {
+        return '-';
       },
       accessibilityOptions(options) {
         if (options) {
@@ -656,7 +643,7 @@
       category(options) {
         const ids = Object.values(options);
         const matches = Object.keys(Categories).filter(k => ids.includes(Categories[k]));
-        if (matches) {
+        if (matches && matches.length > 0) {
           return this.matchIdToString(matches);
         } else {
           return '-';
