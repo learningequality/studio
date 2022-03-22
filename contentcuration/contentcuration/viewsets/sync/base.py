@@ -150,4 +150,3 @@ def apply_changes(changes_queryset):
     bulk_update(changes, update_fields=("applied", "errored", "kwargs"))
     if new_changes:
         Change.create_changes(new_changes, applied=True)
-    return True

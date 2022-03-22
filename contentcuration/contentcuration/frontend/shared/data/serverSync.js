@@ -207,7 +207,6 @@ async function syncChanges() {
     .filter(([id, time]) => id && time > now - CHANNEL_SYNC_KEEP_ALIVE_INTERVAL)
     .map(([id]) => id);
   const channel_revs = {};
-  console.log(user);
   for (let channelId of channel_ids) {
     channel_revs[channelId] = get(user, [MAX_REV_KEY, channelId], 0);
   }

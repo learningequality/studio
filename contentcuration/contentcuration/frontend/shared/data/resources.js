@@ -896,7 +896,7 @@ export const Session = new IndexedDBResource({
       channelScope.id = channelId;
       const channelRev = (window.CHANNEL_EDIT_GLOBAL || {}).channel_rev || 0;
       await this.updateSession({
-        [`${MAX_REV_KEY}.${window.CHANNEL_EDIT_GLOBAL.channel_id}`]: channelRev,
+        [`${MAX_REV_KEY}.${channelId}`]: channelRev,
       });
       this.channelSyncKeepAlive(channelId);
       setInterval(() => this.channelSyncKeepAlive(channelId), CHANNEL_SYNC_KEEP_ALIVE_INTERVAL);
