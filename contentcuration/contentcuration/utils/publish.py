@@ -824,8 +824,5 @@ def publish_channel(
     elapsed = time.time() - start
 
     if elapsed > PUBLISHING_UPDATE_THRESHOLD:
-        try:
-            raise SlowPublishError(elapsed, channel_id)
-        except SlowPublishError as e:
-            report_exception(e)
+       report_exception(SlowPublishError(elapsed, channel_id))
     return channel
