@@ -1,7 +1,5 @@
 import logging
 
-from django.conf import settings
-
 from contentcuration.utils.sentry import report_exception
 from contentcuration.viewsets.sync.constants import ALL_TABLES
 from contentcuration.viewsets.sync.constants import COPIED
@@ -16,60 +14,53 @@ def validate_table(table):
         raise ValueError("{} is not a valid table name".format(table))
 
 
-def generate_create_event(key, table, obj):
+def _generate_event(key, table, event_type, channel_id, user_id):
     validate_table(table)
-    return {
-        "obj": obj,
+    event = {
         "key": key,
         "table": table,
-        "type": CREATED,
+        "type": event_type,
     }
+    if channel_id:
+        event["channel_id"] = channel_id
+    if user_id:
+        event["user_id"] = user_id
+    return event
 
 
-def generate_update_event(key, table, mods):
-    validate_table(table)
-    return {
-        "mods": mods,
-        "key": key,
-        "table": table,
-        "type": UPDATED,
-    }
+def generate_create_event(key, table, obj, channel_id=None, user_id=None):
+    event = _generate_event(key, table, CREATED, channel_id, user_id)
+    event["obj"] = obj
+    return event
 
 
-def generate_delete_event(key, table):
-    validate_table(table)
-    return {
-        "key": key,
-        "table": table,
-        "type": DELETED,
-    }
+def generate_update_event(key, table, mods, channel_id=None, user_id=None):
+    event = _generate_event(key, table, UPDATED, channel_id, user_id)
+    event["mods"] = mods
+    return event
 
 
-def generate_move_event(key, table, target, position):
-    validate_table(table)
-    return {
-        "key": key,
-        "target": target,
-        "position": position,
-        "table": table,
-        "type": MOVED,
-    }
+def generate_delete_event(key, table, channel_id=None, user_id=None):
+    return _generate_event(key, table, DELETED, channel_id, user_id)
+
+
+def generate_move_event(key, table, target, position, channel_id=None, user_id=None):
+    event = _generate_event(key, table, MOVED, channel_id, user_id)
+    event["target"] = target
+    event["position"] = position
+    return event
 
 
 def generate_copy_event(
-    key, table, from_key, target, position=None, mods=None, excluded_descendants=None
+    key, table, from_key, target, position=None, mods=None, excluded_descendants=None, channel_id=None, user_id=None
 ):
-    validate_table(table)
-    return {
-        "key": key,
-        "from_key": from_key,
-        "target": target,
-        "position": position,
-        "mods": mods,
-        "excluded_descendants": excluded_descendants,
-        "table": table,
-        "type": COPIED,
-    }
+    event = _generate_event(key, table, COPIED, channel_id, user_id)
+    event["from_key"] = from_key
+    event["target"] = target
+    event["position"] = position
+    event["mods"] = mods
+    event["excluded_descendants"] = excluded_descendants
+    return event
 
 
 def log_sync_exception(e):
@@ -77,7 +68,5 @@ def log_sync_exception(e):
     # to complete properly.
     report_exception(e)
 
-    if getattr(settings, "DEBUG", False) or getattr(settings, "TEST_ENV", False):
-        raise
     # make sure we leave a record in the logs just in case.
     logging.error(e)

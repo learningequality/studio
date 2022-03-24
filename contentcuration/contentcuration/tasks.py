@@ -99,7 +99,7 @@ def duplicate_nodes_task(
 
     changes = []
     if new_node is not None:
-        changes.append(generate_update_event(pk, CONTENTNODE, {COPYING_FLAG: False, "node_id": new_node.node_id}))
+        changes.append(generate_update_event(pk, CONTENTNODE, {COPYING_FLAG: False, "node_id": new_node.node_id}, channel_id=channel_id))
 
     return {"changes": changes}
 
@@ -115,8 +115,8 @@ def export_channel_task(self, user_id, channel_id, version_notes="", language=se
             progress_tracker=self.progress,
         )
     return {"changes": [
-        generate_update_event(channel_id, CHANNEL, {"published": True, "primary_token": channel.get_human_token().token}),
-        generate_update_event(channel.main_tree.pk, CONTENTNODE, {"published": True, "changed": False}),
+        generate_update_event(channel_id, CHANNEL, {"published": True, "primary_token": channel.get_human_token().token}, channel_id=channel_id),
+        generate_update_event(channel.main_tree.pk, CONTENTNODE, {"published": True, "changed": False}, channel_id=channel_id),
     ]}
 
 

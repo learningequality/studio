@@ -295,6 +295,7 @@ class ChannelSerializer(BulkModelSerializer):
                     "published": instance.main_tree.published,
                     "content_defaults": instance.content_defaults,
                 },
+                channel_id=instance.id,
             )
         )
         return instance

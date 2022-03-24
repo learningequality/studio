@@ -11,8 +11,8 @@ from django.core.files.storage import default_storage
 
 import contentcuration.models as models
 from contentcuration.utils.garbage_collect import get_deleted_chefs_root
-from contentcuration.viewsets.sync.utils import generate_update_event
 from contentcuration.viewsets.sync.constants import CHANNEL
+from contentcuration.viewsets.sync.utils import generate_update_event
 
 
 def write_file_to_storage(fobj, check_valid=False, name=None):
@@ -96,5 +96,6 @@ def activate_channel(channel, user):
             "root_id": channel.main_tree.id,
             "staging_root_id": None
         },
+        channel_id=channel.id,
     )
     return change

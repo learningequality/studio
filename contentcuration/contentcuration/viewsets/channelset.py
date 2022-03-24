@@ -34,7 +34,7 @@ class ChannelSetSerializer(BulkModelSerializer):
             instance.editors.add(user)
         self.changes.append(
             generate_update_event(
-                instance.id, CHANNELSET, {"secret_token": instance.secret_token.token},
+                instance.id, CHANNELSET, {"secret_token": instance.secret_token.token}, user_id=user.id
             )
         )
         return instance

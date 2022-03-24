@@ -291,4 +291,4 @@ class ChangeEventMixin(object):
         from contentcuration.viewsets.task import TaskViewSet
         task_viewset = TaskViewSet(request=self.request)
         task_viewset.initial(self.request)
-        return generate_create_event(task.task_id, TASK, task_viewset.serialize_object(pk=task.pk))
+        return generate_create_event(task.task_id, TASK, task_viewset.serialize_object(pk=task.pk), channel_id=task.channel_id)

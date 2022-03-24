@@ -141,7 +141,7 @@ class AsyncTaskTestCase(BaseAPITestCase):
             self.assertEqual(
                 result["changes"][0],
                 generate_update_event(
-                    task_args["pk"], CONTENTNODE, {COPYING_FLAG: False, "node_id": node_id}
+                    task_args["pk"], CONTENTNODE, {COPYING_FLAG: False, "node_id": node_id}, channel_id=self.channel.pk
                 ),
             )
 
