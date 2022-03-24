@@ -81,7 +81,7 @@
     "i18n-iso-countries": "^5.1.0",
     "intl": "1.2.5",
     "jquery": "^2.2.4",
-    "jspdf": "git://github.com/MrRio/jsPDF.git#b7a1d8239c596292ce86dafa77f05987bcfa2e6e",
+    "jspdf": "https://github.com/MrRio/jsPDF.git#b7a1d8239c596292ce86dafa77f05987bcfa2e6e",
     "kolibri-constants": "^0.1.39",
     "kolibri-tools": "^0.14.5-dev.4",
     "lodash": "^4.17.21",
