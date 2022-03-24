@@ -12,6 +12,8 @@ from rest_framework.views import APIView
 from contentcuration.models import Change
 from contentcuration.models import Channel
 from contentcuration.tasks import get_or_create_async_task
+from contentcuration.viewsets.sync.constants import CHANNEL
+from contentcuration.viewsets.sync.constants import CREATED
 
 
 def change_model_values_to_change_dict(c):
@@ -30,9 +32,17 @@ class SyncView(APIView):
 
         if changes:
             change_channel_ids = set(x.get("channel_id") for x in changes if x.get("channel_id"))
+            # Channels that have been created on the client side won't exist on the server yet, so we need to add a special exception for them.
+            created_channel_ids = set(x.get("channel_id") for x in changes if x.get("channel_id") and x.get("table") == CHANNEL and x.get("type") == CREATED)
+            # However, this would also give people a mechanism to edit existing channels on the server side by adding a channel create event for an
+            # already existing channel, so we have to filter out the channel ids that are already created on the server side, regardless of whether
+            # the user making the requests has permissions for those channels.
+            created_channel_ids = created_channel_ids.difference(
+                set(Channel.objects.filter(id__in=created_channel_ids).values_list("id", flat=True).distinct())
+            )
             allowed_ids = set(
                 Channel.filter_edit_queryset(Channel.objects.filter(id__in=change_channel_ids), request.user).values_list("id", flat=True).distinct()
-            )
+            ).union(created_channel_ids)
             # Allow changes that are either:
             # Not related to a channel and instead related to the user if the user is the current user.
             user_only_changes = []
