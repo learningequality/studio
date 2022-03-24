@@ -28,7 +28,6 @@ from django.db.models import Count
 from django.db.models import Exists
 from django.db.models import F
 from django.db.models import Index
-from django.db.models import IntegerField
 from django.db.models import JSONField
 from django.db.models import Max
 from django.db.models import OuterRef
@@ -39,7 +38,6 @@ from django.db.models import UUIDField as DjangoUUIDField
 from django.db.models import Value
 from django.db.models.expressions import ExpressionList
 from django.db.models.expressions import RawSQL
-from django.db.models.functions import Cast
 from django.db.models.functions import Lower
 from django.db.models.indexes import IndexExpression
 from django.db.models.query_utils import DeferredAttribute
@@ -1255,18 +1253,8 @@ class ContentNode(MPTTModel, models.Model):
         )
 
     @classmethod
-    def _orphan_tree_id_subquery(cls):
-        # For some reason this now requires an explicit type cast
-        # or it gets interpreted as a varchar
-        return Cast(cls.objects.filter(
-            pk=settings.ORPHANAGE_ROOT_ID
-        ).values_list("tree_id", flat=True)[:1], output_field=IntegerField())
-
-    @classmethod
     def filter_edit_queryset(cls, queryset, user):
         user_id = not user.is_anonymous and user.id
-
-        queryset = queryset.exclude(pk=settings.ORPHANAGE_ROOT_ID)
 
         if not user_id:
             return queryset.none()
@@ -1280,7 +1268,7 @@ class ContentNode(MPTTModel, models.Model):
         if user.is_admin:
             return queryset
 
-        return queryset.filter(Q(edit=True) | Q(tree_id=cls._orphan_tree_id_subquery()))
+        return queryset.filter(edit=True)
 
     @classmethod
     def filter_view_queryset(cls, queryset, user):
@@ -1292,7 +1280,7 @@ class ContentNode(MPTTModel, models.Model):
                     public=True, main_tree__tree_id=OuterRef("tree_id")
                 ).values("pk")
             ),
-        ).exclude(pk=settings.ORPHANAGE_ROOT_ID)
+        )
 
         if not user_id:
             return queryset.annotate(edit=boolean_val(False), view=boolean_val(False)).filter(public=True)
@@ -1312,7 +1300,6 @@ class ContentNode(MPTTModel, models.Model):
             Q(view=True)
             | Q(edit=True)
             | Q(public=True)
-            | Q(tree_id=cls._orphan_tree_id_subquery())
         )
 
     @raise_if_unsaved

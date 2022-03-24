@@ -296,7 +296,7 @@ class ContentNodeTestCase(PermissionQuerysetTestCase):
         user = testdata.user()
         queryset = ContentNode.filter_view_queryset(self.base_queryset, user=user)
         self.assertQuerysetDoesNotContain(queryset, pk=settings.ORPHANAGE_ROOT_ID)
-        self.assertQuerysetContains(queryset, pk=contentnode.id)
+        self.assertQuerysetDoesNotContain(queryset, pk=contentnode.id)
 
     def test_filter_view_queryset__orphan_tree__anonymous(self):
         contentnode = create_contentnode(settings.ORPHANAGE_ROOT_ID)
@@ -365,7 +365,7 @@ class ContentNodeTestCase(PermissionQuerysetTestCase):
         user = testdata.user()
         queryset = ContentNode.filter_edit_queryset(self.base_queryset, user=user)
         self.assertQuerysetDoesNotContain(queryset, pk=settings.ORPHANAGE_ROOT_ID)
-        self.assertQuerysetContains(queryset, pk=contentnode.id)
+        self.assertQuerysetDoesNotContain(queryset, pk=contentnode.id)
 
     def test_filter_edit_queryset__orphan_tree__anonymous(self):
         contentnode = create_contentnode(settings.ORPHANAGE_ROOT_ID)

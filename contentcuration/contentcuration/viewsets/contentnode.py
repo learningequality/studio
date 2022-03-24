@@ -2,7 +2,6 @@ import json
 from functools import partial
 from functools import reduce
 
-from django.conf import settings
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import IntegrityError
 from django.db import models
@@ -381,6 +380,13 @@ class ContentNodeSerializer(BulkModelSerializer):
         nested_writes = True
 
     def validate(self, data):
+        # Creating, we require a parent to be set.
+        if self.instance is None and "parent" not in data:
+            raise ValidationError("Parent is required for creating a node.")
+        elif self.instance is not None and "parent" in data:
+            raise ValidationError(
+                {"parent": "This field should only be changed by a move operation"}
+            )
         tags = data.get("tags")
         if tags is not None:
             for tag in tags:
@@ -389,10 +395,6 @@ class ContentNodeSerializer(BulkModelSerializer):
         return data
 
     def create(self, validated_data):
-        # Creating a new node, by default put it in the orphanage on initial creation.
-        if "parent" not in validated_data:
-            validated_data["parent_id"] = settings.ORPHANAGE_ROOT_ID
-
         tags = None
         if "tags" in validated_data:
             tags = validated_data.pop("tags")
@@ -405,11 +407,6 @@ class ContentNodeSerializer(BulkModelSerializer):
         return instance
 
     def update(self, instance, validated_data):
-        if "parent" in validated_data:
-            raise ValidationError(
-                {"parent": "This field should only be changed by a move operation"}
-            )
-
         for field in self.dict_fields:
             field_data = validated_data.pop(field, None)
             if field_data is not None:
