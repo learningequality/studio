@@ -10,13 +10,11 @@ from contentcuration.tests.base import StudioAPITestCase
 from contentcuration.tests.viewsets.base import generate_create_event
 from contentcuration.tests.viewsets.base import generate_delete_event
 from contentcuration.tests.viewsets.base import generate_update_event
+from contentcuration.tests.viewsets.base import SyncTestMixin
 from contentcuration.viewsets.sync.constants import CHANNEL
 
 
-class SyncTestCase(StudioAPITestCase):
-    @property
-    def sync_url(self):
-        return reverse("sync")
+class SyncTestCase(StudioAPITestCase, SyncTestMixin):
 
     @property
     def channel_metadata(self):
@@ -30,10 +28,8 @@ class SyncTestCase(StudioAPITestCase):
         user = testdata.user()
         self.client.force_authenticate(user=user)
         channel = self.channel_metadata
-        response = self.client.post(
-            self.sync_url,
-            [generate_create_event(channel["id"], CHANNEL, channel)],
-            format="json",
+        response = self.sync_changes(
+            [generate_create_event(channel["id"], CHANNEL, channel, channel_id=channel["id"])]
         )
         self.assertEqual(response.status_code, 200, response.content)
         try:
@@ -46,13 +42,11 @@ class SyncTestCase(StudioAPITestCase):
         self.client.force_authenticate(user=user)
         channel1 = self.channel_metadata
         channel2 = self.channel_metadata
-        response = self.client.post(
-            self.sync_url,
+        response = self.sync_changes(
             [
-                generate_create_event(channel1["id"], CHANNEL, channel1),
-                generate_create_event(channel2["id"], CHANNEL, channel2),
-            ],
-            format="json",
+                generate_create_event(channel1["id"], CHANNEL, channel1, channel_id=channel1["id"]),
+                generate_create_event(channel2["id"], CHANNEL, channel2, channel_id=channel2["id"]),
+            ]
         )
         self.assertEqual(response.status_code, 200, response.content)
         try:
@@ -72,10 +66,8 @@ class SyncTestCase(StudioAPITestCase):
         new_name = "This is not the old name"
 
         self.client.force_authenticate(user=user)
-        response = self.client.post(
-            self.sync_url,
-            [generate_update_event(channel.id, CHANNEL, {"name": new_name})],
-            format="json",
+        response = self.sync_changes(
+            [generate_update_event(channel.id, CHANNEL, {"name": new_name}, channel_id=channel.id)]
         )
         self.assertEqual(response.status_code, 200, response.content)
         self.assertEqual(models.Channel.objects.get(id=channel.id).name, new_name)
@@ -86,16 +78,14 @@ class SyncTestCase(StudioAPITestCase):
         channel.editors.add(user)
         new_encoding = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAfQA"
         self.client.force_authenticate(user=user)
-        response = self.client.post(
-            self.sync_url,
+        response = self.sync_changes(
             [generate_update_event(channel.id, CHANNEL, {
                 "thumbnail_encoding.base64": new_encoding,
                 "thumbnail_encoding.orientation": 1,
                 "thumbnail_encoding.scale": 0.73602189113443,
                 "thumbnail_encoding.startX": -96.66631072431669,
                 "thumbnail_encoding.startY": -335.58116356397636,
-            })],
-            format="json",
+            }, channel_id=channel.id)]
         )
         self.assertEqual(response.status_code, 200, response.content)
         self.assertEqual(models.Channel.objects.get(id=channel.id).thumbnail_encoding["base64"], new_encoding)
@@ -106,14 +96,10 @@ class SyncTestCase(StudioAPITestCase):
         new_name = "This is not the old name"
 
         self.client.force_authenticate(user=user)
-        with self.settings(TEST_ENV=False):
-            # Override test env here to check what will happen in production
-            response = self.client.post(
-                self.sync_url,
-                [generate_update_event(channel.id, CHANNEL, {"name": new_name})],
-                format="json",
-            )
-        self.assertEqual(len(response.json()["errors"]), 1, response.content)
+        response = self.sync_changes(
+            [generate_update_event(channel.id, CHANNEL, {"name": new_name}, channel_id=channel.id)],
+        )
+        self.assertEqual(len(response.json()["disallowed"]), 1, response.content)
         self.assertNotEqual(models.Channel.objects.get(id=channel.id).name, new_name)
 
     def test_viewer_cannot_update_channel(self):
@@ -123,14 +109,10 @@ class SyncTestCase(StudioAPITestCase):
         new_name = "This is not the old name"
 
         self.client.force_authenticate(user=user)
-        with self.settings(TEST_ENV=False):
-            # Override test env here to check what will happen in production
-            response = self.client.post(
-                self.sync_url,
-                [generate_update_event(channel.id, CHANNEL, {"name": new_name})],
-                format="json",
-            )
-        self.assertEqual(len(response.json()["errors"]), 1, response.content)
+        response = self.sync_changes(
+            [generate_update_event(channel.id, CHANNEL, {"name": new_name}, channel_id=channel.id)],
+        )
+        self.assertEqual(len(response.json()["disallowed"]), 1, response.content)
         self.assertNotEqual(models.Channel.objects.get(id=channel.id).name, new_name)
 
     def test_update_channel_defaults(self):
@@ -140,14 +122,12 @@ class SyncTestCase(StudioAPITestCase):
         author = "This is not the old author"
 
         self.client.force_authenticate(user=user)
-        response = self.client.post(
-            self.sync_url,
+        response = self.sync_changes(
             [
                 generate_update_event(
-                    channel.id, CHANNEL, {"content_defaults.author": author}
+                    channel.id, CHANNEL, {"content_defaults.author": author}, channel_id=channel.id
                 )
-            ],
-            format="json",
+            ]
         )
         self.assertEqual(response.status_code, 200, response.content)
         self.assertEqual(
@@ -157,14 +137,12 @@ class SyncTestCase(StudioAPITestCase):
         aggregator = "This is not the old aggregator"
 
         self.client.force_authenticate(user=user)
-        response = self.client.post(
-            self.sync_url,
+        response = self.sync_changes(
             [
                 generate_update_event(
-                    channel.id, CHANNEL, {"content_defaults.aggregator": aggregator}
+                    channel.id, CHANNEL, {"content_defaults.aggregator": aggregator}, channel_id=channel.id
                 )
-            ],
-            format="json",
+            ]
         )
         self.assertEqual(response.status_code, 200, response.content)
         self.assertEqual(
@@ -184,13 +162,11 @@ class SyncTestCase(StudioAPITestCase):
         new_name = "This is not the old name"
 
         self.client.force_authenticate(user=user)
-        response = self.client.post(
-            self.sync_url,
+        response = self.sync_changes(
             [
-                generate_update_event(channel1.id, CHANNEL, {"name": new_name}),
-                generate_update_event(channel2.id, CHANNEL, {"name": new_name}),
-            ],
-            format="json",
+                generate_update_event(channel1.id, CHANNEL, {"name": new_name}, channel_id=channel1.id),
+                generate_update_event(channel2.id, CHANNEL, {"name": new_name}, channel_id=channel2.id),
+            ]
         )
         self.assertEqual(response.status_code, 200, response.content)
         self.assertEqual(models.Channel.objects.get(id=channel1.id).name, new_name)
@@ -204,17 +180,13 @@ class SyncTestCase(StudioAPITestCase):
         new_name = "This is not the old name"
 
         self.client.force_authenticate(user=user)
-        with self.settings(TEST_ENV=False):
-            # Override test env here to check what will happen in production
-            response = self.client.post(
-                self.sync_url,
-                [
-                    generate_update_event(channel1.id, CHANNEL, {"name": new_name}),
-                    generate_update_event(channel2.id, CHANNEL, {"name": new_name}),
-                ],
-                format="json",
-            )
-        self.assertEqual(len(response.json()["errors"]), 1, response.content)
+        response = self.sync_changes(
+            [
+                generate_update_event(channel1.id, CHANNEL, {"name": new_name}, channel_id=channel1.id),
+                generate_update_event(channel2.id, CHANNEL, {"name": new_name}, channel_id=channel2.id),
+            ],
+        )
+        self.assertEqual(len(response.json()["disallowed"]), 1, response.content)
         self.assertEqual(models.Channel.objects.get(id=channel1.id).name, new_name)
         self.assertNotEqual(models.Channel.objects.get(id=channel2.id).name, new_name)
 
@@ -227,17 +199,13 @@ class SyncTestCase(StudioAPITestCase):
         new_name = "This is not the old name"
 
         self.client.force_authenticate(user=user)
-        with self.settings(TEST_ENV=False):
-            # Override test env here to check what will happen in production
-            response = self.client.post(
-                self.sync_url,
-                [
-                    generate_update_event(channel1.id, CHANNEL, {"name": new_name}),
-                    generate_update_event(channel2.id, CHANNEL, {"name": new_name}),
-                ],
-                format="json",
-            )
-        self.assertEqual(len(response.json()["errors"]), 1, response.content)
+        response = self.sync_changes(
+            [
+                generate_update_event(channel1.id, CHANNEL, {"name": new_name}, channel_id=channel1.id),
+                generate_update_event(channel2.id, CHANNEL, {"name": new_name}, channel_id=channel2.id),
+            ],
+        )
+        self.assertEqual(len(response.json()["disallowed"]), 1, response.content)
         self.assertEqual(models.Channel.objects.get(id=channel1.id).name, new_name)
         self.assertNotEqual(models.Channel.objects.get(id=channel2.id).name, new_name)
 
@@ -247,13 +215,9 @@ class SyncTestCase(StudioAPITestCase):
         channel.editors.add(user)
 
         self.client.force_authenticate(user=user)
-        with self.settings(TEST_ENV=False):
-            # Override test env here to check what will happen in production
-            response = self.client.post(
-                self.sync_url,
-                [generate_update_event(channel.id, CHANNEL, {"bookmark": True})],
-                format="json",
-            )
+        response = self.sync_changes(
+            [generate_update_event(channel.id, CHANNEL, {"bookmark": True})],
+        )
         self.assertEqual(response.status_code, 200, response.content)
         self.assertTrue(user.bookmarked_channels.filter(id=channel.id).exists())
 
@@ -263,13 +227,9 @@ class SyncTestCase(StudioAPITestCase):
         channel.viewers.add(user)
 
         self.client.force_authenticate(user=user)
-        with self.settings(TEST_ENV=False):
-            # Override test env here to check what will happen in production
-            response = self.client.post(
-                self.sync_url,
-                [generate_update_event(channel.id, CHANNEL, {"bookmark": True})],
-                format="json",
-            )
+        response = self.sync_changes(
+            [generate_update_event(channel.id, CHANNEL, {"bookmark": True})],
+        )
         self.assertEqual(response.status_code, 200, response.content)
         self.assertTrue(user.bookmarked_channels.filter(id=channel.id).exists())
 
@@ -281,15 +241,11 @@ class SyncTestCase(StudioAPITestCase):
         channel.save()
 
         self.client.force_authenticate(user=user)
-        with self.settings(TEST_ENV=False):
-            # Override test env here to check what will happen in production
-            response = self.client.post(
-                self.sync_url,
-                [generate_update_event(channel.id, CHANNEL, {
-                    "bookmark": True,
-                })],
-                format="json",
-            )
+        response = self.sync_changes(
+            [generate_update_event(channel.id, CHANNEL, {
+                "bookmark": True,
+            })],
+        )
         self.assertEqual(response.status_code, 200, response.content)
         self.assertTrue(user.bookmarked_channels.filter(id=channel.id).exists())
 
@@ -300,15 +256,11 @@ class SyncTestCase(StudioAPITestCase):
         channel.save()
 
         self.client.force_authenticate(user=user)
-        with self.settings(TEST_ENV=False):
-            # Override test env here to check what will happen in production
-            response = self.client.post(
-                self.sync_url,
-                [generate_update_event(channel.id, CHANNEL, {
-                    "bookmark": True,
-                })],
-                format="json",
-            )
+        response = self.sync_changes(
+            [generate_update_event(channel.id, CHANNEL, {
+                "bookmark": True,
+            })],
+        )
         self.assertEqual(response.status_code, 200, response.content)
         self.assertTrue(user.bookmarked_channels.filter(id=channel.id).exists())
 
@@ -321,16 +273,12 @@ class SyncTestCase(StudioAPITestCase):
         channel.save()
 
         self.client.force_authenticate(user=user)
-        with self.settings(TEST_ENV=False):
-            # Override test env here to check what will happen in production
-            response = self.client.post(
-                self.sync_url,
-                [generate_update_event(channel.id, CHANNEL, {
-                    "bookmark": True,
-                    "name": new_name
-                })],
-                format="json",
-            )
+        response = self.sync_changes(
+            [generate_update_event(channel.id, CHANNEL, {
+                "bookmark": True,
+                "name": new_name
+            })],
+        )
         self.assertEqual(response.status_code, 400, response.content)
         self.assertTrue(user.bookmarked_channels.filter(id=channel.id).exists())
         self.assertNotEqual(models.Channel.objects.get(id=channel.id).name, new_name)
@@ -341,9 +289,7 @@ class SyncTestCase(StudioAPITestCase):
         channel.editors.add(user)
 
         self.client.force_authenticate(user=user)
-        response = self.client.post(
-            self.sync_url, [generate_delete_event(channel.id, CHANNEL)], format="json",
-        )
+        response = self.sync_changes([generate_delete_event(channel.id, CHANNEL, channel_id=channel.id)])
         self.assertEqual(response.status_code, 200, response.content)
         try:
             models.Channel.objects.get(id=channel.id)
@@ -356,13 +302,9 @@ class SyncTestCase(StudioAPITestCase):
         channel = models.Channel.objects.create(**self.channel_metadata)
 
         self.client.force_authenticate(user=user)
-        with self.settings(TEST_ENV=False):
-            # Override test env here to check what will happen in production
-            response = self.client.post(
-                self.sync_url,
-                [generate_delete_event(channel.id, CHANNEL)],
-                format="json",
-            )
+        response = self.sync_changes(
+            [generate_delete_event(channel.id, CHANNEL, channel_id=channel.id)],
+        )
         # Returns a 200 as, as far as the frontend is concerned
         # the operation is done.
         self.assertEqual(response.status_code, 200, response.content)
@@ -380,13 +322,11 @@ class SyncTestCase(StudioAPITestCase):
         channel2.editors.add(user)
 
         self.client.force_authenticate(user=user)
-        response = self.client.post(
-            self.sync_url,
+        response = self.sync_changes(
             [
-                generate_delete_event(channel1.id, CHANNEL),
-                generate_delete_event(channel2.id, CHANNEL),
-            ],
-            format="json",
+                generate_delete_event(channel1.id, CHANNEL, channel_id=channel1.id),
+                generate_delete_event(channel2.id, CHANNEL, channel_id=channel2.id),
+            ]
         )
         self.assertEqual(response.status_code, 200, response.content)
         try:
@@ -408,16 +348,12 @@ class SyncTestCase(StudioAPITestCase):
         channel2 = models.Channel.objects.create(**self.channel_metadata)
 
         self.client.force_authenticate(user=user)
-        with self.settings(TEST_ENV=False):
-            # Override test env here to check what will happen in production
-            response = self.client.post(
-                self.sync_url,
-                [
-                    generate_delete_event(channel1.id, CHANNEL),
-                    generate_delete_event(channel2.id, CHANNEL),
-                ],
-                format="json",
-            )
+        response = self.sync_changes(
+            [
+                generate_delete_event(channel1.id, CHANNEL, channel_id=channel1.id),
+                generate_delete_event(channel2.id, CHANNEL, channel_id=channel2.id),
+            ],
+        )
         # Returns a 200 as, as far as the frontend is concerned
         # the operation is done.
         self.assertEqual(response.status_code, 200, response.content)

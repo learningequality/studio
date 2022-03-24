@@ -9,16 +9,14 @@ from le_utils.constants import exercises
 from contentcuration import models
 from contentcuration.tests import testdata
 from contentcuration.tests.base import StudioAPITestCase
+from contentcuration.tests.viewsets.base import generate_create_event
+from contentcuration.tests.viewsets.base import generate_delete_event
+from contentcuration.tests.viewsets.base import generate_update_event
+from contentcuration.tests.viewsets.base import SyncTestMixin
 from contentcuration.viewsets.sync.constants import ASSESSMENTITEM
-from contentcuration.viewsets.sync.utils import generate_create_event
-from contentcuration.viewsets.sync.utils import generate_delete_event
-from contentcuration.viewsets.sync.utils import generate_update_event
 
 
-class SyncTestCase(StudioAPITestCase):
-    @property
-    def sync_url(self):
-        return reverse("sync")
+class SyncTestCase(StudioAPITestCase, SyncTestMixin):
 
     @property
     def assessmentitem_metadata(self):
@@ -49,16 +47,15 @@ class SyncTestCase(StudioAPITestCase):
     def test_create_assessmentitem(self):
         self.client.force_authenticate(user=self.user)
         assessmentitem = self.assessmentitem_metadata
-        response = self.client.post(
-            self.sync_url,
+        response = self.sync_changes(
             [
                 generate_create_event(
                     [assessmentitem["contentnode"], assessmentitem["assessment_id"]],
                     ASSESSMENTITEM,
                     assessmentitem,
+                    channel_id=self.channel.id,
                 )
             ],
-            format="json",
         )
         self.assertEqual(response.status_code, 200, response.content)
         try:
@@ -79,16 +76,15 @@ class SyncTestCase(StudioAPITestCase):
         )
 
         assessmentitem["question"] = question
-        response = self.client.post(
-            self.sync_url,
+        response = self.sync_changes(
             [
                 generate_create_event(
                     [assessmentitem["contentnode"], assessmentitem["assessment_id"]],
                     ASSESSMENTITEM,
                     assessmentitem,
+                    channel_id=self.channel.id,
                 )
             ],
-            format="json",
         )
         self.assertEqual(response.status_code, 200, response.content)
         try:
@@ -114,16 +110,15 @@ class SyncTestCase(StudioAPITestCase):
         )
 
         assessmentitem["answers"] = answers
-        response = self.client.post(
-            self.sync_url,
+        response = self.sync_changes(
             [
                 generate_create_event(
                     [assessmentitem["contentnode"], assessmentitem["assessment_id"]],
                     ASSESSMENTITEM,
                     assessmentitem,
+                    channel_id=self.channel.id,
                 )
             ],
-            format="json",
         )
         self.assertEqual(response.status_code, 200, response.content)
         try:
@@ -149,16 +144,15 @@ class SyncTestCase(StudioAPITestCase):
         )
 
         assessmentitem["hints"] = hints
-        response = self.client.post(
-            self.sync_url,
+        response = self.sync_changes(
             [
                 generate_create_event(
                     [assessmentitem["contentnode"], assessmentitem["assessment_id"]],
                     ASSESSMENTITEM,
                     assessmentitem,
+                    channel_id=self.channel.id,
                 )
             ],
-            format="json",
         )
         self.assertEqual(response.status_code, 200, response.content)
         try:
@@ -181,18 +175,18 @@ class SyncTestCase(StudioAPITestCase):
             exercises.IMG_PLACEHOLDER, image_file.checksum, image_file.file_format_id
         )
         assessmentitem["question"] = question
-        response = self.client.post(
-            self.sync_url,
+        response = self.sync_changes(
             [
                 generate_create_event(
                     [assessmentitem["contentnode"], assessmentitem["assessment_id"]],
                     ASSESSMENTITEM,
                     assessmentitem,
+                    channel_id=self.channel.id,
                 )
             ],
-            format="json",
         )
-        self.assertEqual(response.status_code, 400, response.content)
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(len(response.json()["errors"]), 1)
         try:
             models.AssessmentItem.objects.get(
                 assessment_id=assessmentitem["assessment_id"]
@@ -207,21 +201,21 @@ class SyncTestCase(StudioAPITestCase):
         self.client.force_authenticate(user=self.user)
         assessmentitem1 = self.assessmentitem_metadata
         assessmentitem2 = self.assessmentitem_metadata
-        response = self.client.post(
-            self.sync_url,
+        response = self.sync_changes(
             [
                 generate_create_event(
                     [assessmentitem1["contentnode"], assessmentitem1["assessment_id"]],
                     ASSESSMENTITEM,
                     assessmentitem1,
+                    channel_id=self.channel.id,
                 ),
                 generate_create_event(
                     [assessmentitem2["contentnode"], assessmentitem2["assessment_id"]],
                     ASSESSMENTITEM,
                     assessmentitem2,
+                    channel_id=self.channel.id,
                 ),
             ],
-            format="json",
         )
         self.assertEqual(response.status_code, 200, response.content)
         try:
@@ -246,16 +240,15 @@ class SyncTestCase(StudioAPITestCase):
         new_question = "{}"
 
         self.client.force_authenticate(user=self.user)
-        response = self.client.post(
-            self.sync_url,
+        response = self.sync_changes(
             [
                 generate_update_event(
                     [assessmentitem.contentnode_id, assessmentitem.assessment_id],
                     ASSESSMENTITEM,
                     {"question": new_question},
+                    channel_id=self.channel.id,
                 )
             ],
-            format="json",
         )
         self.assertEqual(response.status_code, 200, response.content)
         self.assertEqual(
@@ -266,8 +259,7 @@ class SyncTestCase(StudioAPITestCase):
     def test_attempt_update_missing_assessmentitem(self):
 
         self.client.force_authenticate(user=self.user)
-        response = self.client.post(
-            self.sync_url,
+        response = self.sync_changes(
             [
                 generate_update_event([
                             self.channel.main_tree.get_descendants()
@@ -278,12 +270,12 @@ class SyncTestCase(StudioAPITestCase):
                         ],
                     ASSESSMENTITEM,
                     {"question": "but why is it missing in the first place?"},
+                    channel_id=self.channel.id,
                 )
             ],
-            format="json",
         )
-        self.assertEqual(response.status_code, 400, response.content)
-        self.assertEqual(response.data.get("errors")[0].get("error")[0], "Not found")
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(response.data["errors"][0]["errors"][0], "Not found")
 
     def test_update_assessmentitem_with_file(self):
 
@@ -298,16 +290,15 @@ class SyncTestCase(StudioAPITestCase):
         )
 
         self.client.force_authenticate(user=self.user)
-        response = self.client.post(
-            self.sync_url,
+        response = self.sync_changes(
             [
                 generate_update_event(
                     [assessmentitem.contentnode_id, assessmentitem.assessment_id],
                     ASSESSMENTITEM,
                     {"question": question},
+                    channel_id=self.channel.id,
                 )
             ],
-            format="json",
         )
         self.assertEqual(response.status_code, 200, response.content)
         try:
@@ -327,18 +318,18 @@ class SyncTestCase(StudioAPITestCase):
         )
 
         self.client.force_authenticate(user=self.user)
-        response = self.client.post(
-            self.sync_url,
+        response = self.sync_changes(
             [
                 generate_update_event(
                     [assessmentitem.contentnode_id, assessmentitem.assessment_id],
                     ASSESSMENTITEM,
                     {"question": question},
+                    channel_id=self.channel.id,
                 )
             ],
-            format="json",
         )
-        self.assertEqual(response.status_code, 400, response.content)
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(len(response.json()["errors"]), 1)
         try:
             file = assessmentitem.files.get()
             self.assertNotEqual(file.id, image_file.id)
@@ -357,16 +348,15 @@ class SyncTestCase(StudioAPITestCase):
         question = "A different question"
 
         self.client.force_authenticate(user=self.user)
-        response = self.client.post(
-            self.sync_url,
+        response = self.sync_changes(
             [
                 generate_update_event(
                     [assessmentitem.contentnode_id, assessmentitem.assessment_id],
                     ASSESSMENTITEM,
                     {"question": question},
+                    channel_id=self.channel.id,
                 )
             ],
-            format="json",
         )
         self.assertEqual(response.status_code, 200, response.content)
         try:
@@ -386,21 +376,21 @@ class SyncTestCase(StudioAPITestCase):
         new_question = "{}"
 
         self.client.force_authenticate(user=self.user)
-        response = self.client.post(
-            self.sync_url,
+        response = self.sync_changes(
             [
                 generate_update_event(
                     [assessmentitem1.contentnode_id, assessmentitem1.assessment_id],
                     ASSESSMENTITEM,
                     {"question": new_question},
+                    channel_id=self.channel.id,
                 ),
                 generate_update_event(
                     [assessmentitem2.contentnode_id, assessmentitem2.assessment_id],
                     ASSESSMENTITEM,
                     {"question": new_question},
+                    channel_id=self.channel.id,
                 ),
             ],
-            format="json",
         )
         self.assertEqual(response.status_code, 200, response.content)
         self.assertEqual(
@@ -418,16 +408,15 @@ class SyncTestCase(StudioAPITestCase):
             **self.assessmentitem_db_metadata
         )
         self.client.force_authenticate(user=self.user)
-        response = self.client.post(
-            self.sync_url,
+        response = self.sync_changes(
             [
                 generate_update_event(
                     [assessmentitem.contentnode_id, assessmentitem.assessment_id],
                     ASSESSMENTITEM,
                     {},
+                    channel_id=self.channel.id,
                 )
             ],
-            format="json",
         )
         self.assertEqual(response.status_code, 200, response.content)
 
@@ -437,16 +426,15 @@ class SyncTestCase(StudioAPITestCase):
             **self.assessmentitem_db_metadata
         )
         self.client.force_authenticate(user=self.user)
-        response = self.client.post(
-            self.sync_url,
+        response = self.sync_changes(
             [
                 generate_update_event(
                     [assessmentitem.contentnode_id, assessmentitem.assessment_id],
                     ASSESSMENTITEM,
                     {"not_a_field": "not_a_value"},
+                    channel_id=self.channel.id,
                 )
             ],
-            format="json",
         )
         self.assertEqual(response.status_code, 200, response.content)
 
@@ -457,15 +445,14 @@ class SyncTestCase(StudioAPITestCase):
         )
 
         self.client.force_authenticate(user=self.user)
-        response = self.client.post(
-            self.sync_url,
+        response = self.sync_changes(
             [
                 generate_delete_event(
                     [assessmentitem.contentnode_id, assessmentitem.assessment_id],
                     ASSESSMENTITEM,
+                    channel_id=self.channel.id,
                 )
             ],
-            format="json",
         )
         self.assertEqual(response.status_code, 200, response.content)
         try:
@@ -484,19 +471,19 @@ class SyncTestCase(StudioAPITestCase):
         )
 
         self.client.force_authenticate(user=self.user)
-        response = self.client.post(
-            self.sync_url,
+        response = self.sync_changes(
             [
                 generate_delete_event(
                     [assessmentitem1.contentnode_id, assessmentitem1.assessment_id],
                     ASSESSMENTITEM,
+                    channel_id=self.channel.id,
                 ),
                 generate_delete_event(
                     [assessmentitem2.contentnode_id, assessmentitem2.assessment_id],
                     ASSESSMENTITEM,
+                    channel_id=self.channel.id,
                 ),
             ],
-            format="json",
         )
         self.assertEqual(response.status_code, 200, response.content)
         try:
