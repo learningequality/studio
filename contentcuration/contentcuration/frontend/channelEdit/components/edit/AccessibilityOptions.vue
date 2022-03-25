@@ -26,6 +26,7 @@
 </template>
 
 <script>
+
   import { AccessibilityCategories, AccessibilityCategoriesMap } from 'shared/constants';
   import Checkbox from 'shared/views/form/Checkbox';
   import HelpTooltip from 'shared/views/HelpTooltip';
@@ -44,7 +45,7 @@
       selected: {
         type: Array,
         default: () => [],
-      }
+      },
     },
     computed: {
       accessibility: {
@@ -59,7 +60,6 @@
        * List of accessibility options for all content kinds except for audio
        */
       showCorrectAccessibilityList() {
-        console.log('kind', this.kind)
         return Object.keys(AccessibilityCategories)
           .filter(key => AccessibilityCategoriesMap[this.kind].includes(key))
           .map(key => {
@@ -67,9 +67,9 @@
               label: key,
               value: AccessibilityCategories[key],
               help: key,
-            }
-          })
-}
+            };
+          });
+      },
     },
     $trs: {
       /* eslint-disable kolibri/vue-no-unused-translations */
@@ -79,7 +79,7 @@
       SIGN_LANGUAGE: `Synchronized sign language intepretation is available for audio and video content. The value may be extended by adding an ISO 639 sign language code. For example, /sgn-en-us for American Sign Language.`,
       TAGGED_PDF: `The structures in a PDF have been tagged to improve the navigation of the content.`,
       /* eslint-enable kolibri/vue-no-unused-translations */
-    }
+    },
   };
 
 </script>
