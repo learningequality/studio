@@ -261,7 +261,7 @@ class ExtraFieldsSerializer(JSONFieldDictSerializer):
     mastery_model = ChoiceField(
         choices=exercises.MASTERY_MODELS, allow_null=True, required=False
     )
-    randomize = BooleanField()
+    randomize = BooleanField(allow_null=True, required=False)
     m = IntegerField(allow_null=True, required=False)
     n = IntegerField(allow_null=True, required=False)
     options = ExtraFieldsOptionsSerializer(required=False)
@@ -280,7 +280,7 @@ class MetadataLabelsField(JSONFieldDictSerializer):
     def get_fields(self):
         fields = {}
         for label_id, label_name in self.choices:
-            field = BooleanField(required=False, label=label_name)
+            field = BooleanField(required=False, label=label_name, allow_null=True)
             fields[label_id] = field
         return fields
 
