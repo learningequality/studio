@@ -181,7 +181,7 @@ export function createContentNode(context, { parent, kind, ...payload }) {
     role_visibility: contentDefaults.role_visibility || RolesNames.LEARNER,
     learners_needs: {},
     completion: {},
-    accessibility_categories: {},
+    accessibility_labels: {},
     ...payload,
   };
 
@@ -217,7 +217,7 @@ function generateContentNodeData({
   learners_needs = NOVALUE,
   learning_activities = NOVALUE,
   levels = NOVALUE,
-  accessibility_categories = NOVALUE,
+  accessibility_labels = NOVALUE,
   completion = NOVALUE,
 } = {}) {
   const contentNodeData = {};
@@ -251,8 +251,8 @@ function generateContentNodeData({
   if (levels !== NOVALUE) {
     contentNodeData.levels = levels;
   }
-  if (accessibility_categories !== NOVALUE) {
-    contentNodeData.accessibility_categories = accessibility_categories;
+  if (accessibility_labels !== NOVALUE) {
+    contentNodeData.accessibility_labels = accessibility_labels;
   }
   if (completion !== NOVALUE) {
     contentNodeData.completion = completion;
@@ -305,7 +305,6 @@ export function updateContentNode(context, { id, ...payload } = {}) {
     throw ReferenceError('id must be defined to update a contentNode');
   }
   let contentNodeData = generateContentNodeData(payload);
-
   const node = context.getters.getContentNode(id);
 
   // Don't overwrite existing extra_fields data
@@ -342,7 +341,6 @@ export function updateContentNode(context, { id, ...payload } = {}) {
     ...contentNodeData,
     complete,
   };
-
   context.commit('UPDATE_CONTENTNODE', { id, ...contentNodeData });
   return ContentNode.update(id, contentNodeData);
 }

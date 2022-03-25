@@ -1,5 +1,13 @@
 import featureFlagsSchema from 'static/feature_flags.json';
 
+export { default as ContentNodeResourceType } from 'kolibri-constants/labels/ResourceType';
+export { default as LearningActivities } from 'kolibri-constants/labels/LearningActivities';
+export { default as AccessibilityCategories } from 'kolibri-constants/labels/AccessibilityCategories';
+// Used to categorize the level or audience of content
+export { default as ContentLevels } from 'kolibri-constants/labels/Levels';
+export { default as ResourcesNeededTypes } from 'kolibri-constants/labels/Needs';
+export { default as Categories } from 'kolibri-constants/labels/Subjects';
+
 export const ContentDefaults = {
   author: 'author',
   provider: 'provider',
@@ -172,23 +180,33 @@ export const ContentModalities = {
   QUIZ: 'QUIZ',
 };
 
-// Audiovisual and document have defaults set to the first dropdown option
-// The rest have no defaults
-
+export const AccessibilityCategoriesMap = {
+  // Note: audio is not included, as it is rendered in the UI differently.
+  document: ['ALT_TEXT', 'HIGH_CONTRAST', 'TAGGED_PDF'],
+  video: ['SIGN_LANGUAGE', 'AUDIO_DESCRIPTION'],
+  exercise: ['ALT_TEXT'],
+  html5: ['ALT_TEXT', 'HIGH_CONTRAST'],
+}
 export const completionDropdownMap = {
   document: ['All content viewed', 'Complete duration'],
+//TODO: REMOVE this map
+  // nodeDetails = {
+  //   title: 'Exercise',
+  //   kind: ContentKindsNames.EXERCISE,
+  //   license: { id: 8 },
+  //   extra_fields: {
+  //     mastery_model: MasteryModelsNames.DO_ALL,
+  //     options: {
+  //       completion_criteria: {
+  //         model: CompletionCriteriaModels.TIME,
+  //         threshold: 10, //it can mean num of pages or time in min, etc
+  //       },
+  //     },
+  //   },
+  // };
   exercise: [
     'Practice until goal is met',
-    'Short activity',
-    'Long activity',
-    'Reference',
-    'Exact time to complete',
+    'Practice quiz',
   ],
   zip: ['Short activity', 'Long activity', 'Reference', 'Exact time to complete'],
-};
-
-export const durationDropdownMap = {
-  audio: ['Exact time to complete', 'Short activity', 'Long activity', 'Reference'],
-  video: ['Exact time to complete', 'Short activity', 'Long activity', 'Reference'],
-  document: ['Exact time to complete', 'Short activity', 'Long activity', 'Reference'],
 };

@@ -138,7 +138,11 @@
           </h1>
         </VFlex>
         <VFlex>
-          <CompletionDropdown v-model="completionType" :nodeId="firstNode.id" />
+          <CompletionDropdown
+            v-model="completionCriteria"
+            :nodeId="firstNode.id"
+            :required="!isDocument"
+          />
         </VFlex>
       </VLayout>
 
@@ -148,8 +152,7 @@
           <h1 class="subheading">
             {{ $tr('assessmentHeader') }}
           </h1>
-
-          <!-- Mastery -->
+          <!-- Goal -->
           <MasteryDropdown
             v-if="extra_fields"
             ref="mastery_model"
@@ -172,6 +175,7 @@
             :label="$tr('randomizeQuestionLabel')"
             :indeterminate="!isUnique(randomizeOrder)"
           />
+
 
           <!-- Feature flag: Channel quizzes -->
           <Checkbox
@@ -244,7 +248,11 @@
             <h1 class="subheading">
               {{ $tr('accessibilityHeader') }}
             </h1>
-            <AccessibilityOptions v-model="accessibility" docOrSlides />
+            <AccessibilityOptions
+              v-model="accessibility"
+              :checked="accessibility"
+              :kind="firstNode.kind"
+            />
           </VFlex>
         </template>
       </VLayout>
@@ -383,6 +391,7 @@
 
   import difference from 'lodash/difference';
   import intersection from 'lodash/intersection';
+  import isUndefined from 'lodash/isUndefined';
   import uniq from 'lodash/uniq';
   import { mapGetters, mapActions } from 'vuex';
   import ContentNodeThumbnail from '../../views/files/thumbnails/ContentNodeThumbnail';
@@ -497,7 +506,6 @@
         return this.getContentNodes(this.nodeIds);
       },
       firstNode() {
-        console.log('firstNode id', this.nodes[0]);
         return this.nodes.length ? this.nodes[0] : null;
       },
       allExercises() {
@@ -547,8 +555,20 @@
       contentLearningActivities: generateGetterSetter('learning_activities'),
       contentLevel: generateGetterSetter('levels'),
       contentLearnersNeed: generateGetterSetter('learners_needs'),
-      completionType: generateGetterSetter('completion'),
-      accessibility: generateGetterSetter('accessibility_categories'),
+      accessibility: {
+        get() {
+          const value = this.getValueFromNodes('accessibility_labels');
+          return Object.keys(value).filter(k => value[k]);
+        },
+        set(value) {
+          console.log('>>value received by DTV', value) //array
+          const newMap = {};
+          for (let label of value) {
+            newMap[label] = true;
+          }
+          this.update({ ['accessibility_labels']: newMap });
+        }
+      },
       role: generateGetterSetter('role_visibility'),
       language: generateGetterSetter('language'),
       mastery_model() {
@@ -569,6 +589,7 @@
           };
         },
         set(value) {
+          console.log('set masteryModelItem value', value)
           this.updateExtraFields(value);
         },
       },
@@ -611,16 +632,16 @@
           this.updateExtraFields({ options });
         },
       },
-      // TODO remove eslint disable when `completionCriteria` is utilized
-      /* eslint-disable-next-line kolibri/vue-no-unused-properties */
       completionCriteria: {
         get() {
           const options = this.getExtraFieldsValueFromNodes('options') || {};
+          // console.log('from BE options.completion_criteria', options.completion_criteria)
           return options.completion_criteria || {};
         },
         set(completion_criteria) {
+          // console.log('completion_criteria', completion_criteria)
           // TODO Remove validation if unnecessary after implementing `completionCriteria`
-          if (validateCompletionCriteria(completion_criteria)) {
+          if (validateCompletionCriteria(completion_criteria, this.firstNode.kind)) {
             const options = { completion_criteria };
             this.updateExtraFields({ options });
           } else {
@@ -670,6 +691,9 @@
       allowChannelQuizzes() {
         return this.$store.getters.hasFeatureEnabled(FeatureFlagKeys.channel_quizzes);
       },
+      isDocument() {
+        return this.firstNode.kind === 'document';
+      }
     },
     watch: {
       nodes: {
@@ -756,7 +780,8 @@
         ) {
           return this.diffTracker.extra_fields[key];
         }
-        let results = uniq(this.nodes.map(node => node.extra_fields[key] || defaultValue));
+        let results = uniq(this.nodes.map(node => node.extra_fields[key]
+          || isUndefined(node.extra_fields[key]) ? defaultValue : node.extra_fields[key]));
         return getValueFromResults(results);
       },
       getPlaceholder(field) {
