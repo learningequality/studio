@@ -328,7 +328,3 @@ export function nodeExpanded(state) {
 export function levels() {
   return ['Preschool/Nursery', 'Lower primary', 'Upper primary', 'Lower secondary'];
 }
-
-export function learnersNeeds(state) {
-  return ['Teacher', 'Peers', 'Paper and pencil', 'Internet', 'Other supplies'];
-}

@@ -179,7 +179,7 @@ export function createContentNode(context, { parent, kind, ...payload }) {
     parent,
     ...contentDefaults,
     role_visibility: contentDefaults.role_visibility || RolesNames.LEARNER,
-    learners_needs: {},
+    learner_needs: {},
     completion: {},
     accessibility_labels: {},
     ...payload,
@@ -214,7 +214,7 @@ function generateContentNodeData({
   extra_fields = NOVALUE,
   prerequisite = NOVALUE,
   complete = NOVALUE,
-  learners_needs = NOVALUE,
+  learner_needs = NOVALUE,
   learning_activities = NOVALUE,
   levels = NOVALUE,
   accessibility_labels = NOVALUE,
@@ -260,8 +260,8 @@ function generateContentNodeData({
   if (role_visibility !== NOVALUE) {
     contentNodeData.role_visibility = role_visibility;
   }
-  if (learners_needs !== NOVALUE) {
-    contentNodeData.learners_needs = learners_needs;
+  if (learner_needs !== NOVALUE) {
+    contentNodeData.learner_needs = learner_needs;
   }
   if (aggregator !== NOVALUE) {
     contentNodeData.aggregator = aggregator;

@@ -1,21 +1,21 @@
 <template>
 
   <VSelect
-    ref="needs"
+    ref="need"
     v-model="need"
-    :items="needs"
+    :items="resources"
     box
     chips
-    :label="$tr('learnersNeedsLabel')"
+    :label="$tr('learnerNeedsLabel')"
     multiple
     deletableChips
     clearable
   >
     <template v-slot:no-data>
-      <VListTile v-if="learnersNeedsText && learnersNeedsText.trim()">
+      <VListTile v-if="learnerNeedsText && learnerNeedsText.trim()">
         <VListTileContent>
           <VListTileTitle>
-            {{ $tr('noNeedsFoundText', { text: learnersNeedsText.trim() }) }}
+            {{ $tr('noNeedsFoundText', { text: learnerNeedsText.trim() }) }}
           </VListTileTitle>
         </VListTileContent>
       </VListTile>
@@ -25,18 +25,13 @@
 </template>
 
 <script>
+  import { ResourcesNeededTypes } from 'shared/constants';
 
   export default {
-    name: 'LearnersNeedsOptions',
-    props: {
-      needs: {
-        type: Array,
-        required: true,
-      },
-    },
+    name: 'ResourcesNeededDropdown',
     data() {
       return {
-        learnersNeedsText: null,
+        learnerNeedsText: null,
       };
     },
     computed: {
@@ -48,9 +43,12 @@
           this.$emit('input', value);
         },
       },
+      resources() {
+        return Object.entries(ResourcesNeededTypes).map((resource) => ( { text: resource[0], value: resource[1] } ));
+      },
     },
     $trs: {
-      learnersNeedsLabel: 'What you will need',
+      learnerNeedsLabel: 'What you will need',
       noNeedsFoundText:
         'No results found for "{text}". Press \'Enter\' key to specify a new item learners will need',
     },

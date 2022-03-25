@@ -83,10 +83,9 @@
 
                 <!-- What you will need -->
                 <VFlex d-flex xs12>
-                  <LearnersNeedsOptions
-                    ref="learners_needs"
-                    v-model="contentLearnersNeed"
-                    :needs="learnersNeeds"
+                  <ResourcesNeededDropdown
+                    ref="learnerNeeds"
+                    v-model="learnerNeeds"
                   />
                 </VFlex>
 
@@ -401,7 +400,7 @@
   import AccessibilityOptions from './AccessibilityOptions.vue';
   import LevelsOptions from './LevelsOptions.vue';
   import CompletionDropdown from './CompletionDropdown.vue';
-  import LearnersNeedsOptions from './LearnersNeedsOptions.vue';
+  import ResourcesNeededDropdown from './ResourcesNeededDropdown.vue';
   import CategoryDropdown from './CategoryDropdown.vue';
   import {
     getTitleValidators,
@@ -470,7 +469,7 @@
       AccessibilityOptions,
       CompletionDropdown,
       LevelsOptions,
-      LearnersNeedsOptions,
+      ResourcesNeededDropdown,
       CategoryDropdown,
     },
     props: {
@@ -498,7 +497,6 @@
         'tags',
         'learningActivities',
         'levels',
-        'learnersNeeds',
       ]),
       ...mapGetters('currentChannel', ['currentChannel']),
       ...mapGetters('file', ['getContentNodeFiles']),
@@ -554,14 +552,25 @@
       },
       contentLearningActivities: generateGetterSetter('learning_activities'),
       contentLevel: generateGetterSetter('levels'),
-      contentLearnersNeed: generateGetterSetter('learners_needs'),
+      learnerNeeds: {
+        get() {
+          const value = this.getValueFromNodes('learner_needs');
+          return Object.keys(value).filter(k => value[k]);
+        },
+        set(value) {
+          const newMap = {};
+          for (let label of value) {
+            newMap[label] = true;
+          }
+          this.update({ ['learner_needs']: newMap });
+        }
+      },
       accessibility: {
         get() {
           const value = this.getValueFromNodes('accessibility_labels');
           return Object.keys(value).filter(k => value[k]);
         },
         set(value) {
-          console.log('>>value received by DTV', value) //array
           const newMap = {};
           for (let label of value) {
             newMap[label] = true;
