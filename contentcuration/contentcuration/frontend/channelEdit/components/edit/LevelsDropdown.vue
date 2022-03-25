@@ -25,15 +25,10 @@
 </template>
 
 <script>
+  import { ContentLevels } from 'shared/constants';
 
   export default {
-    name: 'LevelsOptions',
-    props: {
-      levels: {
-        type: Array,
-        required: true,
-      },
-    },
+    name: 'LevelsDropdown',
     data() {
       return {
         levelText: null,
@@ -48,6 +43,9 @@
           this.$emit('input', value);
         },
       },
+      levels() {
+        return Object.entries(ContentLevels).map((resource) => ( { text: resource[0], value: resource[1] } ));
+      }
     },
     $trs: {
       levelLabel: 'Level',

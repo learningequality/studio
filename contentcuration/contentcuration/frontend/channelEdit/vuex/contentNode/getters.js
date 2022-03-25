@@ -324,7 +324,3 @@ export function nodeExpanded(state) {
     return Boolean(state.expandedNodes[id]);
   };
 }
-
-export function levels() {
-  return ['Preschool/Nursery', 'Lower primary', 'Upper primary', 'Lower secondary'];
-}

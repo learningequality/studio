@@ -78,15 +78,12 @@
 
                 <!-- Level -->
                 <VFlex d-flex xs12>
-                  <LevelsOptions v-model="contentLevel" :levels="levels" />
+                  <LevelsDropdown ref="contentLevel" v-model="contentLevel" />
                 </VFlex>
 
                 <!-- What you will need -->
                 <VFlex d-flex xs12>
-                  <ResourcesNeededDropdown
-                    ref="learnerNeeds"
-                    v-model="learnerNeeds"
-                  />
+                  <ResourcesNeededDropdown ref="learnerNeeds" v-model="learnerNeeds" />
                 </VFlex>
 
                 <!-- Tags -->
@@ -398,7 +395,7 @@
   import SubtitlesList from '../../views/files/supplementaryLists/SubtitlesList';
   import { isImportedContent, importedChannelLink } from '../../utils';
   import AccessibilityOptions from './AccessibilityOptions.vue';
-  import LevelsOptions from './LevelsOptions.vue';
+  import LevelsDropdown from './LevelsDropdown.vue';
   import CompletionDropdown from './CompletionDropdown.vue';
   import ResourcesNeededDropdown from './ResourcesNeededDropdown.vue';
   import CategoryDropdown from './CategoryDropdown.vue';
@@ -468,7 +465,7 @@
       Checkbox,
       AccessibilityOptions,
       CompletionDropdown,
-      LevelsOptions,
+      LevelsDropdown,
       ResourcesNeededDropdown,
       CategoryDropdown,
     },
@@ -496,7 +493,6 @@
         'copyrightHolders',
         'tags',
         'learningActivities',
-        'levels',
       ]),
       ...mapGetters('currentChannel', ['currentChannel']),
       ...mapGetters('file', ['getContentNodeFiles']),
@@ -551,7 +547,19 @@
         },
       },
       contentLearningActivities: generateGetterSetter('learning_activities'),
-      contentLevel: generateGetterSetter('levels'),
+      contentLevel: {
+        get() {
+          const value = this.getValueFromNodes('grade_levels');
+          return Object.keys(value).filter(k => value[k]);
+        },
+        set(value) {
+          const newMap = {};
+          for (let label of value) {
+            newMap[label] = true;
+          }
+          this.update({ ['grade_levels']: newMap });
+        }
+      },
       learnerNeeds: {
         get() {
           const value = this.getValueFromNodes('learner_needs');
