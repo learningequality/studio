@@ -451,6 +451,29 @@
     };
   }
 
+  /**
+   * This function is used to generate getter/setters for new metadata fields that are boolean maps:
+   * - `grade_levels` (sometimes referred to as `content_levels`)
+   * - `learner_needs` (resources needed)
+   * - `accessibility_labels` (accessibility options)
+   */
+  function generateNestedNodesGetterSetter(key) {
+    return {
+      get() {
+        const value = this.getValueFromNodes(key);
+        console.log('get', key, value);
+        return Object.keys(value).filter(k => value[k]);
+      },
+      set(value) {
+        const newMap = {};
+        for (let label of value) {
+          newMap[label] = true;
+        }
+        this.update({ [key]: newMap });
+      },
+    };
+  }
+
   export default {
     name: 'DetailsTabView',
     components: {
@@ -547,45 +570,9 @@
         },
       },
       contentLearningActivities: generateGetterSetter('learning_activities'),
-      contentLevel: {
-        get() {
-          const value = this.getValueFromNodes('grade_levels');
-          return Object.keys(value).filter(k => value[k]);
-        },
-        set(value) {
-          const newMap = {};
-          for (let label of value) {
-            newMap[label] = true;
-          }
-          this.update({ ['grade_levels']: newMap });
-        }
-      },
-      learnerNeeds: {
-        get() {
-          const value = this.getValueFromNodes('learner_needs');
-          return Object.keys(value).filter(k => value[k]);
-        },
-        set(value) {
-          const newMap = {};
-          for (let label of value) {
-            newMap[label] = true;
-          }
-          this.update({ ['learner_needs']: newMap });
-        }
-      },
-      accessibility: {
-        get() {
-          const value = this.getValueFromNodes('accessibility_labels');
-          return Object.keys(value).filter(k => value[k]);
-        },
-        set(value) {
-          const newMap = {};
-          for (let label of value) {
-            newMap[label] = true;
-          }
-          this.update({ ['accessibility_labels']: newMap });
-        }
-      },
+      contentLevel: generateNestedNodesGetterSetter('grade_levels'),
+      learnerNeeds: generateNestedNodesGetterSetter('learner_needs'),
+      accessibility: generateNestedNodesGetterSetter('accessibility_labels'),
       role: generateGetterSetter('role_visibility'),
       language: generateGetterSetter('language'),
       mastery_model() {
@@ -606,7 +593,7 @@
           };
         },
         set(value) {
-          console.log('set masteryModelItem value', value)
+          console.log('set masteryModelItem value', value);
           this.updateExtraFields(value);
         },
       },
@@ -710,7 +697,7 @@
       },
       isDocument() {
         return this.firstNode.kind === 'document';
-      }
+      },
     },
     watch: {
       nodes: {
@@ -797,8 +784,13 @@
         ) {
           return this.diffTracker.extra_fields[key];
         }
-        let results = uniq(this.nodes.map(node => node.extra_fields[key]
-          || isUndefined(node.extra_fields[key]) ? defaultValue : node.extra_fields[key]));
+        let results = uniq(
+          this.nodes.map(node =>
+            node.extra_fields[key] || isUndefined(node.extra_fields[key])
+              ? defaultValue
+              : node.extra_fields[key]
+          )
+        );
         return getValueFromResults(results);
       },
       getPlaceholder(field) {
