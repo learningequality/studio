@@ -824,5 +824,10 @@ def publish_channel(
     elapsed = time.time() - start
 
     if elapsed > PUBLISHING_UPDATE_THRESHOLD:
-       report_exception(SlowPublishError(elapsed, channel_id))
+        # we raise the exception so that sentry has the stack trace when it tries to log log it
+        # we need to raise it to get Python to fill out the stack trace.
+        try:
+            raise SlowPublishError(elapsed, channel_id)
+        except SlowPublishError as e:
+            report_exception(e)
     return channel
