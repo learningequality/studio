@@ -9,6 +9,7 @@ from builtins import str
 from builtins import zip
 
 import pytest
+from django.db import IntegrityError
 from django.db.utils import DataError
 from le_utils.constants import content_kinds
 from mixer.backend.django import mixer
@@ -16,7 +17,7 @@ from mock import patch
 from past.utils import old_div
 
 from . import testdata
-from .base import BaseTestCase
+from .base import StudioTestCase
 from .testdata import create_studio_file
 from contentcuration.models import Channel
 from contentcuration.models import ContentKind
@@ -132,7 +133,7 @@ def _check_node_copy(source, copy, original_channel_id=None, channel=None):
         _check_node_copy(child_source, child_copy, original_channel_id, channel)
 
 
-class NodeGettersTestCase(BaseTestCase):
+class NodeGettersTestCase(StudioTestCase):
     def setUp(self):
         super(NodeGettersTestCase, self).setUp()
 
@@ -171,7 +172,7 @@ class NodeGettersTestCase(BaseTestCase):
         assert len(details["kind_count"]) > 0
 
 
-class NodeOperationsTestCase(BaseTestCase):
+class NodeOperationsTestCase(StudioTestCase):
     def setUp(self):
         super(NodeOperationsTestCase, self).setUp()
 
@@ -717,7 +718,7 @@ class NodeOperationsTestCase(BaseTestCase):
         )
 
 
-class SyncNodesOperationTestCase(BaseTestCase):
+class SyncNodesOperationTestCase(StudioTestCase):
     """
     Checks that sync nodes updates properies.
     """
@@ -844,7 +845,7 @@ class SyncNodesOperationTestCase(BaseTestCase):
             assert fileA.language == fileB.language, "different language found"
 
 
-class NodeCreationTestCase(BaseTestCase):
+class NodeCreationTestCase(StudioTestCase):
     def test_content_tag_creation(self):
         """
         Verfies tag creation works

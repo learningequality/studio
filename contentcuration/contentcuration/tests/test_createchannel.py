@@ -7,7 +7,7 @@ from builtins import str
 import requests
 from django.urls import reverse_lazy
 
-from .base import BaseTestCase
+from .base import StudioTestCase
 from .testdata import create_studio_file
 from contentcuration import models
 
@@ -44,7 +44,7 @@ def add_field_defaults_to_node(node):
 ###
 
 
-class CreateChannelTestCase(BaseTestCase):
+class CreateChannelTestCase(StudioTestCase):
     @classmethod
     def setUpClass(cls):
         super(CreateChannelTestCase, cls).setUpClass()

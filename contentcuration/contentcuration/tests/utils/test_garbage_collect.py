@@ -17,7 +17,6 @@ from contentcuration.models import ContentNode
 from contentcuration.models import File
 from contentcuration.models import Task
 from contentcuration.tests.base import BaseAPITestCase
-from contentcuration.tests.base import BaseTestCase
 from contentcuration.tests.base import StudioTestCase
 from contentcuration.tests.testdata import tree
 from contentcuration.utils.garbage_collect import clean_up_contentnodes
@@ -349,7 +348,7 @@ class CleanUpContentNodesTestCase(StudioTestCase):
         assert default_storage.exists("storage/a/a/aaa.jpg")
 
 
-class CleanUpFeatureFlagsTestCase(BaseTestCase):
+class CleanUpFeatureFlagsTestCase(StudioTestCase):
     def test_clean_up(self):
         key = "feature_flag_does_not_exist"
         self.user.feature_flags = {

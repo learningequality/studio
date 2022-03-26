@@ -4,10 +4,10 @@ import os
 import tempfile
 import zipfile
 
-from .base import BaseTestCase
+from .base import StudioTestCase
 
 
-class ZipFileTestCase(BaseTestCase):
+class ZipFileTestCase(StudioTestCase):
 
     def setUp(self):
         super(ZipFileTestCase, self).setUp()

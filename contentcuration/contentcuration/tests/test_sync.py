@@ -2,7 +2,7 @@ from __future__ import absolute_import
 
 from le_utils.constants import content_kinds
 
-from .base import BaseTestCase
+from .base import StudioTestCase
 from .testdata import create_temp_file
 from contentcuration.models import AssessmentItem
 from contentcuration.models import Channel
@@ -10,7 +10,7 @@ from contentcuration.utils.publish import mark_all_nodes_as_published
 from contentcuration.utils.sync import sync_channel
 
 
-class SyncTestCase(BaseTestCase):
+class SyncTestCase(StudioTestCase):
     """
     Test channel and node sync operations.
     """
