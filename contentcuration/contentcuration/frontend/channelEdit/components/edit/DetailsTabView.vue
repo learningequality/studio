@@ -52,17 +52,30 @@
               <VLayout row wrap>
                 <!-- Learning activity -->
                 <VFlex d-flex xs12>
-                  <LearningActivityDropdown ref="learning_activities" v-model="contentLearningActivities" @focus="trackClick('Learning activities')" />
+                  <LearningActivityDropdown
+                    ref="learning_activities"
+                    v-model="contentLearningActivities"
+                    :kind="firstNode.kind"
+                    @focus="trackClick('Learning activities')"
+                  />
                 </VFlex>
 
                 <!-- Level -->
                 <VFlex d-flex xs12>
-                  <LevelsDropdown ref="contentLevel" v-model="contentLevel" />
+                  <LevelsDropdown
+                    ref="contentLevel"
+                    v-model="contentLevel"
+                    @focus="trackClick('Levels dropdown')"
+                  />
                 </VFlex>
 
                 <!-- What you will need -->
                 <VFlex d-flex xs12>
-                  <ResourcesNeededDropdown ref="learnerNeeds" v-model="learnerNeeds" />
+                  <ResourcesNeededDropdown
+                    ref="learnerNeeds"
+                    v-model="learnerNeeds"
+                    @focus="trackClick('What you will need')"
+                  />
                 </VFlex>
 
                 <!-- Tags -->

@@ -26,6 +26,16 @@ import { LearningActivities } from 'shared/constants';
 
 export default {
   name: 'LearningActivityDropdown',
+  props: {
+    kind: {
+      type: String,
+      default: '',
+    },
+    selected: {
+      type: Array,
+      default: () => [],
+    },
+  },
   data() {
     return {
       learningActivityText: null,
@@ -34,7 +44,16 @@ export default {
   computed: {
     learningActivity: {
       get() {
-        return this.value;
+        if (this.kind === 'video') {
+          console.log ('LearningActivities.WATCH', LearningActivities.WATCH)
+          return LearningActivities.WATCH;
+        } else if (this.kind === 'audio') {
+          return LearningActivities.LISTEN;
+        } else if (this.kind === 'document') {
+          return LearningActivities.READ;
+        } else {
+          return this.selected;
+        }
       },
       set(value) {
         this.$emit('input', value);
