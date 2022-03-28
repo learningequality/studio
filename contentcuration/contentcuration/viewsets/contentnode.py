@@ -280,7 +280,7 @@ class MetadataLabelsField(JSONFieldDictSerializer):
     def get_fields(self):
         fields = {}
         for label_id, label_name in self.choices:
-            field = BooleanField(required=False, label=label_name)
+            field = BooleanField(required=False, label=label_name, allow_null=True)
             fields[label_id] = field
         return fields
 
@@ -305,6 +305,16 @@ class ContentNodeSerializer(BulkModelSerializer):
     accessibility_labels = MetadataLabelsField(accessibility_categories.choices, required=False)
     categories = MetadataLabelsField(subjects.choices, required=False)
     learner_needs = MetadataLabelsField(needs.choices, required=False)
+
+    dict_fields = [
+        "extra_fields",
+        "grade_levels",
+        "resource_types",
+        "learning_activities",
+        "accessibility_labels",
+        "categories",
+        "learner_needs",
+    ]
 
     class Meta:
         model = ContentNode
@@ -367,11 +377,12 @@ class ContentNodeSerializer(BulkModelSerializer):
                 {"parent": "This field should only be changed by a move operation"}
             )
 
-        extra_fields = validated_data.pop("extra_fields", None)
-        if extra_fields is not None:
-            validated_data["extra_fields"] = self.fields["extra_fields"].update(
-                instance.extra_fields, extra_fields
-            )
+        for field in self.dict_fields:
+            field_data = validated_data.pop(field, None)
+            if field_data is not None:
+                validated_data[field] = self.fields[field].update(
+                    getattr(instance, field), field_data
+                )
         if "tags" in validated_data:
             tags = validated_data.pop("tags")
             set_tags({instance.id: tags})

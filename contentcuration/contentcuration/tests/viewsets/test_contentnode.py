@@ -15,6 +15,7 @@ from django_concurrent_tests.helpers import call_concurrently
 from django_concurrent_tests.helpers import make_concurrent_calls
 from le_utils.constants import content_kinds
 from le_utils.constants import roles
+from le_utils.constants.labels.accessibility_categories import ACCESSIBILITYCATEGORIESLIST
 
 from contentcuration import models
 from contentcuration.tests import testdata
@@ -614,6 +615,64 @@ class SyncTestCase(StudioAPITestCase):
         self.assertEqual(
             models.ContentNode.objects.get(id=contentnode.id).extra_fields["randomize"], randomize
         )
+
+    def test_update_contentnode_remove_from_extra_fields(self):
+        user = testdata.user()
+        metadata = self.contentnode_db_metadata
+        metadata["extra_fields"] = {
+            "m": 5,
+        }
+        contentnode = models.ContentNode.objects.create(**metadata)
+        self.client.force_authenticate(user=user)
+        # Remove extra_fields.m
+        response = self.client.post(
+            self.sync_url,
+            [generate_update_event(contentnode.id, CONTENTNODE, {"extra_fields.m": None})],
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        with self.assertRaises(KeyError):
+            models.ContentNode.objects.get(id=contentnode.id).extra_fields["m"]
+
+    def test_update_contentnode_add_multiple_metadata_labels(self):
+        user = testdata.user()
+
+        contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
+        self.client.force_authenticate(user=user)
+        # Add metadata label to accessibility_labels
+        response = self.client.post(
+            self.sync_url,
+            [generate_update_event(contentnode.id, CONTENTNODE, {"accessibility_labels.{}".format(ACCESSIBILITYCATEGORIESLIST[0]): True})],
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertTrue(models.ContentNode.objects.get(id=contentnode.id).accessibility_labels[ACCESSIBILITYCATEGORIESLIST[0]])
+
+        response = self.client.post(
+            self.sync_url,
+            [generate_update_event(contentnode.id, CONTENTNODE, {"accessibility_labels.{}".format(ACCESSIBILITYCATEGORIESLIST[1]): True})],
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertTrue(models.ContentNode.objects.get(id=contentnode.id).accessibility_labels[ACCESSIBILITYCATEGORIESLIST[0]])
+        self.assertTrue(models.ContentNode.objects.get(id=contentnode.id).accessibility_labels[ACCESSIBILITYCATEGORIESLIST[1]])
+
+    def test_update_contentnode_remove_metadata_label(self):
+        user = testdata.user()
+        metadata = self.contentnode_db_metadata
+        metadata["accessibility_labels"] = {ACCESSIBILITYCATEGORIESLIST[0]: True}
+
+        contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
+        self.client.force_authenticate(user=user)
+        # Add metadata label to accessibility_labels
+        response = self.client.post(
+            self.sync_url,
+            [generate_update_event(contentnode.id, CONTENTNODE, {"accessibility_labels.{}".format(ACCESSIBILITYCATEGORIESLIST[0]): None})],
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        with self.assertRaises(KeyError):
+            models.ContentNode.objects.get(id=contentnode.id).accessibility_labels[ACCESSIBILITYCATEGORIESLIST[0]]
 
     def test_update_contentnode_tags(self):
         user = testdata.user()
