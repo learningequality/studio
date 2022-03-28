@@ -52,28 +52,7 @@
               <VLayout row wrap>
                 <!-- Learning activity -->
                 <VFlex d-flex xs12>
-                  <VSelect
-                    ref="learning_activities"
-                    v-model="contentLearningActivities"
-                    :items="learningActivities"
-                    chips
-                    :label="$tr('learningActivityLabel')"
-                    multiple
-                    deletableChips
-                    box
-                    clearable
-                    @focus="trackClick('Learning activities')"
-                  >
-                    <template v-slot:no-data>
-                      <VListTile v-if="learningActivityText && learningActivityText.trim()">
-                        <VListTileContent>
-                          <VListTileTitle>
-                            {{ $tr('noActivitiesText', { text: learningActivityText.trim() }) }}
-                          </VListTileTitle>
-                        </VListTileContent>
-                      </VListTile>
-                    </template>
-                  </VSelect>
+                  <LearningActivityDropdown ref="learning_activities" v-model="contentLearningActivities" @focus="trackClick('Learning activities')" />
                 </VFlex>
 
                 <!-- Level -->
@@ -397,6 +376,7 @@
   import AccessibilityOptions from './AccessibilityOptions.vue';
   import LevelsDropdown from './LevelsDropdown.vue';
   import CompletionDropdown from './CompletionDropdown.vue';
+  import LearningActivityDropdown from './LearningActivityDropdown.vue';
   import ResourcesNeededDropdown from './ResourcesNeededDropdown.vue';
   import CategoryDropdown from './CategoryDropdown.vue';
   import {
@@ -491,6 +471,7 @@
       LevelsDropdown,
       ResourcesNeededDropdown,
       CategoryDropdown,
+      LearningActivityDropdown,
     },
     props: {
       nodeIds: {
@@ -501,7 +482,6 @@
     data() {
       return {
         tagText: null,
-        learningActivityText: null,
         valid: true,
         diffTracker: {},
         beginners: false,
@@ -515,7 +495,6 @@
         'aggregators',
         'copyrightHolders',
         'tags',
-        'learningActivities',
       ]),
       ...mapGetters('currentChannel', ['currentChannel']),
       ...mapGetters('file', ['getContentNodeFiles']),
@@ -569,7 +548,7 @@
           }
         },
       },
-      contentLearningActivities: generateGetterSetter('learning_activities'),
+      contentLearningActivities: generateNestedNodesGetterSetter('learning_activities'),
       contentLevel: generateNestedNodesGetterSetter('grade_levels'),
       learnerNeeds: generateNestedNodesGetterSetter('learner_needs'),
       accessibility: generateNestedNodesGetterSetter('accessibility_labels'),
@@ -836,9 +815,6 @@
         'Website or org hosting the content collection but not necessarily the creator or copyright holder',
       copyrightHolderLabel: 'Copyright holder',
       descriptionLabel: 'Description',
-      learningActivityLabel: 'Learning activity',
-      noActivitiesText:
-        'No results found for "{text}". Press \'Enter\' key to create a new learning activity',
       tagsLabel: 'Tags',
       noTagsFoundText: 'No results found for "{text}". Press \'Enter\' key to create a new tag',
       randomizeQuestionLabel: 'Randomize question order for learners',

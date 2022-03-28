@@ -311,14 +311,6 @@ export function tags(state) {
   ).sort();
 }
 
-export function learningActivities(state) {
-  return uniq(
-    flatMap(Object.values(state.contentNodesMap), node =>
-      Object.keys(node['learning_activities'] || {})
-    ).filter(t => t)
-  ).sort();
-}
-
 export function nodeExpanded(state) {
   return function(id) {
     return Boolean(state.expandedNodes[id]);
