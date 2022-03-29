@@ -82,7 +82,7 @@
     "intl": "1.2.5",
     "jquery": "^2.2.4",
     "jspdf": "https://github.com/MrRio/jsPDF.git#b7a1d8239c596292ce86dafa77f05987bcfa2e6e",
-    "kolibri-constants": "^0.1.39",
+    "kolibri-constants": "^0.1.40",
     "kolibri-tools": "^0.14.5-dev.4",
     "lodash": "^4.17.21",
     "material-icons": "0.3.1",
