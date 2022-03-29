@@ -12205,9 +12205,9 @@ jsonparse@^1.2.0:
   resolved "https://registry.yarnpkg.com/jsonparse/-/jsonparse-1.3.1.tgz#3f4dae4a91fac315f71062f8521cc239f1366280"
   integrity sha1-P02uSpH6wxX3EGL4UhzCOfE2YoA=
 
-"jspdf@git://github.com/MrRio/jsPDF.git#b7a1d8239c596292ce86dafa77f05987bcfa2e6e":
+"jspdf@https://github.com/MrRio/jsPDF.git#b7a1d8239c596292ce86dafa77f05987bcfa2e6e":
   version "2.1.1"
-  resolved "git://github.com/MrRio/jsPDF.git#b7a1d8239c596292ce86dafa77f05987bcfa2e6e"
+  resolved "https://github.com/MrRio/jsPDF.git#b7a1d8239c596292ce86dafa77f05987bcfa2e6e"
   dependencies:
     atob "^2.1.2"
     btoa "^1.2.1"

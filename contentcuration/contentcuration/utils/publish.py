@@ -30,6 +30,7 @@ from django.utils.translation import gettext_lazy as _
 from kolibri_content import models as kolibrimodels
 from kolibri_content.router import get_active_content_database
 from kolibri_content.router import using_content_database
+from le_utils.constants import completion_criteria
 from le_utils.constants import content_kinds
 from le_utils.constants import exercises
 from le_utils.constants import file_formats
@@ -226,14 +227,18 @@ def create_bare_contentnode(ccnode, default_language, channel_id, channel_name):
     if ccnode.language or default_language:
         language, _new = get_or_create_language(ccnode.language or default_language)
 
-    duration = None
-    if ccnode.kind_id in [content_kinds.AUDIO, content_kinds.VIDEO]:
-        # aggregate duration from associated files, choosing maximum if there are multiple, like hi and lo res videos
-        duration = ccnode.files.aggregate(duration=Max("duration")).get("duration")
-
     options = {}
     if ccnode.extra_fields and 'options' in ccnode.extra_fields:
         options = ccnode.extra_fields['options']
+
+    duration = None
+    ccnode_completion_criteria = options.get("completion_criteria")
+    if ccnode_completion_criteria:
+        if ccnode_completion_criteria["model"] == completion_criteria.TIME or ccnode_completion_criteria["model"] == completion_criteria.APPROX_TIME:
+            duration = ccnode_completion_criteria["threshold"]
+    if duration is None and ccnode.kind_id in [content_kinds.AUDIO, content_kinds.VIDEO]:
+        # aggregate duration from associated files, choosing maximum if there are multiple, like hi and lo res videos.
+        duration = ccnode.files.aggregate(duration=Max("duration")).get("duration")
 
     kolibrinode, is_new = kolibrimodels.ContentNode.objects.update_or_create(
         pk=ccnode.node_id,

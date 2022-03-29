@@ -1,12 +1,10 @@
 import featureFlagsSchema from 'static/feature_flags.json';
 
-export { default as ContentNodeResourceType } from 'kolibri-constants/labels/ResourceType';
 export { default as LearningActivities } from 'kolibri-constants/labels/LearningActivities';
-export { default as AccessibilityCategories } from 'kolibri-constants/labels/AccessibilityCategories';
-// Used to categorize the level or audience of content
-export { default as ContentLevels } from 'kolibri-constants/labels/Levels';
-export { default as ResourcesNeededTypes } from 'kolibri-constants/labels/Needs';
+export { default as CompletionCriteriaModels } from 'kolibri-constants/CompletionCriteria';
+export { default as ContentLevel } from 'kolibri-constants/labels/Levels';
 export { default as Categories } from 'kolibri-constants/labels/Subjects';
+export { default as AccessibilityCategories } from 'kolibri-constants/labels/AccessibilityCategories';
 
 export const ContentDefaults = {
   author: 'author',
@@ -186,10 +184,10 @@ export const AccessibilityCategoriesMap = {
   video: ['SIGN_LANGUAGE', 'AUDIO_DESCRIPTION'],
   exercise: ['ALT_TEXT'],
   html5: ['ALT_TEXT', 'HIGH_CONTRAST'],
-}
+};
 export const completionDropdownMap = {
   document: ['All content viewed', 'Complete duration'],
-//TODO: REMOVE this map
+  //TODO: REMOVE this map
   // nodeDetails = {
   //   title: 'Exercise',
   //   kind: ContentKindsNames.EXERCISE,
@@ -204,9 +202,6 @@ export const completionDropdownMap = {
   //     },
   //   },
   // };
-  exercise: [
-    'Practice until goal is met',
-    'Practice quiz',
-  ],
+  exercise: ['Practice until goal is met', 'Practice quiz'],
   zip: ['Short activity', 'Long activity', 'Reference', 'Exact time to complete'],
 };

@@ -133,16 +133,17 @@ export function getContentNodeDetailsAreValid(state) {
 export function getContentNodeFilesAreValid(state, getters, rootState, rootGetters) {
   return function(contentNodeId) {
     const contentNode = state.contentNodesMap[contentNodeId];
+    if (
+      contentNode.kind === ContentKindsNames.TOPIC ||
+      contentNode.kind === ContentKindsNames.EXERCISE
+    ) {
+      return true;
+    }
     if (contentNode && contentNode.kind !== ContentKindsNames.TOPIC) {
       let files = rootGetters['file/getContentNodeFiles'](contentNode.id);
       if (files.length) {
         // Don't count errors before files have loaded
         return !getNodeFilesErrors(files).length;
-      } else if (
-        contentNode.kind === ContentKindsNames.TOPIC ||
-        contentNode.kind === ContentKindsNames.EXERCISE
-      ) {
-        return true;
       } else {
         return false;
       }

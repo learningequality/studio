@@ -144,11 +144,13 @@ def node(data, parent=None):
             content_id=data.get('content_id') or data['node_id'],
             sort_order=data.get('sort_order', 1),
             complete=True,
+            extra_fields=data.get('extra_fields'),
         )
         new_node.save()
         video_file = fileobj_video(contents=b"Video File")
         video_file.contentnode = new_node
         video_file.preset_id = format_presets.VIDEO_HIGH_RES
+        video_file.duration = 100
         video_file.save()
 
     # Create exercises

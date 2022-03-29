@@ -1160,6 +1160,10 @@ class ContentNode(MPTTModel, models.Model):
     categories = models.JSONField(blank=True, null=True)
     learner_needs = models.JSONField(blank=True, null=True)
 
+    # A field for storing a suggested duration for the content node
+    # this duration should be in seconds.
+    suggested_duration = models.IntegerField(blank=True, null=True, help_text="Suggested duration for the content node (in seconds)")
+
     objects = CustomContentNodeTreeManager()
 
     # Track all updates and ignore a blacklist of attributes
