@@ -1,11 +1,12 @@
 <template>
+
   <VSelect
     v-model="learningActivity"
     :items="learningActivities"
     box
     chips
     clearable
-    :label="$tr('learningActivityLabel')"
+    :label="translateMetadataString('learningActivity')"
     multiple
     deletableChips
   >
@@ -19,56 +20,64 @@
       </VListTile>
     </template>
   </VSelect>
+
 </template>
 
 <script>
-import { LearningActivities } from 'shared/constants';
 
-export default {
-  name: 'LearningActivityDropdown',
-  props: {
-    kind: {
-      type: String,
-      default: '',
-    },
-    selected: {
-      type: Array,
-      default: () => [],
-    },
-  },
-  data() {
-    return {
-      learningActivityText: null,
-    };
-  },
-  computed: {
-    learningActivity: {
-      get() {
-        if (this.kind === 'video') {
-          console.log ('LearningActivities.WATCH', LearningActivities.WATCH)
-          return LearningActivities.WATCH;
-        } else if (this.kind === 'audio') {
-          return LearningActivities.LISTEN;
-        } else if (this.kind === 'document') {
-          return LearningActivities.READ;
-        } else {
-          return this.selected;
-        }
+  import { camelCase } from 'lodash';
+  import { LearningActivities } from 'shared/constants';
+  import { constantsTranslationMixin, metadataTranslationMixin } from 'shared/mixins';
+
+  export default {
+    name: 'LearningActivityDropdown',
+    mixins: [constantsTranslationMixin, metadataTranslationMixin],
+    props: {
+      kind: {
+        type: String,
+        default: '',
       },
-      set(value) {
-        this.$emit('input', value);
+      selected: {
+        type: Array,
+        default: () => [],
       },
     },
-    learningActivities() {
-      return Object.entries(LearningActivities).map((activity) => ( { text: activity[0], value: activity[1] } ));
+    data() {
+      return {
+        learningActivityText: null,
+      };
     },
-  },
-  $trs: {
-    learningActivityLabel: 'Learning activity',
-    noActivitiesText:
-      'No results found for "{text}". Press \'Enter\' key to create a new learning activity',
-  },
-};
+    computed: {
+      learningActivity: {
+        get() {
+          if (this.kind === 'video') {
+            console.log('LearningActivities.WATCH', LearningActivities.WATCH);
+            return LearningActivities.WATCH;
+          } else if (this.kind === 'audio') {
+            return LearningActivities.LISTEN;
+          } else if (this.kind === 'document') {
+            return LearningActivities.READ;
+          } else {
+            return this.selected;
+          }
+        },
+        set(value) {
+          this.$emit('input', value);
+        },
+      },
+      learningActivities() {
+        return Object.entries(LearningActivities).map(activity => ({
+          text: this.translateMetadataString(camelCase(activity[0])),
+          value: activity[1],
+        }));
+      },
+    },
+    $trs: {
+      noActivitiesText:
+        'No results found for "{text}". Press \'Enter\' key to create a new learning activity',
+    },
+  };
+
 </script>
 <style lang="scss">
 </style>
