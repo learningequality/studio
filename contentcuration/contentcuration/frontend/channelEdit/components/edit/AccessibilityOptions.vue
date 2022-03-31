@@ -76,6 +76,9 @@
     },
     $trs: {
       /* eslint-disable kolibri/vue-no-unused-translations */
+      /**
+       * Strings for the help tooltips
+       */
       altText: `Alternative text is provided for visual content (e.g., via the HTML alt attribute).`,
       audioDescription: `Audio descriptions are available (e.g., via an HTML5 track element with kind="descriptions")`,
       highContrast: `Content meets the visual contrast threshold set out in WCAG Success Criteria 1.4.6`,

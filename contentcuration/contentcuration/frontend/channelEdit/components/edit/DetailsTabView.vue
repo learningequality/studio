@@ -234,7 +234,7 @@
         <template v-if="requiresAccessibility">
           <VFlex xs12>
             <h1 class="subheading">
-              {{ $tr('accessibilityHeader') }}
+              {{ translateMetadataString('accessibility') }}
             </h1>
             <AccessibilityOptions
               v-model="accessibility"
@@ -407,6 +407,7 @@
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import { NEW_OBJECT, FeatureFlagKeys, ContentModalities } from 'shared/constants';
   import { validate as validateCompletionCriteria } from 'shared/leUtils/CompletionCriteria';
+  import { constantsTranslationMixin, metadataTranslationMixin } from 'shared/mixins';
 
   // Define an object to act as the place holder for non unique values.
   const nonUniqueValue = {};
@@ -486,6 +487,7 @@
       CategoryDropdown,
       LearningActivityDropdown,
     },
+    mixins: [constantsTranslationMixin, metadataTranslationMixin],
     props: {
       nodeIds: {
         type: Array,
@@ -631,11 +633,11 @@
       completionCriteria: {
         get() {
           const options = this.getExtraFieldsValueFromNodes('options') || {};
-          // console.log('from BE options.completion_criteria', options.completion_criteria)
+          console.log('@@from BE options.completion_criteria', options.completion_criteria)
           return options.completion_criteria || {};
         },
         set(completion_criteria) {
-          // console.log('completion_criteria', completion_criteria)
+          console.log('@@completion_criteria', completion_criteria)
           // TODO Remove validation if unnecessary after implementing `completionCriteria`
           if (validateCompletionCriteria(completion_criteria, this.firstNode.kind)) {
             const options = { completion_criteria };
