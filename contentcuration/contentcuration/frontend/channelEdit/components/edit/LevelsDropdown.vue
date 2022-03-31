@@ -7,7 +7,7 @@
     box
     chips
     clearable
-    :label="$tr('levelLabel')"
+    :label="translateMetadataString('level')"
     multiple
     deletableChips
   >
@@ -25,10 +25,14 @@
 </template>
 
 <script>
+
+  import { camelCase } from 'lodash';
   import { ContentLevels } from 'shared/constants';
+  import { constantsTranslationMixin, metadataTranslationMixin } from 'shared/mixins';
 
   export default {
     name: 'LevelsDropdown',
+    mixins: [constantsTranslationMixin, metadataTranslationMixin],
     data() {
       return {
         levelText: null,
@@ -43,12 +47,31 @@
           this.$emit('input', value);
         },
       },
+      /**
+       * List of levels to show in the dropdown, taking into account mapping
+       * to levels in the constantsthat do not have an exact matching corresponding string
+       * @returns {Array}
+       */
       levels() {
-        return Object.entries(ContentLevels).map((resource) => ( { text: resource[0], value: resource[1] } ));
-      }
+        return Object.entries(ContentLevels).map(level => {
+          let translationKey;
+          if (level[0] === 'PROFESSIONAL') {
+            translationKey = 'specializedProfessionalTraining';
+          } else if (level[0] === 'WORK_SKILLS') {
+            translationKey = 'allLevelsWorkSkills';
+          } else if (level[0] === 'BASIC_SKILLS') {
+            translationKey = 'allLevelsBasicSkills';
+          } else {
+            translationKey = camelCase(level[0]);
+          }
+          return {
+            text: this.translateMetadataString(translationKey),
+            value: level[1],
+          };
+        });
+      },
     },
     $trs: {
-      levelLabel: 'Level',
       noLevelsFoundText: 'No results found for "{text}". Press \'Enter\' key to create a new level',
     },
   };
