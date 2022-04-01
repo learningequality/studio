@@ -25,10 +25,13 @@
 </template>
 
 <script>
+  import { camelCase } from 'lodash';
   import { ResourcesNeededTypes } from 'shared/constants';
+  import { constantsTranslationMixin, metadataTranslationMixin } from 'shared/mixins';
 
   export default {
     name: 'ResourcesNeededDropdown',
+    mixins: [constantsTranslationMixin, metadataTranslationMixin],
     data() {
       return {
         learnerNeedsText: null,
@@ -44,7 +47,10 @@
         },
       },
       resources() {
-        return Object.entries(ResourcesNeededTypes).map((resource) => ( { text: resource[0], value: resource[1] } ));
+        return Object.entries(ResourcesNeededTypes).map(resource => ( {
+          text: this.translateMetadataString(resource[0]),
+          value: resource[1]
+        }));
       },
     },
     $trs: {
