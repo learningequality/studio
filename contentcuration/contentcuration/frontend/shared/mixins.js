@@ -657,15 +657,15 @@ export const metadataTranslationMixin = {
 };
 
 /**
- * An object mapping ad hoc keys (like those to be passed to coreString()) which do not
+ * An object mapping ad hoc keys (like those to be passed to CommonMetadataStrings()) which do not
  * conform to the expectations. Examples:
  *
- * - Misspelling of the key in coreStrings but a kolibri-constant used to access it is
+ * - Misspelling of the key in CommonMetadataStrings but a kolibri-constant used to access it is
  *   spelled correctly and will not map.
  * - Keys were defined and string-froze which are not camelCase.
  * - Keys which, when _.camelCase()'ed will not result in a valid key, requiring manual mapping
  */
- const nonconformingKeys = {
+const nonconformingKeys = {
   PEOPLE: 'ToUseWithTeachersAndPeers',
   PAPER_PENCIL: 'ToUseWithPaperAndPencil',
   INTERNET: 'NeedsInternet',
