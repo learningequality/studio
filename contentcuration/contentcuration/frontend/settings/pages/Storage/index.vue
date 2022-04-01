@@ -90,8 +90,8 @@
         return ContentKindsList.filter(k => !hiddenKinds.includes(k));
       },
       storageUsagePercentage() {
-        // parseInt to force the float to int
-        return parseInt((this.usedSpace / this.totalSpace) * 100);
+        // Math.round to fix ParseInt issues for really small divisions to force the float to int
+        return Math.round((this.usedSpace / this.totalSpace) * 100);
       },
       theme() {
         return theme();
