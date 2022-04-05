@@ -50,6 +50,13 @@ from contentcuration.utils.messages import get_messages
 from contentcuration.viewsets.channelset import PublicChannelSetSerializer
 
 PUBLIC_CHANNELS_CACHE_DURATION = 30  # seconds
+PUBLIC_CHANNELS_CACHE_KEYS = {
+    "list": "public_channel_list",
+    "languages": "public_channel_languages",
+    "licenses": "public_channel_licenses",
+    "kinds": "public_channel_kinds",
+    "collections": "public_channel_collections",
+}
 
 MESSAGES = "i18n_messages"
 PREFERENCES = "user_preferences"
@@ -126,15 +133,15 @@ def channel_list(request):
     current_user = current_user_for_context(None if anon else request.user)
     preferences = DEFAULT_USER_PREFERENCES if anon else request.user.content_defaults
 
-    public_channel_list = cache.get("public_channel_list")
+    public_channel_list = cache.get(PUBLIC_CHANNELS_CACHE_KEYS["list"])
     if public_channel_list is None:
         public_channel_list = Channel.objects.filter(
             public=True, main_tree__published=True, deleted=False,
         ).values_list("main_tree__tree_id", flat=True)
-        cache.set("public_channel_list", public_channel_list, None)
+        cache.set(PUBLIC_CHANNELS_CACHE_KEYS["list"], public_channel_list, None)
 
     # Get public channel languages
-    languages = cache.get("public_channel_languages")
+    languages = cache.get(PUBLIC_CHANNELS_CACHE_KEYS["languages"])
     if languages is None:
         public_lang_query = (
             Language.objects.filter(
@@ -147,10 +154,10 @@ def channel_list(request):
             .order_by("lang_code")
         )
         languages = {lang["lang_code"]: lang["count"] for lang in public_lang_query}
-        cache.set("public_channel_languages", json_for_parse_from_data(languages), None)
+        cache.set(PUBLIC_CHANNELS_CACHE_KEYS["languages"], json_for_parse_from_data(languages), None)
 
     # Get public channel licenses
-    licenses = cache.get("public_channel_licenses")
+    licenses = cache.get(PUBLIC_CHANNELS_CACHE_KEYS["licenses"])
     if licenses is None:
         public_license_query = (
             License.objects.filter(contentnode__tree_id__in=public_channel_list)
@@ -159,10 +166,10 @@ def channel_list(request):
             .distinct()
         )
         licenses = list(public_license_query)
-        cache.set("public_channel_licenses", json_for_parse_from_data(licenses), None)
+        cache.set(PUBLIC_CHANNELS_CACHE_KEYS["licenses"], json_for_parse_from_data(licenses), None)
 
     # Get public channel kinds
-    kinds = cache.get("public_channel_kinds")
+    kinds = cache.get(PUBLIC_CHANNELS_CACHE_KEYS["kinds"])
     if kinds is None:
         public_kind_query = (
             ContentKind.objects.filter(contentnodes__tree_id__in=public_channel_list)
@@ -171,10 +178,10 @@ def channel_list(request):
             .distinct()
         )
         kinds = list(public_kind_query)
-        cache.set("public_channel_kinds", json_for_parse_from_data(kinds), None)
+        cache.set(PUBLIC_CHANNELS_CACHE_KEYS["kinds"], json_for_parse_from_data(kinds), None)
 
     # Get public channel sets
-    collections = cache.get("public_channel_collections")
+    collections = cache.get(PUBLIC_CHANNELS_CACHE_KEYS["collections"])
     if collections is None:
         public_channelset_query = ChannelSet.objects.filter(public=True).annotate(
             count=SQCountDistinct(
@@ -187,7 +194,7 @@ def channel_list(request):
                 field="id",
             )
         )
-        cache.set("public_channel_collections", json_for_parse_from_serializer(
+        cache.set(PUBLIC_CHANNELS_CACHE_KEYS["collections"], json_for_parse_from_serializer(
             PublicChannelSetSerializer(public_channelset_query, many=True)), None)
 
     return render(

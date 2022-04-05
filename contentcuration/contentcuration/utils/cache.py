@@ -9,6 +9,7 @@ from django.core.cache import cache as django_cache
 from django_redis.client import DefaultClient
 from django_redis.client.default import _main_exceptions
 
+from contentcuration.views.base import PUBLIC_CHANNELS_CACHE_KEYS
 
 DEFERRED_FLAG = "__DEFERRED"
 
@@ -105,6 +106,7 @@ def delete_public_channel_cache_keys():
     """
     delete_cache_keys("*get_public_channel_list*")
     delete_cache_keys("*get_user_public_channels*")
+    django_cache.delete_many(list(PUBLIC_CHANNELS_CACHE_KEYS.values()))
 
 
 def redis_retry(func):
@@ -134,6 +136,7 @@ class ResourceSizeCache:
     If the django_cache is Redis, then we use the lower level Redis client to use
     its hash commands, HSET and HGET, to ensure we can store lots of data in performant way
     """
+
     def __init__(self, node, cache=None):
         self.node = node
         self.cache = cache or django_cache
