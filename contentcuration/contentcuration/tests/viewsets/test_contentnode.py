@@ -1469,6 +1469,22 @@ class CRUDTestCase(StudioAPITestCase):
             .exists()
         )
 
+    def test_update_contentnode_suggested_duration(self):
+        user = testdata.user()
+        contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
+        new_suggested_duration = 600
+
+        self.client.force_authenticate(user=user)
+        response = self.client.patch(
+            reverse("contentnode-detail", kwargs={"pk": contentnode.id}),
+            {"suggested_duration": new_suggested_duration},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(
+            models.ContentNode.objects.get(id=contentnode.id).suggested_duration, new_suggested_duration
+        )
+
     def test_update_contentnode_tags_dont_duplicate(self):
         user = testdata.user()
         contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
