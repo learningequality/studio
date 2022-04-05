@@ -1658,9 +1658,13 @@ class ContentNode(MPTTModel, models.Model):
     def on_create(self):
         self.changed = True
         self.recalculate_editors_storage()
+        if self.published:
+            delete_public_channel_cache_keys()
 
     def on_update(self):
         self.changed = self.changed or self.has_changes()
+        if self.published:
+            delete_public_channel_cache_keys()
 
     def move_to(self, target, *args, **kwargs):
         parent_was_trashtree = self.parent.channel_trash.exists()
