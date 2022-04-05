@@ -2,14 +2,15 @@
 
   <VFlex>
     <VLayout row wrap>
-      <VFlex v-if="!audioVideoUpload" md3>
+      <VFlex v-if="!audioVideoUpload" md2 sm3>
         <VTextField
-          v-model="minutes"
+          v-model.number="minutes"
           box
+          min="0"
           :label="$tr('minutesRequired')"
         />
       </VFlex>
-      <VFlex v-else md6>
+      <VFlex v-else md2 sm3>
         {{ defaultUploadTime }}
       </VFlex>
     </VLayout>
@@ -26,14 +27,26 @@
         type: Boolean,
         default: false,
       },
+      value: {
+        type: Number,
+        default: 0,
+      }
     },
     data() {
       return {
-        minutes: '',
-        defaultUploadTime: '13:24',
+        defaultUploadTime: 13,
       };
     },
-    computed: {},
+    computed: {
+      minutes: {
+        get() {
+          return this.value;
+        },
+        set (value) {
+          this.$emit('input', value)
+        }
+      }
+    },
     $trs: {
       minutesRequired: 'Minutes',
     },

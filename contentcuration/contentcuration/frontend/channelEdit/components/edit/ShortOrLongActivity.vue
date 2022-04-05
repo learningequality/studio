@@ -2,18 +2,19 @@
 
   <VFlex>
     <VLayout row wrap justify-space-between>
-      <VFlex md2>
+      <VFlex md2 sm3>
         <VTextField
           v-model="minutes"
           box
           :label="$tr('minutesRequired')"
         />
       </VFlex>
-      <VFlex md9>
+      <VFlex md9 sm8>
         <VSlider
           v-model="minutes"
           :label="label"
           :max="maxRange"
+          :min="shortActivity ? 0 : 31"
         />
       </VFlex>
     </VLayout>
@@ -35,12 +36,16 @@
         type: Boolean,
         default: false,
       },
+      value: {
+        type: Number,
+        default: 0,
+      },
     },
     data() {
       return {
         label: '',
-        shortMinutes: 10,
-        longMinutes: 45,
+        shortMinutes: this.value || 10,
+        longMinutes: this.value || 45,
       };
     },
     computed: {
@@ -54,7 +59,6 @@
           } else {
             this.longMinutes = value;
           }
-          console.log('value of minutes sent up', value);
           this.$emit('input', value);
         },
       },
