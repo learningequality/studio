@@ -173,6 +173,9 @@ def handle_changes(request, viewset_class, change_type, changes):
                 raise ChangeNotAllowed(change_type, viewset_class)
             result = event_handler(changes)
             elapsed = time.time() - start
+            print(" ===== ")
+            print(result)
+            print(" ===== ")
 
             if elapsed > SLOW_UPDATE_THRESHOLD:
                 # This is really a warning rather than an actual error,

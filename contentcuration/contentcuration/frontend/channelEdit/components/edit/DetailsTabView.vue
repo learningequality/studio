@@ -163,6 +163,71 @@
         </VFlex>
       </VLayout>
 
+      <!-- Validated for Section -->
+      <VLayout >
+        <VFlex>
+        <h1 class="subheading">
+            Validated For
+        </h1>
+        <!-- <VAutocomplete
+          v-model="screen_reader"
+          class="language-dropdown"
+          label="Screen Reader"
+          box
+          v-bind="$attrs"
+          :items="[
+              {text: 'JAWS'},
+              {text: 'NVDA'},
+              {text: 'Narrator'}
+          ]"
+          color="primary"
+          itemValue="id"
+          autoSelectFirst
+          :allowOverflow="false"
+          clearable
+          :rules="rules"
+          :required="required"
+          :search-input.sync="input"
+          :menu-props="menuProps"
+          :multiple="multiple"
+          :chips="multiple"
+          @change="input = ''"
+          @focus="$emit('focus')"
+        >
+        </VAutocomplete> -->
+        <ScreenReaderDropdown 
+        ref="screen_reader"
+        v-model="screen_reader"
+        />
+        {{screen_reader}}
+        <OsValidatorDropdown />
+        <!-- <VAutocomplete
+          v-model="os_validator"
+          class="language-dropdown"
+          label="OS Validators"
+          box
+          v-bind="$attrs"
+          :items="[
+              {text: 'Windows'},
+              {text: 'Linux'},
+          ]"
+          color="primary"
+          itemValue="id"
+          autoSelectFirst
+          :allowOverflow="false"
+          clearable
+          :rules="rules"
+          :required="required"
+          :search-input.sync="input"
+          :menu-props="menuProps"
+          :multiple="multiple"
+          :chips="multiple"
+          @change="input = ''"
+          @focus="$emit('focus')"
+        >
+        </VAutocomplete> -->
+        </VFlex>
+      </VLayout>
 
       <!-- Source section -->
       <VLayout row wrap class="section">
@@ -314,6 +379,8 @@
   import LicenseDropdown from 'shared/views/LicenseDropdown';
   import MasteryDropdown from 'shared/views/MasteryDropdown';
   import VisibilityDropdown from 'shared/views/VisibilityDropdown';
+  import ScreenReaderDropdown from 'shared/views/ScreenReaderDropdown'
+  import OsValidatorDropdown from 'shared/views/OsValidatorDropdown'
   import Checkbox from 'shared/views/form/Checkbox';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import { NEW_OBJECT, FeatureFlagKeys, ContentModalities } from 'shared/constants';
@@ -363,10 +430,13 @@
       LicenseDropdown,
       MasteryDropdown,
       VisibilityDropdown,
+      ScreenReaderDropdown,
+      OsValidatorDropdown,
       FileUpload,
       SubtitlesList,
       ContentNodeThumbnail,
       Checkbox,
+
     },
     props: {
       nodeIds: {
@@ -438,6 +508,7 @@
       },
       role: generateGetterSetter('role_visibility'),
       language: generateGetterSetter('language'),
+      screen_reader : generateGetterSetter('screen_reader'),
       mastery_model() {
         return this.getExtraFieldsValueFromNodes('mastery_model');
       },
@@ -636,6 +707,7 @@
         if (Object.prototype.hasOwnProperty.call(this.diffTracker, key)) {
           return this.diffTracker[key];
         }
+        console.log(this.nodes)
         let results = uniq(this.nodes.map(node => node[key] || null));
         return getValueFromResults(results);
       },

@@ -1123,6 +1123,10 @@ class ContentNode(MPTTModel, models.Model):
 
     thumbnail_encoding = models.TextField(blank=True, null=True)
 
+    # New Fields Validated For 
+    screen_reader = models.CharField(max_length=20, blank=True)
+    os_validators = models.CharField(max_length=20, blank=True)
+
     created = models.DateTimeField(default=timezone.now, verbose_name="created")
     modified = models.DateTimeField(auto_now=True, verbose_name="modified")
     published = models.BooleanField(default=False)
