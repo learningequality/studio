@@ -45,7 +45,11 @@ class IsAdminUser(BasePermission):
     """
 
     def has_permission(self, request, view):
-        return bool(request.user and request.user.is_admin)
+        try:
+            perm = request.user and request.user.is_admin
+        except AttributeError:
+            perm = False
+        return bool(perm)
 
 
 class UserListPagination(ValuesViewsetPageNumberPagination):
