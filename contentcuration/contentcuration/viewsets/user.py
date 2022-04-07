@@ -16,7 +16,7 @@ from django_filters.rest_framework import CharFilter
 from django_filters.rest_framework import FilterSet
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
-from rest_framework.permissions import IsAdminUser
+from rest_framework.permissions import BasePermission
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
@@ -37,6 +37,15 @@ from contentcuration.viewsets.sync.constants import CREATED
 from contentcuration.viewsets.sync.constants import DELETED
 from contentcuration.viewsets.sync.constants import EDITOR_M2M
 from contentcuration.viewsets.sync.constants import VIEWER_M2M
+
+
+class IsAdminUser(BasePermission):
+    """
+    Our custom permission to check admin authorization.
+    """
+
+    def has_permission(self, request, view):
+        return bool(request.user and request.user.is_admin)
 
 
 class UserListPagination(ValuesViewsetPageNumberPagination):
