@@ -46,7 +46,7 @@ class IsAdminUser(BasePermission):
 
     def has_permission(self, request, view):
         try:
-            perm = request.user and request.user.is_admin
+            return request.user and request.user.is_admin
         except AttributeError:
             perm = False
         return bool(perm)
