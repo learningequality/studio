@@ -48,8 +48,7 @@ class IsAdminUser(BasePermission):
         try:
             return request.user and request.user.is_admin
         except AttributeError:
-            perm = False
-        return False
+            return False
 
 
 class UserListPagination(ValuesViewsetPageNumberPagination):
