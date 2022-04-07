@@ -49,7 +49,7 @@ class IsAdminUser(BasePermission):
             return request.user and request.user.is_admin
         except AttributeError:
             perm = False
-        return bool(perm)
+        return False
 
 
 class UserListPagination(ValuesViewsetPageNumberPagination):
