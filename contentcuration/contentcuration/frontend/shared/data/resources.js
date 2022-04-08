@@ -1016,7 +1016,7 @@ export const Channel = new Resource({
     }).then(() => {
       // make sure transaction is closed before calling a non-Dexie async function
       // see here: https://bit.ly/3dJtsIe
-      return client.patch(modelUrl, { deleted: true });
+      return client.delete(modelUrl);
     });
   },
   setChannelIdOnChange(change) {

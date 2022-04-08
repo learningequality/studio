@@ -405,6 +405,10 @@ class ChannelViewSet(ChangeEventMixin, ValuesViewset):
     field_map = channel_field_map
     values = base_channel_values + ("edit", "view", "bookmark")
 
+    def perform_destroy(self, instance):
+        instance.deleted = True
+        instance.save(update_fields=["deleted"])
+
     def get_queryset(self):
         queryset = super(ChannelViewSet, self).get_queryset()
         user_id = not self.request.user.is_anonymous and self.request.user.id
@@ -666,6 +670,9 @@ class AdminChannelViewSet(ChannelViewSet):
         "demo_server_url",
         "primary_token",
     )
+
+    def perform_destroy(self, instance):
+        instance.delete()
 
     def get_queryset(self):
         channel_main_tree_nodes = ContentNode.objects.filter(

@@ -291,11 +291,7 @@ class SyncTestCase(StudioAPITestCase, SyncTestMixin):
         self.client.force_authenticate(user=user)
         response = self.sync_changes([generate_delete_event(channel.id, CHANNEL, channel_id=channel.id)])
         self.assertEqual(response.status_code, 200, response.content)
-        try:
-            models.Channel.objects.get(id=channel.id)
-            self.fail("Channel was not deleted")
-        except models.Channel.DoesNotExist:
-            pass
+        self.assertTrue(models.Channel.objects.get(id=channel.id).deleted)
 
     def test_cannot_delete_channel(self):
         user = testdata.user()
@@ -329,17 +325,8 @@ class SyncTestCase(StudioAPITestCase, SyncTestMixin):
             ]
         )
         self.assertEqual(response.status_code, 200, response.content)
-        try:
-            models.Channel.objects.get(id=channel1.id)
-            self.fail("Channel 1 was not deleted")
-        except models.Channel.DoesNotExist:
-            pass
-
-        try:
-            models.Channel.objects.get(id=channel2.id)
-            self.fail("Channel 2 was not deleted")
-        except models.Channel.DoesNotExist:
-            pass
+        self.assertTrue(models.Channel.objects.get(id=channel1.id).deleted)
+        self.assertTrue(models.Channel.objects.get(id=channel2.id).deleted)
 
     def test_cannot_delete_some_channels(self):
         user = testdata.user()
@@ -357,16 +344,8 @@ class SyncTestCase(StudioAPITestCase, SyncTestMixin):
         # Returns a 200 as, as far as the frontend is concerned
         # the operation is done.
         self.assertEqual(response.status_code, 200, response.content)
-        try:
-            models.Channel.objects.get(id=channel1.id)
-            self.fail("Channel 1 was not deleted")
-        except models.Channel.DoesNotExist:
-            pass
-
-        try:
-            models.Channel.objects.get(id=channel2.id)
-        except models.Channel.DoesNotExist:
-            self.fail("Channel 2 was deleted")
+        self.assertTrue(models.Channel.objects.get(id=channel1.id).deleted)
+        self.assertFalse(models.Channel.objects.get(id=channel2.id).deleted)
 
 
 class CRUDTestCase(StudioAPITestCase):
@@ -437,8 +416,4 @@ class CRUDTestCase(StudioAPITestCase):
             reverse("channel-detail", kwargs={"pk": channel.id})
         )
         self.assertEqual(response.status_code, 204, response.content)
-        try:
-            models.Channel.objects.get(id=channel.id)
-            self.fail("Channel was not deleted")
-        except models.Channel.DoesNotExist:
-            pass
+        self.assertTrue(models.Channel.objects.get(id=channel.id).deleted)
