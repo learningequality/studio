@@ -12316,10 +12316,10 @@ knuth-shuffle-seeded@^1.0.6:
   dependencies:
     seed-random "~2.2.0"
 
-kolibri-constants@^0.1.39:
-  version "0.1.39"
-  resolved "https://registry.yarnpkg.com/kolibri-constants/-/kolibri-constants-0.1.39.tgz#f91ec1cf19d5043a46b81580da19e1ccedaa39b8"
-  integrity sha512-6tqli9wb7N7cxQFFT4IEWFUUWTnU96+zVPJG+F2/AIwPFVSmEJdqVh/p+syfDUwqQe8eDxbdd4e+ZSC+cEcxuw==
+kolibri-constants@^0.1.40:
+  version "0.1.40"
+  resolved "https://registry.yarnpkg.com/kolibri-constants/-/kolibri-constants-0.1.40.tgz#ea75e7ce9716a027638c4ac6db73867bc04d1858"
+  integrity sha512-264LtFuLoQ15GbZKxWnMcl+uDovzj75GWopnW40ixAVMERrmhSIGuSl1wID9IVOyT788xLQCPhcIqOP5LmDA9A==
 
 "kolibri-design-system@github:learningequality/kolibri-design-system#c2acc3fd19cee52ccd2a17fa8d2b10cddb2b3d63":
   version "1.3.0"

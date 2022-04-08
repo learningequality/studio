@@ -9,6 +9,21 @@ const ajv = new Ajv({
   ],
 });
 
-export function compile(schema) {
-  return ajv.compile(schema);
+/**
+ * Compiles the AJV instance with a JSON schema to get a validation function
+ *
+ * @param {Object} schema
+ * @param {Object[]} dependentSchemas
+ * @return {ValidateFunction<bool>}
+ */
+export function compile(schema, dependentSchemas = null) {
+  let instance = ajv;
+  // Add dependent schemas to local instance
+  if (dependentSchemas) {
+    instance = dependentSchemas.reduce(
+      (instance, dependentSchema) => instance.addSchema(dependentSchema),
+      instance
+    );
+  }
+  return instance.compile(schema);
 }

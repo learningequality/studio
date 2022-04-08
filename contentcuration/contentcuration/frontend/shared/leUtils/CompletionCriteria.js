@@ -1,4 +1,5 @@
 import CompletionCriteriaModels, { SCHEMA } from 'kolibri-constants/CompletionCriteria';
+import { SCHEMA as MASTERY_SCHEMA } from 'kolibri-constants/MasteryCriteria';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 import { compile } from 'shared/utils/jsonSchema';
 import { ValidationErrors } from 'shared/constants';
@@ -6,7 +7,7 @@ import { ValidationErrors } from 'shared/constants';
 /**
  * @type {Function<boolean>|ValidateFunction}
  */
-const _validate = compile(SCHEMA);
+const _validate = compile(SCHEMA, [MASTERY_SCHEMA]);
 
 /**
  * @param {Object} criteria
