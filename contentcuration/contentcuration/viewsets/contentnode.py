@@ -43,6 +43,7 @@ from contentcuration.db.models.query import RIGHT_JOIN
 from contentcuration.db.models.query import With
 from contentcuration.db.models.query import WithValues
 from contentcuration.models import AssessmentItem
+from contentcuration.models import Change
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
 from contentcuration.models import ContentTag
@@ -68,7 +69,6 @@ from contentcuration.viewsets.sync.constants import CONTENTNODE
 from contentcuration.viewsets.sync.constants import CREATED
 from contentcuration.viewsets.sync.constants import DELETED
 from contentcuration.viewsets.sync.constants import TASK_ID
-from contentcuration.viewsets.sync.utils import generate_delete_event
 from contentcuration.viewsets.sync.utils import generate_update_event
 
 
@@ -609,7 +609,7 @@ class PrerequisitesUpdateHandler(ValuesViewset):
                 change.update({"errors": str(e)})
                 errors.append(change)
 
-        return errors or None, None
+        return errors or None
 
     def create_from_changes(self, changes):
         return self._handle_relationship_changes(changes)
@@ -879,26 +879,23 @@ class ContentNodeViewSet(BulkUpdateMixin, ChangeEventMixin, ValuesViewset):
 
     def move_from_changes(self, changes):
         errors = []
-        changes_to_return = []
         for move in changes:
             # Move change will have key, must also have target property
             # optionally can include the desired position.
-            move_error, move_change = self.move(
+            move_error = self.move(
                 move["key"], target=move.get("target"), position=move.get("position")
             )
             if move_error:
                 move.update({"errors": [move_error]})
                 errors.append(move)
-            if move_change:
-                changes_to_return.append(move_change)
-        return errors, changes_to_return
+        return errors
 
     def move(self, pk, target=None, position=None):
         try:
             contentnode = self.get_edit_queryset().get(pk=pk)
         except ContentNode.DoesNotExist:
             error = ValidationError("Specified node does not exist")
-            return str(error), None
+            return str(error)
 
         try:
             target, position = self.validate_targeting_args(target, position)
@@ -908,26 +905,20 @@ class ContentNodeViewSet(BulkUpdateMixin, ChangeEventMixin, ValuesViewset):
                 position,
             )
 
-            return (
-                None,
-                None,
-            )
+            return None
         except ValidationError as e:
-            return str(e), None
+            return str(e)
 
     def copy_from_changes(self, changes):
         errors = []
-        changes_to_return = []
         for copy in changes:
             # Copy change will have key, must also have other attributes, defined in `copy`
             # Just pass as keyword arguments here to let copy do the validation
-            copy_errors, copy_changes = self.copy(copy["key"], **copy)
+            copy_errors = self.copy(copy["key"], **copy)
             if copy_errors:
                 copy.update({"errors": copy_errors})
                 errors.append(copy)
-            if copy_changes:
-                changes_to_return.extend(copy_changes)
-        return errors, changes_to_return
+        return errors
 
     def copy(
         self,
@@ -943,20 +934,20 @@ class ContentNodeViewSet(BulkUpdateMixin, ChangeEventMixin, ValuesViewset):
         try:
             target, position = self.validate_targeting_args(target, position)
         except ValidationError as e:
-            return str(e), None
+            return str(e)
 
         try:
             source = self.get_queryset().get(pk=from_key)
         except ContentNode.DoesNotExist:
             error = ValidationError("Copy source node does not exist")
-            return str(error), [generate_delete_event(pk, CONTENTNODE)]
+            return str(error)
 
         # Affected channel for the copy is the target's channel
         channel_id = target.channel_id
 
         if ContentNode.objects.filter(pk=pk).exists():
             error = ValidationError("Copy pk already exists")
-            return str(error), None
+            return str(error)
 
         task_args = {
             "user_id": self.request.user.id,
@@ -973,7 +964,8 @@ class ContentNodeViewSet(BulkUpdateMixin, ChangeEventMixin, ValuesViewset):
             "duplicate-nodes", self.request.user, **task_args
         )
 
-        return (
-            None,
-            [generate_update_event(pk, CONTENTNODE, {TASK_ID: task_info.task_id})],
+        Change.create_change(
+            generate_update_event(pk, CONTENTNODE, {TASK_ID: task_info.task_id}, channel_id=channel_id), created_by_id=self.request.user.id, applied=True
         )
+
+        return None

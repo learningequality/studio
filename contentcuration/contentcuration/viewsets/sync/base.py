@@ -1,9 +1,7 @@
 from collections import OrderedDict
 
-from django_bulk_update.helper import bulk_update
 from search.viewsets.savedsearch import SavedSearchViewSet
 
-from contentcuration.models import Change
 from contentcuration.viewsets.assessmentitem import AssessmentItemViewSet
 from contentcuration.viewsets.channel import ChannelViewSet
 from contentcuration.viewsets.channelset import ChannelSetViewSet
@@ -121,32 +119,30 @@ event_handlers = {
 
 def apply_changes(changes_queryset):
     changes = changes_queryset.order_by("server_rev").select_related("created_by")
-    new_changes = []
     for change in changes:
+        # Assume an error, this will be updated
+        # in the case there isn't!
+        changed_fields = ("errored", "kwargs")
         table_name = change.table
-        if table_name in viewset_mapping:
+        try:
             viewset_class = viewset_mapping[table_name]
             change_type = change.change_type
-            try:
-                change_type = int(change_type)
-                viewset = viewset_class()
-                viewset.sync_initial(change.created_by)
-                if change_type in event_handlers:
-                    event_handler = getattr(viewset, event_handlers[change_type], None)
-                    if event_handler is None:
-                        raise ChangeNotAllowed(change_type, viewset_class)
-                    es, cs = event_handler([change.serialize_to_change_dict()])
-                    if es:
-                        change.errored = True
-                        change.kwargs["errors"] = es[0]["errors"]
-                    else:
-                        change.applied = True
-                    if cs:
-                        new_changes.extend(cs)
-            except Exception as e:
-                log_sync_exception(e)
-                change.errored = True
-                change.kwargs["errors"] = [str(e)]
-    bulk_update(changes, update_fields=("applied", "errored", "kwargs"))
-    if new_changes:
-        Change.create_changes(new_changes, applied=True)
+            change_type = int(change_type)
+            viewset = viewset_class()
+            viewset.sync_initial(change.created_by)
+            if change_type in event_handlers:
+                event_handler = getattr(viewset, event_handlers[change_type], None)
+                if event_handler is None:
+                    raise ChangeNotAllowed(change_type, viewset_class)
+                errors = event_handler([change.serialize_to_change_dict()])
+                if errors:
+                    change.errored = True
+                    change.kwargs["errors"] = errors[0]["errors"]
+                else:
+                    change.applied = True
+                    changed_fields = ("applied",)
+        except Exception as e:
+            log_sync_exception(e)
+            change.errored = True
+            change.kwargs["errors"] = [str(e)]
+        change.save(update_fields=changed_fields)
