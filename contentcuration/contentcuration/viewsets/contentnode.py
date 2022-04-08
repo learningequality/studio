@@ -333,6 +333,7 @@ class ContentNodeSerializer(BulkModelSerializer):
             "accessibility_labels",
             "categories",
             "learner_needs",
+            "suggested_duration",
         )
         list_serializer_class = ContentNodeListSerializer
         nested_writes = True
@@ -613,6 +614,7 @@ class ContentNodeViewSet(BulkUpdateMixin, ChangeEventMixin, ValuesViewset):
         "accessibility_labels",
         "categories",
         "learner_needs",
+        "suggested_duration",
     )
 
     field_map = {
