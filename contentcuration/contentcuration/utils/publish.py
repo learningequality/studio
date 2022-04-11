@@ -403,7 +403,7 @@ def process_assessment_metadata(ccnode, kolibrinode):
     randomize = exercise_data.get('randomize') if exercise_data.get('randomize') is not None else True
     assessment_item_ids = [a.assessment_id for a in assessment_items]
 
-    mastery_model = {'type': exercise_data.get('mastery_model') or exercises.M_OF_N}
+    mastery_model = {'type': exercise_data.get('mastery_model') or exercises.M_OF_N or exercise_data.get('option.completion_criteria.mastery_model')}
     if mastery_model['type'] == exercises.M_OF_N:
         mastery_model.update({'n': exercise_data.get('n') or min(5, assessment_items.count()) or 1})
         mastery_model.update({'m': exercise_data.get('m') or min(5, assessment_items.count()) or 1})
