@@ -118,6 +118,12 @@ class Command(BaseCommand):
         logging.info('Marking mastery_model less exercises...')
         count = ContentNode.objects.exclude(complete=False).filter(kind_id=content_kinds.EXERCISE).filter(~Q(extra_fields__has_key='mastery_model')) \
             .order_by().update(complete=False)
+
+        logging.info('Marked {} mastery_model less exercises(finished in {})'.format(count, time.time() - exercisestart))
+
+        count = ContentNode.objects.exclude(complete=False).filter(kind_id=content_kinds.EXERCISE).filter(~Q(extra_fields__has_key='option.completion_criteria.mastery_model')) \
+            .order_by().update(complete=False)
+
         logging.info('Marked {} mastery_model less exercises(finished in {})'.format(count, time.time() - exercisestart))
 
         exercisestart = time.time()
