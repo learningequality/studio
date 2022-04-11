@@ -30,6 +30,7 @@ from django.utils.translation import gettext_lazy as _
 from kolibri_content import models as kolibrimodels
 from kolibri_content.router import get_active_content_database
 from kolibri_content.router import using_content_database
+from le_utils.constants import completion_criteria
 from le_utils.constants import content_kinds
 from le_utils.constants import exercises
 from le_utils.constants import file_formats
@@ -55,6 +56,27 @@ PERSEUS_IMG_DIR = exercises.IMG_PLACEHOLDER + "/images"
 THUMBNAIL_DIMENSION = 128
 MIN_SCHEMA_VERSION = "1"
 BLOCKING_TASK_TYPES = ["duplicate-nodes", "move-nodes", "sync-channel"]
+PUBLISHING_UPDATE_THRESHOLD = 3600
+
+
+class SlowPublishError(Exception):
+    """
+    Used to track slow Publishing operations. We don't raise this error,
+    just feed it to Sentry for reporting.
+    """
+
+    def __init__(self, time, channel_id):
+
+        self.time = time
+        self.channel_id = channel_id
+        message = (
+            "publishing the channel with channel_id {} took {} seconds to complete, exceeding {} second threshold."
+        )
+        self.message = message.format(
+            self.channel_id, self.time, PUBLISHING_UPDATE_THRESHOLD
+        )
+
+        super(SlowPublishError, self).__init__(self.message)
 
 
 def send_emails(channel, user_id, version_notes=''):
@@ -227,14 +249,18 @@ def create_bare_contentnode(ccnode, default_language, channel_id, channel_name):
     if ccnode.language or default_language:
         language, _new = get_or_create_language(ccnode.language or default_language)
 
-    duration = None
-    if ccnode.kind_id in [content_kinds.AUDIO, content_kinds.VIDEO]:
-        # aggregate duration from associated files, choosing maximum if there are multiple, like hi and lo res videos
-        duration = ccnode.files.aggregate(duration=Max("duration")).get("duration")
-
     options = {}
     if ccnode.extra_fields and 'options' in ccnode.extra_fields:
         options = ccnode.extra_fields['options']
+
+    duration = None
+    ccnode_completion_criteria = options.get("completion_criteria")
+    if ccnode_completion_criteria:
+        if ccnode_completion_criteria["model"] == completion_criteria.TIME or ccnode_completion_criteria["model"] == completion_criteria.APPROX_TIME:
+            duration = ccnode_completion_criteria["threshold"]
+    if duration is None and ccnode.kind_id in [content_kinds.AUDIO, content_kinds.VIDEO]:
+        # aggregate duration from associated files, choosing maximum if there are multiple, like hi and lo res videos.
+        duration = ccnode.files.aggregate(duration=Max("duration")).get("duration")
 
     kolibrinode, is_new = kolibrimodels.ContentNode.objects.update_or_create(
         pk=ccnode.node_id,
@@ -767,7 +793,7 @@ def publish_channel(
     """
     channel = ccmodels.Channel.objects.get(pk=channel_id)
     kolibri_temp_db = None
-
+    start = time.time()
     try:
         set_channel_icon_encoding(channel)
         wait_for_async_tasks(channel)
@@ -803,4 +829,14 @@ def publish_channel(
             os.remove(kolibri_temp_db)
         channel.main_tree.publishing = False
         channel.main_tree.save()
+
+    elapsed = time.time() - start
+
+    if elapsed > PUBLISHING_UPDATE_THRESHOLD:
+        # we raise the exception so that sentry has the stack trace when it tries to log it
+        # we need to raise it to get Python to fill out the stack trace.
+        try:
+            raise SlowPublishError(elapsed, channel_id)
+        except SlowPublishError as e:
+            report_exception(e)
     return channel

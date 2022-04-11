@@ -131,7 +131,7 @@ yarn run devsetup
 In one tab, start `celery` using:
 
 ```bash
-make prodceleryworkers
+yarn run celery
 ```
 
 In another tab, start Django and the webpack build using:
