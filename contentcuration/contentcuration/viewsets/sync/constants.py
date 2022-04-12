@@ -15,6 +15,7 @@ ALL_CHANGES = set([
 ])
 
 # Client-side table constants
+BOOKMARK = "bookmark"
 CHANNEL = "channel"
 CONTENTNODE = "contentnode"
 CONTENTNODE_PREREQUISITE = "contentnode_prerequisite"
@@ -32,6 +33,7 @@ TASK = "task"
 
 ALL_TABLES = set(
     [
+        BOOKMARK,
         CHANNEL,
         CLIPBOARD,
         CONTENTNODE,

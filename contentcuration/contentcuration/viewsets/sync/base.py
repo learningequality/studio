@@ -3,6 +3,7 @@ from collections import OrderedDict
 from search.viewsets.savedsearch import SavedSearchViewSet
 
 from contentcuration.viewsets.assessmentitem import AssessmentItemViewSet
+from contentcuration.viewsets.bookmark import BookmarkViewSet
 from contentcuration.viewsets.channel import ChannelViewSet
 from contentcuration.viewsets.channelset import ChannelSetViewSet
 from contentcuration.viewsets.clipboard import ClipboardViewSet
@@ -11,6 +12,7 @@ from contentcuration.viewsets.contentnode import PrerequisitesUpdateHandler
 from contentcuration.viewsets.file import FileViewSet
 from contentcuration.viewsets.invitation import InvitationViewSet
 from contentcuration.viewsets.sync.constants import ASSESSMENTITEM
+from contentcuration.viewsets.sync.constants import BOOKMARK
 from contentcuration.viewsets.sync.constants import CHANNEL
 from contentcuration.viewsets.sync.constants import CHANNELSET
 from contentcuration.viewsets.sync.constants import CLIPBOARD
@@ -56,6 +58,7 @@ viewset_mapping = OrderedDict(
         # If a new channel has been created, then any other operations that happen
         # within that channel depend on that, so we prioritize channel operations
         (CHANNEL, ChannelViewSet),
+        (BOOKMARK, BookmarkViewSet),
         (INVITATION, InvitationViewSet),
         # Tree operations require content nodes to exist, and any new assessment items
         # need to point to an existing content node

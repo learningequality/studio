@@ -223,7 +223,7 @@ class ChannelFilter(BaseChannelFilter):
         return queryset.filter(view=True)
 
     def filter_bookmark(self, queryset, name, value):
-        return queryset.filter(bookmark=True)
+        return queryset.filter(bookmarked_by=self.request.user)
 
     class Meta:
         model = Channel
@@ -245,7 +245,6 @@ class ChannelSerializer(BulkModelSerializer):
     """
 
     thumbnail_encoding = ThumbnailEncodingFieldsSerializer(required=False)
-    bookmark = serializers.BooleanField(required=False)
     content_defaults = ContentDefaultsSerializer(partial=True, required=False)
 
     class Meta:
@@ -259,7 +258,6 @@ class ChannelSerializer(BulkModelSerializer):
             "thumbnail_encoding",
             "version",
             "language",
-            "bookmark",
             "content_defaults",
             "source_domain",
         )
@@ -268,7 +266,6 @@ class ChannelSerializer(BulkModelSerializer):
         nested_writes = True
 
     def create(self, validated_data):
-        bookmark = validated_data.pop("bookmark", None)
         content_defaults = validated_data.pop("content_defaults", {})
         validated_data["content_defaults"] = self.fields["content_defaults"].create(
             content_defaults
@@ -283,8 +280,7 @@ class ChannelSerializer(BulkModelSerializer):
                 instance.editors.add(user)
             except IntegrityError:
                 pass
-            if bookmark:
-                user.bookmarked_channels.add(instance)
+
         self.changes.append(
             generate_update_event(
                 instance.id,
@@ -301,7 +297,6 @@ class ChannelSerializer(BulkModelSerializer):
         return instance
 
     def update(self, instance, validated_data):
-        bookmark = validated_data.pop("bookmark", None)
         content_defaults = validated_data.pop("content_defaults", None)
         is_deleted = validated_data.get("deleted")
         if content_defaults is not None:
@@ -313,18 +308,6 @@ class ChannelSerializer(BulkModelSerializer):
         if "request" in self.context:
             user_id = self.context["request"].user.id
 
-            # We could possibly do this in bulk later in the process,
-            # but bulk creating many to many through table models
-            # would be required, and that would need us to be able to
-            # efficiently ignore conflicts with existing models.
-            # When we have upgraded to Django 2.2, we can do the bulk
-            # creation of many to many models to make this more efficient
-            # and use the `ignore_conflicts=True` kwarg to ignore
-            # any conflicts.
-            if bookmark is not None and bookmark:
-                instance.bookmarked_by.add(user_id)
-            elif bookmark is not None:
-                instance.bookmarked_by.remove(user_id)
         was_deleted = instance.deleted
         instance = super(ChannelSerializer, self).update(instance, validated_data)
         # mark the instance as deleted or recovered, if requested
@@ -403,7 +386,7 @@ class ChannelViewSet(ChangeEventMixin, ValuesViewset):
     filterset_class = ChannelFilter
 
     field_map = channel_field_map
-    values = base_channel_values + ("edit", "view", "bookmark")
+    values = base_channel_values + ("edit", "view")
 
     def perform_destroy(self, instance):
         instance.deleted = True
@@ -417,7 +400,6 @@ class ChannelViewSet(ChangeEventMixin, ValuesViewset):
         return queryset.annotate(
             edit=Exists(user_queryset.filter(editable_channels=OuterRef("id"))),
             view=Exists(user_queryset.filter(view_only_channels=OuterRef("id"))),
-            bookmark=Exists(user_queryset.filter(bookmarked_channels=OuterRef("id"))),
         )
 
     def annotate_queryset(self, queryset):
@@ -442,30 +424,6 @@ class ChannelViewSet(ChangeEventMixin, ValuesViewset):
             count=SQCount(non_topic_content_ids, field="content_id"),
         )
         return queryset
-
-    def update_from_changes(self, changes):
-        """
-        If a channel can be bookmarked, changes from bookmarking are addressed in this
-        method before the `update_from_changes` method in `UpdateModelMixin`.
-        """
-        for change in changes:
-            if 'bookmark' in change["mods"].keys():
-                queryset = self.filter_queryset_from_keys(
-                    self.get_queryset(), [change["key"]]
-                ).order_by()
-                instance = queryset.get(**dict(self.values_from_key(change["key"])))
-                bookmark = {k: v for k, v in change['mods'].items() if k == 'bookmark'}
-                other_mods = {k: v for k, v in change['mods'].items() if k != 'bookmark'}
-                change["mods"] = bookmark
-                serializer = self.get_serializer(
-                    instance, data=self._map_update_change(change), partial=True
-                )
-                if serializer.is_valid():
-                    self.perform_update(serializer)
-                    change["mods"] = other_mods
-
-        changes = [change for change in changes if change['mods']]
-        return super(ChannelViewSet, self).update_from_changes(changes)
 
     @action(detail=True, methods=["post"])
     def publish(self, request, pk=None):
