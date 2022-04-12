@@ -810,7 +810,8 @@ def publish_channel(
         channel.main_tree.save()
 
         # Delete public channel cache.
-        delete_public_channel_cache_keys()
+        if channel.public:
+            delete_public_channel_cache_keys()
 
         if send_email:
             send_emails(channel, user_id, version_notes=version_notes)
