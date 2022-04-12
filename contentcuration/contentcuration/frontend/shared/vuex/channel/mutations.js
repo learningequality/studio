@@ -51,8 +51,12 @@ export function UPDATE_CHANNEL(state, { id, content_defaults = {}, ...payload } 
   }
 }
 
-export function SET_BOOKMARK(state, { id, bookmark }) {
-  state.channelsMap[id].bookmark = bookmark;
+export function SET_BOOKMARK(state, { channel }) {
+  Vue.set(state.bookmarksMap, channel, true);
+}
+
+export function DELETE_BOOKMARK(state, { channel }) {
+  Vue.delete(state.bookmarksMap, channel);
 }
 
 export function ADD_INVITATION(state, invitation) {

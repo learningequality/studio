@@ -8,6 +8,7 @@ export function searchCatalog(context, params) {
   params.published = true;
   let promise;
   if (context.rootGetters.loggedIn) {
+    context.dispatch('channel/loadBookmarks', null, { root: true });
     promise = Channel.fetchCollection(params);
   } else {
     promise = Channel.searchCatalog(params);

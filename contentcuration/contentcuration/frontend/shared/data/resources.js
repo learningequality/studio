@@ -917,6 +917,17 @@ export const Session = new IndexedDBResource({
   },
 });
 
+export const Bookmark = new Resource({
+  tableName: TABLE_NAMES.BOOKMARK,
+  urlName: 'bookmark',
+  idField: 'channel',
+  setUserIdOnChange(change) {
+    if (vuexStore) {
+      change.user_id = vuexStore.getters.currentUserId;
+    }
+  },
+});
+
 export const Channel = new Resource({
   tableName: TABLE_NAMES.CHANNEL,
   urlName: 'channel',

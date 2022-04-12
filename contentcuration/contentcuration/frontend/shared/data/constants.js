@@ -28,6 +28,7 @@ export const TABLE_NAMES = {
   TASK: 'task',
   CHANGES_TABLE,
   CHANGE_LOCKS_TABLE,
+  BOOKMARK: 'bookmark',
 };
 
 export const APP_ID = 'KolibriStudio';

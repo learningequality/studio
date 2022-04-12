@@ -203,7 +203,7 @@ async function syncChanges() {
   }
 
   const now = Date.now();
-  const channel_ids = Object.entries(user[ACTIVE_CHANNELS])
+  const channel_ids = Object.entries(user[ACTIVE_CHANNELS] || {})
     .filter(([id, time]) => id && time > now - CHANNEL_SYNC_KEEP_ALIVE_INTERVAL)
     .map(([id]) => id);
   const channel_revs = {};

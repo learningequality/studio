@@ -30,6 +30,13 @@ export default {
      */
     channelViewersMap: {},
     channelsMap: {},
+    /* A lookup of channel ids that are bookmarked
+     * {
+     *   channel_id_1: true,
+     *   channel_id_2: true,
+     * }
+     */
+    bookmarksMap: {},
   }),
   getters,
   mutations,
@@ -52,6 +59,10 @@ export default {
     [TABLE_NAMES.VIEWER_M2M]: {
       [CHANGE_TYPES.CREATED]: 'ADD_VIEWER_TO_CHANNEL',
       [CHANGE_TYPES.DELETED]: 'REMOVE_VIEWER_FROM_CHANNEL',
+    },
+    [TABLE_NAMES.BOOKMARK]: {
+      [CHANGE_TYPES.CREATED]: 'SET_BOOKMARK',
+      [CHANGE_TYPES.DELETED]: 'DELETE_BOOKMARK',
     },
   },
 };
