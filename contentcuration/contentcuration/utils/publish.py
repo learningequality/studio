@@ -41,6 +41,7 @@ from past.utils import old_div
 
 from contentcuration import models as ccmodels
 from contentcuration.statistics import record_publish_stats
+from contentcuration.utils.cache import delete_public_channel_cache_keys
 from contentcuration.utils.files import create_thumbnail_from_base64
 from contentcuration.utils.files import get_thumbnail_encoding
 from contentcuration.utils.parser import extract_value
@@ -807,6 +808,10 @@ def publish_channel(
         channel.main_tree.changed = False
         channel.main_tree.published = True
         channel.main_tree.save()
+
+        # Delete public channel cache.
+        if channel.public:
+            delete_public_channel_cache_keys()
 
         if send_email:
             send_emails(channel, user_id, version_notes=version_notes)

@@ -835,8 +835,8 @@ class Channel(models.Model):
                 node_id=self.id,
             )
 
-        # if this change affects the public channel list, clear the channel cache
-        if self.public:
+        # if this change affects the published channel list, clear the channel cache
+        if self.public and (self.main_tree and self.main_tree.published):
             delete_public_channel_cache_keys()
 
     def on_update(self):
@@ -876,8 +876,8 @@ class Channel(models.Model):
         if self.main_tree and self.main_tree._field_updates.changed():
             self.main_tree.save()
 
-        # if this change affects the public channel list, clear the channel cache
-        if "public" in original_values:
+        # if this change affects the published channel list, clear the channel cache
+        if "public" in original_values and (self.main_tree and self.main_tree.published):
             delete_public_channel_cache_keys()
 
     def save(self, *args, **kwargs):

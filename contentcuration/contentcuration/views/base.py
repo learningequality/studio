@@ -5,6 +5,7 @@ from urllib.parse import urlunsplit
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
+from django.core.cache import cache
 from django.core.exceptions import PermissionDenied
 from django.db.models import Count
 from django.db.models import IntegerField
@@ -49,6 +50,13 @@ from contentcuration.utils.messages import get_messages
 from contentcuration.viewsets.channelset import PublicChannelSetSerializer
 
 PUBLIC_CHANNELS_CACHE_DURATION = 30  # seconds
+PUBLIC_CHANNELS_CACHE_KEYS = {
+    "list": "public_channel_list",
+    "languages": "public_channel_languages",
+    "licenses": "public_channel_licenses",
+    "kinds": "public_channel_kinds",
+    "collections": "public_channel_collections",
+}
 
 MESSAGES = "i18n_messages"
 PREFERENCES = "user_preferences"
@@ -125,53 +133,70 @@ def channel_list(request):
     current_user = current_user_for_context(None if anon else request.user)
     preferences = DEFAULT_USER_PREFERENCES if anon else request.user.content_defaults
 
-    public_channel_list = Channel.objects.filter(
-        public=True, main_tree__published=True, deleted=False,
-    ).values_list("main_tree__tree_id", flat=True)
+    public_channel_list = cache.get(PUBLIC_CHANNELS_CACHE_KEYS["list"])
+    if public_channel_list is None:
+        public_channel_list = Channel.objects.filter(
+            public=True, main_tree__published=True, deleted=False,
+        ).values_list("main_tree__tree_id", flat=True)
+        cache.set(PUBLIC_CHANNELS_CACHE_KEYS["list"], public_channel_list, None)
 
     # Get public channel languages
-    public_lang_query = (
-        Language.objects.filter(
-            channel_language__public=True,
-            channel_language__main_tree__published=True,
-            channel_language__deleted=False,
+    languages = cache.get(PUBLIC_CHANNELS_CACHE_KEYS["languages"])
+    if languages is None:
+        public_lang_query = (
+            Language.objects.filter(
+                channel_language__public=True,
+                channel_language__main_tree__published=True,
+                channel_language__deleted=False,
+            )
+            .values("lang_code")
+            .annotate(count=Count("lang_code"))
+            .order_by("lang_code")
         )
-        .values("lang_code")
-        .annotate(count=Count("lang_code"))
-        .order_by("lang_code")
-    )
-    languages = {lang["lang_code"]: lang["count"] for lang in public_lang_query}
+        languages = {lang["lang_code"]: lang["count"] for lang in public_lang_query}
+        cache.set(PUBLIC_CHANNELS_CACHE_KEYS["languages"], json_for_parse_from_data(languages), None)
 
     # Get public channel licenses
-    public_license_query = (
-        License.objects.filter(contentnode__tree_id__in=public_channel_list)
-        .values_list("id", flat=True)
-        .order_by("id")
-        .distinct()
-    )
-    licenses = list(public_license_query)
+    licenses = cache.get(PUBLIC_CHANNELS_CACHE_KEYS["licenses"])
+    if licenses is None:
+        public_license_query = (
+            License.objects.filter(contentnode__tree_id__in=public_channel_list)
+            .values_list("id", flat=True)
+            .order_by("id")
+            .distinct()
+        )
+        licenses = list(public_license_query)
+        cache.set(PUBLIC_CHANNELS_CACHE_KEYS["licenses"], json_for_parse_from_data(licenses), None)
 
     # Get public channel kinds
-    public_kind_query = (
-        ContentKind.objects.filter(contentnodes__tree_id__in=public_channel_list)
-        .values_list("kind", flat=True)
-        .order_by("kind")
-        .distinct()
-    )
-    kinds = list(public_kind_query)
+    kinds = cache.get(PUBLIC_CHANNELS_CACHE_KEYS["kinds"])
+    if kinds is None:
+        public_kind_query = (
+            ContentKind.objects.filter(contentnodes__tree_id__in=public_channel_list)
+            .values_list("kind", flat=True)
+            .order_by("kind")
+            .distinct()
+        )
+        kinds = list(public_kind_query)
+        cache.set(PUBLIC_CHANNELS_CACHE_KEYS["kinds"], json_for_parse_from_data(kinds), None)
 
     # Get public channel sets
-    public_channelset_query = ChannelSet.objects.filter(public=True).annotate(
-        count=SQCountDistinct(
-            Channel.objects.filter(
-                secret_tokens=OuterRef("secret_token"),
-                public=True,
-                main_tree__published=True,
-                deleted=False,
-            ).values_list("id", flat=True),
-            field="id",
+    collections = cache.get(PUBLIC_CHANNELS_CACHE_KEYS["collections"])
+    if collections is None:
+        public_channelset_query = ChannelSet.objects.filter(public=True).annotate(
+            count=SQCountDistinct(
+                Channel.objects.filter(
+                    secret_tokens=OuterRef("secret_token"),
+                    public=True,
+                    main_tree__published=True,
+                    deleted=False,
+                ).values_list("id", flat=True),
+                field="id",
+            )
         )
-    )
+        cache.set(PUBLIC_CHANNELS_CACHE_KEYS["collections"], json_for_parse_from_serializer(
+            PublicChannelSetSerializer(public_channelset_query, many=True)), None)
+
     return render(
         request,
         "channel_list.html",
@@ -180,12 +205,10 @@ def channel_list(request):
             PREFERENCES: json_for_parse_from_data(preferences),
             MESSAGES: json_for_parse_from_data(get_messages()),
             "LIBRARY_MODE": settings.LIBRARY_MODE,
-            "public_languages": json_for_parse_from_data(languages),
-            "public_kinds": json_for_parse_from_data(kinds),
-            "public_licenses": json_for_parse_from_data(licenses),
-            "public_collections": json_for_parse_from_serializer(
-                PublicChannelSetSerializer(public_channelset_query, many=True)
-            ),
+            "public_languages": languages,
+            "public_kinds": kinds,
+            "public_licenses": licenses,
+            "public_collections": collections,
         },
     )
 
