@@ -25,7 +25,6 @@
 </template>
 
 <script>
-  import { camelCase } from 'lodash';
   import { ResourcesNeededTypes } from 'shared/constants';
   import { constantsTranslationMixin, metadataTranslationMixin } from 'shared/mixins';
 

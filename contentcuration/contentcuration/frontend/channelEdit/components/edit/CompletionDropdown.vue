@@ -3,7 +3,7 @@
   <div>
     <!-- Checkbox for "Allow learners to mark complete" -->
     <VLayout row wrap>
-      <VFlex md6>
+      <VFlex md6 class="pb-2">
         <Checkbox
           v-model="learnerManaged"
           color="primary"
@@ -11,7 +11,6 @@
           style="margin-top: 0px; padding-top: 0px"
         />
       </VFlex>
-
     </VLayout>
 
     <!-- Main "Completion" dropdown menu based on node.kind -->
@@ -20,9 +19,9 @@
         <VSelect
           v-if="showCompletion"
           ref="completion"
-          v-model="selectedCompletion"
+          v-model="completedOption"
           box
-          :items="showCorrectDropdownMenu"
+          :items="showCorrectDropdownOptions"
           :label="translateMetadataString('completion')"
           :required="required"
           :rules="completionRules"
@@ -48,12 +47,14 @@
       <VFlex xs6 md6>
         <ShortOrLongActivity
           v-if="selectedDuration === 'Short activity' || selectedDuration === 'Long activity'"
+          v-model="minutes"
           :shortActivity="selectedDuration === 'Short activity' ? true : false"
         />
         <ExactTimeToCompleteActivity
           v-if="selectedDuration === 'Exact time to complete'"
-          :duration="file.id"
-          :audioVideoUpload="node.kind === 'video' || node.kind === 'audio'"
+          v-model="minutes"
+          :duration="fileDuration"
+          :audioVideoUpload="kind === 'video' || kind === 'audio'"
         />
       </VFlex>
     </VLayout>
@@ -64,7 +65,7 @@
     </VFlex>
 
     <!-- Practice -->
-    <VFlex v-if="node.kind === 'exercise' && selected === 'Practice until goal is met'" md6>
+    <!-- <VFlex v-if="node.kind === 'exercise' && selected === 'Practice until goal is met'" md6>
       <VSelect
         ref="goal"
         v-model="goal"
@@ -73,14 +74,14 @@
         :label="$tr('goalLabel')"
         @focus="trackClick('Goal')"
       />
-    </VFlex>
+    </VFlex> -->
 
     <!-- Other options -->
-    <VLayout row wrap>
+    <!-- <VLayout row wrap>
       <PracticeUntilGoalMetActivity
         v-if="node.kind === 'exercise' && selectedDuration === 'Practice until goal is met'"
       />
-    </VLayout>
+    </VLayout> -->
 
   </div>
 
@@ -88,7 +89,6 @@
 
 <script>
 
-  import { mapGetters } from 'vuex';
   import ShortOrLongActivity from './ShortOrLongActivity.vue';
   import ExactTimeToCompleteActivity from './ExactTimeToCompleteActivity.vue';
   import PracticeUntilGoalMetActivity from './PracticeUntilGoalMetActivity.vue';
@@ -101,6 +101,13 @@
   } from 'shared/utils/validation';
   import { metadataStrings, metadataTranslationMixin } from 'shared/mixins';
 
+  const CompletionOptionsMap = {
+    allContent: 'All content viewed',
+    completeDuration: "Complete duration",
+    goal: 'Practice until goal is met',
+    practiceQuiz: 'Practice quiz',
+  }
+
   export default {
     name: 'CompletionDropdown',
     components: {
@@ -111,9 +118,13 @@
     },
     mixins: [metadataStrings, metadataTranslationMixin],
     props: {
-      nodeId: {
+      kind: {
         type: String,
-        required: true,
+        required: false,
+      },
+      fileDuration: {
+        type: Number,
+        default: 0,
       },
       required: {
         type: Boolean,
@@ -127,101 +138,137 @@
     data() {
       return {
         learnersCanMarkComplete: false,
-        goal: 'M of N',
+        // goal: 'M of N',
         durationValue: null,
+        durationInSeconds: 0,
+        completionValue: 'All content viewed',
+        time: this.value.suggested_duration || 0,
       };
     },
     computed: {
-      ...mapGetters('contentNode', ['getContentNode', 'completion']),
-      ...mapGetters('file', ['getContentNodeFiles']),
-      file() {
-        return this.getContentNodeFiles(this.nodeId)[0];
-      },
+      // ...mapGetters('contentNode', ['getContentNode', 'completion']),
       showCompletion() {
-        return (this.node.kind === 'audio' || this.node.kind === 'video') ? false : true;
+        return (this.kind === 'audio' || this.kind === 'video') ? false : true;
       },
       learnerManaged: {
         get() {
-          console.log('!!!this.learnersCanMarkComplete', this.learnersCanMarkComplete);
           return this.learnersCanMarkComplete;
         },
         set(value) {
-          console.log('!!!value', value);
           this.handleInput({ learner_managed: value });
         }
       },
-      selectedDuration: {
+      minutes: {
         get() {
-          if(this.node.kind === 'audio' || this.node.kind === 'video') {
-            return this.durationValue || this.durationOptions[0];
-          } else {
-            return this.durationValue;
-          }
+          return this.time; //TODO: find out what this is in the backend?
         },
         set(value) {
-          this.durationValue = value;
-          console.log('!!! durationValue', value)
-          this.handleInput({ suggested_duration: value })
+          this.time = value;
+          console.log('!!! minutes setter', value, this.time)
+          this.durationInSeconds = this.time * 60;
+          if (this.durationValue === 'Exact time to complete' ||
+            this.durationValue === 'Short activity' ||
+            this.durationValue === 'Long activity')
+          {
+            this.handleInput({ suggested_duration: this.durationInSeconds });
+            // this.$emit('changeTime', this.durationInSeconds);
+          }
+        }
+      },
+      // time() {
+      //   return (this.value.suggested_duration || 0);
+      // },
+      selectedDuration: {
+        get() {
+          if(this.kind === 'audio' || this.kind === 'video') {
+            return this.durationValue || {};
+          } else {
+            console.log('!!!in selectedDuration getter(), ', this.durationValue)
+            return this.durationValue || {};
+          }
+        },
+        set(duration) {
+          console.log('!!!in selectedDuration: durationValue', duration)
+          this.durationValue = duration; //TODO update this to the object
+
+          // Duration for when COMPLETION is set to 'All content viewed'
+          if (this.completionValue === 'All content viewed') {
+            if (duration === 'Reference') {
+              this.handleInput({
+                model: CompletionCriteriaModels.REFERENCE,
+                threshold: '100%', //TODO: double-check if this is correct; is there suggested_duration?
+              })
+            } else {
+              this.handleInput({ model: CompletionCriteriaModels.PAGES, threshold: '100%' });
+
+              // if (this.time === 0) {
+              //   if (this.durationValue === 'Short activity') {
+              //     this.handleInput({ suggested_duration: 10*60 });
+              //   } else if (this.durationValue === 'Long activity') {
+              //     this.handleInput({ suggested_duration: 45*60 });
+              //   }
+              // }
+
+              this.durationInSeconds = this.time * 60;
+              this.$emit('update', this.durationInSeconds);
+              // this.handleInput({ suggested_duration: this.durationInSeconds });
+
+            }
+          }
+
+          if (this.completionValue === 'Complete duration') {
+            if (duration === 'Exact time to complete') {
+              console.log('!!!model: CompletionCriteriaModels.TIME, this.time is', this.time, this.durationInSeconds)
+              this.handleInput({
+                model: CompletionCriteriaModels.TIME,
+                threshold: this.durationInSeconds,
+              });
+            } else if (duration === 'Short activity' || duration === 'Long activity') {
+              console.log("!!!model: CompletionCriteriaModels.APPROX_TIME, this.time is", this.time, this.durationInSeconds)
+              this.handleInput({
+                model: CompletionCriteriaModels.APPROX_TIME,
+                threshold: this.durationInSeconds,
+              });
+            }
+          }
+
         },
       },
-      selectedCompletion: {
+      completedOption: {
         get() {
-          console.log('!!!this.completionValue', CompletionCriteriaModels);
-          console.log('!!!this.node.kind', this.node.kind);
-          if (this.node.kind === 'document') {
-            console.log(this.value)
-            return this.value;
+          if (this.kind === 'document') {
+            if (!this.completionValue) {
+              this.handleInput({ model: CompletionCriteriaModels.PAGES, threshold: '100%' })
+            }
+            return this.completionValue || CompletionOptionsMap.allContent;
           }
-          // if (this.node.kind === 'exercise') {
-          //   return this.completionValue || CompletionCriteriaModels.MASTERY;
-          // }
           return this.completionValue;
         },
         set(value) {
           this.completionValue = value;
-          console.log('!!!set completionValue', this.completionValue)
-          console.log('!!!this.node', this.node)
-          let model, threshold;
-          if (this.completionValue === 'All content viewed') {
-            model = CompletionCriteriaModels.PAGES;
-            threshold = "100%";
-            console.log('!!!mode/threshold for all content viewed', model, threshold)
-            this.handleInput({ model, threshold })
+
+          //Do something if completion is 'All content viewed', else wait for duration to be set
+          if (this.completionValue === CompletionOptionsMap.allContent) {
+            return this.handleInput({ model: CompletionCriteriaModels.PAGES, threshold: '100%' })
           }
-          if (this.completionValue === 'Complete duration') {
-            model = CompletionCriteriaModels.PAGES;
-            console.log('!!!model for complete duration', model)
-            this.handleInput({ model })
-          }
-          console.log('!!!else')
-          return this.handleInput({ model, threshold })
         },
       },
-      showCorrectDropdownMenu() {
-        let correctDropdown;
-        if (this.node.kind === 'document') {
-          correctDropdown = ['All content viewed', 'Complete duration']
+      showCorrectDropdownOptions() {
+        const CompletionOptionsDropdownMap = {
+          document: [`allContent`, `completeDuration`],
+          exercise: [CompletionOptionsMap.goal, CompletionOptionsMap.practiceQuiz],
         }
-        if (this.node.kind === 'exercise') {
-          correctDropdown = [
-            CompletionCriteriaModels.PRACTICE_UNTIL_GOAL_IS_MET,
-            CompletionCriteriaModels.PRACTICE_QUIZ
-          ]
-        }
-        return correctDropdown.map(model => ({
-          // text: this.translateConstant(model),
-          text: model,
-          value: model,
+
+        return CompletionOptionsDropdownMap[this.kind].map(model => ({
+          text: this.$tr(model),
+          value: CompletionOptionsMap[model],
         }));
       },
-      node() {
-        return this.getContentNode(this.nodeId);
+      durationOptions() {
+        return ['Exact time to complete', 'Short activity', 'Long activity', 'Reference'];
       },
       completionRules() {
         return this.required ? getCompletionValidators().map(translateValidator) : [];
-      },
-      durationOptions() {//TODO update
-        return ['Exact time to complete', 'Short activity', 'Long activity', 'Reference'];
       },
       durationRules() {
         return this.required ? getDurationValidators().map(translateValidator) : [];
@@ -232,19 +279,43 @@
         this.$analytics.trackClick('channel_editor_modal_details', label);
       },
       handleInput(newValue) {
-        let data = {
-          ...this.value,
-          ...newValue,
-        };
+        console.log('!!newValue', newValue, this.value)
+        let data;
+        if (newValue.model) {
+          data = {
+            ...this.value,
+            extra_fields: {
+              options: {
+                ...newValue,
+              }
+            },
+          };
+        } else {
+          data = {
+            ...this.value,
+            suggested_duration: newValue,
+          };
+        }
+
         console.log('!!!handleInput data', data)
-        this.$emit('input', data);
+        if(data.suggested_duration !== 0) {
+          this.$emit('changeTime', data);
+        } else {
+          this.$emit('input', data);
+        }
       },
     },
     $trs: {
       learnersCanMarkComplete: 'Allow learners to mark as complete',
+      /* eslint-disable kolibri/vue-no-unused-translations */
+      allContent: 'All content viewed',
+      completeDuration: 'Complete duration',
+      goal: 'Practice until goal is met',
+      practiceQuiz: 'Practice quiz',
+      /* eslint-enable kolibri/vue-no-unused-translations */
       referenceHint:
         'Progress will not be tracked on reference material unless learners mark it as complete',
-      goalLabel: 'Goal',
+      // goalLabel: 'Goal',
     },
   };
 

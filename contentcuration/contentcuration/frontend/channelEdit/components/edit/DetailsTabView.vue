@@ -128,8 +128,10 @@
         <VFlex>
           <CompletionDropdown
             v-model="completionCriteria"
-            :nodeId="firstNode.id"
+            :kind="firstNode.kind"
+            :file="nodeFiles[0]"
             :required="!isDocument"
+            @changeTime="updateSuggestedDuration"
           />
         </VFlex>
       </VLayout>
@@ -455,14 +457,16 @@
     return {
       get() {
         const value = this.getValueFromNodes(key);
-        console.log('get', key, value);
+        console.log('**value', key, value)
         return Object.keys(value).filter(k => value[k]);
       },
       set(value) {
         const newMap = {};
         for (let label of value) {
           newMap[label] = true;
+          console.log('newMap[label]', newMap[label]);
         }
+        console.log('[key]: newMap', { [key]: newMap});
         this.update({ [key]: newMap });
       },
     };
@@ -633,14 +637,22 @@
       completionCriteria: {
         get() {
           const options = this.getExtraFieldsValueFromNodes('options') || {};
-          console.log('@@from BE options.completion_criteria', options.completion_criteria)
-          return options.completion_criteria || {};
+          console.log('@@!!from BE options.completion_criteria', options)
+          // console.log('@@!!firstnode', this.firstNode)
+          // return options.completion_criteria || {};
+          return {
+            suggested_duration: this.getValueFromNodes('suggested_duration'),
+            ...options.completion_criteria,
+          } || {};
         },
         set(completion_criteria) {
-          console.log('@@completion_criteria', completion_criteria)
+          console.log('@@!!completion_criteria', completion_criteria)
+          console.log('@@!! validateCompletionCriteria true or false', validateCompletionCriteria(completion_criteria, this.firstNode.kind))
           // TODO Remove validation if unnecessary after implementing `completionCriteria`
           if (validateCompletionCriteria(completion_criteria, this.firstNode.kind)) {
+            console.log('@@!!validation passed')
             const options = { completion_criteria };
+            console.log('@@!!options', options)
             this.updateExtraFields({ options });
           } else {
             console.warn('Invalid completion criteria', [...validateCompletionCriteria.errors]);
@@ -769,9 +781,11 @@
           return this.diffTracker[key];
         }
         let results = uniq(this.nodes.map(node => node[key] || null));
+        console.log('@@!!getValueFromNodes', key, results)
         return getValueFromResults(results);
       },
       getExtraFieldsValueFromNodes(key, defaultValue = null) {
+        console.log('@@!! from BE getExtraFieldsValueFromNodes', key, defaultValue)
         if (
           Object.prototype.hasOwnProperty.call(this.diffTracker, 'extra_fields') &&
           Object.prototype.hasOwnProperty.call(this.diffTracker.extra_fields, key)
@@ -785,6 +799,7 @@
               : node.extra_fields[key]
           )
         );
+        console.log('@@!! from BE results', results)
         return getValueFromResults(results);
       },
       getPlaceholder(field) {
@@ -807,6 +822,9 @@
         this.$analytics.trackAction('channel_editor_modal_preview', 'Preview', {
           eventLabel: 'File',
         });
+      },
+      updateSuggestedDuration() {
+        return generateGetterSetter('suggested_duration');
       },
     },
     $trs: {

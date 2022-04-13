@@ -44,6 +44,7 @@
           return this.value;
         },
         set(value) {
+          console.log('newMap value', value)
           this.$emit('input', value);
         },
       },

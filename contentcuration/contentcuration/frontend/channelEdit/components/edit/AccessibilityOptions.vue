@@ -56,6 +56,7 @@
           return this.selected;
         },
         set(value) {
+          console.log('@@value', value)
           return this.$emit('input', value);
         },
       },

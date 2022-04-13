@@ -189,23 +189,3 @@ export const AccessibilityCategoriesMap = {
   exercise: ['ALT_TEXT'],
   html5: ['ALT_TEXT', 'HIGH_CONTRAST'],
 };
-export const completionDropdownMap = {
-  document: ['All content viewed', 'Complete duration'],
-  //TODO: REMOVE this map
-  // nodeDetails = {
-  //   title: 'Exercise',
-  //   kind: ContentKindsNames.EXERCISE,
-  //   license: { id: 8 },
-  //   extra_fields: {
-  //     mastery_model: MasteryModelsNames.DO_ALL,
-  //     options: {
-  //       completion_criteria: {
-  //         model: CompletionCriteriaModels.TIME,
-  //         threshold: 10, //it can mean num of pages or time in min, etc
-  //       },
-  //     },
-  //   },
-  // };
-  exercise: ['Practice until goal is met', 'Practice quiz'],
-  zip: ['Short activity', 'Long activity', 'Reference', 'Exact time to complete'],
-};

@@ -4,14 +4,14 @@
     <VLayout row wrap justify-space-between>
       <VFlex md2 sm3>
         <VTextField
-          v-model="minutes"
+          v-model.number="shortLongActivityMinutes"
           box
           :label="$tr('minutesRequired')"
         />
       </VFlex>
       <VFlex md9 sm8>
         <VSlider
-          v-model="minutes"
+          v-model="shortLongActivityMinutes"
           :label="label"
           :max="maxRange"
           :min="shortActivity ? 0 : 31"
@@ -44,20 +44,21 @@
     data() {
       return {
         label: '',
-        shortMinutes: this.value || 10,
-        longMinutes: this.value || 45,
+        shortMinutes: 10,
+        longMinutes: 45,
       };
     },
     computed: {
-      minutes: {
+      shortLongActivityMinutes: {
         get() {
+          // return this.value;
           return this.shortActivity ? this.shortMinutes : this.longMinutes;
         },
         set(value) {
           if (this.shortActivity) {
-            this.shortMinutes = value;
+            this.shortMinutes = value < this.maxRange ? value : this.maxRange;
           } else {
-            this.longMinutes = value;
+            this.longMinutes = value > 31 ? value : 31;
           }
           this.$emit('input', value);
         },

@@ -37,10 +37,6 @@
         type: String,
         default: '',
       },
-      selected: {
-        type: Array,
-        default: () => [],
-      },
     },
     data() {
       return {
@@ -51,15 +47,13 @@
       learningActivity: {
         get() {
           if (this.kind === 'video') {
-            console.log('LearningActivities.WATCH', LearningActivities.WATCH);
-            return LearningActivities.WATCH;
-          } else if (this.kind === 'audio') {
-            return LearningActivities.LISTEN;
+            return [LearningActivities.WATCH];
           } else if (this.kind === 'document') {
-            return LearningActivities.READ;
-          } else {
-            return this.selected;
+            return [LearningActivities.READ];
+          } else if (this.kind === 'audio') {
+            return [LearningActivities.LISTEN];
           }
+          return this.value;
         },
         set(value) {
           this.$emit('input', value);

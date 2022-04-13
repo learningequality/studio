@@ -192,13 +192,10 @@
     },
     methods: {
       handleInput(newValue) {
-        console.log('!!newValue', newValue)
-        console.log('!!this.value', this.Value)
         let data = {
           ...this.value,
           ...newValue,
         };
-        console.log('!!data', data)
         this.$emit('input', data);
       },
       isIntegerInput(evt) {

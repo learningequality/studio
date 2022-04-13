@@ -643,6 +643,10 @@ export const metadataStrings = createTranslator('CommonMetadataStrings', {
     message: 'Long activity',
     context: 'Label with time estimation for learning activities that take more than 30 minutes.',
   },
+  exactTime: {
+    message: 'Exact time to complete',
+    context: 'Label with exact time required for learning activities.'
+  }
 });
 
 export const metadataTranslationMixin = {

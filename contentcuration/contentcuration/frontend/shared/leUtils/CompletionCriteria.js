@@ -20,6 +20,7 @@ export function validate(criteria, contentKind = null) {
 
   if (!_validate(criteria)) {
     validate.errors = _validate.errors;
+    console.log('@@!! validate errors', validate.errors)
     return false;
   }
 

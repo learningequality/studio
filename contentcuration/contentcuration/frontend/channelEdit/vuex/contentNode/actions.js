@@ -182,6 +182,7 @@ export function createContentNode(context, { parent, kind, ...payload }) {
     learner_needs: {},
     completion: {},
     accessibility_labels: {},
+    suggested_duration: 0,
     ...payload,
   };
 
@@ -217,6 +218,7 @@ function generateContentNodeData({
   learner_needs = NOVALUE,
   learning_activities = NOVALUE,
   grade_levels = NOVALUE,
+  suggested_duration = NOVALUE,
   accessibility_labels = NOVALUE,
   completion = NOVALUE,
 } = {}) {
@@ -250,6 +252,9 @@ function generateContentNodeData({
   }
   if (grade_levels !== NOVALUE) {
     contentNodeData.grade_levels = grade_levels;
+  }
+  if (suggested_duration !== NOVALUE) {
+    contentNodeData.suggested_duration = suggested_duration;
   }
   if (accessibility_labels !== NOVALUE) {
     contentNodeData.accessibility_labels = accessibility_labels;
@@ -301,11 +306,13 @@ function generateContentNodeData({
 }
 
 export function updateContentNode(context, { id, ...payload } = {}) {
+  console.log('$$updatecontentnode', context, { id, ...payload })
   if (!id) {
     throw ReferenceError('id must be defined to update a contentNode');
   }
   let contentNodeData = generateContentNodeData(payload);
   const node = context.getters.getContentNode(id);
+  console.log('$$node', node)
 
   // Don't overwrite existing extra_fields data
   if (contentNodeData.extra_fields) {
@@ -332,6 +339,7 @@ export function updateContentNode(context, { id, ...payload } = {}) {
     ...node,
     ...contentNodeData,
   };
+  console.log('$$newNode', newNode)
   const complete = isNodeComplete({
     nodeDetails: newNode,
     assessmentItems: context.rootGetters['assessmentItem/getAssessmentItems'](id),
@@ -341,6 +349,8 @@ export function updateContentNode(context, { id, ...payload } = {}) {
     ...contentNodeData,
     complete,
   };
+  console.log('$$contentNodeData', contentNodeData)
+
   context.commit('UPDATE_CONTENTNODE', { id, ...contentNodeData });
   return ContentNode.update(id, contentNodeData);
 }

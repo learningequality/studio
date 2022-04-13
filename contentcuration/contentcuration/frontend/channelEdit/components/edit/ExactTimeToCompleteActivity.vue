@@ -30,11 +30,15 @@
       value: {
         type: Number,
         default: 0,
-      }
+      },
+      duration: {
+        type: Number,
+        default: 0,
+      },
     },
     data() {
       return {
-        defaultUploadTime: 13,
+        defaultUploadTime: this.duration,
       };
     },
     computed: {
