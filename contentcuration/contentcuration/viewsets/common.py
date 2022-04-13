@@ -125,6 +125,8 @@ class DotPathValueMixin(object):
         # get just field name
         value = dictionary.get(self.field_name, {})
 
+        self.initial_value = value
+
         if value is None:
             return empty
 
@@ -151,7 +153,31 @@ class JSONFieldDictSerializer(DotPathValueMixin, serializers.Serializer):
         return instance
 
     def update(self, instance, validated_data):
+        instance = instance or self.default_value()
         instance.update(validated_data)
+        # This should have been set when get_value was invoked
+        # But could be `None`, so we check if it is truthy here.
+        if getattr(self, "initial_value", None):
+            # Iterate through each field
+            for key in self.initial_value:
+                # If the field is explicitly being set as None, then
+                # we need to delete it from the instance.
+                if self.initial_value[key] is None:
+                    # Follow the dot path to find the nested object
+                    obj = instance
+                    # Iterate through each part of the dot path
+                    # up until, but not including the final key
+                    for part in key.split(".")[:-1]:
+                        if isinstance(obj, dict):
+                            # If it's a dict use get to get the next level object
+                            obj = obj.get(part)
+                        elif isinstance(obj, list):
+                            # If it's a list, use the index to get the next level object
+                            obj = obj[int(part)]
+                        else:
+                            raise ValidationError("Tried to access a dot path in an invalid type")
+                    # Finally, delete the final key
+                    obj.pop(key.split(".")[-1])
         return instance
 
 
