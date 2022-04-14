@@ -179,6 +179,7 @@ export function createContentNode(context, { parent, kind, ...payload }) {
     role_visibility: contentDefaults.role_visibility || RolesNames.LEARNER,
     accessibility_labels: {},
     grade_levels: {},
+    learner_needs: {},
     ...payload,
   };
 
@@ -213,6 +214,7 @@ function generateContentNodeData({
   complete = NOVALUE,
   accessibility_labels = NOVALUE,
   grade_levels = NOVALUE,
+  learner_needs = NOVALUE,
 } = {}) {
   const contentNodeData = {};
   if (title !== NOVALUE) {
@@ -256,6 +258,9 @@ function generateContentNodeData({
   }
   if (grade_levels !== NOVALUE) {
     contentNodeData.grade_levels = grade_levels;
+  }
+  if (learner_needs !== NOVALUE) {
+    contentNodeData.learner_needs = learner_needs;
   }
 
   if (extra_fields !== NOVALUE) {

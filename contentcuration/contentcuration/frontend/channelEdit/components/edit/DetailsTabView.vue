@@ -52,6 +52,14 @@
               @focus="trackClick('Levels dropdown')"
             />
           </VFlex>
+          <!-- What you will need -->
+          <VFlex d-flex xs12>
+            <ResourcesNeededOptions
+              ref="resourcesNeeded"
+              v-model="resourcesNeeded"
+              @focus="trackClick('What you will need')"
+            />
+          </VFlex>
           <!-- Tags -->
           <VCombobox
             ref="tags"
@@ -337,6 +345,7 @@
   import { isImportedContent, importedChannelLink } from '../../utils';
   import AccessibilityOptions from './AccessibilityOptions.vue';
   import LevelsOptions from './LevelsOptions.vue';
+  import ResourcesNeededOptions from './ResourcesNeededOptions.vue';
 
   import {
     getTitleValidators,
@@ -427,6 +436,7 @@
       Checkbox,
       AccessibilityOptions,
       LevelsOptions,
+      ResourcesNeededOptions,
     },
     mixins: [constantsTranslationMixin, metadataTranslationMixin],
     props: {
@@ -507,6 +517,8 @@
       language: generateGetterSetter('language'),
       accessibility: generateNestedNodesGetterSetter('accessibility_labels'),
       contentLevel: generateNestedNodesGetterSetter('grade_levels'),
+      resourcesNeeded: generateNestedNodesGetterSetter('learner_needs'),
+
       mastery_model() {
         return this.getExtraFieldsValueFromNodes('mastery_model');
       },

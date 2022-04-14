@@ -6,6 +6,7 @@ export { default as ContentLevel } from 'kolibri-constants/labels/Levels';
 export { default as Categories } from 'kolibri-constants/labels/Subjects';
 export { default as AccessibilityCategories } from 'kolibri-constants/labels/AccessibilityCategories';
 export { default as ContentLevels } from 'kolibri-constants/labels/Levels';
+export { default as ResourcesNeededTypes } from 'kolibri-constants/labels/Needs';
 
 export const ContentDefaults = {
   author: 'author',
