@@ -88,7 +88,7 @@
       altText: `Alternative text is provided for visual content (e.g., via the HTML alt attribute).`,
       audioDescription: `Audio descriptions are available (e.g., via an HTML5 track element with kind="descriptions")`,
       highContrast: `Content meets the visual contrast threshold set out in WCAG Success Criteria 1.4.6`,
-      signLanguage: `Synchronized sign language intepretation is available for audio and video content. The value may be extended by adding an ISO 639 sign language code. For example, /sgn-en-us for American Sign Language.`,
+      signLanguage: `Synchronized sign language intepretation is available for audio and video content.`,
       taggedPdf: `The structures in a PDF have been tagged to improve the navigation of the content.`,
       /* eslint-enable kolibri/vue-no-unused-translations */
     },
