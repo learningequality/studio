@@ -15,7 +15,12 @@
         >
           <template #label>
             <span class="text-xs-left">{{ accessibilityItem.label }}</span>
-            <HelpTooltip :text="$tr(accessibilityItem.help)" bottom class="px-2" />
+            <HelpTooltip
+              :text="$tr(accessibilityItem.help)"
+              bottom
+              class="px-2"
+              data-test="accessibility-tooltip"
+            />
           </template>
         </Checkbox>
       </VFlex>
