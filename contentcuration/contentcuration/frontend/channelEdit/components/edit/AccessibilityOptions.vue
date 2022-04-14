@@ -12,6 +12,7 @@
           :value="accessibilityItem.value"
           :label="accessibilityItem.label"
           color="primary"
+          :data-test="`checkbox-${accessibilityItem.label}`"
         >
           <template #label>
             <span class="text-xs-left">{{ accessibilityItem.label }}</span>
@@ -19,7 +20,7 @@
               :text="$tr(accessibilityItem.help)"
               bottom
               class="px-2"
-              data-test="accessibility-tooltip"
+              :data-test="`tooltip-${accessibilityItem.label}`"
             />
           </template>
         </Checkbox>
