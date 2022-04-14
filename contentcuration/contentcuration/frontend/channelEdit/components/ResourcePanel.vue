@@ -127,9 +127,28 @@
               {{ $formatNumber(assessmentItems.length) }}
             </span>
           </DetailsRow>
+          <DetailsRow :label="$tr('description')" :text="getText('description')" />
+          <DetailsRow
+            v-if="!isTopic"
+            :label="translateMetadataString('level')"
+            :text="level(node.level)"
+            notranslate
+          />
+          <DetailsRow
+            v-if="!isTopic"
+            :label="translateMetadataString('learningActivity')"
+            :text="learningActivity(node.learning_activities)"
+            notranslate
+          />
+          <DetailsRow
+            v-if="!isExercise && !isTopic"
+            :label="translateMetadataString('completion')"
+            :text="completion(node.extra_fields)"
+            notranslate
+          />
           <DetailsRow
             v-if="isExercise"
-            :label="$tr('masteryCriteria')"
+            :label="$tr('completion')"
           >
             <span v-if="noMasteryModel" class="red--text">
               <Icon color="red" small>error</Icon>
@@ -139,30 +158,16 @@
               {{ masteryCriteria }}
             </span>
           </DetailsRow>
-          <DetailsRow :label="$tr('description')" :text="getText('description')" />
           <DetailsRow
-            :label="translateMetadataString('level')"
-            :text="level(node.level)"
-            notranslate
-          />
-          <DetailsRow
-            :label="translateMetadataString('learningActivity')"
-            :text="learningActivity(node.learning_activities)"
-            notranslate
-          />
-          <DetailsRow
-            :label="translateMetadataString('completion')"
-            :text="completion()"
-            notranslate
-          />
-          <DetailsRow
+            v-if="!isTopic"
             :label="translateMetadataString('duration')"
-            :text="duration()"
+            :text="duration(node.extra_fields)"
             notranslate
           />
           <div>
           </div>
           <DetailsRow
+          v-if="!isTopic"
             :label="translateMetadataString('category')"
             :text="category(node.categories)"
             notranslate
@@ -190,6 +195,7 @@
           <DetailsRow :label="$tr('language')" :text="languageName" />
           <DetailsRow v-if="!isTopic" :label="$tr('visibleTo')" :text="roleName" />
           <DetailsRow
+            v-if="!isTopic"
             :label="translateMetadataString('accessibility')"
             :text="accessibilityOptions(node.accessbility_options)"
             notranslate
@@ -351,6 +357,7 @@
     Categories,
     LearningActivities,
     AccessibilityCategories,
+    CompletionCriteriaModels,
   } from '../../shared/constants';
   import AssessmentItemPreview from './AssessmentItemPreview/AssessmentItemPreview';
   import ContentNodeValidator from './ContentNodeValidator';
@@ -456,6 +463,7 @@
         return this.contentNodesTotalSize([this.nodeId]);
       },
       isTopic() {
+        console.log(JSON.parse(JSON.stringify(this.node.extra_fields)));
         return this.node && this.node.kind === ContentKindsNames.TOPIC;
       },
       isExercise() {
@@ -600,6 +608,22 @@
       matchIdToString(ids) {
         return ids.map(i => this.translateMetadataString(camelCase(i))).join(', ');
       },
+      toMinutes(duration) {
+        const minutes = Math.round(duration / 60)
+        return this.$tr('duration', { value: minutes})
+      },
+      toExactTimeToComplete(duration) {
+        const minutes = Math.floor(duration / 60)
+        const seconds = duration % minutes
+        return `${minutes}:${seconds}`
+      },
+      toSuggestedDuration(duration) {
+        if (duration < 1860) {
+          return this.$tr('shortActivity')
+        } else {
+          return this.$tr('longActivity')
+        }
+      },
       level(level) {
         const match = Object.keys(ContentLevel).find(k => ContentLevel[k] == level);
         if (match) {
@@ -619,10 +643,25 @@
           return '-';
         }
       },
-      completion() {
+      completion(value) {
+        if (value && value.completion_criteria) {
+          if (value.completion_criteria.model === CompletionCriteriaModels.APPROX_TIME) {
+            return this.toSuggestedDuration(value.suggested_duration)
+          } else if (value.completion_criteria.model === CompletionCriteriaModels.REFERNCE) {
+            return this.$tr('reference')
+          }
+          return this.$tr(camelCase(value.completion_criteria.model))
+        }
         return '-';
       },
-      duration() {
+      duration(value) {
+        if (value && value.completion_criteria) {
+          if (value.completion_criteria.model === CompletionCriteriaModels.TIME) {
+            return this.toExactTimeToComplete(value.completion_criteria.threshold)
+          } else if (value.completion_criteria.model === CompletionCriteriaModels.APPROX_TIME) {
+            return this.toMinutes(value.suggested_duration)
+          }
+        }
         return '-';
       },
       accessibilityOptions(options) {
@@ -675,12 +714,17 @@
     $trs: {
       questions: 'Questions',
       masteryCriteria: 'Mastery criteria',
-      masteryMofN: '{m} out of {n}',
+      masteryMofN: 'Goal: {m} out of {n}',
       details: 'Details',
+      completion: 'Completion',
       showAnswers: 'Show answers',
       questionCount: '{value, number, integer} {value, plural, one {question} other {questions}}',
       description: 'Description',
+      duration: '{value, number, integer} minutes',
+      shortActivity: 'Short activity',
+      longActivity: 'Long activity',
       tags: 'Tags',
+      time: 'Exact time to complete',
       audience: 'Audience',
       language: 'Language',
       visibleTo: 'Visible to',
@@ -701,6 +745,7 @@
       availableFormats: 'Available formats',
       subtitles: 'Captions and subtitles',
       fileSize: 'Size',
+      reference: 'Reference',
 
       // Validation strings
       noLicenseError: 'Missing license',
