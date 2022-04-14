@@ -211,7 +211,6 @@ function generateContentNodeData({
   prerequisite = NOVALUE,
   complete = NOVALUE,
   accessibility_labels = NOVALUE,
-
 } = {}) {
   const contentNodeData = {};
   if (title !== NOVALUE) {
@@ -248,8 +247,8 @@ function generateContentNodeData({
     contentNodeData.provider = provider;
   }
   /*
-  * New metadata fields
-  */
+   * New metadata fields
+   */
   if (accessibility_labels !== NOVALUE) {
     contentNodeData.accessibility_labels = accessibility_labels;
   }
