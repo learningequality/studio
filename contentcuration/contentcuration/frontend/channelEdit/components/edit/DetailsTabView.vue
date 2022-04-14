@@ -44,6 +44,14 @@
             box
             @focus="trackClick('Description')"
           />
+          <!-- Level -->
+          <VFlex d-flex xs12>
+            <LevelsOptions
+              ref="contentLevel"
+              v-model="contentLevel"
+              @focus="trackClick('Levels dropdown')"
+            />
+          </VFlex>
           <!-- Tags -->
           <VCombobox
             ref="tags"
@@ -328,6 +336,8 @@
   import SubtitlesList from '../../views/files/supplementaryLists/SubtitlesList';
   import { isImportedContent, importedChannelLink } from '../../utils';
   import AccessibilityOptions from './AccessibilityOptions.vue';
+  import LevelsOptions from './LevelsOptions.vue';
+
   import {
     getTitleValidators,
     getCopyrightHolderValidators,
@@ -416,6 +426,7 @@
       ContentNodeThumbnail,
       Checkbox,
       AccessibilityOptions,
+      LevelsOptions,
     },
     mixins: [constantsTranslationMixin, metadataTranslationMixin],
     props: {
@@ -495,6 +506,7 @@
       role: generateGetterSetter('role_visibility'),
       language: generateGetterSetter('language'),
       accessibility: generateNestedNodesGetterSetter('accessibility_labels'),
+      contentLevel: generateNestedNodesGetterSetter('grade_levels'),
       mastery_model() {
         return this.getExtraFieldsValueFromNodes('mastery_model');
       },
