@@ -19,6 +19,9 @@
   import { ResourcesNeededTypes } from 'shared/constants';
   import { constantsTranslationMixin, metadataTranslationMixin } from 'shared/mixins';
 
+  //the variable below can be changed or removed when metadata/Kolibri is updated
+  const keysToBeTemporarilyRemoved = ['PEERS', 'TEACHER', 'PRIOR_KNOWLEDGE', 'MATERIALS'];
+
   export default {
     name: 'ResourcesNeededOptions',
     mixins: [constantsTranslationMixin, metadataTranslationMixin],
@@ -38,22 +41,31 @@
         },
       },
       resources() {
-        /*
-         * List of resources to show in the dropdown, taking into account mapping
-         * to resources that do not currently need to be displayed in Kolibri
-         */
-        let keysToBeTemporarilyRemoved = ['PEERS', 'TEACHER', 'PRIOR_KNOWLEDGE', 'MATERIALS'];
-        const adaptedResourcesNeededTypes = Object.keys(ResourcesNeededTypes).reduce((acc, key) => {
-          if (keysToBeTemporarilyRemoved.indexOf(key) === -1) {
-            acc[key] = ResourcesNeededTypes[key];
-          }
-          return acc;
-        }, {});
-
-        return Object.entries(adaptedResourcesNeededTypes).map(resource => ({
+        const dropdown =
+          this.updateResourcesDropdown(keysToBeTemporarilyRemoved) || ResourcesNeededTypes;
+        return Object.entries(dropdown).map(resource => ({
           text: this.translateMetadataString(resource[0]),
           value: resource[1],
         }));
+      },
+    },
+    methods: {
+      /**
+       * @param {array} listOfKeys
+       * @returns {Object}
+       *
+       * Determines resources to show in the dropdown, to remove resources
+       * that do not currently need to be displayed in Kolibri
+       */
+      updateResourcesDropdown(listOfKeys) {
+        if (listOfKeys) {
+          return Object.keys(ResourcesNeededTypes).reduce((acc, key) => {
+            if (listOfKeys.indexOf(key) === -1) {
+              acc[key] = ResourcesNeededTypes[key];
+            }
+            return acc;
+          }, {});
+        }
       },
     },
     $trs: {
