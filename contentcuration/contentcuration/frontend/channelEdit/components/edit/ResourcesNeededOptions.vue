@@ -15,6 +15,7 @@
 </template>
 
 <script>
+
   import { ResourcesNeededTypes } from 'shared/constants';
   import { constantsTranslationMixin, metadataTranslationMixin } from 'shared/mixins';
 
@@ -37,9 +38,21 @@
         },
       },
       resources() {
-        return Object.entries(ResourcesNeededTypes).map(resource => ( {
+        /*
+         * List of resources to show in the dropdown, taking into account mapping
+         * to resources that do not currently need to be displayed in Kolibri
+         */
+        let keysToBeTemporarilyRemoved = ['PEERS', 'TEACHER', 'PRIOR_KNOWLEDGE', 'MATERIALS'];
+        const adaptedResourcesNeededTypes = Object.keys(ResourcesNeededTypes).reduce((acc, key) => {
+          if (keysToBeTemporarilyRemoved.indexOf(key) === -1) {
+            acc[key] = ResourcesNeededTypes[key];
+          }
+          return acc;
+        }, {});
+
+        return Object.entries(adaptedResourcesNeededTypes).map(resource => ({
           text: this.translateMetadataString(resource[0]),
-          value: resource[1]
+          value: resource[1],
         }));
       },
     },
