@@ -391,7 +391,7 @@
     return {
       get() {
         const value = this.getValueFromNodes(key);
-        return Object.keys(value).filter(k => value[k]);
+        return Object.keys(value);
       },
       set(value) {
         const newMap = {};
