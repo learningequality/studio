@@ -180,6 +180,7 @@ export function createContentNode(context, { parent, kind, ...payload }) {
     accessibility_labels: {},
     grade_levels: {},
     learner_needs: {},
+    learning_activities: {},
     ...payload,
   };
 
@@ -215,6 +216,7 @@ function generateContentNodeData({
   accessibility_labels = NOVALUE,
   grade_levels = NOVALUE,
   learner_needs = NOVALUE,
+  learning_activities = NOVALUE,
 } = {}) {
   const contentNodeData = {};
   if (title !== NOVALUE) {
@@ -261,6 +263,9 @@ function generateContentNodeData({
   }
   if (learner_needs !== NOVALUE) {
     contentNodeData.learner_needs = learner_needs;
+  }
+  if (learning_activities !== NOVALUE) {
+    contentNodeData.learning_activities = learning_activities;
   }
 
   if (extra_fields !== NOVALUE) {

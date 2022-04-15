@@ -44,6 +44,15 @@
             box
             @focus="trackClick('Description')"
           />
+          <!-- Learning activity -->
+          <VFlex d-flex xs12>
+            <LearningActivityOptions
+              ref="learning_activities"
+              v-model="contentLearningActivities"
+              :kind="firstNode.kind"
+              @focus="trackClick('Learning activities')"
+            />
+          </VFlex>
           <!-- Level -->
           <VFlex d-flex xs12>
             <LevelsOptions
@@ -346,6 +355,7 @@
   import AccessibilityOptions from './AccessibilityOptions.vue';
   import LevelsOptions from './LevelsOptions.vue';
   import ResourcesNeededOptions from './ResourcesNeededOptions.vue';
+  import LearningActivityOptions from './LearningActivityOptions.vue';
 
   import {
     getTitleValidators,
@@ -437,6 +447,7 @@
       AccessibilityOptions,
       LevelsOptions,
       ResourcesNeededOptions,
+      LearningActivityOptions,
     },
     mixins: [constantsTranslationMixin, metadataTranslationMixin],
     props: {
@@ -518,6 +529,7 @@
       accessibility: generateNestedNodesGetterSetter('accessibility_labels'),
       contentLevel: generateNestedNodesGetterSetter('grade_levels'),
       resourcesNeeded: generateNestedNodesGetterSetter('learner_needs'),
+      contentLearningActivities: generateNestedNodesGetterSetter('learning_activities'),
 
       mastery_model() {
         return this.getExtraFieldsValueFromNodes('mastery_model');
