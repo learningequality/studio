@@ -1,10 +1,10 @@
 import { SharingPermissions } from 'shared/constants';
 
 function mapChannel(state, channel) {
-  return {
+  return channel ? {
     ...channel,
     bookmark: Boolean(state.bookmarksMap[channel.id]),
-  };
+  } : channel;
 }
 
 export function channels(state) {
