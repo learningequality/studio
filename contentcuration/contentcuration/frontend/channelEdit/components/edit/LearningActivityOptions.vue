@@ -10,17 +10,7 @@
     multiple
     deletableChips
     :rules="learningActivityRules"
-  >
-    <template v-slot:no-data>
-      <VListTile v-if="learningActivityText && learningActivityText.trim()">
-        <VListTileContent>
-          <VListTileTitle>
-            {{ $tr('noActivitiesText', { text: learningActivityText.trim() }) }}
-          </VListTileTitle>
-        </VListTileContent>
-      </VListTile>
-    </template>
-  </VSelect>
+  />
 
 </template>
 
@@ -43,11 +33,6 @@
         type: Array,
         default: () => [],
       },
-    },
-    data() {
-      return {
-        learningActivityText: null,
-      };
     },
     computed: {
       learningActivity: {
@@ -74,10 +59,6 @@
       learningActivityRules() {
         return getLearningActivityValidators().map(translateValidator);
       },
-    },
-    $trs: {
-      noActivitiesText:
-        'No results found for "{text}". Press \'Enter\' key to create a new learning activity',
     },
   };
 
