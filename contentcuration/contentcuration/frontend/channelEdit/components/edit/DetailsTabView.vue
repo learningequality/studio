@@ -163,6 +163,21 @@
         </VFlex>
       </VLayout>
 
+      <!-- Accessibility section -->
+      <VLayout row wrap class="section">
+        <template v-if="requiresAccessibility">
+          <VFlex xs12>
+            <h1 class="subheading">
+              {{ translateMetadataString('accessibility') }}
+            </h1>
+            <AccessibilityOptions
+              v-model="accessibility"
+              :checked="accessibility"
+              :kind="firstNode.kind"
+            />
+          </VFlex>
+        </template>
+      </VLayout>
 
       <!-- Source section -->
       <VLayout row wrap class="section">
@@ -288,6 +303,15 @@
           <SubtitlesList :nodeId="firstNode.id" />
         </VFlex>
       </VLayout>
+
+      <!-- Audio accessibility section -->
+      <VLayout row wrap class="section">
+        <template v-if="audioAccessibility">
+          <VFlex xs12>
+            <SubtitlesList :nodeId="firstNode.id" />
+          </VFlex>
+        </template>
+      </VLayout>
     </VForm>
   </div>
 
@@ -303,6 +327,7 @@
   import FileUpload from '../../views/files/FileUpload';
   import SubtitlesList from '../../views/files/supplementaryLists/SubtitlesList';
   import { isImportedContent, importedChannelLink } from '../../utils';
+  import AccessibilityOptions from './AccessibilityOptions.vue';
   import {
     getTitleValidators,
     getCopyrightHolderValidators,
@@ -318,6 +343,7 @@
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import { NEW_OBJECT, FeatureFlagKeys, ContentModalities } from 'shared/constants';
   import { validate as validateCompletionCriteria } from 'shared/leUtils/CompletionCriteria';
+  import { constantsTranslationMixin, metadataTranslationMixin } from 'shared/mixins';
 
   // Define an object to act as the place holder for non unique values.
   const nonUniqueValue = {};
@@ -355,6 +381,28 @@
     };
   }
 
+  /**
+   * This function is used to generate getter/setters for new metadata fields that are boolean maps:
+   * - `grade_levels` (sometimes referred to as `content_levels`)
+   * - `learner_needs` (resources needed)
+   * - `accessibility_labels` (accessibility options)
+   */
+  function generateNestedNodesGetterSetter(key) {
+    return {
+      get() {
+        const value = this.getValueFromNodes(key);
+        return Object.keys(value);
+      },
+      set(value) {
+        const newMap = {};
+        for (let label of value) {
+          newMap[label] = true;
+        }
+        this.update({ [key]: newMap });
+      },
+    };
+  }
+
   export default {
     name: 'DetailsTabView',
     components: {
@@ -367,7 +415,9 @@
       SubtitlesList,
       ContentNodeThumbnail,
       Checkbox,
+      AccessibilityOptions,
     },
+    mixins: [constantsTranslationMixin, metadataTranslationMixin],
     props: {
       nodeIds: {
         type: Array,
@@ -413,6 +463,12 @@
       importedChannelName() {
         return this.firstNode.original_channel_name;
       },
+      requiresAccessibility() {
+        return this.nodes.every(node => node.kind !== ContentKindsNames.AUDIO);
+      },
+      audioAccessibility() {
+        return this.oneSelected && this.firstNode.kind === 'audio';
+      },
       /* FORM FIELDS */
       title: generateGetterSetter('title'),
       description: generateGetterSetter('description'),
@@ -438,6 +494,7 @@
       },
       role: generateGetterSetter('role_visibility'),
       language: generateGetterSetter('language'),
+      accessibility: generateNestedNodesGetterSetter('accessibility_labels'),
       mastery_model() {
         return this.getExtraFieldsValueFromNodes('mastery_model');
       },

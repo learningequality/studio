@@ -175,3 +175,11 @@ export const FeatureFlagKeys = Object.keys(FeatureFlagsSchema.properties).reduce
 export const ContentModalities = {
   QUIZ: 'QUIZ',
 };
+
+export const AccessibilityCategoriesMap = {
+  // Note: audio is not included, as it is rendered in the UI differently.
+  document: ['ALT_TEXT', 'HIGH_CONTRAST', 'TAGGED_PDF'],
+  video: ['SIGN_LANGUAGE', 'AUDIO_DESCRIPTION'],
+  exercise: ['ALT_TEXT'],
+  html5: ['ALT_TEXT', 'HIGH_CONTRAST'],
+};
