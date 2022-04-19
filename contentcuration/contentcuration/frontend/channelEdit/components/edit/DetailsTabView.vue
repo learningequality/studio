@@ -49,7 +49,6 @@
             <LearningActivityOptions
               ref="learning_activities"
               v-model="contentLearningActivities"
-              :kind="firstNode.kind"
               @focus="trackClick('Learning activities')"
             />
           </VFlex>
@@ -415,6 +414,7 @@
    * - `grade_levels` (sometimes referred to as `content_levels`)
    * - `learner_needs` (resources needed)
    * - `accessibility_labels` (accessibility options)
+   * - `learning_activities` (learning activities)
    */
   function generateNestedNodesGetterSetter(key) {
     return {

@@ -25,10 +25,6 @@
     name: 'LearningActivityOptions',
     mixins: [constantsTranslationMixin, metadataTranslationMixin],
     props: {
-      kind: {
-        type: String,
-        default: '',
-      },
       value: {
         type: Array,
         default: () => [],
@@ -37,13 +33,6 @@
     computed: {
       learningActivity: {
         get() {
-          if (this.kind === 'video') {
-            return this.value || [LearningActivities.WATCH];
-          } else if (this.kind === 'document') {
-            return this.value || [LearningActivities.READ];
-          } else if (this.kind === 'audio') {
-            return this.value || [LearningActivities.LISTEN];
-          }
           return this.value;
         },
         set(value) {
