@@ -32,69 +32,80 @@
             box
             @focus="trackClick('Title')"
           />
-          <!-- Description -->
-          <VTextarea
-            v-if="oneSelected"
-            ref="description"
-            v-model="description"
-            :label="$tr('descriptionLabel')"
-            maxlength="400"
-            counter
-            autoGrow
-            box
-            @focus="trackClick('Description')"
-          />
-          <!-- Learning activity -->
-          <VFlex d-flex xs12>
-            <LearningActivityOptions
-              ref="learning_activities"
-              v-model="contentLearningActivities"
-              @focus="trackClick('Learning activities')"
-            />
-          </VFlex>
-          <!-- Level -->
-          <VFlex d-flex xs12>
-            <LevelsOptions
-              ref="contentLevel"
-              v-model="contentLevel"
-              @focus="trackClick('Levels dropdown')"
-            />
-          </VFlex>
-          <!-- What you will need -->
-          <VFlex d-flex xs12>
-            <ResourcesNeededOptions
-              ref="resourcesNeeded"
-              v-model="resourcesNeeded"
-              @focus="trackClick('What you will need')"
-            />
-          </VFlex>
-          <!-- Tags -->
-          <VCombobox
-            ref="tags"
-            v-model="contentTags"
-            class="tagbox"
-            :items="tags"
-            :searchInput.sync="tagText"
-            chips
-            box
-            :label="$tr('tagsLabel')"
-            multiple
-            deletableChips
-            hideSelected
-            maxlength="30"
-            autoSelectFirst
-            @focus="trackClick('Tags')"
-          >
-            <template v-slot:no-data>
-              <VListTile v-if="tagText && tagText.trim()">
-                <VListTileContent>
-                  <VListTileTitle>
-                    {{ $tr('noTagsFoundText', { text: tagText.trim() }) }}
-                  </VListTileTitle>
-                </VListTileContent>
-              </VListTile>
-            </template>
-          </VCombobox>
+          <VLayout row wrap>
+            <VFlex
+              xs12
+              md6
+              class="basicInfoColumn"
+              :class="{ 'pr-2': $vuetify.breakpoint.mdAndUp }"
+            >
+              <!-- Description -->
+              <VTextarea
+                v-if="oneSelected"
+                ref="description"
+                v-model="description"
+                :label="$tr('descriptionLabel')"
+                maxlength="400"
+                counter
+                autoGrow
+                box
+                height="100%"
+                class="descriptionTextArea"
+                @focus="trackClick('Description')"
+              />
+            </VFlex>
+            <VFlex
+              xs12
+              md6
+              :class="{ 'pl-2': $vuetify.breakpoint.mdAndUp }"
+            >
+              <!-- Learning activity -->
+              <LearningActivityOptions
+                ref="learning_activities"
+                v-model="contentLearningActivities"
+                @focus="trackClick('Learning activities')"
+              />
+              <!-- Level -->
+              <LevelsOptions
+                ref="contentLevel"
+                v-model="contentLevel"
+                @focus="trackClick('Levels dropdown')"
+              />
+              <!-- What you will need -->
+              <ResourcesNeededOptions
+                ref="resourcesNeeded"
+                v-model="resourcesNeeded"
+                @focus="trackClick('What you will need')"
+              />
+              <!-- Tags -->
+              <VCombobox
+                ref="tags"
+                v-model="contentTags"
+                class="tagbox"
+                :items="tags"
+                :searchInput.sync="tagText"
+                chips
+                box
+                :label="$tr('tagsLabel')"
+                multiple
+                deletableChips
+                hideSelected
+                maxlength="30"
+                autoSelectFirst
+                @focus="trackClick('Tags')"
+              >
+                <template v-slot:no-data>
+                  <VListTile v-if="tagText && tagText.trim()">
+                    <VListTileContent>
+                      <VListTileTitle>
+                        {{ $tr('noTagsFoundText', { text: tagText.trim() }) }}
+                      </VListTileTitle>
+                    </VListTileContent>
+                  </VListTile>
+                </template>
+              </VCombobox>
+            </VFlex>
+          </VLayout>
         </VFlex>
       </VLayout>
 
@@ -859,6 +870,18 @@
           &::after {
             border: 0;
           }
+        }
+      }
+
+      .basicInfoColumn {
+        display: flex;
+        /deep/ .v-input {
+          // Stretches the "Description" text area to fill the column vertically
+          align-items: stretch;
+        }
+        /deep/ .v-input__control {
+          // Makes sure that the character count does not get pushed to second column
+          flex-wrap: nowrap;
         }
       }
     }
