@@ -108,6 +108,7 @@ describe('contentNode actions', () => {
           title: 'notatest',
           description: 'very',
           language: 'no',
+          learning_activities: { test: true },
         })
         .then(() => {
           expect(updateSpy).toHaveBeenCalledWith(id, {
@@ -116,6 +117,7 @@ describe('contentNode actions', () => {
             language: 'no',
             changed: true,
             complete: false,
+            learning_activities: { test: true },
           });
           updateSpy.mockRestore();
         });
