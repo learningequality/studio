@@ -690,20 +690,31 @@
         return value !== nonUniqueValue;
       },
       getValueFromNodes(key) {
-        if (Object.prototype.hasOwnProperty.call(this.diffTracker, key)) {
-          return this.diffTracker[key];
-        }
-        let results = uniq(this.nodes.map(node => node[key] || null));
+        const results = uniq(
+          this.nodes.map(node => {
+            if (Object.prototype.hasOwnProperty.call(this.diffTracker[node.id] || {}, key)) {
+              return this.diffTracker[node.id][key];
+            }
+            return node[key] || null;
+          })
+        );
         return getValueFromResults(results);
       },
       getExtraFieldsValueFromNodes(key, defaultValue = null) {
-        if (
-          Object.prototype.hasOwnProperty.call(this.diffTracker, 'extra_fields') &&
-          Object.prototype.hasOwnProperty.call(this.diffTracker.extra_fields, key)
-        ) {
-          return this.diffTracker.extra_fields[key];
-        }
-        let results = uniq(this.nodes.map(node => node.extra_fields[key] || defaultValue));
+        const results = uniq(
+          this.nodes.map(node => {
+            if (
+              Object.prototype.hasOwnProperty.call(
+                this.diffTracker[node.id] || {},
+                'extra_fields'
+              ) &&
+              Object.prototype.hasOwnProperty.call(this.diffTracker[node.id].extra_fields, key)
+            ) {
+              return this.diffTracker[node.id].extra_fields[key];
+            }
+            return node.extra_fields[key] || defaultValue;
+          })
+        );
         return getValueFromResults(results);
       },
       getPlaceholder(field) {
