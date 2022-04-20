@@ -365,7 +365,7 @@ describe('channelEdit utils', () => {
           title: 'Exercise',
           kind: ContentKindsNames.EXERCISE,
           license: { id: 8 },
-          learning_activities: { '#j8L0eq3': true },
+          learning_activities: { test: true },
           extra_fields: {
             mastery_model: MasteryModelsNames.DO_ALL,
             options: {
@@ -476,7 +476,7 @@ describe('channelEdit utils', () => {
           title: 'A node',
           license: { id: 8 },
           kind,
-          learning_activities: { '#j8L0eq3': true },
+          learning_activities: { test: true },
           extra_fields: {
             options: {
               completion_criteria: {
@@ -568,7 +568,7 @@ describe('channelEdit utils', () => {
           title: '',
           kind: 'document',
           license: 8,
-          learning_activities: { '#j8L0eq3': true },
+          learning_activities: { test: true },
         })
       ).toEqual([ValidationErrors.TITLE_REQUIRED]);
     });
@@ -579,7 +579,7 @@ describe('channelEdit utils', () => {
           title: 'Title',
           kind: 'document',
           license: null,
-          learning_activities: { '#j8L0eq3': true },
+          learning_activities: { test: true },
         },
         [ValidationErrors.LICENSE_REQUIRED],
       ],
@@ -588,7 +588,7 @@ describe('channelEdit utils', () => {
           title: 'Title',
           kind: 'document',
           license: 8,
-          learning_activities: { '#j8L0eq3': true },
+          learning_activities: { test: true },
         },
         [],
       ],
@@ -598,7 +598,7 @@ describe('channelEdit utils', () => {
           title: 'Title',
           kind: 'topic',
           license: null,
-          learning_activities: { '#j8L0eq3': true },
+          learning_activities: { test: true },
         },
         [],
       ],
@@ -608,7 +608,7 @@ describe('channelEdit utils', () => {
           title: 'Title',
           freeze_authoring_data: true,
           license: null,
-          learning_activities: { '#j8L0eq3': true },
+          learning_activities: { test: true },
         },
         [],
       ],
@@ -622,7 +622,7 @@ describe('channelEdit utils', () => {
         {
           title: 'Title',
           license: 1,
-          learning_activities: { '#j8L0eq3': true },
+          learning_activities: { test: true },
         },
         [ValidationErrors.COPYRIGHT_HOLDER_REQUIRED],
       ],
@@ -631,7 +631,7 @@ describe('channelEdit utils', () => {
           title: 'Title',
           license: 1,
           copyright_holder: 'Copyright holder',
-          learning_activities: { '#j8L0eq3': true },
+          learning_activities: { test: true },
         },
         [],
       ],
@@ -646,7 +646,7 @@ describe('channelEdit utils', () => {
           title: 'Title',
           license: 9,
           copyright_holder: 'Copyright holder',
-          learning_activities: { '#j8L0eq3': true },
+          learning_activities: { test: true },
         },
         [ValidationErrors.LICENSE_DESCRIPTION_REQUIRED],
       ],
@@ -656,7 +656,7 @@ describe('channelEdit utils', () => {
           license: 9,
           copyright_holder: 'Copyright holder',
           license_description: 'My custom license',
-          learning_activities: { '#j8L0eq3': true },
+          learning_activities: { test: true },
         },
         [],
       ],
@@ -670,7 +670,7 @@ describe('channelEdit utils', () => {
           title: 'Title',
           kind: 'exercise',
           license: 8,
-          learning_activities: { '#j8L0eq3': true },
+          learning_activities: { test: true },
         },
         [ValidationErrors.MASTERY_MODEL_REQUIRED],
       ],
@@ -679,7 +679,7 @@ describe('channelEdit utils', () => {
           title: 'Title',
           kind: 'exercise',
           license: 8,
-          learning_activities: { '#j8L0eq3': true },
+          learning_activities: { test: true },
           extra_fields: {
             mastery_model: 'do_all',
           },
@@ -691,7 +691,7 @@ describe('channelEdit utils', () => {
           title: 'Title',
           kind: 'exercise',
           license: 8,
-          learning_activities: { '#j8L0eq3': true },
+          learning_activities: { test: true },
           extra_fields: {
             mastery_model: 'm_of_n',
             m: 3,
@@ -709,7 +709,7 @@ describe('channelEdit utils', () => {
           title: 'Title',
           kind: 'exercise',
           license: 8,
-          learning_activities: { '#j8L0eq3': true },
+          learning_activities: { test: true },
           extra_fields: {
             mastery_model: 'm_of_n',
             m: 3,
@@ -723,7 +723,7 @@ describe('channelEdit utils', () => {
           title: 'Title',
           kind: 'exercise',
           license: 8,
-          learning_activities: { '#j8L0eq3': true },
+          learning_activities: { test: true },
           extra_fields: {
             mastery_model: 'm_of_n',
             m: 2,
