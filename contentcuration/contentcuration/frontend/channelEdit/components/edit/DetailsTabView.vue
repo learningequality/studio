@@ -106,6 +106,8 @@
               </VCombobox>
             </VFlex>
           </VLayout>
+          <!-- Category -->
+          <CategoryOptions ref="categories" v-model="categories" />
         </VFlex>
       </VLayout>
 
@@ -366,6 +368,7 @@
   import LevelsOptions from './LevelsOptions.vue';
   import ResourcesNeededOptions from './ResourcesNeededOptions.vue';
   import LearningActivityOptions from './LearningActivityOptions.vue';
+  import CategoryOptions from './CategoryOptions.vue';
 
   import {
     getTitleValidators,
@@ -459,6 +462,7 @@
       LevelsOptions,
       ResourcesNeededOptions,
       LearningActivityOptions,
+      CategoryOptions,
     },
     mixins: [constantsTranslationMixin, metadataTranslationMixin],
     props: {
@@ -541,7 +545,7 @@
       contentLevel: generateNestedNodesGetterSetter('grade_levels'),
       resourcesNeeded: generateNestedNodesGetterSetter('learner_needs'),
       contentLearningActivities: generateNestedNodesGetterSetter('learning_activities'),
-
+      categories: generateNestedNodesGetterSetter('categories'),
       mastery_model() {
         return this.getExtraFieldsValueFromNodes('mastery_model');
       },

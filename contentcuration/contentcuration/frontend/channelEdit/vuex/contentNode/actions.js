@@ -181,6 +181,7 @@ export function createContentNode(context, { parent, kind, ...payload }) {
     grade_levels: {},
     learner_needs: {},
     learning_activities: {},
+    categories: {},
     ...payload,
   };
 
@@ -217,6 +218,7 @@ function generateContentNodeData({
   grade_levels = NOVALUE,
   learner_needs = NOVALUE,
   learning_activities = NOVALUE,
+  categories = NOVALUE,
 } = {}) {
   const contentNodeData = {};
   if (title !== NOVALUE) {
@@ -266,6 +268,9 @@ function generateContentNodeData({
   }
   if (learning_activities !== NOVALUE) {
     contentNodeData.learning_activities = learning_activities;
+  }
+  if (categories !== NOVALUE) {
+    contentNodeData.categories = categories;
   }
 
   if (extra_fields !== NOVALUE) {

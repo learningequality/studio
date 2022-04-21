@@ -674,6 +674,8 @@ const nonconformingKeys = {
   BASIC_SKILLS: 'allLevelsBasicSkills',
   FOUNDATIONS: 'basicSkills',
   foundationsLogicAndCriticalThinking: 'logicAndCriticalThinking',
+  toolsAndSoftwareTraining: 'softwareToolsAndTraining',
+  foundations: 'basicSkills',
 
   /*
    * TODO: the following are in ResourcesNeededTypes map from le-utils, but not in Kolibri,
