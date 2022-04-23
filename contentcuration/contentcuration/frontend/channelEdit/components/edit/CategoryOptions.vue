@@ -22,7 +22,7 @@
               v-bind="attrs"
               close
               v-on="on"
-              @input="remove(data.item)"
+              @input="remove(data.item.value)"
             >
               {{ data.item.text }}
             </VChip>
@@ -70,7 +70,7 @@
 
 <script>
 
-  import { camelCase } from 'lodash';
+  import { camelCase, intersection } from 'lodash';
   import { constantsTranslationMixin, metadataTranslationMixin } from 'shared/mixins';
   import { Categories, CategoriesLookup } from 'shared/constants';
 
@@ -175,37 +175,56 @@
           return this.value;
         },
         set(value) {
-          let items = value.map(item => item);
-          let addedItem = items[items.length - 1];
+          let items = [...value];
+          let currentItem = items[items.length - 1];
 
-          let parents = findFamilyTreeIds(addedItem).filter(
-            familyMember => familyMember !== addedItem
+          let parents = findFamilyTreeIds(currentItem).filter(
+            familyMember => familyMember !== currentItem
           );
+          let rootParent = parents[0];
 
           // If removing an item
           if (this.chipsSelected.length > items.length) {
-            this.chipsSelected = items;
-            this.dropdownSelected = [...value, ...parents];
-          } else {
-            // If the addedItem is already something checked in the dropdown
-            if (this.dropdownSelected.includes(addedItem)) {
-              this.dropdownSelected = this.dropdownSelected.filter(
-                item => !item.includes(addedItem)
-              );
-              this.chipsSelected = this.dropdownSelected;
+            if (items.length === 0) {
+              this.dropdownSelected = [];
             } else {
-              // If adding a brand new item
-              this.dropdownSelected = [...items, ...parents];
+              this.dropdownSelected = intersection([
+                ...this.dropdownSelected,
+                ...items,
+                ...parents,
+              ]);
+            }
+            this.chipsSelected = items;
+          } else {
+            // If the currentItem is already included in the dropdown and we need to remove it
+            if (this.dropdownSelected.includes(currentItem)) {
+              this.dropdownSelected = this.dropdownSelected.filter(
+                item => !item.includes(currentItem)
+              );
+              if (rootParent) {
+                this.chipsSelected = [
+                  ...this.chipsSelected.filter(item => !item.includes(currentItem)),
+                  rootParent,
+                ];
+              } else {
+                this.chipsSelected = [
+                  ...this.chipsSelected.filter(item => !item.includes(currentItem)),
+                ];
+              }
+            } else {
+              // If adding a brand new item, change dropdown
+              this.dropdownSelected = intersection([
+                ...this.dropdownSelected,
+                ...items,
+                ...parents,
+              ]);
 
               // If selecting a child item when parent is checked
               if (items.filter(item => parents.indexOf(item) !== -1)) {
                 this.chipsSelected = items.filter(item => parents.indexOf(item) === -1);
-              } else {
-                this.chipsSelected = items;
               }
             }
           }
-
           this.$emit('input', this.chipsSelected);
         },
       },
@@ -220,7 +239,9 @@
         return this.nested ? { paddingLeft: `${item.level * 24}px` } : {};
       },
       remove(item) {
-        this.chipsSelected.splice(this.chipsSelected.indexOf(item.id), 1);
+        this.chipsSelected.splice(this.chipsSelected.indexOf(item), 1);
+        this.dropdownSelected.splice(this.dropdownSelected.indexOf(item), 1);
+        this.$emit('input', this.chipsSelected);
       },
       tooltipHelper(id) {
         return displayFamilyTree(dropdown, id)
