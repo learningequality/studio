@@ -14,16 +14,10 @@
       item-value="value"
       item-text="text"
     >
-
       <template v-slot:selection="data">
         <VTooltip bottom>
           <template v-slot:activator="{ on, attrs }">
-            <VChip
-              v-bind="attrs"
-              close
-              v-on="on"
-              @input="remove(data.item.value)"
-            >
+            <VChip v-bind="attrs" close v-on="on" @input="remove(data.item.value)">
               {{ data.item.text }}
             </VChip>
           </template>
@@ -49,7 +43,7 @@
           checkboxes updates to VAutocomplete automatically
           so that we can use our own handlers instead
         -->
-        <div style="width: 100%; height: 100%;" aria-hidden="true">
+        <div style="width: 100%; height: 100%" aria-hidden="true">
           <VDivider v-if="!item.value.includes('.')" />
           <KCheckbox
             v-model="selected"
@@ -126,22 +120,6 @@
     return dropdown;
   };
 
-  const findFamilyTreeIds = value => {
-    const family = [];
-    let familyMember = value;
-    while (familyMember) {
-      family.push(familyMember);
-      familyMember = familyMember.includes('.')
-        ? familyMember.substring(0, familyMember.lastIndexOf('.'))
-        : null;
-    }
-    return family;
-  };
-
-  function displayFamilyTree(nodes, id) {
-    return nodes.filter(node => findFamilyTreeIds(id).includes(node.value));
-  }
-
   export default {
     name: 'CategoryOptions',
     mixins: [constantsTranslationMixin, metadataTranslationMixin],
@@ -178,7 +156,7 @@
           let items = [...value];
           let currentItem = items[items.length - 1];
 
-          let parents = findFamilyTreeIds(currentItem).filter(
+          let parents = this.findFamilyTreeIds(currentItem).filter(
             familyMember => familyMember !== currentItem
           );
           let rootParent = parents[0];
@@ -197,11 +175,13 @@
             this.chipsSelected = items;
           } else {
             // If the currentItem is already included in the dropdown and we need to remove it
+            // but it does not exist in the chips array because it is only visually represented
             if (this.dropdownSelected.includes(currentItem)) {
               this.dropdownSelected = this.dropdownSelected.filter(
                 item => !item.includes(currentItem)
               );
               if (rootParent) {
+                // If the root parent exists, then we need to change the chips
                 this.chipsSelected = [
                   ...this.chipsSelected.filter(item => !item.includes(currentItem)),
                   rootParent,
@@ -228,6 +208,15 @@
           this.$emit('input', this.chipsSelected);
         },
       },
+      dropdownSelectedObj() {
+        return this.dropdownSelected.map(item => {
+          return {
+            text: this.translateMetadataString(camelCase(CategoriesLookup[item])),
+            value: item,
+            level: this.findDepth(item),
+          };
+        });
+      },
     },
     watch: {
       categoryText(val) {
@@ -240,16 +229,64 @@
       },
       remove(item) {
         this.chipsSelected.splice(this.chipsSelected.indexOf(item), 1);
-        this.dropdownSelected.splice(this.dropdownSelected.indexOf(item), 1);
+        this.updateDropdownSelected(item);
         this.$emit('input', this.chipsSelected);
       },
       tooltipHelper(id) {
-        return displayFamilyTree(dropdown, id)
+        return this.displayFamilyTree(dropdown, id)
           .map(node => this.translateMetadataString(camelCase(node.text)))
           .join(' - ');
       },
       findDepth(val) {
         return val.split('.').length - 1;
+      },
+      displayFamilyTree(nodes, id) {
+        return nodes.filter(node => this.findFamilyTreeIds(id).includes(node.value));
+      },
+      findFamilyTreeIds(value) {
+        const family = [];
+        let familyMember = value;
+        while (familyMember) {
+          family.push(familyMember);
+          familyMember = familyMember.includes('.')
+            ? familyMember.substring(0, familyMember.lastIndexOf('.'))
+            : null;
+        }
+        return family;
+      },
+      /**
+       * This function is used to update the dropdown list when an item is removed
+       * from chipsSelected array.
+       * @param {string} chip - The value of the chip that was removed
+       */
+      updateDropdownSelected(chip) {
+        let directParent = chip.substring(0, chip.lastIndexOf('.'));
+        let potentialSiblings = this.dropdownSelectedObj.filter(
+          item => item.level === this.findDepth(chip) && item.value !== chip
+        );
+        let numberOfSiblings = potentialSiblings.filter(item => item.value.includes(directParent))
+          .length;
+        let numberOfSiblingsOfParent =
+          this.dropdownSelectedObj.filter(item => item.level === this.findDepth(chip) - 1).length -
+          1;
+
+        if (
+          (numberOfSiblingsOfParent > 0 && numberOfSiblings > 0) ||
+          (numberOfSiblingsOfParent === 0 && numberOfSiblings > 0)
+        ) {
+          // Remove only chip
+          this.dropdownSelected = this.dropdownSelected.filter(item => !item.includes(chip));
+        } else if (numberOfSiblingsOfParent > 0 && numberOfSiblings === 0) {
+          // Remove only chip and direct parent
+          this.dropdownSelected = this.dropdownSelected.filter(
+            item => !item.includes(directParent)
+          );
+        } else if (numberOfSiblingsOfParent === 0 && numberOfSiblings === 0) {
+          // Remove entire family tree
+          this.dropdownSelected = this.dropdownSelected.filter(
+            item => this.findFamilyTreeIds(chip).indexOf(item) === -1
+          );
+        }
       },
     },
     $trs: {
