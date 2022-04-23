@@ -271,6 +271,17 @@ class TagField(DotPathValueMixin, DictField):
     pass
 
 
+class MetadataLabelBooleanField(BooleanField):
+    def bind(self, field_name, parent):
+        # By default the bind method of the Field class sets the source_attrs to field_name.split(".").
+        # As we have literal field names that include "." we need to override this behavior.
+        # Otherwise it will attempt to set the source_attrs to a nested path, assuming that it is a source path,
+        # not a materialized path. This probably means that it was a bad idea to use "." in the materialized path,
+        # but alea iacta est.
+        super(MetadataLabelBooleanField, self).bind(field_name, parent)
+        self.source_attrs = [self.source]
+
+
 class MetadataLabelsField(JSONFieldDictSerializer):
     def __init__(self, choices, *args, **kwargs):
         self.choices = choices
@@ -280,8 +291,9 @@ class MetadataLabelsField(JSONFieldDictSerializer):
     def get_fields(self):
         fields = {}
         for label_id, label_name in self.choices:
-            field = BooleanField(required=False, label=label_name, allow_null=True)
+            field = MetadataLabelBooleanField(required=False, label=label_name, allow_null=True)
             fields[label_id] = field
+
         return fields
 
 
