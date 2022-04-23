@@ -125,8 +125,6 @@ class DotPathValueMixin(object):
         # get just field name
         value = dictionary.get(self.field_name, {})
 
-        self.initial_value = value
-
         if value is None:
             return empty
 
@@ -136,11 +134,26 @@ class DotPathValueMixin(object):
         # then merge in fields with keys like `content_defaults.author`
         multi_value = MultiValueDict()
         multi_value.update(dictionary)
-        html_value = unnest_dict(
-            html.parse_html_dict(multi_value, prefix=self.field_name).dict()
-        )
-        value.update(html_value)
+        html_value = html.parse_html_dict(multi_value, prefix=self.field_name).dict()
 
+        fields = getattr(self, "fields", {})
+
+        for key in html_value:
+            # Split on the first occurrence of a "." in case we are dealing with a dot path
+            # referencing a child field of this field.
+            keys = key.split(".", 1)
+            # Only attempt to use this if there is a dot path, and the parent of the dot path is
+            # a valid child field. Otherwise, we just use the value as-is.
+            if key not in fields and len(keys) == 2 and keys[0] in fields:
+                # If it is a valid child field, we invoke the nested field's get_value method
+                # with the value of the child field.
+                # N.B. the get_value method expects a dictionary that references the field's name
+                # not just the value.
+                value[keys[0]] = fields[keys[0]].get_value({keys[0]: {keys[1]: html_value[key]}})
+                if key in value:
+                    del value[key]
+            else:
+                value[key] = html_value[key]
         return value if value.keys() else empty
 
 
@@ -154,30 +167,19 @@ class JSONFieldDictSerializer(DotPathValueMixin, serializers.Serializer):
 
     def update(self, instance, validated_data):
         instance = instance or self.default_value()
-        instance.update(validated_data)
-        # This should have been set when get_value was invoked
-        # But could be `None`, so we check if it is truthy here.
-        if getattr(self, "initial_value", None):
-            # Iterate through each field
-            for key in self.initial_value:
-                # If the field is explicitly being set as None, then
-                # we need to delete it from the instance.
-                if self.initial_value[key] is None:
-                    # Follow the dot path to find the nested object
-                    obj = instance
-                    # Iterate through each part of the dot path
-                    # up until, but not including the final key
-                    for part in key.split(".")[:-1]:
-                        if isinstance(obj, dict):
-                            # If it's a dict use get to get the next level object
-                            obj = obj.get(part)
-                        elif isinstance(obj, list):
-                            # If it's a list, use the index to get the next level object
-                            obj = obj[int(part)]
-                        else:
-                            raise ValidationError("Tried to access a dot path in an invalid type")
-                    # Finally, delete the final key
-                    obj.pop(key.split(".")[-1])
+        for key, value in validated_data.items():
+            if value is None:
+                # If the value is None, we delete the key from the instance.
+                # Silently ignore deletion of values that don't exist
+                if key in instance:
+                    del instance[key]
+            elif hasattr(self.fields[key], "update"):
+                # If the nested field has an update method (e.g. a nested serializer),
+                # call the update value so that we can do any recursive updates
+                self.fields[key].update(instance[key], validated_data[key])
+            else:
+                # Otherwise, just update the value
+                instance[key] = validated_data[key]
         return instance
 
 
