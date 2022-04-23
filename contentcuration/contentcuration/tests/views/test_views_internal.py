@@ -652,7 +652,7 @@ class CreateChannelTestCase(StudioTestCase):
     """
 
     def setUp(self):
-        super(CreateChannelTestCase, self).setUp()
+        super(CreateChannelTestCase, self).setUpBase()
         self.channel_data = {
             "id": uuid.uuid4().hex,
             "name": "Test channel for creation",

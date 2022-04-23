@@ -58,7 +58,7 @@ class CreateChannelTestCase(StudioTestCase):
         }
 
     def setUp(self):
-        super(CreateChannelTestCase, self).setUp()
+        super(CreateChannelTestCase, self).setUpBase()
         self.topic = models.ContentKind.objects.get(kind="topic")
         self.license = models.License.objects.all()[0]
         self.fileinfo_audio = create_studio_file("abc", preset='audio', ext='mp3')

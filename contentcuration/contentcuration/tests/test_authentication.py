@@ -9,7 +9,7 @@ from .base import StudioTestCase
 
 class AuthenticationTestCase(StudioTestCase):
     def setUp(self):
-        super(AuthenticationTestCase, self).setUp()
+        super(AuthenticationTestCase, self).setUpBase()
         self.base_url = reverse("channel", kwargs={"channel_id": self.channel.pk})
 
     def test_channel_admin_access(self):

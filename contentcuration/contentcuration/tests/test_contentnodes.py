@@ -135,7 +135,7 @@ def _check_node_copy(source, copy, original_channel_id=None, channel=None):
 
 class NodeGettersTestCase(StudioTestCase):
     def setUp(self):
-        super(NodeGettersTestCase, self).setUp()
+        super(NodeGettersTestCase, self).setUpBase()
 
         self.channel = testdata.channel()
         self.topic, _created = ContentKind.objects.get_or_create(kind="Topic")
@@ -174,7 +174,7 @@ class NodeGettersTestCase(StudioTestCase):
 
 class NodeOperationsTestCase(StudioTestCase):
     def setUp(self):
-        super(NodeOperationsTestCase, self).setUp()
+        super(NodeOperationsTestCase, self).setUpBase()
 
         self.channel = testdata.channel()
         tree = TreeBuilder()
@@ -724,7 +724,7 @@ class SyncNodesOperationTestCase(StudioTestCase):
     """
 
     def setUp(self):
-        super(SyncNodesOperationTestCase, self).setUp()
+        super(SyncNodesOperationTestCase, self).setUpBase()
 
     def test_sync_after_no_changes(self):
         orig_video, cloned_video = self._setup_original_and_deriative_nodes()
@@ -846,6 +846,9 @@ class SyncNodesOperationTestCase(StudioTestCase):
 
 
 class NodeCreationTestCase(StudioTestCase):
+    def setUp(self):
+        return super(NodeCreationTestCase, self).setUpBase()
+
     def test_content_tag_creation(self):
         """
         Verfies tag creation works

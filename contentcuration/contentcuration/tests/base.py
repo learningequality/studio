@@ -95,6 +95,10 @@ class StudioTestCase(TestCase, BucketTestMixin):
     def setUp(self):
         if not self.persist_bucket:
             self.create_bucket()
+
+    def setUpBase(self):
+        if not self.persist_bucket:
+            self.create_bucket()
         self.channel = testdata.channel()
         self.user = testdata.user()
         self.channel.editors.add(self.user)

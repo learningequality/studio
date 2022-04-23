@@ -208,6 +208,10 @@ class CleanUpContentNodesTestCase(StudioTestCase):
         assert ContentNode.objects.filter(parent_id=settings.ORPHANAGE_ROOT_ID).count() == 0
 
     def test_deletes_associated_files(self):
+
+        # Delete all test data files created by StudioTestCase's setUp.
+        File.objects.all().delete()
+
         c = _create_expired_contentnode()
         f = File.objects.create(
             contentnode_id=c.pk,
@@ -349,6 +353,10 @@ class CleanUpContentNodesTestCase(StudioTestCase):
 
 
 class CleanUpFeatureFlagsTestCase(StudioTestCase):
+
+    def setUp(self):
+        return super(CleanUpFeatureFlagsTestCase, self).setUpBase()
+
     def test_clean_up(self):
         key = "feature_flag_does_not_exist"
         self.user.feature_flags = {

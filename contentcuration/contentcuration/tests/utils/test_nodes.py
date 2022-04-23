@@ -18,7 +18,7 @@ from contentcuration.utils.nodes import STALE_MAX_CALCULATION_SIZE
 
 class ResourceSizeHelperTestCase(StudioTestCase):
     def setUp(self):
-        super(ResourceSizeHelperTestCase, self).setUp()
+        super(ResourceSizeHelperTestCase, self).setUpBase()
         self.root = self.channel.main_tree
         self.helper = ResourceSizeHelper(self.root)
 
@@ -121,7 +121,7 @@ class CalculateResourceSizeIntegrationTestCase(StudioTestCase):
     """
 
     def setUp(self):
-        super(CalculateResourceSizeIntegrationTestCase, self).setUp()
+        super(CalculateResourceSizeIntegrationTestCase, self).setUpBase()
         self.root = self.channel.main_tree
 
     def test_small(self):
