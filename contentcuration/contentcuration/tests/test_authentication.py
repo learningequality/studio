@@ -1,14 +1,15 @@
 from __future__ import absolute_import
 
-from django.urls import reverse
 import urllib.parse
 
-from .base import BaseTestCase
+from django.urls import reverse
+
+from .base import StudioTestCase
 
 
-class AuthenticationTestCase(BaseTestCase):
+class AuthenticationTestCase(StudioTestCase):
     def setUp(self):
-        super(AuthenticationTestCase, self).setUp()
+        super(AuthenticationTestCase, self).setUpBase()
         self.base_url = reverse("channel", kwargs={"channel_id": self.channel.pk})
 
     def test_channel_admin_access(self):

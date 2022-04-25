@@ -17,7 +17,6 @@ from contentcuration.models import ContentNode
 from contentcuration.models import File
 from contentcuration.models import Task
 from contentcuration.tests.base import BaseAPITestCase
-from contentcuration.tests.base import BaseTestCase
 from contentcuration.tests.base import StudioTestCase
 from contentcuration.tests.testdata import tree
 from contentcuration.utils.garbage_collect import clean_up_contentnodes
@@ -209,6 +208,10 @@ class CleanUpContentNodesTestCase(StudioTestCase):
         assert ContentNode.objects.filter(parent_id=settings.ORPHANAGE_ROOT_ID).count() == 0
 
     def test_deletes_associated_files(self):
+
+        # Delete all test data files created by StudioTestCase's setUp.
+        File.objects.all().delete()
+
         c = _create_expired_contentnode()
         f = File.objects.create(
             contentnode_id=c.pk,
@@ -349,7 +352,11 @@ class CleanUpContentNodesTestCase(StudioTestCase):
         assert default_storage.exists("storage/a/a/aaa.jpg")
 
 
-class CleanUpFeatureFlagsTestCase(BaseTestCase):
+class CleanUpFeatureFlagsTestCase(StudioTestCase):
+
+    def setUp(self):
+        return super(CleanUpFeatureFlagsTestCase, self).setUpBase()
+
     def test_clean_up(self):
         key = "feature_flag_does_not_exist"
         self.user.feature_flags = {

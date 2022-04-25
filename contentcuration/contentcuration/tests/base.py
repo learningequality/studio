@@ -96,6 +96,14 @@ class StudioTestCase(TestCase, BucketTestMixin):
         if not self.persist_bucket:
             self.create_bucket()
 
+    def setUpBase(self):
+        if not self.persist_bucket:
+            self.create_bucket()
+        self.channel = testdata.channel()
+        self.user = testdata.user()
+        self.channel.editors.add(self.user)
+        self.channel.main_tree.refresh_from_db()
+
     def tearDown(self):
         if not self.persist_bucket:
             self.delete_bucket()
@@ -116,6 +124,21 @@ class StudioTestCase(TestCase, BucketTestMixin):
         file_upload_url = str(reverse_lazy("api_file_upload"))
         return fileobj_temp, self.admin_client().post(file_upload_url, {"file": f})
 
+    def sign_in(self, user=None):
+        if not user:
+            user = self.user
+        user.save()
+        self.client.force_login(user)
+
+    def get(self, url, data=None, follow=False, secure=False):
+        return self.client.get(
+            url,
+            data=data,
+            follow=follow,
+            secure=secure,
+            HTTP_USER_AGENT=settings.SUPPORTED_BROWSERS[0],
+        )
+
 
 class StudioAPITestCase(APITestCase, BucketTestMixin):
     @classmethod
@@ -130,15 +153,6 @@ class StudioAPITestCase(APITestCase, BucketTestMixin):
     def tearDown(self):
         if not self.persist_bucket:
             self.delete_bucket()
-
-
-class BaseTestCase(StudioTestCase):
-    def setUp(self):
-        super(BaseTestCase, self).setUp()
-        self.channel = testdata.channel()
-        self.user = testdata.user()
-        self.channel.editors.add(self.user)
-        self.channel.main_tree.refresh_from_db()
 
     def sign_in(self, user=None):
         if not user:

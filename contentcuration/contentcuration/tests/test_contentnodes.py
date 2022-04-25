@@ -9,6 +9,7 @@ from builtins import str
 from builtins import zip
 
 import pytest
+from django.db import IntegrityError
 from django.db.utils import DataError
 from le_utils.constants import content_kinds
 from mixer.backend.django import mixer
@@ -16,7 +17,7 @@ from mock import patch
 from past.utils import old_div
 
 from . import testdata
-from .base import BaseTestCase
+from .base import StudioTestCase
 from .testdata import create_studio_file
 from contentcuration.models import Channel
 from contentcuration.models import ContentKind
@@ -132,9 +133,9 @@ def _check_node_copy(source, copy, original_channel_id=None, channel=None):
         _check_node_copy(child_source, child_copy, original_channel_id, channel)
 
 
-class NodeGettersTestCase(BaseTestCase):
+class NodeGettersTestCase(StudioTestCase):
     def setUp(self):
-        super(NodeGettersTestCase, self).setUp()
+        super(NodeGettersTestCase, self).setUpBase()
 
         self.channel = testdata.channel()
         self.topic, _created = ContentKind.objects.get_or_create(kind="Topic")
@@ -171,9 +172,9 @@ class NodeGettersTestCase(BaseTestCase):
         assert len(details["kind_count"]) > 0
 
 
-class NodeOperationsTestCase(BaseTestCase):
+class NodeOperationsTestCase(StudioTestCase):
     def setUp(self):
-        super(NodeOperationsTestCase, self).setUp()
+        super(NodeOperationsTestCase, self).setUpBase()
 
         self.channel = testdata.channel()
         tree = TreeBuilder()
@@ -717,13 +718,13 @@ class NodeOperationsTestCase(BaseTestCase):
         )
 
 
-class SyncNodesOperationTestCase(BaseTestCase):
+class SyncNodesOperationTestCase(StudioTestCase):
     """
     Checks that sync nodes updates properies.
     """
 
     def setUp(self):
-        super(SyncNodesOperationTestCase, self).setUp()
+        super(SyncNodesOperationTestCase, self).setUpBase()
 
     def test_sync_after_no_changes(self):
         orig_video, cloned_video = self._setup_original_and_deriative_nodes()
@@ -844,7 +845,10 @@ class SyncNodesOperationTestCase(BaseTestCase):
             assert fileA.language == fileB.language, "different language found"
 
 
-class NodeCreationTestCase(BaseTestCase):
+class NodeCreationTestCase(StudioTestCase):
+    def setUp(self):
+        return super(NodeCreationTestCase, self).setUpBase()
+
     def test_content_tag_creation(self):
         """
         Verfies tag creation works

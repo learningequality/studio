@@ -4,13 +4,13 @@ import os
 import tempfile
 import zipfile
 
-from .base import BaseTestCase
+from .base import StudioTestCase
 
 
-class ZipFileTestCase(BaseTestCase):
+class ZipFileTestCase(StudioTestCase):
 
     def setUp(self):
-        super(ZipFileTestCase, self).setUp()
+        super(ZipFileTestCase, self).setUpBase()
         self.zipfile_url = '/zipcontent/'
 
         self.temp_files = []
