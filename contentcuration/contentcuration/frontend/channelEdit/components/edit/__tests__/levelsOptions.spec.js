@@ -20,4 +20,14 @@ describe('LevelsOptions', () => {
 
     expect(dropdownItems).toBe(numberOfAvailableLevels);
   });
+
+  it('emits expected data', () => {
+    const wrapper = shallowMount(LevelsOptions);
+    const value = 'Preschool';
+    wrapper.vm.$emit('input', value);
+
+    expect(wrapper.emitted().input).toBeTruthy();
+    expect(wrapper.emitted().input.length).toBe(1);
+    expect(wrapper.emitted().input[0]).toEqual([value]);
+  });
 });

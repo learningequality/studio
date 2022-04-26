@@ -19,4 +19,14 @@ describe('LearningActivityOptions', () => {
 
     expect(dropdownItems).toBe(numberOfDropdownItems);
   });
+
+  it('emits expected data', () => {
+    const wrapper = shallowMount(LearningActivityOptions);
+    const value = 'Create';
+    wrapper.vm.$emit('input', value);
+
+    expect(wrapper.emitted().input).toBeTruthy();
+    expect(wrapper.emitted().input.length).toBe(1);
+    expect(wrapper.emitted().input[0]).toEqual([value]);
+  });
 });
