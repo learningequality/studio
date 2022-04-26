@@ -19,10 +19,6 @@
   import { ResourcesNeededTypes } from 'shared/constants';
   import { constantsTranslationMixin, metadataTranslationMixin } from 'shared/mixins';
 
-  //the variable below can be changed or removed when metadata/Kolibri is updated
-  const keysToBeTemporarilyRemoved = ['PEERS', 'TEACHER', 'PRIOR_KNOWLEDGE', 'MATERIALS'];
-  const dropdown = updateResourcesDropdown(keysToBeTemporarilyRemoved) || ResourcesNeededTypes;
-
   /**
    * @param {array} listOfKeys
    * @returns {Object}
@@ -30,7 +26,7 @@
    * Determines resources to show in the dropdown, to remove resources
    * that do not currently need to be displayed in Kolibri
    */
-  function updateResourcesDropdown(listOfKeys) {
+  export function updateResourcesDropdown(listOfKeys) {
     if (listOfKeys) {
       return Object.keys(ResourcesNeededTypes).reduce((acc, key) => {
         if (listOfKeys.indexOf(key) === -1) {
@@ -40,9 +36,11 @@
       }, {});
     }
   }
-  export const exportedForTesting = {
-    updateResourcesDropdown,
-  };
+
+  //the variable below can be changed or removed when metadata/Kolibri is updated
+  const keysToBeTemporarilyRemoved = ['PEERS', 'TEACHER', 'PRIOR_KNOWLEDGE', 'MATERIALS'];
+  const dropdown = updateResourcesDropdown(keysToBeTemporarilyRemoved) || ResourcesNeededTypes;
+
   export default {
     name: 'ResourcesNeededOptions',
     mixins: [constantsTranslationMixin, metadataTranslationMixin],

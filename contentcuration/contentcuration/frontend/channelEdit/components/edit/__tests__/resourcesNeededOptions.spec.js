@@ -1,10 +1,8 @@
 import Vue from 'vue';
 import Vuetify from 'vuetify';
 import { shallowMount } from '@vue/test-utils';
-import ResourcesNeededOptions, { exportedForTesting } from '../ResourcesNeededOptions.vue';
+import ResourcesNeededOptions, { updateResourcesDropdown } from '../ResourcesNeededOptions.vue';
 import { ResourcesNeededTypes } from 'shared/constants';
-
-const { updateResourcesDropdown } = exportedForTesting;
 
 Vue.use(Vuetify);
 
