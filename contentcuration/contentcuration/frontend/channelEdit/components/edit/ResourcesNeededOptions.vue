@@ -21,7 +21,28 @@
 
   //the variable below can be changed or removed when metadata/Kolibri is updated
   const keysToBeTemporarilyRemoved = ['PEERS', 'TEACHER', 'PRIOR_KNOWLEDGE', 'MATERIALS'];
+  const dropdown = updateResourcesDropdown(keysToBeTemporarilyRemoved) || ResourcesNeededTypes;
 
+  /**
+   * @param {array} listOfKeys
+   * @returns {Object}
+   *
+   * Determines resources to show in the dropdown, to remove resources
+   * that do not currently need to be displayed in Kolibri
+   */
+  function updateResourcesDropdown(listOfKeys) {
+    if (listOfKeys) {
+      return Object.keys(ResourcesNeededTypes).reduce((acc, key) => {
+        if (listOfKeys.indexOf(key) === -1) {
+          acc[key] = ResourcesNeededTypes[key];
+        }
+        return acc;
+      }, {});
+    }
+  }
+  export const exportedForTesting = {
+    updateResourcesDropdown,
+  };
   export default {
     name: 'ResourcesNeededOptions',
     mixins: [constantsTranslationMixin, metadataTranslationMixin],
@@ -41,31 +62,10 @@
         },
       },
       resources() {
-        const dropdown =
-          this.updateResourcesDropdown(keysToBeTemporarilyRemoved) || ResourcesNeededTypes;
         return Object.entries(dropdown).map(resource => ({
           text: this.translateMetadataString(resource[0]),
           value: resource[1],
         }));
-      },
-    },
-    methods: {
-      /**
-       * @param {array} listOfKeys
-       * @returns {Object}
-       *
-       * Determines resources to show in the dropdown, to remove resources
-       * that do not currently need to be displayed in Kolibri
-       */
-      updateResourcesDropdown(listOfKeys) {
-        if (listOfKeys) {
-          return Object.keys(ResourcesNeededTypes).reduce((acc, key) => {
-            if (listOfKeys.indexOf(key) === -1) {
-              acc[key] = ResourcesNeededTypes[key];
-            }
-            return acc;
-          }, {});
-        }
       },
     },
     $trs: {
@@ -75,5 +75,4 @@
 
 </script>
 <style lang="scss">
-
 </style>
