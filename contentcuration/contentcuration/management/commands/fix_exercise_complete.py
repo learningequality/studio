@@ -5,7 +5,6 @@ from django.core.management.base import BaseCommand
 from django.db.models import Q
 from le_utils.constants import content_kinds
 from le_utils.constants import exercises
-from handling_function import handling_mastery_competition_criteria
 
 from contentcuration.models import ContentNode
 from contentcuration.models import License
@@ -21,10 +20,32 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         start = time.time()
-
         reset_time = time.time()
 
-        i = handling_mastery_competition_criteria()
+        mastery_model_exercise_count = ContentNode.objects.filter(kind_id=content_kinds.EXERCISE) \
+            .filter(Q(extra_fields__has_key='mastery_model')).order_by().count()
+
+        i = 0
+
+        while i < mastery_model_exercise_count:
+            chunk_time = time.time()
+            update_ids = ContentNode.objects.filter(kind_id=content_kinds.EXERCISE) \
+                             .filter(Q(extra_fields__has_key='mastery_model')).order_by("id").values_list("id", flat=True)[i: i + CHUNKSIZE]
+            ContentNode.objects.filter(pk__in=update_ids).update(complete=True)
+            logging.info('Marked {} nodes as complete=True in {} seconds'.format(CHUNKSIZE, time.time() - chunk_time))
+            i += CHUNKSIZE
+
+        mastery_model_exercise_count = ContentNode.objects.filter(kind_id=content_kinds.EXERCISE) \
+            .filter(Q(extra_fields__has_key='option.completion_criteria.mastery_model')).order_by().count()
+
+        while i < mastery_model_exercise_count:
+            chunk_time = time.time()
+            update_ids = ContentNode.objects.filter(kind_id=content_kinds.EXERCISE) \
+                             .filter(Q(extra_fields__has_key='option.completion_criteria.mastery_model')).order_by("id").values_list("id", flat=True)[i: i + CHUNKSIZE]
+            ContentNode.objects.filter(pk__in=update_ids).update(complete=True)
+            logging.info('Marked {} nodes as complete=True in {} seconds'.format(CHUNKSIZE, time.time() - chunk_time))
+            i += CHUNKSIZE
+
         logging.info('Marked all mastery_modeled exercises as complete=True (finished in {})'.format(time.time() - reset_time))
 
         # Mark invalid titles
