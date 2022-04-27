@@ -1,10 +1,18 @@
 import Vue from 'vue';
 import Vuetify from 'vuetify';
-import { shallowMount } from '@vue/test-utils';
+import { shallowMount, mount } from '@vue/test-utils';
 import LevelsOptions from '../LevelsOptions.vue';
 import { ContentLevels } from 'shared/constants';
 
 Vue.use(Vuetify);
+
+function makeWrapper(value) {
+  return mount(LevelsOptions, {
+    propsData: {
+      value,
+    },
+  });
+}
 
 describe('LevelsOptions', () => {
   it('smoke test', () => {
@@ -21,13 +29,30 @@ describe('LevelsOptions', () => {
     expect(dropdownItems).toBe(numberOfAvailableLevels);
   });
 
-  it('emits expected data', () => {
-    const wrapper = shallowMount(LevelsOptions);
-    const value = 'Preschool';
-    wrapper.vm.$emit('input', value);
+  describe('updating state', () => {
+    it('should update levels field with new values received from a parent', () => {
+      const levels = ['abc', 'gefo'];
+      const wrapper = makeWrapper(levels);
+      const dropdown = wrapper.find({ name: 'v-select' });
 
-    expect(wrapper.emitted().input).toBeTruthy();
-    expect(wrapper.emitted().input.length).toBe(1);
-    expect(wrapper.emitted().input[0]).toEqual([value]);
+      expect(dropdown.props('value')).toEqual(levels);
+
+      wrapper.setProps({
+        value: ['def'],
+      });
+      expect(dropdown.props('value')).toEqual(['def']);
+    });
+
+    it('should emit new input values', () => {
+      const levels = ['abc', 'gefo', '8hw'];
+      const wrapper = makeWrapper({});
+      const dropdown = wrapper.find({ name: 'v-select' });
+      dropdown.vm.$emit('input', levels);
+
+      return Vue.nextTick().then(() => {
+        const emittedLevels = wrapper.emitted('input').pop()[0];
+        expect(emittedLevels).toEqual(levels);
+      });
+    });
   });
 });
