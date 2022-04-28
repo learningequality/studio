@@ -885,22 +885,44 @@ export const Session = new IndexedDBResource({
       }
     },
   },
-  channelSyncKeepAlive(channelId) {
-    document.hasFocus()
-      ? this.updateSession({ [`${ACTIVE_CHANNELS}.${channelId}`]: Date.now() })
-      : null;
+  get currentChannel() {
+    return (window.CHANNEL_EDIT_GLOBAL || {});
+  },
+  get currentChannelId() {
+    return this.currentChannel.channel_id || null;
+  },
+  channelSyncKeepAlive() {
+    if (this.currentChannelId && document.hasFocus()) {
+      this.updateSession({ [`${ACTIVE_CHANNELS}.${this.currentChannelId}`]: Date.now() });
+    }
+  },
+  monitorKeepAlive() {
+    if (this.currentChannelId) {
+      this.channelSyncKeepAlive();
+      if (!this._keepAliveInterval) {
+        this._keepAliveInterval = setInterval(() => this.channelSyncKeepAlive(), CHANNEL_SYNC_KEEP_ALIVE_INTERVAL);
+      }
+    }
+  },
+  stopMonitorKeepAlive() {
+    if (this._keepAliveInterval) {
+      clearInterval(this._keepAliveInterval);
+      this._keepAliveInterval = null;
+    }
   },
   async setChannelScope() {
-    const channelId = (window.CHANNEL_EDIT_GLOBAL || {}).channel_id || null;
+    const channelId = this.currentChannelId;
     if (channelId) {
       channelScope.id = channelId;
       const channelRev = (window.CHANNEL_EDIT_GLOBAL || {}).channel_rev || 0;
+      // N.B. key paths produce nested updates in Dexie.js when using the update method,
+      // as in the `updateSession` method below.
       await this.updateSession({
         [`${MAX_REV_KEY}.${channelId}`]: channelRev,
       });
-      this.channelSyncKeepAlive(channelId);
-      setInterval(() => this.channelSyncKeepAlive(channelId), CHANNEL_SYNC_KEEP_ALIVE_INTERVAL);
-      window.addEventListener('focus', () => this.channelSyncKeepAlive(channelId));
+      this.monitorKeepAlive();
+      window.addEventListener('focus', () => this.monitorKeepAlive());
+      window.addEventListener('blur', () => this.stopMonitorKeepAlive());
     }
   },
   async getSession() {
@@ -909,10 +931,12 @@ export const Session = new IndexedDBResource({
   async updateSession(currentUser) {
     const result = await this.update(CURRENT_USER, currentUser);
     if (!result) {
+      // put takes an object, not keypaths, so if the current user doesn't exist
+      // we create it with a put, and then call update again.
       await this.put({
-        ...currentUser,
         CURRENT_USER,
       });
+      await this.update(CURRENT_USER, currentUser);
     }
   },
 });

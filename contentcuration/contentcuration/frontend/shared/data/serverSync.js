@@ -174,7 +174,10 @@ function handleMaxRevs(response, userId) {
   if (lastUserChange) {
     maxRevs.user_rev = lastUserChange.server_rev;
   }
-  return Session.updateSession(maxRevs);
+  if (Object.keys(maxRevs).length) {
+    return Session.updateSession(maxRevs);
+  }
+  return Promise.resolve();
 }
 
 async function syncChanges() {
@@ -255,11 +258,11 @@ async function syncChanges() {
         handleMaxRevs(response, user.id),
       ]);
     } catch (err) {
-      console.error('There was an error updating change status', err); // eslint-disable-line no-console
+      console.error('There was an error updating change status: ', err); // eslint-disable-line no-console
     }
   } catch (err) {
     // There was an error during syncing, log, but carry on
-    console.warn('There was an error during syncing with the backend for', err); // eslint-disable-line no-console
+    console.warn('There was an error during syncing with the backend: ', err); // eslint-disable-line no-console
   }
   syncActive = false;
 }
