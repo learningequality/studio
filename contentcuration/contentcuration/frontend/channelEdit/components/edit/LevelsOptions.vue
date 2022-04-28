@@ -10,6 +10,7 @@
     :label="translateMetadataString('level')"
     multiple
     deletableChips
+    attach="contentLevel"
   />
 
 </template>
