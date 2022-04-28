@@ -442,30 +442,38 @@ export function loadNodeDetails(context, nodeId) {
 }
 
 // Actions to check indexeddb saving status
-export function checkSavingProgress(
+export async function checkSavingProgress(
   context,
   { contentNodeIds = [], fileIds = [], assessmentIds = [] }
 ) {
-  const promises = [];
-  promises.push(
-    contentNodeIds.map(nodeId =>
-      db[CHANGES_TABLE].where({ '[table+key]': [TABLE_NAMES.CONTENTNODE, nodeId] }).first()
-    )
-  );
-  promises.push(
-    fileIds.map(fileId =>
-      db[CHANGES_TABLE].where({ '[table+key]': [TABLE_NAMES.FILE, fileId] }).first()
-    )
-  );
-  promises.push(
-    assessmentIds.map(assessmentItemId =>
-      db[CHANGES_TABLE].where({
-        '[table+key]': [TABLE_NAMES.ASSESSMENTITEM, assessmentItemId],
-      }).first()
-    )
-  );
-
-  return Promise.all(flatten(promises)).then(results => {
-    return results.some(Boolean);
-  });
+  if (!contentNodeIds.length && !fileIds.length && !assessmentIds.length) {
+    return false;
+  }
+  const unsyncedChanges = {
+    [TABLE_NAMES.CONTENTNODE]: {},
+    [TABLE_NAMES.FILE]: {},
+    [TABLE_NAMES.ASSESSMENTITEM]: {},
+  };
+  const query = await db[CHANGES_TABLE].toCollection().filter(c => !c.synced).toArray();
+  for (let change of query) {
+    if (unsyncedChanges[change.table]) {
+      unsyncedChanges[change.table][change.key] = true;
+    }
+  }
+  for (let nodeId of contentNodeIds) {
+    if (unsyncedChanges[TABLE_NAMES.CONTENTNODE][nodeId]) {
+      return true;
+    }
+  }
+  for (let fileId of fileIds) {
+    if (unsyncedChanges[TABLE_NAMES.FILE][fileId]) {
+      return true;
+    }
+  }
+  for (let assessmentId of assessmentIds) {
+    if (unsyncedChanges[TABLE_NAMES.ASSESSMENTITEM][assessmentId]) {
+      return true;
+    }
+  }
+  return false;
 }
