@@ -886,7 +886,7 @@ export const Session = new IndexedDBResource({
     },
   },
   get currentChannel() {
-    return (window.CHANNEL_EDIT_GLOBAL || {});
+    return window.CHANNEL_EDIT_GLOBAL || {};
   },
   get currentChannelId() {
     return this.currentChannel.channel_id || null;
@@ -900,7 +900,10 @@ export const Session = new IndexedDBResource({
     if (this.currentChannelId) {
       this.channelSyncKeepAlive();
       if (!this._keepAliveInterval) {
-        this._keepAliveInterval = setInterval(() => this.channelSyncKeepAlive(), CHANNEL_SYNC_KEEP_ALIVE_INTERVAL);
+        this._keepAliveInterval = setInterval(
+          () => this.channelSyncKeepAlive(),
+          CHANNEL_SYNC_KEEP_ALIVE_INTERVAL
+        );
       }
     }
   },
@@ -1272,6 +1275,7 @@ export const ContentNode = new TreeResource({
               source: CLIENTID,
               table: this.tableName,
               type: isCreate ? CHANGE_TYPES.COPIED : CHANGE_TYPES.MOVED,
+              channel_id: parent.channel_id,
             };
 
             return callback({
