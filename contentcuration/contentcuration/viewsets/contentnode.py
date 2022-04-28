@@ -50,8 +50,10 @@ from contentcuration.models import ContentTag
 from contentcuration.models import File
 from contentcuration.models import generate_storage_url
 from contentcuration.models import PrerequisiteContentRelationship
+from contentcuration.models import Task
 from contentcuration.models import UUIDField
 from contentcuration.tasks import get_or_create_async_task
+from contentcuration.utils.celery.tasks import ProgressTracker
 from contentcuration.utils.nodes import calculate_resource_size
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
@@ -66,6 +68,7 @@ from contentcuration.viewsets.common import SQCount
 from contentcuration.viewsets.common import UserFilteredPrimaryKeyRelatedField
 from contentcuration.viewsets.common import UUIDInFilter
 from contentcuration.viewsets.sync.constants import CONTENTNODE
+from contentcuration.viewsets.sync.constants import COPYING_FLAG
 from contentcuration.viewsets.sync.constants import CREATED
 from contentcuration.viewsets.sync.constants import DELETED
 from contentcuration.viewsets.sync.constants import TASK_ID
@@ -930,7 +933,6 @@ class ContentNodeViewSet(BulkUpdateMixin, ChangeEventMixin, ValuesViewset):
         excluded_descendants=None,
         **kwargs
     ):
-        from contentcuration.tasks import create_async_task
         try:
             target, position = self.validate_targeting_args(target, position)
         except ValidationError as e:
@@ -949,23 +951,41 @@ class ContentNodeViewSet(BulkUpdateMixin, ChangeEventMixin, ValuesViewset):
             error = ValidationError("Copy pk already exists")
             return str(error)
 
-        task_args = {
-            "user_id": self.request.user.id,
-            "channel_id": channel_id,
-            "source_id": source.id,
-            "target_id": target.id,
-            "pk": pk,
-            "mods": mods,
-            "excluded_descendants": excluded_descendants,
-            "position": position,
-        }
+        can_edit_source_channel = ContentNode.filter_edit_queryset(
+            ContentNode.objects.filter(id=source.id), user=self.request.user
+        ).exists()
 
-        task, task_info = create_async_task(
-            "duplicate-nodes", self.request.user, **task_args
+        task_object = Task.objects.create(status="RUNNING", channel_id=channel_id, is_progress_tracking=True, task_type="copy_nodes", user=self.request.user)
+
+        Change.create_change(
+            generate_update_event(pk, CONTENTNODE, {TASK_ID: task_object.task_id}, channel_id=channel_id), created_by_id=self.request.user.id,
+            applied=True
+        )
+
+        def update_progress(meta=None):
+            if meta:
+                task_object.metadata = meta
+                task_object.save()
+
+        new_node = source.copy_to(
+            target,
+            position,
+            pk,
+            mods,
+            excluded_descendants,
+            can_edit_source_channel=can_edit_source_channel,
+            progress_tracker=ProgressTracker(None, update_progress, progress_increment=5),
         )
 
         Change.create_change(
-            generate_update_event(pk, CONTENTNODE, {TASK_ID: task_info.task_id}, channel_id=channel_id), created_by_id=self.request.user.id, applied=True
+            generate_update_event(
+                pk,
+                CONTENTNODE,
+                {COPYING_FLAG: False, "node_id": new_node.node_id},
+                channel_id=channel_id
+            ),
+            created_by_id=self.request.user.id,
+            applied=True
         )
 
         return None

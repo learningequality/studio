@@ -9,7 +9,6 @@ from celery import states
 from celery.utils.log import get_task_logger
 from django.conf import settings
 from django.core.mail import EmailMessage
-from django.db import IntegrityError
 from django.template.loader import render_to_string
 from django.utils.translation import gettext as _
 from django.utils.translation import override
@@ -27,7 +26,6 @@ from contentcuration.utils.publish import publish_channel
 from contentcuration.utils.sync import sync_channel
 from contentcuration.viewsets.sync.constants import CHANNEL
 from contentcuration.viewsets.sync.constants import CONTENTNODE
-from contentcuration.viewsets.sync.constants import COPYING_FLAG
 from contentcuration.viewsets.sync.utils import generate_update_event
 from contentcuration.viewsets.user import AdminUserFilter
 
@@ -57,51 +55,6 @@ def apply_channel_changes(channel_id):
     changes_qs = Change.objects.filter(applied=False, errored=False, channel_id=channel_id)
     while changes_qs.exists():
         apply_changes(changes_qs)
-
-
-@app.task(bind=True, name="duplicate_nodes_task", track_progress=True)
-def duplicate_nodes_task(
-    self,
-    user_id,
-    channel_id,
-    target_id,
-    source_id,
-    pk=None,
-    position="last-child",
-    mods=None,
-    excluded_descendants=None,
-):
-    source = ContentNode.objects.get(id=source_id)
-    target = ContentNode.objects.get(id=target_id)
-
-    can_edit_source_channel = ContentNode.filter_edit_queryset(
-        ContentNode.objects.filter(id=source_id), user=User.objects.get(id=user_id)
-    ).exists()
-
-    new_node = None
-
-    try:
-        new_node = source.copy_to(
-            target,
-            position,
-            pk,
-            mods,
-            excluded_descendants,
-            can_edit_source_channel=can_edit_source_channel,
-            progress_tracker=self.progress,
-        )
-    except IntegrityError:
-        # This will happen if the node has already been created
-        # Pass for now and just return the updated data
-        # Possible we might want to raise an error here, but not clear
-        # whether this could then be a way to sniff for ids
-        pass
-
-    changes = []
-    if new_node is not None:
-        changes.append(generate_update_event(pk, CONTENTNODE, {COPYING_FLAG: False, "node_id": new_node.node_id}, channel_id=channel_id))
-
-    return {"changes": changes}
 
 
 @app.task(bind=True, name="export_channel_task", track_progress=True)
@@ -229,7 +182,6 @@ def sendcustomemails_task(subject, message, query):
 type_mapping = {
     "apply_user_changes": apply_user_changes,
     "apply_channel_changes": apply_channel_changes,
-    "duplicate-nodes": duplicate_nodes_task,
     "export-channel": export_channel_task,
     "sync-channel": sync_channel_task,
     "get-node-diff": generatenodediff_task,
