@@ -669,13 +669,18 @@ const nonconformingKeys = {
   PEOPLE: 'ToUseWithTeachersAndPeers',
   PAPER_PENCIL: 'ToUseWithPaperAndPencil',
   INTERNET: 'NeedsInternet',
-  MATERIALS: 'NeedsMaterials',
   FOR_BEGINNERS: 'ForBeginners',
   digitalLiteracy: 'digitialLiteracy',
   BASIC_SKILLS: 'allLevelsBasicSkills',
   FOUNDATIONS: 'basicSkills',
-  toolsAndSoftwareTraining: 'softwareToolsAndTraining',
   foundationsLogicAndCriticalThinking: 'logicAndCriticalThinking',
+
+  /*
+   * TODO: the following are in ResourcesNeededTypes map from le-utils, but not in Kolibri,
+   * and should be tracked in the issue - https://github.com/learningequality/kolibri/issues/9245
+   */
+  OTHER_SUPPLIES: 'NeedsMaterials',
+  SPECIAL_SOFTWARE: 'softwareToolsAndTraining',
 };
 
 /**

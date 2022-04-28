@@ -94,6 +94,10 @@ function _getMasteryModel(node) {
   return node.extra_fields;
 }
 
+function _getLearningActivity(node) {
+  return Object.keys(node.learning_activities);
+}
+
 function _getErrorMsg(error) {
   const messages = {
     [ValidationErrors.TITLE_REQUIRED]: translator.$tr('titleRequired'),
@@ -108,6 +112,7 @@ function _getErrorMsg(error) {
     [ValidationErrors.MASTERY_MODEL_N_REQUIRED]: translator.$tr('masteryModelNRequired'),
     [ValidationErrors.MASTERY_MODEL_N_WHOLE_NUMBER]: translator.$tr('masteryModelNWholeNumber'),
     [ValidationErrors.MASTERY_MODEL_N_GT_ZERO]: translator.$tr('masteryModelNGtZero'),
+    [ValidationErrors.LEARNING_ACTIVITY_REQUIRED]: translator.$tr('learningActivityRequired'),
   };
 
   return messages[error];
@@ -132,6 +137,10 @@ export function getLicenseValidators() {
 
 export function getCopyrightHolderValidators() {
   return [value => Boolean(value && value.trim()) || ValidationErrors.COPYRIGHT_HOLDER_REQUIRED];
+}
+
+export function getLearningActivityValidators() {
+  return [value => Boolean(value.length) || ValidationErrors.LEARNING_ACTIVITY_REQUIRED];
 }
 
 export function getLicenseDescriptionValidators() {
@@ -181,6 +190,13 @@ export function getNodeCopyrightHolderErrors(node) {
   }
   return getCopyrightHolderValidators()
     .map(validator => validator(node.copyright_holder))
+    .filter(value => value !== true);
+}
+
+export function getNodeLearningActivityErrors(node) {
+  const learningActivity = _getLearningActivity(node);
+  return getLearningActivityValidators()
+    .map(validator => validator(learningActivity))
     .filter(value => value !== true);
 }
 
@@ -251,6 +267,14 @@ export function getNodeDetailsErrors(node) {
     }
   }
 
+  // learning activity is a required field for resources
+  if (node.kind !== ContentKindsNames.TOPIC) {
+    const learningActivityErrors = getNodeLearningActivityErrors(node);
+    if (learningActivityErrors.length) {
+      errors = errors.concat(learningActivityErrors);
+    }
+  }
+
   // mastery is required on exercises
   if (node.kind === ContentKindsNames.EXERCISE) {
     const masteryModelErrors = getNodeMasteryModelErrors(node);
@@ -267,7 +291,6 @@ export function getNodeDetailsErrors(node) {
       errors = errors.concat(masteryModelNErrors);
     }
   }
-
   return errors;
 }
 

@@ -5,6 +5,8 @@ export { default as CompletionCriteriaModels } from 'kolibri-constants/Completio
 export { default as ContentLevel } from 'kolibri-constants/labels/Levels';
 export { default as Categories } from 'kolibri-constants/labels/Subjects';
 export { default as AccessibilityCategories } from 'kolibri-constants/labels/AccessibilityCategories';
+export { default as ContentLevels } from 'kolibri-constants/labels/Levels';
+export { default as ResourcesNeededTypes } from 'kolibri-constants/labels/Needs';
 
 export const ContentDefaults = {
   author: 'author',
@@ -159,6 +161,7 @@ export const ValidationErrors = {
   INVALID_NUMBER_OF_CORRECT_ANSWERS: 'INVALID_NUMBER_OF_CORRECT_ANSWERS',
   NO_VALID_PRIMARY_FILES: 'NO_VALID_PRIMARY_FILES',
   INVALID_COMPLETION_CRITERIA_MODEL: 'INVALID_COMPLETION_CRITERIA_MODEL',
+  LEARNING_ACTIVITY_REQUIRED: 'LEARNING_ACTIVITY_REQUIRED',
   ...fileErrors,
 };
 
