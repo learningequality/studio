@@ -20,6 +20,7 @@
     :menu-props="menuProps"
     :multiple="multiple"
     :chips="multiple"
+    attach="language"
     @change="input = ''"
     @focus="$emit('focus')"
   >

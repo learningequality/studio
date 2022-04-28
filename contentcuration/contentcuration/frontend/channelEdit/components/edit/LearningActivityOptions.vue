@@ -10,6 +10,7 @@
     multiple
     deletableChips
     :rules="learningActivityRules"
+    attach="learning_activities"
   />
 
 </template>
