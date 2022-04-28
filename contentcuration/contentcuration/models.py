@@ -2356,6 +2356,6 @@ class Change(models.Model):
         return obj
 
     def serialize_to_change_dict(self):
-        datum = self.kwargs
+        datum = self.kwargs.copy()
         datum.update({"rev": self.client_rev, "table": self.table, "type": self.change_type})
         return datum
