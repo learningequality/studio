@@ -2,7 +2,7 @@
 
   <div id="app">
     <VAutocomplete
-      v-model="selected"
+      :value="selected"
       :items="categoriesList"
       :searchInput.sync="categoryText"
       :label="translateMetadataString('category')"
@@ -13,6 +13,7 @@
       multiple
       item-value="value"
       item-text="text"
+      @click:clear="item => remove(item.value)"
     >
       <template v-slot:selection="data">
         <VTooltip bottom>
@@ -41,13 +42,13 @@
         <div style="width: 100%; height: 100%" aria-hidden="true">
           <VDivider v-if="!item.value.includes('.')" />
           <KCheckbox
-            v-model="selected"
-            :checked="dropdownSelected.includes(item.value)"
+            :checked="dropdownSelected[item.value]"
             :label="item.text"
             :value="item.value"
             style="margin-top: 10px"
             :style="treeItemStyle(item)"
             :ripple="false"
+            @change="checked => checked ? add(item.value) : remove(item.value)"
           />
         </div>
       </template>
@@ -128,8 +129,6 @@
     data() {
       return {
         categoryText: null,
-        chipsSelected: [],
-        nested: true,
       };
     },
     computed: {
@@ -143,46 +142,39 @@
         });
       },
       dropdownSelected() {
-        return [
-          ...new Set(
-            this.chipsSelected.reduce((a, chip) => a.concat(this.findFamilyTreeIds(chip)), [])
-          ),
-        ];
+        const obj = {};
+        for (let category of this.selected) {
+          const paths = category.split('.');
+          let cat = '';
+          for (let path of paths) {
+            cat += path;
+            obj[cat] = true;
+            cat += '.';
+          }
+        }
+        return obj;
       },
       selected: {
         get() {
           return this.value;
         },
         set(value) {
-          let items = [...value];
-          let currentItem = items[items.length - 1] || '';
-
-          this.handleCheckboxItem(currentItem, items);
-          this.$emit('input', this.chipsSelected);
+          this.$emit('input', value);
         },
       },
-      dropdownSelectedObj() {
-        return this.dropdownSelected.map(item => {
-          return {
-            text: this.translateMetadataString(camelCase(CategoriesLookup[item])),
-            value: item,
-            level: this.findDepth(item),
-          };
-        });
-      },
-    },
-    watch: {
-      categoryText(val) {
-        return !val ? (this.nested = true) : (this.nested = false);
+      nested() {
+        return !this.categoryText;
       },
     },
     methods: {
       treeItemStyle(item) {
         return this.nested ? { paddingLeft: `${item.level * 24}px` } : {};
       },
+      add(item) {
+        this.selected = [...this.selected, item];
+      },
       remove(item) {
-        this.chipsSelected.splice(this.chipsSelected.indexOf(item), 1);
-        this.$emit('input', this.chipsSelected);
+        this.selected = this.selected.filter(i => !i.startsWith(item));
       },
       tooltipHelper(id) {
         return this.displayFamilyTree(dropdown, id)
@@ -205,46 +197,6 @@
             : null;
         }
         return family;
-      },
-      handleCheckboxItem(item, items) {
-        const parents = this.findFamilyTreeIds(item).filter(familyMember => familyMember !== item);
-        const rootParent = parents[0];
-        const directParent = item.substring(0, item.lastIndexOf('.')) || null;
-        const potentialSiblings = this.dropdownSelectedObj.filter(
-          checkedItem => checkedItem.level === this.findDepth(item) && checkedItem.value !== item
-        );
-        const numberOfSiblings = potentialSiblings.filter(sibling =>
-          sibling.value.includes(directParent)
-        ).length;
-
-        // If removing a checked item that is listed as a chip in the autocomplete bar
-        if (this.chipsSelected.length > items.length) {
-          this.chipsSelected = items;
-        } else {
-          // Behaviors for items not listed as chips in the autocomplete bar
-          if (this.dropdownSelected.includes(item)) {
-            if (rootParent) {
-              // If checked item has a sibling
-              if (numberOfSiblings > 0) {
-                this.chipsSelected = this.chipsSelected.filter(
-                  chip => !chip.includes(item) && chip !== rootParent
-                );
-              } else {
-                this.chipsSelected = [
-                  ...this.chipsSelected.filter(chip => !chip.includes(item)),
-                  rootParent,
-                ];
-              }
-            } else {
-              this.chipsSelected = [...this.chipsSelected.filter(chip => !chip.includes(item))];
-            }
-          } else {
-            // If selecting a child item when parent has already been checked
-            if (items.filter(val => parents.indexOf(val) !== -1)) {
-              this.chipsSelected = items.filter(val => parents.indexOf(val) === -1);
-            }
-          }
-        }
       },
     },
     $trs: {
