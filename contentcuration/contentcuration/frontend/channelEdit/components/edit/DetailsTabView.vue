@@ -54,11 +54,7 @@
                 @focus="trackClick('Description')"
               />
             </VFlex>
-            <VFlex
-              xs12
-              md6
-              :class="{ 'pl-2': $vuetify.breakpoint.mdAndUp }"
-            >
+            <VFlex xs12 md6 :class="{ 'pl-2': $vuetify.breakpoint.mdAndUp }">
               <!-- Learning activity -->
               <LearningActivityOptions
                 id="learning_activities"
@@ -114,6 +110,30 @@
         </VFlex>
       </VLayout>
 
+      <!-- Completion section -->
+      <VLayout row wrap class="section">
+        <VFlex xs12>
+          <h1 class="subheading">
+            {{ $tr('completionLabel') }}
+          </h1>
+          <!-- Checkbox for "Allow learners to mark complete" -->
+          <VFlex md6 class="pb-2">
+            <Checkbox
+              v-model="learnerManaged"
+              color="primary"
+              :label="$tr('learnersCanMarkComplete')"
+              style="margin-top: 0px; padding-top: 0px"
+            />
+          </VFlex>
+          <CompletionOptions
+            v-model="completionAndDuration"
+            :kind="firstNode.kind"
+            :file="nodeFiles[0]"
+            :required="!isDocument"
+          />
+        </VFlex>
+      </VLayout>
+
       <!-- Assessment options -->
       <VLayout v-if="allExercises" row wrap class="section">
         <VFlex xs12>
@@ -162,7 +182,7 @@
             {{ $tr('thumbnailHeader') }}
           </h1>
           <!-- Thumbnail -->
-          <div style="width:250px;">
+          <div style="width: 250px">
             <ContentNodeThumbnail
               v-model="thumbnail"
               :nodeId="firstNode.id"
@@ -253,7 +273,7 @@
               box
               :placeholder="getPlaceholder('author')"
               :value="author && author.toString()"
-              @input.native="e => author = e.srcElement.value"
+              @input.native="(e) => (author = e.srcElement.value)"
               @input="author = $event"
               @focus="trackClick('Author')"
             >
@@ -274,7 +294,7 @@
               autoSelectFirst
               box
               :value="provider && provider.toString()"
-              @input.native="e => provider = e.srcElement.value"
+              @input.native="(e) => (provider = e.srcElement.value)"
               @input="provider = $event"
               @focus="trackClick('Provider')"
             >
@@ -295,7 +315,7 @@
               :placeholder="getPlaceholder('aggregator')"
               box
               :value="aggregator && aggregator.toString()"
-              @input.native="e => aggregator = e.srcElement.value"
+              @input.native="(e) => (aggregator = e.srcElement.value)"
               @input="aggregator = $event"
               @focus="trackClick('Aggregator')"
             >
@@ -332,7 +352,7 @@
               :readonly="disableAuthEdits"
               box
               :value="copyright_holder && copyright_holder.toString()"
-              @input.native="e => copyright_holder = e.srcElement.value"
+              @input.native="(e) => (copyright_holder = e.srcElement.value)"
               @input="copyright_holder = $event"
               @focus="trackClick('Copyright holder')"
             />
@@ -375,6 +395,7 @@
   import ResourcesNeededOptions from './ResourcesNeededOptions.vue';
   import LearningActivityOptions from './LearningActivityOptions.vue';
   import CategoryOptions from './CategoryOptions.vue';
+  import CompletionOptions from './CompletionOptions.vue';
 
   import {
     getTitleValidators,
@@ -469,6 +490,7 @@
       ResourcesNeededOptions,
       LearningActivityOptions,
       CategoryOptions,
+      CompletionOptions,
     },
     mixins: [constantsTranslationMixin, metadataTranslationMixin],
     props: {
@@ -552,6 +574,7 @@
       resourcesNeeded: generateNestedNodesGetterSetter('learner_needs'),
       contentLearningActivities: generateNestedNodesGetterSetter('learning_activities'),
       categories: generateNestedNodesGetterSetter('categories'),
+      learnerManaged: generateGetterSetter('learner_managed'),
       mastery_model() {
         return this.getExtraFieldsValueFromNodes('mastery_model');
       },
@@ -614,21 +637,45 @@
       },
       // TODO remove eslint disable when `completionCriteria` is utilized
       /* eslint-disable-next-line kolibri/vue-no-unused-properties */
-      completionCriteria: {
+      completionAndDuration: {
         get() {
           const options = this.getExtraFieldsValueFromNodes('options') || {};
-          return options.completion_criteria || {};
-        },
-        set(completion_criteria) {
-          // TODO Remove validation if unnecessary after implementing `completionCriteria`
-          if (validateCompletionCriteria(completion_criteria)) {
-            const options = { completion_criteria };
-            this.updateExtraFields({ options });
-          } else {
-            console.warn('Invalid completion criteria', [...validateCompletionCriteria.errors]);
+          const suggested_duration = this.getValueFromNodes('suggested_duration');
+          // return options.completion_criteria || {};
+          return {
+            suggested_duration,
+            ...options.completion_criteria || {},
           }
         },
+        set(value) {
+          // TODO Remove validation if unnecessary after implementing `completionCriteria`
+          // if (validateCompletionCriteria(completion_criteria)) {
+            // const options = { completion_criteria };
+            // this.updateExtraFields({ options });
+          // } else {
+          //   console.warn('Invalid completion criteria', [...validateCompletionCriteria.errors]);
+          // }
+          // const options = { value };
+          console.log('!!suggested_duration', value);
+          this.update({ ['suggested_duration']: value });
+
+          // this.updateExtraFields({ options });
+        },
       },
+      // completionAndDuration() {
+      //   get() {
+      // set(value) {
+      //   this.update({ [key]: value });
+      //       return {
+      //       suggested_duration: this.suggested_duration,
+      //       completion_criteria: this.completion_criteria,
+      //     };
+      //   },
+      //   set(value) {
+      //     this.suggested_duration = value.suggested_duration;
+      //     this.completion_criteria = value.completion_criteria;
+      //   },
+      // },
 
       /* COMPUTED PROPS */
       disableAuthEdits() {
@@ -674,6 +721,10 @@
       allowChannelQuizzes() {
         return this.$store.getters.hasFeatureEnabled(FeatureFlagKeys.channel_quizzes);
       },
+      isDocument() {
+        return this.firstNode.kind === 'document';
+      },
+      // updateSuggestedDuration: generateGetterSetter('suggested_duration'),
     },
     watch: {
       nodes: {
@@ -821,6 +872,8 @@
       noTagsFoundText: 'No results found for "{text}". Press \'Enter\' key to create a new tag',
       randomizeQuestionLabel: 'Randomize question order for learners',
       channelQuizzesLabel: 'Allow as a channel quiz',
+      completionLabel: 'Completion',
+      learnersCanMarkComplete: 'Allow learners to mark as complete',
     },
   };
 
