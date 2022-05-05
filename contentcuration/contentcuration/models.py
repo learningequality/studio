@@ -24,6 +24,7 @@ from django.db import IntegrityError
 from django.db import models
 from django.db.models import Count
 from django.db.models import Exists
+from django.db.models import F
 from django.db.models import Index
 from django.db.models import IntegerField
 from django.db.models import JSONField
@@ -262,12 +263,15 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def get_user_active_trees(self):
         return self.editable_channels.exclude(deleted=True)\
-            .values_list('main_tree__tree_id', flat=True)
+            .values(tree_id=F("main_tree__tree_id"))
 
     def get_user_active_files(self):
-        active_trees = self.get_user_active_trees()
-        return self.files.filter(contentnode__tree_id__in=active_trees)\
-            .values('checksum').distinct()
+        cte = With(self.get_user_active_trees().distinct())
+
+        return cte.join(self.files.get_queryset(), contentnode__tree_id=cte.col.tree_id)\
+            .with_cte(cte)\
+            .values('checksum')\
+            .distinct()
 
     def get_space_used(self, active_files=None):
         active_files = active_files or self.get_user_active_files()
