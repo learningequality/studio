@@ -1,5 +1,9 @@
+import urllib.parse
+
 from django.conf import settings
 from django.contrib import admin
+from django.core.files.storage import default_storage
+from django.http.response import HttpResponseNotFound
 from django.http.response import HttpResponseRedirect
 from django.urls import include
 from django.urls import path
@@ -17,6 +21,28 @@ def webpack_redirect_view(request):
             query=request.GET.urlencode()
         )
     )
+
+
+def file_server(request, storage_path=None):
+    """
+    Development fallback to redirect file storage requests to Minio
+    """
+    # generate the minio storage URL, so we can get the GET parameters that give everyone
+    # access even if they don't need to log in
+    if storage_path is None:
+        return HttpResponseNotFound()
+
+    params = urllib.parse.urlparse(default_storage.url(storage_path)).query
+    host = request.META['HTTP_HOST'].split(":")[0]
+    port = 9000  # hardcoded to the default minio IP address
+    url = "http://{host}:{port}/{bucket}/{path}?{params}".format(
+        host=host,
+        port=port,
+        bucket=settings.AWS_S3_BUCKET_NAME,
+        path=storage_path,
+        params=params,
+    )
+    return HttpResponseRedirect(url)
 
 
 schema_view = get_schema_view(
@@ -47,6 +73,7 @@ urlpatterns = urlpatterns + [
         r"^redoc/$", schema_view.with_ui("redoc", cache_timeout=0), name="schema-redoc"
     ),
     re_path(r"^api-auth/", include("rest_framework.urls", namespace="rest_framework")),
+    re_path(r"^content/(?P<storage_path>.+)$", file_server),
 ]
 
 if getattr(settings, "DEBUG_PANEL_ACTIVE", False):

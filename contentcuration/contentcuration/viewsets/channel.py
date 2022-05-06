@@ -277,6 +277,7 @@ class ChannelSerializer(BulkModelSerializer):
         instance = super(ChannelSerializer, self).create(validated_data)
         if "request" in self.context:
             user = self.context["request"].user
+            instance.mark_created(user)
             try:
                 # Wrap in try catch, fix for #3049
                 # This has been newly created so add the current user as an editor
@@ -302,13 +303,16 @@ class ChannelSerializer(BulkModelSerializer):
     def update(self, instance, validated_data):
         bookmark = validated_data.pop("bookmark", None)
         content_defaults = validated_data.pop("content_defaults", None)
+        is_deleted = validated_data.get("deleted")
         if content_defaults is not None:
             validated_data["content_defaults"] = self.fields["content_defaults"].update(
                 instance.content_defaults, content_defaults
             )
 
+        user_id = None
         if "request" in self.context:
             user_id = self.context["request"].user.id
+
             # We could possibly do this in bulk later in the process,
             # but bulk creating many to many through table models
             # would be required, and that would need us to be able to
@@ -321,7 +325,15 @@ class ChannelSerializer(BulkModelSerializer):
                 instance.bookmarked_by.add(user_id)
             elif bookmark is not None:
                 instance.bookmarked_by.remove(user_id)
-        return super(ChannelSerializer, self).update(instance, validated_data)
+        was_deleted = instance.deleted
+        instance = super(ChannelSerializer, self).update(instance, validated_data)
+        # mark the instance as deleted or recovered, if requested
+        if user_id is not None and is_deleted is not None and is_deleted != was_deleted:
+            if is_deleted:
+                instance.mark_deleted(user_id)
+            else:
+                instance.mark_recovered(user_id)
+        return instance
 
 
 def get_thumbnail_url(item):
@@ -434,9 +446,8 @@ class ChannelViewSet(ChangeEventMixin, ValuesViewset):
         """
         for change in changes:
             if 'bookmark' in change["mods"].keys():
-                keys = [change["key"] for change in changes]
                 queryset = self.filter_queryset_from_keys(
-                    self.get_queryset(), keys
+                    self.get_queryset(), [change["key"]]
                 ).order_by()
                 instance = queryset.get(**dict(self.values_from_key(change["key"])))
                 bookmark = {k: v for k, v in change['mods'].items() if k == 'bookmark'}
@@ -460,16 +471,18 @@ class ChannelViewSet(ChangeEventMixin, ValuesViewset):
 
         channel = self.get_edit_object()
 
-        if (
-            channel.main_tree.publishing or
+        if channel.deleted:
+            raise ValidationError("Cannot publish a deleted channel")
+        elif channel.main_tree.publishing:
+            raise ValidationError("Channel is already publishing")
+        elif (
             not channel.main_tree.get_descendants(include_self=True)
             .filter(changed=True)
             .exists()
         ):
             raise ValidationError("Cannot publish an unchanged channel")
 
-        channel.main_tree.publishing = True
-        channel.main_tree.save()
+        channel.mark_publishing(request.user)
 
         version_notes = request.data.get("version_notes")
 

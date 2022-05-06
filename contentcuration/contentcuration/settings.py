@@ -165,6 +165,7 @@ SUPPORTED_BROWSERS = [
 HEALTH_CHECK_BROWSERS = [
     'kube-probe',
     'GoogleHC',
+    'Studio-Internal-Prober'
 ]
 
 REST_FRAMEWORK = {

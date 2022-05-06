@@ -8,6 +8,7 @@ import uuid
 from datetime import datetime
 
 import pytz
+from celery import states
 from django.conf import settings
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.base_user import BaseUserManager
@@ -24,6 +25,7 @@ from django.db import IntegrityError
 from django.db import models
 from django.db.models import Count
 from django.db.models import Exists
+from django.db.models import F
 from django.db.models import Index
 from django.db.models import IntegerField
 from django.db.models import JSONField
@@ -60,6 +62,7 @@ from postmark.core import PMMailInactiveRecipientException
 from postmark.core import PMMailUnauthorizedException
 from rest_framework.authtoken.models import Token
 
+from contentcuration.constants import channel_history
 from contentcuration.db.models.expressions import Array
 from contentcuration.db.models.functions import ArrayRemove
 from contentcuration.db.models.functions import Unnest
@@ -92,6 +95,12 @@ DEFAULT_CONTENT_DEFAULTS = {
     'auto_randomize_questions': True,
 }
 DEFAULT_USER_PREFERENCES = json.dumps(DEFAULT_CONTENT_DEFAULTS, ensure_ascii=False)
+
+
+def to_pk(model_or_pk):
+    if isinstance(model_or_pk, models.Model):
+        return model_or_pk.pk
+    return model_or_pk
 
 
 class UserManager(BaseUserManager):
@@ -261,13 +270,15 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def get_user_active_trees(self):
         return self.editable_channels.exclude(deleted=True)\
-            .values_list('main_tree__tree_id', flat=True)
+            .values(tree_id=F("main_tree__tree_id"))
 
     def get_user_active_files(self):
-        active_trees = self.get_user_active_trees()
-        return self.files.annotate(in_active_tree=Exists(active_trees.filter(main_tree__tree_id=OuterRef("contentnode__tree_id"))))\
-            .filter(in_active_tree=True)\
-            .values('checksum').distinct()
+        cte = With(self.get_user_active_trees().distinct())
+
+        return cte.join(self.files.get_queryset(), contentnode__tree_id=cte.col.tree_id)\
+            .with_cte(cte)\
+            .values('checksum')\
+            .distinct()
 
     def get_space_used(self, active_files=None):
         active_files = active_files or self.get_user_active_files()
@@ -931,6 +942,32 @@ class Channel(models.Model):
 
         return self
 
+    def mark_created(self, user):
+        self.history.create(actor_id=to_pk(user), action=channel_history.CREATION)
+
+    def mark_publishing(self, user):
+        self.history.create(actor_id=to_pk(user), action=channel_history.PUBLICATION)
+        self.main_tree.publishing = True
+        self.main_tree.save()
+
+    def mark_deleted(self, user):
+        self.history.create(actor_id=to_pk(user), action=channel_history.DELETION)
+        self.deleted = True
+        self.save()
+
+    def mark_recovered(self, user):
+        self.history.create(actor_id=to_pk(user), action=channel_history.RECOVERY)
+        self.deleted = False
+        self.save()
+
+    @property
+    def deletion_history(self):
+        return self.history.filter(action=channel_history.DELETION)
+
+    @property
+    def publishing_history(self):
+        return self.history.filter(action=channel_history.PUBLICATION)
+
     @classmethod
     def get_public_channels(cls, defer_nonmain_trees=False):
         """
@@ -959,6 +996,36 @@ class Channel(models.Model):
         ]
         index_together = [
             ["deleted", "public"]
+        ]
+
+
+CHANNEL_HISTORY_CHANNEL_INDEX_NAME = "idx_channel_history_channel_id"
+
+
+class ChannelHistory(models.Model):
+    """
+    Model for tracking certain actions performed on a channel
+    """
+    channel = models.ForeignKey('Channel', null=False, blank=False, related_name='history', on_delete=models.CASCADE)
+    actor = models.ForeignKey('User', null=False, blank=False, related_name='channel_history', on_delete=models.CASCADE)
+    performed = models.DateTimeField(default=timezone.now)
+    action = models.CharField(max_length=50, choices=channel_history.choices)
+
+    @classmethod
+    def prune(cls):
+        """
+        Prunes history records by keeping the most recent actions for each channel and type,
+        and deleting all other older actions
+        """
+        keep_ids = cls.objects.distinct("channel_id", "action").order_by("channel_id", "action", "-performed").values_list("id", flat=True)
+        cls.objects.exclude(id__in=keep_ids).delete()
+
+    class Meta:
+        verbose_name = "Channel history"
+        verbose_name_plural = "Channel histories"
+
+        indexes = [
+            models.Index(fields=["channel_id"], name=CHANNEL_HISTORY_CHANNEL_INDEX_NAME),
         ]
 
 
@@ -2225,3 +2292,8 @@ class Task(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="task", on_delete=models.CASCADE)
     metadata = JSONField()
     channel_id = DjangoUUIDField(db_index=True, null=True, blank=True)
+
+    @classmethod
+    def find_incomplete(cls, task_type, **filters):
+        filters.update(task_type=task_type, status__in=["QUEUED", states.PENDING, states.RECEIVED, states.STARTED])
+        return cls.objects.filter(**filters)

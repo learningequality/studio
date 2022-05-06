@@ -78,6 +78,7 @@ def create_channel(
         channel.viewers.add(v)
 
     channel.save()
+    channel.mark_created(editors[0])
     channel.main_tree.get_descendants().delete()
     channel.staging_tree and channel.staging_tree.get_descendants().delete()
     return channel

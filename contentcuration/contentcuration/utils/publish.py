@@ -105,8 +105,8 @@ def create_content_database(channel, force, user_id, force_exercises, progress_t
     fh, tempdb = tempfile.mkstemp(suffix=".sqlite3")
 
     with using_content_database(tempdb):
-        channel.main_tree.publishing = True
-        channel.main_tree.save()
+        if not channel.main_tree.publishing:
+            channel.mark_publishing(user_id)
 
         call_command("migrate",
                      "content",
