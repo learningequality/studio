@@ -187,9 +187,13 @@
       displayFamilyTree(nodes, id) {
         return nodes.filter(node => this.findFamilyTreeIds(id).includes(node.value));
       },
-      findFamilyTreeIds(value) {
+      /**
+       * @param {String} id The id of the selected category
+       * @returns {Array} An array of all ids of the family beginning with the selected category
+       */
+      findFamilyTreeIds(id) {
         const family = [];
-        let familyMember = value;
+        let familyMember = id;
         while (familyMember) {
           family.push(familyMember);
           familyMember = familyMember.includes('.')
