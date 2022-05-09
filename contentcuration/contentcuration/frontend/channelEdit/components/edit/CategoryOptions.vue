@@ -13,7 +13,7 @@
       multiple
       item-value="value"
       item-text="text"
-      @click:clear="item => remove(item.value)"
+      @click:clear="$nextTick(() => removeAll())"
     >
       <template v-slot:selection="data">
         <VTooltip bottom>
@@ -175,6 +175,9 @@
       },
       remove(item) {
         this.selected = this.selected.filter(i => !i.startsWith(item));
+      },
+      removeAll() {
+        this.selected = [];
       },
       tooltipHelper(id) {
         return this.displayFamilyTree(dropdown, id)
