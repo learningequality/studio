@@ -294,130 +294,23 @@ describe('CategoryOptions', () => {
   });
 
   describe('interactions', () => {
-    it('when user checks an item, only that item is added to the chips', () => {
+    it('when user checks an item, that is emitted to the parent component', () => {
       const wrapper = shallowMount(CategoryOptions);
-      const items = ['PbGoe2MV'];
-      const item = 'PbGoe2MV';
-      wrapper.vm.handleCheckboxItem(item, items);
+      const item = 'abcd';
+      wrapper.vm.$emit = jest.fn();
+      wrapper.vm.add(item);
 
-      expect(wrapper.vm.chipsSelected).toEqual(items);
+      expect(wrapper.vm.$emit.mock.calls[0][0]).toBe('input');
+      expect(wrapper.vm.$emit.mock.calls[0][1]).toEqual([item]);
     });
-    it('when user checks a grandchild item, that item and all its parents are added to the dropdown', () => {
+    it('when user unchecks an item, that is emitted to the parent component', () => {
       const wrapper = shallowMount(CategoryOptions);
-      const items = ['d&WXdXWF.e#RTW9E#.8ZoaPsVW'];
-      const item = 'd&WXdXWF.e#RTW9E#.8ZoaPsVW';
-      const expectedDropdown = ['d&WXdXWF.e#RTW9E#.8ZoaPsVW', 'd&WXdXWF.e#RTW9E#', 'd&WXdXWF'];
-      wrapper.vm.handleCheckboxItem(item, items);
+      const item = 'defj';
+      wrapper.vm.$emit = jest.fn();
+      wrapper.vm.remove(item);
 
-      expect(wrapper.vm.dropdownSelected.length).toEqual(expectedDropdown.length);
-    });
-    it('when user unchecks a grandchild item that has a sibling, only that item is removed from the chips', () => {
-      const wrapper = shallowMount(CategoryOptions, {
-        data() {
-          return {
-            chipsSelected: [
-              'd&WXdXWF.e#RTW9E#.8ZoaPsVW',
-              'd&WXdXWF.e#RTW9E#.CfnlTDZ#',
-              'd&WXdXWF.5QAjgfv7.BUMJJBnS',
-              'd&WXdXWF.5QAjgfv7.XsWznP4o',
-            ],
-          };
-        },
-      });
-      const items = [
-        'd&WXdXWF.e#RTW9E#.8ZoaPsVW',
-        'd&WXdXWF.e#RTW9E#.CfnlTDZ#',
-        'd&WXdXWF.5QAjgfv7.BUMJJBnS',
-      ];
-      const item = 'd&WXdXWF.5QAjgfv7.BUMJJBnS';
-      const expectedChips = [
-        'd&WXdXWF.e#RTW9E#.8ZoaPsVW',
-        'd&WXdXWF.e#RTW9E#.CfnlTDZ#',
-        'd&WXdXWF.5QAjgfv7.BUMJJBnS',
-      ];
-      const expectedDropdown = [
-        'd&WXdXWF.e#RTW9E#.8ZoaPsVW',
-        'd&WXdXWF.e#RTW9E#',
-        'd&WXdXWF',
-        'd&WXdXWF.e#RTW9E#.CfnlTDZ#',
-        'd&WXdXWF.5QAjgfv7.BUMJJBnS',
-        'd&WXdXWF.5QAjgfv7',
-      ];
-      wrapper.vm.handleCheckboxItem(item, items);
-
-      expect(wrapper.vm.chipsSelected.length).toEqual(expectedChips.length);
-      expect(wrapper.vm.dropdownSelected.length).toEqual(expectedDropdown.length);
-    });
-    it('when user unchecks a grandchild item that has no siblings and its parents have siblings, that item and its parent are removed from the chips ', () => {
-      const wrapper = shallowMount(CategoryOptions, {
-        data() {
-          return {
-            chipsSelected: [
-              'd&WXdXWF.e#RTW9E#.8ZoaPsVW',
-              'd&WXdXWF.e#RTW9E#.CfnlTDZ#',
-              'd&WXdXWF.5QAjgfv7.BUMJJBnS',
-            ],
-          };
-        },
-      });
-      const items = ['d&WXdXWF.e#RTW9E#.8ZoaPsVW', 'd&WXdXWF.e#RTW9E#.CfnlTDZ#'];
-      const item = 'd&WXdXWF.e#RTW9E#.CfnlTDZ#';
-      const expectedChips = ['d&WXdXWF.e#RTW9E#.8ZoaPsVW', 'd&WXdXWF.e#RTW9E#.CfnlTDZ#'];
-      const expectedDropdown = [
-        'd&WXdXWF.e#RTW9E#.8ZoaPsVW',
-        'd&WXdXWF.e#RTW9E#',
-        'd&WXdXWF',
-        'd&WXdXWF.e#RTW9E#.CfnlTDZ#',
-      ];
-      wrapper.vm.handleCheckboxItem(item, items);
-
-      expect(wrapper.vm.chipsSelected.length).toEqual(expectedChips.length);
-      expect(wrapper.vm.dropdownSelected.length).toEqual(expectedDropdown.length);
-    });
-    it('when user unchecks a grandchild item that has no siblings and its parents have no siblings, that item, its parent, and the root are removed from the chips ', () => {
-      const wrapper = shallowMount(CategoryOptions, {
-        data() {
-          return { chipsSelected: ['d&WXdXWF.e#RTW9E#.8ZoaPsVW', 'BCG3&slG.wZ3EAedB'] };
-        },
-      });
-      const items = ['BCG3&slG.wZ3EAedB'];
-      const item = 'BCG3&slG.wZ3EAedB';
-      const expectedChips = ['BCG3&slG.wZ3EAedB'];
-      const expectedDropdown = ['BCG3&slG.wZ3EAedB', 'BCG3&slG'];
-      wrapper.vm.handleCheckboxItem(item, items);
-
-      expect(wrapper.vm.chipsSelected.length).toEqual(expectedChips.length);
-      expect(wrapper.vm.dropdownSelected.length).toEqual(expectedDropdown.length);
-    });
-    it('when user unchecks an item that has children and its parents have no siblings, that item and all its children are removed from the chips ', () => {
-      const wrapper = shallowMount(CategoryOptions, {
-        data() {
-          return { chipsSelected: ['d&WXdXWF.5QAjgfv7.BUMJJBnS'] };
-        },
-      });
-      const items = ['d&WXdXWF.5QAjgfv7.BUMJJBnS', 'd&WXdXWF'];
-      const item = 'd&WXdXWF';
-      const expectedChips = [];
-      const expectedDropdown = [];
-      wrapper.vm.handleCheckboxItem(item, items);
-
-      expect(wrapper.vm.chipsSelected.length).toEqual(expectedChips.length);
-      expect(wrapper.vm.dropdownSelected.length).toEqual(expectedDropdown.length);
-    });
-    it('when user checks grandchild of parent after parent item has already been checked, the grandchild replaces the parent chip', () => {
-      const wrapper = shallowMount(CategoryOptions, {
-        data() {
-          return { chipsSelected: ['d&WXdXWF'] };
-        },
-      });
-      const items = ['d&WXdXWF', 'd&WXdXWF.5QAjgfv7.XsWznP4o'];
-      const item = 'd&WXdXWF.5QAjgfv7.XsWznP4o';
-      const expectedChips = ['d&WXdXWF.5QAjgfv7.XsWznP4o'];
-      const expectedDropdown = ['d&WXdXWF.5QAjgfv7.XsWznP4o', 'd&WXdXWF.5QAjgfv7', 'd&WXdXWF'];
-      wrapper.vm.handleCheckboxItem(item, items);
-
-      expect(wrapper.vm.chipsSelected.length).toEqual(expectedChips.length);
-      expect(wrapper.vm.dropdownSelected.length).toEqual(expectedDropdown.length);
+      expect(wrapper.vm.$emit.mock.calls[0][0]).toBe('input');
+      expect(wrapper.vm.$emit.mock.calls[0][1]).toEqual([]);
     });
   });
 
@@ -425,12 +318,12 @@ describe('CategoryOptions', () => {
     it('in the autocomplete bar, the chip is removed when user clicks on its close button', () => {
       const wrapper = shallowMount(CategoryOptions, {
         data() {
-          return { chipsSelected: ['remove me', 'abc', 'def', 'abc.'] };
+          return { selected: ['remove me', 'abc', 'def', 'abc.'] };
         },
       });
-      const originalChipsLength = wrapper.vm.chipsSelected.length;
+      const originalChipsLength = wrapper.vm.selected.length;
       wrapper.vm.remove('remove me');
-      const chips = wrapper.vm.chipsSelected;
+      const chips = wrapper.vm.selected;
 
       expect(chips.length).toEqual(originalChipsLength - 1);
     });
