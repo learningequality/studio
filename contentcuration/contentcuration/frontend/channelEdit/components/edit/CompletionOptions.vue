@@ -33,12 +33,12 @@
       </VFlex>
       <VFlex xs6 md6>
         <ShortOrLongActivity
-          v-if="durationValue === 'Short activity' || durationValue === 'Long activity'"
+          v-if="selectedDuration === 'shortActivity' || selectedDuration === 'longActivity'"
           v-model="minutes"
-          :shortActivity="durationValue === 'Short activity' ? true : false"
+          :shortActivity="selectedDuration === 'shortActivity' ? true : false"
         />
         <ExactTimeToCompleteActivity
-          v-if="durationValue === 'Exact time to complete'"
+          v-if="selectedDuration === 'exactTime' && durationValue !== 'reference'"
           v-model="minutes"
           :duration="fileDuration"
           :audioVideoUpload="kind === 'video' || kind === 'audio'"
@@ -76,7 +76,7 @@
 import ShortOrLongActivity from './ShortOrLongActivity.vue';
 import ExactTimeToCompleteActivity from './ExactTimeToCompleteActivity.vue';
 // import PracticeUntilGoalMetActivity from './PracticeUntilGoalMetActivity.vue';
-import { CompletionCriteriaModels } from 'shared/constants';
+import { CompletionCriteriaModels, CompletionCriteriaLookup } from 'shared/constants';
 import {
   getCompletionValidators,
   getDurationValidators,
@@ -106,7 +106,7 @@ export default {
     },
     fileDuration: {
       type: Number,
-      default: 0,
+      default: null,
     },
     required: {
       type: Boolean,
@@ -127,7 +127,6 @@ export default {
     };
   },
   computed: {
-    // ...mapGetters('contentNode', ['getContentNode', 'completion']),
     showCompletion() {
       return this.kind === 'audio' || this.kind === 'video' || this.kind === 'html5' ? false : true;
     },
@@ -137,15 +136,21 @@ export default {
       },
       set(value) {
         this.time = value;
-        console.log('!!! minutes setter', value, this.time);
+        console.log('!!! setting new minutes', value, this.time);
         this.durationInSeconds = this.time * 60;
         if (
-          this.durationValue === 'Exact time to complete' ||
-          this.durationValue === 'Short activity' ||
-          this.durationValue === 'Long activity'
+          this.durationValue === 'exactTime' ||
+          this.durationValue === 'shortActivity' ||
+          this.durationValue === 'longActivity'
         ) {
-          this.handleInput({ suggested_duration: this.durationInSeconds });
-          // this.$emit('changeTime', this.durationInSeconds);
+          console.log('!!! setting the new minutes', this.durationInSeconds);
+          this.handleInput({
+            suggested_duration: this.durationInSeconds,
+            completion_criteria: {
+              model: CompletionCriteriaModels.APPROX_TIME,
+              threshold: this.durationInSeconds,
+            },
+          });
         }
       },
     },
@@ -155,7 +160,13 @@ export default {
     selectedDuration: {
       get() {
         if (this.kind === 'audio' || this.kind === 'video') {
-          return this.value || {};
+          // TODO figure out how get the correct threshold emitted to parent
+          //this.value is {model: reference, threshold: null}, or {model: time, threshold: 846}
+          // if model is approx_time and threshold is < ....
+            //return 'shortActivity';
+          // else
+            //return 'longActivity';
+          return this.value.model ? this.findDurationObject(this.value.model).id : 'exactTime';
         } else {
           console.log('!!!in selectedDuration getter() is ', this.value);
           return this.value || {};
@@ -163,13 +174,34 @@ export default {
       },
       set(duration) {
         this.durationValue = duration;
-        console.log('!!!in selectedDuration: durationValue is ', duration);
-        if (
-          this.durationValue === 'Exact time to complete' ||
-          this.durationValue === 'Short activity' ||
-          this.durationValue === 'Long activity'
+        if (this.durationValue === 'exactTime') {
+          console.log('!!! setting new duration', this.durationValue);
+          this.handleInput({
+            suggested_duration: 849, //TODO: temporary - remove!
+            completion_criteria: {
+              model: CompletionCriteriaModels.TIME,
+              threshold: 849, //TODO: temporary - remove!
+            },
+          });
+        } else if (
+          this.durationValue === 'shortActivity' ||
+          this.durationValue === 'longActivity'
         ) {
-          this.handleInput({ suggested_duration: this.durationInSeconds });
+          console.log('!!! setting new duration', this.durationValue);
+          this.handleInput({
+            suggested_duration: this.durationInSeconds,
+            completion_criteria: {
+              model: CompletionCriteriaModels.APPROX_TIME,
+              threshold: null,
+            },
+          });
+        } else if (this.durationValue === 'reference') {
+          this.handleInput({
+            completion_criteria: {
+              model: CompletionCriteriaModels.REFERENCE,
+              threshold: null,
+            },
+          });
         }
 
         // // Duration for when COMPLETION is set to 'All content viewed'
@@ -235,6 +267,7 @@ export default {
       },
       set(value) {
         this.completionValue = value;
+        console.log('!! completionValue', this.completionValue);
 
         //Do something if completion is 'All content viewed', else wait for duration to be set
         if (this.completionValue === CompletionOptionsMap.allContent) {
@@ -253,39 +286,60 @@ export default {
         value: CompletionOptionsMap[model],
       }));
     },
+    showDurationOptions() {
+      //this is used because of this Vuetify issue for dropdowns with multiple values: https://github.com/vuetifyjs/vuetify/issues/11529
+      return [
+        {
+          text: this.$tr('exactTime'),
+          value: CompletionCriteriaModels.TIME,
+          id: 'exactTime',
+        },
+        {
+          text: this.translateMetadataString('shortActivity'),
+          value: CompletionCriteriaModels.APPROX_TIME,
+          id: 'shortActivity',
+        },
+        {
+          text: this.translateMetadataString('longActivity'),
+          value: CompletionCriteriaModels.APPROX_TIME,
+          id: 'longActivity',
+        },
+        {
+          text: this.translateMetadataString('readReference'),
+          value: CompletionCriteriaModels.REFERENCE,
+          id: 'reference',
+        },
+      ];
+    },
     durationOptions() {
-      return ['Exact time to complete', 'Short activity', 'Long activity', 'Reference'];
+      return this.showDurationOptions.map((model) => ({ value: model.id, text: model.text }));
     },
     completionRules() {
       return this.required ? getCompletionValidators().map(translateValidator) : [];
     },
     durationRules() {
-      return this.required ? getDurationValidators().map(translateValidator) : [];
+      return getDurationValidators().map(translateValidator);
     },
   },
   methods: {
+    findDurationObject(model) {
+      //workaround for Vuetify issue with multiple ids in dropdowns
+      return this.showDurationOptions.find((i) => i.value === model);
+    },
     trackClick(label) {
       this.$analytics.trackClick('channel_editor_modal_details', label);
     },
-    handleInput(newValue) {
-      console.log('!!in handleInput, newValue is ', newValue, this.value);
-      let data;
-      if (newValue.model) {
-        data = {
-          ...this.value,
-          extra_fields: {
-            options: {
-              completion_criteria: {
-                ...newValue,
-              },
-            },
-          },
-        };
-      } else {
-        data = {
-          ...this.value,
-          ...newValue
-        };
+    handleInput({ completion_criteria, suggested_duration } = {}) {
+      const data = {
+        completion_criteria,
+        suggested_duration,
+      };
+      console.log('!!! in handleInput, orig data is: ', data)
+      if (!completion_criteria) {
+        data['completion_criteria'] = this.value['completion_criteria'];
+      }
+      if (suggested_duration === undefined) {
+        data['suggested_duration'] = this.value['suggested_duration'];
       }
       console.log('!!! in handleInput, data is ', data);
       this.$emit('input', data);
@@ -297,6 +351,7 @@ export default {
     completeDuration: 'Complete duration',
     goal: 'Practice until goal is met',
     practiceQuiz: 'Practice quiz',
+    exactTime: 'Exact time to complete',
     /* eslint-enable kolibri/vue-no-unused-translations */
     referenceHint:
       'Progress will not be tracked on reference material unless learners mark it as complete',

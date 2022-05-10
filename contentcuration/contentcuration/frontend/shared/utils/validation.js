@@ -113,7 +113,7 @@ function _getErrorMsg(error) {
     [ValidationErrors.MASTERY_MODEL_N_WHOLE_NUMBER]: translator.$tr('masteryModelNWholeNumber'),
     [ValidationErrors.MASTERY_MODEL_N_GT_ZERO]: translator.$tr('masteryModelNGtZero'),
     [ValidationErrors.LEARNING_ACTIVITY_REQUIRED]: translator.$tr('learningActivityRequired'),
-    [ValidationErrors.COMPLETION_REQUIRED]: translator.$tr('completionRequired'),
+    [ValidationErrors.DURATION_REQUIRED]: translator.$tr('durationRequired'),
   };
 
   return messages[error];
@@ -149,7 +149,7 @@ export function getCompletionValidators() {
 }
 
 export function getDurationValidators() {
-  return [value => Boolean(value) || ValidationErrors.DURATION_REQUIRED];
+  return [value => Boolean(value.length) || ValidationErrors.DURATION_REQUIRED];
 }
 
 export function getLicenseDescriptionValidators() {

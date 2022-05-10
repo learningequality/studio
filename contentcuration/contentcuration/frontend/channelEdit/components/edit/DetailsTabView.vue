@@ -128,7 +128,7 @@
           <CompletionOptions
             v-model="completionAndDuration"
             :kind="firstNode.kind"
-            :file="nodeFiles[0]"
+            :fileDuration="fileDuration"
             :required="!isDocument"
           />
         </VFlex>
@@ -641,13 +641,16 @@
         get() {
           const options = this.getExtraFieldsValueFromNodes('options') || {};
           const suggested_duration = this.getValueFromNodes('suggested_duration');
-          // return options.completion_criteria || {};
+          console.log('completionAndDuration, return', options, {
+            ...suggested_duration || {},
+            ...options.completion_criteria || {},
+          })
           return {
-            suggested_duration,
+            ...suggested_duration || {},
             ...options.completion_criteria || {},
           }
         },
-        set(value) {
+        set({ completion_criteria, suggested_duration }) {
           // TODO Remove validation if unnecessary after implementing `completionCriteria`
           // if (validateCompletionCriteria(completion_criteria)) {
             // const options = { completion_criteria };
@@ -655,28 +658,13 @@
           // } else {
           //   console.warn('Invalid completion criteria', [...validateCompletionCriteria.errors]);
           // }
-          // const options = { value };
-          console.log('!!suggested_duration', value);
-          this.update({ ['suggested_duration']: value });
-
-          // this.updateExtraFields({ options });
+          if (completion_criteria) {
+            const options = { completion_criteria };
+            this.updateExtraFields({ options });
+          }
+          this.update({suggested_duration});
         },
       },
-      // completionAndDuration() {
-      //   get() {
-      // set(value) {
-      //   this.update({ [key]: value });
-      //       return {
-      //       suggested_duration: this.suggested_duration,
-      //       completion_criteria: this.completion_criteria,
-      //     };
-      //   },
-      //   set(value) {
-      //     this.suggested_duration = value.suggested_duration;
-      //     this.completion_criteria = value.completion_criteria;
-      //   },
-      // },
-
       /* COMPUTED PROPS */
       disableAuthEdits() {
         return this.nodes.some(node => node.freeze_authoring_data);
@@ -711,6 +699,13 @@
       },
       nodeFiles() {
         return (this.firstNode && this.getContentNodeFiles(this.firstNode.id)) || [];
+      },
+      fileDuration() {
+        if (this.firstNode.kind === 'audio' || this.firstNode.kind === 'video') {
+          return this.nodeFiles.filter(file => file.file_format === 'mp4' || file.file_format === 'mp3')[0].duration;
+        } else {
+          return null;
+        }
       },
       videoSelected() {
         return this.oneSelected && this.firstNode.kind === 'video';
@@ -765,6 +760,7 @@
         return Promise.all(Object.keys(this.diffTracker).map(this.saveFromDiffTracker));
       },
       update(payload) {
+        console.log('!!! update() payload', payload)
         this.nodeIds.forEach(id => {
           this.$set(this.diffTracker, id, {
             ...(this.diffTracker[id] || {}),
@@ -775,6 +771,7 @@
         });
       },
       updateExtraFields(extra_fields) {
+        console.log('!!!% extra_fields', extra_fields);
         this.nodeIds.forEach(id => {
           const existingData = this.diffTracker[id] || {};
           this.$set(this.diffTracker, id, {

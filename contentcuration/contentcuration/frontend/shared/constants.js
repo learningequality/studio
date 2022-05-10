@@ -1,5 +1,6 @@
 import invert from 'lodash/invert';
 import Subjects from 'kolibri-constants/labels/Subjects';
+import CompletionCriteria from 'kolibri-constants/CompletionCriteria';
 import featureFlagsSchema from 'static/feature_flags.json';
 
 export { default as LearningActivities } from 'kolibri-constants/labels/LearningActivities';
@@ -11,6 +12,7 @@ export { default as ContentLevels } from 'kolibri-constants/labels/Levels';
 export { default as ResourcesNeededTypes } from 'kolibri-constants/labels/Needs';
 
 export const CategoriesLookup = invert(Subjects);
+export const CompletionCriteriaLookup = invert(CompletionCriteria);
 
 export const ContentDefaults = {
   author: 'author',
@@ -166,6 +168,7 @@ export const ValidationErrors = {
   NO_VALID_PRIMARY_FILES: 'NO_VALID_PRIMARY_FILES',
   INVALID_COMPLETION_CRITERIA_MODEL: 'INVALID_COMPLETION_CRITERIA_MODEL',
   LEARNING_ACTIVITY_REQUIRED: 'LEARNING_ACTIVITY_REQUIRED',
+  DURATION_REQUIRED: 'DURATION_REQUIRED',
   ...fileErrors,
 };
 

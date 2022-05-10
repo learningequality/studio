@@ -33,12 +33,12 @@
       },
       duration: {
         type: Number,
-        default: 0,
+        default: null,
       },
     },
     data() {
       return {
-        defaultUploadTime: this.duration,
+        defaultUploadTime: this.duration || 12,
       };
     },
     computed: {
