@@ -14,7 +14,7 @@
       :rules="rules"
       menu-props="offsetY"
       box
-      attach="role_visibility"
+      attach="#role_visibility"
       @focus="$emit('focus')"
     >
       <template v-slot:append-outer>

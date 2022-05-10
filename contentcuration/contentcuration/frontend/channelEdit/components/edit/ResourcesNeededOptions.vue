@@ -10,7 +10,7 @@
     multiple
     deletableChips
     clearable
-    attach="resourcesNeeded"
+    attach="#resources_needed"
   />
 
 </template>
