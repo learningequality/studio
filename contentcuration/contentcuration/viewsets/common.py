@@ -176,7 +176,7 @@ class JSONFieldDictSerializer(DotPathValueMixin, serializers.Serializer):
             elif hasattr(self.fields[key], "update"):
                 # If the nested field has an update method (e.g. a nested serializer),
                 # call the update value so that we can do any recursive updates
-                self.fields[key].update(instance[key], validated_data[key])
+                instance[key] = self.fields[key].update(instance.get(key, {}), validated_data[key])
             else:
                 # Otherwise, just update the value
                 instance[key] = validated_data[key]

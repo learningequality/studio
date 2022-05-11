@@ -638,6 +638,20 @@ class SyncTestCase(StudioAPITestCase):
         with self.assertRaises(KeyError):
             models.ContentNode.objects.get(id=contentnode.id).extra_fields["m"]
 
+    def test_update_contentnode_add_to_extra_fields_nested(self):
+        user = testdata.user()
+        metadata = self.contentnode_db_metadata
+        contentnode = models.ContentNode.objects.create(**metadata)
+        self.client.force_authenticate(user=user)
+        # Add extra_fields.options.modality
+        response = self.client.post(
+            self.sync_url,
+            [generate_update_event(contentnode.id, CONTENTNODE, {"extra_fields.options.modality": "QUIZ"})],
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(models.ContentNode.objects.get(id=contentnode.id).extra_fields["options"]["modality"], "QUIZ")
+
     def test_update_contentnode_remove_from_extra_fields_nested(self):
         user = testdata.user()
         metadata = self.contentnode_db_metadata
