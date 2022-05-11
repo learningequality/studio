@@ -149,7 +149,10 @@ class DotPathValueMixin(object):
                 # with the value of the child field.
                 # N.B. the get_value method expects a dictionary that references the field's name
                 # not just the value.
-                value[keys[0]] = fields[keys[0]].get_value({keys[0]: {keys[1]: html_value[key]}})
+                nested_value = fields[keys[0]].get_value({keys[0]: {keys[1]: html_value[key]}})
+                if keys[0] not in value:
+                    value[keys[0]] = {}
+                value[keys[0]].update(nested_value)
                 if key in value:
                     del value[key]
             else:
@@ -176,7 +179,7 @@ class JSONFieldDictSerializer(DotPathValueMixin, serializers.Serializer):
             elif hasattr(self.fields[key], "update"):
                 # If the nested field has an update method (e.g. a nested serializer),
                 # call the update value so that we can do any recursive updates
-                self.fields[key].update(instance[key], validated_data[key])
+                instance[key] = self.fields[key].update(instance.get(key, {}), validated_data[key])
             else:
                 # Otherwise, just update the value
                 instance[key] = validated_data[key]
