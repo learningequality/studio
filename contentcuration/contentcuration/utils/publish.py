@@ -406,12 +406,10 @@ def process_assessment_metadata(ccnode, kolibrinode):
     exercise_data_type = ""
     if exercise_data.get('mastery_model'):
         exercise_data_type = exercise_data.get('mastery_model')
-    if exercises.M_OF_N:
-        exercise_data_type = exercises.M_OF_N
     if exercise_data.get('option') or exercise_data.get('option').get('completion_criteria') or exercise_data.get('option').get('completion_criteria').get('mastery_model'):
         exercise_data_type = exercise_data.get('option').get('completion_criteria').get('mastery_model')
 
-    mastery_model = {'type': exercise_data_type}
+    mastery_model = {'type': exercise_data_type or exercises.M_OF_N}
     if mastery_model['type'] == exercises.M_OF_N:
         mastery_model.update({'n': exercise_data.get('n') or min(5, assessment_items.count()) or 1})
         mastery_model.update({'m': exercise_data.get('m') or min(5, assessment_items.count()) or 1})
