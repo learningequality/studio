@@ -708,6 +708,40 @@ class SyncTestCase(StudioAPITestCase):
         self.assertEqual(c.extra_fields["options"]["completion_criteria"]["model"], completion_criteria.TIME)
         self.assertEqual(c.extra_fields["options"]["completion_criteria"]["threshold"], 10)
 
+    def test_update_contentnode_update_options_completion_criteria_threshold_only(self):
+        user = testdata.user()
+        metadata = self.contentnode_db_metadata
+        metadata["extra_fields"] = {
+            "options": {
+                "completion_criteria": {
+                    "model": completion_criteria.TIME,
+                    "threshold": 5,
+                }
+            },
+        }
+        contentnode = models.ContentNode.objects.create(**metadata)
+        self.client.force_authenticate(user=user)
+        # Change extra_fields.options.completion_criteria.model
+        # and extra_fields.options.completion_criteria.threshold
+        response = self.client.post(
+            self.sync_url,
+            [
+                generate_update_event(
+                    contentnode.id,
+                    CONTENTNODE,
+                    {
+                        "extra_fields.options.completion_criteria.threshold": 10
+                    }
+                )
+            ],
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        c = models.ContentNode.objects.get(id=contentnode.id)
+
+        self.assertEqual(c.extra_fields["options"]["completion_criteria"]["model"], completion_criteria.TIME)
+        self.assertEqual(c.extra_fields["options"]["completion_criteria"]["threshold"], 10)
+
     def test_update_contentnode_add_multiple_metadata_labels(self):
         user = testdata.user()
 

@@ -271,10 +271,10 @@ class CompletionCriteriaSerializer(JSONFieldDictSerializer):
     model = CharField()
     learner_managed = BooleanField(required=False)
 
-    def to_internal_value(self, data):
-        output = super().to_internal_value(data)
-        completion_criteria_validator.validate(output)
-        return output
+    def update(self, instance, validated_data):
+        instance = super(CompletionCriteriaSerializer, self).update(instance, validated_data)
+        completion_criteria_validator.validate(instance)
+        return instance
 
 
 class ExtraFieldsOptionsSerializer(JSONFieldDictSerializer):
