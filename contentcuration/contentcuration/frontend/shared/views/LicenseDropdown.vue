@@ -18,7 +18,7 @@
         menu-props="offsetY"
         class="ma-0"
         box
-        attach="license"
+        attach="#license"
         @focus="$emit('focus')"
       >
         <template #append-outer>

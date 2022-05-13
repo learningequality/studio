@@ -61,18 +61,21 @@
             >
               <!-- Learning activity -->
               <LearningActivityOptions
+                id="learning_activities"
                 ref="learning_activities"
                 v-model="contentLearningActivities"
                 @focus="trackClick('Learning activities')"
               />
               <!-- Level -->
               <LevelsOptions
+                id="levels"
                 ref="contentLevel"
                 v-model="contentLevel"
                 @focus="trackClick('Levels dropdown')"
               />
               <!-- What you will need -->
               <ResourcesNeededOptions
+                id="resources_needed"
                 ref="resourcesNeeded"
                 v-model="resourcesNeeded"
                 @focus="trackClick('What you will need')"
@@ -106,6 +109,8 @@
               </VCombobox>
             </VFlex>
           </VLayout>
+          <!-- Category -->
+          <CategoryOptions ref="categories" v-model="categories" />
         </VFlex>
       </VLayout>
 
@@ -176,6 +181,7 @@
           </h1>
           <!-- Language -->
           <LanguageDropdown
+            id="language"
             ref="language"
             v-model="language"
             class="mb-2"
@@ -189,6 +195,7 @@
           <!-- Visibility -->
           <VisibilityDropdown
             v-if="allResources"
+            id="role_visibility"
             ref="role_visibility"
             v-model="role"
             :placeholder="getPlaceholder('role')"
@@ -299,6 +306,7 @@
 
             <!-- License -->
             <LicenseDropdown
+              id="license"
               ref="license"
               v-model="licenseItem"
               :required="isUnique(license) && isUnique(license_description) && !disableAuthEdits"
@@ -366,6 +374,7 @@
   import LevelsOptions from './LevelsOptions.vue';
   import ResourcesNeededOptions from './ResourcesNeededOptions.vue';
   import LearningActivityOptions from './LearningActivityOptions.vue';
+  import CategoryOptions from './CategoryOptions.vue';
 
   import {
     getTitleValidators,
@@ -459,6 +468,7 @@
       LevelsOptions,
       ResourcesNeededOptions,
       LearningActivityOptions,
+      CategoryOptions,
     },
     mixins: [constantsTranslationMixin, metadataTranslationMixin],
     props: {
@@ -541,7 +551,7 @@
       contentLevel: generateNestedNodesGetterSetter('grade_levels'),
       resourcesNeeded: generateNestedNodesGetterSetter('learner_needs'),
       contentLearningActivities: generateNestedNodesGetterSetter('learning_activities'),
-
+      categories: generateNestedNodesGetterSetter('categories'),
       mastery_model() {
         return this.getExtraFieldsValueFromNodes('mastery_model');
       },
