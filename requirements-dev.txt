@@ -83,7 +83,7 @@ django-debug-toolbar==1.9.1
     # via
     #   -r requirements-dev.in
     #   django-debug-panel
-django==3.2.5
+django==3.2.13
     # via
     #   -c requirements.txt
     #   django-debug-toolbar
@@ -348,9 +348,8 @@ tornado==6.1
     # via flower
 typed-ast==1.5.4
     # via astroid
-typing-extensions==4.0.1
+typing-extensions==4.1.1
     # via
-    #   -c requirements.txt
     #   asgiref
     #   astroid
     #   locust
