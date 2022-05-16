@@ -33,9 +33,14 @@
       </VFlex>
       <VFlex xs6 md6>
         <ShortOrLongActivity
-          v-if="selectedDuration === 'shortActivity' || selectedDuration === 'longActivity'"
+          v-if="
+            selectedDuration === 'shortActivity' ||
+              selectedDuration === 'longActivity'
+          "
           v-model="minutes"
-          :shortActivity="selectedDuration === 'shortActivity' ? true : false"
+          :shortActivity="
+            selectedDuration === 'shortActivity' || durationValue === 'shortActivity' ? true : false
+          "
         />
         <ExactTimeToCompleteActivity
           v-if="selectedDuration === 'exactTime' && durationValue !== 'reference'"
@@ -121,7 +126,6 @@ export default {
     return {
       // goal: 'M of N',
       durationValue: null,
-      durationInSeconds: 0,
       completionValue: 'All content viewed',
       time: this.value.suggested_duration || 0,
     };
@@ -135,64 +139,47 @@ export default {
         return this.time;
       },
       set(value) {
-        this.time = value;
-        console.log('!!! setting new minutes', value, this.time);
-        this.durationInSeconds = this.time * 60;
+        this.time = this.minutesToSeconds(value);
         if (
           this.durationValue === 'exactTime' ||
           this.durationValue === 'shortActivity' ||
           this.durationValue === 'longActivity'
         ) {
-          console.log('!!! setting the new minutes', this.durationInSeconds);
           this.handleInput({
-            suggested_duration: this.durationInSeconds,
+            suggested_duration: this.time,
             completion_criteria: {
               model: CompletionCriteriaModels.APPROX_TIME,
-              threshold: this.durationInSeconds,
+              threshold: this.time,
             },
           });
         }
       },
     },
-    // time() {
-    //   return (this.value.suggested_duration || 0);
-    // },
     selectedDuration: {
       get() {
         if (this.kind === 'audio' || this.kind === 'video') {
-          // TODO figure out how get the correct threshold emitted to parent
-          //this.value is {model: reference, threshold: null}, or {model: time, threshold: 846}
-          // if model is approx_time and threshold is < ....
-            //return 'shortActivity';
-          // else
-            //return 'longActivity';
+          if (this.value.model === 'approx_time') {
+            if (this.durationValue === 'longActivity') {
+              return 'longActivity';
+            }
+            if (this.durationValue === 'shortActivity') {
+              return 'shortActivity';
+            }
+          }
           return this.value.model ? this.findDurationObject(this.value.model).id : 'exactTime';
+          //this could probably be simplified to just be 'reference'
         } else {
-          console.log('!!!in selectedDuration getter() is ', this.value);
           return this.value || {};
         }
       },
       set(duration) {
         this.durationValue = duration;
         if (this.durationValue === 'exactTime') {
-          console.log('!!! setting new duration', this.durationValue);
           this.handleInput({
             suggested_duration: 849, //TODO: temporary - remove!
             completion_criteria: {
               model: CompletionCriteriaModels.TIME,
               threshold: 849, //TODO: temporary - remove!
-            },
-          });
-        } else if (
-          this.durationValue === 'shortActivity' ||
-          this.durationValue === 'longActivity'
-        ) {
-          console.log('!!! setting new duration', this.durationValue);
-          this.handleInput({
-            suggested_duration: this.durationInSeconds,
-            completion_criteria: {
-              model: CompletionCriteriaModels.APPROX_TIME,
-              threshold: null,
             },
           });
         } else if (this.durationValue === 'reference') {
@@ -202,57 +189,34 @@ export default {
               threshold: null,
             },
           });
+        } else if (
+          this.durationValue === 'shortActivity' ||
+          this.durationValue === 'longActivity'
+        ) {
+          if (this.durationValue === 'shortActivity' && this.value.suggested_duration > 1860) {
+            this.time = 600;
+          } else if (this.durationValue === 'longActivity' && this.value.suggested_duration < 1860) {
+            this.time = 3000;
+          }
+          // If we are switching between short and long activities
+          if (this.value.model === 'approx_time') {
+            this.handleInput({
+              suggested_duration: this.time,
+              completion_criteria: {
+                model: CompletionCriteriaModels.APPROX_TIME,
+                threshold: this.time,
+              },
+            });
+          } else {
+            // If we are switching from reference or exact time to short or long activities
+            this.handleInput({
+              completion_criteria: {
+                model: CompletionCriteriaModels.APPROX_TIME,
+                threshold: this.value.suggested_duration,
+              },
+            });
+          }
         }
-
-        // // Duration for when COMPLETION is set to 'All content viewed'
-        // if (this.completionValue === 'All content viewed') {
-        //   if (duration === 'Reference') {
-        //     this.handleInput({
-        //       model: CompletionCriteriaModels.REFERENCE,
-        //       threshold: '100%', //TODO: double-check if this is correct; is there suggested_duration?
-        //     });
-        //     console.log('!!!in selectedDuration: durationValue', duration);
-        //   } else {
-        //     this.handleInput({ model: CompletionCriteriaModels.PAGES, threshold: '100%' });
-        //     console.log('!!!in selectedDuration: durationValue', duration);
-
-        //     // if (this.time === 0) {
-        //     //   if (this.durationValue === 'Short activity') {
-        //     //     this.handleInput({ suggested_duration: 10*60 });
-        //     //   } else if (this.durationValue === 'Long activity') {
-        //     //     this.handleInput({ suggested_duration: 45*60 });
-        //     //   }
-        //     // }
-
-        //     this.durationInSeconds = this.time * 60;
-        //     this.$emit('update', this.durationInSeconds);
-        //     // this.handleInput({ suggested_duration: this.durationInSeconds });
-        //   }
-        // }
-
-        // if (this.completionValue === 'Complete duration') {
-        //   if (duration === 'Exact time to complete') {
-        //     console.log(
-        //       '!!!model: CompletionCriteriaModels.TIME, this.time is',
-        //       this.time,
-        //       this.durationInSeconds
-        //     );
-        //     this.handleInput({
-        //       model: CompletionCriteriaModels.TIME,
-        //       threshold: this.durationInSeconds,
-        //     });
-        //   } else if (duration === 'Short activity' || duration === 'Long activity') {
-        //     console.log(
-        //       '!!!model: CompletionCriteriaModels.APPROX_TIME, this.time is',
-        //       this.time,
-        //       this.durationInSeconds
-        //     );
-        //     this.handleInput({
-        //       model: CompletionCriteriaModels.APPROX_TIME,
-        //       threshold: this.durationInSeconds,
-        //     });
-        //   }
-        // }
       },
     },
     selectedCompletion: {
@@ -267,7 +231,6 @@ export default {
       },
       set(value) {
         this.completionValue = value;
-        console.log('!! completionValue', this.completionValue);
 
         //Do something if completion is 'All content viewed', else wait for duration to be set
         if (this.completionValue === CompletionOptionsMap.allContent) {
@@ -329,19 +292,20 @@ export default {
     trackClick(label) {
       this.$analytics.trackClick('channel_editor_modal_details', label);
     },
+    minutesToSeconds(minutes) {
+      return minutes * 60;
+    },
     handleInput({ completion_criteria, suggested_duration } = {}) {
       const data = {
         completion_criteria,
         suggested_duration,
       };
-      console.log('!!! in handleInput, orig data is: ', data)
       if (!completion_criteria) {
         data['completion_criteria'] = this.value['completion_criteria'];
       }
       if (suggested_duration === undefined) {
         data['suggested_duration'] = this.value['suggested_duration'];
       }
-      console.log('!!! in handleInput, data is ', data);
       this.$emit('input', data);
     },
   },

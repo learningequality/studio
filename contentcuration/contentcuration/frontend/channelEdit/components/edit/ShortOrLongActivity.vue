@@ -1,20 +1,17 @@
 <template>
-
   <VFlex>
     <VLayout row wrap justify-space-between>
       <VFlex md2 sm3>
-        <VTextField
-          v-model.number="shortLongActivityMinutes"
-          box
-          :label="$tr('minutesRequired')"
-        />
+        <VTextField v-model.number="shortLongActivityMinutes" box :label="$tr('minutesRequired')" />
       </VFlex>
       <VFlex md9 sm8>
         <VSlider
           v-model="shortLongActivityMinutes"
           :label="label"
           :max="maxRange"
-          :min="shortActivity ? 0 : 31"
+          :min="shortActivity ? 0 : 30"
+          :step="shortActivity ? 5 : 10"
+          ticks="always"
         />
       </VFlex>
     </VLayout>
@@ -24,57 +21,56 @@
       </VFlex>
     </VLayout>
   </VFlex>
-
 </template>
 
 <script>
-
-  export default {
-    name: 'ShortOrLongActivity',
-    props: {
-      shortActivity: {
-        type: Boolean,
-        default: false,
-      },
-      // value: {
-      //   type: Number,
-      //   default: 0,
-      // },
+const SLIDER_MIDPOINT = 1800;
+export default {
+  name: 'ShortOrLongActivity',
+  props: {
+    shortActivity: {
+      type: Boolean,
+      default: false,
     },
-    data() {
-      return {
-        label: '',
-        shortMinutes: 10,
-        longMinutes: 45,
-      };
+    value: {
+      type: Number,
+      default: 0,
     },
-    computed: {
-      shortLongActivityMinutes: {
-        get() {
-          // return this.value;
-          return this.shortActivity ? this.shortMinutes : this.longMinutes;
-        },
-        set(value) {
-          if (this.shortActivity) {
-            this.shortMinutes = value < this.maxRange ? value : this.maxRange;
-          } else {
-            this.longMinutes = value > 31 ? value : 31;
-          }
-          this.$emit('input', value);
-        },
+  },
+  data() {
+    return {
+      label: '',
+      default: this.shortActivity ? 10 : 50,
+    };
+  },
+  computed: {
+    shortLongActivityMinutes: {
+      get() {
+        if (this.shortActivity) {
+          return this.value > SLIDER_MIDPOINT ? this.default : this.secondsToMinutes(this.value);
+        } else {
+          return this.value < SLIDER_MIDPOINT ? this.default : this.secondsToMinutes(this.value);
+        }
       },
-      maxRange() {
-        return this.shortActivity ? 30 : 120;
+      set(value) {
+        this.$emit('input', value);
       },
     },
-    $trs: {
-      minutesRequired: 'Minutes',
-      optionalLabel:
-        '(Optional) Duration until resource is marked as complete. This value will not be shown to learners.',
+    maxRange() {
+      return this.shortActivity ? 30 : 120;
     },
-  };
-
+  },
+  methods: {
+    secondsToMinutes(seconds) {
+      return Math.floor(seconds / 60);
+    },
+  },
+  $trs: {
+    minutesRequired: 'Minutes',
+    optionalLabel:
+      '(Optional) Duration until resource is marked as complete. This value will not be shown to learners.',
+  },
+};
 </script>
 <style lang="scss">
-
 </style>
