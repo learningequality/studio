@@ -406,7 +406,7 @@ def process_assessment_metadata(ccnode, kolibrinode):
     exercise_data_type = ""
     if exercise_data.get('mastery_model'):
         exercise_data_type = exercise_data.get('mastery_model')
-    if exercise_data.get('option') or exercise_data.get('option').get('completion_criteria') or exercise_data.get('option').get('completion_criteria').get('mastery_model'):
+    if exercise_data.get('option') and exercise_data.get('option').get('completion_criteria') and exercise_data.get('option').get('completion_criteria').get('mastery_model'):
         exercise_data_type = exercise_data.get('option').get('completion_criteria').get('mastery_model')
 
     mastery_model = {'type': exercise_data_type or exercises.M_OF_N}
