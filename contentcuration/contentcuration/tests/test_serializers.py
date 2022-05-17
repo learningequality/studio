@@ -1,8 +1,8 @@
 from __future__ import absolute_import
 
-from django.core.exceptions import ValidationError
 from django.db.models.query import QuerySet
 from django.test.testcases import SimpleTestCase
+from rest_framework import serializers
 
 from .base import BaseAPITestCase
 from contentcuration.models import Channel
@@ -42,14 +42,14 @@ class ExtraFieldsOptionsSerializerTestCase(SimpleTestCase):
         serializer.is_valid()
         try:
             serializer.update({}, serializer.validated_data)
-        except ValidationError:
+        except serializers.ValidationError:
             self.fail("Completion criteria should be valid")
 
     def test_completion_criteria__invalid(self):
         self.data.update(completion_criteria={"model": "time", "threshold": "test"})
         serializer = self.serializer
         serializer.is_valid()
-        with self.assertRaises(ValidationError):
+        with self.assertRaises(serializers.ValidationError):
             serializer.update({}, serializer.validated_data)
 
 
