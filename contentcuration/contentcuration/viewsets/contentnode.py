@@ -3,6 +3,7 @@ from functools import partial
 from functools import reduce
 
 from django.conf import settings
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import IntegrityError
 from django.db import models
 from django.db.models import Exists
@@ -273,7 +274,10 @@ class CompletionCriteriaSerializer(JSONFieldDictSerializer):
 
     def update(self, instance, validated_data):
         instance = super(CompletionCriteriaSerializer, self).update(instance, validated_data)
-        completion_criteria_validator.validate(instance)
+        try:
+            completion_criteria_validator.validate(instance)
+        except DjangoValidationError as e:
+            raise ValidationError(e)
         return instance
 
 
