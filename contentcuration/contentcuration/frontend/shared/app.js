@@ -3,6 +3,7 @@ import Vue from 'vue';
 import VueRouter from 'vue-router';
 import Vuetify from 'vuetify';
 import VueIntl from 'vue-intl';
+import VueCompositionAPI from '@vue/composition-api';
 import Croppa from 'vue-croppa';
 import { Workbox, messageSW } from 'workbox-window';
 import KThemePlugin from 'kolibri-design-system/lib/KThemePlugin';
@@ -29,6 +30,7 @@ if (process.env.NODE_ENV !== 'production') {
 Vue.use(Croppa);
 Vue.use(VueIntl);
 Vue.use(VueRouter);
+Vue.use(VueCompositionAPI);
 Vue.use(Vuetify, {
   rtl: window.isRTL,
   // Enable css variables (e.g. `var(--v-grey-darken1)`)
