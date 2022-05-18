@@ -23,7 +23,7 @@
             />
             <FileStatusText
               v-if="erroredFile"
-              :fileId="erroredFile.id"
+              :fileId="erroredFile"
               :readonly="Boolean(fileUploadId)"
               data-test="error"
               @open="openFileDialog"
@@ -37,7 +37,7 @@
         <VListTileContent>
           <VListTileTitle class="grey--text text-xs-right">
             <span v-if="fileDisplay.uploading" data-test="uploading">
-              <FileStatusText :fileId="fileDisplay.id" @open="openFileDialog" />
+              <FileStatusText :file="fileDisplay" @open="openFileDialog" />
             </span>
             <span v-else-if="!fileDisplay.error">
               {{ formatFileSize(fileDisplay.file_size) }}
@@ -59,9 +59,9 @@
 
 <script>
 
-  import { mapGetters } from 'vuex';
+  import useFiles from 'shared/composables/useFiles';
+  import useFileUpload from 'shared/composables/useFileUpload';
   import FileStatusText from 'shared/views/files/FileStatusText';
-  import { fileSizeMixin } from 'shared/mixins';
   import Uploader from 'shared/views/files/Uploader';
 
   export default {
@@ -70,7 +70,6 @@
       Uploader,
       FileStatusText,
     },
-    mixins: [fileSizeMixin],
     props: {
       file: {
         type: Object,
@@ -89,15 +88,19 @@
         required: false,
       },
     },
+    setup() {
+      const { formatFileSize } = useFiles();
+      const { getFileUpload } = useFileUpload();
+      return { formatFileSize, getFileUpload };
+    },
     data() {
       return {
         fileUploadId: null,
       };
     },
     computed: {
-      ...mapGetters('file', ['getFileUpload']),
       fileUpload() {
-        return this.fileUploadId && this.getFileUpload(this.fileUploadId);
+        return this.getFileUpload(this.fileUploadId);
       },
       fileDisplay() {
         if (

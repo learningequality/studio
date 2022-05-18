@@ -176,8 +176,8 @@
   import ClipboardChip from '../../components/ClipboardChip';
   import { RouteNames } from '../../constants';
   import ChannelActionsDropdown from './ChannelActionsDropdown';
+  import useFiles from 'shared/composables/useFiles';
   import Checkbox from 'shared/views/form/Checkbox';
-  import { fileSizeMixin } from 'shared/mixins';
 
   export default {
     name: 'ChannelItem',
@@ -186,7 +186,6 @@
       ClipboardChip,
       Checkbox,
     },
-    mixins: [fileSizeMixin],
     props: {
       value: {
         type: Array,
@@ -196,6 +195,10 @@
         type: String,
         required: true,
       },
+    },
+    setup() {
+      const { formatFileSize } = useFiles();
+      return { formatFileSize };
     },
     computed: {
       ...mapGetters('channel', ['getChannel']),

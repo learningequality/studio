@@ -68,7 +68,8 @@
 
   import { mapGetters } from 'vuex';
   import RequestForm from './RequestForm';
-  import { fileSizeMixin, constantsTranslationMixin } from 'shared/mixins';
+  import useFiles from 'shared/composables/useFiles';
+  import { constantsTranslationMixin } from 'shared/mixins';
   import { ContentKindsList, ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import theme from 'shared/vuetify/theme';
   import LoadingText from 'shared/views/LoadingText';
@@ -76,7 +77,11 @@
   export default {
     name: 'Storage',
     components: { LoadingText, RequestForm },
-    mixins: [fileSizeMixin, constantsTranslationMixin],
+    mixins: [constantsTranslationMixin],
+    setup() {
+      const { formatFileSize } = useFiles();
+      return { formatFileSize };
+    },
     data() {
       return {
         showRequestForm: false,

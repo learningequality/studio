@@ -1,6 +1,6 @@
 <template>
 
-  <VLayout :key="fileId" :class="{ fullscreen, renderer: loading }">
+  <VLayout :key="file ? file.id : ''" :class="{ fullscreen, renderer: loading }">
     <VCard v-if="!file" flat class="message-card">
       <VLayout align-center justify-center fill-height>
         {{ $tr('noFileText') }}
@@ -8,7 +8,7 @@
     </VCard>
     <VCard v-else-if="file.uploading || file.error" flat class="message-card">
       <VLayout align-center justify-center fill-height data-test="progress">
-        <FileStatus :fileId="file.id" large />
+        <FileStatus :file="file" large />
       </VLayout>
     </VCard>
     <VFlex v-else-if="isVideo">
@@ -66,7 +66,6 @@
 
   import uniqBy from 'lodash/uniqBy';
   import sortBy from 'lodash/sortBy';
-  import { mapGetters } from 'vuex';
   import EpubRenderer from './EpubRenderer';
   import FileStatus from 'shared/views/files/FileStatus';
 
@@ -77,12 +76,12 @@
       EpubRenderer,
     },
     props: {
-      fileId: {
-        type: String,
+      file: {
+        type: Object,
         required: false,
       },
-      nodeId: {
-        type: String,
+      supplementaryFiles: {
+        type: Array,
         required: false,
       },
       fullscreen: {
@@ -96,15 +95,10 @@
       };
     },
     computed: {
-      ...mapGetters('file', ['getContentNodeFileById', 'getContentNodeFiles']),
-      file() {
-        return this.getContentNodeFileById(this.nodeId, this.fileId);
-      },
-      supplementaryFiles() {
-        let files = this.nodeId ? this.getContentNodeFiles(this.nodeId) : [];
-        return files.filter(f => f.preset.supplementary);
-      },
       subtitles() {
+        if (!this.supplementaryFiles) {
+          return [];
+        }
         const files = this.supplementaryFiles.filter(f => f.preset.subtitle);
         return sortBy(
           uniqBy(files, f => f.language.id),
@@ -112,21 +106,24 @@
         );
       },
       isVideo() {
-        return this.file.file_format === 'mp4' || this.file.file_format === 'webm';
+        return (this.file && this.file.file_format === 'mp4') || this.file.file_format === 'webm';
       },
       isAudio() {
-        return this.file.file_format === 'mp3';
+        return this.file && this.file.file_format === 'mp3';
       },
       isHTML() {
-        return this.file.file_format === 'zip';
+        return this.file && this.file.file_format === 'zip';
       },
       isPDF() {
-        return this.file.file_format === 'pdf';
+        return this.file && this.file.file_format === 'pdf';
       },
       isEpub() {
-        return this.file.file_format === 'epub';
+        return this.file && this.file.file_format === 'epub';
       },
       htmlPath() {
+        if (!this.file) {
+          return '';
+        }
         return `/zipcontent/${this.file.checksum}.${this.file.file_format}`;
       },
       src() {
@@ -134,8 +131,8 @@
       },
     },
     watch: {
-      fileId(newFileId) {
-        this.loading = Boolean(newFileId);
+      file(newFile) {
+        this.loading = Boolean(newFile && newFile.id);
       },
     },
     $trs: {

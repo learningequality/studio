@@ -27,10 +27,10 @@ if (process.env.NODE_ENV !== 'production') {
   Vue.config.devtools = true;
 }
 
+Vue.use(VueCompositionAPI);
 Vue.use(Croppa);
 Vue.use(VueIntl);
 Vue.use(VueRouter);
-Vue.use(VueCompositionAPI);
 Vue.use(Vuetify, {
   rtl: window.isRTL,
   // Enable css variables (e.g. `var(--v-grey-darken1)`)

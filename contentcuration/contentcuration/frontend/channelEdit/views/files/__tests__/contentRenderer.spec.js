@@ -4,11 +4,6 @@ import { factory } from '../../../store';
 
 const store = factory();
 
-const testFile = {
-  id: 'test',
-  url: '',
-};
-
 function makeWrapper(props = {}) {
   return mount(ContentRenderer, {
     store,
@@ -21,16 +16,6 @@ function makeWrapper(props = {}) {
         file_format: 'mp3',
         preset: {},
         ...props,
-      },
-    },
-    computed: {
-      getContentNodeFileById() {
-        return () => {
-          return {
-            ...testFile,
-            ...props,
-          };
-        };
       },
     },
   });

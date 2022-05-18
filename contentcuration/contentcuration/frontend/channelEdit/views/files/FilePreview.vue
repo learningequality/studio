@@ -22,8 +22,8 @@
         </VBtn>
       </VToolbar>
       <ContentRenderer
-        :nodeId="nodeId"
-        :fileId="fileId"
+        :file="file"
+        :supplementaryFiles="supplementaryFiles"
         :fullscreen="fullscreen"
       />
       <p v-if="!fullscreen" class="mt-2">
@@ -43,7 +43,6 @@
 
   import fromPairs from 'lodash/fromPairs';
   import flatMap from 'lodash/flatMap';
-  import { mapGetters } from 'vuex';
   import ContentRenderer from './ContentRenderer';
   import { FormatPresetsList } from 'shared/leUtils/FormatPresets';
 
@@ -60,11 +59,15 @@
       ContentRenderer,
     },
     props: {
-      fileId: {
-        type: String,
+      node: {
+        type: Object,
+        required: true,
+      },
+      nodeFiles: {
+        type: Array,
         required: false,
       },
-      nodeId: {
+      fileId: {
         type: String,
         required: false,
       },
@@ -79,25 +82,23 @@
       };
     },
     computed: {
-      ...mapGetters('file', ['getContentNodeFileById']),
-      ...mapGetters('contentNode', ['getContentNode']),
-      node() {
-        return this.getContentNode(this.nodeId);
-      },
-      file() {
-        return this.getContentNodeFileById(this.nodeId, this.fileId);
-      },
       nodeTitle() {
         return this.node && this.node.title;
+      },
+      file() {
+        return this.nodeFiles.find(f => f.id === this.fileId);
+      },
+      supplementaryFiles() {
+        return this.nodeFiles.filter(f => f.preset.supplementary);
       },
       isPreviewable() {
         return Boolean(availablePreviewFormats[this.file.file_format]);
       },
       isAudio() {
-        return this.file.file_format === 'mp3';
+        return this.file && this.file.file_format === 'mp3';
       },
       isZip() {
-        return this.file.file_format === 'zip';
+        return this.file && this.file.file_format === 'zip';
       },
       showFullscreenOption() {
         return (

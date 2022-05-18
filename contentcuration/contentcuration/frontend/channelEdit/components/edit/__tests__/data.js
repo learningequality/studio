@@ -3,8 +3,6 @@ import { LicensesList } from 'shared/leUtils/Licenses';
 import contentNode from 'frontend/channelEdit/vuex/contentNode';
 import storeFactory from 'shared/vuex/baseStore';
 
-import fileUploadsModule from 'shared/vuex/file';
-
 export const editableFields = [
   'language',
   'title',
@@ -66,7 +64,6 @@ export const mockFunctions = {
 
 export const localStore = storeFactory({
   modules: {
-    file: fileUploadsModule,
     contentNode,
   },
 });

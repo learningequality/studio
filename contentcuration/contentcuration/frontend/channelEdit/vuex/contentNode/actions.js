@@ -9,8 +9,10 @@ import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 import { findLicense } from 'shared/utils/helpers';
 import { RolesNames } from 'shared/leUtils/Roles';
 import { isNodeComplete } from 'shared/utils/validation';
-
+import useFiles from 'shared/composables/useFiles';
 import db from 'shared/data/db';
+
+const { getContentNodeFiles } = useFiles();
 
 export function loadContentNodes(context, params = {}) {
   return ContentNode.where(params).then(contentNodes => {
@@ -337,18 +339,19 @@ export function updateContentNode(context, { id, ...payload } = {}) {
     ...node,
     ...contentNodeData,
   };
-  const complete = isNodeComplete({
-    nodeDetails: newNode,
-    assessmentItems: context.rootGetters['assessmentItem/getAssessmentItems'](id),
-    files: context.rootGetters['file/getContentNodeFiles'](id),
+  return getContentNodeFiles(id).then(files => {
+    const complete = isNodeComplete({
+      nodeDetails: newNode,
+      assessmentItems: context.rootGetters['assessmentItem/getAssessmentItems'](id),
+      files,
+    });
+    contentNodeData = {
+      ...contentNodeData,
+      complete,
+    };
+    context.commit('UPDATE_CONTENTNODE', { id, ...contentNodeData });
+    return ContentNode.update(id, contentNodeData);
   });
-  contentNodeData = {
-    ...contentNodeData,
-    complete,
-  };
-
-  context.commit('UPDATE_CONTENTNODE', { id, ...contentNodeData });
-  return ContentNode.update(id, contentNodeData);
 }
 
 export function addTags(context, { ids, tags }) {

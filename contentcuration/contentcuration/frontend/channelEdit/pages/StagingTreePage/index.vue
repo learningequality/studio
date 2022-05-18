@@ -247,7 +247,8 @@
   import ResourceDrawer from '../../components/ResourceDrawer';
   import Diff from './Diff';
   import DiffTable from './DiffTable';
-  import { fileSizeMixin, titleMixin, routerMixin } from 'shared/mixins';
+  import useFiles from 'shared/composables/useFiles';
+  import { titleMixin, routerMixin } from 'shared/mixins';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import BottomBar from 'shared/views/BottomBar';
   import Breadcrumbs from 'shared/views/Breadcrumbs';
@@ -275,7 +276,7 @@
       MainNavigationDrawer,
       OfflineText,
     },
-    mixins: [fileSizeMixin, titleMixin, routerMixin],
+    mixins: [titleMixin, routerMixin],
     props: {
       nodeId: {
         type: String,
@@ -285,6 +286,10 @@
         type: String,
         required: false,
       },
+    },
+    setup() {
+      const { formatFileSize } = useFiles();
+      return { formatFileSize };
     },
     data() {
       return {

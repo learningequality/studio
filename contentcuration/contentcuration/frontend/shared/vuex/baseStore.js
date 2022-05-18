@@ -6,7 +6,6 @@ import snackbar from './snackbar';
 import errors from './errors';
 import contextMenu from './contextMenu';
 import channel from './channel';
-import file from './file';
 import policies from './policies';
 import SyncProgressPlugin from './syncProgressPlugin';
 import PoliciesPlugin from './policies/plugin';
@@ -51,7 +50,6 @@ export default function storeFactory({
     snackbar,
     contextMenu,
     channel,
-    file,
     policies,
     ...modules,
   };

@@ -11,7 +11,7 @@
         <VLayout row align-center :class="hasError ? 'red--text' : 'grey--text'" class="body-1">
           <FileStatusText
             v-if="fileUpload && fileUpload.error || uploading"
-            :fileId="fileUpload && fileUpload.id"
+            :file="fileUpload"
             @open="openFileDialog"
           />
           <template v-else>
@@ -38,7 +38,7 @@
                   data-test="generating"
                   color="greenSuccess"
                 />
-                <FileStatus v-else :fileId="fileUpload.id" large data-test="progress" />
+                <FileStatus v-else :file="fileUpload" large data-test="progress" />
               </p>
               <ActionLink
                 v-if="!hasError"
@@ -187,10 +187,13 @@
 
 <script>
 
-  import { mapActions, mapGetters } from 'vuex';
+  import { mapGetters } from 'vuex';
+  import { onMounted } from '@vue/composition-api';
   import ThumbnailGenerator from './ThumbnailGenerator';
   import ThumbnailCard from './ThumbnailCard';
-  import { fileSizeMixin, fileStatusMixin } from 'shared/mixins';
+  import useFiles from 'shared/composables/useFiles';
+  import useContentNodesFiles from 'shared/composables/useContentNodesFiles';
+  import useFileUpload from 'shared/composables/useFileUpload';
   import { FormatPresetsList } from 'shared/leUtils/FormatPresets';
   import Uploader from 'shared/views/files/Uploader';
   import FileDropzone from 'shared/views/files/FileDropzone';
@@ -199,6 +202,7 @@
   import IconButton from 'shared/views/IconButton';
   import Thumbnail from 'shared/views/files/Thumbnail';
   import { ASPECT_RATIO, THUMBNAIL_WIDTH } from 'shared/constants';
+  import { File } from 'shared/data/resources';
 
   export default {
     name: 'ContentNodeThumbnail',
@@ -212,7 +216,6 @@
       Thumbnail,
       ThumbnailCard,
     },
-    mixins: [fileSizeMixin, fileStatusMixin],
     props: {
       value: {
         type: Object,
@@ -232,6 +235,24 @@
         required: true,
       },
     },
+    setup(props) {
+      const { getErrorMessage, formatFileSize } = useFiles();
+      const { subscribeContentNodesFiles, contentNodesFiles } = useContentNodesFiles();
+      const { getFileUpload, deleteFileUpload } = useFileUpload();
+
+      onMounted(() => {
+        subscribeContentNodesFiles([props.nodeId]);
+      });
+
+      return {
+        getErrorMessage,
+        formatFileSize,
+        subscribeContentNodesFiles,
+        contentNodeFiles: contentNodesFiles,
+        getFileUpload,
+        deleteFileUpload,
+      };
+    },
     data() {
       return {
         cropping: false,
@@ -245,12 +266,8 @@
     },
     computed: {
       ...mapGetters('contentNode', ['getContentNode']),
-      ...mapGetters('file', ['getContentNodeFiles', 'getFileUpload']),
-      files() {
-        return this.getContentNodeFiles(this.nodeId);
-      },
       fileUpload() {
-        return this.fileUploadId && this.getFileUpload(this.fileUploadId);
+        return this.getFileUpload(this.fileUploadId);
       },
       allowGeneration() {
         // Not allowed for channels, when operations are in progress, or in cropping mode
@@ -281,7 +298,7 @@
         if (this.generating) {
           return this.$tr('generatingThumbnail');
         } else if (this.hasError) {
-          return this.errorMessage(this.fileUpload.id);
+          return this.getErrorMessage(this.fileUpload);
         } else if (this.uploading) {
           return this.$tr('uploadingThumbnail');
         } else if (!this.value) {
@@ -325,7 +342,7 @@
           return null;
         }
 
-        const file = this.files.find(f => !f.preset.supplementary && f.url);
+        const file = this.contentNodeFiles.find(f => !f.preset.supplementary && f.url);
         return (file && file.url.split('?')[0]) || '';
       },
       primaryFileName() {
@@ -333,7 +350,7 @@
           return null;
         }
 
-        const file = this.files.find(f => !f.preset.supplementary && f.url);
+        const file = this.contentNodeFiles.find(f => !f.preset.supplementary && f.url);
         return (file && `${file.checksum}.${file.file_format}`) || '';
       },
       width() {
@@ -344,9 +361,11 @@
       },
     },
     watch: {
-      nodeId(id) {
-        if (id) {
+      nodeId(newId, oldId) {
+        if (newId !== oldId) {
+          this.deleteFileUpload(oldId);
           this.reset();
+          this.subscribeContentNodesFiles([newId]);
         }
       },
       hasError(error) {
@@ -354,7 +373,6 @@
       },
     },
     methods: {
-      ...mapActions('file', ['deleteFile']),
       handleUploading(fileUpload) {
         // Set a blank encoding so that we apply
         // new croppa metadata to the new image.
@@ -379,13 +397,11 @@
         }
         if (this.removeOnCancel) {
           if (this.fileUpload) {
-            this.deleteFile(this.fileUpload);
+            File.delete(this.fileUpload.id);
           }
-          this.reset();
-        } else {
-          this.cropping = false;
-          this.generating = false;
         }
+        this.deleteFileUpload(this.fileUploadId);
+        this.reset();
       },
 
       /* CROPPING FUNCTION */

@@ -39,7 +39,7 @@
               error
             </Icon>
           </template>
-          <span>{{ errorMessage(erroredFiles[0].checksum) }}</span>
+          <span>{{ getErrorMessage(erroredFiles[0]) }}</span>
         </VTooltip>
         <Icon
           v-else-if="showUploadProgress && progress >= 1"
@@ -72,8 +72,10 @@
 <script>
 
   import { mapActions, mapGetters } from 'vuex';
+  import { onMounted } from '@vue/composition-api';
   import { RouteNames } from '../../constants';
-  import { fileSizeMixin, fileStatusMixin } from 'shared/mixins';
+  import useFiles from 'shared/composables/useFiles';
+  import useContentNodesFiles from 'shared/composables/useContentNodesFiles';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
   import Checkbox from 'shared/views/form/Checkbox';
 
@@ -83,7 +85,6 @@
       Checkbox,
       ContentNodeIcon,
     },
-    mixins: [fileSizeMixin, fileStatusMixin],
     props: {
       value: {
         type: Array,
@@ -94,6 +95,16 @@
         required: true,
       },
     },
+    setup(props) {
+      const { getErrorMessage, getStatusMessage } = useFiles();
+      const { subscribeContentNodesFiles, contentNodesFiles } = useContentNodesFiles();
+
+      onMounted(() => {
+        subscribeContentNodesFiles([props.nodeId]);
+      });
+
+      return { getErrorMessage, getStatusMessage, contentNodeFiles: contentNodesFiles };
+    },
     data() {
       return {
         showUploadProgress: false,
@@ -102,7 +113,6 @@
     computed: {
       ...mapGetters('currentChannel', ['canEdit']),
       ...mapGetters('contentNode', ['getContentNode', 'getContentNodeIsValid']),
-      ...mapGetters('file', ['getContentNodeFiles']),
       selected: {
         get() {
           return this.value;
@@ -115,10 +125,7 @@
         return this.getContentNode(this.nodeId);
       },
       nodeIsValid() {
-        return this.getContentNodeIsValid(this.nodeId);
-      },
-      files() {
-        return this.getContentNodeFiles(this.nodeId);
+        return this.getContentNodeIsValid(this.nodeId, this.contentNodeFiles);
       },
       backgroundColor() {
         if (this.selected.includes(this.nodeId)) {
@@ -132,7 +139,7 @@
         if (this.node.kind === 'exercise') {
           return this.$tr('questionCount', { count: this.node.assessment_item_count || 0 });
         }
-        return this.statusMessage(this.node.files);
+        return this.getStatusMessage(this.node.files);
       },
       canRemove() {
         return (
@@ -143,10 +150,10 @@
         );
       },
       uploadingFiles() {
-        return this.files.filter(f => f.uploading || f.progress < 1);
+        return this.contentNodeFiles.filter(f => f.uploading || f.progress < 1);
       },
       erroredFiles() {
-        return this.files.filter(f => f.error);
+        return this.contentNodeFiles.filter(f => f.error);
       },
       progress() {
         return (

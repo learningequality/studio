@@ -10,6 +10,7 @@
       :addText="$tr('addSubtitleText')"
       :readonly="readonly"
       :nodeId="nodeId"
+      :nodeFiles="nodeFiles"
       @upload="trackUpload"
     />
   </div>
@@ -32,6 +33,10 @@
     props: {
       nodeId: {
         type: String,
+        required: true,
+      },
+      nodeFiles: {
+        type: Array,
         required: true,
       },
       readonly: {

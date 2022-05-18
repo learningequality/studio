@@ -35,7 +35,6 @@
                 analyticsLabel="Question"
                 :markdown="question"
                 :handleFileUpload="handleFiles"
-                :getFileUpload="getFileUpload"
                 :imagePreset="imagePreset"
                 @update="onQuestionUpdate"
                 @minimize="closeQuestion"
@@ -75,7 +74,6 @@
             :answers="answers"
             :openAnswerIdx="openAnswerIdx"
             :handleFileUpload="handleFiles"
-            :getFileUpload="getFileUpload"
             :imagePreset="imagePreset"
             @update="onAnswersUpdate"
             @open="openAnswer"
@@ -87,7 +85,6 @@
             :hints="hints"
             :openHintIdx="openHintIdx"
             :handleFileUpload="handleFiles"
-            :getFileUpload="getFileUpload"
             :imagePreset="imagePreset"
             @update="onHintsUpdate"
             @open="openHint"
@@ -102,7 +99,6 @@
 
 <script>
 
-  import { mapGetters } from 'vuex';
   import { AssessmentItemTypeLabels } from '../../constants';
   import { updateAnswersToQuestionType, assessmentItemKey } from '../../utils';
   import translator from '../../translator';
@@ -179,7 +175,6 @@
       };
     },
     computed: {
-      ...mapGetters('file', ['getFileUpload']),
       question() {
         if (!this.item || !this.item.question) {
           return '';

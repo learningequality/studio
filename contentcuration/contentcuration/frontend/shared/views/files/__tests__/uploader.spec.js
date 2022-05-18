@@ -30,13 +30,6 @@ describe('uploader', () => {
       wrapper.vm.openFileDialog();
       expect(wrapper.find('[data-test="upload-dialog"]').exists()).toBe(false);
     });
-    it('readonly should disable dropping files', () => {
-      let uploadFile = jest.fn();
-      wrapper = makeWrapper({ readonly: true });
-      wrapper.setMethods({ uploadFile });
-      wrapper.vm.handleFiles([{ name: 'test.png' }]);
-      expect(uploadFile).not.toHaveBeenCalled();
-    });
     it('readonly should not highlight dropzone', () => {
       wrapper = makeWrapper({ readonly: true });
       wrapper.setData({ highlight: true });

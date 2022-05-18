@@ -19,7 +19,7 @@
               <VLayout wrap align-center justify-center style="max-height: 0px;">
                 <div class="text-xs-center" style="position: absolute;">
                   <p>
-                    <FileStatus :fileId="uploadingId" large data-test="progress" />
+                    <FileStatus :file="file" large data-test="progress" />
                   </p>
                   <ActionLink
                     v-if="!hasError"
@@ -68,7 +68,7 @@
           <template v-if="hasError">
             <span class="body-1 red--text">
               <FileStatusText
-                :fileId="uploadingId"
+                :file="file"
                 @open="openFileDialog"
               />
             </span>
@@ -140,13 +140,14 @@
 
 <script>
 
-  import { mapGetters } from 'vuex';
   import IconButton from '../IconButton';
+  import useFileUpload from 'shared/composables/useFileUpload';
   import Uploader from 'shared/views/files/Uploader';
   import FileStatus from 'shared/views/files/FileStatus';
   import FileStatusText from 'shared/views/files/FileStatusText';
   import Thumbnail from 'shared/views/files/Thumbnail';
   import FileDropzone from 'shared/views/files/FileDropzone';
+  import { File } from 'shared/data/resources';
   import { ASPECT_RATIO, THUMBNAIL_WIDTH } from 'shared/constants';
 
   const DEFAULT_THUMBNAIL = {
@@ -179,6 +180,10 @@
         default: false,
       },
     },
+    setup() {
+      const { getFileUpload, deleteFileUpload } = useFileUpload();
+      return { getFileUpload, deleteFileUpload };
+    },
     data() {
       return {
         cropping: false,
@@ -189,9 +194,8 @@
       };
     },
     computed: {
-      ...mapGetters('file', ['getFileUpload']),
       file() {
-        return this.uploadingId && this.getFileUpload(this.uploadingId);
+        return this.getFileUpload(this.uploadingId);
       },
       hasError() {
         return this.file && this.file.error;
@@ -249,7 +253,8 @@
       },
       cancelPendingFile() {
         if (this.fileUpload) {
-          this.deleteFile(this.fileUpload);
+          this.deleteFileUpload(this.fileUpload.id);
+          File.delete(this.fileUpload.id);
         }
         this.reset();
       },
@@ -274,7 +279,7 @@
       },
       reset() {
         this.cropping = false;
-        this.uploadingId = null;
+        this.deleteFileUpload(this.uploadingId);
       },
       remove() {
         this.updateThumbnail(DEFAULT_THUMBNAIL);

@@ -61,12 +61,13 @@
 
 <script>
 
-  import { mapActions, mapGetters } from 'vuex';
   import sortBy from 'lodash/sortBy';
   import uniqBy from 'lodash/uniqBy';
   import SupplementaryItem from './SupplementaryItem';
   import LanguageDropdown from 'shared/views/LanguageDropdown';
   import Uploader from 'shared/views/files/Uploader';
+  import { File } from 'shared/data/resources';
+  import useFiles from 'shared/composables/useFiles';
 
   export default {
     name: 'SupplementaryList',
@@ -76,6 +77,10 @@
       Uploader,
     },
     props: {
+      nodeFiles: {
+        type: Array,
+        required: true,
+      },
       presetID: {
         type: String,
         required: true,
@@ -93,6 +98,10 @@
         required: true,
       },
     },
+    setup() {
+      const { updateFile } = useFiles();
+      return { updateFile };
+    },
     data() {
       return {
         addingFile: false,
@@ -100,11 +109,13 @@
       };
     },
     computed: {
-      ...mapGetters('file', ['getContentNodeFiles']),
       files() {
+        if (!this.nodeFiles) {
+          return [];
+        }
         return uniqBy(
           sortBy(
-            this.getContentNodeFiles(this.nodeId).filter(f => f.preset.id === this.presetID),
+            this.nodeFiles.filter(f => f.preset.id === this.presetID),
             f => f.language.native_name
           ),
           f => f.language.id
@@ -115,9 +126,14 @@
       },
     },
     methods: {
-      ...mapActions('file', ['updateFile', 'deleteFile']),
       add(file) {
         this.makeFile(file).then(this.reset);
+      },
+      deleteFile(file) {
+        if (!file) {
+          return;
+        }
+        File.delete(file.id);
       },
       makeFile(file) {
         return this.updateFile({

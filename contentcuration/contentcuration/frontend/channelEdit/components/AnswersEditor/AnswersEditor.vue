@@ -74,7 +74,6 @@
                       analyticsLabel="Answer"
                       :markdown="answer.answer"
                       :handleFileUpload="handleFileUpload"
-                      :getFileUpload="getFileUpload"
                       :imagePreset="imagePreset"
                       @update="updateAnswerText($event, answerIdx)"
                       @minimize="emitClose"
@@ -168,10 +167,6 @@
       },
       // Inject function to handle file uploads
       handleFileUpload: {
-        type: Function,
-      },
-      // Inject function to get file upload object
-      getFileUpload: {
         type: Function,
       },
       imagePreset: {

@@ -37,7 +37,6 @@
       :src="imagesMenu.src"
       :alt="imagesMenu.alt"
       :handleFileUpload="handleFileUpload"
-      :getFileUpload="getFileUpload"
       :imagePreset="imagePreset"
       @insert="insertImageToEditor"
       @cancel="onImagesMenuCancel"
@@ -109,10 +108,6 @@
       },
       // Inject function to handle file uploads
       handleFileUpload: {
-        type: Function,
-      },
-      // Inject function to get file upload object
-      getFileUpload: {
         type: Function,
       },
       imagePreset: {

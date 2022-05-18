@@ -99,8 +99,8 @@
   import { RouteNames } from '../../constants';
   import UserActionsDropdown from './UserActionsDropdown';
   import UserStorage from './UserStorage';
+  import useFiles from 'shared/composables/useFiles';
   import Checkbox from 'shared/views/form/Checkbox';
-  import { fileSizeMixin } from 'shared/mixins';
 
   export default {
     name: 'UserItem',
@@ -109,10 +109,13 @@
       UserActionsDropdown,
       UserStorage,
     },
+    setup() {
+      const { formatFileSize } = useFiles();
+      return { formatFileSize };
+    },
     filters: {
       capitalize,
     },
-    mixins: [fileSizeMixin],
     props: {
       value: {
         type: Array,

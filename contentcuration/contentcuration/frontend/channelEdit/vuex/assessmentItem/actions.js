@@ -1,20 +1,25 @@
 import { AssessmentItem } from 'shared/data/resources';
 import { isNodeComplete } from 'shared/utils/validation';
+import useFiles from 'shared/composables/useFiles';
 import db from 'shared/data/db';
 import { TABLE_NAMES } from 'shared/data/constants';
 
+const { getContentNodeFiles } = useFiles();
+
 function updateNodeComplete(nodeId, context) {
   const node = context.rootGetters['contentNode/getContentNode'](nodeId);
-  const complete = isNodeComplete({
-    nodeDetails: node,
-    assessmentItems: context.getters.getAssessmentItems(nodeId),
-    files: context.rootGetters['file/getContentNodeFiles'](nodeId),
+  return getContentNodeFiles(nodeId).then(files => {
+    const complete = isNodeComplete({
+      nodeDetails: node,
+      assessmentItems: context.getters.getAssessmentItems(nodeId),
+      files,
+    });
+    return context.dispatch(
+      'contentNode/updateContentNode',
+      { id: nodeId, complete },
+      { root: true }
+    );
   });
-  return context.dispatch(
-    'contentNode/updateContentNode',
-    { id: nodeId, complete },
-    { root: true }
-  );
 }
 
 /**

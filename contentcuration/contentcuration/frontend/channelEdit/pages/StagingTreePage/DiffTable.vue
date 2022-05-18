@@ -67,8 +67,8 @@
 <script>
 
   import Diff from './Diff';
+  import useFiles from 'shared/composables/useFiles';
   import LoadingText from 'shared/views/LoadingText';
-  import { fileSizeMixin } from 'shared/mixins';
 
   export default {
     name: 'DiffTable',
@@ -76,12 +76,15 @@
       Diff,
       LoadingText,
     },
-    mixins: [fileSizeMixin],
     props: {
       stagingDiff: {
         type: Object,
         required: true,
       },
+    },
+    setup() {
+      const { formatFileSize } = useFiles();
+      return { formatFileSize };
     },
     data() {
       return {

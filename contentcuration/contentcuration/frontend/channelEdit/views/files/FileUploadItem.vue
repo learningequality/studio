@@ -71,12 +71,13 @@
 
 <script>
 
-  import { mapGetters } from 'vuex';
   import FileStatusText from 'shared/views/files/FileStatusText';
   import Uploader from 'shared/views/files/Uploader';
   import IconButton from 'shared/views/IconButton';
-  import { constantsTranslationMixin, fileSizeMixin, fileStatusMixin } from 'shared/mixins';
+  import { constantsTranslationMixin } from 'shared/mixins';
   import FileDropzone from 'shared/views/files/FileDropzone';
+  import useFiles from 'shared/composables/useFiles';
+  import useFileUpload from 'shared/composables/useFileUpload';
 
   export default {
     name: 'FileUploadItem',
@@ -86,7 +87,7 @@
       FileStatusText,
       IconButton,
     },
-    mixins: [constantsTranslationMixin, fileSizeMixin, fileStatusMixin],
+    mixins: [constantsTranslationMixin],
     props: {
       file: {
         type: Object,
@@ -108,15 +109,19 @@
         required: false,
       },
     },
+    setup() {
+      const { formatFileSize } = useFiles();
+      const { getFileUpload } = useFileUpload();
+      return { formatFileSize, getFileUpload };
+    },
     data() {
       return {
         fileUploadId: null,
       };
     },
     computed: {
-      ...mapGetters('file', ['getFileUpload']),
       fileUpload() {
-        return this.fileUploadId && this.getFileUpload(this.fileUploadId);
+        return this.getFileUpload(this.fileUploadId);
       },
       uploading() {
         return this.fileDisplay && this.fileDisplay.uploading;
@@ -177,7 +182,6 @@
     font-weight: bold;
     color: var(--v-darken-3);
   }
-
   button {
     margin: 0;
   }

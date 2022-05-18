@@ -165,7 +165,8 @@
   import { RouteNames } from '../../constants';
   import UserStorage from './UserStorage';
   import UserActionsDropdown from './UserActionsDropdown';
-  import { routerMixin, fileSizeMixin } from 'shared/mixins';
+  import useFiles from 'shared/composables/useFiles';
+  import { routerMixin } from 'shared/mixins';
   import LoadingText from 'shared/views/LoadingText';
   import FullscreenModal from 'shared/views/FullscreenModal';
   import DetailsRow from 'shared/views/details/DetailsRow';
@@ -193,6 +194,10 @@
       UserActionsDropdown,
       Banner,
     },
+    setup() {
+      const { formatFileSize } = useFiles();
+      return { formatFileSize };
+    },
     filters: {
       formatList(value) {
         return value ? capitalize(value.join(', ')) : 'N/A';
@@ -201,7 +206,7 @@
         return `${value} ${value === 1 ? 'channel' : 'channels'}`;
       },
     },
-    mixins: [fileSizeMixin, routerMixin],
+    mixins: [routerMixin],
     props: {
       userId: {
         type: String,

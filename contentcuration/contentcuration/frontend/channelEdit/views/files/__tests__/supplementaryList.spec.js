@@ -1,11 +1,8 @@
 import { mount } from '@vue/test-utils';
 import SupplementaryList from '../supplementaryLists/SupplementaryList';
-import SupplementaryItem from '../supplementaryLists/SupplementaryItem';
 import { factory } from '../../../store';
-import Uploader from 'shared/views/files/Uploader';
 
 const testNodeId = 'testnode';
-const testFile = { id: 'file-1', language: { id: 'en' }, preset: { id: 'video_subtitle' } };
 
 function makeWrapper() {
   const store = factory();
@@ -20,11 +17,6 @@ function makeWrapper() {
       node() {
         return {
           files: ['file-1', 'file-2'],
-        };
-      },
-      getContentNodeFiles() {
-        return () => {
-          return [testFile, { id: 'file-2', language: {}, preset: { id: 'high_res_video' } }];
         };
       },
     },
@@ -50,41 +42,6 @@ describe('supplementaryList', () => {
   it('readonly should disable uploading', () => {
     wrapper.setProps({ readonly: true });
     expect(wrapper.find('[data-test="add-file"]').exists()).toBe(false);
-  });
-  describe('methods', () => {
-    it('emitted remove event from list item should call deleteFile action', () => {
-      let deleteFile = jest.fn();
-      wrapper.setMethods({ deleteFile });
-      let listItem = wrapper.find(SupplementaryItem);
-      listItem.vm.$emit('remove', 'test');
-      expect(deleteFile).toHaveBeenCalled();
-      expect(deleteFile.mock.calls[0][0]).toEqual(testFile);
-    });
-    it('calling uploadCompleteHandler should call updateFile action', () => {
-      let updateFile = jest.fn();
-      wrapper.setMethods({ updateFile });
-
-      let listItem = wrapper.find(SupplementaryItem);
-      let replacementFile = { id: 'replacementFile' };
-      listItem.vm.uploadCompleteHandler(replacementFile);
-      expect(updateFile).toHaveBeenCalled();
-      expect(updateFile.mock.calls[0][0].id).toBe(replacementFile.id);
-      expect(updateFile.mock.calls[0][0].language.id).toBe('en');
-    });
-    it('calling uploadingHandler on Uploader should call updateFile', () => {
-      let uploadFile = { id: 'filetest' };
-      let updateFile = jest.fn(() => Promise.resolve());
-      let uploader = wrapper.find(Uploader);
-
-      wrapper.setMethods({ updateFile });
-      wrapper.setData({ selectedLanguage: 'en-PT' });
-
-      uploader.vm.uploadingHandler(uploadFile);
-
-      expect(updateFile).toHaveBeenCalled();
-      expect(updateFile.mock.calls[0][0].id).toBe(uploadFile.id);
-      expect(updateFile.mock.calls[0][0].language).toBe('en-PT');
-    });
   });
   describe('uploading workflow', () => {
     it('clicking add file link should enable language selection', () => {

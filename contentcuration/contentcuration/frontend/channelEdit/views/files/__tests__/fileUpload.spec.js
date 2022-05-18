@@ -53,11 +53,6 @@ function makeWrapper(files) {
         return files;
       },
     },
-    methods: {
-      updateFile() {
-        return Promise.resolve();
-      },
-    },
     stubs: {
       FilePreview: true,
     },
@@ -103,24 +98,6 @@ describe('fileUpload', () => {
     it('selectPreview should select the preview when items are selected in the list', () => {
       uploadItem.vm.$emit('selected');
       expect(wrapper.vm.selected).toBe('file-1');
-    });
-    it('emitted remove event should trigger delete file', () => {
-      let deleteFile = jest.fn();
-      wrapper.setData({ selected: 'file-1' });
-      wrapper.setMethods({ deleteFile });
-      uploadItem.vm.$emit('remove', testFiles[0]);
-      expect(deleteFile).toHaveBeenCalled();
-      expect(deleteFile.mock.calls[0][0]).toBe(testFiles[0]);
-    });
-    it('calling uploadCompleteHandler should trigger update file', () => {
-      let updateFile = jest.fn(() => Promise.resolve());
-      wrapper.setMethods({ updateFile });
-      uploadItem.vm.uploadCompleteHandler(testFiles[1]);
-      expect(updateFile).toHaveBeenCalled();
-      expect(updateFile.mock.calls[0][0]).toEqual({
-        ...testFiles[1],
-        contentnode: 'testnode',
-      });
     });
   });
 });

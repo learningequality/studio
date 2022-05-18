@@ -1,89 +1,10 @@
 import isEqual from 'lodash/isEqual';
 import transform from 'lodash/transform';
 import uniq from 'lodash/uniq';
-import { mapGetters } from 'vuex';
-import {
-  ChannelListTypes,
-  fileErrors,
-  ONE_B,
-  ONE_KB,
-  ONE_MB,
-  ONE_GB,
-  ONE_TB,
-  filterTypes,
-} from './constants';
+import { ChannelListTypes, filterTypes } from './constants';
 import { createTranslator, updateTabTitle } from 'shared/i18n';
 import Languages from 'shared/leUtils/Languages';
 import Licenses from 'shared/leUtils/Licenses';
-
-const sizeStrings = createTranslator('BytesForHumansStrings', {
-  fileSizeInBytes: '{n, number, integer} B',
-  fileSizeInKilobytes: '{n, number, integer} KB',
-  fileSizeInMegabytes: '{n, number, integer} MB',
-  fileSizeInGigabytes: '{n, number, integer} GB',
-  fileSizeInTerabytes: '{n, number, integer} TB',
-});
-
-const stringMap = {
-  [ONE_B]: 'fileSizeInBytes',
-  [ONE_KB]: 'fileSizeInKilobytes',
-  [ONE_MB]: 'fileSizeInMegabytes',
-  [ONE_GB]: 'fileSizeInGigabytes',
-  [ONE_TB]: 'fileSizeInTerabytes',
-};
-
-export default function bytesForHumans(bytes) {
-  bytes = bytes || 0;
-  const unit = [ONE_TB, ONE_GB, ONE_MB, ONE_KB].find(x => bytes >= x) || ONE_B;
-  return sizeStrings.$tr(stringMap[unit], { n: Math.round(bytes / unit) });
-}
-
-export const fileSizeMixin = {
-  methods: {
-    formatFileSize(size) {
-      return bytesForHumans(size);
-    },
-  },
-};
-
-const statusStrings = createTranslator('StatusStrings', {
-  uploadFileSize: '{uploaded} of {total}',
-  uploadFailedError: 'Upload failed',
-  noStorageError: 'Not enough space',
-});
-
-export const fileStatusMixin = {
-  mixins: [fileSizeMixin],
-  computed: {
-    ...mapGetters('file', ['getFileUpload']),
-  },
-  methods: {
-    statusMessage(id) {
-      const errorMessage = this.errorMessage(id);
-      if (errorMessage) {
-        return errorMessage;
-      }
-      const file = this.getFileUpload(id);
-      if (file && file.total) {
-        return statusStrings.$tr('uploadFileSize', {
-          uploaded: bytesForHumans(file.loaded),
-          total: bytesForHumans(file.total),
-        });
-      }
-    },
-    errorMessage(id) {
-      const file = this.getFileUpload(id);
-      if (!file) {
-        return;
-      }
-      if (file.error === fileErrors.NO_STORAGE) {
-        return statusStrings.$tr('noStorageError');
-      } else if (file.error === fileErrors.UPLOAD_FAILED) {
-        return statusStrings.$tr('uploadFailedError');
-      }
-    },
-  },
-};
 
 export const constantStrings = createTranslator('ConstantStrings', {
   [ChannelListTypes.EDITABLE]: 'My channels',

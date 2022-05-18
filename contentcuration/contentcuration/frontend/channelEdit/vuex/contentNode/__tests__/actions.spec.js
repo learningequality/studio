@@ -2,7 +2,6 @@ import contentNode from '../index';
 import currentChannel from '../../currentChannel/index';
 import assessmentItem from '../../assessmentItem/index';
 
-import file from 'shared/vuex/file';
 import { ContentNode } from 'shared/data/resources';
 import storeFactory from 'shared/vuex/baseStore';
 
@@ -32,7 +31,6 @@ describe('contentNode actions', () => {
             assessmentItem,
             contentNode,
             currentChannel,
-            file,
           },
         });
         store.state.session.currentUser.id = userId;

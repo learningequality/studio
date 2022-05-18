@@ -139,7 +139,6 @@
       ...mapGetters('contentNode', [
         'getContentNodes',
         'getContentNodeDetailsAreValid',
-        'getContentNodeFilesAreValid',
         'getImmediateRelatedResourcesCount',
       ]),
       ...mapGetters('assessmentItem', ['getAssessmentItemsAreValid', 'getAssessmentItemsCount']),
@@ -191,7 +190,9 @@
         );
       },
       areFilesValid() {
-        return !this.oneSelected || this.getContentNodeFilesAreValid(this.nodeIds[0]);
+        // should be return !this.oneSelected || this.getContentNodeFilesAreValid
+        // (this.nodeIds[0]) (temporarily removed `getContentNodeFilesAreValid`)
+        return !this.oneSelected;
       },
       assessmentItemsCount() {
         if (!this.oneSelected) {

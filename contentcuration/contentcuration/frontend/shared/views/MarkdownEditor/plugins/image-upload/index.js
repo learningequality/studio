@@ -1,7 +1,7 @@
 import './image-upload.css';
 import { IMAGE_PLACEHOLDER } from '../../constants';
 import imageUploadExtension from './image-upload.js';
-import { storageUrl } from 'shared/vuex/file/utils';
+import { storageUrl } from 'shared/utils/file';
 
 export const IMAGE_REGEX = /!\[([^\]]*)]\(([^/]+\/([^\s]+))(?:\s=([0-9.]+)x([0-9.]+))*\)/g;
 export const SINGLE_IMAGE_REGEX = /!\[([^\]]*)]\(([^/]+\/([^\s]+))(?:\s=([0-9.]+)x([0-9.]+))*\)/;

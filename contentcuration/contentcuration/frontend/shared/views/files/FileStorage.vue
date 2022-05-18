@@ -46,7 +46,7 @@
 <script>
 
   import { mapActions, mapGetters } from 'vuex';
-  import { fileSizeMixin } from 'shared/mixins';
+  import useFiles from 'shared/composables/useFiles';
   import ActionLink from 'shared/views/ActionLink.vue';
 
   export default {
@@ -54,12 +54,15 @@
     components: {
       ActionLink,
     },
-    mixins: [fileSizeMixin],
     props: {
       showProgress: {
         type: Boolean,
         default: false,
       },
+    },
+    setup() {
+      const { formatFileSize } = useFiles();
+      return { formatFileSize };
     },
     computed: {
       ...mapGetters(['usedSpace', 'totalSpace']),

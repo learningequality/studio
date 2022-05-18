@@ -343,7 +343,7 @@
       <!-- Subtitles -->
       <VLayout v-if="videoSelected" row wrap class="section">
         <VFlex xs12>
-          <SubtitlesList :nodeId="firstNode.id" />
+          <SubtitlesList :nodeId="firstNode.id" :nodeFiles="firstNodeFiles" />
         </VFlex>
       </VLayout>
 
@@ -392,6 +392,9 @@
   import { NEW_OBJECT, FeatureFlagKeys, ContentModalities } from 'shared/constants';
   import { validate as validateCompletionCriteria } from 'shared/leUtils/CompletionCriteria';
   import { constantsTranslationMixin, metadataTranslationMixin } from 'shared/mixins';
+  import useFiles from 'shared/composables/useFiles';
+  import useContentNodesFiles from 'shared/composables/useContentNodesFiles';
+  import { File } from 'shared/data/resources';
 
   // Define an object to act as the place holder for non unique values.
   const nonUniqueValue = {};
@@ -477,6 +480,11 @@
         default: () => [],
       },
     },
+    setup() {
+      const { subscribeContentNodesFiles, contentNodesFiles } = useContentNodesFiles();
+      const { updateFile } = useFiles();
+      return { subscribeContentNodesFiles, firstNodeFiles: contentNodesFiles, updateFile };
+    },
     data() {
       return {
         tagText: null,
@@ -494,7 +502,6 @@
         'tags',
       ]),
       ...mapGetters('currentChannel', ['currentChannel']),
-      ...mapGetters('file', ['getContentNodeFiles']),
       nodes() {
         return this.getContentNodes(this.nodeIds);
       },
@@ -598,7 +605,7 @@
           return this.nodeFiles.find(f => f.preset.thumbnail);
         },
         set(file) {
-          file ? this.updateFile(file) : this.thumbnail ? this.deleteFile(this.thumbnail) : null;
+          file ? this.updateFile(file) : this.thumbnail ? File.delete(this.thumbnail.id) : null;
         },
       },
       thumbnailEncoding: generateGetterSetter('thumbnail_encoding'),
@@ -663,7 +670,7 @@
         return getCopyrightHolderValidators().map(translateValidator);
       },
       nodeFiles() {
-        return (this.firstNode && this.getContentNodeFiles(this.firstNode.id)) || [];
+        return (this.firstNode && this.firstNodeFiles) || [];
       },
       videoSelected() {
         return this.oneSelected && this.firstNode.kind === 'video';
@@ -678,20 +685,25 @@
     watch: {
       nodes: {
         deep: true,
-        handler() {
+        handler(newNodes) {
           // Handles both when loading a node and when making a change
           this.tagText = null;
           this.$nextTick(this.handleValidation);
+          if (this.newNodes && this.newNodes.length) {
+            this.subscribeContentNodesFiles([newNodes[0].id]);
+          }
         },
       },
     },
     mounted() {
       this.$nextTick(this.handleValidation);
+      if (this.nodeIds && this.nodeIds.length) {
+        this.subscribeContentNodesFiles([this.nodeIds[0]]);
+      }
     },
     methods: {
       ...mapActions(['setUnsavedChanges']),
       ...mapActions('contentNode', ['updateContentNode', 'addTags', 'removeTags']),
-      ...mapActions('file', ['updateFile', 'deleteFile']),
       saveNode: memoizeDebounce(
         function(id) {
           this.saveFromDiffTracker(id);

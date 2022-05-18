@@ -97,9 +97,10 @@
         <VTabItem value="details">
           <!-- File preview -->
           <FilePreview
-            v-if="isResource && !isExercise && primaryFiles[0]"
-            :nodeId="nodeId"
-            :fileId="primaryFiles[0].id"
+            v-if="isResource && !isExercise && primaryContentNodeFiles[0]"
+            :node="node"
+            :nodeFiles="contentNodeFiles"
+            :fileId="primaryContentNodeFiles[0].id"
           />
           <VCard v-else-if="isResource && !isExercise" class="preview-error" flat>
             <VLayout align-center justify-center fill-height>
@@ -281,7 +282,7 @@
                 {{ $tr('files') }}
               </div>
               <DetailsRow :label="$tr('availableFormats')">
-                <span v-if="!primaryFiles.length" class="red--text">
+                <span v-if="!primaryContentNodeFiles.length" class="red--text">
                   <Icon color="red" small>error</Icon>
                   <span class="mx-1">{{ $tr('noFilesError') }}</span>
                 </span>
@@ -312,10 +313,13 @@
 
   import sortBy from 'lodash/sortBy';
   import { mapActions, mapGetters } from 'vuex';
+  import { computed } from '@vue/composition-api';
   import { isImportedContent, importedChannelLink } from '../utils';
   import FilePreview from '../views/files/FilePreview';
   import AssessmentItemPreview from './AssessmentItemPreview/AssessmentItemPreview';
   import ContentNodeValidator from './ContentNodeValidator';
+  import useFiles from 'shared/composables/useFiles';
+  import useContentNodesFiles from 'shared/composables/useContentNodesFiles';
   import {
     getAssessmentItemErrors,
     getNodeLicenseErrors,
@@ -333,9 +337,10 @@
   import Checkbox from 'shared/views/form/Checkbox';
   import Banner from 'shared/views/Banner';
   import Tabs from 'shared/views/Tabs';
-  import { constantsTranslationMixin, fileSizeMixin, titleMixin } from 'shared/mixins';
+  import { constantsTranslationMixin, titleMixin } from 'shared/mixins';
   import { MasteryModelsNames } from 'shared/leUtils/MasteryModels';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
+  import { File } from 'shared/data/resources';
 
   export default {
     name: 'ResourcePanel',
@@ -351,7 +356,7 @@
       Banner,
       Tabs,
     },
-    mixins: [constantsTranslationMixin, fileSizeMixin, titleMixin],
+    mixins: [constantsTranslationMixin, titleMixin],
     props: {
       nodeId: {
         type: String,
@@ -361,6 +366,25 @@
         type: Boolean,
         default: false,
       },
+    },
+    setup() {
+      const { formatFileSize } = useFiles();
+      const {
+        subscribeContentNodesFiles,
+        contentNodesFiles,
+        primaryContentNodesFiles,
+      } = useContentNodesFiles();
+
+      const sortedContentNodeFiles = computed(() => {
+        return sortBy(contentNodesFiles.value, f => f.preset.order);
+      });
+
+      return {
+        formatFileSize,
+        subscribeContentNodesFiles,
+        contentNodeFiles: sortedContentNodeFiles,
+        primaryContentNodeFiles: primaryContentNodesFiles,
+      };
     },
     data() {
       return {
@@ -374,13 +398,9 @@
         'getImmediateNextStepsList',
         'getImmediatePreviousStepsList',
       ]),
-      ...mapGetters('file', ['getContentNodeFiles', 'contentNodesTotalSize']),
       ...mapGetters('assessmentItem', ['getAssessmentItems']),
       node() {
         return this.getContentNode(this.nodeId);
-      },
-      files() {
-        return sortBy(this.getContentNodeFiles(this.nodeId), f => f.preset.order);
       },
       tab: {
         set(value) {
@@ -410,7 +430,10 @@
         return this.getAssessmentItems(this.nodeId);
       },
       fileSize() {
-        return this.contentNodesTotalSize([this.nodeId]);
+        if (!this.contentNodeFiles || !this.contentNodeFiles.length) {
+          return 0;
+        }
+        return this.contentNodeFiles.reduce((sum, f) => sum + f.file_size, 0);
       },
       isTopic() {
         return this.node && this.node.kind === ContentKindsNames.TOPIC;
@@ -479,14 +502,13 @@
         // TODO: Add in kind counts once the data is available
         return [];
       },
-      primaryFiles() {
-        return this.files.filter(f => !f.preset.supplementary);
-      },
       availableFormats() {
-        return this.primaryFiles.map(f => this.translateConstant(f.preset.id));
+        return this.primaryContentNodeFiles.map(f => this.translateConstant(f.preset.id));
       },
       subtitleFileLanguages() {
-        return this.files.filter(f => f.preset.subtitle).map(f => f.language.native_name);
+        return this.contentNodeFiles
+          .filter(f => f.preset.subtitle)
+          .map(f => f.language.native_name);
       },
 
       /* VALIDATION */
@@ -526,7 +548,7 @@
           this.noLicense ||
           this.noCopyrightHolder ||
           this.noLicenseDescription ||
-          (!this.isExercise && !this.primaryFiles.length) ||
+          (!this.isExercise && !this.primaryContentNodeFiles.length) ||
           (this.isExercise && (this.noMasteryModel || !this.assessmentItems.length))
         );
       },
@@ -537,19 +559,20 @@
     watch: {
       // Listen to node id specifically to avoid recursive call to watcher,
       // but still get updated properly if need to wait for node to be loaded
-      'node.id'() {
+      'node.id'(newNodeId) {
         this.showAnswers = false;
         this.loadNode();
+        this.subscribeContentNodesFiles([newNodeId]);
         this.tab = this.isExercise ? 'questions' : 'details';
       },
     },
     mounted() {
       this.loadNode();
+      this.subscribeContentNodesFiles([this.nodeId]);
       this.tab = this.isExercise ? 'questions' : 'details';
     },
     methods: {
       ...mapActions('contentNode', ['loadRelatedResources']),
-      ...mapActions('file', ['loadFiles']),
       ...mapActions('assessmentItem', ['loadNodeAssessmentItems']),
       getText(field) {
         return this.node[field] || this.defaultText;
@@ -561,7 +584,7 @@
           promises.push(this.loadRelatedResources(this.nodeId));
 
           if (this.isResource) {
-            promises.push(this.loadFiles({ contentnode: this.nodeId }));
+            promises.push(File.where({ contentnode: this.nodeId }));
           }
 
           if (this.isExercise) {

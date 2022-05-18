@@ -7,7 +7,7 @@
           error
         </Icon>
       </template>
-      <span>{{ statusMessage(id) }}</span>
+      <span>{{ getStatusMessage(file) }}</span>
     </VTooltip>
     <Icon
       v-else-if="progress >= 1"
@@ -32,15 +32,13 @@
 
 <script>
 
-  import { mapGetters } from 'vuex';
-  import { fileSizeMixin, fileStatusMixin } from 'shared/mixins';
+  import useFiles from 'shared/composables/useFiles';
 
   export default {
     name: 'FileStatus',
-    mixins: [fileSizeMixin, fileStatusMixin],
     props: {
-      fileId: {
-        type: String,
+      file: {
+        type: Object,
         required: true,
       },
       large: {
@@ -48,14 +46,16 @@
         default: false,
       },
     },
+    setup() {
+      const { getErrorMessage, getStatusMessage } = useFiles();
+      return { getErrorMessage, getStatusMessage };
+    },
     computed: {
-      ...mapGetters('file', ['getFileUpload']),
       progress() {
-        const file = this.getFileUpload(this.fileId);
-        return file && file.progress;
+        return this.file && this.file.progress;
       },
       hasErrors() {
-        return Boolean(this.errorMessage(this.fileId));
+        return Boolean(this.file && this.getErrorMessage(this.file));
       },
     },
   };

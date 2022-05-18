@@ -277,12 +277,8 @@
   import sortBy from 'lodash/sortBy';
   import { SCALE_TEXT, SCALE, CHANNEL_SIZE_DIVISOR } from './constants';
   import DetailsRow from './DetailsRow';
-  import {
-    fileSizeMixin,
-    constantsTranslationMixin,
-    printingMixin,
-    titleMixin,
-  } from 'shared/mixins';
+  import useFiles from 'shared/composables/useFiles';
+  import { constantsTranslationMixin, printingMixin, titleMixin } from 'shared/mixins';
   import LoadingText from 'shared/views/LoadingText';
   import ExpandableList from 'shared/views/ExpandableList';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
@@ -299,7 +295,7 @@
       DetailsRow,
       Thumbnail,
     },
-    mixins: [fileSizeMixin, constantsTranslationMixin, printingMixin, titleMixin],
+    mixins: [constantsTranslationMixin, printingMixin, titleMixin],
     props: {
       // Object matching that returned by the channel details and
       // node details API endpoints, see backend for details of the
@@ -317,6 +313,10 @@
         type: Boolean,
         default: true,
       },
+    },
+    setup() {
+      const { formatFileSize } = useFiles();
+      return { formatFileSize };
     },
     computed: {
       defaultText() {

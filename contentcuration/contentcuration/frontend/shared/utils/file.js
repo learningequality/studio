@@ -9,6 +9,30 @@ const MEDIA_PRESETS = [
   FormatPresetsNames.LOW_RES_VIDEO,
 ];
 const VIDEO_PRESETS = [FormatPresetsNames.HIGH_RES_VIDEO, FormatPresetsNames.LOW_RES_VIDEO];
+const EXTENSION_PRESET_MAP = FormatPresetsList.reduce((map, value) => {
+  if (value.display) {
+    value.allowed_formats.forEach(format => {
+      if (!map[format]) {
+        map[format] = [];
+      }
+      map[format].push(value.id);
+    });
+  }
+  return map;
+}, {});
+
+export function hexToBase64(str) {
+  return btoa(
+    String.fromCharCode.apply(
+      null,
+      str
+        .replace(/\r|\n/g, '')
+        .replace(/([\da-fA-F]{2}) ?/g, '0x$1 ')
+        .replace(/ +$/, '')
+        .split(' ')
+    )
+  );
+}
 
 export function getHash(file) {
   return new Promise((resolve, reject) => {
@@ -39,18 +63,6 @@ export function getHash(file) {
   });
 }
 
-const extensionPresetMap = FormatPresetsList.reduce((map, value) => {
-  if (value.display) {
-    value.allowed_formats.forEach(format => {
-      if (!map[format]) {
-        map[format] = [];
-      }
-      map[format].push(value.id);
-    });
-  }
-  return map;
-}, {});
-
 // Returns the URL that points to the given file. This URL should
 // be readable by the current user
 export function storageUrl(checksum, file_format) {
@@ -77,7 +89,7 @@ export function extractMetadata(file, preset = null) {
       .pop()
       .toLowerCase();
     // Default to whatever the first preset is
-    metadata.preset = extensionPresetMap[fileFormat][0];
+    metadata.preset = EXTENSION_PRESET_MAP[fileFormat][0];
   }
 
   // End here if not audio or video

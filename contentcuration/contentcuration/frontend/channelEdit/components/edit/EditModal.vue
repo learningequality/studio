@@ -178,12 +178,15 @@
 <script>
 
   import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
+  import { computed } from '@vue/composition-api';
   import { RouteNames, TabNames } from '../../constants';
   import FileUploadDefault from '../../views/files/FileUploadDefault';
   import EditList from './EditList';
   import EditView from './EditView';
   import SavingIndicator from './SavingIndicator';
-  import { fileSizeMixin, routerMixin } from 'shared/mixins';
+  import useFiles from 'shared/composables/useFiles';
+  import useContentNodesFiles from 'shared/composables/useContentNodesFiles';
+  import { routerMixin } from 'shared/mixins';
   import FileStorage from 'shared/views/files/FileStorage';
   import MessageDialog from 'shared/views/MessageDialog';
   import ResizableNavigationDrawer from 'shared/views/ResizableNavigationDrawer';
@@ -194,7 +197,7 @@
   import ToolBar from 'shared/views/ToolBar';
   import BottomBar from 'shared/views/BottomBar';
   import FileDropzone from 'shared/views/files/FileDropzone';
-  import { isNodeComplete } from 'shared/utils/validation';
+  import { File } from 'shared/data/resources';
 
   const CHECK_STORAGE_INTERVAL = 10000;
 
@@ -215,7 +218,7 @@
       ToolBar,
       BottomBar,
     },
-    mixins: [fileSizeMixin, routerMixin],
+    mixins: [routerMixin],
     props: {
       detailNodeIds: {
         type: String,
@@ -231,6 +234,20 @@
         type: String,
         required: false,
       },
+    },
+    setup() {
+      const { subscribeContentNodesFiles, contentNodesFiles } = useContentNodesFiles();
+      const { updateFile } = useFiles();
+      const contentNodesAreUploading = computed(() => {
+        return contentNodesFiles.value.some(file => file.uploading);
+      });
+
+      return {
+        subscribeContentNodesFiles,
+        contentNodesFiles,
+        contentNodesAreUploading,
+        updateFile,
+      };
     },
     data() {
       return {
@@ -248,7 +265,6 @@
       ...mapGetters('contentNode', ['getContentNode', 'getContentNodeIsValid']),
       ...mapGetters('assessmentItem', ['getAssessmentItems']),
       ...mapGetters('currentChannel', ['canEdit']),
-      ...mapGetters('file', ['contentNodesAreUploading', 'getContentNodeFiles']),
       ...mapState({
         online: state => state.connection.online,
       }),
@@ -300,7 +316,10 @@
         return node ? node.title : '';
       },
       invalidNodes() {
-        return this.nodeIds.filter(id => !this.getContentNodeIsValid(id));
+        return this.nodeIds.filter(id => {
+          const files = this.contentNodesFiles.filter(f => f.contentnode === id);
+          return !this.getContentNodeIsValid(id, files);
+        });
       },
     },
     beforeRouteEnter(to, from, next) {
@@ -335,7 +354,7 @@
               // Do not remove - there is a logic that relies heavily
               // on assessment items and files being properly loaded
               // (especially marking nodes as (in)complete)
-              vm.loadFiles({ contentnode__in: childrenNodesIds }),
+              File.where({ contentnode__in: childrenNodesIds }),
               vm.loadAssessmentItems({ contentnode__in: childrenNodesIds }),
             ];
           } else {
@@ -350,26 +369,6 @@
             .catch(() => {
               vm.loading = false;
               vm.loadError = true;
-            })
-            .then(() => {
-              // self-healing of nodes' validation status
-              // in case we receive incorrect data from backend
-              let validationPromises = [];
-              allNodesIds.forEach(nodeId => {
-                const node = vm.getContentNode(nodeId);
-                const completeCheck = isNodeComplete({
-                  nodeDetails: node,
-                  assessmentItems: vm.getAssessmentItems(nodeId),
-                  files: vm.getContentNodeFiles(nodeId),
-                });
-
-                if (completeCheck !== node.complete) {
-                  validationPromises.push(
-                    vm.updateContentNode({ id: nodeId, complete: completeCheck })
-                  );
-                }
-              });
-              return Promise.all(validationPromises);
             });
         });
       }
@@ -379,17 +378,16 @@
       this.hideHTMLScroll(true);
       this.selected = this.targetNodeId ? [this.targetNodeId] : this.nodeIds;
       this.storagePoll = setInterval(this.fetchUserStorage, CHECK_STORAGE_INTERVAL);
+      this.subscribeContentNodesFiles(this.nodeIds);
     },
     methods: {
       ...mapActions(['fetchUserStorage']),
       ...mapActions('contentNode', [
         'loadContentNode',
         'loadContentNodes',
-        'updateContentNode',
         'loadRelatedResources',
         'createContentNode',
       ]),
-      ...mapActions('file', ['loadFiles', 'updateFile']),
       ...mapActions('assessmentItem', ['loadAssessmentItems', 'updateAssessmentItems']),
       ...mapMutations('contentNode', { enableValidation: 'ENABLE_VALIDATION_ON_NODES' }),
       closeModal() {
@@ -430,7 +428,7 @@
             if (this.invalidNodes.length) {
               this.selected = [this.invalidNodes[0]];
               this.promptInvalid = true;
-            } else if (this.contentNodesAreUploading(this.nodeIds)) {
+            } else if (this.contentNodesAreUploading) {
               this.promptUploading = true;
             } else {
               this.closeModal();

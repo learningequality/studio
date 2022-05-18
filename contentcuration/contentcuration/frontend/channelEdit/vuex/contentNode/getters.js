@@ -104,13 +104,18 @@ export function getContentNodeAncestors(state, getters) {
 }
 
 export function getContentNodeIsValid(state, getters, rootState, rootGetters) {
-  return function(contentNodeId) {
+  return function(contentNodeId, contentNodeFiles) {
     const contentNode = state.contentNodesMap[contentNodeId];
     return (
       contentNode &&
       (contentNode[NEW_OBJECT] ||
         (getContentNodeDetailsAreValid(state)(contentNodeId) &&
-          getContentNodeFilesAreValid(state, getters, rootState, rootGetters)(contentNodeId) &&
+          getContentNodeFilesAreValid(
+            state,
+            getters,
+            rootState,
+            rootGetters
+          )(contentNodeId, contentNodeFiles) &&
           rootGetters['assessmentItem/getAssessmentItemsAreValid']({
             contentNodeId,
             // Because this is called after items have been created,
@@ -130,8 +135,8 @@ export function getContentNodeDetailsAreValid(state) {
   };
 }
 
-export function getContentNodeFilesAreValid(state, getters, rootState, rootGetters) {
-  return function(contentNodeId) {
+export function getContentNodeFilesAreValid(state) {
+  return function(contentNodeId, contentNodeFiles) {
     const contentNode = state.contentNodesMap[contentNodeId];
     if (
       contentNode.kind === ContentKindsNames.TOPIC ||
@@ -140,10 +145,9 @@ export function getContentNodeFilesAreValid(state, getters, rootState, rootGette
       return true;
     }
     if (contentNode && contentNode.kind !== ContentKindsNames.TOPIC) {
-      let files = rootGetters['file/getContentNodeFiles'](contentNode.id);
-      if (files.length) {
+      if (contentNodeFiles.length) {
         // Don't count errors before files have loaded
-        return !getNodeFilesErrors(files).length;
+        return !getNodeFilesErrors(contentNodeFiles).length;
       } else {
         return false;
       }

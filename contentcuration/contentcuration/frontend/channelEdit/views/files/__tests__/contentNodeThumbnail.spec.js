@@ -28,21 +28,8 @@ const testDocument = {
 
 const fileUploadId = 'upload-id';
 
-function makeWrapper(props = {}, progress) {
+function makeWrapper(props = {}) {
   const store = factory();
-  store.commit('file/ADD_FILE', {
-    id: fileUploadId,
-    loaded: progress,
-    total: 1,
-    url: 'new.png',
-    file_size: 100,
-    original_filename: 'new.png',
-    preset: {
-      id: 'document_thumbnail',
-      thumbnail: true,
-      supplementary: true,
-    },
-  });
   return mount(ContentNodeThumbnail, {
     store,
     attachToDocument: true,
@@ -52,11 +39,6 @@ function makeWrapper(props = {}, progress) {
         return {
           files: [],
           kind: 'document',
-        };
-      },
-      getContentNodeFiles() {
-        return () => {
-          return [testThumbnail, testDocument];
         };
       },
     },
@@ -101,16 +83,6 @@ describe('thumbnail', () => {
     });
     it('progress should be shown during upload', () => {
       expect(wrapper.find('[data-test="progress"]').exists()).toBe(true);
-    });
-    it('hasError should be true if file upload fails', () => {
-      wrapper.vm.$store.commit('file/ADD_FILE', { id: fileUploadId, error: 'ERROR' });
-      expect(wrapper.vm.hasError).toBe(true);
-    });
-    it('cancelling upload should revert to the original state', () => {
-      wrapper.setData({ removeOnCancel: true });
-      wrapper.vm.deleteFile = jest.fn();
-      wrapper.find('[data-test="cancel-upload"]').trigger('click');
-      expect(wrapper.vm.deleteFile).toHaveBeenCalled();
     });
     it('should set cropping equal true when uploadCompleteHandler is run', () => {
       wrapper.vm.handleUploadComplete({ id: fileUploadId });

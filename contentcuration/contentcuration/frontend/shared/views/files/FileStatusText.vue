@@ -26,16 +26,14 @@
 
 <script>
 
-  import { mapGetters } from 'vuex';
-  import { fileStatusMixin } from 'shared/mixins';
+  import useFiles from 'shared/composables/useFiles';
   import { fileErrors } from 'shared/constants';
 
   export default {
     name: 'FileStatusText',
-    mixins: [fileStatusMixin],
     props: {
-      fileId: {
-        type: String,
+      file: {
+        type: Object,
         required: true,
       },
       readonly: {
@@ -48,16 +46,16 @@
         default: false,
       },
     },
+    setup() {
+      const { getStatusMessage } = useFiles();
+      return { getStatusMessage };
+    },
     computed: {
-      ...mapGetters('file', ['getFileUpload']),
-      file() {
-        return this.getFileUpload(this.fileId);
-      },
       uploading() {
         return this.file && this.file.uploading;
       },
       message() {
-        return this.statusMessage(this.fileId);
+        return this.getStatusMessage(this.file);
       },
       invalidFile() {
         return this.file && this.file.error;

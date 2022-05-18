@@ -63,8 +63,9 @@
 
   import FileStorage from './FileStorage';
   import FileDropzone from './FileDropzone';
+  import useFiles from 'shared/composables/useFiles';
+  import useFileUpload from 'shared/composables/useFileUpload';
   import { fileErrors, MAX_FILE_SIZE } from 'shared/constants';
-  import { fileSizeMixin } from 'shared/mixins';
   import Alert from 'shared/views/Alert';
   import { FormatPresetsList } from 'shared/leUtils/FormatPresets';
 
@@ -75,7 +76,6 @@
       FileStorage,
       FileDropzone,
     },
-    mixins: [fileSizeMixin],
     props: {
       readonly: {
         type: Boolean,
@@ -106,6 +106,11 @@
         required: false,
       },
     },
+    setup() {
+      const { formatFileSize, getFile } = useFiles();
+      const { uploadFile } = useFileUpload();
+      return { formatFileSize, getFile, uploadFile };
+    },
     data() {
       return {
         unsupportedFiles: [],
@@ -118,7 +123,6 @@
     },
     computed: {
       ...mapGetters(['availableSpace']),
-      ...mapGetters('file', ['getFileUpload']),
       acceptedFiles() {
         return FormatPresetsList.filter(fp =>
           this.presetID
@@ -148,7 +152,6 @@
     },
     methods: {
       ...mapActions(['fetchUserStorage']),
-      ...mapActions('file', ['uploadFile']),
       openFileDialog() {
         if (!this.readonly) {
           this.$refs.fileUpload.click();
@@ -197,7 +200,7 @@
                 const fileObject = ret.fileObject;
                 ret.promise.then(err => {
                   if (err !== fileErrors.UPLOAD_FAILED && isFunction(this.uploadCompleteHandler)) {
-                    this.uploadCompleteHandler(this.getFileUpload(fileObject.id));
+                    this.getFile(fileObject.id).then(file => this.uploadCompleteHandler(file));
                   }
                 });
               }

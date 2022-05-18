@@ -13,7 +13,6 @@
 
 <script>
 
-  import { mapActions } from 'vuex';
   import chunk from 'lodash/chunk';
   import min from 'lodash/min';
   import map from 'lodash/map';
@@ -23,6 +22,7 @@
   import client from 'shared/client';
   import Alert from 'shared/views/Alert';
   import { ASPECT_RATIO, THUMBNAIL_WIDTH } from 'shared/constants';
+  import useFiles from 'shared/composables/useFiles';
   // Based off of solution here: https://github.com/mozilla/pdf.js/issues/7612
   import PDFJSWorker from '!!file-loader!pdfjs-dist/build/pdf.worker.min.js';
 
@@ -48,6 +48,10 @@
         type: Function,
         required: true,
       },
+    },
+    setup() {
+      const { fetchAudioData } = useFiles();
+      return { fetchAudioData };
     },
     data() {
       return {
@@ -79,7 +83,6 @@
       },
     },
     methods: {
-      ...mapActions('file', ['getAudioData']),
       handleError(error) {
         this.$emit('error', error);
         this.showErrorAlert = true;
@@ -107,7 +110,7 @@
         context.fillStyle = 'black';
         context.fillRect(0, 0, this.width, this.height);
         context.fillStyle = this.$vuetify.theme.primary;
-        this.getAudioData(this.filePath)
+        this.fetchAudioData(this.filePath)
           .then(data => {
             let sampleStart = Math.max(0, (data.length - MAX_AUDIO_SAMPLE_SIZE) / 2);
             let sampleEnd = Math.min(data.length, (data.length + MAX_AUDIO_SAMPLE_SIZE) / 2);

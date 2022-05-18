@@ -35,8 +35,9 @@
           </VCard>
           <FilePreview
             v-else
+            :node="node"
+            :nodeFiles="contentNodeFiles"
             :fileId="selected"
-            :nodeId="nodeId"
             @click="$emit('previewClick')"
           />
         </div>
@@ -73,12 +74,16 @@
 
 <script>
 
+  import { onMounted } from '@vue/composition-api';
   import sortBy from 'lodash/sortBy';
-  import { mapActions, mapGetters } from 'vuex';
+  import { mapGetters } from 'vuex';
   import FilePreview from './FilePreview';
   import FileUploadItem from './FileUploadItem';
+  import useContentNodesFiles from 'shared/composables/useContentNodesFiles';
+  import useFiles from 'shared/composables/useFiles';
   import { FormatPresetsList } from 'shared/leUtils/FormatPresets';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
+  import { File } from 'shared/data/resources';
 
   export default {
     name: 'FileUpload',
@@ -93,19 +98,32 @@
         required: true,
       },
     },
+    setup(props) {
+      const {
+        subscribeContentNodesFiles,
+        contentNodesFiles,
+        primaryContentNodesFiles,
+      } = useContentNodesFiles();
+      const { updateFile } = useFiles();
+      onMounted(() => {
+        subscribeContentNodesFiles([props.nodeId]);
+      });
+
+      return {
+        contentNodeFiles: contentNodesFiles,
+        primaryContentNodeFiles: primaryContentNodesFiles,
+        updateFile,
+      };
+    },
     data() {
       return {
         selected: null,
       };
     },
     computed: {
-      ...mapGetters('file', ['getContentNodeFiles']),
       ...mapGetters('contentNode', ['getContentNode']),
       node() {
         return this.getContentNode(this.nodeId);
-      },
-      files() {
-        return this.getContentNodeFiles(this.nodeId);
       },
       presets() {
         return FormatPresetsList.filter(p => p.kind_id === this.node.kind);
@@ -117,7 +135,7 @@
         return this.fileCount > 1;
       },
       primaryFileCount() {
-        return this.files.filter(file => !file.preset.supplementary).length;
+        return this.primaryContentNodeFiles.length;
       },
       primaryFileMapping() {
         return sortBy(
@@ -127,7 +145,7 @@
               return {
                 preset,
                 order: preset.order,
-                file: this.files.find(file => file.preset.id === preset.id),
+                file: this.contentNodeFiles.find(file => file.preset.id === preset.id),
               };
             }),
           'order'
@@ -135,7 +153,7 @@
       },
     },
     watch: {
-      'files.length'(newCount, oldCount) {
+      'contentNodeFiles.length'(newCount, oldCount) {
         if (!oldCount) {
           this.selectFirstFile();
         }
@@ -145,9 +163,8 @@
       this.selectFirstFile();
     },
     methods: {
-      ...mapActions('file', ['updateFile', 'deleteFile']),
       selectFirstFile() {
-        let firstFile = sortBy(this.files, f => f.preset.order)[0];
+        let firstFile = sortBy(this.contentNodeFiles, f => f.preset.order)[0];
         this.selected = firstFile && firstFile.id;
       },
       handleUploadComplete(fileUpload) {
@@ -163,7 +180,10 @@
         });
       },
       handleRemoveFile(file) {
-        this.deleteFile(file);
+        if (!file) {
+          return;
+        }
+        File.delete(file.id);
         if (file.id === this.selected) {
           this.selectFirstFile();
         }

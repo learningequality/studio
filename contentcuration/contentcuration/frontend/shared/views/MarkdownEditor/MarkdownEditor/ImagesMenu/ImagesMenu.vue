@@ -22,7 +22,7 @@
         <div class="body-1 mb-2 mx-2">
           <FileStatusText
             v-if="uploadingId"
-            :fileId="uploadingId"
+            :file="file"
             permanent
             @open="openFileDialog"
           />
@@ -45,7 +45,7 @@
               <VLayout wrap align-center justify-center style="max-height: 0px;">
                 <div class="text-xs-center" style="position: absolute;">
                   <p>
-                    <FileStatus :fileId="uploadingId" large />
+                    <FileStatus :file="file" large />
                   </p>
                   <ActionLink
                     v-if="!hasError"
@@ -105,6 +105,7 @@
 
 <script>
 
+  import useFileUpload from 'shared/composables/useFileUpload';
   import FileStatusText from 'shared/views/files/FileStatusText';
   import FileStatus from 'shared/views/files/FileStatus';
   import FileDropzone from 'shared/views/files/FileDropzone';
@@ -140,13 +141,13 @@
       handleFileUpload: {
         type: Function,
       },
-      // Inject function to get file upload object
-      getFileUpload: {
-        type: Function,
-      },
       imagePreset: {
         type: String,
       },
+    },
+    setup() {
+      const { getFileUpload, deleteFileUpload } = useFileUpload();
+      return { getFileUpload, deleteFileUpload };
     },
     data() {
       return {
@@ -155,6 +156,9 @@
       };
     },
     computed: {
+      file() {
+        return this.getFileUpload(this.uploadingId);
+      },
       anchorArrowClasses() {
         const classes = ['anchor-arrow'];
 
@@ -170,9 +174,6 @@
       acceptedFormats() {
         // TODO: Properly handle lists for i18n
         return FormatPresetsMap.get(this.imagePreset).allowed_formats.join(', ');
-      },
-      file() {
-        return this.getFileUpload(this.uploadingId);
       },
       fileSrc() {
         return (this.file && this.file.url) || this.src;
@@ -207,6 +208,7 @@
         });
       },
       cancelPendingFile() {
+        this.deleteFileUpload(this.uploadingId);
         this.uploadingId = '';
       },
       openFileDialog() {

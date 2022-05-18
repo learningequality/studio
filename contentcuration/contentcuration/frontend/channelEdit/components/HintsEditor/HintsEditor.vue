@@ -44,7 +44,6 @@
                       analyticsLabel="Hint"
                       :markdown="hint.hint"
                       :handleFileUpload="handleFileUpload"
-                      :getFileUpload="getFileUpload"
                       :imagePreset="imagePreset"
                       @update="updateHintText($event, hintIdx)"
                       @minimize="emitClose"
@@ -121,10 +120,6 @@
       },
       // Inject function to handle file uploads
       handleFileUpload: {
-        type: Function,
-      },
-      // Inject function to get file upload object
-      getFileUpload: {
         type: Function,
       },
       imagePreset: {
