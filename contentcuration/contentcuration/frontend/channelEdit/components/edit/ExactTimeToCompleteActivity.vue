@@ -46,10 +46,10 @@
         get() {
           return this.value;
         },
-        set (value) {
-          this.$emit('input', value)
-        }
-      }
+        set(value) {
+          this.$emit('input', value);
+        },
+      },
     },
     $trs: {
       minutesRequired: 'Minutes',
