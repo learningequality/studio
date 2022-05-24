@@ -284,6 +284,7 @@ class ExtraFieldsOptionsSerializer(JSONFieldDictSerializer):
 class ExtraFieldsSerializer(JSONFieldDictSerializer):
     randomize = BooleanField()
     options = ExtraFieldsOptionsSerializer(required=False)
+    suggested_duration_type = ChoiceField(choices=[completion_criteria.TIME, completion_criteria.APPROX_TIME], allow_null=True, required=False)
 
 
 class TagField(DotPathValueMixin, DictField):

@@ -304,6 +304,9 @@ function generateContentNodeData({
     if (extra_fields.options) {
       contentNodeData.extra_fields.options = extra_fields.options;
     }
+    if (extra_fields.suggested_duration_type) {
+      contentNodeData.extra_fields.suggested_duration_type = extra_fields.suggested_duration_type;
+    }
   }
   if (prerequisite !== NOVALUE) {
     contentNodeData.prerequisite = prerequisite;
@@ -319,7 +322,6 @@ function generateContentNodeData({
 }
 
 export function updateContentNode(context, { id, ...payload } = {}) {
-  console.log('!!! *** {id, ...payload}', { id, ...payload });
   if (!id) {
     throw ReferenceError('id must be defined to update a contentNode');
   }
@@ -333,12 +335,10 @@ export function updateContentNode(context, { id, ...payload } = {}) {
 
     // Don't overwrite existing options data
     if (contentNodeData.extra_fields.options) {
-      console.log('!!!*** current options', contentNodeData.extra_fields.options);
       contentNodeData.extra_fields.options = {
         ...(extraFields.options || {}),
         ...contentNodeData.extra_fields.options,
       };
-      console.log('!!!*** current options NOW', contentNodeData.extra_fields.options);
     }
 
     contentNodeData = {
@@ -363,7 +363,6 @@ export function updateContentNode(context, { id, ...payload } = {}) {
     ...contentNodeData,
     complete,
   };
-  console.log('!!! *** contentNodeData to update', contentNodeData);
 
   context.commit('ADD_CONTENTNODE', { id, ...contentNodeData });
   return ContentNode.update(id, contentNodeData);

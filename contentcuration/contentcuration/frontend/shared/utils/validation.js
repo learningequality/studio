@@ -149,6 +149,7 @@ export function getCompletionValidators() {
 }
 
 export function getDurationValidators() {
+  console.log('!!!% ERROR')
   return [value => Boolean(value.length) || ValidationErrors.DURATION_REQUIRED];
 }
 
