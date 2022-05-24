@@ -68,6 +68,7 @@
           if (!this.value) {
             return '';
           }
+          console.log('!!! GET minutes from this.value', this.value);
           return this.convertToMinutes(this.value);
         },
         set(value) {
@@ -110,7 +111,9 @@
         return [
           v => v !== '' || 'This field is required',
           v => v >= EXACT_MIN || 'Time must be greater than or equal to 1',
-          v => v <= EXACT_MAX || 'Time must be less than or equal to 1200',
+          v =>
+            v <= EXACT_MAX ||
+            'Please make sure this is the amount of time you want learners to spend on this resource to complete it',
         ];
       },
     },
@@ -122,8 +125,12 @@
         return Math.floor(seconds / 60);
       },
       validateMinutes(value) {
-        if (value >= this.minRange && value <= this.maxRange) {
+        if (this.durationValue === 'exactTime') {
           this.$emit('input', value * 60);
+        } else {
+          if (value >= this.minRange && value <= this.maxRange) {
+            this.$emit('input', value * 60);
+          }
         }
       },
     },
