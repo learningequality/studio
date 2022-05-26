@@ -18,7 +18,6 @@ from django.conf import settings
 from django.core.files import File
 from django.core.files.storage import default_storage as storage
 from django.core.management import call_command
-from django.db import transaction
 from django.db.models import Count
 from django.db.models import Max
 from django.db.models import Q
@@ -181,30 +180,29 @@ def map_content_nodes(  # noqa: C901
         except IndexError:
             return None
 
-    with transaction.atomic():
-        with ccmodels.ContentNode.objects.delay_mptt_updates(), kolibrimodels.ContentNode.objects.delay_mptt_updates():
-            for node in iter(queue_get_return_none_when_empty, None):
-                logging.debug("Mapping node with id {id}".format(
-                    id=node.pk))
+    with ccmodels.ContentNode.objects.delay_mptt_updates(), kolibrimodels.ContentNode.objects.delay_mptt_updates():
+        for node in iter(queue_get_return_none_when_empty, None):
+            logging.debug("Mapping node with id {id}".format(
+                id=node.pk))
 
-                if node.get_descendants(include_self=True).exclude(kind_id=content_kinds.TOPIC).exists() and node.complete:
-                    children = (node.children.all())
-                    node_queue.extend(children)
+            if node.get_descendants(include_self=True).exclude(kind_id=content_kinds.TOPIC).exists() and node.complete:
+                children = (node.children.all())
+                node_queue.extend(children)
 
-                    kolibrinode = create_bare_contentnode(node, default_language, channel_id, channel_name)
+                kolibrinode = create_bare_contentnode(node, default_language, channel_id, channel_name)
 
-                    if node.kind.kind == content_kinds.EXERCISE:
-                        exercise_data = process_assessment_metadata(node, kolibrinode)
-                        if force_exercises or node.changed or not \
-                                node.files.filter(preset_id=format_presets.EXERCISE).exists():
-                            create_perseus_exercise(node, kolibrinode, exercise_data, user_id=user_id)
-                    elif node.kind.kind == content_kinds.SLIDESHOW:
-                        create_slideshow_manifest(node, kolibrinode, user_id=user_id)
-                    create_associated_file_objects(kolibrinode, node)
-                    map_tags_to_node(kolibrinode, node)
+                if node.kind.kind == content_kinds.EXERCISE:
+                    exercise_data = process_assessment_metadata(node, kolibrinode)
+                    if force_exercises or node.changed or not \
+                            node.files.filter(preset_id=format_presets.EXERCISE).exists():
+                        create_perseus_exercise(node, kolibrinode, exercise_data, user_id=user_id)
+                elif node.kind.kind == content_kinds.SLIDESHOW:
+                    create_slideshow_manifest(node, kolibrinode, user_id=user_id)
+                create_associated_file_objects(kolibrinode, node)
+                map_tags_to_node(kolibrinode, node)
 
-                if progress_tracker:
-                    progress_tracker.increment(increment=percent_per_node)
+            if progress_tracker:
+                progress_tracker.increment(increment=percent_per_node)
 
 
 def create_slideshow_manifest(ccnode, kolibrinode, user_id=None):
@@ -428,7 +426,11 @@ def process_assessment_metadata(ccnode, kolibrinode):
     exercise_data_type = ""
     if exercise_data.get('mastery_model'):
         exercise_data_type = exercise_data.get('mastery_model')
-    if exercise_data.get('option') and exercise_data.get('option').get('completion_criteria') and exercise_data.get('option').get('completion_criteria').get('mastery_model'):
+    if (
+        exercise_data.get('option') and
+        exercise_data.get('option').get('completion_criteria') and
+        exercise_data.get('option').get('completion_criteria').get('mastery_model')
+    ):
         exercise_data_type = exercise_data.get('option').get('completion_criteria').get('mastery_model')
 
     mastery_model = {'type': exercise_data_type or exercises.M_OF_N}
