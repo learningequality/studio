@@ -10,7 +10,6 @@ from django.db.models import Q
 from django.db.models import Subquery
 from django.http import Http404
 from django.utils.decorators import method_decorator
-from django.utils.translation import get_language
 from django.views.decorators.cache import cache_page
 from django_cte import With
 from django_filters.rest_framework import BooleanFilter
@@ -28,6 +27,7 @@ from rest_framework.serializers import FloatField
 from rest_framework.serializers import IntegerField
 
 from contentcuration.decorators import cache_no_user_data
+from contentcuration.models import Change
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
 from contentcuration.models import File
@@ -36,8 +36,10 @@ from contentcuration.models import SecretToken
 from contentcuration.models import User
 from contentcuration.utils.pagination import CachedListPagination
 from contentcuration.utils.pagination import ValuesViewsetPageNumberPagination
+from contentcuration.utils.publish import publish_channel
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
+from contentcuration.viewsets.base import create_change_tracker
 from contentcuration.viewsets.base import ReadOnlyValuesViewset
 from contentcuration.viewsets.base import RequiredFilterSet
 from contentcuration.viewsets.base import ValuesViewset
@@ -48,7 +50,9 @@ from contentcuration.viewsets.common import SQCount
 from contentcuration.viewsets.common import SQSum
 from contentcuration.viewsets.common import UUIDInFilter
 from contentcuration.viewsets.sync.constants import CHANNEL
+from contentcuration.viewsets.sync.constants import CONTENTNODE
 from contentcuration.viewsets.sync.utils import generate_update_event
+from contentcuration.viewsets.sync.utils import log_sync_exception
 from contentcuration.viewsets.user import IsAdminUser
 
 
@@ -425,15 +429,24 @@ class ChannelViewSet(ChangeEventMixin, ValuesViewset):
         )
         return queryset
 
-    @action(detail=True, methods=["post"])
-    def publish(self, request, pk=None):
-        from contentcuration.tasks import create_async_task
+    def publish_from_changes(self, changes):
+        errors = []
+        for publish in changes:
+            # Publish change will have key, version_notes, and language.
+            try:
+                self.publish(
+                    publish["key"], version_notes=publish.get("version_notes"), language=publish.get("language")
+                )
+            except Exception as e:
+                log_sync_exception(e)
+                publish["errors"] = [str(e)]
+                errors.append(publish)
+        return errors
 
-        if not pk:
-            raise Http404
+    def publish(self, pk, version_notes="", language=None):
         logging.debug("Entering the publish channel endpoint")
 
-        channel = self.get_edit_object()
+        channel = self.get_edit_queryset().get(pk=pk)
 
         if channel.deleted:
             raise ValidationError("Cannot publish a deleted channel")
@@ -446,21 +459,37 @@ class ChannelViewSet(ChangeEventMixin, ValuesViewset):
         ):
             raise ValidationError("Cannot publish an unchanged channel")
 
-        channel.mark_publishing(request.user)
+        channel.mark_publishing(self.request.user)
 
-        version_notes = request.data.get("version_notes")
-
-        task_args = {
-            "user_id": request.user.pk,
-            "channel_id": channel.id,
-            "version_notes": version_notes,
-            "language": get_language(),
-        }
-
-        _, task_info = create_async_task("export-channel", request.user, **task_args)
-        return Response({
-            'changes': [self.create_task_event(task_info)]
-        })
+        with create_change_tracker(pk, CHANNEL, channel.id, self.request.user, "export-channel") as progress_tracker:
+            try:
+                channel = publish_channel(
+                    self.request.user.pk,
+                    channel.id,
+                    version_notes=version_notes,
+                    send_email=True,
+                    progress_tracker=progress_tracker,
+                    language=language
+                )
+                Change.create_changes([
+                    generate_update_event(
+                        channel.id, CHANNEL, {
+                            "published": True,
+                            "publishing": False,
+                            "primary_token": channel.get_human_token().token,
+                            "last_published": channel.last_published
+                        }, channel_id=channel.id
+                    ),
+                    generate_update_event(channel.main_tree.pk, CONTENTNODE, {"published": True, "changed": False}, channel_id=channel.id),
+                ], created_by_id=self.request.user.id, applied=True)
+            except Exception as e:
+                Change.create_changes([
+                    generate_update_event(
+                        channel.id, CHANNEL, {"publishing": False}, channel_id=channel.id
+                    ),
+                ], created_by_id=self.request.user.id, applied=True)
+                progress_tracker.report_exception(e)
+                raise
 
     @action(detail=True, methods=["post"])
     def sync(self, request, pk=None):

@@ -26,6 +26,7 @@ from django.db.utils import IntegrityError
 from django.template.loader import render_to_string
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+from django.utils.translation import override
 from kolibri_content import models as kolibrimodels
 from kolibri_content.router import get_active_content_database
 from kolibri_content.router import using_content_database
@@ -795,6 +796,7 @@ def publish_channel(
     force_exercises=False,
     send_email=False,
     progress_tracker=None,
+    language=settings.LANGUAGE_CODE,
 ):
     """
     :type progress_tracker: contentcuration.utils.celery.ProgressTracker|None
@@ -822,7 +824,8 @@ def publish_channel(
             delete_public_channel_cache_keys()
 
         if send_email:
-            send_emails(channel, user_id, version_notes=version_notes)
+            with override(language):
+                send_emails(channel, user_id, version_notes=version_notes)
 
         # use SQLite backup API to put DB into archives folder.
         # Then we can use the empty db name to have SQLite use a temporary DB (https://www.sqlite.org/inmemorydb.html)
