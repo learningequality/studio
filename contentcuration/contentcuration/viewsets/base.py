@@ -1,5 +1,7 @@
 import traceback
+from contextlib import contextmanager
 
+from celery import states
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
 from django.http import Http404
@@ -24,7 +26,11 @@ from rest_framework.utils import model_meta
 from rest_framework.viewsets import ReadOnlyModelViewSet
 
 from contentcuration.models import Change
+from contentcuration.models import Task
+from contentcuration.utils.celery.tasks import ProgressTracker
 from contentcuration.viewsets.common import MissingRequiredParamsException
+from contentcuration.viewsets.sync.constants import TASK_ID
+from contentcuration.viewsets.sync.utils import generate_update_event
 from contentcuration.viewsets.sync.utils import log_sync_exception
 
 
@@ -879,3 +885,41 @@ class RequiredFilterSet(FilterSet):
         if not has_filtering_queries:
             raise MissingRequiredParamsException("No valid filter parameters supplied")
         return super(FilterSet, self).qs
+
+
+@contextmanager
+def create_change_tracker(pk, table, channel_id, user, task_type):
+    # Clean up any previous tasks specific to this in case there were failures.
+    Task.objects.filter(channel_id=channel_id, task_type=task_type, metadata__pk=pk, metadata__table=table).delete()
+
+    task_object = Task.objects.create(status=states.STARTED, channel_id=channel_id, is_progress_tracking=True, task_type=task_type, user=user, metadata={
+        "pk": pk, "table": table
+    })
+
+    def update_progress(meta=None):
+        if meta:
+            task_object.metadata = meta
+            task_object.save()
+
+    Change.create_change(
+        generate_update_event(pk, table, {TASK_ID: task_object.task_id}, channel_id=channel_id), created_by_id=user.id,
+        applied=True
+    )
+
+    def report_exception(e):
+        task_object.status = states.FAILURE
+        task_object.metadata.update({"error": str(e)})
+        task_object.save()
+
+    tracker = ProgressTracker(None, update_progress)
+    tracker.report_exception = report_exception
+
+    yield tracker
+
+    if task_object.status == states.STARTED:
+        # No error reported, cleanup.
+        Change.create_change(
+            generate_update_event(pk, table, {TASK_ID: None}, channel_id=channel_id), created_by_id=user.id,
+            applied=True
+        )
+        task_object.delete()
