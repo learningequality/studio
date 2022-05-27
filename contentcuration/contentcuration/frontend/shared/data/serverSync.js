@@ -60,6 +60,7 @@ const copiedFields = commonFields.concat([
   'position',
   'excluded_descendants',
 ]);
+const publishedFields = commonFields.concat(['version_notes', 'language']);
 
 function trimChangeForSync(change) {
   if (change.type === CHANGE_TYPES.CREATED) {
@@ -72,6 +73,8 @@ function trimChangeForSync(change) {
     return pick(change, movedFields);
   } else if (change.type === CHANGE_TYPES.COPIED) {
     return pick(change, copiedFields);
+  } else if (change.type === CHANGE_TYPES.PUBLISHED) {
+    return pick(change, publishedFields);
   }
 }
 

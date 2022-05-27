@@ -4,6 +4,8 @@ export const CHANGE_TYPES = {
   DELETED: 3,
   MOVED: 4,
   COPIED: 5,
+  PUBLISHED: 6,
+  SYNCED: 7,
 };
 
 // Tables

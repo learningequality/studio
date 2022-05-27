@@ -5,7 +5,7 @@ import { CHANGE_TYPES, IGNORED_SOURCE } from './constants';
 import db from './db';
 import { INDEXEDDB_RESOURCES } from './registry';
 
-const { CREATED, DELETED, UPDATED, MOVED } = CHANGE_TYPES;
+const { CREATED, DELETED, UPDATED, MOVED, PUBLISHED, SYNCED } = CHANGE_TYPES;
 
 export function applyMods(obj, mods) {
   for (let keyPath in mods) {
@@ -60,7 +60,7 @@ export function collectChanges(changes) {
   const collectedChanges = {};
   changes.forEach(change => {
     if (!Object.prototype.hasOwnProperty.call(collectedChanges, change.table)) {
-      collectedChanges[change.table] = { [CREATED]: [], [DELETED]: [], [UPDATED]: [], [MOVED]: [] };
+      collectedChanges[change.table] = { [CREATED]: [], [DELETED]: [], [UPDATED]: [], [MOVED]: [], [PUBLISHED]: [], [SYNCED]: [] };
     }
     collectedChanges[change.table][change.type].push(change);
   });
