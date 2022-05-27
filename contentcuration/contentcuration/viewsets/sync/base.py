@@ -25,7 +25,9 @@ from contentcuration.viewsets.sync.constants import EDITOR_M2M
 from contentcuration.viewsets.sync.constants import FILE
 from contentcuration.viewsets.sync.constants import INVITATION
 from contentcuration.viewsets.sync.constants import MOVED
+from contentcuration.viewsets.sync.constants import PUBLISHED
 from contentcuration.viewsets.sync.constants import SAVEDSEARCH
+from contentcuration.viewsets.sync.constants import SYNCED
 from contentcuration.viewsets.sync.constants import TASK
 from contentcuration.viewsets.sync.constants import UPDATED
 from contentcuration.viewsets.sync.constants import USER
@@ -51,7 +53,6 @@ class ChangeNotAllowed(Exception):
         super(ChangeNotAllowed, self).__init__(self.message)
 
 
-# Uses ordered dict behaviour to enforce operation orders
 viewset_mapping = OrderedDict(
     [
         (USER, UserViewSet),
@@ -76,39 +77,13 @@ viewset_mapping = OrderedDict(
     ]
 )
 
-change_order = [
-    # inserts
-    COPIED,
-    CREATED,
-    # updates
-    UPDATED,
-    DELETED,
-    MOVED,
-]
-
-table_name_indices = {
-    table_name: i for i, table_name in enumerate(viewset_mapping.keys())
-}
-
 
 def get_table(obj):
     return obj["table"]
 
 
-def get_table_sort_order(obj):
-    return table_name_indices[get_table(obj)]
-
-
 def get_change_type(obj):
     return obj["type"]
-
-
-def get_change_order(obj):
-    try:
-        change_type = int(obj["type"])
-    except ValueError:
-        change_type = -1
-    return change_order.index(change_type)
 
 
 event_handlers = {
@@ -117,6 +92,8 @@ event_handlers = {
     DELETED: "delete_from_changes",
     MOVED: "move_from_changes",
     COPIED: "copy_from_changes",
+    PUBLISHED: "publish_from_changes",
+    SYNCED: "sync_from_changes",
 }
 
 
