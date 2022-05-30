@@ -3,6 +3,7 @@ A view that handles synchronization of changes from the frontend
 and deals with processing all the changes to make appropriate
 bulk creates, updates, and deletes.
 """
+from celery import states
 from django.db.models import Q
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAuthenticated
@@ -11,6 +12,7 @@ from rest_framework.views import APIView
 
 from contentcuration.models import Change
 from contentcuration.models import Channel
+from contentcuration.models import Task
 from contentcuration.tasks import get_or_create_async_task
 from contentcuration.viewsets.sync.constants import CHANNEL
 from contentcuration.viewsets.sync.constants import CREATED
@@ -28,7 +30,7 @@ class SyncView(APIView):
 
     def handle_changes(self, request):
         session_key = request.session.session_key
-        changes = request.data.get("changes", [])
+        changes = list(filter(lambda x: type(x) is dict, request.data.get("changes", [])))
 
         if changes:
             change_channel_ids = set(x.get("channel_id") for x in changes if x.get("channel_id"))
@@ -67,14 +69,17 @@ class SyncView(APIView):
             return {"disallowed": disallowed_changes, "allowed": allowed_changes}
         return {}
 
-    def return_changes(self, request):
+    def get_channel_revs(self, request):
         channel_revs = request.data.get("channel_revs", {})
-        user_rev = request.data.get("user_rev") or 0
-        session_key = request.session.session_key
         if channel_revs:
             # Filter to only the channels that the user has permissions to view.
             channel_ids = Channel.filter_view_queryset(Channel.objects.all(), request.user).filter(id__in=channel_revs.keys()).values_list("id", flat=True)
             channel_revs = {channel_id: channel_revs[channel_id] for channel_id in channel_ids}
+        return channel_revs
+
+    def return_changes(self, request, channel_revs):
+        user_rev = request.data.get("user_rev") or 0
+        session_key = request.session.session_key
 
         # Create a filter that returns all applied changes, and any errored changes made by this session
         relevant_to_session_filter = (Q(applied=True) | Q(errored=True, session_id=session_key))
@@ -108,6 +113,21 @@ class SyncView(APIView):
 
         return {"changes": changes, "errors": errors, "successes": successes}
 
+    def return_tasks(self, request, channel_revs):
+        tasks = Task.objects.filter(
+            channel_id__in=channel_revs.keys(),
+            status__in=[states.STARTED, states.FAILURE]
+        ).exclude(task_type__in=["apply_channel_changes", "apply_user_changes"])
+        return {
+            "tasks": tasks.values(
+                "task_id",
+                "task_type",
+                "metadata",
+                "channel_id",
+                "status",
+            )
+        }
+
     def post(self, request):
         response_payload = {
             "disallowed": [],
@@ -115,10 +135,15 @@ class SyncView(APIView):
             "changes": [],
             "errors": [],
             "successess": [],
+            "tasks": [],
         }
+
+        channel_revs = self.get_channel_revs(request)
 
         response_payload.update(self.handle_changes(request))
 
-        response_payload.update(self.return_changes(request))
+        response_payload.update(self.return_changes(request, channel_revs))
+
+        response_payload.update(self.return_tasks(request, channel_revs))
 
         return Response(response_payload)

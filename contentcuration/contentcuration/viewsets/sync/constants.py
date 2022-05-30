@@ -32,7 +32,6 @@ EDITOR_M2M = "editor_m2m"
 VIEWER_M2M = "viewer_m2m"
 SAVEDSEARCH = "savedsearch"
 CLIPBOARD = "clipboard"
-TASK = "task"
 
 
 ALL_TABLES = set(
@@ -50,7 +49,6 @@ ALL_TABLES = set(
         SAVEDSEARCH,
         EDITOR_M2M,
         VIEWER_M2M,
-        TASK,
     ]
 )
 

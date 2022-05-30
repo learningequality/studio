@@ -59,7 +59,6 @@ from contentcuration.viewsets.base import BulkUpdateMixin
 from contentcuration.viewsets.base import create_change_tracker
 from contentcuration.viewsets.base import RequiredFilterSet
 from contentcuration.viewsets.base import ValuesViewset
-from contentcuration.viewsets.common import ChangeEventMixin
 from contentcuration.viewsets.common import DotPathValueMixin
 from contentcuration.viewsets.common import JSONFieldDictSerializer
 from contentcuration.viewsets.common import NotNullMapArrayAgg
@@ -624,7 +623,7 @@ def dict_if_none(obj, field_name=None):
 
 
 # Apply mixin first to override ValuesViewset
-class ContentNodeViewSet(BulkUpdateMixin, ChangeEventMixin, ValuesViewset):
+class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
     queryset = ContentNode.objects.all()
     serializer_class = ContentNodeSerializer
     permission_classes = [IsAuthenticated]

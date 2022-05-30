@@ -43,7 +43,6 @@ from contentcuration.viewsets.base import create_change_tracker
 from contentcuration.viewsets.base import ReadOnlyValuesViewset
 from contentcuration.viewsets.base import RequiredFilterSet
 from contentcuration.viewsets.base import ValuesViewset
-from contentcuration.viewsets.common import ChangeEventMixin
 from contentcuration.viewsets.common import ContentDefaultsSerializer
 from contentcuration.viewsets.common import JSONFieldDictSerializer
 from contentcuration.viewsets.common import SQCount
@@ -382,7 +381,7 @@ channel_field_map = {
 }
 
 
-class ChannelViewSet(ChangeEventMixin, ValuesViewset):
+class ChannelViewSet(ValuesViewset):
     queryset = Channel.objects.all()
     permission_classes = [IsAuthenticated]
     serializer_class = ChannelSerializer

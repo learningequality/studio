@@ -17,7 +17,7 @@ import {
 import db from './db';
 import mergeAllChanges from './mergeChanges';
 import { INDEXEDDB_RESOURCES } from './registry';
-import { Session } from './resources';
+import { Session, Task } from './resources';
 import client from 'shared/client';
 import urls from 'shared/urls';
 
@@ -183,6 +183,11 @@ function handleMaxRevs(response, userId) {
   return Promise.resolve();
 }
 
+function handleTasks(response) {
+  const tasks = get(response, ['data', 'tasks'], []);
+  return Task.setTasks(tasks);
+}
+
 async function syncChanges() {
   // Note: we could in theory use Dexie syncable for what
   // we are doing here, but I can't find a good way to make
@@ -259,6 +264,7 @@ async function syncChanges() {
         handleErrors(response),
         handleSuccesses(response),
         handleMaxRevs(response, user.id),
+        handleTasks(response),
       ]);
     } catch (err) {
       console.error('There was an error updating change status: ', err); // eslint-disable-line no-console

@@ -1725,30 +1725,14 @@ export const Clipboard = new TreeResource({
   },
 });
 
-export const Task = new Resource({
+export const Task = new IndexedDBResource({
   tableName: TABLE_NAMES.TASK,
-  urlName: 'task',
   idField: 'task_id',
-  listeners: {
-    [CHANGE_TYPES.CREATED]: function(change) {
-      if (change.obj.status === 'SUCCESS') {
-        const changes = get(change.obj, ['metadata', 'result', 'changes']);
-        if (changes) {
-          applyChanges(changes);
-        }
-      }
-    },
-    [CHANGE_TYPES.UPDATED]: function(change) {
-      if (change.mods.status === 'SUCCESS') {
-        const changes = get(change.obj, ['metadata', 'result', 'changes']);
-        if (changes) {
-          applyChanges(changes);
-        }
-      }
-    },
-  },
-  setChannelIdOnChange(change) {
-    // For channels, the appropriate channel_id for a change is just the key
-    change.channel_id = change.obj.channel_id;
-  },
+  setTasks(tasks) {
+    return this.transaction({ mode: 'rw', source: IGNORED_SOURCE}, () => {
+      return this.table.where(this.idField).noneOf(tasks.map(t => t[this.idField])).delete().then(() => {
+        return this.table.bulkPut(tasks);
+      });
+    });
+  }
 });
