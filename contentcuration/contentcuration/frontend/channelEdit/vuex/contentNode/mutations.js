@@ -17,16 +17,6 @@ export function REMOVE_CONTENTNODE(state, contentNode) {
   Vue.delete(state.contentNodesMap, contentNode.id);
 }
 
-export function UPDATE_CONTENTNODE(state, { id, ...payload } = {}) {
-  if (!id) {
-    throw ReferenceError('id must be defined to update a contentNode set');
-  }
-  state.contentNodesMap[id] = {
-    ...state.contentNodesMap[id],
-    ...payload,
-  };
-}
-
 export function SET_CONTENTNODE_NOT_NEW(state, contentNodeId) {
   if (state.contentNodesMap[contentNodeId]) {
     Vue.delete(state.contentNodesMap[contentNodeId], NEW_OBJECT);
@@ -48,7 +38,7 @@ export function REMOVE_TAG(state, { id, tag }) {
 }
 
 export function SET_FILES(state, { id, files }) {
-  state.contentNodesMap[id].files = files;
+  Vue.set(state.contentNodesMap[id], 'files', files);
 }
 
 export function COLLAPSE_ALL_EXPANDED(state) {

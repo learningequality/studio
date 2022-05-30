@@ -1,5 +1,4 @@
 import flatMap from 'lodash/flatMap';
-import flatten from 'lodash/flatten';
 import uniq from 'lodash/uniq';
 import { NEW_OBJECT, NOVALUE } from 'shared/constants';
 import client from 'shared/client';
@@ -347,7 +346,7 @@ export function updateContentNode(context, { id, ...payload } = {}) {
     complete,
   };
 
-  context.commit('UPDATE_CONTENTNODE', { id, ...contentNodeData });
+  context.commit('ADD_CONTENTNODE', { id, ...contentNodeData });
   return ContentNode.update(id, contentNodeData);
 }
 
@@ -428,7 +427,7 @@ export function moveContentNodes(
   return Promise.all(
     id__in.map(id => {
       return ContentNode.move(id, target, position).then(node => {
-        context.commit('UPDATE_CONTENTNODE', node);
+        context.commit('ADD_CONTENTNODE', node);
         return id;
       });
     })
