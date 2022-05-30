@@ -132,15 +132,15 @@ function handleErrors(response) {
   if (errors.length) {
     const errorMap = {};
     for (let error of errors) {
-      errorMap[error.rev] = error;
+      errorMap[error.server_rev] = error;
     }
     // Set the return error data onto the changes - this will update the change
     // both with any errors and the results of any merging that happened prior
     // to the sync operation being called
-    return db[CHANGES_TABLE].where('rev')
-      .anyOf(Object.keys(errorMap).map(Number))
+    return db[CHANGES_TABLE].where('server_rev')
+      .anyOf(Object.keys(errorMap))
       .modify(obj => {
-        return Object.assign(obj, errorMap[obj.rev]);
+        return Object.assign(obj, errorMap[obj.server_rev]);
       });
   }
   return Promise.resolve();
