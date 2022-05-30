@@ -26,9 +26,11 @@ export default {
     },
     getPublishTaskForChannel(state) {
       return function(channelId) {
-        return Object.values(state.asyncTasksMap).find(t => t.channel_id.replace('-', '') === channelId && t.task_type === 'export-channel');
-      }
-    }
+        return Object.values(state.asyncTasksMap).find(
+          t => t.channel_id.replace('-', '') === channelId && t.task_type === 'export-channel'
+        );
+      };
+    },
   },
   mutations: {
     ADD_ASYNC_TASK(state, task) {

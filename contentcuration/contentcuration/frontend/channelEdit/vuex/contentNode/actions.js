@@ -453,7 +453,9 @@ export async function checkSavingProgress(
     [TABLE_NAMES.FILE]: {},
     [TABLE_NAMES.ASSESSMENTITEM]: {},
   };
-  const query = await db[CHANGES_TABLE].toCollection().filter(c => !c.synced).toArray();
+  const query = await db[CHANGES_TABLE].toCollection()
+    .filter(c => !c.synced)
+    .toArray();
   for (let change of query) {
     if (unsyncedChanges[change.table]) {
       unsyncedChanges[change.table][change.key] = true;

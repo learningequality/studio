@@ -300,9 +300,7 @@
         return this.rootNode && this.rootNode.error_count;
       },
       isChanged() {
-        return (
-          this.rootNode && this.rootNode.changed
-        );
+        return this.rootNode && this.rootNode.changed;
       },
       isPublished() {
         return this.currentChannel && this.currentChannel.published;

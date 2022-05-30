@@ -15,7 +15,12 @@ const PUBLISH_TASK = {
   metadata: { progress: 0 },
   channel_id: CHANNEL_ID,
 };
-const SYNC_TASK = { task_id: 'task', task_type: 'sync-channel', metadata: { progress: 0 }, channel_id: CHANNEL_ID };
+const SYNC_TASK = {
+  task_id: 'task',
+  task_type: 'sync-channel',
+  metadata: { progress: 0 },
+  channel_id: CHANNEL_ID,
+};
 
 function makeWrapper({ propsData, store, publishing = false } = {}) {
   return mount(ProgressModal, {
@@ -28,9 +33,9 @@ function makeWrapper({ propsData, store, publishing = false } = {}) {
           id: CHANNEL_ID,
           last_published: new Date(),
           publishing,
-        }
-      }
-    }
+        };
+      },
+    },
   });
 }
 
@@ -73,15 +78,12 @@ describe('ProgressModal', () => {
       });
 
       it('should display publishing message', () => {
-        expect(wrapper.text()).toContain(
-          'Publishing channel'
-        );
+        expect(wrapper.text()).toContain('Publishing channel');
       });
 
       it('should display progress', () => {
         expect(getProgress(wrapper).exists()).toBe(true);
       });
-
     });
 
     describe('errored out', () => {
@@ -116,9 +118,7 @@ describe('ProgressModal', () => {
       });
 
       it('should display complete message', () => {
-        expect(wrapper.text()).toContain(
-          'Published'
-        );
+        expect(wrapper.text()).toContain('Published');
       });
 
       it("shouldn't display progress", () => {
@@ -165,15 +165,12 @@ describe('ProgressModal', () => {
       });
 
       it('should display syncing message', () => {
-        expect(wrapper.text()).toContain(
-          'Syncing channel'
-        );
+        expect(wrapper.text()).toContain('Syncing channel');
       });
 
       it('should display progress', () => {
         expect(getProgress(wrapper).exists()).toBe(true);
       });
-
     });
 
     describe('errored out', () => {
@@ -194,7 +191,6 @@ describe('ProgressModal', () => {
       it('should display error', () => {
         expect(wrapper.text()).toContain('Last sync failed');
       });
-
     });
 
     describe('is complete', () => {
@@ -208,7 +204,7 @@ describe('ProgressModal', () => {
         wrapper = makeWrapper({ propsData, store });
       });
 
-      it("should display progress", () => {
+      it('should display progress', () => {
         expect(getProgress(wrapper).exists()).toBe(true);
       });
     });

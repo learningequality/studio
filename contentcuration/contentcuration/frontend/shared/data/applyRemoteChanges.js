@@ -60,7 +60,14 @@ export function collectChanges(changes) {
   const collectedChanges = {};
   changes.forEach(change => {
     if (!Object.prototype.hasOwnProperty.call(collectedChanges, change.table)) {
-      collectedChanges[change.table] = { [CREATED]: [], [DELETED]: [], [UPDATED]: [], [MOVED]: [], [PUBLISHED]: [], [SYNCED]: [] };
+      collectedChanges[change.table] = {
+        [CREATED]: [],
+        [DELETED]: [],
+        [UPDATED]: [],
+        [MOVED]: [],
+        [PUBLISHED]: [],
+        [SYNCED]: [],
+      };
     }
     collectedChanges[change.table][change.type].push(change);
   });

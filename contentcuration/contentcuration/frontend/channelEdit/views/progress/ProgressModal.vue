@@ -26,7 +26,10 @@
       <span>{{ $tr('publishHeader') }}</span>&nbsp;<span>{{ progressPercent }}</span>
     </div>
     <div v-else class="grey--text">
-      {{ lastPublished ? $tr('lastPublished', { last_published: $formatRelative(lastPublished, now) }) : $tr('unpublishedText') }}
+      {{ lastPublished ?
+        $tr('lastPublished', { last_published: $formatRelative(lastPublished, now) }) :
+        $tr('unpublishedText')
+      }}
     </div>
   </div>
 
@@ -62,22 +65,24 @@
       },
       progressPercent() {
         const progressPercent = get(this.currentTask, ['metadata', 'progress'], 0);
-        return this.$formatNumber((Math.round(progressPercent || 0) / 100), {
+        return this.$formatNumber(Math.round(progressPercent || 0) / 100, {
           style: 'percent',
           minimumFractionDigits: 0,
-          maximumFractionDigits: 0
+          maximumFractionDigits: 0,
         });
       },
       currentPublishTaskError() {
         const publishTask = this.getPublishTaskForChannel(this.currentChannel.id);
         return Boolean(
-          publishTask &&
-          get(publishTask, ['metadata', 'error'], null) ||
+          (publishTask && get(publishTask, ['metadata', 'error'], null)) ||
             get(publishTask, 'status') === 'FAILURE'
         );
       },
       syncError() {
-        return Boolean(this.isSyncing && get(this.currentTask, ['metadata', 'error'], null) || get(this.currentTask, 'status') === 'FAILURE');
+        return Boolean(
+          (this.isSyncing && get(this.currentTask, ['metadata', 'error'], null)) ||
+            get(this.currentTask, 'status') === 'FAILURE'
+        );
       },
       lastPublished() {
         if (!this.currentChannel.last_published) {
@@ -88,7 +93,7 @@
           return this.now;
         }
         return date;
-      }
+      },
     },
     mounted() {
       this.timer = setInterval(() => {
