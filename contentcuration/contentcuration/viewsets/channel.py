@@ -8,7 +8,6 @@ from django.db.models import Exists
 from django.db.models import OuterRef
 from django.db.models import Q
 from django.db.models import Subquery
-from django.http import Http404
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django_cte import With
@@ -17,11 +16,9 @@ from django_filters.rest_framework import CharFilter
 from le_utils.constants import content_kinds
 from le_utils.constants import roles
 from rest_framework import serializers
-from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import AllowAny
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
 from rest_framework.serializers import CharField
 from rest_framework.serializers import FloatField
 from rest_framework.serializers import IntegerField
@@ -37,6 +34,7 @@ from contentcuration.models import User
 from contentcuration.utils.pagination import CachedListPagination
 from contentcuration.utils.pagination import ValuesViewsetPageNumberPagination
 from contentcuration.utils.publish import publish_channel
+from contentcuration.utils.sync import sync_channel
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import create_change_tracker
@@ -490,15 +488,31 @@ class ChannelViewSet(ValuesViewset):
                 progress_tracker.report_exception(e)
                 raise
 
-    @action(detail=True, methods=["post"])
-    def sync(self, request, pk=None):
-        from contentcuration.tasks import create_async_task
+    def sync_from_changes(self, changes):
+        errors = []
+        for sync in changes:
+            # Publish change will have key, attributes, tags, files, and assessment_items.
+            try:
+                self.sync(
+                    sync["key"],
+                    attributes=sync.get("attributes"),
+                    tags=sync.get("tags"),
+                    files=sync.get("files"),
+                    assessment_items=sync.get("assessment_items")
+                )
+            except Exception as e:
+                log_sync_exception(e)
+                sync["errors"] = [str(e)]
+                errors.append(sync)
+        return errors
 
-        if not pk:
-            raise Http404
+    def sync(self, pk, attributes=False, tags=False, files=False, assessment_items=False):
         logging.debug("Entering the sync channel endpoint")
 
-        channel = self.get_edit_object()
+        channel = self.get_edit_queryset().get(pk=pk)
+
+        if channel.deleted:
+            raise ValidationError("Cannot sync a deleted channel")
 
         if (
             not channel.main_tree.get_descendants()
@@ -513,21 +527,15 @@ class ChannelViewSet(ValuesViewset):
         ):
             raise ValidationError("Cannot sync a channel with no imported content")
 
-        data = request.data
-
-        task_args = {
-            "user_id": request.user.pk,
-            "channel_id": channel.id,
-            "sync_attributes": data.get("attributes"),
-            "sync_tags": data.get("tags"),
-            "sync_files": data.get("files"),
-            "sync_assessment_items": data.get("assessment_items"),
-        }
-
-        _, task_info = create_async_task("sync-channel", request.user, **task_args)
-        return Response({
-            'changes': [self.create_task_event(task_info)]
-        })
+        with create_change_tracker(pk, CHANNEL, channel.id, self.request.user, "sync-channel") as progress_tracker:
+            sync_channel(
+                channel,
+                attributes,
+                tags,
+                files,
+                tags,
+                progress_tracker=progress_tracker,
+            )
 
 
 @method_decorator(

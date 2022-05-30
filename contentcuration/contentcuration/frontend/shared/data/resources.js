@@ -2,7 +2,6 @@ import Dexie from 'dexie';
 import Mutex from 'mutex-js';
 import findIndex from 'lodash/findIndex';
 import flatMap from 'lodash/flatMap';
-import get from 'lodash/get';
 import isArray from 'lodash/isArray';
 import isFunction from 'lodash/isFunction';
 import isNumber from 'lodash/isNumber';
@@ -34,6 +33,7 @@ import db, { channelScope, CLIENTID, Collection } from './db';
 import { API_RESOURCES, INDEXEDDB_RESOURCES } from './registry';
 import { fileErrors, NEW_OBJECT } from 'shared/constants';
 import client, { paramsSerializer } from 'shared/client';
+import { currentLanguage } from 'shared/i18n';
 import urls from 'shared/urls';
 
 // Number of seconds after which data is considered stale.
@@ -1014,36 +1014,36 @@ export const Channel = new Resource({
     return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
       return this.table.update(id, { publishing: true });
     }).then(() => {
-      return client
-        .post(this.getUrlFunction('publish')(id), {
-          version_notes,
-        })
-        .then(response => {
-          // The endpoint may return a Task create event in `changes`
-          return applyChanges(response.data.changes || []);
-        })
-        .catch(() => this.clearPublish(id));
-    });
-  },
-
-  clearPublish(id) {
-    return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
-      return this.table.update(id, { publishing: false });
+      const change = {
+        key: id,
+        version_notes,
+        language: currentLanguage,
+        source: CLIENTID,
+        table: this.tableName,
+        type: CHANGE_TYPES.PUBLISHED,
+        channel_id: id,
+      };
+      return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, CHANGES_TABLE, () => {
+        return db[CHANGES_TABLE].put(change);
+      });
     });
   },
 
   sync(id, { attributes = false, tags = false, files = false, assessment_items = false } = {}) {
-    return client
-      .post(this.getUrlFunction('sync')(id), {
-        attributes,
-        tags,
-        files,
-        assessment_items,
-      })
-      .then(response => {
-        // The endpoint may return a Task create event in `changes`
-        return applyChanges(response.data.changes || []);
-      });
+    const change = {
+      key: id,
+      attributes,
+      tags,
+      files,
+      assessment_items,
+      source: CLIENTID,
+      table: this.tableName,
+      type: CHANGE_TYPES.SYNCED,
+      channel_id: id,
+    };
+    return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, CHANGES_TABLE, () => {
+      return db[CHANGES_TABLE].put(change);
+    });
   },
 
   softDelete(id) {
@@ -1729,10 +1729,14 @@ export const Task = new IndexedDBResource({
   tableName: TABLE_NAMES.TASK,
   idField: 'task_id',
   setTasks(tasks) {
-    return this.transaction({ mode: 'rw', source: IGNORED_SOURCE}, () => {
-      return this.table.where(this.idField).noneOf(tasks.map(t => t[this.idField])).delete().then(() => {
-        return this.table.bulkPut(tasks);
-      });
+    return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
+      return this.table
+        .where(this.idField)
+        .noneOf(tasks.map(t => t[this.idField]))
+        .delete()
+        .then(() => {
+          return this.table.bulkPut(tasks);
+        });
     });
-  }
+  },
 });
