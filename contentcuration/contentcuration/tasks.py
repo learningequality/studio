@@ -15,18 +15,12 @@ from django.utils.translation import override
 
 from contentcuration.celery import app
 from contentcuration.models import Change
-from contentcuration.models import Channel
 from contentcuration.models import ContentNode
 from contentcuration.models import Task
 from contentcuration.models import User
 from contentcuration.utils.csv_writer import write_user_csv
 from contentcuration.utils.nodes import calculate_resource_size
 from contentcuration.utils.nodes import generate_diff
-from contentcuration.utils.publish import publish_channel
-from contentcuration.utils.sync import sync_channel
-from contentcuration.viewsets.sync.constants import CHANNEL
-from contentcuration.viewsets.sync.constants import CONTENTNODE
-from contentcuration.viewsets.sync.utils import generate_update_event
 from contentcuration.viewsets.user import AdminUserFilter
 
 
@@ -45,53 +39,22 @@ STATE_QUEUED = "QUEUED"
 def apply_user_changes(user_id):
     from contentcuration.viewsets.sync.base import apply_changes
     changes_qs = Change.objects.filter(applied=False, errored=False, user_id=user_id, channel__isnull=True)
-    while changes_qs.exists():
-        apply_changes(changes_qs)
+    apply_changes(changes_qs)
+    if changes_qs.exists():
+        user = User.objects.filter(id=user_id).first()
+        if user:
+            create_async_task("apply_user_changes", user, user_id=user_id)
 
 
 @app.task(name="apply_channel_changes")
 def apply_channel_changes(channel_id):
     from contentcuration.viewsets.sync.base import apply_changes
     changes_qs = Change.objects.filter(applied=False, errored=False, channel_id=channel_id)
-    while changes_qs.exists():
-        apply_changes(changes_qs)
-
-
-@app.task(bind=True, name="export_channel_task", track_progress=True)
-def export_channel_task(self, user_id, channel_id, version_notes="", language=settings.LANGUAGE_CODE):
-    with override(language):
-        channel = publish_channel(
-            user_id,
-            channel_id,
-            version_notes=version_notes,
-            send_email=True,
-            progress_tracker=self.progress,
-        )
-    return {"changes": [
-        generate_update_event(channel_id, CHANNEL, {"published": True, "primary_token": channel.get_human_token().token}, channel_id=channel_id),
-        generate_update_event(channel.main_tree.pk, CONTENTNODE, {"published": True, "changed": False}, channel_id=channel_id),
-    ]}
-
-
-@app.task(bind=True, name="sync_channel_task", track_progress=True)
-def sync_channel_task(
-    self,
-    user_id,
-    channel_id,
-    sync_attributes,
-    sync_tags,
-    sync_files,
-    sync_assessment_items,
-):
-    channel = Channel.objects.get(pk=channel_id)
-    sync_channel(
-        channel,
-        sync_attributes,
-        sync_tags,
-        sync_files,
-        sync_tags,
-        progress_tracker=self.progress,
-    )
+    apply_changes(changes_qs)
+    if changes_qs.exists():
+        user = User.objects.filter(editable_channels=channel_id).first()
+        if user:
+            create_async_task("apply_channel_changes", user, channel_id=channel_id)
 
 
 class CustomEmailMessage(EmailMessage):
@@ -182,8 +145,6 @@ def sendcustomemails_task(subject, message, query):
 type_mapping = {
     "apply_user_changes": apply_user_changes,
     "apply_channel_changes": apply_channel_changes,
-    "export-channel": export_channel_task,
-    "sync-channel": sync_channel_task,
     "get-node-diff": generatenodediff_task,
     "calculate-user-storage": calculate_user_storage_task,
     "calculate-resource-size": calculate_resource_size_task,
