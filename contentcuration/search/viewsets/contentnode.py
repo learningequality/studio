@@ -162,7 +162,7 @@ class SearchContentNodeViewSet(ContentNodeViewSet):
         2. Annotate lists of content node and channel pks
         """
         # Get accessible content nodes that match the content id
-        content_id_query = ContentNode.filter_view_queryset(ContentNode.objects.all(), self.request.user).filter(
+        content_id_query = queryset.filter(
             content_id=OuterRef("content_id")
         )
 

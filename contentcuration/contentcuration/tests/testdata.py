@@ -195,21 +195,23 @@ def node(data, parent=None):
     return new_node
 
 
-def tree(parent=None):
+def tree(parent=None, tree_data=None):
     # Read from json fixture
-    filepath = os.path.sep.join([os.path.dirname(__file__), "fixtures", "tree.json"])
-    with open(filepath, "rb") as jsonfile:
-        data = json.load(jsonfile)
+    if tree_data is None:
+        filepath = os.path.sep.join([os.path.dirname(__file__), "fixtures", "tree.json"])
+        with open(filepath, "rb") as jsonfile:
+            tree_data = json.load(jsonfile)
 
-    return node(data, parent)
+    return node(tree_data, parent)
 
 
-def channel(name="testchannel"):
+def channel(name="testchannel", create_main_tree=True, main_tree_data=None):
     channel = cc.Channel.objects.create(name=name)
     channel.save()
 
-    channel.main_tree = tree()
-    channel.save()
+    if create_main_tree:
+        channel.main_tree = tree(tree_data=main_tree_data)
+        channel.save()
 
     return channel
 
