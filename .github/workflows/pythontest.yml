@@ -15,16 +15,18 @@ jobs:
         with:
           github_token: ${{ github.token }}
           paths: '["**.py", "requirements.txt", "requirements-dev.txt", ".github/workflows/pythontest.yml"]'
+
   unit_test:
     name: Python unit tests
     needs: pre_job
     if: ${{ needs.pre_job.outputs.should_skip != 'true' }}
     runs-on: ubuntu-latest
+
     services:
       # Label used to access the service container
       postgres:
         # Docker Hub image
-        image: postgres
+        image: postgres:12
         # Provide the password for postgres
         env:
           POSTGRES_USER: learningequality
@@ -42,7 +44,7 @@ jobs:
       # Label used to access the service container
       redis:
         # Docker Hub image
-        image: redis
+        image: redis:4.0.9
         # Set health checks to wait until redis has started
         options: >-
           --health-cmd "redis-cli ping"
@@ -52,16 +54,16 @@ jobs:
         ports:
           # Maps port 6379 on service container to the host
           - 6379:6379
-      minio:
-        image: bitnami/minio
-        env:
-          MINIO_API_CORS_ALLOW_ORIGIN: http://localhost:8080
-          MINIO_ACCESS_KEY: development
-          MINIO_SECRET_KEY: development
-        ports:
-          - 9000:9000
     steps:
     - uses: actions/checkout@v2
+    - name: Set up minio
+      run: |
+        docker run -d -p 9000:9000 --name minio \
+                    -e "MINIO_ACCESS_KEY=development" \
+                    -e "MINIO_SECRET_KEY=development" \
+                    -v /tmp/minio_data:/data \
+                    -v /tmp/minio_config:/root/.minio \
+                    minio/minio server /data
     - name: Set up Python 3.6
       uses: actions/setup-python@v2
       with:

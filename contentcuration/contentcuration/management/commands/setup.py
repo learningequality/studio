@@ -23,7 +23,7 @@ from contentcuration.utils.db_tools import create_file
 from contentcuration.utils.db_tools import create_topic
 from contentcuration.utils.db_tools import create_user
 from contentcuration.utils.files import duplicate_file
-from contentcuration.utils.minio_utils import ensure_storage_bucket_public
+from contentcuration.utils.storage_common import is_gcs_backend
 
 logmodule.basicConfig()
 logging = logmodule.getLogger(__name__)
@@ -55,7 +55,9 @@ class Command(BaseCommand):
             sys.exit()
 
         # create the minio bucket
-        ensure_storage_bucket_public()
+        if not is_gcs_backend():
+            from contentcuration.utils.minio_utils import ensure_storage_bucket_public
+            ensure_storage_bucket_public()
 
         # create the cache table
         try:
