@@ -38,7 +38,7 @@ jobs:
         yarn --frozen-lockfile
         npm rebuild node-sass
     - name: Build frontend
-      run: yarn run build -p
+      run: yarn run build
   make_messages:
     name: Build all message files
     needs: pre_job

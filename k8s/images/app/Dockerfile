@@ -37,7 +37,7 @@ WORKDIR /contentcuration
 # generate the node bundles
 RUN mkdir -p contentcuration/static/js/bundles
 RUN ln -s /node_modules /contentcuration/node_modules
-RUN yarn run build -p
+RUN yarn run build
 
 EXPOSE 8000
 
