@@ -192,7 +192,7 @@
   }
 
   .renderer {
-    background: url('/static/img/kolibri_load.gif') no-repeat center;
+    background: url('./kolibri_load.gif') no-repeat center;
     background-size: 150px auto;
   }
 
