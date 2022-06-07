@@ -43,7 +43,8 @@
     "celery": "(cd contentcuration && DJANGO_SETTINGS_MODULE=contentcuration.dev_settings celery -A contentcuration worker --without-mingle --without-gossip -l info) || true",
     "storybook": "start-storybook",
     "storybook:debug": "start-storybook --debug-webpack",
-    "storybook:build": "build-storybook"
+    "storybook:build": "build-storybook",
+    "update-languages": "kolibri-tools i18n-code-gen --output-dir contentcuration/contentcuration/frontend/shared/i18n/ --lang-info contentcuration/contentcuration/language_info.json"
   },
   "repository": {
     "type": "git",
