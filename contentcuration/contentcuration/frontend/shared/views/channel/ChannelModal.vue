@@ -138,9 +138,11 @@
     props: {
       channelId: {
         type: String,
+        default: null,
       },
       tab: {
         type: String,
+        default: null,
       },
     },
     data() {

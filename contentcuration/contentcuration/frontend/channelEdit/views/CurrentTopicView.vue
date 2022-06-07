@@ -270,6 +270,7 @@
       detailNodeId: {
         type: String,
         required: false,
+        default: null,
       },
     },
     data() {

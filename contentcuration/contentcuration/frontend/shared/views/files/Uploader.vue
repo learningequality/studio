@@ -84,6 +84,7 @@
       presetID: {
         type: String,
         required: false,
+        default: null,
       },
       allowDrop: {
         type: Boolean,
@@ -100,10 +101,12 @@
       uploadingHandler: {
         type: Function,
         required: false,
+        default: () => {},
       },
       uploadCompleteHandler: {
         type: Function,
         required: false,
+        default: () => {},
       },
     },
     data() {

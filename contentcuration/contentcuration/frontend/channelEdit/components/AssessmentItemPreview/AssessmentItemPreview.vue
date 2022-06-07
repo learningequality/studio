@@ -137,6 +137,7 @@
        */
       item: {
         type: Object,
+        default: null,
       },
       detailed: {
         type: Boolean,

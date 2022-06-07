@@ -87,6 +87,7 @@
         validator: value => {
           return value && (!value.license || findLicense(value.license, { id: null }).id !== null);
         },
+        default: null,
       },
       required: {
         type: Boolean,

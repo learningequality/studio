@@ -70,6 +70,7 @@
       listType: {
         type: String,
         validator: listTypeValidator,
+        default: Object.values(ChannelListTypes)[0],
       },
     },
     data() {

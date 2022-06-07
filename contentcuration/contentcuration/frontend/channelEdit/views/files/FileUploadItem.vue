@@ -91,6 +91,7 @@
       file: {
         type: Object,
         required: false,
+        default: null,
       },
       preset: {
         type: Object,
@@ -106,6 +107,7 @@
       uploadCompleteHandler: {
         type: Function,
         required: false,
+        default: () => {},
       },
     },
     data() {

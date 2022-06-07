@@ -78,6 +78,7 @@
     props: {
       items: {
         type: Array,
+        default: () => [],
       },
       max: {
         type: Number,
@@ -93,6 +94,7 @@
       },
       noItemsText: {
         type: String,
+        default: null,
       },
       expanded: {
         type: Boolean,

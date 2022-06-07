@@ -144,12 +144,14 @@
        */
       item: {
         type: Object,
+        default: null,
       },
       /**
        * An array of error codes related to the item.
        */
       errors: {
         type: Array,
+        default: () => [],
       },
       /**
        * Inject a function that opens a dialog that should
@@ -168,6 +170,7 @@
        */
       openDialog: {
         type: Function,
+        default: () => {},
       },
     },
     data() {

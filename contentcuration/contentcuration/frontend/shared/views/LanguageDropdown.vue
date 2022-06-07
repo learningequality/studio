@@ -57,6 +57,7 @@
           }
           return !value.toString();
         },
+        default: null,
       },
       required: {
         type: Boolean,

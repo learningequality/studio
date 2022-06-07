@@ -112,6 +112,7 @@
       */
       iconActionsConfig: {
         type: Array,
+        default: () => [],
       },
       displayMenu: {
         type: Boolean,
@@ -128,6 +129,7 @@
       */
       menuActionsConfig: {
         type: Array,
+        default: () => [],
       },
       collapse: {
         type: Boolean,

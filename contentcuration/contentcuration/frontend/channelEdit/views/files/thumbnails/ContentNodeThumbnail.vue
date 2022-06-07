@@ -220,6 +220,7 @@
         validator: file => {
           return file.preset.thumbnail && file.file_size && file.id;
         },
+        default: null,
       },
       encoding: {
         type: Object,

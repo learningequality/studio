@@ -115,20 +115,25 @@
     props: {
       hints: {
         type: Array,
+        default: () => [],
       },
       openHintIdx: {
         type: Number,
+        default: 0,
       },
       // Inject function to handle file uploads
       handleFileUpload: {
         type: Function,
+        default: () => {},
       },
       // Inject function to get file upload object
       getFileUpload: {
         type: Function,
+        default: () => {},
       },
       imagePreset: {
         type: String,
+        default: null,
       },
     },
     data() {

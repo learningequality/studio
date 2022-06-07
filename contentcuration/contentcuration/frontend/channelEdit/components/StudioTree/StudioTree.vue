@@ -227,6 +227,7 @@
       selectedNodeId: {
         type: String,
         required: false,
+        default: null,
       },
       allowEditing: {
         type: Boolean,

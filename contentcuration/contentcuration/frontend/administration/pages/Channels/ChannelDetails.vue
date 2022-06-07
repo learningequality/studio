@@ -77,6 +77,7 @@
     props: {
       channelId: {
         type: String,
+        default: null,
       },
     },
     data() {

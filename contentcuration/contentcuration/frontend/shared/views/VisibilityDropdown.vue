@@ -76,6 +76,7 @@
       placeholder: {
         type: String,
         required: false,
+        default: '',
       },
       required: {
         type: Boolean,

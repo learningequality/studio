@@ -45,6 +45,7 @@
       error: {
         type: Object,
         required: false,
+        default: () => ({}),
       },
     },
     data() {

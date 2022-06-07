@@ -38,10 +38,12 @@
       filePath: {
         type: String,
         required: false,
+        default: '',
       },
       fileName: {
         type: String,
         required: false,
+        default: '',
       },
       // Method to call to handle generated files
       handleFiles: {

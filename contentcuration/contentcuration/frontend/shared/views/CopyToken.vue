@@ -37,6 +37,7 @@
       successText: {
         type: String,
         required: false,
+        default: null,
       },
       loading: {
         type: Boolean,

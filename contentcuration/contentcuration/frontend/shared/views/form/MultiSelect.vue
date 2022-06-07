@@ -52,6 +52,7 @@
       itemText: {
         type: [String, Function],
         required: false,
+        default: '',
       },
       notranslate: {
         type: Boolean,

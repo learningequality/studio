@@ -43,6 +43,7 @@
       messageId: {
         type: String,
         required: false,
+        default: null,
       },
     },
     computed: {

@@ -71,6 +71,7 @@
             MasteryModels.has(value.mastery_model)
           );
         },
+        default: null,
       },
       showMofN: {
         type: Boolean,
@@ -90,6 +91,7 @@
       },
       mPlaceholder: {
         type: String,
+        default: '',
       },
       nRequired: {
         type: Boolean,
@@ -97,6 +99,7 @@
       },
       nPlaceholder: {
         type: String,
+        default: '',
       },
     },
     computed: {

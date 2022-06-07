@@ -37,15 +37,19 @@
     props: {
       label: {
         type: String,
+        default: '',
       },
       definition: {
         type: String,
+        default: null,
       },
       text: {
         type: String,
+        default: '',
       },
       notranslate: {
         type: Boolean,
+        default: false,
       },
     },
   };

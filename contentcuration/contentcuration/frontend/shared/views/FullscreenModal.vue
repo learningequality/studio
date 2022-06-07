@@ -77,6 +77,7 @@
       header: {
         type: String,
         required: false,
+        default: '',
       },
       color: {
         type: String,

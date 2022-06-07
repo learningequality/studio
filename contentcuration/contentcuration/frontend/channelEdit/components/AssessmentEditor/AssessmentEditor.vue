@@ -159,9 +159,11 @@
       },
       items: {
         type: Array,
+        default: () => [],
       },
       itemsErrors: {
         type: Object,
+        default: null,
       },
       /**
        * Inject a function that opens a dialog that should
@@ -180,6 +182,7 @@
        */
       openDialog: {
         type: Function,
+        default: () => {},
       },
     },
     data() {

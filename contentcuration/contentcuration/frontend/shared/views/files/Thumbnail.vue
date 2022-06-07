@@ -90,6 +90,7 @@
       src: {
         type: String,
         required: false,
+        default: '',
       },
       encoding: {
         type: Object,
@@ -100,6 +101,7 @@
       kind: {
         type: String,
         required: false,
+        default: null,
       },
       showKind: {
         type: Boolean,
