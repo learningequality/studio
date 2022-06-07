@@ -29,7 +29,7 @@ module.exports = (env = {}) => {
     throw Error('Check base webpack configuration for update of location of css loader');
   }
 
-  const rootDir = process.cwd();
+  const rootDir = __dirname;
 
   const rootNodeModules = path.join(rootDir, 'node_modules');
 
