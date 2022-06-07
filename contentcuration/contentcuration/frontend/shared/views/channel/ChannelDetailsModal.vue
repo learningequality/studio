@@ -99,7 +99,7 @@
     watch: {
       dialog(newValue) {
         if (!newValue) {
-          this.$router.push(this.backLink);
+          this.$router.push(this.backLink).catch(() => {});
         }
       },
     },
@@ -130,7 +130,7 @@
           .then(([channel, details]) => {
             // Channel either doesn't exist or user doesn't have access to channel
             if (!channel) {
-              this.$router.replace(this.backLink);
+              this.$router.replace(this.backLink).catch(() => {});
               this.dialog = false;
               return;
             }

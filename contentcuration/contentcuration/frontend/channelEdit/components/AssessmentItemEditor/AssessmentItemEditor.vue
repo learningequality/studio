@@ -170,7 +170,7 @@
        */
       openDialog: {
         type: Function,
-        default: () => {},
+        default: null,
       },
     },
     data() {

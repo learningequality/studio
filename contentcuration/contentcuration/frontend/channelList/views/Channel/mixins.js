@@ -103,7 +103,7 @@ export const catalogFilterMixin = {
           ...params,
           page: 1, // Make sure we're on page 1 for every new query
         },
-      });
+      }).catch(() => {});
     },
   },
 };

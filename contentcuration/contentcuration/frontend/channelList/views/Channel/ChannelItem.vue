@@ -365,7 +365,7 @@
         } else {
           this.linkToChannelTree
             ? (window.location.href = this.channelHref)
-            : this.$router.push(this.channelDetailsLink);
+            : this.$router.push(this.channelDetailsLink).catch(() => {});
         }
       },
       trackTokenCopy() {

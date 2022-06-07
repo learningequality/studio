@@ -359,7 +359,7 @@
           .then(([user, details]) => {
             // User not found
             if (!user) {
-              this.$router.replace(this.backLink);
+              this.$router.replace(this.backLink).catch(() => {});
               return;
             }
             this.updateTitleForPage();

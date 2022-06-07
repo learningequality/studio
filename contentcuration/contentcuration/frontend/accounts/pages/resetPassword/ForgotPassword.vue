@@ -45,7 +45,7 @@
             .then(() => {
               this.$router.push({
                 name: 'PasswordInstructionsSent',
-              });
+              }).catch(() => {});
             })
             .catch(() => {
               this.error = true;

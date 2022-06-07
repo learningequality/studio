@@ -138,7 +138,7 @@
     props: {
       channelId: {
         type: String,
-        default: null,
+        default: '',
       },
       tab: {
         type: String,
@@ -274,7 +274,7 @@
         if (!this.isNew) {
           this.$refs.detailsform.validate();
         }
-      });
+      }).catch(() => {});
     },
     mounted() {
       // Set expiry to 1ms

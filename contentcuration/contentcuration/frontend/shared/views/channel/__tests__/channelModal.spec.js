@@ -12,8 +12,6 @@ const router = new VueRouter({
     {
       name: TESTROUTE,
       path: '/testroute',
-      props: true,
-      component: ChannelModal,
     },
   ],
 });
@@ -29,7 +27,7 @@ function makeWrapper() {
       channelId,
       tab,
     },
-  });
+  }).catch(() => {});
   return mount(ChannelModal, {
     router,
     store,
