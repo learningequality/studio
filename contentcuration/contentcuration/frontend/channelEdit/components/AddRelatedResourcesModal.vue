@@ -23,63 +23,63 @@
         v-model="selectedNodeId"
         :treeId="rootId"
       >
-        <VListTile
-          slot="child"
-          :key="childNode.id"
-          slot-scope="{ childNode }"
-          :class="listItemClasses(childNode)"
-          @click="onListItemClick(childNode)"
-        >
-          <VListTileAction>
-            <ContentNodeIcon
-              v-if="childNode.kind"
-              :kind="childNode.kind"
-              :size="20"
-            />
-          </VListTileAction>
-
-          <VListTileContent>
-            <VListTileTitle>
-              <VTooltip
-                bottom
-                :disabled="!isListItemDisabled(childNode)"
-              >
-                <template #activator="{ on }">
-                  <span
-                    :class="getTitleClass(childNode)"
-                    v-on="on"
-                  >
-                    {{ getTitle(childNode) }}
-                  </span>
-                </template>
-                <span>{{ listItemTooltip(childNode) }}</span>
-              </VTooltip>
-            </VListTileTitle>
-          </VListTileContent>
-
-          <template v-if="displayActionsButtons(childNode)">
+        <template #child="{ childNode }">
+          <VListTile
+            :key="childNode.id"
+            :class="listItemClasses(childNode)"
+            @click="onListItemClick(childNode)"
+          >
             <VListTileAction>
-              <VBtn
-                flat
-                class="font-weight-bold"
-                @click.stop.prevent="onPreviewStepClick(childNode.id)"
-              >
-                {{ $tr('previewStepBtnLabel') }}
-              </VBtn>
+              <ContentNodeIcon
+                v-if="childNode.kind"
+                :kind="childNode.kind"
+                :size="20"
+              />
             </VListTileAction>
 
-            <VListTileAction v-if="!isNodePreviewOpen">
-              <VBtn
-                flat
-                color="primary"
-                class="font-weight-bold"
-                @click.stop.prevent="onAddStepClick(childNode.id)"
-              >
-                {{ $tr('addStepBtnLabel') }}
-              </VBtn>
-            </VListTileAction>
-          </template>
-        </VListTile>
+            <VListTileContent>
+              <VListTileTitle>
+                <VTooltip
+                  bottom
+                  :disabled="!isListItemDisabled(childNode)"
+                >
+                  <template #activator="{ on }">
+                    <span
+                      :class="getTitleClass(childNode)"
+                      v-on="on"
+                    >
+                      {{ getTitle(childNode) }}
+                    </span>
+                  </template>
+                  <span>{{ listItemTooltip(childNode) }}</span>
+                </VTooltip>
+              </VListTileTitle>
+            </VListTileContent>
+
+            <template v-if="displayActionsButtons(childNode)">
+              <VListTileAction>
+                <VBtn
+                  flat
+                  class="font-weight-bold"
+                  @click.stop.prevent="onPreviewStepClick(childNode.id)"
+                >
+                  {{ $tr('previewStepBtnLabel') }}
+                </VBtn>
+              </VListTileAction>
+
+              <VListTileAction v-if="!isNodePreviewOpen">
+                <VBtn
+                  flat
+                  color="primary"
+                  class="font-weight-bold"
+                  @click.stop.prevent="onAddStepClick(childNode.id)"
+                >
+                  {{ $tr('addStepBtnLabel') }}
+                </VBtn>
+              </VListTileAction>
+            </template>
+          </VListTile>
+        </template>
       </NodeTreeNavigation>
     </VContent>
     <ResourceDrawer
