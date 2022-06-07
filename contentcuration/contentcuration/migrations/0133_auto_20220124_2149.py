@@ -15,11 +15,6 @@ class Migration(migrations.Migration):
             name='duration',
             field=models.IntegerField(blank=True, null=True),
         ),
-        migrations.AlterField(
-            model_name='contentkind',
-            name='kind',
-            field=models.CharField(choices=[('topic', 'Topic'), ('video', 'Video'), ('audio', 'Audio'), ('exercise', 'Exercise'), ('document', 'Document'), ('html5', 'HTML5 App'), ('slideshow', 'Slideshow'), ('h5p', 'H5P'), ('zim', 'Zim'), ('quiz', 'Quiz')], max_length=200, primary_key=True, serialize=False),
-        ),
         migrations.AddConstraint(
             model_name='file',
             constraint=models.CheckConstraint(check=models.Q(models.Q(('duration__gt', 0), ('preset__in', ['audio', 'high_res_video', 'low_res_video'])), ('duration__isnull', True), _connector='OR'), name='file_media_duration_int'),

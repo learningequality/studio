@@ -6,7 +6,7 @@ from django.db import models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('content', '0016_alter_contentnode_kind'),
+        ('content', '0015_auto_20210707_1606'),
     ]
 
     operations = [
