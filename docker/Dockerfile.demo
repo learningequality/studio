@@ -6,7 +6,7 @@ RUN apt-get update --fix-missing && apt-get -y install curl
 RUN ln -fs /usr/share/zoneinfo/America/Los_Angeles /etc/localtime
 
 # install node
-RUN curl -sL https://deb.nodesource.com/setup_10.x | bash -
+RUN curl -sL https://deb.nodesource.com/setup_16.x | bash -
 
 ENV DEBIAN_FRONTEND noninteractive
 # Default Python file.open file encoding to UTF-8 instead of ASCII, workaround for le-utils setup.py issue

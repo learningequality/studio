@@ -104,13 +104,13 @@ For more details, please see the [pip-tools docs on Github](https://github.com/j
 
 ### Yarn and Javascript dependencies
 
-As described above, Kolibri Studio has dependencies that rely on Node.js version 10.x. `nodeenv` is a useful tool for using specific versions of Node.js tools in Python environments. You'll also need [yarn](https://yarnpkg.com/lang/en/docs/install) installed.
+As described above, Kolibri Studio has dependencies that rely on Node.js version 16.x. `nodeenv` is a useful tool for using specific versions of Node.js tools in Python environments. You'll also need [yarn](https://yarnpkg.com/lang/en/docs/install) installed.
 
 All the javascript dependencies are listed in `package.json`. To install them run the following [yarn](https://yarnpkg.com/en/) command:
 
 ```bash
 # Set up Node 10.x environment
-nodeenv -p --node=10.15.3
+nodeenv -p --node=16.15.1
 # Install javascript dependencies
 yarn install --network-timeout 1000000
 ```
