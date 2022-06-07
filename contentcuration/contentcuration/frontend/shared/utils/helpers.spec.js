@@ -1,3 +1,5 @@
+/* eslint-disable vue/one-component-per-file */
+
 import Vue from 'vue';
 import { mount } from '@vue/test-utils';
 import each from 'jest-each';
