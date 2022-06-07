@@ -108,7 +108,9 @@
   }
 
   .header-content.has-icon {
-    width: calc(100% ~'-' @header - width);
+    // stylelint-disable
+    width: calc(100% ~'-' @header-width);
+    // stylelint-enable
   }
 
   .list-group.open > .list-group-header .v-icon {

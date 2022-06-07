@@ -178,10 +178,12 @@
       margin: 0 auto;
       border-radius: 3px;
     }
+
     &:not(.icon-only) {
       background-color: white;
       border: 1px solid var(--v-greyBorder-lighten1);
     }
+
     &.nothumbnail {
       background-color: var(--v-greyBackground-base);
     }
@@ -215,6 +217,7 @@
   @svg-scale: 1.25;
   @svg-width: 100% * 9 / 16 / @svg-scale;
   @svg-top: (100% * 9 / 16 / 2) - (@svg-width / 2);
+
   svg.thumbnail-image {
     top: 0;
     left: 50% - (@svg-width / 4);
@@ -248,6 +251,7 @@
     &.ltr-image {
       left: 36%;
     }
+
     &.rtl-image {
       right: 66%;
     }
@@ -274,6 +278,7 @@
     height: 0;
     font-size: xx-large;
     text-align: center;
+
     .v-icon {
       font-size: 300%;
     }

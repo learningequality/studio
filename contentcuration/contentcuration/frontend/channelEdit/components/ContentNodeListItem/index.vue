@@ -446,7 +446,9 @@
     max-width: 160px;
 
     .compact & {
-      width: calc(@compact - thumbnail-width);
+      // stylelint-disable
+      width: calc(@compact-thumbnail-width);
+      // stylelint-enable
       min-width: 20px;
     }
   }

@@ -9,6 +9,7 @@ module.exports = {
      */
     'selector-max-id': null, // This would require a major refactor
     'at-rule-no-unknown': null, // we're using LESS
-    'scss/at-rule-no-unknown': null // we're using LESS
+    'scss/at-rule-no-unknown': null, // we're using LESS
+    'csstree/validator': null // this triggers issues with unknown at rules too.
   },
 };
