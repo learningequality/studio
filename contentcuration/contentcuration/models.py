@@ -60,6 +60,7 @@ from postmark.core import PMMailInactiveRecipientException
 from postmark.core import PMMailUnauthorizedException
 from rest_framework.authtoken.models import Token
 
+from contentcuration.constants.contentnode import kind_activity_map
 from contentcuration.db.models.expressions import Array
 from contentcuration.db.models.functions import ArrayRemove
 from contentcuration.db.models.functions import Unnest
@@ -1657,6 +1658,7 @@ class ContentNode(MPTTModel, models.Model):
     def on_create(self):
         self.changed = True
         self.recalculate_editors_storage()
+        self.set_default_learning_activity()
 
     def on_update(self):
         self.changed = self.changed or self.has_changes()
@@ -1668,6 +1670,13 @@ class ContentNode(MPTTModel, models.Model):
         # Recalculate storage if node was moved to or from the trash tree
         if target.channel_trash.exists() or parent_was_trashtree:
             self.recalculate_editors_storage()
+
+    def set_default_learning_activity(self):
+        if self.learning_activities is None:
+            if self.kind in kind_activity_map:
+                self.learning_activities = {
+                    kind_activity_map[self.kind]: True
+                }
 
     def save(self, skip_lock=False, *args, **kwargs):
         if self._state.adding:
