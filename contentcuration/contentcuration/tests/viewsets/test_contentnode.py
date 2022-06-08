@@ -550,10 +550,9 @@ class SyncTestCase(StudioAPITestCase, SyncTestMixin):
         contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
         contentnode2 = models.ContentNode.objects.create(**self.contentnode_db_metadata)
 
-        response = self.sync_changes(
+        self.sync_changes(
             [generate_update_event(contentnode.id, CONTENTNODE, {"parent": contentnode2.id})],
         )
-        self.assertEqual(response.status_code, 400, response.content)
         self.assertNotEqual(
             models.ContentNode.objects.get(id=contentnode.id).parent_id, contentnode2.id
         )
@@ -640,7 +639,7 @@ class SyncTestCase(StudioAPITestCase, SyncTestMixin):
         contentnode = models.ContentNode.objects.create(**metadata)
         # Add extra_fields.options.modality
         response = self.sync_changes(
-            [generate_update_event(contentnode.id, CONTENTNODE, {"extra_fields.options.modality": "QUIZ"})],
+            [generate_update_event(contentnode.id, CONTENTNODE, {"extra_fields.options.modality": "QUIZ"}, channel_id=self.channel.id)],
         )
         self.assertEqual(response.status_code, 200, response.content)
         self.assertEqual(models.ContentNode.objects.get(id=contentnode.id).extra_fields["options"]["modality"], "QUIZ")
@@ -682,7 +681,8 @@ class SyncTestCase(StudioAPITestCase, SyncTestMixin):
                     {
                         "extra_fields.options.completion_criteria.model": completion_criteria.TIME,
                         "extra_fields.options.completion_criteria.threshold": 10
-                    }
+                    },
+                    channel_id=self.channel.id
                 )
             ],
         )
@@ -712,7 +712,8 @@ class SyncTestCase(StudioAPITestCase, SyncTestMixin):
                     CONTENTNODE,
                     {
                         "extra_fields.options.completion_criteria.threshold": 10
-                    }
+                    },
+                    channel_id=self.channel.id
                 )
             ],
         )
@@ -742,7 +743,8 @@ class SyncTestCase(StudioAPITestCase, SyncTestMixin):
                     CONTENTNODE,
                     {
                         "extra_fields.options.completion_criteria.model": completion_criteria.TIME,
-                    }
+                    },
+                    channel_id=self.channel.id
                 )
             ],
         )
