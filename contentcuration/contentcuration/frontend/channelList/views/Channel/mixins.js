@@ -97,13 +97,15 @@ export const catalogFilterMixin = {
       this.navigate({});
     },
     navigate(params) {
-      this.$router.push({
-        ...this.$route,
-        query: {
-          ...params,
-          page: 1, // Make sure we're on page 1 for every new query
-        },
-      }).catch(() => {});
+      this.$router
+        .push({
+          ...this.$route,
+          query: {
+            ...params,
+            page: 1, // Make sure we're on page 1 for every new query
+          },
+        })
+        .catch(() => {});
     },
   },
 };

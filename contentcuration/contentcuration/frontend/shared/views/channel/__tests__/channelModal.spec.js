@@ -21,13 +21,15 @@ const channelId = '11111111111111111111111111111111';
 let tab = 'share';
 
 function makeWrapper() {
-  router.push({
-    name: TESTROUTE,
-    params: {
-      channelId,
-      tab,
-    },
-  }).catch(() => {});
+  router
+    .push({
+      name: TESTROUTE,
+      params: {
+        channelId,
+        tab,
+      },
+    })
+    .catch(() => {});
   return mount(ChannelModal, {
     router,
     store,

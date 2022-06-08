@@ -72,12 +72,14 @@ describe('catalogFilterBar', () => {
     });
     it('should keep excluded if page number changed', () => {
       wrapper.setData({ excluded: ['item 1'] });
-      router.push({
-        query: {
-          ...wrapper.vm.$route.query,
-          page: 2,
-        },
-      }).catch(() => {});
+      router
+        .push({
+          query: {
+            ...wrapper.vm.$route.query,
+            page: 2,
+          },
+        })
+        .catch(() => {});
       wrapper.vm.$nextTick(() => {
         expect(wrapper.vm.excluded).toEqual(['item 1']);
       });

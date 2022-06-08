@@ -56,6 +56,7 @@
       learningActivities: {
         type: Object,
         required: false,
+        default: () => ({}),
       },
       showEachActivityIcon: {
         type: Boolean,

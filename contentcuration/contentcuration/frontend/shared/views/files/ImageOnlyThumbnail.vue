@@ -60,6 +60,7 @@
       src: {
         type: String,
         required: false,
+        default: '',
       },
       encoding: {
         type: Object,
@@ -70,10 +71,12 @@
       learningActivities: {
         type: Object,
         required: false,
+        default: null,
       },
       kind: {
         type: String,
         required: false,
+        default: null,
       },
       isTopic: {
         type: Boolean,
@@ -170,8 +173,11 @@
   }
 
   @svg-scale: 1.25;
+
   @svg-width: 100% * 9 / 16 / @svg-scale;
+
   @svg-top: (100% * 9 / 16 / 2) - (@svg-width / 2);
+
   svg.thumbnail-image {
     top: 0;
     left: 50% - (@svg-width / 4);
@@ -205,6 +211,7 @@
     &.ltr-image {
       left: 36%;
     }
+
     &.rtl-image {
       right: 66%;
     }
@@ -231,6 +238,7 @@
     height: 0;
     font-size: xx-large;
     text-align: center;
+
     .v-icon {
       font-size: 300%;
     }

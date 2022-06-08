@@ -137,6 +137,7 @@
       kind: {
         type: String,
         required: false,
+        default: null,
       },
       fileDuration: {
         type: Number,
@@ -153,6 +154,7 @@
       value: {
         type: Object,
         required: false,
+        default: () => ({}),
       },
     },
     data() {

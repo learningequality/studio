@@ -100,8 +100,8 @@
 <script>
 
   import { mapGetters, mapActions } from 'vuex';
-  import { RouteNames, rowsPerPageItems } from '../../constants';
   import { tableMixin, generateFilterMixin } from '../../mixins';
+  import { RouteNames, rowsPerPageItems } from '../../constants';
   import ChannelItem from './ChannelItem';
   import { channelExportMixin } from 'shared/views/channel/mixins';
   import { routerMixin } from 'shared/mixins';

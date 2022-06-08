@@ -46,9 +46,11 @@
             MasteryModels.has(value.mastery_model)
           );
         },
+        default: () => ({}),
       },
       placeholder: {
         type: String,
+        default: '',
       },
       required: {
         type: Boolean,
