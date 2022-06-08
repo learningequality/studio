@@ -448,33 +448,13 @@ export async function checkSavingProgress(
   if (!contentNodeIds.length && !fileIds.length && !assessmentIds.length) {
     return false;
   }
-  const unsyncedChanges = {
-    [TABLE_NAMES.CONTENTNODE]: {},
-    [TABLE_NAMES.FILE]: {},
-    [TABLE_NAMES.ASSESSMENTITEM]: {},
+  const idsToCheck = {
+    [TABLE_NAMES.CONTENTNODE]: contentNodeIds,
+    [TABLE_NAMES.FILE]: fileIds,
+    [TABLE_NAMES.ASSESSMENTITEM]: assessmentIds,
   };
   const query = await db[CHANGES_TABLE].toCollection()
-    .filter(c => !c.synced)
-    .toArray();
-  for (let change of query) {
-    if (unsyncedChanges[change.table]) {
-      unsyncedChanges[change.table][change.key] = true;
-    }
-  }
-  for (let nodeId of contentNodeIds) {
-    if (unsyncedChanges[TABLE_NAMES.CONTENTNODE][nodeId]) {
-      return true;
-    }
-  }
-  for (let fileId of fileIds) {
-    if (unsyncedChanges[TABLE_NAMES.FILE][fileId]) {
-      return true;
-    }
-  }
-  for (let assessmentId of assessmentIds) {
-    if (unsyncedChanges[TABLE_NAMES.ASSESSMENTITEM][assessmentId]) {
-      return true;
-    }
-  }
-  return false;
+    .filter(c => !c.synced && idsToCheck[c.table] && idsToCheck[c.table].includes(c.key))
+    .first();
+  return Boolean(query);
 }

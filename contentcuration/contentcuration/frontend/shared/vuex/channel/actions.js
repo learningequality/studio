@@ -15,11 +15,10 @@ export async function loadBookmarks(context) {
 /* CHANNEL LIST ACTIONS */
 export async function loadChannelList(context, payload = {}) {
   if (payload.listType) {
+    const bookmarks = await loadBookmarks(context);
     if (payload.listType === 'bookmark') {
-      const bookmarks = await loadBookmarks(context);
       payload.id__in = bookmarks.map(b => b.channel);
     } else {
-      loadBookmarks(context);
       payload[payload.listType] = true;
     }
     delete payload.listType;

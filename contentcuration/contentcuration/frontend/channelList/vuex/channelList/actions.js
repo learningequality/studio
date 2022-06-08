@@ -8,13 +8,13 @@ export function searchCatalog(context, params) {
   params.published = true;
   let promise;
   if (context.rootGetters.loggedIn) {
-    context.dispatch('channel/loadBookmarks', null, { root: true });
-    promise = Channel.fetchCollection(params);
+    const bookmarkPromise = context.dispatch('channel/loadBookmarks', null, { root: true });
+    promise = Promise.all([Channel.fetchCollection(params), bookmarkPromise]);
   } else {
-    promise = Channel.searchCatalog(params);
+    promise = Promise.all([Channel.searchCatalog(params), Promise.resolve()]);
   }
 
-  return promise.then(pageData => {
+  return promise.then(([pageData]) => {
     context.commit('SET_PAGE', pageData);
     // Put channel data in our global channels map
     context.commit('channel/ADD_CHANNELS', pageData.results, { root: true });

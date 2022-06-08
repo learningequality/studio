@@ -22,9 +22,8 @@ export function getChannel(state) {
 export function getChannels(state) {
   return function(channelIds) {
     return channelIds
-      .map(key => state.channelsMap[key])
-      .filter(channel => channel)
-      .map(channel => mapChannel(state, channel));
+      .map(key => mapChannel(state.channelsMap[key]))
+      .filter(channel => channel);
   };
 }
 

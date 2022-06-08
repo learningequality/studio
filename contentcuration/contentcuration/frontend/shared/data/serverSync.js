@@ -87,12 +87,12 @@ function handleDisallowed(response) {
   const disallowed = get(response, ['data', 'disallowed'], []);
   if (disallowed.length) {
     // Collect all disallowed
-    const disallowedRevs = disallowed.map(d => d.rev);
+    const disallowedRevs = disallowed.map(d => Number(d.rev));
     // Set the return error data onto the changes - this will update the change
     // both with any errors and the results of any merging that happened prior
     // to the sync operation being called
     return db[CHANGES_TABLE].where('rev')
-      .anyOf(disallowedRevs.map(Number))
+      .anyOf(disallowedRevs)
       .modify({ disallowed: true, synced: true });
   }
   return Promise.resolve();
@@ -217,11 +217,11 @@ async function syncChanges() {
   }
 
   const now = Date.now();
-  const channel_ids = Object.entries(user[ACTIVE_CHANNELS] || {})
+  const channelIds = Object.entries(user[ACTIVE_CHANNELS] || {})
     .filter(([id, time]) => id && time > now - CHANNEL_SYNC_KEEP_ALIVE_INTERVAL)
     .map(([id]) => id);
   const channel_revs = {};
-  for (let channelId of channel_ids) {
+  for (let channelId of channelIds) {
     channel_revs[channelId] = get(user, [MAX_REV_KEY, channelId], 0);
   }
 
