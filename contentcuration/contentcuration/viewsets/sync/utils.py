@@ -2,10 +2,12 @@ import logging
 
 from contentcuration.utils.sentry import report_exception
 from contentcuration.viewsets.sync.constants import ALL_TABLES
+from contentcuration.viewsets.sync.constants import CHANNEL
 from contentcuration.viewsets.sync.constants import COPIED
 from contentcuration.viewsets.sync.constants import CREATED
 from contentcuration.viewsets.sync.constants import DELETED
 from contentcuration.viewsets.sync.constants import MOVED
+from contentcuration.viewsets.sync.constants import PUBLISHED
 from contentcuration.viewsets.sync.constants import UPDATED
 
 
@@ -60,6 +62,15 @@ def generate_copy_event(
     event["position"] = position
     event["mods"] = mods
     event["excluded_descendants"] = excluded_descendants
+    return event
+
+
+def generate_publish_event(
+    key, version_notes="", language=None
+):
+    event = _generate_event(key, CHANNEL, PUBLISHED, key, None)
+    event["version_notes"] = version_notes
+    event["language"] = language
     return event
 
 

@@ -47,6 +47,7 @@ from contentcuration.models import SlideshowSlide
 from contentcuration.models import StagedFile
 from contentcuration.serializers import GetTreeDataSerializer
 from contentcuration.tasks import create_async_task
+from contentcuration.tasks import get_or_create_async_task
 from contentcuration.utils.files import get_file_diff
 from contentcuration.utils.garbage_collect import get_deleted_chefs_root
 from contentcuration.utils.nodes import map_files_to_assessment_item
@@ -54,6 +55,7 @@ from contentcuration.utils.nodes import map_files_to_node
 from contentcuration.utils.nodes import map_files_to_slideshow_slide_item
 from contentcuration.utils.tracing import trace
 from contentcuration.viewsets.sync.constants import CHANNEL
+from contentcuration.viewsets.sync.utils import generate_publish_event
 from contentcuration.viewsets.sync.utils import generate_update_event
 
 
@@ -324,17 +326,16 @@ def api_publish_channel(request):
         channel_id = data["channel_id"]
         # Ensure that the user has permission to edit this channel.
         Channel.get_editable(request.user, channel_id)
-        task_args = {
-            "user_id": request.user.pk,
-            "channel_id": channel_id,
-            "version_notes": data.get('version_notes'),
-        }
 
-        _, task_info = create_async_task("export-channel", request.user, **task_args)
+        event = generate_publish_event(channel_id, version_notes=data.get('version_notes'))
+
+        Change.create_change(event, created_by_id=request.user.pk)
+
+        get_or_create_async_task("apply_channel_changes", request.user, channel_id=channel_id)
+
         return Response({
             "success": True,
             "channel": channel_id,
-            "task_id": task_info.task_id,
         })
     except (KeyError, Channel.DoesNotExist):
         return HttpResponseNotFound("No channel matching: {}".format(data))
