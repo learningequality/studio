@@ -92,7 +92,7 @@ class SyncView(APIView):
         changes_to_return = list(
             Change.objects.filter(
                 change_filter
-            ).values("server_rev", "session_id", "channel_id", "user_id", "applied", "errored", "table", "change_type", "kwargs")
+            ).values("server_rev", "session_id", "channel_id", "user_id", "applied", "errored", "table", "change_type", "kwargs").order_by("server_rev")
         )
 
         if not changes_to_return:
