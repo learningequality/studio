@@ -3,8 +3,8 @@
         "content": "{{ question | jsonify   }}\n\n[[☃ radio 1]]",
         "images": {{% for image in question_images %}
             "{{ image.name }}": {
-                "width": {{ image.width }},
-                "height": {{ image.height }}
+                "width": {{ image.width|safe }},
+                "height": {{ image.height|safe }}
             }{% if forloop.last %}{% else %},{% endif %}
         {% endfor %}},
         "widgets": {
@@ -18,8 +18,8 @@
                             "content": "{{ answer.answer | jsonify   }}",
                             "images":{{% for image in answer.images %}
                                 "{{ image.name }}": {
-                                    "width": {{ image.width }},
-                                    "height": {{ image.height }}
+                                    "width": {{ image.width|safe }},
+                                    "height": {{ image.height|safe }}
                                 }{% if forloop.last %}{% else %},{% endif %}
                             {% endfor %}}
                         }{% if forloop.last %}{% else %},{% endif %}
@@ -57,8 +57,8 @@
             "widgets":{},
             "images":{{% for image in hint.images %}
                 "{{ image.name }}": {
-                    "width": {{ image.width }},
-                    "height": {{ image.height }}
+                    "width": {{ image.width|safe }},
+                    "height": {{ image.height|safe }}
                 }{% if forloop.last %}{% else %},{% endif %}
             {% endfor %}},
             "content":"{{hint.hint | jsonify  }}",
