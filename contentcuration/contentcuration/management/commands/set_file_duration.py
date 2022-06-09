@@ -1,8 +1,5 @@
 import logging as logmodule
-import os
-import shutil
 import subprocess
-import tempfile
 import time
 
 from django.core.management.base import BaseCommand
@@ -17,7 +14,7 @@ logging = logmodule.getLogger('command')
 CHUNKSIZE = 10000
 
 
-def extract_duration_of_media(fpath_in):
+def extract_duration_of_media(f_in):
     result = subprocess.check_output(
         [
             "ffprobe",
@@ -29,8 +26,9 @@ def extract_duration_of_media(fpath_in):
             "default=noprint_wrappers=1:nokey=1",
             "-loglevel",
             "panic",
-            str(fpath_in),
-        ]
+            "-"
+        ],
+        stdin=f_in,
     )
     return int(float(result.decode("utf-8").strip()))
 
@@ -59,11 +57,7 @@ class Command(BaseCommand):
                     continue
                 try:
                     with file.file_on_disk.open() as f:
-                        fobj = tempfile.NamedTemporaryFile(delete=False)
-                        shutil.copyfileobj(f, fobj)
-                        fobj.close()
-                        duration = extract_duration_of_media(fobj.name)
-                        os.unlink(fobj.name)
+                        duration = extract_duration_of_media(f)
                     if duration:
                         updated_count += File.objects.filter(checksum=file.checksum, preset_id__in=MEDIA_PRESETS).update(duration=duration)
                 except FileNotFoundError:
