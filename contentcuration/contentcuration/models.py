@@ -20,11 +20,11 @@ from django.core.exceptions import ValidationError
 from django.core.files.storage import default_storage
 from django.core.files.storage import FileSystemStorage
 from django.core.mail import send_mail
-from django.db import connection
 from django.db import IntegrityError
 from django.db import models
 from django.db.models import Count
 from django.db.models import Exists
+from django.db.models import F
 from django.db.models import Index
 from django.db.models import IntegerField
 from django.db.models import JSONField
@@ -35,8 +35,8 @@ from django.db.models import Subquery
 from django.db.models import Sum
 from django.db.models import UUIDField as DjangoUUIDField
 from django.db.models import Value
-from django.db.models.expressions import RawSQL
 from django.db.models.expressions import ExpressionList
+from django.db.models.expressions import RawSQL
 from django.db.models.functions import Cast
 from django.db.models.functions import Lower
 from django.db.models.indexes import IndexExpression
@@ -61,6 +61,7 @@ from postmark.core import PMMailInactiveRecipientException
 from postmark.core import PMMailUnauthorizedException
 from rest_framework.authtoken.models import Token
 
+from contentcuration.constants.contentnode import kind_activity_map
 from contentcuration.db.models.expressions import Array
 from contentcuration.db.models.functions import ArrayRemove
 from contentcuration.db.models.functions import Unnest
@@ -262,12 +263,15 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def get_user_active_trees(self):
         return self.editable_channels.exclude(deleted=True)\
-            .values_list('main_tree__tree_id', flat=True)
+            .values(tree_id=F("main_tree__tree_id"))
 
     def get_user_active_files(self):
-        active_trees = self.get_user_active_trees()
-        return self.files.filter(contentnode__tree_id__in=active_trees)\
-            .values('checksum').distinct()
+        cte = With(self.get_user_active_trees().distinct())
+
+        return cte.join(self.files.get_queryset(), contentnode__tree_id=cte.col.tree_id)\
+            .with_cte(cte)\
+            .values('checksum')\
+            .distinct()
 
     def get_space_used(self, active_files=None):
         active_files = active_files or self.get_user_active_files()
@@ -545,35 +549,6 @@ class FileOnDiskStorage(FileSystemStorage):
             logging.warn('Content copy "%s" already exists!' % name)
             return name
         return super(FileOnDiskStorage, self)._save(name, content)
-
-
-class ChannelResourceSize(models.Model):
-    tree_id = models.IntegerField()
-    resource_size = models.IntegerField()
-
-    pg_view_name = "contentcuration_channel_resource_sizes"
-    file_table = "contentcuration_file"
-    node_table = "contentcuration_contentnode"
-
-    @classmethod
-    def initialize_view(cls):
-        sql = 'CREATE MATERIALIZED VIEW {view} AS ' \
-              'SELECT tree_id as id, tree_id, SUM("{file_table}"."file_size") AS ' \
-              '"resource_size" FROM "{node}" LEFT OUTER JOIN "{file_table}" ON ' \
-              '("{node}"."id" = "{file_table}"."contentnode_id") GROUP BY {node}.tree_id' \
-              ' WITH DATA;'.format(view=cls.pg_view_name, file_table=cls.file_table, node=cls.node_table)
-        with connection.cursor() as cursor:
-            cursor.execute(sql)
-
-    @classmethod
-    def refresh_view(cls):
-        sql = "REFRESH MATERIALIZED VIEW {}".format(cls.pg_view_name)
-        with connection.cursor() as cursor:
-            cursor.execute(sql)
-
-    class Meta:
-        managed = False
-        db_table = "contentcuration_channel_resource_sizes"
 
 
 class SecretToken(models.Model):
@@ -1176,6 +1151,19 @@ class ContentNode(MPTTModel, models.Model):
     role_visibility = models.CharField(max_length=50, choices=roles.choices, default=roles.LEARNER)
     freeze_authoring_data = models.BooleanField(default=False)
 
+    # Fields for metadata labels
+    # These fields use a map to store applied labels
+    # {
+    #   "<label_id1>": true,
+    #   "<label_id2>": true,
+    # }
+    grade_levels = models.JSONField(blank=True, null=True)
+    resource_types = models.JSONField(blank=True, null=True)
+    learning_activities = models.JSONField(blank=True, null=True)
+    accessibility_labels = models.JSONField(blank=True, null=True)
+    categories = models.JSONField(blank=True, null=True)
+    learner_needs = models.JSONField(blank=True, null=True)
+
     objects = CustomContentNodeTreeManager()
 
     # Track all updates and ignore a blacklist of attributes
@@ -1674,6 +1662,7 @@ class ContentNode(MPTTModel, models.Model):
     def on_create(self):
         self.changed = True
         self.recalculate_editors_storage()
+        self.set_default_learning_activity()
 
     def on_update(self):
         self.changed = self.changed or self.has_changes()
@@ -1685,6 +1674,13 @@ class ContentNode(MPTTModel, models.Model):
         # Recalculate storage if node was moved to or from the trash tree
         if target.channel_trash.exists() or parent_was_trashtree:
             self.recalculate_editors_storage()
+
+    def set_default_learning_activity(self):
+        if self.learning_activities is None:
+            if self.kind in kind_activity_map:
+                self.learning_activities = {
+                    kind_activity_map[self.kind]: True
+                }
 
     def save(self, skip_lock=False, *args, **kwargs):
         if self._state.adding:
@@ -1952,6 +1948,8 @@ class StagedFile(models.Model):
 
 FILE_DISTINCT_INDEX_NAME = "file_checksum_file_size_idx"
 FILE_MODIFIED_DESC_INDEX_NAME = "file_modified_desc_idx"
+FILE_DURATION_CONSTRAINT = "file_media_duration_int"
+MEDIA_PRESETS = [format_presets.AUDIO, format_presets.VIDEO_HIGH_RES, format_presets.VIDEO_LOW_RES]
 
 
 class File(models.Model):
@@ -1975,6 +1973,7 @@ class File(models.Model):
     uploaded_by = models.ForeignKey(User, related_name='files', blank=True, null=True, on_delete=models.SET_NULL)
 
     modified = models.DateTimeField(auto_now=True, verbose_name="modified", null=True)
+    duration = models.IntegerField(blank=True, null=True)
 
     objects = CustomManager()
 
@@ -2086,6 +2085,9 @@ class File(models.Model):
             models.Index(fields=['checksum', 'file_size'], name=FILE_DISTINCT_INDEX_NAME),
             models.Index(fields=["-modified"], name=FILE_MODIFIED_DESC_INDEX_NAME),
         ]
+        constraints = [
+            models.CheckConstraint(check=(Q(preset__in=MEDIA_PRESETS, duration__gt=0) | Q(duration__isnull=True)), name=FILE_DURATION_CONSTRAINT)
+        ]
 
 
 @receiver(models.signals.post_delete, sender=File)
@@ -2125,7 +2127,7 @@ class PrerequisiteContentRelationship(models.Model):
             raise IntegrityError('Cannot self reference as prerequisite.')
         # immediate cyclic exception
         if PrerequisiteContentRelationship.objects.using(self._state.db) \
-                        .filter(target_node=self.prerequisite, prerequisite=self.target_node):
+                .filter(target_node=self.prerequisite, prerequisite=self.target_node):
             raise IntegrityError(
                 'Note: Prerequisite relationship is directional! %s and %s cannot be prerequisite of each other!'
                 % (self.target_node, self.prerequisite))
@@ -2158,14 +2160,9 @@ class RelatedContentRelationship(models.Model):
             raise IntegrityError('Cannot self reference as related.')
         # handle immediate cyclic
         if RelatedContentRelationship.objects.using(self._state.db) \
-                        .filter(contentnode_1=self.contentnode_2, contentnode_2=self.contentnode_1):
+                .filter(contentnode_1=self.contentnode_2, contentnode_2=self.contentnode_1):
             return  # silently cancel the save
         super(RelatedContentRelationship, self).save(*args, **kwargs)
-
-
-class Exercise(models.Model):
-    contentnode = models.ForeignKey('ContentNode', related_name="exercise", null=True, on_delete=models.CASCADE)
-    mastery_model = models.CharField(max_length=200, default=exercises.DO_ALL, choices=exercises.MASTERY_MODELS)
 
 
 class Invitation(models.Model):

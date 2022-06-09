@@ -8,15 +8,13 @@ amqp==2.6.1
     # via
     #   -c requirements.txt
     #   kombu
-appdirs==1.4.4
-    # via virtualenv
 asgiref==3.3.4
     # via
     #   -c requirements.txt
     #   django
 aspy.yaml==1.3.0
     # via pre-commit
-astroid==2.5.6
+astroid==2.11.5
     # via pylint
 attrs==19.3.0
     # via
@@ -30,6 +28,8 @@ billiard==3.6.4.0
     # via
     #   -c requirements.txt
     #   celery
+brotli==1.0.9
+    # via geventhttpclient
 celery==4.4.7
     # via
     #   -c requirements.txt
@@ -40,21 +40,21 @@ certifi==2020.12.5
     #   geventhttpclient
     #   minio
     #   requests
-cfgv==3.3.0
+cfgv==3.3.1
     # via pre-commit
 chardet==4.0.0
     # via
     #   -c requirements.txt
     #   requests
-click==8.0.0
+click==8.0.4
     # via
     #   flask
     #   pip-tools
-codecov==2.1.11
+codecov==2.1.12
     # via -r requirements-dev.in
 colorama==0.4.4
     # via pytest-watch
-configargparse==1.4.1
+configargparse==1.5.3
     # via locust
 coreapi==2.3.3
     # via drf-yasg
@@ -62,7 +62,7 @@ coreschema==0.0.4
     # via
     #   coreapi
     #   drf-yasg
-coverage[toml]==5.5
+coverage[toml]==6.2
     # via
     #   -r requirements-dev.in
     #   codecov
@@ -71,7 +71,9 @@ git+https://github.com/someshchaturvedi/customizable-django-profiler.git#customi
     # via -r requirements-dev.in
 dataclasses==0.8
     # via werkzeug
-distlib==0.3.1
+dill==0.3.4
+    # via pylint
+distlib==0.3.4
     # via virtualenv
 django-concurrent-test-helper==0.7.0
     # via -r requirements-dev.in
@@ -81,7 +83,7 @@ django-debug-toolbar==1.9.1
     # via
     #   -r requirements-dev.in
     #   django-debug-panel
-django==3.2.4
+django==3.2.13
     # via
     #   -c requirements.txt
     #   django-debug-toolbar
@@ -99,31 +101,34 @@ faker==0.9.1
     # via
     #   -r requirements-dev.in
     #   mixer
-filelock==3.0.12
+filelock==3.4.1
     # via virtualenv
 flake8==3.4.1
     # via -r requirements-dev.in
 flask-basicauth==0.2.0
     # via locust
-flask==1.1.2
+flask-cors==3.0.10
+    # via locust
+flask==2.0.3
     # via
     #   flask-basicauth
+    #   flask-cors
     #   locust
 flower==0.9.4
     # via -r requirements-dev.in
-fonttools==4.24.0
+fonttools==4.27.1
     # via -r requirements-dev.in
-gevent==21.1.2
+gevent==21.12.0
     # via
     #   geventhttpclient
     #   locust
-geventhttpclient==1.4.4
+geventhttpclient==1.5.3
     # via locust
-greenlet==1.1.0
+greenlet==1.1.2
     # via gevent
 humanize==0.5.1
     # via flower
-identify==2.2.4
+identify==2.4.4
     # via pre-commit
 idna==2.10
     # via
@@ -132,13 +137,14 @@ idna==2.10
 importlib-metadata==1.7.0
     # via
     #   -c requirements.txt
+    #   click
     #   kombu
     #   pep517
     #   pluggy
     #   pre-commit
     #   pytest
     #   virtualenv
-importlib-resources==5.2.0
+importlib-resources==5.4.0
     # via
     #   pre-commit
     #   virtualenv
@@ -148,7 +154,7 @@ inflection==0.5.1
     # via drf-yasg
 iniconfig==1.1.1
     # via pytest
-isort==5.8.0
+isort==5.10.1
     # via
     #   -r requirements-dev.in
     #   pylint
@@ -162,19 +168,20 @@ jedi==0.17.2
     #   -r requirements-dev.in
     #   python-language-server
     #   python-lsp-server
-jinja2==3.0.1
+jinja2==3.0.3
     # via
     #   coreschema
     #   flask
+    #   locust
 json-rpc==1.13.0
     # via -r requirements-dev.in
 kombu==4.6.11
     # via
     #   -c requirements.txt
     #   celery
-lazy-object-proxy==1.6.0
+lazy-object-proxy==1.7.1
     # via astroid
-locust==1.5.3
+locust==2.8.6
     # via -r requirements-dev.in
 markupsafe==2.0.1
     # via jinja2
@@ -190,7 +197,7 @@ mock==4.0.3
     # via
     #   -r requirements-dev.in
     #   django-concurrent-test-helper
-msgpack==1.0.2
+msgpack==1.0.4
     # via locust
 nodeenv==1.6.0
     # via
@@ -203,20 +210,24 @@ packaging==20.9
     #   pytest
 parso==0.7.1
     # via jedi
-pep517==0.10.0
+pep517==0.12.0
     # via pip-tools
-pip-tools==6.1.0
+pip-tools==6.4.0
     # via -r requirements-dev.in
-pluggy==0.13.1
+platformdirs==2.4.0
+    # via
+    #   pylint
+    #   virtualenv
+pluggy==1.0.0
     # via
     #   pytest
     #   python-language-server
     #   python-lsp-server
 pre-commit==1.15.1
     # via -r requirements-dev.in
-psutil==5.8.0
+psutil==5.9.1
     # via locust
-py==1.10.0
+py==1.11.0
     # via pytest
 pycodestyle==2.3.1
     # via
@@ -230,31 +241,31 @@ pyinstrument-cext==0.2.4
     # via pyinstrument
 pyinstrument==3.4.2
     # via -r requirements-dev.in
-pylint==2.8.2
+pylint==2.13.9
     # via -r requirements-dev.in
 pyls-isort==0.2.2
     # via -r requirements-dev.in
-pympler==0.9
+pympler==1.0.1
     # via -r requirements-dev.in
-pypandoc==1.5
+pypandoc==1.8.1
     # via -r requirements-dev.in
 pyparsing==2.4.7
     # via
     #   -c requirements.txt
     #   packaging
-pytest-cov==2.12.0
+pytest-cov==3.0.0
     # via -r requirements-dev.in
-pytest-django==4.3.0
+pytest-django==4.5.2
     # via -r requirements-dev.in
 pytest-logging==2015.11.4
     # via -r requirements-dev.in
-pytest-pythonpath==0.7.3
+pytest-pythonpath==0.7.4
     # via -r requirements-dev.in
-pytest-timeout==1.4.2
+pytest-timeout==2.1.0
     # via -r requirements-dev.in
 pytest-watch==4.2.0
     # via -r requirements-dev.in
-pytest==6.2.4
+pytest==6.2.5
     # via
     #   -r requirements-dev.in
     #   pytest-cov
@@ -273,7 +284,7 @@ python-language-server==0.36.2
     # via -r requirements-dev.in
 python-lsp-jsonrpc==1.0.0
     # via python-lsp-server
-python-lsp-server==1.0.1
+python-lsp-server==1.3.3
     # via pyls-isort
 pytz==2021.1
     # via
@@ -281,11 +292,11 @@ pytz==2021.1
     #   celery
     #   django
     #   flower
-pyyaml==5.4.1
+pyyaml==6.0
     # via
     #   aspy.yaml
     #   pre-commit
-pyzmq==22.0.3
+pyzmq==23.1.0
     # via locust
 requests==2.25.1
     # via
@@ -293,11 +304,13 @@ requests==2.25.1
     #   codecov
     #   coreapi
     #   locust
-rope==0.19.0
+rope==1.1.1
     # via -r requirements-dev.in
-ruamel.yaml.clib==0.2.2
+roundrobin==0.0.2
+    # via locust
+ruamel.yaml.clib==0.2.6
     # via ruamel.yaml
-ruamel.yaml==0.17.4
+ruamel.yaml==0.17.21
     # via drf-yasg
 service-factory==0.1.6
     # via -r requirements-dev.in
@@ -306,6 +319,7 @@ six==1.16.0
     #   -c requirements.txt
     #   django-concurrent-test-helper
     #   faker
+    #   flask-cors
     #   geventhttpclient
     #   pre-commit
     #   python-dateutil
@@ -323,20 +337,24 @@ text-unidecode==1.2
     # via faker
 toml==0.10.2
     # via
+    #   pre-commit
+    #   pytest
+tomli==1.2.3
+    # via
     #   coverage
     #   pep517
-    #   pre-commit
     #   pylint
-    #   pytest
 tornado==6.1
     # via flower
-typed-ast==1.4.3
+typed-ast==1.5.4
     # via astroid
-typing-extensions==3.10.0.0
+typing-extensions==4.1.1
     # via
-    #   -c requirements.txt
     #   asgiref
-ujson==4.0.2
+    #   astroid
+    #   locust
+    #   pylint
+ujson==4.3.0
     # via
     #   python-jsonrpc-server
     #   python-language-server
@@ -357,19 +375,19 @@ vine==1.3.0
     #   -c requirements.txt
     #   amqp
     #   celery
-virtualenv==20.4.6
+virtualenv==20.14.1
     # via pre-commit
-watchdog==2.1.2
+watchdog==2.1.8
     # via pytest-watch
-werkzeug==2.0.1
+werkzeug==2.0.3
     # via
     #   flask
     #   locust
-wheel==0.36.2
-    # via pypandoc
-wrapt==1.12.1
+wheel==0.37.1
+    # via pip-tools
+wrapt==1.14.1
     # via astroid
-yapf==0.31.0
+yapf==0.32.0
     # via -r requirements-dev.in
 zipp==3.4.1
     # via

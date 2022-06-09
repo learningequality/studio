@@ -12343,18 +12343,6 @@ jsprim@^1.2.2:
     json-schema "0.2.3"
     verror "1.10.0"
 
-jszip-utils@0.0.2:
-  version "0.0.2"
-  resolved "https://registry.yarnpkg.com/jszip-utils/-/jszip-utils-0.0.2.tgz#457d5cbca60a1c2e0706e9da2b544e8e7bc50bf8"
-  integrity sha1-RX1cvKYKHC4HBunaK1ROjnvFC/g=
-
-jszip@^2.5.0:
-  version "2.6.1"
-  resolved "https://registry.yarnpkg.com/jszip/-/jszip-2.6.1.tgz#b88f3a7b2e67a2a048152982c7a3756d9c4828f0"
-  integrity sha1-uI86ey5noqBIFSmCx6N1bZxIKPA=
-  dependencies:
-    pako "~1.0.2"
-
 jszip@^3.4.0:
   version "3.5.0"
   resolved "https://registry.yarnpkg.com/jszip/-/jszip-3.5.0.tgz#b4fd1f368245346658e781fec9675802489e15f6"
@@ -12442,6 +12430,11 @@ knuth-shuffle-seeded@^1.0.6:
   integrity sha1-AfG2VzOqdUDuCNiwF0Fk0iCB5OE=
   dependencies:
     seed-random "~2.2.0"
+
+kolibri-constants@^0.1.40:
+  version "0.1.40"
+  resolved "https://registry.yarnpkg.com/kolibri-constants/-/kolibri-constants-0.1.40.tgz#ea75e7ce9716a027638c4ac6db73867bc04d1858"
+  integrity sha512-264LtFuLoQ15GbZKxWnMcl+uDovzj75GWopnW40ixAVMERrmhSIGuSl1wID9IVOyT788xLQCPhcIqOP5LmDA9A==
 
 "kolibri-design-system@git+https://github.com/learningequality/kolibri-design-system#v0.2.x":
   version "0.2.2-beta4"
