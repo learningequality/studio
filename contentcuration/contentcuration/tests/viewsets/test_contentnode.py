@@ -15,6 +15,7 @@ from django_concurrent_tests.helpers import call_concurrently
 from django_concurrent_tests.helpers import make_concurrent_calls
 from le_utils.constants import completion_criteria
 from le_utils.constants import content_kinds
+from le_utils.constants import exercises
 from le_utils.constants import roles
 from le_utils.constants.labels.accessibility_categories import ACCESSIBILITYCATEGORIESLIST
 from le_utils.constants.labels.subjects import SUBJECTSLIST
@@ -587,36 +588,113 @@ class SyncTestCase(StudioAPITestCase):
             models.ContentNode.objects.get(id=contentnode.id).title, new_title
         )
 
+    def test_update_extra_fields_completion_criteria_set(self):
+        user = testdata.user()
+        metadata = self.contentnode_db_metadata
+        metadata["extra_fields"] = {
+            "options": {
+                "threshold": {
+                    "m": 3,
+                    "n": 6,
+                    "mastery_model": exercises.M_OF_N,
+                },
+                "model": completion_criteria.MASTERY,
+            }
+        }
+        contentnode = models.ContentNode.objects.create(**metadata)
+        self.client.force_authenticate(user=user)
+
+        response = self.client.post(
+            self.sync_url,
+            [generate_update_event(contentnode.id, CONTENTNODE, {
+                "extra_fields.options.completion_criteria.threshold.m": 4,
+                "extra_fields.options.completion_criteria.threshold.n": 8,
+                "extra_fields.options.completion_criteria.threshold.mastery_model": exercises.M_OF_N,
+                "extra_fields.options.completion_criteria.model": completion_criteria.MASTERY}
+            )],
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(
+            models.ContentNode.objects.get(id=contentnode.id).extra_fields["options"]["completion_criteria"]["threshold"]["m"], 4
+        )
+        self.assertEqual(
+            models.ContentNode.objects.get(id=contentnode.id).extra_fields["options"]["completion_criteria"]["threshold"]["n"], 8
+        )
+
+    def test_update_extra_fields_completion_criteria_unset(self):
+        user = testdata.user()
+        metadata = self.contentnode_db_metadata
+        metadata["extra_fields"] = {
+            "m": 3,
+            "n": 5,
+            "mastery_model": exercises.M_OF_N,
+        }
+        contentnode = models.ContentNode.objects.create(**metadata)
+        self.client.force_authenticate(user=user)
+
+        response = self.client.post(
+            self.sync_url,
+            [generate_update_event(contentnode.id, CONTENTNODE, {
+                "extra_fields.options.completion_criteria.threshold.m": 4,
+                "extra_fields.options.completion_criteria.threshold.n": 6,
+                "extra_fields.options.completion_criteria.threshold.mastery_model": exercises.M_OF_N,
+                "extra_fields.options.completion_criteria.model": completion_criteria.MASTERY}
+            )],
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 200, response.content)
+
+        self.assertEqual(
+            models.ContentNode.objects.get(id=contentnode.id).extra_fields["m"], 3
+        )
+        self.assertEqual(
+            models.ContentNode.objects.get(id=contentnode.id).extra_fields["n"], 5
+        )
+        self.assertEqual(
+            models.ContentNode.objects.get(id=contentnode.id).extra_fields["mastery_model"], exercises.M_OF_N
+        )
+        self.assertEqual(
+            models.ContentNode.objects.get(id=contentnode.id).extra_fields["options"]["completion_criteria"]["threshold"]["m"], 4
+        )
+        self.assertEqual(
+            models.ContentNode.objects.get(id=contentnode.id).extra_fields["options"]["completion_criteria"]["threshold"]["n"], 6
+        )
+        self.assertEqual(
+            models.ContentNode.objects.get(id=contentnode.id).extra_fields["options"]["completion_criteria"]["threshold"]["mastery_model"], exercises.M_OF_N
+        )
+        self.assertEqual(
+            models.ContentNode.objects.get(id=contentnode.id).extra_fields["options"]["completion_criteria"]["model"], completion_criteria.MASTERY
+        )
+
     def test_update_contentnode_extra_fields(self):
         user = testdata.user()
         contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
 
-        # Update extra_fields.m
+        # Update m and n fields
         m = 5
+        n = 10
         self.client.force_authenticate(user=user)
+
         response = self.client.post(
             self.sync_url,
-            [generate_update_event(contentnode.id, CONTENTNODE, {"extra_fields.m": m})],
+            [generate_update_event(contentnode.id, CONTENTNODE, {
+                "extra_fields.options.completion_criteria.threshold.m": m,
+                "extra_fields.options.completion_criteria.threshold.n": n,
+                "extra_fields.options.completion_criteria.threshold.mastery_model": exercises.M_OF_N,
+                "extra_fields.options.completion_criteria.model": completion_criteria.MASTERY}
+            )],
             format="json",
-        )
-        self.assertEqual(response.status_code, 200, response.content)
-        self.assertEqual(
-            models.ContentNode.objects.get(id=contentnode.id).extra_fields["m"], m
         )
 
-        # Update extra_fields.m
-        n = 10
-        response = self.client.post(
-            self.sync_url,
-            [generate_update_event(contentnode.id, CONTENTNODE, {"extra_fields.n": n})],
-            format="json",
-        )
         self.assertEqual(response.status_code, 200, response.content)
         self.assertEqual(
-            models.ContentNode.objects.get(id=contentnode.id).extra_fields["m"], m
+            models.ContentNode.objects.get(id=contentnode.id).extra_fields["options"]["completion_criteria"]["threshold"]["m"], m
         )
         self.assertEqual(
-            models.ContentNode.objects.get(id=contentnode.id).extra_fields["n"], n
+            models.ContentNode.objects.get(id=contentnode.id).extra_fields["options"]["completion_criteria"]["threshold"]["n"], n
         )
 
         # Update extra_fields.randomize
@@ -628,10 +706,10 @@ class SyncTestCase(StudioAPITestCase):
         )
         self.assertEqual(response.status_code, 200, response.content)
         self.assertEqual(
-            models.ContentNode.objects.get(id=contentnode.id).extra_fields["m"], m
+            models.ContentNode.objects.get(id=contentnode.id).extra_fields["options"]["completion_criteria"]["threshold"]["m"], m
         )
         self.assertEqual(
-            models.ContentNode.objects.get(id=contentnode.id).extra_fields["n"], n
+            models.ContentNode.objects.get(id=contentnode.id).extra_fields["options"]["completion_criteria"]["threshold"]["n"], n
         )
         self.assertEqual(
             models.ContentNode.objects.get(id=contentnode.id).extra_fields["randomize"], randomize
@@ -641,19 +719,30 @@ class SyncTestCase(StudioAPITestCase):
         user = testdata.user()
         metadata = self.contentnode_db_metadata
         metadata["extra_fields"] = {
-            "m": 5,
+            "options": {
+                "threshold": {
+                    "m": 5,
+                    "n": None,
+                    "mastery_model": exercises.M_OF_N,
+                },
+                "model": completion_criteria.MASTERY,
+            }
         }
         contentnode = models.ContentNode.objects.create(**metadata)
         self.client.force_authenticate(user=user)
-        # Remove extra_fields.m
+        # Remove m from extra_fields
         response = self.client.post(
             self.sync_url,
-            [generate_update_event(contentnode.id, CONTENTNODE, {"extra_fields.m": None})],
+            [generate_update_event(contentnode.id, CONTENTNODE, {
+                "extra_fields.options.completion_criteria.threshold.m": None,
+                "extra_fields.options.completion_criteria.threshold.n": None,
+                "extra_fields.options.completion_criteria.threshold.mastery_model": exercises.M_OF_N,
+                "extra_fields.options.completion_criteria.model": completion_criteria.MASTERY}
+            )],
             format="json",
         )
         self.assertEqual(response.status_code, 200, response.content)
-        with self.assertRaises(KeyError):
-            models.ContentNode.objects.get(id=contentnode.id).extra_fields["m"]
+        self.assertEqual(models.ContentNode.objects.get(id=contentnode.id).extra_fields["options"]["completion_criteria"]["threshold"]["m"], None)
 
     def test_update_contentnode_add_to_extra_fields_nested(self):
         user = testdata.user()

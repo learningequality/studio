@@ -35,6 +35,7 @@ from rest_framework.serializers import BooleanField
 from rest_framework.serializers import CharField
 from rest_framework.serializers import ChoiceField
 from rest_framework.serializers import DictField
+from rest_framework.serializers import Field
 from rest_framework.serializers import ValidationError
 from rest_framework.viewsets import ViewSet
 
@@ -73,8 +74,6 @@ from contentcuration.viewsets.sync.constants import TASK_ID
 from contentcuration.viewsets.sync.utils import generate_delete_event
 from contentcuration.viewsets.sync.utils import generate_update_event
 from contentcuration.viewsets.sync.utils import log_sync_exception
-# from le_utils.constants import exercises
-# from rest_framework.serializers import IntegerField
 
 
 channel_query = Channel.objects.filter(main_tree__tree_id=OuterRef("tree_id"))
@@ -255,15 +254,15 @@ class ContentNodeListSerializer(BulkListSerializer):
         return all_objects
 
 
-class ThresholdField(CharField):
+class ThresholdField(Field):
     def to_representation(self, value):
         return value
 
     def to_internal_value(self, data):
-        data = super(ThresholdField, self).to_internal_value(data)
         try:
+            print(data)
             data = int(data)
-        except ValueError:
+        except(ValueError, TypeError):
             pass
         return data
 
@@ -454,10 +453,10 @@ def get_title(item):
 def consolidate_extra_fields(item):
     extra_fields = item.get("extra_fields")
     if item["kind"] == content_kinds.EXERCISE:
-        m = extra_fields.pop("m")
-        n = extra_fields.pop("n")
-        mastery_model = extra_fields.pop("mastery_model")
-        if not extra_fields.get("options").get("completion_criteria"):
+        m = extra_fields.pop("m", None)
+        n = extra_fields.pop("n", None)
+        mastery_model = extra_fields.pop("mastery_model", None)
+        if not extra_fields.get("options", {}).get("completion_criteria", {}):
             extra_fields["options"] = extra_fields.get("options", {})
             extra_fields["options"]["completion_criteria"] = {
                 "threshold": {
