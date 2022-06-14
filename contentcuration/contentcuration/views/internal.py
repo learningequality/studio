@@ -16,6 +16,12 @@ from django.http import HttpResponseServerError
 from django.http import JsonResponse
 from le_utils.constants import content_kinds
 from le_utils.constants import roles
+from le_utils.constants.labels.accessibility_categories import ACCESSIBILITYCATEGORIESLIST
+from le_utils.constants.labels.learning_activities import LEARNINGACTIVITIESLIST
+from le_utils.constants.labels.levels import LEVELSLIST
+from le_utils.constants.labels.needs import NEEDSLIST
+from le_utils.constants.labels.resource_type import RESOURCETYPELIST
+from le_utils.constants.labels.subjects import SUBJECTSLIST
 from past.builtins import basestring
 from raven.contrib.django.raven_compat.models import client
 from rest_framework import status
@@ -66,7 +72,7 @@ VERSION_ERROR = VersionStatus(
 )
 
 
-class NodeValidationError(Exception):
+class NodeValidationError(ValidationError):
     pass
 
 
@@ -598,6 +604,16 @@ def convert_data_to_nodes(user, content_data, parent_node):
         raise ObjectDoesNotExist("Error creating node: {0}".format(e))
 
 
+METADATA = {
+    "grade_levels": set(LEVELSLIST),
+    "resource_types": set(RESOURCETYPELIST),
+    "learning_activities": set(LEARNINGACTIVITIESLIST),
+    "accessibility_labels": set(ACCESSIBILITYCATEGORIESLIST),
+    "categories": set(SUBJECTSLIST),
+    "learner_needs": set(NEEDSLIST),
+}
+
+
 def create_node(node_data, parent_node, sort_order):  # noqa: C901
     """ Generate node based on node dict """
     # Make sure license is valid
@@ -632,6 +648,18 @@ def create_node(node_data, parent_node, sort_order):  # noqa: C901
         if license.copyright_holder_required:
             is_complete &= copyright_holder != ""
 
+    metadata_labels = {}
+
+    for label, valid_values in METADATA.items():
+        if label in node_data:
+            if type(node_data[label]) is not list:
+                raise NodeValidationError("{} must pass a list of values".format(label))
+            metadata_labels[label] = {}
+            for value in node_data[label]:
+                if value not in valid_values:
+                    raise NodeValidationError("{} is not a valid value for {}".format(value, label))
+                metadata_labels[label][value] = True
+
     node = ContentNode.objects.create(
         title=title,
         tree_id=parent_node.tree_id,
@@ -654,6 +682,7 @@ def create_node(node_data, parent_node, sort_order):  # noqa: C901
         freeze_authoring_data=True,
         role_visibility=node_data.get('role') or roles.LEARNER,
         complete=is_complete,
+        **metadata_labels
     )
 
     tags = []

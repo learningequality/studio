@@ -8,6 +8,12 @@ import uuid
 from django.db import connections
 from django.urls import reverse_lazy
 from le_utils.constants import format_presets
+from le_utils.constants.labels.accessibility_categories import ACCESSIBILITYCATEGORIESLIST
+from le_utils.constants.labels.learning_activities import LEARNINGACTIVITIESLIST
+from le_utils.constants.labels.levels import LEVELSLIST
+from le_utils.constants.labels.needs import NEEDSLIST
+from le_utils.constants.labels.resource_type import RESOURCETYPELIST
+from le_utils.constants.labels.subjects import SUBJECTSLIST
 from mixer.main import mixer
 from mock import patch
 from rest_framework.test import APIClient
@@ -42,6 +48,16 @@ class SampleContentNodeDataSchema:
     source_id = str
     author = str
     copyright_holder = str
+
+
+METADATA = {
+    "grade_levels": LEVELSLIST,
+    "resource_types": RESOURCETYPELIST,
+    "learning_activities": LEARNINGACTIVITIESLIST,
+    "accessibility_labels": ACCESSIBILITYCATEGORIESLIST,
+    "categories": SUBJECTSLIST,
+    "learner_needs": NEEDSLIST,
+}
 
 
 class ApiAddNodesToTreeTestCase(StudioTestCase):
@@ -110,6 +126,11 @@ class ApiAddNodesToTreeTestCase(StudioTestCase):
         invalid_copyright_holder["title"] = "invalid_copyright_holder"
         invalid_copyright_holder["copyright_holder"] = ""
 
+        valid_metadata_labels = self._make_node_data()
+        valid_metadata_labels["title"] = "valid_metadata_labels"
+        for label, values in METADATA.items():
+            valid_metadata_labels[label] = [values[0]]
+
         self.sample_data = {
             "root_id": self.root_node.id,
             "content_data": [
@@ -117,6 +138,7 @@ class ApiAddNodesToTreeTestCase(StudioTestCase):
                 invalid_title_node,
                 invalid_license_description,
                 invalid_copyright_holder,
+                valid_metadata_labels,
             ],
         }
         self.resp = self.admin_client().post(
@@ -166,6 +188,13 @@ class ApiAddNodesToTreeTestCase(StudioTestCase):
         # our original file object
         assert f.file_on_disk.read() == self.fileobj.file_on_disk.read()
 
+    def test_metadata_properly_created(self):
+        node = ContentNode.objects.get(title="valid_metadata_labels")
+        for label, values in METADATA.items():
+            self.assertEqual(getattr(node, label), {
+                values[0]: True
+            })
+
     def test_invalid_nodes_are_not_complete(self):
         node_0 = ContentNode.objects.get(title=self.title)
         node_1 = ContentNode.objects.get(description="invalid_title_node")
@@ -187,6 +216,24 @@ class ApiAddNodesToTreeTestCase(StudioTestCase):
             "root_id": self.root_node.id,
             "content_data": [
                 invalid_tag_length,
+            ],
+        }
+
+        response = self.admin_client().post(
+            reverse_lazy("api_add_nodes_to_tree"), data=test_data, format="json"
+        )
+
+        self.assertEqual(response.status_code, 400, response.content)
+
+    def test_invalid_metadata_label_excluded(self):
+        invalid_metadata_labels = self._make_node_data()
+        invalid_metadata_labels["title"] = "invalid_metadata_labels"
+        invalid_metadata_labels["categories"] = ["not a label!"]
+
+        test_data = {
+            "root_id": self.root_node.id,
+            "content_data": [
+                invalid_metadata_labels,
             ],
         }
 
