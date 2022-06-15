@@ -145,6 +145,7 @@ def node(data, parent=None):
             sort_order=data.get('sort_order', 1),
             complete=True,
             extra_fields=data.get('extra_fields'),
+            grade_levels="{}",
         )
         new_node.save()
         video_file = fileobj_video(contents=b"Video File")
@@ -171,6 +172,7 @@ def node(data, parent=None):
             content_id=data.get('content_id') or data['node_id'],
             sort_order=data.get('sort_order', 1),
             complete=True,
+            grade_levels="{}",
         )
 
         new_node.save()
