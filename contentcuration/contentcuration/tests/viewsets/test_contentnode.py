@@ -400,6 +400,35 @@ class ContentNodeViewSetTestCase(StudioAPITestCase):
         self.assertEqual(response.data["extra_fields"]["options"]["completion_criteria"]["threshold"]["mastery_model"], exercises.M_OF_N)
         self.assertEqual(response.data["extra_fields"]["options"]["completion_criteria"]["model"], completion_criteria.MASTERY)
 
+    def test_consolidate_extra_fields_with_mastrey_model_none(self):
+
+        user = testdata.user()
+        channel = testdata.channel()
+        channel.public = True
+        channel.save()
+        contentnode = models.ContentNode.objects.create(
+            title="Aron's cool contentnode",
+            id=uuid.uuid4().hex,
+            kind_id=content_kinds.EXERCISE,
+            description="coolest contentnode this side of the Pacific",
+            parent_id=channel.main_tree_id,
+            extra_fields={
+                "options": {
+                    "m": None,
+                    "n": None,
+                    "mastery_model": None,
+                }
+            }
+        )
+
+        self.client.force_authenticate(user=user)
+        with self.settings(TEST_ENV=False):
+            response = self.client.get(
+                self.viewset_url(pk=contentnode.id), format="json",
+            )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(response.data["extra_fields"]["options"], {})
+
 
 class SyncTestCase(StudioAPITestCase):
     @property

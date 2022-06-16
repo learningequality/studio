@@ -455,7 +455,7 @@ def consolidate_extra_fields(item):
         m = extra_fields.get("options", {}).pop("m", None)
         n = extra_fields.get("options", {}).pop("n", None)
         mastery_model = extra_fields.get("options", {}).pop("mastery_model", None)
-        if not extra_fields.get("options", {}).get("completion_criteria", {}):
+        if not extra_fields.get("options", {}).get("completion_criteria", {}) and mastery_model is not None:
             extra_fields["options"] = extra_fields.get("options", {})
             extra_fields["options"]["completion_criteria"] = {
                 "threshold": {
