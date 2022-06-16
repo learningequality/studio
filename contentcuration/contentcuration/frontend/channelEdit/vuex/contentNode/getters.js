@@ -157,6 +157,7 @@ function getStepDetail(state, getters, contentNodeId) {
     id: contentNodeId,
     title: '',
     kind: '',
+    learning_activities: '',
     parentTitle: '',
   };
 
@@ -166,8 +167,10 @@ function getStepDetail(state, getters, contentNodeId) {
     return stepDetail;
   }
 
+
   stepDetail.title = node.title;
   stepDetail.kind = node.kind;
+  stepDetail.learning_activities = node.learning_activities;
 
   const parentNodeId = state.contentNodesMap[contentNodeId].parent;
 
@@ -177,6 +180,8 @@ function getStepDetail(state, getters, contentNodeId) {
       stepDetail.parentTitle = parentNode.title;
     }
   }
+
+  console.log(stepDetail)
 
   return stepDetail;
 }

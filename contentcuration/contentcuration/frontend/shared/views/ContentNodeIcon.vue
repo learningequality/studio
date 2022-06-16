@@ -1,105 +1,92 @@
 <template>
 
-  <span v-if="icon">
-    <VChip
-      v-if="showColor"
-      label
-      :color="kind"
-      :small="small"
-      :textColor="fontColor"
-      class="ma-0 pa-0"
-      :class="{ iconOnly: !includeText, fillWidth }"
-      :style="{ width: fillWidth ? '100%' : 'unset' }"
-      capture-as-image
-    >
-      <Icon small :color="fontColor" v-bind="$attrs">
-        {{ icon }}
-      </Icon>
-      <span v-if="includeText" class="ml-2">{{ text }}</span>
+  <!-- <span v-if="icon">
+    <VChip v-if="showColor" label color="#efefef" :small="small" :textColor="fontColor" class="ma-0 pa-0"
+      :class="{ iconOnly: !includeText, fillWidth }" :style="{ width: fillWidth ? '100%' : 'unset' }" capture-as-image>
+      <KIcon small color="white" :icon="icon" />
+      <span v-if="includeText" class="ml-2">"hello world"</span>
     </VChip>
     <span v-else capture-as-image>
-      <Icon :color="fontColor" v-bind="$attrs">
-        {{ icon }}
-      </Icon>
-      <span v-if="includeText">{{ text }}</span>
+      <KIcon small color="white" :icon="icon" />
+      <span v-if="includeText">"hello world"</span>
     </span>
-  </span>
+  </span> -->
+  <div v-if="includeText && chip" class="chip">
+    <KLabeledIcon :icon="icon" :label="text" />
+  </div>
+  <div v-else-if="includeText && !chip">
+    <KLabeledIcon :icon="icon" :label="text" />
+  </div>
+  <KIcon v-else :icon="icon" :aria-label="text" />
+
 
 </template>
 
 <script>
 
-  import ContentKinds from 'shared/leUtils/ContentKinds';
-  import { getContentKindIcon } from 'shared/vuetify/icons';
+import { getContentKindIcon } from 'shared/vuetify/icons';
+import { LearningActivities } from '../../shared/constants';
+import { camelCase } from 'lodash';
+import {  metadataTranslationMixin } from 'shared/mixins';
 
   export default {
     name: 'ContentNodeIcon',
+    mixins: [metadataTranslationMixin],
+
     props: {
-      kind: {
-        type: String,
-        validator: value => {
-          return value === 'unsupported' || ContentKinds.has(value);
-        },
-        default: 'unsupported',
+      learningActivity: {
+        type: Object,
+        required: false,
+      },
+      isTopic: {
+        type: Boolean,
+        default: false,
       },
       includeText: {
         type: Boolean,
         default: false,
       },
-      showColor: {
-        type: Boolean,
-        default: true,
-      },
-      isEmpty: {
-        type: Boolean,
-        default: false,
-      },
-      fillWidth: {
-        type: Boolean,
-        default: false,
-      },
-      small: {
+      chip: {
         type: Boolean,
         default: false,
       },
     },
     computed: {
-      fontColor() {
-        return this.showColor ? 'white' : 'grey darken-1';
-      },
       icon() {
-        return getContentKindIcon(this.kind, this.isEmpty);
+        if (this.isTopic) {
+          return 'topic'
+        } else {
+          return getContentKindIcon(this.text);
+        }
       },
       text() {
-        switch (this.kind) {
-          case 'topic':
-            return this.$tr('topic');
-          case 'video':
-            return this.$tr('video');
-          case 'audio':
-            return this.$tr('audio');
-          case 'slideshow':
-            return this.$tr('slideshow');
-          case 'exercise':
-            return this.$tr('exercise');
-          case 'document':
-            return this.$tr('document');
-          case 'html5':
-            return this.$tr('html5');
-          default:
-            return this.$tr('unsupported');
+        if (this.isTopic) {
+          return this.$tr('topic')
+        }
+        return this.learningActivityString(this.learningActivity)
+      }
+    },
+    methods: {
+      matchIdToString(ids) {
+        return ids.map(i => this.translateMetadataString(camelCase(i))).join(', ');
+      },
+      learningActivityString(options) {
+        const ids = Object.keys(options);
+        const matches = Object.keys(LearningActivities).filter(k =>
+          ids.includes(LearningActivities[k])
+        );
+        if (matches && matches.length === 1) {
+          return this.matchIdToString(matches);
+        } else if (matches && matches.length > 1) {
+          return this.$tr('multipleLearningActivities')
+        } else {
+          return '';
         }
       },
     },
     $trs: {
-      topic: 'Folder',
-      video: 'Video',
-      audio: 'Audio',
-      exercise: 'Exercise',
-      document: 'Document',
-      slideshow: 'Slideshow',
-      html5: 'HTML5 App',
-      unsupported: 'Unsupported',
+     multipleLearningActivities: 'Multiple learning activities',
+     topic: 'Folder',
     },
   };
 
@@ -107,11 +94,13 @@
 
 <style lang="less" scoped>
 
-  .iconOnly {
-    /deep/ .v-chip__content {
-      height: 22px;
-      padding: 0 5px;
-    }
+  .chip {
+      background-color: #dedede;
+      display: inline-block;
+        padding: 10px;
+        font-weight: bold;
+        border-radius: 4px;
+        width: unset !important;
   }
 
 </style>

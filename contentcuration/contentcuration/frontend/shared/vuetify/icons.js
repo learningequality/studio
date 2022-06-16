@@ -6,6 +6,8 @@ import LightBulbIcon from '../views/icons/LightBulbIcon';
 import ViewOnlyIcon from '../views/icons/ViewOnlyIcon';
 import Icon from 'shared/views/Icon';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
+import { camelCase } from 'lodash';
+
 
 Vue.component(Icon.name, Icon);
 
@@ -21,10 +23,16 @@ export const CONTENT_KIND_ICONS = {
   [ContentKindsNames.HTML5]: 'widgets',
 };
 
-export function getContentKindIcon(kind, isEmpty = false) {
-  const icon = (isEmpty ? [kind + EMPTY] : []).concat([kind]).find(k => k in CONTENT_KIND_ICONS);
-  return icon ? CONTENT_KIND_ICONS[icon] : 'error_outline';
-}
+export function getContentKindIcon(activity) {
+
+    if (activity  == 'Explore') {
+      return 'interactShaded';
+    } else if (activity == 'Multiple learning activities') {
+      return 'allActivities';
+    } else {
+      return `${camelCase(activity) + 'Solid'}`;
+  }
+};
 
 // Can use $vuetify.icons.iconName in <Icon> tags
 const customIcons = {

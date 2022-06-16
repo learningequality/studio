@@ -3,26 +3,19 @@
   <VLayout row wrap @scroll="$emit('scroll', $event)">
     <VFlex xs12>
       <VLayout v-if="!hideNavigation" row>
-        <VFlex v-if="!loading && node">
-          <div class="mb-1">
-            <!-- Slot for elements like "Back" link -->
-            <slot name="navigation"></slot>
-          </div>
-          <ContentNodeIcon :kind="node.kind" includeText />
-        </VFlex>
+        <div v-if="!loading && node" class="mb-1">
+          <!-- Slot for elements like "Back" link -->
+          <slot name="navigation"></slot>
+          <ContentNodeIcon v-if="isTopic" :isTopic="true" includeText chip />
+          <ContentNodeIcon v-else-if="node.learning_activities" :learningActivity="node.learning_activities" includeText
+            chip />
+        </div>
+
         <VSpacer />
-        <VBtn
-          icon
-          flat
-          small
-          color="grey"
-          class="ma-0"
-          @click="$emit('close')"
-        >
+        <VBtn icon flat small color="grey" class="ma-0" @click="$emit('close')">
           <Icon>clear</Icon>
         </VBtn>
       </VLayout>
-      <ContentNodeIcon v-else :kind="node.kind" includeText />
     </VFlex>
     <LoadingText v-if="loading || !node" class="mt-4" />
     <VFlex v-else xs12 class="pb-5">
@@ -55,18 +48,9 @@
       </Tabs>
       <VTabsItems :value="tab" @change="tab = $event">
         <VTabItem value="questions">
-          <Banner
-            :value="!assessmentItems.length"
-            class="my-2"
-            error
-            :text="$tr('noQuestionsError')"
-          />
-          <Banner
-            :value="Boolean(invalidQuestionCount)"
-            class="my-2"
-            error
-            :text="$tr('incompleteQuestionError', { count: invalidQuestionCount })"
-          />
+          <Banner :value="!assessmentItems.length" class="my-2" error :text="$tr('noQuestionsError')" />
+          <Banner :value="Boolean(invalidQuestionCount)" class="my-2" error
+            :text="$tr('incompleteQuestionError', { count: invalidQuestionCount })" />
           <VLayout v-if="assessmentItems.length" justify-space-between align-center class="my-3">
             <VFlex>
               <Checkbox v-model="showAnswers" :label="$tr('showAnswers')" class="ma-0" />
@@ -84,10 +68,7 @@
                   </div>
                 </VFlex>
                 <VFlex>
-                  <AssessmentItemPreview
-                    :item="item"
-                    :detailed="showAnswers"
-                  />
+                  <AssessmentItemPreview :item="item" :detailed="showAnswers" />
                 </VFlex>
               </VLayout>
             </VCardText>
@@ -96,11 +77,8 @@
         </VTabItem>
         <VTabItem value="details">
           <!-- File preview -->
-          <FilePreview
-            v-if="isResource && !isExercise && primaryFiles[0]"
-            :nodeId="nodeId"
-            :fileId="primaryFiles[0].id"
-          />
+          <FilePreview v-if="isResource && !isExercise && primaryFiles[0]" :nodeId="nodeId"
+            :fileId="primaryFiles[0].id" />
           <VCard v-else-if="isResource && !isExercise" class="preview-error" flat>
             <VLayout align-center justify-center fill-height>
               <VTooltip bottom>
@@ -115,10 +93,7 @@
           </VCard>
 
           <!-- Content details -->
-          <DetailsRow
-            v-if="isExercise"
-            :label="$tr('questions')"
-          >
+          <DetailsRow v-if="isExercise" :label="$tr('questions')">
             <span v-if="!assessmentItems.length" class="red--text">
               <Icon color="red" small>error</Icon>
               <span class="mx-1">{{ $tr('noQuestionsError') }}</span>
@@ -128,28 +103,14 @@
             </span>
           </DetailsRow>
           <DetailsRow :label="$tr('description')" :text="getText('description')" />
-          <DetailsRow
-            v-if="!isTopic"
-            :label="translateMetadataString('level')"
-            :text="level(node.level)"
-            notranslate
-          />
-          <DetailsRow
-            v-if="!isTopic"
-            :label="translateMetadataString('learningActivity')"
-            :text="learningActivity(node.learning_activities)"
-            notranslate
-          />
-          <DetailsRow
-            v-if="!isExercise && !isTopic"
-            :label="translateMetadataString('completion')"
-            :text="completion(node.extra_fields)"
-            notranslate
-          />
-          <DetailsRow
-            v-if="isExercise"
-            :label="$tr('completion')"
-          >
+          <DetailsRow v-if="!isTopic" :label="translateMetadataString('level')" :text="level(node.grade_levels)"
+            notranslate />
+          <DetailsRow v-if="!isTopic" :label="translateMetadataString('learningActivity')">
+            <ContentNodeIcon :learningActivity="node.learning_activities" includeText />
+          </DetailsRow>
+          <DetailsRow v-if="!isExercise && !isTopic" :label="translateMetadataString('completion')"
+            :text="completion(node.extra_fields)" notranslate />
+          <DetailsRow v-if="isExercise" :label="$tr('completion')">
             <span v-if="noMasteryModel" class="red--text">
               <Icon color="red" small>error</Icon>
               <span class="mx-1">{{ $tr('noMasteryModelError') }}</span>
@@ -158,31 +119,17 @@
               {{ masteryCriteria }}
             </span>
           </DetailsRow>
-          <DetailsRow
-            v-if="!isTopic"
-            :label="translateMetadataString('duration')"
-            :text="duration(node.extra_fields)"
-            notranslate
-          />
+          <DetailsRow v-if="!isTopic" :label="translateMetadataString('duration')" :text="duration(node.extra_fields)"
+            notranslate />
           <div>
           </div>
-          <DetailsRow
-          v-if="!isTopic"
-            :label="translateMetadataString('category')"
-            :text="category(node.categories)"
-            notranslate
-          />
+          <DetailsRow v-if="!isTopic" :label="translateMetadataString('category')" :text="category(node.categories)"
+            notranslate />
           <DetailsRow :label="$tr('tags')">
             <div v-if="!sortedTags.length">
               {{ defaultText }}
             </div>
-            <VChip
-              v-for="tag in sortedTags"
-              v-else
-              :key="tag"
-              class="notranslate"
-              color="grey lighten-4"
-            >
+            <VChip v-for="tag in sortedTags" v-else :key="tag" class="notranslate" color="grey lighten-4">
               {{ tag }}
             </VChip>
           </DetailsRow>
@@ -194,12 +141,8 @@
           </div>
           <DetailsRow :label="$tr('language')" :text="languageName" />
           <DetailsRow v-if="!isTopic" :label="$tr('visibleTo')" :text="roleName" />
-          <DetailsRow
-            v-if="!isTopic"
-            :label="translateMetadataString('accessibility')"
-            :text="accessibilityOptions(node.accessbility_options)"
-            notranslate
-          />
+          <DetailsRow v-if="!isTopic" :label="translateMetadataString('accessibility')"
+            :text="accessibilityOptions(node.accessibility_labels)" notranslate />
           <!-- Related resources section -->
           <template v-if="!isTopic">
             <div class="section-header">
@@ -209,31 +152,25 @@
               <div v-if="!previousSteps.length">
                 {{ defaultText }}
               </div>
-              <VList v-else dense class="mb-2 pa-0">
-                <VListTile v-for="prerequisite in previousSteps" :key="prerequisite.id">
-                  <VListTileContent>
-                    <VListTileTitle :class="getTitleClass(prerequisite)">
-                      <ContentNodeIcon :kind="prerequisite.kind" class="mr-2" />
-                      {{ getTitle(prerequisite) }}
-                    </VListTileTitle>
-                  </VListTileContent>
-                </VListTile>
-              </VList>
+              <div v-else dense class="mb-2 pa-1">
+                <div v-for="prerequisite in previousSteps" :key="prerequisite.id">
+                  <ContentNodeIcon v-if="prerequisite.learning_activities"
+                    :learningActivity="prerequisite.learning_activities" class="mr-2" />
+                  {{ getTitle(prerequisite) }}
+                </div>
+              </div>
             </DetailsRow>
             <DetailsRow :label="$tr('nextSteps')">
               <div v-if="!nextSteps.length">
                 {{ defaultText }}
               </div>
-              <VList v-else dense class="mb-2 pa-0">
-                <VListTile v-for="postrequisite in nextSteps" :key="postrequisite.id">
-                  <VListTileContent>
-                    <VListTileTitle :class="getTitleClass(postrequisite)">
-                      <ContentNodeIcon :kind="postrequisite.kind" class="mr-2" />
-                      {{ getTitle(postrequisite) }}
-                    </VListTileTitle>
-                  </VListTileContent>
-                </VListTile>
-              </VList>
+              <div v-else dense class="mb-2 pa-1">
+                <div v-for="postrequisite in nextSteps" :key="postrequisite.id">
+                  <ContentNodeIcon v-if="postrequisite.learning_activities"
+                    :learningActivity="postrequisite.learning_activities" class="mr-2" />
+                  {{ getTitle(postrequisite) }}
+                </div>
+              </div>
             </DetailsRow>
           </template>
 
@@ -243,13 +180,8 @@
               {{ $tr('resources') }}
             </div>
             <DetailsRow v-if="isImported && importedChannelLink" :label="$tr('originalChannel')">
-              <ActionLink
-                :text="importedChannelName"
-                :href="importedChannelLink"
-                truncate
-                notranslate
-                target="_blank"
-              />
+              <ActionLink :text="importedChannelName" :href="importedChannelLink" truncate notranslate
+                target="_blank" />
             </DetailsRow>
             <DetailsRow :label="$tr('totalResources')">
               <p>
@@ -259,7 +191,7 @@
                 <VListTile v-for="kind in kindCount" :key="kind.kind">
                   <VListTileContent>
                     <VListTileTitle>
-                      <ContentNodeIcon :kind="kind.kind" class="mr-2" />
+                      <!-- <ContentNodeIcon :learningActivity="kind.learning_activities" class="mr-2" /> -->
                     </VListTileTitle>
                   </VListTileContent>
                 </VListTile>
@@ -273,13 +205,8 @@
               {{ $tr('source') }}
             </div>
             <DetailsRow v-if="isImported && importedChannelLink" :label="$tr('originalChannel')">
-              <ActionLink
-                :text="importedChannelName"
-                :href="importedChannelLink"
-                truncate
-                notranslate
-                target="_blank"
-              />
+              <ActionLink :text="importedChannelName" :href="importedChannelLink" truncate notranslate
+                target="_blank" />
             </DetailsRow>
             <DetailsRow :label="$tr('author')" :text="getText('author')" notranslate />
             <DetailsRow :label="$tr('provider')" :text="getText('provider')" notranslate />
@@ -322,19 +249,10 @@
                   <Icon color="red" small>error</Icon>
                   <span class="mx-1">{{ $tr('noFilesError') }}</span>
                 </span>
-                <ExpandableList
-                  v-else
-                  :noItemsText="defaultText"
-                  :items="availableFormats"
-                  inline
-                />
+                <ExpandableList v-else :noItemsText="defaultText" :items="availableFormats" inline />
               </DetailsRow>
               <DetailsRow v-if="node.kind === 'video'" :label="$tr('subtitles')">
-                <ExpandableList
-                  :noItemsText="defaultText"
-                  :items="subtitleFileLanguages"
-                  inline
-                />
+                <ExpandableList :noItemsText="defaultText" :items="subtitleFileLanguages" inline />
               </DetailsRow>
             </template>
           </template>
@@ -355,7 +273,6 @@
   import {
     ContentLevel,
     Categories,
-    LearningActivities,
     AccessibilityCategories,
     CompletionCriteriaModels,
   } from '../../shared/constants';
@@ -624,18 +541,10 @@
           return this.$tr('longActivity')
         }
       },
-      level(level) {
-        const match = Object.keys(ContentLevel).find(k => ContentLevel[k] == level);
-        if (match) {
-          return this.translateMetadataString(camelCase(match));
-        } else {
-          return '-';
-        }
-      },
-      learningActivity(options) {
-        const ids = Object.values(options);
-        const matches = Object.keys(LearningActivities).filter(k =>
-          ids.includes(LearningActivities[k])
+      level(levels) {
+        const ids = Object.keys(levels);
+        const matches = Object.keys(ContentLevel).filter(k =>
+          ids.includes(ContentLevel[k])
         );
         if (matches && matches.length > 0) {
           return this.matchIdToString(matches);
@@ -665,22 +574,18 @@
         return '-';
       },
       accessibilityOptions(options) {
-        if (options) {
-          const ids = Object.values(options);
-          const matches = Object.keys(AccessibilityCategories).filter(k =>
-            ids.includes(AccessibilityCategories[k])
-          );
-          if (matches) {
-            return this.matchIdToString(matches);
-          } else {
-            return '-';
-          }
+        const ids = Object.keys(options);
+        const matches = Object.keys(AccessibilityCategories).filter(k =>
+          ids.includes(AccessibilityCategories[k])
+        );
+        if (matches && matches.length > 0) {
+          return this.matchIdToString(matches);
         } else {
           return '-';
         }
       },
       category(options) {
-        const ids = Object.values(options);
+        const ids = Object.keys(options);
         const matches = Object.keys(Categories).filter(k => ids.includes(Categories[k]));
         if (matches && matches.length > 0) {
           return this.matchIdToString(matches);
