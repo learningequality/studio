@@ -374,17 +374,15 @@ class ContentNodeViewSetTestCase(StudioAPITestCase):
         channel.public = True
         channel.save()
         contentnode = models.ContentNode.objects.create(
-            title="Aron's cool contentnode",
+            title="Ozer's cool contentnode",
             id=uuid.uuid4().hex,
             kind_id=content_kinds.EXERCISE,
             description="coolest contentnode this side of the Pacific",
             parent_id=channel.main_tree_id,
             extra_fields={
-                "options": {
-                    "m": 3,
-                    "n": 6,
-                    "mastery_model": exercises.M_OF_N,
-                }
+                "m": 3,
+                "n": 6,
+                "mastery_model": exercises.M_OF_N,
             }
         )
 
@@ -410,14 +408,13 @@ class ContentNodeViewSetTestCase(StudioAPITestCase):
             title="Aron's cool contentnode",
             id=uuid.uuid4().hex,
             kind_id=content_kinds.EXERCISE,
-            description="coolest contentnode this side of the Pacific",
+            description="India is the hottest country in the world",
             parent_id=channel.main_tree_id,
             extra_fields={
-                "options": {
-                    "m": None,
-                    "n": None,
-                    "mastery_model": None,
-                }
+
+                "m": None,
+                "n": None,
+                "mastery_model": None,
             }
         )
 
@@ -427,7 +424,7 @@ class ContentNodeViewSetTestCase(StudioAPITestCase):
                 self.viewset_url(pk=contentnode.id), format="json",
             )
         self.assertEqual(response.status_code, 200, response.content)
-        self.assertEqual(response.data["extra_fields"]["options"], {})
+        self.assertEqual(response.data["extra_fields"], {})
 
 
 class SyncTestCase(StudioAPITestCase):

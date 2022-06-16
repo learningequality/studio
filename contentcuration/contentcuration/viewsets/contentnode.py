@@ -452,9 +452,9 @@ def get_title(item):
 def consolidate_extra_fields(item):
     extra_fields = item.get("extra_fields")
     if item["kind"] == content_kinds.EXERCISE:
-        m = extra_fields.get("options", {}).pop("m", None)
-        n = extra_fields.get("options", {}).pop("n", None)
-        mastery_model = extra_fields.get("options", {}).pop("mastery_model", None)
+        m = extra_fields.pop("m", None)
+        n = extra_fields.pop("n", None)
+        mastery_model = extra_fields.pop("mastery_model", None)
         if not extra_fields.get("options", {}).get("completion_criteria", {}) and mastery_model is not None:
             extra_fields["options"] = extra_fields.get("options", {})
             extra_fields["options"]["completion_criteria"] = {
