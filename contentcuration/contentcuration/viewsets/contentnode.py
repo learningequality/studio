@@ -260,7 +260,6 @@ class ThresholdField(Field):
 
     def to_internal_value(self, data):
         try:
-            print(data)
             data = int(data)
         except(ValueError, TypeError):
             pass
