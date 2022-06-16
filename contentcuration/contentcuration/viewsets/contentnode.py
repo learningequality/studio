@@ -19,8 +19,8 @@ from django.utils.timezone import now
 from django_cte import CTEQuerySet
 from django_filters.rest_framework import CharFilter
 from django_filters.rest_framework import UUIDFilter
+from le_utils.constants import completion_criteria
 from le_utils.constants import content_kinds
-from le_utils.constants import exercises
 from le_utils.constants import roles
 from le_utils.constants.labels import accessibility_categories
 from le_utils.constants.labels import learning_activities
@@ -35,7 +35,7 @@ from rest_framework.serializers import BooleanField
 from rest_framework.serializers import CharField
 from rest_framework.serializers import ChoiceField
 from rest_framework.serializers import DictField
-from rest_framework.serializers import IntegerField
+from rest_framework.serializers import Field
 from rest_framework.serializers import ValidationError
 from rest_framework.viewsets import ViewSet
 
@@ -254,15 +254,14 @@ class ContentNodeListSerializer(BulkListSerializer):
         return all_objects
 
 
-class ThresholdField(CharField):
+class ThresholdField(Field):
     def to_representation(self, value):
         return value
 
     def to_internal_value(self, data):
-        data = super(ThresholdField, self).to_internal_value(data)
         try:
             data = int(data)
-        except ValueError:
+        except(ValueError, TypeError):
             pass
         return data
 
@@ -287,12 +286,7 @@ class ExtraFieldsOptionsSerializer(JSONFieldDictSerializer):
 
 
 class ExtraFieldsSerializer(JSONFieldDictSerializer):
-    mastery_model = ChoiceField(
-        choices=exercises.MASTERY_MODELS, allow_null=True, required=False
-    )
     randomize = BooleanField()
-    m = IntegerField(allow_null=True, required=False)
-    n = IntegerField(allow_null=True, required=False)
     options = ExtraFieldsOptionsSerializer(required=False)
 
 
@@ -453,6 +447,26 @@ def retrieve_thumbail_src(item):
 def get_title(item):
     # If it's the root, use the channel name (should be original channel name)
     return item["title"] if item["parent_id"] else item["original_channel_name"]
+
+
+def consolidate_extra_fields(item):
+    extra_fields = item.get("extra_fields")
+    if item["kind"] == content_kinds.EXERCISE:
+        m = extra_fields.pop("m", None)
+        n = extra_fields.pop("n", None)
+        mastery_model = extra_fields.pop("mastery_model", None)
+        if not extra_fields.get("options", {}).get("completion_criteria", {}) and mastery_model is not None:
+            extra_fields["options"] = extra_fields.get("options", {})
+            extra_fields["options"]["completion_criteria"] = {
+                "threshold": {
+                    "m": m,
+                    "n": n,
+                    "mastery_model": mastery_model,
+                },
+                "model": completion_criteria.MASTERY,
+            }
+
+    return extra_fields
 
 
 class PrerequisitesUpdateHandler(ViewSet):
@@ -683,6 +697,7 @@ class ContentNodeViewSet(BulkUpdateMixin, ChangeEventMixin, ValuesViewset):
         "accessibility_labels": partial(dict_if_none, field_name="accessibility_labels"),
         "categories": partial(dict_if_none, field_name="categories"),
         "learner_needs": partial(dict_if_none, field_name="learner_needs"),
+        "extra_fields": consolidate_extra_fields,
     }
 
     def _annotate_channel_id(self, queryset):
