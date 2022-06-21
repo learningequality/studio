@@ -20,7 +20,10 @@ export function applyMods(obj, mods) {
 }
 
 function applyUpdate(table, change) {
-  return table.update(change.key, change.mods);
+  return table
+    .where(':id')
+    .equals(change.key)
+    .modify(obj => applyMods(obj, change.mods));
 }
 
 function applyCreate(table, change) {
