@@ -58,6 +58,10 @@ MIN_SCHEMA_VERSION = "1"
 PUBLISHING_UPDATE_THRESHOLD = 3600
 
 
+class NoNodesChangedError(Exception):
+    pass
+
+
 class SlowPublishError(Exception):
     """
     Used to track slow Publishing operations. We don't raise this error,
@@ -710,7 +714,7 @@ def raise_if_nodes_are_all_unchanged(channel):
 
     if not changed_models.exists():
         logging.debug("No nodes have been changed!")
-        raise ValueError("No models changed!")
+        raise NoNodesChangedError("No models changed!")
 
     logging.info("Some nodes are changed.")
 
@@ -815,7 +819,8 @@ def publish_channel(
 
         if progress_tracker:
             progress_tracker.track(100)
-
+    except NoNodesChangedError:
+        logging.warning("No nodes have changed for channel {} so no publish will happen".format(channel_id))
     # No matter what, make sure publishing is set to False once the run is done
     finally:
         if kolibri_temp_db and os.path.exists(kolibri_temp_db):
