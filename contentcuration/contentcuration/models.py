@@ -60,6 +60,7 @@ from mptt.models import TreeForeignKey
 from postmark.core import PMMailInactiveRecipientException
 from postmark.core import PMMailUnauthorizedException
 from rest_framework.authtoken.models import Token
+from rest_framework.fields import get_attribute
 from rest_framework.utils.encoders import JSONEncoder
 
 from contentcuration.constants import channel_history
@@ -2355,7 +2356,18 @@ class Change(models.Model):
         obj.save()
         return obj
 
-    def serialize_to_change_dict(self):
-        datum = self.kwargs.copy()
-        datum.update({"rev": self.client_rev, "table": self.table, "type": self.change_type})
+    @classmethod
+    def serialize(cls, change):
+        datum = get_attribute(change, ["kwargs"]).copy()
+        datum.update({
+            "server_rev": get_attribute(change, ["server_rev"]),
+            "table": get_attribute(change, ["table"]),
+            "type": get_attribute(change, ["change_type"]),
+            "channel_id": get_attribute(change, ["channel_id"]),
+            "user_id": get_attribute(change, ["user_id"]),
+            "created_by_id": get_attribute(change, ["created_by_id"])
+        })
         return datum
+
+    def serialize_to_change_dict(self):
+        return self.serialize(self)
