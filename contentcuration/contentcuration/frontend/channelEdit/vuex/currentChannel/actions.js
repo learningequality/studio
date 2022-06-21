@@ -1,7 +1,6 @@
 import Vue from 'vue';
 import { ContentNode, Channel } from '../../../shared/data/resources';
 import client from 'shared/client';
-import applyChanges from 'shared/data/applyRemoteChanges';
 
 export function loadChannel(context, { staging = false } = {}) {
   return context
@@ -50,9 +49,7 @@ export function deployCurrentChannel(context) {
   let payload = {
     channel_id: context.state.currentChannelId,
   };
-  return client.post(window.Urls.activate_channel(), payload).then(response => {
-    applyChanges(response.data.changes);
-  });
+  return client.post(window.Urls.activate_channel(), payload);
 }
 
 export function publishChannel(context, version_notes) {
