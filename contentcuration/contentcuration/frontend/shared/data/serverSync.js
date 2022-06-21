@@ -1,4 +1,5 @@
 import debounce from 'lodash/debounce';
+import findLastIndex from 'lodash/findLastIndex';
 import get from 'lodash/get';
 import pick from 'lodash/pick';
 import orderBy from 'lodash/orderBy';
@@ -17,7 +18,7 @@ import {
 import db from './db';
 import mergeAllChanges from './mergeChanges';
 import { INDEXEDDB_RESOURCES } from './registry';
-import { Session, Task } from './resources';
+import { Channel, Session, Task } from './resources';
 import client from 'shared/client';
 import urls from 'shared/urls';
 
@@ -171,19 +172,34 @@ function handleMaxRevs(response, userId) {
   );
   const channelIds = uniq(allChanges.map(c => c.channel_id)).filter(Boolean);
   const maxRevs = {};
+  const promises = [];
   for (let channelId of channelIds) {
-    maxRevs[`${MAX_REV_KEY}.${channelId}`] = allChanges.find(
-      c => c.channel_id === channelId
-    ).server_rev;
+    const channelChanges = allChanges.filter(c => c.channel_id === channelId);
+    maxRevs[`${MAX_REV_KEY}.${channelId}`] = channelChanges[0].server_rev;
+    const lastChannelEditIndex = findLastIndex(
+      channelChanges,
+      c => !c.errors && !c.user_id && c.created_by_id && c.type !== CHANGE_TYPES.PUBLISHED
+    );
+    const lastPublishIndex = findLastIndex(
+      channelChanges,
+      c => !c.errors && !c.user_id && c.created_by_id && c.type === CHANGE_TYPES.PUBLISHED
+    );
+    if (lastChannelEditIndex > lastPublishIndex) {
+      promises.push(
+        Channel.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
+          return Channel.table.update(channelId, { unpublished_changes: true });
+        })
+      );
+    }
   }
   const lastUserChange = allChanges.find(c => c.user_id === userId);
   if (lastUserChange) {
     maxRevs.user_rev = lastUserChange.server_rev;
   }
   if (Object.keys(maxRevs).length) {
-    return Session.updateSession(maxRevs);
+    promises.push(Session.updateSession(maxRevs));
   }
-  return Promise.resolve();
+  return Promise.all(promises);
 }
 
 function handleTasks(response) {
