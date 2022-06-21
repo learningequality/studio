@@ -8,9 +8,9 @@ export function ADD_CONTENTNODE(state, contentNode) {
 }
 
 export function ADD_CONTENTNODES(state, contentNodes = []) {
-  state.contentNodesMap = contentNodes.reduce((contentNodesMap, contentNode) => {
-    return mergeMapItem(contentNodesMap, contentNode);
-  }, state.contentNodesMap);
+  for (let contentNode of contentNodes) {
+    ADD_CONTENTNODE(state, contentNode);
+  }
 }
 
 export function REMOVE_CONTENTNODE(state, contentNode) {
