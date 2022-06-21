@@ -18,12 +18,6 @@ from contentcuration.viewsets.sync.constants import CHANNEL
 from contentcuration.viewsets.sync.constants import CREATED
 
 
-def change_model_values_to_change_dict(c):
-    datum = c["kwargs"]
-    datum.update({"server_rev": c["server_rev"], "table": c["table"], "type": c["change_type"], "channel_id": c["channel_id"], "user_id": c["user_id"]})
-    return datum
-
-
 class SyncView(APIView):
     authentication_classes = (SessionAuthentication,)
     permission_classes = (IsAuthenticated,)
@@ -92,7 +86,18 @@ class SyncView(APIView):
         changes_to_return = list(
             Change.objects.filter(
                 change_filter
-            ).values("server_rev", "session_id", "channel_id", "user_id", "applied", "errored", "table", "change_type", "kwargs").order_by("server_rev")
+            ).values(
+                "server_rev",
+                "session_id",
+                "channel_id",
+                "user_id",
+                "created_by_id",
+                "applied",
+                "errored",
+                "table",
+                "change_type",
+                "kwargs"
+            ).order_by("server_rev")
         )
 
         if not changes_to_return:
@@ -105,11 +110,11 @@ class SyncView(APIView):
         for c in changes_to_return:
             if c["applied"]:
                 if c["session_id"] == session_key:
-                    successes.append(change_model_values_to_change_dict(c))
+                    successes.append(Change.serialize(c))
                 else:
-                    changes.append(change_model_values_to_change_dict(c))
+                    changes.append(Change.serialize(c))
             if c["errored"] and c["session_id"] == session_key:
-                errors.append(change_model_values_to_change_dict(c))
+                errors.append(Change.serialize(c))
 
         return {"changes": changes, "errors": errors, "successes": successes}
 
