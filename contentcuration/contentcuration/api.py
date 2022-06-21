@@ -89,7 +89,7 @@ def activate_channel(channel, user):
     user.staged_files.all().delete()
     user.set_space_used()
 
-    change = generate_update_event(
+    models.Change.create_change(generate_update_event(
         channel.id,
         CHANNEL,
         {
@@ -97,5 +97,4 @@ def activate_channel(channel, user):
             "staging_root_id": None
         },
         channel_id=channel.id,
-    )
-    return change
+    ), applied=True)

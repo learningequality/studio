@@ -317,14 +317,12 @@ def activate_channel_endpoint(request):
         channel = Channel.filter_edit_queryset(Channel.objects.all(), request.user).get(pk=data["channel_id"])
     except Channel.DoesNotExist:
         return HttpResponseNotFound("Channel not found")
-    changes = []
     try:
-        change = activate_channel(channel, request.user)
-        changes.append(change)
+        activate_channel(channel, request.user)
     except PermissionDenied as e:
         return HttpResponseForbidden(str(e))
 
-    return HttpResponse(json.dumps({"success": True, "changes": changes}))
+    return HttpResponse(json.dumps({"success": True}))
 
 
 # Taken from kolibri.core.views which was
