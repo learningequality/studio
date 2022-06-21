@@ -79,9 +79,10 @@
         );
       },
       syncError() {
-        return Boolean(
-          (this.isSyncing && get(this.currentTask, ['metadata', 'error'], null)) ||
-            get(this.currentTask, 'status') === 'FAILURE'
+        return (
+          this.isSyncing &&
+          (get(this.currentTask, ['metadata', 'error'], null) ||
+            get(this.currentTask, 'status') === 'FAILURE')
         );
       },
       lastPublished() {
