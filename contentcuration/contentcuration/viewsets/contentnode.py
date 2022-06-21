@@ -745,7 +745,6 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
         if not pk:
             raise Http404
 
-        task_info = None
         node = self.get_object()
 
         # currently we restrict triggering calculations through the API to the channel root node
@@ -760,18 +759,13 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
             # We don't really need more than one queued async calculation task, so we use
             # get_or_create_async_task to ensure a task is queued, as well as return info about it
             task_args = dict(node_id=node.pk, channel_id=node.channel_id)
-            task_info = get_or_create_async_task(
+            get_or_create_async_task(
                 "calculate-resource-size", self.request.user, **task_args
             )
 
-        changes = []
-        if task_info is not None:
-            changes.append(self.create_task_event(task_info))
-
         return Response({
             "size": size,
-            "stale": stale,
-            "changes": changes
+            "stale": stale
         })
 
     def annotate_queryset(self, queryset):
@@ -971,7 +965,6 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
                     {COPYING_FLAG: False, "node_id": new_node.node_id},
                     channel_id=channel_id
                 ),
-                created_by_id=self.request.user.id,
                 applied=True
             )
 

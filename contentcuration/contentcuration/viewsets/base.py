@@ -902,8 +902,7 @@ def create_change_tracker(pk, table, channel_id, user, task_type):
             task_object.save()
 
     Change.create_change(
-        generate_update_event(pk, table, {TASK_ID: task_object.task_id}, channel_id=channel_id), created_by_id=user.id,
-        applied=True
+        generate_update_event(pk, table, {TASK_ID: task_object.task_id}, channel_id=channel_id), applied=True
     )
 
     def report_exception(e):
@@ -919,7 +918,6 @@ def create_change_tracker(pk, table, channel_id, user, task_type):
     if task_object.status == states.STARTED:
         # No error reported, cleanup.
         Change.create_change(
-            generate_update_event(pk, table, {TASK_ID: None}, channel_id=channel_id), created_by_id=user.id,
-            applied=True
+            generate_update_event(pk, table, {TASK_ID: None}, channel_id=channel_id), applied=True
         )
         task_object.delete()
