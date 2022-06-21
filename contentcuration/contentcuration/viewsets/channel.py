@@ -8,6 +8,8 @@ from django.db.models import Exists
 from django.db.models import OuterRef
 from django.db.models import Q
 from django.db.models import Subquery
+from django.db.models import Value
+from django.db.models.functions import Coalesce
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django_cte import With
@@ -47,7 +49,7 @@ from contentcuration.viewsets.common import SQCount
 from contentcuration.viewsets.common import SQSum
 from contentcuration.viewsets.common import UUIDInFilter
 from contentcuration.viewsets.sync.constants import CHANNEL
-from contentcuration.viewsets.sync.constants import CONTENTNODE
+from contentcuration.viewsets.sync.constants import PUBLISHED
 from contentcuration.viewsets.sync.utils import generate_update_event
 from contentcuration.viewsets.sync.utils import log_sync_exception
 from contentcuration.viewsets.user import IsAdminUser
@@ -379,6 +381,19 @@ channel_field_map = {
 }
 
 
+def _unpublished_changes_query(channel):
+    return Change.objects.filter(
+        server_rev__gt=Coalesce(Change.objects.filter(
+            channel=OuterRef("channel"),
+            change_type=PUBLISHED,
+            errored=False
+        ).values("server_rev").order_by("-server_rev")[:1], Value(0)),
+        created_by__isnull=False,
+        channel=channel,
+        user__isnull=True
+    )
+
+
 class ChannelViewSet(ValuesViewset):
     queryset = Channel.objects.all()
     permission_classes = [IsAuthenticated]
@@ -387,7 +402,7 @@ class ChannelViewSet(ValuesViewset):
     filterset_class = ChannelFilter
 
     field_map = channel_field_map
-    values = base_channel_values + ("edit", "view")
+    values = base_channel_values + ("edit", "view", "unpublished_changes")
 
     def perform_destroy(self, instance):
         instance.deleted = True
@@ -424,6 +439,9 @@ class ChannelViewSet(ValuesViewset):
         queryset = queryset.annotate(
             count=SQCount(non_topic_content_ids, field="content_id"),
         )
+
+        queryset = queryset.annotate(unpublished_changes=Exists(_unpublished_changes_query(OuterRef("id"))))
+
         return queryset
 
     def publish_from_changes(self, changes):
@@ -449,12 +467,6 @@ class ChannelViewSet(ValuesViewset):
             raise ValidationError("Cannot publish a deleted channel")
         elif channel.main_tree.publishing:
             raise ValidationError("Channel is already publishing")
-        elif (
-            not channel.main_tree.get_descendants(include_self=True)
-            .filter(changed=True)
-            .exists()
-        ):
-            raise ValidationError("Cannot publish an unchanged channel")
 
         channel.mark_publishing(self.request.user)
 
@@ -474,17 +486,17 @@ class ChannelViewSet(ValuesViewset):
                             "published": True,
                             "publishing": False,
                             "primary_token": channel.get_human_token().token,
-                            "last_published": channel.last_published
+                            "last_published": channel.last_published,
+                            "unpublished_changes": _unpublished_changes_query(channel.id).exists()
                         }, channel_id=channel.id
                     ),
-                    generate_update_event(channel.main_tree.pk, CONTENTNODE, {"published": True, "changed": False}, channel_id=channel.id),
-                ], created_by_id=self.request.user.id, applied=True)
+                ], applied=True)
             except Exception as e:
                 Change.create_changes([
                     generate_update_event(
-                        channel.id, CHANNEL, {"publishing": False}, channel_id=channel.id
+                        channel.id, CHANNEL, {"publishing": False, "unpublished_changes": True}, channel_id=channel.id
                     ),
-                ], created_by_id=self.request.user.id, applied=True)
+                ], applied=True)
                 progress_tracker.report_exception(e)
                 raise
 
