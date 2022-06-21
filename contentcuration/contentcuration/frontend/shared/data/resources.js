@@ -1023,9 +1023,17 @@ export const Channel = new Resource({
         type: CHANGE_TYPES.PUBLISHED,
         channel_id: id,
       };
-      return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, CHANGES_TABLE, () => {
-        return db[CHANGES_TABLE].put(change);
-      });
+      return this.transaction(
+        { mode: 'rw', source: IGNORED_SOURCE },
+        CHANGES_TABLE,
+        TABLE_NAMES.CONTENTNODE,
+        () => {
+          return Promise.all([
+            db[CHANGES_TABLE].put(change),
+            ContentNode.table.where({ channel_id: id }).modify({ changed: false, published: true }),
+          ]);
+        }
+      );
     });
   },
 
