@@ -614,26 +614,6 @@ class SyncTestCase(StudioAPITestCase, SyncTestMixin):
             models.ContentNode.objects.get(id=contentnode.id).extra_fields["randomize"], randomize
         )
 
-    def test_update_contentnode_remove_from_extra_fields(self):
-        metadata = self.contentnode_db_metadata
-        metadata["extra_fields"] = {
-            "options": {
-                "threshold": {
-                    "m": 5,
-                    "n": None,
-                    "mastery_model": exercises.M_OF_N,
-                },
-                "model": completion_criteria.MASTERY,
-            }
-        }
-        contentnode = models.ContentNode.objects.create(**metadata)
-        # Remove extra_fields.m
-        response = self.sync_changes(
-            [generate_update_event(contentnode.id, CONTENTNODE, {"extra_fields.options.completion_criteria.threshold.m": None}, channel_id=self.channel.id)],
-        )
-        self.assertEqual(response.status_code, 200, response.content)
-        self.assertEqual(models.ContentNode.objects.get(id=contentnode.id).extra_fields["options"]["completion_criteria"]["threshold"]["m"], None)
-
     def test_update_contentnode_add_to_extra_fields_nested(self):
         metadata = self.contentnode_db_metadata
         contentnode = models.ContentNode.objects.create(**metadata)
