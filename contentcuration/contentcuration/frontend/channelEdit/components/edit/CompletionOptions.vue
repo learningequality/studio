@@ -1,7 +1,7 @@
 <template>
   <div>
     <!-- "Completion" dropdown menu  -->
-    <VLayout row wrap>
+    <VLayout xs6 md6>
       <VFlex xs6 md6 class="pr-2">
         <VSelect
           ref="completion"
@@ -14,21 +14,31 @@
           @focus="trackClick('Completion')"
         />
       </VFlex>
+      <VFlex>
+        <Goal
+          v-if="kind === 'exercise'"
+          ref="mastery_model"
+          v-model="goal"
+          :placeholder="getPlaceholder('mastery_model')"
+          :required="isUnique(mastery_model)"
+          @focus="trackClick('Mastery model')"
+        />
+      </VFlex>
     </VLayout>
-
-    <MasteryDropdown
-      ref="mastery_model"
-      v-model="masteryModelItem"
-      :placeholder="getPlaceholder('mastery_model')"
-      :required="isUnique(mastery_model)"
-      :mPlaceholder="getPlaceholder('m')"
-      :mRequired="isUnique(m)"
-      :nPlaceholder="getPlaceholder('n')"
-      :nRequired="isUnique(n)"
-      @focus="trackClick('Mastery model')"
-      @mFocus="trackClick('Mastery m value')"
-      @nFocus="trackClick('Mastery n value')"
-    />
+    <VLayout>
+      <MasteryDropdown
+        v-if="kind === 'exercise'"
+        ref="mastery_model"
+        v-model="masteryModelItem"
+        :masteryModel="mastery_model"
+        :mPlaceholder="getPlaceholder('m')"
+        :mRequired="isUnique(m)"
+        :nPlaceholder="getPlaceholder('n')"
+        :nRequired="isUnique(n)"
+        @mFocus="trackClick('Mastery m value')"
+        @nFocus="trackClick('Mastery n value')"
+      />
+    </VLayout>
 
     <VLayout row wrap>
       <VFlex xs6 md6 class="pr-2">
@@ -71,32 +81,13 @@
         {{ $tr('referenceHint') }}
       </VFlex>
     </VLayout>
-
-    <!-- Practice -->
-    <!-- <VFlex v-if="node.kind === 'exercise' && selected === 'Practice until goal is met'" md6>
-      <VSelect
-        ref="goal"
-        v-model="goal"
-        box
-        :items="completion"
-        :label="$tr('goalLabel')"
-        @focus="trackClick('Goal')"
-      />
-    </VFlex> -->
-
-    <!-- Other options -->
-    <!-- <VLayout row wrap>
-      <PracticeUntilGoalMetActivity
-        v-if="node.kind === 'exercise' && durationDropdown === 'Practice until goal is met'"
-      />
-    </VLayout> -->
   </div>
 </template>
 
 <script>
 import ActivityDuration from './ActivityDuration.vue';
+import Goal from 'shared/views/Goal';
 import MasteryDropdown from 'shared/views/MasteryDropdown';
-// import PracticeUntilGoalMetActivity from './PracticeUntilGoalMetActivity.vue';
 import { CompletionCriteriaModels } from 'shared/constants';
 import {
   getCompletionValidators,
@@ -125,7 +116,7 @@ export default {
   components: {
     ActivityDuration,
     MasteryDropdown,
-    // PracticeUntilGoalMetActivity,
+    Goal,
   },
   mixins: [metadataStrings, metadataTranslationMixin],
   props: {
@@ -148,12 +139,14 @@ export default {
   },
   data() {
     return {
-      // goal: 'M of N',
       disabledReference: ['reference'],
       // required state because we need to know the durationDropdown before it is set in backend
       currentDurationDropdown: null,
       // required state because we need to know the completion to determine durationDropdown's model
       currentCompletionDropdown: null,
+      mastery_model: null,
+      m: null,
+      n: null,
     };
   },
   computed: {
@@ -280,9 +273,21 @@ export default {
         this.handleInput(update);
       },
     },
+    goal: {
+      get() {
+        console.log('*** get mastery model item', this.value.mastery_model);
+        return {
+          mastery_model: this.value.mastery_model,
+        };
+      },
+      set(goal) {
+        console.log(goal);
+        this.handleInput(goal);
+      },
+    },
     masteryModelItem: {
       get() {
-        console.log('*** get mastery model item', this.value)
+        console.log('*** get mastery model item', this.value);
         return {
           mastery_model: this.value.mastery_model,
           m: this.value.m,
@@ -585,8 +590,12 @@ export default {
     trackClick(label) {
       this.$analytics.trackClick('channel_editor_modal_details', label);
     },
-    handleInput({ completion_criteria, suggested_duration, suggested_duration_type, ...mastery } = {}) {
-    // handleInput(value) {
+    handleInput({
+      completion_criteria,
+      suggested_duration,
+      suggested_duration_type,
+      ...mastery
+    } = {}) {
       const data = {
         completion_criteria,
         suggested_duration,

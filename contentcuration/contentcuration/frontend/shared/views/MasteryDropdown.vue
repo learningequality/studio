@@ -1,36 +1,6 @@
 <template>
-
-  <VFlex xs12 sm11 md10 lg9 xl8>
-    <VSelect
-      ref="masteryModel"
-      v-model="masteryModel"
-      :items="masteryCriteria"
-      :label="$tr('labelText')"
-      color="primary"
-      box
-      :placeholder="placeholder"
-      :required="required"
-      :readonly="readonly"
-      :disabled="disabled"
-      :rules="masteryRules"
-      menu-props="offsetY"
-      class="mb-2"
-      @focus="$emit('focus')"
-    >
-      <template #append-outer>
-        <InfoModal :header="$tr('exerciseHeader')" :items="masteryCriteria">
-          <p>{{ $tr('exerciseDescripiton') }}</p>
-          <p>{{ $tr('masteryDescripiton') }}</p>
-          <template #header="{ item }">
-            {{ translateConstant(item.value) }}
-          </template>
-          <template #description="{ item }">
-            {{ translateConstant(item.value + '_description') }}
-          </template>
-        </InfoModal>
-      </template>
-    </VSelect>
-
+  <!-- xs12 sm11 md10 lg9 xl8 -->
+  <VFlex>
     <VLayout v-if="showMofN" class="mofn-options" row>
       <VFlex xs6>
         <VTextField
@@ -53,7 +23,7 @@
       <VFlex xs1 justifyCenter class="out-of">
         /
       </VFlex>
-      <VFlex xs5>
+      <VFlex xs6>
         <VTextField
           ref="nValue"
           v-model="nValue"
@@ -88,14 +58,10 @@
     MasteryModelsList,
     MasteryModelsNames,
   } from 'shared/leUtils/MasteryModels';
-  import InfoModal from 'shared/views/InfoModal.vue';
   import { constantsTranslationMixin } from 'shared/mixins';
 
   export default {
     name: 'MasteryDropdown',
-    components: {
-      InfoModal,
-    },
     mixins: [constantsTranslationMixin],
     props: {
       value: {
@@ -110,9 +76,9 @@
           );
         },
       },
-      placeholder: {
-        type: String,
-      },
+      // placeholder: {
+      //   type: String,
+      // },
       required: {
         type: Boolean,
         default: true,
@@ -141,14 +107,14 @@
       },
     },
     computed: {
-      masteryModel: {
-        get() {
-          return this.value && this.value.mastery_model;
-        },
-        set(mastery_model) {
-          this.handleInput({ mastery_model });
-        },
-      },
+      // masteryModel: {
+      //   get() {
+      //     return this.value && this.value.mastery_model;
+      //   },
+      //   set(mastery_model) {
+      //     this.handleInput({ mastery_model });
+      //   },
+      // },
       mValue: {
         get() {
           return this.value && this.value.m;
@@ -176,7 +142,8 @@
         }));
       },
       showMofN() {
-        return this.masteryModel === MasteryModelsNames.M_OF_N;
+        console.log('this.masteryModel', this.masteryModel)
+        return this.value.mastery_model === MasteryModelsNames.M_OF_N;
       },
       masteryRules() {
         return this.required ? getMasteryModelValidators().map(translateValidator) : [];
