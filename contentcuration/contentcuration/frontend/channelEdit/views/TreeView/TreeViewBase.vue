@@ -300,7 +300,10 @@
         return this.rootNode && this.rootNode.error_count;
       },
       isChanged() {
-        return this.currentChannel && this.currentChannel.unpublished_changes;
+        return (
+          this.currentChannel &&
+          (this.currentChannel.unpublished_changes || (this.isRicecooker && this.rootNode.changed))
+        );
       },
       isPublished() {
         return this.currentChannel && this.currentChannel.published;
