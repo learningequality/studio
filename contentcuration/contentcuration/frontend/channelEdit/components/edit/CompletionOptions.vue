@@ -2,8 +2,8 @@
 
   <div>
     <!-- "Completion" dropdown menu  -->
-    <VLayout xs6 md6>
-      <VFlex v-if="showCompletionDropdown" xs6 md6 class="pr-2">
+    <VLayout v-if="showCompletionDropdown" xs6 md6>
+      <VFlex xs6 md6 class="pr-2">
         <VSelect
           ref="completion"
           v-model="completionDropdown"
@@ -16,6 +16,20 @@
         />
       </VFlex>
       <VFlex>
+        <Goal
+          v-if="kind === 'exercise'"
+          ref="mastery_model"
+          v-model="goal"
+          :placeholder="getPlaceholder('mastery_model')"
+          :required="isUnique(mastery_model)"
+          @focus="trackClick('Mastery model')"
+        />
+      </VFlex>
+    </VLayout>
+
+    <!-- Layout for when practice quizzes are not enabled -->
+    <VLayout v-else xs6 md6>
+      <VFlex xs6 md6 class="pr-2">
         <Goal
           v-if="kind === 'exercise'"
           ref="mastery_model"
