@@ -699,6 +699,7 @@ def create_node(node_data, parent_node, sort_order):  # noqa: C901
         # later when we have all data available to determine if it is
         # complete or not.
         complete=True,
+        suggested_duration=node_data.get("suggested_duration"),
         **metadata_labels
     )
 
