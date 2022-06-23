@@ -7,12 +7,23 @@
           <!-- Slot for elements like "Back" link -->
           <slot name="navigation"></slot>
           <ContentNodeIcon v-if="isTopic" :isTopic="true" includeText chip />
-          <ContentNodeIcon v-else-if="node.learning_activities" :learningActivity="node.learning_activities" includeText
-            chip />
+          <ContentNodeIcon
+            v-else-if="hasLearningActivities"
+            :learningActivity="node.learning_activities"
+            includeText
+            chip
+          />
         </div>
 
         <VSpacer />
-        <VBtn icon flat small color="grey" class="ma-0" @click="$emit('close')">
+        <VBtn
+          icon
+          flat
+          small
+          color="grey"
+          class="ma-0"
+          @click="$emit('close')"
+        >
           <Icon>clear</Icon>
         </VBtn>
       </VLayout>
@@ -48,9 +59,18 @@
       </Tabs>
       <VTabsItems :value="tab" @change="tab = $event">
         <VTabItem value="questions">
-          <Banner :value="!assessmentItems.length" class="my-2" error :text="$tr('noQuestionsError')" />
-          <Banner :value="Boolean(invalidQuestionCount)" class="my-2" error
-            :text="$tr('incompleteQuestionError', { count: invalidQuestionCount })" />
+          <Banner
+            :value="!assessmentItems.length"
+            class="my-2"
+            error
+            :text="$tr('noQuestionsError')"
+          />
+          <Banner
+            :value="Boolean(invalidQuestionCount)"
+            class="my-2"
+            error
+            :text="$tr('incompleteQuestionError', { count: invalidQuestionCount })"
+          />
           <VLayout v-if="assessmentItems.length" justify-space-between align-center class="my-3">
             <VFlex>
               <Checkbox v-model="showAnswers" :label="$tr('showAnswers')" class="ma-0" />
@@ -77,8 +97,11 @@
         </VTabItem>
         <VTabItem value="details">
           <!-- File preview -->
-          <FilePreview v-if="isResource && !isExercise && primaryFiles[0]" :nodeId="nodeId"
-            :fileId="primaryFiles[0].id" />
+          <FilePreview
+            v-if="isResource && !isExercise && primaryFiles[0]"
+            :nodeId="nodeId"
+            :fileId="primaryFiles[0].id"
+          />
           <VCard v-else-if="isResource && !isExercise" class="preview-error" flat>
             <VLayout align-center justify-center fill-height>
               <VTooltip bottom>
@@ -103,13 +126,15 @@
             </span>
           </DetailsRow>
           <DetailsRow :label="$tr('description')" :text="getText('description')" />
-          <DetailsRow v-if="!isTopic" :label="translateMetadataString('level')" :text="level(node.grade_levels)"
-            notranslate />
+          <DetailsRow
+            v-if="!isTopic"
+            :label="translateMetadataString('level')"
+            :text="level(node.grade_levels)"
+            notranslate
+          />
           <DetailsRow v-if="!isTopic" :label="translateMetadataString('learningActivity')">
             <ContentNodeIcon :learningActivity="node.learning_activities" includeText />
           </DetailsRow>
-          <DetailsRow v-if="!isExercise && !isTopic" :label="translateMetadataString('completion')"
-            :text="completion(node.extra_fields)" notranslate />
           <DetailsRow v-if="isExercise" :label="$tr('completion')">
             <span v-if="noMasteryModel" class="red--text">
               <Icon color="red" small>error</Icon>
@@ -119,17 +144,23 @@
               {{ masteryCriteria }}
             </span>
           </DetailsRow>
-          <DetailsRow v-if="!isTopic" :label="translateMetadataString('duration')" :text="duration(node.extra_fields)"
-            notranslate />
-          <div>
-          </div>
-          <DetailsRow v-if="!isTopic" :label="translateMetadataString('category')" :text="category(node.categories)"
-            notranslate />
+          <DetailsRow
+            v-if="!isTopic"
+            :label="translateMetadataString('category')"
+            :text="category(node.categories)"
+            notranslate
+          />
           <DetailsRow :label="$tr('tags')">
             <div v-if="!sortedTags.length">
               {{ defaultText }}
             </div>
-            <VChip v-for="tag in sortedTags" v-else :key="tag" class="notranslate" color="grey lighten-4">
+            <VChip
+              v-for="tag in sortedTags"
+              v-else
+              :key="tag"
+              class="notranslate"
+              color="grey lighten-4"
+            >
               {{ tag }}
             </VChip>
           </DetailsRow>
@@ -141,8 +172,12 @@
           </div>
           <DetailsRow :label="$tr('language')" :text="languageName" />
           <DetailsRow v-if="!isTopic" :label="$tr('visibleTo')" :text="roleName" />
-          <DetailsRow v-if="!isTopic" :label="translateMetadataString('accessibility')"
-            :text="accessibilityOptions(node.accessibility_labels)" notranslate />
+          <DetailsRow
+            v-if="!isTopic"
+            :label="translateMetadataString('accessibility')"
+            :text="accessibilityOptions(node.accessibility_labels)"
+            notranslate
+          />
           <!-- Related resources section -->
           <template v-if="!isTopic">
             <div class="section-header">
@@ -154,8 +189,11 @@
               </div>
               <div v-else dense class="mb-2 pa-1">
                 <div v-for="prerequisite in previousSteps" :key="prerequisite.id">
-                  <ContentNodeIcon v-if="prerequisite.learning_activities"
-                    :learningActivity="prerequisite.learning_activities" class="mr-2" />
+                  <ContentNodeIcon
+                    v-if="prerequisite.learning_activities"
+                    :learningActivity="prerequisite.learning_activities"
+                    class="mr-2"
+                  />
                   {{ getTitle(prerequisite) }}
                 </div>
               </div>
@@ -166,8 +204,11 @@
               </div>
               <div v-else dense class="mb-2 pa-1">
                 <div v-for="postrequisite in nextSteps" :key="postrequisite.id">
-                  <ContentNodeIcon v-if="postrequisite.learning_activities"
-                    :learningActivity="postrequisite.learning_activities" class="mr-2" />
+                  <ContentNodeIcon
+                    v-if="postrequisite.learning_activities"
+                    :learningActivity="postrequisite.learning_activities"
+                    class="mr-2"
+                  />
                   {{ getTitle(postrequisite) }}
                 </div>
               </div>
@@ -179,9 +220,17 @@
             <div class="section-header">
               {{ $tr('resources') }}
             </div>
-            <DetailsRow v-if="isImported && importedChannelLink" :label="$tr('originalChannel')">
-              <ActionLink :text="importedChannelName" :href="importedChannelLink" truncate notranslate
-                target="_blank" />
+            <DetailsRow
+              v-if="isImported && importedChannelLink"
+              :label="$tr('originalChannel')"
+            >
+              <ActionLink
+                :text="importedChannelName"
+                :href="importedChannelLink"
+                truncate
+                notranslate
+                target="_blank"
+              />
             </DetailsRow>
             <DetailsRow :label="$tr('totalResources')">
               <p>
@@ -190,9 +239,7 @@
               <VList v-if="node.resource_count" dense class="mb-2 pa-0">
                 <VListTile v-for="kind in kindCount" :key="kind.kind">
                   <VListTileContent>
-                    <VListTileTitle>
-                      <!-- <ContentNodeIcon :learningActivity="kind.learning_activities" class="mr-2" /> -->
-                    </VListTileTitle>
+                    <VListTileTitle />
                   </VListTileContent>
                 </VListTile>
               </VList>
@@ -205,8 +252,13 @@
               {{ $tr('source') }}
             </div>
             <DetailsRow v-if="isImported && importedChannelLink" :label="$tr('originalChannel')">
-              <ActionLink :text="importedChannelName" :href="importedChannelLink" truncate notranslate
-                target="_blank" />
+              <ActionLink
+                :text="importedChannelName"
+                :href="importedChannelLink"
+                truncate
+                notranslate
+                target="_blank"
+              />
             </DetailsRow>
             <DetailsRow :label="$tr('author')" :text="getText('author')" notranslate />
             <DetailsRow :label="$tr('provider')" :text="getText('provider')" notranslate />
@@ -249,7 +301,12 @@
                   <Icon color="red" small>error</Icon>
                   <span class="mx-1">{{ $tr('noFilesError') }}</span>
                 </span>
-                <ExpandableList v-else :noItemsText="defaultText" :items="availableFormats" inline />
+                <ExpandableList
+                  v-else
+                  :noItemsText="defaultText"
+                  :items="availableFormats"
+                  inline
+                />
               </DetailsRow>
               <DetailsRow v-if="node.kind === 'video'" :label="$tr('subtitles')">
                 <ExpandableList :noItemsText="defaultText" :items="subtitleFileLanguages" inline />
@@ -270,12 +327,7 @@
   import { camelCase } from 'lodash';
   import { isImportedContent, importedChannelLink } from '../utils';
   import FilePreview from '../views/files/FilePreview';
-  import {
-    ContentLevel,
-    Categories,
-    AccessibilityCategories,
-    CompletionCriteriaModels,
-  } from '../../shared/constants';
+  import { ContentLevel, Categories, AccessibilityCategories } from '../../shared/constants';
   import AssessmentItemPreview from './AssessmentItemPreview/AssessmentItemPreview';
   import ContentNodeValidator from './ContentNodeValidator';
   import {
@@ -372,6 +424,9 @@
       },
       defaultText() {
         return '-';
+      },
+      hasLearningActivities() {
+        return Object.keys(this.node.learning_activities).length > 0;
       },
       assessmentItems() {
         return this.getAssessmentItems(this.nodeId);
@@ -525,59 +580,22 @@
       matchIdToString(ids) {
         return ids.map(i => this.translateMetadataString(camelCase(i))).join(', ');
       },
-      toMinutes(duration) {
-        const minutes = Math.round(duration / 60)
-        return this.$tr('duration', { value: minutes})
-      },
-      toExactTimeToComplete(duration) {
-        const minutes = Math.floor(duration / 60)
-        const seconds = duration % minutes
-        return `${minutes}:${seconds}`
-      },
-      toSuggestedDuration(duration) {
-        if (duration < 1860) {
-          return this.$tr('shortActivity')
-        } else {
-          return this.$tr('longActivity')
-        }
-      },
       level(levels) {
         const ids = Object.keys(levels);
-        const matches = Object.keys(ContentLevel).filter(k =>
-          ids.includes(ContentLevel[k])
-        );
+        const matches = Object.keys(ContentLevel)
+          .sort()
+          .filter(k => ids.includes(ContentLevel[k]));
         if (matches && matches.length > 0) {
           return this.matchIdToString(matches);
         } else {
           return '-';
         }
       },
-      completion(value) {
-        if (value && value.completion_criteria) {
-          if (value.completion_criteria.model === CompletionCriteriaModels.APPROX_TIME) {
-            return this.toSuggestedDuration(value.suggested_duration)
-          } else if (value.completion_criteria.model === CompletionCriteriaModels.REFERNCE) {
-            return this.$tr('reference')
-          }
-          return this.$tr(camelCase(value.completion_criteria.model))
-        }
-        return '-';
-      },
-      duration(value) {
-        if (value && value.completion_criteria) {
-          if (value.completion_criteria.model === CompletionCriteriaModels.TIME) {
-            return this.toExactTimeToComplete(value.completion_criteria.threshold)
-          } else if (value.completion_criteria.model === CompletionCriteriaModels.APPROX_TIME) {
-            return this.toMinutes(value.suggested_duration)
-          }
-        }
-        return '-';
-      },
       accessibilityOptions(options) {
         const ids = Object.keys(options);
-        const matches = Object.keys(AccessibilityCategories).filter(k =>
-          ids.includes(AccessibilityCategories[k])
-        );
+        const matches = Object.keys(AccessibilityCategories)
+          .sort()
+          .filter(k => ids.includes(AccessibilityCategories[k]));
         if (matches && matches.length > 0) {
           return this.matchIdToString(matches);
         } else {
@@ -586,7 +604,9 @@
       },
       category(options) {
         const ids = Object.keys(options);
-        const matches = Object.keys(Categories).filter(k => ids.includes(Categories[k]));
+        const matches = Object.keys(Categories)
+          .sort()
+          .filter(k => ids.includes(Categories[k]));
         if (matches && matches.length > 0) {
           return this.matchIdToString(matches);
         } else {
@@ -618,18 +638,13 @@
     },
     $trs: {
       questions: 'Questions',
-      masteryCriteria: 'Mastery criteria',
       masteryMofN: 'Goal: {m} out of {n}',
       details: 'Details',
       completion: 'Completion',
       showAnswers: 'Show answers',
       questionCount: '{value, number, integer} {value, plural, one {question} other {questions}}',
       description: 'Description',
-      duration: '{value, number, integer} minutes',
-      shortActivity: 'Short activity',
-      longActivity: 'Long activity',
       tags: 'Tags',
-      time: 'Exact time to complete',
       audience: 'Audience',
       language: 'Language',
       visibleTo: 'Visible to',
@@ -650,7 +665,6 @@
       availableFormats: 'Available formats',
       subtitles: 'Captions and subtitles',
       fileSize: 'Size',
-      reference: 'Reference',
 
       // Validation strings
       noLicenseError: 'Missing license',
