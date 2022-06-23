@@ -135,6 +135,9 @@ docs: clean-docs
 setup:
 	python contentcuration/manage.py setup
 
+filedurations:
+	python contentcuration/manage.py set_file_duration
+
 export COMPOSE_PROJECT_NAME=studio_$(shell git rev-parse --abbrev-ref HEAD)
 
 purge-postgres:
