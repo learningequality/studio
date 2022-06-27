@@ -8,8 +8,6 @@
           {{ overflowText }}
         </span>
       </VSlideYTransition>
-    </p>
-    <p class="mt-2">
       <a v-if="overflowText" class="caption toggler" @click.stop.prevent="toggle">
         <span>{{ togglerText }}</span>
         <Icon small>
@@ -101,6 +99,7 @@
     margin: 0;
     word-wrap: break-word;
     white-space: normal;
+    font-size: 12px;
   }
   .toggler {
     color: var(--v-grey-darken1);

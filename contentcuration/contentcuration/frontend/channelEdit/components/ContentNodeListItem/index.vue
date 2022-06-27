@@ -6,80 +6,59 @@
         <template #default="contextMenuProps">
           <DraggableHandle v-bind="draggableHandle">
             <template #default>
-              <VListTile
-                v-if="node"
-                class="content-list-item pa-0"
-                :class="{
-                  'compact': isCompact,
-                  hover: hover && !copying,
-                  active: (active || hover) && !copying,
-                  disabled: copying,
-                  highlight,
-                }"
-                data-test="content-item"
-                @click="handleTileClick"
-              >
+              <VListTile v-if="node" class="content-list-item pa-0" :class="{
+                'compact': isCompact,
+                hover: hover && !copying,
+                active: (active || hover) && !copying,
+                disabled: copying,
+                highlight,
+              }" data-test="content-item" @click="handleTileClick">
                 <slot name="actions-start" :hover="hover" class="actions-start-col"></slot>
-                <div
-                  class="mx-2 thumbnail-col"
-                  :class="{
-                    'px-2': !isCompact,
-                    'py-4': !isCompact,
-                    'py-3': isCompact,
-                  }"
-                >
-                  <Thumbnail
-                    v-bind="thumbnailAttrs"
-                    :compact="isCompact"
-                    :isEmpty="node.total_count === 0"
-                  />
+                <div class="mx-2 thumbnail-col" :class="{
+                  'px-2': !isCompact,
+                  'py-4': !isCompact,
+                  'py-3': isCompact,
+                }">
+                  <Thumbnail v-bind="thumbnailAttrs" :isTopic="isTopic" :learningActivity="node.learning_activities"
+                    :compact="isCompact" :isEmpty="node.total_count === 0" />
                 </div>
-                <VListTileContent
-                  class="description-col grow px-2"
-                  :class="{
-                    'my-4': !isCompact,
-                    'my-3': isCompact,
-                  }"
-                >
+                <VListTileContent class="description-col grow px-2" :class="{
+                  'my-4': !isCompact,
+                  'my-3': isCompact,
+                }">
                   <VListTileTitle data-test="title">
                     <VLayout row>
                       <VFlex shrink class="text-truncate">
-                        <h3
-                          v-if="hasTitle(node) || !canEdit || copying || node.isNew"
-                          class="notranslate text-truncate"
+                        <h3 v-if="hasTitle(node) || !canEdit || copying || node.isNew" class="notranslate text-truncate"
                           :class="[
                             isCompact ? 'font-weight-regular' : '',
                             getTitleClass(node),
-                          ]"
-                          dir="auto"
-                        >
+                          ]" dir="auto">
                           {{ getTitle(node) }}
                         </h3>
                       </VFlex>
                       <VFlex>
-                        <ContentNodeValidator
-                          v-if="canEdit && !copying && !node.isNew"
-                          :node="node"
-                        />
+                        <ContentNodeValidator v-if="canEdit && !copying && !node.isNew" :node="node" />
                       </VFlex>
                     </VLayout>
                   </VListTileTitle>
-                  <VListTileSubTitle
-                    v-if="(subtitle || node.coach_content) && !isCompact"
-                    data-test="subtitle"
-                    class="metadata"
-                  >
-                    <span>{{ subtitle }}</span>
+
+                  <ToggleText v-show="!isCompact && !comfortable" :text="node.description" data-test="description"
+                    notranslate dir="auto" :splitAt="280" />
+
+                  <VListTileSubTitle v-if="hasMetadataToDisplay && !isCompact" data-test="subtitle" class="metadata">
+                    <span v-if="subtitle" class="text">{{ subtitle }}</span>
+                    <span v-if="Object.keys(node.categories).length > 0" class=" text">{{ category(node.categories)
+                      }}</span>
                     <span v-if="(isTopic && node.coach_count) || isCoach">
+                      <!-- for each learning activity -->
+
+
                       <VTooltip bottom>
                         <template #activator="{ on }">
                           <div style="display: inline-block;" v-on="on">
-                            <Icon
-                              color="primary"
-                              small
-                              class="mx-1"
-                              style="vertical-align: text-top;"
-                            >local_library</Icon>
+                            <Icon color="primary" small class="mx-1" style="vertical-align: text-top;">local_library
+                            </Icon>
                             <span v-if="isTopic">
                               {{ $formatNumber(node.coach_count) }}
                             </span>
@@ -87,20 +66,21 @@
                         </template>
                         <span>
                           {{ isTopic ?
-                            $tr('hasCoachTooltip', { value: node.coach_count })
-                            : $tr('coachTooltip')
+                          $tr('hasCoachTooltip', { value: node.coach_count })
+                          : $tr('coachTooltip')
                           }}
                         </span>
                       </VTooltip>
                     </span>
                   </VListTileSubTitle>
-                  <ToggleText
-                    v-show="!isCompact && !comfortable"
-                    :text="node.description"
-                    data-test="description"
-                    notranslate
-                    dir="auto"
-                  />
+                  <span v-if="!isCompact">
+                    <ContentNodeIcon :isTopic="isTopic" :learningActivity="node.learning_activities" showEachActivityChip
+                    includeText small chip class="inline" />
+                    <span v-if="node.grade_levels">
+                      <span v-for="(key, index) in Object.keys(node.grade_levels)" :key="index" class="small-chip">{{
+                        levels(key) }}</span>
+                    </span>
+                  </span>
                 </VListTileContent>
 
                 <VListTileContent class="actions-end-col updated">
@@ -108,15 +88,8 @@
                 </VListTileContent>
                 <template v-if="!copying">
                   <VListTileAction class="actions-end-col">
-                    <IconButton
-                      v-if="isTopic"
-                      :aria-hidden="hover"
-                      data-test="btn-chevron"
-                      icon="chevronRight"
-                      :text="$tr('openTopic')"
-                      size="small"
-                      @click="$emit('topicChevronClick')"
-                    />
+                    <IconButton v-if="isTopic" :aria-hidden="hover" data-test="btn-chevron" icon="chevronRight"
+                      :text="$tr('openTopic')" size="small" @click="$emit('topicChevronClick')" />
                   </VListTileAction>
                   <slot name="actions-end" :hover="hover"></slot>
                 </template>
@@ -129,10 +102,7 @@
                   </div>
                   <div class="disabled-overlay"></div>
                 </template>
-                <slot
-                  name="context-menu"
-                  v-bind="contextMenuProps"
-                ></slot>
+                <slot name="context-menu" v-bind="contextMenuProps"></slot>
               </VListTile>
 
             </template>
@@ -159,9 +129,17 @@
   import ToggleText from 'shared/views/ToggleText';
   import ContextMenuCloak from 'shared/views/ContextMenuCloak';
   import DraggableHandle from 'shared/views/draggable/DraggableHandle';
-  import { titleMixin } from 'shared/mixins';
+import { titleMixin, metadataTranslationMixin, } from 'shared/mixins';
   import { COPYING_FLAG, TASK_ID } from 'shared/data/constants';
   import { EffectAllowed } from 'shared/mixins/draggable/constants';
+  import ContentNodeIcon from 'shared/views/ContentNodeIcon';
+import { camelCase, matchesProperty } from 'lodash';
+  import {
+    ContentLevel,
+    Categories,
+  } from '../../../shared/constants';
+import LevelsOptionsVue from '../edit/LevelsOptions.vue';
+
 
   export default {
     name: 'ContentNodeListItem',
@@ -174,8 +152,9 @@
       ContentNodeChangedIcon,
       ToggleText,
       TaskProgress,
+      ContentNodeIcon
     },
-    mixins: [titleMixin],
+  mixins: [titleMixin, metadataTranslationMixin],
     props: {
       node: {
         type: Object,
@@ -238,6 +217,9 @@
       isCoach() {
         return this.node.role_visibility === RolesNames.COACH;
       },
+      hasMetadataToDisplay() {
+        return this.subtitle || this.node.coach_content || Object.keys(this.node.categories).length > 0
+      },
       contextMenuDisabled() {
         return !this.$scopedSlots['context-menu'] || this.copying;
       },
@@ -266,6 +248,24 @@
         if (e.target && e.target.tagName !== 'svg' && !this.copying) {
           this.isTopic ? this.$emit('topicChevronClick') : this.$emit('infoClick');
         }
+      },
+      matchIdToString(ids) {
+        return ids.map(i => this.translateMetadataString(camelCase(i))).join(', ');
+      },
+      category(options) {
+        const ids = Object.keys(options);
+        const matches = Object.keys(Categories).sort().filter(k => ids.includes(Categories[k]));
+        if (matches && matches.length > 0) {
+          return this.matchIdToString(matches);
+        }
+        return null;
+      },
+      levels(level) {
+        const match = Object.keys(ContentLevel).find(key => ContentLevel[key] === level);
+        if (match) {
+          return this.translateMetadataString(camelCase(match));
+        }
+        return null;
       },
     },
     $trs: {
@@ -297,6 +297,16 @@
     &.disabled {
       pointer-events: none;
     }
+  }
+
+  .inline {
+    display: inline-block;
+  }
+
+  .text {
+    font-size: 12px;
+    margin: 0;
+    display: inline-block;
   }
 
   .disabled-overlay {
@@ -385,5 +395,14 @@
   .metadata > span:not(:last-child)::after {
     content: ' • ';
   }
+
+    .small-chip {
+      background-color: #dedede;
+      display: inline-block;
+      padding: 2px 4px;
+      font-size: 10px;
+      border-radius: 4px;
+      margin: 2px;
+    }
 
 </style>

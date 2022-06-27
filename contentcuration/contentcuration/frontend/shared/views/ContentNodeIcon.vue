@@ -1,23 +1,27 @@
 <template>
 
-  <!-- <span v-if="icon">
-    <VChip v-if="showColor" label color="#efefef" :small="small" :textColor="fontColor" class="ma-0 pa-0"
-      :class="{ iconOnly: !includeText, fillWidth }" :style="{ width: fillWidth ? '100%' : 'unset' }" capture-as-image>
-      <KIcon small color="white" :icon="icon" />
-      <span v-if="includeText" class="ml-2">"hello world"</span>
-    </VChip>
-    <span v-else capture-as-image>
-      <KIcon small color="white" :icon="icon" />
-      <span v-if="includeText">"hello world"</span>
+  <span v-if="includeText">
+    <span v-for="activity in activities" :key="activity">
+        <div v-if="chip" :class="small ? 'small-chip' : 'chip'">
+            <KLabeledIcon :icon="icon(activity)" :label="text(activity)" />
+        </div>
+        <div v-else>
+          <KLabeledIcon :icon="icon(activity)" :label="text(activity)" />
+        </div>
+      </span>
+  </span>
+  <span v-else>
+    <span v-if="showEachActivityChip">
+      <KIcon v-for="activity in activities" :key="activity" :icon="icon(activity)" :aria-label="text(activity)" />
     </span>
-  </span> -->
-  <div v-if="includeText && chip" class="chip">
-    <KLabeledIcon :icon="icon" :label="text" />
-  </div>
-  <div v-else-if="includeText && !chip">
-    <KLabeledIcon :icon="icon" :label="text" />
-  </div>
-  <KIcon v-else :icon="icon" :aria-label="text" />
+    <span v-else-if="activities.length > 1 && !showEachActivityChip">
+      <KIcon :icon="icon('multiple')" :aria-label="text('multiple')" />
+    </span>
+    <span v-else>
+      <KIcon :icon="icon(activities[0])" :aria-label="text(activities[0])" />
+    </span>
+  </span>
+
 
 
 </template>
@@ -38,6 +42,10 @@ import {  metadataTranslationMixin } from 'shared/mixins';
         type: Object,
         required: false,
       },
+      showEachActivityChip: {
+        type: Boolean,
+        default: false,
+      },
       isTopic: {
         type: Boolean,
         default: false,
@@ -50,39 +58,36 @@ import {  metadataTranslationMixin } from 'shared/mixins';
         type: Boolean,
         default: false,
       },
+      small: {
+        type: Boolean,
+        default: false,
+      },
     },
     computed: {
-      icon() {
+      activities() {
+        const ids = Object.keys(this.learningActivity);
+        return Object.keys(LearningActivities).filter(k =>
+          ids.includes(LearningActivities[k])
+        );
+      },
+    },
+    methods: {
+      icon(activity) {
         if (this.isTopic) {
           return 'topic'
         } else {
-          return getContentKindIcon(this.text);
+          console.log(activity)
+          return getContentKindIcon(this.text(activity));
         }
       },
-      text() {
+      text(activity) {
         if (this.isTopic) {
           return this.$tr('topic')
-        }
-        return this.learningActivityString(this.learningActivity)
-      }
-    },
-    methods: {
-      matchIdToString(ids) {
-        return ids.map(i => this.translateMetadataString(camelCase(i))).join(', ');
-      },
-      learningActivityString(options) {
-        const ids = Object.keys(options);
-        const matches = Object.keys(LearningActivities).filter(k =>
-          ids.includes(LearningActivities[k])
-        );
-        if (matches && matches.length === 1) {
-          return this.matchIdToString(matches);
-        } else if (matches && matches.length > 1) {
+        } else if (activity == 'multiple') {
           return this.$tr('multipleLearningActivities')
-        } else {
-          return '';
         }
-      },
+         return this.translateMetadataString(camelCase(activity))
+      }
     },
     $trs: {
      multipleLearningActivities: 'Multiple learning activities',
@@ -95,12 +100,22 @@ import {  metadataTranslationMixin } from 'shared/mixins';
 <style lang="less" scoped>
 
   .chip {
-      background-color: #dedede;
-      display: inline-block;
-        padding: 10px;
-        font-weight: bold;
-        border-radius: 4px;
-        width: unset !important;
+    background-color: #dedede;
+    display: inline-block;
+    padding: 10px;
+    margin: 4px;
+    font-weight: bold;
+    border-radius: 4px;
+    width: unset !important;
   }
 
+
+  .small-chip {
+    background-color: #dedede;
+    display: inline-block;
+    padding: 2px 4px;
+    font-size: 10px;
+    border-radius: 4px;
+    margin: 2px;
+  }
 </style>

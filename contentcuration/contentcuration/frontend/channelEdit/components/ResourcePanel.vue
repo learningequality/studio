@@ -133,7 +133,7 @@
             notranslate
           />
           <DetailsRow v-if="!isTopic" :label="translateMetadataString('learningActivity')">
-            <ContentNodeIcon :learningActivity="node.learning_activities" includeText />
+            <ContentNodeIcon :learningActivity="node.learning_activities" includeText showEachActivityChip/>
           </DetailsRow>
           <DetailsRow v-if="isExercise" :label="$tr('completion')">
             <span v-if="noMasteryModel" class="red--text">
@@ -192,7 +192,7 @@
                   <ContentNodeIcon
                     v-if="prerequisite.learning_activities"
                     :learningActivity="prerequisite.learning_activities"
-                    class="mr-2"
+                    showEachActivityChip
                   />
                   {{ getTitle(prerequisite) }}
                 </div>
@@ -207,7 +207,7 @@
                   <ContentNodeIcon
                     v-if="postrequisite.learning_activities"
                     :learningActivity="postrequisite.learning_activities"
-                    class="mr-2"
+                    showEachActivityChip
                   />
                   {{ getTitle(postrequisite) }}
                 </div>
