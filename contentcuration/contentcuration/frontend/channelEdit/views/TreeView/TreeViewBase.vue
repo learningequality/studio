@@ -45,6 +45,7 @@
       </VToolbarItems>
       <VSpacer />
       <OfflineText indicator />
+      <ProgressModal />
       <div v-if="errorsInChannel && canEdit" class="mx-1">
         <VTooltip bottom>
           <template #activator="{ on }">
@@ -164,7 +165,6 @@
     <slot></slot>
 
     <PublishModal v-if="showPublishModal" v-model="showPublishModal" />
-    <ProgressModal :syncing="syncing" :noSyncNeeded="noSyncNeeded" />
     <template v-if="isPublished">
       <ChannelTokenModal v-model="showTokenModal" :channel="currentChannel" />
     </template>
@@ -173,7 +173,6 @@
       v-model="showSyncModal"
       :channel="currentChannel"
       @syncing="syncInProgress"
-      @nosync="noResourcesToSync"
     />
     <MessageDialog v-model="showDeleteModal" :header="$tr('deleteTitle')">
       {{ $tr('deletePrompt') }}
@@ -289,7 +288,6 @@
         showClipboard: false,
         showDeleteModal: false,
         syncing: false,
-        noSyncNeeded: false,
       };
     },
     computed: {
@@ -303,10 +301,8 @@
       },
       isChanged() {
         return (
-          this.rootNode &&
-          (this.rootNode.changed ||
-            this.rootNode.has_updated_descendants ||
-            this.rootNode.has_new_descendants)
+          this.currentChannel &&
+          (this.currentChannel.unpublished_changes || (this.isRicecooker && this.rootNode.changed))
         );
       },
       isPublished() {
@@ -317,6 +313,7 @@
       },
       disablePublish() {
         return (
+          this.currentChannel.publishing ||
           !this.isChanged ||
           !this.currentChannel.language ||
           (this.rootNode && !this.rootNode.total_count)
@@ -406,9 +403,6 @@
       },
       syncInProgress() {
         this.syncing = true;
-      },
-      noResourcesToSync() {
-        this.noSyncNeeded = true;
       },
       deleteChannelModal() {
         this.showDeleteModal = true;

@@ -2,7 +2,6 @@ import json
 from functools import partial
 from functools import reduce
 
-from django.conf import settings
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import IntegrityError
 from django.db import models
@@ -37,7 +36,6 @@ from rest_framework.serializers import ChoiceField
 from rest_framework.serializers import DictField
 from rest_framework.serializers import Field
 from rest_framework.serializers import ValidationError
-from rest_framework.viewsets import ViewSet
 
 from contentcuration.constants import completion_criteria as completion_criteria_validator
 from contentcuration.db.models.expressions import IsNull
@@ -45,6 +43,7 @@ from contentcuration.db.models.query import RIGHT_JOIN
 from contentcuration.db.models.query import With
 from contentcuration.db.models.query import WithValues
 from contentcuration.models import AssessmentItem
+from contentcuration.models import Change
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
 from contentcuration.models import ContentTag
@@ -52,15 +51,14 @@ from contentcuration.models import File
 from contentcuration.models import generate_storage_url
 from contentcuration.models import PrerequisiteContentRelationship
 from contentcuration.models import UUIDField
-from contentcuration.tasks import create_async_task
 from contentcuration.tasks import get_or_create_async_task
 from contentcuration.utils.nodes import calculate_resource_size
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import BulkUpdateMixin
+from contentcuration.viewsets.base import create_change_tracker
 from contentcuration.viewsets.base import RequiredFilterSet
 from contentcuration.viewsets.base import ValuesViewset
-from contentcuration.viewsets.common import ChangeEventMixin
 from contentcuration.viewsets.common import DotPathValueMixin
 from contentcuration.viewsets.common import JSONFieldDictSerializer
 from contentcuration.viewsets.common import NotNullMapArrayAgg
@@ -68,12 +66,10 @@ from contentcuration.viewsets.common import SQCount
 from contentcuration.viewsets.common import UserFilteredPrimaryKeyRelatedField
 from contentcuration.viewsets.common import UUIDInFilter
 from contentcuration.viewsets.sync.constants import CONTENTNODE
+from contentcuration.viewsets.sync.constants import COPYING_FLAG
 from contentcuration.viewsets.sync.constants import CREATED
 from contentcuration.viewsets.sync.constants import DELETED
-from contentcuration.viewsets.sync.constants import TASK_ID
-from contentcuration.viewsets.sync.utils import generate_delete_event
 from contentcuration.viewsets.sync.utils import generate_update_event
-from contentcuration.viewsets.sync.utils import log_sync_exception
 
 
 channel_query = Channel.objects.filter(main_tree__tree_id=OuterRef("tree_id"))
@@ -384,6 +380,13 @@ class ContentNodeSerializer(BulkModelSerializer):
         nested_writes = True
 
     def validate(self, data):
+        # Creating, we require a parent to be set.
+        if self.instance is None and "parent" not in data:
+            raise ValidationError("Parent is required for creating a node.")
+        elif self.instance is not None and "parent" in data:
+            raise ValidationError(
+                {"parent": "This field should only be changed by a move operation"}
+            )
         tags = data.get("tags")
         if tags is not None:
             for tag in tags:
@@ -392,10 +395,6 @@ class ContentNodeSerializer(BulkModelSerializer):
         return data
 
     def create(self, validated_data):
-        # Creating a new node, by default put it in the orphanage on initial creation.
-        if "parent" not in validated_data:
-            validated_data["parent_id"] = settings.ORPHANAGE_ROOT_ID
-
         tags = None
         if "tags" in validated_data:
             tags = validated_data.pop("tags")
@@ -408,11 +407,6 @@ class ContentNodeSerializer(BulkModelSerializer):
         return instance
 
     def update(self, instance, validated_data):
-        if "parent" in validated_data:
-            raise ValidationError(
-                {"parent": "This field should only be changed by a move operation"}
-            )
-
         for field in self.dict_fields:
             field_data = validated_data.pop(field, None)
             if field_data is not None:
@@ -469,7 +463,8 @@ def consolidate_extra_fields(item):
     return extra_fields
 
 
-class PrerequisitesUpdateHandler(ViewSet):
+class PrerequisitesUpdateHandler(ValuesViewset):
+    values = tuple()
     """
     Dummy viewset for handling create and delete changes for prerequisites
     """
@@ -614,7 +609,7 @@ class PrerequisitesUpdateHandler(ViewSet):
                 change.update({"errors": str(e)})
                 errors.append(change)
 
-        return errors or None, None
+        return errors or None
 
     def create_from_changes(self, changes):
         return self._handle_relationship_changes(changes)
@@ -628,7 +623,7 @@ def dict_if_none(obj, field_name=None):
 
 
 # Apply mixin first to override ValuesViewset
-class ContentNodeViewSet(BulkUpdateMixin, ChangeEventMixin, ValuesViewset):
+class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
     queryset = ContentNode.objects.all()
     serializer_class = ContentNodeSerializer
     permission_classes = [IsAuthenticated]
@@ -750,7 +745,6 @@ class ContentNodeViewSet(BulkUpdateMixin, ChangeEventMixin, ValuesViewset):
         if not pk:
             raise Http404
 
-        task_info = None
         node = self.get_object()
 
         # currently we restrict triggering calculations through the API to the channel root node
@@ -765,18 +759,13 @@ class ContentNodeViewSet(BulkUpdateMixin, ChangeEventMixin, ValuesViewset):
             # We don't really need more than one queued async calculation task, so we use
             # get_or_create_async_task to ensure a task is queued, as well as return info about it
             task_args = dict(node_id=node.pk, channel_id=node.channel_id)
-            task_info = get_or_create_async_task(
+            get_or_create_async_task(
                 "calculate-resource-size", self.request.user, **task_args
             )
 
-        changes = []
-        if task_info is not None:
-            changes.append(self.create_task_event(task_info))
-
         return Response({
             "size": size,
-            "stale": stale,
-            "changes": changes
+            "stale": stale
         })
 
     def annotate_queryset(self, queryset):
@@ -884,64 +873,46 @@ class ContentNodeViewSet(BulkUpdateMixin, ChangeEventMixin, ValuesViewset):
 
     def move_from_changes(self, changes):
         errors = []
-        changes_to_return = []
         for move in changes:
             # Move change will have key, must also have target property
             # optionally can include the desired position.
-            move_error, move_change = self.move(
+            move_error = self.move(
                 move["key"], target=move.get("target"), position=move.get("position")
             )
             if move_error:
                 move.update({"errors": [move_error]})
                 errors.append(move)
-            if move_change:
-                changes_to_return.append(move_change)
-        return errors, changes_to_return
+        return errors
 
     def move(self, pk, target=None, position=None):
         try:
             contentnode = self.get_edit_queryset().get(pk=pk)
         except ContentNode.DoesNotExist:
             error = ValidationError("Specified node does not exist")
-            return str(error), None
+            return str(error)
 
         try:
             target, position = self.validate_targeting_args(target, position)
 
-            channel_id = target.channel_id
-
-            task_args = {
-                "user_id": self.request.user.id,
-                "channel_id": channel_id,
-                "node_id": contentnode.id,
-                "target_id": target.id,
-                "position": position,
-            }
-
-            task, task_info = create_async_task(
-                "move-nodes", self.request.user, **task_args
+            contentnode.move_to(
+                target,
+                position,
             )
 
-            return (
-                None,
-                None,
-            )
+            return None
         except ValidationError as e:
-            return str(e), None
+            return str(e)
 
     def copy_from_changes(self, changes):
         errors = []
-        changes_to_return = []
         for copy in changes:
             # Copy change will have key, must also have other attributes, defined in `copy`
             # Just pass as keyword arguments here to let copy do the validation
-            copy_errors, copy_changes = self.copy(copy["key"], **copy)
+            copy_errors = self.copy(copy["key"], **copy)
             if copy_errors:
                 copy.update({"errors": copy_errors})
                 errors.append(copy)
-            if copy_changes:
-                changes_to_return.extend(copy_changes)
-        return errors, changes_to_return
+        return errors
 
     def copy(
         self,
@@ -956,64 +927,45 @@ class ContentNodeViewSet(BulkUpdateMixin, ChangeEventMixin, ValuesViewset):
         try:
             target, position = self.validate_targeting_args(target, position)
         except ValidationError as e:
-            return str(e), None
+            return str(e)
 
         try:
             source = self.get_queryset().get(pk=from_key)
         except ContentNode.DoesNotExist:
             error = ValidationError("Copy source node does not exist")
-            return str(error), [generate_delete_event(pk, CONTENTNODE)]
+            return str(error)
 
         # Affected channel for the copy is the target's channel
         channel_id = target.channel_id
 
         if ContentNode.objects.filter(pk=pk).exists():
             error = ValidationError("Copy pk already exists")
-            return str(error), None
+            return str(error)
 
-        task_args = {
-            "user_id": self.request.user.id,
-            "channel_id": channel_id,
-            "source_id": source.id,
-            "target_id": target.id,
-            "pk": pk,
-            "mods": mods,
-            "excluded_descendants": excluded_descendants,
-            "position": position,
-        }
+        can_edit_source_channel = ContentNode.filter_edit_queryset(
+            ContentNode.objects.filter(id=source.id), user=self.request.user
+        ).exists()
 
-        task, task_info = create_async_task(
-            "duplicate-nodes", self.request.user, **task_args
-        )
+        with create_change_tracker(pk, CONTENTNODE, channel_id, self.request.user, "copy_nodes") as progress_tracker:
 
-        return (
-            None,
-            [generate_update_event(pk, CONTENTNODE, {TASK_ID: task_info.task_id})],
-        )
+            new_node = source.copy_to(
+                target,
+                position,
+                pk,
+                mods,
+                excluded_descendants,
+                can_edit_source_channel=can_edit_source_channel,
+                progress_tracker=progress_tracker,
+            )
 
-    def delete_from_changes(self, changes):
-        errors = []
-        changes_to_return = []
-        queryset = self.get_edit_queryset().order_by()
-        for change in changes:
-            try:
-                instance = queryset.get(**dict(self.values_from_key(change["key"])))
+            Change.create_change(
+                generate_update_event(
+                    pk,
+                    CONTENTNODE,
+                    {COPYING_FLAG: False, "node_id": new_node.node_id},
+                    channel_id=channel_id
+                ),
+                applied=True
+            )
 
-                task_args = {
-                    "user_id": self.request.user.id,
-                    "channel_id": instance.channel_id,
-                    "node_id": instance.id,
-                }
-
-                task, task_info = create_async_task(
-                    "delete-node", self.request.user, **task_args
-                )
-            except ContentNode.DoesNotExist:
-                # If the object already doesn't exist, as far as the user is concerned
-                # job done!
-                pass
-            except Exception as e:
-                log_sync_exception(e)
-                change["errors"] = [str(e)]
-                errors.append(change)
-        return errors, changes_to_return
+        return None

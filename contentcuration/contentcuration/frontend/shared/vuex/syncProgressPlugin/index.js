@@ -12,7 +12,7 @@ const SyncProgressPlugin = store => {
     }
 
     db[CHANGES_TABLE].toCollection()
-      .filter(c => !c.errors)
+      .filter(c => !c.synced)
       .limit(1)
       .count()
       .then(count => store.commit('SET_UNSAVED_CHANGES', count > 0));

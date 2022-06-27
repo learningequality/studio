@@ -41,6 +41,7 @@ from .json_dump import json_for_parse_from_serializer
 from contentcuration.api import activate_channel
 from contentcuration.constants import channel_history
 from contentcuration.decorators import browser_is_supported
+from contentcuration.models import Change
 from contentcuration.models import Channel
 from contentcuration.models import ChannelHistory
 from contentcuration.models import ChannelSet
@@ -87,7 +88,11 @@ def current_user_for_context(user):
     if not user or user.is_anonymous:
         return json_for_parse_from_data(None)
 
-    return json_for_parse_from_data({field: getattr(user, field) for field in user_fields})
+    user_data = {field: getattr(user, field) for field in user_fields}
+
+    user_data["user_rev"] = Change.objects.filter(applied=True, user=user).values_list("server_rev", flat=True).order_by("-server_rev").first() or 0
+
+    return json_for_parse_from_data(user_data)
 
 
 @browser_is_supported
@@ -158,7 +163,7 @@ def publishing_status(request):
 @permission_classes((AllowAny,))
 def channel_list(request):
     anon = settings.LIBRARY_MODE or request.user.is_anonymous
-    current_user = current_user_for_context(None if anon else request.user)
+    current_user = current_user_for_context(request.user)
     preferences = DEFAULT_USER_PREFERENCES if anon else request.user.content_defaults
 
     public_channel_list = cache.get(PUBLIC_CHANNELS_CACHE_KEYS["list"])
@@ -264,6 +269,7 @@ def accounts(request):
 @permission_classes((IsAuthenticated,))
 def channel(request, channel_id):
     channel_error = ""
+    channel_rev = 0
 
     # Check if channel exists
     try:
@@ -277,13 +283,15 @@ def channel(request, channel_id):
         # an option to restore the channel in the Administration page
         if channel.deleted:
             channel_error = 'CHANNEL_EDIT_ERROR_CHANNEL_DELETED'
+        else:
+            channel_rev = Change.objects.filter(applied=True, channel=channel).values_list("server_rev", flat=True).order_by("-server_rev").first() or 0
 
     return render(
         request,
         "channel_edit.html",
         {
             CHANNEL_EDIT_GLOBAL: json_for_parse_from_data(
-                {"channel_id": channel_id, "channel_error": channel_error}
+                {"channel_id": channel_id, "channel_error": channel_error, "channel_rev": channel_rev}
             ),
             CURRENT_USER: current_user_for_context(request.user),
             PREFERENCES: json_for_parse_from_data(request.user.content_defaults),
@@ -309,14 +317,12 @@ def activate_channel_endpoint(request):
         channel = Channel.filter_edit_queryset(Channel.objects.all(), request.user).get(pk=data["channel_id"])
     except Channel.DoesNotExist:
         return HttpResponseNotFound("Channel not found")
-    changes = []
     try:
-        change = activate_channel(channel, request.user)
-        changes.append(change)
+        activate_channel(channel, request.user)
     except PermissionDenied as e:
         return HttpResponseForbidden(str(e))
 
-    return HttpResponse(json.dumps({"success": True, "changes": changes}))
+    return HttpResponse(json.dumps({"success": True}))
 
 
 # Taken from kolibri.core.views which was

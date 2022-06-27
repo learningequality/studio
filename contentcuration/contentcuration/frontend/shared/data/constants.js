@@ -4,6 +4,8 @@ export const CHANGE_TYPES = {
   DELETED: 3,
   MOVED: 4,
   COPIED: 5,
+  PUBLISHED: 6,
+  SYNCED: 7,
 };
 
 // Tables
@@ -28,6 +30,7 @@ export const TABLE_NAMES = {
   TASK: 'task',
   CHANGES_TABLE,
   CHANGE_LOCKS_TABLE,
+  BOOKMARK: 'bookmark',
 };
 
 export const APP_ID = 'KolibriStudio';
@@ -57,3 +60,10 @@ export const TASK_ID = '__TASK_ID';
 // This constant is used for saving/retrieving a current
 // user object from the session table
 export const CURRENT_USER = 'CURRENT_USER';
+
+// A key in the session table that stores the currently active channels to listen for updates
+export const ACTIVE_CHANNELS = 'ACTIVE_CHANNELS';
+
+export const CHANNEL_SYNC_KEEP_ALIVE_INTERVAL = 300 * 1000;
+
+export const MAX_REV_KEY = 'max_rev';

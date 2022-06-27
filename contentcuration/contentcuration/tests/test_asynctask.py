@@ -1,18 +1,12 @@
 from __future__ import absolute_import
 
-import uuid
-from builtins import range
-from builtins import str
-
 import pytest
 from celery import states
 from django.db import connection
 from django.db.utils import OperationalError
 from django.test import TransactionTestCase
-from django.urls import reverse
 
 from .base import BaseAPITestCase
-from contentcuration.models import ContentNode
 from contentcuration.models import Task
 from contentcuration.tasks import create_async_task
 from contentcuration.tasks import get_or_create_async_task
@@ -21,9 +15,6 @@ from contentcuration.tasks_test import drop_db_connections_fail
 from contentcuration.tasks_test import drop_db_connections_success
 from contentcuration.tasks_test import non_async_test_task
 from contentcuration.tasks_test import query_db_task
-from contentcuration.viewsets.sync.constants import CONTENTNODE
-from contentcuration.viewsets.sync.constants import COPYING_FLAG
-from contentcuration.viewsets.sync.utils import generate_update_event
 
 
 class AsyncTaskTestCase(BaseAPITestCase):
@@ -36,7 +27,7 @@ class AsyncTaskTestCase(BaseAPITestCase):
         Tests that when an async task is created and completed, the Task object has a status of 'SUCCESS' and
         contains the return value of the task.
         """
-        task, task_info = create_async_task("test", self.user, apply_async=False)
+        task, task_info = create_async_task("test", self.user)
         self.assertEqual(task_info.user, self.user)
         self.assertEqual(task_info.task_type, "test")
 
@@ -51,7 +42,7 @@ class AsyncTaskTestCase(BaseAPITestCase):
         Tests that if a task fails with an error, that the error information is stored in the Task object for later
         retrieval and analysis.
         """
-        celery_task, task_info = create_async_task("error-test", self.user, apply_async=False)
+        celery_task, task_info = create_async_task("error-test", self.user)
 
         task_info.refresh_from_db()
         self.assertEqual(task_info.status, states.FAILURE)
@@ -94,98 +85,6 @@ class AsyncTaskTestCase(BaseAPITestCase):
         result = task.get()
         self.assertEquals(result, 42)
         self.assertEquals(Task.objects.filter(task_id=task.id).count(), 0)
-
-    def test_duplicate_nodes_task(self):
-        ids = []
-        node_ids = []
-        for i in range(3, 6):
-            node_id = "0000000000000000000000000000000" + str(i)
-            node_ids.append(node_id)
-            node = ContentNode.objects.get(node_id=node_id)
-            ids.append(node.pk)
-
-        parent_node = ContentNode.objects.get(
-            node_id="00000000000000000000000000000002"
-        )
-
-        tasks = []
-
-        for source_id in ids:
-
-            task_args = {
-                "user_id": self.user.pk,
-                "channel_id": self.channel.pk,
-                "source_id": source_id,
-                "target_id": parent_node.pk,
-                "pk": uuid.uuid4().hex,
-            }
-            task, task_info = create_async_task(
-                "duplicate-nodes", self.user, apply_async=False, **task_args
-            )
-            tasks.append((task_args, task_info))
-
-        for task_args, task_info in tasks:
-            # progress is retrieved dynamically upon calls to get the task info, so
-            # use an API call rather than checking the db directly for progress.
-            url = reverse("task-detail", kwargs={"task_id": task_info.task_id})
-            response = self.get(url)
-            assert (
-                response.data["status"] == states.SUCCESS
-            ), "Task failed, exception: {}".format(
-                response.data["metadata"]["error"]["traceback"]
-            )
-            self.assertEqual(response.data["status"], states.SUCCESS)
-            self.assertEqual(response.data["task_type"], "duplicate-nodes")
-            result = response.data["metadata"]["result"]
-            node_id = ContentNode.objects.get(pk=task_args["pk"]).node_id
-            self.assertEqual(
-                result["changes"][0],
-                generate_update_event(
-                    task_args["pk"], CONTENTNODE, {COPYING_FLAG: False, "node_id": node_id}
-                ),
-            )
-
-        parent_node.refresh_from_db()
-        children = parent_node.get_children()
-
-        for child in children:
-            # make sure the copies are in the results
-            if child.original_source_node_id and child.source_node_id:
-                assert child.original_source_node_id in node_ids
-                assert child.source_node_id in node_ids
-
-    def test_delete_nodes_task(self):
-        node_id = "00000000000000000000000000000002"
-
-        task_args = {
-            "user_id": self.user.pk,
-            "channel_id": self.channel.pk,
-            "node_id": node_id,
-        }
-        create_async_task(
-            "delete-node", self.user, apply_async=False, **task_args
-        )
-
-        try:
-            ContentNode.objects.get(
-                id=node_id
-            )
-            self.fail("Node still exists after deletion task")
-        except ContentNode.DoesNotExist:
-            pass
-
-    def test_delete_nodes_task_no_node(self):
-        node_id = uuid.uuid4().hex
-
-        task_args = {
-            "user_id": self.user.pk,
-            "channel_id": self.channel.pk,
-            "node_id": node_id,
-        }
-        _, task_info = create_async_task(
-            "delete-node", self.user, apply_async=False, **task_args
-        )
-        self.assertFalse("error" in task_info.metadata)
 
     def test_get_or_create_task(self):
         expected_task = Task.objects.create(

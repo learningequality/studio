@@ -562,6 +562,7 @@ describe('ContentNode methods', () => {
     beforeEach(() => {
       table = {
         put: jest.fn(() => Promise.resolve()),
+        update: jest.fn(() => Promise.resolve()),
       };
       parent = {
         id: uuid4(),

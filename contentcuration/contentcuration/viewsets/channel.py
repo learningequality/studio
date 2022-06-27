@@ -8,9 +8,9 @@ from django.db.models import Exists
 from django.db.models import OuterRef
 from django.db.models import Q
 from django.db.models import Subquery
-from django.http import Http404
+from django.db.models import Value
+from django.db.models.functions import Coalesce
 from django.utils.decorators import method_decorator
-from django.utils.translation import get_language
 from django.views.decorators.cache import cache_page
 from django_cte import With
 from django_filters.rest_framework import BooleanFilter
@@ -18,38 +18,40 @@ from django_filters.rest_framework import CharFilter
 from le_utils.constants import content_kinds
 from le_utils.constants import roles
 from rest_framework import serializers
-from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import AllowAny
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
 from rest_framework.serializers import CharField
 from rest_framework.serializers import FloatField
 from rest_framework.serializers import IntegerField
 
 from contentcuration.decorators import cache_no_user_data
+from contentcuration.models import Change
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
 from contentcuration.models import File
 from contentcuration.models import generate_storage_url
 from contentcuration.models import SecretToken
 from contentcuration.models import User
-from contentcuration.tasks import create_async_task
 from contentcuration.utils.pagination import CachedListPagination
 from contentcuration.utils.pagination import ValuesViewsetPageNumberPagination
+from contentcuration.utils.publish import publish_channel
+from contentcuration.utils.sync import sync_channel
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
+from contentcuration.viewsets.base import create_change_tracker
 from contentcuration.viewsets.base import ReadOnlyValuesViewset
 from contentcuration.viewsets.base import RequiredFilterSet
 from contentcuration.viewsets.base import ValuesViewset
-from contentcuration.viewsets.common import ChangeEventMixin
 from contentcuration.viewsets.common import ContentDefaultsSerializer
 from contentcuration.viewsets.common import JSONFieldDictSerializer
 from contentcuration.viewsets.common import SQCount
 from contentcuration.viewsets.common import SQSum
 from contentcuration.viewsets.common import UUIDInFilter
 from contentcuration.viewsets.sync.constants import CHANNEL
+from contentcuration.viewsets.sync.constants import PUBLISHED
 from contentcuration.viewsets.sync.utils import generate_update_event
+from contentcuration.viewsets.sync.utils import log_sync_exception
 from contentcuration.viewsets.user import IsAdminUser
 
 
@@ -224,7 +226,7 @@ class ChannelFilter(BaseChannelFilter):
         return queryset.filter(view=True)
 
     def filter_bookmark(self, queryset, name, value):
-        return queryset.filter(bookmark=True)
+        return queryset.filter(bookmarked_by=self.request.user)
 
     class Meta:
         model = Channel
@@ -246,7 +248,6 @@ class ChannelSerializer(BulkModelSerializer):
     """
 
     thumbnail_encoding = ThumbnailEncodingFieldsSerializer(required=False)
-    bookmark = serializers.BooleanField(required=False)
     content_defaults = ContentDefaultsSerializer(partial=True, required=False)
 
     class Meta:
@@ -260,7 +261,6 @@ class ChannelSerializer(BulkModelSerializer):
             "thumbnail_encoding",
             "version",
             "language",
-            "bookmark",
             "content_defaults",
             "source_domain",
         )
@@ -269,7 +269,6 @@ class ChannelSerializer(BulkModelSerializer):
         nested_writes = True
 
     def create(self, validated_data):
-        bookmark = validated_data.pop("bookmark", None)
         content_defaults = validated_data.pop("content_defaults", {})
         validated_data["content_defaults"] = self.fields["content_defaults"].create(
             content_defaults
@@ -284,8 +283,7 @@ class ChannelSerializer(BulkModelSerializer):
                 instance.editors.add(user)
             except IntegrityError:
                 pass
-            if bookmark:
-                user.bookmarked_channels.add(instance)
+
         self.changes.append(
             generate_update_event(
                 instance.id,
@@ -296,12 +294,12 @@ class ChannelSerializer(BulkModelSerializer):
                     "published": instance.main_tree.published,
                     "content_defaults": instance.content_defaults,
                 },
+                channel_id=instance.id,
             )
         )
         return instance
 
     def update(self, instance, validated_data):
-        bookmark = validated_data.pop("bookmark", None)
         content_defaults = validated_data.pop("content_defaults", None)
         is_deleted = validated_data.get("deleted")
         if content_defaults is not None:
@@ -313,18 +311,6 @@ class ChannelSerializer(BulkModelSerializer):
         if "request" in self.context:
             user_id = self.context["request"].user.id
 
-            # We could possibly do this in bulk later in the process,
-            # but bulk creating many to many through table models
-            # would be required, and that would need us to be able to
-            # efficiently ignore conflicts with existing models.
-            # When we have upgraded to Django 2.2, we can do the bulk
-            # creation of many to many models to make this more efficient
-            # and use the `ignore_conflicts=True` kwarg to ignore
-            # any conflicts.
-            if bookmark is not None and bookmark:
-                instance.bookmarked_by.add(user_id)
-            elif bookmark is not None:
-                instance.bookmarked_by.remove(user_id)
         was_deleted = instance.deleted
         instance = super(ChannelSerializer, self).update(instance, validated_data)
         # mark the instance as deleted or recovered, if requested
@@ -395,7 +381,20 @@ channel_field_map = {
 }
 
 
-class ChannelViewSet(ChangeEventMixin, ValuesViewset):
+def _unpublished_changes_query(channel):
+    return Change.objects.filter(
+        server_rev__gt=Coalesce(Change.objects.filter(
+            channel=OuterRef("channel"),
+            change_type=PUBLISHED,
+            errored=False
+        ).values("server_rev").order_by("-server_rev")[:1], Value(0)),
+        created_by__isnull=False,
+        channel=channel,
+        user__isnull=True
+    )
+
+
+class ChannelViewSet(ValuesViewset):
     queryset = Channel.objects.all()
     permission_classes = [IsAuthenticated]
     serializer_class = ChannelSerializer
@@ -403,7 +402,11 @@ class ChannelViewSet(ChangeEventMixin, ValuesViewset):
     filterset_class = ChannelFilter
 
     field_map = channel_field_map
-    values = base_channel_values + ("edit", "view", "bookmark")
+    values = base_channel_values + ("edit", "view", "unpublished_changes")
+
+    def perform_destroy(self, instance):
+        instance.deleted = True
+        instance.save(update_fields=["deleted"])
 
     def get_queryset(self):
         queryset = super(ChannelViewSet, self).get_queryset()
@@ -413,7 +416,6 @@ class ChannelViewSet(ChangeEventMixin, ValuesViewset):
         return queryset.annotate(
             edit=Exists(user_queryset.filter(editable_channels=OuterRef("id"))),
             view=Exists(user_queryset.filter(view_only_channels=OuterRef("id"))),
-            bookmark=Exists(user_queryset.filter(bookmarked_channels=OuterRef("id"))),
         )
 
     def annotate_queryset(self, queryset):
@@ -437,74 +439,92 @@ class ChannelViewSet(ChangeEventMixin, ValuesViewset):
         queryset = queryset.annotate(
             count=SQCount(non_topic_content_ids, field="content_id"),
         )
+
+        queryset = queryset.annotate(unpublished_changes=Exists(_unpublished_changes_query(OuterRef("id"))))
+
         return queryset
 
-    def update_from_changes(self, changes):
-        """
-        If a channel can be bookmarked, changes from bookmarking are addressed in this
-        method before the `update_from_changes` method in `UpdateModelMixin`.
-        """
-        for change in changes:
-            if 'bookmark' in change["mods"].keys():
-                queryset = self.filter_queryset_from_keys(
-                    self.get_queryset(), [change["key"]]
-                ).order_by()
-                instance = queryset.get(**dict(self.values_from_key(change["key"])))
-                bookmark = {k: v for k, v in change['mods'].items() if k == 'bookmark'}
-                other_mods = {k: v for k, v in change['mods'].items() if k != 'bookmark'}
-                change["mods"] = bookmark
-                serializer = self.get_serializer(
-                    instance, data=self._map_update_change(change), partial=True
+    def publish_from_changes(self, changes):
+        errors = []
+        for publish in changes:
+            # Publish change will have key, version_notes, and language.
+            try:
+                self.publish(
+                    publish["key"], version_notes=publish.get("version_notes"), language=publish.get("language")
                 )
-                if serializer.is_valid():
-                    self.perform_update(serializer)
-                    change["mods"] = other_mods
+            except Exception as e:
+                log_sync_exception(e)
+                publish["errors"] = [str(e)]
+                errors.append(publish)
+        return errors
 
-        changes = [change for change in changes if change['mods']]
-        return super(ChannelViewSet, self).update_from_changes(changes)
-
-    @action(detail=True, methods=["post"])
-    def publish(self, request, pk=None):
-        if not pk:
-            raise Http404
+    def publish(self, pk, version_notes="", language=None):
         logging.debug("Entering the publish channel endpoint")
 
-        channel = self.get_edit_object()
+        channel = self.get_edit_queryset().get(pk=pk)
 
         if channel.deleted:
             raise ValidationError("Cannot publish a deleted channel")
         elif channel.main_tree.publishing:
             raise ValidationError("Channel is already publishing")
-        elif (
-            not channel.main_tree.get_descendants(include_self=True)
-            .filter(changed=True)
-            .exists()
-        ):
-            raise ValidationError("Cannot publish an unchanged channel")
 
-        channel.mark_publishing(request.user)
+        channel.mark_publishing(self.request.user)
 
-        version_notes = request.data.get("version_notes")
+        with create_change_tracker(pk, CHANNEL, channel.id, self.request.user, "export-channel") as progress_tracker:
+            try:
+                channel = publish_channel(
+                    self.request.user.pk,
+                    channel.id,
+                    version_notes=version_notes,
+                    send_email=True,
+                    progress_tracker=progress_tracker,
+                    language=language
+                )
+                Change.create_changes([
+                    generate_update_event(
+                        channel.id, CHANNEL, {
+                            "published": True,
+                            "publishing": False,
+                            "primary_token": channel.get_human_token().token,
+                            "last_published": channel.last_published,
+                            "unpublished_changes": _unpublished_changes_query(channel.id).exists()
+                        }, channel_id=channel.id
+                    ),
+                ], applied=True)
+            except Exception as e:
+                Change.create_changes([
+                    generate_update_event(
+                        channel.id, CHANNEL, {"publishing": False, "unpublished_changes": True}, channel_id=channel.id
+                    ),
+                ], applied=True)
+                progress_tracker.report_exception(e)
+                raise
 
-        task_args = {
-            "user_id": request.user.pk,
-            "channel_id": channel.id,
-            "version_notes": version_notes,
-            "language": get_language(),
-        }
+    def sync_from_changes(self, changes):
+        errors = []
+        for sync in changes:
+            # Publish change will have key, attributes, tags, files, and assessment_items.
+            try:
+                self.sync(
+                    sync["key"],
+                    attributes=sync.get("attributes"),
+                    tags=sync.get("tags"),
+                    files=sync.get("files"),
+                    assessment_items=sync.get("assessment_items")
+                )
+            except Exception as e:
+                log_sync_exception(e)
+                sync["errors"] = [str(e)]
+                errors.append(sync)
+        return errors
 
-        _, task_info = create_async_task("export-channel", request.user, **task_args)
-        return Response({
-            'changes': [self.create_task_event(task_info)]
-        })
-
-    @action(detail=True, methods=["post"])
-    def sync(self, request, pk=None):
-        if not pk:
-            raise Http404
+    def sync(self, pk, attributes=False, tags=False, files=False, assessment_items=False):
         logging.debug("Entering the sync channel endpoint")
 
-        channel = self.get_edit_object()
+        channel = self.get_edit_queryset().get(pk=pk)
+
+        if channel.deleted:
+            raise ValidationError("Cannot sync a deleted channel")
 
         if (
             not channel.main_tree.get_descendants()
@@ -519,21 +539,15 @@ class ChannelViewSet(ChangeEventMixin, ValuesViewset):
         ):
             raise ValidationError("Cannot sync a channel with no imported content")
 
-        data = request.data
-
-        task_args = {
-            "user_id": request.user.pk,
-            "channel_id": channel.id,
-            "sync_attributes": data.get("attributes"),
-            "sync_tags": data.get("tags"),
-            "sync_files": data.get("files"),
-            "sync_assessment_items": data.get("assessment_items"),
-        }
-
-        _, task_info = create_async_task("sync-channel", request.user, **task_args)
-        return Response({
-            'changes': [self.create_task_event(task_info)]
-        })
+        with create_change_tracker(pk, CHANNEL, channel.id, self.request.user, "sync-channel") as progress_tracker:
+            sync_channel(
+                channel,
+                attributes,
+                tags,
+                files,
+                tags,
+                progress_tracker=progress_tracker,
+            )
 
 
 @method_decorator(
@@ -662,6 +676,9 @@ class AdminChannelViewSet(ChannelViewSet):
         "demo_server_url",
         "primary_token",
     )
+
+    def perform_destroy(self, instance):
+        instance.delete()
 
     def get_queryset(self):
         channel_main_tree_nodes = ContentNode.objects.filter(

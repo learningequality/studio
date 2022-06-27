@@ -9,13 +9,14 @@ from le_utils.constants import content_kinds
 from contentcuration import models
 from contentcuration.tests import testdata
 from contentcuration.tests.base import StudioAPITestCase
+from contentcuration.tests.viewsets.base import generate_create_event
+from contentcuration.tests.viewsets.base import generate_delete_event
+from contentcuration.tests.viewsets.base import generate_update_event
+from contentcuration.tests.viewsets.base import SyncTestMixin
 from contentcuration.viewsets.sync.constants import CLIPBOARD
-from contentcuration.viewsets.sync.utils import generate_create_event
-from contentcuration.viewsets.sync.utils import generate_delete_event
-from contentcuration.viewsets.sync.utils import generate_update_event
 
 
-class SyncTestCase(StudioAPITestCase):
+class SyncTestCase(StudioAPITestCase, SyncTestMixin):
     @classmethod
     def setUpClass(cls):
         cls.create_bucket()
@@ -66,10 +67,8 @@ class SyncTestCase(StudioAPITestCase):
     def test_create_clipboard(self):
         self.client.force_authenticate(user=self.user)
         clipboard = self.clipboard_metadata
-        response = self.client.post(
-            self.sync_url,
-            [generate_create_event(clipboard["id"], CLIPBOARD, clipboard)],
-            format="json",
+        response = self.sync_changes(
+            [generate_create_event(clipboard["id"], CLIPBOARD, clipboard, user_id=self.user.id)],
         )
         self.assertEqual(response.status_code, 200, response.content)
         try:
@@ -81,10 +80,8 @@ class SyncTestCase(StudioAPITestCase):
         self.client.force_authenticate(user=self.user)
         clipboard = self.clipboard_metadata
         clipboard["extra_fields"] = None
-        response = self.client.post(
-            self.sync_url,
-            [generate_create_event(clipboard["id"], CLIPBOARD, clipboard)],
-            format="json",
+        response = self.sync_changes(
+            [generate_create_event(clipboard["id"], CLIPBOARD, clipboard, user_id=self.user.id)],
         )
         self.assertEqual(response.status_code, 200, response.content)
         try:
@@ -98,10 +95,8 @@ class SyncTestCase(StudioAPITestCase):
         self.client.force_authenticate(user=self.user)
         clipboard = self.clipboard_metadata
         clipboard["parent"] = channel.main_tree_id
-        response = self.client.post(
-            self.sync_url,
-            [generate_create_event(clipboard["id"], CLIPBOARD, clipboard)],
-            format="json",
+        response = self.sync_changes(
+            [generate_create_event(clipboard["id"], CLIPBOARD, clipboard, user_id=self.user.id)],
         )
         self.assertEqual(response.status_code, 200, response.content)
         try:
@@ -115,13 +110,11 @@ class SyncTestCase(StudioAPITestCase):
         self.client.force_authenticate(user=self.user)
         clipboard1 = self.clipboard_metadata
         clipboard2 = self.clipboard_metadata
-        response = self.client.post(
-            self.sync_url,
+        response = self.sync_changes(
             [
-                generate_create_event(clipboard1["id"], CLIPBOARD, clipboard1),
-                generate_create_event(clipboard2["id"], CLIPBOARD, clipboard2),
+                generate_create_event(clipboard1["id"], CLIPBOARD, clipboard1, user_id=self.user.id),
+                generate_create_event(clipboard2["id"], CLIPBOARD, clipboard2, user_id=self.user.id),
             ],
-            format="json",
         )
         self.assertEqual(response.status_code, 200, response.content)
         try:
@@ -139,16 +132,15 @@ class SyncTestCase(StudioAPITestCase):
         node_id1 = uuid.uuid4().hex
 
         self.client.force_authenticate(user=self.user)
-        response = self.client.post(
-            self.sync_url,
+        response = self.sync_changes(
             [
                 generate_update_event(
                     clipboard.id,
                     CLIPBOARD,
                     {"extra_fields.excluded_descendants.{}".format(node_id1): True},
+                    user_id=self.user.id,
                 )
             ],
-            format="json",
         )
         self.assertEqual(response.status_code, 200, response.content)
         self.assertTrue(
@@ -159,16 +151,15 @@ class SyncTestCase(StudioAPITestCase):
 
         node_id2 = uuid.uuid4().hex
 
-        response = self.client.post(
-            self.sync_url,
+        response = self.sync_changes(
             [
                 generate_update_event(
                     clipboard.id,
                     CLIPBOARD,
                     {"extra_fields.excluded_descendants.{}".format(node_id2): True},
+                    user_id=self.user.id,
                 )
             ],
-            format="json",
         )
         self.assertEqual(response.status_code, 200, response.content)
         self.assertTrue(
@@ -186,10 +177,8 @@ class SyncTestCase(StudioAPITestCase):
         clipboard = models.ContentNode.objects.create(**self.clipboard_db_metadata)
 
         self.client.force_authenticate(user=self.user)
-        response = self.client.post(
-            self.sync_url,
-            [generate_delete_event(clipboard.id, CLIPBOARD)],
-            format="json",
+        response = self.sync_changes(
+            [generate_delete_event(clipboard.id, CLIPBOARD, user_id=self.user.id)],
         )
         self.assertEqual(response.status_code, 200, response.content)
         try:
@@ -204,13 +193,11 @@ class SyncTestCase(StudioAPITestCase):
         clipboard2 = models.ContentNode.objects.create(**self.clipboard_db_metadata)
 
         self.client.force_authenticate(user=self.user)
-        response = self.client.post(
-            self.sync_url,
+        response = self.sync_changes(
             [
-                generate_delete_event(clipboard1.id, CLIPBOARD),
-                generate_delete_event(clipboard2.id, CLIPBOARD),
+                generate_delete_event(clipboard1.id, CLIPBOARD, user_id=self.user.id),
+                generate_delete_event(clipboard2.id, CLIPBOARD, user_id=self.user.id),
             ],
-            format="json",
         )
         self.assertEqual(response.status_code, 200, response.content)
         try:

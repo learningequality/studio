@@ -1,18 +1,33 @@
 import { SharingPermissions } from 'shared/constants';
 
+function mapChannel(state, channel) {
+  return channel
+    ? {
+        ...channel,
+        bookmark: Boolean(state.bookmarksMap[channel.id]),
+      }
+    : channel;
+}
+
 export function channels(state) {
-  return Object.values(state.channelsMap);
+  return Object.values(state.channelsMap).map(channel => mapChannel(state, channel));
 }
 
 export function getChannel(state) {
   return function(channelId) {
-    return state.channelsMap[channelId];
+    return mapChannel(state, state.channelsMap[channelId]);
   };
 }
 
 export function getChannels(state) {
   return function(channelIds) {
-    return channelIds.map(key => state.channelsMap[key]).filter(channel => channel);
+    return channelIds.map(key => getChannel(state)(key)).filter(channel => channel);
+  };
+}
+
+export function getBookmarkedChannels(state) {
+  return function() {
+    return getChannels(state)(Object.keys(state.bookmarksMap));
   };
 }
 

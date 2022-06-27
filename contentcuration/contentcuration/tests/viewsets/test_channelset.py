@@ -7,16 +7,14 @@ from django.urls import reverse
 from contentcuration import models
 from contentcuration.tests import testdata
 from contentcuration.tests.base import StudioAPITestCase
+from contentcuration.tests.viewsets.base import generate_create_event
+from contentcuration.tests.viewsets.base import generate_delete_event
+from contentcuration.tests.viewsets.base import generate_update_event
+from contentcuration.tests.viewsets.base import SyncTestMixin
 from contentcuration.viewsets.sync.constants import CHANNELSET
-from contentcuration.viewsets.sync.utils import generate_create_event
-from contentcuration.viewsets.sync.utils import generate_delete_event
-from contentcuration.viewsets.sync.utils import generate_update_event
 
 
-class SyncTestCase(StudioAPITestCase):
-    @property
-    def sync_url(self):
-        return reverse("sync")
+class SyncTestCase(StudioAPITestCase, SyncTestMixin):
 
     @property
     def channelset_metadata(self):
@@ -42,10 +40,8 @@ class SyncTestCase(StudioAPITestCase):
     def test_create_channelset(self):
         self.client.force_authenticate(user=self.user)
         channelset = self.channelset_metadata
-        response = self.client.post(
-            self.sync_url,
-            [generate_create_event(channelset["id"], CHANNELSET, channelset)],
-            format="json",
+        response = self.sync_changes(
+            [generate_create_event(channelset["id"], CHANNELSET, channelset, user_id=self.user.id)],
         )
         self.assertEqual(response.status_code, 200, response.content)
         try:
@@ -57,13 +53,11 @@ class SyncTestCase(StudioAPITestCase):
         self.client.force_authenticate(user=self.user)
         channelset1 = self.channelset_metadata
         channelset2 = self.channelset_metadata
-        response = self.client.post(
-            self.sync_url,
+        response = self.sync_changes(
             [
-                generate_create_event(channelset1["id"], CHANNELSET, channelset1,),
-                generate_create_event(channelset2["id"], CHANNELSET, channelset2,),
+                generate_create_event(channelset1["id"], CHANNELSET, channelset1, user_id=self.user.id),
+                generate_create_event(channelset2["id"], CHANNELSET, channelset2, user_id=self.user.id),
             ],
-            format="json",
         )
         self.assertEqual(response.status_code, 200, response.content)
         try:
@@ -82,10 +76,8 @@ class SyncTestCase(StudioAPITestCase):
         channelset.editors.add(self.user)
 
         self.client.force_authenticate(user=self.user)
-        response = self.client.post(
-            self.sync_url,
-            [generate_update_event(channelset.id, CHANNELSET, {"channels": {}},)],
-            format="json",
+        response = self.sync_changes(
+            [generate_update_event(channelset.id, CHANNELSET, {"channels": {}}, user_id=self.user.id)],
         )
         self.assertEqual(response.status_code, 200, response.content)
         self.assertFalse(
@@ -102,13 +94,11 @@ class SyncTestCase(StudioAPITestCase):
         channelset2.editors.add(self.user)
 
         self.client.force_authenticate(user=self.user)
-        response = self.client.post(
-            self.sync_url,
+        response = self.sync_changes(
             [
-                generate_update_event(channelset1.id, CHANNELSET, {"channels": {}},),
-                generate_update_event(channelset2.id, CHANNELSET, {"channels": {}},),
+                generate_update_event(channelset1.id, CHANNELSET, {"channels": {}}, user_id=self.user.id),
+                generate_update_event(channelset2.id, CHANNELSET, {"channels": {}}, user_id=self.user.id),
             ],
-            format="json",
         )
         self.assertEqual(response.status_code, 200, response.content)
         self.assertFalse(
@@ -127,10 +117,8 @@ class SyncTestCase(StudioAPITestCase):
         channelset = models.ChannelSet.objects.create(**self.channelset_db_metadata)
         channelset.editors.add(self.user)
         self.client.force_authenticate(user=self.user)
-        response = self.client.post(
-            self.sync_url,
-            [generate_update_event(channelset.id, CHANNELSET, {},)],
-            format="json",
+        response = self.sync_changes(
+            [generate_update_event(channelset.id, CHANNELSET, {}, user_id=self.user.id)],
         )
         self.assertEqual(response.status_code, 200, response.content)
 
@@ -139,14 +127,12 @@ class SyncTestCase(StudioAPITestCase):
         channelset = models.ChannelSet.objects.create(**self.channelset_db_metadata)
         channelset.editors.add(self.user)
         self.client.force_authenticate(user=self.user)
-        response = self.client.post(
-            self.sync_url,
+        response = self.sync_changes(
             [
                 generate_update_event(
-                    channelset.id, CHANNELSET, {"not_a_field": "not_a_value"},
+                    channelset.id, CHANNELSET, {"not_a_field": "not_a_value"}, user_id=self.user.id
                 )
             ],
-            format="json",
         )
         self.assertEqual(response.status_code, 200, response.content)
 
@@ -160,16 +146,15 @@ class SyncTestCase(StudioAPITestCase):
         channel1.save()
 
         self.client.force_authenticate(user=self.user)
-        response = self.client.post(
-            self.sync_url,
+        response = self.sync_changes(
             [
                 generate_update_event(
                     channelset.id,
                     CHANNELSET,
                     {"channels.{}".format(channel1.id): True},
+                    user_id=self.user.id
                 )
             ],
-            format="json",
         )
         self.assertEqual(response.status_code, 200, response.content)
         self.assertTrue(
@@ -181,16 +166,15 @@ class SyncTestCase(StudioAPITestCase):
         channel2 = testdata.channel()
         channel2.viewers.add(self.user)
 
-        response = self.client.post(
-            self.sync_url,
+        response = self.sync_changes(
             [
                 generate_update_event(
                     channelset.id,
                     CHANNELSET,
                     {"channels.{}".format(channel2.id): True},
+                    user_id=self.user.id
                 )
             ],
-            format="json",
         )
         self.assertEqual(response.status_code, 200, response.content)
         self.assertTrue(
@@ -204,16 +188,15 @@ class SyncTestCase(StudioAPITestCase):
             .exists()
         )
 
-        response = self.client.post(
-            self.sync_url,
+        response = self.sync_changes(
             [
                 generate_update_event(
                     channelset.id,
                     CHANNELSET,
                     {"channels.{}".format(channel2.id): None},
+                    user_id=self.user.id
                 )
             ],
-            format="json",
         )
         self.assertEqual(response.status_code, 200, response.content)
         self.assertTrue(
@@ -236,18 +219,18 @@ class SyncTestCase(StudioAPITestCase):
         channel1.save()
 
         self.client.force_authenticate(user=self.user)
-        response = self.client.post(
-            self.sync_url,
+        response = self.sync_changes(
             [
                 generate_update_event(
                     channelset.id,
                     CHANNELSET,
                     {"channels.{}".format(channel1.id): True},
+                    user_id=self.user.id
                 )
             ],
-            format="json",
         )
-        self.assertEqual(response.status_code, 400, response.content)
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(len(response.data["errors"]), 1, response.content)
         self.assertFalse(
             models.ChannelSet.objects.get(id=channelset.id)
             .secret_token.channels.filter(id=channel1.id)
@@ -260,10 +243,8 @@ class SyncTestCase(StudioAPITestCase):
         channelset.editors.add(self.user)
 
         self.client.force_authenticate(user=self.user)
-        response = self.client.post(
-            self.sync_url,
-            [generate_delete_event(channelset.id, CHANNELSET,)],
-            format="json",
+        response = self.sync_changes(
+            [generate_delete_event(channelset.id, CHANNELSET, user_id=self.user.id)],
         )
         self.assertEqual(response.status_code, 200, response.content)
         try:
@@ -279,13 +260,11 @@ class SyncTestCase(StudioAPITestCase):
         channelset2.editors.add(self.user)
 
         self.client.force_authenticate(user=self.user)
-        response = self.client.post(
-            self.sync_url,
+        response = self.sync_changes(
             [
-                generate_delete_event(channelset1.id, CHANNELSET,),
-                generate_delete_event(channelset2.id, CHANNELSET,),
+                generate_delete_event(channelset1.id, CHANNELSET, user_id=self.user.id),
+                generate_delete_event(channelset2.id, CHANNELSET, user_id=self.user.id),
             ],
-            format="json",
         )
         self.assertEqual(response.status_code, 200, response.content)
         try:

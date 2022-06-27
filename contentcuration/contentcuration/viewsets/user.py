@@ -258,7 +258,7 @@ class ChannelUserViewSet(ReadOnlyValuesViewset):
             change.update({"errors": ValidationError("Not found").detail})
             errors.append(change)
 
-        return errors or None, None
+        return errors or None
 
     def create_from_changes(self, changes):
         return self._handle_relationship_changes(changes)

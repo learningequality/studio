@@ -10,6 +10,8 @@ from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import ValuesViewset
 from contentcuration.viewsets.common import UserFilteredPrimaryKeyRelatedField
+from contentcuration.viewsets.sync.constants import INVITATION
+from contentcuration.viewsets.sync.utils import generate_update_event
 
 
 class InvitationSerializer(BulkModelSerializer):
@@ -51,6 +53,16 @@ class InvitationSerializer(BulkModelSerializer):
 
         if accepted and not revoked:
             instance.accept()
+            self.changes.append(
+                generate_update_event(
+                    instance.id,
+                    INVITATION,
+                    {
+                        "accepted": True,
+                    },
+                    channel_id=instance.channel_id,
+                )
+            )
 
         return instance
 
