@@ -34,8 +34,8 @@ def create_user(self):
 class WebsocketTestCase(TestCase):
     @pytest.mark.asyncio
     async def test_websocket_connection(self):
-        create_user()
-        self.client.force_login(username="mrtest@testy.com", password="password")
+        user = create_user()
+        self.client.force_login(user)
         headers = [(b'origin', b'...'), (b'cookie', self.client.cookies.output(header='', sep='; ').encode())]
         communicator = WebsocketCommunicator(application, '/ws/sync_socket/12312312312123/', headers)
         connected, subprotocol = await communicator.connect()

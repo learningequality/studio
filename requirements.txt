@@ -4,14 +4,29 @@
 #
 #    pip-compile requirements.in
 #
+aioredis==1.3.1
+    # via channels-redis
 amqp==2.6.1
     # via kombu
 asgiref==3.3.4
-    # via django
+    # via
+    #   channels
+    #   channels-redis
+    #   daphne
+    #   django
+async-timeout==4.0.2
+    # via aioredis
 attrs==19.3.0
     # via
     #   -r requirements.in
+    #   automat
     #   jsonschema
+    #   service-identity
+    #   twisted
+autobahn==21.2.1
+    # via daphne
+automat==20.2.0
+    # via twisted
 backoff==1.10.0
     # via -r requirements.in
 backports-abc==0.5
@@ -33,25 +48,28 @@ certifi==2020.12.5
     #   requests
     #   sentry-sdk
 cffi==1.14.5
-    # via google-crc32c
+    # via
+    #   cryptography
+    #   google-crc32c
+channels-redis==3.3.1
+    # via -r requirements.in
+channels==3.0.4
+    # via
+    #   -r requirements.in
+    #   channels-redis
 chardet==4.0.0
     # via requests
 confusable-homoglyphs==3.2.0
     # via django-registration
-django==3.2.13
+constantly==15.1.0
+    # via twisted
+cryptography==37.0.2
     # via
-    #   -r requirements.in
-    #   django-bulk-update
-    #   django-db-readonly
-    #   django-filter
-    #   django-js-reverse
-    #   django-model-utils
-    #   django-mptt
-    #   django-redis
-    #   django-registration
-    #   django-s3-storage
-    #   djangorestframework
-    #   jsonfield
+    #   autobahn
+    #   pyopenssl
+    #   service-identity
+daphne==3.0.2
+    # via channels
 django-bulk-update==2.2.0
     # via -r requirements.in
 django-cte==1.1.5
@@ -82,6 +100,21 @@ django-s3-storage==0.13.4
     # via -r requirements.in
 django-webpack-loader==0.7.0
     # via -r requirements.in
+django==3.2.13
+    # via
+    #   -r requirements.in
+    #   channels
+    #   django-bulk-update
+    #   django-db-readonly
+    #   django-filter
+    #   django-js-reverse
+    #   django-model-utils
+    #   django-mptt
+    #   django-redis
+    #   django-registration
+    #   django-s3-storage
+    #   djangorestframework
+    #   jsonfield
 djangorestframework==3.12.4
     # via -r requirements.in
 future==0.18.2
@@ -95,6 +128,10 @@ google-api-core[grpc]==1.27.0
     #   google-cloud-logging
 google-api-python-client==2.4.0
     # via -r requirements.in
+google-auth-httplib2==0.1.0
+    # via google-api-python-client
+google-auth-oauthlib==0.4.4
+    # via gspread
 google-auth==1.30.0
     # via
     #   google-api-core
@@ -104,10 +141,6 @@ google-auth==1.30.0
     #   google-cloud-core
     #   google-cloud-storage
     #   gspread
-google-auth-httplib2==0.1.0
-    # via google-api-python-client
-google-auth-oauthlib==0.4.4
-    # via gspread
 google-cloud-core==1.6.0
     # via
     #   -r requirements.in
@@ -140,6 +173,8 @@ gspread==3.6.0
     # via -r requirements.in
 gunicorn==19.6.0
     # via -r requirements.in
+hiredis==2.0.0
+    # via aioredis
 html5lib==1.1
     # via -r requirements.in
 httplib2==0.19.1
@@ -148,10 +183,22 @@ httplib2==0.19.1
     #   google-api-python-client
     #   google-auth-httplib2
     #   oauth2client
+hyperlink==21.0.0
+    # via
+    #   autobahn
+    #   twisted
 idna==2.10
-    # via requests
+    # via
+    #   hyperlink
+    #   requests
+    #   twisted
 importlib-metadata==1.7.0
-    # via -r requirements.in
+    # via
+    #   -r requirements.in
+    #   jsonschema
+    #   kombu
+incremental==21.3.0
+    # via twisted
 jmespath==0.10.0
     # via
     #   boto3
@@ -164,6 +211,8 @@ kombu==4.6.11
     # via celery
 le-utils==0.1.40
     # via -r requirements.in
+msgpack==1.0.4
+    # via channels-redis
 newrelic==6.2.0.156
     # via -r requirements.in
 oauth2client==4.1.3
@@ -191,19 +240,23 @@ protobuf==3.17.0
     #   proto-plus
 psycopg2-binary==2.8.6
     # via -r requirements.in
+pyasn1-modules==0.2.8
+    # via
+    #   google-auth
+    #   oauth2client
+    #   service-identity
 pyasn1==0.4.8
     # via
     #   oauth2client
     #   pyasn1-modules
     #   rsa
-pyasn1-modules==0.2.8
-    # via
-    #   google-auth
-    #   oauth2client
+    #   service-identity
 pycountry==17.5.14
     # via -r requirements.in
 pycparser==2.20
     # via cffi
+pyopenssl==22.0.0
+    # via twisted
 pyparsing==2.4.7
     # via
     #   httplib2
@@ -230,6 +283,8 @@ redis==3.5.3
     # via
     #   -r requirements.in
     #   django-redis
+requests-oauthlib==1.3.0
+    # via google-auth-oauthlib
 requests==2.25.1
     # via
     #   -r requirements.in
@@ -237,8 +292,6 @@ requests==2.25.1
     #   google-cloud-storage
     #   gspread
     #   requests-oauthlib
-requests-oauthlib==1.3.0
-    # via google-auth-oauthlib
 rsa==4.7.2
     # via
     #   google-auth
@@ -247,8 +300,11 @@ s3transfer==0.4.2
     # via boto3
 sentry-sdk==1.1.0
     # via -r requirements.in
+service-identity==21.1.0
+    # via twisted
 six==1.16.0
     # via
+    #   automat
     #   google-api-core
     #   google-api-python-client
     #   google-auth
@@ -263,8 +319,18 @@ six==1.16.0
     #   protobuf
     #   python-dateutil
     #   python-utils
+    #   service-identity
 sqlparse==0.4.1
     # via django
+twisted[tls]==22.4.0
+    # via daphne
+txaio==22.2.1
+    # via autobahn
+typing-extensions==4.1.1
+    # via
+    #   asgiref
+    #   async-timeout
+    #   twisted
 uritemplate==3.0.1
     # via google-api-python-client
 urllib3==1.26.5
@@ -280,6 +346,8 @@ webencodings==0.5.1
     # via html5lib
 zipp==3.4.1
     # via importlib-metadata
+zope.interface==5.4.0
+    # via twisted
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools
