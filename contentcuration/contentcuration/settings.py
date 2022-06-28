@@ -86,6 +86,7 @@ INSTALLED_APPS = (
     'webpack_loader',
     'django_filters',
     'mathfilters',
+    'channels',
 )
 
 SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"
@@ -201,7 +202,17 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'contentcuration.wsgi.application'
+ASGI_APPLICATION = 'contentcuration.asgi.application'
 
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [('127.0.0.1', 6379)],
+        },
+    },
+}
 
 # Database
 # https://docs.djangoproject.com/en/1.8/ref/settings/#databases

@@ -1,24 +1,25 @@
 import debounce from 'lodash/debounce';
 import findLastIndex from 'lodash/findLastIndex';
 import get from 'lodash/get';
-import pick from 'lodash/pick';
 import orderBy from 'lodash/orderBy';
+import pick from 'lodash/pick';
 import uniq from 'lodash/uniq';
-import applyChanges from './applyRemoteChanges';
-import { hasActiveLocks, cleanupLocks } from './changes';
 import {
+  ACTIVE_CHANNELS,
+  CHANGES_TABLE,
   CHANGE_LOCKS_TABLE,
   CHANGE_TYPES,
-  CHANGES_TABLE,
-  IGNORED_SOURCE,
   CHANNEL_SYNC_KEEP_ALIVE_INTERVAL,
-  ACTIVE_CHANNELS,
+  IGNORED_SOURCE,
   MAX_REV_KEY,
 } from './constants';
+import { Channel, Session, Task } from './resources';
+import { cleanupLocks, hasActiveLocks } from './changes';
+
+import { INDEXEDDB_RESOURCES } from './registry';
+import applyChanges from './applyRemoteChanges';
 import db from './db';
 import mergeAllChanges from './mergeChanges';
-import { INDEXEDDB_RESOURCES } from './registry';
-import { Channel, Session, Task } from './resources';
 import client from 'shared/client';
 import urls from 'shared/urls';
 
@@ -336,12 +337,33 @@ async function handleChanges(changes) {
   }
 }
 
+function initializeWebsockets() {
+  // Create WebSocket connection.
+  const socket = new WebSocket('ws://localhost:8080/ws/sync_socket/12312312312123/');
+  socket.onopen = function() {
+    console.log('WebSocket connection opened.');
+    console.log(window.CHANNEL_EDIT_GLOBAL['channel_id']);
+  };
+
+  // Connection opened
+  socket.addEventListener('open', function(event) {
+    socket.send('Hello Server!');
+    console.log(event);
+  });
+
+  // Listen for messages
+  socket.addEventListener('message', function(event) {
+    console.log('Message from server ', event.data);
+  });
+}
+
 let intervalTimer;
 
 export function startSyncing() {
   cleanupLocks();
   // Initiate a sync immediately in case any data
   // is left over in the database.
+  initializeWebsockets();
   debouncedSyncChanges();
   // Start the sync interval
   intervalTimer = setInterval(debouncedSyncChanges, SYNC_POLL_INTERVAL * 1000);
