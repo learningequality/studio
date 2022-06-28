@@ -77,8 +77,8 @@ class CeleryTask(Task):
     track_progress = False
 
     # ensure our tasks are restarted if they're interrupted
-    acks_late = True
-    acks_on_failure_or_timeout = True
+    acks_late = False
+    acks_on_failure_or_timeout = False
     reject_on_worker_lost = True
 
     _progress_tracker = None
