@@ -342,6 +342,8 @@ IGNORABLE_404_URLS = [
 
 # CELERY CONFIGURATIONS
 CELERY_BROKER_URL = REDIS_URL
+# with a redis broker, tasks will be re-sent if not completed within the duration of this timeout
+CELERY_BROKER_TRANSPORT_OPTIONS = {'visibility_timeout': 4 * 3600}
 CELERY_RESULT_BACKEND = REDIS_URL
 CELERY_REDIS_DB = os.getenv("CELERY_REDIS_DB") or "0"
 CELERY_BROKER_URL = "{url}{db}".format(
