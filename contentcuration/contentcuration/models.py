@@ -226,6 +226,9 @@ class User(AbstractBaseUser, PermissionsMixin):
         return Channel.filter_edit_queryset(Channel.objects.all(), self).filter(pk=channel_id).exists()
 
     def check_space(self, size, checksum):
+        if self.is_admin:
+            return True
+        
         active_files = self.get_user_active_files()
         if active_files.filter(checksum=checksum).exists():
             return True
