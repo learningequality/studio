@@ -258,8 +258,15 @@ class ThresholdField(Field):
         try:
             data = int(data)
         except(ValueError, TypeError):
-            pass
+            if not isinstance(data, (str, dict)):
+                self.fail("Must be either an integer, string or dictionary")
         return data
+
+    def update(self, instance, validated_data):
+        if isinstance(instance, dict) and isinstance(validated_data, dict):
+            instance.update(validated_data)
+            return instance
+        return validated_data
 
 
 class CompletionCriteriaSerializer(JSONFieldDictSerializer):
