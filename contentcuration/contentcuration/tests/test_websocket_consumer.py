@@ -1,44 +1,31 @@
 import os
 
 import pytest
-from channels.auth import AuthMiddlewareStack
-from channels.db import database_sync_to_async
-from channels.routing import URLRouter
 from channels.testing import WebsocketCommunicator
-from django.test import TestCase
-from django.urls import re_path
+from django.core.management import call_command
+from django.test import TransactionTestCase
 
-from ..viewsets.websockets.consumers import SyncConsumer
-from contentcuration.models import User
-# from .base import BaseAPITestCase
-
-application = AuthMiddlewareStack(
-    URLRouter([
-        re_path(r'ws/sync_socket/(?P<channel_id>\w+)/$', SyncConsumer.as_asgi()),
-    ])
-)
+from contentcuration.asgi import application
+from contentcuration.tests import testdata
 
 os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
 
 
-@database_sync_to_async
-def create_user(self):
-    user = User.objects.create(
-        email="mrtest@testy.com",
-    )
-    user.set_password("password")
-    user.save()
-    return user
+class WebsocketTestCase(TransactionTestCase):
+    serialized_rollback = True
 
+    def setUp(self):
+        call_command("loadconstants")
+        self.user = testdata.user("mrtest@testy.com")
 
-class WebsocketTestCase(TestCase):
+    def tearDown(self):
+        self.user.delete()
+
     @pytest.mark.asyncio
-    async def test_websocket_connection(self):
-        user = create_user()
-        self.client.force_login(user)
-        headers = [(b'origin', b'...'), (b'cookie', self.client.cookies.output(header='', sep='; ').encode())]
-        communicator = WebsocketCommunicator(application, '/ws/sync_socket/12312312312123/', headers)
-        connected, subprotocol = await communicator.connect()
+    async def test_authenticated_user_websocket_connection(self):
+        self.client.force_login(self.user)
+        headers = [(b'cookie', self.client.cookies.output(attrs=["value"], header='', sep='; ').encode())]
+        communicator = WebsocketCommunicator(application, 'ws/sync_socket/12312312312123/', headers)
+        connected = await communicator.connect()
         assert connected
-        # Close
         await communicator.disconnect()

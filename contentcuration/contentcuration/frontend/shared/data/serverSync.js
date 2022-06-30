@@ -339,7 +339,7 @@ async function handleChanges(changes) {
 
 function initializeWebsockets() {
   // Create WebSocket connection.
-  const socket = new WebSocket('ws://localhost:8080/ws/sync_socket/12312312312123/');
+  const socket = new WebSocket('ws://' + window.location.host + '/ws/sync_socket/12312312312123/');
   socket.onopen = function() {
     console.log('WebSocket connection opened.');
     console.log(window.CHANNEL_EDIT_GLOBAL['channel_id']);
