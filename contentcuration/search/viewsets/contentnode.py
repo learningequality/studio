@@ -13,18 +13,19 @@ from django_filters.rest_framework import BooleanFilter
 from django_filters.rest_framework import CharFilter
 from le_utils.constants import content_kinds
 from le_utils.constants import roles
+from rest_framework.permissions import IsAuthenticated
 
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
 from contentcuration.models import File
 from contentcuration.utils.pagination import CachedListPagination
 from contentcuration.viewsets.base import RequiredFilterSet
+from contentcuration.viewsets.base import ValuesViewset
 from contentcuration.viewsets.common import NotNullMapArrayAgg
 from contentcuration.viewsets.common import SQArrayAgg
 from contentcuration.viewsets.common import SQCount
 from contentcuration.viewsets.common import UUIDFilter
 from contentcuration.viewsets.common import UUIDInFilter
-from contentcuration.viewsets.contentnode import ContentNodeViewSet
 
 
 class ListPagination(CachedListPagination):
@@ -65,9 +66,11 @@ class ContentNodeFilter(RequiredFilterSet):
 
     def filter_keywords(self, queryset, name, value):
         filter_query = Q(title__icontains=value) | Q(description__icontains=value)
+
         tags_node_ids = ContentNode.tags.through.objects.filter(
             contenttag__tag_name__icontains=value
-        ).values_list("contentnode_id", flat=True)[:250]
+        ).values_list("contentnode_id", flat=True)
+
         # Check if we have a Kolibri node id or ids and add them to the search if so.
         # Add to, rather than replace, the filters so that we never misinterpret a search term as a UUID.
         # node_ids = uuid_re.findall(value) + list(tags_node_ids)
@@ -77,10 +80,8 @@ class ContentNodeFilter(RequiredFilterSet):
             filter_query |= Q(node_id=node_id)
             filter_query |= Q(content_id=node_id)
             filter_query |= Q(id=node_id)
-        for node_id in tags_node_ids:
-            filter_query |= Q(id=node_id)
 
-        return queryset.filter(filter_query)
+        return queryset.filter(Q(id__in=list(tags_node_ids)) | filter_query)
 
     def filter_author(self, queryset, name, value):
         return queryset.filter(
@@ -130,9 +131,11 @@ class ContentNodeFilter(RequiredFilterSet):
         )
 
 
-class SearchContentNodeViewSet(ContentNodeViewSet):
+class SearchContentNodeViewSet(ValuesViewset):
+    queryset = ContentNode.objects.all()
     filterset_class = ContentNodeFilter
     pagination_class = ListPagination
+    permission_classes = [IsAuthenticated]
     values = (
         "id",
         "content_id",
@@ -162,7 +165,7 @@ class SearchContentNodeViewSet(ContentNodeViewSet):
         2. Annotate lists of content node and channel pks
         """
         # Get accessible content nodes that match the content id
-        content_id_query = queryset.filter(
+        content_id_query = ContentNode.filter_view_queryset(ContentNode.objects.all(), self.request.user).filter(
             content_id=OuterRef("content_id")
         )
 
