@@ -30,7 +30,7 @@ const SYNC_IF_NO_CHANGES_FOR = 2;
 // When this many seconds pass, repoll the backend to
 // check for any updates to active channels, or the user and sync any current changes
 const SYNC_POLL_INTERVAL = 5;
-
+let socket;
 // Flag to check if a sync is currently active.
 let syncActive = false;
 
@@ -275,6 +275,13 @@ async function syncChanges() {
     //   "errors": [],
     //   "successes": [],
     // }
+    if (requestPayload.changes.length != 0) {
+      socket.send(
+        JSON.stringify({
+          payload: requestPayload,
+        })
+      );
+    }
     const response = await client.post(urls['sync'](), requestPayload);
     try {
       await Promise.all([
@@ -337,33 +344,13 @@ async function handleChanges(changes) {
   }
 }
 
-function initializeWebsockets() {
-  // Create WebSocket connection.
-  const socket = new WebSocket('ws://' + window.location.host + '/ws/sync_socket/12312312312123/');
-  socket.onopen = function() {
-    console.log('WebSocket connection opened.');
-    console.log(window.CHANNEL_EDIT_GLOBAL['channel_id']);
-  };
-
-  // Connection opened
-  socket.addEventListener('open', function(event) {
-    socket.send('Hello Server!');
-    console.log(event);
-  });
-
-  // Listen for messages
-  socket.addEventListener('message', function(event) {
-    console.log('Message from server ', event.data);
-  });
-}
-
 let intervalTimer;
 
 export function startSyncing() {
   cleanupLocks();
   // Initiate a sync immediately in case any data
   // is left over in the database.
-  initializeWebsockets();
+  socket = new WebSocket('ws://' + window.location.host + '/ws/sync_socket/12312312312123/');
   debouncedSyncChanges();
   // Start the sync interval
   intervalTimer = setInterval(debouncedSyncChanges, SYNC_POLL_INTERVAL * 1000);
