@@ -59,7 +59,7 @@
   import { constantsTranslationMixin } from 'shared/mixins';
 
   export default {
-    name: 'MasteryCriteriaMofN',
+    name: 'MasteryCriteriaMofNFields',
     mixins: [constantsTranslationMixin],
     props: {
       value: {

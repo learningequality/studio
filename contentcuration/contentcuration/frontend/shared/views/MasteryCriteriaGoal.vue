@@ -79,7 +79,7 @@
           return this.value && this.value.mastery_model;
         },
         set(mastery_model) {
-          if (mastery_model !== 'm of n') {
+          if (mastery_model !== MasteryModelsNames.M_OF_N) {
             this.handleInput({ mastery_model });
           }
         },
