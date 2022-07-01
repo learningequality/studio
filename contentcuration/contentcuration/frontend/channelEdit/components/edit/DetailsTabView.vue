@@ -110,6 +110,21 @@
       </VLayout>
 
       <!-- Completion section -->
+      <!-- Assessment options -->
+      <VLayout v-if="allExercises" row wrap class="section">
+        <VFlex xs12>
+          <h1 class="subheading">
+            {{ $tr('assessmentOptionsLabel') }}
+          </h1>
+          <!-- Randomize question order -->
+          <Checkbox
+            ref="randomize"
+            v-model="randomizeOrder"
+            :label="$tr('randomizeQuestionLabel')"
+            :indeterminate="!isUnique(randomizeOrder)"
+          />
+        </VFlex>
+      </VLayout>
       <VLayout row wrap class="section">
         <VFlex xs12>
           <h1 class="subheading">
@@ -129,47 +144,11 @@
             :kind="firstNode.kind"
             :fileDuration="fileDuration"
             :required="!isDocument"
+            :practiceQuizzesAllowed="allowChannelQuizzes"
           />
         </VFlex>
       </VLayout>
 
-      <!-- Assessment options -->
-      <VLayout v-if="allExercises" row wrap class="section">
-        <VFlex xs12>
-
-          <!-- Mastery -->
-          <!-- <MasteryDropdown
-            v-if="extra_fields"
-            ref="mastery_model"
-            v-model="masteryModelItem"
-            :placeholder="getPlaceholder('mastery_model')"
-            :required="isUnique(mastery_model)"
-            :mPlaceholder="getPlaceholder('m')"
-            :mRequired="isUnique(m)"
-            :nPlaceholder="getPlaceholder('n')"
-            :nRequired="isUnique(n)"
-            @focus="trackClick('Mastery model')"
-            @mFocus="trackClick('Mastery m value')"
-            @nFocus="trackClick('Mastery n value')"
-          /> -->
-
-          <!-- Randomize question order -->
-          <Checkbox
-            ref="randomize"
-            v-model="randomizeOrder"
-            :label="$tr('randomizeQuestionLabel')"
-            :indeterminate="!isUnique(randomizeOrder)"
-          />
-
-          <!-- Feature flag: Channel quizzes -->
-          <Checkbox
-            v-if="allowChannelQuizzes"
-            v-model="channelQuiz"
-            :label="$tr('channelQuizzesLabel')"
-            :indeterminate="!oneSelected"
-          />
-        </VFlex>
-      </VLayout>
 
       <!-- Thumbnail section -->
       <VLayout row wrap class="section">
@@ -598,16 +577,18 @@ export default {
       },
     },
     thumbnailEncoding: generateGetterSetter('thumbnail_encoding'),
-    channelQuiz: {
-      get() {
-        const options = this.getExtraFieldsValueFromNodes('options') || {};
-        return options.modality === ContentModalities.QUIZ;
-      },
-      set(val) {
-        const options = { modality: val ? ContentModalities.QUIZ : null };
-        this.updateExtraFields({ options });
-      },
-    },
+    // channelQuiz: {
+    //   get() {
+    //     const options = this.getExtraFieldsValueFromNodes('options') || {};
+    //     console.log('options.modality', options.modality)
+    //     return options.modality === ContentModalities.QUIZ;
+    //   },
+    //   set(val) {
+    //     const options = { modality: val ? ContentModalities.QUIZ : null };
+    //     console.log('options.modality set', options)
+    //     this.updateExtraFields({ options });
+    //   },
+    // },
     // TODO remove eslint disable when `completionCriteria` is utilized
     /* eslint-disable-next-line kolibri/vue-no-unused-properties */
     // masteryModelItem: {
@@ -623,44 +604,36 @@ export default {
     //     this.updateExtraFields(value);
     //   },
     // },
-    mastery_model() {
-      return this.getExtraFieldsValueFromNodes('mastery_model');
-    },
-    m() {
-      return this.getExtraFieldsValueFromNodes('m');
-    },
-    n() {
-      return this.getExtraFieldsValueFromNodes('n');
-    },
+    // mastery_model() {
+    //   return this.getExtraFieldsValueFromNodes('mastery_model');
+    // },
+    // m() {
+    //   return this.getExtraFieldsValueFromNodes('m');
+    // },
+    // n() {
+    //   return this.getExtraFieldsValueFromNodes('n');
+    // },
     completionAndDuration: {
       get() {
-        const options = this.getExtraFieldsValueFromNodes('options') || {};
+        const { completion_criteria, modality } =
+          this.getExtraFieldsValueFromNodes('options') || {};
         const suggested_duration_type =
           this.getExtraFieldsValueFromNodes('suggested_duration_type');
         const suggested_duration = this.getValueFromNodes('suggested_duration');
-        const mastery_model = this.mastery_model;
-        const m = this.m;
-        const n = this.n;
-        console.log(
-          {
-          mastery_model,
-          m,
-          n,
+        console.log({
           suggested_duration,
           suggested_duration_type,
-          ...(options.completion_criteria || {}),
-        }
-        )
+          modality,
+          ...(completion_criteria || {}),
+        });
         return {
-          mastery_model,
-          m,
-          n,
           suggested_duration,
           suggested_duration_type,
-          ...(options.completion_criteria || {}),
+          modality,
+          ...(completion_criteria || {}),
         };
       },
-      set({ completion_criteria, suggested_duration, suggested_duration_type, mastery_model, m, n }) {
+      set({ completion_criteria, suggested_duration, suggested_duration_type, modality }) {
         // TODO Remove validation if unnecessary after implementing `completionCriteria`
         // if (validateCompletionCriteria(completion_criteria)) {
         // const options = { completion_criteria };
@@ -668,14 +641,31 @@ export default {
         // } else {
         //   console.warn('Invalid completion criteria', [...validateCompletionCriteria.errors]);
         // }
-        if (completion_criteria) {
-          const options = { completion_criteria };
-          this.updateExtraFields({ options });
+        console.log('setter', {
+          completion_criteria,
+          suggested_duration,
+          suggested_duration_type,
+          modality,
+        });
+        // if (completion_criteria) {
+        //   const options = { completion_criteria };
+        //   console.log('updating options', options)
+        //   this.updateExtraFields({ options });
+        // }
+        // if (modality) {
+        //   const options = { modality };
+        //   console.log('updating options', options)
+        //   this.updateExtraFields({ options });
+        // }
+        const options = { completion_criteria, modality };
+        console.log('!!!!updating options', options);
+        if (modality) {
+          options.modality = modality;
         }
+
+        console.log('!!!!updating options.modality', options.modality);
+        this.updateExtraFields({ options });
         this.updateExtraFields({ suggested_duration_type });
-        this.updateExtraFields({ mastery_model });
-        this.updateExtraFields({ m });
-        this.updateExtraFields({ n });
         this.update({ suggested_duration });
       },
     },
@@ -729,6 +719,8 @@ export default {
       return !this.nodes.some((n) => n[NEW_OBJECT]);
     },
     allowChannelQuizzes() {
+      // return false;
+      // TODO: uncomment
       return this.$store.getters.hasFeatureEnabled(FeatureFlagKeys.channel_quizzes);
     },
     isDocument() {
@@ -878,8 +870,8 @@ export default {
     descriptionLabel: 'Description',
     tagsLabel: 'Tags',
     noTagsFoundText: 'No results found for "{text}". Press \'Enter\' key to create a new tag',
+    assessmentOptionsLabel: 'Assessment options',
     randomizeQuestionLabel: 'Randomize question order for learners',
-    channelQuizzesLabel: 'Allow as a channel quiz',
     completionLabel: 'Completion',
     learnersCanMarkComplete: 'Allow learners to mark as complete',
   },

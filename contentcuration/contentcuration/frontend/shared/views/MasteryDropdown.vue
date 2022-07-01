@@ -1,4 +1,5 @@
 <template>
+
   <!-- xs12 sm11 md10 lg9 xl8 -->
   <VFlex>
     <VLayout v-if="showMofN" class="mofn-options" row>
@@ -49,15 +50,12 @@
 <script>
 
   import {
-    getMasteryModelValidators,
+    // getMasteryModelValidators,
     getMasteryModelMValidators,
     getMasteryModelNValidators,
     translateValidator,
   } from '../utils/validation';
-  import MasteryModels, {
-    MasteryModelsList,
-    MasteryModelsNames,
-  } from 'shared/leUtils/MasteryModels';
+  import MasteryModels from 'shared/leUtils/MasteryModels'; // MasteryModelsNames, // MasteryModelsList,
   import { constantsTranslationMixin } from 'shared/mixins';
 
   export default {
@@ -79,10 +77,14 @@
       // placeholder: {
       //   type: String,
       // },
-      required: {
+      showMofN: {
         type: Boolean,
-        default: true,
+        default: false,
       },
+      // required: {
+      //   type: Boolean,
+      //   default: true,
+      // },
       readonly: {
         type: Boolean,
         default: false,
@@ -135,19 +137,15 @@
           this.handleInput(value < this.mValue ? { m: value, n: value } : { n: value });
         },
       },
-      masteryCriteria() {
-        return MasteryModelsList.map(model => ({
-          text: this.translateConstant(model),
-          value: model,
-        }));
-      },
-      showMofN() {
-        console.log('this.masteryModel', this.masteryModel)
-        return this.value.mastery_model === MasteryModelsNames.M_OF_N;
-      },
-      masteryRules() {
-        return this.required ? getMasteryModelValidators().map(translateValidator) : [];
-      },
+      // masteryCriteria() {
+      //   return MasteryModelsList.map(model => ({
+      //     text: this.translateConstant(model),
+      //     value: model,
+      //   }));
+      // },
+      // masteryRules() {
+      //   return this.required ? getMasteryModelValidators().map(translateValidator) : [];
+      // },
       mRules() {
         return this.mRequired
           ? getMasteryModelMValidators(this.nValue).map(translateValidator)
@@ -190,12 +188,6 @@
       },
     },
     $trs: {
-      labelText: 'Mastery criteria',
-      exerciseHeader: 'About exercises',
-      exerciseDescripiton:
-        'Exercises contain a set of interactive questions that a learner can engage with in Kolibri. Learners receive instant feedback for each answer (correct or incorrect). Kolibri will display available questions in an exercise until the learner achieves mastery.',
-      masteryDescripiton:
-        'Kolibri marks an exercise as "completed" when the mastery criteria is met. Here are the different types of mastery criteria for an exercise:',
       mHint: 'Correct answers needed',
       nHint: 'Recent answers',
     },

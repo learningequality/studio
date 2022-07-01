@@ -18,20 +18,7 @@
           menu-props="offsetY"
           class="mb-2"
           @focus="$emit('focus')"
-        >
-          <!-- <template #append-outer>
-            <InfoModal :header="$tr('exerciseHeader')" :items="masteryCriteria">
-              <p>{{ $tr('exerciseDescripiton') }}</p>
-              <p>{{ $tr('masteryDescripiton') }}</p>
-              <template #header="{ item }">
-                {{ translateConstant(item.value) }}
-              </template>
-              <template #description="{ item }">
-                {{ translateConstant(item.value + '_description') }}
-              </template>
-            </InfoModal>
-          </template> -->
-        </VSelect>
+        />
       </VFlex>
     </VLayout>
 
@@ -43,8 +30,6 @@
 
   import {
     getMasteryModelValidators,
-    getMasteryModelMValidators,
-    getMasteryModelNValidators,
     translateValidator,
   } from '../utils/validation';
   import MasteryModels, {
@@ -88,14 +73,6 @@
         type: Boolean,
         default: false,
       },
-      // mRequired: {
-      //   type: Boolean,
-      //   default: true,
-      // },
-      // nRequired: {
-      //   type: Boolean,
-      //   default: true,
-      // },
     },
     computed: {
       masteryModel: {
@@ -108,46 +85,15 @@
           }
         },
       },
-      // mValue: {
-      //   get() {
-      //     return this.value && this.value.m;
-      //   },
-      //   set(value) {
-      //     value = Number(value);
-      //     // Make sure n is always greater than or equal to m
-      //     this.handleInput(value > this.nValue ? { m: value, n: value } : { m: value });
-      //   },
-      // },
-      // nValue: {
-      //   get() {
-      //     return this.value && this.value.n;
-      //   },
-      //   set(value) {
-      //     value = Number(value);
-      //     // Make sure m is always less than or equal to n
-      //     this.handleInput(value < this.mValue ? { m: value, n: value } : { n: value });
-      //   },
-      // },
       masteryCriteria() {
         return MasteryModelsList.map(model => ({
           text: this.translateConstant(model),
           value: model,
         }));
       },
-      // showMofN() {
-      //   return this.masteryModel === MasteryModelsNames.M_OF_N;
-      // },
       masteryRules() {
         return this.required ? getMasteryModelValidators().map(translateValidator) : [];
       },
-      // mRules() {
-      //   return this.mRequired
-      //     ? getMasteryModelMValidators(this.nValue).map(translateValidator)
-      //     : [];
-      // },
-      // nRules() {
-      //   return this.nRequired ? getMasteryModelNValidators().map(translateValidator) : [];
-      // },
     },
     methods: {
       handleInput(newValue) {
@@ -158,39 +104,9 @@
         console.log('data', data)
         this.$emit('input', data);
       },
-      // isIntegerInput(evt) {
-      //   evt = evt ? evt : window.event;
-      //   var charCode = evt.which ? evt.which : evt.keyCode;
-      //   if (charCode > 31 && (charCode < 48 || charCode > 57) && charCode === 46) {
-      //     evt.preventDefault();
-      //   } else {
-      //     return true;
-      //   }
-      // },
-      // isIntegerPaste(evt) {
-      //   try {
-      //     let num = Number(evt.clipboardData.getData('Text'));
-      //     if (Number.isInteger(num) && num >= 0) {
-      //       return true;
-      //     } else {
-      //       evt.preventDefault();
-      //       return false;
-      //     }
-      //   } catch (_) {
-      //     evt.preventDefault();
-      //     return false;
-      //   }
-      // },
     },
     $trs: {
       labelText: 'Goal',
-      // exerciseHeader: 'About exercises',
-      // exerciseDescripiton:
-      //   'Exercises contain a set of interactive questions that a learner can engage with in Kolibri. Learners receive instant feedback for each answer (correct or incorrect). Kolibri will display available questions in an exercise until the learner achieves mastery.',
-      // masteryDescripiton:
-      //   'Kolibri marks an exercise as "completed" when the mastery criteria is met. Here are the different types of mastery criteria for an exercise:',
-      // mHint: 'Correct answers needed',
-      // nHint: 'Recent answers',
     },
   };
 

@@ -39,9 +39,15 @@ describe('CompletionOptions', () => {
       });
     });
     describe(`exercise`, () => {
-      it(`'Practice until goal is met' should be displayed by default if 'practice quiz' is enabled `, () => {});
-      it(`'Practice quiz' should be displayed if 'practice quiz' is enabled`, () => {});
-      it(`Completion dropdown should not be displayed if 'practice quiz' is not enabled`, () => {});
+      it(`'Practice until goal is met' should be displayed by default if 'practice quiz' is enabled `, () => {
+        //done
+      });
+      it(`'Practice quiz' should be displayed if 'practice quiz' is enabled`, () => {
+        //done
+      });
+      it(`Completion dropdown should not be displayed if 'practice quiz' is not enabled and M/N is default`, () => {
+        //done
+      });
     });
     describe(`html5 or h5p`, () => {
       it(`'Complete duration' should be displayed by default for html5`, () => {
