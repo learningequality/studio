@@ -1,5 +1,4 @@
 <template>
-  <!-- xs12 sm11 md10 lg9 xl8 -->
   <VFlex>
     <VLayout>
       <VFlex>

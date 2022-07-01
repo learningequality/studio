@@ -110,7 +110,6 @@
       </VLayout>
 
       <!-- Completion section -->
-      <!-- Assessment options -->
       <VLayout v-if="allExercises" row wrap class="section">
         <VFlex xs12>
           <h1 class="subheading">
@@ -148,7 +147,6 @@
           />
         </VFlex>
       </VLayout>
-
 
       <!-- Thumbnail section -->
       <VLayout row wrap class="section">
@@ -233,8 +231,6 @@
                 :text="$tr('importedFromButtonText', { channel: importedChannelName })"
               />
             </p>
-
-            <!-- Need to break up v-model to properly show placeholder -->
 
             <!-- Author -->
             <VCombobox
@@ -382,7 +378,7 @@ import LicenseDropdown from 'shared/views/LicenseDropdown';
 import VisibilityDropdown from 'shared/views/VisibilityDropdown';
 import Checkbox from 'shared/views/form/Checkbox';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
-import { NEW_OBJECT, FeatureFlagKeys, ContentModalities } from 'shared/constants';
+import { NEW_OBJECT, FeatureFlagKeys } from 'shared/constants';
 // import { validate as validateCompletionCriteria } from 'shared/leUtils/CompletionCriteria';
 import { constantsTranslationMixin, metadataTranslationMixin } from 'shared/mixins';
 
@@ -563,9 +559,6 @@ export default {
         this.update(value);
       },
     },
-    extra_fields() {
-      return this.getValueFromNodes('extra_fields');
-    },
     thumbnail: {
       get() {
         return this.nodeFiles.find((f) => f.preset.thumbnail);
@@ -575,42 +568,6 @@ export default {
       },
     },
     thumbnailEncoding: generateGetterSetter('thumbnail_encoding'),
-    // channelQuiz: {
-    //   get() {
-    //     const options = this.getExtraFieldsValueFromNodes('options') || {};
-    //     console.log('options.modality', options.modality)
-    //     return options.modality === ContentModalities.QUIZ;
-    //   },
-    //   set(val) {
-    //     const options = { modality: val ? ContentModalities.QUIZ : null };
-    //     console.log('options.modality set', options)
-    //     this.updateExtraFields({ options });
-    //   },
-    // },
-    // TODO remove eslint disable when `completionCriteria` is utilized
-    /* eslint-disable-next-line kolibri/vue-no-unused-properties */
-    // masteryModelItem: {
-    //   get() {
-    //     return {
-    //       mastery_model: this.mastery_model,
-    //       m: this.m,
-    //       n: this.n,
-    //     };
-    //   },
-    //   set(value) {
-    //     console.log('***value', value)
-    //     this.updateExtraFields(value);
-    //   },
-    // },
-    // mastery_model() {
-    //   return this.getExtraFieldsValueFromNodes('mastery_model');
-    // },
-    // m() {
-    //   return this.getExtraFieldsValueFromNodes('m');
-    // },
-    // n() {
-    //   return this.getExtraFieldsValueFromNodes('n');
-    // },
     completionAndDuration: {
       get() {
         const { completion_criteria, modality } =
@@ -645,23 +602,11 @@ export default {
           suggested_duration_type,
           modality,
         });
-        // if (completion_criteria) {
-        //   const options = { completion_criteria };
-        //   console.log('updating options', options)
-        //   this.updateExtraFields({ options });
-        // }
-        // if (modality) {
-        //   const options = { modality };
-        //   console.log('updating options', options)
-        //   this.updateExtraFields({ options });
-        // }
         const options = { completion_criteria, modality };
-        console.log('!!!!updating options', options);
         if (modality) {
           options.modality = modality;
         }
-
-        console.log('!!!!updating options.modality', options.modality);
+        console.log('!!!!updating options', options);
         this.updateExtraFields({ options });
         this.updateExtraFields({ suggested_duration_type });
         this.update({ suggested_duration });
@@ -724,7 +669,6 @@ export default {
     isDocument() {
       return this.firstNode.kind === 'document';
     },
-    // updateSuggestedDuration: generateGetterSetter('suggested_duration'),
   },
   watch: {
     nodes: {

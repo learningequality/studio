@@ -1,6 +1,6 @@
 <template>
   <div>
-    <!-- Layout for when practice quizzes are enabled -->
+    <!-- Layout when practice quizzes are enabled -->
     <VLayout v-if="showCompletionDropdown" xs6 md6>
       <!-- "Completion" dropdown menu  -->
       <VFlex xs6 md6 class="pr-2">
@@ -27,6 +27,7 @@
       </VFlex>
     </VLayout>
 
+    <!-- Layout when practice quizzes are not enabled -->
     <VLayout v-else xs6 md6>
       <VFlex xs6 md6 class="pr-2">
         <MasteryCriteriaGoal
@@ -67,23 +68,12 @@
           :required="required"
           @focus="trackClick('Duration')"
         />
-        <!-- v-if="durationRequired" -->
-        <!-- "Duration" dropdown menu w/clearble 'x' button -->
-        <!-- <VSelect
-          v-else
-          v-model="durationDropdown"
-          box
-          clearable
-          :items="durationOptions"
-          :label="translateMetadataString('duration')"
-          @focus="trackClick('Duration')"
-        /> -->
       </VFlex>
 
-      <!-- "Activity duration" input and details textbox -->
+      <!-- "Activity duration" minutes input -->
       <VFlex xs6 md6>
         <ActivityDuration
-          v-if="showActivityDurationDropdown"
+          v-if="showActivityDurationInput"
           v-model="minutes"
           :selectedDuration="currentDurationDropdown || durationDropdown"
           :duration="fileDuration"
@@ -103,7 +93,7 @@
 import ActivityDuration from './ActivityDuration.vue';
 import MasteryCriteriaGoal from 'shared/views/MasteryCriteriaGoal';
 import MasteryCriteriaMofNFields from 'shared/views/MasteryCriteriaMofNFields';
-import { CompletionCriteriaModels } from 'shared/constants';
+import { CompletionCriteriaModels, ContentModalities } from 'shared/constants';
 import {
   getCompletionValidators,
   // getDurationValidators,
@@ -219,7 +209,7 @@ export default {
         (this.value.model === 'reference' && this.currentCompletionDropdown !== 'completeDuration')
       );
     },
-    showActivityDurationDropdown() {
+    showActivityDurationInput() {
       const defaultStateWhenSwitchingfromAllContentViewedAndCompleteDuration =
         this.value.suggested_duration === null && this.value.suggested_duration_type === null;
       if (!this.audioVideoResource) {
