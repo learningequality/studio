@@ -350,7 +350,17 @@ export function startSyncing() {
   cleanupLocks();
   // Initiate a sync immediately in case any data
   // is left over in the database.
-  socket = new WebSocket('ws://' + window.location.host + '/ws/sync_socket/12312312312123/');
+  socket = new WebSocket(
+    'ws://' +
+      window.location.host +
+      '/ws/sync_socket/' +
+      window.CHANNEL_EDIT_GLOBAL.channel_id +
+      '/'
+  );
+  // Connection opened
+  socket.addEventListener('open', () => {
+    console.log('Websocket connected');
+  });
   debouncedSyncChanges();
   // Start the sync interval
   intervalTimer = setInterval(debouncedSyncChanges, SYNC_POLL_INTERVAL * 1000);

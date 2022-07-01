@@ -66,17 +66,14 @@ class SyncConsumer(WebsocketConsumer):
             self.channel_name
         )
 
-        # Receive message from WebSocket
+    # Receive message from WebSocket
     def receive(self, text_data):
+        session_key = self.scope['cookies']['kolibri_studio_sessionid']
         text_data_json = json.loads(text_data)
-        print(text_data_json)
-        # message = text_data_json['requestPayload']
-        # print(message)
-        # Send message to room group
-        # async_to_sync(self.channel_layer.group_send)(
-        #     self.room_group_name,
-        #     {
-        #         'type': 'chat_message',
-        #         'message': message
-        #     }
-        # )
+        changes = text_data_json["payload"]
+        print(session_key)
+        print(changes)
+
+        # print(session_id)
+        # When the user sends somme changes then create async tasks and return to him
+        # {"disallowed": disallowed_changes, "allowed": allowed_changes}
