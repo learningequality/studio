@@ -379,7 +379,6 @@ import { findLicense, memoizeDebounce } from 'shared/utils/helpers';
 import LanguageDropdown from 'shared/views/LanguageDropdown';
 import HelpTooltip from 'shared/views/HelpTooltip';
 import LicenseDropdown from 'shared/views/LicenseDropdown';
-// import MasteryDropdown from 'shared/views/MasteryDropdown';
 import VisibilityDropdown from 'shared/views/VisibilityDropdown';
 import Checkbox from 'shared/views/form/Checkbox';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
@@ -452,7 +451,6 @@ export default {
     LanguageDropdown,
     HelpTooltip,
     LicenseDropdown,
-    // MasteryDropdown,
     VisibilityDropdown,
     FileUpload,
     SubtitlesList,

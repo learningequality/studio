@@ -1,7 +1,8 @@
 <template>
   <div>
-    <!-- "Completion" dropdown menu  -->
+    <!-- Layout for when practice quizzes are enabled -->
     <VLayout v-if="showCompletionDropdown" xs6 md6>
+      <!-- "Completion" dropdown menu  -->
       <VFlex xs6 md6 class="pr-2">
         <VSelect
           ref="completion"
@@ -15,8 +16,8 @@
         />
       </VFlex>
       <VFlex>
-        <Goal
-          v-if="showGoalDropdown"
+        <MasteryCriteriaGoal
+          v-if="showMasteryCriteriaGoalDropdown"
           ref="mastery_model"
           v-model="goal"
           :placeholder="getPlaceholder('mastery_model')"
@@ -26,10 +27,9 @@
       </VFlex>
     </VLayout>
 
-    <!-- Layout for when practice quizzes are not enabled -->
     <VLayout v-else xs6 md6>
       <VFlex xs6 md6 class="pr-2">
-        <Goal
+        <MasteryCriteriaGoal
           v-if="kind === 'exercise'"
           ref="mastery_model"
           v-model="goal"
@@ -39,8 +39,9 @@
         />
       </VFlex>
     </VLayout>
+
     <VLayout>
-      <MasteryDropdown
+      <MasteryCriteriaMofNFields
         v-if="kind === 'exercise'"
         ref="mastery_model"
         v-model="masteryModelItem"
@@ -100,8 +101,8 @@
 
 <script>
 import ActivityDuration from './ActivityDuration.vue';
-import Goal from 'shared/views/Goal';
-import MasteryDropdown from 'shared/views/MasteryDropdown';
+import MasteryCriteriaGoal from 'shared/views/MasteryCriteriaGoal';
+import MasteryCriteriaMofNFields from 'shared/views/MasteryCriteriaMofNFields';
 import { CompletionCriteriaModels } from 'shared/constants';
 import {
   getCompletionValidators,
@@ -129,8 +130,8 @@ export default {
   name: 'CompletionOptions',
   components: {
     ActivityDuration,
-    MasteryDropdown,
-    Goal,
+    MasteryCriteriaMofNFields,
+    MasteryCriteriaGoal,
   },
   mixins: [metadataStrings, metadataTranslationMixin],
   props: {
@@ -168,7 +169,7 @@ export default {
     };
   },
   computed: {
-    showGoalDropdown() {
+    showMasteryCriteriaGoalDropdown() {
       if (this.kind === 'exercise') {
         if (this.value.modality === 'QUIZ') {
           //this ensures that anytime the completion dropdown is practice quiz

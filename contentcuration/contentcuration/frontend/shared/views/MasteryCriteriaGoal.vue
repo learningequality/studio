@@ -40,7 +40,7 @@
   import { constantsTranslationMixin } from 'shared/mixins';
 
   export default {
-    name: 'Goal',
+    name: 'MasteryCriteriaGoal',
     components: {
       // InfoModal,
     },
