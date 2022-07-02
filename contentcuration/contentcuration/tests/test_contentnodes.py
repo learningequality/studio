@@ -9,6 +9,7 @@ from builtins import str
 from builtins import zip
 
 import pytest
+from django.core.cache import cache
 from django.db import IntegrityError
 from django.db.utils import DataError
 from le_utils.constants import content_kinds
@@ -170,6 +171,40 @@ class NodeGettersTestCase(StudioTestCase):
         assert details["resource_count"] > 0
         assert details["resource_size"] > 0
         assert len(details["kind_count"]) > 0
+
+    def test_get_tree_id_by_pk(self):
+        contentnode = ContentNode.objects.create(
+            title="Kolibri", parent=self.channel.main_tree, kind=self.topic
+        )
+
+        tree_id = ContentNode.get_tree_id_by_pk(contentnode.id)
+        tree_id_from_cache = cache.get("node_{}".format(contentnode.pk))
+
+        assert tree_id == tree_id_from_cache == self.channel.main_tree.tree_id
+
+        with patch("contentcuration.models.ContentNode") as mock_contentnode:
+            tree_id = ContentNode.get_tree_id_by_pk(contentnode.id)
+            mock_contentnode.assert_not_called()
+            assert tree_id == tree_id_from_cache == self.channel.main_tree.tree_id
+
+    def test_tree_id_update_on_move(self):
+        sourcenode = ContentNode.objects.create(
+            title="Main", parent=self.channel.main_tree, kind=self.topic
+        )
+        sourcenode_tree_id = ContentNode.get_tree_id_by_pk(sourcenode.id)
+
+        assert sourcenode_tree_id == self.channel.main_tree.tree_id
+
+        targetnode = ContentNode.objects.create(
+            title="Trashed", parent=self.channel.trash_tree, kind=self.topic
+        )
+
+        sourcenode.move_to(targetnode, "last-child")
+
+        with patch("contentcuration.models.ContentNode") as mock_contentnode:
+            sourcenode_tree_id = ContentNode.get_tree_id_by_pk(sourcenode.id)
+            mock_contentnode.assert_not_called()
+            assert sourcenode_tree_id == self.channel.trash_tree.tree_id
 
 
 class NodeOperationsTestCase(StudioTestCase):

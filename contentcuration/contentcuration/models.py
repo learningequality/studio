@@ -1254,6 +1254,22 @@ class ContentNode(MPTTModel, models.Model):
         )
 
     @classmethod
+    def get_tree_id_by_pk(cls, pk):
+        """
+        Fetches `tree_id` from cache if available else queries the db and sets a cache.
+
+        Args:
+            pk (uuid): primary key of ContentNode.
+        Returns:
+            `tree_id` (int): ContentNode's tree_id.
+        """
+        tree_id = cache.get("node_{}".format(pk))
+        if tree_id is None:
+            tree_id = ContentNode.objects.values_list("tree_id", flat=True).get(pk=pk)
+            cache.set("node_{}".format(pk), tree_id, None)
+        return tree_id
+
+    @classmethod
     def filter_edit_queryset(cls, queryset, user):
         user_id = not user.is_anonymous and user.id
 
@@ -1728,6 +1744,10 @@ class ContentNode(MPTTModel, models.Model):
     def move_to(self, target, *args, **kwargs):
         parent_was_trashtree = self.parent.channel_trash.exists()
         super(ContentNode, self).move_to(target, *args, **kwargs)
+        self.save()
+
+        # Update tree_id cache when node is moved to another tree
+        cache.set("node_{}".format(self.id), self.tree_id, None)
 
         # Recalculate storage if node was moved to or from the trash tree
         if target.channel_trash.exists() or parent_was_trashtree:
