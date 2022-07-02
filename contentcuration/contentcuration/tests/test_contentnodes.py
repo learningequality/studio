@@ -179,8 +179,10 @@ class NodeGettersTestCase(StudioTestCase):
 
         tree_id = ContentNode.get_tree_id_by_pk(contentnode.id)
         tree_id_from_cache = cache.get("node_{}".format(contentnode.pk))
-
         assert tree_id == tree_id_from_cache == self.channel.main_tree.tree_id
+
+        tree_id = ContentNode.get_tree_id_by_pk("123456789")
+        assert tree_id is None
 
         with patch("contentcuration.models.ContentNode") as mock_contentnode:
             tree_id = ContentNode.get_tree_id_by_pk(contentnode.id)
@@ -205,6 +207,18 @@ class NodeGettersTestCase(StudioTestCase):
             sourcenode_tree_id = ContentNode.get_tree_id_by_pk(sourcenode.id)
             mock_contentnode.assert_not_called()
             assert sourcenode_tree_id == self.channel.trash_tree.tree_id
+
+    def test_pk_and_tree_id_query(self):
+        contentnode = ContentNode.objects.create(
+            title="Studio", parent=self.channel.main_tree, kind=self.topic
+        )
+
+        contentnode_by_id = ContentNode.objects.filter(pk=contentnode.id)[0]
+        contentnode_by_id_and_tree_id = ContentNode.objects.filter(pk=contentnode.id, tree_id=ContentNode.get_tree_id_by_pk(contentnode.id))[0]
+        contentnode_by_id_and_tree_id_none = ContentNode.objects.filter(pk=contentnode.id, tree_id=ContentNode.get_tree_id_by_pk("123456789"))
+
+        assert contentnode_by_id.id == contentnode_by_id_and_tree_id.id
+        assert len(contentnode_by_id_and_tree_id_none) == 0
 
 
 class NodeOperationsTestCase(StudioTestCase):

@@ -938,7 +938,7 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
         # Affected channel for the copy is the target's channel
         channel_id = target.channel_id
 
-        if ContentNode.objects.filter(pk=pk).exists():
+        if ContentNode.objects.filter(pk=pk, tree_id=ContentNode.get_tree_id_by_pk(pk)).exists():
             error = ValidationError("Copy pk already exists")
             return str(error)
 

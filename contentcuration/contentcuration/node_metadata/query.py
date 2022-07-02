@@ -21,13 +21,14 @@ class Metadata(object):
         node = ContentNode.objects.get(pk='123...abc')
         data = Metadata(some_thing=MetadataAnnotation()).get(node.pk)
     """
+
     def __init__(self, queryset_or_model=None, **annotations):
         """
         :param queryset_or_model: A ContentNode or queryset
         :param annotations: A dict of annotations
         """
         if isinstance(queryset_or_model, ContentNode):
-            self.query = ContentNode.objects.filter(pk=queryset_or_model.pk)
+            self.query = ContentNode.objects.filter(pk=queryset_or_model.pk, tree_id=ContentNode.get_tree_id_by_pk(queryset_or_model.pk))
         else:
             self.query = queryset_or_model
         self.annotations = annotations
@@ -49,7 +50,7 @@ class Metadata(object):
         :return: A dict of metadata for the node identified by `node_pk`
         """
         if self.query is None:
-            return Metadata(ContentNode.objects.filter(pk=node_pk), **self.annotations).get(node_pk)
+            return Metadata(ContentNode.objects.filter(pk=node_pk, tree_id=ContentNode.get_tree_id_by_pk(node_pk)), **self.annotations).get(node_pk)
 
         if self.metadata is None:
             self.metadata = {}

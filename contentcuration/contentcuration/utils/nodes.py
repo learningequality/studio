@@ -30,7 +30,7 @@ from contentcuration.utils.files import get_thumbnail_encoding
 from contentcuration.utils.sentry import report_exception
 
 
-def map_files_to_node(user, node, data):
+def map_files_to_node(user, node, data):  # noqa: C901
     """
     Generate files that reference the content node.
     """
@@ -193,8 +193,8 @@ def get_diff(updated, original):
 
 
 def generate_diff(updated_id, original_id):
-    updated = ContentNode.objects.filter(pk=updated_id).first()
-    original = ContentNode.objects.filter(pk=original_id).first()
+    updated = ContentNode.objects.filter(pk=updated_id, tree_id=ContentNode.get_tree_id_by_pk(updated_id)).first()
+    original = ContentNode.objects.filter(pk=original_id, tree_id=ContentNode.get_tree_id_by_pk(original_id)).first()
 
     main_descendants = original.get_descendants() if original else None
     updated_descendants = updated.get_descendants() if updated else None
@@ -291,6 +291,7 @@ class ResourceSizeHelper:
     """
     Helper class for calculating resource size
     """
+
     def __init__(self, node):
         """
         :param node: The contentnode with which to determine resource size
@@ -365,6 +366,7 @@ SLOW_UNFORCED_CALC_THRESHOLD = 5
 
 class SlowCalculationError(Exception):
     """ Error used for tracking slow calculation times in Sentry """
+
     def __init__(self, node_id, time):
         self.node_id = node_id
         self.time = time

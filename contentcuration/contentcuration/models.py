@@ -1261,12 +1261,18 @@ class ContentNode(MPTTModel, models.Model):
         Args:
             pk (uuid): primary key of ContentNode.
         Returns:
-            `tree_id` (int): ContentNode's tree_id.
+            `tree_id` (int): `tree_id` of ContentNode at `pk`. If no such ContentNode exists then
+            None is returned.
         """
         tree_id = cache.get("node_{}".format(pk))
+
         if tree_id is None:
-            tree_id = ContentNode.objects.values_list("tree_id", flat=True).get(pk=pk)
-            cache.set("node_{}".format(pk), tree_id, None)
+            try:
+                tree_id = ContentNode.objects.values_list("tree_id", flat=True).get(pk=pk)
+                cache.set("node_{}".format(pk), tree_id, None)
+            except ContentNode.DoesNotExist:
+                tree_id = None
+
         return tree_id
 
     @classmethod
@@ -1462,7 +1468,7 @@ class ContentNode(MPTTModel, models.Model):
         from contentcuration.viewsets.common import SQRelatedArrayAgg
         from contentcuration.viewsets.common import SQSum
 
-        node = ContentNode.objects.filter(pk=self.id).order_by()
+        node = ContentNode.objects.filter(pk=self.id, tree_id=self.tree_id).order_by()
 
         descendants = (
             self.get_descendants()
