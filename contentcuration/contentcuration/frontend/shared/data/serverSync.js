@@ -283,6 +283,11 @@ async function syncChanges() {
       );
     }
     const response = await client.post(urls['sync'](), requestPayload);
+    socket.onmessage = function(e) {
+      const data = JSON.parse(e.data);
+      console.log(data);
+    };
+
     try {
       await Promise.all([
         handleDisallowed(response),

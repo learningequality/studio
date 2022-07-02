@@ -3,11 +3,17 @@ import json
 from asgiref.sync import async_to_sync
 from channels.generic.websocket import WebsocketConsumer
 
+from contentcuration.models import Change
+from contentcuration.models import Channel
+from contentcuration.tasks import get_or_create_async_task
+from contentcuration.viewsets.sync.constants import CHANNEL
+from contentcuration.viewsets.sync.constants import CREATED
+
 
 class SyncConsumer(WebsocketConsumer):
 
     # Checks permissions
-    def check_perms(self):
+    def check_authentication(self):
         return self.scope['user'].is_authenticated
 
     # Initial reset
@@ -15,7 +21,10 @@ class SyncConsumer(WebsocketConsumer):
         super().__init__(*args, **kwargs)
         self.room_name = None
         self.room_group_name = None
+        self.session_key = None
+        self.user = None
         self.user_id = None
+        self.indiviual_room_group_name = None
 
     # This function gets executed when a user tries to make a websocket connection.
     #   - Creates and joins a group for indiviual user
@@ -25,17 +34,19 @@ class SyncConsumer(WebsocketConsumer):
         # Extract the channel_id from url
         self.room_name = self.scope['url_route']['kwargs']['channel_id']
         self.room_group_name = self.room_name
+
         print("----------------------------------")
         print("Connected to channel_id: " + self.room_name)
         print("----------------------------------")
-        # Create a private group for
+
         self.user = self.scope["user"]
-        self.indiviual_room_group_name = "asdasdasdasd"
+        self.indiviual_room_group_name = str(self.user.id)
+
         print("----------------------------------")
-        print("Connected to user_id: " + str(self.user))
+        print("Connected to user " + str(self.user))
         print("----------------------------------")
 
-        if self.scope['user'].is_authenticated:
+        if self.check_authentication():
             # Join room group based on channel_id
             async_to_sync(self.channel_layer.group_add)(
                 self.room_group_name,
@@ -68,12 +79,50 @@ class SyncConsumer(WebsocketConsumer):
 
     # Receive message from WebSocket
     def receive(self, text_data):
-        session_key = self.scope['cookies']['kolibri_studio_sessionid']
+        response_payload = {
+            "disallowed": [],
+            "allowed": [],
+        }
+        self.user_id = self.scope['user'].id
+        self.session_key = self.scope['cookies']['kolibri_studio_sessionid']
         text_data_json = json.loads(text_data)
-        changes = text_data_json["payload"]
-        print(session_key)
-        print(changes)
+        changes = text_data_json["payload"]["changes"]
 
-        # print(session_id)
-        # When the user sends somme changes then create async tasks and return to him
-        # {"disallowed": disallowed_changes, "allowed": allowed_changes}
+        if changes:
+            change_channel_ids = set(x.get("channel_id") for x in changes if x.get("channel_id"))
+            # Channels that have been created on the client side won't exist on the server yet, so we need to add a special exception for them.
+            created_channel_ids = set(x.get("channel_id") for x in changes if x.get("channel_id") and x.get("table") == CHANNEL and x.get("type") == CREATED)
+            # However, this would also give people a mechanism to edit existing channels on the server side by adding a channel create event for an
+            # already existing channel, so we have to filter out the channel ids that are already created on the server side, regardless of whether
+            # the user making the requests has permissions for those channels.
+            created_channel_ids = created_channel_ids.difference(
+                set(Channel.objects.filter(id__in=created_channel_ids).values_list("id", flat=True).distinct())
+            )
+            allowed_ids = set(
+                Channel.filter_edit_queryset(Channel.objects.filter(id__in=change_channel_ids), self.user).values_list("id", flat=True).distinct()
+            ).union(created_channel_ids)
+            # Allow changes that are either:
+            # Not related to a channel and instead related to the user if the user is the current user.
+            user_only_changes = []
+            # Related to a channel that the user is an editor for.
+            channel_changes = []
+            # Changes that cannot be made
+            disallowed_changes = []
+            for c in changes:
+                if c.get("channel_id") is None and c.get("user_id") == self.user_id:
+                    user_only_changes.append(c)
+                elif c.get("channel_id") in allowed_ids:
+                    channel_changes.append(c)
+                else:
+                    disallowed_changes.append(c)
+            change_models = Change.create_changes(user_only_changes + channel_changes, created_by_id=self.user_id, session_key=self.session_key)
+            if user_only_changes:
+                get_or_create_async_task("apply_user_changes", self.user, user_id=self.user_id)
+            for channel_id in allowed_ids:
+                get_or_create_async_task("apply_channel_changes", self.user, channel_id=channel_id)
+            allowed_changes = [{"rev": c.client_rev, "server_rev": c.server_rev} for c in change_models]
+            response_payload.update({"disallowed": disallowed_changes, "allowed": allowed_changes})
+
+            self.send(json.dumps({
+                'response_payload': response_payload
+            }))
