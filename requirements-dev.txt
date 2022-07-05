@@ -317,7 +317,7 @@ toml==0.10.2
     #   pytest
 tornado==6.1
     # via flower
-ujson==4.0.2
+ujson==5.4.0
     # via
     #   python-jsonrpc-server
     #   python-language-server
