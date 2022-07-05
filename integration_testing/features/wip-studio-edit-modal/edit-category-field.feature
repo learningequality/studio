@@ -1,14 +1,12 @@
 Feature: Edit *Category* field
 	Across all file types. 
 
-# Comment here
-
 	Background: 
 		Given I am signed into Studio
-			And I am in an editable channel
-		When I right click <resource>
-		When I click *Edit details*
-		Then I see the edit modal for <resource>
+			And I am in an editable channel with all resource types
+		When I right click a <resource>
+			And I click *Edit details*
+		Then I see the *Edit details* modal for the <resource>
 			And I see the *Category* dropdown in the *Basic information* section
 
 	Scenario: View category options
@@ -53,7 +51,7 @@ Feature: Edit *Category* field
 		Given that <first-level category> checkbox is selected
 			And <first-level category> is a chip in the *Category* text field
 		When I click <second-level category> under <first-level category>
-		then I see that <second-level category> is determinately selected
+		Then I see that <second-level category> is determinately selected
 			And <first-level category> is still determinately selected
 			And I see the chip in the *Category* text field changed to <second-level category>
 			And I do not see <first-level category> as a chip in the *Category* text field
