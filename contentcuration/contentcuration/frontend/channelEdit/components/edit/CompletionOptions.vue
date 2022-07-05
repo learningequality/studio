@@ -66,6 +66,7 @@
           :items="selectableDurationOptions"
           :label="translateMetadataString('duration')"
           :required="required"
+          :clearable="clearableDurationDropdown"
           @focus="trackClick('Duration')"
         />
       </VFlex>
@@ -112,7 +113,7 @@ nonUniqueValue.toString = () => '';
 const SuggestedDurationTypesMap = {
   APPROX_TIME: 'approx_time',
   TIME: 'time',
-}
+};
 const CompletionDropdownMap = {
   allContent: 'allContent',
   completeDuration: 'completeDuration',
@@ -172,6 +173,9 @@ export default {
     };
   },
   computed: {
+    clearableDurationDropdown() {
+      return this.value.model ===  CompletionCriteriaModels.PAGES;
+    },
     showMasteryCriteriaGoalDropdown() {
       if (this.kind === ContentKindsNames.EXERCISE) {
         if (this.value.modality === ContentModalities.QUIZ) {
@@ -300,6 +304,32 @@ export default {
             model: CompletionCriteriaModels.REFERENCE,
             threshold: null,
           };
+        }
+
+        // FOR DOCUMENTS
+        if (this.kind === ContentKindsNames.DOCUMENT) {
+          if (value === 'allContent') {
+            update.suggested_duration_type = this.value.suggested_duration_type;
+            update.suggested_duration = this.value.suggested_duration;
+            update.completion_criteria = {
+              model: CompletionCriteriaModels.PAGES,
+              threshold: '100%',
+            };
+          } else {
+            update.suggested_duration_type = this.value.suggested_duration_type;
+            update.suggested_duration = this.value.suggested_duration;
+            if (this.durationDropdown === 'longActivity' || this.durationDropdown === 'shortActivity') {
+              update.completion_criteria = {
+                model: CompletionCriteriaModels.APPROX_TIME,
+                threshold: this.value.suggested_duration,
+              };
+            } else {
+              update.completion_criteria = {
+                model: CompletionCriteriaModels.TIME,
+                threshold: this.value.suggested_duration,
+              };
+            }
+          }
         }
 
         // FOR EXERCISES
@@ -457,7 +487,10 @@ export default {
           if (this.isExactTime) {
             return DurationDropdownMap.EXACT_TIME;
           }
-        } else if (this.value.model === CompletionCriteriaModels.TIME || defaultStateForAudioVideo) {
+        } else if (
+          this.value.model === CompletionCriteriaModels.TIME ||
+          defaultStateForAudioVideo
+        ) {
           return DurationDropdownMap.EXACT_TIME;
         } else {
           if (this.isLongActivity) {
@@ -676,17 +709,6 @@ export default {
           disabled: this.disabledReference.includes(model.value),
         }));
       } else if (this.kind === ContentKindsNames.EXERCISE) {
-        // console.log('exercise')
-        // console.log(
-        //   this.allPossibleDurationOptions
-        //   .filter((model) => {
-        //     console.log(model.value)
-        //     return model.value !== CompletionCriteriaModels.REFERENCE})
-        //   .map((model) => ({
-        //     value: model.id,
-        //     text: model.text,
-        //   }))
-        // )
         return this.allPossibleDurationOptions
           .filter((model) => model.value !== CompletionCriteriaModels.REFERENCE)
           .map((model) => ({

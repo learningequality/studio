@@ -82,15 +82,12 @@ export default {
   },
   computed: {
     showRequiredLabel() {
-      console.log('here')
       if (this.selectedDuration !== 'exactTime' && this.selectedCompletion === 'completeDuration'){
-        console.log('here')
         return true;
       }
       return false;
     },
     showOptionalLabel() {
-      console.log('here')
       return this.selectedDuration !== 'exactTime'
     },
     increments() {
