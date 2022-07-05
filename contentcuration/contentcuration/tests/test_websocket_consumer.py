@@ -12,7 +12,7 @@ os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
 
 
 class WebsocketTestCase(TransactionTestCase):
-    serialized_rollback = True
+    # serialized_rollback = True
 
     def setUp(self):
         call_command("loadconstants")
