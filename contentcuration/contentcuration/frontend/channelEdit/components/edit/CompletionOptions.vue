@@ -77,6 +77,7 @@
           v-model="minutes"
           :selectedDuration="currentDurationDropdown || durationDropdown"
           :duration="fileDuration"
+          :selectedCompletion="currentCompletionDropdown || completionDropdown"
           :audioVideoUpload="kind === 'video' || kind === 'audio'"
         />
       </VFlex>

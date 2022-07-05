@@ -31,7 +31,10 @@
       </VFlex>
     </VLayout>
     <VLayout row wrap>
-      <VFlex v-if="selectedDuration !== 'exactTime'">
+      <VFlex v-if="showRequiredLabel">
+        {{ $tr('notOptionalLabel') }}
+      </VFlex>
+      <VFlex v-else-if="showOptionalLabel">
         {{ $tr('optionalLabel') }}
       </VFlex>
     </VLayout>
@@ -55,6 +58,10 @@ export default {
       type: String,
       default: '',
     },
+    selectedCompletion: {
+      type: String,
+      default: '',
+    },
     value: {
       type: Number,
       default: 0,
@@ -74,6 +81,18 @@ export default {
     };
   },
   computed: {
+    showRequiredLabel() {
+      console.log('here')
+      if (this.selectedDuration !== 'exactTime' && this.selectedCompletion === 'completeDuration'){
+        console.log('here')
+        return true;
+      }
+      return false;
+    },
+    showOptionalLabel() {
+      console.log('here')
+      return this.selectedDuration !== 'exactTime'
+    },
     increments() {
       return this.selectedDuration === 'shortActivity' ? 5 : 10;
     },
@@ -157,6 +176,8 @@ export default {
     minutesRequired: 'Minutes',
     optionalLabel:
       '(Optional) Duration until resource is marked as complete. This value will not be shown to learners.',
+    notOptionalLabel:
+      'Duration until resource is marked as complete. This value will not be shown to learners.',
   },
 };
 </script>
