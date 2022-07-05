@@ -15,6 +15,10 @@ CHUNKSIZE = 10000
 
 
 def extract_duration_of_media(f_in):
+    """
+    For more details on these commands, refer to the ffmpeg Wiki:
+    https://trac.ffmpeg.org/wiki/FFprobeTips#Formatcontainerduration
+    """
     result = subprocess.check_output(
         [
             "ffprobe",
@@ -30,7 +34,42 @@ def extract_duration_of_media(f_in):
         ],
         stdin=f_in,
     )
-    return int(float(result.decode("utf-8").strip()))
+    result = result.decode("utf-8").strip()
+    try:
+        # return int(float(result))
+        raise ValueError
+    except ValueError:
+        # This can happen if ffprobe returns N/A for the duration
+        # So instead we try to stream the entire file to get the value
+        f_in.seek(0)
+        result = subprocess.run(
+            [
+                "ffmpeg",
+                "-i",
+                "pipe:",
+                "-f",
+                "null",
+                "-",
+            ],
+            stdin=f_in,
+            stderr=subprocess.PIPE
+        )
+        second_last_line = result.stderr.decode("utf-8").strip().splitlines()[-2]
+        time_code = second_last_line.split(" time=")[1].split(" ")[0]
+        hours, minutes, seconds = time_code.split(":")
+        try:
+            hours = int(hours)
+        except ValueError:
+            hours = 0
+        try:
+            minutes = int(minutes)
+        except ValueError:
+            minutes = 0
+        try:
+            seconds = int(float(seconds))
+        except ValueError:
+            seconds = 0
+        return (hours * 60 + minutes) * 60 + seconds
 
 
 class Command(BaseCommand):
