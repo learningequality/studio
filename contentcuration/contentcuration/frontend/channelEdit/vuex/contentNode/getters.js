@@ -180,8 +180,6 @@ function getStepDetail(state, getters, contentNodeId) {
     }
   }
 
-  console.log(stepDetail);
-
   return stepDetail;
 }
 

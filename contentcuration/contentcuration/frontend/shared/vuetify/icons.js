@@ -22,7 +22,12 @@ export const CONTENT_KIND_ICONS = {
   [ContentKindsNames.HTML5]: 'widgets',
 };
 
-export function getContentKindIcon(activity) {
+export function getContentKindIcon(kind, isEmpty = false) {
+  const icon = (isEmpty ? [kind + EMPTY] : []).concat([kind]).find(k => k in CONTENT_KIND_ICONS);
+  return icon ? CONTENT_KIND_ICONS[icon] : 'error_outline';
+}
+
+export function getLearningActivityIcon(activity) {
   if (activity == 'Explore') {
     return 'interactShaded';
   } else if (activity == 'Multiple learning activities') {

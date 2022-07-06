@@ -6,8 +6,8 @@
         <div v-if="!loading && node" class="mb-1">
           <!-- Slot for elements like "Back" link -->
           <slot name="navigation"></slot>
-          <ContentNodeIcon v-if="isTopic" :isTopic="true" includeText chip />
-          <ContentNodeIcon
+          <ContentNodeLearningActivityIcon v-if="isTopic" :isTopic="true" includeText chip />
+          <ContentNodeLearningActivityIcon
             v-else-if="hasLearningActivities"
             :learningActivity="node.learning_activities"
             includeText
@@ -133,7 +133,7 @@
             notranslate
           />
           <DetailsRow v-if="!isTopic" :label="translateMetadataString('learningActivity')">
-            <ContentNodeIcon
+            <ContentNodeLearningActivityIcon
               :learningActivity="node.learning_activities"
               includeText
               showEachActivityChip
@@ -193,7 +193,7 @@
               </div>
               <div v-else dense class="mb-2 pa-1">
                 <div v-for="prerequisite in previousSteps" :key="prerequisite.id">
-                  <ContentNodeIcon
+                  <ContentNodeLearningActivityIcon
                     v-if="prerequisite.learning_activities"
                     :learningActivity="prerequisite.learning_activities"
                     showEachActivityChip
@@ -208,7 +208,7 @@
               </div>
               <div v-else dense class="mb-2 pa-1">
                 <div v-for="postrequisite in nextSteps" :key="postrequisite.id">
-                  <ContentNodeIcon
+                  <ContentNodeLearningActivityIcon
                     v-if="postrequisite.learning_activities"
                     :learningActivity="postrequisite.learning_activities"
                     showEachActivityChip
@@ -343,7 +343,7 @@
     getNodeMasteryModelMErrors,
     getNodeMasteryModelNErrors,
   } from 'shared/utils/validation';
-  import ContentNodeIcon from 'shared/views/ContentNodeIcon';
+  import ContentNodeLearningActivityIcon from 'shared/views/ContentNodeLearningActivityIcon';
   import LoadingText from 'shared/views/LoadingText';
   import DetailsRow from 'shared/views/details/DetailsRow';
   import ExpandableList from 'shared/views/ExpandableList';
@@ -363,7 +363,7 @@
   export default {
     name: 'ResourcePanel',
     components: {
-      ContentNodeIcon,
+      ContentNodeLearningActivityIcon,
       LoadingText,
       DetailsRow,
       FilePreview,

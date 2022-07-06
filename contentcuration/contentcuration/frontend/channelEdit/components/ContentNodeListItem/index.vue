@@ -118,7 +118,7 @@
                     </span>
                   </VListTileSubTitle>
                   <span v-if="!isCompact">
-                    <ContentNodeIcon
+                    <ContentNodeLearningActivityIcon
                       :isTopic="isTopic"
                       :learningActivity="node.learning_activities"
                       showEachActivityChip
@@ -197,7 +197,7 @@
   import { titleMixin, metadataTranslationMixin } from 'shared/mixins';
   import { COPYING_FLAG, TASK_ID } from 'shared/data/constants';
   import { EffectAllowed } from 'shared/mixins/draggable/constants';
-  import ContentNodeIcon from 'shared/views/ContentNodeIcon';
+  import ContentNodeLearningActivityIcon from 'shared/views/ContentNodeLearningActivityIcon';
 
   export default {
     name: 'ContentNodeListItem',
@@ -210,7 +210,7 @@
       ContentNodeChangedIcon,
       ToggleText,
       TaskProgress,
-      ContentNodeIcon,
+      ContentNodeLearningActivityIcon,
     },
     mixins: [titleMixin, metadataTranslationMixin],
     props: {

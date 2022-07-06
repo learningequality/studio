@@ -18,7 +18,7 @@
 
     <!-- If printing the default icon, need to set as printable icon -->
     <div v-else-if="compact || printing">
-      <ContentNodeIcon
+      <ContentNodeLearningActivityIcon
         v-if="learningActivity"
         :learningActivity="learningActivity"
         :isTopic="isTopic"
@@ -48,12 +48,12 @@
 <script>
 
   import { constantsTranslationMixin, printingMixin } from 'shared/mixins';
-  import ContentNodeIcon from 'shared/views/ContentNodeIcon';
+  import ContentNodeLearningActivityIcon from 'shared/views/ContentNodeLearningActivityIcon';
 
   export default {
     name: 'Thumbnail',
     components: {
-      ContentNodeIcon,
+      ContentNodeLearningActivityIcon,
     },
     mixins: [constantsTranslationMixin, printingMixin],
     props: {

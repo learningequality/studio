@@ -1,29 +1,27 @@
 <template>
 
-  <span v-if="includeText">
-    <span v-for="activity in activities" :key="activity">
-      <div v-if="chip" :class="small ? 'small-chip' : 'chip'">
-        <KLabeledIcon :icon="icon(activity)" :label="text(activity)" />
-      </div>
-      <div v-else>
-        <KLabeledIcon :icon="icon(activity)" :label="text(activity)" />
-      </div>
-    </span>
-  </span>
-  <span v-else>
-    <span v-if="showEachActivityChip">
-      <KIcon
-        v-for="activity in activities"
-        :key="activity"
-        :icon="icon(activity)"
-        :aria-label="text(activity)"
-      />
-    </span>
-    <span v-else-if="activities.length > 1 && !showEachActivityChip">
-      <KIcon :icon="icon('multiple')" :aria-label="text('multiple')" />
-    </span>
-    <span v-else>
-      <KIcon :icon="icon(activities[0])" :aria-label="text(activities[0])" />
+  <span v-if="icon">
+    <VChip
+      v-if="showColor"
+      label
+      :color="kind"
+      :small="small"
+      :textColor="fontColor"
+      class="ma-0 pa-0"
+      :class="{ iconOnly: !includeText, fillWidth }"
+      :style="{ width: fillWidth ? '100%' : 'unset' }"
+      capture-as-image
+    >
+      <Icon small :color="fontColor" v-bind="$attrs">
+        {{ icon }}
+      </Icon>
+      <span v-if="includeText" class="ml-2">{{ text }}</span>
+    </VChip>
+    <span v-else capture-as-image>
+      <Icon :color="fontColor" v-bind="$attrs">
+        {{ icon }}
+      </Icon>
+      <span v-if="includeText">{{ text }}</span>
     </span>
   </span>
 
@@ -31,33 +29,32 @@
 
 <script>
 
-  import { camelCase } from 'lodash';
-  import { LearningActivities } from '../../shared/constants';
+  import ContentKinds from 'shared/leUtils/ContentKinds';
   import { getContentKindIcon } from 'shared/vuetify/icons';
-  import { metadataTranslationMixin } from 'shared/mixins';
 
   export default {
     name: 'ContentNodeIcon',
-    mixins: [metadataTranslationMixin],
-
     props: {
-      learningActivity: {
-        type: Object,
-        required: false,
-      },
-      showEachActivityChip: {
-        type: Boolean,
-        default: false,
-      },
-      isTopic: {
-        type: Boolean,
-        default: false,
+      kind: {
+        type: String,
+        validator: value => {
+          return value === 'unsupported' || ContentKinds.has(value);
+        },
+        default: 'unsupported',
       },
       includeText: {
         type: Boolean,
         default: false,
       },
-      chip: {
+      showColor: {
+        type: Boolean,
+        default: true,
+      },
+      isEmpty: {
+        type: Boolean,
+        default: false,
+      },
+      fillWidth: {
         type: Boolean,
         default: false,
       },
@@ -67,32 +64,42 @@
       },
     },
     computed: {
-      activities() {
-        const ids = Object.keys(this.learningActivity);
-        return Object.keys(LearningActivities).filter(k => ids.includes(LearningActivities[k]));
+      fontColor() {
+        return this.showColor ? 'white' : 'grey darken-1';
       },
-    },
-    methods: {
-      icon(activity) {
-        if (this.isTopic) {
-          return 'topic';
-        } else {
-          console.log(activity);
-          return getContentKindIcon(this.text(activity));
-        }
+      icon() {
+        return getContentKindIcon(this.kind, this.isEmpty);
       },
-      text(activity) {
-        if (this.isTopic) {
-          return this.$tr('topic');
-        } else if (activity == 'multiple') {
-          return this.$tr('multipleLearningActivities');
+      text() {
+        switch (this.kind) {
+          case 'topic':
+            return this.$tr('topic');
+          case 'video':
+            return this.$tr('video');
+          case 'audio':
+            return this.$tr('audio');
+          case 'slideshow':
+            return this.$tr('slideshow');
+          case 'exercise':
+            return this.$tr('exercise');
+          case 'document':
+            return this.$tr('document');
+          case 'html5':
+            return this.$tr('html5');
+          default:
+            return this.$tr('unsupported');
         }
-        return this.translateMetadataString(camelCase(activity));
       },
     },
     $trs: {
-      multipleLearningActivities: 'Multiple learning activities',
       topic: 'Folder',
+      video: 'Video',
+      audio: 'Audio',
+      exercise: 'Exercise',
+      document: 'Document',
+      slideshow: 'Slideshow',
+      html5: 'HTML5 App',
+      unsupported: 'Unsupported',
     },
   };
 
@@ -100,23 +107,11 @@
 
 <style lang="less" scoped>
 
-  .chip {
-    display: inline-block;
-    width: unset !important;
-    padding: 10px;
-    margin: 4px;
-    font-weight: bold;
-    background-color: #dedede;
-    border-radius: 4px;
-  }
-
-  .small-chip {
-    display: inline-block;
-    padding: 2px 4px;
-    margin: 2px;
-    font-size: 10px;
-    background-color: #dedede;
-    border-radius: 4px;
+  .iconOnly {
+    /deep/ .v-chip__content {
+      height: 22px;
+      padding: 0 5px;
+    }
   }
 
 </style>
