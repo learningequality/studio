@@ -360,6 +360,11 @@
   import { MasteryModelsNames } from 'shared/leUtils/MasteryModels';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
+  const formatter = new Intl.ListFormat(window.languageCode, {
+    style: 'long',
+    type: 'conjunction',
+  });
+
   export default {
     name: 'ResourcePanel',
     components: {
@@ -581,8 +586,9 @@
       getText(field) {
         return this.node[field] || this.defaultText;
       },
-      matchIdToString(ids) {
-        return ids.map(i => this.translateMetadataString(camelCase(i))).join(', ');
+      metadataListText(ids) {
+        const list = ids.map(i => this.translateMetadataString(camelCase(i)));
+        return formatter.format(list);
       },
       level(levels) {
         const ids = Object.keys(levels);
@@ -590,7 +596,7 @@
           .sort()
           .filter(k => ids.includes(ContentLevel[k]));
         if (matches && matches.length > 0) {
-          return this.matchIdToString(matches);
+          return this.metadataListText(matches);
         } else {
           return '-';
         }
@@ -601,7 +607,7 @@
           .sort()
           .filter(k => ids.includes(AccessibilityCategories[k]));
         if (matches && matches.length > 0) {
-          return this.matchIdToString(matches);
+          return this.metadataListText(matches);
         } else {
           return '-';
         }
@@ -612,7 +618,7 @@
           .sort()
           .filter(k => ids.includes(Categories[k]));
         if (matches && matches.length > 0) {
-          return this.matchIdToString(matches);
+          return this.metadataListText(matches);
         } else {
           return '-';
         }
