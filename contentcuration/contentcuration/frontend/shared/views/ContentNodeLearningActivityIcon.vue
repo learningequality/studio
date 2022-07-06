@@ -79,7 +79,6 @@
         if (this.isTopic) {
           return 'topic';
         } else {
-          console.log(activity);
           return getLearningActivityIcon(this.text(activity));
         }
       },

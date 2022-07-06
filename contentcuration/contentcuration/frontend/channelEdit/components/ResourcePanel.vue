@@ -329,6 +329,7 @@
   import sortBy from 'lodash/sortBy';
   import { mapActions, mapGetters } from 'vuex';
   import { camelCase } from 'lodash';
+  import { createIntl } from '@formatjs/intl';
   import { isImportedContent, importedChannelLink } from '../utils';
   import FilePreview from '../views/files/FilePreview';
   import { ContentLevel, Categories, AccessibilityCategories } from '../../shared/constants';
@@ -360,9 +361,8 @@
   import { MasteryModelsNames } from 'shared/leUtils/MasteryModels';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
-  const formatter = new Intl.ListFormat(window.languageCode, {
-    style: 'long',
-    type: 'conjunction',
+  const intl = createIntl({
+    locale: window.languageCode || 'en',
   });
 
   export default {
@@ -444,7 +444,6 @@
         return this.contentNodesTotalSize([this.nodeId]);
       },
       isTopic() {
-        console.log(JSON.parse(JSON.stringify(this.node.extra_fields)));
         return this.node && this.node.kind === ContentKindsNames.TOPIC;
       },
       isExercise() {
@@ -588,7 +587,7 @@
       },
       metadataListText(ids) {
         const list = ids.map(i => this.translateMetadataString(camelCase(i)));
-        return formatter.format(list);
+        return intl.formatList(list);
       },
       level(levels) {
         const ids = Object.keys(levels);
