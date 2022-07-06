@@ -14,7 +14,11 @@ logging = logmodule.getLogger('command')
 CHUNKSIZE = 10000
 
 
-def extract_duration_of_media(f_in):
+def extract_duration_of_media(f_in, extension):
+    """
+    For more details on these commands, refer to the ffmpeg Wiki:
+    https://trac.ffmpeg.org/wiki/FFprobeTips#Formatcontainerduration
+    """
     result = subprocess.check_output(
         [
             "ffprobe",
@@ -26,11 +30,47 @@ def extract_duration_of_media(f_in):
             "default=noprint_wrappers=1:nokey=1",
             "-loglevel",
             "panic",
+            "-f",
+            extension,
             "-"
         ],
         stdin=f_in,
     )
-    return int(float(result.decode("utf-8").strip()))
+    result = result.decode("utf-8").strip()
+    try:
+        return int(float(result))
+    except ValueError:
+        # This can happen if ffprobe returns N/A for the duration
+        # So instead we try to stream the entire file to get the value
+        f_in.seek(0)
+        result = subprocess.run(
+            [
+                "ffmpeg",
+                "-i",
+                "pipe:",
+                "-f",
+                "null",
+                "-",
+            ],
+            stdin=f_in,
+            stderr=subprocess.PIPE
+        )
+        second_last_line = result.stderr.decode("utf-8").strip().splitlines()[-2]
+        time_code = second_last_line.split(" time=")[1].split(" ")[0]
+        hours, minutes, seconds = time_code.split(":")
+        try:
+            hours = int(hours)
+        except ValueError:
+            hours = 0
+        try:
+            minutes = int(minutes)
+        except ValueError:
+            minutes = 0
+        try:
+            seconds = int(float(seconds))
+        except ValueError:
+            seconds = 0
+        return (hours * 60 + minutes) * 60 + seconds
 
 
 class Command(BaseCommand):
@@ -57,7 +97,7 @@ class Command(BaseCommand):
                     continue
                 try:
                     with file.file_on_disk.open() as f:
-                        duration = extract_duration_of_media(f)
+                        duration = extract_duration_of_media(f, file.file_format.extension)
                     if duration:
                         updated_count += File.objects.filter(checksum=file.checksum, preset_id__in=MEDIA_PRESETS).update(duration=duration)
                 except FileNotFoundError:
