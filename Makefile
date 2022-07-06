@@ -138,6 +138,9 @@ setup:
 filedurations:
 	python contentcuration/manage.py set_file_duration
 
+learningactivities:
+	python contentcuration/manage.py set_default_learning_activities
+
 export COMPOSE_PROJECT_NAME=studio_$(shell git rev-parse --abbrev-ref HEAD)
 
 purge-postgres:
