@@ -36,8 +36,7 @@ def extract_duration_of_media(f_in):
     )
     result = result.decode("utf-8").strip()
     try:
-        # return int(float(result))
-        raise ValueError
+        return int(float(result))
     except ValueError:
         # This can happen if ffprobe returns N/A for the duration
         # So instead we try to stream the entire file to get the value
