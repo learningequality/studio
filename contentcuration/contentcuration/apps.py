@@ -14,3 +14,22 @@ class ContentConfig(AppConfig):
         if settings.AWS_AUTO_CREATE_BUCKET and not is_gcs_backend():
             from contentcuration.utils.minio_utils import ensure_storage_bucket_public
             ensure_storage_bucket_public()
+
+        self._patch_django_cte_qjoin()
+
+    def _patch_django_cte_qjoin(self):
+        """
+        TODO Remove after the following prs/issues are resolved:
+        https://github.com/learningequality/studio/pull/3442
+        https://github.com/dimagi/django-cte/pull/60
+
+        @see fix: https://github.com/dimagi/django-cte/pull/50/files
+        """
+        from django_cte.join import QJoin
+
+        class join_field:
+            class related_model:
+                class _meta:
+                    local_concrete_fields = ()
+
+        QJoin.join_field = join_field
