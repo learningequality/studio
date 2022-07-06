@@ -133,7 +133,11 @@
             notranslate
           />
           <DetailsRow v-if="!isTopic" :label="translateMetadataString('learningActivity')">
-            <ContentNodeIcon :learningActivity="node.learning_activities" includeText showEachActivityChip/>
+            <ContentNodeIcon
+              :learningActivity="node.learning_activities"
+              includeText
+              showEachActivityChip
+            />
           </DetailsRow>
           <DetailsRow v-if="isExercise" :label="$tr('completion')">
             <span v-if="noMasteryModel" class="red--text">

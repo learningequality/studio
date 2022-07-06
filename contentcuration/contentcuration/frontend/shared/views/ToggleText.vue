@@ -97,9 +97,9 @@
 
   .text {
     margin: 0;
+    font-size: 12px;
     word-wrap: break-word;
     white-space: normal;
-    font-size: 12px;
   }
   .toggler {
     color: var(--v-grey-darken1);

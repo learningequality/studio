@@ -1,13 +1,12 @@
 import Vue from 'vue';
 import vuetifyIcons from 'vuetify/lib/components/Vuetify/mixins/icons';
+import { camelCase } from 'lodash';
 import CollapseAllIcon from '../views/icons/CollapseAllIcon';
 import IndicatorIcon from '../views/icons/IndicatorIcon';
 import LightBulbIcon from '../views/icons/LightBulbIcon';
 import ViewOnlyIcon from '../views/icons/ViewOnlyIcon';
 import Icon from 'shared/views/Icon';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
-import { camelCase } from 'lodash';
-
 
 Vue.component(Icon.name, Icon);
 
@@ -24,15 +23,14 @@ export const CONTENT_KIND_ICONS = {
 };
 
 export function getContentKindIcon(activity) {
-
-    if (activity  == 'Explore') {
-      return 'interactShaded';
-    } else if (activity == 'Multiple learning activities') {
-      return 'allActivities';
-    } else {
-      return `${camelCase(activity) + 'Solid'}`;
+  if (activity == 'Explore') {
+    return 'interactShaded';
+  } else if (activity == 'Multiple learning activities') {
+    return 'allActivities';
+  } else {
+    return `${camelCase(activity) + 'Solid'}`;
   }
-};
+}
 
 // Can use $vuetify.icons.iconName in <Icon> tags
 const customIcons = {

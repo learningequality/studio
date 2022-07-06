@@ -167,7 +167,6 @@ function getStepDetail(state, getters, contentNodeId) {
     return stepDetail;
   }
 
-
   stepDetail.title = node.title;
   stepDetail.kind = node.kind;
   stepDetail.learning_activities = node.learning_activities;
@@ -181,7 +180,7 @@ function getStepDetail(state, getters, contentNodeId) {
     }
   }
 
-  console.log(stepDetail)
+  console.log(stepDetail);
 
   return stepDetail;
 }
