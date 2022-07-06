@@ -44,9 +44,9 @@ describe('ContentNodeListItem', () => {
       },
       computed: {
         hasMetadataToDisplay() {
-          return true
-        }
-      }
+          return true;
+        },
+      },
     });
   });
   it('smoke test', () => {
