@@ -14,7 +14,7 @@ logging = logmodule.getLogger('command')
 CHUNKSIZE = 10000
 
 
-def extract_duration_of_media(f_in):
+def extract_duration_of_media(f_in, extension):
     """
     For more details on these commands, refer to the ffmpeg Wiki:
     https://trac.ffmpeg.org/wiki/FFprobeTips#Formatcontainerduration
@@ -30,6 +30,8 @@ def extract_duration_of_media(f_in):
             "default=noprint_wrappers=1:nokey=1",
             "-loglevel",
             "panic",
+            "-f",
+            extension,
             "-"
         ],
         stdin=f_in,
@@ -95,7 +97,7 @@ class Command(BaseCommand):
                     continue
                 try:
                     with file.file_on_disk.open() as f:
-                        duration = extract_duration_of_media(f)
+                        duration = extract_duration_of_media(f, file.file_format.extension)
                     if duration:
                         updated_count += File.objects.filter(checksum=file.checksum, preset_id__in=MEDIA_PRESETS).update(duration=duration)
                 except FileNotFoundError:
