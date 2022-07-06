@@ -42,6 +42,11 @@ describe('ContentNodeListItem', () => {
       propsData: {
         node: DOCUMENT_NODE,
       },
+      computed: {
+        hasMetadataToDisplay() {
+          return true
+        }
+      }
     });
   });
   it('smoke test', () => {
@@ -61,10 +66,6 @@ describe('ContentNodeListItem', () => {
 
   it("doesn't render a chevron button for a node different from topic", () => {
     expect(wrapper.contains('[data-test="btn-chevron"]')).toBe(false);
-  });
-
-  it("doesn't render a subtitle for a node different from topic and exercise", () => {
-    expect(wrapper.contains('[data-test="subtitle"]')).toBe(false);
   });
 
   it('emits an event when list item is clicked', () => {

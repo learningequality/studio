@@ -77,13 +77,13 @@
                   />
 
                   <VListTileSubTitle
-                    v-if="hasMetadataToDisplay && !isCompact"
+                    v-if="!isCompact"
                     data-test="subtitle"
                     class="metadata"
                   >
                     <span v-if="subtitle" class="text">{{ subtitle }}</span>
                     <span
-                      v-if="Object.keys(node.categories).length > 0"
+                      v-if="node.categories ? Object.keys(node.categories).length > 0 : null"
                       class="text"
                     >
                       {{ category(node.categories) }}
@@ -274,11 +274,6 @@
       },
       isCoach() {
         return this.node.role_visibility === RolesNames.COACH;
-      },
-      hasMetadataToDisplay() {
-        return (
-          this.subtitle || this.node.coach_content || Object.keys(this.node.categories).length > 0
-        );
       },
       contextMenuDisabled() {
         return !this.$scopedSlots['context-menu'] || this.copying;

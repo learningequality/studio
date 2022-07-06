@@ -68,8 +68,10 @@
     },
     computed: {
       activities() {
-        const ids = Object.keys(this.learningActivity);
-        return Object.keys(LearningActivities).filter(k => ids.includes(LearningActivities[k]));
+        if (this.learningActivity) {
+          const ids = Object.keys(this.learningActivity);
+          return Object.keys(LearningActivities).filter(k => ids.includes(LearningActivities[k]));
+        }
       },
     },
     methods: {
