@@ -1,5 +1,5 @@
 attrs==19.3.0
-django-cte==1.1.5
+django-cte==1.2.1
 django-mptt==0.11.0
 django-filter==2.4.0
 djangorestframework==3.12.4
