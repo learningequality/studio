@@ -66,6 +66,7 @@
           :items="selectableDurationOptions"
           :label="translateMetadataString('duration')"
           :required="required"
+          :rules="durationRules"
           @focus="trackClick('Duration')"
         />
       </VFlex>
@@ -100,7 +101,7 @@
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import {
     getCompletionValidators,
-    // getDurationValidators,
+    getDurationValidators,
     translateValidator,
   } from 'shared/utils/validation';
   import { metadataStrings, metadataTranslationMixin } from 'shared/mixins';
@@ -333,7 +334,7 @@
                 // default state
                 update.completion_criteria = {
                   model: this.value.model,
-                  threshold: this.value.threshold || 0,
+                  threshold: this.value.threshold,
                 };
               }
             }
@@ -735,10 +736,9 @@
       completionRules() {
         return this.required ? getCompletionValidators().map(translateValidator) : [];
       },
-      // TODO: reinstate this
-      // durationRules() {
-      //   return getDurationValidators().map(translateValidator);
-      // },
+      durationRules() {
+        return getDurationValidators().map(translateValidator);
+      },
       oneSelected() {
         return 1;
       },
