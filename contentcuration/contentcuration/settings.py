@@ -218,6 +218,8 @@ DATABASES = {
     },
 }
 
+IS_CONTENTNODE_TABLE_PARTITIONED = os.getenv("IS_CONTENTNODE_TABLE_PARTITIONED") or False
+
 
 DATABASE_ROUTERS = [
     "kolibri_content.router.ContentDBRouter",

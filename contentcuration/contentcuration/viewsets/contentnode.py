@@ -938,12 +938,12 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
         # Affected channel for the copy is the target's channel
         channel_id = target.channel_id
 
-        if ContentNode.objects.filter(pk=pk, tree_id=ContentNode.get_tree_id_by_pk(pk)).exists():
+        if ContentNode.filter_by_pk(pk=pk).exists():
             error = ValidationError("Copy pk already exists")
             return str(error)
 
         can_edit_source_channel = ContentNode.filter_edit_queryset(
-            ContentNode.objects.filter(id=source.id), user=self.request.user
+            ContentNode.filter_by_pk(pk=source.id), user=self.request.user
         ).exists()
 
         with create_change_tracker(pk, CONTENTNODE, channel_id, self.request.user, "copy_nodes") as progress_tracker:

@@ -193,8 +193,8 @@ def get_diff(updated, original):
 
 
 def generate_diff(updated_id, original_id):
-    updated = ContentNode.objects.filter(pk=updated_id, tree_id=ContentNode.get_tree_id_by_pk(updated_id)).first()
-    original = ContentNode.objects.filter(pk=original_id, tree_id=ContentNode.get_tree_id_by_pk(original_id)).first()
+    updated = ContentNode.filter_by_pk(pk=updated_id).first()
+    original = ContentNode.filter_by_pk(pk=original_id).first()
 
     main_descendants = original.get_descendants() if original else None
     updated_descendants = updated.get_descendants() if updated else None

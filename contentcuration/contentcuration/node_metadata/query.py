@@ -28,7 +28,7 @@ class Metadata(object):
         :param annotations: A dict of annotations
         """
         if isinstance(queryset_or_model, ContentNode):
-            self.query = ContentNode.objects.filter(pk=queryset_or_model.pk, tree_id=ContentNode.get_tree_id_by_pk(queryset_or_model.pk))
+            self.query = ContentNode.filter_by_pk(pk=queryset_or_model.pk)
         else:
             self.query = queryset_or_model
         self.annotations = annotations

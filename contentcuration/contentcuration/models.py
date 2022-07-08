@@ -1139,6 +1139,7 @@ class License(models.Model):
 NODE_ID_INDEX_NAME = "node_id_idx"
 NODE_MODIFIED_INDEX_NAME = "node_modified_idx"
 NODE_MODIFIED_DESC_INDEX_NAME = "node_modified_desc_idx"
+CONTENTNODE_TREE_ID_CACHE_KEY = "contentnode_{pk}_tree_id"
 
 
 class ContentNode(MPTTModel, models.Model):
@@ -1254,26 +1255,27 @@ class ContentNode(MPTTModel, models.Model):
         )
 
     @classmethod
-    def get_tree_id_by_pk(cls, pk):
+    def filter_by_pk(cls, pk):
         """
-        Fetches `tree_id` from cache if available else queries the db and sets a cache.
+        Returns a `QuerySet` that filters by ContentNode's `pk`.
 
-        Args:
-            pk (uuid): primary key of ContentNode.
-        Returns:
-            `tree_id` (int): `tree_id` of ContentNode at `pk`. If no such ContentNode exists then
-            None is returned.
+        If `settings.IS_CONTENTNODE_TABLE_PARTITIONED` is set to `True` then this
+        returns a `QuerySet` that filters by `tree_id` and `pk`. Also, sets a cache
+        for `tree_id`.
         """
-        tree_id = cache.get("node_{}".format(pk))
+        if settings.IS_CONTENTNODE_TABLE_PARTITIONED is True:
+            tree_id = cache.get(CONTENTNODE_TREE_ID_CACHE_KEY.format(pk=pk))
 
-        if tree_id is None:
-            try:
+            if tree_id is None:
                 tree_id = ContentNode.objects.values_list("tree_id", flat=True).get(pk=pk)
-                cache.set("node_{}".format(pk), tree_id, None)
-            except ContentNode.DoesNotExist:
-                tree_id = None
+                cache.set(CONTENTNODE_TREE_ID_CACHE_KEY.format(pk=pk), tree_id, None)
 
-        return tree_id
+            query = ContentNode.objects.filter(tree_id=tree_id, pk=pk)
+
+        else:
+            query = ContentNode.objects.filter(pk=pk)
+
+        return query
 
     @classmethod
     def filter_edit_queryset(cls, queryset, user):
@@ -1753,7 +1755,7 @@ class ContentNode(MPTTModel, models.Model):
         self.save()
 
         # Update tree_id cache when node is moved to another tree
-        cache.set("node_{}".format(self.id), self.tree_id, None)
+        cache.set(CONTENTNODE_TREE_ID_CACHE_KEY.format(pk=self.id), self.tree_id, None)
 
         # Recalculate storage if node was moved to or from the trash tree
         if target.channel_trash.exists() or parent_was_trashtree:

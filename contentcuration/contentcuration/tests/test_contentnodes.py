@@ -23,6 +23,7 @@ from .testdata import create_studio_file
 from contentcuration.models import Channel
 from contentcuration.models import ContentKind
 from contentcuration.models import ContentNode
+from contentcuration.models import CONTENTNODE_TREE_ID_CACHE_KEY
 from contentcuration.models import ContentTag
 from contentcuration.models import FormatPreset
 from contentcuration.models import generate_storage_url
@@ -173,52 +174,45 @@ class NodeGettersTestCase(StudioTestCase):
         assert len(details["kind_count"]) > 0
 
     def test_get_tree_id_by_pk(self):
+        from django.conf import settings
+
         contentnode = ContentNode.objects.create(
             title="Kolibri", parent=self.channel.main_tree, kind=self.topic
         )
 
-        tree_id = ContentNode.get_tree_id_by_pk(contentnode.id)
-        tree_id_from_cache = cache.get("node_{}".format(contentnode.pk))
-        assert tree_id == tree_id_from_cache == self.channel.main_tree.tree_id
-
-        tree_id = ContentNode.get_tree_id_by_pk("123456789")
-        assert tree_id is None
-
+        assert settings.IS_CONTENTNODE_TABLE_PARTITIONED is False
+        node = ContentNode.filter_by_pk(contentnode.id)[0]
+        tree_id_from_cache = cache.get(CONTENTNODE_TREE_ID_CACHE_KEY.format(pk=contentnode.pk))
+        assert node.id == contentnode.id
+        assert tree_id_from_cache is None
         with patch("contentcuration.models.ContentNode") as mock_contentnode:
-            tree_id = ContentNode.get_tree_id_by_pk(contentnode.id)
-            mock_contentnode.assert_not_called()
-            assert tree_id == tree_id_from_cache == self.channel.main_tree.tree_id
+            ContentNode.filter_by_pk(contentnode.id)
+            mock_contentnode.objects.filter.assert_called_once_with(pk=contentnode.id)
+
+        settings.IS_CONTENTNODE_TABLE_PARTITIONED = True
+        node = ContentNode.filter_by_pk(contentnode.id)[0]
+        tree_id_from_cache = cache.get(CONTENTNODE_TREE_ID_CACHE_KEY.format(pk=contentnode.id))
+        assert node.id == contentnode.id
+        assert tree_id_from_cache == self.channel.main_tree.tree_id == node.tree_id
+        with patch("contentcuration.models.ContentNode") as mock_contentnode:
+            ContentNode.filter_by_pk(contentnode.id)
+            mock_contentnode.objects.filter.assert_called_once_with(tree_id=tree_id_from_cache, pk=contentnode.id)
+            mock_contentnode.objects.values_list.get.assert_not_called()
 
     def test_tree_id_update_on_move(self):
         sourcenode = ContentNode.objects.create(
             title="Main", parent=self.channel.main_tree, kind=self.topic
         )
-        sourcenode_tree_id = ContentNode.get_tree_id_by_pk(sourcenode.id)
-
-        assert sourcenode_tree_id == self.channel.main_tree.tree_id
-
         targetnode = ContentNode.objects.create(
             title="Trashed", parent=self.channel.trash_tree, kind=self.topic
         )
 
         sourcenode.move_to(targetnode, "last-child")
 
-        with patch("contentcuration.models.ContentNode") as mock_contentnode:
-            sourcenode_tree_id = ContentNode.get_tree_id_by_pk(sourcenode.id)
-            mock_contentnode.assert_not_called()
-            assert sourcenode_tree_id == self.channel.trash_tree.tree_id
+        after_move_sourcenode = ContentNode.filter_by_pk(sourcenode.id)[0]
 
-    def test_pk_and_tree_id_query(self):
-        contentnode = ContentNode.objects.create(
-            title="Studio", parent=self.channel.main_tree, kind=self.topic
-        )
-
-        contentnode_by_id = ContentNode.objects.filter(pk=contentnode.id)[0]
-        contentnode_by_id_and_tree_id = ContentNode.objects.filter(pk=contentnode.id, tree_id=ContentNode.get_tree_id_by_pk(contentnode.id))[0]
-        contentnode_by_id_and_tree_id_none = ContentNode.objects.filter(pk=contentnode.id, tree_id=ContentNode.get_tree_id_by_pk("123456789"))
-
-        assert contentnode_by_id.id == contentnode_by_id_and_tree_id.id
-        assert len(contentnode_by_id_and_tree_id_none) == 0
+        assert after_move_sourcenode.tree_id == self.channel.trash_tree.tree_id == cache.get(
+            CONTENTNODE_TREE_ID_CACHE_KEY.format(pk=sourcenode.pk))
 
 
 class NodeOperationsTestCase(StudioTestCase):
