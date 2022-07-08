@@ -50,7 +50,7 @@ class Metadata(object):
         :return: A dict of metadata for the node identified by `node_pk`
         """
         if self.query is None:
-            return Metadata(ContentNode.objects.filter(pk=node_pk, tree_id=ContentNode.get_tree_id_by_pk(node_pk)), **self.annotations).get(node_pk)
+            return Metadata(ContentNode.filter_by_pk(pk=node_pk), **self.annotations).get(node_pk)
 
         if self.metadata is None:
             self.metadata = {}

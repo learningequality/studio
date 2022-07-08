@@ -723,7 +723,7 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
         # should not be cross channel, and are not meaningful if they are.
         prereq_table_entries = PrerequisiteContentRelationship.objects.filter(
             target_node__tree_id=Cast(
-                ContentNode.objects.filter(pk=pk).values_list("tree_id", flat=True)[:1],
+                ContentNode.filter_by_pk(pk=pk).values_list("tree_id", flat=True)[:1],
                 output_field=DjangoIntegerField(),
             )
         ).values("target_node_id", "prerequisite_id")
