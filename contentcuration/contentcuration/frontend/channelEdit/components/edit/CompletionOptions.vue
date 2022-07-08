@@ -737,6 +737,14 @@
         return this.required ? getCompletionValidators().map(translateValidator) : [];
       },
       durationRules() {
+        const defaultStateForDocument = this.currentCompletionDropdown === null;
+        const allContentViewedIsChosenInCompletionDropdown =
+          this.currentCompletionDropdown === 'allContent' ||
+          (this.value.model === 'pages' && this.currentCompletionDropdown === 'allContent');
+
+        if (defaultStateForDocument || allContentViewedIsChosenInCompletionDropdown) {
+          return false;
+        }
         return getDurationValidators().map(translateValidator);
       },
       oneSelected() {
