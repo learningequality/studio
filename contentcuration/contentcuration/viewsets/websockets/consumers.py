@@ -1,6 +1,7 @@
 import json
 
 from asgiref.sync import async_to_sync
+from celery.utils.log import get_task_logger
 from channels.generic.websocket import WebsocketConsumer
 
 from contentcuration.models import Change
@@ -8,6 +9,8 @@ from contentcuration.models import Channel
 from contentcuration.tasks import get_or_create_async_task
 from contentcuration.viewsets.sync.constants import CHANNEL
 from contentcuration.viewsets.sync.constants import CREATED
+
+logger = get_task_logger(__name__)
 
 
 class SyncConsumer(WebsocketConsumer):
@@ -35,16 +38,16 @@ class SyncConsumer(WebsocketConsumer):
         self.room_name = self.scope['url_route']['kwargs']['channel_id']
         self.room_group_name = self.room_name
 
-        print("----------------------------------")
-        print("Connected to channel_id: " + self.room_name)
-        print("----------------------------------")
+        logger.info("----------------------------------")
+        logger.info("Connected to channel_id: " + self.room_name)
+        logger.info("----------------------------------")
 
         self.user = self.scope["user"]
         self.indiviual_room_group_name = str(self.user.id)
 
-        print("----------------------------------")
-        print("Connected to user " + str(self.user))
-        print("----------------------------------")
+        logger.info("----------------------------------")
+        logger.info("Connected to user " + str(self.user))
+        logger.info("----------------------------------")
 
         if self.check_authentication():
             # Join room group based on channel_id
