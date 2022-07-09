@@ -41,3 +41,4 @@ tabulate==0.8.2
 fonttools
 flower==0.9.4
 minio==7.1.1
+python-dotenv

@@ -1,4 +1,6 @@
 # flake8: noqa
+from dotenv import load_dotenv
+
 from .not_production_settings import *  # noqa
 
 DEBUG = True
@@ -17,3 +19,5 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.TokenAuthentication',
     )
 }
+
+load_dotenv(override=True)  # take environment variables from .env.

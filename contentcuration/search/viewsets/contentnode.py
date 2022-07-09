@@ -1,14 +1,12 @@
 import re
 
-from django.db.models import Case
+from django.db.models import ExpressionWrapper
 from django.db.models import F
 from django.db.models import IntegerField
 from django.db.models import OuterRef
 from django.db.models import Q
 from django.db.models import Subquery
 from django.db.models import Value
-from django.db.models import When
-from django.db.models.functions import Coalesce
 from django_filters.rest_framework import BooleanFilter
 from django_filters.rest_framework import CharFilter
 from le_utils.constants import content_kinds
@@ -22,10 +20,9 @@ from contentcuration.utils.pagination import CachedListPagination
 from contentcuration.viewsets.base import RequiredFilterSet
 from contentcuration.viewsets.base import ValuesViewset
 from contentcuration.viewsets.common import NotNullMapArrayAgg
-from contentcuration.viewsets.common import SQArrayAgg
-from contentcuration.viewsets.common import SQCount
 from contentcuration.viewsets.common import UUIDFilter
 from contentcuration.viewsets.common import UUIDInFilter
+from contentcuration.viewsets.contentnode import get_title
 
 
 class ListPagination(CachedListPagination):
@@ -136,6 +133,7 @@ class SearchContentNodeViewSet(ValuesViewset):
     filterset_class = ContentNodeFilter
     pagination_class = ListPagination
     permission_classes = [IsAuthenticated]
+
     values = (
         "id",
         "content_id",
@@ -154,71 +152,43 @@ class SearchContentNodeViewSet(ValuesViewset):
         "modified",
         "parent_id",
         "changed",
-        "location_ids",
         "content_tags",
         "original_channel_name",
     )
+
+    field_map = {
+        "title": get_title,
+    }
+
+    def get_queryset(self):
+        queryset = super(SearchContentNodeViewSet, self).get_queryset()
+        return ContentNode._annotate_channel_id(queryset)
 
     def annotate_queryset(self, queryset):
         """
         1. Do a distinct by 'content_id,' using the original node if possible
         2. Annotate lists of content node and channel pks
         """
-        # Get accessible content nodes that match the content id
-        content_id_query = ContentNode.filter_view_queryset(ContentNode.objects.all(), self.request.user).filter(
-            content_id=OuterRef("content_id")
-        )
-
-        # Combine by unique content id
-        deduped_content_query = (
-            content_id_query.filter(content_id=OuterRef("content_id"))
-            .annotate(
-                is_original=Case(
-                    When(original_source_node_id=F("node_id"), then=Value(1)),
-                    default=Value(2),
-                    output_field=IntegerField(),
-                ),
-            )
-            .order_by("is_original", "created")
-        )
-        queryset = queryset.filter(
-            pk__in=Subquery(deduped_content_query.values_list("id", flat=True)[:1])
-        ).order_by()
-
         thumbnails = File.objects.filter(
             contentnode=OuterRef("id"), preset__thumbnail=True
         )
 
-        descendant_resources = (
-            ContentNode.objects.filter(
-                tree_id=OuterRef("tree_id"),
-                lft__gt=OuterRef("lft"),
-                rght__lt=OuterRef("rght"),
-            )
-            .exclude(kind_id=content_kinds.TOPIC)
-            .values("id", "role_visibility", "changed")
-            .order_by()
+        descendant_resources_count = ExpressionWrapper(((F("rght") - F("lft") - Value(1)) / Value(2)), output_field=IntegerField())
+
+        channel_name = Subquery(
+            Channel.objects.filter(pk=OuterRef("channel_id")).values(
+                "name"
+            )[:1]
         )
-        original_channel_name = Coalesce(
-            Subquery(
-                Channel.objects.filter(pk=OuterRef("original_channel_id")).values(
-                    "name"
-                )[:1]
-            ),
-            Subquery(
-                Channel.objects.filter(main_tree__tree_id=OuterRef("tree_id")).values(
-                    "name"
-                )[:1]
-            ),
-        )
+
         queryset = queryset.annotate(
-            location_ids=SQArrayAgg(content_id_query, field="id"),
-            resource_count=SQCount(descendant_resources, field="id"),
+            resource_count=descendant_resources_count,
             thumbnail_checksum=Subquery(thumbnails.values("checksum")[:1]),
             thumbnail_extension=Subquery(
                 thumbnails.values("file_format__extension")[:1]
             ),
             content_tags=NotNullMapArrayAgg("tags__tag_name"),
-            original_channel_name=original_channel_name,
+            original_channel_name=channel_name,
         )
+
         return queryset
