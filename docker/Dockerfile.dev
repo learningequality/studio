@@ -17,7 +17,7 @@ RUN apt-get update --fix-missing && \
     apt-get -y install \
         curl fish man \
         python-minimal python3.6 python3-pip python3-dev \
-        gcc libpq-dev make git gettext libjpeg-dev
+        gcc libpq-dev make git gettext libjpeg-dev ffmpeg
 
 # Ensure that python is using python3
 # copying approach from official python images
