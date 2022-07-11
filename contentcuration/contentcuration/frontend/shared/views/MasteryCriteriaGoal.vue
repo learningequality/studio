@@ -12,7 +12,6 @@
           :placeholder="placeholder"
           :required="required"
           :readonly="readonly"
-          :disabled="disabled"
           :rules="masteryRules"
           menu-props="offsetY"
           class="mb-2"
@@ -20,138 +19,117 @@
         />
       </VFlex>
     </VLayout>
-
   </VFlex>
-
 </template>
 
 <script>
+import { getMasteryModelValidators, translateValidator } from '../utils/validation';
+import MasteryModels, { MasteryModelsList, MasteryModelsNames } from 'shared/leUtils/MasteryModels';
+import { constantsTranslationMixin } from 'shared/mixins';
 
-  import {
-    getMasteryModelValidators,
-    translateValidator,
-  } from '../utils/validation';
-  import MasteryModels, {
-    MasteryModelsList,
-    MasteryModelsNames,
-  } from 'shared/leUtils/MasteryModels';
-  // import InfoModal from 'shared/views/InfoModal.vue';
-  import { constantsTranslationMixin } from 'shared/mixins';
-
-  export default {
-    name: 'MasteryCriteriaGoal',
-    components: {
-      // InfoModal,
-    },
-    mixins: [constantsTranslationMixin],
-    props: {
-      value: {
-        type: Object,
-        required: false,
-        validator: function(value) {
-          return (
-            !value ||
-            !value.mastery_model ||
-            !value.mastery_model.toString() ||
-            MasteryModels.has(value.mastery_model)
-          );
-        },
-      },
-      placeholder: {
-        type: String,
-      },
-      required: {
-        type: Boolean,
-        default: true,
-      },
-      readonly: {
-        type: Boolean,
-        default: false,
-      },
-      disabled: {
-        type: Boolean,
-        default: false,
+export default {
+  name: 'MasteryCriteriaGoal',
+  mixins: [constantsTranslationMixin],
+  props: {
+    value: {
+      type: Object,
+      required: false,
+      validator: function (value) {
+        return (
+          !value ||
+          !value.mastery_model ||
+          !value.mastery_model.toString() ||
+          MasteryModels.has(value.mastery_model)
+        );
       },
     },
-    computed: {
-      masteryModel: {
-        get() {
-          return this.value && this.value.mastery_model;
-        },
-        set(mastery_model) {
-          if (mastery_model !== MasteryModelsNames.M_OF_N) {
-            this.handleInput({ mastery_model });
-          }
-        },
+    placeholder: {
+      type: String,
+    },
+    required: {
+      type: Boolean,
+      default: true,
+    },
+    readonly: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  computed: {
+    masteryModel: {
+      get() {
+        return this.value && this.value.mastery_model;
       },
-      masteryCriteria() {
-        return MasteryModelsList.map(model => ({
-          text: this.translateConstant(model),
-          value: model,
-        }));
-      },
-      masteryRules() {
-        return this.required ? getMasteryModelValidators().map(translateValidator) : [];
+      set(mastery_model) {
+        if (mastery_model !== MasteryModelsNames.M_OF_N) {
+          this.handleInput({ mastery_model });
+        }
       },
     },
-    methods: {
-      handleInput(newValue) {
-        let data = {
-          ...this.value,
-          ...newValue,
-        };
-        console.log('data', data)
-        this.$emit('input', data);
-      },
+    masteryCriteria() {
+      return MasteryModelsList.map((model) => ({
+        text: this.translateConstant(model),
+        value: model,
+      }));
     },
-    $trs: {
-      labelText: 'Goal',
+    masteryRules() {
+      return this.required ? getMasteryModelValidators().map(translateValidator) : [];
     },
-  };
-
+  },
+  methods: {
+    handleInput(newValue) {
+      let data = {
+        ...this.value,
+        ...newValue,
+      };
+      this.$emit('input', data);
+    },
+  },
+  $trs: {
+    labelText: 'Goal',
+  },
+};
 </script>
 
 
 <style lang="less" scoped>
+.v-autocomplete {
+  display: inline-block;
+  width: 150px;
+}
 
-  .v-autocomplete {
-    display: inline-block;
-    width: 150px;
-  }
+.mastery-field {
+  width: 50px;
+}
 
-  .mastery-field {
-    width: 50px;
-  }
+.out-of {
+  padding-top: 20px;
+  font-size: 18pt;
+  color: var(--v-grey-darken1);
+  text-align: center;
+}
 
-  .out-of {
-    padding-top: 20px;
-    font-size: 18pt;
-    color: var(--v-grey-darken1);
-    text-align: center;
-  }
-
-  .mastery-table {
-    padding: 15px;
-    .mastery-row {
-      padding: 5px;
-      &:nth-child(odd) {
-        background-color: var(--v-greyBackground-base);
-      }
-      .mastery-label {
-        padding-right: 15px;
-        font-weight: bold;
-      }
+.mastery-table {
+  padding: 15px;
+  .mastery-row {
+    padding: 5px;
+    &:nth-child(odd) {
+      background-color: var(--v-greyBackground-base);
+    }
+    .mastery-label {
+      padding-right: 15px;
+      font-weight: bold;
     }
   }
-  /deep/ a {
-    text-decoration: none !important;
-    &:hover {
-      color: var(--v-blue-darken-1);
-    }
+}
+/deep/ a {
+  text-decoration: none !important;
+  &:hover {
+    color: var(--v-blue-darken-1);
   }
+}
 
-  /deep/ .v-list__tile {
-    width: 100%;
-  }
-
+/deep/ .v-list__tile {
+  width: 100%;
+}
 </style>

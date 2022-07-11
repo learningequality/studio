@@ -1,6 +1,5 @@
 <template>
 
-  <!-- xs12 sm11 md10 lg9 xl8 -->
   <VFlex>
     <VLayout v-if="showMofN" class="mofn-options" row>
       <VFlex xs6>
@@ -15,7 +14,6 @@
           :placeholder="mPlaceholder"
           :readonly="readonly"
           :rules="mRules"
-          :disabled="disabled"
           @keypress="isIntegerInput($event)"
           @paste="isIntegerPaste($event)"
           @focus="$emit('mFocus')"
@@ -36,7 +34,6 @@
           :readonly="readonly"
           :placeholder="nPlaceholder"
           :rules="nRules"
-          :disabled="disabled"
           @keypress="isIntegerInput($event)"
           @paste="isIntegerPaste($event)"
           @focus="$emit('nFocus')"
@@ -50,7 +47,6 @@
 <script>
 
   import {
-    // getMasteryModelValidators,
     getMasteryModelMValidators,
     getMasteryModelNValidators,
     translateValidator,
@@ -74,22 +70,11 @@
           );
         },
       },
-      // placeholder: {
-      //   type: String,
-      // },
       showMofN: {
         type: Boolean,
         default: false,
       },
-      // required: {
-      //   type: Boolean,
-      //   default: true,
-      // },
       readonly: {
-        type: Boolean,
-        default: false,
-      },
-      disabled: {
         type: Boolean,
         default: false,
       },
@@ -109,14 +94,6 @@
       },
     },
     computed: {
-      // masteryModel: {
-      //   get() {
-      //     return this.value && this.value.mastery_model;
-      //   },
-      //   set(mastery_model) {
-      //     this.handleInput({ mastery_model });
-      //   },
-      // },
       mValue: {
         get() {
           return this.value && this.value.m;
@@ -137,15 +114,6 @@
           this.handleInput(value < this.mValue ? { m: value, n: value } : { n: value });
         },
       },
-      // masteryCriteria() {
-      //   return MasteryModelsList.map(model => ({
-      //     text: this.translateConstant(model),
-      //     value: model,
-      //   }));
-      // },
-      // masteryRules() {
-      //   return this.required ? getMasteryModelValidators().map(translateValidator) : [];
-      // },
       mRules() {
         return this.mRequired
           ? getMasteryModelMValidators(this.nValue).map(translateValidator)
