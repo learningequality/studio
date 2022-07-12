@@ -22,7 +22,8 @@ const MESSAGES = {
   longActivityGtThirty: 'Long activity must be greater than 30',
   longActivityLteOneTwenty: 'Long activity must be less than or equal to 120',
   activityDurationTimeMinRequirement: 'Time must be greater than or equal to 1',
-  activityDurationTooLongWarning: 'Please make sure this is the amount of time you want learners to spend on this resource to complete it',
+  activityDurationTooLongWarning:
+    'Please make sure this is the amount of time you want learners to spend on this resource to complete it',
 };
 
 export default createTranslator('sharedVue', MESSAGES);

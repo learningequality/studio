@@ -1,4 +1,5 @@
 <template>
+
   <div v-if="nodes.length" class="details-edit-view">
     <VForm ref="form" v-model="valid" :lazy-validation="newContent" class="px-2">
       <!-- File upload and preview section -->
@@ -350,533 +351,543 @@
       </VLayout>
     </VForm>
   </div>
+
 </template>
 
 <script>
-import difference from 'lodash/difference';
-import intersection from 'lodash/intersection';
-import uniq from 'lodash/uniq';
-import { mapGetters, mapActions } from 'vuex';
-import ContentNodeThumbnail from '../../views/files/thumbnails/ContentNodeThumbnail';
-import FileUpload from '../../views/files/FileUpload';
-import SubtitlesList from '../../views/files/supplementaryLists/SubtitlesList';
-import { isImportedContent, importedChannelLink } from '../../utils';
-import AccessibilityOptions from './AccessibilityOptions.vue';
-import LevelsOptions from './LevelsOptions.vue';
-import ResourcesNeededOptions from './ResourcesNeededOptions.vue';
-import LearningActivityOptions from './LearningActivityOptions.vue';
-import CategoryOptions from './CategoryOptions.vue';
-import CompletionOptions from './CompletionOptions.vue';
 
-import {
-  getTitleValidators,
-  getCopyrightHolderValidators,
-  translateValidator,
-} from 'shared/utils/validation';
-import { findLicense, memoizeDebounce } from 'shared/utils/helpers';
-import LanguageDropdown from 'shared/views/LanguageDropdown';
-import HelpTooltip from 'shared/views/HelpTooltip';
-import LicenseDropdown from 'shared/views/LicenseDropdown';
-import VisibilityDropdown from 'shared/views/VisibilityDropdown';
-import Checkbox from 'shared/views/form/Checkbox';
-import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
-import { NEW_OBJECT, FeatureFlagKeys } from 'shared/constants';
-// import { validate as validateCompletionCriteria } from 'shared/leUtils/CompletionCriteria';
-import { constantsTranslationMixin, metadataTranslationMixin } from 'shared/mixins';
+  import difference from 'lodash/difference';
+  import intersection from 'lodash/intersection';
+  import uniq from 'lodash/uniq';
+  import { mapGetters, mapActions } from 'vuex';
+  import ContentNodeThumbnail from '../../views/files/thumbnails/ContentNodeThumbnail';
+  import FileUpload from '../../views/files/FileUpload';
+  import SubtitlesList from '../../views/files/supplementaryLists/SubtitlesList';
+  import { isImportedContent, importedChannelLink } from '../../utils';
+  import AccessibilityOptions from './AccessibilityOptions.vue';
+  import LevelsOptions from './LevelsOptions.vue';
+  import ResourcesNeededOptions from './ResourcesNeededOptions.vue';
+  import LearningActivityOptions from './LearningActivityOptions.vue';
+  import CategoryOptions from './CategoryOptions.vue';
+  import CompletionOptions from './CompletionOptions.vue';
 
-// Define an object to act as the place holder for non unique values.
-const nonUniqueValue = {};
-nonUniqueValue.toString = () => '';
+  import {
+    getTitleValidators,
+    getCopyrightHolderValidators,
+    translateValidator,
+  } from 'shared/utils/validation';
+  import { findLicense, memoizeDebounce } from 'shared/utils/helpers';
+  import LanguageDropdown from 'shared/views/LanguageDropdown';
+  import HelpTooltip from 'shared/views/HelpTooltip';
+  import LicenseDropdown from 'shared/views/LicenseDropdown';
+  import VisibilityDropdown from 'shared/views/VisibilityDropdown';
+  import Checkbox from 'shared/views/form/Checkbox';
+  import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
+  import { NEW_OBJECT, FeatureFlagKeys } from 'shared/constants';
+  // import { validate as validateCompletionCriteria } from 'shared/leUtils/CompletionCriteria';
+  import { constantsTranslationMixin, metadataTranslationMixin } from 'shared/mixins';
 
-function getValueFromResults(results) {
-  if (results.length === 0) {
-    return null;
-  } else if (results.length === 1) {
-    return results[0];
-  } else {
-    return nonUniqueValue;
+  // Define an object to act as the place holder for non unique values.
+  const nonUniqueValue = {};
+  nonUniqueValue.toString = () => '';
+
+  function getValueFromResults(results) {
+    if (results.length === 0) {
+      return null;
+    } else if (results.length === 1) {
+      return results[0];
+    } else {
+      return nonUniqueValue;
+    }
   }
-}
 
-function generateGetterSetter(key) {
-  return {
-    get() {
-      return this.getValueFromNodes(key);
-    },
-    set(value) {
-      this.update({ [key]: value });
-    },
-  };
-}
-
-function generateExtraFieldsGetterSetter(key, defaultValue) {
-  return {
-    get() {
-      return this.getExtraFieldsValueFromNodes(key, defaultValue);
-    },
-    set(value) {
-      this.updateExtraFields({ [key]: value });
-    },
-  };
-}
-
-/**
- * This function is used to generate getter/setters for new metadata fields that are boolean maps:
- * - `grade_levels` (sometimes referred to as `content_levels`)
- * - `learner_needs` (resources needed)
- * - `accessibility_labels` (accessibility options)
- * - `learning_activities` (learning activities)
- * - `categories` (categories)
- */
-
-function generateNestedNodesGetterSetter(key) {
-  return {
-    get() {
-      const value = this.getValueFromNodes(key);
-      return Object.keys(value);
-    },
-    set(value) {
-      const newMap = {};
-      for (let label of value) {
-        newMap[label] = true;
-      }
-      this.update({ [key]: newMap });
-    },
-  };
-}
-
-export default {
-  name: 'DetailsTabView',
-  components: {
-    LanguageDropdown,
-    HelpTooltip,
-    LicenseDropdown,
-    VisibilityDropdown,
-    FileUpload,
-    SubtitlesList,
-    ContentNodeThumbnail,
-    Checkbox,
-    AccessibilityOptions,
-    LevelsOptions,
-    ResourcesNeededOptions,
-    LearningActivityOptions,
-    CategoryOptions,
-    CompletionOptions,
-  },
-  mixins: [constantsTranslationMixin, metadataTranslationMixin],
-  props: {
-    nodeIds: {
-      type: Array,
-      default: () => [],
-    },
-  },
-  data() {
+  function generateGetterSetter(key) {
     return {
-      tagText: null,
-      valid: true,
-      diffTracker: {},
+      get() {
+        return this.getValueFromNodes(key);
+      },
+      set(value) {
+        this.update({ [key]: value });
+      },
     };
-  },
-  computed: {
-    ...mapGetters('contentNode', [
-      'getContentNodes',
-      'authors',
-      'providers',
-      'aggregators',
-      'copyrightHolders',
-      'tags',
-    ]),
-    ...mapGetters('currentChannel', ['currentChannel']),
-    ...mapGetters('file', ['getContentNodeFiles']),
-    nodes() {
-      return this.getContentNodes(this.nodeIds);
-    },
-    firstNode() {
-      return this.nodes.length ? this.nodes[0] : null;
-    },
-    allExercises() {
-      return this.nodes.every((node) => node.kind === ContentKindsNames.EXERCISE);
-    },
-    allResources() {
-      return !this.nodes.some((node) => node.kind === ContentKindsNames.TOPIC);
-    },
-    isImported() {
-      return isImportedContent(this.firstNode);
-    },
-    importedChannelLink() {
-      return importedChannelLink(this.firstNode, this.$router);
-    },
-    importedChannelName() {
-      return this.firstNode.original_channel_name;
-    },
-    requiresAccessibility() {
-      return this.nodes.every((node) => node.kind !== ContentKindsNames.AUDIO);
-    },
-    audioAccessibility() {
-      return this.oneSelected && this.firstNode.kind === 'audio';
-    },
-    /* FORM FIELDS */
-    title: generateGetterSetter('title'),
-    description: generateGetterSetter('description'),
-    randomizeOrder: generateExtraFieldsGetterSetter('randomize', true),
-    author: generateGetterSetter('author'),
-    provider: generateGetterSetter('provider'),
-    aggregator: generateGetterSetter('aggregator'),
-    copyright_holder: generateGetterSetter('copyright_holder'),
-    contentTags: {
-      get() {
-        return intersection(...this.nodes.map((node) => node.tags));
-      },
-      set(value) {
-        const oldValue = intersection(...this.nodes.map((node) => node.tags));
-        // If selecting a tag, clear the text field
-        if (value.length > (oldValue || []).length) {
-          this.tagText = null;
-          this.addNodeTags(difference(value, oldValue));
-        } else {
-          this.removeNodeTags(difference(oldValue, value));
-        }
-      },
-    },
-    role: generateGetterSetter('role_visibility'),
-    language: generateGetterSetter('language'),
-    accessibility: generateNestedNodesGetterSetter('accessibility_labels'),
-    contentLevel: generateNestedNodesGetterSetter('grade_levels'),
-    resourcesNeeded: generateNestedNodesGetterSetter('learner_needs'),
-    contentLearningActivities: generateNestedNodesGetterSetter('learning_activities'),
-    categories: generateNestedNodesGetterSetter('categories'),
-    learnerManaged: generateGetterSetter('learner_managed'),
-    license() {
-      return this.getValueFromNodes('license');
-    },
-    license_description() {
-      return this.getValueFromNodes('license_description');
-    },
-    licenseItem: {
-      get() {
-        return {
-          license: this.license && this.license.toString() ? this.license : null,
-          license_description: (this.license_description || '').toString(),
-        };
-      },
-      set(value) {
-        this.update(value);
-      },
-    },
-    thumbnail: {
-      get() {
-        return this.nodeFiles.find((f) => f.preset.thumbnail);
-      },
-      set(file) {
-        file ? this.updateFile(file) : this.thumbnail ? this.deleteFile(this.thumbnail) : null;
-      },
-    },
-    thumbnailEncoding: generateGetterSetter('thumbnail_encoding'),
-    completionAndDuration: {
-      get() {
-        const { completion_criteria, modality } =
-          this.getExtraFieldsValueFromNodes('options') || {};
-        const suggested_duration_type =
-          this.getExtraFieldsValueFromNodes('suggested_duration_type');
-        const suggested_duration = this.getValueFromNodes('suggested_duration');
-        return {
-          suggested_duration,
-          suggested_duration_type,
-          modality,
-          ...(completion_criteria || {}),
-        };
-      },
-      set({ completion_criteria, suggested_duration, suggested_duration_type, modality }) {
-        // TODO Remove validation if unnecessary after implementing `completionCriteria`
-        // if (validateCompletionCriteria(completion_criteria)) {
-        // const options = { completion_criteria };
-        // this.updateExtraFields({ options });
-        // } else {
-        //   console.warn('Invalid completion criteria', [...validateCompletionCriteria.errors]);
-        // }
+  }
 
-        const options = { completion_criteria, modality };
-        if (modality) {
-          options.modality = modality;
+  function generateExtraFieldsGetterSetter(key, defaultValue) {
+    return {
+      get() {
+        return this.getExtraFieldsValueFromNodes(key, defaultValue);
+      },
+      set(value) {
+        this.updateExtraFields({ [key]: value });
+      },
+    };
+  }
+
+  /**
+   * This function is used to generate getter/setters for new metadata fields that are boolean maps:
+   * - `grade_levels` (sometimes referred to as `content_levels`)
+   * - `learner_needs` (resources needed)
+   * - `accessibility_labels` (accessibility options)
+   * - `learning_activities` (learning activities)
+   * - `categories` (categories)
+   */
+
+  function generateNestedNodesGetterSetter(key) {
+    return {
+      get() {
+        const value = this.getValueFromNodes(key);
+        return Object.keys(value);
+      },
+      set(value) {
+        const newMap = {};
+        for (let label of value) {
+          newMap[label] = true;
         }
-        this.updateExtraFields({ options });
-        this.updateExtraFields({ suggested_duration_type });
-        this.update({ suggested_duration });
+        this.update({ [key]: newMap });
+      },
+    };
+  }
+
+  export default {
+    name: 'DetailsTabView',
+    components: {
+      LanguageDropdown,
+      HelpTooltip,
+      LicenseDropdown,
+      VisibilityDropdown,
+      FileUpload,
+      SubtitlesList,
+      ContentNodeThumbnail,
+      Checkbox,
+      AccessibilityOptions,
+      LevelsOptions,
+      ResourcesNeededOptions,
+      LearningActivityOptions,
+      CategoryOptions,
+      CompletionOptions,
+    },
+    mixins: [constantsTranslationMixin, metadataTranslationMixin],
+    props: {
+      nodeIds: {
+        type: Array,
+        default: () => [],
       },
     },
-    /* COMPUTED PROPS */
-    disableAuthEdits() {
-      return this.nodes.some((node) => node.freeze_authoring_data);
+    data() {
+      return {
+        tagText: null,
+        valid: true,
+        diffTracker: {},
+      };
     },
-    detectedImportText() {
-      const count = this.nodes.filter((node) => node.freeze_authoring_data).length;
-      return this.$tr('detectedImportText', { count });
-    },
-    oneSelected() {
-      return this.nodes.length === 1;
-    },
-    languageHint() {
-      let topLevel = this.nodes.some((node) => node.parent === this.currentChannel.main_tree);
-      return topLevel ? this.$tr('languageChannelHelpText') : this.$tr('languageHelpText');
-    },
-    copyrightHolderRequired() {
-      // Needs to appear when any of the selected licenses require a copyright holder
-      return this.nodes.some(
-        (node) =>
-          findLicense(node.license, { copyright_holder_required: false }).copyright_holder_required
-      );
-    },
-    titleRules() {
-      return getTitleValidators().map(translateValidator);
-    },
-    copyrightHolderRules() {
-      if (this.disableAuthEdits || !this.isUnique(this.copyright_holder)) {
-        return [];
-      }
-      return getCopyrightHolderValidators().map(translateValidator);
-    },
-    nodeFiles() {
-      return (this.firstNode && this.getContentNodeFiles(this.firstNode.id)) || [];
-    },
-    fileDuration() {
-      if (this.firstNode.kind === 'audio' || this.firstNode.kind === 'video') {
-        return this.nodeFiles.filter(
-          (file) => file.file_format === 'mp4' || file.file_format === 'mp3'
-        )[0].duration;
-      } else {
-        return null;
-      }
-    },
-    videoSelected() {
-      return this.oneSelected && this.firstNode.kind === 'video';
-    },
-    newContent() {
-      return !this.nodes.some((n) => n[NEW_OBJECT]);
-    },
-    allowChannelQuizzes() {
-      // return false;
-      // TODO: uncomment
-      return this.$store.getters.hasFeatureEnabled(FeatureFlagKeys.channel_quizzes);
-    },
-    isDocument() {
-      return this.firstNode.kind === 'document';
-    },
-  },
-  watch: {
-    nodes: {
-      deep: true,
-      handler() {
-        // Handles both when loading a node and when making a change
-        this.tagText = null;
-        this.$nextTick(this.handleValidation);
+    computed: {
+      ...mapGetters('contentNode', [
+        'getContentNodes',
+        'authors',
+        'providers',
+        'aggregators',
+        'copyrightHolders',
+        'tags',
+      ]),
+      ...mapGetters('currentChannel', ['currentChannel']),
+      ...mapGetters('file', ['getContentNodeFiles']),
+      nodes() {
+        return this.getContentNodes(this.nodeIds);
       },
-    },
-  },
-  mounted() {
-    this.$nextTick(this.handleValidation);
-  },
-  methods: {
-    ...mapActions(['setUnsavedChanges']),
-    ...mapActions('contentNode', ['updateContentNode', 'addTags', 'removeTags']),
-    ...mapActions('file', ['updateFile', 'deleteFile']),
-    saveNode: memoizeDebounce(
-      function (id) {
-        this.saveFromDiffTracker(id);
+      firstNode() {
+        return this.nodes.length ? this.nodes[0] : null;
       },
-      1000,
-      { trailing: true }
-    ),
-    saveFromDiffTracker(id) {
-      if (this.diffTracker[id]) {
-        return this.updateContentNode({ id, ...this.diffTracker[id] }).then(() => {
-          delete this.diffTracker[id];
-        });
-      }
-      return Promise.resolve();
-    },
-    /*
-     * @public
-     */
-    immediateSaveAll() {
-      return Promise.all(Object.keys(this.diffTracker).map(this.saveFromDiffTracker));
-    },
-    update(payload) {
-      this.nodeIds.forEach((id) => {
-        this.$set(this.diffTracker, id, {
-          ...(this.diffTracker[id] || {}),
-          ...payload,
-        });
-        this.setUnsavedChanges(true);
-        this.saveNode(id);
-      });
-    },
-    updateExtraFields(extra_fields) {
-      this.nodeIds.forEach((id) => {
-        const existingData = this.diffTracker[id] || {};
-        this.$set(this.diffTracker, id, {
-          ...existingData,
-          extra_fields: {
-            ...(existingData.extra_fields || {}),
-            ...extra_fields,
-          },
-        });
-        this.setUnsavedChanges(true);
-        this.saveNode(id);
-      });
-    },
-    addNodeTags(tags) {
-      this.addTags({ ids: this.nodeIds, tags });
-    },
-    removeNodeTags(tags) {
-      this.removeTags({ ids: this.nodeIds, tags });
-    },
-    isUnique(value) {
-      return value !== nonUniqueValue;
-    },
-    getValueFromNodes(key) {
-      const results = uniq(
-        this.nodes.map((node) => {
-          if (Object.prototype.hasOwnProperty.call(this.diffTracker[node.id] || {}, key)) {
-            return this.diffTracker[node.id][key];
+      allExercises() {
+        return this.nodes.every(node => node.kind === ContentKindsNames.EXERCISE);
+      },
+      allResources() {
+        return !this.nodes.some(node => node.kind === ContentKindsNames.TOPIC);
+      },
+      isImported() {
+        return isImportedContent(this.firstNode);
+      },
+      importedChannelLink() {
+        return importedChannelLink(this.firstNode, this.$router);
+      },
+      importedChannelName() {
+        return this.firstNode.original_channel_name;
+      },
+      requiresAccessibility() {
+        return this.nodes.every(node => node.kind !== ContentKindsNames.AUDIO);
+      },
+      audioAccessibility() {
+        return this.oneSelected && this.firstNode.kind === 'audio';
+      },
+      /* FORM FIELDS */
+      title: generateGetterSetter('title'),
+      description: generateGetterSetter('description'),
+      randomizeOrder: generateExtraFieldsGetterSetter('randomize', true),
+      author: generateGetterSetter('author'),
+      provider: generateGetterSetter('provider'),
+      aggregator: generateGetterSetter('aggregator'),
+      copyright_holder: generateGetterSetter('copyright_holder'),
+      contentTags: {
+        get() {
+          return intersection(...this.nodes.map(node => node.tags));
+        },
+        set(value) {
+          const oldValue = intersection(...this.nodes.map(node => node.tags));
+          // If selecting a tag, clear the text field
+          if (value.length > (oldValue || []).length) {
+            this.tagText = null;
+            this.addNodeTags(difference(value, oldValue));
+          } else {
+            this.removeNodeTags(difference(oldValue, value));
           }
-          return node[key] || null;
-        })
-      );
-      return getValueFromResults(results);
-    },
-    getExtraFieldsValueFromNodes(key, defaultValue = null) {
-      const results = uniq(
-        this.nodes.map((node) => {
-          if (
-            Object.prototype.hasOwnProperty.call(this.diffTracker[node.id] || {}, 'extra_fields') &&
-            Object.prototype.hasOwnProperty.call(this.diffTracker[node.id].extra_fields, key)
-          ) {
-            return this.diffTracker[node.id].extra_fields[key];
+        },
+      },
+      role: generateGetterSetter('role_visibility'),
+      language: generateGetterSetter('language'),
+      accessibility: generateNestedNodesGetterSetter('accessibility_labels'),
+      contentLevel: generateNestedNodesGetterSetter('grade_levels'),
+      resourcesNeeded: generateNestedNodesGetterSetter('learner_needs'),
+      contentLearningActivities: generateNestedNodesGetterSetter('learning_activities'),
+      categories: generateNestedNodesGetterSetter('categories'),
+      learnerManaged: generateGetterSetter('learner_managed'),
+      license() {
+        return this.getValueFromNodes('license');
+      },
+      license_description() {
+        return this.getValueFromNodes('license_description');
+      },
+      licenseItem: {
+        get() {
+          return {
+            license: this.license && this.license.toString() ? this.license : null,
+            license_description: (this.license_description || '').toString(),
+          };
+        },
+        set(value) {
+          this.update(value);
+        },
+      },
+      thumbnail: {
+        get() {
+          return this.nodeFiles.find(f => f.preset.thumbnail);
+        },
+        set(file) {
+          file ? this.updateFile(file) : this.thumbnail ? this.deleteFile(this.thumbnail) : null;
+        },
+      },
+      thumbnailEncoding: generateGetterSetter('thumbnail_encoding'),
+      completionAndDuration: {
+        get() {
+          const { completion_criteria, modality } =
+            this.getExtraFieldsValueFromNodes('options') || {};
+          const suggested_duration_type = this.getExtraFieldsValueFromNodes(
+            'suggested_duration_type'
+          );
+          const suggested_duration = this.getValueFromNodes('suggested_duration');
+          return {
+            suggested_duration,
+            suggested_duration_type,
+            modality,
+            ...(completion_criteria || {}),
+          };
+        },
+        set({ completion_criteria, suggested_duration, suggested_duration_type, modality }) {
+          // TODO Remove validation if unnecessary after implementing `completionCriteria`
+          // if (validateCompletionCriteria(completion_criteria)) {
+          // const options = { completion_criteria };
+          // this.updateExtraFields({ options });
+          // } else {
+          //   console.warn('Invalid completion criteria', [...validateCompletionCriteria.errors]);
+          // }
+
+          const options = { completion_criteria, modality };
+          if (modality) {
+            options.modality = modality;
           }
-          return node.extra_fields[key] || defaultValue;
-        })
-      );
-      return getValueFromResults(results);
+          this.updateExtraFields({ options });
+          this.updateExtraFields({ suggested_duration_type });
+          this.update({ suggested_duration });
+        },
+      },
+      /* COMPUTED PROPS */
+      disableAuthEdits() {
+        return this.nodes.some(node => node.freeze_authoring_data);
+      },
+      detectedImportText() {
+        const count = this.nodes.filter(node => node.freeze_authoring_data).length;
+        return this.$tr('detectedImportText', { count });
+      },
+      oneSelected() {
+        return this.nodes.length === 1;
+      },
+      languageHint() {
+        let topLevel = this.nodes.some(node => node.parent === this.currentChannel.main_tree);
+        return topLevel ? this.$tr('languageChannelHelpText') : this.$tr('languageHelpText');
+      },
+      copyrightHolderRequired() {
+        // Needs to appear when any of the selected licenses require a copyright holder
+        return this.nodes.some(
+          node =>
+            findLicense(node.license, { copyright_holder_required: false })
+              .copyright_holder_required
+        );
+      },
+      titleRules() {
+        return getTitleValidators().map(translateValidator);
+      },
+      copyrightHolderRules() {
+        if (this.disableAuthEdits || !this.isUnique(this.copyright_holder)) {
+          return [];
+        }
+        return getCopyrightHolderValidators().map(translateValidator);
+      },
+      nodeFiles() {
+        return (this.firstNode && this.getContentNodeFiles(this.firstNode.id)) || [];
+      },
+      fileDuration() {
+        if (this.firstNode.kind === 'audio' || this.firstNode.kind === 'video') {
+          return this.nodeFiles.filter(
+            file => file.file_format === 'mp4' || file.file_format === 'mp3'
+          )[0].duration;
+        } else {
+          return null;
+        }
+      },
+      videoSelected() {
+        return this.oneSelected && this.firstNode.kind === 'video';
+      },
+      newContent() {
+        return !this.nodes.some(n => n[NEW_OBJECT]);
+      },
+      allowChannelQuizzes() {
+        // return false;
+        // TODO: uncomment
+        return this.$store.getters.hasFeatureEnabled(FeatureFlagKeys.channel_quizzes);
+      },
+      isDocument() {
+        return this.firstNode.kind === 'document';
+      },
     },
-    getPlaceholder(field) {
-      // Should only show if multiple nodes are selected with different
-      // values for the field (e.g. if author field is different on the selected nodes)
-      return this.oneSelected || this.isUnique(this[field]) ? '' : '---';
+    watch: {
+      nodes: {
+        deep: true,
+        handler() {
+          // Handles both when loading a node and when making a change
+          this.tagText = null;
+          this.$nextTick(this.handleValidation);
+        },
+      },
     },
-    handleValidation() {
-      if (this.$refs.form) {
-        !this.newContent ? this.$refs.form.resetValidation() : this.$refs.form.validate();
-      }
+    mounted() {
+      this.$nextTick(this.handleValidation);
     },
-    setEncoding(encoding) {
-      this.thumbnailEncoding = encoding;
+    methods: {
+      ...mapActions(['setUnsavedChanges']),
+      ...mapActions('contentNode', ['updateContentNode', 'addTags', 'removeTags']),
+      ...mapActions('file', ['updateFile', 'deleteFile']),
+      saveNode: memoizeDebounce(
+        function(id) {
+          this.saveFromDiffTracker(id);
+        },
+        1000,
+        { trailing: true }
+      ),
+      saveFromDiffTracker(id) {
+        if (this.diffTracker[id]) {
+          return this.updateContentNode({ id, ...this.diffTracker[id] }).then(() => {
+            delete this.diffTracker[id];
+          });
+        }
+        return Promise.resolve();
+      },
+      /*
+       * @public
+       */
+      immediateSaveAll() {
+        return Promise.all(Object.keys(this.diffTracker).map(this.saveFromDiffTracker));
+      },
+      update(payload) {
+        this.nodeIds.forEach(id => {
+          this.$set(this.diffTracker, id, {
+            ...(this.diffTracker[id] || {}),
+            ...payload,
+          });
+          this.setUnsavedChanges(true);
+          this.saveNode(id);
+        });
+      },
+      updateExtraFields(extra_fields) {
+        this.nodeIds.forEach(id => {
+          const existingData = this.diffTracker[id] || {};
+          this.$set(this.diffTracker, id, {
+            ...existingData,
+            extra_fields: {
+              ...(existingData.extra_fields || {}),
+              ...extra_fields,
+            },
+          });
+          this.setUnsavedChanges(true);
+          this.saveNode(id);
+        });
+      },
+      addNodeTags(tags) {
+        this.addTags({ ids: this.nodeIds, tags });
+      },
+      removeNodeTags(tags) {
+        this.removeTags({ ids: this.nodeIds, tags });
+      },
+      isUnique(value) {
+        return value !== nonUniqueValue;
+      },
+      getValueFromNodes(key) {
+        const results = uniq(
+          this.nodes.map(node => {
+            if (Object.prototype.hasOwnProperty.call(this.diffTracker[node.id] || {}, key)) {
+              return this.diffTracker[node.id][key];
+            }
+            return node[key] || null;
+          })
+        );
+        return getValueFromResults(results);
+      },
+      getExtraFieldsValueFromNodes(key, defaultValue = null) {
+        const results = uniq(
+          this.nodes.map(node => {
+            if (
+              Object.prototype.hasOwnProperty.call(
+                this.diffTracker[node.id] || {},
+                'extra_fields'
+              ) &&
+              Object.prototype.hasOwnProperty.call(this.diffTracker[node.id].extra_fields, key)
+            ) {
+              return this.diffTracker[node.id].extra_fields[key];
+            }
+            return node.extra_fields[key] || defaultValue;
+          })
+        );
+        return getValueFromResults(results);
+      },
+      getPlaceholder(field) {
+        // Should only show if multiple nodes are selected with different
+        // values for the field (e.g. if author field is different on the selected nodes)
+        return this.oneSelected || this.isUnique(this[field]) ? '' : '---';
+      },
+      handleValidation() {
+        if (this.$refs.form) {
+          !this.newContent ? this.$refs.form.resetValidation() : this.$refs.form.validate();
+        }
+      },
+      setEncoding(encoding) {
+        this.thumbnailEncoding = encoding;
+      },
+      trackClick(label) {
+        this.$analytics.trackClick('channel_editor_modal_details', label);
+      },
+      trackPreview() {
+        this.$analytics.trackAction('channel_editor_modal_preview', 'Preview', {
+          eventLabel: 'File',
+        });
+      },
     },
-    trackClick(label) {
-      this.$analytics.trackClick('channel_editor_modal_details', label);
+    $trs: {
+      basicInfoHeader: 'Basic information',
+      audienceHeader: 'Audience',
+      sourceHeader: 'Source',
+      thumbnailHeader: 'Thumbnail',
+      titleLabel: 'Title',
+      languageHelpText: 'Leave blank to use the folder language',
+      languageChannelHelpText: 'Leave blank to use the channel language',
+      importedFromButtonText: 'Imported from {channel}',
+      detectedImportText:
+        '{count, plural,\n =1 {# resource has view-only permission}\n other {# resources have view-only permission}}',
+      authorLabel: 'Author',
+      authorToolTip: 'Person or organization who created this content',
+      providerLabel: 'Provider',
+      providerToolTip: 'Organization that commissioned or is distributing the content',
+      aggregatorLabel: 'Aggregator',
+      aggregatorToolTip:
+        'Website or org hosting the content collection but not necessarily the creator or copyright holder',
+      copyrightHolderLabel: 'Copyright holder',
+      descriptionLabel: 'Description',
+      tagsLabel: 'Tags',
+      noTagsFoundText: 'No results found for "{text}". Press \'Enter\' key to create a new tag',
+      assessmentOptionsLabel: 'Assessment options',
+      randomizeQuestionLabel: 'Randomize question order for learners',
+      completionLabel: 'Completion',
+      learnersCanMarkComplete: 'Allow learners to mark as complete',
     },
-    trackPreview() {
-      this.$analytics.trackAction('channel_editor_modal_preview', 'Preview', {
-        eventLabel: 'File',
-      });
-    },
-  },
-  $trs: {
-    basicInfoHeader: 'Basic information',
-    audienceHeader: 'Audience',
-    sourceHeader: 'Source',
-    thumbnailHeader: 'Thumbnail',
-    titleLabel: 'Title',
-    languageHelpText: 'Leave blank to use the folder language',
-    languageChannelHelpText: 'Leave blank to use the channel language',
-    importedFromButtonText: 'Imported from {channel}',
-    detectedImportText:
-      '{count, plural,\n =1 {# resource has view-only permission}\n other {# resources have view-only permission}}',
-    authorLabel: 'Author',
-    authorToolTip: 'Person or organization who created this content',
-    providerLabel: 'Provider',
-    providerToolTip: 'Organization that commissioned or is distributing the content',
-    aggregatorLabel: 'Aggregator',
-    aggregatorToolTip:
-      'Website or org hosting the content collection but not necessarily the creator or copyright holder',
-    copyrightHolderLabel: 'Copyright holder',
-    descriptionLabel: 'Description',
-    tagsLabel: 'Tags',
-    noTagsFoundText: 'No results found for "{text}". Press \'Enter\' key to create a new tag',
-    assessmentOptionsLabel: 'Assessment options',
-    randomizeQuestionLabel: 'Randomize question order for learners',
-    completionLabel: 'Completion',
-    learnersCanMarkComplete: 'Allow learners to mark as complete',
-  },
-};
+  };
+
 </script>
 
 <style lang="less" scoped>
-@space-between-sections: 64px;
 
-/deep/ a,
-/deep/ a:hover {
-  color: inherit;
-  text-decoration: none;
-}
+  @space-between-sections: 64px;
 
-.details-edit-view {
-  padding: 10px;
-
-  /deep/ .subheading {
-    margin-bottom: 8px;
-    font-weight: bold;
+  /deep/ a,
+  /deep/ a:hover {
+    color: inherit;
+    text-decoration: none;
   }
-  .section .flex {
-    margin: 24px 0 !important;
-  }
-  .auth-section {
-    /deep/ .v-autocomplete .v-input__append-inner {
-      visibility: hidden;
+
+  .details-edit-view {
+    padding: 10px;
+
+    /deep/ .subheading {
+      margin-bottom: 8px;
+      font-weight: bold;
     }
-  }
-
-  .v-form {
-    max-width: 960px;
-    .tagbox {
-      /deep/ .v-select__selections {
-        min-height: 0 !important;
-      }
-      /deep/ .v-chip__content {
-        color: black; // Read-only tag box grays out tags
-      }
-      /deep/ .v-input__append-inner {
-        display: none;
+    .section .flex {
+      margin: 24px 0 !important;
+    }
+    .auth-section {
+      /deep/ .v-autocomplete .v-input__append-inner {
+        visibility: hidden;
       }
     }
 
-    /deep/ .v-input--is-readonly {
-      /deep/ label {
-        color: var(--v-grey-darken2) !important;
-      }
-      /deep/ .v-input__append-inner {
-        display: none;
-      }
-      /deep/ .v-input__slot {
-        &::before {
-          border-style: dotted;
+    .v-form {
+      max-width: 960px;
+      .tagbox {
+        /deep/ .v-select__selections {
+          min-height: 0 !important;
         }
-        &::after {
-          border: 0;
+        /deep/ .v-chip__content {
+          color: black; // Read-only tag box grays out tags
+        }
+        /deep/ .v-input__append-inner {
+          display: none;
         }
       }
-    }
 
-    .basicInfoColumn {
-      display: flex;
-      /deep/ .v-input {
-        // Stretches the "Description" text area to fill the column vertically
-        align-items: stretch;
+      /deep/ .v-input--is-readonly {
+        /deep/ label {
+          color: var(--v-grey-darken2) !important;
+        }
+        /deep/ .v-input__append-inner {
+          display: none;
+        }
+        /deep/ .v-input__slot {
+          &::before {
+            border-style: dotted;
+          }
+          &::after {
+            border: 0;
+          }
+        }
       }
-      /deep/ .v-input__control {
-        // Makes sure that the character count does not get pushed to second column
-        flex-wrap: nowrap;
+
+      .basicInfoColumn {
+        display: flex;
+        /deep/ .v-input {
+          // Stretches the "Description" text area to fill the column vertically
+          align-items: stretch;
+        }
+        /deep/ .v-input__control {
+          // Makes sure that the character count does not get pushed to second column
+          flex-wrap: nowrap;
+        }
       }
     }
   }
-}
+
 </style>
