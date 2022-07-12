@@ -109,7 +109,7 @@
         </VFlex>
       </VLayout>
 
-      <!-- Completion section -->
+      <!-- Completion section for exercises -->
       <VLayout v-if="allExercises" row wrap class="section">
         <VFlex xs12>
           <h1 class="subheading">
@@ -124,6 +124,8 @@
           />
         </VFlex>
       </VLayout>
+
+      <!-- Completion section for all resources -->
       <VLayout row wrap class="section">
         <VFlex xs12>
           <h1 class="subheading">
@@ -424,7 +426,9 @@ function generateExtraFieldsGetterSetter(key, defaultValue) {
  * - `learner_needs` (resources needed)
  * - `accessibility_labels` (accessibility options)
  * - `learning_activities` (learning activities)
+ * - `categories` (categories)
  */
+
 function generateNestedNodesGetterSetter(key) {
   return {
     get() {
@@ -575,12 +579,6 @@ export default {
         const suggested_duration_type =
           this.getExtraFieldsValueFromNodes('suggested_duration_type');
         const suggested_duration = this.getValueFromNodes('suggested_duration');
-        console.log({
-          suggested_duration,
-          suggested_duration_type,
-          modality,
-          ...(completion_criteria || {}),
-        });
         return {
           suggested_duration,
           suggested_duration_type,
@@ -596,17 +594,11 @@ export default {
         // } else {
         //   console.warn('Invalid completion criteria', [...validateCompletionCriteria.errors]);
         // }
-        console.log('setter', {
-          completion_criteria,
-          suggested_duration,
-          suggested_duration_type,
-          modality,
-        });
+
         const options = { completion_criteria, modality };
         if (modality) {
           options.modality = modality;
         }
-        console.log('!!!!updating options', options);
         this.updateExtraFields({ options });
         this.updateExtraFields({ suggested_duration_type });
         this.update({ suggested_duration });
@@ -709,7 +701,6 @@ export default {
       return Promise.all(Object.keys(this.diffTracker).map(this.saveFromDiffTracker));
     },
     update(payload) {
-      console.log('!!! update() payload', payload);
       this.nodeIds.forEach((id) => {
         this.$set(this.diffTracker, id, {
           ...(this.diffTracker[id] || {}),
@@ -720,7 +711,6 @@ export default {
       });
     },
     updateExtraFields(extra_fields) {
-      console.log('!!!% extra_fields', extra_fields);
       this.nodeIds.forEach((id) => {
         const existingData = this.diffTracker[id] || {};
         this.$set(this.diffTracker, id, {

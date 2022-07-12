@@ -97,7 +97,13 @@
   import ActivityDuration from './ActivityDuration.vue';
   import MasteryCriteriaGoal from 'shared/views/MasteryCriteriaGoal';
   import MasteryCriteriaMofNFields from 'shared/views/MasteryCriteriaMofNFields';
-  import { CompletionCriteriaModels, ContentModalities, CompletionDropdownMap, DurationDropdownMap } from 'shared/constants';
+  import {
+    CompletionCriteriaModels,
+    ContentModalities,
+    CompletionDropdownMap,
+    DurationDropdownMap,
+  } from 'shared/constants';
+  import { MasteryModelsNames } from 'shared/leUtils/MasteryModels';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import {
     getCompletionValidators,
@@ -144,7 +150,7 @@
       },
       value: {
         type: Object,
-        required: false, //TODO: add validator?
+        required: false,
       },
     },
     data() {
@@ -171,11 +177,10 @@
         return false;
       },
       showCompletionDropdown() {
-        //TODO UNCOMMENT OUT
-        if (this.kind === ContentKindsNames.EXERCISE && !this.practiceQuizzesAllowed) {
-          return false;
-        }
-        return true;
+        /*
+        This condition can be removed once practice quizzes are fully implemented in 0.16
+        */
+        return !(this.kind === ContentKindsNames.EXERCISE && !this.practiceQuizzesAllowed);
       },
       audioVideoResource() {
         return this.kind === ContentKindsNames.AUDIO || this.kind === ContentKindsNames.VIDEO;
@@ -192,6 +197,9 @@
         );
       },
       showReferenceHint() {
+        /*
+        The reference hint should be shown only when "Reference" is selected
+        */
         if (this.kind === ContentKindsNames.H5P || this.kind === ContentKindsNames.HTML5) {
           if (this.currentCompletionDropdown === CompletionDropdownMap.determinedByResource) {
             return false;
@@ -205,29 +213,27 @@
         }
         return (
           (this.durationDropdown === DurationDropdownMap.REFERENCE &&
-            this.currentCompletionDropdown === 'allContent') ||
+            this.currentCompletionDropdown === CompletionDropdownMap.allContent) ||
           this.currentCompletionDropdown === CompletionDropdownMap.reference ||
           (this.value.model === CompletionCriteriaModels.REFERENCE &&
             this.currentCompletionDropdown !== CompletionDropdownMap.completeDuration)
         );
       },
       showActivityDurationInput() {
+        /* The `ActivityDuration` component should visible when:
+          - Long activity, short activity, or exact time are chosen if it is not an AV resource
+          - Long activity or short activity are chosen if it is an AV resource
+        */
         const switchingFromReferenceBetweenAllContentViewedAndCompleteDuration =
           this.value.suggested_duration === null || this.value.suggested_duration_type === null;
 
         if (!this.audioVideoResource) {
-          if (
+          return !(
             this.value.model === CompletionCriteriaModels.REFERENCE ||
             switchingFromReferenceBetweenAllContentViewedAndCompleteDuration
-          ) {
-            return false;
-          }
-          return true;
+          );
         }
-        if (this.audioVideoResource && this.value.model !== CompletionCriteriaModels.REFERENCE) {
-          return true;
-        }
-        return false;
+        return this.audioVideoResource && this.value.model !== CompletionCriteriaModels.REFERENCE;
       },
       completionDropdown: {
         get() {
@@ -235,7 +241,7 @@
             if (this.value.model === CompletionCriteriaModels.REFERENCE) {
               return CompletionDropdownMap.reference;
             }
-            return CompletionDropdownMap.completeDuration; // default
+            return CompletionDropdownMap.completeDuration;
           }
 
           if (this.kind === ContentKindsNames.DOCUMENT) {
@@ -272,7 +278,6 @@
               return CompletionDropdownMap.practiceQuiz;
             }
             return CompletionDropdownMap.goal;
-            // return this.value.model;
           }
 
           return '';
@@ -282,7 +287,7 @@
           this.currentCompletionDropdown = value;
 
           // FOR AUDIO/VIDEO
-          if (value === 'reference') {
+          if (value === CompletionDropdownMap.reference) {
             update.suggested_duration_type = this.value.suggested_duration_type;
             update.completion_criteria = {
               model: CompletionCriteriaModels.REFERENCE,
@@ -292,7 +297,7 @@
 
           // FOR DOCUMENTS
           if (this.kind === ContentKindsNames.DOCUMENT) {
-            if (value === 'allContent') {
+            if (value === CompletionDropdownMap.allContent) {
               update.suggested_duration_type = this.value.suggested_duration_type;
               update.suggested_duration = this.value.suggested_duration;
               update.completion_criteria = {
@@ -303,14 +308,14 @@
               update.suggested_duration_type = this.value.suggested_duration_type;
               update.suggested_duration = this.value.suggested_duration;
               if (
-                this.durationDropdown === 'longActivity' ||
-                this.durationDropdown === 'shortActivity'
+                this.durationDropdown === DurationDropdownMap.LONG_ACTIVITY ||
+                this.durationDropdown === DurationDropdownMap.SHORT_ACTIVITY
               ) {
                 update.completion_criteria = {
                   model: CompletionCriteriaModels.APPROX_TIME,
                   threshold: this.value.suggested_duration || 0,
                 };
-              } else if (this.durationDropdown === 'exactTime') {
+              } else if (this.durationDropdown === DurationDropdownMap.EXACT_TIME) {
                 update.completion_criteria = {
                   model: CompletionCriteriaModels.TIME,
                   threshold: this.value.suggested_duration || 0,
@@ -341,7 +346,6 @@
               };
             }
           }
-
           this.handleInput(update);
         },
       },
@@ -372,9 +376,9 @@
           }
           if (this.value.threshold) {
             const defaultStateWhenSwitchingFromGoalToPracticeQuiz =
-              this.value.threshold.mastery_model === 'm_of_n' &&
+              this.value.threshold.mastery_model === MasteryModelsNames.M_OF_N &&
               this.currentCompletionDropdown === null;
-            if (this.currentCompletionDropdown === 'goal') {
+            if (this.currentCompletionDropdown === CompletionDropdownMap.goal) {
               return true;
             }
             if (defaultStateWhenSwitchingFromGoalToPracticeQuiz) {
@@ -724,16 +728,14 @@
       durationRules() {
         const defaultStateForDocument = this.currentCompletionDropdown === null;
         const allContentViewedIsChosenInCompletionDropdown =
-          this.currentCompletionDropdown === 'allContent' ||
-          (this.value.model === 'pages' && this.currentCompletionDropdown === 'allContent');
+          this.currentCompletionDropdown === CompletionDropdownMap.allContent ||
+          (this.value.model === CompletionCriteriaModels.PAGES &&
+            this.currentCompletionDropdown === CompletionDropdownMap.allContent);
 
         if (defaultStateForDocument || allContentViewedIsChosenInCompletionDropdown) {
-          return false;
+          return [];
         }
         return getDurationValidators().map(translateValidator);
-      },
-      oneSelected() {
-        return 1;
       },
     },
     methods: {
@@ -772,17 +774,17 @@
         return value !== nonUniqueValue;
       },
       getPlaceholder(field) {
-        // Should only show if multiple nodes are selected with different
-        // values for the field (e.g. if author field is different on the selected nodes)
-        return this.oneSelected || this.isUnique(this[field]) ? '' : '---';
+        return this.isUnique(this[field]) ? '' : '---';
       },
     },
     $trs: {
+      /* eslint-disable kolibri/vue-no-unused-translations */
       allContent: 'All content viewed',
-      determinedByResource: 'Determined by resource',
       completeDuration: 'Complete duration',
+      determinedByResource: 'Determined by resource',
       goal: 'Practice until goal is met',
       practiceQuiz: 'Practice quiz',
+      /* eslint-enable */
       exactTime: 'Exact time to complete',
       reference: 'Reference',
       referenceHint:

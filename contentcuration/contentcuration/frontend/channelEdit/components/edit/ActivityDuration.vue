@@ -45,11 +45,11 @@
 import debounce from 'lodash/debounce';
 import { CompletionDropdownMap, DurationDropdownMap } from 'shared/constants';
 import {
-    getShortActivityDurationValidators,
-    getLongActivityDurationValidators,
-    getActivityDurationValidators,
-    translateValidator,
-  } from 'shared/utils/validation';
+  getShortActivityDurationValidators,
+  getLongActivityDurationValidators,
+  getActivityDurationValidators,
+  translateValidator,
+} from 'shared/utils/validation';
 
 const SHORT_MIN = 1;
 const SHORT_MAX = 30;
@@ -107,6 +107,7 @@ export default {
         ? SHORT_ACTIVITY_RANGE
         : LONG_ACTIVITY_RANGE;
     },
+
     minutes: {
       get() {
         if (!this.value) {
