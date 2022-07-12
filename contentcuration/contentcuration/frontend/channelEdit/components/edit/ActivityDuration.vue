@@ -44,6 +44,12 @@
 <script>
 import debounce from 'lodash/debounce';
 import { CompletionDropdownMap, DurationDropdownMap } from 'shared/constants';
+import {
+    getShortActivityDurationValidators,
+    getLongActivityDurationValidators,
+    getActivityDurationValidators,
+    translateValidator,
+  } from 'shared/utils/validation';
 
 const SHORT_MIN = 1;
 const SHORT_MAX = 30;
@@ -131,27 +137,12 @@ export default {
       }
     },
     minutesRules() {
-      //TODO: handle translation and move to central location
       if (this.selectedDuration === DurationDropdownMap.SHORT_ACTIVITY) {
-        return [
-          (v) => v !== '' || 'This field is required',
-          (v) => v >= SHORT_MIN || 'Short activity must be greater than or equal to 1',
-          (v) => v <= SHORT_MAX || 'Short activity must be less than or equal to 30',
-        ];
+        return getShortActivityDurationValidators().map(translateValidator);
       } else if (this.selectedDuration === DurationDropdownMap.LONG_ACTIVITY) {
-        return [
-          (v) => v !== '' || 'This field is required',
-          (v) => v >= LONG_MIN || 'Long activity must be greater than or equal to 31',
-          (v) => v <= LONG_MAX || 'Long activity must be less than or equal to 120',
-        ];
+        return getLongActivityDurationValidators().map(translateValidator);
       }
-      return [
-        (v) => v !== '' || 'This field is required',
-        (v) => v >= EXACT_MIN || 'Time must be greater than or equal to 1',
-        (v) =>
-          v <= EXACT_MAX ||
-          'Please make sure this is the amount of time you want learners to spend on this resource to complete it',
-      ];
+      return getActivityDurationValidators().map(translateValidator);
     },
   },
   created() {

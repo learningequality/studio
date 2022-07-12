@@ -114,6 +114,13 @@ function _getErrorMsg(error) {
     [ValidationErrors.MASTERY_MODEL_N_GT_ZERO]: translator.$tr('masteryModelNGtZero'),
     [ValidationErrors.LEARNING_ACTIVITY_REQUIRED]: translator.$tr('learningActivityRequired'),
     [ValidationErrors.DURATION_REQUIRED]: translator.$tr('durationRequired'),
+    [ValidationErrors.ACTIVITY_DURATION_REQUIRED]: translator.$tr('activityDurationRequired'),
+    [ValidationErrors.ACTIVITY_DURATION_MIN_FOR_SHORT_ACTIVITY]: translator.$tr('shortActivityGteOne'),
+    [ValidationErrors.ACTIVITY_DURATION_MAX_FOR_SHORT_ACTIVITY]: translator.$tr('shortActivityLteThirty'),
+    [ValidationErrors.ACTIVITY_DURATION_MIN_FOR_LONG_ACTIVITY]: translator.$tr('longActivityGtThirty'),
+    [ValidationErrors.ACTIVITY_DURATION_MAX_FOR_LONG_ACTIVITY]: translator.$tr('longActivityLteOneTwenty'),
+    [ValidationErrors.ACTIVITY_DURATION_MIN_REQUIREMENT]: translator.$tr('activityDurationTimeMinRequirement'),
+    [ValidationErrors.ACTIVITY_DURATION_TOO_LONG]: translator.$tr('activityDurationTooLongWarning'),
   };
 
   return messages[error];
@@ -175,6 +182,30 @@ export function getMasteryModelNValidators() {
     value => Boolean(value) || ValidationErrors.MASTERY_MODEL_N_REQUIRED,
     value => Number.isInteger(Number(value)) || ValidationErrors.MASTERY_MODEL_N_WHOLE_NUMBER,
     value => value > 0 || ValidationErrors.MASTERY_MODEL_N_GT_ZERO,
+  ];
+}
+
+export function getShortActivityDurationValidators() {
+  return [
+    (v) => v !== '' || ValidationErrors.ACTIVITY_DURATION_REQUIRED,
+    (v) => v >= 1 || ValidationErrors.ACTIVITY_DURATION_MIN_FOR_SHORT_ACTIVITY,
+    (v) => v <= 30 || ValidationErrors.ACTIVITY_DURATION_MAX_FOR_SHORT_ACTIVITY,
+  ];
+}
+
+export function getLongActivityDurationValidators() {
+  return [
+    (v) => v !== '' || ValidationErrors.ACTIVITY_DURATION_REQUIRED,
+    (v) => v > 30 || ValidationErrors.ACTIVITY_DURATION_MIN_FOR_LONG_ACTIVITY,
+    (v) => v <= 120 || ValidationErrors.ACTIVITY_DURATION_MAX_FOR_LONG_ACTIVITY,
+  ];
+}
+
+export function getActivityDurationValidators() {
+  return [
+    (v) => v !== '' || ValidationErrors.ACTIVITY_DURATION_REQUIRED,
+    (v) => v >= 1 || ValidationErrors.ACTIVITY_DURATION_MIN_REQUIREMENT,
+    (v) => v <= 1200 || ValidationErrors.ACTIVITY_DURATION_TOO_LONG,
   ];
 }
 
