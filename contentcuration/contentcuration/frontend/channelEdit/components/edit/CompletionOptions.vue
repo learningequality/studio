@@ -97,7 +97,7 @@
   import ActivityDuration from './ActivityDuration.vue';
   import MasteryCriteriaGoal from 'shared/views/MasteryCriteriaGoal';
   import MasteryCriteriaMofNFields from 'shared/views/MasteryCriteriaMofNFields';
-  import { CompletionCriteriaModels, ContentModalities } from 'shared/constants';
+  import { CompletionCriteriaModels, ContentModalities, CompletionDropdownMap, DurationDropdownMap } from 'shared/constants';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import {
     getCompletionValidators,
@@ -115,21 +115,6 @@
   const SuggestedDurationTypesMap = {
     APPROX_TIME: 'approx_time',
     TIME: 'time',
-  };
-  const CompletionDropdownMap = {
-    allContent: 'allContent',
-    completeDuration: 'completeDuration',
-    determinedByResource: 'determinedByResource',
-    goal: 'goal',
-    practiceQuiz: 'practiceQuiz',
-    reference: 'reference',
-  };
-
-  const DurationDropdownMap = {
-    EXACT_TIME: 'exactTime',
-    SHORT_ACTIVITY: 'shortActivity',
-    LONG_ACTIVITY: 'longActivity',
-    REFERENCE: 'reference',
   };
 
   export default {

@@ -193,3 +193,19 @@ export const AccessibilityCategoriesMap = {
   exercise: ['ALT_TEXT'],
   html5: ['ALT_TEXT', 'HIGH_CONTRAST'],
 };
+
+export const CompletionDropdownMap = {
+  allContent: 'allContent',
+  completeDuration: 'completeDuration',
+  determinedByResource: 'determinedByResource',
+  goal: 'goal',
+  practiceQuiz: 'practiceQuiz',
+  reference: 'reference',
+};
+
+export const DurationDropdownMap = {
+  EXACT_TIME: 'exactTime',
+  SHORT_ACTIVITY: 'shortActivity',
+  LONG_ACTIVITY: 'longActivity',
+  REFERENCE: 'reference',
+};
