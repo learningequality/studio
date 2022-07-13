@@ -384,7 +384,7 @@
   import Checkbox from 'shared/views/form/Checkbox';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import { NEW_OBJECT, FeatureFlagKeys } from 'shared/constants';
-  // import { validate as validateCompletionCriteria } from 'shared/leUtils/CompletionCriteria';
+  import { validate as validateCompletionCriteria } from 'shared/leUtils/CompletionCriteria';
   import { constantsTranslationMixin, metadataTranslationMixin } from 'shared/mixins';
 
   // Define an object to act as the place holder for non unique values.
@@ -591,14 +591,12 @@
           };
         },
         set({ completion_criteria, suggested_duration, suggested_duration_type, modality }) {
-          // TODO Remove validation if unnecessary after implementing `completionCriteria`
-          // if (validateCompletionCriteria(completion_criteria)) {
-          // const options = { completion_criteria };
-          // this.updateExtraFields({ options });
-          // } else {
-          //   console.warn('Invalid completion criteria', [...validateCompletionCriteria.errors]);
-          // }
-
+          if (validateCompletionCriteria(completion_criteria)) {
+            const options = { completion_criteria };
+            this.updateExtraFields({ options });
+          } else {
+            console.warn('Invalid completion criteria', [...validateCompletionCriteria.errors]);
+          }
           const options = { completion_criteria, modality };
           if (modality) {
             options.modality = modality;
@@ -659,8 +657,6 @@
         return !this.nodes.some(n => n[NEW_OBJECT]);
       },
       allowChannelQuizzes() {
-        // return false;
-        // TODO: uncomment
         return this.$store.getters.hasFeatureEnabled(FeatureFlagKeys.channel_quizzes);
       },
       isDocument() {
