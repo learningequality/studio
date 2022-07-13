@@ -181,8 +181,6 @@ export function createContentNode(context, { parent, kind, ...payload }) {
     learner_needs: {},
     learning_activities: {},
     categories: {},
-    completion: {},
-    learner_managed: false,
     suggested_duration: 0,
     ...payload,
   };
@@ -221,8 +219,6 @@ function generateContentNodeData({
   learner_needs = NOVALUE,
   learning_activities = NOVALUE,
   categories = NOVALUE,
-  completion = NOVALUE,
-  learner_managed = NOVALUE,
   suggested_duration = NOVALUE,
 } = {}) {
   const contentNodeData = {};
@@ -277,16 +273,9 @@ function generateContentNodeData({
   if (categories !== NOVALUE) {
     contentNodeData.categories = categories;
   }
-  if (completion !== NOVALUE) {
-    contentNodeData.completion = completion;
-  }
   if (suggested_duration !== NOVALUE) {
     contentNodeData.suggested_duration = suggested_duration;
   }
-  if (learner_managed !== NOVALUE) {
-    contentNodeData.learner_managed = learner_managed;
-  }
-
   if (extra_fields !== NOVALUE) {
     contentNodeData.extra_fields = contentNodeData.extra_fields || {};
     if (extra_fields.mastery_model) {
