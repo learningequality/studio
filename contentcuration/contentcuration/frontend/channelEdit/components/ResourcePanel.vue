@@ -9,7 +9,7 @@
           <ContentNodeLearningActivityIcon v-if="isTopic" :isTopic="true" includeText chip />
           <ContentNodeLearningActivityIcon
             v-else-if="hasLearningActivities"
-            :learningActivity="node.learning_activities"
+            :learningActivities="node.learning_activities"
             includeText
             chip
           />
@@ -130,13 +130,12 @@
             v-if="!isTopic"
             :label="translateMetadataString('level')"
             :text="level(node.grade_levels)"
-            notranslate
           />
           <DetailsRow v-if="!isTopic" :label="translateMetadataString('learningActivity')">
             <ContentNodeLearningActivityIcon
-              :learningActivity="node.learning_activities"
+              :learningActivities="node.learning_activities"
               includeText
-              showEachActivityChip
+              showEachActivityIcon
             />
           </DetailsRow>
           <DetailsRow v-if="isExercise" :label="$tr('completion')">
@@ -152,7 +151,6 @@
             v-if="!isTopic"
             :label="translateMetadataString('category')"
             :text="category(node.categories)"
-            notranslate
           />
           <DetailsRow :label="$tr('tags')">
             <div v-if="!sortedTags.length">
@@ -195,8 +193,8 @@
                 <div v-for="prerequisite in previousSteps" :key="prerequisite.id">
                   <ContentNodeLearningActivityIcon
                     v-if="prerequisite.learning_activities"
-                    :learningActivity="prerequisite.learning_activities"
-                    showEachActivityChip
+                    :learningActivities="prerequisite.learning_activities"
+                    showEachActivityIcon
                   />
                   {{ getTitle(prerequisite) }}
                 </div>
@@ -210,8 +208,8 @@
                 <div v-for="postrequisite in nextSteps" :key="postrequisite.id">
                   <ContentNodeLearningActivityIcon
                     v-if="postrequisite.learning_activities"
-                    :learningActivity="postrequisite.learning_activities"
-                    showEachActivityChip
+                    :learningActivities="postrequisite.learning_activities"
+                    showEachActivityIcon
                   />
                   {{ getTitle(postrequisite) }}
                 </div>
@@ -329,7 +327,7 @@
   import sortBy from 'lodash/sortBy';
   import { mapActions, mapGetters } from 'vuex';
   import { camelCase } from 'lodash';
-  import { createIntl } from '@formatjs/intl';
+  import {shouldPolyfill} from '@formatjs/intl-listformat/should-polyfill'
   import { isImportedContent, importedChannelLink } from '../utils';
   import FilePreview from '../views/files/FilePreview';
   import { ContentLevel, Categories, AccessibilityCategories } from '../../shared/constants';
@@ -361,9 +359,36 @@
   import { MasteryModelsNames } from 'shared/leUtils/MasteryModels';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
-  const intl = createIntl({
-    locale: window.languageCode || 'en',
-  });
+  // This is a temporary polyfill work around
+  // vue-intl, which we are using for options such as $formatDate
+  // and $formatTime, had a bug where $formatList was excluded
+  // https://github.com/formatjs/formatjs/issues/3488
+  // it was fixed 11 July 2022, but would require a major version leap
+  // from 3.0.0 to 6.2.9
+  // https://github.com/formatjs/formatjs/releases/tag/vue-intl%406.2.9
+  // in the long term, upgrading would be the better solution, but it
+  // will likely require refacotring and will be a larger project,
+  // outside the scope of this PR
+  async function polyfill(locale) {
+    const unsupportedLocale = shouldPolyfill(locale)
+    // This locale is supported
+    if (!unsupportedLocale) {
+      return
+    }
+    // Load the polyfill 1st BEFORE loading data
+    await import('@formatjs/intl-listformat/polyfill-force')
+    await import(`@formatjs/intl-listformat/locale-data/${unsupportedLocale}`)
+  }
+
+
+  let intl;
+  if (Intl.ListFormat) {
+    intl = new Intl.ListFormat(window.languageCode , { style: 'narrow', type: 'conjunction' });
+  } else  {
+    intl = createIntl({
+      locale: window.languageCode,
+    });
+  }
 
   export default {
     name: 'ResourcePanel',
@@ -435,7 +460,7 @@
         return '-';
       },
       hasLearningActivities() {
-        return Object.keys(this.node.learning_activities).length > 0;
+        return this.node && Object.keys(this.node.learning_activities).length > 0;
       },
       assessmentItems() {
         return this.getAssessmentItems(this.nodeId);
@@ -575,6 +600,7 @@
       },
     },
     mounted() {
+      polyfill(window.languageCode)
       this.loadNode();
       this.tab = this.isExercise ? 'questions' : 'details';
     },
@@ -587,7 +613,7 @@
       },
       metadataListText(ids) {
         const list = ids.map(i => this.translateMetadataString(camelCase(i)));
-        return intl.formatList(list);
+        return intl.format(list);
       },
       level(levels) {
         const ids = Object.keys(levels);

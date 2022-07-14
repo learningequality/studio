@@ -42,11 +42,6 @@ describe('ContentNodeListItem', () => {
       propsData: {
         node: DOCUMENT_NODE,
       },
-      computed: {
-        hasMetadataToDisplay() {
-          return true;
-        },
-      },
     });
   });
   it('smoke test', () => {

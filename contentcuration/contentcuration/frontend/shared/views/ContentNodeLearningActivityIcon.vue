@@ -1,8 +1,14 @@
 <template>
 
   <span v-if="includeText">
-    <span v-for="activity in activities" :key="activity">
-      <div v-if="chip" :class="small ? 'small-chip' : 'chip'">
+     <!-- if include text is true, use a labeled icon.
+    Currently, for icons containing text, each activity
+     is displayed inidividually if there are multiple -->
+    <span v-for="(activity, index) in activities" :key="index" data-test="labeled-icon">
+      <div v-if="chip"
+        :class="small ? 'small-chip' : 'chip'"
+        :style="{ backgroundColor: $themeTokens.fineLine }"
+      >
         <KLabeledIcon :icon="icon(activity)" :label="text(activity)" />
       </div>
       <div v-else>
@@ -10,20 +16,21 @@
       </div>
     </span>
   </span>
+  <!-- If not text, just use a KIcon -->
   <span v-else>
-    <span v-if="showEachActivityChip">
+    <!-- if multiple learning activities should be displayed with a single icon -->
+    <span v-if="activities.length > 1 && !showEachActivityIcon">
+      <KIcon :icon="icon('multiple')" :aria-label="text('multiple')" data-test="multiple-activities-icon"/>
+    </span>
+    <!--otherwise, display one or more activities individually, each with its own icon -->
+    <span v-else-if="activities.length > 0">
       <KIcon
+        data-test="icon-only"
         v-for="activity in activities"
         :key="activity"
         :icon="icon(activity)"
         :aria-label="text(activity)"
       />
-    </span>
-    <span v-else-if="activities.length > 1 && !showEachActivityChip">
-      <KIcon :icon="icon('multiple')" :aria-label="text('multiple')" />
-    </span>
-    <span v-else>
-      <KIcon :icon="icon(activities[0])" :aria-label="text(activities[0])" />
     </span>
   </span>
 
@@ -41,15 +48,11 @@
     mixins: [metadataTranslationMixin],
 
     props: {
-      learningActivity: {
+      learningActivities: {
         type: Object,
         required: false,
       },
-      showEachActivityChip: {
-        type: Boolean,
-        default: false,
-      },
-      isTopic: {
+      showEachActivityIcon: {
         type: Boolean,
         default: false,
       },
@@ -68,8 +71,8 @@
     },
     computed: {
       activities() {
-        if (this.learningActivity) {
-          const ids = Object.keys(this.learningActivity);
+        if (this.learningActivities) {
+          const ids = Object.keys(this.learningActivities);
           return Object.keys(LearningActivities).filter(k => ids.includes(LearningActivities[k]));
         }
         return [];
@@ -77,11 +80,7 @@
     },
     methods: {
       icon(activity) {
-        if (this.isTopic) {
-          return 'topic';
-        } else {
-          return getLearningActivityIcon(this.text(activity));
-        }
+       return getLearningActivityIcon(this.text(activity));
       },
       text(activity) {
         if (this.isTopic) {
@@ -108,7 +107,6 @@
     padding: 10px;
     margin: 4px;
     font-weight: bold;
-    background-color: #dedede;
     border-radius: 4px;
   }
 
@@ -117,7 +115,6 @@
     padding: 2px 4px;
     margin: 2px;
     font-size: 10px;
-    background-color: #dedede;
     border-radius: 4px;
   }
 
