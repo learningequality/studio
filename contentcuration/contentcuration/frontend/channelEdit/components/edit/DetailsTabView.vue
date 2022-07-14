@@ -591,7 +591,7 @@
           };
         },
         set({ completion_criteria, suggested_duration, suggested_duration_type, modality }) {
-          if (validateCompletionCriteria(completion_criteria)) {
+          if (validateCompletionCriteria(completion_criteria, this.firstNode.kind)) {
             const options = { completion_criteria };
             this.updateExtraFields({ options });
           } else {
