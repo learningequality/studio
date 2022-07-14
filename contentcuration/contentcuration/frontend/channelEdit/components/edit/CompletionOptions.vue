@@ -95,8 +95,8 @@
 <script>
 
   import ActivityDuration from './ActivityDuration.vue';
-  import MasteryCriteriaGoal from 'shared/views/MasteryCriteriaGoal';
-  import MasteryCriteriaMofNFields from 'shared/views/MasteryCriteriaMofNFields';
+  import MasteryCriteriaGoal from './MasteryCriteriaGoal';
+  import MasteryCriteriaMofNFields from './MasteryCriteriaMofNFields';
   import {
     CompletionCriteriaModels,
     ContentModalities,
@@ -178,8 +178,8 @@
       },
       showCompletionDropdown() {
         /*
-        This condition can be removed once practice quizzes are fully implemented in 0.16
-        */
+          This condition can be removed once practice quizzes are fully implemented in 0.16
+          */
         return !(this.kind === ContentKindsNames.EXERCISE && !this.practiceQuizzesAllowed);
       },
       audioVideoResource() {
@@ -198,8 +198,8 @@
       },
       showReferenceHint() {
         /*
-        The reference hint should be shown only when "Reference" is selected
-        */
+          The reference hint should be shown only when "Reference" is selected
+          */
         if (this.kind === ContentKindsNames.H5P || this.kind === ContentKindsNames.HTML5) {
           if (this.currentCompletionDropdown === CompletionDropdownMap.determinedByResource) {
             return false;
@@ -221,9 +221,9 @@
       },
       showActivityDurationInput() {
         /* The `ActivityDuration` component should visible when:
-          - Long activity, short activity, or exact time are chosen if it is not an AV resource
-          - Long activity or short activity are chosen if it is an AV resource
-        */
+            - Long activity, short activity, or exact time are chosen if it is not an AV resource
+            - Long activity or short activity are chosen if it is an AV resource
+          */
         const switchingFromReferenceBetweenAllContentViewedAndCompleteDuration =
           this.value.suggested_duration === null || this.value.suggested_duration_type === null;
 
@@ -358,14 +358,25 @@
         },
         set(threshold) {
           let update = {};
-          update.completion_criteria = {
-            model: CompletionCriteriaModels.MASTERY,
-            threshold: {
-              mastery_model: threshold.mastery_model,
-              m: this.value.threshold.m,
-              n: this.value.threshold.n,
-            },
-          };
+          if (threshold.mastery_model === 'm_of_n') {
+            update.completion_criteria = {
+              model: CompletionCriteriaModels.MASTERY,
+              threshold: {
+                mastery_model: threshold.mastery_model,
+                m: this.value.threshold.m || this.m,
+                n: this.value.threshold.n || this.n,
+              },
+            };
+          } else {
+            update.completion_criteria = {
+              model: CompletionCriteriaModels.MASTERY,
+              threshold: {
+                mastery_model: threshold.mastery_model,
+                m: null,
+                n: null,
+              },
+            };
+          }
           this.handleInput(update);
         },
       },
@@ -399,6 +410,9 @@
           return { m: this.m, n: this.n };
         },
         set(threshold) {
+          this.m = threshold.m;
+          this.n = threshold.n;
+
           let update = {};
           update.completion_criteria = {
             model: CompletionCriteriaModels.MASTERY,
@@ -767,7 +781,6 @@
         if (suggested_duration_type === undefined) {
           data['suggested_duration_type'] = this.value['suggested_duration_type'];
         }
-
         this.$emit('input', data);
       },
       isUnique(value) {

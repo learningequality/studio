@@ -50,7 +50,7 @@
     getMasteryModelMValidators,
     getMasteryModelNValidators,
     translateValidator,
-  } from '../utils/validation';
+  } from '../../../shared/utils/validation';
   import MasteryModels from 'shared/leUtils/MasteryModels'; // MasteryModelsNames, // MasteryModelsList,
   import { constantsTranslationMixin } from 'shared/mixins';
 
