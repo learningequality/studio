@@ -15,7 +15,6 @@
       >
         <VAutocomplete
           v-model.number="minutes"
-          type="number"
           :step="increments"
           box
           :label="$tr('minutesRequired')"
