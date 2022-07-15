@@ -2,7 +2,10 @@
 
   <VFlex>
     <VLayout row wrap justify-space-between>
-      <VFlex v-if="audioVideoUpload && selectedDuration === 'exactTime'" md2 sm3>
+      <VFlex
+        v-if="audioVideoUpload && selectedDuration === 'exactTime'"
+        class="defaultUpload md2 sm3"
+      >
         {{ defaultUploadTime }}
       </VFlex>
       <VFlex
@@ -11,7 +14,7 @@
         sm3
       >
         <VAutocomplete
-          v-model="minutes"
+          v-model.number="minutes"
           type="number"
           :step="increments"
           box
@@ -176,5 +179,11 @@
   };
 
 </script>
-<style lang="scss">
+<style lang="scss" scoped>
+
+  .defaultUpload {
+    margin: 0.8em;
+    font-size: 1.2em;
+  }
+
 </style>
