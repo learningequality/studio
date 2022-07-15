@@ -111,15 +111,15 @@ class SyncConsumer(WebsocketConsumer):
         # Changes that cannot be made
         disallowed_changes = []
         for c in changes:
-            if c.get("channel_id") is None and c.get("user_id") == user_id:
+            if c.get("channel_id") is None and c.get("user_id") == self.user_id:
                 user_only_changes.append(c)
             elif c.get("channel_id") in allowed_ids:
                 channel_changes.append(c)
             else:
                 disallowed_changes.append(c)
-        change_models = Change.create_changes(user_only_changes + channel_changes, created_by_id=user_id, session_key=session_key)
+        change_models = Change.create_changes(user_only_changes + channel_changes, created_by_id=self.user_id, session_key=self.session_key)
         if user_only_changes:
-            get_or_create_async_task("apply_user_changes", self.user, user_id=user_id)
+            get_or_create_async_task("apply_user_changes", self.user, user_id=self.user_id)
         for channel_id in allowed_ids:
             get_or_create_async_task("apply_channel_changes", self.user, channel_id=channel_id)
         allowed_changes = [{"rev": c.client_rev, "server_rev": c.server_rev} for c in change_models]
@@ -127,4 +127,13 @@ class SyncConsumer(WebsocketConsumer):
 
         self.send(json.dumps({
             'response_payload': response_payload
+        }))
+
+    # Receive message from room group
+    def broadcast_changes(self, event):
+        change = event['change']
+
+        # Send message to WebSocket
+        self.send(text_data=json.dumps({
+            'change': change
         }))
