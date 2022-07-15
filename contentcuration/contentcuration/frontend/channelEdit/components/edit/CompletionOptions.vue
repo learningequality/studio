@@ -161,8 +161,8 @@
         // required state because we need to know the completion to determine durationDropdown model
         currentCompletionDropdown: null,
         mastery_model: null,
-        m: null,
-        n: null,
+        m: 3,
+        n: 5,
       };
     },
     computed: {
@@ -179,7 +179,7 @@
       showCompletionDropdown() {
         /*
           This condition can be removed once practice quizzes are fully implemented in 0.16
-          */
+        */
         return !(this.kind === ContentKindsNames.EXERCISE && !this.practiceQuizzesAllowed);
       },
       audioVideoResource() {
@@ -199,7 +199,7 @@
       showReferenceHint() {
         /*
           The reference hint should be shown only when "Reference" is selected
-          */
+        */
         if (this.kind === ContentKindsNames.H5P || this.kind === ContentKindsNames.HTML5) {
           if (this.currentCompletionDropdown === CompletionDropdownMap.determinedByResource) {
             return false;
@@ -221,9 +221,9 @@
       },
       showActivityDurationInput() {
         /* The `ActivityDuration` component should visible when:
-            - Long activity, short activity, or exact time are chosen if it is not an AV resource
-            - Long activity or short activity are chosen if it is an AV resource
-          */
+          - Long activity, short activity, or exact time are chosen if it is not an AV resource
+          - Long activity or short activity are chosen if it is an AV resource
+        */
         const switchingFromReferenceBetweenAllContentViewedAndCompleteDuration =
           this.value.suggested_duration === null || this.value.suggested_duration_type === null;
 
@@ -358,7 +358,7 @@
         },
         set(threshold) {
           let update = {};
-          if (threshold.mastery_model === 'm_of_n') {
+          if (threshold.mastery_model === MasteryModelsNames.M_OF_N) {
             update.completion_criteria = {
               model: CompletionCriteriaModels.MASTERY,
               threshold: {
@@ -377,6 +377,8 @@
               },
             };
           }
+          this.m = this.value.threshold.m || this.m;
+          this.n = this.value.threshold.n || this.n;
           this.handleInput(update);
         },
       },
@@ -389,7 +391,10 @@
             const defaultStateWhenSwitchingFromGoalToPracticeQuiz =
               this.value.threshold.mastery_model === MasteryModelsNames.M_OF_N &&
               this.currentCompletionDropdown === null;
-            if (this.currentCompletionDropdown === CompletionDropdownMap.goal) {
+            if (
+              this.currentCompletionDropdown === CompletionDropdownMap.goal &&
+              this.value.threshold.mastery_model === MasteryModelsNames.M_OF_N
+            ) {
               return true;
             }
             if (defaultStateWhenSwitchingFromGoalToPracticeQuiz) {
@@ -401,13 +406,16 @@
       },
       masteryModelItem: {
         get() {
-          if (this.value.threshold) {
+          if (this.value.threshold.mastery_model !== MasteryModelsNames.M_OF_N) {
             return {
               m: this.value.threshold.m,
               n: this.value.threshold.n,
             };
           }
-          return { m: this.m, n: this.n };
+          return {
+            m: this.value.threshold.m ? this.value.threshold.m : this.m,
+            n: this.value.threshold.n ? this.value.threshold.n : this.n,
+          };
         },
         set(threshold) {
           this.m = threshold.m;
@@ -469,8 +477,7 @@
       completionDropdownIsAllContentViewed() {
         return (
           (this.completionDropdown === null &&
-            this.currentCompletionDropdown === CompletionDropdownMap.allContent) ||
-          (this.completionDropdown === CompletionDropdownMap.allContent &&
+            this.currentCompletionDropdown === CompletionDropdownMap.nt &&
             this.currentCompletionDropdown === null) ||
           (this.completionDropdown === CompletionDropdownMap.allContent &&
             this.currentCompletionDropdown === CompletionDropdownMap.allContent)
@@ -633,7 +640,6 @@
               };
             }
           }
-
           this.handleInput(update);
         },
       },
