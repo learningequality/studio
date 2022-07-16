@@ -355,13 +355,17 @@ export function startSyncing() {
   cleanupLocks();
   // Initiate a sync immediately in case any data
   // is left over in the database.
-  socket = new WebSocket(
-    'ws://' +
-      window.location.host +
-      '/ws/sync_socket/' +
-      window.CHANNEL_EDIT_GLOBAL.channel_id +
-      '/'
-  );
+  process.env.NODE_ENV == 'production'
+    ? (socket = new WebSocket(
+        new URL(
+          `wss://${window.location.host}/ws/sync_socket/${window.CHANNEL_EDIT_GLOBAL.channel_id}/`
+        )
+      ))
+    : (socket = new WebSocket(
+        new URL(
+          `ws://${window.location.host}/ws/sync_socket/${window.CHANNEL_EDIT_GLOBAL.channel_id}/`
+        )
+      ));
   // Connection opened
   socket.addEventListener('open', () => {
     console.log('Websocket connected');

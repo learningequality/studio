@@ -14,7 +14,6 @@ os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
 
 
 class WebsocketTestCase(TransactionTestCase):
-    # serialized_rollback = True
 
     def setUp(self):
         call_command("loadconstants")
@@ -96,7 +95,6 @@ class WebsocketTestCase(TransactionTestCase):
             communicator = WebsocketCommunicator(application, 'ws/sync_socket/12312312312123/', headers)
             connected, _ = await communicator.connect()
             channel_layer = get_channel_layer()
-            print(channel_layer.groups)
             # check the grou for channel exist
             assert channel_layer.groups['12312312312123']
             assert channel_layer.groups[f"{self.user.id}"]
