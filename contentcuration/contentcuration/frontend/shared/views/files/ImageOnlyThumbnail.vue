@@ -1,37 +1,15 @@
 <template>
 
   <figure
-    class="thumbnail"
     :class="{
-      [kind]: compact,
+      'thumbnail': !compact,
       'icon-only': compact,
       'nothumbnail': !showThumbnail && !compact,
     }"
     :style="{ 'max-width': maxWidth }"
   >
-    <VLayout
-      v-if="kind && !printing && showKind && !compact"
-      tag="figcaption"
-      row
-      align-center
-      class="caption"
-      :class="kind"
-    >
-      <VFlex shrink class="px-1">
-        <Icon
-          v-if="!compact"
-          dark
-          small
-          :aria-label="kindTitle"
-          v-text="icon"
-        />
-      </VFlex>
-      <VFlex shrink>
-        <span class="caption white--text">{{ kindTitle }}</span>
-      </VFlex>
-    </VLayout>
     <img
-      v-if="showThumbnail"
+      v-if="showThumbnail && !compact"
       :src="thumbnailSrc"
       :alt="$tr('thumbnail', { title: title })"
       :style="{ objectFit }"
@@ -39,30 +17,17 @@
     >
 
     <!-- If printing the default icon, need to set as printable icon -->
-    <div v-else-if="printing" class="printable-icon">
-      <Icon :color="$vuetify.theme[kind]" capture-as-image>
-        {{ icon }}
-      </Icon>
+    <div v-else-if="compact || printing">
+      <ContentNodeLearningActivityIcon
+        v-if="learningActivities && !isTopic"
+        :learningActivities="learningActivities"
+      />
+      <KIcon v-else-if="isTopic" :icon="kind" :aria-label="translateConstant(kind)"/>
     </div>
-
-    <!-- Bury icon within SVG so it's more responsive, since font-size scaling is more difficult -->
-    <svg
-      v-else-if="compact"
-      viewBox="0 0 24 24"
-      :aria-label="kindTitle"
-      class="thumbnail-image"
-    >
-      <text
-        :x="-1"
-        :y="y"
-        fill="#ffffff"
-        class="material-icons notranslate v-icon"
-      >{{ icon }}</text>
-    </svg>
     <svg
       v-else
       viewBox="0 0 24 24"
-      :aria-label="kindTitle"
+      :aria-label="title"
       class="nothumbnail-image"
       :class="$isRTL ? 'rtl-image' : 'ltr-image'"
     >
@@ -71,7 +36,9 @@
         :y="y - 3"
         :fill="$vuetify.theme.greyBorder"
         class="material-icons notranslate v-icon"
-      >image</text>
+      >
+        image
+      </text>
     </svg>
 
   </figure>
@@ -81,10 +48,13 @@
 <script>
 
   import { constantsTranslationMixin, printingMixin } from 'shared/mixins';
-  import { getContentKindIcon } from 'shared/vuetify/icons';
+  import ContentNodeLearningActivityIcon from 'shared/views/ContentNodeLearningActivityIcon';
 
   export default {
-    name: 'Thumbnail',
+    name: 'ImageOnlyThumbnail',
+    components: {
+      ContentNodeLearningActivityIcon,
+    },
     mixins: [constantsTranslationMixin, printingMixin],
     props: {
       src: {
@@ -97,13 +67,17 @@
           return {};
         },
       },
+      learningActivities: {
+        type: Object,
+        required: false,
+      },
       kind: {
         type: String,
         required: false,
       },
-      showKind: {
+      isTopic: {
         type: Boolean,
-        default: true,
+        default: false,
       },
       title: {
         type: String,
@@ -113,10 +87,6 @@
       compact: {
         type: Boolean,
         required: false,
-        default: false,
-      },
-      isEmpty: {
-        type: Boolean,
         default: false,
       },
       maxWidth: {
@@ -138,20 +108,11 @@
       objectFit() {
         return this.kind ? 'cover' : 'contain';
       },
-      icon() {
-        return getContentKindIcon(this.kind, this.isEmpty);
-      },
       thumbnailSrc() {
         return this.encoding && this.encoding.base64 ? this.encoding.base64 : this.src;
       },
       showThumbnail() {
         return this.thumbnailSrc && !this.compact;
-      },
-      kindTitle() {
-        if (this.kind) {
-          return this.translateConstant(this.kind);
-        }
-        return '';
       },
     },
     $trs: {
@@ -169,20 +130,18 @@
     position: relative;
     /* stylelint-disable-next-line  */
     padding-bottom: 100% * 9 / 16;
+    border-radius: 3px;
 
-    &.icon-only {
-      padding-top: 0;
-      padding-bottom: 92%;
-      margin: 0 auto;
-      border-radius: 3px;
-    }
-    &:not(.icon-only) {
-      background-color: white;
-      border: 1px solid var(--v-greyBorder-lighten1);
-    }
     &.nothumbnail {
       background-color: var(--v-greyBackground-base);
     }
+  }
+
+  .icon-only {
+    position: relative;
+    padding-top: 0;
+    padding-bottom: 0;
+    margin: 0 auto;
   }
 
   .caption {

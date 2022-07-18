@@ -28,10 +28,10 @@
                     'py-3': isCompact,
                   }"
                 >
-                  <Thumbnail
+                  <ImageOnlyThumbnail
                     v-bind="thumbnailAttrs"
                     :isTopic="isTopic"
-                    :learningActivity="node.learning_activities"
+                    :learningActivities="node.learning_activities"
                     :compact="isCompact"
                     :isEmpty="node.total_count === 0"
                   />
@@ -118,10 +118,11 @@
                     </span>
                   </VListTileSubTitle>
                   <span v-if="!isCompact">
+
                     <ContentNodeLearningActivityIcon
-                      :isTopic="isTopic"
-                      :learningActivity="node.learning_activities"
-                      showEachActivityChip
+                      v-if="!isTopic"
+                      :learningActivities="node.learning_activities"
+                      showEachActivityIcon
                       includeText
                       small
                       chip
@@ -132,6 +133,7 @@
                         v-for="(key, index) in Object.keys(node.grade_levels)"
                         :key="index"
                         class="small-chip"
+                        :style="{ backgroundColor: $themeTokens.fineLine }"
                       >
                         {{ levels(key) }}
                       </span>
@@ -189,7 +191,7 @@
   import { ContentLevel, Categories } from '../../../shared/constants';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import { RolesNames } from 'shared/leUtils/Roles';
-  import Thumbnail from 'shared/views/files/Thumbnail';
+  import ImageOnlyThumbnail from 'shared/views/files/ImageOnlyThumbnail';
   import IconButton from 'shared/views/IconButton';
   import ToggleText from 'shared/views/ToggleText';
   import ContextMenuCloak from 'shared/views/ContextMenuCloak';
@@ -204,7 +206,7 @@
     components: {
       DraggableHandle,
       ContextMenuCloak,
-      Thumbnail,
+      ImageOnlyThumbnail,
       IconButton,
       ContentNodeValidator,
       ContentNodeChangedIcon,
@@ -304,7 +306,11 @@
           this.isTopic ? this.$emit('topicChevronClick') : this.$emit('infoClick');
         }
       },
-      matchIdToString(ids) {
+      metadataListText(ids) {
+        // an array of values, rather than an internationalized list
+        // is created here (unlike in ResourcePanel), because the values
+        // are used to create one or more individual "chips" to display
+        // rather than a string of text
         return ids.map(i => this.translateMetadataString(camelCase(i))).join(', ');
       },
       category(options) {
@@ -313,7 +319,7 @@
           .sort()
           .filter(k => ids.includes(Categories[k]));
         if (matches && matches.length > 0) {
-          return this.matchIdToString(matches);
+          return this.metadataListText(matches);
         }
         return null;
       },
@@ -458,7 +464,6 @@
     padding: 2px 4px;
     margin: 2px;
     font-size: 10px;
-    background-color: #dedede;
     border-radius: 4px;
   }
 
