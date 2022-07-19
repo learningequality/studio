@@ -355,22 +355,21 @@ export function startSyncing() {
   cleanupLocks();
   // Initiate a sync immediately in case any data
   // is left over in the database.
-  process.env.NODE_ENV == 'production'
-    ? (socket = new WebSocket(
-        new URL(
-          `wss://${window.location.host}/ws/sync_socket/${window.CHANNEL_EDIT_GLOBAL.channel_id}/`
-        )
-      ))
-    : (socket = new WebSocket(
-        new URL(
-          `ws://${window.location.host}/ws/sync_socket/${window.CHANNEL_EDIT_GLOBAL.channel_id}/`
-        )
-      ));
+
+  const websocketUrl = new URL(
+    `/ws/sync_socket/${window.CHANNEL_EDIT_GLOBAL.channel_id}/`,
+    window.location.href
+  );
+  websocketUrl.protocol = window.location.protocol == 'https:' ? 'wss:' : 'ws:';
+  socket = new WebSocket(websocketUrl);
+
   // Connection opened
   socket.addEventListener('open', () => {
     console.log('Websocket connected');
   });
+
   debouncedSyncChanges();
+
   // Start the sync interval
   intervalTimer = setInterval(debouncedSyncChanges, SYNC_POLL_INTERVAL * 1000);
   db.on('changes', handleChanges);

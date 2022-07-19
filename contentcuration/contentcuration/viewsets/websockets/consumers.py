@@ -15,20 +15,19 @@ logging = logger.getLogger(__name__)
 
 
 class SyncConsumer(WebsocketConsumer):
-
-    # Checks permissions
-    def check_authentication(self):
-        return self.scope['user'].is_authenticated
-
     # Initial reset
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.room_name = None
         self.room_group_name = None
-        self.session_key = None
-        self.user = None
-        self.user_id = None
         self.indiviual_room_group_name = None
+
+    @property
+    def user(self):
+        return self.scope["user"]
+
+    # Checks permissions
+    def check_authentication(self):
+        return self.user.is_authenticated
 
     def connect(self):
         """
@@ -37,12 +36,10 @@ class SyncConsumer(WebsocketConsumer):
         - Joins a public group based on channel_id provided in url
         """
         # Extract the channel_id from url
-        self.room_name = self.scope['url_route']['kwargs']['channel_id']
-        self.room_group_name = self.room_name
+        self.room_group_name = self.scope['url_route']['kwargs']['channel_id']
 
-        logging.debug("Connected to channel_id: " + self.room_name)
+        logging.debug("Connected to channel_id: " + self.room_group_name)
 
-        self.user = self.scope["user"]
         self.indiviual_room_group_name = str(self.user.id)
 
         logging.debug("Connected to user " + str(self.user))
@@ -89,8 +86,8 @@ class SyncConsumer(WebsocketConsumer):
             "disallowed": [],
             "allowed": [],
         }
-        self.user_id = self.scope['user'].id
-        self.session_key = self.scope['cookies']['kolibri_studio_sessionid']
+        user_id = self.user.id
+        session_key = self.scope['cookies']['kolibri_studio_sessionid']
         text_data_json = json.loads(text_data)
         changes = text_data_json["payload"]["changes"]
 
@@ -114,15 +111,15 @@ class SyncConsumer(WebsocketConsumer):
         # Changes that cannot be made
         disallowed_changes = []
         for c in changes:
-            if c.get("channel_id") is None and c.get("user_id") == self.user_id:
+            if c.get("channel_id") is None and c.get("user_id") == user_id:
                 user_only_changes.append(c)
             elif c.get("channel_id") in allowed_ids:
                 channel_changes.append(c)
             else:
                 disallowed_changes.append(c)
-        change_models = Change.create_changes(user_only_changes + channel_changes, created_by_id=self.user_id, session_key=self.session_key)
+        change_models = Change.create_changes(user_only_changes + channel_changes, created_by_id=user_id, session_key=session_key)
         if user_only_changes:
-            get_or_create_async_task("apply_user_changes", self.user, user_id=self.user_id)
+            get_or_create_async_task("apply_user_changes", self.user, user_id=user_id)
         for channel_id in allowed_ids:
             get_or_create_async_task("apply_channel_changes", self.user, channel_id=channel_id)
         allowed_changes = [{"rev": c.client_rev, "server_rev": c.server_rev} for c in change_models]
