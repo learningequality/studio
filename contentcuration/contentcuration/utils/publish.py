@@ -251,6 +251,11 @@ def create_bare_contentnode(ccnode, default_language, channel_id, channel_name):
     if ccnode.language or default_language:
         language, _new = get_or_create_language(ccnode.language or default_language)
 
+    duration = None
+    if ccnode.kind_id in [content_kinds.AUDIO, content_kinds.VIDEO]:
+        # aggregate duration from associated files, choosing maximum if there are multiple, like hi and lo res videos
+        duration = ccnode.files.aggregate(duration=Max("duration")).get("duration")
+
     options = {}
     if ccnode.extra_fields and 'options' in ccnode.extra_fields:
         options = ccnode.extra_fields['options']
