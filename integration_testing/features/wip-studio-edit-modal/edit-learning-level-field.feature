@@ -1,20 +1,18 @@
 Feature: Edit *Learning level* field
 	Across all file types
 
-# Comment here
-
 	Background: 
 		Given I am signed into Studio
-			And I am in an editable channel
+			And I am in an editable channel with all resource types
 		When I right click <resource>
-		When I click *Edit details*
-		Then I see the edit modal for <resource>
+			And I click *Edit details*
+		Then I see the *Edit details* modal for the <resource>
 			And I see the *Level* dropdown in the *Basic information* section
 
 	Scenario: View learning level options
 		When I click the *Level* dropdown
 		Then I see multi-select checkboxes
-			And I see the options: *Preschool/Nursery*, *Lower primary*, *Upper primary*, *Lower secondary*, *Upper secondary*, *Tertiary*, *Specialized professional training*, *All levels -- basic skills*, *All levels -- work skills*
+			And I see the options: *Preschool/Nursery*, *Lower primary*, *Upper primary*, *Lower secondary*, *Upper secondary*, *Tertiary*, *Specialized professional training*, *All levels -- basic skills*, *All levels -- work skills* #TO DO - we need a final list with the available checkboxes
 
 	Scenario: Select options
 		Given I see the options for *Level*

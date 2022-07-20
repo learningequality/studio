@@ -108,7 +108,10 @@
         return this.getContentNodeFiles(this.nodeId);
       },
       presets() {
-        return FormatPresetsList.filter(p => p.kind_id === this.node.kind);
+        // Explicitly exclude any 'dependency' presets for now
+        return FormatPresetsList.filter(
+          p => p.kind_id === this.node.kind && !p.id.includes('dependency')
+        );
       },
       fileCount() {
         return this.primaryFileMapping.filter(item => item.file && !item.file.error).length;

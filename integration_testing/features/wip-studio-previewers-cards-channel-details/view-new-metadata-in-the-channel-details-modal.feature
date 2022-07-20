@@ -1,16 +1,13 @@
 Feature: View new metadata in the channel details modal
 
-
-# Comment here
-
 	Background: 
 		Given I am signed into Studio
-			And I am in an editable channel, <channel>
-		When I click on the info icon next to the <channel> label in the app bar
-		Then I see the channel details modal for <channel>
+			And I am in an editable channel
+		When I click on the info icon next to the channel label in the app bar
+		Then I see the channel details modal for the channel
 
 	Scenario: View total resources
-		Given there are resources for all learning activity types in <channel>
+		Given there are resources for all learning activity types in a channel
 			And some are marked with *Multiple activities*
 		Then I see the new icons and labels
 			And I see the number of resources for each learning activity

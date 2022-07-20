@@ -48,7 +48,7 @@ services:
     environment:
       MINIO_ACCESS_KEY: development
       MINIO_SECRET_KEY: development
-      MINIO_API_CORS_ALLOW_ORIGIN: http://localhost:8080
+      MINIO_API_CORS_ALLOW_ORIGIN: 'http://localhost:8080,http://127.0.0.1:8080'
     volumes:
       - minio_data:/data
 
