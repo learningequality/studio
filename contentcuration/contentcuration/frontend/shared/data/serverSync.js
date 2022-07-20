@@ -1,24 +1,25 @@
 import debounce from 'lodash/debounce';
 import findLastIndex from 'lodash/findLastIndex';
 import get from 'lodash/get';
-import pick from 'lodash/pick';
 import orderBy from 'lodash/orderBy';
+import pick from 'lodash/pick';
 import uniq from 'lodash/uniq';
-import applyChanges from './applyRemoteChanges';
-import { hasActiveLocks, cleanupLocks } from './changes';
 import {
+  ACTIVE_CHANNELS,
+  CHANGES_TABLE,
   CHANGE_LOCKS_TABLE,
   CHANGE_TYPES,
-  CHANGES_TABLE,
-  IGNORED_SOURCE,
   CHANNEL_SYNC_KEEP_ALIVE_INTERVAL,
-  ACTIVE_CHANNELS,
+  IGNORED_SOURCE,
   MAX_REV_KEY,
 } from './constants';
+import { Channel, Session, Task } from './resources';
+import { cleanupLocks, hasActiveLocks } from './changes';
+
+import { INDEXEDDB_RESOURCES } from './registry';
+import applyChanges from './applyRemoteChanges';
 import db from './db';
 import mergeAllChanges from './mergeChanges';
-import { INDEXEDDB_RESOURCES } from './registry';
-import { Channel, Session, Task } from './resources';
 import client from 'shared/client';
 import urls from 'shared/urls';
 
@@ -29,7 +30,7 @@ const SYNC_IF_NO_CHANGES_FOR = 2;
 // When this many seconds pass, repoll the backend to
 // check for any updates to active channels, or the user and sync any current changes
 const SYNC_POLL_INTERVAL = 5;
-
+let socket;
 // Flag to check if a sync is currently active.
 let syncActive = false;
 
@@ -274,7 +275,19 @@ async function syncChanges() {
     //   "errors": [],
     //   "successes": [],
     // }
+    if (requestPayload.changes.length != 0) {
+      socket.send(
+        JSON.stringify({
+          payload: requestPayload,
+        })
+      );
+    }
     const response = await client.post(urls['sync'](), requestPayload);
+    socket.onmessage = function(e) {
+      const data = JSON.parse(e.data);
+      console.log(data);
+    };
+
     try {
       await Promise.all([
         handleDisallowed(response),
@@ -342,7 +355,21 @@ export function startSyncing() {
   cleanupLocks();
   // Initiate a sync immediately in case any data
   // is left over in the database.
+
+  const websocketUrl = new URL(
+    `/ws/sync_socket/${window.CHANNEL_EDIT_GLOBAL.channel_id}/`,
+    window.location.href
+  );
+  websocketUrl.protocol = window.location.protocol == 'https:' ? 'wss:' : 'ws:';
+  socket = new WebSocket(websocketUrl);
+
+  // Connection opened
+  socket.addEventListener('open', () => {
+    console.log('Websocket connected');
+  });
+
   debouncedSyncChanges();
+
   // Start the sync interval
   intervalTimer = setInterval(debouncedSyncChanges, SYNC_POLL_INTERVAL * 1000);
   db.on('changes', handleChanges);

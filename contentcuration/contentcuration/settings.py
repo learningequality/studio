@@ -67,6 +67,7 @@ ALLOWED_HOSTS = ["*"]  # In production, we serve through a file socket, so this 
 # Application definition
 
 INSTALLED_APPS = (
+    'channels',
     'contentcuration.apps.ContentConfig',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -86,6 +87,7 @@ INSTALLED_APPS = (
     'webpack_loader',
     'django_filters',
     'mathfilters',
+
 )
 
 SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"
@@ -201,7 +203,17 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'contentcuration.wsgi.application'
+ASGI_APPLICATION = 'contentcuration.asgi.application'
 
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [('127.0.0.1', 6379)],
+        },
+    },
+}
 
 # Database
 # https://docs.djangoproject.com/en/1.8/ref/settings/#databases
