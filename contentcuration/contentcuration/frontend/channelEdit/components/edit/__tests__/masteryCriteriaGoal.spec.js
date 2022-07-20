@@ -22,9 +22,7 @@ describe('masteryCriteriaGoal', () => {
 
   beforeEach(() => {
     formWrapper = makeWrapper();
-    console.log(formWrapper.html());
     wrapper = formWrapper.find(MasteryCriteriaGoal);
-    console.log(wrapper.html());
     wrapper.setProps({ value: { mastery_model: 'm_of_n' } });
     modelInput = wrapper.find({ ref: 'masteryModel' }).find('input');
   });
