@@ -13,6 +13,7 @@
           :placeholder="placeholder"
           :required="required"
           :readonly="readonly"
+          :disabled="disabled"
           :rules="masteryRules"
           menu-props="offsetY"
           class="mb-2"
@@ -27,7 +28,10 @@
 <script>
 
   import { getMasteryModelValidators, translateValidator } from '../../../shared/utils/validation';
-  import MasteryModels, { MasteryModelsList } from 'shared/leUtils/MasteryModels';
+  import MasteryModels, {
+    MasteryModelsList,
+    MasteryModelsNames,
+  } from 'shared/leUtils/MasteryModels';
   import { constantsTranslationMixin } from 'shared/mixins';
 
   export default {
@@ -52,6 +56,10 @@
       required: {
         type: Boolean,
         default: true,
+      },
+      disabled: {
+        type: Boolean,
+        default: false,
       },
       readonly: {
         type: Boolean,
