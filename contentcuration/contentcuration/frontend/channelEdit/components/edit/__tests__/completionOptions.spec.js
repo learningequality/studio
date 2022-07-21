@@ -18,7 +18,7 @@ describe('CompletionOptions', () => {
       expect(dropdown.exists()).toBe(true);
     });
     describe(`initial, default states`, () => {
-      describe(`audio or video`, () => {
+      describe(`audio/video`, () => {
         it(`'Complete duration' should be displayed by default`, () => {
           const wrapper = mount(CompletionOptions, {
             propsData: {
@@ -173,6 +173,39 @@ describe('CompletionOptions', () => {
         });
       });
     });
+    describe(`changing states`, () => {
+      describe('emitted events', () => {
+        it('input should be emitted when completion dropdown is updated', async () => {
+          const wrapper = mount(CompletionOptions, {
+            propsData: {
+              kind: 'document',
+              value: { model: null },
+            },
+          });
+          wrapper.find({ ref: 'completion' }).vm.$emit('input', 'allContent');
+          await wrapper.vm.$nextTick();
+
+          expect(wrapper.emitted('input')).toBeTruthy();
+        });
+      });
+      describe(`audio/video`, () => {
+        it(`'Duration dropdown' is not visible and reference hint is visible when 'Reference' is selected`, async () => {
+          const wrapper = mount(CompletionOptions, {
+            propsData: {
+              kind: 'audio',
+              value: { model: null },
+            },
+          });
+          expect(wrapper.vm.showReferenceHint).toBe(false);
+          expect(wrapper.find({ ref: 'duration' }).exists()).toBe(true);
+
+          wrapper.find({ ref: 'completion' }).vm.$emit('input', 'reference');
+          await wrapper.vm.$nextTick();
+          expect(wrapper.vm.showReferenceHint).toBe(true);
+          expect(wrapper.find({ ref: 'duration' }).exists()).toBe(false);
+        });
+      });
+    });
   });
 
   describe(`duration dropdown`, () => {
@@ -229,21 +262,48 @@ describe('CompletionOptions', () => {
         expect(dropdown.exists()).toBe(false);
       });
     });
-    xdescribe(`displayed states`, () => {
-      it(`'Reference' should be displayed if the model is 'reference'`, () => {
-        //done
+    describe(`when completion dropdown is 'Complete duration'`, () => {
+      describe('emitted events', () => {
+        it('input should be emitted when duration dropdown is updated', async () => {
+          const wrapper = mount(CompletionOptions, {
+            propsData: {
+              kind: 'document',
+              value: { model: null },
+            },
+          });
+          wrapper.find({ ref: 'duration' }).vm.$emit('input', 'shortActivity');
+          await wrapper.vm.$nextTick();
+
+          expect(wrapper.emitted('input')).toBeTruthy();
+        });
       });
-      it(`'Exact time' should be displayed if the 'suggested_duration_type' is 'exact time'`, () => {
-        //done
+      describe(`audio/video`, () => {
+        it(`minutes input is displayed when 'Short activity' is chosen`, async () => {
+          const wrapper = mount(CompletionOptions, {
+            propsData: {
+              kind: 'audio',
+              value: { model: null },
+            },
+          });
+          wrapper.find({ ref: 'duration' }).vm.$emit('input', 'shortActivity');
+          await wrapper.vm.$nextTick();
+          expect(wrapper.find({ ref: 'activity_duration' }).exists()).toBe(true);
+        });
+        it(`minutes input is displayed when 'Long activity' is chosen`, async () => {
+          const wrapper = mount(CompletionOptions, {
+            propsData: {
+              kind: 'audio',
+              value: { model: null },
+            },
+          });
+          wrapper.find({ ref: 'duration' }).vm.$emit('input', 'longActivity');
+          await wrapper.vm.$nextTick();
+          expect(wrapper.find({ ref: 'activity_duration' }).exists()).toBe(true);
+        });
       });
-      it(`'Short activity' should be displayed if the 'suggested_duration_type' is 'approx_time' and 'suggested_duration' is less than the midpoint`, () => {
-        //done
-      });
-      it(`'Long activity' should be displayed if the 'suggested_duration_type' is 'approx_time' and 'suggested_duration' is greater than the midpoint`, () => {
-        //done
-      });
-    });
-    xdescribe(`when completion dropdown is 'Complete duration'`, () => {
+      describe(`document`, () => {});
+      describe(`exercise`, () => {});
+      describe(`html5 or h5p`, () => {});
       it(`model and suggested_duration_type should be 'approx_time' when duration dropdown is 'Short activity'`, () => {
         //done
       });
