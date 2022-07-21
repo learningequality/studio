@@ -189,20 +189,23 @@ describe('CompletionOptions', () => {
         });
       });
       describe(`audio/video`, () => {
-        it(`'Duration dropdown' is not visible and reference hint is visible when 'Reference' is selected`, async () => {
+        it(`'Duration dropdown' is not visible and reference hint is visible when 'Reference' is selected`, () => {
           const wrapper = mount(CompletionOptions, {
             propsData: {
               kind: 'audio',
-              value: { model: null },
+              value: { model: 'reference' },
             },
           });
-          expect(wrapper.vm.showReferenceHint).toBe(false);
-          expect(wrapper.find({ ref: 'duration' }).exists()).toBe(true);
-
-          wrapper.find({ ref: 'completion' }).vm.$emit('input', 'reference');
-          await wrapper.vm.$nextTick();
           expect(wrapper.vm.showReferenceHint).toBe(true);
           expect(wrapper.find({ ref: 'duration' }).exists()).toBe(false);
+
+          // wrapper.find({ ref: 'completion' }).vm.$emit('input', 'reference');
+          // await wrapper.vm.$nextTick();
+
+          // console.log(wrapper.vm.audioVideoResource)
+          // console.log(wrapper.vm.value);
+          // expect(wrapper.vm.showReferenceHint).toBe(true);
+          // expect(wrapper.find({ ref: 'duration' }).exists()).toBe(false);
         });
       });
     });
@@ -278,7 +281,7 @@ describe('CompletionOptions', () => {
         });
       });
       describe(`audio/video`, () => {
-        it(`minutes input is displayed when 'Short activity' is chosen`, async () => {
+        it(`minutes input is displayed when 'Short activity' is selected`, async () => {
           const wrapper = mount(CompletionOptions, {
             propsData: {
               kind: 'audio',
@@ -288,8 +291,9 @@ describe('CompletionOptions', () => {
           wrapper.find({ ref: 'duration' }).vm.$emit('input', 'shortActivity');
           await wrapper.vm.$nextTick();
           expect(wrapper.find({ ref: 'activity_duration' }).exists()).toBe(true);
+          expect(wrapper.vm.showActivityDurationInput).toBe(true);
         });
-        it(`minutes input is displayed when 'Long activity' is chosen`, async () => {
+        it(`minutes input is displayed when 'Long activity' is selected`, async () => {
           const wrapper = mount(CompletionOptions, {
             propsData: {
               kind: 'audio',
@@ -299,9 +303,82 @@ describe('CompletionOptions', () => {
           wrapper.find({ ref: 'duration' }).vm.$emit('input', 'longActivity');
           await wrapper.vm.$nextTick();
           expect(wrapper.find({ ref: 'activity_duration' }).exists()).toBe(true);
+          expect(wrapper.vm.showActivityDurationInput).toBe(true);
         });
       });
-      describe(`document`, () => {});
+      describe(`document`, () => {
+        describe(`'All content viewed' is selected as completion`, () => {
+          it(`minutes input is displayed when 'Short activity' is selected`, async () => {
+            const wrapper = mount(CompletionOptions, {
+              propsData: {
+                kind: 'document',
+                value: { model: 'pages' },
+              },
+            });
+            wrapper.find({ ref: 'duration' }).vm.$emit('input', 'shortActivity');
+            await wrapper.vm.$nextTick();
+            expect(wrapper.find({ ref: 'activity_duration' }).exists()).toBe(true);
+            expect(wrapper.vm.showActivityDurationInput).toBe(true);
+          });
+          it(`minutes input is displayed when 'Long activity' is selected`, async () => {
+            const wrapper = mount(CompletionOptions, {
+              propsData: {
+                kind: 'document',
+                value: { model: 'pages' },
+              },
+            });
+            wrapper.find({ ref: 'duration' }).vm.$emit('input', 'longActivity');
+            await wrapper.vm.$nextTick();
+            expect(wrapper.find({ ref: 'activity_duration' }).exists()).toBe(true);
+            expect(wrapper.vm.showActivityDurationInput).toBe(true);
+          });
+          it(`minutes input is displayed when 'Exact time' is selected`, async () => {
+            const wrapper = mount(CompletionOptions, {
+              propsData: {
+                kind: 'document',
+                value: { model: 'pages' },
+              },
+            });
+            wrapper.find({ ref: 'duration' }).vm.$emit('input', 'exactTime');
+            await wrapper.vm.$nextTick();
+            expect(wrapper.find({ ref: 'activity_duration' }).exists()).toBe(true);
+            expect(wrapper.vm.showActivityDurationInput).toBe(true);
+          });
+          it(`minutes input is hidden and reference hint is displayed when 'Reference' is selected`, () => {
+            const wrapper = mount(CompletionOptions, {
+              propsData: {
+                kind: 'document',
+                value: { model: 'reference' },
+              },
+            });
+            // wrapper.find({ ref: 'completion' }).vm.$emit('input', 'allContent');
+            // wrapper.find({ ref: 'duration' }).vm.$emit('input',
+            //   {
+            //     completion_criteria: { model: 'reference', threshold: null },
+            //     suggested_duration: NaN,
+            //     suggested_duration_type: 'approx_time',
+            //     modality: undefined
+            //   }
+            // );
+
+            expect(wrapper.find({ ref: 'activity_duration' }).exists()).toBe(false);
+            expect(wrapper.vm.showActivityDurationInput).toBe(false);
+            expect(wrapper.vm.showReferenceHint).toBe(true);
+          });
+        });
+        describe(`'Complete duration' is selected as completion`, () => {
+          it(`.... when 'Short activity' is selected`, () => {});
+          it(`.... when 'Long activity' is selected`, () => {});
+          it(`.... when 'Exact time' is selected`, () => {});
+          it(`.... when 'Reference' is selected`, () => {});
+        });
+        describe(`Switching between 'All content viewed' and 'Complete duration'`, () => {
+          it(`.... when switching betweeen 'Short activity' in ACV and CD`, () => {});
+          it(`.... when switching betweeen 'Long activity' in ACV and CD`, () => {});
+          it(`.... when switching betweeen 'Exact time' in ACV and CD`, () => {});
+          it(`.... when switching betweeen 'Reference' in ACV and CD`, () => {});
+        });
+      });
       describe(`exercise`, () => {});
       describe(`html5 or h5p`, () => {});
       it(`model and suggested_duration_type should be 'approx_time' when duration dropdown is 'Short activity'`, () => {
