@@ -175,21 +175,61 @@ describe('CompletionOptions', () => {
     });
   });
 
-  xdescribe(`duration dropdown`, () => {
+  describe(`duration dropdown`, () => {
+    it(`renders the duration dropdown`, () => {
+      const wrapper = mount(CompletionOptions);
+      const dropdown = wrapper.find({ ref: 'duration' });
+      expect(dropdown.exists()).toBe(true);
+    });
     describe(`default states`, () => {
       it(`'Exact time to complete' should be displayed by default for audio or video`, () => {
-        //done
+        const wrapper = mount(CompletionOptions, {
+          propsData: {
+            kind: 'audio',
+            value: { suggested_duration: null },
+          },
+        });
+        expect(wrapper.vm.durationDropdown).toBe('exactTime');
       });
       it(`duration dropdown is empty by default for documents`, () => {
-        //done
+        const wrapper = mount(CompletionOptions, {
+          propsData: {
+            kind: 'document',
+            value: { suggested_duration: null },
+          },
+        });
+        expect(wrapper.vm.durationDropdown).toBe('');
       });
-      it(`duration dropdown is empty by default for exercises`, () => {});
+      it(`duration dropdown is empty by default for exercises`, () => {
+        const wrapper = mount(CompletionOptions, {
+          propsData: {
+            kind: 'exercise',
+            value: { suggested_duration: null },
+          },
+        });
+        expect(wrapper.vm.durationDropdown).toBe('');
+      });
       it(`duration dropdown is empty by default for html5`, () => {
-        //done
+        const wrapper = mount(CompletionOptions, {
+          propsData: {
+            kind: 'html5',
+            value: { suggested_duration: null },
+          },
+        });
+        expect(wrapper.vm.durationDropdown).toBe('');
       });
-      it(`duration dropdown is hidden by default for h5p`, () => {});
+      it(`duration dropdown is hidden by default for h5p`, () => {
+        const wrapper = mount(CompletionOptions, {
+          propsData: {
+            kind: 'h5p',
+            value: { suggested_duration: null },
+          },
+        });
+        const dropdown = wrapper.find({ ref: 'duration' });
+        expect(dropdown.exists()).toBe(false);
+      });
     });
-    describe(`displayed states`, () => {
+    xdescribe(`displayed states`, () => {
       it(`'Reference' should be displayed if the model is 'reference'`, () => {
         //done
       });
@@ -203,7 +243,7 @@ describe('CompletionOptions', () => {
         //done
       });
     });
-    describe(`when completion dropdown is 'Complete duration'`, () => {
+    xdescribe(`when completion dropdown is 'Complete duration'`, () => {
       it(`model and suggested_duration_type should be 'approx_time' when duration dropdown is 'Short activity'`, () => {
         //done
       });
@@ -214,7 +254,7 @@ describe('CompletionOptions', () => {
         //done
       });
     });
-    describe(`when completion dropdown is 'All content viewed'`, () => {
+    xdescribe(`when completion dropdown is 'All content viewed'`, () => {
       it(`model should be 'pages' and suggested_duration_type should be 'approx_time' when duration dropdown is 'Short activity'`, () => {
         //done
       });
@@ -228,17 +268,17 @@ describe('CompletionOptions', () => {
         //done
       });
     });
-    describe(`when completion dropdown is 'Practice quiz'`, () => {
+    xdescribe(`when completion dropdown is 'Practice quiz'`, () => {
       it(`'Goal' dropdown is removed`, () => {
         //done
       });
     });
-    describe(`when completion dropdown is 'Practice until goal is met'`, () => {
+    xdescribe(`when completion dropdown is 'Practice until goal is met'`, () => {
       it(``, () => {});
       it(``, () => {});
       it(``, () => {});
     });
-    describe(`when completion dropdown is 'Determined by this resource'`, () => {});
+    xdescribe(`when completion dropdown is 'Determined by this resource'`, () => {});
   });
   xdescribe(`minutes input`, () => {
     //Note: while the component itself is in another component,
