@@ -1,14 +1,12 @@
 Feature: Edit *Learning activity* field
 	Across all file types
 
-# Comment here
-
 	Background: 
 		Given I am signed into Studio
-			And I am in an editable channel
-		When I right click <resource>
-		When I click *Edit details*
-		Then I see the edit modal for <resource>
+			And I am in an editable channel with all resource types
+		When I right click a <resource>
+			And I click *Edit details*
+		Then I see the *Edit details* modal for the <resource>
 			And I see the *Learning activity* dropdown in the *Basic information* section
 
 	Scenario: View learning activity options
@@ -52,14 +50,14 @@ Feature: Edit *Learning activity* field
 	Scenario: See that learning activity field is required
 		Given the *Learning activity* field of <resource> is empty
 		When I click the *Learning activity* text field
-		When I lose focus on the *Learning activity* text field
-		Then I see *Learning activity* is in an error state
+			And I lose focus on the *Learning activity* text field
+		Then I see that the *Learning activity* is in an error state
 			And I see *Learning activity is required*
 		When I click *FINISH*
-		Then I see <resource> in the topic tree
-			And I see a red error icon on <resource>
-		When I left-click <resource>
-		Then I see the previewer for <resource>
+		Then I see the <resource> in the topic tree
+			And I see a red error icon on the <resource>
+		When I left-click the <resource>
+		Then I see the previewer for the <resource>
 			And I see there is no learning activity label at the top left
 			And I see the *Learning activity* field has a red error icon
-			And I see the message *Missing learning activity* in red text
+			And I see a *Missing learning activity* message in red text

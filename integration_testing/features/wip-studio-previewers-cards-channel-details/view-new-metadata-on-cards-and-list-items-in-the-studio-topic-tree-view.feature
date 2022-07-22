@@ -1,10 +1,8 @@
 Feature: View new metadata on cards and list items in the Studio topic tree view
 
-# Comment here
-
 	Background: 
 		Given I am signed into Studio
-			And I am in an editable channel
+			And I am in an editable channel with all resource types
 
 	Scenario: See new metadata for .pdf, .epub, .mp3, .mp4, .mov, .zip
 		Given *View* is set to *Default view*
