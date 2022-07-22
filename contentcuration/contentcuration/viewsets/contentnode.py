@@ -310,6 +310,7 @@ class ExtraFieldsOptionsSerializer(JSONFieldDictSerializer):
 class ExtraFieldsSerializer(JSONFieldDictSerializer):
     randomize = BooleanField()
     options = ExtraFieldsOptionsSerializer(required=False)
+    suggested_duration_type = ChoiceField(choices=[completion_criteria.TIME, completion_criteria.APPROX_TIME], allow_null=True, required=False)
 
     def update(self, instance, validated_data):
         instance = _migrate_extra_fields(instance)
