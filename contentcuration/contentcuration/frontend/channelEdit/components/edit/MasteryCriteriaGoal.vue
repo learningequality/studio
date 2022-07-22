@@ -28,10 +28,7 @@
 <script>
 
   import { getMasteryModelValidators, translateValidator } from '../../../shared/utils/validation';
-  import MasteryModels, {
-    MasteryModelsList,
-    MasteryModelsNames,
-  } from 'shared/leUtils/MasteryModels';
+  import MasteryModels, { MasteryModelsList } from 'shared/leUtils/MasteryModels';
   import { constantsTranslationMixin } from 'shared/mixins';
 
   export default {

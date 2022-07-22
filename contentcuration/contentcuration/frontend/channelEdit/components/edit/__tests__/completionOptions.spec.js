@@ -18,7 +18,6 @@ describe('CompletionOptions', () => {
     });
     describe(`initial, default states`, () => {
       describe(`audio/video`, () => {
-        //!TODO FIX
         it(`'Complete duration' should be displayed by default`, () => {
           const wrapper = mount(CompletionOptions, {
             propsData: {
@@ -28,38 +27,37 @@ describe('CompletionOptions', () => {
           });
           expect(wrapper.vm.completionDropdown).toBe('completeDuration');
         });
-        it(`'Complete duration' should be displayed if the model in the backend is 'exact time', 'short activity', or 'long activity'`, () => {
+        it(`'Complete duration' should be displayed if 'Exact time'`, () => {
           const wrapper = mount(CompletionOptions, {
             propsData: {
               kind: 'audio',
-              value: { model: 'exactTime' },
+              value: { model: 'time', threshold: 600, suggested_duration_type: 'time' },
             },
           });
           expect(wrapper.vm.completionDropdown).toBe('completeDuration');
         });
-        it(`'Complete duration' should be displayed if the model in the backend is 'exact time'`, () => {
+        it(`'Complete duration' should be displayed if 'Short activity'`, () => {
           const wrapper = mount(CompletionOptions, {
             propsData: {
               kind: 'audio',
-              value: { model: 'exactTime' },
+              value: {
+                model: 'approx_time',
+                threshold: 600,
+                suggested_duration_type: 'approx_time',
+              },
             },
           });
           expect(wrapper.vm.completionDropdown).toBe('completeDuration');
         });
-        it(`'Complete duration' should be displayed if the model in the backend is 'short activity'`, () => {
+        it(`'Complete duration' should be displayed if 'Long activity'`, () => {
           const wrapper = mount(CompletionOptions, {
             propsData: {
               kind: 'audio',
-              value: { model: 'shortActivity' },
-            },
-          });
-          expect(wrapper.vm.completionDropdown).toBe('completeDuration');
-        });
-        it(`'Complete duration' should be displayed if the model in the backend is 'long activity'`, () => {
-          const wrapper = mount(CompletionOptions, {
-            propsData: {
-              kind: 'audio',
-              value: { model: 'longActivity' },
+              value: {
+                model: 'approx_time',
+                threshold: 6000,
+                suggested_duration_type: 'approx_time',
+              },
             },
           });
           expect(wrapper.vm.completionDropdown).toBe('completeDuration');
@@ -73,12 +71,8 @@ describe('CompletionOptions', () => {
           });
           expect(wrapper.vm.completionDropdown).toBe('reference');
         });
-        it(`time from file should be displayed when duration dropdown is 'Exact time to complete'`, () => {
-          //! TODO FIX
-        });
       });
       describe(`document`, () => {
-        //! TODO FIX
         it(`'All content viewed' should be displayed by default`, () => {
           const wrapper = mount(CompletionOptions, {
             propsData: {
@@ -101,34 +95,49 @@ describe('CompletionOptions', () => {
           const wrapper = mount(CompletionOptions, {
             propsData: {
               kind: 'document',
-              value: { model: 'pages' },
+              value: { model: 'pages', threshold: '100%' },
             },
           });
           expect(wrapper.vm.completionDropdown).toBe('allContent');
         });
-        it(`'Complete duration' should be displayed if the model in the backend is 'exact time'`, () => {
+        it(`'Complete duration' should be displayed if 'exact time'`, () => {
           const wrapper = mount(CompletionOptions, {
             propsData: {
               kind: 'document',
-              value: { model: 'exactTime' },
+              value: {
+                model: 'time',
+                threshold: 1234,
+                suggested_duration: 1234,
+                suggested_duration_type: 'time',
+              },
             },
           });
           expect(wrapper.vm.completionDropdown).toBe('completeDuration');
         });
-        it(`'Complete duration' should be displayed if the model in the backend is 'short activity'`, () => {
+        it(`'Complete duration' should be displayed if 'short activity'`, () => {
           const wrapper = mount(CompletionOptions, {
             propsData: {
               kind: 'document',
-              value: { model: 'shortActivity' },
+              value: {
+                model: 'approx_time',
+                threshold: 1234,
+                suggested_duration: 1234,
+                suggested_duration_type: 'approx_time',
+              },
             },
           });
           expect(wrapper.vm.completionDropdown).toBe('completeDuration');
         });
-        it(`'Complete duration' should be displayed if the model in the backend is 'long activity'`, () => {
+        it(`'Complete duration' should be displayed if 'long activity'`, () => {
           const wrapper = mount(CompletionOptions, {
             propsData: {
               kind: 'document',
-              value: { model: 'shortActivity' },
+              value: {
+                model: 'time',
+                threshold: 1234567,
+                suggested_duration: 1234567,
+                suggested_duration_type: 'time',
+              },
             },
           });
           expect(wrapper.vm.completionDropdown).toBe('completeDuration');
@@ -139,7 +148,7 @@ describe('CompletionOptions', () => {
           const wrapper = mount(CompletionOptions, {
             propsData: {
               kind: 'exercise',
-              value: { model: null },
+              value: { model: null, threshold: { m: null, n: null } },
             },
           });
           expect(wrapper.vm.completionDropdown).toBe('goal');
@@ -148,7 +157,7 @@ describe('CompletionOptions', () => {
           const wrapper = mount(CompletionOptions, {
             propsData: {
               kind: 'exercise',
-              value: { model: null, modality: 'QUIZ' },
+              value: { model: null, threshold: { m: null, n: null }, modality: 'QUIZ' },
               practiceQuizzesAllowed: false,
             },
           });
@@ -209,7 +218,7 @@ describe('CompletionOptions', () => {
           const wrapper = mount(CompletionOptions, {
             propsData: {
               kind: 'exercise',
-              value: { model: 'mastery', modality: 'QUIZ' },
+              value: { model: 'mastery', threshold: { m: 3, n: 5 }, modality: 'QUIZ' },
             },
           });
           wrapper.find({ ref: 'completion' }).vm.$emit('input', 'practiceQuiz');
@@ -249,7 +258,7 @@ describe('CompletionOptions', () => {
         const wrapper = mount(CompletionOptions, {
           propsData: {
             kind: 'exercise',
-            value: { model: 'mastery', suggested_duration: null },
+            value: { model: 'mastery', threshold: { m: 3, n: 5 }, suggested_duration: null },
           },
         });
         expect(wrapper.vm.durationDropdown).toBe('');
@@ -258,7 +267,7 @@ describe('CompletionOptions', () => {
         const wrapper = mount(CompletionOptions, {
           propsData: {
             kind: 'exercise',
-            value: { model: 'mastery' },
+            value: { model: 'mastery', threshold: { m: 3, n: 5 } },
           },
         });
         wrapper.find({ ref: 'completion' }).vm.$emit('input', 'completeDuration');
@@ -502,7 +511,7 @@ describe('CompletionOptions', () => {
           const wrapper = mount(CompletionOptions, {
             propsData: {
               kind: 'exercise',
-              value: { model: 'mastery' },
+              value: { model: 'mastery', threshold: { m: 3, n: 5 } },
             },
           });
           wrapper.find({ ref: 'duration' }).vm.$emit('input', 'shortActivity');
@@ -514,7 +523,7 @@ describe('CompletionOptions', () => {
           const wrapper = mount(CompletionOptions, {
             propsData: {
               kind: 'exercise',
-              value: { model: 'mastery' },
+              value: { model: 'mastery', threshold: { m: 3, n: 5 } },
             },
           });
           wrapper.find({ ref: 'duration' }).vm.$emit('input', 'longActivity');
@@ -526,7 +535,7 @@ describe('CompletionOptions', () => {
           const wrapper = mount(CompletionOptions, {
             propsData: {
               kind: 'exercise',
-              value: { model: 'mastery' },
+              value: { model: 'mastery', threshold: { m: 3, n: 5 } },
             },
           });
           wrapper.find({ ref: 'duration' }).vm.$emit('input', 'exactTime');
@@ -540,7 +549,7 @@ describe('CompletionOptions', () => {
           const wrapper = mount(CompletionOptions, {
             propsData: {
               kind: 'exercise',
-              value: { model: 'mastery', modality: 'QUIZ' },
+              value: { model: 'mastery', threshold: { m: 3, n: 5 }, modality: 'QUIZ' },
             },
           });
           wrapper.find({ ref: 'duration' }).vm.$emit('input', 'shortActivity');
@@ -552,7 +561,7 @@ describe('CompletionOptions', () => {
           const wrapper = mount(CompletionOptions, {
             propsData: {
               kind: 'exercise',
-              value: { model: 'mastery', modality: 'QUIZ' },
+              value: { model: 'mastery', threshold: { m: 3, n: 5 }, modality: 'QUIZ' },
             },
           });
           wrapper.find({ ref: 'duration' }).vm.$emit('input', 'longActivity');
@@ -564,7 +573,7 @@ describe('CompletionOptions', () => {
           const wrapper = mount(CompletionOptions, {
             propsData: {
               kind: 'exercise',
-              value: { model: 'mastery', modality: 'QUIZ' },
+              value: { model: 'mastery', threshold: { m: 3, n: 5 }, modality: 'QUIZ' },
             },
           });
           wrapper.find({ ref: 'duration' }).vm.$emit('input', 'exactTime');
@@ -583,6 +592,7 @@ describe('CompletionOptions', () => {
                 modality: 'QUIZ',
                 suggested_duration: 1200,
                 suggested_duration_type: 'approx_time',
+                threshold: { m: 3, n: 5 },
               },
             },
           });
@@ -604,6 +614,7 @@ describe('CompletionOptions', () => {
                 modality: 'QUIZ',
                 suggested_duration: 6000,
                 suggested_duration_type: 'approx_time',
+                threshold: { m: 3, n: 5 },
               },
             },
           });
@@ -625,6 +636,7 @@ describe('CompletionOptions', () => {
                 modality: 'QUIZ',
                 suggested_duration: 1234,
                 suggested_duration_type: 'time',
+                threshold: { m: 3, n: 5 },
               },
             },
           });
