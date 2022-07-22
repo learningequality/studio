@@ -1,8 +1,12 @@
 from .dev_settings import *  # noqa
 
-# These endpoints will throw an error on the django debug panel
+# These endpoints will throw an error on the django debug panel.
 EXCLUDED_DEBUG_URLS = [
     "/content/storage",
+
+    # Disabling task API because as soon as the task API gets polled
+    # the current request data gets overwritten.
+    "/api/task",
 ]
 
 DEBUG_PANEL_ACTIVE = True
@@ -14,7 +18,7 @@ def custom_show_toolbar(request):
     )  # noqa F405
 
 
-# if debug_panel exists, add it to our INSTALLED_APPS
+# if debug_panel exists, add it to our INSTALLED_APPS.
 INSTALLED_APPS += ("debug_panel", "debug_toolbar", "pympler")  # noqa F405
 MIDDLEWARE += (  # noqa F405
     "debug_toolbar.middleware.DebugToolbarMiddleware",

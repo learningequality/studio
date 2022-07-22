@@ -256,8 +256,6 @@ python-dateutil==2.8.1
     # via
     #   -c requirements.txt
     #   faker
-python-dotenv==0.20.0
-    # via -r requirements-dev.in
 python-jsonrpc-server==0.4.0
     # via python-language-server
 python-language-server==0.36.2
