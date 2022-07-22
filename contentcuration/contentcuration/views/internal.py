@@ -53,6 +53,7 @@ from contentcuration.utils.garbage_collect import get_deleted_chefs_root
 from contentcuration.utils.nodes import map_files_to_assessment_item
 from contentcuration.utils.nodes import map_files_to_node
 from contentcuration.utils.nodes import map_files_to_slideshow_slide_item
+from contentcuration.utils.sentry import report_exception
 from contentcuration.utils.tracing import trace
 from contentcuration.viewsets.sync.constants import CHANNEL
 from contentcuration.viewsets.sync.utils import generate_publish_event
@@ -555,6 +556,20 @@ def create_channel(channel_data, user):
     return channel  # Return new channel
 
 
+class IncompleteNodeError(Exception):
+    """
+    Used to track incomplete nodes from ricecooker. We don't raise this error,
+    just feed it to Sentry for reporting.
+    """
+
+    def __init__(self, node, errors):
+        self.message = (
+            "Node {} had the following errors: {}".format(node, ",".join(errors))
+        )
+
+        super(IncompleteNodeError, self).__init__(self.message)
+
+
 @trace
 def convert_data_to_nodes(user, content_data, parent_node):
     """ Parse dict and create nodes accordingly """
@@ -596,10 +611,16 @@ def convert_data_to_nodes(user, content_data, parent_node):
                             user, new_node, slides, node_data["files"]
                         )
 
-                    new_node.mark_complete()
+                    # Wait until after files have been set on the node to check for node completeness
+                    # as some node kinds are counted as incomplete if they lack a default file.
+                    completion_errors = new_node.mark_complete()
 
-                    if not new_node.complete:
-                        new_node.save()
+                    if completion_errors:
+                        try:
+                            # we need to raise it to get Python to fill out the stack trace.
+                            raise IncompleteNodeError(new_node, completion_errors)
+                        except IncompleteNodeError as e:
+                            report_exception(e)
 
                     # Track mapping between newly created node and node id
                     root_mapping.update({node_data["node_id"]: new_node.pk})
