@@ -596,6 +596,11 @@ def convert_data_to_nodes(user, content_data, parent_node):
                             user, new_node, slides, node_data["files"]
                         )
 
+                    new_node.mark_complete()
+
+                    if not new_node.complete:
+                        new_node.save()
+
                     # Track mapping between newly created node and node id
                     root_mapping.update({node_data["node_id"]: new_node.pk})
             return root_mapping
@@ -637,16 +642,9 @@ def create_node(node_data, parent_node, sort_order):  # noqa: C901
             raise NodeValidationError("Node {} has invalid completion criteria".format(node_data["node_id"]))
 
     # Validate title and license fields
-    is_complete = True
     title = node_data.get('title', "")
     license_description = node_data.get('license_description', "")
     copyright_holder = node_data.get('copyright_holder', "")
-    is_complete &= title != ""
-    if node_data['kind'] != content_kinds.TOPIC:
-        if license.is_custom:
-            is_complete &= license_description != ""
-        if license.copyright_holder_required:
-            is_complete &= copyright_holder != ""
 
     metadata_labels = {}
 
@@ -681,7 +679,10 @@ def create_node(node_data, parent_node, sort_order):  # noqa: C901
         language_id=node_data.get("language"),
         freeze_authoring_data=True,
         role_visibility=node_data.get('role') or roles.LEARNER,
-        complete=is_complete,
+        # Assume it is complete to start with, we will do validation
+        # later when we have all data available to determine if it is
+        # complete or not.
+        complete=True,
         **metadata_labels
     )
 

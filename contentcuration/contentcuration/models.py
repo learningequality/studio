@@ -64,6 +64,7 @@ from rest_framework.fields import get_attribute
 from rest_framework.utils.encoders import JSONEncoder
 
 from contentcuration.constants import channel_history
+from contentcuration.constants import completion_criteria
 from contentcuration.constants.contentnode import kind_activity_map
 from contentcuration.db.models.expressions import Array
 from contentcuration.db.models.functions import ArrayRemove
@@ -1721,6 +1722,39 @@ class ContentNode(MPTTModel, models.Model):
         from contentcuration.utils.user import calculate_user_storage
         for editor in self.files.values_list('uploaded_by_id', flat=True).distinct():
             calculate_user_storage(editor)
+
+    def mark_complete(self):
+        # Is complete if title is falsy but only if not a root node.
+        is_complete = (bool(self.title) or self.parent_id is None)
+        if self.kind_id != content_kinds.TOPIC:
+            is_complete = is_complete and bool(self.license)
+            if self.license and self.license.is_custom:
+                is_complete = is_complete and bool(self.license_description)
+            if self.license and self.license.copyright_holder_required:
+                is_complete = is_complete and bool(self.copyright_holder)
+            if self.kind_id != content_kinds.EXERCISE:
+                is_complete = is_complete and self.files.filter(preset__supplementary=False).exists()
+            else:
+                # Check to see if the exercise has at least one assessment item that has:
+                is_complete = is_complete and self.assessment_items.filter(
+                    # A non-blank question
+                    ~Q(question='')
+                    # Non-blank answers
+                    & ~Q(answers='[]')
+                    # With either an input question or one answer marked as correct
+                    & (Q(type=exercises.INPUT_QUESTION) | Q(answers__iregex=r'"correct":\s*true'))
+                ).exists()
+                # Check that it has a mastery model set
+                # Either check for the previous location for the mastery model, or rely on our completion criteria validation
+                # that if it has been set, then it has been set correctly.
+                criterion = self.extra_fields.get("options", {}).get("completion_criteria")
+                is_complete = is_complete and (self.extra_fields.get("mastery_model") or criterion)
+                if criterion:
+                    try:
+                        completion_criteria.validate(criterion, kind=content_kinds.EXERCISE)
+                    except completion_criteria.ValidationError:
+                        is_complete = False
+        self.complete = is_complete
 
     def on_create(self):
         self.changed = True
