@@ -177,9 +177,9 @@ export default {
     },
     hideCompletionDropdown() {
       /*
-        This condition can be removed once practice quizzes are fully implemented in 0.16
-        Named "hide" instead of "show" because "show" is the default behavior
-        */
+          This condition can be removed once practice quizzes are fully implemented in 0.16
+          Named "hide" instead of "show" because "show" is the default behavior
+          */
       return this.practiceQuizzesAllowed;
     },
     audioVideoResource() {
@@ -204,8 +204,8 @@ export default {
     },
     showReferenceHint() {
       /*
-        The reference hint should be shown only when "Reference" is selected
-        */
+          The reference hint should be shown only when "Reference" is selected
+          */
       if (this.value) {
         if (this.kind === ContentKindsNames.H5P || this.kind === ContentKindsNames.HTML5) {
           if (this.currentCompletionDropdown === CompletionDropdownMap.determinedByResource) {
@@ -230,10 +230,10 @@ export default {
     },
     showActivityDurationInput() {
       /* The `ActivityDuration` component should visible when:
-          - Long activity, short activity, or exact time are chosen if it is not an AV resource
-          - Long activity or short activity are chosen if it is an AV resource
-          - Long activity, short activity, or exact time are chosen in HTML5
-        */
+            - Long activity, short activity, or exact time are chosen if it is not an AV resource
+            - Long activity or short activity are chosen if it is an AV resource
+            - Long activity, short activity, or exact time are chosen in HTML5
+          */
       if (this.value) {
         const switchingFromReferenceBetweenAllContentViewedAndCompleteDuration =
           this.value.suggested_duration === null || this.value.suggested_duration_type === null;
@@ -426,7 +426,10 @@ export default {
           const defaultStateWhenSwitchingFromGoalToPracticeQuiz =
             this.value.threshold.mastery_model === MasteryModelsNames.M_OF_N &&
             this.currentCompletionDropdown === null;
-          if (this.currentCompletionDropdown === CompletionDropdownMap.goal) {
+          if (
+            this.currentCompletionDropdown === CompletionDropdownMap.goal &&
+            this.value.threshold.mastery_model === MasteryModelsNames.M_OF_N
+          ) {
             return true;
           }
           if (defaultStateWhenSwitchingFromGoalToPracticeQuiz) {
@@ -578,21 +581,17 @@ export default {
           }
           if (duration === DurationDropdownMap.SHORT_ACTIVITY) {
             update.suggested_duration_type = SuggestedDurationTypesMap.APPROX_TIME;
-            const roundedValue = Math.round(this.value.suggested_duration / 300) * 300;
-            if (roundedValue > SHORT_LONG_ACTIVITY_MIDPOINT || roundedValue <= 0) {
-              update.suggested_duration = DEFAULT_SHORT_ACTIVITY;
-            } else {
-              update.suggested_duration = roundedValue;
-            }
+            update.suggested_duration = this.handleMinutesInputFromActivityDuration(
+              this.value.suggested_duration,
+              duration
+            );
           }
           if (duration === DurationDropdownMap.LONG_ACTIVITY) {
             update.suggested_duration_type = SuggestedDurationTypesMap.APPROX_TIME;
-            const roundedValue = Math.round(this.value.suggested_duration / 600) * 600;
-            if (roundedValue < SHORT_LONG_ACTIVITY_MIDPOINT || roundedValue > 7200) {
-              update.suggested_duration = DEFAULT_LONG_ACTIVITY;
-            } else {
-              update.suggested_duration = roundedValue;
-            }
+            update.suggested_duration = this.handleMinutesInputFromActivityDuration(
+              this.value.suggested_duration,
+              duration
+            );
           }
           update.completion_criteria = {
             model: CompletionCriteriaModels.PAGES,
@@ -607,12 +606,10 @@ export default {
         ) {
           if (duration === DurationDropdownMap.SHORT_ACTIVITY) {
             update.suggested_duration_type = SuggestedDurationTypesMap.APPROX_TIME;
-            const roundedValue = Math.round(this.value.suggested_duration / 300) * 300;
-            if (roundedValue > SHORT_LONG_ACTIVITY_MIDPOINT || roundedValue <= 0) {
-              update.suggested_duration = DEFAULT_SHORT_ACTIVITY;
-            } else {
-              update.suggested_duration = roundedValue;
-            }
+            update.suggested_duration = this.handleMinutesInputFromActivityDuration(
+              this.value.suggested_duration,
+              duration
+            );
             update.completion_criteria = {
               model: CompletionCriteriaModels.APPROX_TIME,
               threshold: update.suggested_duration,
@@ -620,12 +617,10 @@ export default {
           }
           if (duration === DurationDropdownMap.LONG_ACTIVITY) {
             update.suggested_duration_type = SuggestedDurationTypesMap.APPROX_TIME;
-            const roundedValue = Math.round(this.value.suggested_duration / 600) * 600;
-            if (roundedValue < SHORT_LONG_ACTIVITY_MIDPOINT || roundedValue > 7200) {
-              update.suggested_duration = DEFAULT_LONG_ACTIVITY;
-            } else {
-              update.suggested_duration = roundedValue;
-            }
+            update.suggested_duration = this.handleMinutesInputFromActivityDuration(
+              this.value.suggested_duration,
+              duration
+            );
             update.completion_criteria = {
               model: CompletionCriteriaModels.APPROX_TIME,
               threshold: update.suggested_duration,
@@ -643,13 +638,10 @@ export default {
 
         if (this.value.model === CompletionCriteriaModels.MASTERY) {
           if (duration === DurationDropdownMap.SHORT_ACTIVITY) {
-            update.suggested_duration_type = SuggestedDurationTypesMap.APPROX_TIME;
-            const roundedValue = Math.round(this.value.suggested_duration / 300) * 300;
-            if (roundedValue > SHORT_LONG_ACTIVITY_MIDPOINT || roundedValue <= 0) {
-              update.suggested_duration = DEFAULT_SHORT_ACTIVITY;
-            } else {
-              update.suggested_duration = roundedValue;
-            }
+            update.suggested_duration = this.handleMinutesInputFromActivityDuration(
+              this.value.suggested_duration,
+              duration
+            );
             update.completion_criteria = {
               model: this.value.model,
               threshold: this.value.threshold,
@@ -803,6 +795,27 @@ export default {
   methods: {
     trackClick(label) {
       this.$analytics.trackClick('channel_editor_modal_details', label);
+    },
+    handleMinutesInputFromActivityDuration(minutes, duration) {
+      let suggested_duration;
+      let roundedValue;
+      if (duration === DurationDropdownMap.SHORT_ACTIVITY) {
+        roundedValue = Math.round(minutes / 300) * 300;
+        if (roundedValue > SHORT_LONG_ACTIVITY_MIDPOINT || roundedValue <= 0) {
+          suggested_duration = DEFAULT_SHORT_ACTIVITY;
+        } else {
+          suggested_duration = roundedValue;
+        }
+      }
+      if (duration === DurationDropdownMap.LONG_ACTIVITY) {
+        roundedValue = Math.round(minutes / 600) * 600;
+        if (roundedValue < SHORT_LONG_ACTIVITY_MIDPOINT || roundedValue > 7200) {
+          suggested_duration = DEFAULT_LONG_ACTIVITY;
+        } else {
+          suggested_duration = roundedValue;
+        }
+      }
+      return suggested_duration;
     },
     handleInput({
       completion_criteria,

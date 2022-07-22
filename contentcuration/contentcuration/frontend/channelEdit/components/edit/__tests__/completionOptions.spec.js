@@ -18,6 +18,7 @@ describe('CompletionOptions', () => {
     });
     describe(`initial, default states`, () => {
       describe(`audio/video`, () => {
+        //!TODO FIX
         it(`'Complete duration' should be displayed by default`, () => {
           const wrapper = mount(CompletionOptions, {
             propsData: {
@@ -71,6 +72,9 @@ describe('CompletionOptions', () => {
             },
           });
           expect(wrapper.vm.completionDropdown).toBe('reference');
+        });
+        it(`time from file should be displayed when duration dropdown is 'Exact time to complete'`, () => {
+          //! TODO FIX
         });
       });
       describe(`document`, () => {
@@ -687,30 +691,83 @@ describe('CompletionOptions', () => {
       });
     });
   });
-  xdescribe(`minutes input`, () => {
-    //Note: while the component itself is in another component,
+  describe(`minutes input`, () => {
+    //Note: while the 'ActivityDuration' component itself is in another component,
     //the logic to get the data ready for the BE is in this component
-    //test for the initial state (does it show or not show) when you click on resources
-    describe(`in 'Short activity'`, () => {
-      it(`should increment by 5-minute intervals`, () => {
-        // const wrapper = mount(ActivityDuration, {
-        //   propsData: {
-        //     selectedDuration: 'longActivity',
-        //   },
-        // });
-        // expect(wrapper.html()).toContain(`step="5"`);
-        // expect(wrapper.html()).not.toContain(`step="10"`);
-      });
-      it(`should round to the nearest 5-minute`, () => {
-        // const wrapper = mount(ActivityDuration);
-      });
-      it(`minimum accepted input should be 5 minutes`, () => {});
-      it(`maximum accepted input should be 30 minutes`, () => {});
-    });
+    describe(`correct handling of values for switching from 'Exact time' to 'Short activity' or 'Long activity'`, () => {
+      it(`displays default 'Short activity' value when input > the max allowed for 'Short activity'`, () => {
+        const shortActivityDefaultValue = 600;
+        const wrapper = mount(CompletionOptions, {
+          propsData: {
+            kind: 'document',
+            value: {
+              model: 'pages',
+              threshold: '100%',
+              suggested_duration: 3060,
+              suggested_duration_type: 'time',
+            },
+          },
+        });
 
-    xdescribe(`default states`, () => {
-      it(`time from file should be displayed when duration dropdown is 'Exact time to complete'`, () => {
-        //done
+        expect(wrapper.vm.handleMinutesInputFromActivityDuration(3060, `shortActivity`)).toBe(
+          shortActivityDefaultValue
+        );
+      });
+      it(`displays default 'Long activity' value when input < the min allowed for 'Long activity'`, () => {
+        const longActivityDefaultValue = 3000;
+        const wrapper = mount(CompletionOptions, {
+          propsData: {
+            kind: 'document',
+            value: {
+              model: 'pages',
+              threshold: '100%',
+              suggested_duration: 50,
+              suggested_duration_type: 'time',
+            },
+          },
+        });
+
+        expect(wrapper.vm.handleMinutesInputFromActivityDuration(50, `longActivity`)).toBe(
+          longActivityDefaultValue
+        );
+      });
+    });
+    describe(`correct handling of values for switching from 'Short activity' or 'Long activity' to 'Exact Time'`, () => {
+      it(`displays 'Long activity' value`, async () => {
+        const wrapper = mount(CompletionOptions, {
+          propsData: {
+            kind: 'document',
+            value: {
+              model: 'pages',
+              threshold: '100%',
+              suggested_duration: 4200,
+              suggested_duration_type: 'approx_time',
+            },
+          },
+        });
+        wrapper.find({ ref: 'duration' }).vm.$emit('input', 'exactTime');
+        await wrapper.vm.$nextTick();
+
+        expect(wrapper.vm.currentDurationDropdown).toBe('exactTime');
+        expect(wrapper.vm.minutes).toBe(4200);
+      });
+      it(`displays 'Short activity' value`, async () => {
+        const wrapper = mount(CompletionOptions, {
+          propsData: {
+            kind: 'document',
+            value: {
+              model: 'pages',
+              threshold: '100%',
+              suggested_duration: 200,
+              suggested_duration_type: 'approx_time',
+            },
+          },
+        });
+        wrapper.find({ ref: 'duration' }).vm.$emit('input', 'exactTime');
+        await wrapper.vm.$nextTick();
+
+        expect(wrapper.vm.currentDurationDropdown).toBe('exactTime');
+        expect(wrapper.vm.minutes).toBe(200);
       });
     });
   });
