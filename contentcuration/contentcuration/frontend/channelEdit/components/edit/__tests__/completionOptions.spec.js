@@ -636,7 +636,55 @@ describe('CompletionOptions', () => {
       });
     });
     describe(`html5 or h5p`, () => {
-      xdescribe(`when completion dropdown is 'Determined by this resource'`, () => {});
+      describe(`when completion dropdown is 'Determined by this resource'`, () => {
+        it(`minutes input is displayed when 'Short activity' is selected`, async () => {
+          const wrapper = mount(CompletionOptions, {
+            propsData: {
+              kind: 'html5',
+              value: { suggested_duration: null, model: 'approx_time' },
+            },
+          });
+          wrapper.find({ ref: 'duration' }).vm.$emit('input', 'shortActivity');
+          await wrapper.vm.$nextTick();
+          expect(wrapper.find({ ref: 'activity_duration' }).exists()).toBe(true);
+          expect(wrapper.vm.showActivityDurationInput).toBe(true);
+        });
+        it(`minutes input is displayed when 'Long activity' is selected`, async () => {
+          const wrapper = mount(CompletionOptions, {
+            propsData: {
+              kind: 'html5',
+              value: { suggested_duration: null, model: 'approx_time' },
+            },
+          });
+          wrapper.find({ ref: 'duration' }).vm.$emit('input', 'longActivity');
+          await wrapper.vm.$nextTick();
+          expect(wrapper.find({ ref: 'activity_duration' }).exists()).toBe(true);
+          expect(wrapper.vm.showActivityDurationInput).toBe(true);
+        });
+        it(`minutes input is displayed when 'Exact time' is selected`, async () => {
+          const wrapper = mount(CompletionOptions, {
+            propsData: {
+              kind: 'html5',
+              value: { suggested_duration: null, model: 'time' },
+            },
+          });
+          wrapper.find({ ref: 'duration' }).vm.$emit('input', 'exactTime');
+          await wrapper.vm.$nextTick();
+          expect(wrapper.find({ ref: 'activity_duration' }).exists()).toBe(true);
+          expect(wrapper.vm.showActivityDurationInput).toBe(true);
+        });
+        it(`minutes input is hidden and reference hint is displayed when 'Reference' is selected`, () => {
+          const wrapper = mount(CompletionOptions, {
+            propsData: {
+              kind: 'html5',
+              value: { suggested_duration: null, model: 'reference' },
+            },
+          });
+          expect(wrapper.find({ ref: 'activity_duration' }).exists()).toBe(false);
+          expect(wrapper.vm.showActivityDurationInput).toBe(false);
+          expect(wrapper.vm.showReferenceHint).toBe(true);
+        });
+      });
     });
   });
   xdescribe(`minutes input`, () => {
@@ -664,13 +712,6 @@ describe('CompletionOptions', () => {
       it(`time from file should be displayed when duration dropdown is 'Exact time to complete'`, () => {
         //done
       });
-      it(`minutes input should not be displayed for documents`, () => {
-        //done
-      });
-      it(`duration dropdown is empty by default for exercises`, () => {
-        //done
-      });
-      it(`duration dropdown is empty by default for html5 or h5p`, () => {});
     });
   });
 });
