@@ -129,6 +129,7 @@ class SyncView(APIView):
                 "task_id",
                 "task_name",
                 "traceback",
+                "progress",
                 "channel_id",
                 "status",
             )
