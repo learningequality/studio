@@ -22,7 +22,7 @@ describe('ActivityDuration', () => {
         const wrapper = shallowMount(ActivityDuration);
         expect(wrapper.vm.defaultUploadTime).toEqual(defaultValue);
       });
-      it(`should display the file's time at upload when 'Exact time to complete' is chosen in Completiond dropdown`, () => {
+      it(`should display the file's time at upload when 'Exact time to complete' is chosen in Completion dropdown`, () => {
         // TODO: defaultValue will need to be changed when file-upload-duration is implemented
         const defaultValue = '17:12';
         const wrapper = shallowMount(ActivityDuration, {
@@ -32,7 +32,7 @@ describe('ActivityDuration', () => {
         expect(wrapper.vm.defaultUploadTime).not.toEqual(defaultValue);
         expect(wrapper.vm.defaultUploadTime).toEqual(123);
       });
-      it(`should display a "stand-in" at upload if file's time at upload is not available when 'Exact time to complete' is chosen in Completiond dropdown`, () => {
+      it(`should display a "stand-in" at upload if file's time at upload is not available when 'Exact time to complete' is chosen in Completion dropdown`, () => {
         // TODO: defaultValue will need to be changed when file-upload-duration is implemented
         const defaultValue = '17:12';
         const wrapper = shallowMount(ActivityDuration, {
@@ -45,34 +45,25 @@ describe('ActivityDuration', () => {
     });
 
     describe(`convert seconds to minutes for display`, () => {
-      it(`should convert seconds into minutes`, () => {
-        const wrapper = shallowMount(ActivityDuration);
-        expect(wrapper.vm.convertToMinutes(3000)).toBe(50);
-      });
       it(`should display the seconds passed down from parent as minutes`, () => {
         const wrapper = shallowMount(ActivityDuration, {
           propsData: { value: 600 },
         });
-        let seconds = wrapper.props('value');
-        expect(wrapper.props('value')).toEqual(600);
-        expect(wrapper.vm.convertToMinutes(seconds)).toBe(10);
-
-        wrapper.setProps({ value: 4800 });
-        seconds = wrapper.props('value');
-        expect(wrapper.props('value')).toEqual(4800);
-        expect(wrapper.vm.convertToMinutes(seconds)).toBe(80);
+        expect(wrapper.vm.minutes).toBe(10);
+        wrapper.setProps({ value: 4821 });
+        return wrapper.vm.$nextTick().then(() => {
+          expect(wrapper.vm.minutes).toBe(80);
+        });
       });
     });
 
     describe(`convert minutes to seconds to emit to parent`, () => {
-      it(`should convert minutes to seconds before emitting`, () => {
-        const wrapper = shallowMount(ActivityDuration);
-        expect(wrapper.vm.convertToSeconds(40)).toBe(2400);
-      });
       it(`should emit time to parent`, () => {
         const seconds = 2400;
         const wrapper = mount(ActivityDuration);
-        wrapper.vm.$emit('input', seconds);
+        wrapper.vm.minutes = 40;
+        // Ensure debounced function gets called
+        wrapper.vm.handleUpdatedInput.flush();
 
         return Vue.nextTick().then(() => {
           const emittedTime = wrapper.emitted('input').pop()[0];

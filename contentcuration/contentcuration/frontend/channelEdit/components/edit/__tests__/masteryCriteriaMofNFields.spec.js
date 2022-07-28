@@ -38,15 +38,17 @@ describe('masteryCriteriaMofNFields', () => {
     });
     it('should render correct mValue and nValue props', () => {
       wrapper.setProps({ value: { m: 10, n: 20 } });
-      expect(wrapper.vm.$refs.mValue.value).toEqual(10);
-      expect(wrapper.vm.$refs.nValue.value).toEqual(20);
+      return wrapper.vm.$nextTick(() => {
+        expect(wrapper.vm.$refs.mValue.value).toEqual(10);
+        expect(wrapper.vm.$refs.nValue.value).toEqual(20);
+      });
     });
   });
   describe('props', () => {
     beforeEach(() => {});
     it('setting readonly should prevent any edits', () => {
       wrapper.setProps({ readonly: true });
-      wrapper.vm.$nextTick(() => {
+      return wrapper.vm.$nextTick(() => {
         expect(mInput.attributes('readonly')).toEqual('readonly');
         expect(nInput.attributes('readonly')).toEqual('readonly');
       });
@@ -56,7 +58,7 @@ describe('masteryCriteriaMofNFields', () => {
       expect(nInput.attributes('required')).toEqual('required');
 
       wrapper.setProps({ mRequired: false, nRequired: false });
-      wrapper.vm.$nextTick(() => {
+      return wrapper.vm.$nextTick(() => {
         expect(mInput.attributes('required')).toBeFalsy();
         expect(nInput.attributes('required')).toBeFalsy();
       });
@@ -66,7 +68,7 @@ describe('masteryCriteriaMofNFields', () => {
       expect(nInput.attributes('disabled')).toBeFalsy();
 
       wrapper.setProps({ disabled: true });
-      wrapper.vm.$nextTick(() => {
+      return wrapper.vm.$nextTick(() => {
         expect(mInput.attributes('disabled')).toEqual('disabled');
         expect(nInput.attributes('disabled')).toEqual('disabled');
       });
