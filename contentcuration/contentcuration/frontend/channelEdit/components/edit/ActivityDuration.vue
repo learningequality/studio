@@ -96,6 +96,9 @@
     },
     computed: {
       showRequiredLabel() {
+        if (this.audioVideoUpload) {
+          return false;
+        }
         return (
           this.selectedDuration !== DurationDropdownMap.EXACT_TIME &&
           this.selectedCompletion === CompletionDropdownMap.completeDuration
@@ -121,7 +124,7 @@
           return this.convertToMinutes(this.value);
         },
         set(value) {
-          this.handleValidateMinutes(value);
+          this.handleUpdatedInput(value);
         },
       },
       maxRange() {
@@ -152,20 +155,17 @@
       },
     },
     created() {
-      this.handleValidateMinutes = debounce(this.validateMinutes, 500);
+      this.handleUpdatedInput = debounce(this.handleInput, 500);
     },
     methods: {
       convertToMinutes(seconds) {
         return Math.floor(seconds / 60);
       },
-      validateMinutes(value) {
-        if (this.selectedDuration === DurationDropdownMap.EXACT_TIME) {
-          this.$emit('input', value * 60);
-        } else {
-          if (value >= this.minRange && value <= this.maxRange) {
-            this.$emit('input', value * 60);
-          }
-        }
+      convertToSeconds(minutes) {
+        return minutes * 60;
+      },
+      handleInput(value) {
+        this.$emit('input', this.convertToSeconds(value));
       },
     },
     $trs: {

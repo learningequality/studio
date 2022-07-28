@@ -13,6 +13,7 @@
           :required="mRequired"
           :placeholder="mPlaceholder"
           :readonly="readonly"
+          :disabled="disabled"
           :rules="mRules"
           @keypress="isIntegerInput($event)"
           @paste="isIntegerPaste($event)"
@@ -33,6 +34,7 @@
           :required="nRequired"
           :readonly="readonly"
           :placeholder="nPlaceholder"
+          :disabled="disabled"
           :rules="nRules"
           @keypress="isIntegerInput($event)"
           @paste="isIntegerPaste($event)"
@@ -75,6 +77,10 @@
         default: false,
       },
       readonly: {
+        type: Boolean,
+        default: false,
+      },
+      disabled: {
         type: Boolean,
         default: false,
       },

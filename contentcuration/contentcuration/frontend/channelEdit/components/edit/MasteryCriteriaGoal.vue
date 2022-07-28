@@ -13,6 +13,7 @@
           :placeholder="placeholder"
           :required="required"
           :readonly="readonly"
+          :disabled="disabled"
           :rules="masteryRules"
           menu-props="offsetY"
           class="mb-2"
@@ -52,6 +53,10 @@
       required: {
         type: Boolean,
         default: true,
+      },
+      disabled: {
+        type: Boolean,
+        default: false,
       },
       readonly: {
         type: Boolean,
