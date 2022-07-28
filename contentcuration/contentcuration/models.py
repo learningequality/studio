@@ -64,6 +64,7 @@ from rest_framework.fields import get_attribute
 from rest_framework.utils.encoders import JSONEncoder
 
 from contentcuration.constants import channel_history
+from contentcuration.constants import completion_criteria
 from contentcuration.constants.contentnode import kind_activity_map
 from contentcuration.db.models.expressions import Array
 from contentcuration.db.models.functions import ArrayRemove
@@ -1721,6 +1722,45 @@ class ContentNode(MPTTModel, models.Model):
         from contentcuration.utils.user import calculate_user_storage
         for editor in self.files.values_list('uploaded_by_id', flat=True).distinct():
             calculate_user_storage(editor)
+
+    def mark_complete(self):  # noqa C901
+        errors = []
+        # Is complete if title is falsy but only if not a root node.
+        if not (bool(self.title) or self.parent_id is None):
+            errors.append("Empty title")
+        if self.kind_id != content_kinds.TOPIC:
+            if not self.license:
+                errors.append("Missing license")
+            if self.license and self.license.is_custom and not self.license_description:
+                errors.append("Missing license description for custom license")
+            if self.license and self.license.copyright_holder_required and not self.copyright_holder:
+                errors.append("Missing required copyright holder")
+            if self.kind_id != content_kinds.EXERCISE and not self.files.filter(preset__supplementary=False).exists():
+                errors.append("Missing default file")
+            if self.kind_id == content_kinds.EXERCISE:
+                # Check to see if the exercise has at least one assessment item that has:
+                if not self.assessment_items.filter(
+                    # A non-blank question
+                    ~Q(question='')
+                    # Non-blank answers
+                    & ~Q(answers='[]')
+                    # With either an input question or one answer marked as correct
+                    & (Q(type=exercises.INPUT_QUESTION) | Q(answers__iregex=r'"correct":\s*true'))
+                ).exists():
+                    errors.append("No questions with question text and complete answers")
+                # Check that it has a mastery model set
+                # Either check for the previous location for the mastery model, or rely on our completion criteria validation
+                # that if it has been set, then it has been set correctly.
+                criterion = self.extra_fields.get("options", {}).get("completion_criteria")
+                if not (self.extra_fields.get("mastery_model") or criterion):
+                    errors.append("Missing mastery criterion")
+                if criterion:
+                    try:
+                        completion_criteria.validate(criterion, kind=content_kinds.EXERCISE)
+                    except completion_criteria.ValidationError:
+                        errors.append("Mastery criterion is defined but is invalid")
+        self.complete = not errors
+        return errors
 
     def on_create(self):
         self.changed = True
