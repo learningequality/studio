@@ -78,8 +78,8 @@ class CeleryTask(Task):
     send_events = True
 
     # ensure our tasks are restarted if they're interrupted
-    acks_late = False
-    acks_on_failure_or_timeout = False
+    acks_late = True
+    acks_on_failure_or_timeout = True
     reject_on_worker_lost = True
 
     @property
