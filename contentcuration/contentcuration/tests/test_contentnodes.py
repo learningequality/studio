@@ -9,7 +9,6 @@ from builtins import str
 from builtins import zip
 
 import pytest
-from django.core.cache import cache
 from django.db import IntegrityError
 from django.db.utils import DataError
 from le_utils.constants import content_kinds
@@ -23,7 +22,6 @@ from .testdata import create_studio_file
 from contentcuration.models import Channel
 from contentcuration.models import ContentKind
 from contentcuration.models import ContentNode
-from contentcuration.models import CONTENTNODE_TREE_ID_CACHE_KEY
 from contentcuration.models import ContentTag
 from contentcuration.models import FormatPreset
 from contentcuration.models import generate_storage_url
@@ -172,47 +170,6 @@ class NodeGettersTestCase(StudioTestCase):
         assert details["resource_count"] > 0
         assert details["resource_size"] > 0
         assert len(details["kind_count"]) > 0
-
-    def test_get_tree_id_by_pk(self):
-        from django.conf import settings
-
-        contentnode = ContentNode.objects.create(
-            title="Kolibri", parent=self.channel.main_tree, kind=self.topic
-        )
-
-        assert settings.IS_CONTENTNODE_TABLE_PARTITIONED is False
-        node = ContentNode.filter_by_pk(contentnode.id)[0]
-        tree_id_from_cache = cache.get(CONTENTNODE_TREE_ID_CACHE_KEY.format(pk=contentnode.pk))
-        assert node.id == contentnode.id
-        assert tree_id_from_cache is None
-        with patch("contentcuration.models.ContentNode") as mock_contentnode:
-            ContentNode.filter_by_pk(contentnode.id)
-            mock_contentnode.objects.filter.assert_called_once_with(pk=contentnode.id)
-
-        settings.IS_CONTENTNODE_TABLE_PARTITIONED = True
-        node = ContentNode.filter_by_pk(contentnode.id)[0]
-        tree_id_from_cache = cache.get(CONTENTNODE_TREE_ID_CACHE_KEY.format(pk=contentnode.id))
-        assert node.id == contentnode.id
-        assert tree_id_from_cache == self.channel.main_tree.tree_id == node.tree_id
-        with patch("contentcuration.models.ContentNode") as mock_contentnode:
-            ContentNode.filter_by_pk(contentnode.id)
-            mock_contentnode.objects.filter.assert_called_once_with(tree_id=tree_id_from_cache, pk=contentnode.id)
-            mock_contentnode.objects.values_list.get.assert_not_called()
-
-    def test_tree_id_update_on_move(self):
-        sourcenode = ContentNode.objects.create(
-            title="Main", parent=self.channel.main_tree, kind=self.topic
-        )
-        targetnode = ContentNode.objects.create(
-            title="Trashed", parent=self.channel.trash_tree, kind=self.topic
-        )
-
-        sourcenode.move_to(targetnode, "last-child")
-
-        after_move_sourcenode = ContentNode.filter_by_pk(sourcenode.id)[0]
-
-        assert after_move_sourcenode.tree_id == self.channel.trash_tree.tree_id == cache.get(
-            CONTENTNODE_TREE_ID_CACHE_KEY.format(pk=sourcenode.pk))
 
 
 class NodeOperationsTestCase(StudioTestCase):

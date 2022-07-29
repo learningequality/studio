@@ -1262,22 +1262,22 @@ class ContentNode(MPTTModel, models.Model):
     def filter_by_pk(cls, pk):
         """
         Returns a `QuerySet` that filters by ContentNode's `pk`.
-
-        If `settings.IS_CONTENTNODE_TABLE_PARTITIONED` is set to `True` then this
-        returns a `QuerySet` that filters by `tree_id` and `pk`. Also, sets a cache
-        for `tree_id`.
+        If `settings.IS_CONTENTNODE_TABLE_PARTITIONED` is set to `True` and a ContentNode
+        for `pk` exists then this returns a `QuerySet` that filters by `tree_id` as well.
+        Also, sets a cache for `tree_id`.
         """
+        query = ContentNode.objects.filter(pk=pk)
+
         if settings.IS_CONTENTNODE_TABLE_PARTITIONED is True:
             tree_id = cache.get(CONTENTNODE_TREE_ID_CACHE_KEY.format(pk=pk))
 
             if tree_id is None:
-                tree_id = ContentNode.objects.values_list("tree_id", flat=True).get(pk=pk)
-                cache.set(CONTENTNODE_TREE_ID_CACHE_KEY.format(pk=pk), tree_id, None)
+                tree_id = ContentNode.objects.filter(pk=pk).values_list("tree_id", flat=True).first()
+                if tree_id:
+                    cache.set(CONTENTNODE_TREE_ID_CACHE_KEY.format(pk=pk), tree_id, None)
 
-            query = ContentNode.objects.filter(tree_id=tree_id, pk=pk)
-
-        else:
-            query = ContentNode.objects.filter(pk=pk)
+            if tree_id:
+                query = query.filter(tree_id=tree_id)
 
         return query
 
