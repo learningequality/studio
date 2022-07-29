@@ -1143,7 +1143,7 @@ class License(models.Model):
 NODE_ID_INDEX_NAME = "node_id_idx"
 NODE_MODIFIED_INDEX_NAME = "node_modified_idx"
 NODE_MODIFIED_DESC_INDEX_NAME = "node_modified_desc_idx"
-CONTENTNODE_TREE_ID_CACHE_KEY = "contentnode_{pk}_tree_id"
+CONTENTNODE_TREE_ID_CACHE_KEY = "contentnode_{pk}__tree_id"
 
 
 class ContentNode(MPTTModel, models.Model):
