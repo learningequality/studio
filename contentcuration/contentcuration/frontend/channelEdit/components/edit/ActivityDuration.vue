@@ -86,12 +86,12 @@
       },
       duration: {
         type: Number,
-        default: null,
+        default: 0,
       },
     },
     data() {
       return {
-        defaultUploadTime: this.duration || `17:12`,
+        defaultUploadTime: this.duration,
       };
     },
     computed: {
