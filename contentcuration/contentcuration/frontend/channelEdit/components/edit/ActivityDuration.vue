@@ -6,7 +6,7 @@
         v-if="audioVideoUpload && selectedDuration === 'exactTime'"
         class="defaultUpload md2 sm3"
       >
-        {{ defaultUploadTime }}
+        {{ convertToHHMMSS(defaultUploadTime) }}
       </VFlex>
       <VFlex
         v-else-if="selectedDuration === 'shortActivity' || selectedDuration === 'longActivity'"
@@ -166,6 +166,16 @@
       },
       handleInput(value) {
         this.$emit('input', this.convertToSeconds(value));
+      },
+      convertToHHMMSS(totalSeconds) {
+        const hours = Math.floor(totalSeconds / 3600)
+          .toString()
+          .padStart(2, 0);
+        const minutes = Math.floor((totalSeconds % 3600) / 60)
+          .toString()
+          .padStart(2, 0);
+        const seconds = ((totalSeconds % 3600) % 60).toString().padStart(2, 0);
+        return `${hours}:${minutes}:${seconds}`;
       },
     },
     $trs: {
