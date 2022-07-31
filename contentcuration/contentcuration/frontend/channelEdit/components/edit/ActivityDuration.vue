@@ -86,12 +86,12 @@
       },
       duration: {
         type: Number,
-        default: 0,
+        default: null,
       },
     },
     data() {
       return {
-        defaultUploadTime: this.duration,
+        defaultUploadTime: this.duration || `17:12`,
       };
     },
     computed: {
@@ -168,14 +168,18 @@
         this.$emit('input', this.convertToSeconds(value));
       },
       convertToHHMMSS(totalSeconds) {
-        const hours = Math.floor(totalSeconds / 3600)
-          .toString()
-          .padStart(2, 0);
-        const minutes = Math.floor((totalSeconds % 3600) / 60)
-          .toString()
-          .padStart(2, 0);
-        const seconds = ((totalSeconds % 3600) % 60).toString().padStart(2, 0);
-        return `${hours}:${minutes}:${seconds}`;
+        if (totalSeconds !== null && Number.isInteger(totalSeconds)) {
+          const hours = Math.floor(totalSeconds / 3600)
+            .toString()
+            .padStart(2, 0);
+          const minutes = Math.floor((totalSeconds % 3600) / 60)
+            .toString()
+            .padStart(2, 0);
+          const seconds = ((totalSeconds % 3600) % 60).toString().padStart(2, 0);
+          return `${hours}:${minutes}:${seconds}`;
+        } else {
+          return totalSeconds;
+        }
       },
     },
     $trs: {
