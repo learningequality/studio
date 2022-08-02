@@ -1144,6 +1144,7 @@ class License(models.Model):
 NODE_ID_INDEX_NAME = "node_id_idx"
 NODE_MODIFIED_INDEX_NAME = "node_modified_idx"
 NODE_MODIFIED_DESC_INDEX_NAME = "node_modified_desc_idx"
+CONTENTNODE_TREE_ID_CACHE_KEY = "contentnode_{pk}__tree_id"
 
 
 class ContentNode(MPTTModel, models.Model):
@@ -1257,6 +1258,33 @@ class ContentNode(MPTTModel, models.Model):
                 ).values_list("id", flat=True)[:1]
             )
         )
+
+    @classmethod
+    def filter_by_pk(cls, pk):
+        """
+        When `settings.IS_CONTENTNODE_TABLE_PARTITIONED` is `False`, this always
+        returns a queryset filtered by pk.
+
+        When `settings.IS_CONTENTNODE_TABLE_PARTITIONED` is `True` and a ContentNode
+        for `pk` exists, this returns a queryset filtered by `pk` AND `tree_id`. If
+        a ContentNode does not exist for `pk` then an empty queryset is returned.
+        """
+        query = ContentNode.objects.filter(pk=pk)
+
+        if settings.IS_CONTENTNODE_TABLE_PARTITIONED is True:
+            tree_id = cache.get(CONTENTNODE_TREE_ID_CACHE_KEY.format(pk=pk))
+
+            if tree_id:
+                query = query.filter(tree_id=tree_id)
+            else:
+                tree_id = ContentNode.objects.filter(pk=pk).values_list("tree_id", flat=True).first()
+                if tree_id:
+                    cache.set(CONTENTNODE_TREE_ID_CACHE_KEY.format(pk=pk), tree_id, None)
+                    query = query.filter(tree_id=tree_id)
+                else:
+                    query = query.none()
+
+        return query
 
     @classmethod
     def filter_edit_queryset(cls, queryset, user):
@@ -1451,7 +1479,7 @@ class ContentNode(MPTTModel, models.Model):
         from contentcuration.viewsets.common import SQRelatedArrayAgg
         from contentcuration.viewsets.common import SQSum
 
-        node = ContentNode.objects.filter(pk=self.id).order_by()
+        node = ContentNode.objects.filter(pk=self.id, tree_id=self.tree_id).order_by()
 
         descendants = (
             self.get_descendants()
@@ -1773,6 +1801,10 @@ class ContentNode(MPTTModel, models.Model):
     def move_to(self, target, *args, **kwargs):
         parent_was_trashtree = self.parent.channel_trash.exists()
         super(ContentNode, self).move_to(target, *args, **kwargs)
+        self.save()
+
+        # Update tree_id cache when node is moved to another tree
+        cache.set(CONTENTNODE_TREE_ID_CACHE_KEY.format(pk=self.id), self.tree_id, None)
 
         # Recalculate storage if node was moved to or from the trash tree
         if target.channel_trash.exists() or parent_was_trashtree:

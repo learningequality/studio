@@ -742,7 +742,7 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
         # should not be cross channel, and are not meaningful if they are.
         prereq_table_entries = PrerequisiteContentRelationship.objects.filter(
             target_node__tree_id=Cast(
-                ContentNode.objects.filter(pk=pk).values_list("tree_id", flat=True)[:1],
+                ContentNode.filter_by_pk(pk=pk).values_list("tree_id", flat=True)[:1],
                 output_field=DjangoIntegerField(),
             )
         ).values("target_node_id", "prerequisite_id")
@@ -957,12 +957,12 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
         # Affected channel for the copy is the target's channel
         channel_id = target.channel_id
 
-        if ContentNode.objects.filter(pk=pk).exists():
+        if ContentNode.filter_by_pk(pk=pk).exists():
             error = ValidationError("Copy pk already exists")
             return str(error)
 
         can_edit_source_channel = ContentNode.filter_edit_queryset(
-            ContentNode.objects.filter(id=source.id), user=self.request.user
+            ContentNode.filter_by_pk(pk=source.id), user=self.request.user
         ).exists()
 
         with create_change_tracker(pk, CONTENTNODE, channel_id, self.request.user, "copy_nodes") as progress_tracker:
