@@ -7,9 +7,12 @@ from contentcuration.models import Change
 
 
 @receiver(post_save, sender=Change, weak=False)
-def broadcast_new_change_model(sender, instance, created, **kwargs):
+def broadcast_new_change_model_handler(sender, instance, created, **kwargs):
+    broadcast_new_change_model(instance)
+
+
+def broadcast_new_change_model(instance):
     channel_layer = get_channel_layer()
-    print(instance.__dict__)
     serialized_change_object = Change.serialize(instance)
     # Name of channel group
     room_group_name = instance.channel_id
@@ -17,7 +20,7 @@ def broadcast_new_change_model(sender, instance, created, **kwargs):
     indiviual_room_group_name = instance.user_id
 
     # if the change object is errored then we broadcast the info back to indiviual user
-    if instance.errored is True:
+    if instance.errored:
         async_to_sync(channel_layer.group_send)(
             instance.created_by_id,
             {

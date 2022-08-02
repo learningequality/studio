@@ -14,7 +14,6 @@ os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
 
 
 class WebsocketTestCase(TransactionTestCase):
-
     def setUp(self):
         call_command("loadconstants")
         self.user = testdata.user("mrtest@testy.com")
