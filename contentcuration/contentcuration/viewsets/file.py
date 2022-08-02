@@ -1,4 +1,5 @@
 import codecs
+import math
 
 from django.core.exceptions import PermissionDenied
 from django.http import HttpResponseBadRequest
@@ -156,6 +157,9 @@ class FileViewSet(BulkDeleteMixin, BulkUpdateMixin, ReadOnlyValuesViewset):
         retval = get_presigned_upload_url(
             filepath, checksum_base64, 600, content_length=size
         )
+        duration = request.data.get("duration")
+        if duration is not None:
+            duration = math.ceil(duration)
 
         file = File(
             file_size=size,
@@ -165,7 +169,7 @@ class FileViewSet(BulkDeleteMixin, BulkUpdateMixin, ReadOnlyValuesViewset):
             file_format_id=file_format,
             preset_id=preset,
             uploaded_by=request.user,
-            duration=request.data.get("duration"),
+            duration=duration,
         )
 
         # Avoid using our file_on_disk attribute for checks

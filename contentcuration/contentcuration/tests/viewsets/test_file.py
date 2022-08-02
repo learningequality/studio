@@ -390,6 +390,7 @@ class UploadFileURLTestCase(StudioAPITestCase):
             "name": "le_studio",
             "file_format": file_formats.MP3,
             "preset": format_presets.AUDIO,
+            "duration": 10.123
         }
 
     def test_required_keys(self):
@@ -414,3 +415,5 @@ class UploadFileURLTestCase(StudioAPITestCase):
         self.client.force_authenticate(user=self.user)
         response = self.client.post(reverse("file-upload-url"), self.file, format="json",)
         self.assertEqual(response.status_code, 200)
+        file = models.File.objects.get(checksum=self.file["checksum"])
+        self.assertEqual(11, file.duration)
