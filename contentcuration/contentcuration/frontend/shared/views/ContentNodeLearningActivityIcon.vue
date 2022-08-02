@@ -1,11 +1,12 @@
 <template>
 
   <span v-if="includeText">
-     <!-- if include text is true, use a labeled icon.
+    <!-- if include text is true, use a labeled icon.
     Currently, for icons containing text, each activity
      is displayed inidividually if there are multiple -->
     <span v-for="(activity, index) in activities" :key="index" data-test="labeled-icon">
-      <div v-if="chip"
+      <div
+        v-if="chip"
         :class="small ? 'small-chip' : 'chip'"
         :style="{ backgroundColor: $themeTokens.fineLine }"
       >
@@ -20,14 +21,18 @@
   <span v-else>
     <!-- if multiple learning activities should be displayed with a single icon -->
     <span v-if="activities.length > 1 && !showEachActivityIcon">
-      <KIcon :icon="icon('multiple')" :aria-label="text('multiple')" data-test="multiple-activities-icon"/>
+      <KIcon
+        :icon="icon('multiple')"
+        :aria-label="text('multiple')"
+        data-test="multiple-activities-icon"
+      />
     </span>
     <!--otherwise, display one or more activities individually, each with its own icon -->
     <span v-else-if="activities.length > 0">
       <KIcon
-        data-test="icon-only"
         v-for="activity in activities"
         :key="activity"
+        data-test="icon-only"
         :icon="icon(activity)"
         :aria-label="text(activity)"
       />
@@ -80,7 +85,7 @@
     },
     methods: {
       icon(activity) {
-       return getLearningActivityIcon(this.text(activity));
+        return getLearningActivityIcon(this.text(activity));
       },
       text(activity) {
         if (this.isTopic) {

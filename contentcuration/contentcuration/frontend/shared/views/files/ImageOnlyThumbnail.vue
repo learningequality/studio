@@ -22,7 +22,7 @@
         v-if="learningActivities && !isTopic"
         :learningActivities="learningActivities"
       />
-      <KIcon v-else-if="isTopic" :icon="kind" :aria-label="translateConstant(kind)"/>
+      <KIcon v-else-if="isTopic" :icon="kind" :aria-label="translateConstant(kind)" />
     </div>
     <svg
       v-else
