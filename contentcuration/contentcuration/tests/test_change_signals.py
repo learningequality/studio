@@ -89,7 +89,7 @@ class ChangeSignalTestCase(TestCase, BucketTestMixin):
         channel_layer = mock_get_channel_layer.return_value
         mock_async_to_sync.assert_called_with(channel_layer.group_send)
         async_mock_return_value = mock_async_to_sync.return_value
-        async_mock_return_value.assert_called_with(self.user.id, {
+        async_mock_return_value.assert_called_with(str(self.user.id), {
             'type': 'broadcast_changes',
             'change': change_serialized
         })
@@ -107,7 +107,7 @@ class ChangeSignalTestCase(TestCase, BucketTestMixin):
         channel_layer = mock_get_channel_layer.return_value
         mock_async_to_sync.assert_called_with(channel_layer.group_send)
         async_mock_return_value = mock_async_to_sync.return_value
-        async_mock_return_value.assert_called_with(editor.id, {
+        async_mock_return_value.assert_called_with(str(editor.id), {
             'type': 'broadcast_changes',
             'change': change_serialized
         })
@@ -116,7 +116,7 @@ class ChangeSignalTestCase(TestCase, BucketTestMixin):
             'type': 'broadcast_changes',
             'change': change_serialized
         })
-        async_mock_return_value.assert_any_call(editor.id, {
+        async_mock_return_value.assert_any_call(str(editor.id), {
             'type': 'broadcast_changes',
             'change': change_serialized
         })

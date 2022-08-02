@@ -15,18 +15,15 @@ def broadcast_new_change_model(instance):
     channel_layer = get_channel_layer()
     serialized_change_object = Change.serialize(instance)
     # Name of channel group
-    room_group_name = str(instance.channel_id or "dummy")
+    room_group_name = instance.channel_id
 
     # name of indiviual_user group
-    indiviual_room_group_name = str(instance.user_id or "dummy")
-
-    print("DEBUG", room_group_name)
-    print("DEBUG", indiviual_room_group_name)
+    indiviual_room_group_name = instance.user_id
 
     # if the change object is errored then we broadcast the info back to indiviual user
     if instance.errored:
         async_to_sync(channel_layer.group_send)(
-            instance.created_by_id,
+            str(instance.created_by_id or ""),
             {
                 'type': 'broadcast_changes',
                 'errored': serialized_change_object
@@ -36,7 +33,7 @@ def broadcast_new_change_model(instance):
     # if the change is related to channel we broadcast changes to channel group
     if not indiviual_room_group_name and room_group_name:
         async_to_sync(channel_layer.group_send)(
-            room_group_name,
+            str(room_group_name or ""),
             {
                 'type': 'broadcast_changes',
                 'change': serialized_change_object
@@ -45,7 +42,7 @@ def broadcast_new_change_model(instance):
     # if the change is only related to indiviual user
     elif indiviual_room_group_name and not room_group_name:
         async_to_sync(channel_layer.group_send)(
-            indiviual_room_group_name,
+            str(indiviual_room_group_name or ""),
             {
                 'type': 'broadcast_changes',
                 'change': serialized_change_object
@@ -54,14 +51,14 @@ def broadcast_new_change_model(instance):
     # if the change is realted to both user and channel then we will broadcast to both of the groups
     elif indiviual_room_group_name and room_group_name:
         async_to_sync(channel_layer.group_send)(
-            room_group_name,
+            str(room_group_name or ""),
             {
                 'type': 'broadcast_changes',
                 'change': serialized_change_object
             }
         )
         async_to_sync(channel_layer.group_send)(
-            indiviual_room_group_name,
+            str(indiviual_room_group_name or ""),
             {
                 'type': 'broadcast_changes',
                 'change': serialized_change_object
