@@ -15,9 +15,13 @@ def broadcast_new_change_model(instance):
     channel_layer = get_channel_layer()
     serialized_change_object = Change.serialize(instance)
     # Name of channel group
-    room_group_name = instance.channel_id
+    room_group_name = str(instance.channel_id or "dummy")
+
     # name of indiviual_user group
-    indiviual_room_group_name = instance.user_id
+    indiviual_room_group_name = str(instance.user_id or "dummy")
+
+    print("DEBUG", room_group_name)
+    print("DEBUG", indiviual_room_group_name)
 
     # if the change object is errored then we broadcast the info back to indiviual user
     if instance.errored:

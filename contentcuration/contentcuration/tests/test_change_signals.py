@@ -6,6 +6,7 @@ from mock import patch
 
 from contentcuration.models import Change
 from contentcuration.tests import testdata
+from contentcuration.tests.base import BucketTestMixin
 from contentcuration.tests.viewsets.base import generate_create_event
 from contentcuration.tests.viewsets.base import generate_update_event
 from contentcuration.viewsets.sync.constants import BOOKMARK
@@ -13,14 +14,18 @@ from contentcuration.viewsets.sync.constants import CHANNEL
 from contentcuration.viewsets.sync.constants import EDITOR_M2M
 
 
-class ChangeSignalTestCase(TestCase):
+class ChangeSignalTestCase(TestCase, BucketTestMixin):
     def setUp(self):
         call_command("loadconstants")
+        if not self.persist_bucket:
+            self.create_bucket()
         self.user = testdata.user("mrtest@testy.com")
         self.channel = testdata.channel()
         self.channel.editors.add(self.user)
 
     def tearDown(self):
+        if not self.persist_bucket:
+            self.delete_bucket()
         self.user.delete()
 
     @property
