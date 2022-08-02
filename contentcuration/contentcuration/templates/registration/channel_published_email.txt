@@ -12,12 +12,12 @@
 {% blocktrans with notes=notes %}Version notes: {{ notes }}{% endblocktrans %}
 
 
-{% trans "Thanks for using Kolibri Studio!" %}
+{% translate "Thanks for using Kolibri Studio!" %}
 
-{% trans "The Learning Equality Team" %}
+{% translate "The Learning Equality Team" %}
 
 
 
-{% trans "You are receiving this email because you are subscribed to this channel." %}
+{% translate "You are receiving this email because you are subscribed to this channel." %}
 
 {% endautoescape %}
