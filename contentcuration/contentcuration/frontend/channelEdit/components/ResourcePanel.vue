@@ -358,8 +358,6 @@
   import { MasteryModelsNames } from 'shared/leUtils/MasteryModels';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
-  const intl = new Intl.ListFormat(window.languageCode, { style: 'narrow', type: 'conjunction' });
-
   export default {
     name: 'ResourcePanel',
     components: {
@@ -582,7 +580,11 @@
       },
       metadataListText(ids) {
         const list = ids.map(i => this.translateMetadataString(camelCase(i)));
-        return intl.format(list);
+        const formatter = Intl.ListFormat(window.languageCode, {
+          style: 'narrow',
+          type: 'conjunction',
+        });
+        return formatter.format(list);
       },
       level(levels) {
         const ids = Object.keys(levels);
