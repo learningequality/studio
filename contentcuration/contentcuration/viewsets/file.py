@@ -143,6 +143,12 @@ class FileViewSet(BulkDeleteMixin, BulkUpdateMixin, ReadOnlyValuesViewset):
                 reason="Must specify: size, checksum, name, file_format, and preset"
             )
 
+        duration = request.data.get("duration")
+        if duration is not None:
+            if not isinstance(duration, (int, float)):
+                return HttpResponseBadRequest(reason="File duration must be a number")
+            duration = math.ceil(duration)
+
         try:
             request.user.check_space(float(size), checksum)
         except PermissionDenied:
@@ -157,9 +163,6 @@ class FileViewSet(BulkDeleteMixin, BulkUpdateMixin, ReadOnlyValuesViewset):
         retval = get_presigned_upload_url(
             filepath, checksum_base64, 600, content_length=size
         )
-        duration = request.data.get("duration")
-        if duration is not None:
-            duration = math.ceil(duration)
 
         file = File(
             file_size=size,

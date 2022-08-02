@@ -403,6 +403,16 @@ class UploadFileURLTestCase(StudioAPITestCase):
 
         self.assertEqual(response.status_code, 400)
 
+    def test_duration_invalid(self):
+        self.file["duration"] = '1.23'
+
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(
+            reverse("file-upload-url"), self.file, format="json",
+        )
+
+        self.assertEqual(response.status_code, 400)
+
     def test_insufficient_storage(self):
         self.file["size"] = 100000000000000
 
