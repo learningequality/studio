@@ -23,7 +23,7 @@
           <template #header="{ item }">
             <span>
               {{ item.text }}
-              <Icon v-if="roleIcon(item.value)" color="primary">
+              <Icon v-if="roleIcon(item.value)" :color="roleColor(item.value)">
                 {{ roleIcon(item.value) }}
               </Icon>
             </span>
@@ -34,13 +34,13 @@
         </InfoModal>
       </template>
       <template #selection="{ item }">
-        <Icon v-if="roleIcon(item.value)" color="primary" class="pr-2">
+        <Icon v-if="roleIcon(item.value)" :color="roleColor(item.value)" class="pr-2">
           {{ roleIcon(item.value) }}
         </Icon>
         {{ item.text }}
       </template>
       <template #item="{ item }">
-        <Icon v-if="roleIcon(item.value)" color="primary" class="pr-2">
+        <Icon v-if="roleIcon(item.value)" :color="roleColor(item.value)" class="pr-2">
           {{ roleIcon(item.value) }}
         </Icon>
         {{ item.text }}
@@ -57,6 +57,7 @@
   import { constantsTranslationMixin } from 'shared/mixins';
 
   const roleIcons = { coach: 'local_library' };
+  const roleColors = { coach: 'roleVisibilityCoach' };
 
   export default {
     name: 'VisibilityDropdown',
@@ -108,6 +109,9 @@
     methods: {
       roleIcon(role) {
         return roleIcons[role];
+      },
+      roleColor(role) {
+        return roleColors[role] || 'primary';
       },
     },
     $trs: {
