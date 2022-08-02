@@ -75,7 +75,7 @@ def get_node_details_cached(user, node, channel_id=None):
             last_cache_update = datetime.strptime(
                 json.loads(cached_data)["last_update"], settings.DATE_TIME_FORMAT
             )
-            if last_update.replace(tzinfo=None) > last_cache_update:
+            if not user.is_anonymous and last_update.replace(tzinfo=None) > last_cache_update:
                 # update the stats async, then return the cached value
                 getnodedetails_task.enqueue(user, node_id=node.pk)
         return json.loads(cached_data)
