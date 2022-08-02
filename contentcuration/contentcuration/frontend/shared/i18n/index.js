@@ -3,7 +3,6 @@ import has from 'lodash/has';
 import { languageDirections, defaultLanguage } from 'kolibri-design-system/lib/utils/i18n';
 import importVueIntlLocaleData from 'kolibri-tools/lib/i18n/vue-intl-locale-data';
 import importIntlLocale from 'kolibri-tools/lib/i18n/intl-locale-data';
-import { shouldPolyfill } from '@formatjs/intl-listformat/should-polyfill'
 
 export {
   languageDirections,
@@ -147,16 +146,6 @@ class Translator {
   }
 }
 
-async function polyfill(currentLanguage) {
-  const unsupportedLocale = shouldPolyfill(currentLanguage)
-  // This locale is supported
-  if (!unsupportedLocale) {
-    return
-  }
-  // Load the polyfill 1st BEFORE loading data
-  await import('@formatjs/intl-listformat/polyfill-force')
-  await import(`@formatjs/intl-listformat/locale-data/${unsupportedLocale}`)
-}
 /**
  * Returns a Translator instance.
  * @param {string} nameSpace - The nameSpace of the messages for translation.

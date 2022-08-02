@@ -327,7 +327,6 @@
   import sortBy from 'lodash/sortBy';
   import { mapActions, mapGetters } from 'vuex';
   import { camelCase } from 'lodash';
-  import {shouldPolyfill} from '@formatjs/intl-listformat/should-polyfill'
   import { isImportedContent, importedChannelLink } from '../utils';
   import FilePreview from '../views/files/FilePreview';
   import { ContentLevel, Categories, AccessibilityCategories } from '../../shared/constants';
@@ -359,36 +358,7 @@
   import { MasteryModelsNames } from 'shared/leUtils/MasteryModels';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
-  // This is a temporary polyfill work around
-  // vue-intl, which we are using for options such as $formatDate
-  // and $formatTime, had a bug where $formatList was excluded
-  // https://github.com/formatjs/formatjs/issues/3488
-  // it was fixed 11 July 2022, but would require a major version leap
-  // from 3.0.0 to 6.2.9
-  // https://github.com/formatjs/formatjs/releases/tag/vue-intl%406.2.9
-  // in the long term, upgrading would be the better solution, but it
-  // will likely require refacotring and will be a larger project,
-  // outside the scope of this PR
-  async function polyfill(locale) {
-    const unsupportedLocale = shouldPolyfill(locale)
-    // This locale is supported
-    if (!unsupportedLocale) {
-      return
-    }
-    // Load the polyfill 1st BEFORE loading data
-    await import('@formatjs/intl-listformat/polyfill-force')
-    await import(`@formatjs/intl-listformat/locale-data/${unsupportedLocale}`)
-  }
-
-
-  let intl;
-  if (Intl.ListFormat) {
-    intl = new Intl.ListFormat(window.languageCode , { style: 'narrow', type: 'conjunction' });
-  } else  {
-    intl = createIntl({
-      locale: window.languageCode,
-    });
-  }
+  const intl = new Intl.ListFormat(window.languageCode, { style: 'narrow', type: 'conjunction' });
 
   export default {
     name: 'ResourcePanel',
@@ -600,7 +570,6 @@
       },
     },
     mounted() {
-      polyfill(window.languageCode)
       this.loadNode();
       this.tab = this.isExercise ? 'questions' : 'details';
     },
