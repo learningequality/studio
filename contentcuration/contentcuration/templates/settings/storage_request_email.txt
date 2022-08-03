@@ -5,9 +5,9 @@
 
 {% blocktrans with name=user.first_name %}Hello {{ name }},{% endblocktrans %}
 
-{% trans "Thank you for your request for additional storage." %}
+{% translate "Thank you for your request for additional storage." %}
 
-{% trans "Here is a copy of your request:" %}
+{% translate "Here is a copy of your request:" %}
 ==============================================================================
 
 Storage needed: {{data.storage}}
@@ -40,11 +40,11 @@ Time constraint: {{data.time_constraint}}
 
 ==============================================================================
 
-{% trans "We are currently reviewing the information that you have provided, and will work to be in touch in a timely manner depending on the scope of your request. While Kolibri Studio is under active development, we need to be especially mindful of how much additional storage can be provided to ensure that we can successfully continue to build the Studio tool. Many thanks in advance for your understanding." %}
+{% translate "We are currently reviewing the information that you have provided, and will work to be in touch in a timely manner depending on the scope of your request. While Kolibri Studio is under active development, we need to be especially mindful of how much additional storage can be provided to ensure that we can successfully continue to build the Studio tool. Many thanks in advance for your understanding." %}
 
 
-{% trans "Thanks for using Kolibri Studio!" %}
+{% translate "Thanks for using Kolibri Studio!" %}
 
-{% trans "The Learning Equality Team" %}
+{% translate "The Learning Equality Team" %}
 
 {% endautoescape %}

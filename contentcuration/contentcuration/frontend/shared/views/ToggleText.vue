@@ -8,8 +8,6 @@
           {{ overflowText }}
         </span>
       </VSlideYTransition>
-    </p>
-    <p class="mt-2">
       <a v-if="overflowText" class="caption toggler" @click.stop.prevent="toggle">
         <span>{{ togglerText }}</span>
         <Icon small>
@@ -99,6 +97,7 @@
 
   .text {
     margin: 0;
+    font-size: 12px;
     word-wrap: break-word;
     white-space: normal;
   }
