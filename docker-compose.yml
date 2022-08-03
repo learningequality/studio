@@ -63,7 +63,7 @@ services:
       - pgdata:/var/lib/postgresql/data/pgdata
 
   redis:
-    image: redis:4.0.9
+    image: redis:6.0.9
 
   cloudprober:
     <<: *studio-worker

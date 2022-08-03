@@ -8,7 +8,7 @@ Rather than using Docker, it is also possible to manually install the dependenci
   - [python-pip](https://pip.pypa.io/en/stable/installing/)
   - [nodejs (16.x)](https://nodejs.org/en/download/)
   - [Postgres DB (12.x)](https://www.postgresql.org/download/)
-  - [redis](https://redis.io/topics/quickstart)
+  - [redis (6.x)](https://redis.io/topics/quickstart)
   - [minio server](https://www.minio.io/downloads.html)
   - [nginx](https://www.nginx.com/resources/wiki/start/topics/tutorials/install/)
   - [ffmpeg](https://www.ffmpeg.org/)
@@ -53,9 +53,6 @@ brew link --force imagemagick@6
 ### Windows
 
 Windows is no longer supported due to incompatibilities with some of the required packages.
-
-
-
 
 
 ## Set up the database
