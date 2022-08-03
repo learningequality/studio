@@ -159,6 +159,20 @@ def publishing_status(request):
     return Response(channel_publish_status)
 
 
+@api_view(["GET"])
+@authentication_classes((TokenAuthentication, SessionAuthentication))
+@permission_classes((IsAuthenticated,))
+def celery_worker_status(request):
+    if not request.user.is_admin:
+        return HttpResponseForbidden()
+
+    from contentcuration.celery import app
+
+    # should return dict with structure like:
+    # {'celery@hostname': {'ok': 'pong'}}
+    return Response(app.control.inspect().ping() or {})
+
+
 """ END HEALTH CHECKS """
 
 
