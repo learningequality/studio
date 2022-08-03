@@ -1,4 +1,5 @@
 import Vue from 'vue';
+import debounce from 'lodash/debounce';
 
 /**
  * Analytics class for handling anything analytics related, exposed in Vue as $analytics
@@ -11,6 +12,50 @@ class Analytics {
    */
   constructor(dataLayer) {
     this.dataLayer = dataLayer;
+
+    // overwrite method with debounced version
+    this.reset = debounce(this.reset, 10 * 1000);
+
+    // add interval to trigger resets since events can be added to the datalayer through
+    // other means (like GTM triggers)
+    this.resetInterval = setInterval(() => {
+      this.reset();
+    }, 30 * 1000);
+  }
+
+  /**
+   * Resets the datalayer and cleans up elements
+   */
+  reset() {
+    if (process.env.NODE_ENV !== 'production') {
+      console.info('Analytics.reset()');
+    }
+    const dataLayer = this.dataLayer;
+
+    // This can't use an arrow function, it will be called with a different
+    // context to access `this.reset()`
+    this.dataLayer.push(function() {
+      // See https://developers.google.com/tag-platform/devguides/datalayer#reset
+      this.reset();
+
+      // Do our own reset of the `gtm.element` variable
+      for (let item of dataLayer) {
+        if (item['gtm.element']) {
+          item['gtm.element'] = null;
+        }
+      }
+    });
+  }
+
+  /**
+   * Push data onto the datalayer
+   * @param {object|function} args
+   */
+  push(...args) {
+    this.dataLayer.push(...args);
+
+    // trigger debounced reset()
+    this.reset();
   }
 
   /**
@@ -22,7 +67,7 @@ class Analytics {
    * @param {{:*}} data
    */
   trackEvent(event, data = {}) {
-    this.dataLayer.push({
+    this.push({
       ...data,
       event,
     });
@@ -68,7 +113,7 @@ class Analytics {
       return;
     }
 
-    this.dataLayer.push({
+    this.push({
       currentChannel: {
         id: channel.id,
         name: channel.name,
@@ -80,6 +125,15 @@ class Analytics {
         // hasEditors:
       },
     });
+  }
+
+  /**
+   * Cleans up the datalayer and removes the interval to call dataLayer.reset()
+   */
+  destroy() {
+    clearInterval(this.resetInterval);
+    this.reset.cancel();
+    this.dataLayer = null;
   }
 }
 
@@ -94,6 +148,7 @@ export default function AnalyticsPlugin(Vue, options = {}) {
   // Merge in old dataLayer
   if (Vue.$analytics) {
     analytics.dataLayer.push(...Vue.$analytics.dataLayer);
+    Vue.$analytics.destroy();
   }
 
   Vue.$analytics = analytics;
