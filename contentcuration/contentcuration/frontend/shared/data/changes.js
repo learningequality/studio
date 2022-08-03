@@ -1,14 +1,8 @@
 import Dexie from 'dexie';
-import { EventEmitter } from 'events';
 import db from 'shared/data/db';
 import { promiseChunk } from 'shared/utils/helpers';
-import {
-  CHANGES_TABLE,
-  REVERT_SOURCE,
-  CHANGE_TYPES,
-  IGNORED_SOURCE,
-} from 'shared/data/constants';
-import { Session } from "shared/data/resources";
+import { CHANGES_TABLE, REVERT_SOURCE, CHANGE_TYPES, IGNORED_SOURCE } from 'shared/data/constants';
+import { Session } from 'shared/data/resources';
 
 /**
  * Wraps the callback with a new ChangeTracker that can be used to revert
@@ -42,9 +36,8 @@ export function withChangeTracker(callback) {
  * Represents multiple changes, with the ability to start and stop tracking them,
  * and to block their synchronization to allow for also reverting them.
  */
-export class ChangeTracker extends EventEmitter {
+export class ChangeTracker {
   constructor() {
-    super();
     this.reverted = false;
     this._startingRev = null;
     this._changes = null;
@@ -73,7 +66,7 @@ export class ChangeTracker extends EventEmitter {
       Session.getSession(),
     ]);
 
-    this._startingRev = (mostRecentChange)
+    this._startingRev = mostRecentChange
       ? mostRecentChange.rev
       : session.max_rev[Session.currentChannelId];
   }
@@ -84,11 +77,9 @@ export class ChangeTracker extends EventEmitter {
    */
   async stop() {
     // Collect the changes
-    const changes = db[CHANGES_TABLE]
-      .where('rev')
+    const changes = db[CHANGES_TABLE].where('rev')
       .above(this._startingRev)
-      .filter(change => !change.source.match(IGNORED_SOURCE))
-    ;
+      .filter(change => !change.source.match(IGNORED_SOURCE));
     this._changes = await changes.sortBy('rev');
   }
 
@@ -154,10 +145,7 @@ export class ChangeTracker extends EventEmitter {
             .where(table.schema.primKey.keyPath)
             .equals(change.key)
             .delete();
-        } else if (
-          change.type === CHANGE_TYPES.UPDATED ||
-          change.type === CHANGE_TYPES.DELETED
-        ) {
+        } else if (change.type === CHANGE_TYPES.UPDATED || change.type === CHANGE_TYPES.DELETED) {
           // If we updated or deleted it, we just want the old stuff back
           return table.put(change.oldObj);
         } else if (change.type === CHANGE_TYPES.MOVED && change.oldObj) {

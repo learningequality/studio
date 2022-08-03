@@ -190,15 +190,14 @@
           id: this.nodeId,
           target: this.nodeId,
           position: RELATIVE_TREE_POSITIONS.RIGHT,
-        }).then((node) => {
-          ContentNode.waitForCopying([node.id])
-            .then(() => {
-              this.showSnackbar({
-                text: this.$tr('copiedSnackbar'),
-                actionText: this.$tr('undo'),
-                actionCallback: () => changeTracker.revert(),
-              }).then(() => changeTracker.cleanUp());
-            });
+        }).then(node => {
+          ContentNode.waitForCopying([node.id]).then(() => {
+            this.showSnackbar({
+              text: this.$tr('copiedSnackbar'),
+              actionText: this.$tr('undo'),
+              actionCallback: () => changeTracker.revert(),
+            }).then(() => changeTracker.cleanUp());
+          });
         });
       }),
       trackAction(eventLabel) {
@@ -217,11 +216,8 @@
       makeACopy: 'Make a copy',
       copyToClipboard: 'Copy to clipboard',
       remove: 'Remove',
-
       undo: 'Undo',
-      cancel: 'Cancel',
       creatingCopies: 'Copying...',
-      creatingClipboardCopies: 'Copying to clipboard...',
       copiedSnackbar: 'Copy operation complete',
       copiedToClipboardSnackbar: 'Copied to clipboard',
       removedItems: 'Sent to trash',

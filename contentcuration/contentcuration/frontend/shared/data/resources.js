@@ -1451,8 +1451,12 @@ export const ContentNode = new TreeResource({
    */
   waitForCopying(ids) {
     const observable = Dexie.liveQuery(() => {
-      return this.table.where('id').anyOf(ids).filter(node => !node[COPYING_FLAG]).toArray();
-    })
+      return this.table
+        .where('id')
+        .anyOf(ids)
+        .filter(node => !node[COPYING_FLAG])
+        .toArray();
+    });
 
     return new Promise((resolve, reject) => {
       const subscription = observable.subscribe({
@@ -1465,10 +1469,10 @@ export const ContentNode = new TreeResource({
         error() {
           subscription.unsubscribe();
           reject();
-        }
+        },
       });
     });
-  }
+  },
 });
 
 export const ChannelSet = new Resource({

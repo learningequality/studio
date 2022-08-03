@@ -417,7 +417,7 @@
       },
     },
     methods: {
-      ...mapActions(['showSnackbar', 'clearSnackbar']),
+      ...mapActions(['showSnackbar']),
       ...mapActions(['setViewMode', 'addViewModeOverride', 'removeViewModeOverride']),
       ...mapActions('contentNode', [
         'createContentNode',
@@ -638,7 +638,7 @@
               position: RELATIVE_TREE_POSITIONS.RIGHT,
             })
           )
-        ).then((nodes) => {
+        ).then(nodes => {
           this.clearSelections();
           ContentNode.waitForCopying(nodes.map(n => n.id)).then(() => {
             this.showSnackbar({
@@ -695,7 +695,6 @@
       selectionCount:
         '{topicCount, plural,\n =1 {# folder}\n other {# folders}}, {resourceCount, plural,\n =1 {# resource}\n other {# resources}}',
       undo: 'Undo',
-      cancel: 'Cancel',
       creatingCopies: 'Copying...',
       copiedItems: 'Copy operation complete',
       copiedItemsToClipboard: 'Copied to clipboard',

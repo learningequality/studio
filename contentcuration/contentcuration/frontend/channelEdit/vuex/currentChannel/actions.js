@@ -57,4 +57,3 @@ export function deployCurrentChannel(context) {
 export function publishChannel(context, version_notes) {
   return Channel.publish(context.state.currentChannelId, version_notes);
 }
-

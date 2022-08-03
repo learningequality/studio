@@ -172,12 +172,14 @@
       copyToClipboard: withChangeTracker(function(changeTracker) {
         return this.copy({ node_id: this.copyNode.node_id, channel_id: this.copyNode.channel_id })
           .then(() => {
-            this.$store.dispatch('showSnackbar', {
-              text: this.$tr('copiedToClipboard'),
-              // TODO: implement revert functionality for clipboard
-              // actionText: this.$tr('undo'),
-              // actionCallback: () => changeTracker.revert(),
-            }).then(() => changeTracker.cleanUp());
+            this.$store
+              .dispatch('showSnackbar', {
+                text: this.$tr('copiedToClipboard'),
+                // TODO: implement revert functionality for clipboard
+                // actionText: this.$tr('undo'),
+                // actionCallback: () => changeTracker.revert(),
+              })
+              .then(() => changeTracker.cleanUp());
           })
           .catch(error => {
             this.$store.dispatch('showSnackbarSimple', this.$tr('copyFailed'));
