@@ -40,6 +40,7 @@
   import { mapActions, mapGetters } from 'vuex';
   import { RouteNames } from '../constants';
   import MoveModal from './move/MoveModal';
+  import { ContentNode } from 'shared/data/resources';
   import { withChangeTracker } from 'shared/data/changes';
   import { RELATIVE_TREE_POSITIONS } from 'shared/data/constants';
 
@@ -103,7 +104,7 @@
       },
     },
     methods: {
-      ...mapActions(['showSnackbar', 'clearSnackbar']),
+      ...mapActions(['showSnackbar']),
       ...mapActions('contentNode', ['createContentNode', 'moveContentNodes', 'copyContentNode']),
       ...mapActions('clipboard', ['copy']),
       newTopicNode() {
@@ -154,29 +155,24 @@
         const redirect = this.getRemoveNodeRedirect();
         return this.moveContentNodes({ id__in: [this.nodeId], parent: this.trashId }).then(() => {
           redirect();
-          return this.showSnackbar({
+          this.showSnackbar({
             text: this.$tr('removedItems'),
             actionText: this.$tr('undo'),
             actionCallback: () => changeTracker.revert(),
-          });
+          }).then(() => changeTracker.cleanUp());
         });
       }),
       copyToClipboard: withChangeTracker(function(changeTracker) {
         this.trackAction('Copy to clipboard');
-        this.showSnackbar({
-          duration: null,
-          text: this.$tr('creatingClipboardCopies'),
-          actionText: this.$tr('cancel'),
-          actionCallback: () => changeTracker.revert(),
-        });
 
         return this.copy({ node_id: this.node.node_id, channel_id: this.node.channel_id }).then(
           () => {
-            return this.showSnackbar({
+            this.showSnackbar({
               text: this.$tr('copiedToClipboardSnackbar'),
-              actionText: this.$tr('undo'),
-              actionCallback: () => changeTracker.revert(),
-            });
+              // TODO: implement revert functionality for clipboard
+              // actionText: this.$tr('undo'),
+              // actionCallback: () => changeTracker.revert(),
+            }).then(() => changeTracker.cleanUp());
           }
         );
       }),
@@ -185,21 +181,24 @@
         this.showSnackbar({
           duration: null,
           text: this.$tr('creatingCopies'),
-          actionText: this.$tr('cancel'),
-          actionCallback: () => changeTracker.revert(),
+          // TODO: determine how to cancel copying while it's in progress,
+          // TODO: if that's something we want
+          // actionText: this.$tr('cancel'),
+          // actionCallback: () => changeTracker.revert(),
         });
         return this.copyContentNode({
           id: this.nodeId,
           target: this.nodeId,
           position: RELATIVE_TREE_POSITIONS.RIGHT,
-        }).then(() => {
-          return this.clearSnackbar();
-          // TODO: Shows too quickly, need to show when copy task completes
-          // return this.showSnackbar({
-          //   text: this.$tr('copiedSnackbar'),
-          //   actionText: this.$tr('undo'),
-          //   actionCallback: () => changeTracker.revert(),
-          // });
+        }).then((node) => {
+          ContentNode.waitForCopying([node.id])
+            .then(() => {
+              this.showSnackbar({
+                text: this.$tr('copiedSnackbar'),
+                actionText: this.$tr('undo'),
+                actionCallback: () => changeTracker.revert(),
+              }).then(() => changeTracker.cleanUp());
+            });
         });
       }),
       trackAction(eventLabel) {
@@ -223,7 +222,7 @@
       cancel: 'Cancel',
       creatingCopies: 'Copying...',
       creatingClipboardCopies: 'Copying to clipboard...',
-      // copiedSnackbar: 'Copy operation complete',
+      copiedSnackbar: 'Copy operation complete',
       copiedToClipboardSnackbar: 'Copied to clipboard',
       removedItems: 'Sent to trash',
     },

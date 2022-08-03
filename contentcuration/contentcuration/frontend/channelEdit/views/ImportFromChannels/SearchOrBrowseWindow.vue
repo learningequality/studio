@@ -170,19 +170,14 @@
         return this.copyToClipboard();
       },
       copyToClipboard: withChangeTracker(function(changeTracker) {
-        this.$store.dispatch('showSnackbar', {
-          duration: null,
-          text: this.$tr('copyingToClipboard'),
-          actionText: this.$tr('cancel'),
-          actionCallback: () => changeTracker.revert(),
-        });
         return this.copy({ node_id: this.copyNode.node_id, channel_id: this.copyNode.channel_id })
           .then(() => {
-            return this.$store.dispatch('showSnackbar', {
+            this.$store.dispatch('showSnackbar', {
               text: this.$tr('copiedToClipboard'),
-              actionText: this.$tr('undo'),
-              actionCallback: () => changeTracker.revert(),
-            });
+              // TODO: implement revert functionality for clipboard
+              // actionText: this.$tr('undo'),
+              // actionCallback: () => changeTracker.revert(),
+            }).then(() => changeTracker.cleanUp());
           })
           .catch(error => {
             this.$store.dispatch('showSnackbarSimple', this.$tr('copyFailed'));
@@ -196,9 +191,7 @@
       searchAction: 'Search',
 
       // Copy strings
-      undo: 'Undo',
-      cancel: 'Cancel',
-      copyingToClipboard: 'Copying to clipboard...',
+      // undo: 'Undo',
       copiedToClipboard: 'Copied to clipboard',
       copyFailed: 'Failed to copy to clipboard',
     },
