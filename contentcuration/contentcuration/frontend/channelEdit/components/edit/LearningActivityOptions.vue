@@ -17,7 +17,7 @@
 
 <script>
 
-  import { camelCase } from 'lodash';
+  import camelCase from 'lodash/camelCase';
   import { LearningActivities } from 'shared/constants';
   import { constantsTranslationMixin, metadataTranslationMixin } from 'shared/mixins';
   import { getLearningActivityValidators, translateValidator } from 'shared/utils/validation';

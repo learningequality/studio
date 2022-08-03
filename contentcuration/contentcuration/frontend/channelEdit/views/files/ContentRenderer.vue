@@ -159,6 +159,7 @@
     width: 100%;
     outline: none;
   }
+
   .v-card,
   .v-card > .layout,
   embed,
@@ -167,9 +168,11 @@
     min-height: 200px;
     max-height: @max-height;
   }
+
   video {
     max-height: @max-height;
   }
+
   .message-card,
   video,
   embed,
@@ -182,6 +185,7 @@
 
   .fullscreen {
     min-height: @max-height;
+
     .v-card,
     audio,
     embed,

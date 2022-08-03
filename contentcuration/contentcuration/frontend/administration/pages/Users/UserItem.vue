@@ -99,8 +99,8 @@
   import { RouteNames } from '../../constants';
   import UserActionsDropdown from './UserActionsDropdown';
   import UserStorage from './UserStorage';
-  import Checkbox from 'shared/views/form/Checkbox';
   import { fileSizeMixin } from 'shared/mixins';
+  import Checkbox from 'shared/views/form/Checkbox';
 
   export default {
     name: 'UserItem',

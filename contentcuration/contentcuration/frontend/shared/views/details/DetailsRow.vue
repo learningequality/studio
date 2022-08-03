@@ -58,9 +58,11 @@
   .flex {
     word-break: break-word;
   }
+
   .flex:last-child {
     padding-left: 10px;
   }
+
   label {
     vertical-align: middle;
   }

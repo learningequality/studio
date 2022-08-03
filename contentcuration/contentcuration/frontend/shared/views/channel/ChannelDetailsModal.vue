@@ -12,7 +12,7 @@
       <VLayout class="mb-3">
         <VSpacer v-if="$vuetify.breakpoint.smAndUp" />
         <Menu>
-          <template v-slot:activator="{ on }">
+          <template #activator="{ on }">
             <VBtn color="primary" dark :block="$vuetify.breakpoint.xsOnly" v-on="on">
               {{ $tr('downloadButton') }}
               &nbsp;

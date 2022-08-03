@@ -181,11 +181,11 @@
   import { mapState, mapActions, mapGetters, mapMutations } from 'vuex';
   import debounce from 'lodash/debounce';
 
-  import ContentNodeOptions from '../ContentNodeOptions';
-  import ContentNodeChangedIcon from '../ContentNodeChangedIcon';
-  import ContentNodeValidator from '../ContentNodeValidator';
-  import ContentNodeContextMenu from '../ContentNodeContextMenu';
   import TaskProgress from '../../views/progress/TaskProgress';
+  import ContentNodeContextMenu from '../ContentNodeContextMenu';
+  import ContentNodeValidator from '../ContentNodeValidator';
+  import ContentNodeChangedIcon from '../ContentNodeChangedIcon';
+  import ContentNodeOptions from '../ContentNodeOptions';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import ContextMenuCloak from 'shared/views/ContextMenuCloak';
   import LoadingText from 'shared/views/LoadingText';

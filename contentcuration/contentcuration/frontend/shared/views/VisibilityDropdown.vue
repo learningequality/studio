@@ -17,7 +17,7 @@
       attach="#role_visibility"
       @focus="$emit('focus')"
     >
-      <template v-slot:append-outer>
+      <template #append-outer>
         <InfoModal :header="$tr('visibilityHeader')" :items="roles">
           <p>{{ $tr('visibilityDescription') }}</p>
           <template #header="{ item }">

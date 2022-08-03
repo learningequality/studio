@@ -116,8 +116,8 @@
 <script>
 
   import { mapActions, mapGetters } from 'vuex';
-  import ContentNodeOptions from './ContentNodeOptions';
   import clipboardMixin, { parentMixin } from './mixins';
+  import ContentNodeOptions from './ContentNodeOptions';
   import Checkbox from 'shared/views/form/Checkbox';
   import Thumbnail from 'shared/views/files/Thumbnail';
   import ContextMenu from 'shared/views/ContextMenu';

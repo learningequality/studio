@@ -121,9 +121,9 @@
 
 <script>
 
-  import { floatOrIntRegex, getCorrectAnswersIndices, mapCorrectAnswers } from '../../utils';
-  import { AssessmentItemToolbarActions } from '../../constants';
   import AssessmentItemToolbar from '../AssessmentItemToolbar';
+  import { AssessmentItemToolbarActions } from '../../constants';
+  import { floatOrIntRegex, getCorrectAnswersIndices, mapCorrectAnswers } from '../../utils';
   import { AssessmentItemTypes } from 'shared/constants';
   import { swapElements } from 'shared/utils/helpers';
   import Checkbox from 'shared/views/form/Checkbox';
@@ -427,6 +427,7 @@
 
   .card-border-light {
     border: 1px solid var(--v-greyBorder-lighten1);
+
     &:not(:first-child) {
       border-top: 0;
     }

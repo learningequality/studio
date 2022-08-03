@@ -138,9 +138,9 @@
 <script>
 
   import { mapActions, mapGetters, mapMutations } from 'vuex';
-  import { RouteNames, DraggableRegions, DraggableUniverses } from '../../constants';
-  import StudioTree from '../../components/StudioTree/StudioTree';
   import CurrentTopicView from '../CurrentTopicView';
+  import StudioTree from '../../components/StudioTree/StudioTree';
+  import { RouteNames, DraggableRegions, DraggableUniverses } from '../../constants';
   import TreeViewBase from './TreeViewBase';
   import Banner from 'shared/views/Banner';
   import IconButton from 'shared/views/IconButton';

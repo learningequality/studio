@@ -120,6 +120,7 @@
   /deep/ .v-tabs__div {
     min-width: 160px;
   }
+
   /deep/ .v-tabs__container {
     padding: 0;
   }

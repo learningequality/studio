@@ -14,7 +14,7 @@
     </td>
     <td class="text-xs-right">
       <Menu>
-        <template v-slot:activator="{ on }">
+        <template #activator="{ on }">
           <VBtn flat block v-on="on">
             {{ $tr('options') }}
             <Icon>arrow_drop_down</Icon>

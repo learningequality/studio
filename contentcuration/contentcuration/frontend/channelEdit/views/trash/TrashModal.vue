@@ -127,9 +127,9 @@
 
   import { mapActions, mapGetters } from 'vuex';
   import sortBy from 'lodash/sortBy';
-  import { RouteNames } from '../../constants';
-  import ResourceDrawer from '../../components/ResourceDrawer';
   import MoveModal from '../../components/move/MoveModal';
+  import ResourceDrawer from '../../components/ResourceDrawer';
+  import { RouteNames } from '../../constants';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
   import Checkbox from 'shared/views/form/Checkbox';
   import MessageDialog from 'shared/views/MessageDialog';

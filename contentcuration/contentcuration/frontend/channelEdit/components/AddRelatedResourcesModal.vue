@@ -108,8 +108,8 @@
 
   import { mapState, mapGetters, mapActions } from 'vuex';
 
-  import NodeTreeNavigation from './NodeTreeNavigation';
   import ResourceDrawer from './ResourceDrawer';
+  import NodeTreeNavigation from './NodeTreeNavigation';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
   import FullscreenModal from 'shared/views/FullscreenModal';
   import { titleMixin } from 'shared/mixins';
@@ -239,6 +239,7 @@
 
   .list-item-disabled {
     opacity: 0.5;
+
     /deep/ .v-list__tile--link:hover {
       color: inherit;
       background-color: transparent;

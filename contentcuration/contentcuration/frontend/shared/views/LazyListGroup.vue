@@ -108,7 +108,7 @@
   }
 
   .header-content.has-icon {
-    width: calc(100% ~'-' @header-width);
+    width: calc(100% ~'-' @header - width);
   }
 
   .list-group.open > .list-group-header .v-icon {

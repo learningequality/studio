@@ -37,7 +37,7 @@ describe('swapElements', () => {
 
 describe('extendSlot', () => {
   // Component that implements extendSlot functionality
-  const extenderComponent = Vue.component('extender', {
+  const extenderComponent = Vue.component('Extender', {
     data() {
       return {
         val: 0,
@@ -74,7 +74,7 @@ describe('extendSlot', () => {
   });
 
   function withLayout(template, overrides = {}) {
-    const component = Vue.component('test-root', {
+    const component = Vue.component('TestRoot', {
       template,
       ...overrides,
     });
@@ -167,7 +167,7 @@ describe('extendSlot', () => {
     });
 
     describe('containing component', () => {
-      const other = Vue.component('other', {
+      const other = Vue.component('Other', {
         template: `<div class="scoped-el"><slot></slot></div>`,
       });
       const layout = withLayout(
@@ -251,7 +251,7 @@ describe('extendSlot', () => {
     });
 
     describe('containing component', () => {
-      const other = Vue.component('other', {
+      const other = Vue.component('Other', {
         template: `<div class="unscoped-el"><slot></slot></div>`,
       });
       const layout = withLayout(

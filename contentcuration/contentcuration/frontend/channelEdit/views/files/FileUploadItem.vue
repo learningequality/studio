@@ -181,19 +181,24 @@
   button {
     margin: 0;
   }
+
   /deep/ .v-list__tile {
     height: max-content !important;
     min-height: 64px;
     padding: 5px 16px;
+
     .remove-icon {
       display: none;
     }
+
     &:hover .remove-icon {
       display: block;
     }
+
     .v-list__tile__title {
       height: max-content;
     }
+
     .v-list__tile__sub-title {
       white-space: unset;
     }

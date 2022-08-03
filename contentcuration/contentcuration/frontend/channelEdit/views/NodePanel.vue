@@ -52,8 +52,8 @@
 
   import { mapActions, mapGetters } from 'vuex';
 
-  import { RouteNames } from '../constants';
   import ContentNodeEditListItem from '../components/ContentNodeEditListItem';
+  import { RouteNames } from '../constants';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import LoadingText from 'shared/views/LoadingText';
   import { COPYING_FLAG } from 'shared/data/constants';

@@ -133,6 +133,7 @@
     /deep/ .v-input__control {
       width: 100% !important;
     }
+
     &:hover {
       background-color: var(--v-channelHighlightDefault-base);
     }

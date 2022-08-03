@@ -34,7 +34,7 @@
 
         <VListTileAction>
           <VTooltip bottom>
-            <template slot="activator" slot-scope="{ on }">
+            <template #activator="{ on }">
               <VBtn
                 icon
                 data-test="resourceRemoveBtn"

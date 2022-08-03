@@ -101,8 +101,10 @@
     word-wrap: break-word;
     white-space: normal;
   }
+
   .toggler {
     color: var(--v-grey-darken1);
+
     span {
       text-decoration: underline;
     }

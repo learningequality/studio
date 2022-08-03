@@ -102,6 +102,7 @@
     width: calc(100% - 48px);
     min-height: 0 !important;
   }
+
   .v-chip,
   /deep/ .v-chip__content,
   .text-truncate {

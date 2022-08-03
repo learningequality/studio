@@ -66,7 +66,7 @@
                   </template>
 
                   <VTooltip v-else top>
-                    <template slot="activator" slot-scope="{ on }">
+                    <template #activator="{ on }">
                       <Icon class="red--text" v-on="on">
                         error
                       </Icon>
@@ -131,8 +131,8 @@
   import AssessmentItemToolbar from '../AssessmentItemToolbar';
   import AssessmentItemEditor from '../AssessmentItemEditor/AssessmentItemEditor';
   import AssessmentItemPreview from '../AssessmentItemPreview/AssessmentItemPreview';
-  import { AssessmentItemTypes } from 'shared/constants';
   import Checkbox from 'shared/views/form/Checkbox';
+  import { AssessmentItemTypes } from 'shared/constants';
 
   function areItemsEqual(item1, item2) {
     if (!item1 || !item2) {

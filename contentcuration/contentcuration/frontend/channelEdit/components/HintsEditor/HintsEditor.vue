@@ -85,8 +85,8 @@
 
 <script>
 
-  import { AssessmentItemToolbarActions } from '../../constants';
   import AssessmentItemToolbar from '../AssessmentItemToolbar';
+  import { AssessmentItemToolbarActions } from '../../constants';
   import { swapElements } from 'shared/utils/helpers';
 
   import MarkdownEditor from 'shared/views/MarkdownEditor/MarkdownEditor/MarkdownEditor';
@@ -294,6 +294,7 @@
 
   .card-border-light {
     border: 1px solid var(--v-greyBorder-lighten1);
+
     &:not(:first-child) {
       border-top: 0;
     }

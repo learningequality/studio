@@ -36,7 +36,7 @@
       :header="$tr('noStorageHeader')"
       text=""
     >
-      <template v-slot>
+      <template #default>
         <div class="storage-alert">
           <p>{{ $tr('uploadSize', { size: formatFileSize(totalUploadSize) }) }}</p>
           <p>
@@ -61,8 +61,8 @@
   import flatMap from 'lodash/flatMap';
   import isFunction from 'lodash/isFunction';
 
-  import FileStorage from './FileStorage';
   import FileDropzone from './FileDropzone';
+  import FileStorage from './FileStorage';
   import { fileErrors, MAX_FILE_SIZE } from 'shared/constants';
   import { fileSizeMixin } from 'shared/mixins';
   import Alert from 'shared/views/Alert';
@@ -244,6 +244,7 @@
   .storage-alert {
     font-size: 12pt;
   }
+
   .storage-usage {
     margin-top: -5px;
     font-size: 10pt;

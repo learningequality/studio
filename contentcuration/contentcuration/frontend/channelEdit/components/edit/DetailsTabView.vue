@@ -93,7 +93,7 @@
                 autoSelectFirst
                 @focus="trackClick('Tags')"
               >
-                <template v-slot:no-data>
+                <template #no-data>
                   <VListTile v-if="tagText && tagText.trim()">
                     <VListTileContent>
                       <VListTileTitle>
@@ -251,7 +251,7 @@
               @input="author = $event"
               @focus="trackClick('Author')"
             >
-              <template v-slot:append-outer>
+              <template #append-outer>
                 <HelpTooltip :text="$tr('authorToolTip')" top :small="false" />
               </template>
             </VCombobox>
@@ -272,7 +272,7 @@
               @input="provider = $event"
               @focus="trackClick('Provider')"
             >
-              <template v-slot:append-outer>
+              <template #append-outer>
                 <HelpTooltip :text="$tr('providerToolTip')" top :small="false" />
               </template>
             </VCombobox>
@@ -293,7 +293,7 @@
               @input="aggregator = $event"
               @focus="trackClick('Aggregator')"
             >
-              <template v-slot:append-outer>
+              <template #append-outer>
                 <HelpTooltip :text="$tr('aggregatorToolTip')" top :small="false" />
               </template>
             </VCombobox>
@@ -832,9 +832,11 @@
       margin-bottom: 8px;
       font-weight: bold;
     }
+
     .section .flex {
       margin: 24px 0 !important;
     }
+
     .auth-section {
       /deep/ .v-autocomplete .v-input__append-inner {
         visibility: hidden;
@@ -843,13 +845,16 @@
 
     .v-form {
       max-width: 960px;
+
       .tagbox {
         /deep/ .v-select__selections {
           min-height: 0 !important;
         }
+
         /deep/ .v-chip__content {
           color: black; // Read-only tag box grays out tags
         }
+
         /deep/ .v-input__append-inner {
           display: none;
         }
@@ -859,13 +864,16 @@
         /deep/ label {
           color: var(--v-grey-darken2) !important;
         }
+
         /deep/ .v-input__append-inner {
           display: none;
         }
+
         /deep/ .v-input__slot {
           &::before {
             border-style: dotted;
           }
+
           &::after {
             border: 0;
           }
@@ -874,10 +882,12 @@
 
       .basicInfoColumn {
         display: flex;
+
         /deep/ .v-input {
           // Stretches the "Description" text area to fill the column vertically
           align-items: stretch;
         }
+
         /deep/ .v-input__control {
           // Makes sure that the character count does not get pushed to second column
           flex-wrap: nowrap;

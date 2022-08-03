@@ -3,7 +3,7 @@
   <VFadeTransition v-if="offline" data-test="text">
     <template v-show="offline && !libraryMode">
       <VTooltip v-if="indicator" bottom z-index="300">
-        <template v-slot:activator="{ on }">
+        <template #activator="{ on }">
           <div class="px-4" v-on="on">
             <Icon class="mx-2">
               cloud_off

@@ -7,7 +7,7 @@
       class="toolbar-item"
     >
       <VTooltip top>
-        <template slot="activator" slot-scope="{ on }">
+        <template #activator="{ on }">
           <VBtn
             icon
             :disabled="!isIconClickable(action)"
@@ -29,7 +29,7 @@
       class="toolbar-item"
     >
       <Menu bottom>
-        <template slot="activator" slot-scope="{ on }">
+        <template #activator="{ on }">
           <VBtn
             icon
             v-on="on"

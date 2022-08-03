@@ -15,9 +15,9 @@
       item-text="text"
       @click:clear="$nextTick(() => removeAll())"
     >
-      <template v-slot:selection="data">
+      <template #selection="data">
         <VTooltip bottom>
-          <template v-slot:activator="{ on, attrs }">
+          <template #activator="{ on, attrs }">
             <VChip v-bind="attrs" close v-on="on" @input="remove(data.item.value)">
               {{ data.item.text }}
             </VChip>
@@ -28,7 +28,7 @@
         </VTooltip>
       </template>
 
-      <template v-slot:no-data>
+      <template #no-data>
         <VListTile v-if="categoryText && categoryText.trim()">
           <VListTileContent>
             <VListTileTitle>
@@ -38,7 +38,7 @@
         </VListTile>
       </template>
 
-      <template v-slot:item="{ item }">
+      <template #item="{ item }">
         <div style="width: 100%; height: 100%" aria-hidden="true">
           <VDivider v-if="!item.value.includes('.')" />
           <KCheckbox
@@ -59,7 +59,7 @@
 
 <script>
 
-  import { camelCase } from 'lodash';
+  import camelCase from 'lodash/camelCase';
   import { constantsTranslationMixin, metadataTranslationMixin } from 'shared/mixins';
   import { Categories, CategoriesLookup } from 'shared/constants';
 

@@ -188,8 +188,8 @@
 <script>
 
   import { mapActions, mapGetters } from 'vuex';
-  import ThumbnailGenerator from './ThumbnailGenerator';
   import ThumbnailCard from './ThumbnailCard';
+  import ThumbnailGenerator from './ThumbnailGenerator';
   import { fileSizeMixin, fileStatusMixin } from 'shared/mixins';
   import { FormatPresetsList } from 'shared/leUtils/FormatPresets';
   import Uploader from 'shared/views/files/Uploader';

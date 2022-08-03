@@ -91,6 +91,7 @@
     margin: 0;
     font-weight: normal;
   }
+
   .v-input--checkbox {
     margin-bottom: -25px;
   }

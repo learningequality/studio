@@ -231,10 +231,10 @@
 
   import { mapActions, mapGetters, mapState } from 'vuex';
   import get from 'lodash/get';
-  import { RouteNames, viewModes, DraggableRegions, DraggableUniverses } from '../constants';
-  import ResourceDrawer from '../components/ResourceDrawer';
-  import ContentNodeOptions from '../components/ContentNodeOptions';
   import MoveModal from '../components/move/MoveModal';
+  import ContentNodeOptions from '../components/ContentNodeOptions';
+  import ResourceDrawer from '../components/ResourceDrawer';
+  import { RouteNames, viewModes, DraggableRegions, DraggableUniverses } from '../constants';
   import NodePanel from './NodePanel';
   import IconButton from 'shared/views/IconButton';
   import ToolBar from 'shared/views/ToolBar';

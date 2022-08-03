@@ -5,8 +5,8 @@ import CollapseAllIcon from '../views/icons/CollapseAllIcon';
 import IndicatorIcon from '../views/icons/IndicatorIcon';
 import LightBulbIcon from '../views/icons/LightBulbIcon';
 import ViewOnlyIcon from '../views/icons/ViewOnlyIcon';
-import Icon from 'shared/views/Icon';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
+import Icon from 'shared/views/Icon';
 
 Vue.component(Icon.name, Icon);
 

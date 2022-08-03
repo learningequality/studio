@@ -77,6 +77,7 @@
   .v-text-field /deep/ input[type='text'] {
     color: var(--v-grey-darken1) !important;
   }
+
   .v-text-field /deep/ .v-input__slot::before {
     border-style: dotted !important;
   }

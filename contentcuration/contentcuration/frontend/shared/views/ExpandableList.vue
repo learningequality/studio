@@ -36,7 +36,7 @@
           </div>
           <VExpansionPanel v-if="items.length > maxItems" :value="isExpanded ? 0 : null">
             <VExpansionPanelContent>
-              <template v-slot:header>
+              <template #header>
                 <span @click="toggle">
                   {{ toggleText }}
                 </span>
@@ -139,15 +139,19 @@
 
   .v-expansion-panel {
     box-shadow: none;
+
     /deep/ .v-expansion-panel__header {
       padding: 0;
     }
   }
+
   .inline-list {
     padding: 0;
+
     li {
       display: inline;
     }
+
     &.delimit li:not(:last-child)::after {
       content: ' • ';
     }
