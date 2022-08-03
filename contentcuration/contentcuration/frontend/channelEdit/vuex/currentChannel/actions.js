@@ -57,7 +57,7 @@ export function publishChannel(context, version_notes) {
 }
 
 export function stopTask(context, task) {
-  if (task && task.task_type === 'export-channel') {
+  if (task && task.task_name === 'export-channel') {
     return Channel.clearPublish(context.state.currentChannelId).then(() => {
       return context.dispatch('task/deleteTask', task, { root: true });
     });

@@ -491,13 +491,12 @@ class ChannelViewSet(ValuesViewset):
                         }, channel_id=channel.id
                     ),
                 ], applied=True)
-            except Exception as e:
+            except Exception:
                 Change.create_changes([
                     generate_update_event(
                         channel.id, CHANNEL, {"publishing": False, "unpublished_changes": True}, channel_id=channel.id
                     ),
                 ], applied=True)
-                progress_tracker.report_exception(e)
                 raise
 
     def sync_from_changes(self, changes):

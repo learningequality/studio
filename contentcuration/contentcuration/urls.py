@@ -77,6 +77,7 @@ urlpatterns = [
     re_path(r'^api/search/', include('search.urls'), name='search'),
     re_path(r'^api/probers/get_prober_channel', views.get_prober_channel, name='get_prober_channel'),
     re_path(r'^api/probers/publishing_status', views.publishing_status, name='publishing_status'),
+    re_path(r'^api/probers/celery_worker_status', views.celery_worker_status, name='celery_worker_status'),
     re_path(r'^api/sync/$', SyncView.as_view(), name="sync"),
 ]
 

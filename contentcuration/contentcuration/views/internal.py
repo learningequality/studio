@@ -46,8 +46,8 @@ from contentcuration.models import License
 from contentcuration.models import SlideshowSlide
 from contentcuration.models import StagedFile
 from contentcuration.serializers import GetTreeDataSerializer
-from contentcuration.tasks import create_async_task
-from contentcuration.tasks import get_or_create_async_task
+from contentcuration.tasks import apply_channel_changes_task
+from contentcuration.tasks import generatenodediff_task
 from contentcuration.utils.files import get_file_diff
 from contentcuration.utils.garbage_collect import get_deleted_chefs_root
 from contentcuration.utils.nodes import map_files_to_assessment_item
@@ -248,18 +248,13 @@ def api_commit_channel(request):
                 old_staging.title = "Old staging tree for channel {}".format(obj.pk)
                 old_staging.save()
 
-        _, task = create_async_task(
-            "get-node-diff",
-            request.user,
-            updated_id=obj.staging_tree.id,
-            original_id=obj.main_tree.id,
-        )
+        async_result = generatenodediff_task.enqueue(request.user, updated_id=obj.staging_tree.id, original_id=obj.main_tree.id)
 
         # Send response back to the content integration script
         return Response({
             "success": True,
             "new_channel": obj.pk,
-            "diff_task_id": task.pk,
+            "diff_task_id": async_result.task_id,
         })
     except (Channel.DoesNotExist, PermissionDenied):
         return HttpResponseNotFound("No channel matching: {}".format(channel_id))
@@ -332,7 +327,7 @@ def api_publish_channel(request):
 
         Change.create_change(event, created_by_id=request.user.pk)
 
-        get_or_create_async_task("apply_channel_changes", request.user, channel_id=channel_id)
+        apply_channel_changes_task.fetch_or_enqueue(request.user, channel_id=channel_id)
 
         return Response({
             "success": True,

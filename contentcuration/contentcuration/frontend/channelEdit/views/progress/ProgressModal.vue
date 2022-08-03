@@ -50,7 +50,7 @@
       ...mapGetters('task', ['getAsyncTask', 'getPublishTaskForChannel']),
       ...mapGetters('currentChannel', ['currentChannel', 'canManage']),
       isSyncing() {
-        return this.currentTask && this.currentTask.task_type === 'sync-channel';
+        return this.currentTask && this.currentTask.task_name === 'sync-channel';
       },
       isPublishing() {
         // add condition so that publishing modal is only visible for users
@@ -64,7 +64,7 @@
         return this.getAsyncTask(this.currentChannel[TASK_ID]) || null;
       },
       progressPercent() {
-        const progressPercent = get(this.currentTask, ['metadata', 'progress'], 0);
+        const progressPercent = get(this.currentTask, ['progress'], 0);
         return this.$formatNumber(Math.round(progressPercent || 0) / 100, {
           style: 'percent',
           minimumFractionDigits: 0,
@@ -74,14 +74,14 @@
       currentPublishTaskError() {
         const publishTask = this.getPublishTaskForChannel(this.currentChannel.id);
         return Boolean(
-          (publishTask && get(publishTask, ['metadata', 'error'], null)) ||
+          (publishTask && get(publishTask, ['traceback'], null)) ||
             get(publishTask, 'status') === 'FAILURE'
         );
       },
       syncError() {
         return (
           this.isSyncing &&
-          (get(this.currentTask, ['metadata', 'error'], null) ||
+          (get(this.currentTask, ['traceback'], null) ||
             get(this.currentTask, 'status') === 'FAILURE')
         );
       },

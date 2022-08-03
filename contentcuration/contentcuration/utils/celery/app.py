@@ -44,3 +44,19 @@ class CeleryApp(Celery):
                 pass
 
         return decoded_tasks
+
+    def decode_result(self, result, status=None):
+        """
+        Decodes the celery result, like the raw result from the database, using celery tools
+
+        See .backend.decode_result() for similar functionality
+
+        :param result: The string serialized/decoded result
+        :param status: Pass the status to unserialize an exception result if status is an exception state
+        :return: The decoded result
+        """
+        state = {
+            "result": self.backend.decode(result),
+            "status": status,
+        }
+        return self.backend.meta_from_decoded(state).get("result")

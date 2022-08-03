@@ -1,4 +1,6 @@
+import json
 import traceback
+import uuid
 from contextlib import contextmanager
 
 from celery import states
@@ -26,7 +28,7 @@ from rest_framework.utils import model_meta
 from rest_framework.viewsets import ReadOnlyModelViewSet
 
 from contentcuration.models import Change
-from contentcuration.models import Task
+from contentcuration.models import TaskResult
 from contentcuration.utils.celery.tasks import ProgressTracker
 from contentcuration.viewsets.common import MissingRequiredParamsException
 from contentcuration.viewsets.sync.constants import TASK_ID
@@ -888,36 +890,42 @@ class RequiredFilterSet(FilterSet):
 
 
 @contextmanager
-def create_change_tracker(pk, table, channel_id, user, task_type):
+def create_change_tracker(pk, table, channel_id, user, task_name):
     # Clean up any previous tasks specific to this in case there were failures.
-    Task.objects.filter(channel_id=channel_id, task_type=task_type, metadata__pk=pk, metadata__table=table).delete()
+    meta = json.dumps(dict(pk=pk, table=table))
+    TaskResult.objects.filter(channel_id=channel_id, task_name=task_name, meta=meta).delete()
 
-    task_object = Task.objects.create(status=states.STARTED, channel_id=channel_id, is_progress_tracking=True, task_type=task_type, user=user, metadata={
-        "pk": pk, "table": table
-    })
+    task_id = uuid.uuid4().hex
+    task_object = TaskResult.objects.create(
+        task_id=task_id,
+        status=states.STARTED,
+        channel_id=channel_id,
+        task_name=task_name,
+        user=user,
+        meta=meta
+    )
 
-    def update_progress(meta=None):
-        if meta:
-            task_object.metadata = meta
+    def update_progress(progress=None):
+        if progress:
+            task_object.progress = progress
             task_object.save()
 
     Change.create_change(
         generate_update_event(pk, table, {TASK_ID: task_object.task_id}, channel_id=channel_id), applied=True
     )
 
-    def report_exception(e):
+    tracker = ProgressTracker(task_id, update_progress)
+
+    try:
+        yield tracker
+    except Exception as e:
         task_object.status = states.FAILURE
-        task_object.metadata.update({"error": str(e)})
+        task_object.traceback = e.__traceback__
         task_object.save()
-
-    tracker = ProgressTracker(None, update_progress)
-    tracker.report_exception = report_exception
-
-    yield tracker
-
-    if task_object.status == states.STARTED:
-        # No error reported, cleanup.
-        Change.create_change(
-            generate_update_event(pk, table, {TASK_ID: None}, channel_id=channel_id), applied=True
-        )
-        task_object.delete()
+    finally:
+        if task_object.status == states.STARTED:
+            # No error reported, cleanup.
+            Change.create_change(
+                generate_update_event(pk, table, {TASK_ID: None}, channel_id=channel_id), applied=True
+            )
+            task_object.delete()

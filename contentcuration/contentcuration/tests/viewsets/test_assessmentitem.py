@@ -16,7 +16,7 @@ from contentcuration.tests.viewsets.base import SyncTestMixin
 from contentcuration.viewsets.sync.constants import ASSESSMENTITEM
 
 
-class SyncTestCase(StudioAPITestCase, SyncTestMixin):
+class SyncTestCase(SyncTestMixin, StudioAPITestCase):
 
     @property
     def assessmentitem_metadata(self):
