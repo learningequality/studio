@@ -58,6 +58,15 @@
                           {{ getTitle(node) }}
                         </h3>
                       </VFlex>
+                      <VFlex v-if="!isTopic && isCoach" class="px-1">
+                        <Icon
+                          color="roleVisibilityCoach"
+                          small
+                          style="vertical-align: middle;"
+                        >
+                          local_library
+                        </Icon>
+                      </VFlex>
                       <VFlex>
                         <ContentNodeValidator
                           v-if="canEdit && !copying && !node.isNew"
@@ -96,10 +105,10 @@
                         <template #activator="{ on }">
                           <div style="display: inline-block;" v-on="on">
                             <Icon
-                              color="primary"
+                              color="roleVisibilityCoach"
                               small
                               class="mx-1"
-                              style="vertical-align: text-top;"
+                              style="vertical-align: sub;"
                             >
                               local_library
                             </Icon>
