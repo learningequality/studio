@@ -33,7 +33,7 @@
 
 <script>
 
-  import { camelCase } from 'lodash';
+  import camelCase from 'lodash/camelCase';
   import { AccessibilityCategories, AccessibilityCategoriesMap } from 'shared/constants';
   import Checkbox from 'shared/views/form/Checkbox';
   import HelpTooltip from 'shared/views/HelpTooltip';

@@ -21,7 +21,7 @@ const channel = {
 };
 
 function makeWrapper() {
-  router.replace({ name: RouteNames.CHANNELS });
+  router.replace({ name: RouteNames.CHANNELS }).catch(() => {});
   return mount(ChannelItem, {
     router,
     store,

@@ -4,9 +4,9 @@
 
 Rather than using Docker, it is also possible to manually install the dependencies on your host machine or in a virtual machine. These dependencies include:
 
-  - [python (2.7)](https://www.python.org/downloads/release/python-2713/)
+  - [python (3.6)](https://www.python.org/downloads/release/python-3612/)
   - [python-pip](https://pip.pypa.io/en/stable/installing/)
-  - [nodejs (10.x)](https://nodejs.org/en/download/)
+  - [nodejs (16.x)](https://nodejs.org/en/download/)
   - [Postgres DB (12.x)](https://www.postgresql.org/download/)
   - [redis](https://redis.io/topics/quickstart)
   - [minio server](https://www.minio.io/downloads.html)
@@ -16,7 +16,7 @@ Rather than using Docker, it is also possible to manually install the dependenci
   - [libmagickwand-dev](http://docs.wand-py.org/en/0.2.4/guide/install.html)
   - [yarn](https://yarnpkg.com/lang/en/docs/install)
 
-You can also use `nodeenv` (which is included as a python development dependency below) or `nvm` to install Node.js 10.x if you need to maintain multiple versions of node:
+You can also use `nodeenv` (which is included as a python development dependency below) or `nvm` to install Node.js 16.x if you need to maintain multiple versions of node:
 
 * http://ekalinin.github.io/nodeenv/
 * https://github.com/creationix/nvm
@@ -31,7 +31,7 @@ wget https://dl.minio.io/server/minio/release/linux-amd64/minio -O /usr/local/bi
 chmod +x /usr/local/bin/minio
 
 # Install node PPA
-curl -sL https://deb.nodesource.com/setup_10.x | bash -
+curl -sL https://deb.nodesource.com/setup_16.x | bash -
 
 # Install packages
 apt-get install -y  python python-pip python-dev python-tk \

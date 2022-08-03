@@ -71,6 +71,7 @@
             MasteryModels.has(value.mastery_model)
           );
         },
+        default: null,
       },
       showMofN: {
         type: Boolean,
@@ -90,6 +91,7 @@
       },
       mPlaceholder: {
         type: String,
+        default: '',
       },
       nRequired: {
         type: Boolean,
@@ -97,6 +99,7 @@
       },
       nPlaceholder: {
         type: String,
+        default: '',
       },
     },
     computed: {
@@ -190,19 +193,24 @@
 
   .mastery-table {
     padding: 15px;
+
     .mastery-row {
       padding: 5px;
+
       &:nth-child(odd) {
         background-color: var(--v-greyBackground-base);
       }
+
       .mastery-label {
         padding-right: 15px;
         font-weight: bold;
       }
     }
   }
+
   /deep/ a {
     text-decoration: none !important;
+
     &:hover {
       color: var(--v-blue-darken-1);
     }

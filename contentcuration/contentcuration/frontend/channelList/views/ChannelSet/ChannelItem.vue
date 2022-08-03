@@ -60,6 +60,7 @@
   .card-header {
     font-size: 18px;
   }
+
   .metadata-section {
     // Double space metadata section
     line-height: 3;

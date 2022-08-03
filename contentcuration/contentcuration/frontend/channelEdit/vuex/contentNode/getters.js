@@ -4,7 +4,6 @@ import uniq from 'lodash/uniq';
 import uniqBy from 'lodash/uniqBy';
 
 import { parseNode } from './utils';
-
 import { getNodeDetailsErrors, getNodeFilesErrors } from 'shared/utils/validation';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 import { NEW_OBJECT } from 'shared/constants';

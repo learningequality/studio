@@ -366,6 +366,7 @@
     &.active {
       background: #fafafa;
     }
+
     &.disabled {
       pointer-events: none;
     }
@@ -394,10 +395,12 @@
     display: flex;
     padding-top: 44px;
     cursor: progress;
+
     p,
     div {
       margin: 0 2px;
     }
+
     .compact & {
       padding-top: 12px;
     }
@@ -443,7 +446,9 @@
     max-width: 160px;
 
     .compact & {
+      // stylelint-disable
       width: calc(@compact-thumbnail-width);
+      // stylelint-enable
       min-width: 20px;
     }
   }
@@ -464,6 +469,7 @@
     align-items: flex-start;
     justify-content: center;
   }
+
   .metadata > span:not(:last-child)::after {
     content: ' • ';
   }

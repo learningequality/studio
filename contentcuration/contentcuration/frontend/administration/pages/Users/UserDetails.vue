@@ -163,8 +163,8 @@
   import capitalize from 'lodash/capitalize';
   import { mapActions, mapGetters } from 'vuex';
   import { RouteNames } from '../../constants';
-  import UserStorage from './UserStorage';
   import UserActionsDropdown from './UserActionsDropdown';
+  import UserStorage from './UserStorage';
   import { routerMixin, fileSizeMixin } from 'shared/mixins';
   import LoadingText from 'shared/views/LoadingText';
   import FullscreenModal from 'shared/views/FullscreenModal';
@@ -359,7 +359,7 @@
           .then(([user, details]) => {
             // User not found
             if (!user) {
-              this.$router.replace(this.backLink);
+              this.$router.replace(this.backLink).catch(() => {});
               return;
             }
             this.updateTitleForPage();

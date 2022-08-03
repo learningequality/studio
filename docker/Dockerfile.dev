@@ -27,7 +27,7 @@ RUN cd /usr/local/bin && \
   ln -s $(which pip3) pip
 
 # Download then install node
-RUN curl -sL https://deb.nodesource.com/setup_10.x | bash - &&\
+RUN curl -sL https://deb.nodesource.com/setup_16.x | bash - &&\
     apt-get install -y nodejs
 ################################################################################
 

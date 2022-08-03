@@ -6,7 +6,9 @@ export function loadChannel(context, { staging = false } = {}) {
   return context
     .dispatch('channel/loadChannel', context.state.currentChannelId, { root: true })
     .then(channel => {
-      Vue.$analytics.trackCurrentChannel(channel, staging);
+      if (channel) {
+        Vue.$analytics.trackCurrentChannel(channel, staging);
+      }
       return channel;
     });
 }

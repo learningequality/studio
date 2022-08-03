@@ -55,10 +55,12 @@
       nodeId: {
         type: String,
         required: false,
+        default: null,
       },
       channelId: {
         type: String,
         required: false,
+        default: null,
       },
       permanent: {
         type: Boolean,

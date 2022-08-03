@@ -103,12 +103,12 @@
 <script>
 
   import { mapGetters } from 'vuex';
-  import { AssessmentItemTypeLabels } from '../../constants';
-  import { updateAnswersToQuestionType, assessmentItemKey } from '../../utils';
-  import translator from '../../translator';
 
-  import AnswersEditor from '../AnswersEditor/AnswersEditor';
   import HintsEditor from '../HintsEditor/HintsEditor';
+  import AnswersEditor from '../AnswersEditor/AnswersEditor';
+  import translator from '../../translator';
+  import { updateAnswersToQuestionType, assessmentItemKey } from '../../utils';
+  import { AssessmentItemTypeLabels } from '../../constants';
   import { AssessmentItemTypes, ValidationErrors } from 'shared/constants';
   import ErrorList from 'shared/views/ErrorList/ErrorList';
   import Uploader from 'shared/views/files/Uploader';
@@ -144,12 +144,14 @@
        */
       item: {
         type: Object,
+        default: null,
       },
       /**
        * An array of error codes related to the item.
        */
       errors: {
         type: Array,
+        default: () => [],
       },
       /**
        * Inject a function that opens a dialog that should
@@ -168,6 +170,7 @@
        */
       openDialog: {
         type: Function,
+        default: null,
       },
     },
     data() {

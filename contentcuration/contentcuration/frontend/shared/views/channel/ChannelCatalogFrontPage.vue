@@ -11,13 +11,13 @@
       {{ $tr("catalogHeader") }}
     </h1>
     <DetailsRow :label="$tr('exported')">
-      <template v-slot>
+      <template #default>
         {{ $formatDate(Date.now(), {
           weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) }}
       </template>
     </DetailsRow>
     <DetailsRow :label="$tr('formatsHeading')">
-      <template v-slot>
+      <template #default>
         <ExpandableList
           :noItemsText="$tr('defaultNoItemsText')"
           :items="kinds.map(translateConstant)"
@@ -38,7 +38,7 @@
       </span>
     </DetailsRow>
     <DetailsRow :label="$tr('languagesHeading')">
-      <template v-slot>
+      <template #default>
         <ExpandableList
           :noItemsText="$tr('defaultNoItemsText')"
           :items="languages"

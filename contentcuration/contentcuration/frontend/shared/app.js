@@ -6,8 +6,8 @@ import VueIntl from 'vue-intl';
 import Croppa from 'vue-croppa';
 import { Workbox, messageSW } from 'workbox-window';
 import KThemePlugin from 'kolibri-design-system/lib/KThemePlugin';
-import AnalyticsPlugin from './analytics/plugin';
 
+import AnalyticsPlugin from './analytics/plugin';
 import { theme, icons } from 'shared/vuetify';
 
 import { i18nSetup } from 'shared/i18n';

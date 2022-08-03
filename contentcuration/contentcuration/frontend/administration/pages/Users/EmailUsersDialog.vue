@@ -31,7 +31,7 @@
               >
                 <template #item="{ item }">
                   <VTooltip bottom>
-                    <template v-slot:activator="{ on }">
+                    <template #activator="{ on }">
                       <VChip
                         small
                         :close="selected.length > 1"

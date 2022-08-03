@@ -1,9 +1,11 @@
 <template>
 
   <VTooltip maxWidth="150px" v-bind="$attrs">
-    <Icon slot="activator" color="primary" :small="small">
-      {{ icon }}
-    </Icon>
+    <template #activator>
+      <Icon color="primary" :small="small">
+        {{ icon }}
+      </Icon>
+    </template>
     <span class="text-xs-center">{{ text }}</span>
   </VTooltip>
 

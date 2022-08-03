@@ -83,9 +83,9 @@
 
   import { mapGetters } from 'vuex';
 
-  import ContentNodeListItem from './ContentNodeListItem';
-  import ContentNodeOptions from './ContentNodeOptions';
   import ContentNodeContextMenu from './ContentNodeContextMenu';
+  import ContentNodeOptions from './ContentNodeOptions';
+  import ContentNodeListItem from './ContentNodeListItem';
   import Checkbox from 'shared/views/form/Checkbox';
   import IconButton from 'shared/views/IconButton';
   import DraggableItem from 'shared/views/draggable/DraggableItem';
@@ -243,14 +243,17 @@
         z-index: 1000;
         height: auto !important;
       }
+
       &::after {
         display: none;
       }
+
       &.dragging-over {
         &::before {
           bottom: 0;
         }
       }
+
       &:not(.dragging-over) {
         border-bottom: 0;
       }

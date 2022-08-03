@@ -243,11 +243,11 @@
 <script>
 
   import { mapActions, mapGetters } from 'vuex';
-  import { DraggableRegions, DraggableUniverses, RouteNames } from '../../constants';
-  import PublishModal from '../../components/publish/PublishModal';
-  import ProgressModal from '../progress/ProgressModal';
-  import SyncResourcesModal from '../sync/SyncResourcesModal';
   import Clipboard from '../../components/Clipboard';
+  import SyncResourcesModal from '../sync/SyncResourcesModal';
+  import ProgressModal from '../progress/ProgressModal';
+  import PublishModal from '../../components/publish/PublishModal';
+  import { DraggableRegions, DraggableUniverses, RouteNames } from '../../constants';
   import MainNavigationDrawer from 'shared/views/MainNavigationDrawer';
   import IconButton from 'shared/views/IconButton';
   import ToolBar from 'shared/views/ToolBar';
@@ -469,6 +469,7 @@
   .drag-placeholder {
     position: absolute;
     z-index: 24;
+
     .text {
       width: 400px;
       max-width: 400px;
@@ -482,6 +483,7 @@
       from {
         transform: translateY(0);
       }
+
       to {
         transform: translateY(-5px);
       }

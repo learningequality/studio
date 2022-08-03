@@ -3,7 +3,7 @@
   <!-- Show progress bar if progress is tracked -->
   <VLayout v-if="progressPercent !== null && !isDone" row align-center class="mt-3">
     <VProgressLinear
-      v-model="progressPercent"
+      :value="progressPercent"
       class="ma-0"
       height="10"
       data-test="progress"

@@ -20,6 +20,7 @@
       text: {
         type: String,
         required: false,
+        default: '',
       },
       error: {
         type: Boolean,

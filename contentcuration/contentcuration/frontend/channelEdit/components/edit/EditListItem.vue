@@ -34,7 +34,7 @@
           </Icon>
         </div>
         <VTooltip v-else-if="erroredFiles.length" top>
-          <template v-slot:activator="{ on }">
+          <template #activator="{ on }">
             <Icon color="red" v-on="on">
               error
             </Icon>
@@ -184,6 +184,7 @@
 
   .v-list__tile__action {
     min-width: 30px;
+
     &.changed {
       min-width: 15px;
       font-weight: bold;
@@ -197,9 +198,11 @@
   /deep/ .v-list__tile {
     height: max-content !important;
     min-height: 64px;
+
     &:hover .remove-item {
       display: block;
     }
+
     .v-list__tile__sub-title {
       white-space: unset;
     }

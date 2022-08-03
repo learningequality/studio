@@ -22,7 +22,7 @@ const details = {
 };
 
 function makeWrapper(userProps = {}) {
-  router.replace({ name: RouteNames.USER, params: { userId } });
+  router.replace({ name: RouteNames.USER, params: { userId } }).catch(() => {});
   return mount(UserDetails, {
     router,
     store,

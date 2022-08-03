@@ -106,17 +106,21 @@
     props: {
       markdown: {
         type: String,
+        default: '',
       },
       // Inject function to handle file uploads
       handleFileUpload: {
         type: Function,
+        default: () => {},
       },
       // Inject function to get file upload object
       getFileUpload: {
         type: Function,
+        default: () => {},
       },
       imagePreset: {
         type: String,
+        default: '',
       },
       analyticsLabel: {
         type: String,
@@ -942,6 +946,7 @@
   .wrapper {
     padding: 1px;
     border: 4px solid transparent;
+
     &.highlight {
       border-color: var(--v-primary-base);
     }

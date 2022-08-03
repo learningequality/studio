@@ -21,6 +21,7 @@
       },
       mathQuill: {
         type: Function,
+        default: () => {},
       },
     },
     data() {

@@ -42,7 +42,7 @@ const selectKind = (wrapper, kind) => {
   const input = wrapper.find('[data-test="kindSelect"]');
   input.element.value = kind;
 
-  input.trigger('input');
+  input.trigger('input', kind);
 };
 
 describe('AssessmentItemEditor', () => {

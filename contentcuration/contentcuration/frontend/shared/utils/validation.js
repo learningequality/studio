@@ -1,6 +1,6 @@
 import get from 'lodash/get';
-import { AssessmentItemTypes, ValidationErrors } from '../constants';
 import translator from '../translator';
+import { AssessmentItemTypes, ValidationErrors } from '../constants';
 import Licenses from 'shared/leUtils/Licenses';
 import { MasteryModelsNames } from 'shared/leUtils/MasteryModels';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';

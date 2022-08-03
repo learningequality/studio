@@ -85,8 +85,8 @@
 
 <script>
 
-  import { AssessmentItemToolbarActions } from '../../constants';
   import AssessmentItemToolbar from '../AssessmentItemToolbar';
+  import { AssessmentItemToolbarActions } from '../../constants';
   import { swapElements } from 'shared/utils/helpers';
 
   import MarkdownEditor from 'shared/views/MarkdownEditor/MarkdownEditor/MarkdownEditor';
@@ -115,20 +115,25 @@
     props: {
       hints: {
         type: Array,
+        default: () => [],
       },
       openHintIdx: {
         type: Number,
+        default: 0,
       },
       // Inject function to handle file uploads
       handleFileUpload: {
         type: Function,
+        default: () => {},
       },
       // Inject function to get file upload object
       getFileUpload: {
         type: Function,
+        default: () => {},
       },
       imagePreset: {
         type: String,
+        default: null,
       },
     },
     data() {
@@ -294,6 +299,7 @@
 
   .card-border-light {
     border: 1px solid var(--v-greyBorder-lighten1);
+
     &:not(:first-child) {
       border-top: 0;
     }
