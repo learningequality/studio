@@ -703,7 +703,6 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
         "tags": "content_tags",
         "kind": "kind__kind",
         "thumbnail_src": retrieve_thumbail_src,
-        "title": get_title,
         "parent": "parent_id",
         "grade_levels": partial(dict_if_none, field_name="grade_levels"),
         "resource_types": partial(dict_if_none, field_name="resource_types"),
