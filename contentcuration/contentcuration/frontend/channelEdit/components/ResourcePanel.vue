@@ -326,7 +326,7 @@
 
   import sortBy from 'lodash/sortBy';
   import { mapActions, mapGetters } from 'vuex';
-  import { camelCase } from 'lodash';
+  import camelCase from 'lodash/camelCase';
   import { isImportedContent, importedChannelLink } from '../utils';
   import FilePreview from '../views/files/FilePreview';
   import { ContentLevel, Categories, AccessibilityCategories } from '../../shared/constants';

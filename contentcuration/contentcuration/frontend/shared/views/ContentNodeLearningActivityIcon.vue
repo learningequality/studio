@@ -43,7 +43,7 @@
 
 <script>
 
-  import { camelCase } from 'lodash';
+  import camelCase from 'lodash/camelCase';
   import { LearningActivities } from '../constants';
   import { getLearningActivityIcon } from 'shared/vuetify/icons';
   import { metadataTranslationMixin } from 'shared/mixins';
