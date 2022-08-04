@@ -44,7 +44,7 @@ jobs:
       # Label used to access the service container
       redis:
         # Docker Hub image
-        image: redis:4.0.9
+        image: redis:6.0.9
         # Set health checks to wait until redis has started
         options: >-
           --health-cmd "redis-cli ping"
