@@ -1,8 +1,8 @@
 <template>
 
   <VTooltip maxWidth="150px" v-bind="$attrs">
-    <template #activator>
-      <Icon color="primary" :small="small">
+    <template #activator="{ on }">
+      <Icon color="primary" :small="small" v-on="on">
         {{ icon }}
       </Icon>
     </template>

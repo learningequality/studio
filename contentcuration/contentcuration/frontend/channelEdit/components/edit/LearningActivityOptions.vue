@@ -10,7 +10,7 @@
       :label="translateMetadataString('learningActivity')"
       multiple
       deletableChips
-      :menu-props="{offsetY: true, lazy: true, zIndex: 4}"
+      :menu-props="{ offsetY: true, lazy: true, zIndex: 4 }"
       :rules="learningActivityRules"
       :attach="$attrs.id ? `#${$attrs.id}` : '.learning-activity-container'"
     />
@@ -57,7 +57,9 @@
 
 </script>
 <style lang="less" scoped>
+
   .learning-activity-container {
     position: relative;
   }
+
 </style>

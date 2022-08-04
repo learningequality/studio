@@ -11,7 +11,7 @@
       multiple
       deletableChips
       clearable
-      :menu-props="{offsetY: true, lazy: true, zIndex: 4}"
+      :menu-props="{ offsetY: true, lazy: true, zIndex: 4 }"
       :attach="$attrs.id ? `#${$attrs.id}` : '.resources-needed-container'"
     />
   </div>
@@ -77,7 +77,9 @@
 
 </script>
 <style lang="less">
+
   .resources-needed-container {
     position: relative;
   }
+
 </style>

@@ -15,7 +15,7 @@
         :readonly="readonly"
         :rules="licenseRules"
         :placeholder="placeholder"
-        :menu-props="{offsetY: true, lazy: true, top: true, zIndex: 4}"
+        :menu-props="{ offsetY: true, lazy: true, top: true, zIndex: 4 }"
         class="ma-0"
         box
         :attach="$attrs.id ? `#${$attrs.id}` : '.license-container'"
@@ -180,7 +180,9 @@
 </script>
 
 <style lang="less" scoped>
+
   .license-container {
     position: relative;
   }
+
 </style>

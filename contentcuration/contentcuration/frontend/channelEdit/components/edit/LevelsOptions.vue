@@ -11,7 +11,7 @@
       :label="translateMetadataString('level')"
       multiple
       deletableChips
-      :menu-props="{offsetY: true, lazy: true, zIndex: 4}"
+      :menu-props="{ offsetY: true, lazy: true, zIndex: 4 }"
       :attach="$attrs.id ? `#${$attrs.id}` : '.levels-container'"
     />
   </div>
@@ -74,4 +74,5 @@
   .levels-container {
     position: relative;
   }
+
 </style>

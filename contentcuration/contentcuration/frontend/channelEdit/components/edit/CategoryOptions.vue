@@ -13,7 +13,7 @@
       multiple
       item-value="value"
       item-text="text"
-      :menu-props="{offsetY: true, lazy: true, zIndex: 4}"
+      :menu-props="{ offsetY: true, lazy: true, zIndex: 4 }"
       attach=".category-container"
       @click:clear="$nextTick(() => removeAll())"
     >
@@ -224,7 +224,7 @@
     flex-wrap: wrap;
   }
 
-  /deep/ div[role="listitem"]:first-child hr {
+  /deep/ div[role='listitem']:first-child hr {
     display: none;
   }
 

@@ -4,7 +4,7 @@
     <!-- Layout when practice quizzes are enabled -->
     <VLayout v-if="hideCompletionDropdown" xs6 md6>
       <!-- "Completion" dropdown menu  -->
-      <VFlex xs6 md6 class="pr-2 completion-container">
+      <VFlex xs6 md6 class="completion-container pr-2">
         <VSelect
           ref="completion"
           v-model="completionDropdown"
@@ -13,7 +13,7 @@
           :label="translateMetadataString('completion')"
           :required="required"
           :rules="completionRules"
-          :menu-props="{offsetY: true, lazy: true, zIndex: 4}"
+          :menu-props="{ offsetY: true, lazy: true, zIndex: 4 }"
           attach=".completion-container"
           @focus="trackClick('Completion')"
         />
@@ -60,7 +60,7 @@
     </VLayout>
 
     <VLayout row wrap>
-      <VFlex xs6 md6 class="pr-2 completion-duration-container">
+      <VFlex xs6 md6 class="completion-duration-container pr-2">
         <VSelect
           v-if="!hideDurationDropdown"
           ref="duration"
@@ -70,7 +70,7 @@
           :label="translateMetadataString('duration')"
           :required="required"
           :rules="durationRules"
-          :menu-props="{offsetY: true, lazy: true, zIndex: 4}"
+          :menu-props="{ offsetY: true, lazy: true, zIndex: 4 }"
           attach=".completion-duration-container"
           @focus="trackClick('Duration')"
         />
@@ -881,7 +881,10 @@
 
 </script>
 <style lang="less" scoped>
-  .completion-container, .completion-duration-container {
+
+  .completion-container,
+  .completion-duration-container {
     position: relative;
   }
+
 </style>

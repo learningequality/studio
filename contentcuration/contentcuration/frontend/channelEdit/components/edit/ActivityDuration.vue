@@ -20,7 +20,7 @@
           box
           :label="$tr('minutesRequired')"
           :items="availableNumbers"
-          :menu-props="{offsetY: true, lazy: true, zIndex: 4}"
+          :menu-props="{ offsetY: true, lazy: true, zIndex: 4 }"
           attach=".activity-duration-container"
         />
       </VFlex>
