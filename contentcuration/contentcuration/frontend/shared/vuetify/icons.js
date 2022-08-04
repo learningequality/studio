@@ -1,6 +1,6 @@
 import Vue from 'vue';
 import vuetifyIcons from 'vuetify/lib/components/Vuetify/mixins/icons';
-import { camelCase } from 'lodash';
+import camelCase from 'lodash/camelCase';
 import CollapseAllIcon from '../views/icons/CollapseAllIcon';
 import IndicatorIcon from '../views/icons/IndicatorIcon';
 import LightBulbIcon from '../views/icons/LightBulbIcon';

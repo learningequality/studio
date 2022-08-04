@@ -193,7 +193,7 @@
 <script>
 
   import { mapActions } from 'vuex';
-  import { camelCase } from 'lodash';
+  import camelCase from 'lodash/camelCase';
   import ContentNodeValidator from '../ContentNodeValidator';
   import ContentNodeChangedIcon from '../ContentNodeChangedIcon';
   import TaskProgress from '../../views/progress/TaskProgress';
