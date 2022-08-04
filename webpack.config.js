@@ -10,7 +10,6 @@ const BundleTracker = require('kolibri-tools/lib/webpackBundleTracker');
 const CircularDependencyPlugin = require('circular-dependency-plugin');
 
 const WebpackRTLPlugin = require('kolibri-tools/lib/webpackRtlPlugin');
-const VuetifyLoaderPlugin = require('vuetify-loader/lib/plugin');
 
 const { InjectManifest } = require('workbox-webpack-plugin');
 
@@ -89,7 +88,6 @@ module.exports = (env = {}) => {
       modules: [rootNodeModules],
     },
     plugins: [
-      new VuetifyLoaderPlugin(),
       new BundleTracker({
         filename: path.resolve(djangoProjectDir, 'build', 'webpack-stats.json'),
       }),
