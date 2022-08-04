@@ -469,11 +469,6 @@ def retrieve_thumbail_src(item):
     return None
 
 
-def get_title(item):
-    # If it's the root, use the channel name (should be original channel name)
-    return item["title"] if item["parent_id"] else item["original_channel_name"]
-
-
 def consolidate_extra_fields(item):
     extra_fields = item.get("extra_fields")
     if item["kind"] == content_kinds.EXERCISE:
