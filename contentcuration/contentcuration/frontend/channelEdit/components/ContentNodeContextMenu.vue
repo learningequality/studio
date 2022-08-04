@@ -1,6 +1,6 @@
 <template>
 
-  <Menu v-model="value" :position-x="positionX" :position-y="positionY" absolute>
+  <Menu v-model="value" :position-x="positionX" :position-y="positionY" absolute lazy>
     <VCard>
       <slot>
         <ContentNodeOptions :nodeId="nodeId" :hideDetailsLink="hideDetailsLink" />

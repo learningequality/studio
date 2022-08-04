@@ -18,7 +18,7 @@
       @click:clear="$nextTick(() => removeAll())"
     >
       <template #selection="data">
-        <VTooltip bottom>
+        <VTooltip bottom lazy>
           <template #activator="{ on, attrs }">
             <VChip v-bind="attrs" close v-on="on" @input="remove(data.item.value)">
               {{ data.item.text }}

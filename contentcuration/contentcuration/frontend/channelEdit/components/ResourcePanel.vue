@@ -104,7 +104,7 @@
           />
           <VCard v-else-if="isResource && !isExercise" class="preview-error" flat>
             <VLayout align-center justify-center fill-height>
-              <VTooltip bottom>
+              <VTooltip bottom lazy>
                 <template #activator="{ on }">
                   <Icon color="red" v-on="on">
                     error

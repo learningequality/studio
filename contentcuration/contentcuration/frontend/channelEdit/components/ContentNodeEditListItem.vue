@@ -48,7 +48,7 @@
 
         <template #actions-end>
           <VListTileAction :aria-hidden="!active" class="action-icon px-1">
-            <Menu v-model="activated">
+            <Menu v-model="activated" lazy>
               <template #activator="{ on }">
                 <IconButton
                   icon="optionsVertical"

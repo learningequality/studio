@@ -186,7 +186,7 @@
       <DetailsRow :label="$tr('licensesLabel')">
         <template #default>
           <template v-if="!printing">
-            <VTooltip v-for="license in details.licenses" :key="license" top>
+            <VTooltip v-for="license in details.licenses" :key="license" top lazy>
               <template #activator="{ on }">
                 <VChip class="tag" v-on="on">
                   {{ translateConstant(license) }}

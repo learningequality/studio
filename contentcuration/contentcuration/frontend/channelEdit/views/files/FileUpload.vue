@@ -23,7 +23,7 @@
         <div class="preview-wrapper">
           <VCard v-if="!primaryFileCount" flat class="mb-2 message-card">
             <VLayout align-center justify-center fill-height>
-              <VTooltip bottom>
+              <VTooltip bottom lazy>
                 <template #activator="{ on }">
                   <Icon color="red" v-on="on">
                     error

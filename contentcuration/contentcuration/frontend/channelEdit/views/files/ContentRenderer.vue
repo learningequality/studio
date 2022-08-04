@@ -48,7 +48,7 @@
 
     <VCard v-else class="message-card" flat>
       <VLayout align-center justify-center fill-height data-test="not-supported">
-        <VTooltip bottom>
+        <VTooltip bottom lazy>
           <template #activator="{ on }">
             <Icon color="grey lighten-2" large v-on="on">
               visibility_off
