@@ -1,17 +1,20 @@
 <template>
 
-  <VSelect
-    v-model="learningActivity"
-    :items="learningActivities"
-    box
-    chips
-    clearable
-    :label="translateMetadataString('learningActivity')"
-    multiple
-    deletableChips
-    :rules="learningActivityRules"
-    attach="#learning_activities"
-  />
+  <div class="learning-activity-container">
+    <VSelect
+      v-model="learningActivity"
+      :items="learningActivities"
+      box
+      chips
+      clearable
+      :label="translateMetadataString('learningActivity')"
+      multiple
+      deletableChips
+      :menu-props="{offsetY: true, lazy: true, zIndex: 4}"
+      :rules="learningActivityRules"
+      :attach="$attrs.id ? `#${$attrs.id}` : '.learning-activity-container'"
+    />
+  </div>
 
 </template>
 
@@ -53,5 +56,8 @@
   };
 
 </script>
-<style lang="scss">
+<style lang="less" scoped>
+  .learning-activity-container {
+    position: relative;
+  }
 </style>

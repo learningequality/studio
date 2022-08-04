@@ -1,6 +1,6 @@
 <template>
 
-  <div id="app">
+  <div class="category-container">
     <VAutocomplete
       :value="selected"
       :items="categoriesList"
@@ -13,6 +13,8 @@
       multiple
       item-value="value"
       item-text="text"
+      :menu-props="{offsetY: true, lazy: true, zIndex: 4}"
+      attach=".category-container"
       @click:clear="$nextTick(() => removeAll())"
     >
       <template #selection="data">
@@ -39,7 +41,7 @@
       </template>
 
       <template #item="{ item }">
-        <div style="width: 100%; height: 100%" aria-hidden="true">
+        <div style="width: 100%; height: 100%">
           <VDivider v-if="!item.value.includes('.')" />
           <KCheckbox
             :checked="dropdownSelected[item.value]"
@@ -214,8 +216,16 @@
 </script>
 <style lang="less" scoped>
 
+  .category-container {
+    position: relative;
+  }
+
   /deep/ .v-list__tile {
     flex-wrap: wrap;
+  }
+
+  /deep/ div[role="listitem"]:first-child hr {
+    display: none;
   }
 
 </style>

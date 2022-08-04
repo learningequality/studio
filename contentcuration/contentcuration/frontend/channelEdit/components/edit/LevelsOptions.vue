@@ -1,17 +1,20 @@
 <template>
 
-  <VSelect
-    ref="level"
-    v-model="level"
-    :items="levels"
-    box
-    chips
-    clearable
-    :label="translateMetadataString('level')"
-    multiple
-    deletableChips
-    attach="#levels"
-  />
+  <div class="levels-container">
+    <VSelect
+      ref="level"
+      v-model="level"
+      :items="levels"
+      box
+      chips
+      clearable
+      :label="translateMetadataString('level')"
+      multiple
+      deletableChips
+      :menu-props="{offsetY: true, lazy: true, zIndex: 4}"
+      :attach="$attrs.id ? `#${$attrs.id}` : '.levels-container'"
+    />
+  </div>
 
 </template>
 
@@ -66,6 +69,9 @@
   };
 
 </script>
-<style lang="scss">
+<style lang="less" scoped>
 
+  .levels-container {
+    position: relative;
+  }
 </style>

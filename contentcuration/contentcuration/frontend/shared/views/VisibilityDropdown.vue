@@ -1,6 +1,6 @@
 <template>
 
-  <VLayout grid wrap align-center>
+  <VLayout grid wrap align-center class="role-visibility-container">
     <VSelect
       ref="visibility"
       v-model="role"
@@ -12,9 +12,9 @@
       :readonly="readonly"
       :required="required"
       :rules="rules"
-      menu-props="offsetY"
+      :menu-props="{ offsetY: true, lazy: true, zIndex: 4 }"
       box
-      attach="#role_visibility"
+      :attach="$attrs.id ? `#${$attrs.id}` : '.role-visibility-container'"
       @focus="$emit('focus')"
     >
       <template #append-outer>
@@ -136,6 +136,10 @@
     margin-left: 5px;
     font-size: 12pt;
     vertical-align: text-top;
+  }
+
+  .role-visibility-container {
+    position: relative;
   }
 
 </style>

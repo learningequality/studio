@@ -10,6 +10,7 @@
       </VFlex>
       <VFlex
         v-else-if="selectedDuration === 'shortActivity' || selectedDuration === 'longActivity'"
+        class="activity-duration-container"
         md3
         sm3
       >
@@ -19,6 +20,8 @@
           box
           :label="$tr('minutesRequired')"
           :items="availableNumbers"
+          :menu-props="{offsetY: true, lazy: true, zIndex: 4}"
+          attach=".activity-duration-container"
         />
       </VFlex>
       <VFlex v-else md3 sm3>
@@ -192,7 +195,11 @@
   };
 
 </script>
-<style lang="scss" scoped>
+<style lang="less" scoped>
+
+  .activity-duration-container {
+    position: relative;
+  }
 
   .defaultUpload {
     margin: 0.8em;
