@@ -16,6 +16,7 @@
         >
           <template #label>
             <span class="text-xs-left">{{ accessibilityItem.label }}</span>
+            &nbsp;
             <HelpTooltip
               :text="$tr(accessibilityItem.help)"
               bottom

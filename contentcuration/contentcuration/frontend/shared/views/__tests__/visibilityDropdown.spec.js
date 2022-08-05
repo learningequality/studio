@@ -25,7 +25,8 @@ describe('visibilityDropdown', () => {
   });
 
   describe('on load', () => {
-    it.each(RolesArray)('all visibility options should be an option to select', role => {
+    it.each(RolesArray)('all visibility options should be an option to select', async role => {
+      await wrapper.find('.v-input__slot').trigger('click');
       expect(wrapper.find('.v-list').text()).toContain(constantStrings.$tr(role));
     });
     it.each(RolesArray)('should render according to visibility prop %s', visibility => {
