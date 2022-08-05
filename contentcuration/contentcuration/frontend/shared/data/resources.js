@@ -1299,6 +1299,9 @@ export const ContentNode = new TreeResource({
     });
   },
 
+  // Retain super's put method that does not handle tree insertion
+  _put: TreeResource.prototype.put,
+
   /**
    * @param {Object} obj
    * @return {Promise<string>}
