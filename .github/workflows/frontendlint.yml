@@ -14,7 +14,7 @@ jobs:
         uses: fkirc/skip-duplicate-actions@master
         with:
           github_token: ${{ github.token }}
-          paths: '["**.vue", "**.js", "yarn.lock"]'
+          paths: '["**.vue", "**.js", "yarn.lock", ".github/workflows/frontendlint.yml"]'
   test:
     name: Frontend linting
     needs: pre_job
