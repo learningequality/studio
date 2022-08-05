@@ -982,7 +982,24 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
                     {COPYING_FLAG: False, "node_id": new_node.node_id},
                     channel_id=channel_id
                 ),
-                applied=True
+                applied=True,
+                created_by_id=self.request.user.id,
             )
 
         return None
+
+    def perform_create(self, serializer, change=None):
+        instance = serializer.save()
+
+        # return change to the frontend for updating the `node_id` and `content_id`
+        if change is not None:
+            Change.create_change(
+                generate_update_event(
+                    instance.pk,
+                    CONTENTNODE,
+                    {"node_id": instance.node_id, "content_id": instance.content_id},
+                    channel_id=change["channel_id"],
+                ),
+                created_by_id=change["created_by_id"],
+                applied=True
+            )

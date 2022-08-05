@@ -635,7 +635,7 @@ class CreateModelMixin(object):
             + self.values_from_key(change["key"])
         )
 
-    def perform_create(self, serializer):
+    def perform_create(self, serializer, change=None):
         serializer.save()
 
     def create_from_changes(self, changes):
@@ -645,7 +645,7 @@ class CreateModelMixin(object):
             try:
                 serializer = self.get_serializer(data=self._map_create_change(change))
                 if serializer.is_valid():
-                    self.perform_create(serializer)
+                    self.perform_create(serializer, change=change)
                 else:
                     change.update({"errors": serializer.errors})
                     errors.append(change)
