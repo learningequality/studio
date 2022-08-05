@@ -2,6 +2,7 @@ from collections import OrderedDict
 
 from search.viewsets.savedsearch import SavedSearchViewSet
 
+from contentcuration.utils.user import delay_user_storage_calculation
 from contentcuration.viewsets.assessmentitem import AssessmentItemViewSet
 from contentcuration.viewsets.bookmark import BookmarkViewSet
 from contentcuration.viewsets.channel import ChannelViewSet
@@ -94,6 +95,7 @@ event_handlers = {
 }
 
 
+@delay_user_storage_calculation
 def apply_changes(changes_queryset):
     changes = changes_queryset.order_by("server_rev").select_related("created_by")
     for change in changes:
