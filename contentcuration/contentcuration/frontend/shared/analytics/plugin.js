@@ -1,5 +1,5 @@
 import Vue from 'vue';
-import debounce from 'lodash/debounce';
+import isFunction from 'lodash/isFunction';
 
 /**
  * Analytics class for handling anything analytics related, exposed in Vue as $analytics
@@ -11,40 +11,62 @@ class Analytics {
    * @param {Array} dataLayer
    */
   constructor(dataLayer) {
+    this.counter = 0;
     this.dataLayer = dataLayer;
+    this.lastLength = 0;
 
-    // overwrite method with debounced version
-    this.reset = debounce(this.reset, 10 * 1000);
-
-    // add interval to trigger resets since events can be added to the datalayer through
-    // other means (like GTM triggers)
+    // add interval to trigger resets every 5 minutes
     this.resetInterval = setInterval(() => {
       this.reset();
-    }, 30 * 1000);
+    }, 5 * 60 * 1000);
   }
 
   /**
    * Resets the datalayer and cleans up elements
    */
   reset() {
+    // If the dataLayer hasn't changed since our last reset, skip
+    if (this.dataLayer.length === this.lastLength) {
+      if (process.env.NODE_ENV !== 'production') {
+        console.info('Skipping Analytics.reset()');
+      }
+      return;
+    }
+
     if (process.env.NODE_ENV !== 'production') {
       console.info('Analytics.reset()');
     }
+
+    // Add local variable so the pushed reset function can access the datalayer
     const dataLayer = this.dataLayer;
+    const resetCounter = this.counter;
+    this.counter++;
 
     // This can't use an arrow function, it will be called with a different
     // context to access `this.reset()`
-    this.dataLayer.push(function() {
+    const dataLayerReset = function() {
       // See https://developers.google.com/tag-platform/devguides/datalayer#reset
       this.reset();
 
-      // Do our own reset of the `gtm.element` variable
       for (let item of dataLayer) {
+        // Do our own reset of the `gtm.element` variable
         if (item['gtm.element']) {
           item['gtm.element'] = null;
         }
+        // Be sure we stop when we reach this function's position in the dataLayer. The dataLayer
+        // is like a FIFO queue, so by queuing this function and having the GTM execute it, we're
+        // ensuring that everything prior to this function was processed. For this reason, we stop
+        // once we reach the position of this function to avoid manipulating events that have been
+        // added afterwards
+        if (isFunction(item) && item['counter'] === resetCounter) {
+          break;
+        }
       }
-    });
+    };
+    dataLayerReset.counter = resetCounter;
+
+    this.dataLayer.push(dataLayerReset);
+    this.lastLength = this.dataLayer.length;
   }
 
   /**
@@ -53,9 +75,6 @@ class Analytics {
    */
   push(...args) {
     this.dataLayer.push(...args);
-
-    // trigger debounced reset()
-    this.reset();
   }
 
   /**
@@ -132,7 +151,6 @@ class Analytics {
    */
   destroy() {
     clearInterval(this.resetInterval);
-    this.reset.cancel();
     this.dataLayer = null;
   }
 }
