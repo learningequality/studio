@@ -38,7 +38,7 @@ jobs:
         yarn --frozen-lockfile
         npm rebuild node-sass
     - name: Run tests
-      run: yarn run lint-all:fix
+      run: yarn run lint-frontend:format
     - name: Check for modified files
       if: github.event.pull_request && github.event.pull_request.head.repo.full_name == github.repository
       id: git-check
