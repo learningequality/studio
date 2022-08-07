@@ -31,6 +31,7 @@ def broadcast_new_change_model(instance):
             raise NoneCreatedByIdError(instance)
         except NoneCreatedByIdError as e:
             report_exception(e)
+        logging.error("Missing expected Change.created_by_id")
         return
 
     # if the change object is errored then we broadcast the info back to indiviual user

@@ -14,7 +14,7 @@ from contentcuration.viewsets.sync.constants import EDITOR_M2M
 
 class NoneCreatedByIdError(Exception):
     """
-    Use to log change object whose created_by_id. We don't raise this error,
+    Use to log change object whose created_by_id is set to none. We don't raise this error,
     just feed it to Sentry for reporting.
     """
 
