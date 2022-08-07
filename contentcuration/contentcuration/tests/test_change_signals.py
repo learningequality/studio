@@ -44,7 +44,7 @@ class ChangeSignalTestCase(TestCase, BucketTestMixin):
         """
         Test changes that are specific to channel(change channel name) only.
         """
-        change_serialized = create_channel_specific_change_object(self.channel)
+        change_serialized = create_channel_specific_change_object(self.user, self.channel)
         channel_layer = mock_get_channel_layer.return_value
         mock_async_to_sync.assert_called_once_with(channel_layer.group_send)
         async_mock_return_value = mock_async_to_sync.return_value
@@ -61,9 +61,9 @@ class ChangeSignalTestCase(TestCase, BucketTestMixin):
         """
         change_serialized = create_user_specific_change_object(self.user, self.channel)
         channel_layer = mock_get_channel_layer.return_value
-        mock_async_to_sync.assert_called_with(channel_layer.group_send)
+        mock_async_to_sync.assert_called_once_with(channel_layer.group_send)
         async_mock_return_value = mock_async_to_sync.return_value
-        async_mock_return_value.assert_called_with(str(self.user.id), {
+        async_mock_return_value.assert_called_once_with(str(self.user.id), {
             'type': 'broadcast_changes',
             'change': change_serialized
         })
@@ -77,12 +77,9 @@ class ChangeSignalTestCase(TestCase, BucketTestMixin):
         editor = self.user
         change_serialized = create_channel_user_common_change_object(editor, self.channel)
         channel_layer = mock_get_channel_layer.return_value
+        assert 2 == mock_async_to_sync.call_count
         mock_async_to_sync.assert_called_with(channel_layer.group_send)
         async_mock_return_value = mock_async_to_sync.return_value
-        async_mock_return_value.assert_called_with(str(editor.id), {
-            'type': 'broadcast_changes',
-            'change': change_serialized
-        })
         assert 2 == mock_async_to_sync.call_count
         async_mock_return_value.assert_any_call(self.channel.id, {
             'type': 'broadcast_changes',
@@ -101,10 +98,10 @@ class ChangeSignalTestCase(TestCase, BucketTestMixin):
         """
         change_serialized = create_errored_change_object(self.user, self.channel)
         channel_layer = mock_get_channel_layer.return_value
-        mock_async_to_sync.assert_called_with(channel_layer.group_send)
+        mock_async_to_sync.assert_called_once_with(channel_layer.group_send)
         async_mock_return_value = mock_async_to_sync.return_value
         assert 1 == mock_async_to_sync.call_count
-        async_mock_return_value.assert_any_call(str(self.user.id), {
+        async_mock_return_value.assert_called_once_with(str(self.user.id), {
             'type': 'broadcast_changes',
             'errored': change_serialized
         })

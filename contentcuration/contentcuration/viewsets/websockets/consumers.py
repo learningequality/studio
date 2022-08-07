@@ -129,8 +129,10 @@ class SyncConsumer(WebsocketConsumer):
             'response_payload': response_payload
         }))
 
-    # Receive message from room group
     def broadcast_changes(self, event):
+        """
+        Receive message events sent to the subscribed groups from our Django signal handlers, and relay the messages to the frontend
+        """
         change = event['change']
 
         # Send message to WebSocket
