@@ -12,25 +12,6 @@ from contentcuration.viewsets.sync.constants import CONTENTNODE
 from contentcuration.viewsets.sync.constants import EDITOR_M2M
 
 
-class NoneCreatedByIdError(Exception):
-    """
-    Use to log change object whose created_by_id is set to none. We don't raise this error,
-    just feed it to Sentry for reporting.
-    """
-
-    def __init__(self, instance):
-
-        self.change_object = instance
-        message = (
-            "The change object did not have a created_by_id {}"
-        )
-        self.message = message.format(
-            instance.pk
-        )
-
-        super(NoneCreatedByIdError, self).__init__(self.message)
-
-
 def bookmark_metadata(channel):
     return {
         "channel": channel.id,

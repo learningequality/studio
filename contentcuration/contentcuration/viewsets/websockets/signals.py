@@ -6,10 +6,28 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 from contentcuration.models import Change
-from contentcuration.tests.utils.websocket_helper import NoneCreatedByIdError
 from contentcuration.utils.sentry import report_exception
 
 logging = logger.getLogger(__name__)
+
+
+class NoneCreatedByIdError(Exception):
+    """
+    Use to log change object whose created_by_id is set to none. We don't raise this error,
+    just feed it to Sentry for reporting.
+    """
+
+    def __init__(self, instance):
+
+        self.change_object = instance
+        message = (
+            "The change object did not have a created_by_id {}"
+        )
+        self.message = message.format(
+            instance.pk
+        )
+
+        super(NoneCreatedByIdError, self).__init__(self.message)
 
 
 @receiver(post_save, sender=Change, weak=False)
