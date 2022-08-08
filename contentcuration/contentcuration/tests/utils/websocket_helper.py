@@ -25,7 +25,7 @@ class NoneCreatedByIdError(Exception):
             "The change object did not have a created_by_id {}"
         )
         self.message = message.format(
-            instance.__dict__
+            instance.pk
         )
 
         super(NoneCreatedByIdError, self).__init__(self.message)

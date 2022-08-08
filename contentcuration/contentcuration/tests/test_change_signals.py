@@ -5,11 +5,11 @@ from mock import patch
 from contentcuration.models import Change
 from contentcuration.tests import testdata
 from contentcuration.tests.base import BucketTestMixin
+from contentcuration.tests.utils.websocket_helper import create_channel_specific_change_object
+from contentcuration.tests.utils.websocket_helper import create_channel_user_common_change_object
+from contentcuration.tests.utils.websocket_helper import create_errored_change_object
+from contentcuration.tests.utils.websocket_helper import create_user_specific_change_object
 from contentcuration.tests.viewsets.base import generate_update_event
-from contentcuration.utils.websocket_helper import create_channel_specific_change_object
-from contentcuration.utils.websocket_helper import create_channel_user_common_change_object
-from contentcuration.utils.websocket_helper import create_errored_change_object
-from contentcuration.utils.websocket_helper import create_user_specific_change_object
 from contentcuration.viewsets.sync.constants import CHANNEL
 
 

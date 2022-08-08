@@ -6,8 +6,8 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 from contentcuration.models import Change
+from contentcuration.tests.utils.websocket_helper import NoneCreatedByIdError
 from contentcuration.utils.sentry import report_exception
-from contentcuration.utils.websocket_helper import NoneCreatedByIdError
 
 logging = logger.getLogger(__name__)
 
@@ -26,7 +26,7 @@ def broadcast_new_change_model(instance):
     # name of indiviual_user group
     indiviual_room_group_name = instance.user_id
 
-    if(instance.created_by_id is None):
+    if instance.created_by_id is None:
         try:
             raise NoneCreatedByIdError(instance)
         except NoneCreatedByIdError as e:
