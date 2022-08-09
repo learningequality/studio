@@ -86,7 +86,7 @@
     "mutex-js": "^1.1.5",
     "node-vibrant": "^3.1.6",
     "papaparse": "^5.2.0",
-    "pdfjs-dist": "^2.14.305",
+    "pdfjs-dist": "^2.15.349",
     "qs": "^6.9.1",
     "regenerator-runtime": "^0.13.5",
     "showdown": "^1.9.1",
