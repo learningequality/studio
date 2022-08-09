@@ -1600,7 +1600,7 @@
     estree-walker "^1.0.1"
     picomatch "^2.2.2"
 
-"@sentry/browser@^7.9.0":
+"@sentry/browser@7.9.0":
   version "7.9.0"
   resolved "https://registry.yarnpkg.com/@sentry/browser/-/browser-7.9.0.tgz#eb9aeebfd5fb758e484ebdc6ab420a2a620219bb"
   integrity sha512-R0/EatdSBPZ+orsD5Mu/Gq8XmEfr/KCzJv05S35GVPDkIgczIJ2AYlHgchnEO0m63jDFyWLzUteQmPZ3pao9PQ==
@@ -1646,6 +1646,17 @@
   version "0.24.28"
   resolved "https://registry.yarnpkg.com/@sinclair/typebox/-/typebox-0.24.28.tgz#15aa0b416f82c268b1573ab653e4413c965fe794"
   integrity sha512-dgJd3HLOkLmz4Bw50eZx/zJwtBq65nms3N9VBYu5LTjJ883oBFkTyXRlCB/ZGGwqYpJJHA5zW2Ibhl5ngITfow==
+
+"@sentry/vue@^7.9.0":
+  version "7.9.0"
+  resolved "https://registry.yarnpkg.com/@sentry/vue/-/vue-7.9.0.tgz#63752b08ef6e3313f0828080641f6df0b9ceef61"
+  integrity sha512-oHTNc31xfOqxASEQXzZ9LxN2cbKlhQNuaLQZEG4W/3mEWwJM/TLwd/0pWQPUmUQDuQlxTb56hEqCbaCPNTOPqw==
+  dependencies:
+    "@sentry/browser" "7.9.0"
+    "@sentry/core" "7.9.0"
+    "@sentry/types" "7.9.0"
+    "@sentry/utils" "7.9.0"
+    tslib "^1.9.3"
 
 "@sinonjs/commons@^1.7.0":
   version "1.8.3"

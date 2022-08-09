@@ -28,53 +28,7 @@
         {% block variables %}
         {% endblock variables %}
         {% cache 60 head_cache %}
-        <!--[if lt IE 9]>
-            <script src="{% static "js/html5shiv.js" %}"></script>
-        <![endif] -->
-        <!-- make sure configuring Sentry is one of the very first things we do in order to catch the most errors. -->
 
-        <!-- for some reason, load raven commmand doesn't actually load the raven JS library, so do so here
-             TODO: Should we install and bundle this as a dep using yarn?
-        -->
-        {%  if not debug %}
-        <script
-          src="https://browser.sentry-cdn.com/5.10.2/bundle.min.js"
-          integrity="sha384-ssBfXiBvlVC7bdA/VX03S88B5MwXQWdnpJRbUYFPgswlOBwETwTp6F3SMUNpo9M9"
-          crossorigin="anonymous">
-        </script>
-        <script>
-            // Ignore errors when CloudFlare-AlwaysOnline is in the user agent as these are errors serving
-            // the offline version and I don't think we can fix or reproduce these easily.
-            // Fix taken from here: https://github.com/getsentry/sentry-javascript/issues/617#issuecomment-227562203
-            if (window.Sentry) {
-              Sentry.init({ dsn: 'https://e4b21baeb7a044b885464d2af687fb73@sentry.io/1252819',
-                // onunhandledrejection reports just give us a dump of the Promise.reject object, and we often
-                // get another error report with more useful data anyway, so ignore these for now.
-                // They are most commonly triggered by a 500 response from an API endpoint call.
-                integrations: [new Sentry.Integrations.GlobalHandlers({ onerror: true, onunhandledrejection: false})],
-                beforeSend: function(event) {
-                  var isCloudFlare = /^(.*CloudFlare-AlwaysOnline.*)$/.test(window.navigator.userAgent);
-                  if (isCloudFlare) {
-                      return null;
-                  }
-
-                  return event;
-                },
-                // If there are errors that are known bugs in third-party libs or are clearly harmless,
-                // add them here to reduce sentry noise.
-                ignoreErrors: [
-                  // These appear to be errors in Summernote, but we have yet to reproduce. Although we get a lot
-                  // of Sentry reports with these errors, they lack a stack trace, and we also have not yet gotten
-                  // any user reports of this problem. For the moment, silence them so that they don't drown out
-                  // other errors. We may wish to remove these once we resolve the other errors.
-                  'IndexSizeError: Failed to execute \'setStart\' on \'Range\'',
-                  'IndexSizeError: Failed to execute \'setEnd\' on \'Range\'',
-                  'IndexSizeError: Index or size is negative or greater than the allowed amount',
-                ]
-              });
-            }
-        </script>
-        {% endif %}
         <link rel="shortcut icon" href="{% static 'img/logo.ico' %}">
 
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
