@@ -43,6 +43,7 @@
       messageId: {
         type: String,
         required: false,
+        default: null,
       },
     },
     computed: {
@@ -91,6 +92,7 @@
     margin: 0;
     font-weight: normal;
   }
+
   .v-input--checkbox {
     margin-bottom: -25px;
   }

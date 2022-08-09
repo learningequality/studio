@@ -153,7 +153,7 @@
               {{ $tr('totalResources') }}:
               <span class="font-weight-bold">{{ resourcesCountStaged }}</span>
               <Diff :value="resourcesCountDiff" class="font-weight-bold">
-                <template slot-scope="{ sign, value }">
+                <template #default="{ sign, value }">
                   ({{ sign }}{{ value ? value : '-' }})
                 </template>
               </Diff>
@@ -162,7 +162,7 @@
               {{ $tr('totalSize') }}:
               <span class="font-weight-bold">{{ formatFileSize(fileSizeStaged) }}</span>
               <Diff :value="fileSizeDiff" class="font-weight-bold">
-                <template slot-scope="{ sign, value }">
+                <template #default="{ sign, value }">
                   ({{ sign }}{{ value ? formatFileSize(value) : '-' }})
                 </template>
               </Diff>
@@ -240,13 +240,12 @@
 
   import { mapGetters, mapMutations, mapActions } from 'vuex';
 
-  import { RouteNames, viewModes } from '../../constants';
-
-  import ContentNodeListItem from '../../components/ContentNodeListItem';
-  import StudioTree from '../../components/StudioTree/StudioTree';
   import ResourceDrawer from '../../components/ResourceDrawer';
-  import Diff from './Diff';
+  import StudioTree from '../../components/StudioTree/StudioTree';
+  import ContentNodeListItem from '../../components/ContentNodeListItem';
+  import { RouteNames, viewModes } from '../../constants';
   import DiffTable from './DiffTable';
+  import Diff from './Diff';
   import { fileSizeMixin, titleMixin, routerMixin } from 'shared/mixins';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import BottomBar from 'shared/views/BottomBar';
@@ -284,6 +283,7 @@
       detailNodeId: {
         type: String,
         required: false,
+        default: null,
       },
     },
     data() {

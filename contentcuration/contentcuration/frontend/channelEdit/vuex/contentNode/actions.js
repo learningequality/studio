@@ -181,6 +181,7 @@ export function createContentNode(context, { parent, kind, ...payload }) {
     learner_needs: {},
     learning_activities: {},
     categories: {},
+    suggested_duration: 0,
     ...payload,
   };
 
@@ -218,6 +219,7 @@ function generateContentNodeData({
   learner_needs = NOVALUE,
   learning_activities = NOVALUE,
   categories = NOVALUE,
+  suggested_duration = NOVALUE,
 } = {}) {
   const contentNodeData = {};
   if (title !== NOVALUE) {
@@ -271,7 +273,9 @@ function generateContentNodeData({
   if (categories !== NOVALUE) {
     contentNodeData.categories = categories;
   }
-
+  if (suggested_duration !== NOVALUE) {
+    contentNodeData.suggested_duration = suggested_duration;
+  }
   if (extra_fields !== NOVALUE) {
     contentNodeData.extra_fields = contentNodeData.extra_fields || {};
     if (extra_fields.mastery_model) {
@@ -288,6 +292,9 @@ function generateContentNodeData({
     }
     if (extra_fields.options) {
       contentNodeData.extra_fields.options = extra_fields.options;
+    }
+    if (extra_fields.suggested_duration_type) {
+      contentNodeData.extra_fields.suggested_duration_type = extra_fields.suggested_duration_type;
     }
   }
   if (prerequisite !== NOVALUE) {

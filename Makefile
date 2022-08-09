@@ -13,10 +13,6 @@ dummyusers:
 prodceleryworkers:
 	cd contentcuration/ && celery -A contentcuration worker -l info --concurrency=3 --task-events
 
-prodcelerydashboard:
-	# connect to the celery dashboard by visiting http://localhost:5555
-	kubectl port-forward deployment/master-studio-celery-dashboard 5555
-
 devserver:
 	yarn run devserver
 

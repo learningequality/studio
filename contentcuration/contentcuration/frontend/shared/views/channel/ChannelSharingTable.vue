@@ -29,7 +29,7 @@
           </td>
           <td class="text-xs-right">
             <Menu v-if="item.id !== user.id && (item.pending || viewOnly)">
-              <template v-slot:activator="{ on }">
+              <template #activator="{ on }">
                 <VBtn flat v-on="on">
                   {{ $tr('optionsDropdown') }}
                   <Icon class="ml-1">

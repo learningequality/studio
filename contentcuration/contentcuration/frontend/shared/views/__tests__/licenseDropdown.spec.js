@@ -27,7 +27,8 @@ describe('licenseDropdown', () => {
   });
 
   describe('on load', () => {
-    it.each(LicensesList)('%s license option should be an option to select', license => {
+    it.each(LicensesList)('%s license option should be an option to select', async license => {
+      await wrapper.find('.v-input__slot').trigger('click');
       expect(wrapper.find('.v-list').text()).toContain(license.license_name);
     });
     it.each(LicensesList)(

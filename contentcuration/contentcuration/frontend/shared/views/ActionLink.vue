@@ -32,10 +32,12 @@
     props: {
       text: {
         type: String,
+        default: '',
       },
       target: {
         type: String,
         required: false,
+        default: null,
       },
       truncate: {
         type: Boolean,

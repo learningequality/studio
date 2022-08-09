@@ -11,14 +11,14 @@ const CHANNEL_ID = 'test';
 
 const PUBLISH_TASK = {
   task_id: 'task',
-  task_type: 'export-channel',
-  metadata: { progress: 0 },
+  task_name: 'export-channel',
+  progress: 0,
   channel_id: CHANNEL_ID,
 };
 const SYNC_TASK = {
   task_id: 'task',
-  task_type: 'sync-channel',
-  metadata: { progress: 0 },
+  task_name: 'sync-channel',
+  progress: 0,
   channel_id: CHANNEL_ID,
 };
 
@@ -111,7 +111,7 @@ describe('ProgressModal', () => {
 
       beforeEach(() => {
         const publishTask = cloneDeep(PUBLISH_TASK);
-        publishTask.metadata.progress = 100;
+        publishTask.progress = 100;
         const store = storeFactory(storeConfig);
         store.commit('task/ADD_ASYNC_TASK', publishTask);
         wrapper = makeWrapper({ store });
@@ -198,7 +198,7 @@ describe('ProgressModal', () => {
 
       beforeEach(() => {
         const syncTask = cloneDeep(SYNC_TASK);
-        syncTask.metadata.progress = 100;
+        syncTask.progress = 100;
         const store = storeFactory(storeConfig);
         store.commit('task/ADD_ASYNC_TASK', syncTask);
         wrapper = makeWrapper({ propsData, store });

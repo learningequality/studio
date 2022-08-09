@@ -4,7 +4,6 @@ import uniq from 'lodash/uniq';
 import uniqBy from 'lodash/uniqBy';
 
 import { parseNode } from './utils';
-
 import { getNodeDetailsErrors, getNodeFilesErrors } from 'shared/utils/validation';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 import { NEW_OBJECT } from 'shared/constants';
@@ -157,6 +156,7 @@ function getStepDetail(state, getters, contentNodeId) {
     id: contentNodeId,
     title: '',
     kind: '',
+    learning_activities: '',
     parentTitle: '',
   };
 
@@ -168,6 +168,7 @@ function getStepDetail(state, getters, contentNodeId) {
 
   stepDetail.title = node.title;
   stepDetail.kind = node.kind;
+  stepDetail.learning_activities = node.learning_activities;
 
   const parentNodeId = state.contentNodesMap[contentNodeId].parent;
 

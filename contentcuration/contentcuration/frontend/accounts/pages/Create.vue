@@ -508,6 +508,7 @@
 
   .policy-checkbox /deep/ .v-input__slot {
     margin-bottom: 4px !important;
+
     label {
       color: var(--v-grey-darken1) !important;
     }

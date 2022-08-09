@@ -1,43 +1,41 @@
 <template>
 
-  <VFadeTransition v-if="offline" data-test="text">
-    <template v-show="offline && !libraryMode">
-      <VTooltip v-if="indicator" bottom z-index="300">
-        <template v-slot:activator="{ on }">
-          <div class="px-4" v-on="on">
-            <Icon class="mx-2">
-              cloud_off
-            </Icon>
-            <span class="font-weight-bold">
-              {{ $tr('offlineIndicatorText') }}
-            </span>
-          </div>
-        </template>
-        <span>{{ offlineText || $tr('offlineText') }}</span>
-      </VTooltip>
-      <ToolBar
-        v-else-if="toolbar"
-        color="white"
-        dense
-        flat
-        fixed
-        clipped-left
-        clipped-right
-        :style="`margin-top: ${offset}px;`"
-        v-bind="$attrs"
-      >
-        <Icon class="mx-3">
-          cloud_off
-        </Icon>
-        <span>{{ offlineText || $tr('offlineText') }}</span>
-      </ToolBar>
-      <div v-else>
-        <Icon class="mx-3">
-          cloud_off
-        </Icon>
-        <span>{{ offlineText || $tr('offlineText') }}</span>
-      </div>
-    </template>
+  <VFadeTransition v-if="offline && !libraryMode" data-test="text">
+    <VTooltip v-if="indicator" bottom z-index="300">
+      <template #activator="{ on }">
+        <div class="px-4" v-on="on">
+          <Icon class="mx-2">
+            cloud_off
+          </Icon>
+          <span class="font-weight-bold">
+            {{ $tr('offlineIndicatorText') }}
+          </span>
+        </div>
+      </template>
+      <span>{{ offlineText || $tr('offlineText') }}</span>
+    </VTooltip>
+    <ToolBar
+      v-else-if="toolbar"
+      color="white"
+      dense
+      flat
+      fixed
+      clipped-left
+      clipped-right
+      :style="`margin-top: ${offset}px;`"
+      v-bind="$attrs"
+    >
+      <Icon class="mx-3">
+        cloud_off
+      </Icon>
+      <span>{{ offlineText || $tr('offlineText') }}</span>
+    </ToolBar>
+    <div v-else>
+      <Icon class="mx-3">
+        cloud_off
+      </Icon>
+      <span>{{ offlineText || $tr('offlineText') }}</span>
+    </div>
   </VFadeTransition>
 
 </template>

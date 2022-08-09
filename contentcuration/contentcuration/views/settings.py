@@ -65,7 +65,7 @@ def settings(request):
 @login_required
 @api_view(["GET"])
 def export_user_data(request):
-    generateusercsv_task.delay(request.user.pk, language=get_language())
+    generateusercsv_task.enqueue(request.user, user_id=request.user.pk, language=get_language())
     return HttpResponse({"success": True})
 
 

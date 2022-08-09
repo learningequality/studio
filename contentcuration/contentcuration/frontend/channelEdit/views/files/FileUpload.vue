@@ -192,6 +192,7 @@
     border-color: var(--v-greyBorder-base) !important;
     border-style: solid;
     border-width: 1px;
+
     .v-icon {
       cursor: default;
     }
@@ -199,12 +200,15 @@
 
   .v-input--radio-group {
     width: 100%;
+
     /deep/ .v-input__control {
       width: 100%;
     }
+
     /deep/ label {
       color: var(--v-text-base);
     }
+
     .v-list {
       padding: 0;
     }

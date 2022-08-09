@@ -114,9 +114,9 @@
   import { mapGetters } from 'vuex';
   import debounce from 'lodash/debounce';
   import { RouteNames } from '../../constants';
-  import LanguageFilter from './components/LanguageFilter';
-  import { catalogFilterMixin } from './mixins';
   import CatalogFilterBar from './CatalogFilterBar';
+  import { catalogFilterMixin } from './mixins';
+  import LanguageFilter from './components/LanguageFilter';
   import MultiSelect from 'shared/views/form/MultiSelect';
   import { constantsTranslationMixin } from 'shared/mixins';
   import Checkbox from 'shared/views/form/Checkbox';
@@ -215,6 +215,7 @@
   .v-input--checkbox {
     margin: 0;
   }
+
   /deep/ .v-messages {
     display: none;
   }
@@ -225,6 +226,7 @@
     font-weight: bold;
     color: gray;
   }
+
   .filters {
     width: 100%;
     height: calc(100% - 64px);

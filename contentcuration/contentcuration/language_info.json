@@ -1,0 +1,44 @@
+[
+    {
+      "crowdin_code": "ach",
+      "intl_code": "ach-ug",
+      "language_name": "In-context translation",
+      "english_name": "In-context translation",
+      "default_font": "NotoSans"
+    },
+    {
+      "crowdin_code": "ar",
+      "intl_code": "ar",
+      "language_name": "العَرَبِيَّة‎‎",
+      "english_name": "Arabic",
+      "default_font": "NotoSansArabic"
+    },
+    {
+      "crowdin_code": "en",
+      "intl_code": "en",
+      "language_name": "English",
+      "english_name": "English",
+      "default_font": "NotoSans"
+    },
+    {
+      "crowdin_code": "es-ES",
+      "intl_code": "es-es",
+      "language_name": "Español (España)",
+      "english_name": "Spanish (Spain)",
+      "default_font": "NotoSans"
+    },
+    {
+      "crowdin_code": "fr",
+      "intl_code": "fr-fr",
+      "language_name": "Français",
+      "english_name": "French",
+      "default_font": "NotoSans"
+    },
+    {
+      "crowdin_code": "pt-BR",
+      "intl_code": "pt-br",
+      "language_name": "Português (Brazil)",
+      "english_name": "Portuguese (Brazil)",
+      "default_font": "NotoSans"
+    }
+]

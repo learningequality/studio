@@ -51,7 +51,7 @@ from contentcuration.models import File
 from contentcuration.models import generate_storage_url
 from contentcuration.models import PrerequisiteContentRelationship
 from contentcuration.models import UUIDField
-from contentcuration.tasks import get_or_create_async_task
+from contentcuration.tasks import calculate_resource_size_task
 from contentcuration.utils.nodes import calculate_resource_size
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
@@ -258,8 +258,15 @@ class ThresholdField(Field):
         try:
             data = int(data)
         except(ValueError, TypeError):
-            pass
+            if not isinstance(data, (str, dict)):
+                self.fail("Must be either an integer, string or dictionary")
         return data
+
+    def update(self, instance, validated_data):
+        if isinstance(instance, dict) and isinstance(validated_data, dict):
+            instance.update(validated_data)
+            return instance
+        return validated_data
 
 
 class CompletionCriteriaSerializer(JSONFieldDictSerializer):
@@ -276,6 +283,25 @@ class CompletionCriteriaSerializer(JSONFieldDictSerializer):
         return instance
 
 
+def _migrate_extra_fields(extra_fields):
+    if not isinstance(extra_fields, dict):
+        return extra_fields
+    m = extra_fields.pop("m", None)
+    n = extra_fields.pop("n", None)
+    mastery_model = extra_fields.pop("mastery_model", None)
+    if not extra_fields.get("options", {}).get("completion_criteria", {}) and mastery_model is not None:
+        extra_fields["options"] = extra_fields.get("options", {})
+        extra_fields["options"]["completion_criteria"] = {
+            "threshold": {
+                "m": m,
+                "n": n,
+                "mastery_model": mastery_model,
+            },
+            "model": completion_criteria.MASTERY,
+        }
+    return extra_fields
+
+
 class ExtraFieldsOptionsSerializer(JSONFieldDictSerializer):
     modality = ChoiceField(choices=(("QUIZ", "Quiz"),), allow_null=True, required=False)
     completion_criteria = CompletionCriteriaSerializer(required=False)
@@ -284,6 +310,11 @@ class ExtraFieldsOptionsSerializer(JSONFieldDictSerializer):
 class ExtraFieldsSerializer(JSONFieldDictSerializer):
     randomize = BooleanField()
     options = ExtraFieldsOptionsSerializer(required=False)
+    suggested_duration_type = ChoiceField(choices=[completion_criteria.TIME, completion_criteria.APPROX_TIME], allow_null=True, required=False)
+
+    def update(self, instance, validated_data):
+        instance = _migrate_extra_fields(instance)
+        return super(ExtraFieldsSerializer, self).update(instance, validated_data)
 
 
 class TagField(DotPathValueMixin, DictField):
@@ -446,19 +477,7 @@ def get_title(item):
 def consolidate_extra_fields(item):
     extra_fields = item.get("extra_fields")
     if item["kind"] == content_kinds.EXERCISE:
-        m = extra_fields.pop("m", None)
-        n = extra_fields.pop("n", None)
-        mastery_model = extra_fields.pop("mastery_model", None)
-        if not extra_fields.get("options", {}).get("completion_criteria", {}) and mastery_model is not None:
-            extra_fields["options"] = extra_fields.get("options", {})
-            extra_fields["options"]["completion_criteria"] = {
-                "threshold": {
-                    "m": m,
-                    "n": n,
-                    "mastery_model": mastery_model,
-                },
-                "model": completion_criteria.MASTERY,
-            }
+        extra_fields = _migrate_extra_fields(extra_fields)
 
     return extra_fields
 
@@ -723,7 +742,7 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
         # should not be cross channel, and are not meaningful if they are.
         prereq_table_entries = PrerequisiteContentRelationship.objects.filter(
             target_node__tree_id=Cast(
-                ContentNode.objects.filter(pk=pk).values_list("tree_id", flat=True)[:1],
+                ContentNode.filter_by_pk(pk=pk).values_list("tree_id", flat=True)[:1],
                 output_field=DjangoIntegerField(),
             )
         ).values("target_node_id", "prerequisite_id")
@@ -757,15 +776,13 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
             # When stale, that means the value is not up-to-date with modified files in the DB,
             # and the channel is significantly large, so we'll queue an async task for calculation.
             # We don't really need more than one queued async calculation task, so we use
-            # get_or_create_async_task to ensure a task is queued, as well as return info about it
+            # fetch_or_enqueue to ensure a task is queued, as well as return info about it
             task_args = dict(node_id=node.pk, channel_id=node.channel_id)
-            get_or_create_async_task(
-                "calculate-resource-size", self.request.user, **task_args
-            )
+            calculate_resource_size_task.fetch_or_enqueue(self.request.user, **task_args)
 
         return Response({
             "size": size,
-            "stale": stale
+            "stale": stale,
         })
 
     def annotate_queryset(self, queryset):
@@ -938,12 +955,12 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
         # Affected channel for the copy is the target's channel
         channel_id = target.channel_id
 
-        if ContentNode.objects.filter(pk=pk).exists():
+        if ContentNode.filter_by_pk(pk=pk).exists():
             error = ValidationError("Copy pk already exists")
             return str(error)
 
         can_edit_source_channel = ContentNode.filter_edit_queryset(
-            ContentNode.objects.filter(id=source.id), user=self.request.user
+            ContentNode.filter_by_pk(pk=source.id), user=self.request.user
         ).exists()
 
         with create_change_tracker(pk, CONTENTNODE, channel_id, self.request.user, "copy_nodes") as progress_tracker:

@@ -152,12 +152,15 @@
       },
       defaultsTitle: {
         type: String,
+        default: null,
       },
       defaultsSubTitle: {
         type: String,
+        default: null,
       },
       thumbnailsSubTitle: {
         type: String,
+        default: null,
       },
     },
     data() {

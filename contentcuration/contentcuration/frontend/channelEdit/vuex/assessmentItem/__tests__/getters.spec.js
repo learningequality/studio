@@ -40,6 +40,7 @@ describe('assessmentItem getters', () => {
             type: AssessmentItemTypes.SINGLE_SELECTION,
             question: '',
             answers: [],
+            order: 1,
           },
           'assessment-id-3': {
             assessment_id: 'assessment-id-3',
@@ -59,6 +60,7 @@ describe('assessmentItem getters', () => {
                 order: 2,
               },
             ],
+            order: 2,
           },
         },
         'content-node-id-3': {
@@ -96,6 +98,7 @@ describe('assessmentItem getters', () => {
           type: AssessmentItemTypes.SINGLE_SELECTION,
           question: '',
           answers: [],
+          order: 1,
         },
         {
           assessment_id: 'assessment-id-3',
@@ -115,6 +118,7 @@ describe('assessmentItem getters', () => {
               order: 2,
             },
           ],
+          order: 2,
         },
       ]);
     });

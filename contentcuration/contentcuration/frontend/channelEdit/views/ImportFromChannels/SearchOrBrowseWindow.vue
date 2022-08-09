@@ -218,6 +218,7 @@
     margin: 0;
     margin-top: 0 !important;
   }
+
   .search-btn {
     height: inherit;
     margin: 0;

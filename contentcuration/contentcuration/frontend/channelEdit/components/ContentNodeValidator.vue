@@ -35,6 +35,7 @@
     props: {
       node: {
         type: Object,
+        default: null,
       },
       hideTitleValidation: {
         type: Boolean,

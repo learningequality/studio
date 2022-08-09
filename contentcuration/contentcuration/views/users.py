@@ -253,6 +253,15 @@ class UserActivationView(ActivationView):
                 settings.DEFAULT_FROM_EMAIL,
                 [settings.REGISTRATION_INFORMATION_EMAIL],
             )
+            # Send email to welcome new user
+            subject = render_to_string("registration/welcome_new_user_email_subject.txt")
+            message = render_to_string("registration/welcome_new_user_email.html", {})
+            user.email_user(
+                subject,
+                message,
+                settings.DEFAULT_FROM_EMAIL,
+                html_message=message
+            )
 
         return user
 

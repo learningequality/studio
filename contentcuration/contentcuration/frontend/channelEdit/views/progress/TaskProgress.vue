@@ -41,10 +41,10 @@
         return this.progress >= 100 && !this.currentTaskError;
       },
       currentTaskError() {
-        return this.task ? get(this.task, ['metadata', 'error']) : null;
+        return this.task ? get(this.task, ['traceback']) : null;
       },
       progress() {
-        return this.task ? get(this.task, ['metadata', 'progress']) : 0;
+        return this.task ? get(this.task, ['progress']) : 0;
       },
     },
   };

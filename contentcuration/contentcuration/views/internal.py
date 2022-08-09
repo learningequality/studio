@@ -46,13 +46,14 @@ from contentcuration.models import License
 from contentcuration.models import SlideshowSlide
 from contentcuration.models import StagedFile
 from contentcuration.serializers import GetTreeDataSerializer
-from contentcuration.tasks import create_async_task
-from contentcuration.tasks import get_or_create_async_task
+from contentcuration.tasks import apply_channel_changes_task
+from contentcuration.tasks import generatenodediff_task
 from contentcuration.utils.files import get_file_diff
 from contentcuration.utils.garbage_collect import get_deleted_chefs_root
 from contentcuration.utils.nodes import map_files_to_assessment_item
 from contentcuration.utils.nodes import map_files_to_node
 from contentcuration.utils.nodes import map_files_to_slideshow_slide_item
+from contentcuration.utils.sentry import report_exception
 from contentcuration.utils.tracing import trace
 from contentcuration.viewsets.sync.constants import CHANNEL
 from contentcuration.viewsets.sync.utils import generate_publish_event
@@ -247,18 +248,13 @@ def api_commit_channel(request):
                 old_staging.title = "Old staging tree for channel {}".format(obj.pk)
                 old_staging.save()
 
-        _, task = create_async_task(
-            "get-node-diff",
-            request.user,
-            updated_id=obj.staging_tree.id,
-            original_id=obj.main_tree.id,
-        )
+        async_result = generatenodediff_task.enqueue(request.user, updated_id=obj.staging_tree.id, original_id=obj.main_tree.id)
 
         # Send response back to the content integration script
         return Response({
             "success": True,
             "new_channel": obj.pk,
-            "diff_task_id": task.pk,
+            "diff_task_id": async_result.task_id,
         })
     except (Channel.DoesNotExist, PermissionDenied):
         return HttpResponseNotFound("No channel matching: {}".format(channel_id))
@@ -331,7 +327,7 @@ def api_publish_channel(request):
 
         Change.create_change(event, created_by_id=request.user.pk)
 
-        get_or_create_async_task("apply_channel_changes", request.user, channel_id=channel_id)
+        apply_channel_changes_task.fetch_or_enqueue(request.user, channel_id=channel_id)
 
         return Response({
             "success": True,
@@ -555,6 +551,20 @@ def create_channel(channel_data, user):
     return channel  # Return new channel
 
 
+class IncompleteNodeError(Exception):
+    """
+    Used to track incomplete nodes from ricecooker. We don't raise this error,
+    just feed it to Sentry for reporting.
+    """
+
+    def __init__(self, node, errors):
+        self.message = (
+            "Node {} had the following errors: {}".format(node, ",".join(errors))
+        )
+
+        super(IncompleteNodeError, self).__init__(self.message)
+
+
 @trace
 def convert_data_to_nodes(user, content_data, parent_node):
     """ Parse dict and create nodes accordingly """
@@ -595,6 +605,17 @@ def convert_data_to_nodes(user, content_data, parent_node):
                         map_files_to_slideshow_slide_item(
                             user, new_node, slides, node_data["files"]
                         )
+
+                    # Wait until after files have been set on the node to check for node completeness
+                    # as some node kinds are counted as incomplete if they lack a default file.
+                    completion_errors = new_node.mark_complete()
+
+                    if completion_errors:
+                        try:
+                            # we need to raise it to get Python to fill out the stack trace.
+                            raise IncompleteNodeError(new_node, completion_errors)
+                        except IncompleteNodeError as e:
+                            report_exception(e)
 
                     # Track mapping between newly created node and node id
                     root_mapping.update({node_data["node_id"]: new_node.pk})
@@ -637,16 +658,9 @@ def create_node(node_data, parent_node, sort_order):  # noqa: C901
             raise NodeValidationError("Node {} has invalid completion criteria".format(node_data["node_id"]))
 
     # Validate title and license fields
-    is_complete = True
     title = node_data.get('title', "")
     license_description = node_data.get('license_description', "")
     copyright_holder = node_data.get('copyright_holder', "")
-    is_complete &= title != ""
-    if node_data['kind'] != content_kinds.TOPIC:
-        if license.is_custom:
-            is_complete &= license_description != ""
-        if license.copyright_holder_required:
-            is_complete &= copyright_holder != ""
 
     metadata_labels = {}
 
@@ -681,7 +695,10 @@ def create_node(node_data, parent_node, sort_order):  # noqa: C901
         language_id=node_data.get("language"),
         freeze_authoring_data=True,
         role_visibility=node_data.get('role') or roles.LEARNER,
-        complete=is_complete,
+        # Assume it is complete to start with, we will do validation
+        # later when we have all data available to determine if it is
+        # complete or not.
+        complete=True,
         **metadata_labels
     )
 

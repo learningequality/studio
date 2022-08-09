@@ -47,7 +47,7 @@ describe('catalogFilterBar', () => {
     const searchCatalogMock = jest.fn();
 
     beforeEach(() => {
-      router.replace({ query: {} });
+      router.replace({ query: {} }).catch(() => {});
       searchCatalogMock.mockReset();
       wrapper = makeWrapper({
         debouncedSearch() {
@@ -57,7 +57,7 @@ describe('catalogFilterBar', () => {
     });
     it('should call debouncedSearch', () => {
       const keywords = 'search catalog test';
-      router.push({ query: { keywords } });
+      router.push({ query: { keywords } }).catch(() => {});
       wrapper.vm.$nextTick(() => {
         expect(searchCatalogMock).toHaveBeenCalled();
       });
@@ -65,19 +65,21 @@ describe('catalogFilterBar', () => {
     it('should reset excluded if a filter changed', () => {
       const keywords = 'search reset test';
       wrapper.setData({ excluded: ['item 1'] });
-      router.push({ query: { keywords } });
+      router.push({ query: { keywords } }).catch(() => {});
       wrapper.vm.$nextTick(() => {
         expect(wrapper.vm.excluded).toEqual([]);
       });
     });
     it('should keep excluded if page number changed', () => {
       wrapper.setData({ excluded: ['item 1'] });
-      router.push({
-        query: {
-          ...wrapper.vm.$route.query,
-          page: 2,
-        },
-      });
+      router
+        .push({
+          query: {
+            ...wrapper.vm.$route.query,
+            page: 2,
+          },
+        })
+        .catch(() => {});
       wrapper.vm.$nextTick(() => {
         expect(wrapper.vm.excluded).toEqual(['item 1']);
       });

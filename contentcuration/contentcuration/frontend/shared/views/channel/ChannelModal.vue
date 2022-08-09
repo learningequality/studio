@@ -109,8 +109,8 @@
 
   import Vue from 'vue';
   import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
-  import ChannelThumbnail from './ChannelThumbnail';
   import ChannelSharing from './ChannelSharing';
+  import ChannelThumbnail from './ChannelThumbnail';
   import { NEW_OBJECT, ErrorTypes } from 'shared/constants';
   import MessageDialog from 'shared/views/MessageDialog';
   import LanguageDropdown from 'shared/views/LanguageDropdown';
@@ -138,9 +138,11 @@
     props: {
       channelId: {
         type: String,
+        default: '',
       },
       tab: {
         type: String,
+        default: null,
       },
     },
     data() {
@@ -266,13 +268,15 @@
     // will never be rendered.
     beforeMount() {
       const channelId = this.$route.params.channelId;
-      return this.verifyChannel(channelId).then(() => {
-        this.header = this.channel.name; // Get channel name when user enters modal
-        this.updateTitleForPage();
-        if (!this.isNew) {
-          this.$refs.detailsform.validate();
-        }
-      });
+      return this.verifyChannel(channelId)
+        .then(() => {
+          this.header = this.channel.name; // Get channel name when user enters modal
+          this.updateTitleForPage();
+          if (!this.isNew) {
+            this.$refs.detailsform.validate();
+          }
+        })
+        .catch(() => {});
     },
     mounted() {
       // Set expiry to 1ms

@@ -15,6 +15,7 @@ from kolibri_content.router import set_active_content_database
 from mock import patch
 
 from .base import StudioTestCase
+from .helpers import clear_tasks
 from .testdata import channel
 from .testdata import node as create_node
 from .testdata import slideshow
@@ -219,6 +220,7 @@ class ChannelExportUtilityFunctionTestCase(StudioTestCase):
         set_active_content_database(None)
         if os.path.exists(self.output_db):
             os.remove(self.output_db)
+        clear_tasks()
 
     def test_convert_channel_thumbnail_empty_thumbnail(self):
         channel = cc.Channel.objects.create()

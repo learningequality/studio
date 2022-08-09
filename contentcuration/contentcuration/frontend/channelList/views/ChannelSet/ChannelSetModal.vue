@@ -155,8 +155,8 @@
   import { mapGetters, mapActions } from 'vuex';
   import difference from 'lodash/difference';
   import { RouteNames } from '../../constants';
-  import ChannelSelectionList from './ChannelSelectionList';
   import ChannelItem from './ChannelItem';
+  import ChannelSelectionList from './ChannelSelectionList';
   import { NEW_OBJECT, ChannelListTypes, ErrorTypes } from 'shared/constants';
   import { constantsTranslationMixin, routerMixin } from 'shared/mixins';
   import CopyToken from 'shared/views/CopyToken';

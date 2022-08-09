@@ -70,61 +70,80 @@
 </script>
 
 
-<style lang="less">
+<style lang="scss">
 
-  @first-col-width: 75px;
-  @first-col-expanded-width: 350px;
+  $first-col-width: 75px;
+  $first-col-expanded-width: 350px;
 
-  .freeze {
+  @mixin freeze {
     position: sticky;
     z-index: 3;
     background-color: white;
   }
-  .freeze-column {
-    .freeze;
+
+  .freeze {
+    @include freeze;
+  }
+
+  @mixin freeze-column {
+    @include freeze;
 
     left: 0;
     box-shadow: 0 4px 4px 0 #888888;
   }
 
-  .freeze-row {
-    .freeze;
+  .freeze-column {
+    @include freeze-column;
+  }
+
+  @mixin freeze-row {
+    @include freeze;
 
     top: 0;
     box-shadow: 4px 0 4px 0 #888888;
+  }
+
+  .freeze-row {
+    @include freeze-row;
   }
 
   .table-col-freeze {
     thead tr {
       border-bottom: 0 !important;
     }
+
     th {
-      .freeze-row;
+      @include freeze-row;
 
       &:first-child {
-        .freeze-column;
+        @include freeze-column;
 
         z-index: 4;
         box-shadow: 0 0 4px 0 #888888;
       }
+
       * {
         vertical-align: middle;
       }
+
       .v-icon:not(.v-icon--is-component) {
         font-size: 16pt !important;
         color: var(--v-darkGrey-darken1) !important;
         opacity: 1 !important;
         transform: none !important;
       }
+
       .v-input--checkbox {
         display: inline-block;
         width: min-content;
+
         .v-icon {
           font-size: 18pt !important;
           opacity: 1 !important;
           transform: none !important;
         }
       }
+
       button svg {
         vertical-align: baseline;
       }
@@ -135,7 +154,7 @@
       white-space: nowrap;
 
       &:first-child {
-        .freeze-column;
+        @include freeze-column;
       }
     }
 

@@ -15,6 +15,7 @@
     props: {
       markdown: {
         type: String,
+        default: '',
       },
     },
   };

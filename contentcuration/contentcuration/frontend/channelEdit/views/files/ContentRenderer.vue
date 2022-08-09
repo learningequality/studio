@@ -80,10 +80,12 @@
       fileId: {
         type: String,
         required: false,
+        default: null,
       },
       nodeId: {
         type: String,
         required: false,
+        default: null,
       },
       fullscreen: {
         type: Boolean,
@@ -159,6 +161,7 @@
     width: 100%;
     outline: none;
   }
+
   .v-card,
   .v-card > .layout,
   embed,
@@ -167,9 +170,11 @@
     min-height: 200px;
     max-height: @max-height;
   }
+
   video {
     max-height: @max-height;
   }
+
   .message-card,
   video,
   embed,
@@ -182,6 +187,7 @@
 
   .fullscreen {
     min-height: @max-height;
+
     .v-card,
     audio,
     embed,
@@ -192,7 +198,7 @@
   }
 
   .renderer {
-    background: url('/static/img/kolibri_load.gif') no-repeat center;
+    background: url('./kolibri_load.gif') no-repeat center;
     background-size: 150px auto;
   }
 
