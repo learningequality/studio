@@ -8,6 +8,8 @@ class ContentConfig(AppConfig):
     name = 'contentcuration'
 
     def ready(self):
+        # signals for websockets
+        import contentcuration.viewsets.websockets.signals
         # see note in the celery_signals.py file for why we import here.
         import contentcuration.utils.celery.signals  # noqa
 
