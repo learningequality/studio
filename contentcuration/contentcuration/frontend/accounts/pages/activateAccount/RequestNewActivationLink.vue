@@ -47,7 +47,7 @@
         if (this.$refs.form.validate()) {
           this.sendActivationLink(this.email)
             .then(() => {
-              this.$router.replace({ name: 'ActivationLinkReSent' });
+              this.$router.replace({ name: 'ActivationLinkReSent' }).catch(() => {});
             })
             .catch(() => {
               this.error = true;

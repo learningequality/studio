@@ -1,8 +1,6 @@
 Feature: View new metadata in previewers across Studio
 	How the new metadata is laid out on previewers
 
-# Comment here
-
 	Background: 
 		Given I am signed into Studio
 			And I am in an editable channel

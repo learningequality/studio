@@ -1,8 +1,8 @@
 import Vue from 'vue';
 import has from 'lodash/has';
 import { languageDirections, defaultLanguage } from 'kolibri-design-system/lib/utils/i18n';
-import importVueIntlLocaleData from 'kolibri-tools/lib/i18n/vue-intl-locale-data';
-import importIntlLocale from 'kolibri-tools/lib/i18n/intl-locale-data';
+import importVueIntlLocaleData from './vue-intl-locale-data';
+import importIntlLocale from './intl-locale-data';
 
 export {
   languageDirections,

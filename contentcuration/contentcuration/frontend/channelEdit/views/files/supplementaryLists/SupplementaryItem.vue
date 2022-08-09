@@ -87,6 +87,7 @@
       uploadCompleteHandler: {
         type: Function,
         required: false,
+        default: () => {},
       },
     },
     data() {

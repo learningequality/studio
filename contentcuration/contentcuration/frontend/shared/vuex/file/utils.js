@@ -92,7 +92,7 @@ export function extractMetadata(file, preset = null) {
     const mediaElement = document.createElement(isVideo ? 'video' : 'audio');
     // Add a listener to read the metadata once it has loaded.
     mediaElement.addEventListener('loadedmetadata', () => {
-      metadata.duration = mediaElement.duration;
+      metadata.duration = Math.ceil(mediaElement.duration);
       // Override preset based off video resolution
       if (isVideo) {
         metadata.preset =

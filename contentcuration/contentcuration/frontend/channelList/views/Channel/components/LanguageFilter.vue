@@ -32,7 +32,7 @@
       <Checkbox :key="item.id" :input-value="value" :value="item.id" class="mt-0">
         <template #label>
           <VTooltip bottom>
-            <template v-slot:activator="{ on }">
+            <template #activator="{ on }">
               <div class="text-truncate" style="width: 250px;" v-on="on">
                 {{ item.name }}
               </div>
@@ -113,6 +113,7 @@
   /deep/ .v-select__selections {
     width: calc(100% - 48px);
   }
+
   .v-chip,
   /deep/ .v-chip__content,
   .text-truncate {

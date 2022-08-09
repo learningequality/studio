@@ -22,6 +22,8 @@ from django.core.exceptions import ValidationError
 from django.core.files.storage import default_storage
 from django.core.files.storage import FileSystemStorage
 from django.core.mail import send_mail
+from django.core.validators import MaxValueValidator
+from django.core.validators import MinValueValidator
 from django.db import IntegrityError
 from django.db import models
 from django.db.models import Count
@@ -45,6 +47,7 @@ from django.db.models.sql import Query
 from django.dispatch import receiver
 from django.utils import timezone
 from django.utils.translation import gettext as _
+from django_celery_results.models import TaskResult
 from django_cte import With
 from le_utils import proquint
 from le_utils.constants import content_kinds
@@ -64,6 +67,8 @@ from rest_framework.fields import get_attribute
 from rest_framework.utils.encoders import JSONEncoder
 
 from contentcuration.constants import channel_history
+from contentcuration.constants import completion_criteria
+from contentcuration.constants.contentnode import kind_activity_map
 from contentcuration.db.models.expressions import Array
 from contentcuration.db.models.functions import ArrayRemove
 from contentcuration.db.models.functions import Unnest
@@ -236,6 +241,9 @@ class User(AbstractBaseUser, PermissionsMixin):
         return Channel.filter_edit_queryset(Channel.objects.all(), self).filter(pk=channel_id).exists()
 
     def check_space(self, size, checksum):
+        if self.is_admin:
+            return True
+
         active_files = self.get_user_active_files()
         if active_files.filter(checksum=checksum).exists():
             return True
@@ -1139,6 +1147,7 @@ class License(models.Model):
 NODE_ID_INDEX_NAME = "node_id_idx"
 NODE_MODIFIED_INDEX_NAME = "node_modified_idx"
 NODE_MODIFIED_DESC_INDEX_NAME = "node_modified_desc_idx"
+CONTENTNODE_TREE_ID_CACHE_KEY = "contentnode_{pk}__tree_id"
 
 
 class ContentNode(MPTTModel, models.Model):
@@ -1252,6 +1261,33 @@ class ContentNode(MPTTModel, models.Model):
                 ).values_list("id", flat=True)[:1]
             )
         )
+
+    @classmethod
+    def filter_by_pk(cls, pk):
+        """
+        When `settings.IS_CONTENTNODE_TABLE_PARTITIONED` is `False`, this always
+        returns a queryset filtered by pk.
+
+        When `settings.IS_CONTENTNODE_TABLE_PARTITIONED` is `True` and a ContentNode
+        for `pk` exists, this returns a queryset filtered by `pk` AND `tree_id`. If
+        a ContentNode does not exist for `pk` then an empty queryset is returned.
+        """
+        query = ContentNode.objects.filter(pk=pk)
+
+        if settings.IS_CONTENTNODE_TABLE_PARTITIONED is True:
+            tree_id = cache.get(CONTENTNODE_TREE_ID_CACHE_KEY.format(pk=pk))
+
+            if tree_id:
+                query = query.filter(tree_id=tree_id)
+            else:
+                tree_id = ContentNode.objects.filter(pk=pk).values_list("tree_id", flat=True).first()
+                if tree_id:
+                    cache.set(CONTENTNODE_TREE_ID_CACHE_KEY.format(pk=pk), tree_id, None)
+                    query = query.filter(tree_id=tree_id)
+                else:
+                    query = query.none()
+
+        return query
 
     @classmethod
     def filter_edit_queryset(cls, queryset, user):
@@ -1446,7 +1482,7 @@ class ContentNode(MPTTModel, models.Model):
         from contentcuration.viewsets.common import SQRelatedArrayAgg
         from contentcuration.viewsets.common import SQSum
 
-        node = ContentNode.objects.filter(pk=self.id).order_by()
+        node = ContentNode.objects.filter(pk=self.id, tree_id=self.tree_id).order_by()
 
         descendants = (
             self.get_descendants()
@@ -1718,9 +1754,49 @@ class ContentNode(MPTTModel, models.Model):
         for editor in self.files.values_list('uploaded_by_id', flat=True).distinct():
             calculate_user_storage(editor)
 
+    def mark_complete(self):  # noqa C901
+        errors = []
+        # Is complete if title is falsy but only if not a root node.
+        if not (bool(self.title) or self.parent_id is None):
+            errors.append("Empty title")
+        if self.kind_id != content_kinds.TOPIC:
+            if not self.license:
+                errors.append("Missing license")
+            if self.license and self.license.is_custom and not self.license_description:
+                errors.append("Missing license description for custom license")
+            if self.license and self.license.copyright_holder_required and not self.copyright_holder:
+                errors.append("Missing required copyright holder")
+            if self.kind_id != content_kinds.EXERCISE and not self.files.filter(preset__supplementary=False).exists():
+                errors.append("Missing default file")
+            if self.kind_id == content_kinds.EXERCISE:
+                # Check to see if the exercise has at least one assessment item that has:
+                if not self.assessment_items.filter(
+                    # A non-blank question
+                    ~Q(question='')
+                    # Non-blank answers
+                    & ~Q(answers='[]')
+                    # With either an input question or one answer marked as correct
+                    & (Q(type=exercises.INPUT_QUESTION) | Q(answers__iregex=r'"correct":\s*true'))
+                ).exists():
+                    errors.append("No questions with question text and complete answers")
+                # Check that it has a mastery model set
+                # Either check for the previous location for the mastery model, or rely on our completion criteria validation
+                # that if it has been set, then it has been set correctly.
+                criterion = self.extra_fields.get("options", {}).get("completion_criteria")
+                if not (self.extra_fields.get("mastery_model") or criterion):
+                    errors.append("Missing mastery criterion")
+                if criterion:
+                    try:
+                        completion_criteria.validate(criterion, kind=content_kinds.EXERCISE)
+                    except completion_criteria.ValidationError:
+                        errors.append("Mastery criterion is defined but is invalid")
+        self.complete = not errors
+        return errors
+
     def on_create(self):
         self.changed = True
         self.recalculate_editors_storage()
+        self.set_default_learning_activity()
 
     def on_update(self):
         self.changed = self.changed or self.has_changes()
@@ -1728,10 +1804,21 @@ class ContentNode(MPTTModel, models.Model):
     def move_to(self, target, *args, **kwargs):
         parent_was_trashtree = self.parent.channel_trash.exists()
         super(ContentNode, self).move_to(target, *args, **kwargs)
+        self.save()
+
+        # Update tree_id cache when node is moved to another tree
+        cache.set(CONTENTNODE_TREE_ID_CACHE_KEY.format(pk=self.id), self.tree_id, None)
 
         # Recalculate storage if node was moved to or from the trash tree
         if target.channel_trash.exists() or parent_was_trashtree:
             self.recalculate_editors_storage()
+
+    def set_default_learning_activity(self):
+        if self.learning_activities is None:
+            if self.kind in kind_activity_map:
+                self.learning_activities = {
+                    kind_activity_map[self.kind]: True
+                }
 
     def save(self, skip_lock=False, *args, **kwargs):
         if self._state.adding:
@@ -2184,7 +2271,9 @@ class PrerequisiteContentRelationship(models.Model):
                 % (self.target_node, self.prerequisite))
         # distant cyclic exception
         # elif <this is a nice to have exception, may implement in the future when the priority raises.>
-        #     raise Exception('Note: Prerequisite relationship is acyclic! %s and %s forms a closed loop!' % (self.target_node, self.prerequisite))
+        #     raise Exception('Note: Prerequisite relationship is acyclic! %s and %s forms a closed loop!' % (
+        #         self.target_node, self.prerequisite
+        #     ))
         super(PrerequisiteContentRelationship, self).clean(*args, **kwargs)
 
     def save(self, *args, **kwargs):
@@ -2274,23 +2363,6 @@ class Invitation(models.Model):
         ).distinct()
 
 
-class Task(models.Model):
-    """Asynchronous tasks"""
-    task_id = UUIDField(db_index=True, default=uuid.uuid4)  # This ID is used as the Celery task ID
-    task_type = models.CharField(max_length=50)
-    created = models.DateTimeField(default=timezone.now)
-    status = models.CharField(max_length=10)
-    is_progress_tracking = models.BooleanField(default=False)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="task", on_delete=models.CASCADE)
-    metadata = JSONField()
-    channel_id = DjangoUUIDField(db_index=True, null=True, blank=True)
-
-    @classmethod
-    def find_incomplete(cls, task_type, **filters):
-        filters.update(task_type=task_type, status__in=["QUEUED", states.PENDING, states.RECEIVED, states.STARTED])
-        return cls.objects.filter(**filters)
-
-
 class Change(models.Model):
     server_rev = models.BigAutoField(primary_key=True)
     # We need to store the user who is applying this change
@@ -2371,3 +2443,41 @@ class Change(models.Model):
 
     def serialize_to_change_dict(self):
         return self.serialize(self)
+
+
+class TaskResultCustom(object):
+    """
+    Custom fields to add to django_celery_results's TaskResult model
+    """
+    # user shouldn't be null, but in order to append the field, this needs to be allowed
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="tasks", on_delete=models.CASCADE, null=True)
+    channel_id = DjangoUUIDField(db_index=True, null=True, blank=True)
+    progress = models.IntegerField(null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(100)])
+
+    super_as_dict = TaskResult.as_dict
+
+    def as_dict(self):
+        """
+        :return: A dictionary representation
+        """
+        super_dict = self.super_as_dict()
+        super_dict.update(
+            user_id=self.user_id,
+            channel_id=self.channel_id,
+            progress=self.progress,
+        )
+        return super_dict
+
+    @classmethod
+    def contribute_to_class(cls, model_class=TaskResult):
+        """
+        Adds fields to model, by default TaskResult
+        :param model_class: TaskResult model
+        """
+        for field in dir(cls):
+            if not field.startswith("_"):
+                model_class.add_to_class(field, getattr(cls, field))
+
+
+# trigger class contributions immediately
+TaskResultCustom.contribute_to_class()

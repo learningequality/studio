@@ -2,7 +2,7 @@
 
   <div>
     <VTooltip v-if="hasErrors" top>
-      <template v-slot:activator="{ on }">
+      <template #activator="{ on }">
         <Icon color="red" :large="large" v-on="on">
           error
         </Icon>

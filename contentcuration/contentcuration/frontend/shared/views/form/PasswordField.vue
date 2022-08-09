@@ -23,6 +23,7 @@
       value: {
         type: String,
         required: false,
+        default: '',
       },
       additionalRules: {
         type: Array,
@@ -33,6 +34,7 @@
       label: {
         type: String,
         required: false,
+        default: null,
       },
       required: {
         type: Boolean,

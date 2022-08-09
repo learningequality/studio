@@ -6,7 +6,7 @@ from django.urls import reverse_lazy
 
 from ..base import BaseAPITestCase
 from contentcuration.models import Channel
-from contentcuration.models import Task
+from contentcuration.models import TaskResult
 from contentcuration.utils.db_tools import TreeBuilder
 
 
@@ -54,12 +54,11 @@ class PublishingStatusEndpointTestCase(BaseAPITestCase):
         self.channel.main_tree = main_tree.root
         self.channel.save()
         self.channel.mark_publishing(self.user)
-        task = Task.objects.create(
-            task_type="export-channel",
+        task = TaskResult.objects.create(
+            task_name="export-channel",
             channel_id=self.channel.id,
             user_id=self.user.id,
             status="QUEUED",
-            metadata={},
         )
         response = self.get(
             reverse_lazy("publishing_status"),

@@ -18,7 +18,7 @@
 
     <template v-if="isChannel">
       <DetailsRow v-if="details.published && details.primary_token" :label="$tr('tokenHeading')">
-        <template v-slot>
+        <template #default>
           <CopyToken
             v-if="!printing"
             :token="details.primary_token"
@@ -61,7 +61,7 @@
         :text="sizeText"
       />
       <DetailsRow :label="$tr('resourceHeading')">
-        <template v-slot>
+        <template #default>
           <p>{{ $formatNumber(details.resource_count) }}</p>
           <VDataTable
             :items="kindCount"
@@ -84,7 +84,7 @@
         </template>
       </DetailsRow>
       <DetailsRow :label="$tr('containsHeading')">
-        <template v-if="!printing" v-slot>
+        <template v-if="!printing" #default>
           <VChip v-if="details.includes.coach_content" class="tag">
             {{ $tr('coachHeading') }}
           </VChip>
@@ -95,7 +95,7 @@
             {{ defaultText }}
           </div>
         </template>
-        <template v-else v-slot>
+        <template v-else #default>
           <span>{{ includesPrintable }}</span>
         </template>
       </DetailsRow>
@@ -105,7 +105,7 @@
         :definition="!printing ? $tr('coachDescription') : ''"
       />
       <DetailsRow :label="$tr('tagsHeading')">
-        <template v-slot>
+        <template #default>
           <div v-if="!sortedTags.length">
             {{ defaultText }}
           </div>
@@ -123,7 +123,7 @@
         </template>
       </DetailsRow>
       <DetailsRow :label="$tr('languagesHeading')">
-        <template v-slot>
+        <template #default>
           <ExpandableList
             :noItemsText="defaultText"
             :items="details.languages"
@@ -133,7 +133,7 @@
         </template>
       </DetailsRow>
       <DetailsRow :label="$tr('subtitlesHeading')">
-        <template v-slot>
+        <template #default>
           <ExpandableList
             :noItemsText="defaultText"
             :items="details.accessible_languages"
@@ -147,7 +147,7 @@
         :label="$tr('authorsLabel')"
         :definition="!printing ? $tr('authorToolTip') : ''"
       >
-        <template v-slot>
+        <template #default>
           <ExpandableList
             :noItemsText="defaultText"
             :items="details.authors"
@@ -160,7 +160,7 @@
         :label="$tr('providersLabel')"
         :definition="!printing ? $tr('providerToolTip') : ''"
       >
-        <template v-slot>
+        <template #default>
           <ExpandableList
             :noItemsText="defaultText"
             :items="details.providers"
@@ -173,7 +173,7 @@
         :label="$tr('aggregatorsLabel')"
         :definition="!printing ? $tr('aggregatorToolTip') : ''"
       >
-        <template v-slot>
+        <template #default>
           <ExpandableList
             :noItemsText="defaultText"
             :items="details.aggregators"
@@ -184,10 +184,10 @@
       </DetailsRow>
 
       <DetailsRow :label="$tr('licensesLabel')">
-        <template v-slot>
+        <template #default>
           <template v-if="!printing">
             <VTooltip v-for="license in details.licenses" :key="license" top>
-              <template v-slot:activator="{ on }">
+              <template #activator="{ on }">
                 <VChip class="tag" v-on="on">
                   {{ translateConstant(license) }}
                 </VChip>
@@ -201,7 +201,7 @@
         </template>
       </DetailsRow>
       <DetailsRow :label="$tr('copyrightHoldersLabel')">
-        <template v-slot>
+        <template #default>
           <ExpandableList
             :items="details.copyright_holders"
             :no-items-text="defaultText"
@@ -215,7 +215,7 @@
         v-if="details.original_channels.length"
         :label="$tr('containsContentHeading')"
       >
-        <template v-slot>
+        <template #default>
           <VLayout
             v-for="channel in details.original_channels"
             :key="channel.id"
@@ -275,8 +275,8 @@
 <script>
 
   import sortBy from 'lodash/sortBy';
-  import { SCALE_TEXT, SCALE, CHANNEL_SIZE_DIVISOR } from './constants';
   import DetailsRow from './DetailsRow';
+  import { SCALE_TEXT, SCALE, CHANNEL_SIZE_DIVISOR } from './constants';
   import {
     fileSizeMixin,
     constantsTranslationMixin,
@@ -432,6 +432,7 @@
 
   .printing /deep/ * {
     font-family: 'Noto Sans', helvetica !important;
+
     &.material-icons {
       font-family: 'Material Icons' !important;
     }
@@ -444,6 +445,7 @@
   .draft-header {
     color: gray;
   }
+
   .subheader {
     margin-top: 20px;
     margin-bottom: 0;
@@ -467,12 +469,15 @@
   .kind-table {
     max-width: 350px;
     font-size: 12pt;
+
     /deep/ tr {
       border-top: 0 !important;
+
       &:hover {
         background: transparent !important;
       }
     }
+
     td {
       height: 36px;
       font-size: 12pt;
@@ -481,17 +486,21 @@
 
   .preview-row {
     margin: 16px 0;
+
     &:first-child {
       margin-top: 0;
     }
+
     a {
       margin: 0 8px;
       font-weight: bold;
       text-decoration: none;
+
       span {
         text-decoration: underline;
       }
     }
+
     .source-thumbnail {
       flex-grow: 0;
       width: 150px;

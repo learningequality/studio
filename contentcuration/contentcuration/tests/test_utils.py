@@ -32,7 +32,7 @@ class TestTheTestsTestCase(StudioTestCase):
         """
         This test checks that the Django settings for the test suite are properly set.
         """
-        assert settings.RUNNING_TESTS and settings.CELERY_TASK_ALWAYS_EAGER
+        assert settings.RUNNING_TESTS
 
 
 class GetFileDiffTestCase(StudioTestCase):

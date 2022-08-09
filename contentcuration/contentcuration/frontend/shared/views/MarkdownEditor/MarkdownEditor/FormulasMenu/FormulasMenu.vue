@@ -103,6 +103,7 @@
       },
       mathQuill: {
         type: Function,
+        default: () => {},
       },
       anchorArrowSide: {
         type: String,

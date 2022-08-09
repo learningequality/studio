@@ -1,6 +1,6 @@
 <template>
 
-  <div>
+  <div class="license-container">
     <VLayout class="license-dropdown" row align-center>
       <VSelect
         ref="license"
@@ -15,10 +15,10 @@
         :readonly="readonly"
         :rules="licenseRules"
         :placeholder="placeholder"
-        menu-props="offsetY"
+        :menu-props="{ offsetY: true, lazy: true, top: true, zIndex: 4 }"
         class="ma-0"
         box
-        attach="#license"
+        :attach="$attrs.id ? `#${$attrs.id}` : '.license-container'"
         @focus="$emit('focus')"
       >
         <template #append-outer>
@@ -87,6 +87,7 @@
         validator: value => {
           return value && (!value.license || findLicense(value.license, { id: null }).id !== null);
         },
+        default: null,
       },
       required: {
         type: Boolean,
@@ -177,3 +178,11 @@
   };
 
 </script>
+
+<style lang="less" scoped>
+
+  .license-container {
+    position: relative;
+  }
+
+</style>

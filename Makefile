@@ -11,11 +11,7 @@ dummyusers:
 	cd contentcuration/ && python manage.py loaddata contentcuration/fixtures/admin_user_token.json
 
 prodceleryworkers:
-	cd contentcuration/ && celery -A contentcuration worker -l info --concurrency=3 --task-events --without-mingle --without-gossip
-
-prodcelerydashboard:
-	# connect to the celery dashboard by visiting http://localhost:5555
-	kubectl port-forward deployment/master-studio-celery-dashboard 5555
+	cd contentcuration/ && celery -A contentcuration worker -l info --concurrency=3 --task-events
 
 devserver:
 	yarn run devserver
@@ -134,6 +130,12 @@ docs: clean-docs
 
 setup:
 	python contentcuration/manage.py setup
+
+filedurations:
+	python contentcuration/manage.py set_file_duration
+
+learningactivities:
+	python contentcuration/manage.py set_default_learning_activities
 
 export COMPOSE_PROJECT_NAME=studio_$(shell git rev-parse --abbrev-ref HEAD)
 

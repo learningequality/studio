@@ -63,10 +63,12 @@
       fileId: {
         type: String,
         required: false,
+        default: null,
       },
       nodeId: {
         type: String,
         required: false,
+        default: null,
       },
       hideFullscreenOption: {
         type: Boolean,

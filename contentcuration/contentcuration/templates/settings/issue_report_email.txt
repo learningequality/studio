@@ -5,7 +5,7 @@
 
 {% blocktrans with name=user.first_name %}Hello {{ name }},{% endblocktrans %}
 
-{% trans "Thank you for reporting your issue. Here is a copy of your report:" %}
+{% translate "Thank you for reporting your issue. Here is a copy of your report:" %}
 ==============================================================================
 
 Operating system: {{data.operating_system}}
@@ -17,12 +17,12 @@ Description:
 
 ==============================================================================
 
-{% trans "We are currently reviewing the information that you have provided, and will file your issue accordingly." %}
-{% trans "We appreciate your patience and assistance as we work to improve Kolibri Studio!" %}
+{% translate "We are currently reviewing the information that you have provided, and will file your issue accordingly." %}
+{% translate "We appreciate your patience and assistance as we work to improve Kolibri Studio!" %}
 
 
-{% trans "Thank you," %}
+{% translate "Thank you," %}
 
-{% trans "The Learning Equality Team" %}
+{% translate "The Learning Equality Team" %}
 
 {% endautoescape %}

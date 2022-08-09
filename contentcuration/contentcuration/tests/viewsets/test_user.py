@@ -11,7 +11,7 @@ from contentcuration.viewsets.sync.constants import EDITOR_M2M
 from contentcuration.viewsets.sync.constants import VIEWER_M2M
 
 
-class SyncTestCase(StudioAPITestCase, SyncTestMixin):
+class SyncTestCase(SyncTestMixin, StudioAPITestCase):
 
     def setUp(self):
         super(SyncTestCase, self).setUp()

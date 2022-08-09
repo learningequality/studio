@@ -3,31 +3,31 @@
 {% autoescape off %}
 {% blocktrans with name=user.first_name %}Hello {{ name }},{% endblocktrans %}
 
-{% trans 'Here is the information for your Kolibri Studio account' %}
+{% translate 'Here is the information for your Kolibri Studio account' %}
 
-{% trans 'Name:' %} {{user.first_name}} {{user.last_name}}
-{% trans 'Email:' %} {{user.email}}
-{% trans 'Date joined:' %} {{user.date_joined | date:"M d, Y"}}
-{% if user.information %}{% trans 'Countries:' %} {{user.information.locations|join:'/'}}
-{% trans 'Intended use for Studio:' %} {{user.information.uses|join:'/'}}
-{% trans 'You heard about Kolibri Studio from:' %} {{user.information.heard_from}}{% endif %}
+{% translate 'Name:' %} {{user.first_name}} {{user.last_name}}
+{% translate 'Email:' %} {{user.email}}
+{% translate 'Date joined:' %} {{user.date_joined | date:"M d, Y"}}
+{% if user.information %}{% translate 'Countries:' %} {{user.information.locations|join:'/'}}
+{% translate 'Intended use for Studio:' %} {{user.information.uses|join:'/'}}
+{% translate 'You heard about Kolibri Studio from:' %} {{user.information.heard_from}}{% endif %}
 
-{% if edit_channels %}{% trans 'Channels you have edit access to: ' %}
+{% if edit_channels %}{% translate 'Channels you have edit access to: ' %}
 {% for channel in edit_channels %}    {{channel.id}} - {{channel.name}}
 {% endfor %}{% endif %}
 
-{% if view_channels %}{% trans 'Channels you have view access to: ' %}
+{% if view_channels %}{% translate 'Channels you have view access to: ' %}
 {% for channel in view_channels %}    {{channel.id}} - {{channel.name}}
 {% endfor %}{% endif %}
 
-{% trans 'Information about the resources you have uploaded has been attached as a CSV file.' %}
+{% translate 'Information about the resources you have uploaded has been attached as a CSV file.' %}
 
 
 {% blocktrans %}If you have any questions or concerns, please email us at {{ legal_email }}.{% endblocktrans %}
 
 
-{% trans "Thanks for using Kolibri Studio!" %}
+{% translate "Thanks for using Kolibri Studio!" %}
 
-{% trans "The Learning Equality Team" %}
+{% translate "The Learning Equality Team" %}
 
 {% endautoescape %}

@@ -137,8 +137,8 @@
 <script>
 
   import { mapGetters, mapActions } from 'vuex';
-  import { RouteNames } from '../../constants';
   import ResourceDrawer from '../ResourceDrawer';
+  import { RouteNames } from '../../constants';
   import NewTopicModal from './NewTopicModal';
   import Breadcrumbs from 'shared/views/Breadcrumbs';
   import LoadingText from 'shared/views/LoadingText';
@@ -316,13 +316,16 @@
     .options {
       display: none;
     }
+
     &.disabled {
       pointer-events: none;
       opacity: 0.4;
     }
+
     &:not(.disabled) {
       cursor: pointer;
     }
+
     &:hover {
       .options {
         display: block;

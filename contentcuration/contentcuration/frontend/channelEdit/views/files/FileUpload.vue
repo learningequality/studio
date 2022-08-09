@@ -108,7 +108,10 @@
         return this.getContentNodeFiles(this.nodeId);
       },
       presets() {
-        return FormatPresetsList.filter(p => p.kind_id === this.node.kind);
+        // Explicitly exclude any 'dependency' presets for now
+        return FormatPresetsList.filter(
+          p => p.kind_id === this.node.kind && !p.id.includes('dependency')
+        );
       },
       fileCount() {
         return this.primaryFileMapping.filter(item => item.file && !item.file.error).length;
@@ -189,6 +192,7 @@
     border-color: var(--v-greyBorder-base) !important;
     border-style: solid;
     border-width: 1px;
+
     .v-icon {
       cursor: default;
     }
@@ -196,12 +200,15 @@
 
   .v-input--radio-group {
     width: 100%;
+
     /deep/ .v-input__control {
       width: 100%;
     }
+
     /deep/ label {
       color: var(--v-text-base);
     }
+
     .v-list {
       padding: 0;
     }

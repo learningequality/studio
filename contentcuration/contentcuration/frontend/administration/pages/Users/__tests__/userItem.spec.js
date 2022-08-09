@@ -16,7 +16,7 @@ const user = {
 };
 
 function makeWrapper() {
-  router.replace({ name: RouteNames.USERS });
+  router.replace({ name: RouteNames.USERS }).catch(() => {});
   return mount(UserItem, {
     router,
     store,

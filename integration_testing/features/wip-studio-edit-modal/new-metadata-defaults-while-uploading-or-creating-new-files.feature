@@ -1,17 +1,15 @@
 Feature: New metadata defaults while uploading or creating new files
 	User uploads files and sees which new metadata fields are and aren't set by default
 
-# Comment here
-
 	Background: 
 		Given I am signed into Studio
 			And I am in an editable channel
-		When I click the *ADD* button
-		When I select *Upload files*
+		When I click the *Add* button
+			And I select *Upload files*
 		Then I see the *Upload files* page
 
 	Scenario: Upload .PDF or .EPUB
-		When I upload <.PDF or .EPUB>
+		When I upload a .PDF or an .EPUB file
 		Then I see the edit modal for <.PDF or .EPUB>
 			And I see upload of <.PDF or .EPUB> is in progress
 			And I see *Level* is empty
@@ -62,8 +60,8 @@ Feature: New metadata defaults while uploading or creating new files
 
 	Scenario: Create new Practice resource
 		Given I am in an editable channel
-		When I click *ADD*
-		When I click *New exercise*
+		When I click *Add*
+			And I click *New exercise*
 		Then I see the edit modal for the exercise
 			And I see *Level* is empty
 			And I see *Learning activity* is set to *Practice*

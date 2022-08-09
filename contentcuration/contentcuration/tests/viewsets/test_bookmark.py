@@ -11,7 +11,7 @@ from contentcuration.tests.viewsets.base import SyncTestMixin
 from contentcuration.viewsets.sync.constants import BOOKMARK
 
 
-class SyncTestCase(StudioAPITestCase, SyncTestMixin):
+class SyncTestCase(SyncTestMixin, StudioAPITestCase):
 
     @property
     def bookmark_metadata(self):

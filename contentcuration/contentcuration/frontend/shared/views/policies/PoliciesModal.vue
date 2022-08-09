@@ -10,7 +10,7 @@
 
     <slot></slot>
 
-    <template slot="actions">
+    <template #actions>
       <template v-if="needsAcceptance">
         <KFixedGrid :numCols="2">
           <KGridItem :layout="{ span: 1 }">

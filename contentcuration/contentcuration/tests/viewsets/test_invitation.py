@@ -14,7 +14,7 @@ from contentcuration.tests.viewsets.base import SyncTestMixin
 from contentcuration.viewsets.sync.constants import INVITATION
 
 
-class SyncTestCase(StudioAPITestCase, SyncTestMixin):
+class SyncTestCase(SyncTestMixin, StudioAPITestCase):
 
     @property
     def invitation_metadata(self):

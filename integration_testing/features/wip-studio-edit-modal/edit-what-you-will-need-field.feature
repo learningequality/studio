@@ -1,14 +1,12 @@
 Feature: Edit *What you will need* field
 	Across all file types
 
-# Comment here
-
 	Background: 
 		Given I am signed into Studio
-			And I am in an editable channel
+			And I am in an editable channel with all resource types
 		When I right click <resource>
 		When I click *Edit details*
-		Then I see the edit modal for <resource>
+		Then I see the *Edit details* modal for the <resource>
 			And I see the *What you will need* dropdown in the *Basic information* section
 
 	Scenario: View *What you will need* options
@@ -50,10 +48,10 @@ Feature: Edit *What you will need* field
 			And the height of the *What you will need* dropdown grows to contain it
 
 	Scenario: See that *What you will need* field is optional
-		Given the *What you will need* field of <resource> is empty
+		Given the *What you will need* field of a <resource> is empty
 		When I click *FINISH*
 		Then I see <resource> in the topic tree
 			And I do not see an error icon
-		When I left-click <resource>
-		Then I see the previewer for <resource>
-			And I see the *What you will need* field is empty
+		When I left-click the <resource>
+		Then I see the previewer for the <resource>
+			And I see that the *What you will need* field is empty

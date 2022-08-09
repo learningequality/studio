@@ -1,4 +1,5 @@
 import codecs
+import math
 
 from django.core.exceptions import PermissionDenied
 from django.http import HttpResponseBadRequest
@@ -142,6 +143,12 @@ class FileViewSet(BulkDeleteMixin, BulkUpdateMixin, ReadOnlyValuesViewset):
                 reason="Must specify: size, checksum, name, file_format, and preset"
             )
 
+        duration = request.data.get("duration")
+        if duration is not None:
+            if not isinstance(duration, (int, float)):
+                return HttpResponseBadRequest(reason="File duration must be a number")
+            duration = math.ceil(duration)
+
         try:
             request.user.check_space(float(size), checksum)
         except PermissionDenied:
@@ -165,7 +172,7 @@ class FileViewSet(BulkDeleteMixin, BulkUpdateMixin, ReadOnlyValuesViewset):
             file_format_id=file_format,
             preset_id=preset,
             uploaded_by=request.user,
-            duration=request.data.get("duration"),
+            duration=duration,
         )
 
         # Avoid using our file_on_disk attribute for checks

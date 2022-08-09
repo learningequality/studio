@@ -12,92 +12,94 @@
     >
       <template #header>
         <VHover>
-          <ContextMenu slot-scope="{ hover }">
-            <DraggableItem
-              :draggableMetadata="draggableMetadata"
-              :dropEffect="dropEffectAndAllowed"
-              :style="{ 'cursor': 'default' }"
-            >
-              <DraggableHandle
-                :effectAllowed="dropEffectAndAllowed"
+          <template #default="{ hover }">
+            <ContextMenu>
+              <DraggableItem
+                :draggableMetadata="draggableMetadata"
+                :dropEffect="dropEffectAndAllowed"
+                :style="{ 'cursor': 'default' }"
               >
-                <VListTile
-                  class="content-item py-1"
-                  :class="{ hover, selected }"
-                  :style="{ 'padding-left': indentPadding }"
-                  inactive
+                <DraggableHandle
+                  :effectAllowed="dropEffectAndAllowed"
                 >
-                  <VListTileAction class="action-col">
-                    <Checkbox
-                      ref="checkbox"
-                      class="mt-0 pt-0"
-                      :inputValue="selected"
-                      :indeterminate="indeterminate"
-                      @click.stop.prevent="goNextSelectionState"
-                    />
-                  </VListTileAction>
-                  <div
-                    class="py-2 thumbnail-col"
+                  <VListTile
+                    class="content-item py-1"
+                    :class="{ hover, selected }"
+                    :style="{ 'padding-left': indentPadding }"
+                    inactive
                   >
-                    <Thumbnail
-                      v-bind="thumbnailAttrs"
-                      :isEmpty="contentNode.resource_count === 0"
-                      compact
-                    />
-                  </div>
-
-                  <template v-if="contentNode.kind === 'topic'">
-                    <VListTileContent class="description-col pl-2 shrink">
-                      <VListTileTitle class="text-truncate" :class="getTitleClass(contentNode)">
-                        {{ getTitle(contentNode) }}
-                      </VListTileTitle>
-                    </VListTileContent>
-                    <VListTileAction style="min-width: unset;" class="pl-3 pr-1">
-                      <div class="badge caption font-weight-bold">
-                        {{ contentNode.resource_count }}
-                      </div>
+                    <VListTileAction class="action-col">
+                      <Checkbox
+                        ref="checkbox"
+                        class="mt-0 pt-0"
+                        :inputValue="selected"
+                        :indeterminate="indeterminate"
+                        @click.stop.prevent="goNextSelectionState"
+                      />
                     </VListTileAction>
-                    <!-- Custom placement of dropdown indicator -->
-                    <VListTileAction
-                      class="action-col px-1 v-list__group__header__append-icon"
+                    <div
+                      class="py-2 thumbnail-col"
                     >
-                      <Icon>arrow_drop_down</Icon>
+                      <Thumbnail
+                        v-bind="thumbnailAttrs"
+                        :isEmpty="contentNode.resource_count === 0"
+                        compact
+                      />
+                    </div>
+
+                    <template v-if="contentNode.kind === 'topic'">
+                      <VListTileContent class="description-col pl-2 shrink">
+                        <VListTileTitle class="text-truncate" :class="getTitleClass(contentNode)">
+                          {{ getTitle(contentNode) }}
+                        </VListTileTitle>
+                      </VListTileContent>
+                      <VListTileAction style="min-width: unset;" class="pl-3 pr-1">
+                        <div class="badge caption font-weight-bold">
+                          {{ contentNode.resource_count }}
+                        </div>
+                      </VListTileAction>
+                      <!-- Custom placement of dropdown indicator -->
+                      <VListTileAction
+                        class="action-col px-1 v-list__group__header__append-icon"
+                      >
+                        <Icon>arrow_drop_down</Icon>
+                      </VListTileAction>
+                      <VSpacer />
+                    </template>
+                    <template v-else>
+                      <VListTileContent class="description-col pa-2" @click="handlePreview">
+                        <VListTileTitle class="text-truncate" :class="getTitleClass(contentNode)">
+                          {{ getTitle(contentNode) }}
+                        </VListTileTitle>
+                      </VListTileContent>
+                    </template>
+
+                    <VListTileAction class="action-col option-col" :aria-hidden="!hover">
+                      <Menu>
+                        <template #activator="{ on }">
+                          <VBtn
+                            small
+                            icon
+                            flat
+                            class="ma-0"
+                            v-on="on"
+                            @click.stop
+                          >
+                            <Icon>more_horiz</Icon>
+                          </VBtn>
+                        </template>
+
+                        <ContentNodeOptions :nodeId="nodeId" />
+                      </Menu>
                     </VListTileAction>
-                    <VSpacer />
-                  </template>
-                  <template v-else>
-                    <VListTileContent class="description-col pa-2" @click="handlePreview">
-                      <VListTileTitle class="text-truncate" :class="getTitleClass(contentNode)">
-                        {{ getTitle(contentNode) }}
-                      </VListTileTitle>
-                    </VListTileContent>
-                  </template>
-
-                  <VListTileAction class="action-col option-col" :aria-hidden="!hover">
-                    <Menu>
-                      <template #activator="{ on }">
-                        <VBtn
-                          small
-                          icon
-                          flat
-                          class="ma-0"
-                          v-on="on"
-                          @click.stop
-                        >
-                          <Icon>more_horiz</Icon>
-                        </VBtn>
-                      </template>
-
-                      <ContentNodeOptions :nodeId="nodeId" />
-                    </Menu>
-                  </VListTileAction>
-                </VListTile>
-              </DraggableHandle>
-            </DraggableItem>
-            <template v-if="contentNode" #menu>
-              <ContentNodeOptions :nodeId="nodeId" />
-            </template>
-          </ContextMenu>
+                  </VListTile>
+                </DraggableHandle>
+              </DraggableItem>
+              <template v-if="contentNode" #menu>
+                <ContentNodeOptions :nodeId="nodeId" />
+              </template>
+            </ContextMenu>
+          </template>
         </VHover>
       </template>
 
@@ -116,8 +118,8 @@
 <script>
 
   import { mapActions, mapGetters } from 'vuex';
-  import ContentNodeOptions from './ContentNodeOptions';
   import clipboardMixin, { parentMixin } from './mixins';
+  import ContentNodeOptions from './ContentNodeOptions';
   import Checkbox from 'shared/views/form/Checkbox';
   import Thumbnail from 'shared/views/files/Thumbnail';
   import ContextMenu from 'shared/views/ContextMenu';

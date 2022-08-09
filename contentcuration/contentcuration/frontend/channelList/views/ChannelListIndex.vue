@@ -32,7 +32,7 @@
           @click="trackTabClick(listType)"
         >
           <VBadge :value="invitationsByListCounts[listType]" color="secondary">
-            <template v-slot:badge>
+            <template #badge>
               <span>{{ $formatNumber(invitationsByListCounts[listType]) }}</span>
             </template>
             <span>{{ translateConstant(listType) }}</span>
@@ -91,8 +91,8 @@
     ListTypeToRouteMapping,
     RouteToListTypeMapping,
   } from '../constants';
-  import ChannelInvitation from './Channel/ChannelInvitation';
   import ChannelListAppError from './ChannelListAppError';
+  import ChannelInvitation from './Channel/ChannelInvitation';
   import { ChannelListTypes } from 'shared/constants';
   import { constantsTranslationMixin, routerMixin } from 'shared/mixins';
   import GlobalSnackbar from 'shared/views/GlobalSnackbar';
@@ -269,6 +269,7 @@
 
   html {
     overflow-y: auto !important;
+
     .title,
     .headline,
     .display,
@@ -278,6 +279,7 @@
     .v-chip__content {
       font-family: 'Noto Sans' !important;
     }
+
     .v-btn--flat,
     .v-tabs__item {
       font-weight: bold;

@@ -6,7 +6,8 @@ from channels.generic.websocket import WebsocketConsumer
 
 from contentcuration.models import Change
 from contentcuration.models import Channel
-from contentcuration.tasks import get_or_create_async_task
+from contentcuration.tasks import apply_channel_changes_task
+from contentcuration.tasks import apply_user_changes_task
 from contentcuration.viewsets.sync.constants import CHANNEL
 from contentcuration.viewsets.sync.constants import CREATED
 
@@ -119,9 +120,9 @@ class SyncConsumer(WebsocketConsumer):
                 disallowed_changes.append(c)
         change_models = Change.create_changes(user_only_changes + channel_changes, created_by_id=user_id, session_key=session_key)
         if user_only_changes:
-            get_or_create_async_task("apply_user_changes", self.user, user_id=user_id)
+            apply_user_changes_task.fetch_or_enqueue(self.user, user_id=user_id)
         for channel_id in allowed_ids:
-            get_or_create_async_task("apply_channel_changes", self.user, channel_id=channel_id)
+            apply_channel_changes_task.fetch_or_enqueue(self.user, channel_id=channel_id)
         allowed_changes = [{"rev": c.client_rev, "server_rev": c.server_rev} for c in change_models]
         response_payload.update({"disallowed": disallowed_changes, "allowed": allowed_changes})
 

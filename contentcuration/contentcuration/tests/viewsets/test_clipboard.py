@@ -16,7 +16,7 @@ from contentcuration.tests.viewsets.base import SyncTestMixin
 from contentcuration.viewsets.sync.constants import CLIPBOARD
 
 
-class SyncTestCase(StudioAPITestCase, SyncTestMixin):
+class SyncTestCase(SyncTestMixin, StudioAPITestCase):
     @classmethod
     def setUpClass(cls):
         cls.create_bucket()

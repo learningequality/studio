@@ -350,7 +350,6 @@ class ContentNodeViewSetTestCase(StudioAPITestCase):
         self.assertEqual(response.status_code, 403, response.content)
 
     def test_consolidate_extra_fields(self):
-
         user = testdata.user()
         channel = testdata.channel()
         channel.public = True
@@ -408,7 +407,7 @@ class ContentNodeViewSetTestCase(StudioAPITestCase):
         self.assertEqual(response.data["extra_fields"], {})
 
 
-class SyncTestCase(StudioAPITestCase, SyncTestMixin):
+class SyncTestCase(SyncTestMixin, StudioAPITestCase):
 
     def setUp(self):
         super(SyncTestCase, self).setUp()
@@ -574,7 +573,7 @@ class SyncTestCase(StudioAPITestCase, SyncTestMixin):
             models.ContentNode.objects.get(id=contentnode.id).title, new_title
         )
 
-    def test_update_contentnode_extra_fields(self):
+    def test_update_contentnode_exercise_mastery_model(self):
         contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
 
         # Update m and n fields
@@ -597,18 +596,75 @@ class SyncTestCase(StudioAPITestCase, SyncTestMixin):
             models.ContentNode.objects.get(id=contentnode.id).extra_fields["options"]["completion_criteria"]["threshold"]["n"], n
         )
 
+    def test_update_contentnode_exercise_mastery_model_partial(self):
+        data = self.contentnode_db_metadata
+        data["extra_fields"] = {
+            "options": {
+                "completion_criteria": {
+                    "threshold": {
+                        "m": 5,
+                        "n": 10,
+                        "mastery_model": exercises.M_OF_N,
+                    },
+                    "model": completion_criteria.MASTERY,
+                }
+            }
+        }
+        contentnode = models.ContentNode.objects.create(**data)
+
+        # Update m and n fields
+        m = 4
+        response = self.sync_changes(
+            [generate_update_event(contentnode.id, CONTENTNODE, {
+                "extra_fields.options.completion_criteria.threshold.m": m,
+            }, channel_id=self.channel.id)],
+        )
+
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(
+            models.ContentNode.objects.get(id=contentnode.id).extra_fields["options"]["completion_criteria"]["threshold"]["m"], m
+        )
+
+    def test_update_contentnode_exercise_mastery_model_old(self):
+        data = self.contentnode_db_metadata
+        data["extra_fields"] = {
+            "m": 5,
+            "n": 10,
+            "mastery_model": exercises.M_OF_N,
+        }
+
+        contentnode = models.ContentNode.objects.create(**data)
+
+        # Update m and n fields
+        m = 4
+        response = self.sync_changes(
+            [generate_update_event(contentnode.id, CONTENTNODE, {
+                "extra_fields.options.completion_criteria.threshold.m": m,
+            }, channel_id=self.channel.id)],
+        )
+
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(
+            models.ContentNode.objects.get(id=contentnode.id).extra_fields["options"]["completion_criteria"]["threshold"]["m"], m
+        )
+        self.assertEqual(
+            models.ContentNode.objects.get(id=contentnode.id).extra_fields["options"]["completion_criteria"]["threshold"]["n"], 10
+        )
+        self.assertEqual(
+            models.ContentNode.objects.get(id=contentnode.id).extra_fields["options"]["completion_criteria"]["threshold"]["mastery_model"], exercises.M_OF_N
+        )
+        self.assertEqual(
+            models.ContentNode.objects.get(id=contentnode.id).extra_fields["options"]["completion_criteria"]["model"], completion_criteria.MASTERY
+        )
+
+    def test_update_contentnode_extra_fields(self):
+        contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
         # Update extra_fields.randomize
         randomize = True
         response = self.sync_changes(
             [generate_update_event(contentnode.id, CONTENTNODE, {"extra_fields.randomize": randomize}, channel_id=self.channel.id)],
         )
         self.assertEqual(response.status_code, 200, response.content)
-        self.assertEqual(
-            models.ContentNode.objects.get(id=contentnode.id).extra_fields["options"]["completion_criteria"]["threshold"]["m"], m
-        )
-        self.assertEqual(
-            models.ContentNode.objects.get(id=contentnode.id).extra_fields["options"]["completion_criteria"]["threshold"]["n"], n
-        )
         self.assertEqual(
             models.ContentNode.objects.get(id=contentnode.id).extra_fields["randomize"], randomize
         )

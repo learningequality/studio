@@ -178,11 +178,11 @@
 <script>
 
   import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
-  import { RouteNames, TabNames } from '../../constants';
   import FileUploadDefault from '../../views/files/FileUploadDefault';
-  import EditList from './EditList';
-  import EditView from './EditView';
+  import { RouteNames, TabNames } from '../../constants';
   import SavingIndicator from './SavingIndicator';
+  import EditView from './EditView';
+  import EditList from './EditList';
   import { fileSizeMixin, routerMixin } from 'shared/mixins';
   import FileStorage from 'shared/views/files/FileStorage';
   import MessageDialog from 'shared/views/MessageDialog';
@@ -230,6 +230,7 @@
       targetNodeId: {
         type: String,
         required: false,
+        default: null,
       },
     },
     data() {
@@ -528,6 +529,7 @@
 
   /deep/ .v-toolbar__extension {
     padding: 0;
+
     .v-toolbar__content {
       border-bottom: 1px solid var(--v-grey-lighten4);
     }
@@ -540,6 +542,7 @@
     margin-right: 0;
     margin-left: 0;
   }
+
   /deep/ .v-content__wrap {
     max-height: calc(100vh - 128px);
     overflow-y: auto;

@@ -27,6 +27,7 @@
     props: {
       markdown: {
         type: String,
+        default: '',
       },
     },
     data() {

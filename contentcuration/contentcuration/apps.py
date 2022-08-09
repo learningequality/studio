@@ -9,9 +9,7 @@ class ContentConfig(AppConfig):
 
     def ready(self):
         # signals for websockets
-        import contentcuration.viewsets.websockets.signals
-        # see note in the celery_signals.py file for why we import here.
-        import contentcuration.utils.celery.signals  # noqa
+        import contentcuration.viewsets.websockets.signals # noqa
 
         if settings.AWS_AUTO_CREATE_BUCKET and not is_gcs_backend():
             from contentcuration.utils.minio_utils import ensure_storage_bucket_public

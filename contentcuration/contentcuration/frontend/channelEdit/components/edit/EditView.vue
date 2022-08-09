@@ -20,7 +20,7 @@
             >
               {{ $tr(tabs.DETAILS) }}
               <VTooltip v-if="!areDetailsValid || !areFilesValid" top>
-                <template v-slot:activator="{ on }">
+                <template #activator="{ on }">
                   <Icon color="red" dark small class="ml-2" v-on="on">
                     error
                   </Icon>
@@ -38,7 +38,7 @@
             >
               {{ $tr(tabs.QUESTIONS) }}
               <VTooltip v-if="!areAssessmentItemsValid" top>
-                <template v-slot:activator="{ on }">
+                <template #activator="{ on }">
                   <Icon color="red" dark v-on="on">
                     error
                   </Icon>
@@ -106,9 +106,9 @@
   import AssessmentTab from '../../components/AssessmentTab/AssessmentTab';
   import RelatedResourcesTab from '../../components/RelatedResourcesTab/RelatedResourcesTab';
   import DetailsTabView from './DetailsTabView';
-  import Tabs from 'shared/views/Tabs';
-  import ToolBar from 'shared/views/ToolBar';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
+  import ToolBar from 'shared/views/ToolBar';
+  import Tabs from 'shared/views/Tabs';
 
   export default {
     name: 'EditView',
@@ -286,6 +286,7 @@
   .v-tabs__div {
     min-width: 150px;
     font-weight: bold;
+
     .v-icon {
       margin-left: 5px;
       font-size: 12pt;
@@ -301,6 +302,7 @@
     margin-bottom: 20px;
     font-size: 45pt;
   }
+
   .wrapper {
     min-width: 100%;
     max-height: inherit;

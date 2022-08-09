@@ -173,13 +173,16 @@
   /*! rtl:begin:ignore */
   .drawer-left {
     right: auto;
+
     /deep/ .v-navigation-drawer__border {
       margin-left: 3px;
       border-right: 1px solid var(--v-grey-lighten4);
     }
   }
+
   .drawer-right {
     left: auto;
+
     /deep/ .v-navigation-drawer__border {
       margin-right: 3px;
       border-left: 1px solid var(--v-grey-lighten4);
@@ -195,6 +198,7 @@
     cursor: col-resize;
     background: transparent !important;
     transition: background 0.2s ease;
+
     &:hover,
     .dragging& {
       background: var(--v-secondary-base) !important;

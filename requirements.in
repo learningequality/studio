@@ -1,5 +1,5 @@
 attrs==19.3.0
-django-cte==1.1.5
+django-cte==1.2.1
 django-mptt==0.11.0
 django-filter==2.4.0
 djangorestframework==3.12.4
@@ -11,13 +11,13 @@ gunicorn==19.6.0
 django-postmark==0.1.6
 jsonfield==3.1.0
 newrelic>=2.86.3.70
-celery<5
+celery==5.1.2
 redis
 pycountry==17.5.14
 pathlib
 progressbar2==3.38.0
 python-postmark==0.5.0
-Django==3.2.13
+Django==3.2.14
 django-webpack-loader==0.7.0
 google-cloud-error-reporting
 google-cloud-storage
@@ -46,3 +46,4 @@ jsonschema>=3.2.0
 importlib-metadata==1.7.0
 channels==3.0.4
 channels-redis==3.3.1
+django-celery-results

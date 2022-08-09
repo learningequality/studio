@@ -1,16 +1,16 @@
 import { mount, createLocalVue } from '@vue/test-utils';
 import Vuex from 'vuex';
 import VueRouter from 'vue-router';
-import { cloneDeep } from 'lodash';
+import cloneDeep from 'lodash/cloneDeep';
 import flushPromises from 'flush-promises';
 
 import { RouteNames } from '../../../constants';
 import router from '../../../router';
 import channelSet from '../../../vuex/channelSet';
 import ChannelSetModal from '../ChannelSetModal';
-import { NEW_OBJECT } from 'shared/constants';
-import storeFactory from 'shared/vuex/baseStore';
 import channel from 'shared/vuex/channel';
+import storeFactory from 'shared/vuex/baseStore';
+import { NEW_OBJECT } from 'shared/constants';
 
 const localVue = createLocalVue();
 localVue.use(Vuex);

@@ -25,7 +25,7 @@ jobs:
     - name: Use Node.js
       uses: actions/setup-node@v1
       with:
-        node-version: '10.x'
+        node-version: '16.x'
     - name: Cache Node.js modules
       uses: actions/cache@v2
       with:
@@ -38,7 +38,7 @@ jobs:
         yarn --frozen-lockfile
         npm rebuild node-sass
     - name: Build frontend
-      run: yarn run build -p
+      run: yarn run build
   make_messages:
     name: Build all message files
     needs: pre_job
@@ -65,7 +65,7 @@ jobs:
     - name: Use Node.js
       uses: actions/setup-node@v1
       with:
-        node-version: '10.x'
+        node-version: '16.x'
     - name: Cache Node.js modules
       uses: actions/cache@v2
       with:

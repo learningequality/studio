@@ -49,7 +49,7 @@ from contentcuration.models import ContentKind
 from contentcuration.models import DEFAULT_USER_PREFERENCES
 from contentcuration.models import Language
 from contentcuration.models import License
-from contentcuration.models import Task
+from contentcuration.models import TaskResult
 from contentcuration.serializers import SimplifiedChannelProbeCheckSerializer
 from contentcuration.utils.i18n import SUPPORTED_LANGUAGES
 from contentcuration.utils.messages import get_messages
@@ -140,20 +140,37 @@ def publishing_status(request):
     if not request.user.is_admin:
         return HttpResponseForbidden()
 
-    associated_tasks = Task.find_incomplete("export-channel", channel_id=Cast(OuterRef("channel_id"), UUIDField()))
+    associated_tasks = TaskResult.objects.filter(
+        task_name="export-channel",
+        channel_id=Cast(OuterRef("channel_id"), UUIDField()),
+    )
     channel_publish_status = (
         ChannelHistory.objects
         .filter(
             action=channel_history.PUBLICATION,
             channel_id__in=Channel.objects.filter(main_tree__publishing=True).values("id"),
         )
-        .annotate(task_id=associated_tasks.order_by("-created").values("task_id")[:1])
+        .annotate(task_id=associated_tasks.order_by("-date_created").values("task_id")[:1])
         .distinct("channel_id")
         .order_by("channel_id", "-performed")
         .values("channel_id", "performed", "task_id")
     )
 
     return Response(channel_publish_status)
+
+
+@api_view(["GET"])
+@authentication_classes((TokenAuthentication, SessionAuthentication))
+@permission_classes((IsAuthenticated,))
+def celery_worker_status(request):
+    if not request.user.is_admin:
+        return HttpResponseForbidden()
+
+    from contentcuration.celery import app
+
+    # should return dict with structure like:
+    # {'celery@hostname': {'ok': 'pong'}}
+    return Response(app.control.inspect().ping() or {})
 
 
 """ END HEALTH CHECKS """
