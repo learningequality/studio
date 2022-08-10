@@ -122,7 +122,7 @@ class SyncView(APIView):
     def return_tasks(self, request, channel_revs):
         tasks = TaskResult.objects.filter(
             channel_id__in=channel_revs.keys(),
-            status__in=states.READY_STATES,
+            status__in=[states.STARTED, states.FAILURE],
         ).exclude(task_name__in=[apply_channel_changes_task.name, apply_user_changes_task.name])
         return {
             "tasks": tasks.values(

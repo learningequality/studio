@@ -421,8 +421,8 @@
               },
             };
           }
-          this.m = this.value.threshold.m || this.m;
-          this.n = this.value.threshold.n || this.n;
+          this.m = (this.value.threshold ? this.value.threshold.m : null) || this.m;
+          this.n = (this.value.threshold ? this.value.threshold.n : null) || this.n;
           this.handleInput(update);
         },
       },
@@ -450,6 +450,10 @@
       },
       masteryModelItem: {
         get() {
+          if (!this.value.threshold) {
+            return { m: null, n: null };
+          }
+
           if (this.value.threshold.mastery_model !== MasteryModelsNames.M_OF_N) {
             return {
               m: this.value.threshold.m,
