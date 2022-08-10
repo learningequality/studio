@@ -4242,10 +4242,10 @@ detect-node@^2.0.4, detect-node@^2.1.0:
   resolved "https://registry.yarnpkg.com/detect-node/-/detect-node-2.1.0.tgz#c9c70775a49c3d03bc2c06d9a73be550f978f8b1"
   integrity sha512-T0NIuQpnTvFDATNuHN5roPwSBG83rFsuO+MXXH9/3N1eFbn4wcPjttvjMLEPWJ0RGUYgQE7cGgS3tNxbqCGM7g==
 
-dexie-observable@3.0.0-beta.9:
-  version "3.0.0-beta.9"
-  resolved "https://registry.yarnpkg.com/dexie-observable/-/dexie-observable-3.0.0-beta.9.tgz#37812c2e555bfc46655c92285f8a15e07b6fbf2a"
-  integrity sha512-85CsoopLXO2w03mikK874UgxXAqTH6VF2LsKmfSsJDFXv3SDe9AEWtrKiXNeaTa0ueyQlxJ0dTXDahYHFUJHdA==
+dexie-observable@3.0.0-beta.11:
+  version "3.0.0-beta.11"
+  resolved "https://registry.yarnpkg.com/dexie-observable/-/dexie-observable-3.0.0-beta.11.tgz#2ab39e81f0fd2a8a040e014279d07b4c13c9100f"
+  integrity sha512-mKwSYy54Kj73Njp3Rs+GoldLxyDJK1LF7niBkZxSenGAlBCXB5RxafH2Mg6Ay0B1pLlDYvJCWH31s88/Uz0WSg==
 
 dexie@^3.2.2:
   version "3.2.2"
