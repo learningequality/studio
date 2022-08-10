@@ -642,10 +642,18 @@
         return (this.firstNode && this.getContentNodeFiles(this.firstNode.id)) || [];
       },
       fileDuration() {
+        let audioVideoFiles;
         if (this.firstNode.kind === 'audio' || this.firstNode.kind === 'video') {
-          return this.nodeFiles.filter(
+          audioVideoFiles = this.nodeFiles.filter(
             file => file.file_format === 'mp4' || file.file_format === 'mp3'
-          )[0].duration;
+          );
+          if (audioVideoFiles && audioVideoFiles[1]) {
+            return audioVideoFiles[1].duration;
+          } else if (audioVideoFiles && audioVideoFiles[0]) {
+            return audioVideoFiles[0].duration;
+          } else {
+            return null;
+          }
         } else {
           return null;
         }
