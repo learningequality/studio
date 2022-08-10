@@ -58,6 +58,9 @@ class GoogleCloudStorage(Storage):
         else:
             blob = blob_object
 
+        if blob is None:
+            raise FileNotFoundError("{} not found".format(name))
+
         fobj = tempfile.NamedTemporaryFile()
         blob.download_to_file(fobj)
         # flush it to disk
