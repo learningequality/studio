@@ -7941,10 +7941,10 @@ known-css-properties@^0.24.0:
   resolved "https://registry.yarnpkg.com/known-css-properties/-/known-css-properties-0.24.0.tgz#19aefd85003ae5698a5560d2b55135bf5432155c"
   integrity sha512-RTSoaUAfLvpR357vWzAz/50Q/BmHfmE6ETSWfutT0AJiw10e6CmcdYRQJlLRd95B53D0Y2aD1jSxD3V3ySF+PA==
 
-kolibri-constants@^0.1.40:
-  version "0.1.40"
-  resolved "https://registry.yarnpkg.com/kolibri-constants/-/kolibri-constants-0.1.40.tgz#ea75e7ce9716a027638c4ac6db73867bc04d1858"
-  integrity sha512-264LtFuLoQ15GbZKxWnMcl+uDovzj75GWopnW40ixAVMERrmhSIGuSl1wID9IVOyT788xLQCPhcIqOP5LmDA9A==
+kolibri-constants@^0.1.41:
+  version "0.1.41"
+  resolved "https://registry.yarnpkg.com/kolibri-constants/-/kolibri-constants-0.1.41.tgz#7acf8118bc4ab2ceb3e28b807e391d46bb563ed9"
+  integrity sha512-cykNfZvnW8FZlpYnk3SvTUuCOGlYGwgmQbor91dpWe9z8Tb4jcZKYzIY+ZBCsjgsU1azb+R+gdqLxrdw9LgGLg==
 
 "kolibri-design-system@https://github.com/learningequality/kolibri-design-system#e9a2ff34716bb6412fe99f835ded5b17345bab94":
   version "1.3.0"
