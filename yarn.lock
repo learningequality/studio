@@ -6051,10 +6051,10 @@ hyphenate-style-name@^1.0.2:
   resolved "https://registry.yarnpkg.com/hyphenate-style-name/-/hyphenate-style-name-1.0.4.tgz#691879af8e220aea5750e8827db4ef62a54e361d"
   integrity sha512-ygGZLjmXfPHj+ZWh6LwbC37l43MhfztxetbFCoYTM2VjkIUpeHgSNn7QIyVFj7YQ1Wl9Cbw5sholVJPzWvC2MQ==
 
-i18n-iso-countries@^5.1.0:
-  version "5.5.0"
-  resolved "https://registry.yarnpkg.com/i18n-iso-countries/-/i18n-iso-countries-5.5.0.tgz#466e097b585730b6a7ed54a850e2eeb2a578af78"
-  integrity sha512-S5lPQ3NYmi9n0PFX1L3qv0BQE/EvEVKPFQTLZubQxDQBNwS3Yf6WHk3Aw1wg0bpS8amn7gI5nk5n9JOcnUHvhA==
+i18n-iso-countries@^7.5.0:
+  version "7.5.0"
+  resolved "https://registry.yarnpkg.com/i18n-iso-countries/-/i18n-iso-countries-7.5.0.tgz#74fedd72619526a195cfb2e768fe1d82eed2123f"
+  integrity sha512-PtfKJNWLVhhU0KBX/8asmywjAcuyQk07mmmMwxFJcddTNBJJ1yvpY2qxVmyxbtVF+9+6eg9phgpv83XPUKU5CA==
   dependencies:
     diacritics "1.3.0"
 

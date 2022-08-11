@@ -75,7 +75,7 @@
     "epubjs": "^0.3.89",
     "file-saver": "^2.0.2",
     "html2canvas": "^1.0.0-rc.5",
-    "i18n-iso-countries": "^5.1.0",
+    "i18n-iso-countries": "^7.5.0",
     "intl": "1.2.5",
     "jquery": "^2.2.4",
     "jspdf": "https://github.com/MrRio/jsPDF.git#b7a1d8239c596292ce86dafa77f05987bcfa2e6e",
