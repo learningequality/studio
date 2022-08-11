@@ -1,6 +1,12 @@
 name: Javascript Linting
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+    - unstable
+    - hotfixes
+    - master
+  pull_request:
 
 jobs:
   pre_job:
