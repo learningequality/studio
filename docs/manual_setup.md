@@ -4,7 +4,7 @@
 
 Rather than using Docker, it is also possible to manually install the dependencies on your host machine or in a virtual machine. These dependencies include:
 
-  - [python (3.6)](https://www.python.org/downloads/release/python-3612/)
+  - [python (3.9)](https://www.python.org/downloads/release/python-3913/)
   - [python-pip](https://pip.pypa.io/en/stable/installing/)
   - [nodejs (16.x)](https://nodejs.org/en/download/)
   - [Postgres DB (12.x)](https://www.postgresql.org/download/)

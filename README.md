@@ -67,7 +67,7 @@ make dcservicesdown
 
 To develop on Kolibri Studio, you'll need:
 
-* Python 3.6+
+* Python 3.9+
 
 Managing Python installations can be quite tricky. We *highly* recommend using something like [`pyenv`](https://learningequality.github.io/django-tutorial/en/python_installation/) or package managers like `Homebrew <http://brew.sh/>`__ on Mac or ``apt`` on Debian to manage your Python installations. Never modify your system's built-in version of Python.
 
