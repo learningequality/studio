@@ -64,10 +64,10 @@ jobs:
                     -v /tmp/minio_data:/data \
                     -v /tmp/minio_config:/root/.minio \
                     minio/minio server /data
-    - name: Set up Python 3.6
+    - name: Set up Python 3.9
       uses: actions/setup-python@v2
       with:
-        python-version: 3.6
+        python-version: 3.9
     - name: pip cache
       uses: actions/cache@v2
       with:
