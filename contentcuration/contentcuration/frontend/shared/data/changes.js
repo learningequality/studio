@@ -1,8 +1,9 @@
 import Dexie from 'dexie';
 import db from 'shared/data/db';
 import { promiseChunk } from 'shared/utils/helpers';
-import { CHANGES_TABLE, REVERT_SOURCE, CHANGE_TYPES, IGNORED_SOURCE } from 'shared/data/constants';
+import { CHANGES_TABLE, CHANGE_TYPES, IGNORED_SOURCE } from 'shared/data/constants';
 import { Session } from 'shared/data/resources';
+import { INDEXEDDB_RESOURCES } from 'shared/data/registry';
 
 /**
  * Wraps the callback with a new ChangeTracker that can be used to revert
@@ -108,10 +109,6 @@ export class ChangeTracker {
     this.reverted = true;
 
     if (Dexie.currentTransaction) {
-      if (Dexie.currentTransaction.source === REVERT_SOURCE) {
-        return;
-      }
-
       // We're in the middle of a transaction, so just abort that
       Dexie.currentTransaction.abort();
       return;
@@ -125,12 +122,17 @@ export class ChangeTracker {
     //
     // R. Tibbles: I think this could be done in two queries (TODO)
     return promiseChunk(this._changes.reverse(), 1, ([change]) => {
-      const table = db[change.table];
-      return db.transaction('rw', change.table, () => {
-        // This source inherits from `IGNORED_SOURCE` so this will be ignored
-        Dexie.currentTransaction.source = REVERT_SOURCE;
-
-        // If we had created something, we'll delete
+      const resource = INDEXEDDB_RESOURCES[change.table];
+      if (!resource) {
+        if (process.env.NODE_ENV !== 'production') {
+          /* eslint-disable no-console */
+          console.warn(`Resource does not exist for table '${change.table}'`);
+          /* eslint-enable */
+        }
+        return Promise.resolve();
+      }
+      return resource.transaction({}, () => {
+        // If we had created something, we'll delete it
         // Special MOVED case here comes from the operation of COPY then MOVE for duplicating
         // content nodes, which in this case would be on the Tree table, so we're removing
         // the tree record
@@ -141,17 +143,23 @@ export class ChangeTracker {
         ) {
           // Get the primary key's field name off the table to make sure we delete by
           // the change key
-          return table
-            .where(table.schema.primKey.keyPath)
+          return resource.table
+            .where(resource.table.schema.primKey.keyPath)
             .equals(change.key)
             .delete();
         } else if (change.type === CHANGE_TYPES.UPDATED || change.type === CHANGE_TYPES.DELETED) {
           // If we updated or deleted it, we just want the old stuff back
-          return table.put(change.oldObj);
+          return resource.table.put(change.oldObj);
         } else if (change.type === CHANGE_TYPES.MOVED && change.oldObj) {
           // Lastly if this is a MOVE, then this was likely a single operation, so we just roll
           // it back
-          return table.put(change.oldObj);
+          return resource.table.put(change.oldObj);
+        } else {
+          if (process.env.NODE_ENV !== 'production') {
+            /* eslint-disable no-console */
+            console.warn(`Attempted to revert unsupported change type '${change.type}'`);
+            /* eslint-enable */
+          }
         }
       });
     });

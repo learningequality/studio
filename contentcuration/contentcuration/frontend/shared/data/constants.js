@@ -41,8 +41,6 @@ export const APP_ID = 'KolibriStudio';
  */
 export const IGNORED_SOURCE = 'IGNORED_SOURCE';
 
-export const REVERT_SOURCE = 'REVERT/' + IGNORED_SOURCE;
-
 export const RELATIVE_TREE_POSITIONS = {
   FIRST_CHILD: 'first-child',
   LAST_CHILD: 'last-child',
