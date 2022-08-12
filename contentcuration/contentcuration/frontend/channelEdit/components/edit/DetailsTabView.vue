@@ -642,18 +642,13 @@
         return (this.firstNode && this.getContentNodeFiles(this.firstNode.id)) || [];
       },
       fileDuration() {
-        let audioVideoFiles;
-        if (this.firstNode.kind === 'audio' || this.firstNode.kind === 'video') {
-          audioVideoFiles = this.nodeFiles.filter(
-            file => file.file_format === 'mp4' || file.file_format === 'mp3'
-          );
-          if (audioVideoFiles && audioVideoFiles[1]) {
-            return audioVideoFiles[1].duration;
-          } else if (audioVideoFiles && audioVideoFiles[0]) {
-            return audioVideoFiles[0].duration;
-          } else {
-            return null;
-          }
+        if (
+          this.firstNode.kind === ContentKindsNames.AUDIO ||
+          this.firstNode.kind === ContentKindsNames.VIDEO
+        ) {
+          // return the last item in the array
+          const file = this.nodeFiles[this.nodeFiles.length - 1];
+          return file.duration;
         } else {
           return null;
         }
