@@ -24,7 +24,6 @@ from contentcuration.viewsets.base import ValuesViewset
 from contentcuration.viewsets.common import NotNullMapArrayAgg
 from contentcuration.viewsets.common import UUIDFilter
 from contentcuration.viewsets.common import UUIDInFilter
-from contentcuration.viewsets.contentnode import get_title
 
 
 class ListPagination(CachedListPagination):
@@ -142,10 +141,6 @@ class SearchContentNodeViewSet(ValuesViewset):
         "content_tags",
         "original_channel_name",
     )
-
-    field_map = {
-        "title": get_title,
-    }
 
     def get_queryset(self):
         queryset = super(SearchContentNodeViewSet, self).get_queryset()

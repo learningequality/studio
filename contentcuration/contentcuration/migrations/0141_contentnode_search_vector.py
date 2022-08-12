@@ -11,7 +11,7 @@ class Migration(migrations.Migration):
     atomic = False
 
     dependencies = [
-        ('contentcuration', '0137_channelhistory'),
+        ('contentcuration', '0140_delete_task'),
     ]
 
     operations = [
