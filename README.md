@@ -81,6 +81,15 @@ pip install -r requirements-dev.txt
 # Set up pre-commit hooks
 pre-commit install
 ```
+#### A note about dependencies on Apple Silicon M1
+If you run into an error with `pip install` related to the `grcpio` package, it is because it currently [does not support M1 with the version for `grcpio` Studio uses](https://github.com/grpc/grpc/issues/25082). In order to fix it, you will need to add the following environmental variables before running `pip install`:
+
+```
+export GRPC_PYTHON_BUILD_SYSTEM_OPENSSL=1
+export GRPC_PYTHON_BUILD_SYSTEM_ZLIB=1
+export CFLAGS="-I/opt/homebrew/opt/openssl/include"
+export LDFLAGS="-L/opt/homebrew/opt/openssl/lib"
+```
 
 #### Adding or updating dependencies
 
