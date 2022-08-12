@@ -9,7 +9,7 @@
       <template>
         <VListTileAction>
           <VTooltip bottom>
-            <template v-slot:activator="{ on }">
+            <template #activator="{ on }">
               <VBtn
                 icon
                 data-test="accept"
@@ -26,7 +26,7 @@
         </VListTileAction>
         <VListTileAction>
           <VTooltip bottom>
-            <template v-slot:activator="{ on }">
+            <template #activator="{ on }">
               <VBtn
                 icon
                 data-test="decline"

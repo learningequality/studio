@@ -1,7 +1,7 @@
 import mock
 from django.test import SimpleTestCase
 
-from ..base import mock_class_instance
+from ..helpers import mock_class_instance
 from contentcuration.models import ContentNode
 from contentcuration.utils.cache import ResourceSizeCache
 

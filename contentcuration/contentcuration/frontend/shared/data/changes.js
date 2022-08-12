@@ -1,6 +1,6 @@
+import { EventEmitter } from 'events';
 import Dexie from 'dexie';
 import uuidv4 from 'uuid/v4';
-import { EventEmitter } from 'events';
 import db, { CLIENTID } from 'shared/data/db';
 import { promiseChunk } from 'shared/utils/helpers';
 import {

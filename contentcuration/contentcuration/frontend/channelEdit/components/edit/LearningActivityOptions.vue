@@ -1,23 +1,26 @@
 <template>
 
-  <VSelect
-    v-model="learningActivity"
-    :items="learningActivities"
-    box
-    chips
-    clearable
-    :label="translateMetadataString('learningActivity')"
-    multiple
-    deletableChips
-    :rules="learningActivityRules"
-    attach="#learning_activities"
-  />
+  <div class="learning-activity-container">
+    <VSelect
+      v-model="learningActivity"
+      :items="learningActivities"
+      box
+      chips
+      clearable
+      :label="translateMetadataString('learningActivity')"
+      multiple
+      deletableChips
+      :menu-props="{ offsetY: true, lazy: true, zIndex: 4 }"
+      :rules="learningActivityRules"
+      :attach="$attrs.id ? `#${$attrs.id}` : '.learning-activity-container'"
+    />
+  </div>
 
 </template>
 
 <script>
 
-  import { camelCase } from 'lodash';
+  import camelCase from 'lodash/camelCase';
   import { LearningActivities } from 'shared/constants';
   import { constantsTranslationMixin, metadataTranslationMixin } from 'shared/mixins';
   import { getLearningActivityValidators, translateValidator } from 'shared/utils/validation';
@@ -53,5 +56,10 @@
   };
 
 </script>
-<style lang="scss">
+<style lang="less" scoped>
+
+  .learning-activity-container {
+    position: relative;
+  }
+
 </style>

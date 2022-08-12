@@ -1,36 +1,6 @@
 <template>
 
-  <VFlex xs12 sm11 md10 lg9 xl8>
-    <VSelect
-      ref="masteryModel"
-      v-model="masteryModel"
-      :items="masteryCriteria"
-      :label="$tr('labelText')"
-      color="primary"
-      box
-      :placeholder="placeholder"
-      :required="required"
-      :readonly="readonly"
-      :disabled="disabled"
-      :rules="masteryRules"
-      menu-props="offsetY"
-      class="mb-2"
-      @focus="$emit('focus')"
-    >
-      <template #append-outer>
-        <InfoModal :header="$tr('exerciseHeader')" :items="masteryCriteria">
-          <p>{{ $tr('exerciseDescripiton') }}</p>
-          <p>{{ $tr('masteryDescripiton') }}</p>
-          <template #header="{ item }">
-            {{ translateConstant(item.value) }}
-          </template>
-          <template #description="{ item }">
-            {{ translateConstant(item.value + '_description') }}
-          </template>
-        </InfoModal>
-      </template>
-    </VSelect>
-
+  <VFlex>
     <VLayout v-if="showMofN" class="mofn-options" row>
       <VFlex xs6>
         <VTextField
@@ -43,8 +13,8 @@
           :required="mRequired"
           :placeholder="mPlaceholder"
           :readonly="readonly"
-          :rules="mRules"
           :disabled="disabled"
+          :rules="mRules"
           @keypress="isIntegerInput($event)"
           @paste="isIntegerPaste($event)"
           @focus="$emit('mFocus')"
@@ -53,7 +23,7 @@
       <VFlex xs1 justifyCenter class="out-of">
         /
       </VFlex>
-      <VFlex xs5>
+      <VFlex xs6>
         <VTextField
           ref="nValue"
           v-model="nValue"
@@ -64,8 +34,8 @@
           :required="nRequired"
           :readonly="readonly"
           :placeholder="nPlaceholder"
-          :rules="nRules"
           :disabled="disabled"
+          :rules="nRules"
           @keypress="isIntegerInput($event)"
           @paste="isIntegerPaste($event)"
           @focus="$emit('nFocus')"
@@ -79,23 +49,15 @@
 <script>
 
   import {
-    getMasteryModelValidators,
     getMasteryModelMValidators,
     getMasteryModelNValidators,
     translateValidator,
-  } from '../utils/validation';
-  import MasteryModels, {
-    MasteryModelsList,
-    MasteryModelsNames,
-  } from 'shared/leUtils/MasteryModels';
-  import InfoModal from 'shared/views/InfoModal.vue';
+  } from '../../../shared/utils/validation';
+  import MasteryModels from 'shared/leUtils/MasteryModels'; // MasteryModelsNames, // MasteryModelsList,
   import { constantsTranslationMixin } from 'shared/mixins';
 
   export default {
-    name: 'MasteryDropdown',
-    components: {
-      InfoModal,
-    },
+    name: 'MasteryCriteriaMofNFields',
     mixins: [constantsTranslationMixin],
     props: {
       value: {
@@ -109,13 +71,11 @@
             MasteryModels.has(value.mastery_model)
           );
         },
+        default: null,
       },
-      placeholder: {
-        type: String,
-      },
-      required: {
+      showMofN: {
         type: Boolean,
-        default: true,
+        default: false,
       },
       readonly: {
         type: Boolean,
@@ -131,6 +91,7 @@
       },
       mPlaceholder: {
         type: String,
+        default: '',
       },
       nRequired: {
         type: Boolean,
@@ -138,17 +99,10 @@
       },
       nPlaceholder: {
         type: String,
+        default: '',
       },
     },
     computed: {
-      masteryModel: {
-        get() {
-          return this.value && this.value.mastery_model;
-        },
-        set(mastery_model) {
-          this.handleInput({ mastery_model });
-        },
-      },
       mValue: {
         get() {
           return this.value && this.value.m;
@@ -168,18 +122,6 @@
           // Make sure m is always less than or equal to n
           this.handleInput(value < this.mValue ? { m: value, n: value } : { n: value });
         },
-      },
-      masteryCriteria() {
-        return MasteryModelsList.map(model => ({
-          text: this.translateConstant(model),
-          value: model,
-        }));
-      },
-      showMofN() {
-        return this.masteryModel === MasteryModelsNames.M_OF_N;
-      },
-      masteryRules() {
-        return this.required ? getMasteryModelValidators().map(translateValidator) : [];
       },
       mRules() {
         return this.mRequired
@@ -223,12 +165,6 @@
       },
     },
     $trs: {
-      labelText: 'Mastery criteria',
-      exerciseHeader: 'About exercises',
-      exerciseDescripiton:
-        'Exercises contain a set of interactive questions that a learner can engage with in Kolibri. Learners receive instant feedback for each answer (correct or incorrect). Kolibri will display available questions in an exercise until the learner achieves mastery.',
-      masteryDescripiton:
-        'Kolibri marks an exercise as "completed" when the mastery criteria is met. Here are the different types of mastery criteria for an exercise:',
       mHint: 'Correct answers needed',
       nHint: 'Recent answers',
     },
@@ -257,19 +193,24 @@
 
   .mastery-table {
     padding: 15px;
+
     .mastery-row {
       padding: 5px;
+
       &:nth-child(odd) {
         background-color: var(--v-greyBackground-base);
       }
+
       .mastery-label {
         padding-right: 15px;
         font-weight: bold;
       }
     }
   }
+
   /deep/ a {
     text-decoration: none !important;
+
     &:hover {
       color: var(--v-blue-darken-1);
     }

@@ -65,9 +65,9 @@ docs/_build/
 # PyBuilder
 target/
 
-# virtualenv, pipenv, direnv
-.envrc
+# virtualenv, pipenv, etc
 .env
+.envrc
 venv
 .venv
 Pipfile

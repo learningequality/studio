@@ -15,6 +15,7 @@ from kolibri_content.router import set_active_content_database
 from mock import patch
 
 from .base import StudioTestCase
+from .helpers import clear_tasks
 from .testdata import channel
 from .testdata import node as create_node
 from .testdata import slideshow
@@ -27,7 +28,6 @@ from contentcuration.utils.publish import fill_published_fields
 from contentcuration.utils.publish import map_prerequisites
 from contentcuration.utils.publish import MIN_SCHEMA_VERSION
 from contentcuration.utils.publish import set_channel_icon_encoding
-from contentcuration.utils.publish import wait_for_async_tasks
 
 pytestmark = pytest.mark.django_db
 
@@ -220,6 +220,7 @@ class ChannelExportUtilityFunctionTestCase(StudioTestCase):
         set_active_content_database(None)
         if os.path.exists(self.output_db):
             os.remove(self.output_db)
+        clear_tasks()
 
     def test_convert_channel_thumbnail_empty_thumbnail(self):
         channel = cc.Channel.objects.create()
@@ -245,38 +246,6 @@ class ChannelExportUtilityFunctionTestCase(StudioTestCase):
         create_slideshow_manifest(ccnode, kolibrinode)
         manifest_collection = cc.File.objects.filter(contentnode=ccnode, preset_id=u"slideshow_manifest")
         assert len(manifest_collection) == 1
-
-    def test_blocking_task_detection(self):
-        with patch('time.sleep') as patched_time_sleep:
-            user = cc.User.objects.create()
-            channel = cc.Channel.objects.create()
-            cc.Task.objects.create(channel_id=channel.pk, user_id=user.pk, task_type='sync-channel', metadata={})
-            wait_for_async_tasks(channel, attempts=1)
-            self.assertEqual(1, patched_time_sleep.call_count)
-
-    def test_blocking_task_completion_detection(self):
-        with patch('time.sleep') as patched_time_sleep:
-            user = cc.User.objects.create()
-            channel = cc.Channel.objects.create()
-            cc.Task.objects.create(channel_id=channel.pk, user_id=user.pk, task_type='sync-channel', metadata={}, status='SUCCESS')
-            wait_for_async_tasks(channel, attempts=1)
-            self.assertEqual(0, patched_time_sleep.call_count)
-
-    def test_blocking_task_failure_detection(self):
-        with patch('time.sleep') as patched_time_sleep:
-            user = cc.User.objects.create()
-            channel = cc.Channel.objects.create()
-            cc.Task.objects.create(channel_id=channel.pk, user_id=user.pk, task_type='sync-channel', metadata={}, status='FAILURE')
-            wait_for_async_tasks(channel, attempts=1)
-            self.assertEqual(0, patched_time_sleep.call_count)
-
-    def test_nonblocking_task_detection(self):
-        with patch('time.sleep') as patched_time_sleep:
-            user = cc.User.objects.create()
-            channel = cc.Channel.objects.create()
-            cc.Task.objects.create(channel_id=channel.pk, user_id=user.pk, task_type='get-node-diff', metadata={})
-            wait_for_async_tasks(channel, attempts=1)
-            self.assertEqual(0, patched_time_sleep.call_count)
 
 
 class ChannelExportPrerequisiteTestCase(StudioTestCase):

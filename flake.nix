@@ -11,9 +11,9 @@
   outputs = { self, nixpkgs, nixpkgsOld }:
     let
       overlay = self: super: {
-        # this overlay is to replace yarn's dep from the latest nodejs, to nodejs 10.
+        # this overlay is to replace yarn's dep from the latest nodejs, to nodejs 16.
         yarn = with self;
-          super.yarn.overrideAttrs (old: { buildInputs = [ nodejs-10_x ]; });
+          super.yarn.overrideAttrs (old: { buildInputs = [ nodejs-16_x ]; });
       };
 
     in {
@@ -27,7 +27,7 @@
         };
         buildTimePkgs = with npkgs; [
           yarn
-          nodejs-10_x
+          nodejs-16_x
           python36
           python36Packages.venvShellHook
           python36Packages.wheel

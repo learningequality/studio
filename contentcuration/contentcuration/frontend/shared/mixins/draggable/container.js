@@ -1,7 +1,7 @@
 import { mapActions, mapGetters } from 'vuex';
 import debounce from 'lodash/debounce';
-import baseMixin from './base';
 import { DropEventHelper, objectValuesValidator } from './utils';
+import baseMixin from './base';
 import { DraggableFlags } from 'shared/vuex/draggablePlugin/module/constants';
 import { animationThrottle, extendSlot } from 'shared/utils/helpers';
 import {

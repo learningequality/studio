@@ -158,6 +158,7 @@ def create_exercise(title, parent, license_id, description="", user=None, empty=
         "m": 3,
         "n": 5,
     }
+
     exercise = ContentNode.objects.create(
         title=title,
         description=description,

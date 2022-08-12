@@ -70,6 +70,7 @@
       listType: {
         type: String,
         validator: listTypeValidator,
+        default: Object.values(ChannelListTypes)[0],
       },
     },
     data() {
@@ -133,6 +134,7 @@
     /deep/ .v-input__control {
       width: 100% !important;
     }
+
     &:hover {
       background-color: var(--v-channelHighlightDefault-base);
     }

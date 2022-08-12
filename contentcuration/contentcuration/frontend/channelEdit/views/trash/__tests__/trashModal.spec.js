@@ -68,7 +68,7 @@ describe('trashModal', () => {
   let wrapper;
   beforeEach(() => {
     wrapper = makeWrapper();
-    router.replace({ name: RouteNames.TRASH, params: { nodeId: 'test' } });
+    router.replace({ name: RouteNames.TRASH, params: { nodeId: 'test' } }).catch(() => {});
     wrapper.setData({ loading: false });
   });
   describe('on load', () => {

@@ -1,0 +1,6 @@
+# This is the required version of Python to run Studio currently.
+# This is determined by the default Python 3 version that is installed
+# inside Ubuntu Bionic, which is used to build images for Studio.
+# We encode it here so that it can be picked up by Github's dependabot
+# to manage automated package upgrades.
+python-3.9.13

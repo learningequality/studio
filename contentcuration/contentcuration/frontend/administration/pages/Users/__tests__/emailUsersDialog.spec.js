@@ -1,5 +1,8 @@
 import { mount } from '@vue/test-utils';
 import EmailUsersDialog from '../EmailUsersDialog';
+import { factory } from '../../../store';
+
+const store = factory();
 
 const userId = 'test-user-id';
 const userEmail = 'test@user.com';
@@ -18,6 +21,7 @@ const user2 = {
 
 function makeWrapper() {
   return mount(EmailUsersDialog, {
+    store,
     propsData: {
       query: {
         ids: [userId, userId2],

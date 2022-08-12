@@ -1,17 +1,20 @@
 <template>
 
-  <VSelect
-    ref="need"
-    v-model="need"
-    :items="resources"
-    box
-    chips
-    :label="$tr('resourcesNeededLabel')"
-    multiple
-    deletableChips
-    clearable
-    attach="#resources_needed"
-  />
+  <div class="resources-needed-container">
+    <VSelect
+      ref="need"
+      v-model="need"
+      :items="resources"
+      box
+      chips
+      :label="$tr('resourcesNeededLabel')"
+      multiple
+      deletableChips
+      clearable
+      :menu-props="{ offsetY: true, lazy: true, zIndex: 4 }"
+      :attach="$attrs.id ? `#${$attrs.id}` : '.resources-needed-container'"
+    />
+  </div>
 
 </template>
 
@@ -73,5 +76,10 @@
   };
 
 </script>
-<style lang="scss">
+<style lang="less">
+
+  .resources-needed-container {
+    position: relative;
+  }
+
 </style>

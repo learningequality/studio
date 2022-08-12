@@ -18,7 +18,6 @@ from django.conf import settings
 from django.core.files import File
 from django.core.files.storage import default_storage as storage
 from django.core.management import call_command
-from django.db import transaction
 from django.db.models import Count
 from django.db.models import Max
 from django.db.models import Q
@@ -27,6 +26,7 @@ from django.db.utils import IntegrityError
 from django.template.loader import render_to_string
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+from django.utils.translation import override
 from kolibri_content import models as kolibrimodels
 from kolibri_content.router import get_active_content_database
 from kolibri_content.router import using_content_database
@@ -47,6 +47,7 @@ from contentcuration.utils.files import get_thumbnail_encoding
 from contentcuration.utils.parser import extract_value
 from contentcuration.utils.parser import load_json_string
 from contentcuration.utils.sentry import report_exception
+from contentcuration.utils.user import delay_user_storage_calculation
 
 
 logmodule.basicConfig()
@@ -55,8 +56,11 @@ logging = logmodule.getLogger(__name__)
 PERSEUS_IMG_DIR = exercises.IMG_PLACEHOLDER + "/images"
 THUMBNAIL_DIMENSION = 128
 MIN_SCHEMA_VERSION = "1"
-BLOCKING_TASK_TYPES = ["duplicate-nodes", "move-nodes", "sync-channel"]
 PUBLISHING_UPDATE_THRESHOLD = 3600
+
+
+class NoNodesChangedError(Exception):
+    pass
 
 
 class SlowPublishError(Exception):
@@ -181,34 +185,33 @@ def map_content_nodes(  # noqa: C901
         except IndexError:
             return None
 
-    with transaction.atomic():
-        with ccmodels.ContentNode.objects.delay_mptt_updates(), kolibrimodels.ContentNode.objects.delay_mptt_updates():
-            for node in iter(queue_get_return_none_when_empty, None):
-                logging.debug("Mapping node with id {id}".format(
-                    id=node.pk))
+    with ccmodels.ContentNode.objects.delay_mptt_updates(), kolibrimodels.ContentNode.objects.delay_mptt_updates():
+        for node in iter(queue_get_return_none_when_empty, None):
+            logging.debug("Mapping node with id {id}".format(
+                id=node.pk))
 
-                # Update tsvector for this node.
-                node.title_description_search_vector = ccmodels.POSTGRES_SEARCH_VECTOR
-                node.save(update_fields=["title_description_search_vector"])
+            # Update tsvector for this node.
+            node.title_description_search_vector = ccmodels.POSTGRES_SEARCH_VECTOR
+            node.save(update_fields=["title_description_search_vector"])
 
-                if node.get_descendants(include_self=True).exclude(kind_id=content_kinds.TOPIC).exists() and node.complete:
-                    children = (node.children.all())
-                    node_queue.extend(children)
+            if node.get_descendants(include_self=True).exclude(kind_id=content_kinds.TOPIC).exists() and node.complete:
+                children = (node.children.all())
+                node_queue.extend(children)
 
-                    kolibrinode = create_bare_contentnode(node, default_language, channel_id, channel_name)
+            kolibrinode = create_bare_contentnode(node, default_language, channel_id, channel_name)
 
-                    if node.kind.kind == content_kinds.EXERCISE:
-                        exercise_data = process_assessment_metadata(node, kolibrinode)
-                        if force_exercises or node.changed or not \
-                                node.files.filter(preset_id=format_presets.EXERCISE).exists():
-                            create_perseus_exercise(node, kolibrinode, exercise_data, user_id=user_id)
-                    elif node.kind.kind == content_kinds.SLIDESHOW:
-                        create_slideshow_manifest(node, kolibrinode, user_id=user_id)
-                    create_associated_file_objects(kolibrinode, node)
-                    map_tags_to_node(kolibrinode, node)
+            if node.kind.kind == content_kinds.EXERCISE:
+                exercise_data = process_assessment_metadata(node, kolibrinode)
+                if force_exercises or node.changed or not \
+                        node.files.filter(preset_id=format_presets.EXERCISE).exists():
+                    create_perseus_exercise(node, kolibrinode, exercise_data, user_id=user_id)
+            elif node.kind.kind == content_kinds.SLIDESHOW:
+                create_slideshow_manifest(node, kolibrinode, user_id=user_id)
+            create_associated_file_objects(kolibrinode, node)
+            map_tags_to_node(kolibrinode, node)
 
-                if progress_tracker:
-                    progress_tracker.increment(increment=percent_per_node)
+            if progress_tracker:
+                progress_tracker.increment(increment=percent_per_node)
 
 
 def create_slideshow_manifest(ccnode, kolibrinode, user_id=None):
@@ -252,6 +255,11 @@ def create_bare_contentnode(ccnode, default_language, channel_id, channel_name):
     language = None
     if ccnode.language or default_language:
         language, _new = get_or_create_language(ccnode.language or default_language)
+
+    duration = None
+    if ccnode.kind_id in [content_kinds.AUDIO, content_kinds.VIDEO]:
+        # aggregate duration from associated files, choosing maximum if there are multiple, like hi and lo res videos
+        duration = ccnode.files.aggregate(duration=Max("duration")).get("duration")
 
     options = {}
     if ccnode.extra_fields and 'options' in ccnode.extra_fields:
@@ -432,8 +440,11 @@ def process_assessment_metadata(ccnode, kolibrinode):
     exercise_data_type = ""
     if exercise_data.get('mastery_model'):
         exercise_data_type = exercise_data.get('mastery_model')
-    if exercise_data.get('option') and exercise_data.get('option').get('completion_criteria') \
-            and exercise_data.get('option').get('completion_criteria').get('mastery_model'):
+    if (
+        exercise_data.get('option') and
+        exercise_data.get('option').get('completion_criteria') and
+        exercise_data.get('option').get('completion_criteria').get('mastery_model')
+    ):
         exercise_data_type = exercise_data.get('option').get('completion_criteria').get('mastery_model')
 
     mastery_model = {'type': exercise_data_type or exercises.M_OF_N}
@@ -713,7 +724,7 @@ def raise_if_nodes_are_all_unchanged(channel):
 
     if not changed_models.exists():
         logging.debug("No nodes have been changed!")
-        raise ValueError("No models changed!")
+        raise NoNodesChangedError("No models changed!")
 
     logging.info("Some nodes are changed.")
 
@@ -773,23 +784,7 @@ def fill_published_fields(channel, version_notes):
     channel.save()
 
 
-def _check_for_blocking_tasks(channel):
-    return ccmodels.Task.objects.filter(
-        task_type__in=BLOCKING_TASK_TYPES,
-        channel_id=channel.pk,
-    ).exclude(status='FAILURE').exclude(status='SUCCESS').exists()
-
-
-# Default try for 30 minutes
-def wait_for_async_tasks(channel, attempts=360):
-    while attempts and _check_for_blocking_tasks(channel):
-        attempts -= 1
-        time.sleep(5)
-
-    if not attempts and _check_for_blocking_tasks(channel):
-        logging.warning('Ran out of attempts: Tasks still detected for {} during publish'.format(channel.pk))
-
-
+@delay_user_storage_calculation
 def publish_channel(
     user_id,
     channel_id,
@@ -798,6 +793,7 @@ def publish_channel(
     force_exercises=False,
     send_email=False,
     progress_tracker=None,
+    language=settings.LANGUAGE_CODE,
 ):
     """
     :type progress_tracker: contentcuration.utils.celery.ProgressTracker|None
@@ -807,7 +803,6 @@ def publish_channel(
     start = time.time()
     try:
         set_channel_icon_encoding(channel)
-        wait_for_async_tasks(channel)
         kolibri_temp_db = create_content_database(channel, force, user_id, force_exercises, progress_tracker=progress_tracker)
         increment_channel_version(channel)
         mark_all_nodes_as_published(channel)
@@ -825,7 +820,8 @@ def publish_channel(
             delete_public_channel_cache_keys()
 
         if send_email:
-            send_emails(channel, user_id, version_notes=version_notes)
+            with override(language):
+                send_emails(channel, user_id, version_notes=version_notes)
 
         # use SQLite backup API to put DB into archives folder.
         # Then we can use the empty db name to have SQLite use a temporary DB (https://www.sqlite.org/inmemorydb.html)
@@ -834,7 +830,8 @@ def publish_channel(
 
         if progress_tracker:
             progress_tracker.track(100)
-
+    except NoNodesChangedError:
+        logging.warning("No nodes have changed for channel {} so no publish will happen".format(channel_id))
     # No matter what, make sure publishing is set to False once the run is done
     finally:
         if kolibri_temp_db and os.path.exists(kolibri_temp_db):

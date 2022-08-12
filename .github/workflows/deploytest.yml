@@ -1,6 +1,12 @@
 name: Build and deploy tests
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+    - unstable
+    - hotfixes
+    - master
+  pull_request:
 
 jobs:
   pre_job:
@@ -25,7 +31,7 @@ jobs:
     - name: Use Node.js
       uses: actions/setup-node@v1
       with:
-        node-version: '10.x'
+        node-version: '16.x'
     - name: Cache Node.js modules
       uses: actions/cache@v2
       with:
@@ -38,7 +44,7 @@ jobs:
         yarn --frozen-lockfile
         npm rebuild node-sass
     - name: Build frontend
-      run: yarn run build -p
+      run: yarn run build
   make_messages:
     name: Build all message files
     needs: pre_job
@@ -46,10 +52,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - name: Set up Python 3.6
+    - name: Set up Python 3.9
       uses: actions/setup-python@v2
       with:
-        python-version: 3.6
+        python-version: 3.9
     - name: pip cache
       uses: actions/cache@v2
       with:
@@ -65,7 +71,7 @@ jobs:
     - name: Use Node.js
       uses: actions/setup-node@v1
       with:
-        node-version: '10.x'
+        node-version: '16.x'
     - name: Cache Node.js modules
       uses: actions/cache@v2
       with:

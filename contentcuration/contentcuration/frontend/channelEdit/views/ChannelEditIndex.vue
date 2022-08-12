@@ -37,10 +37,10 @@
       },
     },
     created() {
-      this.activateTaskUpdateTimer();
+      this.initState();
     },
     methods: {
-      ...mapActions('task', ['activateTaskUpdateTimer']),
+      ...mapActions('task', ['initState']),
     },
   };
 

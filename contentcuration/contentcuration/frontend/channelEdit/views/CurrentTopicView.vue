@@ -5,11 +5,11 @@
     <VToolbar dense color="transparent" flat>
       <slot name="action"></slot>
       <Breadcrumbs :items="ancestors" class="mx-1 px-2 py-0">
-        <template #item="{ item, isLast }">
+        <template #item="{ item, isFirst, isLast }">
           <!-- Current item -->
           <VLayout v-if="isLast" align-center row>
             <VFlex class="font-weight-bold text-truncate" shrink :class="getTitleClass(item)">
-              {{ getTitle(item) }}
+              {{ isFirst ? currentChannel.name : getTitle(item) }}
             </VFlex>
             <Menu v-if="item.displayNodeOptions">
               <template #activator="{ on }">
@@ -23,7 +23,7 @@
             </Menu>
           </VLayout>
           <span v-else class="grey--text" :class="getTitleClass(item)">
-            {{ getTitle(item) }}
+            {{ isFirst ? currentChannel.name : getTitle(item) }}
           </span>
         </template>
       </Breadcrumbs>
@@ -231,10 +231,10 @@
 
   import { mapActions, mapGetters, mapState } from 'vuex';
   import get from 'lodash/get';
-  import { RouteNames, viewModes, DraggableRegions, DraggableUniverses } from '../constants';
-  import ResourceDrawer from '../components/ResourceDrawer';
-  import ContentNodeOptions from '../components/ContentNodeOptions';
   import MoveModal from '../components/move/MoveModal';
+  import ContentNodeOptions from '../components/ContentNodeOptions';
+  import ResourceDrawer from '../components/ResourceDrawer';
+  import { RouteNames, viewModes, DraggableRegions, DraggableUniverses } from '../constants';
   import NodePanel from './NodePanel';
   import IconButton from 'shared/views/IconButton';
   import ToolBar from 'shared/views/ToolBar';
@@ -270,6 +270,7 @@
       detailNodeId: {
         type: String,
         required: false,
+        default: null,
       },
     },
     data() {

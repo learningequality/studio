@@ -1,13 +1,14 @@
 import Vue from 'vue';
 import { ContentNode, Channel } from '../../../shared/data/resources';
 import client from 'shared/client';
-import applyChanges from 'shared/data/applyRemoteChanges';
 
 export function loadChannel(context, { staging = false } = {}) {
   return context
     .dispatch('channel/loadChannel', context.state.currentChannelId, { root: true })
     .then(channel => {
-      Vue.$analytics.trackCurrentChannel(channel, staging);
+      if (channel) {
+        Vue.$analytics.trackCurrentChannel(channel, staging);
+      }
       return channel;
     });
 }
@@ -50,9 +51,7 @@ export function deployCurrentChannel(context) {
   let payload = {
     channel_id: context.state.currentChannelId,
   };
-  return client.post(window.Urls.activate_channel(), payload).then(response => {
-    applyChanges(response.data.changes);
-  });
+  return client.post(window.Urls.activate_channel(), payload);
 }
 
 export function publishChannel(context, version_notes) {
@@ -60,7 +59,7 @@ export function publishChannel(context, version_notes) {
 }
 
 export function stopTask(context, task) {
-  if (task && task.task_type === 'export-channel') {
+  if (task && task.task_name === 'export-channel') {
     return Channel.clearPublish(context.state.currentChannelId).then(() => {
       return context.dispatch('task/deleteTask', task, { root: true });
     });

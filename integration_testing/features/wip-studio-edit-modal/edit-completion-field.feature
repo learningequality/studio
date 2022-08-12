@@ -1,44 +1,37 @@
-Feature: Edit completion field
+Feature: Edit completion/duration field
 	Across all file types
-
-# Comment here
 
 	Background: 
 		Given I am signed into Studio
-			And I am in an editable channel
-		When I right click <resource>
-		When I click *Edit details*
-		Then I see the edit modal for <resource>
+			And I am in an editable channel with all resource types
+		When I right click a <resource>
+			And I click *Edit details*
+		Then I see the *Edit details* modal for the <resource>
 			And I see the *Completion* section underneath the *Basic information* section
 
-	Scenario: View options for .MP4
-		Given I am viewing an .MP4 file
-		When I click the *Completion* dropdown
-		Then I see the options: *Short activity*, *Long activity*, *Reference*, and *Exact time to complete*
+	Scenario: View options for .MP4 or .MP3
+		Given I am viewing an .MP4 or an .MP3 file
+		When I click the *Duration* dropdown
+		Then I see the options: *Exact time to complete*, *Short activity*, *Long activity* and *Reference*
 
-	Scenario: View options for .PDF or .EPUB
-		Given I am viewing a .PDF or .EPUB file
+	Scenario: View options for .PDF, .EPUB or slides
+		Given I am viewing .PDF, .EPUB or slides
 		When I click the *Completion* dropdown
-		Then I see the options: *All content viewed*, *Short activity*, *Long activity*, *Reference*, and *Exact time to complete*
-
-	Scenario: View options for .MP3
-		Given I am viewing an .MP3 file 
-		When I click the *Completion* dropdown
-		Then I see the options: *Short activity*, *Long activity*, *Reference*, and *Exact time to complete*
+		Then I see the options: *All content viewed* and *Complete duration*
 
 	Scenario: View options for .ZIP
 		Given I am viewing a .ZIP
 		When I click on the *Completion* dropdown
-		Then I see the options: *Short activity*, *Long activity*, *Reference*, *Exact time to complete*
+		Then I see the options: *Complete duration* and *Determined by this resource*
 
 	Scenario: View options for Practice resources
 		Given I am viewing an exercise
 		When I click on the *Completion* dropdown
-		Then I see the options: *Practice until goal is met*, *Short activity*, *Long activity*, *Reference*, *Exact time to complete*
+		Then I see the options: *Practice until goal is met* and *Practice quiz*
 
 	Scenario: Set completion to *Short activity*
 		When I click on the *Completion* dropdown
-		When I select *Short activity*
+			And I select *Short activity*
 		Then I see *Short activity* appear in the text input
 			And I see a *Minutes* text input field appear next to *Completion*
 			And I see a slider appear next to *Minutes*
@@ -59,7 +52,7 @@ Feature: Edit completion field
 
 	Scenario: Set completion to *Long activity*
 		When I click on the *Completion* dropdown
-		When I select *Long activity*
+			And I select *Long activity*
 		Then I see *Long activity* appear in the text input
 			And I see a *Minutes* text input field appear next to *Completion*
 			And I see a slider appear next to *Minutes*
@@ -83,12 +76,9 @@ Feature: Edit completion field
 
 	Scenario: Set completion to *Reference*
 		When I click on the *Completion* dropdown
-		When I select *Reference*
+			And I select *Reference*
 		Then I see *Reference* appear as an input for *Completion*
 			And I see the caption *Progress will not be tracked on reference material unless learners mark it as complete*
-			And I see an info icon next to the *Completion* field
-		When I hover over the info icon
-		Then I see the tooltip *Textbooks, dictionaries, indexes, and other similar resources*
 
 	Scenario: Set completion to *Exact time to complete* on .MP4 or .MOV
 		Given I am viewing an .MP4 or .MOV
@@ -100,13 +90,13 @@ Feature: Edit completion field
 	Scenario: Set completion to *Exact time to complete* for non- .MP4 or .MOV
 		Given I am viewing a resource that is not an .MP4 or .MOV
 		When I click the *Completion* dropdown
-		When I select *Exact time to complete*
+			And I select *Exact time to complete*
 		Then I see a *Exact time to complete* appear as an input for *Completion*
 			And I see a *Minutes* text input field appear next to *Completion*
 			And I see it is empty by default
 		When I click the *Minutes* field
-		When I enter a whole number
-		When I lose focus on the field
+			And I enter a whole number
+			And I lose focus on the field
 		Then I see the number has saved
 
 	Scenario: Enter whole numbers only to *Minutes* field
@@ -117,25 +107,25 @@ Feature: Edit completion field
 	Scenario: Set completion to *Practice until goal is met*
 		Given I am viewing an exercise
 		When I click the *Completion* dropdown
-		When I click *Practice until goal is met*
+			And I click *Practice until goal is met*
 		Then I see the *Completion* field is set to *Practice until goal is met*
 			And I see an empty *Goal* text field dropdown appears next to it
 		When I click the *Goal* dropdown
 		Then I see the options: *100% correct*, *M of N*, *10 in a row*, *2 in a row*, *3 in a row*, *5 in a row*
 		When I select *M of N*
-		Then I see an empty*Correct answers needed* text field, */*, and empty *Recent answers* text field appear
+		Then I see an empty *Correct answers needed* text field, */*, and empty *Recent answers* text field appear
 
 	Scenario: See that *Completion* field is required
 		Given the *Completion* field of <resource> is empty
 		When I click the *Completion* text field
-		When I lose focus on the *Completion* text field
+			And I lose focus on the *Completion* text field
 		Then I see *Completion* is in an error state
 			And I see *Completion is required*
 		When I click *FINISH*
 		Then I see <resource> in the topic tree
 			And I see a red error icon on <resource>
-		When I left-click <resource>
-		Then I see the previewer for <resource>
+		When I left-click the <resource>
+		Then I see the previewer for the <resource>
 			And I see there is no learning activity label at the top left
 			And I see the *Completion* field has a red error icon
 			And I see the message *Missing completion criteria* in red text

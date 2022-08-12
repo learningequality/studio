@@ -1,5 +1,4 @@
 import flatMap from 'lodash/flatMap';
-import flatten from 'lodash/flatten';
 import uniq from 'lodash/uniq';
 import { NEW_OBJECT, NOVALUE } from 'shared/constants';
 import client from 'shared/client';
@@ -182,6 +181,7 @@ export function createContentNode(context, { parent, kind, ...payload }) {
     learner_needs: {},
     learning_activities: {},
     categories: {},
+    suggested_duration: 0,
     ...payload,
   };
 
@@ -219,6 +219,7 @@ function generateContentNodeData({
   learner_needs = NOVALUE,
   learning_activities = NOVALUE,
   categories = NOVALUE,
+  suggested_duration = NOVALUE,
 } = {}) {
   const contentNodeData = {};
   if (title !== NOVALUE) {
@@ -272,7 +273,9 @@ function generateContentNodeData({
   if (categories !== NOVALUE) {
     contentNodeData.categories = categories;
   }
-
+  if (suggested_duration !== NOVALUE) {
+    contentNodeData.suggested_duration = suggested_duration;
+  }
   if (extra_fields !== NOVALUE) {
     contentNodeData.extra_fields = contentNodeData.extra_fields || {};
     if (extra_fields.mastery_model) {
@@ -289,6 +292,9 @@ function generateContentNodeData({
     }
     if (extra_fields.options) {
       contentNodeData.extra_fields.options = extra_fields.options;
+    }
+    if (extra_fields.suggested_duration_type) {
+      contentNodeData.extra_fields.suggested_duration_type = extra_fields.suggested_duration_type;
     }
   }
   if (prerequisite !== NOVALUE) {
@@ -347,7 +353,7 @@ export function updateContentNode(context, { id, ...payload } = {}) {
     complete,
   };
 
-  context.commit('UPDATE_CONTENTNODE', { id, ...contentNodeData });
+  context.commit('ADD_CONTENTNODE', { id, ...contentNodeData });
   return ContentNode.update(id, contentNodeData);
 }
 
@@ -428,7 +434,7 @@ export function moveContentNodes(
   return Promise.all(
     id__in.map(id => {
       return ContentNode.move(id, target, position).then(node => {
-        context.commit('UPDATE_CONTENTNODE', node);
+        context.commit('ADD_CONTENTNODE', node);
         return id;
       });
     })
@@ -442,30 +448,20 @@ export function loadNodeDetails(context, nodeId) {
 }
 
 // Actions to check indexeddb saving status
-export function checkSavingProgress(
+export async function checkSavingProgress(
   context,
   { contentNodeIds = [], fileIds = [], assessmentIds = [] }
 ) {
-  const promises = [];
-  promises.push(
-    contentNodeIds.map(nodeId =>
-      db[CHANGES_TABLE].where({ '[table+key]': [TABLE_NAMES.CONTENTNODE, nodeId] }).first()
-    )
-  );
-  promises.push(
-    fileIds.map(fileId =>
-      db[CHANGES_TABLE].where({ '[table+key]': [TABLE_NAMES.FILE, fileId] }).first()
-    )
-  );
-  promises.push(
-    assessmentIds.map(assessmentItemId =>
-      db[CHANGES_TABLE].where({
-        '[table+key]': [TABLE_NAMES.ASSESSMENTITEM, assessmentItemId],
-      }).first()
-    )
-  );
-
-  return Promise.all(flatten(promises)).then(results => {
-    return results.some(Boolean);
-  });
+  if (!contentNodeIds.length && !fileIds.length && !assessmentIds.length) {
+    return false;
+  }
+  const idsToCheck = {
+    [TABLE_NAMES.CONTENTNODE]: contentNodeIds,
+    [TABLE_NAMES.FILE]: fileIds,
+    [TABLE_NAMES.ASSESSMENTITEM]: assessmentIds,
+  };
+  const query = await db[CHANGES_TABLE].toCollection()
+    .filter(c => !c.synced && idsToCheck[c.table] && idsToCheck[c.table].includes(c.key))
+    .first();
+  return Boolean(query);
 }

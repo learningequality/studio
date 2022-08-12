@@ -18,6 +18,7 @@
     props: {
       errors: {
         type: Array,
+        default: () => [],
       },
     },
   };

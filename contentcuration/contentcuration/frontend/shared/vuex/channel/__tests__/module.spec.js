@@ -1,6 +1,7 @@
 import pick from 'lodash/pick';
 import channel from '../index';
 import {
+  Bookmark,
   Channel,
   Invitation,
   ChannelUser,
@@ -55,7 +56,7 @@ describe('channel actions', () => {
         .spyOn(Channel, 'where')
         .mockImplementation(() => Promise.resolve([channelDatum]));
       return store.dispatch('channel/loadChannelList').then(() => {
-        expect(store.getters['channel/channels']).toEqual([channelDatum]);
+        expect(store.getters['channel/channels']).toEqual([{ ...channelDatum, bookmark: false }]);
         whereSpy.mockRestore();
       });
     });
@@ -85,7 +86,7 @@ describe('channel actions', () => {
         .spyOn(Channel, 'get')
         .mockImplementation(() => Promise.resolve(channelDatum));
       return store.dispatch('channel/loadChannel', id).then(() => {
-        expect(store.getters['channel/channels']).toEqual([channelDatum]);
+        expect(store.getters['channel/channels']).toEqual([{ ...channelDatum, bookmark: false }]);
         getSpy.mockRestore();
       });
     });
@@ -177,22 +178,30 @@ describe('channel actions', () => {
     });
   });
   describe('bookmarkChannel action', () => {
-    it('should call Channel.update', () => {
-      const updateSpy = jest.spyOn(Channel, 'update');
+    it('should call Bookmark.put when creating a bookmark', () => {
+      const putSpy = jest.spyOn(Bookmark, 'put');
       store.commit('channel/ADD_CHANNEL', {
         id,
         name: 'test',
-        bookmark: false,
       });
       return store.dispatch('channel/bookmarkChannel', { id, bookmark: true }).then(() => {
-        expect(updateSpy).toHaveBeenCalledWith(id, { bookmark: true });
+        expect(putSpy).toHaveBeenCalledWith({ channel: id });
+      });
+    });
+    it('should call Bookmark.delete when removing a bookmark', () => {
+      const deleteSpy = jest.spyOn(Bookmark, 'delete');
+      store.commit('channel/ADD_CHANNEL', {
+        id,
+        name: 'test',
+      });
+      return store.dispatch('channel/bookmarkChannel', { id, bookmark: false }).then(() => {
+        expect(deleteSpy).toHaveBeenCalledWith(id);
       });
     });
     it('should set the channel as bookmarked in vuex state', () => {
       store.commit('channel/ADD_CHANNEL', {
         id,
         name: 'test',
-        bookmark: false,
       });
       return store.dispatch('channel/bookmarkChannel', { id, bookmark: true }).then(() => {
         expect(store.getters['channel/getChannel'](id).bookmark).toBe(true);

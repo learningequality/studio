@@ -77,7 +77,7 @@
                 {{ $tr('cancelButton') }}
               </VBtn>
               <Menu top>
-                <template v-slot:activator="{ on }">
+                <template #activator="{ on }">
                   <VBtn color="primary" class="ma-0 mx-2" v-on="on">
                     {{ $tr('downloadButton') }}
                     <Icon class="ml-1">
@@ -112,8 +112,8 @@
   import isEqual from 'lodash/isEqual';
   import union from 'lodash/union';
   import { RouteNames } from '../../constants';
-  import ChannelItem from './ChannelItem';
   import CatalogFilters from './CatalogFilters';
+  import ChannelItem from './ChannelItem';
   import LoadingText from 'shared/views/LoadingText';
   import Pagination from 'shared/views/Pagination';
   import BottomToolBar from 'shared/views/BottomToolBar';

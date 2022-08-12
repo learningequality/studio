@@ -23,6 +23,17 @@ import {
 import { MasteryModelsNames } from 'shared/leUtils/MasteryModels';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
+function generateMasteryExtraFields(mastery) {
+  return {
+    options: {
+      completion_criteria: {
+        model: CompletionCriteriaModels.MASTERY,
+        threshold: mastery,
+      },
+    },
+  };
+}
+
 describe('channelEdit utils', () => {
   describe('translateValidator', () => {
     it('returns true if a validator function returns true for a value', () => {
@@ -200,7 +211,9 @@ describe('channelEdit utils', () => {
     });
 
     it('returns no errors when a mastery model specified', () => {
-      const node = { extra_fields: { mastery_model: MasteryModelsNames.DO_ALL } };
+      const node = {
+        extra_fields: generateMasteryExtraFields({ mastery_model: MasteryModelsNames.DO_ALL }),
+      };
       expect(getNodeMasteryModelErrors(node)).toEqual([]);
     });
   });
@@ -208,25 +221,32 @@ describe('channelEdit utils', () => {
   describe('getNodeMasteryModelMErrors', () => {
     it(`returns no errors for empty m value
       when no mastery model is specified`, () => {
-      const node = { extra_fields: { mastery_model: null, m: null } };
+      const node = { extra_fields: generateMasteryExtraFields({ mastery_model: null, m: null }) };
       expect(getNodeMasteryModelMErrors(node)).toEqual([]);
     });
 
     it(`returns no errors for empty m value
       for mastery models other than m of n`, () => {
-      const node = { extra_fields: { mastery_model: MasteryModelsNames.DO_ALL, m: null } };
+      const node = {
+        extra_fields: generateMasteryExtraFields({
+          mastery_model: MasteryModelsNames.DO_ALL,
+          m: null,
+        }),
+      };
       expect(getNodeMasteryModelMErrors(node)).toEqual([]);
     });
 
     describe('for a mastery model m of n', () => {
       let node;
       beforeEach(() => {
-        node = { extra_fields: { mastery_model: MasteryModelsNames.M_OF_N } };
+        node = {
+          extra_fields: generateMasteryExtraFields({ mastery_model: MasteryModelsNames.M_OF_N }),
+        };
       });
 
       it('returns errors for empty m value', () => {
-        node.extra_fields.m = undefined;
-        node.extra_fields.n = 3;
+        node.extra_fields.options.completion_criteria.threshold.m = undefined;
+        node.extra_fields.options.completion_criteria.threshold.n = 3;
 
         expect(getNodeMasteryModelMErrors(node)).toEqual([
           ValidationErrors.MASTERY_MODEL_M_REQUIRED,
@@ -237,8 +257,8 @@ describe('channelEdit utils', () => {
       });
 
       it('returns an error for non-integer m value', () => {
-        node.extra_fields.m = 1.27;
-        node.extra_fields.n = 3;
+        node.extra_fields.options.completion_criteria.threshold.m = 1.27;
+        node.extra_fields.options.completion_criteria.threshold.n = 3;
 
         expect(getNodeMasteryModelMErrors(node)).toEqual([
           ValidationErrors.MASTERY_MODEL_M_WHOLE_NUMBER,
@@ -246,8 +266,8 @@ describe('channelEdit utils', () => {
       });
 
       it('returns an error for m value smaller than zero', () => {
-        node.extra_fields.m = -2;
-        node.extra_fields.n = 3;
+        node.extra_fields.options.completion_criteria.threshold.m = -2;
+        node.extra_fields.options.completion_criteria.threshold.n = 3;
 
         expect(getNodeMasteryModelMErrors(node)).toEqual([
           ValidationErrors.MASTERY_MODEL_M_GT_ZERO,
@@ -255,15 +275,15 @@ describe('channelEdit utils', () => {
       });
 
       it('returns an error for m value larger than n value', () => {
-        node.extra_fields.m = 4;
-        node.extra_fields.n = 3;
+        node.extra_fields.options.completion_criteria.threshold.m = 4;
+        node.extra_fields.options.completion_criteria.threshold.n = 3;
 
         expect(getNodeMasteryModelMErrors(node)).toEqual([ValidationErrors.MASTERY_MODEL_M_LTE_N]);
       });
 
       it('returns no errors for m whole number smaller than n value', () => {
-        node.extra_fields.m = 3;
-        node.extra_fields.n = 4;
+        node.extra_fields.options.completion_criteria.threshold.m = 3;
+        node.extra_fields.options.completion_criteria.threshold.n = 4;
 
         expect(getNodeMasteryModelMErrors(node)).toEqual([]);
       });
@@ -273,24 +293,31 @@ describe('channelEdit utils', () => {
   describe('getNodeMasteryModelNErrors', () => {
     it(`returns no errors for empty n value
       when no mastery model is specified`, () => {
-      const node = { extra_fields: { mastery_model: null, n: null } };
+      const node = { extra_fields: generateMasteryExtraFields({ mastery_model: null, n: null }) };
       expect(getNodeMasteryModelNErrors(node)).toEqual([]);
     });
 
     it(`returns no errors for empty n value
       for mastery models other than m of n`, () => {
-      const node = { extra_fields: { mastery_model: MasteryModelsNames.DO_ALL, n: null } };
+      const node = {
+        extra_fields: generateMasteryExtraFields({
+          mastery_model: MasteryModelsNames.DO_ALL,
+          n: null,
+        }),
+      };
       expect(getNodeMasteryModelNErrors(node)).toEqual([]);
     });
 
     describe('for a mastery model m of n', () => {
       let node;
       beforeEach(() => {
-        node = { extra_fields: { mastery_model: MasteryModelsNames.M_OF_N } };
+        node = {
+          extra_fields: generateMasteryExtraFields({ mastery_model: MasteryModelsNames.M_OF_N }),
+        };
       });
 
       it('returns errors for empty n value', () => {
-        node.extra_fields.n = undefined;
+        node.extra_fields.options.completion_criteria.threshold.n = undefined;
 
         expect(getNodeMasteryModelNErrors(node)).toEqual([
           ValidationErrors.MASTERY_MODEL_N_REQUIRED,
@@ -300,7 +327,7 @@ describe('channelEdit utils', () => {
       });
 
       it('returns an error for non-integer n value', () => {
-        node.extra_fields.n = 1.27;
+        node.extra_fields.options.completion_criteria.threshold.n = 1.27;
 
         expect(getNodeMasteryModelNErrors(node)).toEqual([
           ValidationErrors.MASTERY_MODEL_N_WHOLE_NUMBER,
@@ -308,7 +335,7 @@ describe('channelEdit utils', () => {
       });
 
       it('returns an error for n value smaller than zero', () => {
-        node.extra_fields.n = -2;
+        node.extra_fields.options.completion_criteria.threshold.n = -2;
 
         expect(getNodeMasteryModelNErrors(node)).toEqual([
           ValidationErrors.MASTERY_MODEL_N_GT_ZERO,
@@ -316,7 +343,7 @@ describe('channelEdit utils', () => {
       });
 
       it('returns no errors for n whole number', () => {
-        node.extra_fields.n = 3;
+        node.extra_fields.options.completion_criteria.threshold.n = 3;
 
         expect(getNodeMasteryModelNErrors(node)).toEqual([]);
       });
@@ -680,9 +707,9 @@ describe('channelEdit utils', () => {
           kind: 'exercise',
           license: 8,
           learning_activities: { test: true },
-          extra_fields: {
+          extra_fields: generateMasteryExtraFields({
             mastery_model: 'do_all',
-          },
+          }),
         },
         [],
       ],
@@ -692,10 +719,10 @@ describe('channelEdit utils', () => {
           kind: 'exercise',
           license: 8,
           learning_activities: { test: true },
-          extra_fields: {
+          extra_fields: generateMasteryExtraFields({
             mastery_model: 'm_of_n',
             m: 3,
-          },
+          }),
         },
         [
           ValidationErrors.MASTERY_MODEL_M_LTE_N,
@@ -710,11 +737,11 @@ describe('channelEdit utils', () => {
           kind: 'exercise',
           license: 8,
           learning_activities: { test: true },
-          extra_fields: {
+          extra_fields: generateMasteryExtraFields({
             mastery_model: 'm_of_n',
             m: 3,
             n: 2,
-          },
+          }),
         },
         [ValidationErrors.MASTERY_MODEL_M_LTE_N],
       ],
@@ -724,11 +751,11 @@ describe('channelEdit utils', () => {
           kind: 'exercise',
           license: 8,
           learning_activities: { test: true },
-          extra_fields: {
+          extra_fields: generateMasteryExtraFields({
             mastery_model: 'm_of_n',
             m: 2,
             n: 3,
-          },
+          }),
         },
         [],
       ],

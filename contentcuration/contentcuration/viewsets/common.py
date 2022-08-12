@@ -25,8 +25,6 @@ from rest_framework.utils import html
 
 from contentcuration.models import DEFAULT_CONTENT_DEFAULTS
 from contentcuration.models import License
-from contentcuration.viewsets.sync.constants import TASK
-from contentcuration.viewsets.sync.utils import generate_create_event
 
 
 class MissingRequiredParamsException(APIException):
@@ -281,14 +279,3 @@ class UserFilteredPrimaryKeyRelatedField(PrimaryKeyRelatedField):
                 "UserFilteredPrimaryKeyRelatedField used on queryset for model that does not have filter_edit_queryset method"
             )
         return queryset
-
-
-class ChangeEventMixin(object):
-    def create_task_event(self, task):
-        """
-        :type task: contentcuration.models.Task
-        """
-        from contentcuration.viewsets.task import TaskViewSet
-        task_viewset = TaskViewSet(request=self.request)
-        task_viewset.initial(self.request)
-        return generate_create_event(task.task_id, TASK, task_viewset.serialize_object(pk=task.pk))

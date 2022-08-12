@@ -36,28 +36,28 @@ Studio requires some background services to be running:
 
 The instructions below show how to set up the services using Docker. This works for many people, but not everyone. If docker is giving you issues, you can also [manually install](docs/manual_setup.md) the services either on your host machine or in a virtual machine (for example, using Vagrant with Virtualbox or VMWare).
 
-First, [install Docker](https://docs.docker.com/install/).
+First, [install Docker](https://docs.docker.com/install/) and [docker-compose](https://docs.docker.com/compose/install/).
 
-Next, run
+After installing the above, you're ready to start the services by running:
 
 ```bash
 make dcservicesup
 ```
 
-This will take a while the first time it's run, and might need to be restarted a couple times if it errors out initially.
+The above command may take longer the first time it's run.
 
-To confirm that the services are running, run `docker ps`, and you should see three containers, for example:
+To confirm that the services are running, you should see three containers when executing `docker ps`. For example:
 
 ```bash
 > docker ps
 CONTAINER ID        IMAGE                             COMMAND                  CREATED             STATUS              PORTS                    NAMES
-e09c5c203b93        redis:4.0.9                       "docker-entrypoint.s…"   51 seconds ago      Up 49 seconds       0.0.0.0:6379->6379/tcp   studio_vue-refactor_redis_1
+e09c5c203b93        redis:6.0.9                       "docker-entrypoint.s…"   51 seconds ago      Up 49 seconds       0.0.0.0:6379->6379/tcp   studio_vue-refactor_redis_1
 6164371efb6b        minio/minio                       "minio server /data"     51 seconds ago      Up 49 seconds       0.0.0.0:9000->9000/tcp   studio_vue-refactor_minio_1
 c86bbfa3a59e        postgres:12.10                      "docker-entrypoint.s…"   51 seconds ago      Up 49 seconds       0.0.0.0:5432->5432/tcp   studio_vue-refactor_postgres_1
 ```
 
 
-To shut down the services, run
+To stop the services, press <kbd>Ctrl</kbd> + <kbd>C</kbd> in the terminal where you ran `make dcservicesup`. Once you've done that, you may run the following command to remove the docker containers (they will be recreated when you run `dcservicesup` again):
 
 ```bash
 make dcservicesdown
@@ -67,19 +67,13 @@ make dcservicesdown
 
 To develop on Kolibri Studio, you'll need:
 
-* Python 3.6
+* Python 3.9+
 
-Managing Python installations can be quite tricky. We *highly* recommend using package managers like `Homebrew <http://brew.sh/>`__ on Mac or ``apt`` on Debian for this. Never modify your system's built-in version of Python
+Managing Python installations can be quite tricky. We *highly* recommend using something like [`pyenv`](https://learningequality.github.io/django-tutorial/en/python_installation/) or package managers like `Homebrew <http://brew.sh/>`__ on Mac or ``apt`` on Debian to manage your Python installations. Never modify your system's built-in version of Python.
 
-Then set up:
+Once you've set up a Python [virtual environment](https://learningequality.github.io/django-tutorial/en/python_installation/) for the project, you can install the dependencies:
 
 ```bash
-# Create virtual environment
-virtualenv venv
-
-# Activate virtual environment
-. venv/bin/activate
-
 # Install all dependencies
 pip install -r requirements.txt
 pip install -r requirements-dev.txt
@@ -87,8 +81,6 @@ pip install -r requirements-dev.txt
 # Set up pre-commit hooks
 pre-commit install
 ```
-
-Exit the virtual environment by running `exit`.
 
 #### Adding or updating dependencies
 
@@ -104,13 +96,15 @@ For more details, please see the [pip-tools docs on Github](https://github.com/j
 
 ### Yarn and Javascript dependencies
 
-As described above, Kolibri Studio has dependencies that rely on Node.js version 10.x. `nodeenv` is a useful tool for using specific versions of Node.js tools in Python environments. You'll also need [yarn](https://yarnpkg.com/lang/en/docs/install) installed.
+As described above, Kolibri Studio has dependencies that rely on Node.js version 16.x. `nodeenv` is a useful tool for using specific versions of Node.js tools in Python environments. You'll also need [yarn](https://yarnpkg.com/lang/en/docs/install) installed.
 
 All the javascript dependencies are listed in `package.json`. To install them run the following [yarn](https://yarnpkg.com/en/) command:
 
 ```bash
-# Set up Node 10.x environment
-nodeenv -p --node=10.15.3
+# Set up Node 16.x environment
+nodeenv -p --node=16.16.0
+# Install yarn 'globally' to the project if you haven't already installed it globally
+npm install -g yarn
 # Install javascript dependencies
 yarn install --network-timeout 1000000
 ```
@@ -128,13 +122,13 @@ yarn run devsetup
 
 ### Running the development server
 
-In one tab, start `celery` using:
+In one terminal tab, start the `celery` workers for asynchronous task processing:
 
 ```bash
 yarn run celery
 ```
 
-In another tab, start Django and the webpack build using:
+In another terminal tab, start the Django webserver and the webpack build using:
 
 
 ```bash
@@ -143,7 +137,7 @@ yarn run devserver:hot  # with Vue hot module reloading
 yarn run devserver  # without hot module reloading
 ```
 
-This will take a few minutes to build the frontend. When it's done, you can log in with `a@a.com` password `a` at [http://localhost:8080/accounts/login/](http://localhost:8080/accounts/login/)
+This will take a few minutes to build the frontend. When it's done, you can sign in with `a@a.com` password `a` at [http://localhost:8080/accounts/login/](http://localhost:8080/accounts/login/)
 
 
 ## Additional tools
@@ -165,6 +159,9 @@ If you want to test the performance of your changes, you can start up a local se
 with settings closer to a production environment like so:
 
 ```bash
+# build frontend dependencies
+yarn run build
+# run the server (no webpack)
 yarn run localprodserver
 ```
 
@@ -217,24 +214,16 @@ will open the browser with an interactive diagram with all the profiling informa
 Front-end linting is run using:
 
 ```bash
-yarn run lint-all
+yarn run lint-frontend
 ```
 
 Some linting errors can be fixed automatically by running:
 
 ```bash
-yarn run lint-all:fix
+yarn run lint-frontend:format
 ```
 
 Make sure you've set up pre-commit hooks as described above. This will ensure that linting is automatically run on staged changes before every commit.
-
-### Flower
-
-[Flower](https://flower.readthedocs.io/en/latest/) is a Celery monitoring dashboard. It is available on http://localhost:5555 after you run services:
-
-```bash
-yarn run services
-```
 
 ### Storybook
 
@@ -250,7 +239,7 @@ You can also check [official addons](https://storybook.js.org/addons/).
 yarn run storybook
 ```
 
-With detailed webpack information (useful when debuggin loaders, addons and similar):
+With detailed webpack information (useful when debugging loaders, addons and similar):
 
 ```bash
 yarn run storybook:debug

@@ -26,7 +26,7 @@
   >
     <template #item="{ item }">
       <VTooltip bottom>
-        <template v-slot:activator="{ on }">
+        <template #activator="{ on }">
           <span class="text-truncate" v-on="on">{{ languageText(item) }}</span>
         </template>
         <span>{{ languageText(item) }}</span>
@@ -57,6 +57,7 @@
           }
           return !value.toString();
         },
+        default: null,
       },
       required: {
         type: Boolean,
@@ -128,6 +129,7 @@
     width: calc(100% - 48px);
     min-height: 0 !important;
   }
+
   .v-chip,
   /deep/ .v-chip__content,
   .text-truncate {

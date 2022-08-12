@@ -1,8 +1,12 @@
 import { mount } from '@vue/test-utils';
 import ChangePasswordForm from '../Account/ChangePasswordForm';
+import { factory } from '../../store';
+
+const store = factory();
 
 function makeWrapper() {
   return mount(ChangePasswordForm, {
+    store,
     sync: false,
     propsData: {
       value: true,

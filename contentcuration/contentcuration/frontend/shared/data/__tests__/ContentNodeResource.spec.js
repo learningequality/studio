@@ -183,7 +183,10 @@ describe('ContentNode methods', () => {
   });
 
   function mockMethod(name, implementation) {
-    const mock = jest.spyOn(ContentNode, name).mockImplementation(implementation);
+    const path = name.split('.');
+    const prop = path.pop();
+    const mockObj = path.reduce((mockObj, prop) => mockObj[prop], ContentNode);
+    const mock = jest.spyOn(mockObj, prop).mockImplementation(implementation);
     mocks.push(mock);
     return mock;
   }
@@ -270,6 +273,7 @@ describe('ContentNode methods', () => {
       resolveParent,
       treeLock,
       get,
+      tableGet,
       where,
       getNewSortOrder;
     beforeEach(() => {
@@ -284,6 +288,7 @@ describe('ContentNode methods', () => {
       treeLock = mockMethod('treeLock', (id, cb) => cb());
       getNewSortOrder = mockMethod('getNewSortOrder', () => lft);
       get = mockMethod('get', () => Promise.resolve(node));
+      tableGet = mockMethod('table.get', () => Promise.resolve());
       where = mockMethod('where', () => Promise.resolve(siblings));
     });
 
@@ -395,13 +400,13 @@ describe('ContentNode methods', () => {
         ).resolves.toEqual('results');
         expect(resolveParent).toHaveBeenCalledWith('target', 'position');
         expect(treeLock).toHaveBeenCalledWith(parent.root_id, expect.any(Function));
-        expect(get).toHaveBeenCalledWith('abc123', false);
+        expect(tableGet).toHaveBeenCalledWith('abc123');
         expect(where).toHaveBeenCalledWith({ parent: parent.id }, false);
         expect(getNewSortOrder).not.toBeCalled();
         expect(cb).toBeCalled();
         const result = cb.mock.calls[0][0];
         expect(result).toMatchObject({
-          node,
+          node: undefined,
           parent,
           payload: {
             id: expect.not.stringMatching('abc123'),
@@ -434,13 +439,13 @@ describe('ContentNode methods', () => {
         ).resolves.toEqual('results');
         expect(resolveParent).toHaveBeenCalledWith('target', 'position');
         expect(treeLock).toHaveBeenCalledWith(parent.root_id, expect.any(Function));
-        expect(get).toHaveBeenCalledWith('abc123', false);
+        expect(tableGet).toHaveBeenCalledWith('abc123');
         expect(where).toHaveBeenCalledWith({ parent: parent.id }, false);
         expect(getNewSortOrder).toHaveBeenCalledWith(null, 'target', 'position', siblings);
         expect(cb).toBeCalled();
         const result = cb.mock.calls[0][0];
         expect(result).toMatchObject({
-          node,
+          node: undefined,
           parent,
           payload: {
             id: expect.not.stringMatching('abc123'),
@@ -473,7 +478,7 @@ describe('ContentNode methods', () => {
         ).rejects.toThrow('New lft value evaluated to null');
         expect(resolveParent).toHaveBeenCalledWith('target', 'position');
         expect(treeLock).toHaveBeenCalledWith(parent.root_id, expect.any(Function));
-        expect(get).toHaveBeenCalledWith('abc123', false);
+        expect(tableGet).toHaveBeenCalledWith('abc123');
         expect(where).toHaveBeenCalledWith({ parent: parent.id }, false);
         expect(getNewSortOrder).toHaveBeenCalledWith(null, 'target', 'position', siblings);
         expect(cb).not.toBeCalled();
@@ -562,6 +567,7 @@ describe('ContentNode methods', () => {
     beforeEach(() => {
       table = {
         put: jest.fn(() => Promise.resolve()),
+        update: jest.fn(() => Promise.resolve()),
       };
       parent = {
         id: uuid4(),

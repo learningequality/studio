@@ -109,8 +109,8 @@
 
   import Vue from 'vue';
   import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
-  import ChannelThumbnail from './ChannelThumbnail';
   import ChannelSharing from './ChannelSharing';
+  import ChannelThumbnail from './ChannelThumbnail';
   import { NEW_OBJECT, ErrorTypes } from 'shared/constants';
   import MessageDialog from 'shared/views/MessageDialog';
   import LanguageDropdown from 'shared/views/LanguageDropdown';
@@ -138,9 +138,11 @@
     props: {
       channelId: {
         type: String,
+        default: '',
       },
       tab: {
         type: String,
+        default: null,
       },
     },
     data() {
@@ -156,6 +158,9 @@
     computed: {
       ...mapState(['currentLanguage']),
       ...mapGetters('channel', ['getChannel']),
+      ...mapState({
+        user: state => state.session.currentUser,
+      }),
       channel() {
         return this.getChannel(this.channelId) || {};
       },
@@ -263,13 +268,15 @@
     // will never be rendered.
     beforeMount() {
       const channelId = this.$route.params.channelId;
-      return this.verifyChannel(channelId).then(() => {
-        this.header = this.channel.name; // Get channel name when user enters modal
-        this.updateTitleForPage();
-        if (!this.isNew) {
-          this.$refs.detailsform.validate();
-        }
-      });
+      return this.verifyChannel(channelId)
+        .then(() => {
+          this.header = this.channel.name; // Get channel name when user enters modal
+          this.updateTitleForPage();
+          if (!this.isNew) {
+            this.$refs.detailsform.validate();
+          }
+        })
+        .catch(() => {});
     },
     mounted() {
       // Set expiry to 1ms
@@ -338,8 +345,9 @@
         return new Promise((resolve, reject) => {
           // Check if we already have the channel locally
           if (this.getChannel(channelId)) {
-            // Don't allow view-only channels
-            if (this.getChannel(channelId).edit) {
+            // Don't allow view-only channels,
+            // but allow admins to access
+            if (this.getChannel(channelId).edit || this.user.is_admin) {
               resolve();
             } else {
               this.$store.dispatch('errors/handleGenericError', {

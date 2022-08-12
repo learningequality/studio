@@ -3,6 +3,7 @@ import uuid
 import mock
 import pytest
 from django.conf import settings
+from django.core.cache import cache
 from django.db.utils import IntegrityError
 from django.utils import timezone
 from le_utils.constants import content_kinds
@@ -13,6 +14,7 @@ from contentcuration.models import AssessmentItem
 from contentcuration.models import Channel
 from contentcuration.models import ChannelHistory
 from contentcuration.models import ContentNode
+from contentcuration.models import CONTENTNODE_TREE_ID_CACHE_KEY
 from contentcuration.models import File
 from contentcuration.models import FILE_DURATION_CONSTRAINT
 from contentcuration.models import generate_object_storage_name
@@ -296,7 +298,7 @@ class ContentNodeTestCase(PermissionQuerysetTestCase):
         user = testdata.user()
         queryset = ContentNode.filter_view_queryset(self.base_queryset, user=user)
         self.assertQuerysetDoesNotContain(queryset, pk=settings.ORPHANAGE_ROOT_ID)
-        self.assertQuerysetContains(queryset, pk=contentnode.id)
+        self.assertQuerysetDoesNotContain(queryset, pk=contentnode.id)
 
     def test_filter_view_queryset__orphan_tree__anonymous(self):
         contentnode = create_contentnode(settings.ORPHANAGE_ROOT_ID)
@@ -365,7 +367,7 @@ class ContentNodeTestCase(PermissionQuerysetTestCase):
         user = testdata.user()
         queryset = ContentNode.filter_edit_queryset(self.base_queryset, user=user)
         self.assertQuerysetDoesNotContain(queryset, pk=settings.ORPHANAGE_ROOT_ID)
-        self.assertQuerysetContains(queryset, pk=contentnode.id)
+        self.assertQuerysetDoesNotContain(queryset, pk=contentnode.id)
 
     def test_filter_edit_queryset__orphan_tree__anonymous(self):
         contentnode = create_contentnode(settings.ORPHANAGE_ROOT_ID)
@@ -373,6 +375,68 @@ class ContentNodeTestCase(PermissionQuerysetTestCase):
         queryset = ContentNode.filter_edit_queryset(self.base_queryset, user=self.anonymous_user)
         self.assertQuerysetDoesNotContain(queryset, pk=settings.ORPHANAGE_ROOT_ID)
         self.assertQuerysetDoesNotContain(queryset, pk=contentnode.id)
+
+    def test_initial_setting_for_contentnode_table_partition(self):
+        self.assertEqual(settings.IS_CONTENTNODE_TABLE_PARTITIONED, False)
+
+    def test_filter_by_pk__when_node_exists(self):
+        contentnode = create_contentnode(settings.ORPHANAGE_ROOT_ID)
+
+        with self.settings(IS_CONTENTNODE_TABLE_PARTITIONED=False):
+            node = ContentNode.filter_by_pk(pk=contentnode.id).first()
+            self.assertEqual(node.id, contentnode.id)
+
+        with self.settings(IS_CONTENTNODE_TABLE_PARTITIONED=True):
+            node = ContentNode.filter_by_pk(pk=contentnode.id).first()
+            self.assertEqual(node.id, contentnode.id)
+
+    def test_filter_by_pk__when_node_doesnot_exists(self):
+        with self.settings(IS_CONTENTNODE_TABLE_PARTITIONED=False):
+            node = ContentNode.filter_by_pk(pk=uuid.uuid4().hex).first()
+            self.assertEqual(node, None)
+
+        with self.settings(IS_CONTENTNODE_TABLE_PARTITIONED=True):
+            node = ContentNode.filter_by_pk(pk=uuid.uuid4().hex).first()
+            self.assertEqual(node, None)
+
+    def test_filter_by_pk__sets_cache(self):
+        contentnode = create_contentnode(settings.ORPHANAGE_ROOT_ID)
+
+        with self.settings(IS_CONTENTNODE_TABLE_PARTITIONED=True):
+            node = ContentNode.filter_by_pk(pk=contentnode.id).first()
+            tree_id_from_cache = cache.get(CONTENTNODE_TREE_ID_CACHE_KEY.format(pk=contentnode.id))
+            self.assertEqual(node.tree_id, tree_id_from_cache)
+
+    def test_filter_by_pk__doesnot_query_db_when_cache_hit(self):
+        contentnode = create_contentnode(settings.ORPHANAGE_ROOT_ID)
+
+        with self.settings(IS_CONTENTNODE_TABLE_PARTITIONED=True):
+
+            # First, set cache by using filter_by_pk
+            ContentNode.filter_by_pk(pk=contentnode.id)
+
+            with mock.patch("contentcuration.models.ContentNode") as mock_contentnode:
+                ContentNode.filter_by_pk(contentnode.id)
+                mock_contentnode.objects.filter.values_list.first.assert_not_called()
+
+    def test_filter_by_pk__tree_id_updated_on_move(self):
+        with self.settings(IS_CONTENTNODE_TABLE_PARTITIONED=True):
+            testchannel = testdata.channel()
+
+            sourcenode = ContentNode.objects.create(
+                title="Main", parent=testchannel.main_tree, kind_id="topic"
+            )
+            targetnode = ContentNode.objects.create(
+                title="Trashed", parent=testchannel.trash_tree, kind_id="topic"
+            )
+
+            sourcenode.move_to(targetnode, "last-child")
+
+            after_move_sourcenode = ContentNode.filter_by_pk(sourcenode.id).first()
+            tree_id_from_cache = cache.get(CONTENTNODE_TREE_ID_CACHE_KEY.format(pk=sourcenode.id))
+
+            self.assertEqual(after_move_sourcenode.tree_id, testchannel.trash_tree.tree_id)
+            self.assertEqual(tree_id_from_cache, testchannel.trash_tree.tree_id)
 
 
 class AssessmentItemTestCase(PermissionQuerysetTestCase):

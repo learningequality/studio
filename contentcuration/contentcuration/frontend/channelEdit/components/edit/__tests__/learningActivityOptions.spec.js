@@ -20,10 +20,12 @@ describe('LearningActivityOptions', () => {
     expect(wrapper.isVueInstance()).toBe(true);
   });
 
-  it('number of items in the dropdown should be equal to number of items available in ', () => {
-    const wrapper = shallowMount(LearningActivityOptions);
+  it('number of items in the dropdown should be equal to number of items available in ', async () => {
+    const wrapper = makeWrapper([]);
+    await wrapper.find('.v-input__slot').trigger('click');
+
     const numberOfDropdownItems = Object.keys(LearningActivities).length;
-    const dropdownItems = wrapper.attributes()['items'].split(',').length;
+    const dropdownItems = wrapper.find('.v-list').element.children.length;
 
     expect(dropdownItems).toBe(numberOfDropdownItems);
   });

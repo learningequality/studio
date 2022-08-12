@@ -45,6 +45,7 @@
       </VToolbarItems>
       <VSpacer />
       <OfflineText indicator />
+      <ProgressModal />
       <div v-if="errorsInChannel && canEdit" class="mx-1">
         <VTooltip bottom>
           <template #activator="{ on }">
@@ -164,7 +165,6 @@
     <slot></slot>
 
     <PublishModal v-if="showPublishModal" v-model="showPublishModal" />
-    <ProgressModal :syncing="syncing" :noSyncNeeded="noSyncNeeded" />
     <template v-if="isPublished">
       <ChannelTokenModal v-model="showTokenModal" :channel="currentChannel" />
     </template>
@@ -173,7 +173,6 @@
       v-model="showSyncModal"
       :channel="currentChannel"
       @syncing="syncInProgress"
-      @nosync="noResourcesToSync"
     />
     <MessageDialog v-model="showDeleteModal" :header="$tr('deleteTitle')">
       {{ $tr('deletePrompt') }}
@@ -244,11 +243,11 @@
 <script>
 
   import { mapActions, mapGetters } from 'vuex';
-  import { DraggableRegions, DraggableUniverses, RouteNames } from '../../constants';
-  import PublishModal from '../../components/publish/PublishModal';
-  import ProgressModal from '../progress/ProgressModal';
-  import SyncResourcesModal from '../sync/SyncResourcesModal';
   import Clipboard from '../../components/Clipboard';
+  import SyncResourcesModal from '../sync/SyncResourcesModal';
+  import ProgressModal from '../progress/ProgressModal';
+  import PublishModal from '../../components/publish/PublishModal';
+  import { DraggableRegions, DraggableUniverses, RouteNames } from '../../constants';
   import MainNavigationDrawer from 'shared/views/MainNavigationDrawer';
   import IconButton from 'shared/views/IconButton';
   import ToolBar from 'shared/views/ToolBar';
@@ -289,7 +288,6 @@
         showClipboard: false,
         showDeleteModal: false,
         syncing: false,
-        noSyncNeeded: false,
       };
     },
     computed: {
@@ -303,10 +301,8 @@
       },
       isChanged() {
         return (
-          this.rootNode &&
-          (this.rootNode.changed ||
-            this.rootNode.has_updated_descendants ||
-            this.rootNode.has_new_descendants)
+          this.currentChannel &&
+          (this.currentChannel.unpublished_changes || (this.isRicecooker && this.rootNode.changed))
         );
       },
       isPublished() {
@@ -317,6 +313,7 @@
       },
       disablePublish() {
         return (
+          this.currentChannel.publishing ||
           !this.isChanged ||
           !this.currentChannel.language ||
           (this.rootNode && !this.rootNode.total_count)
@@ -407,9 +404,6 @@
       syncInProgress() {
         this.syncing = true;
       },
-      noResourcesToSync() {
-        this.noSyncNeeded = true;
-      },
       deleteChannelModal() {
         this.showDeleteModal = true;
         this.trackClickEvent('Delete channel');
@@ -475,6 +469,7 @@
   .drag-placeholder {
     position: absolute;
     z-index: 24;
+
     .text {
       width: 400px;
       max-width: 400px;
@@ -488,6 +483,7 @@
       from {
         transform: translateY(0);
       }
+
       to {
         transform: translateY(-5px);
       }

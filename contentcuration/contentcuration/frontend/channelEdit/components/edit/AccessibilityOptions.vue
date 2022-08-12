@@ -16,6 +16,7 @@
         >
           <template #label>
             <span class="text-xs-left">{{ accessibilityItem.label }}</span>
+            &nbsp;
             <HelpTooltip
               :text="$tr(accessibilityItem.help)"
               bottom
@@ -33,7 +34,7 @@
 
 <script>
 
-  import { camelCase } from 'lodash';
+  import camelCase from 'lodash/camelCase';
   import { AccessibilityCategories, AccessibilityCategoriesMap } from 'shared/constants';
   import Checkbox from 'shared/views/form/Checkbox';
   import HelpTooltip from 'shared/views/HelpTooltip';

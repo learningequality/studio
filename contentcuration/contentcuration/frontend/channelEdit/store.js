@@ -8,9 +8,9 @@ import task from './vuex/task';
 import * as actions from './actions';
 import * as getters from './getters';
 import * as mutations from './mutations';
-import storeFactory from 'shared/vuex/baseStore';
-import persistFactory from 'shared/vuex/persistFactory';
 import DraggablePlugin from 'shared/vuex/draggablePlugin';
+import persistFactory from 'shared/vuex/persistFactory';
+import storeFactory from 'shared/vuex/baseStore';
 
 export const STORE_CONFIG = {
   state() {

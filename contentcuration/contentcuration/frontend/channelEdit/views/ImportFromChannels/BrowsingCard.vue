@@ -31,7 +31,12 @@
               <VTooltip bottom>
                 <template #activator="{ on }">
                   <div class="my-1" style="display: inline-block;" v-on="on">
-                    <Icon color="primary" small style="vertical-align: text-top;" class="mx-1">
+                    <Icon
+                      color="roleVisibilityCoach"
+                      small
+                      style="vertical-align: text-top;"
+                      class="mx-1"
+                    >
                       local_library
                     </Icon>
                     <template v-if="isTopic">
@@ -205,18 +210,22 @@
 
   .metadata {
     color: var(--v-grey-darken2);
+
     span:not(:last-child)::after {
       margin: 0 8px;
       color: var(--v-grey-base);
       content: '•';
     }
   }
+
   .v-card {
     cursor: pointer;
+
     &:hover {
       background-color: var(--v-greyBackground-base);
     }
   }
+
   h3 {
     // Hack to resolve card resizing when title is too long
     width: 100px;

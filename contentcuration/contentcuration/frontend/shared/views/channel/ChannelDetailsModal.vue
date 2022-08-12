@@ -12,7 +12,7 @@
       <VLayout class="mb-3">
         <VSpacer v-if="$vuetify.breakpoint.smAndUp" />
         <Menu>
-          <template v-slot:activator="{ on }">
+          <template #activator="{ on }">
             <VBtn color="primary" dark :block="$vuetify.breakpoint.xsOnly" v-on="on">
               {{ $tr('downloadButton') }}
               &nbsp;
@@ -60,6 +60,7 @@
     props: {
       channelId: {
         type: String,
+        default: null,
       },
     },
     data() {
@@ -98,7 +99,7 @@
     watch: {
       dialog(newValue) {
         if (!newValue) {
-          this.$router.push(this.backLink);
+          this.$router.push(this.backLink).catch(() => {});
         }
       },
     },
@@ -129,7 +130,7 @@
           .then(([channel, details]) => {
             // Channel either doesn't exist or user doesn't have access to channel
             if (!channel) {
-              this.$router.replace(this.backLink);
+              this.$router.replace(this.backLink).catch(() => {});
               this.dialog = false;
               return;
             }
