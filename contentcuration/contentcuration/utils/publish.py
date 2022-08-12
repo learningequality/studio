@@ -187,6 +187,10 @@ def map_content_nodes(  # noqa: C901
                 logging.debug("Mapping node with id {id}".format(
                     id=node.pk))
 
+                # Update tsvector for this node.
+                node.title_description_search_vector = ccmodels.POSTGRES_SEARCH_VECTOR
+                node.save(update_fields=["title_description_search_vector"])
+
                 if node.get_descendants(include_self=True).exclude(kind_id=content_kinds.TOPIC).exists() and node.complete:
                     children = (node.children.all())
                     node_queue.extend(children)
@@ -428,7 +432,8 @@ def process_assessment_metadata(ccnode, kolibrinode):
     exercise_data_type = ""
     if exercise_data.get('mastery_model'):
         exercise_data_type = exercise_data.get('mastery_model')
-    if exercise_data.get('option') and exercise_data.get('option').get('completion_criteria') and exercise_data.get('option').get('completion_criteria').get('mastery_model'):
+    if exercise_data.get('option') and exercise_data.get('option').get('completion_criteria') \
+            and exercise_data.get('option').get('completion_criteria').get('mastery_model'):
         exercise_data_type = exercise_data.get('option').get('completion_criteria').get('mastery_model')
 
     mastery_model = {'type': exercise_data_type or exercises.M_OF_N}

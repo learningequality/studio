@@ -1,5 +1,6 @@
 import re
 
+from django.contrib.postgres.search import SearchQuery
 from django.db.models import ExpressionWrapper
 from django.db.models import F
 from django.db.models import IntegerField
@@ -16,6 +17,7 @@ from rest_framework.permissions import IsAuthenticated
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
 from contentcuration.models import File
+from contentcuration.models import POSTGRES_FTS_CONFIG
 from contentcuration.utils.pagination import CachedListPagination
 from contentcuration.viewsets.base import RequiredFilterSet
 from contentcuration.viewsets.base import ValuesViewset
@@ -62,23 +64,8 @@ class ContentNodeFilter(RequiredFilterSet):
         return queryset.filter(channel_id__in=list(channel_ids))
 
     def filter_keywords(self, queryset, name, value):
-        filter_query = Q(title__icontains=value) | Q(description__icontains=value)
-
-        tags_node_ids = ContentNode.tags.through.objects.filter(
-            contenttag__tag_name__icontains=value
-        ).values_list("contentnode_id", flat=True)
-
-        # Check if we have a Kolibri node id or ids and add them to the search if so.
-        # Add to, rather than replace, the filters so that we never misinterpret a search term as a UUID.
-        # node_ids = uuid_re.findall(value) + list(tags_node_ids)
-        node_ids = uuid_re.findall(value)
-        for node_id in node_ids:
-            # check for the major ID types
-            filter_query |= Q(node_id=node_id)
-            filter_query |= Q(content_id=node_id)
-            filter_query |= Q(id=node_id)
-
-        return queryset.filter(Q(id__in=list(tags_node_ids)) | filter_query)
+        search_tsquery = SearchQuery(value=value, config=POSTGRES_FTS_CONFIG, search_type="plain")
+        return queryset.filter(title_description_search_vector=search_tsquery)
 
     def filter_author(self, queryset, name, value):
         return queryset.filter(

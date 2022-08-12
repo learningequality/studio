@@ -13,6 +13,10 @@ from django.conf import settings
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import PermissionsMixin
+from django.contrib.postgres.indexes import GinIndex
+from django.contrib.postgres.indexes import GistIndex
+from django.contrib.postgres.search import SearchVector
+from django.contrib.postgres.search import SearchVectorField
 from django.core.cache import cache
 from django.core.exceptions import MultipleObjectsReturned
 from django.core.exceptions import ObjectDoesNotExist
@@ -1082,6 +1086,9 @@ class ChannelSet(models.Model):
             self.secret_token.delete()
 
 
+CONTENT_TAG_NAME__INDEX_NAME = "contenttag_tag_name_gist_idx"
+
+
 class ContentTag(models.Model):
     id = UUIDField(primary_key=True, default=uuid.uuid4)
     tag_name = models.CharField(max_length=50)
@@ -1093,6 +1100,7 @@ class ContentTag(models.Model):
 
     class Meta:
         unique_together = ['tag_name', 'channel']
+        indexes = [GistIndex(fields=["tag_name"], name=CONTENT_TAG_NAME__INDEX_NAME, opclasses=["gist_trgm_ops"])]
 
 
 def delegate_manager(method):
@@ -1136,6 +1144,12 @@ class License(models.Model):
 NODE_ID_INDEX_NAME = "node_id_idx"
 NODE_MODIFIED_INDEX_NAME = "node_modified_idx"
 NODE_MODIFIED_DESC_INDEX_NAME = "node_modified_desc_idx"
+NODE_SEARCH_VECTOR_GIN_INDEX_NAME = "node_search_vector_gin_idx"
+
+# Ours postgres full text search configuration.
+POSTGRES_FTS_CONFIG = "simple"
+# Search vector to create tsvector of title and description concatenated.
+POSTGRES_SEARCH_VECTOR = SearchVector("title", "description", config=POSTGRES_FTS_CONFIG)
 
 
 class ContentNode(MPTTModel, models.Model):
@@ -1230,6 +1244,10 @@ class ContentNode(MPTTModel, models.Model):
     # A field for storing a suggested duration for the content node
     # this duration should be in seconds.
     suggested_duration = models.IntegerField(blank=True, null=True, help_text="Suggested duration for the content node (in seconds)")
+
+    # A field to store the ts_vector form of (title + ' ' + description).
+    # This significantly increases the search performance.
+    title_description_search_vector = SearchVectorField(blank=True, null=True)
 
     objects = CustomContentNodeTreeManager()
 
@@ -1830,6 +1848,7 @@ class ContentNode(MPTTModel, models.Model):
         indexes = [
             models.Index(fields=["node_id"], name=NODE_ID_INDEX_NAME),
             models.Index(fields=["-modified"], name=NODE_MODIFIED_DESC_INDEX_NAME),
+            GinIndex(fields=["title_description_search_vector"], name=NODE_SEARCH_VECTOR_GIN_INDEX_NAME),
         ]
 
 

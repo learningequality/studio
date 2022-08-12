@@ -86,6 +86,7 @@ INSTALLED_APPS = (
     'webpack_loader',
     'django_filters',
     'mathfilters',
+    'django.contrib.postgres',
 )
 
 SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"
