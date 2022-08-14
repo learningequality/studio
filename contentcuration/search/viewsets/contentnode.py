@@ -1,6 +1,5 @@
 import re
 
-from django.contrib.postgres.search import SearchQuery
 from django.db.models import ExpressionWrapper
 from django.db.models import F
 from django.db.models import IntegerField
@@ -17,7 +16,6 @@ from rest_framework.permissions import IsAuthenticated
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
 from contentcuration.models import File
-from contentcuration.models import POSTGRES_FTS_CONFIG
 from contentcuration.utils.pagination import CachedListPagination
 from contentcuration.viewsets.base import RequiredFilterSet
 from contentcuration.viewsets.base import ValuesViewset
@@ -30,9 +28,6 @@ class ListPagination(CachedListPagination):
     page_size = 25
     page_size_query_param = "page_size"
     max_page_size = 100
-
-
-uuid_re = re.compile("([a-f0-9]{32})")
 
 
 class ContentNodeFilter(RequiredFilterSet):
@@ -63,8 +58,7 @@ class ContentNodeFilter(RequiredFilterSet):
         return queryset.filter(channel_id__in=list(channel_ids))
 
     def filter_keywords(self, queryset, name, value):
-        search_tsquery = SearchQuery(value=value, config=POSTGRES_FTS_CONFIG, search_type="plain")
-        return queryset.filter(title_description_search_vector=search_tsquery)
+        return ContentNode.search(queryset=queryset, search_term=value)
 
     def filter_author(self, queryset, name, value):
         return queryset.filter(
@@ -115,7 +109,6 @@ class ContentNodeFilter(RequiredFilterSet):
 
 
 class SearchContentNodeViewSet(ValuesViewset):
-    queryset = ContentNode.objects.all()
     filterset_class = ContentNodeFilter
     pagination_class = ListPagination
     permission_classes = [IsAuthenticated]
@@ -143,13 +136,11 @@ class SearchContentNodeViewSet(ValuesViewset):
     )
 
     def get_queryset(self):
-        queryset = super(SearchContentNodeViewSet, self).get_queryset()
-        return ContentNode._annotate_channel_id(queryset)
+        return ContentNode._annotate_channel_id(ContentNode.objects)
 
     def annotate_queryset(self, queryset):
         """
-        1. Do a distinct by 'content_id,' using the original node if possible
-        2. Annotate lists of content node and channel pks
+        Annotates thumbnails, resources count and channel name.
         """
         thumbnails = File.objects.filter(
             contentnode=OuterRef("id"), preset__thumbnail=True

@@ -14,6 +14,7 @@ from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import PermissionsMixin
 from django.contrib.postgres.indexes import GinIndex
 from django.contrib.postgres.indexes import GistIndex
+from django.contrib.postgres.search import SearchQuery
 from django.contrib.postgres.search import SearchVector
 from django.contrib.postgres.search import SearchVectorField
 from django.contrib.sessions.models import Session
@@ -1356,6 +1357,12 @@ class ContentNode(MPTTModel, models.Model):
             | Q(public=True)
         )
 
+    @classmethod
+    def search(self, queryset, search_term):
+        search_query = Q(title_description_search_vector=SearchQuery(value=search_term, config=POSTGRES_FTS_CONFIG, search_type="plain"))
+        tags_query = Q(tags__tag_name__icontains=search_term)
+        return queryset.filter(search_query | tags_query)
+
     @raise_if_unsaved
     def get_root(self):
         # Only topics can be root nodes
@@ -1839,8 +1846,10 @@ class ContentNode(MPTTModel, models.Model):
 
     def save(self, skip_lock=False, *args, **kwargs):
         if self._state.adding:
+            is_create = True
             self.on_create()
         else:
+            is_create = False
             self.on_update()
 
         # Logic borrowed from mptt - do a simple check to see if we have changed
@@ -1883,6 +1892,9 @@ class ContentNode(MPTTModel, models.Model):
             # no persistent object references for the original and new parent to modify
             if changed_ids:
                 ContentNode.objects.filter(id__in=changed_ids).update(changed=True)
+
+        if is_create:
+            ContentNode.filter_by_pk(pk=self.id).update(title_description_search_vector=POSTGRES_SEARCH_VECTOR)
 
     # Copied from MPTT
     save.alters_data = True
