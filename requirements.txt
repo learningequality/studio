@@ -90,7 +90,7 @@ django-postmark==0.1.6
     # via -r requirements.in
 django-prometheus==2.1.0
     # via -r requirements.in
-django-redis==4.12.1
+django-redis==5.2.0
     # via -r requirements.in
 django-registration==3.3
     # via -r requirements.in
