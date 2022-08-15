@@ -190,7 +190,7 @@ packaging==20.9
     # via google-api-core
 pathlib==1.0.1
     # via -r requirements.in
-pillow==8.3.2
+pillow==9.2.0
     # via -r requirements.in
 progressbar2==3.55.0
     # via -r requirements.in
