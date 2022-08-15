@@ -92,7 +92,7 @@ django-prometheus==2.1.0
     # via -r requirements.in
 django-redis==4.12.1
     # via -r requirements.in
-django-registration==3.1.2
+django-registration==3.3
     # via -r requirements.in
 django-s3-storage==0.13.4
     # via -r requirements.in
