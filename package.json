@@ -62,7 +62,7 @@
   },
   "homepage": "https://github.com/learningequality/studio#readme",
   "dependencies": {
-    "@sentry/browser": "^7.9.0",
+    "@sentry/browser": "^7.10.0",
     "@toast-ui/editor": "^2.3.1",
     "ajv": "^8.9.0",
     "axios": "^0.21.2",
