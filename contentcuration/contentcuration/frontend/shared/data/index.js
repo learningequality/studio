@@ -2,7 +2,7 @@ import Dexie from 'dexie';
 import mapValues from 'lodash/mapValues';
 import { createLeaderElection } from 'broadcast-channel';
 import channel from './broadcastChannel';
-import { CHANGE_LOCKS_TABLE, CHANGES_TABLE, IGNORED_SOURCE, TABLE_NAMES } from './constants';
+import { CHANGES_TABLE, IGNORED_SOURCE, TABLE_NAMES } from './constants';
 import db from './db';
 import { INDEXEDDB_RESOURCES } from './registry';
 import { startSyncing, stopSyncing } from './serverSync';
@@ -24,8 +24,6 @@ export function setupSchema() {
     // that I do not currently understand, so we engage
     // in somewhat duplicative behaviour instead.
     [CHANGES_TABLE]: 'rev++,[table+key],server_rev',
-    // A special table for keeping track of change locks
-    [CHANGE_LOCKS_TABLE]: 'id++,tracker_id,expiry',
     ...mapValues(INDEXEDDB_RESOURCES, value => value.schema),
   });
 }
