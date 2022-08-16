@@ -69,7 +69,7 @@
     "broadcast-channel": "^3.0.3",
     "clipboard-polyfill": "^2.8.1",
     "codemirror": "5.58.2",
-    "core-js": "^3.6.5",
+    "core-js": "^3.24.1",
     "dexie": "^3.2.2",
     "dexie-observable": "3.0.0-beta.11",
     "epubjs": "^0.3.89",
