@@ -3781,10 +3781,10 @@ core-js-compat@^3.21.0, core-js-compat@^3.22.1:
     browserslist "^4.20.3"
     semver "7.0.0"
 
-core-js@3, core-js@^3.18.3, core-js@^3.6.5:
-  version "3.22.8"
-  resolved "https://registry.yarnpkg.com/core-js/-/core-js-3.22.8.tgz#23f860b1fe60797cc4f704d76c93fea8a2f60631"
-  integrity sha512-UoGQ/cfzGYIuiq6Z7vWL1HfkE9U9IZ4Ub+0XSiJTCzvbZzgPA69oDF2f+lgJ6dFFLEdjW5O6svvoKzXX23xFkA==
+core-js@3, core-js@^3.18.3, core-js@^3.24.1:
+  version "3.24.1"
+  resolved "https://registry.yarnpkg.com/core-js/-/core-js-3.24.1.tgz#cf7724d41724154010a6576b7b57d94c5d66e64f"
+  integrity sha512-0QTBSYSUZ6Gq21utGzkfITDylE8jWC9Ne1D2MrhvlsZBI1x39OdDIVbzSqtgMndIy6BlHxBXpMGqzZmnztg2rg==
 
 core-js@^2.4.0:
   version "2.6.12"
@@ -12667,11 +12667,6 @@ workbox-cacheable-response@6.5.4:
   dependencies:
     workbox-core "6.5.4"
 
-workbox-core@6.5.3:
-  version "6.5.3"
-  resolved "https://registry.yarnpkg.com/workbox-core/-/workbox-core-6.5.3.tgz#bca038a9ef0d7a634a6db2a60f45313ed22ac249"
-  integrity sha512-Bb9ey5n/M9x+l3fBTlLpHt9ASTzgSGj6vxni7pY72ilB/Pb3XtN+cZ9yueboVhD5+9cNQrC9n/E1fSrqWsUz7Q==
-
 workbox-core@6.5.4:
   version "6.5.4"
   resolved "https://registry.yarnpkg.com/workbox-core/-/workbox-core-6.5.4.tgz#df48bf44cd58bb1d1726c49b883fb1dffa24c9ba"
@@ -12768,21 +12763,13 @@ workbox-webpack-plugin@^6.5.4:
     webpack-sources "^1.4.3"
     workbox-build "6.5.4"
 
-workbox-window@6.5.4:
+workbox-window@6.5.4, workbox-window@^6.5.4:
   version "6.5.4"
   resolved "https://registry.yarnpkg.com/workbox-window/-/workbox-window-6.5.4.tgz#d991bc0a94dff3c2dbb6b84558cff155ca878e91"
   integrity sha512-HnLZJDwYBE+hpG25AQBO8RUWBJRaCsI9ksQJEp3aCOFCaG5kqaToAYXFRAHxzRluM2cQbGzdQF5rjKPWPA1fug==
   dependencies:
     "@types/trusted-types" "^2.0.2"
     workbox-core "6.5.4"
-
-workbox-window@^6.2.4:
-  version "6.5.3"
-  resolved "https://registry.yarnpkg.com/workbox-window/-/workbox-window-6.5.3.tgz#4ade70056cb73477ef1cd8fea7cfd0ecbd825c7f"
-  integrity sha512-GnJbx1kcKXDtoJBVZs/P7ddP0Yt52NNy4nocjBpYPiRhMqTpJCNrSL+fGHZ/i/oP6p/vhE8II0sA6AZGKGnssw==
-  dependencies:
-    "@types/trusted-types" "^2.0.2"
-    workbox-core "6.5.3"
 
 wrap-ansi@^5.1.0:
   version "5.1.0"
