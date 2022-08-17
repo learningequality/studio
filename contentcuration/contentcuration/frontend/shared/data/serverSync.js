@@ -13,7 +13,6 @@ import {
   MAX_REV_KEY,
 } from './constants';
 import { Channel, Session, Task } from './resources';
-import { cleanupLocks, hasActiveLocks } from './changes';
 
 import { INDEXEDDB_RESOURCES } from './registry';
 import applyChanges from './applyRemoteChanges';
