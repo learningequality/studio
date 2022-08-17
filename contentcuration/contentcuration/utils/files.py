@@ -157,7 +157,7 @@ def write_base64_to_file(encoding, fpath_out):
         raise AssertionError("Error writing to file: Invalid base64 encoding")
 
     with open(fpath_out, "wb") as target_file:
-        target_file.write(base64.decodestring(encoding_match.group(2).encode('utf-8')))
+        target_file.write(base64.decodebytes(encoding_match.group(2).encode('utf-8')))
 
 
 def create_thumbnail_from_base64(encoding, file_format_id=file_formats.PNG, preset_id=None, uploaded_by=None):

@@ -237,7 +237,7 @@ def api_commit_channel(request):
             channel_id=channel_id,
         )
         # Send event (new staging tree or new main tree) for the channel
-        Change.create_change(event)
+        Change.create_change(event, created_by_id=request.user.id)
 
         # Mark old staging tree for garbage collection
         if old_staging and old_staging != obj.main_tree:

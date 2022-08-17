@@ -6,7 +6,7 @@
         v-if="audioVideoUpload && selectedDuration === 'exactTime'"
         class="defaultUpload md2 sm3"
       >
-        {{ convertToHHMMSS(defaultUploadTime) }}
+        {{ convertToHHMMSS(duration || `00:00`) }}
       </VFlex>
       <VFlex
         v-else-if="selectedDuration === 'shortActivity' || selectedDuration === 'longActivity'"
@@ -91,11 +91,6 @@
         type: Number,
         default: null,
       },
-    },
-    data() {
-      return {
-        defaultUploadTime: this.duration || `17:12`,
-      };
     },
     computed: {
       showRequiredLabel() {

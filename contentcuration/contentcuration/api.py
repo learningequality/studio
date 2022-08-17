@@ -97,4 +97,4 @@ def activate_channel(channel, user):
             "staging_root_id": None
         },
         channel_id=channel.id,
-    ), applied=True)
+    ), applied=True, created_by_id=user.id)

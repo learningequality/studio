@@ -57,15 +57,3 @@ export function deployCurrentChannel(context) {
 export function publishChannel(context, version_notes) {
   return Channel.publish(context.state.currentChannelId, version_notes);
 }
-
-export function stopTask(context, task) {
-  if (task && task.task_name === 'export-channel') {
-    return Channel.clearPublish(context.state.currentChannelId).then(() => {
-      return context.dispatch('task/deleteTask', task, { root: true });
-    });
-  } else if (task) {
-    return context.dispatch('task/deleteTask', task, { root: true });
-  } else {
-    Promise.resolve();
-  }
-}

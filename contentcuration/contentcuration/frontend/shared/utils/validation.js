@@ -1,4 +1,5 @@
 import get from 'lodash/get';
+import CompletionCriteriaModels from 'kolibri-constants/CompletionCriteria';
 import translator from '../translator';
 import { AssessmentItemTypes, ValidationErrors } from '../constants';
 import Licenses from 'shared/leUtils/Licenses';
@@ -52,6 +53,9 @@ export function isNodeComplete({ nodeDetails, assessmentItems, files }) {
   }
 
   if (getNodeDetailsErrors(nodeDetails).length) {
+    if (process.env.NODE_ENV !== 'production') {
+      console.info('Node is incomplete', getNodeDetailsErrors(nodeDetails));
+    }
     return false;
   }
   if (
@@ -59,17 +63,26 @@ export function isNodeComplete({ nodeDetails, assessmentItems, files }) {
     nodeDetails.kind !== ContentKindsNames.EXERCISE
   ) {
     if (getNodeFilesErrors(files).length) {
+      if (process.env.NODE_ENV !== 'production') {
+        console.info("Node's files are incomplete", getNodeFilesErrors(files));
+      }
       return false;
     }
   }
   if (nodeDetails.kind !== ContentKindsNames.TOPIC) {
     const completionCriteria = get(nodeDetails, 'extra_fields.options.completion_criteria');
     if (completionCriteria && !validateCompletionCriteria(completionCriteria, nodeDetails.kind)) {
+      if (process.env.NODE_ENV !== 'production') {
+        console.info("Node's completion criteria is invalid", validateCompletionCriteria.errors);
+      }
       return false;
     }
   }
   if (nodeDetails.kind === ContentKindsNames.EXERCISE) {
     if (!assessmentItems.length) {
+      if (process.env.NODE_ENV !== 'production') {
+        console.info('Exercise node is missing assessment items');
+      }
       return false;
     }
 
@@ -78,6 +91,12 @@ export function isNodeComplete({ nodeDetails, assessmentItems, files }) {
       return getAssessmentItemErrors(sanitizedAssessmentItem).length;
     };
     if (assessmentItems.some(isInvalid)) {
+      if (process.env.NODE_ENV !== 'production') {
+        console.info(
+          "Exercise node's assessment items are invalid",
+          assessmentItems.some(isInvalid)
+        );
+      }
       return false;
     }
   }
@@ -91,7 +110,11 @@ function _getLicense(node) {
 }
 
 function _getMasteryModel(node) {
-  return node.extra_fields;
+  const criteria = get(node, 'extra_fields.options.completion_criteria', {});
+  if (criteria.model === CompletionCriteriaModels.MASTERY) {
+    return criteria.threshold || {};
+  }
+  return {};
 }
 
 function _getLearningActivity(node) {
