@@ -370,7 +370,7 @@
   import LearningActivityOptions from './LearningActivityOptions.vue';
   import CategoryOptions from './CategoryOptions.vue';
   import CompletionOptions from './CompletionOptions.vue';
-
+  import FormatPresetsMap, { FormatPresetsNames } from 'shared/leUtils/FormatPresets';
   import {
     getTitleValidators,
     getCopyrightHolderValidators,
@@ -642,10 +642,17 @@
         return (this.firstNode && this.getContentNodeFiles(this.firstNode.id)) || [];
       },
       fileDuration() {
-        if (this.firstNode.kind === 'audio' || this.firstNode.kind === 'video') {
-          return this.nodeFiles.filter(
-            file => file.file_format === 'mp4' || file.file_format === 'mp3'
-          )[0].duration;
+        if (
+          this.firstNode.kind === ContentKindsNames.AUDIO ||
+          this.firstNode.kind === ContentKindsNames.VIDEO
+        ) {
+          // filter for the correct file types,
+          // to exclude files such as subtitle or cc
+          let audioVideoFiles;
+          audioVideoFiles = this.nodeFiles.filter(file => this.allowedFileType(file));
+          // return the last item in the array
+          const file = audioVideoFiles[audioVideoFiles.length - 1];
+          return file.duration;
         } else {
           return null;
         }
@@ -733,6 +740,17 @@
       },
       isUnique(value) {
         return value !== nonUniqueValue;
+      },
+      allowedFileType(file) {
+        let allowedFileTypes = [];
+        // add the relevant format presets for audio and video
+        // high res and low res are currently the same, so only one is included
+        allowedFileTypes.push(
+          FormatPresetsMap.get(FormatPresetsNames.HIGH_RES_VIDEO).allowed_formats
+        );
+        allowedFileTypes.push(FormatPresetsMap.get(FormatPresetsNames.AUDIO).allowed_formats);
+        allowedFileTypes = allowedFileTypes.flat();
+        return allowedFileTypes.includes(file.file_format);
       },
       getValueFromNodes(key) {
         const results = uniq(

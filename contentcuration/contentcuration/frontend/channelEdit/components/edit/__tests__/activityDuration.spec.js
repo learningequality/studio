@@ -16,33 +16,6 @@ describe('ActivityDuration', () => {
     const shortActivityMax = 30;
     const longActivityMin = 31;
     const longActivityMax = 120;
-    describe(`default state for audio/video resources`, () => {
-      it(`should display a static upload time when 'Exact time to complete' for audio/video resources as initial state`, () => {
-        const defaultValue = '17:12';
-        const wrapper = shallowMount(ActivityDuration);
-        expect(wrapper.vm.defaultUploadTime).toEqual(defaultValue);
-      });
-      it(`should display the file's time at upload when 'Exact time to complete' is chosen in Completion dropdown`, () => {
-        // TODO: defaultValue will need to be changed when file-upload-duration is implemented
-        const defaultValue = '17:12';
-        const wrapper = shallowMount(ActivityDuration, {
-          propsData: { duration: 123 },
-        });
-        expect(wrapper.props('duration')).toEqual(123);
-        expect(wrapper.vm.defaultUploadTime).not.toEqual(defaultValue);
-        expect(wrapper.vm.defaultUploadTime).toEqual(123);
-      });
-      it(`should display a "stand-in" at upload if file's time at upload is not available when 'Exact time to complete' is chosen in Completion dropdown`, () => {
-        // TODO: defaultValue will need to be changed when file-upload-duration is implemented
-        const defaultValue = '17:12';
-        const wrapper = shallowMount(ActivityDuration, {
-          propsData: { duration: null },
-        });
-        expect(wrapper.props('duration')).toEqual(null);
-        expect(wrapper.vm.defaultUploadTime).toEqual(defaultValue);
-        expect(wrapper.vm.defaultUploadTime).not.toEqual(null);
-      });
-    });
 
     describe(`convert seconds to minutes for display`, () => {
       it(`should display the seconds passed down from parent as minutes`, () => {
