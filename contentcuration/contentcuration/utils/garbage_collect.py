@@ -145,3 +145,12 @@ def clean_up_tasks():
         count, _ = TaskResult.objects.filter(date_done__lt=date_cutoff, status__in=states.READY_STATES).delete()
 
     logging.info("Deleted {} completed task(s) from the task table".format(count))
+
+
+def clean_up_stale_files():
+    """
+    Clean up files that aren't attached to any ContentNode, AssessmentItem, or SlideshowSlide
+    """
+    # files_to_clean_up = File.objects.filter(
+    #     contentnode__isnull=True, assessment_item__isnull=True, slideshow_slide__isnull=True
+    # )
