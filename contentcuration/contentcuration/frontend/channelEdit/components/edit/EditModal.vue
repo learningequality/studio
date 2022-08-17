@@ -248,7 +248,7 @@
     computed: {
       ...mapGetters('contentNode', ['getContentNode', 'getContentNodeIsValid']),
       ...mapGetters('assessmentItem', ['getAssessmentItems']),
-      ...mapGetters('currentChannel', ['canEdit']),
+      ...mapGetters('currentChannel', ['currentChannel', 'canEdit']),
       ...mapGetters('file', ['contentNodesAreUploading', 'getContentNodeFiles']),
       ...mapState({
         online: state => state.connection.online,
@@ -448,6 +448,7 @@
         return this.createContentNode({
           kind,
           parent: this.$route.params.nodeId,
+          channel_id: this.currentChannel.id,
           ...payload,
         }).then(newNodeId => {
           this.$router.push({

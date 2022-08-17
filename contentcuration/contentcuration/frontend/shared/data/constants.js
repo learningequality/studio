@@ -11,8 +11,6 @@ export const CHANGE_TYPES = {
 // Tables
 export const CHANGES_TABLE = 'changesForSyncing';
 
-export const CHANGE_LOCKS_TABLE = 'changeLocks';
-
 export const TABLE_NAMES = {
   SESSION: 'session',
   CHANNEL: 'channel',
@@ -29,7 +27,6 @@ export const TABLE_NAMES = {
   CLIPBOARD: 'clipboard',
   TASK: 'task',
   CHANGES_TABLE,
-  CHANGE_LOCKS_TABLE,
   BOOKMARK: 'bookmark',
 };
 
@@ -43,8 +40,6 @@ export const APP_ID = 'KolibriStudio';
  * @type {string}
  */
 export const IGNORED_SOURCE = 'IGNORED_SOURCE';
-
-export const REVERT_SOURCE = 'REVERT/' + IGNORED_SOURCE;
 
 export const RELATIVE_TREE_POSITIONS = {
   FIRST_CHILD: 'first-child',

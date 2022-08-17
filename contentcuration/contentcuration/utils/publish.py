@@ -47,6 +47,7 @@ from contentcuration.utils.files import get_thumbnail_encoding
 from contentcuration.utils.parser import extract_value
 from contentcuration.utils.parser import load_json_string
 from contentcuration.utils.sentry import report_exception
+from contentcuration.utils.user import delay_user_storage_calculation
 
 
 logmodule.basicConfig()
@@ -779,6 +780,7 @@ def fill_published_fields(channel, version_notes):
     channel.save()
 
 
+@delay_user_storage_calculation
 def publish_channel(
     user_id,
     channel_id,

@@ -405,6 +405,7 @@ export function copyContentNode(
   // with a `source_id` of the source node then create the content node copies
   return ContentNode.copy(id, target, position, excluded_descendants).then(node => {
     context.commit('ADD_CONTENTNODE', node);
+    return node;
   });
 }
 

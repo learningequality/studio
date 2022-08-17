@@ -7,7 +7,6 @@ import uniq from 'lodash/uniq';
 import {
   ACTIVE_CHANNELS,
   CHANGES_TABLE,
-  CHANGE_LOCKS_TABLE,
   CHANGE_TYPES,
   CHANNEL_SYNC_KEEP_ALIVE_INTERVAL,
   IGNORED_SOURCE,
@@ -309,11 +308,9 @@ async function syncChanges() {
 }
 
 const debouncedSyncChanges = debounce(() => {
-  return hasActiveLocks().then(hasLocks => {
-    if (!hasLocks && !syncActive) {
-      return syncChanges();
-    }
-  });
+  if (!syncActive) {
+    return syncChanges();
+  }
 }, SYNC_IF_NO_CHANGES_FOR * 1000);
 
 if (process.env.NODE_ENV !== 'production' && typeof window !== 'undefined') {
@@ -323,10 +320,6 @@ if (process.env.NODE_ENV !== 'production' && typeof window !== 'undefined') {
 async function handleChanges(changes) {
   changes.map(applyResourceListener);
   const syncableChanges = changes.filter(isSyncableChange);
-
-  const lockChanges = changes.find(
-    change => change.table === CHANGE_LOCKS_TABLE && change.type === CHANGE_TYPES.DELETED
-  );
 
   if (syncableChanges.length) {
     // Flatten any changes before we store them in the changes table
@@ -342,9 +335,9 @@ async function handleChanges(changes) {
     await db[CHANGES_TABLE].bulkPut(mergedSyncableChanges);
   }
 
-  // If we detect locks were removed, or changes were written to the changes table
+  // If we detect  changes were written to the changes table
   // then we'll trigger sync
-  if (lockChanges || syncableChanges.length) {
+  if (syncableChanges.length) {
     debouncedSyncChanges();
   }
 }
@@ -352,7 +345,6 @@ async function handleChanges(changes) {
 let intervalTimer;
 
 export function startSyncing() {
-  cleanupLocks();
   // Initiate a sync immediately in case any data
   // is left over in the database.
 

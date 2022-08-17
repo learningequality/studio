@@ -305,19 +305,13 @@
       },
       copyToClipboard: withChangeTracker(function(ids, changeTracker) {
         const nodes = this.getRealContentNodes(ids);
-        this.showSnackbar({
-          duration: null,
-          text: this.$tr('creatingClipboardCopies'),
-          actionText: this.$tr('cancel'),
-          actionCallback: () => changeTracker.revert(),
-        });
-
         return this.copyAll({ nodes }).then(() => {
-          return this.showSnackbar({
+          this.showSnackbar({
             text: this.$tr('copiedItemsToClipboard'),
-            actionText: this.$tr('undo'),
-            actionCallback: () => changeTracker.revert(),
-          });
+            // TODO: implement revert functionality for clipboard
+            // actionText: this.$tr('undo'),
+            // actionCallback: () => changeTracker.revert(),
+          }).then(() => changeTracker.cleanUp());
         });
       }),
       calculateMoveNodes() {
@@ -347,24 +341,16 @@
           return Promise.resolve([]);
         }
 
-        this.showSnackbar({
-          duration: null,
-          text: this.$tr('creatingClipboardCopies'),
-          //! COMMENTED OUT UNTIL FUNCTIONALITY UPDATED
-          // actionText: this.$tr('cancel'),
-          actionCallback: () => changeTracker.revert(),
-        });
-
         return promiseChunk(trees, 1, ([tree]) => {
           // `tree` is exactly the params for copy
           return this.copy(tree);
         }).then(() => {
-          return this.showSnackbar({
+          this.showSnackbar({
             text: this.$tr('copiedItemsToClipboard'),
-            //! COMMENTED OUT UNTIL FUNCTIONALITY UPDATED
+            // TODO: implement revert functionality for clipboard
             // actionText: this.$tr('undo'),
-            actionCallback: () => changeTracker.revert(),
-          });
+            // actionCallback: () => changeTracker.revert(),
+          }).then(() => changeTracker.cleanUp());
         });
       }),
       removeNodes: withChangeTracker(function(changeTracker) {
@@ -375,36 +361,25 @@
           return Promise.resolve([]);
         }
 
-        this.showSnackbar({
-          duration: null,
-          text: this.$tr('removingItems'),
-          //! COMMENTED OUT UNTIL FUNCTIONALITY UPDATED
-          // actionText: this.$tr('cancel'),
-          actionCallback: () => changeTracker.revert(),
-        });
-
         return this.deleteClipboardNodes(selectionIds).then(() => {
           this.resetSelectionState();
-          return this.showSnackbar({
+          this.showSnackbar({
             text: this.$tr('removedFromClipboard'),
-            //! COMMENTED OUT UNTIL FUNCTIONALITY UPDATED
+            // TODO: implement revert functionality for clipboard
             // actionText: this.$tr('undo'),
-            actionCallback: () => changeTracker.revert(),
-          });
+            // actionCallback: () => changeTracker.revert(),
+          }).then(() => changeTracker.cleanUp());
         });
       }),
     },
     $trs: {
       selectAll: 'Select all',
-      undo: 'Undo',
-      cancel: 'Cancel',
+      // undo: 'Undo',
       close: 'Close',
       duplicateSelectedButton: 'Make a copy',
       moveSelectedButton: 'Move',
       deleteSelectedButton: 'Delete',
-      removingItems: 'Deleting from clipboard...',
       removedFromClipboard: 'Deleted from clipboard',
-      creatingClipboardCopies: 'Copying in clipboard...',
       copiedItemsToClipboard: 'Copied in clipboard',
       emptyDefaultTitle: 'No resources in your clipboard',
       emptyDefaultText:

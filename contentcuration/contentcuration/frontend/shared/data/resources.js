@@ -1245,8 +1245,11 @@ export const ContentNode = new TreeResource({
       // Using root_id, we'll keep this locked while we handle this, so no other operations
       // happen while we're potentially waiting for some data we need (siblings, source node)
       return this.treeLock(parent.root_id, () => {
+        // Don't trigger fetch, if this is specified as a creation
+        const getNode = isCreate ? this.table.get(id) : this.get(id, false);
+
         // Preload the ID we're referencing, and get siblings to determine sort order
-        return Promise.all([this.get(id, false), this.where({ parent: parent.id }, false)]).then(
+        return Promise.all([getNode, this.where({ parent: parent.id }, false)]).then(
           ([node, siblings]) => {
             let lft = 1;
             if (siblings.length) {
@@ -1266,6 +1269,7 @@ export const ContentNode = new TreeResource({
             const payload = {
               id: isCreate ? uuid4() : id,
               parent: parent.id,
+              root_id: parent.root_id,
               lft,
               changed: true,
             };
@@ -1293,6 +1297,29 @@ export const ContentNode = new TreeResource({
         );
       });
     });
+  },
+
+  // Retain super's put method that does not handle tree insertion
+  _put: TreeResource.prototype.put,
+
+  /**
+   * @param {Object} obj
+   * @return {Promise<string>}
+   */
+  put(obj) {
+    const prepared = this._preparePut(obj);
+
+    return this.resolveTreeInsert(
+      prepared.id,
+      prepared.parent,
+      RELATIVE_TREE_POSITIONS.LAST_CHILD,
+      true,
+      data => {
+        return this.transaction({ mode: 'rw' }, () => {
+          return this.table.put({ ...prepared, ...data.payload });
+        });
+      }
+    );
   },
 
   move(id, target, position = RELATIVE_TREE_POSITIONS.FIRST_CHILD) {
@@ -1416,6 +1443,36 @@ export const ContentNode = new TreeResource({
     });
   },
   setChannelIdOnChange: setChannelIdFromTransactionSource,
+
+  /**
+   * Waits for copying of content nodes to complete for all ids referenced in `ids` array
+   * @param {string[]} ids
+   * @returns {Promise<void>}
+   */
+  waitForCopying(ids) {
+    const observable = Dexie.liveQuery(() => {
+      return this.table
+        .where('id')
+        .anyOf(ids)
+        .filter(node => !node[COPYING_FLAG])
+        .toArray();
+    });
+
+    return new Promise((resolve, reject) => {
+      const subscription = observable.subscribe({
+        next(result) {
+          if (result.length === ids.length) {
+            subscription.unsubscribe();
+            resolve();
+          }
+        },
+        error() {
+          subscription.unsubscribe();
+          reject();
+        },
+      });
+    });
+  },
 });
 
 export const ChannelSet = new Resource({
@@ -1718,7 +1775,7 @@ export const Clipboard = new TreeResource({
         extra_fields,
       };
 
-      return this.transaction({ mode: 'rw' }, () => {
+      return this.transaction({ mode: 'rw' }, CHANGES_TABLE, () => {
         return this.table.put(data).then(() => data);
       });
     });
