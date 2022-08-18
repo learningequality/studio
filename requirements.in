@@ -29,7 +29,7 @@ google-api-python-client
 django-db-readonly==0.7.0
 oauth2client
 django-mathfilters
-google-cloud-kms==0.2.1
+google-cloud-kms==1.1.0
 backoff
 backports-abc==0.5
 django-model-utils==4.0.0
