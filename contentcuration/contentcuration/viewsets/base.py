@@ -969,6 +969,7 @@ def create_change_tracker(pk, table, channel_id, user, task_name):
         )
     finally:
         if status == states.STARTED:
+            progress = 100
             async_to_sync(channel_layer.group_send)(
                 str(room_group_name),
                 {
