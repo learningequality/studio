@@ -1,4 +1,5 @@
 import 'regenerator-runtime/runtime';
+import * as Sentry from '@sentry/vue';
 import Vue from 'vue';
 import VueRouter from 'vue-router';
 import Vuetify, {
@@ -122,6 +123,30 @@ import { Session, injectVuexStore } from 'shared/data/resources';
 // just say yes to devtools (in debug mode)
 if (process.env.NODE_ENV !== 'production') {
   Vue.config.devtools = true;
+} else {
+  Sentry.init({
+    Vue,
+    dsn: 'https://e4b21baeb7a044b885464d2af687fb73@sentry.io/1252819',
+    initialScope: {
+      user: window.user ? { id: window.user.id, email: window.user.email } : null,
+    },
+    // onunhandledrejection reports just give us a dump of the Promise.reject object, and we often
+    // get another error report with more useful data anyway, so ignore these for now.
+    // They are most commonly triggered by a 500 response from an API endpoint call.
+    integrations: [
+      new Sentry.Integrations.GlobalHandlers({ onerror: true, onunhandledrejection: false }),
+    ],
+    beforeSend: function(event) {
+      // Ignore errors when CloudFlare-AlwaysOnline is in the user agent as these are errors serving
+      // the offline version and I don't think we can fix or reproduce these easily.
+      // Fix taken from here: https://github.com/getsentry/sentry-javascript/issues/617#issuecomment-227562203
+      var isCloudFlare = /^(.*CloudFlare-AlwaysOnline.*)$/.test(window.navigator.userAgent);
+      if (isCloudFlare) {
+        return null;
+      }
+      return event;
+    },
+  });
 }
 
 Vue.use(Croppa);
