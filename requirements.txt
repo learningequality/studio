@@ -104,24 +104,17 @@ future==0.18.2
     # via -r requirements.in
 google-api-core[grpc]==1.27.0
     # via
-    #   google-api-python-client
     #   google-cloud-core
     #   google-cloud-error-reporting
     #   google-cloud-kms
     #   google-cloud-logging
-google-api-python-client==2.4.0
-    # via -r requirements.in
 google-auth==1.30.0
     # via
     #   google-api-core
-    #   google-api-python-client
-    #   google-auth-httplib2
     #   google-auth-oauthlib
     #   google-cloud-core
     #   google-cloud-storage
     #   gspread
-google-auth-httplib2==0.1.0
-    # via google-api-python-client
 google-auth-oauthlib==0.4.4
     # via gspread
 google-cloud-core==1.7.3
@@ -161,8 +154,6 @@ html5lib==1.1
 httplib2==0.19.1
     # via
     #   django-postmark
-    #   google-api-python-client
-    #   google-auth-httplib2
     #   oauth2client
 idna==2.10
     # via requests
@@ -269,9 +260,7 @@ six==1.16.0
     # via
     #   click-repl
     #   google-api-core
-    #   google-api-python-client
     #   google-auth
-    #   google-auth-httplib2
     #   google-cloud-core
     #   google-resumable-media
     #   grpcio
@@ -284,8 +273,6 @@ six==1.16.0
     #   python-utils
 sqlparse==0.4.1
     # via django
-uritemplate==3.0.1
-    # via google-api-python-client
 urllib3==1.26.5
     # via
     #   botocore
