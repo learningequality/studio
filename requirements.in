@@ -24,7 +24,6 @@ google-cloud-storage
 django-s3-storage==0.13.4
 requests>=2.20.0
 google-cloud-core
-gspread==3.6.0
 django-db-readonly==0.7.0
 oauth2client
 django-mathfilters
