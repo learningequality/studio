@@ -140,3 +140,25 @@ class SyncConsumer(WebsocketConsumer):
         self.send(text_data=json.dumps({
             'change': change
         }))
+
+    def broadcast_errors(self, event):
+        """
+        Broadcast any errors to frontend
+        """
+        error = event['errored']
+
+        # Send message to WebSocket
+        self.send(text_data=json.dumps({
+            'errored': error
+        }))
+
+    def broadcast_tasks(self, event):
+        """
+        Broadcast tasks to frontend
+        """
+        task = event['tasks']
+
+        # Send message to WebSocket
+        self.send(text_data=json.dumps({
+            'task': task
+        }))

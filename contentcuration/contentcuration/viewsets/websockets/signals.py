@@ -44,6 +44,15 @@ def broadcast_new_change_model(instance):
     # name of indiviual_user group
     indiviual_room_group_name = instance.user_id
 
+    if instance.created_by_id is None and instance.change_type == 2 and instance.errored is True:
+        async_to_sync(channel_layer.group_send)(
+            str(room_group_name),
+            {
+                'type': 'broadcast_errors',
+                'errored': serialized_change_object
+            }
+        )
+
     if instance.created_by_id is None:
         try:
             raise NoneCreatedByIdError(instance)
@@ -57,7 +66,7 @@ def broadcast_new_change_model(instance):
         async_to_sync(channel_layer.group_send)(
             str(instance.created_by_id),
             {
-                'type': 'broadcast_changes',
+                'type': 'broadcast_errors',
                 'errored': serialized_change_object
             }
         )

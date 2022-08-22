@@ -3,7 +3,9 @@ import traceback
 import uuid
 from contextlib import contextmanager
 
+from asgiref.sync import async_to_sync
 from celery import states
+from channels.layers import get_channel_layer
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
 from django.http import Http404
@@ -894,24 +896,52 @@ def create_change_tracker(pk, table, channel_id, user, task_name):
     # Clean up any previous tasks specific to this in case there were failures.
     meta = json.dumps(dict(pk=pk, table=table))
     TaskResult.objects.filter(channel_id=channel_id, task_name=task_name, meta=meta).delete()
+    progress = 0
+    status = states.STARTED
+
+    channel_layer = get_channel_layer()
+    room_group_name = channel_id
 
     task_id = uuid.uuid4().hex
-    task_object = TaskResult.objects.create(
-        task_id=task_id,
-        status=states.STARTED,
-        channel_id=channel_id,
-        task_name=task_name,
-        user=user,
-        meta=meta
+
+    async_to_sync(channel_layer.group_send)(
+        str(room_group_name),
+        {
+            'type': 'broadcast_tasks',
+            'tasks': {
+                'pk': pk,
+                'table': table,
+                'task_id': task_id,
+                'task_name': task_name,
+                'traceback': None,
+                'progress': progress,
+                'channel_id': channel_id,
+                'status': status,
+            }
+        }
     )
 
     def update_progress(progress=None):
         if progress:
-            task_object.progress = progress
-            task_object.save()
+            async_to_sync(channel_layer.group_send)(
+                str(room_group_name),
+                {
+                    'type': 'broadcast_tasks',
+                    'tasks': {
+                        'pk': pk,
+                        'table': table,
+                        'task_id': task_id,
+                        'task_name': task_name,
+                        'traceback': None,
+                        'progress': progress,
+                        'channel_id': channel_id,
+                        'status': status,
+                    }
+                }
+            )
 
     Change.create_change(
-        generate_update_event(pk, table, {TASK_ID: task_object.task_id}, channel_id=channel_id), applied=True
+        generate_update_event(pk, table, {TASK_ID: task_id}, channel_id=channel_id), applied=True
     )
 
     tracker = ProgressTracker(task_id, update_progress)
@@ -919,13 +949,44 @@ def create_change_tracker(pk, table, channel_id, user, task_name):
     try:
         yield tracker
     except Exception as e:
-        task_object.status = states.FAILURE
-        task_object.traceback = e.__traceback__
-        task_object.save()
+        status = states.FAILURE
+        traceback_str = ''.join(traceback.format_tb(e.__traceback__))
+        async_to_sync(channel_layer.group_send)(
+            str(room_group_name),
+            {
+                'type': 'broadcast_tasks',
+                'tasks': {
+                    'pk': pk,
+                    'table': table,
+                    'task_id': task_id,
+                    'task_name': task_name,
+                    'traceback': traceback_str,
+                    'progress': progress,
+                    'channel_id': channel_id,
+                    'status': status,
+                }
+            }
+        )
     finally:
-        if task_object.status == states.STARTED:
+        if status == states.STARTED:
+            progress = 100
+            async_to_sync(channel_layer.group_send)(
+                str(room_group_name),
+                {
+                    'type': 'broadcast_tasks',
+                    'tasks': {
+                            'pk': pk,
+                            'table': table,
+                            'task_id': task_id,
+                            'task_name': task_name,
+                            'traceback': None,
+                            'progress': progress,
+                            'channel_id': channel_id,
+                            'status': states.SUCCESS,
+                    }
+                }
+            )
             # No error reported, cleanup.
             Change.create_change(
                 generate_update_event(pk, table, {TASK_ID: None}, channel_id=channel_id), applied=True
             )
-            task_object.delete()
