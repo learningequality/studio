@@ -102,6 +102,6 @@ class ChangeSignalTestCase(TestCase, BucketTestMixin):
         async_mock_return_value = mock_async_to_sync.return_value
         assert 1 == mock_async_to_sync.call_count
         async_mock_return_value.assert_called_once_with(str(self.user.id), {
-            'type': 'broadcast_changes',
+            'type': 'broadcast_errors',
             'errored': change_serialized
         })

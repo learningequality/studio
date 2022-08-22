@@ -3,7 +3,6 @@ A view that handles synchronization of changes from the frontend
 and deals with processing all the changes to make appropriate
 bulk creates, updates, and deletes.
 """
-from celery import states
 from django.db.models import Q
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAuthenticated
@@ -12,7 +11,6 @@ from rest_framework.views import APIView
 
 from contentcuration.models import Change
 from contentcuration.models import Channel
-from contentcuration.models import TaskResult
 from contentcuration.tasks import apply_channel_changes_task
 from contentcuration.tasks import apply_user_changes_task
 from contentcuration.viewsets.sync.constants import CHANNEL
@@ -119,22 +117,6 @@ class SyncView(APIView):
 
         return {"changes": changes, "errors": errors, "successes": successes}
 
-    def return_tasks(self, request, channel_revs):
-        tasks = TaskResult.objects.filter(
-            channel_id__in=channel_revs.keys(),
-            status__in=[states.STARTED, states.FAILURE],
-        ).exclude(task_name__in=[apply_channel_changes_task.name, apply_user_changes_task.name])
-        return {
-            "tasks": tasks.values(
-                "task_id",
-                "task_name",
-                "traceback",
-                "progress",
-                "channel_id",
-                "status",
-            )
-        }
-
     def post(self, request):
         response_payload = {
             "disallowed": [],
@@ -150,7 +132,5 @@ class SyncView(APIView):
         response_payload.update(self.handle_changes(request))
 
         response_payload.update(self.return_changes(request, channel_revs))
-
-        response_payload.update(self.return_tasks(request, channel_revs))
 
         return Response(response_payload)

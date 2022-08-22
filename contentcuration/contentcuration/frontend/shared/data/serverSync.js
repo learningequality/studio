@@ -4,6 +4,11 @@ import get from 'lodash/get';
 import orderBy from 'lodash/orderBy';
 import pick from 'lodash/pick';
 import uniq from 'lodash/uniq';
+import mergeAllChanges from './mergeChanges';
+import db from './db';
+import applyChanges from './applyRemoteChanges';
+import { INDEXEDDB_RESOURCES } from './registry';
+import { Channel, Session, Task } from './resources';
 import {
   ACTIVE_CHANNELS,
   CHANGES_TABLE,
@@ -12,12 +17,6 @@ import {
   IGNORED_SOURCE,
   MAX_REV_KEY,
 } from './constants';
-import { Channel, Session, Task } from './resources';
-
-import { INDEXEDDB_RESOURCES } from './registry';
-import applyChanges from './applyRemoteChanges';
-import db from './db';
-import mergeAllChanges from './mergeChanges';
 import client from 'shared/client';
 import urls from 'shared/urls';
 
@@ -201,11 +200,6 @@ function handleMaxRevs(response, userId) {
   return Promise.all(promises);
 }
 
-function handleTasks(response) {
-  const tasks = get(response, ['data', 'tasks'], []);
-  return Task.setTasks(tasks);
-}
-
 async function syncChanges() {
   // Note: we could in theory use Dexie syncable for what
   // we are doing here, but I can't find a good way to make
@@ -284,6 +278,9 @@ async function syncChanges() {
     socket.onmessage = function(e) {
       const data = JSON.parse(e.data);
       console.log(data);
+      if (data.task) {
+        Task.put(data.task);
+      }
     };
 
     try {
@@ -294,7 +291,6 @@ async function syncChanges() {
         handleErrors(response),
         handleSuccesses(response),
         handleMaxRevs(response, user.id),
-        handleTasks(response),
       ]);
     } catch (err) {
       console.error('There was an error updating change status: ', err); // eslint-disable-line no-console
