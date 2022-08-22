@@ -923,40 +923,22 @@ def create_change_tracker(pk, table, channel_id, user, task_name):
 
     def update_progress(progress=None):
         if progress:
-            if progress == 100:
-                async_to_sync(channel_layer.group_send)(
-                    str(room_group_name),
-                    {
-                        'type': 'broadcast_tasks',
-                        'tasks': {
-                            'pk': pk,
-                            'table': table,
-                            'task_id': task_id,
-                            'task_name': task_name,
-                            'traceback': None,
-                            'progress': progress,
-                            'channel_id': channel_id,
-                            'status': states.SUCCESS,
-                        }
+            async_to_sync(channel_layer.group_send)(
+                str(room_group_name),
+                {
+                    'type': 'broadcast_tasks',
+                    'tasks': {
+                        'pk': pk,
+                        'table': table,
+                        'task_id': task_id,
+                        'task_name': task_name,
+                        'traceback': None,
+                        'progress': progress,
+                        'channel_id': channel_id,
+                        'status': status,
                     }
-                )
-            else:
-                async_to_sync(channel_layer.group_send)(
-                    str(room_group_name),
-                    {
-                        'type': 'broadcast_tasks',
-                        'tasks': {
-                            'pk': pk,
-                            'table': table,
-                            'task_id': task_id,
-                            'task_name': task_name,
-                            'traceback': None,
-                            'progress': progress,
-                            'channel_id': channel_id,
-                            'status': status,
-                        }
-                    }
-                )
+                }
+            )
 
     Change.create_change(
         generate_update_event(pk, table, {TASK_ID: task_id}, channel_id=channel_id), applied=True
@@ -986,7 +968,23 @@ def create_change_tracker(pk, table, channel_id, user, task_name):
             }
         )
     finally:
-        if status == states.SUCCESS:
+        if status == states.STARTED:
+            async_to_sync(channel_layer.group_send)(
+                str(room_group_name),
+                {
+                    'type': 'broadcast_tasks',
+                    'tasks': {
+                            'pk': pk,
+                            'table': table,
+                            'task_id': task_id,
+                            'task_name': task_name,
+                            'traceback': None,
+                            'progress': progress,
+                            'channel_id': channel_id,
+                            'status': states.SUCCESS,
+                    }
+                }
+            )
             # No error reported, cleanup.
             Change.create_change(
                 generate_update_event(pk, table, {TASK_ID: None}, channel_id=channel_id), applied=True
