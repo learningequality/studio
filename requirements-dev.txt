@@ -366,7 +366,6 @@ ujson==4.0.2
     #   python-lsp-server
 uritemplate==3.0.1
     # via
-    #   -c requirements.txt
     #   coreapi
     #   drf-yasg
 urllib3==1.26.5
