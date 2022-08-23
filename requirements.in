@@ -13,7 +13,7 @@ jsonfield==3.1.0
 newrelic>=2.86.3.70
 celery==5.2.7
 redis
-pycountry==17.5.14
+pycountry==22.3.5
 pathlib
 progressbar2==3.55.0
 python-postmark==0.5.0
