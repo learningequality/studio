@@ -528,4 +528,5 @@ class TreeBuilder(object):
             "grade_levels": {c: True for c in choices(LEVELSLIST, k=random.randint(1, 2))},
             "categories": {c: True for c in choices(SUBJECTSLIST, k=random.randint(1, 10))},
             "learner_needs": {c: True for c in choices(NEEDSLIST, k=random.randint(1, 5))},
+            "suggested_duration": random.randint(5, 5000),
         }

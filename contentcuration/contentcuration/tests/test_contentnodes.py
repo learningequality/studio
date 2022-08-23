@@ -112,6 +112,7 @@ def _check_node_copy(source, copy, original_channel_id=None, channel=None):
         assert child_copy.accessibility_labels == child_source.accessibility_labels
         assert child_copy.categories == child_source.categories
         assert child_copy.learner_needs == child_source.learner_needs
+        assert child_copy.suggested_duration == child_source.suggested_duration
         assert child_copy.changed
         assert not child_copy.published
         assert child_copy.complete == child_source.complete

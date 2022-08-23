@@ -246,6 +246,7 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
             "accessibility_labels": source.accessibility_labels,
             "categories": source.categories,
             "learner_needs": source.learner_needs,
+            "suggested_duration": source.suggested_duration,
         }
 
     def _clone_node(
