@@ -74,6 +74,13 @@ def broadcast_new_change_model(instance):
         # if the change is related to channel we broadcast changes to channel group
         if not indiviual_room_group_name and room_group_name:
             async_to_sync(channel_layer.group_send)(
+                str(instance.created_by_id),
+                {
+                    'type': 'broadcast_success',
+                    'success': serialized_change_object
+                }
+            )
+            async_to_sync(channel_layer.group_send)(
                 str(room_group_name),
                 {
                     'type': 'broadcast_changes',
@@ -85,8 +92,8 @@ def broadcast_new_change_model(instance):
             async_to_sync(channel_layer.group_send)(
                 str(indiviual_room_group_name),
                 {
-                    'type': 'broadcast_changes',
-                    'change': serialized_change_object
+                    'type': 'broadcast_success',
+                    'success': serialized_change_object
                 }
             )
         # if the change is realted to both user and channel then we will broadcast to both of the groups
@@ -101,7 +108,7 @@ def broadcast_new_change_model(instance):
             async_to_sync(channel_layer.group_send)(
                 str(indiviual_room_group_name),
                 {
-                    'type': 'broadcast_changes',
-                    'change': serialized_change_object
+                    'type': 'broadcast_success',
+                    'success': serialized_change_object
                 }
             )

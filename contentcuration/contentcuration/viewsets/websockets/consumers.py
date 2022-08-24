@@ -162,3 +162,14 @@ class SyncConsumer(WebsocketConsumer):
         self.send(text_data=json.dumps({
             'task': task
         }))
+
+    def broadcast_success(self, event):
+        """
+        Broadcast success to required user
+        """
+        success = event['success']
+
+        # Send message to WebSocket
+        self.send(text_data=json.dumps({
+            'success': success
+        }))

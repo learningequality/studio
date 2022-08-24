@@ -80,10 +80,9 @@ function trimChangeForSync(change) {
   }
 }
 
-function handleDisallowed(response) {
+function handleDisallowed(disallowed) {
   // The disallowed property is an array of any changes that were sent to the server,
   // that were rejected.
-  const disallowed = get(response, ['data', 'disallowed'], []);
   if (disallowed.length) {
     // Collect all disallowed
     const disallowedRevs = disallowed.map(d => Number(d.rev));
@@ -97,10 +96,9 @@ function handleDisallowed(response) {
   return Promise.resolve();
 }
 
-function handleAllowed(response) {
+function handleAllowed(allowed) {
   // The allowed property is an array of any rev and server_rev for any changes sent to
   // the server that were accepted
-  const allowed = get(response, ['data', 'allowed'], []);
   if (allowed.length) {
     const revMap = {};
     for (let obj of allowed) {
@@ -116,21 +114,19 @@ function handleAllowed(response) {
   return Promise.resolve();
 }
 
-function handleReturnedChanges(response) {
+function handleReturnedChanges(returnedChanges) {
   // The changes property is an array of any changes from the server to apply in the
   // client.
-  const returnedChanges = get(response, ['data', 'changes'], []);
   if (returnedChanges.length) {
     return applyChanges(returnedChanges);
   }
   return Promise.resolve();
 }
 
-function handleErrors(response) {
+function handleErrors(errors) {
   // The errors property is an array of any changes that were sent to the server,
   // that were rejected, with an additional errors property that describes
   // the error.
-  const errors = get(response, ['data', 'errors'], []);
   if (errors.length) {
     const errorMap = {};
     for (let error of errors) {
@@ -148,13 +144,12 @@ function handleErrors(response) {
   return Promise.resolve();
 }
 
-function handleSuccesses(response) {
+function handleSuccesses(success) {
   // The successes property is an array of server_revs for any previously synced changes
   // that have now been successfully applied on the server.
-  const successes = get(response, ['data', 'successes'], []);
-  if (successes.length) {
+  if (success) {
     return db[CHANGES_TABLE].where('server_rev')
-      .anyOf(successes.map(c => c.server_rev))
+      .anyOf(success.server_rev)
       .delete();
   }
   return Promise.resolve();
@@ -281,17 +276,26 @@ async function syncChanges() {
       if (data.task) {
         Task.put(data.task);
       }
+      if (data.responsePayload && data.responsePayload.allowed) {
+        handleAllowed(data.responsePayload.allowed);
+      }
+      if (data.responsePayload && data.responsePayload.disallowed) {
+        handleDisallowed(data.responsePayload.disallowed);
+      }
+      if (data.errored) {
+        handleErrors(data.errored);
+      }
+      if (data.success);
+      {
+        handleSuccesses(data.success);
+      }
+      if (data.change) {
+        handleReturnedChanges(data.change);
+      }
     };
 
     try {
-      await Promise.all([
-        handleDisallowed(response),
-        handleAllowed(response),
-        handleReturnedChanges(response),
-        handleErrors(response),
-        handleSuccesses(response),
-        handleMaxRevs(response, user.id),
-      ]);
+      await Promise.all([handleMaxRevs(response, user.id)]);
     } catch (err) {
       console.error('There was an error updating change status: ', err); // eslint-disable-line no-console
     }
