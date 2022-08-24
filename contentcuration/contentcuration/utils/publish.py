@@ -157,7 +157,6 @@ def assign_license_to_contentcuration_nodes(channel, license):
 inheritable_fields = [
     "grade_levels",
     "resource_types",
-    "accessibility_labels",
     "categories",
     "learner_needs",
 ]
@@ -261,7 +260,7 @@ def create_slideshow_manifest(ccnode, user_id=None):
         temp_manifest.close()
 
 
-def create_bare_contentnode(ccnode, default_language, channel_id, channel_name, metadata):
+def create_bare_contentnode(ccnode, default_language, channel_id, channel_name, metadata):  # noqa: C901
     logging.debug("Creating a Kolibri contentnode for instance id {}".format(
         ccnode.node_id))
 
@@ -292,8 +291,12 @@ def create_bare_contentnode(ccnode, default_language, channel_id, channel_name, 
         duration = ccnode.files.aggregate(duration=Max("duration")).get("duration")
 
     learning_activities = None
-    if ccnode.learning_activities and ccnode.kind_id != content_kinds.TOPIC:
-        learning_activities = ",".join(ccnode.learning_activities.keys())
+    accessibility_labels = None
+    if ccnode.kind_id != content_kinds.TOPIC:
+        if ccnode.learning_activities:
+            learning_activities = ",".join(ccnode.learning_activities.keys())
+        if ccnode.accessibility_labels:
+            accessibility_labels = ",".join(ccnode.accessibility_labels.keys())
 
     kolibrinode, is_new = kolibrimodels.ContentNode.objects.update_or_create(
         pk=ccnode.node_id,
@@ -319,7 +322,7 @@ def create_bare_contentnode(ccnode, default_language, channel_id, channel_name, 
             "grade_levels": ",".join(metadata["grade_levels"].keys()) if metadata["grade_levels"] else None,
             "resource_types": ",".join(metadata["resource_types"].keys()) if metadata["resource_types"] else None,
             "learning_activities": learning_activities,
-            "accessibility_labels": ",".join(metadata["accessibility_labels"].keys()) if metadata["accessibility_labels"] else None,
+            "accessibility_labels": accessibility_labels,
             "categories": ",".join(metadata["categories"].keys()) if metadata["categories"] else None,
             "learner_needs": ",".join(metadata["learner_needs"].keys()) if metadata["learner_needs"] else None,
         }

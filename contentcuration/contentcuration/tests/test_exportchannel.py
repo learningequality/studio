@@ -98,7 +98,7 @@ class ExportChannelTestCase(StudioTestCase):
 
         first_topic = self.content_channel.main_tree.get_descendants().first()
         first_topic.accessibility_labels = {
-            accessibility_categories.CAPTIONS_SUBTITLES: True,
+            accessibility_categories.AUDIO_DESCRIPTION: True,
         }
         first_topic.learning_activities = {
             learning_activities.WATCH: True,
@@ -118,6 +118,9 @@ class ExportChannelTestCase(StudioTestCase):
         first_topic.save()
 
         first_topic_first_child = first_topic.children.first()
+        first_topic_first_child.accessibility_labels = {
+            accessibility_categories.CAPTIONS_SUBTITLES: True,
+        }
         first_topic_first_child.categories = {
             subjects.ALGEBRA: True,
         }
@@ -247,10 +250,16 @@ class ExportChannelTestCase(StudioTestCase):
         first_child = kolibri_models.ContentNode.objects.filter(parent_id=first_topic_node_id).first()
         self.assertEqual(first_child.learner_needs, needs.FOR_BEGINNERS)
 
-    def test_inherited_accessibility_labels(self):
+    def test_topics_no_accessibility_label(self):
         first_topic_node_id = self.content_channel.main_tree.get_descendants().first().node_id
-        for child in kolibri_models.ContentNode.objects.filter(parent_id=first_topic_node_id):
-            self.assertEqual(child.accessibility_labels, accessibility_categories.CAPTIONS_SUBTITLES)
+        topic = kolibri_models.ContentNode.objects.get(id=first_topic_node_id)
+        self.assertIsNone(topic.accessibility_labels)
+
+    def test_child_no_inherit_accessibility_label(self):
+        first_topic_node_id = self.content_channel.main_tree.get_descendants().first().node_id
+        first_child = kolibri_models.ContentNode.objects.filter(parent_id=first_topic_node_id).first()
+        # Should only be the learning activities we set on the child directly, not any parent ones.
+        self.assertEqual(first_child.accessibility_labels, accessibility_categories.CAPTIONS_SUBTITLES)
 
     def test_inherited_grade_levels(self):
         first_topic_node_id = self.content_channel.main_tree.get_descendants().first().node_id
