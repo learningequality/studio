@@ -28,7 +28,7 @@ RUN curl -sL https://deb.nodesource.com/setup_16.x | bash - &&\
 # Node packages ################################################################
 RUN npm install -g yarn && npm cache clean --force
 COPY ./package.json ./yarn.lock   /src/
-RUN  yarn install --network-timeout 1000000 --pure-lockfile && yarn cache clean
+RUN yarn install && yarn cache clean
 ################################################################################
 
 
@@ -37,8 +37,8 @@ COPY requirements.txt requirements-dev.txt   /src/
 RUN pip install --no-cache-dir --upgrade pip
 
 # install pinned deps from pip-tools into system
-RUN pip install --ignore-installed -r requirements.txt
-RUN pip install --ignore-installed -r requirements-dev.txt
+RUN pip install -r requirements.txt
+RUN pip install -r requirements-dev.txt
 ################################################################################
 
 

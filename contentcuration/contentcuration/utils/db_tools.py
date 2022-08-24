@@ -11,6 +11,14 @@ from le_utils.constants import exercises
 from le_utils.constants import file_formats
 from le_utils.constants import format_presets
 from le_utils.constants import licenses
+from le_utils.constants.labels.accessibility_categories import (
+    ACCESSIBILITYCATEGORIESLIST,
+)
+from le_utils.constants.labels.learning_activities import LEARNINGACTIVITIESLIST
+from le_utils.constants.labels.levels import LEVELSLIST
+from le_utils.constants.labels.needs import NEEDSLIST
+from le_utils.constants.labels.resource_type import RESOURCETYPELIST
+from le_utils.constants.labels.subjects import SUBJECTSLIST
 
 from contentcuration.api import write_file_to_storage
 from contentcuration.models import AssessmentItem
@@ -266,6 +274,10 @@ def uuid4_hex():
     return uuid.uuid4().hex
 
 
+def choices(sequence, k):
+    return [random.choice(sequence) for _ in range(0, k)]
+
+
 class TreeBuilder(object):
     """
     This class is purely to generate all the relevant data for a single
@@ -510,4 +522,11 @@ class TreeBuilder(object):
             "parent_id": parent_id,
             "kind_id": kind,
             "complete": complete,
+            "resource_types": {c: True for c in choices(RESOURCETYPELIST, k=random.randint(1, 2))},
+            "learning_activities": {c: True for c in choices(LEARNINGACTIVITIESLIST, k=random.randint(1, 3))},
+            "accessibility_labels": {c: True for c in choices(ACCESSIBILITYCATEGORIESLIST, k=random.randint(1, 3))},
+            "grade_levels": {c: True for c in choices(LEVELSLIST, k=random.randint(1, 2))},
+            "categories": {c: True for c in choices(SUBJECTSLIST, k=random.randint(1, 10))},
+            "learner_needs": {c: True for c in choices(NEEDSLIST, k=random.randint(1, 5))},
+            "suggested_duration": random.randint(5, 5000),
         }

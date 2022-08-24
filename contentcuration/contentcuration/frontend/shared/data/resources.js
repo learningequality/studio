@@ -1443,6 +1443,36 @@ export const ContentNode = new TreeResource({
     });
   },
   setChannelIdOnChange: setChannelIdFromTransactionSource,
+
+  /**
+   * Waits for copying of content nodes to complete for all ids referenced in `ids` array
+   * @param {string[]} ids
+   * @returns {Promise<void>}
+   */
+  waitForCopying(ids) {
+    const observable = Dexie.liveQuery(() => {
+      return this.table
+        .where('id')
+        .anyOf(ids)
+        .filter(node => !node[COPYING_FLAG])
+        .toArray();
+    });
+
+    return new Promise((resolve, reject) => {
+      const subscription = observable.subscribe({
+        next(result) {
+          if (result.length === ids.length) {
+            subscription.unsubscribe();
+            resolve();
+          }
+        },
+        error() {
+          subscription.unsubscribe();
+          reject();
+        },
+      });
+    });
+  },
 });
 
 export const ChannelSet = new Resource({
@@ -1745,7 +1775,7 @@ export const Clipboard = new TreeResource({
         extra_fields,
       };
 
-      return this.transaction({ mode: 'rw' }, () => {
+      return this.transaction({ mode: 'rw' }, CHANGES_TABLE, () => {
         return this.table.put(data).then(() => data);
       });
     });

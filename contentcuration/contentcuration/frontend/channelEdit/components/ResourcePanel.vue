@@ -580,7 +580,7 @@
       },
       metadataListText(ids) {
         const list = ids.map(i => this.translateMetadataString(camelCase(i)));
-        const formatter = Intl.ListFormat(window.languageCode, {
+        const formatter = new Intl.ListFormat(window.languageCode, {
           style: 'narrow',
           type: 'conjunction',
         });
