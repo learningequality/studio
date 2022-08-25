@@ -81,7 +81,7 @@
     "pdfjs-dist": "^2.15.349",
     "qs": "^6.11.0",
     "regenerator-runtime": "^0.13.5",
-    "showdown": "^1.9.1",
+    "showdown": "^2.1.0",
     "spark-md5": "^3.0.0",
     "store2": "^2.14.2",
     "string-strip-html": "8.3.0",
