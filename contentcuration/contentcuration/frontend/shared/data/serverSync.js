@@ -1,14 +1,3 @@
-import debounce from 'lodash/debounce';
-import findLastIndex from 'lodash/findLastIndex';
-import get from 'lodash/get';
-import orderBy from 'lodash/orderBy';
-import pick from 'lodash/pick';
-import uniq from 'lodash/uniq';
-import mergeAllChanges from './mergeChanges';
-import db from './db';
-import applyChanges from './applyRemoteChanges';
-import { INDEXEDDB_RESOURCES } from './registry';
-import { Channel, Session, Task } from './resources';
 import {
   ACTIVE_CHANNELS,
   CHANGES_TABLE,
@@ -17,7 +6,20 @@ import {
   IGNORED_SOURCE,
   MAX_REV_KEY,
 } from './constants';
+import { Channel, Session, Task } from './resources';
+
+import { INDEXEDDB_RESOURCES } from './registry';
+import applyChanges from './applyRemoteChanges';
 import client from 'shared/client';
+import db from './db';
+import debounce from 'lodash/debounce';
+// import { event } from 'jquery';
+import findLastIndex from 'lodash/findLastIndex';
+import get from 'lodash/get';
+import mergeAllChanges from './mergeChanges';
+import orderBy from 'lodash/orderBy';
+import pick from 'lodash/pick';
+import uniq from 'lodash/uniq';
 import urls from 'shared/urls';
 
 // When this many seconds pass without a syncable
@@ -26,7 +28,7 @@ const SYNC_IF_NO_CHANGES_FOR = 2;
 
 // When this many seconds pass, repoll the backend to
 // check for any updates to active channels, or the user and sync any current changes
-const SYNC_POLL_INTERVAL = 5;
+// const SYNC_POLL_INTERVAL = 5;
 let socket;
 // Flag to check if a sync is currently active.
 let syncActive = false;
@@ -80,9 +82,115 @@ function trimChangeForSync(change) {
   }
 }
 
-function handleDisallowed(disallowed) {
+function socketHandleAllowed(allowed) {
+  if (allowed.length) {
+    const revMap = {};
+    for (let obj of allowed) {
+      revMap[obj.rev] = obj.server_rev;
+    }
+    return db[CHANGES_TABLE].where('rev')
+      .anyOf(Object.keys(revMap).map(Number))
+      .modify(c => {
+        c.server_rev = revMap[c.rev];
+        c.synced = true;
+      });
+  }
+}
+function socketHandleDisallowed(disallowed) {
+  if (disallowed.length) {
+    // Collect all disallowed
+    const disallowedRevs = disallowed.map(d => Number(d.rev));
+    // Set the return error data onto the changes - this will update the change
+    // both with any errors and the results of any merging that happened prior
+    // to the sync operation being called
+    return db[CHANGES_TABLE].where('rev')
+      .anyOf(disallowedRevs)
+      .modify({ disallowed: true, synced: true });
+  }
+}
+
+function socketHandleReturnedChanges(returnedChange) {
+  // The changes property is an array of any changes from the server to apply in the
+  // client.
+  let returnedChanges = [];
+  returnedChanges.push(returnedChange);
+  if (returnedChanges.length) {
+    return applyChanges(returnedChanges);
+  }
+}
+
+function socketHandleErrors(error) {
+  // The errors property is an array of any changes that were sent to the server,
+  // that were rejected, with an additional errors property that describes
+  // the error.
+  let errors = [];
+  errors.push(error);
+  if (errors.length) {
+    const errorMap = {};
+    for (let error of errors) {
+      errorMap[error.server_rev] = error;
+    }
+    // Set the return error data onto the changes - this will update the change
+    // both with any errors and the results of any merging that happened prior
+    // to the sync operation being called
+    return db[CHANGES_TABLE].where('server_rev')
+      .anyOf(Object.keys(errorMap))
+      .modify(obj => {
+        return Object.assign(obj, errorMap[obj.server_rev]);
+      });
+  }
+}
+
+function socketHandleSuccesses(success) {
+  // The successes property is an array of server_revs for any previously synced changes
+  // that have now been successfully applied on the server.
+  if (success.length) {
+    return db[CHANGES_TABLE].where('server_rev')
+      .anyOf(success.server_rev)
+      .delete();
+  }
+}
+
+function socketHandleMaxRevs(change, userId) {
+  let changes = [];
+  changes.push(change);
+  const allChanges = orderBy(changes, 'server_rev', 'desc');
+  const channelIds = uniq(allChanges.channel_id).filter(Boolean);
+  const maxRevs = {};
+  const promises = [];
+  for (let channelId of channelIds) {
+    const channelChanges = allChanges.filter(c => c.channel_id === channelId);
+    maxRevs[`${MAX_REV_KEY}.${channelId}`] = channelChanges[0].server_rev;
+    const lastChannelEditIndex = findLastIndex(
+      channelChanges,
+      c => !c.errors && !c.user_id && c.created_by_id && c.type !== CHANGE_TYPES.PUBLISHED
+    );
+    const lastPublishIndex = findLastIndex(
+      channelChanges,
+      c => !c.errors && !c.user_id && c.created_by_id && c.type === CHANGE_TYPES.PUBLISHED
+    );
+    if (lastChannelEditIndex > lastPublishIndex) {
+      promises.push(
+        Channel.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
+          return Channel.table.update(channelId, { unpublished_changes: true });
+        })
+      );
+    }
+  }
+  const lastUserChange = allChanges.find(c => c.user_id === userId);
+  if (lastUserChange) {
+    maxRevs.user_rev = lastUserChange.server_rev;
+  }
+  if (Object.keys(maxRevs).length) {
+    promises.push(Session.updateSession(maxRevs));
+  }
+  return Promise.all(promises);
+}
+
+function handleDisallowed(response) {
   // The disallowed property is an array of any changes that were sent to the server,
   // that were rejected.
+  const disallowed = get(response, ['data', 'disallowed'], []);
   if (disallowed.length) {
     // Collect all disallowed
     const disallowedRevs = disallowed.map(d => Number(d.rev));
@@ -96,9 +204,10 @@ function handleDisallowed(disallowed) {
   return Promise.resolve();
 }
 
-function handleAllowed(allowed) {
+function handleAllowed(response) {
   // The allowed property is an array of any rev and server_rev for any changes sent to
   // the server that were accepted
+  const allowed = get(response, ['data', 'allowed'], []);
   if (allowed.length) {
     const revMap = {};
     for (let obj of allowed) {
@@ -114,19 +223,21 @@ function handleAllowed(allowed) {
   return Promise.resolve();
 }
 
-function handleReturnedChanges(returnedChanges) {
+function handleReturnedChanges(response) {
   // The changes property is an array of any changes from the server to apply in the
   // client.
+  const returnedChanges = get(response, ['data', 'changes'], []);
   if (returnedChanges.length) {
     return applyChanges(returnedChanges);
   }
   return Promise.resolve();
 }
 
-function handleErrors(errors) {
+function handleErrors(response) {
   // The errors property is an array of any changes that were sent to the server,
   // that were rejected, with an additional errors property that describes
   // the error.
+  const errors = get(response, ['data', 'errors'], []);
   if (errors.length) {
     const errorMap = {};
     for (let error of errors) {
@@ -144,12 +255,13 @@ function handleErrors(errors) {
   return Promise.resolve();
 }
 
-function handleSuccesses(success) {
+function handleSuccesses(response) {
   // The successes property is an array of server_revs for any previously synced changes
   // that have now been successfully applied on the server.
-  if (success) {
+  const successes = get(response, ['data', 'successes'], []);
+  if (successes.length) {
     return db[CHANGES_TABLE].where('server_rev')
-      .anyOf(success.server_rev)
+      .anyOf(successes.map(c => c.server_rev))
       .delete();
   }
   return Promise.resolve();
@@ -194,7 +306,39 @@ function handleMaxRevs(response, userId) {
   }
   return Promise.all(promises);
 }
+async function WebsocketSendChanges(changesToSync) {
+  const  user =  await Session.getSession();
 
+  if (!user) {
+    // If not logged in, nothing to do.
+    return;
+  }
+
+  const requestPayload = {
+    changes: [],
+  };
+
+  // By the time we get here, our changesToSync Array should
+  // have every change we want to sync to the server, so we
+  // can now trim it down to only what is needed to transmit over the wire.
+  // TODO: remove moves when a delete change is present for an object,
+  // because a delete will wipe out the move.
+  const changes = changesToSync.map(trimChangeForSync);
+  // Create a promise for the sync - if there is nothing to sync just resolve immediately,
+  // in order to still call our change cleanup code.
+  if (changes.length) {
+    requestPayload.changes = changes;
+  }
+
+
+  if (requestPayload.changes.length != 0) {
+    socket.send(
+      JSON.stringify({
+        payload: requestPayload,
+      })
+    );
+  }
+}
 async function syncChanges() {
   // Note: we could in theory use Dexie syncable for what
   // we are doing here, but I can't find a good way to make
@@ -262,40 +406,18 @@ async function syncChanges() {
     //   "errors": [],
     //   "successes": [],
     // }
-    if (requestPayload.changes.length != 0) {
-      socket.send(
-        JSON.stringify({
-          payload: requestPayload,
-        })
-      );
-    }
+
     const response = await client.post(urls['sync'](), requestPayload);
-    socket.onmessage = function(e) {
-      const data = JSON.parse(e.data);
-      console.log(data);
-      if (data.task) {
-        Task.put(data.task);
-      }
-      if (data.responsePayload && data.responsePayload.allowed) {
-        handleAllowed(data.responsePayload.allowed);
-      }
-      if (data.responsePayload && data.responsePayload.disallowed) {
-        handleDisallowed(data.responsePayload.disallowed);
-      }
-      if (data.errored) {
-        handleErrors(data.errored);
-      }
-      if (data.success);
-      {
-        handleSuccesses(data.success);
-      }
-      if (data.change) {
-        handleReturnedChanges(data.change);
-      }
-    };
 
     try {
-      await Promise.all([handleMaxRevs(response, user.id)]);
+      await Promise.all([
+        handleDisallowed(response),
+        handleAllowed(response),
+        handleReturnedChanges(response),
+        handleErrors(response),
+        handleSuccesses(response),
+        handleMaxRevs(response, user.id),
+      ]);
     } catch (err) {
       console.error('There was an error updating change status: ', err); // eslint-disable-line no-console
     }
@@ -347,8 +469,9 @@ async function handleChanges(changes) {
 
   // If we detect  changes were written to the changes table
   // then we'll trigger sync
-  if (syncableChanges.length || newChangeTableEntries) {
-    debouncedSyncChanges();
+
+  if (newChangeTableEntries.length) {
+    WebsocketSendChanges(newChangeTableEntries);
   }
 }
 
@@ -363,6 +486,7 @@ export function startSyncing() {
     window.location.href
   );
   websocketUrl.protocol = window.location.protocol == 'https:' ? 'wss:' : 'ws:';
+
   socket = new WebSocket(websocketUrl);
 
   // Connection opened
@@ -372,8 +496,32 @@ export function startSyncing() {
 
   debouncedSyncChanges();
 
+  socket.addEventListener('message', e => {
+    const data = JSON.parse(e.data);
+    console.log(data);
+    if (data.task) {
+      Task.put(data.task);
+    }
+    if (data.responsePayload && data.responsePayload.allowed) {
+      socketHandleAllowed(data.responsePayload.allowed);
+    }
+    if (data.responsePayload && data.responsePayload.disallowed) {
+      socketHandleDisallowed(data.responsePayload.disallowed);
+    }
+    if (data.change) {
+      socketHandleReturnedChanges(data.change);
+      socketHandleMaxRevs(data.change, data.change.created_by_id);
+    }
+    if (data.errored) {
+      socketHandleErrors(data.errored);
+    }
+    if (data.success) {
+      socketHandleSuccesses(data.success);
+    }
+  });
+
   // Start the sync interval
-  intervalTimer = setInterval(debouncedSyncChanges, SYNC_POLL_INTERVAL * 1000);
+  // intervalTimer = setInterval(debouncedSyncChanges, SYNC_POLL_INTERVAL * 1000);
   db.on('changes', handleChanges);
 }
 
