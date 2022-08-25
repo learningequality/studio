@@ -19,7 +19,7 @@ from django.utils.http import http_date
 from django.views.decorators.clickjacking import xframe_options_exempt
 from django.views.generic.base import View
 from le_utils.constants import exercises
-from raven.contrib.django.raven_compat.models import client
+from sentry_sdk import capture_message
 from webpack_loader.utils import get_files
 
 from contentcuration.models import generate_object_storage_name
@@ -112,7 +112,7 @@ class ZipContentView(View):
         return response
 
     @xframe_options_exempt  # noqa
-    def get(self, request, zipped_filename, embedded_filepath):
+    def get(self, request, zipped_filename, embedded_filepath):  # noqa: C901
         """
         Handles GET requests and serves a static file from within the zip file.
         """
@@ -174,7 +174,7 @@ class ZipContentView(View):
                     file_size = len(content_with_path)
         except zipfile.BadZipfile:
             just_downloaded = getattr(zf_obj, 'just_downloaded', "Unknown (Most likely local file)")
-            client.captureMessage("Unable to open zip file. File info: name={}, size={}, mode={}, just_downloaded={}".format(
+            capture_message("Unable to open zip file. File info: name={}, size={}, mode={}, just_downloaded={}".format(
                 zf_obj.name, zf_obj.size, zf_obj.mode, just_downloaded))
             return HttpResponseServerError(
                 "Attempt to open zip file failed. Please try again, and if you continue to receive this message, please check that the zip file is valid."
