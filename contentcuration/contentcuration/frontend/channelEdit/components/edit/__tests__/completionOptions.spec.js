@@ -202,7 +202,7 @@ describe('CompletionOptions', () => {
         });
       });
       describe(`audio/video`, () => {
-        it(`'Duration dropdown' is not visible and reference hint is visible when 'Reference' is selected`, () => {
+        it(`'Completion dropdown' is not visible and reference hint is visible when 'Reference' is selected`, () => {
           const wrapper = mount(CompletionOptions, {
             propsData: {
               kind: 'audio',
@@ -210,7 +210,7 @@ describe('CompletionOptions', () => {
             },
           });
           expect(wrapper.vm.showReferenceHint).toBe(true);
-          expect(wrapper.find({ ref: 'duration' }).exists()).toBe(false);
+          expect(wrapper.find({ ref: 'completion' }).exists()).toBe(false);
         });
       });
       describe(`exercise`, () => {
