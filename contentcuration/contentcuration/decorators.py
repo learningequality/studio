@@ -1,8 +1,6 @@
 from django.conf import settings
-from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import render
 
-from contentcuration.models import Channel
 
 ACCEPTED_BROWSERS = settings.HEALTH_CHECK_BROWSERS + settings.SUPPORTED_BROWSERS
 
@@ -29,48 +27,6 @@ def is_admin(function):
             return function(request, *args, **kwargs)
 
         return render(request, "unauthorized.html", status=403)
-
-    wrap.__doc__ = function.__doc__
-    wrap.__name__ = function.__name__
-    return wrap
-
-
-def can_access_channel(function):
-    def wrap(request, *args, **kwargs):
-        try:
-            channel = Channel.objects.get(pk=kwargs["channel_id"])
-        except ObjectDoesNotExist:
-            return render(request, "channel_not_found.html")
-
-        if (
-            channel.public
-            or channel.editors.filter(id=request.user.id).exists()
-            or channel.viewers.filter(id=request.user.id).exists()
-            or (not request.user.is_anonymous and request.user.is_admin)
-        ):
-            return function(request, *args, **kwargs)
-
-        return render(request, "channel_not_found.html", status=404)
-
-    wrap.__doc__ = function.__doc__
-    wrap.__name__ = function.__name__
-    return wrap
-
-
-def can_edit_channel(function):
-    def wrap(request, *args, **kwargs):
-        try:
-            channel = Channel.objects.get(pk=kwargs["channel_id"], deleted=False)
-
-            if (
-                not channel.editors.filter(id=request.user.id).exists()
-                and not request.user.is_admin
-            ):
-                return render(request, "unauthorized.html", status=403)
-
-            return function(request, *args, **kwargs)
-        except ObjectDoesNotExist:
-            return render(request, "channel_not_found.html")
 
     wrap.__doc__ = function.__doc__
     wrap.__name__ = function.__name__

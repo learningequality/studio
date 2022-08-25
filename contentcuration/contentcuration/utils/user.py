@@ -1,8 +1,6 @@
 import logging
 from contextlib import ContextDecorator
 
-from contentcuration.tasks import calculate_user_storage_task
-
 
 class DelayUserStorageCalculation(ContextDecorator):
     """
@@ -34,6 +32,7 @@ delay_user_storage_calculation = DelayUserStorageCalculation()
 def calculate_user_storage(user_id):
     """TODO: Perhaps move this to User model to avoid unnecessary User lookups"""
     from contentcuration.models import User
+    from contentcuration.tasks import calculate_user_storage_task
 
     if delay_user_storage_calculation.is_active:
         delay_user_storage_calculation.queue.append(user_id)
