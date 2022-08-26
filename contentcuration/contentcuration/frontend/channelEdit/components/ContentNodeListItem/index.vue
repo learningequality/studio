@@ -99,9 +99,7 @@
                     </span>
                     <span v-if="(isTopic && node.coach_count) || isCoach">
                       <!-- for each learning activity -->
-
-
-                      <VTooltip bottom>
+                      <VTooltip bottom lazy>
                         <template #activator="{ on }">
                           <div style="display: inline-block;" v-on="on">
                             <Icon

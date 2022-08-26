@@ -23,6 +23,10 @@
         type: Boolean,
         default: true,
       },
+      lazy: {
+        type: Boolean,
+        default: true,
+      },
       /* eslint-enable kolibri/vue-no-unused-properties */
     },
   };

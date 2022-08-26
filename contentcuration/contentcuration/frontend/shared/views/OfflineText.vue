@@ -1,7 +1,7 @@
 <template>
 
   <VFadeTransition v-if="offline && !libraryMode" data-test="text">
-    <VTooltip v-if="indicator" bottom z-index="300">
+    <VTooltip v-if="indicator" bottom z-index="300" lazy>
       <template #activator="{ on }">
         <div class="px-4" v-on="on">
           <Icon class="mx-2">
