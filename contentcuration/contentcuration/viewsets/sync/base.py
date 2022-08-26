@@ -2,7 +2,7 @@ from collections import OrderedDict
 
 from search.viewsets.savedsearch import SavedSearchViewSet
 
-from contentcuration.utils.user import delay_user_storage_calculation
+from contentcuration.decorators import delay_user_storage_calculation
 from contentcuration.viewsets.assessmentitem import AssessmentItemViewSet
 from contentcuration.viewsets.bookmark import BookmarkViewSet
 from contentcuration.viewsets.channel import ChannelViewSet

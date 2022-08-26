@@ -40,6 +40,7 @@ from past.builtins import basestring
 from past.utils import old_div
 
 from contentcuration import models as ccmodels
+from contentcuration.decorators import delay_user_storage_calculation
 from contentcuration.statistics import record_publish_stats
 from contentcuration.utils.cache import delete_public_channel_cache_keys
 from contentcuration.utils.files import create_thumbnail_from_base64
@@ -47,7 +48,6 @@ from contentcuration.utils.files import get_thumbnail_encoding
 from contentcuration.utils.parser import extract_value
 from contentcuration.utils.parser import load_json_string
 from contentcuration.utils.sentry import report_exception
-from contentcuration.utils.user import delay_user_storage_calculation
 
 
 logmodule.basicConfig()

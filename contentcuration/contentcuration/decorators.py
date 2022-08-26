@@ -1,3 +1,5 @@
+from contextlib import ContextDecorator
+
 from django.conf import settings
 from django.shortcuts import render
 
@@ -60,3 +62,31 @@ def cache_no_user_data(view_func):
         return response
 
     return wrap
+
+
+class DelayUserStorageCalculation(ContextDecorator):
+    """
+    Decorator class that will dedupe and delay requests to enqueue storage calculation tasks for users
+    until after the wrapped function has exited
+    """
+    depth = 0
+    queue = []
+
+    @property
+    def is_active(self):
+        return self.depth > 0
+
+    def __enter__(self):
+        self.depth += 1
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        from contentcuration.utils.user import calculate_user_storage
+        self.depth -= 1
+        if not self.is_active:
+            user_ids = set(self.queue)
+            self.queue = []
+            for user_id in user_ids:
+                calculate_user_storage(user_id)
+
+
+delay_user_storage_calculation = DelayUserStorageCalculation()

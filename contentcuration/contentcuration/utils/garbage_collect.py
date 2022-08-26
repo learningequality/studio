@@ -18,11 +18,11 @@ from le_utils.constants import content_kinds
 
 from contentcuration.constants import feature_flags
 from contentcuration.db.models.functions import JSONObjectKeys
+from contentcuration.decorators import delay_user_storage_calculation
 from contentcuration.models import ContentNode
 from contentcuration.models import File
 from contentcuration.models import TaskResult
 from contentcuration.models import User
-from contentcuration.utils.user import delay_user_storage_calculation
 
 
 class DisablePostDeleteSignal(object):
