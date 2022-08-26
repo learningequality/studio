@@ -2,6 +2,9 @@ import { EventEmitter } from 'events';
 import { CHANGE_TYPES } from 'shared/data';
 import { CLIENTID } from 'shared/data/db';
 
+// In the change source, the client ID should always be in the beginning
+const clientIdRegex = new RegExp(`^${CLIENTID}`);
+
 function getEventName(table, type) {
   return `${table}/${type}`;
 }
@@ -111,7 +114,7 @@ export default function IndexedDBPlugin(db, listeners = []) {
   db.on('changes', function(changes) {
     changes.forEach(function(change) {
       // Don't invoke listeners if their client originated the change
-      if (CLIENTID !== change.source) {
+      if (!clientIdRegex.test(change.source)) {
         // Always invoke the listeners with the full object representation
         // It is up to the callbacks to know how to parse this.
         const obj = Object.assign(
