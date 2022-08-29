@@ -4,7 +4,7 @@
     <!-- Layout when practice quizzes are enabled -->
     <VLayout v-if="hideCompletionDropdown" xs6 md6>
       <!-- "Completion" dropdown menu  -->
-      <VFlex xs6 md6 class="completion-container pr-2">
+      <VFlex v-if="!audioVideoResource" xs6 md6 class="completion-container pr-2">
         <VSelect
           ref="completion"
           v-model="completionDropdown"
@@ -201,10 +201,11 @@
             return true;
           }
           return (
-            this.currentCompletionDropdown === CompletionDropdownMap.reference ||
+            (this.currentCompletionDropdown === CompletionDropdownMap.reference &&
+              !this.audioVideoResource) ||
             (this.value.model === CompletionCriteriaModels.REFERENCE &&
               !this.currentCompletionDropdown &&
-              this.audioVideoResource) ||
+              !this.audioVideoResource) ||
             //should be hidden if model is reference and we're getting this from the BE
             this.currentCompletionDropdown === CompletionDropdownMap.determinedByResource
           );
@@ -764,9 +765,8 @@
        */
       selectableDurationOptions() {
         if (
-          (this.kind === ContentKindsNames.DOCUMENT &&
-            this.currentCompletionDropdown === CompletionDropdownMap.completeDuration) ||
-          this.audioVideoResource
+          this.kind === ContentKindsNames.DOCUMENT &&
+          this.currentCompletionDropdown === CompletionDropdownMap.completeDuration
         ) {
           return this.allPossibleDurationOptions.map(model => ({
             value: model.id,
