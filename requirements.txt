@@ -225,8 +225,6 @@ pytz==2022.1
     #   django
     #   django-postmark
     #   google-api-core
-raven==6.10.0
-    # via -r requirements.in
 redis==3.5.3
     # via
     #   -r requirements.in

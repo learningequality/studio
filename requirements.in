@@ -34,7 +34,6 @@ django-redis
 django-prometheus
 future
 sentry-sdk
-raven
 django-bulk-update
 html5lib==1.1
 pillow==9.2.0

@@ -23,7 +23,6 @@ from le_utils.constants.labels.needs import NEEDSLIST
 from le_utils.constants.labels.resource_type import RESOURCETYPELIST
 from le_utils.constants.labels.subjects import SUBJECTSLIST
 from past.builtins import basestring
-from raven.contrib.django.raven_compat.models import client
 from rest_framework import status
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.authentication import TokenAuthentication
@@ -32,6 +31,7 @@ from rest_framework.decorators import authentication_classes
 from rest_framework.decorators import permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from sentry_sdk import capture_exception
 
 from contentcuration import ricecooker_versions as rc
 from contentcuration.api import activate_channel
@@ -79,8 +79,8 @@ class NodeValidationError(ValidationError):
     pass
 
 
-def handle_server_error(request):
-    client.captureException(stack=True, tags={"url": request.path})
+def handle_server_error(e, request):
+    capture_exception(e, tags={"url": request.path})
 
 
 @api_view(["POST", "GET"])
@@ -177,7 +177,7 @@ def api_file_upload(request):
     except KeyError:
         return HttpResponseBadRequest("Invalid file upload request")
     except Exception as e:
-        handle_server_error(request)
+        handle_server_error(e, request)
         return HttpResponseServerError(content=str(e), reason=str(e))
 
 
@@ -200,7 +200,7 @@ def api_create_channel_endpoint(request):
     except KeyError:
         return HttpResponseBadRequest("Required attribute missing from data: {}".format(data))
     except Exception as e:
-        handle_server_error(request)
+        handle_server_error(e, request)
         return HttpResponseServerError(content=str(e), reason=str(e))
 
 
@@ -261,7 +261,7 @@ def api_commit_channel(request):
     except KeyError:
         return HttpResponseBadRequest("Required attribute missing from data: {}".format(data))
     except Exception as e:
-        handle_server_error(request)
+        handle_server_error(e, request)
         return HttpResponseServerError(content=str(e), reason=str(e))
 
 
@@ -307,7 +307,7 @@ def api_add_nodes_to_tree(request):
     except NodeValidationError as e:
         return HttpResponseBadRequest(str(e))
     except Exception as e:
-        handle_server_error(request)
+        handle_server_error(e, request)
         return HttpResponseServerError(content=str(e), reason=str(e))
 
 
@@ -336,7 +336,7 @@ def api_publish_channel(request):
     except (KeyError, Channel.DoesNotExist):
         return HttpResponseNotFound("No channel matching: {}".format(data))
     except Exception as e:
-        handle_server_error(request)
+        handle_server_error(e, request)
         return HttpResponseServerError(content=str(e), reason=str(e))
 
 
@@ -353,7 +353,7 @@ def activate_channel_internal(request):
     except Channel.DoesNotExist:
         return HttpResponseNotFound("No channel matching: {}".format(channel_id))
     except Exception as e:
-        handle_server_error(request)
+        handle_server_error(e, request)
         return HttpResponseServerError(content=str(e), reason=str(e))
 
 
@@ -402,7 +402,7 @@ def get_tree_data(request):
     except ValueError:
         return HttpResponseNotFound("No tree name matching: {}".format(tree_name))
     except Exception as e:
-        handle_server_error(request)
+        handle_server_error(e, request)
         return HttpResponseServerError(content=str(e), reason=str(e))
 
 
@@ -442,7 +442,7 @@ def get_node_tree_data(request):
     except Channel.DoesNotExist:
         return HttpResponseNotFound("No channel matching: {}".format(channel_id))
     except Exception as e:
-        handle_server_error(request)
+        handle_server_error(e, request)
         return HttpResponseServerError(content=str(e), reason=str(e))
 
 
@@ -467,7 +467,7 @@ def get_channel_status_bulk(request):
     except KeyError:
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
     except Exception as e:
-        handle_server_error(request)
+        handle_server_error(e, request)
         return HttpResponseServerError(content=str(e), reason=str(e))
 
 
