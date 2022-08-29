@@ -7,9 +7,7 @@ import logging
 
 from celery import states
 from django.conf import settings
-from django.db.models import OuterRef
 from django.db.models.expressions import CombinedExpression
-from django.db.models.expressions import Exists
 from django.db.models.expressions import F
 from django.db.models.expressions import Value
 from django.db.models.signals import post_delete
@@ -18,7 +16,6 @@ from le_utils.constants import content_kinds
 
 from contentcuration.constants import feature_flags
 from contentcuration.db.models.functions import JSONObjectKeys
-from contentcuration.decorators import delay_user_storage_calculation
 from contentcuration.models import ContentNode
 from contentcuration.models import File
 from contentcuration.models import TaskResult
@@ -150,18 +147,18 @@ def clean_up_tasks():
     logging.info("Deleted {} completed task(s) from the task table".format(count))
 
 
-@delay_user_storage_calculation
-def clean_up_stale_files(last_modified=now() - datetime.timedelta(days=30)):
+def clean_up_stale_files(last_modified=None):
     """
     Clean up files that aren't attached to any ContentNode, AssessmentItem, or SlideshowSlide and where
     the modified date is older than `last_modified`
     """
+    if last_modified is None:
+        last_modified = now() - datetime.timedelta(days=30)
 
-    files_to_clean_up = File.objects.filter(
-        contentnode__isnull=True, assessment_item__isnull=True, slideshow_slide__isnull=True, modified__lt=last_modified
-    )
+    # Uses a subset of Python’s array-slicing syntax to limit deletion to 1000000 files per function run
+    with DisablePostDeleteSignal():
+        files_to_clean_up, _ = File.objects.filter(pk__in=File.objects.filter(
+            contentnode__isnull=True, assessment_item__isnull=True, slideshow_slide__isnull=True, modified__lt=last_modified
+        ).values_list('pk')[:1000000]).delete()
 
-    # Uses a subset of Python’s array-slicing syntax to limit deletion to 100000 files per function run
-    files_deleted, _ = File.objects.filter(Exists(files_to_clean_up.filter(pk=OuterRef('pk'))[:100000])).delete()
-
-    logging.info("Files with a modified date older than {} should be deleted. Deleted {} file(s).".format(last_modified, files_deleted))
+    logging.info("Files with a modified date older than {} should be deleted. Deleted {} file(s).".format(last_modified, files_to_clean_up))
