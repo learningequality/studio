@@ -198,6 +198,7 @@ describe('IndexedDBPlugin', function() {
     const listener5 = testListener('testTableC', CHANGE_TYPES.CREATED, 'anotherVuexNamespace');
     const listener6 = testListener('testTableC', CHANGE_TYPES.UPDATED, 'anotherVuexNamespace');
     const listener7 = testListener('testTableZ', CHANGE_TYPES.CREATED);
+    const listener8 = testListener('testTableZ', CHANGE_TYPES.CREATED);
 
     listener1.addChange();
     listener2.addChange();
@@ -206,6 +207,7 @@ describe('IndexedDBPlugin', function() {
     listener5.addChange();
     listener6.addChange();
     listener7.addChange(CLIENTID);
+    listener8.addChange(`${CLIENTID}::${uuidv4()}`);
 
     const result = IndexedDBPlugin(this.db, this.listeners);
     result(this.store);
@@ -217,6 +219,7 @@ describe('IndexedDBPlugin', function() {
     listener5.assertNotCalled();
     listener6.assertNotCalled();
     listener7.assertNotCalled();
+    listener8.assertNotCalled();
 
     this.db.events.emit('changes', this.changes);
 
@@ -227,5 +230,6 @@ describe('IndexedDBPlugin', function() {
     listener5.assertCalled();
     listener6.assertCalled();
     listener7.assertNotCalled(); // from source CLIENTID
+    listener8.assertNotCalled(); // from source /^CLIENTID/
   });
 });
