@@ -95,6 +95,7 @@ function socketHandleAllowed(allowed) {
         c.synced = true;
       });
   }
+  return Promise.resolve();
 }
 function socketHandleDisallowed(disallowed) {
   if (disallowed.length) {
@@ -107,6 +108,7 @@ function socketHandleDisallowed(disallowed) {
       .anyOf(disallowedRevs)
       .modify({ disallowed: true, synced: true });
   }
+  return Promise.resolve();
 }
 
 function socketHandleReturnedChanges(returnedChange) {
@@ -117,6 +119,7 @@ function socketHandleReturnedChanges(returnedChange) {
   if (returnedChanges.length) {
     return applyChanges(returnedChanges);
   }
+  return Promise.resolve();
 }
 
 function socketHandleErrors(error) {
@@ -139,6 +142,7 @@ function socketHandleErrors(error) {
         return Object.assign(obj, errorMap[obj.server_rev]);
       });
   }
+  return Promise.resolve();
 }
 
 function socketHandleSuccesses(success) {
@@ -149,6 +153,7 @@ function socketHandleSuccesses(success) {
       .anyOf(success.server_rev)
       .delete();
   }
+  return Promise.resolve();
 }
 
 function socketHandleMaxRevs(change, userId) {
@@ -255,6 +260,11 @@ function handleErrors(response) {
   return Promise.resolve();
 }
 
+function handleTasks(response) {
+  const tasks = get(response, ['data', 'tasks'], []);
+  return Task.setTasks(tasks);
+}
+
 function handleSuccesses(response) {
   // The successes property is an array of server_revs for any previously synced changes
   // that have now been successfully applied on the server.
@@ -306,8 +316,10 @@ function handleMaxRevs(response, userId) {
   }
   return Promise.all(promises);
 }
+
 async function WebsocketSendChanges(changesToSync) {
   const  user =  await Session.getSession();
+
 
   if (!user) {
     // If not logged in, nothing to do.
@@ -417,6 +429,7 @@ async function syncChanges() {
         handleErrors(response),
         handleSuccesses(response),
         handleMaxRevs(response, user.id),
+        handleTasks(response),
       ]);
     } catch (err) {
       console.error('There was an error updating change status: ', err); // eslint-disable-line no-console
@@ -494,29 +507,56 @@ export function startSyncing() {
     console.log('Websocket connected');
   });
 
+  // Listen for any errors due to which connection may be closed.
+  socket.addEventListener('error', event => {
+    console.log('WebSocket error: ', event);
+  });
+
   debouncedSyncChanges();
 
   socket.addEventListener('message', e => {
     const data = JSON.parse(e.data);
     console.log(data);
     if (data.task) {
-      Task.put(data.task);
+      Task.setTask(data.task);
     }
     if (data.responsePayload && data.responsePayload.allowed) {
-      socketHandleAllowed(data.responsePayload.allowed);
+      try {
+        socketHandleAllowed(data.responsePayload.allowed);
+      } catch (err) {
+        console.log(err);
+      }
     }
     if (data.responsePayload && data.responsePayload.disallowed) {
-      socketHandleDisallowed(data.responsePayload.disallowed);
+      try {
+        socketHandleDisallowed(data.responsePayload.disallowed);
+      } catch (err) {
+        console.log(err);
+      }
     }
     if (data.change) {
-      socketHandleReturnedChanges(data.change);
-      socketHandleMaxRevs(data.change, data.change.created_by_id);
+      try {
+        Promise.all([
+          socketHandleReturnedChanges(data.change),
+          socketHandleMaxRevs(data.change, data.change.created_by_id),
+        ]);
+      } catch (err) {
+        console.log(err);
+      }
     }
     if (data.errored) {
-      socketHandleErrors(data.errored);
+      try {
+        socketHandleErrors(data.errored);
+      } catch (err) {
+        console.log(err);
+      }
     }
     if (data.success) {
-      socketHandleSuccesses(data.success);
+      try {
+        socketHandleSuccesses(data.success);
+      } catch (err) {
+        console.log(err);
+      }
     }
   });
 

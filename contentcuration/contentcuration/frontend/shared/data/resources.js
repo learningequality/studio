@@ -1,5 +1,25 @@
+import {
+  ACTIVE_CHANNELS,
+  CHANGES_TABLE,
+  CHANGE_TYPES,
+  CHANNEL_SYNC_KEEP_ALIVE_INTERVAL,
+  COPYING_FLAG,
+  CURRENT_USER,
+  IGNORED_SOURCE,
+  MAX_REV_KEY,
+  RELATIVE_TREE_POSITIONS,
+  TABLE_NAMES,
+  TASK_ID,
+} from './constants';
+import { API_RESOURCES, INDEXEDDB_RESOURCES } from './registry';
+import { NEW_OBJECT, fileErrors } from 'shared/constants';
+import applyChanges, { applyMods, collectChanges } from './applyRemoteChanges';
+import client, { paramsSerializer } from 'shared/client';
+import db, { CLIENTID, Collection, channelScope } from './db';
+
 import Dexie from 'dexie';
 import Mutex from 'mutex-js';
+import { currentLanguage } from 'shared/i18n';
 import findIndex from 'lodash/findIndex';
 import flatMap from 'lodash/flatMap';
 import isArray from 'lodash/isArray';
@@ -7,34 +27,14 @@ import isFunction from 'lodash/isFunction';
 import isNumber from 'lodash/isNumber';
 import isString from 'lodash/isString';
 import matches from 'lodash/matches';
+import mergeAllChanges from './mergeChanges';
 import overEvery from 'lodash/overEvery';
 import pick from 'lodash/pick';
 import sortBy from 'lodash/sortBy';
 import uniq from 'lodash/uniq';
 import uniqBy from 'lodash/uniqBy';
-
-import { v4 as uuidv4 } from 'uuid';
-import {
-  CHANGE_TYPES,
-  CHANGES_TABLE,
-  IGNORED_SOURCE,
-  RELATIVE_TREE_POSITIONS,
-  TABLE_NAMES,
-  COPYING_FLAG,
-  TASK_ID,
-  CURRENT_USER,
-  ACTIVE_CHANNELS,
-  CHANNEL_SYNC_KEEP_ALIVE_INTERVAL,
-  MAX_REV_KEY,
-} from './constants';
-import applyChanges, { applyMods, collectChanges } from './applyRemoteChanges';
-import mergeAllChanges from './mergeChanges';
-import db, { channelScope, CLIENTID, Collection } from './db';
-import { API_RESOURCES, INDEXEDDB_RESOURCES } from './registry';
-import { fileErrors, NEW_OBJECT } from 'shared/constants';
-import client, { paramsSerializer } from 'shared/client';
-import { currentLanguage } from 'shared/i18n';
 import urls from 'shared/urls';
+import { v4 as uuidv4 } from 'uuid';
 
 // Number of seconds after which data is considered stale.
 const REFRESH_INTERVAL = 5;
@@ -1808,15 +1808,9 @@ export const Clipboard = new TreeResource({
 export const Task = new IndexedDBResource({
   tableName: TABLE_NAMES.TASK,
   idField: 'task_id',
-  setTasks(tasks) {
+  setTask(task) {
     return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
-      return this.table
-        .where(this.idField)
-        .noneOf(tasks.map(t => t[this.idField]))
-        .delete()
-        .then(() => {
-          return this.table.bulkPut(tasks);
-        });
+      return this.table.Put(task);
     });
   },
 });
