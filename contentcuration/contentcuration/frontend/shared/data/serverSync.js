@@ -313,8 +313,9 @@ async function handleChanges(changes) {
   // a sync to send them to the backend - this is particularly important for
   // MOVE, COPY, PUBLISH, and SYNC changes where we may be executing them inside an IGNORED_SOURCE
   // because they also make UPDATE and CREATE changes that we wish to make in the client only.
+  // Only do this for changes that are not marked as synced.
   const newChangeTableEntries = changes.some(
-    c => c.table === CHANGES_TABLE && c.type === CHANGE_TYPES.CREATED
+    c => c.table === CHANGES_TABLE && c.type === CHANGE_TYPES.CREATED && !c.obj.synced
   );
 
   if (syncableChanges.length) {
