@@ -110,6 +110,7 @@
   import debounce from 'lodash/debounce';
   import difference from 'lodash/difference';
   import isEqual from 'lodash/isEqual';
+  import sortBy from 'lodash/sortBy';
   import union from 'lodash/union';
   import { RouteNames } from '../../constants';
   import CatalogFilters from './CatalogFilters';
@@ -189,7 +190,9 @@
         return RouteNames.CATALOG_DETAILS;
       },
       channels() {
-        return this.getChannels(this.page.results);
+        // Sort again by the same ordering used on the backend - name.
+        // Have to do this because of how we are getting the object data via getChannels.
+        return sortBy(this.getChannels(this.page.results), 'name');
       },
       selectedCount() {
         return this.page.count - this.excluded.length;

@@ -324,6 +324,7 @@
 
 <script>
 
+  import orderBy from 'lodash/orderBy';
   import sortBy from 'lodash/sortBy';
   import { mapActions, mapGetters } from 'vuex';
   import camelCase from 'lodash/camelCase';
@@ -468,7 +469,7 @@
         return this.translateConstant(masteryModel);
       },
       sortedTags() {
-        return sortBy(this.node.tags, '-count');
+        return orderBy(this.node.tags, ['count'], ['desc']);
       },
       license() {
         return Licenses.get(this.node.license);
