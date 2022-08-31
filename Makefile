@@ -141,6 +141,9 @@ filedurations:
 learningactivities:
 	python contentcuration/manage.py set_default_learning_activities
 
+hascaptions:
+	python contentcuration/manage.py set_orm_based_has_captions
+
 export COMPOSE_PROJECT_NAME=studio_$(shell git rev-parse --abbrev-ref HEAD)
 
 purge-postgres:
