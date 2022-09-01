@@ -147,6 +147,9 @@ def clean_up_tasks():
     logging.info("Deleted {} completed task(s) from the task table".format(count))
 
 
+CHUNKSIZE = 500000
+
+
 def clean_up_stale_files(last_modified=None):
     """
     Clean up files that aren't attached to any ContentNode, AssessmentItem, or SlideshowSlide and where
@@ -155,10 +158,20 @@ def clean_up_stale_files(last_modified=None):
     if last_modified is None:
         last_modified = now() - datetime.timedelta(days=30)
 
-    # Uses a subset of Python’s array-slicing syntax to limit deletion to 1000000 files per function run
     with DisablePostDeleteSignal():
-        files_to_clean_up, _ = File.objects.filter(pk__in=File.objects.filter(
+        files_to_clean_up = File.objects.filter(
             contentnode__isnull=True, assessment_item__isnull=True, slideshow_slide__isnull=True, modified__lt=last_modified
-        ).values_list('pk')[:1000000]).delete()
+        )
 
-    logging.info("Files with a modified date older than {} should be deleted. Deleted {} file(s).".format(last_modified, files_to_clean_up))
+        files_to_clean_up_slice = files_to_clean_up.values_list("id", flat=True)[0:CHUNKSIZE]
+
+        count = 0
+
+        while files_to_clean_up.exists():
+            this_count, _ = File.objects.filter(id__in=files_to_clean_up_slice).delete()
+
+            this_count = len(files_to_clean_up_slice)
+            count += this_count
+            files_to_clean_up_slice = files_to_clean_up.values_list("id", flat=True)[0:CHUNKSIZE]
+
+    logging.info("Files with a modified date older than {} were deleted. Deleted {} file(s).".format(last_modified, count))
