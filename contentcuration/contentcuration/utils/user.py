@@ -1,39 +1,12 @@
 import logging
-from contextlib import ContextDecorator
 
 from contentcuration.tasks import calculate_user_storage_task
-
-
-class DelayUserStorageCalculation(ContextDecorator):
-    """
-    Decorator class that will dedupe and delay requests to enqueue storage calculation tasks for users
-    until after the wrapped function has exited
-    """
-    depth = 0
-    queue = []
-
-    @property
-    def is_active(self):
-        return self.depth > 0
-
-    def __enter__(self):
-        self.depth += 1
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.depth -= 1
-        if not self.is_active:
-            user_ids = set(self.queue)
-            self.queue = []
-            for user_id in user_ids:
-                calculate_user_storage(user_id)
-
-
-delay_user_storage_calculation = DelayUserStorageCalculation()
 
 
 def calculate_user_storage(user_id):
     """TODO: Perhaps move this to User model to avoid unnecessary User lookups"""
     from contentcuration.models import User
+    from contentcuration.decorators import delay_user_storage_calculation
 
     if delay_user_storage_calculation.is_active:
         delay_user_storage_calculation.queue.append(user_id)
