@@ -14,7 +14,7 @@ if (process.env.NODE_ENV !== 'production') {
 // represent their materialized path as Dexie uses to represent nested updates.
 // This means that when Dexie returns a change object about these,
 // it nests the dot paths that should remain unnested.
-const flatMapRegex = /^(accessibility_labels|categories|grade_levels|learner_needs|learning_activities|resource_types)\.(.+)/; // eslint-disable-line
+const flatMapRegex = /^(content_defaults|accessibility_labels|categories|grade_levels|learner_needs|learning_activities|resource_types)\.(.+)/; // eslint-disable-line
 
 // In order to intercept these issues at the earliest possible juncture
 // we override the Dexie set and delete methods for key paths
@@ -42,6 +42,7 @@ Dexie.setByKeyPath = function(obj, keyPath, value) {
     const key = findFlatPath[1];
     const path = findFlatPath[2];
     obj[key] = {
+      ...(obj[key] || {}),
       [path]: value,
     };
     return obj;

@@ -1,6 +1,7 @@
 import Vue from 'vue';
 import { TABLE_NAMES, CHANGE_TYPES } from 'shared/data';
 import { Task } from 'shared/data/resources';
+import { applyMods } from 'shared/data/applyRemoteChanges';
 
 export default {
   namespaced: true,
@@ -36,6 +37,11 @@ export default {
     ADD_ASYNC_TASK(state, task) {
       Vue.set(state.asyncTasksMap, task.task_id, task);
     },
+    UPDATE_ASYNC_TASK_FROM_INDEXEDDB(state, { task_id, ...mods }) {
+      if (task_id && state.asyncTasksMap[task_id]) {
+        applyMods(state.asyncTasksMap[task_id], mods);
+      }
+    },
     REMOVE_ASYNC_TASK(state, asyncTask) {
       Vue.delete(state.asyncTasksMap, asyncTask.task_id);
     },
@@ -43,7 +49,7 @@ export default {
   listeners: {
     [TABLE_NAMES.TASK]: {
       [CHANGE_TYPES.CREATED]: 'ADD_ASYNC_TASK',
-      [CHANGE_TYPES.UPDATED]: 'ADD_ASYNC_TASK',
+      [CHANGE_TYPES.UPDATED]: 'UPDATE_ASYNC_TASK_FROM_INDEXEDDB',
       [CHANGE_TYPES.DELETED]: 'REMOVE_ASYNC_TASK',
     },
   },
