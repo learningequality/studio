@@ -384,7 +384,6 @@
   import Checkbox from 'shared/views/form/Checkbox';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import { NEW_OBJECT, FeatureFlagKeys } from 'shared/constants';
-  import { validate as validateCompletionCriteria } from 'shared/leUtils/CompletionCriteria';
   import { constantsTranslationMixin, metadataTranslationMixin } from 'shared/mixins';
 
   // Define an object to act as the place holder for non unique values.
@@ -548,7 +547,6 @@
       resourcesNeeded: generateNestedNodesGetterSetter('learner_needs'),
       contentLearningActivities: generateNestedNodesGetterSetter('learning_activities'),
       categories: generateNestedNodesGetterSetter('categories'),
-      learnerManaged: generateGetterSetter('learner_managed'),
       license() {
         return this.getValueFromNodes('license');
       },
@@ -591,19 +589,23 @@
           };
         },
         set({ completion_criteria, suggested_duration, suggested_duration_type, modality }) {
-          if (validateCompletionCriteria(completion_criteria, this.firstNode.kind)) {
-            const options = { completion_criteria };
-            this.updateExtraFields({ options });
-          } else {
-            console.warn('Invalid completion criteria', [...validateCompletionCriteria.errors]);
-          }
+          completion_criteria.learner_managed = this.learnerManaged;
           const options = { completion_criteria, modality };
-          if (modality) {
-            options.modality = modality;
-          }
           this.updateExtraFields({ options });
           this.updateExtraFields({ suggested_duration_type });
           this.update({ suggested_duration });
+        },
+      },
+      learnerManaged: {
+        get() {
+          const { completion_criteria = {} } = this.getExtraFieldsValueFromNodes('options') || {};
+          return completion_criteria.learner_managed;
+        },
+        set(value) {
+          const { completion_criteria = {}, ...options } =
+            this.getExtraFieldsValueFromNodes('options') || {};
+          completion_criteria.learner_managed = value;
+          this.updateExtraFields({ options: { ...options, completion_criteria } });
         },
       },
       /* COMPUTED PROPS */
