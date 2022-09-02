@@ -20,7 +20,7 @@ jobs:
         uses: fkirc/skip-duplicate-actions@master
         with:
           github_token: ${{ github.token }}
-          paths: '["**.py", "requirements.txt", ".github/workflows/deploytest.yml", "**.vue", "**.js", "yarn.lock"]'
+          paths: '["**.py", "requirements.txt", ".github/workflows/deploytest.yml", "**.vue", "**.js", "yarn.lock", "package.json"]'
   build_assets:
     name: Build frontend assets
     needs: pre_job

@@ -25,7 +25,7 @@
     @focus="$emit('focus')"
   >
     <template #item="{ item }">
-      <VTooltip bottom>
+      <VTooltip bottom lazy>
         <template #activator="{ on }">
           <span class="text-truncate" v-on="on">{{ languageText(item) }}</span>
         </template>

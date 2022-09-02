@@ -1,6 +1,6 @@
 <template>
 
-  <VTooltip maxWidth="150px" v-bind="$attrs">
+  <VTooltip maxWidth="150px" v-bind="$attrs" lazy>
     <template #activator="{ on }">
       <Icon color="primary" :small="small" v-on="on">
         {{ icon }}

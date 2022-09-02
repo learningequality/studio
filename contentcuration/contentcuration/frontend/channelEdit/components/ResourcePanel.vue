@@ -104,7 +104,7 @@
           />
           <VCard v-else-if="isResource && !isExercise" class="preview-error" flat>
             <VLayout align-center justify-center fill-height>
-              <VTooltip bottom>
+              <VTooltip bottom lazy>
                 <template #activator="{ on }">
                   <Icon color="red" v-on="on">
                     error
@@ -324,6 +324,7 @@
 
 <script>
 
+  import orderBy from 'lodash/orderBy';
   import sortBy from 'lodash/sortBy';
   import { mapActions, mapGetters } from 'vuex';
   import camelCase from 'lodash/camelCase';
@@ -468,7 +469,7 @@
         return this.translateConstant(masteryModel);
       },
       sortedTags() {
-        return sortBy(this.node.tags, '-count');
+        return orderBy(this.node.tags, ['count'], ['desc']);
       },
       license() {
         return Licenses.get(this.node.license);
@@ -580,7 +581,7 @@
       },
       metadataListText(ids) {
         const list = ids.map(i => this.translateMetadataString(camelCase(i)));
-        const formatter = Intl.ListFormat(window.languageCode, {
+        const formatter = new Intl.ListFormat(window.languageCode, {
           style: 'narrow',
           type: 'conjunction',
         });

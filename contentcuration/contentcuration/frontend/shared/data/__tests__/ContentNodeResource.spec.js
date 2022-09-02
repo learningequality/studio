@@ -277,11 +277,12 @@ describe('ContentNode methods', () => {
       where,
       getNewSortOrder;
     beforeEach(() => {
-      node = { id: uuid4(), title: 'Test node' };
+      node = { id: uuid4(), title: 'Test node', channel_id: uuid4() };
       parent = {
         id: uuid4(),
         title: 'Test node parent',
         root_id: uuid4(),
+        channel_id: uuid4(),
       };
       siblings = [];
       resolveParent = mockMethod('resolveParent', () => Promise.resolve(parent));
@@ -331,6 +332,43 @@ describe('ContentNode methods', () => {
             source: CLIENTID,
             table: 'contentnode',
             type: CHANGE_TYPES.MOVED,
+            channel_id: parent.channel_id,
+          },
+        });
+      });
+
+      it("should default `channel_id` to the node's", async () => {
+        let cb = jest.fn(() => Promise.resolve('results'));
+        parent.channel_id = null;
+        await expect(
+          ContentNode.resolveTreeInsert('abc123', 'target', 'position', false, cb)
+        ).resolves.toEqual('results');
+        expect(resolveParent).toHaveBeenCalledWith('target', 'position');
+        expect(treeLock).toHaveBeenCalledWith(parent.root_id, expect.any(Function));
+        expect(get).toHaveBeenCalledWith('abc123', false);
+        expect(where).toHaveBeenCalledWith({ parent: parent.id }, false);
+        expect(getNewSortOrder).not.toBeCalled();
+        expect(cb).toBeCalled();
+        const result = cb.mock.calls[0][0];
+        expect(result).toMatchObject({
+          node,
+          parent,
+          payload: {
+            id: 'abc123',
+            parent: parent.id,
+            lft: 1,
+            changed: true,
+          },
+          change: {
+            key: 'abc123',
+            from_key: null,
+            target: parent.id,
+            position: RELATIVE_TREE_POSITIONS.LAST_CHILD,
+            oldObj: node,
+            source: CLIENTID,
+            table: 'contentnode',
+            type: CHANGE_TYPES.MOVED,
+            channel_id: node.channel_id,
           },
         });
       });
@@ -388,6 +426,22 @@ describe('ContentNode methods', () => {
         expect(get).toHaveBeenCalledWith('abc123', false);
         expect(where).toHaveBeenCalledWith({ parent: parent.id }, false);
         expect(getNewSortOrder).toHaveBeenCalledWith('abc123', 'target', 'position', siblings);
+        expect(cb).not.toBeCalled();
+      });
+
+      it('should reject if null channel_id', async () => {
+        let cb = jest.fn(() => Promise.resolve('results'));
+        parent.channel_id = null;
+        node.channel_id = null;
+
+        await expect(
+          ContentNode.resolveTreeInsert('abc123', 'target', 'position', false, cb)
+        ).rejects.toThrow('Missing channel_id for tree insertion change event');
+        expect(resolveParent).toHaveBeenCalledWith('target', 'position');
+        expect(treeLock).toHaveBeenCalledWith(parent.root_id, expect.any(Function));
+        expect(get).toHaveBeenCalledWith('abc123', false);
+        expect(where).toHaveBeenCalledWith({ parent: parent.id }, false);
+        expect(getNewSortOrder).not.toBeCalled();
         expect(cb).not.toBeCalled();
       });
     });

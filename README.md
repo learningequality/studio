@@ -1,6 +1,6 @@
 # Kolibri Studio
 
-[![codecov](http://codecov.io/github/learningequality/studio/coverage.svg?branch=develop)](http://codecov.io/github/learningequality/studio?branch=develop])
+[![Python tests](https://github.com/learningequality/studio/actions/workflows/pythontest.yml/badge.svg)](https://github.com/learningequality/studio/actions/workflows/pythontest.yml) [![Javascript Tests](https://github.com/learningequality/studio/actions/workflows/frontendtest.yml/badge.svg)](https://github.com/learningequality/studio/actions/workflows/frontendtest.yml) [![codecov](http://codecov.io/github/learningequality/studio/coverage.svg?branch=develop)](http://codecov.io/github/learningequality/studio?branch=develop])
 
 [Kolibri Studio](https://studio.learningequality.org) is a web application designed to deliver educational materials to [Kolibri](http://learningequality.org/kolibri/). It supports:
 
@@ -9,44 +9,88 @@
 - Creating learning pathways and assessments
 - Uploading new content through the web interface or programatically using [ricecooker-powered](https://github.com/learningequality/ricecooker) content import scripts
 
-Kolibri Studio uses [Django](https://www.djangoproject.com/) for the backend and is transitioning from [Backbone.js](https://backbonejs.org/) to [Vue.js](https://vuejs.org/) for the frontend.
+Kolibri Studio uses the [Django framework](https://www.djangoproject.com/) for the backend and [Vue.js](https://vuejs.org/) for the frontend.
 
 If you are looking for help setting up custom content channels, uploading and organizing resources using Kolibri Studio, please refer to the [User Guide](https://kolibri-studio.readthedocs.io/en/latest/).
 
+## Local development instructions
+The following guide utilizes docker and docker-compose to run select services required for Studio to function. If you would rather install these services on your host, please follow the [host-setup guide](docs/host_services_setup.md).
 
-## Getting started
+### Prerequisites
+Please install these prerequisites, or alternatives for setting up your local development environment:
+- [volta](https://docs.volta.sh/guide/getting-started) or a different node.js manager
+- [pyenv](https://kolibri-dev.readthedocs.io/en/develop/howtos/installing_pyenv.html) and [pyenv-virtualenv](https://github.com/pyenv/pyenv-virtualenv#installation)
+- [docker](https://docs.docker.com/install/) and [docker-compose](https://docs.docker.com/compose/install/)
 
-### Get the code
 
-- Install and set up [Git](https://help.github.com/articles/set-up-git/) on your computer. Try [this tutorial](http://learngitbranching.js.org/) if you need more practice
-- [Sign up and configure your GitHub account](https://github.com/join) if you don't have one already.
-- Fork the [studio repo](https://github.com/learningequality/studio) to create a copy of the studio repository under your own github username. This will make it easier to [submit pull requests](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request). Read more details [about forking](https://help.github.com/articles/fork-a-repo/) from GitHub
-- Clone your repo locally
+### Build your python virtual environment
+To determine the preferred version of Python, you can check the `runtime.txt` file:
+```bash
+$ cat runtime.txt
+# This is the required version of Python to run Studio currently.
+# This is determined by the default Python 3 version that is installed
+# inside Ubuntu Bionic, which is used to build images for Studio.
+# We encode it here so that it can be picked up by Github's dependabot
+# to manage automated package upgrades.
+python-3.9.13
+```
+Use `pyenv` to install the version of Python listed in that file, and to also set up a virtual environment:
+```bash
+pyenv install 3.9.13
+pyenv virtualenv 3.9.13 studio-py3.9
+pyenv activate studio-py3.9
+```
+Now you may install Studio's Python dependencies:
+```bash
+pip install -r requirements.txt -r requirements-dev.txt
+```
+To deactivate the virtual environment, when you're finished developing on Studio for the time being:
+```bash
+pyenv deactivate
+```
 
-Tip: [Register your SSH keys](https://help.github.com/en/articles/connecting-to-github-with-ssh) on GitHub to avoid having to repeatedly enter your password.
+#### A note about dependencies on Apple Silicon M1+
+If you run into an error with `pip install` related to the `grcpio` package, it is because it currently [does not support M1 with the version for `grcpio` Studio uses](https://github.com/grpc/grpc/issues/25082). In order to fix it, you will need to add the following environmental variables before running `pip install`:
+```bash
+export GRPC_PYTHON_BUILD_SYSTEM_OPENSSL=1
+export GRPC_PYTHON_BUILD_SYSTEM_ZLIB=1
+export CFLAGS="-I/opt/homebrew/opt/openssl/include"
+export LDFLAGS="-L/opt/homebrew/opt/openssl/lib"
+```
 
+### Install frontend dependencies
+Install the version of node.js supported by Studio, and install `yarn`:
+```bash
+volta install node@16
+volta install yarn
+```
+After installing `yarn`, you may now install frontend dependencies:
+```bash
+yarn install
+```
 
 ### Install and run services
 
 Studio requires some background services to be running:
 
-* Minio
-* Postgres
-* Redis
+* Minio - a local S3 storage emulation
+* PostgreSQL (postgres) - a relational database
+* Redis - a fast key/value store useful for caching
+* Celery - the task manager and executor, which relies on the Studio codebase
 
-The instructions below show how to set up the services using Docker. This works for many people, but not everyone. If docker is giving you issues, you can also [manually install](docs/manual_setup.md) the services either on your host machine or in a virtual machine (for example, using Vagrant with Virtualbox or VMWare).
+Generally speaking, you'll want to open a separate terminal/terminal-tab to run the services. With docker and docker-compose installed, running the above services is as easy as:
+```bash
+make run-services
+```
 
-First, [install Docker](https://docs.docker.com/install/) and [docker-compose](https://docs.docker.com/compose/install/).
-
-After installing the above, you're ready to start the services by running:
+The above command may take longer the first time it's run. It includes starting the `celery` workers, and the other dependent services through docker, which can be done separately with the following two commands:
 
 ```bash
 make dcservicesup
+make devceleryworkers
 ```
 
-The above command may take longer the first time it's run.
-
-To confirm that the services are running, you should see three containers when executing `docker ps`. For example:
+To confirm that docker-based services are running, you should see three containers when executing `docker ps`. For example:
 
 ```bash
 > docker ps
@@ -56,42 +100,41 @@ e09c5c203b93        redis:6.0.9                       "docker-entrypoint.s…"  
 c86bbfa3a59e        postgres:12.10                      "docker-entrypoint.s…"   51 seconds ago      Up 49 seconds       0.0.0.0:5432->5432/tcp   studio_vue-refactor_postgres_1
 ```
 
-
-To stop the services, press <kbd>Ctrl</kbd> + <kbd>C</kbd> in the terminal where you ran `make dcservicesup`. Once you've done that, you may run the following command to remove the docker containers (they will be recreated when you run `dcservicesup` again):
-
+To stop the services, press <kbd>Ctrl</kbd> + <kbd>C</kbd> in the terminal where you ran `make run-services` (or `dcservicesup`). Once you've done that, you may run the following command to remove the docker containers (they will be recreated when you run `run-services` or `dcservicesup` again):
 ```bash
 make dcservicesdown
 ```
 
-### Python dependencies
-
-To develop on Kolibri Studio, you'll need:
-
-* Python 3.9+
-
-Managing Python installations can be quite tricky. We *highly* recommend using something like [`pyenv`](https://learningequality.github.io/django-tutorial/en/python_installation/) or package managers like `Homebrew <http://brew.sh/>`__ on Mac or ``apt`` on Debian to manage your Python installations. Never modify your system's built-in version of Python.
-
-Once you've set up a Python [virtual environment](https://learningequality.github.io/django-tutorial/en/python_installation/) for the project, you can install the dependencies:
-
+### Initializing Studio
+With the services running, in a separate terminal/terminal-tab, we can now initialize the database for Studio development purposes. The command below will initialize the database tables, import constants, and a user account for development:
 ```bash
-# Install all dependencies
-pip install -r requirements.txt
-pip install -r requirements-dev.txt
-
-# Set up pre-commit hooks
-pre-commit install
-```
-#### A note about dependencies on Apple Silicon M1
-If you run into an error with `pip install` related to the `grcpio` package, it is because it currently [does not support M1 with the version for `grcpio` Studio uses](https://github.com/grpc/grpc/issues/25082). In order to fix it, you will need to add the following environmental variables before running `pip install`:
-
-```
-export GRPC_PYTHON_BUILD_SYSTEM_OPENSSL=1
-export GRPC_PYTHON_BUILD_SYSTEM_ZLIB=1
-export CFLAGS="-I/opt/homebrew/opt/openssl/include"
-export LDFLAGS="-L/opt/homebrew/opt/openssl/lib"
+yarn run devsetup
 ```
 
-#### Adding or updating dependencies
+### Running the development server
+With the services running, in a separate terminal/terminal-tab, and the database initialized, we can start the dev server:
+```bash
+yarn run devserver:hot  # with Vue hot module reloading
+# or
+yarn run devserver  # without hot module reloading
+```
+
+Either of the above commands will take a few moments to build the frontend. When it finishes, you can sign in with the account created by the `yarn run devsetup` command:
+- url: `http://localhost:8080/accounts/login/`
+- username: `a@a.com`
+- password: `a`
+
+### Running the celery service
+Studio uses `celery` for executing asynchronous tasks, which are integral to Studio's channel editing architecture. The celery service does not reload when there are Python changes like the Django devserver does, so it's often preferred to run it separately. If you are developing changes against a task or the celery configuration, you'll need to use `make dcservicesup` to run only the docker-based services.
+
+In a separate terminal/terminal-tab, run the following to start the service and press <kbd>Ctrl</kbd> + <kbd>C</kbd> to stop it:
+```bash
+make devceleryworkers
+```
+
+Stop and restart the above to reload your changes.
+
+## Adding or updating dependencies
 
 We use `pip-tools` to ensure all our dependencies use the same versions on all deployments.
 
@@ -103,79 +146,51 @@ To update a dependency, use `pip-compile --upgrade-package [package-name] requir
 
 For more details, please see the [pip-tools docs on Github](https://github.com/jazzband/pip-tools).
 
-### Yarn and Javascript dependencies
-
-As described above, Kolibri Studio has dependencies that rely on Node.js version 16.x. `nodeenv` is a useful tool for using specific versions of Node.js tools in Python environments. You'll also need [yarn](https://yarnpkg.com/lang/en/docs/install) installed.
-
-All the javascript dependencies are listed in `package.json`. To install them run the following [yarn](https://yarnpkg.com/en/) command:
-
-```bash
-# Set up Node 16.x environment
-nodeenv -p --node=16.16.0
-# Install yarn 'globally' to the project if you haven't already installed it globally
-npm install -g yarn
-# Install javascript dependencies
-yarn install --network-timeout 1000000
-```
-
-The `network-timeout` helps avoid a timeout issue with the Material Icons dependency.
-
-
-### Initial setup
-
-To set up the database, run:
-
-```bash
-yarn run devsetup
-```
-
-### Running the development server
-
-In one terminal tab, start the `celery` workers for asynchronous task processing:
-
-```bash
-yarn run celery
-```
-
-In another terminal tab, start the Django webserver and the webpack build using:
-
-
-```bash
-yarn run devserver:hot  # with Vue hot module reloading
-# or
-yarn run devserver  # without hot module reloading
-```
-
-This will take a few minutes to build the frontend. When it's done, you can sign in with `a@a.com` password `a` at [http://localhost:8080/accounts/login/](http://localhost:8080/accounts/login/)
-
-
 ## Additional tools
 
 ### Running tests
 
-You can run tests using the following command:
+With Studio's services running, you may run tests with the following commands:
 
 ```bash
+# backend
+make test
+# frontend
 yarn run test
 ```
 
 View [more testing tips](docs/running_tests.md)
 
+### Linting
+
+Front-end linting is run using:
+
+```bash
+yarn run lint-frontend
+```
+
+Some linting errors can be fixed automatically by running:
+
+```bash
+yarn run lint-frontend:format
+```
+
+Make sure you've set up pre-commit hooks as described above. This will ensure that linting is automatically run on staged changes before every commit.
 
 ### Profiling and local production testing
 
-If you want to test the performance of your changes, you can start up a local server
-with settings closer to a production environment like so:
+If you want to test the performance of your changes, you can start up a local server with settings closer to a production environment like so:
 
 ```bash
 # build frontend dependencies
 yarn run build
 # run the server (no webpack)
-yarn run localprodserver
+yarn run runserver
+# or for profiling production more closely
+yarn run runserver:prod-profiling
 ```
 
-Once the local production server is running, you can also use Locust to test your changes
-under scenarios of high demand like so:
+Once the local production server is running, you can also use Locust to test your changes under scenarios of high demand like so:
 
 ```bash
 cd deploy/chaos/loadtest
@@ -202,7 +217,7 @@ Afterwards no further treatment of the generated files is needed. You can open d
 
 ##### Endpoint profiling mode
 
-When using the all requests mode it's usual that the profile folder is soon full of information for requests that are not interesting for the developer and it's hard to find the files for some specific endpoints.
+When using the _all requests mode_ it's usual that the profile folder is soon full of information for requests that are not interesting for the developer, obscuring the files for specific endpoints.
 
 If an env variable called `PROFILE_STUDIO_FILTER` is used, the profiler will be executed only on the http requests containing the text stated by the variable.
 
@@ -217,22 +232,6 @@ Example of snakeviz use:
 `snakeviz /tmp/profile/studio\:20200909161405011678.prof`
 
 will open the browser with an interactive diagram with all the profiling information
-
-### Linting
-
-Front-end linting is run using:
-
-```bash
-yarn run lint-frontend
-```
-
-Some linting errors can be fixed automatically by running:
-
-```bash
-yarn run lint-frontend:format
-```
-
-Make sure you've set up pre-commit hooks as described above. This will ensure that linting is automatically run on staged changes before every commit.
 
 ### Storybook
 

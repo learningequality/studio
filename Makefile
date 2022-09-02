@@ -1,3 +1,12 @@
+###############################################################
+# PRODUCTION COMMANDS #########################################
+###############################################################
+# These are production commands which may be invoked in deployments
+#altprodserver: NUM_PROCS:=3
+#altprodserver: NUM_THREADS:=5
+#altprodserver: collectstatic compilemessages
+#	cd contentcuration/ && gunicorn contentcuration.wsgi:application --timeout=4000 --error-logfile=/var/log/gunicorn-error.log --workers=${NUM_PROCS} --threads=${NUM_THREADS} --bind=0.0.0.0:8081 --pid=/tmp/contentcuration.pid --log-level=debug || sleep infinity
+
 altprodserver:
 	$(MAKE) -j 2 gunicornanddapneserver
 
@@ -22,48 +31,32 @@ dummyusers:
 prodceleryworkers:
 	cd contentcuration/ && celery -A contentcuration worker -l info --concurrency=3 --task-events
 
-devserver:
-	yarn run devserver
-
-test:
-	yarn install && yarn run unittests
-	mv contentcuration/coverage.xml shared
-
-python-test:
-	pytest --cov-report=xml --cov=./
-	mv ./coverage.xml shared
-
-docker-python-test: SHELL:=/bin/bash
-docker-python-test:
-	# launch all studio's dependent services using docker-compose, and then run the tests
-	# create a shared directory accessible from within Docker so that it can pass the
-	# coverage report back for uploading.
-	mkdir -p shared
-	docker-compose run -v "${PWD}/shared:/shared" studio-app make collectstatic python-test -e DJANGO_SETTINGS_MODULE=contentcuration.test_settings
-	bash <(curl -s https://codecov.io/bash)
-	rm -rf shared
-
-endtoendtest: SHELL:=/bin/bash
-endtoendtest:
-	# launch all studio's dependent services using docker-compose, and then run the tests
-	# create a shared directory accessible from within Docker so that it can pass the
-	# coverage report back for uploading.
-	mkdir -p shared
-	docker-compose run -v "${PWD}/shared:/shared" studio-app make collectstatic test -e DJANGO_SETTINGS_MODULE=contentcuration.test_settings
-	bash <(curl -s https://codecov.io/bash)
-	rm -rf shared
-
-
 collectstatic:
 	python contentcuration/manage.py collectstatic --noinput
+
+compilemessages:
+	python contentcuration/manage.py compilemessages
 
 migrate:
 	python contentcuration/manage.py migrate || true
 	python contentcuration/manage.py loadconstants
 
-ensurecrowdinclient:
-	ls -l crowdin-cli.jar || curl -L https://storage.googleapis.com/le-downloads/crowdin-cli/crowdin-cli.jar -o crowdin-cli.jar
+contentnodegc:
+	python contentcuration/manage.py garbage_collect
 
+filedurations:
+	python contentcuration/manage.py set_file_duration
+
+learningactivities:
+	python contentcuration/manage.py set_default_learning_activities
+
+###############################################################
+# END PRODUCTION COMMANDS #####################################
+###############################################################
+
+###############################################################
+# I18N COMMANDS ###############################################
+###############################################################
 i18n-extract-frontend:
 	# generate frontend messages
 	yarn makemessages
@@ -99,6 +92,8 @@ i18n-download-translations:
 	python node_modules/kolibri-tools/lib/i18n/crowdin.py download-translations ${branch}
 	node node_modules/kolibri-tools/lib/i18n/intl_code_gen.js
 	python node_modules/kolibri-tools/lib/i18n/crowdin.py convert-files
+	# TODO: is this necessary? # Manual hack to add es language by copying es_ES to es
+	# cp -r contentcuration/locale/es_ES contentcuration/locale/es
 
 i18n-download: i18n-download-translations
 
@@ -115,18 +110,10 @@ i18n-download-glossary:
 
 i18n-upload-glossary:
 	python node_modules/kolibri-tools/lib/i18n/crowdin.py upload-glossary
-uploadmessages: ensurecrowdinclient
-	java -jar crowdin-cli.jar upload sources -b `git rev-parse --abbrev-ref HEAD`
 
-# we need to depend on makemessages, since CrowdIn requires the en folder to be populated
-# in order for it to properly extract strings
-downloadmessages: ensurecrowdinclient makemessages
-	java -jar crowdin-cli.jar download -b `git rev-parse --abbrev-ref HEAD` || true
-	# Manual hack to add es language by copying es_ES to es
-	cp -r contentcuration/locale/es_ES contentcuration/locale/es
-
-compilemessages:
-	python contentcuration/manage.py compilemessages
+###############################################################
+# END I18N COMMANDS ###########################################
+###############################################################
 
 # When using apidocs, this should clean out all modules
 clean-docs:
@@ -140,11 +127,16 @@ docs: clean-docs
 setup:
 	python contentcuration/manage.py setup
 
-filedurations:
-	python contentcuration/manage.py set_file_duration
+################################################################
+# DEVELOPMENT COMMANDS #########################################
+################################################################
 
-learningactivities:
-	python contentcuration/manage.py set_default_learning_activities
+test:
+	pytest
+
+dummyusers:
+	cd contentcuration/ && python manage.py loaddata contentcuration/fixtures/admin_user.json
+	cd contentcuration/ && python manage.py loaddata contentcuration/fixtures/admin_user_token.json
 
 export COMPOSE_PROJECT_NAME=studio_$(shell git rev-parse --abbrev-ref HEAD)
 
@@ -153,6 +145,12 @@ purge-postgres:
 	PGPASSWORD=kolibri createdb -U learningequality "kolibri-studio" --port 5432 -h localhost
 
 destroy-and-recreate-database: purge-postgres setup
+
+devceleryworkers:
+	$(MAKE) -e DJANGO_SETTINGS_MODULE=contentcuration.dev_settings prodceleryworkers
+
+run-services:
+	$(MAKE) -j 2 dcservicesup devceleryworkers
 
 dcbuild:
 	# build all studio docker image and all dependent services using docker-compose
@@ -175,14 +173,13 @@ dcclean:
 	docker-compose down -v
 	docker image prune -f
 
-export COMPOSE_STUDIO_APP = ${COMPOSE_PROJECT_NAME}_studio-app_1
 dcshell:
-	# bash shell inside studio-app container
-	docker exec -ti ${COMPOSE_STUDIO_APP} /usr/bin/fish
+	# bash shell inside the (running!) studio-app container
+	docker-compose exec studio-app /usr/bin/fish
 
-dctest: endtoendtest
-	# launch all studio's dependent services using docker-compose, and then run the tests
-	echo "Finished running  make test -e DJANGO_SETTINGS_MODULE=contentcuration.test_settings"
+dctest:
+	# run backend tests inside docker, in new instances
+	docker-compose run studio-app make test
 
 dcservicesup:
 	# launch all studio's dependent services using docker-compose

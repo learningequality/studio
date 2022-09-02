@@ -106,6 +106,13 @@ def _check_node_copy(source, copy, original_channel_id=None, channel=None):
         assert child_copy.aggregator == child_source.aggregator
         assert child_copy.provider == child_source.provider
         assert child_copy.role_visibility == child_source.role_visibility
+        assert child_copy.grade_levels == child_source.grade_levels
+        assert child_copy.resource_types == child_source.resource_types
+        assert child_copy.learning_activities == child_source.learning_activities
+        assert child_copy.accessibility_labels == child_source.accessibility_labels
+        assert child_copy.categories == child_source.categories
+        assert child_copy.learner_needs == child_source.learner_needs
+        assert child_copy.suggested_duration == child_source.suggested_duration
         assert child_copy.changed
         assert not child_copy.published
         assert child_copy.complete == child_source.complete

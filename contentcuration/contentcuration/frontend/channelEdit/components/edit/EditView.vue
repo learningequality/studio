@@ -19,7 +19,7 @@
               @click="trackTab('Details')"
             >
               {{ $tr(tabs.DETAILS) }}
-              <VTooltip v-if="!areDetailsValid || !areFilesValid" top>
+              <VTooltip v-if="!areDetailsValid || !areFilesValid" top lazy>
                 <template #activator="{ on }">
                   <Icon color="red" dark small class="ml-2" v-on="on">
                     error
@@ -37,7 +37,7 @@
               @click="trackTab('Questions')"
             >
               {{ $tr(tabs.QUESTIONS) }}
-              <VTooltip v-if="!areAssessmentItemsValid" top>
+              <VTooltip v-if="!areAssessmentItemsValid" top lazy>
                 <template #activator="{ on }">
                   <Icon color="red" dark v-on="on">
                     error

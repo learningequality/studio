@@ -42,6 +42,7 @@
                 <VTooltip
                   bottom
                   :disabled="!isListItemDisabled(childNode)"
+                  lazy
                 >
                   <template #activator="{ on }">
                     <span

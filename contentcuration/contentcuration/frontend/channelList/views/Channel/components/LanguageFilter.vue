@@ -17,7 +17,7 @@
     @change="languageInput = ''"
   >
     <template #selection="{ item }">
-      <VTooltip bottom>
+      <VTooltip bottom lazy>
         <template #activator="{ on }">
           <VChip class="ma-1" v-on="on">
             <div class="text-truncate">
@@ -31,7 +31,7 @@
     <template #item="{ item }">
       <Checkbox :key="item.id" :input-value="value" :value="item.id" class="mt-0">
         <template #label>
-          <VTooltip bottom>
+          <VTooltip bottom lazy>
             <template #activator="{ on }">
               <div class="text-truncate" style="width: 250px;" v-on="on">
                 {{ item.name }}

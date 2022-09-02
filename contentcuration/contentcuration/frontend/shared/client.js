@@ -1,5 +1,6 @@
 import axios from 'axios';
 import qs from 'qs';
+import * as Sentry from '@sentry/vue';
 
 export function paramsSerializer(params) {
   // Do custom querystring stingifying to comma separate array params
@@ -83,9 +84,8 @@ client.interceptors.response.use(
       // In dev build log warnings to console for developer use
       console.warn('AJAX Request Error: ' + message); // eslint-disable-line no-console
       console.warn('Error data: ' + JSON.stringify(extraData)); // eslint-disable-line no-console
-    }
-    if (window.Raven && window.Raven.captureMessage) {
-      window.Raven.captureMessage(message, {
+    } else {
+      Sentry.captureMessage(message, {
         extra: extraData,
       });
     }

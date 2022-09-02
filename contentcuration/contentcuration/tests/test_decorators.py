@@ -1,11 +1,11 @@
 import mock
 
+from contentcuration.decorators import delay_user_storage_calculation
 from contentcuration.tests.base import StudioTestCase
 from contentcuration.utils.user import calculate_user_storage
-from contentcuration.utils.user import delay_user_storage_calculation
 
 
-class UserUtilsTestCase(StudioTestCase):
+class DecoratorsTestCase(StudioTestCase):
     @mock.patch("contentcuration.utils.user.calculate_user_storage_task")
     def test_delay_storage_calculation(self, mock_task):
         @delay_user_storage_calculation

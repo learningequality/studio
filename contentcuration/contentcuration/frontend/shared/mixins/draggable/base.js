@@ -1,5 +1,5 @@
 import { mapState } from 'vuex';
-import uuidv4 from 'uuid/v4';
+import { v4 as uuidv4 } from 'uuid';
 import { DraggableIdentityHelper } from 'shared/vuex/draggablePlugin/module/utils';
 
 export default {
