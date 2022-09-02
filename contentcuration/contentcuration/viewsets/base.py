@@ -14,6 +14,7 @@ from django_bulk_update.helper import bulk_update
 from django_filters.constants import EMPTY_VALUES
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import FilterSet
+from rest_framework.exceptions import NotAuthenticated
 from rest_framework.filters import OrderingFilter
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
@@ -201,8 +202,13 @@ class BulkModelSerializer(SimpleReprMixin, ModelSerializer):
 
     def save(self, **kwargs):
         instance = super(BulkModelSerializer, self).save(**kwargs)
+        if "request" in self.context and not self.context["request"].user.is_anonymous:
+            user = self.context["request"].user.id
+        else:
+            raise NotAuthenticated()
+
         if self.changes:
-            Change.create_changes(self.changes, applied=True)
+            Change.create_changes(self.changes, applied=True, created_by_id=user)
         return instance
 
 
@@ -941,7 +947,7 @@ def create_change_tracker(pk, table, channel_id, user, task_name):
             )
 
     Change.create_change(
-        generate_update_event(pk, table, {TASK_ID: task_id}, channel_id=channel_id), applied=True
+        generate_update_event(pk, table, {TASK_ID: task_id}, channel_id=channel_id), applied=True, created_by_id=user.id
     )
 
     tracker = ProgressTracker(task_id, update_progress)
@@ -988,5 +994,6 @@ def create_change_tracker(pk, table, channel_id, user, task_name):
             )
             # No error reported, cleanup.
             Change.create_change(
-                generate_update_event(pk, table, {TASK_ID: None}, channel_id=channel_id), applied=True
+                generate_update_event(pk, table, {TASK_ID: None}, channel_id=channel_id), applied=True, created_by_id=user.id
+
             )

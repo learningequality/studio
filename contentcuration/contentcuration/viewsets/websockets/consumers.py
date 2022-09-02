@@ -4,10 +4,6 @@ import logging as logger
 from asgiref.sync import async_to_sync
 from channels.generic.websocket import WebsocketConsumer
 
-from contentcuration.models import Change
-from contentcuration.models import Channel
-from contentcuration.tasks import apply_channel_changes_task
-from contentcuration.tasks import apply_user_changes_task
 from contentcuration.viewsets.sync.constants import CHANNEL
 from contentcuration.viewsets.sync.constants import CREATED
 
@@ -80,6 +76,10 @@ class SyncConsumer(WebsocketConsumer):
         )
 
     def receive(self, text_data):
+        from contentcuration.models import Change
+        from contentcuration.models import Channel
+        from contentcuration.tasks import apply_channel_changes_task
+        from contentcuration.tasks import apply_user_changes_task
         """
         Executes when data is received from websocket
         """

@@ -490,13 +490,13 @@ class ChannelViewSet(ValuesViewset):
                             "unpublished_changes": _unpublished_changes_query(channel.id).exists()
                         }, channel_id=channel.id
                     ),
-                ], applied=True)
+                ], created_by_id=self.request.user.id, applied=True)
             except Exception:
                 Change.create_changes([
                     generate_update_event(
                         channel.id, CHANNEL, {"publishing": False, "unpublished_changes": True}, channel_id=channel.id
                     ),
-                ], applied=True)
+                ], created_by_id=self.request.user, applied=True)
                 raise
 
     def sync_from_changes(self, changes):

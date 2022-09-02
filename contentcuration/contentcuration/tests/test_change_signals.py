@@ -35,7 +35,7 @@ class ChangeSignalTestCase(TestCase, BucketTestMixin):
         """
         self.client.force_login(self.user)
         new_name = "This is not the old name"
-        Change.create_change(generate_update_event(self.channel.id, CHANNEL, {"name": new_name}, channel_id=self.channel.id))
+        Change.create_change(generate_update_event(self.channel.id, CHANNEL, {"name": new_name}, channel_id=self.channel.id), created_by_id=self.user.id)
         assert mock_signal.call_count == 1
 
     @patch('contentcuration.viewsets.websockets.signals.async_to_sync')

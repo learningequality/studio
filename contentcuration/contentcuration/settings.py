@@ -66,7 +66,6 @@ ALLOWED_HOSTS = ["*"]  # In production, we serve through a file socket, so this 
 # Application definition
 
 INSTALLED_APPS = (
-    'channels',
     'contentcuration.apps.ContentConfig',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -87,6 +86,7 @@ INSTALLED_APPS = (
     'django_filters',
     'mathfilters',
     'django_celery_results',
+    'channels',
 )
 
 SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"

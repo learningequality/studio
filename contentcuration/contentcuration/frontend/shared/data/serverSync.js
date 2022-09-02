@@ -459,7 +459,7 @@ async function handleChanges(changes) {
   // MOVE, COPY, PUBLISH, and SYNC changes where we may be executing them inside an IGNORED_SOURCE
   // because they also make UPDATE and CREATE changes that we wish to make in the client only.
   // Only do this for changes that are not marked as synced.
-  const newChangeTableEntries = changes.some(
+  const newChangeTableEntries = changes.filter(
     c => c.table === CHANGES_TABLE && c.type === CHANGE_TYPES.CREATED && !c.obj.synced
   );
 
@@ -481,7 +481,7 @@ async function handleChanges(changes) {
   // then we'll trigger sync
 
   if (newChangeTableEntries.length) {
-    WebsocketSendChanges(newChangeTableEntries);
+    WebsocketSendChanges(newChangeTableEntries.map(c => c.obj));
   }
 }
 
