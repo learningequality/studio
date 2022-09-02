@@ -1,7 +1,16 @@
-altprodserver: NUM_PROCS:=3
-altprodserver: NUM_THREADS:=5
-altprodserver: collectstatic ensurecrowdinclient downloadmessages compilemessages
+altprodserver:
+	$(MAKE) -j 2 gunicornanddapneserver
+
+gunicornanddapneserver: gunicornserver daphneserver
+
+daphneserver:
+	cd contentcuration/ && daphne -b 0.0.0.0 -p 8082 contentcuration.asgi:application
+
+gunicornserver: NUM_PROCS:=2
+gunicornserver: NUM_THREADS:=5
+gunicornserver: collectstatic ensurecrowdinclient downloadmessages compilemessages
 	cd contentcuration/ && gunicorn contentcuration.wsgi:application --timeout=4000 --error-logfile=/var/log/gunicorn-error.log --workers=${NUM_PROCS} --threads=${NUM_THREADS} --bind=0.0.0.0:8081 --pid=/tmp/contentcuration.pid --log-level=debug || sleep infinity
+
 
 contentnodegc:
 	cd contentcuration/ && python manage.py garbage_collect
