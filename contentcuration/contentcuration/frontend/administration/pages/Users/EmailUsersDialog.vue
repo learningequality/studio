@@ -30,7 +30,7 @@
                 :delimit="false"
               >
                 <template #item="{ item }">
-                  <VTooltip bottom>
+                  <VTooltip bottom lazy>
                     <template #activator="{ on }">
                       <VChip
                         small

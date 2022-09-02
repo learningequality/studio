@@ -8,7 +8,7 @@
 
       <template>
         <VListTileAction>
-          <VTooltip bottom>
+          <VTooltip bottom lazy>
             <template #activator="{ on }">
               <VBtn
                 icon
@@ -25,7 +25,7 @@
           </VTooltip>
         </VListTileAction>
         <VListTileAction>
-          <VTooltip bottom>
+          <VTooltip bottom lazy>
             <template #activator="{ on }">
               <VBtn
                 icon

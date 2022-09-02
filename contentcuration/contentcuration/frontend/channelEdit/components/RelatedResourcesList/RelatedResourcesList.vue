@@ -33,7 +33,7 @@
         </VListTileContent>
 
         <VListTileAction>
-          <VTooltip bottom>
+          <VTooltip bottom lazy>
             <template #activator="{ on }">
               <VBtn
                 icon

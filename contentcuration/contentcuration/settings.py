@@ -17,7 +17,6 @@ import sys
 from datetime import timedelta
 from tempfile import gettempdir
 
-import pycountry
 from django.utils.timezone import now
 
 from contentcuration.utils.incidents import INCIDENTS
@@ -287,7 +286,6 @@ USE_TZ = True
 
 LOCALE_PATHS = (
     os.path.join(BASE_DIR, 'locale'),
-    pycountry.LOCALES_DIR,
 )
 
 

@@ -33,7 +33,7 @@
             error
           </Icon>
         </div>
-        <VTooltip v-else-if="erroredFiles.length" top>
+        <VTooltip v-else-if="erroredFiles.length" top lazy>
           <template #activator="{ on }">
             <Icon color="red" v-on="on">
               error

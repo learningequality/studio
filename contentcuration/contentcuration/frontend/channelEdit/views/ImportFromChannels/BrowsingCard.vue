@@ -28,7 +28,7 @@
               {{ languageName }}
             </span>
             <span v-if="node.coach_count || isCoach">
-              <VTooltip bottom>
+              <VTooltip bottom lazy>
                 <template #activator="{ on }">
                   <div class="my-1" style="display: inline-block;" v-on="on">
                     <Icon

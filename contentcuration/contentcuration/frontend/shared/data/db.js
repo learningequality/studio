@@ -1,6 +1,6 @@
 import Dexie from 'dexie';
 import 'dexie-observable';
-import uuidv4 from 'uuid/v4';
+import { v4 as uuidv4 } from 'uuid';
 import { APP_ID } from './constants';
 
 if (process.env.NODE_ENV !== 'production') {

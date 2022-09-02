@@ -13,6 +13,8 @@ const WebpackRTLPlugin = require('kolibri-tools/lib/webpackRtlPlugin');
 
 const { InjectManifest } = require('workbox-webpack-plugin');
 
+const webpack = require('webpack');
+
 const djangoProjectDir = path.resolve('contentcuration');
 const staticFilesDir = path.resolve(djangoProjectDir, 'contentcuration', 'static');
 const srcDir = path.resolve(djangoProjectDir, 'contentcuration', 'frontend');
@@ -88,6 +90,9 @@ module.exports = (env = {}) => {
       modules: [rootNodeModules],
     },
     plugins: [
+      new webpack.IgnorePlugin({
+        resourceRegExp: /vuetify\/src\/stylus\//,
+      }),
       new BundleTracker({
         filename: path.resolve(djangoProjectDir, 'build', 'webpack-stats.json'),
       }),

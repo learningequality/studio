@@ -1,7 +1,7 @@
 <template>
 
   <span v-if="message">
-    <VTooltip bottom>
+    <VTooltip bottom lazy>
       <template #activator="{ on }">
         <Icon color="greenSuccess" small v-on="on">
           {{ showFilled ? 'lens' : 'trip_origin' }}

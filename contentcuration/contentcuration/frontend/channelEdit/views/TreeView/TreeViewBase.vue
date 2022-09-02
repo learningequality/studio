@@ -47,7 +47,7 @@
       <OfflineText indicator />
       <ProgressModal />
       <div v-if="errorsInChannel && canEdit" class="mx-1">
-        <VTooltip bottom>
+        <VTooltip bottom lazy>
           <template #activator="{ on }">
             <div class="amber--text title" style="width: max-content;" v-on="on">
               {{ $formatNumber(errorsInChannel) }}
@@ -63,7 +63,7 @@
         <span v-if="canManage && isRicecooker" class="font-weight-bold grey--text subheading">
           {{ $tr('apiGenerated') }}
         </span>
-        <VTooltip v-if="canManage" bottom attach="body">
+        <VTooltip v-if="canManage" bottom attach="body" lazy>
           <template #activator="{ on }">
             <!-- Need to wrap in div to enable tooltip when button is disabled -->
             <div style="height: 100%;" v-on="on">

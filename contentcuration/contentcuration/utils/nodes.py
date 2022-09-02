@@ -79,6 +79,7 @@ def map_files_to_node(user, node, data):  # noqa: C901
             preset=kind_preset,
             language_id=file_data.get('language'),
             uploaded_by=user,
+            duration=file_data.get("duration"),
         )
         resource_obj.file_on_disk.name = file_path
         resource_obj.save()
