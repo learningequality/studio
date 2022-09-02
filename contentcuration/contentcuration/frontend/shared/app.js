@@ -119,6 +119,7 @@ import ActionLink from 'shared/views/ActionLink';
 import Menu from 'shared/views/Menu';
 import { initializeDB, resetDB } from 'shared/data';
 import { Session, injectVuexStore } from 'shared/data/resources';
+import translator from 'shared/translator';
 
 // just say yes to devtools (in debug mode)
 if (process.env.NODE_ENV !== 'production') {
@@ -303,7 +304,10 @@ export default async function startApp({ store, router, index }) {
   await initializeDB();
   await i18nSetup();
 
-  const currentUser = window.user || {};
+  const guestUser = {
+    first_name: translator.$tr('guestName'),
+  };
+  const currentUser = window.user || guestUser;
   const dbCurrentUser = (await Session.getSession()) || {};
 
   if (
@@ -315,6 +319,8 @@ export default async function startApp({ store, router, index }) {
   }
   if (currentUser.id !== undefined && currentUser.id !== null) {
     await store.dispatch('saveSession', currentUser, { root: true });
+  } else {
+    await store.dispatch('saveGuestSession', currentUser);
   }
 
   await Session.setChannelScope();
