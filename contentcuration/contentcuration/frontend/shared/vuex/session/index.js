@@ -6,9 +6,9 @@ import { Session, User } from 'shared/data/resources';
 import { forceServerSync } from 'shared/data/serverSync';
 import translator from 'shared/translator';
 
-const GUEST_USER = async () => ({
+const GUEST_USER = {
   first_name: translator.$tr('guestName'),
-});
+};
 
 function langCode(language) {
   // Turns a Django language name (en-gb) into an ISO language code (en-GB)
@@ -30,8 +30,8 @@ function langCode(language) {
 }
 
 export default {
-  state: async () => ({
-    currentUser: await GUEST_USER,
+  state: () => ({
+    currentUser: GUEST_USER,
     preferences:
       window.user_preferences === 'string'
         ? JSON.parse(window.user_preferences)
@@ -49,8 +49,8 @@ export default {
         ...data,
       };
     },
-    async REMOVE_SESSION(state) {
-      state.currentUser = await GUEST_USER;
+    REMOVE_SESSION(state) {
+      state.currentUser = GUEST_USER;
     },
   },
   getters: {
