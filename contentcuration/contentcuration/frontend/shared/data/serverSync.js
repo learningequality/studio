@@ -1,3 +1,15 @@
+import debounce from 'lodash/debounce';
+// import { event } from 'jquery';
+import findLastIndex from 'lodash/findLastIndex';
+import get from 'lodash/get';
+import orderBy from 'lodash/orderBy';
+import pick from 'lodash/pick';
+import uniq from 'lodash/uniq';
+import mergeAllChanges from './mergeChanges';
+import db from './db';
+import applyChanges from './applyRemoteChanges';
+import { INDEXEDDB_RESOURCES } from './registry';
+import { Channel, Session, Task } from './resources';
 import {
   ACTIVE_CHANNELS,
   CHANGES_TABLE,
@@ -6,20 +18,7 @@ import {
   IGNORED_SOURCE,
   MAX_REV_KEY,
 } from './constants';
-import { Channel, Session, Task } from './resources';
-
-import { INDEXEDDB_RESOURCES } from './registry';
-import applyChanges from './applyRemoteChanges';
 import client from 'shared/client';
-import db from './db';
-import debounce from 'lodash/debounce';
-// import { event } from 'jquery';
-import findLastIndex from 'lodash/findLastIndex';
-import get from 'lodash/get';
-import mergeAllChanges from './mergeChanges';
-import orderBy from 'lodash/orderBy';
-import pick from 'lodash/pick';
-import uniq from 'lodash/uniq';
 import urls from 'shared/urls';
 
 // When this many seconds pass without a syncable
@@ -318,8 +317,7 @@ function handleMaxRevs(response, userId) {
 }
 
 async function WebsocketSendChanges(changesToSync) {
-  const  user =  await Session.getSession();
-
+  const user = await Session.getSession();
 
   if (!user) {
     // If not logged in, nothing to do.
@@ -341,7 +339,6 @@ async function WebsocketSendChanges(changesToSync) {
   if (changes.length) {
     requestPayload.changes = changes;
   }
-
 
   if (requestPayload.changes.length != 0) {
     socket.send(
@@ -518,7 +515,7 @@ export function startSyncing() {
     const data = JSON.parse(e.data);
     console.log(data);
     if (data.task) {
-      Task.setTask(data.task);
+      Task.setTasks([data.task]);
     }
     if (data.responsePayload && data.responsePayload.allowed) {
       try {

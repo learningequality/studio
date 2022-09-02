@@ -1,3 +1,22 @@
+import Dexie from 'dexie';
+import Mutex from 'mutex-js';
+import findIndex from 'lodash/findIndex';
+import flatMap from 'lodash/flatMap';
+import isArray from 'lodash/isArray';
+import isFunction from 'lodash/isFunction';
+import isNumber from 'lodash/isNumber';
+import isString from 'lodash/isString';
+import matches from 'lodash/matches';
+import overEvery from 'lodash/overEvery';
+import pick from 'lodash/pick';
+import sortBy from 'lodash/sortBy';
+import uniq from 'lodash/uniq';
+import uniqBy from 'lodash/uniqBy';
+import { v4 as uuidv4 } from 'uuid';
+import mergeAllChanges from './mergeChanges';
+import db, { CLIENTID, Collection, channelScope } from './db';
+import applyChanges, { applyMods, collectChanges } from './applyRemoteChanges';
+import { API_RESOURCES, INDEXEDDB_RESOURCES } from './registry';
 import {
   ACTIVE_CHANNELS,
   CHANGES_TABLE,
@@ -11,30 +30,10 @@ import {
   TABLE_NAMES,
   TASK_ID,
 } from './constants';
-import { API_RESOURCES, INDEXEDDB_RESOURCES } from './registry';
-import { NEW_OBJECT, fileErrors } from 'shared/constants';
-import applyChanges, { applyMods, collectChanges } from './applyRemoteChanges';
-import client, { paramsSerializer } from 'shared/client';
-import db, { CLIENTID, Collection, channelScope } from './db';
-
-import Dexie from 'dexie';
-import Mutex from 'mutex-js';
-import { currentLanguage } from 'shared/i18n';
-import findIndex from 'lodash/findIndex';
-import flatMap from 'lodash/flatMap';
-import isArray from 'lodash/isArray';
-import isFunction from 'lodash/isFunction';
-import isNumber from 'lodash/isNumber';
-import isString from 'lodash/isString';
-import matches from 'lodash/matches';
-import mergeAllChanges from './mergeChanges';
-import overEvery from 'lodash/overEvery';
-import pick from 'lodash/pick';
-import sortBy from 'lodash/sortBy';
-import uniq from 'lodash/uniq';
-import uniqBy from 'lodash/uniqBy';
 import urls from 'shared/urls';
-import { v4 as uuidv4 } from 'uuid';
+import { currentLanguage } from 'shared/i18n';
+import client, { paramsSerializer } from 'shared/client';
+import { NEW_OBJECT, fileErrors } from 'shared/constants';
 
 // Number of seconds after which data is considered stale.
 const REFRESH_INTERVAL = 5;
@@ -1808,9 +1807,9 @@ export const Clipboard = new TreeResource({
 export const Task = new IndexedDBResource({
   tableName: TABLE_NAMES.TASK,
   idField: 'task_id',
-  setTask(task) {
+  setTasks(task) {
     return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
-      return this.table.Put(task);
+      return this.table.bulkPut(task);
     });
   },
 });
