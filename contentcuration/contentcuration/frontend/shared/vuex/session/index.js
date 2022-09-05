@@ -6,6 +6,8 @@ import { Session, User } from 'shared/data/resources';
 import { forceServerSync } from 'shared/data/serverSync';
 import translator from 'shared/translator';
 
+let guestUser = {};
+
 function langCode(language) {
   // Turns a Django language name (en-gb) into an ISO language code (en-GB)
   // Copied and modified from Django's to_locale function that does something similar
@@ -27,7 +29,7 @@ function langCode(language) {
 
 export default {
   state: () => ({
-    currentUser: {},
+    currentUser: guestUser,
     preferences:
       window.user_preferences === 'string'
         ? JSON.parse(window.user_preferences)
@@ -46,9 +48,7 @@ export default {
       };
     },
     REMOVE_SESSION(state) {
-      state.currentUser = {
-        first_name: translator.$tr('guestName'),
-      };
+      state.currentUser = guestUser;
     },
   },
   getters: {
@@ -96,8 +96,9 @@ export default {
       await Session.updateSession(currentUser);
       context.commit('ADD_SESSION', currentUser);
     },
-    async saveGuestSession(context, guestUser) {
-      context.commit('ADD_SESSION', guestUser);
+    async saveGuestSession(context, currentUser) {
+      context.commit('ADD_SESSION', currentUser);
+      guestUser = currentUser;
     },
     login(context, credentials) {
       return client.post(window.Urls.login(), credentials);
