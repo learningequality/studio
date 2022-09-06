@@ -1,6 +1,6 @@
 <template>
 
-  <VList two-line>
+  <VList>
     <SupplementaryItem
       v-for="file in files"
       :key="file.id"
@@ -18,7 +18,7 @@
       @upload="$emit('upload')"
     >
       <template #default="{ openFileDialog }">
-        <VListTile @click.stop>
+        <VListTile inactive class="languageTile py-2">
           <VListTileContent v-if="!addingFile">
             <ActionLink
               data-test="add-file"
@@ -26,10 +26,12 @@
               @click="addingFile = true"
             />
           </VListTileContent>
-          <VListTileContent v-else style="max-width: 250px; height: auto;">
+          <VListTileContent v-else class="captionLanguageDropdown">
             <LanguageDropdown
+              id="captionLanguage"
               v-model="selectedLanguage"
               data-test="select-language"
+              dropAbove
               :excludeLanguages="currentLanguages"
               hide-details
             />
@@ -117,7 +119,10 @@
     methods: {
       ...mapActions('file', ['updateFile', 'deleteFile']),
       add(file) {
-        this.makeFile(file).then(this.reset);
+        this.makeFile(file).then(f => {
+          this.$emit('addFile', f);
+          this.reset();
+        });
       },
       makeFile(file) {
         return this.updateFile({
@@ -142,3 +147,20 @@
   };
 
 </script>
+<style lang="less" scoped>
+
+  .languageTile:hover {
+    background-color: var(--v-greyBackground-base);
+  }
+
+  /deep/ .languageTile > .v-list__tile {
+    height: 56px;
+  }
+
+  .captionLanguageDropdown {
+    max-width: 250px;
+    height: auto;
+    overflow: visible;
+  }
+
+</style>

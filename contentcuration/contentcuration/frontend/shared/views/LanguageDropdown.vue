@@ -20,7 +20,7 @@
     :menu-props="menuProps"
     :multiple="multiple"
     :chips="multiple"
-    attach="#language"
+    :attach="$attrs.id ? `#${$attrs.id}` : '.language-dropdown'"
     @change="input = ''"
     @focus="$emit('focus')"
   >
@@ -73,6 +73,10 @@
         type: Boolean,
         default: false,
       },
+      dropAbove: {
+        type: Boolean,
+        default: false,
+      },
     },
     data() {
       return {
@@ -92,6 +96,7 @@
         return {
           minWidth: 300,
           maxWidth: 300,
+          top: this.dropAbove,
         };
       },
       languages() {
