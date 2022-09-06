@@ -162,7 +162,10 @@ describe('IndexedDBPlugin', function() {
         type,
         source: source || this.source,
         obj: obj || {
-          id: uuidv4(),
+          test: uuidv4(),
+        },
+        mods: {
+          test: uuidv4(),
         },
       };
       this.changes.push(change);
@@ -177,7 +180,7 @@ describe('IndexedDBPlugin', function() {
         addChange: (source, obj = null) => {
           const change = testChange.call(this, table, type, source, obj);
           callObj = {
-            ...change.obj,
+            ...(type === CHANGE_TYPES.UPDATED ? change.mods : change.obj),
             testId: change.key,
           };
         },
