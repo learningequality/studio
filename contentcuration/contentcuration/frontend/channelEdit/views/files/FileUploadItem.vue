@@ -29,6 +29,7 @@
                 v-if="fileDisplay"
                 class="notranslate"
                 :text="formattedFileDisplay"
+                data-test="file-link"
                 @click="openFileDialog"
               />
               <ActionLink
