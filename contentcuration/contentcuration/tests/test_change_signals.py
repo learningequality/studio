@@ -46,9 +46,14 @@ class ChangeSignalTestCase(TestCase, BucketTestMixin):
         """
         change_serialized = create_channel_specific_change_object(self.user, self.channel)
         channel_layer = mock_get_channel_layer.return_value
-        mock_async_to_sync.assert_called_once_with(channel_layer.group_send)
+        assert 2 == mock_async_to_sync.call_count
+        mock_async_to_sync.assert_called_with(channel_layer.group_send)
         async_mock_return_value = mock_async_to_sync.return_value
-        async_mock_return_value.assert_called_once_with(self.channel.id, {
+        async_mock_return_value.assert_any_call(str(self.user.id), {
+            'type': 'broadcast_success',
+            'success': change_serialized
+        })
+        async_mock_return_value.assert_any_call(self.channel.id, {
             'type': 'broadcast_changes',
             'change': change_serialized
         })
@@ -63,9 +68,9 @@ class ChangeSignalTestCase(TestCase, BucketTestMixin):
         channel_layer = mock_get_channel_layer.return_value
         mock_async_to_sync.assert_called_once_with(channel_layer.group_send)
         async_mock_return_value = mock_async_to_sync.return_value
-        async_mock_return_value.assert_called_once_with(str(self.user.id), {
-            'type': 'broadcast_changes',
-            'change': change_serialized
+        async_mock_return_value.assert_any_call(str(self.user.id), {
+            'type': 'broadcast_success',
+            'success': change_serialized
         })
 
     @patch('contentcuration.viewsets.websockets.signals.async_to_sync')
@@ -85,9 +90,9 @@ class ChangeSignalTestCase(TestCase, BucketTestMixin):
             'type': 'broadcast_changes',
             'change': change_serialized
         })
-        async_mock_return_value.assert_any_call(str(editor.id), {
-            'type': 'broadcast_changes',
-            'change': change_serialized
+        async_mock_return_value.assert_any_call(str(self.user.id), {
+            'type': 'broadcast_success',
+            'success': change_serialized
         })
 
     @patch('contentcuration.viewsets.websockets.signals.async_to_sync')

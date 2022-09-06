@@ -490,7 +490,7 @@ let intervalTimer;
 export function startSyncing() {
   // Initiate a sync immediately in case any data
   // is left over in the database.
-
+  debouncedSyncChanges();
   const websocketUrl = new URL(
     `/ws/sync_socket/${window.CHANNEL_EDIT_GLOBAL.channel_id}/`,
     window.location.href
@@ -508,8 +508,6 @@ export function startSyncing() {
   socket.addEventListener('error', event => {
     console.log('WebSocket error: ', event);
   });
-
-  debouncedSyncChanges();
 
   socket.addEventListener('message', e => {
     const data = JSON.parse(e.data);

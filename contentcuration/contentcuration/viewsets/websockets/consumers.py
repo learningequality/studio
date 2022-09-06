@@ -76,13 +76,14 @@ class SyncConsumer(WebsocketConsumer):
         )
 
     def receive(self, text_data):
+        """
+        Executes when data is received from websocket
+        """
         from contentcuration.models import Change
         from contentcuration.models import Channel
         from contentcuration.tasks import apply_channel_changes_task
         from contentcuration.tasks import apply_user_changes_task
-        """
-        Executes when data is received from websocket
-        """
+
         response_payload = {
             "disallowed": [],
             "allowed": [],

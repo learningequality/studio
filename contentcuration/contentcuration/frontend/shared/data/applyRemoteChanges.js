@@ -2,9 +2,9 @@ import Dexie from 'dexie';
 import flatten from 'lodash/flatten';
 import sortBy from 'lodash/sortBy';
 import uniq from 'lodash/uniq';
-import { CHANGE_TYPES, IGNORED_SOURCE, TABLE_NAMES } from './constants';
 import db from './db';
 import { INDEXEDDB_RESOURCES } from './registry';
+import { CHANGE_TYPES, IGNORED_SOURCE, TABLE_NAMES } from './constants';
 
 const { CREATED, DELETED, UPDATED, MOVED, PUBLISHED, SYNCED } = CHANGE_TYPES;
 
@@ -91,6 +91,15 @@ export default function applyChanges(changes) {
   changes = sortBy(changes, ['server_rev', 'rev']);
 
   const table_names = uniq(changes.map(c => c.table));
+  // When changes include a publish change
+  //add the contentnode table since `applyPublish` above needs to
+  // make updates to content nodes
+  if (
+    changes.some(c => c.type === CHANGE_TYPES.PUBLISHED) &&
+    !table_names.includes(TABLE_NAMES.CONTENTNODE)
+  ) {
+    table_names.push(TABLE_NAMES.CONTENTNODE);
+  }
   const tables = table_names.map(table => db.table(table));
 
   return db.transaction('rw', tables, () => {

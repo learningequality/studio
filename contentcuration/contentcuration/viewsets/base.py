@@ -203,12 +203,12 @@ class BulkModelSerializer(SimpleReprMixin, ModelSerializer):
     def save(self, **kwargs):
         instance = super(BulkModelSerializer, self).save(**kwargs)
         if "request" in self.context and not self.context["request"].user.is_anonymous:
-            user = self.context["request"].user.id
+            user = self.context["request"].user
         else:
             raise NotAuthenticated()
 
         if self.changes:
-            Change.create_changes(self.changes, applied=True, created_by_id=user)
+            Change.create_changes(self.changes, applied=True, created_by_id=user.id)
         return instance
 
 
