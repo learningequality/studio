@@ -60,6 +60,7 @@
                 id="learning_activities"
                 ref="learning_activities"
                 v-model="contentLearningActivities"
+                :disabled="isTopic"
                 @focus="trackClick('Learning activities')"
               />
               <!-- Level -->
@@ -127,7 +128,7 @@
       </VLayout>
 
       <!-- Completion section for all resources -->
-      <VLayout row wrap class="section">
+      <VLayout v-if="!isTopic" row wrap class="section">
         <VFlex xs12>
           <h1 class="subheading">
             {{ $tr('completionLabel') }}
@@ -513,7 +514,9 @@
         return this.firstNode.original_channel_name;
       },
       requiresAccessibility() {
-        return this.nodes.every(node => node.kind !== ContentKindsNames.AUDIO);
+        return this.nodes.every(
+          node => node.kind !== ContentKindsNames.AUDIO && node.kind !== ContentKindsNames.TOPIC
+        );
       },
       audioAccessibility() {
         return this.oneSelected && this.firstNode.kind === 'audio';
@@ -658,7 +661,7 @@
         }
       },
       videoSelected() {
-        return this.oneSelected && this.firstNode.kind === 'video';
+        return this.oneSelected && this.firstNode.kind === ContentKindsNames.VIDEO;
       },
       newContent() {
         return !this.nodes.some(n => n[NEW_OBJECT]);
@@ -667,7 +670,10 @@
         return this.$store.getters.hasFeatureEnabled(FeatureFlagKeys.channel_quizzes);
       },
       isDocument() {
-        return this.firstNode.kind === 'document';
+        return this.firstNode.kind === ContentKindsNames.DOCUMENT;
+      },
+      isTopic() {
+        return this.firstNode.kind === ContentKindsNames.TOPIC;
       },
     },
     watch: {
