@@ -6,9 +6,7 @@ import { Session, User } from 'shared/data/resources';
 import { forceServerSync } from 'shared/data/serverSync';
 import translator from 'shared/translator';
 
-const GUEST_USER = {
-  first_name: 'Guest',
-};
+const GUEST_USER = {};
 
 function langCode(language) {
   // Turns a Django language name (en-gb) into an ISO language code (en-GB)
