@@ -24,7 +24,6 @@ const MESSAGES = {
   activityDurationTimeMinRequirement: 'Time must be greater than or equal to 1',
   activityDurationTooLongWarning:
     'Please make sure this is the amount of time you want learners to spend on this resource to complete it',
-  guestName: 'Guest',
 };
 
 export default createTranslator('sharedVue', MESSAGES);
