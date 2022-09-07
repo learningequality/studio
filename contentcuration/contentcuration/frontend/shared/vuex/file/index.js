@@ -27,7 +27,7 @@ export default {
   listeners: {
     [TABLE_NAMES.FILE]: {
       [CHANGE_TYPES.CREATED]: 'ADD_FILE',
-      [CHANGE_TYPES.UPDATED]: 'ADD_FILE',
+      [CHANGE_TYPES.UPDATED]: 'UPDATE_FILE_FROM_INDEXEDDB',
       [CHANGE_TYPES.DELETED]: 'REMOVE_FILE',
     },
   },

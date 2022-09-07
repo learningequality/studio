@@ -1,5 +1,6 @@
 import Vue from 'vue';
 import { mergeMapItem } from 'shared/vuex/utils';
+import { applyMods } from 'shared/data/applyRemoteChanges';
 
 export function UPDATE_ASSESSMENTITEM(state, assessmentItem) {
   if (!assessmentItem.assessment_id) {
@@ -42,6 +43,12 @@ export function UPDATE_ASSESSMENTITEM(state, assessmentItem) {
       'assessment_id'
     )
   );
+}
+
+export function UPDATE_ASSESSMENTITEM_FROM_INDEXEDDB(state, { id, ...mods }) {
+  if (id && state.assessmentItemsMap[id]) {
+    applyMods(state.assessmentItemsMap[id], mods);
+  }
 }
 
 export function DELETE_ASSESSMENTITEM(state, assessmentItem) {
