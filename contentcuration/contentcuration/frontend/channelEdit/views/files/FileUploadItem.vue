@@ -136,7 +136,7 @@
       },
       formattedFileDisplay() {
         const fileName = this.fileDisplay.original_filename;
-        if (fileName === 'file' || (fileName && !fileName.length)) {
+        if (fileName === 'file' || !fileName) {
           return this.$tr('unknownFile');
         }
         return fileName;

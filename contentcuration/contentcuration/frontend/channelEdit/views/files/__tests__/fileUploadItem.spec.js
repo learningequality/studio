@@ -31,8 +31,14 @@ describe('fileUploadItem', () => {
   describe('render', () => {
     it("'Unknown filename' should be displayed if original_filename is 'file'", () => {
       let file = {
-        id: 'file-1',
         original_filename: 'file',
+      };
+      let wrapper = makeWrapper({}, file);
+      expect(wrapper.find('[data-test="file-link"]').text()).toBe('Unknown filename');
+    });
+    it("'Unknown filename' should be displayed if original_filename is ''", () => {
+      let file = {
+        original_filename: '',
       };
       let wrapper = makeWrapper({}, file);
       expect(wrapper.find('[data-test="file-link"]').text()).toBe('Unknown filename');
