@@ -1,6 +1,7 @@
 import Dexie from 'dexie';
 import 'dexie-observable';
 import { v4 as uuidv4 } from 'uuid';
+import Vue from 'vue';
 import { APP_ID } from './constants';
 
 if (process.env.NODE_ENV !== 'production') {
@@ -28,7 +29,14 @@ Dexie.delByKeyPath = function(obj, keyPath, value) {
   if (findFlatPath) {
     const key = findFlatPath[1];
     const path = findFlatPath[2];
-    delete obj[key][path];
+    // since this function is called by `applyMods`, and we also use that to apply mods to Vuex
+    // objects, we want to ensure that observers are triggered when we delete. To limit the
+    // performance impact, this check for `__ob__` should tell us if there's an observer
+    if (obj[key].__ob__) {
+      Vue.delete(obj[key], path);
+    } else {
+      delete obj[key][path];
+    }
     return obj;
   }
   return originaldelByKeyPath(obj, keyPath, value);
