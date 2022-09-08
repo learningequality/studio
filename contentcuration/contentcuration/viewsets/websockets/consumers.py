@@ -4,10 +4,6 @@ import logging as logger
 from asgiref.sync import async_to_sync
 from channels.generic.websocket import WebsocketConsumer
 
-from contentcuration.models import Change
-from contentcuration.models import Channel
-from contentcuration.tasks import apply_channel_changes_task
-from contentcuration.tasks import apply_user_changes_task
 from contentcuration.viewsets.sync.constants import CHANNEL
 from contentcuration.viewsets.sync.constants import CREATED
 
@@ -83,6 +79,11 @@ class SyncConsumer(WebsocketConsumer):
         """
         Executes when data is received from websocket
         """
+        from contentcuration.models import Change
+        from contentcuration.models import Channel
+        from contentcuration.tasks import apply_channel_changes_task
+        from contentcuration.tasks import apply_user_changes_task
+
         response_payload = {
             "disallowed": [],
             "allowed": [],
@@ -161,4 +162,15 @@ class SyncConsumer(WebsocketConsumer):
         # Send message to WebSocket
         self.send(text_data=json.dumps({
             'task': task
+        }))
+
+    def broadcast_success(self, event):
+        """
+        Broadcast success to required user
+        """
+        success = event['success']
+
+        # Send message to WebSocket
+        self.send(text_data=json.dumps({
+            'success': success
         }))

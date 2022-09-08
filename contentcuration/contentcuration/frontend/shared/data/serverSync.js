@@ -22,11 +22,8 @@ import urls from 'shared/urls';
 
 // When this many seconds pass without a syncable
 // change being registered, sync changes!
-const SYNC_IF_NO_CHANGES_FOR = 2;
+const SYNC_IF_NO_CHANGES_FOR = 0.5;
 
-// When this many seconds pass, repoll the backend to
-// check for any updates to active channels, or the user and sync any current changes
-const SYNC_POLL_INTERVAL = 5;
 let socket;
 // Flag to check if a sync is currently active.
 let syncActive = false;
@@ -80,10 +77,9 @@ function trimChangeForSync(change) {
   }
 }
 
-function handleDisallowed(response) {
+function handleDisallowed(disallowed) {
   // The disallowed property is an array of any changes that were sent to the server,
   // that were rejected.
-  const disallowed = get(response, ['data', 'disallowed'], []);
   if (disallowed.length) {
     // Collect all disallowed
     const disallowedRevs = disallowed.map(d => Number(d.rev));
@@ -97,10 +93,9 @@ function handleDisallowed(response) {
   return Promise.resolve();
 }
 
-function handleAllowed(response) {
+function handleAllowed(allowed) {
   // The allowed property is an array of any rev and server_rev for any changes sent to
   // the server that were accepted
-  const allowed = get(response, ['data', 'allowed'], []);
   if (allowed.length) {
     const revMap = {};
     for (let obj of allowed) {
@@ -116,21 +111,19 @@ function handleAllowed(response) {
   return Promise.resolve();
 }
 
-function handleReturnedChanges(response) {
+function handleReturnedChanges(returnedChanges) {
   // The changes property is an array of any changes from the server to apply in the
   // client.
-  const returnedChanges = get(response, ['data', 'changes'], []);
   if (returnedChanges.length) {
     return applyChanges(returnedChanges);
   }
   return Promise.resolve();
 }
 
-function handleErrors(response) {
+function handleErrors(errors) {
   // The errors property is an array of any changes that were sent to the server,
   // that were rejected, with an additional errors property that describes
   // the error.
-  const errors = get(response, ['data', 'errors'], []);
   if (errors.length) {
     const errorMap = {};
     for (let error of errors) {
@@ -148,10 +141,13 @@ function handleErrors(response) {
   return Promise.resolve();
 }
 
-function handleSuccesses(response) {
+function handleTasks(tasks) {
+  return Task.setTasks(tasks);
+}
+
+function handleSuccesses(successes) {
   // The successes property is an array of server_revs for any previously synced changes
   // that have now been successfully applied on the server.
-  const successes = get(response, ['data', 'successes'], []);
   if (successes.length) {
     return db[CHANGES_TABLE].where('server_rev')
       .anyOf(successes.map(c => c.server_rev))
@@ -160,14 +156,8 @@ function handleSuccesses(response) {
   return Promise.resolve();
 }
 
-function handleMaxRevs(response, userId) {
-  const allChanges = orderBy(
-    get(response, ['data', 'changes'], [])
-      .concat(get(response, ['data', 'errors'], []))
-      .concat(get(response, ['data', 'successes'], [])),
-    'server_rev',
-    'desc'
-  );
+function handleMaxRevs(changes, userId) {
+  const allChanges = orderBy(changes, 'server_rev', 'desc');
   const channelIds = uniq(allChanges.map(c => c.channel_id)).filter(Boolean);
   const maxRevs = {};
   const promises = [];
@@ -200,6 +190,71 @@ function handleMaxRevs(response, userId) {
   return Promise.all(promises);
 }
 
+async function WebsocketSendChanges() {
+  // Note: we could in theory use Dexie syncable for what
+  // we are doing here, but I can't find a good way to make
+  // it ignore our regular API calls for seeding the database
+  // Also, the pattern it expects for server interactions would
+  // require greater backend rearchitecting to focus our server-client
+  // interactions on changes to objects, with consistent and resolvable
+  // revisions. We will do this for now, but we have the option of doing
+  // something more involved and better architectured in the future.
+
+  syncActive = true;
+
+  // Track the maxRevision at this moment so that we can ignore any changes that
+  // might have come in during processing - leave them for the next cycle.
+  // This is the primary key of the change objects, so the collection is ordered by this
+  // by default - if we just grab the last object, we can get the key from there.
+  const [lastChange, user] = await Promise.all([
+    db[CHANGES_TABLE].orderBy('rev').last(),
+    Session.getSession(),
+  ]);
+  if (!user) {
+    // If not logged in, nothing to do.
+    return;
+  }
+
+  const now = Date.now();
+  const channelIds = Object.entries(user[ACTIVE_CHANNELS] || {})
+    .filter(([id, time]) => id && time > now - CHANNEL_SYNC_KEEP_ALIVE_INTERVAL)
+    .map(([id]) => id);
+  const channel_revs = {};
+  for (let channelId of channelIds) {
+    channel_revs[channelId] = get(user, [MAX_REV_KEY, channelId], 0);
+  }
+
+  const requestPayload = {
+    changes: [],
+    channel_revs,
+    user_rev: user.user_rev || 0,
+  };
+
+  if (lastChange) {
+    const changesMaxRevision = lastChange.rev;
+    const syncableChanges = db[CHANGES_TABLE].where('rev')
+      .belowOrEqual(changesMaxRevision)
+      .filter(c => !c.synced);
+    const changesToSync = await syncableChanges.toArray();
+    // By the time we get here, our changesToSync Array should
+    // have every change we want to sync to the server, so we
+    // can now trim it down to only what is needed to transmit over the wire.
+    // TODO: remove moves when a delete change is present for an object,
+    // because a delete will wipe out the move.
+    const changes = changesToSync.map(trimChangeForSync);
+    // Create a promise for the sync - if there is nothing to sync just resolve immediately,
+    // in order to still call our change cleanup code.
+    if (changes.length) {
+      requestPayload.changes = changes;
+      socket.send(
+        JSON.stringify({
+          payload: requestPayload,
+        })
+      );
+    }
+  }
+  syncActive = false;
+}
 async function syncChanges() {
   // Note: we could in theory use Dexie syncable for what
   // we are doing here, but I can't find a good way to make
@@ -267,30 +322,23 @@ async function syncChanges() {
     //   "errors": [],
     //   "successes": [],
     // }
-    if (requestPayload.changes.length != 0) {
-      socket.send(
-        JSON.stringify({
-          payload: requestPayload,
-        })
-      );
-    }
+
     const response = await client.post(urls['sync'](), requestPayload);
-    socket.onmessage = function(e) {
-      const data = JSON.parse(e.data);
-      console.log(data);
-      if (data.task) {
-        Task.put(data.task);
-      }
-    };
 
     try {
       await Promise.all([
-        handleDisallowed(response),
-        handleAllowed(response),
-        handleReturnedChanges(response),
-        handleErrors(response),
-        handleSuccesses(response),
-        handleMaxRevs(response, user.id),
+        handleDisallowed(get(response, ['data', 'disallowed'], [])),
+        handleAllowed(get(response, ['data', 'allowed'], [])),
+        handleReturnedChanges(get(response, ['data', 'changes'], [])),
+        handleErrors(get(response, ['data', 'errors'], [])),
+        handleSuccesses(get(response, ['data', 'successes'], [])),
+        handleMaxRevs(
+          get(response, ['data', 'changes'], [])
+            .concat(get(response, ['data', 'errors'], []))
+            .concat(get(response, ['data', 'successes'], [])),
+          user.id
+        ),
+        handleTasks(get(response, ['data', 'tasks'], [])),
       ]);
     } catch (err) {
       console.error('There was an error updating change status: ', err); // eslint-disable-line no-console
@@ -323,7 +371,7 @@ async function handleChanges(changes) {
   // MOVE, COPY, PUBLISH, and SYNC changes where we may be executing them inside an IGNORED_SOURCE
   // because they also make UPDATE and CREATE changes that we wish to make in the client only.
   // Only do this for changes that are not marked as synced.
-  const newChangeTableEntries = changes.some(
+  const newChangeTableEntries = changes.filter(
     c => c.table === CHANGES_TABLE && c.type === CHANGE_TYPES.CREATED && !c.obj.synced
   );
 
@@ -343,8 +391,11 @@ async function handleChanges(changes) {
 
   // If we detect  changes were written to the changes table
   // then we'll trigger sync
-  if (syncableChanges.length || newChangeTableEntries) {
-    debouncedSyncChanges();
+
+  if (newChangeTableEntries.length) {
+    if (!syncActive) {
+      WebsocketSendChanges();
+    }
   }
 }
 
@@ -353,12 +404,13 @@ let intervalTimer;
 export function startSyncing() {
   // Initiate a sync immediately in case any data
   // is left over in the database.
-
+  debouncedSyncChanges();
   const websocketUrl = new URL(
     `/ws/sync_socket/${window.CHANNEL_EDIT_GLOBAL.channel_id}/`,
     window.location.href
   );
   websocketUrl.protocol = window.location.protocol == 'https:' ? 'wss:' : 'ws:';
+
   socket = new WebSocket(websocketUrl);
 
   // Connection opened
@@ -366,10 +418,58 @@ export function startSyncing() {
     console.log('Websocket connected');
   });
 
-  debouncedSyncChanges();
+  // Listen for any errors due to which connection may be closed.
+  socket.addEventListener('error', event => {
+    console.log('WebSocket error: ', event);
+  });
 
-  // Start the sync interval
-  intervalTimer = setInterval(debouncedSyncChanges, SYNC_POLL_INTERVAL * 1000);
+  socket.addEventListener('message', async e => {
+    const data = JSON.parse(e.data);
+    const user = await Session.getSession();
+    console.log(data);
+    if (data.task) {
+      Task.setTasks([data.task]);
+    }
+    if (data.response_payload && data.response_payload.allowed) {
+      try {
+        handleAllowed(data.response_payload.allowed);
+      } catch (err) {
+        console.log(err);
+      }
+    }
+    if (data.response_payload && data.response_payload.disallowed) {
+      try {
+        handleDisallowed(data.response_payload.disallowed);
+      } catch (err) {
+        console.log(err);
+      }
+    }
+    if (data.change) {
+      try {
+        handleReturnedChanges([data.change]);
+        handleMaxRevs([data.change], user.id);
+      } catch (err) {
+        console.log(err);
+      }
+    }
+    if (data.errored) {
+      try {
+        handleErrors([data.errored]);
+        handleMaxRevs([data.errored], user.id);
+      } catch (err) {
+        console.log(err);
+      }
+    }
+    if (data.success) {
+      try {
+        handleSuccesses([data.success]);
+        handleMaxRevs([data.success], user.id);
+      } catch (err) {
+        console.log(err);
+      }
+    }
+  });
+
   db.on('changes', handleChanges);
 }
 

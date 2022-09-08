@@ -2,6 +2,7 @@ import Dexie from 'dexie';
 import Mutex from 'mutex-js';
 import findIndex from 'lodash/findIndex';
 import flatMap from 'lodash/flatMap';
+import intersection from 'lodash/intersection';
 import isArray from 'lodash/isArray';
 import isFunction from 'lodash/isFunction';
 import isNumber from 'lodash/isNumber';
@@ -12,29 +13,34 @@ import pick from 'lodash/pick';
 import sortBy from 'lodash/sortBy';
 import uniq from 'lodash/uniq';
 import uniqBy from 'lodash/uniqBy';
-
 import { v4 as uuidv4 } from 'uuid';
+import mergeAllChanges from './mergeChanges';
+import db, { CLIENTID, Collection, channelScope } from './db';
+import applyChanges, { applyMods, collectChanges } from './applyRemoteChanges';
+import { API_RESOURCES, INDEXEDDB_RESOURCES } from './registry';
 import {
-  CHANGE_TYPES,
+  ACTIVE_CHANNELS,
   CHANGES_TABLE,
+  CHANGE_TYPES,
+  CHANNEL_SYNC_KEEP_ALIVE_INTERVAL,
+  COPYING_FLAG,
+  CURRENT_USER,
   IGNORED_SOURCE,
+  MAX_REV_KEY,
   RELATIVE_TREE_POSITIONS,
   TABLE_NAMES,
-  COPYING_FLAG,
   TASK_ID,
-  CURRENT_USER,
-  ACTIVE_CHANNELS,
-  CHANNEL_SYNC_KEEP_ALIVE_INTERVAL,
-  MAX_REV_KEY,
 } from './constants';
-import applyChanges, { applyMods, collectChanges } from './applyRemoteChanges';
-import mergeAllChanges from './mergeChanges';
-import db, { channelScope, CLIENTID, Collection } from './db';
-import { API_RESOURCES, INDEXEDDB_RESOURCES } from './registry';
-import { fileErrors, NEW_OBJECT } from 'shared/constants';
-import client, { paramsSerializer } from 'shared/client';
-import { currentLanguage } from 'shared/i18n';
 import urls from 'shared/urls';
+import { currentLanguage } from 'shared/i18n';
+import client, { paramsSerializer } from 'shared/client';
+import { NEW_OBJECT, fileErrors } from 'shared/constants';
+
+/**
+ * Task names for which it is only useful to keep the most recent task object
+ * @type {string[]}
+ */
+const SINGULAR_TASKS = ['export-channel', 'sync-channel'];
 
 // Number of seconds after which data is considered stale.
 const REFRESH_INTERVAL = 5;
@@ -1810,13 +1816,15 @@ export const Task = new IndexedDBResource({
   idField: 'task_id',
   setTasks(tasks) {
     return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
-      return this.table
-        .where(this.idField)
-        .noneOf(tasks.map(t => t[this.idField]))
-        .delete()
-        .then(() => {
-          return this.table.bulkPut(tasks);
-        });
+      let deletePromise = Promise.resolve();
+      let taskDeletes = intersection(
+        SINGULAR_TASKS,
+        tasks.map(t => t.task_name)
+      );
+      if (taskDeletes.length) {
+        deletePromise = this.table.filter(t => taskDeletes.includes(t.task_name)).delete();
+      }
+      return deletePromise.then(() => this.table.bulkPut(tasks));
     });
   },
 });
