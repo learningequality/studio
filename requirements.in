@@ -15,7 +15,7 @@ celery==5.2.7
 redis
 pathlib
 progressbar2==3.55.0
-python-postmark==0.5.0
+python-postmark==0.5.8
 Django==3.2.14
 django-webpack-loader==0.7.0
 google-cloud-error-reporting

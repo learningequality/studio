@@ -215,7 +215,7 @@ python-dateutil==2.8.1
     # via
     #   -r requirements.in
     #   botocore
-python-postmark==0.5.0
+python-postmark==0.5.8
     # via -r requirements.in
 python-utils==2.5.6
     # via progressbar2
