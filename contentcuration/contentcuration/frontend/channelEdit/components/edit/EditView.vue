@@ -251,10 +251,16 @@
       },
     },
     $trs: {
-      [TabNames.DETAILS]: 'Details',
-      [TabNames.PREVIEW]: 'Preview',
-      [TabNames.QUESTIONS]: 'Questions',
-      [TabNames.RELATED]: 'Related',
+      /* eslint-disable kolibri/vue-no-unused-translations */
+      /** @see TabNames.DETAILS */
+      details: 'Details',
+      /** @see TabNames.PREVIEW */
+      preview: 'Preview',
+      /** @see TabNames.QUESTIONS */
+      questions: 'Questions',
+      /** @see TabNames.RELATED */
+      related: 'Related',
+      /* eslint-enable kolibri/vue-no-unused-translations */
       noItemsToEditText: 'Please select resources or folders to edit',
       invalidFieldsToolTip: 'Some required information is missing',
       errorBannerText: 'Please provide the required information',

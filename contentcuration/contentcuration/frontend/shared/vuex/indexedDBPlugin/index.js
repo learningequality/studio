@@ -1,6 +1,5 @@
 import { EventEmitter } from 'events';
 import { CHANGE_TYPES } from 'shared/data';
-import { CLIENTID } from 'shared/data/db';
 
 function getEventName(table, type) {
   return `${table}/${type}`;
@@ -110,16 +109,15 @@ export default function IndexedDBPlugin(db, listeners = []) {
 
   db.on('changes', function(changes) {
     changes.forEach(function(change) {
-      // Don't invoke listeners if their client originated the change
-      if (CLIENTID !== change.source) {
-        // Always invoke the listeners with the full object representation
-        // It is up to the callbacks to know how to parse this.
-        const obj = Object.assign(
-          { [db[change.table].schema.primKey.keyPath]: change.key },
-          change.obj || {}
-        );
-        events.emit(getEventName(change.table, change.type), obj);
+      let obj = change.obj || {};
+      if (change.type === CHANGE_TYPES.UPDATED) {
+        obj = change.mods;
       }
+      events.emit(getEventName(change.table, change.type), {
+        // we ensure we invoke the listeners with an object that has the PK
+        [db[change.table].schema.primKey.keyPath]: change.key,
+        ...obj,
+      });
     });
   });
 

@@ -2,6 +2,7 @@ import Vue from 'vue';
 import isEmpty from 'lodash/isEmpty';
 import { NEW_OBJECT } from 'shared/constants';
 import { mergeMapItem } from 'shared/vuex/utils';
+import { applyMods } from 'shared/data/applyRemoteChanges';
 
 export function ADD_CONTENTNODE(state, contentNode) {
   state.contentNodesMap = mergeMapItem(state.contentNodesMap, contentNode);
@@ -10,6 +11,12 @@ export function ADD_CONTENTNODE(state, contentNode) {
 export function ADD_CONTENTNODES(state, contentNodes = []) {
   for (let contentNode of contentNodes) {
     ADD_CONTENTNODE(state, contentNode);
+  }
+}
+
+export function UPDATE_CONTENTNODE_FROM_INDEXEDDB(state, { id, ...updates }) {
+  if (id && state.contentNodesMap[id]) {
+    applyMods(state.contentNodesMap[id], updates);
   }
 }
 

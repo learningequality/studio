@@ -4,38 +4,20 @@
 #
 #    pip-compile requirements-dev.in
 #
-amqp==5.1.1
-    # via
-    #   -c requirements.txt
-    #   kombu
 asgiref==3.3.4
     # via
     #   -c requirements.txt
     #   django
 aspy-yaml==1.3.0
     # via pre-commit
-astroid==2.6.6
-    # via pylint
 attrs==19.3.0
     # via
     #   -c requirements.txt
     #   pytest
-autoflake==1.4
-    # via -r requirements-dev.in
-autopep8==1.4
-    # via -r requirements-dev.in
-billiard==3.6.4.0
-    # via
-    #   -c requirements.txt
-    #   celery
 brotli==1.0.9
     # via geventhttpclient
 build==0.8.0
     # via pip-tools
-celery==5.2.7
-    # via
-    #   -c requirements.txt
-    #   flower
 certifi==2020.12.5
     # via
     #   -c requirements.txt
@@ -51,24 +33,8 @@ chardet==4.0.0
 click==8.1.3
     # via
     #   -c requirements.txt
-    #   celery
-    #   click-didyoumean
-    #   click-plugins
-    #   click-repl
     #   flask
     #   pip-tools
-click-didyoumean==0.3.0
-    # via
-    #   -c requirements.txt
-    #   celery
-click-plugins==1.1.1
-    # via
-    #   -c requirements.txt
-    #   celery
-click-repl==0.2.0
-    # via
-    #   -c requirements.txt
-    #   celery
 codecov==2.1.12
     # via -r requirements-dev.in
 colorama==0.4.4
@@ -113,9 +79,7 @@ docopt==0.6.2
 drf-yasg==1.20.0
     # via -r requirements-dev.in
 faker==0.9.1
-    # via
-    #   -r requirements-dev.in
-    #   mixer
+    # via mixer
 filelock==3.4.1
     # via virtualenv
 flake8==3.4.1
@@ -129,8 +93,6 @@ flask-basicauth==0.2.0
     # via locust
 flask-cors==3.0.10
     # via locust
-flower==0.9.4
-    # via -r requirements-dev.in
 fonttools==4.27.1
     # via -r requirements-dev.in
 gevent==21.12.0
@@ -141,8 +103,6 @@ geventhttpclient==1.5.3
     # via locust
 greenlet==1.1.2
     # via gevent
-humanize==0.5.1
-    # via flower
 identify==2.4.4
     # via pre-commit
 idna==2.10
@@ -153,47 +113,25 @@ importlib-metadata==1.7.0
     # via
     #   -c requirements.txt
     #   pre-commit
-importmagic==0.1.7
-    # via -r requirements-dev.in
 inflection==0.5.1
     # via drf-yasg
 iniconfig==1.1.1
     # via pytest
-isort==5.8.0
-    # via
-    #   -r requirements-dev.in
-    #   pylint
-    #   pyls-isort
 itsdangerous==2.0.1
     # via flask
 itypes==1.2.0
     # via coreapi
-jedi==0.17.2
-    # via
-    #   -r requirements-dev.in
-    #   python-language-server
-    #   python-lsp-server
 jinja2==3.0.3
     # via
     #   coreschema
     #   flask
     #   locust
-json-rpc==1.13.0
-    # via -r requirements-dev.in
-kombu==5.2.4
-    # via
-    #   -c requirements.txt
-    #   celery
-lazy-object-proxy==1.7.1
-    # via astroid
 locust==2.8.6
     # via -r requirements-dev.in
 markupsafe==2.0.1
     # via jinja2
 mccabe==0.6.1
-    # via
-    #   flake8
-    #   pylint
+    # via flake8
 minio==7.1.1
     # via -r requirements-dev.in
 mixer==6.1.3
@@ -216,8 +154,6 @@ packaging==20.9
     #   build
     #   drf-yasg
     #   pytest
-parso==0.7.1
-    # via jedi
 pep517==0.12.0
     # via build
 pip-tools==6.8.0
@@ -225,36 +161,21 @@ pip-tools==6.8.0
 platformdirs==2.4.0
     # via virtualenv
 pluggy==0.13.1
-    # via
-    #   pytest
-    #   python-language-server
-    #   python-lsp-server
+    # via pytest
 pre-commit==1.15.1
     # via -r requirements-dev.in
-prompt-toolkit==3.0.23
-    # via
-    #   -c requirements.txt
-    #   click-repl
 psutil==5.8.0
     # via locust
 py==1.10.0
     # via pytest
 pycodestyle==2.3.1
-    # via
-    #   autopep8
-    #   flake8
+    # via flake8
 pyflakes==1.5.0
-    # via
-    #   autoflake
-    #   flake8
+    # via flake8
 pyinstrument==3.4.2
     # via -r requirements-dev.in
 pyinstrument-cext==0.2.4
     # via pyinstrument
-pylint==2.8.2
-    # via -r requirements-dev.in
-pyls-isort==0.2.2
-    # via -r requirements-dev.in
 pympler==1.0.1
     # via -r requirements-dev.in
 pypandoc==1.8.1
@@ -288,20 +209,10 @@ python-dateutil==2.8.1
     # via
     #   -c requirements.txt
     #   faker
-python-jsonrpc-server==0.4.0
-    # via python-language-server
-python-language-server==0.36.2
-    # via -r requirements-dev.in
-python-lsp-jsonrpc==1.0.0
-    # via python-lsp-server
-python-lsp-server==1.3.3
-    # via pyls-isort
 pytz==2022.1
     # via
     #   -c requirements.txt
-    #   celery
     #   django
-    #   flower
 pyyaml==6.0
     # via
     #   aspy-yaml
@@ -314,20 +225,15 @@ requests==2.25.1
     #   codecov
     #   coreapi
     #   locust
-rope==1.1.1
-    # via -r requirements-dev.in
 roundrobin==0.0.2
     # via locust
 ruamel-yaml==0.17.21
     # via drf-yasg
 ruamel-yaml-clib==0.2.6
     # via ruamel-yaml
-service-factory==0.1.6
-    # via -r requirements-dev.in
 six==1.16.0
     # via
     #   -c requirements.txt
-    #   click-repl
     #   django-concurrent-test-helper
     #   faker
     #   flask-cors
@@ -349,25 +255,16 @@ text-unidecode==1.2
 toml==0.10.2
     # via
     #   pre-commit
-    #   pylint
     #   pytest
 tomli==1.2.3
     # via
     #   build
     #   coverage
     #   pep517
-tornado==6.1
-    # via flower
 typing-extensions==4.1.1
     # via
     #   -c requirements.txt
     #   locust
-ujson==4.0.2
-    # via
-    #   python-jsonrpc-server
-    #   python-language-server
-    #   python-lsp-jsonrpc
-    #   python-lsp-server
 uritemplate==3.0.1
     # via
     #   coreapi
@@ -377,20 +274,10 @@ urllib3==1.26.5
     #   -c requirements.txt
     #   minio
     #   requests
-vine==5.0.0
-    # via
-    #   -c requirements.txt
-    #   amqp
-    #   celery
-    #   kombu
 virtualenv==20.14.1
     # via pre-commit
 watchdog==2.1.8
     # via pytest-watch
-wcwidth==0.2.5
-    # via
-    #   -c requirements.txt
-    #   prompt-toolkit
 werkzeug==2.0.1
     # via
     #   flask
@@ -398,10 +285,6 @@ werkzeug==2.0.1
 wheel==0.37.1
     # via pip-tools
 whitenoise==5.2.0
-    # via -r requirements-dev.in
-wrapt==1.12.1
-    # via astroid
-yapf==0.32.0
     # via -r requirements-dev.in
 zipp==3.4.1
     # via

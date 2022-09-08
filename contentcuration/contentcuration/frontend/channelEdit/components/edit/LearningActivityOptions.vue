@@ -4,6 +4,7 @@
     <VSelect
       v-model="learningActivity"
       :items="learningActivities"
+      :disabled="disabled"
       box
       chips
       clearable
@@ -33,14 +34,23 @@
         type: Array,
         default: () => [],
       },
+      disabled: {
+        type: Boolean,
+        default: false,
+      },
     },
     computed: {
       learningActivity: {
         get() {
-          return this.value;
+          if (!this.disabled) {
+            return this.value;
+          }
+          return null;
         },
         set(value) {
-          this.$emit('input', value);
+          if (!this.disabled) {
+            this.$emit('input', value);
+          }
         },
       },
       learningActivities() {
@@ -50,7 +60,7 @@
         }));
       },
       learningActivityRules() {
-        return getLearningActivityValidators().map(translateValidator);
+        return this.disabled ? [] : getLearningActivityValidators().map(translateValidator);
       },
     },
   };
