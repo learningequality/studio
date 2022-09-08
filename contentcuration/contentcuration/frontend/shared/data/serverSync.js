@@ -423,8 +423,9 @@ export function startSyncing() {
     console.log('WebSocket error: ', event);
   });
 
-  socket.addEventListener('message', e => {
+  socket.addEventListener('message', async e => {
     const data = JSON.parse(e.data);
+    const user = await Session.getSession();
     console.log(data);
     if (data.task) {
       Task.setTasks([data.task]);
@@ -446,7 +447,7 @@ export function startSyncing() {
     if (data.change) {
       try {
         handleReturnedChanges([data.change]);
-        handleMaxRevs([data.change], data.change.created_by_id);
+        handleMaxRevs([data.change], user.id);
       } catch (err) {
         console.log(err);
       }
@@ -454,7 +455,7 @@ export function startSyncing() {
     if (data.errored) {
       try {
         handleErrors([data.errored]);
-        handleMaxRevs([data.errored], data.errored.created_by_id);
+        handleMaxRevs([data.errored], user.id);
       } catch (err) {
         console.log(err);
       }
@@ -462,7 +463,7 @@ export function startSyncing() {
     if (data.success) {
       try {
         handleSuccesses([data.success]);
-        handleMaxRevs([data.success], data.success.created_by_id);
+        handleMaxRevs([data.success], user.id);
       } catch (err) {
         console.log(err);
       }
