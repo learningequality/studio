@@ -332,7 +332,12 @@ async function syncChanges() {
         handleReturnedChanges(get(response, ['data', 'changes'], [])),
         handleErrors(get(response, ['data', 'errors'], [])),
         handleSuccesses(get(response, ['data', 'successes'], [])),
-        handleMaxRevs(get(response, ['data', 'changes'], []), user.id),
+        handleMaxRevs(
+          get(response, ['data', 'changes'], [])
+            .concat(get(response, ['data', 'errors'], []))
+            .concat(get(response, ['data', 'successes'], [])),
+          user.id
+        ),
         handleTasks(get(response, ['data', 'tasks'], [])),
       ]);
     } catch (err) {
@@ -440,10 +445,8 @@ export function startSyncing() {
     }
     if (data.change) {
       try {
-        Promise.all([
-          handleReturnedChanges([data.change]),
-          handleMaxRevs([data.change], data.change.created_by_id),
-        ]);
+        handleReturnedChanges([data.change]);
+        handleMaxRevs([data.change], data.change.created_by_id);
       } catch (err) {
         console.log(err);
       }
@@ -451,6 +454,7 @@ export function startSyncing() {
     if (data.errored) {
       try {
         handleErrors([data.errored]);
+        handleMaxRevs([data.errored], data.errored.created_by_id);
       } catch (err) {
         console.log(err);
       }
@@ -458,6 +462,7 @@ export function startSyncing() {
     if (data.success) {
       try {
         handleSuccesses([data.success]);
+        handleMaxRevs([data.success], data.success.created_by_id);
       } catch (err) {
         console.log(err);
       }
