@@ -388,7 +388,6 @@
   import Checkbox from 'shared/views/form/Checkbox';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import { NEW_OBJECT, FeatureFlagKeys, AccessibilityCategories } from 'shared/constants';
-  import { validate as validateCompletionCriteria } from 'shared/leUtils/CompletionCriteria';
   import { constantsTranslationMixin, metadataTranslationMixin } from 'shared/mixins';
 
   // Define an object to act as the place holder for non unique values.
