@@ -22,7 +22,7 @@ import urls from 'shared/urls';
 
 // When this many seconds pass without a syncable
 // change being registered, sync changes!
-const SYNC_IF_NO_CHANGES_FOR = 2;
+const SYNC_IF_NO_CHANGES_FOR = 0.5;
 
 let socket;
 // Flag to check if a sync is currently active.
