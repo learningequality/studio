@@ -68,7 +68,7 @@ django==3.2.14
     #   jsonfield
 django-bulk-update==2.2.0
     # via -r requirements.in
-django-celery-results==2.2.0
+django-celery-results==2.4.0
     # via -r requirements.in
 django-cte==1.2.1
     # via -r requirements.in
@@ -159,7 +159,7 @@ jmespath==0.10.0
     #   botocore
 jsonfield==3.1.0
     # via -r requirements.in
-jsonschema==3.2.0
+jsonschema==4.15.0
     # via -r requirements.in
 kombu==5.2.4
     # via celery
@@ -215,7 +215,7 @@ python-dateutil==2.8.1
     # via
     #   -r requirements.in
     #   botocore
-python-postmark==0.5.0
+python-postmark==0.5.8
     # via -r requirements.in
 python-utils==2.5.6
     # via progressbar2
@@ -251,7 +251,6 @@ six==1.16.0
     #   google-resumable-media
     #   grpcio
     #   html5lib
-    #   jsonschema
     #   oauth2client
     #   progressbar2
     #   protobuf
