@@ -17,7 +17,7 @@ daphneserver:
 
 gunicornserver: NUM_PROCS:=2
 gunicornserver: NUM_THREADS:=5
-gunicornserver: collectstatic compilemessages
+gunicornserver:
 	cd contentcuration/ && gunicorn contentcuration.wsgi:application --timeout=4000 --error-logfile=/var/log/gunicorn-error.log --workers=${NUM_PROCS} --threads=${NUM_THREADS} --bind=0.0.0.0:8081 --pid=/tmp/contentcuration.pid --log-level=debug || sleep infinity
 
 
