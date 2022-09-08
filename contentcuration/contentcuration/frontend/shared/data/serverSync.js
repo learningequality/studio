@@ -1,5 +1,4 @@
 import debounce from 'lodash/debounce';
-// import { event } from 'jquery';
 import findLastIndex from 'lodash/findLastIndex';
 import get from 'lodash/get';
 import orderBy from 'lodash/orderBy';
@@ -25,9 +24,6 @@ import urls from 'shared/urls';
 // change being registered, sync changes!
 const SYNC_IF_NO_CHANGES_FOR = 2;
 
-// When this many seconds pass, repoll the backend to
-// check for any updates to active channels, or the user and sync any current changes
-// const SYNC_POLL_INTERVAL = 5;
 let socket;
 // Flag to check if a sync is currently active.
 let syncActive = false;
@@ -515,16 +511,16 @@ export function startSyncing() {
     if (data.task) {
       Task.setTasks([data.task]);
     }
-    if (data.responsePayload && data.responsePayload.allowed) {
+    if (data.response_payload && data.response_payload.allowed) {
       try {
-        socketHandleAllowed(data.responsePayload.allowed);
+        socketHandleAllowed(data.response_payload.allowed);
       } catch (err) {
         console.log(err);
       }
     }
-    if (data.responsePayload && data.responsePayload.disallowed) {
+    if (data.response_payload && data.response_payload.disallowed) {
       try {
-        socketHandleDisallowed(data.responsePayload.disallowed);
+        socketHandleDisallowed(data.response_payload.disallowed);
       } catch (err) {
         console.log(err);
       }
