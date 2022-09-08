@@ -74,7 +74,7 @@ django-cte==1.2.1
     # via -r requirements.in
 django-db-readonly==0.7.0
     # via -r requirements.in
-django-filter==2.4.0
+django-filter==22.1
     # via -r requirements.in
 django-js-asset==1.2.2
     # via django-mptt
