@@ -12,11 +12,6 @@ from django.conf import settings
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import PermissionsMixin
-from django.contrib.postgres.indexes import GinIndex
-from django.contrib.postgres.indexes import GistIndex
-from django.contrib.postgres.search import SearchQuery
-from django.contrib.postgres.search import SearchVector
-from django.contrib.postgres.search import SearchVectorField
 from django.contrib.sessions.models import Session
 from django.core.cache import cache
 from django.core.exceptions import MultipleObjectsReturned
@@ -1111,7 +1106,6 @@ class ContentTag(models.Model):
 
     class Meta:
         unique_together = ['tag_name', 'channel']
-        indexes = [GistIndex(fields=["tag_name"], name=CONTENT_TAG_NAME__INDEX_NAME, opclasses=["gist_trgm_ops"])]
 
 
 def delegate_manager(method):
@@ -1156,11 +1150,6 @@ NODE_ID_INDEX_NAME = "node_id_idx"
 NODE_MODIFIED_INDEX_NAME = "node_modified_idx"
 NODE_MODIFIED_DESC_INDEX_NAME = "node_modified_desc_idx"
 NODE_SEARCH_VECTOR_GIN_INDEX_NAME = "node_search_vector_gin_idx"
-
-# Ours postgres full text search configuration.
-POSTGRES_FTS_CONFIG = "simple"
-# Search vector to create tsvector of title and description concatenated.
-POSTGRES_SEARCH_VECTOR = SearchVector("title", "description", config=POSTGRES_FTS_CONFIG)
 CONTENTNODE_TREE_ID_CACHE_KEY = "contentnode_{pk}__tree_id"
 
 
@@ -1257,10 +1246,6 @@ class ContentNode(MPTTModel, models.Model):
     # this duration should be in seconds.
     suggested_duration = models.IntegerField(blank=True, null=True, help_text="Suggested duration for the content node (in seconds)")
 
-    # A field to store the ts_vector form of (title + ' ' + description).
-    # This significantly increases the search performance.
-    title_description_search_vector = SearchVectorField(blank=True, null=True)
-
     objects = CustomContentNodeTreeManager()
 
     # Track all updates and ignore a blacklist of attributes
@@ -1356,12 +1341,6 @@ class ContentNode(MPTTModel, models.Model):
             | Q(edit=True)
             | Q(public=True)
         )
-
-    @classmethod
-    def search(self, queryset, search_term):
-        search_query = Q(title_description_search_vector=SearchQuery(value=search_term, config=POSTGRES_FTS_CONFIG, search_type="plain"))
-        tags_query = Q(tags__tag_name__icontains=search_term)
-        return queryset.filter(search_query | tags_query)
 
     @raise_if_unsaved
     def get_root(self):
@@ -1846,10 +1825,8 @@ class ContentNode(MPTTModel, models.Model):
 
     def save(self, skip_lock=False, *args, **kwargs):
         if self._state.adding:
-            is_create = True
             self.on_create()
         else:
-            is_create = False
             self.on_update()
 
         # Logic borrowed from mptt - do a simple check to see if we have changed
@@ -1893,9 +1870,6 @@ class ContentNode(MPTTModel, models.Model):
             if changed_ids:
                 ContentNode.objects.filter(id__in=changed_ids).update(changed=True)
 
-        if is_create:
-            ContentNode.filter_by_pk(pk=self.id).update(title_description_search_vector=POSTGRES_SEARCH_VECTOR)
-
     # Copied from MPTT
     save.alters_data = True
 
@@ -1938,7 +1912,6 @@ class ContentNode(MPTTModel, models.Model):
         indexes = [
             models.Index(fields=["node_id"], name=NODE_ID_INDEX_NAME),
             models.Index(fields=["-modified"], name=NODE_MODIFIED_DESC_INDEX_NAME),
-            GinIndex(fields=["title_description_search_vector"], name=NODE_SEARCH_VECTOR_GIN_INDEX_NAME),
         ]
 
 

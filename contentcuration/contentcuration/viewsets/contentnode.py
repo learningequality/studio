@@ -633,8 +633,7 @@ class PrerequisitesUpdateHandler(ValuesViewset):
 
 
 def dict_if_none(obj, field_name=None):
-    value = obj.get(field_name)
-    return value if value else {}
+    return obj[field_name] if obj[field_name] else {}
 
 
 # Apply mixin first to override ValuesViewset

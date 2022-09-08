@@ -4,9 +4,10 @@ from .dev_settings import *  # noqa
 EXCLUDED_DEBUG_URLS = [
     "/content/storage",
 
-    # Disabling task API because as soon as the task API gets polled
+    # Disabling sync API because as soon as the sync API gets polled
     # the current request data gets overwritten.
-    "/api/task",
+    # Can be removed after websockets deployment.
+    "/api/sync",
 ]
 
 DEBUG_PANEL_ACTIVE = True
