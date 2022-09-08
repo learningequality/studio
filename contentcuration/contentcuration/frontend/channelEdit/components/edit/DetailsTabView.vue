@@ -807,7 +807,6 @@
       subtitleFileLanguageComparison(file) {
         if (this.oneSelected && this.language === file.language) {
           this.accessibility = [...this.accessibility, AccessibilityCategories.CAPTIONS_SUBTITLES];
-          console.log({ ...this.accessibility });
         }
       },
     },
