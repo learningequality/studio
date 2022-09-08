@@ -60,6 +60,7 @@
                 id="learning_activities"
                 ref="learning_activities"
                 v-model="contentLearningActivities"
+                :disabled="isTopic"
                 @focus="trackClick('Learning activities')"
               />
               <!-- Level -->
@@ -127,7 +128,7 @@
       </VLayout>
 
       <!-- Completion section for all resources -->
-      <VLayout row wrap class="section">
+      <VLayout v-if="!isTopic" row wrap class="section">
         <VFlex xs12>
           <h1 class="subheading">
             {{ $tr('completionLabel') }}
@@ -384,7 +385,6 @@
   import Checkbox from 'shared/views/form/Checkbox';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import { NEW_OBJECT, FeatureFlagKeys } from 'shared/constants';
-  import { validate as validateCompletionCriteria } from 'shared/leUtils/CompletionCriteria';
   import { constantsTranslationMixin, metadataTranslationMixin } from 'shared/mixins';
 
   // Define an object to act as the place holder for non unique values.
@@ -513,7 +513,9 @@
         return this.firstNode.original_channel_name;
       },
       requiresAccessibility() {
-        return this.nodes.every(node => node.kind !== ContentKindsNames.AUDIO);
+        return this.nodes.every(
+          node => node.kind !== ContentKindsNames.AUDIO && node.kind !== ContentKindsNames.TOPIC
+        );
       },
       audioAccessibility() {
         return this.oneSelected && this.firstNode.kind === 'audio';
@@ -548,7 +550,6 @@
       resourcesNeeded: generateNestedNodesGetterSetter('learner_needs'),
       contentLearningActivities: generateNestedNodesGetterSetter('learning_activities'),
       categories: generateNestedNodesGetterSetter('categories'),
-      learnerManaged: generateGetterSetter('learner_managed'),
       license() {
         return this.getValueFromNodes('license');
       },
@@ -591,19 +592,23 @@
           };
         },
         set({ completion_criteria, suggested_duration, suggested_duration_type, modality }) {
-          if (validateCompletionCriteria(completion_criteria, this.firstNode.kind)) {
-            const options = { completion_criteria };
-            this.updateExtraFields({ options });
-          } else {
-            console.warn('Invalid completion criteria', [...validateCompletionCriteria.errors]);
-          }
+          completion_criteria.learner_managed = this.learnerManaged;
           const options = { completion_criteria, modality };
-          if (modality) {
-            options.modality = modality;
-          }
           this.updateExtraFields({ options });
           this.updateExtraFields({ suggested_duration_type });
           this.update({ suggested_duration });
+        },
+      },
+      learnerManaged: {
+        get() {
+          const { completion_criteria = {} } = this.getExtraFieldsValueFromNodes('options') || {};
+          return completion_criteria.learner_managed;
+        },
+        set(value) {
+          const { completion_criteria = {}, ...options } =
+            this.getExtraFieldsValueFromNodes('options') || {};
+          completion_criteria.learner_managed = value;
+          this.updateExtraFields({ options: { ...options, completion_criteria } });
         },
       },
       /* COMPUTED PROPS */
@@ -658,7 +663,7 @@
         }
       },
       videoSelected() {
-        return this.oneSelected && this.firstNode.kind === 'video';
+        return this.oneSelected && this.firstNode.kind === ContentKindsNames.VIDEO;
       },
       newContent() {
         return !this.nodes.some(n => n[NEW_OBJECT]);
@@ -667,7 +672,10 @@
         return this.$store.getters.hasFeatureEnabled(FeatureFlagKeys.channel_quizzes);
       },
       isDocument() {
-        return this.firstNode.kind === 'document';
+        return this.firstNode.kind === ContentKindsNames.DOCUMENT;
+      },
+      isTopic() {
+        return this.firstNode.kind === ContentKindsNames.TOPIC;
       },
     },
     watch: {

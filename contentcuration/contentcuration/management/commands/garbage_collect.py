@@ -11,6 +11,7 @@ from django.core.management.base import BaseCommand
 from contentcuration.utils.garbage_collect import clean_up_contentnodes
 from contentcuration.utils.garbage_collect import clean_up_deleted_chefs
 from contentcuration.utils.garbage_collect import clean_up_feature_flags
+from contentcuration.utils.garbage_collect import clean_up_stale_files
 from contentcuration.utils.garbage_collect import clean_up_tasks
 
 
@@ -33,5 +34,7 @@ class Command(BaseCommand):
         clean_up_deleted_chefs()
         logging.info("Cleaning up feature flags")
         clean_up_feature_flags()
+        logging.info("Cleaning up stale file objects")
+        clean_up_stale_files()
         logging.info("Cleaning up tasks")
         clean_up_tasks()

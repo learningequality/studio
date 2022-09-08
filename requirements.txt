@@ -203,8 +203,6 @@ pyasn1-modules==0.2.8
     # via
     #   google-auth
     #   oauth2client
-pycountry==22.3.5
-    # via -r requirements.in
 pycparser==2.20
     # via cffi
 pyparsing==2.4.7
@@ -227,8 +225,6 @@ pytz==2022.1
     #   django
     #   django-postmark
     #   google-api-core
-raven==6.10.0
-    # via -r requirements.in
 redis==3.5.3
     # via
     #   -r requirements.in

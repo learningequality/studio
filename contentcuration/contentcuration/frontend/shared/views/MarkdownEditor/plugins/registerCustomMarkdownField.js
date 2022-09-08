@@ -1,6 +1,6 @@
 import Vue from 'vue';
 import vueCustomElement from 'vue-custom-element';
-import uuid from 'uuid/v4';
+import { v4 as uuidv4 } from 'uuid';
 
 export default VueComponent => {
   const dashed = camel => camel.replace(/([a-zA-Z])(?=[A-Z])/g, '$1-').toLowerCase();
@@ -18,7 +18,7 @@ export default VueComponent => {
 
       // a hack to prevent squire from merging custom element spans
       // see here: https://github.com/nhn/tui.editor/blob/master/libs/squire/source/Node.js#L92-L101
-      this.classList.add(`markdown-field-${uuid()}`);
+      this.classList.add(`markdown-field-${uuidv4()}`);
 
       // pass innerHTML of host element as the `markdown` property
       this.observer = new MutationObserver(mutations => {

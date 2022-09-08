@@ -13,7 +13,7 @@ import sortBy from 'lodash/sortBy';
 import uniq from 'lodash/uniq';
 import uniqBy from 'lodash/uniqBy';
 
-import uuidv4 from 'uuid/v4';
+import { v4 as uuidv4 } from 'uuid';
 import {
   CHANGE_TYPES,
   CHANGES_TABLE,
@@ -1274,6 +1274,24 @@ export const ContentNode = new TreeResource({
               changed: true,
             };
 
+            let channel_id = parent.channel_id;
+
+            // This should really only happen when this is a move operation to the trash tree.
+            // Other cases like copying shouldn't encounter this because they should always have the
+            // channel_id on the destination. The trash tree root node does not have the channel_id
+            // annotated on it, and using the source node's channel_id should be reliable
+            // in that case
+            if (!channel_id && node) {
+              channel_id = node.channel_id;
+
+              // The change would be disallowed anyway, so prevent the frontend from applying it
+              if (!channel_id) {
+                return Promise.reject(
+                  new Error('Missing channel_id for tree insertion change event')
+                );
+              }
+            }
+
             // Prep the change data tracked in the changes table
             const change = {
               key: payload.id,
@@ -1284,7 +1302,7 @@ export const ContentNode = new TreeResource({
               source: CLIENTID,
               table: this.tableName,
               type: isCreate ? CHANGE_TYPES.COPIED : CHANGE_TYPES.MOVED,
-              channel_id: parent.channel_id,
+              channel_id,
             };
 
             return callback({

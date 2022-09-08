@@ -1,6 +1,5 @@
 from __future__ import division
 
-import collections
 import itertools
 import json
 import logging as logmodule
@@ -40,6 +39,7 @@ from past.builtins import basestring
 from past.utils import old_div
 
 from contentcuration import models as ccmodels
+from contentcuration.decorators import delay_user_storage_calculation
 from contentcuration.statistics import record_publish_stats
 from contentcuration.utils.cache import delete_public_channel_cache_keys
 from contentcuration.utils.files import create_thumbnail_from_base64
@@ -47,7 +47,6 @@ from contentcuration.utils.files import get_thumbnail_encoding
 from contentcuration.utils.parser import extract_value
 from contentcuration.utils.parser import load_json_string
 from contentcuration.utils.sentry import report_exception
-from contentcuration.utils.user import delay_user_storage_calculation
 
 
 logmodule.basicConfig()
@@ -118,7 +117,7 @@ def create_content_database(channel, force, user_id, force_exercises, progress_t
                      no_input=True)
         if progress_tracker:
             progress_tracker.track(10)
-        map_content_nodes(
+        tree_mapper = TreeMapper(
             channel.main_tree,
             channel.language,
             channel.id,
@@ -127,6 +126,7 @@ def create_content_database(channel, force, user_id, force_exercises, progress_t
             force_exercises=force_exercises,
             progress_tracker=progress_tracker,
         )
+        tree_mapper.map_nodes()
         map_channel_to_kolibri_channel(channel)
         # It should be at this percent already, but just in case.
         if progress_tracker:
@@ -154,67 +154,83 @@ def assign_license_to_contentcuration_nodes(channel, license):
     channel.main_tree.get_family().update(license_id=license.pk)
 
 
-def map_content_nodes(  # noqa: C901
-    root_node,
-    default_language,
-    channel_id,
-    channel_name,
-    user_id=None,
-    force_exercises=False,
-    progress_tracker=None,
-):
-    """
-    :type progress_tracker: contentcuration.utils.celery.ProgressTracker|None
-    """
-    # make sure we process nodes higher up in the tree first, or else when we
-    # make mappings the parent nodes might not be there
-
-    if not root_node.complete:
-        raise ValueError("Attempted to publish a channel with an incomplete root node")
-
-    node_queue = collections.deque()
-    node_queue.append(root_node)
-
-    task_percent_total = 80.0
-    total_nodes = root_node.get_descendant_count() + 1  # make sure we include root_node
-    percent_per_node = old_div(task_percent_total, total_nodes)
-
-    def queue_get_return_none_when_empty():
-        try:
-            return node_queue.popleft()
-        except IndexError:
-            return None
-
-    with ccmodels.ContentNode.objects.delay_mptt_updates(), kolibrimodels.ContentNode.objects.delay_mptt_updates():
-        for node in iter(queue_get_return_none_when_empty, None):
-            logging.debug("Mapping node with id {id}".format(
-                id=node.pk))
-
-            # Update tsvector for this node.
-            node.title_description_search_vector = ccmodels.POSTGRES_SEARCH_VECTOR
-            node.save(update_fields=["title_description_search_vector"])
-
-            if node.get_descendants(include_self=True).exclude(kind_id=content_kinds.TOPIC).exists() and node.complete:
-                children = (node.children.all())
-                node_queue.extend(children)
-
-                kolibrinode = create_bare_contentnode(node, default_language, channel_id, channel_name)
-
-                if node.kind.kind == content_kinds.EXERCISE:
-                    exercise_data = process_assessment_metadata(node, kolibrinode)
-                    if force_exercises or node.changed or not \
-                            node.files.filter(preset_id=format_presets.EXERCISE).exists():
-                        create_perseus_exercise(node, kolibrinode, exercise_data, user_id=user_id)
-                elif node.kind.kind == content_kinds.SLIDESHOW:
-                    create_slideshow_manifest(node, kolibrinode, user_id=user_id)
-                create_associated_file_objects(kolibrinode, node)
-                map_tags_to_node(kolibrinode, node)
-
-            if progress_tracker:
-                progress_tracker.increment(increment=percent_per_node)
+inheritable_fields = [
+    "grade_levels",
+    "resource_types",
+    "categories",
+    "learner_needs",
+]
 
 
-def create_slideshow_manifest(ccnode, kolibrinode, user_id=None):
+class TreeMapper:
+    def __init__(
+        self,
+        root_node,
+        default_language,
+        channel_id,
+        channel_name,
+        user_id=None,
+        force_exercises=False,
+        progress_tracker=None,
+    ):
+        if not root_node.complete:
+            raise ValueError("Attempted to publish a channel with an incomplete root node")
+
+        self.root_node = root_node
+        task_percent_total = 80.0
+        total_nodes = root_node.get_descendant_count() + 1  # make sure we include root_node
+        self.percent_per_node = old_div(task_percent_total, total_nodes)
+        self.progress_tracker = progress_tracker
+        self.default_language = default_language
+        self.channel_id = channel_id
+        self.channel_name = channel_name
+        self.user_id = user_id
+        self.force_exercises = force_exercises
+
+    def _node_completed(self):
+        if self.progress_tracker:
+            self.progress_tracker.increment(increment=self.percent_per_node)
+
+    def map_nodes(self):
+        self.recurse_nodes(self.root_node, {})
+
+    def recurse_nodes(self, node, inherited_fields):
+        logging.debug("Mapping node with id {id}".format(id=node.pk))
+
+        # Only process nodes that are either non-topics or have non-topic descendants
+        if node.get_descendants(include_self=True).exclude(kind_id=content_kinds.TOPIC).exists() and node.complete:
+
+            metadata = {}
+
+            for field in inheritable_fields:
+                metadata[field] = {}
+                inherited_keys = (inherited_fields.get(field) or {}).keys()
+                own_keys = (getattr(node, field) or {}).keys()
+                # Get a list of all keys in reverse order of length so we can remove any less specific values
+                all_keys = sorted(set(inherited_keys).union(set(own_keys)), key=len, reverse=True)
+                for key in all_keys:
+                    if not any(k != key and k.startswith(key) for k in all_keys):
+                        metadata[field][key] = True
+
+            kolibrinode = create_bare_contentnode(node, self.default_language, self.channel_id, self.channel_name, metadata)
+
+            if node.kind.kind == content_kinds.EXERCISE:
+                exercise_data = process_assessment_metadata(node, kolibrinode)
+                if self.force_exercises or node.changed or not \
+                        node.files.filter(preset_id=format_presets.EXERCISE).exists():
+                    create_perseus_exercise(node, kolibrinode, exercise_data, user_id=self.user_id)
+            elif node.kind.kind == content_kinds.SLIDESHOW:
+                create_slideshow_manifest(node, user_id=self.user_id)
+            elif node.kind_id == content_kinds.TOPIC:
+                for child in node.children.all():
+                    self.recurse_nodes(child, metadata)
+            create_associated_file_objects(kolibrinode, node)
+            map_tags_to_node(kolibrinode, node)
+
+        self._node_completed()
+
+
+def create_slideshow_manifest(ccnode, user_id=None):
     print("Creating slideshow manifest...")
 
     preset = ccmodels.FormatPreset.objects.filter(pk="slideshow_manifest")[0]
@@ -244,7 +260,7 @@ def create_slideshow_manifest(ccnode, kolibrinode, user_id=None):
         temp_manifest.close()
 
 
-def create_bare_contentnode(ccnode, default_language, channel_id, channel_name):
+def create_bare_contentnode(ccnode, default_language, channel_id, channel_name, metadata):  # noqa: C901
     logging.debug("Creating a Kolibri contentnode for instance id {}".format(
         ccnode.node_id))
 
@@ -274,6 +290,14 @@ def create_bare_contentnode(ccnode, default_language, channel_id, channel_name):
         # aggregate duration from associated files, choosing maximum if there are multiple, like hi and lo res videos.
         duration = ccnode.files.aggregate(duration=Max("duration")).get("duration")
 
+    learning_activities = None
+    accessibility_labels = None
+    if ccnode.kind_id != content_kinds.TOPIC:
+        if ccnode.learning_activities:
+            learning_activities = ",".join(ccnode.learning_activities.keys())
+        if ccnode.accessibility_labels:
+            accessibility_labels = ",".join(ccnode.accessibility_labels.keys())
+
     kolibrinode, is_new = kolibrimodels.ContentNode.objects.update_or_create(
         pk=ccnode.node_id,
         defaults={
@@ -295,12 +319,12 @@ def create_bare_contentnode(ccnode, default_language, channel_id, channel_name):
             'duration': duration,
             'options': json.dumps(options),
             # Fields for metadata labels
-            "grade_levels": ",".join(ccnode.grade_levels.keys()) if ccnode.grade_levels else None,
-            "resource_types": ",".join(ccnode.resource_types.keys()) if ccnode.resource_types else None,
-            "learning_activities": ",".join(ccnode.learning_activities.keys()) if ccnode.learning_activities else None,
-            "accessibility_labels": ",".join(ccnode.accessibility_labels.keys()) if ccnode.accessibility_labels else None,
-            "categories": ",".join(ccnode.categories.keys()) if ccnode.categories else None,
-            "learner_needs": ",".join(ccnode.learner_needs.keys()) if ccnode.learner_needs else None,
+            "grade_levels": ",".join(metadata["grade_levels"].keys()) if metadata["grade_levels"] else None,
+            "resource_types": ",".join(metadata["resource_types"].keys()) if metadata["resource_types"] else None,
+            "learning_activities": learning_activities,
+            "accessibility_labels": accessibility_labels,
+            "categories": ",".join(metadata["categories"].keys()) if metadata["categories"] else None,
+            "learner_needs": ",".join(metadata["learner_needs"].keys()) if metadata["learner_needs"] else None,
         }
     )
 

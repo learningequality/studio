@@ -182,6 +182,7 @@ export function createContentNode(context, { parent, kind, ...payload }) {
     learning_activities: {},
     categories: {},
     suggested_duration: 0,
+    channel_id: channel.id,
     ...payload,
   };
 

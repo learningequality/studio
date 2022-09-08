@@ -42,7 +42,7 @@
       confirmButtonText="Delete"
       @confirm="softDeleteHandler"
     />
-    <VMenu offset-y>
+    <Menu>
       <template #activator="{ on }">
         <VBtn v-bind="$attrs" v-on="on">
           actions
@@ -108,7 +108,7 @@
           </VListTile>
         </template>
       </VList>
-    </VMenu>
+    </Menu>
 
   </div>
 

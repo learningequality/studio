@@ -65,7 +65,7 @@
                     </span>
                   </template>
 
-                  <VTooltip v-else top>
+                  <VTooltip v-else top lazy>
                     <template #activator="{ on }">
                       <Icon class="red--text" v-on="on">
                         error

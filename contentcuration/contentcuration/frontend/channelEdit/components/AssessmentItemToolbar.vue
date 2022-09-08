@@ -6,7 +6,7 @@
       :key="`${action}-${idx}`"
       class="toolbar-item"
     >
-      <VTooltip top>
+      <VTooltip top lazy>
         <template #activator="{ on }">
           <VBtn
             icon

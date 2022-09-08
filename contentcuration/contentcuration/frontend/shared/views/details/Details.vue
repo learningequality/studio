@@ -186,7 +186,7 @@
       <DetailsRow :label="$tr('licensesLabel')">
         <template #default>
           <template v-if="!printing">
-            <VTooltip v-for="license in details.licenses" :key="license" top>
+            <VTooltip v-for="license in details.licenses" :key="license" top lazy>
               <template #activator="{ on }">
                 <VChip class="tag" v-on="on">
                   {{ translateConstant(license) }}
@@ -274,7 +274,7 @@
 
 <script>
 
-  import sortBy from 'lodash/sortBy';
+  import orderBy from 'lodash/orderBy';
   import DetailsRow from './DetailsRow';
   import { SCALE_TEXT, SCALE, CHANNEL_SIZE_DIVISOR } from './constants';
   import {
@@ -348,7 +348,7 @@
         });
       },
       kindCount() {
-        return sortBy(this.details.kind_count, ['-count', 'kind_id']);
+        return orderBy(this.details.kind_count, ['count', 'kind_id'], ['desc', 'asc']);
       },
       createdDate() {
         return this.$formatDate(this.details.created, {
@@ -361,7 +361,7 @@
         return Object.keys(this.details).length;
       },
       sortedTags() {
-        return sortBy(this.details.tags, '-count');
+        return orderBy(this.details.tags, ['count'], ['desc']);
       },
       includesPrintable() {
         const includes = [];

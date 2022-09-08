@@ -17,7 +17,6 @@ import sys
 from datetime import timedelta
 from tempfile import gettempdir
 
-import pycountry
 from django.utils.timezone import now
 
 from contentcuration.utils.incidents import INCIDENTS
@@ -276,7 +275,6 @@ USE_TZ = True
 
 LOCALE_PATHS = (
     os.path.join(BASE_DIR, 'locale'),
-    pycountry.LOCALES_DIR,
 )
 
 
@@ -317,10 +315,10 @@ SITE_ID = 1
 # Used for serializing datetime objects.
 DATE_TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 
+POSTMARK_SSL = True
 SEND_USER_ACTIVATION_NOTIFICATION_EMAIL = bool(
     os.getenv("SEND_USER_ACTIVATION_NOTIFICATION_EMAIL")
 )
-
 SPACE_REQUEST_EMAIL = 'content@learningequality.org'
 REGISTRATION_INFORMATION_EMAIL = 'studio-registrations@learningequality.org'
 HELP_EMAIL = 'content@learningequality.org'

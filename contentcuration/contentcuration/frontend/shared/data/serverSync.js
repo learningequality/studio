@@ -306,6 +306,17 @@ if (process.env.NODE_ENV !== 'production' && typeof window !== 'undefined') {
 async function handleChanges(changes) {
   changes.map(applyResourceListener);
   const syncableChanges = changes.filter(isSyncableChange);
+  // Here we are handling changes triggered by Dexie Observable
+  // this is listening to all of our IndexedDB tables, both for resources
+  // and for our special Changes table.
+  // Here we look for any newly created changes in the changes table, which may require
+  // a sync to send them to the backend - this is particularly important for
+  // MOVE, COPY, PUBLISH, and SYNC changes where we may be executing them inside an IGNORED_SOURCE
+  // because they also make UPDATE and CREATE changes that we wish to make in the client only.
+  // Only do this for changes that are not marked as synced.
+  const newChangeTableEntries = changes.some(
+    c => c.table === CHANGES_TABLE && c.type === CHANGE_TYPES.CREATED && !c.obj.synced
+  );
 
   if (syncableChanges.length) {
     // Flatten any changes before we store them in the changes table
@@ -323,7 +334,7 @@ async function handleChanges(changes) {
 
   // If we detect  changes were written to the changes table
   // then we'll trigger sync
-  if (syncableChanges.length) {
+  if (syncableChanges.length || newChangeTableEntries) {
     debouncedSyncChanges();
   }
 }

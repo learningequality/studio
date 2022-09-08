@@ -63,7 +63,7 @@
               {{ $tr('unpublishedText') }}
             </VCardText>
           </VFlex>
-          <VTooltip bottom>
+          <VTooltip bottom lazy>
             <template #activator="{ on }">
               <Icon
                 v-if="allowEdit && hasUnpublishedChanges"
