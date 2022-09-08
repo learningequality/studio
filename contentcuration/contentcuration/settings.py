@@ -358,6 +358,7 @@ CELERY = {
     "accept_content": ['application/json'],
     "task_serializer": "json",
     "result_serializer": "json",
+    "result_extended": True,
     "worker_send_task_events": True,
 }
 
