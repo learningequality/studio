@@ -33,4 +33,6 @@ export const ContentKindLearningActivityDefaults = {
   [ContentKindsNames.AUDIO]: LearningActivities.LISTEN,
   [ContentKindsNames.DOCUMENT]: LearningActivities.READ,
   [ContentKindsNames.VIDEO]: LearningActivities.WATCH,
+  [ContentKindsNames.EXERCISE]: LearningActivities.PRACTICE,
+  [ContentKindsNames.SLIDESHOW]: LearningActivities.READ,
 };
