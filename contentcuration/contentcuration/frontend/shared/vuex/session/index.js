@@ -5,10 +5,9 @@ import { TABLE_NAMES, CHANGE_TYPES, resetDB } from 'shared/data';
 import { Session, User } from 'shared/data/resources';
 import { forceServerSync } from 'shared/data/serverSync';
 import translator from 'shared/translator';
+import { applyMods } from 'shared/data/applyRemoteChanges';
 
-const GUEST_USER = {
-  first_name: 'Guest',
-};
+const GUEST_USER = {};
 
 function langCode(language) {
   // Turns a Django language name (en-gb) into an ISO language code (en-GB)
@@ -48,6 +47,11 @@ export default {
         ...state.currentUser,
         ...data,
       };
+    },
+    UPDATE_SESSION_FROM_INDEXEDDB(state, { id, ...mods }) {
+      if (id === state.currentUser.id) {
+        applyMods(state.currentUser, mods);
+      }
     },
     REMOVE_SESSION(state) {
       state.currentUser = GUEST_USER;
@@ -137,7 +141,7 @@ export default {
   listeners: {
     [TABLE_NAMES.SESSION]: {
       [CHANGE_TYPES.CREATED]: 'ADD_SESSION',
-      [CHANGE_TYPES.UPDATED]: 'UPDATE_SESSION',
+      [CHANGE_TYPES.UPDATED]: 'UPDATE_SESSION_FROM_INDEXEDDB',
       [CHANGE_TYPES.DELETED]: 'REMOVE_SESSION',
     },
   },

@@ -241,7 +241,10 @@
   import Breadcrumbs from 'shared/views/Breadcrumbs';
   import Checkbox from 'shared/views/form/Checkbox';
   import { withChangeTracker } from 'shared/data/changes';
-  import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
+  import {
+    ContentKindsNames,
+    ContentKindLearningActivityDefaults,
+  } from 'shared/leUtils/ContentKinds';
   import { titleMixin, routerMixin } from 'shared/mixins';
   import { COPYING_FLAG, RELATIVE_TREE_POSITIONS } from 'shared/data/constants';
   import { DraggableTypes, DropEffect } from 'shared/mixins/draggable/constants';
@@ -438,8 +441,8 @@
         const title = detailTitle ? `${detailTitle} - ${topicTitle}` : topicTitle;
         this.updateTabTitle(this.$store.getters.appendChannelName(title));
       },
-      newContentNode(route, { kind, title }) {
-        this.createContentNode({ parent: this.topicId, kind, title }).then(newId => {
+      newContentNode(route, payload) {
+        this.createContentNode({ parent: this.topicId, ...payload }).then(newId => {
           this.$router.push({
             name: route,
             params: { detailNodeIds: newId },
@@ -458,6 +461,9 @@
         let nodeData = {
           kind: ContentKindsNames.EXERCISE,
           title: '',
+          learning_activities: {
+            [ContentKindLearningActivityDefaults[ContentKindsNames.EXERCISE]]: true,
+          },
         };
         this.newContentNode(RouteNames.ADD_EXERCISE, nodeData);
         this.trackClickEvent('Add exercise');

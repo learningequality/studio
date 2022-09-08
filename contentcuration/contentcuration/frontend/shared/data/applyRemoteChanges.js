@@ -91,6 +91,14 @@ export default function applyChanges(changes) {
   changes = sortBy(changes, ['server_rev', 'rev']);
 
   const table_names = uniq(changes.map(c => c.table));
+  // When changes include a publish change, add the contentnode table since `applyPublish` above
+  // needs to make updates to content nodes
+  if (
+    changes.some(c => c.type === CHANGE_TYPES.PUBLISHED) &&
+    !table_names.includes(TABLE_NAMES.CONTENTNODE)
+  ) {
+    table_names.push(TABLE_NAMES.CONTENTNODE);
+  }
   const tables = table_names.map(table => db.table(table));
 
   return db.transaction('rw', tables, () => {
