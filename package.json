@@ -59,7 +59,6 @@
     "ajv": "^8.9.0",
     "axios": "^0.27.2",
     "broadcast-channel": "^4.14.0",
-    "clipboard-polyfill": "^2.8.1",
     "codemirror": "5.58.2",
     "core-js": "^3.25.0",
     "dexie": "^3.2.2",

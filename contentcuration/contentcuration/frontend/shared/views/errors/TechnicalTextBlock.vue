@@ -32,8 +32,6 @@
 
 <script>
 
-  import * as clipboard from 'clipboard-polyfill';
-
   export default {
     name: 'TechnicalTextBlock',
     props: {
@@ -65,7 +63,7 @@
     },
     methods: {
       copyError() {
-        clipboard
+        navigator.clipboard
           .writeText(this.formattedText)
           .then(() => {
             this.$store.dispatch('showSnackbar', {
