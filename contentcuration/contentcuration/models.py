@@ -1092,9 +1092,6 @@ class ChannelSet(models.Model):
             self.secret_token.delete()
 
 
-CONTENT_TAG_NAME__INDEX_NAME = "contenttag_tag_name_gist_idx"
-
-
 class ContentTag(models.Model):
     id = UUIDField(primary_key=True, default=uuid.uuid4)
     tag_name = models.CharField(max_length=50)
@@ -1149,7 +1146,6 @@ class License(models.Model):
 NODE_ID_INDEX_NAME = "node_id_idx"
 NODE_MODIFIED_INDEX_NAME = "node_modified_idx"
 NODE_MODIFIED_DESC_INDEX_NAME = "node_modified_desc_idx"
-NODE_SEARCH_VECTOR_GIN_INDEX_NAME = "node_search_vector_gin_idx"
 CONTENTNODE_TREE_ID_CACHE_KEY = "contentnode_{pk}__tree_id"
 
 
