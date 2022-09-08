@@ -1,7 +1,7 @@
 attrs==19.3.0
 django-cte==1.2.1
 django-mptt==0.11.0
-django-filter==2.4.0
+django-filter==22.1
 djangorestframework==3.12.4
 psycopg2-binary==2.9.3
 django-js-reverse==0.9.1
@@ -20,7 +20,7 @@ Django==3.2.14
 django-webpack-loader==0.7.0
 google-cloud-error-reporting
 google-cloud-storage
-django-s3-storage==0.13.4
+django-s3-storage==0.13.9
 requests>=2.20.0
 google-cloud-core
 django-db-readonly==0.7.0

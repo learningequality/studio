@@ -12,6 +12,12 @@ from django.db import connections
 from kolibri_content import models as kolibri_models
 from kolibri_content.router import get_active_content_database
 from kolibri_content.router import set_active_content_database
+from le_utils.constants.labels import accessibility_categories
+from le_utils.constants.labels import learning_activities
+from le_utils.constants.labels import levels
+from le_utils.constants.labels import needs
+from le_utils.constants.labels import resource_type
+from le_utils.constants.labels import subjects
 from mock import patch
 
 from .base import StudioTestCase
@@ -21,7 +27,6 @@ from .testdata import node as create_node
 from .testdata import slideshow
 from contentcuration import models as cc
 from contentcuration.utils.publish import convert_channel_thumbnail
-from contentcuration.utils.publish import create_bare_contentnode
 from contentcuration.utils.publish import create_content_database
 from contentcuration.utils.publish import create_slideshow_manifest
 from contentcuration.utils.publish import fill_published_fields
@@ -90,6 +95,42 @@ class ExportChannelTestCase(StudioTestCase):
         new_video.complete = True
         new_video.parent = self.content_channel.main_tree
         new_video.save()
+
+        first_topic = self.content_channel.main_tree.get_descendants().first()
+        first_topic.accessibility_labels = {
+            accessibility_categories.AUDIO_DESCRIPTION: True,
+        }
+        first_topic.learning_activities = {
+            learning_activities.WATCH: True,
+        }
+        first_topic.grade_levels = {
+            levels.LOWER_SECONDARY: True,
+        }
+        first_topic.learner_needs = {
+            needs.PRIOR_KNOWLEDGE: True,
+        }
+        first_topic.resource_types = {
+            resource_type.LESSON_PLAN: True,
+        }
+        first_topic.categories = {
+            subjects.MATHEMATICS: True,
+        }
+        first_topic.save()
+
+        first_topic_first_child = first_topic.children.first()
+        first_topic_first_child.accessibility_labels = {
+            accessibility_categories.CAPTIONS_SUBTITLES: True,
+        }
+        first_topic_first_child.categories = {
+            subjects.ALGEBRA: True,
+        }
+        first_topic_first_child.learner_needs = {
+            needs.FOR_BEGINNERS: True,
+        }
+        first_topic_first_child.learning_activities = {
+            learning_activities.LISTEN: True,
+        }
+        first_topic_first_child.save()
 
         set_channel_icon_encoding(self.content_channel)
         self.tempdb = create_content_database(self.content_channel, True, self.admin_user.id, True)
@@ -189,6 +230,58 @@ class ExportChannelTestCase(StudioTestCase):
         self.assertTrue(isinstance(json.loads(asm.assessment_item_ids), list))
         self.assertTrue(isinstance(json.loads(asm.mastery_model), dict))
 
+    def test_inherited_category(self):
+        first_topic_node_id = self.content_channel.main_tree.get_descendants().first().node_id
+        for child in kolibri_models.ContentNode.objects.filter(parent_id=first_topic_node_id)[1:]:
+            self.assertEqual(child.categories, subjects.MATHEMATICS)
+
+    def test_inherited_category_no_overwrite(self):
+        first_topic_node_id = self.content_channel.main_tree.get_descendants().first().node_id
+        first_child = kolibri_models.ContentNode.objects.filter(parent_id=first_topic_node_id).first()
+        self.assertEqual(first_child.categories, subjects.ALGEBRA)
+
+    def test_inherited_needs(self):
+        first_topic_node_id = self.content_channel.main_tree.get_descendants().first().node_id
+        for child in kolibri_models.ContentNode.objects.filter(parent_id=first_topic_node_id)[1:]:
+            self.assertEqual(child.learner_needs, needs.PRIOR_KNOWLEDGE)
+
+    def test_inherited_needs_no_overwrite(self):
+        first_topic_node_id = self.content_channel.main_tree.get_descendants().first().node_id
+        first_child = kolibri_models.ContentNode.objects.filter(parent_id=first_topic_node_id).first()
+        self.assertEqual(first_child.learner_needs, needs.FOR_BEGINNERS)
+
+    def test_topics_no_accessibility_label(self):
+        first_topic_node_id = self.content_channel.main_tree.get_descendants().first().node_id
+        topic = kolibri_models.ContentNode.objects.get(id=first_topic_node_id)
+        self.assertIsNone(topic.accessibility_labels)
+
+    def test_child_no_inherit_accessibility_label(self):
+        first_topic_node_id = self.content_channel.main_tree.get_descendants().first().node_id
+        first_child = kolibri_models.ContentNode.objects.filter(parent_id=first_topic_node_id).first()
+        # Should only be the learning activities we set on the child directly, not any parent ones.
+        self.assertEqual(first_child.accessibility_labels, accessibility_categories.CAPTIONS_SUBTITLES)
+
+    def test_inherited_grade_levels(self):
+        first_topic_node_id = self.content_channel.main_tree.get_descendants().first().node_id
+        for child in kolibri_models.ContentNode.objects.filter(parent_id=first_topic_node_id):
+            self.assertEqual(child.grade_levels, levels.LOWER_SECONDARY)
+
+    def test_inherited_resource_types(self):
+        first_topic_node_id = self.content_channel.main_tree.get_descendants().first().node_id
+        for child in kolibri_models.ContentNode.objects.filter(parent_id=first_topic_node_id):
+            self.assertEqual(child.resource_types, resource_type.LESSON_PLAN)
+
+    def test_topics_no_learning_activity(self):
+        first_topic_node_id = self.content_channel.main_tree.get_descendants().first().node_id
+        topic = kolibri_models.ContentNode.objects.get(id=first_topic_node_id)
+        self.assertIsNone(topic.learning_activities)
+
+    def test_child_no_inherit_learning_activity(self):
+        first_topic_node_id = self.content_channel.main_tree.get_descendants().first().node_id
+        first_child = kolibri_models.ContentNode.objects.filter(parent_id=first_topic_node_id).first()
+        # Should only be the learning activities we set on the child directly, not any parent ones.
+        self.assertEqual(first_child.learning_activities, learning_activities.LISTEN)
+
 
 class ChannelExportUtilityFunctionTestCase(StudioTestCase):
     @classmethod
@@ -240,10 +333,8 @@ class ChannelExportUtilityFunctionTestCase(StudioTestCase):
             self.assertEqual("this is a test", convert_channel_thumbnail(channel))
 
     def test_create_slideshow_manifest(self):
-        content_channel = cc.Channel.objects.create()
         ccnode = cc.ContentNode.objects.create(kind_id=slideshow(), extra_fields={}, complete=True)
-        kolibrinode = create_bare_contentnode(ccnode, ccnode.language, content_channel.id, content_channel.name)
-        create_slideshow_manifest(ccnode, kolibrinode)
+        create_slideshow_manifest(ccnode)
         manifest_collection = cc.File.objects.filter(contentnode=ccnode, preset_id=u"slideshow_manifest")
         assert len(manifest_collection) == 1
 

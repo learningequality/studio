@@ -2,6 +2,7 @@ import Vue from 'vue';
 import pick from 'lodash/pick';
 import { ContentDefaults, NEW_OBJECT } from 'shared/constants';
 import { mergeMapItem } from 'shared/vuex/utils';
+import { applyMods } from 'shared/data/applyRemoteChanges';
 
 /* CHANNEL LIST MUTATIONS */
 
@@ -48,6 +49,11 @@ export function UPDATE_CHANNEL(state, { id, content_defaults = {}, ...payload } 
         pick(content_defaults, Object.keys(ContentDefaults))
       ),
     });
+  }
+}
+export function UPDATE_CHANNEL_FROM_INDEXEDDB(state, { id, ...mods }) {
+  if (id && state.channelsMap[id]) {
+    applyMods(state.channelsMap[id], mods);
   }
 }
 
