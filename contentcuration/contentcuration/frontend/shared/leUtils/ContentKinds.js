@@ -1,3 +1,5 @@
+import LearningActivities from 'kolibri-constants/labels/LearningActivities';
+
 // Constant values for ContentKinds sorted by id
 const ContentKinds = new Set([
   'audio',
@@ -25,4 +27,10 @@ export const ContentKindsNames = {
   TOPIC: 'topic',
   VIDEO: 'video',
   ZIM: 'zim',
+};
+
+export const ContentKindLearningActivityDefaults = {
+  [ContentKindsNames.AUDIO]: LearningActivities.LISTEN,
+  [ContentKindsNames.DOCUMENT]: LearningActivities.READ,
+  [ContentKindsNames.VIDEO]: LearningActivities.WATCH,
 };

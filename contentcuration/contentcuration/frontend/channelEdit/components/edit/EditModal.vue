@@ -183,6 +183,7 @@
   import SavingIndicator from './SavingIndicator';
   import EditView from './EditView';
   import EditList from './EditList';
+  import { ContentKindLearningActivityDefaults } from 'shared/leUtils/ContentKinds';
   import { fileSizeMixin, routerMixin } from 'shared/mixins';
   import FileStorage from 'shared/views/files/FileStorage';
   import MessageDialog from 'shared/views/MessageDialog';
@@ -445,6 +446,15 @@
       /* Creation actions */
       createNode(kind, payload = {}) {
         this.enableValidation(this.nodeIds);
+        // Default learning activity on upload
+        if (
+          !Object.keys(payload.learning_activities || {}).length &&
+          kind in ContentKindLearningActivityDefaults
+        ) {
+          payload.learning_activities = {
+            [ContentKindLearningActivityDefaults[kind]]: true,
+          };
+        }
         return this.createContentNode({
           kind,
           parent: this.$route.params.nodeId,
