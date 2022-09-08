@@ -1,6 +1,5 @@
 import Dexie from 'dexie';
 import mapValues from 'lodash/mapValues';
-import { createLeaderElection } from 'broadcast-channel';
 import channel from './broadcastChannel';
 import { CHANGES_TABLE, IGNORED_SOURCE, TABLE_NAMES } from './constants';
 import db from './db';
@@ -11,6 +10,8 @@ import * as resources from './resources';
 // Re-export for ease of reference.
 export { CHANGE_TYPES, TABLE_NAMES } from './constants';
 export { API_RESOURCES, INDEXEDDB_RESOURCES } from './registry';
+
+const { createLeaderElection } = require('broadcast-channel');
 
 export function setupSchema() {
   if (!Object.keys(resources).length) {
