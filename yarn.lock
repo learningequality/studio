@@ -8444,10 +8444,10 @@ marks-pane@^1.0.9:
   resolved "https://registry.yarnpkg.com/marks-pane/-/marks-pane-1.0.9.tgz#c0b5ab813384d8cd81faaeb3bbf3397dc809c1b3"
   integrity sha512-Ahs4oeG90tbdPWwAJkAAoHg2lRR8lAs9mZXETNPO9hYg3AkjUJBKi1NQ4aaIQZVGrig7c/3NUV1jANl8rFTeMg==
 
-material-icons@0.3.1:
-  version "0.3.1"
-  resolved "https://registry.yarnpkg.com/material-icons/-/material-icons-0.3.1.tgz#425e06e2448632d6249d6e1ffe2993682c5b171e"
-  integrity sha512-5Hbj76A6xDPcDZEbM4oxTknhWuMwGWnAHVLLPCEq9eVlcHb0fn4koU9ZeyMy1wjARtDEPAHfd5ZdL2Re5hf0zQ==
+material-icons@1.11.11:
+  version "1.11.11"
+  resolved "https://registry.yarnpkg.com/material-icons/-/material-icons-1.11.11.tgz#5c4936d120d05d2ba948c2b055748ea3ab2d6472"
+  integrity sha512-8Cv9oJ4rqIYq0qHeX/Q3WU34qAXk8sXA9/sdg9BwPMKFhE0eGYPpVJMdSgmXNwmgxRxpMs68DceYVxx4jMNmbA==
 
 mathml-tag-names@^2.1.3:
   version "2.1.3"
