@@ -204,12 +204,12 @@ TEMPLATES = [
 WSGI_APPLICATION = 'contentcuration.wsgi.application'
 ASGI_APPLICATION = 'contentcuration.asgi.application'
 
-
+CHANNELS_DB = 2
 CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
-            "hosts": [('127.0.0.1', 6379)],
+            "hosts": ["{url}{db}".format(url=REDIS_URL, db=CHANNELS_DB)],
         },
     },
 }
