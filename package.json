@@ -100,7 +100,7 @@
     "@vue/test-utils": "1.0.0-beta.29",
     "aphrodite": "https://github.com/learningequality/aphrodite/",
     "autoprefixer": "^9.6.1",
-    "babel-jest": "^26.0.1",
+    "babel-jest": "^29.0.2",
     "circular-dependency-plugin": "^5.2.0",
     "eslint-import-resolver-webpack": "0.13.2",
     "fake-indexeddb": "^4.0.0",
