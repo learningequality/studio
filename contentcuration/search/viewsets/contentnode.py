@@ -7,18 +7,20 @@ from django.db.models import OuterRef
 from django.db.models import Q
 from django.db.models import Subquery
 from django.db.models import Value
+from django.db.models.functions import Coalesce
 from django_filters.rest_framework import BooleanFilter
 from django_filters.rest_framework import CharFilter
 from le_utils.constants import content_kinds
 from le_utils.constants import roles
 from rest_framework.permissions import IsAuthenticated
+from search.models import ContentNodeFullTextSearch
+from search.utils import get_fts_search_query
 
 from contentcuration.models import Channel
-from contentcuration.models import ContentNode
 from contentcuration.models import File
 from contentcuration.utils.pagination import CachedListPagination
+from contentcuration.viewsets.base import ReadOnlyValuesViewset
 from contentcuration.viewsets.base import RequiredFilterSet
-from contentcuration.viewsets.base import ValuesViewset
 from contentcuration.viewsets.common import NotNullMapArrayAgg
 from contentcuration.viewsets.common import UUIDFilter
 from contentcuration.viewsets.common import UUIDInFilter
@@ -48,110 +50,117 @@ class ContentNodeFilter(RequiredFilterSet):
         user = not self.request.user.is_anonymous and self.request.user
         channel_ids = []
         if value == "public":
-            channel_ids = Channel.objects.filter(public=True, deleted=False).values_list("id", flat=True)
+            channel_ids = Channel.objects.filter(public=True, deleted=False, main_tree__published=True).values_list("id", flat=True)
         elif value == "edit" and user:
-            channel_ids = user.editable_channels.values_list("id", flat=True)
+            channel_ids = user.editable_channels.filter(main_tree__published=True).values_list("id", flat=True)
         elif value == "bookmark" and user:
-            channel_ids = user.bookmarked_channels.values_list("id", flat=True)
+            channel_ids = user.bookmarked_channels.filter(main_tree__published=True).values_list("id", flat=True)
         elif value == "view" and user:
-            channel_ids = user.view_only_channels.values_list("id", flat=True)
+            channel_ids = user.view_only_channels.filter(main_tree__published=True).values_list("id", flat=True)
         return queryset.filter(channel_id__in=list(channel_ids))
 
     def filter_keywords(self, queryset, name, value):
-        return ContentNode.search(queryset=queryset, search_term=value)
+        return queryset.filter(Q(keywords_tsvector=get_fts_search_query(value))
+                               | Q(author_tsvector=get_fts_search_query(value)))
 
     def filter_author(self, queryset, name, value):
-        return queryset.filter(
-            Q(author__icontains=value)
-            | Q(aggregator__icontains=value)
-            | Q(provider__icontains=value)
-        )
+        return queryset.filter(author_tsvector=get_fts_search_query(value))
 
     def filter_languages(self, queryset, name, value):
-        return queryset.filter(language__lang_code__in=value.split(","))
+        return queryset.filter(contentnode__language__lang_code__in=value.split(","))
 
     def filter_licenses(self, queryset, name, value):
         licenses = [int(li) for li in value.split(",")]
-        return queryset.filter(license__in=licenses)
+        return queryset.filter(contentnode__license__in=licenses)
 
     def filter_kinds(self, queryset, name, value):
-        return queryset.filter(kind_id__in=value.split(","))
+        return queryset.filter(contentnode__kind_id__in=value.split(","))
 
     def filter_coach(self, queryset, name, value):
-        return queryset.filter(role_visibility=roles.COACH)
+        return queryset.filter(contentnode__role_visibility=roles.COACH)
 
     def filter_resources(self, queryset, name, value):
-        return queryset.exclude(kind_id=content_kinds.TOPIC)
+        return queryset.exclude(contentnode__kind_id=content_kinds.TOPIC)
 
     def filter_assessments(self, queryset, name, value):
-        return queryset.filter(kind_id=content_kinds.EXERCISE)
+        return queryset.filter(contentnode__kind_id=content_kinds.EXERCISE)
 
     def filter_created_after(self, queryset, name, value):
         date = re.search(r"(\d{4})-0?(\d+)-(\d+)", value)
         return queryset.filter(
-            created__year__gte=date.group(1),
-            created__month__gte=date.group(2),
-            created__day__gte=date.group(3),
-        )
-
-    class Meta:
-        model = ContentNode
-        fields = (
-            "keywords",
-            "languages",
-            "licenses",
-            "kinds",
-            "coach",
-            "author",
-            "resources",
-            "assessments",
+            contentnode__created__year__gte=date.group(1),
+            contentnode__created__month__gte=date.group(2),
+            contentnode__created__day__gte=date.group(3),
         )
 
 
-class SearchContentNodeViewSet(ValuesViewset):
+class SearchContentNodeViewSet(ReadOnlyValuesViewset):
     filterset_class = ContentNodeFilter
     pagination_class = ListPagination
     permission_classes = [IsAuthenticated]
 
+    field_map = {
+        "id": "contentnode__id",
+        "content_id": "contentnode__content_id",
+        "node_id": "contentnode__node_id",
+        "title": "contentnode__title",
+        "description": "contentnode__description",
+        "author": "contentnode__author",
+        "provider": "contentnode__provider",
+        "kind__kind": "contentnode__kind__kind",
+        "thumbnail_encoding": "contentnode__thumbnail_encoding",
+        "published": "contentnode__published",
+        "modified": "contentnode__modified",
+        "parent_id": "contentnode__parent_id",
+        "changed": "contentnode__changed",
+    }
+
     values = (
-        "id",
-        "content_id",
-        "node_id",
-        "title",
-        "description",
-        "author",
-        "provider",
-        "kind__kind",
+        "contentnode__id",
+        "contentnode__content_id",
+        "contentnode__node_id",
+        "contentnode__title",
+        "contentnode__description",
+        "contentnode__author",
+        "contentnode__provider",
+        "contentnode__kind__kind",
+        "contentnode__thumbnail_encoding",
+        "contentnode__published",
+        "contentnode__modified",
+        "contentnode__parent_id",
+        "contentnode__changed",
         "channel_id",
         "resource_count",
         "thumbnail_checksum",
         "thumbnail_extension",
-        "thumbnail_encoding",
-        "published",
-        "modified",
-        "parent_id",
-        "changed",
         "content_tags",
         "original_channel_name",
     )
 
     def get_queryset(self):
-        return ContentNode._annotate_channel_id(ContentNode.objects)
+        return ContentNodeFullTextSearch.objects.select_related("contentnode")
 
     def annotate_queryset(self, queryset):
         """
         Annotates thumbnails, resources count and channel name.
         """
         thumbnails = File.objects.filter(
-            contentnode=OuterRef("id"), preset__thumbnail=True
+            contentnode=OuterRef("contentnode__id"), preset__thumbnail=True
         )
 
-        descendant_resources_count = ExpressionWrapper(((F("rght") - F("lft") - Value(1)) / Value(2)), output_field=IntegerField())
+        descendant_resources_count = ExpressionWrapper(((F("contentnode__rght") - F("contentnode__lft") - Value(1)) / Value(2)), output_field=IntegerField())
 
-        channel_name = Subquery(
-            Channel.objects.filter(pk=OuterRef("channel_id")).values(
-                "name"
-            )[:1]
+        original_channel_name = Coalesce(
+            Subquery(
+                Channel.objects.filter(pk=OuterRef("contentnode__original_channel_id")).values(
+                    "name"
+                )[:1]
+            ),
+            Subquery(
+                Channel.objects.filter(main_tree__tree_id=OuterRef("contentnode__tree_id")).values(
+                    "name"
+                )[:1]
+            ),
         )
 
         queryset = queryset.annotate(
@@ -160,8 +169,8 @@ class SearchContentNodeViewSet(ValuesViewset):
             thumbnail_extension=Subquery(
                 thumbnails.values("file_format__extension")[:1]
             ),
-            content_tags=NotNullMapArrayAgg("tags__tag_name"),
-            original_channel_name=channel_name,
+            content_tags=NotNullMapArrayAgg("contentnode__tags__tag_name"),
+            original_channel_name=original_channel_name,
         )
 
         return queryset

@@ -14,13 +14,17 @@ from builtins import str
 from itertools import chain
 
 from django.conf import settings
+from django.contrib.postgres.aggregates import StringAgg
 from django.core.files import File
 from django.core.files.storage import default_storage as storage
 from django.core.management import call_command
 from django.db.models import Count
+from django.db.models import Exists
 from django.db.models import Max
+from django.db.models import OuterRef
 from django.db.models import Q
 from django.db.models import Sum
+from django.db.models import Value
 from django.db.utils import IntegrityError
 from django.template.loader import render_to_string
 from django.utils import timezone
@@ -37,6 +41,13 @@ from le_utils.constants import format_presets
 from le_utils.constants import roles
 from past.builtins import basestring
 from past.utils import old_div
+from search.constants import CHANNEL_KEYWORDS_TSVECTOR
+from search.constants import CONTENTNODE_AUTHOR_TSVECTOR
+from search.constants import CONTENTNODE_KEYWORDS_TSVECTOR
+from search.constants import CONTENTNODE_PREFIXED_AUTHOR_TSVECTOR
+from search.constants import CONTENTNODE_PREFIXED_KEYWORDS_TSVECTOR
+from search.models import ChannelFullTextSearch
+from search.models import ContentNodeFullTextSearch
 
 from contentcuration import models as ccmodels
 from contentcuration.decorators import delay_user_storage_calculation
@@ -808,6 +819,64 @@ def fill_published_fields(channel, version_notes):
     channel.save()
 
 
+def create_or_update_tsvectors(channel_id):
+    """
+    Create or update tsvectors for the channel and all its content nodes.
+    """
+    # Update or create channel tsvector entry.
+    logging.info("Starting to set tsvectors for channel with id {}.".format(channel_id))
+
+    from contentcuration.viewsets.channel import primary_token_subquery
+
+    channel = (ccmodels.Channel.objects
+               .annotate(primary_channel_token=primary_token_subquery,
+                         keywords_tsvector=CHANNEL_KEYWORDS_TSVECTOR)
+               .get(pk=channel_id))
+
+    if ChannelFullTextSearch.objects.filter(channel_id=channel_id).exists():
+        update_count = ChannelFullTextSearch.objects.filter(channel_id=channel_id).update(keywords_tsvector=channel.keywords_tsvector)
+        logging.info("Updated {} channel tsvector.".format(update_count))
+    else:
+        obj = ChannelFullTextSearch(channel_id=channel_id, keywords_tsvector=channel.keywords_tsvector)
+        obj.save()
+        logging.info("Created 1 channel tsvector.")
+
+    # Update or create contentnodes tsvector entry for channel_id.
+    logging.info("Setting tsvectors for all contentnodes in channel {}.".format(channel_id))
+
+    if ContentNodeFullTextSearch.objects.filter(channel_id=channel_id).exists():
+
+        # First, delete nodes that are no longer in main_tree.
+        nodes_no_longer_in_main_tree = ~Exists(channel.main_tree.get_family().filter(id=OuterRef("contentnode_id")))
+        ContentNodeFullTextSearch.objects.filter(nodes_no_longer_in_main_tree, channel_id=channel_id).delete()
+
+        # Now, all remaining nodes are in main_tree, so let's update them.
+        update_count = (ContentNodeFullTextSearch.objects.filter(channel_id=channel_id)
+                        .annotate(contentnode_tags=StringAgg("tags__tag_name", delimiter=" "))
+                        .update(keywords_tsvector=CONTENTNODE_PREFIXED_KEYWORDS_TSVECTOR, author_tsvector=CONTENTNODE_PREFIXED_AUTHOR_TSVECTOR))
+
+    # Insert newly created nodes.
+    nodes_not_having_tsvector_record = ~Exists(ContentNodeFullTextSearch.objects.filter(contentnode_id=OuterRef("id")))
+    nodes_to_insert = (channel.main_tree.get_family()
+                       .filter(nodes_not_having_tsvector_record)
+                       .annotate(channel_id=Value(channel_id),
+                                 contentnode_tags=StringAgg("tags__tag_name", delimiter=" "),
+                                 keywords_tsvector=CONTENTNODE_KEYWORDS_TSVECTOR,
+                                 author_tsvector=CONTENTNODE_AUTHOR_TSVECTOR)
+                       .values("id", "channel_id", "keywords_tsvector", "author_tsvector"))
+
+    insert_objs = list()
+
+    for node in nodes_to_insert:
+        obj = ContentNodeFullTextSearch(contentnode_id=node["id"], channel_id=node["channel_id"],
+                                        keywords_tsvector=node["keywords_tsvector"], author_tsvector=node["author_tsvector"])
+        insert_objs.append(obj)
+
+    inserted_nodes_list = ContentNodeFullTextSearch.objects.bulk_create(insert_objs)
+
+    logging.info("Successfully inserted {} and updated {} contentnode tsvectors.".format(len(inserted_nodes_list), update_count))
+
+
 @delay_user_storage_calculation
 def publish_channel(
     user_id,
@@ -818,6 +887,8 @@ def publish_channel(
     send_email=False,
     progress_tracker=None,
     language=settings.LANGUAGE_CODE,
+
+
 ):
     """
     :type progress_tracker: contentcuration.utils.celery.ProgressTracker|None
@@ -842,6 +913,10 @@ def publish_channel(
         # Delete public channel cache.
         if channel.public:
             delete_public_channel_cache_keys()
+
+        # Enqueue tsvector task to update or create channel tsvectors and all its
+        # contentnodes tsvector entries.
+        create_or_update_tsvectors(channel_id=channel_id)
 
         if send_email:
             with override(language):

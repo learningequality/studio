@@ -8,8 +8,8 @@ from django.contrib.postgres.aggregates import StringAgg
 from django.core.management.base import BaseCommand
 from django.db.models import Exists
 from django.db.models import OuterRef
-from search.models import CONTENTNODE_AUTHOR_TSVECTOR
-from search.models import CONTENTNODE_KEYWORDS_TSVECTOR
+from search.constants import CONTENTNODE_AUTHOR_TSVECTOR
+from search.constants import CONTENTNODE_KEYWORDS_TSVECTOR
 from search.models import ContentNodeFullTextSearch
 
 from contentcuration.models import ContentNode

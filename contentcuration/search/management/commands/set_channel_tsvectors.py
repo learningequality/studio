@@ -7,7 +7,7 @@ import time
 from django.core.management.base import BaseCommand
 from django.db.models import Exists
 from django.db.models import OuterRef
-from search.models import CHANNEL_KEYWORDS_TSVECTOR
+from search.constants import CHANNEL_KEYWORDS_TSVECTOR
 from search.models import ChannelFullTextSearch
 
 from contentcuration.models import Channel
