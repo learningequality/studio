@@ -21,8 +21,6 @@
 
 <script>
 
-  import * as clipboard from 'clipboard-polyfill';
-
   export default {
     name: 'CopyToken',
     props: {
@@ -51,7 +49,7 @@
     },
     methods: {
       copyToken() {
-        clipboard
+        navigator.clipboard
           .writeText(this.displayToken)
           .then(() => {
             let text = this.successText || this.$tr('copiedTokenId');
