@@ -931,16 +931,11 @@ export const Session = new IndexedDBResource({
   async getSession() {
     return this.get(CURRENT_USER);
   },
-  async updateSession(currentUser) {
-    const result = await this.update(CURRENT_USER, currentUser);
-    if (!result) {
-      // put takes an object, not keypaths, so if the current user doesn't exist
-      // we create it with a put, and then call update again.
-      await this.put({
-        CURRENT_USER,
-      });
-      await this.update(CURRENT_USER, currentUser);
-    }
+  setSession(currentUser) {
+    return this.put({ CURRENT_USER, ...currentUser });
+  },
+  updateSession(currentUser) {
+    return this.update(CURRENT_USER, currentUser);
   },
 });
 

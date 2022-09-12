@@ -7,8 +7,6 @@ import { forceServerSync } from 'shared/data/serverSync';
 import translator from 'shared/translator';
 import { applyMods } from 'shared/data/applyRemoteChanges';
 
-const GUEST_USER = {};
-
 function langCode(language) {
   // Turns a Django language name (en-gb) into an ISO language code (en-GB)
   // Copied and modified from Django's to_locale function that does something similar
@@ -30,7 +28,7 @@ function langCode(language) {
 
 export default {
   state: () => ({
-    currentUser: GUEST_USER,
+    currentUser: {},
     preferences:
       window.user_preferences === 'string'
         ? JSON.parse(window.user_preferences)
@@ -54,7 +52,7 @@ export default {
       }
     },
     REMOVE_SESSION(state) {
-      state.currentUser = GUEST_USER;
+      state.currentUser = {};
     },
   },
   getters: {
@@ -98,9 +96,9 @@ export default {
     },
   },
   actions: {
-    async saveSession(context, currentUser) {
-      await Session.updateSession(currentUser);
-      context.commit('ADD_SESSION', currentUser);
+    saveSession(context, currentUser) {
+      // This will trigger the IndexedDB listener to call `ADD_SESSION`
+      return Session.setSession(currentUser);
     },
     login(context, credentials) {
       return client.post(window.Urls.login(), credentials);
