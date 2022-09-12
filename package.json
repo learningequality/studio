@@ -59,7 +59,6 @@
     "ajv": "^8.9.0",
     "axios": "^0.27.2",
     "broadcast-channel": "^4.14.0",
-    "clipboard-polyfill": "^2.8.1",
     "codemirror": "5.58.2",
     "core-js": "^3.25.0",
     "dexie": "^3.2.2",
@@ -91,7 +90,7 @@
     "vue-custom-element": "https://github.com/learningequality/vue-custom-element.git#master",
     "vue-intl": "^3.0.0",
     "vue-router": "3.5.4",
-    "vuetify": "^1.5.24",
+    "vuetify": "^2.6.10",
     "vuex": "^3.0.1",
     "workbox-precaching": "^6.5.4",
     "workbox-window": "^6.5.4"
