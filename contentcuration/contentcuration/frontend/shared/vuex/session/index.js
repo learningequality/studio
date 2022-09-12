@@ -97,7 +97,10 @@ export default {
   },
   actions: {
     saveSession(context, currentUser) {
-      // This will trigger the IndexedDB listener to call `ADD_SESSION`
+      context.commit('ADD_SESSION', currentUser);
+      // This will trigger the IndexedDB listener to call `ADD_SESSION` if this actually creates
+      // the user in IndexedDB, but if we've already saved it to IndexedDB, we want to call the
+      // above `ADD_SESSION` regardless
       return Session.setSession(currentUser);
     },
     login(context, credentials) {
