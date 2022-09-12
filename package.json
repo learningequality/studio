@@ -60,7 +60,7 @@
     "axios": "^0.27.2",
     "broadcast-channel": "^4.14.0",
     "codemirror": "5.58.2",
-    "core-js": "^3.25.0",
+    "core-js": "^3.25.1",
     "dexie": "^3.2.2",
     "dexie-observable": "3.0.0-beta.11",
     "epubjs": "^0.3.89",
