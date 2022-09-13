@@ -1,6 +1,6 @@
 <template>
 
-  <div>
+  <div class="channel-cards">
     <VCard
       class="channel my-3"
       :class="{ hideHighlight, added }"
@@ -430,6 +430,11 @@
 
   /deep/ .thumbnail {
     width: 100%;
+  }
+
+  .channel-cards {
+    display: inline-block;
+    min-width: 100%;
   }
 
 </style>
