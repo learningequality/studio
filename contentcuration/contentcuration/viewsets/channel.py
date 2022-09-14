@@ -122,10 +122,13 @@ class BaseChannelFilter(RequiredFilterSet):
         return queryset.filter(deleted=value)
 
     def filter_keywords(self, queryset, name, value):
+        search_query = get_fts_search_query(value)
+        dash_replaced_search_query = get_fts_search_query(value.replace("-", ""))
+
         channel_keywords_query = (Exists(ChannelFullTextSearch.objects.filter(
-            keywords_tsvector=get_fts_search_query(value.replace("-", "")), channel_id=OuterRef("id"))))
+            Q(keywords_tsvector=search_query) | Q(keywords_tsvector=dash_replaced_search_query), channel_id=OuterRef("id"))))
         contentnode_search_query = (Exists(ContentNodeFullTextSearch.objects.filter(
-            Q(keywords_tsvector=get_fts_search_query(value)) | Q(author_tsvector=get_fts_search_query(value)), channel_id=OuterRef("id"))))
+            Q(keywords_tsvector=search_query) | Q(author_tsvector=search_query), channel_id=OuterRef("id"))))
 
         return queryset.filter(Q(channel_keywords_query) | Q(contentnode_search_query))
 

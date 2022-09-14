@@ -49,19 +49,22 @@ class ContentNodeFilter(RequiredFilterSet):
     def filter_channel_list(self, queryset, name, value):
         user = not self.request.user.is_anonymous and self.request.user
         channel_ids = []
+
         if value == "public":
-            channel_ids = Channel.objects.filter(public=True, deleted=False, main_tree__published=True).values_list("id", flat=True)
+            channel_ids = Channel.get_public_channels().values_list("id", flat=True)
         elif value == "edit" and user:
-            channel_ids = user.editable_channels.filter(main_tree__published=True).values_list("id", flat=True)
+            channel_ids = user.editable_channels.values_list("id", flat=True)
         elif value == "bookmark" and user:
-            channel_ids = user.bookmarked_channels.filter(main_tree__published=True).values_list("id", flat=True)
+            channel_ids = user.bookmarked_channels.values_list("id", flat=True)
         elif value == "view" and user:
-            channel_ids = user.view_only_channels.filter(main_tree__published=True).values_list("id", flat=True)
+            channel_ids = user.view_only_channels.values_list("id", flat=True)
+
         return queryset.filter(channel_id__in=list(channel_ids))
 
     def filter_keywords(self, queryset, name, value):
-        return queryset.filter(Q(keywords_tsvector=get_fts_search_query(value))
-                               | Q(author_tsvector=get_fts_search_query(value)))
+        search_query = get_fts_search_query(value)
+        return queryset.filter(Q(keywords_tsvector=search_query)
+                               | Q(author_tsvector=search_query))
 
     def filter_author(self, queryset, name, value):
         return queryset.filter(author_tsvector=get_fts_search_query(value))
@@ -98,6 +101,7 @@ class SearchContentNodeViewSet(ReadOnlyValuesViewset):
     filterset_class = ContentNodeFilter
     pagination_class = ListPagination
     permission_classes = [IsAuthenticated]
+    queryset = ContentNodeFullTextSearch.objects.all()
 
     field_map = {
         "id": "contentnode__id",
@@ -137,12 +141,9 @@ class SearchContentNodeViewSet(ReadOnlyValuesViewset):
         "original_channel_name",
     )
 
-    def get_queryset(self):
-        return ContentNodeFullTextSearch.objects.select_related("contentnode")
-
     def annotate_queryset(self, queryset):
         """
-        Annotates thumbnails, resources count and channel name.
+        Annotates thumbnails, resources count and original channel name.
         """
         thumbnails = File.objects.filter(
             contentnode=OuterRef("contentnode__id"), preset__thumbnail=True
