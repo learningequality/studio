@@ -3,7 +3,6 @@ import Mutex from 'mutex-js';
 import findIndex from 'lodash/findIndex';
 import flatMap from 'lodash/flatMap';
 import isArray from 'lodash/isArray';
-import isFunction from 'lodash/isFunction';
 import isNumber from 'lodash/isNumber';
 import isString from 'lodash/isString';
 import matches from 'lodash/matches';
@@ -26,6 +25,7 @@ import {
   ACTIVE_CHANNELS,
   CHANNEL_SYNC_KEEP_ALIVE_INTERVAL,
   MAX_REV_KEY,
+  LAST_FETCHED,
 } from './constants';
 import applyChanges, { applyMods, collectChanges } from './applyRemoteChanges';
 import mergeAllChanges from './mergeChanges';
@@ -38,8 +38,6 @@ import urls from 'shared/urls';
 
 // Number of seconds after which data is considered stale.
 const REFRESH_INTERVAL = 5;
-
-const LAST_FETCHED = '__last_fetch';
 
 const QUERY_SUFFIXES = {
   IN: 'in',
@@ -121,14 +119,6 @@ export function injectVuexStore(store) {
 // Custom uuid4 function to match our dashless uuids on the server side
 export function uuid4() {
   return uuidv4().replace(/-/g, '');
-}
-
-/**
- * @param {Function|Object} updater
- * @return {Function}
- */
-export function resolveUpdater(updater) {
-  return isFunction(updater) ? updater : () => updater;
 }
 
 /*
@@ -1338,34 +1328,30 @@ export const ContentNode = new TreeResource({
   move(id, target, position = RELATIVE_TREE_POSITIONS.FIRST_CHILD) {
     return this.resolveTreeInsert(id, target, position, false, data => {
       // Ignore changes from this operation except for the explicit move change we generate.
-      return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, CHANGES_TABLE, () => {
-        return this.tableMove(data);
+      return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, CHANGES_TABLE, async () => {
+        const payload = await this.tableMove(data);
+        await db[CHANGES_TABLE].put(data.change);
+        return payload;
       });
     });
   },
 
-  tableMove({ node, parent, payload, change }) {
-    return this.table
-      .update(node.id, payload)
-      .then(updated => {
-        // Update didn't succeed, this node probably doesn't exist, do a put instead,
-        // but need to add in other parent info.
-        if (!updated) {
-          payload = {
-            ...payload,
-            root_id: parent.root_id,
-          };
-          return this.table.put(payload);
-        }
-      })
-      .then(() => {
-        // Set old parent to changed
-        if (node.parent !== parent.id) {
-          return this.table.update(node.parent, { changed: true });
-        }
-      })
-      .then(() => db[CHANGES_TABLE].put(change))
-      .then(() => payload);
+  async tableMove({ node, parent, payload }) {
+    const updated = await this.table.update(node.id, payload);
+    // Update didn't succeed, this node probably doesn't exist, do a put instead,
+    // but need to add in other parent info.
+    if (!updated) {
+      payload = {
+        ...payload,
+        root_id: parent.root_id,
+      };
+      await this.table.put(payload);
+    }
+    // Set old parent to changed
+    if (node.parent !== parent.id) {
+      await this.table.update(node.parent, { changed: true });
+    }
+    return payload;
   },
 
   /**
@@ -1389,13 +1375,15 @@ export const ContentNode = new TreeResource({
 
       // Ignore changes from this operation except for the
       // explicit copy change we generate.
-      return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, CHANGES_TABLE, () => {
-        return this.tableCopy(data);
+      return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, CHANGES_TABLE, async () => {
+        const payload = await this.tableCopy(data);
+        await db[CHANGES_TABLE].put(data.change);
+        return payload;
       });
     });
   },
 
-  tableCopy({ node, parent, payload, change }) {
+  async tableCopy({ node, parent, payload }) {
     payload = {
       ...node,
       ...payload,
@@ -1416,10 +1404,8 @@ export const ContentNode = new TreeResource({
     };
 
     // Manually put our changes into the tree changes for syncing table
-    return this.table
-      .put(payload)
-      .then(() => db[CHANGES_TABLE].put(change))
-      .then(() => payload);
+    await this.table.put(payload);
+    return payload;
   },
 
   getAncestors(id) {
