@@ -32,7 +32,7 @@ class Command(BaseCommand):
                                .annotate(contentnode_tags=StringAgg("tags__tag_name", delimiter=" "),
                                          keywords_tsvector=CONTENTNODE_KEYWORDS_TSVECTOR,
                                          author_tsvector=CONTENTNODE_AUTHOR_TSVECTOR)
-                               .filter(tsvector_not_already_inserted_query, published=True)
+                               .filter(tsvector_not_already_inserted_query, published=True, channel_id__isnull=False)
                                .values("id", "channel_id", "keywords_tsvector", "author_tsvector").order_by())
 
         insertable_nodes_tsvector = list(tsvector_node_query[:CHUNKSIZE])
@@ -43,10 +43,9 @@ class Command(BaseCommand):
 
             insert_objs = list()
             for node in insertable_nodes_tsvector:
-                if node["channel_id"]:
-                    obj = ContentNodeFullTextSearch(contentnode_id=node["id"], channel_id=node["channel_id"],
-                                                    keywords_tsvector=node["keywords_tsvector"], author_tsvector=node["author_tsvector"])
-                    insert_objs.append(obj)
+                obj = ContentNodeFullTextSearch(contentnode_id=node["id"], channel_id=node["channel_id"],
+                                                keywords_tsvector=node["keywords_tsvector"], author_tsvector=node["author_tsvector"])
+                insert_objs.append(obj)
 
             inserted_objs_list = ContentNodeFullTextSearch.objects.bulk_create(insert_objs)
 
