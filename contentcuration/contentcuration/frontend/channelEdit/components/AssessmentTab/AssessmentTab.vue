@@ -91,15 +91,15 @@
         return this.getAssessmentItems(this.nodeId);
       },
       areAssessmentItemsValid() {
-        return this.getAssessmentItemsAreValid({ contentNodeId: this.nodeId, ignoreNew: true });
+        return this.getAssessmentItemsAreValid({ contentNodeId: this.nodeId, ignoreDelayed: true });
       },
       assessmentItemsErrors() {
-        return this.getAssessmentItemsErrors({ contentNodeId: this.nodeId, ignoreNew: true });
+        return this.getAssessmentItemsErrors({ contentNodeId: this.nodeId, ignoreDelayed: true });
       },
       invalidItemsErrorMessage() {
         const invalidItemsCount = this.getInvalidAssessmentItemsCount({
           contentNodeId: this.nodeId,
-          ignoreNew: true,
+          ignoreDelayed: true,
         });
 
         if (!invalidItemsCount) {

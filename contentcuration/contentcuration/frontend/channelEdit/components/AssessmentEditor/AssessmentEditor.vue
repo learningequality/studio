@@ -132,7 +132,7 @@
   import AssessmentItemEditor from '../AssessmentItemEditor/AssessmentItemEditor';
   import AssessmentItemPreview from '../AssessmentItemPreview/AssessmentItemPreview';
   import Checkbox from 'shared/views/form/Checkbox';
-  import { AssessmentItemTypes } from 'shared/constants';
+  import { AssessmentItemTypes, DELAYED_VALIDATION } from 'shared/constants';
 
   function areItemsEqual(item1, item2) {
     if (!item1 || !item2) {
@@ -245,7 +245,7 @@
         }
         this.$emit('updateItem', {
           ...assessmentItemKey(this.activeItem),
-          isNew: false,
+          [DELAYED_VALIDATION]: false,
         });
         this.activeItem = null;
       },
@@ -313,8 +313,8 @@
           type: AssessmentItemTypes.SINGLE_SELECTION,
           answers: [],
           hints: [],
-          isNew: true,
           order: newItemOrder,
+          [DELAYED_VALIDATION]: true,
         };
 
         let reorderedItems = [...this.sortedItems];
