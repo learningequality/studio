@@ -6,7 +6,7 @@ import pytest
 from dateutil.parser import isoparse
 from django.db.models import F
 from django.db.models import Max
-from django.test import SimpleTestCase
+from django.test import TestCase
 
 from ..base import StudioTestCase
 from contentcuration.models import ContentNode
@@ -42,7 +42,7 @@ class ResourceSizeHelperTestCase(StudioTestCase):
 
 @mock.patch("contentcuration.utils.nodes.ResourceSizeHelper")
 @mock.patch("contentcuration.utils.nodes.ResourceSizeCache")
-class CalculateResourceSizeTestCase(SimpleTestCase):
+class CalculateResourceSizeTestCase(TestCase):
     def setUp(self):
         super(CalculateResourceSizeTestCase, self).setUp()
         self.node = mock.Mock(spec_set=ContentNode())

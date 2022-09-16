@@ -29,6 +29,10 @@ filedurations:
 learningactivities:
 	python contentcuration/manage.py set_default_learning_activities
 
+set-tsvectors:
+	python contentcuration/manage.py set_channel_tsvectors
+	python contentcuration/manage.py set_contentnode_tsvectors
+
 ###############################################################
 # END PRODUCTION COMMANDS #####################################
 ###############################################################
