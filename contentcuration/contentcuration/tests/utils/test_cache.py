@@ -1,18 +1,15 @@
 import mock
-from django.test import SimpleTestCase
-from search.models import ContentNodeFullTextSearch
+from django.test import TestCase
 
 from ..helpers import mock_class_instance
 from contentcuration.models import ContentNode
 from contentcuration.utils.cache import ResourceSizeCache
 
 
-class ResourceSizeCacheTestCase(SimpleTestCase):
+class ResourceSizeCacheTestCase(TestCase):
     def setUp(self):
         super(ResourceSizeCacheTestCase, self).setUp()
-        c = ContentNode()
-        c.node_fts = ContentNodeFullTextSearch()
-        self.node = mock.Mock(spec_set=c)
+        self.node = mock.Mock(spec_set=ContentNode())
         self.node.pk = "abcdefghijklmnopqrstuvwxyz"
         self.redis_client = mock_class_instance("redis.client.StrictRedis")
         self.cache_client = mock_class_instance("django_redis.client.DefaultClient")
