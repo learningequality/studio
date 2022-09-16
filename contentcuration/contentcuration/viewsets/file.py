@@ -156,7 +156,7 @@ class FileViewSet(BulkDeleteMixin, BulkUpdateMixin, ReadOnlyValuesViewset):
 
         might_skip = File.objects.filter(checksum=checksum).exists()
 
-        filepath = generate_object_storage_name(checksum, filename)
+        filepath = generate_object_storage_name(checksum, filename, default_ext=file_format)
         checksum_base64 = codecs.encode(
             codecs.decode(checksum, "hex"), "base64"
         ).decode()
