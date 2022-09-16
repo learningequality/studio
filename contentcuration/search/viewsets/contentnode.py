@@ -4,7 +4,6 @@ from django.db.models import ExpressionWrapper
 from django.db.models import F
 from django.db.models import IntegerField
 from django.db.models import OuterRef
-from django.db.models import Q
 from django.db.models import Subquery
 from django.db.models import Value
 from django.db.models.functions import Coalesce
@@ -62,9 +61,7 @@ class ContentNodeFilter(RequiredFilterSet):
         return queryset.filter(channel_id__in=list(channel_ids))
 
     def filter_keywords(self, queryset, name, value):
-        search_query = get_fts_search_query(value)
-        return queryset.filter(Q(keywords_tsvector=search_query)
-                               | Q(author_tsvector=search_query))
+        return queryset.filter(keywords_tsvector=get_fts_search_query(value))
 
     def filter_author(self, queryset, name, value):
         return queryset.filter(author_tsvector=get_fts_search_query(value))

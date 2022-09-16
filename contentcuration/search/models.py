@@ -25,7 +25,7 @@ class ContentNodeFullTextSearch(models.Model):
     id = StudioUUIDField(primary_key=True, default=uuid.uuid4)
 
     # The contentnode that this record points to.
-    contentnode = models.ForeignKey(ContentNode, on_delete=models.CASCADE, related_name="node_fts")
+    contentnode = models.OneToOneField(ContentNode, on_delete=models.CASCADE, related_name="node_fts")
 
     # The channel to which the contentnode belongs. Channel cannot be NULL because we only allow
     # searches to be made inside channels.
@@ -46,7 +46,7 @@ class ChannelFullTextSearch(models.Model):
     id = StudioUUIDField(primary_key=True, default=uuid.uuid4)
 
     # The channel to which this record points.
-    channel = models.ForeignKey(Channel, on_delete=models.CASCADE, related_name="channel_fts")
+    channel = models.OneToOneField(Channel, on_delete=models.CASCADE, related_name="channel_fts")
 
     # This stores the channel keywords as tsvector for super fast searches.
     keywords_tsvector = SearchVectorField(null=True, blank=True)
