@@ -918,9 +918,9 @@ def create_change_tracker(pk, table, channel_id, user, task_name):
 
     try:
         yield tracker
-    except Exception as e:
+    except Exception:
         task_object.status = states.FAILURE
-        task_object.traceback = e.__traceback__
+        task_object.traceback = traceback.format_exc()
         task_object.save()
     finally:
         if task_object.status == states.STARTED:

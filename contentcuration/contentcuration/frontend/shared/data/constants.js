@@ -51,6 +51,7 @@ export const RELATIVE_TREE_POSITIONS = {
 // Special fields used for copying and other async tasks
 export const COPYING_FLAG = '__COPYING';
 export const TASK_ID = '__TASK_ID';
+export const LAST_FETCHED = '__last_fetch';
 
 // This constant is used for saving/retrieving a current
 // user object from the session table

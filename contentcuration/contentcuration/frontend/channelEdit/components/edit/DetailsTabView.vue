@@ -338,7 +338,10 @@
       <!-- Subtitles -->
       <VLayout v-if="videoSelected" row wrap class="section">
         <VFlex xs12>
-          <SubtitlesList :nodeId="firstNode.id" />
+          <SubtitlesList
+            :nodeId="firstNode.id"
+            @addFile="subtitleFileLanguageComparison"
+          />
         </VFlex>
       </VLayout>
 
@@ -384,7 +387,7 @@
   import VisibilityDropdown from 'shared/views/VisibilityDropdown';
   import Checkbox from 'shared/views/form/Checkbox';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
-  import { NEW_OBJECT, FeatureFlagKeys } from 'shared/constants';
+  import { NEW_OBJECT, FeatureFlagKeys, AccessibilityCategories } from 'shared/constants';
   import { constantsTranslationMixin, metadataTranslationMixin } from 'shared/mixins';
 
   // Define an object to act as the place holder for non unique values.
@@ -808,6 +811,11 @@
         this.$analytics.trackAction('channel_editor_modal_preview', 'Preview', {
           eventLabel: 'File',
         });
+      },
+      subtitleFileLanguageComparison(file) {
+        if (this.oneSelected && this.language === file.language) {
+          this.accessibility = [...this.accessibility, AccessibilityCategories.CAPTIONS_SUBTITLES];
+        }
       },
     },
     $trs: {

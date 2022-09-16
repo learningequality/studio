@@ -99,6 +99,7 @@ export function updateFile(context, { id, ...payload }) {
         }
       }
     }
+    return { id, ...fileData };
   });
 }
 
