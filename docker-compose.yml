@@ -50,7 +50,7 @@ services:
       MINIO_SECRET_KEY: development
       MINIO_API_CORS_ALLOW_ORIGIN: 'http://localhost:8080,http://127.0.0.1:8080'
     volumes:
-      - minio_data:/data
+      - .docker/minio:/data
 
   postgres:
     image: postgres:12
@@ -61,6 +61,7 @@ services:
       POSTGRES_DB: kolibri-studio
     volumes:
       - pgdata:/var/lib/postgresql/data/pgdata
+      - .docker/postgres:/docker-entrypoint-initdb.d
 
   redis:
     image: redis:6.0.9

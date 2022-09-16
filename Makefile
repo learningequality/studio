@@ -138,15 +138,29 @@ devceleryworkers:
 run-services:
 	$(MAKE) -j 2 dcservicesup devceleryworkers
 
+.docker/minio:
+	mkdir -p $@
+
+.docker/postgres:
+	mkdir -p $@
+
+.docker/pgpass:
+	echo "localhost:5432:kolibri-studio:learningequality:kolibri" > .docker/pgpass
+	chmod 600 .docker/pgpass
+
+.docker/postgres/init.sql: .docker/pgpass
+	# assumes postgres is running in a docker container
+	PGPASSFILE=.docker/pgpass pg_dump --host localhost --port 5432 --username learningequality --dbname "kolibri-studio" --file $@
+
 dcbuild:
 	# build all studio docker image and all dependent services using docker-compose
 	docker-compose build
 
-dcup:
+dcup: .docker/minio .docker/postgres
 	# run all services except for cloudprober
 	docker-compose up studio-app celery-worker
 
-dcup-cloudprober:
+dcup-cloudprober: .docker/minio .docker/postgres
 	# run all services including cloudprober
 	docker-compose up
 
@@ -163,11 +177,14 @@ dcshell:
 	# bash shell inside the (running!) studio-app container
 	docker-compose exec studio-app /usr/bin/fish
 
-dctest:
+dcpsql: .docker/pgpass
+	PGPASSFILE=.docker/pgpass psql --host localhost --port 5432 --username learningequality --dbname "kolibri-studio"
+
+dctest: .docker/minio .docker/postgres
 	# run backend tests inside docker, in new instances
 	docker-compose run studio-app make test
 
-dcservicesup:
+dcservicesup: .docker/minio .docker/postgres
 	# launch all studio's dependent services using docker-compose
 	docker-compose -f docker-compose.yml -f docker-compose.alt.yml up minio postgres redis
 
