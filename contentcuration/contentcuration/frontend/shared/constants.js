@@ -196,7 +196,7 @@ export const ContentModalities = {
 export const AccessibilityCategoriesMap = {
   // Note: audio is not included, as it is rendered in the UI differently.
   document: ['ALT_TEXT', 'HIGH_CONTRAST', 'TAGGED_PDF'],
-  video: ['SIGN_LANGUAGE', 'AUDIO_DESCRIPTION', 'CAPTIONS_SUBTITLES'],
+  video: ['CAPTIONS_SUBTITLES', 'AUDIO_DESCRIPTION', 'SIGN_LANGUAGE'],
   exercise: ['ALT_TEXT'],
   html5: ['ALT_TEXT', 'HIGH_CONTRAST'],
 };
