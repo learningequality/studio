@@ -85,6 +85,7 @@ INSTALLED_APPS = (
     'webpack_loader',
     'django_filters',
     'mathfilters',
+    'django.contrib.postgres',
     'django_celery_results',
 )
 
@@ -219,7 +220,6 @@ DATABASES = {
 }
 
 IS_CONTENTNODE_TABLE_PARTITIONED = os.getenv("IS_CONTENTNODE_TABLE_PARTITIONED") or False
-
 
 DATABASE_ROUTERS = [
     "kolibri_content.router.ContentDBRouter",
