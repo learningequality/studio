@@ -27,8 +27,8 @@ class Command(BaseCommand):
 
         channel_not_already_inserted_query = ~Exists(ChannelFullTextSearch.objects.filter(channel_id=OuterRef("id")))
 
-        channel_query = (Channel.objects.select_related("main_tree")
-                         .filter(channel_not_already_inserted_query, deleted=False, main_tree__published=True)
+        channel_query = (Channel.objects.filter(channel_not_already_inserted_query,
+                                                deleted=False, main_tree__published=True)
                          .annotate(primary_channel_token=primary_token_subquery,
                                    keywords_tsvector=CHANNEL_KEYWORDS_TSVECTOR)
                          .values("id", "keywords_tsvector"))
