@@ -380,8 +380,6 @@ export function getNodeFilesErrors(files) {
     if (!validPrimaryFiles.length) {
       errors.push(ValidationErrors.NO_VALID_PRIMARY_FILES);
     }
-  } else if (!files || files.length == 0) {
-    errors.push(ValidationErrors.NO_VALID_PRIMARY_FILES);
   }
   return errors;
 }
