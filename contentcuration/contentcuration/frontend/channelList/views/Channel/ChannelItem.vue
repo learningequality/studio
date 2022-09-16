@@ -1,6 +1,6 @@
 <template>
 
-  <div style="width: 100%;">
+  <div>
     <VCard
       class="channel my-3"
       :class="{ hideHighlight, added }"
