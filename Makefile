@@ -145,8 +145,8 @@ run-services:
 	mkdir -p $@
 
 .docker/pgpass:
-	echo "localhost:5432:kolibri-studio:learningequality:kolibri" > .docker/pgpass
-	chmod 600 .docker/pgpass
+	echo "localhost:5432:kolibri-studio:learningequality:kolibri" > $@
+	chmod 600 $@
 
 .docker/postgres/init.sql: .docker/pgpass
 	# assumes postgres is running in a docker container
