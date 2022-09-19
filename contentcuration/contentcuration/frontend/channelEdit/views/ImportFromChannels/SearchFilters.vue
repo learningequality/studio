@@ -42,8 +42,8 @@
 
     <!-- Show coach content toggle -->
     <Checkbox v-model="coach" class="mb-4 mt-2">
-      <template v-slot:label>
-        <Icon small>
+      <template #label>
+        <Icon small color="roleVisibilityCoach">
           local_library
         </Icon>
         <span class="mx-2 text-xs-left">{{ $tr('coachContentLabel') }}</span>
@@ -212,7 +212,7 @@
       channelSourceLabel: 'Channel/source',
       filtersHeader: 'Filter options',
       kindLabel: 'Format',
-      hideTopicsLabel: 'Hide topics',
+      hideTopicsLabel: 'Hide folders',
       assessmentsLabel: 'Show assessments only',
       licensesLabel: 'License',
       coachContentLabel: 'Show resources for coaches',

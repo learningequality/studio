@@ -21,8 +21,6 @@
 
 <script>
 
-  import * as clipboard from 'clipboard-polyfill';
-
   export default {
     name: 'CopyToken',
     props: {
@@ -37,6 +35,7 @@
       successText: {
         type: String,
         required: false,
+        default: null,
       },
       loading: {
         type: Boolean,
@@ -50,7 +49,7 @@
     },
     methods: {
       copyToken() {
-        clipboard
+        navigator.clipboard
           .writeText(this.displayToken)
           .then(() => {
             let text = this.successText || this.$tr('copiedTokenId');
@@ -77,6 +76,7 @@
   .v-text-field /deep/ input[type='text'] {
     color: var(--v-grey-darken1) !important;
   }
+
   .v-text-field /deep/ .v-input__slot::before {
     border-style: dotted !important;
   }

@@ -1,4 +1,5 @@
 import codecs
+import math
 
 from django.core.exceptions import PermissionDenied
 from django.http import HttpResponseBadRequest
@@ -138,19 +139,24 @@ class FileViewSet(BulkDeleteMixin, BulkUpdateMixin, ReadOnlyValuesViewset):
             file_format = request.data["file_format"]
             preset = request.data["preset"]
         except KeyError:
-            raise HttpResponseBadRequest(
+            return HttpResponseBadRequest(
                 reason="Must specify: size, checksum, name, file_format, and preset"
             )
 
+        duration = request.data.get("duration")
+        if duration is not None:
+            if not isinstance(duration, (int, float)):
+                return HttpResponseBadRequest(reason="File duration must be a number")
+            duration = math.ceil(duration)
+
         try:
             request.user.check_space(float(size), checksum)
-
-        except PermissionDenied as e:
-            return HttpResponseBadRequest(reason=str(e), status=418)
+        except PermissionDenied:
+            return HttpResponseBadRequest(reason="Not enough space. Check your storage under Settings page.", status=412)
 
         might_skip = File.objects.filter(checksum=checksum).exists()
 
-        filepath = generate_object_storage_name(checksum, filename)
+        filepath = generate_object_storage_name(checksum, filename, default_ext=file_format)
         checksum_base64 = codecs.encode(
             codecs.decode(checksum, "hex"), "base64"
         ).decode()
@@ -166,7 +172,7 @@ class FileViewSet(BulkDeleteMixin, BulkUpdateMixin, ReadOnlyValuesViewset):
             file_format_id=file_format,
             preset_id=preset,
             uploaded_by=request.user,
-            duration=request.data.get("duration"),
+            duration=duration,
         )
 
         # Avoid using our file_on_disk attribute for checks

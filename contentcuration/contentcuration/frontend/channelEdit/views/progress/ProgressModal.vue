@@ -1,105 +1,56 @@
 <template>
 
-  <div v-if="isSyncing || nothingToSync || isPublishing">
-    <KModal
-      v-if="!displayCancelModal"
-      data-test="progress-modal"
-      :title="progressModalTitle"
+  <div class="px-1">
+    <div v-if="isSyncing && !syncError" class="grey--text" data-test="progress">
+      <span>{{ $tr('syncHeader') }}</span>&nbsp;<span>{{ progressPercent }}</span>
+    </div>
+    <div
+      v-else-if="syncError"
+      class="red--text"
     >
-      {{ progressModalDescription }}
-
-      <ProgressBar
-        v-if="!nothingToSync"
-        data-test="progress-bar"
-        :progressPercent="progressPercent"
-        :currentTaskError="currentTaskError"
-      />
-      <div
-        v-if="currentTaskError"
-        class="caption mt-2 red--text"
-      >
-        <Icon small color="red">
-          error
-        </Icon>
-        {{ $tr('defaultErrorText') }}
-      </div>
-
-      <template slot="actions">
-        <KButton
-          v-if="isFinished || currentTaskError"
-          primary
-          data-test="refresh-button"
-          @click="cancelTaskAndClose(currentTask)"
-        >
-          {{ $tr('refreshButton') }}
-        </KButton>
-        <KButton
-          v-else
-          primary
-          data-test="stop-button"
-          @click="displayCancelModal = true"
-        >
-          {{ $tr('stopButton') }}
-        </KButton>
-      </template>
-    </KModal>
-
-    <KModal
-      v-else
-      data-test="cancel-modal"
-      :title="$tr('cancelHeader')"
-      :submitText="$tr('confirmStopButton')"
-      :cancelText="$tr('cancel')"
-      @submit="cancelTaskAndClose(currentTask)"
-      @cancel="displayCancelModal = false"
+      <Icon small color="red">
+        error
+      </Icon>
+      {{ $tr('syncError') }}
+    </div>
+    <div
+      v-if="currentPublishTaskError"
+      class="red--text"
     >
-      {{ $tr('cancelText') }}
-    </KModal>
+      <Icon small color="red">
+        error
+      </Icon>
+      {{ $tr('defaultErrorText') }}
+    </div>
+    <div v-else-if="isPublishing" class="grey--text" data-test="progress">
+      <span>{{ $tr('publishHeader') }}</span>&nbsp;<span>{{ progressPercent }}</span>
+    </div>
+    <div v-else class="grey--text">
+      {{ lastPublished ?
+        $tr('lastPublished', { last_published: $formatRelative(lastPublished, now) }) :
+        $tr('unpublishedText')
+      }}
+    </div>
   </div>
 
 </template>
 
 <script>
 
-  import { mapActions, mapGetters } from 'vuex';
+  import { mapGetters } from 'vuex';
   import get from 'lodash/get';
-  import ProgressBar from './ProgressBar';
+  import { TASK_ID } from 'shared/data/constants';
 
   export default {
     name: 'ProgressModal',
-    components: {
-      ProgressBar,
-    },
-    props: {
-      syncing: {
-        type: Boolean,
-        default: false,
-      },
-      noSyncNeeded: {
-        type: Boolean,
-        default: false,
-      },
-    },
-    data() {
-      return {
-        displayCancelModal: false,
-      };
-    },
+    data: () => ({
+      now: Date.now(),
+    }),
     computed: {
-      ...mapGetters('task', ['currentTasksForChannel']),
+      ...mapGetters('task', ['getAsyncTask', 'getPublishTaskForChannel']),
       ...mapGetters('currentChannel', ['currentChannel', 'canManage']),
-      currentTasks() {
-        return this.currentTasksForChannel(this.currentChannel.id) || null;
-      },
       isSyncing() {
-        return this.syncing && this.currentChannel && !this.currentChannel.publishing;
-      },
-      // this handles validation errors from the Sync Resources Modal
-      // where .sync itself errors because of the validation error
-      // for not syncing channels with no imported resources
-      // this property is added her as a way to manager feedback to the user
-      nothingToSync() {
-        return this.isSyncing && this.noSyncNeeded;
+        return this.currentTask && this.currentTask.task_name === 'sync-channel';
       },
       isPublishing() {
         // add condition so that publishing modal is only visible for users
@@ -110,82 +61,56 @@
         return false;
       },
       currentTask() {
-        if (this.isSyncing) {
-          return this.currentTasks.find(task => task.task_type === 'sync-channel');
-        } else if (this.isPublishing) {
-          return this.currentTasks.find(task => task.task_type === 'export-channel');
-        } else {
-          return null;
-        }
+        return this.getAsyncTask(this.currentChannel[TASK_ID]) || null;
       },
       progressPercent() {
-        if (this.nothingToSync) {
-          return 100;
-        }
-        return get(this.currentTask, ['metadata', 'progress'], 0);
-      },
-      isFinished() {
-        return this.progressPercent >= 100;
-      },
-      currentTaskError() {
-        return Boolean(
-          get(this.currentTask, ['metadata', 'error'], null) ||
-            get(this.currentTask, 'status') === 'FAILURE'
-        );
-      },
-      progressModalTitle() {
-        if (this.isPublishing) {
-          return this.$tr('publishHeader');
-        }
-        if (this.isSyncing || this.nothingToSync) {
-          return this.$tr('syncHeader');
-        }
-        return '';
-      },
-      progressModalDescription() {
-        if (this.isPublishing) {
-          return this.$tr('publishDescription');
-        }
-        if (this.isFinished && (this.isSyncing || this.nothingToSync)) {
-          return this.$tr('finishedMessage');
-        } else if ((this.currentTask && this.isPublishing) || this.currentChannel.publishing) {
-          return this.$tr('publishDescription');
-        } else if (this.syncing || (this.currentTask && this.isSyncing)) {
-          return this.$tr('syncDescription');
-        }
-        if (this.isSyncing || this.nothingToSync) {
-          return this.$tr('syncDescription');
-        }
-        return '';
-      },
-    },
-    methods: {
-      ...mapActions('currentChannel', ['stopTask']),
-      cancelTaskAndClose(task) {
-        this.stopTask(task).then(() => {
-          window.location.reload();
+        const progressPercent = get(this.currentTask, ['progress'], 0);
+        return this.$formatNumber(Math.round(progressPercent || 0) / 100, {
+          style: 'percent',
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 0,
         });
       },
+      currentPublishTaskError() {
+        const publishTask = this.getPublishTaskForChannel(this.currentChannel.id);
+        return Boolean(
+          (publishTask && get(publishTask, ['traceback'], null)) ||
+            get(publishTask, 'status') === 'FAILURE'
+        );
+      },
+      syncError() {
+        return (
+          this.isSyncing &&
+          (get(this.currentTask, ['traceback'], null) ||
+            get(this.currentTask, 'status') === 'FAILURE')
+        );
+      },
+      lastPublished() {
+        if (!this.currentChannel.last_published) {
+          return null;
+        }
+        const date = new Date(this.currentChannel.last_published);
+        if (date > this.now) {
+          return this.now;
+        }
+        return date;
+      },
+    },
+    mounted() {
+      this.timer = setInterval(() => {
+        this.now = Date.now();
+      }, 10000);
+    },
+    beforeDestroy() {
+      clearInterval(this.timer);
     },
     $trs: {
-      /* eslint-disable kolibri/vue-no-unused-translations */
-      defaultHeader: 'Updating channel',
-      defaultDescription: 'Update is in progress, please wait...',
-      /* eslint-enable */
-      defaultErrorText:
-        'An unexpected error has occurred. Please try again, and if you continue to see this message, please contact support via the Help menu.',
-      finishedMessage: 'Operation complete! Click "Refresh" to update the page.',
+      defaultErrorText: 'Last publish failed.',
       publishHeader: 'Publishing channel',
-      publishDescription:
-        'Once publishing is complete, you will receive an email notification and will be able to make further edits to your channel.',
+      lastPublished: 'Published {last_published}',
+      unpublishedText: 'Unpublished',
       syncHeader: 'Syncing channel',
-      syncDescription: 'Channel syncing is in progress, please wait...',
-      stopButton: 'Stop',
-      refreshButton: 'Refresh',
-      cancel: 'No, go back',
-      confirmStopButton: 'Yes, stop task',
-      cancelHeader: 'Are you sure?',
-      cancelText: 'Are you sure you would like to cancel this task?',
+      syncError: 'Last sync failed',
     },
   };
 

@@ -361,7 +361,7 @@ def create_tags(cursor, contentnode, target_id, indent=0):
         tag_list.append(tag_obj)
 
     # Save tags to node
-    contentnode.tags = tag_list
+    contentnode.tags.set(tag_list)
     contentnode.save()
 
 

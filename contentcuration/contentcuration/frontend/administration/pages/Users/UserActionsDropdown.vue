@@ -36,7 +36,7 @@
       v-model="emailDialog"
       :query="{ ids: [userId] }"
     />
-    <VMenu offsetY>
+    <Menu>
       <template #activator="{ on }">
         <VBtn v-bind="$attrs" v-on="on">
           Actions
@@ -88,7 +88,7 @@
           </VListTile>
         </template>
       </VList>
-    </VMenu>
+    </Menu>
   </div>
 
 </template>

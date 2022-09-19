@@ -2,9 +2,7 @@ import Dexie from 'dexie';
 import Mutex from 'mutex-js';
 import findIndex from 'lodash/findIndex';
 import flatMap from 'lodash/flatMap';
-import get from 'lodash/get';
 import isArray from 'lodash/isArray';
-import isFunction from 'lodash/isFunction';
 import isNumber from 'lodash/isNumber';
 import isString from 'lodash/isString';
 import matches from 'lodash/matches';
@@ -14,7 +12,7 @@ import sortBy from 'lodash/sortBy';
 import uniq from 'lodash/uniq';
 import uniqBy from 'lodash/uniqBy';
 
-import uuidv4 from 'uuid/v4';
+import { v4 as uuidv4 } from 'uuid';
 import {
   CHANGE_TYPES,
   CHANGES_TABLE,
@@ -24,19 +22,22 @@ import {
   COPYING_FLAG,
   TASK_ID,
   CURRENT_USER,
+  ACTIVE_CHANNELS,
+  CHANNEL_SYNC_KEEP_ALIVE_INTERVAL,
+  MAX_REV_KEY,
+  LAST_FETCHED,
 } from './constants';
 import applyChanges, { applyMods, collectChanges } from './applyRemoteChanges';
 import mergeAllChanges from './mergeChanges';
-import db, { CLIENTID, Collection } from './db';
+import db, { channelScope, CLIENTID, Collection } from './db';
 import { API_RESOURCES, INDEXEDDB_RESOURCES } from './registry';
-import { fileErrors, NEW_OBJECT } from 'shared/constants';
+import { DELAYED_VALIDATION, fileErrors, NEW_OBJECT } from 'shared/constants';
 import client, { paramsSerializer } from 'shared/client';
+import { currentLanguage } from 'shared/i18n';
 import urls from 'shared/urls';
 
 // Number of seconds after which data is considered stale.
 const REFRESH_INTERVAL = 5;
-
-const LAST_FETCHED = '__last_fetch';
 
 const QUERY_SUFFIXES = {
   IN: 'in',
@@ -109,17 +110,15 @@ class Paginator {
   }
 }
 
+let vuexStore;
+
+export function injectVuexStore(store) {
+  vuexStore = store;
+}
+
 // Custom uuid4 function to match our dashless uuids on the server side
 export function uuid4() {
   return uuidv4().replace(/-/g, '');
-}
-
-/**
- * @param {Function|Object} updater
- * @return {Function}
- */
-export function resolveUpdater(updater) {
-  return isFunction(updater) ? updater : () => updater;
 }
 
 /*
@@ -240,8 +239,12 @@ class IndexedDBResource {
    * in a way that doesn't trigger listeners from the client that
    * initiated it by setting the CLIENTID.
    */
-  transaction({ mode = 'rw', source = CLIENTID } = {}, ...extraTables) {
+  transaction({ mode = 'rw', source = null } = {}, ...extraTables) {
     const callback = extraTables.pop();
+    if (source === null) {
+      const channelScopeId = channelScope.id;
+      source = channelScopeId === null ? CLIENTID : `${CLIENTID}::${channelScopeId}`;
+    }
     return db.transaction(mode, this.tableName, ...extraTables, () => {
       Dexie.currentTransaction.source = source;
       return callback();
@@ -482,7 +485,7 @@ class IndexedDBResource {
   }
 
   /**
-   * Method to remove the NEW_OBJECT
+   * Method to remove the NEW_OBJECT and DELAYED_VALIDATION symbols
    * property so we don't commit it to IndexedDB
    * @param {Object} obj
    * @return {Object}
@@ -492,6 +495,7 @@ class IndexedDBResource {
       ...obj,
     };
     delete out[NEW_OBJECT];
+    delete out[DELAYED_VALIDATION];
     return out;
   }
 
@@ -586,6 +590,26 @@ class IndexedDBResource {
     return this.transaction({ mode: 'rw' }, () => {
       return this.table.delete(id);
     });
+  }
+
+  /**
+   * Set the channel_id property on a change
+   * object before we put it in the store, if relevant
+   * @param {Object} change
+   * @returns {Object}
+   */
+  setChannelIdOnChange(change) {
+    return change;
+  }
+
+  /**
+   * Set the user_id property on a change
+   * object before we put it in the store, if relevant
+   * @param {Object} change
+   * @returns {Object}
+   */
+  setUserIdOnChange(change) {
+    return change;
   }
 }
 
@@ -852,6 +876,69 @@ export const Session = new IndexedDBResource({
       }
     },
   },
+  get currentChannel() {
+    return window.CHANNEL_EDIT_GLOBAL || {};
+  },
+  get currentChannelId() {
+    return this.currentChannel.channel_id || null;
+  },
+  channelSyncKeepAlive() {
+    if (this.currentChannelId && document.hasFocus()) {
+      this.updateSession({ [`${ACTIVE_CHANNELS}.${this.currentChannelId}`]: Date.now() });
+    }
+  },
+  monitorKeepAlive() {
+    if (this.currentChannelId) {
+      this.channelSyncKeepAlive();
+      if (!this._keepAliveInterval) {
+        this._keepAliveInterval = setInterval(
+          () => this.channelSyncKeepAlive(),
+          CHANNEL_SYNC_KEEP_ALIVE_INTERVAL
+        );
+      }
+    }
+  },
+  stopMonitorKeepAlive() {
+    if (this._keepAliveInterval) {
+      clearInterval(this._keepAliveInterval);
+      this._keepAliveInterval = null;
+    }
+  },
+  async setChannelScope() {
+    const channelId = this.currentChannelId;
+    if (channelId) {
+      channelScope.id = channelId;
+      const channelRev = (window.CHANNEL_EDIT_GLOBAL || {}).channel_rev || 0;
+      // N.B. key paths produce nested updates in Dexie.js when using the update method,
+      // as in the `updateSession` method below.
+      await this.updateSession({
+        [`${MAX_REV_KEY}.${channelId}`]: channelRev,
+      });
+      this.monitorKeepAlive();
+      window.addEventListener('focus', () => this.monitorKeepAlive());
+      window.addEventListener('blur', () => this.stopMonitorKeepAlive());
+    }
+  },
+  async getSession() {
+    return this.get(CURRENT_USER);
+  },
+  setSession(currentUser) {
+    return this.put({ CURRENT_USER, ...currentUser });
+  },
+  updateSession(currentUser) {
+    return this.update(CURRENT_USER, currentUser);
+  },
+});
+
+export const Bookmark = new Resource({
+  tableName: TABLE_NAMES.BOOKMARK,
+  urlName: 'bookmark',
+  idField: 'channel',
+  setUserIdOnChange(change) {
+    if (vuexStore) {
+      change.user_id = vuexStore.getters.currentUserId;
+    }
+  },
 });
 
 export const Channel = new Resource({
@@ -913,36 +1000,44 @@ export const Channel = new Resource({
     return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
       return this.table.update(id, { publishing: true });
     }).then(() => {
-      return client
-        .post(this.getUrlFunction('publish')(id), {
-          version_notes,
-        })
-        .then(response => {
-          // The endpoint may return a Task create event in `changes`
-          return applyChanges(response.data.changes || []);
-        })
-        .catch(() => this.clearPublish(id));
-    });
-  },
-
-  clearPublish(id) {
-    return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
-      return this.table.update(id, { publishing: false });
+      const change = {
+        key: id,
+        version_notes,
+        language: currentLanguage,
+        source: CLIENTID,
+        table: this.tableName,
+        type: CHANGE_TYPES.PUBLISHED,
+        channel_id: id,
+      };
+      return this.transaction(
+        { mode: 'rw', source: IGNORED_SOURCE },
+        CHANGES_TABLE,
+        TABLE_NAMES.CONTENTNODE,
+        () => {
+          return Promise.all([
+            db[CHANGES_TABLE].put(change),
+            ContentNode.table.where({ channel_id: id }).modify({ changed: false, published: true }),
+          ]);
+        }
+      );
     });
   },
 
   sync(id, { attributes = false, tags = false, files = false, assessment_items = false } = {}) {
-    return client
-      .post(this.getUrlFunction('sync')(id), {
-        attributes,
-        tags,
-        files,
-        assessment_items,
-      })
-      .then(response => {
-        // The endpoint may return a Task create event in `changes`
-        return applyChanges(response.data.changes || []);
-      });
+    const change = {
+      key: id,
+      attributes,
+      tags,
+      files,
+      assessment_items,
+      source: CLIENTID,
+      table: this.tableName,
+      type: CHANGE_TYPES.SYNCED,
+      channel_id: id,
+    };
+    return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, CHANGES_TABLE, () => {
+      return db[CHANGES_TABLE].put(change);
+    });
   },
 
   softDelete(id) {
@@ -953,10 +1048,21 @@ export const Channel = new Resource({
     }).then(() => {
       // make sure transaction is closed before calling a non-Dexie async function
       // see here: https://bit.ly/3dJtsIe
-      return client.patch(modelUrl, { deleted: true });
+      return client.delete(modelUrl);
     });
   },
+  setChannelIdOnChange(change) {
+    // For channels, the appropriate channel_id for a change is just the key
+    change.channel_id = change.key;
+  },
 });
+
+function setChannelIdFromTransactionSource(change) {
+  const channel_id = change.source.split('::').slice(1)[0];
+  if (channel_id) {
+    change.channel_id = channel_id;
+  }
+}
 
 export const ContentNodePrerequisite = new IndexedDBResource({
   tableName: TABLE_NAMES.CONTENTNODE_PREREQUISITE,
@@ -964,6 +1070,7 @@ export const ContentNodePrerequisite = new IndexedDBResource({
   idField: '[target_node+prerequisite]',
   uuid: false,
   syncable: true,
+  setChannelIdOnChange: setChannelIdFromTransactionSource,
 });
 
 export const ContentNode = new TreeResource({
@@ -1060,10 +1167,7 @@ export const ContentNode = new TreeResource({
    * @returns {{ size: Number, stale: Boolean, changes: [{key: string}]}}
    */
   getResourceSize(id) {
-    return client.get(this.getUrlFunction('size')(id)).then(response => {
-      // The endpoint may return a Task create event in `changes`
-      return applyChanges(response.data.changes || []).then(() => response.data);
-    });
+    return client.get(this.getUrlFunction('size')(id)).then(response => response.data);
   },
 
   /**
@@ -1127,8 +1231,11 @@ export const ContentNode = new TreeResource({
       // Using root_id, we'll keep this locked while we handle this, so no other operations
       // happen while we're potentially waiting for some data we need (siblings, source node)
       return this.treeLock(parent.root_id, () => {
+        // Don't trigger fetch, if this is specified as a creation
+        const getNode = isCreate ? this.table.get(id) : this.get(id, false);
+
         // Preload the ID we're referencing, and get siblings to determine sort order
-        return Promise.all([this.get(id, false), this.where({ parent: parent.id }, false)]).then(
+        return Promise.all([getNode, this.where({ parent: parent.id }, false)]).then(
           ([node, siblings]) => {
             let lft = 1;
             if (siblings.length) {
@@ -1148,9 +1255,28 @@ export const ContentNode = new TreeResource({
             const payload = {
               id: isCreate ? uuid4() : id,
               parent: parent.id,
+              root_id: parent.root_id,
               lft,
               changed: true,
             };
+
+            let channel_id = parent.channel_id;
+
+            // This should really only happen when this is a move operation to the trash tree.
+            // Other cases like copying shouldn't encounter this because they should always have the
+            // channel_id on the destination. The trash tree root node does not have the channel_id
+            // annotated on it, and using the source node's channel_id should be reliable
+            // in that case
+            if (!channel_id && node) {
+              channel_id = node.channel_id;
+
+              // The change would be disallowed anyway, so prevent the frontend from applying it
+              if (!channel_id) {
+                return Promise.reject(
+                  new Error('Missing channel_id for tree insertion change event')
+                );
+              }
+            }
 
             // Prep the change data tracked in the changes table
             const change = {
@@ -1162,6 +1288,7 @@ export const ContentNode = new TreeResource({
               source: CLIENTID,
               table: this.tableName,
               type: isCreate ? CHANGE_TYPES.COPIED : CHANGE_TYPES.MOVED,
+              channel_id,
             };
 
             return callback({
@@ -1176,37 +1303,56 @@ export const ContentNode = new TreeResource({
     });
   },
 
+  // Retain super's put method that does not handle tree insertion
+  _put: TreeResource.prototype.put,
+
+  /**
+   * @param {Object} obj
+   * @return {Promise<string>}
+   */
+  put(obj) {
+    const prepared = this._preparePut(obj);
+
+    return this.resolveTreeInsert(
+      prepared.id,
+      prepared.parent,
+      RELATIVE_TREE_POSITIONS.LAST_CHILD,
+      true,
+      data => {
+        return this.transaction({ mode: 'rw' }, () => {
+          return this.table.put({ ...prepared, ...data.payload });
+        });
+      }
+    );
+  },
+
   move(id, target, position = RELATIVE_TREE_POSITIONS.FIRST_CHILD) {
     return this.resolveTreeInsert(id, target, position, false, data => {
       // Ignore changes from this operation except for the explicit move change we generate.
-      return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, CHANGES_TABLE, () => {
-        return this.tableMove(data);
+      return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, CHANGES_TABLE, async () => {
+        const payload = await this.tableMove(data);
+        await db[CHANGES_TABLE].put(data.change);
+        return payload;
       });
     });
   },
 
-  tableMove({ node, parent, payload, change }) {
-    return this.table
-      .update(node.id, payload)
-      .then(updated => {
-        // Update didn't succeed, this node probably doesn't exist, do a put instead,
-        // but need to add in other parent info.
-        if (!updated) {
-          payload = {
-            ...payload,
-            root_id: parent.root_id,
-          };
-          return this.table.put(payload);
-        }
-      })
-      .then(() => {
-        // Set old parent to changed
-        if (node.parent !== parent.id) {
-          return this.table.update(node.parent, { changed: true });
-        }
-      })
-      .then(() => db[CHANGES_TABLE].put(change))
-      .then(() => payload);
+  async tableMove({ node, parent, payload }) {
+    const updated = await this.table.update(node.id, payload);
+    // Update didn't succeed, this node probably doesn't exist, do a put instead,
+    // but need to add in other parent info.
+    if (!updated) {
+      payload = {
+        ...payload,
+        root_id: parent.root_id,
+      };
+      await this.table.put(payload);
+    }
+    // Set old parent to changed
+    if (node.parent !== parent.id) {
+      await this.table.update(node.parent, { changed: true });
+    }
+    return payload;
   },
 
   /**
@@ -1230,13 +1376,15 @@ export const ContentNode = new TreeResource({
 
       // Ignore changes from this operation except for the
       // explicit copy change we generate.
-      return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, CHANGES_TABLE, () => {
-        return this.tableCopy(data);
+      return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, CHANGES_TABLE, async () => {
+        const payload = await this.tableCopy(data);
+        await db[CHANGES_TABLE].put(data.change);
+        return payload;
       });
     });
   },
 
-  tableCopy({ node, parent, payload, change }) {
+  async tableCopy({ node, parent, payload }) {
     payload = {
       ...node,
       ...payload,
@@ -1257,10 +1405,8 @@ export const ContentNode = new TreeResource({
     };
 
     // Manually put our changes into the tree changes for syncing table
-    return this.table
-      .put(payload)
-      .then(() => db[CHANGES_TABLE].put(change))
-      .then(() => payload);
+    await this.table.put(payload);
+    return payload;
   },
 
   getAncestors(id) {
@@ -1296,6 +1442,37 @@ export const ContentNode = new TreeResource({
       return node;
     });
   },
+  setChannelIdOnChange: setChannelIdFromTransactionSource,
+
+  /**
+   * Waits for copying of content nodes to complete for all ids referenced in `ids` array
+   * @param {string[]} ids
+   * @returns {Promise<void>}
+   */
+  waitForCopying(ids) {
+    const observable = Dexie.liveQuery(() => {
+      return this.table
+        .where('id')
+        .anyOf(ids)
+        .filter(node => !node[COPYING_FLAG])
+        .toArray();
+    });
+
+    return new Promise((resolve, reject) => {
+      const subscription = observable.subscribe({
+        next(result) {
+          if (result.length === ids.length) {
+            subscription.unsubscribe();
+            resolve();
+          }
+        },
+        error() {
+          subscription.unsubscribe();
+          reject();
+        },
+      });
+    });
+  },
 });
 
 export const ChannelSet = new Resource({
@@ -1315,6 +1492,12 @@ export const Invitation = new Resource({
         return this.table.update(id, changes);
       });
     });
+  },
+  setChannelIdOnChange(change) {
+    change.channel_id = change.obj.channel;
+  },
+  setUserIdOnChange(change) {
+    change.user_id = change.obj.invited;
   },
 });
 
@@ -1350,6 +1533,12 @@ export const EditorM2M = new IndexedDBResource({
   idField: '[user+channel]',
   uuid: false,
   syncable: true,
+  setChannelIdOnChange(change) {
+    change.channel_id = change.obj.channel;
+  },
+  setUserIdOnChange(change) {
+    change.user_id = change.obj.user;
+  },
 });
 
 export const ViewerM2M = new IndexedDBResource({
@@ -1358,6 +1547,12 @@ export const ViewerM2M = new IndexedDBResource({
   idField: '[user+channel]',
   uuid: false,
   syncable: true,
+  setChannelIdOnChange(change) {
+    change.channel_id = change.obj.channel;
+  },
+  setUserIdOnChange(change) {
+    change.user_id = change.obj.user;
+  },
 });
 
 export const ChannelUser = new APIResource({
@@ -1504,13 +1699,14 @@ export const AssessmentItem = new Resource({
       });
     });
   },
+  setChannelIdOnChange: setChannelIdFromTransactionSource,
 });
 
 export const File = new Resource({
   tableName: TABLE_NAMES.FILE,
   urlName: 'file',
   indexFields: ['contentnode'],
-  uploadUrl({ checksum, size, type, name, file_format, preset }) {
+  uploadUrl({ checksum, size, type, name, file_format, preset, duration = null }) {
     return client
       .post(this.getUrlFunction('upload_url')(), {
         checksum,
@@ -1519,6 +1715,7 @@ export const File = new Resource({
         name,
         file_format,
         preset,
+        duration,
       })
       .then(response => {
         if (!response) {
@@ -1531,6 +1728,7 @@ export const File = new Resource({
         });
       });
   },
+  setChannelIdOnChange: setChannelIdFromTransactionSource,
 });
 
 export const Clipboard = new TreeResource({
@@ -1577,53 +1775,30 @@ export const Clipboard = new TreeResource({
         extra_fields,
       };
 
-      return this.transaction({ mode: 'rw' }, () => {
+      return this.transaction({ mode: 'rw' }, CHANGES_TABLE, () => {
         return this.table.put(data).then(() => data);
       });
     });
   },
+  setUserIdOnChange(change) {
+    if (vuexStore) {
+      change.user_id = vuexStore.getters.currentUserId;
+    }
+  },
 });
 
-function deleteMoveTasks(change) {
-  if (change.obj.status === 'SUCCESS' || change.obj.status === 'FAILED') {
-    if (change.obj.task_type === 'move-nodes') {
-      Task.delete(change.key);
-    }
-  }
-}
-
-function deleteDeleteNodeTasks(change) {
-  if (change.obj.status === 'SUCCESS' || change.obj.status === 'FAILED') {
-    if (change.obj.task_type === 'delete-node') {
-      Task.delete(change.key);
-    }
-  }
-}
-
-export const Task = new Resource({
+export const Task = new IndexedDBResource({
   tableName: TABLE_NAMES.TASK,
-  urlName: 'task',
   idField: 'task_id',
-  listeners: {
-    [CHANGE_TYPES.CREATED]: function(change) {
-      if (change.obj.status === 'SUCCESS') {
-        const changes = get(change.obj, ['metadata', 'result', 'changes']);
-        if (changes) {
-          applyChanges(changes);
-        }
-      }
-      deleteMoveTasks(change);
-      deleteDeleteNodeTasks(change);
-    },
-    [CHANGE_TYPES.UPDATED]: function(change) {
-      if (change.mods.status === 'SUCCESS') {
-        const changes = get(change.obj, ['metadata', 'result', 'changes']);
-        if (changes) {
-          applyChanges(changes);
-        }
-      }
-      deleteMoveTasks(change);
-      deleteDeleteNodeTasks(change);
-    },
+  setTasks(tasks) {
+    return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
+      return this.table
+        .where(this.idField)
+        .noneOf(tasks.map(t => t[this.idField]))
+        .delete()
+        .then(() => {
+          return this.table.bulkPut(tasks);
+        });
+    });
   },
 });

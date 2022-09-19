@@ -4,8 +4,22 @@ UPDATED = 2
 DELETED = 3
 MOVED = 4
 COPIED = 5
+PUBLISHED = 6
+SYNCED = 7
+
+
+ALL_CHANGES = set([
+    CREATED,
+    UPDATED,
+    DELETED,
+    MOVED,
+    COPIED,
+    PUBLISHED,
+    SYNCED,
+])
 
 # Client-side table constants
+BOOKMARK = "bookmark"
 CHANNEL = "channel"
 CONTENTNODE = "contentnode"
 CONTENTNODE_PREREQUISITE = "contentnode_prerequisite"
@@ -18,11 +32,11 @@ EDITOR_M2M = "editor_m2m"
 VIEWER_M2M = "viewer_m2m"
 SAVEDSEARCH = "savedsearch"
 CLIPBOARD = "clipboard"
-TASK = "task"
 
 
 ALL_TABLES = set(
     [
+        BOOKMARK,
         CHANNEL,
         CLIPBOARD,
         CONTENTNODE,
@@ -35,14 +49,8 @@ ALL_TABLES = set(
         SAVEDSEARCH,
         EDITOR_M2M,
         VIEWER_M2M,
-        TASK,
     ]
 )
-
-
-# Using this as a workaround for not having a proper event source
-# this key will hold events for propagation in redis
-USER_CHANGES_PREFIX = "user_changes_{user_id}"
 
 
 # Key to use for whether a node is currently copying

@@ -25,8 +25,6 @@ from rest_framework.utils import html
 
 from contentcuration.models import DEFAULT_CONTENT_DEFAULTS
 from contentcuration.models import License
-from contentcuration.viewsets.sync.constants import TASK
-from contentcuration.viewsets.sync.utils import generate_create_event
 
 
 class MissingRequiredParamsException(APIException):
@@ -134,11 +132,29 @@ class DotPathValueMixin(object):
         # then merge in fields with keys like `content_defaults.author`
         multi_value = MultiValueDict()
         multi_value.update(dictionary)
-        html_value = unnest_dict(
-            html.parse_html_dict(multi_value, prefix=self.field_name).dict()
-        )
-        value.update(html_value)
+        html_value = html.parse_html_dict(multi_value, prefix=self.field_name).dict()
 
+        fields = getattr(self, "fields", {})
+
+        for key in html_value:
+            # Split on the first occurrence of a "." in case we are dealing with a dot path
+            # referencing a child field of this field.
+            keys = key.split(".", 1)
+            # Only attempt to use this if there is a dot path, and the parent of the dot path is
+            # a valid child field. Otherwise, we just use the value as-is.
+            if key not in fields and len(keys) == 2 and keys[0] in fields:
+                # If it is a valid child field, we invoke the nested field's get_value method
+                # with the value of the child field.
+                # N.B. the get_value method expects a dictionary that references the field's name
+                # not just the value.
+                nested_value = fields[keys[0]].get_value({keys[0]: {keys[1]: html_value[key]}})
+                if keys[0] not in value:
+                    value[keys[0]] = {}
+                value[keys[0]].update(nested_value)
+                if key in value:
+                    del value[key]
+            else:
+                value[key] = html_value[key]
         return value if value.keys() else empty
 
 
@@ -151,7 +167,20 @@ class JSONFieldDictSerializer(DotPathValueMixin, serializers.Serializer):
         return instance
 
     def update(self, instance, validated_data):
-        instance.update(validated_data)
+        instance = instance or self.default_value()
+        for key, value in validated_data.items():
+            if value is None:
+                # If the value is None, we delete the key from the instance.
+                # Silently ignore deletion of values that don't exist
+                if key in instance:
+                    del instance[key]
+            elif hasattr(self.fields[key], "update"):
+                # If the nested field has an update method (e.g. a nested serializer),
+                # call the update value so that we can do any recursive updates
+                instance[key] = self.fields[key].update(instance.get(key, {}), validated_data[key])
+            else:
+                # Otherwise, just update the value
+                instance[key] = validated_data[key]
         return instance
 
 
@@ -250,14 +279,3 @@ class UserFilteredPrimaryKeyRelatedField(PrimaryKeyRelatedField):
                 "UserFilteredPrimaryKeyRelatedField used on queryset for model that does not have filter_edit_queryset method"
             )
         return queryset
-
-
-class ChangeEventMixin(object):
-    def create_task_event(self, task):
-        """
-        :type task: contentcuration.models.Task
-        """
-        from contentcuration.viewsets.task import TaskViewSet
-        task_viewset = TaskViewSet(request=self.request)
-        task_viewset.initial(self.request)
-        return generate_create_event(task.task_id, TASK, task_viewset.serialize_object(pk=task.pk))

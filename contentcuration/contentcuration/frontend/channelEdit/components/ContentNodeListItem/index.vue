@@ -28,8 +28,10 @@
                     'py-3': isCompact,
                   }"
                 >
-                  <Thumbnail
+                  <ImageOnlyThumbnail
                     v-bind="thumbnailAttrs"
+                    :isTopic="isTopic"
+                    :learningActivities="node.learning_activities"
                     :compact="isCompact"
                     :isEmpty="node.total_count === 0"
                   />
@@ -45,7 +47,7 @@
                     <VLayout row>
                       <VFlex shrink class="text-truncate">
                         <h3
-                          v-if="hasTitle(node) || !canEdit || copying || node.isNew"
+                          v-if="hasTitle(node) || !canEdit || copying || isNew"
                           class="notranslate text-truncate"
                           :class="[
                             isCompact ? 'font-weight-regular' : '',
@@ -56,30 +58,58 @@
                           {{ getTitle(node) }}
                         </h3>
                       </VFlex>
+                      <VFlex v-if="!isTopic && isCoach" class="px-1">
+                        <Icon
+                          color="roleVisibilityCoach"
+                          small
+                          style="vertical-align: middle;"
+                        >
+                          local_library
+                        </Icon>
+                      </VFlex>
                       <VFlex>
                         <ContentNodeValidator
-                          v-if="canEdit && !copying && !node.isNew"
+                          v-if="canEdit && !copying && !isNew"
                           :node="node"
                         />
                       </VFlex>
                     </VLayout>
                   </VListTileTitle>
+
+                  <ToggleText
+                    v-show="!isCompact && !comfortable"
+                    :text="node.description"
+                    data-test="description"
+                    notranslate
+                    dir="auto"
+                    :splitAt="280"
+                  />
+
                   <VListTileSubTitle
-                    v-if="(subtitle || node.coach_content) && !isCompact"
+                    v-if="!isCompact"
                     data-test="subtitle"
                     class="metadata"
                   >
-                    <span>{{ subtitle }}</span>
+                    <span v-if="subtitle" class="text">{{ subtitle }}</span>
+                    <span
+                      v-if="node.categories ? Object.keys(node.categories).length > 0 : null"
+                      class="text"
+                    >
+                      {{ category(node.categories) }}
+                    </span>
                     <span v-if="(isTopic && node.coach_count) || isCoach">
-                      <VTooltip bottom>
+                      <!-- for each learning activity -->
+                      <VTooltip bottom lazy>
                         <template #activator="{ on }">
                           <div style="display: inline-block;" v-on="on">
                             <Icon
-                              color="primary"
+                              color="roleVisibilityCoach"
                               small
                               class="mx-1"
-                              style="vertical-align: text-top;"
-                            >local_library</Icon>
+                              style="vertical-align: sub;"
+                            >
+                              local_library
+                            </Icon>
                             <span v-if="isTopic">
                               {{ $formatNumber(node.coach_count) }}
                             </span>
@@ -94,13 +124,28 @@
                       </VTooltip>
                     </span>
                   </VListTileSubTitle>
-                  <ToggleText
-                    v-show="!isCompact && !comfortable"
-                    :text="node.description"
-                    data-test="description"
-                    notranslate
-                    dir="auto"
-                  />
+                  <span v-if="!isCompact">
+
+                    <ContentNodeLearningActivityIcon
+                      v-if="!isTopic"
+                      :learningActivities="node.learning_activities"
+                      showEachActivityIcon
+                      includeText
+                      small
+                      chip
+                      class="inline"
+                    />
+                    <span v-if="node.grade_levels">
+                      <span
+                        v-for="(key, index) in Object.keys(node.grade_levels)"
+                        :key="index"
+                        class="small-chip"
+                        :style="{ backgroundColor: $themeTokens.fineLine }"
+                      >
+                        {{ levels(key) }}
+                      </span>
+                    </span>
+                  </span>
                 </VListTileContent>
 
                 <VListTileContent class="actions-end-col updated">
@@ -129,10 +174,7 @@
                   </div>
                   <div class="disabled-overlay"></div>
                 </template>
-                <slot
-                  name="context-menu"
-                  v-bind="contextMenuProps"
-                ></slot>
+                <slot name="context-menu" v-bind="contextMenuProps"></slot>
               </VListTile>
 
             </template>
@@ -148,34 +190,37 @@
 
 <script>
 
-  import { mapActions } from 'vuex';
+  import camelCase from 'lodash/camelCase';
   import ContentNodeValidator from '../ContentNodeValidator';
   import ContentNodeChangedIcon from '../ContentNodeChangedIcon';
   import TaskProgress from '../../views/progress/TaskProgress';
+  import { ContentLevel, Categories, NEW_OBJECT } from 'shared/constants';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import { RolesNames } from 'shared/leUtils/Roles';
-  import Thumbnail from 'shared/views/files/Thumbnail';
+  import ImageOnlyThumbnail from 'shared/views/files/ImageOnlyThumbnail';
   import IconButton from 'shared/views/IconButton';
   import ToggleText from 'shared/views/ToggleText';
   import ContextMenuCloak from 'shared/views/ContextMenuCloak';
   import DraggableHandle from 'shared/views/draggable/DraggableHandle';
-  import { titleMixin } from 'shared/mixins';
+  import { titleMixin, metadataTranslationMixin } from 'shared/mixins';
   import { COPYING_FLAG, TASK_ID } from 'shared/data/constants';
   import { EffectAllowed } from 'shared/mixins/draggable/constants';
+  import ContentNodeLearningActivityIcon from 'shared/views/ContentNodeLearningActivityIcon';
 
   export default {
     name: 'ContentNodeListItem',
     components: {
       DraggableHandle,
       ContextMenuCloak,
-      Thumbnail,
+      ImageOnlyThumbnail,
       IconButton,
       ContentNodeValidator,
       ContentNodeChangedIcon,
       ToggleText,
       TaskProgress,
+      ContentNodeLearningActivityIcon,
     },
-    mixins: [titleMixin],
+    mixins: [titleMixin, metadataTranslationMixin],
     props: {
       node: {
         type: Object,
@@ -217,6 +262,9 @@
       isTopic() {
         return this.node.kind === ContentKindsNames.TOPIC;
       },
+      isNew() {
+        return this.node[NEW_OBJECT];
+      },
       thumbnailAttrs() {
         const { title, kind, thumbnail_src: src, thumbnail_encoding: encoding } = this.node;
         return { title, kind, src, encoding };
@@ -252,7 +300,6 @@
       copying(isCopying, wasCopying) {
         if (wasCopying && !isCopying) {
           this.highlight = true;
-          this.deleteTask({ task_id: this.taskId });
           setTimeout(() => {
             this.highlight = false;
           }, 2500);
@@ -260,18 +307,41 @@
       },
     },
     methods: {
-      ...mapActions('task', ['deleteTask']),
       handleTileClick(e) {
         // Ensures that clicking an icon button is not treated the same as clicking the card
         if (e.target && e.target.tagName !== 'svg' && !this.copying) {
           this.isTopic ? this.$emit('topicChevronClick') : this.$emit('infoClick');
         }
       },
+      metadataListText(ids) {
+        // an array of values, rather than an internationalized list
+        // is created here (unlike in ResourcePanel), because the values
+        // are used to create one or more individual "chips" to display
+        // rather than a string of text
+        return ids.map(i => this.translateMetadataString(camelCase(i))).join(', ');
+      },
+      category(options) {
+        const ids = Object.keys(options);
+        const matches = Object.keys(Categories)
+          .sort()
+          .filter(k => ids.includes(Categories[k]));
+        if (matches && matches.length > 0) {
+          return this.metadataListText(matches);
+        }
+        return null;
+      },
+      levels(level) {
+        const match = Object.keys(ContentLevel).find(key => ContentLevel[key] === level);
+        if (match) {
+          return this.translateMetadataString(camelCase(match));
+        }
+        return null;
+      },
     },
     $trs: {
       resources: '{value, number, integer} {value, plural, one {resource} other {resources}}',
       questions: '{value, number, integer} {value, plural, one {question} other {questions}}',
-      openTopic: 'Open topic',
+      openTopic: 'Open folder',
       hasCoachTooltip:
         '{value, number, integer} {value, plural, one {resource for coaches} other {resources for coaches}}',
       coachTooltip: 'Resource for coaches',
@@ -294,9 +364,20 @@
     &.active {
       background: #fafafa;
     }
+
     &.disabled {
       pointer-events: none;
     }
+  }
+
+  .inline {
+    display: inline-block;
+  }
+
+  .text {
+    display: inline-block;
+    margin: 0;
+    font-size: 12px;
   }
 
   .disabled-overlay {
@@ -312,10 +393,12 @@
     display: flex;
     padding-top: 44px;
     cursor: progress;
+
     p,
     div {
       margin: 0 2px;
     }
+
     .compact & {
       padding-top: 12px;
     }
@@ -361,7 +444,9 @@
     max-width: 160px;
 
     .compact & {
+      // stylelint-disable
       width: calc(@compact-thumbnail-width);
+      // stylelint-enable
       min-width: 20px;
     }
   }
@@ -382,8 +467,17 @@
     align-items: flex-start;
     justify-content: center;
   }
+
   .metadata > span:not(:last-child)::after {
     content: ' • ';
+  }
+
+  .small-chip {
+    display: inline-block;
+    padding: 2px 4px;
+    margin: 2px;
+    font-size: 10px;
+    border-radius: 4px;
   }
 
 </style>

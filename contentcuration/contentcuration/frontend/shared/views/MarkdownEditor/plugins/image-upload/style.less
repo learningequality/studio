@@ -1,5 +1,7 @@
 @import '~vuetify/dist/vuetify.min.css';
+// stylelint-disable scss/at-import-partial-extension
 @import '~shared/styles/main.less';
+// stylelint-enable
 
 @resizer-size: 16px;
 
@@ -9,6 +11,7 @@ img {
   border: 1px solid var(--v-greyBorder-base);
   object-fit: cover;
 }
+
 .dragging {
   img {
     pointer-events: none;
@@ -18,9 +21,11 @@ img {
 
 .resizing {
   user-select: none;
+
   * {
     user-select: none;
   }
+
   img {
     border: 2px solid var(--v-grey-darken4);
   }
@@ -60,6 +65,7 @@ img {
     font-style: normal;
   }
 }
+
 .image-field {
   position: relative;
   display: inline-block;

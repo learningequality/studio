@@ -1,0 +1,1 @@
+{% load i18n %}{% translate "Thank you for activating your Kolibri Studio account! Let's get started..." %}

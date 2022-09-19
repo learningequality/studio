@@ -10,7 +10,7 @@
           <Checkbox v-model="selected" />
         </VFlex>
         <VFlex shrink>
-          <VTooltip v-if="user.is_admin" bottom z-index="200">
+          <VTooltip v-if="user.is_admin" bottom z-index="200" lazy>
             <template #activator="{ on }">
               <span class="px-1 py-2" v-on="on">
                 <Icon color="light-green accent-4">
@@ -33,11 +33,10 @@
     <td>{{ user.email }}</td>
     <td style="min-width: 175px;">
       <!-- Using VMenu instead of VEditDialog to have more control over actions -->
-      <VMenu
+      <Menu
         v-if="user.is_active"
         v-model="showStorage"
         :close-on-content-click="false"
-        offset-y
       >
         <template #activator="{ on }">
           {{ formatFileSize(user.disk_space) }}
@@ -57,7 +56,7 @@
             />
           </VCardText>
         </VCard>
-      </VMenu>
+      </Menu>
       <span v-else>Inactive</span>
     </td>
     <td>

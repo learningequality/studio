@@ -1,6 +1,12 @@
 name: Javascript Tests
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+    - unstable
+    - hotfixes
+    - master
+  pull_request:
 
 jobs:
   pre_job:
@@ -25,7 +31,7 @@ jobs:
     - name: Use Node.js
       uses: actions/setup-node@v1
       with:
-        node-version: '10.x'
+        node-version: '16.x'
     - name: Cache Node.js modules
       uses: actions/cache@v2
       with:

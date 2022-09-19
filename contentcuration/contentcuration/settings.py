@@ -17,7 +17,6 @@ import sys
 from datetime import timedelta
 from tempfile import gettempdir
 
-import pycountry
 from django.utils.timezone import now
 
 from contentcuration.utils.incidents import INCIDENTS
@@ -86,6 +85,8 @@ INSTALLED_APPS = (
     'webpack_loader',
     'django_filters',
     'mathfilters',
+    'django.contrib.postgres',
+    'django_celery_results',
 )
 
 SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"
@@ -165,6 +166,7 @@ SUPPORTED_BROWSERS = [
 HEALTH_CHECK_BROWSERS = [
     'kube-probe',
     'GoogleHC',
+    'Studio-Internal-Prober'
 ]
 
 REST_FRAMEWORK = {
@@ -217,6 +219,7 @@ DATABASES = {
     },
 }
 
+IS_CONTENTNODE_TABLE_PARTITIONED = os.getenv("IS_CONTENTNODE_TABLE_PARTITIONED") or False
 
 DATABASE_ROUTERS = [
     "kolibri_content.router.ContentDBRouter",
@@ -272,7 +275,6 @@ USE_TZ = True
 
 LOCALE_PATHS = (
     os.path.join(BASE_DIR, 'locale'),
-    pycountry.LOCALES_DIR,
 )
 
 
@@ -313,10 +315,10 @@ SITE_ID = 1
 # Used for serializing datetime objects.
 DATE_TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 
+POSTMARK_SSL = True
 SEND_USER_ACTIVATION_NOTIFICATION_EMAIL = bool(
     os.getenv("SEND_USER_ACTIVATION_NOTIFICATION_EMAIL")
 )
-
 SPACE_REQUEST_EMAIL = 'content@learningequality.org'
 REGISTRATION_INFORMATION_EMAIL = 'studio-registrations@learningequality.org'
 HELP_EMAIL = 'content@learningequality.org'
@@ -341,26 +343,24 @@ IGNORABLE_404_URLS = [
 ]
 
 # CELERY CONFIGURATIONS
-CELERY_BROKER_URL = REDIS_URL
-# with a redis broker, tasks will be re-sent if not completed within the duration of this timeout
-CELERY_BROKER_TRANSPORT_OPTIONS = {'visibility_timeout': 4 * 3600}
-CELERY_RESULT_BACKEND = REDIS_URL
 CELERY_REDIS_DB = os.getenv("CELERY_REDIS_DB") or "0"
-CELERY_BROKER_URL = "{url}{db}".format(
-    url=REDIS_URL,
-    db=CELERY_REDIS_DB
-)
-CELERY_RESULT_BACKEND = CELERY_BROKER_URL
-CELERY_TIMEZONE = os.getenv("CELERY_TIMEZONE") or 'Africa/Nairobi'
-CELERY_ACCEPT_CONTENT = ['application/json']
-CELERY_TASK_SERIALIZER = 'json'
-CELERY_RESULT_SERIALIZER = 'json'
-# If this is True, Celery tasks are run synchronously. This is set to True in the unit tests,
-# as it is not possible to correctly test Celery tasks asynchronously currently.
-CELERY_TASK_ALWAYS_EAGER = False
-# We hook into task events to update the Task DB records with the updated state.
-# See celerysignals.py for more info.
-CELERY_WORKER_SEND_TASK_EVENTS = True
+CELERY = {
+    "broker_url": "{url}{db}".format(
+        url=REDIS_URL,
+        db=CELERY_REDIS_DB
+    ),
+    # with a redis broker, tasks will be re-sent if not completed within the duration of this timeout
+    "broker_transport_options": {"visibility_timeout": 4 * 3600},
+    "redis_db": CELERY_REDIS_DB,
+    "result_backend": "django-db",
+    "redis_backend_health_check_interval": 600,
+    "timezone": os.getenv("CELERY_TIMEZONE") or 'Africa/Nairobi',
+    "accept_content": ['application/json'],
+    "task_serializer": "json",
+    "result_serializer": "json",
+    "result_extended": True,
+    "worker_send_task_events": True,
+}
 
 # When cleaning up orphan nodes, only clean up any that have been last modified
 # since this date

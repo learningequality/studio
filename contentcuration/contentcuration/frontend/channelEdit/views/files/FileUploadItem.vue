@@ -28,7 +28,8 @@
               <ActionLink
                 v-if="fileDisplay"
                 class="notranslate"
-                :text="fileDisplay.original_filename"
+                :text="formattedFileDisplay"
+                data-test="file-link"
                 @click="openFileDialog"
               />
               <ActionLink
@@ -91,6 +92,7 @@
       file: {
         type: Object,
         required: false,
+        default: null,
       },
       preset: {
         type: Object,
@@ -106,6 +108,7 @@
       uploadCompleteHandler: {
         type: Function,
         required: false,
+        default: () => {},
       },
     },
     data() {
@@ -130,6 +133,13 @@
           return this.fileUpload;
         }
         return this.file;
+      },
+      formattedFileDisplay() {
+        const fileName = this.fileDisplay.original_filename;
+        if (fileName === 'file' || !fileName) {
+          return this.$tr('unknownFile');
+        }
+        return fileName;
       },
       erroredFile() {
         if (this.fileUpload && this.fileUpload.error) {
@@ -164,6 +174,7 @@
       /* eslint-disable kolibri/vue-no-unused-translations */
       retryUpload: 'Retry upload',
       uploadFailed: 'Upload failed',
+      unknownFile: 'Unknown filename',
       /* eslint-enable kolibri/vue-no-unused-translations */
     },
   };
@@ -181,19 +192,24 @@
   button {
     margin: 0;
   }
+
   /deep/ .v-list__tile {
     height: max-content !important;
     min-height: 64px;
     padding: 5px 16px;
+
     .remove-icon {
       display: none;
     }
+
     &:hover .remove-icon {
       display: block;
     }
+
     .v-list__tile__title {
       height: max-content;
     }
+
     .v-list__tile__sub-title {
       white-space: unset;
     }

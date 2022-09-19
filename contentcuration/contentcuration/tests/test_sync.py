@@ -2,7 +2,7 @@ from __future__ import absolute_import
 
 from le_utils.constants import content_kinds
 
-from .base import BaseTestCase
+from .base import StudioTestCase
 from .testdata import create_temp_file
 from contentcuration.models import AssessmentItem
 from contentcuration.models import Channel
@@ -10,13 +10,13 @@ from contentcuration.utils.publish import mark_all_nodes_as_published
 from contentcuration.utils.sync import sync_channel
 
 
-class SyncTestCase(BaseTestCase):
+class SyncTestCase(StudioTestCase):
     """
     Test channel and node sync operations.
     """
 
     def setUp(self):
-        super(SyncTestCase, self).setUp()
+        super(SyncTestCase, self).setUpBase()
         self.derivative_channel = Channel.objects.create(name="testchannel")
         self.channel.main_tree.copy_to(self.derivative_channel.main_tree)
         self.derivative_channel.main_tree.refresh_from_db()

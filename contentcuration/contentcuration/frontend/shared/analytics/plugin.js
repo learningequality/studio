@@ -1,4 +1,5 @@
 import Vue from 'vue';
+import isFunction from 'lodash/isFunction';
 
 /**
  * Analytics class for handling anything analytics related, exposed in Vue as $analytics
@@ -10,7 +11,70 @@ class Analytics {
    * @param {Array} dataLayer
    */
   constructor(dataLayer) {
+    this.counter = 0;
     this.dataLayer = dataLayer;
+    this.lastLength = 0;
+
+    // add interval to trigger resets every 5 minutes
+    this.resetInterval = setInterval(() => {
+      this.reset();
+    }, 5 * 60 * 1000);
+  }
+
+  /**
+   * Resets the datalayer and cleans up elements
+   */
+  reset() {
+    // If the dataLayer hasn't changed since our last reset, skip
+    if (this.dataLayer.length === this.lastLength) {
+      if (process.env.NODE_ENV !== 'production') {
+        console.info('Skipping Analytics.reset()');
+      }
+      return;
+    }
+
+    if (process.env.NODE_ENV !== 'production') {
+      console.info('Analytics.reset()');
+    }
+
+    // Add local variable so the pushed reset function can access the datalayer
+    const dataLayer = this.dataLayer;
+    const resetCounter = this.counter;
+    this.counter++;
+
+    // This can't use an arrow function, it will be called with a different
+    // context to access `this.reset()`
+    const dataLayerReset = function() {
+      // See https://developers.google.com/tag-platform/devguides/datalayer#reset
+      this.reset();
+
+      for (let item of dataLayer) {
+        // Do our own reset of the `gtm.element` variable
+        if (item['gtm.element']) {
+          item['gtm.element'] = null;
+        }
+        // Be sure we stop when we reach this function's position in the dataLayer. The dataLayer
+        // is like a FIFO queue, so by queuing this function and having the GTM execute it, we're
+        // ensuring that everything prior to this function was processed. For this reason, we stop
+        // once we reach the position of this function to avoid manipulating events that have been
+        // added afterwards
+        if (isFunction(item) && item['counter'] === resetCounter) {
+          break;
+        }
+      }
+    };
+    dataLayerReset.counter = resetCounter;
+
+    this.dataLayer.push(dataLayerReset);
+    this.lastLength = this.dataLayer.length;
+  }
+
+  /**
+   * Push data onto the datalayer
+   * @param {object|function} args
+   */
+  push(...args) {
+    this.dataLayer.push(...args);
   }
 
   /**
@@ -22,7 +86,7 @@ class Analytics {
    * @param {{:*}} data
    */
   trackEvent(event, data = {}) {
-    this.dataLayer.push({
+    this.push({
       ...data,
       event,
     });
@@ -68,7 +132,7 @@ class Analytics {
       return;
     }
 
-    this.dataLayer.push({
+    this.push({
       currentChannel: {
         id: channel.id,
         name: channel.name,
@@ -80,6 +144,14 @@ class Analytics {
         // hasEditors:
       },
     });
+  }
+
+  /**
+   * Cleans up the datalayer and removes the interval to call dataLayer.reset()
+   */
+  destroy() {
+    clearInterval(this.resetInterval);
+    this.dataLayer = null;
   }
 }
 
@@ -94,6 +166,7 @@ export default function AnalyticsPlugin(Vue, options = {}) {
   // Merge in old dataLayer
   if (Vue.$analytics) {
     analytics.dataLayer.push(...Vue.$analytics.dataLayer);
+    Vue.$analytics.destroy();
   }
 
   Vue.$analytics = analytics;

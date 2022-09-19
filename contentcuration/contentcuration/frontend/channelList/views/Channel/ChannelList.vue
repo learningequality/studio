@@ -47,7 +47,7 @@
 <script>
 
   import { mapGetters, mapActions } from 'vuex';
-  import sortBy from 'lodash/sortBy';
+  import orderBy from 'lodash/orderBy';
   import { RouteNames, CHANNEL_PAGE_SIZE } from '../../constants';
   import ChannelItem from './ChannelItem';
   import LoadingText from 'shared/views/LoadingText';
@@ -83,13 +83,16 @@
         if (!channels) {
           return [];
         }
-        const sortFields = ['-modified'];
+        const sortFields = ['modified'];
+        const orderFields = ['desc'];
         if (this.listType === ChannelListTypes.PUBLIC) {
-          sortFields.unshift('-priority');
+          sortFields.unshift('priority');
+          orderFields.unshift('desc');
         }
-        return sortBy(
+        return orderBy(
           this.channels.filter(channel => channel[this.listType] && !channel.deleted),
-          sortFields
+          sortFields,
+          orderFields
         );
       },
       isEditable() {

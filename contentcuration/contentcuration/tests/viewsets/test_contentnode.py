@@ -13,21 +13,29 @@ from django.urls import reverse
 from django_concurrent_tests.errors import WrappedError
 from django_concurrent_tests.helpers import call_concurrently
 from django_concurrent_tests.helpers import make_concurrent_calls
+from le_utils.constants import completion_criteria
 from le_utils.constants import content_kinds
+from le_utils.constants import exercises
 from le_utils.constants import roles
+from le_utils.constants.labels.accessibility_categories import ACCESSIBILITYCATEGORIESLIST
+from le_utils.constants.labels.subjects import SUBJECTSLIST
 
 from contentcuration import models
 from contentcuration.tests import testdata
 from contentcuration.tests.base import BucketTestMixin
 from contentcuration.tests.base import StudioAPITestCase
+from contentcuration.tests.viewsets.base import generate_copy_event
+from contentcuration.tests.viewsets.base import generate_create_event
+from contentcuration.tests.viewsets.base import generate_delete_event
+from contentcuration.tests.viewsets.base import generate_update_event
+from contentcuration.tests.viewsets.base import SyncTestMixin
 from contentcuration.utils.db_tools import TreeBuilder
 from contentcuration.viewsets.contentnode import ContentNodeFilter
 from contentcuration.viewsets.sync.constants import CONTENTNODE
 from contentcuration.viewsets.sync.constants import CONTENTNODE_PREREQUISITE
-from contentcuration.viewsets.sync.utils import generate_copy_event
-from contentcuration.viewsets.sync.utils import generate_create_event
-from contentcuration.viewsets.sync.utils import generate_delete_event
-from contentcuration.viewsets.sync.utils import generate_update_event
+
+
+nested_subjects = [subject for subject in SUBJECTSLIST if "." in subject]
 
 
 def create_and_get_contentnode(parent_id):
@@ -277,25 +285,6 @@ class ContentNodeViewSetTestCase(StudioAPITestCase):
     def viewset_url(self, **kwargs):
         return reverse("contentnode-detail", kwargs=kwargs)
 
-    @property
-    def contentnode_metadata(self):
-        return {
-            "title": "Aron's cool contentnode",
-            "id": uuid.uuid4().hex,
-            "kind": content_kinds.VIDEO,
-            "description": "coolest contentnode this side of the Pacific",
-        }
-
-    @property
-    def contentnode_db_metadata(self):
-        return {
-            "title": "Aron's cool contentnode",
-            "id": uuid.uuid4().hex,
-            "kind_id": content_kinds.VIDEO,
-            "description": "coolest contentnode this side of the Pacific",
-            "parent_id": settings.ORPHANAGE_ROOT_ID,
-        }
-
     def test_get_contentnode__editor(self):
         user = testdata.user()
         channel = testdata.channel()
@@ -360,11 +349,73 @@ class ContentNodeViewSetTestCase(StudioAPITestCase):
             )
         self.assertEqual(response.status_code, 403, response.content)
 
+    def test_consolidate_extra_fields(self):
+        user = testdata.user()
+        channel = testdata.channel()
+        channel.public = True
+        channel.save()
+        contentnode = models.ContentNode.objects.create(
+            title="Ozer's cool contentnode",
+            id=uuid.uuid4().hex,
+            kind_id=content_kinds.EXERCISE,
+            description="coolest contentnode this side of the Pacific",
+            parent_id=channel.main_tree_id,
+            extra_fields={
+                "m": 3,
+                "n": 6,
+                "mastery_model": exercises.M_OF_N,
+            }
+        )
 
-class SyncTestCase(StudioAPITestCase):
-    @property
-    def sync_url(self):
-        return reverse("sync")
+        self.client.force_authenticate(user=user)
+        with self.settings(TEST_ENV=False):
+            response = self.client.get(
+                self.viewset_url(pk=contentnode.id), format="json",
+            )
+        self.assertEqual(response.status_code, 200, response.content)
+        print(response.data["extra_fields"])
+        self.assertEqual(response.data["extra_fields"]["options"]["completion_criteria"]["threshold"]["m"], 3)
+        self.assertEqual(response.data["extra_fields"]["options"]["completion_criteria"]["threshold"]["n"], 6)
+        self.assertEqual(response.data["extra_fields"]["options"]["completion_criteria"]["threshold"]["mastery_model"], exercises.M_OF_N)
+        self.assertEqual(response.data["extra_fields"]["options"]["completion_criteria"]["model"], completion_criteria.MASTERY)
+
+    def test_consolidate_extra_fields_with_mastrey_model_none(self):
+
+        user = testdata.user()
+        channel = testdata.channel()
+        channel.public = True
+        channel.save()
+        contentnode = models.ContentNode.objects.create(
+            title="Aron's cool contentnode",
+            id=uuid.uuid4().hex,
+            kind_id=content_kinds.EXERCISE,
+            description="India is the hottest country in the world",
+            parent_id=channel.main_tree_id,
+            extra_fields={
+
+                "m": None,
+                "n": None,
+                "mastery_model": None,
+            }
+        )
+
+        self.client.force_authenticate(user=user)
+        with self.settings(TEST_ENV=False):
+            response = self.client.get(
+                self.viewset_url(pk=contentnode.id), format="json",
+            )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(response.data["extra_fields"], {})
+
+
+class SyncTestCase(SyncTestMixin, StudioAPITestCase):
+
+    def setUp(self):
+        super(SyncTestCase, self).setUp()
+        self.channel = testdata.channel()
+        self.user = testdata.user()
+        self.channel.editors.add(self.user)
+        self.client.force_authenticate(user=self.user)
 
     @property
     def contentnode_metadata(self):
@@ -373,6 +424,7 @@ class SyncTestCase(StudioAPITestCase):
             "id": uuid.uuid4().hex,
             "kind": content_kinds.VIDEO,
             "description": "coolest contentnode this side of the Pacific",
+            "parent": self.channel.main_tree_id,
         }
 
     @property
@@ -382,56 +434,24 @@ class SyncTestCase(StudioAPITestCase):
             "id": uuid.uuid4().hex,
             "kind_id": content_kinds.VIDEO,
             "description": "coolest contentnode this side of the Pacific",
-            "parent_id": settings.ORPHANAGE_ROOT_ID,
+            "parent_id": self.channel.main_tree_id,
         }
 
-    def test_create_contentnode(self):
-        user = testdata.user()
-        self.client.force_authenticate(user=user)
+    def test_create_contentnode_no_permissions(self):
+        self.channel.editors.remove(self.user)
         contentnode = self.contentnode_metadata
-        response = self.client.post(
-            self.sync_url,
-            [generate_create_event(contentnode["id"], CONTENTNODE, contentnode)],
-            format="json",
+        response = self.sync_changes(
+            [generate_create_event(contentnode["id"], CONTENTNODE, contentnode, channel_id=self.channel.id)],
         )
         self.assertEqual(response.status_code, 200, response.content)
-        try:
+        with self.assertRaises(models.ContentNode.DoesNotExist):
             models.ContentNode.objects.get(id=contentnode["id"])
-        except models.ContentNode.DoesNotExist:
-            self.fail("ContentNode was not created")
-
-    def test_create_contentnode_tag(self):
-        user = testdata.user()
-        tag = "howzat!"
-
-        self.client.force_authenticate(user=user)
-        contentnode = self.contentnode_metadata
-        contentnode["tags"] = {
-            tag: True,
-        }
-        response = self.client.post(
-            self.sync_url,
-            [generate_create_event(contentnode["id"], CONTENTNODE, contentnode)],
-            format="json",
-        )
-        self.assertEqual(response.status_code, 200, response.content)
-        self.assertTrue(
-            models.ContentNode.objects.get(id=contentnode["id"])
-            .tags.filter(tag_name=tag)
-            .exists()
-        )
 
     def test_create_contentnode_with_parent(self):
-        channel = testdata.channel()
-        user = testdata.user()
-        channel.editors.add(user)
-        self.client.force_authenticate(user=user)
+        self.channel.editors.add(self.user)
         contentnode = self.contentnode_metadata
-        contentnode["parent"] = channel.main_tree_id
-        response = self.client.post(
-            self.sync_url,
-            [generate_create_event(contentnode["id"], CONTENTNODE, contentnode)],
-            format="json",
+        response = self.sync_changes(
+            [generate_create_event(contentnode["id"], CONTENTNODE, contentnode, channel_id=self.channel.id)],
         )
         self.assertEqual(response.status_code, 200, response.content)
         try:
@@ -439,25 +459,19 @@ class SyncTestCase(StudioAPITestCase):
         except models.ContentNode.DoesNotExist:
             self.fail("ContentNode was not created")
 
-        self.assertEqual(new_node.parent_id, channel.main_tree_id)
+        self.assertEqual(new_node.parent_id, self.channel.main_tree_id)
 
     def test_cannot_create_contentnode(self):
-        channel = testdata.channel()
-        user = testdata.user()
-        channel.editors.remove(user)
-        channel.viewers.remove(user)
+        self.channel.editors.remove(self.user)
+        self.channel.viewers.remove(self.user)
 
         contentnode = self.contentnode_metadata
-        contentnode["parent"] = channel.main_tree_id
+        contentnode["parent"] = self.channel.main_tree_id
 
-        self.client.force_authenticate(user=user)
-        with self.settings(TEST_ENV=False):
-            response = self.client.post(
-                self.sync_url,
-                [generate_create_event(contentnode["id"], CONTENTNODE, contentnode)],
-                format="json",
-            )
-        self.assertEqual(response.status_code, 400, response.content)
+        response = self.sync_changes(
+            [generate_create_event(contentnode["id"], CONTENTNODE, contentnode, channel_id=self.channel.id)],
+        )
+        self.assertEqual(len(response.data["disallowed"]), 1)
         try:
             models.ContentNode.objects.get(id=contentnode["id"])
             self.fail("ContentNode was created")
@@ -465,17 +479,13 @@ class SyncTestCase(StudioAPITestCase):
             pass
 
     def test_create_contentnodes(self):
-        user = testdata.user()
-        self.client.force_authenticate(user=user)
         contentnode1 = self.contentnode_metadata
         contentnode2 = self.contentnode_metadata
-        response = self.client.post(
-            self.sync_url,
+        response = self.sync_changes(
             [
-                generate_create_event(contentnode1["id"], CONTENTNODE, contentnode1),
-                generate_create_event(contentnode2["id"], CONTENTNODE, contentnode2),
+                generate_create_event(contentnode1["id"], CONTENTNODE, contentnode1, channel_id=self.channel.id),
+                generate_create_event(contentnode2["id"], CONTENTNODE, contentnode2, channel_id=self.channel.id),
             ],
-            format="json",
         )
         self.assertEqual(response.status_code, 200, response.content)
         try:
@@ -489,9 +499,8 @@ class SyncTestCase(StudioAPITestCase):
             self.fail("ContentNode 2 was not created")
 
     def test_cannot_create_some_contentnodes(self):
-        user = testdata.user()
         channel1 = testdata.channel()
-        channel1.editors.add(user)
+        channel1.editors.add(self.user)
         channel2 = testdata.channel()
 
         contentnode1 = self.contentnode_metadata
@@ -500,21 +509,19 @@ class SyncTestCase(StudioAPITestCase):
         contentnode1["parent"] = channel1.main_tree_id
         contentnode2["parent"] = channel2.main_tree_id
 
-        self.client.force_authenticate(user=user)
-        with self.settings(TEST_ENV=False):
-            response = self.client.post(
-                self.sync_url,
-                [
-                    generate_create_event(
-                        contentnode1["id"], CONTENTNODE, contentnode1
-                    ),
-                    generate_create_event(
-                        contentnode2["id"], CONTENTNODE, contentnode2
-                    ),
-                ],
-                format="json",
-            )
-        self.assertEqual(response.status_code, 207, response.content)
+        response = self.sync_changes(
+            [
+                generate_create_event(
+                    contentnode1["id"], CONTENTNODE, contentnode1, channel_id=channel1.id
+                ),
+                generate_create_event(
+                    contentnode2["id"], CONTENTNODE, contentnode2, channel_id=channel2.id
+                ),
+            ],
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(len(response.data["allowed"]), 1)
+        self.assertEqual(len(response.data["disallowed"]), 1)
         try:
             models.ContentNode.objects.get(id=contentnode1["id"])
         except models.ContentNode.DoesNotExist:
@@ -527,108 +534,352 @@ class SyncTestCase(StudioAPITestCase):
             pass
 
     def test_update_contentnode(self):
-        user = testdata.user()
         contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
         new_title = "This is not the old title"
 
-        self.client.force_authenticate(user=user)
-        response = self.client.post(
-            self.sync_url,
-            [generate_update_event(contentnode.id, CONTENTNODE, {"title": new_title})],
-            format="json",
+        response = self.sync_changes(
+            [generate_update_event(contentnode.id, CONTENTNODE, {"title": new_title}, channel_id=self.channel.id)],
         )
         self.assertEqual(response.status_code, 200, response.content)
         self.assertEqual(
             models.ContentNode.objects.get(id=contentnode.id).title, new_title
         )
 
-    def test_cannot_update_contentnode(self):
-        user = testdata.user()
-        channel = testdata.channel()
-        contentnode = create_and_get_contentnode(channel.main_tree_id)
+    def test_cannot_update_contentnode_parent(self):
+        contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
+        contentnode2 = models.ContentNode.objects.create(**self.contentnode_db_metadata)
+
+        self.sync_changes(
+            [generate_update_event(contentnode.id, CONTENTNODE, {"parent": contentnode2.id})],
+        )
+        self.assertNotEqual(
+            models.ContentNode.objects.get(id=contentnode.id).parent_id, contentnode2.id
+        )
+
+    def test_cannot_update_no_permissions(self):
+        self.channel.editors.remove(self.user)
+        contentnode = create_and_get_contentnode(self.channel.main_tree_id)
         new_title = "This is not the old title"
 
-        self.client.force_authenticate(user=user)
-        with self.settings(TEST_ENV=False):
-            response = self.client.post(
-                self.sync_url,
-                [
-                    generate_update_event(
-                        contentnode.id, CONTENTNODE, {"title": new_title}
-                    )
-                ],
-                format="json",
-            )
+        response = self.sync_changes(
+            [
+                generate_update_event(
+                    contentnode.id, CONTENTNODE, {"title": new_title}, channel_id=self.channel.id
+                )
+            ],
+        )
 
-        self.assertEqual(response.status_code, 400, response.content)
+        self.assertEqual(len(response.data["disallowed"]), 1)
         self.assertNotEqual(
             models.ContentNode.objects.get(id=contentnode.id).title, new_title
         )
 
-    def test_update_contentnode_extra_fields(self):
-        user = testdata.user()
+    def test_update_contentnode_exercise_mastery_model(self):
         contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
 
-        # Update extra_fields.m
+        # Update m and n fields
         m = 5
-        self.client.force_authenticate(user=user)
-        response = self.client.post(
-            self.sync_url,
-            [generate_update_event(contentnode.id, CONTENTNODE, {"extra_fields.m": m})],
-            format="json",
-        )
-        self.assertEqual(response.status_code, 200, response.content)
-        self.assertEqual(
-            models.ContentNode.objects.get(id=contentnode.id).extra_fields["m"], m
-        )
-
-        # Update extra_fields.m
         n = 10
-        response = self.client.post(
-            self.sync_url,
-            [generate_update_event(contentnode.id, CONTENTNODE, {"extra_fields.n": n})],
-            format="json",
-        )
-        self.assertEqual(response.status_code, 200, response.content)
-        self.assertEqual(
-            models.ContentNode.objects.get(id=contentnode.id).extra_fields["m"], m
-        )
-        self.assertEqual(
-            models.ContentNode.objects.get(id=contentnode.id).extra_fields["n"], n
+        response = self.sync_changes(
+            [generate_update_event(contentnode.id, CONTENTNODE, {
+                "extra_fields.options.completion_criteria.threshold.m": m,
+                "extra_fields.options.completion_criteria.threshold.n": n,
+                "extra_fields.options.completion_criteria.threshold.mastery_model": exercises.M_OF_N,
+                "extra_fields.options.completion_criteria.model": completion_criteria.MASTERY
+            }, channel_id=self.channel.id)],
         )
 
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(
+            models.ContentNode.objects.get(id=contentnode.id).extra_fields["options"]["completion_criteria"]["threshold"]["m"], m
+        )
+        self.assertEqual(
+            models.ContentNode.objects.get(id=contentnode.id).extra_fields["options"]["completion_criteria"]["threshold"]["n"], n
+        )
+
+    def test_update_contentnode_exercise_mastery_model_partial(self):
+        data = self.contentnode_db_metadata
+        data["extra_fields"] = {
+            "options": {
+                "completion_criteria": {
+                    "threshold": {
+                        "m": 5,
+                        "n": 10,
+                        "mastery_model": exercises.M_OF_N,
+                    },
+                    "model": completion_criteria.MASTERY,
+                }
+            }
+        }
+        contentnode = models.ContentNode.objects.create(**data)
+
+        # Update m and n fields
+        m = 4
+        response = self.sync_changes(
+            [generate_update_event(contentnode.id, CONTENTNODE, {
+                "extra_fields.options.completion_criteria.threshold.m": m,
+            }, channel_id=self.channel.id)],
+        )
+
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(
+            models.ContentNode.objects.get(id=contentnode.id).extra_fields["options"]["completion_criteria"]["threshold"]["m"], m
+        )
+
+    def test_update_contentnode_exercise_mastery_model_old(self):
+        data = self.contentnode_db_metadata
+        data["extra_fields"] = {
+            "m": 5,
+            "n": 10,
+            "mastery_model": exercises.M_OF_N,
+        }
+
+        contentnode = models.ContentNode.objects.create(**data)
+
+        # Update m and n fields
+        m = 4
+        response = self.sync_changes(
+            [generate_update_event(contentnode.id, CONTENTNODE, {
+                "extra_fields.options.completion_criteria.threshold.m": m,
+            }, channel_id=self.channel.id)],
+        )
+
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(
+            models.ContentNode.objects.get(id=contentnode.id).extra_fields["options"]["completion_criteria"]["threshold"]["m"], m
+        )
+        self.assertEqual(
+            models.ContentNode.objects.get(id=contentnode.id).extra_fields["options"]["completion_criteria"]["threshold"]["n"], 10
+        )
+        self.assertEqual(
+            models.ContentNode.objects.get(id=contentnode.id).extra_fields["options"]["completion_criteria"]["threshold"]["mastery_model"], exercises.M_OF_N
+        )
+        self.assertEqual(
+            models.ContentNode.objects.get(id=contentnode.id).extra_fields["options"]["completion_criteria"]["model"], completion_criteria.MASTERY
+        )
+
+    def test_update_contentnode_extra_fields(self):
+        contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
         # Update extra_fields.randomize
         randomize = True
-        response = self.client.post(
-            self.sync_url,
-            [generate_update_event(contentnode.id, CONTENTNODE, {"extra_fields.randomize": randomize})],
-            format="json",
+        response = self.sync_changes(
+            [generate_update_event(contentnode.id, CONTENTNODE, {"extra_fields.randomize": randomize}, channel_id=self.channel.id)],
         )
         self.assertEqual(response.status_code, 200, response.content)
-        self.assertEqual(
-            models.ContentNode.objects.get(id=contentnode.id).extra_fields["m"], m
-        )
-        self.assertEqual(
-            models.ContentNode.objects.get(id=contentnode.id).extra_fields["n"], n
-        )
         self.assertEqual(
             models.ContentNode.objects.get(id=contentnode.id).extra_fields["randomize"], randomize
         )
 
+    def test_update_contentnode_add_to_extra_fields_nested(self):
+        metadata = self.contentnode_db_metadata
+        contentnode = models.ContentNode.objects.create(**metadata)
+        # Add extra_fields.options.modality
+        response = self.sync_changes(
+            [generate_update_event(contentnode.id, CONTENTNODE, {"extra_fields.options.modality": "QUIZ"}, channel_id=self.channel.id)],
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(models.ContentNode.objects.get(id=contentnode.id).extra_fields["options"]["modality"], "QUIZ")
+
+    def test_update_contentnode_remove_from_extra_fields_nested(self):
+        metadata = self.contentnode_db_metadata
+        metadata["extra_fields"] = {
+            "options": {
+                "modality": "QUIZ",
+            },
+        }
+        contentnode = models.ContentNode.objects.create(**metadata)
+        # Remove extra_fields.options.modality
+        response = self.sync_changes(
+            [generate_update_event(contentnode.id, CONTENTNODE, {"extra_fields.options.modality": None}, channel_id=self.channel.id)],
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        with self.assertRaises(KeyError):
+            models.ContentNode.objects.get(id=contentnode.id).extra_fields["options"]["modality"]
+
+    def test_update_contentnode_update_options_completion_criteria(self):
+        metadata = self.contentnode_db_metadata
+        metadata["extra_fields"] = {
+            "options": {
+                "completion_criteria": {
+                    "model": completion_criteria.REFERENCE,
+                    "threshold": None,
+                }
+            },
+        }
+        contentnode = models.ContentNode.objects.create(**metadata)
+        # Change extra_fields.options.completion_criteria.model
+        # and extra_fields.options.completion_criteria.threshold
+        response = self.sync_changes(
+            [
+                generate_update_event(
+                    contentnode.id,
+                    CONTENTNODE,
+                    {
+                        "extra_fields.options.completion_criteria.model": completion_criteria.TIME,
+                        "extra_fields.options.completion_criteria.threshold": 10
+                    },
+                    channel_id=self.channel.id
+                )
+            ],
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        c = models.ContentNode.objects.get(id=contentnode.id)
+
+        self.assertEqual(c.extra_fields["options"]["completion_criteria"]["model"], completion_criteria.TIME)
+        self.assertEqual(c.extra_fields["options"]["completion_criteria"]["threshold"], 10)
+
+    def test_update_contentnode_update_options_completion_criteria_threshold_only(self):
+        metadata = self.contentnode_db_metadata
+        metadata["extra_fields"] = {
+            "options": {
+                "completion_criteria": {
+                    "model": completion_criteria.TIME,
+                    "threshold": 5,
+                }
+            },
+        }
+        contentnode = models.ContentNode.objects.create(**metadata)
+        # Change extra_fields.options.completion_criteria.model
+        # and extra_fields.options.completion_criteria.threshold
+        response = self.sync_changes(
+            [
+                generate_update_event(
+                    contentnode.id,
+                    CONTENTNODE,
+                    {
+                        "extra_fields.options.completion_criteria.threshold": 10
+                    },
+                    channel_id=self.channel.id
+                )
+            ],
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        c = models.ContentNode.objects.get(id=contentnode.id)
+
+        self.assertEqual(c.extra_fields["options"]["completion_criteria"]["model"], completion_criteria.TIME)
+        self.assertEqual(c.extra_fields["options"]["completion_criteria"]["threshold"], 10)
+
+    def test_update_contentnode_update_options_invalid_completion_criteria(self):
+        metadata = self.contentnode_db_metadata
+        metadata["extra_fields"] = {
+            "options": {
+                "completion_criteria": {
+                    "model": completion_criteria.REFERENCE,
+                    "threshold": None,
+                }
+            },
+        }
+        contentnode = models.ContentNode.objects.create(**metadata)
+        # Change extra_fields.options.completion_criteria.model
+        # and extra_fields.options.completion_criteria.threshold
+        response = self.sync_changes(
+            [
+                generate_update_event(
+                    contentnode.id,
+                    CONTENTNODE,
+                    {
+                        "extra_fields.options.completion_criteria.model": completion_criteria.TIME,
+                    },
+                    channel_id=self.channel.id
+                )
+            ],
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        c = models.ContentNode.objects.get(id=contentnode.id)
+
+        self.assertEqual(c.extra_fields["options"]["completion_criteria"]["model"], completion_criteria.REFERENCE)
+        self.assertEqual(c.extra_fields["options"]["completion_criteria"]["threshold"], None)
+
+    def test_update_contentnode_add_multiple_metadata_labels(self):
+        contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
+        # Add metadata label to accessibility_labels
+        response = self.sync_changes(
+            [
+                generate_update_event(
+                    contentnode.id,
+                    CONTENTNODE,
+                    {"accessibility_labels.{}".format(ACCESSIBILITYCATEGORIESLIST[0]): True},
+                    channel_id=self.channel.id
+                )
+            ],
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertTrue(models.ContentNode.objects.get(id=contentnode.id).accessibility_labels[ACCESSIBILITYCATEGORIESLIST[0]])
+
+        response = self.sync_changes(
+            [
+                generate_update_event(
+                    contentnode.id,
+                    CONTENTNODE,
+                    {"accessibility_labels.{}".format(ACCESSIBILITYCATEGORIESLIST[1]): True},
+                    channel_id=self.channel.id
+                )
+            ],
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertTrue(models.ContentNode.objects.get(id=contentnode.id).accessibility_labels[ACCESSIBILITYCATEGORIESLIST[0]])
+        self.assertTrue(models.ContentNode.objects.get(id=contentnode.id).accessibility_labels[ACCESSIBILITYCATEGORIESLIST[1]])
+
+    def test_update_contentnode_add_multiple_nested_metadata_labels(self):
+
+        contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
+        # Add metadata label to categories
+        response = self.sync_changes(
+            [generate_update_event(contentnode.id, CONTENTNODE, {"categories.{}".format(nested_subjects[0]): True}, channel_id=self.channel.id)],
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertTrue(models.ContentNode.objects.get(id=contentnode.id).categories[nested_subjects[0]])
+
+        response = self.sync_changes(
+            [generate_update_event(contentnode.id, CONTENTNODE, {"categories.{}".format(nested_subjects[1]): True}, channel_id=self.channel.id)],
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertTrue(models.ContentNode.objects.get(id=contentnode.id).categories[nested_subjects[0]])
+        self.assertTrue(models.ContentNode.objects.get(id=contentnode.id).categories[nested_subjects[1]])
+
+    def test_update_contentnode_remove_metadata_label(self):
+        metadata = self.contentnode_db_metadata
+        metadata["accessibility_labels"] = {ACCESSIBILITYCATEGORIESLIST[0]: True}
+
+        contentnode = models.ContentNode.objects.create(**metadata)
+        # Add metadata label to accessibility_labels
+        response = self.sync_changes(
+            [
+                generate_update_event(
+                    contentnode.id,
+                    CONTENTNODE,
+                    {"accessibility_labels.{}".format(ACCESSIBILITYCATEGORIESLIST[0]): None},
+                    channel_id=self.channel.id
+                )
+            ],
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        with self.assertRaises(KeyError):
+            models.ContentNode.objects.get(id=contentnode.id).accessibility_labels[ACCESSIBILITYCATEGORIESLIST[0]]
+
+    def test_update_contentnode_remove_nested_metadata_label(self):
+        metadata = self.contentnode_db_metadata
+        metadata["categories"] = {nested_subjects[0]: True}
+
+        contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
+        # Add metadata label to categories
+        response = self.sync_changes(
+            [generate_update_event(contentnode.id, CONTENTNODE, {"categories.{}".format(nested_subjects[0]): None}, channel_id=self.channel.id)],
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        with self.assertRaises(KeyError):
+            models.ContentNode.objects.get(id=contentnode.id).categories[nested_subjects[0]]
+
     def test_update_contentnode_tags(self):
-        user = testdata.user()
         contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
         tag = "howzat!"
 
-        self.client.force_authenticate(user=user)
-        response = self.client.post(
-            self.sync_url,
+        response = self.sync_changes(
             [
                 generate_update_event(
-                    contentnode.id, CONTENTNODE, {"tags.{}".format(tag): True}
+                    contentnode.id, CONTENTNODE, {"tags.{}".format(tag): True}, channel_id=self.channel.id
                 )
             ],
-            format="json",
         )
         self.assertEqual(response.status_code, 200, response.content)
         self.assertTrue(
@@ -639,14 +890,12 @@ class SyncTestCase(StudioAPITestCase):
 
         other_tag = "LBW!"
 
-        response = self.client.post(
-            self.sync_url,
+        response = self.sync_changes(
             [
                 generate_update_event(
-                    contentnode.id, CONTENTNODE, {"tags.{}".format(other_tag): True}
+                    contentnode.id, CONTENTNODE, {"tags.{}".format(other_tag): True}, channel_id=self.channel.id
                 )
             ],
-            format="json",
         )
         self.assertEqual(response.status_code, 200, response.content)
         self.assertTrue(
@@ -660,14 +909,12 @@ class SyncTestCase(StudioAPITestCase):
             .exists()
         )
 
-        response = self.client.post(
-            self.sync_url,
+        response = self.sync_changes(
             [
                 generate_update_event(
-                    contentnode.id, CONTENTNODE, {"tags.{}".format(other_tag): None}
+                    contentnode.id, CONTENTNODE, {"tags.{}".format(other_tag): None}, channel_id=self.channel.id
                 )
             ],
-            format="json",
         )
         self.assertEqual(response.status_code, 200, response.content)
         self.assertTrue(
@@ -681,22 +928,30 @@ class SyncTestCase(StudioAPITestCase):
             .exists()
         )
 
+    def test_update_contentnode_suggested_duration(self):
+        contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
+        new_suggested_duration = 600
+
+        response = self.sync_changes(
+            [generate_update_event(contentnode.id, CONTENTNODE, {"suggested_duration": new_suggested_duration}, channel_id=self.channel.id)],
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(
+            models.ContentNode.objects.get(id=contentnode.id).suggested_duration, new_suggested_duration
+        )
+
     def test_update_contentnode_tags_dont_duplicate(self):
-        user = testdata.user()
         contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
         tag = "howzat!"
 
         old_tag = models.ContentTag.objects.create(tag_name=tag)
 
-        self.client.force_authenticate(user=user)
-        response = self.client.post(
-            self.sync_url,
+        response = self.sync_changes(
             [
                 generate_update_event(
-                    contentnode.id, CONTENTNODE, {"tags.{}".format(tag): True}
+                    contentnode.id, CONTENTNODE, {"tags.{}".format(tag): True}, channel_id=self.channel.id
                 )
             ],
-            format="json",
         )
         self.assertEqual(response.status_code, 200, response.content)
         self.assertTrue(
@@ -706,36 +961,28 @@ class SyncTestCase(StudioAPITestCase):
         )
 
     def test_update_contentnode_tags_list(self):
-        user = testdata.user()
         contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
         tag = "howzat!"
 
-        self.client.force_authenticate(user=user)
-        response = self.client.post(
-            self.sync_url,
-            [generate_update_event(contentnode.id, CONTENTNODE, {"tags": [tag]})],
-            format="json",
+        response = self.sync_changes(
+            [generate_update_event(contentnode.id, CONTENTNODE, {"tags": [tag]}, channel_id=self.channel.id)],
         )
-        self.assertEqual(response.status_code, 400, response.content)
+        self.assertEqual(len(response.data["errors"]), 1)
 
     def test_update_contentnodes(self):
-        user = testdata.user()
         contentnode1 = models.ContentNode.objects.create(**self.contentnode_db_metadata)
         contentnode2 = models.ContentNode.objects.create(**self.contentnode_db_metadata)
         new_title = "This is not the old title"
 
-        self.client.force_authenticate(user=user)
-        response = self.client.post(
-            self.sync_url,
+        response = self.sync_changes(
             [
                 generate_update_event(
-                    contentnode1.id, CONTENTNODE, {"title": new_title}
+                    contentnode1.id, CONTENTNODE, {"title": new_title}, channel_id=self.channel.id
                 ),
                 generate_update_event(
-                    contentnode2.id, CONTENTNODE, {"title": new_title}
+                    contentnode2.id, CONTENTNODE, {"title": new_title}, channel_id=self.channel.id
                 ),
             ],
-            format="json",
         )
         self.assertEqual(response.status_code, 200, response.content)
         self.assertEqual(
@@ -746,31 +993,27 @@ class SyncTestCase(StudioAPITestCase):
         )
 
     def test_cannot_update_some_contentnodes(self):
-        user = testdata.user()
 
         channel1 = testdata.channel()
-        channel1.editors.add(user)
+        channel1.editors.add(self.user)
         contentnode1 = create_and_get_contentnode(channel1.main_tree_id)
 
         channel2 = testdata.channel()
         contentnode2 = create_and_get_contentnode(channel2.main_tree_id)
         new_title = "This is not the old title"
 
-        self.client.force_authenticate(user=user)
-        with self.settings(TEST_ENV=False):
-            response = self.client.post(
-                self.sync_url,
-                [
-                    generate_update_event(
-                        contentnode1.id, CONTENTNODE, {"title": new_title}
-                    ),
-                    generate_update_event(
-                        contentnode2.id, CONTENTNODE, {"title": new_title}
-                    ),
-                ],
-                format="json",
-            )
-        self.assertEqual(response.status_code, 207, response.content)
+        response = self.sync_changes(
+            [
+                generate_update_event(
+                    contentnode1.id, CONTENTNODE, {"title": new_title}, channel_id=channel1.id
+                ),
+                generate_update_event(
+                    contentnode2.id, CONTENTNODE, {"title": new_title}, channel_id=channel2.id
+                ),
+            ],
+        )
+        self.assertEqual(len(response.data["disallowed"]), 1)
+
         self.assertEqual(
             models.ContentNode.objects.get(id=contentnode1.id).title, new_title
         )
@@ -779,31 +1022,23 @@ class SyncTestCase(StudioAPITestCase):
         )
 
     def test_update_contentnode_updates_last_modified(self):
-        user = testdata.user()
         contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
 
         last_modified = contentnode.modified
         new_title = "This is not the old title"
 
-        self.client.force_authenticate(user=user)
-        response = self.client.post(
-            self.sync_url,
-            [generate_update_event(contentnode.id, CONTENTNODE, {"title": new_title})],
-            format="json",
+        response = self.sync_changes(
+            [generate_update_event(contentnode.id, CONTENTNODE, {"title": new_title}, channel_id=self.channel.id)],
         )
         self.assertEqual(response.status_code, 200, response.content)
         updated_node = models.ContentNode.objects.get(id=contentnode.id)
         self.assertNotEqual(last_modified, updated_node.modified)
 
     def test_delete_contentnode(self):
-        user = testdata.user()
         contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
 
-        self.client.force_authenticate(user=user)
-        response = self.client.post(
-            self.sync_url,
-            [generate_delete_event(contentnode.id, CONTENTNODE)],
-            format="json",
+        response = self.sync_changes(
+            [generate_delete_event(contentnode.id, CONTENTNODE, channel_id=self.channel.id)],
         )
         self.assertEqual(response.status_code, 200, response.content)
         try:
@@ -812,18 +1047,13 @@ class SyncTestCase(StudioAPITestCase):
         except models.ContentNode.DoesNotExist:
             pass
 
-    def test_cannot_delete_contentnode(self):
-        user = testdata.user()
-        channel = testdata.channel()
-        contentnode = create_and_get_contentnode(channel.main_tree_id)
+    def test_cannot_delete_contentnode_no_permissions(self):
+        self.channel.editors.remove(self.user)
+        contentnode = create_and_get_contentnode(self.channel.main_tree_id)
 
-        self.client.force_authenticate(user=user)
-        with self.settings(TEST_ENV=False):
-            response = self.client.post(
-                self.sync_url,
-                [generate_delete_event(contentnode.id, CONTENTNODE)],
-                format="json",
-            )
+        response = self.sync_changes(
+            [generate_delete_event(contentnode.id, CONTENTNODE, channel_id=self.channel.id)],
+        )
         # Return a 200 here rather than a 404.
         self.assertEqual(response.status_code, 200, response.content)
         try:
@@ -832,20 +1062,15 @@ class SyncTestCase(StudioAPITestCase):
             self.fail("ContentNode was deleted")
 
     def test_delete_contentnodes(self):
-        user = testdata.user()
         contentnode1 = models.ContentNode.objects.create(**self.contentnode_db_metadata)
         contentnode2 = models.ContentNode.objects.create(**self.contentnode_db_metadata)
 
-        self.client.force_authenticate(user=user)
-        response = self.client.post(
-            self.sync_url,
+        self.sync_changes(
             [
-                generate_delete_event(contentnode1.id, CONTENTNODE),
-                generate_delete_event(contentnode2.id, CONTENTNODE),
+                generate_delete_event(contentnode1.id, CONTENTNODE, channel_id=self.channel.id),
+                generate_delete_event(contentnode2.id, CONTENTNODE, channel_id=self.channel.id),
             ],
-            format="json",
         )
-        self.assertEqual(response.status_code, 200, response.content)
         try:
             models.ContentNode.objects.get(id=contentnode1.id)
             self.fail("ContentNode 1 was not deleted")
@@ -859,27 +1084,21 @@ class SyncTestCase(StudioAPITestCase):
             pass
 
     def test_cannot_delete_some_contentnodes(self):
-        user = testdata.user()
 
         channel1 = testdata.channel()
-        channel1.editors.add(user)
+        channel1.editors.add(self.user)
         contentnode1 = create_and_get_contentnode(channel1.main_tree_id)
 
         channel2 = testdata.channel()
         contentnode2 = create_and_get_contentnode(channel2.main_tree_id)
 
-        self.client.force_authenticate(user=user)
-        with self.settings(TEST_ENV=False):
-            response = self.client.post(
-                self.sync_url,
-                [
-                    generate_delete_event(contentnode1.id, CONTENTNODE),
-                    generate_delete_event(contentnode2.id, CONTENTNODE),
-                ],
-                format="json",
-            )
-        # Return a 200 here rather than a 207. As operation is done!
-        self.assertEqual(response.status_code, 200, response.content)
+        response = self.sync_changes(
+            [
+                generate_delete_event(contentnode1.id, CONTENTNODE, channel_id=channel1.id),
+                generate_delete_event(contentnode2.id, CONTENTNODE, channel_id=channel2.id),
+            ],
+        )
+        self.assertEqual(len(response.data["disallowed"]), 1)
         try:
             models.ContentNode.objects.get(id=contentnode1.id)
             self.fail("ContentNode 1 was not deleted")
@@ -892,20 +1111,15 @@ class SyncTestCase(StudioAPITestCase):
             self.fail("ContentNode 2 was deleted")
 
     def test_copy_contentnode(self):
-        channel = testdata.channel()
-        user = testdata.user()
-        channel.editors.add(user)
+        self.channel.editors.add(self.user)
         contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
         new_node_id = uuid.uuid4().hex
-        self.client.force_authenticate(user=user)
-        response = self.client.post(
-            self.sync_url,
+        response = self.sync_changes(
             [
                 generate_copy_event(
-                    new_node_id, CONTENTNODE, contentnode.id, channel.main_tree_id,
+                    new_node_id, CONTENTNODE, contentnode.id, self.channel.main_tree_id, channel_id=self.channel.id
                 )
             ],
-            format="json",
         )
         self.assertEqual(response.status_code, 200, response.content)
 
@@ -914,30 +1128,22 @@ class SyncTestCase(StudioAPITestCase):
         except models.ContentNode.DoesNotExist:
             self.fail("ContentNode was not copied")
 
-        self.assertEqual(new_node.parent_id, channel.main_tree_id)
+        self.assertEqual(new_node.parent_id, self.channel.main_tree_id)
 
     def test_cannot_copy_contentnode__source_permission(self):
-        user = testdata.user()
-        channel = testdata.channel()
-        channel.editors.add(user)
-
         source_channel = testdata.channel()
         contentnode = create_and_get_contentnode(source_channel.main_tree_id)
 
         new_node_id = uuid.uuid4().hex
 
-        self.client.force_authenticate(user=user)
-        with self.settings(TEST_ENV=False):
-            response = self.client.post(
-                self.sync_url,
-                [
-                    generate_copy_event(
-                        new_node_id, CONTENTNODE, contentnode.id, channel.main_tree_id,
-                    )
-                ],
-                format="json",
-            )
-        self.assertEqual(response.status_code, 207, response.content)
+        response = self.sync_changes(
+            [
+                generate_copy_event(
+                    new_node_id, CONTENTNODE, contentnode.id, self.channel.main_tree_id, channel_id=self.channel.id
+                )
+            ],
+        )
+        self.assertEqual(len(response.data["errors"]), 1)
 
         try:
             models.ContentNode.objects.get(id=new_node_id)
@@ -946,23 +1152,18 @@ class SyncTestCase(StudioAPITestCase):
             pass
 
     def test_cannot_copy_contentnode__target_permission(self):
-        channel = testdata.channel()
-        user = testdata.user()
+        self.channel.editors.remove(self.user)
         contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
         new_node_id = uuid.uuid4().hex
 
-        self.client.force_authenticate(user=user)
-        with self.settings(TEST_ENV=False):
-            response = self.client.post(
-                self.sync_url,
-                [
-                    generate_copy_event(
-                        new_node_id, CONTENTNODE, contentnode.id, channel.main_tree_id,
-                    )
-                ],
-                format="json",
-            )
-        self.assertEqual(response.status_code, 400, response.content)
+        response = self.sync_changes(
+            [
+                generate_copy_event(
+                    new_node_id, CONTENTNODE, contentnode.id, self.channel.main_tree_id, channel_id=self.channel.id
+                )
+            ],
+        )
+        self.assertEqual(len(response.data["disallowed"]), 1)
 
         try:
             models.ContentNode.objects.get(id=new_node_id)
@@ -975,13 +1176,9 @@ class SyncTestCase(StudioAPITestCase):
         Regression test to ensure that nodes created here are able to be moved to
         other MPTT trees without invalidating data.
         """
-        user = testdata.user()
-        self.client.force_authenticate(user=user)
         contentnode = self.contentnode_metadata
-        response = self.client.post(
-            self.sync_url,
-            [generate_create_event(contentnode["id"], CONTENTNODE, contentnode)],
-            format="json",
+        response = self.sync_changes(
+            [generate_create_event(contentnode["id"], CONTENTNODE, contentnode, channel_id=self.channel.id)],
         )
         self.assertEqual(response.status_code, 200, response.content)
         try:
@@ -1007,20 +1204,14 @@ class SyncTestCase(StudioAPITestCase):
         Regression test to ensure that nodes created here are able to be moved to
         other MPTT trees without invalidating data.
         """
-        channel = testdata.channel()
-        user = testdata.user()
-        channel.editors.add(user)
         contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
         new_node_id = uuid.uuid4().hex
-        self.client.force_authenticate(user=user)
-        response = self.client.post(
-            self.sync_url,
+        response = self.sync_changes(
             [
                 generate_copy_event(
-                    new_node_id, CONTENTNODE, contentnode.id, channel.main_tree_id,
+                    new_node_id, CONTENTNODE, contentnode.id, self.channel.main_tree_id, channel_id=self.channel.id
                 )
             ],
-            format="json",
         )
         self.assertEqual(response.status_code, 200, response.content)
 
@@ -1043,34 +1234,26 @@ class SyncTestCase(StudioAPITestCase):
             self.fail("Moving caused a breakdown of the tree structure")
 
     def test_update_orphanage_root(self):
-        user = testdata.user()
         new_title = "This is not the old title"
 
-        self.client.force_authenticate(user=user)
-        response = self.client.post(
-            self.sync_url,
+        response = self.sync_changes(
             [
                 generate_update_event(
                     settings.ORPHANAGE_ROOT_ID, CONTENTNODE, {"title": new_title}
                 )
             ],
-            format="json",
         )
-        self.assertEqual(response.status_code, 400, response.content)
+        self.assertEqual(len(response.data["disallowed"]), 1)
         self.assertNotEqual(
             models.ContentNode.objects.get(id=settings.ORPHANAGE_ROOT_ID).title,
             new_title,
         )
 
     def test_delete_orphanage_root(self):
-        user = testdata.user()
         models.ContentNode.objects.create(**self.contentnode_db_metadata)
 
-        self.client.force_authenticate(user=user)
-        response = self.client.post(
-            self.sync_url,
-            [generate_delete_event(settings.ORPHANAGE_ROOT_ID, CONTENTNODE)],
-            format="json",
+        response = self.sync_changes(
+            [generate_delete_event(settings.ORPHANAGE_ROOT_ID, CONTENTNODE, channel_id=self.channel.id)],
         )
         # We return 200 even when a deletion is not found, but it should
         # still not actually delete it.
@@ -1081,103 +1264,81 @@ class SyncTestCase(StudioAPITestCase):
             self.fail("Orphanage root was deleted")
 
     def test_create_prerequisites(self):
-        user = testdata.user()
-        self.client.force_authenticate(user=user)
         contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
         prereq = models.ContentNode.objects.create(**self.contentnode_db_metadata)
         postreq = models.ContentNode.objects.create(**self.contentnode_db_metadata)
-        response = self.client.post(
-            self.sync_url,
+        response = self.sync_changes(
             [
                 generate_create_event(
-                    [contentnode.id, prereq.id], CONTENTNODE_PREREQUISITE, {}
+                    [contentnode.id, prereq.id], CONTENTNODE_PREREQUISITE, {}, channel_id=self.channel.id
                 ),
                 generate_create_event(
-                    [postreq.id, contentnode.id], CONTENTNODE_PREREQUISITE, {}
+                    [postreq.id, contentnode.id], CONTENTNODE_PREREQUISITE, {}, channel_id=self.channel.id
                 ),
             ],
-            format="json",
         )
         self.assertEqual(response.status_code, 200, response.content)
         self.assertTrue(contentnode.prerequisite.filter(id=prereq.id).exists())
         self.assertTrue(contentnode.is_prerequisite_of.filter(id=postreq.id).exists())
 
     def test_create_self_referential_prerequisite(self):
-        user = testdata.user()
-        self.client.force_authenticate(user=user)
         contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
-        response = self.client.post(
-            self.sync_url,
+        response = self.sync_changes(
             [
                 generate_create_event(
-                    [contentnode.id, contentnode.id], CONTENTNODE_PREREQUISITE, {}
+                    [contentnode.id, contentnode.id], CONTENTNODE_PREREQUISITE, {}, channel_id=self.channel.id
                 ),
             ],
-            format="json",
         )
-        self.assertEqual(response.status_code, 400, response.content)
+        self.assertEqual(len(response.data["errors"]), 1)
         self.assertFalse(contentnode.prerequisite.filter(id=contentnode.id).exists())
 
     def test_create_cyclic_prerequisite(self):
-        user = testdata.user()
-        self.client.force_authenticate(user=user)
         contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
         prereq = models.ContentNode.objects.create(**self.contentnode_db_metadata)
         models.PrerequisiteContentRelationship.objects.create(
             target_node=contentnode, prerequisite=prereq
         )
-        response = self.client.post(
-            self.sync_url,
+        response = self.sync_changes(
             [
                 generate_create_event(
-                    [prereq.id, contentnode.id], CONTENTNODE_PREREQUISITE, {}
+                    [prereq.id, contentnode.id], CONTENTNODE_PREREQUISITE, {}, channel_id=self.channel.id
                 ),
             ],
-            format="json",
         )
-        self.assertEqual(response.status_code, 400, response.content)
+        self.assertEqual(len(response.data["errors"]), 1)
         self.assertFalse(prereq.prerequisite.filter(id=contentnode.id).exists())
 
     def test_create_cross_tree_prerequisite(self):
-        user = testdata.user()
-        channel = testdata.channel()
-        channel.editors.add(user)
-        self.client.force_authenticate(user=user)
+        other_channel = testdata.channel()
+        other_channel.editors.add(self.user)
         contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
-        prereq = channel.main_tree.get_descendants().first()
-        response = self.client.post(
-            self.sync_url,
+        prereq = other_channel.main_tree.get_descendants().first()
+        response = self.sync_changes(
             [
                 generate_create_event(
-                    [contentnode.id, prereq.id], CONTENTNODE_PREREQUISITE, {}
+                    [contentnode.id, prereq.id], CONTENTNODE_PREREQUISITE, {}, channel_id=self.channel.id
                 ),
             ],
-            format="json",
         )
-        self.assertEqual(response.status_code, 400, response.content)
+        self.assertEqual(len(response.data["errors"]), 1, response.data)
         self.assertFalse(contentnode.prerequisite.filter(id=prereq.id).exists())
 
     def test_create_no_permission_prerequisite(self):
-        user = testdata.user()
-        channel = testdata.channel()
-        self.client.force_authenticate(user=user)
+        self.channel.editors.remove(self.user)
         contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
-        prereq = channel.main_tree.get_descendants().first()
-        response = self.client.post(
-            self.sync_url,
+        prereq = self.channel.main_tree.get_descendants().first()
+        response = self.sync_changes(
             [
                 generate_create_event(
-                    [contentnode.id, prereq.id], CONTENTNODE_PREREQUISITE, {}
+                    [contentnode.id, prereq.id], CONTENTNODE_PREREQUISITE, {}, channel_id=self.channel.id
                 ),
             ],
-            format="json",
         )
-        self.assertEqual(response.status_code, 400, response.content)
+        self.assertEqual(len(response.data["disallowed"]), 1)
         self.assertFalse(contentnode.prerequisite.filter(id=prereq.id).exists())
 
     def test_delete_prerequisites(self):
-        user = testdata.user()
-        self.client.force_authenticate(user=user)
         contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
         prereq = models.ContentNode.objects.create(**self.contentnode_db_metadata)
         postreq = models.ContentNode.objects.create(**self.contentnode_db_metadata)
@@ -1187,45 +1348,47 @@ class SyncTestCase(StudioAPITestCase):
         models.PrerequisiteContentRelationship.objects.create(
             target_node=postreq, prerequisite=contentnode
         )
-        response = self.client.post(
-            self.sync_url,
+        response = self.sync_changes(
             [
                 generate_delete_event(
-                    [contentnode.id, prereq.id], CONTENTNODE_PREREQUISITE
+                    [contentnode.id, prereq.id], CONTENTNODE_PREREQUISITE, channel_id=self.channel.id
                 ),
                 generate_delete_event(
-                    [postreq.id, contentnode.id], CONTENTNODE_PREREQUISITE
+                    [postreq.id, contentnode.id], CONTENTNODE_PREREQUISITE, channel_id=self.channel.id
                 ),
             ],
-            format="json",
         )
         self.assertEqual(response.status_code, 200, response.content)
         self.assertFalse(contentnode.prerequisite.filter(id=prereq.id).exists())
         self.assertFalse(contentnode.is_prerequisite_of.filter(id=postreq.id).exists())
 
     def test_delete_no_permission_prerequisite(self):
-        user = testdata.user()
-        channel = testdata.channel()
-        self.client.force_authenticate(user=user)
-        contentnode = channel.main_tree.get_descendants().last()
-        prereq = channel.main_tree.get_descendants().first()
+        self.channel.editors.remove(self.user)
+        contentnode = self.channel.main_tree.get_descendants().last()
+        prereq = self.channel.main_tree.get_descendants().first()
         models.PrerequisiteContentRelationship.objects.create(
             target_node=contentnode, prerequisite=prereq
         )
-        response = self.client.post(
-            self.sync_url,
+        response = self.sync_changes(
             [
                 generate_delete_event(
-                    [contentnode.id, prereq.id], CONTENTNODE_PREREQUISITE
+                    [contentnode.id, prereq.id], CONTENTNODE_PREREQUISITE, channel_id=self.channel.id
                 ),
             ],
-            format="json",
         )
-        self.assertEqual(response.status_code, 400, response.content)
+        self.assertEqual(len(response.data["disallowed"]), 1)
         self.assertTrue(contentnode.prerequisite.filter(id=prereq.id).exists())
 
 
 class CRUDTestCase(StudioAPITestCase):
+
+    def setUp(self):
+        super(CRUDTestCase, self).setUp()
+        self.channel = testdata.channel()
+        self.user = testdata.user()
+        self.channel.editors.add(self.user)
+        self.client.force_authenticate(user=self.user)
+
     @property
     def contentnode_metadata(self):
         return {
@@ -1233,6 +1396,7 @@ class CRUDTestCase(StudioAPITestCase):
             "id": uuid.uuid4().hex,
             "kind": content_kinds.VIDEO,
             "description": "coolest contentnode this side of the Pacific",
+            "parent": self.channel.main_tree_id,
         }
 
     @property
@@ -1242,12 +1406,10 @@ class CRUDTestCase(StudioAPITestCase):
             "id": uuid.uuid4().hex,
             "kind_id": content_kinds.VIDEO,
             "description": "coolest contentnode this side of the Pacific",
-            "parent_id": settings.ORPHANAGE_ROOT_ID,
+            "parent_id": self.channel.main_tree_id,
         }
 
     def test_fetch_contentnode(self):
-        user = testdata.user()
-        self.client.force_authenticate(user=user)
         contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
         response = self.client.get(
             reverse("contentnode-detail", kwargs={"pk": contentnode.id}), format="json",
@@ -1256,11 +1418,9 @@ class CRUDTestCase(StudioAPITestCase):
         self.assertEqual(response.data["id"], contentnode.id)
 
     def test_fetch_contentnode__by_parent(self):
-        user = testdata.user()
-        self.client.force_authenticate(user=user)
 
         channel = models.Channel.objects.create(name="Test channel")
-        channel.editors.add(user)
+        channel.editors.add(self.user)
         channel.save()
 
         metadata = self.contentnode_db_metadata
@@ -1275,11 +1435,8 @@ class CRUDTestCase(StudioAPITestCase):
         self.assertEqual(response.data[0]["id"], contentnode.id)
 
     def test_fetch_contentnode__by_node_id_channel_id(self):
-        user = testdata.user()
-        self.client.force_authenticate(user=user)
-
         channel = models.Channel.objects.create(name="Test channel")
-        channel.editors.add(user)
+        channel.editors.add(self.user)
         channel.save()
 
         metadata = self.contentnode_db_metadata
@@ -1298,8 +1455,6 @@ class CRUDTestCase(StudioAPITestCase):
         self.assertEqual(response.data[0]["id"], contentnode.id)
 
     def test_fetch_requisites(self):
-        user = testdata.user()
-        self.client.force_authenticate(user=user)
         contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
         prereq = models.ContentNode.objects.create(**self.contentnode_db_metadata)
         postreq = models.ContentNode.objects.create(**self.contentnode_db_metadata)
@@ -1336,8 +1491,6 @@ class CRUDTestCase(StudioAPITestCase):
         )
 
     def test_create_contentnode(self):
-        user = testdata.user()
-        self.client.force_authenticate(user=user)
         contentnode = self.contentnode_metadata
         response = self.client.post(
             reverse("contentnode-list"), contentnode, format="json",
@@ -1349,10 +1502,8 @@ class CRUDTestCase(StudioAPITestCase):
             self.fail("ContentNode was not created")
 
     def test_create_contentnode_tag(self):
-        user = testdata.user()
         tag = "howzat!"
 
-        self.client.force_authenticate(user=user)
         contentnode = self.contentnode_metadata
         contentnode["tags"] = {
             tag: True,
@@ -1367,12 +1518,24 @@ class CRUDTestCase(StudioAPITestCase):
             .exists()
         )
 
+    def test_contentnode_tag_greater_than_30_chars(self):
+        tag = "kolibri studio, kolibri studio!"
+
+        contentnode = self.contentnode_metadata
+        contentnode["tags"] = {
+            tag: True,
+        }
+
+        response = self.client.post(
+            reverse("contentnode-list"), contentnode, format="json",
+        )
+
+        self.assertEqual(response.status_code, 400, response.content)
+
     def test_update_contentnode(self):
-        user = testdata.user()
         contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
         new_title = "This is not the old title"
 
-        self.client.force_authenticate(user=user)
         response = self.client.patch(
             reverse("contentnode-detail", kwargs={"pk": contentnode.id}),
             {"title": new_title},
@@ -1384,11 +1547,9 @@ class CRUDTestCase(StudioAPITestCase):
         )
 
     def test_update_contentnode_tags(self):
-        user = testdata.user()
         contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
         tag = "howzat!"
 
-        self.client.force_authenticate(user=user)
         response = self.client.patch(
             reverse("contentnode-detail", kwargs={"pk": contentnode.id}),
             {"tags.{}".format(tag): True},
@@ -1437,14 +1598,28 @@ class CRUDTestCase(StudioAPITestCase):
             .exists()
         )
 
-    def test_update_contentnode_tags_dont_duplicate(self):
+    def test_update_contentnode_suggested_duration(self):
         user = testdata.user()
+        contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
+        new_suggested_duration = 600
+
+        self.client.force_authenticate(user=user)
+        response = self.client.patch(
+            reverse("contentnode-detail", kwargs={"pk": contentnode.id}),
+            {"suggested_duration": new_suggested_duration},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(
+            models.ContentNode.objects.get(id=contentnode.id).suggested_duration, new_suggested_duration
+        )
+
+    def test_update_contentnode_tags_dont_duplicate(self):
         contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
         tag = "howzat!"
 
         old_tag = models.ContentTag.objects.create(tag_name=tag)
 
-        self.client.force_authenticate(user=user)
         response = self.client.patch(
             reverse("contentnode-detail", kwargs={"pk": contentnode.id}),
             {"tags.{}".format(tag): True},
@@ -1458,10 +1633,8 @@ class CRUDTestCase(StudioAPITestCase):
         )
 
     def test_delete_contentnode(self):
-        user = testdata.user()
         contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
 
-        self.client.force_authenticate(user=user)
         response = self.client.delete(
             reverse("contentnode-detail", kwargs={"pk": contentnode.id})
         )
@@ -1477,8 +1650,6 @@ class CRUDTestCase(StudioAPITestCase):
         Regression test to ensure that nodes created here are able to be moved to
         other MPTT trees without invalidating data.
         """
-        user = testdata.user()
-        self.client.force_authenticate(user=user)
         contentnode = self.contentnode_metadata
         response = self.client.post(
             reverse("contentnode-list"), contentnode, format="json",
@@ -1503,10 +1674,8 @@ class CRUDTestCase(StudioAPITestCase):
             self.fail("Moving caused a breakdown of the tree structure")
 
     def test_update_orphanage_root(self):
-        user = testdata.user()
         new_title = "This is not the old title"
 
-        self.client.force_authenticate(user=user)
         response = self.client.patch(
             reverse("contentnode-detail", kwargs={"pk": settings.ORPHANAGE_ROOT_ID}),
             {"title": new_title},
@@ -1519,10 +1688,8 @@ class CRUDTestCase(StudioAPITestCase):
         )
 
     def test_delete_orphanage_root(self):
-        user = testdata.user()
         models.ContentNode.objects.create(**self.contentnode_db_metadata)
 
-        self.client.force_authenticate(user=user)
         response = self.client.delete(
             reverse("contentnode-detail", kwargs={"pk": settings.ORPHANAGE_ROOT_ID})
         )
@@ -1534,21 +1701,17 @@ class CRUDTestCase(StudioAPITestCase):
 
     @mock.patch("contentcuration.utils.nodes.STALE_MAX_CALCULATION_SIZE", 5000)
     def test_resource_size(self):
-        user = testdata.user()
-        channel = testdata.channel()
-        tree = TreeBuilder(user=user)
-        channel.main_tree = tree.root
-        channel.editors.add(user)
-        channel.save()
+        tree = TreeBuilder(user=self.user)
+        self.channel.main_tree = tree.root
+        self.channel.save()
 
-        self.client.force_authenticate(user=user)
         response = self.client.get(
-            reverse("contentnode-size", kwargs={"pk": channel.main_tree.id})
+            reverse("contentnode-size", kwargs={"pk": self.channel.main_tree.id})
         )
 
         files_map = {}
 
-        for c in channel.main_tree.get_descendants(include_self=True):
+        for c in self.channel.main_tree.get_descendants(include_self=True):
             for f in c.files.all():
                 files_map[f.checksum] = f.file_size
 

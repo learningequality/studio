@@ -10,16 +10,14 @@ from le_utils.constants import format_presets
 from contentcuration import models
 from contentcuration.tests import testdata
 from contentcuration.tests.base import StudioAPITestCase
+from contentcuration.tests.viewsets.base import generate_create_event
+from contentcuration.tests.viewsets.base import generate_delete_event
+from contentcuration.tests.viewsets.base import generate_update_event
+from contentcuration.tests.viewsets.base import SyncTestMixin
 from contentcuration.viewsets.sync.constants import FILE
-from contentcuration.viewsets.sync.utils import generate_create_event
-from contentcuration.viewsets.sync.utils import generate_delete_event
-from contentcuration.viewsets.sync.utils import generate_update_event
 
 
-class SyncTestCase(StudioAPITestCase):
-    @property
-    def sync_url(self):
-        return reverse("sync")
+class SyncTestCase(SyncTestMixin, StudioAPITestCase):
 
     @property
     def file_metadata(self):
@@ -48,18 +46,14 @@ class SyncTestCase(StudioAPITestCase):
         self.channel = testdata.channel()
         self.user = testdata.user()
         self.channel.editors.add(self.user)
+        self.client.force_authenticate(user=self.user)
 
     def test_cannot_create_file(self):
-        self.client.force_authenticate(user=self.user)
         file = self.file_metadata
-        with self.settings(TEST_ENV=False):
-            # Override test env here to check what will happen in production
-            response = self.client.post(
-                self.sync_url,
-                [generate_create_event(file["id"], FILE, file,)],
-                format="json",
-            )
-        self.assertEqual(response.status_code, 400, response.content)
+        response = self.sync_changes(
+            [generate_create_event(file["id"], FILE, file, channel_id=self.channel.id)],
+        )
+        self.assertEqual(len(response.data["errors"]), 1)
         try:
             models.File.objects.get(id=file["id"])
             self.fail("File was created")
@@ -67,20 +61,15 @@ class SyncTestCase(StudioAPITestCase):
             pass
 
     def test_cannot_create_files(self):
-        self.client.force_authenticate(user=self.user)
         file1 = self.file_metadata
         file2 = self.file_metadata
-        with self.settings(TEST_ENV=False):
-            # Override test env here to check what will happen in production
-            response = self.client.post(
-                self.sync_url,
-                [
-                    generate_create_event(file1["id"], FILE, file1,),
-                    generate_create_event(file2["id"], FILE, file2,),
-                ],
-                format="json",
-            )
-        self.assertEqual(response.status_code, 400, response.content)
+        response = self.sync_changes(
+            [
+                generate_create_event(file1["id"], FILE, file1, channel_id=self.channel.id),
+                generate_create_event(file2["id"], FILE, file2, channel_id=self.channel.id),
+            ],
+        )
+        self.assertEqual(len(response.data["errors"]), 2)
         try:
             models.File.objects.get(id=file1["id"])
             self.fail("File 1 was created")
@@ -98,11 +87,8 @@ class SyncTestCase(StudioAPITestCase):
         file = models.File.objects.create(**self.file_db_metadata)
         new_preset = format_presets.VIDEO_HIGH_RES
 
-        self.client.force_authenticate(user=self.user)
-        response = self.client.post(
-            self.sync_url,
-            [generate_update_event(file.id, FILE, {"preset": new_preset},)],
-            format="json",
+        response = self.sync_changes(
+            [generate_update_event(file.id, FILE, {"preset": new_preset}, channel_id=self.channel.id)],
         )
         self.assertEqual(response.status_code, 200, response.content)
         self.assertEqual(
@@ -114,11 +100,8 @@ class SyncTestCase(StudioAPITestCase):
         contentnode_id = file_metadata.pop("contentnode_id")
         file = models.File.objects.create(**file_metadata)
 
-        self.client.force_authenticate(user=self.user)
-        response = self.client.post(
-            self.sync_url,
-            [generate_update_event(file.id, FILE, {"contentnode": contentnode_id},)],
-            format="json",
+        response = self.sync_changes(
+            [generate_update_event(file.id, FILE, {"contentnode": contentnode_id}, channel_id=self.channel.id)],
         )
         self.assertEqual(response.status_code, 200, response.content)
         self.assertEqual(
@@ -131,13 +114,10 @@ class SyncTestCase(StudioAPITestCase):
 
         self.channel.editors.remove(self.user)
 
-        self.client.force_authenticate(user=self.user)
-        response = self.client.post(
-            self.sync_url,
-            [generate_update_event(file.id, FILE, {"preset": new_preset},)],
-            format="json",
+        response = self.sync_changes(
+            [generate_update_event(file.id, FILE, {"preset": new_preset}, channel_id=self.channel.id)],
         )
-        self.assertEqual(response.status_code, 400, response.content)
+        self.assertEqual(len(response.data["disallowed"]), 1)
         self.assertNotEqual(
             models.File.objects.get(id=file.id).preset_id, new_preset,
         )
@@ -149,13 +129,10 @@ class SyncTestCase(StudioAPITestCase):
         self.channel.editors.remove(self.user)
         self.channel.viewers.add(self.user)
 
-        self.client.force_authenticate(user=self.user)
-        response = self.client.post(
-            self.sync_url,
-            [generate_update_event(file.id, FILE, {"preset": new_preset},)],
-            format="json",
+        response = self.sync_changes(
+            [generate_update_event(file.id, FILE, {"preset": new_preset}, channel_id=self.channel.id)],
         )
-        self.assertEqual(response.status_code, 400, response.content)
+        self.assertEqual(len(response.data["disallowed"]), 1)
         self.assertNotEqual(
             models.File.objects.get(id=file.id).preset_id, new_preset,
         )
@@ -166,14 +143,11 @@ class SyncTestCase(StudioAPITestCase):
         file2 = models.File.objects.create(**self.file_db_metadata)
         new_preset = format_presets.VIDEO_HIGH_RES
 
-        self.client.force_authenticate(user=self.user)
-        response = self.client.post(
-            self.sync_url,
+        response = self.sync_changes(
             [
-                generate_update_event(file1.id, FILE, {"preset": new_preset},),
-                generate_update_event(file2.id, FILE, {"preset": new_preset},),
+                generate_update_event(file1.id, FILE, {"preset": new_preset}, channel_id=self.channel.id),
+                generate_update_event(file2.id, FILE, {"preset": new_preset}, channel_id=self.channel.id),
             ],
-            format="json",
         )
         self.assertEqual(response.status_code, 200, response.content)
         self.assertEqual(
@@ -186,20 +160,14 @@ class SyncTestCase(StudioAPITestCase):
     def test_update_file_empty(self):
 
         file = models.File.objects.create(**self.file_db_metadata)
-        self.client.force_authenticate(user=self.user)
-        response = self.client.post(
-            self.sync_url, [generate_update_event(file.id, FILE, {},)], format="json",
-        )
+        response = self.sync_changes([generate_update_event(file.id, FILE, {}, channel_id=self.channel.id)])
         self.assertEqual(response.status_code, 200, response.content)
 
     def test_update_file_unwriteable_fields(self):
 
         file = models.File.objects.create(**self.file_db_metadata)
-        self.client.force_authenticate(user=self.user)
-        response = self.client.post(
-            self.sync_url,
-            [generate_update_event(file.id, FILE, {"not_a_field": "not_a_value"},)],
-            format="json",
+        response = self.sync_changes(
+            [generate_update_event(file.id, FILE, {"not_a_field": "not_a_value"}, channel_id=self.channel.id)],
         )
         self.assertEqual(response.status_code, 200, response.content)
 
@@ -208,9 +176,7 @@ class SyncTestCase(StudioAPITestCase):
         file = models.File.objects.create(**self.file_db_metadata)
 
         self.client.force_authenticate(user=self.user)
-        response = self.client.post(
-            self.sync_url, [generate_delete_event(file.id, FILE,)], format="json",
-        )
+        response = self.sync_changes([generate_delete_event(file.id, FILE, channel_id=self.channel.id)])
         self.assertEqual(response.status_code, 200, response.content)
         try:
             models.File.objects.get(id=file.id)
@@ -224,13 +190,11 @@ class SyncTestCase(StudioAPITestCase):
         file2 = models.File.objects.create(**self.file_db_metadata)
 
         self.client.force_authenticate(user=self.user)
-        response = self.client.post(
-            self.sync_url,
+        response = self.sync_changes(
             [
-                generate_delete_event(file1.id, FILE,),
-                generate_delete_event(file2.id, FILE,),
+                generate_delete_event(file1.id, FILE, channel_id=self.channel.id),
+                generate_delete_event(file2.id, FILE, channel_id=self.channel.id),
             ],
-            format="json",
         )
         self.assertEqual(response.status_code, 200, response.content)
         try:
@@ -414,3 +378,52 @@ class CRUDTestCase(StudioAPITestCase):
             self.fail("File was not deleted")
         except models.File.DoesNotExist:
             pass
+
+
+class UploadFileURLTestCase(StudioAPITestCase):
+    def setUp(self):
+        super(UploadFileURLTestCase, self).setUp()
+        self.user = testdata.user()
+        self.file = {
+            "size": 1000,
+            "checksum": uuid.uuid4().hex,
+            "name": "le_studio",
+            "file_format": file_formats.MP3,
+            "preset": format_presets.AUDIO,
+            "duration": 10.123
+        }
+
+    def test_required_keys(self):
+        del self.file["name"]
+
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(
+            reverse("file-upload-url"), self.file, format="json",
+        )
+
+        self.assertEqual(response.status_code, 400)
+
+    def test_duration_invalid(self):
+        self.file["duration"] = '1.23'
+
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(
+            reverse("file-upload-url"), self.file, format="json",
+        )
+
+        self.assertEqual(response.status_code, 400)
+
+    def test_insufficient_storage(self):
+        self.file["size"] = 100000000000000
+
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(reverse("file-upload-url"), self.file, format="json",)
+
+        self.assertEqual(response.status_code, 412)
+
+    def test_upload_url(self):
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(reverse("file-upload-url"), self.file, format="json",)
+        self.assertEqual(response.status_code, 200)
+        file = models.File.objects.get(checksum=self.file["checksum"])
+        self.assertEqual(11, file.duration)

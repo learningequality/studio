@@ -52,8 +52,8 @@
 
   import { mapActions, mapGetters } from 'vuex';
 
-  import { RouteNames } from '../constants';
   import ContentNodeEditListItem from '../components/ContentNodeEditListItem';
+  import { RouteNames } from '../constants';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import LoadingText from 'shared/views/LoadingText';
   import { COPYING_FLAG } from 'shared/data/constants';
@@ -149,7 +149,7 @@
     },
     $trs: {
       emptyViewOnlyChannelText: 'Nothing in this channel yet',
-      emptyTopicText: 'Nothing in this topic yet',
+      emptyTopicText: 'Nothing in this folder yet',
       emptyChannelText: 'Click "ADD" to start building your channel',
       emptyChannelSubText: 'Create, upload, or import resources from other channels',
     },

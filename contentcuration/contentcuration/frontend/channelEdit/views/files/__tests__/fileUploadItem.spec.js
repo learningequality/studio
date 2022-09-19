@@ -29,6 +29,28 @@ function makeWrapper(props = {}, file = {}) {
 
 describe('fileUploadItem', () => {
   describe('render', () => {
+    it("'Unknown filename' should be displayed if original_filename is 'file'", () => {
+      let file = {
+        original_filename: 'file',
+      };
+      let wrapper = makeWrapper({}, file);
+      expect(wrapper.find('[data-test="file-link"]').text()).toBe('Unknown filename');
+    });
+    it("'Unknown filename' should be displayed if original_filename is ''", () => {
+      let file = {
+        original_filename: '',
+      };
+      let wrapper = makeWrapper({}, file);
+      expect(wrapper.find('[data-test="file-link"]').text()).toBe('Unknown filename');
+    });
+    it("original_filename should be displayed if its value is not 'file'", () => {
+      let file = {
+        id: 'file-1',
+        original_filename: 'SomeFileName',
+      };
+      let wrapper = makeWrapper({}, file);
+      expect(wrapper.find('[data-test="file-link"]').text()).toBe('SomeFileName');
+    });
     it('should show a status error if the file has an error', () => {
       let wrapper = makeWrapper({}, { error: true });
       expect(wrapper.find('[data-test="status"]').exists()).toBe(true);

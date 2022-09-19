@@ -138,9 +138,9 @@
 <script>
 
   import { mapActions, mapGetters, mapMutations } from 'vuex';
-  import { RouteNames, DraggableRegions, DraggableUniverses } from '../../constants';
-  import StudioTree from '../../components/StudioTree/StudioTree';
   import CurrentTopicView from '../CurrentTopicView';
+  import StudioTree from '../../components/StudioTree/StudioTree';
+  import { RouteNames, DraggableRegions, DraggableUniverses } from '../../constants';
   import TreeViewBase from './TreeViewBase';
   import Banner from 'shared/views/Banner';
   import IconButton from 'shared/views/IconButton';
@@ -178,6 +178,7 @@
       detailNodeId: {
         type: String,
         required: false,
+        default: null,
       },
     },
     data() {
@@ -396,7 +397,7 @@
     $trs: {
       showSidebar: 'Show sidebar',
       collapseAllButton: 'Collapse all',
-      openCurrentLocationButton: 'Expand to current topic location',
+      openCurrentLocationButton: 'Expand to current folder location',
       updatedResourcesReadyForReview: 'Updated resources are ready for review',
       closeDrawer: 'Close',
     },

@@ -1,4 +1,18 @@
+import invert from 'lodash/invert';
+import Subjects from 'kolibri-constants/labels/Subjects';
+import CompletionCriteria from 'kolibri-constants/CompletionCriteria';
 import featureFlagsSchema from 'static/feature_flags.json';
+
+export { default as LearningActivities } from 'kolibri-constants/labels/LearningActivities';
+export { default as CompletionCriteriaModels } from 'kolibri-constants/CompletionCriteria';
+export { default as ContentLevel } from 'kolibri-constants/labels/Levels';
+export { default as Categories } from 'kolibri-constants/labels/Subjects';
+export { default as AccessibilityCategories } from 'kolibri-constants/labels/AccessibilityCategories';
+export { default as ContentLevels } from 'kolibri-constants/labels/Levels';
+export { default as ResourcesNeededTypes } from 'kolibri-constants/labels/Needs';
+
+export const CategoriesLookup = invert(Subjects);
+export const CompletionCriteriaLookup = invert(CompletionCriteria);
 
 export const ContentDefaults = {
   author: 'author',
@@ -33,6 +47,10 @@ export const NOVALUE = Symbol('No value default');
 // This symbol is used as a key on objects that are new to indicate
 // that they have not yet been committed to our IndexedDB layer.
 export const NEW_OBJECT = Symbol('New object');
+
+// This symbol is used as a key on new objects used to denote when
+// validation should be delayed
+export const DELAYED_VALIDATION = Symbol('Delayed validation');
 
 export const kindToIconMap = {
   audio: 'headset',
@@ -152,6 +170,16 @@ export const ValidationErrors = {
   QUESTION_REQUIRED: 'QUESTION_REQUIRED',
   INVALID_NUMBER_OF_CORRECT_ANSWERS: 'INVALID_NUMBER_OF_CORRECT_ANSWERS',
   NO_VALID_PRIMARY_FILES: 'NO_VALID_PRIMARY_FILES',
+  INVALID_COMPLETION_CRITERIA_MODEL: 'INVALID_COMPLETION_CRITERIA_MODEL',
+  LEARNING_ACTIVITY_REQUIRED: 'LEARNING_ACTIVITY_REQUIRED',
+  DURATION_REQUIRED: 'DURATION_REQUIRED',
+  ACTIVITY_DURATION_REQUIRED: 'ACTIVITY_DURATION_REQUIRED',
+  ACTIVITY_DURATION_MIN_FOR_SHORT_ACTIVITY: 'ACTIVITY_DURATION_MIN_FOR_SHORT_ACTIVITY',
+  ACTIVITY_DURATION_MAX_FOR_SHORT_ACTIVITY: 'ACTIVITY_DURATION_MAX_FOR_SHORT_ACTIVITY',
+  ACTIVITY_DURATION_MIN_FOR_LONG_ACTIVITY: 'ACTIVITY_DURATION_MIN_FOR_LONG_ACTIVITY',
+  ACTIVITY_DURATION_MAX_FOR_LONG_ACTIVITY: 'ACTIVITY_DURATION_MAX_FOR_LONG_ACTIVITY',
+  ACTIVITY_DURATION_MIN_REQUIREMENT: 'ACTIVITY_DURATION_MIN_REQUIREMENT',
+  ACTIVITY_DURATION_TOO_LONG: 'ACTIVITY_DURATION_TOO_LONG',
   ...fileErrors,
 };
 
@@ -167,4 +195,28 @@ export const FeatureFlagKeys = Object.keys(FeatureFlagsSchema.properties).reduce
 
 export const ContentModalities = {
   QUIZ: 'QUIZ',
+};
+
+export const AccessibilityCategoriesMap = {
+  // Note: audio is not included, as it is rendered in the UI differently.
+  document: ['ALT_TEXT', 'HIGH_CONTRAST', 'TAGGED_PDF'],
+  video: ['CAPTIONS_SUBTITLES', 'AUDIO_DESCRIPTION', 'SIGN_LANGUAGE'],
+  exercise: ['ALT_TEXT'],
+  html5: ['ALT_TEXT', 'HIGH_CONTRAST'],
+};
+
+export const CompletionDropdownMap = {
+  allContent: 'allContent',
+  completeDuration: 'completeDuration',
+  determinedByResource: 'determinedByResource',
+  goal: 'goal',
+  practiceQuiz: 'practiceQuiz',
+  reference: 'reference',
+};
+
+export const DurationDropdownMap = {
+  EXACT_TIME: 'exactTime',
+  SHORT_ACTIVITY: 'shortActivity',
+  LONG_ACTIVITY: 'longActivity',
+  REFERENCE: 'reference',
 };

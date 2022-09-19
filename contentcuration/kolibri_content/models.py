@@ -122,6 +122,14 @@ class ContentNode(MPTTModel):
     # A JSON Dictionary of properties to configure loading, rendering, etc. the file
     options = models.TextField(default="{}")
 
+    # Fields for metadata labels
+    grade_levels = models.TextField(blank=True, null=True)
+    resource_types = models.TextField(blank=True, null=True)
+    learning_activities = models.TextField(blank=True, null=True)
+    accessibility_labels = models.TextField(blank=True, null=True)
+    categories = models.TextField(blank=True, null=True)
+    learner_needs = models.TextField(blank=True, null=True)
+
     # If media, the duration in seconds
     duration = models.IntegerField(null=True, blank=True)
 

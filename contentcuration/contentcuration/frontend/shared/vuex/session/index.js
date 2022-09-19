@@ -2,14 +2,10 @@ import debounce from 'lodash/debounce';
 import client from '../../client';
 import Languages from 'shared/leUtils/Languages';
 import { TABLE_NAMES, CHANGE_TYPES, resetDB } from 'shared/data';
-import { CURRENT_USER } from 'shared/data/constants';
 import { Session, User } from 'shared/data/resources';
 import { forceServerSync } from 'shared/data/serverSync';
 import translator from 'shared/translator';
-
-const GUEST_USER = {
-  first_name: 'Guest',
-};
+import { applyMods } from 'shared/data/applyRemoteChanges';
 
 function langCode(language) {
   // Turns a Django language name (en-gb) into an ISO language code (en-GB)
@@ -32,7 +28,7 @@ function langCode(language) {
 
 export default {
   state: () => ({
-    currentUser: GUEST_USER,
+    currentUser: {},
     preferences:
       window.user_preferences === 'string'
         ? JSON.parse(window.user_preferences)
@@ -50,8 +46,13 @@ export default {
         ...data,
       };
     },
+    UPDATE_SESSION_FROM_INDEXEDDB(state, { id, ...mods }) {
+      if (id === state.currentUser.id) {
+        applyMods(state.currentUser, mods);
+      }
+    },
     REMOVE_SESSION(state) {
-      state.currentUser = GUEST_USER;
+      state.currentUser = {};
     },
   },
   getters: {
@@ -95,12 +96,12 @@ export default {
     },
   },
   actions: {
-    async saveSession(context, currentUser) {
-      await Session.put({
-        ...currentUser,
-        CURRENT_USER,
-      });
+    saveSession(context, currentUser) {
       context.commit('ADD_SESSION', currentUser);
+      // This will trigger the IndexedDB listener to call `ADD_SESSION` if this actually creates
+      // the user in IndexedDB, but if we've already saved it to IndexedDB, we want to call the
+      // above `ADD_SESSION` regardless
+      return Session.setSession(currentUser);
     },
     login(context, credentials) {
       return client.post(window.Urls.login(), credentials);
@@ -141,7 +142,7 @@ export default {
   listeners: {
     [TABLE_NAMES.SESSION]: {
       [CHANGE_TYPES.CREATED]: 'ADD_SESSION',
-      [CHANGE_TYPES.UPDATED]: 'UPDATE_SESSION',
+      [CHANGE_TYPES.UPDATED]: 'UPDATE_SESSION_FROM_INDEXEDDB',
       [CHANGE_TYPES.DELETED]: 'REMOVE_SESSION',
     },
   },

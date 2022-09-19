@@ -8,7 +8,7 @@
     :headers="headers"
     :items="items"
   >
-    <template slot="items" slot-scope="props">
+    <template #items="props">
       <!-- Type column -->
       <td>{{ props.item.type }}</td>
 
@@ -39,7 +39,7 @@
         </template>
         <template v-else>
           <Diff :value="props.item.diff" class="font-weight-bold">
-            <template slot-scope="{ sign, value }">
+            <template #default="{ sign, value }">
               <span v-if="props.item.key === 'file_size_in_bytes'">
                 {{ sign }}{{ value ? formatFileSize(value) : '-' }}
               </span>
@@ -136,7 +136,7 @@
       headerDiff: 'Net changes',
       typeVersion: 'API version',
       typeFileSize: 'File size',
-      typeTopics: 'Topics',
+      typeTopics: 'Folders',
       typeVideos: 'Videos',
       typeAudios: 'Audios',
       typeExercises: 'Exercises',

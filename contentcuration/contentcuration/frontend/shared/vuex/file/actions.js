@@ -1,4 +1,4 @@
-import { getHash, inferPreset, storageUrl } from './utils';
+import { getHash, extractMetadata, storageUrl } from './utils';
 import { File } from 'shared/data/resources';
 import client from 'shared/client';
 import { fileErrors, NOVALUE } from 'shared/constants';
@@ -99,6 +99,7 @@ export function updateFile(context, { id, ...payload }) {
         }
       }
     }
+    return { id, ...fileData };
   });
 }
 
@@ -166,8 +167,8 @@ export function uploadFileToStorage(
 export function uploadFile(context, { file, preset = null } = {}) {
   return new Promise((resolve, reject) => {
     // 1. Get the checksum of the file
-    Promise.all([getHash(file), preset ? Promise.resolve() : inferPreset(file)])
-      .then(([checksum, presetId]) => {
+    Promise.all([getHash(file), extractMetadata(file, preset)])
+      .then(([checksum, metadata]) => {
         const file_format = file.name
           .split('.')
           .pop()
@@ -179,7 +180,7 @@ export function uploadFile(context, { file, preset = null } = {}) {
           type: file.type,
           name: file.name,
           file_format,
-          preset: preset || presetId,
+          ...metadata,
         })
           .then(data => {
             const fileObject = {
@@ -225,7 +226,7 @@ export function uploadFile(context, { file, preset = null } = {}) {
           })
           .catch(error => {
             let errorType = fileErrors.UPLOAD_FAILED;
-            if (error.response && error.response.status === 418) {
+            if (error.response && error.response.status === 412) {
               errorType = fileErrors.NO_STORAGE;
             }
             const fileObject = {
@@ -235,7 +236,7 @@ export function uploadFile(context, { file, preset = null } = {}) {
               file_size: file.size,
               original_filename: file.name,
               file_format,
-              preset: presetId,
+              preset: metadata.preset,
               error: errorType,
             };
             context.commit('ADD_FILE', fileObject);

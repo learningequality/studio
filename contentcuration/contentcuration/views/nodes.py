@@ -4,7 +4,6 @@ from datetime import datetime
 from django.conf import settings
 from django.core.cache import cache
 from django.db.models import Max
-from django.db.models import Q
 from django.http import Http404
 from django.http import HttpResponse
 from django.http import HttpResponseNotFound
@@ -21,8 +20,7 @@ from rest_framework.response import Response
 
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
-from contentcuration.models import Task
-from contentcuration.tasks import create_async_task
+from contentcuration.tasks import generatenodediff_task
 from contentcuration.tasks import getnodedetails_task
 from contentcuration.utils.nodes import get_diff
 
@@ -38,7 +36,7 @@ def get_channel_details(request, channel_id):
     channel = get_object_or_404(Channel.filter_view_queryset(Channel.objects.all(), request.user), id=channel_id)
     if not channel.main_tree:
         raise Http404
-    data = get_node_details_cached(channel.main_tree, channel_id=channel_id)
+    data = get_node_details_cached(request.user, channel.main_tree, channel_id=channel_id)
     return HttpResponse(json.dumps(data))
 
 
@@ -49,11 +47,11 @@ def get_node_details(request, node_id):
     channel = node.get_channel()
     if channel and not channel.public:
         return HttpResponseNotFound("No topic found for {}".format(node_id))
-    data = get_node_details_cached(node)
+    data = get_node_details_cached(request.user, node)
     return HttpResponse(json.dumps(data))
 
 
-def get_node_details_cached(node, channel_id=None):
+def get_node_details_cached(user, node, channel_id=None):
     cached_data = cache.get("details_{}".format(node.node_id))
     if cached_data:
         descendants = (
@@ -77,9 +75,9 @@ def get_node_details_cached(node, channel_id=None):
             last_cache_update = datetime.strptime(
                 json.loads(cached_data)["last_update"], settings.DATE_TIME_FORMAT
             )
-            if last_update.replace(tzinfo=None) > last_cache_update:
+            if not user.is_anonymous and last_update.replace(tzinfo=None) > last_cache_update:
                 # update the stats async, then return the cached value
-                getnodedetails_task.apply_async((node.pk,))
+                getnodedetails_task.enqueue(user, node_id=node.pk)
         return json.loads(cached_data)
 
     return node.get_details(channel_id=channel_id)
@@ -101,13 +99,7 @@ def get_node_diff(request, updated_id, original_id):
             return Response(data)
 
         # See if there's already a staging task in progress
-        is_generating = Task.objects.filter(
-            task_type="get-node-diff",
-            metadata__args__updated_id=updated_id,
-            metadata__args__original_id=original_id,
-        ).exclude(Q(status='FAILURE') | Q(status='SUCCESS')).exists()
-
-        if is_generating:
+        if generatenodediff_task.find_incomplete_ids(updated_id=updated_id, original_id=original_id).exists():
             return Response('Diff is being generated', status=status.HTTP_302_FOUND)
     except ContentNode.DoesNotExist:
         pass
@@ -129,12 +121,5 @@ def generate_node_diff(request, updated_id, original_id):
         return Response('Diff is not available', status=status.HTTP_403_FORBIDDEN)
 
     # See if there's already a staging task in progress
-    is_generating = Task.objects.filter(
-        task_type="get-node-diff",
-        metadata__args__updated_id=updated_id,
-        metadata__args__original_id=original_id,
-    ).exclude(Q(status='FAILURE') | Q(status='SUCCESS')).exists()
-
-    if not is_generating:
-        create_async_task("get-node-diff", request.user, updated_id=updated_id, original_id=original_id)
+    generatenodediff_task.fetch_or_enqueue(request.user, updated_id=updated_id, original_id=original_id)
     return Response('Diff is being generated')

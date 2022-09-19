@@ -47,6 +47,7 @@
         name="item"
         :item="item"
         :index="index"
+        :isFirst="index === 0"
         :isLast="index === breadcrumbs.length - 1"
       ></slot>
     </VBreadcrumbsItem>

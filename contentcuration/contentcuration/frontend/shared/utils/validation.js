@@ -1,8 +1,11 @@
-import { AssessmentItemTypes, ValidationErrors } from '../constants';
+import get from 'lodash/get';
+import CompletionCriteriaModels from 'kolibri-constants/CompletionCriteria';
 import translator from '../translator';
+import { AssessmentItemTypes, ValidationErrors } from '../constants';
 import Licenses from 'shared/leUtils/Licenses';
 import { MasteryModelsNames } from 'shared/leUtils/MasteryModels';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
+import { validate as validateCompletionCriteria } from 'shared/leUtils/CompletionCriteria';
 
 /**
  * Topic and resource
@@ -29,6 +32,10 @@ import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
  * It must have at least one question
  * A question must have right answers
  *
+ * Non-topics
+ * ----------
+ * Completion criteria is validated to ensure it conforms to the schema
+ *   and is valid for the content kind
  */
 export function isNodeComplete({ nodeDetails, assessmentItems, files }) {
   if (!nodeDetails) {
@@ -46,6 +53,9 @@ export function isNodeComplete({ nodeDetails, assessmentItems, files }) {
   }
 
   if (getNodeDetailsErrors(nodeDetails).length) {
+    if (process.env.NODE_ENV !== 'production') {
+      console.info('Node is incomplete', getNodeDetailsErrors(nodeDetails));
+    }
     return false;
   }
   if (
@@ -53,11 +63,26 @@ export function isNodeComplete({ nodeDetails, assessmentItems, files }) {
     nodeDetails.kind !== ContentKindsNames.EXERCISE
   ) {
     if (getNodeFilesErrors(files).length) {
+      if (process.env.NODE_ENV !== 'production') {
+        console.info("Node's files are incomplete", getNodeFilesErrors(files));
+      }
+      return false;
+    }
+  }
+  if (nodeDetails.kind !== ContentKindsNames.TOPIC) {
+    const completionCriteria = get(nodeDetails, 'extra_fields.options.completion_criteria');
+    if (completionCriteria && !validateCompletionCriteria(completionCriteria, nodeDetails.kind)) {
+      if (process.env.NODE_ENV !== 'production') {
+        console.info("Node's completion criteria is invalid", validateCompletionCriteria.errors);
+      }
       return false;
     }
   }
   if (nodeDetails.kind === ContentKindsNames.EXERCISE) {
     if (!assessmentItems.length) {
+      if (process.env.NODE_ENV !== 'production') {
+        console.info('Exercise node is missing assessment items');
+      }
       return false;
     }
 
@@ -66,6 +91,12 @@ export function isNodeComplete({ nodeDetails, assessmentItems, files }) {
       return getAssessmentItemErrors(sanitizedAssessmentItem).length;
     };
     if (assessmentItems.some(isInvalid)) {
+      if (process.env.NODE_ENV !== 'production') {
+        console.info(
+          "Exercise node's assessment items are invalid",
+          assessmentItems.some(isInvalid)
+        );
+      }
       return false;
     }
   }
@@ -79,7 +110,15 @@ function _getLicense(node) {
 }
 
 function _getMasteryModel(node) {
-  return node.extra_fields;
+  const criteria = get(node, 'extra_fields.options.completion_criteria', {});
+  if (criteria.model === CompletionCriteriaModels.MASTERY) {
+    return criteria.threshold || {};
+  }
+  return {};
+}
+
+function _getLearningActivity(node) {
+  return Object.keys(node.learning_activities);
 }
 
 function _getErrorMsg(error) {
@@ -96,6 +135,25 @@ function _getErrorMsg(error) {
     [ValidationErrors.MASTERY_MODEL_N_REQUIRED]: translator.$tr('masteryModelNRequired'),
     [ValidationErrors.MASTERY_MODEL_N_WHOLE_NUMBER]: translator.$tr('masteryModelNWholeNumber'),
     [ValidationErrors.MASTERY_MODEL_N_GT_ZERO]: translator.$tr('masteryModelNGtZero'),
+    [ValidationErrors.LEARNING_ACTIVITY_REQUIRED]: translator.$tr('learningActivityRequired'),
+    [ValidationErrors.DURATION_REQUIRED]: translator.$tr('durationRequired'),
+    [ValidationErrors.ACTIVITY_DURATION_REQUIRED]: translator.$tr('activityDurationRequired'),
+    [ValidationErrors.ACTIVITY_DURATION_MIN_FOR_SHORT_ACTIVITY]: translator.$tr(
+      'shortActivityGteOne'
+    ),
+    [ValidationErrors.ACTIVITY_DURATION_MAX_FOR_SHORT_ACTIVITY]: translator.$tr(
+      'shortActivityLteThirty'
+    ),
+    [ValidationErrors.ACTIVITY_DURATION_MIN_FOR_LONG_ACTIVITY]: translator.$tr(
+      'longActivityGtThirty'
+    ),
+    [ValidationErrors.ACTIVITY_DURATION_MAX_FOR_LONG_ACTIVITY]: translator.$tr(
+      'longActivityLteOneTwenty'
+    ),
+    [ValidationErrors.ACTIVITY_DURATION_MIN_REQUIREMENT]: translator.$tr(
+      'activityDurationTimeMinRequirement'
+    ),
+    [ValidationErrors.ACTIVITY_DURATION_TOO_LONG]: translator.$tr('activityDurationTooLongWarning'),
   };
 
   return messages[error];
@@ -120,6 +178,18 @@ export function getLicenseValidators() {
 
 export function getCopyrightHolderValidators() {
   return [value => Boolean(value && value.trim()) || ValidationErrors.COPYRIGHT_HOLDER_REQUIRED];
+}
+
+export function getLearningActivityValidators() {
+  return [value => Boolean(value.length) || ValidationErrors.LEARNING_ACTIVITY_REQUIRED];
+}
+
+export function getCompletionValidators() {
+  return [value => Boolean(value) || ValidationErrors.COMPLETION_REQUIRED];
+}
+
+export function getDurationValidators() {
+  return [value => Boolean(value.length) || ValidationErrors.DURATION_REQUIRED];
 }
 
 export function getLicenseDescriptionValidators() {
@@ -147,6 +217,30 @@ export function getMasteryModelNValidators() {
   ];
 }
 
+export function getShortActivityDurationValidators() {
+  return [
+    v => v !== '' || ValidationErrors.ACTIVITY_DURATION_REQUIRED,
+    v => v >= 1 || ValidationErrors.ACTIVITY_DURATION_MIN_FOR_SHORT_ACTIVITY,
+    v => v <= 30 || ValidationErrors.ACTIVITY_DURATION_MAX_FOR_SHORT_ACTIVITY,
+  ];
+}
+
+export function getLongActivityDurationValidators() {
+  return [
+    v => v !== '' || ValidationErrors.ACTIVITY_DURATION_REQUIRED,
+    v => v > 30 || ValidationErrors.ACTIVITY_DURATION_MIN_FOR_LONG_ACTIVITY,
+    v => v <= 120 || ValidationErrors.ACTIVITY_DURATION_MAX_FOR_LONG_ACTIVITY,
+  ];
+}
+
+export function getActivityDurationValidators() {
+  return [
+    v => v !== '' || ValidationErrors.ACTIVITY_DURATION_REQUIRED,
+    v => v >= 1 || ValidationErrors.ACTIVITY_DURATION_MIN_REQUIREMENT,
+    v => v <= 1200 || ValidationErrors.ACTIVITY_DURATION_TOO_LONG,
+  ];
+}
+
 // Node validation
 // These functions return an array of error codes
 export function getNodeTitleErrors(node) {
@@ -169,6 +263,13 @@ export function getNodeCopyrightHolderErrors(node) {
   }
   return getCopyrightHolderValidators()
     .map(validator => validator(node.copyright_holder))
+    .filter(value => value !== true);
+}
+
+export function getNodeLearningActivityErrors(node) {
+  const learningActivity = _getLearningActivity(node);
+  return getLearningActivityValidators()
+    .map(validator => validator(learningActivity))
     .filter(value => value !== true);
 }
 
@@ -239,6 +340,14 @@ export function getNodeDetailsErrors(node) {
     }
   }
 
+  // learning activity is a required field for resources
+  if (node.kind !== ContentKindsNames.TOPIC) {
+    const learningActivityErrors = getNodeLearningActivityErrors(node);
+    if (learningActivityErrors.length) {
+      errors = errors.concat(learningActivityErrors);
+    }
+  }
+
   // mastery is required on exercises
   if (node.kind === ContentKindsNames.EXERCISE) {
     const masteryModelErrors = getNodeMasteryModelErrors(node);
@@ -255,7 +364,6 @@ export function getNodeDetailsErrors(node) {
       errors = errors.concat(masteryModelNErrors);
     }
   }
-
   return errors;
 }
 
@@ -265,11 +373,13 @@ export function getNodeDetailsErrors(node) {
  * @returns {Array} An array of error codes.
  */
 export function getNodeFilesErrors(files) {
-  let errors = files.filter(f => f.error).map(f => f.error);
-  let validPrimaryFiles = files.filter(f => !f.error && !f.preset.supplementary);
-
-  if (!validPrimaryFiles.length) {
-    errors.push(ValidationErrors.NO_VALID_PRIMARY_FILES);
+  let errors = [];
+  if (files && files.length > 0) {
+    errors = files.filter(f => f.error).map(f => f.error);
+    let validPrimaryFiles = files.filter(f => !f.error && !f.preset.supplementary);
+    if (!validPrimaryFiles.length) {
+      errors.push(ValidationErrors.NO_VALID_PRIMARY_FILES);
+    }
   }
   return errors;
 }

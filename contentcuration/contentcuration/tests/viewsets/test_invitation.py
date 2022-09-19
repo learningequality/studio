@@ -7,16 +7,14 @@ from django.urls import reverse
 from contentcuration import models
 from contentcuration.tests import testdata
 from contentcuration.tests.base import StudioAPITestCase
+from contentcuration.tests.viewsets.base import generate_create_event
+from contentcuration.tests.viewsets.base import generate_delete_event
+from contentcuration.tests.viewsets.base import generate_update_event
+from contentcuration.tests.viewsets.base import SyncTestMixin
 from contentcuration.viewsets.sync.constants import INVITATION
-from contentcuration.viewsets.sync.utils import generate_create_event
-from contentcuration.viewsets.sync.utils import generate_delete_event
-from contentcuration.viewsets.sync.utils import generate_update_event
 
 
-class SyncTestCase(StudioAPITestCase):
-    @property
-    def sync_url(self):
-        return reverse("sync")
+class SyncTestCase(SyncTestMixin, StudioAPITestCase):
 
     @property
     def invitation_metadata(self):
@@ -42,14 +40,12 @@ class SyncTestCase(StudioAPITestCase):
         self.user = testdata.user()
         self.channel.editors.add(self.user)
         self.invited_user = testdata.user("inv@inc.com")
+        self.client.force_authenticate(user=self.user)
 
     def test_create_invitation(self):
-        self.client.force_authenticate(user=self.user)
         invitation = self.invitation_metadata
-        response = self.client.post(
-            self.sync_url,
-            [generate_create_event(invitation["id"], INVITATION, invitation,)],
-            format="json",
+        response = self.sync_changes(
+            [generate_create_event(invitation["id"], INVITATION, invitation, channel_id=self.channel.id, user_id=self.invited_user.id)],
         )
         self.assertEqual(response.status_code, 200, response.content)
         try:
@@ -58,16 +54,13 @@ class SyncTestCase(StudioAPITestCase):
             self.fail("Invitation was not created")
 
     def test_create_invitations(self):
-        self.client.force_authenticate(user=self.user)
         invitation1 = self.invitation_metadata
         invitation2 = self.invitation_metadata
-        response = self.client.post(
-            self.sync_url,
+        response = self.sync_changes(
             [
-                generate_create_event(invitation1["id"], INVITATION, invitation1,),
-                generate_create_event(invitation2["id"], INVITATION, invitation2,),
+                generate_create_event(invitation1["id"], INVITATION, invitation1, channel_id=self.channel.id, user_id=self.invited_user.id),
+                generate_create_event(invitation2["id"], INVITATION, invitation2, channel_id=self.channel.id, user_id=self.invited_user.id),
             ],
-            format="json",
         )
         self.assertEqual(response.status_code, 200, response.content)
         try:
@@ -85,10 +78,8 @@ class SyncTestCase(StudioAPITestCase):
         invitation = models.Invitation.objects.create(**self.invitation_db_metadata)
 
         self.client.force_authenticate(user=self.invited_user)
-        response = self.client.post(
-            self.sync_url,
-            [generate_update_event(invitation.id, INVITATION, {"accepted": True},)],
-            format="json",
+        response = self.sync_changes(
+            [generate_update_event(invitation.id, INVITATION, {"accepted": True}, user_id=self.invited_user.id)],
         )
         self.assertEqual(response.status_code, 200, response.content)
         try:
@@ -101,16 +92,14 @@ class SyncTestCase(StudioAPITestCase):
                 email=self.invited_user.email, channel=self.channel
             ).exists()
         )
+        self.assertTrue(models.Change.objects.filter(channel=self.channel).exists())
 
     def test_update_invitation_revoke(self):
 
         invitation = models.Invitation.objects.create(**self.invitation_db_metadata)
 
-        self.client.force_authenticate(user=self.user)
-        response = self.client.post(
-            self.sync_url,
-            [generate_update_event(invitation.id, INVITATION, {"revoked": True},)],
-            format="json",
+        response = self.sync_changes(
+            [generate_update_event(invitation.id, INVITATION, {"revoked": True}, channel_id=self.channel.id, user_id=self.invited_user.id)],
         )
         self.assertEqual(response.status_code, 200, response.content)
         try:
@@ -130,10 +119,8 @@ class SyncTestCase(StudioAPITestCase):
         invitation = models.Invitation.objects.create(**self.invitation_db_metadata)
 
         self.client.force_authenticate(user=self.invited_user)
-        response = self.client.post(
-            self.sync_url,
-            [generate_update_event(invitation.id, INVITATION, {"revoked": True},)],
-            format="json",
+        response = self.sync_changes(
+            [generate_update_event(invitation.id, INVITATION, {"revoked": True}, channel_id=self.channel.id, user_id=self.invited_user.id)],
         )
         self.assertEqual(response.status_code, 200, response.content)
         invitation = models.Invitation.objects.get(id=invitation.id)
@@ -146,10 +133,8 @@ class SyncTestCase(StudioAPITestCase):
         invitation.save()
 
         self.client.force_authenticate(user=self.invited_user)
-        response = self.client.post(
-            self.sync_url,
-            [generate_update_event(invitation.id, INVITATION, {"accepted": True},)],
-            format="json",
+        response = self.sync_changes(
+            [generate_update_event(invitation.id, INVITATION, {"accepted": True}, channel_id=self.channel.id, user_id=self.invited_user.id)],
         )
         self.assertEqual(response.status_code, 200, response.content)
         invitation = models.Invitation.objects.get(id=invitation.id)
@@ -159,11 +144,8 @@ class SyncTestCase(StudioAPITestCase):
 
         invitation = models.Invitation.objects.create(**self.invitation_db_metadata)
 
-        self.client.force_authenticate(user=self.user)
-        response = self.client.post(
-            self.sync_url,
-            [generate_update_event(invitation.id, INVITATION, {"accepted": True, "declined": True},)],
-            format="json",
+        response = self.sync_changes(
+            [generate_update_event(invitation.id, INVITATION, {"accepted": True, "declined": True}, channel_id=self.channel.id, user_id=self.invited_user.id)],
         )
         self.assertEqual(response.status_code, 200, response.content)
         invitation = models.Invitation.objects.get(id=invitation.id)
@@ -174,11 +156,8 @@ class SyncTestCase(StudioAPITestCase):
 
         invitation = models.Invitation.objects.create(**self.invitation_db_metadata)
 
-        self.client.force_authenticate(user=self.user)
-        response = self.client.post(
-            self.sync_url,
-            [generate_update_event(invitation.id, INVITATION, {"declined": True},)],
-            format="json",
+        response = self.sync_changes(
+            [generate_update_event(invitation.id, INVITATION, {"declined": True}, channel_id=self.channel.id, user_id=self.invited_user.id)],
         )
         self.assertEqual(response.status_code, 200, response.content)
         try:
@@ -195,26 +174,20 @@ class SyncTestCase(StudioAPITestCase):
     def test_update_invitation_empty(self):
 
         invitation = models.Invitation.objects.create(**self.invitation_db_metadata)
-        self.client.force_authenticate(user=self.user)
-        response = self.client.post(
-            self.sync_url,
-            [generate_update_event(invitation.id, INVITATION, {},)],
-            format="json",
+        response = self.sync_changes(
+            [generate_update_event(invitation.id, INVITATION, {}, channel_id=self.channel.id, user_id=self.invited_user.id)],
         )
         self.assertEqual(response.status_code, 200, response.content)
 
     def test_update_invitation_unwriteable_fields(self):
 
         invitation = models.Invitation.objects.create(**self.invitation_db_metadata)
-        self.client.force_authenticate(user=self.user)
-        response = self.client.post(
-            self.sync_url,
+        response = self.sync_changes(
             [
                 generate_update_event(
-                    invitation.id, INVITATION, {"not_a_field": "not_a_value"},
+                    invitation.id, INVITATION, {"not_a_field": "not_a_value"}, channel_id=self.channel.id, user_id=self.invited_user.id
                 )
             ],
-            format="json",
         )
         self.assertEqual(response.status_code, 200, response.content)
 
@@ -222,11 +195,8 @@ class SyncTestCase(StudioAPITestCase):
 
         invitation = models.Invitation.objects.create(**self.invitation_db_metadata)
 
-        self.client.force_authenticate(user=self.user)
-        response = self.client.post(
-            self.sync_url,
-            [generate_delete_event(invitation.id, INVITATION,)],
-            format="json",
+        response = self.sync_changes(
+            [generate_delete_event(invitation.id, INVITATION, channel_id=self.channel.id, user_id=self.invited_user.id)],
         )
         self.assertEqual(response.status_code, 200, response.content)
         try:
@@ -240,14 +210,11 @@ class SyncTestCase(StudioAPITestCase):
 
         invitation2 = models.Invitation.objects.create(**self.invitation_db_metadata)
 
-        self.client.force_authenticate(user=self.user)
-        response = self.client.post(
-            self.sync_url,
+        response = self.sync_changes(
             [
-                generate_delete_event(invitation1.id, INVITATION,),
-                generate_delete_event(invitation2.id, INVITATION,),
+                generate_delete_event(invitation1.id, INVITATION, channel_id=self.channel.id, user_id=self.invited_user.id),
+                generate_delete_event(invitation2.id, INVITATION, channel_id=self.channel.id, user_id=self.invited_user.id),
             ],
-            format="json",
         )
         self.assertEqual(response.status_code, 200, response.content)
         try:
@@ -332,6 +299,7 @@ class CRUDTestCase(StudioAPITestCase):
                 email=self.invited_user.email, channel=self.channel
             ).exists()
         )
+        self.assertTrue(models.Change.objects.filter(channel=self.channel).exists())
 
     def test_update_invitation_decline(self):
 

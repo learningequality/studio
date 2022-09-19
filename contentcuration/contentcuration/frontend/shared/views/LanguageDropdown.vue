@@ -20,12 +20,13 @@
     :menu-props="menuProps"
     :multiple="multiple"
     :chips="multiple"
+    :attach="$attrs.id ? `#${$attrs.id}` : '.language-dropdown'"
     @change="input = ''"
     @focus="$emit('focus')"
   >
     <template #item="{ item }">
-      <VTooltip bottom>
-        <template v-slot:activator="{ on }">
+      <VTooltip bottom lazy>
+        <template #activator="{ on }">
           <span class="text-truncate" v-on="on">{{ languageText(item) }}</span>
         </template>
         <span>{{ languageText(item) }}</span>
@@ -56,6 +57,7 @@
           }
           return !value.toString();
         },
+        default: null,
       },
       required: {
         type: Boolean,
@@ -68,6 +70,10 @@
         },
       },
       multiple: {
+        type: Boolean,
+        default: false,
+      },
+      dropAbove: {
         type: Boolean,
         default: false,
       },
@@ -90,6 +96,7 @@
         return {
           minWidth: 300,
           maxWidth: 300,
+          top: this.dropAbove,
         };
       },
       languages() {
@@ -127,6 +134,7 @@
     width: calc(100% - 48px);
     min-height: 0 !important;
   }
+
   .v-chip,
   /deep/ .v-chip__content,
   .text-truncate {

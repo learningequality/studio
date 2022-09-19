@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 """
 The entrypoint for the studio-app docker image for development purposes.
 This script is not used in the production, develop, or staging setups (k8s).

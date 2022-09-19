@@ -2,7 +2,7 @@
 
   <VToolbar v-bind="$attrs" :flat="flat" :color="color">
     <slot></slot>
-    <slot slot="extension" name="extension"></slot>
+    <template #extension name="extension"></template>
   </VToolbar>
 
 </template>

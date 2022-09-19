@@ -8,10 +8,12 @@ import uuid
 from datetime import datetime
 
 import pytz
+from celery import states
 from django.conf import settings
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import PermissionsMixin
+from django.contrib.sessions.models import Session
 from django.core.cache import cache
 from django.core.exceptions import MultipleObjectsReturned
 from django.core.exceptions import ObjectDoesNotExist
@@ -20,13 +22,14 @@ from django.core.exceptions import ValidationError
 from django.core.files.storage import default_storage
 from django.core.files.storage import FileSystemStorage
 from django.core.mail import send_mail
+from django.core.validators import MaxValueValidator
+from django.core.validators import MinValueValidator
 from django.db import IntegrityError
 from django.db import models
 from django.db.models import Count
 from django.db.models import Exists
 from django.db.models import F
 from django.db.models import Index
-from django.db.models import IntegerField
 from django.db.models import JSONField
 from django.db.models import Max
 from django.db.models import OuterRef
@@ -37,7 +40,6 @@ from django.db.models import UUIDField as DjangoUUIDField
 from django.db.models import Value
 from django.db.models.expressions import ExpressionList
 from django.db.models.expressions import RawSQL
-from django.db.models.functions import Cast
 from django.db.models.functions import Lower
 from django.db.models.indexes import IndexExpression
 from django.db.models.query_utils import DeferredAttribute
@@ -45,6 +47,7 @@ from django.db.models.sql import Query
 from django.dispatch import receiver
 from django.utils import timezone
 from django.utils.translation import gettext as _
+from django_celery_results.models import TaskResult
 from django_cte import With
 from le_utils import proquint
 from le_utils.constants import content_kinds
@@ -60,7 +63,11 @@ from mptt.models import TreeForeignKey
 from postmark.core import PMMailInactiveRecipientException
 from postmark.core import PMMailUnauthorizedException
 from rest_framework.authtoken.models import Token
+from rest_framework.fields import get_attribute
+from rest_framework.utils.encoders import JSONEncoder
 
+from contentcuration.constants import channel_history
+from contentcuration.constants import completion_criteria
 from contentcuration.constants.contentnode import kind_activity_map
 from contentcuration.db.models.expressions import Array
 from contentcuration.db.models.functions import ArrayRemove
@@ -70,6 +77,8 @@ from contentcuration.db.models.manager import CustomManager
 from contentcuration.statistics import record_channel_stats
 from contentcuration.utils.cache import delete_public_channel_cache_keys
 from contentcuration.utils.parser import load_json_string
+from contentcuration.viewsets.sync.constants import ALL_CHANGES
+from contentcuration.viewsets.sync.constants import ALL_TABLES
 
 
 EDIT_ACCESS = "edit"
@@ -94,6 +103,12 @@ DEFAULT_CONTENT_DEFAULTS = {
     'auto_randomize_questions': True,
 }
 DEFAULT_USER_PREFERENCES = json.dumps(DEFAULT_CONTENT_DEFAULTS, ensure_ascii=False)
+
+
+def to_pk(model_or_pk):
+    if isinstance(model_or_pk, models.Model):
+        return model_or_pk.pk
+    return model_or_pk
 
 
 class UserManager(BaseUserManager):
@@ -228,7 +243,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     def check_space(self, size, checksum):
         if self.is_admin:
             return True
-        
+
         active_files = self.get_user_active_files()
         if active_files.filter(checksum=checksum).exists():
             return True
@@ -641,7 +656,7 @@ class PermissionCTE(With):
         queryset = model.objects.filter(user_id=user_id)\
             .annotate(
                 tree_id=Unnest(ArrayRemove(Array(*self.tree_id_fields), None), output_field=models.IntegerField())
-            )
+        )
         super(PermissionCTE, self).__init__(queryset=queryset.values("user_id", "channel_id", "tree_id"), **kwargs)
 
     @classmethod
@@ -842,8 +857,8 @@ class Channel(models.Model):
                 node_id=self.id,
             )
 
-        # if this change affects the public channel list, clear the channel cache
-        if self.public:
+        # if this change affects the published channel list, clear the channel cache
+        if self.public and (self.main_tree and self.main_tree.published):
             delete_public_channel_cache_keys()
 
     def on_update(self):
@@ -883,8 +898,8 @@ class Channel(models.Model):
         if self.main_tree and self.main_tree._field_updates.changed():
             self.main_tree.save()
 
-        # if this change affects the public channel list, clear the channel cache
-        if "public" in original_values:
+        # if this change affects the published channel list, clear the channel cache
+        if "public" in original_values and (self.main_tree and self.main_tree.published):
             delete_public_channel_cache_keys()
 
     def save(self, *args, **kwargs):
@@ -938,6 +953,32 @@ class Channel(models.Model):
 
         return self
 
+    def mark_created(self, user):
+        self.history.create(actor_id=to_pk(user), action=channel_history.CREATION)
+
+    def mark_publishing(self, user):
+        self.history.create(actor_id=to_pk(user), action=channel_history.PUBLICATION)
+        self.main_tree.publishing = True
+        self.main_tree.save()
+
+    def mark_deleted(self, user):
+        self.history.create(actor_id=to_pk(user), action=channel_history.DELETION)
+        self.deleted = True
+        self.save()
+
+    def mark_recovered(self, user):
+        self.history.create(actor_id=to_pk(user), action=channel_history.RECOVERY)
+        self.deleted = False
+        self.save()
+
+    @property
+    def deletion_history(self):
+        return self.history.filter(action=channel_history.DELETION)
+
+    @property
+    def publishing_history(self):
+        return self.history.filter(action=channel_history.PUBLICATION)
+
     @classmethod
     def get_public_channels(cls, defer_nonmain_trees=False):
         """
@@ -966,6 +1007,36 @@ class Channel(models.Model):
         ]
         index_together = [
             ["deleted", "public"]
+        ]
+
+
+CHANNEL_HISTORY_CHANNEL_INDEX_NAME = "idx_channel_history_channel_id"
+
+
+class ChannelHistory(models.Model):
+    """
+    Model for tracking certain actions performed on a channel
+    """
+    channel = models.ForeignKey('Channel', null=False, blank=False, related_name='history', on_delete=models.CASCADE)
+    actor = models.ForeignKey('User', null=False, blank=False, related_name='channel_history', on_delete=models.CASCADE)
+    performed = models.DateTimeField(default=timezone.now)
+    action = models.CharField(max_length=50, choices=channel_history.choices)
+
+    @classmethod
+    def prune(cls):
+        """
+        Prunes history records by keeping the most recent actions for each channel and type,
+        and deleting all other older actions
+        """
+        keep_ids = cls.objects.distinct("channel_id", "action").order_by("channel_id", "action", "-performed").values_list("id", flat=True)
+        cls.objects.exclude(id__in=keep_ids).delete()
+
+    class Meta:
+        verbose_name = "Channel history"
+        verbose_name_plural = "Channel histories"
+
+        indexes = [
+            models.Index(fields=["channel_id"], name=CHANNEL_HISTORY_CHANNEL_INDEX_NAME),
         ]
 
 
@@ -1076,6 +1147,7 @@ class License(models.Model):
 NODE_ID_INDEX_NAME = "node_id_idx"
 NODE_MODIFIED_INDEX_NAME = "node_modified_idx"
 NODE_MODIFIED_DESC_INDEX_NAME = "node_modified_desc_idx"
+CONTENTNODE_TREE_ID_CACHE_KEY = "contentnode_{pk}__tree_id"
 
 
 class ContentNode(MPTTModel, models.Model):
@@ -1167,6 +1239,10 @@ class ContentNode(MPTTModel, models.Model):
     categories = models.JSONField(blank=True, null=True)
     learner_needs = models.JSONField(blank=True, null=True)
 
+    # A field for storing a suggested duration for the content node
+    # this duration should be in seconds.
+    suggested_duration = models.IntegerField(blank=True, null=True, help_text="Suggested duration for the content node (in seconds)")
+
     objects = CustomContentNodeTreeManager()
 
     # Track all updates and ignore a blacklist of attributes
@@ -1187,18 +1263,35 @@ class ContentNode(MPTTModel, models.Model):
         )
 
     @classmethod
-    def _orphan_tree_id_subquery(cls):
-        # For some reason this now requires an explicit type cast
-        # or it gets interpreted as a varchar
-        return Cast(cls.objects.filter(
-            pk=settings.ORPHANAGE_ROOT_ID
-        ).values_list("tree_id", flat=True)[:1], output_field=IntegerField())
+    def filter_by_pk(cls, pk):
+        """
+        When `settings.IS_CONTENTNODE_TABLE_PARTITIONED` is `False`, this always
+        returns a queryset filtered by pk.
+
+        When `settings.IS_CONTENTNODE_TABLE_PARTITIONED` is `True` and a ContentNode
+        for `pk` exists, this returns a queryset filtered by `pk` AND `tree_id`. If
+        a ContentNode does not exist for `pk` then an empty queryset is returned.
+        """
+        query = ContentNode.objects.filter(pk=pk)
+
+        if settings.IS_CONTENTNODE_TABLE_PARTITIONED is True:
+            tree_id = cache.get(CONTENTNODE_TREE_ID_CACHE_KEY.format(pk=pk))
+
+            if tree_id:
+                query = query.filter(tree_id=tree_id)
+            else:
+                tree_id = ContentNode.objects.filter(pk=pk).values_list("tree_id", flat=True).first()
+                if tree_id:
+                    cache.set(CONTENTNODE_TREE_ID_CACHE_KEY.format(pk=pk), tree_id, None)
+                    query = query.filter(tree_id=tree_id)
+                else:
+                    query = query.none()
+
+        return query
 
     @classmethod
     def filter_edit_queryset(cls, queryset, user):
         user_id = not user.is_anonymous and user.id
-
-        queryset = queryset.exclude(pk=settings.ORPHANAGE_ROOT_ID)
 
         if not user_id:
             return queryset.none()
@@ -1212,7 +1305,7 @@ class ContentNode(MPTTModel, models.Model):
         if user.is_admin:
             return queryset
 
-        return queryset.filter(Q(edit=True) | Q(tree_id=cls._orphan_tree_id_subquery()))
+        return queryset.filter(edit=True)
 
     @classmethod
     def filter_view_queryset(cls, queryset, user):
@@ -1224,7 +1317,7 @@ class ContentNode(MPTTModel, models.Model):
                     public=True, main_tree__tree_id=OuterRef("tree_id")
                 ).values("pk")
             ),
-        ).exclude(pk=settings.ORPHANAGE_ROOT_ID)
+        )
 
         if not user_id:
             return queryset.annotate(edit=boolean_val(False), view=boolean_val(False)).filter(public=True)
@@ -1244,7 +1337,6 @@ class ContentNode(MPTTModel, models.Model):
             Q(view=True)
             | Q(edit=True)
             | Q(public=True)
-            | Q(tree_id=cls._orphan_tree_id_subquery())
         )
 
     @raise_if_unsaved
@@ -1390,7 +1482,7 @@ class ContentNode(MPTTModel, models.Model):
         from contentcuration.viewsets.common import SQRelatedArrayAgg
         from contentcuration.viewsets.common import SQSum
 
-        node = ContentNode.objects.filter(pk=self.id).order_by()
+        node = ContentNode.objects.filter(pk=self.id, tree_id=self.tree_id).order_by()
 
         descendants = (
             self.get_descendants()
@@ -1662,6 +1754,45 @@ class ContentNode(MPTTModel, models.Model):
         for editor in self.files.values_list('uploaded_by_id', flat=True).distinct():
             calculate_user_storage(editor)
 
+    def mark_complete(self):  # noqa C901
+        errors = []
+        # Is complete if title is falsy but only if not a root node.
+        if not (bool(self.title) or self.parent_id is None):
+            errors.append("Empty title")
+        if self.kind_id != content_kinds.TOPIC:
+            if not self.license:
+                errors.append("Missing license")
+            if self.license and self.license.is_custom and not self.license_description:
+                errors.append("Missing license description for custom license")
+            if self.license and self.license.copyright_holder_required and not self.copyright_holder:
+                errors.append("Missing required copyright holder")
+            if self.kind_id != content_kinds.EXERCISE and not self.files.filter(preset__supplementary=False).exists():
+                errors.append("Missing default file")
+            if self.kind_id == content_kinds.EXERCISE:
+                # Check to see if the exercise has at least one assessment item that has:
+                if not self.assessment_items.filter(
+                    # A non-blank question
+                    ~Q(question='')
+                    # Non-blank answers
+                    & ~Q(answers='[]')
+                    # With either an input question or one answer marked as correct
+                    & (Q(type=exercises.INPUT_QUESTION) | Q(answers__iregex=r'"correct":\s*true'))
+                ).exists():
+                    errors.append("No questions with question text and complete answers")
+                # Check that it has a mastery model set
+                # Either check for the previous location for the mastery model, or rely on our completion criteria validation
+                # that if it has been set, then it has been set correctly.
+                criterion = self.extra_fields.get("options", {}).get("completion_criteria")
+                if not (self.extra_fields.get("mastery_model") or criterion):
+                    errors.append("Missing mastery criterion")
+                if criterion:
+                    try:
+                        completion_criteria.validate(criterion, kind=content_kinds.EXERCISE)
+                    except completion_criteria.ValidationError:
+                        errors.append("Mastery criterion is defined but is invalid")
+        self.complete = not errors
+        return errors
+
     def on_create(self):
         self.changed = True
         self.recalculate_editors_storage()
@@ -1673,6 +1804,10 @@ class ContentNode(MPTTModel, models.Model):
     def move_to(self, target, *args, **kwargs):
         parent_was_trashtree = self.parent.channel_trash.exists()
         super(ContentNode, self).move_to(target, *args, **kwargs)
+        self.save()
+
+        # Update tree_id cache when node is moved to another tree
+        cache.set(CONTENTNODE_TREE_ID_CACHE_KEY.format(pk=self.id), self.tree_id, None)
 
         # Recalculate storage if node was moved to or from the trash tree
         if target.channel_trash.exists() or parent_was_trashtree:
@@ -2136,7 +2271,9 @@ class PrerequisiteContentRelationship(models.Model):
                 % (self.target_node, self.prerequisite))
         # distant cyclic exception
         # elif <this is a nice to have exception, may implement in the future when the priority raises.>
-        #     raise Exception('Note: Prerequisite relationship is acyclic! %s and %s forms a closed loop!' % (self.target_node, self.prerequisite))
+        #     raise Exception('Note: Prerequisite relationship is acyclic! %s and %s forms a closed loop!' % (
+        #         self.target_node, self.prerequisite
+        #     ))
         super(PrerequisiteContentRelationship, self).clean(*args, **kwargs)
 
     def save(self, *args, **kwargs):
@@ -2226,13 +2363,121 @@ class Invitation(models.Model):
         ).distinct()
 
 
-class Task(models.Model):
-    """Asynchronous tasks"""
-    task_id = UUIDField(db_index=True, default=uuid.uuid4)  # This ID is used as the Celery task ID
-    task_type = models.CharField(max_length=50)
-    created = models.DateTimeField(default=timezone.now)
-    status = models.CharField(max_length=10)
-    is_progress_tracking = models.BooleanField(default=False)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="task", on_delete=models.CASCADE)
-    metadata = JSONField()
+class Change(models.Model):
+    server_rev = models.BigAutoField(primary_key=True)
+    # We need to store the user who is applying this change
+    # so that we can validate they have permissions to do so
+    # allow to be null so that we don't lose changes if a user
+    # account is hard deleted.
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="changes_by_user")
+    # Almost all changes are related to channels, but some are specific only to users
+    # so we allow this to be nullable for these edge cases.
+    # Indexed by default because it's a ForeignKey field.
+    channel = models.ForeignKey(Channel, null=True, blank=True, on_delete=models.CASCADE)
+    # For those changes related to users, store a user value instead of channel
+    # this may be different to created_by, as changes to invitations affect individual users.
+    # Indexed by default because it's a ForeignKey field.
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.CASCADE, related_name="changes_about_user")
+    # Use client_rev to keep track of changes coming from the client side
+    # but let it be blank or null for changes we generate on the server side
+    client_rev = models.IntegerField(null=True, blank=True)
+    # client_rev numbers are by session, we add the session key here for bookkeeping
+    # to allow a check within the same session to return whether a change has been applied
+    # or not, and hence remove it from the frontend
+    session = models.ForeignKey(Session, null=True, blank=True, on_delete=models.SET_NULL)
+    table = models.CharField(max_length=32)
+    change_type = models.IntegerField()
+    # Use the DRF JSONEncoder class as the encoder here
+    # so that we can handle anything that has been deserialized by DRF
+    # or that will be later be serialized by DRF
+    kwargs = JSONField(encoder=JSONEncoder)
+    applied = models.BooleanField(default=False)
+    errored = models.BooleanField(default=False)
+
+    @classmethod
+    def _create_from_change(cls, created_by_id=None, channel_id=None, user_id=None, session_key=None, applied=False, table=None, rev=None, **data):
+        change_type = data.pop("type")
+        if table is None or table not in ALL_TABLES:
+            raise TypeError("table is a required argument for creating changes and must be a valid table name")
+        if change_type is None or change_type not in ALL_CHANGES:
+            raise TypeError("change_type is a required argument for creating changes and must be a valid change type integer")
+        return cls(
+            session_id=session_key,
+            created_by_id=created_by_id,
+            channel_id=channel_id,
+            user_id=user_id,
+            client_rev=rev,
+            table=table,
+            change_type=change_type,
+            kwargs=data,
+            applied=applied
+        )
+
+    @classmethod
+    def create_changes(cls, changes, created_by_id=None, session_key=None, applied=False):
+        change_models = []
+        for change in changes:
+            change_models.append(cls._create_from_change(created_by_id=created_by_id, session_key=session_key, applied=applied, **change))
+
+        cls.objects.bulk_create(change_models)
+        return change_models
+
+    @classmethod
+    def create_change(cls, change, created_by_id=None, session_key=None, applied=False):
+        obj = cls._create_from_change(created_by_id=created_by_id, session_key=session_key, applied=applied, **change)
+        obj.save()
+        return obj
+
+    @classmethod
+    def serialize(cls, change):
+        datum = get_attribute(change, ["kwargs"]).copy()
+        datum.update({
+            "server_rev": get_attribute(change, ["server_rev"]),
+            "table": get_attribute(change, ["table"]),
+            "type": get_attribute(change, ["change_type"]),
+            "channel_id": get_attribute(change, ["channel_id"]),
+            "user_id": get_attribute(change, ["user_id"]),
+            "created_by_id": get_attribute(change, ["created_by_id"])
+        })
+        return datum
+
+    def serialize_to_change_dict(self):
+        return self.serialize(self)
+
+
+class TaskResultCustom(object):
+    """
+    Custom fields to add to django_celery_results's TaskResult model
+    """
+    # user shouldn't be null, but in order to append the field, this needs to be allowed
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="tasks", on_delete=models.CASCADE, null=True)
     channel_id = DjangoUUIDField(db_index=True, null=True, blank=True)
+    progress = models.IntegerField(null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(100)])
+
+    super_as_dict = TaskResult.as_dict
+
+    def as_dict(self):
+        """
+        :return: A dictionary representation
+        """
+        super_dict = self.super_as_dict()
+        super_dict.update(
+            user_id=self.user_id,
+            channel_id=self.channel_id,
+            progress=self.progress,
+        )
+        return super_dict
+
+    @classmethod
+    def contribute_to_class(cls, model_class=TaskResult):
+        """
+        Adds fields to model, by default TaskResult
+        :param model_class: TaskResult model
+        """
+        for field in dir(cls):
+            if not field.startswith("_"):
+                model_class.add_to_class(field, getattr(cls, field))
+
+
+# trigger class contributions immediately
+TaskResultCustom.contribute_to_class()

@@ -18,13 +18,13 @@
   import min from 'lodash/min';
   import map from 'lodash/map';
   import max from 'lodash/max';
-  import pdfJSLib from 'pdfjs-dist';
   import epubJS from 'epubjs';
+  import PDFJSWorker from '!!file-loader!pdfjs-dist/build/pdf.worker.min.js';
   import client from 'shared/client';
   import Alert from 'shared/views/Alert';
   import { ASPECT_RATIO, THUMBNAIL_WIDTH } from 'shared/constants';
-  // Based off of solution here: https://github.com/mozilla/pdf.js/issues/7612
-  import PDFJSWorker from '!!file-loader!pdfjs-dist/build/pdf.worker.min.js';
+  // Based off of solution here: https://github.com/mozilla/pdf.js/issues/7612#issuecomment-576807171
+  const pdfJSLib = require('pdfjs-dist');
 
   pdfJSLib.GlobalWorkerOptions.workerSrc = PDFJSWorker;
   const MAX_AUDIO_SAMPLE_SIZE = 64000;
@@ -38,10 +38,12 @@
       filePath: {
         type: String,
         required: false,
+        default: '',
       },
       fileName: {
         type: String,
         required: false,
+        default: '',
       },
       // Method to call to handle generated files
       handleFiles: {

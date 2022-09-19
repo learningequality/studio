@@ -1,7 +1,8 @@
 import json
+from functools import partial
 from functools import reduce
 
-from django.conf import settings
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import IntegrityError
 from django.db import models
 from django.db.models import Exists
@@ -17,24 +18,32 @@ from django.utils.timezone import now
 from django_cte import CTEQuerySet
 from django_filters.rest_framework import CharFilter
 from django_filters.rest_framework import UUIDFilter
+from le_utils.constants import completion_criteria
 from le_utils.constants import content_kinds
-from le_utils.constants import exercises
 from le_utils.constants import roles
+from le_utils.constants.labels import accessibility_categories
+from le_utils.constants.labels import learning_activities
+from le_utils.constants.labels import levels
+from le_utils.constants.labels import needs
+from le_utils.constants.labels import resource_type
+from le_utils.constants.labels import subjects
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.serializers import BooleanField
+from rest_framework.serializers import CharField
 from rest_framework.serializers import ChoiceField
 from rest_framework.serializers import DictField
-from rest_framework.serializers import IntegerField
+from rest_framework.serializers import Field
 from rest_framework.serializers import ValidationError
-from rest_framework.viewsets import ViewSet
 
+from contentcuration.constants import completion_criteria as completion_criteria_validator
 from contentcuration.db.models.expressions import IsNull
 from contentcuration.db.models.query import RIGHT_JOIN
 from contentcuration.db.models.query import With
 from contentcuration.db.models.query import WithValues
 from contentcuration.models import AssessmentItem
+from contentcuration.models import Change
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
 from contentcuration.models import ContentTag
@@ -42,15 +51,14 @@ from contentcuration.models import File
 from contentcuration.models import generate_storage_url
 from contentcuration.models import PrerequisiteContentRelationship
 from contentcuration.models import UUIDField
-from contentcuration.tasks import create_async_task
-from contentcuration.tasks import get_or_create_async_task
+from contentcuration.tasks import calculate_resource_size_task
 from contentcuration.utils.nodes import calculate_resource_size
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import BulkUpdateMixin
+from contentcuration.viewsets.base import create_change_tracker
 from contentcuration.viewsets.base import RequiredFilterSet
 from contentcuration.viewsets.base import ValuesViewset
-from contentcuration.viewsets.common import ChangeEventMixin
 from contentcuration.viewsets.common import DotPathValueMixin
 from contentcuration.viewsets.common import JSONFieldDictSerializer
 from contentcuration.viewsets.common import NotNullMapArrayAgg
@@ -58,12 +66,10 @@ from contentcuration.viewsets.common import SQCount
 from contentcuration.viewsets.common import UserFilteredPrimaryKeyRelatedField
 from contentcuration.viewsets.common import UUIDInFilter
 from contentcuration.viewsets.sync.constants import CONTENTNODE
+from contentcuration.viewsets.sync.constants import COPYING_FLAG
 from contentcuration.viewsets.sync.constants import CREATED
 from contentcuration.viewsets.sync.constants import DELETED
-from contentcuration.viewsets.sync.constants import TASK_ID
-from contentcuration.viewsets.sync.utils import generate_delete_event
 from contentcuration.viewsets.sync.utils import generate_update_event
-from contentcuration.viewsets.sync.utils import log_sync_exception
 
 
 channel_query = Channel.objects.filter(main_tree__tree_id=OuterRef("tree_id"))
@@ -244,22 +250,101 @@ class ContentNodeListSerializer(BulkListSerializer):
         return all_objects
 
 
+class ThresholdField(Field):
+    def to_representation(self, value):
+        return value
+
+    def to_internal_value(self, data):
+        try:
+            data = int(data)
+        except(ValueError, TypeError):
+            if not isinstance(data, (str, dict)):
+                self.fail("Must be either an integer, string or dictionary")
+        return data
+
+    def update(self, instance, validated_data):
+        if isinstance(instance, dict) and isinstance(validated_data, dict):
+            instance.update(validated_data)
+            return instance
+        return validated_data
+
+
+class CompletionCriteriaSerializer(JSONFieldDictSerializer):
+    threshold = ThresholdField(allow_null=True)
+    model = CharField()
+    learner_managed = BooleanField(required=False)
+
+    def update(self, instance, validated_data):
+        instance = super(CompletionCriteriaSerializer, self).update(instance, validated_data)
+        try:
+            completion_criteria_validator.validate(instance)
+        except DjangoValidationError as e:
+            raise ValidationError(e)
+        return instance
+
+
+def _migrate_extra_fields(extra_fields):
+    if not isinstance(extra_fields, dict):
+        return extra_fields
+    m = extra_fields.pop("m", None)
+    n = extra_fields.pop("n", None)
+    mastery_model = extra_fields.pop("mastery_model", None)
+    if not extra_fields.get("options", {}).get("completion_criteria", {}) and mastery_model is not None:
+        extra_fields["options"] = extra_fields.get("options", {})
+        extra_fields["options"]["completion_criteria"] = {
+            "threshold": {
+                "m": m,
+                "n": n,
+                "mastery_model": mastery_model,
+            },
+            "model": completion_criteria.MASTERY,
+        }
+    return extra_fields
+
+
 class ExtraFieldsOptionsSerializer(JSONFieldDictSerializer):
     modality = ChoiceField(choices=(("QUIZ", "Quiz"),), allow_null=True, required=False)
+    completion_criteria = CompletionCriteriaSerializer(required=False)
 
 
 class ExtraFieldsSerializer(JSONFieldDictSerializer):
-    mastery_model = ChoiceField(
-        choices=exercises.MASTERY_MODELS, allow_null=True, required=False
-    )
     randomize = BooleanField()
-    m = IntegerField(allow_null=True, required=False)
-    n = IntegerField(allow_null=True, required=False)
     options = ExtraFieldsOptionsSerializer(required=False)
+    suggested_duration_type = ChoiceField(choices=[completion_criteria.TIME, completion_criteria.APPROX_TIME], allow_null=True, required=False)
+
+    def update(self, instance, validated_data):
+        instance = _migrate_extra_fields(instance)
+        return super(ExtraFieldsSerializer, self).update(instance, validated_data)
 
 
 class TagField(DotPathValueMixin, DictField):
     pass
+
+
+class MetadataLabelBooleanField(BooleanField):
+    def bind(self, field_name, parent):
+        # By default the bind method of the Field class sets the source_attrs to field_name.split(".").
+        # As we have literal field names that include "." we need to override this behavior.
+        # Otherwise it will attempt to set the source_attrs to a nested path, assuming that it is a source path,
+        # not a materialized path. This probably means that it was a bad idea to use "." in the materialized path,
+        # but alea iacta est.
+        super(MetadataLabelBooleanField, self).bind(field_name, parent)
+        self.source_attrs = [self.source]
+
+
+class MetadataLabelsField(JSONFieldDictSerializer):
+    def __init__(self, choices, *args, **kwargs):
+        self.choices = choices
+        # Instantiate the superclass normally
+        super().__init__(*args, **kwargs)
+
+    def get_fields(self):
+        fields = {}
+        for label_id, label_name in self.choices:
+            field = MetadataLabelBooleanField(required=False, label=label_name, allow_null=True)
+            fields[label_id] = field
+
+        return fields
 
 
 class ContentNodeSerializer(BulkModelSerializer):
@@ -274,6 +359,24 @@ class ContentNodeSerializer(BulkModelSerializer):
     extra_fields = ExtraFieldsSerializer(required=False)
 
     tags = TagField(required=False)
+
+    # Fields for metadata labels
+    grade_levels = MetadataLabelsField(levels.choices, required=False)
+    resource_types = MetadataLabelsField(resource_type.choices, required=False)
+    learning_activities = MetadataLabelsField(learning_activities.choices, required=False)
+    accessibility_labels = MetadataLabelsField(accessibility_categories.choices, required=False)
+    categories = MetadataLabelsField(subjects.choices, required=False)
+    learner_needs = MetadataLabelsField(needs.choices, required=False)
+
+    dict_fields = [
+        "extra_fields",
+        "grade_levels",
+        "resource_types",
+        "learning_activities",
+        "accessibility_labels",
+        "categories",
+        "learner_needs",
+    ]
 
     class Meta:
         model = ContentNode
@@ -296,15 +399,33 @@ class ContentNodeSerializer(BulkModelSerializer):
             "complete",
             "changed",
             "tags",
+            "grade_levels",
+            "resource_types",
+            "learning_activities",
+            "accessibility_labels",
+            "categories",
+            "learner_needs",
+            "suggested_duration",
         )
         list_serializer_class = ContentNodeListSerializer
         nested_writes = True
 
-    def create(self, validated_data):
-        # Creating a new node, by default put it in the orphanage on initial creation.
-        if "parent" not in validated_data:
-            validated_data["parent_id"] = settings.ORPHANAGE_ROOT_ID
+    def validate(self, data):
+        # Creating, we require a parent to be set.
+        if self.instance is None and "parent" not in data:
+            raise ValidationError("Parent is required for creating a node.")
+        elif self.instance is not None and "parent" in data:
+            raise ValidationError(
+                {"parent": "This field should only be changed by a move operation"}
+            )
+        tags = data.get("tags")
+        if tags is not None:
+            for tag in tags:
+                if len(tag) > 30:
+                    raise ValidationError("tag is greater than 30 characters")
+        return data
 
+    def create(self, validated_data):
         tags = None
         if "tags" in validated_data:
             tags = validated_data.pop("tags")
@@ -317,16 +438,12 @@ class ContentNodeSerializer(BulkModelSerializer):
         return instance
 
     def update(self, instance, validated_data):
-        if "parent" in validated_data:
-            raise ValidationError(
-                {"parent": "This field should only be changed by a move operation"}
-            )
-
-        extra_fields = validated_data.pop("extra_fields", None)
-        if extra_fields is not None:
-            validated_data["extra_fields"] = self.fields["extra_fields"].update(
-                instance.extra_fields, extra_fields
-            )
+        for field in self.dict_fields:
+            field_data = validated_data.pop(field, None)
+            if field_data is not None:
+                validated_data[field] = self.fields[field].update(
+                    getattr(instance, field), field_data
+                )
         if "tags" in validated_data:
             tags = validated_data.pop("tags")
             set_tags({instance.id: tags})
@@ -352,12 +469,16 @@ def retrieve_thumbail_src(item):
     return None
 
 
-def get_title(item):
-    # If it's the root, use the channel name (should be original channel name)
-    return item["title"] if item["parent_id"] else item["original_channel_name"]
+def consolidate_extra_fields(item):
+    extra_fields = item.get("extra_fields")
+    if item["kind"] == content_kinds.EXERCISE:
+        extra_fields = _migrate_extra_fields(extra_fields)
+
+    return extra_fields
 
 
-class PrerequisitesUpdateHandler(ViewSet):
+class PrerequisitesUpdateHandler(ValuesViewset):
+    values = tuple()
     """
     Dummy viewset for handling create and delete changes for prerequisites
     """
@@ -502,7 +623,7 @@ class PrerequisitesUpdateHandler(ViewSet):
                 change.update({"errors": str(e)})
                 errors.append(change)
 
-        return errors or None, None
+        return errors or None
 
     def create_from_changes(self, changes):
         return self._handle_relationship_changes(changes)
@@ -511,8 +632,12 @@ class PrerequisitesUpdateHandler(ViewSet):
         return self._handle_relationship_changes(changes)
 
 
+def dict_if_none(obj, field_name=None):
+    return obj[field_name] if obj[field_name] else {}
+
+
 # Apply mixin first to override ValuesViewset
-class ContentNodeViewSet(BulkUpdateMixin, ChangeEventMixin, ValuesViewset):
+class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
     queryset = ContentNode.objects.all()
     serializer_class = ContentNodeSerializer
     permission_classes = [IsAuthenticated]
@@ -558,6 +683,13 @@ class ContentNodeViewSet(BulkUpdateMixin, ChangeEventMixin, ValuesViewset):
         "complete",
         "changed",
         "lft",
+        "grade_levels",
+        "resource_types",
+        "learning_activities",
+        "accessibility_labels",
+        "categories",
+        "learner_needs",
+        "suggested_duration",
     )
 
     field_map = {
@@ -566,8 +698,14 @@ class ContentNodeViewSet(BulkUpdateMixin, ChangeEventMixin, ValuesViewset):
         "tags": "content_tags",
         "kind": "kind__kind",
         "thumbnail_src": retrieve_thumbail_src,
-        "title": get_title,
         "parent": "parent_id",
+        "grade_levels": partial(dict_if_none, field_name="grade_levels"),
+        "resource_types": partial(dict_if_none, field_name="resource_types"),
+        "learning_activities": partial(dict_if_none, field_name="learning_activities"),
+        "accessibility_labels": partial(dict_if_none, field_name="accessibility_labels"),
+        "categories": partial(dict_if_none, field_name="categories"),
+        "learner_needs": partial(dict_if_none, field_name="learner_needs"),
+        "extra_fields": consolidate_extra_fields,
     }
 
     def _annotate_channel_id(self, queryset):
@@ -598,7 +736,7 @@ class ContentNodeViewSet(BulkUpdateMixin, ChangeEventMixin, ValuesViewset):
         # should not be cross channel, and are not meaningful if they are.
         prereq_table_entries = PrerequisiteContentRelationship.objects.filter(
             target_node__tree_id=Cast(
-                ContentNode.objects.filter(pk=pk).values_list("tree_id", flat=True)[:1],
+                ContentNode.filter_by_pk(pk=pk).values_list("tree_id", flat=True)[:1],
                 output_field=DjangoIntegerField(),
             )
         ).values("target_node_id", "prerequisite_id")
@@ -620,7 +758,6 @@ class ContentNodeViewSet(BulkUpdateMixin, ChangeEventMixin, ValuesViewset):
         if not pk:
             raise Http404
 
-        task_info = None
         node = self.get_object()
 
         # currently we restrict triggering calculations through the API to the channel root node
@@ -633,20 +770,13 @@ class ContentNodeViewSet(BulkUpdateMixin, ChangeEventMixin, ValuesViewset):
             # When stale, that means the value is not up-to-date with modified files in the DB,
             # and the channel is significantly large, so we'll queue an async task for calculation.
             # We don't really need more than one queued async calculation task, so we use
-            # get_or_create_async_task to ensure a task is queued, as well as return info about it
+            # fetch_or_enqueue to ensure a task is queued, as well as return info about it
             task_args = dict(node_id=node.pk, channel_id=node.channel_id)
-            task_info = get_or_create_async_task(
-                "calculate-resource-size", self.request.user, **task_args
-            )
-
-        changes = []
-        if task_info is not None:
-            changes.append(self.create_task_event(task_info))
+            calculate_resource_size_task.fetch_or_enqueue(self.request.user, **task_args)
 
         return Response({
             "size": size,
             "stale": stale,
-            "changes": changes
         })
 
     def annotate_queryset(self, queryset):
@@ -754,64 +884,46 @@ class ContentNodeViewSet(BulkUpdateMixin, ChangeEventMixin, ValuesViewset):
 
     def move_from_changes(self, changes):
         errors = []
-        changes_to_return = []
         for move in changes:
             # Move change will have key, must also have target property
             # optionally can include the desired position.
-            move_error, move_change = self.move(
+            move_error = self.move(
                 move["key"], target=move.get("target"), position=move.get("position")
             )
             if move_error:
                 move.update({"errors": [move_error]})
                 errors.append(move)
-            if move_change:
-                changes_to_return.append(move_change)
-        return errors, changes_to_return
+        return errors
 
     def move(self, pk, target=None, position=None):
         try:
             contentnode = self.get_edit_queryset().get(pk=pk)
         except ContentNode.DoesNotExist:
             error = ValidationError("Specified node does not exist")
-            return str(error), None
+            return str(error)
 
         try:
             target, position = self.validate_targeting_args(target, position)
 
-            channel_id = target.channel_id
-
-            task_args = {
-                "user_id": self.request.user.id,
-                "channel_id": channel_id,
-                "node_id": contentnode.id,
-                "target_id": target.id,
-                "position": position,
-            }
-
-            task, task_info = create_async_task(
-                "move-nodes", self.request.user, **task_args
+            contentnode.move_to(
+                target,
+                position,
             )
 
-            return (
-                None,
-                None,
-            )
+            return None
         except ValidationError as e:
-            return str(e), None
+            return str(e)
 
     def copy_from_changes(self, changes):
         errors = []
-        changes_to_return = []
         for copy in changes:
             # Copy change will have key, must also have other attributes, defined in `copy`
             # Just pass as keyword arguments here to let copy do the validation
-            copy_errors, copy_changes = self.copy(copy["key"], **copy)
+            copy_errors = self.copy(copy["key"], **copy)
             if copy_errors:
                 copy.update({"errors": copy_errors})
                 errors.append(copy)
-            if copy_changes:
-                changes_to_return.extend(copy_changes)
-        return errors, changes_to_return
+        return errors
 
     def copy(
         self,
@@ -826,64 +938,62 @@ class ContentNodeViewSet(BulkUpdateMixin, ChangeEventMixin, ValuesViewset):
         try:
             target, position = self.validate_targeting_args(target, position)
         except ValidationError as e:
-            return str(e), None
+            return str(e)
 
         try:
             source = self.get_queryset().get(pk=from_key)
         except ContentNode.DoesNotExist:
             error = ValidationError("Copy source node does not exist")
-            return str(error), [generate_delete_event(pk, CONTENTNODE)]
+            return str(error)
 
         # Affected channel for the copy is the target's channel
         channel_id = target.channel_id
 
-        if ContentNode.objects.filter(pk=pk).exists():
+        if ContentNode.filter_by_pk(pk=pk).exists():
             error = ValidationError("Copy pk already exists")
-            return str(error), None
+            return str(error)
 
-        task_args = {
-            "user_id": self.request.user.id,
-            "channel_id": channel_id,
-            "source_id": source.id,
-            "target_id": target.id,
-            "pk": pk,
-            "mods": mods,
-            "excluded_descendants": excluded_descendants,
-            "position": position,
-        }
+        can_edit_source_channel = ContentNode.filter_edit_queryset(
+            ContentNode.filter_by_pk(pk=source.id), user=self.request.user
+        ).exists()
 
-        task, task_info = create_async_task(
-            "duplicate-nodes", self.request.user, **task_args
-        )
+        with create_change_tracker(pk, CONTENTNODE, channel_id, self.request.user, "copy_nodes") as progress_tracker:
 
-        return (
-            None,
-            [generate_update_event(pk, CONTENTNODE, {TASK_ID: task_info.task_id})],
-        )
+            new_node = source.copy_to(
+                target,
+                position,
+                pk,
+                mods,
+                excluded_descendants,
+                can_edit_source_channel=can_edit_source_channel,
+                progress_tracker=progress_tracker,
+            )
 
-    def delete_from_changes(self, changes):
-        errors = []
-        changes_to_return = []
-        queryset = self.get_edit_queryset().order_by()
-        for change in changes:
-            try:
-                instance = queryset.get(**dict(self.values_from_key(change["key"])))
+            Change.create_change(
+                generate_update_event(
+                    pk,
+                    CONTENTNODE,
+                    {COPYING_FLAG: False, "node_id": new_node.node_id},
+                    channel_id=channel_id
+                ),
+                applied=True,
+                created_by_id=self.request.user.id,
+            )
 
-                task_args = {
-                    "user_id": self.request.user.id,
-                    "channel_id": instance.channel_id,
-                    "node_id": instance.id,
-                }
+        return None
 
-                task, task_info = create_async_task(
-                    "delete-node", self.request.user, **task_args
-                )
-            except ContentNode.DoesNotExist:
-                # If the object already doesn't exist, as far as the user is concerned
-                # job done!
-                pass
-            except Exception as e:
-                log_sync_exception(e)
-                change["errors"] = [str(e)]
-                errors.append(change)
-        return errors, changes_to_return
+    def perform_create(self, serializer, change=None):
+        instance = serializer.save()
+
+        # return change to the frontend for updating the `node_id` and `content_id`
+        if change is not None:
+            Change.create_change(
+                generate_update_event(
+                    instance.pk,
+                    CONTENTNODE,
+                    {"node_id": instance.node_id, "content_id": instance.content_id},
+                    channel_id=change["channel_id"],
+                ),
+                created_by_id=change["created_by_id"],
+                applied=True
+            )

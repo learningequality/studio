@@ -10,16 +10,16 @@
 {% endif %}
 
 {% if user and user.is_active %}
-{% trans "Please sign in to Kolibri Studio to accept or decline your invitation:" %}
+{% translate "Please sign in to Kolibri Studio to accept or decline your invitation:" %}
 {{ domain }}{% url 'channels' %}
 {% else %}
-{% trans "Please follow this link to create an account (you must be signed in to accept or decline invitations):" %}
+{% translate "Please follow this link to create an account (you must be signed in to accept or decline invitations):" %}
 {{ domain }}{% url 'accept_invitation_and_registration' email %}
 {% endif %}
 
 
-{% trans "Thanks for using Kolibri Studio!" %}
+{% translate "Thanks for using Kolibri Studio!" %}
 
-{% trans "The Learning Equality Team" %}
+{% translate "The Learning Equality Team" %}
 
 {% endautoescape %}

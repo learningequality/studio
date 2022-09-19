@@ -2,6 +2,7 @@ import Vue from 'vue';
 import pick from 'lodash/pick';
 import { ContentDefaults, NEW_OBJECT } from 'shared/constants';
 import { mergeMapItem } from 'shared/vuex/utils';
+import { applyMods } from 'shared/data/applyRemoteChanges';
 
 /* CHANNEL LIST MUTATIONS */
 
@@ -50,9 +51,18 @@ export function UPDATE_CHANNEL(state, { id, content_defaults = {}, ...payload } 
     });
   }
 }
+export function UPDATE_CHANNEL_FROM_INDEXEDDB(state, { id, ...mods }) {
+  if (id && state.channelsMap[id]) {
+    applyMods(state.channelsMap[id], mods);
+  }
+}
 
-export function SET_BOOKMARK(state, { id, bookmark }) {
-  state.channelsMap[id].bookmark = bookmark;
+export function SET_BOOKMARK(state, { channel }) {
+  Vue.set(state.bookmarksMap, channel, true);
+}
+
+export function DELETE_BOOKMARK(state, { channel }) {
+  Vue.delete(state.bookmarksMap, channel);
 }
 
 export function ADD_INVITATION(state, invitation) {

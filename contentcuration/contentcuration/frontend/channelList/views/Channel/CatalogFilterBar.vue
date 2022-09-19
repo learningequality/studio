@@ -224,6 +224,7 @@
 
   .v-card {
     cursor: pointer;
+
     &:hover {
       background-color: var(--v-grey-lighten4);
     }

@@ -3,13 +3,18 @@
   <VLayout row wrap @scroll="$emit('scroll', $event)">
     <VFlex xs12>
       <VLayout v-if="!hideNavigation" row>
-        <VFlex v-if="!loading && node">
-          <div class="mb-1">
-            <!-- Slot for elements like "Back" link -->
-            <slot name="navigation"></slot>
-          </div>
-          <ContentNodeIcon :kind="node.kind" includeText />
-        </VFlex>
+        <div v-if="!loading && node" class="mb-1">
+          <!-- Slot for elements like "Back" link -->
+          <slot name="navigation"></slot>
+          <ContentNodeLearningActivityIcon v-if="isTopic" :isTopic="true" includeText chip />
+          <ContentNodeLearningActivityIcon
+            v-else-if="hasLearningActivities"
+            :learningActivities="node.learning_activities"
+            includeText
+            chip
+          />
+        </div>
+
         <VSpacer />
         <VBtn
           icon
@@ -22,7 +27,6 @@
           <Icon>clear</Icon>
         </VBtn>
       </VLayout>
-      <ContentNodeIcon v-else :kind="node.kind" includeText />
     </VFlex>
     <LoadingText v-if="loading || !node" class="mt-4" />
     <VFlex v-else xs12 class="pb-5">
@@ -84,10 +88,7 @@
                   </div>
                 </VFlex>
                 <VFlex>
-                  <AssessmentItemPreview
-                    :item="item"
-                    :detailed="showAnswers"
-                  />
+                  <AssessmentItemPreview :item="item" :detailed="showAnswers" />
                 </VFlex>
               </VLayout>
             </VCardText>
@@ -103,7 +104,7 @@
           />
           <VCard v-else-if="isResource && !isExercise" class="preview-error" flat>
             <VLayout align-center justify-center fill-height>
-              <VTooltip bottom>
+              <VTooltip bottom lazy>
                 <template #activator="{ on }">
                   <Icon color="red" v-on="on">
                     error
@@ -115,10 +116,7 @@
           </VCard>
 
           <!-- Content details -->
-          <DetailsRow
-            v-if="isExercise"
-            :label="$tr('questions')"
-          >
+          <DetailsRow v-if="isExercise" :label="$tr('questions')">
             <span v-if="!assessmentItems.length" class="red--text">
               <Icon color="red" small>error</Icon>
               <span class="mx-1">{{ $tr('noQuestionsError') }}</span>
@@ -127,10 +125,20 @@
               {{ $formatNumber(assessmentItems.length) }}
             </span>
           </DetailsRow>
+          <DetailsRow :label="$tr('description')" :text="getText('description')" />
           <DetailsRow
-            v-if="isExercise"
-            :label="$tr('masteryCriteria')"
-          >
+            v-if="!isTopic"
+            :label="translateMetadataString('level')"
+            :text="level(node.grade_levels)"
+          />
+          <DetailsRow v-if="!isTopic" :label="translateMetadataString('learningActivity')">
+            <ContentNodeLearningActivityIcon
+              :learningActivities="node.learning_activities"
+              includeText
+              showEachActivityIcon
+            />
+          </DetailsRow>
+          <DetailsRow v-if="isExercise" :label="$tr('completion')">
             <span v-if="noMasteryModel" class="red--text">
               <Icon color="red" small>error</Icon>
               <span class="mx-1">{{ $tr('noMasteryModelError') }}</span>
@@ -139,7 +147,11 @@
               {{ masteryCriteria }}
             </span>
           </DetailsRow>
-          <DetailsRow :label="$tr('description')" :text="getText('description')" />
+          <DetailsRow
+            v-if="!isTopic"
+            :label="translateMetadataString('category')"
+            :text="category(node.categories)"
+          />
           <DetailsRow :label="$tr('tags')">
             <div v-if="!sortedTags.length">
               {{ defaultText }}
@@ -162,7 +174,12 @@
           </div>
           <DetailsRow :label="$tr('language')" :text="languageName" />
           <DetailsRow v-if="!isTopic" :label="$tr('visibleTo')" :text="roleName" />
-
+          <DetailsRow
+            v-if="!isTopic"
+            :label="translateMetadataString('accessibility')"
+            :text="accessibilityOptions(node.accessibility_labels)"
+            notranslate
+          />
           <!-- Related resources section -->
           <template v-if="!isTopic">
             <div class="section-header">
@@ -172,31 +189,31 @@
               <div v-if="!previousSteps.length">
                 {{ defaultText }}
               </div>
-              <VList v-else dense class="mb-2 pa-0">
-                <VListTile v-for="prerequisite in previousSteps" :key="prerequisite.id">
-                  <VListTileContent>
-                    <VListTileTitle :class="getTitleClass(prerequisite)">
-                      <ContentNodeIcon :kind="prerequisite.kind" class="mr-2" />
-                      {{ getTitle(prerequisite) }}
-                    </VListTileTitle>
-                  </VListTileContent>
-                </VListTile>
-              </VList>
+              <div v-else dense class="mb-2 pa-1">
+                <div v-for="prerequisite in previousSteps" :key="prerequisite.id">
+                  <ContentNodeLearningActivityIcon
+                    v-if="prerequisite.learning_activities"
+                    :learningActivities="prerequisite.learning_activities"
+                    showEachActivityIcon
+                  />
+                  {{ getTitle(prerequisite) }}
+                </div>
+              </div>
             </DetailsRow>
             <DetailsRow :label="$tr('nextSteps')">
               <div v-if="!nextSteps.length">
                 {{ defaultText }}
               </div>
-              <VList v-else dense class="mb-2 pa-0">
-                <VListTile v-for="postrequisite in nextSteps" :key="postrequisite.id">
-                  <VListTileContent>
-                    <VListTileTitle :class="getTitleClass(postrequisite)">
-                      <ContentNodeIcon :kind="postrequisite.kind" class="mr-2" />
-                      {{ getTitle(postrequisite) }}
-                    </VListTileTitle>
-                  </VListTileContent>
-                </VListTile>
-              </VList>
+              <div v-else dense class="mb-2 pa-1">
+                <div v-for="postrequisite in nextSteps" :key="postrequisite.id">
+                  <ContentNodeLearningActivityIcon
+                    v-if="postrequisite.learning_activities"
+                    :learningActivities="postrequisite.learning_activities"
+                    showEachActivityIcon
+                  />
+                  {{ getTitle(postrequisite) }}
+                </div>
+              </div>
             </DetailsRow>
           </template>
 
@@ -205,7 +222,10 @@
             <div class="section-header">
               {{ $tr('resources') }}
             </div>
-            <DetailsRow v-if="isImported && importedChannelLink" :label="$tr('originalChannel')">
+            <DetailsRow
+              v-if="isImported && importedChannelLink"
+              :label="$tr('originalChannel')"
+            >
               <ActionLink
                 :text="importedChannelName"
                 :href="importedChannelLink"
@@ -221,9 +241,7 @@
               <VList v-if="node.resource_count" dense class="mb-2 pa-0">
                 <VListTile v-for="kind in kindCount" :key="kind.kind">
                   <VListTileContent>
-                    <VListTileTitle>
-                      <ContentNodeIcon :kind="kind.kind" class="mr-2" />
-                    </VListTileTitle>
+                    <VListTileTitle />
                   </VListTileContent>
                 </VListTile>
               </VList>
@@ -293,11 +311,7 @@
                 />
               </DetailsRow>
               <DetailsRow v-if="node.kind === 'video'" :label="$tr('subtitles')">
-                <ExpandableList
-                  :noItemsText="defaultText"
-                  :items="subtitleFileLanguages"
-                  inline
-                />
+                <ExpandableList :noItemsText="defaultText" :items="subtitleFileLanguages" inline />
               </DetailsRow>
             </template>
           </template>
@@ -310,10 +324,13 @@
 
 <script>
 
+  import orderBy from 'lodash/orderBy';
   import sortBy from 'lodash/sortBy';
   import { mapActions, mapGetters } from 'vuex';
+  import camelCase from 'lodash/camelCase';
   import { isImportedContent, importedChannelLink } from '../utils';
   import FilePreview from '../views/files/FilePreview';
+  import { ContentLevel, Categories, AccessibilityCategories } from '../../shared/constants';
   import AssessmentItemPreview from './AssessmentItemPreview/AssessmentItemPreview';
   import ContentNodeValidator from './ContentNodeValidator';
   import {
@@ -325,7 +342,7 @@
     getNodeMasteryModelMErrors,
     getNodeMasteryModelNErrors,
   } from 'shared/utils/validation';
-  import ContentNodeIcon from 'shared/views/ContentNodeIcon';
+  import ContentNodeLearningActivityIcon from 'shared/views/ContentNodeLearningActivityIcon';
   import LoadingText from 'shared/views/LoadingText';
   import DetailsRow from 'shared/views/details/DetailsRow';
   import ExpandableList from 'shared/views/ExpandableList';
@@ -333,14 +350,19 @@
   import Checkbox from 'shared/views/form/Checkbox';
   import Banner from 'shared/views/Banner';
   import Tabs from 'shared/views/Tabs';
-  import { constantsTranslationMixin, fileSizeMixin, titleMixin } from 'shared/mixins';
+  import {
+    constantsTranslationMixin,
+    fileSizeMixin,
+    titleMixin,
+    metadataTranslationMixin,
+  } from 'shared/mixins';
   import { MasteryModelsNames } from 'shared/leUtils/MasteryModels';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
   export default {
     name: 'ResourcePanel',
     components: {
-      ContentNodeIcon,
+      ContentNodeLearningActivityIcon,
       LoadingText,
       DetailsRow,
       FilePreview,
@@ -351,7 +373,7 @@
       Banner,
       Tabs,
     },
-    mixins: [constantsTranslationMixin, fileSizeMixin, titleMixin],
+    mixins: [constantsTranslationMixin, metadataTranslationMixin, fileSizeMixin, titleMixin],
     props: {
       nodeId: {
         type: String,
@@ -406,6 +428,9 @@
       defaultText() {
         return '-';
       },
+      hasLearningActivities() {
+        return this.node && Object.keys(this.node.learning_activities).length > 0;
+      },
       assessmentItems() {
         return this.getAssessmentItems(this.nodeId);
       },
@@ -444,7 +469,7 @@
         return this.translateConstant(masteryModel);
       },
       sortedTags() {
-        return sortBy(this.node.tags, '-count');
+        return orderBy(this.node.tags, ['count'], ['desc']);
       },
       license() {
         return Licenses.get(this.node.license);
@@ -554,6 +579,47 @@
       getText(field) {
         return this.node[field] || this.defaultText;
       },
+      metadataListText(ids) {
+        const list = ids.map(i => this.translateMetadataString(camelCase(i)));
+        const formatter = new Intl.ListFormat(window.languageCode, {
+          style: 'narrow',
+          type: 'conjunction',
+        });
+        return formatter.format(list);
+      },
+      level(levels) {
+        const ids = Object.keys(levels);
+        const matches = Object.keys(ContentLevel)
+          .sort()
+          .filter(k => ids.includes(ContentLevel[k]));
+        if (matches && matches.length > 0) {
+          return this.metadataListText(matches);
+        } else {
+          return '-';
+        }
+      },
+      accessibilityOptions(options) {
+        const ids = Object.keys(options);
+        const matches = Object.keys(AccessibilityCategories)
+          .sort()
+          .filter(k => ids.includes(AccessibilityCategories[k]));
+        if (matches && matches.length > 0) {
+          return this.metadataListText(matches);
+        } else {
+          return '-';
+        }
+      },
+      category(options) {
+        const ids = Object.keys(options);
+        const matches = Object.keys(Categories)
+          .sort()
+          .filter(k => ids.includes(Categories[k]));
+        if (matches && matches.length > 0) {
+          return this.metadataListText(matches);
+        } else {
+          return '-';
+        }
+      },
       loadNode() {
         // Load related models
         if (this.node) {
@@ -579,9 +645,9 @@
     },
     $trs: {
       questions: 'Questions',
-      masteryCriteria: 'Mastery criteria',
-      masteryMofN: '{m} out of {n}',
+      masteryMofN: 'Goal: {m} out of {n}',
       details: 'Details',
+      completion: 'Completion',
       showAnswers: 'Show answers',
       questionCount: '{value, number, integer} {value, plural, one {question} other {questions}}',
       description: 'Description',

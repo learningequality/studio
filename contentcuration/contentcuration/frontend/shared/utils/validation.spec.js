@@ -1,5 +1,5 @@
 import each from 'jest-each';
-
+import CompletionCriteriaModels from 'kolibri-constants/CompletionCriteria';
 import { AssessmentItemTypes, ValidationErrors } from '../constants';
 import {
   translateValidator,
@@ -18,9 +18,21 @@ import {
   sanitizeAssessmentItemHints,
   sanitizeAssessmentItem,
   getAssessmentItemErrors,
+  getNodeLearningActivityErrors,
 } from './validation';
 import { MasteryModelsNames } from 'shared/leUtils/MasteryModels';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
+
+function generateMasteryExtraFields(mastery) {
+  return {
+    options: {
+      completion_criteria: {
+        model: CompletionCriteriaModels.MASTERY,
+        threshold: mastery,
+      },
+    },
+  };
+}
 
 describe('channelEdit utils', () => {
   describe('translateValidator', () => {
@@ -175,6 +187,23 @@ describe('channelEdit utils', () => {
     });
   });
 
+  describe('getNodeLearningActivityErrors', () => {
+    it(`returns an error for an empty learning activity input`, () => {
+      const node = {
+        learning_activities: {},
+      };
+      expect(getNodeLearningActivityErrors(node)).toEqual([
+        ValidationErrors.LEARNING_ACTIVITY_REQUIRED,
+      ]);
+    });
+    it('returns no errors when learning activity is specified', () => {
+      const node = {
+        learning_activities: { test: true },
+      };
+      expect(getNodeLearningActivityErrors(node)).toEqual([]);
+    });
+  });
+
   describe('getNodeMasteryModelErrors', () => {
     it('returns an error for an empty mastery model', () => {
       const node = { extra_fields: null };
@@ -182,7 +211,9 @@ describe('channelEdit utils', () => {
     });
 
     it('returns no errors when a mastery model specified', () => {
-      const node = { extra_fields: { mastery_model: MasteryModelsNames.DO_ALL } };
+      const node = {
+        extra_fields: generateMasteryExtraFields({ mastery_model: MasteryModelsNames.DO_ALL }),
+      };
       expect(getNodeMasteryModelErrors(node)).toEqual([]);
     });
   });
@@ -190,25 +221,32 @@ describe('channelEdit utils', () => {
   describe('getNodeMasteryModelMErrors', () => {
     it(`returns no errors for empty m value
       when no mastery model is specified`, () => {
-      const node = { extra_fields: { mastery_model: null, m: null } };
+      const node = { extra_fields: generateMasteryExtraFields({ mastery_model: null, m: null }) };
       expect(getNodeMasteryModelMErrors(node)).toEqual([]);
     });
 
     it(`returns no errors for empty m value
       for mastery models other than m of n`, () => {
-      const node = { extra_fields: { mastery_model: MasteryModelsNames.DO_ALL, m: null } };
+      const node = {
+        extra_fields: generateMasteryExtraFields({
+          mastery_model: MasteryModelsNames.DO_ALL,
+          m: null,
+        }),
+      };
       expect(getNodeMasteryModelMErrors(node)).toEqual([]);
     });
 
     describe('for a mastery model m of n', () => {
       let node;
       beforeEach(() => {
-        node = { extra_fields: { mastery_model: MasteryModelsNames.M_OF_N } };
+        node = {
+          extra_fields: generateMasteryExtraFields({ mastery_model: MasteryModelsNames.M_OF_N }),
+        };
       });
 
       it('returns errors for empty m value', () => {
-        node.extra_fields.m = undefined;
-        node.extra_fields.n = 3;
+        node.extra_fields.options.completion_criteria.threshold.m = undefined;
+        node.extra_fields.options.completion_criteria.threshold.n = 3;
 
         expect(getNodeMasteryModelMErrors(node)).toEqual([
           ValidationErrors.MASTERY_MODEL_M_REQUIRED,
@@ -219,8 +257,8 @@ describe('channelEdit utils', () => {
       });
 
       it('returns an error for non-integer m value', () => {
-        node.extra_fields.m = 1.27;
-        node.extra_fields.n = 3;
+        node.extra_fields.options.completion_criteria.threshold.m = 1.27;
+        node.extra_fields.options.completion_criteria.threshold.n = 3;
 
         expect(getNodeMasteryModelMErrors(node)).toEqual([
           ValidationErrors.MASTERY_MODEL_M_WHOLE_NUMBER,
@@ -228,8 +266,8 @@ describe('channelEdit utils', () => {
       });
 
       it('returns an error for m value smaller than zero', () => {
-        node.extra_fields.m = -2;
-        node.extra_fields.n = 3;
+        node.extra_fields.options.completion_criteria.threshold.m = -2;
+        node.extra_fields.options.completion_criteria.threshold.n = 3;
 
         expect(getNodeMasteryModelMErrors(node)).toEqual([
           ValidationErrors.MASTERY_MODEL_M_GT_ZERO,
@@ -237,15 +275,15 @@ describe('channelEdit utils', () => {
       });
 
       it('returns an error for m value larger than n value', () => {
-        node.extra_fields.m = 4;
-        node.extra_fields.n = 3;
+        node.extra_fields.options.completion_criteria.threshold.m = 4;
+        node.extra_fields.options.completion_criteria.threshold.n = 3;
 
         expect(getNodeMasteryModelMErrors(node)).toEqual([ValidationErrors.MASTERY_MODEL_M_LTE_N]);
       });
 
       it('returns no errors for m whole number smaller than n value', () => {
-        node.extra_fields.m = 3;
-        node.extra_fields.n = 4;
+        node.extra_fields.options.completion_criteria.threshold.m = 3;
+        node.extra_fields.options.completion_criteria.threshold.n = 4;
 
         expect(getNodeMasteryModelMErrors(node)).toEqual([]);
       });
@@ -255,24 +293,31 @@ describe('channelEdit utils', () => {
   describe('getNodeMasteryModelNErrors', () => {
     it(`returns no errors for empty n value
       when no mastery model is specified`, () => {
-      const node = { extra_fields: { mastery_model: null, n: null } };
+      const node = { extra_fields: generateMasteryExtraFields({ mastery_model: null, n: null }) };
       expect(getNodeMasteryModelNErrors(node)).toEqual([]);
     });
 
     it(`returns no errors for empty n value
       for mastery models other than m of n`, () => {
-      const node = { extra_fields: { mastery_model: MasteryModelsNames.DO_ALL, n: null } };
+      const node = {
+        extra_fields: generateMasteryExtraFields({
+          mastery_model: MasteryModelsNames.DO_ALL,
+          n: null,
+        }),
+      };
       expect(getNodeMasteryModelNErrors(node)).toEqual([]);
     });
 
     describe('for a mastery model m of n', () => {
       let node;
       beforeEach(() => {
-        node = { extra_fields: { mastery_model: MasteryModelsNames.M_OF_N } };
+        node = {
+          extra_fields: generateMasteryExtraFields({ mastery_model: MasteryModelsNames.M_OF_N }),
+        };
       });
 
       it('returns errors for empty n value', () => {
-        node.extra_fields.n = undefined;
+        node.extra_fields.options.completion_criteria.threshold.n = undefined;
 
         expect(getNodeMasteryModelNErrors(node)).toEqual([
           ValidationErrors.MASTERY_MODEL_N_REQUIRED,
@@ -282,7 +327,7 @@ describe('channelEdit utils', () => {
       });
 
       it('returns an error for non-integer n value', () => {
-        node.extra_fields.n = 1.27;
+        node.extra_fields.options.completion_criteria.threshold.n = 1.27;
 
         expect(getNodeMasteryModelNErrors(node)).toEqual([
           ValidationErrors.MASTERY_MODEL_N_WHOLE_NUMBER,
@@ -290,7 +335,7 @@ describe('channelEdit utils', () => {
       });
 
       it('returns an error for n value smaller than zero', () => {
-        node.extra_fields.n = -2;
+        node.extra_fields.options.completion_criteria.threshold.n = -2;
 
         expect(getNodeMasteryModelNErrors(node)).toEqual([
           ValidationErrors.MASTERY_MODEL_N_GT_ZERO,
@@ -298,7 +343,7 @@ describe('channelEdit utils', () => {
       });
 
       it('returns no errors for n whole number', () => {
-        node.extra_fields.n = 3;
+        node.extra_fields.options.completion_criteria.threshold.n = 3;
 
         expect(getNodeMasteryModelNErrors(node)).toEqual([]);
       });
@@ -347,8 +392,15 @@ describe('channelEdit utils', () => {
           title: 'Exercise',
           kind: ContentKindsNames.EXERCISE,
           license: { id: 8 },
+          learning_activities: { test: true },
           extra_fields: {
             mastery_model: MasteryModelsNames.DO_ALL,
+            options: {
+              completion_criteria: {
+                model: CompletionCriteriaModels.TIME,
+                threshold: 10,
+              },
+            },
           },
         };
         assessmentItems = [
@@ -400,11 +452,43 @@ describe('channelEdit utils', () => {
         ).toBe(false);
       });
 
+      it('returns false if completion_criteria is invalid', () => {
+        const details = {
+          ...nodeDetails,
+          extra_fields: {
+            ...nodeDetails.extra_fields,
+            options: {
+              completion_criteria: {
+                // pages model not allowed for exercise
+                model: CompletionCriteriaModels.PAGES,
+                threshold: 12,
+              },
+            },
+          },
+        };
+        expect(isNodeComplete({ nodeDetails: details, assessmentItems })).toBe(false);
+      });
+
       it(`
         returns true if node details are valid,
         there is at least one assessment items,
         and all assessment items are valid`, () => {
-        expect(isNodeComplete({ nodeDetails, assessmentItems })).toBe(true);
+        const details = {
+          ...nodeDetails,
+          extra_fields: {
+            ...nodeDetails.extra_fields,
+            options: {
+              completion_criteria: {
+                // mastery model only allowed for exercise
+                model: CompletionCriteriaModels.MASTERY,
+                threshold: {
+                  mastery_model: 'do_all',
+                },
+              },
+            },
+          },
+        };
+        expect(isNodeComplete({ nodeDetails: details, assessmentItems })).toBe(true);
       });
     });
 
@@ -419,6 +503,15 @@ describe('channelEdit utils', () => {
           title: 'A node',
           license: { id: 8 },
           kind,
+          learning_activities: { test: true },
+          extra_fields: {
+            options: {
+              completion_criteria: {
+                model: CompletionCriteriaModels.TIME,
+                threshold: 10,
+              },
+            },
+          },
         };
         files = [
           {
@@ -447,13 +540,42 @@ describe('channelEdit utils', () => {
         expect(isNodeComplete({ nodeDetails: invalidNodeDetails, files })).toBe(false);
       });
 
-      it('returns false if there are no files', () => {
-        expect(isNodeComplete({ nodeDetails, files: [] })).toBe(false);
-      });
-
       it('returns false if there is at least one invalid file', () => {
         const invalidFile = { id: 'file-id', error: 'error' };
         expect(isNodeComplete({ nodeDetails, files: [...files, invalidFile] })).toBe(false);
+      });
+
+      it('returns false if completion_criteria is invalid', () => {
+        const details = {
+          ...nodeDetails,
+          extra_fields: {
+            options: {
+              completion_criteria: {
+                model: 'pages',
+                threshold: -1,
+              },
+            },
+          },
+        };
+        expect(isNodeComplete({ nodeDetails: details, files })).toBe(false);
+      });
+
+      it('returns false if completion_criteria is invalid for kind', () => {
+        const details = {
+          ...nodeDetails,
+          extra_fields: {
+            options: {
+              completion_criteria: {
+                // mastery model only allowed for exercise
+                model: CompletionCriteriaModels.MASTERY,
+                threshold: {
+                  mastery_model: 'do_all',
+                },
+              },
+            },
+          },
+        };
+        expect(isNodeComplete({ nodeDetails: details, files })).toBe(false);
       });
 
       it('returns true if node details and all files are valid', () => {
@@ -469,6 +591,7 @@ describe('channelEdit utils', () => {
           title: '',
           kind: 'document',
           license: 8,
+          learning_activities: { test: true },
         })
       ).toEqual([ValidationErrors.TITLE_REQUIRED]);
     });
@@ -479,6 +602,7 @@ describe('channelEdit utils', () => {
           title: 'Title',
           kind: 'document',
           license: null,
+          learning_activities: { test: true },
         },
         [ValidationErrors.LICENSE_REQUIRED],
       ],
@@ -487,6 +611,7 @@ describe('channelEdit utils', () => {
           title: 'Title',
           kind: 'document',
           license: 8,
+          learning_activities: { test: true },
         },
         [],
       ],
@@ -496,6 +621,7 @@ describe('channelEdit utils', () => {
           title: 'Title',
           kind: 'topic',
           license: null,
+          learning_activities: { test: true },
         },
         [],
       ],
@@ -505,6 +631,7 @@ describe('channelEdit utils', () => {
           title: 'Title',
           freeze_authoring_data: true,
           license: null,
+          learning_activities: { test: true },
         },
         [],
       ],
@@ -518,6 +645,7 @@ describe('channelEdit utils', () => {
         {
           title: 'Title',
           license: 1,
+          learning_activities: { test: true },
         },
         [ValidationErrors.COPYRIGHT_HOLDER_REQUIRED],
       ],
@@ -526,6 +654,7 @@ describe('channelEdit utils', () => {
           title: 'Title',
           license: 1,
           copyright_holder: 'Copyright holder',
+          learning_activities: { test: true },
         },
         [],
       ],
@@ -540,6 +669,7 @@ describe('channelEdit utils', () => {
           title: 'Title',
           license: 9,
           copyright_holder: 'Copyright holder',
+          learning_activities: { test: true },
         },
         [ValidationErrors.LICENSE_DESCRIPTION_REQUIRED],
       ],
@@ -549,6 +679,7 @@ describe('channelEdit utils', () => {
           license: 9,
           copyright_holder: 'Copyright holder',
           license_description: 'My custom license',
+          learning_activities: { test: true },
         },
         [],
       ],
@@ -562,6 +693,7 @@ describe('channelEdit utils', () => {
           title: 'Title',
           kind: 'exercise',
           license: 8,
+          learning_activities: { test: true },
         },
         [ValidationErrors.MASTERY_MODEL_REQUIRED],
       ],
@@ -570,9 +702,10 @@ describe('channelEdit utils', () => {
           title: 'Title',
           kind: 'exercise',
           license: 8,
-          extra_fields: {
+          learning_activities: { test: true },
+          extra_fields: generateMasteryExtraFields({
             mastery_model: 'do_all',
-          },
+          }),
         },
         [],
       ],
@@ -581,10 +714,11 @@ describe('channelEdit utils', () => {
           title: 'Title',
           kind: 'exercise',
           license: 8,
-          extra_fields: {
+          learning_activities: { test: true },
+          extra_fields: generateMasteryExtraFields({
             mastery_model: 'm_of_n',
             m: 3,
-          },
+          }),
         },
         [
           ValidationErrors.MASTERY_MODEL_M_LTE_N,
@@ -598,11 +732,12 @@ describe('channelEdit utils', () => {
           title: 'Title',
           kind: 'exercise',
           license: 8,
-          extra_fields: {
+          learning_activities: { test: true },
+          extra_fields: generateMasteryExtraFields({
             mastery_model: 'm_of_n',
             m: 3,
             n: 2,
-          },
+          }),
         },
         [ValidationErrors.MASTERY_MODEL_M_LTE_N],
       ],
@@ -611,11 +746,12 @@ describe('channelEdit utils', () => {
           title: 'Title',
           kind: 'exercise',
           license: 8,
-          extra_fields: {
+          learning_activities: { test: true },
+          extra_fields: generateMasteryExtraFields({
             mastery_model: 'm_of_n',
             m: 2,
             n: 3,
-          },
+          }),
         },
         [],
       ],

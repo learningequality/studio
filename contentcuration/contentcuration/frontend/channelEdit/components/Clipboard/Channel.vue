@@ -49,8 +49,8 @@
 <script>
 
   import { mapGetters } from 'vuex';
-  import ContentNode from './ContentNode';
   import clipboardMixin, { parentMixin } from './mixins';
+  import ContentNode from './ContentNode';
   import Checkbox from 'shared/views/form/Checkbox';
   import { SelectionFlags } from 'frontend/channelEdit/vuex/clipboard/constants';
   import LazyListGroup from 'shared/views/LazyListGroup';

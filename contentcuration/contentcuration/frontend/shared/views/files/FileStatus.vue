@@ -1,8 +1,8 @@
 <template>
 
   <div>
-    <VTooltip v-if="hasErrors" top>
-      <template v-slot:activator="{ on }">
+    <VTooltip v-if="hasErrors" top lazy>
+      <template #activator="{ on }">
         <Icon color="red" :large="large" v-on="on">
           error
         </Icon>

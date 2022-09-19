@@ -7,7 +7,7 @@ from builtins import str
 import requests
 from django.urls import reverse_lazy
 
-from .base import BaseTestCase
+from .base import StudioTestCase
 from .testdata import create_studio_file
 from contentcuration import models
 
@@ -44,7 +44,7 @@ def add_field_defaults_to_node(node):
 ###
 
 
-class CreateChannelTestCase(BaseTestCase):
+class CreateChannelTestCase(StudioTestCase):
     @classmethod
     def setUpClass(cls):
         super(CreateChannelTestCase, cls).setUpClass()
@@ -58,7 +58,7 @@ class CreateChannelTestCase(BaseTestCase):
         }
 
     def setUp(self):
-        super(CreateChannelTestCase, self).setUp()
+        super(CreateChannelTestCase, self).setUpBase()
         self.topic = models.ContentKind.objects.get(kind="topic")
         self.license = models.License.objects.all()[0]
         self.fileinfo_audio = create_studio_file("abc", preset='audio', ext='mp3')

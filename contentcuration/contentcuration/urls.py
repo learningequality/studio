@@ -32,6 +32,7 @@ import contentcuration.views.users as registration_views
 import contentcuration.views.zip as zip_views
 from contentcuration.views import pwa
 from contentcuration.viewsets.assessmentitem import AssessmentItemViewSet
+from contentcuration.viewsets.bookmark import BookmarkViewSet
 from contentcuration.viewsets.channel import AdminChannelViewSet
 from contentcuration.viewsets.channel import CatalogViewSet
 from contentcuration.viewsets.channel import ChannelViewSet
@@ -40,8 +41,7 @@ from contentcuration.viewsets.clipboard import ClipboardViewSet
 from contentcuration.viewsets.contentnode import ContentNodeViewSet
 from contentcuration.viewsets.file import FileViewSet
 from contentcuration.viewsets.invitation import InvitationViewSet
-from contentcuration.viewsets.sync.endpoint import sync
-from contentcuration.viewsets.task import TaskViewSet
+from contentcuration.viewsets.sync.endpoint import SyncView
 from contentcuration.viewsets.user import AdminUserViewSet
 from contentcuration.viewsets.user import ChannelUserViewSet
 from contentcuration.viewsets.user import UserViewSet
@@ -54,12 +54,12 @@ class StagingPageRedirectView(RedirectView):
 
 
 router = routers.DefaultRouter(trailing_slash=False)
+router.register(r'bookmark', BookmarkViewSet, basename="bookmark")
 router.register(r'channel', ChannelViewSet)
 router.register(r'channelset', ChannelSetViewSet)
 router.register(r'catalog', CatalogViewSet, basename='catalog')
 router.register(r'admin-channels', AdminChannelViewSet, basename='admin-channels')
 router.register(r'file', FileViewSet)
-router.register(r'task', TaskViewSet)
 router.register(r'channeluser', ChannelUserViewSet, basename="channeluser")
 router.register(r'user', UserViewSet)
 router.register(r'invitation', InvitationViewSet)
@@ -76,7 +76,9 @@ urlpatterns = [
     re_path(r'^stealthz$', views.stealth, name='stealth'),
     re_path(r'^api/search/', include('search.urls'), name='search'),
     re_path(r'^api/probers/get_prober_channel', views.get_prober_channel, name='get_prober_channel'),
-    re_path(r'^api/sync/$', sync, name="sync"),
+    re_path(r'^api/probers/publishing_status', views.publishing_status, name='publishing_status'),
+    re_path(r'^api/probers/celery_worker_status', views.celery_worker_status, name='celery_worker_status'),
+    re_path(r'^api/sync/$', SyncView.as_view(), name="sync"),
 ]
 
 # if activated, turn on django prometheus urls

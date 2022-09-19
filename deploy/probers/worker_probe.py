@@ -1,7 +1,4 @@
 #!/usr/bin/env python
-import os
-
-import requests
 from base import BaseProbe
 
 
@@ -10,16 +7,14 @@ class WorkerProbe(BaseProbe):
     metric = "worker_ping_latency_msec"
 
     def do_probe(self):
-        celery_dashboard_url = (
-            os.getenv("CELERY_DASHBOARD_URL") or "http://127.0.0.1:5555/dashboard"
-        )
-        response = requests.get(celery_dashboard_url, params={"json": "1"})
-        response.raise_for_status()
+        r = self.request("api/probers/celery_worker_status/")
+        r.raise_for_status()
+        results = r.json()
 
         active_workers = []
-        for worker in response.json()["data"]:
-            if worker["status"]:
-                active_workers.append(worker["hostname"])
+        for worker_hostname, worker_status in results.items():
+            if "ok" in worker_status.keys():
+                active_workers.append(worker_hostname)
 
         if not active_workers:
             raise Exception("No workers are running!")

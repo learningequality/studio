@@ -11,6 +11,14 @@ from le_utils.constants import exercises
 from le_utils.constants import file_formats
 from le_utils.constants import format_presets
 from le_utils.constants import licenses
+from le_utils.constants.labels.accessibility_categories import (
+    ACCESSIBILITYCATEGORIESLIST,
+)
+from le_utils.constants.labels.learning_activities import LEARNINGACTIVITIESLIST
+from le_utils.constants.labels.levels import LEVELSLIST
+from le_utils.constants.labels.needs import NEEDSLIST
+from le_utils.constants.labels.resource_type import RESOURCETYPELIST
+from le_utils.constants.labels.subjects import SUBJECTSLIST
 
 from contentcuration.api import write_file_to_storage
 from contentcuration.models import AssessmentItem
@@ -78,6 +86,7 @@ def create_channel(
         channel.viewers.add(v)
 
     channel.save()
+    channel.mark_created(editors[0])
     channel.main_tree.get_descendants().delete()
     channel.staging_tree and channel.staging_tree.get_descendants().delete()
     return channel
@@ -157,6 +166,7 @@ def create_exercise(title, parent, license_id, description="", user=None, empty=
         "m": 3,
         "n": 5,
     }
+
     exercise = ContentNode.objects.create(
         title=title,
         description=description,
@@ -262,6 +272,10 @@ def create_file(display_name, preset_id, ext, user=None):
 
 def uuid4_hex():
     return uuid.uuid4().hex
+
+
+def choices(sequence, k):
+    return [random.choice(sequence) for _ in range(0, k)]
 
 
 class TreeBuilder(object):
@@ -508,4 +522,11 @@ class TreeBuilder(object):
             "parent_id": parent_id,
             "kind_id": kind,
             "complete": complete,
+            "resource_types": {c: True for c in choices(RESOURCETYPELIST, k=random.randint(1, 2))},
+            "learning_activities": {c: True for c in choices(LEARNINGACTIVITIESLIST, k=random.randint(1, 3))},
+            "accessibility_labels": {c: True for c in choices(ACCESSIBILITYCATEGORIESLIST, k=random.randint(1, 3))},
+            "grade_levels": {c: True for c in choices(LEVELSLIST, k=random.randint(1, 2))},
+            "categories": {c: True for c in choices(SUBJECTSLIST, k=random.randint(1, 10))},
+            "learner_needs": {c: True for c in choices(NEEDSLIST, k=random.randint(1, 5))},
+            "suggested_duration": random.randint(5, 5000),
         }

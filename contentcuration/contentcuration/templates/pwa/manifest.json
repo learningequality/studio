@@ -4,8 +4,8 @@
 {% get_current_language_bidi as LANGUAGE_BIDI %}
 
 {
-  "name": "{% trans 'Kolibri Studio' %}",
-  "short_name": "{% trans 'Kolibri Studio' %}",
+  "name": "{% translate 'Kolibri Studio' %}",
+  "short_name": "{% translate 'Kolibri Studio' %}",
   "description": "",
   "start_url": "{{ full_path }}",
   "display": "standalone",

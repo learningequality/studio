@@ -1,19 +1,19 @@
 /* eslint-env node */
 
 const path = require('path');
-const webpack = require('webpack');
+const process = require('process');
+const baseConfig = require('kolibri-tools/lib/webpack.config.base');
+const { merge } = require('webpack-merge');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
-const BundleTracker = require('webpack-bundle-tracker');
-const VueLoaderPlugin = require('vue-loader/lib/plugin');
+const BundleTracker = require('kolibri-tools/lib/webpackBundleTracker');
 const CircularDependencyPlugin = require('circular-dependency-plugin');
 
-const TerserPlugin = require('terser-webpack-plugin');
-const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
-const WebpackRTLPlugin = require('webpack-rtl-plugin');
-const VuetifyLoaderPlugin = require('vuetify-loader/lib/plugin');
+const WebpackRTLPlugin = require('kolibri-tools/lib/webpackRtlPlugin');
 
 const { InjectManifest } = require('workbox-webpack-plugin');
+
+const webpack = require('webpack');
 
 const djangoProjectDir = path.resolve('contentcuration');
 const staticFilesDir = path.resolve(djangoProjectDir, 'contentcuration', 'static');
@@ -21,44 +21,22 @@ const srcDir = path.resolve(djangoProjectDir, 'contentcuration', 'frontend');
 
 const bundleOutputDir = path.resolve(staticFilesDir, 'studio');
 
-function recursiveIssuer(m) {
-  if (m.issuer) {
-    return recursiveIssuer(m.issuer);
-  } else if (m.name) {
-    return m.name;
-  } else {
-    return false;
-  }
-}
-
-// NOTE: Lots of things are handled by webpack4. NODE_ENV, uglify, source-maps
-// see: https://medium.com/webpack/webpack-4-mode-and-optimization-5423a6bc597a
-
 module.exports = (env = {}) => {
   const dev = env.dev;
   const hot = env.hot;
-  const postCSSLoader = {
-    loader: 'postcss-loader',
-    options: {
-      config: { path: path.resolve(__dirname, './postcss.config.js') },
-      sourceMap: dev,
-    },
-  };
-  const cssInsertionLoader = hot ? 'style-loader' : MiniCssExtractPlugin.loader;
-  const cssLoader = {
-    loader: 'css-loader',
-    options: { minimize: !dev, sourceMap: dev },
-  };
-  // for scss blocks
-  const sassLoaders = [
-    cssInsertionLoader,
-    cssLoader,
-    postCSSLoader,
-    {
-      loader: 'sass-loader',
-    },
-  ];
-  return {
+  const base = baseConfig({ mode: dev ? 'development' : 'production', hot, cache: dev });
+
+  if (String(base.module.rules[2].test) !== String(/\.css$/)) {
+    throw Error('Check base webpack configuration for update of location of css loader');
+  }
+
+  const rootDir = __dirname;
+
+  const rootNodeModules = path.join(rootDir, 'node_modules');
+
+  const baseCssLoaders = base.module.rules[2].use;
+
+  return merge(base, {
     context: srcDir,
     entry: {
       // Use arrays for every entry to allow for hot reloading.
@@ -73,7 +51,8 @@ module.exports = (env = {}) => {
       htmlScreenshot: ['./shared/utils/htmlScreenshot.js'],
     },
     output: {
-      filename: '[name]-[hash].js',
+      filename: '[name]-[fullhash].js',
+      chunkFilename: '[name]-[id]-[fullhash].js',
       path: bundleOutputDir,
       publicPath: dev ? 'http://127.0.0.1:4000/dist/' : '/static/studio/',
     },
@@ -83,89 +62,15 @@ module.exports = (env = {}) => {
         'Access-Control-Allow-Origin': '*',
       },
     },
-    optimization: {
-      splitChunks: {
-        cacheGroups: {
-          // Chunk css by bundle, not by dynamic split points.
-          // This will add a bit to each bundle, but will mean we don't
-          // have to dynamically determine which css bundle to load
-          // if we do webpack code splitting.
-          // Modified from https://github.com/webpack-contrib/mini-css-extract-plugin#extracting-css-based-on-entry
-          baseStyles: {
-            name: 'base',
-            test: (m, c, entry = 'base') =>
-              m.constructor.name === 'CssModule' && recursiveIssuer(m) === entry,
-            chunks: 'all',
-            enforce: true,
-          },
-        },
-      },
-      minimizer: [
-        new TerserPlugin({
-          cache: true,
-          parallel: true,
-          sourceMap: true,
-          terserOptions: {
-            mangle: false,
-            safari10: false,
-            output: {
-              comments: false,
-            },
-          },
-        }),
-        new OptimizeCSSAssetsPlugin({}),
-      ],
-    },
     module: {
       rules: [
         {
-          test: /\.js?$/,
-          exclude: /node_modules\/(?!(kolibri-design-system)\/).*/,
-          use: ['babel-loader'],
-        },
-        {
-          test: /\.handlebars?$/,
-          use: ['handlebars-template-loader'],
-        },
-        {
           test: /\.styl(us)?$/,
-          use: [hot ? `style-loader` : MiniCssExtractPlugin.loader, `css-loader`, 'stylus-loader'],
+          use: baseCssLoaders.concat('stylus-loader'),
         },
         {
           test: /\.less?$/,
-          use: [
-            hot ? `style-loader` : MiniCssExtractPlugin.loader,
-            `css-loader`,
-            postCSSLoader,
-            'less-loader',
-          ],
-        },
-        {
-          test: /\.css?$/,
-          use: [hot ? `style-loader` : MiniCssExtractPlugin.loader, `css-loader`, postCSSLoader],
-        },
-        {
-          test: /\.vue?$/,
-          loader: 'vue-loader',
-        },
-        // Use url loader to load font files.
-        {
-          test: /\.(eot|woff|otf|ttf|woff2)$/,
-          use: {
-            loader: 'url-loader',
-            options: { name: '[name].[ext]?[hash]' },
-          },
-        },
-        {
-          test: /\.(png|jpe?g|gif|svg)$/,
-          use: {
-            loader: 'url-loader',
-            options: { limit: 10000, name: '[name].[ext]?[hash]' },
-          },
-        },
-        {
-          test: /\.s[a|c]ss$/,
-          use: sassLoaders,
+          use: baseCssLoaders.concat('less-loader'),
         },
       ],
     },
@@ -179,25 +84,25 @@ module.exports = (env = {}) => {
         static: staticFilesDir,
       },
       extensions: ['.js', '.vue', '.css', '.less'],
+      modules: [rootNodeModules],
     },
-    devtool: 'cheap-module-source-map',
+    resolveLoader: {
+      modules: [rootNodeModules],
+    },
     plugins: [
-      new VueLoaderPlugin(),
-      new VuetifyLoaderPlugin(),
-      new BundleTracker({
-        path: path.resolve(djangoProjectDir, 'build'),
-        filename: 'webpack-stats.json',
+      new webpack.IgnorePlugin({
+        resourceRegExp: /vuetify\/src\/stylus\//,
       }),
-      new webpack.ProvidePlugin({
-        // used in Mathquill, set in jquery
-        'window.jQuery': 'jquery',
-        jQuery: 'jquery',
+      new BundleTracker({
+        filename: path.resolve(djangoProjectDir, 'build', 'webpack-stats.json'),
       }),
       new MiniCssExtractPlugin({
-        filename: '[name]-[hash].css',
-        chunkFilename: '[name]-[hash]-[id].css',
+        filename: '[name]-[fullhash].css',
+        chunkFilename: '[name]-[fullhash]-[id].css',
       }),
-      new WebpackRTLPlugin(),
+      new WebpackRTLPlugin({
+        minify: false,
+      }),
       new CircularDependencyPlugin({
         // exclude detection of files based on a RegExp
         exclude: /a\.js|node_modules/,
@@ -223,7 +128,6 @@ module.exports = (env = {}) => {
             }),
           ]
     ),
-    // new in webpack 4. Specifies the default bundle type
-    mode: 'development',
-  };
+    stats: 'normal',
+  });
 };

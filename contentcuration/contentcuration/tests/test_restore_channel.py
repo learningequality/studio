@@ -1,17 +1,13 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import
-
-from future import standard_library
-standard_library.install_aliases()
-from builtins import str
 import datetime
 import json
-import sys
 import uuid
 from io import BytesIO
 
 from django.core.files.storage import default_storage
 from django.template.loader import render_to_string
+from django.utils.translation import activate
+from django.utils.translation import deactivate
 from le_utils.constants import exercises
 from mixer.backend.django import mixer
 from mock import MagicMock
@@ -24,10 +20,6 @@ from contentcuration.utils.import_tools import create_channel
 from contentcuration.utils.import_tools import generate_assessment_item
 from contentcuration.utils.import_tools import process_content
 
-if sys.version_info.major == 2:
-    reload(sys)
-    sys.setdefaultencoding('utf8')
-
 
 thumbnail_path = "/content/thumbnail.png"
 ASSESSMENT_DATA = {
@@ -35,7 +27,7 @@ ASSESSMENT_DATA = {
         'template': 'perseus/input_question.json',
         'type': exercises.INPUT_QUESTION,
         'question': "Input question",
-        'question_images': [],
+        'question_images': [{"name": "test.jpg", "width": 12.71, "height": 12.12}],
         'hints': [{'hint': 'Hint 1'}],
         'answers': [
             {'answer': '1', 'correct': True, 'images': []},
@@ -171,6 +163,8 @@ class PerseusRestoreTestCase(StudioTestCase):
             self.assertEqual(result, test['output'])
 
     def test_generate_assessment_item(self):
+        # Run in Spanish to ensure we are properly creating JSON with non-localized numbers
+        activate("es-es")
         for assessment_id, data in list(ASSESSMENT_DATA.items()):
             assessment_data = json.loads(render_to_string(data['template'], data).encode('utf-8', "ignore"))
             assessment_item = generate_assessment_item(assessment_id, data['order'], data['type'], assessment_data)
@@ -182,3 +176,4 @@ class PerseusRestoreTestCase(StudioTestCase):
                 self.assertTrue(any(h for h in data['hints'] if h['hint'] == hint['hint']))
             for answer in json.loads(assessment_item.answers):
                 self.assertTrue(any(a for a in data['answers'] if a['answer'] == str(answer['answer']) and a['correct'] == answer['correct']))
+        deactivate()

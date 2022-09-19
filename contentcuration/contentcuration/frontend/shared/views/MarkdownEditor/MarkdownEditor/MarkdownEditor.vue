@@ -61,6 +61,7 @@
 
   import Editor from '@toast-ui/editor';
   import debounce from 'lodash/debounce';
+  import { stripHtml } from 'string-strip-html';
 
   import imageUpload, { paramsToImageFieldHTML } from '../plugins/image-upload';
   import formulas from '../plugins/formulas';
@@ -105,17 +106,21 @@
     props: {
       markdown: {
         type: String,
+        default: '',
       },
       // Inject function to handle file uploads
       handleFileUpload: {
         type: Function,
+        default: () => {},
       },
       // Inject function to get file upload object
       getFileUpload: {
         type: Function,
+        default: () => {},
       },
       imagePreset: {
         type: String,
+        default: '',
       },
       analyticsLabel: {
         type: String,
@@ -183,7 +188,9 @@
           content = content.replaceAll('&nbsp;', ' ');
 
           // TUI.editor sprinkles in extra `<br>` tags that Kolibri renders literally
-          content = content.replaceAll('<br>', '');
+          // any copy pasted rich text that renders as HTML but does not get converted
+          // will linger here, so remove it as Kolibri will render it literally also.
+          content = stripHtml(content).result;
           return content;
         }
         toHTML(content) {
@@ -939,6 +946,7 @@
   .wrapper {
     padding: 1px;
     border: 4px solid transparent;
+
     &.highlight {
       border-color: var(--v-primary-base);
     }

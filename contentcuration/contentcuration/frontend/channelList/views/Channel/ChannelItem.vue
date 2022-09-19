@@ -63,7 +63,7 @@
               {{ $tr('unpublishedText') }}
             </VCardText>
           </VFlex>
-          <VTooltip bottom>
+          <VTooltip bottom lazy>
             <template #activator="{ on }">
               <Icon
                 v-if="allowEdit && hasUnpublishedChanges"
@@ -124,7 +124,7 @@
               @mouseleave.native="hideHighlight = false"
             />
             <Menu v-if="showOptions">
-              <template v-slot:activator="{ on }">
+              <template #activator="{ on }">
                 <VBtn
                   icon
                   flat
@@ -365,7 +365,7 @@
         } else {
           this.linkToChannelTree
             ? (window.location.href = this.channelHref)
-            : this.$router.push(this.channelDetailsLink);
+            : this.$router.push(this.channelDetailsLink).catch(() => {});
         }
       },
       trackTokenCopy() {
@@ -400,9 +400,11 @@
   .v-card {
     width: 100%;
     cursor: pointer;
+
     &:hover:not(.hideHighlight) {
       background-color: var(--v-greyBackground-base);
     }
+
     &.added {
       background-color: var(--v-greenHighlightBackground-base);
     }
@@ -411,6 +413,7 @@
   .card-header {
     font-size: 18px;
   }
+
   .metadata-section {
     // Double space metadata section
     line-height: 3;
@@ -418,6 +421,7 @@
 
   .metadata-field {
     display: inline-block;
+
     &:not(:last-child)::after {
       margin: 0 8px;
       content: '•';

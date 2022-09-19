@@ -5,11 +5,14 @@ from urllib.parse import urlunsplit
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
+from django.core.cache import cache
 from django.core.exceptions import PermissionDenied
 from django.db.models import Count
 from django.db.models import IntegerField
 from django.db.models import OuterRef
 from django.db.models import Subquery
+from django.db.models import UUIDField
+from django.db.models.functions import Cast
 from django.http import HttpResponse
 from django.http import HttpResponseForbidden
 from django.http import HttpResponseNotFound
@@ -36,19 +39,30 @@ from rest_framework.response import Response
 from .json_dump import json_for_parse_from_data
 from .json_dump import json_for_parse_from_serializer
 from contentcuration.api import activate_channel
+from contentcuration.constants import channel_history
 from contentcuration.decorators import browser_is_supported
+from contentcuration.models import Change
 from contentcuration.models import Channel
+from contentcuration.models import ChannelHistory
 from contentcuration.models import ChannelSet
 from contentcuration.models import ContentKind
 from contentcuration.models import DEFAULT_USER_PREFERENCES
 from contentcuration.models import Language
 from contentcuration.models import License
+from contentcuration.models import TaskResult
 from contentcuration.serializers import SimplifiedChannelProbeCheckSerializer
 from contentcuration.utils.i18n import SUPPORTED_LANGUAGES
 from contentcuration.utils.messages import get_messages
 from contentcuration.viewsets.channelset import PublicChannelSetSerializer
 
 PUBLIC_CHANNELS_CACHE_DURATION = 30  # seconds
+PUBLIC_CHANNELS_CACHE_KEYS = {
+    "list": "public_channel_list",
+    "languages": "public_channel_languages",
+    "licenses": "public_channel_licenses",
+    "kinds": "public_channel_kinds",
+    "collections": "public_channel_collections",
+}
 
 MESSAGES = "i18n_messages"
 PREFERENCES = "user_preferences"
@@ -74,7 +88,11 @@ def current_user_for_context(user):
     if not user or user.is_anonymous:
         return json_for_parse_from_data(None)
 
-    return json_for_parse_from_data({field: getattr(user, field) for field in user_fields})
+    user_data = {field: getattr(user, field) for field in user_fields}
+
+    user_data["user_rev"] = Change.objects.filter(applied=True, user=user).values_list("server_rev", flat=True).order_by("-server_rev").first() or 0
+
+    return json_for_parse_from_data(user_data)
 
 
 @browser_is_supported
@@ -115,6 +133,46 @@ def get_prober_channel(request):
     return Response(SimplifiedChannelProbeCheckSerializer(channel).data)
 
 
+@api_view(["GET"])
+@authentication_classes((TokenAuthentication, SessionAuthentication))
+@permission_classes((IsAuthenticated,))
+def publishing_status(request):
+    if not request.user.is_admin:
+        return HttpResponseForbidden()
+
+    associated_tasks = TaskResult.objects.filter(
+        task_name="export-channel",
+        channel_id=Cast(OuterRef("channel_id"), UUIDField()),
+    )
+    channel_publish_status = (
+        ChannelHistory.objects
+        .filter(
+            action=channel_history.PUBLICATION,
+            channel_id__in=Channel.objects.filter(main_tree__publishing=True).values("id"),
+        )
+        .annotate(task_id=associated_tasks.order_by("-date_created").values("task_id")[:1])
+        .distinct("channel_id")
+        .order_by("channel_id", "-performed")
+        .values("channel_id", "performed", "task_id")
+    )
+
+    return Response(channel_publish_status)
+
+
+@api_view(["GET"])
+@authentication_classes((TokenAuthentication, SessionAuthentication))
+@permission_classes((IsAuthenticated,))
+def celery_worker_status(request):
+    if not request.user.is_admin:
+        return HttpResponseForbidden()
+
+    from contentcuration.celery import app
+
+    # should return dict with structure like:
+    # {'celery@hostname': {'ok': 'pong'}}
+    return Response(app.control.inspect().ping() or {})
+
+
 """ END HEALTH CHECKS """
 
 
@@ -122,56 +180,73 @@ def get_prober_channel(request):
 @permission_classes((AllowAny,))
 def channel_list(request):
     anon = settings.LIBRARY_MODE or request.user.is_anonymous
-    current_user = current_user_for_context(None if anon else request.user)
+    current_user = current_user_for_context(request.user)
     preferences = DEFAULT_USER_PREFERENCES if anon else request.user.content_defaults
 
-    public_channel_list = Channel.objects.filter(
-        public=True, main_tree__published=True, deleted=False,
-    ).values_list("main_tree__tree_id", flat=True)
+    public_channel_list = cache.get(PUBLIC_CHANNELS_CACHE_KEYS["list"])
+    if public_channel_list is None:
+        public_channel_list = Channel.objects.filter(
+            public=True, main_tree__published=True, deleted=False,
+        ).values_list("main_tree__tree_id", flat=True)
+        cache.set(PUBLIC_CHANNELS_CACHE_KEYS["list"], public_channel_list, None)
 
     # Get public channel languages
-    public_lang_query = (
-        Language.objects.filter(
-            channel_language__public=True,
-            channel_language__main_tree__published=True,
-            channel_language__deleted=False,
+    languages = cache.get(PUBLIC_CHANNELS_CACHE_KEYS["languages"])
+    if languages is None:
+        public_lang_query = (
+            Language.objects.filter(
+                channel_language__public=True,
+                channel_language__main_tree__published=True,
+                channel_language__deleted=False,
+            )
+            .values("lang_code")
+            .annotate(count=Count("lang_code"))
+            .order_by("lang_code")
         )
-        .values("lang_code")
-        .annotate(count=Count("lang_code"))
-        .order_by("lang_code")
-    )
-    languages = {lang["lang_code"]: lang["count"] for lang in public_lang_query}
+        languages = {lang["lang_code"]: lang["count"] for lang in public_lang_query}
+        cache.set(PUBLIC_CHANNELS_CACHE_KEYS["languages"], json_for_parse_from_data(languages), None)
 
     # Get public channel licenses
-    public_license_query = (
-        License.objects.filter(contentnode__tree_id__in=public_channel_list)
-        .values_list("id", flat=True)
-        .order_by("id")
-        .distinct()
-    )
-    licenses = list(public_license_query)
+    licenses = cache.get(PUBLIC_CHANNELS_CACHE_KEYS["licenses"])
+    if licenses is None:
+        public_license_query = (
+            License.objects.filter(contentnode__tree_id__in=public_channel_list)
+            .values_list("id", flat=True)
+            .order_by("id")
+            .distinct()
+        )
+        licenses = list(public_license_query)
+        cache.set(PUBLIC_CHANNELS_CACHE_KEYS["licenses"], json_for_parse_from_data(licenses), None)
 
     # Get public channel kinds
-    public_kind_query = (
-        ContentKind.objects.filter(contentnodes__tree_id__in=public_channel_list)
-        .values_list("kind", flat=True)
-        .order_by("kind")
-        .distinct()
-    )
-    kinds = list(public_kind_query)
+    kinds = cache.get(PUBLIC_CHANNELS_CACHE_KEYS["kinds"])
+    if kinds is None:
+        public_kind_query = (
+            ContentKind.objects.filter(contentnodes__tree_id__in=public_channel_list)
+            .values_list("kind", flat=True)
+            .order_by("kind")
+            .distinct()
+        )
+        kinds = list(public_kind_query)
+        cache.set(PUBLIC_CHANNELS_CACHE_KEYS["kinds"], json_for_parse_from_data(kinds), None)
 
     # Get public channel sets
-    public_channelset_query = ChannelSet.objects.filter(public=True).annotate(
-        count=SQCountDistinct(
-            Channel.objects.filter(
-                secret_tokens=OuterRef("secret_token"),
-                public=True,
-                main_tree__published=True,
-                deleted=False,
-            ).values_list("id", flat=True),
-            field="id",
+    collections = cache.get(PUBLIC_CHANNELS_CACHE_KEYS["collections"])
+    if collections is None:
+        public_channelset_query = ChannelSet.objects.filter(public=True).annotate(
+            count=SQCountDistinct(
+                Channel.objects.filter(
+                    secret_tokens=OuterRef("secret_token"),
+                    public=True,
+                    main_tree__published=True,
+                    deleted=False,
+                ).values_list("id", flat=True),
+                field="id",
+            )
         )
-    )
+        cache.set(PUBLIC_CHANNELS_CACHE_KEYS["collections"], json_for_parse_from_serializer(
+            PublicChannelSetSerializer(public_channelset_query, many=True)), None)
+
     return render(
         request,
         "channel_list.html",
@@ -180,12 +255,10 @@ def channel_list(request):
             PREFERENCES: json_for_parse_from_data(preferences),
             MESSAGES: json_for_parse_from_data(get_messages()),
             "LIBRARY_MODE": settings.LIBRARY_MODE,
-            "public_languages": json_for_parse_from_data(languages),
-            "public_kinds": json_for_parse_from_data(kinds),
-            "public_licenses": json_for_parse_from_data(licenses),
-            "public_collections": json_for_parse_from_serializer(
-                PublicChannelSetSerializer(public_channelset_query, many=True)
-            ),
+            "public_languages": languages,
+            "public_kinds": kinds,
+            "public_licenses": licenses,
+            "public_collections": collections,
         },
     )
 
@@ -213,6 +286,7 @@ def accounts(request):
 @permission_classes((IsAuthenticated,))
 def channel(request, channel_id):
     channel_error = ""
+    channel_rev = 0
 
     # Check if channel exists
     try:
@@ -226,13 +300,15 @@ def channel(request, channel_id):
         # an option to restore the channel in the Administration page
         if channel.deleted:
             channel_error = 'CHANNEL_EDIT_ERROR_CHANNEL_DELETED'
+        else:
+            channel_rev = Change.objects.filter(applied=True, channel=channel).values_list("server_rev", flat=True).order_by("-server_rev").first() or 0
 
     return render(
         request,
         "channel_edit.html",
         {
             CHANNEL_EDIT_GLOBAL: json_for_parse_from_data(
-                {"channel_id": channel_id, "channel_error": channel_error}
+                {"channel_id": channel_id, "channel_error": channel_error, "channel_rev": channel_rev}
             ),
             CURRENT_USER: current_user_for_context(request.user),
             PREFERENCES: json_for_parse_from_data(request.user.content_defaults),
@@ -258,14 +334,12 @@ def activate_channel_endpoint(request):
         channel = Channel.filter_edit_queryset(Channel.objects.all(), request.user).get(pk=data["channel_id"])
     except Channel.DoesNotExist:
         return HttpResponseNotFound("Channel not found")
-    changes = []
     try:
-        change = activate_channel(channel, request.user)
-        changes.append(change)
+        activate_channel(channel, request.user)
     except PermissionDenied as e:
         return HttpResponseForbidden(str(e))
 
-    return HttpResponse(json.dumps({"success": True, "changes": changes}))
+    return HttpResponse(json.dumps({"success": True}))
 
 
 # Taken from kolibri.core.views which was

@@ -10,8 +10,8 @@ import file from './file';
 import policies from './policies';
 import SyncProgressPlugin from './syncProgressPlugin';
 import PoliciesPlugin from './policies/plugin';
-import db from 'shared/data/db';
 import IndexedDBPlugin, { Listener, commitListener } from 'shared/vuex/indexedDBPlugin';
+import db from 'shared/data/db';
 
 Vue.use(Vuex);
 

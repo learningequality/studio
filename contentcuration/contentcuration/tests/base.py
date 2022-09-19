@@ -1,9 +1,7 @@
 from __future__ import absolute_import
 
 from builtins import str
-from importlib import import_module
 
-import mock
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
@@ -21,29 +19,6 @@ from rest_framework.test import force_authenticate
 from . import testdata
 from contentcuration.models import User
 from contentcuration.utils import minio_utils
-
-
-def mock_class_instance(target):
-    """
-    Helper that returns a Mocked instance of the `target` class
-
-    :param target: A class or string module path to the class
-    :return: A mocked class instance of `target`
-    """
-    if isinstance(target, str):
-        target_split = target.split(".")
-        target_mod = ".".join(target_split[:-1])
-        target_name = target_split[-1]
-
-        module = import_module(target_mod)
-        target_cls = getattr(module, target_name)
-    else:
-        target_cls = target
-
-    class MockClass(target_cls):
-        def __new__(cls, *args, **kwargs):
-            return mock.Mock(spec_set=cls)
-    return MockClass()
 
 
 class BucketTestClassMixin(object):
@@ -96,6 +71,14 @@ class StudioTestCase(TestCase, BucketTestMixin):
         if not self.persist_bucket:
             self.create_bucket()
 
+    def setUpBase(self):
+        if not self.persist_bucket:
+            self.create_bucket()
+        self.channel = testdata.channel()
+        self.user = testdata.user()
+        self.channel.editors.add(self.user)
+        self.channel.main_tree.refresh_from_db()
+
     def tearDown(self):
         if not self.persist_bucket:
             self.delete_bucket()
@@ -116,6 +99,21 @@ class StudioTestCase(TestCase, BucketTestMixin):
         file_upload_url = str(reverse_lazy("api_file_upload"))
         return fileobj_temp, self.admin_client().post(file_upload_url, {"file": f})
 
+    def sign_in(self, user=None):
+        if not user:
+            user = self.user
+        user.save()
+        self.client.force_login(user)
+
+    def get(self, url, data=None, follow=False, secure=False):
+        return self.client.get(
+            url,
+            data=data,
+            follow=follow,
+            secure=secure,
+            HTTP_USER_AGENT=settings.SUPPORTED_BROWSERS[0],
+        )
+
 
 class StudioAPITestCase(APITestCase, BucketTestMixin):
     @classmethod
@@ -130,15 +128,6 @@ class StudioAPITestCase(APITestCase, BucketTestMixin):
     def tearDown(self):
         if not self.persist_bucket:
             self.delete_bucket()
-
-
-class BaseTestCase(StudioTestCase):
-    def setUp(self):
-        super(BaseTestCase, self).setUp()
-        self.channel = testdata.channel()
-        self.user = testdata.user()
-        self.channel.editors.add(self.user)
-        self.channel.main_tree.refresh_from_db()
 
     def sign_in(self, user=None):
         if not user:

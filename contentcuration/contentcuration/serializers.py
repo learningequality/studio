@@ -1,7 +1,6 @@
 import json
 from collections import OrderedDict
 
-from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import serializers
 
 from contentcuration.models import Channel
@@ -31,35 +30,6 @@ class PublicChannelSerializer(serializers.ModelSerializer):
     matching_tokens = serializers.SerializerMethodField('match_tokens')
     icon_encoding = serializers.SerializerMethodField('get_thumbnail_encoding')
     version_notes = serializers.SerializerMethodField('sort_published_data')
-
-    def get_channel_primary_token(self, channel):
-        try:
-            token = channel.get_human_token().token
-        except ObjectDoesNotExist:
-            return channel.pk
-
-        return "-".join([token[:5], token[5:]])
-
-    def generate_thumbnail_url(self, channel):
-        return channel.get_thumbnail()
-
-    def check_for_changes(self, channel):
-        return channel.main_tree and channel.main_tree.get_descendants().filter(changed=True).exists()
-
-    def get_resource_count(self, channel):
-        return channel.get_resource_count()
-
-    def get_date_created(self, channel):
-        return channel.main_tree.created
-
-    def get_date_modified(self, channel):
-        return channel.get_date_modified()
-
-    def check_published(self, channel):
-        return channel.main_tree.published
-
-    def check_publishing(self, channel):
-        return channel.main_tree.publishing
 
     def match_tokens(self, channel):
         tokens = json.loads(channel.tokens) if hasattr(channel, 'tokens') else []

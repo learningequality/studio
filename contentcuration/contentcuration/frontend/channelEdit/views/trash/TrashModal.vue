@@ -127,9 +127,9 @@
 
   import { mapActions, mapGetters } from 'vuex';
   import sortBy from 'lodash/sortBy';
-  import { RouteNames } from '../../constants';
-  import ResourceDrawer from '../../components/ResourceDrawer';
   import MoveModal from '../../components/move/MoveModal';
+  import ResourceDrawer from '../../components/ResourceDrawer';
+  import { RouteNames } from '../../constants';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
   import Checkbox from 'shared/views/form/Checkbox';
   import MessageDialog from 'shared/views/MessageDialog';
@@ -233,7 +233,7 @@
       moveNodes(target) {
         return this.moveContentNodes({ id__in: this.selected, parent: target }).then(() => {
           this.reset();
-          this.$refs.moveModal.moveComplete();
+          this.$refs.moveModal && this.$refs.moveModal.moveComplete();
         });
       },
       reset() {
@@ -262,11 +262,11 @@
       selectAllHeader: 'Select all',
       deletedHeader: 'Removed',
       selectedCountText:
-        '{topicCount, plural,\n =1 {# topic}\n other {# topics}}, {resourceCount, plural,\n =1 {# resource}\n other {# resources}}',
+        '{topicCount, plural,\n =1 {# folder}\n other {# folders}}, {resourceCount, plural,\n =1 {# resource}\n other {# resources}}',
       deleteButton: 'Delete',
       restoreButton: 'Restore',
       deleteConfirmationHeader:
-        'Permanently delete {topicCount, plural,\n =1 {# topic}\n other {# topics}}, {resourceCount, plural,\n =1 {# resource}\n other {# resources}}?',
+        'Permanently delete {topicCount, plural,\n =1 {# folder}\n other {# folders}}, {resourceCount, plural,\n =1 {# resource}\n other {# resources}}?',
       deleteConfirmationText: 'You cannot undo this action. Are you sure you want to continue?',
       deleteConfirmationDeleteButton: 'Delete permanently',
       deleteConfirmationCancelButton: 'Cancel',

@@ -47,11 +47,13 @@
   div {
     white-space: nowrap;
   }
+
   div.label {
     max-width: 8em;
     overflow: hidden;
     text-overflow: ellipsis;
   }
+
   .VBtn:hover::before,
   .VBtn:focus::before {
     background-color: transparent;

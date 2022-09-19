@@ -114,7 +114,6 @@
   import { getCorrectAnswersIndices } from '../../utils';
   import translator from '../../translator';
   import { AssessmentItemTypes } from 'shared/constants';
-
   import Checkbox from 'shared/views/form/Checkbox';
   import MarkdownViewer from 'shared/views/MarkdownEditor/MarkdownViewer/MarkdownViewer.vue';
 
@@ -138,6 +137,7 @@
        */
       item: {
         type: Object,
+        default: null,
       },
       detailed: {
         type: Boolean,
@@ -238,6 +238,7 @@
     &.open .icon {
       transform: rotate(90deg);
     }
+
     [dir='rtl'] & {
       &:not(.open) .icon {
         transform: rotate(180deg);

@@ -26,6 +26,7 @@ export default function theme() {
       draggableDropZone: '#dddddd',
       draggableDropOverlay: '#996189',
       greenHighlightBackground: '#E3F0ED',
+      roleVisibilityCoach: '#01a9f3',
     },
     themeTokens()
   );

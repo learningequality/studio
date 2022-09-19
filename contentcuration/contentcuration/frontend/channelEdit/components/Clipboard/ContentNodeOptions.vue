@@ -86,40 +86,30 @@
       },
       removeNode: withChangeTracker(function(changeTracker) {
         this.track('Delete');
-        this.showSnackbar({
-          duration: null,
-          text: this.$tr('removingItems', { count: 1 }),
-          actionText: this.$tr('cancel'),
-          actionCallback: () => changeTracker.revert(),
-        });
 
         return this.deleteClipboardNode({
           id: this.nodeId,
         }).then(() => {
-          return this.showSnackbar({
+          this.showSnackbar({
             text: this.$tr('removedFromClipboard'),
-            actionText: this.$tr('undo'),
-            actionCallback: () => changeTracker.revert(),
-          });
+            // TODO: implement revert functionality for clipboard
+            // actionText: this.$tr('undo'),
+            // actionCallback: () => changeTracker.revert(),
+          }).then(() => changeTracker.cleanUp());
         });
       }),
       duplicateNode: withChangeTracker(function(changeTracker) {
         this.track('Copy');
-        this.showSnackbar({
-          duration: null,
-          text: this.$tr('creatingCopies'),
-          actionText: this.$tr('cancel'),
-          actionCallback: () => changeTracker.revert(),
-        });
 
         return this.copyAll({
           nodes: [this.contentNode],
         }).then(() => {
-          return this.showSnackbar({
+          this.showSnackbar({
             text: this.$tr('copiedItemsToClipboard'),
-            actionText: this.$tr('undo'),
-            actionCallback: () => changeTracker.revert(),
-          });
+            // TODO: implement revert functionality for clipboard
+            // actionText: this.$tr('undo'),
+            // actionCallback: () => changeTracker.revert(),
+          }).then(() => changeTracker.cleanUp());
         });
       }),
       track(label) {
@@ -131,11 +121,8 @@
       makeACopy: 'Make a copy',
       moveTo: 'Move to...',
       remove: 'Delete',
-      undo: 'Undo',
-      cancel: 'Cancel',
-      creatingCopies: 'Copying in clipboard...',
+      // undo: 'Undo',
       copiedItemsToClipboard: 'Copied in clipboard',
-      removingItems: 'Deleting from clipboard...',
       removedFromClipboard: 'Deleted from clipboard',
     },
   };

@@ -16,6 +16,7 @@
     props: {
       totalPages: {
         type: Number,
+        default: 0,
       },
     },
     computed: {
