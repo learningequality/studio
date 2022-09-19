@@ -126,9 +126,9 @@ hascaptions:
 
 export COMPOSE_PROJECT_NAME=studio_$(shell git rev-parse --abbrev-ref HEAD)
 
-purge-postgres:
-	-PGPASSWORD=kolibri dropdb -U learningequality "kolibri-studio" --port 5432 -h localhost
-	PGPASSWORD=kolibri createdb -U learningequality "kolibri-studio" --port 5432 -h localhost
+purge-postgres: .docker/pgpass
+	-PGPASSFILE=.docker/pgpass dropdb -U learningequality "kolibri-studio" --port 5432 -h localhost
+	PGPASSFILE=.docker/pgpass createdb -U learningequality "kolibri-studio" --port 5432 -h localhost
 
 destroy-and-recreate-database: purge-postgres setup
 
