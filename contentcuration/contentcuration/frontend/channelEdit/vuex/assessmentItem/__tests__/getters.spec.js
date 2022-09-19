@@ -5,7 +5,7 @@ import {
   getInvalidAssessmentItemsCount,
   getAssessmentItemsAreValid,
 } from '../getters';
-import { AssessmentItemTypes, ValidationErrors } from 'shared/constants';
+import { AssessmentItemTypes, DELAYED_VALIDATION, ValidationErrors } from 'shared/constants';
 
 describe('assessmentItem getters', () => {
   let state;
@@ -45,7 +45,7 @@ describe('assessmentItem getters', () => {
           'assessment-id-3': {
             assessment_id: 'assessment-id-3',
             contentnode: 'content-node-id-2',
-            isNew: true,
+            [DELAYED_VALIDATION]: true,
             type: AssessmentItemTypes.SINGLE_SELECTION,
             question: 'What color are minions?',
             answers: [
@@ -67,7 +67,7 @@ describe('assessmentItem getters', () => {
           'assessment-id-4': {
             assessment_id: 'assessment-id-4',
             contentnode: 'content-node-id-3',
-            isNew: true,
+            [DELAYED_VALIDATION]: true,
             type: AssessmentItemTypes.SINGLE_SELECTION,
             question: '',
             answers: [],
@@ -75,7 +75,7 @@ describe('assessmentItem getters', () => {
           'assessment-id-5': {
             assessment_id: 'assessment-id-5',
             contentnode: 'content-node-id-3',
-            isNew: true,
+            [DELAYED_VALIDATION]: true,
             type: AssessmentItemTypes.SINGLE_SELECTION,
             question: '',
             answers: [],
@@ -103,7 +103,7 @@ describe('assessmentItem getters', () => {
         {
           assessment_id: 'assessment-id-3',
           contentnode: 'content-node-id-2',
-          isNew: true,
+          [DELAYED_VALIDATION]: true,
           type: AssessmentItemTypes.SINGLE_SELECTION,
           question: 'What color are minions?',
           answers: [
@@ -145,9 +145,9 @@ describe('assessmentItem getters', () => {
       });
     });
 
-    it("doesn't include invalid nodes errors that are new if `ignoreNew` set to true", () => {
+    it("doesn't include invalid nodes errors that are new if `ignoreDelayed` set to true", () => {
       expect(
-        getAssessmentItemsErrors(state)({ contentNodeId: 'content-node-id-2', ignoreNew: true })
+        getAssessmentItemsErrors(state)({ contentNodeId: 'content-node-id-2', ignoreDelayed: true })
       ).toEqual({
         'assessment-id-2': [
           ValidationErrors.QUESTION_REQUIRED,
@@ -163,11 +163,11 @@ describe('assessmentItem getters', () => {
       expect(getInvalidAssessmentItemsCount(state)({ contentNodeId: 'content-node-id-2' })).toBe(2);
     });
 
-    it("doesn't count invalid nodes that are new if `ignoreNew` set to true", () => {
+    it("doesn't count invalid nodes that are new if `ignoreDelayed` set to true", () => {
       expect(
         getInvalidAssessmentItemsCount(state)({
           contentNodeId: 'content-node-id-2',
-          ignoreNew: true,
+          ignoreDelayed: true,
         })
       ).toBe(1);
     });
@@ -182,9 +182,12 @@ describe('assessmentItem getters', () => {
       expect(getAssessmentItemsAreValid(state)({ contentNodeId: 'content-node-id-2' })).toBe(false);
     });
 
-    it('returns true if all assessment items are not valid and marked as new if `ignoreNew` set to true', () => {
+    it('returns true if all assessment items are not valid and marked as new if `ignoreDelayed` set to true', () => {
       expect(
-        getAssessmentItemsAreValid(state)({ contentNodeId: 'content-node-id-4', ignoreNew: true })
+        getAssessmentItemsAreValid(state)({
+          contentNodeId: 'content-node-id-4',
+          ignoreDelayed: true,
+        })
       ).toBe(true);
     });
   });

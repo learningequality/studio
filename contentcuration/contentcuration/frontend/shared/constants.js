@@ -48,6 +48,10 @@ export const NOVALUE = Symbol('No value default');
 // that they have not yet been committed to our IndexedDB layer.
 export const NEW_OBJECT = Symbol('New object');
 
+// This symbol is used as a key on new objects used to denote when
+// validation should be delayed
+export const DELAYED_VALIDATION = Symbol('Delayed validation');
+
 export const kindToIconMap = {
   audio: 'headset',
   channel: 'apps',
