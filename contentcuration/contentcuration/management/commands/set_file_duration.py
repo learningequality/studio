@@ -14,7 +14,7 @@ logging = logmodule.getLogger('command')
 CHUNKSIZE = 10000
 
 
-def extract_duration_of_media(f_in, extension):
+def extract_duration_of_media(f_in, extension):  # noqa C901
     """
     For more details on these commands, refer to the ffmpeg Wiki:
     https://trac.ffmpeg.org/wiki/FFprobeTips#Formatcontainerduration
@@ -55,9 +55,12 @@ def extract_duration_of_media(f_in, extension):
             stdin=f_in,
             stderr=subprocess.PIPE
         )
-        second_last_line = result.stderr.decode("utf-8").strip().splitlines()[-2]
-        time_code = second_last_line.split(" time=")[1].split(" ")[0]
-        hours, minutes, seconds = time_code.split(":")
+        try:
+            second_last_line = result.stderr.decode("utf-8").strip().splitlines()[-2]
+            time_code = second_last_line.split(" time=")[1].split(" ")[0]
+            hours, minutes, seconds = time_code.split(":")
+        except IndexError:
+            raise RuntimeError("Unable to determine media length")
         try:
             hours = int(hours)
         except ValueError:
@@ -103,7 +106,7 @@ class Command(BaseCommand):
                 except FileNotFoundError:
                     logging.warning("File {} not found".format(file))
                     excluded_files.add(file.file_on_disk.name)
-                except subprocess.CalledProcessError:
+                except (subprocess.CalledProcessError, RuntimeError):
                     logging.warning("File {} could not be read for duration".format(file))
                     excluded_files.add(file.file_on_disk.name)
 
