@@ -3,7 +3,7 @@ import { shallowMount, mount } from '@vue/test-utils';
 import { AssessmentItemToolbarActions } from '../../constants';
 import { assessmentItemKey } from '../../utils';
 import AssessmentEditor from './AssessmentEditor';
-import { AssessmentItemTypes, ValidationErrors } from 'shared/constants';
+import { AssessmentItemTypes, ValidationErrors, DELAYED_VALIDATION } from 'shared/constants';
 
 jest.mock('shared/views/MarkdownEditor/MarkdownEditor/MarkdownEditor.vue');
 jest.mock('shared/views/MarkdownEditor/MarkdownViewer/MarkdownViewer.vue');
@@ -306,7 +306,7 @@ describe('AssessmentEditor', () => {
         answers: [],
         hints: [],
         order: 1,
-        isNew: true,
+        [DELAYED_VALIDATION]: true,
       });
     });
 
@@ -348,7 +348,7 @@ describe('AssessmentEditor', () => {
         answers: [],
         hints: [],
         order: 2,
-        isNew: true,
+        [DELAYED_VALIDATION]: true,
       });
       expect(listeners.addItem).toBeCalledTimes(1);
     });
@@ -433,7 +433,7 @@ describe('AssessmentEditor', () => {
         answers: [],
         hints: [],
         order: 4,
-        isNew: true,
+        [DELAYED_VALIDATION]: true,
       });
     });
   });
