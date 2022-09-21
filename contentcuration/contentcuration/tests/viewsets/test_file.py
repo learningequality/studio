@@ -413,6 +413,22 @@ class UploadFileURLTestCase(StudioAPITestCase):
 
         self.assertEqual(response.status_code, 400)
 
+    def test_invalid_file_format_upload(self):
+        self.client.force_authenticate(user=self.user)
+        file = {
+            "size": 1000,
+            "checksum": uuid.uuid4().hex,
+            "name": "le_studio",
+            "file_format": "ppx",
+            "preset": format_presets.AUDIO,
+            "duration": 10.123
+        }
+        response = self.client.post(
+            reverse("file-upload-url"), file, format="json",
+        )
+
+        self.assertEqual(response.status_code, 400)
+
     def test_insufficient_storage(self):
         self.file["size"] = 100000000000000
 
