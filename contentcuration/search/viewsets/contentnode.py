@@ -17,7 +17,7 @@ from search.utils import get_fts_search_query
 
 from contentcuration.models import Channel
 from contentcuration.models import File
-from contentcuration.utils.pagination import CachedListPagination
+from contentcuration.utils.pagination import ValuesViewsetPageNumberPagination
 from contentcuration.viewsets.base import ReadOnlyValuesViewset
 from contentcuration.viewsets.base import RequiredFilterSet
 from contentcuration.viewsets.common import NotNullMapArrayAgg
@@ -25,7 +25,7 @@ from contentcuration.viewsets.common import UUIDFilter
 from contentcuration.viewsets.common import UUIDInFilter
 
 
-class ListPagination(CachedListPagination):
+class ListPagination(ValuesViewsetPageNumberPagination):
     page_size = 25
     page_size_query_param = "page_size"
     max_page_size = 100
