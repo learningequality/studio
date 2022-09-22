@@ -51,8 +51,7 @@
       },
       itemText: {
         type: [String, Function],
-        required: false,
-        default: '',
+        required: true,
       },
       notranslate: {
         type: Boolean,
