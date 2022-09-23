@@ -41,18 +41,21 @@
       </template>
 
       <template #item="{ item }">
-        <div style="width: 100%; height: 100%">
-          <VDivider v-if="!item.value.includes('.')" />
+        <VListTile
+          :value="isSelected(item.value)"
+          :class="{ parentOption: !item.value.includes('.') }"
+          @mousedown.prevent
+          @click="() => !isSelected(item.value) ? add(item.value) : remove(item.value)"
+        >
           <KCheckbox
-            :checked="dropdownSelected[item.value]"
+            :checked="isSelected(item.value)"
             :label="item.text"
             :value="item.value"
             style="margin-top: 10px"
             :style="treeItemStyle(item)"
             :ripple="false"
-            @change="checked => checked ? add(item.value) : remove(item.value)"
           />
-        </div>
+        </VListTile>
       </template>
     </VAutocomplete>
   </div>
@@ -143,19 +146,6 @@
           };
         });
       },
-      dropdownSelected() {
-        const obj = {};
-        for (let category of this.selected) {
-          const paths = category.split('.');
-          let cat = '';
-          for (let path of paths) {
-            cat += path;
-            obj[cat] = true;
-            cat += '.';
-          }
-        }
-        return obj;
-      },
       selected: {
         get() {
           return this.value;
@@ -167,16 +157,19 @@
       nested() {
         return !this.categoryText;
       },
+      isSelected() {
+        return value => this.selected.some(v => v.startsWith(value));
+      },
     },
     methods: {
       treeItemStyle(item) {
         return this.nested ? { paddingLeft: `${item.level * 24}px` } : {};
       },
-      add(item) {
-        this.selected = [...this.selected, item];
+      add(value) {
+        this.selected = [...this.selected, value];
       },
-      remove(item) {
-        this.selected = this.selected.filter(i => !i.startsWith(item));
+      remove(value) {
+        this.selected = this.selected.filter(i => !i.startsWith(value));
       },
       removeAll() {
         this.selected = [];
@@ -220,12 +213,8 @@
     position: relative;
   }
 
-  /deep/ .v-list__tile {
-    flex-wrap: wrap;
-  }
-
-  /deep/ div[role='listitem']:first-child hr {
-    display: none;
+  .parentOption:not(:first-child) {
+    border-top: 1px solid rgba(0, 0, 0, 0.12);
   }
 
 </style>
