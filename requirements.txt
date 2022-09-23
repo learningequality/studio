@@ -191,7 +191,7 @@ proto-plus==1.18.1
     # via
     #   google-cloud-error-reporting
     #   google-cloud-logging
-protobuf==3.17.0
+protobuf==3.18.3
     # via
     #   google-api-core
     #   googleapis-common-protos
@@ -257,7 +257,6 @@ six==1.16.0
     #   html5lib
     #   oauth2client
     #   progressbar2
-    #   protobuf
     #   python-dateutil
     #   python-utils
 sqlparse==0.4.1
