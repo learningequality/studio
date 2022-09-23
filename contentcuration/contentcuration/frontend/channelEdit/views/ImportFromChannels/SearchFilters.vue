@@ -55,8 +55,8 @@
       v-model="kinds"
       :items="kindFilterOptions"
       :label="$tr('kindLabel')"
+      item-text="text"
     />
-
 
     <!-- Language -->
     <LanguageDropdown
@@ -69,6 +69,7 @@
       v-model="licenses"
       :items="licenseOptions"
       :label="$tr('licensesLabel')"
+      item-text="text"
     />
 
     <!-- Created after -->
