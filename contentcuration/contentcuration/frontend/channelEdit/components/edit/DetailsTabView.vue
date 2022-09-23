@@ -438,8 +438,25 @@
   function generateNestedNodesGetterSetter(key) {
     return {
       get() {
-        const value = this.getValueFromNodes(key);
-        return Object.keys(value);
+        // Return the unique values...
+        return uniq(
+          // for which all selected nodes share...
+          intersection(
+            // by mapping the fields for each selected node...
+            ...this.nodes.map(node => {
+              // checking the diffTracker first, then the node...
+              for (let obj of [this.diffTracker[node.id] || {}, node]) {
+                // returning the keys of the field
+                if (Object.prototype.hasOwnProperty.call(obj, key)) {
+                  return Object.keys(obj[key]);
+                }
+              }
+              // otherwise an empty array, which will cause `intersection`
+              // to result in an empty array
+              return [];
+            })
+          )
+        );
       },
       set(value) {
         const newMap = {};
