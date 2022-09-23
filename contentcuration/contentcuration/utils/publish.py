@@ -298,6 +298,12 @@ def create_bare_contentnode(ccnode, default_language, channel_id, channel_name, 
         if ccnode.accessibility_labels:
             accessibility_labels = ",".join(ccnode.accessibility_labels.keys())
 
+    # Do not use the inherited metadata if this is a topic, just read from its own metadata instead.
+    grade_levels = ccnode.grade_levels if ccnode.kind_id == content_kinds.TOPIC else metadata["grade_levels"]
+    resource_types = ccnode.resource_types if ccnode.kind_id == content_kinds.TOPIC else metadata["resource_types"]
+    categories = ccnode.categories if ccnode.kind_id == content_kinds.TOPIC else metadata["categories"]
+    learner_needs = ccnode.learner_needs if ccnode.kind_id == content_kinds.TOPIC else metadata["learner_needs"]
+
     kolibrinode, is_new = kolibrimodels.ContentNode.objects.update_or_create(
         pk=ccnode.node_id,
         defaults={
@@ -319,12 +325,12 @@ def create_bare_contentnode(ccnode, default_language, channel_id, channel_name, 
             'duration': duration,
             'options': json.dumps(options),
             # Fields for metadata labels
-            "grade_levels": ",".join(metadata["grade_levels"].keys()) if metadata["grade_levels"] else None,
-            "resource_types": ",".join(metadata["resource_types"].keys()) if metadata["resource_types"] else None,
+            "grade_levels": ",".join(grade_levels.keys()) if grade_levels else None,
+            "resource_types": ",".join(resource_types.keys()) if resource_types else None,
             "learning_activities": learning_activities,
             "accessibility_labels": accessibility_labels,
-            "categories": ",".join(metadata["categories"].keys()) if metadata["categories"] else None,
-            "learner_needs": ",".join(metadata["learner_needs"].keys()) if metadata["learner_needs"] else None,
+            "categories": ",".join(categories.keys()) if categories else None,
+            "learner_needs": ",".join(learner_needs.keys()) if learner_needs else None,
         }
     )
 

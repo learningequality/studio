@@ -97,6 +97,18 @@ class ExportChannelTestCase(StudioTestCase):
         new_video.save()
 
         first_topic = self.content_channel.main_tree.get_descendants().first()
+
+        # Add a publishable topic to ensure it does not inherit but that its children do
+        new_node = create_node({'kind_id': 'topic', 'title': 'Disinherited topic', 'children': []})
+        new_node.complete = True
+        new_node.parent = first_topic
+        new_node.save()
+
+        new_video = create_node({'kind_id': 'video', 'title': 'Inheriting video', 'children': []})
+        new_video.complete = True
+        new_video.parent = new_node
+        new_video.save()
+
         first_topic.accessibility_labels = {
             accessibility_categories.AUDIO_DESCRIPTION: True,
         }
@@ -233,7 +245,11 @@ class ExportChannelTestCase(StudioTestCase):
     def test_inherited_category(self):
         first_topic_node_id = self.content_channel.main_tree.get_descendants().first().node_id
         for child in kolibri_models.ContentNode.objects.filter(parent_id=first_topic_node_id)[1:]:
-            self.assertEqual(child.categories, subjects.MATHEMATICS)
+            if child.kind == "topic":
+                self.assertIsNone(child.categories)
+                self.assertEqual(child.children.first().categories, subjects.MATHEMATICS)
+            else:
+                self.assertEqual(child.categories, subjects.MATHEMATICS)
 
     def test_inherited_category_no_overwrite(self):
         first_topic_node_id = self.content_channel.main_tree.get_descendants().first().node_id
@@ -243,7 +259,11 @@ class ExportChannelTestCase(StudioTestCase):
     def test_inherited_needs(self):
         first_topic_node_id = self.content_channel.main_tree.get_descendants().first().node_id
         for child in kolibri_models.ContentNode.objects.filter(parent_id=first_topic_node_id)[1:]:
-            self.assertEqual(child.learner_needs, needs.PRIOR_KNOWLEDGE)
+            if child.kind == "topic":
+                self.assertIsNone(child.learner_needs)
+                self.assertEqual(child.children.first().learner_needs, needs.PRIOR_KNOWLEDGE)
+            else:
+                self.assertEqual(child.learner_needs, needs.PRIOR_KNOWLEDGE)
 
     def test_inherited_needs_no_overwrite(self):
         first_topic_node_id = self.content_channel.main_tree.get_descendants().first().node_id
@@ -264,12 +284,20 @@ class ExportChannelTestCase(StudioTestCase):
     def test_inherited_grade_levels(self):
         first_topic_node_id = self.content_channel.main_tree.get_descendants().first().node_id
         for child in kolibri_models.ContentNode.objects.filter(parent_id=first_topic_node_id):
-            self.assertEqual(child.grade_levels, levels.LOWER_SECONDARY)
+            if child.kind == "topic":
+                self.assertIsNone(child.grade_levels)
+                self.assertEqual(child.children.first().grade_levels, levels.LOWER_SECONDARY)
+            else:
+                self.assertEqual(child.grade_levels, levels.LOWER_SECONDARY)
 
     def test_inherited_resource_types(self):
         first_topic_node_id = self.content_channel.main_tree.get_descendants().first().node_id
         for child in kolibri_models.ContentNode.objects.filter(parent_id=first_topic_node_id):
-            self.assertEqual(child.resource_types, resource_type.LESSON_PLAN)
+            if child.kind == "topic":
+                self.assertIsNone(child.resource_types)
+                self.assertEqual(child.children.first().resource_types, resource_type.LESSON_PLAN)
+            else:
+                self.assertEqual(child.resource_types, resource_type.LESSON_PLAN)
 
     def test_topics_no_learning_activity(self):
         first_topic_node_id = self.content_channel.main_tree.get_descendants().first().node_id
