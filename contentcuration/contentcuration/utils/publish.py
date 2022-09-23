@@ -154,11 +154,15 @@ def assign_license_to_contentcuration_nodes(channel, license):
     channel.main_tree.get_family().update(license_id=license.pk)
 
 
-inheritable_fields = [
+inheritable_map_fields = [
     "grade_levels",
     "resource_types",
     "categories",
     "learner_needs",
+]
+
+inheritable_simple_value_fields = [
+    "language",
 ]
 
 
@@ -194,7 +198,7 @@ class TreeMapper:
     def map_nodes(self):
         self.recurse_nodes(self.root_node, {})
 
-    def recurse_nodes(self, node, inherited_fields):
+    def recurse_nodes(self, node, inherited_fields):  # noqa C901
         logging.debug("Mapping node with id {id}".format(id=node.pk))
 
         # Only process nodes that are either non-topics or have non-topic descendants
@@ -202,7 +206,7 @@ class TreeMapper:
 
             metadata = {}
 
-            for field in inheritable_fields:
+            for field in inheritable_map_fields:
                 metadata[field] = {}
                 inherited_keys = (inherited_fields.get(field) or {}).keys()
                 own_keys = (getattr(node, field) or {}).keys()
@@ -211,6 +215,12 @@ class TreeMapper:
                 for key in all_keys:
                     if not any(k != key and k.startswith(key) for k in all_keys):
                         metadata[field][key] = True
+
+            for field in inheritable_simple_value_fields:
+                if field in inherited_fields:
+                    metadata[field] = inherited_fields[field]
+                if getattr(node, field):
+                    metadata[field] = getattr(node, field)
 
             kolibrinode = create_bare_contentnode(node, self.default_language, self.channel_id, self.channel_name, metadata)
 
@@ -268,9 +278,9 @@ def create_bare_contentnode(ccnode, default_language, channel_id, channel_name, 
     if ccnode.license is not None:
         kolibri_license = create_kolibri_license_object(ccnode)[0]
 
-    language = None
-    if ccnode.language or default_language:
-        language, _new = get_or_create_language(ccnode.language or default_language)
+    language = (ccnode.language if ccnode.kind_id == content_kinds.TOPIC else metadata.get("language")) or default_language
+    if language:
+        language, _new = get_or_create_language(language)
 
     duration = None
     if ccnode.kind_id in [content_kinds.AUDIO, content_kinds.VIDEO]:
