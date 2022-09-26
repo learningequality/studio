@@ -4,19 +4,21 @@
     <!-- Filters -->
     <SearchFilterBar />
     <VLayout row>
-      <VFlex class="px-2" sm3>
-        <ActionLink
-          class="mb-3"
-          :text="$tr('savedSearchesLabel')"
-          @click="showSavedSearches = true"
-        />
+      <VFlex shrink>
+        <div class="px-2">
+          <ActionLink
+            class="mb-3"
+            :text="$tr('savedSearchesLabel')"
+            @click="showSavedSearches = true"
+          />
+        </div>
         <SearchFilters
           :searchResults="nodes"
         />
       </VFlex>
 
       <!-- Main area with cards -->
-      <VFlex sm9>
+      <VFlex class="pl-4">
         <VContainer v-if="loadFailed">
           <p class="text-xs-center">
             <Icon color="red">
@@ -27,9 +29,9 @@
             {{ $tr('failedToLoad') }}
           </p>
         </VContainer>
-        <VContainer v-else class="mx-0">
+        <VContainer v-else class="mx-0 px-1">
           <LoadingText v-if="loading" />
-          <VLayout v-else row align-center class="mx-4">
+          <VLayout v-else row align-center>
             <VFlex grow>
               <span class="font-weight-bold subheading">
                 {{ $tr('searchResultsCount', {
@@ -55,16 +57,17 @@
               </span>
             </VFlex>
           </VLayout>
-          <div class="px-4">
-            <VLayout v-for="node in nodes" :key="node.id" row align-center>
-              <VFlex shrink>
+          <div>
+            <VLayout v-for="node in nodes" :key="node.id" row align-center class="py-2">
+              <VFlex class="px-1" shrink>
                 <Checkbox
                   :key="`checkbox-${node.id}`"
                   :input-value="isSelected(node)"
+                  class="mt-0 pt-0"
                   @change="toggleSelected(node)"
                 />
               </VFlex>
-              <VFlex class="pa-4" grow>
+              <VFlex shrink grow style="width: 100%;">
                 <BrowsingCard
                   :node="node"
                   :inSearch="true"

@@ -1,6 +1,10 @@
 <template>
 
-  <VNavigationDrawer permanent floating style="z-index: 0;">
+  <VNavigationDrawer
+    permanent
+    floating
+    class="import-search-filters px-2"
+  >
     <!-- Channel -->
     <p class="font-weight-bold grey--text mb-1">
       {{ $tr('channelsHeader') }}
@@ -61,6 +65,7 @@
     <!-- Language -->
     <LanguageDropdown
       v-model="languages"
+      drop-above
       multiple
     />
 
@@ -121,7 +126,7 @@
   import Checkbox from 'shared/views/form/Checkbox';
   import LanguageDropdown from 'shared/views/LanguageDropdown';
 
-  const excludedKinds = new Set(['topic', 'exercise', 'h5p']);
+  const excludedKinds = new Set(['topic', 'exercise', 'h5p', 'zim']);
   const includedKinds = ContentKindsList.filter(kind => !excludedKinds.has(kind));
 
   export default {
@@ -225,6 +230,12 @@
 
 
 <style lang="less" scoped>
+
+  .import-search-filters {
+    z-index: 0;
+    box-sizing: border-box;
+    overflow: visible;
+  }
 
   .fieldset-reset {
     border-style: none;
