@@ -44,6 +44,7 @@ from contentcuration.statistics import record_publish_stats
 from contentcuration.utils.cache import delete_public_channel_cache_keys
 from contentcuration.utils.files import create_thumbnail_from_base64
 from contentcuration.utils.files import get_thumbnail_encoding
+from contentcuration.utils.nodes import migrate_extra_fields
 from contentcuration.utils.parser import extract_value
 from contentcuration.utils.parser import load_json_string
 from contentcuration.utils.sentry import report_exception
@@ -471,21 +472,16 @@ def create_perseus_exercise(ccnode, kolibrinode, exercise_data, user_id=None):
 def process_assessment_metadata(ccnode, kolibrinode):
     # Get mastery model information, set to default if none provided
     assessment_items = ccnode.assessment_items.all().order_by('order')
-    exercise_data = ccnode.extra_fields if ccnode.extra_fields else {}
-    if isinstance(exercise_data, basestring):
-        exercise_data = json.loads(exercise_data)
-    randomize = exercise_data.get('randomize') if exercise_data.get('randomize') is not None else True
+    extra_fields = ccnode.extra_fields
+    if isinstance(extra_fields, basestring):
+        extra_fields = json.loads(extra_fields)
+    extra_fields = migrate_extra_fields(extra_fields) or {}
+    randomize = extra_fields.get('randomize') if extra_fields.get('randomize') is not None else True
     assessment_item_ids = [a.assessment_id for a in assessment_items]
 
-    exercise_data_type = ""
-    if exercise_data.get('mastery_model'):
-        exercise_data_type = exercise_data.get('mastery_model')
-    if (
-        exercise_data.get('option') and
-        exercise_data.get('option').get('completion_criteria') and
-        exercise_data.get('option').get('completion_criteria').get('mastery_model')
-    ):
-        exercise_data_type = exercise_data.get('option').get('completion_criteria').get('mastery_model')
+    exercise_data = extra_fields.get('options').get('completion_criteria').get('threshold')
+
+    exercise_data_type = exercise_data.get('mastery_model', "")
 
     mastery_model = {'type': exercise_data_type or exercises.M_OF_N}
     if mastery_model['type'] == exercises.M_OF_N:
