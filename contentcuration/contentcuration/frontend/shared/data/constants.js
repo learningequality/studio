@@ -48,7 +48,7 @@ export const RELATIVE_TREE_POSITIONS = {
   RIGHT: 'right',
 };
 
-// Special fields used for copying and other async tasks
+// Special fields used for frontend specific handling
 export const COPYING_FLAG = '__COPYING';
 export const TASK_ID = '__TASK_ID';
 export const LAST_FETCHED = '__last_fetch';

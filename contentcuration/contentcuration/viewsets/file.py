@@ -3,6 +3,7 @@ import math
 
 from django.core.exceptions import PermissionDenied
 from django.http import HttpResponseBadRequest
+from le_utils.constants import file_formats
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -156,13 +157,16 @@ class FileViewSet(BulkDeleteMixin, BulkUpdateMixin, ReadOnlyValuesViewset):
 
         might_skip = File.objects.filter(checksum=checksum).exists()
 
-        filepath = generate_object_storage_name(checksum, filename)
+        filepath = generate_object_storage_name(checksum, filename, default_ext=file_format)
         checksum_base64 = codecs.encode(
             codecs.decode(checksum, "hex"), "base64"
         ).decode()
         retval = get_presigned_upload_url(
             filepath, checksum_base64, 600, content_length=size
         )
+
+        if file_format not in dict(file_formats.choices):
+            return HttpResponseBadRequest("Invalid file_format!")
 
         file = File(
             file_size=size,

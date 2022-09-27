@@ -540,10 +540,6 @@ describe('channelEdit utils', () => {
         expect(isNodeComplete({ nodeDetails: invalidNodeDetails, files })).toBe(false);
       });
 
-      it('returns false if there are no files', () => {
-        expect(isNodeComplete({ nodeDetails, files: [] })).toBe(false);
-      });
-
       it('returns false if there is at least one invalid file', () => {
         const invalidFile = { id: 'file-id', error: 'error' };
         expect(isNodeComplete({ nodeDetails, files: [...files, invalidFile] })).toBe(false);

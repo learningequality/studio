@@ -46,6 +46,7 @@
             <ChannelItem
               :channelId="item.id"
               :detailsRouteName="detailsRouteName"
+              style="flex-grow: 1; width: 100%;"
             />
           </VLayout>
         </VFlex>

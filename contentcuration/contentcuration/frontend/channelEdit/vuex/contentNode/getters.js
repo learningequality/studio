@@ -116,7 +116,7 @@ export function getContentNodeIsValid(state, getters, rootState, rootGetters) {
             // and it is not used within a form to run field validations,
             //  it's okay to set this to false. This also accounts for
             // any async delays with the node creation
-            ignoreNew: false,
+            ignoreDelayed: false,
           })))
     );
   };

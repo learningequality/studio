@@ -196,6 +196,7 @@
   import BottomBar from 'shared/views/BottomBar';
   import FileDropzone from 'shared/views/files/FileDropzone';
   import { isNodeComplete } from 'shared/utils/validation';
+  import { DELAYED_VALIDATION } from 'shared/constants';
 
   const CHECK_STORAGE_INTERVAL = 10000;
 
@@ -422,7 +423,7 @@
         // X button action
         this.enableValidation(this.nodeIds);
         let assessmentItems = this.getAssessmentItems(this.nodeIds);
-        assessmentItems.forEach(item => (item.question ? (item.isNew = false) : ''));
+        assessmentItems.forEach(item => (item.question ? (item[DELAYED_VALIDATION] = false) : ''));
         this.updateAssessmentItems(assessmentItems);
         // reaches into Details Tab to run save of diffTracker
         // before the validation pop up is executed

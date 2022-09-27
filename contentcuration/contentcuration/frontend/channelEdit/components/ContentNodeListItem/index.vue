@@ -47,7 +47,7 @@
                     <VLayout row>
                       <VFlex shrink class="text-truncate">
                         <h3
-                          v-if="hasTitle(node) || !canEdit || copying || node.isNew"
+                          v-if="hasTitle(node) || !canEdit || copying || isNew"
                           class="notranslate text-truncate"
                           :class="[
                             isCompact ? 'font-weight-regular' : '',
@@ -69,7 +69,7 @@
                       </VFlex>
                       <VFlex>
                         <ContentNodeValidator
-                          v-if="canEdit && !copying && !node.isNew"
+                          v-if="canEdit && !copying && !isNew"
                           :node="node"
                         />
                       </VFlex>
@@ -194,7 +194,7 @@
   import ContentNodeValidator from '../ContentNodeValidator';
   import ContentNodeChangedIcon from '../ContentNodeChangedIcon';
   import TaskProgress from '../../views/progress/TaskProgress';
-  import { ContentLevel, Categories } from '../../../shared/constants';
+  import { ContentLevel, Categories, NEW_OBJECT } from 'shared/constants';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import { RolesNames } from 'shared/leUtils/Roles';
   import ImageOnlyThumbnail from 'shared/views/files/ImageOnlyThumbnail';
@@ -261,6 +261,9 @@
       },
       isTopic() {
         return this.node.kind === ContentKindsNames.TOPIC;
+      },
+      isNew() {
+        return this.node[NEW_OBJECT];
       },
       thumbnailAttrs() {
         const { title, kind, thumbnail_src: src, thumbnail_encoding: encoding } = this.node;

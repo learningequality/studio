@@ -373,11 +373,13 @@ export function getNodeDetailsErrors(node) {
  * @returns {Array} An array of error codes.
  */
 export function getNodeFilesErrors(files) {
-  let errors = files.filter(f => f.error).map(f => f.error);
-  let validPrimaryFiles = files.filter(f => !f.error && !f.preset.supplementary);
-
-  if (!validPrimaryFiles.length) {
-    errors.push(ValidationErrors.NO_VALID_PRIMARY_FILES);
+  let errors = [];
+  if (files && files.length > 0) {
+    errors = files.filter(f => f.error).map(f => f.error);
+    let validPrimaryFiles = files.filter(f => !f.error && !f.preset.supplementary);
+    if (!validPrimaryFiles.length) {
+      errors.push(ValidationErrors.NO_VALID_PRIMARY_FILES);
+    }
   }
   return errors;
 }

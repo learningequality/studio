@@ -49,6 +49,8 @@ describe('AccessibilityOptions', () => {
     expect(wrapper.find('[data-test="checkbox-Tagged PDF"]').exists()).toBe(false);
     expect(wrapper.find('[data-test="checkbox-Has sign language captions"]').exists()).toBe(true);
     expect(wrapper.find('[data-test="checkbox-Has audio descriptions"]').exists()).toBe(true);
+    expect(wrapper.find('[data-test="checkbox-Has captions or subtitles"]').exists()).toBe(true);
+    expect(wrapper.find('[data-test="tooltip-Has captions or subtitles"]').exists()).toBe(false);
   });
 
   it('should display the correct list of accessibility options if resource is an exercise/practice', () => {

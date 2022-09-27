@@ -1,5 +1,6 @@
 import { EventEmitter } from 'events';
-import { CHANGE_TYPES } from 'shared/data';
+import omit from 'lodash/omit';
+import { CHANGE_TYPES, LAST_FETCHED } from 'shared/data/constants';
 
 function getEventName(table, type) {
   return `${table}/${type}`;
@@ -116,7 +117,8 @@ export default function IndexedDBPlugin(db, listeners = []) {
       events.emit(getEventName(change.table, change.type), {
         // we ensure we invoke the listeners with an object that has the PK
         [db[change.table].schema.primKey.keyPath]: change.key,
-        ...obj,
+        // spread the object, omitting the last fetched attribute used only in resource layer
+        ...omit(obj, [LAST_FETCHED]),
       });
     });
   });

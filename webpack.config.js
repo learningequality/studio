@@ -51,10 +51,11 @@ module.exports = (env = {}) => {
       htmlScreenshot: ['./shared/utils/htmlScreenshot.js'],
     },
     output: {
-      filename: '[name]-[fullhash].js',
-      chunkFilename: '[name]-[id]-[fullhash].js',
+      filename: dev ? '[name].js' : '[name]-[fullhash].js',
+      chunkFilename: dev ? '[name]-[id].js' : '[name]-[id]-[fullhash].js',
       path: bundleOutputDir,
       publicPath: dev ? 'http://127.0.0.1:4000/dist/' : '/static/studio/',
+      pathinfo: !dev,
     },
     devServer: {
       port: 4000,
@@ -97,8 +98,8 @@ module.exports = (env = {}) => {
         filename: path.resolve(djangoProjectDir, 'build', 'webpack-stats.json'),
       }),
       new MiniCssExtractPlugin({
-        filename: '[name]-[fullhash].css',
-        chunkFilename: '[name]-[fullhash]-[id].css',
+        filename: dev ? '[name].css' :'[name]-[fullhash].css',
+        chunkFilename: dev ? '[name]-[id].css' :'[name]-[fullhash]-[id].css',
       }),
       new WebpackRTLPlugin({
         minify: false,
