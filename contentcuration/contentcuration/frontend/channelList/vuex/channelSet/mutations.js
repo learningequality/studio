@@ -34,7 +34,10 @@ export function UPDATE_CHANNELSET(state, { id, ...payload }) {
 
 export function UPDATE_CHANNELSET_FROM_INDEXEDDB(state, { id, ...mods }) {
   if (id && state.channelSetsMap[id]) {
-    applyMods(state.channelSetsMap[id], mods);
+    state.channelSetsMap = {
+      ...state.channelSetsMap,
+      [id]: applyMods(state.channelSetsMap[id], mods),
+    };
   }
 }
 

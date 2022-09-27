@@ -17,7 +17,10 @@ export function UPDATE_SAVEDSEARCH(state, search) {
 
 export function UPDATE_SAVEDSEARCH_FROM_INDEXEDDB(state, { id, ...updates }) {
   if (id && state.savedSearches[id]) {
-    applyMods(state.savedSearches[id], updates);
+    state.savedSearches = {
+      ...state.savedSearches,
+      [id]: applyMods(state.savedSearches[id], updates),
+    };
   }
 }
 

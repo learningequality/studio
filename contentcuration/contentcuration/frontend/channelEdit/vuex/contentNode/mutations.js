@@ -16,7 +16,10 @@ export function ADD_CONTENTNODES(state, contentNodes = []) {
 
 export function UPDATE_CONTENTNODE_FROM_INDEXEDDB(state, { id, ...updates }) {
   if (id && state.contentNodesMap[id]) {
-    applyMods(state.contentNodesMap[id], updates);
+    state.contentNodesMap = {
+      ...state.contentNodesMap,
+      [id]: applyMods(state.contentNodesMap[id], updates),
+    };
   }
 }
 
