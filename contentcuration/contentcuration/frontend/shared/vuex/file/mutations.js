@@ -4,8 +4,14 @@ import { applyMods } from 'shared/data/applyRemoteChanges';
 
 function updateFileMaps(state, file) {
   if (file.assessment_item) {
+    if (!state.assessmentItemFilesMap[file.assessment_item]) {
+      Vue.set(state.assessmentItemFilesMap, file.assessment_item, {});
+    }
     Vue.set(state.assessmentItemFilesMap[file.assessment_item], file.id, file);
   } else if (file.contentnode) {
+    if (!state.contentNodeFilesMap[file.contentnode]) {
+      Vue.set(state.contentNodeFilesMap, file.contentnode, {});
+    }
     Vue.set(state.contentNodeFilesMap[file.contentnode], file.id, file);
   }
 }
