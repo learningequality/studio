@@ -183,9 +183,9 @@
     $trs: {
       minutesRequired: 'Minutes',
       optionalLabel:
-        '(Optional) Duration until resource is marked as complete. This value will not be shown to learners.',
+        '(Optional) Time required for the resource to be marked as completed. This value will not be displayed to learners.',
       notOptionalLabel:
-        'Duration until resource is marked as complete. This value will not be shown to learners.',
+        'Time required for the resource to be marked as completed. This value will not be displayed to learners.',
     },
   };
 

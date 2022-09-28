@@ -523,16 +523,30 @@ export const metadataStrings = createTranslator('CommonMetadataStrings', {
       "'Peers' in this context refers to classmates or other learners who are interacting with Kolibri.",
   },
   ToUseWithPaperAndPencil: {
-    message: 'To use with paper and pencil',
+    message: 'Paper and pencil',
     context: 'Refers to a filter for resources.\n',
   },
   NeedsInternet: {
-    message: 'That need internet connection',
+    message: 'Internet connection',
     context: 'Refers to a filter for resources.',
   },
   NeedsMaterials: {
-    message: 'That need other materials',
+    message: 'Other supplies',
     context: 'Refers to a filter for resources.\n',
+  },
+  softwareTools: {
+    message: 'Other software tools',
+    context: 'Refers to a filter for resources that need additional software to be used.',
+  },
+  peers: {
+    message: 'Working with peers',
+    context:
+      'Refers to a filter for resources that require a learner to work with other learners to be used.',
+  },
+  teacher: {
+    message: 'Working with a teacher',
+    context:
+      'Refers to a filter for resources that require a learner to work with a teacher to be used.',
   },
 
   // Accessibility category name
@@ -543,12 +557,12 @@ export const metadataStrings = createTranslator('CommonMetadataStrings', {
   },
   // Accessibility Categories
   signLanguage: {
-    message: 'Has sign language captions',
+    message: 'Includes sign language captions',
     context:
       'https://en.wikipedia.org/wiki/Sign_language\nhttps://en.wikipedia.org/wiki/List_of_sign_languages\nWherever communities of deaf people exist, sign languages have developed as useful means of communication, and they form the core of local Deaf cultures. Although signing is used primarily by the deaf and hard of hearing, it is also used by hearing individuals, such as those unable to physically speak, those who have trouble with spoken language due to a disability or condition (augmentative and alternative communication), or those with deaf family members, such as children of deaf adults. ',
   },
   audioDescription: {
-    message: 'Has audio descriptions',
+    message: 'Includes audio descriptions',
     context:
       'Content has narration used to provide information surrounding key visual elements for the benefit of blind and visually impaired users.\nhttps://en.wikipedia.org/wiki/Audio_description',
   },
@@ -558,17 +572,17 @@ export const metadataStrings = createTranslator('CommonMetadataStrings', {
       'A tagged PDF includes hidden accessibility markups (tags) that make the document accessible to those who use screen readers and other assistive technology (AT).\n\nhttps://taggedpdf.com/what-is-a-tagged-pdf/',
   },
   altText: {
-    message: 'Has alternative text description for images',
+    message: 'Includes alternative text descriptions for images',
     context:
       'Alternative text, or alt text, is a written substitute for an image. It is used to describe information being provided by an image, graph, or any other visual element on a web page. It provides information about the context and function of an image for people with varying degrees of visual and cognitive impairments. When a screen reader encounters an image, it will read aloud the alternative text.\nhttps://www.med.unc.edu/webguide/accessibility/alt-text/',
   },
   highContrast: {
-    message: 'Has high contrast display for low vision',
+    message: 'Includes high contrast text for learners with low vision',
     context:
       "Accessibility filter used to search for resources that have high contrast color themes for users with low vision ('display' refers to digital content, not the hardware like screens or monitors).\nhttps://veroniiiica.com/2019/10/25/high-contrast-color-schemes-low-vision/",
   },
   captionsSubtitles: {
-    message: 'Has captions or subtitles',
+    message: 'Includes captions or subtitles',
     context:
       'Accessibility filter to search for video and audio resources that have text captions for users who are deaf or hard of hearing.\nhttps://www.w3.org/WAI/media/av/captions/',
   },
@@ -668,6 +682,8 @@ export const metadataTranslationMixin = {
 const nonconformingKeys = {
   PEOPLE: 'ToUseWithTeachersAndPeers',
   PAPER_PENCIL: 'ToUseWithPaperAndPencil',
+  PEERS: 'peers',
+  TEACHER: 'teacher',
   INTERNET: 'NeedsInternet',
   FOR_BEGINNERS: 'ForBeginners',
   digitalLiteracy: 'digitialLiteracy',
@@ -676,13 +692,8 @@ const nonconformingKeys = {
   foundationsLogicAndCriticalThinking: 'logicAndCriticalThinking',
   toolsAndSoftwareTraining: 'softwareToolsAndTraining',
   foundations: 'basicSkills',
-
-  /*
-   * TODO: the following are in ResourcesNeededTypes map from le-utils, but not in Kolibri,
-   * and should be tracked in the issue - https://github.com/learningequality/kolibri/issues/9245
-   */
   OTHER_SUPPLIES: 'NeedsMaterials',
-  SPECIAL_SOFTWARE: 'softwareToolsAndTraining',
+  SPECIAL_SOFTWARE: 'softwareTools',
 };
 
 /**

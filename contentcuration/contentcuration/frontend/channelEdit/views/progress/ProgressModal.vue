@@ -105,12 +105,12 @@
       clearInterval(this.timer);
     },
     $trs: {
-      defaultErrorText: 'Last publish failed.',
+      defaultErrorText: 'Last attempt to publish failed',
       publishHeader: 'Publishing channel',
       lastPublished: 'Published {last_published}',
       unpublishedText: 'Unpublished',
       syncHeader: 'Syncing channel',
-      syncError: 'Last sync failed',
+      syncError: 'Last attempt to sync failed',
     },
   };
 

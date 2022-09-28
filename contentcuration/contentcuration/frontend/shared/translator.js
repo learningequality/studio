@@ -1,6 +1,7 @@
 import { createTranslator } from 'shared/i18n';
 
 const MESSAGES = {
+  fieldRequired: 'This field is required',
   titleRequired: 'Title is required',
   licenseRequired: 'License is required',
   copyrightHolderRequired: 'Copyright holder is required',
@@ -17,13 +18,12 @@ const MESSAGES = {
   learningActivityRequired: 'Learning activity is required',
   durationRequired: 'Duration is required',
   activityDurationRequired: 'This field is required',
-  shortActivityGteOne: 'Short activity must be greater than or equal to 1',
-  shortActivityLteThirty: 'Short activity must be less than or equal to 30',
-  longActivityGtThirty: 'Long activity must be greater than 30',
-  longActivityLteOneTwenty: 'Long activity must be less than or equal to 120',
-  activityDurationTimeMinRequirement: 'Time must be greater than or equal to 1',
+  activityDurationGteOne: 'Value must be equal to or greater than 1',
+  shortActivityLteThirty: 'Value must be equal or less than 30',
+  longActivityGtThirty: 'Value must be greater than 30',
+  longActivityLteOneTwenty: 'Value must be equal or less than 120',
   activityDurationTooLongWarning:
-    'Please make sure this is the amount of time you want learners to spend on this resource to complete it',
+    'This value is very high. Please make sure this is how long learners should work on the resource for, in order to complete it.',
 };
 
 export default createTranslator('sharedVue', MESSAGES);

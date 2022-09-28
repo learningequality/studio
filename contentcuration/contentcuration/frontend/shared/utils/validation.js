@@ -123,23 +123,23 @@ function _getLearningActivity(node) {
 
 function _getErrorMsg(error) {
   const messages = {
-    [ValidationErrors.TITLE_REQUIRED]: translator.$tr('titleRequired'),
-    [ValidationErrors.LICENSE_REQUIRED]: translator.$tr('licenseRequired'),
-    [ValidationErrors.COPYRIGHT_HOLDER_REQUIRED]: translator.$tr('copyrightHolderRequired'),
+    [ValidationErrors.TITLE_REQUIRED]: translator.$tr('fieldRequired'),
+    [ValidationErrors.LICENSE_REQUIRED]: translator.$tr('fieldRequired'),
+    [ValidationErrors.COPYRIGHT_HOLDER_REQUIRED]: translator.$tr('fieldRequired'),
     [ValidationErrors.LICENSE_DESCRIPTION_REQUIRED]: translator.$tr('licenseDescriptionRequired'),
-    [ValidationErrors.MASTERY_MODEL_REQUIRED]: translator.$tr('masteryModelRequired'),
-    [ValidationErrors.MASTERY_MODEL_M_REQUIRED]: translator.$tr('masteryModelMRequired'),
-    [ValidationErrors.MASTERY_MODEL_M_WHOLE_NUMBER]: translator.$tr('masteryModelMWholeNumber'),
+    [ValidationErrors.MASTERY_MODEL_REQUIRED]: translator.$tr('fieldRequired'),
+    [ValidationErrors.MASTERY_MODEL_M_REQUIRED]: translator.$tr('fieldRequired'),
+    [ValidationErrors.MASTERY_MODEL_M_WHOLE_NUMBER]: translator.$tr('fieldRequired'),
     [ValidationErrors.MASTERY_MODEL_M_GT_ZERO]: translator.$tr('masteryModelMGtZero'),
     [ValidationErrors.MASTERY_MODEL_M_LTE_N]: translator.$tr('masteryModelMLteN'),
-    [ValidationErrors.MASTERY_MODEL_N_REQUIRED]: translator.$tr('masteryModelNRequired'),
+    [ValidationErrors.MASTERY_MODEL_N_REQUIRED]: translator.$tr('fieldRequired'),
     [ValidationErrors.MASTERY_MODEL_N_WHOLE_NUMBER]: translator.$tr('masteryModelNWholeNumber'),
     [ValidationErrors.MASTERY_MODEL_N_GT_ZERO]: translator.$tr('masteryModelNGtZero'),
-    [ValidationErrors.LEARNING_ACTIVITY_REQUIRED]: translator.$tr('learningActivityRequired'),
-    [ValidationErrors.DURATION_REQUIRED]: translator.$tr('durationRequired'),
-    [ValidationErrors.ACTIVITY_DURATION_REQUIRED]: translator.$tr('activityDurationRequired'),
+    [ValidationErrors.LEARNING_ACTIVITY_REQUIRED]: translator.$tr('fieldRequired'),
+    [ValidationErrors.DURATION_REQUIRED]: translator.$tr('fieldRequired'),
+    [ValidationErrors.ACTIVITY_DURATION_REQUIRED]: translator.$tr('fieldRequired'),
     [ValidationErrors.ACTIVITY_DURATION_MIN_FOR_SHORT_ACTIVITY]: translator.$tr(
-      'shortActivityGteOne'
+      'activityDurationGteOne'
     ),
     [ValidationErrors.ACTIVITY_DURATION_MAX_FOR_SHORT_ACTIVITY]: translator.$tr(
       'shortActivityLteThirty'
@@ -150,9 +150,7 @@ function _getErrorMsg(error) {
     [ValidationErrors.ACTIVITY_DURATION_MAX_FOR_LONG_ACTIVITY]: translator.$tr(
       'longActivityLteOneTwenty'
     ),
-    [ValidationErrors.ACTIVITY_DURATION_MIN_REQUIREMENT]: translator.$tr(
-      'activityDurationTimeMinRequirement'
-    ),
+    [ValidationErrors.ACTIVITY_DURATION_MIN_REQUIREMENT]: translator.$tr('activityDurationGteOne'),
     [ValidationErrors.ACTIVITY_DURATION_TOO_LONG]: translator.$tr('activityDurationTooLongWarning'),
   };
 

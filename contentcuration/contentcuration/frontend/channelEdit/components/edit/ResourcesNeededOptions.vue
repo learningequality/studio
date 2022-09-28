@@ -71,7 +71,7 @@
       },
     },
     $trs: {
-      resourcesNeededLabel: 'What you will need',
+      resourcesNeededLabel: 'Requirements',
     },
   };
 
