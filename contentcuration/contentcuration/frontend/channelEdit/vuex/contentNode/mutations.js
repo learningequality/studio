@@ -16,10 +16,9 @@ export function ADD_CONTENTNODES(state, contentNodes = []) {
 
 export function UPDATE_CONTENTNODE_FROM_INDEXEDDB(state, { id, ...updates }) {
   if (id && state.contentNodesMap[id]) {
-    state.contentNodesMap = {
-      ...state.contentNodesMap,
-      [id]: applyMods(state.contentNodesMap[id], updates),
-    };
+    // Need to do object spread to return a new object for setting in the map
+    // otherwise nested changes will not trigger reactive updates
+    Vue.set(state.contentNodesMap, id, { ...applyMods(state.contentNodesMap[id], updates) });
   }
 }
 

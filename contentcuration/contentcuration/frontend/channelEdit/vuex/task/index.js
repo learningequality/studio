@@ -39,10 +39,7 @@ export default {
     },
     UPDATE_ASYNC_TASK_FROM_INDEXEDDB(state, { task_id, ...mods }) {
       if (task_id && state.asyncTasksMap[task_id]) {
-        state.asyncTasksMap = {
-          ...state.asyncTasksMap,
-          [task_id]: applyMods(state.asyncTasksMap[task_id], mods),
-        };
+        Vue.set(state.asyncTasksMap, task_id, { ...applyMods(state.asyncTasksMap[task_id], mods) });
       }
     },
     REMOVE_ASYNC_TASK(state, asyncTask) {

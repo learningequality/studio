@@ -48,7 +48,7 @@ export default {
     },
     UPDATE_SESSION_FROM_INDEXEDDB(state, { id, ...mods }) {
       if (id === state.currentUser.id) {
-        state.currentUser = applyMods(state.currentUser, mods);
+        state.currentUser = { ...applyMods(state.currentUser, mods) };
       }
     },
     REMOVE_SESSION(state) {
