@@ -57,7 +57,6 @@
             <VFlex xs12 md6 :class="{ 'pl-2': $vuetify.breakpoint.mdAndUp }">
               <!-- Learning activity -->
               <LearningActivityOptions
-                id="learning_activities"
                 ref="learning_activities"
                 v-model="contentLearningActivities"
                 :disabled="isTopic"
@@ -65,14 +64,12 @@
               />
               <!-- Level -->
               <LevelsOptions
-                id="levels"
                 ref="contentLevel"
                 v-model="contentLevel"
                 @focus="trackClick('Levels dropdown')"
               />
               <!-- What you will need -->
               <ResourcesNeededOptions
-                id="resources_needed"
                 ref="resourcesNeeded"
                 v-model="resourcesNeeded"
                 @focus="trackClick('What you will need')"
@@ -178,7 +175,6 @@
           </h1>
           <!-- Language -->
           <LanguageDropdown
-            id="language"
             ref="language"
             v-model="language"
             class="mb-2"
@@ -192,7 +188,6 @@
           <!-- Visibility -->
           <VisibilityDropdown
             v-if="allResources"
-            id="role_visibility"
             ref="role_visibility"
             v-model="role"
             :placeholder="getPlaceholder('role')"
@@ -313,7 +308,6 @@
 
             <!-- License -->
             <LicenseDropdown
-              id="license"
               ref="license"
               v-model="licenseItem"
               :required="isUnique(license) && isUnique(license_description) && !disableAuthEdits"

@@ -9,13 +9,18 @@
     <p class="font-weight-bold grey--text mb-1">
       {{ $tr('channelsHeader') }}
     </p>
-    <VSelect
-      v-model="channelType"
-      :label="$tr('channelTypeLabel')"
-      :items="channelTypeFilterOptions"
-      box
-      :menu-props="menuProps"
-    />
+    <DropdownWrapper menuHeight="270">
+      <template #default="{ attach, menuProps }">
+        <VSelect
+          v-model="channelType"
+          :label="$tr('channelTypeLabel')"
+          :items="channelTypeFilterOptions"
+          box
+          :attach="attach"
+          :menu-props="menuProps"
+        />
+      </template>
+    </DropdownWrapper>
     <MultiSelect
       v-model="channel_id__in"
       :label="$tr('channelSourceLabel')"
@@ -65,7 +70,6 @@
     <!-- Language -->
     <LanguageDropdown
       v-model="languages"
-      drop-above
       multiple
     />
 
@@ -125,6 +129,7 @@
   import MultiSelect from 'shared/views/form/MultiSelect';
   import Checkbox from 'shared/views/form/Checkbox';
   import LanguageDropdown from 'shared/views/LanguageDropdown';
+  import DropdownWrapper from 'shared/views/form/DropdownWrapper';
 
   const excludedKinds = new Set(['topic', 'exercise', 'h5p', 'zim']);
   const includedKinds = ContentKindsList.filter(kind => !excludedKinds.has(kind));
@@ -132,6 +137,7 @@
   export default {
     name: 'SearchFilters',
     components: {
+      DropdownWrapper,
       MultiSelect,
       Checkbox,
       LanguageDropdown,
@@ -182,9 +188,6 @@
             value,
           };
         });
-      },
-      menuProps() {
-        return { offsetY: true, maxHeight: 270 };
       },
       licenseOptions() {
         return LicensesList.map(license => {

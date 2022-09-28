@@ -1,21 +1,23 @@
 <template>
 
-  <div class="learning-activity-container">
-    <VSelect
-      v-model="learningActivity"
-      :items="learningActivities"
-      :disabled="disabled"
-      box
-      chips
-      clearable
-      :label="translateMetadataString('learningActivity')"
-      multiple
-      deletableChips
-      :menu-props="{ offsetY: true, lazy: true, zIndex: 4 }"
-      :rules="learningActivityRules"
-      :attach="$attrs.id ? `#${$attrs.id}` : '.learning-activity-container'"
-    />
-  </div>
+  <DropdownWrapper>
+    <template #default="{ attach, menuProps }">
+      <VSelect
+        v-model="learningActivity"
+        :items="learningActivities"
+        :disabled="disabled"
+        box
+        chips
+        clearable
+        :label="translateMetadataString('learningActivity')"
+        multiple
+        deletableChips
+        :menu-props="menuProps"
+        :rules="learningActivityRules"
+        :attach="attach"
+      />
+    </template>
+  </DropdownWrapper>
 
 </template>
 
@@ -25,9 +27,11 @@
   import { LearningActivities } from 'shared/constants';
   import { constantsTranslationMixin, metadataTranslationMixin } from 'shared/mixins';
   import { getLearningActivityValidators, translateValidator } from 'shared/utils/validation';
+  import DropdownWrapper from 'shared/views/form/DropdownWrapper';
 
   export default {
     name: 'LearningActivityOptions',
+    components: { DropdownWrapper },
     mixins: [constantsTranslationMixin, metadataTranslationMixin],
     props: {
       value: {
@@ -67,9 +71,5 @@
 
 </script>
 <style lang="less" scoped>
-
-  .learning-activity-container {
-    position: relative;
-  }
 
 </style>

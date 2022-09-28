@@ -2,24 +2,27 @@
 
   <VFlex>
     <VLayout>
-      <VFlex>
-        <VSelect
-          ref="masteryModel"
-          v-model="masteryModel"
-          :items="masteryCriteria"
-          :label="$tr('labelText')"
-          color="primary"
-          box
-          :placeholder="placeholder"
-          :required="required"
-          :readonly="readonly"
-          :disabled="disabled"
-          :rules="masteryRules"
-          menu-props="offsetY"
-          class="mb-2"
-          @focus="$emit('focus')"
-        />
-      </VFlex>
+      <DropdownWrapper component="VFlex">
+        <template #default="{ attach, menuProps }">
+          <VSelect
+            ref="masteryModel"
+            v-model="masteryModel"
+            :items="masteryCriteria"
+            :label="$tr('labelText')"
+            color="primary"
+            box
+            :placeholder="placeholder"
+            :required="required"
+            :readonly="readonly"
+            :disabled="disabled"
+            :rules="masteryRules"
+            :menu-props="menuProps"
+            :attach="attach"
+            class="mb-2"
+            @focus="$emit('focus')"
+          />
+        </template>
+      </DropdownWrapper>
     </VLayout>
   </VFlex>
 
@@ -30,9 +33,11 @@
   import { getMasteryModelValidators, translateValidator } from '../../../shared/utils/validation';
   import MasteryModels, { MasteryModelsList } from 'shared/leUtils/MasteryModels';
   import { constantsTranslationMixin } from 'shared/mixins';
+  import DropdownWrapper from 'shared/views/form/DropdownWrapper';
 
   export default {
     name: 'MasteryCriteriaGoal',
+    components: { DropdownWrapper },
     mixins: [constantsTranslationMixin],
     props: {
       value: {

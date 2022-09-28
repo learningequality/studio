@@ -4,20 +4,22 @@
     <!-- Layout when practice quizzes are enabled -->
     <VLayout v-if="hideCompletionDropdown" xs6 md6>
       <!-- "Completion" dropdown menu  -->
-      <VFlex xs6 md6 class="completion-container pr-2">
-        <VSelect
-          ref="completion"
-          v-model="completionDropdown"
-          box
-          :items="showCorrectCompletionOptions"
-          :label="translateMetadataString('completion')"
-          :required="required"
-          :rules="completionRules"
-          :menu-props="{ offsetY: true, lazy: true, zIndex: 4 }"
-          attach=".completion-container"
-          @focus="trackClick('Completion')"
-        />
-      </VFlex>
+      <DropdownWrapper component="VFlex" xs6 md6 class="pr-2">
+        <template #default="{ attach, menuProps }">
+          <VSelect
+            ref="completion"
+            v-model="completionDropdown"
+            box
+            :items="showCorrectCompletionOptions"
+            :label="translateMetadataString('completion')"
+            :required="required"
+            :rules="completionRules"
+            :menu-props="menuProps"
+            :attach="attach"
+            @focus="trackClick('Completion')"
+          />
+        </template>
+      </DropdownWrapper>
       <VFlex>
         <MasteryCriteriaGoal
           v-if="showMasteryCriteriaGoalDropdown"
@@ -60,21 +62,23 @@
     </VLayout>
 
     <VLayout row wrap>
-      <VFlex xs6 md6 class="completion-duration-container pr-2">
-        <VSelect
-          v-if="!hideDurationDropdown"
-          ref="duration"
-          v-model="durationDropdown"
-          box
-          :items="selectableDurationOptions"
-          :label="translateMetadataString('duration')"
-          :required="required"
-          :rules="durationRules"
-          :menu-props="{ offsetY: true, lazy: true, zIndex: 4 }"
-          attach=".completion-duration-container"
-          @focus="trackClick('Duration')"
-        />
-      </VFlex>
+      <DropdownWrapper component="VFlex" xs6 md6 class="pr-2">
+        <template #default="{ attach, menuProps }">
+          <VSelect
+            v-if="!hideDurationDropdown"
+            ref="duration"
+            v-model="durationDropdown"
+            box
+            :items="selectableDurationOptions"
+            :label="translateMetadataString('duration')"
+            :required="required"
+            :rules="durationRules"
+            :menu-props="{ ...menuProps, zIndex: 4 }"
+            :attach="attach"
+            @focus="trackClick('Duration')"
+          />
+        </template>
+      </DropdownWrapper>
 
       <!-- "Activity duration" minutes input -->
       <VFlex xs6 md6>
@@ -117,6 +121,7 @@
     translateValidator,
   } from 'shared/utils/validation';
   import { metadataStrings, metadataTranslationMixin } from 'shared/mixins';
+  import DropdownWrapper from 'shared/views/form/DropdownWrapper';
 
   const DEFAULT_SHORT_ACTIVITY = 600;
   const DEFAULT_LONG_ACTIVITY = 3000;
@@ -132,6 +137,7 @@
   export default {
     name: 'CompletionOptions',
     components: {
+      DropdownWrapper,
       ActivityDuration,
       MasteryCriteriaMofNFields,
       MasteryCriteriaGoal,
@@ -889,10 +895,5 @@
 
 </script>
 <style lang="less" scoped>
-
-  .completion-container,
-  .completion-duration-container {
-    position: relative;
-  }
 
 </style>
