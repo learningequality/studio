@@ -845,18 +845,14 @@ def sync_contentnode_and_channel_tsvectors(channel_id):
 
         # Now, all remaining nodes are in main_tree, so let's update them.
         # Update only changed nodes.
-        changed_nodes_subquery = (get_fts_annotated_contentnode_qs(channel_id)
-                                  .filter(id=OuterRef("contentnode_id"),
-                                          tree_id=channel["main_tree__tree_id"],
-                                          complete=True,
-                                          changed=True)
-                                  .order_by())
-        ContentNodeFullTextSearch.objects.filter(channel_id=channel_id).update(
-            keywords_tsvector=Subquery(changed_nodes_subquery.values_list("keywords_tsvector")[:1]),
-            author_tsvector=Subquery(changed_nodes_subquery.values_list("author_tsvector")[:1])
+        node_tsv_subquery = get_fts_annotated_contentnode_qs(channel_id).filter(id=OuterRef("contentnode_id")).order_by()
+        ContentNodeFullTextSearch.objects.filter(channel_id=channel_id, contentnode__complete=True, contentnode__changed=True).update(
+            keywords_tsvector=Subquery(node_tsv_subquery.values("keywords_tsvector")[:1]),
+            author_tsvector=Subquery(node_tsv_subquery.values("author_tsvector")[:1])
         )
 
     # Insert newly created nodes.
+    # "set_contentnode_tsvectors" command is defined in "search/management/commands" directory.
     call_command("set_contentnode_tsvectors",
                  "--channel-id={}".format(channel_id),
                  "--tree-id={}".format(channel["main_tree__tree_id"]),
