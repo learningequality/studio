@@ -52,11 +52,11 @@ class ContentNodeFilter(RequiredFilterSet):
         if value == "public":
             channel_ids = Channel.get_public_channels().values_list("id", flat=True)
         elif value == "edit" and user:
-            channel_ids = user.editable_channels.values_list("id", flat=True)
+            channel_ids = user.editable_channels.filter(deleted=False).values_list("id", flat=True)
         elif value == "bookmark" and user:
-            channel_ids = user.bookmarked_channels.values_list("id", flat=True)
+            channel_ids = user.bookmarked_channels.filter(deleted=False).values_list("id", flat=True)
         elif value == "view" and user:
-            channel_ids = user.view_only_channels.values_list("id", flat=True)
+            channel_ids = user.view_only_channels.filter(deleted=False).values_list("id", flat=True)
 
         return queryset.filter(channel_id__in=list(channel_ids))
 
