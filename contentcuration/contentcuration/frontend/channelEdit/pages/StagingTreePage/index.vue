@@ -520,9 +520,9 @@
       reviewMode: 'Review mode',
       emptyChannelText: 'No resources found',
       emptyChannelSubText:
-        'No changes to review! The channel contains all the latest folders and resources.',
+        'No changes to review! The channel contains all the most recent folders and resources.',
       collapseAllButton: 'Collapse all',
-      openCurrentLocationButton: 'Jump to current folder location',
+      openCurrentLocationButton: 'Expand to current folder location',
       totalResources: 'Total resources',
       totalSize: 'Total size',
       openSummaryDetailsDialogBtn: 'View summary',

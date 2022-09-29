@@ -870,14 +870,14 @@
     },
     $trs: {
       /* eslint-disable kolibri/vue-no-unused-translations */
-      allContent: 'All content viewed',
-      completeDuration: 'Complete duration',
-      determinedByResource: 'Determined by resource',
-      goal: 'Practice until goal is met',
+      allContent: 'Viewed in its entirety',
+      completeDuration: 'When time spent is equal to duration',
+      determinedByResource: 'Determined by the resource',
+      goal: 'When goal is met',
       practiceQuiz: 'Practice quiz',
       /* eslint-enable */
-      exactTime: 'Exact time to complete',
-      reference: 'Reference',
+      exactTime: 'Time to complete',
+      reference: 'Reference material',
       referenceHint:
         'Progress will not be tracked on reference material unless learners mark it as complete',
     },

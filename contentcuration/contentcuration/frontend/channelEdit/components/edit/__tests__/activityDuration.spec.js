@@ -87,9 +87,9 @@ describe('ActivityDuration', () => {
 
     describe(`hints`, () => {
       const optionalHint =
-        '(Optional) Duration until resource is marked as complete. This value will not be shown to learners.';
+        '(Optional) Time required for the resource to be marked as completed. This value will not be displayed to learners.';
       const requiredHint =
-        'Duration until resource is marked as complete. This value will not be shown to learners.';
+        'Time required for the resource to be marked as completed. This value will not be displayed to learners.';
       describe(`audio/video resource`, () => {
         it(`should display optional hint when 'Short activity' is chosen`, () => {
           const wrapper = shallowMount(ActivityDuration, {

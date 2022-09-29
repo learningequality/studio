@@ -43,7 +43,7 @@ describe('channelEdit utils', () => {
 
     it('returns an error message if a validator function returns an error code for a value', () => {
       const title = '';
-      expect(translateValidator(getTitleValidators()[0])(title)).toBe('Title is required');
+      expect(translateValidator(getTitleValidators()[0])(title)).toBe('This field is required');
     });
   });
 
