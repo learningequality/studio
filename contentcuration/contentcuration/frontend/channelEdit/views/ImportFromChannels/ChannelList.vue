@@ -112,6 +112,7 @@
           [this.channelFilter]: true,
           page: this.$route.query.page || 1,
           exclude: this.currentChannelId,
+          ordering: this.channelFilter === 'public' ? 'name' : '-modified',
         }).then(page => {
           this.pageCount = page.total_pages;
           this.channels = page.results;
