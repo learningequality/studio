@@ -16,7 +16,7 @@
             :readonly="readonly"
             :disabled="disabled"
             :rules="masteryRules"
-            :menu-props="menuProps"
+            :menu-props="{ ...menuProps, lazy: false }"
             :attach="attach"
             class="mb-2"
             @focus="$emit('focus')"
