@@ -430,7 +430,7 @@ export const metadataStrings = createTranslator('CommonMetadataStrings', {
     message: 'Numeracy',
     context: 'Category type. See https://en.wikipedia.org/wiki/Numeracy',
   },
-  digitialLiteracy: {
+  digitalLiteracy: {
     message: 'Digital literacy',
     context: 'Category type. See https://en.wikipedia.org/wiki/Digital_literacy',
   },
@@ -513,24 +513,19 @@ export const metadataStrings = createTranslator('CommonMetadataStrings', {
   },
 
   // Resources Needed Categories = {
-  ForBeginners: {
+  forBeginners: {
     message: 'For beginners',
     context: 'Filter option and a label for the resources in the Kolibri Library.',
   },
-  ToUseWithTeachersAndPeers: {
-    message: 'To use with teachers and peers',
-    context:
-      "'Peers' in this context refers to classmates or other learners who are interacting with Kolibri.",
-  },
-  ToUseWithPaperAndPencil: {
+  toUseWithPaperAndPencil: {
     message: 'Paper and pencil',
     context: 'Refers to a filter for resources.\n',
   },
-  NeedsInternet: {
+  needsInternet: {
     message: 'Internet connection',
     context: 'Refers to a filter for resources.',
   },
-  NeedsMaterials: {
+  needsMaterials: {
     message: 'Other supplies',
     context: 'Refers to a filter for resources.\n',
   },
@@ -680,19 +675,16 @@ export const metadataTranslationMixin = {
  * - Keys which, when _.camelCase()'ed will not result in a valid key, requiring manual mapping
  */
 const nonconformingKeys = {
-  PEOPLE: 'ToUseWithTeachersAndPeers',
-  PAPER_PENCIL: 'ToUseWithPaperAndPencil',
+  PAPER_PENCIL: 'toUseWithPaperAndPencil',
   PEERS: 'peers',
   TEACHER: 'teacher',
-  INTERNET: 'NeedsInternet',
-  FOR_BEGINNERS: 'ForBeginners',
-  digitalLiteracy: 'digitialLiteracy',
+  INTERNET: 'needsInternet',
   BASIC_SKILLS: 'allLevelsBasicSkills',
   FOUNDATIONS: 'basicSkills',
   foundationsLogicAndCriticalThinking: 'logicAndCriticalThinking',
   toolsAndSoftwareTraining: 'softwareToolsAndTraining',
   foundations: 'basicSkills',
-  OTHER_SUPPLIES: 'NeedsMaterials',
+  OTHER_SUPPLIES: 'needsMaterials',
   SPECIAL_SOFTWARE: 'softwareTools',
 };
 

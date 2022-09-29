@@ -199,6 +199,18 @@
             :required="isUnique(role)"
             @focus="trackClick('Role visibility')"
           />
+
+          <!-- For Beginners -->
+          <KCheckbox
+            id="beginners"
+            ref="beginners"
+            :checked="forBeginners"
+            @change="value => forBeginners = value"
+          >
+            <span class="text-xs-left v-label" style="padding-left: 8px;">
+              {{ translateMetadataString('forBeginners') }}
+            </span>
+          </KCheckbox>
         </VFlex>
       </VLayout>
 
@@ -387,7 +399,12 @@
   import VisibilityDropdown from 'shared/views/VisibilityDropdown';
   import Checkbox from 'shared/views/form/Checkbox';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
-  import { NEW_OBJECT, FeatureFlagKeys, AccessibilityCategories } from 'shared/constants';
+  import {
+    NEW_OBJECT,
+    FeatureFlagKeys,
+    AccessibilityCategories,
+    ResourcesNeededTypes,
+  } from 'shared/constants';
   import { constantsTranslationMixin, metadataTranslationMixin } from 'shared/mixins';
 
   // Define an object to act as the place holder for non unique values.
@@ -568,6 +585,20 @@
       accessibility: generateNestedNodesGetterSetter('accessibility_labels'),
       contentLevel: generateNestedNodesGetterSetter('grade_levels'),
       resourcesNeeded: generateNestedNodesGetterSetter('learner_needs'),
+      forBeginners: {
+        get() {
+          return this.resourcesNeeded.includes(ResourcesNeededTypes.FOR_BEGINNERS);
+        },
+        set(value) {
+          if (value) {
+            this.resourcesNeeded = [...this.resourcesNeeded, ResourcesNeededTypes.FOR_BEGINNERS];
+          } else {
+            this.resourcesNeeded = this.resourcesNeeded.filter(
+              r => r !== ResourcesNeededTypes.FOR_BEGINNERS
+            );
+          }
+        },
+      },
       contentLearningActivities: generateNestedNodesGetterSetter('learning_activities'),
       categories: generateNestedNodesGetterSetter('categories'),
       license() {
