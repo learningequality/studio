@@ -18,6 +18,7 @@
     <pre ref="textBox" class="hidden-screen-only">{{ text }}</pre>
     <div>
       <KButton
+        v-if="clipboardAvailable"
         ref="copyButton"
         :style="{ marginTop: '8px', marginBottom: '8px' }"
         :primary="false"
@@ -60,19 +61,24 @@
           minHeight: `${this.minHeight}px`,
         };
       },
+      clipboardAvailable() {
+        return Boolean(navigator.clipboard);
+      },
     },
     methods: {
       copyError() {
-        navigator.clipboard
-          .writeText(this.formattedText)
-          .then(() => {
-            this.$store.dispatch('showSnackbar', {
-              text: this.$tr('copiedToClipboardConfirmation'),
+        if (this.clipboardAvailable) {
+          navigator.clipboard
+            .writeText(this.formattedText)
+            .then(() => {
+              this.$store.dispatch('showSnackbar', {
+                text: this.$tr('copiedToClipboardConfirmation'),
+              });
+            })
+            .catch(() => {
+              this.$store.dispatch('showSnackbar', { text: this.$tr('copiedToClipboardFailure') });
             });
-          })
-          .catch(() => {
-            this.$store.dispatch('showSnackbar', { text: this.$tr('copiedToClipboardFailure') });
-          });
+        }
       },
     },
     $trs: {
