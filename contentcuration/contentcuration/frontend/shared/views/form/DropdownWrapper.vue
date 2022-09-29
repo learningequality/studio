@@ -69,6 +69,11 @@
           break;
         }
         scrollableAncestor = scrollableAncestor.parentNode;
+
+        // Stop if we reach the body-- tagName is likely uppercase
+        if (/body/i.test(scrollableAncestor.tagName)) {
+          break;
+        }
       }
 
       const scrollableBoundingRect = scrollableAncestor.getBoundingClientRect();
