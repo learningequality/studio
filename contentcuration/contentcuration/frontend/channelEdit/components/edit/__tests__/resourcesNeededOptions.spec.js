@@ -36,7 +36,7 @@ describe('ResourcesNeededOptions', () => {
 
     it('should emit new input values', () => {
       const resourcesNeeded = ['person', 'book', 'train'];
-      const wrapper = makeWrapper({});
+      const wrapper = makeWrapper([]);
       const dropdown = wrapper.find({ name: 'v-select' });
       dropdown.vm.$emit('input', resourcesNeeded);
 

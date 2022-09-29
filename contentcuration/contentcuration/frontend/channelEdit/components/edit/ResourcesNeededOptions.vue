@@ -13,6 +13,8 @@
       clearable
       :menu-props="{ offsetY: true, lazy: true, zIndex: 4 }"
       :attach="$attrs.id ? `#${$attrs.id}` : '.resources-needed-container'"
+      :hint="hint"
+      persistent-hint
     />
   </div>
 
@@ -56,9 +58,16 @@
           value: ResourcesNeededTypes[key],
         }));
       },
+      hint() {
+        return this.value && this.value.includes(ResourcesNeededTypes.OTHER_SUPPLIES)
+          ? this.$tr('furtherExplanation')
+          : '';
+      },
     },
     $trs: {
       resourcesNeededLabel: 'Requirements',
+      furtherExplanation:
+        "Please add to the 'Description' field any additional supplies learners will need in order to use this resource",
     },
   };
 
