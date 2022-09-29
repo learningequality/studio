@@ -692,6 +692,7 @@ class Resource extends mix(APIResource, IndexedDBResource) {
         // Only fetch new updates if we've finished syncing the changes table
         db[CHANGES_TABLE].where('table')
           .equals(this.tableName)
+          .filter(c => !c.synced)
           .limit(1)
           .toArray()
           .then(pendingChanges => {
