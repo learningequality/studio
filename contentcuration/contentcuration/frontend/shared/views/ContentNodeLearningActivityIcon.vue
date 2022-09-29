@@ -124,4 +124,11 @@
     border-radius: 4px;
   }
 
+  .labeled-icon-wrapper /deep/ .icon {
+    [dir='rtl'] & {
+      right: 0;
+      left: auto;
+    }
+  }
+
 </style>
