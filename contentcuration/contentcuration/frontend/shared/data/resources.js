@@ -1392,6 +1392,7 @@ export const ContentNode = new TreeResource({
       // Placeholder node_id, we should receive the new value from backend result
       node_id: uuid4(),
       original_source_node_id: node.original_source_node_id || node.node_id,
+      original_channel_id: node.original_channel_id || node.channel_id,
       source_channel_id: node.channel_id,
       source_node_id: node.node_id,
       channel_id: parent.channel_id,
