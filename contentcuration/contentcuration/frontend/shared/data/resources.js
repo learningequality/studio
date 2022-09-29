@@ -1791,6 +1791,10 @@ export const Task = new IndexedDBResource({
   tableName: TABLE_NAMES.TASK,
   idField: 'task_id',
   setTasks(tasks) {
+    for (let task of tasks) {
+      // Coerce channel_id to be a simple hex string
+      task.channel_id = task.channel_id.replace('-', '');
+    }
     return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
       return this.table
         .where(this.idField)
