@@ -1,4 +1,3 @@
-import functools
 import hashlib
 import json
 import logging
@@ -8,7 +7,6 @@ import uuid
 from datetime import datetime
 
 import pytz
-from celery import states
 from django.conf import settings
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.base_user import BaseUserManager
@@ -1104,20 +1102,6 @@ class ContentTag(models.Model):
 
     class Meta:
         unique_together = ['tag_name', 'channel']
-
-
-def delegate_manager(method):
-    """
-    Delegate method calls to base manager, if exists.
-    """
-
-    @functools.wraps(method)
-    def wrapped(self, *args, **kwargs):
-        if self._base_manager:
-            return getattr(self._base_manager, method.__name__)(*args, **kwargs)
-        return method(self, *args, **kwargs)
-
-    return wrapped
 
 
 class License(models.Model):
