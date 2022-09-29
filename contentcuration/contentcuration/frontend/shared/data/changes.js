@@ -1,8 +1,13 @@
 import Dexie from 'dexie';
+import sortBy from 'lodash/sortBy';
 import db from 'shared/data/db';
 import { promiseChunk } from 'shared/utils/helpers';
-import { CHANGES_TABLE, CHANGE_TYPES, IGNORED_SOURCE } from 'shared/data/constants';
-import { Session } from 'shared/data/resources';
+import {
+  CHANGES_TABLE,
+  CHANGE_TYPES,
+  IGNORED_SOURCE,
+  RELATIVE_TREE_POSITIONS,
+} from 'shared/data/constants';
 import { INDEXEDDB_RESOURCES } from 'shared/data/registry';
 
 /**
@@ -61,15 +66,9 @@ export class ChangeTracker {
     }
 
     // Grab the most recent change in the changes table, if it exists, which it might not
-    // if everything has been synced and applied, otherwise check the session for its max rev
-    const [mostRecentChange, session] = await Promise.all([
-      db[CHANGES_TABLE].orderBy('rev').last(),
-      Session.getSession(),
-    ]);
+    const mostRecentChange = await db[CHANGES_TABLE].orderBy('rev').last();
 
-    this._startingRev = mostRecentChange
-      ? mostRecentChange.rev
-      : session.max_rev[Session.currentChannelId];
+    this._startingRev = mostRecentChange ? mostRecentChange.rev : null;
   }
 
   /**
@@ -78,10 +77,16 @@ export class ChangeTracker {
    */
   async stop() {
     // Collect the changes
-    const changes = db[CHANGES_TABLE].where('rev')
-      .above(this._startingRev)
-      .filter(change => !change.source.match(IGNORED_SOURCE));
-    this._changes = await changes.sortBy('rev');
+    let changes = db[CHANGES_TABLE];
+
+    // If we had a starting rev, filter to only those changes added since
+    if (this._startingRev) {
+      changes = changes.where('rev').above(this._startingRev);
+    }
+
+    this._changes = await changes
+      .filter(change => !change.source.match(IGNORED_SOURCE))
+      .sortBy('rev');
   }
 
   /**
@@ -131,7 +136,7 @@ export class ChangeTracker {
         }
         return Promise.resolve();
       }
-      return resource.transaction({}, () => {
+      return resource.transaction({}, CHANGES_TABLE, () => {
         // If we had created something, we'll delete it
         // Special MOVED case here comes from the operation of COPY then MOVE for duplicating
         // content nodes, which in this case would be on the Tree table, so we're removing
@@ -151,9 +156,21 @@ export class ChangeTracker {
           // If we updated or deleted it, we just want the old stuff back
           return resource.table.put(change.oldObj);
         } else if (change.type === CHANGE_TYPES.MOVED && change.oldObj) {
-          // Lastly if this is a MOVE, then this was likely a single operation, so we just roll
-          // it back
-          return resource.table.put(change.oldObj);
+          // Lastly if this is a MOVE, we generate a reverse move back to its old position
+          const { parent, lft } = change.oldObj;
+
+          // Collect the affected node's siblings prior to the change
+          return resource.where({ parent }, false).then(siblings => {
+            // Search the siblings ordered by `lft` to find the first a sibling
+            // where we should move the node, positioned before that sibling
+            let relativeSibling = sortBy(siblings, 'lft').find(sibling => sibling.lft >= lft);
+            if (relativeSibling) {
+              return resource.move(change.key, relativeSibling.id, RELATIVE_TREE_POSITIONS.LEFT);
+            }
+
+            // this handles if there were no siblings OR if the deleted node was at the end
+            return resource.move(change.key, parent, RELATIVE_TREE_POSITIONS.LAST_CHILD);
+          });
         } else {
           if (process.env.NODE_ENV !== 'production') {
             /* eslint-disable no-console */
