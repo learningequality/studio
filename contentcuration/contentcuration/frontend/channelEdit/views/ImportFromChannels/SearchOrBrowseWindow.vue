@@ -3,7 +3,7 @@
   <ImportFromChannelsModal>
     <template #default="{ preview }">
       <VSheet>
-        <div v-if="!isBrowsing" class="my-2">
+        <div v-if="!isBrowsing" class="my-2 px-2">
           <ActionLink
             :text="$tr('backToBrowseAction')"
             @click="handleBackToBrowse"
@@ -11,8 +11,8 @@
         </div>
 
         <!-- Search bar -->
-        <VLayout row wrap class="mt-4">
-          <VFlex xl4 lg5 md7 sm12>
+        <VLayout row wrap class="mt-4 px-2">
+          <VFlex style="max-width: 700px">
             <VForm ref="search" @submit.prevent="handleSearchTerm">
               <VTextField
                 v-model="searchTerm"

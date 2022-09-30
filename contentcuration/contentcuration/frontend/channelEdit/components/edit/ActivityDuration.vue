@@ -10,19 +10,22 @@
       </VFlex>
       <VFlex
         v-else-if="selectedDuration === 'shortActivity' || selectedDuration === 'longActivity'"
-        class="activity-duration-container"
         md3
         sm3
       >
-        <VAutocomplete
-          v-model.number="minutes"
-          :step="increments"
-          box
-          :label="$tr('minutesRequired')"
-          :items="availableNumbers"
-          :menu-props="{ offsetY: true, lazy: true, zIndex: 4 }"
-          attach=".activity-duration-container"
-        />
+        <DropdownWrapper>
+          <template #default="{ attach, menuProps }">
+            <VAutocomplete
+              v-model.number="minutes"
+              :step="increments"
+              box
+              :label="$tr('minutesRequired')"
+              :items="availableNumbers"
+              :menu-props="menuProps"
+              :attach="attach"
+            />
+          </template>
+        </DropdownWrapper>
       </VFlex>
       <VFlex v-else md3 sm3>
         <VTextField
@@ -58,6 +61,7 @@
     getActivityDurationValidators,
     translateValidator,
   } from 'shared/utils/validation';
+  import DropdownWrapper from 'shared/views/form/DropdownWrapper';
 
   const SHORT_MIN = 1;
   const SHORT_MAX = 30;
@@ -70,6 +74,7 @@
 
   export default {
     name: 'ActivityDuration',
+    components: { DropdownWrapper },
     props: {
       selectedDuration: {
         type: String,
@@ -191,10 +196,6 @@
 
 </script>
 <style lang="less" scoped>
-
-  .activity-duration-container {
-    position: relative;
-  }
 
   .defaultUpload {
     margin: 0.8em;

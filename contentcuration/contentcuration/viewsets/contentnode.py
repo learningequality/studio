@@ -615,7 +615,7 @@ class PrerequisitesUpdateHandler(ValuesViewset):
 
 
 def dict_if_none(obj, field_name=None):
-    return obj[field_name] if obj[field_name] else {}
+    return obj[field_name] if field_name in obj and obj[field_name] else {}
 
 
 # Apply mixin first to override ValuesViewset

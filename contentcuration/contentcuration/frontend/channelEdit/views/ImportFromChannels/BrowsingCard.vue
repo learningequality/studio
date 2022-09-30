@@ -3,7 +3,7 @@
   <VCard @click="handleClick">
     <VCardTitle>
       <VLayout row wrap>
-        <VFlex lg2 md4 sm5 xs12 class="pt-2 px-4">
+        <VFlex class="pt-2 px-4 thumbnail-column">
           <Thumbnail
             :src="node.thumbnail_src"
             :kind="node.kind"
@@ -11,7 +11,7 @@
           />
         </VFlex>
 
-        <VFlex lg10 md8 sm7 xs12 class="px-4">
+        <VFlex class="info-column px-4">
           <h3
             class="font-weight-bold mt-2 text-truncate title"
             :class="getTitleClass(node)"
@@ -204,6 +204,15 @@
 
 
 <style lang="less" scoped>
+
+  .thumbnail-column {
+    flex-basis: 33%;
+    max-width: 220px;
+  }
+
+  .info-column {
+    flex-basis: 67%;
+  }
 
   .show-more-btn {
     margin-left: -7px;

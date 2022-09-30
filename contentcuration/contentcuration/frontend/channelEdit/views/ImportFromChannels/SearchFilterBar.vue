@@ -1,6 +1,6 @@
 <template>
 
-  <VContainer class="pt-3 px-0" fluid>
+  <VContainer class="pt-3 px-2" fluid>
     <VChip
       v-for="(filter, index) in currentFilters"
       :key="`search-filter-${index}`"

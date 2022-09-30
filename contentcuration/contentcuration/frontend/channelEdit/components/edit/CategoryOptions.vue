@@ -1,64 +1,66 @@
 <template>
 
-  <div class="category-container">
-    <VAutocomplete
-      :value="selected"
-      :items="categoriesList"
-      :searchInput.sync="categoryText"
-      :label="translateMetadataString('category')"
-      box
-      clearable
-      chips
-      deletableChips
-      multiple
-      item-value="value"
-      item-text="text"
-      :menu-props="{ offsetY: true, lazy: true, zIndex: 4 }"
-      attach=".category-container"
-      @click:clear="$nextTick(() => removeAll())"
-    >
-      <template #selection="data">
-        <VTooltip bottom lazy>
-          <template #activator="{ on, attrs }">
-            <VChip v-bind="attrs" close v-on="on" @input="remove(data.item.value)">
-              {{ data.item.text }}
-            </VChip>
-          </template>
-          <div>
-            <div>{{ tooltipHelper(data.item.value) }}</div>
-          </div>
-        </VTooltip>
-      </template>
+  <DropdownWrapper>
+    <template #default="{ attach, menuProps }">
+      <VAutocomplete
+        :value="selected"
+        :items="categoriesList"
+        :searchInput.sync="categoryText"
+        :label="translateMetadataString('category')"
+        box
+        clearable
+        chips
+        deletableChips
+        multiple
+        item-value="value"
+        item-text="text"
+        :menu-props="{ ...menuProps, zIndex: 4 }"
+        :attach="attach"
+        @click:clear="$nextTick(() => removeAll())"
+      >
+        <template #selection="data">
+          <VTooltip bottom lazy>
+            <template #activator="{ on, attrs }">
+              <VChip v-bind="attrs" close v-on="on" @input="remove(data.item.value)">
+                {{ data.item.text }}
+              </VChip>
+            </template>
+            <div>
+              <div>{{ tooltipHelper(data.item.value) }}</div>
+            </div>
+          </VTooltip>
+        </template>
 
-      <template #no-data>
-        <VListTile v-if="categoryText && categoryText.trim()">
-          <VListTileContent>
-            <VListTileTitle>
-              {{ $tr('noCategoryFoundText', { text: categoryText.trim() }) }}
-            </VListTileTitle>
-          </VListTileContent>
-        </VListTile>
-      </template>
+        <template #no-data>
+          <VListTile v-if="categoryText && categoryText.trim()">
+            <VListTileContent>
+              <VListTileTitle>
+                {{ $tr('noCategoryFoundText', { text: categoryText.trim() }) }}
+              </VListTileTitle>
+            </VListTileContent>
+          </VListTile>
+        </template>
 
-      <template #item="{ item }">
-        <VListTile
-          :value="isSelected(item.value)"
-          :class="{ parentOption: !item.value.includes('.') }"
-          @mousedown.prevent
-          @click="() => !isSelected(item.value) ? add(item.value) : remove(item.value)"
-        >
-          <KCheckbox
-            :checked="isSelected(item.value)"
-            :label="item.text"
-            :value="item.value"
-            style="margin-top: 10px"
-            :style="treeItemStyle(item)"
-            :ripple="false"
-          />
-        </VListTile>
-      </template>
-    </VAutocomplete>
-  </div>
+        <template #item="{ item }">
+          <VListTile
+            :value="isSelected(item.value)"
+            :class="{ parentOption: !item.value.includes('.') }"
+            @mousedown.prevent
+            @click="() => !isSelected(item.value) ? add(item.value) : remove(item.value)"
+          >
+            <KCheckbox
+              :checked="isSelected(item.value)"
+              :label="item.text"
+              :value="item.value"
+              style="margin-top: 10px"
+              :style="treeItemStyle(item)"
+              :ripple="false"
+            />
+          </VListTile>
+        </template>
+      </VAutocomplete>
+    </template>
+  </DropdownWrapper>
 
 </template>
 
@@ -67,6 +69,7 @@
   import camelCase from 'lodash/camelCase';
   import { constantsTranslationMixin, metadataTranslationMixin } from 'shared/mixins';
   import { Categories, CategoriesLookup } from 'shared/constants';
+  import DropdownWrapper from 'shared/views/form/DropdownWrapper';
 
   const availablePaths = {};
   const categoriesObj = {};
@@ -124,6 +127,7 @@
 
   export default {
     name: 'CategoryOptions',
+    components: { DropdownWrapper },
     mixins: [constantsTranslationMixin, metadataTranslationMixin],
     props: {
       value: {
@@ -208,10 +212,6 @@
 
 </script>
 <style lang="less" scoped>
-
-  .category-container {
-    position: relative;
-  }
 
   .parentOption:not(:first-child) {
     border-top: 1px solid rgba(0, 0, 0, 0.12);

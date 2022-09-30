@@ -1,22 +1,24 @@
 <template>
 
-  <div class="resources-needed-container">
-    <VSelect
-      ref="need"
-      v-model="need"
-      :items="resources"
-      box
-      chips
-      :label="$tr('resourcesNeededLabel')"
-      multiple
-      deletableChips
-      clearable
-      :menu-props="{ offsetY: true, lazy: true, zIndex: 4 }"
-      :attach="$attrs.id ? `#${$attrs.id}` : '.resources-needed-container'"
-      :hint="hint"
-      persistent-hint
-    />
-  </div>
+  <DropdownWrapper>
+    <template #default="{ attach, menuProps }">
+      <VSelect
+        ref="need"
+        v-model="need"
+        :items="resources"
+        box
+        chips
+        :label="$tr('resourcesNeededLabel')"
+        multiple
+        deletableChips
+        clearable
+        :menu-props="menuProps"
+        :attach="attach"
+        :hint="hint"
+        persistent-hint
+      />
+    </template>
+  </DropdownWrapper>
 
 </template>
 
@@ -24,6 +26,7 @@
 
   import { ResourcesNeededTypes } from 'shared/constants';
   import { constantsTranslationMixin, metadataTranslationMixin } from 'shared/mixins';
+  import DropdownWrapper from 'shared/views/form/DropdownWrapper';
 
   const dropdownItems = [
     'PEERS',
@@ -36,6 +39,7 @@
 
   export default {
     name: 'ResourcesNeededOptions',
+    components: { DropdownWrapper },
     mixins: [constantsTranslationMixin, metadataTranslationMixin],
     props: {
       value: {
@@ -73,9 +77,5 @@
 
 </script>
 <style lang="less">
-
-  .resources-needed-container {
-    position: relative;
-  }
 
 </style>
