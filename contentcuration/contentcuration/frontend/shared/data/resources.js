@@ -706,7 +706,18 @@ class Resource extends mix(APIResource, IndexedDBResource) {
   }
 
   headModel(id) {
-    return client.head(this.modelUrl(id));
+    // If the resource identified by `id` has just been created, but we haven't verified
+    // the server has applied the change yet, we skip making the HEAD request for it
+    return db[CHANGES_TABLE].where('[table+key]')
+      .equals([this.tableName, id])
+      .filter(c => [CHANGE_TYPES.CREATED, CHANGE_TYPES.COPIED].includes(c.type))
+      .count()
+      .then(pendingCount => {
+        if (pendingCount > 0) {
+          return;
+        }
+        return client.head(this.modelUrl(id));
+      });
   }
 
   fetchModel(id) {
