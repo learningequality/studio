@@ -643,7 +643,9 @@
           };
         },
         set({ completion_criteria, suggested_duration, suggested_duration_type, modality }) {
-          completion_criteria.learner_managed = this.learnerManaged;
+          if (completion_criteria) {
+            completion_criteria.learner_managed = this.learnerManaged;
+          }
           const options = { completion_criteria, modality };
           this.updateExtraFields({ options });
           this.updateExtraFields({ suggested_duration_type });
