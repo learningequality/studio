@@ -873,6 +873,7 @@
       determinedByResource: 'Determined by the resource',
       goal: 'When goal is met',
       practiceQuiz: 'Practice quiz',
+      reference: 'Reference material',
       /* eslint-enable */
       exactTime: 'Exact time to complete',
       referenceHint:
