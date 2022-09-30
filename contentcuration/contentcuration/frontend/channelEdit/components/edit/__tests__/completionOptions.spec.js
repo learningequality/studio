@@ -202,7 +202,7 @@ describe('CompletionOptions', () => {
         });
       });
       describe(`audio/video`, () => {
-        it(`'Completion dropdown' is not visible and reference hint is visible when 'Reference' is selected`, () => {
+        it(`'Reference hint is visible when 'Reference' is selected`, () => {
           const wrapper = mount(CompletionOptions, {
             propsData: {
               kind: 'audio',
@@ -210,7 +210,6 @@ describe('CompletionOptions', () => {
             },
           });
           expect(wrapper.vm.showReferenceHint).toBe(true);
-          expect(wrapper.find({ ref: 'completion' }).exists()).toBe(false);
         });
       });
       describe(`exercise`, () => {
@@ -422,23 +421,6 @@ describe('CompletionOptions', () => {
           await wrapper.vm.$nextTick();
           expect(wrapper.find({ ref: 'activity_duration' }).exists()).toBe(true);
           expect(wrapper.vm.showActivityDurationInput).toBe(true);
-        });
-        it(`'Reference' is disabled`, async () => {
-          const wrapper = mount(CompletionOptions, {
-            propsData: {
-              kind: 'document',
-              value: { model: 'time' },
-            },
-          });
-          wrapper.find({ ref: 'completion' }).vm.$emit('input', 'completeDuration');
-          await wrapper.vm.$nextTick();
-
-          const clickableDurationDropdown = wrapper.vm.selectableDurationOptions;
-          const reference = clickableDurationDropdown.filter(
-            option => option.value === 'reference'
-          );
-          expect(clickableDurationDropdown.length).toBe(4);
-          expect(reference[0].disabled).toBe(true);
         });
       });
       describe(`switching between 'All content viewed (ACV)' and 'Complete duration (CD)'`, () => {
