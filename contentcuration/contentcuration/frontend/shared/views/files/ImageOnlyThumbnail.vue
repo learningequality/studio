@@ -213,7 +213,7 @@
     }
 
     &.rtl-image {
-      right: 16%;
+      right: 66%;
     }
 
     .caption + & {
