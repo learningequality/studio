@@ -26,6 +26,8 @@ import {
   CHANNEL_SYNC_KEEP_ALIVE_INTERVAL,
   MAX_REV_KEY,
   LAST_FETCHED,
+  CREATION_CHANGE_TYPES,
+  TREE_CHANGE_TYPES,
 } from './constants';
 import applyChanges, { applyMods, collectChanges } from './applyRemoteChanges';
 import mergeAllChanges from './mergeChanges';
@@ -685,28 +687,45 @@ class Resource extends mix(APIResource, IndexedDBResource) {
       if (objs === EMPTY_ARRAY) {
         return [];
       }
-      if (!objs.length && !objs.count) {
-        return this.fetchCollection(params);
-      }
-      if (doRefresh) {
-        // Only fetch new updates if we've finished syncing the changes table
-        db[CHANGES_TABLE].where('table')
-          .equals(this.tableName)
-          .filter(c => !c.synced)
-          .limit(1)
-          .toArray()
-          .then(pendingChanges => {
-            if (pendingChanges.length === 0) {
-              this.fetchCollection(params);
-            }
-          });
+      // if there are no objects, and it's also not an empty paginated response (objs.count),
+      // or we mean to refresh
+      if ((!objs.length && !objs.count) || doRefresh) {
+        let refresh = Promise.resolve(true);
+        // ContentNode tree operations are the troublemakers causing the logic below
+        if (this.tableName === TABLE_NAMES.CONTENTNODE) {
+          // Only fetch new updates if we don't have pending changes to ContentNode that
+          // affect tree structure
+          refresh = db[CHANGES_TABLE].where('table')
+            .equals(TABLE_NAMES.CONTENTNODE)
+            .filter(c => TREE_CHANGE_TYPES.includes(c.type))
+            .count()
+            .then(pendingCount => pendingCount === 0);
+        }
+
+        const fetch = refresh.then(shouldFetch => {
+          return shouldFetch ? this.fetchCollection(params) : [];
+        });
+        // Be sure to return the fetch promise to relay fetched objects in this condition
+        if (!objs.length && !objs.count) {
+          return fetch;
+        }
       }
       return objs;
     });
   }
 
   headModel(id) {
-    return client.head(this.modelUrl(id));
+    // If the resource identified by `id` has just been created, but we haven't verified
+    // the server has applied the change yet, we skip making the HEAD request for it
+    return db[CHANGES_TABLE].where('[table+key]')
+      .equals([this.tableName, id])
+      .filter(c => CREATION_CHANGE_TYPES.includes(c.type))
+      .count()
+      .then(pendingCount => {
+        if (pendingCount === 0) {
+          return client.head(this.modelUrl(id));
+        }
+      });
   }
 
   fetchModel(id) {
