@@ -4,7 +4,7 @@
     <!-- Layout when practice quizzes are enabled -->
     <VLayout v-if="hideCompletionDropdown" xs6 md6>
       <!-- "Completion" dropdown menu  -->
-      <VFlex v-if="!audioVideoResource" xs6 md6 class="completion-container pr-2">
+      <VFlex xs6 md6 class="completion-container pr-2">
         <VSelect
           ref="completion"
           v-model="completionDropdown"
@@ -163,7 +163,6 @@
     },
     data() {
       return {
-        disabledReference: ['reference'],
         // required state because we need to know the durationDropdown before it is set in backend
         currentDurationDropdown: null,
         // required state because we need to know the completion to determine durationDropdown model
@@ -201,11 +200,9 @@
             return true;
           }
           return (
-            (this.currentCompletionDropdown === CompletionDropdownMap.reference &&
-              !this.audioVideoResource) ||
+            this.currentCompletionDropdown === CompletionDropdownMap.reference ||
             (this.value.model === CompletionCriteriaModels.REFERENCE &&
-              !this.currentCompletionDropdown &&
-              !this.audioVideoResource) ||
+              !this.currentCompletionDropdown) ||
             //should be hidden if model is reference and we're getting this from the BE
             this.currentCompletionDropdown === CompletionDropdownMap.determinedByResource
           );
@@ -716,13 +713,22 @@
       },
       showCorrectCompletionOptions() {
         const CompletionOptionsDropdownMap = {
-          document: [CompletionDropdownMap.allContent, CompletionDropdownMap.completeDuration],
+          document: [
+            CompletionDropdownMap.allContent,
+            CompletionDropdownMap.completeDuration,
+            CompletionDropdownMap.reference,
+          ],
           exercise: [CompletionDropdownMap.goal, CompletionDropdownMap.practiceQuiz],
           html5: [
             CompletionDropdownMap.completeDuration,
             CompletionDropdownMap.determinedByResource,
+            CompletionDropdownMap.reference,
           ],
-          h5p: [CompletionDropdownMap.determinedByResource, CompletionDropdownMap.completeDuration],
+          h5p: [
+            CompletionDropdownMap.determinedByResource,
+            CompletionDropdownMap.completeDuration,
+            CompletionDropdownMap.reference,
+          ],
           audio: [CompletionDropdownMap.completeDuration, CompletionDropdownMap.reference],
           video: [CompletionDropdownMap.completeDuration, CompletionDropdownMap.reference],
         };
@@ -752,11 +758,6 @@
             value: CompletionCriteriaModels.APPROX_TIME,
             id: 'longActivity',
           },
-          {
-            text: this.translateMetadataString('readReference'),
-            value: CompletionCriteriaModels.REFERENCE,
-            id: 'reference',
-          },
         ];
       },
       /**
@@ -771,15 +772,12 @@
           return this.allPossibleDurationOptions.map(model => ({
             value: model.id,
             text: model.text,
-            disabled: this.disabledReference.includes(model.value),
           }));
         } else if (this.kind === ContentKindsNames.EXERCISE) {
-          return this.allPossibleDurationOptions
-            .filter(model => model.value !== CompletionCriteriaModels.REFERENCE)
-            .map(model => ({
-              value: model.id,
-              text: model.text,
-            }));
+          return this.allPossibleDurationOptions.map(model => ({
+            value: model.id,
+            text: model.text,
+          }));
         } else {
           return this.allPossibleDurationOptions.map(model => ({
             value: model.id,
@@ -876,8 +874,7 @@
       goal: 'When goal is met',
       practiceQuiz: 'Practice quiz',
       /* eslint-enable */
-      exactTime: 'Time to complete',
-      reference: 'Reference material',
+      exactTime: 'Exact time to complete',
       referenceHint:
         'Progress will not be tracked on reference material unless learners mark it as complete',
     },
