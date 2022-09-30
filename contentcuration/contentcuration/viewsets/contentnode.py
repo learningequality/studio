@@ -53,6 +53,7 @@ from contentcuration.models import PrerequisiteContentRelationship
 from contentcuration.models import UUIDField
 from contentcuration.tasks import calculate_resource_size_task
 from contentcuration.utils.nodes import calculate_resource_size
+from contentcuration.utils.nodes import migrate_extra_fields
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import BulkUpdateMixin
@@ -257,7 +258,7 @@ class ThresholdField(Field):
     def to_internal_value(self, data):
         try:
             data = int(data)
-        except(ValueError, TypeError):
+        except (ValueError, TypeError):
             if not isinstance(data, (str, dict)):
                 self.fail("Must be either an integer, string or dictionary")
         return data
@@ -283,25 +284,6 @@ class CompletionCriteriaSerializer(JSONFieldDictSerializer):
         return instance
 
 
-def _migrate_extra_fields(extra_fields):
-    if not isinstance(extra_fields, dict):
-        return extra_fields
-    m = extra_fields.pop("m", None)
-    n = extra_fields.pop("n", None)
-    mastery_model = extra_fields.pop("mastery_model", None)
-    if not extra_fields.get("options", {}).get("completion_criteria", {}) and mastery_model is not None:
-        extra_fields["options"] = extra_fields.get("options", {})
-        extra_fields["options"]["completion_criteria"] = {
-            "threshold": {
-                "m": m,
-                "n": n,
-                "mastery_model": mastery_model,
-            },
-            "model": completion_criteria.MASTERY,
-        }
-    return extra_fields
-
-
 class ExtraFieldsOptionsSerializer(JSONFieldDictSerializer):
     modality = ChoiceField(choices=(("QUIZ", "Quiz"),), allow_null=True, required=False)
     completion_criteria = CompletionCriteriaSerializer(required=False)
@@ -313,7 +295,7 @@ class ExtraFieldsSerializer(JSONFieldDictSerializer):
     suggested_duration_type = ChoiceField(choices=[completion_criteria.TIME, completion_criteria.APPROX_TIME], allow_null=True, required=False)
 
     def update(self, instance, validated_data):
-        instance = _migrate_extra_fields(instance)
+        instance = migrate_extra_fields(instance)
         return super(ExtraFieldsSerializer, self).update(instance, validated_data)
 
 
@@ -472,7 +454,7 @@ def retrieve_thumbail_src(item):
 def consolidate_extra_fields(item):
     extra_fields = item.get("extra_fields")
     if item["kind"] == content_kinds.EXERCISE:
-        extra_fields = _migrate_extra_fields(extra_fields)
+        extra_fields = migrate_extra_fields(extra_fields)
 
     return extra_fields
 

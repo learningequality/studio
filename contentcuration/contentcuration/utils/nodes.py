@@ -15,6 +15,7 @@ from django.core.files.storage import default_storage
 from django.db.models import Count
 from django.db.models import Sum
 from django.utils import timezone
+from le_utils.constants import completion_criteria
 from le_utils.constants import content_kinds
 from le_utils.constants import format_presets
 
@@ -427,3 +428,22 @@ def calculate_resource_size(node, force=False):
             report_exception(e)
 
     return size, False
+
+
+def migrate_extra_fields(extra_fields):
+    if not isinstance(extra_fields, dict):
+        return extra_fields
+    m = extra_fields.pop("m", None)
+    n = extra_fields.pop("n", None)
+    mastery_model = extra_fields.pop("mastery_model", None)
+    if not extra_fields.get("options", {}).get("completion_criteria", {}) and mastery_model is not None:
+        extra_fields["options"] = extra_fields.get("options", {})
+        extra_fields["options"]["completion_criteria"] = {
+            "threshold": {
+                "m": m,
+                "n": n,
+                "mastery_model": mastery_model,
+            },
+            "model": completion_criteria.MASTERY,
+        }
+    return extra_fields

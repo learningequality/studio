@@ -12,6 +12,7 @@ from django.db import connections
 from kolibri_content import models as kolibri_models
 from kolibri_content.router import get_active_content_database
 from kolibri_content.router import set_active_content_database
+from le_utils.constants import exercises
 from le_utils.constants.labels import accessibility_categories
 from le_utils.constants.labels import learning_activities
 from le_utils.constants.labels import levels
@@ -96,15 +97,39 @@ class ExportChannelTestCase(StudioTestCase):
         new_video.parent = self.content_channel.main_tree
         new_video.save()
 
+        # Add a node to test new style mastery models.
+        extra_fields = {
+            "options": {
+                "completion_criteria": {
+                    "model": "mastery",
+                    "threshold": {
+                        "m": 1,
+                        "n": 2,
+                        "mastery_model": exercises.M_OF_N,
+                    }
+                }
+            }
+        }
+        current_exercise = cc.ContentNode.objects.filter(kind_id="exercise").first()
+
+        new_exercise = create_node({'kind_id': 'exercise', 'title': 'Mastery test', 'extra_fields': extra_fields})
+        new_exercise.complete = True
+        new_exercise.parent = current_exercise.parent
+        new_exercise.save()
+        for ai in current_exercise.assessment_items.all():
+            ai.id = None
+            ai.contentnode = new_exercise
+            ai.save()
+
         first_topic = self.content_channel.main_tree.get_descendants().first()
 
         # Add a publishable topic to ensure it does not inherit but that its children do
-        new_node = create_node({'kind_id': 'topic', 'title': 'Disinherited topic', 'children': []})
+        new_node = create_node({'kind_id': 'topic', 'title': 'Disinherited topic'})
         new_node.complete = True
         new_node.parent = first_topic
         new_node.save()
 
-        new_video = create_node({'kind_id': 'video', 'title': 'Inheriting video', 'children': []})
+        new_video = create_node({'kind_id': 'video', 'title': 'Inheriting video'})
         new_video.complete = True
         new_video.parent = new_node
         new_video.save()
@@ -241,9 +266,14 @@ class ExportChannelTestCase(StudioTestCase):
         self.assertIsNotNone(self.content_channel.icon_encoding)
 
     def test_assessment_metadata(self):
-        asm = kolibri_models.AssessmentMetaData.objects.first()
-        self.assertTrue(isinstance(json.loads(asm.assessment_item_ids), list))
-        self.assertTrue(isinstance(json.loads(asm.mastery_model), dict))
+        for i, exercise in enumerate(kolibri_models.ContentNode.objects.filter(kind="exercise")):
+            asm = exercise.assessmentmetadata.first()
+            self.assertTrue(isinstance(json.loads(asm.assessment_item_ids), list))
+            mastery = json.loads(asm.mastery_model)
+            self.assertTrue(isinstance(mastery, dict))
+            self.assertEqual(mastery["type"], exercises.DO_ALL if i == 0 else exercises.M_OF_N)
+            self.assertEqual(mastery["m"], 3 if i == 0 else 1)
+            self.assertEqual(mastery["n"], 3 if i == 0 else 2)
 
     def test_inherited_language(self):
         first_topic_node_id = self.content_channel.main_tree.get_descendants().first().node_id
