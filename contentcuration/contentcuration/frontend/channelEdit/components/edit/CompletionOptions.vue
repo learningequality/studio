@@ -336,6 +336,12 @@
                 model: CompletionCriteriaModels.PAGES,
                 threshold: '100%',
               };
+            } else if (value === CompletionDropdownMap.reference) {
+              update.suggested_duration_type = null;
+              update.completion_criteria = {
+                model: CompletionCriteriaModels.REFERENCE,
+                threshold: null,
+              };
             } else {
               update.suggested_duration_type = this.value.suggested_duration_type;
               update.suggested_duration = this.value.suggested_duration;
