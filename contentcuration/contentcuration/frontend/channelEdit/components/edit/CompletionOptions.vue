@@ -881,7 +881,7 @@
       practiceQuiz: 'Practice quiz',
       reference: 'Reference material',
       /* eslint-enable */
-      exactTime: 'Exact time to complete',
+      exactTime: 'Time to complete',
       referenceHint:
         'Progress will not be tracked on reference material unless learners mark it as complete',
     },
