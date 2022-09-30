@@ -593,7 +593,21 @@
           .sort()
           .filter(k => ids.includes(ContentLevel[k]));
         if (matches && matches.length > 0) {
-          return this.metadataListText(matches);
+          let mappedMatches = [];
+          let newMatch;
+          matches.map(match => {
+            if (match === 'PROFESSIONAL') {
+              newMatch = 'specializedProfessionalTraining';
+            } else if (match === 'WORK_SKILLS') {
+              newMatch = 'allLevelsWorkSkills';
+            } else if (match === 'BASIC_SKILLS') {
+              newMatch = 'allLevelsBasicSkills';
+            } else {
+              newMatch = match;
+            }
+            mappedMatches.push(newMatch);
+          });
+          return this.metadataListText(mappedMatches);
         } else {
           return '-';
         }
