@@ -400,6 +400,8 @@ class ChannelViewSet(ValuesViewset):
     serializer_class = ChannelSerializer
     pagination_class = ChannelListPagination
     filterset_class = ChannelFilter
+    ordering_fields = ["modified", "name"]
+    ordering = "-modified"
 
     field_map = channel_field_map
     values = base_channel_values + ("edit", "view", "unpublished_changes")
@@ -412,6 +414,15 @@ class ChannelViewSet(ValuesViewset):
         queryset = super(ChannelViewSet, self).get_queryset()
         user_id = not self.request.user.is_anonymous and self.request.user.id
         user_queryset = User.objects.filter(id=user_id)
+        # Add the last modified node modified value as the channel last modified
+        channel_main_tree_nodes = ContentNode.objects.filter(
+            tree_id=OuterRef("main_tree__tree_id")
+        )
+        queryset = queryset.annotate(
+            modified=Subquery(
+                channel_main_tree_nodes.values("modified").order_by("-modified")[:1]
+            )
+        )
 
         return queryset.annotate(
             edit=Exists(user_queryset.filter(editable_channels=OuterRef("id"))),
@@ -423,12 +434,7 @@ class ChannelViewSet(ValuesViewset):
         channel_main_tree_nodes = ContentNode.objects.filter(
             tree_id=OuterRef("main_tree__tree_id")
         )
-        # Add the last modified node modified value as the channel last modified
-        queryset = queryset.annotate(
-            modified=Subquery(
-                channel_main_tree_nodes.values("modified").order_by("-modified")[:1]
-            )
-        )
+
         # Add the unique count of distinct non-topic node content_ids
         non_topic_content_ids = (
             channel_main_tree_nodes.exclude(kind_id=content_kinds.TOPIC)
@@ -561,6 +567,8 @@ class CatalogViewSet(ReadOnlyValuesViewset):
     serializer_class = ChannelSerializer
     pagination_class = CatalogListPagination
     filterset_class = BaseChannelFilter
+    ordering_fields = []
+    ordering = ("-priority", "name")
 
     permission_classes = [AllowAny]
 

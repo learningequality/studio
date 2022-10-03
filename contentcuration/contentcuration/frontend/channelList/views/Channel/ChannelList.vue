@@ -48,7 +48,7 @@
 
   import { mapGetters, mapActions } from 'vuex';
   import orderBy from 'lodash/orderBy';
-  import { RouteNames, CHANNEL_PAGE_SIZE } from '../../constants';
+  import { RouteNames } from '../../constants';
   import ChannelItem from './ChannelItem';
   import LoadingText from 'shared/views/LoadingText';
   import { ChannelListTypes } from 'shared/constants';
@@ -98,9 +98,6 @@
       isEditable() {
         return this.listType === ChannelListTypes.EDITABLE;
       },
-      isStarred() {
-        return this.listType === ChannelListTypes.STARRED;
-      },
     },
     watch: {
       listType(newListType) {
@@ -129,17 +126,6 @@
       },
       loadData(listType) {
         this.loading = true;
-        let parameters = {
-          listType,
-          sortBy: '-modified',
-        };
-
-        // Don't paginate bookmarked channel list for more
-        // rapid updating when channels are starred/unstarred
-        if (!this.isStarred) {
-          parameters.page = Number(this.$route.query.page || 1);
-          parameters.page_size = CHANNEL_PAGE_SIZE;
-        }
 
         this.loadChannelList({ listType }).then(() => {
           this.loading = false;
