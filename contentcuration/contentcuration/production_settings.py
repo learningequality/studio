@@ -12,8 +12,6 @@ from contentcuration.utils.secretmanagement import get_secret
 
 MEDIA_ROOT = base_settings.STORAGE_ROOT
 
-SITE_ID = int(get_secret("SITE_ID") or "1")
-
 DEFAULT_FILE_STORAGE = 'contentcuration.utils.gcs_storage.GoogleCloudStorage'
 SESSION_ENGINE = "django.contrib.sessions.backends.db"
 
