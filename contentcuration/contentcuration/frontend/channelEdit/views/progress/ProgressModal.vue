@@ -14,7 +14,7 @@
       {{ $tr('syncError') }}
     </div>
     <div
-      v-if="currentPublishTaskError"
+      v-else-if="currentPublishTaskError"
       class="red--text"
     >
       <Icon small color="red">
