@@ -153,17 +153,6 @@ describe('CompletionOptions', () => {
           });
           expect(wrapper.vm.completionDropdown).toBe('goal');
         });
-        it(`Completion dropdown should not be displayed if 'practice quiz' is not enabled while 'Practice until goal is met' is set in background`, () => {
-          const wrapper = mount(CompletionOptions, {
-            propsData: {
-              kind: 'exercise',
-              value: { model: null, threshold: { m: null, n: null }, modality: 'QUIZ' },
-              practiceQuizzesAllowed: false,
-            },
-          });
-          expect(wrapper.find({ ref: 'completion' }).exists()).toBe(false);
-          expect(wrapper.vm.completionDropdown).toBe('goal');
-        });
       });
       describe(`html5 or h5p`, () => {
         it(`'Complete duration' should be displayed by default for html5`, () => {
