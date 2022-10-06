@@ -2,7 +2,7 @@
 
   <div>
     <!-- Layout when practice quizzes are enabled -->
-    <VLayout v-if="hideCompletionDropdown" xs6 md6>
+    <VLayout xs6 md6>
       <!-- "Completion" dropdown menu  -->
       <DropdownWrapper component="VFlex" xs6 md6 class="pr-2">
         <template #default="{ attach, menuProps }">
@@ -23,20 +23,6 @@
       <VFlex>
         <MasteryCriteriaGoal
           v-if="showMasteryCriteriaGoalDropdown"
-          ref="mastery_model"
-          v-model="goal"
-          :placeholder="getPlaceholder('mastery_model')"
-          :required="isUnique(mastery_model)"
-          @focus="trackClick('Mastery model')"
-        />
-      </VFlex>
-    </VLayout>
-
-    <!-- Layout when practice quizzes are NOT enabled -->
-    <VLayout v-else xs6 md6>
-      <VFlex xs6 md6 class="pr-2">
-        <MasteryCriteriaGoal
-          v-if="kind === 'exercise'"
           ref="mastery_model"
           v-model="goal"
           :placeholder="getPlaceholder('mastery_model')"
@@ -157,10 +143,6 @@
         type: Boolean,
         default: true,
       },
-      practiceQuizzesAllowed: {
-        type: Boolean,
-        default: true,
-      },
       value: {
         type: Object,
         required: false,
@@ -188,13 +170,6 @@
           return true;
         }
         return false;
-      },
-      hideCompletionDropdown() {
-        /*
-          This condition can be removed once practice quizzes are fully implemented in 0.16
-          Named "hide" instead of "show" because "show" is the default behavior
-          */
-        return this.practiceQuizzesAllowed;
       },
       audioVideoResource() {
         return this.kind === ContentKindsNames.AUDIO || this.kind === ContentKindsNames.VIDEO;

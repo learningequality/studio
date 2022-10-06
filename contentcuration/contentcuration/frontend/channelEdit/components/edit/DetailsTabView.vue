@@ -144,7 +144,6 @@
             :kind="firstNode.kind"
             :fileDuration="fileDuration"
             :required="!isDocument"
-            :practiceQuizzesAllowed="allowChannelQuizzes"
           />
         </VFlex>
       </VLayout>
@@ -393,12 +392,7 @@
   import VisibilityDropdown from 'shared/views/VisibilityDropdown';
   import Checkbox from 'shared/views/form/Checkbox';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
-  import {
-    NEW_OBJECT,
-    FeatureFlagKeys,
-    AccessibilityCategories,
-    ResourcesNeededTypes,
-  } from 'shared/constants';
+  import { NEW_OBJECT, AccessibilityCategories, ResourcesNeededTypes } from 'shared/constants';
   import { constantsTranslationMixin, metadataTranslationMixin } from 'shared/mixins';
 
   // Define an object to act as the place holder for non unique values.
@@ -714,9 +708,6 @@
       },
       newContent() {
         return !this.nodes.some(n => n[NEW_OBJECT]);
-      },
-      allowChannelQuizzes() {
-        return this.$store.getters.hasFeatureEnabled(FeatureFlagKeys.channel_quizzes);
       },
       isDocument() {
         return this.firstNode.kind === ContentKindsNames.DOCUMENT;
