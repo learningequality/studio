@@ -427,3 +427,5 @@ if key and len(key) > 0 and release_commit:
 
 
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
+
+LANGUAGE_COOKIE_AGE = 3600 * 24 * 14
