@@ -1,7 +1,5 @@
 import json
 from builtins import str
-from urllib.parse import urlsplit
-from urllib.parse import urlunsplit
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
@@ -16,7 +14,6 @@ from django.db.models.functions import Cast
 from django.http import HttpResponse
 from django.http import HttpResponseForbidden
 from django.http import HttpResponseNotFound
-from django.http import HttpResponseRedirect
 from django.shortcuts import redirect
 from django.shortcuts import render
 from django.urls import is_valid_path
@@ -54,7 +51,6 @@ from contentcuration.models import Language
 from contentcuration.models import License
 from contentcuration.models import TaskResult
 from contentcuration.serializers import SimplifiedChannelProbeCheckSerializer
-from contentcuration.utils.i18n import SUPPORTED_LANGUAGES
 from contentcuration.utils.messages import get_messages
 from contentcuration.viewsets.channelset import PublicChannelSetSerializer
 
@@ -344,82 +340,19 @@ def activate_channel_endpoint(request):
 
     return HttpResponse(json.dumps({"success": True}))
 
-# Taken from kolibri.core.views which was
-# modified from django.views.i18n
-# @require_POST
-# def set_language(request):
-#     """
-#     Since this view changes how the user will see the rest of the site, it must
-#     only be accessed as a POST request. If called as a GET request, it will
-#     error.
-#     """
-#     payload = json.loads(request.body)
-#     lang_code = payload.get(LANGUAGE_QUERY_PARAMETER)
-#     print(lang_code)
-#     next_url = urlsplit(payload.get("next")) if payload.get("next") else None
-#     if lang_code and lang_code in SUPPORTED_LANGUAGES:
-#         if next_url and is_valid_path(next_url.path):
-#             # If it is a recognized path, then translate it to the new language and return it.
-#             next_path = urlunsplit(
-#                 (
-#                     next_url[0],
-#                     next_url[1],
-#                     translate_url(next_url[2], lang_code),
-#                     next_url[3],
-#                     next_url[4],
-#                 )
-#             )
-#         else:
-#             # Just redirect to the base URL w/ the lang_code
-#             next_path = translate_url(reverse('base'), lang_code)
-#         response = HttpResponse(next_path)
-#         if hasattr(request, "session"):
-#             request.session[LANGUAGE_SESSION_KEY] = lang_code
-#         response.set_cookie(
-#             settings.LANGUAGE_COOKIE_NAME, lang_code,
-#             max_age=settings.LANGUAGE_COOKIE_AGE,
-#             path=settings.LANGUAGE_COOKIE_PATH,
-#             domain=settings.LANGUAGE_COOKIE_DOMAIN,
-#             secure=settings.LANGUAGE_COOKIE_SECURE,
-#             httponly=settings.LANGUAGE_COOKIE_HTTPONLY,
-#             samesite=settings.LANGUAGE_COOKIE_SAMESITE,
-#         )
-#     else:
-#         lang_code = get_language()
-#         if next_url and is_valid_path(next_url.path):
-#             # If it is a recognized path, then translate it using the default language code for this device
-#             next_path = urlunsplit(
-#                 (
-#                     next_url[0],
-#                     next_url[1],
-#                     translate_url(next_url[2], lang_code),
-#                     next_url[3],
-#                     next_url[4],
-#                 )
-#             )
-#         else:
-#             # Just redirect to the base URL w/ the lang_code, likely the default language
-#             next_path = translate_url(reverse('base'), lang_code)
-#         response = HttpResponse(next_path)
-#         if hasattr(request, "session"):
-#             request.session.pop(LANGUAGE_SESSION_KEY, "")
-#         response.delete_cookie(settings.LANGUAGE_COOKIE_NAME)
-#     return response
 
-
-@api_view(['POST', 'GET'])
+@require_POST
+# flake8: noqa: C901
 def set_language(request):
     """
-    Redirect to a given URL while setting the chosen language in the session
-    (if enabled) and in a cookie. The URL and the language code need to be
-    specified in the request parameters.
-
     Since this view changes how the user will see the rest of the site, it must
     only be accessed as a POST request. If called as a GET request, it will
-    redirect to the page in the request (the 'next' parameter) without changing
-    any state.
+    error.
     """
-    next_url = request.POST.get('next', request.GET.get('next'))
+    payload = json.loads(request.body)
+    lang_code = payload.get(LANGUAGE_QUERY_PARAMETER)
+    next_url = payload.get("next")
+
     if (
         (next_url or request.accepts('text/html')) and
         not url_has_allowed_host_and_scheme(
@@ -434,15 +367,16 @@ def set_language(request):
             allowed_hosts={request.get_host()},
             require_https=request.is_secure(),
         ):
-            next_url = '/'
-    response = HttpResponseRedirect(next_url) if next_url else HttpResponse(status=204)
+            next_url = translate_url(reverse('base'), lang_code)
+    if next_url and not is_valid_path(next_url):
+        next_url = translate_url(reverse('base'), lang_code)
+    response = HttpResponse(next_url) if next_url else HttpResponse(status=204)
     if request.method == 'POST':
-        lang_code = request.POST.get(LANGUAGE_QUERY_PARAMETER)
         if lang_code and check_for_language(lang_code):
             if next_url:
                 next_trans = translate_url(next_url, lang_code)
                 if next_trans != next_url:
-                    response = HttpResponseRedirect(next_trans)
+                    response = HttpResponse(next_trans)
             if hasattr(request, 'session'):
                 # Storing the language in the session is deprecated.
                 # (RemovedInDjango40Warning)
@@ -456,4 +390,14 @@ def set_language(request):
                 httponly=settings.LANGUAGE_COOKIE_HTTPONLY,
                 samesite=settings.LANGUAGE_COOKIE_SAMESITE,
             )
+        else:
+            lang_code = get_language()
+            if lang_code and check_for_language(lang_code):
+                if next_url:
+                    next_trans = translate_url(next_url, lang_code)
+                    if next_trans != next_url:
+                        response = HttpResponse(next_trans)
+            if hasattr(request, "session"):
+                request.session.pop(LANGUAGE_SESSION_KEY, "")
+
     return response

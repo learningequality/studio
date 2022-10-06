@@ -156,7 +156,7 @@ urlpatterns += [
 # Include all URLS prefixed by language
 urlpatterns += i18n_patterns(
     re_path(r'^$', views.base, name='base'),
-    # re_path(r"^i18n/setlang/$", views.set_language, name="set_language"),
+    re_path(r"^i18n/setlang/$", views.set_language, name="set_language"),
     re_path(r'^channels/$', views.channel_list, name='channels'),
     # Redirect deprecated staging URL to new URL
     re_path(r'^channels/(?P<channel_id>[^/]{32})/staging/$', StagingPageRedirectView.as_view(), name='staging_redirect'),
