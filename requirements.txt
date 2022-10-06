@@ -14,7 +14,7 @@ attrs==19.3.0
     # via
     #   -r requirements.in
     #   jsonschema
-backoff==2.1.2
+backoff==2.2.1
     # via -r requirements.in
 backports-abc==0.5
     # via -r requirements.in
