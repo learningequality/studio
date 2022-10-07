@@ -24,6 +24,9 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.serializers import CharField
 from rest_framework.serializers import FloatField
 from rest_framework.serializers import IntegerField
+from search.models import ChannelFullTextSearch
+from search.models import ContentNodeFullTextSearch
+from search.utils import get_fts_search_query
 
 from contentcuration.decorators import cache_no_user_data
 from contentcuration.models import Change
@@ -119,23 +122,15 @@ class BaseChannelFilter(RequiredFilterSet):
         return queryset.filter(deleted=value)
 
     def filter_keywords(self, queryset, name, value):
-        # TODO: Wait until we show more metadata on cards to add this back in
-        # keywords_query = self.main_tree_query.filter(
-        #     Q(tags__tag_name__icontains=value)
-        #     | Q(author__icontains=value)
-        #     | Q(aggregator__icontains=value)
-        #     | Q(provider__icontains=value)
-        # )
-        return queryset.annotate(
-            # keyword_match_count=SQCount(keywords_query, field="content_id"),
-            primary_token=primary_token_subquery,
-        ).filter(
-            Q(name__icontains=value)
-            | Q(description__icontains=value)
-            | Q(pk__istartswith=value)
-            | Q(primary_token=value.replace("-", ""))
-            # | Q(keyword_match_count__gt=0)
-        )
+        search_query = get_fts_search_query(value)
+        dash_replaced_search_query = get_fts_search_query(value.replace("-", ""))
+
+        channel_keywords_query = (Exists(ChannelFullTextSearch.objects.filter(
+            Q(keywords_tsvector=search_query) | Q(keywords_tsvector=dash_replaced_search_query), channel_id=OuterRef("id"))))
+        contentnode_search_query = (Exists(ContentNodeFullTextSearch.objects.filter(
+            Q(keywords_tsvector=search_query) | Q(author_tsvector=search_query), channel_id=OuterRef("id"))))
+
+        return queryset.filter(Q(channel_keywords_query) | Q(contentnode_search_query))
 
     def filter_languages(self, queryset, name, value):
         languages = value.split(",")
