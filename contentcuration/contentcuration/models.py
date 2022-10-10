@@ -216,12 +216,36 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def delete(self):
         """
-        Soft deletes the user.
+        Hard deletes invitation associated to this account, hard deletes channel and channet sets
+        only if user is the only editor. Then soft deletes the user account.
         """
+        from contentcuration.viewsets.common import SQCount
+
+        # Hard delete invitations associated to this account.
+        self.sent_to.all().delete()
+
+        # Hard delete channels associated with this user (if user is the only editor).
+        user_query = (
+            User.objects.filter(editable_channels__id=OuterRef('id'))
+                        .values_list('id', flat=True)
+                        .distinct()
+        )
+        self.editable_channels.annotate(num_editors=SQCount(user_query, field="id")).filter(num_editors=1).delete()
+
+        # Hard delete channel collections associated with this user (if user is the only editor).
+        user_query = (
+            User.objects.filter(channel_sets__id=OuterRef('id'))
+                        .values_list('id', flat=True)
+                        .distinct()
+        )
+        self.channel_sets.annotate(num_editors=SQCount(user_query, field="id")).filter(num_editors=1).delete()
+
+        # Soft delete user.
         self.deleted = True
         # Deactivate the user to disallow authentication and also
         # to let the user verify the email again after recovery.
         self.is_active = False
+
         self.save()
 
     def recover(self):
