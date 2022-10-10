@@ -200,6 +200,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     content_defaults = JSONField(default=dict)
     policies = JSONField(default=dict, null=True)
     feature_flags = JSONField(default=dict, null=True)
+    deleted = models.BooleanField(default=False, db_index=True)
 
     _field_updates = FieldTracker(fields=[
         # Field to watch for changes
@@ -214,27 +215,21 @@ class User(AbstractBaseUser, PermissionsMixin):
         return self.email
 
     def delete(self):
-        from contentcuration.viewsets.common import SQCount
-        # Remove any invitations associated to this account
-        self.sent_to.all().delete()
+        """
+        Soft deletes the user.
+        """
+        self.deleted = True
+        # Deactivate the user to disallow authentication and also
+        # to let the user verify the email again after recovery.
+        self.is_active = False
+        self.save()
 
-        # Delete channels associated with this user (if user is the only editor)
-        user_query = (
-            User.objects.filter(editable_channels__id=OuterRef('id'))
-                        .values_list('id', flat=True)
-                        .distinct()
-        )
-        self.editable_channels.annotate(num_editors=SQCount(user_query, field="id")).filter(num_editors=1).delete()
-
-        # Delete channel collections associated with this user (if user is the only editor)
-        user_query = (
-            User.objects.filter(channel_sets__id=OuterRef('id'))
-                        .values_list('id', flat=True)
-                        .distinct()
-        )
-        self.channel_sets.annotate(num_editors=SQCount(user_query, field="id")).filter(num_editors=1).delete()
-
-        super(User, self).delete()
+    def recover(self):
+        """
+        Use this method when we want to recover a user.
+        """
+        self.deleted = False
+        self.save()
 
     def can_edit(self, channel_id):
         return Channel.filter_edit_queryset(Channel.objects.all(), self).filter(pk=channel_id).exists()
@@ -406,17 +401,20 @@ class User(AbstractBaseUser, PermissionsMixin):
         return queryset.filter(pk=user.pk)
 
     @classmethod
-    def get_for_email(cls, email, **filters):
+    def get_for_email(cls, email, deleted=False, **filters):
         """
         Returns the appropriate User record given an email, ordered by:
          - those with is_active=True first, which there should only ever be one
          - otherwise by ID DESC so most recent inactive shoud be returned
 
+        Filters out deleted User records by default. Can be overridden with
+        deleted argument.
+
         :param email: A string of the user's email
         :param filters: Additional filters to filter the User queryset
         :return: User or None
         """
-        return User.objects.filter(email__iexact=email.strip(), **filters)\
+        return User.objects.filter(email__iexact=email.strip(), deleted=deleted, **filters)\
             .order_by("-is_active", "-id").first()
 
 

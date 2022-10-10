@@ -787,6 +787,7 @@ class UserTestCase(StudioTestCase):
         user1 = self._create_user("tester@tester.com", is_active=False)
         user2 = self._create_user("tester@Tester.com", is_active=False)
         user3 = self._create_user("Tester@Tester.com", is_active=True)
+        user4 = self._create_user("testing@test.com", is_active=True)
 
         # active should be returned first
         self.assertEqual(user3, User.get_for_email("tester@tester.com"))
@@ -800,6 +801,32 @@ class UserTestCase(StudioTestCase):
 
         # ensure nothing found doesn't error
         self.assertIsNone(User.get_for_email("tester@tester.com"))
+
+        # ensure we don't return soft-deleted users
+        user4.delete()
+        self.assertIsNone(User.get_for_email("testing@test.com"))
+
+    def test_delete__sets_deleted_true(self):
+        user = self._create_user("tester@tester.com")
+        user.delete()
+        self.assertEqual(user.deleted, True)
+
+    def test_delete__sets_is_active_false(self):
+        user = self._create_user("tester@tester.com")
+        user.delete()
+        self.assertEqual(user.is_active, False)
+
+    def test_recover__sets_deleted_false(self):
+        user = self._create_user("tester@tester.com")
+        user.delete()
+        user.recover()
+        self.assertEqual(user.deleted, False)
+
+    def test_recover__keeps_is_active_false(self):
+        user = self._create_user("tester@tester.com")
+        user.delete()
+        user.recover()
+        self.assertEqual(user.is_active, False)
 
 
 class ChannelHistoryTestCase(StudioTestCase):
