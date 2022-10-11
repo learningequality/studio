@@ -168,7 +168,7 @@ kombu==5.2.4
     # via celery
 le-utils==0.1.41
     # via -r requirements.in
-newrelic==6.2.0.156
+newrelic==8.2.1
     # via -r requirements.in
 oauth2client==4.1.3
     # via -r requirements.in
