@@ -9,27 +9,17 @@ from contentcuration.viewsets.websockets.routing import websocket_urlpatterns
 
 django.setup(set_prefix=False)
 
-if settings.DEBUG:
-    # Settings for development environment
-    application = ProtocolTypeRouter({
-        "websocket":
+protocol_config = {
+    "websocket":
         AuthMiddlewareStack(
             URLRouter(
                 websocket_urlpatterns
             )
         ),
-    })
-else:
-    # Settings for production environment
-    # we dont want to expose other url routes to daphne server
-    application = ProtocolTypeRouter({
-        "http":
-        URLRouter(http_urlpatterns),
+}
 
-        "websocket":
-        AuthMiddlewareStack(
-            URLRouter(
-                websocket_urlpatterns
-            )
-        ),
-    })
+# production settings to add healthcheck
+if not settings.DEBUG:
+    protocol_config.update(http=URLRouter(http_urlpatterns))
+
+application = ProtocolTypeRouter(protocol_config)

@@ -176,10 +176,10 @@ class SyncConsumer(WebsocketConsumer):
             'success': success
         }))
 
-# Consumer for handeling the only http request related with
-# Health check
-
 
 class HealthCheckHttpConsumer(AsyncHttpConsumer):
+    """
+    Consumer for handeling the only http request related with Health check
+    """
     async def handle(self, body):
         await self.send_response(200, b"OK")
