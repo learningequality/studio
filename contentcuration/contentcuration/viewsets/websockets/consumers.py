@@ -2,6 +2,7 @@ import json
 import logging as logger
 
 from asgiref.sync import async_to_sync
+from channels.generic.http import AsyncHttpConsumer
 from channels.generic.websocket import WebsocketConsumer
 
 from contentcuration.viewsets.sync.constants import CHANNEL
@@ -174,3 +175,11 @@ class SyncConsumer(WebsocketConsumer):
         self.send(text_data=json.dumps({
             'success': success
         }))
+
+# Consumer for handeling the only http request related with
+# Health check
+
+
+class HealthCheckHttpConsumer(AsyncHttpConsumer):
+    async def handle(self, body):
+        await self.send_response(200, b"OK")
