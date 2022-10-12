@@ -1435,6 +1435,11 @@ export const ContentNode = new TreeResource({
     return payload;
   },
 
+  /**
+   * Returns all ancestors of a node, including itself
+   * @param {String} id
+   * @return {Promise<Object[]>}
+   */
   getAncestors(id) {
     return this.table.get(id).then(node => {
       if (node) {
@@ -1464,6 +1469,9 @@ export const ContentNode = new TreeResource({
     return this.transaction({ mode: 'rw', source }, async () => {
       const ancestors = await this.getAncestors(id);
       for (let ancestor of ancestors) {
+        if (ancestor.id === id) {
+          continue;
+        }
         await this.update(ancestor.id, updateCallback(ancestor));
       }
     });
