@@ -2181,6 +2181,12 @@ class File(models.Model):
             2. fill the other fields accordingly
         """
         from contentcuration.utils.user import calculate_user_storage
+
+        # check if the file format exists in file_formats.choices
+        if self.file_format_id:
+            if self.file_format_id not in dict(file_formats.choices):
+                raise ValidationError("Invalid file_format")
+
         if set_by_file_on_disk and self.file_on_disk:  # if file_on_disk is supplied, hash out the file
             if self.checksum is None or self.checksum == "":
                 md5 = hashlib.md5()
