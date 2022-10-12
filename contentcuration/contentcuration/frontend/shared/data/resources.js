@@ -1036,7 +1036,12 @@ export const Channel = new Resource({
         () => {
           return Promise.all([
             db[CHANGES_TABLE].put(change),
-            ContentNode.table.where({ channel_id: id }).modify({ changed: false, published: true }),
+            ContentNode.table.where({ channel_id: id }).modify({
+              changed: false,
+              published: true,
+              has_new_descendants: false,
+              has_updated_descendants: false,
+            }),
           ]);
         }
       );
