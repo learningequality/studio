@@ -98,7 +98,7 @@ describe('ProgressModal', () => {
       });
 
       it('should display an error message', () => {
-        expect(wrapper.text()).toContain('Last publish failed.');
+        expect(wrapper.text()).toContain('Last attempt to publish failed');
       });
 
       it('should not display progress', () => {
@@ -189,7 +189,7 @@ describe('ProgressModal', () => {
       });
 
       it('should display error', () => {
-        expect(wrapper.text()).toContain('Last sync failed');
+        expect(wrapper.text()).toContain('Last attempt to sync failed');
       });
     });
 

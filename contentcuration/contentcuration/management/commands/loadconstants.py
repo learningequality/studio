@@ -135,7 +135,7 @@ SITES = [
         "fields": {
             "id": 2,
             "name": "Kolibri Studio (Debug Mode)",
-            "domain": "127.0.0.1:8000",
+            "domain": "127.0.0.1:8080",
         },
     },
     {
@@ -143,8 +143,17 @@ SITES = [
         "pk": "id",
         "fields": {
             "id": 3,
-            "name": "Kolibri Studio (Develop)",
-            "domain": "develop.contentworkshop.learningequality.org",
+            "name": "Kolibri Studio (Develop/Unstable)",
+            "domain": "unstable.studio.learningequality.org",
+        },
+    },
+    {
+        "model": Site,
+        "pk": "id",
+        "fields": {
+            "id": 4,
+            "name": "Kolibri Studio (Hotfixes)",
+            "domain": "hotfixes.studio.learningequality.org",
         },
     },
 ]

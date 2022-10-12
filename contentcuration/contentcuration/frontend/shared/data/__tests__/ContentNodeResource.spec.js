@@ -664,6 +664,7 @@ describe('ContentNode methods', () => {
         parent: parent.id,
         lft: 1,
         node_id: expect.not.stringMatching(new RegExp(`${node.node_id}|${parent.node_id}`)),
+        original_channel_id: node.original_channel_id || node.channel_id,
         original_source_node_id: node.original_source_node_id,
         source_channel_id: node.channel_id,
         source_node_id: node.node_id,

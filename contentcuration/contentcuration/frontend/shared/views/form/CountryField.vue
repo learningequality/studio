@@ -1,27 +1,35 @@
 <template>
 
-  <VAutocomplete
-    v-model="locations"
-    :items="options"
-    :label="label || $tr('locationLabel')"
-    :multiple="multiple"
-    :box="box"
-    item-value="id"
-    item-text="name"
-    :required="required"
-    :rules="rules"
-    :search-input.sync="searchInput"
-    :no-data-text="$tr('noCountriesFound')"
-    :chips="multiple"
-    clearable
-    v-bind="$attrs"
-    @change="searchInput = ''"
-  />
+  <DropdownWrapper>
+    <template #default="{ attach, menuProps }">
+      <VAutocomplete
+        v-model="locations"
+        :items="options"
+        :label="label || $tr('locationLabel')"
+        :multiple="multiple"
+        :box="box"
+        item-value="id"
+        item-text="name"
+        :required="required"
+        :rules="rules"
+        :search-input.sync="searchInput"
+        :no-data-text="$tr('noCountriesFound')"
+        :chips="multiple"
+        :attach="attach"
+        :menuProps="menuProps"
+        clearable
+        v-bind="$attrs"
+        @change="searchInput = ''"
+      />
+    </template>
+  </DropdownWrapper>
 
 </template>
 
 
 <script>
+
+  import DropdownWrapper from 'shared/views/form/DropdownWrapper';
 
   var countries = require('i18n-iso-countries');
   countries.registerLocale(require('i18n-iso-countries/langs/en.json'));
@@ -32,6 +40,9 @@
 
   export default {
     name: 'CountryField',
+    components: { DropdownWrapper },
+    // $attrs are rebound to a descendent component
+    inheritAttrs: false,
     props: {
       value: {
         type: [String, Array],

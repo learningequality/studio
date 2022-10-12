@@ -22,18 +22,12 @@ import Dexie from 'dexie';
 import flatMap from 'lodash/flatMap';
 import { CHANGE_TYPES } from './constants';
 import { INDEXEDDB_RESOURCES } from './registry';
-
-function applyModifications(obj, modifications) {
-  Object.keys(modifications).forEach(function(keyPath) {
-    Dexie.setByKeyPath(obj, keyPath, modifications[keyPath]);
-  });
-  return obj;
-}
+import { applyMods } from './applyRemoteChanges';
 
 function combineCreateAndUpdate(oldChange, newChange) {
   // Apply modifications to existing object.
   // Passed in object should be modifiable, so no need to clone.
-  applyModifications(oldChange.obj, newChange.mods);
+  applyMods(oldChange.obj, newChange.mods);
   return oldChange;
 }
 

@@ -8,11 +8,6 @@
       "title": "Test development feature",
       "description": "This no-op feature flag is excluded from non-dev environments",
       "$env": "development"
-    },
-    "channel_quizzes": {
-      "type": "boolean",
-      "title": "Channel quizzes",
-      "description": "Allows an exercise to be marked as a channel quiz"
     }
   },
   "examples": [

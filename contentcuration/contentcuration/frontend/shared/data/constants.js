@@ -7,6 +7,16 @@ export const CHANGE_TYPES = {
   PUBLISHED: 6,
   SYNCED: 7,
 };
+/**
+ * An array of change types that directly result in the creation of nodes
+ * @type {(number)[]}
+ */
+export const CREATION_CHANGE_TYPES = [CHANGE_TYPES.CREATED, CHANGE_TYPES.COPIED];
+/**
+ * An array of change types that directly result in changes to tree structure
+ * @type {(number)[]}
+ */
+export const TREE_CHANGE_TYPES = [CHANGE_TYPES.CREATED, CHANGE_TYPES.COPIED, CHANGE_TYPES.MOVED];
 
 // Tables
 export const CHANGES_TABLE = 'changesForSyncing';

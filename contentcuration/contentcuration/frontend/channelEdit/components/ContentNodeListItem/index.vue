@@ -331,8 +331,15 @@
         return null;
       },
       levels(level) {
-        const match = Object.keys(ContentLevel).find(key => ContentLevel[key] === level);
+        let match = Object.keys(ContentLevel).find(key => ContentLevel[key] === level);
         if (match) {
+          if (match === 'PROFESSIONAL') {
+            match = 'specializedProfessionalTraining';
+          } else if (match === 'WORK_SKILLS') {
+            match = 'allLevelsWorkSkills';
+          } else if (match === 'BASIC_SKILLS') {
+            match = 'allLevelsBasicSkills';
+          }
           return this.translateMetadataString(camelCase(match));
         }
         return null;

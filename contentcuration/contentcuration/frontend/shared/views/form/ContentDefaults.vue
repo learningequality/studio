@@ -41,14 +41,19 @@
         data-name="copyrightHolder"
         :label="$tr('copyrightHolder')"
       />
-      <VSelect
-        v-model="license"
-        box
-        data-name="license"
-        :items="licenseOpts"
-        :label="$tr('license')"
-        menuProps="offsetY"
-      />
+      <DropdownWrapper>
+        <template #default="{ attach, menuProps }">
+          <VSelect
+            v-model="license"
+            box
+            data-name="license"
+            :items="licenseOpts"
+            :label="$tr('license')"
+            :attach="attach"
+            :menuProps="menuProps"
+          />
+        </template>
+      </DropdownWrapper>
       <VTextarea
         v-if="isCustomLicense"
         v-model="licenseDescription"
@@ -104,6 +109,7 @@
   import { LicensesList } from 'shared/leUtils/Licenses';
   import { ContentDefaults, ContentDefaultsDefaults } from 'shared/constants';
   import { findLicense } from 'shared/utils/helpers';
+  import DropdownWrapper from 'shared/views/form/DropdownWrapper';
 
   function normalizeContentDefaults(contentDefaults) {
     return Object.entries(ContentDefaultsDefaults).reduce((normalized, [key, defaultValue]) => {
@@ -136,6 +142,7 @@
   export default {
     name: 'ContentDefaults',
     components: {
+      DropdownWrapper,
       Checkbox,
     },
     mixins: [constantsTranslationMixin],

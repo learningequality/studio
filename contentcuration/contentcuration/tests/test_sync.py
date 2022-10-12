@@ -6,6 +6,7 @@ from .base import StudioTestCase
 from .testdata import create_temp_file
 from contentcuration.models import AssessmentItem
 from contentcuration.models import Channel
+from contentcuration.models import ContentTag
 from contentcuration.utils.publish import mark_all_nodes_as_published
 from contentcuration.utils.sync import sync_channel
 
@@ -154,5 +155,104 @@ class SyncTestCase(StudioTestCase):
         self.assertEqual(target_ai.files.count(), ai.files.count())
 
         self.assertEqual(target_ai.files.filter(checksum=db_file.checksum).count(), 1)
+
+        self.assertTrue(self.derivative_channel.has_changes())
+
+    def test_sync_tags_add(self):
+        """
+        Test that calling sync_node_tags successfully syncs a tag added to the original node to
+        the copied node.
+        """
+
+        self.assertFalse(self.derivative_channel.has_changes())
+
+        contentnode = (
+            self.channel.main_tree.get_descendants()
+            .exclude(kind_id=content_kinds.TOPIC)
+            .first()
+        )
+
+        target_child = self.derivative_channel.main_tree.get_descendants().get(
+            source_node_id=contentnode.node_id
+        )
+
+        self.assertIsNotNone(target_child)
+        self.assertEqual(
+            target_child.tags.count(), contentnode.tags.count()
+        )
+
+        tag = ContentTag.objects.create(tag_name="tagname")
+
+        contentnode.tags.add(tag)
+
+        self.assertNotEqual(
+            target_child.tags.count(), contentnode.tags.count()
+        )
+
+        sync_channel(self.derivative_channel, sync_tags=True)
+        self.derivative_channel.main_tree.refresh_from_db()
+
+        self.assertEqual(
+            target_child.tags.count(), contentnode.tags.count()
+        )
+
+        self.assertEqual(
+            target_child.tags.filter(
+                tag_name=tag.tag_name
+            ).count(),
+            1,
+        )
+
+        self.assertTrue(self.derivative_channel.has_changes())
+
+    def test_sync_tags_add_multiple_tags(self):
+        """
+        Test that calling sync_node_tags does not raise an error when there
+        are multiple tags with the same tag_name and null channel_id.
+        """
+
+        self.assertFalse(self.derivative_channel.has_changes())
+
+        contentnode = (
+            self.channel.main_tree.get_descendants()
+            .exclude(kind_id=content_kinds.TOPIC)
+            .first()
+        )
+
+        target_child = self.derivative_channel.main_tree.get_descendants().get(
+            source_node_id=contentnode.node_id
+        )
+
+        self.assertIsNotNone(target_child)
+        self.assertEqual(
+            target_child.tags.count(), contentnode.tags.count()
+        )
+
+        # Create the same tag twice
+        ContentTag.objects.create(tag_name="tagname")
+
+        tag = ContentTag.objects.create(tag_name="tagname")
+
+        contentnode.tags.add(tag)
+
+        self.assertNotEqual(
+            target_child.tags.count(), contentnode.tags.count()
+        )
+        try:
+            sync_channel(self.derivative_channel, sync_tags=True)
+        except Exception as e:
+            self.fail("Could not run sync_channel without raising exception: {}".format(e))
+        self.derivative_channel.main_tree.refresh_from_db()
+
+        self.assertEqual(
+            target_child.tags.count(), contentnode.tags.count()
+        )
+
+        self.assertEqual(
+            target_child.tags.filter(
+                tag_name=tag.tag_name
+            ).count(),
+            1,
+        )
 
         self.assertTrue(self.derivative_channel.has_changes())

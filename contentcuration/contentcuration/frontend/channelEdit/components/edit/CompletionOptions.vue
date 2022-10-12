@@ -2,39 +2,27 @@
 
   <div>
     <!-- Layout when practice quizzes are enabled -->
-    <VLayout v-if="hideCompletionDropdown" xs6 md6>
+    <VLayout xs6 md6>
       <!-- "Completion" dropdown menu  -->
-      <VFlex v-if="!audioVideoResource" xs6 md6 class="completion-container pr-2">
-        <VSelect
-          ref="completion"
-          v-model="completionDropdown"
-          box
-          :items="showCorrectCompletionOptions"
-          :label="translateMetadataString('completion')"
-          :required="required"
-          :rules="completionRules"
-          :menu-props="{ offsetY: true, lazy: true, zIndex: 4 }"
-          attach=".completion-container"
-          @focus="trackClick('Completion')"
-        />
-      </VFlex>
+      <DropdownWrapper component="VFlex" xs6 md6 class="pr-2">
+        <template #default="{ attach, menuProps }">
+          <VSelect
+            ref="completion"
+            v-model="completionDropdown"
+            box
+            :items="showCorrectCompletionOptions"
+            :label="translateMetadataString('completion')"
+            :required="required"
+            :rules="completionRules"
+            :menu-props="menuProps"
+            :attach="attach"
+            @focus="trackClick('Completion')"
+          />
+        </template>
+      </DropdownWrapper>
       <VFlex>
         <MasteryCriteriaGoal
           v-if="showMasteryCriteriaGoalDropdown"
-          ref="mastery_model"
-          v-model="goal"
-          :placeholder="getPlaceholder('mastery_model')"
-          :required="isUnique(mastery_model)"
-          @focus="trackClick('Mastery model')"
-        />
-      </VFlex>
-    </VLayout>
-
-    <!-- Layout when practice quizzes are NOT enabled -->
-    <VLayout v-else xs6 md6>
-      <VFlex xs6 md6 class="pr-2">
-        <MasteryCriteriaGoal
-          v-if="kind === 'exercise'"
           ref="mastery_model"
           v-model="goal"
           :placeholder="getPlaceholder('mastery_model')"
@@ -60,21 +48,23 @@
     </VLayout>
 
     <VLayout row wrap>
-      <VFlex xs6 md6 class="completion-duration-container pr-2">
-        <VSelect
-          v-if="!hideDurationDropdown"
-          ref="duration"
-          v-model="durationDropdown"
-          box
-          :items="selectableDurationOptions"
-          :label="translateMetadataString('duration')"
-          :required="required"
-          :rules="durationRules"
-          :menu-props="{ offsetY: true, lazy: true, zIndex: 4 }"
-          attach=".completion-duration-container"
-          @focus="trackClick('Duration')"
-        />
-      </VFlex>
+      <DropdownWrapper component="VFlex" xs6 md6 class="pr-2">
+        <template #default="{ attach, menuProps }">
+          <VSelect
+            v-if="!hideDurationDropdown"
+            ref="duration"
+            v-model="durationDropdown"
+            box
+            :items="selectableDurationOptions"
+            :label="translateMetadataString('duration')"
+            :required="required"
+            :rules="durationRules"
+            :menu-props="{ ...menuProps, zIndex: 4 }"
+            :attach="attach"
+            @focus="trackClick('Duration')"
+          />
+        </template>
+      </DropdownWrapper>
 
       <!-- "Activity duration" minutes input -->
       <VFlex xs6 md6>
@@ -117,6 +107,7 @@
     translateValidator,
   } from 'shared/utils/validation';
   import { metadataStrings, metadataTranslationMixin } from 'shared/mixins';
+  import DropdownWrapper from 'shared/views/form/DropdownWrapper';
 
   const DEFAULT_SHORT_ACTIVITY = 600;
   const DEFAULT_LONG_ACTIVITY = 3000;
@@ -132,6 +123,7 @@
   export default {
     name: 'CompletionOptions',
     components: {
+      DropdownWrapper,
       ActivityDuration,
       MasteryCriteriaMofNFields,
       MasteryCriteriaGoal,
@@ -151,10 +143,6 @@
         type: Boolean,
         default: true,
       },
-      practiceQuizzesAllowed: {
-        type: Boolean,
-        default: true,
-      },
       value: {
         type: Object,
         required: false,
@@ -163,7 +151,6 @@
     },
     data() {
       return {
-        disabledReference: ['reference'],
         // required state because we need to know the durationDropdown before it is set in backend
         currentDurationDropdown: null,
         // required state because we need to know the completion to determine durationDropdown model
@@ -184,13 +171,6 @@
         }
         return false;
       },
-      hideCompletionDropdown() {
-        /*
-          This condition can be removed once practice quizzes are fully implemented in 0.16
-          Named "hide" instead of "show" because "show" is the default behavior
-          */
-        return this.practiceQuizzesAllowed;
-      },
       audioVideoResource() {
         return this.kind === ContentKindsNames.AUDIO || this.kind === ContentKindsNames.VIDEO;
       },
@@ -201,11 +181,9 @@
             return true;
           }
           return (
-            (this.currentCompletionDropdown === CompletionDropdownMap.reference &&
-              !this.audioVideoResource) ||
+            this.currentCompletionDropdown === CompletionDropdownMap.reference ||
             (this.value.model === CompletionCriteriaModels.REFERENCE &&
-              !this.currentCompletionDropdown &&
-              !this.audioVideoResource) ||
+              !this.currentCompletionDropdown) ||
             //should be hidden if model is reference and we're getting this from the BE
             this.currentCompletionDropdown === CompletionDropdownMap.determinedByResource
           );
@@ -338,6 +316,12 @@
               update.completion_criteria = {
                 model: CompletionCriteriaModels.PAGES,
                 threshold: '100%',
+              };
+            } else if (value === CompletionDropdownMap.reference) {
+              update.suggested_duration_type = null;
+              update.completion_criteria = {
+                model: CompletionCriteriaModels.REFERENCE,
+                threshold: null,
               };
             } else {
               update.suggested_duration_type = this.value.suggested_duration_type;
@@ -716,13 +700,22 @@
       },
       showCorrectCompletionOptions() {
         const CompletionOptionsDropdownMap = {
-          document: [CompletionDropdownMap.allContent, CompletionDropdownMap.completeDuration],
+          document: [
+            CompletionDropdownMap.allContent,
+            CompletionDropdownMap.completeDuration,
+            CompletionDropdownMap.reference,
+          ],
           exercise: [CompletionDropdownMap.goal, CompletionDropdownMap.practiceQuiz],
           html5: [
             CompletionDropdownMap.completeDuration,
             CompletionDropdownMap.determinedByResource,
+            CompletionDropdownMap.reference,
           ],
-          h5p: [CompletionDropdownMap.determinedByResource, CompletionDropdownMap.completeDuration],
+          h5p: [
+            CompletionDropdownMap.determinedByResource,
+            CompletionDropdownMap.completeDuration,
+            CompletionDropdownMap.reference,
+          ],
           audio: [CompletionDropdownMap.completeDuration, CompletionDropdownMap.reference],
           video: [CompletionDropdownMap.completeDuration, CompletionDropdownMap.reference],
         };
@@ -752,11 +745,6 @@
             value: CompletionCriteriaModels.APPROX_TIME,
             id: 'longActivity',
           },
-          {
-            text: this.translateMetadataString('readReference'),
-            value: CompletionCriteriaModels.REFERENCE,
-            id: 'reference',
-          },
         ];
       },
       /**
@@ -771,15 +759,12 @@
           return this.allPossibleDurationOptions.map(model => ({
             value: model.id,
             text: model.text,
-            disabled: this.disabledReference.includes(model.value),
           }));
         } else if (this.kind === ContentKindsNames.EXERCISE) {
-          return this.allPossibleDurationOptions
-            .filter(model => model.value !== CompletionCriteriaModels.REFERENCE)
-            .map(model => ({
-              value: model.id,
-              text: model.text,
-            }));
+          return this.allPossibleDurationOptions.map(model => ({
+            value: model.id,
+            text: model.text,
+          }));
         } else {
           return this.allPossibleDurationOptions.map(model => ({
             value: model.id,
@@ -870,14 +855,14 @@
     },
     $trs: {
       /* eslint-disable kolibri/vue-no-unused-translations */
-      allContent: 'All content viewed',
-      completeDuration: 'Complete duration',
-      determinedByResource: 'Determined by resource',
-      goal: 'Practice until goal is met',
+      allContent: 'Viewed in its entirety',
+      completeDuration: 'When time spent is equal to duration',
+      determinedByResource: 'Determined by the resource',
+      goal: 'When goal is met',
       practiceQuiz: 'Practice quiz',
+      reference: 'Reference material',
       /* eslint-enable */
-      exactTime: 'Exact time to complete',
-      reference: 'Reference',
+      exactTime: 'Time to complete',
       referenceHint:
         'Progress will not be tracked on reference material unless learners mark it as complete',
     },
@@ -885,10 +870,5 @@
 
 </script>
 <style lang="less" scoped>
-
-  .completion-container,
-  .completion-duration-container {
-    position: relative;
-  }
 
 </style>
