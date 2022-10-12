@@ -2,7 +2,12 @@ import flatMap from 'lodash/flatMap';
 import uniq from 'lodash/uniq';
 import { NEW_OBJECT, NOVALUE } from 'shared/constants';
 import client from 'shared/client';
-import { RELATIVE_TREE_POSITIONS, CHANGES_TABLE, TABLE_NAMES } from 'shared/data/constants';
+import {
+  RELATIVE_TREE_POSITIONS,
+  CHANGES_TABLE,
+  TABLE_NAMES,
+  IGNORED_SOURCE,
+} from 'shared/data/constants';
 import { ContentNode } from 'shared/data/resources';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 import { findLicense } from 'shared/utils/helpers';
@@ -152,8 +157,9 @@ export function createContentNode(context, { parent, kind, ...payload }) {
   const channel = context.rootGetters['currentChannel/currentChannel'];
   let contentDefaults = Object.assign({}, channel.content_defaults);
 
-  if (kind === ContentKindsNames.TOPIC) {
-    // Topics shouldn't have license, language or copyright info assigned.
+  const isFolder = kind === ContentKindsNames.TOPIC;
+  if (isFolder) {
+    // Folders shouldn't have license, language or copyright info assigned.
     contentDefaults = {};
   } else {
     // content_defaults for historical reason has stored the license as a string constant,
@@ -191,10 +197,19 @@ export function createContentNode(context, { parent, kind, ...payload }) {
     assessmentItems: [],
     files: [],
   });
-  return ContentNode.put(contentNodeData).then(id => {
+  return ContentNode.put(contentNodeData).then(async id => {
     context.commit('ADD_CONTENTNODE', {
       id,
       ...contentNodeData,
+    });
+    // Update ancestor's counts upon adding this new folder or resource
+    await ContentNode.updateAncestors({ id, source: IGNORED_SOURCE }, ancestor => {
+      return {
+        total_count: ancestor.total_count + 1,
+        resource_count: ancestor.resource_count + Number(!isFolder),
+        coach_count:
+          ancestor.coach_count + Number(contentNodeData.role_visibility === RolesNames.COACH),
+      };
     });
     return id;
   });
@@ -355,7 +370,20 @@ export function updateContentNode(context, { id, ...payload } = {}) {
   };
 
   context.commit('ADD_CONTENTNODE', { id, ...contentNodeData });
-  return ContentNode.update(id, contentNodeData);
+  return ContentNode.update(id, contentNodeData).then(async updated => {
+    // If the visibility changed, update ancestor coach counts appropriately
+    if (node.role_visibility !== contentNodeData.role_visibility) {
+      const coachCountDiff = contentNodeData.role_visibility === RolesNames.COACH ? 1 : -1;
+
+      await ContentNode.updateAncestors({ id, source: IGNORED_SOURCE }, ancestor => {
+        return {
+          coach_count: ancestor.coach_count + coachCountDiff,
+        };
+      });
+    }
+
+    return updated;
+  });
 }
 
 export function addTags(context, { ids, tags }) {
@@ -404,8 +432,25 @@ export function copyContentNode(
 ) {
   // First, this will parse the tree and create the copy the local tree nodes,
   // with a `source_id` of the source node then create the content node copies
-  return ContentNode.copy(id, target, position, excluded_descendants).then(node => {
+  return ContentNode.copy(id, target, position, excluded_descendants).then(async node => {
     context.commit('ADD_CONTENTNODE', node);
+
+    // Update ancestors' counts after copying
+    const resourceCountDiff =
+      node['kind'] === ContentKindsNames.TOPIC ? node['resource_count'] || 0 : 1;
+    const coachCountDiff =
+      node['kind'] === ContentKindsNames.TOPIC
+        ? node['coach_count'] || 0
+        : Number(node['role_visibility'] === RolesNames.COACH);
+
+    await ContentNode.updateAncestors({ id, source: IGNORED_SOURCE }, ancestor => {
+      return {
+        total_count: ancestor.total_count + (node['total_count'] || 1),
+        resource_count: ancestor.resource_count + resourceCountDiff,
+        coach_count: ancestor.coach_count + coachCountDiff,
+      };
+    });
+
     return node;
   });
 }
@@ -434,11 +479,37 @@ export function moveContentNodes(
   }
 
   return Promise.all(
-    id__in.map(id => {
-      return ContentNode.move(id, target, position).then(node => {
-        context.commit('ADD_CONTENTNODE', node);
-        return id;
+    id__in.map(async id => {
+      const node = context.getters.getContentNode(id) || {};
+
+      const resourceCountDiff =
+        node['kind'] === ContentKindsNames.TOPIC ? node['resource_count'] || 0 : 1;
+      const coachCountDiff =
+        node['kind'] === ContentKindsNames.TOPIC
+          ? node['coach_count'] || 0
+          : Number(node['role_visibility'] === RolesNames.COACH);
+
+      // Decrement ancestors' counts prior to the move
+      await ContentNode.updateAncestors({ id, source: IGNORED_SOURCE }, ancestor => {
+        return {
+          total_count: ancestor.total_count - (node['total_count'] || 1),
+          resource_count: ancestor.resource_count - resourceCountDiff,
+          coach_count: ancestor.coach_count - coachCountDiff,
+        };
       });
+
+      // Move the node and update Vuex state
+      context.commit('ADD_CONTENTNODE', await ContentNode.move(id, target, position));
+
+      // Increment ancestors' counts after the move
+      await ContentNode.updateAncestors({ id, source: IGNORED_SOURCE }, ancestor => {
+        return {
+          total_count: ancestor.total_count + (node['total_count'] || 1),
+          resource_count: ancestor.resource_count + resourceCountDiff,
+          coach_count: ancestor.coach_count + coachCountDiff,
+        };
+      });
+      return id;
     })
   );
 }

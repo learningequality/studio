@@ -1452,6 +1452,24 @@ export const ContentNode = new TreeResource({
   },
 
   /**
+   * Calls `updateCallback` on each ancestor, and calls `.update` for that ancestor
+   * with the return value from `updateCallback`
+   *
+   * @param {String} id
+   * @param {String|null} source
+   * @param {Function} updateCallback
+   * @return {Promise<void>}
+   */
+  updateAncestors({ id, source = null }, updateCallback) {
+    return this.transaction({ mode: 'rw', source }, async () => {
+      const ancestors = await this.getAncestors(id);
+      for (let ancestor of ancestors) {
+        await this.update(ancestor.id, updateCallback(ancestor));
+      }
+    });
+  },
+
+  /**
    * Uses local IndexedDB index on node_id+channel_id, otherwise specifically requests the
    * collection using the same params since GET detail endpoint doesn't support that the params
    *

@@ -97,7 +97,7 @@
                     >
                       {{ category(node.categories) }}
                     </span>
-                    <span v-if="(isTopic && node.coach_count) || isCoach">
+                    <span v-if="isTopic && node.coach_count">
                       <!-- for each learning activity -->
                       <VTooltip bottom lazy>
                         <template #activator="{ on }">
