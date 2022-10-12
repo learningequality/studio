@@ -12,7 +12,6 @@
  */
 import { precacheAndRoute } from 'workbox-precaching';
 
-console.log(self.__WB_MANIFEST);
 precacheAndRoute(self.__WB_MANIFEST);
 
 addEventListener('message', event => {
