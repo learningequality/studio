@@ -1,5 +1,6 @@
 import json
 from builtins import str
+from urllib.parse import urlsplit
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
@@ -352,6 +353,7 @@ def set_language(request):
     payload = json.loads(request.body)
     lang_code = payload.get(LANGUAGE_QUERY_PARAMETER)
     next_url = payload.get("next")
+    # next_url = urlsplit(payload.get("next")) if payload.get("next") else None
 
     if (
         (next_url or request.accepts('text/html')) and
@@ -368,7 +370,8 @@ def set_language(request):
             require_https=request.is_secure(),
         ):
             next_url = translate_url(reverse('base'), lang_code)
-    if next_url and not is_valid_path(next_url):
+    next_url_split = urlsplit(next_url) if next_url else None
+    if next_url and not is_valid_path(next_url_split.path):
         next_url = translate_url(reverse('base'), lang_code)
     response = HttpResponse(next_url) if next_url else HttpResponse(status=204)
     if request.method == 'POST':
