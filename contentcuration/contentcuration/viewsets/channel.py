@@ -481,23 +481,22 @@ class ChannelViewSet(ValuesViewset):
                     progress_tracker=progress_tracker,
                     language=language
                 )
-                Change.create_changes([
+                Change.create_change(
                     generate_update_event(
                         channel.id, CHANNEL, {
                             "published": True,
                             "publishing": False,
                             "primary_token": channel.get_human_token().token,
-                            "last_published": channel.last_published,
-                            "unpublished_changes": _unpublished_changes_query(channel.id).exists()
+                            "last_published": str(channel.last_published),
+                            "unpublished_changes": bool(_unpublished_changes_query(channel.id).exists())
                         }, channel_id=channel.id
-                    ),
-                ], applied=True)
+                    ), created_by_id=self.request.user.id, applied=True)
             except Exception:
                 Change.create_changes([
                     generate_update_event(
                         channel.id, CHANNEL, {"publishing": False, "unpublished_changes": True}, channel_id=channel.id
                     ),
-                ], applied=True)
+                ], created_by_id=self.request.user.id, applied=True)
                 raise
 
     def sync_from_changes(self, changes):

@@ -148,12 +148,15 @@ class ContentDefaultsSerializerUseTestCase(BaseAPITestCase):
             nested_writes = True
 
     def test_save__create(self):
+        class request:
+            user = self.user
+        context = {"request": request}
         s = self.ChannelSerializer(
             data=dict(
                 name="New test channel",
                 description="This is the best test channel",
                 content_defaults=dict(author="Buster"),
-            )
+            ), context=context
         )
 
         self.assertTrue(s.is_valid())
@@ -164,6 +167,9 @@ class ContentDefaultsSerializerUseTestCase(BaseAPITestCase):
         self.assertEqual(defaults, c.content_defaults)
 
     def test_save__update(self):
+        class request:
+            user = self.user
+        context = {"request": request}
         c = Channel(
             name="New test channel",
             description="This is the best test channel",
@@ -172,7 +178,7 @@ class ContentDefaultsSerializerUseTestCase(BaseAPITestCase):
         c.save()
 
         s = self.ChannelSerializer(
-            c, data=dict(content_defaults=dict(license="Special Permissions"))
+            c, data=dict(content_defaults=dict(license="Special Permissions")), context=context
         )
 
         self.assertTrue(s.is_valid())
