@@ -97,9 +97,11 @@ def sync_node_tags(node, original):
     for tag in original.tags.exclude(
         tag_name__in=node.tags.values_list("tag_name", flat=True)
     ):
-        new_tag, _ = ContentTag.objects.get_or_create(
+        new_tag = ContentTag.objects.filter(
             tag_name=tag.tag_name, channel_id=None,
-        )
+        ).first()
+        if not new_tag:
+            new_tag = ContentTag.objects.create(tag_name=tag.tag_name, channel_id=None)
         node.tags.add(new_tag)
         node.changed = True
 

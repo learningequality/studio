@@ -1,61 +1,66 @@
 <template>
 
-  <div class="category-container">
-    <VAutocomplete
-      :value="selected"
-      :items="categoriesList"
-      :searchInput.sync="categoryText"
-      :label="translateMetadataString('category')"
-      box
-      clearable
-      chips
-      deletableChips
-      multiple
-      item-value="value"
-      item-text="text"
-      :menu-props="{ offsetY: true, lazy: true, zIndex: 4 }"
-      attach=".category-container"
-      @click:clear="$nextTick(() => removeAll())"
-    >
-      <template #selection="data">
-        <VTooltip bottom lazy>
-          <template #activator="{ on, attrs }">
-            <VChip v-bind="attrs" close v-on="on" @input="remove(data.item.value)">
-              {{ data.item.text }}
-            </VChip>
-          </template>
-          <div>
-            <div>{{ tooltipHelper(data.item.value) }}</div>
-          </div>
-        </VTooltip>
-      </template>
+  <DropdownWrapper>
+    <template #default="{ attach, menuProps }">
+      <VAutocomplete
+        :value="selected"
+        :items="categoriesList"
+        :searchInput.sync="categoryText"
+        :label="translateMetadataString('category')"
+        box
+        clearable
+        chips
+        deletableChips
+        multiple
+        item-value="value"
+        item-text="text"
+        :menu-props="{ ...menuProps, zIndex: 4 }"
+        :attach="attach"
+        @click:clear="$nextTick(() => removeAll())"
+      >
+        <template #selection="data">
+          <VTooltip bottom lazy>
+            <template #activator="{ on, attrs }">
+              <VChip v-bind="attrs" close v-on="on" @input="remove(data.item.value)">
+                {{ data.item.text }}
+              </VChip>
+            </template>
+            <div>
+              <div>{{ tooltipHelper(data.item.value) }}</div>
+            </div>
+          </VTooltip>
+        </template>
 
-      <template #no-data>
-        <VListTile v-if="categoryText && categoryText.trim()">
-          <VListTileContent>
-            <VListTileTitle>
-              {{ $tr('noCategoryFoundText', { text: categoryText.trim() }) }}
-            </VListTileTitle>
-          </VListTileContent>
-        </VListTile>
-      </template>
+        <template #no-data>
+          <VListTile v-if="categoryText && categoryText.trim()">
+            <VListTileContent>
+              <VListTileTitle>
+                {{ $tr('noCategoryFoundText', { text: categoryText.trim() }) }}
+              </VListTileTitle>
+            </VListTileContent>
+          </VListTile>
+        </template>
 
-      <template #item="{ item }">
-        <div style="width: 100%; height: 100%">
-          <VDivider v-if="!item.value.includes('.')" />
-          <KCheckbox
-            :checked="dropdownSelected[item.value]"
-            :label="item.text"
-            :value="item.value"
-            style="margin-top: 10px"
-            :style="treeItemStyle(item)"
-            :ripple="false"
-            @change="checked => checked ? add(item.value) : remove(item.value)"
-          />
-        </div>
-      </template>
-    </VAutocomplete>
-  </div>
+        <template #item="{ item }">
+          <VListTile
+            :value="isSelected(item.value)"
+            :class="{ parentOption: !item.value.includes('.') }"
+            @mousedown.prevent
+            @click="() => !isSelected(item.value) ? add(item.value) : remove(item.value)"
+          >
+            <KCheckbox
+              :checked="isSelected(item.value)"
+              :label="item.text"
+              :value="item.value"
+              style="margin-top: 10px"
+              :style="treeItemStyle(item)"
+              :ripple="false"
+            />
+          </VListTile>
+        </template>
+      </VAutocomplete>
+    </template>
+  </DropdownWrapper>
 
 </template>
 
@@ -64,6 +69,7 @@
   import camelCase from 'lodash/camelCase';
   import { constantsTranslationMixin, metadataTranslationMixin } from 'shared/mixins';
   import { Categories, CategoriesLookup } from 'shared/constants';
+  import DropdownWrapper from 'shared/views/form/DropdownWrapper';
 
   const availablePaths = {};
   const categoriesObj = {};
@@ -121,6 +127,7 @@
 
   export default {
     name: 'CategoryOptions',
+    components: { DropdownWrapper },
     mixins: [constantsTranslationMixin, metadataTranslationMixin],
     props: {
       value: {
@@ -143,19 +150,6 @@
           };
         });
       },
-      dropdownSelected() {
-        const obj = {};
-        for (let category of this.selected) {
-          const paths = category.split('.');
-          let cat = '';
-          for (let path of paths) {
-            cat += path;
-            obj[cat] = true;
-            cat += '.';
-          }
-        }
-        return obj;
-      },
       selected: {
         get() {
           return this.value;
@@ -167,16 +161,19 @@
       nested() {
         return !this.categoryText;
       },
+      isSelected() {
+        return value => this.selected.some(v => v.startsWith(value));
+      },
     },
     methods: {
       treeItemStyle(item) {
         return this.nested ? { paddingLeft: `${item.level * 24}px` } : {};
       },
-      add(item) {
-        this.selected = [...this.selected, item];
+      add(value) {
+        this.selected = [...this.selected, value];
       },
-      remove(item) {
-        this.selected = this.selected.filter(i => !i.startsWith(item));
+      remove(value) {
+        this.selected = this.selected.filter(i => !i.startsWith(value));
       },
       removeAll() {
         this.selected = [];
@@ -216,16 +213,8 @@
 </script>
 <style lang="less" scoped>
 
-  .category-container {
-    position: relative;
-  }
-
-  /deep/ .v-list__tile {
-    flex-wrap: wrap;
-  }
-
-  /deep/ div[role='listitem']:first-child hr {
-    display: none;
+  .parentOption:not(:first-child) {
+    border-top: 1px solid rgba(0, 0, 0, 0.12);
   }
 
 </style>

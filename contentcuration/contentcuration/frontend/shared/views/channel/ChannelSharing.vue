@@ -26,20 +26,24 @@
             @input="error = null"
           />
         </VFlex>
-        <VFlex shrink>
-          <VSelect
-            v-model="shareMode"
-            box
-            color="primary"
-            menu-props="offsetY"
-            :items="permissions"
-            item-value="id"
-            item-text="text"
-            style="max-width: 200px;"
-            single-line
-            hide-details
-          />
-        </VFlex>
+        <DropdownWrapper component="VFlex" shrink :menuHeight="120">
+          <template #default="{ attach, menuProps }">
+            <VSelect
+              v-model="shareMode"
+              box
+              color="primary"
+              menu-props="offsetY"
+              :items="permissions"
+              item-value="id"
+              item-text="text"
+              style="max-width: 200px;"
+              single-line
+              hide-details
+              :attach="attach"
+              :menuProps="menuProps"
+            />
+          </template>
+        </DropdownWrapper>
       </VLayout>
       <VBtn color="primary" type="submit" :disabled="sharing">
         {{ $tr('inviteButton') }}
@@ -63,10 +67,12 @@
   import ChannelSharingTable from './ChannelSharingTable';
   import LoadingText from 'shared/views/LoadingText';
   import { SharingPermissions } from 'shared/constants';
+  import DropdownWrapper from 'shared/views/form/DropdownWrapper';
 
   export default {
     name: 'ChannelSharing',
     components: {
+      DropdownWrapper,
       LoadingText,
       ChannelSharingTable,
     },

@@ -442,4 +442,4 @@ class UploadFileURLTestCase(StudioAPITestCase):
         response = self.client.post(reverse("file-upload-url"), self.file, format="json",)
         self.assertEqual(response.status_code, 200)
         file = models.File.objects.get(checksum=self.file["checksum"])
-        self.assertEqual(11, file.duration)
+        self.assertEqual(10, file.duration)

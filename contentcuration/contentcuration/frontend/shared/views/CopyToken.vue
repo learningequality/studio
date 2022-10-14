@@ -3,8 +3,8 @@
   <VTextField
     v-if="token"
     v-model="displayToken"
-    :title="$tr('copyPrompt')"
-    appendIcon="content_copy"
+    :title="clipboardAvailable ? $tr('copyPrompt') : ''"
+    :appendIcon="clipboardAvailable ? 'content_copy' : null"
     readonly
     color="primary"
     :hideDetails="true"
@@ -46,20 +46,25 @@
       displayToken() {
         return this.hyphenate ? this.token.slice(0, 5) + '-' + this.token.slice(5) : this.token;
       },
+      clipboardAvailable() {
+        return Boolean(navigator.clipboard);
+      },
     },
     methods: {
       copyToken() {
-        navigator.clipboard
-          .writeText(this.displayToken)
-          .then(() => {
-            let text = this.successText || this.$tr('copiedTokenId');
-            this.$store.dispatch('showSnackbar', { text });
-            this.$analytics.trackEvent('copy_token');
-            this.$emit('copied');
-          })
-          .catch(() => {
-            this.$store.dispatch('showSnackbar', { text: this.$tr('copyFailed') });
-          });
+        if (this.clipboardAvailable) {
+          navigator.clipboard
+            .writeText(this.displayToken)
+            .then(() => {
+              let text = this.successText || this.$tr('copiedTokenId');
+              this.$store.dispatch('showSnackbar', { text });
+              this.$analytics.trackEvent('copy_token');
+              this.$emit('copied');
+            })
+            .catch(() => {
+              this.$store.dispatch('showSnackbar', { text: this.$tr('copyFailed') });
+            });
+        }
       },
     },
     $trs: {

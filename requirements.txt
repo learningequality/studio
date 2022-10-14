@@ -14,7 +14,7 @@ attrs==19.3.0
     # via
     #   -r requirements.in
     #   jsonschema
-backoff==2.1.2
+backoff==2.2.1
     # via -r requirements.in
 backports-abc==0.5
     # via -r requirements.in
@@ -191,12 +191,12 @@ proto-plus==1.18.1
     # via
     #   google-cloud-error-reporting
     #   google-cloud-logging
-protobuf==3.17.0
+protobuf==3.18.3
     # via
     #   google-api-core
     #   googleapis-common-protos
     #   proto-plus
-psycopg2-binary==2.9.3
+psycopg2-binary==2.9.4
     # via -r requirements.in
 pyasn1==0.4.8
     # via
@@ -257,7 +257,6 @@ six==1.16.0
     #   html5lib
     #   oauth2client
     #   progressbar2
-    #   protobuf
     #   python-dateutil
     #   python-utils
 sqlparse==0.4.1

@@ -1,20 +1,24 @@
 <template>
 
-  <div class="resources-needed-container">
-    <VSelect
-      ref="need"
-      v-model="need"
-      :items="resources"
-      box
-      chips
-      :label="$tr('resourcesNeededLabel')"
-      multiple
-      deletableChips
-      clearable
-      :menu-props="{ offsetY: true, lazy: true, zIndex: 4 }"
-      :attach="$attrs.id ? `#${$attrs.id}` : '.resources-needed-container'"
-    />
-  </div>
+  <DropdownWrapper>
+    <template #default="{ attach, menuProps }">
+      <VSelect
+        ref="need"
+        v-model="need"
+        :items="resources"
+        box
+        chips
+        :label="$tr('resourcesNeededLabel')"
+        multiple
+        deletableChips
+        clearable
+        :menu-props="menuProps"
+        :attach="attach"
+        :hint="hint"
+        persistent-hint
+      />
+    </template>
+  </DropdownWrapper>
 
 </template>
 
@@ -22,31 +26,20 @@
 
   import { ResourcesNeededTypes } from 'shared/constants';
   import { constantsTranslationMixin, metadataTranslationMixin } from 'shared/mixins';
+  import DropdownWrapper from 'shared/views/form/DropdownWrapper';
 
-  /**
-   * @param {array} listOfKeys
-   * @returns {Object}
-   *
-   * Determines resources to show in the dropdown, to remove resources
-   * that do not currently need to be displayed in Kolibri
-   */
-  export function updateResourcesDropdown(listOfKeys) {
-    if (listOfKeys) {
-      return Object.keys(ResourcesNeededTypes).reduce((acc, key) => {
-        if (listOfKeys.indexOf(key) === -1) {
-          acc[key] = ResourcesNeededTypes[key];
-        }
-        return acc;
-      }, {});
-    }
-  }
-
-  //the variable below can be changed or removed when metadata/Kolibri is updated
-  const keysToBeTemporarilyRemoved = ['PEERS', 'TEACHER', 'PRIOR_KNOWLEDGE', 'MATERIALS'];
-  const dropdown = updateResourcesDropdown(keysToBeTemporarilyRemoved) || ResourcesNeededTypes;
+  const dropdownItems = [
+    'PEERS',
+    'TEACHER',
+    'INTERNET',
+    'SPECIAL_SOFTWARE',
+    'PAPER_PENCIL',
+    'OTHER_SUPPLIES',
+  ];
 
   export default {
     name: 'ResourcesNeededOptions',
+    components: { DropdownWrapper },
     mixins: [constantsTranslationMixin, metadataTranslationMixin],
     props: {
       value: {
@@ -64,22 +57,25 @@
         },
       },
       resources() {
-        return Object.entries(dropdown).map(resource => ({
-          text: this.translateMetadataString(resource[0]),
-          value: resource[1],
+        return dropdownItems.map(key => ({
+          text: this.translateMetadataString(key),
+          value: ResourcesNeededTypes[key],
         }));
+      },
+      hint() {
+        return this.value && this.value.includes(ResourcesNeededTypes.OTHER_SUPPLIES)
+          ? this.$tr('furtherExplanation')
+          : '';
       },
     },
     $trs: {
-      resourcesNeededLabel: 'What you will need',
+      resourcesNeededLabel: 'Requirements',
+      furtherExplanation:
+        "Please add to the 'Description' field any additional supplies learners will need in order to use this resource",
     },
   };
 
 </script>
 <style lang="less">
-
-  .resources-needed-container {
-    position: relative;
-  }
 
 </style>

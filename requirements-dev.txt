@@ -66,7 +66,7 @@ django-concurrent-test-helper==0.7.0
     # via -r requirements-dev.in
 django-debug-panel==0.8.3
     # via -r requirements-dev.in
-django-debug-toolbar==1.9.1
+django-debug-toolbar==3.5.0
     # via
     #   -r requirements-dev.in
     #   django-debug-panel

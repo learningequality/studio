@@ -90,8 +90,7 @@ def send_invitation_email(request):
                     'channel_id': channel_id,
                     'invitation_key': invitation.id,
                     'channel': channel.name,
-                    'domain': request.META.get('HTTP_ORIGIN') or "https://{}".format(
-                        request.get_host() or Site.objects.get_current().domain),
+                    'domain': "https://{}".format(Site.objects.get_current().domain),
                     }
         subject = render_to_string('permissions/permissions_email_subject.txt', ctx_dict)
         message = render_to_string('permissions/permissions_email.txt', ctx_dict)
@@ -255,7 +254,10 @@ class UserActivationView(ActivationView):
             )
             # Send email to welcome new user
             subject = render_to_string("registration/welcome_new_user_email_subject.txt")
-            message = render_to_string("registration/welcome_new_user_email.html", {})
+            message = render_to_string(
+                "registration/welcome_new_user_email.html",
+                {"domain": "https://{}".format(Site.objects.get_current().domain)}
+            )
             user.email_user(
                 subject,
                 message,
@@ -271,12 +273,9 @@ class UserPasswordResetView(PasswordResetView):
     http_method_names = ["post"]
 
     def post(self, request):
-        protocol = "https" if request.is_secure() else "http"
-        site = request.get_host() or Site.objects.get_current().domain
         email_context = {
             "site": get_current_site(request),
-            "domain": request.META.get("HTTP_ORIGIN")
-            or "{}://{}".format(protocol, site),
+            "domain": "https://{}".format(Site.objects.get_current().domain),
         }
         form = self.form_class(json.loads(request.body))
         if form.is_valid():

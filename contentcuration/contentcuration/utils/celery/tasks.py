@@ -1,3 +1,4 @@
+import logging
 import math
 import uuid
 
@@ -6,6 +7,9 @@ from celery.app.task import Task
 from celery.result import AsyncResult
 
 from contentcuration.utils.sentry import report_exception
+
+
+logger = logging.getLogger(__name__)
 
 
 class ProgressTracker:
@@ -174,6 +178,8 @@ class CeleryTask(Task):
         task_id = uuid.uuid4().hex
         channel_id = kwargs.get("channel_id")
 
+        logging.info(f"Enqueuing task:id {self.name}:{task_id} for user:channel {user.pk}:{channel_id} | {kwargs}")
+
         # returns a CeleryAsyncResult
         async_result = self.apply_async(
             task_id=task_id,
@@ -205,7 +211,9 @@ class CeleryTask(Task):
             if task_ids:
                 async_result = self.fetch_match(task_ids[0], **kwargs)
                 if async_result:
+                    logging.info(f"Fetched matching task {self.name} for user {user.pk} with id {async_result.id} | {kwargs}")
                     return async_result
+        logging.info(f"Didn't fetch matching task {self.name} for user {user.pk} | {kwargs}")
         return self.enqueue(user, **kwargs)
 
     def requeue(self, **kwargs):
@@ -221,6 +229,7 @@ class CeleryTask(Task):
         task_result = get_task_model(self, request.id)
         task_kwargs = request.kwargs.copy()
         task_kwargs.update(kwargs)
+        logging.info(f"Re-queuing task {self.name} for user {task_result.user.pk} from {request.id} | {task_kwargs}")
         return self.enqueue(task_result.user, **task_kwargs)
 
 

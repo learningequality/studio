@@ -38,7 +38,7 @@
 <script>
 
   import { mapActions, mapGetters } from 'vuex';
-  import { RouteNames } from '../constants';
+  import { RouteNames, TabNames } from '../constants';
   import MoveModal from './move/MoveModal';
   import { ContentNode } from 'shared/data/resources';
   import { withChangeTracker } from 'shared/data/changes';
@@ -119,6 +119,7 @@
             params: {
               ...this.$route.params,
               detailNodeIds: newId,
+              tab: TabNames.DETAILS,
             },
           });
         });

@@ -3,7 +3,7 @@
   <VCard @click="handleClick">
     <VCardTitle>
       <VLayout row wrap>
-        <VFlex lg2 md4 sm5 xs12 class="pt-2 px-4">
+        <VFlex class="pt-2 px-4 thumbnail-column">
           <Thumbnail
             :src="node.thumbnail_src"
             :kind="node.kind"
@@ -11,7 +11,7 @@
           />
         </VFlex>
 
-        <VFlex lg10 md8 sm7 xs12 class="px-4">
+        <VFlex class="info-column px-4">
           <h3
             class="font-weight-bold mt-2 text-truncate title"
             :class="getTitleClass(node)"
@@ -149,7 +149,7 @@
         if (this.isTopic) {
           return `${baseUrl}#/${this.node.id}`;
         }
-        return `${baseUrl}#/${this.node.parent}/${this.node.id}`;
+        return `${baseUrl}#/${this.node.parent_id}/${this.node.id}`;
       },
       resourcesMsg() {
         let count;
@@ -160,13 +160,8 @@
         }
         return this.$tr('resourcesCount', { count });
       },
-      numLocations() {
-        return this.node.location_ids.length;
-      },
       goToLocationLabel() {
-        return this.numLocations > 1
-          ? this.$tr('goToPluralLocationsAction', { count: this.numLocations })
-          : this.$tr('goToSingleLocationAction');
+        return this.$tr('goToSingleLocationAction');
       },
       isTopic() {
         return this.node.kind === ContentKindsNames.TOPIC;
@@ -189,8 +184,6 @@
     $trs: {
       tagsList: 'Tags: {tags}',
       goToSingleLocationAction: 'Go to location',
-      goToPluralLocationsAction:
-        'In {count, number} {count, plural, one {location} other {locations}}',
       addToClipboardAction: 'Copy to clipboard',
       resourcesCount: '{count, number} {count, plural, one {resource} other {resources}}',
       coach: 'Resource for coaches',
@@ -204,6 +197,15 @@
 
 
 <style lang="less" scoped>
+
+  .thumbnail-column {
+    flex-basis: 33%;
+    max-width: 220px;
+  }
+
+  .info-column {
+    flex-basis: 67%;
+  }
 
   .show-more-btn {
     margin-left: -7px;

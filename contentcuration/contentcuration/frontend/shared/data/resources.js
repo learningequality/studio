@@ -26,6 +26,8 @@ import {
   CHANNEL_SYNC_KEEP_ALIVE_INTERVAL,
   MAX_REV_KEY,
   LAST_FETCHED,
+  CREATION_CHANGE_TYPES,
+  TREE_CHANGE_TYPES,
 } from './constants';
 import applyChanges, { applyMods, collectChanges } from './applyRemoteChanges';
 import mergeAllChanges from './mergeChanges';
@@ -685,27 +687,45 @@ class Resource extends mix(APIResource, IndexedDBResource) {
       if (objs === EMPTY_ARRAY) {
         return [];
       }
-      if (!objs.length && !objs.count) {
-        return this.fetchCollection(params);
-      }
-      if (doRefresh) {
-        // Only fetch new updates if we've finished syncing the changes table
-        db[CHANGES_TABLE].where('table')
-          .equals(this.tableName)
-          .limit(1)
-          .toArray()
-          .then(pendingChanges => {
-            if (pendingChanges.length === 0) {
-              this.fetchCollection(params);
-            }
-          });
+      // if there are no objects, and it's also not an empty paginated response (objs.count),
+      // or we mean to refresh
+      if ((!objs.length && !objs.count) || doRefresh) {
+        let refresh = Promise.resolve(true);
+        // ContentNode tree operations are the troublemakers causing the logic below
+        if (this.tableName === TABLE_NAMES.CONTENTNODE) {
+          // Only fetch new updates if we don't have pending changes to ContentNode that
+          // affect tree structure
+          refresh = db[CHANGES_TABLE].where('table')
+            .equals(TABLE_NAMES.CONTENTNODE)
+            .filter(c => TREE_CHANGE_TYPES.includes(c.type))
+            .count()
+            .then(pendingCount => pendingCount === 0);
+        }
+
+        const fetch = refresh.then(shouldFetch => {
+          return shouldFetch ? this.fetchCollection(params) : [];
+        });
+        // Be sure to return the fetch promise to relay fetched objects in this condition
+        if (!objs.length && !objs.count) {
+          return fetch;
+        }
       }
       return objs;
     });
   }
 
   headModel(id) {
-    return client.head(this.modelUrl(id));
+    // If the resource identified by `id` has just been created, but we haven't verified
+    // the server has applied the change yet, we skip making the HEAD request for it
+    return db[CHANGES_TABLE].where('[table+key]')
+      .equals([this.tableName, id])
+      .filter(c => CREATION_CHANGE_TYPES.includes(c.type))
+      .count()
+      .then(pendingCount => {
+        if (pendingCount === 0) {
+          return client.head(this.modelUrl(id));
+        }
+      });
   }
 
   fetchModel(id) {
@@ -1016,7 +1036,12 @@ export const Channel = new Resource({
         () => {
           return Promise.all([
             db[CHANGES_TABLE].put(change),
-            ContentNode.table.where({ channel_id: id }).modify({ changed: false, published: true }),
+            ContentNode.table.where({ channel_id: id }).modify({
+              changed: false,
+              published: true,
+              has_new_descendants: false,
+              has_updated_descendants: false,
+            }),
           ]);
         }
       );
@@ -1392,6 +1417,7 @@ export const ContentNode = new TreeResource({
       // Placeholder node_id, we should receive the new value from backend result
       node_id: uuid4(),
       original_source_node_id: node.original_source_node_id || node.node_id,
+      original_channel_id: node.original_channel_id || node.channel_id,
       source_channel_id: node.channel_id,
       source_node_id: node.node_id,
       channel_id: parent.channel_id,
@@ -1791,6 +1817,10 @@ export const Task = new IndexedDBResource({
   tableName: TABLE_NAMES.TASK,
   idField: 'task_id',
   setTasks(tasks) {
+    for (let task of tasks) {
+      // Coerce channel_id to be a simple hex string
+      task.channel_id = task.channel_id.replace('-', '');
+    }
     return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
       return this.table
         .where(this.idField)

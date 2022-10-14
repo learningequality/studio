@@ -6,7 +6,14 @@
         {{ value }}
       </div>
     </VChip>
-    <VBtn icon small right data-test="copy" @click="copyToClipboard">
+    <VBtn
+      v-if="clipboardAvailable"
+      icon
+      small
+      right
+      data-test="copy"
+      @click="copyToClipboard"
+    >
       <Icon small>
         content_copy
       </Icon>
@@ -30,11 +37,18 @@
         type: String,
       },
     },
+    computed: {
+      clipboardAvailable() {
+        return Boolean(navigator.clipboard);
+      },
+    },
     methods: {
       copyToClipboard() {
-        navigator.clipboard.writeText(this.value).then(() => {
-          this.$store.dispatch('showSnackbarSimple', this.successMessage);
-        });
+        if (this.clipboardAvailable) {
+          navigator.clipboard.writeText(this.value).then(() => {
+            this.$store.dispatch('showSnackbarSimple', this.successMessage);
+          });
+        }
       },
     },
   };

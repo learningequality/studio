@@ -3,16 +3,26 @@
   <VContainer class="mx-0 px-0">
     <!-- Filters -->
     <VLayout row wrap>
-      <VFlex sm6 md5 lg4 xl3 class="pr-4">
-        <VSelect
-          v-model="channelFilter"
-          :label="$tr('channelFilterLabel')"
-          :items="channelFilterOptions"
-          :menu-props="{ offsetY: true }"
-          :disabled="loading"
-          box
-        />
-      </VFlex>
+      <DropdownWrapper
+        component="VFlex"
+        sm6
+        md5
+        lg4
+        xl3
+        class="pr-4"
+      >
+        <template #default="{ attach, menuProps }">
+          <VSelect
+            v-model="channelFilter"
+            :label="$tr('channelFilterLabel')"
+            :items="channelFilterOptions"
+            :attach="attach"
+            :menu-props="menuProps"
+            :disabled="loading"
+            box
+          />
+        </template>
+      </DropdownWrapper>
       <VFlex sm6 md5 lg4 xl3 class="pr-5">
         <LanguageDropdown v-model="languageFilter" />
       </VFlex>
@@ -48,10 +58,12 @@
   import Pagination from 'shared/views/Pagination';
   import LoadingText from 'shared/views/LoadingText';
   import { constantsTranslationMixin } from 'shared/mixins';
+  import DropdownWrapper from 'shared/views/form/DropdownWrapper';
 
   export default {
     name: 'ChannelList',
     components: {
+      DropdownWrapper,
       ChannelInfoCard,
       LanguageDropdown,
       Pagination,
@@ -112,6 +124,8 @@
           [this.channelFilter]: true,
           page: this.$route.query.page || 1,
           exclude: this.currentChannelId,
+          ordering: this.channelFilter === 'public' ? 'name' : '-modified',
+          published: true,
         }).then(page => {
           this.pageCount = page.total_pages;
           this.channels = page.results;
