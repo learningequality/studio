@@ -353,7 +353,6 @@ def set_language(request):
     payload = json.loads(request.body)
     lang_code = payload.get(LANGUAGE_QUERY_PARAMETER)
     next_url = payload.get("next")
-    # next_url = urlsplit(payload.get("next")) if payload.get("next") else None
 
     if (
         (next_url or request.accepts('text/html')) and
