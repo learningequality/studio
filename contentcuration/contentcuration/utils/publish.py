@@ -14,6 +14,7 @@ from builtins import str
 from itertools import chain
 
 from django.conf import settings
+from django.contrib.sites.models import Site
 from django.core.files import File
 from django.core.files.storage import default_storage as storage
 from django.core.management import call_command
@@ -94,15 +95,18 @@ def send_emails(channel, user_id, version_notes=''):
     subject = render_to_string('registration/custom_email_subject.txt', {'subject': _('Kolibri Studio Channel Published')})
     token = channel.secret_tokens.filter(is_primary=True).first()
     token = '{}-{}'.format(token.token[:5], token.token[-5:])
+    domain = "https://{}".format(Site.objects.get_current().domain)
 
     if user_id:
         user = ccmodels.User.objects.get(pk=user_id)
-        message = render_to_string('registration/channel_published_email.txt', {'channel': channel, 'user': user, 'token': token, 'notes': version_notes})
+        message = render_to_string('registration/channel_published_email.txt',
+                                   {'channel': channel, 'user': user, 'token': token, 'notes': version_notes, 'domain': domain})
         user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL, )
     else:
         # Email all users about updates to channel
         for user in itertools.chain(channel.editors.all(), channel.viewers.all()):
-            message = render_to_string('registration/channel_published_email.txt', {'channel': channel, 'user': user, 'token': token, 'notes': version_notes})
+            message = render_to_string('registration/channel_published_email.txt',
+                                       {'channel': channel, 'user': user, 'token': token, 'notes': version_notes, 'domain': domain})
             user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL, )
 
 
