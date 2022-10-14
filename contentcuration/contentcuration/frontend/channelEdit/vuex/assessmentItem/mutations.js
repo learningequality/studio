@@ -46,8 +46,15 @@ export function UPDATE_ASSESSMENTITEM(state, assessmentItem) {
 }
 
 export function UPDATE_ASSESSMENTITEM_FROM_INDEXEDDB(state, { id, ...mods }) {
-  if (id && state.assessmentItemsMap[id]) {
-    applyMods(state.assessmentItemsMap[id], mods);
+  const [contentnode, assessment_id] = id || [null, null];
+  if (
+    id &&
+    state.assessmentItemsMap[contentnode] &&
+    state.assessmentItemsMap[contentnode][assessment_id]
+  ) {
+    Vue.set(state.assessmentItemsMap[contentnode], assessment_id, {
+      ...applyMods(state.assessmentItemsMap[contentnode][assessment_id], mods),
+    });
   }
 }
 

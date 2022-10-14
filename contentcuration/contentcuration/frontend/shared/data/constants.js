@@ -7,6 +7,16 @@ export const CHANGE_TYPES = {
   PUBLISHED: 6,
   SYNCED: 7,
 };
+/**
+ * An array of change types that directly result in the creation of nodes
+ * @type {(number)[]}
+ */
+export const CREATION_CHANGE_TYPES = [CHANGE_TYPES.CREATED, CHANGE_TYPES.COPIED];
+/**
+ * An array of change types that directly result in changes to tree structure
+ * @type {(number)[]}
+ */
+export const TREE_CHANGE_TYPES = [CHANGE_TYPES.CREATED, CHANGE_TYPES.COPIED, CHANGE_TYPES.MOVED];
 
 // Tables
 export const CHANGES_TABLE = 'changesForSyncing';
@@ -48,9 +58,10 @@ export const RELATIVE_TREE_POSITIONS = {
   RIGHT: 'right',
 };
 
-// Special fields used for copying and other async tasks
+// Special fields used for frontend specific handling
 export const COPYING_FLAG = '__COPYING';
 export const TASK_ID = '__TASK_ID';
+export const LAST_FETCHED = '__last_fetch';
 
 // This constant is used for saving/retrieving a current
 // user object from the session table

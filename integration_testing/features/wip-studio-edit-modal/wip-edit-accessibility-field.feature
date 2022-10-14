@@ -3,7 +3,7 @@ Feature: Edit *Accessibility* field
 
 # Comment here
 
-	Background: 
+	Background:
 		Given I am signed into Studio
 			And I am in an editable channel
 		When I right click <resource>
@@ -13,8 +13,9 @@ Feature: Edit *Accessibility* field
 
 	Scenario: View options for .MP4
 		Given I am viewing an .MP4 in the edit modal
-		Then I see a checkbox that says *Has sign language captions*
+		Then I see a checkbox that says *Has captions or subtitles*
 			And I see a checkbox that says *Has audio descriptions*
+			And I see a checkbox that says *Has sign language captions*
 
 	Scenario: View tooltips for .MP4
 		Given I am viewing an .MP4 in the edit modal

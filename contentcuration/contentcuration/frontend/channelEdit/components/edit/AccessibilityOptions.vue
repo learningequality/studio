@@ -12,16 +12,17 @@
           :value="accessibilityItem.value"
           :label="accessibilityItem.label"
           color="primary"
-          :data-test="`checkbox-${accessibilityItem.label}`"
+          :data-test="`checkbox-${accessibilityItem.help}`"
         >
           <template #label>
             <span class="text-xs-left">{{ accessibilityItem.label }}</span>
             &nbsp;
             <HelpTooltip
+              v-if="accessibilityItem.showTooltip"
               :text="$tr(accessibilityItem.help)"
               bottom
               class="px-2"
-              :data-test="`tooltip-${accessibilityItem.label}`"
+              :data-test="`tooltip-${accessibilityItem.help}`"
             />
           </template>
         </Checkbox>
@@ -39,6 +40,9 @@
   import Checkbox from 'shared/views/form/Checkbox';
   import HelpTooltip from 'shared/views/HelpTooltip';
   import { constantsTranslationMixin, metadataTranslationMixin } from 'shared/mixins';
+
+  // A list of accessibility category values for which to hide the tooltip
+  const HideTooltips = [AccessibilityCategories.CAPTIONS_SUBTITLES];
 
   export default {
     name: 'AccessibilityOptions',
@@ -70,15 +74,14 @@
        * List of accessibility options for all content kinds except for audio
        */
       showCorrectAccessibilityList() {
-        return Object.keys(AccessibilityCategories)
-          .filter(key => AccessibilityCategoriesMap[this.kind].includes(key))
-          .map(key => {
-            return {
-              label: this.translateMetadataString(camelCase(key)),
-              value: AccessibilityCategories[key],
-              help: camelCase(key),
-            };
-          });
+        return AccessibilityCategoriesMap[this.kind].map(key => {
+          return {
+            label: this.translateMetadataString(camelCase(key)),
+            value: AccessibilityCategories[key],
+            help: camelCase(key),
+            showTooltip: !HideTooltips.includes(AccessibilityCategories[key]),
+          };
+        });
       },
     },
     $trs: {
@@ -86,11 +89,11 @@
       /**
        * Strings for the help tooltips
        */
-      altText: `Alternative text is provided for visual content (e.g., via the HTML alt attribute).`,
-      audioDescription: `Audio descriptions are available (e.g., via an HTML5 track element with kind="descriptions")`,
-      highContrast: `Content meets the visual contrast threshold set out in WCAG Success Criteria 1.4.6`,
-      signLanguage: `Synchronized sign language intepretation is available for audio and video content.`,
-      taggedPdf: `The structures in a PDF have been tagged to improve the navigation of the content.`,
+      altText: `Visual elements in the resource have descriptions that can be accessed by screen readers for the benefit of blind learners`,
+      audioDescription: `The resource contains a second narration audio track that provides additional information for the benefit of blind users and those with low vision`,
+      highContrast: `The resource text and visual elements are displayed with high contrast for the benefit of users with low vision`,
+      signLanguage: `Synchronized sign language intepretation is available for audio and video content`,
+      taggedPdf: `The document contains PDF tags that can be accessed by screen readers for the benefit of blind learners`,
       /* eslint-enable kolibri/vue-no-unused-translations */
     },
   };

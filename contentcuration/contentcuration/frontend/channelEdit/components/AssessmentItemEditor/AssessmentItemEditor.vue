@@ -3,18 +3,21 @@
   <Uploader ref="uploader" :presetID="imagePreset">
     <template #default="{ handleFiles }">
       <VLayout>
-        <VFlex xs7 lg5>
-          <VSelect
-            :key="kindSelectKey"
-            :items="kindSelectItems"
-            :value="kind"
-            :label="$tr('questionTypeLabel')"
-            data-test="kindSelect"
-            :menu-props="{ offsetY: true }"
-            box
-            @input="onKindUpdate"
-          />
-        </VFlex>
+        <DropdownWrapper component="VFlex" xs7 lg5>
+          <template #default="{ attach, menuProps }">
+            <VSelect
+              :key="kindSelectKey"
+              :items="kindSelectItems"
+              :value="kind"
+              :label="$tr('questionTypeLabel')"
+              data-test="kindSelect"
+              :menu-props="menuProps"
+              :attach="attach"
+              box
+              @input="onKindUpdate"
+            />
+          </template>
+        </DropdownWrapper>
       </VLayout>
 
       <VLayout>
@@ -115,10 +118,12 @@
   import MarkdownEditor from 'shared/views/MarkdownEditor/MarkdownEditor/MarkdownEditor';
   import MarkdownViewer from 'shared/views/MarkdownEditor/MarkdownViewer/MarkdownViewer';
   import { FormatPresetsNames } from 'shared/leUtils/FormatPresets';
+  import DropdownWrapper from 'shared/views/form/DropdownWrapper';
 
   export default {
     name: 'AssessmentItemEditor',
     components: {
+      DropdownWrapper,
       ErrorList,
       MarkdownEditor,
       MarkdownViewer,

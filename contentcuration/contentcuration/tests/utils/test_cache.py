@@ -2,14 +2,13 @@ import mock
 from django.test import SimpleTestCase
 
 from ..helpers import mock_class_instance
-from contentcuration.models import ContentNode
 from contentcuration.utils.cache import ResourceSizeCache
 
 
 class ResourceSizeCacheTestCase(SimpleTestCase):
     def setUp(self):
         super(ResourceSizeCacheTestCase, self).setUp()
-        self.node = mock.Mock(spec_set=ContentNode())
+        self.node = mock_class_instance("contentcuration.models.ContentNode")
         self.node.pk = "abcdefghijklmnopqrstuvwxyz"
         self.redis_client = mock_class_instance("redis.client.StrictRedis")
         self.cache_client = mock_class_instance("django_redis.client.DefaultClient")

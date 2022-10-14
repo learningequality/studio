@@ -85,6 +85,7 @@ INSTALLED_APPS = (
     'webpack_loader',
     'django_filters',
     'mathfilters',
+    'django.contrib.postgres',
     'django_celery_results',
     'channels',
 )
@@ -231,7 +232,6 @@ DATABASES = {
 
 IS_CONTENTNODE_TABLE_PARTITIONED = os.getenv("IS_CONTENTNODE_TABLE_PARTITIONED") or False
 
-
 DATABASE_ROUTERS = [
     "kolibri_content.router.ContentDBRouter",
 ]
@@ -302,6 +302,11 @@ LANGUAGES = (
     # ('en-PT', gettext('English - Pirate')),
 )
 
+SITE_BY_ID = {
+    'master': 1,
+    'unstable': 3,
+    'hotfixes': 4,
+}
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
@@ -321,7 +326,7 @@ AUTH_USER_MODEL = 'contentcuration.User'
 
 ACCOUNT_ACTIVATION_DAYS = 7
 REGISTRATION_OPEN = True
-SITE_ID = 1
+SITE_ID = SITE_BY_ID.get(os.getenv('BRANCH_ENVIRONMENT'), 1)
 
 # Used for serializing datetime objects.
 DATE_TIME_FORMAT = "%Y-%m-%d %H:%M:%S"

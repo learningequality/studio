@@ -4,6 +4,7 @@ import mock
 import pytest
 from django.conf import settings
 from django.core.cache import cache
+from django.core.exceptions import ValidationError
 from django.db.utils import IntegrityError
 from django.utils import timezone
 from le_utils.constants import content_kinds
@@ -667,6 +668,15 @@ class FileTestCase(PermissionQuerysetTestCase):
                 contentnode=create_contentnode(channel.main_tree_id),
                 preset_id=format_presets.EPUB,
                 duration=10,
+            )
+
+    def test_invalid_file_format(self):
+        channel = testdata.channel()
+        with self.assertRaises(ValidationError, msg="Invalid file_format"):
+            File.objects.create(
+                contentnode=create_contentnode(channel.main_tree_id),
+                preset_id=format_presets.EPUB,
+                file_format_id='pptx',
             )
 
 

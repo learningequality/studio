@@ -1,4 +1,3 @@
-import functools
 import hashlib
 import json
 import logging
@@ -1105,20 +1104,6 @@ class ContentTag(models.Model):
         unique_together = ['tag_name', 'channel']
 
 
-def delegate_manager(method):
-    """
-    Delegate method calls to base manager, if exists.
-    """
-
-    @functools.wraps(method)
-    def wrapped(self, *args, **kwargs):
-        if self._base_manager:
-            return getattr(self._base_manager, method.__name__)(*args, **kwargs)
-        return method(self, *args, **kwargs)
-
-    return wrapped
-
-
 class License(models.Model):
     """
     Normalize the license of ContentNode model
@@ -2196,6 +2181,12 @@ class File(models.Model):
             2. fill the other fields accordingly
         """
         from contentcuration.utils.user import calculate_user_storage
+
+        # check if the file format exists in file_formats.choices
+        if self.file_format_id:
+            if self.file_format_id not in dict(file_formats.choices):
+                raise ValidationError("Invalid file_format")
+
         if set_by_file_on_disk and self.file_on_disk:  # if file_on_disk is supplied, hash out the file
             if self.checksum is None or self.checksum == "":
                 md5 = hashlib.md5()

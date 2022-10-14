@@ -43,7 +43,7 @@ describe('channelEdit utils', () => {
 
     it('returns an error message if a validator function returns an error code for a value', () => {
       const title = '';
-      expect(translateValidator(getTitleValidators()[0])(title)).toBe('Title is required');
+      expect(translateValidator(getTitleValidators()[0])(title)).toBe('This field is required');
     });
   });
 
@@ -538,10 +538,6 @@ describe('channelEdit utils', () => {
           title: '',
         };
         expect(isNodeComplete({ nodeDetails: invalidNodeDetails, files })).toBe(false);
-      });
-
-      it('returns false if there are no files', () => {
-        expect(isNodeComplete({ nodeDetails, files: [] })).toBe(false);
       });
 
       it('returns false if there is at least one invalid file', () => {

@@ -1,20 +1,22 @@
 <template>
 
-  <div class="levels-container">
-    <VSelect
-      ref="level"
-      v-model="level"
-      :items="levels"
-      box
-      chips
-      clearable
-      :label="translateMetadataString('level')"
-      multiple
-      deletableChips
-      :menu-props="{ offsetY: true, lazy: true, zIndex: 4 }"
-      :attach="$attrs.id ? `#${$attrs.id}` : '.levels-container'"
-    />
-  </div>
+  <DropdownWrapper>
+    <template #default="{ attach, menuProps }">
+      <VSelect
+        ref="level"
+        v-model="level"
+        :items="levels"
+        box
+        chips
+        clearable
+        :label="translateMetadataString('level')"
+        multiple
+        deletableChips
+        :menu-props="menuProps"
+        :attach="attach"
+      />
+    </template>
+  </DropdownWrapper>
 
 </template>
 
@@ -23,9 +25,11 @@
   import camelCase from 'lodash/camelCase';
   import { ContentLevels } from 'shared/constants';
   import { constantsTranslationMixin, metadataTranslationMixin } from 'shared/mixins';
+  import DropdownWrapper from 'shared/views/form/DropdownWrapper';
 
   export default {
     name: 'LevelsOptions',
+    components: { DropdownWrapper },
     mixins: [constantsTranslationMixin, metadataTranslationMixin],
     props: {
       value: {
@@ -70,9 +74,5 @@
 
 </script>
 <style lang="less" scoped>
-
-  .levels-container {
-    position: relative;
-  }
 
 </style>

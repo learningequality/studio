@@ -52,6 +52,7 @@
           v-model="licenses"
           :items="licenseOptions"
           :label="$tr('licenseLabel')"
+          item-text="text"
         />
 
         <!-- Formats (attach to self to keep in notranslate class) -->
@@ -59,6 +60,7 @@
           v-model="kinds"
           :items="kindOptions"
           :label="$tr('formatLabel')"
+          item-text="text"
         />
 
         <!-- Starred -->

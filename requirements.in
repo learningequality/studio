@@ -1,9 +1,9 @@
 attrs==19.3.0
 django-cte==1.2.1
-django-mptt==0.11.0
+django-mptt==0.13.4
 django-filter==22.1
 djangorestframework==3.12.4
-psycopg2-binary==2.9.3
+psycopg2-binary==2.9.4
 django-js-reverse==0.9.1
 django-registration==3.3
 le-utils==0.1.41
@@ -15,7 +15,7 @@ celery==5.2.7
 redis
 pathlib
 progressbar2==3.55.0
-python-postmark==0.5.0
+python-postmark==0.5.8
 Django==3.2.14
 django-webpack-loader==0.7.0
 google-cloud-error-reporting

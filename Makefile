@@ -42,6 +42,10 @@ filedurations:
 learningactivities:
 	python contentcuration/manage.py set_default_learning_activities
 
+set-tsvectors:
+	python contentcuration/manage.py set_channel_tsvectors
+	python contentcuration/manage.py set_contentnode_tsvectors --published
+
 ###############################################################
 # END PRODUCTION COMMANDS #####################################
 ###############################################################
@@ -129,6 +133,9 @@ test:
 dummyusers:
 	cd contentcuration/ && python manage.py loaddata contentcuration/fixtures/admin_user.json
 	cd contentcuration/ && python manage.py loaddata contentcuration/fixtures/admin_user_token.json
+
+hascaptions:
+	python contentcuration/manage.py set_orm_based_has_captions
 
 export COMPOSE_PROJECT_NAME=studio_$(shell git rev-parse --abbrev-ref HEAD)
 

@@ -57,7 +57,6 @@
             <VFlex xs12 md6 :class="{ 'pl-2': $vuetify.breakpoint.mdAndUp }">
               <!-- Learning activity -->
               <LearningActivityOptions
-                id="learning_activities"
                 ref="learning_activities"
                 v-model="contentLearningActivities"
                 :disabled="isTopic"
@@ -65,14 +64,12 @@
               />
               <!-- Level -->
               <LevelsOptions
-                id="levels"
                 ref="contentLevel"
                 v-model="contentLevel"
                 @focus="trackClick('Levels dropdown')"
               />
               <!-- What you will need -->
               <ResourcesNeededOptions
-                id="resources_needed"
                 ref="resourcesNeeded"
                 v-model="resourcesNeeded"
                 @focus="trackClick('What you will need')"
@@ -147,7 +144,6 @@
             :kind="firstNode.kind"
             :fileDuration="fileDuration"
             :required="!isDocument"
-            :practiceQuizzesAllowed="allowChannelQuizzes"
           />
         </VFlex>
       </VLayout>
@@ -178,7 +174,6 @@
           </h1>
           <!-- Language -->
           <LanguageDropdown
-            id="language"
             ref="language"
             v-model="language"
             class="mb-2"
@@ -192,13 +187,24 @@
           <!-- Visibility -->
           <VisibilityDropdown
             v-if="allResources"
-            id="role_visibility"
             ref="role_visibility"
             v-model="role"
             :placeholder="getPlaceholder('role')"
             :required="isUnique(role)"
             @focus="trackClick('Role visibility')"
           />
+
+          <!-- For Beginners -->
+          <KCheckbox
+            id="beginners"
+            ref="beginners"
+            :checked="forBeginners"
+            @change="value => forBeginners = value"
+          >
+            <span class="text-xs-left v-label" style="padding-left: 8px;">
+              {{ translateMetadataString('forBeginners') }}
+            </span>
+          </KCheckbox>
         </VFlex>
       </VLayout>
 
@@ -301,7 +307,6 @@
 
             <!-- License -->
             <LicenseDropdown
-              id="license"
               ref="license"
               v-model="licenseItem"
               :required="isUnique(license) && isUnique(license_description) && !disableAuthEdits"
@@ -338,7 +343,10 @@
       <!-- Subtitles -->
       <VLayout v-if="videoSelected" row wrap class="section">
         <VFlex xs12>
-          <SubtitlesList :nodeId="firstNode.id" />
+          <SubtitlesList
+            :nodeId="firstNode.id"
+            @addFile="subtitleFileLanguageComparison"
+          />
         </VFlex>
       </VLayout>
 
@@ -384,7 +392,7 @@
   import VisibilityDropdown from 'shared/views/VisibilityDropdown';
   import Checkbox from 'shared/views/form/Checkbox';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
-  import { NEW_OBJECT, FeatureFlagKeys } from 'shared/constants';
+  import { NEW_OBJECT, AccessibilityCategories, ResourcesNeededTypes } from 'shared/constants';
   import { constantsTranslationMixin, metadataTranslationMixin } from 'shared/mixins';
 
   // Define an object to act as the place holder for non unique values.
@@ -435,8 +443,25 @@
   function generateNestedNodesGetterSetter(key) {
     return {
       get() {
-        const value = this.getValueFromNodes(key);
-        return Object.keys(value);
+        // Return the unique values...
+        return uniq(
+          // for which all selected nodes share...
+          intersection(
+            // by mapping the fields for each selected node...
+            ...this.nodes.map(node => {
+              // checking the diffTracker first, then the node...
+              for (let obj of [this.diffTracker[node.id] || {}, node]) {
+                // returning the keys of the field
+                if (Object.prototype.hasOwnProperty.call(obj, key)) {
+                  return Object.keys(obj[key]);
+                }
+              }
+              // otherwise an empty array, which will cause `intersection`
+              // to result in an empty array
+              return [];
+            })
+          )
+        );
       },
       set(value) {
         const newMap = {};
@@ -548,6 +573,20 @@
       accessibility: generateNestedNodesGetterSetter('accessibility_labels'),
       contentLevel: generateNestedNodesGetterSetter('grade_levels'),
       resourcesNeeded: generateNestedNodesGetterSetter('learner_needs'),
+      forBeginners: {
+        get() {
+          return this.resourcesNeeded.includes(ResourcesNeededTypes.FOR_BEGINNERS);
+        },
+        set(value) {
+          if (value) {
+            this.resourcesNeeded = [...this.resourcesNeeded, ResourcesNeededTypes.FOR_BEGINNERS];
+          } else {
+            this.resourcesNeeded = this.resourcesNeeded.filter(
+              r => r !== ResourcesNeededTypes.FOR_BEGINNERS
+            );
+          }
+        },
+      },
       contentLearningActivities: generateNestedNodesGetterSetter('learning_activities'),
       categories: generateNestedNodesGetterSetter('categories'),
       license() {
@@ -592,7 +631,9 @@
           };
         },
         set({ completion_criteria, suggested_duration, suggested_duration_type, modality }) {
-          completion_criteria.learner_managed = this.learnerManaged;
+          if (completion_criteria) {
+            completion_criteria.learner_managed = this.learnerManaged;
+          }
           const options = { completion_criteria, modality };
           this.updateExtraFields({ options });
           this.updateExtraFields({ suggested_duration_type });
@@ -667,9 +708,6 @@
       },
       newContent() {
         return !this.nodes.some(n => n[NEW_OBJECT]);
-      },
-      allowChannelQuizzes() {
-        return this.$store.getters.hasFeatureEnabled(FeatureFlagKeys.channel_quizzes);
       },
       isDocument() {
         return this.firstNode.kind === ContentKindsNames.DOCUMENT;
@@ -808,6 +846,11 @@
         this.$analytics.trackAction('channel_editor_modal_preview', 'Preview', {
           eventLabel: 'File',
         });
+      },
+      subtitleFileLanguageComparison(file) {
+        if (this.oneSelected && this.language === file.language) {
+          this.accessibility = [...this.accessibility, AccessibilityCategories.CAPTIONS_SUBTITLES];
+        }
       },
     },
     $trs: {

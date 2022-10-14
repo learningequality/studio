@@ -1,7 +1,7 @@
 Feature: Edit completion/duration field
 	Across all file types
 
-	Background: 
+	Background:
 		Given I am signed into Studio
 			And I am in an editable channel with all resource types
 		When I right click a <resource>
@@ -11,18 +11,20 @@ Feature: Edit completion/duration field
 
 	Scenario: View options for .MP4 or .MP3
 		Given I am viewing an .MP4 or an .MP3 file
+		When I click the *Completion* dropdown
+		Then I see the options: *Complete duration* and *Reference*
 		When I click the *Duration* dropdown
-		Then I see the options: *Exact time to complete*, *Short activity*, *Long activity* and *Reference*
+		Then I see the options: *Exact time to complete*, *Short activity*, and *Long activity*
 
 	Scenario: View options for .PDF, .EPUB or slides
 		Given I am viewing .PDF, .EPUB or slides
 		When I click the *Completion* dropdown
-		Then I see the options: *All content viewed* and *Complete duration*
+		Then I see the options: *All content viewed*, *Complete duration*, and *Reference*
 
 	Scenario: View options for .ZIP
 		Given I am viewing a .ZIP
 		When I click on the *Completion* dropdown
-		Then I see the options: *Complete duration* and *Determined by this resource*
+		Then I see the options: *Complete duration*, *Determined by this resource*, and *Reference*
 
 	Scenario: View options for Practice resources
 		Given I am viewing an exercise

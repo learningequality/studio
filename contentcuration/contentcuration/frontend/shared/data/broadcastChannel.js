@@ -1,6 +1,6 @@
-import { BroadcastChannel } from 'broadcast-channel';
-
 import { APP_ID } from './constants';
+
+const { BroadcastChannel } = require('broadcast-channel');
 
 // N.B. channels do not subscribe to messages that
 // they send, so if you want to listen to all messages

@@ -48,6 +48,10 @@ export const NOVALUE = Symbol('No value default');
 // that they have not yet been committed to our IndexedDB layer.
 export const NEW_OBJECT = Symbol('New object');
 
+// This symbol is used as a key on new objects used to denote when
+// validation should be delayed
+export const DELAYED_VALIDATION = Symbol('Delayed validation');
+
 export const kindToIconMap = {
   audio: 'headset',
   channel: 'apps',
@@ -196,7 +200,7 @@ export const ContentModalities = {
 export const AccessibilityCategoriesMap = {
   // Note: audio is not included, as it is rendered in the UI differently.
   document: ['ALT_TEXT', 'HIGH_CONTRAST', 'TAGGED_PDF'],
-  video: ['SIGN_LANGUAGE', 'AUDIO_DESCRIPTION'],
+  video: ['CAPTIONS_SUBTITLES', 'AUDIO_DESCRIPTION', 'SIGN_LANGUAGE'],
   exercise: ['ALT_TEXT'],
   html5: ['ALT_TEXT', 'HIGH_CONTRAST'],
 };

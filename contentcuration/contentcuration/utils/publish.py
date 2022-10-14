@@ -18,8 +18,11 @@ from django.core.files import File
 from django.core.files.storage import default_storage as storage
 from django.core.management import call_command
 from django.db.models import Count
+from django.db.models import Exists
 from django.db.models import Max
+from django.db.models import OuterRef
 from django.db.models import Q
+from django.db.models import Subquery
 from django.db.models import Sum
 from django.db.utils import IntegrityError
 from django.template.loader import render_to_string
@@ -37,6 +40,10 @@ from le_utils.constants import format_presets
 from le_utils.constants import roles
 from past.builtins import basestring
 from past.utils import old_div
+from search.models import ChannelFullTextSearch
+from search.models import ContentNodeFullTextSearch
+from search.utils import get_fts_annotated_channel_qs
+from search.utils import get_fts_annotated_contentnode_qs
 
 from contentcuration import models as ccmodels
 from contentcuration.decorators import delay_user_storage_calculation
@@ -44,6 +51,7 @@ from contentcuration.statistics import record_publish_stats
 from contentcuration.utils.cache import delete_public_channel_cache_keys
 from contentcuration.utils.files import create_thumbnail_from_base64
 from contentcuration.utils.files import get_thumbnail_encoding
+from contentcuration.utils.nodes import migrate_extra_fields
 from contentcuration.utils.parser import extract_value
 from contentcuration.utils.parser import load_json_string
 from contentcuration.utils.sentry import report_exception
@@ -154,11 +162,15 @@ def assign_license_to_contentcuration_nodes(channel, license):
     channel.main_tree.get_family().update(license_id=license.pk)
 
 
-inheritable_fields = [
+inheritable_map_fields = [
     "grade_levels",
     "resource_types",
     "categories",
     "learner_needs",
+]
+
+inheritable_simple_value_fields = [
+    "language",
 ]
 
 
@@ -194,7 +206,7 @@ class TreeMapper:
     def map_nodes(self):
         self.recurse_nodes(self.root_node, {})
 
-    def recurse_nodes(self, node, inherited_fields):
+    def recurse_nodes(self, node, inherited_fields):  # noqa C901
         logging.debug("Mapping node with id {id}".format(id=node.pk))
 
         # Only process nodes that are either non-topics or have non-topic descendants
@@ -202,7 +214,7 @@ class TreeMapper:
 
             metadata = {}
 
-            for field in inheritable_fields:
+            for field in inheritable_map_fields:
                 metadata[field] = {}
                 inherited_keys = (inherited_fields.get(field) or {}).keys()
                 own_keys = (getattr(node, field) or {}).keys()
@@ -211,6 +223,12 @@ class TreeMapper:
                 for key in all_keys:
                     if not any(k != key and k.startswith(key) for k in all_keys):
                         metadata[field][key] = True
+
+            for field in inheritable_simple_value_fields:
+                if field in inherited_fields:
+                    metadata[field] = inherited_fields[field]
+                if getattr(node, field):
+                    metadata[field] = getattr(node, field)
 
             kolibrinode = create_bare_contentnode(node, self.default_language, self.channel_id, self.channel_name, metadata)
 
@@ -268,9 +286,9 @@ def create_bare_contentnode(ccnode, default_language, channel_id, channel_name, 
     if ccnode.license is not None:
         kolibri_license = create_kolibri_license_object(ccnode)[0]
 
-    language = None
-    if ccnode.language or default_language:
-        language, _new = get_or_create_language(ccnode.language or default_language)
+    language = (ccnode.language if ccnode.kind_id == content_kinds.TOPIC else metadata.get("language")) or default_language
+    if language:
+        language, _new = get_or_create_language(language)
 
     duration = None
     if ccnode.kind_id in [content_kinds.AUDIO, content_kinds.VIDEO]:
@@ -298,6 +316,12 @@ def create_bare_contentnode(ccnode, default_language, channel_id, channel_name, 
         if ccnode.accessibility_labels:
             accessibility_labels = ",".join(ccnode.accessibility_labels.keys())
 
+    # Do not use the inherited metadata if this is a topic, just read from its own metadata instead.
+    grade_levels = ccnode.grade_levels if ccnode.kind_id == content_kinds.TOPIC else metadata["grade_levels"]
+    resource_types = ccnode.resource_types if ccnode.kind_id == content_kinds.TOPIC else metadata["resource_types"]
+    categories = ccnode.categories if ccnode.kind_id == content_kinds.TOPIC else metadata["categories"]
+    learner_needs = ccnode.learner_needs if ccnode.kind_id == content_kinds.TOPIC else metadata["learner_needs"]
+
     kolibrinode, is_new = kolibrimodels.ContentNode.objects.update_or_create(
         pk=ccnode.node_id,
         defaults={
@@ -319,12 +343,12 @@ def create_bare_contentnode(ccnode, default_language, channel_id, channel_name, 
             'duration': duration,
             'options': json.dumps(options),
             # Fields for metadata labels
-            "grade_levels": ",".join(metadata["grade_levels"].keys()) if metadata["grade_levels"] else None,
-            "resource_types": ",".join(metadata["resource_types"].keys()) if metadata["resource_types"] else None,
+            "grade_levels": ",".join(grade_levels.keys()) if grade_levels else None,
+            "resource_types": ",".join(resource_types.keys()) if resource_types else None,
             "learning_activities": learning_activities,
             "accessibility_labels": accessibility_labels,
-            "categories": ",".join(metadata["categories"].keys()) if metadata["categories"] else None,
-            "learner_needs": ",".join(metadata["learner_needs"].keys()) if metadata["learner_needs"] else None,
+            "categories": ",".join(categories.keys()) if categories else None,
+            "learner_needs": ",".join(learner_needs.keys()) if learner_needs else None,
         }
     )
 
@@ -455,21 +479,16 @@ def create_perseus_exercise(ccnode, kolibrinode, exercise_data, user_id=None):
 def process_assessment_metadata(ccnode, kolibrinode):
     # Get mastery model information, set to default if none provided
     assessment_items = ccnode.assessment_items.all().order_by('order')
-    exercise_data = ccnode.extra_fields if ccnode.extra_fields else {}
-    if isinstance(exercise_data, basestring):
-        exercise_data = json.loads(exercise_data)
-    randomize = exercise_data.get('randomize') if exercise_data.get('randomize') is not None else True
+    extra_fields = ccnode.extra_fields
+    if isinstance(extra_fields, basestring):
+        extra_fields = json.loads(extra_fields)
+    extra_fields = migrate_extra_fields(extra_fields) or {}
+    randomize = extra_fields.get('randomize') if extra_fields.get('randomize') is not None else True
     assessment_item_ids = [a.assessment_id for a in assessment_items]
 
-    exercise_data_type = ""
-    if exercise_data.get('mastery_model'):
-        exercise_data_type = exercise_data.get('mastery_model')
-    if (
-        exercise_data.get('option') and
-        exercise_data.get('option').get('completion_criteria') and
-        exercise_data.get('option').get('completion_criteria').get('mastery_model')
-    ):
-        exercise_data_type = exercise_data.get('option').get('completion_criteria').get('mastery_model')
+    exercise_data = extra_fields.get('options').get('completion_criteria').get('threshold')
+
+    exercise_data_type = exercise_data.get('mastery_model', "")
 
     mastery_model = {'type': exercise_data_type or exercises.M_OF_N}
     if mastery_model['type'] == exercises.M_OF_N:
@@ -808,6 +827,50 @@ def fill_published_fields(channel, version_notes):
     channel.save()
 
 
+def sync_contentnode_and_channel_tsvectors(channel_id):
+    """
+    Creates, deletes and updates tsvectors of the channel and all its content nodes
+    to reflect the current state of channel's main tree.
+    """
+    # Update or create channel tsvector entry.
+    logging.info("Setting tsvector for channel with id {}.".format(channel_id))
+
+    channel = (get_fts_annotated_channel_qs()
+               .values("keywords_tsvector", "main_tree__tree_id")
+               .get(pk=channel_id))
+
+    obj, is_created = ChannelFullTextSearch.objects.update_or_create(channel_id=channel_id, defaults={"keywords_tsvector": channel["keywords_tsvector"]})
+    del obj
+
+    if is_created:
+        logging.info("Created 1 channel tsvector.")
+    else:
+        logging.info("Updated 1 channel tsvector.")
+
+    # Update or create contentnodes tsvector entry for channel_id.
+    logging.info("Setting tsvectors for all main tree contentnodes in channel {}.".format(channel_id))
+
+    if ContentNodeFullTextSearch.objects.filter(channel_id=channel_id).exists():
+        # First, delete nodes that are no longer in main_tree.
+        nodes_no_longer_in_main_tree = ~Exists(ccmodels.ContentNode.objects.filter(id=OuterRef("contentnode_id"), tree_id=channel["main_tree__tree_id"]))
+        ContentNodeFullTextSearch.objects.filter(nodes_no_longer_in_main_tree, channel_id=channel_id).delete()
+
+        # Now, all remaining nodes are in main_tree, so let's update them.
+        # Update only changed nodes.
+        node_tsv_subquery = get_fts_annotated_contentnode_qs(channel_id).filter(id=OuterRef("contentnode_id")).order_by()
+        ContentNodeFullTextSearch.objects.filter(channel_id=channel_id, contentnode__complete=True, contentnode__changed=True).update(
+            keywords_tsvector=Subquery(node_tsv_subquery.values("keywords_tsvector")[:1]),
+            author_tsvector=Subquery(node_tsv_subquery.values("author_tsvector")[:1])
+        )
+
+    # Insert newly created nodes.
+    # "set_contentnode_tsvectors" command is defined in "search/management/commands" directory.
+    call_command("set_contentnode_tsvectors",
+                 "--channel-id={}".format(channel_id),
+                 "--tree-id={}".format(channel["main_tree__tree_id"]),
+                 "--complete")
+
+
 @delay_user_storage_calculation
 def publish_channel(
     user_id,
@@ -829,8 +892,9 @@ def publish_channel(
         set_channel_icon_encoding(channel)
         kolibri_temp_db = create_content_database(channel, force, user_id, force_exercises, progress_tracker=progress_tracker)
         increment_channel_version(channel)
-        mark_all_nodes_as_published(channel)
         add_tokens_to_channel(channel)
+        sync_contentnode_and_channel_tsvectors(channel_id=channel.id)
+        mark_all_nodes_as_published(channel)
         fill_published_fields(channel, version_notes)
 
         # Attributes not getting set for some reason, so just save it here

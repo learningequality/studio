@@ -1,6 +1,7 @@
 import debounce from 'lodash/debounce';
 import findLastIndex from 'lodash/findLastIndex';
 import get from 'lodash/get';
+import omit from 'lodash/omit';
 import orderBy from 'lodash/orderBy';
 import pick from 'lodash/pick';
 import uniq from 'lodash/uniq';
@@ -16,6 +17,9 @@ import {
   CHANNEL_SYNC_KEEP_ALIVE_INTERVAL,
   IGNORED_SOURCE,
   MAX_REV_KEY,
+  LAST_FETCHED,
+  COPYING_FLAG,
+  TASK_ID,
 } from './constants';
 import client from 'shared/client';
 import urls from 'shared/urls';
@@ -28,13 +32,36 @@ let socket;
 // Flag to check if a sync is currently active.
 let syncActive = false;
 
+const commonFields = ['type', 'key', 'table', 'rev', 'channel_id', 'user_id'];
+const objectFields = ['objs', 'mods'];
+const ignoredSubFields = [COPYING_FLAG, LAST_FETCHED, TASK_ID];
+
+const ChangeTypeMapFields = {
+  [CHANGE_TYPES.CREATED]: commonFields.concat(['obj']),
+  [CHANGE_TYPES.UPDATED]: commonFields.concat(['mods']),
+  [CHANGE_TYPES.DELETED]: commonFields,
+  [CHANGE_TYPES.MOVED]: commonFields.concat(['target', 'position']),
+  [CHANGE_TYPES.COPIED]: commonFields.concat([
+    'from_key',
+    'mods',
+    'target',
+    'position',
+    'excluded_descendants',
+  ]),
+  [CHANGE_TYPES.PUBLISHED]: commonFields.concat(['version_notes', 'language']),
+  [CHANGE_TYPES.SYNCED]: commonFields.concat(['attributes', 'tags', 'files', 'assessment_items']),
+};
+
 function isSyncableChange(change) {
   const src = change.source || '';
 
   return (
     !src.match(IGNORED_SOURCE) &&
     INDEXEDDB_RESOURCES[change.table] &&
-    INDEXEDDB_RESOURCES[change.table].syncable
+    INDEXEDDB_RESOURCES[change.table].syncable &&
+    // don't create changes when it's an update to only ignored fields
+    (change.type !== CHANGE_TYPES.UPDATED ||
+      Object.keys(change.mods).some(key => !ignoredSubFields.includes(key)))
   );
 }
 
@@ -45,36 +72,23 @@ function applyResourceListener(change) {
   }
 }
 
-const commonFields = ['type', 'key', 'table', 'rev', 'channel_id', 'user_id'];
-const createFields = commonFields.concat(['obj']);
-const updateFields = commonFields.concat(['mods']);
-const movedFields = commonFields.concat(['target', 'position']);
-const copiedFields = commonFields.concat([
-  'from_key',
-  'mods',
-  'target',
-  'position',
-  'excluded_descendants',
-]);
-const publishedFields = commonFields.concat(['version_notes', 'language']);
-const syncedFields = commonFields.concat(['attributes', 'tags', 'files', 'assessment_items']);
-
+/**
+ * Reduces a change to only the fields that are needed for sending it to the backend
+ *
+ * @param change
+ * @return {null|Object}
+ */
 function trimChangeForSync(change) {
-  if (change.type === CHANGE_TYPES.CREATED) {
-    return pick(change, createFields);
-  } else if (change.type === CHANGE_TYPES.UPDATED) {
-    return pick(change, updateFields);
-  } else if (change.type === CHANGE_TYPES.DELETED) {
-    return pick(change, commonFields);
-  } else if (change.type === CHANGE_TYPES.MOVED) {
-    return pick(change, movedFields);
-  } else if (change.type === CHANGE_TYPES.COPIED) {
-    return pick(change, copiedFields);
-  } else if (change.type === CHANGE_TYPES.PUBLISHED) {
-    return pick(change, publishedFields);
-  } else if (change.type === CHANGE_TYPES.SYNCED) {
-    return pick(change, syncedFields);
+  // Extract the syncable fields
+  const payload = pick(change, ChangeTypeMapFields[change.type]);
+
+  // for any field that has an object as a value, remove ignored fields from those objects
+  for (let field of objectFields) {
+    if (payload[field]) {
+      payload[field] = omit(payload[field], ignoredSubFields);
+    }
   }
+  return payload;
 }
 
 function handleDisallowed(disallowed) {
@@ -306,7 +320,7 @@ async function syncChanges() {
     // can now trim it down to only what is needed to transmit over the wire.
     // TODO: remove moves when a delete change is present for an object,
     // because a delete will wipe out the move.
-    const changes = changesToSync.map(trimChangeForSync);
+    const changes = changesToSync.map(trimChangeForSync).filter(Boolean);
     // Create a promise for the sync - if there is nothing to sync just resolve immediately,
     // in order to still call our change cleanup code.
     if (changes.length) {

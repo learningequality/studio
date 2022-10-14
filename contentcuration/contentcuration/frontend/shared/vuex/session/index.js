@@ -7,8 +7,6 @@ import { forceServerSync } from 'shared/data/serverSync';
 import translator from 'shared/translator';
 import { applyMods } from 'shared/data/applyRemoteChanges';
 
-const GUEST_USER = {};
-
 function langCode(language) {
   // Turns a Django language name (en-gb) into an ISO language code (en-GB)
   // Copied and modified from Django's to_locale function that does something similar
@@ -30,7 +28,7 @@ function langCode(language) {
 
 export default {
   state: () => ({
-    currentUser: GUEST_USER,
+    currentUser: {},
     preferences:
       window.user_preferences === 'string'
         ? JSON.parse(window.user_preferences)
@@ -50,11 +48,11 @@ export default {
     },
     UPDATE_SESSION_FROM_INDEXEDDB(state, { id, ...mods }) {
       if (id === state.currentUser.id) {
-        applyMods(state.currentUser, mods);
+        state.currentUser = { ...applyMods(state.currentUser, mods) };
       }
     },
     REMOVE_SESSION(state) {
-      state.currentUser = GUEST_USER;
+      state.currentUser = {};
     },
   },
   getters: {
@@ -98,9 +96,12 @@ export default {
     },
   },
   actions: {
-    async saveSession(context, currentUser) {
-      await Session.updateSession(currentUser);
+    saveSession(context, currentUser) {
       context.commit('ADD_SESSION', currentUser);
+      // This will trigger the IndexedDB listener to call `ADD_SESSION` if this actually creates
+      // the user in IndexedDB, but if we've already saved it to IndexedDB, we want to call the
+      // above `ADD_SESSION` regardless
+      return Session.setSession(currentUser);
     },
     login(context, credentials) {
       return client.post(window.Urls.login(), credentials);

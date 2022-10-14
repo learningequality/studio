@@ -956,7 +956,7 @@ def create_change_tracker(pk, table, channel_id, user, task_name):
         yield tracker
     except Exception as e:
         status = states.FAILURE
-        traceback_str = ''.join(traceback.format_tb(e.__traceback__))
+        traceback_str = traceback.format_exc()
         async_to_sync(channel_layer.group_send)(
             str(room_group_name),
             {

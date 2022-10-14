@@ -1,7 +1,5 @@
 import Dexie from 'dexie';
-import flatten from 'lodash/flatten';
 import sortBy from 'lodash/sortBy';
-import uniq from 'lodash/uniq';
 import db from './db';
 import { INDEXEDDB_RESOURCES } from './registry';
 import { CHANGE_TYPES, IGNORED_SOURCE, TABLE_NAMES } from './constants';
@@ -17,19 +15,6 @@ export function applyMods(obj, mods) {
     }
   }
   return obj;
-}
-
-function applyUpdate(table, change) {
-  return table
-    .where(':id')
-    .equals(change.key)
-    .modify(obj => applyMods(obj, change.mods));
-}
-
-function applyCreate(table, change) {
-  return table
-    .put(change.obj, !table.schema.primKey.keyPath ? change.key : undefined)
-    .then(() => change.obj);
 }
 
 export function collectChanges(changes) {
@@ -51,76 +36,116 @@ export function collectChanges(changes) {
 }
 
 /**
- * @param {table: string, rev: Number, key: string, target: string, position: string} change
- * @return {Promise{}}
+ * @param {Object} change - The change object
+ * @param {String|Function} args[] - string table names with callback at the end
+ * @returns {Promise}
  */
+function transaction(change, ...args) {
+  const callback = args.pop();
+  const tableNames = [change.table, ...args];
+  return db.transaction('rw', tableNames, () => {
+    Dexie.currentTransaction.source = IGNORED_SOURCE;
+    return callback();
+  });
+}
+
+function applyCreate(change) {
+  return transaction(change, () => {
+    const table = db.table(change.table);
+    return table
+      .put(change.obj, !table.schema.primKey.keyPath ? change.key : undefined)
+      .then(() => change.obj);
+  });
+}
+
+function applyUpdate(change) {
+  return transaction(change, () => {
+    return db
+      .table(change.table)
+      .where(':id')
+      .equals(change.key)
+      .modify(obj => applyMods(obj, change.mods));
+  });
+}
+
+function applyDelete(change) {
+  return transaction(change, () => {
+    return db.table(change.table).delete(change.key);
+  });
+}
+
 function applyMove(change) {
   const resource = INDEXEDDB_RESOURCES[change.table];
   if (!resource || !resource.tableMove) {
-    return null;
+    return Promise.resolve();
   }
 
   const { key, target, position } = change;
   return resource.resolveTreeInsert(key, target, position, false, data => {
-    data.change.source = IGNORED_SOURCE;
-    return resource.tableMove(data);
+    return transaction(change, () => {
+      return resource.tableMove(data);
+    });
+  });
+}
+
+function applyCopy(change) {
+  const resource = INDEXEDDB_RESOURCES[change.table];
+  if (!resource || !resource.tableCopy) {
+    return Promise.resolve();
+  }
+
+  const { key, target, position, from_key } = change;
+  // copying takes the ID of the node to copy, so we use `from_key`
+  return resource.resolveTreeInsert(from_key, target, position, true, data => {
+    return transaction(change, () => {
+      // Update the ID on the payload to match the received change, since isCreate=true
+      // would generate new IDs
+      data.payload.id = key;
+      return resource.tableCopy(data);
+    });
   });
 }
 
 function applyPublish(change) {
   if (change.table !== TABLE_NAMES.CHANNEL) {
-    return null;
+    return Promise.resolve();
   }
 
-  const ContentNode = INDEXEDDB_RESOURCES[TABLE_NAMES.CONTENTNODE];
-  return ContentNode.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
-    return ContentNode.table
+  // Publish changes associate with the channel, but we open a transaction on contentnode
+  return transaction(change, TABLE_NAMES.CONTENTNODE, () => {
+    return db
+      .table(TABLE_NAMES.CONTENTNODE)
       .where({ channel_id: change.channel_id })
       .modify({ changed: false, published: true });
   });
 }
 
-/*
- * Modified from https://github.com/dfahlander/Dexie.js/blob/master/addons/Dexie.Syncable/src/apply-changes.js
+/**
+ * @see https://github.com/dfahlander/Dexie.js/blob/master/addons/Dexie.Syncable/src/apply-changes.js
+ * @return {Promise<Array>}
  */
-export default function applyChanges(changes) {
-  if (!changes.length) {
-    return Promise.resolve();
+export default async function applyChanges(changes) {
+  const results = [];
+  for (let change of sortBy(changes, ['server_rev', 'rev'])) {
+    let result;
+    if (change.type === CHANGE_TYPES.CREATED) {
+      result = await applyCreate(change);
+    } else if (change.type === CHANGE_TYPES.UPDATED) {
+      result = await applyUpdate(change);
+    } else if (change.type === CHANGE_TYPES.DELETED) {
+      result = await applyDelete(change);
+    } else if (change.type === CHANGE_TYPES.MOVED) {
+      result = await applyMove(change);
+    } else if (change.type === CHANGE_TYPES.COPIED) {
+      result = await applyCopy(change);
+    } else if (change.type === CHANGE_TYPES.PUBLISHED) {
+      result = await applyPublish(change);
+    }
+
+    if (result) {
+      results.push(result);
+    }
   }
 
-  changes = sortBy(changes, ['server_rev', 'rev']);
-
-  const table_names = uniq(changes.map(c => c.table));
-  // When changes include a publish change, add the contentnode table since `applyPublish` above
-  // needs to make updates to content nodes
-  if (
-    changes.some(c => c.type === CHANGE_TYPES.PUBLISHED) &&
-    !table_names.includes(TABLE_NAMES.CONTENTNODE)
-  ) {
-    table_names.push(TABLE_NAMES.CONTENTNODE);
-  }
-  const tables = table_names.map(table => db.table(table));
-
-  return db.transaction('rw', tables, () => {
-    Dexie.currentTransaction.source = IGNORED_SOURCE;
-    const promises = changes.map(change => {
-      const table = db.table(change.table);
-      if (change.type === CHANGE_TYPES.CREATED) {
-        return applyCreate(table, change);
-      }
-      if (change.type === CHANGE_TYPES.UPDATED) {
-        return applyUpdate(table, change);
-      }
-      if (change.type === CHANGE_TYPES.DELETED) {
-        return table.delete(change.key);
-      }
-      if (change.type === CHANGE_TYPES.MOVED) {
-        return applyMove(change);
-      }
-      if (change.type === CHANGE_TYPES.PUBLISHED) {
-        return applyPublish(change);
-      }
-    });
-    return Promise.all(promises).then(results => flatten(results).filter(Boolean));
-  });
+  return results;
 }

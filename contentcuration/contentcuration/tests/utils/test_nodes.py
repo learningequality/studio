@@ -9,7 +9,7 @@ from django.db.models import Max
 from django.test import SimpleTestCase
 
 from ..base import StudioTestCase
-from contentcuration.models import ContentNode
+from contentcuration.tests.helpers import mock_class_instance
 from contentcuration.utils.nodes import calculate_resource_size
 from contentcuration.utils.nodes import ResourceSizeHelper
 from contentcuration.utils.nodes import SlowCalculationError
@@ -45,7 +45,7 @@ class ResourceSizeHelperTestCase(StudioTestCase):
 class CalculateResourceSizeTestCase(SimpleTestCase):
     def setUp(self):
         super(CalculateResourceSizeTestCase, self).setUp()
-        self.node = mock.Mock(spec_set=ContentNode())
+        self.node = mock_class_instance("contentcuration.models.ContentNode")
 
     def assertCalculation(self, cache, helper, force=False):
         helper().get_size.return_value = 456

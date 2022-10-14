@@ -4,7 +4,6 @@ import findIndex from 'lodash/findIndex';
 import flatMap from 'lodash/flatMap';
 import intersection from 'lodash/intersection';
 import isArray from 'lodash/isArray';
-import isFunction from 'lodash/isFunction';
 import isNumber from 'lodash/isNumber';
 import isString from 'lodash/isString';
 import matches from 'lodash/matches';
@@ -13,11 +12,8 @@ import pick from 'lodash/pick';
 import sortBy from 'lodash/sortBy';
 import uniq from 'lodash/uniq';
 import uniqBy from 'lodash/uniqBy';
+
 import { v4 as uuidv4 } from 'uuid';
-import mergeAllChanges from './mergeChanges';
-import db, { CLIENTID, Collection, channelScope } from './db';
-import applyChanges, { applyMods, collectChanges } from './applyRemoteChanges';
-import { API_RESOURCES, INDEXEDDB_RESOURCES } from './registry';
 import {
   ACTIVE_CHANNELS,
   CHANGES_TABLE,
@@ -25,16 +21,23 @@ import {
   CHANNEL_SYNC_KEEP_ALIVE_INTERVAL,
   COPYING_FLAG,
   CURRENT_USER,
+  CREATION_CHANGE_TYPES,
   IGNORED_SOURCE,
+  LAST_FETCHED,
   MAX_REV_KEY,
   RELATIVE_TREE_POSITIONS,
   TABLE_NAMES,
   TASK_ID,
+  TREE_CHANGE_TYPES,
 } from './constants';
+import applyChanges, { applyMods, collectChanges } from './applyRemoteChanges';
+import mergeAllChanges from './mergeChanges';
+import db, { channelScope, CLIENTID, Collection } from './db';
+import { API_RESOURCES, INDEXEDDB_RESOURCES } from './registry';
+import { DELAYED_VALIDATION, fileErrors, NEW_OBJECT } from 'shared/constants';
 import urls from 'shared/urls';
 import { currentLanguage } from 'shared/i18n';
 import client, { paramsSerializer } from 'shared/client';
-import { NEW_OBJECT, fileErrors } from 'shared/constants';
 
 /**
  * Task names for which it is only useful to keep the most recent task object
@@ -44,8 +47,6 @@ const SINGULAR_TASKS = ['export-channel', 'sync-channel'];
 
 // Number of seconds after which data is considered stale.
 const REFRESH_INTERVAL = 5;
-
-const LAST_FETCHED = '__last_fetch';
 
 const QUERY_SUFFIXES = {
   IN: 'in',
@@ -127,14 +128,6 @@ export function injectVuexStore(store) {
 // Custom uuid4 function to match our dashless uuids on the server side
 export function uuid4() {
   return uuidv4().replace(/-/g, '');
-}
-
-/**
- * @param {Function|Object} updater
- * @return {Function}
- */
-export function resolveUpdater(updater) {
-  return isFunction(updater) ? updater : () => updater;
 }
 
 /*
@@ -501,7 +494,7 @@ class IndexedDBResource {
   }
 
   /**
-   * Method to remove the NEW_OBJECT
+   * Method to remove the NEW_OBJECT and DELAYED_VALIDATION symbols
    * property so we don't commit it to IndexedDB
    * @param {Object} obj
    * @return {Object}
@@ -511,6 +504,7 @@ class IndexedDBResource {
       ...obj,
     };
     delete out[NEW_OBJECT];
+    delete out[DELAYED_VALIDATION];
     return out;
   }
 
@@ -700,27 +694,45 @@ class Resource extends mix(APIResource, IndexedDBResource) {
       if (objs === EMPTY_ARRAY) {
         return [];
       }
-      if (!objs.length && !objs.count) {
-        return this.fetchCollection(params);
-      }
-      if (doRefresh) {
-        // Only fetch new updates if we've finished syncing the changes table
-        db[CHANGES_TABLE].where('table')
-          .equals(this.tableName)
-          .limit(1)
-          .toArray()
-          .then(pendingChanges => {
-            if (pendingChanges.length === 0) {
-              this.fetchCollection(params);
-            }
-          });
+      // if there are no objects, and it's also not an empty paginated response (objs.count),
+      // or we mean to refresh
+      if ((!objs.length && !objs.count) || doRefresh) {
+        let refresh = Promise.resolve(true);
+        // ContentNode tree operations are the troublemakers causing the logic below
+        if (this.tableName === TABLE_NAMES.CONTENTNODE) {
+          // Only fetch new updates if we don't have pending changes to ContentNode that
+          // affect tree structure
+          refresh = db[CHANGES_TABLE].where('table')
+            .equals(TABLE_NAMES.CONTENTNODE)
+            .filter(c => TREE_CHANGE_TYPES.includes(c.type))
+            .count()
+            .then(pendingCount => pendingCount === 0);
+        }
+
+        const fetch = refresh.then(shouldFetch => {
+          return shouldFetch ? this.fetchCollection(params) : [];
+        });
+        // Be sure to return the fetch promise to relay fetched objects in this condition
+        if (!objs.length && !objs.count) {
+          return fetch;
+        }
       }
       return objs;
     });
   }
 
   headModel(id) {
-    return client.head(this.modelUrl(id));
+    // If the resource identified by `id` has just been created, but we haven't verified
+    // the server has applied the change yet, we skip making the HEAD request for it
+    return db[CHANGES_TABLE].where('[table+key]')
+      .equals([this.tableName, id])
+      .filter(c => CREATION_CHANGE_TYPES.includes(c.type))
+      .count()
+      .then(pendingCount => {
+        if (pendingCount === 0) {
+          return client.head(this.modelUrl(id));
+        }
+      });
   }
 
   fetchModel(id) {
@@ -937,16 +949,11 @@ export const Session = new IndexedDBResource({
   async getSession() {
     return this.get(CURRENT_USER);
   },
-  async updateSession(currentUser) {
-    const result = await this.update(CURRENT_USER, currentUser);
-    if (!result) {
-      // put takes an object, not keypaths, so if the current user doesn't exist
-      // we create it with a put, and then call update again.
-      await this.put({
-        CURRENT_USER,
-      });
-      await this.update(CURRENT_USER, currentUser);
-    }
+  setSession(currentUser) {
+    return this.put({ CURRENT_USER, ...currentUser });
+  },
+  updateSession(currentUser) {
+    return this.update(CURRENT_USER, currentUser);
   },
 });
 
@@ -1036,7 +1043,12 @@ export const Channel = new Resource({
         () => {
           return Promise.all([
             db[CHANGES_TABLE].put(change),
-            ContentNode.table.where({ channel_id: id }).modify({ changed: false, published: true }),
+            ContentNode.table.where({ channel_id: id }).modify({
+              changed: false,
+              published: true,
+              has_new_descendants: false,
+              has_updated_descendants: false,
+            }),
           ]);
         }
       );
@@ -1349,34 +1361,30 @@ export const ContentNode = new TreeResource({
   move(id, target, position = RELATIVE_TREE_POSITIONS.FIRST_CHILD) {
     return this.resolveTreeInsert(id, target, position, false, data => {
       // Ignore changes from this operation except for the explicit move change we generate.
-      return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, CHANGES_TABLE, () => {
-        return this.tableMove(data);
+      return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, CHANGES_TABLE, async () => {
+        const payload = await this.tableMove(data);
+        await db[CHANGES_TABLE].put(data.change);
+        return payload;
       });
     });
   },
 
-  tableMove({ node, parent, payload, change }) {
-    return this.table
-      .update(node.id, payload)
-      .then(updated => {
-        // Update didn't succeed, this node probably doesn't exist, do a put instead,
-        // but need to add in other parent info.
-        if (!updated) {
-          payload = {
-            ...payload,
-            root_id: parent.root_id,
-          };
-          return this.table.put(payload);
-        }
-      })
-      .then(() => {
-        // Set old parent to changed
-        if (node.parent !== parent.id) {
-          return this.table.update(node.parent, { changed: true });
-        }
-      })
-      .then(() => db[CHANGES_TABLE].put(change))
-      .then(() => payload);
+  async tableMove({ node, parent, payload }) {
+    const updated = await this.table.update(node.id, payload);
+    // Update didn't succeed, this node probably doesn't exist, do a put instead,
+    // but need to add in other parent info.
+    if (!updated) {
+      payload = {
+        ...payload,
+        root_id: parent.root_id,
+      };
+      await this.table.put(payload);
+    }
+    // Set old parent to changed
+    if (node.parent !== parent.id) {
+      await this.table.update(node.parent, { changed: true });
+    }
+    return payload;
   },
 
   /**
@@ -1400,13 +1408,15 @@ export const ContentNode = new TreeResource({
 
       // Ignore changes from this operation except for the
       // explicit copy change we generate.
-      return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, CHANGES_TABLE, () => {
-        return this.tableCopy(data);
+      return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, CHANGES_TABLE, async () => {
+        const payload = await this.tableCopy(data);
+        await db[CHANGES_TABLE].put(data.change);
+        return payload;
       });
     });
   },
 
-  tableCopy({ node, parent, payload, change }) {
+  async tableCopy({ node, parent, payload }) {
     payload = {
       ...node,
       ...payload,
@@ -1414,6 +1424,7 @@ export const ContentNode = new TreeResource({
       // Placeholder node_id, we should receive the new value from backend result
       node_id: uuid4(),
       original_source_node_id: node.original_source_node_id || node.node_id,
+      original_channel_id: node.original_channel_id || node.channel_id,
       source_channel_id: node.channel_id,
       source_node_id: node.node_id,
       channel_id: parent.channel_id,
@@ -1427,10 +1438,8 @@ export const ContentNode = new TreeResource({
     };
 
     // Manually put our changes into the tree changes for syncing table
-    return this.table
-      .put(payload)
-      .then(() => db[CHANGES_TABLE].put(change))
-      .then(() => payload);
+    await this.table.put(payload);
+    return payload;
   },
 
   getAncestors(id) {
@@ -1815,6 +1824,10 @@ export const Task = new IndexedDBResource({
   tableName: TABLE_NAMES.TASK,
   idField: 'task_id',
   setTasks(tasks) {
+    for (let task of tasks) {
+      // Coerce channel_id to be a simple hex string
+      task.channel_id = task.channel_id.replace('-', '');
+    }
     return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
       let deletePromise = Promise.resolve();
       let taskDeletes = intersection(
