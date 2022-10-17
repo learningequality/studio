@@ -134,7 +134,6 @@
           <VFlex md6 class="pb-2">
             <Checkbox
               v-model="learnerManaged"
-              color="primary"
               :label="$tr('learnersCanMarkComplete')"
               style="margin-top: 0px; padding-top: 0px"
             />

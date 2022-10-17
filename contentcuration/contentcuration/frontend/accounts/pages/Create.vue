@@ -142,7 +142,6 @@
           :label="$tr('ToSCheck')"
           required
           :rules="tosRules"
-          :hide-details="false"
           class="my-1 policy-checkbox"
         />
 
@@ -157,7 +156,6 @@
           :label="$tr('privacyPolicyCheck')"
           required
           :rules="policyRules"
-          :hide-details="false"
           class="mb-3 mt-1 policy-checkbox"
         />
 
