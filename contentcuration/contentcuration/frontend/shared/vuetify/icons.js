@@ -28,9 +28,9 @@ export function getContentKindIcon(kind, isEmpty = false) {
 }
 
 export function getLearningActivityIcon(activity) {
-  if (activity == 'Explore') {
+  if (activity.toLowerCase() === 'explore') {
     return 'interactShaded';
-  } else if (activity == 'Multiple learning activities') {
+  } else if (activity === 'multiple') {
     return 'allActivities';
   } else {
     return `${camelCase(activity) + 'Solid'}`;
