@@ -86,12 +86,10 @@
     },
     methods: {
       icon(activity) {
-        return getLearningActivityIcon(this.text(activity));
+        return getLearningActivityIcon(activity);
       },
       text(activity) {
-        if (this.isTopic) {
-          return this.$tr('topic');
-        } else if (activity == 'multiple') {
+        if (activity === 'multiple') {
           return this.$tr('multipleLearningActivities');
         }
         return this.translateMetadataString(camelCase(activity));
@@ -99,7 +97,6 @@
     },
     $trs: {
       multipleLearningActivities: 'Multiple learning activities',
-      topic: 'Folder',
     },
   };
 
