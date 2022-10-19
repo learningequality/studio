@@ -48,6 +48,7 @@
           top: this.top,
           maxHeight: this.menuHeight,
           lazy: true,
+          contentClass: this.$isRTL ? 'forceRTLMenu' : null,
         };
       },
     },
@@ -91,3 +92,16 @@
   };
 
 </script>
+<style>
+
+/* According to the documentation, Vuetify supposedly supports a `right` prop to position the menu
+   on the right side, but there isn't any code that actually does this. So when using an RTL
+   language, this class will be applied and these will get flipped, because our intention is
+   left:auto and right:0
+ */
+.forceRTLMenu {
+  left: 0 !important;
+  right: auto !important;
+}
+
+</style>
