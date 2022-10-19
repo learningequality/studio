@@ -48,7 +48,7 @@
           top: this.top,
           maxHeight: this.menuHeight,
           lazy: true,
-          contentClass: this.$isRTL ? 'forceRTLMenu' : null,
+          contentClass: this.$isRTL ? 'forceRTLMenu' : '',
         };
       },
     },
