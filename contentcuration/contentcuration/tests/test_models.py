@@ -1,3 +1,4 @@
+import datetime
 import uuid
 
 import mock
@@ -11,6 +12,7 @@ from le_utils.constants import content_kinds
 from le_utils.constants import format_presets
 
 from contentcuration.constants import channel_history
+from contentcuration.constants import user_history
 from contentcuration.models import AssessmentItem
 from contentcuration.models import Channel
 from contentcuration.models import ChannelHistory
@@ -22,6 +24,7 @@ from contentcuration.models import generate_object_storage_name
 from contentcuration.models import Invitation
 from contentcuration.models import object_storage_name
 from contentcuration.models import User
+from contentcuration.models import UserHistory
 from contentcuration.tests import testdata
 from contentcuration.tests.base import StudioTestCase
 
@@ -806,27 +809,30 @@ class UserTestCase(StudioTestCase):
         user4.delete()
         self.assertIsNone(User.get_for_email("testing@test.com"))
 
-    def test_delete__sets_deleted_true(self):
+    def test_delete(self):
         user = self._create_user("tester@tester.com")
         user.delete()
-        self.assertEqual(user.deleted, True)
 
-    def test_delete__sets_is_active_false(self):
-        user = self._create_user("tester@tester.com")
-        user.delete()
+        # Sets deleted_at?
+        self.assertIsInstance(user.deleted_at, datetime.datetime)
+        # Sets is_active to False?
         self.assertEqual(user.is_active, False)
+        # Creates user history?
+        user_delete_history = UserHistory.objects.filter(user_id=user.id, action=user_history.DELETION).first()
+        self.assertIsNotNone(user_delete_history)
 
-    def test_recover__sets_deleted_false(self):
+    def test_recover(self):
         user = self._create_user("tester@tester.com")
         user.delete()
         user.recover()
-        self.assertEqual(user.deleted, False)
 
-    def test_recover__keeps_is_active_false(self):
-        user = self._create_user("tester@tester.com")
-        user.delete()
-        user.recover()
+        # Sets deleted_at to None?
+        self.assertEqual(user.deleted_at, None)
+        # Keeps is_active to False?
         self.assertEqual(user.is_active, False)
+        # Creates user history?
+        user_recover_history = UserHistory.objects.filter(user_id=user.id, action=user_history.RECOVERY).first()
+        self.assertIsNotNone(user_recover_history)
 
 
 class ChannelHistoryTestCase(StudioTestCase):

@@ -66,6 +66,7 @@ from rest_framework.utils.encoders import JSONEncoder
 
 from contentcuration.constants import channel_history
 from contentcuration.constants import completion_criteria
+from contentcuration.constants import user_history
 from contentcuration.constants.contentnode import kind_activity_map
 from contentcuration.db.models.expressions import Array
 from contentcuration.db.models.functions import ArrayRemove
@@ -199,7 +200,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     content_defaults = JSONField(default=dict)
     policies = JSONField(default=dict, null=True)
     feature_flags = JSONField(default=dict, null=True)
-    deleted = models.BooleanField(default=False, db_index=True)
+    deleted_at = models.DateTimeField(null=True, blank=True)
 
     _field_updates = FieldTracker(fields=[
         # Field to watch for changes
@@ -215,44 +216,66 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def delete(self):
         """
-        Hard deletes invitation associated to this account, hard deletes channel and channet sets
-        only if user is the only editor. Then soft deletes the user account.
+        Soft deletes the user account.
         """
-        from contentcuration.viewsets.common import SQCount
-
-        # Hard delete invitations associated to this account.
-        self.sent_to.all().delete()
-
-        # Hard delete channels associated with this user (if user is the only editor).
-        user_query = (
-            User.objects.filter(editable_channels__id=OuterRef('id'))
-                        .values_list('id', flat=True)
-                        .distinct()
-        )
-        self.editable_channels.annotate(num_editors=SQCount(user_query, field="id")).filter(num_editors=1).delete()
-
-        # Hard delete channel collections associated with this user (if user is the only editor).
-        user_query = (
-            User.objects.filter(channel_sets__id=OuterRef('id'))
-                        .values_list('id', flat=True)
-                        .distinct()
-        )
-        self.channel_sets.annotate(num_editors=SQCount(user_query, field="id")).filter(num_editors=1).delete()
-
-        # Soft delete user.
-        self.deleted = True
+        self.deleted_at = timezone.now()
         # Deactivate the user to disallow authentication and also
         # to let the user verify the email again after recovery.
         self.is_active = False
-
         self.save()
+        self.history.create(user_id=self.pk, action=user_history.DELETION)
 
     def recover(self):
         """
         Use this method when we want to recover a user.
         """
-        self.deleted = False
+        self.deleted_at = None
         self.save()
+        self.history.create(user_id=self.pk, action=user_history.RECOVERY)
+
+    def hard_delete_user_related_data(self):
+        """
+        Hard delete all user related data. But keeps the user record itself intact.
+
+        User related data that gets hard deleted are:
+            - sole editor non-public channels.
+            - sole editor non-public channelsets.
+            - sole editor non-public channels' content nodes and its underlying files that are not
+            used by any other channel.
+            - all user invitations.
+        """
+        from contentcuration.viewsets.common import SQCount
+
+        # Hard delete invitations associated to this account.
+        self.sent_to.all().delete()
+        self.sent_by.all().delete()
+
+        editable_channels_user_query = (
+            User.objects.filter(editable_channels__id=OuterRef('id'))
+                        .values_list('id', flat=True)
+                        .distinct()
+        )
+        non_public_channels_sole_editor = self.editable_channels.annotate(num_editors=SQCount(
+            editable_channels_user_query, field="id")).filter(num_editors=1, public=False)
+
+        # Point sole editor non-public channels' contentnodes to orphan tree to let
+        # our garbage collection delete the nodes and underlying files.
+        ContentNode._annotate_channel_id(ContentNode.objects).filter(channel_id__in=list(
+            non_public_channels_sole_editor)).update(parent_id=settings.ORPHANAGE_ROOT_ID)
+
+        # Hard delete non-public channels associated with this user (if user is the only editor).
+        non_public_channels_sole_editor.delete()
+
+        # Hard delete non-public channel collections associated with this user (if user is the only editor).
+        user_query = (
+            User.objects.filter(channel_sets__id=OuterRef('id'))
+                        .values_list('id', flat=True)
+                        .distinct()
+        )
+        self.channel_sets.annotate(num_editors=SQCount(user_query, field="id")).filter(num_editors=1, public=False).delete()
+
+        # Create history!
+        self.history.create(user_id=self.pk, action=user_history.RELATED_DATA_HARD_DELETION)
 
     def can_edit(self, channel_id):
         return Channel.filter_edit_queryset(Channel.objects.all(), self).filter(pk=channel_id).exists()
@@ -424,20 +447,20 @@ class User(AbstractBaseUser, PermissionsMixin):
         return queryset.filter(pk=user.pk)
 
     @classmethod
-    def get_for_email(cls, email, deleted=False, **filters):
+    def get_for_email(cls, email, deleted_at__isnull=True, **filters):
         """
         Returns the appropriate User record given an email, ordered by:
          - those with is_active=True first, which there should only ever be one
          - otherwise by ID DESC so most recent inactive shoud be returned
 
         Filters out deleted User records by default. Can be overridden with
-        deleted argument.
+        deleted_at__isnull argument.
 
         :param email: A string of the user's email
         :param filters: Additional filters to filter the User queryset
         :return: User or None
         """
-        return User.objects.filter(email__iexact=email.strip(), deleted=deleted, **filters)\
+        return User.objects.filter(email__iexact=email.strip(), deleted_at__isnull=deleted_at__isnull, **filters)\
             .order_by("-is_active", "-id").first()
 
 
@@ -1058,6 +1081,16 @@ class ChannelHistory(models.Model):
         indexes = [
             models.Index(fields=["channel_id"], name=CHANNEL_HISTORY_CHANNEL_INDEX_NAME),
         ]
+
+
+class UserHistory(models.Model):
+    """
+    Model that stores the user's action history.
+    """
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=False, blank=False, related_name="history", on_delete=models.CASCADE)
+    action = models.CharField(max_length=32, choices=user_history.choices)
+
+    performed_at = models.DateTimeField(default=timezone.now)
 
 
 class ChannelSet(models.Model):
