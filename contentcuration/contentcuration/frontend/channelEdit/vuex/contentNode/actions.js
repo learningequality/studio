@@ -279,15 +279,6 @@ function generateContentNodeData({
   }
   if (extra_fields !== NOVALUE) {
     contentNodeData.extra_fields = contentNodeData.extra_fields || {};
-    if (extra_fields.mastery_model) {
-      contentNodeData.extra_fields.mastery_model = extra_fields.mastery_model;
-    }
-    if (extra_fields.m) {
-      contentNodeData.extra_fields.m = extra_fields.m;
-    }
-    if (extra_fields.n) {
-      contentNodeData.extra_fields.n = extra_fields.n;
-    }
     if (extra_fields.randomize !== undefined) {
       contentNodeData.extra_fields.randomize = extra_fields.randomize;
     }

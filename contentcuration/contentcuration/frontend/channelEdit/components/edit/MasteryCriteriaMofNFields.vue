@@ -52,8 +52,8 @@
     getMasteryModelMValidators,
     getMasteryModelNValidators,
     translateValidator,
-  } from '../../../shared/utils/validation';
-  import MasteryModels from 'shared/leUtils/MasteryModels'; // MasteryModelsNames, // MasteryModelsList,
+  } from 'shared/utils/validation';
+  import MasteryModels from 'shared/leUtils/MasteryModels';
   import { constantsTranslationMixin } from 'shared/mixins';
 
   export default {
@@ -108,9 +108,7 @@
           return this.value && this.value.m;
         },
         set(value) {
-          value = Number(value);
-          // Make sure n is always greater than or equal to m
-          this.handleInput(value > this.nValue ? { m: value, n: value } : { m: value });
+          this.handleInput({ m: Number(value) });
         },
       },
       nValue: {
@@ -118,9 +116,7 @@
           return this.value && this.value.n;
         },
         set(value) {
-          value = Number(value);
-          // Make sure m is always less than or equal to n
-          this.handleInput(value < this.mValue ? { m: value, n: value } : { n: value });
+          this.handleInput({ n: Number(value) });
         },
       },
       mRules() {
@@ -133,10 +129,15 @@
       },
     },
     methods: {
-      handleInput(newValue) {
+      handleInput(update) {
+        // Don't emit input events unless we're sure we should
+        if (!this.showMofN) {
+          return;
+        }
+
         let data = {
           ...this.value,
-          ...newValue,
+          ...update,
         };
         this.$emit('input', data);
       },

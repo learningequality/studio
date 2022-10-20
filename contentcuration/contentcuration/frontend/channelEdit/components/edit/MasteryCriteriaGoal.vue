@@ -30,7 +30,7 @@
 
 <script>
 
-  import { getMasteryModelValidators, translateValidator } from '../../../shared/utils/validation';
+  import { getMasteryModelValidators, translateValidator } from 'shared/utils/validation';
   import MasteryModels, { MasteryModelsList } from 'shared/leUtils/MasteryModels';
   import { constantsTranslationMixin } from 'shared/mixins';
   import DropdownWrapper from 'shared/views/form/DropdownWrapper';
