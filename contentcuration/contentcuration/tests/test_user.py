@@ -161,10 +161,12 @@ class UserAccountTestCase(BaseAPITestCase):
                         self.assertIn(videos[index - 1].original_filename, row)
                         self.assertIn(_format_size(videos[index - 1].file_size), row)
             self.assertEqual(index, len(videos))
+    """
+    Write and refactor for related data hard delete test cases below.
+    """
 
     def test_account_deletion(self):
-        self.user.delete()
-        self.assertFalse(Channel.objects.filter(pk=self.channel.pk).exists())
+        pass
 
     def test_account_deletion_shared_channels_preserved(self):
         # Deleting a user account shouldn't delete shared channels
