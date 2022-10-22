@@ -17,11 +17,13 @@ from django.utils.timezone import now
 from le_utils.constants import content_kinds
 
 from contentcuration.constants import feature_flags
+from contentcuration.constants import user_history
 from contentcuration.db.models.functions import JSONObjectKeys
 from contentcuration.models import ContentNode
 from contentcuration.models import File
 from contentcuration.models import TaskResult
 from contentcuration.models import User
+from contentcuration.models import UserHistory
 
 
 class DisablePostDeleteSignal(object):
@@ -76,11 +78,13 @@ def clean_up_soft_deleted_users():
         - all user invitations.
     """
     account_deletion_buffer_delta = now() - datetime.timedelta(days=settings.ACCOUNT_DELETION_BUFFER)
-    users_to_delete = User.objects.filter(deleted_at__lt=account_deletion_buffer_delta)
+    deleted_users = User.objects.filter(deleted=True)
 
-    for user in users_to_delete:
-        user.hard_delete_user_related_data()
-        logging.info("Hard deleted user related data for user {}".format(user.email))
+    for user in deleted_users:
+        latest_deletion_time = UserHistory.objects.filter(user_id=user.id, action=user_history.DELETION).order_by("-performed_at").first()
+        if latest_deletion_time and latest_deletion_time.performed_at < account_deletion_buffer_delta:
+            user.hard_delete_user_related_data()
+            logging.info("Hard deleted user related data for user {}".format(user.email))
 
 
 def clean_up_deleted_chefs():

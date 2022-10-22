@@ -200,7 +200,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     content_defaults = JSONField(default=dict)
     policies = JSONField(default=dict, null=True)
     feature_flags = JSONField(default=dict, null=True)
-    deleted_at = models.DateTimeField(null=True, blank=True)
+    deleted = models.BooleanField(default=False, db_index=True)
 
     _field_updates = FieldTracker(fields=[
         # Field to watch for changes
@@ -218,7 +218,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         """
         Soft deletes the user account.
         """
-        self.deleted_at = timezone.now()
+        self.deleted = True
         # Deactivate the user to disallow authentication and also
         # to let the user verify the email again after recovery.
         self.is_active = False
@@ -229,7 +229,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         """
         Use this method when we want to recover a user.
         """
-        self.deleted_at = None
+        self.deleted = False
         self.save()
         self.history.create(user_id=self.pk, action=user_history.RECOVERY)
 
@@ -261,7 +261,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         # Point sole editor non-public channels' contentnodes to orphan tree to let
         # our garbage collection delete the nodes and underlying files.
         ContentNode._annotate_channel_id(ContentNode.objects).filter(channel_id__in=list(
-            non_public_channels_sole_editor)).update(parent_id=settings.ORPHANAGE_ROOT_ID)
+            non_public_channels_sole_editor.values_list("id", flat=True))).update(parent_id=settings.ORPHANAGE_ROOT_ID)
 
         # Hard delete non-public channels associated with this user (if user is the only editor).
         non_public_channels_sole_editor.delete()
@@ -447,21 +447,23 @@ class User(AbstractBaseUser, PermissionsMixin):
         return queryset.filter(pk=user.pk)
 
     @classmethod
-    def get_for_email(cls, email, deleted_at__isnull=True, **filters):
+    def get_for_email(cls, email, deleted=False, **filters):
         """
         Returns the appropriate User record given an email, ordered by:
          - those with is_active=True first, which there should only ever be one
          - otherwise by ID DESC so most recent inactive shoud be returned
 
-        Filters out deleted User records by default. Can be overridden with
-        deleted_at__isnull argument.
+        Filters out deleted User records by default. To include both deleted and
+        undeleted user records pass None to the deleted argument.
 
         :param email: A string of the user's email
         :param filters: Additional filters to filter the User queryset
         :return: User or None
         """
-        return User.objects.filter(email__iexact=email.strip(), deleted_at__isnull=deleted_at__isnull, **filters)\
-            .order_by("-is_active", "-id").first()
+        user_qs = User.objects.filter(email__iexact=email.strip())
+        if deleted is not None:
+            user_qs = user_qs.filter(deleted=deleted)
+        return user_qs.filter(**filters).order_by("-is_active", "-id").first()
 
 
 class UUIDField(models.CharField):

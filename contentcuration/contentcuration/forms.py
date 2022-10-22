@@ -46,7 +46,7 @@ class RegistrationForm(UserCreationForm, ExtraFormMixin):
 
     def clean_email(self):
         email = self.cleaned_data['email'].strip().lower()
-        if User.objects.filter(Q(is_active=True) | Q(deleted_at__isnull=False), email__iexact=email).exists():
+        if User.objects.filter(Q(is_active=True) | Q(deleted=True), email__iexact=email).exists():
             raise UserWarning
         return email
 

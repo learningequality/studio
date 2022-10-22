@@ -17,15 +17,19 @@ from le_utils.constants import format_presets
 
 from contentcuration import models as cc
 from contentcuration.api import activate_channel
+from contentcuration.constants import user_history
 from contentcuration.models import ContentNode
 from contentcuration.models import File
 from contentcuration.models import TaskResult
+from contentcuration.models import UserHistory
 from contentcuration.tests.base import BaseAPITestCase
 from contentcuration.tests.base import StudioTestCase
 from contentcuration.tests.testdata import tree
+from contentcuration.utils.db_tools import create_user
 from contentcuration.utils.garbage_collect import clean_up_contentnodes
 from contentcuration.utils.garbage_collect import clean_up_deleted_chefs
 from contentcuration.utils.garbage_collect import clean_up_feature_flags
+from contentcuration.utils.garbage_collect import clean_up_soft_deleted_users
 from contentcuration.utils.garbage_collect import clean_up_stale_files
 from contentcuration.utils.garbage_collect import clean_up_tasks
 from contentcuration.utils.garbage_collect import get_deleted_chefs_root
@@ -190,6 +194,36 @@ def _create_expired_contentnode(creation_date=THREE_MONTHS_AGO):
         modified=creation_date,
     )
     return c
+
+
+def _create_expired_deleted_user(email="test@test.com", deletion_date=THREE_MONTHS_AGO):
+    user = create_user(email, "password", "test", "test")
+    user.delete()
+
+    user_latest_delete_history = UserHistory.objects.filter(user_id=user.id, action=user_history.DELETION).order_by("-performed_at").first()
+    user_latest_delete_history.performed_at = deletion_date
+    user_latest_delete_history.save()
+    return user
+
+
+class CleanUpSoftDeletedExpiredUsersTestCase(StudioTestCase):
+    def test_cleanup__all_expired_soft_deleted_users(self):
+        expired_users = []
+        for i in range(0, 5):
+            expired_users.append(_create_expired_deleted_user(email=f"test-{i}@test.com"))
+
+        clean_up_soft_deleted_users()
+
+        for user in expired_users:
+            assert UserHistory.objects.filter(user_id=user.id, action=user_history.RELATED_DATA_HARD_DELETION).exists() is True
+
+    def test_no_cleanup__unexpired_soft_deleted_users(self):
+        # TO DO
+        pass
+
+    def test_no_cleanup__undeleted_users(self):
+        # TO DO
+        pass
 
 
 class CleanUpContentNodesTestCase(StudioTestCase):
