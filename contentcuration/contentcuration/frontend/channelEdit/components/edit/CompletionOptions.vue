@@ -277,7 +277,10 @@
           }
 
           if (this.kind === ContentKindsNames.H5P) {
-            if (!this.value['model']) {
+            if (
+              !this.value['model'] ||
+              this.value.model === CompletionCriteriaModels.DETERMINED_BY_RESOURCE
+            ) {
               return CompletionDropdownMap.determinedByResource;
             }
             return CompletionDropdownMap.completeDuration;
@@ -294,7 +297,7 @@
           return '';
         },
         set(value) {
-          let update = {};
+          const update = {};
           this.currentCompletionDropdown = value;
 
           // FOR AUDIO/VIDEO
@@ -351,8 +354,8 @@
           if (this.kind === ContentKindsNames.HTML5 || this.kind === ContentKindsNames.H5P) {
             if (value === CompletionDropdownMap.determinedByResource) {
               update.completion_criteria = {
-                model: this.value.model,
-                threshold: this.value.threshold,
+                model: CompletionCriteriaModels.DETERMINED_BY_RESOURCE,
+                threshold: null,
               };
             }
           }
@@ -384,7 +387,7 @@
           return { mastery_model: this.mastery_model };
         },
         set(threshold) {
-          let update = {};
+          const update = {};
           if (threshold.mastery_model === MasteryModelsNames.M_OF_N) {
             update.completion_criteria = {
               model: CompletionCriteriaModels.MASTERY,

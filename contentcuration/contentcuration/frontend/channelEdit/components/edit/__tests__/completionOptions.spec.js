@@ -2,6 +2,7 @@ import Vue from 'vue';
 import Vuetify from 'vuetify';
 import { shallowMount, mount } from '@vue/test-utils';
 import CompletionOptions from '../CompletionOptions.vue';
+import { CompletionCriteriaModels } from 'shared/constants';
 
 Vue.use(Vuetify);
 
@@ -628,7 +629,10 @@ describe('CompletionOptions', () => {
           const wrapper = mount(CompletionOptions, {
             propsData: {
               kind: 'html5',
-              value: { suggested_duration: null, model: 'approx_time' },
+              value: {
+                suggested_duration: null,
+                model: CompletionCriteriaModels.DETERMINED_BY_RESOURCE,
+              },
             },
           });
           wrapper.find({ ref: 'duration' }).vm.$emit('input', 'shortActivity');
@@ -640,7 +644,10 @@ describe('CompletionOptions', () => {
           const wrapper = mount(CompletionOptions, {
             propsData: {
               kind: 'html5',
-              value: { suggested_duration: null, model: 'approx_time' },
+              value: {
+                suggested_duration: null,
+                model: CompletionCriteriaModels.DETERMINED_BY_RESOURCE,
+              },
             },
           });
           wrapper.find({ ref: 'duration' }).vm.$emit('input', 'longActivity');
@@ -652,7 +659,10 @@ describe('CompletionOptions', () => {
           const wrapper = mount(CompletionOptions, {
             propsData: {
               kind: 'html5',
-              value: { suggested_duration: null, model: 'time' },
+              value: {
+                suggested_duration: null,
+                model: CompletionCriteriaModels.DETERMINED_BY_RESOURCE,
+              },
             },
           });
           wrapper.find({ ref: 'duration' }).vm.$emit('input', 'exactTime');
@@ -670,6 +680,23 @@ describe('CompletionOptions', () => {
           expect(wrapper.find({ ref: 'activity_duration' }).exists()).toBe(false);
           expect(wrapper.vm.showActivityDurationInput).toBe(false);
           expect(wrapper.vm.showReferenceHint).toBe(true);
+        });
+      });
+    });
+    describe(`html5`, () => {
+      describe(`when completion dropdown is the default value`, () => {
+        it(`should emit determined by resource when it is selected`, async () => {
+          const wrapper = mount(CompletionOptions, {
+            propsData: {
+              kind: 'html5',
+              value: { suggested_duration: null, model: null },
+            },
+          });
+          wrapper.find({ ref: 'completion' }).vm.$emit('input', 'determinedByResource');
+          await wrapper.vm.$nextTick();
+          expect(wrapper.emitted('input')[0][0].completion_criteria.model).toEqual(
+            CompletionCriteriaModels.DETERMINED_BY_RESOURCE
+          );
         });
       });
     });
