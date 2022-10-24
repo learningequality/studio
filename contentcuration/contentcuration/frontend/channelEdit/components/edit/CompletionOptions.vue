@@ -265,14 +265,17 @@
           }
 
           if (this.kind === ContentKindsNames.HTML5) {
+            console.log(this.value, this.value.model);
             if (
               !this.value['model'] ||
               this.value.model === CompletionCriteriaModels.APPROX_TIME ||
-              this.value.model === CompletionCriteriaModels.TIME ||
-              this.value.model === CompletionCriteriaModels.REFERENCE
+              this.value.model === CompletionCriteriaModels.TIME
             ) {
               return CompletionDropdownMap.completeDuration;
+            } else if (this.value.model === CompletionCriteriaModels.REFERENCE) {
+              return CompletionDropdownMap.reference;
             }
+
             return CompletionDropdownMap.determinedByResource;
           }
 
@@ -353,9 +356,15 @@
           // FOR H5P/HTML5
           if (this.kind === ContentKindsNames.HTML5 || this.kind === ContentKindsNames.H5P) {
             if (value === CompletionDropdownMap.determinedByResource) {
+              // when richard adds the final constant, add that condition here
               update.completion_criteria = {
                 model: CompletionCriteriaModels.DETERMINED_BY_RESOURCE,
                 threshold: null,
+              };
+            } else if (value === CompletionDropdownMap.completeDuration) {
+              update.completion_criteria = {
+                model: CompletionCriteriaModels.TIME,
+                threshold: this.value.suggested_duration || 0,
               };
             }
           }
