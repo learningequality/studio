@@ -132,10 +132,16 @@ export default function mergeAllChanges(changes, flatten = false, changesToSync 
     if (!('rev' in change) || typeof change.rev === 'undefined') {
       console.error('This change has no `rev`:', change);
       throw new Error('Cannot determine the correct order for a change with no `rev`.');
-    } else if (change.rev <= lastRev) {
+    } else if (lastRev && change.rev <= lastRev) {
       console.error("These changes aren't ordered by `rev`:", changes);
       throw new Error('Cannot merge changes unless they are ordered by `rev`.');
     }
+
+    // Skip the change if the change errored or was disallowed
+    if (change.disallowed || (change.errors && change.errors.length > 0)) {
+      continue;
+    }
+
     lastRev = change.rev;
 
     // Ignore changes initiated by non-Resource registered tables
