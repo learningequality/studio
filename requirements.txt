@@ -166,7 +166,7 @@ jsonschema==4.16.0
     # via -r requirements.in
 kombu==5.2.4
     # via celery
-le-utils==0.1.41
+le-utils==0.1.42
     # via -r requirements.in
 newrelic==6.2.0.156
     # via -r requirements.in
