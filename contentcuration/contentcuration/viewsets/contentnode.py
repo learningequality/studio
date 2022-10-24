@@ -273,7 +273,7 @@ class ThresholdField(Field):
 class CompletionCriteriaSerializer(JSONFieldDictSerializer):
     threshold = ThresholdField(allow_null=True)
     model = CharField()
-    learner_managed = BooleanField(required=False)
+    learner_managed = BooleanField(required=False, allow_null=True)
 
     def update(self, instance, validated_data):
         instance = super(CompletionCriteriaSerializer, self).update(instance, validated_data)

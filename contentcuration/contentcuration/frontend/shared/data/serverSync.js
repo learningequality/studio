@@ -154,7 +154,7 @@ function handleErrors(response) {
     // both with any errors and the results of any merging that happened prior
     // to the sync operation being called
     return db[CHANGES_TABLE].where('server_rev')
-      .anyOf(Object.keys(errorMap))
+      .anyOf(Object.keys(errorMap).map(Number))
       .modify(obj => {
         return Object.assign(obj, errorMap[obj.server_rev]);
       });

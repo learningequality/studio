@@ -90,6 +90,7 @@
 
 <script>
 
+  import get from 'lodash/get';
   import MasteryCriteriaGoal from './MasteryCriteriaGoal';
   import ActivityDuration from './ActivityDuration.vue';
   import MasteryCriteriaMofNFields from './MasteryCriteriaMofNFields';
@@ -163,11 +164,8 @@
     computed: {
       showMasteryCriteriaGoalDropdown() {
         if (this.kind === ContentKindsNames.EXERCISE) {
-          if (this.value.modality === ContentModalities.QUIZ) {
-            //this ensures that anytime the completion dropdown is practice quiz
-            return false;
-          }
-          return true;
+          //this ensures that anytime the completion dropdown is practice quiz
+          return this.value.modality !== ContentModalities.QUIZ;
         }
         return false;
       },
@@ -392,8 +390,8 @@
               model: CompletionCriteriaModels.MASTERY,
               threshold: {
                 mastery_model: threshold.mastery_model,
-                m: this.value.threshold.m || this.m,
-                n: this.value.threshold.n || this.n,
+                m: get(this.value, 'threshold.m') || this.m,
+                n: get(this.value, 'threshold.n') || this.n,
               },
             };
           } else {
@@ -406,8 +404,6 @@
               },
             };
           }
-          this.m = (this.value.threshold ? this.value.threshold.m : null) || this.m;
-          this.n = (this.value.threshold ? this.value.threshold.n : null) || this.n;
           this.handleInput(update);
         },
       },
@@ -435,35 +431,33 @@
       },
       masteryModelItem: {
         get() {
-          if (!this.value.threshold) {
-            return { m: null, n: null };
-          }
-
-          if (this.value.threshold.mastery_model !== MasteryModelsNames.M_OF_N) {
+          if (get(this.value, 'threshold.mastery_model') !== MasteryModelsNames.M_OF_N) {
             return {
-              m: this.value.threshold.m,
-              n: this.value.threshold.n,
+              m: null,
+              n: null,
             };
           }
           return {
-            m: this.value.threshold.m ? this.value.threshold.m : this.m,
-            n: this.value.threshold.n ? this.value.threshold.n : this.n,
+            m: get(this.value, 'threshold.m') || this.m,
+            n: get(this.value, 'threshold.n') || this.n,
           };
         },
         set(threshold) {
-          this.m = threshold.m;
-          this.n = threshold.n;
+          this.m = get(threshold, 'm') || this.m;
+          this.n = get(threshold, 'n') || this.n;
 
-          let update = {};
-          update.completion_criteria = {
+          const mastery_model = get(this.value, 'threshold.mastery_model');
+          const completion_criteria = {
             model: CompletionCriteriaModels.MASTERY,
             threshold: {
-              mastery_model: this.value.threshold.mastery_model,
-              m: threshold.m,
-              n: threshold.n,
+              mastery_model,
             },
           };
-          this.handleInput(update);
+          if (mastery_model === MasteryModelsNames.M_OF_N) {
+            completion_criteria.threshold.m = this.m;
+            completion_criteria.threshold.n = this.n;
+          }
+          this.handleInput({ completion_criteria });
         },
       },
       isLongActivity() {
