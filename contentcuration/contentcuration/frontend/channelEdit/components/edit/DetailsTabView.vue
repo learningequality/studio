@@ -59,7 +59,7 @@
               <LearningActivityOptions
                 ref="learning_activities"
                 v-model="contentLearningActivities"
-                :disabled="isTopic"
+                :disabled="anyIsTopic"
                 @focus="trackClick('Learning activities')"
               />
               <!-- Level -->
@@ -125,7 +125,7 @@
       </VLayout>
 
       <!-- Completion section for all resources -->
-      <VLayout v-if="!isTopic" row wrap class="section">
+      <VLayout v-if="!anyIsTopic && allSameKind" row wrap class="section">
         <VFlex xs12>
           <h1 class="subheading">
             {{ $tr('completionLabel') }}
@@ -143,7 +143,7 @@
             v-model="completionAndDuration"
             :kind="firstNode.kind"
             :fileDuration="fileDuration"
-            :required="!isDocument"
+            :required="!anyIsDocument || !allSameKind"
           />
         </VFlex>
       </VLayout>
@@ -528,8 +528,21 @@
       allResources() {
         return !this.nodes.some(node => node.kind === ContentKindsNames.TOPIC);
       },
+      allSameKind() {
+        const kind = this.firstNode.kind;
+        return !this.nodes.some(node => node.kind !== kind);
+      },
+      anyIsDocument() {
+        return this.nodes.some(n => n.kind === ContentKindsNames.DOCUMENT);
+      },
+      anyIsTopic() {
+        return this.nodes.some(n => n.kind === ContentKindsNames.TOPIC);
+      },
       isImported() {
         return isImportedContent(this.firstNode);
+      },
+      newContent() {
+        return !this.nodes.some(n => n[NEW_OBJECT]);
       },
       importedChannelLink() {
         return importedChannelLink(this.firstNode, this.$router);
@@ -705,15 +718,6 @@
       },
       videoSelected() {
         return this.oneSelected && this.firstNode.kind === ContentKindsNames.VIDEO;
-      },
-      newContent() {
-        return !this.nodes.some(n => n[NEW_OBJECT]);
-      },
-      isDocument() {
-        return this.firstNode.kind === ContentKindsNames.DOCUMENT;
-      },
-      isTopic() {
-        return this.firstNode.kind === ContentKindsNames.TOPIC;
       },
     },
     watch: {
