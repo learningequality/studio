@@ -584,6 +584,7 @@ class CatalogViewSet(ReadOnlyValuesViewset):
         "count",
         "public",
         "last_published",
+        "demo_server_url",
     )
 
     def get_queryset(self):
