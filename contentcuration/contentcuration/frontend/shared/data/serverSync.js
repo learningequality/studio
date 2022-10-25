@@ -258,7 +258,6 @@ async function syncChanges() {
   const unAppliedChanges = await db[CHANGES_TABLE].orderBy('server_rev')
     .filter(c => c.synced && !c.errors && !c.disallowed)
     .toArray();
-  unAppliedChanges.reverse();
   for (let channelId of channelIds) {
     channel_revs[channelId] = get(user, [MAX_REV_KEY, channelId], 0);
     const unAppliedChange = unAppliedChanges.find(c => c.channel_id === channelId);
