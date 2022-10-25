@@ -58,7 +58,7 @@ export function storageUrl(checksum, file_format) {
     return '';
   }
   /*eslint no-undef: "error"*/
-  return `${window.storageBaseUrl}${checksum[0]}/${checksum[1]}/${checksum}.${file_format}`;
+  return `/content/storage/${checksum[0]}/${checksum[1]}/${checksum}.${file_format}`;
 }
 
 /**
