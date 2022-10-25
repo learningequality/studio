@@ -249,8 +249,26 @@ async function syncChanges() {
     .filter(([id, time]) => id && time > now - CHANNEL_SYNC_KEEP_ALIVE_INTERVAL)
     .map(([id]) => id);
   const channel_revs = {};
+  // Ensure we ask for information about our changes that are as yet unapplied
+  // We need to do this as server side changes are applied 'out of order' as they are generated
+  // already applied but can have a server_rev higher than as yet unapplied client generated
+  // changes. This should be cleaned up when we are able to directly communicate with the client
+  // via websockets and don't need to store these kind of events in the same mechanism as the change
+  // event log.
+  const unAppliedChanges = await db[CHANGES_TABLE].orderBy('server_rev')
+    .filter(c => c.synced && !c.errors && !c.disallowed)
+    .toArray();
+  unAppliedChanges.reverse();
   for (let channelId of channelIds) {
     channel_revs[channelId] = get(user, [MAX_REV_KEY, channelId], 0);
+    const unAppliedChange = unAppliedChanges.find(c => c.channel_id === channelId);
+    if (
+      unAppliedChange &&
+      unAppliedChange.server_rev &&
+      unAppliedChange.server_rev < channel_revs[channelId]
+    ) {
+      channel_revs[channelId] = unAppliedChange.server_rev;
+    }
   }
 
   const requestPayload = {

@@ -141,7 +141,7 @@ class SyncView(APIView):
             "allowed": [],
             "changes": [],
             "errors": [],
-            "successess": [],
+            "successes": [],
             "tasks": [],
         }
 
