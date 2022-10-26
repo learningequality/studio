@@ -937,6 +937,13 @@ export const Session = new IndexedDBResource({
       this.monitorKeepAlive();
       window.addEventListener('focus', () => this.monitorKeepAlive());
       window.addEventListener('blur', () => this.stopMonitorKeepAlive());
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+          this.stopMonitorKeepAlive();
+        } else {
+          this.monitorKeepAlive();
+        }
+      });
     }
   },
   async getSession() {
