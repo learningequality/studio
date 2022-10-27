@@ -583,7 +583,10 @@
           ) {
             if (duration === DurationDropdownMap.EXACT_TIME) {
               update.suggested_duration_type = SuggestedDurationTypesMap.TIME;
-              update.suggested_duration = this.value.suggested_duration || 60;
+              update.suggested_duration = this.handleMinutesInputFromActivityDuration(
+                this.value.suggested_duration,
+                duration
+              );
             }
             if (duration === DurationDropdownMap.SHORT_ACTIVITY) {
               update.suggested_duration_type = SuggestedDurationTypesMap.APPROX_TIME;
@@ -634,7 +637,10 @@
             }
             if (duration === DurationDropdownMap.EXACT_TIME) {
               update.suggested_duration_type = SuggestedDurationTypesMap.TIME;
-              update.suggested_duration = this.value.suggested_duration || 60;
+              update.suggested_duration = this.handleMinutesInputFromActivityDuration(
+                this.value.suggested_duration,
+                duration
+              );
               update.completion_criteria = {
                 model: CompletionCriteriaModels.TIME,
                 threshold: update.suggested_duration,
@@ -668,7 +674,10 @@
             }
             if (duration === DurationDropdownMap.EXACT_TIME) {
               update.suggested_duration_type = SuggestedDurationTypesMap.TIME;
-              update.suggested_duration = this.value.suggested_duration || 60;
+              update.suggested_duration = this.handleMinutesInputFromActivityDuration(
+                this.value.suggested_duration,
+                duration
+              );
               update.completion_criteria = {
                 model: this.value.model,
                 threshold: this.value.threshold,
