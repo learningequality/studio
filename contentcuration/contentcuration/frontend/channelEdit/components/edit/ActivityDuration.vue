@@ -23,6 +23,7 @@
               :items="availableNumbers"
               :menu-props="menuProps"
               :attach="attach"
+              :rules="minutesRules"
             />
           </template>
         </DropdownWrapper>
@@ -102,10 +103,7 @@
         if (this.audioVideoUpload) {
           return false;
         }
-        return (
-          this.selectedDuration !== DurationDropdownMap.EXACT_TIME &&
-          this.selectedCompletion === CompletionDropdownMap.completeDuration
-        );
+        return this.selectedCompletion === CompletionDropdownMap.completeDuration;
       },
       showOptionalLabel() {
         return this.selectedDuration !== DurationDropdownMap.EXACT_TIME;
@@ -153,8 +151,14 @@
           return getShortActivityDurationValidators().map(translateValidator);
         } else if (this.selectedDuration === DurationDropdownMap.LONG_ACTIVITY) {
           return getLongActivityDurationValidators().map(translateValidator);
+        } else if (
+          this.selectedDuration === DurationDropdownMap.EXACT_TIME &&
+          this.selectedCompletion === CompletionDropdownMap.completeDuration
+        ) {
+          return getActivityDurationValidators().map(translateValidator);
+        } else {
+          return [];
         }
-        return getActivityDurationValidators().map(translateValidator);
       },
     },
     created() {
