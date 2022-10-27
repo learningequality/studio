@@ -280,8 +280,7 @@
           }
 
           if (this.kind === ContentKindsNames.EXERCISE) {
-            // if the practice quiz flag is set, return "practice quiz"
-            if (this.practiceQuizzesAllowed && this.value.modality === ContentModalities.QUIZ) {
+            if (this.value.modality === ContentModalities.QUIZ) {
               return CompletionDropdownMap.practiceQuiz;
             }
             return CompletionDropdownMap.goal;
@@ -377,8 +376,8 @@
             if (value === CompletionDropdownMap.practiceQuiz) {
               update.modality = ContentModalities.QUIZ;
               update.completion_criteria = {
-                model: this.value.model,
-                threshold: this.value.threshold,
+                model: this.value.model || CompletionCriteriaModels.MASTERY,
+                threshold: this.value.threshold || { mastery_model: MasteryModelsNames.DO_ALL },
               };
             } else {
               update.modality = null;
@@ -790,6 +789,10 @@
       durationRules() {
         const defaultStateForDocument = this.currentCompletionDropdown === null;
         if (this.value) {
+          // duration never required for exercises
+          if (this.value.model === CompletionCriteriaModels.MASTERY) {
+            return [];
+          }
           const allContentViewedIsChosenInCompletionDropdown =
             this.currentCompletionDropdown === CompletionDropdownMap.allContent ||
             (this.value.model === CompletionCriteriaModels.PAGES &&
