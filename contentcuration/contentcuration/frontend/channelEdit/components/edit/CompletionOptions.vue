@@ -177,8 +177,7 @@
         if (this.value) {
           return (
             this.value.model == CompletionCriteriaModels.REFERENCE ||
-            this.value.model == CompletionCriteriaModels.DETERMINED_BY_RESOURCE ||
-            this.kind === ContentKindsNames.H5P
+            this.value.model == CompletionCriteriaModels.DETERMINED_BY_RESOURCE
           );
         }
         return false;
@@ -788,27 +787,13 @@
         return false;
       },
       durationRules() {
-        const defaultStateForDocument = this.currentCompletionDropdown === null;
-        if (this.value) {
-          // duration never required for exercises
-          if (
-            this.value.model === CompletionCriteriaModels.MASTERY ||
-            this.value.model === CompletionCriteriaModels.DETERMINED_BY_RESOURCE ||
-            this.kind === ContentKindsNames.H5P
-          ) {
-            return [];
-          }
-          const allContentViewedIsChosenInCompletionDropdown =
-            this.currentCompletionDropdown === CompletionDropdownMap.allContent ||
-            (this.value.model === CompletionCriteriaModels.PAGES &&
-              this.currentCompletionDropdown === CompletionDropdownMap.allContent);
-
-          if (defaultStateForDocument || allContentViewedIsChosenInCompletionDropdown) {
-            return [];
-          }
+        if (
+          this.currentCompletionDropdown === CompletionDropdownMap.completeDuration ||
+          this.completionDropdown === CompletionDropdownMap.completeDuration
+        ) {
+          return getDurationValidators().map(translateValidator);
         }
-
-        return getDurationValidators().map(translateValidator);
+        return [];
       },
     },
     methods: {

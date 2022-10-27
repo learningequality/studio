@@ -268,7 +268,10 @@ describe('CompletionOptions', () => {
         const wrapper = mount(CompletionOptions, {
           propsData: {
             kind: 'h5p',
-            value: { suggested_duration: null },
+            value: {
+              suggested_duration: null,
+              model: CompletionCriteriaModels.DETERMINED_BY_RESOURCE,
+            },
           },
         });
         const dropdown = wrapper.find({ ref: 'duration' });

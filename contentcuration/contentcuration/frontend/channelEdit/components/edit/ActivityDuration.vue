@@ -156,9 +156,8 @@
           this.selectedCompletion === CompletionDropdownMap.completeDuration
         ) {
           return getActivityDurationValidators().map(translateValidator);
-        } else {
-          return [];
         }
+        return [];
       },
     },
     created() {
