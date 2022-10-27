@@ -177,7 +177,8 @@
         if (this.value) {
           return (
             this.value.model == CompletionCriteriaModels.REFERENCE ||
-            this.value.model == CompletionCriteriaModels.DETERMINED_BY_RESOURCE
+            this.value.model == CompletionCriteriaModels.DETERMINED_BY_RESOURCE ||
+            this.kind === ContentKindsNames.H5P
           );
         }
         return false;
@@ -790,7 +791,11 @@
         const defaultStateForDocument = this.currentCompletionDropdown === null;
         if (this.value) {
           // duration never required for exercises
-          if (this.value.model === CompletionCriteriaModels.MASTERY) {
+          if (
+            this.value.model === CompletionCriteriaModels.MASTERY ||
+            this.value.model === CompletionCriteriaModels.DETERMINED_BY_RESOURCE ||
+            this.kind === ContentKindsNames.H5P
+          ) {
             return [];
           }
           const allContentViewedIsChosenInCompletionDropdown =

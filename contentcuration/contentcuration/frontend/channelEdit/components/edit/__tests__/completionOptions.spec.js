@@ -83,15 +83,6 @@ describe('CompletionOptions', () => {
           });
           expect(wrapper.vm.completionDropdown).toBe('allContent');
         });
-        it(`'All content viewed' should be displayed if the model in the backend is 'reference'`, () => {
-          const wrapper = mount(CompletionOptions, {
-            propsData: {
-              kind: 'document',
-              value: { model: 'reference' },
-            },
-          });
-          expect(wrapper.vm.completionDropdown).toBe('allContent');
-        });
         it(`'All content viewed' should be displayed if the model in the backend is 'pages'`, () => {
           const wrapper = mount(CompletionOptions, {
             propsData: {
@@ -100,6 +91,15 @@ describe('CompletionOptions', () => {
             },
           });
           expect(wrapper.vm.completionDropdown).toBe('allContent');
+        });
+        it(`'Reference' should be displayed if the model in the backend is 'reference'`, () => {
+          const wrapper = mount(CompletionOptions, {
+            propsData: {
+              kind: 'document',
+              value: { model: 'reference' },
+            },
+          });
+          expect(wrapper.vm.completionDropdown).toBe('reference');
         });
         it(`'Complete duration' should be displayed if 'exact time'`, () => {
           const wrapper = mount(CompletionOptions, {
@@ -145,7 +145,7 @@ describe('CompletionOptions', () => {
         });
       });
       describe(`exercise`, () => {
-        it(`'Practice until goal is met' should be displayed by default if 'practice quiz' is enabled `, () => {
+        it(`'When goal is met' should be displayed by default`, () => {
           const wrapper = mount(CompletionOptions, {
             propsData: {
               kind: 'exercise',
@@ -156,7 +156,7 @@ describe('CompletionOptions', () => {
         });
       });
       describe(`html5 or h5p`, () => {
-        it(`'Complete duration' should be displayed by default for html5`, () => {
+        it(`'When time spent is equal to duration' should be displayed by default for html5 and h5p`, () => {
           const wrapper = mount(CompletionOptions, {
             propsData: {
               kind: 'html5',
@@ -164,15 +164,6 @@ describe('CompletionOptions', () => {
             },
           });
           expect(wrapper.vm.completionDropdown).toBe('completeDuration');
-        });
-        it(`'Determined by this resource' should be displayed if there is no model in the backend for h5p`, () => {
-          const wrapper = mount(CompletionOptions, {
-            propsData: {
-              kind: 'h5p',
-              value: { model: null },
-            },
-          });
-          expect(wrapper.vm.completionDropdown).toBe('determinedByResource');
         });
       });
     });
@@ -191,11 +182,10 @@ describe('CompletionOptions', () => {
           expect(wrapper.emitted('input')).toBeTruthy();
         });
       });
-      describe(`audio/video`, () => {
+      describe(`reference hint`, () => {
         it(`'Reference hint is visible when 'Reference' is selected`, () => {
           const wrapper = mount(CompletionOptions, {
             propsData: {
-              kind: 'audio',
               value: { model: 'reference' },
             },
           });
@@ -203,7 +193,7 @@ describe('CompletionOptions', () => {
         });
       });
       describe(`exercise`, () => {
-        it(`Goal and MofN components should not be displayed when switching to PQ from PUGIM`, async () => {
+        it(`Goal and MofN components should not be displayed when 'Practice Quiz' is selected`, async () => {
           const wrapper = mount(CompletionOptions, {
             propsData: {
               kind: 'exercise',
@@ -625,7 +615,7 @@ describe('CompletionOptions', () => {
     });
     describe(`html5 or h5p`, () => {
       describe(`when completion dropdown is 'Determined by this resource'`, () => {
-        it(`minutes input is displayed when 'Short activity' is selected`, async () => {
+        it(`duration dropdown is always hidden`, async () => {
           const wrapper = mount(CompletionOptions, {
             propsData: {
               kind: 'html5',
@@ -635,40 +625,9 @@ describe('CompletionOptions', () => {
               },
             },
           });
-          wrapper.find({ ref: 'duration' }).vm.$emit('input', 'shortActivity');
-          await wrapper.vm.$nextTick();
-          expect(wrapper.find({ ref: 'activity_duration' }).exists()).toBe(true);
-          expect(wrapper.vm.showActivityDurationInput).toBe(true);
-        });
-        it(`minutes input is displayed when 'Long activity' is selected`, async () => {
-          const wrapper = mount(CompletionOptions, {
-            propsData: {
-              kind: 'html5',
-              value: {
-                suggested_duration: null,
-                model: CompletionCriteriaModels.DETERMINED_BY_RESOURCE,
-              },
-            },
-          });
-          wrapper.find({ ref: 'duration' }).vm.$emit('input', 'longActivity');
-          await wrapper.vm.$nextTick();
-          expect(wrapper.find({ ref: 'activity_duration' }).exists()).toBe(true);
-          expect(wrapper.vm.showActivityDurationInput).toBe(true);
-        });
-        it(`minutes input is displayed when 'Exact time' is selected`, async () => {
-          const wrapper = mount(CompletionOptions, {
-            propsData: {
-              kind: 'html5',
-              value: {
-                suggested_duration: null,
-                model: CompletionCriteriaModels.DETERMINED_BY_RESOURCE,
-              },
-            },
-          });
-          wrapper.find({ ref: 'duration' }).vm.$emit('input', 'exactTime');
-          await wrapper.vm.$nextTick();
-          expect(wrapper.find({ ref: 'activity_duration' }).exists()).toBe(true);
-          expect(wrapper.vm.showActivityDurationInput).toBe(true);
+          expect(wrapper.find({ ref: 'activity_duration' }).exists()).toBe(false);
+          expect(wrapper.find({ ref: 'duration' }).exists()).toBe(false);
+          expect(wrapper.vm.showActivityDurationInput).toBe(false);
         });
         it(`minutes input is hidden and reference hint is displayed when 'Reference' is selected`, () => {
           const wrapper = mount(CompletionOptions, {
