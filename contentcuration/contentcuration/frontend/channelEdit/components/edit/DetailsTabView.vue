@@ -54,9 +54,10 @@
                 @focus="trackClick('Description')"
               />
             </VFlex>
-            <VFlex xs12 md6 :class="{ 'pl-2': $vuetify.breakpoint.mdAndUp }">
+            <VFlex xs12 :[mdValue]="true" :class="{ 'pl-2': $vuetify.breakpoint.mdAndUp }">
               <!-- Learning activity -->
               <LearningActivityOptions
+                v-if="oneSelected"
                 ref="learning_activities"
                 v-model="contentLearningActivities"
                 :disabled="anyIsTopic"
@@ -64,12 +65,14 @@
               />
               <!-- Level -->
               <LevelsOptions
+                v-if="oneSelected"
                 ref="contentLevel"
                 v-model="contentLevel"
                 @focus="trackClick('Levels dropdown')"
               />
               <!-- What you will need -->
               <ResourcesNeededOptions
+                v-if="oneSelected"
                 ref="resourcesNeeded"
                 v-model="resourcesNeeded"
                 @focus="trackClick('What you will need')"
@@ -104,7 +107,7 @@
             </VFlex>
           </VLayout>
           <!-- Category -->
-          <CategoryOptions ref="categories" v-model="categories" />
+          <CategoryOptions v-if="oneSelected" ref="categories" v-model="categories" />
         </VFlex>
       </VLayout>
 
@@ -196,6 +199,7 @@
 
           <!-- For Beginners -->
           <KCheckbox
+            v-if="oneSelected"
             id="beginners"
             ref="beginners"
             :checked="forBeginners"
@@ -551,8 +555,11 @@
         return this.firstNode.original_channel_name;
       },
       requiresAccessibility() {
-        return this.nodes.every(
-          node => node.kind !== ContentKindsNames.AUDIO && node.kind !== ContentKindsNames.TOPIC
+        return (
+          this.oneSelected &&
+          this.nodes.every(
+            node => node.kind !== ContentKindsNames.AUDIO && node.kind !== ContentKindsNames.TOPIC
+          )
         );
       },
       audioAccessibility() {
@@ -718,6 +725,11 @@
       },
       videoSelected() {
         return this.oneSelected && this.firstNode.kind === ContentKindsNames.VIDEO;
+      },
+      // Dynamically compute the size of the VFlex used
+      /* eslint-disable-next-line kolibri/vue-no-unused-properties */
+      mdValue() {
+        return this.oneSelected ? 'md6' : 'md12';
       },
     },
     watch: {
