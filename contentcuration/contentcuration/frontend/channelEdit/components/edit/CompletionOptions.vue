@@ -828,6 +828,9 @@
             suggested_duration = roundedValue;
           }
         }
+        if (duration === DurationDropdownMap.EXACT_TIME) {
+          suggested_duration = Math.round(minutes / 60) * 60;
+        }
         return suggested_duration;
       },
       handleInput({
