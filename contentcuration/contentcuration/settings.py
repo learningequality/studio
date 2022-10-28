@@ -413,18 +413,23 @@ LIBRARY_MODE = False
 key = get_secret("SENTRY_DSN_KEY")
 if key:
     key = key.strip()  # strip any possible whitespace or trailing newline
-release_commit = get_secret("RELEASE_COMMIT_SHA")
-if key and len(key) > 0 and release_commit:
+
+SENTRY_DSN = 'https://{secret}@sentry.io/1252819'.format(secret=key) if key else None
+SENTRY_ENVIRONMENT = get_secret("BRANCH_ENVIRONMENT")
+SENTRY_RELEASE = get_secret("RELEASE_COMMIT_SHA")
+SENTRY_ACTIVE = False
+
+if SENTRY_DSN and SENTRY_RELEASE and SENTRY_ENVIRONMENT:
     import sentry_sdk
     # TODO: there are also Celery and Redis integrations, but since they are new
     # I left them as a separate task so we can spend more time on testing.
     from sentry_sdk.integrations.django import DjangoIntegration
 
     sentry_sdk.init(
-        dsn='https://{secret}@sentry.io/1252819'.format(secret=key),
+        dsn=SENTRY_DSN,
         integrations=[DjangoIntegration()],
-        release=release_commit,
-        environment=get_secret("BRANCH_ENVIRONMENT"),
+        release=SENTRY_RELEASE,
+        environment=SENTRY_ENVIRONMENT,
         send_default_pii=True,
     )
 

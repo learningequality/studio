@@ -77,6 +77,12 @@
           var csrftoken = '{{ csrf_token }}';
           var betaMode = "{{ BETA_MODE }}" === "True";
           var storageBaseUrl = "{{ STORAGE_HOST }}/{{ STORAGE_BASE_URL }}";
+          {% if SENTRY_ACTIVE %}
+          var sentryActive = true;
+          var sentryDSN = "{{ SENTRY_DSN }}";
+          var sentryEnvironment = "{{ SENTRY_ENVIRONMENT }}";
+          var sentryRelease = "{{ SENTRY_RELEASE }}";
+          {% endif %}
           {%  if not debug %}
           if (user && user.id && window.Sentry) {
             Sentry.setUser({ id: user.id, email: user.email });
