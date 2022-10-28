@@ -399,10 +399,13 @@ class ContentNodeSerializer(BulkModelSerializer):
                     raise ValidationError("tag is greater than 30 characters")
         return data
 
-    def _check_completion_criteria(self, kind, validated_data):
+    def _check_completion_criteria(self, kind, complete, validated_data):
         completion_criteria = validated_data.get("extra_fields", {}).get("options", {}).get("completion_criteria", {})
         try:
-            completion_criteria_validator.check_model_for_kind(completion_criteria, kind)
+            if complete:
+                completion_criteria_validator.validate(completion_criteria, kind)
+            else:
+                completion_criteria_validator.check_model_for_kind(completion_criteria, kind)
         except DjangoValidationError as e:
             raise ValidationError(e)
 
@@ -411,7 +414,7 @@ class ContentNodeSerializer(BulkModelSerializer):
         if "tags" in validated_data:
             tags = validated_data.pop("tags")
 
-        self._check_completion_criteria(validated_data.get("kind"), validated_data)
+        self._check_completion_criteria(validated_data.get("kind"), validated_data.get("complete", False), validated_data)
 
         instance = super(ContentNodeSerializer, self).create(validated_data)
 
@@ -431,7 +434,7 @@ class ContentNodeSerializer(BulkModelSerializer):
             tags = validated_data.pop("tags")
             set_tags({instance.id: tags})
 
-        self._check_completion_criteria(validated_data.get("kind", instance.kind_id), validated_data)
+        self._check_completion_criteria(validated_data.get("kind", instance.kind_id), validated_data.get("complete", instance.complete), validated_data)
 
         return super(ContentNodeSerializer, self).update(instance, validated_data)
 
