@@ -28,13 +28,18 @@ import urls from 'shared/urls';
 // change being registered, sync changes!
 const SYNC_IF_NO_CHANGES_FOR = 0.5;
 
+// 25 seconds
+const WEBSOCKET_PING_INTERVAL = 25000;
+
 let socket;
+let shouldWePing = true;
 // Flag to check if a sync is currently active.
 let syncActive = false;
 
 const commonFields = ['type', 'key', 'table', 'rev', 'channel_id', 'user_id'];
 const objectFields = ['objs', 'mods'];
 const ignoredSubFields = [COPYING_FLAG, LAST_FETCHED, TASK_ID];
+
 
 const ChangeTypeMapFields = {
   [CHANGE_TYPES.CREATED]: commonFields.concat(['obj']),
@@ -260,6 +265,8 @@ async function WebsocketSendChanges() {
     // in order to still call our change cleanup code.
     if (changes.length) {
       requestPayload.changes = changes;
+      //set ping to false to reset ping timmer
+      shouldWePing = false;
       socket.send(
         JSON.stringify({
           payload: requestPayload,
@@ -415,6 +422,18 @@ async function handleChanges(changes) {
 
 let intervalTimer;
 
+// Skip the Pinging if we recently interacted with backend 
+var pingTimer = function () {
+  if(shouldWePing == false){
+    shouldWePing = true;
+    return;
+  }
+  socket.send(JSON.stringify({
+    ping: "PING!",
+  }))
+}
+
+
 export function startSyncing() {
   // Initiate a sync immediately in case any data
   // is left over in the database.
@@ -431,6 +450,10 @@ export function startSyncing() {
   socket.addEventListener('open', () => {
     console.log('Websocket connected');
   });
+  
+  //Keep Pinging the websocket connection to keep connection alive
+  setInterval(pingTimer, WEBSOCKET_PING_INTERVAL);
+
 
   // Listen for any errors due to which connection may be closed.
   socket.addEventListener('error', event => {
