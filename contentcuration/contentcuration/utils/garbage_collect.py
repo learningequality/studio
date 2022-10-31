@@ -8,9 +8,11 @@ import logging
 from celery import states
 from django.conf import settings
 from django.core.files.storage import default_storage
+from django.db.models import Subquery
 from django.db.models.expressions import CombinedExpression
 from django.db.models.expressions import Exists
 from django.db.models.expressions import F
+from django.db.models.expressions import OuterRef
 from django.db.models.expressions import Value
 from django.db.models.signals import post_delete
 from django.utils.timezone import now
@@ -78,13 +80,14 @@ def clean_up_soft_deleted_users():
         - all user invitations.
     """
     account_deletion_buffer_delta = now() - datetime.timedelta(days=settings.ACCOUNT_DELETION_BUFFER)
-    deleted_users = User.objects.filter(deleted=True)
+    user_latest_deletion_time_subquery = Subquery(UserHistory.objects.filter(user_id=OuterRef(
+        "id"), action=user_history.DELETION).values("performed_at").order_by("-performed_at")[:1])
+    users_to_delete = User.objects.annotate(latest_deletion_time=user_latest_deletion_time_subquery).filter(
+        deleted=True, latest_deletion_time__lt=account_deletion_buffer_delta)
 
-    for user in deleted_users:
-        latest_deletion_time = UserHistory.objects.filter(user_id=user.id, action=user_history.DELETION).order_by("-performed_at").first()
-        if latest_deletion_time and latest_deletion_time.performed_at < account_deletion_buffer_delta:
-            user.hard_delete_user_related_data()
-            logging.info("Hard deleted user related data for user {}".format(user.email))
+    for user in users_to_delete:
+        user.hard_delete_user_related_data()
+        logging.info("Hard deleted user related data for user {}.".format(user.email))
 
 
 def clean_up_deleted_chefs():

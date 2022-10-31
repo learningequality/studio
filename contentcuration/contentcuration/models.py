@@ -200,6 +200,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     content_defaults = JSONField(default=dict)
     policies = JSONField(default=dict, null=True)
     feature_flags = JSONField(default=dict, null=True)
+
     deleted = models.BooleanField(default=False, db_index=True)
 
     _field_updates = FieldTracker(fields=[
