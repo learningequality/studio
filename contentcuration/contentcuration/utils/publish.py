@@ -99,15 +99,15 @@ def send_emails(channel, user_id, version_notes=''):
 
     if user_id:
         user = ccmodels.User.objects.get(pk=user_id)
-        message = render_to_string('registration/channel_published_email.txt',
+        message = render_to_string('registration/channel_published_email.html',
                                    {'channel': channel, 'user': user, 'token': token, 'notes': version_notes, 'domain': domain})
-        user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL, )
+        user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL, html_message=message)
     else:
         # Email all users about updates to channel
         for user in itertools.chain(channel.editors.all(), channel.viewers.all()):
-            message = render_to_string('registration/channel_published_email.txt',
+            message = render_to_string('registration/channel_published_email.html',
                                        {'channel': channel, 'user': user, 'token': token, 'notes': version_notes, 'domain': domain})
-            user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL, )
+            user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL, html_message=message)
 
 
 def create_content_database(channel, force, user_id, force_exercises, progress_tracker=None):
