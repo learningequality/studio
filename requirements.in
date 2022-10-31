@@ -20,7 +20,7 @@ Django==3.2.14
 django-webpack-loader==0.7.0
 google-cloud-error-reporting
 google-cloud-storage
-django-s3-storage==0.13.9
+django-s3-storage==0.13.10
 requests>=2.20.0
 google-cloud-core
 django-db-readonly==0.7.0

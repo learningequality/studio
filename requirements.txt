@@ -97,7 +97,7 @@ django-redis==5.2.0
     # via -r requirements.in
 django-registration==3.3
     # via -r requirements.in
-django-s3-storage==0.13.9
+django-s3-storage==0.13.10
     # via -r requirements.in
 django-webpack-loader==0.7.0
     # via -r requirements.in
