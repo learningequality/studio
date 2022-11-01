@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+{% load i18n %}
+<html>
+<head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+    {% autoescape off %}
+    <p>{% blocktrans with name=user.first_name %}Hello {{ name }},{% endblocktrans %}</p>
+
+    <p><a href="{{ domain }}{% url 'channel' channel_id=channel.pk %}" target="_blank">{% blocktrans with channel_name=channel.name %}{{ channel_name }}{% endblocktrans %}</a> ({{ domain }}{% url 'channel' channel_id=channel.pk %}) {% translate "has finished publishing! Here is the channel token (for importing it into Kolibri):" %}</p>
+
+    <p>
+        {% blocktrans with channel_token=token %}Token: {{ channel_token }}{% endblocktrans %}
+        <br>
+        {% blocktrans with channel_id=channel.pk %}ID (for Kolibri version 0.6.0 and below): {{ channel_id }}{% endblocktrans %}
+    </p>
+
+    <p>{% blocktrans with notes=notes %}Version notes: {{ notes }}{% endblocktrans %}</p>
+
+    <p>
+        {% translate "Thanks for using Kolibri Studio!" %}
+        <br>
+        {% translate "The Learning Equality Team" %}
+    </p>
+
+    <p>{% translate "You are receiving this email because you are subscribed to this channel." %}</p>
+    {% endautoescape %}
+</body>
+</html>
