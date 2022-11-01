@@ -41,17 +41,12 @@
     mixins: [constantsTranslationMixin],
     props: {
       value: {
-        type: Object,
+        type: String,
         required: false,
         validator: function(value) {
-          return (
-            !value ||
-            !value.mastery_model ||
-            !value.mastery_model.toString() ||
-            MasteryModels.has(value.mastery_model)
-          );
+          return !value || MasteryModels.has(value);
         },
-        default: () => ({}),
+        default: '',
       },
       placeholder: {
         type: String,
@@ -73,10 +68,10 @@
     computed: {
       masteryModel: {
         get() {
-          return this.value && this.value.mastery_model;
+          return this.value;
         },
         set(mastery_model) {
-          this.handleInput({ mastery_model });
+          this.$emit('input', mastery_model);
         },
       },
       masteryCriteria() {
@@ -87,15 +82,6 @@
       },
       masteryRules() {
         return this.required ? getMasteryModelValidators().map(translateValidator) : [];
-      },
-    },
-    methods: {
-      handleInput(newValue) {
-        let data = {
-          ...this.value,
-          ...newValue,
-        };
-        this.$emit('input', data);
       },
     },
     $trs: {

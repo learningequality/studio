@@ -137,6 +137,7 @@ function _getErrorMsg(error) {
     [ValidationErrors.MASTERY_MODEL_N_GT_ZERO]: translator.$tr('masteryModelNGtZero'),
     [ValidationErrors.LEARNING_ACTIVITY_REQUIRED]: translator.$tr('fieldRequired'),
     [ValidationErrors.DURATION_REQUIRED]: translator.$tr('fieldRequired'),
+    [ValidationErrors.COMPLETION_REQUIRED]: translator.$tr('fieldRequired'),
     [ValidationErrors.ACTIVITY_DURATION_REQUIRED]: translator.$tr('fieldRequired'),
     [ValidationErrors.ACTIVITY_DURATION_MIN_FOR_SHORT_ACTIVITY]: translator.$tr(
       'activityDurationGteOne'

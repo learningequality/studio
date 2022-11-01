@@ -130,20 +130,12 @@
           <h1 class="subheading">
             {{ $tr('completionLabel') }}
           </h1>
-          <!-- Checkbox for "Allow learners to mark complete" -->
-          <VFlex md6 class="pb-2">
-            <Checkbox
-              v-model="learnerManaged"
-              color="primary"
-              :label="$tr('learnersCanMarkComplete')"
-              style="margin-top: 0px; padding-top: 0px"
-            />
-          </VFlex>
           <CompletionOptions
             v-model="completionAndDuration"
             :kind="firstNode.kind"
             :fileDuration="fileDuration"
             :required="!anyIsDocument || !allSameKind"
+            :markCompleteLabel="$tr('learnersCanMarkComplete')"
           />
         </VFlex>
       </VLayout>
@@ -392,12 +384,13 @@
   import VisibilityDropdown from 'shared/views/VisibilityDropdown';
   import Checkbox from 'shared/views/form/Checkbox';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
-  import { NEW_OBJECT, AccessibilityCategories, ResourcesNeededTypes } from 'shared/constants';
+  import {
+    NEW_OBJECT,
+    AccessibilityCategories,
+    ResourcesNeededTypes,
+    nonUniqueValue,
+  } from 'shared/constants';
   import { constantsTranslationMixin, metadataTranslationMixin } from 'shared/mixins';
-
-  // Define an object to act as the place holder for non unique values.
-  const nonUniqueValue = {};
-  nonUniqueValue.toString = () => '';
 
   function getValueFromResults(results) {
     if (results.length === 0) {
@@ -644,25 +637,10 @@
           };
         },
         set({ completion_criteria, suggested_duration, suggested_duration_type, modality }) {
-          if (completion_criteria) {
-            completion_criteria.learner_managed = this.learnerManaged;
-          }
           const options = { completion_criteria, modality };
           this.updateExtraFields({ options });
           this.updateExtraFields({ suggested_duration_type });
           this.update({ suggested_duration });
-        },
-      },
-      learnerManaged: {
-        get() {
-          const { completion_criteria = {} } = this.getExtraFieldsValueFromNodes('options') || {};
-          return completion_criteria.learner_managed;
-        },
-        set(value) {
-          const { completion_criteria = {}, ...options } =
-            this.getExtraFieldsValueFromNodes('options') || {};
-          completion_criteria.learner_managed = value;
-          this.updateExtraFields({ options: { ...options, completion_criteria } });
         },
       },
       /* COMPUTED PROPS */
