@@ -281,7 +281,7 @@
             update.threshold = null;
           } else if (value === CompletionDropdownMap.practiceQuiz) {
             update.modality = ContentModalities.QUIZ;
-            update.threshold = this.threshold || { mastery_model: MasteryModelsNames.DO_ALL };
+            update.threshold = { mastery_model: MasteryModelsNames.DO_ALL };
           } else if (value === CompletionDropdownMap.goal) {
             update.modality = null;
             update.model = CompletionCriteriaModels.MASTERY;
