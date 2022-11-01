@@ -263,6 +263,11 @@
             update.model = this.audioVideoResource
               ? CompletionCriteriaModels.TIME
               : CompletionCriteriaModels.APPROX_TIME;
+            if (!this.audioVideoResource) {
+              update.threshold = DEFAULT_SHORT_ACTIVITY;
+              update.duration = update.threshold;
+            }
+            update.durationType = update.model;
           } else if (value === CompletionDropdownMap.allContent) {
             update.model = CompletionCriteriaModels.PAGES;
             update.threshold = '100%';
@@ -372,6 +377,7 @@
           }
           if (this.timeBasedModel) {
             update.model = update.durationType;
+            update.threshold = update.duration || this.durationValue;
           }
           this.handleInput(update);
         },
@@ -415,7 +421,7 @@
       },
       learnerManaged: {
         get() {
-          return get(this.value, ['completion_criteria', 'learner_managed'], false);
+          return get(this.value, 'learner_managed', false);
         },
         set(learner_managed) {
           this.handleInput({ learner_managed });
