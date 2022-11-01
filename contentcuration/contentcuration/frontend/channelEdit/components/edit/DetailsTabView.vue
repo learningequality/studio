@@ -34,6 +34,7 @@
           />
           <VLayout row wrap>
             <VFlex
+              v-if="oneSelected"
               xs12
               md6
               class="basicInfoColumn"
@@ -41,7 +42,6 @@
             >
               <!-- Description -->
               <VTextarea
-                v-if="oneSelected"
                 ref="description"
                 v-model="description"
                 :label="$tr('descriptionLabel')"
@@ -54,7 +54,11 @@
                 @focus="trackClick('Description')"
               />
             </VFlex>
-            <VFlex xs12 :[mdValue]="true" :class="{ 'pl-2': $vuetify.breakpoint.mdAndUp }">
+            <VFlex
+              xs12
+              :[mdValue]="true"
+              :class="{ 'pl-2': $vuetify.breakpoint.mdAndUp && oneSelected }"
+            >
               <!-- Learning activity -->
               <LearningActivityOptions
                 v-if="oneSelected"
@@ -919,7 +923,7 @@
     }
 
     .section .flex {
-      margin: 24px 0 !important;
+      margin: 12px 0 !important;
     }
 
     .auth-section {
