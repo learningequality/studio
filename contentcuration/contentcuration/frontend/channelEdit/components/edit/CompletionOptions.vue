@@ -414,7 +414,7 @@
         if (this.kind && this.required) {
           return getCompletionValidators().map(translateValidator);
         }
-        return false;
+        return [];
       },
       durationRules() {
         if (this.completionDropdown === CompletionDropdownMap.completeDuration) {

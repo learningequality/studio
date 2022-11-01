@@ -105,6 +105,14 @@ export function isNodeComplete({ nodeDetails, assessmentItems, files }) {
 }
 
 // Private helpers
+function _isPracticeQuiz(node) {
+  const modality = get(node, 'extra_fields.options.modality', {});
+  if (modality === 'QUIZ') {
+    return true;
+  }
+  return false;
+}
+
 function _getLicense(node) {
   return node.license && Licenses.get(node.license.id || node.license);
 }
@@ -272,6 +280,22 @@ export function getNodeLearningActivityErrors(node) {
     .filter(value => value !== true);
 }
 
+export function getCompletionDurationErrors(node) {
+  const criteria = get(node, 'extra_fields.options.completion_criteria', {});
+  // duration requirement is blocking only when is is required for the model
+  // and there is no valid threshold
+  if (criteria.model === CompletionCriteriaModels.TIME) {
+    if (criteria.threshold) {
+      return [];
+    } else {
+      return getDurationValidators()
+        .map(validator => validator(node))
+        .filter(value => value !== true);
+    }
+  }
+  return [];
+}
+
 export function getNodeLicenseDescriptionErrors(node) {
   const license = _getLicense(node);
   if (!license || !license.is_custom) {
@@ -322,6 +346,11 @@ export function getNodeDetailsErrors(node) {
     errors = errors.concat(titleErrors);
   }
 
+  const completionDurationErrors = getCompletionDurationErrors(node);
+  if (completionDurationErrors.length) {
+    errors = errors.concat(completionDurationErrors);
+  }
+
   // authoring information is required for resources
   if (!node.freeze_authoring_data && node.kind !== ContentKindsNames.TOPIC) {
     const licenseErrors = getNodeLicenseErrors(node);
@@ -347,8 +376,11 @@ export function getNodeDetailsErrors(node) {
     }
   }
 
-  // mastery is required on exercises
-  if (node.kind === ContentKindsNames.EXERCISE) {
+  // mastery is required on exercises but not on practice quizzes
+  // Practice quiz requirements are set in the background, and separate validations
+  // run to check this based on the completion_criteria in LE utils
+  if (node.kind === ContentKindsNames.EXERCISE && !_isPracticeQuiz(node)) {
+    console.log('not practice quiz');
     const masteryModelErrors = getNodeMasteryModelErrors(node);
     const masteryModelMErrors = getNodeMasteryModelMErrors(node);
     const masteryModelNErrors = getNodeMasteryModelNErrors(node);
