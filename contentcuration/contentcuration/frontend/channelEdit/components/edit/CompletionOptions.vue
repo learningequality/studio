@@ -266,6 +266,9 @@
             if (!this.audioVideoResource) {
               update.threshold = DEFAULT_SHORT_ACTIVITY;
               update.duration = update.threshold;
+            } else {
+              update.threshold = this.generateDefaultThreshold();
+              update.duration = update.threshold;
             }
             update.durationType = update.model;
           } else if (value === CompletionDropdownMap.allContent) {
