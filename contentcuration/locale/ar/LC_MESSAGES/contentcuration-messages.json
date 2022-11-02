@@ -820,7 +820,7 @@
   "DetailsTabView.importedFromButtonText": "استيراد من {channel}",
   "DetailsTabView.languageChannelHelpText": "اتركه فارغاً من أجل استخدام لغة القناة",
   "DetailsTabView.languageHelpText": "اتركه فارغًا من أجل استخدام لغة المجلد",
-  "DetailsTabView.learnersCanMarkComplete": "السماح للمتعلمين بتحديده على أنه مكتمل",
+  "CompletionOptions.learnersCanMarkComplete": "السماح للمتعلمين بتحديده على أنه مكتمل",
   "DetailsTabView.noTagsFoundText": "لم يتم العثور على نتائج بحث لـ\"{text}\". إضغط على 'إدخال' لإنشاء تصنيف جديد",
   "DetailsTabView.providerLabel": "موفر الخدمة",
   "DetailsTabView.providerToolTip": "المنظمة التي كلّفت بالمحتوى أو تقوم بنشر المحتوى",

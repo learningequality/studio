@@ -820,7 +820,7 @@
   "DetailsTabView.importedFromButtonText": "Importado do {channel}",
   "DetailsTabView.languageChannelHelpText": "Deixar em branco para usar o idioma do canal",
   "DetailsTabView.languageHelpText": "Deixar em branco para que o idioma da pasta seja utilizado",
-  "DetailsTabView.learnersCanMarkComplete": "Permitir que os alunos marquem como 'concluído'",
+  "CompletionOptions.learnersCanMarkComplete": "Permitir que os alunos marquem como 'concluído'",
   "DetailsTabView.noTagsFoundText": "Nenhum resultado encontrado para \"{text}\". Pressione 'Enter' para criar um novo marcador",
   "DetailsTabView.providerLabel": "Provedor",
   "DetailsTabView.providerToolTip": "Organização que encomendou ou distribui o conteúdo",

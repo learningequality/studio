@@ -135,7 +135,6 @@
             :kind="firstNode.kind"
             :fileDuration="fileDuration"
             :required="!anyIsDocument || !allSameKind"
-            :markCompleteLabel="$tr('learnersCanMarkComplete')"
           />
         </VFlex>
       </VLayout>
@@ -860,7 +859,6 @@
       assessmentOptionsLabel: 'Assessment options',
       randomizeQuestionLabel: 'Randomize question order for learners',
       completionLabel: 'Completion',
-      learnersCanMarkComplete: 'Allow learners to mark as complete',
     },
   };
 

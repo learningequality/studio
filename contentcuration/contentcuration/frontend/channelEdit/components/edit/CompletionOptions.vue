@@ -5,7 +5,7 @@
     <Checkbox
       v-model="learnerManaged"
       color="primary"
-      :label="markCompleteLabel"
+      :label="$tr('learnersCanMarkComplete')"
       style="padding-bottom: 16px;"
     />
     <!-- Layout when practice quizzes are enabled -->
@@ -202,11 +202,6 @@
         type: Object,
         required: false,
         default: () => ({}),
-      },
-      // TODO: move string in here
-      markCompleteLabel: {
-        type: String,
-        required: true,
       },
     },
     computed: {
@@ -520,6 +515,7 @@
       exactTime: 'Time to complete',
       referenceHint:
         'Progress will not be tracked on reference material unless learners mark it as complete',
+      learnersCanMarkComplete: 'Allow learners to mark as complete',
     },
   };
 
