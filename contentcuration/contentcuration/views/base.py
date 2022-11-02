@@ -346,6 +346,12 @@ def activate_channel_endpoint(request):
 # flake8: noqa: C901
 def set_language(request):
     """
+    We are using set_language from official Django set_language redirect view
+    https://docs.djangoproject.com/en/3.2/_modules/django/views/i18n/#set_language
+    and slighty modifying it according to our use case as we donot use AJAX, hence we donot
+    redirect rather just respond the required URL!
+
+
     Since this view changes how the user will see the rest of the site, it must
     only be accessed as a POST request. If called as a GET request, it will
     error.
