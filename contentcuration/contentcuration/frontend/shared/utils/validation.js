@@ -380,7 +380,6 @@ export function getNodeDetailsErrors(node) {
   // Practice quiz requirements are set in the background, and separate validations
   // run to check this based on the completion_criteria in LE utils
   if (node.kind === ContentKindsNames.EXERCISE && !_isPracticeQuiz(node)) {
-    console.log('not practice quiz');
     const masteryModelErrors = getNodeMasteryModelErrors(node);
     const masteryModelMErrors = getNodeMasteryModelMErrors(node);
     const masteryModelNErrors = getNodeMasteryModelNErrors(node);
