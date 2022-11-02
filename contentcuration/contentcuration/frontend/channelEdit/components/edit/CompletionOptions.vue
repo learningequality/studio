@@ -1,6 +1,13 @@
 <template>
 
   <div>
+    <!-- Checkbox for "Allow learners to mark complete" -->
+    <Checkbox
+      v-model="learnerManaged"
+      color="primary"
+      :label="$tr('learnersCanMarkComplete')"
+      style="padding-bottom: 16px;"
+    />
     <!-- Layout when practice quizzes are enabled -->
     <VLayout xs6 md6>
       <!-- "Completion" dropdown menu  -->
@@ -24,9 +31,9 @@
         <MasteryCriteriaGoal
           v-if="showMasteryCriteriaGoalDropdown"
           ref="mastery_model"
-          v-model="goal"
+          v-model="masteryModel"
           :placeholder="getPlaceholder('mastery_model')"
-          :required="isUnique(mastery_model)"
+          :required="isUnique(masteryModel)"
           @focus="trackClick('Mastery model')"
         />
       </VFlex>
@@ -36,22 +43,21 @@
       <MasteryCriteriaMofNFields
         v-if="kind === 'exercise'"
         ref="mastery_model_m_of_n"
-        v-model="masteryModelItem"
+        v-model="mOfN"
         :showMofN="showMofN"
-        :mPlaceholder="getPlaceholder('m')"
-        :mRequired="isUnique(m)"
-        :nPlaceholder="getPlaceholder('n')"
-        :nRequired="isUnique(n)"
+        :mPlaceholder="getPlaceholder('mOfN.m')"
+        :mRequired="isUnique(mOfN.m)"
+        :nPlaceholder="getPlaceholder('mOfN.n')"
+        :nRequired="isUnique(mOfN.n)"
         @mFocus="trackClick('Mastery m value')"
         @nFocus="trackClick('Mastery n value')"
       />
     </VLayout>
 
     <VLayout row wrap>
-      <DropdownWrapper component="VFlex" xs6 md6 class="pr-2">
+      <DropdownWrapper v-if="showDuration" component="VFlex" xs6 md6 class="pr-2">
         <template #default="{ attach, menuProps }">
           <VSelect
-            v-if="!hideDurationDropdown"
             ref="duration"
             v-model="durationDropdown"
             box
@@ -67,14 +73,13 @@
       </DropdownWrapper>
 
       <!-- "Activity duration" minutes input -->
-      <VFlex xs6 md6>
+      <VFlex v-if="showDuration" xs6 md6>
         <ActivityDuration
-          v-if="showActivityDurationInput"
           ref="activity_duration"
-          v-model="minutes"
-          :selectedDuration="currentDurationDropdown || durationDropdown"
+          v-model="durationValue"
+          :selectedDuration="durationDropdown"
           :duration="fileDuration"
-          :selectedCompletion="currentCompletionDropdown || completionDropdown"
+          :selectedCompletion="completionDropdown"
           :audioVideoUpload="kind === 'video' || kind === 'audio'"
         />
       </VFlex>
@@ -99,7 +104,9 @@
     ContentModalities,
     CompletionDropdownMap,
     DurationDropdownMap,
+    nonUniqueValue,
   } from 'shared/constants';
+  import Checkbox from 'shared/views/form/Checkbox';
   import { MasteryModelsNames } from 'shared/leUtils/MasteryModels';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import {
@@ -113,17 +120,64 @@
   const DEFAULT_SHORT_ACTIVITY = 600;
   const DEFAULT_LONG_ACTIVITY = 3000;
   const SHORT_LONG_ACTIVITY_MIDPOINT = 1860;
-  const nonUniqueValue = {};
-  nonUniqueValue.toString = () => '';
 
-  const SuggestedDurationTypesMap = {
-    APPROX_TIME: 'approx_time',
-    TIME: 'time',
+  const defaultCompletionCriteriaModels = {
+    [ContentKindsNames.VIDEO]: CompletionCriteriaModels.TIME,
+    [ContentKindsNames.AUDIO]: CompletionCriteriaModels.TIME,
+    [ContentKindsNames.DOCUMENT]: CompletionCriteriaModels.PAGES,
+    [ContentKindsNames.H5P]: CompletionCriteriaModels.DETERMINED_BY_RESOURCE,
+    [ContentKindsNames.HTML5]: CompletionCriteriaModels.APPROX_TIME,
+    [ContentKindsNames.EXERCISE]: CompletionCriteriaModels.MASTERY,
+  };
+
+  const defaultCompletionCriteriaThresholds = {
+    // Audio and Video threshold defaults are dynamic based
+    // on the duration of the file itself.
+    [ContentKindsNames.DOCUMENT]: '100%',
+    [ContentKindsNames.HTML5]: 300,
+    // We cannot set an automatic default threshold for exercises.
+  };
+
+  const completionCriteriaToDropdownMap = {
+    [CompletionCriteriaModels.TIME]: CompletionDropdownMap.completeDuration,
+    [CompletionCriteriaModels.APPROX_TIME]: CompletionDropdownMap.completeDuration,
+    [CompletionCriteriaModels.PAGES]: CompletionDropdownMap.allContent,
+    [CompletionCriteriaModels.DETERMINED_BY_RESOURCE]: CompletionDropdownMap.determinedByResource,
+    [CompletionCriteriaModels.MASTERY]: CompletionDropdownMap.goal,
+    [CompletionCriteriaModels.REFERENCE]: CompletionDropdownMap.reference,
+  };
+
+  const CompletionOptionsDropdownMap = {
+    [ContentKindsNames.DOCUMENT]: [
+      CompletionDropdownMap.allContent,
+      CompletionDropdownMap.completeDuration,
+      CompletionDropdownMap.reference,
+    ],
+    [ContentKindsNames.EXERCISE]: [CompletionDropdownMap.goal, CompletionDropdownMap.practiceQuiz],
+    [ContentKindsNames.HTML5]: [
+      CompletionDropdownMap.completeDuration,
+      CompletionDropdownMap.determinedByResource,
+      CompletionDropdownMap.reference,
+    ],
+    [ContentKindsNames.H5P]: [
+      CompletionDropdownMap.determinedByResource,
+      CompletionDropdownMap.completeDuration,
+      CompletionDropdownMap.reference,
+    ],
+    [ContentKindsNames.VIDEO]: [
+      CompletionDropdownMap.completeDuration,
+      CompletionDropdownMap.reference,
+    ],
+    [ContentKindsNames.AUDIO]: [
+      CompletionDropdownMap.completeDuration,
+      CompletionDropdownMap.reference,
+    ],
   };
 
   export default {
     name: 'CompletionOptions',
     components: {
+      Checkbox,
       DropdownWrapper,
       ActivityDuration,
       MasteryCriteriaMofNFields,
@@ -150,18 +204,16 @@
         default: () => ({}),
       },
     },
-    data() {
-      return {
-        // required state because we need to know the durationDropdown before it is set in backend
-        currentDurationDropdown: null,
-        // required state because we need to know the completion to determine durationDropdown model
-        currentCompletionDropdown: null,
-        mastery_model: null,
-        m: null,
-        n: null,
-      };
-    },
     computed: {
+      model() {
+        return this.value.model || defaultCompletionCriteriaModels[this.kind];
+      },
+      threshold() {
+        if (!this.value.model) {
+          return this.generateDefaultThreshold();
+        }
+        return this.value.threshold;
+      },
       showMasteryCriteriaGoalDropdown() {
         if (this.kind === ContentKindsNames.EXERCISE) {
           //this ensures that anytime the completion dropdown is practice quiz
@@ -172,570 +224,163 @@
       audioVideoResource() {
         return this.kind === ContentKindsNames.AUDIO || this.kind === ContentKindsNames.VIDEO;
       },
-      hideDurationDropdown() {
-        // named "hide" instead of "show" because "show" is the default behavior
-        if (this.value) {
-          return (
-            this.value.model == CompletionCriteriaModels.REFERENCE ||
-            this.value.model == CompletionCriteriaModels.DETERMINED_BY_RESOURCE
-          );
-        }
-        return false;
+      showDuration() {
+        return (
+          this.model === CompletionCriteriaModels.TIME ||
+          this.model === CompletionCriteriaModels.APPROX_TIME
+        );
       },
       showReferenceHint() {
         /*
           The reference hint should be shown only when "Reference" is selected
         */
-        if (this.value) {
-          if (this.kind === ContentKindsNames.H5P || this.kind === ContentKindsNames.HTML5) {
-            if (this.currentCompletionDropdown === CompletionDropdownMap.determinedByResource) {
-              return false;
-            }
-            if (
-              this.value.model === CompletionCriteriaModels.REFERENCE &&
-              this.currentCompletionDropdown === CompletionDropdownMap.completeDuration
-            ) {
-              return true;
-            }
-          }
-          if (this.audioVideoResource) {
-            return this.value.model === CompletionCriteriaModels.REFERENCE;
-          }
-          return (
-            this.value.model === CompletionCriteriaModels.REFERENCE &&
-            this.currentCompletionDropdown !== CompletionDropdownMap.completeDuration
-          );
-        }
-        return false;
-      },
-      showActivityDurationInput() {
-        /* The `ActivityDuration` component should visible when:
-          - Long activity, short activity, or exact time are chosen if it is not an AV resource
-          - Long activity or short activity are chosen if it is an AV resource
-          - Long activity, short activity, or exact time are chosen in HTML5
-        */
-        if (this.value) {
-          if (
-            this.value.model == CompletionCriteriaModels.REFERENCE ||
-            this.value.model == CompletionCriteriaModels.DETERMINED_BY_RESOURCE
-          ) {
-            return false;
-          }
-
-          if (!this.audioVideoResource) {
-            return true;
-          }
-        }
-        return this.audioVideoResource && this.value.model !== CompletionCriteriaModels.REFERENCE;
+        return this.model === CompletionCriteriaModels.REFERENCE;
       },
       completionDropdown: {
         get() {
-          if (this.audioVideoResource) {
-            if (this.value.model === CompletionCriteriaModels.REFERENCE) {
-              return CompletionDropdownMap.reference;
-            }
-            return CompletionDropdownMap.completeDuration;
+          if (
+            this.value.modality === ContentModalities.QUIZ &&
+            this.model === CompletionCriteriaModels.MASTERY
+          ) {
+            return CompletionDropdownMap.practiceQuiz;
           }
-
-          if (this.value.model === CompletionCriteriaModels.REFERENCE) {
-            return CompletionDropdownMap.reference;
-          }
-
-          if (this.kind === ContentKindsNames.DOCUMENT) {
-            if (!this.value['model']) {
-              return CompletionDropdownMap.allContent;
-            } else {
-              if (
-                this.value.model === CompletionCriteriaModels.PAGES ||
-                this.value.model === CompletionCriteriaModels.REFERENCE
-              ) {
-                return CompletionDropdownMap.allContent;
-              }
-              return CompletionDropdownMap.completeDuration;
-            }
-          }
-
-          if (this.kind === ContentKindsNames.HTML5) {
-            if (
-              !this.value['model'] ||
-              this.value.model === CompletionCriteriaModels.APPROX_TIME ||
-              this.value.model === CompletionCriteriaModels.TIME
-            ) {
-              return CompletionDropdownMap.completeDuration;
-            } else if (this.value.model === CompletionCriteriaModels.REFERENCE) {
-              return CompletionDropdownMap.reference;
-            }
-
-            return CompletionDropdownMap.determinedByResource;
-          }
-
-          if (this.kind === ContentKindsNames.H5P) {
-            if (
-              !this.value['model'] ||
-              this.value.model === CompletionCriteriaModels.DETERMINED_BY_RESOURCE
-            ) {
-              return CompletionDropdownMap.determinedByResource;
-            }
-            return CompletionDropdownMap.completeDuration;
-          }
-
-          if (this.kind === ContentKindsNames.EXERCISE) {
-            if (this.value.modality === ContentModalities.QUIZ) {
-              return CompletionDropdownMap.practiceQuiz;
-            }
-            return CompletionDropdownMap.goal;
-          }
-
-          return '';
+          return completionCriteriaToDropdownMap[this.model];
         },
         set(value) {
           const update = {};
-          this.currentCompletionDropdown = value;
 
-          // FOR AUDIO/VIDEO
           if (value === CompletionDropdownMap.reference) {
-            update.suggested_duration_type = this.value.suggested_duration_type;
-            update.completion_criteria = {
-              model: CompletionCriteriaModels.REFERENCE,
-              threshold: null,
-            };
-          }
-          if (value === CompletionDropdownMap.completeDuration) {
-            update.completion_criteria = {
-              model: CompletionCriteriaModels.TIME,
-              threshold: this.fileDuration || this.value.suggested_duration,
-            };
-          }
-
-          // FOR DOCUMENTS
-          if (this.kind === ContentKindsNames.DOCUMENT) {
-            if (value === CompletionDropdownMap.allContent) {
-              update.suggested_duration_type = this.value.suggested_duration_type;
-              update.suggested_duration = this.value.suggested_duration;
-              update.completion_criteria = {
-                model: CompletionCriteriaModels.PAGES,
-                threshold: '100%',
-              };
-            } else if (value === CompletionDropdownMap.reference) {
-              update.suggested_duration_type = null;
-              update.completion_criteria = {
-                model: CompletionCriteriaModels.REFERENCE,
-                threshold: null,
-              };
-            } else if (value === CompletionDropdownMap.completeDuration) {
-              // set to '1' as the minimum here, due to validation rules requiring > 0
-              update.suggested_duration = this.value.suggested_duration || 60;
-              update.completion_criteria = {
-                model: CompletionCriteriaModels.TIME,
-                threshold: this.value.suggested_duration || 60,
-              };
+            update.model = CompletionCriteriaModels.REFERENCE;
+            update.durationType = null;
+            update.duration = null;
+            update.threshold = null;
+          } else if (value === CompletionDropdownMap.completeDuration) {
+            update.model = this.audioVideoResource
+              ? CompletionCriteriaModels.TIME
+              : CompletionCriteriaModels.APPROX_TIME;
+            if (!this.audioVideoResource) {
+              update.threshold = DEFAULT_SHORT_ACTIVITY;
+              update.duration = update.threshold;
             } else {
-              update.suggested_duration_type = this.value.suggested_duration_type;
-              update.suggested_duration = this.value.suggested_duration;
-              if (
-                this.durationDropdown === DurationDropdownMap.LONG_ACTIVITY ||
-                this.durationDropdown === DurationDropdownMap.SHORT_ACTIVITY
-              ) {
-                update.completion_criteria = {
-                  model: CompletionCriteriaModels.APPROX_TIME,
-                  threshold: this.value.suggested_duration || 0,
-                };
-              } else if (this.durationDropdown === DurationDropdownMap.EXACT_TIME) {
-                update.completion_criteria = {
-                  model: CompletionCriteriaModels.TIME,
-                  threshold: this.value.suggested_duration || 0,
-                };
-              } else {
-                // default state
-                update.completion_criteria = {
-                  model: this.value.model,
-                  threshold: this.value.threshold,
-                };
-              }
+              update.threshold = this.generateDefaultThreshold();
+              update.duration = update.threshold;
             }
-          }
-
-          // FOR H5P/HTML5
-          if (this.kind === ContentKindsNames.HTML5 || this.kind === ContentKindsNames.H5P) {
-            if (value === CompletionDropdownMap.determinedByResource) {
-              update.completion_criteria = {
-                model: CompletionCriteriaModels.DETERMINED_BY_RESOURCE,
-                threshold: null,
-              };
-            } else if (value === CompletionDropdownMap.completeDuration) {
-              update.suggested_duration = this.value.suggested_duration || 60;
-              update.completion_criteria = {
-                model: CompletionCriteriaModels.TIME,
-                threshold: this.value.suggested_duration || 60,
-              };
-            }
-          }
-
-          // FOR EXERCISES
-          if (this.kind === ContentKindsNames.EXERCISE) {
-            if (value === CompletionDropdownMap.practiceQuiz) {
-              update.modality = ContentModalities.QUIZ;
-              update.completion_criteria = {
-                model: this.value.model || CompletionCriteriaModels.MASTERY,
-                threshold: this.value.threshold || { mastery_model: MasteryModelsNames.DO_ALL },
-              };
-            } else {
-              update.modality = null;
-              update.completion_criteria = {
-                model: this.value.model,
-                threshold: this.value.threshold,
-              };
-            }
+            update.durationType = update.model;
+          } else if (value === CompletionDropdownMap.allContent) {
+            update.model = CompletionCriteriaModels.PAGES;
+            update.threshold = '100%';
+          } else if (value === CompletionDropdownMap.determinedByResource) {
+            update.model = CompletionCriteriaModels.DETERMINED_BY_RESOURCE;
+            update.durationType = null;
+            update.duration = null;
+            update.threshold = null;
+          } else if (value === CompletionDropdownMap.practiceQuiz) {
+            update.modality = ContentModalities.QUIZ;
+            update.threshold = { mastery_model: MasteryModelsNames.DO_ALL };
+          } else if (value === CompletionDropdownMap.goal) {
+            update.modality = null;
+            update.model = CompletionCriteriaModels.MASTERY;
           }
           this.handleInput(update);
         },
       },
-      goal: {
+      masteryModel: {
         get() {
-          if (this.value.threshold) {
-            return { mastery_model: this.value.threshold.mastery_model };
-          }
-          return { mastery_model: this.mastery_model };
+          return get(this, 'threshold.mastery_model');
         },
-        set(threshold) {
-          const update = {};
-          if (threshold.mastery_model === MasteryModelsNames.M_OF_N) {
-            update.completion_criteria = {
-              model: CompletionCriteriaModels.MASTERY,
-              threshold: {
-                mastery_model: threshold.mastery_model,
-                m: get(this.value, 'threshold.m') || this.m,
-                n: get(this.value, 'threshold.n') || this.n,
-              },
-            };
-          } else {
-            update.completion_criteria = {
-              model: CompletionCriteriaModels.MASTERY,
-              threshold: {
-                mastery_model: threshold.mastery_model,
-                m: null,
-                n: null,
-              },
-            };
+        set(mastery_model) {
+          const update = { threshold: { mastery_model } };
+          if (mastery_model === MasteryModelsNames.M_OF_N) {
+            update.threshold.m = get(this, 'threshold.m');
+            update.threshold.n = get(this, 'threshold.n');
           }
           this.handleInput(update);
         },
       },
       showMofN() {
-        if (this.kind === ContentKindsNames.EXERCISE) {
-          if (this.value.modality === ContentModalities.QUIZ) {
-            return false;
-          }
-          if (this.value.threshold) {
-            const defaultStateWhenSwitchingFromGoalToPracticeQuiz =
-              this.value.threshold.mastery_model === MasteryModelsNames.M_OF_N &&
-              this.currentCompletionDropdown === null;
-            if (
-              this.currentCompletionDropdown === CompletionDropdownMap.goal &&
-              this.value.threshold.mastery_model === MasteryModelsNames.M_OF_N
-            ) {
-              return true;
-            }
-            if (defaultStateWhenSwitchingFromGoalToPracticeQuiz) {
-              return true;
-            }
-          }
+        if (this.kind !== ContentKindsNames.EXERCISE) {
+          return false;
         }
-        return false;
+        if (this.value.modality === ContentModalities.QUIZ) {
+          return false;
+        }
+        return get(this, 'threshold.mastery_model') === MasteryModelsNames.M_OF_N;
       },
-      masteryModelItem: {
+      mOfN: {
         get() {
-          if (get(this.value, 'threshold.mastery_model') !== MasteryModelsNames.M_OF_N) {
-            return {
-              m: null,
-              n: null,
-            };
-          }
           return {
-            m: get(this.value, 'threshold.m') || this.m,
-            n: get(this.value, 'threshold.n') || this.n,
+            m: get(this.value, 'threshold.m'),
+            n: get(this.value, 'threshold.n'),
           };
         },
         set(threshold) {
-          this.m = get(threshold, 'm') || this.m;
-          this.n = get(threshold, 'n') || this.n;
-
-          const mastery_model = get(this.value, 'threshold.mastery_model');
-          const completion_criteria = {
-            model: CompletionCriteriaModels.MASTERY,
-            threshold: {
-              mastery_model,
-            },
-          };
+          const mastery_model = get(this, 'threshold.mastery_model');
           if (mastery_model === MasteryModelsNames.M_OF_N) {
-            completion_criteria.threshold.m = this.m;
-            completion_criteria.threshold.n = this.n;
+            threshold.mastery_model = mastery_model;
+            this.handleInput({ threshold });
           }
-          this.handleInput({ completion_criteria });
         },
       },
-      isLongActivity() {
+      timeBasedModel() {
         return (
-          this.value.suggested_duration > SHORT_LONG_ACTIVITY_MIDPOINT &&
-          this.value.suggested_duration_type === SuggestedDurationTypesMap.APPROX_TIME
+          this.model === CompletionCriteriaModels.TIME ||
+          this.model === CompletionCriteriaModels.APPROX_TIME
         );
       },
-      isShortActivity() {
-        return (
-          this.value.suggested_duration <= SHORT_LONG_ACTIVITY_MIDPOINT &&
-          this.value.suggested_duration_type === SuggestedDurationTypesMap.APPROX_TIME
-        );
-      },
-      isExactTime() {
-        return this.value.suggested_duration_type === SuggestedDurationTypesMap.TIME;
-      },
-      isSwitchingFromCompleteDurationToAllContent() {
-        return (
-          this.completionDropdown === CompletionDropdownMap.completeDuration &&
-          this.currentCompletionDropdown === CompletionDropdownMap.allContent
-        );
-      },
-      isSwitchingFromAllContentToCompleteDuration() {
-        return (
-          this.completionDropdown === CompletionDropdownMap.allContent &&
-          this.currentCompletionDropdown === CompletionDropdownMap.completeDuration
-        );
-      },
-      requiresAudioVideoDefault() {
-        return this.audioVideoResource && !this.value.model;
-      },
-      completionDropdownIsCompleteDuration() {
-        return (
-          (this.completionDropdown === null &&
-            this.currentCompletionDropdown === CompletionDropdownMap.completeDuration) ||
-          (this.completionDropdown === CompletionDropdownMap.completeDuration &&
-            this.currentCompletionDropdown === null) ||
-          (this.completionDropdown === CompletionDropdownMap.completeDuration &&
-            this.currentCompletionDropdown === CompletionDropdownMap.completeDuration) ||
-          this.currentCompletionDropdown === CompletionDropdownMap.completeDuration
-        );
-      },
-      completionDropdownIsAllContentViewed() {
-        return (
-          (this.completionDropdown === null &&
-            this.currentCompletionDropdown === CompletionDropdownMap.allContent) ||
-          (this.completionDropdown === CompletionDropdownMap.allContent &&
-            this.currentCompletionDropdown === null) ||
-          (this.completionDropdown === CompletionDropdownMap.allContent &&
-            this.currentCompletionDropdown === CompletionDropdownMap.allContent)
-        );
-      },
-      durationDropdown: {
+      durationValue: {
         get() {
-          if (this.value) {
-            const defaultStateForAudioVideo =
-              this.value.suggested_duration === null &&
-              !this.value.suggested_duration_type &&
-              this.audioVideoResource;
-            if (
-              this.value.model === CompletionCriteriaModels.REFERENCE ||
-              (this.currentCompletionDropdown === CompletionDropdownMap.completeDuration &&
-                this.currentDurationDropdown === DurationDropdownMap.REFERENCE)
-            ) {
-              return DurationDropdownMap.REFERENCE;
-            } else if (this.value.model === CompletionCriteriaModels.PAGES) {
-              if (this.isLongActivity) {
-                return DurationDropdownMap.LONG_ACTIVITY;
-              }
-              if (this.isShortActivity) {
-                return DurationDropdownMap.SHORT_ACTIVITY;
-              }
-              if (this.isExactTime) {
-                return DurationDropdownMap.EXACT_TIME;
-              }
-            } else if (
-              this.value.model === CompletionCriteriaModels.TIME ||
-              defaultStateForAudioVideo
-            ) {
-              return DurationDropdownMap.EXACT_TIME;
-            } else {
-              if (this.isLongActivity) {
-                return DurationDropdownMap.LONG_ACTIVITY;
-              }
-              if (this.isShortActivity) {
-                return DurationDropdownMap.SHORT_ACTIVITY;
-              }
-              if (this.isExactTime) {
-                return DurationDropdownMap.EXACT_TIME;
-              }
-            }
-          }
-          return '';
+          return this.timeBasedModel ? this.threshold : this.value.suggested_duration;
         },
         set(duration) {
-          const update = {};
-          this.currentDurationDropdown = duration;
-
-          if (duration === DurationDropdownMap.REFERENCE) {
-            update.suggested_duration_type = null;
-            update.completion_criteria = {
-              model: CompletionCriteriaModels.REFERENCE,
-              threshold: null,
-            };
-          } else if (
-            this.isSwitchingFromCompleteDurationToAllContent ||
-            this.completionDropdownIsAllContentViewed
-          ) {
-            if (duration === DurationDropdownMap.EXACT_TIME) {
-              update.suggested_duration_type = SuggestedDurationTypesMap.TIME;
-              update.suggested_duration = this.handleMinutesInputFromActivityDuration(
-                this.value.suggested_duration,
-                duration
-              );
-            }
-            if (duration === DurationDropdownMap.SHORT_ACTIVITY) {
-              update.suggested_duration_type = SuggestedDurationTypesMap.APPROX_TIME;
-              update.suggested_duration = this.handleMinutesInputFromActivityDuration(
-                this.value.suggested_duration,
-                duration
-              );
-            }
-            if (duration === DurationDropdownMap.LONG_ACTIVITY) {
-              update.suggested_duration_type = SuggestedDurationTypesMap.APPROX_TIME;
-              update.suggested_duration = this.handleMinutesInputFromActivityDuration(
-                this.value.suggested_duration,
-                duration
-              );
-            }
-            update.completion_criteria = {
-              model: CompletionCriteriaModels.PAGES,
-              threshold: '100%',
-            };
-          } else if (
-            this.isSwitchingFromAllContentToCompleteDuration ||
-            this.requiresAudioVideoDefault ||
-            this.completionDropdownIsCompleteDuration ||
-            this.kind === ContentKindsNames.HTML5 ||
-            this.kind === ContentKindsNames.H5P
-          ) {
-            if (duration === DurationDropdownMap.SHORT_ACTIVITY) {
-              update.suggested_duration_type = SuggestedDurationTypesMap.APPROX_TIME;
-              update.suggested_duration = this.handleMinutesInputFromActivityDuration(
-                this.value.suggested_duration,
-                duration
-              );
-              update.completion_criteria = {
-                model: CompletionCriteriaModels.APPROX_TIME,
-                threshold: update.suggested_duration,
-              };
-            }
-            if (duration === DurationDropdownMap.LONG_ACTIVITY) {
-              update.suggested_duration_type = SuggestedDurationTypesMap.APPROX_TIME;
-              update.suggested_duration = this.handleMinutesInputFromActivityDuration(
-                this.value.suggested_duration,
-                duration
-              );
-              update.completion_criteria = {
-                model: CompletionCriteriaModels.APPROX_TIME,
-                threshold: update.suggested_duration,
-              };
-            }
-            if (duration === DurationDropdownMap.EXACT_TIME) {
-              update.suggested_duration_type = SuggestedDurationTypesMap.TIME;
-              update.suggested_duration = this.handleMinutesInputFromActivityDuration(
-                this.value.suggested_duration,
-                duration
-              );
-              update.completion_criteria = {
-                model: CompletionCriteriaModels.TIME,
-                threshold: update.suggested_duration,
-              };
-            }
+          const update = {
+            duration,
+          };
+          if (this.timeBasedModel) {
+            update.threshold = duration;
           }
-
-          if (this.value.model === CompletionCriteriaModels.MASTERY) {
-            if (duration === DurationDropdownMap.SHORT_ACTIVITY) {
-              update.suggested_duration = this.handleMinutesInputFromActivityDuration(
-                this.value.suggested_duration,
-                duration
-              );
-              update.completion_criteria = {
-                model: this.value.model,
-                threshold: this.value.threshold,
-              };
-            }
-            if (duration === DurationDropdownMap.LONG_ACTIVITY) {
-              update.suggested_duration_type = SuggestedDurationTypesMap.APPROX_TIME;
-              const roundedValue = Math.round(this.value.suggested_duration / 600) * 600;
-              if (roundedValue < SHORT_LONG_ACTIVITY_MIDPOINT || roundedValue > 7200) {
-                update.suggested_duration = DEFAULT_LONG_ACTIVITY;
-              } else {
-                update.suggested_duration = roundedValue;
-              }
-              update.completion_criteria = {
-                model: this.value.model,
-                threshold: this.value.threshold,
-              };
-            }
-            if (duration === DurationDropdownMap.EXACT_TIME) {
-              update.suggested_duration_type = SuggestedDurationTypesMap.TIME;
-              update.suggested_duration = this.handleMinutesInputFromActivityDuration(
-                this.value.suggested_duration,
-                duration
-              );
-              update.completion_criteria = {
-                model: this.value.model,
-                threshold: this.value.threshold,
-              };
-            }
-          }
-
           this.handleInput(update);
         },
       },
-      minutes: {
+      durationType() {
+        return this.timeBasedModel ? this.model : this.value.suggested_duration_type;
+      },
+      durationDropdown: {
         get() {
-          return this.value.suggested_duration;
-        },
-        set(minutes) {
-          if (
-            this.value.model === CompletionCriteriaModels.PAGES ||
-            this.value.model === CompletionCriteriaModels.MASTERY
-          ) {
-            this.handleInput({
-              suggested_duration: minutes,
-              completion_criteria: {
-                model: this.value.model,
-                threshold: this.value.threshold,
-              },
-            });
-          } else {
-            this.handleInput({
-              suggested_duration: minutes,
-              completion_criteria: {
-                model: this.value.model,
-                threshold: minutes,
-              },
-            });
+          if (this.durationType === CompletionCriteriaModels.TIME) {
+            return DurationDropdownMap.EXACT_TIME;
           }
+          if (
+            this.durationValue > SHORT_LONG_ACTIVITY_MIDPOINT &&
+            this.durationType === CompletionCriteriaModels.APPROX_TIME
+          ) {
+            return DurationDropdownMap.LONG_ACTIVITY;
+          }
+          return DurationDropdownMap.SHORT_ACTIVITY;
+        },
+        set(dropdownValue) {
+          const update = {};
+          if (dropdownValue === DurationDropdownMap.EXACT_TIME) {
+            update.durationType = CompletionCriteriaModels.TIME;
+          } else if (
+            dropdownValue === DurationDropdownMap.LONG_ACTIVITY ||
+            dropdownValue === DurationDropdownMap.SHORT_ACTIVITY
+          ) {
+            update.durationType = CompletionCriteriaModels.APPROX_TIME;
+            update.duration = this.handleMinutesInputFromActivityDuration(
+              this.durationValue,
+              dropdownValue
+            );
+          } else {
+            update.durationType = null;
+          }
+          if (this.timeBasedModel) {
+            update.model = update.durationType;
+            update.threshold = update.duration || this.durationValue;
+          }
+          this.handleInput(update);
         },
       },
       showCorrectCompletionOptions() {
-        const CompletionOptionsDropdownMap = {
-          document: [
-            CompletionDropdownMap.allContent,
-            CompletionDropdownMap.completeDuration,
-            CompletionDropdownMap.reference,
-          ],
-          exercise: [CompletionDropdownMap.goal, CompletionDropdownMap.practiceQuiz],
-          html5: [
-            CompletionDropdownMap.completeDuration,
-            CompletionDropdownMap.determinedByResource,
-            CompletionDropdownMap.reference,
-          ],
-          h5p: [
-            CompletionDropdownMap.determinedByResource,
-            CompletionDropdownMap.completeDuration,
-            CompletionDropdownMap.reference,
-          ],
-          audio: [CompletionDropdownMap.completeDuration, CompletionDropdownMap.reference],
-          video: [CompletionDropdownMap.completeDuration, CompletionDropdownMap.reference],
-        };
         if (this.kind) {
           return CompletionOptionsDropdownMap[this.kind].map(model => ({
             text: this.$tr(model),
@@ -744,125 +389,118 @@
         }
         return [];
       },
-      allPossibleDurationOptions() {
-        //this is used because of this Vuetify issue for dropdowns with multiple values: https://github.com/vuetifyjs/vuetify/issues/11529
+      selectableDurationOptions() {
         return [
           {
             text: this.$tr(DurationDropdownMap.EXACT_TIME),
-            value: CompletionCriteriaModels.TIME,
-            id: 'exactTime',
+            value: 'exactTime',
           },
           {
             text: this.translateMetadataString(DurationDropdownMap.SHORT_ACTIVITY),
-            value: CompletionCriteriaModels.APPROX_TIME,
-            id: 'shortActivity',
+            value: 'shortActivity',
           },
           {
             text: this.translateMetadataString(DurationDropdownMap.LONG_ACTIVITY),
-            value: CompletionCriteriaModels.APPROX_TIME,
-            id: 'longActivity',
+            value: 'longActivity',
           },
         ];
       },
-      /**
-       * When the duration dropdown is for audio, video, or documents, if "Complete duration"
-       * is chosen, then "Reference" cannot be selected
-       */
-      selectableDurationOptions() {
-        if (
-          this.kind === ContentKindsNames.DOCUMENT &&
-          this.currentCompletionDropdown === CompletionDropdownMap.completeDuration
-        ) {
-          return this.allPossibleDurationOptions.map(model => ({
-            value: model.id,
-            text: model.text,
-          }));
-        } else if (this.kind === ContentKindsNames.EXERCISE) {
-          return this.allPossibleDurationOptions.map(model => ({
-            value: model.id,
-            text: model.text,
-          }));
-        } else {
-          return this.allPossibleDurationOptions.map(model => ({
-            value: model.id,
-            text: model.text,
-          }));
-        }
-      },
       completionRules() {
-        if (this.kind) {
-          return this.required ? getCompletionValidators().map(translateValidator) : [];
+        if (this.kind && this.required) {
+          return getCompletionValidators().map(translateValidator);
         }
-        return false;
+        return [];
       },
       durationRules() {
-        if (
-          this.currentCompletionDropdown === CompletionDropdownMap.completeDuration ||
-          this.completionDropdown === CompletionDropdownMap.completeDuration
-        ) {
+        if (this.completionDropdown === CompletionDropdownMap.completeDuration) {
           return getDurationValidators().map(translateValidator);
         }
         return [];
       },
+      learnerManaged: {
+        get() {
+          return get(this.value, 'learner_managed', false);
+        },
+        set(learner_managed) {
+          this.handleInput({ learner_managed });
+        },
+      },
     },
     methods: {
+      generateDefaultThreshold() {
+        if (this.audioVideoResource) {
+          return this.fileDuration || this.value.suggested_duration;
+        }
+        return defaultCompletionCriteriaThresholds[this.kind];
+      },
       trackClick(label) {
         this.$analytics.trackClick('channel_editor_modal_details', label);
       },
-      handleMinutesInputFromActivityDuration(minutes, duration) {
-        let suggested_duration;
-        let roundedValue;
-        if (duration === DurationDropdownMap.SHORT_ACTIVITY) {
-          roundedValue = Math.round(minutes / 300) * 300;
+      handleMinutesInputFromActivityDuration(minutes, durationDropdown) {
+        if (durationDropdown === DurationDropdownMap.SHORT_ACTIVITY) {
+          const roundedValue = Math.round(minutes / 300) * 300;
           if (roundedValue > SHORT_LONG_ACTIVITY_MIDPOINT || roundedValue <= 0) {
-            suggested_duration = DEFAULT_SHORT_ACTIVITY;
-          } else {
-            suggested_duration = roundedValue;
+            return DEFAULT_SHORT_ACTIVITY;
           }
+          return roundedValue;
         }
-        if (duration === DurationDropdownMap.LONG_ACTIVITY) {
-          roundedValue = Math.round(minutes / 600) * 600;
+        if (durationDropdown === DurationDropdownMap.LONG_ACTIVITY) {
+          const roundedValue = Math.round(minutes / 600) * 600;
           if (roundedValue < SHORT_LONG_ACTIVITY_MIDPOINT || roundedValue > 7200) {
-            suggested_duration = DEFAULT_LONG_ACTIVITY;
-          } else {
-            suggested_duration = roundedValue;
+            return DEFAULT_LONG_ACTIVITY;
           }
+          return roundedValue;
         }
-        return suggested_duration;
+        return Math.round(minutes / 60) * 60;
       },
-      handleInput({
-        completion_criteria,
-        suggested_duration,
-        suggested_duration_type,
-        modality,
-      } = {}) {
+      handleInput({ model, threshold, duration, durationType, modality, learner_managed } = {}) {
         const data = {
-          completion_criteria,
-          suggested_duration,
-          suggested_duration_type,
-          modality,
+          completion_criteria: {
+            model: this.model,
+            threshold: this.threshold,
+            learner_managed: this.learnerManaged,
+          },
+          suggested_duration: this.durationValue,
+          suggested_duration_type: this.durationType,
+          modality: this.value.modality,
         };
 
-        if (!completion_criteria) {
-          data['completion_criteria'] = this.value['completion_criteria'];
+        if (typeof model !== 'undefined') {
+          data.completion_criteria.model = model;
         }
-        if (modality === undefined) {
-          data['modality'] = this.value['modality'];
+        if (typeof modality !== 'undefined') {
+          data.modality = modality;
         }
-        if (suggested_duration === undefined) {
-          data['suggested_duration'] = this.value['suggested_duration'];
+        if (durationType) {
+          data.suggested_duration_type = durationType;
+        } else if (typeof durationType !== 'undefined') {
+          delete data.suggested_duration_type;
         }
-        if (suggested_duration_type === undefined) {
-          data['suggested_duration_type'] = this.value['suggested_duration_type'];
+        if (duration) {
+          data.suggested_duration = this.handleMinutesInputFromActivityDuration(
+            duration,
+            this.durationType
+          );
+        } else if (typeof duration !== 'undefined') {
+          delete data.suggested_duration;
         }
-
+        if (threshold) {
+          data.completion_criteria.threshold = threshold;
+        } else if (typeof threshold !== 'undefined') {
+          delete data.completion_criteria.threshold;
+        }
+        if (learner_managed) {
+          data.completion_criteria.learner_managed = true;
+        } else if (typeof learner_managed !== 'undefined') {
+          delete data.completion_criteria.learner_managed;
+        }
         this.$emit('input', data);
       },
       isUnique(value) {
         return value !== nonUniqueValue;
       },
       getPlaceholder(field) {
-        return this.isUnique(this[field]) ? '' : '---';
+        return this.isUnique(get(this, field)) ? '' : '---';
       },
     },
     $trs: {
@@ -877,10 +515,8 @@
       exactTime: 'Time to complete',
       referenceHint:
         'Progress will not be tracked on reference material unless learners mark it as complete',
+      learnersCanMarkComplete: 'Allow learners to mark as complete',
     },
   };
 
 </script>
-<style lang="less" scoped>
-
-</style>

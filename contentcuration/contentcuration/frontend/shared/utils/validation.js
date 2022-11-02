@@ -1,7 +1,7 @@
 import get from 'lodash/get';
 import CompletionCriteriaModels from 'kolibri-constants/CompletionCriteria';
 import translator from '../translator';
-import { AssessmentItemTypes, ValidationErrors } from '../constants';
+import { AssessmentItemTypes, ValidationErrors, ContentModalities } from '../constants';
 import Licenses from 'shared/leUtils/Licenses';
 import { MasteryModelsNames } from 'shared/leUtils/MasteryModels';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
@@ -105,6 +105,10 @@ export function isNodeComplete({ nodeDetails, assessmentItems, files }) {
 }
 
 // Private helpers
+function _isPracticeQuiz(node) {
+  return get(node, 'extra_fields.options.modality') === ContentModalities.QUIZ;
+}
+
 function _getLicense(node) {
   return node.license && Licenses.get(node.license.id || node.license);
 }
@@ -137,6 +141,7 @@ function _getErrorMsg(error) {
     [ValidationErrors.MASTERY_MODEL_N_GT_ZERO]: translator.$tr('masteryModelNGtZero'),
     [ValidationErrors.LEARNING_ACTIVITY_REQUIRED]: translator.$tr('fieldRequired'),
     [ValidationErrors.DURATION_REQUIRED]: translator.$tr('fieldRequired'),
+    [ValidationErrors.COMPLETION_REQUIRED]: translator.$tr('fieldRequired'),
     [ValidationErrors.ACTIVITY_DURATION_REQUIRED]: translator.$tr('fieldRequired'),
     [ValidationErrors.ACTIVITY_DURATION_MIN_FOR_SHORT_ACTIVITY]: translator.$tr(
       'activityDurationGteOne'
@@ -271,6 +276,22 @@ export function getNodeLearningActivityErrors(node) {
     .filter(value => value !== true);
 }
 
+export function getCompletionDurationErrors(node) {
+  const criteria = get(node, 'extra_fields.options.completion_criteria', {});
+  // duration requirement is blocking only when is is required for the model
+  // and there is no valid threshold
+  if (criteria.model === CompletionCriteriaModels.TIME) {
+    if (criteria.threshold) {
+      return [];
+    } else {
+      return getDurationValidators()
+        .map(validator => validator(node))
+        .filter(value => value !== true);
+    }
+  }
+  return [];
+}
+
 export function getNodeLicenseDescriptionErrors(node) {
   const license = _getLicense(node);
   if (!license || !license.is_custom) {
@@ -321,6 +342,11 @@ export function getNodeDetailsErrors(node) {
     errors = errors.concat(titleErrors);
   }
 
+  const completionDurationErrors = getCompletionDurationErrors(node);
+  if (completionDurationErrors.length) {
+    errors = errors.concat(completionDurationErrors);
+  }
+
   // authoring information is required for resources
   if (!node.freeze_authoring_data && node.kind !== ContentKindsNames.TOPIC) {
     const licenseErrors = getNodeLicenseErrors(node);
@@ -346,8 +372,10 @@ export function getNodeDetailsErrors(node) {
     }
   }
 
-  // mastery is required on exercises
-  if (node.kind === ContentKindsNames.EXERCISE) {
+  // mastery is required on exercises but not on practice quizzes
+  // Practice quiz requirements are set in the background, and separate validations
+  // run to check this based on the completion_criteria in LE utils
+  if (node.kind === ContentKindsNames.EXERCISE && !_isPracticeQuiz(node)) {
     const masteryModelErrors = getNodeMasteryModelErrors(node);
     const masteryModelMErrors = getNodeMasteryModelMErrors(node);
     const masteryModelNErrors = getNodeMasteryModelNErrors(node);
