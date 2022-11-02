@@ -694,10 +694,19 @@ class Resource extends mix(APIResource, IndexedDBResource) {
         // ContentNode tree operations are the troublemakers causing the logic below
         if (this.tableName === TABLE_NAMES.CONTENTNODE) {
           // Only fetch new updates if we don't have pending changes to ContentNode that
-          // affect tree structure
+          // affect local tree structure
           refresh = db[CHANGES_TABLE].where('table')
             .equals(TABLE_NAMES.CONTENTNODE)
-            .filter(c => TREE_CHANGE_TYPES.includes(c.type))
+            .filter(c => {
+              if (!TREE_CHANGE_TYPES.includes(c.type)) {
+                return false;
+              }
+              let parent = c.parent;
+              if (c.type === CHANGE_TYPES.CREATED) {
+                parent = c.obj.parent;
+              }
+              return params.parent === parent || (params.ids || []).includes(c.key);
+            })
             .count()
             .then(pendingCount => pendingCount === 0);
         }
@@ -1316,6 +1325,11 @@ export const ContentNode = new TreeResource({
               from_key: isCreate ? id : null,
               target,
               position,
+              // Regardless of the specific target/position
+              // always record the resolved parent for the tree insert
+              // so that we can avoid doing fetches while such changes
+              // are pending.
+              parent: parent.id,
               oldObj: isCreate ? null : node,
               source: CLIENTID,
               table: this.tableName,
