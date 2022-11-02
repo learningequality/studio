@@ -90,9 +90,7 @@ def current_user_for_context(user):
 
     user_data = {field: getattr(user, field) for field in user_fields}
 
-    user_data["user_rev"] = Change.objects.filter(
-        applied=True, user=user, created_by__isnull=False
-    ).values_list("server_rev", flat=True).order_by("-server_rev").first() or 0
+    user_data["user_rev"] = Change.objects.filter(applied=True, user=user).values_list("server_rev", flat=True).order_by("-server_rev").first() or 0
 
     return json_for_parse_from_data(user_data)
 
@@ -303,9 +301,7 @@ def channel(request, channel_id):
         if channel.deleted:
             channel_error = 'CHANNEL_EDIT_ERROR_CHANNEL_DELETED'
         else:
-            channel_rev = Change.objects.filter(
-                applied=True, channel=channel, created_by__isnull=False
-            ).values_list("server_rev", flat=True).order_by("-server_rev").first() or 0
+            channel_rev = Change.objects.filter(applied=True, channel=channel).values_list("server_rev", flat=True).order_by("-server_rev").first() or 0
 
     return render(
         request,
