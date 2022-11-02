@@ -32,7 +32,6 @@ const SYNC_IF_NO_CHANGES_FOR = 0.5;
 const WEBSOCKET_PING_INTERVAL = 25000;
 
 let socket;
-let shouldWePing = true;
 // Flag to check if a sync is currently active.
 let syncActive = false;
 
@@ -265,12 +264,12 @@ async function WebsocketSendChanges() {
     if (changes.length) {
       requestPayload.changes = changes;
       //set ping to false to reset ping timmer
-      shouldWePing = false;
       socket.send(
         JSON.stringify({
           payload: requestPayload,
         })
       );
+      debouncePingMessage();
     }
   }
   syncActive = false;
@@ -376,6 +375,15 @@ const debouncedSyncChanges = debounce(() => {
   }
 }, SYNC_IF_NO_CHANGES_FOR * 1000);
 
+const debouncePingMessage = debounce(() => {
+  socket.send(
+    JSON.stringify({
+      ping: 'PING!',
+    })
+  );
+  debouncePingMessage();
+}, WEBSOCKET_PING_INTERVAL);
+
 if (process.env.NODE_ENV !== 'production' && typeof window !== 'undefined') {
   window.forceServerSync = forceServerSync;
 }
@@ -421,19 +429,6 @@ async function handleChanges(changes) {
 
 let intervalTimer;
 
-// Skip the Pinging if we recently interacted with backend
-var pingTimer = function() {
-  if (shouldWePing == false) {
-    shouldWePing = true;
-    return;
-  }
-  socket.send(
-    JSON.stringify({
-      ping: 'PING!',
-    })
-  );
-};
-
 export function startSyncing() {
   // Initiate a sync immediately in case any data
   // is left over in the database.
@@ -452,7 +447,7 @@ export function startSyncing() {
   });
 
   //Keep Pinging the websocket connection to keep connection alive
-  setInterval(pingTimer, WEBSOCKET_PING_INTERVAL);
+  debouncePingMessage();
 
   // Listen for any errors due to which connection may be closed.
   socket.addEventListener('error', event => {
