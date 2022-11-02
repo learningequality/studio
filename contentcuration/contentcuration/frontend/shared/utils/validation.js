@@ -1,7 +1,7 @@
 import get from 'lodash/get';
 import CompletionCriteriaModels from 'kolibri-constants/CompletionCriteria';
 import translator from '../translator';
-import { AssessmentItemTypes, ValidationErrors } from '../constants';
+import { AssessmentItemTypes, ValidationErrors, ContentModalities } from '../constants';
 import Licenses from 'shared/leUtils/Licenses';
 import { MasteryModelsNames } from 'shared/leUtils/MasteryModels';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
@@ -106,11 +106,7 @@ export function isNodeComplete({ nodeDetails, assessmentItems, files }) {
 
 // Private helpers
 function _isPracticeQuiz(node) {
-  const modality = get(node, 'extra_fields.options.modality', {});
-  if (modality === 'QUIZ') {
-    return true;
-  }
-  return false;
+  return get(node, 'extra_fields.options.modality') === ContentModalities.QUIZ;
 }
 
 function _getLicense(node) {
