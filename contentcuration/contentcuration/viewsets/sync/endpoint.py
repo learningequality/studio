@@ -74,15 +74,18 @@ class SyncView(APIView):
 
     def return_changes(self, request, channel_revs):
         user_rev = request.data.get("user_rev") or 0
+        unapplied_revs = request.data.get("unapplied_revs", [])
         session_key = request.session.session_key
+
+        unapplied_revs_filter = Q(server_rev__in=unapplied_revs)
 
         # Create a filter that returns all applied changes, and any errored changes made by this session
         relevant_to_session_filter = (Q(applied=True) | Q(errored=True, session_id=session_key))
 
-        change_filter = (Q(user=request.user, server_rev__gt=user_rev) & relevant_to_session_filter)
+        change_filter = (Q(user=request.user) & (unapplied_revs_filter | Q(server_rev__gt=user_rev)) & relevant_to_session_filter)
 
         for channel_id, rev in channel_revs.items():
-            change_filter |= (Q(channel_id=channel_id, server_rev__gt=rev) & relevant_to_session_filter)
+            change_filter |= (Q(channel_id=channel_id) & (unapplied_revs_filter | Q(server_rev__gt=rev)) & relevant_to_session_filter)
 
         changes_to_return = list(
             Change.objects.filter(

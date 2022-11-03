@@ -181,9 +181,7 @@ function handleMaxRevs(response, userId) {
       .concat(get(response, ['data', 'successes'], [])),
     'server_rev',
     'desc'
-    // Ignore server generated changes, as they are applied out of order.
-    // This leads to a false sense of which changes we have actually seen.
-  ).filter(c => c.created_by_id);
+  );
   const channelIds = uniq(allChanges.map(c => c.channel_id)).filter(Boolean);
   const maxRevs = {};
   const promises = [];
@@ -255,10 +253,15 @@ async function syncChanges() {
     channel_revs[channelId] = get(user, [MAX_REV_KEY, channelId], 0);
   }
 
+  const unAppliedChanges = await db[CHANGES_TABLE].orderBy('server_rev')
+    .filter(c => c.synced && !c.errors && !c.disallowed)
+    .toArray();
+
   const requestPayload = {
     changes: [],
     channel_revs,
     user_rev: user.user_rev || 0,
+    unapplied_revs: unAppliedChanges.map(c => c.server_rev).filter(Boolean),
   };
 
   if (lastChange) {
