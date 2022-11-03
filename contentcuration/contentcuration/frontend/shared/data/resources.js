@@ -705,7 +705,11 @@ class Resource extends mix(APIResource, IndexedDBResource) {
               if (c.type === CHANGE_TYPES.CREATED) {
                 parent = c.obj.parent;
               }
-              return params.parent === parent || (params.ids || []).includes(c.key);
+              return (
+                params.parent === parent ||
+                params.parent === c.key ||
+                (params.id__in || []).includes(c.key)
+              );
             })
             .count()
             .then(pendingCount => pendingCount === 0);
