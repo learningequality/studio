@@ -636,10 +636,11 @@
       thumbnailEncoding: generateGetterSetter('thumbnail_encoding'),
       completionAndDuration: {
         get() {
-          const { completion_criteria, modality } = this.getExtraFieldsValueFromNodes(
-            'options',
-            {}
-          );
+          const options = this.getExtraFieldsValueFromNodes('options', {});
+          if (options === nonUniqueValue) {
+            return nonUniqueValue;
+          }
+          const { completion_criteria, modality } = options;
           const suggested_duration_type = this.getExtraFieldsValueFromNodes(
             'suggested_duration_type'
           );

@@ -5,6 +5,8 @@
     <Checkbox
       v-model="learnerManaged"
       color="primary"
+      :indeterminate="notUnique"
+      :disabled="notUnique"
       :label="$tr('learnersCanMarkComplete')"
       style="padding-bottom: 16px;"
     />
@@ -17,6 +19,7 @@
             ref="completion"
             v-model="completionDropdown"
             box
+            :placeholder="getPlaceholder('value')"
             :items="showCorrectCompletionOptions"
             :label="translateMetadataString('completion')"
             :required="required"
@@ -61,6 +64,7 @@
             ref="duration"
             v-model="durationDropdown"
             box
+            :placeholder="getPlaceholder('value')"
             :items="selectableDurationOptions"
             :label="translateMetadataString('duration')"
             :required="required"
@@ -205,6 +209,9 @@
       },
     },
     computed: {
+      notUnique() {
+        return this.value === nonUniqueValue;
+      },
       model() {
         return this.value.model || defaultCompletionCriteriaModels[this.kind];
       },
@@ -238,6 +245,9 @@
       },
       completionDropdown: {
         get() {
+          if (this.notUnique) {
+            return;
+          }
           if (
             this.value.modality === ContentModalities.QUIZ &&
             this.model === CompletionCriteriaModels.MASTERY
