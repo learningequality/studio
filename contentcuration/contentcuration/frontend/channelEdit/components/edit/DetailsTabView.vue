@@ -365,6 +365,7 @@
 <script>
 
   import difference from 'lodash/difference';
+  import get from 'lodash/get';
   import intersection from 'lodash/intersection';
   import uniq from 'lodash/uniq';
   import { mapGetters, mapActions } from 'vuex';
@@ -818,7 +819,7 @@
             ) {
               return this.diffTracker[node.id].extra_fields[key];
             }
-            return node.extra_fields[key] || defaultValue;
+            return get(node.extra_fields, key, defaultValue);
           })
         );
         return getValueFromResults(results);
