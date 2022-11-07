@@ -50,7 +50,7 @@
               :value="idx"
               readonly
             >
-              <template #label>
+              <template #default>
                 <div class="px-2">
                   <MarkdownViewer :markdown="answer.answer" />
                 </div>

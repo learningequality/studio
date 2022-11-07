@@ -22,12 +22,11 @@
         >
           <Checkbox
             v-model="selectedChannels"
-            color="primary"
             data-test="checkbox"
             :value="channel.id"
             class="channel ma-0"
           >
-            <template #label>
+            <template #default>
               <ChannelItem :channelId="channel.id" />
             </template>
           </Checkbox>

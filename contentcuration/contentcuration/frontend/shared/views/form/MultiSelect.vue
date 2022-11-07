@@ -22,7 +22,7 @@
         </template>
         <template #item="{ item, tile }">
           <Checkbox v-bind="tile.props" class="ma-0">
-            <template #label>
+            <template #default>
               <span :class="{ notranslate }">{{ getText(item) }}</span>
             </template>
           </Checkbox>

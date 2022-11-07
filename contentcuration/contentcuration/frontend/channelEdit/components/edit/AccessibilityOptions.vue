@@ -11,10 +11,9 @@
           v-model="accessibility"
           :value="accessibilityItem.value"
           :label="accessibilityItem.label"
-          color="primary"
           :data-test="`checkbox-${accessibilityItem.help}`"
         >
-          <template #label>
+          <template #default>
             <span class="text-xs-left">{{ accessibilityItem.label }}</span>
             &nbsp;
             <HelpTooltip

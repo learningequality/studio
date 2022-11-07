@@ -16,7 +16,7 @@
 
         <VListTile @click.stop>
           <VListTileAction>
-            <Checkbox v-model="syncFiles" color="primary" />
+            <Checkbox v-model="syncFiles" />
           </VListTileAction>
           <VListTileContent @click="syncFiles = !syncFiles">
             <VListTileTitle>{{ $tr('syncFilesTitle') }}</VListTileTitle>
@@ -26,7 +26,7 @@
 
         <VListTile @click.stop>
           <VListTileAction>
-            <VCheckbox v-model="syncTags" color="primary" />
+            <Checkbox v-model="syncTags" />
           </VListTileAction>
           <VListTileContent @click="syncTags = !syncTags">
             <VListTileTitle>{{ $tr('syncTagsTitle') }}</VListTileTitle>
@@ -36,7 +36,7 @@
 
         <VListTile @click.stop>
           <VListTileAction>
-            <VCheckbox v-model="syncTitlesAndDescriptions" color="primary" />
+            <Checkbox v-model="syncTitlesAndDescriptions" />
           </VListTileAction>
           <VListTileContent @click="syncTitlesAndDescriptions = !syncTitlesAndDescriptions">
             <VListTileTitle>{{ $tr('syncTitlesAndDescriptionsTitle') }}</VListTileTitle>
@@ -46,7 +46,7 @@
 
         <VListTile @click.stop>
           <VListTileAction>
-            <VCheckbox v-model="syncExercises" color="primary" />
+            <Checkbox v-model="syncExercises" />
           </VListTileAction>
           <VListTileContent @click="syncExercises = !syncExercises">
             <VListTileTitle>{{ $tr('syncExercisesTitle') }}</VListTileTitle>

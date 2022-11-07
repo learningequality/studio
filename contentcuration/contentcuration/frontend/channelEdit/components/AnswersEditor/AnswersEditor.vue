@@ -47,7 +47,7 @@
                   v-if="isMultipleSelection"
                   :key="answerIdx"
                   :value="answerIdx"
-                  :input-value="correctAnswersIndices"
+                  :checked="correctAnswersIndices"
                   @change="onCorrectAnswersIndicesUpdate"
                 />
               </VFlex>

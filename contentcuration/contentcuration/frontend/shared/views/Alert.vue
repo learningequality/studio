@@ -2,10 +2,9 @@
 
   <MessageDialog v-model="open" :header="header" :text="text">
     <slot></slot>
-    <VCheckbox
+    <Checkbox
       v-if="messageId"
       v-model="dontShowAgain"
-      color="primary"
       :label="$tr('dontShowAgain')"
     />
     <template #buttons="{ close }">
@@ -21,10 +20,12 @@
 <script>
 
   import MessageDialog from './MessageDialog';
+  import Checkbox from './form/Checkbox';
 
   export default {
     name: 'Alert',
     components: {
+      Checkbox,
       MessageDialog,
     },
     props: {

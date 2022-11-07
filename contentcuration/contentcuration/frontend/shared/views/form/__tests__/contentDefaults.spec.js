@@ -65,7 +65,7 @@ function assertFormValues(wrapper, contentDefaults) {
     ],
     checkboxes,
     contentDefaults,
-    'inputValue'
+    'checked'
   );
 }
 
