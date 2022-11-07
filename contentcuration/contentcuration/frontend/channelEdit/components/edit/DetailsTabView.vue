@@ -367,7 +367,9 @@
   import difference from 'lodash/difference';
   import get from 'lodash/get';
   import intersection from 'lodash/intersection';
+  import isEqual from 'lodash/isEqual';
   import uniq from 'lodash/uniq';
+  import uniqWith from 'lodash/uniqWith';
   import { mapGetters, mapActions } from 'vuex';
   import ContentNodeThumbnail from '../../views/files/thumbnails/ContentNodeThumbnail';
   import FileUpload from '../../views/files/FileUpload';
@@ -634,8 +636,11 @@
       thumbnailEncoding: generateGetterSetter('thumbnail_encoding'),
       completionAndDuration: {
         get() {
-          const { completion_criteria, modality } =
-            this.getExtraFieldsValueFromNodes('options') || {};
+          const options = this.getExtraFieldsValueFromNodes('options', {});
+          if (options === nonUniqueValue) {
+            return nonUniqueValue;
+          }
+          const { completion_criteria, modality } = options;
           const suggested_duration_type = this.getExtraFieldsValueFromNodes(
             'suggested_duration_type'
           );
@@ -808,7 +813,7 @@
         return getValueFromResults(results);
       },
       getExtraFieldsValueFromNodes(key, defaultValue = null) {
-        const results = uniq(
+        const results = uniqWith(
           this.nodes.map(node => {
             if (
               Object.prototype.hasOwnProperty.call(
@@ -820,7 +825,8 @@
               return this.diffTracker[node.id].extra_fields[key];
             }
             return get(node.extra_fields, key, defaultValue);
-          })
+          }),
+          isEqual
         );
         return getValueFromResults(results);
       },
