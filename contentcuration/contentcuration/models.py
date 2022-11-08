@@ -1777,6 +1777,14 @@ class ContentNode(MPTTModel, models.Model):
         self.complete = not errors
         return errors
 
+    def make_content_id_unique(self):
+        """
+        If there exists a contentnode with the same content_id as the self,
+        then this updates content_id to a random uuid4.
+        """
+        if ContentNode.objects.exclude(pk=self.pk).filter(content_id=self.content_id).exists():
+            ContentNode.objects.filter(pk=self.pk).update(content_id=uuid.uuid4().hex)
+
     def on_create(self):
         self.changed = True
         self.recalculate_editors_storage()
@@ -2051,6 +2059,28 @@ class AssessmentItem(models.Model):
 
         return queryset.filter(Q(view=True) | Q(edit=True) | Q(public=True))
 
+    def on_create(self):
+        """
+        When an exercise is added to a contentnode, update its content_id
+        if it's a copied contentnode.
+        """
+        self.contentnode.make_content_id_unique()
+
+    def on_update(self):
+        """
+        When an exercise is updated of a contentnode, update its content_id
+        if it's a copied contentnode.
+        """
+        self.contentnode.make_content_id_unique()
+
+    def delete(self, *args, **kwargs):
+        """
+        When an exercise is deleted from a contentnode, update its content_id
+        if it's a copied contentnode.
+        """
+        self.contentnode.make_content_id_unique()
+        return super(AssessmentItem, self).delete(*args, **kwargs)
+
 
 class SlideshowSlide(models.Model):
     contentnode = models.ForeignKey('ContentNode', related_name="slideshow_slides", blank=True, null=True,
@@ -2168,10 +2198,19 @@ class File(models.Model):
 
         return os.path.basename(self.file_on_disk.name)
 
+    def update_contentnode_content_id(self):
+        """
+        If the file is attached to a contentnode then update that contentnode's content_id
+        if it's a copied contentnode.
+        """
+        if self.contentnode:
+            self.contentnode.make_content_id_unique()
+
     def on_update(self):
         # since modified was added later as a nullable field to File, we don't use a default but
         # instead we'll just make sure it's always updated through our serializers
         self.modified = timezone.now()
+        self.update_contentnode_content_id()
 
     def save(self, set_by_file_on_disk=True, *args, **kwargs):
         """
