@@ -1,11 +1,10 @@
 import { EventEmitter } from 'events';
-import uuidv4 from 'uuid/v4';
+import { v4 as uuidv4 } from 'uuid';
 import IndexedDBPlugin, {
   commitListener,
   dispatchListener,
   Listener,
 } from 'shared/vuex/indexedDBPlugin/index';
-import { CLIENTID } from 'shared/data/db';
 import { CHANGE_TYPES } from 'shared/data';
 
 describe('Listener', function() {
@@ -163,7 +162,10 @@ describe('IndexedDBPlugin', function() {
         type,
         source: source || this.source,
         obj: obj || {
-          id: uuidv4(),
+          test: uuidv4(),
+        },
+        mods: {
+          test: uuidv4(),
         },
       };
       this.changes.push(change);
@@ -178,7 +180,7 @@ describe('IndexedDBPlugin', function() {
         addChange: (source, obj = null) => {
           const change = testChange.call(this, table, type, source, obj);
           callObj = {
-            ...change.obj,
+            ...(type === CHANGE_TYPES.UPDATED ? change.mods : change.obj),
             testId: change.key,
           };
         },
@@ -197,7 +199,6 @@ describe('IndexedDBPlugin', function() {
     const listener4 = testListener('testTableB', CHANGE_TYPES.UPDATED, 'testVuexNamespace');
     const listener5 = testListener('testTableC', CHANGE_TYPES.CREATED, 'anotherVuexNamespace');
     const listener6 = testListener('testTableC', CHANGE_TYPES.UPDATED, 'anotherVuexNamespace');
-    const listener7 = testListener('testTableZ', CHANGE_TYPES.CREATED);
 
     listener1.addChange();
     listener2.addChange();
@@ -205,7 +206,6 @@ describe('IndexedDBPlugin', function() {
     listener4.addChange();
     listener5.addChange();
     listener6.addChange();
-    listener7.addChange(CLIENTID);
 
     const result = IndexedDBPlugin(this.db, this.listeners);
     result(this.store);
@@ -216,7 +216,6 @@ describe('IndexedDBPlugin', function() {
     listener4.assertNotCalled();
     listener5.assertNotCalled();
     listener6.assertNotCalled();
-    listener7.assertNotCalled();
 
     this.db.events.emit('changes', this.changes);
 
@@ -226,6 +225,5 @@ describe('IndexedDBPlugin', function() {
     listener4.assertCalled();
     listener5.assertCalled();
     listener6.assertCalled();
-    listener7.assertNotCalled(); // from source CLIENTID
   });
 });

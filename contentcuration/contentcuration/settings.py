@@ -17,7 +17,6 @@ import sys
 from datetime import timedelta
 from tempfile import gettempdir
 
-import pycountry
 from django.utils.timezone import now
 
 from contentcuration.utils.incidents import INCIDENTS
@@ -26,6 +25,7 @@ from contentcuration.utils.secretmanagement import get_secret
 logging.getLogger("newrelic").setLevel(logging.CRITICAL)
 logging.getLogger("botocore").setLevel(logging.WARNING)
 logging.getLogger("boto3").setLevel(logging.WARNING)
+logging.basicConfig(level="INFO")
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 STORAGE_ROOT = "storage"
@@ -86,6 +86,8 @@ INSTALLED_APPS = (
     'webpack_loader',
     'django_filters',
     'mathfilters',
+    'django.contrib.postgres',
+    'django_celery_results',
 )
 
 SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"
@@ -165,6 +167,7 @@ SUPPORTED_BROWSERS = [
 HEALTH_CHECK_BROWSERS = [
     'kube-probe',
     'GoogleHC',
+    'Studio-Internal-Prober'
 ]
 
 REST_FRAMEWORK = {
@@ -217,6 +220,7 @@ DATABASES = {
     },
 }
 
+IS_CONTENTNODE_TABLE_PARTITIONED = os.getenv("IS_CONTENTNODE_TABLE_PARTITIONED") or False
 
 DATABASE_ROUTERS = [
     "kolibri_content.router.ContentDBRouter",
@@ -272,7 +276,6 @@ USE_TZ = True
 
 LOCALE_PATHS = (
     os.path.join(BASE_DIR, 'locale'),
-    pycountry.LOCALES_DIR,
 )
 
 
@@ -289,6 +292,11 @@ LANGUAGES = (
     # ('en-PT', gettext('English - Pirate')),
 )
 
+SITE_BY_ID = {
+    'master': 1,
+    'unstable': 3,
+    'hotfixes': 4,
+}
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
@@ -308,15 +316,15 @@ AUTH_USER_MODEL = 'contentcuration.User'
 
 ACCOUNT_ACTIVATION_DAYS = 7
 REGISTRATION_OPEN = True
-SITE_ID = 1
+SITE_ID = SITE_BY_ID.get(os.getenv('BRANCH_ENVIRONMENT'), 1)
 
 # Used for serializing datetime objects.
 DATE_TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 
+POSTMARK_SSL = True
 SEND_USER_ACTIVATION_NOTIFICATION_EMAIL = bool(
     os.getenv("SEND_USER_ACTIVATION_NOTIFICATION_EMAIL")
 )
-
 SPACE_REQUEST_EMAIL = 'content@learningequality.org'
 REGISTRATION_INFORMATION_EMAIL = 'studio-registrations@learningequality.org'
 HELP_EMAIL = 'content@learningequality.org'
@@ -341,26 +349,24 @@ IGNORABLE_404_URLS = [
 ]
 
 # CELERY CONFIGURATIONS
-CELERY_BROKER_URL = REDIS_URL
-# with a redis broker, tasks will be re-sent if not completed within the duration of this timeout
-CELERY_BROKER_TRANSPORT_OPTIONS = {'visibility_timeout': 4 * 3600}
-CELERY_RESULT_BACKEND = REDIS_URL
 CELERY_REDIS_DB = os.getenv("CELERY_REDIS_DB") or "0"
-CELERY_BROKER_URL = "{url}{db}".format(
-    url=REDIS_URL,
-    db=CELERY_REDIS_DB
-)
-CELERY_RESULT_BACKEND = CELERY_BROKER_URL
-CELERY_TIMEZONE = os.getenv("CELERY_TIMEZONE") or 'Africa/Nairobi'
-CELERY_ACCEPT_CONTENT = ['application/json']
-CELERY_TASK_SERIALIZER = 'json'
-CELERY_RESULT_SERIALIZER = 'json'
-# If this is True, Celery tasks are run synchronously. This is set to True in the unit tests,
-# as it is not possible to correctly test Celery tasks asynchronously currently.
-CELERY_TASK_ALWAYS_EAGER = False
-# We hook into task events to update the Task DB records with the updated state.
-# See celerysignals.py for more info.
-CELERY_WORKER_SEND_TASK_EVENTS = True
+CELERY = {
+    "broker_url": "{url}{db}".format(
+        url=REDIS_URL,
+        db=CELERY_REDIS_DB
+    ),
+    # with a redis broker, tasks will be re-sent if not completed within the duration of this timeout
+    "broker_transport_options": {"visibility_timeout": 4 * 3600},
+    "redis_db": CELERY_REDIS_DB,
+    "result_backend": "django-db",
+    "redis_backend_health_check_interval": 600,
+    "timezone": os.getenv("CELERY_TIMEZONE") or 'Africa/Nairobi',
+    "accept_content": ['application/json'],
+    "task_serializer": "json",
+    "result_serializer": "json",
+    "result_extended": True,
+    "worker_send_task_events": True,
+}
 
 # When cleaning up orphan nodes, only clean up any that have been last modified
 # since this date
@@ -408,18 +414,23 @@ LIBRARY_MODE = False
 key = get_secret("SENTRY_DSN_KEY")
 if key:
     key = key.strip()  # strip any possible whitespace or trailing newline
-release_commit = get_secret("RELEASE_COMMIT_SHA")
-if key and len(key) > 0 and release_commit:
+
+SENTRY_DSN = 'https://{secret}@sentry.io/1252819'.format(secret=key) if key else None
+SENTRY_ENVIRONMENT = get_secret("BRANCH_ENVIRONMENT")
+SENTRY_RELEASE = get_secret("RELEASE_COMMIT_SHA")
+SENTRY_ACTIVE = False
+
+if SENTRY_DSN and SENTRY_RELEASE and SENTRY_ENVIRONMENT:
     import sentry_sdk
     # TODO: there are also Celery and Redis integrations, but since they are new
     # I left them as a separate task so we can spend more time on testing.
     from sentry_sdk.integrations.django import DjangoIntegration
 
     sentry_sdk.init(
-        dsn='https://{secret}@sentry.io/1252819'.format(secret=key),
+        dsn=SENTRY_DSN,
         integrations=[DjangoIntegration()],
-        release=release_commit,
-        environment=get_secret("BRANCH_ENVIRONMENT"),
+        release=SENTRY_RELEASE,
+        environment=SENTRY_ENVIRONMENT,
         send_default_pii=True,
     )
 

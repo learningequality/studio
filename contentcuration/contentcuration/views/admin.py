@@ -24,7 +24,7 @@ from contentcuration.views.base import current_user_for_context
 def send_custom_email(request):
     data = json.loads(request.body)
     try:
-        sendcustomemails_task.delay(data["subject"], data["message"], data['query'])
+        sendcustomemails_task.enqueue(request.user, data["subject"], data["message"], data['query'])
     except KeyError:
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 

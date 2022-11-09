@@ -1,11 +1,11 @@
 import pytest
 
-from .base import BaseTestCase
+from .base import StudioTestCase
 from .testdata import exercise
 from contentcuration import models as cc
 
 
-class TestForwardAssessmentItemKeypairConstraint(BaseTestCase):
+class TestForwardAssessmentItemKeypairConstraint(StudioTestCase):
 
     def test_prevent_two_identical_keypairs(self):
         contentnode = cc.ContentNode.objects.create(kind_id=exercise(), extra_fields={})

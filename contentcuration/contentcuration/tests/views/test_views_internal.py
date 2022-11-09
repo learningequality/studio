@@ -4,10 +4,17 @@ Tests for contentcuration.views.internal functions.
 """
 import json
 import uuid
+from unittest import skipIf
 
 from django.db import connections
 from django.urls import reverse_lazy
 from le_utils.constants import format_presets
+from le_utils.constants.labels.accessibility_categories import ACCESSIBILITYCATEGORIESLIST
+from le_utils.constants.labels.learning_activities import LEARNINGACTIVITIESLIST
+from le_utils.constants.labels.levels import LEVELSLIST
+from le_utils.constants.labels.needs import NEEDSLIST
+from le_utils.constants.labels.resource_type import RESOURCETYPELIST
+from le_utils.constants.labels.subjects import SUBJECTSLIST
 from mixer.main import mixer
 from mock import patch
 from rest_framework.test import APIClient
@@ -44,6 +51,16 @@ class SampleContentNodeDataSchema:
     copyright_holder = str
 
 
+METADATA = {
+    "grade_levels": LEVELSLIST,
+    "resource_types": RESOURCETYPELIST,
+    "learning_activities": LEARNINGACTIVITIESLIST,
+    "accessibility_labels": ACCESSIBILITYCATEGORIESLIST,
+    "categories": SUBJECTSLIST,
+    "learner_needs": NEEDSLIST,
+}
+
+
 class ApiAddNodesToTreeTestCase(StudioTestCase):
     """
     Tests for contentcuration.views.internal.api_add_nodes_to_tree function.
@@ -61,6 +78,7 @@ class ApiAddNodesToTreeTestCase(StudioTestCase):
             "source_domain": random_data.source_domain,
             "source_id": random_data.source_id,
             "author": random_data.author,
+            "tags": ["oer", "edtech"],
             "files": [
                 {
                     "size": fileobj.file_size,
@@ -109,6 +127,11 @@ class ApiAddNodesToTreeTestCase(StudioTestCase):
         invalid_copyright_holder["title"] = "invalid_copyright_holder"
         invalid_copyright_holder["copyright_holder"] = ""
 
+        valid_metadata_labels = self._make_node_data()
+        valid_metadata_labels["title"] = "valid_metadata_labels"
+        for label, values in METADATA.items():
+            valid_metadata_labels[label] = [values[0]]
+
         self.sample_data = {
             "root_id": self.root_node.id,
             "content_data": [
@@ -116,6 +139,7 @@ class ApiAddNodesToTreeTestCase(StudioTestCase):
                 invalid_title_node,
                 invalid_license_description,
                 invalid_copyright_holder,
+                valid_metadata_labels,
             ],
         }
         self.resp = self.admin_client().post(
@@ -165,6 +189,14 @@ class ApiAddNodesToTreeTestCase(StudioTestCase):
         # our original file object
         assert f.file_on_disk.read() == self.fileobj.file_on_disk.read()
 
+    def test_metadata_properly_created(self):
+        node = ContentNode.objects.get(title="valid_metadata_labels")
+        for label, values in METADATA.items():
+            self.assertEqual(getattr(node, label), {
+                values[0]: True
+            })
+
+    @skipIf(True, "Disable until we mark nodes as incomplete rather than just warn")
     def test_invalid_nodes_are_not_complete(self):
         node_0 = ContentNode.objects.get(title=self.title)
         node_1 = ContentNode.objects.get(description="invalid_title_node")
@@ -175,6 +207,43 @@ class ApiAddNodesToTreeTestCase(StudioTestCase):
         self.assertFalse(node_1.complete)
         self.assertFalse(node_2.complete)
         self.assertFalse(node_3.complete)
+
+    def test_tag_greater_than_30_chars_excluded(self):
+        # Node with tag greater than 30 characters
+        invalid_tag_length = self._make_node_data()
+        invalid_tag_length["title"] = "invalid_tag_length"
+        invalid_tag_length["tags"] = ["kolibri studio, kolibri studio!"]
+
+        test_data = {
+            "root_id": self.root_node.id,
+            "content_data": [
+                invalid_tag_length,
+            ],
+        }
+
+        response = self.admin_client().post(
+            reverse_lazy("api_add_nodes_to_tree"), data=test_data, format="json"
+        )
+
+        self.assertEqual(response.status_code, 400, response.content)
+
+    def test_invalid_metadata_label_excluded(self):
+        invalid_metadata_labels = self._make_node_data()
+        invalid_metadata_labels["title"] = "invalid_metadata_labels"
+        invalid_metadata_labels["categories"] = ["not a label!"]
+
+        test_data = {
+            "root_id": self.root_node.id,
+            "content_data": [
+                invalid_metadata_labels,
+            ],
+        }
+
+        response = self.admin_client().post(
+            reverse_lazy("api_add_nodes_to_tree"), data=test_data, format="json"
+        )
+
+        self.assertEqual(response.status_code, 400, response.content)
 
 
 class ApiAddExerciseNodesToTreeTestCase(StudioTestCase):
@@ -632,7 +701,7 @@ class CreateChannelTestCase(StudioTestCase):
     """
 
     def setUp(self):
-        super(CreateChannelTestCase, self).setUp()
+        super(CreateChannelTestCase, self).setUpBase()
         self.channel_data = {
             "id": uuid.uuid4().hex,
             "name": "Test channel for creation",

@@ -99,6 +99,7 @@
   .uploader {
     position: absolute;
   }
+
   .file-upload-wrapper {
     max-width: 900px;
     margin: 0 auto;

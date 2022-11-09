@@ -1,10 +1,13 @@
 import { mount } from '@vue/test-utils';
 import ChannelInvitation from '../ChannelInvitation.vue';
+import { factory } from '../../../store';
 
+const store = factory();
 const invitationID = 'testing';
 
 function makeWrapper() {
   return mount(ChannelInvitation, {
+    store,
     propsData: {
       invitationID,
     },

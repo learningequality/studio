@@ -37,6 +37,7 @@
       text: {
         type: String,
         required: false,
+        default: '',
       },
     },
     computed: {

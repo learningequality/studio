@@ -43,9 +43,11 @@
         if (this.$refs.form.validate()) {
           this.sendPasswordResetLink(this.email)
             .then(() => {
-              this.$router.push({
-                name: 'PasswordInstructionsSent',
-              });
+              this.$router
+                .push({
+                  name: 'PasswordInstructionsSent',
+                })
+                .catch(() => {});
             })
             .catch(() => {
               this.error = true;

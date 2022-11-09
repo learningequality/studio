@@ -1,7 +1,7 @@
 <template>
 
   <span v-if="message">
-    <VTooltip bottom>
+    <VTooltip bottom lazy>
       <template #activator="{ on }">
         <Icon color="greenSuccess" small v-on="on">
           {{ showFilled ? 'lens' : 'trip_origin' }}
@@ -21,6 +21,7 @@
     props: {
       node: {
         type: Object,
+        default: null,
       },
     },
     computed: {
@@ -67,9 +68,9 @@
     $trs: {
       containsNewAndUpdated: 'Contains unpublished resources and changes',
       containsNew: 'Contains unpublished resources',
-      isNewTopic: 'Unpublished topic',
+      isNewTopic: 'Unpublished folder',
       containsUpdated: 'Contains unpublished changes',
-      isUpdatedTopic: 'Topic has been updated since last publish',
+      isUpdatedTopic: 'Folder has been updated since last publish',
       isNewResource: 'Unpublished',
       isUpdatedResource: 'Updated since last publish',
     },

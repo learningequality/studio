@@ -3,7 +3,7 @@
   <ImportFromChannelsModal>
     <template #default="{ preview }">
       <VSheet>
-        <div v-if="!isBrowsing" class="my-2">
+        <div v-if="!isBrowsing" class="my-2 px-2">
           <ActionLink
             :text="$tr('backToBrowseAction')"
             @click="handleBackToBrowse"
@@ -11,8 +11,8 @@
         </div>
 
         <!-- Search bar -->
-        <VLayout row wrap class="mt-4">
-          <VFlex xl4 lg5 md7 sm12>
+        <VLayout row wrap class="mt-4 px-2">
+          <VFlex style="max-width: 700px">
             <VForm ref="search" @submit.prevent="handleSearchTerm">
               <VTextField
                 v-model="searchTerm"
@@ -170,19 +170,16 @@
         return this.copyToClipboard();
       },
       copyToClipboard: withChangeTracker(function(changeTracker) {
-        this.$store.dispatch('showSnackbar', {
-          duration: null,
-          text: this.$tr('copyingToClipboard'),
-          actionText: this.$tr('cancel'),
-          actionCallback: () => changeTracker.revert(),
-        });
         return this.copy({ node_id: this.copyNode.node_id, channel_id: this.copyNode.channel_id })
           .then(() => {
-            return this.$store.dispatch('showSnackbar', {
-              text: this.$tr('copiedToClipboard'),
-              actionText: this.$tr('undo'),
-              actionCallback: () => changeTracker.revert(),
-            });
+            this.$store
+              .dispatch('showSnackbar', {
+                text: this.$tr('copiedToClipboard'),
+                // TODO: implement revert functionality for clipboard
+                // actionText: this.$tr('undo'),
+                // actionCallback: () => changeTracker.revert(),
+              })
+              .then(() => changeTracker.cleanUp());
           })
           .catch(error => {
             this.$store.dispatch('showSnackbarSimple', this.$tr('copyFailed'));
@@ -196,9 +193,7 @@
       searchAction: 'Search',
 
       // Copy strings
-      undo: 'Undo',
-      cancel: 'Cancel',
-      copyingToClipboard: 'Copying to clipboard...',
+      // undo: 'Undo',
       copiedToClipboard: 'Copied to clipboard',
       copyFailed: 'Failed to copy to clipboard',
     },
@@ -218,6 +213,7 @@
     margin: 0;
     margin-top: 0 !important;
   }
+
   .search-btn {
     height: inherit;
     margin: 0;

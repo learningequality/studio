@@ -1,38 +1,43 @@
 <template>
 
-  <VAutocomplete
-    v-model="language"
-    class="language-dropdown"
-    box
-    v-bind="$attrs"
-    :items="languages"
-    :label="$tr('labelText')"
-    color="primary"
-    itemValue="id"
-    :itemText="languageText"
-    autoSelectFirst
-    :allowOverflow="false"
-    clearable
-    :rules="rules"
-    :required="required"
-    :no-data-text="$tr('noDataText')"
-    :search-input.sync="input"
-    :menu-props="menuProps"
-    :multiple="multiple"
-    :chips="multiple"
-    @change="input = ''"
-    @focus="$emit('focus')"
-  >
-    <template #item="{ item }">
-      <VTooltip bottom>
-        <template v-slot:activator="{ on }">
-          <span class="text-truncate" v-on="on">{{ languageText(item) }}</span>
-        </template>
-        <span>{{ languageText(item) }}</span>
-      </VTooltip>
+  <DropdownWrapper>
+    <template #default="{ attach, menuProps }">
+      <VAutocomplete
+        v-model="language"
+        class="language-dropdown"
+        box
+        v-bind="$attrs"
+        :items="languages"
+        :label="$tr('labelText')"
+        color="primary"
+        itemValue="id"
+        :itemText="languageText"
+        autoSelectFirst
+        :allowOverflow="false"
+        clearable
+        :rules="rules"
+        :required="required"
+        :no-data-text="$tr('noDataText')"
+        :search-input.sync="input"
+        :menu-props="{ ...menuProps, maxWidth: 300 }"
+        :multiple="multiple"
+        :chips="multiple"
+        :attach="attach"
+        @change="input = ''"
+        @focus="$emit('focus')"
+      >
+        <template #item="{ item }">
+          <VTooltip bottom lazy>
+            <template #activator="{ on }">
+              <span class="text-truncate" v-on="on">{{ languageText(item) }}</span>
+            </template>
+            <span>{{ languageText(item) }}</span>
+          </VTooltip>
 
+        </template>
+      </VAutocomplete>
     </template>
-  </VAutocomplete>
+  </DropdownWrapper>
 
 </template>
 
@@ -41,9 +46,13 @@
 
   import isArray from 'lodash/isArray';
   import Languages, { LanguagesList } from 'shared/leUtils/Languages';
+  import DropdownWrapper from 'shared/views/form/DropdownWrapper';
 
   export default {
     name: 'LanguageDropdown',
+    components: { DropdownWrapper },
+    // $attrs are rebound to a descendent component
+    inheritAttrs: false,
     props: {
       value: {
         type: [String, Array, Object],
@@ -56,6 +65,7 @@
           }
           return !value.toString();
         },
+        default: null,
       },
       required: {
         type: Boolean,
@@ -86,12 +96,6 @@
           this.$emit('input', value);
         },
       },
-      menuProps() {
-        return {
-          minWidth: 300,
-          maxWidth: 300,
-        };
-      },
       languages() {
         const excludeLanguages = new Set(this.excludeLanguages);
         return LanguagesList.filter(l => !excludeLanguages.has(l.id));
@@ -118,15 +122,11 @@
 
 <style lang="less" scoped>
 
-  .language-dropdown {
-    display: inline-block;
-    width: 100%;
-  }
-
   /deep/ .v-select__selections {
     width: calc(100% - 48px);
     min-height: 0 !important;
   }
+
   .v-chip,
   /deep/ .v-chip__content,
   .text-truncate {

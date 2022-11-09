@@ -15,6 +15,7 @@ from django.core.files.storage import default_storage
 from django.db.models import Count
 from django.db.models import Sum
 from django.utils import timezone
+from le_utils.constants import completion_criteria
 from le_utils.constants import content_kinds
 from le_utils.constants import format_presets
 
@@ -30,7 +31,7 @@ from contentcuration.utils.files import get_thumbnail_encoding
 from contentcuration.utils.sentry import report_exception
 
 
-def map_files_to_node(user, node, data):
+def map_files_to_node(user, node, data):  # noqa: C901
     """
     Generate files that reference the content node.
     """
@@ -79,6 +80,7 @@ def map_files_to_node(user, node, data):
             preset=kind_preset,
             language_id=file_data.get('language'),
             uploaded_by=user,
+            duration=file_data.get("duration"),
         )
         resource_obj.file_on_disk.name = file_path
         resource_obj.save()
@@ -193,8 +195,8 @@ def get_diff(updated, original):
 
 
 def generate_diff(updated_id, original_id):
-    updated = ContentNode.objects.filter(pk=updated_id).first()
-    original = ContentNode.objects.filter(pk=original_id).first()
+    updated = ContentNode.filter_by_pk(pk=updated_id).first()
+    original = ContentNode.filter_by_pk(pk=original_id).first()
 
     main_descendants = original.get_descendants() if original else None
     updated_descendants = updated.get_descendants() if updated else None
@@ -291,6 +293,7 @@ class ResourceSizeHelper:
     """
     Helper class for calculating resource size
     """
+
     def __init__(self, node):
         """
         :param node: The contentnode with which to determine resource size
@@ -365,6 +368,7 @@ SLOW_UNFORCED_CALC_THRESHOLD = 5
 
 class SlowCalculationError(Exception):
     """ Error used for tracking slow calculation times in Sentry """
+
     def __init__(self, node_id, time):
         self.node_id = node_id
         self.time = time
@@ -424,3 +428,22 @@ def calculate_resource_size(node, force=False):
             report_exception(e)
 
     return size, False
+
+
+def migrate_extra_fields(extra_fields):
+    if not isinstance(extra_fields, dict):
+        return extra_fields
+    m = extra_fields.pop("m", None)
+    n = extra_fields.pop("n", None)
+    mastery_model = extra_fields.pop("mastery_model", None)
+    if not extra_fields.get("options", {}).get("completion_criteria", {}) and mastery_model is not None:
+        extra_fields["options"] = extra_fields.get("options", {})
+        extra_fields["options"]["completion_criteria"] = {
+            "threshold": {
+                "m": m,
+                "n": n,
+                "mastery_model": mastery_model,
+            },
+            "model": completion_criteria.MASTERY,
+        }
+    return extra_fields

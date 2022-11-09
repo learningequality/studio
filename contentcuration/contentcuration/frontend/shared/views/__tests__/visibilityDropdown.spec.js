@@ -1,4 +1,3 @@
-import _ from 'underscore';
 import { mount } from '@vue/test-utils';
 import VisibilityDropdown from '../VisibilityDropdown.vue';
 import TestForm from './TestForm.vue';
@@ -15,6 +14,8 @@ function makeWrapper() {
   });
 }
 
+const RolesArray = Array.from(Roles);
+
 describe('visibilityDropdown', () => {
   let wrapper;
   let formWrapper;
@@ -24,17 +25,13 @@ describe('visibilityDropdown', () => {
   });
 
   describe('on load', () => {
-    it('all visibility options should be an option to select', () => {
-      Roles.forEach(role => {
-        expect(wrapper.find('.v-list').text()).toContain(constantStrings.$tr(role));
-      });
+    it.each(RolesArray)('all visibility options should be an option to select', async role => {
+      await wrapper.find('.v-input__slot').trigger('click');
+      expect(wrapper.find('.v-list').text()).toContain(constantStrings.$tr(role));
     });
-    it('should render according to visibility prop', () => {
-      function test(visibility) {
-        wrapper.setProps({ value: visibility });
-        expect(wrapper.vm.$refs.visibility.value).toEqual(visibility);
-      }
-      _.each(Roles, test);
+    it.each(RolesArray)('should render according to visibility prop %s', visibility => {
+      wrapper.setProps({ value: visibility });
+      expect(wrapper.vm.$refs.visibility.value).toEqual(visibility);
     });
   });
   describe('props', () => {

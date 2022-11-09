@@ -1,8 +1,13 @@
+import json
 import traceback
+import uuid
+from contextlib import contextmanager
 
+from celery import states
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
 from django.http import Http404
+from django.http.request import HttpRequest
 from django_bulk_update.helper import bulk_update
 from django_filters.constants import EMPTY_VALUES
 from django_filters.rest_framework import DjangoFilterBackend
@@ -22,7 +27,12 @@ from rest_framework.utils import html
 from rest_framework.utils import model_meta
 from rest_framework.viewsets import ReadOnlyModelViewSet
 
+from contentcuration.models import Change
+from contentcuration.models import TaskResult
+from contentcuration.utils.celery.tasks import ProgressTracker
 from contentcuration.viewsets.common import MissingRequiredParamsException
+from contentcuration.viewsets.sync.constants import TASK_ID
+from contentcuration.viewsets.sync.utils import generate_update_event
 from contentcuration.viewsets.sync.utils import log_sync_exception
 
 
@@ -187,6 +197,12 @@ class BulkModelSerializer(SimpleReprMixin, ModelSerializer):
 
         return instance
 
+    def save(self, **kwargs):
+        instance = super(BulkModelSerializer, self).save(**kwargs)
+        if self.changes:
+            Change.create_changes(self.changes, applied=True)
+        return instance
+
 
 # Add mixin first to make sure __repr__ for mixin is first in MRO
 class BulkListSerializer(SimpleReprMixin, ListSerializer):
@@ -341,6 +357,12 @@ class BulkListSerializer(SimpleReprMixin, ListSerializer):
             raise TypeError(msg)
         return created_objects
 
+    def save(self, **kwargs):
+        instance = super(BulkListSerializer, self).save(**kwargs)
+        if self.changes:
+            Change.create_changes(self.changes, applied=True)
+        return instance
+
 
 class ValuesViewsetOrderingFilter(OrderingFilter):
 
@@ -426,13 +448,21 @@ class ReadOnlyValuesViewset(SimpleReprMixin, ReadOnlyModelViewSet):
     field_map = {}
 
     def __init__(self, *args, **kwargs):
-        viewset = super(ReadOnlyValuesViewset, self).__init__(*args, **kwargs)
+        super(ReadOnlyValuesViewset, self).__init__(*args, **kwargs)
         if not isinstance(self.values, tuple):
             raise TypeError("values must be defined as a tuple")
         self._values = tuple(self.values)
         if not isinstance(self.field_map, dict):
             raise TypeError("field_map must be defined as a dict")
         self._field_map = self.field_map.copy()
+
+    def sync_initial(self, user):
+        """
+        Runs anything that needs to occur prior to calling the changes handler.
+        """
+        self.request = HttpRequest()
+        self.request.user = user
+        self.format_kwarg = None
 
     @classmethod
     def id_attr(cls):
@@ -605,20 +635,17 @@ class CreateModelMixin(object):
             + self.values_from_key(change["key"])
         )
 
-    def perform_create(self, serializer):
+    def perform_create(self, serializer, change=None):
         serializer.save()
 
     def create_from_changes(self, changes):
         errors = []
-        changes_to_return = []
 
         for change in changes:
             try:
                 serializer = self.get_serializer(data=self._map_create_change(change))
                 if serializer.is_valid():
-                    self.perform_create(serializer)
-                    if serializer.changes:
-                        changes_to_return.extend(serializer.changes)
+                    self.perform_create(serializer, change=change)
                 else:
                     change.update({"errors": serializer.errors})
                     errors.append(change)
@@ -627,7 +654,7 @@ class CreateModelMixin(object):
                 change["errors"] = [str(e)]
                 errors.append(change)
 
-        return errors, changes_to_return
+        return errors
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -655,7 +682,6 @@ class DestroyModelMixin(object):
 
     def delete_from_changes(self, changes):
         errors = []
-        changes_to_return = []
         queryset = self.get_edit_queryset().order_by()
         for change in changes:
             try:
@@ -670,7 +696,7 @@ class DestroyModelMixin(object):
                 log_sync_exception(e)
                 change["errors"] = [str(e)]
                 errors.append(change)
-        return errors, changes_to_return
+        return errors
 
 
 class UpdateModelMixin(object):
@@ -685,7 +711,6 @@ class UpdateModelMixin(object):
 
     def update_from_changes(self, changes):
         errors = []
-        changes_to_return = []
         queryset = self.get_edit_queryset().order_by()
         for change in changes:
             try:
@@ -695,21 +720,21 @@ class UpdateModelMixin(object):
                 )
                 if serializer.is_valid():
                     self.perform_update(serializer)
-                    if serializer.changes:
-                        changes_to_return.extend(serializer.changes)
                 else:
                     change.update({"errors": serializer.errors})
                     errors.append(change)
             except ObjectDoesNotExist:
                 # Should we also check object permissions here and return a different
                 # error if the user can view the object but not edit it?
+                # N.B. the .detail property of the ValidationError is a list
+                # so we don't need to wrap it in a list here.
                 change.update({"errors": ValidationError("Not found").detail})
                 errors.append(change)
             except Exception as e:
                 log_sync_exception(e)
                 change["errors"] = [str(e)]
                 errors.append(change)
-        return errors, changes_to_return
+        return errors
 
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop("partial", False)
@@ -740,7 +765,13 @@ class BulkCreateMixin(CreateModelMixin):
         serializer = self.get_serializer(data=data, many=True)
         errors = []
         if serializer.is_valid():
-            self.perform_bulk_create(serializer)
+            try:
+                self.perform_bulk_create(serializer)
+            except Exception as e:
+                log_sync_exception(e)
+                for change in changes:
+                    change["errors"] = [str(e)]
+                errors.extend(changes)
         else:
             valid_data = []
             for error, datum in zip(serializer.errors, data):
@@ -756,7 +787,7 @@ class BulkCreateMixin(CreateModelMixin):
                 # before DRF will let us save them.
                 serializer.is_valid(raise_exception=True)
                 self.perform_bulk_create(serializer)
-        return errors, serializer.changes
+        return errors
 
 
 class BulkUpdateMixin(UpdateModelMixin):
@@ -773,12 +804,20 @@ class BulkUpdateMixin(UpdateModelMixin):
         errors = []
 
         if serializer.is_valid():
-            self.perform_bulk_update(serializer)
+            try:
+                self.perform_bulk_update(serializer)
+            except Exception as e:
+                log_sync_exception(e)
+                for change in changes:
+                    change["errors"] = [str(e)]
+                errors.extend(changes)
             if serializer.missing_keys:
                 # add errors for any changes that were specified but no object
                 # corresponding could be found
                 errors = [
-                    dict(error=ValidationError("Not found").detail, **change)
+                    # N.B. the .detail property of the ValidationError is a list
+                    # so we don't need to wrap it in a list here.
+                    dict(errors=ValidationError("Not found").detail, **change)
                     for change in changes
                     if tuple(change["key"]) in serializer.missing_keys
                 ]
@@ -811,7 +850,7 @@ class BulkUpdateMixin(UpdateModelMixin):
                 # before DRF will let us save them.
                 serializer.is_valid(raise_exception=True)
                 self.perform_bulk_update(serializer)
-        return errors, serializer.changes
+        return errors
 
 
 class BulkDeleteMixin(DestroyModelMixin):
@@ -821,7 +860,6 @@ class BulkDeleteMixin(DestroyModelMixin):
             self.get_edit_queryset(), keys
         ).order_by()
         errors = []
-        changes_to_return = []
         try:
             queryset.delete()
         except Exception:
@@ -832,7 +870,7 @@ class BulkDeleteMixin(DestroyModelMixin):
                 }
                 for not_deleted_id in keys
             ]
-        return errors, changes_to_return
+        return errors
 
 
 class RequiredFilterSet(FilterSet):
@@ -849,3 +887,45 @@ class RequiredFilterSet(FilterSet):
         if not has_filtering_queries:
             raise MissingRequiredParamsException("No valid filter parameters supplied")
         return super(FilterSet, self).qs
+
+
+@contextmanager
+def create_change_tracker(pk, table, channel_id, user, task_name):
+    # Clean up any previous tasks specific to this in case there were failures.
+    meta = json.dumps(dict(pk=pk, table=table))
+    TaskResult.objects.filter(channel_id=channel_id, task_name=task_name, meta=meta).delete()
+
+    task_id = uuid.uuid4().hex
+    task_object = TaskResult.objects.create(
+        task_id=task_id,
+        status=states.STARTED,
+        channel_id=channel_id,
+        task_name=task_name,
+        user=user,
+        meta=meta
+    )
+
+    def update_progress(progress=None):
+        if progress:
+            task_object.progress = progress
+            task_object.save()
+
+    Change.create_change(
+        generate_update_event(pk, table, {TASK_ID: task_object.task_id}, channel_id=channel_id), applied=True
+    )
+
+    tracker = ProgressTracker(task_id, update_progress)
+
+    try:
+        yield tracker
+    except Exception:
+        task_object.status = states.FAILURE
+        task_object.traceback = traceback.format_exc()
+        task_object.save()
+    finally:
+        if task_object.status == states.STARTED:
+            # No error reported, cleanup.
+            Change.create_change(
+                generate_update_event(pk, table, {TASK_ID: None}, channel_id=channel_id), applied=True
+            )
+            task_object.delete()

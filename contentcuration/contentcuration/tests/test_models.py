@@ -3,13 +3,20 @@ import uuid
 import mock
 import pytest
 from django.conf import settings
+from django.core.cache import cache
 from django.db.utils import IntegrityError
+from django.utils import timezone
 from le_utils.constants import content_kinds
+from le_utils.constants import format_presets
 
+from contentcuration.constants import channel_history
 from contentcuration.models import AssessmentItem
 from contentcuration.models import Channel
+from contentcuration.models import ChannelHistory
 from contentcuration.models import ContentNode
+from contentcuration.models import CONTENTNODE_TREE_ID_CACHE_KEY
 from contentcuration.models import File
+from contentcuration.models import FILE_DURATION_CONSTRAINT
 from contentcuration.models import generate_object_storage_name
 from contentcuration.models import Invitation
 from contentcuration.models import object_storage_name
@@ -291,7 +298,7 @@ class ContentNodeTestCase(PermissionQuerysetTestCase):
         user = testdata.user()
         queryset = ContentNode.filter_view_queryset(self.base_queryset, user=user)
         self.assertQuerysetDoesNotContain(queryset, pk=settings.ORPHANAGE_ROOT_ID)
-        self.assertQuerysetContains(queryset, pk=contentnode.id)
+        self.assertQuerysetDoesNotContain(queryset, pk=contentnode.id)
 
     def test_filter_view_queryset__orphan_tree__anonymous(self):
         contentnode = create_contentnode(settings.ORPHANAGE_ROOT_ID)
@@ -360,7 +367,7 @@ class ContentNodeTestCase(PermissionQuerysetTestCase):
         user = testdata.user()
         queryset = ContentNode.filter_edit_queryset(self.base_queryset, user=user)
         self.assertQuerysetDoesNotContain(queryset, pk=settings.ORPHANAGE_ROOT_ID)
-        self.assertQuerysetContains(queryset, pk=contentnode.id)
+        self.assertQuerysetDoesNotContain(queryset, pk=contentnode.id)
 
     def test_filter_edit_queryset__orphan_tree__anonymous(self):
         contentnode = create_contentnode(settings.ORPHANAGE_ROOT_ID)
@@ -368,6 +375,68 @@ class ContentNodeTestCase(PermissionQuerysetTestCase):
         queryset = ContentNode.filter_edit_queryset(self.base_queryset, user=self.anonymous_user)
         self.assertQuerysetDoesNotContain(queryset, pk=settings.ORPHANAGE_ROOT_ID)
         self.assertQuerysetDoesNotContain(queryset, pk=contentnode.id)
+
+    def test_initial_setting_for_contentnode_table_partition(self):
+        self.assertEqual(settings.IS_CONTENTNODE_TABLE_PARTITIONED, False)
+
+    def test_filter_by_pk__when_node_exists(self):
+        contentnode = create_contentnode(settings.ORPHANAGE_ROOT_ID)
+
+        with self.settings(IS_CONTENTNODE_TABLE_PARTITIONED=False):
+            node = ContentNode.filter_by_pk(pk=contentnode.id).first()
+            self.assertEqual(node.id, contentnode.id)
+
+        with self.settings(IS_CONTENTNODE_TABLE_PARTITIONED=True):
+            node = ContentNode.filter_by_pk(pk=contentnode.id).first()
+            self.assertEqual(node.id, contentnode.id)
+
+    def test_filter_by_pk__when_node_doesnot_exists(self):
+        with self.settings(IS_CONTENTNODE_TABLE_PARTITIONED=False):
+            node = ContentNode.filter_by_pk(pk=uuid.uuid4().hex).first()
+            self.assertEqual(node, None)
+
+        with self.settings(IS_CONTENTNODE_TABLE_PARTITIONED=True):
+            node = ContentNode.filter_by_pk(pk=uuid.uuid4().hex).first()
+            self.assertEqual(node, None)
+
+    def test_filter_by_pk__sets_cache(self):
+        contentnode = create_contentnode(settings.ORPHANAGE_ROOT_ID)
+
+        with self.settings(IS_CONTENTNODE_TABLE_PARTITIONED=True):
+            node = ContentNode.filter_by_pk(pk=contentnode.id).first()
+            tree_id_from_cache = cache.get(CONTENTNODE_TREE_ID_CACHE_KEY.format(pk=contentnode.id))
+            self.assertEqual(node.tree_id, tree_id_from_cache)
+
+    def test_filter_by_pk__doesnot_query_db_when_cache_hit(self):
+        contentnode = create_contentnode(settings.ORPHANAGE_ROOT_ID)
+
+        with self.settings(IS_CONTENTNODE_TABLE_PARTITIONED=True):
+
+            # First, set cache by using filter_by_pk
+            ContentNode.filter_by_pk(pk=contentnode.id)
+
+            with mock.patch("contentcuration.models.ContentNode") as mock_contentnode:
+                ContentNode.filter_by_pk(contentnode.id)
+                mock_contentnode.objects.filter.values_list.first.assert_not_called()
+
+    def test_filter_by_pk__tree_id_updated_on_move(self):
+        with self.settings(IS_CONTENTNODE_TABLE_PARTITIONED=True):
+            testchannel = testdata.channel()
+
+            sourcenode = ContentNode.objects.create(
+                title="Main", parent=testchannel.main_tree, kind_id="topic"
+            )
+            targetnode = ContentNode.objects.create(
+                title="Trashed", parent=testchannel.trash_tree, kind_id="topic"
+            )
+
+            sourcenode.move_to(targetnode, "last-child")
+
+            after_move_sourcenode = ContentNode.filter_by_pk(sourcenode.id).first()
+            tree_id_from_cache = cache.get(CONTENTNODE_TREE_ID_CACHE_KEY.format(pk=sourcenode.id))
+
+            self.assertEqual(after_move_sourcenode.tree_id, testchannel.trash_tree.tree_id)
+            self.assertEqual(tree_id_from_cache, testchannel.trash_tree.tree_id)
 
 
 class AssessmentItemTestCase(PermissionQuerysetTestCase):
@@ -569,6 +638,37 @@ class FileTestCase(PermissionQuerysetTestCase):
         queryset = File.filter_edit_queryset(self.base_queryset, user=user)
         self.assertQuerysetContains(queryset, pk=node_file.id)
 
+    def test_duration_check_constraint__acceptable(self):
+        channel = testdata.channel()
+        File.objects.create(
+            contentnode=create_contentnode(channel.main_tree_id),
+            preset_id=format_presets.AUDIO,
+            duration=10,
+        )
+        File.objects.create(
+            contentnode=create_contentnode(channel.main_tree_id),
+            preset_id=format_presets.VIDEO_HIGH_RES,
+            duration=1123123,
+        )
+
+    def test_duration_check_constraint__negative(self):
+        channel = testdata.channel()
+        with self.assertRaises(IntegrityError, msg=FILE_DURATION_CONSTRAINT):
+            File.objects.create(
+                contentnode=create_contentnode(channel.main_tree_id),
+                preset_id=format_presets.AUDIO,
+                duration=-10,
+            )
+
+    def test_duration_check_constraint__not_media(self):
+        channel = testdata.channel()
+        with self.assertRaises(IntegrityError, msg=FILE_DURATION_CONSTRAINT):
+            File.objects.create(
+                contentnode=create_contentnode(channel.main_tree_id),
+                preset_id=format_presets.EPUB,
+                duration=10,
+            )
+
 
 class AssessmentItemFilePermissionTestCase(PermissionQuerysetTestCase):
     @property
@@ -690,3 +790,52 @@ class UserTestCase(StudioTestCase):
 
         # ensure nothing found doesn't error
         self.assertIsNone(User.get_for_email("tester@tester.com"))
+
+
+class ChannelHistoryTestCase(StudioTestCase):
+    def setUp(self):
+        super(ChannelHistoryTestCase, self).setUp()
+        self.channel = testdata.channel()
+
+    def test_mark_channel_created(self):
+        self.assertEqual(0, self.channel.history.filter(action=channel_history.CREATION).count())
+        self.channel.mark_created(self.admin_user)
+        self.assertEqual(1, self.channel.history.filter(actor=self.admin_user, action=channel_history.CREATION).count())
+
+    def test_mark_channel_deleted(self):
+        self.assertEqual(0, self.channel.deletion_history.count())
+        self.channel.mark_deleted(self.admin_user)
+        self.assertEqual(1, self.channel.deletion_history.filter(actor=self.admin_user).count())
+
+    def test_mark_channel_recovered(self):
+        self.assertEqual(0, self.channel.history.filter(actor=self.admin_user, action=channel_history.RECOVERY).count())
+        self.channel.mark_recovered(self.admin_user)
+        self.assertEqual(1, self.channel.history.filter(actor=self.admin_user, action=channel_history.RECOVERY).count())
+
+    def test_prune(self):
+        i = 10
+        now = timezone.now()
+        channels = [
+            self.channel,
+            testdata.channel()
+        ]
+        last_history_ids = []
+
+        self.assertEqual(0, ChannelHistory.objects.count())
+
+        while i > 0:
+            last_history_ids = [
+                ChannelHistory.objects.create(
+                    channel=channel,
+                    actor=self.admin_user,
+                    action=channel_history.PUBLICATION,
+                    performed=now - timezone.timedelta(hours=i),
+                ).id
+                for channel in channels
+            ]
+            i -= 1
+
+        self.assertEqual(20, ChannelHistory.objects.count())
+        ChannelHistory.prune()
+        self.assertEqual(2, ChannelHistory.objects.count())
+        self.assertEqual(2, ChannelHistory.objects.filter(id__in=last_history_ids).count())

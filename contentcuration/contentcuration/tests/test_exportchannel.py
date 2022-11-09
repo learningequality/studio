@@ -12,24 +12,34 @@ from django.db import connections
 from kolibri_content import models as kolibri_models
 from kolibri_content.router import get_active_content_database
 from kolibri_content.router import set_active_content_database
+from le_utils.constants import exercises
+from le_utils.constants.labels import accessibility_categories
+from le_utils.constants.labels import learning_activities
+from le_utils.constants.labels import levels
+from le_utils.constants.labels import needs
+from le_utils.constants.labels import resource_type
+from le_utils.constants.labels import subjects
 from mock import patch
 
 from .base import StudioTestCase
+from .helpers import clear_tasks
 from .testdata import channel
+from .testdata import create_studio_file
 from .testdata import node as create_node
 from .testdata import slideshow
 from contentcuration import models as cc
 from contentcuration.utils.publish import convert_channel_thumbnail
-from contentcuration.utils.publish import create_bare_contentnode
 from contentcuration.utils.publish import create_content_database
 from contentcuration.utils.publish import create_slideshow_manifest
 from contentcuration.utils.publish import fill_published_fields
 from contentcuration.utils.publish import map_prerequisites
 from contentcuration.utils.publish import MIN_SCHEMA_VERSION
 from contentcuration.utils.publish import set_channel_icon_encoding
-from contentcuration.utils.publish import wait_for_async_tasks
 
 pytestmark = pytest.mark.django_db
+
+
+thumbnail_bytes = b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\nIDATx\x9cc\x00\x01\x00\x00\x05\x00\x01\r\n-\xb4\x00\x00\x00\x00IEND\xaeB`\x82'  # noqa E501
 
 
 def description():
@@ -70,8 +80,128 @@ class ExportChannelTestCase(StudioTestCase):
         new_video.parent = new_node
         new_video.save()
 
+        # Add a node with tags greater than 30 chars to ensure they get excluded.
+        new_video = create_node({'kind_id': 'video', 'tags': [{'tag_name': 'kolbasdasdasrissadasdwzxcztudio'}, {'tag_name': 'kolbasdasdasrissadasdwzxcztudi'},
+                                {'tag_name': 'kolbasdasdasrissadasdwzxc'}], 'title': 'kolibri tag test', 'children': []})
+        new_video.complete = True
+        new_video.parent = self.content_channel.main_tree
+        new_video.save()
+
+        # Add a node to test completion criteria.
+        extra_fields = {
+            "options": {
+                "completion_criteria": {
+                    "model": "time",
+                    "threshold": 20
+                }
+            }
+        }
+        new_video = create_node({'kind_id': 'video', 'title': 'Completion criteria test', 'extra_fields': extra_fields, 'children': []})
+        new_video.complete = True
+        new_video.parent = self.content_channel.main_tree
+        new_video.save()
+
+        # Add a node to test new style mastery models.
+        extra_fields = {
+            "options": {
+                "completion_criteria": {
+                    "model": "mastery",
+                    "threshold": {
+                        "m": 1,
+                        "n": 2,
+                        "mastery_model": exercises.M_OF_N,
+                    }
+                }
+            }
+        }
+        current_exercise = cc.ContentNode.objects.filter(kind_id="exercise").first()
+
+        new_exercise = create_node({'kind_id': 'exercise', 'title': 'Mastery test', 'extra_fields': extra_fields})
+        new_exercise.complete = True
+        new_exercise.parent = current_exercise.parent
+        new_exercise.save()
+        thumbnail_data = create_studio_file(thumbnail_bytes, preset="exercise_thumbnail", ext="png")
+        file_obj = thumbnail_data["db_file"]
+        file_obj.contentnode = new_exercise
+        file_obj.save()
+        for ai in current_exercise.assessment_items.all():
+            ai.id = None
+            ai.contentnode = new_exercise
+            ai.save()
+
+        legacy_extra_fields = {
+            'mastery_model': exercises.M_OF_N,
+            'randomize': True,
+            'm': 1,
+            'n': 2
+        }
+
+        legacy_exercise = create_node({'kind_id': 'exercise', 'title': 'Legacy Mastery test', 'extra_fields': legacy_extra_fields})
+        legacy_exercise.complete = True
+        legacy_exercise.parent = current_exercise.parent
+        legacy_exercise.save()
+        thumbnail_data = create_studio_file(thumbnail_bytes, preset="exercise_thumbnail", ext="png")
+        file_obj = thumbnail_data["db_file"]
+        file_obj.contentnode = legacy_exercise
+        file_obj.save()
+        for ai in current_exercise.assessment_items.all():
+            ai.id = None
+            ai.contentnode = legacy_exercise
+            ai.save()
+
+        first_topic = self.content_channel.main_tree.get_descendants().first()
+
+        # Add a publishable topic to ensure it does not inherit but that its children do
+        new_node = create_node({'kind_id': 'topic', 'title': 'Disinherited topic'})
+        new_node.complete = True
+        new_node.parent = first_topic
+        new_node.save()
+
+        new_video = create_node({'kind_id': 'video', 'title': 'Inheriting video'})
+        new_video.complete = True
+        new_video.parent = new_node
+        new_video.save()
+
+        first_topic.language_id = "fr"
+
+        first_topic.accessibility_labels = {
+            accessibility_categories.AUDIO_DESCRIPTION: True,
+        }
+        first_topic.learning_activities = {
+            learning_activities.WATCH: True,
+        }
+        first_topic.grade_levels = {
+            levels.LOWER_SECONDARY: True,
+        }
+        first_topic.learner_needs = {
+            needs.PRIOR_KNOWLEDGE: True,
+        }
+        first_topic.resource_types = {
+            resource_type.LESSON_PLAN: True,
+        }
+        first_topic.categories = {
+            subjects.MATHEMATICS: True,
+        }
+        first_topic.save()
+
+        first_topic_first_child = first_topic.children.first()
+        first_topic_first_child.language_id = "sw"
+        first_topic_first_child.accessibility_labels = {
+            accessibility_categories.CAPTIONS_SUBTITLES: True,
+        }
+        first_topic_first_child.categories = {
+            subjects.ALGEBRA: True,
+        }
+        first_topic_first_child.learner_needs = {
+            needs.FOR_BEGINNERS: True,
+        }
+        first_topic_first_child.learning_activities = {
+            learning_activities.LISTEN: True,
+        }
+        first_topic_first_child.save()
+
         set_channel_icon_encoding(self.content_channel)
-        self.tempdb = create_content_database(self.content_channel, True, None, True)
+        self.tempdb = create_content_database(self.content_channel, True, self.admin_user.id, True)
 
         set_active_content_database(self.tempdb)
 
@@ -120,6 +250,21 @@ class ExportChannelTestCase(StudioTestCase):
         for node in incomplete_nodes:
             assert kolibri_nodes.filter(pk=node.node_id).count() == 0
 
+    def test_tags_greater_than_30_excluded(self):
+        tag_node = kolibri_models.ContentNode.objects.filter(title='kolibri tag test').first()
+        published_tags = tag_node.tags.all()
+
+        assert published_tags.count() == 2
+        for t in published_tags:
+            assert len(t.tag_name) <= 30
+
+    def test_duration_override_on_completion_criteria_time(self):
+        completion_criteria_node = kolibri_models.ContentNode.objects.filter(title='Completion criteria test').first()
+        non_completion_criteria_node = kolibri_models.ContentNode.objects.filter(title='kolibri tag test').first()
+
+        assert completion_criteria_node.duration == 20
+        assert non_completion_criteria_node.duration == 100
+
     def test_contentnode_channel_id_data(self):
         channel = kolibri_models.ChannelMetadata.objects.first()
         nodes = kolibri_models.ContentNode.objects.all()
@@ -149,9 +294,113 @@ class ExportChannelTestCase(StudioTestCase):
         self.assertIsNotNone(self.content_channel.icon_encoding)
 
     def test_assessment_metadata(self):
-        asm = kolibri_models.AssessmentMetaData.objects.first()
-        self.assertTrue(isinstance(json.loads(asm.assessment_item_ids), list))
-        self.assertTrue(isinstance(json.loads(asm.mastery_model), dict))
+        for i, exercise in enumerate(kolibri_models.ContentNode.objects.filter(kind="exercise")):
+            asm = exercise.assessmentmetadata.first()
+            self.assertTrue(isinstance(json.loads(asm.assessment_item_ids), list))
+            mastery = json.loads(asm.mastery_model)
+            self.assertTrue(isinstance(mastery, dict))
+            self.assertEqual(mastery["type"], exercises.DO_ALL if i == 0 else exercises.M_OF_N)
+            self.assertEqual(mastery["m"], 3 if i == 0 else 1)
+            self.assertEqual(mastery["n"], 3 if i == 0 else 2)
+
+    def test_inherited_language(self):
+        first_topic_node_id = self.content_channel.main_tree.get_descendants().first().node_id
+        for child in kolibri_models.ContentNode.objects.filter(parent_id=first_topic_node_id)[1:]:
+            if child.kind == "topic":
+                self.assertIsNone(child.lang_id)
+                self.assertEqual(child.children.first().lang_id, "fr")
+            else:
+                self.assertEqual(child.lang_id, "fr")
+
+    def test_inherited_language_no_overwrite(self):
+        first_topic_node_id = self.content_channel.main_tree.get_descendants().first().node_id
+        first_child = kolibri_models.ContentNode.objects.filter(parent_id=first_topic_node_id).first()
+        self.assertEqual(first_child.lang_id, "sw")
+
+    def test_inherited_category(self):
+        first_topic_node_id = self.content_channel.main_tree.get_descendants().first().node_id
+        for child in kolibri_models.ContentNode.objects.filter(parent_id=first_topic_node_id)[1:]:
+            if child.kind == "topic":
+                self.assertIsNone(child.categories)
+                self.assertEqual(child.children.first().categories, subjects.MATHEMATICS)
+            else:
+                self.assertEqual(child.categories, subjects.MATHEMATICS)
+
+    def test_inherited_category_no_overwrite(self):
+        first_topic_node_id = self.content_channel.main_tree.get_descendants().first().node_id
+        first_child = kolibri_models.ContentNode.objects.filter(parent_id=first_topic_node_id).first()
+        self.assertEqual(first_child.categories, subjects.ALGEBRA)
+
+    def test_inherited_needs(self):
+        first_topic_node_id = self.content_channel.main_tree.get_descendants().first().node_id
+        for child in kolibri_models.ContentNode.objects.filter(parent_id=first_topic_node_id)[1:]:
+            if child.kind == "topic":
+                self.assertIsNone(child.learner_needs)
+                self.assertEqual(child.children.first().learner_needs, needs.PRIOR_KNOWLEDGE)
+            else:
+                self.assertEqual(child.learner_needs, needs.PRIOR_KNOWLEDGE)
+
+    def test_inherited_needs_no_overwrite(self):
+        first_topic_node_id = self.content_channel.main_tree.get_descendants().first().node_id
+        first_child = kolibri_models.ContentNode.objects.filter(parent_id=first_topic_node_id).first()
+        self.assertEqual(first_child.learner_needs, needs.FOR_BEGINNERS)
+
+    def test_topics_no_accessibility_label(self):
+        first_topic_node_id = self.content_channel.main_tree.get_descendants().first().node_id
+        topic = kolibri_models.ContentNode.objects.get(id=first_topic_node_id)
+        self.assertIsNone(topic.accessibility_labels)
+
+    def test_child_no_inherit_accessibility_label(self):
+        first_topic_node_id = self.content_channel.main_tree.get_descendants().first().node_id
+        first_child = kolibri_models.ContentNode.objects.filter(parent_id=first_topic_node_id).first()
+        # Should only be the learning activities we set on the child directly, not any parent ones.
+        self.assertEqual(first_child.accessibility_labels, accessibility_categories.CAPTIONS_SUBTITLES)
+
+    def test_inherited_grade_levels(self):
+        first_topic_node_id = self.content_channel.main_tree.get_descendants().first().node_id
+        for child in kolibri_models.ContentNode.objects.filter(parent_id=first_topic_node_id):
+            if child.kind == "topic":
+                self.assertIsNone(child.grade_levels)
+                self.assertEqual(child.children.first().grade_levels, levels.LOWER_SECONDARY)
+            else:
+                self.assertEqual(child.grade_levels, levels.LOWER_SECONDARY)
+
+    def test_inherited_resource_types(self):
+        first_topic_node_id = self.content_channel.main_tree.get_descendants().first().node_id
+        for child in kolibri_models.ContentNode.objects.filter(parent_id=first_topic_node_id):
+            if child.kind == "topic":
+                self.assertIsNone(child.resource_types)
+                self.assertEqual(child.children.first().resource_types, resource_type.LESSON_PLAN)
+            else:
+                self.assertEqual(child.resource_types, resource_type.LESSON_PLAN)
+
+    def test_topics_no_learning_activity(self):
+        first_topic_node_id = self.content_channel.main_tree.get_descendants().first().node_id
+        topic = kolibri_models.ContentNode.objects.get(id=first_topic_node_id)
+        self.assertIsNone(topic.learning_activities)
+
+    def test_child_no_inherit_learning_activity(self):
+        first_topic_node_id = self.content_channel.main_tree.get_descendants().first().node_id
+        first_child = kolibri_models.ContentNode.objects.filter(parent_id=first_topic_node_id).first()
+        # Should only be the learning activities we set on the child directly, not any parent ones.
+        self.assertEqual(first_child.learning_activities, learning_activities.LISTEN)
+
+    def test_publish_no_modify_exercise_extra_fields(self):
+        exercise = cc.ContentNode.objects.get(title="Mastery test")
+        self.assertEqual(exercise.extra_fields["options"]["completion_criteria"]["threshold"], {
+            "m": 1,
+            "n": 2,
+            "mastery_model": exercises.M_OF_N,
+        })
+
+    def test_publish_no_modify_legacy_exercise_extra_fields(self):
+        current_exercise = cc.ContentNode.objects.get(title="Legacy Mastery test")
+        self.assertEqual(current_exercise.extra_fields, {
+            'mastery_model': exercises.M_OF_N,
+            'randomize': True,
+            'm': 1,
+            'n': 2
+        })
 
 
 class ChannelExportUtilityFunctionTestCase(StudioTestCase):
@@ -184,6 +433,7 @@ class ChannelExportUtilityFunctionTestCase(StudioTestCase):
         set_active_content_database(None)
         if os.path.exists(self.output_db):
             os.remove(self.output_db)
+        clear_tasks()
 
     def test_convert_channel_thumbnail_empty_thumbnail(self):
         channel = cc.Channel.objects.create()
@@ -203,44 +453,10 @@ class ChannelExportUtilityFunctionTestCase(StudioTestCase):
             self.assertEqual("this is a test", convert_channel_thumbnail(channel))
 
     def test_create_slideshow_manifest(self):
-        content_channel = cc.Channel.objects.create()
         ccnode = cc.ContentNode.objects.create(kind_id=slideshow(), extra_fields={}, complete=True)
-        kolibrinode = create_bare_contentnode(ccnode, ccnode.language, content_channel.id, content_channel.name)
-        create_slideshow_manifest(ccnode, kolibrinode)
+        create_slideshow_manifest(ccnode)
         manifest_collection = cc.File.objects.filter(contentnode=ccnode, preset_id=u"slideshow_manifest")
         assert len(manifest_collection) == 1
-
-    def test_blocking_task_detection(self):
-        with patch('time.sleep') as patched_time_sleep:
-            user = cc.User.objects.create()
-            channel = cc.Channel.objects.create()
-            cc.Task.objects.create(channel_id=channel.pk, user_id=user.pk, task_type='sync-channel', metadata={})
-            wait_for_async_tasks(channel, attempts=1)
-            self.assertEqual(1, patched_time_sleep.call_count)
-
-    def test_blocking_task_completion_detection(self):
-        with patch('time.sleep') as patched_time_sleep:
-            user = cc.User.objects.create()
-            channel = cc.Channel.objects.create()
-            cc.Task.objects.create(channel_id=channel.pk, user_id=user.pk, task_type='sync-channel', metadata={}, status='SUCCESS')
-            wait_for_async_tasks(channel, attempts=1)
-            self.assertEqual(0, patched_time_sleep.call_count)
-
-    def test_blocking_task_failure_detection(self):
-        with patch('time.sleep') as patched_time_sleep:
-            user = cc.User.objects.create()
-            channel = cc.Channel.objects.create()
-            cc.Task.objects.create(channel_id=channel.pk, user_id=user.pk, task_type='sync-channel', metadata={}, status='FAILURE')
-            wait_for_async_tasks(channel, attempts=1)
-            self.assertEqual(0, patched_time_sleep.call_count)
-
-    def test_nonblocking_task_detection(self):
-        with patch('time.sleep') as patched_time_sleep:
-            user = cc.User.objects.create()
-            channel = cc.Channel.objects.create()
-            cc.Task.objects.create(channel_id=channel.pk, user_id=user.pk, task_type='get-node-diff', metadata={})
-            wait_for_async_tasks(channel, attempts=1)
-            self.assertEqual(0, patched_time_sleep.call_count)
 
 
 class ChannelExportPrerequisiteTestCase(StudioTestCase):

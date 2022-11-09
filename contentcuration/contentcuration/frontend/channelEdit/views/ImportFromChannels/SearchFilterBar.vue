@@ -1,6 +1,6 @@
 <template>
 
-  <VContainer class="pt-3 px-0" fluid>
+  <VContainer class="pt-3 px-2" fluid>
     <VChip
       v-for="(filter, index) in currentFilters"
       :key="`search-filter-${index}`"
@@ -121,7 +121,7 @@
     $trs: {
       coachContent: 'Resources for coaches',
       assessments: 'Assessments',
-      topicsHidden: 'No topics',
+      topicsHidden: 'Folders excluded',
       createdAfter: "Added after '{date}'",
       clearAll: 'Clear all',
     },

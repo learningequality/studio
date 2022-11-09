@@ -1,6 +1,8 @@
 from __future__ import absolute_import
 
 from django.db.models.query import QuerySet
+from le_utils.constants import content_kinds
+from rest_framework import serializers
 
 from .base import BaseAPITestCase
 from contentcuration.models import Channel
@@ -22,6 +24,34 @@ def ensure_no_querysets_in_serializer(object):
 
 
 class ContentNodeSerializerTestCase(BaseAPITestCase):
+    def setUp(self):
+        super(ContentNodeSerializerTestCase, self).setUp()
+        self.data = dict(extra_fields=dict(options=dict(modality="QUIZ")), complete=True)
+        self.node = ContentNode(kind_id=content_kinds.VIDEO)
+
+    @property
+    def serializer(self):
+        return ContentNodeSerializer(instance=self.node, data=self.data, partial=True)
+
+    def test_no_completion_criteria(self):
+        self.assertTrue(self.serializer.is_valid())
+
+    def test_completion_criteria__valid(self):
+        self.data["extra_fields"]["options"].update(completion_criteria={"model": "time", "threshold": 10, "learner_managed": True})
+        serializer = self.serializer
+        serializer.is_valid()
+        try:
+            serializer.update(self.node, serializer.validated_data)
+        except serializers.ValidationError:
+            self.fail("Completion criteria should be valid")
+
+    def test_completion_criteria__invalid(self):
+        self.data["extra_fields"]["options"].update(completion_criteria={"model": "time", "threshold": "test"})
+        serializer = self.serializer
+        serializer.is_valid()
+        with self.assertRaises(serializers.ValidationError):
+            serializer.update(self.node, serializer.validated_data)
+
     def test_repr_doesnt_evaluate_querysets(self):
         node_ids = [
             "00000000000000000000000000000003",

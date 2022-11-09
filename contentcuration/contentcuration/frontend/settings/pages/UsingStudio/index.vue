@@ -114,9 +114,9 @@
 
       bestPractices: 'Best practices',
       bestPractice1:
-        'When using import and clipboard operations, work with small subsets of topics instead of whole channels at once (especially for large channels).',
+        'When using import and clipboard operations, work with small subsets of folders instead of whole channels at once (especially for large channels).',
       bestPractice2:
-        'It is preferable to create multiple small channels rather than one giant channel with many layers of topics.',
+        'It is preferable to create multiple small channels rather than one giant channel with many layers of folders.',
       bestPractice3:
         'Reload the page often to ensure your work is saved to the server and no network errors have occurred. Use CTRL+R on Linux/Windows or ⌘+R on Mac.',
       bestPractice4:
@@ -132,7 +132,7 @@
 
       notableIssues: 'Notable issues',
       issue1:
-        'Two users have reported isolated incidents where content they imported from another channel disappeared, leaving only empty topics and subtopics. In one report, the content later re-appeared. They did not experience these problems consistently, and the incidents may possibly involve issues with a slow or unstable internet connection. If you run into this issue, please contact us as soon as possible and let us know as much information as you can remember.',
+        'Two users have reported isolated incidents where content they imported from another channel disappeared, leaving only empty folders and subfolders. In one report, the content later re-appeared. They did not experience these problems consistently, and the incidents may possibly involve issues with a slow or unstable internet connection. If you run into this issue, please contact us as soon as possible and let us know as much information as you can remember.',
       issueLink1: 'Reports of disappearing content',
       issue2:
         'Some operations in Studio are currently very slow, and so it may appear that the change you attempted to make timed out or did not take effect. In many cases, the change is still being processed and will appear once it is complete. If, after 5-10 minutes, the change still has not taken effect even after a browser refresh, please file an issue. We are working on solutions to these issues.',

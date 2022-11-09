@@ -1,51 +1,54 @@
 <template>
 
-  <VLayout grid wrap align-center>
-    <VSelect
-      ref="visibility"
-      v-model="role"
-      :items="roles"
-      :label="$tr('labelText')"
-      :placeholder="placeholder"
-      color="primary"
-      :disabled="disabled"
-      :readonly="readonly"
-      :required="required"
-      :rules="rules"
-      menu-props="offsetY"
-      box
-      @focus="$emit('focus')"
-    >
-      <template v-slot:append-outer>
-        <InfoModal :header="$tr('visibilityHeader')" :items="roles">
-          <p>{{ $tr('visibilityDescription') }}</p>
-          <template #header="{ item }">
-            <span>
-              {{ item.text }}
-              <Icon v-if="roleIcon(item.value)" color="primary">
-                {{ roleIcon(item.value) }}
-              </Icon>
-            </span>
-          </template>
-          <template #description="{ item }">
-            {{ $tr(item.value) }}
-          </template>
-        </InfoModal>
-      </template>
-      <template #selection="{ item }">
-        <Icon v-if="roleIcon(item.value)" color="primary" class="pr-2">
-          {{ roleIcon(item.value) }}
-        </Icon>
-        {{ item.text }}
-      </template>
-      <template #item="{ item }">
-        <Icon v-if="roleIcon(item.value)" color="primary" class="pr-2">
-          {{ roleIcon(item.value) }}
-        </Icon>
-        {{ item.text }}
-      </template>
-    </VSelect>
-  </VLayout>
+  <DropdownWrapper component="VLayout" grid wrap align-center>
+    <template #default="{ attach, menuProps }">
+      <VSelect
+        ref="visibility"
+        v-model="role"
+        :items="roles"
+        :label="$tr('labelText')"
+        :placeholder="placeholder"
+        color="primary"
+        :disabled="disabled"
+        :readonly="readonly"
+        :required="required"
+        :rules="rules"
+        :menu-props="{ ...menuProps, zIndex: 4 }"
+        box
+        :attach="attach"
+        @focus="$emit('focus')"
+      >
+        <template #append-outer>
+          <InfoModal :header="$tr('visibilityHeader')" :items="roles">
+            <p>{{ $tr('visibilityDescription') }}</p>
+            <template #header="{ item }">
+              <span>
+                {{ item.text }}
+                <Icon v-if="roleIcon(item.value)" :color="roleColor(item.value)">
+                  {{ roleIcon(item.value) }}
+                </Icon>
+              </span>
+            </template>
+            <template #description="{ item }">
+              {{ $tr(item.value) }}
+            </template>
+          </InfoModal>
+        </template>
+        <template #selection="{ item }">
+          <Icon v-if="roleIcon(item.value)" :color="roleColor(item.value)" class="pr-2">
+            {{ roleIcon(item.value) }}
+          </Icon>
+          {{ item.text }}
+        </template>
+        <template #item="{ item }">
+          <Icon v-if="roleIcon(item.value)" :color="roleColor(item.value)" class="pr-2">
+            {{ roleIcon(item.value) }}
+          </Icon>
+          {{ item.text }}
+        </template>
+      </VSelect>
+    </template>
+  </DropdownWrapper>
 
 </template>
 
@@ -54,12 +57,15 @@
   import Roles, { RolesList } from 'shared/leUtils/Roles';
   import InfoModal from 'shared/views/InfoModal.vue';
   import { constantsTranslationMixin } from 'shared/mixins';
+  import DropdownWrapper from 'shared/views/form/DropdownWrapper';
 
   const roleIcons = { coach: 'local_library' };
+  const roleColors = { coach: 'roleVisibilityCoach' };
 
   export default {
     name: 'VisibilityDropdown',
     components: {
+      DropdownWrapper,
       InfoModal,
     },
     mixins: [constantsTranslationMixin],
@@ -74,6 +80,7 @@
       placeholder: {
         type: String,
         required: false,
+        default: '',
       },
       required: {
         type: Boolean,
@@ -108,6 +115,9 @@
       roleIcon(role) {
         return roleIcons[role];
       },
+      roleColor(role) {
+        return roleColors[role] || 'primary';
+      },
     },
     $trs: {
       labelText: 'Visible to',
@@ -130,6 +140,10 @@
     margin-left: 5px;
     font-size: 12pt;
     vertical-align: text-top;
+  }
+
+  .role-visibility-container {
+    position: relative;
   }
 
 </style>

@@ -65,8 +65,8 @@
                     </span>
                   </template>
 
-                  <VTooltip v-else top>
-                    <template slot="activator" slot-scope="{ on }">
+                  <VTooltip v-else top lazy>
+                    <template #activator="{ on }">
                       <Icon class="red--text" v-on="on">
                         error
                       </Icon>
@@ -131,8 +131,8 @@
   import AssessmentItemToolbar from '../AssessmentItemToolbar';
   import AssessmentItemEditor from '../AssessmentItemEditor/AssessmentItemEditor';
   import AssessmentItemPreview from '../AssessmentItemPreview/AssessmentItemPreview';
-  import { AssessmentItemTypes } from 'shared/constants';
   import Checkbox from 'shared/views/form/Checkbox';
+  import { AssessmentItemTypes, DELAYED_VALIDATION } from 'shared/constants';
 
   function areItemsEqual(item1, item2) {
     if (!item1 || !item2) {
@@ -159,9 +159,11 @@
       },
       items: {
         type: Array,
+        default: () => [],
       },
       itemsErrors: {
         type: Object,
+        default: null,
       },
       /**
        * Inject a function that opens a dialog that should
@@ -180,6 +182,7 @@
        */
       openDialog: {
         type: Function,
+        default: () => {},
       },
     },
     data() {
@@ -242,7 +245,7 @@
         }
         this.$emit('updateItem', {
           ...assessmentItemKey(this.activeItem),
-          isNew: false,
+          [DELAYED_VALIDATION]: false,
         });
         this.activeItem = null;
       },
@@ -310,8 +313,8 @@
           type: AssessmentItemTypes.SINGLE_SELECTION,
           answers: [],
           hints: [],
-          isNew: true,
           order: newItemOrder,
+          [DELAYED_VALIDATION]: true,
         };
 
         let reorderedItems = [...this.sortedItems];

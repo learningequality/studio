@@ -35,7 +35,6 @@ from contentcuration.utils.csv_writer import generate_user_csv_filename
 from contentcuration.utils.messages import get_messages
 from contentcuration.views.base import current_user_for_context
 from contentcuration.viewsets.channel import SettingsChannelSerializer
-# from contentcuration.utils.google_drive import add_row_to_sheet
 
 ISSUE_UPDATE_DATE = datetime(2018, 10, 29)
 
@@ -65,7 +64,7 @@ def settings(request):
 @login_required
 @api_view(["GET"])
 def export_user_data(request):
-    generateusercsv_task.delay(request.user.pk, language=get_language())
+    generateusercsv_task.enqueue(request.user, user_id=request.user.pk, language=get_language())
     return HttpResponse({"success": True})
 
 
@@ -172,36 +171,6 @@ class StorageSettingsView(PostFormMixin, FormView):
     form_class = StorageRequestForm
 
     def form_valid(self, form):
-        # Send email with storage request
-        # name, email, storage requested, date of request, number of resources,
-        # average resource size, kind of content, licenses, potential public
-        # channels, audience, uploading for, message, time constraint
-        # values = [
-        #     "{} {}".format(self.request.user.first_name, self.request.user.last_name),
-        #     self.request.user.email,
-        #     form.cleaned_data.get('storage'),
-        #     datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        #     form.cleaned_data.get('resource_count'),
-        #     form.cleaned_data.get('resource_size'),
-        #     form.cleaned_data.get('kind'),
-        #     form.cleaned_data.get('creators'),
-        #     form.cleaned_data.get('sample_link'),
-        #     form.cleaned_data.get('license'),
-        #     form.cleaned_data.get("public"),
-        #     form.cleaned_data.get('audience'),
-        #     form.cleaned_data.get('location'),
-        #     form.cleaned_data.get('import_count'),
-        #     form.cleaned_data.get('uploading_for'),
-        #     form.cleaned_data.get('organization_type'),
-        #     form.cleaned_data.get('message'),
-        #     form.cleaned_data.get('time_constraint'),
-        # ]
-        # Write to storage request sheet
-        # In production: https://docs.google.com/spreadsheets/d/1uC1nsJPx_5g6pQT6ay0qciUVya0zUFJ8wIwbsTEh60Y/edit#gid=0
-        # Debug mode: https://docs.google.com/spreadsheets/d/16X6zcFK8FS5t5tFaGpnxbWnWTXP88h4ccpSpPbyLeA8/edit#gid=0
-        # Comment out for now as there is an authentication issue
-        # add_row_to_sheet(ccsettings.GOOGLE_STORAGE_REQUEST_SHEET, values)
-
         channels = [c for c in form.cleaned_data["public"].split(", ") if c]
         message = render_to_string(
             "settings/storage_request_email.txt",

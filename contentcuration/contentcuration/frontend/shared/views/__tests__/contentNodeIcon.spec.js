@@ -1,4 +1,3 @@
-import _ from 'underscore';
 import Vue from 'vue';
 import Vuetify from 'vuetify';
 import { mount } from '@vue/test-utils';
@@ -18,19 +17,16 @@ function makeWrapper(kind) {
 }
 
 describe('ContentNodeIcon', () => {
-  it('should display the correct icon', () => {
-    function test(kind) {
-      let wrapper = makeWrapper(kind.value);
-      expect(wrapper.find('.v-icon').text()).toContain(kind.icon);
-    }
-    let testIcons = [
-      { value: 'topic', icon: 'folder' },
-      { value: 'video', icon: 'ondemand_video' },
-      { value: 'audio', icon: 'music_note' },
-      { value: 'exercise', icon: 'assignment' },
-      { value: 'document', icon: 'class' },
-      { value: 'html5', icon: 'widgets' },
-    ];
-    _.each(testIcons, test);
+  const testIcons = [
+    { value: 'topic', icon: 'folder' },
+    { value: 'video', icon: 'ondemand_video' },
+    { value: 'audio', icon: 'music_note' },
+    { value: 'exercise', icon: 'assignment' },
+    { value: 'document', icon: 'class' },
+    { value: 'html5', icon: 'widgets' },
+  ];
+  it.each(testIcons)('should display the correct icon $value', kind => {
+    const wrapper = makeWrapper(kind.value);
+    expect(wrapper.find('.v-icon').text()).toContain(kind.icon);
   });
 });

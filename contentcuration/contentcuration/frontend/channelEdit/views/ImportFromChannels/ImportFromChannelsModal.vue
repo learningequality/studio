@@ -17,7 +17,7 @@
       ></div>
     </VFadeTransition>
 
-    <VContainer fluid class="mb-5 pb-5 px-5">
+    <VContainer fluid class="mb-5 modal-container mx-0 pb-5 px-4">
       <slot :preview="handlePreview"></slot>
     </VContainer>
     <ResourceDrawer
@@ -263,5 +263,8 @@
 
 <style lang="less" scoped>
 
+  .modal-container.fluid {
+    max-width: 1200px;
+  }
 
 </style>

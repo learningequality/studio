@@ -1,17 +1,26 @@
 <template>
 
-  <VNavigationDrawer permanent floating style="z-index: 0;">
+  <VNavigationDrawer
+    permanent
+    floating
+    class="import-search-filters px-2"
+  >
     <!-- Channel -->
     <p class="font-weight-bold grey--text mb-1">
       {{ $tr('channelsHeader') }}
     </p>
-    <VSelect
-      v-model="channelType"
-      :label="$tr('channelTypeLabel')"
-      :items="channelTypeFilterOptions"
-      box
-      :menu-props="menuProps"
-    />
+    <DropdownWrapper menuHeight="270">
+      <template #default="{ attach, menuProps }">
+        <VSelect
+          v-model="channelType"
+          :label="$tr('channelTypeLabel')"
+          :items="channelTypeFilterOptions"
+          box
+          :attach="attach"
+          :menu-props="menuProps"
+        />
+      </template>
+    </DropdownWrapper>
     <MultiSelect
       v-model="channel_id__in"
       :label="$tr('channelSourceLabel')"
@@ -42,8 +51,8 @@
 
     <!-- Show coach content toggle -->
     <Checkbox v-model="coach" class="mb-4 mt-2">
-      <template v-slot:label>
-        <Icon small>
+      <template #label>
+        <Icon small color="roleVisibilityCoach">
           local_library
         </Icon>
         <span class="mx-2 text-xs-left">{{ $tr('coachContentLabel') }}</span>
@@ -55,8 +64,8 @@
       v-model="kinds"
       :items="kindFilterOptions"
       :label="$tr('kindLabel')"
+      item-text="text"
     />
-
 
     <!-- Language -->
     <LanguageDropdown
@@ -69,6 +78,7 @@
       v-model="licenses"
       :items="licenseOptions"
       :label="$tr('licensesLabel')"
+      item-text="text"
     />
 
     <!-- Created after -->
@@ -119,13 +129,15 @@
   import MultiSelect from 'shared/views/form/MultiSelect';
   import Checkbox from 'shared/views/form/Checkbox';
   import LanguageDropdown from 'shared/views/LanguageDropdown';
+  import DropdownWrapper from 'shared/views/form/DropdownWrapper';
 
-  const excludedKinds = new Set(['topic', 'exercise', 'h5p']);
+  const excludedKinds = new Set(['topic', 'exercise', 'h5p', 'zim']);
   const includedKinds = ContentKindsList.filter(kind => !excludedKinds.has(kind));
 
   export default {
     name: 'SearchFilters',
     components: {
+      DropdownWrapper,
       MultiSelect,
       Checkbox,
       LanguageDropdown,
@@ -177,9 +189,6 @@
           };
         });
       },
-      menuProps() {
-        return { offsetY: true, maxHeight: 270 };
-      },
       licenseOptions() {
         return LicensesList.map(license => {
           return {
@@ -212,7 +221,7 @@
       channelSourceLabel: 'Channel/source',
       filtersHeader: 'Filter options',
       kindLabel: 'Format',
-      hideTopicsLabel: 'Hide topics',
+      hideTopicsLabel: 'Hide folders',
       assessmentsLabel: 'Show assessments only',
       licensesLabel: 'License',
       coachContentLabel: 'Show resources for coaches',
@@ -224,6 +233,12 @@
 
 
 <style lang="less" scoped>
+
+  .import-search-filters {
+    z-index: 0;
+    box-sizing: border-box;
+    overflow: visible;
+  }
 
   .fieldset-reset {
     border-style: none;

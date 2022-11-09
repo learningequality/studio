@@ -32,71 +32,95 @@
             box
             @focus="trackClick('Title')"
           />
-          <!-- Description -->
-          <VTextarea
-            v-if="oneSelected"
-            ref="description"
-            v-model="description"
-            :label="$tr('descriptionLabel')"
-            maxlength="400"
-            counter
-            autoGrow
-            box
-            @focus="trackClick('Description')"
-          />
-          <!-- Tags -->
-          <VCombobox
-            ref="tags"
-            v-model="contentTags"
-            class="tagbox"
-            :items="tags"
-            :searchInput.sync="tagText"
-            chips
-            box
-            :label="$tr('tagsLabel')"
-            multiple
-            deletableChips
-            hideSelected
-            maxlength="30"
-            autoSelectFirst
-            @focus="trackClick('Tags')"
-          >
-            <template v-slot:no-data>
-              <VListTile v-if="tagText && tagText.trim()">
-                <VListTileContent>
-                  <VListTileTitle>
-                    {{ $tr('noTagsFoundText', { text: tagText.trim() }) }}
-                  </VListTileTitle>
-                </VListTileContent>
-              </VListTile>
-            </template>
-          </VCombobox>
+          <VLayout row wrap>
+            <VFlex
+              v-if="oneSelected"
+              xs12
+              md6
+              class="basicInfoColumn"
+              :class="{ 'pr-2': $vuetify.breakpoint.mdAndUp }"
+            >
+              <!-- Description -->
+              <VTextarea
+                ref="description"
+                v-model="description"
+                :label="$tr('descriptionLabel')"
+                maxlength="400"
+                counter
+                autoGrow
+                box
+                height="100%"
+                class="descriptionTextArea"
+                @focus="trackClick('Description')"
+              />
+            </VFlex>
+            <VFlex
+              xs12
+              :[mdValue]="true"
+              :class="{ 'pl-2': $vuetify.breakpoint.mdAndUp && oneSelected }"
+            >
+              <!-- Learning activity -->
+              <LearningActivityOptions
+                v-if="oneSelected"
+                ref="learning_activities"
+                v-model="contentLearningActivities"
+                :disabled="anyIsTopic"
+                @focus="trackClick('Learning activities')"
+              />
+              <!-- Level -->
+              <LevelsOptions
+                v-if="oneSelected"
+                ref="contentLevel"
+                v-model="contentLevel"
+                @focus="trackClick('Levels dropdown')"
+              />
+              <!-- What you will need -->
+              <ResourcesNeededOptions
+                v-if="oneSelected"
+                ref="resourcesNeeded"
+                v-model="resourcesNeeded"
+                @focus="trackClick('What you will need')"
+              />
+              <!-- Tags -->
+              <VCombobox
+                ref="tags"
+                v-model="contentTags"
+                class="tagbox"
+                :items="tags"
+                :searchInput.sync="tagText"
+                chips
+                box
+                :label="$tr('tagsLabel')"
+                multiple
+                deletableChips
+                hideSelected
+                maxlength="30"
+                autoSelectFirst
+                @focus="trackClick('Tags')"
+              >
+                <template #no-data>
+                  <VListTile v-if="tagText && tagText.trim()">
+                    <VListTileContent>
+                      <VListTileTitle>
+                        {{ $tr('noTagsFoundText', { text: tagText.trim() }) }}
+                      </VListTileTitle>
+                    </VListTileContent>
+                  </VListTile>
+                </template>
+              </VCombobox>
+            </VFlex>
+          </VLayout>
+          <!-- Category -->
+          <CategoryOptions v-if="oneSelected" ref="categories" v-model="categories" />
         </VFlex>
       </VLayout>
 
-      <!-- Assessment options -->
+      <!-- Completion section for exercises -->
       <VLayout v-if="allExercises" row wrap class="section">
         <VFlex xs12>
           <h1 class="subheading">
-            {{ $tr('assessmentHeader') }}
+            {{ $tr('assessmentOptionsLabel') }}
           </h1>
-
-          <!-- Mastery -->
-          <MasteryDropdown
-            v-if="extra_fields"
-            ref="mastery_model"
-            v-model="masteryModelItem"
-            :placeholder="getPlaceholder('mastery_model')"
-            :required="isUnique(mastery_model)"
-            :mPlaceholder="getPlaceholder('m')"
-            :mRequired="isUnique(m)"
-            :nPlaceholder="getPlaceholder('n')"
-            :nRequired="isUnique(n)"
-            @focus="trackClick('Mastery model')"
-            @mFocus="trackClick('Mastery m value')"
-            @nFocus="trackClick('Mastery n value')"
-          />
-
           <!-- Randomize question order -->
           <Checkbox
             ref="randomize"
@@ -104,13 +128,20 @@
             :label="$tr('randomizeQuestionLabel')"
             :indeterminate="!isUnique(randomizeOrder)"
           />
+        </VFlex>
+      </VLayout>
 
-          <!-- Feature flag: Channel quizzes -->
-          <Checkbox
-            v-if="allowChannelQuizzes"
-            v-model="channelQuiz"
-            :label="$tr('channelQuizzesLabel')"
-            :indeterminate="!oneSelected"
+      <!-- Completion section for all resources -->
+      <VLayout v-if="!anyIsTopic && allSameKind" row wrap class="section">
+        <VFlex xs12>
+          <h1 class="subheading">
+            {{ $tr('completionLabel') }}
+          </h1>
+          <CompletionOptions
+            v-model="completionAndDuration"
+            :kind="firstNode.kind"
+            :fileDuration="fileDuration"
+            :required="!anyIsDocument || !allSameKind"
           />
         </VFlex>
       </VLayout>
@@ -122,7 +153,7 @@
             {{ $tr('thumbnailHeader') }}
           </h1>
           <!-- Thumbnail -->
-          <div style="width:250px;">
+          <div style="width: 250px">
             <ContentNodeThumbnail
               v-model="thumbnail"
               :nodeId="firstNode.id"
@@ -160,9 +191,37 @@
             :required="isUnique(role)"
             @focus="trackClick('Role visibility')"
           />
+
+          <!-- For Beginners -->
+          <KCheckbox
+            v-if="oneSelected"
+            id="beginners"
+            ref="beginners"
+            :checked="forBeginners"
+            @change="value => forBeginners = value"
+          >
+            <span class="text-xs-left v-label" style="padding-left: 8px;">
+              {{ translateMetadataString('forBeginners') }}
+            </span>
+          </KCheckbox>
         </VFlex>
       </VLayout>
 
+      <!-- Accessibility section -->
+      <VLayout row wrap class="section">
+        <template v-if="requiresAccessibility">
+          <VFlex xs12>
+            <h1 class="subheading">
+              {{ translateMetadataString('accessibility') }}
+            </h1>
+            <AccessibilityOptions
+              v-model="accessibility"
+              :checked="accessibility"
+              :kind="firstNode.kind"
+            />
+          </VFlex>
+        </template>
+      </VLayout>
 
       <!-- Source section -->
       <VLayout row wrap class="section">
@@ -182,8 +241,6 @@
               />
             </p>
 
-            <!-- Need to break up v-model to properly show placeholder -->
-
             <!-- Author -->
             <VCombobox
               ref="author"
@@ -196,11 +253,11 @@
               box
               :placeholder="getPlaceholder('author')"
               :value="author && author.toString()"
-              @input.native="e => author = e.srcElement.value"
+              @input.native="(e) => (author = e.srcElement.value)"
               @input="author = $event"
               @focus="trackClick('Author')"
             >
-              <template v-slot:append-outer>
+              <template #append-outer>
                 <HelpTooltip :text="$tr('authorToolTip')" top :small="false" />
               </template>
             </VCombobox>
@@ -217,11 +274,11 @@
               autoSelectFirst
               box
               :value="provider && provider.toString()"
-              @input.native="e => provider = e.srcElement.value"
+              @input.native="(e) => (provider = e.srcElement.value)"
               @input="provider = $event"
               @focus="trackClick('Provider')"
             >
-              <template v-slot:append-outer>
+              <template #append-outer>
                 <HelpTooltip :text="$tr('providerToolTip')" top :small="false" />
               </template>
             </VCombobox>
@@ -238,11 +295,11 @@
               :placeholder="getPlaceholder('aggregator')"
               box
               :value="aggregator && aggregator.toString()"
-              @input.native="e => aggregator = e.srcElement.value"
+              @input.native="(e) => (aggregator = e.srcElement.value)"
               @input="aggregator = $event"
               @focus="trackClick('Aggregator')"
             >
-              <template v-slot:append-outer>
+              <template #append-outer>
                 <HelpTooltip :text="$tr('aggregatorToolTip')" top :small="false" />
               </template>
             </VCombobox>
@@ -274,7 +331,7 @@
               :readonly="disableAuthEdits"
               box
               :value="copyright_holder && copyright_holder.toString()"
-              @input.native="e => copyright_holder = e.srcElement.value"
+              @input.native="(e) => (copyright_holder = e.srcElement.value)"
               @input="copyright_holder = $event"
               @focus="trackClick('Copyright holder')"
             />
@@ -285,8 +342,20 @@
       <!-- Subtitles -->
       <VLayout v-if="videoSelected" row wrap class="section">
         <VFlex xs12>
-          <SubtitlesList :nodeId="firstNode.id" />
+          <SubtitlesList
+            :nodeId="firstNode.id"
+            @addFile="subtitleFileLanguageComparison"
+          />
         </VFlex>
+      </VLayout>
+
+      <!-- Audio accessibility section -->
+      <VLayout row wrap class="section">
+        <template v-if="audioAccessibility">
+          <VFlex xs12>
+            <SubtitlesList :nodeId="firstNode.id" />
+          </VFlex>
+        </template>
       </VLayout>
     </VForm>
   </div>
@@ -296,13 +365,23 @@
 <script>
 
   import difference from 'lodash/difference';
+  import get from 'lodash/get';
   import intersection from 'lodash/intersection';
+  import isEqual from 'lodash/isEqual';
   import uniq from 'lodash/uniq';
+  import uniqWith from 'lodash/uniqWith';
   import { mapGetters, mapActions } from 'vuex';
   import ContentNodeThumbnail from '../../views/files/thumbnails/ContentNodeThumbnail';
   import FileUpload from '../../views/files/FileUpload';
   import SubtitlesList from '../../views/files/supplementaryLists/SubtitlesList';
   import { isImportedContent, importedChannelLink } from '../../utils';
+  import AccessibilityOptions from './AccessibilityOptions.vue';
+  import LevelsOptions from './LevelsOptions.vue';
+  import ResourcesNeededOptions from './ResourcesNeededOptions.vue';
+  import LearningActivityOptions from './LearningActivityOptions.vue';
+  import CategoryOptions from './CategoryOptions.vue';
+  import CompletionOptions from './CompletionOptions.vue';
+  import FormatPresetsMap, { FormatPresetsNames } from 'shared/leUtils/FormatPresets';
   import {
     getTitleValidators,
     getCopyrightHolderValidators,
@@ -312,15 +391,16 @@
   import LanguageDropdown from 'shared/views/LanguageDropdown';
   import HelpTooltip from 'shared/views/HelpTooltip';
   import LicenseDropdown from 'shared/views/LicenseDropdown';
-  import MasteryDropdown from 'shared/views/MasteryDropdown';
   import VisibilityDropdown from 'shared/views/VisibilityDropdown';
   import Checkbox from 'shared/views/form/Checkbox';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
-  import { NEW_OBJECT, FeatureFlagKeys, ContentModalities } from 'shared/constants';
-
-  // Define an object to act as the place holder for non unique values.
-  const nonUniqueValue = {};
-  nonUniqueValue.toString = () => '';
+  import {
+    NEW_OBJECT,
+    AccessibilityCategories,
+    ResourcesNeededTypes,
+    nonUniqueValue,
+  } from 'shared/constants';
+  import { constantsTranslationMixin, metadataTranslationMixin } from 'shared/mixins';
 
   function getValueFromResults(results) {
     if (results.length === 0) {
@@ -354,19 +434,67 @@
     };
   }
 
+  /**
+   * This function is used to generate getter/setters for new metadata fields that are boolean maps:
+   * - `grade_levels` (sometimes referred to as `content_levels`)
+   * - `learner_needs` (resources needed)
+   * - `accessibility_labels` (accessibility options)
+   * - `learning_activities` (learning activities)
+   * - `categories` (categories)
+   */
+
+  function generateNestedNodesGetterSetter(key) {
+    return {
+      get() {
+        // Return the unique values...
+        return uniq(
+          // for which all selected nodes share...
+          intersection(
+            // by mapping the fields for each selected node...
+            ...this.nodes.map(node => {
+              // checking the diffTracker first, then the node...
+              for (let obj of [this.diffTracker[node.id] || {}, node]) {
+                // returning the keys of the field
+                if (Object.prototype.hasOwnProperty.call(obj, key)) {
+                  return Object.keys(obj[key]);
+                }
+              }
+              // otherwise an empty array, which will cause `intersection`
+              // to result in an empty array
+              return [];
+            })
+          )
+        );
+      },
+      set(value) {
+        const newMap = {};
+        for (let label of value) {
+          newMap[label] = true;
+        }
+        this.update({ [key]: newMap });
+      },
+    };
+  }
+
   export default {
     name: 'DetailsTabView',
     components: {
       LanguageDropdown,
       HelpTooltip,
       LicenseDropdown,
-      MasteryDropdown,
       VisibilityDropdown,
       FileUpload,
       SubtitlesList,
       ContentNodeThumbnail,
       Checkbox,
+      AccessibilityOptions,
+      LevelsOptions,
+      ResourcesNeededOptions,
+      LearningActivityOptions,
+      CategoryOptions,
+      CompletionOptions,
     },
+    mixins: [constantsTranslationMixin, metadataTranslationMixin],
     props: {
       nodeIds: {
         type: Array,
@@ -403,14 +531,38 @@
       allResources() {
         return !this.nodes.some(node => node.kind === ContentKindsNames.TOPIC);
       },
+      allSameKind() {
+        const kind = this.firstNode.kind;
+        return !this.nodes.some(node => node.kind !== kind);
+      },
+      anyIsDocument() {
+        return this.nodes.some(n => n.kind === ContentKindsNames.DOCUMENT);
+      },
+      anyIsTopic() {
+        return this.nodes.some(n => n.kind === ContentKindsNames.TOPIC);
+      },
       isImported() {
         return isImportedContent(this.firstNode);
+      },
+      newContent() {
+        return !this.nodes.some(n => n[NEW_OBJECT]);
       },
       importedChannelLink() {
         return importedChannelLink(this.firstNode, this.$router);
       },
       importedChannelName() {
         return this.firstNode.original_channel_name;
+      },
+      requiresAccessibility() {
+        return (
+          this.oneSelected &&
+          this.nodes.every(
+            node => node.kind !== ContentKindsNames.AUDIO && node.kind !== ContentKindsNames.TOPIC
+          )
+        );
+      },
+      audioAccessibility() {
+        return this.oneSelected && this.firstNode.kind === 'audio';
       },
       /* FORM FIELDS */
       title: generateGetterSetter('title'),
@@ -437,27 +589,25 @@
       },
       role: generateGetterSetter('role_visibility'),
       language: generateGetterSetter('language'),
-      mastery_model() {
-        return this.getExtraFieldsValueFromNodes('mastery_model');
-      },
-      m() {
-        return this.getExtraFieldsValueFromNodes('m');
-      },
-      n() {
-        return this.getExtraFieldsValueFromNodes('n');
-      },
-      masteryModelItem: {
+      accessibility: generateNestedNodesGetterSetter('accessibility_labels'),
+      contentLevel: generateNestedNodesGetterSetter('grade_levels'),
+      resourcesNeeded: generateNestedNodesGetterSetter('learner_needs'),
+      forBeginners: {
         get() {
-          return {
-            mastery_model: this.mastery_model,
-            m: this.m,
-            n: this.n,
-          };
+          return this.resourcesNeeded.includes(ResourcesNeededTypes.FOR_BEGINNERS);
         },
         set(value) {
-          this.updateExtraFields(value);
+          if (value) {
+            this.resourcesNeeded = [...this.resourcesNeeded, ResourcesNeededTypes.FOR_BEGINNERS];
+          } else {
+            this.resourcesNeeded = this.resourcesNeeded.filter(
+              r => r !== ResourcesNeededTypes.FOR_BEGINNERS
+            );
+          }
         },
       },
+      contentLearningActivities: generateNestedNodesGetterSetter('learning_activities'),
+      categories: generateNestedNodesGetterSetter('categories'),
       license() {
         return this.getValueFromNodes('license');
       },
@@ -475,9 +625,6 @@
           this.update(value);
         },
       },
-      extra_fields() {
-        return this.getValueFromNodes('extra_fields');
-      },
       thumbnail: {
         get() {
           return this.nodeFiles.find(f => f.preset.thumbnail);
@@ -487,17 +634,31 @@
         },
       },
       thumbnailEncoding: generateGetterSetter('thumbnail_encoding'),
-      channelQuiz: {
+      completionAndDuration: {
         get() {
-          const options = this.getExtraFieldsValueFromNodes('options') || {};
-          return options.modality === ContentModalities.QUIZ;
+          const options = this.getExtraFieldsValueFromNodes('options', {});
+          if (options === nonUniqueValue) {
+            return nonUniqueValue;
+          }
+          const { completion_criteria, modality } = options;
+          const suggested_duration_type = this.getExtraFieldsValueFromNodes(
+            'suggested_duration_type'
+          );
+          const suggested_duration = this.getValueFromNodes('suggested_duration');
+          return {
+            suggested_duration,
+            suggested_duration_type,
+            modality,
+            ...(completion_criteria || {}),
+          };
         },
-        set(val) {
-          const options = { modality: val ? ContentModalities.QUIZ : null };
+        set({ completion_criteria, suggested_duration, suggested_duration_type, modality }) {
+          const options = { completion_criteria, modality };
           this.updateExtraFields({ options });
+          this.updateExtraFields({ suggested_duration_type });
+          this.update({ suggested_duration });
         },
       },
-
       /* COMPUTED PROPS */
       disableAuthEdits() {
         return this.nodes.some(node => node.freeze_authoring_data);
@@ -533,14 +694,29 @@
       nodeFiles() {
         return (this.firstNode && this.getContentNodeFiles(this.firstNode.id)) || [];
       },
+      fileDuration() {
+        if (
+          this.firstNode.kind === ContentKindsNames.AUDIO ||
+          this.firstNode.kind === ContentKindsNames.VIDEO
+        ) {
+          // filter for the correct file types,
+          // to exclude files such as subtitle or cc
+          let audioVideoFiles;
+          audioVideoFiles = this.nodeFiles.filter(file => this.allowedFileType(file));
+          // return the last item in the array
+          const file = audioVideoFiles[audioVideoFiles.length - 1];
+          return file.duration;
+        } else {
+          return null;
+        }
+      },
       videoSelected() {
-        return this.oneSelected && this.firstNode.kind === 'video';
+        return this.oneSelected && this.firstNode.kind === ContentKindsNames.VIDEO;
       },
-      newContent() {
-        return !this.nodes.some(n => n[NEW_OBJECT]);
-      },
-      allowChannelQuizzes() {
-        return this.$store.getters.hasFeatureEnabled(FeatureFlagKeys.channel_quizzes);
+      // Dynamically compute the size of the VFlex used
+      /* eslint-disable-next-line kolibri/vue-no-unused-properties */
+      mdValue() {
+        return this.oneSelected ? 'md6' : 'md12';
       },
     },
     watch: {
@@ -614,21 +790,44 @@
       isUnique(value) {
         return value !== nonUniqueValue;
       },
+      allowedFileType(file) {
+        let allowedFileTypes = [];
+        // add the relevant format presets for audio and video
+        // high res and low res are currently the same, so only one is included
+        allowedFileTypes.push(
+          FormatPresetsMap.get(FormatPresetsNames.HIGH_RES_VIDEO).allowed_formats
+        );
+        allowedFileTypes.push(FormatPresetsMap.get(FormatPresetsNames.AUDIO).allowed_formats);
+        allowedFileTypes = allowedFileTypes.flat();
+        return allowedFileTypes.includes(file.file_format);
+      },
       getValueFromNodes(key) {
-        if (Object.prototype.hasOwnProperty.call(this.diffTracker, key)) {
-          return this.diffTracker[key];
-        }
-        let results = uniq(this.nodes.map(node => node[key] || null));
+        const results = uniq(
+          this.nodes.map(node => {
+            if (Object.prototype.hasOwnProperty.call(this.diffTracker[node.id] || {}, key)) {
+              return this.diffTracker[node.id][key];
+            }
+            return node[key] || null;
+          })
+        );
         return getValueFromResults(results);
       },
       getExtraFieldsValueFromNodes(key, defaultValue = null) {
-        if (
-          Object.prototype.hasOwnProperty.call(this.diffTracker, 'extra_fields') &&
-          Object.prototype.hasOwnProperty.call(this.diffTracker.extra_fields, key)
-        ) {
-          return this.diffTracker.extra_fields[key];
-        }
-        let results = uniq(this.nodes.map(node => node.extra_fields[key] || defaultValue));
+        const results = uniqWith(
+          this.nodes.map(node => {
+            if (
+              Object.prototype.hasOwnProperty.call(
+                this.diffTracker[node.id] || {},
+                'extra_fields'
+              ) &&
+              Object.prototype.hasOwnProperty.call(this.diffTracker[node.id].extra_fields, key)
+            ) {
+              return this.diffTracker[node.id].extra_fields[key];
+            }
+            return get(node.extra_fields, key, defaultValue);
+          }),
+          isEqual
+        );
         return getValueFromResults(results);
       },
       getPlaceholder(field) {
@@ -652,15 +851,19 @@
           eventLabel: 'File',
         });
       },
+      subtitleFileLanguageComparison(file) {
+        if (this.oneSelected && this.language === file.language) {
+          this.accessibility = [...this.accessibility, AccessibilityCategories.CAPTIONS_SUBTITLES];
+        }
+      },
     },
     $trs: {
       basicInfoHeader: 'Basic information',
       audienceHeader: 'Audience',
       sourceHeader: 'Source',
-      assessmentHeader: 'Assessment options',
       thumbnailHeader: 'Thumbnail',
       titleLabel: 'Title',
-      languageHelpText: 'Leave blank to use the topic language',
+      languageHelpText: 'Leave blank to use the folder language',
       languageChannelHelpText: 'Leave blank to use the channel language',
       importedFromButtonText: 'Imported from {channel}',
       detectedImportText:
@@ -676,8 +879,9 @@
       descriptionLabel: 'Description',
       tagsLabel: 'Tags',
       noTagsFoundText: 'No results found for "{text}". Press \'Enter\' key to create a new tag',
+      assessmentOptionsLabel: 'Assessment options',
       randomizeQuestionLabel: 'Randomize question order for learners',
-      channelQuizzesLabel: 'Allow as a channel quiz',
+      completionLabel: 'Completion',
     },
   };
 
@@ -700,9 +904,11 @@
       margin-bottom: 8px;
       font-weight: bold;
     }
+
     .section .flex {
-      margin: 24px 0 !important;
+      margin: 12px 0 !important;
     }
+
     .auth-section {
       /deep/ .v-autocomplete .v-input__append-inner {
         visibility: hidden;
@@ -711,13 +917,16 @@
 
     .v-form {
       max-width: 960px;
+
       .tagbox {
         /deep/ .v-select__selections {
           min-height: 0 !important;
         }
+
         /deep/ .v-chip__content {
           color: black; // Read-only tag box grays out tags
         }
+
         /deep/ .v-input__append-inner {
           display: none;
         }
@@ -727,16 +936,33 @@
         /deep/ label {
           color: var(--v-grey-darken2) !important;
         }
+
         /deep/ .v-input__append-inner {
           display: none;
         }
+
         /deep/ .v-input__slot {
           &::before {
             border-style: dotted;
           }
+
           &::after {
             border: 0;
           }
+        }
+      }
+
+      .basicInfoColumn {
+        display: flex;
+
+        /deep/ .v-input {
+          // Stretches the "Description" text area to fill the column vertically
+          align-items: stretch;
+        }
+
+        /deep/ .v-input__control {
+          // Makes sure that the character count does not get pushed to second column
+          flex-wrap: nowrap;
         }
       }
     }

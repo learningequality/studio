@@ -3,232 +3,157 @@ A view that handles synchronization of changes from the frontend
 and deals with processing all the changes to make appropriate
 bulk creates, updates, and deletes.
 """
-import time
-from collections import OrderedDict
-from itertools import groupby
-
+from celery import states
+from django.db.models import Q
 from rest_framework.authentication import SessionAuthentication
-from rest_framework.authentication import TokenAuthentication
-from rest_framework.decorators import api_view
-from rest_framework.decorators import authentication_classes
-from rest_framework.decorators import permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.status import HTTP_207_MULTI_STATUS
-from rest_framework.status import HTTP_400_BAD_REQUEST
-from search.viewsets.savedsearch import SavedSearchViewSet
+from rest_framework.views import APIView
 
-from contentcuration.utils.sentry import report_exception
-from contentcuration.viewsets.assessmentitem import AssessmentItemViewSet
-from contentcuration.viewsets.channel import ChannelViewSet
-from contentcuration.viewsets.channelset import ChannelSetViewSet
-from contentcuration.viewsets.clipboard import ClipboardViewSet
-from contentcuration.viewsets.contentnode import ContentNodeViewSet
-from contentcuration.viewsets.contentnode import PrerequisitesUpdateHandler
-from contentcuration.viewsets.file import FileViewSet
-from contentcuration.viewsets.invitation import InvitationViewSet
-from contentcuration.viewsets.sync.constants import ASSESSMENTITEM
+from contentcuration.models import Change
+from contentcuration.models import Channel
+from contentcuration.models import TaskResult
+from contentcuration.tasks import apply_channel_changes_task
+from contentcuration.tasks import apply_user_changes_task
 from contentcuration.viewsets.sync.constants import CHANNEL
-from contentcuration.viewsets.sync.constants import CHANNELSET
-from contentcuration.viewsets.sync.constants import CLIPBOARD
-from contentcuration.viewsets.sync.constants import CONTENTNODE
-from contentcuration.viewsets.sync.constants import CONTENTNODE_PREREQUISITE
-from contentcuration.viewsets.sync.constants import COPIED
 from contentcuration.viewsets.sync.constants import CREATED
-from contentcuration.viewsets.sync.constants import DELETED
-from contentcuration.viewsets.sync.constants import EDITOR_M2M
-from contentcuration.viewsets.sync.constants import FILE
-from contentcuration.viewsets.sync.constants import INVITATION
-from contentcuration.viewsets.sync.constants import MOVED
-from contentcuration.viewsets.sync.constants import SAVEDSEARCH
-from contentcuration.viewsets.sync.constants import TASK
-from contentcuration.viewsets.sync.constants import UPDATED
-from contentcuration.viewsets.sync.constants import USER
-from contentcuration.viewsets.sync.constants import VIEWER_M2M
-from contentcuration.viewsets.sync.utils import get_and_clear_user_events
-from contentcuration.viewsets.sync.utils import log_sync_exception
-from contentcuration.viewsets.task import TaskViewSet
-from contentcuration.viewsets.user import ChannelUserViewSet
-from contentcuration.viewsets.user import UserViewSet
 
 
-# Kept low to get more data on slow calls, we may make this more tolerant
-# once we move to production.
-SLOW_UPDATE_THRESHOLD = 10
+class SyncView(APIView):
+    authentication_classes = (SessionAuthentication,)
+    permission_classes = (IsAuthenticated,)
 
+    def handle_changes(self, request):
+        session_key = request.session.session_key
+        changes = list(filter(lambda x: type(x) is dict, request.data.get("changes", [])))
 
-class SlowSyncError(Exception):
-    """
-    Used to track slow sync operations. We don't raise this error,
-    just feed it to Sentry for reporting.
-    """
+        if changes:
+            change_channel_ids = set(x.get("channel_id") for x in changes if x.get("channel_id"))
+            # Channels that have been created on the client side won't exist on the server yet, so we need to add a special exception for them.
+            created_channel_ids = set(x.get("channel_id") for x in changes if x.get("channel_id") and x.get("table") == CHANNEL and x.get("type") == CREATED)
+            # However, this would also give people a mechanism to edit existing channels on the server side by adding a channel create event for an
+            # already existing channel, so we have to filter out the channel ids that are already created on the server side, regardless of whether
+            # the user making the requests has permissions for those channels.
+            created_channel_ids = created_channel_ids.difference(
+                set(Channel.objects.filter(id__in=created_channel_ids).values_list("id", flat=True).distinct())
+            )
+            allowed_ids = set(
+                Channel.filter_edit_queryset(Channel.objects.filter(id__in=change_channel_ids), request.user).values_list("id", flat=True).distinct()
+            ).union(created_channel_ids)
+            # Allow changes that are either:
+            # Not related to a channel and instead related to the user if the user is the current user.
+            user_only_changes = []
+            # Related to a channel that the user is an editor for.
+            channel_changes = []
+            # Changes that cannot be made
+            disallowed_changes = []
+            for c in changes:
+                if c.get("channel_id") is None and c.get("user_id") == request.user.id:
+                    user_only_changes.append(c)
+                elif c.get("channel_id") in allowed_ids:
+                    channel_changes.append(c)
+                else:
+                    disallowed_changes.append(c)
+            change_models = Change.create_changes(user_only_changes + channel_changes, created_by_id=request.user.id, session_key=session_key)
+            if user_only_changes:
+                apply_user_changes_task.fetch_or_enqueue(request.user, user_id=request.user.id)
+            for channel_id in allowed_ids:
+                apply_channel_changes_task.fetch_or_enqueue(request.user, channel_id=channel_id)
+            allowed_changes = [{"rev": c.client_rev, "server_rev": c.server_rev} for c in change_models]
 
-    def __init__(self, change_type, time, changes):
-        self.change_type = change_type
-        self.time = time
-        self.changes = changes
+            return {"disallowed": disallowed_changes, "allowed": allowed_changes}
+        return {}
 
-        message = (
-            "Change type {} took {} seconds to complete, exceeding {} second threshold."
+    def get_channel_revs(self, request):
+        channel_revs = request.data.get("channel_revs", {})
+        if channel_revs:
+            # Filter to only the channels that the user has permissions to view.
+            channel_ids = Channel.filter_view_queryset(Channel.objects.all(), request.user).filter(id__in=channel_revs.keys()).values_list("id", flat=True)
+            channel_revs = {channel_id: channel_revs[channel_id] for channel_id in channel_ids}
+        return channel_revs
+
+    def return_changes(self, request, channel_revs):
+        user_rev = request.data.get("user_rev") or 0
+        unapplied_revs = request.data.get("unapplied_revs", [])
+        session_key = request.session.session_key
+
+        unapplied_revs_filter = Q(server_rev__in=unapplied_revs)
+
+        # Create a filter that returns all applied changes, and any errored changes made by this session
+        relevant_to_session_filter = (Q(applied=True) | Q(errored=True, session_id=session_key))
+
+        change_filter = (Q(user=request.user) & (unapplied_revs_filter | Q(server_rev__gt=user_rev)) & relevant_to_session_filter)
+
+        for channel_id, rev in channel_revs.items():
+            change_filter |= (Q(channel_id=channel_id) & (unapplied_revs_filter | Q(server_rev__gt=rev)) & relevant_to_session_filter)
+
+        changes_to_return = list(
+            Change.objects.filter(
+                change_filter
+            ).values(
+                "server_rev",
+                "session_id",
+                "channel_id",
+                "user_id",
+                "created_by_id",
+                "applied",
+                "errored",
+                "table",
+                "change_type",
+                "kwargs"
+            ).order_by("server_rev")
         )
-        self.message = message.format(
-            self.change_type, self.time, SLOW_UPDATE_THRESHOLD
-        )
 
-        super(SlowSyncError, self).__init__(self.message)
+        if not changes_to_return:
+            return {}
 
+        changes = []
+        successes = []
+        errors = []
 
-class ChangeNotAllowed(Exception):
-    """
-    Used to report changes that are not supported by the backend
-    """
+        for c in changes_to_return:
+            if c["applied"]:
+                if c["session_id"] == session_key:
+                    successes.append(Change.serialize(c))
+                else:
+                    changes.append(Change.serialize(c))
+            if c["errored"] and c["session_id"] == session_key:
+                errors.append(Change.serialize(c))
 
-    def __init__(self, change_type, viewset_class):
-        self.change_type = change_type
-        self.viewset_class = viewset_class
-        self.message = "Change type {} not allowed on viewset {}.".format(
-            change_type, viewset_class
-        )
+        return {"changes": changes, "errors": errors, "successes": successes}
 
-        super(ChangeNotAllowed, self).__init__(self.message)
+    def return_tasks(self, request, channel_revs):
+        tasks = TaskResult.objects.filter(
+            channel_id__in=channel_revs.keys(),
+            status__in=[states.STARTED, states.FAILURE],
+        ).exclude(task_name__in=[apply_channel_changes_task.name, apply_user_changes_task.name])
+        return {
+            "tasks": tasks.values(
+                "task_id",
+                "task_name",
+                "traceback",
+                "progress",
+                "channel_id",
+                "status",
+            )
+        }
 
+    def post(self, request):
+        response_payload = {
+            "disallowed": [],
+            "allowed": [],
+            "changes": [],
+            "errors": [],
+            "successes": [],
+            "tasks": [],
+        }
 
-# Uses ordered dict behaviour to enforce operation orders
-viewset_mapping = OrderedDict(
-    [
-        (USER, UserViewSet),
-        # If a new channel has been created, then any other operations that happen
-        # within that channel depend on that, so we prioritize channel operations
-        (CHANNEL, ChannelViewSet),
-        (INVITATION, InvitationViewSet),
-        # Tree operations require content nodes to exist, and any new assessment items
-        # need to point to an existing content node
-        (CONTENTNODE, ContentNodeViewSet),
-        (CONTENTNODE_PREREQUISITE, PrerequisitesUpdateHandler),
-        (CLIPBOARD, ClipboardViewSet),
-        # The exact order of these three is not important.
-        (ASSESSMENTITEM, AssessmentItemViewSet),
-        (CHANNELSET, ChannelSetViewSet),
-        (FILE, FileViewSet),
-        (EDITOR_M2M, ChannelUserViewSet),
-        (VIEWER_M2M, ChannelUserViewSet),
-        (SAVEDSEARCH, SavedSearchViewSet),
-        (TASK, TaskViewSet),
-    ]
-)
+        channel_revs = self.get_channel_revs(request)
 
-change_order = [
-    # inserts
-    COPIED,
-    CREATED,
-    # updates
-    UPDATED,
-    DELETED,
-    MOVED,
-]
+        response_payload.update(self.handle_changes(request))
 
-table_name_indices = {
-    table_name: i for i, table_name in enumerate(viewset_mapping.keys())
-}
+        response_payload.update(self.return_changes(request, channel_revs))
 
+        response_payload.update(self.return_tasks(request, channel_revs))
 
-def get_table(obj):
-    return obj["table"]
-
-
-def get_table_sort_order(obj):
-    return table_name_indices[get_table(obj)]
-
-
-def get_change_type(obj):
-    return obj["type"]
-
-
-def get_change_order(obj):
-    try:
-        change_type = int(obj["type"])
-    except ValueError:
-        change_type = -1
-    return change_order.index(change_type)
-
-
-event_handlers = {
-    CREATED: "create_from_changes",
-    UPDATED: "update_from_changes",
-    DELETED: "delete_from_changes",
-    MOVED: "move_from_changes",
-    COPIED: "copy_from_changes",
-}
-
-
-def handle_changes(request, viewset_class, change_type, changes):
-    try:
-        change_type = int(change_type)
-        viewset = viewset_class(request=request)
-        viewset.initial(request)
-        if change_type in event_handlers:
-            start = time.time()
-            event_handler = getattr(viewset, event_handlers[change_type], None)
-            if event_handler is None:
-                raise ChangeNotAllowed(change_type, viewset_class)
-            result = event_handler(changes)
-            elapsed = time.time() - start
-
-            if elapsed > SLOW_UPDATE_THRESHOLD:
-                # This is really a warning rather than an actual error,
-                # but using exceptions simplifies reporting it to Sentry,
-                # so create and pass along the error but do not raise it.
-                try:
-                    # we need to raise it to get Python to fill out the stack trace.
-                    raise SlowSyncError(change_type, elapsed, changes)
-                except SlowSyncError as e:
-                    report_exception(e)
-            return result
-    except Exception as e:
-        log_sync_exception(e)
-        for change in changes:
-            change["errors"] = [str(e)]
-        return changes, None
-
-
-@authentication_classes((TokenAuthentication, SessionAuthentication))
-@permission_classes((IsAuthenticated,))
-@api_view(["POST"])
-def sync(request):
-    # Collect all error objects, which consist of the original change
-    # plus any validation errors raised.
-    errors = []
-    # Collect all changes that should be propagated back to the client
-    # this allows internal validation to take place and fields to be added
-    # if needed by the server.
-    changes_to_return = []
-    data = sorted(request.data, key=get_table_sort_order)
-    for table_name, group in groupby(data, get_table):
-        if table_name in viewset_mapping:
-            viewset_class = viewset_mapping[table_name]
-            group = sorted(group, key=get_change_order)
-            for change_type, changes in groupby(group, get_change_type):
-                # Coerce changes iterator to list so it can be read multiple times
-                es, cs = handle_changes(
-                    request, viewset_class, change_type, list(changes)
-                )
-                if es:
-                    errors.extend(es)
-                if cs:
-                    changes_to_return.extend(cs)
-
-    # Add any changes that have been logged from elsewhere in our hacky redis
-    # cache mechanism
-    changes_to_return.extend(get_and_clear_user_events(request.user.id))
-    if not errors:
-        if changes_to_return:
-            return Response({"changes": changes_to_return})
-        return Response({})
-    if len(errors) < len(data) or changes_to_return:
-        # If there are some errors, but not all, or all errors and some changes return a mixed response
-        return Response(
-            {"changes": changes_to_return, "errors": errors},
-            status=HTTP_207_MULTI_STATUS,
-        )
-    # If the errors are total, and there are no changes reject the response outright!
-    return Response({"errors": errors}, status=HTTP_400_BAD_REQUEST)
+        return Response(response_payload)

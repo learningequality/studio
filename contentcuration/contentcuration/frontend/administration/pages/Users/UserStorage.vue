@@ -16,17 +16,20 @@
           :rules="spaceRules"
         />
       </VFlex>
-      <VFlex style="max-width: 75px;">
-        <VSelect
-          v-model="unit"
-          :items="unitOptions"
-          :menuProps="{ offsetY: true }"
-          box
-          single-line
-          required
-          :rules="unitRules"
-        />
-      </VFlex>
+      <DropdownWrapper component="VFlex" style="max-width: 75px;">
+        <template #default="{ attach, menuProps }">
+          <VSelect
+            v-model="unit"
+            :items="unitOptions"
+            :attach="attach"
+            :menuProps="menuProps"
+            box
+            single-line
+            required
+            :rules="unitRules"
+          />
+        </template>
+      </DropdownWrapper>
     </VLayout>
     <VBtn
       v-if="showCancel"
@@ -55,6 +58,7 @@
   import { mapActions } from 'vuex';
   import findLastKey from 'lodash/findLastKey';
   import { ONE_B, ONE_KB, ONE_MB, ONE_GB, ONE_TB } from 'shared/constants';
+  import DropdownWrapper from 'shared/views/form/DropdownWrapper';
 
   const units = {
     ONE_B,
@@ -66,6 +70,7 @@
 
   export default {
     name: 'UserStorage',
+    components: { DropdownWrapper },
     props: {
       value: {
         type: Number,

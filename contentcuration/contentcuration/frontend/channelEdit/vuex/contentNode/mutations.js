@@ -2,29 +2,28 @@ import Vue from 'vue';
 import isEmpty from 'lodash/isEmpty';
 import { NEW_OBJECT } from 'shared/constants';
 import { mergeMapItem } from 'shared/vuex/utils';
+import { applyMods } from 'shared/data/applyRemoteChanges';
 
 export function ADD_CONTENTNODE(state, contentNode) {
   state.contentNodesMap = mergeMapItem(state.contentNodesMap, contentNode);
 }
 
 export function ADD_CONTENTNODES(state, contentNodes = []) {
-  state.contentNodesMap = contentNodes.reduce((contentNodesMap, contentNode) => {
-    return mergeMapItem(contentNodesMap, contentNode);
-  }, state.contentNodesMap);
+  for (let contentNode of contentNodes) {
+    ADD_CONTENTNODE(state, contentNode);
+  }
+}
+
+export function UPDATE_CONTENTNODE_FROM_INDEXEDDB(state, { id, ...updates }) {
+  if (id && state.contentNodesMap[id]) {
+    // Need to do object spread to return a new object for setting in the map
+    // otherwise nested changes will not trigger reactive updates
+    Vue.set(state.contentNodesMap, id, { ...applyMods(state.contentNodesMap[id], updates) });
+  }
 }
 
 export function REMOVE_CONTENTNODE(state, contentNode) {
   Vue.delete(state.contentNodesMap, contentNode.id);
-}
-
-export function UPDATE_CONTENTNODE(state, { id, ...payload } = {}) {
-  if (!id) {
-    throw ReferenceError('id must be defined to update a contentNode set');
-  }
-  state.contentNodesMap[id] = {
-    ...state.contentNodesMap[id],
-    ...payload,
-  };
 }
 
 export function SET_CONTENTNODE_NOT_NEW(state, contentNodeId) {
@@ -48,7 +47,7 @@ export function REMOVE_TAG(state, { id, tag }) {
 }
 
 export function SET_FILES(state, { id, files }) {
-  state.contentNodesMap[id].files = files;
+  Vue.set(state.contentNodesMap[id], 'files', files);
 }
 
 export function COLLAPSE_ALL_EXPANDED(state) {

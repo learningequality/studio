@@ -1,30 +1,35 @@
 <template>
 
-  <VSelect
-    v-model="selections"
-    :items="items"
-    multiple
-    :box="box"
-    clearable
-    chips
-    :no-data-text="$tr('noItemsFound')"
-    :menu-props="menuProps"
-    v-bind="$attrs"
-    @click.stop.prevent
-  >
-    <template #selection="{ item }">
-      <VChip :class="{ notranslate }">
-        {{ getText(item) }}
-      </VChip>
-    </template>
-    <template #item="{ item, tile }">
-      <Checkbox v-bind="tile.props" class="ma-0">
-        <template #label>
-          <span :class="{ notranslate }">{{ getText(item) }}</span>
+  <DropdownWrapper :menuHeight="270">
+    <template #default="{ attach, menuProps }">
+      <VSelect
+        v-model="selections"
+        :items="items"
+        multiple
+        :box="box"
+        clearable
+        chips
+        :no-data-text="$tr('noItemsFound')"
+        :menu-props="{ ...menuProps, zIndex: 300 }"
+        :attach="attach"
+        v-bind="$attrs"
+        @click.stop.prevent
+      >
+        <template #selection="{ item }">
+          <VChip :class="{ notranslate }">
+            {{ getText(item) }}
+          </VChip>
         </template>
-      </Checkbox>
+        <template #item="{ item, tile }">
+          <Checkbox v-bind="tile.props" class="ma-0">
+            <template #label>
+              <span :class="{ notranslate }">{{ getText(item) }}</span>
+            </template>
+          </Checkbox>
+        </template>
+      </VSelect>
     </template>
-  </VSelect>
+  </DropdownWrapper>
 
 </template>
 
@@ -32,10 +37,13 @@
 <script>
 
   import Checkbox from './Checkbox';
+  import DropdownWrapper from './DropdownWrapper';
 
   export default {
     name: 'MultiSelect',
-    components: { Checkbox },
+    components: { Checkbox, DropdownWrapper },
+    // $attrs are rebound to a descendent component
+    inheritAttrs: false,
     props: {
       value: {
         type: Array,
@@ -51,7 +59,7 @@
       },
       itemText: {
         type: [String, Function],
-        required: false,
+        required: true,
       },
       notranslate: {
         type: Boolean,
@@ -70,9 +78,6 @@
         set(value) {
           this.$emit('input', value.filter(Boolean));
         },
-      },
-      menuProps() {
-        return { offsetY: true, maxHeight: 270, zIndex: 300 };
       },
     },
     methods: {
@@ -102,6 +107,7 @@
     width: calc(100% - 48px);
     min-height: 0 !important;
   }
+
   .v-chip,
   /deep/ .v-chip__content,
   .text-truncate {

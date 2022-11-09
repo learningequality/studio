@@ -1,13 +1,26 @@
 import pickBy from 'lodash/pickBy';
 import { NOVALUE } from 'shared/constants';
 import { IGNORED_SOURCE } from 'shared/data/constants';
-import { Channel, Invitation, ChannelUser } from 'shared/data/resources';
+import { Bookmark, Channel, Invitation, ChannelUser } from 'shared/data/resources';
 import client from 'shared/client';
 
+export async function loadBookmarks(context) {
+  const bookmarks = await Bookmark.where();
+  for (let bookmark of bookmarks) {
+    context.commit('SET_BOOKMARK', bookmark);
+  }
+  return bookmarks;
+}
+
 /* CHANNEL LIST ACTIONS */
-export function loadChannelList(context, payload = {}) {
+export async function loadChannelList(context, payload = {}) {
   if (payload.listType) {
-    payload[payload.listType] = true;
+    const bookmarks = await loadBookmarks(context);
+    if (payload.listType === 'bookmark') {
+      payload.id__in = bookmarks.map(b => b.channel);
+    } else {
+      payload[payload.listType] = true;
+    }
     delete payload.listType;
   }
   return Channel.where(payload).then(channels => {
@@ -185,9 +198,15 @@ export function updateChannel(
 }
 
 export function bookmarkChannel(context, { id, bookmark }) {
-  return Channel.update(id, { bookmark }).then(() => {
-    context.commit('SET_BOOKMARK', { id, bookmark });
-  });
+  if (bookmark) {
+    return Bookmark.put({ channel: id }).then(() => {
+      context.commit('SET_BOOKMARK', { channel: id });
+    });
+  } else {
+    return Bookmark.delete(id).then(() => {
+      context.commit('DELETE_BOOKMARK', { channel: id });
+    });
+  }
 }
 
 export function deleteChannel(context, channelId) {

@@ -1,30 +1,21 @@
-FROM ubuntu:bionic
-
-RUN apt-get update --fix-missing && apt-get -y install curl
+FROM python:3.9-slim-buster
 
 # Set the timezone
 RUN ln -fs /usr/share/zoneinfo/America/Los_Angeles /etc/localtime
 
-# install node
-RUN curl -sL https://deb.nodesource.com/setup_10.x | bash -
-
 ENV DEBIAN_FRONTEND noninteractive
 # Default Python file.open file encoding to UTF-8 instead of ASCII, workaround for le-utils setup.py issue
 ENV LANG C.UTF-8
-RUN apt-get update && apt-get -y install nodejs python-minimal python3.6 python3-pip python3-dev gcc libpq-dev make git curl libjpeg-dev ffmpeg
+RUN apt-get update && apt-get -y install python3-pip python3-dev gcc libpq-dev make git curl libjpeg-dev ffmpeg
 
-# Ensure that python is using python3
-# copying approach from official python images
-ENV PATH /usr/local/bin:$PATH
-RUN cd /usr/local/bin && \
-  ln -s $(which python3) python && \
-  ln -s $(which pip3) pip
+# install node
+RUN curl -sL https://deb.nodesource.com/setup_16.x | bash - && apt-get install -y nodejs
 
-RUN npm install -g yarn
+RUN npm install --location=global yarn && npm cache clean --force
 
 COPY ./package.json .
 COPY ./yarn.lock .
-RUN yarn install
+RUN yarn install && yarn cache clean
 
 COPY requirements.txt .
 
@@ -37,8 +28,8 @@ WORKDIR /contentcuration
 # generate the node bundles
 RUN mkdir -p contentcuration/static/js/bundles
 RUN ln -s /node_modules /contentcuration/node_modules
-RUN yarn run build -p
+RUN yarn run build
 
 EXPOSE 8000
 
-ENTRYPOINT ["make", "setup", "altprodserver"]
+ENTRYPOINT ["make", "altprodserver"]

@@ -77,8 +77,7 @@
         		color:white;
         	}
         	.message-signature-img{
-        		width:24px;
-        		margin-right:10px;
+        		width:145px;
         		cursor:pointer;
         	}
         	.message-signature p{
@@ -88,8 +87,8 @@
     </head>
     <body>
     	{% autoescape off %}
-		<h3>{% trans "Hello" %} <strong>{{ user.first_name }}</strong>,</h3>
-		<p>{% trans "Welcome to Kolibri! Here is the link to activate your account:" %}</p>
+		<h3>{% translate "Hello" %} <strong>{{ user.first_name }}</strong>,</h3>
+		<p>{% translate "Welcome to Kolibri Studio! Here is the link to activate your account:" %}</p>
 		<div class="message-content">
 			<div class="message-header">
 				<div class="message-img">
@@ -98,18 +97,22 @@
 				<p class="message-channel-name">Activation Link</p>
 			</div>
 			<div class="message-links">
-				<p class="message-invitation-instructions">{% trans "Click here to activate your account." %}</p>
-				<p class="message-invitation-instructions">{% trans "This link is valid for" %} <strong>{% blocktrans %}{{ expiration_days }} days.{% endblocktrans %}</strong></p>
+				<p class="message-invitation-instructions">{% translate "Click here to activate your account." %}</p>
+				<p class="message-invitation-instructions">{% translate "This link is valid for" %} <strong>{% blocktrans %}{{ expiration_days }} days.{% endblocktrans %}</strong></p>
 				<p class="message-link">
-					<a href="{{ domain }}{% url 'registration_activate' activation_key %}"  class="accept-btn">{% trans "ACTIVATE" %}</a>
+					<a href="{{ domain }}{% url 'registration_activate' activation_key %}"  class="accept-btn">{% translate "ACTIVATE" %}</a>
 				</p>
 				<p></p>
 			</div>
 		</div>
 		<div class="message-signature">
-		<p>{% trans "Thanks for using our site!" %}</p>
-
-		<p><a href="https://learningequality.org/" target="_blank"><img src="data:image/png;base64,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" class="message-signature-img"> <strong>The Learning Equality Team</strong></a></p>
+        <p>
+		  {% translate "Thanks for using our site!" %}<br>
+          <strong>{% translate "The Learning Equality Team" %}</strong>
+        </p>
+        <a href="https://learningequality.org/" target="_blank">
+          <img src="{{ domain }}/static/img/le-logo-web.png" class="message-signature-img" />
+        </a>
 		</div>
 		{% endautoescape %}
 	</body>

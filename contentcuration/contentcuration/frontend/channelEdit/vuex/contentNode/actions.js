@@ -1,5 +1,4 @@
 import flatMap from 'lodash/flatMap';
-import flatten from 'lodash/flatten';
 import uniq from 'lodash/uniq';
 import { NEW_OBJECT, NOVALUE } from 'shared/constants';
 import client from 'shared/client';
@@ -177,6 +176,13 @@ export function createContentNode(context, { parent, kind, ...payload }) {
     parent,
     ...contentDefaults,
     role_visibility: contentDefaults.role_visibility || RolesNames.LEARNER,
+    accessibility_labels: {},
+    grade_levels: {},
+    learner_needs: {},
+    learning_activities: {},
+    categories: {},
+    suggested_duration: 0,
+    channel_id: channel.id,
     ...payload,
   };
 
@@ -209,6 +215,12 @@ function generateContentNodeData({
   extra_fields = NOVALUE,
   prerequisite = NOVALUE,
   complete = NOVALUE,
+  accessibility_labels = NOVALUE,
+  grade_levels = NOVALUE,
+  learner_needs = NOVALUE,
+  learning_activities = NOVALUE,
+  categories = NOVALUE,
+  suggested_duration = NOVALUE,
 } = {}) {
   const contentNodeData = {};
   if (title !== NOVALUE) {
@@ -244,22 +256,37 @@ function generateContentNodeData({
   if (provider !== NOVALUE) {
     contentNodeData.provider = provider;
   }
+  /*
+   * New metadata fields
+   */
+  if (accessibility_labels !== NOVALUE) {
+    contentNodeData.accessibility_labels = accessibility_labels;
+  }
+  if (grade_levels !== NOVALUE) {
+    contentNodeData.grade_levels = grade_levels;
+  }
+  if (learner_needs !== NOVALUE) {
+    contentNodeData.learner_needs = learner_needs;
+  }
+  if (learning_activities !== NOVALUE) {
+    contentNodeData.learning_activities = learning_activities;
+  }
+  if (categories !== NOVALUE) {
+    contentNodeData.categories = categories;
+  }
+  if (suggested_duration !== NOVALUE) {
+    contentNodeData.suggested_duration = suggested_duration;
+  }
   if (extra_fields !== NOVALUE) {
     contentNodeData.extra_fields = contentNodeData.extra_fields || {};
-    if (extra_fields.mastery_model) {
-      contentNodeData.extra_fields.mastery_model = extra_fields.mastery_model;
-    }
-    if (extra_fields.m) {
-      contentNodeData.extra_fields.m = extra_fields.m;
-    }
-    if (extra_fields.n) {
-      contentNodeData.extra_fields.n = extra_fields.n;
-    }
     if (extra_fields.randomize !== undefined) {
       contentNodeData.extra_fields.randomize = extra_fields.randomize;
     }
     if (extra_fields.options) {
       contentNodeData.extra_fields.options = extra_fields.options;
+    }
+    if (extra_fields.suggested_duration_type) {
+      contentNodeData.extra_fields.suggested_duration_type = extra_fields.suggested_duration_type;
     }
   }
   if (prerequisite !== NOVALUE) {
@@ -318,7 +345,7 @@ export function updateContentNode(context, { id, ...payload } = {}) {
     complete,
   };
 
-  context.commit('UPDATE_CONTENTNODE', { id, ...contentNodeData });
+  context.commit('ADD_CONTENTNODE', { id, ...contentNodeData });
   return ContentNode.update(id, contentNodeData);
 }
 
@@ -370,6 +397,7 @@ export function copyContentNode(
   // with a `source_id` of the source node then create the content node copies
   return ContentNode.copy(id, target, position, excluded_descendants).then(node => {
     context.commit('ADD_CONTENTNODE', node);
+    return node;
   });
 }
 
@@ -399,7 +427,7 @@ export function moveContentNodes(
   return Promise.all(
     id__in.map(id => {
       return ContentNode.move(id, target, position).then(node => {
-        context.commit('UPDATE_CONTENTNODE', node);
+        context.commit('ADD_CONTENTNODE', node);
         return id;
       });
     })
@@ -413,30 +441,20 @@ export function loadNodeDetails(context, nodeId) {
 }
 
 // Actions to check indexeddb saving status
-export function checkSavingProgress(
+export async function checkSavingProgress(
   context,
   { contentNodeIds = [], fileIds = [], assessmentIds = [] }
 ) {
-  const promises = [];
-  promises.push(
-    contentNodeIds.map(nodeId =>
-      db[CHANGES_TABLE].where({ '[table+key]': [TABLE_NAMES.CONTENTNODE, nodeId] }).first()
-    )
-  );
-  promises.push(
-    fileIds.map(fileId =>
-      db[CHANGES_TABLE].where({ '[table+key]': [TABLE_NAMES.FILE, fileId] }).first()
-    )
-  );
-  promises.push(
-    assessmentIds.map(assessmentItemId =>
-      db[CHANGES_TABLE].where({
-        '[table+key]': [TABLE_NAMES.ASSESSMENTITEM, assessmentItemId],
-      }).first()
-    )
-  );
-
-  return Promise.all(flatten(promises)).then(results => {
-    return results.some(Boolean);
-  });
+  if (!contentNodeIds.length && !fileIds.length && !assessmentIds.length) {
+    return false;
+  }
+  const idsToCheck = {
+    [TABLE_NAMES.CONTENTNODE]: contentNodeIds,
+    [TABLE_NAMES.FILE]: fileIds,
+    [TABLE_NAMES.ASSESSMENTITEM]: assessmentIds,
+  };
+  const query = await db[CHANGES_TABLE].toCollection()
+    .filter(c => !c.synced && idsToCheck[c.table] && idsToCheck[c.table].includes(c.key))
+    .first();
+  return Boolean(query);
 }

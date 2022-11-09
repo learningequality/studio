@@ -1,12 +1,12 @@
 import mock
-from django.test import SimpleTestCase
+from django.test import TestCase
 
-from ..base import mock_class_instance
+from ..helpers import mock_class_instance
 from contentcuration.models import ContentNode
 from contentcuration.utils.cache import ResourceSizeCache
 
 
-class ResourceSizeCacheTestCase(SimpleTestCase):
+class ResourceSizeCacheTestCase(TestCase):
     def setUp(self):
         super(ResourceSizeCacheTestCase, self).setUp()
         self.node = mock.Mock(spec_set=ContentNode())

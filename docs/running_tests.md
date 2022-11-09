@@ -1,58 +1,64 @@
 # Running tests
-Make sure you've installed the test requirements, setup a virtual environment, and started the minio server. Then, to
-run python tests:
 
-To run all unit tests:
+## Backend tests
+Make sure you've installed the requirements in `requirements-dev.txt`, set up a virtual environment, and started Studio's necessary services (postgres, minio, and redis). Then you may use the following command to run backend/Python tests:
 
-    yarn run unittests
+    make test
 
-To run all integration tests:
-
-    yarn run apptests
-
-Finally, to run all tests:
+## Frontend tests
+Make sure you've installed all frontend requirements (`yarn install`). Then you may use the following command to run all frontend tests:
 
     yarn run test
 
+## Tests within Docker
+You may run either of the above in `docker` by using `docker-compose run studio-app`. For example:
+
+    docker-compose run studio-app make test
+    docker-compose run studio-app yarn run test
+
+You may run arbitrary commands in the docker container, including customized test runs like those below, by prepending `docker-compose run studio-app ` to the command.
+
 ## Customizing Test Runs and Output
 
-If you want more control while testing, there are several options for customizing test runs.
-First, make sure you start services manually in a separate terminal using:
+### Backend tests
 
-    yarn run services
+The Python backend tests use the `pytest` runner. With the `pytest.ini` configuration, the command to run these tests is very simple:
 
-From there, you can run the unit tests directly by calling:
-
-    pytest contentcuration
+    pytest
 
 By default, pytest is configured to recreate a fresh database every time.  This can be painfully slow!  To speed things up, you can ask pytest to recycle table structures between runs:
 
-    pytest contentcuration --reuse-db
+    pytest --reuse-db
 
-For convenience, you can also use yarn to run the tests this way with the following command:
+To execute a subset of all tests, like a specific test you're modifying, you have a couple of options at your disposal. First, `pytest` will accept a path to a test file or directory which limits execution to only those tests in the file path:
 
-    yarn run unittests:reusedb
+    pytest contentcuration/contentcuration/tests/test_utils.py
 
-If you do end up changing the schema (e.g. by updating a model), remember to run pytest without the `--reuse-db`.  Or, if you want to be more explicit you can use `--create-db` to ensure that the test database's table structure is up to date:
+Another option is to use the `-k` switch to filter by matching test names. For instance, to only run the `test_we_are_testing` in `contentcuration/contentcuration/tests/test_utils.py`:
 
-    pytest contentcuration --create-db
+    pytest -k test_we_are_testing
 
-Sometimes it's nice to use print statements in your tests to see what's going on.  Pytest disables print statements by default, but you can show them by passing `-s`, e.g.:
+Or slightly faster if you know which file the test lives:
 
-    pytest contentcuration -s --reuse-db
+    pytest -k test_we_are_testing contentcuration/contentcuration/tests/test_utils.py
 
-## Automatically running tests during development
-For running tests continuously during development, pytest-watch is included.  This works well with the `--reuse-db` option:
+Lastly, sometimes it's nice to use `print` statements in your tests or code to see what's going on. `pytest` disables print statements by default, but you can disable `pytest` suppression of those messages by passing `-s` to `pytest`.
+
+#### Automatically running tests during development
+For running tests continuously during development, `pytest-watch` is included. This works well with the `--reuse-db` option:
 
     ptw contentcuration -- --reuse-db
 
-The extra `--` is required for passing pytest options through pytest-watch.  Sometimes you might want to quickly rerun an isolated set of tests while developing a new feature.  You could do something like this:
+### Frontend tests
+The JavaScript tests use the `jest` test runner. The `yarn run test` command automatically includes the `jest` configuration in its invocation of tests. To execute a subset of all tests, like a specific test you're modifying, you may pass along a file path:
 
-    ptw contentcuration/contentcuration/tests/test_megaboard.py -- -s --reuse-db
+    yarn run test contentcuration/contentcuration/frontend/shared/utils/helpers.spec.js
 
-## Emulating the Travis CI environment
-To emulate the Travis CI environment locally:
+#### Automatically running tests during development
+For running tests continuously during development, we have `yarn` script which will watch for file changes and re-execute tests when they change:
 
-    docker-compose run studio-app make test
+    yarn run test-jest:dev
 
-**NOTE: You may need to run `yarn run services` to run tests**
+This also supports only a subset of tests, like passing a file:
+
+    yarn run test-jest:dev contentcuration/contentcuration/frontend/shared/utils/helpers.spec.js

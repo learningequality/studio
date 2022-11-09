@@ -1,11 +1,12 @@
 import Vue from 'vue';
 import vuetifyIcons from 'vuetify/lib/components/Vuetify/mixins/icons';
+import camelCase from 'lodash/camelCase';
 import CollapseAllIcon from '../views/icons/CollapseAllIcon';
 import IndicatorIcon from '../views/icons/IndicatorIcon';
 import LightBulbIcon from '../views/icons/LightBulbIcon';
 import ViewOnlyIcon from '../views/icons/ViewOnlyIcon';
-import Icon from 'shared/views/Icon';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
+import Icon from 'shared/views/Icon';
 
 Vue.component(Icon.name, Icon);
 
@@ -24,6 +25,16 @@ export const CONTENT_KIND_ICONS = {
 export function getContentKindIcon(kind, isEmpty = false) {
   const icon = (isEmpty ? [kind + EMPTY] : []).concat([kind]).find(k => k in CONTENT_KIND_ICONS);
   return icon ? CONTENT_KIND_ICONS[icon] : 'error_outline';
+}
+
+export function getLearningActivityIcon(activity) {
+  if (activity.toLowerCase() === 'explore') {
+    return 'interactShaded';
+  } else if (activity === 'multiple') {
+    return 'allActivities';
+  } else {
+    return `${camelCase(activity) + 'Solid'}`;
+  }
 }
 
 // Can use $vuetify.icons.iconName in <Icon> tags

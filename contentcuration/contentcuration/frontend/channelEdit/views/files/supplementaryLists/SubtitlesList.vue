@@ -11,6 +11,7 @@
       :readonly="readonly"
       :nodeId="nodeId"
       @upload="trackUpload"
+      @addFile="addFileHandler"
     />
   </div>
 
@@ -52,6 +53,9 @@
         this.$analytics.trackAction('file_uploader', 'Upload', {
           eventLabel: 'Related file',
         });
+      },
+      addFileHandler(f) {
+        this.$emit('addFile', f);
       },
     },
     $trs: {

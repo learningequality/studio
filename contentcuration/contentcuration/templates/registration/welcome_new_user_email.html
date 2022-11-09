@@ -1,0 +1,183 @@
+<!DOCTYPE HTML>
+{% load i18n %}
+{% load static %}
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+      body {
+          font-family: 'Noto Sans', Verdana, sans-serif;
+          padding: 50px;
+          width: 600px;
+          height: 600px;
+      }
+
+      .message-content {
+          width: 700px;
+          padding-top: 0 !important;
+      }
+
+      .message-content > div {
+          margin: 10px 0px;
+      }
+
+      a {
+          text-decoration: none;
+      }
+
+      .message-header {
+          background-color: #915194;
+          color: white;
+          margin-bottom: 40px;
+      }
+
+      .message-channel-name {
+          margin-top: 0;
+          font-size: 18pt;
+          font-weight: bold;
+          text-align: center;
+      }
+
+      .message-content {
+          border: 3px solid #915194;
+          background-color: white;
+          margin: 0px auto;
+          padding: 0px 20px 35px 20px;
+          position: relative;
+      }
+
+      .heading {
+          text-align: center;
+      }
+
+      .message-link {
+          margin-top: 30px;
+      }
+
+      .message-signature * {
+          margin: 0;
+          padding: 0;
+      }
+
+      .message-signature-img {
+          width: 145px;
+          cursor: pointer;
+      }
+
+      .note {
+          font-style: italic;
+          font-size: 12px;
+      }
+  </style>
+</head>
+<body>
+{% autoescape off %}
+<div class="message-content">
+  <div class="message-header">
+    <p class="message-channel-name">{% translate "Welcome to Kolibri Studio!" %}</p>
+  </div>
+  <div class="greeting">
+    <p>
+    {% blocktranslate %}
+      We're delighted to introduce you to <a href="{{ domain }}">Kolibri Studio</a>, our curricular tool to add,
+      organize, and manage your own resources or those from the Kolibri Content Library.
+    {% endblocktranslate %}
+    <a href="{{ domain }}/channels/#/public">
+      {% translate "View the Kolibri Content Library" %}
+    </a>
+    </p>
+  </div>
+  <div class="function-container">
+    <p>
+    {% blocktranslate %}
+      Using Kolibri Studio, you can explore pre-organized collections of open educational resources (OER), and bundle,
+      tag, differentiate, re-order, and distribute them into custom channels.
+    {% endblocktranslate %}
+    </p>
+    <p>
+    {% blocktranslate %}
+      Using an admin account, you can then publish and import these custom channels--either your own or those shared
+      with you -- into Kolibri with a unique "token" generated for each channel.
+    {% endblocktranslate %}
+    </p>
+  </div>
+  <div>
+    <p>
+    {% blocktranslate %}
+      Browse through the list of resources below* to learn more about Kolibri Studio and to begin creating your own
+      custom channels:
+    {% endblocktranslate %}
+    </p>
+    <ul>
+      <li>
+        <a href="https://kolibri-studio.readthedocs.io/en/latest/index.html">
+          <b>{% translate "Kolibri Studio User Guide" %}</b>
+        </a>
+      </li>
+      <li>
+        <a href="https://drive.google.com/file/d/1uvbTnIyxIP6lrFKPIat8pIJeIa5RNZf5/view?usp=sharing">
+          <b>{% translate "Content integration guide:" %}</b>
+        </a>
+        {% blocktranslate %}
+          Information on licensing, compatible formats, technical integration and more.
+        {% endblocktranslate %}
+        {% blocktranslate %}
+          <em>Note that if you are adding a small number of resources, technical integration is not necessary.</em>
+        {% endblocktranslate %}
+      </li>
+      <li>
+        <b>{% translate "Step by step tutorials:" %}</b>
+        <ul type="circle">
+          <li>
+            <b>{% translate "Video format:" %}</b>
+            <a href="https://kolibri-demo.learningequality.org/en/learn/#/topics/ec29f4cc20a8437d844a60297c2ffd07">
+              {% translate "Using Kolibri Studio: Your Content Workspace for Kolibri" %}
+            </a>
+            {% translate "(*also available in French and Arabic)" %}
+          </li>
+          <li>
+            <b>{% translate "Slide gif format:" %}</b>
+            <a
+              href="https://docs.google.com/presentation/d/e/2PACX-1vRLHvRytsoLdOCv5EMlm5_KRKYHdtwpt_FUkC3sLeW5L12Tw9KZj5GA6klbq8dQB1nVtEBGn73GZsU9/pub?start=true&loop=true&delayms=30000&slide=id.g6b950d4fd1_0_360"
+            >
+              <b>{% translate "Step by step Studio tutorial" %}</b>
+            </a>
+          </li>
+        </ul>
+      </li>
+      <li>
+        <b>
+          {% translate "Video compression instructions:" %}
+        </b>
+        {% blocktranslate %}
+          For optimal results, videos should be compressed in order to achieve small file sizes. Compression ensures
+          that the videos are well suited for offline distribution and playback on all Kolibri devices.
+        {% endblocktranslate %}
+        <a href="https://ricecooker.readthedocs.io/en/latest/video_compression.html">
+          {% translate "View the guide to video compression" %}
+        </a>
+      </li>
+    </ul>
+  </div>
+  <div class="footer">
+    <p>
+      {% translate "If you need support with Kolibri Studio, please reach out to us on our Community Forum." %}
+      <a href="https://community.learningequality.org/c/support/studio/22">
+        {% translate "Access the Community Forum" %}
+      </a>
+    </p>
+    <p>
+      {% translate "Thank You!" %}<br>
+      <strong>{% translate "The Learning Equality Team" %}</strong>
+    </p>
+    <a href="https://learningequality.org/" target="_blank">
+      <img src="{{ domain }}/static/img/le-logo-web.png" class="message-signature-img" />
+    </a>
+    <br/>
+    <p class="note"> <em>{% translate "*resources are presented in English" %}</em></p>
+  </div>
+</div>
+{% endautoescape %}
+</body>
+</html>

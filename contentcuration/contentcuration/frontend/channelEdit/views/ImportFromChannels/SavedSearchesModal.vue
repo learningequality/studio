@@ -198,6 +198,7 @@
 
   .metadata {
     color: var(--v-grey-darken2);
+
     span:not(:last-child)::after {
       margin: 0 4px;
       color: var(--v-grey-base);

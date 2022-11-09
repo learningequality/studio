@@ -33,8 +33,8 @@
         </VListTileContent>
 
         <VListTileAction>
-          <VTooltip bottom>
-            <template slot="activator" slot-scope="{ on }">
+          <VTooltip bottom lazy>
+            <template #activator="{ on }">
               <VBtn
                 icon
                 data-test="resourceRemoveBtn"
@@ -88,6 +88,7 @@
       removeResourceBtnLabel: {
         type: String,
         required: false,
+        default: null,
       },
     },
     computed: {

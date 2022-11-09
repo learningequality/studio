@@ -4,16 +4,14 @@ from django.urls import reverse
 
 from contentcuration.tests import testdata
 from contentcuration.tests.base import StudioAPITestCase
+from contentcuration.tests.viewsets.base import generate_create_event
+from contentcuration.tests.viewsets.base import generate_delete_event
+from contentcuration.tests.viewsets.base import SyncTestMixin
 from contentcuration.viewsets.sync.constants import EDITOR_M2M
 from contentcuration.viewsets.sync.constants import VIEWER_M2M
-from contentcuration.viewsets.sync.utils import generate_create_event
-from contentcuration.viewsets.sync.utils import generate_delete_event
 
 
-class SyncTestCase(StudioAPITestCase):
-    @property
-    def sync_url(self):
-        return reverse("sync")
+class SyncTestCase(SyncTestMixin, StudioAPITestCase):
 
     def setUp(self):
         super(SyncTestCase, self).setUp()
@@ -25,13 +23,11 @@ class SyncTestCase(StudioAPITestCase):
         editor = testdata.user(email="editor@e.com")
         viewer = testdata.user(email="viewer@v.com")
         self.client.force_authenticate(user=self.user)
-        response = self.client.post(
-            self.sync_url,
+        response = self.sync_changes(
             [
-                generate_create_event([editor.id, self.channel.id], EDITOR_M2M, {}),
-                generate_create_event([viewer.id, self.channel.id], VIEWER_M2M, {}),
+                generate_create_event([editor.id, self.channel.id], EDITOR_M2M, {}, channel_id=self.channel.id, user_id=editor.id),
+                generate_create_event([viewer.id, self.channel.id], VIEWER_M2M, {}, channel_id=self.channel.id, user_id=viewer.id),
             ],
-            format="json",
         )
         self.assertEqual(response.status_code, 200, response.content)
         self.assertTrue(self.channel.editors.filter(id=editor.id).exists())
@@ -43,13 +39,11 @@ class SyncTestCase(StudioAPITestCase):
         viewer = testdata.user(email="viewer@v.com")
         self.channel.viewers.add(viewer)
         self.client.force_authenticate(user=self.user)
-        response = self.client.post(
-            self.sync_url,
+        response = self.sync_changes(
             [
-                generate_delete_event([editor.id, self.channel.id], EDITOR_M2M),
-                generate_delete_event([viewer.id, self.channel.id], VIEWER_M2M),
+                generate_delete_event([editor.id, self.channel.id], EDITOR_M2M, channel_id=self.channel.id, user_id=editor.id),
+                generate_delete_event([viewer.id, self.channel.id], VIEWER_M2M, channel_id=self.channel.id, user_id=viewer.id),
             ],
-            format="json",
         )
         self.assertEqual(response.status_code, 200, response.content)
         self.assertFalse(self.channel.editors.filter(id=editor.id).exists())

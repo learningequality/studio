@@ -6,9 +6,9 @@ import pytest
 from dateutil.parser import isoparse
 from django.db.models import F
 from django.db.models import Max
-from django.test import SimpleTestCase
+from django.test import TestCase
 
-from ..base import BaseTestCase
+from ..base import StudioTestCase
 from contentcuration.models import ContentNode
 from contentcuration.utils.nodes import calculate_resource_size
 from contentcuration.utils.nodes import ResourceSizeHelper
@@ -16,9 +16,9 @@ from contentcuration.utils.nodes import SlowCalculationError
 from contentcuration.utils.nodes import STALE_MAX_CALCULATION_SIZE
 
 
-class ResourceSizeHelperTestCase(BaseTestCase):
+class ResourceSizeHelperTestCase(StudioTestCase):
     def setUp(self):
-        super(ResourceSizeHelperTestCase, self).setUp()
+        super(ResourceSizeHelperTestCase, self).setUpBase()
         self.root = self.channel.main_tree
         self.helper = ResourceSizeHelper(self.root)
 
@@ -42,7 +42,7 @@ class ResourceSizeHelperTestCase(BaseTestCase):
 
 @mock.patch("contentcuration.utils.nodes.ResourceSizeHelper")
 @mock.patch("contentcuration.utils.nodes.ResourceSizeCache")
-class CalculateResourceSizeTestCase(SimpleTestCase):
+class CalculateResourceSizeTestCase(TestCase):
     def setUp(self):
         super(CalculateResourceSizeTestCase, self).setUp()
         self.node = mock.Mock(spec_set=ContentNode())
@@ -115,12 +115,13 @@ class CalculateResourceSizeTestCase(SimpleTestCase):
             self.assertIsInstance(report_exception.mock_calls[0][1][0], SlowCalculationError)
 
 
-class CalculateResourceSizeIntegrationTestCase(BaseTestCase):
+class CalculateResourceSizeIntegrationTestCase(StudioTestCase):
     """
     Integration test case
     """
+
     def setUp(self):
-        super(CalculateResourceSizeIntegrationTestCase, self).setUp()
+        super(CalculateResourceSizeIntegrationTestCase, self).setUpBase()
         self.root = self.channel.main_tree
 
     def test_small(self):

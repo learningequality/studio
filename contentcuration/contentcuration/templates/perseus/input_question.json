@@ -3,8 +3,8 @@
         "content": "{{ question | jsonify  }}\n\n[[☃ numeric-input 1]]",
         "images": {{% for image in question_images %}
             "{{ image.name }}": {
-                "width": {{ image.width }},
-                "height": {{ image.height }}
+                "width": {{ image.width|safe }},
+                "height": {{ image.height|safe }}
             }{% if forloop.last %}{% else %},{% endif %}
         {% endfor %}},
         "widgets":  {
@@ -59,8 +59,8 @@
             "widgets":{},
             "images":{{% for image in hint.images %}
                 "{{ image.name }}": {
-                    "width": {{ image.width }},
-                    "height": {{ image.height }}
+                    "width": {{ image.width|safe }},
+                    "height": {{ image.height|safe }}
                 }{% if forloop.last %}{% else %},{% endif %}
             {% endfor %}},
             "content":"{{hint.hint | jsonify  }}",

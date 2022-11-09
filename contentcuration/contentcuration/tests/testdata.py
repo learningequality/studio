@@ -112,7 +112,7 @@ def node_json(data):
     return node_data
 
 
-def node(data, parent=None):
+def node(data, parent=None):  # noqa: C901
     new_node = None
     # Create topics
     if 'node_id' not in data:
@@ -144,21 +144,26 @@ def node(data, parent=None):
             content_id=data.get('content_id') or data['node_id'],
             sort_order=data.get('sort_order', 1),
             complete=True,
+            extra_fields=data.get('extra_fields'),
         )
         new_node.save()
         video_file = fileobj_video(contents=b"Video File")
         video_file.contentnode = new_node
         video_file.preset_id = format_presets.VIDEO_HIGH_RES
+        video_file.duration = 100
         video_file.save()
 
     # Create exercises
     elif data['kind_id'] == "exercise":
-        extra_fields = {
-            'mastery_model': data['mastery_model'],
-            'randomize': True,
-            'm': data.get('m') or 0,
-            'n': data.get('n') or 0
-        }
+        if "extra_fields" in data:
+            extra_fields = data["extra_fields"]
+        else:
+            extra_fields = {
+                'mastery_model': data['mastery_model'],
+                'randomize': True,
+                'm': data.get('m') or 0,
+                'n': data.get('n') or 0
+            }
         new_node = cc.ContentNode(
             kind=exercise(),
             parent=parent,
@@ -172,7 +177,7 @@ def node(data, parent=None):
         )
 
         new_node.save()
-        for assessment_item in data['assessment_items']:
+        for assessment_item in data.get('assessment_items', []):
             ai = cc.AssessmentItem(
                 contentnode=new_node,
                 assessment_id=assessment_item['assessment_id'],

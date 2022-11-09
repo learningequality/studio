@@ -37,15 +37,19 @@
     props: {
       label: {
         type: String,
+        default: '',
       },
       definition: {
         type: String,
+        default: null,
       },
       text: {
         type: String,
+        default: '',
       },
       notranslate: {
         type: Boolean,
+        default: false,
       },
     },
   };
@@ -58,9 +62,11 @@
   .flex {
     word-break: break-word;
   }
+
   .flex:last-child {
     padding-left: 10px;
   }
+
   label {
     vertical-align: middle;
   }

@@ -178,11 +178,12 @@
 <script>
 
   import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
-  import { RouteNames, TabNames } from '../../constants';
   import FileUploadDefault from '../../views/files/FileUploadDefault';
-  import EditList from './EditList';
-  import EditView from './EditView';
+  import { RouteNames, TabNames } from '../../constants';
   import SavingIndicator from './SavingIndicator';
+  import EditView from './EditView';
+  import EditList from './EditList';
+  import { ContentKindLearningActivityDefaults } from 'shared/leUtils/ContentKinds';
   import { fileSizeMixin, routerMixin } from 'shared/mixins';
   import FileStorage from 'shared/views/files/FileStorage';
   import MessageDialog from 'shared/views/MessageDialog';
@@ -195,6 +196,7 @@
   import BottomBar from 'shared/views/BottomBar';
   import FileDropzone from 'shared/views/files/FileDropzone';
   import { isNodeComplete } from 'shared/utils/validation';
+  import { DELAYED_VALIDATION } from 'shared/constants';
 
   const CHECK_STORAGE_INTERVAL = 10000;
 
@@ -230,6 +232,7 @@
       targetNodeId: {
         type: String,
         required: false,
+        default: null,
       },
     },
     data() {
@@ -247,7 +250,7 @@
     computed: {
       ...mapGetters('contentNode', ['getContentNode', 'getContentNodeIsValid']),
       ...mapGetters('assessmentItem', ['getAssessmentItems']),
-      ...mapGetters('currentChannel', ['canEdit']),
+      ...mapGetters('currentChannel', ['currentChannel', 'canEdit']),
       ...mapGetters('file', ['contentNodesAreUploading', 'getContentNodeFiles']),
       ...mapState({
         online: state => state.connection.online,
@@ -420,7 +423,7 @@
         // X button action
         this.enableValidation(this.nodeIds);
         let assessmentItems = this.getAssessmentItems(this.nodeIds);
-        assessmentItems.forEach(item => (item.question ? (item.isNew = false) : ''));
+        assessmentItems.forEach(item => (item.question ? (item[DELAYED_VALIDATION] = false) : ''));
         this.updateAssessmentItems(assessmentItems);
         // reaches into Details Tab to run save of diffTracker
         // before the validation pop up is executed
@@ -444,9 +447,19 @@
       /* Creation actions */
       createNode(kind, payload = {}) {
         this.enableValidation(this.nodeIds);
+        // Default learning activity on upload
+        if (
+          !Object.keys(payload.learning_activities || {}).length &&
+          kind in ContentKindLearningActivityDefaults
+        ) {
+          payload.learning_activities = {
+            [ContentKindLearningActivityDefaults[kind]]: true,
+          };
+        }
         return this.createContentNode({
           kind,
           parent: this.$route.params.nodeId,
+          channel_id: this.currentChannel.id,
           ...payload,
         }).then(newNodeId => {
           this.$router.push({
@@ -500,7 +513,7 @@
       uploadFilesHeader: 'Upload files',
       editFilesHeader: 'Edit files',
       createExerciseHeader: 'New exercise',
-      addTopicsHeader: 'New topic',
+      addTopicsHeader: 'New folder',
       invalidNodesFound:
         '{count, plural,\n =1 {# incomplete resource found}\n other {# incomplete resources found}}',
       invalidNodesFoundText:
@@ -509,7 +522,7 @@
       keepEditingButton: 'Keep editing',
       saveFailedHeader: 'Save failed',
       saveFailedText: 'There was a problem saving your content',
-      addTopic: 'Add new topic',
+      addTopic: 'Add new folder',
       uploadButton: 'Upload more',
       uploadInProgressHeader: 'Upload in progress',
       uploadInProgressText: 'Uploads that are in progress will be lost if you exit',
@@ -528,6 +541,7 @@
 
   /deep/ .v-toolbar__extension {
     padding: 0;
+
     .v-toolbar__content {
       border-bottom: 1px solid var(--v-grey-lighten4);
     }
@@ -540,6 +554,7 @@
     margin-right: 0;
     margin-left: 0;
   }
+
   /deep/ .v-content__wrap {
     max-height: calc(100vh - 128px);
     overflow-y: auto;

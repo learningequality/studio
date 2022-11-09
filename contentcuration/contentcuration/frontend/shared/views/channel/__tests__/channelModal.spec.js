@@ -12,8 +12,6 @@ const router = new VueRouter({
     {
       name: TESTROUTE,
       path: '/testroute',
-      props: true,
-      component: ChannelModal,
     },
   ],
 });
@@ -23,13 +21,15 @@ const channelId = '11111111111111111111111111111111';
 let tab = 'share';
 
 function makeWrapper() {
-  router.push({
-    name: TESTROUTE,
-    params: {
-      channelId,
-      tab,
-    },
-  });
+  router
+    .push({
+      name: TESTROUTE,
+      params: {
+        channelId,
+        tab,
+      },
+    })
+    .catch(() => {});
   return mount(ChannelModal, {
     router,
     store,

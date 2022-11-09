@@ -63,10 +63,6 @@ describe('ContentNodeListItem', () => {
     expect(wrapper.contains('[data-test="btn-chevron"]')).toBe(false);
   });
 
-  it("doesn't render a subtitle for a node different from topic and exercise", () => {
-    expect(wrapper.contains('[data-test="subtitle"]')).toBe(false);
-  });
-
   it('emits an event when list item is clicked', () => {
     wrapper.find('[data-test="content-item"]').trigger('click');
 

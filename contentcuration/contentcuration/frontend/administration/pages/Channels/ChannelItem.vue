@@ -10,7 +10,7 @@
           <Checkbox v-model="selected" />
         </VFlex>
         <VFlex shrink>
-          <VTooltip v-if="channel.public && !channel.deleted" bottom z-index="200">
+          <VTooltip v-if="channel.public && !channel.deleted" bottom z-index="200" lazy>
             <template #activator="{ on }">
               <span class="px-1 py-2" v-on="on">
                 <Icon color="light-green accent-4">

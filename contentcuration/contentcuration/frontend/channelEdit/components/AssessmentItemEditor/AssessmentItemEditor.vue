@@ -3,18 +3,21 @@
   <Uploader ref="uploader" :presetID="imagePreset">
     <template #default="{ handleFiles }">
       <VLayout>
-        <VFlex xs7 lg5>
-          <VSelect
-            :key="kindSelectKey"
-            :items="kindSelectItems"
-            :value="kind"
-            :label="$tr('questionTypeLabel')"
-            data-test="kindSelect"
-            :menu-props="{ offsetY: true }"
-            box
-            @input="onKindUpdate"
-          />
-        </VFlex>
+        <DropdownWrapper component="VFlex" xs7 lg5>
+          <template #default="{ attach, menuProps }">
+            <VSelect
+              :key="kindSelectKey"
+              :items="kindSelectItems"
+              :value="kind"
+              :label="$tr('questionTypeLabel')"
+              data-test="kindSelect"
+              :menu-props="menuProps"
+              :attach="attach"
+              box
+              @input="onKindUpdate"
+            />
+          </template>
+        </DropdownWrapper>
       </VLayout>
 
       <VLayout>
@@ -103,22 +106,24 @@
 <script>
 
   import { mapGetters } from 'vuex';
-  import { AssessmentItemTypeLabels } from '../../constants';
-  import { updateAnswersToQuestionType, assessmentItemKey } from '../../utils';
-  import translator from '../../translator';
 
-  import AnswersEditor from '../AnswersEditor/AnswersEditor';
   import HintsEditor from '../HintsEditor/HintsEditor';
+  import AnswersEditor from '../AnswersEditor/AnswersEditor';
+  import translator from '../../translator';
+  import { updateAnswersToQuestionType, assessmentItemKey } from '../../utils';
+  import { AssessmentItemTypeLabels } from '../../constants';
   import { AssessmentItemTypes, ValidationErrors } from 'shared/constants';
   import ErrorList from 'shared/views/ErrorList/ErrorList';
   import Uploader from 'shared/views/files/Uploader';
   import MarkdownEditor from 'shared/views/MarkdownEditor/MarkdownEditor/MarkdownEditor';
   import MarkdownViewer from 'shared/views/MarkdownEditor/MarkdownViewer/MarkdownViewer';
   import { FormatPresetsNames } from 'shared/leUtils/FormatPresets';
+  import DropdownWrapper from 'shared/views/form/DropdownWrapper';
 
   export default {
     name: 'AssessmentItemEditor',
     components: {
+      DropdownWrapper,
       ErrorList,
       MarkdownEditor,
       MarkdownViewer,
@@ -144,12 +149,14 @@
        */
       item: {
         type: Object,
+        default: null,
       },
       /**
        * An array of error codes related to the item.
        */
       errors: {
         type: Array,
+        default: () => [],
       },
       /**
        * Inject a function that opens a dialog that should
@@ -168,6 +175,7 @@
        */
       openDialog: {
         type: Function,
+        default: null,
       },
     },
     data() {

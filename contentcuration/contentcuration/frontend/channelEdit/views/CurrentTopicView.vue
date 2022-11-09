@@ -5,11 +5,11 @@
     <VToolbar dense color="transparent" flat>
       <slot name="action"></slot>
       <Breadcrumbs :items="ancestors" class="mx-1 px-2 py-0">
-        <template #item="{ item, isLast }">
+        <template #item="{ item, isFirst, isLast }">
           <!-- Current item -->
           <VLayout v-if="isLast" align-center row>
             <VFlex class="font-weight-bold text-truncate" shrink :class="getTitleClass(item)">
-              {{ getTitle(item) }}
+              {{ isFirst ? currentChannel.name : getTitle(item) }}
             </VFlex>
             <Menu v-if="item.displayNodeOptions">
               <template #activator="{ on }">
@@ -23,7 +23,7 @@
             </Menu>
           </VLayout>
           <span v-else class="grey--text" :class="getTitleClass(item)">
-            {{ getTitle(item) }}
+            {{ isFirst ? currentChannel.name : getTitle(item) }}
           </span>
         </template>
       </Breadcrumbs>
@@ -231,22 +231,26 @@
 
   import { mapActions, mapGetters, mapState } from 'vuex';
   import get from 'lodash/get';
-  import { RouteNames, viewModes, DraggableRegions, DraggableUniverses } from '../constants';
-  import ResourceDrawer from '../components/ResourceDrawer';
-  import ContentNodeOptions from '../components/ContentNodeOptions';
   import MoveModal from '../components/move/MoveModal';
+  import ContentNodeOptions from '../components/ContentNodeOptions';
+  import ResourceDrawer from '../components/ResourceDrawer';
+  import { RouteNames, viewModes, DraggableRegions, DraggableUniverses } from '../constants';
   import NodePanel from './NodePanel';
   import IconButton from 'shared/views/IconButton';
   import ToolBar from 'shared/views/ToolBar';
   import Breadcrumbs from 'shared/views/Breadcrumbs';
   import Checkbox from 'shared/views/form/Checkbox';
   import { withChangeTracker } from 'shared/data/changes';
-  import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
+  import {
+    ContentKindsNames,
+    ContentKindLearningActivityDefaults,
+  } from 'shared/leUtils/ContentKinds';
   import { titleMixin, routerMixin } from 'shared/mixins';
   import { COPYING_FLAG, RELATIVE_TREE_POSITIONS } from 'shared/data/constants';
   import { DraggableTypes, DropEffect } from 'shared/mixins/draggable/constants';
   import { DraggableFlags } from 'shared/vuex/draggablePlugin/module/constants';
   import DraggableRegion from 'shared/views/draggable/DraggableRegion';
+  import { ContentNode } from 'shared/data/resources';
 
   export default {
     name: 'CurrentTopicView',
@@ -270,6 +274,7 @@
       detailNodeId: {
         type: String,
         required: false,
+        default: null,
       },
     },
     data() {
@@ -415,7 +420,7 @@
       },
     },
     methods: {
-      ...mapActions(['showSnackbar', 'clearSnackbar']),
+      ...mapActions(['showSnackbar']),
       ...mapActions(['setViewMode', 'addViewModeOverride', 'removeViewModeOverride']),
       ...mapActions('contentNode', [
         'createContentNode',
@@ -436,8 +441,8 @@
         const title = detailTitle ? `${detailTitle} - ${topicTitle}` : topicTitle;
         this.updateTabTitle(this.$store.getters.appendChannelName(title));
       },
-      newContentNode(route, { kind, title }) {
-        this.createContentNode({ parent: this.topicId, kind, title }).then(newId => {
+      newContentNode(route, payload) {
+        this.createContentNode({ parent: this.topicId, ...payload }).then(newId => {
           this.$router.push({
             name: route,
             params: { detailNodeIds: newId },
@@ -456,6 +461,9 @@
         let nodeData = {
           kind: ContentKindsNames.EXERCISE,
           title: '',
+          learning_activities: {
+            [ContentKindLearningActivityDefaults[ContentKindsNames.EXERCISE]]: true,
+          },
         };
         this.newContentNode(RouteNames.ADD_EXERCISE, nodeData);
         this.trackClickEvent('Add exercise');
@@ -597,32 +605,25 @@
           if (nextRoute) {
             this.$router.replace(nextRoute);
           }
-          return this.showSnackbar({
+          this.showSnackbar({
             text: this.$tr('removedItems', { count: id__in.length }),
             actionText: this.$tr('undo'),
             actionCallback: () => changeTracker.revert(),
-          });
+          }).then(() => changeTracker.cleanUp());
         });
       }),
       copyToClipboard: withChangeTracker(function(ids, changeTracker) {
         this.trackClickEvent('Copy to clipboard');
         const nodes = this.getContentNodes(ids);
-        this.showSnackbar({
-          duration: null,
-          text: this.$tr('creatingClipboardCopies'),
-          //! COMMENTED OUT UNTIL FUNCTIONALITY UPDATED
-          // actionText: this.$tr('cancel'),
-          actionCallback: () => changeTracker.revert(),
-        });
 
         return this.copyAll({ nodes }).then(() => {
           this.clearSelections();
-          return this.showSnackbar({
+          this.showSnackbar({
             text: this.$tr('copiedItemsToClipboard'),
-            //! COMMENTED OUT UNTIL FUNCTIONALITY UPDATED
+            // TODO: implement revert functionality for clipboard
             // actionText: this.$tr('undo'),
-            actionCallback: () => changeTracker.revert(),
-          });
+            // actionCallback: () => changeTracker.revert(),
+          }).then(() => changeTracker.cleanUp());
         });
       }),
       duplicateNodes: withChangeTracker(function(id__in, changeTracker) {
@@ -630,8 +631,10 @@
         this.showSnackbar({
           duration: null,
           text: this.$tr('creatingCopies'),
-          actionText: this.$tr('cancel'),
-          actionCallback: () => changeTracker.revert(),
+          // TODO: determine how to cancel copying while it's in progress,
+          // TODO: if that's something we want
+          // actionText: this.$tr('cancel'),
+          // actionCallback: () => changeTracker.revert(),
         });
         return Promise.all(
           id__in.map(id =>
@@ -641,15 +644,15 @@
               position: RELATIVE_TREE_POSITIONS.RIGHT,
             })
           )
-        ).then(() => {
+        ).then(nodes => {
           this.clearSelections();
-          return this.clearSnackbar();
-          // TODO: Shows too quickly, need to show when copy task completes
-          // return this.showSnackbar({
-          //   text: this.$tr('copiedItems'),
-          //   actionText: this.$tr('undo'),
-          //   actionCallback: () => changeTracker.revert(),
-          // });
+          ContentNode.waitForCopying(nodes.map(n => n.id)).then(() => {
+            this.showSnackbar({
+              text: this.$tr('copiedItems'),
+              actionText: this.$tr('undo'),
+              actionCallback: () => changeTracker.revert(),
+            }).then(() => changeTracker.cleanUp());
+          });
         });
       }),
       scroll(e) {
@@ -679,7 +682,7 @@
       },
     },
     $trs: {
-      addTopic: 'New topic',
+      addTopic: 'New folder',
       addExercise: 'New exercise',
       uploadFiles: 'Upload files',
       importFromChannels: 'Import from channels',
@@ -696,12 +699,10 @@
       duplicateSelectedButton: 'Make a copy',
       deleteSelectedButton: 'Delete',
       selectionCount:
-        '{topicCount, plural,\n =1 {# topic}\n other {# topics}}, {resourceCount, plural,\n =1 {# resource}\n other {# resources}}',
+        '{topicCount, plural,\n =1 {# folder}\n other {# folders}}, {resourceCount, plural,\n =1 {# resource}\n other {# resources}}',
       undo: 'Undo',
-      cancel: 'Cancel',
       creatingCopies: 'Copying...',
-      creatingClipboardCopies: 'Copying to clipboard...',
-      // copiedItems: 'Copy operation complete',
+      copiedItems: 'Copy operation complete',
       copiedItemsToClipboard: 'Copied to clipboard',
       removedItems: 'Sent to trash',
       selectAllLabel: 'Select all',

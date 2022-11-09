@@ -178,7 +178,7 @@
     },
     $trs: {
       allChannelsLabel: 'Channels',
-      noResourcesOrTopics: 'There are no resources or topics here',
+      noResourcesOrTopics: 'There are no resources or folders here',
       selectAllAction: 'Select all',
     },
   };

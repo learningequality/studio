@@ -99,15 +99,20 @@
         <h1 class="font-weight-bold my-2 subheading">
           {{ $tr('sourceLabel') }}*
         </h1>
-        <VSelect
-          v-model="form.source"
-          :items="sourceOptions"
-          item-text="label"
-          item-value="id"
-          box
-          menu-props="offsetY"
-          :label="$tr('sourcePlaceholder')"
-        />
+        <DropdownWrapper>
+          <template #default="{ attach, menuProps }">
+            <VSelect
+              v-model="form.source"
+              :items="sourceOptions"
+              item-text="label"
+              item-value="id"
+              box
+              :menu-props="menuProps"
+              :attach="attach"
+              :label="$tr('sourcePlaceholder')"
+            />
+          </template>
+        </DropdownWrapper>
         <VSlideYTransition>
           <TextArea
             v-if="form.source === sources.ORGANIZATION"
@@ -185,10 +190,12 @@
   import Banner from 'shared/views/Banner';
   import Checkbox from 'shared/views/form/Checkbox';
   import { policies } from 'shared/constants';
+  import DropdownWrapper from 'shared/views/form/DropdownWrapper';
 
   export default {
     name: 'Create',
     components: {
+      DropdownWrapper,
       ImmersiveModalLayout,
       TextField,
       EmailField,
@@ -508,6 +515,7 @@
 
   .policy-checkbox /deep/ .v-input__slot {
     margin-bottom: 4px !important;
+
     label {
       color: var(--v-grey-darken1) !important;
     }

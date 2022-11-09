@@ -1,44 +1,47 @@
 <template>
 
   <div>
-    <VLayout class="license-dropdown" row align-center>
-      <VSelect
-        ref="license"
-        v-model="license"
-        :items="licenses"
-        :label="$tr('licenseLabel')"
-        color="primary"
-        itemValue="id"
-        :itemText="translate"
-        :disabled="disabled"
-        :required="required"
-        :readonly="readonly"
-        :rules="licenseRules"
-        :placeholder="placeholder"
-        menu-props="offsetY"
-        class="ma-0"
-        box
-        @focus="$emit('focus')"
-      >
-        <template #append-outer>
-          <InfoModal :header="$tr('licenseInfoHeader')" :items="licenses">
-            <template #header="{ item }">
-              {{ translate(item) }}
-            </template>
-            <template #description="{ item }">
-              {{ translateDescription(item) }}
-              <p v-if="item.license_url" class="mt-1">
-                <ActionLink
-                  :href="getLicenseUrl(item)"
-                  target="_blank"
-                  :text="$tr('learnMoreButton')"
-                />
-              </p>
-            </template>
-          </InfoModal>
-        </template>
-      </VSelect>
-    </VLayout>
+    <DropdownWrapper component="VLayout" class="license-dropdown" row align-center>
+      <template #default="{ attach, menuProps }">
+        <VSelect
+          ref="license"
+          v-model="license"
+          :items="licenses"
+          :label="$tr('licenseLabel')"
+          color="primary"
+          itemValue="id"
+          :itemText="translate"
+          :disabled="disabled"
+          :required="required"
+          :readonly="readonly"
+          :rules="licenseRules"
+          :placeholder="placeholder"
+          :menu-props="menuProps"
+          class="ma-0"
+          box
+          :attach="attach"
+          @focus="$emit('focus')"
+        >
+          <template #append-outer>
+            <InfoModal :header="$tr('licenseInfoHeader')" :items="licenses">
+              <template #header="{ item }">
+                {{ translate(item) }}
+              </template>
+              <template #description="{ item }">
+                {{ translateDescription(item) }}
+                <p v-if="item.license_url" class="mt-1">
+                  <ActionLink
+                    :href="getLicenseUrl(item)"
+                    target="_blank"
+                    :text="$tr('learnMoreButton')"
+                  />
+                </p>
+              </template>
+            </InfoModal>
+          </template>
+        </VSelect>
+      </template>
+    </DropdownWrapper>
     <VTextarea
       v-if="isCustom"
       ref="description"
@@ -71,10 +74,12 @@
   import { LicensesList } from 'shared/leUtils/Licenses';
   import { constantsTranslationMixin } from 'shared/mixins';
   import { findLicense } from 'shared/utils/helpers';
+  import DropdownWrapper from 'shared/views/form/DropdownWrapper';
 
   export default {
     name: 'LicenseDropdown',
     components: {
+      DropdownWrapper,
       InfoModal,
     },
     filters: {},
@@ -86,6 +91,7 @@
         validator: value => {
           return value && (!value.license || findLicense(value.license, { id: null }).id !== null);
         },
+        default: null,
       },
       required: {
         type: Boolean,
@@ -176,3 +182,7 @@
   };
 
 </script>
+
+<style lang="less" scoped>
+
+</style>

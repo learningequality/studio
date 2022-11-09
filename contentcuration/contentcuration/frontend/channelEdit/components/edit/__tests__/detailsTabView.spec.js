@@ -60,6 +60,9 @@ describe.skip('detailsTabView', () => {
     wrapper = makeWrapper();
   });
   describe('on render', () => {
+    // TODO: add defaults for 'accessibility' field
+    // TODO: add defaults for 'grade_levels' field
+    // TODO: add defaults for 'learner_needs' field
     it('all fields should match node field values', () => {
       let keys = [
         'language',

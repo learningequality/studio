@@ -19,8 +19,8 @@
               @click="trackTab('Details')"
             >
               {{ $tr(tabs.DETAILS) }}
-              <VTooltip v-if="!areDetailsValid || !areFilesValid" top>
-                <template v-slot:activator="{ on }">
+              <VTooltip v-if="!areDetailsValid || !areFilesValid" top lazy>
+                <template #activator="{ on }">
                   <Icon color="red" dark small class="ml-2" v-on="on">
                     error
                   </Icon>
@@ -37,8 +37,8 @@
               @click="trackTab('Questions')"
             >
               {{ $tr(tabs.QUESTIONS) }}
-              <VTooltip v-if="!areAssessmentItemsValid" top>
-                <template v-slot:activator="{ on }">
+              <VTooltip v-if="!areAssessmentItemsValid" top lazy>
+                <template #activator="{ on }">
                   <Icon color="red" dark v-on="on">
                     error
                   </Icon>
@@ -66,7 +66,7 @@
         </ToolBar>
         <VContainer fluid>
           <VTabsItems v-model="currentTab">
-            <VTabItem :key="tabs.DETAILS" ref="detailswindow" :value="tabs.DETAILS" lazy>
+            <VTabItem :key="tabs.DETAILS" ref="detailswindow" :value="tabs.DETAILS">
               <VAlert v-if="nodeIds.length > 1" :value="true" type="info" color="primary" outline>
                 {{ countText }}
               </VAlert>
@@ -106,9 +106,9 @@
   import AssessmentTab from '../../components/AssessmentTab/AssessmentTab';
   import RelatedResourcesTab from '../../components/RelatedResourcesTab/RelatedResourcesTab';
   import DetailsTabView from './DetailsTabView';
-  import Tabs from 'shared/views/Tabs';
-  import ToolBar from 'shared/views/ToolBar';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
+  import ToolBar from 'shared/views/ToolBar';
+  import Tabs from 'shared/views/Tabs';
 
   export default {
     name: 'EditView',
@@ -187,7 +187,7 @@
       areAssessmentItemsValid() {
         return (
           !this.oneSelected ||
-          this.getAssessmentItemsAreValid({ contentNodeId: this.nodeIds[0], ignoreNew: true })
+          this.getAssessmentItemsAreValid({ contentNodeId: this.nodeIds[0], ignoreDelayed: true })
         );
       },
       areFilesValid() {
@@ -245,23 +245,27 @@
       },
       /*
        * @public
-       * reaches into Details Tab to run save of diffTracker
-       * before the validation pop up is executed
        */
       immediateSaveAll: function() {
         return this.$refs.detailsTab.immediateSaveAll();
       },
     },
     $trs: {
-      [TabNames.DETAILS]: 'Details',
-      [TabNames.PREVIEW]: 'Preview',
-      [TabNames.QUESTIONS]: 'Questions',
-      [TabNames.RELATED]: 'Related',
-      noItemsToEditText: 'Please select resources or topics to edit',
+      /* eslint-disable kolibri/vue-no-unused-translations */
+      /** @see TabNames.DETAILS */
+      details: 'Details',
+      /** @see TabNames.PREVIEW */
+      preview: 'Preview',
+      /** @see TabNames.QUESTIONS */
+      questions: 'Questions',
+      /** @see TabNames.RELATED */
+      related: 'Related',
+      /* eslint-enable kolibri/vue-no-unused-translations */
+      noItemsToEditText: 'Please select resources or folders to edit',
       invalidFieldsToolTip: 'Some required information is missing',
       errorBannerText: 'Please provide the required information',
       editingMultipleCount:
-        'Editing details for {topicCount, plural,\n =1 {# topic}\n other {# topics}}, {resourceCount, plural,\n =1 {# resource}\n other {# resources}}',
+        'Editing details for {topicCount, plural,\n =1 {# folder}\n other {# folders}}, {resourceCount, plural,\n =1 {# resource}\n other {# resources}}',
     },
   };
 
@@ -288,6 +292,7 @@
   .v-tabs__div {
     min-width: 150px;
     font-weight: bold;
+
     .v-icon {
       margin-left: 5px;
       font-size: 12pt;
@@ -303,6 +308,7 @@
     margin-bottom: 20px;
     font-size: 45pt;
   }
+
   .wrapper {
     min-width: 100%;
     max-height: inherit;
