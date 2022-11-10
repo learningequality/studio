@@ -1705,13 +1705,14 @@ class ContentNode(MPTTModel, models.Model):
             "accessible_languages": node.get("accessible_languages", ""),
             "licenses": node.get("licenses", ""),
             "tags": node.get("tags_list", []),
-            "copyright_holders": node["copyright_holders"],
-            "authors": node["authors"],
-            "aggregators": node["aggregators"],
-            "providers": node["providers"],
-            "sample_pathway": pathway,
             "original_channels": original_channels,
+            "sample_pathway": pathway,
             "sample_nodes": sample_nodes,
+            # source model fields for the below default to an empty string, but can also be null
+            "authors": list(filter(bool, node["authors"])),
+            "aggregators": list(filter(bool, node["aggregators"])),
+            "providers": list(filter(bool, node["providers"])),
+            "copyright_holders": list(filter(bool, node["copyright_holders"])),
         }
 
         # Set cache with latest data
