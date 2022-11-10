@@ -93,7 +93,7 @@
         </div>
       </VFadeTransition>
 
-      <VToolbarItems>
+      <VToolbarItems v-if="!loadingAncestors">
         <Menu class="pa-1">
           <template #activator="{ on }">
             <IconButton
