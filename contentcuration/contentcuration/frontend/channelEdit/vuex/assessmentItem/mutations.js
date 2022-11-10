@@ -59,5 +59,7 @@ export function UPDATE_ASSESSMENTITEM_FROM_INDEXEDDB(state, { id, ...mods }) {
 }
 
 export function DELETE_ASSESSMENTITEM(state, assessmentItem) {
-  Vue.delete(state.assessmentItemsMap[assessmentItem.contentnode], assessmentItem.assessment_id);
+  if (state.assessmentItemsMap[assessmentItem.contentnode]) {
+    Vue.delete(state.assessmentItemsMap[assessmentItem.contentnode], assessmentItem.assessment_id);
+  }
 }
