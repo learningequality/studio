@@ -167,7 +167,8 @@
     },
     methods: {
       treeItemStyle(item) {
-        return this.nested ? { paddingLeft: `${item.level * 24}px` } : {};
+        const rule = this.$isRTL ? 'paddingRight' : 'paddingLeft';
+        return this.nested ? { [rule]: `${item.level * 24}px` } : {};
       },
       add(value) {
         this.selected = [...this.selected, value];

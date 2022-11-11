@@ -81,15 +81,21 @@ function selectNode(wrapper) {
 }
 
 describe('CurrentTopicView', () => {
+  let wrapper;
+
+  afterEach(() => {
+    wrapper && wrapper.destroy();
+  });
+
   it('smoke test', () => {
     const store = storeFactory(STORE_CONFIG);
-    const wrapper = makeWrapper({ store });
+    wrapper = makeWrapper({ store });
 
     expect(wrapper.isVueInstance()).toBe(true);
   });
 
   describe('for a topic with nodes', () => {
-    let store, wrapper;
+    let store;
 
     beforeEach(() => {
       global.CHANNEL_EDIT_GLOBAL.channel_id = CHANNEL.id;

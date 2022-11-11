@@ -23,7 +23,7 @@ describe('masteryCriteriaGoal', () => {
   beforeEach(() => {
     formWrapper = makeWrapper();
     wrapper = formWrapper.find(MasteryCriteriaGoal);
-    wrapper.setProps({ value: { mastery_model: 'm_of_n' } });
+    wrapper.setProps({ value: 'm_of_n' });
     modelInput = wrapper.find({ ref: 'masteryModel' }).find('input');
   });
 
@@ -35,7 +35,7 @@ describe('masteryCriteriaGoal', () => {
     });
     it('should render according to masteryModel prop', () => {
       function test(model) {
-        wrapper.setProps({ value: { mastery_model: model } });
+        wrapper.setProps({ value: model });
         expect(wrapper.vm.$refs.masteryModel.value).toEqual(model);
       }
       MasteryModels.forEach(test);
@@ -71,12 +71,12 @@ describe('masteryCriteriaGoal', () => {
       expect(wrapper.emitted('input')).toBeFalsy();
       modelInput.setValue('do_all');
       expect(wrapper.emitted('input')).toBeTruthy();
-      expect(wrapper.emitted('input')[0][0].mastery_model).toEqual('do_all');
+      expect(wrapper.emitted('input')[0][0]).toEqual('do_all');
     });
   });
   describe('validation', () => {
     it('should flag empty required mastery models', () => {
-      wrapper.setProps({ value: { mastery_model: null } });
+      wrapper.setProps({ value: null });
       formWrapper.vm.validate();
       expect(
         wrapper

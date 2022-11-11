@@ -34,6 +34,7 @@
           />
           <VLayout row wrap>
             <VFlex
+              v-if="oneSelected"
               xs12
               md6
               class="basicInfoColumn"
@@ -41,7 +42,6 @@
             >
               <!-- Description -->
               <VTextarea
-                v-if="oneSelected"
                 ref="description"
                 v-model="description"
                 :label="$tr('descriptionLabel')"
@@ -54,22 +54,29 @@
                 @focus="trackClick('Description')"
               />
             </VFlex>
-            <VFlex xs12 md6 :class="{ 'pl-2': $vuetify.breakpoint.mdAndUp }">
+            <VFlex
+              xs12
+              :[mdValue]="true"
+              :class="{ 'pl-2': $vuetify.breakpoint.mdAndUp && oneSelected }"
+            >
               <!-- Learning activity -->
               <LearningActivityOptions
+                v-if="oneSelected"
                 ref="learning_activities"
                 v-model="contentLearningActivities"
-                :disabled="isTopic"
+                :disabled="anyIsTopic"
                 @focus="trackClick('Learning activities')"
               />
               <!-- Level -->
               <LevelsOptions
+                v-if="oneSelected"
                 ref="contentLevel"
                 v-model="contentLevel"
                 @focus="trackClick('Levels dropdown')"
               />
               <!-- What you will need -->
               <ResourcesNeededOptions
+                v-if="oneSelected"
                 ref="resourcesNeeded"
                 v-model="resourcesNeeded"
                 @focus="trackClick('What you will need')"
@@ -104,7 +111,7 @@
             </VFlex>
           </VLayout>
           <!-- Category -->
-          <CategoryOptions ref="categories" v-model="categories" />
+          <CategoryOptions v-if="oneSelected" ref="categories" v-model="categories" />
         </VFlex>
       </VLayout>
 
@@ -125,25 +132,16 @@
       </VLayout>
 
       <!-- Completion section for all resources -->
-      <VLayout v-if="!isTopic" row wrap class="section">
+      <VLayout v-if="!anyIsTopic && allSameKind" row wrap class="section">
         <VFlex xs12>
           <h1 class="subheading">
             {{ $tr('completionLabel') }}
           </h1>
-          <!-- Checkbox for "Allow learners to mark complete" -->
-          <VFlex md6 class="pb-2">
-            <Checkbox
-              v-model="learnerManaged"
-              color="primary"
-              :label="$tr('learnersCanMarkComplete')"
-              style="margin-top: 0px; padding-top: 0px"
-            />
-          </VFlex>
           <CompletionOptions
             v-model="completionAndDuration"
             :kind="firstNode.kind"
             :fileDuration="fileDuration"
-            :required="!isDocument"
+            :required="!anyIsDocument || !allSameKind"
           />
         </VFlex>
       </VLayout>
@@ -196,6 +194,7 @@
 
           <!-- For Beginners -->
           <KCheckbox
+            v-if="oneSelected"
             id="beginners"
             ref="beginners"
             :checked="forBeginners"
@@ -366,8 +365,11 @@
 <script>
 
   import difference from 'lodash/difference';
+  import get from 'lodash/get';
   import intersection from 'lodash/intersection';
+  import isEqual from 'lodash/isEqual';
   import uniq from 'lodash/uniq';
+  import uniqWith from 'lodash/uniqWith';
   import { mapGetters, mapActions } from 'vuex';
   import ContentNodeThumbnail from '../../views/files/thumbnails/ContentNodeThumbnail';
   import FileUpload from '../../views/files/FileUpload';
@@ -392,12 +394,13 @@
   import VisibilityDropdown from 'shared/views/VisibilityDropdown';
   import Checkbox from 'shared/views/form/Checkbox';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
-  import { NEW_OBJECT, AccessibilityCategories, ResourcesNeededTypes } from 'shared/constants';
+  import {
+    NEW_OBJECT,
+    AccessibilityCategories,
+    ResourcesNeededTypes,
+    nonUniqueValue,
+  } from 'shared/constants';
   import { constantsTranslationMixin, metadataTranslationMixin } from 'shared/mixins';
-
-  // Define an object to act as the place holder for non unique values.
-  const nonUniqueValue = {};
-  nonUniqueValue.toString = () => '';
 
   function getValueFromResults(results) {
     if (results.length === 0) {
@@ -528,8 +531,21 @@
       allResources() {
         return !this.nodes.some(node => node.kind === ContentKindsNames.TOPIC);
       },
+      allSameKind() {
+        const kind = this.firstNode.kind;
+        return !this.nodes.some(node => node.kind !== kind);
+      },
+      anyIsDocument() {
+        return this.nodes.some(n => n.kind === ContentKindsNames.DOCUMENT);
+      },
+      anyIsTopic() {
+        return this.nodes.some(n => n.kind === ContentKindsNames.TOPIC);
+      },
       isImported() {
         return isImportedContent(this.firstNode);
+      },
+      newContent() {
+        return !this.nodes.some(n => n[NEW_OBJECT]);
       },
       importedChannelLink() {
         return importedChannelLink(this.firstNode, this.$router);
@@ -538,8 +554,11 @@
         return this.firstNode.original_channel_name;
       },
       requiresAccessibility() {
-        return this.nodes.every(
-          node => node.kind !== ContentKindsNames.AUDIO && node.kind !== ContentKindsNames.TOPIC
+        return (
+          this.oneSelected &&
+          this.nodes.every(
+            node => node.kind !== ContentKindsNames.AUDIO && node.kind !== ContentKindsNames.TOPIC
+          )
         );
       },
       audioAccessibility() {
@@ -617,8 +636,11 @@
       thumbnailEncoding: generateGetterSetter('thumbnail_encoding'),
       completionAndDuration: {
         get() {
-          const { completion_criteria, modality } =
-            this.getExtraFieldsValueFromNodes('options') || {};
+          const options = this.getExtraFieldsValueFromNodes('options', {});
+          if (options === nonUniqueValue) {
+            return nonUniqueValue;
+          }
+          const { completion_criteria, modality } = options;
           const suggested_duration_type = this.getExtraFieldsValueFromNodes(
             'suggested_duration_type'
           );
@@ -631,25 +653,10 @@
           };
         },
         set({ completion_criteria, suggested_duration, suggested_duration_type, modality }) {
-          if (completion_criteria) {
-            completion_criteria.learner_managed = this.learnerManaged;
-          }
           const options = { completion_criteria, modality };
           this.updateExtraFields({ options });
           this.updateExtraFields({ suggested_duration_type });
           this.update({ suggested_duration });
-        },
-      },
-      learnerManaged: {
-        get() {
-          const { completion_criteria = {} } = this.getExtraFieldsValueFromNodes('options') || {};
-          return completion_criteria.learner_managed;
-        },
-        set(value) {
-          const { completion_criteria = {}, ...options } =
-            this.getExtraFieldsValueFromNodes('options') || {};
-          completion_criteria.learner_managed = value;
-          this.updateExtraFields({ options: { ...options, completion_criteria } });
         },
       },
       /* COMPUTED PROPS */
@@ -706,14 +713,10 @@
       videoSelected() {
         return this.oneSelected && this.firstNode.kind === ContentKindsNames.VIDEO;
       },
-      newContent() {
-        return !this.nodes.some(n => n[NEW_OBJECT]);
-      },
-      isDocument() {
-        return this.firstNode.kind === ContentKindsNames.DOCUMENT;
-      },
-      isTopic() {
-        return this.firstNode.kind === ContentKindsNames.TOPIC;
+      // Dynamically compute the size of the VFlex used
+      /* eslint-disable-next-line kolibri/vue-no-unused-properties */
+      mdValue() {
+        return this.oneSelected ? 'md6' : 'md12';
       },
     },
     watch: {
@@ -810,7 +813,7 @@
         return getValueFromResults(results);
       },
       getExtraFieldsValueFromNodes(key, defaultValue = null) {
-        const results = uniq(
+        const results = uniqWith(
           this.nodes.map(node => {
             if (
               Object.prototype.hasOwnProperty.call(
@@ -821,8 +824,9 @@
             ) {
               return this.diffTracker[node.id].extra_fields[key];
             }
-            return node.extra_fields[key] || defaultValue;
-          })
+            return get(node.extra_fields, key, defaultValue);
+          }),
+          isEqual
         );
         return getValueFromResults(results);
       },
@@ -878,7 +882,6 @@
       assessmentOptionsLabel: 'Assessment options',
       randomizeQuestionLabel: 'Randomize question order for learners',
       completionLabel: 'Completion',
-      learnersCanMarkComplete: 'Allow learners to mark as complete',
     },
   };
 
@@ -903,7 +906,7 @@
     }
 
     .section .flex {
-      margin: 24px 0 !important;
+      margin: 12px 0 !important;
     }
 
     .auth-section {

@@ -75,9 +75,30 @@
             </VList>
           </Menu>
         </template>
-        <VBtn v-else href="/accounts" flat>
-          {{ $tr('logIn') }}
-        </VBtn>
+        <template v-else>
+          <Menu>
+            <template #activator="{ on }">
+              <VBtn flat style="text-transform: none;" v-on="on">
+                <Icon>person</Icon>
+                <Icon>arrow_drop_down</Icon>
+              </VBtn>
+            </template>
+            <VList>
+              <VListTile :href="'/accounts/'">
+                <VListTileAction>
+                  <Icon>exit_to_app</Icon>
+                </VListTileAction>
+                <VListTileTitle v-text="$tr('logIn')" />
+              </VListTile>
+              <VListTile @click="showLanguageModal = true">
+                <VListTileAction>
+                  <Icon>language</Icon>
+                </VListTileAction>
+                <VListTileTitle v-text="$tr('changeLanguage')" />
+              </VListTile>
+            </VList>
+          </Menu>
+        </template>
       </VToolbarItems>
 
       <template v-if="$slots.tabs" #extension>

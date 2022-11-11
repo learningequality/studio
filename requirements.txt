@@ -210,7 +210,7 @@ jsonschema==4.16.0
     # via -r requirements.in
 kombu==5.2.4
     # via celery
-le-utils==0.1.41
+le-utils==0.1.42
     # via -r requirements.in
 msgpack==1.0.4
     # via channels-redis
@@ -242,7 +242,7 @@ protobuf==3.18.3
     #   google-api-core
     #   googleapis-common-protos
     #   proto-plus
-psycopg2-binary==2.9.4
+psycopg2-binary==2.9.5
     # via -r requirements.in
 pyasn1==0.4.8
     # via

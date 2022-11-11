@@ -658,7 +658,7 @@ class CreateModelMixin(object):
                     change.update({"errors": serializer.errors})
                     errors.append(change)
             except Exception as e:
-                log_sync_exception(e)
+                log_sync_exception(e, user=self.request.user, change=change)
                 change["errors"] = [str(e)]
                 errors.append(change)
 
@@ -701,7 +701,7 @@ class DestroyModelMixin(object):
                 # job done!
                 pass
             except Exception as e:
-                log_sync_exception(e)
+                log_sync_exception(e, user=self.request.user, change=change)
                 change["errors"] = [str(e)]
                 errors.append(change)
         return errors
@@ -739,7 +739,7 @@ class UpdateModelMixin(object):
                 change.update({"errors": ValidationError("Not found").detail})
                 errors.append(change)
             except Exception as e:
-                log_sync_exception(e)
+                log_sync_exception(e, user=self.request.user, change=change)
                 change["errors"] = [str(e)]
                 errors.append(change)
         return errors
@@ -776,7 +776,7 @@ class BulkCreateMixin(CreateModelMixin):
             try:
                 self.perform_bulk_create(serializer)
             except Exception as e:
-                log_sync_exception(e)
+                log_sync_exception(e, user=self.request.user, changes=changes)
                 for change in changes:
                     change["errors"] = [str(e)]
                 errors.extend(changes)
@@ -815,7 +815,7 @@ class BulkUpdateMixin(UpdateModelMixin):
             try:
                 self.perform_bulk_update(serializer)
             except Exception as e:
-                log_sync_exception(e)
+                log_sync_exception(e, user=self.request.user, changes=changes)
                 for change in changes:
                     change["errors"] = [str(e)]
                 errors.extend(changes)

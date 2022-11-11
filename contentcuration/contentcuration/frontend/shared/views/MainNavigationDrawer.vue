@@ -32,6 +32,7 @@
           <VListTileContent class="subheading">
             <VListTileTitle>{{ $tr('administrationLink') }}</VListTileTitle>
           </VListTileContent>
+
         </VListTile>
         <VListTile :href="settingsLink" @click="trackClick('Settings')">
           <VListTileAction>
@@ -39,6 +40,14 @@
           </VListTileAction>
           <VListTileContent class="subheading">
             <VListTileTitle>{{ $tr('settingsLink') }}</VListTileTitle>
+          </VListTileContent>
+        </VListTile>
+        <VListTile @click="showLanguageModal = true">
+          <VListTileAction>
+            <Icon>language</Icon>
+          </VListTileAction>
+          <VListTileContent class="subheading">
+            <VListTileTitle v-text="$tr('changeLanguage')" />
           </VListTileContent>
         </VListTile>
         <VListTile :href="helpLink" target="_blank" @click="trackClick('Help')">
@@ -73,7 +82,14 @@
           />
         </p>
       </VContainer>
+
     </VNavigationDrawer>
+
+    <LanguageSwitcherModal
+      v-if="showLanguageModal"
+      :style="{ color: $themeTokens.text }"
+      @cancel="showLanguageModal = false"
+    />
 
   </div>
 
@@ -84,17 +100,24 @@
 
   import { mapActions, mapState } from 'vuex';
   import KolibriLogo from './KolibriLogo';
+  import LanguageSwitcherModal from 'shared/languageSwitcher/LanguageSwitcherModal';
 
   export default {
     name: 'MainNavigationDrawer',
     components: {
       KolibriLogo,
+      LanguageSwitcherModal,
     },
     props: {
       value: {
         type: Boolean,
         default: false,
       },
+    },
+    data() {
+      return {
+        showLanguageModal: false,
+      };
     },
     computed: {
       ...mapState({
@@ -131,6 +154,7 @@
       channelsLink: 'Channels',
       administrationLink: 'Administration',
       settingsLink: 'Settings',
+      changeLanguage: 'Change language',
       helpLink: 'Help and support',
       logoutLink: 'Sign out',
       copyright: '© {year} Learning Equality',

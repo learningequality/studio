@@ -147,7 +147,7 @@ function handleErrors(errors) {
     // both with any errors and the results of any merging that happened prior
     // to the sync operation being called
     return db[CHANGES_TABLE].where('server_rev')
-      .anyOf(Object.keys(errorMap))
+      .anyOf(Object.keys(errorMap).map(Number))
       .modify(obj => {
         return Object.assign(obj, errorMap[obj.server_rev]);
       });
@@ -303,10 +303,15 @@ async function syncChanges() {
     channel_revs[channelId] = get(user, [MAX_REV_KEY, channelId], 0);
   }
 
+  const unAppliedChanges = await db[CHANGES_TABLE].orderBy('server_rev')
+    .filter(c => c.synced && !c.errors && !c.disallowed)
+    .toArray();
+
   const requestPayload = {
     changes: [],
     channel_revs,
     user_rev: user.user_rev || 0,
+    unapplied_revs: unAppliedChanges.map(c => c.server_rev).filter(Boolean),
   };
 
   if (lastChange) {

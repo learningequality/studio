@@ -20,6 +20,53 @@ def _build_validator():
 validator = _build_validator()
 
 
+ALLOWED_MODELS_PER_KIND = {
+    content_kinds.DOCUMENT: {
+        completion_criteria.PAGES,
+        completion_criteria.TIME,
+        completion_criteria.APPROX_TIME,
+        completion_criteria.REFERENCE,
+    },
+    content_kinds.EXERCISE: {completion_criteria.MASTERY},
+    content_kinds.HTML5: {
+        completion_criteria.DETERMINED_BY_RESOURCE,
+        completion_criteria.TIME,
+        completion_criteria.APPROX_TIME,
+        completion_criteria.REFERENCE,
+    },
+    content_kinds.H5P: {
+        completion_criteria.DETERMINED_BY_RESOURCE,
+        completion_criteria.TIME,
+        completion_criteria.APPROX_TIME,
+        completion_criteria.REFERENCE,
+    },
+    content_kinds.AUDIO: {
+        completion_criteria.TIME,
+        completion_criteria.APPROX_TIME,
+        completion_criteria.REFERENCE,
+    },
+    content_kinds.VIDEO: {
+        completion_criteria.TIME,
+        completion_criteria.APPROX_TIME,
+        completion_criteria.REFERENCE,
+    },
+}
+
+
+def check_model_for_kind(data, kind):
+    model = data.get("model")
+    if kind is None or model is None or kind not in ALLOWED_MODELS_PER_KIND:
+        return
+
+    # validate that content kind is allowed for the completion criteria model
+    if model not in ALLOWED_MODELS_PER_KIND[kind]:
+        raise ValidationError(
+            "Completion criteria model '{}' is invalid for content kind '{}'".format(
+                model, kind
+            )
+        )
+
+
 def validate(data, kind=None):
     """
     :param data: Dictionary of data to validate
@@ -49,16 +96,4 @@ def validate(data, kind=None):
         e.error_list.extend(error_descriptions)
         raise e
 
-    model = data.get("model")
-    if kind is None or model is None:
-        return
-
-    # validate that content kind is allowed for the completion criteria model
-    if (model == completion_criteria.PAGES and kind != content_kinds.DOCUMENT) or (
-        model == completion_criteria.MASTERY and kind != content_kinds.EXERCISE
-    ):
-        raise ValidationError(
-            "Completion criteria model '{}' is invalid for content kind '{}'".format(
-                model, kind
-            )
-        )
+    check_model_for_kind(data, kind)
