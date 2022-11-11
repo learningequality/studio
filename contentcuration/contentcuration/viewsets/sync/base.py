@@ -121,7 +121,7 @@ def apply_changes(changes_queryset):
                     change.applied = True
                     changed_fields = ("applied",)
         except Exception as e:
-            log_sync_exception(e)
+            log_sync_exception(e, user=change.created_by, change=change.serialize_to_change_dict())
             change.errored = True
             change.kwargs["errors"] = [str(e)]
         change.save(update_fields=changed_fields)

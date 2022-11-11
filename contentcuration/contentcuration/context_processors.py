@@ -22,6 +22,10 @@ def site_variables(request):
         "DEBUG": settings.DEBUG,
         "LANG_INFO": json_for_parse_from_data(language_globals()),
         "LOGGED_IN": not request.user.is_anonymous,
+        "SENTRY_DSN": settings.SENTRY_DSN,
+        "SENTRY_ENVIRONMENT": settings.SENTRY_ENVIRONMENT,
+        "SENTRY_RELEASE": settings.SENTRY_RELEASE,
+        "SENTRY_ACTIVE": settings.SENTRY_ACTIVE,
     }
 
 

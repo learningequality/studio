@@ -158,6 +158,7 @@
           return book.loaded.cover.then(() => {
             if (!book.cover) {
               this.handleError();
+              return;
             }
             return book.archive.createUrl(book.cover, { base64: true }).then(this.handleGenerated);
           });

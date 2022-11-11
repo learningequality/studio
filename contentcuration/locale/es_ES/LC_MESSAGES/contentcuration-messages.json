@@ -820,7 +820,7 @@
   "DetailsTabView.importedFromButtonText": "Importado desde {channel}",
   "DetailsTabView.languageChannelHelpText": "Dejar en blanco para usar el idioma del canal",
   "DetailsTabView.languageHelpText": "Dejar en blanco para usar el idioma de la carpeta",
-  "DetailsTabView.learnersCanMarkComplete": "Permitir a los estudiantes marcar como completado",
+  "CompletionOptions.learnersCanMarkComplete": "Permitir a los estudiantes marcar como completado",
   "DetailsTabView.noTagsFoundText": "No se han encontrado resultados para \"{text}\". Pulse la tecla 'Entrar' para crear una nueva etiqueta",
   "DetailsTabView.providerLabel": "Proveedor",
   "DetailsTabView.providerToolTip": "Organización que ha encargado o está distribuyendo el contenido",

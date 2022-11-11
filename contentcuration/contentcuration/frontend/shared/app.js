@@ -123,10 +123,12 @@ import { Session, injectVuexStore } from 'shared/data/resources';
 // just say yes to devtools (in debug mode)
 if (process.env.NODE_ENV !== 'production') {
   Vue.config.devtools = true;
-} else {
+} else if (window.sentryActive) {
   Sentry.init({
     Vue,
-    dsn: 'https://e4b21baeb7a044b885464d2af687fb73@sentry.io/1252819',
+    dsn: window.sentryDSN,
+    environment: window.sentryEnvironment,
+    release: window.sentryRelease,
     initialScope: {
       user: window.user ? { id: window.user.id, email: window.user.email } : null,
     },

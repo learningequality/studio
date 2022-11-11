@@ -575,7 +575,9 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         )
 
     def test_update_contentnode_exercise_mastery_model(self):
-        contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
+        metadata = self.contentnode_db_metadata
+        metadata["kind_id"] = content_kinds.EXERCISE
+        contentnode = models.ContentNode.objects.create(**metadata)
 
         # Update m and n fields
         m = 5
@@ -599,6 +601,7 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
 
     def test_update_contentnode_exercise_mastery_model_partial(self):
         data = self.contentnode_db_metadata
+        data["kind_id"] = content_kinds.EXERCISE
         data["extra_fields"] = {
             "options": {
                 "completion_criteria": {
@@ -628,6 +631,7 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
 
     def test_update_contentnode_exercise_mastery_model_old(self):
         data = self.contentnode_db_metadata
+        data["kind_id"] = content_kinds.EXERCISE
         data["extra_fields"] = {
             "m": 5,
             "n": 10,
@@ -778,6 +782,8 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
                     contentnode.id,
                     CONTENTNODE,
                     {
+                        # Only do full validation of this when the update is setting to True.
+                        "complete": True,
                         "extra_fields.options.completion_criteria.model": completion_criteria.TIME,
                     },
                     channel_id=self.channel.id

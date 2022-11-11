@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 
 from django.db.models.query import QuerySet
-from django.test.testcases import SimpleTestCase
+from le_utils.constants import content_kinds
 from rest_framework import serializers
 
 from .base import BaseAPITestCase
@@ -11,7 +11,6 @@ from contentcuration.models import DEFAULT_CONTENT_DEFAULTS
 from contentcuration.viewsets.channel import ChannelSerializer as BaseChannelSerializer
 from contentcuration.viewsets.common import ContentDefaultsSerializer
 from contentcuration.viewsets.contentnode import ContentNodeSerializer
-from contentcuration.viewsets.contentnode import ExtraFieldsOptionsSerializer
 
 
 def ensure_no_querysets_in_serializer(object):
@@ -24,36 +23,35 @@ def ensure_no_querysets_in_serializer(object):
         )
 
 
-class ExtraFieldsOptionsSerializerTestCase(SimpleTestCase):
+class ContentNodeSerializerTestCase(BaseAPITestCase):
     def setUp(self):
-        super(ExtraFieldsOptionsSerializerTestCase, self).setUp()
-        self.data = dict(modality="QUIZ")
+        super(ContentNodeSerializerTestCase, self).setUp()
+        self.data = dict(extra_fields=dict(options=dict(modality="QUIZ")), complete=True)
+        self.node = ContentNode(kind_id=content_kinds.VIDEO)
 
     @property
     def serializer(self):
-        return ExtraFieldsOptionsSerializer(data=self.data)
+        return ContentNodeSerializer(instance=self.node, data=self.data, partial=True)
 
     def test_no_completion_criteria(self):
         self.assertTrue(self.serializer.is_valid())
 
     def test_completion_criteria__valid(self):
-        self.data.update(completion_criteria={"model": "time", "threshold": 10, "learner_managed": True})
+        self.data["extra_fields"]["options"].update(completion_criteria={"model": "time", "threshold": 10, "learner_managed": True})
         serializer = self.serializer
         serializer.is_valid()
         try:
-            serializer.update({}, serializer.validated_data)
+            serializer.update(self.node, serializer.validated_data)
         except serializers.ValidationError:
             self.fail("Completion criteria should be valid")
 
     def test_completion_criteria__invalid(self):
-        self.data.update(completion_criteria={"model": "time", "threshold": "test"})
+        self.data["extra_fields"]["options"].update(completion_criteria={"model": "time", "threshold": "test"})
         serializer = self.serializer
         serializer.is_valid()
         with self.assertRaises(serializers.ValidationError):
-            serializer.update({}, serializer.validated_data)
+            serializer.update(self.node, serializer.validated_data)
 
-
-class ContentNodeSerializerTestCase(BaseAPITestCase):
     def test_repr_doesnt_evaluate_querysets(self):
         node_ids = [
             "00000000000000000000000000000003",

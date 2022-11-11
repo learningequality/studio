@@ -24,6 +24,7 @@ from mock import patch
 from .base import StudioTestCase
 from .helpers import clear_tasks
 from .testdata import channel
+from .testdata import create_studio_file
 from .testdata import node as create_node
 from .testdata import slideshow
 from contentcuration import models as cc
@@ -36,6 +37,9 @@ from contentcuration.utils.publish import MIN_SCHEMA_VERSION
 from contentcuration.utils.publish import set_channel_icon_encoding
 
 pytestmark = pytest.mark.django_db
+
+
+thumbnail_bytes = b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\nIDATx\x9cc\x00\x01\x00\x00\x05\x00\x01\r\n-\xb4\x00\x00\x00\x00IEND\xaeB`\x82'  # noqa E501
 
 
 def description():
@@ -116,9 +120,33 @@ class ExportChannelTestCase(StudioTestCase):
         new_exercise.complete = True
         new_exercise.parent = current_exercise.parent
         new_exercise.save()
+        thumbnail_data = create_studio_file(thumbnail_bytes, preset="exercise_thumbnail", ext="png")
+        file_obj = thumbnail_data["db_file"]
+        file_obj.contentnode = new_exercise
+        file_obj.save()
         for ai in current_exercise.assessment_items.all():
             ai.id = None
             ai.contentnode = new_exercise
+            ai.save()
+
+        legacy_extra_fields = {
+            'mastery_model': exercises.M_OF_N,
+            'randomize': True,
+            'm': 1,
+            'n': 2
+        }
+
+        legacy_exercise = create_node({'kind_id': 'exercise', 'title': 'Legacy Mastery test', 'extra_fields': legacy_extra_fields})
+        legacy_exercise.complete = True
+        legacy_exercise.parent = current_exercise.parent
+        legacy_exercise.save()
+        thumbnail_data = create_studio_file(thumbnail_bytes, preset="exercise_thumbnail", ext="png")
+        file_obj = thumbnail_data["db_file"]
+        file_obj.contentnode = legacy_exercise
+        file_obj.save()
+        for ai in current_exercise.assessment_items.all():
+            ai.id = None
+            ai.contentnode = legacy_exercise
             ai.save()
 
         first_topic = self.content_channel.main_tree.get_descendants().first()
@@ -356,6 +384,23 @@ class ExportChannelTestCase(StudioTestCase):
         first_child = kolibri_models.ContentNode.objects.filter(parent_id=first_topic_node_id).first()
         # Should only be the learning activities we set on the child directly, not any parent ones.
         self.assertEqual(first_child.learning_activities, learning_activities.LISTEN)
+
+    def test_publish_no_modify_exercise_extra_fields(self):
+        exercise = cc.ContentNode.objects.get(title="Mastery test")
+        self.assertEqual(exercise.extra_fields["options"]["completion_criteria"]["threshold"], {
+            "m": 1,
+            "n": 2,
+            "mastery_model": exercises.M_OF_N,
+        })
+
+    def test_publish_no_modify_legacy_exercise_extra_fields(self):
+        current_exercise = cc.ContentNode.objects.get(title="Legacy Mastery test")
+        self.assertEqual(current_exercise.extra_fields, {
+            'mastery_model': exercises.M_OF_N,
+            'randomize': True,
+            'm': 1,
+            'n': 2
+        })
 
 
 class ChannelExportUtilityFunctionTestCase(StudioTestCase):

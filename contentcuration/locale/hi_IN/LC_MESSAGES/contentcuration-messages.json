@@ -820,7 +820,7 @@
   "DetailsTabView.importedFromButtonText": "Imported from {channel}",
   "DetailsTabView.languageChannelHelpText": "Leave blank to use the channel language",
   "DetailsTabView.languageHelpText": "Leave blank to use the folder language",
-  "DetailsTabView.learnersCanMarkComplete": "Allow learners to mark as complete",
+  "CompletionOptions.learnersCanMarkComplete": "Allow learners to mark as complete",
   "DetailsTabView.noTagsFoundText": "No results found for \"{text}\". Press 'Enter' key to create a new tag",
   "DetailsTabView.providerLabel": "Provider",
   "DetailsTabView.providerToolTip": "Organization that commissioned or is distributing the content",
