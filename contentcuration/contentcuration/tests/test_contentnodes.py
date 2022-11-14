@@ -184,6 +184,10 @@ class NodeGettersTestCase(StudioTestCase):
         assert details["resource_count"] > 0
         assert details["resource_size"] > 0
         assert len(details["kind_count"]) > 0
+        assert len(details["authors"]) == len([author for author in details["authors"] if author])
+        assert len(details["aggregators"]) == len([aggregator for aggregator in details["aggregators"] if aggregator])
+        assert len(details["providers"]) == len([provider for provider in details["providers"] if provider])
+        assert len(details["copyright_holders"]) == len([holder for holder in details["copyright_holders"] if holder])
 
 
 class NodeOperationsTestCase(StudioTestCase):
