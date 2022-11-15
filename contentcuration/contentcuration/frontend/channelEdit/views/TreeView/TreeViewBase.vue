@@ -63,7 +63,7 @@
         <span v-if="canManage && isRicecooker" class="font-weight-bold grey--text subheading">
           {{ $tr('apiGenerated') }}
         </span>
-        <VTooltip v-if="canManage" bottom attach="body" lazy>
+        <VTooltip v-if="!loading && canManage" bottom attach="body" lazy>
           <template #activator="{ on }">
             <!-- Need to wrap in div to enable tooltip when button is disabled -->
             <div style="height: 100%;" v-on="on">
@@ -82,7 +82,7 @@
           </template>
           <span>{{ publishButtonTooltip }}</span>
         </VTooltip>
-        <span v-else class="font-weight-bold grey--text subheading">
+        <span v-else-if="!loading" class="font-weight-bold grey--text subheading">
           {{ $tr('viewOnly') }}
         </span>
       </template>
@@ -279,6 +279,12 @@
       MessageDialog,
     },
     mixins: [titleMixin],
+    props: {
+      loading: {
+        type: Boolean,
+        default: false,
+      },
+    },
     data() {
       return {
         drawer: false,
@@ -331,7 +337,9 @@
         }
       },
       showChannelMenu() {
-        return this.$vuetify.breakpoint.xsOnly || this.canManage || this.isPublished;
+        return (
+          !this.loading && (this.$vuetify.breakpoint.xsOnly || this.canManage || this.isPublished)
+        );
       },
       viewChannelDetailsLink() {
         return {

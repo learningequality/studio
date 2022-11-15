@@ -74,10 +74,19 @@ def generate_publish_event(
     return event
 
 
-def log_sync_exception(e):
+def log_sync_exception(e, user=None, change=None, changes=None):
     # Capture exception and report, but allow sync
     # to complete properly.
-    report_exception(e)
+
+    contexts = {}
+
+    if change is not None:
+        contexts["change"] = change
+
+    elif changes is not None:
+        contexts["changes"] = changes
+
+    report_exception(e, user=user, contexts=contexts)
 
     # make sure we leave a record in the logs just in case.
     logging.error(e)

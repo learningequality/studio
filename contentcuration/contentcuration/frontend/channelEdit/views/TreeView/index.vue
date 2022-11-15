@@ -1,6 +1,6 @@
 <template>
 
-  <TreeViewBase @dropToClipboard="handleDropToClipboard">
+  <TreeViewBase :loading="loading" @dropToClipboard="handleDropToClipboard">
     <template v-if="hasStagingTree && canManage" #extension>
       <Banner
         :value="true"

@@ -171,6 +171,7 @@ export const ValidationErrors = {
   INVALID_NUMBER_OF_CORRECT_ANSWERS: 'INVALID_NUMBER_OF_CORRECT_ANSWERS',
   NO_VALID_PRIMARY_FILES: 'NO_VALID_PRIMARY_FILES',
   INVALID_COMPLETION_CRITERIA_MODEL: 'INVALID_COMPLETION_CRITERIA_MODEL',
+  COMPLETION_REQUIRED: 'COMPLETION_REQUIRED',
   LEARNING_ACTIVITY_REQUIRED: 'LEARNING_ACTIVITY_REQUIRED',
   DURATION_REQUIRED: 'DURATION_REQUIRED',
   ACTIVITY_DURATION_REQUIRED: 'ACTIVITY_DURATION_REQUIRED',
@@ -218,5 +219,8 @@ export const DurationDropdownMap = {
   EXACT_TIME: 'exactTime',
   SHORT_ACTIVITY: 'shortActivity',
   LONG_ACTIVITY: 'longActivity',
-  REFERENCE: 'reference',
 };
+
+// Define an object to act as the place holder for non unique values.
+export const nonUniqueValue = {};
+nonUniqueValue.toString = () => '';

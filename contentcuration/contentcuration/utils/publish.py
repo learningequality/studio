@@ -408,7 +408,7 @@ def create_associated_thumbnail(ccnode, ccfilemodel):
             "points": [],
             "zoom": 0,
         })
-        ccnode.save()
+        ccnode.save(update_fields=("thumbnail_encoding",))
 
     return create_thumbnail_from_base64(
         encoding,

@@ -820,7 +820,7 @@
   "DetailsTabView.importedFromButtonText": "Importer à partir de {channel}",
   "DetailsTabView.languageChannelHelpText": "Laisser vide pour utiliser la langue de la chaîne",
   "DetailsTabView.languageHelpText": "Laisser vide pour utiliser la langue du dossier",
-  "DetailsTabView.learnersCanMarkComplete": "Autoriser les apprenants à marquer le contenu comme étant terminé",
+  "CompletionOptions.learnersCanMarkComplete": "Autoriser les apprenants à marquer le contenu comme étant terminé",
   "DetailsTabView.noTagsFoundText": "Aucun résultat trouvé pour \"{text}\". Appuyez sur la touche 'Entrée' pour créer une nouvelle étiquette",
   "DetailsTabView.providerLabel": "Fournisseur",
   "DetailsTabView.providerToolTip": "Organisation ayant commandé le contenu ou qui le distribue",

@@ -454,7 +454,7 @@ class ChannelViewSet(ValuesViewset):
                     publish["key"], version_notes=publish.get("version_notes"), language=publish.get("language")
                 )
             except Exception as e:
-                log_sync_exception(e)
+                log_sync_exception(e, user=self.request.user, change=publish)
                 publish["errors"] = [str(e)]
                 errors.append(publish)
         return errors
@@ -513,7 +513,7 @@ class ChannelViewSet(ValuesViewset):
                     assessment_items=sync.get("assessment_items")
                 )
             except Exception as e:
-                log_sync_exception(e)
+                log_sync_exception(e, user=self.request.user, change=sync)
                 sync["errors"] = [str(e)]
                 errors.append(sync)
         return errors
