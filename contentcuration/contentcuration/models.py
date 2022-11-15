@@ -1780,10 +1780,12 @@ class ContentNode(MPTTModel, models.Model):
 
     def make_content_id_unique(self):
         """
-        If there exists a contentnode with the same content_id as the self,
-        then this updates content_id to a random uuid4.
+        If self is NOT an original contentnode (in other words, a copied contentnode)
+        and a contentnode with same content_id exists then we update self's content_id.
         """
-        if ContentNode.objects.exclude(pk=self.pk).filter(content_id=self.content_id).exists():
+        is_node_original = self.original_source_node_id is None or self.original_source_node_id == self.node_id
+        does_same_content_exists = ContentNode.objects.exclude(pk=self.pk).filter(content_id=self.content_id).exists()
+        if (not is_node_original) and does_same_content_exists:
             ContentNode.objects.filter(pk=self.pk).update(content_id=uuid.uuid4().hex)
 
     def on_create(self):
@@ -2201,10 +2203,10 @@ class File(models.Model):
 
     def update_contentnode_content_id(self):
         """
-        If the file is attached to a contentnode then update that contentnode's content_id
-        if it's a copied contentnode.
+        If the file is attached to a contentnode and is not a thumbnail
+        then update that contentnode's content_id if it's a copied contentnode.
         """
-        if self.contentnode:
+        if self.contentnode and self.preset.thumbnail is False:
             self.contentnode.make_content_id_unique()
 
     def on_update(self):

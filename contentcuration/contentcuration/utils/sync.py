@@ -106,7 +106,7 @@ def sync_node_tags(node, original):
         node.changed = True
 
 
-def sync_node_files(node, original):
+def sync_node_files(node, original): # noqa C901
     """
     Sync all files in ``node`` from the files in ``original`` node.
     """
@@ -118,6 +118,11 @@ def sync_node_files(node, original):
         else:
             file_key = file.preset_id
         node_files[file_key] = file
+        # If node has any non-thumbnail file then it means the node
+        # is an uploaded file. So, we equalize the content_id with the original.
+        if file.preset.thumbnail is False:
+            node.content_id = original.content_id
+            node.changed = True
 
     source_files = {}
 
@@ -218,3 +223,7 @@ def sync_node_assessment_items(node, original):  # noqa C901
     if files_to_create:
         File.objects.bulk_create(files_to_create)
         node.changed = True
+    # Now, node and its original have same content so
+    # let us equalize its content_id.
+    node.content_id = original.content_id
+    node.changed = True
