@@ -106,11 +106,12 @@ def sync_node_tags(node, original):
         node.changed = True
 
 
-def sync_node_files(node, original): # noqa C901
+def sync_node_files(node, original):  # noqa C901
     """
     Sync all files in ``node`` from the files in ``original`` node.
     """
     node_files = {}
+    is_node_uploaded_file = False
 
     for file in node.files.all():
         if file.preset_id == format_presets.VIDEO_SUBTITLE:
@@ -119,10 +120,9 @@ def sync_node_files(node, original): # noqa C901
             file_key = file.preset_id
         node_files[file_key] = file
         # If node has any non-thumbnail file then it means the node
-        # is an uploaded file. So, we equalize the content_id with the original.
+        # is an uploaded file.
         if file.preset.thumbnail is False:
-            node.content_id = original.content_id
-            node.changed = True
+            is_node_uploaded_file = True
 
     source_files = {}
 
@@ -132,6 +132,10 @@ def sync_node_files(node, original): # noqa C901
         else:
             file_key = file.preset_id
         source_files[file_key] = file
+        # If node has any non-thumbnail file then it means the node
+        # is an uploaded file.
+        if file.preset.thumbnail is False:
+            is_node_uploaded_file = True
 
     files_to_delete = []
     files_to_create = []
@@ -152,6 +156,9 @@ def sync_node_files(node, original): # noqa C901
 
     if files_to_create:
         File.objects.bulk_create(files_to_create)
+
+    if node.changed and is_node_uploaded_file:
+        node.content_id = original.content_id
 
 
 assessment_item_fields = (
@@ -223,7 +230,8 @@ def sync_node_assessment_items(node, original):  # noqa C901
     if files_to_create:
         File.objects.bulk_create(files_to_create)
         node.changed = True
+
     # Now, node and its original have same content so
     # let us equalize its content_id.
-    node.content_id = original.content_id
-    node.changed = True
+    if node.changed:
+        node.content_id = original.content_id
