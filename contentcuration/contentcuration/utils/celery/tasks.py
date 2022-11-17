@@ -3,7 +3,6 @@ import math
 import uuid
 
 from celery import states
-from celery.app.task import Context
 from celery.app.task import Task
 from celery.result import AsyncResult
 
@@ -188,12 +187,12 @@ class CeleryTask(Task):
         )
 
         # ensure the result is saved to the backend (database)
-        request_context = Context(id=task_id, kwargs=kwargs)
-        request_context.task = self.name
-        self.backend.store_result(task_id, None, states.PENDING, request=request_context)
+        self.backend.add_pending_result(async_result)
 
         # after calling apply, we should have task result model, so get it and set our custom fields
         task_result = get_task_model(self, task_id)
+        task_result.task_name = self.name
+        task_result.task_kwargs = self.backend.encode_content(kwargs)[2]
         task_result.user = user
         task_result.channel_id = channel_id
         task_result.save()
