@@ -12,7 +12,7 @@ Feature: Edit *Learning level* field
 	Scenario: View learning level options
 		When I click the *Level* dropdown
 		Then I see multi-select checkboxes
-			And I see the options: *Preschool/Nursery*, *Lower primary*, *Upper primary*, *Lower secondary*, *Upper secondary*, *Tertiary*, *Specialized professional training*, *All levels -- basic skills*, *All levels -- work skills* #TO DO - we need a final list with the available checkboxes
+			And I see the options: *All levels -- basic skills*, *Lower primary*, *Lower secondary*, *Preschool*, *Specialized professional training*, *Tertiary*, *Upper primary*, *Upper secondary*, *All levels -- work skills*
 
 	Scenario: Select options
 		Given I see the options for *Level*
