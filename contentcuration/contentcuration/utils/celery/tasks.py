@@ -156,7 +156,8 @@ class CeleryTask(Task):
         """
         async_result = self.fetch(task_id)
         # the task kwargs are serialized in the DB so just ensure that args actually match
-        if async_result.kwargs == kwargs:
+        transcoded_kwargs = self.backend.decode(self.backend.encode(kwargs))
+        if async_result.kwargs == transcoded_kwargs:
             return async_result
         return None
 
@@ -192,7 +193,7 @@ class CeleryTask(Task):
         # after calling apply, we should have task result model, so get it and set our custom fields
         task_result = get_task_model(self, task_id)
         task_result.task_name = self.name
-        task_result.task_kwargs = self.backend.encode_content(kwargs)[2]
+        task_result.task_kwargs = self.backend.encode(kwargs)
         task_result.user = user
         task_result.channel_id = channel_id
         task_result.save()

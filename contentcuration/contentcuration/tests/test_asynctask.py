@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 import threading
+import uuid
 
 from celery import states
 from celery.result import allow_join_result
@@ -203,6 +204,12 @@ class AsyncTaskTestCase(TransactionTestCase):
     def test_fetch_or_enqueue_task(self):
         expected_task = test_task.enqueue(self.user, is_test=True)
         async_result = test_task.fetch_or_enqueue(self.user, is_test=True)
+        self.assertEqual(expected_task.task_id, async_result.task_id)
+
+    def test_fetch_or_enqueue_task__channel_id(self):
+        channel_id = uuid.uuid4()
+        expected_task = test_task.enqueue(self.user, channel_id=channel_id)
+        async_result = test_task.fetch_or_enqueue(self.user, channel_id=channel_id)
         self.assertEqual(expected_task.task_id, async_result.task_id)
 
     def test_requeue_task(self):
