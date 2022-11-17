@@ -212,6 +212,24 @@ class AsyncTaskTestCase(TransactionTestCase):
         async_result = test_task.fetch_or_enqueue(self.user, channel_id=channel_id)
         self.assertEqual(expected_task.task_id, async_result.task_id)
 
+    def test_fetch_or_enqueue_task__channel_id__hex(self):
+        channel_id = uuid.uuid4()
+        expected_task = test_task.enqueue(self.user, channel_id=channel_id.hex)
+        async_result = test_task.fetch_or_enqueue(self.user, channel_id=channel_id.hex)
+        self.assertEqual(expected_task.task_id, async_result.task_id)
+
+    def test_fetch_or_enqueue_task__channel_id__hex_then_uuid(self):
+        channel_id = uuid.uuid4()
+        expected_task = test_task.enqueue(self.user, channel_id=channel_id.hex)
+        async_result = test_task.fetch_or_enqueue(self.user, channel_id=channel_id)
+        self.assertEqual(expected_task.task_id, async_result.task_id)
+
+    def test_fetch_or_enqueue_task__channel_id__uuid_then_hex(self):
+        channel_id = uuid.uuid4()
+        expected_task = test_task.enqueue(self.user, channel_id=channel_id)
+        async_result = test_task.fetch_or_enqueue(self.user, channel_id=channel_id.hex)
+        self.assertEqual(expected_task.task_id, async_result.task_id)
+
     def test_requeue_task(self):
         existing_task_ids = requeue_test_task.find_ids()
         self.assertEqual(len(existing_task_ids), 0)
