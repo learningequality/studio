@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 import uuid
 
+import mock
 from django.urls import reverse
 
 from contentcuration import models
@@ -9,6 +10,7 @@ from contentcuration.tests import testdata
 from contentcuration.tests.base import StudioAPITestCase
 from contentcuration.tests.viewsets.base import generate_create_event
 from contentcuration.tests.viewsets.base import generate_delete_event
+from contentcuration.tests.viewsets.base import generate_sync_channel_event
 from contentcuration.tests.viewsets.base import generate_update_event
 from contentcuration.tests.viewsets.base import SyncTestMixin
 from contentcuration.viewsets.sync.constants import CHANNEL
@@ -272,6 +274,30 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         self.assertEqual(response.status_code, 200, response.content)
         self.assertTrue(models.Channel.objects.get(id=channel1.id).deleted)
         self.assertFalse(models.Channel.objects.get(id=channel2.id).deleted)
+
+    @mock.patch("contentcuration.viewsets.channel.sync_channel")
+    def test_sync_channel_called_correctly(self, sync_channel_mock):
+        user = testdata.user()
+        channel = testdata.channel()
+        channel.editors.add(user)
+        channel_node = channel.main_tree.get_descendants().first()
+        channel_node.copy_to(target=channel.main_tree)
+
+        self.client.force_authenticate(user=user)
+        for i in range(1, 5):
+            sync_channel_mock.reset_mock()
+            args = [channel.id, False, False, False, False]
+            args[i] = True
+
+            response = self.sync_changes(
+                [
+                    generate_sync_channel_event(*args)
+                ]
+            )
+
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(sync_channel_mock.call_args.args[i], True)
+            sync_channel_mock.assert_called_once()
 
 
 class CRUDTestCase(StudioAPITestCase):

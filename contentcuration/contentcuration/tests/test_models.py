@@ -439,6 +439,31 @@ class ContentNodeTestCase(PermissionQuerysetTestCase):
             self.assertEqual(after_move_sourcenode.tree_id, testchannel.trash_tree.tree_id)
             self.assertEqual(tree_id_from_cache, testchannel.trash_tree.tree_id)
 
+    def test_make_content_id_unique(self):
+        channel_original = testdata.channel()
+        channel_importer = testdata.channel()
+
+        # Import a node from a channel.
+        original_node = channel_original.main_tree.get_descendants().first()
+        copied_node = original_node.copy_to(target=channel_importer.main_tree)
+
+        original_node.refresh_from_db()
+        copied_node.refresh_from_db()
+
+        original_node_old_content_id = original_node.content_id
+        copied_node_old_content_id = copied_node.content_id
+
+        original_node.make_content_id_unique()
+        copied_node.make_content_id_unique()
+
+        original_node.refresh_from_db()
+        copied_node.refresh_from_db()
+
+        # Assert that original node's content_id doesn't change.
+        self.assertEqual(original_node_old_content_id, original_node.content_id)
+        # Assert copied node's content_id changes.
+        self.assertNotEqual(copied_node_old_content_id, copied_node.content_id)
+
 
 class AssessmentItemTestCase(PermissionQuerysetTestCase):
     @property
