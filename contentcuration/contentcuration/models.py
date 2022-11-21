@@ -1756,12 +1756,15 @@ class ContentNode(MPTTModel, models.Model):
             if self.kind_id == content_kinds.EXERCISE:
                 # Check to see if the exercise has at least one assessment item that has:
                 if not self.assessment_items.filter(
-                    # A non-blank question
-                    ~Q(question='')
-                    # Non-blank answers
-                    & ~Q(answers='[]')
-                    # With either an input question or one answer marked as correct
-                    & (Q(type=exercises.INPUT_QUESTION) | Q(answers__iregex=r'"correct":\s*true'))
+                    # Item with non-blank raw data
+                    ~Q(raw_data="") | (
+                        # A non-blank question
+                        ~Q(question='')
+                        # Non-blank answers
+                        & ~Q(answers='[]')
+                        # With either an input question or one answer marked as correct
+                        & (Q(type=exercises.INPUT_QUESTION) | Q(answers__iregex=r'"correct":\s*true'))
+                    )
                 ).exists():
                     errors.append("No questions with question text and complete answers")
                 # Check that it has a mastery model set
