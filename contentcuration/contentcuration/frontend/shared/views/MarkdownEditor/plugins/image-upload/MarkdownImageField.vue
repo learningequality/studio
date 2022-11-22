@@ -136,6 +136,7 @@
         );
       },
       handleRemove() {
+        this.editorField.innerHTML = '';
         this.$destroy();
         this.$el.parentNode.removeChild(this.$el);
       },
