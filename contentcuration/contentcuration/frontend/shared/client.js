@@ -54,10 +54,23 @@ client.interceptors.response.use(
     if (process.env.NODE_ENV !== 'production') {
       // In dev build log warnings to console for developer use
       console.warn('AJAX Request Error: ' + message); // eslint-disable-line no-console
-      console.warn('Error data: ' + JSON.stringify(error)); // eslint-disable-line no-console
+      console.warn('Error data: ', error); // eslint-disable-line no-console
     } else {
-      Sentry.captureException(new Error(message), {
-        contexts: { error },
+      Sentry.withScope(function(scope) {
+        scope.addAttachment({
+          filename: 'error.json',
+          data: JSON.stringify(error),
+          contentType: 'application/json',
+        });
+        Sentry.captureException(new Error(message), {
+          extra: {
+            Request: {
+              headers: error.config.headers,
+              method: error.config.method,
+              url,
+            },
+          },
+        });
       });
     }
     return Promise.reject(error);
