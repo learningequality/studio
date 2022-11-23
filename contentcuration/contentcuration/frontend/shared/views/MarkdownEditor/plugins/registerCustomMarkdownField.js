@@ -16,6 +16,8 @@ const hasLeftwardSpace = el => {
     leftwardSpaceRegex.test(el.previousSibling.textContent) &&
     // And either this sibling doesn't have a previous sibling
     (!el.previousSibling.previousSibling ||
+      // Or it doesn't have a hasAttribute function
+      typeof el.previousSibling.previousSibling.hasAttribute !== 'function' ||
       // Or the previous sibling is not another custom field
       !el.previousSibling.previousSibling.hasAttribute('is') ||
       // Or the previous sibling has two white spaces, one for each
@@ -38,6 +40,8 @@ const hasRightwardSpace = el => {
     rightwardSpaceRegex.test(el.nextSibling.textContent) &&
     // And either this sibling doesn't have a next sibling
     (!el.nextSibling.nextSibling ||
+      // Or it doesn't have a hasAttribute function
+      typeof el.nextSibling.nextSibling.hasAttribute !== 'function' ||
       // Or the next sibling is not another custom field
       !el.nextSibling.nextSibling.hasAttribute('is') ||
       // Or the next sibling has two white spaces, one for each
