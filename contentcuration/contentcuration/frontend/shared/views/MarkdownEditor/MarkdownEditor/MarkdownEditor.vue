@@ -177,12 +177,14 @@
       const Convertor = tmpEditor.convertor.constructor;
       class CustomConvertor extends Convertor {
         toMarkdown(content) {
-          content = showdown.makeMarkdown(content);
           content = imagesHtmlToMd(content);
           content = formulaHtmlToMd(content);
-          content = content.replaceAll('&nbsp;', ' ');
-
+          content = showdown.makeMarkdown(content);
           // TUI.editor sprinkles in extra `<br>` tags that Kolibri renders literally
+          // When showdown has already added linebreaks to render these in markdown
+          // so we just remove these here.
+          content = content.replaceAll('<br>', '');
+
           // any copy pasted rich text that renders as HTML but does not get converted
           // will linger here, so remove it as Kolibri will render it literally also.
           content = stripHtml(content).result;
