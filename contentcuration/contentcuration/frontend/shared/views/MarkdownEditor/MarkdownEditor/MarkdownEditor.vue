@@ -74,14 +74,12 @@
   import { registerMarkdownFormulaField } from '../plugins/formulas/MarkdownFormulaField';
   import { registerMarkdownImageField } from '../plugins/image-upload/MarkdownImageField';
   import { clearNodeFormat, getExtensionMenuPosition } from './utils';
-  import keyHandlers from './keyHandlers';
   import FormulasMenu from './FormulasMenu/FormulasMenu';
   import ImagesMenu from './ImagesMenu/ImagesMenu';
   import ClickOutside from 'shared/directives/click-outside';
 
   registerMarkdownFormulaField();
   registerMarkdownImageField();
-
 
   const AnalyticsActionMap = {
     Bold: 'Bold',
@@ -326,14 +324,8 @@
        * a recommended solution here https://github.com/neilj/Squire/issues/107
        */
       onKeyDown(event) {
-        const squire = this.editor.getSquire();
-
         // Apply squire selection workarounds
         this.fixSquireSelectionOnKeyDown(event);
-
-        if (event.key in keyHandlers) {
-          keyHandlers[event.key](squire);
-        }
 
         // ESC should close menus if any are open
         // or close the editor if none are open
@@ -473,7 +465,7 @@
         const getRightwardElement = selection => getElementAtRelativeOffset(selection, 1);
 
         const getCharacterAtRelativeOffset = (selection, relativeOffset) => {
-          let { element, offset } = squire.getSelectionInfoByOffset(
+          const { element, offset } = squire.getSelectionInfoByOffset(
             selection.startContainer,
             selection.startOffset + relativeOffset
           );
@@ -495,27 +487,31 @@
           /\s$/.test(getCharacterAtRelativeOffset(selection, 0));
 
         const moveCursor = (selection, amount) => {
-          let { element, offset } = squire.getSelectionInfoByOffset(
-            selection.startContainer,
-            selection.startOffset + amount
-          );
-          if (amount > 0) {
-            selection.setStart(element, offset);
-          } else {
-            selection.setEnd(element, offset);
-          }
+          const element = getElementAtRelativeOffset(selection, amount);
+          selection.setStart(element, 0);
+          selection.setEnd(element, 0);
           return selection;
         };
 
-        // make sure Squire doesn't delete rightward custom nodes when 'backspace' is pressed
-        if (event.key !== 'ArrowRight' && event.key !== 'Delete') {
-          if (isCustomNode(getRightwardElement(selection))) {
+        const rightwardElement = getRightwardElement(selection);
+        const leftwardElement = getLeftwardElement(selection);
+
+        if (event.key === 'ArrowRight') {
+          if (isCustomNode(rightwardElement)) {
+            squire.setSelection(moveCursor(selection, 1));
+          } else if (spacerAndCustomElementAreRightward(selection)) {
+            squire.setSelection(moveCursor(selection, 2));
+          }
+        }
+        if (event.key === 'ArrowLeft') {
+          if (isCustomNode(leftwardElement)) {
             squire.setSelection(moveCursor(selection, -1));
+          } else if (spacerAndCustomElementAreLeftward(selection)) {
+            squire.setSelection(moveCursor(selection, -2));
           }
         }
         // make sure Squire doesn't get stuck with a broken cursor position when deleting
         // elements with `contenteditable="false"` in FireFox
-        let leftwardElement = getLeftwardElement(selection);
         if (event.key === 'Backspace') {
           if (selection.startContainer.tagName === 'DIV') {
             // This happens normally when deleting from the beginning of an empty line...
