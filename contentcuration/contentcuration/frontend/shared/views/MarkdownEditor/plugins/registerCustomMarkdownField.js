@@ -15,10 +15,10 @@ export default VueComponent => {
     vueInstanceCreatedCallback() {
       // by default, `contenteditable` will be false
       this.setAttribute('contenteditable', Boolean(VueComponent.contentEditable));
-
+      const id = `markdown-field-${uuidv4()}`;
       // a hack to prevent squire from merging custom element spans
       // see here: https://github.com/nhn/tui.editor/blob/master/libs/squire/source/Node.js#L92-L101
-      this.classList.add(`markdown-field-${uuidv4()}`);
+      this.classList.add(id);
 
       // pass innerHTML of host element as the `markdown` property
       this.observer = new MutationObserver(mutations => {
@@ -40,6 +40,10 @@ export default VueComponent => {
         });
       });
       this.observer.observe(this, { characterData: true, childList: true });
+
+      this.addEventListener('remove', () => {
+        this.parentNode.removeChild(this);
+      });
 
       // initialize the `markdown` property
       this.getVueInstance().$root.markdown = this.innerHTML;
