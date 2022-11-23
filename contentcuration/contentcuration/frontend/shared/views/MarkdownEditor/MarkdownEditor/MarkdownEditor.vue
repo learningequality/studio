@@ -60,7 +60,6 @@
   import * as Showdown from 'showdown';
 
   import Editor from '@toast-ui/editor';
-  import debounce from 'lodash/debounce';
   import { stripHtml } from 'string-strip-html';
 
   import imageUpload, { paramsToImageFieldHTML } from '../plugins/image-upload';
@@ -83,7 +82,6 @@
   registerMarkdownFormulaField();
   registerMarkdownImageField();
 
-  const wrapWithSpaces = html => `&nbsp;${html}&nbsp;`;
 
   const AnalyticsActionMap = {
     Bold: 'Bold',
@@ -164,7 +162,6 @@
       markdown(newMd, previousMd) {
         if (newMd !== previousMd && newMd !== this.editor.getMarkdown()) {
           this.editor.setMarkdown(newMd);
-          this.updateCustomNodeSpacers();
           this.initImageFields();
         }
       },
@@ -306,35 +303,6 @@
       this.keyDownEventListener = this.$el.addEventListener('keydown', this.onKeyDown, true);
       this.clickEventListener = this.$el.addEventListener('click', this.onClick);
       this.editImageEventListener = this.$el.addEventListener('editImage', this.handleEditImage);
-
-      // Make sure all custom nodes have spacers around them.
-      // Note: this is debounced because it's called every keystroke
-      const editorEl = this.$refs.editor;
-      this.updateCustomNodeSpacers = debounce(() => {
-        editorEl.querySelectorAll('span[is]').forEach(el => {
-          el.editing = true;
-          const hasLeftwardSpace = el => {
-            return (
-              el.previousSibling &&
-              el.previousSibling.textContent &&
-              /\s$/.test(el.previousSibling.textContent)
-            );
-          };
-          const hasRightwardSpace = el => {
-            return (
-              el.nextSibling && el.nextSibling.textContent && /^\s/.test(el.nextSibling.textContent)
-            );
-          };
-          if (!hasLeftwardSpace(el)) {
-            el.insertAdjacentText('beforebegin', '\xa0');
-          }
-          if (!hasRightwardSpace(el)) {
-            el.insertAdjacentText('afterend', '\xa0');
-          }
-        });
-      }, 150);
-
-      this.updateCustomNodeSpacers();
     },
     activated() {
       this.editor.focus();
@@ -413,8 +381,6 @@
           event.preventDefault();
           event.stopPropagation();
         }
-
-        this.updateCustomNodeSpacers();
       },
       onPaste(event) {
         const fragment = clearNodeFormat({
@@ -791,7 +757,6 @@
         } else {
           let squire = this.editor.getSquire();
           squire.insertHTML(formulaHTML);
-          this.updateCustomNodeSpacers();
         }
       },
       resetFormulasMenu() {
@@ -876,8 +841,7 @@
           const mdImageEl = template.content.firstElementChild;
           mdImageEl.setAttribute('editing', true);
 
-          // insert non-breaking spaces to allow users to write text before and after
-          this.editor.getSquire().insertHTML(wrapWithSpaces(mdImageEl.outerHTML));
+          this.editor.getSquire().insertHTML(mdImageEl.outerHTML);
 
           this.initImageFields();
         }

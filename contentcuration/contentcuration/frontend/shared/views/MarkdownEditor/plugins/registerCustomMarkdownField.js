@@ -2,6 +2,54 @@ import Vue from 'vue';
 import vueCustomElement from 'vue-custom-element';
 import { v4 as uuidv4 } from 'uuid';
 
+const leftwardSpaceRegex = /\s$/;
+
+const leftwardDoubleSpaceRegex = /\s\s$/;
+
+const hasLeftwardSpace = el => {
+  return (
+    // Has a previous sibling
+    el.previousSibling &&
+    // Which has text content
+    el.previousSibling.textContent &&
+    // The text content has white space right before this element
+    leftwardSpaceRegex.test(el.previousSibling.textContent) &&
+    (
+      // And either this sibling doesn't have a previous sibling
+      !el.previousSibling.previousSibling ||
+      // Or the previous sibling is not another custom field
+      !el.previousSibling.previousSibling.hasAttribute('is') ||
+      // Or the previous sibling has two white spaces, one for each
+      // of the custom fields on either side.
+      leftwardDoubleSpaceRegex.test(el.previousSibling.textContent)
+    )
+  );
+};
+
+const rightwardSpaceRegex = /^\s/;
+
+const rightwardDoubleSpaceRegex = /^\s\s/;
+
+const hasRightwardSpace = el => {
+  return (
+    // Has a next sibling
+    el.nextSibling &&
+    // Which has text content
+    el.nextSibling.textContent &&
+    // The text content has white space right after this element
+    rightwardSpaceRegex.test(el.nextSibling.textContent) &&
+    (
+      // And either this sibling doesn't have a next sibling
+      !el.nextSibling.nextSibling ||
+      // Or the next sibling is not another custom field
+      !el.nextSibling.nextSibling.hasAttribute('is') ||
+      // Or the next sibling has two white spaces, one for each
+      // of the custom fields on either side.
+      rightwardDoubleSpaceRegex.test(el.nextSibling.textContent)
+    )
+  );
+};
+
 export default VueComponent => {
   const dashed = camel => camel.replace(/([a-zA-Z])(?=[A-Z])/g, '$1-').toLowerCase();
   const name = dashed(VueComponent.name);
@@ -42,8 +90,23 @@ export default VueComponent => {
       this.observer.observe(this, { characterData: true, childList: true });
 
       this.addEventListener('remove', () => {
+        if (hasLeftwardSpace(this)) {
+          this.previousSibling.textContent = this.previousSibling.textContent.replace(leftwardSpaceRegex, '');
+        }
+        if (hasRightwardSpace(this)) {
+          this.nextSibling.textContent = this.nextSibling.textContent.replace(rightwardSpaceRegex, '');
+        }
         this.parentNode.removeChild(this);
       });
+
+      this.editing = true;
+
+      if (!hasLeftwardSpace(this)) {
+        this.insertAdjacentText('beforebegin', '\xa0');
+      }
+      if (!hasRightwardSpace(this)) {
+        this.insertAdjacentText('afterend', '\xa0');
+      }
 
       // initialize the `markdown` property
       this.getVueInstance().$root.markdown = this.innerHTML;
