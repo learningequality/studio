@@ -14,15 +14,13 @@ const hasLeftwardSpace = el => {
     el.previousSibling.textContent &&
     // The text content has white space right before this element
     leftwardSpaceRegex.test(el.previousSibling.textContent) &&
-    (
-      // And either this sibling doesn't have a previous sibling
-      !el.previousSibling.previousSibling ||
+    // And either this sibling doesn't have a previous sibling
+    (!el.previousSibling.previousSibling ||
       // Or the previous sibling is not another custom field
       !el.previousSibling.previousSibling.hasAttribute('is') ||
       // Or the previous sibling has two white spaces, one for each
       // of the custom fields on either side.
-      leftwardDoubleSpaceRegex.test(el.previousSibling.textContent)
-    )
+      leftwardDoubleSpaceRegex.test(el.previousSibling.textContent))
   );
 };
 
@@ -38,15 +36,13 @@ const hasRightwardSpace = el => {
     el.nextSibling.textContent &&
     // The text content has white space right after this element
     rightwardSpaceRegex.test(el.nextSibling.textContent) &&
-    (
-      // And either this sibling doesn't have a next sibling
-      !el.nextSibling.nextSibling ||
+    // And either this sibling doesn't have a next sibling
+    (!el.nextSibling.nextSibling ||
       // Or the next sibling is not another custom field
       !el.nextSibling.nextSibling.hasAttribute('is') ||
       // Or the next sibling has two white spaces, one for each
       // of the custom fields on either side.
-      rightwardDoubleSpaceRegex.test(el.nextSibling.textContent)
-    )
+      rightwardDoubleSpaceRegex.test(el.nextSibling.textContent))
   );
 };
 
@@ -83,7 +79,7 @@ export default VueComponent => {
             this.innerHTML = textNodesRemoved.map(n => n.nodeValue).join();
           } else {
             // otherwise, pass the innerHTML to inner Vue component as `markdown` prop
-            this.getVueInstance().markdown = this.innerHTML;
+            this.markdown = this.innerHTML;
           }
         });
       });
@@ -91,10 +87,16 @@ export default VueComponent => {
 
       this.addEventListener('remove', () => {
         if (hasLeftwardSpace(this)) {
-          this.previousSibling.textContent = this.previousSibling.textContent.replace(leftwardSpaceRegex, '');
+          this.previousSibling.textContent = this.previousSibling.textContent.replace(
+            leftwardSpaceRegex,
+            ''
+          );
         }
         if (hasRightwardSpace(this)) {
-          this.nextSibling.textContent = this.nextSibling.textContent.replace(rightwardSpaceRegex, '');
+          this.nextSibling.textContent = this.nextSibling.textContent.replace(
+            rightwardSpaceRegex,
+            ''
+          );
         }
         this.parentNode.removeChild(this);
       });
@@ -107,9 +109,8 @@ export default VueComponent => {
       if (!hasRightwardSpace(this)) {
         this.insertAdjacentText('afterend', '\xa0');
       }
-
       // initialize the `markdown` property
-      this.getVueInstance().$root.markdown = this.innerHTML;
+      this.markdown = this.innerHTML;
     },
     shadowCss: VueComponent.shadowCSS,
     shadow: true,
