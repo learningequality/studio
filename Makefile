@@ -2,10 +2,26 @@
 # PRODUCTION COMMANDS #########################################
 ###############################################################
 # These are production commands which may be invoked in deployments
-altprodserver: NUM_PROCS:=3
-altprodserver: NUM_THREADS:=5
-altprodserver: collectstatic compilemessages
-	cd contentcuration/ && gunicorn contentcuration.wsgi:application --timeout=4000 --error-logfile=/var/log/gunicorn-error.log --workers=${NUM_PROCS} --threads=${NUM_THREADS} --bind=0.0.0.0:8081 --pid=/tmp/contentcuration.pid --log-level=debug || sleep infinity
+#altprodserver: NUM_PROCS:=3
+#altprodserver: NUM_THREADS:=5
+#altprodserver: collectstatic compilemessages
+#	cd contentcuration/ && gunicorn contentcuration.wsgi:application --timeout=4000 --error-logfile=/var/log/gunicorn-error.log --workers=${NUM_PROCS} --threads=${NUM_THREADS} --bind=0.0.0.0:8081 --pid=/tmp/contentcuration.pid --log-level=debug || sleep infinity
+
+altprodserver:
+	$(MAKE) -j 2 gunicornanddapneserver
+
+gunicornanddapneserver: gunicornserver daphneserver
+
+daphneserver:
+	cd contentcuration/ && daphne -b 0.0.0.0 -p 8082 contentcuration.asgi:application
+
+gunicornserver: NUM_PROCS:=1
+gunicornserver:
+	cd contentcuration/ && gunicorn contentcuration.wsgi:application --timeout=4000 --error-logfile=/var/log/gunicorn-error.log --workers=${NUM_PROCS} --bind=0.0.0.0:8081 --pid=/tmp/contentcuration.pid --log-level=debug || sleep infinity
+
+
+contentnodegc:
+	cd contentcuration/ && python manage.py garbage_collect
 
 prodceleryworkers:
 	cd contentcuration/ && celery -A contentcuration worker -l info --concurrency=3 --task-events
@@ -19,9 +35,6 @@ compilemessages:
 migrate:
 	python contentcuration/manage.py migrate || true
 	python contentcuration/manage.py loadconstants
-
-contentnodegc:
-	python contentcuration/manage.py garbage_collect
 
 filedurations:
 	python contentcuration/manage.py set_file_duration

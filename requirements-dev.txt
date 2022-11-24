@@ -141,7 +141,9 @@ mock==4.0.3
     #   -r requirements-dev.in
     #   django-concurrent-test-helper
 msgpack==1.0.4
-    # via locust
+    # via
+    #   -c requirements.txt
+    #   locust
 nodeenv==1.6.0
     # via
     #   -r requirements-dev.in
@@ -260,7 +262,9 @@ tomli==1.2.3
     #   coverage
     #   pep517
 typing-extensions==4.1.1
-    # via locust
+    # via
+    #   -c requirements.txt
+    #   locust
 uritemplate==3.0.1
     # via
     #   coreapi
@@ -289,7 +293,9 @@ zipp==3.4.1
 zope-event==4.5.0
     # via gevent
 zope-interface==5.4.0
-    # via gevent
+    # via
+    #   -c requirements.txt
+    #   gevent
 
 # The following packages are considered to be unsafe in a requirements file:
 # pip

@@ -3,7 +3,9 @@ import traceback
 import uuid
 from contextlib import contextmanager
 
+from asgiref.sync import async_to_sync
 from celery import states
+from channels.layers import get_channel_layer
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
 from django.http import Http404
@@ -12,6 +14,7 @@ from django_bulk_update.helper import bulk_update
 from django_filters.constants import EMPTY_VALUES
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import FilterSet
+from rest_framework.exceptions import NotAuthenticated
 from rest_framework.filters import OrderingFilter
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
@@ -199,8 +202,13 @@ class BulkModelSerializer(SimpleReprMixin, ModelSerializer):
 
     def save(self, **kwargs):
         instance = super(BulkModelSerializer, self).save(**kwargs)
+        if "request" in self.context and not self.context["request"].user.is_anonymous:
+            user = self.context["request"].user
+        else:
+            raise NotAuthenticated()
+
         if self.changes:
-            Change.create_changes(self.changes, applied=True)
+            Change.create_changes(self.changes, applied=True, created_by_id=user.id)
         return instance
 
 
@@ -894,38 +902,98 @@ def create_change_tracker(pk, table, channel_id, user, task_name):
     # Clean up any previous tasks specific to this in case there were failures.
     meta = json.dumps(dict(pk=pk, table=table))
     TaskResult.objects.filter(channel_id=channel_id, task_name=task_name, meta=meta).delete()
+    progress = 0
+    status = states.STARTED
+
+    channel_layer = get_channel_layer()
+    room_group_name = channel_id
 
     task_id = uuid.uuid4().hex
-    task_object = TaskResult.objects.create(
-        task_id=task_id,
-        status=states.STARTED,
-        channel_id=channel_id,
-        task_name=task_name,
-        user=user,
-        meta=meta
+
+    async_to_sync(channel_layer.group_send)(
+        str(room_group_name),
+        {
+            'type': 'broadcast_tasks',
+            'tasks': {
+                'pk': pk,
+                'table': table,
+                'task_id': task_id,
+                'task_name': task_name,
+                'traceback': None,
+                'progress': progress,
+                'channel_id': channel_id,
+                'status': status,
+            }
+        }
     )
 
     def update_progress(progress=None):
         if progress:
-            task_object.progress = progress
-            task_object.save()
+            async_to_sync(channel_layer.group_send)(
+                str(room_group_name),
+                {
+                    'type': 'broadcast_tasks',
+                    'tasks': {
+                        'pk': pk,
+                        'table': table,
+                        'task_id': task_id,
+                        'task_name': task_name,
+                        'traceback': None,
+                        'progress': progress,
+                        'channel_id': channel_id,
+                        'status': status,
+                    }
+                }
+            )
 
     Change.create_change(
-        generate_update_event(pk, table, {TASK_ID: task_object.task_id}, channel_id=channel_id), applied=True
+        generate_update_event(pk, table, {TASK_ID: task_id}, channel_id=channel_id), applied=True, created_by_id=user.id
     )
 
     tracker = ProgressTracker(task_id, update_progress)
 
     try:
         yield tracker
-    except Exception:
-        task_object.status = states.FAILURE
-        task_object.traceback = traceback.format_exc()
-        task_object.save()
+    except Exception as e:
+        status = states.FAILURE
+        traceback_str = traceback.format_exc()
+        async_to_sync(channel_layer.group_send)(
+            str(room_group_name),
+            {
+                'type': 'broadcast_tasks',
+                'tasks': {
+                    'pk': pk,
+                    'table': table,
+                    'task_id': task_id,
+                    'task_name': task_name,
+                    'traceback': traceback_str,
+                    'progress': progress,
+                    'channel_id': channel_id,
+                    'status': status,
+                }
+            }
+        )
     finally:
-        if task_object.status == states.STARTED:
+        if status == states.STARTED:
+            progress = 100
+            async_to_sync(channel_layer.group_send)(
+                str(room_group_name),
+                {
+                    'type': 'broadcast_tasks',
+                    'tasks': {
+                            'pk': pk,
+                            'table': table,
+                            'task_id': task_id,
+                            'task_name': task_name,
+                            'traceback': None,
+                            'progress': progress,
+                            'channel_id': channel_id,
+                            'status': states.SUCCESS,
+                    }
+                }
+            )
             # No error reported, cleanup.
             Change.create_change(
-                generate_update_event(pk, table, {TASK_ID: None}, channel_id=channel_id), applied=True
+                generate_update_event(pk, table, {TASK_ID: None}, channel_id=channel_id), applied=True, created_by_id=user.id
+
             )
-            task_object.delete()

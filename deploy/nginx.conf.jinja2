@@ -24,6 +24,11 @@ http {
         server 127.0.0.1:8081;
     }
 
+    # Proxy to daphne for websocket requests
+    upstream ws_server {
+        server 127.0.0.1:8082;
+    }
+
     # Allow-list filter for content catalog paths
     server {
         listen 8080;
@@ -83,6 +88,16 @@ http {
             proxy_redirect     off;
             proxy_set_header   Host $host;
         }
+
+        location /ws/ {
+           proxy_http_version 1.1;
+           proxy_set_header Upgrade $http_upgrade;
+           proxy_set_header Connection "upgrade";
+           proxy_redirect off;
+           proxy_pass http://ws_server;
+           gzip off;
+        }
+
 
         location /content/ {
             proxy_http_version 1.1;

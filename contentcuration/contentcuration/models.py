@@ -2405,7 +2405,7 @@ class Change(models.Model):
         )
 
     @classmethod
-    def create_changes(cls, changes, created_by_id=None, session_key=None, applied=False):
+    def create_changes(cls, changes, created_by_id, session_key=None, applied=False):
         change_models = []
         for change in changes:
             change_models.append(cls._create_from_change(created_by_id=created_by_id, session_key=session_key, applied=applied, **change))
@@ -2414,7 +2414,7 @@ class Change(models.Model):
         return change_models
 
     @classmethod
-    def create_change(cls, change, created_by_id=None, session_key=None, applied=False):
+    def create_change(cls, change, created_by_id, session_key=None, applied=False):
         obj = cls._create_from_change(created_by_id=created_by_id, session_key=session_key, applied=applied, **change)
         obj.save()
         return obj

@@ -1,8 +1,8 @@
 import Dexie from 'dexie';
 import sortBy from 'lodash/sortBy';
-import { CHANGE_TYPES, IGNORED_SOURCE, TABLE_NAMES } from './constants';
 import db from './db';
 import { INDEXEDDB_RESOURCES } from './registry';
+import { CHANGE_TYPES, IGNORED_SOURCE, TABLE_NAMES } from './constants';
 
 const { CREATED, DELETED, UPDATED, MOVED, PUBLISHED, SYNCED } = CHANGE_TYPES;
 
