@@ -1784,8 +1784,8 @@ class ContentNode(MPTTModel, models.Model):
         and a contentnode with same content_id exists then we update self's content_id.
         """
         is_node_original = self.original_source_node_id is None or self.original_source_node_id == self.node_id
-        does_same_content_exists = ContentNode.objects.exclude(pk=self.pk).filter(content_id=self.content_id).exists()
-        if (not is_node_original) and does_same_content_exists:
+        node_same_content_id = ContentNode.objects.exclude(pk=self.pk).filter(content_id=self.content_id)
+        if (not is_node_original) and node_same_content_id.exists():
             ContentNode.objects.filter(pk=self.pk).update(content_id=uuid.uuid4().hex)
 
     def on_create(self):
