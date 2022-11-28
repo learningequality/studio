@@ -162,7 +162,7 @@ jmespath==0.10.0
     #   botocore
 jsonfield==3.1.0
     # via -r requirements.in
-jsonschema==4.16.0
+jsonschema==4.17.1
     # via -r requirements.in
 kombu==5.2.4
     # via celery
