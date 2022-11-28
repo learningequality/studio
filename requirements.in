@@ -1,6 +1,6 @@
 attrs==19.3.0
 django-cte==1.2.1
-django-mptt==0.13.4
+django-mptt==0.14.0
 django-filter==22.1
 djangorestframework==3.12.4
 psycopg2-binary==2.9.5

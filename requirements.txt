@@ -87,7 +87,7 @@ django-mathfilters==1.0.0
     # via -r requirements.in
 django-model-utils==4.2.0
     # via -r requirements.in
-django-mptt==0.13.4
+django-mptt==0.14.0
     # via -r requirements.in
 django-postmark==0.1.6
     # via -r requirements.in
