@@ -6,6 +6,7 @@ from contextlib import contextmanager
 from celery import states
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
+from django.db.utils import IntegrityError
 from django.http import Http404
 from django.http.request import HttpRequest
 from django_bulk_update.helper import bulk_update
@@ -659,7 +660,12 @@ class CreateModelMixin(object):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
+
+        try:
+            self.perform_create(serializer)
+
+        except IntegrityError as e:
+            return Response({"error": str(e)}, status=409)
         instance = serializer.instance
         return Response(self.serialize_object(pk=instance.pk), status=HTTP_201_CREATED)
 
