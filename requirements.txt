@@ -54,8 +54,6 @@ click-repl==0.2.0
     # via celery
 confusable-homoglyphs==3.2.0
     # via django-registration
-deprecated==1.2.13
-    # via redis
 django==3.2.14
     # via
     #   -r requirements.in
@@ -229,7 +227,7 @@ pytz==2022.1
     #   django
     #   django-postmark
     #   google-api-core
-redis==4.3.4
+redis==4.3.5
     # via
     #   -r requirements.in
     #   django-redis
@@ -275,8 +273,6 @@ wcwidth==0.2.5
     # via prompt-toolkit
 webencodings==0.5.1
     # via html5lib
-wrapt==1.14.1
-    # via deprecated
 zipp==3.4.1
     # via importlib-metadata
 
