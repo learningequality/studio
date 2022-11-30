@@ -54,37 +54,6 @@ class CeleryApp(Celery):
             count = conn.default_channel.client.llen(queue_name)
         return count
 
-    def _revoke_matching(self, tasks, task_name, matching_kwargs=None):
-        count = 0
-        for task in tasks:
-            if task['name'] == task_name and (matching_kwargs is None or task['kwargs'] == matching_kwargs):
-                print('Revoking task {}'.format(task))
-                count += 1
-                self.control.revoke(task['id'], terminate=True)
-        return count
-
-    def revoke_reserved_tasks_by_name(self, task_name, matching_kwargs=None):
-        """
-        :param task_name: The string name of the task
-        :param matching_kwargs: A dict of kwargs to match to the task
-        :return: The count of revoked tasks
-        """
-        count = 0
-        for worker_name, tasks in self.control.inspect().reserved().items():
-            count += self._revoke_matching(tasks, task_name, matching_kwargs)
-        return count
-
-    def terminate_active_tasks_by_name(self, task_name, matching_kwargs=None):
-        """
-        :param task_name: The string name of the task
-        :param matching_kwargs: A dict of kwargs to match to the task
-        :return: The count of terminated tasks
-        """
-        count = 0
-        for worker_name, tasks in self.control.inspect().active().items():
-            count += self._revoke_matching(tasks, task_name, matching_kwargs)
-        return count
-
     def decode_result(self, result, status=None):
         """
         Decodes the celery result, like the raw result from the database, using celery tools
