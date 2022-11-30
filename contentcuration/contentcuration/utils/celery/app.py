@@ -45,6 +45,15 @@ class CeleryApp(Celery):
 
         return decoded_tasks
 
+    def count_queued_tasks(self, queue_name="celery"):
+        """
+        :param queue_name: The queue name, defaults to the default "celery" queue
+        :return: int
+        """
+        with self.pool.acquire(block=True) as conn:
+            count = conn.default_channel.client.llen(queue_name)
+        return count
+
     def decode_result(self, result, status=None):
         """
         Decodes the celery result, like the raw result from the database, using celery tools

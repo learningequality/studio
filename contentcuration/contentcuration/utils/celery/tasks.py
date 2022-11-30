@@ -246,6 +246,25 @@ class CeleryTask(Task):
         logging.info(f"Re-queuing task {self.name} for user {task_result.user.pk} from {request.id} | {task_kwargs}")
         return self.enqueue(task_result.user, **task_kwargs)
 
+    def revoke(self, exclude_task_ids=None, **kwargs):
+        """
+        Revokes and terminates all unready tasks matching the kwargs
+        :param exclude_task_ids: Any task ids to exclude from this behavior
+        :param kwargs: Task keyword arguments that will be used to match against tasks
+        :return: The number of tasks revoked
+        """
+        task_ids = self.find_incomplete_ids(**self.backend.decode(self._prepare_kwargs(kwargs)))
+        if exclude_task_ids is not None:
+            task_ids = task_ids.exclude(task_id__in=task_ids)
+        count = 0
+        for task_id in task_ids:
+            logging.info(f"Revoking task {task_id}")
+            self.app.control.revoke(task_id, terminate=True)
+            count += 1
+        # be sure the database backend has these marked appropriately
+        self.TaskModel.objects.filter(task_id__in=task_ids).update(status=states.REVOKED)
+        return count
+
 
 class CeleryAsyncResult(AsyncResult):
     """
