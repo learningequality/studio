@@ -9,7 +9,7 @@ def calculate_user_storage(user_id):
     from contentcuration.decorators import delay_user_storage_calculation
 
     if delay_user_storage_calculation.is_active:
-        delay_user_storage_calculation.queue.append(user_id)
+        delay_user_storage_calculation.add(user_id)
         return
 
     try:
