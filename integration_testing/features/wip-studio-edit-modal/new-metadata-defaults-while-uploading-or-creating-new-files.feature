@@ -11,62 +11,97 @@ Feature: New metadata defaults while uploading or creating new files
 	Scenario: Upload .PDF or .EPUB
 		When I upload a .PDF or an .EPUB file
 		Then I see the edit modal for <.PDF or .EPUB>
-			And I see upload of <.PDF or .EPUB> is in progress
-			And I see *Level* is empty
-			And I see *Learning activity* is set to *Read*
-			And I see *What you will need* is empty
-			And I see *Allow marking as complete* is empty
-			And I see *Completion* is set to *All content viewed*
-			And I see *Accessibility* checkboxes are unchecked
-			And I see *Category* is empty
+			And the *Title* field is prefilled with the name of the file
+			And the *Description* field is empty
+			And *Learning activity* is set to *Read*
+			And *Level* is empty
+			And *Requirements* is empty
+			And *Tags* is empty
+			And *Category* is empty
+			And *Allow learners to mark as complete* is unchecked
+			And *Completion* is set to *Viewed in its entirety*
+			And there is no thumbnail
+			And *Language* is empty
+			And *Visible to* is set to *Anyone*
+			And *For beginners* is not checked
+			And all *Accessibility* checkboxes are unchecked
 
 	Scenario: Upload .MP3
 		When I upload <.MP3>
 		Then I see the edit modal for <.MP3>
-			And I see upload of <.MP3> is in progress
-			And I see *Level* is empty
-			And I see *Learning activity* is set to *Listen*
-			And I see *What you will need* is empty
-			And I see *Allow marking as complete* is empty
-			And I see *Completion* is set to *Exact time to complete*
-			And I see *Exact time to complete* is set to the exact duration of <.MP3>
-			And I see *Accessibility* checkboxes are unchecked
-			And I see *Category* is empty
+			And the *Title* field is prefilled with the name of the file
+			And the *Description* field is empty
+			And *Learning activity* is set to *Listen*
+			And *Level* is empty
+			And *Requirements* is empty
+			And *Tags* is empty
+			And *Category* is empty
+			And *Allow learners to mark as complete* is unchecked
+			And *Completion* is set to *When time spent is equal to duration*
+			And *Duration* is set to *Time to complete*
+			And there is no thumbnail
+			And *Language* is empty
+			And *Visible to* is set to *Anyone*
+			And *For beginners* is unchecked
 
-	Scenario: Upload .MP4 or .MOV
-		When I upload <.MP4 or .MOV>
-		Then I see the edit modal for <.MP4 or .MOV>
-			And I see upload of <.MP4 or .MOV> is in progress
-			And I see *Level* is empty
-			And I see *Learning activity* is set to *Watch*
-			And I see *What you will need* is empty
-			And I see *Allow marking as complete* is empty
-			And I see *Completion* is set to *Exact time to complete*
-			And I see *Exact time to complete* is set to the exact duration of <.MP4 or .MOV>
-			And I see *Accessibility* checkboxes are unchecked
-			And I see *Category* is empty
+	Scenario: Upload .MP4 or .WEBM
+		When I upload <.MP4 or .WEBM>
+		Then I see the edit modal for <.MP4 or .WEBM>
+			And the *Title* field is prefilled with the name of the file
+			And the *Description* field is empty
+			And *Learning activity* is set to *Watch*
+			And *Level* is empty
+			And *Requirements* is empty
+			And *Tags* is empty
+			And *Category* is empty
+			And *Allow learners to mark as complete* is unchecked
+			And *Completion* is set to *When time spent is equal to duration*
+			And *Duration* is set to *Time to complete*
+			And there is no thumbnail
+			And *Language* is empty
+			And *Visible to* is set to *Anyone*
+			And *For beginners* is unchecked
+			And all *Accessibility* checkboxes are unchecked
 
 	Scenario: Upload .ZIP
 		When I upload <.ZIP>
 		Then I see the edit modal for <.ZIP>
-			And I see upload of <.ZIP> is in progress
-			And I see *Level* is empty
-			And I see *Learning activity* is empty
-			And I see *What you will need* is empty
-			And I see *Allow marking as complete* is empty
-			And I see *Completion* is empty
-			And I see *Accessibility* checkboxes are unchecked
-			And I see *Category* is empty
+			And the *Title* field is prefilled with the name of the file
+			And the *Description* field is empty
+			And *Learning activity* is empty
+			And *Level* is empty
+			And *Requirements* is empty
+			And *Tags* is empty
+			And *Category* is empty
+			And *Allow learners to mark as complete* is unchecked
+			And *Completion* is set to *When time spent is equal to duration*
+			And *Duration* is set to *Time to complete*
+			And *Minutes* is set to *10*
+			And there is no thumbnail
+			And *Language* is empty
+			And *Visible to* is set to *Anyone*
+			And *For beginners* is unchecked
+			And all *Accessibility* checkboxes are unchecked
 
 	Scenario: Create new Practice resource
 		Given I am in an editable channel
 		When I click *Add*
 			And I click *New exercise*
 		Then I see the edit modal for the exercise
-			And I see *Level* is empty
-			And I see *Learning activity* is set to *Practice*
-			And I see *What you will need* is empty
-			And I see *Allow marking as complete* is empty
-			And I see *Completion* is empty
-			And I see *Accessibility* checkboxes are unchecked
-			And I see *Category* is empty
+			And the *Title* field is empty
+			And the *Description* field is empty
+			And *Learning activity* is is set to *Practice*
+			And *Level* is empty
+			And *Requirements* is empty
+			And *Tags* is empty
+			And *Category* is empty
+			And *Randomize question order for learners* is checked
+			And *Allow learners to mark as complete* is unchecked
+			And *Completion* is set to *When goal is met*
+			And *Goal* is empty
+			And there is no thumbnail
+			And *Language* is empty
+			And *Visible to* is set to *Anyone*
+			And *For beginners* is unchecked
+			And all *Accessibility* checkboxes are unchecked
+			
