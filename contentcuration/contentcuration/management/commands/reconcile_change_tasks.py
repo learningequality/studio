@@ -19,11 +19,7 @@ class Command(BaseCommand):
         from contentcuration.tasks import apply_channel_changes_task
         from contentcuration.tasks import apply_user_changes_task
 
-        active_task_ids = []
-        for worker_name, tasks in app.control.inspect().active().items():
-            active_task_ids.extend(task['id'] for task in tasks)
-        for worker_name, tasks in app.control.inspect().reserved().items():
-            active_task_ids.extend(task['id'] for task in tasks)
+        active_task_ids = [task['id'] for task in app.get_active_and_reserved_tasks()]
 
         channel_changes = Change.objects.filter(channel_id__isnull=False, applied=False, errored=False) \
             .order_by('channel_id', 'created_by_id') \
