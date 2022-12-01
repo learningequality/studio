@@ -114,11 +114,15 @@ export default function IndexedDBPlugin(db, listeners = []) {
       if (change.type === CHANGE_TYPES.UPDATED) {
         obj = change.mods;
       }
+      // omit the last fetched attribute used only in resource layer
+      const mods = omit(obj, [LAST_FETCHED]);
+      if (Object.keys(mods).length === 0) {
+        return;
+      }
       events.emit(getEventName(change.table, change.type), {
         // we ensure we invoke the listeners with an object that has the PK
         [db[change.table].schema.primKey.keyPath]: change.key,
-        // spread the object, omitting the last fetched attribute used only in resource layer
-        ...omit(obj, [LAST_FETCHED]),
+        ...mods,
       });
     });
   });
