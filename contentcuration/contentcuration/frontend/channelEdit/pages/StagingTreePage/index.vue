@@ -204,6 +204,8 @@
         data-test="deploy-dialog"
         :title="$tr('deployChannel')"
         :submitText="$tr('confirmDeployBtn')"
+        :submitDisabled="submitDisabled"
+        :cancelDisabled="submitDisabled"
         :cancelText="$tr('cancelDeployBtn')"
         @submit="onDeployChannelClick"
         @cancel="displayDeployDialog = false"
@@ -293,6 +295,7 @@
         displayDeployDialog: false,
         drawer: false,
         elevated: false,
+        submitDisabled: false,
       };
     },
     computed: {
@@ -504,7 +507,13 @@
         this.elevated = e.target.scrollTop > 0;
       },
       async onDeployChannelClick() {
-        await this.deployCurrentChannel();
+        this.submitDisabled = true;
+        try {
+          await this.deployCurrentChannel();
+        } catch (e) {
+          this.submitDisabled = false;
+          throw e;
+        }
         await this.loadChannel(this.currentChannel.id);
 
         this.$router.push(this.rootTreeRoute);
