@@ -14,6 +14,7 @@ from django.db.models import Subquery
 from django.db.models import UUIDField
 from django.db.models.functions import Cast
 from django.http import HttpResponse
+from django.http import HttpResponseBadRequest
 from django.http import HttpResponseForbidden
 from django.http import HttpResponseNotFound
 from django.shortcuts import redirect
@@ -367,6 +368,8 @@ def activate_channel_endpoint(request):
         channel = Channel.filter_edit_queryset(Channel.objects.all(), request.user).get(pk=data["channel_id"])
     except Channel.DoesNotExist:
         return HttpResponseNotFound("Channel not found")
+    if channel.staging_tree is None:
+        return HttpResponseBadRequest('Channel is not staged')
     try:
         activate_channel(channel, request.user)
     except PermissionDenied as e:
