@@ -559,7 +559,7 @@ class ChannelViewSet(ValuesViewset):
                 attributes,
                 tags,
                 files,
-                tags,
+                assessment_items,
                 progress_tracker=progress_tracker,
             )
 
