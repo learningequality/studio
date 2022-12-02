@@ -164,90 +164,103 @@ export function uploadFileToStorage(
     });
 }
 
+/**
+ * @return {Promise<{uploadPromise: Promise, fileObject: Object}>}
+ */
 export function uploadFile(context, { file, preset = null } = {}) {
-  return new Promise((resolve, reject) => {
-    // 1. Get the checksum of the file
-    Promise.all([getHash(file), extractMetadata(file, preset)])
-      .then(([checksum, metadata]) => {
-        const file_format = file.name
-          .split('.')
-          .pop()
-          .toLowerCase();
-        // 2. Get the upload url
-        File.uploadUrl({
+  const file_format = file.name
+    .split('.')
+    .pop()
+    .toLowerCase();
+  const hashPromise = getHash(file).catch(() => Promise.reject(fileErrors.CHECKSUM_HASH_FAILED));
+  let checksum,
+    metadata = {};
+
+  return Promise.all([hashPromise, extractMetadata(file, preset)])
+    .then(([fileChecksum, fileMetadata]) => {
+      checksum = fileChecksum;
+      metadata = fileMetadata;
+
+      // 2. Get the upload url
+      return File.uploadUrl({
+        checksum,
+        size: file.size,
+        type: file.type,
+        name: file.name,
+        file_format,
+        ...metadata,
+      }).catch(error => {
+        let errorType = fileErrors.UPLOAD_FAILED;
+        if (error.response && error.response.status === 412) {
+          errorType = fileErrors.NO_STORAGE;
+        }
+        return Promise.reject(errorType);
+      }); // End get upload url
+    })
+    .then(data => {
+      const fileObject = {
+        ...data.file,
+        loaded: 0,
+        total: file.size,
+      };
+      context.commit('ADD_FILE', fileObject);
+
+      // Asynchronously generate file preview
+      setTimeout(() => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onloadend = () => {
+          if (reader.result) {
+            context.commit('ADD_FILE', {
+              id: data.file.id,
+              previewSrc: reader.result,
+            });
+          }
+        };
+      }, 0);
+
+      // 3. Upload file
+      const uploadPromise = context
+        .dispatch('uploadFileToStorage', {
+          id: fileObject.id,
           checksum,
-          size: file.size,
-          type: file.type,
-          name: file.name,
+          file,
           file_format,
-          ...metadata,
+          url: data['uploadURL'],
+          contentType: data['mimetype'],
+          mightSkip: data['might_skip'],
         })
-          .then(data => {
-            const fileObject = {
-              ...data.file,
-              loaded: 0,
-              total: file.size,
-            };
-            context.commit('ADD_FILE', fileObject);
-            // 3. Upload file
-            const promise = context
-              .dispatch('uploadFileToStorage', {
-                id: fileObject.id,
-                checksum,
-                file,
-                file_format,
-                url: data['uploadURL'],
-                contentType: data['mimetype'],
-                mightSkip: data['might_skip'],
-              })
-              .catch(() => {
-                context.commit('ADD_FILE', {
-                  id: fileObject.id,
-                  loaded: 0,
-                  error: fileErrors.UPLOAD_FAILED,
-                });
-                return fileErrors.UPLOAD_FAILED;
-              }); // End upload file
-            // Resolve with a summary of the uploaded file
-            // and a promise that can be chained from for file
-            // upload completion
-            resolve({ fileObject, promise });
-            // Asynchronously generate file preview
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onloadend = () => {
-              if (reader.result) {
-                context.commit('ADD_FILE', {
-                  id: data.file.id,
-                  previewSrc: reader.result,
-                });
-              }
-            };
-          })
-          .catch(error => {
-            let errorType = fileErrors.UPLOAD_FAILED;
-            if (error.response && error.response.status === 412) {
-              errorType = fileErrors.NO_STORAGE;
-            }
-            const fileObject = {
-              checksum,
-              loaded: 0,
-              total: file.size,
-              file_size: file.size,
-              original_filename: file.name,
-              file_format,
-              preset: metadata.preset,
-              error: errorType,
-            };
-            context.commit('ADD_FILE', fileObject);
-            // Resolve with a summary of the uploaded file
-            resolve(fileObject);
-          }); // End get upload url
-      })
-      .catch(() => {
-        reject(fileErrors.CHECKSUM_HASH_FAILED);
-      }); // End get hash
-  });
+        .then(() => fileObject)
+        .catch(() => {
+          // Update vuex with failure
+          context.commit('ADD_FILE', {
+            id: fileObject.id,
+            loaded: 0,
+            error: fileErrors.UPLOAD_FAILED,
+          });
+          return Promise.reject(fileErrors.UPLOAD_FAILED);
+        });
+      // End upload file
+      return { fileObject, uploadPromise };
+    })
+    .catch(error => {
+      // If error isn't one of defined error constants, raise it
+      if (!Object.values(fileErrors).includes(error)) {
+        throw error;
+      }
+      const fileObject = {
+        checksum,
+        loaded: 0,
+        total: file.size,
+        file_size: file.size,
+        original_filename: file.name,
+        file_format,
+        preset: metadata.preset,
+        error,
+      };
+      context.commit('ADD_FILE', fileObject);
+      return { fileObject, uploadPromise: Promise.reject(error) };
+    });
 }
 
 export function getAudioData(context, url) {

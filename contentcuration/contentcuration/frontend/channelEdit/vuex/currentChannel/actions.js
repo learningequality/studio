@@ -51,7 +51,12 @@ export function deployCurrentChannel(context) {
   let payload = {
     channel_id: context.state.currentChannelId,
   };
-  return client.post(window.Urls.activate_channel(), payload);
+  return client.post(window.Urls.activate_channel(), payload).catch(e => {
+    // If response is 'Bad request', channel must already be activated
+    if (e.response && e.response.status === 400) {
+      return Promise.resolve();
+    }
+  });
 }
 
 export function publishChannel(context, version_notes) {

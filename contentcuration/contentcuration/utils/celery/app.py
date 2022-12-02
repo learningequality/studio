@@ -1,9 +1,11 @@
 import base64
 import json
 
+import redis.exceptions
 from celery import Celery
 
 from contentcuration.utils.celery.tasks import CeleryTask
+from contentcuration.utils.sentry import report_exception
 
 
 class CeleryApp(Celery):
@@ -50,9 +52,29 @@ class CeleryApp(Celery):
         :param queue_name: The queue name, defaults to the default "celery" queue
         :return: int
         """
-        with self.pool.acquire(block=True) as conn:
-            count = conn.default_channel.client.llen(queue_name)
+        count = 0
+        try:
+            with self.pool.acquire(block=True) as conn:
+                count = conn.default_channel.client.llen(queue_name)
+        except redis.exceptions.RedisError as e:
+            # log these so we can get visibility into the reliability of the redis connection
+            report_exception(e)
+            pass
         return count
+
+    def get_active_and_reserved_tasks(self):
+        """
+        Iterate over active and reserved tasks
+        :return: A list of dictionaries
+        """
+        active = self.control.inspect().active() or {}
+        for _, tasks in active.items():
+            for task in tasks:
+                yield task
+        reserved = self.control.inspect().reserved() or {}
+        for _, tasks in reserved.items():
+            for task in tasks:
+                yield task
 
     def decode_result(self, result, status=None):
         """
