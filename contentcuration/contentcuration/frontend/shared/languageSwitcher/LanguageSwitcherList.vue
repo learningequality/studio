@@ -129,6 +129,7 @@
     text-align: left;
   }
 
+  // this selector applies to the elements defined in KButtonGroup
   .dots :not(:first-child, :last-child)::after {
     display: inline-block;
     margin: 0 6px;
