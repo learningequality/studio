@@ -28,7 +28,7 @@ const client = axios.create({
   xsrfCookieName: 'csrftoken',
   xsrfHeaderName: 'X-CSRFToken',
   paramsSerializer: {
-    serializer: paramsSerializer,
+    serialize: paramsSerializer,
   },
 });
 
