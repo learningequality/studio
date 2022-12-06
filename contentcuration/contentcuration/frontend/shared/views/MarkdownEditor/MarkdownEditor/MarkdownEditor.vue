@@ -57,23 +57,19 @@
   import '../mathquill/mathquill.js';
   import 'codemirror/lib/codemirror.css';
   import '@toast-ui/editor/dist/toastui-editor.css';
-  import * as Showdown from 'showdown';
 
   import Editor from '@toast-ui/editor';
-  import { stripHtml } from 'string-strip-html';
 
   import imageUpload, { paramsToImageFieldHTML } from '../plugins/image-upload';
   import formulas from '../plugins/formulas';
   import minimize from '../plugins/minimize';
-  import formulaHtmlToMd from '../plugins/formulas/formula-html-to-md';
   import formulaMdToHtml from '../plugins/formulas/formula-md-to-html';
-  import imagesHtmlToMd from '../plugins/image-upload/image-html-to-md';
   import imagesMdToHtml from '../plugins/image-upload/image-md-to-html';
 
   import { CLASS_MATH_FIELD_ACTIVE } from '../constants';
   import { registerMarkdownFormulaField } from '../plugins/formulas/MarkdownFormulaField';
   import { registerMarkdownImageField } from '../plugins/image-upload/MarkdownImageField';
-  import { clearNodeFormat, getExtensionMenuPosition } from './utils';
+  import { clearNodeFormat, generateCustomConverter, getExtensionMenuPosition } from './utils';
   import FormulasMenu from './FormulasMenu/FormulasMenu';
   import ImagesMenu from './ImagesMenu/ImagesMenu';
   import ClickOutside from 'shared/directives/click-outside';
@@ -167,38 +163,7 @@
     mounted() {
       this.mathQuill = MathQuill.getInterface(2);
 
-      // This is currently the only way of inheriting and adjusting
-      // default TUI's convertor methods
-      // see https://github.com/nhn/tui.editor/issues/615
-      const tmpEditor = new Editor({
-        el: this.$refs.editor,
-      });
-      const showdown = new Showdown.Converter();
-      const Convertor = tmpEditor.convertor.constructor;
-      class CustomConvertor extends Convertor {
-        toMarkdown(content) {
-          content = imagesHtmlToMd(content);
-          content = formulaHtmlToMd(content);
-          content = showdown.makeMarkdown(content);
-          // TUI.editor sprinkles in extra `<br>` tags that Kolibri renders literally
-          // When showdown has already added linebreaks to render these in markdown
-          // so we just remove these here.
-          content = content.replaceAll('<br>', '');
-
-          // any copy pasted rich text that renders as HTML but does not get converted
-          // will linger here, so remove it as Kolibri will render it literally also.
-          content = stripHtml(content).result;
-          return content;
-        }
-        toHTML(content) {
-          // Kolibri and showdown assume double newlines for a single line break,
-          // wheras TUI.editor prefers single newline characters.
-          content = content.replaceAll('\n\n', '\n');
-          content = super.toHTML(content);
-          return content;
-        }
-      }
-      tmpEditor.remove();
+      const CustomConvertor = generateCustomConverter(this.$refs.editor);
 
       const createBoldButton = () => {
         {
