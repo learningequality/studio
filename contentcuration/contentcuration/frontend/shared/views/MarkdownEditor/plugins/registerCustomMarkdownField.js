@@ -102,10 +102,10 @@ export default VueComponent => {
             ''
           );
         }
-        this.parentNode.removeChild(this);
+        if (this.parentNode) {
+          this.parentNode.removeChild(this);
+        }
       });
-
-      this.editing = true;
 
       if (!hasLeftwardSpace(this)) {
         this.insertAdjacentText('beforebegin', '\xa0');
