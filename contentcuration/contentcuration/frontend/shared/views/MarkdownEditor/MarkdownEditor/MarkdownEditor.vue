@@ -233,8 +233,8 @@
         // https://github.com/nhn/tui.editor/blob/master/apps/editor/docs/custom-html-renderer.md
         customHTMLRenderer: {
           text(node) {
-            let content = formulaMdToHtml(node.literal);
-            content = imagesMdToHtml(content);
+            let content = formulaMdToHtml(node.literal, true);
+            content = imagesMdToHtml(content, true);
             return {
               type: 'html',
               content,

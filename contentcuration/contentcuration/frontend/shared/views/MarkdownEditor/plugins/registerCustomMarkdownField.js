@@ -107,8 +107,6 @@ export default VueComponent => {
         }
       });
 
-      this.editing = true;
-
       if (!hasLeftwardSpace(this)) {
         this.insertAdjacentText('beforebegin', '\xa0');
       }
