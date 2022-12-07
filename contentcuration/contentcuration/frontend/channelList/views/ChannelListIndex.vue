@@ -29,6 +29,7 @@
           v-for="listType in lists"
           :key="listType.id"
           :to="getChannelLink(listType)"
+          style="padding:5px;"
           @click="trackTabClick(listType)"
         >
           <VBadge :value="invitationsByListCounts[listType]" color="secondary">
@@ -38,10 +39,10 @@
             <span>{{ translateConstant(listType) }}</span>
           </VBadge>
         </VTab>
-        <VTab :to="catalogLink" @click="publicTabClick">
+        <VTab :to="catalogLink" style="padding:5px;" @click="publicTabClick">
           {{ $tr("catalog") }}
         </VTab>
-        <VTab :to="channelSetLink" @click="channelSetsTabClick">
+        <VTab :to="channelSetLink" style="padding:5px;" @click="channelSetsTabClick">
           {{ $tr("channelSets") }}
         </VTab>
       </template>
