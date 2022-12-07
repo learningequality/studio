@@ -78,6 +78,8 @@ urlpatterns = [
     re_path(r'^api/probers/get_prober_channel', views.get_prober_channel, name='get_prober_channel'),
     re_path(r'^api/probers/publishing_status', views.publishing_status, name='publishing_status'),
     re_path(r'^api/probers/celery_worker_status', views.celery_worker_status, name='celery_worker_status'),
+    re_path(r'^api/probers/task_queue_status', views.task_queue_status, name='task_queue_status'),
+    re_path(r'^api/probers/unapplied_changes_status', views.unapplied_changes_status, name='unapplied_changes_status'),
     re_path(r'^api/sync/$', SyncView.as_view(), name="sync"),
 ]
 

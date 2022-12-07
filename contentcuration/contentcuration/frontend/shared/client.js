@@ -1,3 +1,4 @@
+import omit from 'lodash/omit';
 import axios from 'axios';
 import qs from 'qs';
 import * as Sentry from '@sentry/vue';
@@ -26,7 +27,15 @@ export function paramsSerializer(params) {
 const client = axios.create({
   xsrfCookieName: 'csrftoken',
   xsrfHeaderName: 'X-CSRFToken',
-  paramsSerializer,
+  paramsSerializer: {
+    serialize: paramsSerializer,
+  },
+});
+
+// Track when the browser was last offline for error reporting purposes
+let lastOffline = null;
+window.addEventListener('offline', () => {
+  lastOffline = Date.now();
 });
 
 client.interceptors.response.use(
@@ -55,11 +64,12 @@ client.interceptors.response.use(
       // In dev build log warnings to console for developer use
       console.warn('AJAX Request Error: ' + message); // eslint-disable-line no-console
       console.warn('Error data: ', error); // eslint-disable-line no-console
-    } else {
+    } else if (error.code !== 'ECONNABORTED') {
       Sentry.withScope(function(scope) {
         scope.addAttachment({
           filename: 'error.json',
-          data: JSON.stringify(error),
+          // strip csrf token from headers
+          data: JSON.stringify(omit(error, ['config.headers.X-CSRFToken'])),
           contentType: 'application/json',
         });
         Sentry.captureException(new Error(message), {
@@ -68,6 +78,10 @@ client.interceptors.response.use(
               headers: error.config.headers,
               method: error.config.method,
               url,
+            },
+            Network: {
+              lastOffline: lastOffline ? `${Date.now() - lastOffline}ms ago` : 'never',
+              online: navigator.onLine,
             },
           },
         });

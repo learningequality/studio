@@ -14,6 +14,7 @@ from django.db.models import Subquery
 from django.db.models import UUIDField
 from django.db.models.functions import Cast
 from django.http import HttpResponse
+from django.http import HttpResponseBadRequest
 from django.http import HttpResponseForbidden
 from django.http import HttpResponseNotFound
 from django.shortcuts import redirect
@@ -171,6 +172,39 @@ def celery_worker_status(request):
     # should return dict with structure like:
     # {'celery@hostname': {'ok': 'pong'}}
     return Response(app.control.inspect().ping() or {})
+
+
+@api_view(["GET"])
+@authentication_classes((TokenAuthentication, SessionAuthentication))
+@permission_classes((IsAuthenticated,))
+def task_queue_status(request):
+    if not request.user.is_admin:
+        return HttpResponseForbidden()
+
+    from contentcuration.celery import app
+
+    return Response({
+        'queued_task_count': app.count_queued_tasks(),
+    })
+
+
+@api_view(["GET"])
+@authentication_classes((TokenAuthentication, SessionAuthentication))
+@permission_classes((IsAuthenticated,))
+def unapplied_changes_status(request):
+    if not request.user.is_admin:
+        return HttpResponseForbidden()
+
+    from contentcuration.celery import app
+
+    active_task_count = 0
+    for _ in app.get_active_and_reserved_tasks():
+        active_task_count += 1
+
+    return Response({
+        'active_task_count': active_task_count,
+        'unapplied_changes_count': Change.objects.filter(applied=False, errored=False).count(),
+    })
 
 
 """ END HEALTH CHECKS """
@@ -334,6 +368,8 @@ def activate_channel_endpoint(request):
         channel = Channel.filter_edit_queryset(Channel.objects.all(), request.user).get(pk=data["channel_id"])
     except Channel.DoesNotExist:
         return HttpResponseNotFound("Channel not found")
+    if channel.staging_tree is None:
+        return HttpResponseBadRequest('Channel is not staged')
     try:
         activate_channel(channel, request.user)
     except PermissionDenied as e:

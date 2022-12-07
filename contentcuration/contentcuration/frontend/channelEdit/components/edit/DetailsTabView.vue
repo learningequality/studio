@@ -705,10 +705,11 @@
           audioVideoFiles = this.nodeFiles.filter(file => this.allowedFileType(file));
           // return the last item in the array
           const file = audioVideoFiles[audioVideoFiles.length - 1];
-          return file.duration;
-        } else {
-          return null;
+          if (file) {
+            return file.duration;
+          }
         }
+        return null;
       },
       videoSelected() {
         return this.oneSelected && this.firstNode.kind === ContentKindsNames.VIDEO;

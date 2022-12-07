@@ -142,6 +142,9 @@ class AsyncTaskTestCase(TransactionTestCase):
         with allow_join_result():
             return async_result.get(timeout=timeout)
 
+    def test_app_count_queued_tasks(self):
+        self.assertIsInstance(app.count_queued_tasks(), int)
+
     def test_asynctask_reports_success(self):
         """
         Tests that when an async task is created and completed, the Task object has a status of 'SUCCESS' and
@@ -245,3 +248,17 @@ class AsyncTaskTestCase(TransactionTestCase):
         second_result = self._wait_for(second_async_result)
         self.assertIsNone(second_result)
         self.assertTrue(second_async_result.successful())
+
+    def test_revoke_task(self):
+        channel_id = uuid.uuid4()
+        async_result = test_task.enqueue(self.user, channel_id=channel_id)
+        test_task.revoke(channel_id=channel_id)
+
+        # this should raise an exception, even though revoked, because the task is in ready state but not success
+        with self.assertRaises(Exception):
+            self._wait_for(async_result)
+
+        try:
+            TaskResult.objects.get(task_id=async_result.task_id, status=states.REVOKED)
+        except TaskResult.DoesNotExist:
+            self.fail('Missing revoked task result')

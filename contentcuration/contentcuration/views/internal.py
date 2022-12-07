@@ -37,6 +37,7 @@ from contentcuration import ricecooker_versions as rc
 from contentcuration.api import activate_channel
 from contentcuration.api import write_file_to_storage
 from contentcuration.constants import completion_criteria
+from contentcuration.decorators import delay_user_storage_calculation
 from contentcuration.models import AssessmentItem
 from contentcuration.models import Change
 from contentcuration.models import Channel
@@ -54,7 +55,6 @@ from contentcuration.utils.nodes import map_files_to_assessment_item
 from contentcuration.utils.nodes import map_files_to_node
 from contentcuration.utils.nodes import map_files_to_slideshow_slide_item
 from contentcuration.utils.sentry import report_exception
-from contentcuration.utils.tracing import trace
 from contentcuration.viewsets.sync.constants import CHANNEL
 from contentcuration.viewsets.sync.utils import generate_publish_event
 from contentcuration.viewsets.sync.utils import generate_update_event
@@ -565,7 +565,7 @@ class IncompleteNodeError(Exception):
         super(IncompleteNodeError, self).__init__(self.message)
 
 
-@trace
+@delay_user_storage_calculation
 def convert_data_to_nodes(user, content_data, parent_node):
     """ Parse dict and create nodes accordingly """
     try:

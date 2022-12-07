@@ -63,7 +63,7 @@
 
   import FileDropzone from './FileDropzone';
   import FileStorage from './FileStorage';
-  import { fileErrors, MAX_FILE_SIZE } from 'shared/constants';
+  import { MAX_FILE_SIZE } from 'shared/constants';
   import { fileSizeMixin } from 'shared/mixins';
   import Alert from 'shared/views/Alert';
   import { FormatPresetsList } from 'shared/leUtils/FormatPresets';
@@ -193,16 +193,17 @@
           } else if (this.tooLargeFiles.length) {
             this.showTooLargeFilesAlert = true;
           }
-          return this.handleUploads(files).then(fileObjects => {
-            const objects = fileObjects.map(f => f.fileObject);
-            if (fileObjects.length) {
-              for (let ret of fileObjects) {
-                const fileObject = ret.fileObject;
-                ret.promise.then(err => {
-                  if (err !== fileErrors.UPLOAD_FAILED && isFunction(this.uploadCompleteHandler)) {
-                    this.uploadCompleteHandler(this.getFileUpload(fileObject.id));
-                  }
-                });
+          return this.handleUploads(files).then(fileUploads => {
+            const objects = fileUploads.map(f => f.fileObject).filter(f => !f.error);
+            if (fileUploads.length) {
+              for (let fileUpload of fileUploads) {
+                fileUpload.uploadPromise
+                  .then(fileObject => {
+                    if (isFunction(this.uploadCompleteHandler)) {
+                      this.uploadCompleteHandler(this.getFileUpload(fileObject.id));
+                    }
+                  })
+                  .catch(() => {});
               }
               if (isFunction(this.uploadingHandler)) {
                 this.uploadingHandler(this.allowMultiple ? objects : objects[0]);
@@ -220,9 +221,9 @@
           // need to distinguish between presets with same extension
           // (e.g. high res vs. low res videos)
           [...files].map(file => this.uploadFile({ file, preset: this.presetID }).catch(() => null))
-        ).then(fileObjects => {
+        ).then(fileUploads => {
           // Filter out any null values here
-          return fileObjects.filter(Boolean);
+          return fileUploads.filter(Boolean);
         });
       },
     },

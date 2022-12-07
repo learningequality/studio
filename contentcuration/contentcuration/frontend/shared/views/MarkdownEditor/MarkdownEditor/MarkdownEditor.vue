@@ -57,33 +57,25 @@
   import '../mathquill/mathquill.js';
   import 'codemirror/lib/codemirror.css';
   import '@toast-ui/editor/dist/toastui-editor.css';
-  import * as Showdown from 'showdown';
 
   import Editor from '@toast-ui/editor';
-  import debounce from 'lodash/debounce';
-  import { stripHtml } from 'string-strip-html';
 
   import imageUpload, { paramsToImageFieldHTML } from '../plugins/image-upload';
   import formulas from '../plugins/formulas';
   import minimize from '../plugins/minimize';
-  import formulaHtmlToMd from '../plugins/formulas/formula-html-to-md';
   import formulaMdToHtml from '../plugins/formulas/formula-md-to-html';
-  import imagesHtmlToMd from '../plugins/image-upload/image-html-to-md';
   import imagesMdToHtml from '../plugins/image-upload/image-md-to-html';
 
   import { CLASS_MATH_FIELD_ACTIVE } from '../constants';
   import { registerMarkdownFormulaField } from '../plugins/formulas/MarkdownFormulaField';
   import { registerMarkdownImageField } from '../plugins/image-upload/MarkdownImageField';
-  import { clearNodeFormat, getExtensionMenuPosition } from './utils';
-  import keyHandlers from './keyHandlers';
+  import { clearNodeFormat, generateCustomConverter, getExtensionMenuPosition } from './utils';
   import FormulasMenu from './FormulasMenu/FormulasMenu';
   import ImagesMenu from './ImagesMenu/ImagesMenu';
   import ClickOutside from 'shared/directives/click-outside';
 
   registerMarkdownFormulaField();
   registerMarkdownImageField();
-
-  const wrapWithSpaces = html => `&nbsp;${html}&nbsp;`;
 
   const AnalyticsActionMap = {
     Bold: 'Bold',
@@ -164,7 +156,6 @@
       markdown(newMd, previousMd) {
         if (newMd !== previousMd && newMd !== this.editor.getMarkdown()) {
           this.editor.setMarkdown(newMd);
-          this.updateCustomNodeSpacers();
           this.initImageFields();
         }
       },
@@ -172,36 +163,7 @@
     mounted() {
       this.mathQuill = MathQuill.getInterface(2);
 
-      // This is currently the only way of inheriting and adjusting
-      // default TUI's convertor methods
-      // see https://github.com/nhn/tui.editor/issues/615
-      const tmpEditor = new Editor({
-        el: this.$refs.editor,
-      });
-      const showdown = new Showdown.Converter();
-      const Convertor = tmpEditor.convertor.constructor;
-      class CustomConvertor extends Convertor {
-        toMarkdown(content) {
-          content = showdown.makeMarkdown(content);
-          content = imagesHtmlToMd(content);
-          content = formulaHtmlToMd(content);
-          content = content.replaceAll('&nbsp;', ' ');
-
-          // TUI.editor sprinkles in extra `<br>` tags that Kolibri renders literally
-          // any copy pasted rich text that renders as HTML but does not get converted
-          // will linger here, so remove it as Kolibri will render it literally also.
-          content = stripHtml(content).result;
-          return content;
-        }
-        toHTML(content) {
-          // Kolibri and showdown assume double newlines for a single line break,
-          // wheras TUI.editor prefers single newline characters.
-          content = content.replaceAll('\n\n', '\n');
-          content = super.toHTML(content);
-          return content;
-        }
-      }
-      tmpEditor.remove();
+      const CustomConvertor = generateCustomConverter(this.$refs.editor);
 
       const createBoldButton = () => {
         {
@@ -271,8 +233,8 @@
         // https://github.com/nhn/tui.editor/blob/master/apps/editor/docs/custom-html-renderer.md
         customHTMLRenderer: {
           text(node) {
-            let content = formulaMdToHtml(node.literal);
-            content = imagesMdToHtml(content);
+            let content = formulaMdToHtml(node.literal, true);
+            content = imagesMdToHtml(content, true);
             return {
               type: 'html',
               content,
@@ -306,35 +268,6 @@
       this.keyDownEventListener = this.$el.addEventListener('keydown', this.onKeyDown, true);
       this.clickEventListener = this.$el.addEventListener('click', this.onClick);
       this.editImageEventListener = this.$el.addEventListener('editImage', this.handleEditImage);
-
-      // Make sure all custom nodes have spacers around them.
-      // Note: this is debounced because it's called every keystroke
-      const editorEl = this.$refs.editor;
-      this.updateCustomNodeSpacers = debounce(() => {
-        editorEl.querySelectorAll('span[is]').forEach(el => {
-          el.editing = true;
-          const hasLeftwardSpace = el => {
-            return (
-              el.previousSibling &&
-              el.previousSibling.textContent &&
-              /\s$/.test(el.previousSibling.textContent)
-            );
-          };
-          const hasRightwardSpace = el => {
-            return (
-              el.nextSibling && el.nextSibling.textContent && /^\s/.test(el.nextSibling.textContent)
-            );
-          };
-          if (!hasLeftwardSpace(el)) {
-            el.insertAdjacentText('beforebegin', '\xa0');
-          }
-          if (!hasRightwardSpace(el)) {
-            el.insertAdjacentText('afterend', '\xa0');
-          }
-        });
-      }, 150);
-
-      this.updateCustomNodeSpacers();
     },
     activated() {
       this.editor.focus();
@@ -358,14 +291,8 @@
        * a recommended solution here https://github.com/neilj/Squire/issues/107
        */
       onKeyDown(event) {
-        const squire = this.editor.getSquire();
-
         // Apply squire selection workarounds
         this.fixSquireSelectionOnKeyDown(event);
-
-        if (event.key in keyHandlers) {
-          keyHandlers[event.key](squire);
-        }
 
         // ESC should close menus if any are open
         // or close the editor if none are open
@@ -413,8 +340,6 @@
           event.preventDefault();
           event.stopPropagation();
         }
-
-        this.updateCustomNodeSpacers();
       },
       onPaste(event) {
         const fragment = clearNodeFormat({
@@ -507,7 +432,7 @@
         const getRightwardElement = selection => getElementAtRelativeOffset(selection, 1);
 
         const getCharacterAtRelativeOffset = (selection, relativeOffset) => {
-          let { element, offset } = squire.getSelectionInfoByOffset(
+          const { element, offset } = squire.getSelectionInfoByOffset(
             selection.startContainer,
             selection.startOffset + relativeOffset
           );
@@ -529,27 +454,31 @@
           /\s$/.test(getCharacterAtRelativeOffset(selection, 0));
 
         const moveCursor = (selection, amount) => {
-          let { element, offset } = squire.getSelectionInfoByOffset(
-            selection.startContainer,
-            selection.startOffset + amount
-          );
-          if (amount > 0) {
-            selection.setStart(element, offset);
-          } else {
-            selection.setEnd(element, offset);
-          }
+          const element = getElementAtRelativeOffset(selection, amount);
+          selection.setStart(element, 0);
+          selection.setEnd(element, 0);
           return selection;
         };
 
-        // make sure Squire doesn't delete rightward custom nodes when 'backspace' is pressed
-        if (event.key !== 'ArrowRight' && event.key !== 'Delete') {
-          if (isCustomNode(getRightwardElement(selection))) {
+        const rightwardElement = getRightwardElement(selection);
+        const leftwardElement = getLeftwardElement(selection);
+
+        if (event.key === 'ArrowRight') {
+          if (isCustomNode(rightwardElement)) {
+            squire.setSelection(moveCursor(selection, 1));
+          } else if (spacerAndCustomElementAreRightward(selection)) {
+            squire.setSelection(moveCursor(selection, 2));
+          }
+        }
+        if (event.key === 'ArrowLeft') {
+          if (isCustomNode(leftwardElement)) {
             squire.setSelection(moveCursor(selection, -1));
+          } else if (spacerAndCustomElementAreLeftward(selection)) {
+            squire.setSelection(moveCursor(selection, -2));
           }
         }
         // make sure Squire doesn't get stuck with a broken cursor position when deleting
         // elements with `contenteditable="false"` in FireFox
-        let leftwardElement = getLeftwardElement(selection);
         if (event.key === 'Backspace') {
           if (selection.startContainer.tagName === 'DIV') {
             // This happens normally when deleting from the beginning of an empty line...
@@ -791,7 +720,6 @@
         } else {
           let squire = this.editor.getSquire();
           squire.insertHTML(formulaHTML);
-          this.updateCustomNodeSpacers();
         }
       },
       resetFormulasMenu() {
@@ -876,8 +804,7 @@
           const mdImageEl = template.content.firstElementChild;
           mdImageEl.setAttribute('editing', true);
 
-          // insert non-breaking spaces to allow users to write text before and after
-          this.editor.getSquire().insertHTML(wrapWithSpaces(mdImageEl.outerHTML));
+          this.editor.getSquire().insertHTML(mdImageEl.outerHTML);
 
           this.initImageFields();
         }
