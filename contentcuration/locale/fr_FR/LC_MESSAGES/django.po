@@ -934,4 +934,3 @@ msgstr "Rapport d'erreurs de Kolibri Studio"
 #: contentcuration/views/settings.py:144
 msgid "Kolibri Studio account deleted"
 msgstr "Compte Kolibri Studio supprimé"
-

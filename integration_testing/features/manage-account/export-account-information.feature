@@ -1,6 +1,6 @@
 Feature: Export account information
 
-	Background: 
+	Background:
 		Given I have a Studio account
 			And I am signed in to Studio
 			And I have interacted with various data and channels

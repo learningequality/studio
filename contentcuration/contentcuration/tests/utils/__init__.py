@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 import sys
-from .migration_test_case import *  # noqa
+
 import pytest
 from mixer.backend.django import mixer
+
+from .migration_test_case import *  # noqa
 from contentcuration.models import ContentNode
 
 # Mark the test class or function as a slow test, where we avoid running it

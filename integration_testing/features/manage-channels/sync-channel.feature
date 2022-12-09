@@ -1,10 +1,10 @@
-Feature: Sync resources		
+Feature: Sync resources
 	Studio users need to be able to sync and update the resources in their channels that have been imported from other channels, but have been modified since the original import.
 
 	Background:
 		Given I am signed in to Studio
 			And I am on the <channel_a> editor page
-			And there is a <resource> in the <channel_a> that has been imported from <channel_b>  
+			And there is a <resource> in the <channel_a> that has been imported from <channel_b>
 
 	Scenario: Sync resource file information
 		Given there is new version of the <resource> file in the <channel_b>
@@ -21,7 +21,7 @@ Feature: Sync resources
 		When I see the *Operation complete!* message
 			And I click the *Refresh button*
 		Then I see the new file version of the <resource>
-			Or I see the new thumbnail 
+			Or I see the new thumbnail
 
 	Scenario: Sync resource tags
 		Given the <resource> in the <channel_b> has a new tag
@@ -84,5 +84,5 @@ Feature: Sync resources
 			And I click the *Refresh button*
 		Then I see that my edits of title, description or tags for the <resource> have been reverted to reflect those on the <channel_b>
 
-	Examples: 
+	Examples:
 	| channel_a | channel_b | resource |

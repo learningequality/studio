@@ -1,6 +1,7 @@
 # Functions for recording various statistics
-import newrelic.agent
 from builtins import next
+
+import newrelic.agent
 from le_utils.constants import content_kinds
 
 

@@ -3,8 +3,8 @@ from le_utils.constants import licenses
 
 from contentcuration.models import ContentNode
 from contentcuration.utils.db_tools import create_channel
-from contentcuration.utils.db_tools import TreeBuilder
 from contentcuration.utils.db_tools import create_user
+from contentcuration.utils.db_tools import TreeBuilder
 
 LICENSE = licenses.SPECIAL_PERMISSIONS
 

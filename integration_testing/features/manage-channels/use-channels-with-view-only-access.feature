@@ -1,6 +1,6 @@
 Feature: Use channels with view-only access
 
-	Background: 
+	Background:
 		Given I am signed in to Studio
 			And I am on the <channel> editor page
 			And I have view-only permissions for <channel>
@@ -23,14 +23,14 @@ Feature: Use channels with view-only access
 			And I click on a *···* button for more options
 		Then I can see the *View details* option
 		When I select the *View details* option
-		Then I can see the *Topic* pane open on the right 
+		Then I can see the *Topic* pane open on the right
 			And I can see all the details for the <topic> topic
 
 	Scenario: View details for a resource
 		When I hover over a <kind> type of <resource> resource
 			And I click on a *···* button for more options
 			And I select the *View details* option
-		Then I can see the <kind> pane for the <resource> resource opens on the right 
+		Then I can see the <kind> pane for the <resource> resource opens on the right
 			And I can see all the details for the <resource> resource
 
 	Scenario: Copy topic or resource to the clipboard from *···* options

@@ -4448,14 +4448,14 @@ Heading for the section in the resource editing window","الاستكمال"
 ","ملفات غير مدعومة"
 "Uploader.unsupportedFilesText","{count, plural,
  =1 {# file will not be uploaded.}
- other {# files will not be uploaded.}} 
+ other {# files will not be uploaded.}}
  {extensionCount, plural,
  =1 {Supported file type is}
  other {Supported file types are}} {extensions}","
 -- CONTEXT --
 ","{count, plural, zero {# ملفات لن يتم تحميلها} one {# ملفات لن يتم تحميلها.} two {# ملفان لن يتم تحميلهما.} few {# ملفات لن يتم تحميلها.} many {# ملفاً لن يتم تحميله.}
  =1 {# ملفاً لن يتم تحميله.}
- other {# ملفات لن يتم تحميلها.}} 
+ other {# ملفات لن يتم تحميلها.}}
  {extensionCount, plural,
  =1 {نوع الملف المدعوم هو}
  other {أنواع الملفات المدعومة هي}} {extensions}"

@@ -1,8 +1,10 @@
 import sys
-# TODO: Investigate more precise timing libraries
 import time
 
-from contentcuration.models import ContentKind, ContentNode, File
+from contentcuration.models import ContentKind
+from contentcuration.models import ContentNode
+from contentcuration.models import File
+# TODO: Investigate more precise timing libraries
 
 def print_progress(text):
     sys.stdout.write("\r" + text)

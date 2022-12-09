@@ -26,4 +26,3 @@ Feature: Set up empty topic tree
 		When I click the *Finish* button
 		Then I am on the channel editor page
 			And I can click on the topic to see the created sub-topics
-			

@@ -1,6 +1,6 @@
 Feature: Go back from Review selections for import to channel list
 
-	Background: 
+	Background:
 		Given I am signed in to Studio
 			And I am on *My Channels > edit* page
 

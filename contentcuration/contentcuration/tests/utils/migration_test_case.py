@@ -1,5 +1,5 @@
-from django.db import connection
 from django.core import management
+from django.db import connection
 from django.db.migrations.executor import MigrationExecutor
 from django.test import TransactionTestCase
 

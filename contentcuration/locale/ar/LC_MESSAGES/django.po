@@ -938,4 +938,3 @@ msgstr "الإبلاغ عن مشكلة في استوديو كوليبري"
 #: contentcuration/views/settings.py:144
 msgid "Kolibri Studio account deleted"
 msgstr "تم حذف حساب استوديو كوليبري"
-

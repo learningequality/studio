@@ -1,4 +1,4 @@
-Feature: View new metadata in previewers across Studio
+Feature: View metadata in previewers across Studio
 	How the new metadata is laid out on previewers
 
 	Background: 

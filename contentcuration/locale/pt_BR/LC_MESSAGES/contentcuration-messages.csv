@@ -4279,7 +4279,7 @@ Heading for the section in the resource editing window","Conclusão"
 ","Excluír {topicCount, plural,
  one {}=1 {# pasta}
  other {# pastas}} e {resourceCount, plural,
- one {}=1 {# conteúdo} 
+ one {}=1 {# conteúdo}
  other {# conteúdos}}?"
 "TrashModal.deleteConfirmationText","You cannot undo this action. Are you sure you want to continue?","
 -- CONTEXT --
@@ -4415,14 +4415,14 @@ Heading for the section in the resource editing window","Conclusão"
 ","Arquivos não suportados"
 "Uploader.unsupportedFilesText","{count, plural,
  =1 {# file will not be uploaded.}
- other {# files will not be uploaded.}} 
+ other {# files will not be uploaded.}}
  {extensionCount, plural,
  =1 {Supported file type is}
  other {Supported file types are}} {extensions}","
 -- CONTEXT --
 ","{count, plural, one {}
  =1 {# arquivo não será enviado.}
- other {# arquivos não serão enviados.}} 
+ other {# arquivos não serão enviados.}}
  {extensionCount, plural,
  =1 {O tipo suportado de arquivo é}
  other {Os tipos suportados de arquivo são}} {extensions}"
