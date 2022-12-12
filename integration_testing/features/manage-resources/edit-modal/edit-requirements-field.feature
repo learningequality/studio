@@ -1,7 +1,7 @@
 Feature: Edit *Requirements* field
 	Across all file types
 
-	Background: 
+	Background:
 		Given I am signed into Studio
 			And I am in an editable channel with all resource types
 		When I right click <resource>

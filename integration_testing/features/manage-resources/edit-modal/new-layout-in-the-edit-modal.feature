@@ -1,7 +1,7 @@
 Feature: New layout in the edit modal
 	User can see new fields: learning level, learning activity, what you will need, duration, completion, for beginners, accessibility, and category
 
-	Background: 
+	Background:
 		Given I am signed into Studio
 			And I am in an editable channel
 			And I have added resources of type .pdf, .epub, .mp3, .mp4, .mov, .zip to the channel
@@ -22,7 +22,7 @@ Feature: New layout in the edit modal
 			And I see the *Thumbnail* section
 			And I see the *Audience* section
 			And I see the *Language* and *Visible to* drop-downs
-			And I see a *For beginners* checkbox 
+			And I see a *For beginners* checkbox
 			And I see the *Accessibility* section
 			And I see the following checkboxes there: *Includes alternative text description for images*, *Includes high contrast display for low vision*, *Tagged PDF*
 			And I see the *Source* section
@@ -44,7 +44,7 @@ Feature: New layout in the edit modal
 			And I see the *Thumbnail* section
 			And I see the *Audience* section
 			And I see the *Language* and *Visible to* drop-downs
-			And I see a *For beginners* checkbox 
+			And I see a *For beginners* checkbox
 			And I see the *Source* section
 			And I see the following fields there: *Author*, *Provider*, *Aggregator*, *License*
 			And I see the *Captions and subtitles* section
@@ -66,7 +66,7 @@ Feature: New layout in the edit modal
 			And I see the *Thumbnail* section
 			And I see the *Audience* section
 			And I see the *Language* and *Visible to* drop-downs
-			And I see a *For beginners* checkbox 
+			And I see a *For beginners* checkbox
 			And I see the *Accessibility* section with the following checkboxes: *Includes captions or subtitles*, *Includes audio descriptions*, *Includes sign language captions*
 			And I see the *Source* section
 			And I see the following fields there: *Author*, *Provider*, *Aggregator*, *License*, *Copyright holder*
@@ -87,7 +87,7 @@ Feature: New layout in the edit modal
 			And I see the *Thumbnail* section
 			And I see the *Audience* section
 			And I see the *Language* and *Visible to* drop-downs
-			And I see a *For beginners* checkbox 
+			And I see a *For beginners* checkbox
 			And I see the *Accessibility* section with the following checkbox: *Includes alternative text descriptions for images*
 			And I see the *Source* section
 			And I see the following fields there: *Author*, *Provider*, *Aggregator*, *License*, *Copyright holder*
@@ -109,7 +109,7 @@ Feature: New layout in the edit modal
 			And I see the *Thumbnail* section
 			And I see the *Audience* section
 			And I see the *Language* and *Visible to* drop-downs
-			And I see a *For beginners* checkbox 
+			And I see a *For beginners* checkbox
 			And I see the *Accessibility* section with the following checkboxes: *Includes alternative text descriptions for images*, *Includes high contrast text for learners with low vision*
 			And I see the *Source* section
 			And I see the following fields there: *Author*, *Provider*, *Aggregator*, *License*, *Copyright holder*
