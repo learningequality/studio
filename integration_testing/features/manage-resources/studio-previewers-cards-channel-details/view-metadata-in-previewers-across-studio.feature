@@ -21,12 +21,13 @@ Feature: View metadata in previewers across Studio
 		When I left-click a .MP4 or .MOV
 		Then I see the previewer panel
 			And I see a learning activity label
-			And I see text fields for: *Level*, *Learning activity*, *Completion*, *Category*, and *Accessibility*
+			And I see text fields for: *Level*, *Learning activity*, *Completion*, *Category*, *Accessibility*, , and *Captions and subtitles*
 
 	Scenario: View Practice previewer
 		When I left-click an exercise
 		Then I see the previewer panel
-			And I see a learning activity label
+		When I click the *Details* tab
+		Then I see a learning activity label
 			And I see text fields for: *Level*, *Learning activity*, *Completion*, *Category*, and *Accessibility*
 
 	Scenario: View previewer with multiple activities
