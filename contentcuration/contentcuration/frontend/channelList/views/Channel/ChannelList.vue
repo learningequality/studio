@@ -145,6 +145,7 @@
 
   .add-channel-button {
     margin: 0;
+    outline-offset: -2px !important;
   }
 
 </style>
