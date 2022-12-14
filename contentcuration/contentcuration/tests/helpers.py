@@ -2,6 +2,7 @@ from builtins import str
 from importlib import import_module
 
 import mock
+from celery import states
 from search.models import ContentNodeFullTextSearch
 
 from contentcuration.models import ContentNode
@@ -22,6 +23,7 @@ def clear_tasks(except_task_id=None):
         qs = qs.exclude(task_id=except_task_id)
     for task_id in qs.values_list("task_id", flat=True):
         app.control.revoke(task_id, terminate=True)
+    qs.update(status=states.REVOKED)
 
 
 def mock_class_instance(target):

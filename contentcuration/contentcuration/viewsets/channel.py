@@ -377,9 +377,18 @@ channel_field_map = {
 
 
 def _unpublished_changes_query(channel):
+    """
+    :param channel: Either an `OuterRef` or `Channel` object
+    :type channel: Channel|OuterRef
+    :return: QuerySet for unpublished changes
+    """
+    # double wrap the channel if it's an outer ref so that we can match the outermost channel
+    # to optimize query performance
+    channel_ref = OuterRef(channel) if isinstance(channel, OuterRef) else channel
+
     return Change.objects.filter(
         server_rev__gt=Coalesce(Change.objects.filter(
-            channel=OuterRef("channel"),
+            channel=channel_ref,
             change_type=PUBLISHED,
             errored=False
         ).values("server_rev").order_by("-server_rev")[:1], Value(0)),
@@ -488,7 +497,7 @@ class ChannelViewSet(ValuesViewset):
                             "publishing": False,
                             "primary_token": channel.get_human_token().token,
                             "last_published": channel.last_published,
-                            "unpublished_changes": _unpublished_changes_query(channel.id).exists()
+                            "unpublished_changes": _unpublished_changes_query(channel).exists()
                         }, channel_id=channel.id
                     ),
                 ], applied=True)

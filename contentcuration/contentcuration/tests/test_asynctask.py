@@ -1,6 +1,5 @@
 from __future__ import absolute_import
 
-import json
 import threading
 import uuid
 
@@ -143,6 +142,9 @@ class AsyncTaskTestCase(TransactionTestCase):
         with allow_join_result():
             return async_result.get(timeout=timeout)
 
+    def test_app_count_queued_tasks(self):
+        self.assertIsInstance(app.count_queued_tasks(), int)
+
     def test_asynctask_reports_success(self):
         """
         Tests that when an async task is created and completed, the Task object has a status of 'SUCCESS' and
@@ -191,18 +193,44 @@ class AsyncTaskTestCase(TransactionTestCase):
         self.assertEquals(result, 42)
         self.assertEquals(TaskResult.objects.filter(task_id=async_result.task_id).count(), 0)
 
-    def test_fetch_or_enqueue_task(self):
-        expected_task = TaskResult.objects.create(
-            task_id=uuid.uuid4().hex,
-            task_name=test_task.name,
-            status=states.PENDING,
-            user=self.user,
-            task_kwargs=json.dumps({
-                "is_test": True
-            }),
-        )
+    def test_enqueue_task_adds_result_with_necessary_info(self):
+        async_result = test_task.enqueue(self.user, is_test=True)
+        try:
+            task_result = TaskResult.objects.get(task_id=async_result.task_id)
+        except TaskResult.DoesNotExist:
+            self.fail('Missing task result')
 
+        self.assertEqual(task_result.task_name, test_task.name)
+        _, _, encoded_kwargs = test_task.backend.encode_content(dict(is_test=True))
+        self.assertEqual(task_result.task_kwargs, encoded_kwargs)
+
+    def test_fetch_or_enqueue_task(self):
+        expected_task = test_task.enqueue(self.user, is_test=True)
         async_result = test_task.fetch_or_enqueue(self.user, is_test=True)
+        self.assertEqual(expected_task.task_id, async_result.task_id)
+
+    def test_fetch_or_enqueue_task__channel_id(self):
+        channel_id = uuid.uuid4()
+        expected_task = test_task.enqueue(self.user, channel_id=channel_id)
+        async_result = test_task.fetch_or_enqueue(self.user, channel_id=channel_id)
+        self.assertEqual(expected_task.task_id, async_result.task_id)
+
+    def test_fetch_or_enqueue_task__channel_id__hex(self):
+        channel_id = uuid.uuid4()
+        expected_task = test_task.enqueue(self.user, channel_id=channel_id.hex)
+        async_result = test_task.fetch_or_enqueue(self.user, channel_id=channel_id.hex)
+        self.assertEqual(expected_task.task_id, async_result.task_id)
+
+    def test_fetch_or_enqueue_task__channel_id__hex_then_uuid(self):
+        channel_id = uuid.uuid4()
+        expected_task = test_task.enqueue(self.user, channel_id=channel_id.hex)
+        async_result = test_task.fetch_or_enqueue(self.user, channel_id=channel_id)
+        self.assertEqual(expected_task.task_id, async_result.task_id)
+
+    def test_fetch_or_enqueue_task__channel_id__uuid_then_hex(self):
+        channel_id = uuid.uuid4()
+        expected_task = test_task.enqueue(self.user, channel_id=channel_id)
+        async_result = test_task.fetch_or_enqueue(self.user, channel_id=channel_id.hex)
         self.assertEqual(expected_task.task_id, async_result.task_id)
 
     def test_requeue_task(self):
@@ -220,3 +248,17 @@ class AsyncTaskTestCase(TransactionTestCase):
         second_result = self._wait_for(second_async_result)
         self.assertIsNone(second_result)
         self.assertTrue(second_async_result.successful())
+
+    def test_revoke_task(self):
+        channel_id = uuid.uuid4()
+        async_result = test_task.enqueue(self.user, channel_id=channel_id)
+        test_task.revoke(channel_id=channel_id)
+
+        # this should raise an exception, even though revoked, because the task is in ready state but not success
+        with self.assertRaises(Exception):
+            self._wait_for(async_result)
+
+        try:
+            TaskResult.objects.get(task_id=async_result.task_id, status=states.REVOKED)
+        except TaskResult.DoesNotExist:
+            self.fail('Missing revoked task result')

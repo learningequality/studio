@@ -146,9 +146,10 @@ class CeleryTask(Task):
         """
         return self.AsyncResult(task_id)
 
-    def fetch_match(self, task_id, **kwargs):
+    def _fetch_match(self, task_id, **kwargs):
         """
-        Gets the result object for a task, assuming it was called async, and ensures it was called with kwargs
+        Gets the result object for a task, assuming it was called async, and ensures it was called with kwargs and
+        assumes that kwargs is has been decoded from an prepared form
         :param task_id: The hex task ID
         :param kwargs: The kwargs the task was called with, which must match when fetching
         :return: A CeleryAsyncResult
@@ -159,6 +160,12 @@ class CeleryTask(Task):
         if async_result.kwargs == kwargs:
             return async_result
         return None
+
+    def _prepare_kwargs(self, kwargs):
+        return self.backend.encode({
+            key: value.hex if isinstance(value, uuid.UUID) else value
+            for key, value in kwargs.items()
+        })
 
     def enqueue(self, user, **kwargs):
         """
@@ -176,19 +183,25 @@ class CeleryTask(Task):
             raise TypeError("All tasks must be assigned to a user.")
 
         task_id = uuid.uuid4().hex
-        channel_id = kwargs.get("channel_id")
+        prepared_kwargs = self._prepare_kwargs(kwargs)
+        transcoded_kwargs = self.backend.decode(prepared_kwargs)
+        channel_id = transcoded_kwargs.get("channel_id")
 
-        logging.info(f"Enqueuing task:id {self.name}:{task_id} for user:channel {user.pk}:{channel_id} | {kwargs}")
+        logging.info(f"Enqueuing task:id {self.name}:{task_id} for user:channel {user.pk}:{channel_id} | {prepared_kwargs}")
 
         # returns a CeleryAsyncResult
         async_result = self.apply_async(
             task_id=task_id,
-            kwargs=kwargs,
+            kwargs=transcoded_kwargs,
         )
+
         # ensure the result is saved to the backend (database)
         self.backend.add_pending_result(async_result)
+
         # after calling apply, we should have task result model, so get it and set our custom fields
         task_result = get_task_model(self, task_id)
+        task_result.task_name = self.name
+        task_result.task_kwargs = prepared_kwargs
         task_result.user = user
         task_result.channel_id = channel_id
         task_result.save()
@@ -207,9 +220,10 @@ class CeleryTask(Task):
         # if we're eagerly executing the task (synchronously), then we shouldn't check for an existing task because
         # implementations probably aren't prepared to rely on an existing asynchronous task
         if not self.app.conf.task_always_eager:
-            task_ids = self.find_incomplete_ids(**kwargs).order_by("date_created")[:1]
+            transcoded_kwargs = self.backend.decode(self._prepare_kwargs(kwargs))
+            task_ids = self.find_incomplete_ids(**transcoded_kwargs).order_by("date_created")[:1]
             if task_ids:
-                async_result = self.fetch_match(task_ids[0], **kwargs)
+                async_result = self._fetch_match(task_ids[0], **transcoded_kwargs)
                 if async_result:
                     logging.info(f"Fetched matching task {self.name} for user {user.pk} with id {async_result.id} | {kwargs}")
                     return async_result
@@ -231,6 +245,25 @@ class CeleryTask(Task):
         task_kwargs.update(kwargs)
         logging.info(f"Re-queuing task {self.name} for user {task_result.user.pk} from {request.id} | {task_kwargs}")
         return self.enqueue(task_result.user, **task_kwargs)
+
+    def revoke(self, exclude_task_ids=None, **kwargs):
+        """
+        Revokes and terminates all unready tasks matching the kwargs
+        :param exclude_task_ids: Any task ids to exclude from this behavior
+        :param kwargs: Task keyword arguments that will be used to match against tasks
+        :return: The number of tasks revoked
+        """
+        task_ids = self.find_incomplete_ids(**self.backend.decode(self._prepare_kwargs(kwargs)))
+        if exclude_task_ids is not None:
+            task_ids = task_ids.exclude(task_id__in=task_ids)
+        count = 0
+        for task_id in task_ids:
+            logging.info(f"Revoking task {task_id}")
+            self.app.control.revoke(task_id, terminate=True)
+            count += 1
+        # be sure the database backend has these marked appropriately
+        self.TaskModel.objects.filter(task_id__in=task_ids).update(status=states.REVOKED)
+        return count
 
 
 class CeleryAsyncResult(AsyncResult):

@@ -264,65 +264,82 @@ class IndexedDBResource {
       CHANGES_TABLE,
       () => {
         // Get any relevant changes that would be overwritten by this bulkPut
-        return db[CHANGES_TABLE].where('[table+key]')
+        const changesPromise = db[CHANGES_TABLE].where('[table+key]')
           .anyOf(itemData.map(datum => [this.tableName, this.getIdValue(datum)]))
-          .sortBy('rev', changes => {
-            changes = mergeAllChanges(changes, true);
-            const collectedChanges = collectChanges(changes)[this.tableName] || {};
-            for (let changeType of Object.keys(collectedChanges)) {
-              const map = {};
-              for (let change of collectedChanges[changeType]) {
-                map[change.key] = change;
-              }
-              collectedChanges[changeType] = map;
+          .sortBy('rev');
+        const currentPromise = this.table
+          .where(this.idField)
+          .anyOf(itemData.map(datum => this.getIdValue(datum)))
+          .toArray();
+
+        return Promise.all([changesPromise, currentPromise]).then(([changes, currents]) => {
+          changes = mergeAllChanges(changes, true);
+          const collectedChanges = collectChanges(changes)[this.tableName] || {};
+          for (let changeType of Object.keys(collectedChanges)) {
+            const map = {};
+            for (let change of collectedChanges[changeType]) {
+              map[change.key] = change;
             }
-            const data = itemData
-              .map(datum => {
-                datum[LAST_FETCHED] = now;
-                const id = this.getIdValue(datum);
-                // If we have an updated change, apply the modifications here
-                if (
-                  collectedChanges[CHANGE_TYPES.UPDATED] &&
-                  collectedChanges[CHANGE_TYPES.UPDATED][id]
-                ) {
-                  applyMods(datum, collectedChanges[CHANGE_TYPES.UPDATED][id].mods);
+            collectedChanges[changeType] = map;
+          }
+          const currentMap = {};
+          for (let currentObj of currents) {
+            currentMap[this.getIdValue(currentObj)] = currentObj;
+          }
+          const data = itemData
+            .map(datum => {
+              const id = this.getIdValue(datum);
+              datum[LAST_FETCHED] = now;
+              // Persist TASK_ID and COPYING_FLAG attributes when directly fetching from the server
+              if (currentMap[id] && currentMap[id][TASK_ID]) {
+                datum[TASK_ID] = currentMap[id][TASK_ID];
+              }
+              if (currentMap[id] && currentMap[id][COPYING_FLAG]) {
+                datum[COPYING_FLAG] = currentMap[id][COPYING_FLAG];
+              }
+              // If we have an updated change, apply the modifications here
+              if (
+                collectedChanges[CHANGE_TYPES.UPDATED] &&
+                collectedChanges[CHANGE_TYPES.UPDATED][id]
+              ) {
+                applyMods(datum, collectedChanges[CHANGE_TYPES.UPDATED][id].mods);
+              }
+              return datum;
+              // If we have a deleted change, just filter out this object so we don't reput it
+            })
+            .filter(
+              datum =>
+                !collectedChanges[CHANGE_TYPES.DELETED] ||
+                !collectedChanges[CHANGE_TYPES.DELETED][this.getIdValue(datum)]
+            );
+          return this.table.bulkPut(data).then(() => {
+            // Move changes need to be reapplied on top of fetched data in case anything
+            // has happened on the backend.
+            return applyChanges(Object.values(collectedChanges[CHANGE_TYPES.MOVED] || {})).then(
+              results => {
+                if (!results || !results.length) {
+                  return data;
                 }
-                return datum;
-                // If we have a deleted change, just filter out this object so we don't reput it
-              })
-              .filter(
-                datum =>
-                  !collectedChanges[CHANGE_TYPES.DELETED] ||
-                  !collectedChanges[CHANGE_TYPES.DELETED][this.getIdValue(datum)]
-              );
-            return this.table.bulkPut(data).then(() => {
-              // Move changes need to be reapplied on top of fetched data in case anything
-              // has happened on the backend.
-              return applyChanges(Object.values(collectedChanges[CHANGE_TYPES.MOVED] || {})).then(
-                results => {
-                  if (!results || !results.length) {
-                    return data;
-                  }
-                  const resultsMap = {};
-                  for (let result of results) {
-                    const id = this.getIdValue(result);
-                    resultsMap[id] = result;
-                  }
-                  return data
-                    .map(datum => {
-                      const id = this.getIdValue(datum);
-                      if (resultsMap[id]) {
-                        applyMods(datum, resultsMap[id]);
-                      }
-                      return datum;
-                      // Concatenate any unsynced created objects onto
-                      // the end of the returned objects
-                    })
-                    .concat(Object.values(collectedChanges[CHANGE_TYPES.CREATED]).map(c => c.obj));
+                const resultsMap = {};
+                for (let result of results) {
+                  const id = this.getIdValue(result);
+                  resultsMap[id] = result;
                 }
-              );
-            });
+                return data
+                  .map(datum => {
+                    const id = this.getIdValue(datum);
+                    if (resultsMap[id]) {
+                      applyMods(datum, resultsMap[id]);
+                    }
+                    return datum;
+                    // Concatenate any unsynced created objects onto
+                    // the end of the returned objects
+                  })
+                  .concat(Object.values(collectedChanges[CHANGE_TYPES.CREATED]).map(c => c.obj));
+              }
+            );
           });
+        });
       }
     );
   }
