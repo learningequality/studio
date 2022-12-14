@@ -1,7 +1,7 @@
 <template>
 
   <div>
-    <KButtonGroup style="margin-top: 8px;">
+    <KButtonGroup style="margin-top: 8px;" class="dots">
       <KIconButton
         icon="language"
         aria-hidden="true"
@@ -10,7 +10,7 @@
         @click="showLanguageModal = true"
       />
       <span
-        class="dotsSpan selected"
+        class="selected"
         :style="{ 'margin': '0' }"
         :title="selectedLanguage.english_name"
       >
@@ -22,7 +22,6 @@
         :text="language.lang_name"
         :title="language.english_name"
         class="lang"
-        :class="determineLangDirection(language.lang_direction)"
         appearance="basic-link"
         :style="{ 'margin': '0 2px' }"
         @click="switchLanguage(language.id)"
@@ -101,11 +100,6 @@
           .slice(0, this.numVisibleLanguages);
       },
     },
-    methods: {
-      determineLangDirection(direction) {
-        return (!this.$isRTL && direction) || (this.$isRTL && !direction) ? 'dotsRtl' : 'dots';
-      },
-    },
     $trs: {
       showMoreLanguagesSelector: 'More languages',
     },
@@ -135,30 +129,10 @@
     text-align: left;
   }
 
-  .dots:not(:last-child)::after {
-    // because it is a pseudo-element, text-decoration none only works with 'display: inline-block`
-    display: inline-block;
-    margin: 0 8px;
-    font-size: 14pt;
-    color: var(--v-grey-base);
-    text-decoration: none;
-    vertical-align: middle;
-    content: '•';
-  }
-
-  .dotsSpan::after {
+  // this selector applies to the elements defined in KButtonGroup
+  .dots :not(:first-child, :last-child)::after {
     display: inline-block;
     margin: 0 6px;
-    font-size: 14pt;
-    color: var(--v-grey-base);
-    text-decoration: none;
-    vertical-align: middle;
-    content: '•';
-  }
-
-  .dotsRtl:not(:last-child)::before {
-    display: inline-block;
-    margin: 0 8px;
     font-size: 14pt;
     color: var(--v-grey-base);
     text-decoration: none;

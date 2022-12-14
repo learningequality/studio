@@ -31,7 +31,7 @@ learningactivities:
 
 set-tsvectors:
 	python contentcuration/manage.py set_channel_tsvectors
-	python contentcuration/manage.py set_contentnode_tsvectors
+	python contentcuration/manage.py set_contentnode_tsvectors --published
 
 ###############################################################
 # END PRODUCTION COMMANDS #####################################

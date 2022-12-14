@@ -3,7 +3,9 @@ from importlib import import_module
 
 import mock
 from celery import states
+from search.models import ContentNodeFullTextSearch
 
+from contentcuration.models import ContentNode
 from contentcuration.models import TaskResult
 
 
@@ -40,6 +42,12 @@ def mock_class_instance(target):
         target_cls = getattr(module, target_name)
     else:
         target_cls = target
+
+    # ContentNode's node_fts field can be handled by Django when tests
+    # access the database but we mock it so that we don't need to query
+    # the database. By doing so we get faster test execution.
+    if type(target_cls) is ContentNode:
+        target_cls.node_fts = ContentNodeFullTextSearch()
 
     class MockClass(target_cls):
         def __new__(cls, *args, **kwargs):

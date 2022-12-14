@@ -14,7 +14,7 @@ attrs==19.3.0
     # via
     #   -r requirements.in
     #   jsonschema
-backoff==2.1.2
+backoff==2.2.1
     # via -r requirements.in
 backports-abc==0.5
     # via -r requirements.in
@@ -54,8 +54,6 @@ click-repl==0.2.0
     # via celery
 confusable-homoglyphs==3.2.0
     # via django-registration
-deprecated==1.2.13
-    # via redis
 django==3.2.14
     # via
     #   -r requirements.in
@@ -85,9 +83,9 @@ django-js-reverse==0.9.1
     # via -r requirements.in
 django-mathfilters==1.0.0
     # via -r requirements.in
-django-model-utils==4.2.0
+django-model-utils==4.3.1
     # via -r requirements.in
-django-mptt==0.13.4
+django-mptt==0.14.0
     # via -r requirements.in
 django-postmark==0.1.6
     # via -r requirements.in
@@ -97,7 +95,7 @@ django-redis==5.2.0
     # via -r requirements.in
 django-registration==3.3
     # via -r requirements.in
-django-s3-storage==0.13.9
+django-s3-storage==0.13.11
     # via -r requirements.in
 django-webpack-loader==0.7.0
     # via -r requirements.in
@@ -162,7 +160,7 @@ jmespath==0.10.0
     #   botocore
 jsonfield==3.1.0
     # via -r requirements.in
-jsonschema==4.16.0
+jsonschema==4.17.3
     # via -r requirements.in
 kombu==5.2.4
     # via celery
@@ -179,7 +177,7 @@ packaging==20.9
     #   redis
 pathlib==1.0.1
     # via -r requirements.in
-pillow==9.2.0
+pillow==9.3.0
     # via -r requirements.in
 progressbar2==3.55.0
     # via -r requirements.in
@@ -191,12 +189,12 @@ proto-plus==1.18.1
     # via
     #   google-cloud-error-reporting
     #   google-cloud-logging
-protobuf==3.17.0
+protobuf==3.18.3
     # via
     #   google-api-core
     #   googleapis-common-protos
     #   proto-plus
-psycopg2-binary==2.9.3
+psycopg2-binary==2.9.5
     # via -r requirements.in
 pyasn1==0.4.8
     # via
@@ -229,7 +227,7 @@ pytz==2022.1
     #   django
     #   django-postmark
     #   google-api-core
-redis==4.3.4
+redis==4.3.5
     # via
     #   -r requirements.in
     #   django-redis
@@ -257,7 +255,6 @@ six==1.16.0
     #   html5lib
     #   oauth2client
     #   progressbar2
-    #   protobuf
     #   python-dateutil
     #   python-utils
 sqlparse==0.4.1
@@ -276,8 +273,6 @@ wcwidth==0.2.5
     # via prompt-toolkit
 webencodings==0.5.1
     # via html5lib
-wrapt==1.14.1
-    # via deprecated
 zipp==3.4.1
     # via importlib-metadata
 
