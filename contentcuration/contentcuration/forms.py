@@ -7,6 +7,7 @@ from django.contrib.auth.forms import PasswordResetForm
 from django.contrib.auth.forms import UserChangeForm
 from django.contrib.auth.forms import UserCreationForm
 from django.core import signing
+from django.db.models import Q
 from django.template.loader import render_to_string
 
 from contentcuration.models import User
@@ -45,7 +46,7 @@ class RegistrationForm(UserCreationForm, ExtraFormMixin):
 
     def clean_email(self):
         email = self.cleaned_data['email'].strip().lower()
-        if User.objects.filter(email__iexact=email, is_active=True).exists():
+        if User.objects.filter(Q(is_active=True) | Q(deleted=True), email__iexact=email).exists():
             raise UserWarning
         return email
 
