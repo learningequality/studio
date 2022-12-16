@@ -174,7 +174,6 @@ packaging==20.9
     # via
     #   google-api-core
     #   google-cloud-error-reporting
-    #   redis
 pathlib==1.0.1
     # via -r requirements.in
 pillow==9.3.0
@@ -227,7 +226,7 @@ pytz==2022.1
     #   django
     #   django-postmark
     #   google-api-core
-redis==4.3.5
+redis==4.4.0
     # via
     #   -r requirements.in
     #   django-redis
