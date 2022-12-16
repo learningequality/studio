@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/vue';
 import debounce from 'lodash/debounce';
 import findLastIndex from 'lodash/findLastIndex';
 import get from 'lodash/get';
@@ -99,6 +100,20 @@ function handleDisallowed(response) {
   // that were rejected.
   const disallowed = get(response, ['data', 'disallowed'], []);
   if (disallowed.length) {
+    // Capture occurrences of the api disallowing changes
+    if (process.env.NODE_ENV === 'production') {
+      Sentry.withScope(function(scope) {
+        scope.addAttachment({
+          filename: 'disallowed.json',
+          data: JSON.stringify(disallowed),
+          contentType: 'application/json',
+        });
+        Sentry.captureException(new Error('/api/sync returned disallowed changes'));
+      });
+    } else {
+      console.warn('/api/sync returned disallowed changes:', disallowed); // eslint-disable-line no-console
+    }
+
     // Collect all disallowed
     const disallowedRevs = disallowed.map(d => Number(d.rev));
     // Set the return error data onto the changes - this will update the change
