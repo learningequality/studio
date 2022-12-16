@@ -9,7 +9,7 @@
       :right="$isRTL"
     >
       <VToolbar color="primary" dark>
-        <VBtn flat icon @click="drawer = false">
+        <VBtn flat icon :tabindex="handleclickTab" @click="drawer = false">
           <Icon>clear</Icon>
         </VBtn>
         <VToolbarTitle class="notranslate">
@@ -42,7 +42,7 @@
             <VListTileTitle>{{ $tr('settingsLink') }}</VListTileTitle>
           </VListTileContent>
         </VListTile>
-        <VListTile @click="showLanguageModal = true" :tabindex="handleclickTab">
+        <VListTile @click="showLanguageModal = true">
           <VListTileAction>
             <Icon>language</Icon>
           </VListTileAction>
@@ -50,10 +50,12 @@
             <VListTileTitle v-text="$tr('changeLanguage')" />
           </VListTileContent>
         </VListTile>
-        <VListTile :href="helpLink" 
-         :tabindex="handleclickTab" 
-         target="_blank"
-         @click="trackClick('Help')">
+        <VListTile
+          :href="helpLink" 
+          :tabindex="handleclickTab" 
+          target="_blank"
+          @click="trackClick('Help')"
+        >
           <VListTileAction>
             <Icon>open_in_new</Icon>
           </VListTileAction>
@@ -61,7 +63,7 @@
             <VListTileTitle>{{ $tr('helpLink') }}</VListTileTitle>
           </VListTileContent>
         </VListTile>
-        <VListTile @click="logout" :tabindex="handleclickTab">
+        <VListTile @click="logout">
           <VListTileAction>
             <Icon>exit_to_app</Icon>
           </VListTileAction>
@@ -128,6 +130,13 @@
       ...mapState({
         user: state => state.session.currentUser,
       }),
+      handleclickTab() {
+        if (this.value) {
+          return 0;
+        } else {
+          return -1;
+        }
+      },
       drawer: {
         get() {
           return this.value;
@@ -135,13 +144,6 @@
         set(value) {
           this.$emit('input', value);
         },
-        handleclickTab(){
-          if(this.value){
-            return 0;
-          }else{
-            return -1;
-          }
-        }
       },
       channelsLink() {
         return window.Urls.channels();
