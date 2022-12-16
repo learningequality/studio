@@ -9,7 +9,7 @@
       :right="$isRTL"
     >
       <VToolbar color="primary" dark>
-        <VBtn flat icon @click="drawer = false">
+        <VBtn flat icon :tabindex="handleclickTab" @click="drawer = false">
           <Icon>clear</Icon>
         </VBtn>
         <VToolbarTitle class="notranslate">
@@ -17,7 +17,7 @@
         </VToolbarTitle>
       </VToolbar>
       <VList>
-        <VListTile :href="channelsLink">
+        <VListTile :href="channelsLink" :tabindex="handleclickTab">
           <VListTileAction>
             <Icon>home</Icon>
           </VListTileAction>
@@ -25,7 +25,7 @@
             <VListTileTitle>{{ $tr('channelsLink') }}</VListTileTitle>
           </VListTileContent>
         </VListTile>
-        <VListTile v-if="user.is_admin" :href="administrationLink">
+        <VListTile v-if="user.is_admin" :href="administrationLink" :tabindex="handleclickTab">
           <VListTileAction>
             <Icon>people</Icon>
           </VListTileAction>
@@ -34,7 +34,7 @@
           </VListTileContent>
 
         </VListTile>
-        <VListTile :href="settingsLink" @click="trackClick('Settings')">
+        <VListTile :href="settingsLink" :tabindex="handleclickTab" @click="trackClick('Settings')">
           <VListTileAction>
             <Icon>settings</Icon>
           </VListTileAction>
@@ -50,7 +50,12 @@
             <VListTileTitle v-text="$tr('changeLanguage')" />
           </VListTileContent>
         </VListTile>
-        <VListTile :href="helpLink" target="_blank" @click="trackClick('Help')">
+        <VListTile
+          :href="helpLink" 
+          :tabindex="handleclickTab" 
+          target="_blank"
+          @click="trackClick('Help')"
+        >
           <VListTileAction>
             <Icon>open_in_new</Icon>
           </VListTileAction>
@@ -73,12 +78,14 @@
           :text="$tr('copyright', { year: new Date().getFullYear() })"
           href="https://learningequality.org/"
           target="_blank"
+          :tabindex="handleclickTab"
         />
         <p class="mt-4">
           <ActionLink
             href="https://community.learningequality.org/c/support/studio"
             target="_blank"
             :text="$tr('giveFeedback')"
+            :tabindex="handleclickTab"
           />
         </p>
       </VContainer>
@@ -123,6 +130,13 @@
       ...mapState({
         user: state => state.session.currentUser,
       }),
+      handleclickTab() {
+        if (this.value) {
+          return 0;
+        } else {
+          return -1;
+        }
+      },
       drawer: {
         get() {
           return this.value;
