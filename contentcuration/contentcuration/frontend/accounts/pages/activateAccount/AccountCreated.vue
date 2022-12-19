@@ -2,13 +2,7 @@
 
   <MessageLayout
     :header="$tr('accountCreatedTitle')"
-  >
-    <template #back>
-      <VBtn color="primary" :to="{ name: 'Main' }" large>
-        {{ $tr('continueToSignIn') }}
-      </VBtn>
-    </template>
-  </MessageLayout>
+  />
 
 </template>
 
@@ -24,7 +18,6 @@
     },
     $trs: {
       accountCreatedTitle: 'Account successfully created',
-      continueToSignIn: 'Continue to sign-in',
     },
   };
 

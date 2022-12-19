@@ -2,13 +2,7 @@
 
   <MessageLayout
     :header="$tr('accountDeletedTitle')"
-  >
-    <template #back>
-      <VBtn color="primary" :to="{ name: 'Main' }" large>
-        {{ $tr('continueToSignIn') }}
-      </VBtn>
-    </template>
-  </MessageLayout>
+  />
 
 </template>
 
@@ -24,7 +18,6 @@
     },
     $trs: {
       accountDeletedTitle: 'Account successfully deleted',
-      continueToSignIn: 'Continue to sign-in page',
     },
   };
 
