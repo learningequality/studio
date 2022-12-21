@@ -132,39 +132,45 @@
         </VSlideYTransition>
 
         <!-- Terms of service -->
-        <ActionLink
-          class="mt-4"
-          :text="$tr('viewToSLink')"
-          @click="showTermsOfService"
-        />
+
         <Checkbox
           v-model="form.accepted_tos"
-          :label="$tr('ToSCheck')"
+          :label="$tr('agreement')"
           required
           :rules="tosRules"
           :hide-details="false"
           class="my-1 policy-checkbox"
         />
+        <div class="span-spacing">
+          <span>
+            <ActionLink
+              :text="$tr('viewPrivacyPolicyLink')"
+              @click="showPrivacyPolicy"
+            />
 
-        <!-- Policy -->
-        <ActionLink
-          class="mt-2"
-          :text="$tr('viewPrivacyPolicyLink')"
-          @click="showPrivacyPolicy"
-        />
-        <Checkbox
-          v-model="form.accepted_policy"
-          :label="$tr('privacyPolicyCheck')"
-          required
-          :rules="policyRules"
-          :hide-details="false"
-          class="mb-3 mt-1 policy-checkbox"
-        />
+          </span>
+          <span> | </span>
+          <span>
+            <ActionLink
+              :text="$tr('viewToSLink')"
+              @click="showTermsOfService"
+            />
+          </span>
+        </div>
 
-        <p class="mb-4">
-          {{ $tr('contactMessage') }}
-        </p>
-        <VBtn color="primary" large :disabled="offline" type="submit">
+        <div class="mt-2 span-spacing">
+          <span>
+            {{ $tr('contactMessage') }}
+          </span>
+          <span>
+            <ActionLink
+              :text="$tr('contentlink')"
+              @click="showPrivacyPolicy"
+            />
+          </span>
+        </div>
+
+        <VBtn color="primary" large :disabled="offline" type="submit" class="mt-5">
           {{ $tr('finishButton') }}
         </VBtn>
       </VForm>
@@ -241,9 +247,7 @@
       tosRules() {
         return [value => (value ? true : this.$tr('ToSRequiredMessage'))];
       },
-      policyRules() {
-        return [value => (value ? true : this.$tr('privacyPolicyRequiredMessage'))];
-      },
+
       usageOptions() {
         return [
           {
@@ -492,15 +496,14 @@
       otherSourcePlaceholder: 'Please describe',
 
       // Privacy policy + terms of service
-      viewToSLink: 'View terms of service',
-      ToSCheck: 'I have read and agree to the terms of service',
+      viewToSLink: 'View Terms of Service',
       ToSRequiredMessage: 'Please accept our terms of service',
 
-      viewPrivacyPolicyLink: 'View privacy policy',
-      privacyPolicyCheck: 'I have read and agree to the privacy policy',
-      privacyPolicyRequiredMessage: 'Please accept our privacy policy',
-      contactMessage: 'Questions or concerns? Please email us at content@learningequality.org',
+      viewPrivacyPolicyLink: 'View Privacy Policy',
+      contactMessage: 'Questions or concerns? Please email us at ',
       finishButton: 'Finish',
+      contentlink: 'content@learningequality.org',
+      agreement: 'I have read and agree to terms of service and the privacy policy',
     },
   };
 
@@ -527,6 +530,15 @@
     padding: 8px;
     padding-right: 0;
     border: 0;
+  }
+
+  .span-spacing {
+    display: flex;
+    margin-left: 40px;
+  }
+
+  .span-spacing span {
+    margin-left: 5px;
   }
 
 </style>
