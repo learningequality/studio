@@ -1,8 +1,10 @@
+import json
 import re
 
 from django.db import transaction
 from django_bulk_update.helper import bulk_update
 from le_utils.constants import exercises
+from rest_framework import serializers
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.serializers import ValidationError
 
@@ -42,6 +44,10 @@ def get_filenames_from_assessment(assessment_item):
     # Get unique checksums in the assessment item text fields markdown
     # Coerce to a string, for Python 2, as the stored data is in unicode, and otherwise
     # the unicode char in the placeholder will not match
+    print("DEBUGGING AI")
+    print(assessment_item.question)
+    print(assessment_item.answers)
+    print("hints" + assessment_item.hints)
     return set(
         exercise_image_filename_regex.findall(
             str(
@@ -74,6 +80,8 @@ class AssessmentListSerializer(BulkListSerializer):
 class AssessmentItemSerializer(BulkModelSerializer):
     # This is set as editable=False on the model so by default DRF does not allow us
     # to set it.
+    hints = serializers.CharField(required=False)
+    answers = serializers.CharField(required=False)
     assessment_id = UUIDRegexField()
     contentnode = UserFilteredPrimaryKeyRelatedField(
         queryset=ContentNode.objects.all(), required=False
@@ -98,6 +106,26 @@ class AssessmentItemSerializer(BulkModelSerializer):
         # Use the contentnode and assessment_id as the lookup field for updates
         update_lookup_field = ("contentnode", "assessment_id")
 
+    def validate_answers(self, value):
+        answers = json.loads(value)
+        if answers is not []:
+            for answer in answers:
+                if not type(answer) is dict:
+                    self.fail('JSON Data Invalid for answers')
+
+                if not all(k in answer for k in ('answer', 'correct', 'order')):
+                    self.fail('Incorrect field in answers')
+
+    def validate_hints(self, value):
+        hints = json.loads(value)
+        print(hints)
+        for hint in hints:
+            if not type(hint) is dict:
+                self.fail('JSON Data Invalid for hints')
+
+            if not all(k in hint for k in ('hint', 'order')):
+                self.fail('Incorrect field in hints')
+
     def set_files(self, all_objects, all_validated_data=None):  # noqa C901
         files_to_delete = []
         files_to_update = {}
@@ -109,8 +137,7 @@ class AssessmentItemSerializer(BulkModelSerializer):
             # have had these fields modified.
             md_fields_modified = {
                 self.id_value_lookup(ai) for ai in all_validated_data
-                    if "question" in ai or "hints" in ai or "answers" in ai
-            }
+                if "question" in ai or "hints" in ai or "answers" in ai}
         else:
             # If this is a create operation, just check if these fields are not null.
             md_fields_modified = {
