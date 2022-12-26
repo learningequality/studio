@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 
+import json
 import uuid
 
 from django.urls import reverse
@@ -21,6 +22,7 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
     @property
     def assessmentitem_metadata(self):
         return {
+
             "assessment_id": uuid.uuid4().hex,
             "contentnode": self.channel.main_tree.get_descendants()
             .filter(kind_id=content_kinds.EXERCISE)
@@ -105,11 +107,14 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         image_file = testdata.fileobj_exercise_image()
         image_file.uploaded_by = self.user
         image_file.save()
-        answers = "![alt_text](${}/{}.{})".format(
+        answer = "![alt_text](${}/{}.{})".format(
             exercises.IMG_PLACEHOLDER, image_file.checksum, image_file.file_format_id
         )
 
-        assessmentitem["answers"] = answers
+        answers = [{'answer': answer, 'correct': False, 'order': 1}]
+
+        assessmentitem["answers"] = json.dumps(answers)
+
         response = self.sync_changes(
             [
                 generate_create_event(
@@ -120,6 +125,7 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
                 )
             ],
         )
+        print(response.data["errors"])
         self.assertEqual(response.status_code, 200, response.content)
         try:
             ai = models.AssessmentItem.objects.get(
@@ -139,11 +145,16 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         image_file = testdata.fileobj_exercise_image()
         image_file.uploaded_by = self.user
         image_file.save()
-        hints = "![alt_text](${}/{}.{})".format(
+        hint = "![alt_text](${}/{}.{})".format(
             exercises.IMG_PLACEHOLDER, image_file.checksum, image_file.file_format_id
         )
+        hints = [
+            {"hint": hint, "order": 1},
+        ]
 
+        hints = json.dumps(hints)
         assessmentitem["hints"] = hints
+
         response = self.sync_changes(
             [
                 generate_create_event(
@@ -154,6 +165,8 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
                 )
             ],
         )
+
+        print(response.data["errors"])
         self.assertEqual(response.status_code, 200, response.content)
         try:
             ai = models.AssessmentItem.objects.get(
@@ -497,6 +510,36 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
             self.fail("AssessmentItem 2 was not deleted")
         except models.AssessmentItem.DoesNotExist:
             pass
+
+    def test_valid_hints_assessmentitem(self):
+        self.client.force_authenticate(user=self.user)
+        assessmentitem = self.assessmentitem_metadata
+        hints = [
+            {"hint": "Hint 1", "order": 1},
+            {"hint": "Hint 2", "order": 2},
+            {"hint": "Hint 3", "order": 3},
+            {"hint": "Hint 4", "order": 4},
+
+        ]
+        hints = json.dumps(hints)
+        assessmentitem["hints"] = hints
+        response = self.sync_changes(
+            [
+                generate_create_event(
+                    [assessmentitem["contentnode"], assessmentitem["assessment_id"]],
+                    ASSESSMENTITEM,
+                    assessmentitem,
+                    channel_id=self.channel.id,
+                ),
+            ],
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        try:
+            models.AssessmentItem.objects.get(
+                assessment_id=assessmentitem["assessment_id"]
+            )
+        except models.AssessmentItem.DoesNotExist:
+            self.fail("AssessmentItem  was not created")
 
 
 class CRUDTestCase(StudioAPITestCase):
