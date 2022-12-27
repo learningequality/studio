@@ -39,7 +39,7 @@ class Command(BaseCommand):
                                               contentnode_tags=StringAgg("tags__tag_name", delimiter=" "),
                                               keywords_tsvector=CONTENTNODE_KEYWORDS_TSVECTOR,
                                               author_tsvector=CONTENTNODE_AUTHOR_TSVECTOR)
-                                    .filter(tsvector_not_already_inserted_query, tree_id=published_channel["main_tree__tree_id"])
+                                    .filter(tsvector_not_already_inserted_query, tree_id=published_channel["main_tree__tree_id"], published=True, complete=True)
                                     .values("id", "channel_id", "keywords_tsvector", "author_tsvector")
                                     .order_by())
 
