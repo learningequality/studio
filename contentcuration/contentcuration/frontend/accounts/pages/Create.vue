@@ -164,8 +164,9 @@
           </span>
           <span>
             <ActionLink
-              :text="$tr('contentlink')"
-              @click="showPrivacyPolicy"
+              class="btn-space-mobile-2"
+              :text="$tr('mailtolink')"
+              :href="`mailto:${email}`"
             />
           </span>
         </div>
@@ -217,6 +218,7 @@
         valid: true,
         registrationFailed: false,
         emailErrors: [],
+        email: 'content@learningequality.org',
         form: {
           first_name: '',
           last_name: '',
@@ -443,6 +445,7 @@
         return Promise.resolve();
       },
     },
+
     $trs: {
       backToLoginButton: 'Sign in',
       createAnAccountTitle: 'Create an account',
@@ -502,7 +505,7 @@
       viewPrivacyPolicyLink: 'View Privacy Policy',
       contactMessage: 'Questions or concerns? Please email us at ',
       finishButton: 'Finish',
-      contentlink: 'content@learningequality.org',
+      mailtolink: 'content@learningequality.org',
       agreement: 'I have read and agree to terms of service and the privacy policy',
     },
   };
@@ -538,7 +541,13 @@
   }
 
   .span-spacing span {
-    margin-left: 5px;
+    margin-left: 2px;
+    font-size: 16px;
+  }
+
+  .btn-space-mobile-2 {
+    position: absolute;
+    font-size: 16px;
   }
 
 </style>
