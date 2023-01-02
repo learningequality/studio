@@ -176,7 +176,7 @@ packaging==20.9
     #   google-cloud-error-reporting
 pathlib==1.0.1
     # via -r requirements.in
-pillow==9.3.0
+pillow==9.4.0
     # via -r requirements.in
 progressbar2==3.55.0
     # via -r requirements.in
