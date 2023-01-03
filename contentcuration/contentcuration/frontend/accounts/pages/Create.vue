@@ -15,7 +15,7 @@
     <h2 ref="top" class="mb-4 primary--text text-xs-center">
       {{ $tr('createAnAccountTitle') }}
     </h2>
-    <VLayout justify-center class="px-4">
+    <VLayout justify-center class="px-3">
       <VForm ref="form" v-model="valid" lazy-validation @submit.prevent="submit">
         <Banner :value="!valid" error class="mb-4">
           {{ registrationFailed ? $tr('registrationFailed') : $tr('errorsMessage') }}
@@ -159,16 +159,15 @@
         </div>
 
         <div class="mt-2 span-spacing">
-          <span>
+          <div class="align-items">
             {{ $tr('contactMessage') }}
-          </span>
-          <span>
+
             <ActionLink
-              class="btn-space-mobile-2"
+              class="span-spacing-email"
               :text="$tr('mailtolink')"
               :href="`mailto:${email}`"
             />
-          </span>
+          </div>
         </div>
 
         <VBtn color="primary" large :disabled="offline" type="submit" class="mt-5">
@@ -545,9 +544,13 @@
     font-size: 16px;
   }
 
-  .btn-space-mobile-2 {
-    position: absolute;
+  .span-spacing-email {
+    margin-left: 3px;
     font-size: 16px;
+  }
+
+  .align-items {
+    display: block;
   }
 
 </style>
