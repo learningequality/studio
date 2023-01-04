@@ -125,7 +125,6 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
                 )
             ],
         )
-        print(response.data["errors"])
         self.assertEqual(response.status_code, 200, response.content)
         try:
             ai = models.AssessmentItem.objects.get(
@@ -166,7 +165,6 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
             ],
         )
 
-        print(response.data["errors"])
         self.assertEqual(response.status_code, 200, response.content)
         try:
             ai = models.AssessmentItem.objects.get(
@@ -195,7 +193,7 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
                     ASSESSMENTITEM,
                     assessmentitem,
                     channel_id=self.channel.id,
-                )
+                ),
             ],
         )
         self.assertEqual(response.status_code, 200, response.content)
@@ -514,15 +512,7 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
     def test_valid_hints_assessmentitem(self):
         self.client.force_authenticate(user=self.user)
         assessmentitem = self.assessmentitem_metadata
-        hints = [
-            {"hint": "Hint 1", "order": 1},
-            {"hint": "Hint 2", "order": 2},
-            {"hint": "Hint 3", "order": 3},
-            {"hint": "Hint 4", "order": 4},
-
-        ]
-        hints = json.dumps(hints)
-        assessmentitem["hints"] = hints
+        assessmentitem["hints"] = json.dumps([{'hint': 'asdasdwdqasd', 'order': 1}, {'hint': 'testing the hint', 'order': 2}])
         response = self.sync_changes(
             [
                 generate_create_event(
@@ -540,6 +530,81 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
             )
         except models.AssessmentItem.DoesNotExist:
             self.fail("AssessmentItem  was not created")
+
+    def test_invalid_hints_assessmentitem(self):
+
+        self.client.force_authenticate(user=self.user)
+        assessmentitem = self.assessmentitem_metadata
+        assessmentitem["hints"] = json.dumps("test invalid string for hints")
+        response = self.sync_changes(
+            [
+                generate_create_event(
+                    [assessmentitem["contentnode"], assessmentitem["assessment_id"]],
+                    ASSESSMENTITEM,
+                    assessmentitem,
+                    channel_id=self.channel.id,
+                ),
+            ],
+        )
+
+        self.assertEqual(response.json()["errors"][0]["table"], "assessmentitem")
+        self.assertEqual(response.json()["errors"][0]["errors"]["hints"][0], "JSON Data Invalid for hints")
+        self.assertEqual(len(response.json()["errors"]), 1)
+
+        with self.assertRaises(models.AssessmentItem.DoesNotExist, msg="AssessmentItem was created"):
+            models.AssessmentItem.objects.get(
+                assessment_id=assessmentitem["assessment_id"]
+            )
+
+    def test_valid_answers_assessmentitem(self):
+        self.client.force_authenticate(user=self.user)
+        assessmentitem = self.assessmentitem_metadata
+        assessmentitem["answers"] = json.dumps([{'answer': 'test answer 1 :)', 'correct': False, 'order': 1},
+                                                {'answer': 'test answer 2 :)', 'correct': False, 'order': 2},
+                                                {'answer': 'test answer 3 :)', 'correct': True, 'order': 3}
+                                                ])
+        response = self.sync_changes(
+            [
+                generate_create_event(
+                    [assessmentitem["contentnode"], assessmentitem["assessment_id"]],
+                    ASSESSMENTITEM,
+                    assessmentitem,
+                    channel_id=self.channel.id,
+                ),
+            ],
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        try:
+            models.AssessmentItem.objects.get(
+                assessment_id=assessmentitem["assessment_id"]
+            )
+        except models.AssessmentItem.DoesNotExist:
+            self.fail("AssessmentItem  was not created")
+
+    def test_invalid_answers_assessmentitem(self):
+
+        self.client.force_authenticate(user=self.user)
+        assessmentitem = self.assessmentitem_metadata
+        assessmentitem["answers"] = json.dumps("test invalid string for answers")
+        response = self.sync_changes(
+            [
+                generate_create_event(
+                    [assessmentitem["contentnode"], assessmentitem["assessment_id"]],
+                    ASSESSMENTITEM,
+                    assessmentitem,
+                    channel_id=self.channel.id,
+                ),
+            ],
+        )
+
+        self.assertEqual(response.json()["errors"][0]["table"], "assessmentitem")
+        self.assertEqual(response.json()["errors"][0]["errors"]["answers"][0], "JSON Data Invalid for answers")
+        self.assertEqual(len(response.json()["errors"]), 1)
+
+        with self.assertRaises(models.AssessmentItem.DoesNotExist, msg="AssessmentItem was created"):
+            models.AssessmentItem.objects.get(
+                assessment_id=assessmentitem["assessment_id"]
+            )
 
 
 class CRUDTestCase(StudioAPITestCase):
