@@ -44,16 +44,14 @@ def get_filenames_from_assessment(assessment_item):
     # Get unique checksums in the assessment item text fields markdown
     # Coerce to a string, for Python 2, as the stored data is in unicode, and otherwise
     # the unicode char in the placeholder will not match
-    print("DEBUGGING AI")
-    print(assessment_item.question)
-    print(assessment_item.answers)
-    print("hints" + assessment_item.hints)
+    answers = json.loads(assessment_item.answers)
+    hints = json.loads(assessment_item.hints)
     return set(
         exercise_image_filename_regex.findall(
             str(
                 assessment_item.question
-                + assessment_item.answers
-                + assessment_item.hints
+                + str([a["answer"] for a in answers])
+                + str([h["hint"] for h in hints])
             )
         )
     )
@@ -108,23 +106,21 @@ class AssessmentItemSerializer(BulkModelSerializer):
 
     def validate_answers(self, value):
         answers = json.loads(value)
-        if answers is not []:
-            for answer in answers:
-                if not type(answer) is dict:
-                    self.fail('JSON Data Invalid for answers')
-
-                if not all(k in answer for k in ('answer', 'correct', 'order')):
-                    self.fail('Incorrect field in answers')
+        for answer in answers:
+            if not type(answer) is dict:
+                raise ValidationError('JSON Data Invalid for answers')
+            if not all(k in answer for k in ('answer', 'correct', 'order')):
+                raise ValidationError('Incorrect field in answers')
+        return value
 
     def validate_hints(self, value):
         hints = json.loads(value)
-        print(hints)
         for hint in hints:
             if not type(hint) is dict:
-                self.fail('JSON Data Invalid for hints')
-
+                raise ValidationError('JSON Data Invalid for hints')
             if not all(k in hint for k in ('hint', 'order')):
-                self.fail('Incorrect field in hints')
+                raise ValidationError('Incorrect field in hints')
+        return value
 
     def set_files(self, all_objects, all_validated_data=None):  # noqa C901
         files_to_delete = []
