@@ -27,10 +27,10 @@ def _prepare_keys(keys):
     limit = INT_64BIT if len(keys) == 1 else INT_32BIT
     new_keys = []
     for key in keys:
-        # if key is over the limit, convert to negative int
+        # if key is over the limit, convert to negative int since key should be unsigned int
         if key >= limit:
             key = limit - key
-        if abs(key) >= limit:
+        if key < -limit or key >= limit:
             raise OverflowError(f"Advisory lock key '{key}' is too large")
         new_keys.append(key)
     return new_keys
