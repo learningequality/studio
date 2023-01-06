@@ -161,12 +161,6 @@
         <div class="mt-2 span-spacing">
           <div class="align-items">
             {{ $tr('contactMessage') }}
-
-            <ActionLink
-              class="span-spacing-email"
-              :text="$tr('mailtolink')"
-              :href="`mailto:${email}`"
-            />
           </div>
         </div>
 
@@ -217,7 +211,6 @@
         valid: true,
         registrationFailed: false,
         emailErrors: [],
-        email: 'content@learningequality.org',
         form: {
           first_name: '',
           last_name: '',
@@ -502,9 +495,8 @@
       ToSRequiredMessage: 'Please accept our terms of service',
 
       viewPrivacyPolicyLink: 'View Privacy Policy',
-      contactMessage: 'Questions or concerns? Please email us at ',
+      contactMessage: 'Questions or concerns? Please email us at content@learningequality.org',
       finishButton: 'Finish',
-      mailtolink: 'content@learningequality.org',
       agreement: 'I have read and agree to terms of service and the privacy policy',
     },
   };
