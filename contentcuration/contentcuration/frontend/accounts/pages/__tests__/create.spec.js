@@ -62,7 +62,6 @@ function makeWrapper(formData) {
   });
   return wrapper;
 }
-
 function makeFailedPromise(statusCode) {
   return () => {
     return new Promise((resolve, reject) => {

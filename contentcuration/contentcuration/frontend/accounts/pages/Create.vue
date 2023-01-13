@@ -132,7 +132,6 @@
         </VSlideYTransition>
 
         <!-- Terms of service -->
-
         <Checkbox
           v-model="form.accepted_tos"
           :label="$tr('agreement')"
@@ -140,6 +139,7 @@
           :rules="tosRules"
           :hide-details="false"
           class="my-1 policy-checkbox"
+          @input="updateAcceptedAgreement"
         />
         <div class="span-spacing">
           <span>
@@ -240,6 +240,15 @@
       },
       tosRules() {
         return [value => (value ? true : this.$tr('ToSRequiredMessage'))];
+      },
+      acceptedAgreement: {
+        get() {
+          return this.form.accepted_tos && this.form.accepted_policy;
+        },
+        set(accepted) {
+          this.form.accepted_tos = accepted;
+          this.form.accepted_policy = accepted;
+        },
       },
 
       usageOptions() {
@@ -411,6 +420,9 @@
       showOtherField(id) {
         return id === uses.OTHER && this.form.uses.includes(id);
       },
+      updateAcceptedAgreement() {
+        this.acceptedAgreement = this.form.accepted_tos && this.form.accepted_policy;
+      },
 
       submit() {
         if (this.$refs.form.validate()) {
@@ -446,7 +458,6 @@
       registrationFailed: 'There was an error registering your account. Please try again',
       registrationFailedOffline:
         'You seem to be offline. Please connect to the internet to create an account.',
-
       // Basic information strings
       basicInformationHeader: 'Basic information',
       firstNameLabel: 'First name',
