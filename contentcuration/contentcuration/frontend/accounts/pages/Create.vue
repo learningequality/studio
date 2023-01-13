@@ -133,13 +133,12 @@
 
         <!-- Terms of service -->
         <Checkbox
-          v-model="form.accepted_tos"
+          v-model="acceptedAgreement"
           :label="$tr('agreement')"
           required
           :rules="tosRules"
           :hide-details="false"
           class="my-1 policy-checkbox"
-          @input="updateAcceptedAgreement"
         />
         <div class="span-spacing">
           <span>
@@ -420,10 +419,6 @@
       showOtherField(id) {
         return id === uses.OTHER && this.form.uses.includes(id);
       },
-      updateAcceptedAgreement() {
-        this.acceptedAgreement = this.form.accepted_tos && this.form.accepted_policy;
-      },
-
       submit() {
         if (this.$refs.form.validate()) {
           let cleanedData = this.clean(this.form);
