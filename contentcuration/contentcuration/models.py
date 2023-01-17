@@ -66,6 +66,7 @@ from rest_framework.utils.encoders import JSONEncoder
 
 from contentcuration.constants import channel_history
 from contentcuration.constants import completion_criteria
+from contentcuration.constants import user_history
 from contentcuration.constants.contentnode import kind_activity_map
 from contentcuration.db.models.expressions import Array
 from contentcuration.db.models.functions import ArrayRemove
@@ -200,6 +201,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     policies = JSONField(default=dict, null=True)
     feature_flags = JSONField(default=dict, null=True)
 
+    deleted = models.BooleanField(default=False, db_index=True)
+
     _field_updates = FieldTracker(fields=[
         # Field to watch for changes
         "disk_space",
@@ -213,27 +216,67 @@ class User(AbstractBaseUser, PermissionsMixin):
         return self.email
 
     def delete(self):
-        from contentcuration.viewsets.common import SQCount
-        # Remove any invitations associated to this account
-        self.sent_to.all().delete()
+        """
+        Soft deletes the user account.
+        """
+        self.deleted = True
+        # Deactivate the user to disallow authentication and also
+        # to let the user verify the email again after recovery.
+        self.is_active = False
+        self.save()
+        self.history.create(user_id=self.pk, action=user_history.DELETION)
 
-        # Delete channels associated with this user (if user is the only editor)
-        user_query = (
+    def recover(self):
+        """
+        Use this method when we want to recover a user.
+        """
+        self.deleted = False
+        self.save()
+        self.history.create(user_id=self.pk, action=user_history.RECOVERY)
+
+    def hard_delete_user_related_data(self):
+        """
+        Hard delete all user related data. But keeps the user record itself intact.
+
+        User related data that gets hard deleted are:
+            - sole editor non-public channels.
+            - sole editor non-public channelsets.
+            - sole editor non-public channels' content nodes and its underlying files that are not
+            used by any other channel.
+            - all user invitations.
+        """
+        from contentcuration.viewsets.common import SQCount
+
+        # Hard delete invitations associated to this account.
+        self.sent_to.all().delete()
+        self.sent_by.all().delete()
+
+        editable_channels_user_query = (
             User.objects.filter(editable_channels__id=OuterRef('id'))
                         .values_list('id', flat=True)
                         .distinct()
         )
-        self.editable_channels.annotate(num_editors=SQCount(user_query, field="id")).filter(num_editors=1).delete()
+        non_public_channels_sole_editor = self.editable_channels.annotate(num_editors=SQCount(
+            editable_channels_user_query, field="id")).filter(num_editors=1, public=False)
 
-        # Delete channel collections associated with this user (if user is the only editor)
+        # Point sole editor non-public channels' contentnodes to orphan tree to let
+        # our garbage collection delete the nodes and underlying files.
+        ContentNode._annotate_channel_id(ContentNode.objects).filter(channel_id__in=list(
+            non_public_channels_sole_editor.values_list("id", flat=True))).update(parent_id=settings.ORPHANAGE_ROOT_ID)
+
+        # Hard delete non-public channels associated with this user (if user is the only editor).
+        non_public_channels_sole_editor.delete()
+
+        # Hard delete non-public channel collections associated with this user (if user is the only editor).
         user_query = (
             User.objects.filter(channel_sets__id=OuterRef('id'))
                         .values_list('id', flat=True)
                         .distinct()
         )
-        self.channel_sets.annotate(num_editors=SQCount(user_query, field="id")).filter(num_editors=1).delete()
+        self.channel_sets.annotate(num_editors=SQCount(user_query, field="id")).filter(num_editors=1, public=False).delete()
 
-        super(User, self).delete()
+        # Create history!
+        self.history.create(user_id=self.pk, action=user_history.RELATED_DATA_HARD_DELETION)
 
     def can_edit(self, channel_id):
         return Channel.filter_edit_queryset(Channel.objects.all(), self).filter(pk=channel_id).exists()
@@ -405,18 +448,23 @@ class User(AbstractBaseUser, PermissionsMixin):
         return queryset.filter(pk=user.pk)
 
     @classmethod
-    def get_for_email(cls, email, **filters):
+    def get_for_email(cls, email, deleted=False, **filters):
         """
         Returns the appropriate User record given an email, ordered by:
          - those with is_active=True first, which there should only ever be one
          - otherwise by ID DESC so most recent inactive shoud be returned
 
+        Filters out deleted User records by default. To include both deleted and
+        undeleted user records pass None to the deleted argument.
+
         :param email: A string of the user's email
         :param filters: Additional filters to filter the User queryset
         :return: User or None
         """
-        return User.objects.filter(email__iexact=email.strip(), **filters)\
-            .order_by("-is_active", "-id").first()
+        user_qs = User.objects.filter(email__iexact=email.strip())
+        if deleted is not None:
+            user_qs = user_qs.filter(deleted=deleted)
+        return user_qs.filter(**filters).order_by("-is_active", "-id").first()
 
 
 class UUIDField(models.CharField):
@@ -1038,6 +1086,16 @@ class ChannelHistory(models.Model):
         ]
 
 
+class UserHistory(models.Model):
+    """
+    Model that stores the user's action history.
+    """
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=False, blank=False, related_name="history", on_delete=models.CASCADE)
+    action = models.CharField(max_length=32, choices=user_history.choices)
+
+    performed_at = models.DateTimeField(default=timezone.now)
+
+
 class ChannelSet(models.Model):
     # NOTE: this is referred to as "channel collections" on the front-end, but we need to call it
     # something else as there is already a ChannelCollection model on the front-end
@@ -1490,14 +1548,14 @@ class ContentNode(MPTTModel, models.Model):
                 "resource_size": 0,
                 "includes": {"coach_content": 0, "exercises": 0},
                 "kind_count": [],
-                "languages": "",
-                "accessible_languages": "",
-                "licenses": "",
+                "languages": [],
+                "accessible_languages": [],
+                "licenses": [],
                 "tags": [],
-                "copyright_holders": "",
-                "authors": "",
-                "aggregators": "",
-                "providers": "",
+                "copyright_holders": [],
+                "authors": [],
+                "aggregators": [],
+                "providers": [],
                 "sample_pathway": [],
                 "original_channels": [],
                 "sample_nodes": [],
@@ -1781,6 +1839,16 @@ class ContentNode(MPTTModel, models.Model):
         self.complete = not errors
         return errors
 
+    def make_content_id_unique(self):
+        """
+        If self is NOT an original contentnode (in other words, a copied contentnode)
+        and a contentnode with same content_id exists then we update self's content_id.
+        """
+        is_node_original = self.original_source_node_id is None or self.original_source_node_id == self.node_id
+        node_same_content_id = ContentNode.objects.exclude(pk=self.pk).filter(content_id=self.content_id)
+        if (not is_node_original) and node_same_content_id.exists():
+            ContentNode.objects.filter(pk=self.pk).update(content_id=uuid.uuid4().hex)
+
     def on_create(self):
         self.changed = True
         self.recalculate_editors_storage()
@@ -2055,6 +2123,28 @@ class AssessmentItem(models.Model):
 
         return queryset.filter(Q(view=True) | Q(edit=True) | Q(public=True))
 
+    def on_create(self):
+        """
+        When an exercise is added to a contentnode, update its content_id
+        if it's a copied contentnode.
+        """
+        self.contentnode.make_content_id_unique()
+
+    def on_update(self):
+        """
+        When an exercise is updated of a contentnode, update its content_id
+        if it's a copied contentnode.
+        """
+        self.contentnode.make_content_id_unique()
+
+    def delete(self, *args, **kwargs):
+        """
+        When an exercise is deleted from a contentnode, update its content_id
+        if it's a copied contentnode.
+        """
+        self.contentnode.make_content_id_unique()
+        return super(AssessmentItem, self).delete(*args, **kwargs)
+
 
 class SlideshowSlide(models.Model):
     contentnode = models.ForeignKey('ContentNode', related_name="slideshow_slides", blank=True, null=True,
@@ -2172,10 +2262,19 @@ class File(models.Model):
 
         return os.path.basename(self.file_on_disk.name)
 
+    def update_contentnode_content_id(self):
+        """
+        If the file is attached to a contentnode and is not a thumbnail
+        then update that contentnode's content_id if it's a copied contentnode.
+        """
+        if self.contentnode and self.preset.thumbnail is False:
+            self.contentnode.make_content_id_unique()
+
     def on_update(self):
         # since modified was added later as a nullable field to File, we don't use a default but
         # instead we'll just make sure it's always updated through our serializers
         self.modified = timezone.now()
+        self.update_contentnode_content_id()
 
     def save(self, set_by_file_on_disk=True, *args, **kwargs):
         """
@@ -2185,6 +2284,12 @@ class File(models.Model):
             2. fill the other fields accordingly
         """
         from contentcuration.utils.user import calculate_user_storage
+
+        # check if the file format exists in file_formats.choices
+        if self.file_format_id:
+            if self.file_format_id not in dict(file_formats.choices):
+                raise ValidationError("Invalid file_format")
+
         if set_by_file_on_disk and self.file_on_disk:  # if file_on_disk is supplied, hash out the file
             if self.checksum is None or self.checksum == "":
                 md5 = hashlib.md5()

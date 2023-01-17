@@ -34,6 +34,7 @@ from contentcuration.tasks import generateusercsv_task
 from contentcuration.utils.csv_writer import generate_user_csv_filename
 from contentcuration.utils.messages import get_messages
 from contentcuration.views.base import current_user_for_context
+from contentcuration.views.users import logout
 from contentcuration.viewsets.channel import SettingsChannelSerializer
 
 ISSUE_UPDATE_DATE = datetime(2018, 10, 29)
@@ -165,6 +166,7 @@ class DeleteAccountView(PostFormMixin, FormView):
             os.unlink(csv_path)
 
         self.request.user.delete()
+        logout(self.request)
 
 
 class StorageSettingsView(PostFormMixin, FormView):

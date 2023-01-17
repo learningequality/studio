@@ -7,19 +7,25 @@ import logging
 
 from celery import states
 from django.conf import settings
+from django.core.files.storage import default_storage
+from django.db.models import Subquery
 from django.db.models.expressions import CombinedExpression
+from django.db.models.expressions import Exists
 from django.db.models.expressions import F
+from django.db.models.expressions import OuterRef
 from django.db.models.expressions import Value
 from django.db.models.signals import post_delete
 from django.utils.timezone import now
 from le_utils.constants import content_kinds
 
 from contentcuration.constants import feature_flags
+from contentcuration.constants import user_history
 from contentcuration.db.models.functions import JSONObjectKeys
 from contentcuration.models import ContentNode
 from contentcuration.models import File
 from contentcuration.models import TaskResult
 from contentcuration.models import User
+from contentcuration.models import UserHistory
 
 
 class DisablePostDeleteSignal(object):
@@ -40,6 +46,48 @@ class DisablePostDeleteSignal(object):
 def get_deleted_chefs_root():
     deleted_chefs_node, _new = ContentNode.objects.get_or_create(pk=settings.DELETED_CHEFS_ROOT_ID, kind_id=content_kinds.TOPIC)
     return deleted_chefs_node
+
+
+def _clean_up_files(contentnode_ids):
+    """
+    Clean up the files (both in the DB and in object storage)
+    associated with the `contentnode_ids` iterable that are
+    not pointed by any other contentnode.
+    """
+    files = File.objects.filter(contentnode__in=contentnode_ids)
+    files_on_storage = files.values_list("file_on_disk", flat=True)
+
+    for disk_file_path in files_on_storage:
+        is_other_node_pointing = Exists(File.objects.filter(file_on_disk=disk_file_path).exclude(contentnode__in=contentnode_ids))
+        if not is_other_node_pointing:
+            default_storage.delete(disk_file_path)
+
+    # use _raw_delete for much fast file deletions
+    files._raw_delete(files.db)
+
+
+def clean_up_soft_deleted_users():
+    """
+    Hard deletes user related data for soft deleted users that are older than ACCOUNT_DELETION_BUFFER.
+
+    Note: User record itself is not hard deleted.
+
+    User related data that gets hard deleted are:
+        - sole editor non-public channels.
+        - sole editor non-public channelsets.
+        - sole editor non-public channels' content nodes and its underlying files that are not
+          used by any other channel.
+        - all user invitations.
+    """
+    account_deletion_buffer_delta = now() - datetime.timedelta(days=settings.ACCOUNT_DELETION_BUFFER)
+    user_latest_deletion_time_subquery = Subquery(UserHistory.objects.filter(user_id=OuterRef(
+        "id"), action=user_history.DELETION).values("performed_at").order_by("-performed_at")[:1])
+    users_to_delete = User.objects.annotate(latest_deletion_time=user_latest_deletion_time_subquery).filter(
+        deleted=True, latest_deletion_time__lt=account_deletion_buffer_delta)
+
+    for user in users_to_delete:
+        user.hard_delete_user_related_data()
+        logging.info("Hard deleted user related data for user {}.".format(user.email))
 
 
 def clean_up_deleted_chefs():
@@ -81,7 +129,7 @@ def clean_up_contentnodes(delete_older_than=settings.ORPHAN_DATE_CLEAN_UP_THRESH
 
     # delete all files first
     with DisablePostDeleteSignal():
-        clean_up_files(nodes_to_clean_up)
+        _clean_up_files(nodes_to_clean_up)
 
     # Use _raw_delete for fast bulk deletions
     try:
@@ -90,32 +138,6 @@ def clean_up_contentnodes(delete_older_than=settings.ORPHAN_DATE_CLEAN_UP_THRESH
         logging.info("Deleted {} node(s) from the orphanage tree".format(count))
     except ContentNode.DoesNotExist:
         pass
-
-
-def clean_up_files(contentnode_ids):
-    """
-    Clean up the files (both in the DB and in object storage)
-    associated with the contentnode_ids given in the `contentnode_ids`
-    iterable.
-    """
-
-    # get all file objects associated with these contentnodes
-    files = File.objects.filter(contentnode__in=contentnode_ids)
-    # get all their associated real files in object storage
-    files_on_storage = files.values_list("file_on_disk")
-    for f in files_on_storage:
-        # values_list returns each set of items in a tuple, even
-        # if there's only one item in there. Extract the file_on_disk
-        # string value from inside that singleton tuple
-        f[0]
-        # NOTE (aron):call the storage's delete method on each file, one by one
-        # disabled for now until we implement logic to not delete files
-        # that are referenced by non-orphan nodes
-        # storage.delete(file_path)
-
-    # finally, remove the entries from object storage
-    # use _raw_delete for much fast file deletions
-    files._raw_delete(files.db)
 
 
 def clean_up_feature_flags():
