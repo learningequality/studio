@@ -12,6 +12,7 @@ from le_utils.constants import content_kinds
 from mptt.managers import TreeManager
 from mptt.signals import node_moved
 
+from contentcuration.constants.locking import TREE_LOCK
 from contentcuration.db.advisory_lock import advisory_lock
 from contentcuration.db.models.query import CustomTreeQuerySet
 from contentcuration.utils.cache import ResourceSizeCache
@@ -32,7 +33,6 @@ logging = logger.getLogger(__name__)
 # The exact optimum batch size is probably highly dependent on tree
 # topology also, so these rudimentary tests are likely insufficient
 BATCH_SIZE = 100
-TREE_LOCK = 1001
 
 
 class CustomManager(Manager.from_queryset(CTEQuerySet)):
