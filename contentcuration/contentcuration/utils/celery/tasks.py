@@ -4,6 +4,7 @@ import logging
 import math
 import uuid
 import zlib
+from collections import OrderedDict
 
 from celery import states
 from celery.app.task import Task
@@ -74,12 +75,17 @@ def get_task_model(ref, task_id):
 
 def generate_task_signature(task_name, task_kwargs=None, channel_id=None):
     """
+    :type task_name: str
+    :param task_kwargs: the celery encoded/serialized form of the task_kwargs dict
+    :type task_kwargs: str|None
+    :type channel_id: str|None
     :return: A hex string, md5
+    :rtype: str
     """
     md5 = hashlib.md5()
     md5.update(task_name.encode('utf-8'))
-    md5.update(str(task_kwargs or '').encode('utf-8'))
-    md5.update(str(channel_id or '').encode('utf-8'))
+    md5.update((task_kwargs or '').encode('utf-8'))
+    md5.update((channel_id or '').encode('utf-8'))
     return md5.hexdigest()
 
 
@@ -128,10 +134,10 @@ class CeleryTask(Task):
         """
         Prepares kwargs, converting UUID to their hex value
         """
-        return {
-            key: value.hex if isinstance(value, uuid.UUID) else value
+        return OrderedDict(
+            (key, value.hex if isinstance(value, uuid.UUID) else value)
             for key, value in kwargs.items()
-        }
+        )
 
     def _generate_signature(self, kwargs):
         """
