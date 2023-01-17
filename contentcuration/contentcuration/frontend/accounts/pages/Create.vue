@@ -131,12 +131,12 @@
           />
         </VSlideYTransition>
 
-        <!-- Terms of service -->
+        <!-- Agreements -->
         <Checkbox
           v-model="acceptedAgreement"
           :label="$tr('agreement')"
           required
-          :rules="tosRules"
+          :rules="tosAndPolicyRules"
           :hide-details="false"
           class="my-1 policy-checkbox"
         />
@@ -237,7 +237,7 @@
       passwordConfirmRules() {
         return [value => (this.form.password1 === value ? true : this.$tr('passwordMatchMessage'))];
       },
-      tosRules() {
+      tosAndPolicyRules() {
         return [value => (value ? true : this.$tr('ToSRequiredMessage'))];
       },
       acceptedAgreement: {
@@ -498,7 +498,7 @@
 
       // Privacy policy + terms of service
       viewToSLink: 'View Terms of Service',
-      ToSRequiredMessage: 'Please accept our terms of service',
+      ToSRequiredMessage: 'Please accept our terms of service and policy',
 
       viewPrivacyPolicyLink: 'View Privacy Policy',
       contactMessage: 'Questions or concerns? Please email us at content@learningequality.org',
@@ -522,6 +522,10 @@
     label {
       color: var(--v-grey-darken1) !important;
     }
+  }
+
+  .policy-checkbox /deep/ .v-messages {
+    margin-left: 40px;
   }
 
   iframe {
