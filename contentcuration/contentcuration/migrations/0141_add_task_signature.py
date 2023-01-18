@@ -5,6 +5,8 @@ from django.db import models
 
 class Migration(migrations.Migration):
 
+    replaces = [('django_celery_results', '0140_delete_task'),]
+
     def __init__(self, name, app_label):
         super(Migration, self).__init__(name, 'django_celery_results')
 
