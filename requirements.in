@@ -17,7 +17,7 @@ pathlib
 progressbar2==3.55.0
 python-postmark==0.5.8
 Django==3.2.14
-django-webpack-loader==0.7.0
+django-webpack-loader==1.8.0
 google-cloud-error-reporting
 google-cloud-storage
 django-s3-storage==0.13.11
