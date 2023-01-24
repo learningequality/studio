@@ -101,7 +101,7 @@ django-webpack-loader==0.7.0
     # via -r requirements.in
 djangorestframework==3.12.4
     # via -r requirements.in
-future==0.18.2
+future==0.18.3
     # via -r requirements.in
 google-api-core[grpc]==1.27.0
     # via
