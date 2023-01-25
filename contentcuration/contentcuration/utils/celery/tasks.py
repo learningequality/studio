@@ -1,11 +1,18 @@
+import contextlib
+import hashlib
 import logging
 import math
 import uuid
+import zlib
+from collections import OrderedDict
 
 from celery import states
 from celery.app.task import Task
 from celery.result import AsyncResult
+from django.db import transaction
 
+from contentcuration.constants.locking import TASK_LOCK
+from contentcuration.db.advisory_lock import advisory_lock
 from contentcuration.utils.sentry import report_exception
 
 
@@ -66,6 +73,22 @@ def get_task_model(ref, task_id):
     return ref.backend.TaskModel.objects.get_task(task_id)
 
 
+def generate_task_signature(task_name, task_kwargs=None, channel_id=None):
+    """
+    :type task_name: str
+    :param task_kwargs: the celery encoded/serialized form of the task_kwargs dict
+    :type task_kwargs: str|None
+    :type channel_id: str|None
+    :return: A hex string, md5
+    :rtype: str
+    """
+    md5 = hashlib.md5()
+    md5.update(task_name.encode('utf-8'))
+    md5.update((task_kwargs or '').encode('utf-8'))
+    md5.update((channel_id or '').encode('utf-8'))
+    return md5.hexdigest()
+
+
 class CeleryTask(Task):
     """
     This is set as the Task class on our Celery app, so to track progress on a task, mark it
@@ -107,35 +130,56 @@ class CeleryTask(Task):
         """
         return super(CeleryTask, self).shadow_name(*args, **kwargs)
 
-    def find_ids(self, channel_id=None, **kwargs):
+    def _prepare_kwargs(self, kwargs):
         """
-        :param channel_id:
-        :param kwargs: Keyword arguments sent to the task, which will be matched against
+        Prepares kwargs, converting UUID to their hex value
+        """
+        return OrderedDict(
+            (key, value.hex if isinstance(value, uuid.UUID) else value)
+            for key, value in kwargs.items()
+        )
+
+    def _generate_signature(self, kwargs):
+        """
+        :param kwargs: A dictionary of task kwargs
+        :return: An hex string representing an md5 hash of task metadata
+        """
+        prepared_kwargs = self._prepare_kwargs(kwargs)
+        return generate_task_signature(
+            self.name,
+            task_kwargs=self.backend.encode(prepared_kwargs),
+            channel_id=prepared_kwargs.get('channel_id')
+        )
+
+    @contextlib.contextmanager
+    def _lock_signature(self, signature):
+        """
+        Opens a transaction and creates an advisory lock for its duration, based off a crc32 hash to convert
+        the signature into an integer which postgres' lock function require
+        :param signature: An hex string representing an md5 hash of task metadata
+        """
+        with transaction.atomic():
+            # compute crc32 to turn signature into integer
+            key2 = zlib.crc32(signature.encode('utf-8'))
+            advisory_lock(TASK_LOCK, key2=key2)
+            yield
+
+    def find_ids(self, signature):
+        """
+        :param signature: An hex string representing an md5 hash of task metadata
         :return: A TaskResult queryset
         :rtype: django.db.models.query.QuerySet
         """
-        task_qs = self.TaskModel.objects.filter(task_name=self.name)
+        return self.TaskModel.objects.filter(signature=signature)\
+            .values_list("task_id", flat=True)
 
-        # add channel filter since we have dedicated field
-        if channel_id:
-            task_qs = task_qs.filter(channel_id=channel_id)
-        else:
-            task_qs = task_qs.filter(channel_id__isnull=True)
-
-        # search for task args in values
-        for value in kwargs.values():
-            task_qs = task_qs.filter(task_kwargs__contains=self.backend.encode(value))
-
-        return task_qs.values_list("task_id", flat=True)
-
-    def find_incomplete_ids(self, channel_id=None, **kwargs):
+    def find_incomplete_ids(self, signature):
         """
-        :param channel_id:
-        :param kwargs:
+        :param signature: An hex string representing an md5 hash of task metadata
         :return: A TaskResult queryset
         :rtype: django.db.models.query.QuerySet
         """
-        return self.find_ids(channel_id=channel_id, **kwargs).exclude(status__in=states.READY_STATES)
+        return self.find_ids(signature).filter(status__in=states.UNREADY_STATES)
 
     def fetch(self, task_id):
         """
@@ -145,27 +189,6 @@ class CeleryTask(Task):
         :rtype: CeleryAsyncResult
         """
         return self.AsyncResult(task_id)
-
-    def _fetch_match(self, task_id, **kwargs):
-        """
-        Gets the result object for a task, assuming it was called async, and ensures it was called with kwargs and
-        assumes that kwargs is has been decoded from an prepared form
-        :param task_id: The hex task ID
-        :param kwargs: The kwargs the task was called with, which must match when fetching
-        :return: A CeleryAsyncResult
-        :rtype: CeleryAsyncResult
-        """
-        async_result = self.fetch(task_id)
-        # the task kwargs are serialized in the DB so just ensure that args actually match
-        if async_result.kwargs == kwargs:
-            return async_result
-        return None
-
-    def _prepare_kwargs(self, kwargs):
-        return self.backend.encode({
-            key: value.hex if isinstance(value, uuid.UUID) else value
-            for key, value in kwargs.items()
-        })
 
     def enqueue(self, user, **kwargs):
         """
@@ -182,17 +205,20 @@ class CeleryTask(Task):
         if user is None or not isinstance(user, User):
             raise TypeError("All tasks must be assigned to a user.")
 
+        signature = kwargs.pop('signature', None)
+        if signature is None:
+            signature = self._generate_signature(kwargs)
+
         task_id = uuid.uuid4().hex
         prepared_kwargs = self._prepare_kwargs(kwargs)
-        transcoded_kwargs = self.backend.decode(prepared_kwargs)
-        channel_id = transcoded_kwargs.get("channel_id")
+        channel_id = prepared_kwargs.get("channel_id")
 
-        logging.info(f"Enqueuing task:id {self.name}:{task_id} for user:channel {user.pk}:{channel_id} | {prepared_kwargs}")
+        logging.info(f"Enqueuing task:id {self.name}:{task_id} for user:channel {user.pk}:{channel_id} | {signature}")
 
         # returns a CeleryAsyncResult
         async_result = self.apply_async(
             task_id=task_id,
-            kwargs=transcoded_kwargs,
+            kwargs=prepared_kwargs,
         )
 
         # ensure the result is saved to the backend (database)
@@ -201,9 +227,10 @@ class CeleryTask(Task):
         # after calling apply, we should have task result model, so get it and set our custom fields
         task_result = get_task_model(self, task_id)
         task_result.task_name = self.name
-        task_result.task_kwargs = prepared_kwargs
+        task_result.task_kwargs = self.backend.encode(prepared_kwargs)
         task_result.user = user
         task_result.channel_id = channel_id
+        task_result.signature = signature
         task_result.save()
         return async_result
 
@@ -219,16 +246,24 @@ class CeleryTask(Task):
         """
         # if we're eagerly executing the task (synchronously), then we shouldn't check for an existing task because
         # implementations probably aren't prepared to rely on an existing asynchronous task
-        if not self.app.conf.task_always_eager:
-            transcoded_kwargs = self.backend.decode(self._prepare_kwargs(kwargs))
-            task_ids = self.find_incomplete_ids(**transcoded_kwargs).order_by("date_created")[:1]
+        if self.app.conf.task_always_eager:
+            return self.enqueue(user, **kwargs)
+
+        signature = self._generate_signature(kwargs)
+
+        # create an advisory lock to obtain exclusive control on preventing task duplicates
+        with self._lock_signature(signature):
+            # order by most recently created
+            task_ids = self.find_incomplete_ids(signature).order_by("-date_created")[:1]
             if task_ids:
-                async_result = self._fetch_match(task_ids[0], **transcoded_kwargs)
-                if async_result:
-                    logging.info(f"Fetched matching task {self.name} for user {user.pk} with id {async_result.id} | {kwargs}")
+                async_result = self.fetch(task_ids[0])
+                # double check
+                if async_result and async_result.status not in states.READY_STATES:
+                    logging.info(f"Fetched matching task {self.name} for user {user.pk} with id {async_result.id} | {signature}")
                     return async_result
-        logging.info(f"Didn't fetch matching task {self.name} for user {user.pk} | {kwargs}")
-        return self.enqueue(user, **kwargs)
+            logging.info(f"Didn't fetch matching task {self.name} for user {user.pk} | {signature}")
+            kwargs.update(signature=signature)
+            return self.enqueue(user, **kwargs)
 
     def requeue(self, **kwargs):
         """
@@ -243,8 +278,9 @@ class CeleryTask(Task):
         task_result = get_task_model(self, request.id)
         task_kwargs = request.kwargs.copy()
         task_kwargs.update(kwargs)
-        logging.info(f"Re-queuing task {self.name} for user {task_result.user.pk} from {request.id} | {task_kwargs}")
-        return self.enqueue(task_result.user, **task_kwargs)
+        signature = self._generate_signature(kwargs)
+        logging.info(f"Re-queuing task {self.name} for user {task_result.user.pk} from {request.id} | {signature}")
+        return self.enqueue(task_result.user, signature=signature, **task_kwargs)
 
     def revoke(self, exclude_task_ids=None, **kwargs):
         """
@@ -253,7 +289,9 @@ class CeleryTask(Task):
         :param kwargs: Task keyword arguments that will be used to match against tasks
         :return: The number of tasks revoked
         """
-        task_ids = self.find_incomplete_ids(**self.backend.decode(self._prepare_kwargs(kwargs)))
+        signature = self._generate_signature(kwargs)
+        task_ids = self.find_incomplete_ids(signature)
+
         if exclude_task_ids is not None:
             task_ids = task_ids.exclude(task_id__in=task_ids)
         count = 0
