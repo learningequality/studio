@@ -133,7 +133,8 @@ class AssessmentItemSerializer(BulkModelSerializer):
             # have had these fields modified.
             md_fields_modified = {
                 self.id_value_lookup(ai) for ai in all_validated_data
-                if "question" in ai or "hints" in ai or "answers" in ai}
+                if "question" in ai or "hints" in ai or "answers" in ai
+            }
         else:
             # If this is a create operation, just check if these fields are not null.
             md_fields_modified = {
