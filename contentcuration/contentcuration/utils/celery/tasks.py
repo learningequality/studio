@@ -10,6 +10,7 @@ from celery import states
 from celery.app.task import Task
 from celery.result import AsyncResult
 from django.db import transaction
+from django.db.utils import IntegrityError
 
 from contentcuration.constants.locking import TASK_LOCK
 from contentcuration.db.advisory_lock import advisory_lock
@@ -224,14 +225,24 @@ class CeleryTask(Task):
         # ensure the result is saved to the backend (database)
         self.backend.add_pending_result(async_result)
 
-        # after calling apply, we should have task result model, so get it and set our custom fields
-        task_result = get_task_model(self, task_id)
-        task_result.task_name = self.name
-        task_result.task_kwargs = self.backend.encode(prepared_kwargs)
-        task_result.user = user
-        task_result.channel_id = channel_id
-        task_result.signature = signature
-        task_result.save()
+        saved = False
+        tries = 0
+        while not saved:
+            # after calling apply, we should ideally have a task result model saved to the DB, but it relies on celery's
+            # event consumption, and we might try to retrieve it before it has actually saved, so we retry
+            try:
+                task_result = get_task_model(self, task_id)
+                task_result.task_name = self.name
+                task_result.task_kwargs = self.backend.encode(prepared_kwargs)
+                task_result.user = user
+                task_result.channel_id = channel_id
+                task_result.signature = signature
+                task_result.save()
+                saved = True
+            except IntegrityError as e:
+                tries += 1
+                if tries > 3:
+                    raise e
         return async_result
 
     def fetch_or_enqueue(self, user, **kwargs):
