@@ -2504,9 +2504,9 @@ anymatch@^3.0.3, anymatch@~3.1.2:
     normalize-path "^3.0.0"
     picomatch "^2.0.4"
 
-"aphrodite@https://github.com/learningequality/aphrodite/":
+"aphrodite@https://github.com/learningequality/aphrodite.git":
   version "2.2.3"
-  resolved "https://github.com/learningequality/aphrodite/#fdc8d7be8912a5cf17f74ff10f124013c52c3e32"
+  resolved "https://github.com/learningequality/aphrodite.git#fdc8d7be8912a5cf17f74ff10f124013c52c3e32"
   dependencies:
     asap "^2.0.3"
     inline-style-prefixer "^4.0.2"
@@ -8004,7 +8004,7 @@ kolibri-constants@^0.1.41:
   version "1.3.0"
   resolved "https://github.com/learningequality/kolibri-design-system#e9a2ff34716bb6412fe99f835ded5b17345bab94"
   dependencies:
-    aphrodite "https://github.com/learningequality/aphrodite/"
+    aphrodite "https://github.com/learningequality/aphrodite.git"
     autosize "^3.0.21"
     css-element-queries "^1.2.0"
     frame-throttle "^3.0.0"
