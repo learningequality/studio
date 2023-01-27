@@ -14,7 +14,7 @@ newrelic>=2.86.3.70
 celery==5.2.7
 redis
 pathlib
-progressbar2==3.55.0
+progressbar2==4.2.0
 python-postmark==0.5.8
 Django==3.2.14
 django-webpack-loader==0.7.0
