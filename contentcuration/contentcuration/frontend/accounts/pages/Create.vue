@@ -525,6 +525,7 @@
   }
 
   .policy-checkbox /deep/ .v-messages {
+    min-height: 0;
     margin-left: 40px;
   }
 
