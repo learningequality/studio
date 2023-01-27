@@ -234,7 +234,7 @@ class AsyncTaskTestCase(TransactionTestCase):
         self.assertEqual(expected_task.task_id, async_result.task_id)
 
     def test_requeue_task(self):
-        signature = requeue_test_task._generate_signature({})
+        signature = requeue_test_task.generate_signature({})
         existing_task_ids = requeue_test_task.find_ids(signature)
         self.assertEqual(len(existing_task_ids), 0)
 

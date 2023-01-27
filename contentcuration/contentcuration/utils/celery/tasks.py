@@ -139,7 +139,7 @@ class CeleryTask(Task):
             for key, value in kwargs.items()
         )
 
-    def _generate_signature(self, kwargs):
+    def generate_signature(self, kwargs):
         """
         :param kwargs: A dictionary of task kwargs
         :return: An hex string representing an md5 hash of task metadata
@@ -207,7 +207,7 @@ class CeleryTask(Task):
 
         signature = kwargs.pop('signature', None)
         if signature is None:
-            signature = self._generate_signature(kwargs)
+            signature = self.generate_signature(kwargs)
 
         task_id = uuid.uuid4().hex
         prepared_kwargs = self._prepare_kwargs(kwargs)
@@ -249,7 +249,7 @@ class CeleryTask(Task):
         if self.app.conf.task_always_eager:
             return self.enqueue(user, **kwargs)
 
-        signature = self._generate_signature(kwargs)
+        signature = self.generate_signature(kwargs)
 
         # create an advisory lock to obtain exclusive control on preventing task duplicates
         with self._lock_signature(signature):
@@ -278,7 +278,7 @@ class CeleryTask(Task):
         task_result = get_task_model(self, request.id)
         task_kwargs = request.kwargs.copy()
         task_kwargs.update(kwargs)
-        signature = self._generate_signature(kwargs)
+        signature = self.generate_signature(kwargs)
         logging.info(f"Re-queuing task {self.name} for user {task_result.user.pk} from {request.id} | {signature}")
         return self.enqueue(task_result.user, signature=signature, **task_kwargs)
 
@@ -289,7 +289,7 @@ class CeleryTask(Task):
         :param kwargs: Task keyword arguments that will be used to match against tasks
         :return: The number of tasks revoked
         """
-        signature = self._generate_signature(kwargs)
+        signature = self.generate_signature(kwargs)
         task_ids = self.find_incomplete_ids(signature)
 
         if exclude_task_ids is not None:
