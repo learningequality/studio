@@ -58,7 +58,7 @@ client.interceptors.response.use(
       }
     }
 
-    message = message ? `${message}: ${url}` : `Network Error: ${url}`;
+    message = message ? `${message}: [${status}] ${url}` : `Network Error: [${status}] ${url}`;
 
     if (process.env.NODE_ENV !== 'production') {
       // In dev build log warnings to console for developer use

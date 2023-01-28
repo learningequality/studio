@@ -14,27 +14,18 @@ def get_fts_search_query(value):
     return SearchQuery(value=value, config=POSTGRES_FTS_CONFIG)
 
 
-def get_fts_annotated_contentnode_qs(channel_id=None):
+def get_fts_annotated_contentnode_qs(channel_id):
     """
     Returns a `ContentNode` queryset annotated with fields required for full text search.
-
-    If `channel_id` is provided, annotates that specific `channel_id` else annotates
-    the `channel_id` to which the contentnode belongs.
     """
     from contentcuration.models import ContentNode
 
-    if channel_id:
-        queryset = ContentNode.objects.annotate(channel_id=Value(channel_id))
-    else:
-        queryset = ContentNode._annotate_channel_id(ContentNode.objects)
-
-    queryset = queryset.annotate(
+    return ContentNode.objects.annotate(
+        channel_id=Value(channel_id),
         contentnode_tags=StringAgg("tags__tag_name", delimiter=" "),
         keywords_tsvector=CONTENTNODE_KEYWORDS_TSVECTOR,
         author_tsvector=CONTENTNODE_AUTHOR_TSVECTOR
     )
-
-    return queryset
 
 
 def get_fts_annotated_channel_qs():
