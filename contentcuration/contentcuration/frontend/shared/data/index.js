@@ -1,4 +1,5 @@
 import Dexie from 'dexie';
+import * as Sentry from '@sentry/vue';
 import mapValues from 'lodash/mapValues';
 import channel from './broadcastChannel';
 import { CHANGES_TABLE, IGNORED_SOURCE, TABLE_NAMES } from './constants';
@@ -47,11 +48,25 @@ function runElection() {
   elector.awaitLeadership().then(startSyncing);
   elector.onduplicate = () => {
     stopSyncing();
-    elector.die().then(runElection);
+    elector
+      .die()
+      .then(() => {
+        // manually reset reference to dead elector on the channel
+        // which is set within `createLeaderElection` and whose
+        // presence is also validated against, requiring its removal
+        channel._leaderElector = null;
+        return runElection();
+      })
+      .catch(Sentry.captureException);
   };
 }
 
-export function initializeDB() {
-  setupSchema();
-  return db.open().then(runElection);
+export async function initializeDB() {
+  try {
+    setupSchema();
+    await db.open();
+    await runElection();
+  } catch (e) {
+    Sentry.captureException(e);
+  }
 }

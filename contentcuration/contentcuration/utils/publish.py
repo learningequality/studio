@@ -869,10 +869,7 @@ def sync_contentnode_and_channel_tsvectors(channel_id):
 
     # Insert newly created nodes.
     # "set_contentnode_tsvectors" command is defined in "search/management/commands" directory.
-    call_command("set_contentnode_tsvectors",
-                 "--channel-id={}".format(channel_id),
-                 "--tree-id={}".format(channel["main_tree__tree_id"]),
-                 "--complete")
+    call_command("set_contentnode_tsvectors", "--channel-id={}".format(channel_id))
 
 
 @delay_user_storage_calculation

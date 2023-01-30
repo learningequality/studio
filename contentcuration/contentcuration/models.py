@@ -7,6 +7,7 @@ import uuid
 from datetime import datetime
 
 import pytz
+from celery import states as celery_states
 from django.conf import settings
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.base_user import BaseUserManager
@@ -75,6 +76,7 @@ from contentcuration.db.models.manager import CustomContentNodeTreeManager
 from contentcuration.db.models.manager import CustomManager
 from contentcuration.statistics import record_channel_stats
 from contentcuration.utils.cache import delete_public_channel_cache_keys
+from contentcuration.utils.celery.tasks import generate_task_signature
 from contentcuration.utils.parser import load_json_string
 from contentcuration.viewsets.sync.constants import ALL_CHANGES
 from contentcuration.viewsets.sync.constants import ALL_TABLES
@@ -2541,13 +2543,20 @@ class Change(models.Model):
 class TaskResultCustom(object):
     """
     Custom fields to add to django_celery_results's TaskResult model
+
+    If adding fields to this class, run `makemigrations` then move the generated migration from the
+    `django_celery_results` app to the `contentcuration` app and override the constructor to change
+    the app_label. See `0141_add_task_signature` for an example
     """
     # user shouldn't be null, but in order to append the field, this needs to be allowed
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="tasks", on_delete=models.CASCADE, null=True)
     channel_id = DjangoUUIDField(db_index=True, null=True, blank=True)
     progress = models.IntegerField(null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(100)])
+    # a hash of the task name and kwargs for identifying repeat tasks
+    signature = models.CharField(null=True, blank=False, max_length=32)
 
     super_as_dict = TaskResult.as_dict
+    super_save = TaskResult.save
 
     def as_dict(self):
         """
@@ -2561,6 +2570,22 @@ class TaskResultCustom(object):
         )
         return super_dict
 
+    def set_signature(self):
+        """
+        Generates and sets the signature for the task if it isn't set
+        """
+        if self.signature is not None:
+            # nothing to do
+            return
+        self.signature = generate_task_signature(self.task_name, task_kwargs=self.task_kwargs, channel_id=self.channel_id)
+
+    def save(self, *args, **kwargs):
+        """
+        Override save to ensure signature is generated
+        """
+        self.set_signature()
+        return self.super_save(*args, **kwargs)
+
     @classmethod
     def contribute_to_class(cls, model_class=TaskResult):
         """
@@ -2568,8 +2593,21 @@ class TaskResultCustom(object):
         :param model_class: TaskResult model
         """
         for field in dir(cls):
-            if not field.startswith("_"):
+            if not field.startswith("_") and field not in ('contribute_to_class', 'Meta'):
                 model_class.add_to_class(field, getattr(cls, field))
+
+        # manually add Meta afterwards
+        setattr(model_class._meta, 'indexes', getattr(model_class._meta, 'indexes', []) + cls.Meta.indexes)
+
+    class Meta:
+        indexes = [
+            # add index that matches query usage for signature
+            models.Index(
+                fields=['signature'],
+                name='task_result_signature_idx',
+                condition=Q(status__in=celery_states.UNREADY_STATES),
+            ),
+        ]
 
 
 # trigger class contributions immediately
