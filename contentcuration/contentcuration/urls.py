@@ -179,3 +179,8 @@ urlpatterns += i18n_patterns(
     re_path(r'^administration/', admin_views.administration, name='administration'),
     re_path(r'^manifest.webmanifest$', pwa.ManifestView.as_view(), name="manifest"),
 )
+
+#  URLs for the kolibri public
+urlpatterns += [
+    re_path(r'^/kolibri/api/public/$'),
+]
