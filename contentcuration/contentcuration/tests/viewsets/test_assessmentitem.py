@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 
+import json
 import uuid
 
 from django.urls import reverse
@@ -21,6 +22,7 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
     @property
     def assessmentitem_metadata(self):
         return {
+
             "assessment_id": uuid.uuid4().hex,
             "contentnode": self.channel.main_tree.get_descendants()
             .filter(kind_id=content_kinds.EXERCISE)
@@ -105,11 +107,14 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         image_file = testdata.fileobj_exercise_image()
         image_file.uploaded_by = self.user
         image_file.save()
-        answers = "![alt_text](${}/{}.{})".format(
+        answer = "![alt_text](${}/{}.{})".format(
             exercises.IMG_PLACEHOLDER, image_file.checksum, image_file.file_format_id
         )
 
-        assessmentitem["answers"] = answers
+        answers = [{'answer': answer, 'correct': False, 'order': 1}]
+
+        assessmentitem["answers"] = json.dumps(answers)
+
         response = self.sync_changes(
             [
                 generate_create_event(
@@ -139,11 +144,16 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         image_file = testdata.fileobj_exercise_image()
         image_file.uploaded_by = self.user
         image_file.save()
-        hints = "![alt_text](${}/{}.{})".format(
+        hint = "![alt_text](${}/{}.{})".format(
             exercises.IMG_PLACEHOLDER, image_file.checksum, image_file.file_format_id
         )
+        hints = [
+            {"hint": hint, "order": 1},
+        ]
 
+        hints = json.dumps(hints)
         assessmentitem["hints"] = hints
+
         response = self.sync_changes(
             [
                 generate_create_event(
@@ -154,6 +164,7 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
                 )
             ],
         )
+
         self.assertEqual(response.status_code, 200, response.content)
         try:
             ai = models.AssessmentItem.objects.get(
@@ -182,7 +193,7 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
                     ASSESSMENTITEM,
                     assessmentitem,
                     channel_id=self.channel.id,
-                )
+                ),
             ],
         )
         self.assertEqual(response.status_code, 200, response.content)
@@ -497,6 +508,103 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
             self.fail("AssessmentItem 2 was not deleted")
         except models.AssessmentItem.DoesNotExist:
             pass
+
+    def test_valid_hints_assessmentitem(self):
+        self.client.force_authenticate(user=self.user)
+        assessmentitem = self.assessmentitem_metadata
+        assessmentitem["hints"] = json.dumps([{'hint': 'asdasdwdqasd', 'order': 1}, {'hint': 'testing the hint', 'order': 2}])
+        response = self.sync_changes(
+            [
+                generate_create_event(
+                    [assessmentitem["contentnode"], assessmentitem["assessment_id"]],
+                    ASSESSMENTITEM,
+                    assessmentitem,
+                    channel_id=self.channel.id,
+                ),
+            ],
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        try:
+            models.AssessmentItem.objects.get(
+                assessment_id=assessmentitem["assessment_id"]
+            )
+        except models.AssessmentItem.DoesNotExist:
+            self.fail("AssessmentItem  was not created")
+
+    def test_invalid_hints_assessmentitem(self):
+
+        self.client.force_authenticate(user=self.user)
+        assessmentitem = self.assessmentitem_metadata
+        assessmentitem["hints"] = json.dumps("test invalid string for hints")
+        response = self.sync_changes(
+            [
+                generate_create_event(
+                    [assessmentitem["contentnode"], assessmentitem["assessment_id"]],
+                    ASSESSMENTITEM,
+                    assessmentitem,
+                    channel_id=self.channel.id,
+                ),
+            ],
+        )
+
+        self.assertEqual(response.json()["errors"][0]["table"], "assessmentitem")
+        self.assertEqual(response.json()["errors"][0]["errors"]["hints"][0], "JSON Data Invalid for hints")
+        self.assertEqual(len(response.json()["errors"]), 1)
+
+        with self.assertRaises(models.AssessmentItem.DoesNotExist, msg="AssessmentItem was created"):
+            models.AssessmentItem.objects.get(
+                assessment_id=assessmentitem["assessment_id"]
+            )
+
+    def test_valid_answers_assessmentitem(self):
+        self.client.force_authenticate(user=self.user)
+        assessmentitem = self.assessmentitem_metadata
+        assessmentitem["answers"] = json.dumps([{'answer': 'test answer 1 :)', 'correct': False, 'order': 1},
+                                                {'answer': 'test answer 2 :)', 'correct': False, 'order': 2},
+                                                {'answer': 'test answer 3 :)', 'correct': True, 'order': 3}
+                                                ])
+        response = self.sync_changes(
+            [
+                generate_create_event(
+                    [assessmentitem["contentnode"], assessmentitem["assessment_id"]],
+                    ASSESSMENTITEM,
+                    assessmentitem,
+                    channel_id=self.channel.id,
+                ),
+            ],
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        try:
+            models.AssessmentItem.objects.get(
+                assessment_id=assessmentitem["assessment_id"]
+            )
+        except models.AssessmentItem.DoesNotExist:
+            self.fail("AssessmentItem  was not created")
+
+    def test_invalid_answers_assessmentitem(self):
+
+        self.client.force_authenticate(user=self.user)
+        assessmentitem = self.assessmentitem_metadata
+        assessmentitem["answers"] = json.dumps("test invalid string for answers")
+        response = self.sync_changes(
+            [
+                generate_create_event(
+                    [assessmentitem["contentnode"], assessmentitem["assessment_id"]],
+                    ASSESSMENTITEM,
+                    assessmentitem,
+                    channel_id=self.channel.id,
+                ),
+            ],
+        )
+
+        self.assertEqual(response.json()["errors"][0]["table"], "assessmentitem")
+        self.assertEqual(response.json()["errors"][0]["errors"]["answers"][0], "JSON Data Invalid for answers")
+        self.assertEqual(len(response.json()["errors"]), 1)
+
+        with self.assertRaises(models.AssessmentItem.DoesNotExist, msg="AssessmentItem was created"):
+            models.AssessmentItem.objects.get(
+                assessment_id=assessmentitem["assessment_id"]
+            )
 
 
 class CRUDTestCase(StudioAPITestCase):
