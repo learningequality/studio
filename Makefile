@@ -1,3 +1,11 @@
+# standalone install method
+DOCKER_COMPOSE = docker-compose
+
+# support new plugin installation for docker-compose
+ifeq (, $(shell which docker-compose))
+DOCKER_COMPOSE = docker compose
+endif
+
 ###############################################################
 # PRODUCTION COMMANDS #########################################
 ###############################################################
@@ -140,37 +148,37 @@ run-services:
 
 dcbuild:
 	# build all studio docker image and all dependent services using docker-compose
-	docker-compose build
+	$(DOCKER_COMPOSE) build
 
 dcup:
 	# run all services except for cloudprober
-	docker-compose up studio-app celery-worker
+	$(DOCKER_COMPOSE) up studio-app celery-worker
 
 dcup-cloudprober:
 	# run all services including cloudprober
-	docker-compose up
+	$(DOCKER_COMPOSE) up
 
 dcdown:
-	# run make deverver in foreground with all dependent services using docker-compose
-	docker-compose down
+	# run make deverver in foreground with all dependent services using $(DOCKER_COMPOSE)
+	$(DOCKER_COMPOSE) down
 
 dcclean:
 	# stop all containers and delete volumes
-	docker-compose down -v
+	$(DOCKER_COMPOSE) down -v
 	docker image prune -f
 
 dcshell:
 	# bash shell inside the (running!) studio-app container
-	docker-compose exec studio-app /usr/bin/fish
+	$(DOCKER_COMPOSE) exec studio-app /usr/bin/fish
 
 dctest:
 	# run backend tests inside docker, in new instances
-	docker-compose run studio-app make test
+	$(DOCKER_COMPOSE) run studio-app make test
 
 dcservicesup:
 	# launch all studio's dependent services using docker-compose
-	docker-compose -f docker-compose.yml -f docker-compose.alt.yml up minio postgres redis
+	$(DOCKER_COMPOSE) -f docker-compose.yml -f docker-compose.alt.yml up minio postgres redis
 
 dcservicesdown:
 	# stop services that were started using dcservicesup
-	docker-compose -f docker-compose.yml -f docker-compose.alt.yml down
+	$(DOCKER_COMPOSE) -f docker-compose.yml -f docker-compose.alt.yml down
