@@ -985,6 +985,7 @@
   "MainNavigationDrawer.helpLink": "Ayuda y soporte",
   "MainNavigationDrawer.logoutLink": "Cerrar sesión",
   "MainNavigationDrawer.settingsLink": "Configuración",
+  "MainNavigationDrawer.changeLanguage": "Cambiar idioma",
   "MarkdownEditor.bold": "Negrita (Ctrl+B)",
   "MarkdownEditor.formulas": "Insertar fórmula (Ctrl+F)",
   "MarkdownEditor.image": "Insertar imagen (Ctrl+P)",
