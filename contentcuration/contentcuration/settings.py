@@ -88,6 +88,7 @@ INSTALLED_APPS = (
     'mathfilters',
     'django.contrib.postgres',
     'django_celery_results',
+    'kolibri_public',
 )
 
 SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"
