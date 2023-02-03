@@ -265,7 +265,7 @@ uritemplate==3.0.1
     # via
     #   coreapi
     #   drf-yasg
-urllib3==1.26.5
+urllib3==1.26.14
     # via
     #   -c requirements.txt
     #   minio
