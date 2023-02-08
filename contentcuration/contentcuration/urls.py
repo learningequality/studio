@@ -20,6 +20,7 @@ from django.urls import include
 from django.urls import path
 from django.urls import re_path
 from django.views.generic.base import RedirectView
+from kolibri_public.urls import urlpatterns as kolibri_v2_public_content_urls
 from rest_framework import routers
 
 import contentcuration.views.admin as admin_views
@@ -96,6 +97,7 @@ urlpatterns += [
     re_path(r'^api/public/(?P<version>[^/]+)/channels$', public_views.get_public_channel_list, name='get_public_channel_list'),
     re_path(r'^api/public/(?P<version>[^/]+)/channels/lookup/(?P<identifier>[^/]+)', public_views.get_public_channel_lookup, name='get_public_channel_lookup'),
     re_path(r'^api/public/info', public_views.InfoViewSet.as_view({'get': 'list'}), name='info'),
+    path("api/public/v2/", include(kolibri_v2_public_content_urls)),
 ]
 
 # Add node api enpoints
@@ -147,10 +149,6 @@ urlpatterns += [
 urlpatterns += [re_path(r'^jsreverse/$', django_js_reverse_views.urls_js, name='js_reverse')]
 
 # I18N Endpoints
-js_info_dict = {
-    'packages': ('your.app.package',),
-}
-
 urlpatterns += [
     re_path(r'^i18n/', include('django.conf.urls.i18n')),
 ]
@@ -178,8 +176,3 @@ urlpatterns += i18n_patterns(
     re_path(r'^administration/', admin_views.administration, name='administration'),
     re_path(r'^manifest.webmanifest$', pwa.ManifestView.as_view(), name="manifest"),
 )
-
-#  URLs for the kolibri_public app
-urlpatterns += [
-    # re_path(r'^/kolibri/api/public/$'),
-]
