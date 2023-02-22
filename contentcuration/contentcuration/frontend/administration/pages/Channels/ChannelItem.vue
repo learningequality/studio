@@ -232,7 +232,7 @@
         return {
           name: RouteNames.USERS,
           query: {
-            keywords: `${this.channel.name} ${this.channelId}`,
+            keywords: `${this.channelId}`,
           },
         };
       },
