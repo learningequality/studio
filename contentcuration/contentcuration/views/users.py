@@ -106,10 +106,19 @@ def send_invitation_email(request):
 @api_view(["GET"])
 @authentication_classes((SessionAuthentication,))
 @permission_classes((IsAuthenticated,))
-def deferred_user_data(request):
+def deferred_user_space_by_kind(request):
     return Response(
         {
             "space_used_by_kind": request.user.get_space_used_by_kind(),
+        }
+    )
+
+@api_view(["GET"])
+@authentication_classes((SessionAuthentication,))
+@permission_classes((IsAuthenticated,))
+def deferred_user_api_token(request):
+    return Response(
+        {
             "api_token": request.user.get_token(),
         }
     )

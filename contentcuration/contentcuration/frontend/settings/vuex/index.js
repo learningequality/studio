@@ -3,10 +3,14 @@ import client from 'shared/client';
 
 const throttleTime = 30 * 1000;
 
-const settingsDeferredUser = throttle(
+const settingsDeferredUserApiToken = function() {
+  return client.get(window.Urls.deferred_user_api_token());
+}
+
+const settingsDeferredUserSpaceByKind = throttle(
   function() {
-    return client.get(window.Urls.deferred_user_data());
-  },
+    return client.get(window.Urls.deferred_user_space_by_kind());
+  }, 
   throttleTime,
   { trailing: false }
 );
@@ -84,9 +88,13 @@ export default {
         return;
       }
 
-      return settingsDeferredUser().then(response => {
-        context.commit('UPDATE_SESSION', response.data, { root: true });
-      });
+      return Promise.all([settingsDeferredUserApiToken(), settingsDeferredUserSpaceByKind()])
+        .then(([apiTokenResponse, spaceByKindResponse]) => {
+          context.commit('UPDATE_SESSION', {
+            api_token: apiTokenResponse.data.api_token,
+            space_used_by_kind: spaceByKindResponse.data.space_used_by_kind
+          }, { root: true });
+        })
     },
   },
 };
