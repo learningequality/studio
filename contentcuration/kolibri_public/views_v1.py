@@ -104,7 +104,7 @@ class InfoViewSet(viewsets.ViewSet):
         """Returns metadata information about the type of device"""
 
         info = {'application': 'studio',
-                'kolibri_version': None,
+                'kolibri_version': "0.16.0",
                 'instance_id': None,
                 'device_name': "Kolibri Studio",
                 'operating_system': None,
