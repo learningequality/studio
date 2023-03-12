@@ -82,24 +82,38 @@ export default {
       return client.post(window.Urls.delete_user_account(), { email });
     },
 
-    // Fetch fields that take longer to calculate
-    fetchDeferredUserData(context) {
+    // Fetch the user API token
+    fetchDeferredUserApiToken(context) {
       if (context.getters.storageUseByKind && context.state.currentUser.api_token) {
         return;
       }
 
-      return Promise.all([settingsDeferredUserApiToken(), settingsDeferredUserSpaceByKind()]).then(
-        ([apiTokenResponse, spaceByKindResponse]) => {
-          context.commit(
-            'UPDATE_SESSION',
-            {
-              api_token: apiTokenResponse.data.api_token,
-              space_used_by_kind: spaceByKindResponse.data.space_used_by_kind,
-            },
-            { root: true }
-          );
-        }
-      );
+      return settingsDeferredUserApiToken().then(response => {
+        context.commit(
+          'UPDATE_SESSION',
+          {
+            api_token: response.data.api_token,
+          },
+          { root: true }
+        );
+      });
+    },
+
+    // Fetch the user storage details
+    fetchDeferredUserStorageByKind(context) {
+      if (context.getters.storageUseByKind && context.state.currentUser.api_token) {
+        return;
+      }
+
+      return settingsDeferredUserSpaceByKind().then(response => {
+        context.commit(
+          'UPDATE_SESSION',
+          {
+            space_used_by_kind: response.data.space_used_by_kind,
+          },
+          { root: true }
+        );
+      });
     },
   },
 };
