@@ -278,7 +278,7 @@ werkzeug==2.0.1
     # via
     #   flask
     #   locust
-wheel==0.37.1
+wheel==0.38.1
     # via pip-tools
 whitenoise==5.2.0
     # via -r requirements-dev.in
