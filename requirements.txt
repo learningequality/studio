@@ -54,7 +54,7 @@ click-repl==0.2.0
     # via celery
 confusable-homoglyphs==3.2.0
     # via django-registration
-django==3.2.14
+django==3.2.18
     # via
     #   -r requirements.in
     #   django-bulk-update
