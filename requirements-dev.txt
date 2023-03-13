@@ -4,7 +4,7 @@
 #
 #    pip-compile requirements-dev.in
 #
-asgiref==3.3.4
+asgiref==3.6.0
     # via
     #   -c requirements.txt
     #   django
@@ -56,7 +56,7 @@ customizable-django-profiler @ git+https://github.com/someshchaturvedi/customiza
     # via -r requirements-dev.in
 distlib==0.3.1
     # via virtualenv
-django==3.2.18
+django==4.1.7
     # via
     #   -c requirements.txt
     #   django-debug-toolbar
@@ -207,10 +207,6 @@ python-dateutil==2.8.1
     # via
     #   -c requirements.txt
     #   faker
-pytz==2022.1
-    # via
-    #   -c requirements.txt
-    #   django
 pyyaml==6.0
     # via
     #   aspy-yaml
