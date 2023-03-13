@@ -9,7 +9,6 @@ from le_utils.constants import exercises
 from contentcuration.models import ContentNode
 from contentcuration.models import License
 
-logmodule.basicConfig(level=logmodule.INFO)
 logging = logmodule.getLogger('command')
 
 

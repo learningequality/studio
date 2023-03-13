@@ -16,7 +16,6 @@ from contentcuration.utils.garbage_collect import clean_up_stale_files
 from contentcuration.utils.garbage_collect import clean_up_tasks
 
 
-logmodule.basicConfig(level=logmodule.INFO)
 logging = logmodule.getLogger('command')
 
 

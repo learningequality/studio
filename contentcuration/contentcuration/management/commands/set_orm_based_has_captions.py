@@ -11,7 +11,6 @@ from le_utils.constants.labels import accessibility_categories
 from contentcuration.models import ContentNode
 from contentcuration.models import File
 
-logmodule.basicConfig(level=logmodule.INFO)
 logging = logmodule.getLogger('command')
 
 
