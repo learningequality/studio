@@ -12,8 +12,10 @@ from collections import OrderedDict
 from functools import reduce
 
 from django.core.exceptions import ValidationError
+from django.db.models import Exists
 from django.db.models import F
 from django.db.models import Max
+from django.db.models import OuterRef
 from django.db.models import Q
 from django.http import Http404
 from django.utils.cache import patch_cache_control
@@ -75,6 +77,90 @@ def metadata_cache(some_func):
 
 
 MODALITIES = set(["QUIZ"])
+
+
+class ChannelMetadataFilter(FilterSet):
+    available = BooleanFilter(method="filter_available", label="Available")
+    has_exercise = BooleanFilter(method="filter_has_exercise", label="Has exercises")
+
+    class Meta:
+        model = models.ChannelMetadata
+        fields = ("available", "has_exercise")
+
+    def filter_has_exercise(self, queryset, name, value):
+        queryset = queryset.annotate(
+            has_exercise=Exists(
+                models.ContentNode.objects.filter(
+                    kind=content_kinds.EXERCISE,
+                    available=True,
+                    channel_id=OuterRef("id"),
+                )
+            )
+        )
+
+        return queryset.filter(has_exercise=True)
+
+    def filter_available(self, queryset, name, value):
+        return queryset.filter(root__available=value)
+
+
+@method_decorator(metadata_cache, name="dispatch")
+class ChannelMetadataViewSet(ReadOnlyValuesViewset):
+    filter_backends = (DjangoFilterBackend,)
+    # Update from filter_class to filterset_class for newer version of Django Filters
+    filterset_class = ChannelMetadataFilter
+    # Add an explicit allow any permission class to override the Studio default
+    permission_classes = (AllowAny,)
+
+    values = (
+        "author",
+        "description",
+        "tagline",
+        "id",
+        "last_updated",
+        "root__lang__lang_code",
+        # Read from native_name from content curation model
+        "root__lang__native_name",
+        "name",
+        "root",
+        "thumbnail",
+        "version",
+        "root__available",
+        "root__num_coach_contents",
+        "public",
+        "total_resource_count",
+        "published_size",
+    )
+
+    field_map = {
+        "num_coach_contents": "root__num_coach_contents",
+        "available": "root__available",
+        "lang_code": "root__lang__lang_code",
+        # Map to lang_name to map from native_name to map from content curation model
+        # to how we want to expose it for Kolibri.
+        "lang_name": "root__lang__native_name",
+    }
+
+    def get_queryset(self):
+        return models.ChannelMetadata.objects.all()
+
+    def consolidate(self, items, queryset):
+        included_languages = {}
+        for (
+            channel_id,
+            language_id,
+        ) in models.ChannelMetadata.included_languages.through.objects.filter(
+            channelmetadata__in=queryset
+        ).values_list(
+            "channelmetadata_id", "language_id"
+        ):
+            if channel_id not in included_languages:
+                included_languages[channel_id] = []
+            included_languages[channel_id].append(language_id)
+        for item in items:
+            item["included_languages"] = included_languages.get(item["id"], [])
+            item["last_published"] = item["last_updated"]
+        return items
 
 
 class UUIDInFilter(BaseInFilter, UUIDFilter):

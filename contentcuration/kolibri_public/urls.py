@@ -2,15 +2,16 @@ from django.urls import include
 from django.urls import path
 from django.urls import re_path
 from kolibri_public import views_v1
+from kolibri_public.views import ChannelMetadataViewSet
 from kolibri_public.views import ContentNodeTreeViewset
 from kolibri_public.views import ContentNodeViewset
 from rest_framework import routers
 
 
 public_content_v2_router = routers.SimpleRouter()
-# public_content_v2_router.register(
-#     r"channel", ChannelMetadataViewSet, basename="publicchannel"
-# )
+public_content_v2_router.register(
+    r"channel", ChannelMetadataViewSet, basename="publicchannel"
+)
 public_content_v2_router.register(
     r"contentnode", ContentNodeViewset, basename="publiccontentnode"
 )
