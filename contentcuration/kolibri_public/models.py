@@ -96,3 +96,19 @@ class ChannelMetadata(base_models.ChannelMetadata):
     )
     order = models.PositiveIntegerField(default=0, null=True, blank=True)
     public = models.BooleanField()
+
+
+class MPTTTreeIDManager(models.Model):
+    """
+    This is added as insurance against concurrency issues. It seems far less likely than for our
+    regular channel tree_ids, but is here as a safety.
+
+    Because MPTT uses plain integers for tree IDs and does not use an auto-incrementing field for them,
+    the same ID can sometimes be assigned to two trees if two channel create ops happen concurrently.
+
+    As we are using this table only for the ID generation, it does not need any fields.
+
+    We resolve this by creating a dummy table and using its ID as the tree index to take advantage of the db's
+    concurrency-friendly way of generating sequential integer IDs. There is a custom migration that ensures
+    that the number of records (and thus id) matches the max tree ID number when this table gets added.
+    """
