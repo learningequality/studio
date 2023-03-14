@@ -1,6 +1,10 @@
+import datetime
+from calendar import timegm
+
 from django.db import connection
 from django.db.models import Q
 from django.urls import reverse
+from django.utils.http import http_date
 from kolibri_content import models as content
 from kolibri_content.constants.schema_versions import CONTENT_SCHEMA_VERSION
 from kolibri_public import models as public
@@ -91,3 +95,20 @@ class ImportMetadataTestCase(APITestCase):
             + "?schema_version={}".format(CONTENT_SCHEMA_VERSION)
         )
         self.assertEqual(response.status_code, 200)
+
+    def test_headers(self):
+        channel = public.ChannelMetadata.objects.get()
+        channel.last_updated = datetime.datetime.now()
+        channel.save()
+        response = self.client.get(
+            reverse("publicimportmetadata-detail", kwargs={"pk": self.node.id})
+        )
+        self.assertEqual(response.headers["Vary"], "Accept")
+        self.assertEqual(
+            response.headers["Cache-Control"],
+            "max-age=300, public, stale-while-revalidate=100",
+        )
+        self.assertEqual(
+            response.headers["Last-Modified"],
+            http_date(timegm(channel.last_updated.utctimetuple())),
+        )
