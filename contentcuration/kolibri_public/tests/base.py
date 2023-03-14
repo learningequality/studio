@@ -4,7 +4,7 @@ import uuid
 from itertools import chain
 
 from django.core.exceptions import FieldDoesNotExist
-from kolibri_public import models
+from kolibri_public import models as kolibri_public_models
 from le_utils.constants import content_kinds
 from le_utils.constants import format_presets
 from le_utils.constants.labels.accessibility_categories import (
@@ -49,7 +49,7 @@ class ChannelBuilder(object):
         "root_node",
     )
 
-    def __init__(self, levels=3, num_children=5, models=models):
+    def __init__(self, levels=3, num_children=5, models=kolibri_public_models):
         self.levels = levels
         self.num_children = num_children
         self.models = models
@@ -69,7 +69,7 @@ class ChannelBuilder(object):
 
     @property
     def cache_key(self):
-        return "{}_{}".format(self.levels, self.num_children)
+        return "{}_{}_{}".format(self.levels, self.num_children, self.models)
 
     def generate_new_tree(self):
         self.channel = self.channel_data()
