@@ -1,17 +1,19 @@
 """
 This is a copy with modifications of the file:
-https://github.com/learningequality/kolibri/blob/b8ef7212f9ab44660e2c7cabeb0122311e5ae5ed/kolibri/core/content/public_api.py
+https://github.com/learningequality/kolibri/blob/c7417e1d558a1e1e52ac8423927d61a0e44da576/kolibri/core/content/public_api.py
 """
 from uuid import UUID
 
 from django.db import connection
 from django.db.models import Q
 from django.http import HttpResponseBadRequest
+from django.utils.decorators import method_decorator
 from kolibri_content import base_models
 from kolibri_content import models as kolibri_content_models
 from kolibri_content.constants.schema_versions import CONTENT_SCHEMA_VERSION  # Use kolibri_content
 from kolibri_content.constants.schema_versions import MIN_CONTENT_SCHEMA_VERSION  # Use kolibri_content
 from kolibri_public import models  # Use kolibri_public models
+from kolibri_public.views import metadata_cache
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -32,6 +34,9 @@ def _get_kc_and_base_models(model):
     return kc_model, base_model
 
 
+# Add the standard metadata_cache decorator to this endpoint to align
+# with other public endpoints
+@method_decorator(metadata_cache, name="dispatch")
 class ImportMetadataViewset(GenericViewSet):
     # Add an explicit allow any permission class to override the Studio default
     permission_classes = (AllowAny,)

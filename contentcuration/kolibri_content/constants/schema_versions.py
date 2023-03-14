@@ -1,6 +1,6 @@
 """
 This is a direct copy of the constants file of the same name in kolibri.core.content
-https://github.com/learningequality/kolibri/blob/b8ef7212f9ab44660e2c7cabeb0122311e5ae5ed/kolibri/core/content/constants/schema_versions.py
+https://github.com/learningequality/kolibri/blob/c7417e1d558a1e1e52ac8423927d61a0e44da576/kolibri/core/content/constants/schema_versions.py
 """
 
 V020BETA1 = "v0.2.0-beta1"

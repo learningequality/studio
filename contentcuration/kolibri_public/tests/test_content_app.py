@@ -636,12 +636,28 @@ class ContentNodeAPITestCase(ContentNodeAPIBase, APITestCase):
         response = self.client.get(reverse("publicchannel-list", kwargs={}))
         self.assertEqual(response.data[0]["name"], "testing")
 
+    def test_channelmetadata_list_headers(self):
+        channel = models.ChannelMetadata.objects.get()
+        channel.last_updated = datetime.datetime.now()
+        channel.save()
+        response = self.client.get(reverse("publicchannel-list", kwargs={}))
+        self._assert_headers(response, channel.last_updated)
+
     def test_channelmetadata_retrieve(self):
         data = models.ChannelMetadata.objects.values()[0]
         response = self.client.get(
             reverse("publicchannel-detail", kwargs={"pk": data["id"]})
         )
         self.assertEqual(response.data["name"], "testing")
+
+    def test_channelmetadata_retrieve_headers(self):
+        channel = models.ChannelMetadata.objects.get()
+        channel.last_updated = datetime.datetime.now()
+        channel.save()
+        response = self.client.get(
+            reverse("publicchannel-detail", kwargs={"pk": channel.id})
+        )
+        self._assert_headers(response, channel.last_updated)
 
     def test_channelmetadata_langfield(self):
         data = models.ChannelMetadata.objects.first()
