@@ -7,6 +7,7 @@ from django.db.models import Value
 from django.http import HttpResponseNotFound
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.cache import cache_page
+from kolibri_content.constants.schema_versions import MIN_CONTENT_SCHEMA_VERSION
 from rest_framework import viewsets
 from rest_framework.decorators import api_view
 from rest_framework.decorators import permission_classes
@@ -91,22 +92,79 @@ def get_channel_name_by_id(request, channel_id):
     return Response(channel_info)
 
 
+device_info_keys = {
+    "1": [
+        "application",
+        "kolibri_version",
+        "instance_id",
+        "device_name",
+        "operating_system",
+    ],
+    "2": [
+        "application",
+        "kolibri_version",
+        "instance_id",
+        "device_name",
+        "operating_system",
+        "subset_of_users_device",
+    ],
+    "3": [
+        "application",
+        "kolibri_version",
+        "instance_id",
+        "device_name",
+        "operating_system",
+        "subset_of_users_device",
+        "min_content_schema_version",
+    ],
+}
+
+DEVICE_INFO_VERSION = "3"
+
+
+def get_device_info(version=DEVICE_INFO_VERSION):
+    """
+    Returns metadata information about the device
+    The default kwarg version should always be the latest
+    version of device info that this function supports.
+    We maintain historic versions for backwards compatibility
+    """
+
+    if version not in device_info_keys:
+        version = DEVICE_INFO_VERSION
+
+    all_info = {
+        "application": "studio",
+        "kolibri_version": "0.16.0",
+        "instance_id": None,
+        'device_name': "Kolibri Studio",
+        "operating_system": None,
+        "subset_of_users_device": False,
+        "min_content_schema_version": MIN_CONTENT_SCHEMA_VERSION,
+    }
+
+    info = {}
+
+    # By this point, we have validated that the version is in device_info_keys
+    for key in device_info_keys.get(version, []):
+        info[key] = all_info[key]
+
+    return info
+
+
 class InfoViewSet(viewsets.ViewSet):
     """
     An equivalent endpoint in kolibri which allows kolibri devices to know
     if this device can serve content.
-    Spec doc: https://docs.google.com/document/d/1XKXQe25sf9Tht6uIXvqb3T40KeY3BLkkexcV08wvR9M/edit#
+    Ref: https://github.com/learningequality/kolibri/blob/develop/kolibri/core/public/api.py#L53
     """
 
     permission_classes = (AllowAny, )
 
     def list(self, request):
         """Returns metadata information about the type of device"""
+        # Default to version 1, as earlier versions of Kolibri
+        # will not have sent a "v" query param.
+        version = request.query_params.get("v", "1")
 
-        info = {'application': 'studio',
-                'kolibri_version': "0.16.0",
-                'instance_id': None,
-                'device_name': "Kolibri Studio",
-                'operating_system': None,
-                }
-        return Response(info)
+        return Response(get_device_info(version))
