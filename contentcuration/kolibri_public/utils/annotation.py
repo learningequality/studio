@@ -2,6 +2,8 @@
 Functions in here are the subset of annotation functions from Kolibri related to channel metadata.
 https://github.com/learningequality/kolibri/blob/caec91dd2da5617adfb50332fb698068248e8e47/kolibri/core/content/utils/annotation.py#L731
 """
+import datetime
+
 from django.db.models import Sum
 from kolibri_public.models import ChannelMetadata
 from kolibri_public.models import ContentNode
@@ -18,10 +20,12 @@ def set_channel_metadata_fields(channel_id, public=None):
     calculate_total_resource_count(channel)
     calculate_included_languages(channel)
     calculate_next_order(channel, public=public)
+    # Add this to ensure we keep this up to date.
+    channel.last_updated = datetime.datetime.now()
 
     if public is not None:
         channel.public = public
-        channel.save()
+    channel.save()
 
 
 def files_for_nodes(nodes):
