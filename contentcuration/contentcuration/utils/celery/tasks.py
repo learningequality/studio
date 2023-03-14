@@ -104,10 +104,8 @@ class CeleryTask(Task):
     track_started = True
     send_events = True
 
-    # ensure our tasks are restarted if they're interrupted
-    acks_late = True
-    acks_on_failure_or_timeout = True
-    reject_on_worker_lost = True
+    # Tasks are acknowledged just before they start executing
+    acks_late = False
 
     @property
     def TaskModel(self):
@@ -311,6 +309,7 @@ class CeleryAsyncResult(AsyncResult):
     The properties access additional properties in the same manner as super properties,
     and our custom properties are added to the meta via TaskResultCustom.as_dict()
     """
+
     def get_model(self):
         """
         :return: The TaskResult model object
