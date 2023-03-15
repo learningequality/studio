@@ -1,6 +1,7 @@
 import invert from 'lodash/invert';
 import Subjects from 'kolibri-constants/labels/Subjects';
 import CompletionCriteria from 'kolibri-constants/CompletionCriteria';
+import ContentLevels from 'kolibri-constants/labels/Levels';
 import featureFlagsSchema from 'static/feature_flags.json';
 
 export { default as LearningActivities } from 'kolibri-constants/labels/LearningActivities';
@@ -12,6 +13,7 @@ export { default as ResourcesNeededTypes } from 'kolibri-constants/labels/Needs'
 
 export const CategoriesLookup = invert(Subjects);
 export const CompletionCriteriaLookup = invert(CompletionCriteria);
+export const LevelsLookup = invert(ContentLevels);
 
 export const ContentDefaults = {
   author: 'author',
