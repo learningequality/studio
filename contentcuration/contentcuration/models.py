@@ -1531,8 +1531,6 @@ class ContentNode(MPTTModel, models.Model):
 
         descendants = (
             self.get_descendants()
-            .prefetch_related("children", "files", "tags")
-            .select_related("license", "language")
             .values("id")
         )
 
