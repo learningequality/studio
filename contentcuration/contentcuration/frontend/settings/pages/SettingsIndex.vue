@@ -65,10 +65,11 @@
       },
     },
     created() {
-      this.fetchDeferredUserData();
+      this.fetchDeferredUserApiToken();
+      this.fetchDeferredUserStorageByKind();
     },
     methods: {
-      ...mapActions('settings', ['fetchDeferredUserData']),
+      ...mapActions('settings', ['fetchDeferredUserStorageByKind', 'fetchDeferredUserApiToken']),
       updateTitleForPage() {
         // Updates the tab title every time the top-level route changes
         let title;
