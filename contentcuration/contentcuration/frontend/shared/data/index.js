@@ -61,10 +61,18 @@ function runElection() {
   };
 }
 
+function applyResourceListener(change) {
+  const resource = INDEXEDDB_RESOURCES[change.table];
+  if (resource && resource.listeners && resource.listeners[change.type]) {
+    resource.listeners[change.type](change);
+  }
+}
+
 export async function initializeDB() {
   try {
     setupSchema();
     await db.open();
+    db.on('changes', changes => changes.map(applyResourceListener));
     await runElection();
   } catch (e) {
     Sentry.captureException(e);

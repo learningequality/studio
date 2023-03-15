@@ -69,13 +69,6 @@ function isSyncableChange(change) {
   );
 }
 
-function applyResourceListener(change) {
-  const resource = INDEXEDDB_RESOURCES[change.table];
-  if (resource && resource.listeners && resource.listeners[change.type]) {
-    resource.listeners[change.type](change);
-  }
-}
-
 /**
  * Reduces a change to only the fields that are needed for sending it to the backend
  *
@@ -338,7 +331,6 @@ if (process.env.NODE_ENV !== 'production' && typeof window !== 'undefined') {
 }
 
 async function handleChanges(changes) {
-  changes.map(applyResourceListener);
   const syncableChanges = changes.filter(isSyncableChange);
   // Here we are handling changes triggered by Dexie Observable
   // this is listening to all of our IndexedDB tables, both for resources
