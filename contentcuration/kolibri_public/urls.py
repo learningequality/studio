@@ -2,15 +2,17 @@ from django.urls import include
 from django.urls import path
 from django.urls import re_path
 from kolibri_public import views_v1
+from kolibri_public.import_metadata_view import ImportMetadataViewset
+from kolibri_public.views import ChannelMetadataViewSet
 from kolibri_public.views import ContentNodeTreeViewset
 from kolibri_public.views import ContentNodeViewset
 from rest_framework import routers
 
 
 public_content_v2_router = routers.SimpleRouter()
-# public_content_v2_router.register(
-#     r"channel", ChannelMetadataViewSet, basename="publicchannel"
-# )
+public_content_v2_router.register(
+    r"channel", ChannelMetadataViewSet, basename="publicchannel"
+)
 public_content_v2_router.register(
     r"contentnode", ContentNodeViewset, basename="publiccontentnode"
 )
@@ -19,9 +21,9 @@ public_content_v2_router.register(
     ContentNodeTreeViewset,
     basename="publiccontentnode_tree",
 )
-# public_content_v2_router.register(
-#     r"importmetadata", ImportMetadataViewset, basename="importmetadata"
-# )
+public_content_v2_router.register(
+    r"importmetadata", ImportMetadataViewset, basename="publicimportmetadata"
+)
 
 urlpatterns = [
     re_path(r'^api/public/channel/(?P<channel_id>[^/]+)', views_v1.get_channel_name_by_id, name='get_channel_name_by_id'),

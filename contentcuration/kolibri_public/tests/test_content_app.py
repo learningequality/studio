@@ -9,6 +9,7 @@ from calendar import timegm
 from itertools import chain
 
 from django.core.cache import cache
+from django.core.management import call_command
 from django.urls import reverse
 from django.utils.http import http_date
 from kolibri_public import models
@@ -301,6 +302,7 @@ def infer_learning_activity(kind):
 class ContentNodeAPIBase(object):
     @classmethod
     def setUpTestData(cls):
+        call_command("loadconstants")
         builder = ChannelBuilder()
         builder.insert_into_default_db()
         models.ContentNode.objects.all().update(available=True)
@@ -310,6 +312,7 @@ class ContentNodeAPIBase(object):
         ).first()
         cls.has_prereq = models.ContentNode.objects.exclude(kind=content_kinds.TOPIC)[1]
         cls.has_prereq.has_prerequisite.add(cls.is_prereq)
+        cls.channel_data = builder.channel
 
     def _get(self, *args, **kwargs):
         return self.client.get(*args, **kwargs)
@@ -629,87 +632,113 @@ class ContentNodeAPITestCase(ContentNodeAPIBase, APITestCase):
         )
         self.assertEqual(set(response.data["tags"]), set(tags))
 
-    # def test_channelmetadata_list(self):
-    #     response = self.client.get(reverse("kolibri:core:channel-list", kwargs={}))
-    #     self.assertEqual(response.data[0]["name"], "testing")
+    def test_channelmetadata_list(self):
+        response = self.client.get(reverse("publicchannel-list", kwargs={}))
+        self.assertEqual(response.data[0]["name"], "testing")
 
-    # def test_channelmetadata_retrieve(self):
-    #     data = models.ChannelMetadata.objects.values()[0]
-    #     response = self.client.get(
-    #         reverse("kolibri:core:channel-detail", kwargs={"pk": data["id"]})
-    #     )
-    #     self.assertEqual(response.data["name"], "testing")
+    def test_channelmetadata_list_headers(self):
+        channel = models.ChannelMetadata.objects.get()
+        channel.last_updated = datetime.datetime.now()
+        channel.save()
+        response = self.client.get(reverse("publicchannel-list", kwargs={}))
+        self._assert_headers(response, channel.last_updated)
 
-    # def test_channelmetadata_langfield(self):
-    #     data = models.ChannelMetadata.objects.first()
-    #     root_lang = models.Language.objects.get(pk=1)
-    #     data.root.lang = root_lang
-    #     data.root.save()
+    def test_channelmetadata_retrieve(self):
+        data = models.ChannelMetadata.objects.values()[0]
+        response = self.client.get(
+            reverse("publicchannel-detail", kwargs={"pk": data["id"]})
+        )
+        self.assertEqual(response.data["name"], "testing")
 
-    #     response = self.client.get(
-    #         reverse("kolibri:core:channel-detail", kwargs={"pk": data.id})
-    #     )
-    #     self.assertEqual(response.data["lang_code"], root_lang.lang_code)
-    #     self.assertEqual(response.data["lang_name"], root_lang.lang_name)
+    def test_channelmetadata_retrieve_headers(self):
+        channel = models.ChannelMetadata.objects.get()
+        channel.last_updated = datetime.datetime.now()
+        channel.save()
+        response = self.client.get(
+            reverse("publicchannel-detail", kwargs={"pk": channel.id})
+        )
+        self._assert_headers(response, channel.last_updated)
 
-    # def test_channelmetadata_langfield_none(self):
-    #     data = models.ChannelMetadata.objects.first()
+    def test_channelmetadata_langfield(self):
+        data = models.ChannelMetadata.objects.first()
+        root_lang = models.Language.objects.first()
+        data.root.lang = root_lang
+        data.root.save()
 
-    #     response = self.client.get(
-    #         reverse("kolibri:core:channel-detail", kwargs={"pk": data.id})
-    #     )
-    #     self.assertEqual(response.data["lang_code"], None)
-    #     self.assertEqual(response.data["lang_name"], None)
+        response = self.client.get(
+            reverse("publicchannel-detail", kwargs={"pk": data.id})
+        )
+        self.assertEqual(response.data["lang_code"], root_lang.lang_code)
+        self.assertEqual(response.data["lang_name"], root_lang.native_name)
 
-    # def test_channelmetadata_content_available_param_filter_lowercase_true(self):
-    #     response = self.client.get(
-    #         reverse("kolibri:core:channel-list"), {"available": "true"}
-    #     )
-    #     self.assertEqual(response.data[0]["id"], "6199dde695db4ee4ab392222d5af1e5c")
+    def test_channelmetadata_langfield_none(self):
+        data = models.ChannelMetadata.objects.first()
 
-    # def test_channelmetadata_content_available_param_filter_uppercase_true(self):
-    #     response = self.client.get(
-    #         reverse("kolibri:core:channel-list"), {"available": True}
-    #     )
-    #     self.assertEqual(response.data[0]["id"], "6199dde695db4ee4ab392222d5af1e5c")
+        response = self.client.get(
+            reverse("publicchannel-detail", kwargs={"pk": data.id})
+        )
+        self.assertEqual(response.data["lang_code"], None)
+        self.assertEqual(response.data["lang_name"], None)
 
-    # def test_channelmetadata_content_unavailable_param_filter_false(self):
-    #     models.ContentNode.objects.filter(title="root").update(available=False)
-    #     response = self.client.get(
-    #         reverse("kolibri:core:channel-list"), {"available": False}
-    #     )
-    #     self.assertEqual(response.data[0]["id"], "6199dde695db4ee4ab392222d5af1e5c")
+    def test_channelmetadata_content_available_param_filter_lowercase_true(self):
+        response = self.client.get(
+            reverse("publicchannel-list"), {"available": "true"}
+        )
+        self.assertEqual(response.data[0]["id"], self.channel_data["id"])
 
-    # def test_channelmetadata_content_available_field_true(self):
-    #     response = self.client.get(reverse("kolibri:core:channel-list"))
-    #     self.assertEqual(response.data[0]["available"], True)
+    def test_channelmetadata_content_available_param_filter_uppercase_true(self):
+        response = self.client.get(
+            reverse("publicchannel-list"), {"available": True}
+        )
+        self.assertEqual(response.data[0]["id"], self.channel_data["id"])
 
-    # def test_channelmetadata_content_available_field_false(self):
-    #     models.ContentNode.objects.filter(title="root").update(available=False)
-    #     response = self.client.get(reverse("kolibri:core:channel-list"))
-    #     self.assertEqual(response.data[0]["available"], False)
+    def test_channelmetadata_content_unavailable_param_filter_false(self):
+        models.ContentNode.objects.all().update(available=False)
+        response = self.client.get(
+            reverse("publicchannel-list"), {"available": False}
+        )
+        self.assertEqual(response.data[0]["id"], self.channel_data["id"])
 
-    # def test_channelmetadata_has_exercises_filter(self):
-    #     # Has nothing else for that matter...
-    #     no_exercise_channel = models.ContentNode.objects.create(
-    #         pk="6a406ac66b224106aa2e93f73a94333d",
-    #         channel_id="f8ec4a5d14cd4716890999da596032d2",
-    #         content_id="ded4a083e75f4689b386fd2b706e792a",
-    #         kind="topic",
-    #         title="no exercise channel",
-    #     )
-    #     models.ChannelMetadata.objects.create(
-    #         id="63acff41781543828861ade41dbdd7ff",
-    #         name="no exercise channel metadata",
-    #         root=no_exercise_channel,
-    #     )
-    #     no_filter_response = self.client.get(reverse("kolibri:core:channel-list"))
-    #     self.assertEqual(len(no_filter_response.data), 2)
-    #     with_filter_response = self.client.get(
-    #         reverse("kolibri:core:channel-list"), {"has_exercise": True}
-    #     )
-    #     self.assertEqual(len(with_filter_response.data), 1)
-    #     self.assertEqual(with_filter_response.data[0]["name"], "testing")
+    def test_channelmetadata_content_available_field_true(self):
+        response = self.client.get(reverse("publicchannel-list"))
+        self.assertEqual(response.data[0]["available"], True)
+
+    def test_channelmetadata_content_available_field_false(self):
+        models.ContentNode.objects.all().update(available=False)
+        response = self.client.get(reverse("publicchannel-list"))
+        self.assertEqual(response.data[0]["available"], False)
+
+    def test_channelmetadata_has_exercises_filter(self):
+        # Has nothing else for that matter...
+        no_exercise_channel = models.ContentNode.objects.create(
+            pk="6a406ac66b224106aa2e93f73a94333d",
+            channel_id="f8ec4a5d14cd4716890999da596032d2",
+            content_id="ded4a083e75f4689b386fd2b706e792a",
+            kind="topic",
+            title="no exercise channel",
+        )
+        models.ChannelMetadata.objects.create(
+            id="63acff41781543828861ade41dbdd7ff",
+            name="no exercise channel metadata",
+            root=no_exercise_channel,
+            public=True,
+        )
+        models.ContentNode.objects.create(
+            pk=uuid.uuid4().hex,
+            channel_id=self.channel_data["id"],
+            content_id=uuid.uuid4().hex,
+            kind="exercise",
+            title="exercise",
+            parent=self.root,
+            available=True,
+        )
+        no_filter_response = self.client.get(reverse("publicchannel-list"))
+        self.assertEqual(len(no_filter_response.data), 2)
+        with_filter_response = self.client.get(
+            reverse("publicchannel-list"), {"has_exercise": True}
+        )
+        self.assertEqual(len(with_filter_response.data), 1)
+        self.assertEqual(with_filter_response.data[0]["name"], self.channel_data["name"])
 
     def test_filtering_coach_content_anon(self):
         response = self.client.get(
