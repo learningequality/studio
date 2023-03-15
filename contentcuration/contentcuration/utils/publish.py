@@ -33,6 +33,7 @@ from django.utils.translation import override
 from kolibri_content import models as kolibrimodels
 from kolibri_content.router import get_active_content_database
 from kolibri_content.router import using_content_database
+from kolibri_public.utils.mapper import ChannelMapper
 from le_utils.constants import completion_criteria
 from le_utils.constants import content_kinds
 from le_utils.constants import exercises
@@ -139,12 +140,15 @@ def create_content_database(channel, force, user_id, force_exercises, progress_t
             progress_tracker=progress_tracker,
         )
         tree_mapper.map_nodes()
-        map_channel_to_kolibri_channel(channel)
+        kolibri_channel = map_channel_to_kolibri_channel(channel)
         # It should be at this percent already, but just in case.
         if progress_tracker:
             progress_tracker.track(90)
         map_prerequisites(channel.main_tree)
         save_export_database(channel.pk)
+        if channel.public:
+            mapper = ChannelMapper(kolibri_channel)
+            mapper.run()
 
     return tempdb
 

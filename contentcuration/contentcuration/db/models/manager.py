@@ -47,16 +47,6 @@ def log_lock_time_spent(timespent):
     logging.debug("Spent {} seconds inside an mptt lock".format(timespent))
 
 
-def execute_queryset_without_results(queryset):
-    query = queryset.query
-    compiler = query.get_compiler(queryset.db)
-    sql, params = compiler.as_sql()
-    if not sql:
-        return
-    cursor = compiler.connection.cursor()
-    cursor.execute(sql, params)
-
-
 class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)):
     # Added 7-31-2018. We can remove this once we are certain we have eliminated all cases
     # where root nodes are getting prepended rather than appended to the tree list.
