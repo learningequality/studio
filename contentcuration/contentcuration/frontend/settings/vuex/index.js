@@ -84,7 +84,7 @@ export default {
 
     // Fetch the user API token
     fetchDeferredUserApiToken(context) {
-      if (context.getters.storageUseByKind && context.state.currentUser.api_token) {
+      if (context.rootState.session.currentUser.api_token) {
         return;
       }
 
@@ -101,7 +101,7 @@ export default {
 
     // Fetch the user storage details
     fetchDeferredUserStorageByKind(context) {
-      if (context.getters.storageUseByKind && context.state.currentUser.api_token) {
+      if (context.rootGetters.storageUseByKind) {
         return;
       }
 

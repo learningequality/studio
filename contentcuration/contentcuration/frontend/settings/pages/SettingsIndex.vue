@@ -65,7 +65,8 @@
       },
     },
     created() {
-      this.fetchDeferredUserApiToken(), this.fetchDeferredUserStorageByKind();
+      this.fetchDeferredUserApiToken();
+      this.fetchDeferredUserStorageByKind();
     },
     methods: {
       ...mapActions('settings', ['fetchDeferredUserStorageByKind', 'fetchDeferredUserApiToken']),
