@@ -1525,6 +1525,7 @@ class ContentNode(MPTTModel, models.Model):
         from contentcuration.viewsets.common import SQCount
         from contentcuration.viewsets.common import SQRelatedArrayAgg
         from contentcuration.viewsets.common import SQSum
+        from contentcuration.viewsets.common import SQJSONBKeyArrayAgg
 
         node = ContentNode.objects.filter(pk=self.id, tree_id=self.tree_id).order_by()
 
@@ -1561,6 +1562,8 @@ class ContentNode(MPTTModel, models.Model):
                 "sample_pathway": [],
                 "original_channels": [],
                 "sample_nodes": [],
+                "levels": [],
+                "categories": [],
             }
 
             # Set cache with latest data
@@ -1655,6 +1658,14 @@ class ContentNode(MPTTModel, models.Model):
             exercises=SQCount(
                 resources.filter(kind_id=content_kinds.EXERCISE), field="id"
             ),
+            levels=SQJSONBKeyArrayAgg(
+                descendants.exclude(grade_levels__isnull=True),
+                field="grade_levels",
+            ),
+            all_categories=SQJSONBKeyArrayAgg(
+                descendants.exclude(categories__isnull=True),
+                field="categories",
+            ),
         )
 
         # Get sample pathway by getting longest path
@@ -1744,6 +1755,8 @@ class ContentNode(MPTTModel, models.Model):
                 "tags_list",
                 "kind_count",
                 "exercises",
+                "levels",
+                "all_categories",
             )
             .first()
         )
@@ -1773,6 +1786,8 @@ class ContentNode(MPTTModel, models.Model):
             "aggregators": list(filter(bool, node["aggregators"])),
             "providers": list(filter(bool, node["providers"])),
             "copyright_holders": list(filter(bool, node["copyright_holders"])),
+            "levels": node.get("levels") or [],
+            "categories": node.get("all_categories") or [],
         }
 
         # Set cache with latest data
