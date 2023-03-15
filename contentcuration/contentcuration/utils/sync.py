@@ -75,13 +75,25 @@ def sync_node(
     return node
 
 
+synced_fields = [
+    "title",
+    "description",
+    "license_id",
+    "copyright_holder",
+    "author",
+    "extra_fields",
+    "categories",
+    "learner_needs",
+    "accessibility_labels",
+    "grade_levels",
+    "resource_types",
+    "learning_activities",
+]
+
+
 def sync_node_data(node, original):
-    node.title = original.title
-    node.description = original.description
-    node.license_id = original.license_id
-    node.copyright_holder = original.copyright_holder
-    node.author = original.author
-    node.extra_fields = original.extra_fields
+    for field in synced_fields:
+        setattr(node, field, getattr(original, field))
     # Set changed if anything has changed
     node.on_update()
 
