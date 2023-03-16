@@ -4,6 +4,7 @@ https://github.com/learningequality/kolibri/blob/caec91dd2da5617adfb50332fb69806
 """
 import datetime
 
+from django.db.models import Q
 from django.db.models import Sum
 from kolibri_public.models import ChannelMetadata
 from kolibri_public.models import ContentNode
@@ -71,7 +72,8 @@ def calculate_next_order(channel, public=False):
     # to make the order match given by the public channel API on Studio.
     if public:
         channel_list_order = list(Channel.objects.filter(
-            public=True, deleted=False, main_tree__published=True
+            # Ensure that this channel is always included in the list.
+            Q(public=True, deleted=False, main_tree__published=True) | Q(id=channel.id)
         ).order_by("-priority").values_list("id", flat=True))
         order = channel_list_order.index(channel.id)
         channel.order = order
