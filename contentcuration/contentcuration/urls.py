@@ -20,13 +20,13 @@ from django.urls import include
 from django.urls import path
 from django.urls import re_path
 from django.views.generic.base import RedirectView
+from kolibri_public.urls import urlpatterns as kolibri_public_urls
 from rest_framework import routers
 
 import contentcuration.views.admin as admin_views
 import contentcuration.views.base as views
 import contentcuration.views.internal as internal_views
 import contentcuration.views.nodes as node_views
-import contentcuration.views.public as public_views
 import contentcuration.views.settings as settings_views
 import contentcuration.views.users as registration_views
 import contentcuration.views.zip as zip_views
@@ -91,12 +91,7 @@ if "django_prometheus" in settings.INSTALLED_APPS:
 
 
 # Add public api endpoints
-urlpatterns += [
-    re_path(r'^api/public/channel/(?P<channel_id>[^/]+)', public_views.get_channel_name_by_id, name='get_channel_name_by_id'),
-    re_path(r'^api/public/(?P<version>[^/]+)/channels$', public_views.get_public_channel_list, name='get_public_channel_list'),
-    re_path(r'^api/public/(?P<version>[^/]+)/channels/lookup/(?P<identifier>[^/]+)', public_views.get_public_channel_lookup, name='get_public_channel_lookup'),
-    re_path(r'^api/public/info', public_views.InfoViewSet.as_view({'get': 'list'}), name='info'),
-]
+urlpatterns += kolibri_public_urls
 
 # Add node api enpoints
 urlpatterns += [
@@ -147,10 +142,6 @@ urlpatterns += [
 urlpatterns += [re_path(r'^jsreverse/$', django_js_reverse_views.urls_js, name='js_reverse')]
 
 # I18N Endpoints
-js_info_dict = {
-    'packages': ('your.app.package',),
-}
-
 urlpatterns += [
     re_path(r'^i18n/', include('django.conf.urls.i18n')),
 ]
