@@ -6,6 +6,7 @@ MOVED = 4
 COPIED = 5
 PUBLISHED = 6
 SYNCED = 7
+DEPLOYED = 8
 
 
 ALL_CHANGES = set([
@@ -16,6 +17,7 @@ ALL_CHANGES = set([
     COPIED,
     PUBLISHED,
     SYNCED,
+    DEPLOYED,
 ])
 
 # Client-side table constants

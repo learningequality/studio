@@ -28,6 +28,7 @@ from search.models import ChannelFullTextSearch
 from search.models import ContentNodeFullTextSearch
 from search.utils import get_fts_search_query
 
+import contentcuration.models as models
 from contentcuration.decorators import cache_no_user_data
 from contentcuration.models import Change
 from contentcuration.models import Channel
@@ -36,6 +37,7 @@ from contentcuration.models import File
 from contentcuration.models import generate_storage_url
 from contentcuration.models import SecretToken
 from contentcuration.models import User
+from contentcuration.utils.garbage_collect import get_deleted_chefs_root
 from contentcuration.utils.pagination import CachedListPagination
 from contentcuration.utils.pagination import ValuesViewsetPageNumberPagination
 from contentcuration.utils.publish import publish_channel
@@ -557,6 +559,52 @@ class ChannelViewSet(ValuesViewset):
                 assessment_items,
                 progress_tracker=progress_tracker,
             )
+
+    def deploy_from_changes(self, changes):
+        errors = []
+        for deploy in changes:
+            try:
+                self.deploy(self.request.user, deploy["key"])
+            except Exception as e:
+                log_sync_exception(e, user=self.request.user, change=deploy)
+                deploy["errors"] = [str(e)]
+                errors.append(deploy)
+        return 1
+
+    def deploy(self, user, pk):
+
+        channel = self.get_edit_queryset().get(pk=pk)
+
+        if channel.staging_tree is None:
+            raise ValidationError("Cannot deploy a channel without staging tree")
+
+        user.check_channel_space(channel)
+
+        if channel.previous_tree and channel.previous_tree != channel.main_tree:
+            # IMPORTANT: Do not remove this block, MPTT updating the deleted chefs block could hang the server
+            with models.ContentNode.objects.disable_mptt_updates():
+                garbage_node = get_deleted_chefs_root()
+                channel.previous_tree.parent = garbage_node
+                channel.previous_tree.title = "Previous tree for channel {}".format(channel.pk)
+                channel.previous_tree.save()
+
+        channel.previous_tree = channel.main_tree
+        channel.main_tree = channel.staging_tree
+        channel.staging_tree = None
+        channel.save()
+
+        user.staged_files.all().delete()
+        user.set_space_used()
+
+        models.Change.create_change(generate_update_event(
+            channel.id,
+            CHANNEL,
+            {
+                "root_id": channel.main_tree.id,
+                "staging_root_id": None
+            },
+            channel_id=channel.id,
+        ), applied=True, created_by_id=user.id)
 
 
 @method_decorator(
