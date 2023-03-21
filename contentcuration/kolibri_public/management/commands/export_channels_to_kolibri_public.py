@@ -9,6 +9,7 @@ from django.core.management import call_command
 from django.core.management.base import BaseCommand
 from kolibri_content.apps import KolibriContentConfig
 from kolibri_content.models import ChannelMetadata as ExportedChannelMetadata
+from kolibri_content.router import get_active_content_database
 from kolibri_content.router import using_content_database
 from kolibri_public.models import ChannelMetadata
 from kolibri_public.utils.mapper import ChannelMapper
@@ -29,7 +30,7 @@ class Command(BaseCommand):
                 db_file.seek(0)
                 with using_content_database(db_file.name):
                     # Run migration to handle old content databases published prior to current fields being added.
-                    call_command("migrate", app_label=KolibriContentConfig.label, database=db_file.name)
+                    call_command("migrate", app_label=KolibriContentConfig.label, database=get_active_content_database())
                     channel = ExportedChannelMetadata.objects.get(id=channel_id)
                     logger.info("Found channel {} for id: {} mapping now".format(channel.name, channel_id))
                     mapper = ChannelMapper(channel)
