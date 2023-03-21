@@ -310,7 +310,11 @@
                   inline
                 />
               </DetailsRow>
-              <DetailsRow v-if="node.kind === 'video'" :label="$tr('subtitles')">
+              <DetailsRow
+                v-if="node.kind === 'video' ||
+                  node.kind === 'audio'"
+                :label="$tr('subtitles')"
+              >
                 <ExpandableList :noItemsText="defaultText" :items="subtitleFileLanguages" inline />
               </DetailsRow>
             </template>
