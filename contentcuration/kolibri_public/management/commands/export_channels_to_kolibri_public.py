@@ -5,7 +5,9 @@ import tempfile
 
 from django.conf import settings
 from django.core.files.storage import default_storage as storage
+from django.core.management import call_command
 from django.core.management.base import BaseCommand
+from kolibri_content.apps import KolibriContentConfig
 from kolibri_content.models import ChannelMetadata as ExportedChannelMetadata
 from kolibri_content.router import using_content_database
 from kolibri_public.models import ChannelMetadata
@@ -26,6 +28,8 @@ class Command(BaseCommand):
                 shutil.copyfileobj(storage_file, db_file)
                 db_file.seek(0)
                 with using_content_database(db_file.name):
+                    # Run migration to handle old content databases published prior to current fields being added.
+                    call_command("migrate", app_label=KolibriContentConfig.label, database=db_file.name)
                     channel = ExportedChannelMetadata.objects.get(id=channel_id)
                     logger.info("Found channel {} for id: {} mapping now".format(channel.name, channel_id))
                     mapper = ChannelMapper(channel)
