@@ -22,13 +22,13 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         start = time.time()
 
-        logging.info("Setting 'has captions' for video kinds")
+        logging.info("Setting 'has captions' for audio kinds")
 
         has_captions_subquery = Exists(File.objects.filter(contentnode=OuterRef("id"), language=OuterRef("language"), preset_id=format_presets.VIDEO_SUBTITLE))
-        # Only try to update video nodes which have not had any accessibility labels set on them
+        # Only try to update audio nodes which have not had any accessibility labels set on them
         # this will allow this management command to be rerun and resume from where it left off
         # and also prevent stomping previous edits to the accessibility_labels field.
-        updateable_nodes = ContentNode.objects.filter(has_captions_subquery, kind=content_kinds.VIDEO, accessibility_labels__isnull=True)
+        updateable_nodes = ContentNode.objects.filter(has_captions_subquery, kind=content_kinds.AUDIO, accessibility_labels__isnull=True)
 
         updateable_node_slice = updateable_nodes.values_list("id", flat=True)[0:CHUNKSIZE]
 
