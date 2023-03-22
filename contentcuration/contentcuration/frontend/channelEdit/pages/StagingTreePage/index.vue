@@ -509,7 +509,7 @@
       async onDeployChannelClick() {
         this.submitDisabled = true;
         try {
-          await this.deployCurrentChannel();
+          this.deployCurrentChannel();
         } catch (e) {
           this.submitDisabled = false;
           throw e;

@@ -1085,6 +1085,19 @@ export const Channel = new Resource({
     });
   },
 
+  deploy(id) {
+    const change = {
+      key: id,
+      source: CLIENTID,
+      table: this.tableName,
+      type: CHANGE_TYPES.DEPLOYED,
+      channel_id: id,
+    };
+    return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, CHANGES_TABLE, () => {
+      return db[CHANGES_TABLE].put(change);
+    });
+  },
+
   sync(id, { attributes = false, tags = false, files = false, assessment_items = false } = {}) {
     const change = {
       key: id,
