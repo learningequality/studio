@@ -27,6 +27,7 @@ from .testdata import channel
 from .testdata import create_studio_file
 from .testdata import node as create_node
 from .testdata import slideshow
+from .testdata import thumbnail_bytes
 from contentcuration import models as cc
 from contentcuration.utils.publish import convert_channel_thumbnail
 from contentcuration.utils.publish import create_content_database
@@ -37,9 +38,6 @@ from contentcuration.utils.publish import MIN_SCHEMA_VERSION
 from contentcuration.utils.publish import set_channel_icon_encoding
 
 pytestmark = pytest.mark.django_db
-
-
-thumbnail_bytes = b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\nIDATx\x9cc\x00\x01\x00\x00\x05\x00\x01\r\n-\xb4\x00\x00\x00\x00IEND\xaeB`\x82'  # noqa E501
 
 
 def description():
