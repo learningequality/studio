@@ -47,6 +47,35 @@ def log_lock_time_spent(timespent):
     logging.debug("Spent {} seconds inside an mptt lock".format(timespent))
 
 
+# Fields that are allowed to be overridden on copies coming from a source that the user
+# does not have edit rights to.
+ALLOWED_OVERRIDES = {
+    "node_id",
+    "title",
+    "description",
+    "aggregator",
+    "provider",
+    "language_id",
+    "grade_levels",
+    "resource_types",
+    "learning_activities",
+    "accessibility_labels",
+    "categories",
+    "learner_needs",
+    "role",
+    "extra_fields",
+    "suggested_duration",
+}
+
+EDIT_ALLOWED_OVERRIDES = ALLOWED_OVERRIDES.union({
+    "license_id",
+    "license_description",
+    "extra_fields",
+    "copyright_holder",
+    "author",
+})
+
+
 class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)):
     # Added 7-31-2018. We can remove this once we are certain we have eliminated all cases
     # where root nodes are getting prepended rather than appended to the tree list.
@@ -262,7 +291,10 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
         copy.update(self.get_source_attributes(source))
 
         if isinstance(mods, dict):
-            copy.update(mods)
+            allowed_keys = EDIT_ALLOWED_OVERRIDES if can_edit_source_channel else ALLOWED_OVERRIDES
+            for key, value in mods.items():
+                if key in copy and key in allowed_keys:
+                    copy[key] = value
 
         # There might be some legacy nodes that don't have these, so ensure they are added
         if (
