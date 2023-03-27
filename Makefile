@@ -42,8 +42,8 @@ set-tsvectors:
 	python contentcuration/manage.py set_contentnode_tsvectors --published
 
 reconcile:
-	python contentcuration/manage.py reconcile_change_tasks
 	python contentcuration/manage.py reconcile_publishing_status
+	python contentcuration/manage.py reconcile_change_tasks
 
 ###############################################################
 # END PRODUCTION COMMANDS #####################################

@@ -291,7 +291,7 @@ class CeleryTask(Task):
         task_ids = self.find_incomplete_ids(signature)
 
         if exclude_task_ids is not None:
-            task_ids = task_ids.exclude(task_id__in=task_ids)
+            task_ids = task_ids.exclude(task_id__in=exclude_task_ids)
         count = 0
         for task_id in task_ids:
             logging.info(f"Revoking task {task_id}")
