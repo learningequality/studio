@@ -76,6 +76,16 @@ class CeleryApp(Celery):
             for task in tasks:
                 yield task
 
+    def get_active_tasks(self):
+        """
+        Iterate over active tasks
+        :return: A list of dictionaries
+        """
+        active = self.control.inspect().active() or {}
+        for _, tasks in active.items():
+            for task in tasks:
+                yield task
+
     def decode_result(self, result, status=None):
         """
         Decodes the celery result, like the raw result from the database, using celery tools

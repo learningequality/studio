@@ -22,8 +22,8 @@ class Command(BaseCommand):
         # Channels that are in `publishing` state.
         publishing_channels = list(Channel.objects.filter(deleted=False, main_tree__publishing=True).values_list("id", flat=True))
 
-        # channel_ids of tasks that are being run by the celery workers or are waiting to be run.
-        active_channel_tasks = [task["kwargs"].get("channel_id") for task in app.get_active_and_reserved_tasks()
+        # channel_ids of tasks that are currently being run by the celery workers.
+        active_channel_tasks = [task["kwargs"].get("channel_id") for task in app.get_active_tasks()
                                 if task["name"] == apply_channel_changes_task.name]
 
         # If channel is in publishing state and doesnot have any active task,
