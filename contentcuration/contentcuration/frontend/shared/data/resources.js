@@ -1546,6 +1546,11 @@ export const ContentNode = new TreeResource({
 export const ChannelSet = new Resource({
   tableName: TABLE_NAMES.CHANNELSET,
   urlName: 'channelset',
+  setUserIdOnChange(change) {
+    if (vuexStore) {
+      change.user_id = vuexStore.getters.currentUserId;
+    }
+  },
 });
 
 export const Invitation = new Resource({
