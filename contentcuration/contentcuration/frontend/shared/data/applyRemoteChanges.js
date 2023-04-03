@@ -4,7 +4,7 @@ import { CHANGE_TYPES, IGNORED_SOURCE, TABLE_NAMES } from './constants';
 import db from './db';
 import { INDEXEDDB_RESOURCES } from './registry';
 
-const { CREATED, DELETED, UPDATED, MOVED, PUBLISHED, SYNCED } = CHANGE_TYPES;
+const { CREATED, DELETED, UPDATED, MOVED, PUBLISHED, SYNCED, DEPLOYED } = CHANGE_TYPES;
 
 export function applyMods(obj, mods) {
   for (let keyPath in mods) {
@@ -28,6 +28,7 @@ export function collectChanges(changes) {
         [MOVED]: [],
         [PUBLISHED]: [],
         [SYNCED]: [],
+        [DEPLOYED]: [],
       };
     }
     collectedChanges[change.table][change.type].push(change);
