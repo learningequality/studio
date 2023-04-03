@@ -134,9 +134,9 @@ hascaptions:
 
 export COMPOSE_PROJECT_NAME=studio_$(shell git rev-parse --abbrev-ref HEAD)
 
-purge-postgres:
-	-PGPASSWORD=kolibri dropdb -U learningequality "kolibri-studio" --port 5432 -h localhost
-	PGPASSWORD=kolibri createdb -U learningequality "kolibri-studio" --port 5432 -h localhost
+purge-postgres: .docker/pgpass
+	-PGPASSFILE=.docker/pgpass dropdb -U learningequality "kolibri-studio" --port 5432 -h localhost
+	PGPASSFILE=.docker/pgpass createdb -U learningequality "kolibri-studio" --port 5432 -h localhost
 
 destroy-and-recreate-database: purge-postgres setup
 
@@ -146,15 +146,29 @@ devceleryworkers:
 run-services:
 	$(MAKE) -j 2 dcservicesup devceleryworkers
 
+.docker/minio:
+	mkdir -p $@
+
+.docker/postgres:
+	mkdir -p $@
+
+.docker/pgpass:
+	echo "localhost:5432:kolibri-studio:learningequality:kolibri" > $@
+	chmod 600 $@
+
+.docker/postgres/init.sql: .docker/pgpass
+	# assumes postgres is running in a docker container
+	PGPASSFILE=.docker/pgpass pg_dump --host localhost --port 5432 --username learningequality --dbname "kolibri-studio" --file $@
+
 dcbuild:
 	# build all studio docker image and all dependent services using docker-compose
 	$(DOCKER_COMPOSE) build
 
-dcup:
+dcup: .docker/minio .docker/postgres
 	# run all services except for cloudprober
 	$(DOCKER_COMPOSE) up studio-app celery-worker
 
-dcup-cloudprober:
+dcup-cloudprober: .docker/minio .docker/postgres
 	# run all services including cloudprober
 	$(DOCKER_COMPOSE) up
 
@@ -171,11 +185,14 @@ dcshell:
 	# bash shell inside the (running!) studio-app container
 	$(DOCKER_COMPOSE) exec studio-app /usr/bin/fish
 
-dctest:
+dcpsql: .docker/pgpass
+	PGPASSFILE=.docker/pgpass psql --host localhost --port 5432 --username learningequality --dbname "kolibri-studio"
+
+dctest: .docker/minio .docker/postgres
 	# run backend tests inside docker, in new instances
 	$(DOCKER_COMPOSE) run studio-app make test
 
-dcservicesup:
+dcservicesup: .docker/minio .docker/postgres
 	# launch all studio's dependent services using docker-compose
 	$(DOCKER_COMPOSE) -f docker-compose.yml -f docker-compose.alt.yml up minio postgres redis
 
