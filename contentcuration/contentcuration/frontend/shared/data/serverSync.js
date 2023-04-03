@@ -54,6 +54,7 @@ const ChangeTypeMapFields = {
   ]),
   [CHANGE_TYPES.PUBLISHED]: commonFields.concat(['version_notes', 'language']),
   [CHANGE_TYPES.SYNCED]: commonFields.concat(['attributes', 'tags', 'files', 'assessment_items']),
+  [CHANGE_TYPES.DEPLOYED]: commonFields,
 };
 
 function isSyncableChange(change) {
