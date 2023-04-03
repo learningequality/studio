@@ -69,13 +69,6 @@ function isSyncableChange(change) {
   );
 }
 
-function applyResourceListener(change) {
-  const resource = INDEXEDDB_RESOURCES[change.table];
-  if (resource && resource.listeners && resource.listeners[change.type]) {
-    resource.listeners[change.type](change);
-  }
-}
-
 /**
  * Reduces a change to only the fields that are needed for sending it to the backend
  *
@@ -331,6 +324,8 @@ const debouncedSyncChanges = debounce(() => {
   if (!syncActive) {
     return syncChanges();
   }
+  // TODO: actually return promise that resolves when active sync completes
+  return new Promise(resolve => setTimeout(resolve, 1000));
 }, SYNC_IF_NO_CHANGES_FOR * 1000);
 
 if (process.env.NODE_ENV !== 'production' && typeof window !== 'undefined') {
@@ -338,7 +333,6 @@ if (process.env.NODE_ENV !== 'production' && typeof window !== 'undefined') {
 }
 
 async function handleChanges(changes) {
-  changes.map(applyResourceListener);
   const syncableChanges = changes.filter(isSyncableChange);
   // Here we are handling changes triggered by Dexie Observable
   // this is listening to all of our IndexedDB tables, both for resources
@@ -391,6 +385,9 @@ export function stopSyncing() {
   db.on('changes').unsubscribe(handleChanges);
 }
 
+/**
+ * @return {Promise}
+ */
 export function forceServerSync() {
   debouncedSyncChanges();
   return debouncedSyncChanges.flush();

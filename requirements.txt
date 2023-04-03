@@ -54,7 +54,7 @@ click-repl==0.2.0
     # via celery
 confusable-homoglyphs==3.2.0
     # via django-registration
-django==3.2.14
+django==3.2.18
     # via
     #   -r requirements.in
     #   django-bulk-update
@@ -178,8 +178,6 @@ pathlib==1.0.1
     # via -r requirements.in
 pillow==9.4.0
     # via -r requirements.in
-progressbar2==3.55.0
-    # via -r requirements.in
 prometheus-client==0.10.1
     # via django-prometheus
 prompt-toolkit==3.0.23
@@ -218,15 +216,13 @@ python-dateutil==2.8.1
     #   botocore
 python-postmark==0.5.8
     # via -r requirements.in
-python-utils==2.5.6
-    # via progressbar2
 pytz==2022.1
     # via
     #   celery
     #   django
     #   django-postmark
     #   google-api-core
-redis==4.4.2
+redis==4.5.1
     # via
     #   -r requirements.in
     #   django-redis
@@ -241,7 +237,7 @@ rsa==4.7.2
     #   oauth2client
 s3transfer==0.4.2
     # via boto3
-sentry-sdk==1.15.0
+sentry-sdk==1.16.0
     # via -r requirements.in
 six==1.16.0
     # via
@@ -252,9 +248,7 @@ six==1.16.0
     #   google-resumable-media
     #   html5lib
     #   oauth2client
-    #   progressbar2
     #   python-dateutil
-    #   python-utils
 sqlparse==0.4.1
     # via django
 urllib3==1.26.14

@@ -554,12 +554,7 @@
         return this.firstNode.original_channel_name;
       },
       requiresAccessibility() {
-        return (
-          this.oneSelected &&
-          this.nodes.every(
-            node => node.kind !== ContentKindsNames.AUDIO && node.kind !== ContentKindsNames.TOPIC
-          )
-        );
+        return this.oneSelected && this.nodes.every(node => node.kind !== ContentKindsNames.TOPIC);
       },
       audioAccessibility() {
         return this.oneSelected && this.firstNode.kind === 'audio';

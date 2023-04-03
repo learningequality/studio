@@ -88,6 +88,7 @@ INSTALLED_APPS = (
     'mathfilters',
     'django.contrib.postgres',
     'django_celery_results',
+    'kolibri_public',
 )
 
 SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"
@@ -123,8 +124,8 @@ if SITE_READ_ONLY:
 
 MIDDLEWARE = (
     # 'django.middleware.cache.UpdateCacheMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.locale.LocaleMiddleware',
+    'contentcuration.middleware.session.KolibriStudioSessionMiddleware',
+    'contentcuration.middleware.locale.KolibriStudioLocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.common.BrokenLinkEmailsMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',

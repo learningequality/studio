@@ -7,7 +7,6 @@ from django.core.management.base import BaseCommand
 from contentcuration.models import File
 from contentcuration.models import MEDIA_PRESETS
 
-logmodule.basicConfig(level=logmodule.INFO)
 logging = logmodule.getLogger('command')
 
 

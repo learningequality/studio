@@ -4,8 +4,8 @@ from django.conf import settings
 from django.core.cache import cache
 from django.urls import reverse
 
-from .base import BaseAPITestCase
-from .testdata import generated_base64encoding
+from contentcuration.tests.base import BaseAPITestCase
+from contentcuration.tests.testdata import generated_base64encoding
 
 
 class PublicAPITestCase(BaseAPITestCase):

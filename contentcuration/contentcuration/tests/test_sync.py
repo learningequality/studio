@@ -6,6 +6,12 @@ from django.urls import reverse
 from le_utils.constants import content_kinds
 from le_utils.constants import file_formats
 from le_utils.constants import format_presets
+from le_utils.constants.labels import accessibility_categories
+from le_utils.constants.labels import learning_activities
+from le_utils.constants.labels import levels
+from le_utils.constants.labels import needs
+from le_utils.constants.labels import resource_type
+from le_utils.constants.labels import subjects
 
 from .base import StudioTestCase
 from .testdata import create_temp_file
@@ -269,6 +275,55 @@ class SyncTestCase(StudioTestCase):
         )
 
         self.assertTrue(self.derivative_channel.has_changes())
+
+    def test_sync_channel_metadata_labels(self):
+        """
+        Test that calling sync channel will also bring in metadata label updates.
+        """
+
+        self.assertFalse(self.channel.has_changes())
+        self.assertFalse(self.derivative_channel.has_changes())
+
+        labels = {
+            "categories": subjects.MATHEMATICS,
+            "learner_needs": needs.PRIOR_KNOWLEDGE,
+            "accessibility_labels": accessibility_categories.CAPTIONS_SUBTITLES,
+            "grade_levels": levels.LOWER_SECONDARY,
+            "resource_types": resource_type.LESSON_PLAN,
+            "learning_activities": learning_activities.LISTEN,
+        }
+
+        contentnode = (
+            self.channel.main_tree.get_descendants()
+            .exclude(kind_id=content_kinds.TOPIC)
+            .first()
+        )
+
+        target_child = self.derivative_channel.main_tree.get_descendants().get(
+            source_node_id=contentnode.node_id
+        )
+
+        self.assertIsNotNone(target_child)
+
+        for key, value in labels.items():
+            setattr(contentnode, key, {value: True})
+        contentnode.save()
+
+        sync_channel(
+            self.derivative_channel,
+            sync_attributes=True,
+            sync_tags=False,
+            sync_files=False,
+            sync_assessment_items=False,
+        )
+
+        self.assertTrue(self.channel.has_changes())
+        self.assertTrue(self.derivative_channel.has_changes())
+
+        target_child.refresh_from_db()
+
+        for key, value in labels.items():
+            self.assertEqual(getattr(target_child, key), {value: True})
 
 
 class ContentIDTestCase(SyncTestMixin, StudioAPITestCase):

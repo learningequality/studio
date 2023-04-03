@@ -5,7 +5,6 @@ from django.core.management.base import BaseCommand
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
 
-logging.basicConfig()
 logger = logging.getLogger('command')
 
 

@@ -56,7 +56,7 @@ customizable-django-profiler @ git+https://github.com/someshchaturvedi/customiza
     # via -r requirements-dev.in
 distlib==0.3.1
     # via virtualenv
-django==3.2.14
+django==3.2.18
     # via
     #   -c requirements.txt
     #   django-debug-toolbar
@@ -278,7 +278,7 @@ werkzeug==2.0.1
     # via
     #   flask
     #   locust
-wheel==0.37.1
+wheel==0.38.1
     # via pip-tools
 whitenoise==5.2.0
     # via -r requirements-dev.in
