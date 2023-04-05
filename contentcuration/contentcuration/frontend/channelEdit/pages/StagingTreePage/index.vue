@@ -21,7 +21,7 @@
       <span class="grey--darken-2 grey--text">{{ $tr('reviewMode') }}</span>
     </ToolBar>
     <MainNavigationDrawer v-model="drawer" />
-    <LoadingText v-if="isLoading" />
+    <LoadingText v-if="isLoading || isDeploying" />
     <VContent v-else-if="isEmpty">
       <VLayout justify-center fill-height class="pt-5">
         <VFlex class="text-xs-center">
@@ -204,8 +204,8 @@
         data-test="deploy-dialog"
         :title="$tr('deployChannel')"
         :submitText="$tr('confirmDeployBtn')"
-        :submitDisabled="submitDisabled"
-        :cancelDisabled="submitDisabled"
+        :submitDisabled="isDeploying"
+        :cancelDisabled="isDeploying"
         :cancelText="$tr('cancelDeployBtn')"
         @submit="onDeployChannelClick"
         @cancel="displayDeployDialog = false"
@@ -258,6 +258,7 @@
   import ToolBar from 'shared/views/ToolBar';
   import MainNavigationDrawer from 'shared/views/MainNavigationDrawer';
   import OfflineText from 'shared/views/OfflineText';
+  import { Channel } from 'shared/data/resources';
 
   export default {
     name: 'StagingTreePage',
@@ -295,7 +296,7 @@
         displayDeployDialog: false,
         drawer: false,
         elevated: false,
-        submitDisabled: false,
+        isDeploying: false,
       };
     },
     computed: {
@@ -432,7 +433,6 @@
     },
     methods: {
       ...mapActions(['showSnackbar', 'addViewModeOverride', 'removeViewModeOverride']),
-      ...mapActions('channel', ['loadChannel']),
       ...mapActions('currentChannel', [
         'loadCurrentChannelStagingDiff',
         'deployCurrentChannel',
@@ -506,20 +506,22 @@
       scroll(e) {
         this.elevated = e.target.scrollTop > 0;
       },
-      async onDeployChannelClick() {
-        this.submitDisabled = true;
-        try {
-          this.deployCurrentChannel();
-        } catch (e) {
-          this.submitDisabled = false;
-          throw e;
-        }
-        await this.loadChannel(this.currentChannel.id);
+      onDeployChannelClick() {
+        this.displayDeployDialog = false;
+        this.deployCurrentChannel();
+        this.isDeploying = true;
 
-        this.$router.push(this.rootTreeRoute);
-
-        this.showSnackbar({
-          text: this.$tr('channelDeployed'),
+        Channel.waitForDeploying(this.currentChannel.id).then(rootId => {
+          this.isDeploying = false;
+          this.$router.push({
+            name: RouteNames.TREE_VIEW,
+            params: {
+              nodeId: rootId,
+            },
+          });
+          this.showSnackbar({
+            text: this.$tr('channelDeployed'),
+          });
         });
       },
     },

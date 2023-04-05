@@ -1098,6 +1098,31 @@ export const Channel = new Resource({
     });
   },
 
+  waitForDeploying(id) {
+    const observable = Dexie.liveQuery(() => {
+      return this.table
+        .where('id')
+        .equals(id)
+        .filter(channel => channel['staging_root_id'] === null)
+        .toArray();
+    });
+
+    return new Promise((resolve, reject) => {
+      const subscription = observable.subscribe({
+        next(result) {
+          if (result.length === 1 && result[0].staging_root_id === null) {
+            subscription.unsubscribe();
+            resolve(result[0].root_id);
+          }
+        },
+        error() {
+          subscription.unsubscribe();
+          reject();
+        },
+      });
+    });
+  },
+
   sync(id, { attributes = false, tags = false, files = false, assessment_items = false } = {}) {
     const change = {
       key: id,
