@@ -404,9 +404,11 @@
         });
       },
       stagingId() {
-        this.$router.push({
-          name: RouteNames.STAGING_TREE_VIEW_REDIRECT,
-        });
+        if (this.hasStagingTree) {
+          this.$router.push({
+            name: RouteNames.STAGING_TREE_VIEW_REDIRECT,
+          });
+        }
       },
     },
     created() {
@@ -508,7 +510,6 @@
       },
       onDeployChannelClick() {
         this.displayDeployDialog = false;
-        this.deployCurrentChannel();
         this.isDeploying = true;
 
         Channel.waitForDeploying(this.currentChannel.id).then(rootId => {
@@ -523,6 +524,8 @@
             text: this.$tr('channelDeployed'),
           });
         });
+
+        this.deployCurrentChannel();
       },
     },
     $trs: {

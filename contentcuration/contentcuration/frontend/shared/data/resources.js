@@ -1103,14 +1103,14 @@ export const Channel = new Resource({
       return this.table
         .where('id')
         .equals(id)
-        .filter(channel => channel['staging_root_id'] === null)
+        .filter(channel => !channel['staging_root_id'] || channel['staging_root_id'] === null)
         .toArray();
     });
 
     return new Promise((resolve, reject) => {
       const subscription = observable.subscribe({
         next(result) {
-          if (result.length === 1 && result[0].staging_root_id === null) {
+          if (result.length === 1) {
             subscription.unsubscribe();
             resolve(result[0].root_id);
           }
