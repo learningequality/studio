@@ -334,7 +334,7 @@
   import camelCase from 'lodash/camelCase';
   import { isImportedContent, importedChannelLink } from '../utils';
   import FilePreview from '../views/files/FilePreview';
-  import { ContentLevel, Categories, AccessibilityCategories } from '../../shared/constants';
+  import { ContentLevels, Categories, AccessibilityCategories } from '../../shared/constants';
   import AssessmentItemPreview from './AssessmentItemPreview/AssessmentItemPreview';
   import ContentNodeValidator from './ContentNodeValidator';
   import {
@@ -593,9 +593,9 @@
       },
       level(levels) {
         const ids = Object.keys(levels);
-        const matches = Object.keys(ContentLevel)
+        const matches = Object.keys(ContentLevels)
           .sort()
-          .filter(k => ids.includes(ContentLevel[k]));
+          .filter(k => ids.includes(ContentLevels[k]));
         if (matches && matches.length > 0) {
           let mappedMatches = [];
           let newMatch;
