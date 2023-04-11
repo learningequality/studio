@@ -15,6 +15,7 @@ from le_utils.constants import content_kinds
 from rest_framework.test import APITestCase
 
 from contentcuration.models import generate_storage_url
+from contentcuration.models import Language
 
 
 kind_activity_map = {
@@ -185,6 +186,14 @@ class ContentNodeAPIBase(object):
         response = self._get(reverse("publiccontentnode-list"))
         self.assertEqual(len(response.data), expected_output)
         self._assert_nodes(response.data, nodes)
+
+    def test_contentnode_list_labels(self):
+        nodes = self.root.get_descendants(include_self=True).filter(available=True)
+        response = self._get(reverse("publiccontentnode-list"), data={"max_results": 1})
+        node_languages = Language.objects.filter(contentnode__in=nodes)
+        self.assertEqual(len(response.data["labels"]["languages"]), node_languages.distinct().count())
+        for lang in response.data["labels"]["languages"]:
+            self.assertTrue(node_languages.filter(native_name=lang["lang_name"]).exists())
 
     def test_contentnode_list_headers(self):
         channel = models.ChannelMetadata.objects.get()

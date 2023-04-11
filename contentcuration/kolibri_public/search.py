@@ -62,11 +62,16 @@ def _get_available_languages(base_queryset):
     # Updated to use contentcuration Language model
     from contentcuration.models import Language
 
-    langs = Language.objects.filter(
-        id__in=base_queryset.exclude(lang=None)
-        .values_list("lang_id", flat=True)
-        .distinct()
-    ).values("id", "lang_name")
+    langs = map(
+        # Updated to use contentcuration field names
+        # Convert language objects to dicts mapped to the kolibri field names
+        lambda x: {"id": x["id"], "lang_name": x["native_name"]},
+        Language.objects.filter(
+            id__in=base_queryset.exclude(lang=None)
+            .values_list("lang_id", flat=True)
+            .distinct()
+        ).values("id", "native_name")
+    )
     return list(langs)
 
 
