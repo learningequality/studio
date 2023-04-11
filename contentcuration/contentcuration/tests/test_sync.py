@@ -81,8 +81,8 @@ class SyncTestCase(StudioTestCase):
 
         sync_channel(
             self.derivative_channel,
-            sync_attributes=True,
-            sync_tags=True,
+            sync_titles_and_descriptions=True,
+            sync_resource_details=True,
             sync_files=True,
             sync_assessment_items=True,
         )
@@ -208,7 +208,7 @@ class SyncTestCase(StudioTestCase):
             target_child.tags.count(), contentnode.tags.count()
         )
 
-        sync_channel(self.derivative_channel, sync_tags=True)
+        sync_channel(self.derivative_channel, sync_resource_details=True)
         self.derivative_channel.main_tree.refresh_from_db()
 
         self.assertEqual(
@@ -258,7 +258,7 @@ class SyncTestCase(StudioTestCase):
             target_child.tags.count(), contentnode.tags.count()
         )
         try:
-            sync_channel(self.derivative_channel, sync_tags=True)
+            sync_channel(self.derivative_channel, sync_resource_details=True)
         except Exception as e:
             self.fail("Could not run sync_channel without raising exception: {}".format(e))
         self.derivative_channel.main_tree.refresh_from_db()
@@ -276,9 +276,54 @@ class SyncTestCase(StudioTestCase):
 
         self.assertTrue(self.derivative_channel.has_changes())
 
-    def test_sync_channel_metadata_labels(self):
+    def test_sync_channel_titles_and_descriptions(self):
         """
-        Test that calling sync channel will also bring in metadata label updates.
+        Test that calling sync channel will update titles and descriptions.
+        """
+
+        self.assertFalse(self.channel.has_changes())
+        self.assertFalse(self.derivative_channel.has_changes())
+
+        labels = {
+            "title": "Some channel title",
+            "description": "Some channel description",
+        }
+
+        contentnode = (
+            self.channel.main_tree.get_descendants()
+            .exclude(kind_id=content_kinds.TOPIC)
+            .first()
+        )
+
+        target_child = self.derivative_channel.main_tree.get_descendants().get(
+            source_node_id=contentnode.node_id
+        )
+
+        self.assertIsNotNone(target_child)
+
+        for key, value in labels.items():
+            setattr(contentnode, key, value)
+        contentnode.save()
+
+        sync_channel(
+            self.derivative_channel,
+            sync_titles_and_descriptions=True,
+            sync_resource_details=False,
+            sync_files=False,
+            sync_assessment_items=False,
+        )
+
+        self.assertTrue(self.channel.has_changes())
+        self.assertTrue(self.derivative_channel.has_changes())
+
+        target_child.refresh_from_db()
+
+        for key, value in labels.items():
+            self.assertEqual(getattr(target_child, key), value)
+
+    def test_sync_channel_other_metadata_labels(self):
+        """
+        Test that calling sync channel will also bring in other metadata label updates.
         """
 
         self.assertFalse(self.channel.has_changes())
@@ -311,8 +356,8 @@ class SyncTestCase(StudioTestCase):
 
         sync_channel(
             self.derivative_channel,
-            sync_attributes=True,
-            sync_tags=False,
+            sync_titles_and_descriptions=False,
+            sync_resource_details=True,
             sync_files=False,
             sync_assessment_items=False,
         )

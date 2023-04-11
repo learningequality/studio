@@ -15,8 +15,8 @@ from contentcuration.models import File
 
 def sync_channel(
     channel,
-    sync_attributes=False,
-    sync_tags=False,
+    sync_titles_and_descriptions=False,
+    sync_resource_details=False,
     sync_files=False,
     sync_assessment_items=False,
     progress_tracker=None,
@@ -37,8 +37,8 @@ def sync_channel(
     for node in nodes_to_sync:
         node = sync_node(
             node,
-            sync_attributes=sync_attributes,
-            sync_tags=sync_tags,
+            sync_titles_and_descriptions=sync_titles_and_descriptions,
+            sync_resource_details=sync_resource_details,
             sync_files=sync_files,
             sync_assessment_items=sync_assessment_items,
         )
@@ -50,8 +50,8 @@ def sync_channel(
 
 def sync_node(
     node,
-    sync_attributes=False,
-    sync_tags=False,
+    sync_titles_and_descriptions=False,
+    sync_resource_details=False,
     sync_files=False,
     sync_assessment_items=False,
 ):
@@ -62,37 +62,38 @@ def sync_node(
                 node.title, original_node.get_channel().name
             )
         )
-        if sync_attributes:  # Sync node metadata
-            sync_node_data(node, original_node)
-        if sync_tags:  # Sync node tags
+        if sync_titles_and_descriptions:
+            fields = [
+                "title",
+                "description",
+            ]
+            sync_node_data(node, original_node, fields)
+        if sync_resource_details:
+            fields = [
+                "license_id",
+                "copyright_holder",
+                "author",
+                "extra_fields",
+                "categories",
+                "learner_needs",
+                "accessibility_labels",
+                "grade_levels",
+                "resource_types",
+                "learning_activities",
+            ]
+            sync_node_data(node, original_node, fields)
             sync_node_tags(node, original_node)
-        if sync_files:  # Sync node files
+        if sync_files:
             sync_node_files(node, original_node)
         if (
             sync_assessment_items and node.kind_id == content_kinds.EXERCISE
-        ):  # Sync node exercises
+        ):
             sync_node_assessment_items(node, original_node)
     return node
 
 
-synced_fields = [
-    "title",
-    "description",
-    "license_id",
-    "copyright_holder",
-    "author",
-    "extra_fields",
-    "categories",
-    "learner_needs",
-    "accessibility_labels",
-    "grade_levels",
-    "resource_types",
-    "learning_activities",
-]
-
-
-def sync_node_data(node, original):
-    for field in synced_fields:
+def sync_node_data(node, original, fields):
+    for field in fields:
         setattr(node, field, getattr(original, field))
     # Set changed if anything has changed
     node.on_update()

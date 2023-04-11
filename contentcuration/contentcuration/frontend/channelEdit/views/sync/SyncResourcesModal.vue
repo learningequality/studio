@@ -8,15 +8,22 @@
       :submitDisabled="!continueAllowed"
       :submitText="$tr('continueButtonLabel')"
       :cancelText="$tr('cancelButtonLabel')"
+      :size="600"
       @cancel="syncModal = false"
       @submit="handleContinue"
     >
-      <VList subheader two-line>
+      <VList
+        subheader
+        two-line
+      >
         <VSubheader>{{ $tr('syncModalExplainer') }}</VSubheader>
 
         <VListTile @click.stop>
           <VListTileAction>
-            <Checkbox v-model="syncFiles" color="primary" />
+            <Checkbox
+              v-model="syncFiles"
+              color="primary"
+            />
           </VListTileAction>
           <VListTileContent @click="syncFiles = !syncFiles">
             <VListTileTitle>{{ $tr('syncFilesTitle') }}</VListTileTitle>
@@ -26,17 +33,23 @@
 
         <VListTile @click.stop>
           <VListTileAction>
-            <VCheckbox v-model="syncTags" color="primary" />
+            <VCheckbox
+              v-model="syncResourceDetails"
+              color="primary"
+            />
           </VListTileAction>
-          <VListTileContent @click="syncTags = !syncTags">
-            <VListTileTitle>{{ $tr('syncTagsTitle') }}</VListTileTitle>
-            <VListTileSubTitle>{{ $tr('syncTagsExplainer') }}</VListTileSubTitle>
+          <VListTileContent @click="syncResourceDetails = !syncResourceDetails">
+            <VListTileTitle>{{ $tr('syncResourceDetailsTitle') }}</VListTileTitle>
+            <VListTileSubTitle>{{ $tr('syncResourceDetailsExplainer') }}</VListTileSubTitle>
           </VListTileContent>
         </VListTile>
 
         <VListTile @click.stop>
           <VListTileAction>
-            <VCheckbox v-model="syncTitlesAndDescriptions" color="primary" />
+            <VCheckbox
+              v-model="syncTitlesAndDescriptions"
+              color="primary"
+            />
           </VListTileAction>
           <VListTileContent @click="syncTitlesAndDescriptions = !syncTitlesAndDescriptions">
             <VListTileTitle>{{ $tr('syncTitlesAndDescriptionsTitle') }}</VListTileTitle>
@@ -46,7 +59,10 @@
 
         <VListTile @click.stop>
           <VListTileAction>
-            <VCheckbox v-model="syncExercises" color="primary" />
+            <VCheckbox
+              v-model="syncExercises"
+              color="primary"
+            />
           </VListTileAction>
           <VListTileContent @click="syncExercises = !syncExercises">
             <VListTileTitle>{{ $tr('syncExercisesTitle') }}</VListTileTitle>
@@ -63,26 +79,40 @@
       :title="$tr('confirmSyncModalTitle')"
       :submitText="$tr('syncButtonLabel')"
       :cancelText="$tr('backButtonLabel')"
+      :size="600"
       @cancel="handleBack"
       @submit="handleSync"
     >
       <VSubheader>{{ $tr('confirmSyncModalExplainer') }}</VSubheader>
       <VCardText>
-        <ul class="mb-4 ml-3 mt-2">
-          <li v-if="syncFiles" class="font-weight-bold">
+        <ul class="mb-1 mt-1 no-bullets">
+          <li
+            v-if="syncFiles"
+            class="font-weight-bold"
+          >
             {{ $tr('syncFilesTitle') }}
           </li>
-          <li v-if="syncTags" class="font-weight-bold">
-            {{ $tr('syncTagsTitle') }}
+          <li
+            v-if="syncResourceDetails"
+            class="font-weight-bold"
+          >
+            {{ $tr('syncResourceDetailsTitle') }}
           </li>
-          <li v-if="syncTitlesAndDescriptions" class="font-weight-bold">
+          <li
+            v-if="syncTitlesAndDescriptions"
+            class="font-weight-bold"
+          >
             {{ $tr('syncTitlesAndDescriptionsTitle') }}
           </li>
-          <li v-if="syncExercises" class="font-weight-bold">
+          <li
+            v-if="syncExercises"
+            class="font-weight-bold"
+          >
             {{ $tr('syncExercisesTitle') }}
           </li>
         </ul>
       </VCardText>
+      <VSubheader>{{ $tr('confirmSyncModalWarningExplainer') }}</VSubheader>
       <VSpacer />
     </KModal>
 
@@ -121,7 +151,7 @@
         confirmSyncModal: false, // the should show second step
         // user choices about which kind of resources to sync
         syncFiles: false,
-        syncTags: false,
+        syncResourceDetails: false,
         syncTitlesAndDescriptions: false,
         syncExercises: false,
       };
@@ -141,7 +171,10 @@
       continueAllowed() {
         // allow CONTINUE button to appear only if something will be synced
         return (
-          this.syncFiles || this.syncTags || this.syncTitlesAndDescriptions || this.syncExercises
+          this.syncFiles ||
+          this.syncResourceDetails ||
+          this.syncTitlesAndDescriptions ||
+          this.syncExercises
         );
       },
     },
@@ -161,8 +194,8 @@
       },
       handleSync() {
         Channel.sync(this.channelId, {
-          attributes: this.syncTitlesAndDescriptions,
-          tags: this.syncTags,
+          titles_and_descriptions: this.syncTitlesAndDescriptions,
+          resource_details: this.syncResourceDetails,
           files: this.syncFiles,
           assessment_items: this.syncExercises,
         })
@@ -171,7 +204,7 @@
             this.$emit('syncing');
           })
           .catch(() => {
-            // add a way for the progress modal to provide feedback
+            // add a way for the progress modal to provide feedback titles_and_descriptions
             // since the available error message doesn't make sense here,
             // for now we will just have the operation be reported complete
             // see ProgressModal nothingToSync for more info
@@ -183,21 +216,25 @@
     $trs: {
       // Sync modal (Step 1 of 3)
       syncModalTitle: 'Sync resources',
-      syncModalExplainer: 'Sync and update your resources with their original source.',
+      syncModalExplainer:
+        'Syncing resources in Kolibri Studio updates copied or imported resources in this channel with any changes made to the original resource files.',
       syncFilesTitle: 'Files',
-      syncFilesExplainer: 'Update all file information',
-      syncTagsTitle: 'Tags',
-      syncTagsExplainer: 'Update all tags',
+      syncFilesExplainer: 'Update all files, including: thumbnails, subtitles, and captions',
+      syncResourceDetailsTitle: 'Resource details',
+      syncResourceDetailsExplainer:
+        'Update information about resources: learning activity, level, requirements, category, tags, audience, and source',
       syncTitlesAndDescriptionsTitle: 'Titles and descriptions',
       syncTitlesAndDescriptionsExplainer: 'Update resource titles and descriptions',
       syncExercisesTitle: 'Assessment details',
-      syncExercisesExplainer: 'Update questions, answers, and hints',
+      syncExercisesExplainer: 'Update questions, answers, and hints in exercises and quizzes',
       cancelButtonLabel: 'Cancel',
       continueButtonLabel: 'Continue',
       //
       // Confirm sync (Step 2 of 3)
       confirmSyncModalTitle: 'Confirm sync',
       confirmSyncModalExplainer: 'You are about to sync and update the following:',
+      confirmSyncModalWarningExplainer:
+        'Warning: this will overwrite any changes you have made to copied or imported resources.',
       backButtonLabel: 'Back',
       syncButtonLabel: 'Sync',
       //
@@ -226,6 +263,12 @@
   .v-list__tile__sub-title {
     width: unset;
     white-space: unset;
+  }
+
+  .no-bullets {
+    padding: 0;
+    margin: 0;
+    list-style-type: none;
   }
 
 </style>
