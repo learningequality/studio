@@ -38,11 +38,11 @@ def generate_update_event(*args, **kwargs):
     return event
 
 
-def generate_sync_channel_event(channel_id, attributes, tags, files, assessment_items):
+def generate_sync_channel_event(channel_id, titles_and_descriptions, resource_details, files, assessment_items):
     event = base_generate_event(key=channel_id, table=CHANNEL, event_type=SYNCED, channel_id=channel_id, user_id=None)
     event["rev"] = random.randint(1, 10000000)
-    event["attributes"] = attributes
-    event["tags"] = tags
+    event["titles_and_descriptions"] = titles_and_descriptions
+    event["resource_details"] = resource_details
     event["files"] = files
     event["assessment_items"] = assessment_items
     return event
