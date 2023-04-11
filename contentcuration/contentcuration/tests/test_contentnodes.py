@@ -753,8 +753,8 @@ class SyncNodesOperationTestCase(StudioTestCase):
         orig_video, cloned_video = self._setup_original_and_deriative_nodes()
         sync_node(
             cloned_video,
-            sync_attributes=True,
-            sync_tags=True,
+            sync_titles_and_descriptions=True,
+            sync_resource_details=True,
             sync_files=True,
             sync_assessment_items=True,
         )
@@ -767,8 +767,8 @@ class SyncNodesOperationTestCase(StudioTestCase):
         self._add_subs_to_video_node(orig_video, "en")
         sync_node(
             cloned_video,
-            sync_attributes=True,
-            sync_tags=True,
+            sync_titles_and_descriptions=True,
+            sync_resource_details=True,
             sync_files=True,
             sync_assessment_items=True,
         )
@@ -781,8 +781,8 @@ class SyncNodesOperationTestCase(StudioTestCase):
         self._add_subs_to_video_node(orig_video, "en")
         sync_node(
             cloned_video,
-            sync_attributes=True,
-            sync_tags=True,
+            sync_titles_and_descriptions=True,
+            sync_resource_details=True,
             sync_files=True,
             sync_assessment_items=True,
         )
@@ -790,8 +790,8 @@ class SyncNodesOperationTestCase(StudioTestCase):
         self._add_subs_to_video_node(orig_video, "zul")
         sync_node(
             cloned_video,
-            sync_attributes=True,
-            sync_tags=True,
+            sync_titles_and_descriptions=True,
+            sync_resource_details=True,
             sync_files=True,
             sync_assessment_items=True,
         )
