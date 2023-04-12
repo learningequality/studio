@@ -404,9 +404,11 @@
         });
       },
       stagingId() {
-        this.$router.push({
-          name: RouteNames.STAGING_TREE_VIEW_REDIRECT,
-        });
+        if (this.hasStagingTree) {
+          this.$router.push({
+            name: RouteNames.STAGING_TREE_VIEW_REDIRECT,
+          });
+        }
       },
     },
     created() {
