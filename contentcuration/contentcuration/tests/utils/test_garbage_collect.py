@@ -16,7 +16,6 @@ from le_utils.constants import file_formats
 from le_utils.constants import format_presets
 
 from contentcuration import models as cc
-from contentcuration.api import activate_channel
 from contentcuration.constants import user_history
 from contentcuration.models import ContentNode
 from contentcuration.models import File
@@ -140,35 +139,6 @@ class NodeSettingTestCase(BaseAPITestCase):
         self.assertNotEqual(garbage_node.tree_id, self.channel.main_tree.tree_id)
 
         child_pk = staging_tree.children.first().pk
-
-        clean_up_deleted_chefs()
-
-        self.assertFalse(cc.ContentNode.objects.filter(parent=garbage_node).exists())
-        self.assertFalse(cc.ContentNode.objects.filter(pk=child_pk).exists())
-
-    def test_activate_channel(self):
-        previous_tree = self.channel.previous_tree
-        tree(parent=previous_tree)
-        garbage_node = get_deleted_chefs_root()
-
-        # Previous tree shouldn't be in garbage tree until activate_channel is called
-        self.assertFalse(
-            garbage_node.get_descendants().filter(pk=previous_tree.pk).exists()
-        )
-        activate_channel(self.channel, self.user)
-        garbage_node.refresh_from_db()
-        previous_tree.refresh_from_db()
-        self.channel.refresh_from_db()
-
-        # We can't use MPTT methods on the deleted chefs tree because we are not running the sort code
-        # for performance reasons, so just do a parent test instead.
-        self.assertTrue(previous_tree.parent == garbage_node)
-
-        # New previous tree should not be in garbage tree
-        self.assertFalse(self.channel.previous_tree.parent)
-        self.assertNotEqual(garbage_node.tree_id, self.channel.previous_tree.tree_id)
-
-        child_pk = previous_tree.children.first().pk
 
         clean_up_deleted_chefs()
 

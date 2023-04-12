@@ -40,7 +40,6 @@ from rest_framework.response import Response
 
 from .json_dump import json_for_parse_from_data
 from .json_dump import json_for_parse_from_serializer
-from contentcuration.api import activate_channel
 from contentcuration.constants import channel_history
 from contentcuration.decorators import browser_is_supported
 from contentcuration.models import Change
@@ -357,25 +356,6 @@ class SQCountDistinct(Subquery):
         "(SELECT COUNT(DISTINCT %(field)s) FROM (%(subquery)s) AS %(field)s__sum)"
     )
     output_field = IntegerField()
-
-
-@api_view(['POST'])
-@authentication_classes((SessionAuthentication,))
-@permission_classes((IsAuthenticated,))
-def activate_channel_endpoint(request):
-    data = request.data
-    try:
-        channel = Channel.filter_edit_queryset(Channel.objects.all(), request.user).get(pk=data["channel_id"])
-    except Channel.DoesNotExist:
-        return HttpResponseNotFound("Channel not found")
-    if channel.staging_tree is None:
-        return HttpResponseBadRequest('Channel is not staged')
-    try:
-        activate_channel(channel, request.user)
-    except PermissionDenied as e:
-        return HttpResponseForbidden(str(e))
-
-    return HttpResponse(json.dumps({"success": True}))
 
 
 @require_POST

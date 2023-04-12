@@ -2,8 +2,8 @@ import json
 import logging
 from builtins import str
 from collections import namedtuple
-from distutils.version import LooseVersion
 
+from distutils.version import LooseVersion
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import PermissionDenied
 from django.core.exceptions import SuspiciousOperation
@@ -34,7 +34,6 @@ from rest_framework.response import Response
 from sentry_sdk import capture_exception
 
 from contentcuration import ricecooker_versions as rc
-from contentcuration.api import activate_channel
 from contentcuration.api import write_file_to_storage
 from contentcuration.constants import completion_criteria
 from contentcuration.decorators import delay_user_storage_calculation
@@ -335,23 +334,6 @@ def api_publish_channel(request):
         })
     except (KeyError, Channel.DoesNotExist):
         return HttpResponseNotFound("No channel matching: {}".format(data))
-    except Exception as e:
-        handle_server_error(e, request)
-        return HttpResponseServerError(content=str(e), reason=str(e))
-
-
-@api_view(['POST'])
-@authentication_classes((TokenAuthentication,))
-@permission_classes((IsAuthenticated,))
-def activate_channel_internal(request):
-    try:
-        data = json.loads(request.body)
-        channel_id = data['channel_id']
-        channel = Channel.get_editable(request.user, channel_id)
-        activate_channel(channel, request.user)
-        return Response({"success": True})
-    except Channel.DoesNotExist:
-        return HttpResponseNotFound("No channel matching: {}".format(channel_id))
     except Exception as e:
         handle_server_error(e, request)
         return HttpResponseServerError(content=str(e), reason=str(e))

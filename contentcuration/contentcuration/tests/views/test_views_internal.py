@@ -613,23 +613,6 @@ class APICommitChannelEndpointTestCase(BaseAPITestCase):
         self.assertEqual(response.status_code, 404)
 
 
-class APIActivateChannelEndpointTestCase(BaseAPITestCase):
-    def test_200_post(self):
-        self.channel.staging_tree = self.channel.main_tree
-        self.channel.save()
-        response = self.post(
-            reverse_lazy("activate_channel_internal"), {"channel_id": self.channel.id}
-        )
-        self.assertEqual(response.status_code, 200)
-
-    def test_404_no_permission(self):
-        new_channel = Channel.objects.create()
-        response = self.post(
-            reverse_lazy("activate_channel_internal"), {"channel_id": new_channel.id}
-        )
-        self.assertEqual(response.status_code, 404)
-
-
 class CheckUserIsEditorEndpointTestCase(BaseAPITestCase):
     def test_200_post(self):
         response = self.post(
