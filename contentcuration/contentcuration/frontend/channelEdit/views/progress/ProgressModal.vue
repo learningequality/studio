@@ -1,14 +1,21 @@
 <template>
 
   <div class="px-1">
-    <div v-if="isSyncing && !syncError" class="grey--text" data-test="progress">
-      <span>{{ $tr('syncHeader') }}</span>&nbsp;<span>{{ progressPercent }}</span>
+    <div
+      v-if="isSyncing && !syncError"
+      class="grey--text"
+      data-test="progress"
+    >
+      <span>{{ $tr('syncHeader') }}</span>&nbsp;<span>{{ formattedProgressPercent }}</span>
     </div>
     <div
       v-else-if="syncError"
       class="red--text"
     >
-      <Icon small color="red">
+      <Icon
+        small
+        color="red"
+      >
         error
       </Icon>
       {{ $tr('syncError') }}
@@ -17,15 +24,25 @@
       v-else-if="currentPublishTaskError"
       class="red--text"
     >
-      <Icon small color="red">
+      <Icon
+        small
+        color="red"
+      >
         error
       </Icon>
       {{ $tr('defaultErrorText') }}
     </div>
-    <div v-else-if="isPublishing" class="grey--text" data-test="progress">
-      <span>{{ $tr('publishHeader') }}</span>&nbsp;<span>{{ progressPercent }}</span>
+    <div
+      v-else-if="isPublishing"
+      class="grey--text"
+      data-test="progress"
+    >
+      <span>{{ $tr('publishHeader') }}</span>&nbsp;<span>{{ formattedProgressPercent }}</span>
     </div>
-    <div v-else class="grey--text">
+    <div
+      v-else
+      class="grey--text"
+    >
       {{ lastPublished ?
         $tr('lastPublished', { last_published: $formatRelative(lastPublished, now) }) :
         $tr('unpublishedText')
@@ -64,8 +81,11 @@
         return this.getAsyncTask(this.currentChannel[TASK_ID]) || null;
       },
       progressPercent() {
-        const progressPercent = get(this.currentTask, ['progress'], 0);
-        return this.$formatNumber(Math.round(progressPercent || 0) / 100, {
+        return Math.round(get(this.currentTask, ['progress'], 0) || 0) / 100;
+      },
+
+      formattedProgressPercent() {
+        return this.$formatNumber(this.progressPercent, {
           style: 'percent',
           minimumFractionDigits: 0,
           maximumFractionDigits: 0,
@@ -109,7 +129,7 @@
       publishHeader: 'Publishing channel',
       lastPublished: 'Published {last_published}',
       unpublishedText: 'Unpublished',
-      syncHeader: 'Syncing channel',
+      syncHeader: 'Syncing resources',
       syncError: 'Last attempt to sync failed',
     },
   };
