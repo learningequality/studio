@@ -35,8 +35,6 @@ click==8.1.3
     #   -c requirements.txt
     #   flask
     #   pip-tools
-codecov==2.1.12
-    # via -r requirements-dev.in
 colorama==0.4.4
     # via pytest-watch
 configargparse==1.5.3
@@ -50,7 +48,6 @@ coreschema==0.0.4
 coverage[toml]==6.2
     # via
     #   -r requirements-dev.in
-    #   codecov
     #   pytest-cov
 customizable-django-profiler @ git+https://github.com/someshchaturvedi/customizable-django-profiler.git
     # via -r requirements-dev.in
@@ -220,7 +217,6 @@ pyzmq==23.1.0
 requests==2.25.1
     # via
     #   -c requirements.txt
-    #   codecov
     #   coreapi
     #   locust
 roundrobin==0.0.2
