@@ -89,4 +89,4 @@ def log_sync_exception(e, user=None, change=None, changes=None):
     report_exception(e, user=user, contexts=contexts)
 
     # make sure we leave a record in the logs just in case.
-    logging.error(e)
+    logging.exception(e)
