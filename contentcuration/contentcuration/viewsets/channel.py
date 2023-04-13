@@ -569,7 +569,7 @@ class ChannelViewSet(ValuesViewset):
                 log_sync_exception(e, user=self.request.user, change=deploy)
                 deploy["errors"] = [str(e)]
                 errors.append(deploy)
-        return 1
+        return errors
 
     def deploy(self, user, pk):
 
