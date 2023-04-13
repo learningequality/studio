@@ -56,7 +56,6 @@
 
   import { mapActions, mapGetters } from 'vuex';
   import get from 'lodash/get';
-  import { ContentNode } from 'shared/data/resources';
   import { TASK_ID } from 'shared/data/constants';
 
   export default {
@@ -65,11 +64,9 @@
       now: Date.now(),
     }),
     computed: {
-      ...mapGetters('contentNode', ['getContentNode']),
-      ...mapGetters('currentChannel', ['currentChannel', 'canManage', 'rootId']),
+      ...mapGetters('currentChannel', ['currentChannel', 'canManage']),
       ...mapGetters('task', ['getAsyncTask', 'getPublishTaskForChannel']),
       isSyncing() {
-        //console.log(this.currentTask);
         return this.currentTask && this.currentTask.task_name === 'sync-channel';
       },
       isPublishing() {
@@ -82,9 +79,6 @@
       },
       currentTask() {
         return this.getAsyncTask(this.currentChannel[TASK_ID]) || null;
-      },
-      nodeId() {
-        return get(this.getContentNode(this.rootId), ['id'], null);
       },
       progressPercent() {
         return this.$formatNumber(Math.round(get(this.currentTask, ['progress'], 0) || 0) / 100, {
@@ -123,8 +117,8 @@
     },
     watch: {
       showSyncingProgress: {
-        handler(newValue) {
-          this.showSnackbarOnCompleteSync(newValue);
+        handler(newValue, oldValue) {
+          this.showSnackbarOnCompleteSync(newValue, oldValue);
         },
         immediate: true,
         deep: true,
@@ -140,12 +134,10 @@
     },
     methods: {
       ...mapActions(['showSnackbar']),
-      showSnackbarOnCompleteSync(showProgress) {
-        if (showProgress && this.nodeId) {
-          ContentNode.waitForCopying([this.nodeId]).then(() => {
-            this.showSnackbar({
-              text: this.$tr('syncedSnackbar'),
-            });
+      showSnackbarOnCompleteSync(newShowProgress, oldShowProgress) {
+        if (!newShowProgress && oldShowProgress) {
+          this.showSnackbar({
+            text: this.$tr('syncedSnackbar'),
           });
         }
       },
