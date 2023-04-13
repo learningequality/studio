@@ -1085,6 +1085,44 @@ export const Channel = new Resource({
     });
   },
 
+  deploy(id) {
+    const change = {
+      key: id,
+      source: CLIENTID,
+      table: this.tableName,
+      type: CHANGE_TYPES.DEPLOYED,
+      channel_id: id,
+    };
+    return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, CHANGES_TABLE, () => {
+      return db[CHANGES_TABLE].put(change);
+    });
+  },
+
+  waitForDeploying(id) {
+    const observable = Dexie.liveQuery(() => {
+      return this.table
+        .where('id')
+        .equals(id)
+        .filter(channel => !channel['staging_root_id'] || channel['staging_root_id'] === null)
+        .toArray();
+    });
+
+    return new Promise((resolve, reject) => {
+      const subscription = observable.subscribe({
+        next(result) {
+          if (result.length === 1) {
+            subscription.unsubscribe();
+            resolve(result[0].root_id);
+          }
+        },
+        error() {
+          subscription.unsubscribe();
+          reject();
+        },
+      });
+    });
+  },
+
   sync(id, { attributes = false, tags = false, files = false, assessment_items = false } = {}) {
     const change = {
       key: id,
