@@ -112,7 +112,7 @@
     <!-- footer buttons -->
     <template #bottom>
       <VSpacer />
-      <KCircularLoader v-if="moveHereButtonDisabled" :size="20" />
+      <KCircularLoader v-if="moveHereButtonDisabled && moveNodesInProgress" :size="20" />
       <VBtn flat exact data-test="cancel" @click="dialog = false">
         {{ $tr("cancel") }}
       </VBtn>
@@ -295,6 +295,7 @@
           actionText: this.$tr('goToLocationButton'),
           actionCallback: this.goToLocation,
         });
+        this.moveNodesInProgress = false;
       },
     },
     $trs: {
