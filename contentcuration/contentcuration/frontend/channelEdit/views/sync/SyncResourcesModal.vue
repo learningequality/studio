@@ -8,15 +8,15 @@
       :submitDisabled="!continueAllowed"
       :submitText="$tr('continueButtonLabel')"
       :cancelText="$tr('cancelButtonLabel')"
-      :size="600"
+      :size="525"
       @cancel="syncModal = false"
       @submit="handleContinue"
     >
-      <VList
-        subheader
-        two-line
-      >
-        <VSubheader>{{ $tr('syncModalExplainer') }}</VSubheader>
+      <VList>
+        <p>{{ $tr('syncModalExplainer') }}</p>
+        <p class="mb-1">
+          {{ $tr('syncModalSelectAttributes') }}
+        </p>
 
         <VListTile @click.stop>
           <VListTileAction>
@@ -79,11 +79,13 @@
       :title="$tr('confirmSyncModalTitle')"
       :submitText="$tr('syncButtonLabel')"
       :cancelText="$tr('backButtonLabel')"
-      :size="600"
+      :size="525"
       @cancel="handleBack"
       @submit="handleSync"
     >
-      <VSubheader>{{ $tr('confirmSyncModalExplainer') }}</VSubheader>
+      <p class="mb-0">
+        {{ $tr('confirmSyncModalExplainer') }}
+      </p>
       <VCardText>
         <ul class="mb-1 mt-1 no-bullets">
           <li
@@ -112,7 +114,9 @@
           </li>
         </ul>
       </VCardText>
-      <VSubheader>{{ $tr('confirmSyncModalWarningExplainer') }}</VSubheader>
+      <p class="mb-0">
+        {{ $tr('confirmSyncModalWarningExplainer') }}
+      </p>
       <VSpacer />
     </KModal>
 
@@ -218,6 +222,7 @@
       syncModalTitle: 'Sync resources',
       syncModalExplainer:
         'Syncing resources in Kolibri Studio updates copied or imported resources in this channel with any changes made to the original resource files.',
+      syncModalSelectAttributes: 'Select the resource attributes that you would like to sync:',
       syncFilesTitle: 'Files',
       syncFilesExplainer: 'Update all files, including: thumbnails, subtitles, and captions',
       syncResourceDetailsTitle: 'Resource details',
@@ -255,9 +260,16 @@
     padding: 0;
   }
 
-  .v-list__tile {
+  /deep/ .v-list__tile {
+    align-items: flex-start;
     height: unset;
-    min-height: 72px;
+    padding: 8px 0;
+  }
+
+  .v-list__tile__action {
+    min-width: 42px;
+    height: unset;
+    padding: 2px 0 0;
   }
 
   .v-list__tile__sub-title {
