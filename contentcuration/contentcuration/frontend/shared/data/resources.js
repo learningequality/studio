@@ -1123,11 +1123,19 @@ export const Channel = new Resource({
     });
   },
 
-  sync(id, { attributes = false, tags = false, files = false, assessment_items = false } = {}) {
+  sync(
+    id,
+    {
+      titles_and_descriptions = false,
+      resource_details = false,
+      files = false,
+      assessment_items = false,
+    } = {}
+  ) {
     const change = {
       key: id,
-      attributes,
-      tags,
+      titles_and_descriptions,
+      resource_details,
       files,
       assessment_items,
       source: CLIENTID,

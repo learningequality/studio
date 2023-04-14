@@ -514,12 +514,12 @@ class ChannelViewSet(ValuesViewset):
     def sync_from_changes(self, changes):
         errors = []
         for sync in changes:
-            # Publish change will have key, attributes, tags, files, and assessment_items.
+            # Publish change will have key, titles_and_descriptions, resource_details, files, and assessment_items.
             try:
                 self.sync(
                     sync["key"],
-                    attributes=sync.get("attributes"),
-                    tags=sync.get("tags"),
+                    titles_and_descriptions=sync.get("titles_and_descriptions"),
+                    resource_details=sync.get("resource_details"),
                     files=sync.get("files"),
                     assessment_items=sync.get("assessment_items")
                 )
@@ -529,7 +529,7 @@ class ChannelViewSet(ValuesViewset):
                 errors.append(sync)
         return errors
 
-    def sync(self, pk, attributes=False, tags=False, files=False, assessment_items=False):
+    def sync(self, pk, titles_and_descriptions=False, resource_details=False, files=False, assessment_items=False):
         logging.debug("Entering the sync channel endpoint")
 
         channel = self.get_edit_queryset().get(pk=pk)
@@ -553,8 +553,8 @@ class ChannelViewSet(ValuesViewset):
         with create_change_tracker(pk, CHANNEL, channel.id, self.request.user, "sync-channel") as progress_tracker:
             sync_channel(
                 channel,
-                attributes,
-                tags,
+                titles_and_descriptions,
+                resource_details,
                 files,
                 assessment_items,
                 progress_tracker=progress_tracker,

@@ -53,7 +53,12 @@ const ChangeTypeMapFields = {
     'excluded_descendants',
   ]),
   [CHANGE_TYPES.PUBLISHED]: commonFields.concat(['version_notes', 'language']),
-  [CHANGE_TYPES.SYNCED]: commonFields.concat(['attributes', 'tags', 'files', 'assessment_items']),
+  [CHANGE_TYPES.SYNCED]: commonFields.concat([
+    'titles_and_descriptions',
+    'resource_details',
+    'files',
+    'assessment_items',
+  ]),
   [CHANGE_TYPES.DEPLOYED]: commonFields,
 };
 
