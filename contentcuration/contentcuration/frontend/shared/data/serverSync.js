@@ -59,6 +59,7 @@ const ChangeTypeMapFields = {
     'files',
     'assessment_items',
   ]),
+  [CHANGE_TYPES.DEPLOYED]: commonFields,
 };
 
 function isSyncableChange(change) {

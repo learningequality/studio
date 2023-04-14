@@ -13,6 +13,7 @@ import hashlib
 from django.contrib.postgres.aggregates import BitOr
 from django.core.cache import cache
 from django.db.models import Case
+from django.db.models import F
 from django.db.models import Max
 from django.db.models import Value
 from django.db.models import When
@@ -63,10 +64,10 @@ def _get_available_languages(base_queryset):
     from contentcuration.models import Language
 
     langs = Language.objects.filter(
-        id__in=base_queryset.exclude(lang=None)
-        .values_list("lang_id", flat=True)
-        .distinct()
-    ).values("id", "lang_name")
+        id__in=base_queryset.exclude(lang=None).values_list("lang_id", flat=True).distinct()
+    # Updated to use contentcuration field names
+    # Convert language objects to dicts mapped to the kolibri field names
+    ).values("id", lang_name=F("native_name"))
     return list(langs)
 
 

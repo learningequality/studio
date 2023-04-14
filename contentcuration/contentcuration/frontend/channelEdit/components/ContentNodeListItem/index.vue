@@ -194,7 +194,7 @@
   import ContentNodeValidator from '../ContentNodeValidator';
   import ContentNodeChangedIcon from '../ContentNodeChangedIcon';
   import TaskProgress from '../../views/progress/TaskProgress';
-  import { ContentLevel, Categories, NEW_OBJECT } from 'shared/constants';
+  import { ContentLevels, Categories, NEW_OBJECT } from 'shared/constants';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import { RolesNames } from 'shared/leUtils/Roles';
   import ImageOnlyThumbnail from 'shared/views/files/ImageOnlyThumbnail';
@@ -331,7 +331,7 @@
         return null;
       },
       levels(level) {
-        let match = Object.keys(ContentLevel).find(key => ContentLevel[key] === level);
+        let match = Object.keys(ContentLevels).find(key => ContentLevels[key] === level);
         if (match) {
           if (match === 'PROFESSIONAL') {
             match = 'specializedProfessionalTraining';

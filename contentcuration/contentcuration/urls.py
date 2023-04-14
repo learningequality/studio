@@ -71,7 +71,6 @@ router.register(r'clipboard', ClipboardViewSet, basename='clipboard')
 urlpatterns = [
     re_path(r'^api/', include(router.urls)),
     re_path(r'^serviceWorker.js$', pwa.ServiceWorkerView.as_view(), name="service_worker"),
-    re_path(r'^api/activate_channel$', views.activate_channel_endpoint, name='activate_channel'),
     re_path(r'^healthz$', views.health, name='health'),
     re_path(r'^stealthz$', views.stealth, name='stealth'),
     re_path(r'^api/search/', include('search.urls'), name='search'),
@@ -124,7 +123,6 @@ urlpatterns += [
     re_path(r'^api/internal/file_diff$', internal_views.file_diff, name="file_diff"),
     re_path(r'^api/internal/file_upload$', internal_views.api_file_upload, name="api_file_upload"),
     re_path(r'^api/internal/publish_channel$', internal_views.api_publish_channel, name="api_publish_channel"),
-    re_path(r'^api/internal/activate_channel_internal$', internal_views.activate_channel_internal, name='activate_channel_internal'),
     re_path(r'^api/internal/check_user_is_editor$', internal_views.check_user_is_editor, name='check_user_is_editor'),
     re_path(r'^api/internal/get_tree_data$', internal_views.get_tree_data, name='get_tree_data'),
     re_path(r'^api/internal/get_node_tree_data$', internal_views.get_node_tree_data, name='get_node_tree_data'),
