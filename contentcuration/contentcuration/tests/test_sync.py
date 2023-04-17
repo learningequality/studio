@@ -125,6 +125,31 @@ class SyncTestCase(StudioTestCase):
         )
         self.assertTrue(self.derivative_channel.has_changes())
 
+    def test_sync_files_remove(self):
+        """
+        Tests whether sync_files remove additional files from the copied node or not.
+        """
+        video_node = (self.channel.main_tree.get_descendants()
+                      .filter(kind_id=content_kinds.VIDEO)
+                      .first()
+                      )
+        video_node_copy = self.derivative_channel.main_tree.get_descendants().get(
+            source_node_id=video_node.node_id
+        )
+
+        self.assertEqual(video_node.files.count(), video_node_copy.files.count())
+
+        self._add_temp_file_to_content_node(video_node_copy)
+
+        self.assertNotEqual(video_node.files.count(), video_node_copy.files.count())
+
+        sync_channel(channel=self.derivative_channel, sync_files=True)
+
+        self.assertEqual(video_node.files.count(), video_node_copy.files.count())
+
+        for file in File.objects.filter(contentnode=video_node.id):
+            self.assertTrue(video_node_copy.files.filter(checksum=file.checksum).exists())
+
     def test_sync_assessment_item_add(self):
         """
         Test that calling sync_assessment_items successfully syncs a file added to the original node to

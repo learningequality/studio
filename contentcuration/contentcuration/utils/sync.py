@@ -122,22 +122,11 @@ def sync_node_files(node, original):  # noqa C901
     """
     Sync all files in ``node`` from the files in ``original`` node.
     """
-    node_files = {}
     is_node_uploaded_file = False
-
-    for file in node.files.all():
-        if file.preset_id == format_presets.VIDEO_SUBTITLE:
-            file_key = "{}:{}".format(file.preset_id, file.language_id)
-        else:
-            file_key = file.preset_id
-        node_files[file_key] = file
-        # If node has any non-thumbnail file then it means the node
-        # is an uploaded file.
-        if file.preset.thumbnail is False:
-            is_node_uploaded_file = True
 
     source_files = {}
 
+    # 1. Build a hashmap of all original node files.
     for file in original.files.all():
         if file.preset_id == format_presets.VIDEO_SUBTITLE:
             file_key = "{}:{}".format(file.preset_id, file.language_id)
@@ -149,25 +138,37 @@ def sync_node_files(node, original):  # noqa C901
         if file.preset.thumbnail is False:
             is_node_uploaded_file = True
 
+    # 2. Iterate through the copied node files. If the copied node file and
+    # source file are same then we remove it from source_files hashmap.
+    # Else we mark that file for deletion.
     files_to_delete = []
+    for file in node.files.all():
+        if file.preset_id == format_presets.VIDEO_SUBTITLE:
+            file_key = "{}:{}".format(file.preset_id, file.language_id)
+        else:
+            file_key = file.preset_id
+        source_file = source_files.get(file_key)
+        if source_file and source_file.checksum == file.checksum:
+            del source_files[file_key]
+        else:
+            files_to_delete.append(file.id)
+
+    # 3. Mark all files present in source_files hashmap for creation.
+    # Files that are not in copied node but in source node
+    # will be present in source_files hashmap.
     files_to_create = []
-    # B. Add all files that are in original
-    for file_key, source_file in source_files.items():
-        # 1. Look for old file with matching preset (and language if subs file)
-        node_file = node_files.get(file_key)
-        if not node_file or node_file.checksum != source_file.checksum:
-            if node_file:
-                files_to_delete.append(node_file.id)
-            source_file.id = None
-            source_file.contentnode_id = node.id
-            files_to_create.append(source_file)
-            node.changed = True
+    for source_file in source_files.values():
+        source_file.id = None
+        source_file.contentnode_id = node.id
+        files_to_create.append(source_file)
 
     if files_to_delete:
         File.objects.filter(id__in=files_to_delete).delete()
+        node.changed = True
 
     if files_to_create:
         File.objects.bulk_create(files_to_create)
+        node.changed = True
 
     if node.changed and is_node_uploaded_file:
         node.content_id = original.content_id
