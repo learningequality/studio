@@ -16,9 +16,12 @@
         :label="$tr('passwordConfirmLabel')"
         :additionalRules="passwordConfirmRules"
       />
-      <VBtn block color="primary" large type="submit">
-        {{ $tr('submitButton') }}
-      </VBtn>
+      <KButton
+        primary
+        class="w-100"
+        :text="$tr('submitButton')"
+        type="submit"
+      />
     </VForm>
   </MessageLayout>
 
@@ -84,3 +87,11 @@
   };
 
 </script>
+
+<style lang="less" scoped>
+
+  .w-100 {
+    width: 100%;
+  }
+
+</style>

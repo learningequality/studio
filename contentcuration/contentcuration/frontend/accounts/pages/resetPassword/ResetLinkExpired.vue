@@ -4,9 +4,12 @@
     :header="$tr('resetExpiredTitle')"
     :text="$tr('resetExpiredText')"
   >
-    <VBtn color="primary" large :to="{ name: 'ForgotPassword' }" class="mb-4">
-      {{ $tr('requestNewLink') }}
-    </VBtn>
+    <KRouterLink
+      primary
+      :text="$tr('requestNewLink')"
+      :to="{ name: 'ForgotPassword' }"
+      appearance="raised-button"
+    />
   </MessageLayout>
 
 </template>

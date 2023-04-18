@@ -58,24 +58,20 @@
                 :text="$tr('forgotPasswordLink')"
               />
             </p>
-            <VBtn
-              block
-              color="primary"
-              large
-              type="submit"
+            <KButton
+              primary
+              class="w-100"
+              :text="$tr('signInButton')"
               :disabled="offline || busy"
-            >
-              {{ $tr('signInButton') }}
-            </VBtn>
-            <VBtn
-              block
-              flat
-              color="primary"
-              class="mt-2"
+              type="submit"
+            />
+            <KRouterLink
+              primary
+              class="mt-2 w-100"
+              :text="$tr('createAccountButton')"
               :to="{ name: 'Create' }"
-            >
-              {{ $tr('createAccountButton') }}
-            </VBtn>
+              appearance="flat-button"
+            />
           </VForm>
           <VDivider />
           <p class="mt-4 text-xs-center">
@@ -224,6 +220,10 @@
     color: var(--v-grey-base);
     vertical-align: middle;
     content: '•';
+  }
+
+  .w-100 {
+    width: 100%;
   }
 
 </style>

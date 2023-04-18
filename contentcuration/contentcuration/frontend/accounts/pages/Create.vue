@@ -163,9 +163,13 @@
           </div>
         </div>
 
-        <VBtn color="primary" large :disabled="offline" type="submit" class="mt-5">
-          {{ $tr('finishButton') }}
-        </VBtn>
+        <KButton
+          primary
+          class="mt-5"
+          :disabled="offline"
+          :text="$tr('finishButton')"
+          type="submit"
+        />
       </VForm>
 
     </VLayout>
