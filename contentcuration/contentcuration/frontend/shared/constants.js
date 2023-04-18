@@ -206,6 +206,9 @@ export const AccessibilityCategoriesMap = {
   audio: ['CAPTIONS_SUBTITLES'],
 };
 
+// an activity with duration longer than this value is considered long, otherwise short
+export const SHORT_LONG_ACTIVITY_MIDPOINT = 1860;
+
 export const CompletionDropdownMap = {
   allContent: 'allContent',
   completeDuration: 'completeDuration',

@@ -138,15 +138,21 @@
               showEachActivityIcon
             />
           </DetailsRow>
-          <DetailsRow v-if="isExercise" :label="$tr('completion')">
-            <span v-if="noMasteryModel" class="red--text">
+
+          <DetailsRow :label="$tr('completion')">
+            <span v-if="isExercise && noMasteryModel" class="red--text">
               <Icon color="red" small>error</Icon>
               <span class="mx-1">{{ $tr('noMasteryModelError') }}</span>
             </span>
             <span v-else>
-              {{ masteryCriteria }}
+              {{ completion }}
             </span>
           </DetailsRow>
+
+          <DetailsRow :label="translateMetadataString('duration')">
+            {{ duration }}
+          </DetailsRow>
+
           <DetailsRow
             v-if="!isTopic"
             :label="translateMetadataString('category')"
@@ -332,11 +338,12 @@
   import sortBy from 'lodash/sortBy';
   import { mapActions, mapGetters } from 'vuex';
   import camelCase from 'lodash/camelCase';
-  import { isImportedContent, importedChannelLink } from '../utils';
+  import { isImportedContent, importedChannelLink, getCompletionCriteriaLabels } from '../utils';
   import FilePreview from '../views/files/FilePreview';
   import { ContentLevel, Categories, AccessibilityCategories } from '../../shared/constants';
   import AssessmentItemPreview from './AssessmentItemPreview/AssessmentItemPreview';
   import ContentNodeValidator from './ContentNodeValidator';
+
   import {
     getAssessmentItemErrors,
     getNodeLicenseErrors,
@@ -360,7 +367,6 @@
     titleMixin,
     metadataTranslationMixin,
   } from 'shared/mixins';
-  import { MasteryModelsNames } from 'shared/leUtils/MasteryModels';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
   export default {
@@ -404,6 +410,12 @@
       ...mapGetters('assessmentItem', ['getAssessmentItems']),
       node() {
         return this.getContentNode(this.nodeId);
+      },
+      completion() {
+        return getCompletionCriteriaLabels(this.node).completion;
+      },
+      duration() {
+        return getCompletionCriteriaLabels(this.node).duration;
       },
       files() {
         return sortBy(this.getContentNodeFiles(this.nodeId), f => f.preset.order);
@@ -458,19 +470,6 @@
       },
       importedChannelName() {
         return this.node.original_channel_name;
-      },
-      masteryCriteria() {
-        if (!this.isExercise) {
-          return '';
-        }
-
-        const masteryModel = this.node.extra_fields.mastery_model;
-        if (!masteryModel) {
-          return this.defaultText;
-        } else if (masteryModel === MasteryModelsNames.M_OF_N) {
-          return this.$tr('masteryMofN', this.node.extra_fields);
-        }
-        return this.translateConstant(masteryModel);
       },
       sortedTags() {
         return orderBy(this.node.tags, ['count'], ['desc']);
@@ -663,7 +662,6 @@
     },
     $trs: {
       questions: 'Questions',
-      masteryMofN: 'Goal: {m} out of {n}',
       details: 'Details',
       completion: 'Completion',
       showAnswers: 'Show answers',
