@@ -154,6 +154,8 @@ class FileViewSet(BulkDeleteMixin, BulkUpdateMixin, ReadOnlyValuesViewset):
             if not isinstance(duration, (int, float)):
                 return HttpResponseBadRequest(reason="File duration must be a number")
             duration = math.floor(duration)
+            if duration <= 0:
+                return HttpResponseBadRequest(reason="File duration is equal to or less than 0")
 
         try:
             request.user.check_space(float(size), checksum)
