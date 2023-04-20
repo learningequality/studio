@@ -451,6 +451,16 @@ class UploadFileURLTestCase(StudioAPITestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(file.contentnode, None)
 
+    def test_duration_zero(self):
+        self.file["duration"] = 0
+
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(
+            reverse("file-upload-url"), self.file, format="json",
+        )
+
+        self.assertEqual(response.status_code, 400)
+
 
 class ContentIDTestCase(SyncTestMixin, StudioAPITestCase):
     def setUp(self):
