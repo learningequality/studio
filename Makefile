@@ -28,6 +28,18 @@ migrate:
 	python contentcuration/manage.py migrate || true
 	python contentcuration/manage.py loadconstants
 
+# This is a special command that is we'll reuse to run data migrations outside of the normal
+# django migration process. This is useful for long running migrations which we don't want to block
+# the CD build. Do not delete!
+# Procedure:
+# 1) Add a new management command for the migration
+# 2) Call it here
+# 3) Perform the release
+# 4) Remove the management command from this `deploy-migrate` recipe
+# 5) Repeat!
+deploy-migrate:
+	echo "Nothing to do here"
+
 contentnodegc:
 	python contentcuration/manage.py garbage_collect
 
