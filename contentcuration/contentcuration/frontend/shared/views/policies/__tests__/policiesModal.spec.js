@@ -90,7 +90,9 @@ describe('PoliciesModal', () => {
 
     describe('when accept policy checkbox is not checked', () => {
       it('disable continue button', () => {
-        expect(wrapper.find('[data-test="continue-button"]').attributes().disabled).toEqual('disabled')
+        expect(wrapper.find('[data-test="continue-button"]').attributes().disabled).toEqual(
+          'disabled'
+        );
       });
     });
 
