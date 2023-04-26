@@ -651,6 +651,7 @@ class FileTestCase(PermissionQuerysetTestCase):
             duration=1123123,
         )
 
+    @pytest.mark.skip(reason="Temporarily removed constraint")
     def test_duration_check_constraint__negative(self):
         channel = testdata.channel()
         with self.assertRaises(IntegrityError, msg=FILE_DURATION_CONSTRAINT):
@@ -660,6 +661,7 @@ class FileTestCase(PermissionQuerysetTestCase):
                 duration=-10,
             )
 
+    @pytest.mark.skip(reason="Temporarily removed constraint")
     def test_duration_check_constraint__not_media(self):
         channel = testdata.channel()
         with self.assertRaises(IntegrityError, msg=FILE_DURATION_CONSTRAINT):
