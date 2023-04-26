@@ -2076,7 +2076,13 @@ class StagedFile(models.Model):
 FILE_DISTINCT_INDEX_NAME = "file_checksum_file_size_idx"
 FILE_MODIFIED_DESC_INDEX_NAME = "file_modified_desc_idx"
 FILE_DURATION_CONSTRAINT = "file_media_duration_int"
-MEDIA_PRESETS = [format_presets.AUDIO, format_presets.VIDEO_HIGH_RES, format_presets.VIDEO_LOW_RES]
+MEDIA_PRESETS = [
+    format_presets.AUDIO,
+    format_presets.AUDIO_DEPENDENCY,
+    format_presets.VIDEO_HIGH_RES,
+    format_presets.VIDEO_LOW_RES,
+    format_presets.VIDEO_DEPENDENCY,
+]
 
 
 class File(models.Model):
