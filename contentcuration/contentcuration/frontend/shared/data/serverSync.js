@@ -1,4 +1,3 @@
-import * as Sentry from '@sentry/vue';
 import debounce from 'lodash/debounce';
 import findLastIndex from 'lodash/findLastIndex';
 import get from 'lodash/get';
@@ -6,6 +5,7 @@ import pick from 'lodash/pick';
 import omit from 'lodash/omit';
 import orderBy from 'lodash/orderBy';
 import uniq from 'lodash/uniq';
+import logging from '../logging';
 import applyChanges from './applyRemoteChanges';
 import {
   CHANGE_TYPES,
@@ -100,18 +100,11 @@ function handleDisallowed(response) {
   const disallowed = get(response, ['data', 'disallowed'], []);
   if (disallowed.length) {
     // Capture occurrences of the api disallowing changes
-    if (process.env.NODE_ENV === 'production') {
-      Sentry.withScope(function(scope) {
-        scope.addAttachment({
-          filename: 'disallowed.json',
-          data: JSON.stringify(disallowed),
-          contentType: 'application/json',
-        });
-        Sentry.captureException(new Error('/api/sync returned disallowed changes'));
-      });
-    } else {
-      console.warn('/api/sync returned disallowed changes:', disallowed); // eslint-disable-line no-console
-    }
+    logging.error(new Error('/api/sync returned disallowed changes'), {
+      filename: 'disallowed.json',
+      data: JSON.stringify(disallowed),
+      contentType: 'application/json',
+    });
 
     // Collect all disallowed
     const disallowedRevs = disallowed.map(d => Number(d.rev));
@@ -317,11 +310,11 @@ async function syncChanges() {
         handleTasks(response),
       ]);
     } catch (err) {
-      console.error('There was an error updating change status: ', err); // eslint-disable-line no-console
+      logging.error(err);
     }
   } catch (err) {
     // There was an error during syncing, log, but carry on
-    console.warn('There was an error during syncing with the backend: ', err); // eslint-disable-line no-console
+    logging.error(err);
   }
   syncActive = false;
 }
