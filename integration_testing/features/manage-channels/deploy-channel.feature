@@ -1,6 +1,6 @@
 Feature: Deploy Channel
 
-	Background: 
+	Background:
 		Given I am signed in to Studio as <username>
 			And I have uploaded content to the staging tree for <channel_id>
 
@@ -11,5 +11,5 @@ Feature: Deploy Channel
 		When I click the *Deploy* button
 		Then I get redirected to https://api.studio.learningequality.org/channels/<channel_id>/edit/<channel_id[0:6]>
 
-	Examples: 
+	Examples:
 	| username | channel_id |

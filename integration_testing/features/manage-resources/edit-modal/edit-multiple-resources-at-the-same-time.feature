@@ -1,7 +1,7 @@
 Feature: Edit multiple resources at the same time in the edit modal
 	Users can apply dropdown options to multiple resources at one time
 
-	Background: 
+	Background:
 		Given I am signed into Studio
 			And I am in an editable channel with all resource types
 		When I select <X> resource checkboxes
@@ -10,7 +10,7 @@ Feature: Edit multiple resources at the same time in the edit modal
 
 	Scenario: See which fields are hidden and shown
 		When I select more than one checkbox in the resource panel on the left
-		Then I see *Editing details for <X> folders, <X> resources* 
+		Then I see *Editing details for <X> folders, <X> resources*
 			And I see text fields and dropdown options that are common to all <X> selected resources
 			And I do not see text fields and dropdown options that are not common to all <X> selected resources
 			And I do not see the resource renderer, *Title*, *Description*, *Preview files*, or *Thumbnail*

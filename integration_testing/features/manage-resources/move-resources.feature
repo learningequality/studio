@@ -10,7 +10,7 @@ Feature: Move resources to a new destination
 			And I click the move button
 		Then I am navigated to a screen that allows me to navigate and choose a destination to move the resource
 		When I navigate to an appropriate destination
-			And click the *Move here* button 
+			And click the *Move here* button
 		Then I am redirected to the channel editor
 			And I see a snackbar confirmation that my resources are moved
 			And the resources are no longer in my original directory

@@ -1,7 +1,7 @@
 Feature: Upload files
 	Users should be able to upload individual learning resources into their channel
 
-	Background: 
+	Background:
 		Given I am signed in to Studio
 			And I am on the channel editor page
 

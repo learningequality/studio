@@ -1,6 +1,6 @@
 Feature: View new metadata in the channel details modal
 
-	Background: 
+	Background:
 		Given I am signed into Studio
 			And I am in an editable channel
 		When I click on the info icon next to the channel label in the app bar
@@ -18,7 +18,7 @@ Feature: View new metadata in the channel details modal
 		Then I see a list of levels that appear in the channel
 			And I see that the list is comma-separated
 			And I see it is ordered from most frequent levels first to least frequent levels last
-	
+
 	Scenario: View categories in the channel
 		Given there are resources marked with different categories
 		Then I see a list of categories that appear in the channel

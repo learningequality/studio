@@ -1,7 +1,7 @@
 Feature: New metadata defaults while uploading or creating new files
 	User uploads files and sees which new metadata fields are and aren't set by default
 
-	Background: 
+	Background:
 		Given I am signed into Studio
 			And I am in an editable channel
 		When I click the *Add* button
@@ -104,4 +104,3 @@ Feature: New metadata defaults while uploading or creating new files
 			And *Visible to* is set to *Anyone*
 			And *For beginners* is unchecked
 			And all *Accessibility* checkboxes are unchecked
-			

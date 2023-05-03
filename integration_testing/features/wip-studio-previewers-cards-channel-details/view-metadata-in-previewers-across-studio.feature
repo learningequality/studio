@@ -1,7 +1,7 @@
-Feature: View new metadata in previewers across Studio
+Feature: View metadata in previewers across Studio
 	How the new metadata is laid out on previewers
 
-	Background: 
+	Background:
 		Given I am signed into Studio
 			And I am in an editable channel
 
