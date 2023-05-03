@@ -312,8 +312,8 @@
 
   import camelCase from 'lodash/camelCase';
   import orderBy from 'lodash/orderBy';
-  import DetailsRow from './DetailsRow';
   import { SCALE_TEXT, SCALE, CHANNEL_SIZE_DIVISOR } from './constants';
+  import DetailsRow from './DetailsRow';
   import { CategoriesLookup, LevelsLookup } from 'shared/constants';
   import {
     fileSizeMixin,
@@ -382,7 +382,7 @@
         return window.libraryMode;
       },
       sizeText() {
-        let size = (this.details && this.details.resource_size) || 0;
+        const size = (this.details && this.details.resource_size) || 0;
         const sizeIndex = Math.max(
           1,
           Math.min(Math.ceil(Math.log(size / CHANNEL_SIZE_DIVISOR) / Math.log(2)), 10)

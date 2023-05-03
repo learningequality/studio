@@ -442,6 +442,7 @@
     min-height: 48px;
 
     &.dragging-over.in-draggable-universe.drop-allowed {
+      /* stylelint-disable-next-line custom-property-pattern */
       background-color: var(--v-draggableDropZone-base);
     }
   }

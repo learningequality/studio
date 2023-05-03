@@ -83,7 +83,7 @@ export function updateAnswersToQuestionType(questionType, answers) {
     }
   }
 
-  let answersCopy = JSON.parse(JSON.stringify(answers));
+  const answersCopy = JSON.parse(JSON.stringify(answers));
 
   switch (questionType) {
     case AssessmentItemTypes.MULTIPLE_SELECTION:

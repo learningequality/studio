@@ -34,7 +34,7 @@ const defaultData = {
 const register = jest.fn();
 
 function makeWrapper(formData) {
-  let wrapper = mount(Create, {
+  const wrapper = mount(Create, {
     router,
     computed: {
       getPolicyAcceptedData() {
@@ -80,13 +80,13 @@ describe('create', () => {
   });
   it('should trigger submit method when form is submitted', () => {
     const submit = jest.fn();
-    let wrapper = makeWrapper();
+    const wrapper = makeWrapper();
     wrapper.setMethods({ submit });
     wrapper.find({ ref: 'form' }).trigger('submit');
     expect(submit).toHaveBeenCalled();
   });
   it('should call register with form data', () => {
-    let wrapper = makeWrapper();
+    const wrapper = makeWrapper();
     wrapper.find({ ref: 'form' }).trigger('submit');
     expect(register.mock.calls[0][0]).toEqual({
       ...defaultData,
@@ -97,12 +97,12 @@ describe('create', () => {
   });
   it('should automatically fill the email if provided in the query param', () => {
     router.push({ name: 'Create', query: { email: 'newtest@test.com' } });
-    let wrapper = mount(Create, { router, stubs: ['PolicyModals'], mocks: connectionStateMocks });
+    const wrapper = mount(Create, { router, stubs: ['PolicyModals'], mocks: connectionStateMocks });
     expect(wrapper.vm.form.email).toBe('newtest@test.com');
   });
   describe('validation', () => {
     it('should call register if form is valid', () => {
-      let wrapper = makeWrapper();
+      const wrapper = makeWrapper();
       wrapper.vm.submit();
       expect(register).toHaveBeenCalled();
     });
@@ -121,26 +121,26 @@ describe('create', () => {
       };
 
       Object.keys(form).forEach(field => {
-        let wrapper = makeWrapper({ [field]: form[field] });
+        const wrapper = makeWrapper({ [field]: form[field] });
         wrapper.vm.submit();
         expect(register).not.toHaveBeenCalled();
       });
     });
     it('should fail if password1 and password2 do not match', () => {
-      let wrapper = makeWrapper({ password1: 'some other password' });
+      const wrapper = makeWrapper({ password1: 'some other password' });
       wrapper.vm.submit();
       expect(register).not.toHaveBeenCalled();
     });
     it('should fail if uses field is set to fields that require more input that is not provided', () => {
       [uses.STORING, uses.OTHER].forEach(use => {
-        let wrapper = makeWrapper({ uses: [use] });
+        const wrapper = makeWrapper({ uses: [use] });
         wrapper.vm.submit();
         expect(register).not.toHaveBeenCalled();
       });
     });
     it('should fail if source field is set to an option that requires more input that is not provided', () => {
       [sources.ORGANIZATION, sources.CONFERENCE, sources.OTHER].forEach(source => {
-        let wrapper = makeWrapper({ source });
+        const wrapper = makeWrapper({ source });
         wrapper.vm.submit();
         expect(register).not.toHaveBeenCalled();
       });

@@ -45,7 +45,7 @@ describe.skip('editList', () => {
     expect(wrapper.vm.nodes).toHaveLength(ContentNodes.length);
   });
   it('should toggle selection when select all clicked', () => {
-    let toggle = wrapper.find('[data-test="select-all"]').find('.v-input--checkbox');
+    const toggle = wrapper.find('[data-test="select-all"]').find('.v-input--checkbox');
     toggle.trigger('click');
     expect(localStore.state.edit_modal.selectedIndices).toHaveLength(ContentNodes.length);
     toggle.trigger('click');

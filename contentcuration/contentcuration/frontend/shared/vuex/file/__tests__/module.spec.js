@@ -42,14 +42,14 @@ describe('file store', () => {
       expect(file.preset.id).toBe('document');
     });
     it('contentNodesTotalSize', () => {
-      let file = {
+      const file = {
         id: 'test',
         preset: 'document_thumbnail',
         file_size: 100,
         checksum: 'checksum-1',
         contentnode,
       };
-      let file2 = {
+      const file2 = {
         id: 'test2',
         preset: 'epub',
         file_size: 100,
@@ -105,7 +105,7 @@ describe('file store', () => {
     });
     describe('upload actions', () => {
       it('uploadFileToStorage should call client.put with upload url', () => {
-        let payload = {
+        const payload = {
           id: 'file-id',
           file: { id: 'hello' },
           url: 'test_url',

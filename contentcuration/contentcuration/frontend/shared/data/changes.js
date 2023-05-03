@@ -163,7 +163,7 @@ export class ChangeTracker {
           return resource.where({ parent }, false).then(siblings => {
             // Search the siblings ordered by `lft` to find the first a sibling
             // where we should move the node, positioned before that sibling
-            let relativeSibling = sortBy(siblings, 'lft').find(sibling => sibling.lft >= lft);
+            const relativeSibling = sortBy(siblings, 'lft').find(sibling => sibling.lft >= lft);
             if (relativeSibling) {
               return resource.move(change.key, relativeSibling.id, RELATIVE_TREE_POSITIONS.LEFT);
             }

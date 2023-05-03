@@ -61,7 +61,7 @@ export function acceptInvitation(context, invitationId) {
       return context
         .dispatch('channel/loadChannel', invitation.channel, { root: true })
         .then(channel => {
-          let data = { ...channel, bookmark: false, added: true };
+          const data = { ...channel, bookmark: false, added: true };
 
           // Make sure correct access is given
           Object.values(SharingPermissions).forEach(permission => {

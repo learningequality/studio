@@ -66,7 +66,7 @@ describe('moveModal', () => {
   });
   describe('on load', () => {
     it('items that are selected to be moved should be disabled', () => {
-      let testWrapper = makeWrapper([testVideo.id]);
+      const testWrapper = makeWrapper([testVideo.id]);
       expect(testWrapper.vm.isDisabled(testVideo)).toBe(true);
     });
   });

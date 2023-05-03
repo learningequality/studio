@@ -52,7 +52,7 @@ export function commitChannelSet(
     channelSetData.description = description;
   }
   channelSetData.channels = {};
-  for (let channel of channels) {
+  for (const channel of channels) {
     channelSetData.channels[channel] = true;
   }
   return ChannelSet.createModel(channelSetData).then(data => {
@@ -78,7 +78,7 @@ export function updateChannelSet(context, { id, name = NOVALUE, description = NO
 
 export function addChannels(context, { channelSetId, channelIds = [] } = {}) {
   const updates = {};
-  for (let channelId of channelIds) {
+  for (const channelId of channelIds) {
     context.commit('ADD_CHANNEL_TO_CHANNELSET', { channelSetId, channelId });
     updates[`channels.${channelId}`] = true;
   }
@@ -87,7 +87,7 @@ export function addChannels(context, { channelSetId, channelIds = [] } = {}) {
 
 export function removeChannels(context, { channelSetId, channelIds = [] } = {}) {
   const updates = {};
-  for (let channelId of channelIds) {
+  for (const channelId of channelIds) {
     context.commit('REMOVE_CHANNEL_FROM_CHANNELSET', { channelSetId, channelId });
     updates[`channels.${channelId}`] = undefined;
   }

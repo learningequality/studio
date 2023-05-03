@@ -597,7 +597,7 @@
           .sort()
           .filter(k => ids.includes(ContentLevels[k]));
         if (matches && matches.length > 0) {
-          let mappedMatches = [];
+          const mappedMatches = [];
           let newMatch;
           matches.map(match => {
             if (match === 'PROFESSIONAL') {
@@ -641,7 +641,7 @@
       loadNode() {
         // Load related models
         if (this.node) {
-          let promises = [];
+          const promises = [];
           promises.push(this.loadRelatedResources(this.nodeId));
 
           if (this.isResource) {

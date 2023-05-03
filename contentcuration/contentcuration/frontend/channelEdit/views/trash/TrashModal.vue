@@ -241,7 +241,7 @@
         this.toggleSelectAll(false);
       },
       deleteNodes() {
-        let text = this.$tr('deleteSuccessMessage');
+        const text = this.$tr('deleteSuccessMessage');
         this.deleteContentNodes(this.selected).then(() => {
           this.showConfirmationDialog = false;
           this.reset();

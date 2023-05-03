@@ -207,8 +207,8 @@
 
           // Reset selection mode if a filter is changed (ignore page)
           const ignoreDefaults = { page: 0 };
-          let toQuery = { ...to.query, ...ignoreDefaults };
-          let fromQuery = { ...this.previousQuery, ...ignoreDefaults };
+          const toQuery = { ...to.query, ...ignoreDefaults };
+          const fromQuery = { ...this.previousQuery, ...ignoreDefaults };
           if (!isEqual(toQuery, fromQuery)) {
             this.setSelection(false);
           }
@@ -223,7 +223,7 @@
       ...mapActions('channelList', ['searchCatalog']),
       loadCatalog() {
         this.loading = true;
-        let params = {
+        const params = {
           ...this.$route.query,
         };
         return this.searchCatalog(params)

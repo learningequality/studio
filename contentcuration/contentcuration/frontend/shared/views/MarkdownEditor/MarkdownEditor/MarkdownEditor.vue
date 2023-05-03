@@ -487,9 +487,9 @@
               // element has `contenteditable="false"` (which is necessary on FireFox for
               // a different reason).  As a result, Squire.js gets stuck. The trick here is
               // to fix its selection so it knows what to delete.
-              let fixedStartContainer =
+              const fixedStartContainer =
                 selection.startContainer.childNodes[selection.startOffset - 1];
-              let fixedEndContainer = selection.endContainer.childNodes[selection.endOffset - 1];
+              const fixedEndContainer = selection.endContainer.childNodes[selection.endOffset - 1];
               if (fixedStartContainer && fixedEndContainer) {
                 selection.setStart(fixedStartContainer, 0);
                 selection.setEnd(fixedEndContainer, 1);
@@ -522,7 +522,7 @@
         }
         // if any part of a custom node is in the selection, include the whole thing
         if (isCustomNode(selection.startContainer)) {
-          let previousSibling = selection.startContainer.previousSibling;
+          const previousSibling = selection.startContainer.previousSibling;
           selection.setStart(previousSibling, previousSibling.length - 1);
           squire.setSelection(selection);
         }
@@ -711,14 +711,14 @@
         formulaEl.setAttribute('is', 'markdown-formula-field');
         formulaEl.setAttribute('editing', true);
         formulaEl.innerHTML = formula;
-        let formulaHTML = formulaEl.outerHTML;
+        const formulaHTML = formulaEl.outerHTML;
         const activeMathFieldEl = this.findActiveMathField();
 
         if (activeMathFieldEl !== null) {
           // setting `outerHTML` is the preferred way to reset a custom node
           activeMathFieldEl.outerHTML = formulaHTML;
         } else {
-          let squire = this.editor.getSquire();
+          const squire = this.editor.getSquire();
           squire.insertHTML(formulaHTML);
         }
       },
@@ -737,10 +737,10 @@
 
       /* IMAGE MENU */
       handleEditImage(event) {
-        let { editorField, editEvent, image } = event.detail;
+        const { editorField, editEvent, image } = event.detail;
         this.activeImageField = editorField;
-        let editorEl = this.$el;
-        let position = getExtensionMenuPosition({
+        const editorEl = this.$el;
+        const position = getExtensionMenuPosition({
           editorEl,
           targetX: editEvent.clientX,
           targetY: editEvent.clientY,

@@ -7,7 +7,7 @@ export function parseNode(node, children) {
   const tags = Object.keys(node.tags || {});
   const aggregateValues = {};
   if (node.kind === ContentKindsNames.TOPIC) {
-    for (let child of children) {
+    for (const child of children) {
       aggregateValues['error_count'] =
         (aggregateValues['error_count'] || 0) +
         (child['error_count'] || Number(!child['complete']));

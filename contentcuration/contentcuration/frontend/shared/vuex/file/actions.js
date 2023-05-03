@@ -89,7 +89,7 @@ export function updateFile(context, { id, ...payload }) {
     if (fileData.contentnode) {
       const presetObj = FormatPresetsMap.get(fileData.preset);
       const files = context.getters.getContentNodeFiles(fileData.contentnode);
-      for (let f of files) {
+      for (const f of files) {
         if (
           f.preset.id === presetObj.id &&
           (!presetObj.multi_language || f.language.id === fileData.language) &&
@@ -268,7 +268,7 @@ export function getAudioData(context, url) {
     client
       .get(url, { responseType: 'arraybuffer' })
       .then(response => {
-        let audioContext = new AudioContext();
+        const audioContext = new AudioContext();
         audioContext
           .decodeAudioData(response.data, buffer => {
             resolve(buffer.getChannelData(0));

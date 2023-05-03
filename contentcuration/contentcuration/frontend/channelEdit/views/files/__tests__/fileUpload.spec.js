@@ -76,7 +76,7 @@ describe('fileUpload', () => {
       expect(wrapper.vm.primaryFileMapping).toHaveLength(2);
     });
     it('should disallow file removal if there is only one primary file', () => {
-      let testFiles2 = [
+      const testFiles2 = [
         {
           id: 'file-1',
           preset: {
@@ -85,7 +85,7 @@ describe('fileUpload', () => {
           },
         },
       ];
-      let testWrapper = makeWrapper(testFiles2);
+      const testWrapper = makeWrapper(testFiles2);
       expect(testWrapper.vm.allowFileRemove).toBe(false);
     });
     it('should allow file removal if there are multiple valid primary files', () => {
@@ -105,7 +105,7 @@ describe('fileUpload', () => {
       expect(wrapper.vm.selected).toBe('file-1');
     });
     it('emitted remove event should trigger delete file', () => {
-      let deleteFile = jest.fn();
+      const deleteFile = jest.fn();
       wrapper.setData({ selected: 'file-1' });
       wrapper.setMethods({ deleteFile });
       uploadItem.vm.$emit('remove', testFiles[0]);
@@ -113,7 +113,7 @@ describe('fileUpload', () => {
       expect(deleteFile.mock.calls[0][0]).toBe(testFiles[0]);
     });
     it('calling uploadCompleteHandler should trigger update file', () => {
-      let updateFile = jest.fn(() => Promise.resolve());
+      const updateFile = jest.fn(() => Promise.resolve());
       wrapper.setMethods({ updateFile });
       uploadItem.vm.uploadCompleteHandler(testFiles[1]);
       expect(updateFile).toHaveBeenCalled();

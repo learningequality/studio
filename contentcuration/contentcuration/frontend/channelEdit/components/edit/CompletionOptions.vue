@@ -100,9 +100,9 @@
 <script>
 
   import get from 'lodash/get';
-  import MasteryCriteriaGoal from './MasteryCriteriaGoal';
-  import ActivityDuration from './ActivityDuration.vue';
   import MasteryCriteriaMofNFields from './MasteryCriteriaMofNFields';
+  import ActivityDuration from './ActivityDuration.vue';
+  import MasteryCriteriaGoal from './MasteryCriteriaGoal';
   import {
     CompletionCriteriaModels,
     ContentModalities,

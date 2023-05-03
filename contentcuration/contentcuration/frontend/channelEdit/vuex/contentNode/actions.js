@@ -353,7 +353,7 @@ export function addTags(context, { ids, tags }) {
   return Promise.all(
     ids.map(id => {
       const updates = {};
-      for (let tag of tags) {
+      for (const tag of tags) {
         context.commit('ADD_TAG', { id, tag });
         updates[`tags.${tag}`] = true;
       }
@@ -366,7 +366,7 @@ export function removeTags(context, { ids, tags }) {
   return Promise.all(
     ids.map(id => {
       const updates = {};
-      for (let tag of tags) {
+      for (const tag of tags) {
         context.commit('REMOVE_TAG', { id, tag });
         updates[`tags.${tag}`] = undefined;
       }

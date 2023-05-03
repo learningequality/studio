@@ -299,7 +299,7 @@
         return this.$tr('editingDetailsHeader');
       },
       parentTitle() {
-        let node = this.$route.params.nodeId && this.getContentNode(this.$route.params.nodeId);
+        const node = this.$route.params.nodeId && this.getContentNode(this.$route.params.nodeId);
         return node ? node.title : '';
       },
       invalidNodes() {
@@ -357,7 +357,7 @@
             .then(() => {
               // self-healing of nodes' validation status
               // in case we receive incorrect data from backend
-              let validationPromises = [];
+              const validationPromises = [];
               allNodesIds.forEach(nodeId => {
                 const node = vm.getContentNode(nodeId);
                 const completeCheck = isNodeComplete({
@@ -424,7 +424,7 @@
         this.selected = this.nodeIds;
         this.$nextTick(() => {
           this.enableValidation(this.nodeIds);
-          let assessmentItems = this.getAssessmentItems(this.nodeIds);
+          const assessmentItems = this.getAssessmentItems(this.nodeIds);
           assessmentItems.forEach(item =>
             item.question ? (item[DELAYED_VALIDATION] = false) : ''
           );
