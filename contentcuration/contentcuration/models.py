@@ -2219,9 +2219,12 @@ class File(models.Model):
             models.Index(fields=["-modified"], name=FILE_MODIFIED_DESC_INDEX_NAME),
         ]
         constraints = [
-            # Commented out to temporarily remove the constraint until we can re-run `set_file_duration`
-            # on all media files with the dependency preset in the database.
-            # models.CheckConstraint(check=(Q(preset__in=MEDIA_PRESETS, duration__gt=0) | Q(duration__isnull=True)), name=FILE_DURATION_CONSTRAINT)
+            # enforces that duration is null when not a media preset, but the duration may be null for media presets
+            # but if not-null, should be greater than 0
+            models.CheckConstraint(
+                check=(Q(preset__in=MEDIA_PRESETS, duration__gt=0) | Q(duration__isnull=True)),
+                name=FILE_DURATION_CONSTRAINT
+            )
         ]
 
 
