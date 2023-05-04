@@ -109,6 +109,7 @@
     CompletionDropdownMap,
     DurationDropdownMap,
     nonUniqueValue,
+    SHORT_LONG_ACTIVITY_MIDPOINT,
   } from 'shared/constants';
   import Checkbox from 'shared/views/form/Checkbox';
   import { MasteryModelsNames } from 'shared/leUtils/MasteryModels';
@@ -123,7 +124,6 @@
 
   const DEFAULT_SHORT_ACTIVITY = 600;
   const DEFAULT_LONG_ACTIVITY = 3000;
-  const SHORT_LONG_ACTIVITY_MIDPOINT = 1860;
 
   const defaultCompletionCriteriaModels = {
     [ContentKindsNames.VIDEO]: CompletionCriteriaModels.TIME,
