@@ -472,7 +472,7 @@ export function moveClipboardNodes(context, { legacyTrees, newTrees, target }) {
     );
   }
   if (newTrees.length) {
-    for (let copyNode of newTrees) {
+    for (const copyNode of newTrees) {
       promises.push(
         context.dispatch(
           'contentNode/copyContentNode',

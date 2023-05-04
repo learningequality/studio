@@ -450,7 +450,7 @@
         });
       },
       newTopicNode() {
-        let nodeData = {
+        const nodeData = {
           kind: ContentKindsNames.TOPIC,
           title: '',
         };
@@ -458,7 +458,7 @@
         this.trackClickEvent('Add topics');
       },
       newExerciseNode() {
-        let nodeData = {
+        const nodeData = {
           kind: ContentKindsNames.EXERCISE,
           title: '',
           learning_activities: {

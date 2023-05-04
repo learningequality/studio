@@ -6,7 +6,7 @@ import client from 'shared/client';
 
 export async function loadBookmarks(context) {
   const bookmarks = await Bookmark.where();
-  for (let bookmark of bookmarks) {
+  for (const bookmark of bookmarks) {
     context.commit('SET_BOOKMARK', bookmark);
   }
   return bookmarks;
@@ -259,7 +259,7 @@ export function loadChannelUsers(context, channelId) {
 }
 
 export async function sendInvitation(context, { channelId, email, shareMode }) {
-  let postedInvitation = await client.post(window.Urls.send_invitation_email(), {
+  const postedInvitation = await client.post(window.Urls.send_invitation_email(), {
     user_email: email,
     share_mode: shareMode,
     channel_id: channelId,

@@ -128,6 +128,7 @@
 
       .v-icon:not(.v-icon--is-component) {
         font-size: 16pt !important;
+        /* stylelint-disable-next-line custom-property-pattern */
         color: var(--v-darkGrey-darken1) !important;
         opacity: 1 !important;
         transform: none !important;
@@ -159,6 +160,7 @@
     }
 
     tr:hover td {
+      /* stylelint-disable-next-line custom-property-pattern */
       background-color: var(--v-greyBackground-base) !important;
     }
 

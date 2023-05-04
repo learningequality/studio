@@ -172,7 +172,7 @@
         user: state => state.session.currentUser,
       }),
       users() {
-        let users = this.getChannelUsers(this.channelId, this.mode);
+        const users = this.getChannelUsers(this.channelId, this.mode);
 
         // Make sure current user is at the top of the list
         if (users.find(u => u.id === this.user.id)) {
@@ -215,7 +215,7 @@
         'removeViewer',
       ]),
       getUserText(user) {
-        let nameParams = {
+        const nameParams = {
           first_name: user.first_name,
           last_name: user.last_name,
         };

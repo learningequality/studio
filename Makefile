@@ -77,10 +77,10 @@ i18n-extract: i18n-extract-frontend i18n-extract-backend
 i18n-transfer-context:
 	yarn transfercontext
 
-#i18n-django-compilemessages:
-	# Change working directory to kolibri/ such that compilemessages
+i18n-django-compilemessages:
+	# Change working directory to contentcuration/ such that compilemessages
 	# finds only the .po files nested there.
-	#cd kolibri && PYTHONPATH="..:$$PYTHONPATH" python -m kolibri manage compilemessages
+	cd contentcuration && python manage.py compilemessages
 
 i18n-upload: i18n-extract
 	python node_modules/kolibri-tools/lib/i18n/crowdin.py upload-sources ${branch}
@@ -91,26 +91,14 @@ i18n-pretranslate:
 i18n-pretranslate-approve-all:
 	python node_modules/kolibri-tools/lib/i18n/crowdin.py pretranslate ${branch} --approve-all
 
-i18n-convert:
-	python node_modules/kolibri-tools/lib/i18n/crowdin.py convert-files
-
 i18n-download-translations:
 	python node_modules/kolibri-tools/lib/i18n/crowdin.py rebuild-translations ${branch}
 	python node_modules/kolibri-tools/lib/i18n/crowdin.py download-translations ${branch}
-	node node_modules/kolibri-tools/lib/i18n/intl_code_gen.js
-	python node_modules/kolibri-tools/lib/i18n/crowdin.py convert-files
-	# TODO: is this necessary? # Manual hack to add es language by copying es_ES to es
-	# cp -r contentcuration/locale/es_ES contentcuration/locale/es
+	yarn exec kolibri-tools i18n-code-gen -- --output-dir ./contentcuration/contentcuration/frontend/shared/i18n
+	$(MAKE) i18n-django-compilemessages
+	yarn exec kolibri-tools i18n-create-message-files -- --namespace contentcuration --searchPath ./contentcuration/contentcuration/frontend
 
 i18n-download: i18n-download-translations
-
-i18n-update:
-	echo "WARNING: i18n-update has been renamed to i18n-download"
-	$(MAKE) i18n-download
-	echo "WARNING: i18n-update has been renamed to i18n-download"
-
-i18n-stats:
-	python node_modules/kolibri-tools/lib/i18n/crowdin.py translation-stats ${branch}
 
 i18n-download-glossary:
 	python node_modules/kolibri-tools/lib/i18n/crowdin.py download-glossary

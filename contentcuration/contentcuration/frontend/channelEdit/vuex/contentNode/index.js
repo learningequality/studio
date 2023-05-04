@@ -6,7 +6,7 @@ import { TABLE_NAMES, CHANGE_TYPES } from 'shared/data';
 export default {
   namespaced: true,
   state: () => {
-    let expandedNodes = {};
+    const expandedNodes = {};
     // TODO: test performance before adding this in to avoid loading a lot of data at once
     // if (window.sessionStorage) {
     //   expandedNodes = JSON.parse(window.sessionStorage.getItem('expandedNodes') || '{}');

@@ -73,8 +73,8 @@ export default VueComponent => {
         mutations.forEach(mutation => {
           const checkIfElementNode = x => x.nodeType === document.ELEMENT_NODE;
           const checkIfTextNode = x => x.nodeType === document.TEXT_NODE;
-          let elementNodesAdded = [...mutation.addedNodes].filter(checkIfElementNode);
-          let textNodesRemoved = [...mutation.removedNodes].filter(checkIfTextNode);
+          const elementNodesAdded = [...mutation.addedNodes].filter(checkIfElementNode);
+          const textNodesRemoved = [...mutation.removedNodes].filter(checkIfTextNode);
 
           // Prevent TUI.editor from adding unwanted DOM elements to the custom element
           // This is necessary so that style modifiers don't wrap markdown in <b> or <i> tags.

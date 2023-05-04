@@ -19,7 +19,7 @@ import {
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
 describe('TreeResource methods', () => {
-  let resource = new TreeResource({
+  const resource = new TreeResource({
     urlName: 'test',
     tableName: 'test',
   });
@@ -303,7 +303,7 @@ describe('ContentNode methods', () => {
 
     describe('moving', () => {
       it('should default to appending', async () => {
-        let cb = jest.fn(() => Promise.resolve('results'));
+        const cb = jest.fn(() => Promise.resolve('results'));
         await expect(
           ContentNode.resolveTreeInsert('abc123', 'target', 'position', false, cb)
         ).resolves.toEqual('results');
@@ -338,7 +338,7 @@ describe('ContentNode methods', () => {
       });
 
       it("should default `channel_id` to the node's", async () => {
-        let cb = jest.fn(() => Promise.resolve('results'));
+        const cb = jest.fn(() => Promise.resolve('results'));
         parent.channel_id = null;
         await expect(
           ContentNode.resolveTreeInsert('abc123', 'target', 'position', false, cb)
@@ -374,7 +374,7 @@ describe('ContentNode methods', () => {
       });
 
       it('should determine lft from siblings', async () => {
-        let cb = jest.fn(() => Promise.resolve('results'));
+        const cb = jest.fn(() => Promise.resolve('results'));
         lft = 7;
         siblings = Array(6)
           .fill(1)
@@ -414,7 +414,7 @@ describe('ContentNode methods', () => {
 
       it('should reject if null lft', async () => {
         lft = null;
-        let cb = jest.fn(() => Promise.resolve('results'));
+        const cb = jest.fn(() => Promise.resolve('results'));
         siblings = Array(5)
           .fill(1)
           .map((_, i) => ({ id: uuid4(), title: `Sibling ${i}` }));
@@ -430,7 +430,7 @@ describe('ContentNode methods', () => {
       });
 
       it('should reject if null channel_id', async () => {
-        let cb = jest.fn(() => Promise.resolve('results'));
+        const cb = jest.fn(() => Promise.resolve('results'));
         parent.channel_id = null;
         node.channel_id = null;
 
@@ -448,7 +448,7 @@ describe('ContentNode methods', () => {
 
     describe('copying', () => {
       it('should default to appending', async () => {
-        let cb = jest.fn(() => Promise.resolve('results'));
+        const cb = jest.fn(() => Promise.resolve('results'));
         await expect(
           ContentNode.resolveTreeInsert('abc123', 'target', 'position', true, cb)
         ).resolves.toEqual('results');
@@ -483,7 +483,7 @@ describe('ContentNode methods', () => {
       });
 
       it('should determine lft from siblings', async () => {
-        let cb = jest.fn(() => Promise.resolve('results'));
+        const cb = jest.fn(() => Promise.resolve('results'));
         lft = 7;
         siblings = Array(5)
           .fill(1)
@@ -523,7 +523,7 @@ describe('ContentNode methods', () => {
 
       it('should reject if null lft', async () => {
         lft = null;
-        let cb = jest.fn(() => Promise.resolve('results'));
+        const cb = jest.fn(() => Promise.resolve('results'));
         siblings = Array(5)
           .fill(1)
           .map((_, i) => ({ id: uuid4(), title: `Sibling ${i}` }));

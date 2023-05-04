@@ -165,6 +165,7 @@
     min-height: 100%;
     padding: 0;
     padding-bottom: 88px;
+    /* stylelint-disable-next-line custom-property-pattern */
     background-color: var(--v-backgroundColor-base);
   }
 

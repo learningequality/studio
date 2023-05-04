@@ -12,10 +12,10 @@ const VIDEO_PRESETS = [FormatPresetsNames.HIGH_RES_VIDEO, FormatPresetsNames.LOW
 
 export function getHash(file) {
   return new Promise((resolve, reject) => {
-    let fileReader = new FileReader();
-    let spark = new SparkMD5.ArrayBuffer();
+    const fileReader = new FileReader();
+    const spark = new SparkMD5.ArrayBuffer();
     let currentChunk = 0;
-    let chunks = Math.ceil(file.size / CHUNK_SIZE);
+    const chunks = Math.ceil(file.size / CHUNK_SIZE);
     fileReader.onload = function(e) {
       spark.append(e.target.result);
       currentChunk++;

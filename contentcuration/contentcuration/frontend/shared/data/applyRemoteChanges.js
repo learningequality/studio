@@ -7,7 +7,7 @@ import { INDEXEDDB_RESOURCES } from './registry';
 const { CREATED, DELETED, UPDATED, MOVED, PUBLISHED, SYNCED, DEPLOYED } = CHANGE_TYPES;
 
 export function applyMods(obj, mods) {
-  for (let keyPath in mods) {
+  for (const keyPath in mods) {
     if (mods[keyPath] === null) {
       Dexie.delByKeyPath(obj, keyPath);
     } else {
@@ -127,7 +127,7 @@ function applyPublish(change) {
  */
 export default async function applyChanges(changes) {
   const results = [];
-  for (let change of sortBy(changes, ['server_rev', 'rev'])) {
+  for (const change of sortBy(changes, ['server_rev', 'rev'])) {
     let result;
     if (change.type === CHANGE_TYPES.CREATED) {
       result = await applyCreate(change);

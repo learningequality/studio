@@ -33,10 +33,10 @@ import applyChanges, { applyMods, collectChanges } from './applyRemoteChanges';
 import mergeAllChanges from './mergeChanges';
 import db, { channelScope, CLIENTID, Collection } from './db';
 import { API_RESOURCES, INDEXEDDB_RESOURCES } from './registry';
-import { DELAYED_VALIDATION, fileErrors, NEW_OBJECT } from 'shared/constants';
-import client, { paramsSerializer } from 'shared/client';
-import { currentLanguage } from 'shared/i18n';
 import urls from 'shared/urls';
+import { currentLanguage } from 'shared/i18n';
+import client, { paramsSerializer } from 'shared/client';
+import { DELAYED_VALIDATION, fileErrors, NEW_OBJECT } from 'shared/constants';
 
 // Number of seconds after which data is considered stale.
 const REFRESH_INTERVAL = 5;
@@ -134,7 +134,7 @@ function mix(...mixins) {
 
   // Programmatically add all the methods and accessors
   // of the mixins to class Mix.
-  for (let mixin of mixins) {
+  for (const mixin of mixins) {
     copyProperties(Mix, mixin);
     copyProperties(Mix.prototype, mixin.prototype);
   }
@@ -142,9 +142,9 @@ function mix(...mixins) {
 }
 
 function copyProperties(target, source) {
-  for (let key of Reflect.ownKeys(source)) {
+  for (const key of Reflect.ownKeys(source)) {
     if (key !== 'constructor' && key !== 'prototype' && key !== 'name') {
-      let desc = Object.getOwnPropertyDescriptor(source, key);
+      const desc = Object.getOwnPropertyDescriptor(source, key);
       Object.defineProperty(target, key, desc);
     }
   }
@@ -275,15 +275,15 @@ class IndexedDBResource {
         return Promise.all([changesPromise, currentPromise]).then(([changes, currents]) => {
           changes = mergeAllChanges(changes, true);
           const collectedChanges = collectChanges(changes)[this.tableName] || {};
-          for (let changeType of Object.keys(collectedChanges)) {
+          for (const changeType of Object.keys(collectedChanges)) {
             const map = {};
-            for (let change of collectedChanges[changeType]) {
+            for (const change of collectedChanges[changeType]) {
               map[change.key] = change;
             }
             collectedChanges[changeType] = map;
           }
           const currentMap = {};
-          for (let currentObj of currents) {
+          for (const currentObj of currents) {
             currentMap[this.getIdValue(currentObj)] = currentObj;
           }
           const data = itemData
@@ -321,7 +321,7 @@ class IndexedDBResource {
                   return data;
                 }
                 const resultsMap = {};
-                for (let result of results) {
+                for (const result of results) {
                   const id = this.getIdValue(result);
                   resultsMap[id] = result;
                 }
@@ -360,7 +360,7 @@ class IndexedDBResource {
 
     // Setup paginator.
     const paginator = new Paginator(params);
-    for (let key of Object.keys(params)) {
+    for (const key of Object.keys(params)) {
       // Partition our parameters
       const [rootParam, suffix] = key.split(SUFFIX_SEPERATOR);
       if (suffix && VALID_SUFFIXES.has(suffix) && suffix !== QUERY_SUFFIXES.IN) {
@@ -1149,7 +1149,7 @@ export const Channel = new Resource({
   },
 
   softDelete(id) {
-    let modelUrl = this.modelUrl(id);
+    const modelUrl = this.modelUrl(id);
     // Call endpoint directly in case we need to navigate to new page
     return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
       return this.table.update(id, { deleted: true });
@@ -1691,7 +1691,7 @@ export const ChannelUser = new APIResource({
       const userData = [];
       const editorM2M = [];
       const viewerM2M = [];
-      for (let datum of itemData) {
+      for (const datum of itemData) {
         const userDatum = {
           ...datum,
         };
@@ -1910,7 +1910,7 @@ export const Task = new IndexedDBResource({
   tableName: TABLE_NAMES.TASK,
   idField: 'task_id',
   setTasks(tasks) {
-    for (let task of tasks) {
+    for (const task of tasks) {
       // Coerce channel_id to be a simple hex string
       task.channel_id = task.channel_id.replace('-', '');
     }

@@ -13,7 +13,7 @@ export default {
   actions: {
     initState(store) {
       return Task.where().then(tasks => {
-        for (let task of tasks) {
+        for (const task of tasks) {
           store.commit('ADD_ASYNC_TASK', task);
         }
       });

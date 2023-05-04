@@ -24,7 +24,7 @@ export function generateFilterMixin(filterMap) {
           return this.$route.query.keywords;
         },
         set(value) {
-          let params = { ...this.$route.query, page: 1 };
+          const params = { ...this.$route.query, page: 1 };
           if (value) {
             params.keywords = value;
           } else {
@@ -37,7 +37,7 @@ export function generateFilterMixin(filterMap) {
         get() {
           // Return filter where all param conditions are met
           const filterKeys = intersection(Object.keys(this.$route.query), paramKeys);
-          let key = findKey(filterMap, value => {
+          const key = findKey(filterMap, value => {
             return filterKeys.every(field => {
               return value.params[field] === _getBooleanVal(this.$route.query[field]);
             });
@@ -115,7 +115,7 @@ export const tableMixin = {
   computed: {
     pagination: {
       get() {
-        let params = {
+        const params = {
           rowsPerPage: Number(this.$route.query.page_size) || 25,
           page: Number(this.$route.query.page) || 1,
         };

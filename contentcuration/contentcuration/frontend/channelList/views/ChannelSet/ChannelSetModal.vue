@@ -306,7 +306,7 @@
         }
       },
       setChannelSet(data) {
-        for (let key in data) {
+        for (const key in data) {
           Vue.set(this.diffTracker, key, data[key]);
         }
         this.changed = true;
