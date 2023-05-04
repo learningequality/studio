@@ -226,6 +226,8 @@ function handleTasks(response) {
   return Task.setTasks(tasks);
 }
 
+const noUserError = 'No user logged in';
+
 async function syncChanges() {
   // Note: we could in theory use Dexie syncable for what
   // we are doing here, but I can't find a good way to make
@@ -238,58 +240,58 @@ async function syncChanges() {
 
   syncActive = true;
 
-  // Track the maxRevision at this moment so that we can ignore any changes that
-  // might have come in during processing - leave them for the next cycle.
-  // This is the primary key of the change objects, so the collection is ordered by this
-  // by default - if we just grab the last object, we can get the key from there.
-  const [lastChange, user] = await Promise.all([
-    db[CHANGES_TABLE].orderBy('rev').last(),
-    Session.getSession(),
-  ]);
-  if (!user) {
-    // If not logged in, nothing to do.
-    return;
-  }
-
-  const now = Date.now();
-  const channelIds = Object.entries(user[ACTIVE_CHANNELS] || {})
-    .filter(([id, time]) => id && time > now - CHANNEL_SYNC_KEEP_ALIVE_INTERVAL)
-    .map(([id]) => id);
-  const channel_revs = {};
-  for (const channelId of channelIds) {
-    channel_revs[channelId] = get(user, [MAX_REV_KEY, channelId], 0);
-  }
-
-  const unAppliedChanges = await db[CHANGES_TABLE].orderBy('server_rev')
-    .filter(c => c.synced && !c.errors && !c.disallowed)
-    .toArray();
-
-  const requestPayload = {
-    changes: [],
-    channel_revs,
-    user_rev: user.user_rev || 0,
-    unapplied_revs: unAppliedChanges.map(c => c.server_rev).filter(Boolean),
-  };
-
-  if (lastChange) {
-    const changesMaxRevision = lastChange.rev;
-    const syncableChanges = db[CHANGES_TABLE].where('rev')
-      .belowOrEqual(changesMaxRevision)
-      .filter(c => !c.synced);
-    const changesToSync = await syncableChanges.toArray();
-    // By the time we get here, our changesToSync Array should
-    // have every change we want to sync to the server, so we
-    // can now trim it down to only what is needed to transmit over the wire.
-    // TODO: remove moves when a delete change is present for an object,
-    // because a delete will wipe out the move.
-    const changes = changesToSync.map(trimChangeForSync).filter(Boolean);
-    // Create a promise for the sync - if there is nothing to sync just resolve immediately,
-    // in order to still call our change cleanup code.
-    if (changes.length) {
-      requestPayload.changes = changes;
-    }
-  }
   try {
+    // Track the maxRevision at this moment so that we can ignore any changes that
+    // might have come in during processing - leave them for the next cycle.
+    // This is the primary key of the change objects, so the collection is ordered by this
+    // by default - if we just grab the last object, we can get the key from there.
+    const [lastChange, user] = await Promise.all([
+      db[CHANGES_TABLE].orderBy('rev').last(),
+      Session.getSession(),
+    ]);
+    if (!user) {
+      // If not logged in, nothing to do.
+      throw new Error(noUserError);
+    }
+
+    const now = Date.now();
+    const channelIds = Object.entries(user[ACTIVE_CHANNELS] || {})
+      .filter(([id, time]) => id && time > now - CHANNEL_SYNC_KEEP_ALIVE_INTERVAL)
+      .map(([id]) => id);
+    const channel_revs = {};
+    for (const channelId of channelIds) {
+      channel_revs[channelId] = get(user, [MAX_REV_KEY, channelId], 0);
+    }
+
+    const unAppliedChanges = await db[CHANGES_TABLE].orderBy('server_rev')
+      .filter(c => c.synced && !c.errors && !c.disallowed)
+      .toArray();
+
+    const requestPayload = {
+      changes: [],
+      channel_revs,
+      user_rev: user.user_rev || 0,
+      unapplied_revs: unAppliedChanges.map(c => c.server_rev).filter(Boolean),
+    };
+
+    if (lastChange) {
+      const changesMaxRevision = lastChange.rev;
+      const syncableChanges = db[CHANGES_TABLE].where('rev')
+        .belowOrEqual(changesMaxRevision)
+        .filter(c => !c.synced);
+      const changesToSync = await syncableChanges.toArray();
+      // By the time we get here, our changesToSync Array should
+      // have every change we want to sync to the server, so we
+      // can now trim it down to only what is needed to transmit over the wire.
+      // TODO: remove moves when a delete change is present for an object,
+      // because a delete will wipe out the move.
+      const changes = changesToSync.map(trimChangeForSync).filter(Boolean);
+      // Create a promise for the sync - if there is nothing to sync just resolve immediately,
+      // in order to still call our change cleanup code.
+      if (changes.length) {
+        requestPayload.changes = changes;
+      }
+    }
     // The response from the sync endpoint has the format:
     // {
     //   "disallowed": [],
@@ -314,7 +316,9 @@ async function syncChanges() {
     }
   } catch (err) {
     // There was an error during syncing, log, but carry on
-    logging.error(err);
+    if (err.message !== noUserError) {
+      logging.error(err);
+    }
   }
   syncActive = false;
 }
