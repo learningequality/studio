@@ -3,9 +3,9 @@ import logging
 import os
 
 import six
-from crcmod.predefined import mkPredefinedCrcFun
 from google.cloud import kms
 from google.cloud.storage import Client
+from google_crc32c import value as _crc32c
 
 ENV_VARS = "ENV_VARS"
 KMS_GCS = 2
@@ -127,5 +127,4 @@ def crc32c(data):
     Returns:
         An int representing the CRC32C checksum of the provided bytes.
     """
-    crc32c_fun = mkPredefinedCrcFun('crc-32c')
-    return crc32c_fun(six.ensure_binary(data))
+    return _crc32c(six.ensure_binary(data))

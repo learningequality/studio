@@ -26,6 +26,7 @@ django-db-readonly==0.7.0
 oauth2client
 django-mathfilters
 google-cloud-kms==2.0.0
+google-crc32c==1.1.2
 backoff
 backports-abc==0.5
 django-model-utils==4.3.1
@@ -40,4 +41,3 @@ python-dateutil>=2.8.1
 jsonschema>=3.2.0
 importlib-metadata==1.7.0
 django-celery-results
-crcmod==1.7
