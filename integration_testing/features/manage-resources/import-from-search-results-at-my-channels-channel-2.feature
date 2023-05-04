@@ -1,6 +1,6 @@
 Feature: Import content from the search results at *My Channels* <channel>
 
-	Background: 
+	Background:
 		Given I am already a registered user
 			And I am signed in to Studio
 			And I am on *My Channels > edit* page
