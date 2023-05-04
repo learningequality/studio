@@ -1,6 +1,5 @@
 import translator from './translator';
 import { RouteNames } from './constants';
-import { createTranslator } from 'shared/i18n';
 import { MasteryModelsNames } from 'shared/leUtils/MasteryModels';
 import { metadataStrings, constantStrings } from 'shared/mixins';
 import {
@@ -158,15 +157,6 @@ export function assessmentItemKey(assessmentItem) {
   };
 }
 
-// TODO: Rename and move to metadata strings translator
-const completionStrings = createTranslator('CompletionStrings', {
-  reference: 'Reference material',
-  completeDuration: 'When time spent is equal to duration',
-  allContent: 'Viewed in its entirety',
-  determinedByResource: 'Determined by the resource',
-  masteryMofN: 'Goal: {m} out of {n}',
-});
-
 /**
  * Converts a value in seconds to a human-readable format.
  * If the value is greater than or equal to one hour, the format will be hh:mm:ss.
@@ -255,18 +245,18 @@ export function getCompletionCriteriaLabels(node) {
 
   switch (completionModel) {
     case CompletionCriteriaModels.REFERENCE:
-      labels.completion = completionStrings.$tr('reference');
+      labels.completion = metadataStrings.$tr('reference');
       break;
 
     case CompletionCriteriaModels.TIME:
-      labels.completion = completionStrings.$tr('completeDuration');
+      labels.completion = metadataStrings.$tr('completeDuration');
       if (suggestedDuration) {
         labels.duration = secondsToHms(suggestedDuration);
       }
       break;
 
     case CompletionCriteriaModels.APPROX_TIME:
-      labels.completion = completionStrings.$tr('completeDuration');
+      labels.completion = metadataStrings.$tr('completeDuration');
       if (isLongActivity(node)) {
         labels.duration = metadataStrings.$tr('longActivity');
       } else {
@@ -276,7 +266,7 @@ export function getCompletionCriteriaLabels(node) {
 
     case CompletionCriteriaModels.PAGES:
       if (completionThreshold === '100%') {
-        labels.completion = completionStrings.$tr('allContent');
+        labels.completion = metadataStrings.$tr('allContent');
       }
       break;
 
@@ -285,7 +275,7 @@ export function getCompletionCriteriaLabels(node) {
         break;
       }
       if (masteryModel === MasteryModelsNames.M_OF_N) {
-        labels.completion = completionStrings.$tr('masteryMofN', {
+        labels.completion = metadataStrings.$tr('masteryMofN', {
           m: completionThreshold.m,
           n: completionThreshold.n,
         });
@@ -295,7 +285,7 @@ export function getCompletionCriteriaLabels(node) {
       break;
 
     case CompletionCriteriaModels.DETERMINED_BY_RESOURCE:
-      labels.completion = completionStrings.$tr('determinedByResource');
+      labels.completion = metadataStrings.$tr('determinedByResource');
       break;
 
     default:

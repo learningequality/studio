@@ -139,7 +139,7 @@
             />
           </DetailsRow>
 
-          <DetailsRow :label="$tr('completion')">
+          <DetailsRow :label="translateMetadataString('completion')">
             <span v-if="isExercise && noMasteryModel" class="red--text">
               <Icon color="red" small>error</Icon>
               <span class="mx-1">{{ $tr('noMasteryModelError') }}</span>
@@ -663,7 +663,6 @@
     $trs: {
       questions: 'Questions',
       details: 'Details',
-      completion: 'Completion',
       showAnswers: 'Show answers',
       questionCount: '{value, number, integer} {value, plural, one {question} other {questions}}',
       description: 'Description',
