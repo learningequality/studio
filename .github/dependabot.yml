@@ -8,9 +8,18 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+      time: "00:00"
 
   # Maintain dependencies for Javascript
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
       interval: "daily"
+      time: "00:00"
+
+  # Maintain dependencies for Github Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "daily"
+      time: "00:00"
