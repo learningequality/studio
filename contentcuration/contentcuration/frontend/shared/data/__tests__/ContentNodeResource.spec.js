@@ -4,6 +4,7 @@ import find from 'lodash/find';
 import {
   RELATIVE_TREE_POSITIONS,
   COPYING_FLAG,
+  COPYING_ERROR_FLAG,
   TASK_ID,
   CHANGES_TABLE,
   CHANGE_TYPES,
@@ -671,6 +672,7 @@ describe('ContentNode methods', () => {
         channel_id: parent.channel_id,
         root_id: parent.root_id,
         [COPYING_FLAG]: true,
+        [COPYING_ERROR_FLAG]: false,
         [TASK_ID]: null,
       };
       await expect(ContentNode.tableCopy({ node, parent, payload, change })).resolves.toMatchObject(
