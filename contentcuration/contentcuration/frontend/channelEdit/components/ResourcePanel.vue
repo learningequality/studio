@@ -689,6 +689,11 @@
       fileSize: 'Size',
 
       // Validation strings
+      /* eslint-disable kolibri/vue-no-unused-translations */
+      noLearningActivityError: 'Missing learning activity',
+      noCompletionCriteriaError: 'Missing completion criteria',
+      noDurationError: 'Missing duration',
+      /* eslint-enable kolibri/vue-no-unused-translations */
       noLicenseError: 'Missing license',
       noCopyrightHolderError: 'Missing copyright holder',
       noLicenseDescriptionError: 'Missing license description',

@@ -52,6 +52,12 @@ const statusStrings = createTranslator('StatusStrings', {
   noStorageError: 'Not enough space',
 });
 
+export const validationStrings = createTranslator('ValidationStrings', {
+  message: 'Missing required information',
+  context:
+    'An error message displayed when some information required before publishing a channel is missing, for example when a resource has no license set.',
+});
+
 export const fileStatusMixin = {
   mixins: [fileSizeMixin],
   computed: {
