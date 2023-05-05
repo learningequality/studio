@@ -83,9 +83,9 @@
 
   import { mapGetters } from 'vuex';
 
-  import ContentNodeContextMenu from './ContentNodeContextMenu';
-  import ContentNodeOptions from './ContentNodeOptions';
   import ContentNodeListItem from './ContentNodeListItem';
+  import ContentNodeOptions from './ContentNodeOptions';
+  import ContentNodeContextMenu from './ContentNodeContextMenu';
   import Checkbox from 'shared/views/form/Checkbox';
   import IconButton from 'shared/views/IconButton';
   import DraggableItem from 'shared/views/draggable/DraggableItem';
@@ -227,6 +227,7 @@
       height: 0;
       overflow: hidden;
       content: ' ';
+      /* stylelint-disable-next-line custom-property-pattern */
       background: var(--v-draggableDropZone-base);
       transition: height ease 0.2s, bottom ease 0.2s;
     }

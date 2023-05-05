@@ -1,6 +1,6 @@
 Feature: Stop the publish of a channel
 
-	Background: 
+	Background:
 		Given there's a channel publish task in-progress
 
 	Scenario: Stop the publish of a channel

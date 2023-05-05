@@ -176,8 +176,8 @@
   import ClipboardChip from '../../components/ClipboardChip';
   import { RouteNames } from '../../constants';
   import ChannelActionsDropdown from './ChannelActionsDropdown';
-  import Checkbox from 'shared/views/form/Checkbox';
   import { fileSizeMixin } from 'shared/mixins';
+  import Checkbox from 'shared/views/form/Checkbox';
 
   export default {
     name: 'ChannelItem',

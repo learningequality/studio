@@ -69,7 +69,7 @@ export function updateAssessmentItems(context, assessmentItems) {
     return Promise.all(
       assessmentItems.map(assessmentItem => {
         // API accepts answers and hints as strings
-        let stringifiedAssessmentItem = {
+        const stringifiedAssessmentItem = {
           ...assessmentItem,
         };
         if (assessmentItem.answers) {

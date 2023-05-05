@@ -1,6 +1,6 @@
 Feature: Import content from another channel
 
-	Background: 
+	Background:
 		Given I am signed in to Studio
 			And I am on the <channel> editing page
 
@@ -17,7 +17,7 @@ Feature: Import content from another channel
 			And I press *Import* button
 		Then I see the *Copying content* modal which displays the import progress
 			And I don't see the *Import from Other channels* page
-			And I see the <channel> editing page again 
+			And I see the <channel> editing page again
 
 #Import content from an available/accessible channel
 

@@ -434,6 +434,7 @@
 
     &:hover {
       cursor: pointer;
+      /* stylelint-disable-next-line custom-property-pattern */
       background-color: var(--v-greyBackground-base);
     }
   }

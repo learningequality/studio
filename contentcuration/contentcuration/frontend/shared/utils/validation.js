@@ -402,7 +402,7 @@ export function getNodeFilesErrors(files) {
   let errors = [];
   if (files && files.length > 0) {
     errors = files.filter(f => f.error).map(f => f.error);
-    let validPrimaryFiles = files.filter(f => !f.error && !f.preset.supplementary);
+    const validPrimaryFiles = files.filter(f => !f.error && !f.preset.supplementary);
     if (!validPrimaryFiles.length) {
       errors.push(ValidationErrors.NO_VALID_PRIMARY_FILES);
     }

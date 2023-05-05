@@ -21,7 +21,7 @@ function makeWrapper(createChannelSetStub) {
 
 describe('channelSetList', () => {
   let wrapper;
-  let createChannelSetStub = jest.fn().mockImplementation(() => Promise.resolve(id));
+  const createChannelSetStub = jest.fn().mockImplementation(() => Promise.resolve(id));
   beforeEach(() => {
     wrapper = makeWrapper(createChannelSetStub);
   });

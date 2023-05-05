@@ -26,7 +26,7 @@ module.exports = (env = {}) => {
   const hot = env.hot;
   const base = baseConfig({ mode: dev ? 'development' : 'production', hot, cache: dev });
 
-  if (String(base.module.rules[2].test) !== String(/\.css$/)) {
+  if (String(base.module.rules[1].test) !== String(/\.css$/)) {
     throw Error('Check base webpack configuration for update of location of css loader');
   }
 
@@ -34,7 +34,7 @@ module.exports = (env = {}) => {
 
   const rootNodeModules = path.join(rootDir, 'node_modules');
 
-  const baseCssLoaders = base.module.rules[2].use;
+  const baseCssLoaders = base.module.rules[1].use;
 
   return merge(base, {
     context: srcDir,
@@ -92,7 +92,7 @@ module.exports = (env = {}) => {
     },
     plugins: [
       new webpack.IgnorePlugin({
-        resourceRegExp: /vuetify\/src\/stylus\//,
+        resourceRegExp: /\.\.\/stylus\//,
       }),
       new BundleTracker({
         filename: path.resolve(djangoProjectDir, 'build', 'webpack-stats.json'),

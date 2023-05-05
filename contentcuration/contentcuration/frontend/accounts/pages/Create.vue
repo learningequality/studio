@@ -360,7 +360,7 @@
       },
       clean() {
         return data => {
-          let cleanedData = { ...data, policies: {} };
+          const cleanedData = { ...data, policies: {} };
           Object.keys(cleanedData).forEach(key => {
             // Trim text fields
             if (key === 'source') {
@@ -425,7 +425,7 @@
       },
       submit() {
         if (this.$refs.form.validate()) {
-          let cleanedData = this.clean(this.form);
+          const cleanedData = this.clean(this.form);
           return this.register(cleanedData)
             .then(() => {
               this.$router.push({ name: 'ActivationSent' });

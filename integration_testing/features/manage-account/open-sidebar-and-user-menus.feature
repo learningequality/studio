@@ -1,7 +1,7 @@
 Feature: Open and close sidebar and user menus
-User needs to be able to open and close the sidebar menu and the user menu 
+User needs to be able to open and close the sidebar menu and the user menu
 
-  Background: 
+  Background:
     Given I am signed in to Studio
 		  And I am on any of the tabs (*My Channels*, *Starred*, *View only*, *Content Library*, or *Collections*)
 

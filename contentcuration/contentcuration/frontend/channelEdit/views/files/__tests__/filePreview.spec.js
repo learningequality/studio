@@ -35,7 +35,7 @@ function makeWrapper(props = {}) {
 describe('filePreview', () => {
   it('should determine if the content is previewable', () => {
     function test(file_format, previewable) {
-      let wrapper = makeWrapper({ file_format });
+      const wrapper = makeWrapper({ file_format });
       expect(wrapper.vm.isPreviewable).toBe(previewable);
     }
     test('mp4', true);
@@ -47,17 +47,17 @@ describe('filePreview', () => {
     test('wut', false);
   });
   it('clicking view fullscreen button should set fullscreen to true', () => {
-    let wrapper = makeWrapper();
+    const wrapper = makeWrapper();
     wrapper.find('[data-test="openfullscreen"]').trigger('click');
     expect(wrapper.vm.fullscreen).toBe(true);
   });
   it('clicking close fullscreen button should set fullscreen to false', () => {
-    let wrapper = makeWrapper({ file_format: 'mp4' });
+    const wrapper = makeWrapper({ file_format: 'mp4' });
     wrapper.setData({ fullscreen: true });
     wrapper.find('[data-test="closefullscreen"]').trigger('click');
     expect(wrapper.vm.fullscreen).toBe(false);
 
-    let wrapperWebm = makeWrapper({ file_format: 'webm' });
+    const wrapperWebm = makeWrapper({ file_format: 'webm' });
     wrapperWebm.setData({ fullscreen: true });
     wrapperWebm.find('[data-test="closefullscreen"]').trigger('click');
     expect(wrapperWebm.vm.fullscreen).toBe(false);

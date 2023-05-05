@@ -150,7 +150,7 @@
     methods: {
       ...mapActions('file', ['updateFile', 'deleteFile']),
       selectFirstFile() {
-        let firstFile = sortBy(this.files, f => f.preset.order)[0];
+        const firstFile = sortBy(this.files, f => f.preset.order)[0];
         this.selected = firstFile && firstFile.id;
       },
       handleUploadComplete(fileUpload) {
@@ -189,6 +189,7 @@
 
   .message-card {
     height: 200px;
+    /* stylelint-disable-next-line custom-property-pattern */
     border-color: var(--v-greyBorder-base) !important;
     border-style: solid;
     border-width: 1px;

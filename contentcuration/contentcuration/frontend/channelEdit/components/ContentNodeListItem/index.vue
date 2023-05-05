@@ -207,9 +207,9 @@
 
   import { mapActions } from 'vuex';
   import camelCase from 'lodash/camelCase';
-  import ContentNodeValidator from '../ContentNodeValidator';
-  import ContentNodeChangedIcon from '../ContentNodeChangedIcon';
   import ContentNodeCopyTaskProgress from '../../views/progress/ContentNodeCopyTaskProgress';
+  import ContentNodeChangedIcon from '../ContentNodeChangedIcon';
+  import ContentNodeValidator from '../ContentNodeValidator';
   import { ContentLevels, Categories, NEW_OBJECT } from 'shared/constants';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import { RolesNames } from 'shared/leUtils/Roles';
@@ -488,6 +488,7 @@
     transition: background-color ease 500ms;
 
     .highlight & {
+      /* stylelint-disable-next-line custom-property-pattern */
       background-color: var(--v-greenHighlightBackground-base);
     }
 

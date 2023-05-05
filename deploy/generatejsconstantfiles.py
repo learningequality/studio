@@ -127,7 +127,7 @@ def generate_constants_set_file(
     # Don't generate this unless ids are strings
     generate_names_constants = True
     for constant in sorted(
-        constant_list, key=lambda x: x if mapper is None else getattr(x, sort_by)
+        constant_list, key=lambda x: 0 if mapper is None else getattr(x, sort_by)
     ):
         output += "  "
         value = mapper(constant) if mapper is not None else constant
@@ -177,7 +177,9 @@ def main():
     )
 
     generate_constants_set_file(
-        [m[0] for m in exercises.MASTERY_MODELS if m[0] != exercises.SKILL_CHECK],
+        [m[0] for m in sorted(
+            exercises.MASTERY_MODELS, key=lambda x: int(x[0][21:]) if 'num_correct_in_a_row_' in x[0] else 0
+        ) if m[0] != exercises.SKILL_CHECK and m[0] != exercises.QUIZ],
         "MasteryModels",
     )
     generate_constants_set_file([r[0] for r in roles.choices], "Roles")

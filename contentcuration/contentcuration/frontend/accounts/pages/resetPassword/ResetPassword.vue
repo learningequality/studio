@@ -58,7 +58,7 @@
       submit() {
         this.error = false;
         if (this.$refs.form.validate()) {
-          let payload = {
+          const payload = {
             ...this.$route.query,
             new_password1: this.new_password1,
             new_password2: this.new_password2,

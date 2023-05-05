@@ -419,7 +419,7 @@ describe('StagingTreePage', () => {
       });
 
       it('redirects to a root tree page after deploy channel button click', async () => {
-        let waitForDeployingSpy = jest.spyOn(Channel, 'waitForDeploying');
+        const waitForDeployingSpy = jest.spyOn(Channel, 'waitForDeploying');
 
         await getDeployDialog(wrapper).vm.$emit('submit');
 

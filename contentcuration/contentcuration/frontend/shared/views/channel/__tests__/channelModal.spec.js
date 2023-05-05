@@ -18,7 +18,7 @@ const router = new VueRouter({
 
 const store = storeFactory();
 const channelId = '11111111111111111111111111111111';
-let tab = 'share';
+const tab = 'share';
 
 function makeWrapper() {
   router
@@ -62,7 +62,7 @@ describe('channelModal', () => {
     wrapper = makeWrapper();
   });
   it('clicking close should call cancelChanges', () => {
-    let cancelChanges = jest.fn();
+    const cancelChanges = jest.fn();
     wrapper.setMethods({ cancelChanges });
     wrapper.find('[data-test="close"]').trigger('click');
     expect(cancelChanges).toHaveBeenCalled();

@@ -1,7 +1,7 @@
 Feature: Edit *Learning activity* field
 	Across all file types
 
-	Background: 
+	Background:
 		Given I am signed into Studio
 			And I am in an editable channel with all resource types
 		When I right click a <resource>
@@ -23,7 +23,7 @@ Feature: Edit *Learning activity* field
 
 	Scenario: Remove an option
 		Given I see the options for *Learning activity*
-			And <option> is selected
+			And an <option> is selected
 		When I click the selected checkbox for <option>
 		Then I see that the checkbox for <option> is empty
 			And I do not see the chip in the textbox

@@ -182,11 +182,11 @@
   import { mapState, mapActions, mapGetters, mapMutations } from 'vuex';
   import debounce from 'lodash/debounce';
 
-  import ContentNodeCopyTaskProgress from '../../views/progress/ContentNodeCopyTaskProgress';
-  import ContentNodeContextMenu from '../ContentNodeContextMenu';
-  import ContentNodeValidator from '../ContentNodeValidator';
-  import ContentNodeChangedIcon from '../ContentNodeChangedIcon';
   import ContentNodeOptions from '../ContentNodeOptions';
+  import ContentNodeChangedIcon from '../ContentNodeChangedIcon';
+  import ContentNodeValidator from '../ContentNodeValidator';
+  import ContentNodeContextMenu from '../ContentNodeContextMenu';
+  import ContentNodeCopyTaskProgress from '../../views/progress/ContentNodeCopyTaskProgress';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import ContextMenuCloak from 'shared/views/ContextMenuCloak';
   import LoadingText from 'shared/views/LoadingText';
@@ -435,6 +435,7 @@
     &.dragging-over-bottom + &.tree-container::before,
     &.dragging-over-bottom:last-child::after {
       height: 5px;
+      /* stylelint-disable-next-line custom-property-pattern */
       background-color: var(--v-draggableDropZone-base);
     }
   }
@@ -476,7 +477,7 @@
   }
 
   .content-title {
-    color: var(--v-darkGrey-base);
+    color: var(--v-darkGrey-base); /* stylelint-disable-line custom-property-pattern */
   }
 
   .slide-y-transition-enter-active,

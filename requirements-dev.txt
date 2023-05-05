@@ -125,8 +125,10 @@ jinja2==3.0.3
     #   locust
 locust==2.8.6
     # via -r requirements-dev.in
-markupsafe==2.0.1
-    # via jinja2
+markupsafe==2.1.2
+    # via
+    #   jinja2
+    #   werkzeug
 mccabe==0.6.1
     # via flake8
 minio==7.1.1
@@ -270,7 +272,7 @@ virtualenv==20.14.1
     # via pre-commit
 watchdog==2.1.8
     # via pytest-watch
-werkzeug==2.0.1
+werkzeug==2.2.3
     # via
     #   flask
     #   locust

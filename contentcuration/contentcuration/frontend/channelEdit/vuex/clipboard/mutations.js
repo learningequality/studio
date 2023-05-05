@@ -17,7 +17,7 @@ export function ADD_CLIPBOARD_NODE(state, clipboardNode) {
 }
 
 export function ADD_CLIPBOARD_NODES(state, clipboardNodes) {
-  for (let clipboardNode of clipboardNodes) {
+  for (const clipboardNode of clipboardNodes) {
     ADD_CLIPBOARD_NODE(state, clipboardNode);
   }
 }
@@ -31,7 +31,7 @@ export function SET_PREVIEW_NODE(state, id) {
 }
 
 export function SET_PRELOAD_NODES(state, preloadNodes) {
-  for (let parent in preloadNodes) {
+  for (const parent in preloadNodes) {
     Vue.set(state.preloadNodes, parent, preloadNodes[parent]);
   }
 }
@@ -41,7 +41,7 @@ export function REMOVE_PRELOAD_NODES(state, parent) {
 }
 
 export function RESET_PRELOAD_NODES(state) {
-  for (let key in state.preloadNodes) {
+  for (const key in state.preloadNodes) {
     Vue.delete(state.preloadNodes, key);
   }
 }

@@ -163,7 +163,7 @@
       submit() {
         if (this.$refs.form.validate()) {
           this.busy = true;
-          let credentials = {
+          const credentials = {
             username: this.username,
             password: this.password,
           };
@@ -211,6 +211,7 @@
 
   .main {
     overflow: auto;
+    /* stylelint-disable-next-line custom-property-pattern */
     background-color: var(--v-backgroundColor-base);
   }
 

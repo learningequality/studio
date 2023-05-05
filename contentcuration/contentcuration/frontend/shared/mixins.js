@@ -761,13 +761,13 @@ export function generateSearchMixin(filterMap) {
     },
     methods: {
       deleteQueryParam(key) {
-        let query = { ...this.$route.query };
+        const query = { ...this.$route.query };
         delete query[key];
 
         this.navigate(query);
       },
       updateQueryParams(params) {
-        let query = {
+        const query = {
           ...this.$route.query,
           ...params,
         };

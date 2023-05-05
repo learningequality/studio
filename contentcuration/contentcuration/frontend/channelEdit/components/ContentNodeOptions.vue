@@ -108,7 +108,7 @@
       ...mapActions('clipboard', ['copy']),
       newTopicNode() {
         this.trackAction('New topic');
-        let nodeData = {
+        const nodeData = {
           parent: this.nodeId,
           kind: 'topic',
         };

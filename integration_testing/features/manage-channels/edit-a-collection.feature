@@ -1,6 +1,6 @@
 Feature: Edit a collection
 
-	Background: 
+	Background:
 		Given I am signed in to Studio
 			And I am on the *Collections* tab
 			And there is at least one collection

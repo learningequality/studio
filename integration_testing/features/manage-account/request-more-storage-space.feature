@@ -1,7 +1,7 @@
 Feature: Request more storage space
 
 	Background:
-		Given I am signed in to Studio 
+		Given I am signed in to Studio
 			And I am on Studio *Settings > Storage* page
 			And I click *Show form* on the page
 

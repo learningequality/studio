@@ -46,7 +46,7 @@ describe.skip('editListItem', () => {
     });
     it('checkbox should toggle selection on click', () => {
       localStore.commit('edit_modal/SET_SELECTED', [1]);
-      let toggle = wrapper.find('.v-input--selection-controls__input');
+      const toggle = wrapper.find('.v-input--selection-controls__input');
       toggle.trigger('click');
       expect(localStore.state.edit_modal.selectedIndices).toContain(0);
       expect(localStore.state.edit_modal.selectedIndices).toContain(1);
@@ -56,7 +56,7 @@ describe.skip('editListItem', () => {
     });
     it('should set node as only selected node on click', () => {
       localStore.commit('edit_modal/SET_SELECTED', [1]);
-      let toggle = wrapper.find('.v-list__tile');
+      const toggle = wrapper.find('.v-list__tile');
       toggle.trigger('click');
       expect(localStore.state.edit_modal.selectedIndices).toContain(0);
       expect(localStore.state.edit_modal.selectedIndices).not.toContain(1);

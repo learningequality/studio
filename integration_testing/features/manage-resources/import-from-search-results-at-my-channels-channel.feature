@@ -1,6 +1,6 @@
 Feature: Import content from the search results
-	
-	Background: 
+
+	Background:
 		Given I am signed in to Studio
 			And I am on the <channel> editing page
 

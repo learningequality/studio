@@ -39,4 +39,3 @@ Feature: Reset your password
 		When I click the link in the email again
 		Then I see a page with the following message: Reset link expired
 			And I see a *Request a new password reset link* button
-

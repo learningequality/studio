@@ -1,6 +1,6 @@
 Feature: Create account on Studio
 
-	Background: 
+	Background:
 		Given I am signed in to Studio
 			And I am on Studio home page
 			And I do not have an account registered with my <email>

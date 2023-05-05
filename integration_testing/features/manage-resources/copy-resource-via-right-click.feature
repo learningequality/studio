@@ -1,5 +1,5 @@
 Feature: Copy resource via right click
-	
+
 	Background:
 		Given I am signed in to Studio
 			And I am on the channel editor view

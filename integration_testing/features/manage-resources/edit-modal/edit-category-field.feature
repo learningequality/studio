@@ -1,7 +1,7 @@
 Feature: Edit *Category* field
-	Across all file types. 
+	Across all file types.
 
-	Background: 
+	Background:
 		Given I am signed into Studio
 			And I am in an editable channel with all resource types
 		When I right click a <resource>
@@ -18,7 +18,7 @@ Feature: Edit *Category* field
 
 	Scenario: Select first-level category option
 		Given that <first-level category> checkbox is empty
-		When I click <first-level category> 
+		When I click <first-level category>
 		Then I see that <first-level category> is determinately selected
 			And I see that children categories are not selected
 			And I see a chip with <first-level category> in the *Category* text field
@@ -29,7 +29,7 @@ Feature: Edit *Category* field
 		Then I see that <second-level category> is determinately selected
 			And I see that <first-level category> is determinately selected
 			And I see that children categories are not selected
-			And I see that <second-level category> is represented as a chip in the *Category* text field 
+			And I see that <second-level category> is represented as a chip in the *Category* text field
 			And I do not see <first-level category> represented as a chip in the *Category* text field
 		When I hover my mouse over the <second-level category> chip
 		Then I see *<first-level category> - <second-level category>* in a tooltip
@@ -96,7 +96,7 @@ Feature: Edit *Category* field
 		Given I <option> is selected in *Category*
 		When I click the selected checkbox for <option>
 		Then I see that the checkbox for <option> is empty
-			And I do not see the chip in the textbox		
+			And I do not see the chip in the textbox
 
 	Scenario: Clear all category selections
 		Given there is more than one option selected in *Category

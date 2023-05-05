@@ -88,7 +88,7 @@ function trimChangeForSync(change) {
   const payload = pick(change, ChangeTypeMapFields[change.type]);
 
   // for any field that has an object as a value, remove ignored fields from those objects
-  for (let field of objectFields) {
+  for (const field of objectFields) {
     if (payload[field]) {
       payload[field] = omit(payload[field], ignoredSubFields);
     }
@@ -133,7 +133,7 @@ function handleAllowed(response) {
   const allowed = get(response, ['data', 'allowed'], []);
   if (allowed.length) {
     const revMap = {};
-    for (let obj of allowed) {
+    for (const obj of allowed) {
       revMap[obj.rev] = obj.server_rev;
     }
     return db[CHANGES_TABLE].where('rev')
@@ -163,7 +163,7 @@ function handleErrors(response) {
   const errors = get(response, ['data', 'errors'], []);
   if (errors.length) {
     const errorMap = {};
-    for (let error of errors) {
+    for (const error of errors) {
       errorMap[error.server_rev] = error;
     }
     // Set the return error data onto the changes - this will update the change
@@ -201,7 +201,7 @@ function handleMaxRevs(response, userId) {
   const channelIds = uniq(allChanges.map(c => c.channel_id)).filter(Boolean);
   const maxRevs = {};
   const promises = [];
-  for (let channelId of channelIds) {
+  for (const channelId of channelIds) {
     const channelChanges = allChanges.filter(c => c.channel_id === channelId);
     maxRevs[`${MAX_REV_KEY}.${channelId}`] = channelChanges[0].server_rev;
     const lastChannelEditIndex = findLastIndex(
@@ -265,7 +265,7 @@ async function syncChanges() {
     .filter(([id, time]) => id && time > now - CHANNEL_SYNC_KEEP_ALIVE_INTERVAL)
     .map(([id]) => id);
   const channel_revs = {};
-  for (let channelId of channelIds) {
+  for (const channelId of channelIds) {
     channel_revs[channelId] = get(user, [MAX_REV_KEY, channelId], 0);
   }
 

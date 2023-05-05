@@ -1,5 +1,4 @@
 import { availableLanguages, currentLanguage, sortLanguages } from '../i18n';
-
 import client from 'shared/client';
 
 export default {
