@@ -40,7 +40,6 @@
   import { mapActions, mapGetters } from 'vuex';
   import { RouteNames, TabNames } from '../constants';
   import MoveModal from './move/MoveModal';
-  import { ContentNode } from 'shared/data/resources';
   import { withChangeTracker } from 'shared/data/changes';
   import { RELATIVE_TREE_POSITIONS } from 'shared/data/constants';
 
@@ -104,7 +103,7 @@
       },
     },
     methods: {
-      ...mapActions(['showSnackbar']),
+      ...mapActions(['showSnackbar', 'clearSnackbar']),
       ...mapActions('contentNode', ['createContentNode', 'moveContentNodes', 'copyContentNode']),
       ...mapActions('clipboard', ['copy']),
       newTopicNode() {
@@ -187,19 +186,24 @@
           // actionText: this.$tr('cancel'),
           // actionCallback: () => changeTracker.revert(),
         });
+
         return this.copyContentNode({
           id: this.nodeId,
           target: this.nodeId,
           position: RELATIVE_TREE_POSITIONS.RIGHT,
-        }).then(node => {
-          ContentNode.waitForCopying([node.id]).then(() => {
+          wait_for_status: true,
+        })
+          .then(() => {
             this.showSnackbar({
               text: this.$tr('copiedSnackbar'),
               actionText: this.$tr('undo'),
               actionCallback: () => changeTracker.revert(),
             }).then(() => changeTracker.cleanUp());
+          })
+          .catch(() => {
+            this.clearSnackbar();
+            changeTracker.cleanUp();
           });
-        });
       }),
       trackAction(eventLabel) {
         this.$analytics.trackAction('channel_editor_node', 'Click', {

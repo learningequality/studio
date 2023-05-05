@@ -168,9 +168,24 @@
                 <template v-else>
                   <div class="copying">
                     <p class="caption grey--text pr-2 pt-1">
-                      {{ $tr("copyingTask") }}
+                      <span :style="{ 'cursor': hasCopyingErrored ? 'default' : 'progress' }">
+                        {{ copyingMessage }}
+                      </span>
+                      <span v-if="hasCopyingErrored">
+                        <ActionLink :text="$tr('retryCopy')" @click="retryFailedCopy" />
+                      </span>
                     </p>
-                    <TaskProgress :taskId="taskId" size="30" />
+                    <ContentNodeCopyTaskProgress
+                      :node="node"
+                      size="30"
+                    />
+                    <IconButton
+                      v-if="hasCopyingErrored"
+                      icon="close"
+                      :text="$tr('removeNode')"
+                      size="small"
+                      @click="removeFailedCopyNode"
+                    />
                   </div>
                   <div class="disabled-overlay"></div>
                 </template>
@@ -190,10 +205,11 @@
 
 <script>
 
+  import { mapActions } from 'vuex';
   import camelCase from 'lodash/camelCase';
   import ContentNodeValidator from '../ContentNodeValidator';
   import ContentNodeChangedIcon from '../ContentNodeChangedIcon';
-  import TaskProgress from '../../views/progress/TaskProgress';
+  import ContentNodeCopyTaskProgress from '../../views/progress/ContentNodeCopyTaskProgress';
   import { ContentLevels, Categories, NEW_OBJECT } from 'shared/constants';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import { RolesNames } from 'shared/leUtils/Roles';
@@ -203,9 +219,11 @@
   import ContextMenuCloak from 'shared/views/ContextMenuCloak';
   import DraggableHandle from 'shared/views/draggable/DraggableHandle';
   import { titleMixin, metadataTranslationMixin } from 'shared/mixins';
-  import { COPYING_FLAG, TASK_ID } from 'shared/data/constants';
+  import { COPYING_FLAG, COPYING_ERROR_FLAG, RELATIVE_TREE_POSITIONS } from 'shared/data/constants';
   import { EffectAllowed } from 'shared/mixins/draggable/constants';
   import ContentNodeLearningActivityIcon from 'shared/views/ContentNodeLearningActivityIcon';
+  import { ContentNode } from 'shared/data/resources';
+  import { withChangeTracker } from 'shared/data/changes';
 
   export default {
     name: 'ContentNodeListItem',
@@ -217,7 +235,7 @@
       ContentNodeValidator,
       ContentNodeChangedIcon,
       ToggleText,
-      TaskProgress,
+      ContentNodeCopyTaskProgress,
       ContentNodeLearningActivityIcon,
     },
     mixins: [titleMixin, metadataTranslationMixin],
@@ -292,8 +310,15 @@
       copying() {
         return this.node[COPYING_FLAG];
       },
-      taskId() {
-        return this.node[TASK_ID];
+      hasCopyingErrored() {
+        return this.node[COPYING_ERROR_FLAG];
+      },
+      copyingMessage() {
+        if (this.hasCopyingErrored) {
+          return this.$tr('copyingError');
+        } else {
+          return this.$tr('copyingTask');
+        }
       },
     },
     watch: {
@@ -307,6 +332,41 @@
       },
     },
     methods: {
+      ...mapActions(['showSnackbar', 'clearSnackbar']),
+      ...mapActions('contentNode', ['deleteContentNode', 'copyContentNode']),
+      removeFailedCopyNode() {
+        return this.deleteContentNode(this.node.id);
+      },
+      retryFailedCopy: withChangeTracker(async function(changeTracker) {
+        const original_source_node = await ContentNode.table
+          .where('node_id')
+          .equals(this.node.original_source_node_id)
+          .toArray();
+        this.showSnackbar({
+          duration: null,
+          text: this.$tr('creatingCopies'),
+        });
+
+        return this.copyContentNode({
+          id: original_source_node[0]['id'],
+          target: this.node.id,
+          position: RELATIVE_TREE_POSITIONS.RIGHT,
+          wait_for_status: true,
+          startingRev: changeTracker._startingRev,
+          is_retry: true,
+        })
+          .then(() => {
+            this.showSnackbar({
+              text: this.$tr('copiedSnackbar'),
+              actionText: this.$tr('undo'),
+              actionCallback: () => changeTracker.revert(),
+            }).then(() => changeTracker.cleanUp());
+          })
+          .catch(() => {
+            this.clearSnackbar();
+            changeTracker.cleanUp();
+          });
+      }),
       handleTileClick(e) {
         // Ensures that clicking an icon button is not treated the same as clicking the card
         if (e.target && e.target.tagName !== 'svg' && !this.copying) {
@@ -353,6 +413,12 @@
         '{value, number, integer} {value, plural, one {resource for coaches} other {resources for coaches}}',
       coachTooltip: 'Resource for coaches',
       copyingTask: 'Copying',
+      copyingError: 'Copy failed.',
+      removeNode: 'Remove',
+      retryCopy: 'Retry',
+      creatingCopies: 'Copying...',
+      copiedSnackbar: 'Copy operation complete',
+      undo: 'Undo',
     },
   };
 
@@ -398,8 +464,9 @@
   .copying {
     z-index: 2;
     display: flex;
+    align-items: baseline;
     padding-top: 44px;
-    cursor: progress;
+    pointer-events: all;
 
     p,
     div {

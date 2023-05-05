@@ -250,7 +250,6 @@
   import { DraggableTypes, DropEffect } from 'shared/mixins/draggable/constants';
   import { DraggableFlags } from 'shared/vuex/draggablePlugin/module/constants';
   import DraggableRegion from 'shared/views/draggable/DraggableRegion';
-  import { ContentNode } from 'shared/data/resources';
 
   export default {
     name: 'CurrentTopicView',
@@ -420,7 +419,7 @@
       },
     },
     methods: {
-      ...mapActions(['showSnackbar']),
+      ...mapActions(['showSnackbar', 'clearSnackbar']),
       ...mapActions(['setViewMode', 'addViewModeOverride', 'removeViewModeOverride']),
       ...mapActions('contentNode', [
         'createContentNode',
@@ -636,23 +635,35 @@
           // actionText: this.$tr('cancel'),
           // actionCallback: () => changeTracker.revert(),
         });
-        return Promise.all(
-          id__in.map(id =>
-            this.copyContentNode({
+        this.clearSelections();
+
+        return Promise.allSettled(
+          id__in.map(id => {
+            return this.copyContentNode({
               id,
               target: id,
               position: RELATIVE_TREE_POSITIONS.RIGHT,
-            })
-          )
-        ).then(nodes => {
-          this.clearSelections();
-          ContentNode.waitForCopying(nodes.map(n => n.id)).then(() => {
+              wait_for_status: true,
+            });
+          })
+        ).then(results => {
+          let anyErrored = false;
+          for (const result of results) {
+            if (result.status === 'rejected') {
+              anyErrored = true;
+              break;
+            }
+          }
+          if (anyErrored) {
+            this.clearSnackbar();
+            changeTracker.cleanUp();
+          } else {
             this.showSnackbar({
               text: this.$tr('copiedItems'),
               actionText: this.$tr('undo'),
               actionCallback: () => changeTracker.revert(),
             }).then(() => changeTracker.cleanUp());
-          });
+          }
         });
       }),
       scroll(e) {

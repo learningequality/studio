@@ -179,7 +179,7 @@
       this.updateTitleForPage();
     },
     methods: {
-      ...mapActions('contentNode', ['copyContentNodes']),
+      ...mapActions('contentNode', ['copyContentNode']),
       ...mapMutations('importFromChannels', {
         selectNode: 'SELECT_NODE',
         deselectNode: 'DESELECT_NODE',
@@ -209,20 +209,23 @@
         });
       },
       handleClickImport() {
-        const nodeIds = this.selected.map(({ id }) => id);
-        return this.copyContentNodes({
-          id__in: nodeIds,
-          target: this.$route.params.destNodeId,
-        }).then(() => {
-          // When exiting, do not show snackbar when clearing selections
-          this.showSnackbar = false;
-          this.$store.commit('importFromChannels/CLEAR_NODES');
-          this.$router.push({
-            name: RouteNames.TREE_VIEW,
-            params: {
-              nodeId: this.$route.params.destNodeId,
-            },
-          });
+        Promise.allSettled(
+          this.selected.map(({ id }) => {
+            return this.copyContentNode({
+              id,
+              target: this.$route.params.destNodeId,
+              wait_for_status: true,
+            });
+          })
+        );
+        // When exiting, do not show snackbar when clearing selections
+        this.showSnackbar = false;
+        this.$store.commit('importFromChannels/CLEAR_NODES');
+        this.$router.push({
+          name: RouteNames.TREE_VIEW,
+          params: {
+            nodeId: this.$route.params.destNodeId,
+          },
         });
       },
       // Using a click method here instead of :to attribute because

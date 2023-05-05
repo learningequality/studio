@@ -28,6 +28,7 @@ import {
   LAST_FETCHED,
   CREATION_CHANGE_TYPES,
   TREE_CHANGE_TYPES,
+  COPYING_ERROR_FLAG,
 } from './constants';
 import applyChanges, { applyMods, collectChanges } from './applyRemoteChanges';
 import mergeAllChanges from './mergeChanges';
@@ -290,12 +291,16 @@ class IndexedDBResource {
             .map(datum => {
               const id = this.getIdValue(datum);
               datum[LAST_FETCHED] = now;
-              // Persist TASK_ID and COPYING_FLAG attributes when directly fetching from the server
+              // Persist TASK_ID, COPYING_FLAG and COPYING_ERROR_FLAG attributes
+              // when directly fetching from the server and when the page is reloaded.
               if (currentMap[id] && currentMap[id][TASK_ID]) {
                 datum[TASK_ID] = currentMap[id][TASK_ID];
               }
               if (currentMap[id] && currentMap[id][COPYING_FLAG]) {
                 datum[COPYING_FLAG] = currentMap[id][COPYING_FLAG];
+              }
+              if (currentMap[id] && currentMap[id][COPYING_ERROR_FLAG]) {
+                datum[COPYING_ERROR_FLAG] = currentMap[id][COPYING_ERROR_FLAG];
               }
               // If we have an updated change, apply the modifications here
               if (
@@ -1475,7 +1480,13 @@ export const ContentNode = new TreeResource({
    * @param {Object|null} [excluded_descendants] a map of node_ids to exclude from the copy
    * @return {Promise}
    */
-  copy(id, target, position = RELATIVE_TREE_POSITIONS.LAST_CHILD, excluded_descendants = null) {
+  copy(
+    id,
+    target,
+    position = RELATIVE_TREE_POSITIONS.LAST_CHILD,
+    excluded_descendants = null,
+    is_retry = false
+  ) {
     if (process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test') {
       /* eslint-disable no-console */
       console.groupCollapsed(`Copying contentnode from ${id} with target ${target}`);
@@ -1486,6 +1497,11 @@ export const ContentNode = new TreeResource({
 
     return this.resolveTreeInsert(id, target, position, true, data => {
       data.change.excluded_descendants = excluded_descendants;
+
+      if (is_retry === true) {
+        data.change.key = data.node.id = data.payload.id = target;
+        data.change.is_retry = is_retry;
+      }
 
       // Ignore changes from this operation except for the
       // explicit copy change we generate.
@@ -1511,11 +1527,18 @@ export const ContentNode = new TreeResource({
       channel_id: parent.channel_id,
       root_id: parent.root_id,
       // Set this node as copying until we get confirmation from the
-      // backend that it has finished copying
+      // backend that it has finished copying.
+      // This flag signifies that the user has issued copying of the node.
       [COPYING_FLAG]: true,
       // Set to null, but this should update to a task id to track the copy
       // task once it has been initiated
       [TASK_ID]: null,
+      // Frontend specific property to mark copy failures. We set it to true
+      // when copying fails.
+      // Note: the COPYING_FLAG remains true even after copying has errored.
+      // So, when both COPYING_FLAG and COPYING_ERROR_FLAG are true,
+      // we read it as -- "this node was copying that has now errored".
+      [COPYING_ERROR_FLAG]: false,
     };
 
     // Manually put our changes into the tree changes for syncing table
@@ -1559,25 +1582,71 @@ export const ContentNode = new TreeResource({
   setChannelIdOnChange: setChannelIdFromTransactionSource,
 
   /**
-   * Waits for copying of content nodes to complete for all ids referenced in `ids` array
-   * @param {string[]} ids
+   * Waits for copying of contentnode to complete for id referenced in `id`.
+   * @param {string} id
    * @returns {Promise<void>}
    */
-  waitForCopying(ids) {
-    const observable = Dexie.liveQuery(() => {
-      return this.table
+  waitForCopying(id, startingRev) {
+    const observable = Dexie.liveQuery(async () => {
+      let task_error = [];
+      let change_error = [];
+
+      const no_copy_flag = await this.table
         .where('id')
-        .anyOf(ids)
+        .equals(id)
         .filter(node => !node[COPYING_FLAG])
         .toArray();
+
+      if (no_copy_flag.length === 1) {
+        return {
+          no_copy_flag,
+          task_error,
+          change_error,
+        };
+      }
+
+      const node_task = await this.table
+        .where('id')
+        .equals(id)
+        .filter(node => node[TASK_ID])
+        .toArray();
+
+      if (node_task.length === 1) {
+        task_error = await Task.table
+          .where(Task.idField)
+          .equals(node_task[0][TASK_ID])
+          .filter(task => task['status'] === 'FAILURE')
+          .toArray();
+      }
+
+      change_error = await db[CHANGES_TABLE].where('[table+key]')
+        .equals([this.tableName, id])
+        .filter(change => {
+          if (change['errors'] && change['type'] === CHANGE_TYPES.COPIED) {
+            if (startingRev === null || change['rev'] > startingRev) {
+              return true;
+            }
+          }
+          return false;
+        })
+        .toArray();
+
+      return {
+        no_copy_flag,
+        task_error,
+        change_error,
+      };
     });
 
     return new Promise((resolve, reject) => {
       const subscription = observable.subscribe({
         next(result) {
-          if (result.length === ids.length) {
+          if (result.no_copy_flag.length === 1) {
             subscription.unsubscribe();
             resolve();
+          } else if (result.task_error.length === 1 || result.change_error.length >= 1) {
+            subscription.unsubscribe();
+            reject();
           }
         },
         error() {

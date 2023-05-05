@@ -63,6 +63,7 @@ export const RELATIVE_TREE_POSITIONS = {
 export const COPYING_FLAG = '__COPYING';
 export const TASK_ID = '__TASK_ID';
 export const LAST_FETCHED = '__last_fetch';
+export const COPYING_ERROR_FLAG = '__HAS_COPYING_ERRORED';
 
 // This constant is used for saving/retrieving a current
 // user object from the session table

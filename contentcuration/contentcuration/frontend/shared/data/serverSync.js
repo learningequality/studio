@@ -15,6 +15,7 @@ import {
   ACTIVE_CHANNELS,
   MAX_REV_KEY,
   LAST_FETCHED,
+  COPYING_ERROR_FLAG,
   COPYING_FLAG,
   TASK_ID,
 } from './constants';
@@ -38,7 +39,7 @@ let syncActive = false;
 
 const commonFields = ['type', 'key', 'table', 'rev', 'channel_id', 'user_id'];
 const objectFields = ['objs', 'mods'];
-const ignoredSubFields = [COPYING_FLAG, LAST_FETCHED, TASK_ID];
+const ignoredSubFields = [COPYING_FLAG, LAST_FETCHED, TASK_ID, COPYING_ERROR_FLAG];
 
 const ChangeTypeMapFields = {
   [CHANGE_TYPES.CREATED]: commonFields.concat(['obj']),
@@ -51,6 +52,7 @@ const ChangeTypeMapFields = {
     'target',
     'position',
     'excluded_descendants',
+    'is_retry',
   ]),
   [CHANGE_TYPES.PUBLISHED]: commonFields.concat(['version_notes', 'language']),
   [CHANGE_TYPES.SYNCED]: commonFields.concat([

@@ -102,10 +102,11 @@
                       style="width: 24px;"
                       shrink
                     >
-                      <TaskProgress
+                      <ContentNodeCopyTaskProgress
                         class="progress-loader"
-                        :taskId="taskId"
+                        :node="node"
                         size="24"
+                        showTooltip
                       />
                     </VFlex>
                     <VFlex
@@ -181,7 +182,7 @@
   import { mapState, mapActions, mapGetters, mapMutations } from 'vuex';
   import debounce from 'lodash/debounce';
 
-  import TaskProgress from '../../views/progress/TaskProgress';
+  import ContentNodeCopyTaskProgress from '../../views/progress/ContentNodeCopyTaskProgress';
   import ContentNodeContextMenu from '../ContentNodeContextMenu';
   import ContentNodeValidator from '../ContentNodeValidator';
   import ContentNodeChangedIcon from '../ContentNodeChangedIcon';
@@ -194,7 +195,7 @@
   import DraggableItem from 'shared/views/draggable/DraggableItem';
   import DraggableHandle from 'shared/views/draggable/DraggableHandle';
   import { titleMixin } from 'shared/mixins';
-  import { COPYING_FLAG, TASK_ID } from 'shared/data/constants';
+  import { COPYING_FLAG } from 'shared/data/constants';
   import { DropEffect, EffectAllowed } from 'shared/mixins/draggable/constants';
   import { objectValuesValidator } from 'shared/mixins/draggable/utils';
 
@@ -211,7 +212,7 @@
       ContentNodeValidator,
       LoadingText,
       IconButton,
-      TaskProgress,
+      ContentNodeCopyTaskProgress,
     },
     mixins: [titleMixin],
     inject: ['draggableUniverse'],
@@ -302,9 +303,6 @@
       },
       copying() {
         return this.node && this.node[COPYING_FLAG];
-      },
-      taskId() {
-        return this.node && this.node[TASK_ID];
       },
       activeDropEffect() {
         // Don't allow dropping into itself
@@ -469,7 +467,6 @@
     z-index: 2;
     margin: auto 0;
     pointer-events: all;
-    cursor: progress;
   }
 
   .node-item {

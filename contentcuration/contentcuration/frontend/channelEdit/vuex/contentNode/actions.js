@@ -2,7 +2,12 @@ import flatMap from 'lodash/flatMap';
 import uniq from 'lodash/uniq';
 import { NEW_OBJECT, NOVALUE } from 'shared/constants';
 import client from 'shared/client';
-import { RELATIVE_TREE_POSITIONS, CHANGES_TABLE, TABLE_NAMES } from 'shared/data/constants';
+import {
+  RELATIVE_TREE_POSITIONS,
+  CHANGES_TABLE,
+  TABLE_NAMES,
+  COPYING_ERROR_FLAG,
+} from 'shared/data/constants';
 import { ContentNode } from 'shared/data/resources';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 import { findLicense } from 'shared/utils/helpers';
@@ -221,8 +226,12 @@ function generateContentNodeData({
   learning_activities = NOVALUE,
   categories = NOVALUE,
   suggested_duration = NOVALUE,
+  [COPYING_ERROR_FLAG]: has_copying_errored = NOVALUE,
 } = {}) {
   const contentNodeData = {};
+  if (has_copying_errored !== NOVALUE) {
+    contentNodeData[COPYING_ERROR_FLAG] = has_copying_errored;
+  }
   if (title !== NOVALUE) {
     contentNodeData.title = title;
   }
@@ -391,23 +400,35 @@ export function deleteContentNodes(context, contentNodeIds) {
 
 export function copyContentNode(
   context,
-  { id, target, position = RELATIVE_TREE_POSITIONS.LAST_CHILD, excluded_descendants = null } = {}
+  {
+    id,
+    target,
+    position = RELATIVE_TREE_POSITIONS.LAST_CHILD,
+    excluded_descendants = null,
+    wait_for_status = false,
+    startingRev = null,
+    is_retry = false,
+  } = {}
 ) {
   // First, this will parse the tree and create the copy the local tree nodes,
   // with a `source_id` of the source node then create the content node copies
-  return ContentNode.copy(id, target, position, excluded_descendants).then(node => {
+  return ContentNode.copy(id, target, position, excluded_descendants, is_retry).then(node => {
     context.commit('ADD_CONTENTNODE', node);
-    return node;
+    if (wait_for_status) {
+      return new Promise((resolve, reject) => {
+        ContentNode.waitForCopying(node.id, startingRev)
+          .then(() => {
+            resolve();
+          })
+          .catch(() => {
+            context.dispatch('updateContentNode', { id: node.id, [COPYING_ERROR_FLAG]: true });
+            reject();
+          });
+      });
+    } else {
+      return node;
+    }
   });
-}
-
-export function copyContentNodes(
-  context,
-  { id__in, target, position = RELATIVE_TREE_POSITIONS.LAST_CHILD }
-) {
-  return Promise.all(
-    id__in.map(id => context.dispatch('copyContentNode', { id, target, position }))
-  );
 }
 
 const PARENT_POSITIONS = [RELATIVE_TREE_POSITIONS.FIRST_CHILD, RELATIVE_TREE_POSITIONS.LAST_CHILD];

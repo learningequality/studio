@@ -922,6 +922,7 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
         position=None,
         mods=None,
         excluded_descendants=None,
+        is_retry=False,
         **kwargs
     ):
         try:
@@ -939,8 +940,12 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
         channel_id = target.channel_id
 
         if ContentNode.filter_by_pk(pk=pk).exists():
-            error = ValidationError("Copy pk already exists")
-            return str(error)
+            if is_retry:
+                copy_node = ContentNode.objects.get(pk=pk)
+                copy_node.delete()
+            else:
+                error = ValidationError("Copy pk already exists")
+                return str(error)
 
         can_edit_source_channel = ContentNode.filter_edit_queryset(
             ContentNode.filter_by_pk(pk=source.id), user=self.request.user
