@@ -16,7 +16,7 @@
   import get from 'lodash/get';
 
   export default {
-    name: 'TaskProgress',
+    name: 'ContentNodeCopyTaskProgress',
     props: {
       taskId: {
         type: String,
@@ -46,6 +46,14 @@
       progress() {
         return this.task ? get(this.task, ['progress']) : 0;
       },
+    },
+    $trs: {
+      /* eslint-disable kolibri/vue-no-unused-translations */
+      /**
+       * String for handling copy failures
+       */
+      copyErrorTopic: 'Some resources failed to copy',
+      /* eslint-enable kolibri/vue-no-unused-translations */
     },
   };
 

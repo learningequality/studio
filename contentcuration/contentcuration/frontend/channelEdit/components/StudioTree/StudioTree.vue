@@ -102,7 +102,7 @@
                       style="width: 24px;"
                       shrink
                     >
-                      <TaskProgress
+                      <ContentNodeCopyTaskProgress
                         class="progress-loader"
                         :taskId="taskId"
                         size="24"
@@ -185,7 +185,7 @@
   import ContentNodeChangedIcon from '../ContentNodeChangedIcon';
   import ContentNodeValidator from '../ContentNodeValidator';
   import ContentNodeContextMenu from '../ContentNodeContextMenu';
-  import TaskProgress from '../../views/progress/TaskProgress';
+  import ContentNodeCopyTaskProgress from '../../views/progress/ContentNodeCopyTaskProgress';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import ContextMenuCloak from 'shared/views/ContextMenuCloak';
   import LoadingText from 'shared/views/LoadingText';
@@ -211,7 +211,7 @@
       ContentNodeValidator,
       LoadingText,
       IconButton,
-      TaskProgress,
+      ContentNodeCopyTaskProgress,
     },
     mixins: [titleMixin],
     inject: ['draggableUniverse'],
