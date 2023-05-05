@@ -208,6 +208,11 @@
     },
     $trs: {
       optionsTooltip: 'Options',
+      removeNode: 'Remove',
+      retryCopy: 'Retry',
+      creatingCopies: 'Copying...',
+      copiedSnackbar: 'Copy operation complete',
+      undo: 'Undo',
     },
   };
 

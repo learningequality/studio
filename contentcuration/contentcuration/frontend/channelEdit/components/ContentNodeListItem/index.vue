@@ -170,7 +170,7 @@
                     <p class="caption grey--text pr-2 pt-1">
                       {{ $tr("copyingTask") }}
                     </p>
-                    <TaskProgress :taskId="taskId" size="30" />
+                    <ContentNodeCopyTaskProgress :taskId="taskId" size="30" />
                   </div>
                   <div class="disabled-overlay"></div>
                 </template>
@@ -191,7 +191,7 @@
 <script>
 
   import camelCase from 'lodash/camelCase';
-  import TaskProgress from '../../views/progress/TaskProgress';
+  import ContentNodeCopyTaskProgress from '../../views/progress/ContentNodeCopyTaskProgress';
   import ContentNodeChangedIcon from '../ContentNodeChangedIcon';
   import ContentNodeValidator from '../ContentNodeValidator';
   import { ContentLevels, Categories, NEW_OBJECT } from 'shared/constants';
@@ -217,7 +217,7 @@
       ContentNodeValidator,
       ContentNodeChangedIcon,
       ToggleText,
-      TaskProgress,
+      ContentNodeCopyTaskProgress,
       ContentNodeLearningActivityIcon,
     },
     mixins: [titleMixin, metadataTranslationMixin],
@@ -353,6 +353,7 @@
         '{value, number, integer} {value, plural, one {resource for coaches} other {resources for coaches}}',
       coachTooltip: 'Resource for coaches',
       copyingTask: 'Copying',
+      copyingError: 'Copy failed.',
     },
   };
 

@@ -16,7 +16,7 @@
   import get from 'lodash/get';
 
   export default {
-    name: 'TaskProgress',
+    name: 'ContentNodeCopyTaskProgress',
     props: {
       taskId: {
         type: String,
@@ -46,6 +46,9 @@
       progress() {
         return this.task ? get(this.task, ['progress']) : 0;
       },
+    },
+    $trs: {
+      copyErrorTopic: 'Some resources failed to copy',
     },
   };
 
