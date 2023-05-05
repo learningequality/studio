@@ -208,11 +208,16 @@
     },
     $trs: {
       optionsTooltip: 'Options',
+      /* eslint-disable kolibri/vue-no-unused-translations */
+      /**
+       * Strings for handling copy failures
+       */
       removeNode: 'Remove',
       retryCopy: 'Retry',
       creatingCopies: 'Copying...',
       copiedSnackbar: 'Copy operation complete',
       undo: 'Undo',
+      /* eslint-enable kolibri/vue-no-unused-translations */
     },
   };
 

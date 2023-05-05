@@ -48,7 +48,12 @@
       },
     },
     $trs: {
+      /* eslint-disable kolibri/vue-no-unused-translations */
+      /**
+       * String for handling copy failures
+       */
       copyErrorTopic: 'Some resources failed to copy',
+      /* eslint-enable kolibri/vue-no-unused-translations */
     },
   };
 

@@ -353,7 +353,12 @@
         '{value, number, integer} {value, plural, one {resource for coaches} other {resources for coaches}}',
       coachTooltip: 'Resource for coaches',
       copyingTask: 'Copying',
+      /* eslint-disable kolibri/vue-no-unused-translations */
+      /**
+       * String for handling copy failures
+       */
       copyingError: 'Copy failed.',
+      /* eslint-enable kolibri/vue-no-unused-translations */
     },
   };
 
