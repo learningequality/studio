@@ -16,7 +16,7 @@ describe('contentNode actions', () => {
   let id;
   const contentNodeDatum = { title: 'test', parent: parentId, lft: 1, tags: {} };
   beforeEach(() => {
-    return ContentNode._put(contentNodeDatum).then(newId => {
+    return ContentNode._add(contentNodeDatum).then(newId => {
       id = newId;
       contentNodeDatum.id = newId;
       jest
@@ -25,7 +25,7 @@ describe('contentNode actions', () => {
       jest
         .spyOn(ContentNode, 'fetchModel')
         .mockImplementation(() => Promise.resolve(contentNodeDatum));
-      return ContentNode._put({ title: 'notatest', parent: newId, lft: 2 }).then(() => {
+      return ContentNode._add({ title: 'notatest', parent: newId, lft: 2 }).then(() => {
         store = storeFactory({
           modules: {
             assessmentItem,

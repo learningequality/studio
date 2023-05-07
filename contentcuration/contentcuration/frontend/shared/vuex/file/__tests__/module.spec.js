@@ -24,7 +24,7 @@ describe('file store', () => {
   beforeEach(() => {
     jest.spyOn(File, 'fetchCollection').mockImplementation(() => Promise.resolve([testFile]));
     jest.spyOn(File, 'fetchModel').mockImplementation(() => Promise.resolve(testFile));
-    return File.put(testFile).then(newId => {
+    return File.add(testFile).then(newId => {
       id = newId;
       store = storeFactory();
       store.commit('file/ADD_FILE', { id, ...testFile });

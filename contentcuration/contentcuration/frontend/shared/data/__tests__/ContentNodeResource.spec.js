@@ -854,7 +854,7 @@ describe('ContentNodePrerequisite methods', () => {
     });
     it('should return all associated requisites, even when there is a cyclic dependency', () => {
       const cyclic = { target_node: 'id-chemistry', prerequisite: 'id-lab' };
-      return ContentNodePrerequisite.put(cyclic).then(() => {
+      return ContentNodePrerequisite.add(cyclic).then(() => {
         return ContentNode.getRequisites('id-integrals').then(entries => {
           expect(sortBy(entries, 'target_node')).toEqual(
             sortBy(mappings.concat([cyclic]), 'target_node')

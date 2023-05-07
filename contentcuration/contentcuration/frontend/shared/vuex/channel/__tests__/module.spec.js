@@ -22,7 +22,7 @@ describe('channel actions', () => {
   let id;
   const channelDatum = { name: 'test', deleted: false, edit: true };
   beforeEach(() => {
-    return Channel.put(channelDatum).then(newId => {
+    return Channel.add(channelDatum).then(newId => {
       id = newId;
       channelDatum.id = id;
       store = storeFactory({
@@ -178,14 +178,14 @@ describe('channel actions', () => {
     });
   });
   describe('bookmarkChannel action', () => {
-    it('should call Bookmark.put when creating a bookmark', () => {
-      const putSpy = jest.spyOn(Bookmark, 'put');
+    it('should call Bookmark.add when creating a bookmark', () => {
+      const addSpy = jest.spyOn(Bookmark, 'add');
       store.commit('channel/ADD_CHANNEL', {
         id,
         name: 'test',
       });
       return store.dispatch('channel/bookmarkChannel', { id, bookmark: true }).then(() => {
-        expect(putSpy).toHaveBeenCalledWith({ channel: id });
+        expect(addSpy).toHaveBeenCalledWith({ channel: id });
       });
     });
     it('should call Bookmark.delete when removing a bookmark', () => {
@@ -268,7 +268,7 @@ describe('Channel sharing vuex', () => {
     jest
       .spyOn(ChannelUser, 'fetchCollection')
       .mockImplementation(() => Promise.resolve([testUser]));
-    return Channel.put(channelDatum).then(newId => {
+    return Channel.add(channelDatum).then(newId => {
       channelId = newId;
       const user = {
         ...testUser,
@@ -276,8 +276,8 @@ describe('Channel sharing vuex', () => {
       const invitations = makeInvitations(channelId);
       testInvitations = invitations;
 
-      return User.put(user).then(() => {
-        return ViewerM2M.put({ user: user.id, channel: channelDatum.id }).then(() => {
+      return User.add(user).then(() => {
+        return ViewerM2M.add({ user: user.id, channel: channelDatum.id }).then(() => {
           return Invitation.table.bulkPut(invitations).then(() => {
             store = storeFactory({
               modules: {
@@ -382,7 +382,7 @@ describe('Channel sharing vuex', () => {
         declined: true,
       };
 
-      Invitation.put(declinedInvitation).then(() => {
+      Invitation.add(declinedInvitation).then(() => {
         store.dispatch('channel/loadChannelUsers', channelId).then(() => {
           expect(Object.keys(store.state.channel.invitationsMap)).not.toContain(
             'choosy-invitation'

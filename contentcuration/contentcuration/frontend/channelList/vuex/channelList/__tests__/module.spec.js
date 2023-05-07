@@ -18,7 +18,7 @@ describe('invitation actions', () => {
   let store;
   let id;
   beforeEach(() => {
-    return Invitation.put(invitation).then(newId => {
+    return Invitation.add(invitation).then(newId => {
       id = newId;
       store = storeFactory({
         modules: {
@@ -59,7 +59,7 @@ describe('invitation actions', () => {
   //   const channel = { id: channel_id, name: 'test', deleted: false, edit: true };
   //   beforeEach(() => {
   //     store.commit('channelList/SET_INVITATION_LIST', [{ id, ...invitation }]);
-  //     return Channel.put(channel);
+  //     return Channel.add(channel);
   //   });
   //   afterEach(() => {
   //     return Channel.table.toCollection().delete();

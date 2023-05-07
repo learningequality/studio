@@ -199,7 +199,7 @@ export function updateChannel(
 
 export function bookmarkChannel(context, { id, bookmark }) {
   if (bookmark) {
-    return Bookmark.put({ channel: id }).then(() => {
+    return Bookmark.add({ channel: id }).then(() => {
       context.commit('SET_BOOKMARK', { channel: id });
     });
   } else {

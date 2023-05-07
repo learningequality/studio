@@ -42,7 +42,7 @@ export function addAssessmentItem(context, assessmentItem) {
   };
 
   return db.transaction('rw', [TABLE_NAMES.CONTENTNODE, TABLE_NAMES.ASSESSMENTITEM], () => {
-    return AssessmentItem.put(stringifiedAssessmentItem).then(([contentnode, assessment_id]) => {
+    return AssessmentItem.add(stringifiedAssessmentItem).then(([contentnode, assessment_id]) => {
       context.commit('UPDATE_ASSESSMENTITEM', {
         ...assessmentItem,
         contentnode,

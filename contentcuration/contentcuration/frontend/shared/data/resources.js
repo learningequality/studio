@@ -557,12 +557,12 @@ class IndexedDBResource {
    */
   createObj(obj) {
     return {
-      ...this._preparePut(obj),
+      ...this._prepareAdd(obj),
       [NEW_OBJECT]: true,
     };
   }
 
-  _preparePut(obj) {
+  _prepareAdd(obj) {
     const idMap = this._prepareCopy({});
     return this._cleanNew({
       ...idMap,
@@ -574,20 +574,10 @@ class IndexedDBResource {
    * @param {Object} obj
    * @return {Promise<string>}
    */
-  put(obj) {
-    return this.transaction({ mode: 'rw' }, () => {
-      return this.table.put(this._preparePut(obj));
-    });
-  }
-
-  /**
-   * @param {Object[]} objs
-   * @return {Promise<string[]>}
-   */
-  bulkPut(objs) {
-    const putObjs = objs.map(this._preparePut);
-    return this.transaction({ mode: 'rw' }, () => {
-      return this.table.bulkPut(putObjs);
+  add(obj) {
+    return this.transaction({ mode: 'rw' }, CHANGES_TABLE, () => {
+      // TODO: Finish implementation of add by adding explicit CREATE change to changes table
+      return this.table.add(this._prepareAdd(obj));
     });
   }
 
@@ -980,7 +970,7 @@ export const Session = new IndexedDBResource({
     return this.get(CURRENT_USER);
   },
   setSession(currentUser) {
-    return this.put({ CURRENT_USER, ...currentUser });
+    return this.table.put({ CURRENT_USER, ...currentUser });
   },
   updateSession(currentUser) {
     return this.update(CURRENT_USER, currentUser);
@@ -1205,7 +1195,7 @@ export const ContentNode = new TreeResource({
       if (entry) {
         return Promise.reject('No cyclic prerequisites');
       }
-      return ContentNodePrerequisite.put({
+      return ContentNodePrerequisite.add({
         target_node,
         prerequisite,
       });
@@ -1416,15 +1406,15 @@ export const ContentNode = new TreeResource({
     });
   },
 
-  // Retain super's put method that does not handle tree insertion
-  _put: TreeResource.prototype.put,
+  // Retain super's add method that does not handle tree insertion
+  _add: TreeResource.prototype.add,
 
   /**
    * @param {Object} obj
    * @return {Promise<string>}
    */
-  put(obj) {
-    const prepared = this._preparePut(obj);
+  add(obj) {
+    const prepared = this._prepareAdd(obj);
 
     return this.resolveTreeInsert(
       prepared.id,
@@ -1433,7 +1423,7 @@ export const ContentNode = new TreeResource({
       true,
       data => {
         return this.transaction({ mode: 'rw' }, () => {
-          return this.table.put({ ...prepared, ...data.payload });
+          return this.table.add({ ...prepared, ...data.payload });
         });
       }
     );
@@ -1678,7 +1668,7 @@ export const ChannelUser = new APIResource({
   urlName: 'channeluser',
   makeEditor(channel, user) {
     return ViewerM2M.delete([user, channel]).then(() => {
-      return EditorM2M.put({ user, channel });
+      return EditorM2M.add({ user, channel });
     });
   },
   removeViewer(channel, user) {
@@ -1809,10 +1799,8 @@ export const AssessmentItem = new Resource({
       });
     });
   },
-  put(obj) {
-    return this.transaction({ mode: 'rw' }, () => {
-      return this.table.put(this._preparePut(obj));
-    }).then(id => {
+  add(obj) {
+    return super.add(obj).then(id => {
       return this.modifyAssessmentItemCount(obj.contentnode, 1).then(() => {
         return id;
       });

@@ -14,7 +14,7 @@ describe('channelSet actions', () => {
     edit: true,
   };
   beforeEach(() => {
-    return ChannelSet.put(channelSetDatum).then(newId => {
+    return ChannelSet.add(channelSetDatum).then(newId => {
       id = newId;
       store = storeFactory({
         modules: {

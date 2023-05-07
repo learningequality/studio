@@ -191,7 +191,7 @@ export function createContentNode(context, { parent, kind, ...payload }) {
     assessmentItems: [],
     files: [],
   });
-  return ContentNode.put(contentNodeData).then(id => {
+  return ContentNode.add(contentNodeData).then(id => {
     context.commit('ADD_CONTENTNODE', {
       id,
       ...contentNodeData,
