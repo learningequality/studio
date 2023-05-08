@@ -116,7 +116,7 @@
       bestPractice2:
         'It is preferable to create multiple small channels rather than one giant channel with many layers of folders.',
       bestPractice3:
-        'Reloading the page should help ensure your work is saved to the server. Use CTRL+R on Linux/Windows or ⌘+R on Mac.',
+        'Reload the page to confirm your work has been saved to the server. Use CTRL+R on Linux/Windows or ⌘+R on Mac.',
       bestPractice5:
         "It is possible that you will encounter timeout errors in your browser when performing operations like import and sync, on large channels. Don't be alarmed by this error message and do not repeat the same operation again right away. It doesn't mean the operation has failed- Kolibri Studio is still working in the background. Wait a few minutes and reload the page before continuing your edits.",
       bestPractice6: 'Compress videos before uploading them (see these instructions).',
