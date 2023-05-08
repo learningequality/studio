@@ -1,12 +1,25 @@
 import Dexie from 'dexie';
+import isEmpty from 'lodash/isEmpty';
+import isNull from 'lodash/isNull';
+import isPlainObject from 'lodash/isPlainObject';
+import isUndefined from 'lodash/isUndefined';
+import omit from 'lodash/omit';
 import sortBy from 'lodash/sortBy';
+import logging from '../logging';
+import { applyMods } from './applyRemoteChanges';
 import db from 'shared/data/db';
 import { promiseChunk } from 'shared/utils/helpers';
 import {
   CHANGES_TABLE,
   CHANGE_TYPES,
+  CHANGE_TYPES_LOOKUP,
+  TABLE_NAMES_LOOKUP,
   IGNORED_SOURCE,
   RELATIVE_TREE_POSITIONS,
+  RELATIVE_TREE_POSITIONS_LOOKUP,
+  LAST_FETCHED,
+  COPYING_FLAG,
+  TASK_ID,
 } from 'shared/data/constants';
 import { INDEXEDDB_RESOURCES } from 'shared/data/registry';
 
@@ -180,5 +193,191 @@ export class ChangeTracker {
         }
       });
     });
+  }
+}
+
+// These fields should not be included in change objects that we
+// store in the changes table for syncing to the backend
+// as they are only used for tracking state locally
+const ignoredSubFields = [COPYING_FLAG, LAST_FETCHED, TASK_ID];
+
+function omitIgnoredSubFields(obj) {
+  return omit(obj, ignoredSubFields);
+}
+
+class Change {
+  constructor({ type, key, table } = {}) {
+    this.setAndValidateLookup(type, 'type', CHANGE_TYPES_LOOKUP);
+    this.setAndValidateNotUndefined(key, 'key');
+    this.setAndValidateLookup(table, 'table', TABLE_NAMES_LOOKUP);
+    if (!INDEXEDDB_RESOURCES[this.table].syncable) {
+      const error = ReferenceError(`${this.table} is not a syncable table`);
+      logging.error(error);
+      throw error;
+    }
+    INDEXEDDB_RESOURCES[this.table].setChannelIdOnChange(this);
+    INDEXEDDB_RESOURCES[this.table].setUserIdOnChange(this);
+  }
+  get changeType() {
+    return this.constructor.name;
+  }
+
+  setAndValidateLookup(value, name, lookup) {
+    if (!lookup[value]) {
+      const error = ReferenceError(`${value} is not a valid ${name} value`);
+      logging.error(error, value);
+      throw error;
+    }
+    this[name] = value;
+  }
+  setAndValidateNotUndefined(value, name) {
+    if (isUndefined(value)) {
+      const error = TypeError(`${name} is required for a ${this.changeType} but it was undefined`);
+      logging.error(error, value);
+      throw error;
+    }
+    this[name] = value;
+  }
+  validateObj(value, name) {
+    if (!isPlainObject(value)) {
+      const error = TypeError(`${name} should be an object, but ${value} was passed instead`);
+      logging.error(error, value);
+      throw error;
+    }
+  }
+  setAndValidateObj(value, name, mapper = obj => obj) {
+    this.validateObj(value, name);
+    this[name] = mapper(value);
+  }
+  setAndValidateBoolean(value, name) {
+    if (typeof value !== 'boolean') {
+      const error = TypeError(`${name} should be a boolean, but ${value} was passed instead`);
+      logging.error(error, value);
+      throw error;
+    }
+    this[name] = value;
+  }
+  setAndValidateObjOrNull(value, name, mapper = obj => obj) {
+    if (!isPlainObject(value) && !isNull(value)) {
+      const error = TypeError(
+        `${name} should be an object or null, but ${value} was passed instead`
+      );
+      logging.error(error, value);
+      throw error;
+    }
+    this[name] = mapper(value);
+  }
+  saveChange() {
+    return db[CHANGES_TABLE].add(this);
+  }
+}
+
+export class CreatedChange extends Change {
+  constructor({ obj, ...fields }) {
+    fields.type = CHANGE_TYPES.CREATED;
+    super(fields);
+    this.setAndValidateObj(obj, 'obj', omitIgnoredSubFields);
+  }
+}
+
+export class UpdatedChange extends Change {
+  constructor({ oldObj, changes, ...fields }) {
+    fields.type = CHANGE_TYPES.UPDATED;
+    super(fields);
+    this.validateObj(changes, 'changes');
+    this.validateObj(oldObj, 'oldObj');
+    changes = omitIgnoredSubFields(changes);
+    oldObj = omitIgnoredSubFields(oldObj);
+    // For now, the aim here is to preserve the same change structure as found in
+    // the Dexie Observable updating hook:
+    // https://github.com/dexie/Dexie.js/blob/master/addons/Dexie.Observable/src/hooks/updating.js#L15
+    const mods = Dexie.getObjectDiff(oldObj, changes);
+    const newObj = Dexie.deepClone(oldObj);
+    for (const propPath in mods) {
+      const mod = mods[propPath];
+      const currentValue = Dexie.getByKeyPath(oldObj, propPath);
+      if (mod !== currentValue && JSON.stringify(mod) !== JSON.stringify(currentValue)) {
+        if (typeof mod === 'undefined') {
+          // Null is as close we could come to deleting a property when not allowing undefined.
+          mods[propPath] = null;
+        }
+      } else {
+        delete mods[propPath];
+      }
+    }
+    this.mods = mods;
+    if (!this.changed) {
+      return;
+    }
+    applyMods(newObj, mods);
+    this.oldObj = oldObj;
+    this.obj = newObj;
+  }
+  get changed() {
+    return !isEmpty(this.mods);
+  }
+  saveChange() {
+    if (!this.changed) {
+      return Promise.resolve(null);
+    }
+    return super.saveChange();
+  }
+}
+
+export class DeletedChange extends Change {
+  constructor({ oldObj, ...fields }) {
+    fields.type = CHANGE_TYPES.DELETED;
+    super(fields);
+    this.setAndValidateObj(oldObj, 'oldObj', omitIgnoredSubFields);
+  }
+}
+
+export class MovedChange extends Change {
+  constructor({ target, position, parent, ...fields }) {
+    fields.type = CHANGE_TYPES.MOVED;
+    super(fields);
+    this.setAndValidateNotUndefined(target, 'target');
+    this.setAndValidateLookup(position, 'position', RELATIVE_TREE_POSITIONS_LOOKUP);
+    this.setAndValidateNotUndefined(parent, 'parent');
+  }
+}
+
+export class CopiedChange extends Change {
+  constructor({ from_key, mods, target, position, excluded_descendants, parent, ...fields }) {
+    fields.type = CHANGE_TYPES.COPIED;
+    super(fields);
+    this.setAndValidateNotUndefined(from_key, 'from_key');
+    this.setAndValidateObj(mods, 'mods', omitIgnoredSubFields);
+    this.setAndValidateNotUndefined(target, 'target');
+    this.setAndValidateLookup(position, 'position', RELATIVE_TREE_POSITIONS_LOOKUP);
+    this.setAndValidateObjOrNull(excluded_descendants, 'excluded_descendants');
+    this.setAndValidateNotUndefined(parent, 'parent');
+  }
+}
+
+export class PublishedChange extends Change {
+  constructor({ version_notes, language, ...fields }) {
+    fields.type = CHANGE_TYPES.PUBLISHED;
+    super(fields);
+    this.setAndValidateNotUndefined(version_notes, 'version_notes');
+    this.setAndValidateNotUndefined(language, 'language');
+  }
+}
+
+export class SyncedChange extends Change {
+  constructor({ titles_and_descriptions, resource_details, files, assessment_items, ...fields }) {
+    fields.type = CHANGE_TYPES.SYNCED;
+    super(fields);
+    this.setAndValidateBoolean(titles_and_descriptions, 'titles_and_descriptions');
+    this.setAndValidateBoolean(resource_details, 'resource_details');
+    this.setAndValidateBoolean(files, 'files');
+    this.setAndValidateBoolean(assessment_items, 'assessment_items');
+  }
+}
+
+export class DeployedChange extends Change {
+  constructor(fields) {
+    fields.type = CHANGE_TYPES.DEPLOYED;
+    super(fields);
   }
 }
