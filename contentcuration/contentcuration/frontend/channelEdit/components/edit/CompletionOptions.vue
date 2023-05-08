@@ -109,6 +109,7 @@
     CompletionDropdownMap,
     DurationDropdownMap,
     nonUniqueValue,
+    SHORT_LONG_ACTIVITY_MIDPOINT,
   } from 'shared/constants';
   import Checkbox from 'shared/views/form/Checkbox';
   import { MasteryModelsNames } from 'shared/leUtils/MasteryModels';
@@ -123,7 +124,6 @@
 
   const DEFAULT_SHORT_ACTIVITY = 600;
   const DEFAULT_LONG_ACTIVITY = 3000;
-  const SHORT_LONG_ACTIVITY_MIDPOINT = 1860;
 
   const defaultCompletionCriteriaModels = {
     [ContentKindsNames.VIDEO]: CompletionCriteriaModels.TIME,
@@ -393,7 +393,7 @@
       showCorrectCompletionOptions() {
         if (this.kind) {
           return CompletionOptionsDropdownMap[this.kind].map(model => ({
-            text: this.$tr(model),
+            text: this.translateMetadataString(model),
             value: CompletionDropdownMap[model],
           }));
         }
@@ -402,7 +402,7 @@
       selectableDurationOptions() {
         return [
           {
-            text: this.$tr(DurationDropdownMap.EXACT_TIME),
+            text: this.translateMetadataString(DurationDropdownMap.EXACT_TIME),
             value: 'exactTime',
           },
           {
@@ -514,15 +514,6 @@
       },
     },
     $trs: {
-      /* eslint-disable kolibri/vue-no-unused-translations */
-      allContent: 'Viewed in its entirety',
-      completeDuration: 'When time spent is equal to duration',
-      determinedByResource: 'Determined by the resource',
-      goal: 'When goal is met',
-      practiceQuiz: 'Practice quiz',
-      reference: 'Reference material',
-      /* eslint-enable */
-      exactTime: 'Time to complete',
       referenceHint:
         'Progress will not be tracked on reference material unless learners mark it as complete',
       learnersCanMarkComplete: 'Allow learners to mark as complete',
