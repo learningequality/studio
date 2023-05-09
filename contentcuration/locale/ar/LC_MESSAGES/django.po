@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kolibri-studio\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-12-16 00:55+0000\n"
+"POT-Creation-Date: 2023-05-08 23:08+0000\n"
 "PO-Revision-Date: 2022-10-17 20:08\n"
 "Last-Translator: \n"
 "Language-Team: Arabic\n"
@@ -10,86 +10,100 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=6; plural=(n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5);\n"
+"Plural-Forms: nplurals=6; plural=(n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 "
+"&& n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5);\n"
 "X-Crowdin-Project: kolibri-studio\n"
 "X-Crowdin-Project-ID: 286000\n"
 "X-Crowdin-Language: ar\n"
 "X-Crowdin-File: /unstable/django.po\n"
 "X-Crowdin-File-ID: 4322\n"
 
-#: contentcuration/api.py:140
-msgid "Date/Time Created"
-msgstr "تاريخ/وقت الإنشاء"
-
-#: contentcuration/api.py:141 contentcuration/api.py:142
-msgid "Not Available"
-msgstr "غير متاح"
-
-#: contentcuration/api.py:145
-msgid "Ricecooker Version"
-msgstr "إصدار Ricecooker"
-
-#: contentcuration/api.py:150 contentcuration/utils/csv_writer.py:164
-msgid "File Size"
-msgstr "حجم الملف"
-
-#: contentcuration/api.py:161
-msgid "# of {}s"
-msgstr "# من {}s"
-
-#: contentcuration/api.py:165
-msgid "# of Questions"
-msgstr "# من الاسئلة"
-
-#: contentcuration/api.py:175
-msgid "# of Subtitles"
-msgstr "# من الترجمات"
-
 #: contentcuration/catalog_settings.py:4 contentcuration/sandbox_settings.py:8
-#: contentcuration/settings.py:287
+#: contentcuration/settings.py:290
 msgid "Arabic"
 msgstr "العربيّة"
+
+#: contentcuration/constants/channel_history.py:9
+#, fuzzy
+#| msgid "Created"
+msgid "Creation"
+msgstr "تمّ الإنشاء"
+
+#: contentcuration/constants/channel_history.py:10
+#, fuzzy
+#| msgid "Public Domain"
+msgid "Publication"
+msgstr "الملكية العامة"
+
+#: contentcuration/constants/channel_history.py:11
+#, fuzzy
+#| msgid "Description"
+msgid "Deletion"
+msgstr "التّوصيف"
+
+#: contentcuration/constants/channel_history.py:12
+msgid "Deletion recovery"
+msgstr ""
+
+#: contentcuration/constants/user_history.py:8
+msgid "User soft deletion"
+msgstr ""
+
+#: contentcuration/constants/user_history.py:9
+msgid "User soft deletion recovery"
+msgstr ""
+
+#: contentcuration/constants/user_history.py:10
+msgid "User related data hard deletion"
+msgstr ""
 
 #: contentcuration/middleware/db_readonly.py:24
 msgid "The site is currently in read-only mode. Please try again later."
 msgstr "الموقع حالياً في وضع القراءة فقط. الرجاء المحاولة مجدداً في وقت لاحق."
 
-#: contentcuration/models.py:279
+#: contentcuration/models.py:295
 msgid "Not enough space. Check your storage under Settings page."
-msgstr "لا توجد مساحة كافية. تحقق من مساحة التخزين الخاصة بك تحت صفحة الإعدادات."
+msgstr ""
+"لا توجد مساحة كافية. تحقق من مساحة التخزين الخاصة بك تحت صفحة الإعدادات."
 
-#: contentcuration/models.py:294 contentcuration/models.py:301
+#: contentcuration/models.py:308 contentcuration/models.py:315
 msgid "Out of storage! Request more space under Settings > Storage."
 msgstr "نفذت مساحة التخزين! قم بطلب المزيد من المساحة من الإعدادات> التخزين."
 
-#: contentcuration/models.py:1410
+#: contentcuration/models.py:1730
 msgid " (Original)"
 msgstr " (أصلي)"
 
-#: contentcuration/settings.py:285
+#: contentcuration/settings.py:288
 msgid "English"
 msgstr "الإنجليزية"
 
-#: contentcuration/settings.py:286
+#: contentcuration/settings.py:289
 msgid "Spanish"
 msgstr "الإسبانية"
 
-#: contentcuration/settings.py:288
+#: contentcuration/settings.py:291
 msgid "French"
 msgstr "الفرنسية"
 
-#: contentcuration/tasks.py:251
-msgid "Unknown error starting task. Please contact support."
-msgstr "حصل خطأ غير معروف أثناء بدء المهمة. الرجاء الاتصال بالدعم."
+#: contentcuration/settings.py:292
+msgid "Portuguese"
+msgstr ""
 
-#: contentcuration/templates/base.html:83
+#: contentcuration/templates/base.html:38
 #: contentcuration/templates/channel_list.html:14
 msgid "Kolibri Studio"
 msgstr "استوديو كوليبري"
 
-#: contentcuration/templates/base.html:166
-msgid "Contentworkshop.learningequality.org has been deprecated. Please go to <a href=\"https://studio.learningequality.org\">studio.learningequality.org</a> for the latest version of Studio"
-msgstr "لم يعد يُشجّع على استخدام Contentworkshop.learningequality.org. يرجى التوجّه إلى <a href=\"https://studio.learningequality.org\">studio.learningequality.org</a> للحصول على آخر إصدار الاستوديو"
+#: contentcuration/templates/base.html:129
+msgid ""
+"Contentworkshop.learningequality.org has been deprecated. Please go to <a "
+"href=\"https://studio.learningequality.org\">studio.learningequality.org</a> "
+"for the latest version of Studio"
+msgstr ""
+"لم يعد يُشجّع على استخدام Contentworkshop.learningequality.org. يرجى التوجّه "
+"إلى <a href=\"https://studio.learningequality.org\">studio.learningequality."
+"org</a> للحصول على آخر إصدار الاستوديو"
 
 #: contentcuration/templates/channel_list.html:13
 msgid "Kolibri Content Library Catalog"
@@ -100,238 +114,16 @@ msgid "We're sorry, this channel was not found."
 msgstr "نعتذر، لم يتم العثور على هذه القناة."
 
 #: contentcuration/templates/channel_not_found.html:24
-#: contentcuration/templates/permissions/open_channel_fail.html:14
 #: contentcuration/templates/staging_not_found.html:23
 #: contentcuration/templates/unauthorized.html:23
 msgid "Go Home"
 msgstr "الذهاب الى الصفحة الرئيسية"
 
-#: contentcuration/templates/exercise_list.html:67
-msgid "Previous"
-msgstr "السؤال السابق"
-
-#: contentcuration/templates/exercise_list.html:73
-msgid "current"
-msgstr "الحالي"
-
-#: contentcuration/templates/exercise_list.html:77
-msgid "Next"
-msgstr "التالي"
-
-#: contentcuration/templates/export/channel_detail_pdf.html:206
-#: contentcuration/templates/export/channel_detail_pdf_condensed.html:165
-msgid "Language not set"
-msgstr "لم يتم تعيين اللغة"
-
-#: contentcuration/templates/export/channel_detail_pdf.html:212
-#: contentcuration/templates/export/channel_detail_pdf_condensed.html:171
-#, python-format
-msgid "This file was generated on %(date)s"
-msgstr "تم إنشاء هذا الملف في %(date)s"
-
-#: contentcuration/templates/export/channel_detail_pdf.html:231
-#: contentcuration/templates/export/channel_detail_pdf_condensed.html:189
-msgid "Created"
-msgstr "تمّ الإنشاء"
-
-#: contentcuration/templates/export/channel_detail_pdf.html:232
-#: contentcuration/templates/export/channel_detail_pdf_condensed.html:190
-msgid "Last Published"
-msgstr "آخر ما نُشر"
-
-#: contentcuration/templates/export/channel_detail_pdf.html:233
-#: contentcuration/templates/export/channel_detail_pdf_condensed.html:191
-msgid "Unpublished"
-msgstr "لم يتم النشر"
-
-#: contentcuration/templates/export/channel_detail_pdf.html:245
-msgid "USING THIS CHANNEL"
-msgstr "استخدام هذه القناة"
-
-#: contentcuration/templates/export/channel_detail_pdf.html:247
-msgid "Copy one of the following into Kolibri to import this channel:"
-msgstr "انسخ واحداً مما يلي إلى كوليبري لاستيراد هذه القناة:"
-
-#: contentcuration/templates/export/channel_detail_pdf.html:252
-msgid "Tokens (Recommended):"
-msgstr "الرموز التعريفية (ينصح بها):"
-
-#: contentcuration/templates/export/channel_detail_pdf.html:260
-msgid "Channel ID:"
-msgstr "مُعرّف القناة:"
-
-#: contentcuration/templates/export/channel_detail_pdf.html:267
-msgid "Channel must be published to import into Kolibri"
-msgstr "يجب نشر القناة لاستيرادها إلى كوليبري"
-
-#: contentcuration/templates/export/channel_detail_pdf.html:273
-msgid "WHAT'S INSIDE"
-msgstr "ما هو المضمون"
-
-#: contentcuration/templates/export/channel_detail_pdf.html:283
-#: contentcuration/templates/export/channel_detail_pdf_condensed.html:213
-#, python-format
-msgid "%(count)s Resource"
-msgid_plural "%(count)s Resources"
-msgstr[0] "%(count)s مصدراً"
-msgstr[1] "%(count)s مصدر"
-msgstr[2] "%(count)s مصدران"
-msgstr[3] "%(count)s مصدراً"
-msgstr[4] "%(count)s مصدراً"
-msgstr[5] "%(count)s مصدراً"
-
-#: contentcuration/templates/export/channel_detail_pdf.html:304
-#: contentcuration/templates/export/channel_detail_pdf_condensed.html:234
-msgid "Includes"
-msgstr "يتضمن"
-
-#: contentcuration/templates/export/channel_detail_pdf.html:310
-#: contentcuration/templates/export/channel_detail_pdf_condensed.html:236
-msgid "Languages"
-msgstr "اللغات"
-
-#: contentcuration/templates/export/channel_detail_pdf.html:316
-#: contentcuration/templates/export/channel_detail_pdf_condensed.html:245
-msgid "Subtitles"
-msgstr "الترجمات"
-
-#: contentcuration/templates/export/channel_detail_pdf.html:324
-#: contentcuration/templates/export/channel_detail_pdf_condensed.html:254
-msgid "For Educators"
-msgstr "للمعلمين"
-
-#: contentcuration/templates/export/channel_detail_pdf.html:325
-#: contentcuration/templates/export/channel_detail_pdf_condensed.html:256
-msgid "Coach Content"
-msgstr "المحتوى الخاص بالمدرب"
-
-#: contentcuration/templates/export/channel_detail_pdf.html:325
-#: contentcuration/templates/export/channel_detail_pdf_condensed.html:257
-msgid "Assessments"
-msgstr "التقييمات"
-
-#: contentcuration/templates/export/channel_detail_pdf.html:334
-msgid "Content Tags"
-msgstr "وسوم المحتوى"
-
-#: contentcuration/templates/export/channel_detail_pdf.html:338
-#: contentcuration/templates/export/channel_detail_pdf_condensed.html:270
-msgid "No tags found"
-msgstr "لا توجد وسوم."
-
-#: contentcuration/templates/export/channel_detail_pdf.html:343
-#: contentcuration/templates/export/channel_detail_pdf.html:448
-#: contentcuration/templates/export/channel_detail_pdf_condensed.html:274
-#: contentcuration/templates/export/channel_detail_pdf_condensed.html:337
-msgid "This channel is empty"
-msgstr "هذه القناة فارغة"
-
-#: contentcuration/templates/export/channel_detail_pdf.html:348
-msgid "SOURCE"
-msgstr "المصدر"
-
-#: contentcuration/templates/export/channel_detail_pdf.html:360
-msgid "This channel features resources created by:"
-msgstr "هذه القناة تميز المصادر التي تم إنشاؤها من خلال:"
-
-#: contentcuration/templates/export/channel_detail_pdf.html:361
-#: contentcuration/templates/export/channel_detail_pdf.html:379
-#: contentcuration/templates/export/channel_detail_pdf.html:398
-#: contentcuration/templates/export/channel_detail_pdf.html:420
-#: contentcuration/templates/export/channel_detail_pdf.html:440
-#: contentcuration/templates/export/channel_detail_pdf_condensed.html:293
-#: contentcuration/templates/export/channel_detail_pdf_condensed.html:305
-#: contentcuration/templates/export/channel_detail_pdf_condensed.html:317
-#: contentcuration/templates/export/channel_detail_pdf_condensed.html:322
-#: contentcuration/templates/export/channel_detail_pdf_condensed.html:333
-msgid "Information not available"
-msgstr "المعلومات غير متوفرة"
-
-#: contentcuration/templates/export/channel_detail_pdf.html:378
-msgid "The material in this channel was provided by:"
-msgstr "تم توفير المواد الموجودة في هذه القناة عن طريق:"
-
-#: contentcuration/templates/export/channel_detail_pdf.html:397
-msgid "Material in this channel was originally hosted by:"
-msgstr "تمت اصتضافة المواد الموجودة في هذه القناة في الأصل من قبل:"
-
-#: contentcuration/templates/export/channel_detail_pdf.html:416
-msgid "This channel includes the following licenses:"
-msgstr "تحتوي هذه القناة على التراخيص التالية:"
-
-#: contentcuration/templates/export/channel_detail_pdf.html:439
-#: contentcuration/templates/export/channel_detail_pdf_condensed.html:326
-msgid "Copyright Holders:"
-msgstr "مالكو حقوق النشر:"
-
-#: contentcuration/templates/export/channel_detail_pdf_condensed.html:192
-msgid "Token:"
-msgstr "الرموز التعريفية:"
-
-#: contentcuration/templates/export/channel_detail_pdf_condensed.html:203
-msgid "What's Inside"
-msgstr "ما هو المضمون"
-
-#: contentcuration/templates/export/channel_detail_pdf_condensed.html:239
-#: contentcuration/templates/export/channel_detail_pdf_condensed.html:248
-#, python-format
-msgid "\n"
-"                                            <span class=\"no-break\">(+ %(count)s more)</span>\n"
-"                                        "
-msgstr "\n"
-"                                            <span class=\"no-break\">(+ %(count)s أكثر)</span>\n"
-"                                        "
-
-#: contentcuration/templates/export/channel_detail_pdf_condensed.html:267
-msgid "Most Common Tags"
-msgstr "الوسوم الأكثر شيوعاً"
-
-#: contentcuration/templates/export/channel_detail_pdf_condensed.html:280
-msgid "Source Information"
-msgstr "معلومات المصدر"
-
-#: contentcuration/templates/export/channel_detail_pdf_condensed.html:284
-msgid "Authors:"
-msgstr "المؤلفون:"
-
-#: contentcuration/templates/export/channel_detail_pdf_condensed.html:288
-#, python-format
-msgid "\n"
-"                                    <b>(+ %(count)s more)</b>\n"
-"                                "
-msgstr "\n"
-"                                    <b>(+ %(count)s أكثر)</b>\n"
-"                                "
-
-#: contentcuration/templates/export/channel_detail_pdf_condensed.html:298
-msgid "Providers:"
-msgstr "مقدمو الخدمات:"
-
-#: contentcuration/templates/export/channel_detail_pdf_condensed.html:301
-#: contentcuration/templates/export/channel_detail_pdf_condensed.html:313
-#: contentcuration/templates/export/channel_detail_pdf_condensed.html:329
-#, python-format
-msgid "\n"
-"                                <b>(+ %(count)s more)</b>\n"
-"                            "
-msgstr "\n"
-"                                <b>(+ %(count)s أكثر)</b>\n"
-"                            "
-
-#: contentcuration/templates/export/channel_detail_pdf_condensed.html:310
-msgid "Aggregators:"
-msgstr "جامعو المحتوى:"
-
-#: contentcuration/templates/export/channel_detail_pdf_condensed.html:322
-msgid "Licenses:"
-msgstr "التراخيص:"
-
-#: contentcuration/templates/export/csv_email.txt:4
 #: contentcuration/templates/export/user_csv_email.txt:4
 #: contentcuration/templates/permissions/permissions_email.txt:4
 #: contentcuration/templates/registration/activation_email.txt:4
 #: contentcuration/templates/registration/activation_needed_email.txt:4
-#: contentcuration/templates/registration/channel_published_email.txt:4
+#: contentcuration/templates/registration/channel_published_email.html:10
 #: contentcuration/templates/registration/password_reset_email.txt:3
 #: contentcuration/templates/registration/registration_needed_email.txt:4
 #: contentcuration/templates/settings/account_deleted_user_email.txt:3
@@ -340,43 +132,6 @@ msgstr "التراخيص:"
 #, python-format
 msgid "Hello %(name)s,"
 msgstr "مرحبا %(name)s,"
-
-#: contentcuration/templates/export/csv_email.txt:6
-#, python-format
-msgid "Your csv for %(channel_name)s has finished generating (attached)."
-msgstr "تم الانتهاء من إنشاء ملف csv الخاص بك لـ %(channel_name)s (مرفق)."
-
-#: contentcuration/templates/export/csv_email.txt:8
-#: contentcuration/templates/export/user_csv_email.txt:29
-#: contentcuration/templates/permissions/permissions_email.txt:21
-#: contentcuration/templates/registration/activation_email.txt:12
-#: contentcuration/templates/registration/activation_needed_email.txt:14
-#: contentcuration/templates/registration/channel_published_email.txt:15
-#: contentcuration/templates/registration/password_reset_email.txt:14
-#: contentcuration/templates/registration/registration_needed_email.txt:12
-#: contentcuration/templates/settings/account_deleted_user_email.txt:10
-#: contentcuration/templates/settings/storage_request_email.txt:46
-msgid "Thanks for using Kolibri Studio!"
-msgstr "شكرا لاستخدام استوديو كوليبري!"
-
-#: contentcuration/templates/export/csv_email.txt:10
-#: contentcuration/templates/export/user_csv_email.txt:31
-#: contentcuration/templates/permissions/permissions_email.txt:23
-#: contentcuration/templates/registration/activation_email.txt:14
-#: contentcuration/templates/registration/activation_needed_email.txt:16
-#: contentcuration/templates/registration/channel_published_email.txt:17
-#: contentcuration/templates/registration/password_reset_email.txt:16
-#: contentcuration/templates/registration/registration_needed_email.txt:14
-#: contentcuration/templates/settings/account_deleted_user_email.txt:12
-#: contentcuration/templates/settings/issue_report_email.txt:26
-#: contentcuration/templates/settings/storage_request_email.txt:48
-msgid "The Learning Equality Team"
-msgstr "فريق المساواة في التعلم"
-
-#: contentcuration/templates/export/csv_email_subject.txt:1
-#, python-format
-msgid "CSV for %(channel_name)s"
-msgstr "ملف CSV لـ %(channel_name)s"
 
 #: contentcuration/templates/export/user_csv_email.txt:6
 msgid "Here is the information for your Kolibri Studio account"
@@ -416,51 +171,78 @@ msgid "Channels you have view access to: "
 msgstr "القنوات التي تملك حق الوصول لعرضها:"
 
 #: contentcuration/templates/export/user_csv_email.txt:23
-msgid "Information about the resources you have uploaded has been attached as a CSV file."
+msgid ""
+"Information about the resources you have uploaded has been attached as a CSV "
+"file."
 msgstr "تم إرفاق معلومات بخصوص المصادر التي حمّلتها كملف CSV."
 
 #: contentcuration/templates/export/user_csv_email.txt:26
 #, python-format
-msgid "If you have any questions or concerns, please email us at %(legal_email)s."
-msgstr "إذا كان لديك أية أسئلة أو استفسارات، يرجى التواصل معنا عبر البريد الإلكتروني %(legal_email)s."
+msgid ""
+"If you have any questions or concerns, please email us at %(legal_email)s."
+msgstr ""
+"إذا كان لديك أية أسئلة أو استفسارات، يرجى التواصل معنا عبر البريد الإلكتروني "
+"%(legal_email)s."
+
+#: contentcuration/templates/export/user_csv_email.txt:29
+#: contentcuration/templates/permissions/permissions_email.txt:21
+#: contentcuration/templates/registration/activation_email.txt:12
+#: contentcuration/templates/registration/activation_needed_email.txt:14
+#: contentcuration/templates/registration/channel_published_email.html:23
+#: contentcuration/templates/registration/password_reset_email.txt:14
+#: contentcuration/templates/registration/registration_needed_email.txt:12
+#: contentcuration/templates/settings/account_deleted_user_email.txt:10
+#: contentcuration/templates/settings/storage_request_email.txt:46
+msgid "Thanks for using Kolibri Studio!"
+msgstr "شكرا لاستخدام استوديو كوليبري!"
+
+#: contentcuration/templates/export/user_csv_email.txt:31
+#: contentcuration/templates/permissions/permissions_email.html:118
+#: contentcuration/templates/permissions/permissions_email.txt:23
+#: contentcuration/templates/registration/activation_email.html:111
+#: contentcuration/templates/registration/activation_email.txt:14
+#: contentcuration/templates/registration/activation_needed_email.txt:16
+#: contentcuration/templates/registration/channel_published_email.html:25
+#: contentcuration/templates/registration/password_reset_email.html:111
+#: contentcuration/templates/registration/password_reset_email.txt:16
+#: contentcuration/templates/registration/registration_needed_email.txt:14
+#: contentcuration/templates/registration/welcome_new_user_email.html:172
+#: contentcuration/templates/settings/account_deleted_user_email.txt:12
+#: contentcuration/templates/settings/issue_report_email.txt:26
+#: contentcuration/templates/settings/storage_request_email.txt:48
+msgid "The Learning Equality Team"
+msgstr "فريق المساواة في التعلم"
 
 #: contentcuration/templates/export/user_csv_email_subject.txt:1
 msgid "Your Kolibri Studio account information"
 msgstr "معلومات حسابك على استوديو كوليبري"
 
-#: contentcuration/templates/permissions/open_channel_fail.html:12
-msgid "There was an error opening this channel."
-msgstr "حصل خطأ ما أثناء فتح هذه القناة."
-
-#: contentcuration/templates/permissions/open_channel_fail.html:13
-msgid "Try running ricecooker again."
-msgstr "حاول تشغيل إصدار ricecooker  مجدداً."
-
-#: contentcuration/templates/permissions/permissions_email.html:93
-#: contentcuration/templates/registration/activation_email.html:91
-#: contentcuration/templates/registration/password_reset_email.html:91
+#: contentcuration/templates/permissions/permissions_email.html:92
+#: contentcuration/templates/registration/activation_email.html:90
+#: contentcuration/templates/registration/password_reset_email.html:90
 msgid "Hello"
 msgstr "مرحبا"
 
-#: contentcuration/templates/permissions/permissions_email.html:94
+#: contentcuration/templates/permissions/permissions_email.html:93
 msgid "has invited you to edit a channel at"
 msgstr "قام بدعوتك لتعديل قناة في"
 
-#: contentcuration/templates/permissions/permissions_email.html:100
+#: contentcuration/templates/permissions/permissions_email.html:99
 #, python-format
 msgid "Invititation to %(share_mode)s channel"
 msgstr "دعوة لـ %(share_mode)s القناة"
 
-#: contentcuration/templates/permissions/permissions_email.html:104
-msgid "Click one of the following links to either accept or decline your invitation:"
+#: contentcuration/templates/permissions/permissions_email.html:103
+msgid ""
+"Click one of the following links to either accept or decline your invitation:"
 msgstr "انقر على أحد الروابط التالية لقبول الدعوة الخاصة بك أو رفضها:"
 
-#: contentcuration/templates/permissions/permissions_email.html:107
-#: contentcuration/templates/permissions/permissions_email.html:109
+#: contentcuration/templates/permissions/permissions_email.html:106
+#: contentcuration/templates/permissions/permissions_email.html:108
 msgid "ACCEPT"
 msgstr "قبول"
 
-#: contentcuration/templates/permissions/permissions_email.html:112
+#: contentcuration/templates/permissions/permissions_email.html:111
 msgid "DECLINE"
 msgstr "رفض"
 
@@ -485,8 +267,12 @@ msgid "Please sign in to Kolibri Studio to accept or decline your invitation:"
 msgstr "يرجى تسجيل الدخول إلى استوديو كوليبري من أجل قبول أو رفض دعوتك:"
 
 #: contentcuration/templates/permissions/permissions_email.txt:16
-msgid "Please follow this link to create an account (you must be signed in to accept or decline invitations):"
-msgstr "الرجاء اتباع هذا الرابط لإنشاء حساب (يجبأن تقوم بتسجيل الدخول من أجل قبول الدعوات أو رفضها):"
+msgid ""
+"Please follow this link to create an account (you must be signed in to "
+"accept or decline invitations):"
+msgstr ""
+"الرجاء اتباع هذا الرابط لإنشاء حساب (يجبأن تقوم بتسجيل الدخول من أجل قبول "
+"الدعوات أو رفضها):"
 
 #: contentcuration/templates/permissions/permissions_email_subject.txt:1
 #, python-format
@@ -498,24 +284,26 @@ msgstr "لقد تمت دعوتك لتحرير %(channel)s"
 msgid "You've been invited to view %(channel)s"
 msgstr "لقد تمت دعوتك لعرض %(channel)s"
 
-#: contentcuration/templates/registration/activation_email.html:92
-msgid "Welcome to Kolibri! Here is the link to activate your account:"
+#: contentcuration/templates/registration/activation_email.html:91
+#, fuzzy
+#| msgid "Welcome to Kolibri! Here is the link to activate your account:"
+msgid "Welcome to Kolibri Studio! Here is the link to activate your account:"
 msgstr "مرحبا بك في كوليبري! إليك رابط تفعيل حسابك:"
 
-#: contentcuration/templates/registration/activation_email.html:101
+#: contentcuration/templates/registration/activation_email.html:100
 msgid "Click here to activate your account."
 msgstr "انقر هنا لتفعيل حسابك."
 
-#: contentcuration/templates/registration/activation_email.html:102
+#: contentcuration/templates/registration/activation_email.html:101
 msgid "This link is valid for"
 msgstr "هذا الرابط صالح لمدة"
 
-#: contentcuration/templates/registration/activation_email.html:102
+#: contentcuration/templates/registration/activation_email.html:101
 #, python-format
 msgid "%(expiration_days)s days."
 msgstr "%(expiration_days)s أيام."
 
-#: contentcuration/templates/registration/activation_email.html:104
+#: contentcuration/templates/registration/activation_email.html:103
 msgid "ACTIVATE"
 msgstr "تفعيل"
 
@@ -536,35 +324,52 @@ msgstr "رابط تفعيل الحساب لـ"
 
 #: contentcuration/templates/registration/activation_needed_email.txt:6
 #, python-format
-msgid "You have requested a password reset link on %(site_name)s without first activating your account."
-msgstr "لقد قمت بطلب رابط إعادة تعيين كلمة المرور على %(site_name)s دون تفعيل حسابك أولاً.."
+msgid ""
+"You have requested a password reset link on %(site_name)s without first "
+"activating your account."
+msgstr ""
+"لقد قمت بطلب رابط إعادة تعيين كلمة المرور على %(site_name)s دون تفعيل حسابك "
+"أولاً.."
 
 #: contentcuration/templates/registration/activation_needed_email.txt:8
 msgid "Please activate your account by following the link below:"
 msgstr "الرجاء تفعيل حسابك عن طريق الرابط أدناه"
 
-#: contentcuration/templates/registration/channel_published_email.txt:6
-#, python-format
-msgid "%(channel_name)s has finished publishing! Here is the channel token (for importing it into Kolibri):"
-msgstr "انتهت %(channel_name)s من النشر! إليك رمز القناة (لاستيراده إلى كوليبري)::"
+#: contentcuration/templates/registration/channel_published_email.html:12
+#, fuzzy, python-format
+#| msgid "CSV for %(channel_name)s"
+msgid "%(channel_name)s"
+msgstr "ملف CSV لـ %(channel_name)s"
 
-#: contentcuration/templates/registration/channel_published_email.txt:8
+#: contentcuration/templates/registration/channel_published_email.html:12
+#, fuzzy
+#| msgid ""
+#| "%(channel_name)s has finished publishing! Here is the channel token (for "
+#| "importing it into Kolibri):"
+msgid ""
+"has finished publishing! Here is the channel token (for importing it into "
+"Kolibri):"
+msgstr ""
+"انتهت %(channel_name)s من النشر! إليك رمز القناة (لاستيراده إلى كوليبري)::"
+
+#: contentcuration/templates/registration/channel_published_email.html:15
 #, python-format
 msgid "Token: %(channel_token)s"
 msgstr "الرمز التعريفي: %(channel_token)s"
 
-#: contentcuration/templates/registration/channel_published_email.txt:10
+#: contentcuration/templates/registration/channel_published_email.html:17
 #, python-format
 msgid "ID (for Kolibri version 0.6.0 and below): %(channel_id)s"
 msgstr "معرّف (لإصدار 0.6.0 وما قبل من كوليبري): %(channel_id)s"
 
-#: contentcuration/templates/registration/channel_published_email.txt:12
+#: contentcuration/templates/registration/channel_published_email.html:20
 #, python-format
 msgid "Version notes: %(notes)s"
 msgstr "ملاحظات حول الإصدار: %(notes)s"
 
-#: contentcuration/templates/registration/channel_published_email.txt:21
-msgid "You are receiving this email because you are subscribed to this channel."
+#: contentcuration/templates/registration/channel_published_email.html:28
+msgid ""
+"You are receiving this email because you are subscribed to this channel."
 msgstr " انت تتلقى هذا البريد الإلكتروني كمشترك في هذه القناة."
 
 #: contentcuration/templates/registration/getting_started.html:16
@@ -585,30 +390,37 @@ msgid "Password reset unsuccessful."
 msgstr "لم تتم عملية إعادة تعيين كلمة المرور بنجاح."
 
 #: contentcuration/templates/registration/password_reset_confirm.html:21
-msgid "The password reset link was invalid, possibly because it has already been used. "
-msgstr "رابط إعادة تعيين كلمة المرور غير صالح، ربما لأنه قد تم استخدامه بالفعل. "
+msgid ""
+"The password reset link was invalid, possibly because it has already been "
+"used. "
+msgstr ""
+"رابط إعادة تعيين كلمة المرور غير صالح، ربما لأنه قد تم استخدامه بالفعل. "
 
 #: contentcuration/templates/registration/password_reset_confirm.html:22
 msgid "Request a new password reset."
 msgstr "طلب رابط جديد لإعادة تعيين كلمة المرور."
 
-#: contentcuration/templates/registration/password_reset_email.html:92
-msgid "You are receiving this e-mail because you requested a password reset for your user account at"
-msgstr "أنت تتلقى هذا البريد الإلكتروني لأنك طلبت إعادة تعيين كلمة المرور لحساب المستخدم الخاص بك على"
+#: contentcuration/templates/registration/password_reset_email.html:91
+msgid ""
+"You are receiving this e-mail because you requested a password reset for "
+"your user account at"
+msgstr ""
+"أنت تتلقى هذا البريد الإلكتروني لأنك طلبت إعادة تعيين كلمة المرور لحساب "
+"المستخدم الخاص بك على"
 
-#: contentcuration/templates/registration/password_reset_email.html:98
+#: contentcuration/templates/registration/password_reset_email.html:97
 msgid "Reset my Password"
 msgstr "إعادة تعيين كلمة المرور الخاصة بي"
 
-#: contentcuration/templates/registration/password_reset_email.html:101
+#: contentcuration/templates/registration/password_reset_email.html:100
 msgid "Please click the button below and choose a new password."
 msgstr "انقر على الزر أدناه لاختيار كلمة مرور جديدة"
 
-#: contentcuration/templates/registration/password_reset_email.html:102
+#: contentcuration/templates/registration/password_reset_email.html:101
 msgid "Your username is"
 msgstr "اسم المستخدم الخاص بك هو"
 
-#: contentcuration/templates/registration/password_reset_email.html:104
+#: contentcuration/templates/registration/password_reset_email.html:103
 msgid "RESET"
 msgstr "إعادة تعيين"
 
@@ -626,7 +438,8 @@ msgid "In case you've forgotten, your username is:"
 msgstr "في حال قد نسيت، اسم المستخدم الخاص بك هو:"
 
 #: contentcuration/templates/registration/password_reset_form.html:16
-msgid "Enter your email, and we'll send instructions for setting a new password."
+msgid ""
+"Enter your email, and we'll send instructions for setting a new password."
 msgstr "أدخل بريدك الإلكتروني، وسنقوم بإرسال تعليمات تعيين كلمة مرور جديدة."
 
 #: contentcuration/templates/registration/password_reset_form.html:19
@@ -644,33 +457,192 @@ msgstr "تمت إعادة تعيين كلمة المرور على"
 
 #: contentcuration/templates/registration/registration_needed_email.txt:6
 #, python-format
-msgid "You have requested a password reset on %(site_name)s without first creating an account."
-msgstr "لقد قمتَ بطلب إعادة تعيين كلمة المرور على %(site_name)s من دون إنشاء حساب أولاً."
+msgid ""
+"You have requested a password reset on %(site_name)s without first creating "
+"an account."
+msgstr ""
+"لقد قمتَ بطلب إعادة تعيين كلمة المرور على %(site_name)s من دون إنشاء حساب "
+"أولاً."
 
 #: contentcuration/templates/registration/registration_needed_email.txt:8
 msgid "Please create an account by following the link below:"
 msgstr "الرجاء تفعيل حسابك عبر الرابط أدناه:"
 
+#: contentcuration/templates/registration/welcome_new_user_email.html:78
+#, fuzzy
+#| msgid "Kolibri Studio"
+msgid "Welcome to Kolibri Studio!"
+msgstr "استوديو كوليبري"
+
+#: contentcuration/templates/registration/welcome_new_user_email.html:82
+#, python-format
+msgid ""
+"\n"
+"      We're delighted to introduce you to <a href=\"%(domain)s\">Kolibri "
+"Studio</a>, our curricular tool to add,\n"
+"      organize, and manage your own resources or those from the Kolibri "
+"Content Library.\n"
+"    "
+msgstr ""
+
+#: contentcuration/templates/registration/welcome_new_user_email.html:87
+#, fuzzy
+#| msgid "Kolibri Content Library Catalog"
+msgid "View the Kolibri Content Library"
+msgstr "دليل مكتبة محتوى كوليبري"
+
+#: contentcuration/templates/registration/welcome_new_user_email.html:93
+msgid ""
+"\n"
+"      Using Kolibri Studio, you can explore pre-organized collections of "
+"open educational resources (OER), and bundle,\n"
+"      tag, differentiate, re-order, and distribute them into custom "
+"channels.\n"
+"    "
+msgstr ""
+
+#: contentcuration/templates/registration/welcome_new_user_email.html:99
+msgid ""
+"\n"
+"      Using an admin account, you can then publish and import these custom "
+"channels--either your own or those shared\n"
+"      with you -- into Kolibri with a unique \"token\" generated for each "
+"channel.\n"
+"    "
+msgstr ""
+
+#: contentcuration/templates/registration/welcome_new_user_email.html:107
+msgid ""
+"\n"
+"      Browse through the list of resources below* to learn more about "
+"Kolibri Studio and to begin creating your own\n"
+"      custom channels:\n"
+"    "
+msgstr ""
+
+#: contentcuration/templates/registration/welcome_new_user_email.html:115
+#, fuzzy
+#| msgid "Kolibri Studio issue report"
+msgid "Kolibri Studio User Guide"
+msgstr "الإبلاغ عن مشكلة في استوديو كوليبري"
+
+#: contentcuration/templates/registration/welcome_new_user_email.html:120
+msgid "Content integration guide:"
+msgstr ""
+
+#: contentcuration/templates/registration/welcome_new_user_email.html:122
+msgid ""
+"\n"
+"          Information on licensing, compatible formats, technical "
+"integration and more.\n"
+"        "
+msgstr ""
+
+#: contentcuration/templates/registration/welcome_new_user_email.html:125
+msgid ""
+"\n"
+"          <em>Note that if you are adding a small number of resources, "
+"technical integration is not necessary.</em>\n"
+"        "
+msgstr ""
+
+#: contentcuration/templates/registration/welcome_new_user_email.html:130
+msgid "Step by step tutorials:"
+msgstr ""
+
+#: contentcuration/templates/registration/welcome_new_user_email.html:133
+msgid "Video format:"
+msgstr ""
+
+#: contentcuration/templates/registration/welcome_new_user_email.html:135
+msgid "Using Kolibri Studio: Your Content Workspace for Kolibri"
+msgstr ""
+
+#: contentcuration/templates/registration/welcome_new_user_email.html:137
+msgid "(*also available in French and Arabic)"
+msgstr ""
+
+#: contentcuration/templates/registration/welcome_new_user_email.html:140
+msgid "Slide gif format:"
+msgstr ""
+
+#: contentcuration/templates/registration/welcome_new_user_email.html:144
+msgid "Step by step Studio tutorial"
+msgstr ""
+
+#: contentcuration/templates/registration/welcome_new_user_email.html:151
+msgid "Video compression instructions:"
+msgstr ""
+
+#: contentcuration/templates/registration/welcome_new_user_email.html:153
+msgid ""
+"\n"
+"          For optimal results, videos should be compressed in order to "
+"achieve small file sizes. Compression ensures\n"
+"          that the videos are well suited for offline distribution and "
+"playback on all Kolibri devices.\n"
+"        "
+msgstr ""
+
+#: contentcuration/templates/registration/welcome_new_user_email.html:158
+msgid "View the guide to video compression"
+msgstr ""
+
+#: contentcuration/templates/registration/welcome_new_user_email.html:165
+msgid ""
+"If you need support with Kolibri Studio, please reach out to us on our "
+"Community Forum."
+msgstr ""
+
+#: contentcuration/templates/registration/welcome_new_user_email.html:167
+msgid "Access the Community Forum"
+msgstr ""
+
+#: contentcuration/templates/registration/welcome_new_user_email.html:171
+#, fuzzy
+#| msgid "Thank you,"
+msgid "Thank You!"
+msgstr "شكراً،"
+
+#: contentcuration/templates/registration/welcome_new_user_email.html:178
+msgid "*resources are presented in English"
+msgstr ""
+
+#: contentcuration/templates/registration/welcome_new_user_email_subject.txt:1
+msgid ""
+"Thank you for activating your Kolibri Studio account! Let's get started..."
+msgstr ""
+
 #: contentcuration/templates/settings/account_deleted_user_email.txt:5
 #, python-format
 msgid "Your %(email)s account on %(site_name)s has been deleted."
-msgstr "إن الحساب الخاص ببريدك الالكتروني %(email)s على %(site_name)s قد تم حذفه."
+msgstr ""
+"إن الحساب الخاص ببريدك الالكتروني %(email)s على %(site_name)s قد تم حذفه."
 
 #: contentcuration/templates/settings/account_deleted_user_email.txt:7
 #, python-format
-msgid "If this was a mistake, please email us at %(legal_email)s by %(buffer_date)s (%(num_days)s days from now)."
-msgstr "في حال حدث ذلك عن طريق الخطأ، يرجى التواصل معنا على %(legal_email)s خلال %(buffer_date)s (%(num_days)s أيام من الآن)."
+msgid ""
+"If this was a mistake, please email us at %(legal_email)s by %(buffer_date)s "
+"(%(num_days)s days from now)."
+msgstr ""
+"في حال حدث ذلك عن طريق الخطأ، يرجى التواصل معنا على %(legal_email)s خلال "
+"%(buffer_date)s (%(num_days)s أيام من الآن)."
 
 #: contentcuration/templates/settings/issue_report_email.txt:8
 msgid "Thank you for reporting your issue. Here is a copy of your report:"
 msgstr "شكرا على الإبلاغ عن مشكلتك. إليك نسخة من تقريرك:"
 
 #: contentcuration/templates/settings/issue_report_email.txt:20
-msgid "We are currently reviewing the information that you have provided, and will file your issue accordingly."
-msgstr "نقوم حاليًا بمراجعة المعلومات التي أرسلتها، وسنتعامل مع مشكلتك وفقًا لذلك."
+msgid ""
+"We are currently reviewing the information that you have provided, and will "
+"file your issue accordingly."
+msgstr ""
+"نقوم حاليًا بمراجعة المعلومات التي أرسلتها، وسنتعامل مع مشكلتك وفقًا لذلك."
 
 #: contentcuration/templates/settings/issue_report_email.txt:21
-msgid "We appreciate your patience and assistance as we work to improve Kolibri Studio!"
+msgid ""
+"We appreciate your patience and assistance as we work to improve Kolibri "
+"Studio!"
 msgstr "نقدر صبرك ومساعدتك ونعمل على تحسين استوديو كوليبري!"
 
 #: contentcuration/templates/settings/issue_report_email.txt:24
@@ -686,8 +658,18 @@ msgid "Here is a copy of your request:"
 msgstr "فيما يلي نسخة من طلبك:"
 
 #: contentcuration/templates/settings/storage_request_email.txt:43
-msgid "We are currently reviewing the information that you have provided, and will work to be in touch in a timely manner depending on the scope of your request. While Kolibri Studio is under active development, we need to be especially mindful of how much additional storage can be provided to ensure that we can successfully continue to build the Studio tool. Many thanks in advance for your understanding."
-msgstr "نقوم حاليًا بمراجعة المعلومات التي أرسلتها، وسنتواصل  معك في الوقت المناسب بحسب نوع طلبك. بينما يكون استوديو كوليبري قيد التطوير النشط، نحتاج إلى أن نكون مدركين بشكل خاص لمقدار مساحة التخزين الإضافية التي يمكن توفيرها لضمان قدرتنا على الاستمرار في إنشاء أداة الاستوديو بنجاح. شكراً مسبقاً لتفهمك."
+msgid ""
+"We are currently reviewing the information that you have provided, and will "
+"work to be in touch in a timely manner depending on the scope of your "
+"request. While Kolibri Studio is under active development, we need to be "
+"especially mindful of how much additional storage can be provided to ensure "
+"that we can successfully continue to build the Studio tool. Many thanks in "
+"advance for your understanding."
+msgstr ""
+"نقوم حاليًا بمراجعة المعلومات التي أرسلتها، وسنتواصل  معك في الوقت المناسب "
+"بحسب نوع طلبك. بينما يكون استوديو كوليبري قيد التطوير النشط، نحتاج إلى أن "
+"نكون مدركين بشكل خاص لمقدار مساحة التخزين الإضافية التي يمكن توفيرها لضمان "
+"قدرتنا على الاستمرار في إنشاء أداة الاستوديو بنجاح. شكراً مسبقاً لتفهمك."
 
 #: contentcuration/templates/staging_not_found.html:22
 msgid "No updates to review."
@@ -713,229 +695,517 @@ msgstr "لاستخدام استوديو كوليبري، ننصح باستخدا
 msgid "You can also try updating your current browser."
 msgstr "يمكنك أيضاً محاولة تحديث متصفحك الحالي."
 
-#: contentcuration/templatetags/license_tags.py:10
-msgid "The Attribution License lets others distribute, remix, tweak, and build upon your work, even commercially, as long as they credit you for the original creation. This is the most accommodating of licenses offered. Recommended for maximum dissemination and use of licensed materials."
-msgstr "يسمح ترخيص Attribution للآخرين بتوزيع عملك وإعادة دمجه وتعديله والبناء عليه في عملك، وحتى تجاريًا، طالما ينسبون لك الفضل في الإنشاء الأصلي. هذا هو أكثر التراخيص المقدمة توافقاً ويوصى به للحصول على أكبر قدر من نشر واستخدام المواد المرخصة."
+#: contentcuration/templatetags/license_tags.py:11
+msgid ""
+"The Attribution License lets others distribute, remix, tweak, and build upon "
+"your work, even commercially, as long as they credit you for the original "
+"creation. This is the most accommodating of licenses offered. Recommended "
+"for maximum dissemination and use of licensed materials."
+msgstr ""
+"يسمح ترخيص Attribution للآخرين بتوزيع عملك وإعادة دمجه وتعديله والبناء عليه "
+"في عملك، وحتى تجاريًا، طالما ينسبون لك الفضل في الإنشاء الأصلي. هذا هو أكثر "
+"التراخيص المقدمة توافقاً ويوصى به للحصول على أكبر قدر من نشر واستخدام المواد "
+"المرخصة."
 
-#: contentcuration/templatetags/license_tags.py:15
-msgid "The Attribution-ShareAlike License lets others remix, tweak, and build upon your work even for commercial purposes, as long as they credit you and license their new creations under the identical terms. This license is often compared to \"copyleft\" free and open source software licenses. All new works based on yours will carry the same license, so any derivatives will also allow commercial use. This is the license used by Wikipedia, and is recommended for materials that would benefit from incorporating content from Wikipedia and similarly licensed projects."
-msgstr "يسمح ترخيص Attribution-ShareAlike للآخرين بتوزيع عملك وإعادة دمجه وتعديله والبناء عليه في عملك، وحتى تجارياً، طالما ينسبون لك الفضل ويرخصون إنشاءاتهم الجديدة تحت الشروط ذاتها. وغالباً ما تتم مقارنة هذا الترخيص بتراخيص البرامج المجانية ومفتوحة المصدر \"الحقوق المتروكة\". ستحمل كل الأعمال الجديدة المبنية على أعمالك الترخيص نفسه، ولذلك، ستسمح أية مشتقات أيضاً بالاستخدام التجاري. إنه ذات الترخيص الذي تستخدمه ويكيبيديا، ويوصى به للمواد التي قد تستفيد من دمج محتوى من ويكيبيديا ومشاريع مرخصة مماثلة."
+#: contentcuration/templatetags/license_tags.py:16
+msgid ""
+"The Attribution-ShareAlike License lets others remix, tweak, and build upon "
+"your work even for commercial purposes, as long as they credit you and "
+"license their new creations under the identical terms. This license is often "
+"compared to \"copyleft\" free and open source software licenses. All new "
+"works based on yours will carry the same license, so any derivatives will "
+"also allow commercial use. This is the license used by Wikipedia, and is "
+"recommended for materials that would benefit from incorporating content from "
+"Wikipedia and similarly licensed projects."
+msgstr ""
+"يسمح ترخيص Attribution-ShareAlike للآخرين بتوزيع عملك وإعادة دمجه وتعديله "
+"والبناء عليه في عملك، وحتى تجارياً، طالما ينسبون لك الفضل ويرخصون إنشاءاتهم "
+"الجديدة تحت الشروط ذاتها. وغالباً ما تتم مقارنة هذا الترخيص بتراخيص البرامج "
+"المجانية ومفتوحة المصدر \"الحقوق المتروكة\". ستحمل كل الأعمال الجديدة "
+"المبنية على أعمالك الترخيص نفسه، ولذلك، ستسمح أية مشتقات أيضاً بالاستخدام "
+"التجاري. إنه ذات الترخيص الذي تستخدمه ويكيبيديا، ويوصى به للمواد التي قد "
+"تستفيد من دمج محتوى من ويكيبيديا ومشاريع مرخصة مماثلة."
 
-#: contentcuration/templatetags/license_tags.py:25
-msgid "The Attribution-NoDerivs License allows for redistribution, commercial and non-commercial, as long as it is passed along unchanged and in whole, with credit to you."
-msgstr "يسمح ترخيص Attribution-NoDerivs بإعادة التوزيع، التجاري وغير التجاري، طالما أنه يتم نقله بشكل كامل من دون تغيير، مع نسب الفضل لك."
+#: contentcuration/templatetags/license_tags.py:26
+msgid ""
+"The Attribution-NoDerivs License allows for redistribution, commercial and "
+"non-commercial, as long as it is passed along unchanged and in whole, with "
+"credit to you."
+msgstr ""
+"يسمح ترخيص Attribution-NoDerivs بإعادة التوزيع، التجاري وغير التجاري، طالما "
+"أنه يتم نقله بشكل كامل من دون تغيير، مع نسب الفضل لك."
 
-#: contentcuration/templatetags/license_tags.py:28
-msgid "The Attribution-NonCommercial License lets others remix, tweak, and build upon your work non-commercially, and although their new works must also acknowledge you and be non-commercial, they don't have to license their derivative works on the same terms."
-msgstr "يسمح ترخيص Attribution-NonCommercial للآخرين بإعادة دمج أعمالك وتعديلها والبناء عليها بشكل غير تجاري، وعلى الرغم من أن أعمالهم الجديدة يجب أن تنسب الفضل لك وأن تكون غير تجارية، فلا يتعين عليهم ترخيص أعمالهم المشتقة وفقاً للشروط نفسها."
+#: contentcuration/templatetags/license_tags.py:29
+msgid ""
+"The Attribution-NonCommercial License lets others remix, tweak, and build "
+"upon your work non-commercially, and although their new works must also "
+"acknowledge you and be non-commercial, they don't have to license their "
+"derivative works on the same terms."
+msgstr ""
+"يسمح ترخيص Attribution-NonCommercial للآخرين بإعادة دمج أعمالك وتعديلها "
+"والبناء عليها بشكل غير تجاري، وعلى الرغم من أن أعمالهم الجديدة يجب أن تنسب "
+"الفضل لك وأن تكون غير تجارية، فلا يتعين عليهم ترخيص أعمالهم المشتقة وفقاً "
+"للشروط نفسها."
 
-#: contentcuration/templatetags/license_tags.py:32
-msgid "The Attribution-NonCommercial-ShareAlike License lets others remix, tweak, and build upon your work non-commercially, as long as they credit you and license their new creations under the identical terms."
-msgstr "يتيح ترخيص Attribution-NonCommercial-ShareAlike للآخرين إعادة مزج أعمالك وتعديلها والبناء عليها بشكل غير تجاري، طالما أنهم ينسبون العمل إليك ويرخصون إبداعاتهم الجديدة وفقًا للشروط المماثلة."
+#: contentcuration/templatetags/license_tags.py:33
+msgid ""
+"The Attribution-NonCommercial-ShareAlike License lets others remix, tweak, "
+"and build upon your work non-commercially, as long as they credit you and "
+"license their new creations under the identical terms."
+msgstr ""
+"يتيح ترخيص Attribution-NonCommercial-ShareAlike للآخرين إعادة مزج أعمالك "
+"وتعديلها والبناء عليها بشكل غير تجاري، طالما أنهم ينسبون العمل إليك ويرخصون "
+"إبداعاتهم الجديدة وفقًا للشروط المماثلة."
 
-#: contentcuration/templatetags/license_tags.py:36
-msgid "The Attribution-NonCommercial-NoDerivs License is the most restrictive of our six main licenses, only allowing others to download your works and share them with others as long as they credit you, but they can't change them in any way or use them commercially."
-msgstr "يعتبر ترخيص Attribution-NonCommercial-NoDerivs الأكثر تقييداً من بين تراخيصنا الستة الرئيسية، حيث يسمح للآخرين بتنزيل أعمالك ومشاركتها مع الآخرين طالما أنهم ينسبون العمل إليك، ولكن لا يمكنهم تغييرها بأي شكل من الأشكال أو استخدامها تجارياً."
+#: contentcuration/templatetags/license_tags.py:37
+msgid ""
+"The Attribution-NonCommercial-NoDerivs License is the most restrictive of "
+"our six main licenses, only allowing others to download your works and share "
+"them with others as long as they credit you, but they can't change them in "
+"any way or use them commercially."
+msgstr ""
+"يعتبر ترخيص Attribution-NonCommercial-NoDerivs الأكثر تقييداً من بين تراخيصنا "
+"الستة الرئيسية، حيث يسمح للآخرين بتنزيل أعمالك ومشاركتها مع الآخرين طالما "
+"أنهم ينسبون العمل إليك، ولكن لا يمكنهم تغييرها بأي شكل من الأشكال أو "
+"استخدامها تجارياً."
 
-#: contentcuration/templatetags/license_tags.py:40
-msgid "The All Rights Reserved License indicates that the copyright holder reserves, or holds for their own use, all the rights provided by copyright law under one specific copyright treaty."
-msgstr "تشير رخصة -جميع الحقوق محفوظة- إلى أن صاحب حقوق الطبع والنشر يحتفظ بجميع الحقوق المنصوص عليها في قانون حقوق الطبع والنشر بموجب اتفاقية حقوق نشر محددة أو يحتفظ بها لاستخدامه الخاص."
+#: contentcuration/templatetags/license_tags.py:41
+msgid ""
+"The All Rights Reserved License indicates that the copyright holder "
+"reserves, or holds for their own use, all the rights provided by copyright "
+"law under one specific copyright treaty."
+msgstr ""
+"تشير رخصة -جميع الحقوق محفوظة- إلى أن صاحب حقوق الطبع والنشر يحتفظ بجميع "
+"الحقوق المنصوص عليها في قانون حقوق الطبع والنشر بموجب اتفاقية حقوق نشر محددة "
+"أو يحتفظ بها لاستخدامه الخاص."
 
-#: contentcuration/templatetags/license_tags.py:43
-msgid "Public Domain work has been identified as being free of known restrictions under copyright law, including all related and neighboring rights."
-msgstr "تم تحديد أعمال الملكية العام على أنها خالية من القيود المعروفة بموجب قانون حقوق الطبع والنشر، بما في ذلك جميع الحقوق المجاورة والمرتبطة."
+#: contentcuration/templatetags/license_tags.py:44
+msgid ""
+"Public Domain work has been identified as being free of known restrictions "
+"under copyright law, including all related and neighboring rights."
+msgstr ""
+"تم تحديد أعمال الملكية العام على أنها خالية من القيود المعروفة بموجب قانون "
+"حقوق الطبع والنشر، بما في ذلك جميع الحقوق المجاورة والمرتبطة."
 
-#: contentcuration/templatetags/license_tags.py:46
-msgid "Special Permissions is a custom license to use when the current licenses do not apply to the content. The owner of this license is responsible for creating a description of what this license entails."
-msgstr "التراخيص الخاصة هي تراخيص مخصصة للاستخدام عندما لا تنطبق التراخيص الحالية على المحتوى. يكون صاحب هذا الترخيص مسؤولاً عن إنشاء وصف لما يتطلبه هذا الترخيص."
+#: contentcuration/templatetags/license_tags.py:47
+msgid ""
+"Special Permissions is a custom license to use when the current licenses do "
+"not apply to the content. The owner of this license is responsible for "
+"creating a description of what this license entails."
+msgstr ""
+"التراخيص الخاصة هي تراخيص مخصصة للاستخدام عندما لا تنطبق التراخيص الحالية "
+"على المحتوى. يكون صاحب هذا الترخيص مسؤولاً عن إنشاء وصف لما يتطلبه هذا "
+"الترخيص."
 
-#: contentcuration/templatetags/translation_tags.py:26
-msgid "100% Correct"
-msgstr "١٠٠٪ صحيح"
-
-#: contentcuration/templatetags/translation_tags.py:27
-msgid "10 in a row"
-msgstr "١٠ على التوالي"
-
-#: contentcuration/templatetags/translation_tags.py:28
-msgid "2 in a row"
-msgstr "٢ على التوالي"
-
-#: contentcuration/templatetags/translation_tags.py:29
-msgid "3 in a row"
-msgstr "٣ على التوالي"
-
-#: contentcuration/templatetags/translation_tags.py:30
-msgid "5 in a row"
-msgstr "٥ على التوالي"
-
-#: contentcuration/templatetags/translation_tags.py:31
-msgid "M of N..."
-msgstr "M من N..."
-
-#: contentcuration/templatetags/translation_tags.py:32
-msgid "CC BY"
-msgstr "CC BY"
-
-#: contentcuration/templatetags/translation_tags.py:33
-msgid "CC BY-SA"
-msgstr "CC BY-SA"
-
-#: contentcuration/templatetags/translation_tags.py:34
-msgid "CC BY-ND"
-msgstr "CC BY-ND"
-
-#: contentcuration/templatetags/translation_tags.py:35
-msgid "CC BY-NC"
-msgstr "CC BY-NC"
-
-#: contentcuration/templatetags/translation_tags.py:36
-msgid "CC BY-NC-SA"
-msgstr "CC BY-NC-SA"
-
-#: contentcuration/templatetags/translation_tags.py:37
-msgid "CC BY-NC-ND"
-msgstr "CC BY-NC-ND"
-
-#: contentcuration/templatetags/translation_tags.py:38
-msgid "All Rights Reserved"
-msgstr "جميع الحقوق محفوظة"
-
-#: contentcuration/templatetags/translation_tags.py:39
-msgid "Public Domain"
-msgstr "الملكية العامة"
-
-#: contentcuration/templatetags/translation_tags.py:40
-msgid "Special Permissions"
-msgstr "تراخيص خاصة"
-
-#: contentcuration/templatetags/translation_tags.py:49
-#, python-format
-msgid "%(filesize)s %(unit)s"
-msgstr "%(filesize)s %(unit)s"
-
-#: contentcuration/utils/csv_writer.py:138
-#: contentcuration/utils/csv_writer.py:201
+#: contentcuration/utils/csv_writer.py:45
+#: contentcuration/utils/csv_writer.py:108
 msgid "No Channel"
 msgstr "لا توجد قنوات"
 
-#: contentcuration/utils/csv_writer.py:139
+#: contentcuration/utils/csv_writer.py:46
 msgid "No resource"
 msgstr "لا توجد مصادر"
 
-#: contentcuration/utils/csv_writer.py:164
+#: contentcuration/utils/csv_writer.py:71
 msgid "Channel"
 msgstr "القناة التعليمية"
 
-#: contentcuration/utils/csv_writer.py:164
+#: contentcuration/utils/csv_writer.py:71
 msgid "Title"
 msgstr "العنوان"
 
-#: contentcuration/utils/csv_writer.py:164
+#: contentcuration/utils/csv_writer.py:71
 msgid "Kind"
 msgstr "النوع"
 
-#: contentcuration/utils/csv_writer.py:164
+#: contentcuration/utils/csv_writer.py:71
 msgid "Filename"
 msgstr "اسم الملفّ"
 
-#: contentcuration/utils/csv_writer.py:164
+#: contentcuration/utils/csv_writer.py:71
+msgid "File Size"
+msgstr "حجم الملف"
+
+#: contentcuration/utils/csv_writer.py:71
 msgid "URL"
 msgstr "عنوان URL"
 
-#: contentcuration/utils/csv_writer.py:164
+#: contentcuration/utils/csv_writer.py:71
 msgid "Description"
 msgstr "التّوصيف"
 
-#: contentcuration/utils/csv_writer.py:165
+#: contentcuration/utils/csv_writer.py:72
 msgid "Author"
 msgstr "المؤلف"
 
-#: contentcuration/utils/csv_writer.py:165
+#: contentcuration/utils/csv_writer.py:72
 msgid "Language"
 msgstr "اللغة"
 
-#: contentcuration/utils/csv_writer.py:165
+#: contentcuration/utils/csv_writer.py:72
 msgid "License"
 msgstr "الترخيص"
 
-#: contentcuration/utils/csv_writer.py:165
+#: contentcuration/utils/csv_writer.py:72
 msgid "License Description"
 msgstr "وصف الترخيص"
 
-#: contentcuration/utils/csv_writer.py:165
+#: contentcuration/utils/csv_writer.py:72
 msgid "Copyright Holder"
 msgstr "مالك حقوق النشر"
 
-#: contentcuration/utils/csv_writer.py:201
+#: contentcuration/utils/csv_writer.py:108
 msgid "No Resource"
 msgstr "لا توجد مصادر"
 
-#: contentcuration/utils/csv_writer.py:201
+#: contentcuration/utils/csv_writer.py:108
 msgid "Staged File"
 msgstr "ملف مرحلي"
 
-#: contentcuration/utils/format.py:15
-msgid "B"
-msgstr "بايت"
-
-#: contentcuration/utils/format.py:17
-msgid "KB"
-msgstr "كيلو بايت"
-
-#: contentcuration/utils/format.py:19
-msgid "MB"
-msgstr "ميغا بايت"
-
-#: contentcuration/utils/format.py:21
-msgid "GB"
-msgstr "جيغا بايت"
-
-#: contentcuration/utils/format.py:23
-msgid "TB"
-msgstr "تيرا بايت"
-
 #: contentcuration/utils/incidents.py:7
-msgid "There was a problem with a third-party service. This means certain operations might be blocked. We appreciate your patience while these issues are being resolved."
-msgstr "حدثت مشكلة في خدمة خاصة بجهة خارجية، وهذا يعني أنه قد يتم حظر بعض العمليات. نقدر صبرك أثناء حل هذه المشكلات."
+msgid ""
+"There was a problem with a third-party service. This means certain "
+"operations might be blocked. We appreciate your patience while these issues "
+"are being resolved."
+msgstr ""
+"حدثت مشكلة في خدمة خاصة بجهة خارجية، وهذا يعني أنه قد يتم حظر بعض العمليات. "
+"نقدر صبرك أثناء حل هذه المشكلات."
 
 #: contentcuration/utils/incidents.py:16
-msgid "<b>EMERGENCY MAINTENANCE</b> Kolibri Studio is operating on read-only mode for the time being in order for us to resolve some maintenance issues. This means all editing capabilities are disabled at the moment. We're currently working very hard to fix the issue as soon as possible. If you have any questions please contact us at content@learningequality.org. We apologize for any inconvenience caused and appreciate your patience while we resolve these issues."
-msgstr "<b>صيانة طارئة</b> يعمل استوديو كوليبري في وضع القراءة فقط في الوقت الحالي لكي نتمكن من حل بعض مشاكل الصيانة. وهذا يعني أن جميع إمكانيات التحرير معطلة حالياً. نعمل حالياً بجد لإصلاح المشكلة بأسرع وقت ممكن. إذا كان لديك أية أسئلة، يرجى التواصل معنا على content@learningequality.org. نعتذر عن أي إزعاج قد سببناه ونقدر تعاونك أثناء حل هذه المشاكل."
+msgid ""
+"<b>EMERGENCY MAINTENANCE</b> Kolibri Studio is operating on read-only mode "
+"for the time being in order for us to resolve some maintenance issues. This "
+"means all editing capabilities are disabled at the moment. We're currently "
+"working very hard to fix the issue as soon as possible. If you have any "
+"questions please contact us at content@learningequality.org. We apologize "
+"for any inconvenience caused and appreciate your patience while we resolve "
+"these issues."
+msgstr ""
+"<b>صيانة طارئة</b> يعمل استوديو كوليبري في وضع القراءة فقط في الوقت الحالي "
+"لكي نتمكن من حل بعض مشاكل الصيانة. وهذا يعني أن جميع إمكانيات التحرير معطلة "
+"حالياً. نعمل حالياً بجد لإصلاح المشكلة بأسرع وقت ممكن. إذا كان لديك أية أسئلة، "
+"يرجى التواصل معنا على content@learningequality.org. نعتذر عن أي إزعاج قد "
+"سببناه ونقدر تعاونك أثناء حل هذه المشاكل."
 
 #: contentcuration/utils/incidents.py:31
-msgid "<b>EMERGENCY MAINTENANCE</b> Kolibri Studio is operating on read-only mode for the time being in order for us to resolve some database issues. This means all editing capabilities are disabled at the moment. We're currently working very hard to fix the issue as soon as possible. If you have any questions please contact us at content@learningequality.org. We apologize for any inconvenience caused and appreciate your patience while we resolve these issues."
-msgstr "<b>الصيانه الطارئه</b> يعمل استوديو في وضع القراءة فقط في الوقت الحالي حتى نتمكن من حل بعض مشكلات قاعدة البيانات. هذا يعني أن جميع إمكانيات التحرير معطلة حالياً. نحن نقوم بما وسعنالإصلاح المشكلة في أسرع وقت ممكن. إذا كانت لديك أية أسئلة، يرجى التواصل معنا على content@learningequality.org. نعتذر عن أي إزعاج سببه لك الأمر ونقدر صبرك أثناء حل هذه المشكلات."
+msgid ""
+"<b>EMERGENCY MAINTENANCE</b> Kolibri Studio is operating on read-only mode "
+"for the time being in order for us to resolve some database issues. This "
+"means all editing capabilities are disabled at the moment. We're currently "
+"working very hard to fix the issue as soon as possible. If you have any "
+"questions please contact us at content@learningequality.org. We apologize "
+"for any inconvenience caused and appreciate your patience while we resolve "
+"these issues."
+msgstr ""
+"<b>الصيانه الطارئه</b> يعمل استوديو في وضع القراءة فقط في الوقت الحالي حتى "
+"نتمكن من حل بعض مشكلات قاعدة البيانات. هذا يعني أن جميع إمكانيات التحرير "
+"معطلة حالياً. نحن نقوم بما وسعنالإصلاح المشكلة في أسرع وقت ممكن. إذا كانت "
+"لديك أية أسئلة، يرجى التواصل معنا على content@learningequality.org. نعتذر عن "
+"أي إزعاج سببه لك الأمر ونقدر صبرك أثناء حل هذه المشكلات."
 
 #: contentcuration/utils/incidents.py:46
-msgid "We are encountering issues with Google Cloud Storage. This means any file uploading and publishing operations are currently unavailable. We appreciate your patience while these issues are being resolved. To check the status of this service, please visit <a target='_blank' href='https://status.cloud.google.com/'>here</a>"
-msgstr "نواجه مشكلات مع Google Cloud Storage. هذا يعني أن أية عمليات تحميل ونشر غير متوفرة حاليًا. نحن نقدر صبرك أثناء حل هذه المشكلات. للتحقق من حالة هذه الخدمة، يرجى زيارة <a target='_blank' href='https://status.cloud.google.com/'>هنا</a>"
+msgid ""
+"We are encountering issues with Google Cloud Storage. This means any file "
+"uploading and publishing operations are currently unavailable. We appreciate "
+"your patience while these issues are being resolved. To check the status of "
+"this service, please visit <a target='_blank' href='https://status.cloud."
+"google.com/'>here</a>"
+msgstr ""
+"نواجه مشكلات مع Google Cloud Storage. هذا يعني أن أية عمليات تحميل ونشر غير "
+"متوفرة حاليًا. نحن نقدر صبرك أثناء حل هذه المشكلات. للتحقق من حالة هذه "
+"الخدمة، يرجى زيارة <a target='_blank' href='https://status.cloud.google."
+"com/'>هنا</a>"
 
 #: contentcuration/utils/incidents.py:57
-msgid "We are encountering issues with a third-party service. This means publishing is currently unavailable. We appreciate your patience while these issues are being resolved."
-msgstr "نواجه مشكلات مع خدمة مرتبطة بجهة خارجية. هذا يعني أن النشر غير متاح حاليًا. نحن نقدر صبرك أثناء حل هذه المشكلات."
+msgid ""
+"We are encountering issues with a third-party service. This means publishing "
+"is currently unavailable. We appreciate your patience while these issues are "
+"being resolved."
+msgstr ""
+"نواجه مشكلات مع خدمة مرتبطة بجهة خارجية. هذا يعني أن النشر غير متاح حاليًا. "
+"نحن نقدر صبرك أثناء حل هذه المشكلات."
 
 #: contentcuration/utils/incidents.py:65
-msgid "We are encountering issues with our data center. This means you may encounter networking problems while using Studio. We appreciate your patience while these issues are being resolved. To check the status of this service, please visit <a target='_blank' href='https://status.cloud.google.com/'>here</a>"
-msgstr " نواجه مشكلات مع مركز البيانات الخاص بنا. هذا يعني أنك قد تواجه مشاكل في الشبكات أثناء استخدام الاستوديو. نقدر صبرك أثناء حل هذه المشكلات. للتحقق من حالة هذه الخدمة قم بزيارة <a target='_blank' href='https://status.cloud.google.com/'>هنا</a>"
+msgid ""
+"We are encountering issues with our data center. This means you may "
+"encounter networking problems while using Studio. We appreciate your "
+"patience while these issues are being resolved. To check the status of this "
+"service, please visit <a target='_blank' href='https://status.cloud.google."
+"com/'>here</a>"
+msgstr ""
+" نواجه مشكلات مع مركز البيانات الخاص بنا. هذا يعني أنك قد تواجه مشاكل في "
+"الشبكات أثناء استخدام الاستوديو. نقدر صبرك أثناء حل هذه المشكلات. للتحقق من "
+"حالة هذه الخدمة قم بزيارة <a target='_blank' href='https://status.cloud."
+"google.com/'>هنا</a>"
 
-#: contentcuration/utils/publish.py:57
+#: contentcuration/utils/publish.py:96
 msgid "Kolibri Studio Channel Published"
 msgstr "تم نشر قناة استوديو كوليبري"
 
-#: contentcuration/views/public.py:63 contentcuration/views/public.py:74
-msgid "Api endpoint {} is not available"
-msgstr "نقطة نهاية Api {} غير متوفرة"
-
-#: contentcuration/views/public.py:76
-msgid "No channel matching {} found"
-msgstr "لم يتم العثور على قناة مطابقة {}"
-
-#: contentcuration/views/settings.py:110
+#: contentcuration/views/settings.py:111
 msgid "Kolibri Studio issue report"
 msgstr "الإبلاغ عن مشكلة في استوديو كوليبري"
 
-#: contentcuration/views/settings.py:144
+#: contentcuration/views/settings.py:143
 msgid "Kolibri Studio account deleted"
 msgstr "تم حذف حساب استوديو كوليبري"
 
+#: kolibri_public/views.py:220
+#, fuzzy
+#| msgid "No Resource"
+msgid "Resource"
+msgstr "لا توجد مصادر"
+
+#: kolibri_public/views_v1.py:63 kolibri_public/views_v1.py:74
+msgid "Api endpoint {} is not available"
+msgstr "نقطة نهاية Api {} غير متوفرة"
+
+#: kolibri_public/views_v1.py:76
+msgid "No channel matching {} found"
+msgstr "لم يتم العثور على قناة مطابقة {}"
+
+#~ msgid "Date/Time Created"
+#~ msgstr "تاريخ/وقت الإنشاء"
+
+#~ msgid "Not Available"
+#~ msgstr "غير متاح"
+
+#~ msgid "Ricecooker Version"
+#~ msgstr "إصدار Ricecooker"
+
+#~ msgid "# of {}s"
+#~ msgstr "# من {}s"
+
+#~ msgid "# of Questions"
+#~ msgstr "# من الاسئلة"
+
+#~ msgid "# of Subtitles"
+#~ msgstr "# من الترجمات"
+
+#~ msgid "Unknown error starting task. Please contact support."
+#~ msgstr "حصل خطأ غير معروف أثناء بدء المهمة. الرجاء الاتصال بالدعم."
+
+#~ msgid "Previous"
+#~ msgstr "السؤال السابق"
+
+#~ msgid "current"
+#~ msgstr "الحالي"
+
+#~ msgid "Next"
+#~ msgstr "التالي"
+
+#~ msgid "Language not set"
+#~ msgstr "لم يتم تعيين اللغة"
+
+#, python-format
+#~ msgid "This file was generated on %(date)s"
+#~ msgstr "تم إنشاء هذا الملف في %(date)s"
+
+#~ msgid "Last Published"
+#~ msgstr "آخر ما نُشر"
+
+#~ msgid "Unpublished"
+#~ msgstr "لم يتم النشر"
+
+#~ msgid "USING THIS CHANNEL"
+#~ msgstr "استخدام هذه القناة"
+
+#~ msgid "Copy one of the following into Kolibri to import this channel:"
+#~ msgstr "انسخ واحداً مما يلي إلى كوليبري لاستيراد هذه القناة:"
+
+#~ msgid "Tokens (Recommended):"
+#~ msgstr "الرموز التعريفية (ينصح بها):"
+
+#~ msgid "Channel ID:"
+#~ msgstr "مُعرّف القناة:"
+
+#~ msgid "Channel must be published to import into Kolibri"
+#~ msgstr "يجب نشر القناة لاستيرادها إلى كوليبري"
+
+#~ msgid "WHAT'S INSIDE"
+#~ msgstr "ما هو المضمون"
+
+#, python-format
+#~ msgid "%(count)s Resource"
+#~ msgid_plural "%(count)s Resources"
+#~ msgstr[0] "%(count)s مصدراً"
+#~ msgstr[1] "%(count)s مصدر"
+#~ msgstr[2] "%(count)s مصدران"
+#~ msgstr[3] "%(count)s مصدراً"
+#~ msgstr[4] "%(count)s مصدراً"
+#~ msgstr[5] "%(count)s مصدراً"
+
+#~ msgid "Includes"
+#~ msgstr "يتضمن"
+
+#~ msgid "Languages"
+#~ msgstr "اللغات"
+
+#~ msgid "Subtitles"
+#~ msgstr "الترجمات"
+
+#~ msgid "For Educators"
+#~ msgstr "للمعلمين"
+
+#~ msgid "Coach Content"
+#~ msgstr "المحتوى الخاص بالمدرب"
+
+#~ msgid "Assessments"
+#~ msgstr "التقييمات"
+
+#~ msgid "Content Tags"
+#~ msgstr "وسوم المحتوى"
+
+#~ msgid "No tags found"
+#~ msgstr "لا توجد وسوم."
+
+#~ msgid "This channel is empty"
+#~ msgstr "هذه القناة فارغة"
+
+#~ msgid "SOURCE"
+#~ msgstr "المصدر"
+
+#~ msgid "This channel features resources created by:"
+#~ msgstr "هذه القناة تميز المصادر التي تم إنشاؤها من خلال:"
+
+#~ msgid "Information not available"
+#~ msgstr "المعلومات غير متوفرة"
+
+#~ msgid "The material in this channel was provided by:"
+#~ msgstr "تم توفير المواد الموجودة في هذه القناة عن طريق:"
+
+#~ msgid "Material in this channel was originally hosted by:"
+#~ msgstr "تمت اصتضافة المواد الموجودة في هذه القناة في الأصل من قبل:"
+
+#~ msgid "This channel includes the following licenses:"
+#~ msgstr "تحتوي هذه القناة على التراخيص التالية:"
+
+#~ msgid "Copyright Holders:"
+#~ msgstr "مالكو حقوق النشر:"
+
+#~ msgid "Token:"
+#~ msgstr "الرموز التعريفية:"
+
+#~ msgid "What's Inside"
+#~ msgstr "ما هو المضمون"
+
+#, python-format
+#~ msgid ""
+#~ "\n"
+#~ "                                            <span class=\"no-break\">(+ "
+#~ "%(count)s more)</span>\n"
+#~ "                                        "
+#~ msgstr ""
+#~ "\n"
+#~ "                                            <span class=\"no-break\">(+ "
+#~ "%(count)s أكثر)</span>\n"
+#~ "                                        "
+
+#~ msgid "Most Common Tags"
+#~ msgstr "الوسوم الأكثر شيوعاً"
+
+#~ msgid "Source Information"
+#~ msgstr "معلومات المصدر"
+
+#~ msgid "Authors:"
+#~ msgstr "المؤلفون:"
+
+#, python-format
+#~ msgid ""
+#~ "\n"
+#~ "                                    <b>(+ %(count)s more)</b>\n"
+#~ "                                "
+#~ msgstr ""
+#~ "\n"
+#~ "                                    <b>(+ %(count)s أكثر)</b>\n"
+#~ "                                "
+
+#~ msgid "Providers:"
+#~ msgstr "مقدمو الخدمات:"
+
+#, python-format
+#~ msgid ""
+#~ "\n"
+#~ "                                <b>(+ %(count)s more)</b>\n"
+#~ "                            "
+#~ msgstr ""
+#~ "\n"
+#~ "                                <b>(+ %(count)s أكثر)</b>\n"
+#~ "                            "
+
+#~ msgid "Aggregators:"
+#~ msgstr "جامعو المحتوى:"
+
+#~ msgid "Licenses:"
+#~ msgstr "التراخيص:"
+
+#, python-format
+#~ msgid "Your csv for %(channel_name)s has finished generating (attached)."
+#~ msgstr "تم الانتهاء من إنشاء ملف csv الخاص بك لـ %(channel_name)s (مرفق)."
+
+#~ msgid "There was an error opening this channel."
+#~ msgstr "حصل خطأ ما أثناء فتح هذه القناة."
+
+#~ msgid "Try running ricecooker again."
+#~ msgstr "حاول تشغيل إصدار ricecooker  مجدداً."
+
+#~ msgid "100% Correct"
+#~ msgstr "١٠٠٪ صحيح"
+
+#~ msgid "10 in a row"
+#~ msgstr "١٠ على التوالي"
+
+#~ msgid "2 in a row"
+#~ msgstr "٢ على التوالي"
+
+#~ msgid "3 in a row"
+#~ msgstr "٣ على التوالي"
+
+#~ msgid "5 in a row"
+#~ msgstr "٥ على التوالي"
+
+#~ msgid "M of N..."
+#~ msgstr "M من N..."
+
+#~ msgid "CC BY"
+#~ msgstr "CC BY"
+
+#~ msgid "CC BY-SA"
+#~ msgstr "CC BY-SA"
+
+#~ msgid "CC BY-ND"
+#~ msgstr "CC BY-ND"
+
+#~ msgid "CC BY-NC"
+#~ msgstr "CC BY-NC"
+
+#~ msgid "CC BY-NC-SA"
+#~ msgstr "CC BY-NC-SA"
+
+#~ msgid "CC BY-NC-ND"
+#~ msgstr "CC BY-NC-ND"
+
+#~ msgid "All Rights Reserved"
+#~ msgstr "جميع الحقوق محفوظة"
+
+#~ msgid "Special Permissions"
+#~ msgstr "تراخيص خاصة"
+
+#, python-format
+#~ msgid "%(filesize)s %(unit)s"
+#~ msgstr "%(filesize)s %(unit)s"
+
+#~ msgid "B"
+#~ msgstr "بايت"
+
+#~ msgid "KB"
+#~ msgstr "كيلو بايت"
+
+#~ msgid "MB"
+#~ msgstr "ميغا بايت"
+
+#~ msgid "GB"
+#~ msgstr "جيغا بايت"
+
+#~ msgid "TB"
+#~ msgstr "تيرا بايت"
