@@ -36,6 +36,30 @@ module.exports = (env = {}) => {
 
   const baseCssLoaders = base.module.rules[1].use;
 
+  const workboxPlugin = new InjectManifest({
+    swSrc: path.resolve(srcDir, 'serviceWorker/index.js'),
+    swDest: 'serviceWorker.js',
+    exclude: dev ? [/./] : [/\.map$/, /^manifest.*\.js$/]
+  });
+
+  if (dev) {
+    // Suppress the "InjectManifest has been called multiple times" warning by reaching into
+    // the private properties of the plugin and making sure it never ends up in the state
+    // where it makes that warning.
+    // https://github.com/GoogleChrome/workbox/blob/v6/packages/workbox-webpack-plugin/src/inject-manifest.ts#L260-L282
+    // Solution taken from here:
+    // https://github.com/GoogleChrome/workbox/issues/1790#issuecomment-1241356293
+    Object.defineProperty(workboxPlugin, "alreadyCalled", {
+      get() {
+        return false
+      },
+      set() {
+        // do nothing; the internals try to set it to true, which then results in a warning
+        // on the next run of webpack.
+      },
+    })
+  }
+
   return merge(base, {
     context: srcDir,
     entry: {
@@ -52,7 +76,7 @@ module.exports = (env = {}) => {
     },
     output: {
       filename: dev ? '[name].js' : '[name]-[fullhash].js',
-      chunkFilename: dev ? '[name]-[id].js' : '[name]-[id]-[fullhash].js',
+      chunkFilename: '[name]-[id]-[fullhash].js',
       path: bundleOutputDir,
       publicPath: dev ? 'http://127.0.0.1:4000/dist/' : '/static/studio/',
       pathinfo: !dev,
@@ -117,18 +141,8 @@ module.exports = (env = {}) => {
         // set the current working directory for displaying module paths
         cwd: process.cwd(),
       }),
-      // This must be added in dev mode if you want to do dev work
-      // on the service worker.
-    ].concat(
-      dev
-        ? []
-        : [
-            new InjectManifest({
-              swSrc: path.resolve(srcDir, 'serviceWorker/index.js'),
-              swDest: 'serviceWorker.js',
-            }),
-          ]
-    ),
+      workboxPlugin,
+    ],
     stats: 'normal',
   });
 };
