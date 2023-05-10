@@ -331,6 +331,8 @@ const debouncedSyncChanges = debounce(() => {
   if (!syncActive) {
     return syncChanges();
   }
+  // TODO: actually return promise that resolves when active sync completes
+  return new Promise(resolve => setTimeout(resolve, 1000));
 }, SYNC_IF_NO_CHANGES_FOR * 1000);
 
 if (process.env.NODE_ENV !== 'production' && typeof window !== 'undefined') {
@@ -391,6 +393,9 @@ export function stopSyncing() {
   db.on('changes').unsubscribe(handleChanges);
 }
 
+/**
+ * @return {Promise}
+ */
 export function forceServerSync() {
   debouncedSyncChanges();
   return debouncedSyncChanges.flush();

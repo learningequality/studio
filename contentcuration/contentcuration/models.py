@@ -75,7 +75,6 @@ from contentcuration.db.models.manager import CustomContentNodeTreeManager
 from contentcuration.db.models.manager import CustomManager
 from contentcuration.statistics import record_channel_stats
 from contentcuration.utils.cache import delete_public_channel_cache_keys
-from contentcuration.utils.celery.tasks import generate_task_signature
 from contentcuration.utils.parser import load_json_string
 from contentcuration.viewsets.sync.constants import ALL_CHANGES
 from contentcuration.viewsets.sync.constants import ALL_TABLES
@@ -2077,7 +2076,13 @@ class StagedFile(models.Model):
 FILE_DISTINCT_INDEX_NAME = "file_checksum_file_size_idx"
 FILE_MODIFIED_DESC_INDEX_NAME = "file_modified_desc_idx"
 FILE_DURATION_CONSTRAINT = "file_media_duration_int"
-MEDIA_PRESETS = [format_presets.AUDIO, format_presets.VIDEO_HIGH_RES, format_presets.VIDEO_LOW_RES]
+MEDIA_PRESETS = [
+    format_presets.AUDIO,
+    format_presets.AUDIO_DEPENDENCY,
+    format_presets.VIDEO_HIGH_RES,
+    format_presets.VIDEO_LOW_RES,
+    format_presets.VIDEO_DEPENDENCY,
+]
 
 
 class File(models.Model):
@@ -2214,7 +2219,12 @@ class File(models.Model):
             models.Index(fields=["-modified"], name=FILE_MODIFIED_DESC_INDEX_NAME),
         ]
         constraints = [
-            models.CheckConstraint(check=(Q(preset__in=MEDIA_PRESETS, duration__gt=0) | Q(duration__isnull=True)), name=FILE_DURATION_CONSTRAINT)
+            # enforces that duration is null when not a media preset, but the duration may be null for media presets
+            # but if not-null, should be greater than 0
+            models.CheckConstraint(
+                check=(Q(preset__in=MEDIA_PRESETS, duration__gt=0) | Q(duration__isnull=True)),
+                name=FILE_DURATION_CONSTRAINT
+            )
         ]
 
 
@@ -2451,7 +2461,6 @@ class TaskResultCustom(object):
     signature = models.CharField(null=True, blank=False, max_length=32)
 
     super_as_dict = TaskResult.as_dict
-    super_save = TaskResult.save
 
     def as_dict(self):
         """
@@ -2464,22 +2473,6 @@ class TaskResultCustom(object):
             progress=self.progress,
         )
         return super_dict
-
-    def set_signature(self):
-        """
-        Generates and sets the signature for the task if it isn't set
-        """
-        if self.signature is not None:
-            # nothing to do
-            return
-        self.signature = generate_task_signature(self.task_name, task_kwargs=self.task_kwargs, channel_id=self.channel_id)
-
-    def save(self, *args, **kwargs):
-        """
-        Override save to ensure signature is generated
-        """
-        self.set_signature()
-        return self.super_save(*args, **kwargs)
 
     @classmethod
     def contribute_to_class(cls, model_class=TaskResult):
