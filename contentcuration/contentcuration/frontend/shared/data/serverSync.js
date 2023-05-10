@@ -202,7 +202,7 @@ const noUserError = 'No user logged in';
 
 const changeRevs = [];
 
-async function syncChanges() {
+async function syncChanges(syncAllChanges) {
   // Note: we could in theory use Dexie syncable for what
   // we are doing here, but I can't find a good way to make
   // it ignore our regular API calls for seeding the database
@@ -238,7 +238,13 @@ async function syncChanges() {
 
     // Snapshot which revs we are syncing, so that we can
     // removes them from the changeRevs array after the sync
-    const revsToSync = [...changeRevs];
+    const revsToSync = [];
+    if (syncAllChanges) {
+      const unsyncedRevs = await db[CHANGES_TABLE].filter(c => !c.synced).primaryKeys();
+      revsToSync.push(...unsyncedRevs);
+    } else {
+      revsToSync.push(...changeRevs);
+    }
     if (revsToSync.length) {
       const syncableChanges = db[CHANGES_TABLE].where('rev')
         .anyOf(revsToSync)
@@ -290,13 +296,13 @@ let syncDebounceTimer;
 const syncResolveRejectStack = [];
 let syncingPromise = Promise.resolve();
 
-function doSyncChanges() {
+function doSyncChanges(syncAll = false) {
   syncDebounceTimer = null;
   // Splice all the resolve/reject handlers off the stack
   const resolveRejectStack = syncResolveRejectStack.splice(0);
   // Wait for any existing sync to complete, then sync again.
   syncingPromise = syncingPromise
-    .then(syncChanges)
+    .then(() => syncChanges(syncAll))
     .then(result => {
       // If it is successful call all of the resolve functions that we have stored
       // from all the Promises that have been returned while this specific debounce
@@ -314,7 +320,7 @@ function doSyncChanges() {
   return syncingPromise;
 }
 
-export function debouncedSyncChanges(flush = false) {
+export function debouncedSyncChanges(flush = false, syncAll = false) {
   // Logic for promise returning debounce vendored and modified from:
   // https://github.com/sindresorhus/p-debounce/blob/main/index.js
   // Return a promise that will consistently resolve when this debounced
@@ -328,10 +334,10 @@ export function debouncedSyncChanges(flush = false) {
     if (flush) {
       // If immediate invocation is required immediately call doSyncChanges
       // rather than using a timeout delay.
-      doSyncChanges();
+      doSyncChanges(syncAll);
     } else {
       // Otherwise update the timeout to this invocation.
-      syncDebounceTimer = setTimeout(doSyncChanges, syncDebounceWait);
+      syncDebounceTimer = setTimeout(() => doSyncChanges(syncAll), syncDebounceWait);
     }
   });
 }
@@ -363,6 +369,5 @@ export function stopSyncing() {
  * @return {Promise}
  */
 export function forceServerSync() {
-  debouncedSyncChanges();
-  return debouncedSyncChanges(true);
+  return debouncedSyncChanges(true, true);
 }
