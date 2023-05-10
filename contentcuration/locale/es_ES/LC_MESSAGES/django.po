@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kolibri-studio\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-05-08 23:08+0000\n"
+"POT-Creation-Date: 2023-05-10 14:17+0000\n"
 "PO-Revision-Date: 2022-10-17 20:08\n"
 "Last-Translator: \n"
 "Language-Team: Spanish\n"
@@ -21,40 +21,6 @@ msgstr ""
 #: contentcuration/settings.py:290
 msgid "Arabic"
 msgstr "Árabe"
-
-#: contentcuration/constants/channel_history.py:9
-#, fuzzy
-#| msgid "Created"
-msgid "Creation"
-msgstr "Creado"
-
-#: contentcuration/constants/channel_history.py:10
-#, fuzzy
-#| msgid "Public Domain"
-msgid "Publication"
-msgstr "Dominio Público"
-
-#: contentcuration/constants/channel_history.py:11
-#, fuzzy
-#| msgid "Description"
-msgid "Deletion"
-msgstr "Descripción"
-
-#: contentcuration/constants/channel_history.py:12
-msgid "Deletion recovery"
-msgstr ""
-
-#: contentcuration/constants/user_history.py:8
-msgid "User soft deletion"
-msgstr ""
-
-#: contentcuration/constants/user_history.py:9
-msgid "User soft deletion recovery"
-msgstr ""
-
-#: contentcuration/constants/user_history.py:10
-msgid "User related data hard deletion"
-msgstr ""
 
 #: contentcuration/middleware/db_readonly.py:24
 msgid "The site is currently in read-only mode. Please try again later."
@@ -1006,6 +972,21 @@ msgstr "API endpoint {} no disponible"
 #: kolibri_public/views_v1.py:76
 msgid "No channel matching {} found"
 msgstr "Ningún canal con {} encontrado"
+
+#, fuzzy
+#~| msgid "Created"
+#~ msgid "Creation"
+#~ msgstr "Creado"
+
+#, fuzzy
+#~| msgid "Public Domain"
+#~ msgid "Publication"
+#~ msgstr "Dominio Público"
+
+#, fuzzy
+#~| msgid "Description"
+#~ msgid "Deletion"
+#~ msgstr "Descripción"
 
 #~ msgid "Date/Time Created"
 #~ msgstr "Fecha/Hora creación"

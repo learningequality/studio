@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kolibri-studio\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-05-08 23:08+0000\n"
+"POT-Creation-Date: 2023-05-10 14:17+0000\n"
 "PO-Revision-Date: 2022-10-17 20:08\n"
 "Last-Translator: \n"
 "Language-Team: Arabic\n"
@@ -22,40 +22,6 @@ msgstr ""
 #: contentcuration/settings.py:290
 msgid "Arabic"
 msgstr "العربيّة"
-
-#: contentcuration/constants/channel_history.py:9
-#, fuzzy
-#| msgid "Created"
-msgid "Creation"
-msgstr "تمّ الإنشاء"
-
-#: contentcuration/constants/channel_history.py:10
-#, fuzzy
-#| msgid "Public Domain"
-msgid "Publication"
-msgstr "الملكية العامة"
-
-#: contentcuration/constants/channel_history.py:11
-#, fuzzy
-#| msgid "Description"
-msgid "Deletion"
-msgstr "التّوصيف"
-
-#: contentcuration/constants/channel_history.py:12
-msgid "Deletion recovery"
-msgstr ""
-
-#: contentcuration/constants/user_history.py:8
-msgid "User soft deletion"
-msgstr ""
-
-#: contentcuration/constants/user_history.py:9
-msgid "User soft deletion recovery"
-msgstr ""
-
-#: contentcuration/constants/user_history.py:10
-msgid "User related data hard deletion"
-msgstr ""
 
 #: contentcuration/middleware/db_readonly.py:24
 msgid "The site is currently in read-only mode. Please try again later."
@@ -963,6 +929,21 @@ msgstr "نقطة نهاية Api {} غير متوفرة"
 #: kolibri_public/views_v1.py:76
 msgid "No channel matching {} found"
 msgstr "لم يتم العثور على قناة مطابقة {}"
+
+#, fuzzy
+#~| msgid "Created"
+#~ msgid "Creation"
+#~ msgstr "تمّ الإنشاء"
+
+#, fuzzy
+#~| msgid "Public Domain"
+#~ msgid "Publication"
+#~ msgstr "الملكية العامة"
+
+#, fuzzy
+#~| msgid "Description"
+#~ msgid "Deletion"
+#~ msgstr "التّوصيف"
 
 #~ msgid "Date/Time Created"
 #~ msgstr "تاريخ/وقت الإنشاء"
