@@ -1425,7 +1425,7 @@ export const ContentNode = new TreeResource({
       RELATIVE_TREE_POSITIONS.LAST_CHILD,
       true,
       data => {
-        return this.transaction({ mode: 'rw' }, () => {
+        return this.transaction({ mode: 'rw' }, CHANGES_TABLE, () => {
           const obj = { ...prepared, ...data.payload };
           return this.table.add(obj).then(id => {
             return this._createChange(id, obj).then(() => id);
