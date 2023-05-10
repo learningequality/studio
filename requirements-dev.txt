@@ -212,6 +212,7 @@ pytz==2022.1
     #   django
 pyyaml==6.0
     # via
+    #   -c requirements.txt
     #   aspy-yaml
     #   pre-commit
 pyzmq==23.1.0
@@ -257,8 +258,10 @@ tomli==1.2.3
     #   build
     #   coverage
     #   pep517
-typing-extensions==4.1.1
-    # via locust
+typing-extensions==4.5.0
+    # via
+    #   -c requirements.txt
+    #   locust
 uritemplate==3.0.1
     # via
     #   coreapi
