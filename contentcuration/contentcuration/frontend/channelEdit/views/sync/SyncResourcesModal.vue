@@ -222,12 +222,12 @@
       syncModalTitle: 'Sync resources',
       syncModalExplainer:
         'Syncing resources in Kolibri Studio updates copied or imported resources in this channel with any changes made to the original resource files.',
-      syncModalSelectAttributes: 'Select the resource attributes that you would like to sync:',
+      syncModalSelectAttributes: 'Select what you would like to sync:',
       syncFilesTitle: 'Files',
       syncFilesExplainer: 'Update all files, including: thumbnails, subtitles, and captions',
       syncResourceDetailsTitle: 'Resource details',
       syncResourceDetailsExplainer:
-        'Update information about resources: learning activity, level, requirements, category, tags, audience, and source',
+        'Update information about the resource: learning activity, level, requirements, category, tags, audience, and source',
       syncTitlesAndDescriptionsTitle: 'Titles and descriptions',
       syncTitlesAndDescriptionsExplainer: 'Update resource titles and descriptions',
       syncExercisesTitle: 'Assessment details',
