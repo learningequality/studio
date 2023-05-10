@@ -690,15 +690,15 @@
 
       // Validation strings
       /* eslint-disable kolibri/vue-no-unused-translations */
-      noLearningActivityError: 'Missing learning activity',
-      noCompletionCriteriaError: 'Missing completion criteria',
-      noDurationError: 'Missing duration',
+      noLearningActivityError: 'Learning activity is required',
+      noCompletionCriteriaError: 'Completion criteria are required',
+      noDurationError: 'Duration is required',
       /* eslint-enable kolibri/vue-no-unused-translations */
-      noLicenseError: 'Missing license',
-      noCopyrightHolderError: 'Missing copyright holder',
-      noLicenseDescriptionError: 'Missing license description',
-      noFilesError: 'Missing files',
-      noMasteryModelError: 'Missing mastery criteria',
+      noLicenseError: 'License is required',
+      noCopyrightHolderError: 'Copyright holder is required',
+      noLicenseDescriptionError: 'License description is required',
+      noFilesError: 'File is required',
+      noMasteryModelError: 'Mastery criteria are required',
       noQuestionsError: 'Exercise is empty',
       incompleteQuestionError:
         '{count, plural, one {# incomplete question} other {# incomplete questions}}',
