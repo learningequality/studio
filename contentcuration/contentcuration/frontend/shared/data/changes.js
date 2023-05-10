@@ -6,7 +6,6 @@ import isUndefined from 'lodash/isUndefined';
 import omit from 'lodash/omit';
 import sortBy from 'lodash/sortBy';
 import logging from '../logging';
-import { applyMods } from './applyRemoteChanges';
 import db from 'shared/data/db';
 import { promiseChunk } from 'shared/utils/helpers';
 import {
@@ -291,8 +290,9 @@ export class UpdatedChange extends Change {
     // For now, the aim here is to preserve the same change structure as found in
     // the Dexie Observable updating hook:
     // https://github.com/dexie/Dexie.js/blob/master/addons/Dexie.Observable/src/hooks/updating.js#L15
-    const mods = Dexie.getObjectDiff(oldObj, changes);
     const newObj = Dexie.deepClone(oldObj);
+    Object.assign(newObj, changes);
+    const mods = Dexie.getObjectDiff(oldObj, newObj);
     for (const propPath in mods) {
       const mod = mods[propPath];
       const currentValue = Dexie.getByKeyPath(oldObj, propPath);
@@ -309,7 +309,6 @@ export class UpdatedChange extends Change {
     if (!this.changed) {
       return;
     }
-    applyMods(newObj, mods);
     this.oldObj = oldObj;
     this.obj = newObj;
   }

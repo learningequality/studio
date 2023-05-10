@@ -527,7 +527,9 @@ class IndexedDBResource {
 
   _saveAndQueueChange(change) {
     return change.saveChange().then(rev => {
-      changeRevs.push(rev);
+      if (rev !== null) {
+        changeRevs.push(rev);
+      }
     });
   }
 
@@ -536,7 +538,7 @@ class IndexedDBResource {
       return Promise.resolve();
     }
     if (!oldObj) {
-      oldObj = await this.get(id);
+      oldObj = await this.table.get(id);
     }
     if (!oldObj) {
       return Promise.resolve();
@@ -553,8 +555,10 @@ class IndexedDBResource {
   update(id, changes) {
     return this.transaction({ mode: 'rw' }, CHANGES_TABLE, () => {
       changes = this._cleanNew(changes);
-      return this.table.update(id, changes).then(val => {
-        return this._updateChange(id, changes).then(() => val);
+      // Do the update change first so that we can diff against the
+      // non-updated object.
+      return this._updateChange(id, changes).then(() => {
+        return this.table.update(id, changes);
       });
     });
   }
@@ -639,7 +643,7 @@ class IndexedDBResource {
     if (!this.syncable) {
       return Promise.resolve();
     }
-    return this.get(id).then(oldObj => {
+    return this.table.get(id).then(oldObj => {
       if (!oldObj) {
         return Promise.resolve();
       }
@@ -654,8 +658,9 @@ class IndexedDBResource {
 
   delete(id) {
     return this.transaction({ mode: 'rw' }, CHANGES_TABLE, () => {
-      return this.table.delete(id).then(ret => {
-        return this._deleteChange(id).then(() => ret);
+      // Generate delete change first so that we can look up the existing object
+      return this._deleteChange(id).then(() => {
+        return this.table.delete(id);
       });
     });
   }
@@ -1048,15 +1053,15 @@ export const Channel = new Resource({
     return this.transaction({ mode: 'rw' }, CHANGES_TABLE, () => {
       return this.table.get(id).then(channel => {
         if (Object.keys(content_defaults).length) {
-          if (!channel.content_defaults) {
-            channel.content_defaults = {};
-          }
           const mergedContentDefaults = {};
-          Object.assign(mergedContentDefaults, channel.content_defaults, content_defaults);
+          Object.assign(mergedContentDefaults, channel.content_defaults || {}, content_defaults);
           changes.content_defaults = mergedContentDefaults;
         }
-        return this.table.update(id, changes).then(ret => {
-          return this._updateChange(id, changes, channel).then(() => ret);
+        // Create the update change for consistency with the super update method
+        // although we could do it after as we are explicity passing in
+        // the pre change channel object
+        return this._updateChange(id, changes, channel).then(() => {
+          return this.table.update(id, changes);
         });
       });
     });
