@@ -1,7 +1,6 @@
 import Dexie from 'dexie';
 import * as Sentry from '@sentry/vue';
 import mapValues from 'lodash/mapValues';
-import channel from './broadcastChannel';
 import { CHANGES_TABLE, IGNORED_SOURCE, TABLE_NAMES } from './constants';
 import db from './db';
 import { INDEXEDDB_RESOURCES } from './registry';
@@ -11,8 +10,6 @@ import * as resources from './resources';
 // Re-export for ease of reference.
 export { CHANGE_TYPES, TABLE_NAMES } from './constants';
 export { API_RESOURCES, INDEXEDDB_RESOURCES } from './registry';
-
-const { createLeaderElection } = require('broadcast-channel');
 
 export function setupSchema() {
   if (!Object.keys(resources).length) {
@@ -42,25 +39,6 @@ if (process.env.NODE_ENV !== 'production' && typeof window !== 'undefined') {
   window.resetDB = resetDB;
 }
 
-function runElection() {
-  const elector = createLeaderElection(channel);
-
-  elector.awaitLeadership().then(startSyncing);
-  elector.onduplicate = () => {
-    stopSyncing();
-    elector
-      .die()
-      .then(() => {
-        // manually reset reference to dead elector on the channel
-        // which is set within `createLeaderElection` and whose
-        // presence is also validated against, requiring its removal
-        channel._leaderElector = null;
-        return runElection();
-      })
-      .catch(Sentry.captureException);
-  };
-}
-
 function applyResourceListener(change) {
   const resource = INDEXEDDB_RESOURCES[change.table];
   if (resource && resource.listeners && resource.listeners[change.type]) {
@@ -73,7 +51,16 @@ export async function initializeDB() {
     setupSchema();
     await db.open();
     db.on('changes', changes => changes.map(applyResourceListener));
-    await runElection();
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        stopSyncing();
+      } else {
+        startSyncing();
+      }
+    });
+    if (!document.hidden) {
+      startSyncing();
+    }
   } catch (e) {
     Sentry.captureException(e);
   }
