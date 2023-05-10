@@ -127,7 +127,7 @@
       notableIssues: 'Notable issues',
       issue1: {
         message:
-          "There have been reports where users have observed the disappearance of channel changes they've recently made. The issue seems related to opening multiple tabs of Kolibri Studio and eventually signing out. We advise that you disable any Memory Saver/Sleeping Tabs browser feature for Kolibri Studio, and to refresh each tab before signing out. We're actively investigating this issue. If you run into it, please contact us as soon as possible and let us know as much information as you can remember.",
+          "There have been reports where users have observed the disappearance of changes they've recently made to their channels. The issue seems related to opening multiple tabs of Kolibri Studio, and eventually signing out. We advise that you disable any ‘Memory Saver/Sleeping’ tab browser feature for Kolibri Studio, and reload each tab before signing out. We're actively investigating this issue, so if you run into it, please contact us with as much information as possible.",
         context: 'A user facing description of an issue that has been reported by users.',
       },
       issueLink1: 'Reports of disappearing content',
