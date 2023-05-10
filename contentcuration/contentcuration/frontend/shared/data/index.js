@@ -4,7 +4,7 @@ import mapValues from 'lodash/mapValues';
 import { CHANGES_TABLE, IGNORED_SOURCE, TABLE_NAMES } from './constants';
 import db from './db';
 import { INDEXEDDB_RESOURCES } from './registry';
-import { startSyncing, stopSyncing } from './serverSync';
+import { startSyncing, stopSyncing, syncOnChanges } from './serverSync';
 import * as resources from './resources';
 
 // Re-export for ease of reference.
@@ -61,6 +61,7 @@ export async function initializeDB() {
     if (!document.hidden) {
       startSyncing();
     }
+    syncOnChanges();
   } catch (e) {
     Sentry.captureException(e);
   }

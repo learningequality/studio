@@ -1,3 +1,4 @@
+import Vue from 'vue';
 import findLastIndex from 'lodash/findLastIndex';
 import get from 'lodash/get';
 import pick from 'lodash/pick';
@@ -5,6 +6,7 @@ import orderBy from 'lodash/orderBy';
 import uniq from 'lodash/uniq';
 import logging from '../logging';
 import applyChanges from './applyRemoteChanges';
+import { changeRevs } from './registry';
 import { CHANGE_TYPES, CHANGES_TABLE, IGNORED_SOURCE, MAX_REV_KEY } from './constants';
 import db, { channelScope } from './db';
 import { Channel, Session, Task } from './resources';
@@ -200,8 +202,6 @@ function handleTasks(response) {
 
 const noUserError = 'No user logged in';
 
-const changeRevs = [];
-
 async function syncChanges(syncAllChanges) {
   // Note: we could in theory use Dexie syncable for what
   // we are doing here, but I can't find a good way to make
@@ -354,6 +354,10 @@ if (process.env.NODE_ENV !== 'production' && typeof window !== 'undefined') {
 }
 
 let intervalTimer;
+
+export function syncOnChanges() {
+  Vue.$watch(() => changeRevs.length, debouncedSyncChanges);
+}
 
 export function startSyncing() {
   // Start the sync interval

@@ -30,7 +30,7 @@ import {
 import applyChanges, { applyMods, collectChanges } from './applyRemoteChanges';
 import mergeAllChanges from './mergeChanges';
 import db, { channelScope, CLIENTID, Collection } from './db';
-import { API_RESOURCES, INDEXEDDB_RESOURCES } from './registry';
+import { API_RESOURCES, INDEXEDDB_RESOURCES, changeRevs } from './registry';
 import {
   CreatedChange,
   UpdatedChange,
@@ -525,6 +525,12 @@ class IndexedDBResource {
     return out;
   }
 
+  _saveAndQueueChange(change) {
+    return change.saveChange().then(rev => {
+      changeRevs.push(rev);
+    });
+  }
+
   async _updateChange(id, changes, oldObj = null) {
     if (!this.syncable) {
       return Promise.resolve();
@@ -541,7 +547,7 @@ class IndexedDBResource {
       oldObj,
       changes,
     });
-    return change.saveAndQueueChange();
+    return this._saveAndQueueChange(change);
   }
 
   update(id, changes) {
@@ -599,7 +605,7 @@ class IndexedDBResource {
       table: this.tableName,
       obj,
     });
-    return change.saveAndQueueChange();
+    return this._saveAndQueueChange(change);
   }
 
   /**
@@ -642,7 +648,7 @@ class IndexedDBResource {
         table: this.tableName,
         oldObj,
       });
-      return change.saveAndQueueChange();
+      return this._saveAndQueueChange(change);
     });
   }
 
@@ -1080,7 +1086,7 @@ export const Channel = new Resource({
         TABLE_NAMES.CONTENTNODE,
         () => {
           return Promise.all([
-            change.saveAndQueueChange(),
+            this._saveAndQueueChange(change),
             ContentNode.table.where({ channel_id: id }).modify({
               changed: false,
               published: true,
@@ -1100,7 +1106,7 @@ export const Channel = new Resource({
       table: this.tableName,
     });
     return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, CHANGES_TABLE, () => {
-      return change.saveAndQueueChange();
+      return this._saveAndQueueChange(change);
     });
   },
 
@@ -1147,7 +1153,7 @@ export const Channel = new Resource({
       table: this.tableName,
     });
     return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, CHANGES_TABLE, () => {
-      return change.saveAndQueueChange();
+      return this._saveAndQueueChange(change);
     });
   },
 
@@ -1430,7 +1436,7 @@ export const ContentNode = new TreeResource({
       return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, CHANGES_TABLE, async () => {
         const payload = await this.tableMove(data);
         const change = new MovedChange(data.changeData);
-        await change.saveAndQueueChange();
+        await this._saveAndQueueChange(change);
         return payload;
       });
     });
@@ -1478,7 +1484,7 @@ export const ContentNode = new TreeResource({
       return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, CHANGES_TABLE, async () => {
         const payload = await this.tableCopy(data);
         const change = new CopiedChange(data.changeData);
-        await change.saveAndQueueChange();
+        await this._saveAndQueueChange(change);
         return payload;
       });
     });
