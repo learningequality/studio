@@ -7,6 +7,7 @@ import omit from 'lodash/omit';
 import sortBy from 'lodash/sortBy';
 import logging from '../logging';
 import { applyMods } from './applyRemoteChanges';
+import { queueChange } from './serverSync';
 import db from 'shared/data/db';
 import { promiseChunk } from 'shared/utils/helpers';
 import {
@@ -269,6 +270,11 @@ class Change {
   }
   saveChange() {
     return db[CHANGES_TABLE].add(this);
+  }
+  saveAndQueueChange() {
+    return this.saveChange().then(() => {
+      return queueChange(this);
+    });
   }
 }
 

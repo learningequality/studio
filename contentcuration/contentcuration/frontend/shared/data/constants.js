@@ -82,9 +82,4 @@ export const LAST_FETCHED = '__last_fetch';
 // user object from the session table
 export const CURRENT_USER = 'CURRENT_USER';
 
-// A key in the session table that stores the currently active channels to listen for updates
-export const ACTIVE_CHANNELS = 'ACTIVE_CHANNELS';
-
-export const CHANNEL_SYNC_KEEP_ALIVE_INTERVAL = 300 * 1000;
-
 export const MAX_REV_KEY = 'max_rev';
