@@ -547,6 +547,90 @@ class IncompleteNodeError(Exception):
         super(IncompleteNodeError, self).__init__(self.message)
 
 
+def add_tags(node, node_data):
+    tags = []
+    channel = node.get_channel()
+    if "tags" in node_data:
+        tag_data = node_data["tags"]
+        if tag_data is not None:
+            for tag in tag_data:
+                if len(tag) > 30:
+                    raise ValidationError("tag is greater than 30 characters")
+                else:
+                    tags.append(
+                        ContentTag.objects.get_or_create(tag_name=tag, channel=channel)[0]
+                    )
+
+    if len(tags) > 0:
+        node.tags.add(*tags)
+
+
+def validate_metadata_labels(node_data):
+    metadata_labels = {}
+
+    for label, valid_values in METADATA.items():
+        if label in node_data:
+            if type(node_data[label]) is not list:
+                raise NodeValidationError("{} must pass a list of values".format(label))
+            metadata_labels[label] = {}
+            for value in node_data[label]:
+                if value not in valid_values:
+                    raise NodeValidationError("{} is not a valid value for {}".format(value, label))
+                metadata_labels[label][value] = True
+
+    return metadata_labels
+
+
+def handle_remote_node(user, node_data, parent_node):
+    if node_data["source_channel_id"] is None:
+        raise NodeValidationError("source_channel_id was None")
+    source_channel_id = node_data["source_channel_id"]
+
+    source_node_id = node_data.get("source_node_id")
+
+    source_content_id = node_data.get("source_content_id")
+
+    if not source_node_id and not source_content_id:
+        raise NodeValidationError("Both source_node_id and source_content_id are None")
+
+    try:
+        channel = Channel.filter_view_queryset(Channel.objects.all(), user).get(id=source_channel_id)
+    except Channel.DoesNotExist:
+        raise NodeValidationError("source_channel_id does not exist")
+
+    contentnode = None
+
+    channel_resource_nodes = channel.main_tree.get_descendants().exclude(kind=content_kinds.TOPIC)
+
+    if source_node_id:
+        try:
+            contentnode = channel_resource_nodes.get(node_id=source_node_id)
+        except ContentNode.DoesNotExist:
+            pass
+
+    if contentnode is None and source_content_id:
+        contentnode = channel_resource_nodes.filter(content_id=source_content_id).first()
+
+    if contentnode is None:
+        raise NodeValidationError(
+            "Unable to find node with node_id {} and/or content_id {} from channel {}".format(
+                source_node_id, source_content_id, source_channel_id
+            )
+        )
+
+    metadata_labels = validate_metadata_labels(node_data)
+
+    # Validate any metadata labels then overwrite the source data so that we are
+    # setting validated and appropriate mapped metadata.
+    node_data.update(metadata_labels)
+
+    can_edit_source_channel = ContentNode.filter_edit_queryset(
+        ContentNode.filter_by_pk(pk=contentnode.id), user=user
+    ).exists()
+
+    return contentnode.copy_to(target=parent_node, mods=node_data, can_edit_source_channel=can_edit_source_channel)
+
+
 @delay_user_storage_calculation
 def convert_data_to_nodes(user, content_data, parent_node):
     """ Parse dict and create nodes accordingly """
@@ -561,32 +645,40 @@ def convert_data_to_nodes(user, content_data, parent_node):
             for node_data in content_data:
                 # Check if node id is already in the tree to avoid duplicates
                 if node_data["node_id"] not in existing_node_ids:
-                    # Create the node
-                    new_node = create_node(node_data, parent_node, sort_order)
+                    if "source_channel_id" in node_data:
+                        new_node = handle_remote_node(user, node_data, parent_node)
 
-                    # Create files associated with node
-                    map_files_to_node(user, new_node, node_data["files"])
+                        map_files_to_node(user, new_node, node_data.get("files", []))
 
-                    # Create questions associated exercise nodes
-                    create_exercises(user, new_node, node_data["questions"])
-                    sort_order += 1
+                        add_tags(new_node, node_data)
 
-                    # Create Slideshow slides (if slideshow kind)
-                    if node_data["kind"] == "slideshow":
-                        extra_fields_unicode = node_data["extra_fields"]
+                    else:
+                        # Create the node
+                        new_node = create_node(node_data, parent_node, sort_order)
 
-                        # Extra Fields comes as type<unicode> - convert it to a dict and get slideshow_data
-                        extra_fields_json = extra_fields_unicode.encode(
-                            "ascii", "ignore"
-                        )
-                        extra_fields = json.loads(extra_fields_json)
+                        # Create files associated with node
+                        map_files_to_node(user, new_node, node_data["files"])
 
-                        slides = create_slides(
-                            user, new_node, extra_fields.get("slideshow_data")
-                        )
-                        map_files_to_slideshow_slide_item(
-                            user, new_node, slides, node_data["files"]
-                        )
+                        # Create questions associated exercise nodes
+                        create_exercises(user, new_node, node_data["questions"])
+                        sort_order += 1
+
+                        # Create Slideshow slides (if slideshow kind)
+                        if node_data["kind"] == "slideshow":
+                            extra_fields_unicode = node_data["extra_fields"]
+
+                            # Extra Fields comes as type<unicode> - convert it to a dict and get slideshow_data
+                            extra_fields_json = extra_fields_unicode.encode(
+                                "ascii", "ignore"
+                            )
+                            extra_fields = json.loads(extra_fields_json)
+
+                            slides = create_slides(
+                                user, new_node, extra_fields.get("slideshow_data")
+                            )
+                            map_files_to_slideshow_slide_item(
+                                user, new_node, slides, node_data["files"]
+                            )
 
                     # Wait until after files have been set on the node to check for node completeness
                     # as some node kinds are counted as incomplete if they lack a default file.
@@ -644,17 +736,7 @@ def create_node(node_data, parent_node, sort_order):  # noqa: C901
     license_description = node_data.get('license_description', "")
     copyright_holder = node_data.get('copyright_holder', "")
 
-    metadata_labels = {}
-
-    for label, valid_values in METADATA.items():
-        if label in node_data:
-            if type(node_data[label]) is not list:
-                raise NodeValidationError("{} must pass a list of values".format(label))
-            metadata_labels[label] = {}
-            for value in node_data[label]:
-                if value not in valid_values:
-                    raise NodeValidationError("{} is not a valid value for {}".format(value, label))
-                metadata_labels[label][value] = True
+    metadata_labels = validate_metadata_labels(node_data)
 
     node = ContentNode.objects.create(
         title=title,
@@ -685,21 +767,7 @@ def create_node(node_data, parent_node, sort_order):  # noqa: C901
         **metadata_labels
     )
 
-    tags = []
-    channel = node.get_channel()
-    if "tags" in node_data:
-        tag_data = node_data["tags"]
-        if tag_data is not None:
-            for tag in tag_data:
-                if len(tag) > 30:
-                    raise ValidationError("tag is greater than 30 characters")
-                else:
-                    tags.append(
-                        ContentTag.objects.get_or_create(tag_name=tag, channel=channel)[0]
-                    )
-
-    if len(tags) > 0:
-        node.tags.set(tags)
+    add_tags(node, node_data)
 
     return node
 
