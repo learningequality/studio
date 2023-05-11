@@ -3536,28 +3536,28 @@ ResourcePanel.license,License,"
 ResourcePanel.nextSteps,Next steps,"
 -- CONTEXT --
 ",
-ResourcePanel.noCompletionCriteriaError,Missing completion criteria,"
+ResourcePanel.noCompletionCriteriaError,Completion criteria are required,"
 -- CONTEXT --
 ",
-ResourcePanel.noCopyrightHolderError,Missing copyright holder,"
+ResourcePanel.noCopyrightHolderError,Copyright holder is required,"
 -- CONTEXT --
 ",
-ResourcePanel.noDurationError,Missing duration,"
+ResourcePanel.noDurationError,Duration is required,"
 -- CONTEXT --
 ",
-ResourcePanel.noFilesError,Missing files,"
+ResourcePanel.noFilesError,File is required,"
 -- CONTEXT --
 ",
-ResourcePanel.noLearningActivityError,Missing learning activity,"
+ResourcePanel.noLearningActivityError,Learning activity is required,"
 -- CONTEXT --
 ",
-ResourcePanel.noLicenseDescriptionError,Missing license description,"
+ResourcePanel.noLicenseDescriptionError,License description is required,"
 -- CONTEXT --
 ",
-ResourcePanel.noLicenseError,Missing license,"
+ResourcePanel.noLicenseError,License is required,"
 -- CONTEXT --
 ",
-ResourcePanel.noMasteryModelError,Missing mastery criteria,"
+ResourcePanel.noMasteryModelError,Mastery criteria are required,"
 -- CONTEXT --
 ",
 ResourcePanel.noQuestionsError,Exercise is empty,"
@@ -3911,13 +3911,13 @@ SyncResourcesModal.syncFilesTitle,Files,"
 SyncResourcesModal.syncModalExplainer,Syncing resources in Kolibri Studio updates copied or imported resources in this channel with any changes made to the original resource files.,"
 -- CONTEXT --
 ",
-SyncResourcesModal.syncModalSelectAttributes,Select the resource attributes that you would like to sync:,"
+SyncResourcesModal.syncModalSelectAttributes,Select what you would like to sync:,"
 -- CONTEXT --
 ",
 SyncResourcesModal.syncModalTitle,Sync resources,"
 -- CONTEXT --
 ",
-SyncResourcesModal.syncResourceDetailsExplainer,"Update information about resources: learning activity, level, requirements, category, tags, audience, and source","
+SyncResourcesModal.syncResourceDetailsExplainer,"Update information about the resource: learning activity, level, requirements, category, tags, audience, and source","
 -- CONTEXT --
 ",
 SyncResourcesModal.syncResourceDetailsTitle,Resource details,"
@@ -4353,7 +4353,7 @@ TreeViewBase.incompleteDescendantsText,"{count, number, integer} {count, plural,
 TreeViewBase.noChangesText,No changes found in channel,"
 -- CONTEXT --
 ",
-TreeViewBase.noLanguageSetError,Missing channel language,"
+TreeViewBase.noLanguageSetError,Channel language is required,"
 -- CONTEXT --
 ",
 TreeViewBase.openTrash,Open trash,"
@@ -4438,7 +4438,7 @@ UsingStudio.bestPractices,Best practices,"
 UsingStudio.communityStandardsLink,Community standards,"
 -- CONTEXT --
 ",
-UsingStudio.issue1,"There have been reports where users have observed the disappearance of channel changes they've recently made. The issue seems related to opening multiple tabs of Kolibri Studio and eventually signing out. We advise that you disable any Memory Saver/Sleeping Tabs browser feature for Kolibri Studio, and to refresh each tab before signing out. We're actively investigating this issue. If you run into it, please contact us as soon as possible and let us know as much information as you can remember.","
+UsingStudio.issue1,"There have been reports where users have observed the disappearance of changes they've recently made to their channels. The issue seems related to opening multiple tabs of Kolibri Studio, and eventually signing out. We advise that you disable any ‘Memory Saver/Sleeping’ tab browser feature for Kolibri Studio, and reload each tab before signing out. We're actively investigating this issue, so if you run into it, please contact us with as much information as possible.","
 -- CONTEXT --
 A user facing description of an issue that has been reported by users.",
 UsingStudio.issueLink1,Reports of disappearing content,"
@@ -4460,12 +4460,6 @@ UsingStudio.termsOfServiceLink,Terms of service,"
 -- CONTEXT --
 ",
 UsingStudio.userDocsLink,User guide,"
--- CONTEXT --
-",
-ValidationStrings.context,"An error message displayed when some information required before publishing a channel is missing, for example when a resource has no license set.","
--- CONTEXT --
-",
-ValidationStrings.message,Missing required information,"
 -- CONTEXT --
 ",
 VisibilityDropdown.coach,"Resources are visible only to coaches (teachers, facilitators, administrators)","
