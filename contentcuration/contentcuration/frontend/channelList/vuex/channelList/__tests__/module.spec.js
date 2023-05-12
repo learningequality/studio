@@ -3,7 +3,6 @@ import channelList from '../index';
 import { Channel, Invitation } from 'shared/data/resources';
 import storeFactory from 'shared/vuex/baseStore';
 
-jest.mock('shared/client');
 jest.mock('shared/vuex/connectionPlugin');
 
 const channel_id = '11111111111111111111111111111111';

@@ -126,6 +126,18 @@ export function injectVuexStore(store) {
   vuexStore = store;
 }
 
+function getUserIdFromStore() {
+  if (vuexStore) {
+    return vuexStore.getters.currentUserId;
+  }
+  throw ReferenceError(
+    ```
+  Attempted to get the user_id from the store to set on a change object,
+  but the store has not been injected into the resources.js module using injectVuexStore function
+  ```
+  );
+}
+
 // Custom uuid4 function to match our dashless uuids on the server side
 export function uuid4() {
   return uuidv4().replace(/-/g, '');
@@ -666,23 +678,21 @@ class IndexedDBResource {
   }
 
   /**
-   * Set the channel_id property on a change
-   * object before we put it in the store, if relevant
-   * @param {Object} change
+   * Return the channel_id for a change, given the object
+   * @param {Object} obj
    * @returns {Object}
    */
-  setChannelIdOnChange(change) {
-    return change;
+  getChannelId() {
+    return;
   }
 
   /**
-   * Set the user_id property on a change
-   * object before we put it in the store, if relevant
-   * @param {Object} change
+   * Return the user_id for a change, given the object
+   * @param {Object} obj
    * @returns {Object}
    */
-  setUserIdOnChange(change) {
-    return change;
+  getUserId() {
+    return;
   }
 }
 
@@ -998,6 +1008,14 @@ export const Session = new IndexedDBResource({
       });
     }
   },
+  async clearChannelScope() {
+    if (channelScope.id) {
+      await this.updateSession({
+        [`${MAX_REV_KEY}.${channelScope.id}`]: null,
+      });
+      channelScope.id = null;
+    }
+  },
   async getSession() {
     return this.get(CURRENT_USER);
   },
@@ -1013,11 +1031,7 @@ export const Bookmark = new Resource({
   tableName: TABLE_NAMES.BOOKMARK,
   urlName: 'bookmark',
   idField: 'channel',
-  setUserIdOnChange(change) {
-    if (vuexStore) {
-      change.user_id = vuexStore.getters.currentUserId;
-    }
-  },
+  getUserId: getUserIdFromStore,
 });
 
 export const Channel = new Resource({
@@ -1173,17 +1187,20 @@ export const Channel = new Resource({
       return client.delete(modelUrl);
     });
   },
-  setChannelIdOnChange(change) {
+  getChannelId(obj) {
     // For channels, the appropriate channel_id for a change is just the key
-    change.channel_id = change.key;
+    return obj.id;
   },
 });
 
-function setChannelFromChannelScope(change) {
+function getChannelFromChannelScope() {
   const channel_id = channelScope.id;
   if (channel_id) {
-    change.channel_id = channel_id;
+    return channel_id;
   }
+  throw ReferenceError(
+    'Attempted to get the channel_id from the channelScope object, but it has not been set.'
+  );
 }
 
 export const ContentNodePrerequisite = new IndexedDBResource({
@@ -1192,7 +1209,7 @@ export const ContentNodePrerequisite = new IndexedDBResource({
   idField: '[target_node+prerequisite]',
   uuid: false,
   syncable: true,
-  setChannelIdOnChange: setChannelFromChannelScope,
+  getChannelId: getChannelFromChannelScope,
 });
 
 export const ContentNode = new TreeResource({
@@ -1554,7 +1571,7 @@ export const ContentNode = new TreeResource({
       return node;
     });
   },
-  setChannelIdOnChange: setChannelFromChannelScope,
+  getChannelId: getChannelFromChannelScope,
 
   /**
    * Waits for copying of content nodes to complete for all ids referenced in `ids` array
@@ -1590,11 +1607,7 @@ export const ContentNode = new TreeResource({
 export const ChannelSet = new Resource({
   tableName: TABLE_NAMES.CHANNELSET,
   urlName: 'channelset',
-  setUserIdOnChange(change) {
-    if (vuexStore) {
-      change.user_id = vuexStore.getters.currentUserId;
-    }
-  },
+  getUserId: getUserIdFromStore,
 });
 
 export const Invitation = new Resource({
@@ -1610,11 +1623,11 @@ export const Invitation = new Resource({
       });
     });
   },
-  setChannelIdOnChange(change) {
-    change.channel_id = change.obj.channel;
+  getChannelId(obj) {
+    return obj.channel;
   },
-  setUserIdOnChange(change) {
-    change.user_id = change.obj.invited;
+  getUserId(obj) {
+    return obj.invited;
   },
 });
 
@@ -1642,6 +1655,9 @@ export const User = new Resource({
       return this.table.update(id, { disk_space_used });
     });
   },
+  getUserId(obj) {
+    return obj.id;
+  },
 });
 
 export const EditorM2M = new IndexedDBResource({
@@ -1650,11 +1666,11 @@ export const EditorM2M = new IndexedDBResource({
   idField: '[user+channel]',
   uuid: false,
   syncable: true,
-  setChannelIdOnChange(change) {
-    change.channel_id = change.obj.channel;
+  getChannelId(obj) {
+    return obj.channel;
   },
-  setUserIdOnChange(change) {
-    change.user_id = change.obj.user;
+  getUserId(obj) {
+    return obj.user;
   },
 });
 
@@ -1664,11 +1680,11 @@ export const ViewerM2M = new IndexedDBResource({
   idField: '[user+channel]',
   uuid: false,
   syncable: true,
-  setChannelIdOnChange(change) {
-    change.channel_id = change.obj.channel;
+  getChannelId(obj) {
+    return obj.channel;
   },
-  setUserIdOnChange(change) {
-    change.user_id = change.obj.user;
+  getUserId(obj) {
+    return obj.user;
   },
 });
 
@@ -1814,7 +1830,7 @@ export const AssessmentItem = new Resource({
       });
     });
   },
-  setChannelIdOnChange: setChannelFromChannelScope,
+  getChannelId: getChannelFromChannelScope,
 });
 
 export const File = new Resource({
@@ -1843,7 +1859,7 @@ export const File = new Resource({
         });
       });
   },
-  setChannelIdOnChange: setChannelFromChannelScope,
+  getChannelId: getChannelFromChannelScope,
 });
 
 export const Clipboard = new TreeResource({
@@ -1891,15 +1907,13 @@ export const Clipboard = new TreeResource({
       };
 
       return this.transaction({ mode: 'rw' }, CHANGES_TABLE, () => {
-        return this.table.put(data).then(() => data);
+        return this.table.add(data).then(id => {
+          return this._createChange(id, data).then(() => data);
+        });
       });
     });
   },
-  setUserIdOnChange(change) {
-    if (vuexStore) {
-      change.user_id = vuexStore.getters.currentUserId;
-    }
-  },
+  getUserId: getUserIdFromStore,
 });
 
 export const Task = new IndexedDBResource({

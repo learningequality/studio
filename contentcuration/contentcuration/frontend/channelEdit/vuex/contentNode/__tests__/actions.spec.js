@@ -4,6 +4,7 @@ import assessmentItem from '../../assessmentItem/index';
 import file from 'shared/vuex/file';
 import { ContentNode } from 'shared/data/resources';
 import storeFactory from 'shared/vuex/baseStore';
+import { mockChannelScope, resetMockChannelScope } from 'shared/utils/testing';
 
 jest.mock('../../currentChannel/index');
 
@@ -15,7 +16,8 @@ describe('contentNode actions', () => {
   let store;
   let id;
   const contentNodeDatum = { title: 'test', parent: parentId, lft: 1, tags: {} };
-  beforeEach(() => {
+  beforeEach(async () => {
+    await mockChannelScope('test-123');
     return ContentNode._add(contentNodeDatum).then(newId => {
       id = newId;
       contentNodeDatum.id = newId;
@@ -38,7 +40,8 @@ describe('contentNode actions', () => {
       });
     });
   });
-  afterEach(() => {
+  afterEach(async () => {
+    await resetMockChannelScope();
     jest.restoreAllMocks();
     return ContentNode.table.toCollection().delete();
   });

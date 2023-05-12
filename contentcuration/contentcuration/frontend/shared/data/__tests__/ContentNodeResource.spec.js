@@ -1,6 +1,7 @@
 import sortBy from 'lodash/sortBy';
 import shuffle from 'lodash/shuffle';
 import find from 'lodash/find';
+import { Store } from 'vuex';
 import {
   RELATIVE_TREE_POSITIONS,
   COPYING_FLAG,
@@ -15,6 +16,7 @@ import {
   ContentNodePrerequisite,
   TreeResource,
   uuid4,
+  injectVuexStore,
 } from 'shared/data/resources';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
@@ -323,16 +325,13 @@ describe('ContentNode methods', () => {
             lft: 1,
             changed: true,
           },
-          change: {
+          changeData: {
             key: 'abc123',
             from_key: null,
             target: parent.id,
             position: RELATIVE_TREE_POSITIONS.LAST_CHILD,
             oldObj: node,
-            source: CLIENTID,
             table: 'contentnode',
-            type: CHANGE_TYPES.MOVED,
-            channel_id: parent.channel_id,
           },
         });
       });
@@ -359,16 +358,13 @@ describe('ContentNode methods', () => {
             lft: 1,
             changed: true,
           },
-          change: {
+          changeData: {
             key: 'abc123',
             from_key: null,
             target: parent.id,
             position: RELATIVE_TREE_POSITIONS.LAST_CHILD,
             oldObj: node,
-            source: CLIENTID,
             table: 'contentnode',
-            type: CHANGE_TYPES.MOVED,
-            channel_id: node.channel_id,
           },
         });
       });
@@ -399,15 +395,13 @@ describe('ContentNode methods', () => {
             lft,
             changed: true,
           },
-          change: {
+          changeData: {
             key: 'abc123',
             from_key: null,
             target: 'target',
             position: 'position',
             oldObj: node,
-            source: CLIENTID,
             table: 'contentnode',
-            type: CHANGE_TYPES.MOVED,
           },
         });
       });
@@ -426,22 +420,6 @@ describe('ContentNode methods', () => {
         expect(get).toHaveBeenCalledWith('abc123', false);
         expect(where).toHaveBeenCalledWith({ parent: parent.id }, false);
         expect(getNewSortOrder).toHaveBeenCalledWith('abc123', 'target', 'position', siblings);
-        expect(cb).not.toBeCalled();
-      });
-
-      it('should reject if null channel_id', async () => {
-        const cb = jest.fn(() => Promise.resolve('results'));
-        parent.channel_id = null;
-        node.channel_id = null;
-
-        await expect(
-          ContentNode.resolveTreeInsert('abc123', 'target', 'position', false, cb)
-        ).rejects.toThrow('Missing channel_id for tree insertion change event');
-        expect(resolveParent).toHaveBeenCalledWith('target', 'position');
-        expect(treeLock).toHaveBeenCalledWith(parent.root_id, expect.any(Function));
-        expect(get).toHaveBeenCalledWith('abc123', false);
-        expect(where).toHaveBeenCalledWith({ parent: parent.id }, false);
-        expect(getNewSortOrder).not.toBeCalled();
         expect(cb).not.toBeCalled();
       });
     });
@@ -468,18 +446,16 @@ describe('ContentNode methods', () => {
             lft: 1,
             changed: true,
           },
-          change: {
+          changeData: {
             key: expect.not.stringMatching('abc123'),
             from_key: 'abc123',
             target: parent.id,
             position: RELATIVE_TREE_POSITIONS.LAST_CHILD,
             oldObj: null,
-            source: CLIENTID,
             table: 'contentnode',
-            type: CHANGE_TYPES.COPIED,
           },
         });
-        expect(result.payload.id).toEqual(result.change.key);
+        expect(result.payload.id).toEqual(result.changeData.key);
       });
 
       it('should determine lft from siblings', async () => {
@@ -507,18 +483,16 @@ describe('ContentNode methods', () => {
             lft,
             changed: true,
           },
-          change: {
+          changeData: {
             key: expect.not.stringMatching('abc123'),
             from_key: 'abc123',
             target: 'target',
             position: 'position',
             oldObj: null,
-            source: CLIENTID,
             table: 'contentnode',
-            type: CHANGE_TYPES.COPIED,
           },
         });
-        expect(result.payload.id).toEqual(result.change.key);
+        expect(result.payload.id).toEqual(result.changeData.key);
       });
 
       it('should reject if null lft', async () => {
@@ -615,7 +589,7 @@ describe('ContentNode methods', () => {
     let node,
       parent,
       payload,
-      change,
+      // change,
       table = {};
 
     beforeEach(() => {
@@ -641,16 +615,14 @@ describe('ContentNode methods', () => {
         node_id: uuid4(),
       };
       payload = { id: uuid4(), parent: parent.id, changed: true, lft: 1 };
-      change = {
-        key: payload.id,
-        from_key: node.id,
-        target: parent.id,
-        position: RELATIVE_TREE_POSITIONS.LAST_CHILD,
-        oldObj: null,
-        source: CLIENTID,
-        table: 'contentnode',
-        type: CHANGE_TYPES.COPIED,
-      };
+      // change = {
+      //   key: payload.id,
+      //   from_key: node.id,
+      //   target: parent.id,
+      //   position: RELATIVE_TREE_POSITIONS.LAST_CHILD,
+      //   oldObj: null,
+      //   table: 'contentnode',
+      // };
 
       mockProperty('table', table);
     });
@@ -673,11 +645,12 @@ describe('ContentNode methods', () => {
         [COPYING_FLAG]: true,
         [TASK_ID]: null,
       };
-      await expect(ContentNode.tableCopy({ node, parent, payload, change })).resolves.toMatchObject(
+      await expect(ContentNode.tableCopy({ node, parent, payload })).resolves.toMatchObject(
         expectedPayload
       );
       expect(table.put).toHaveBeenCalledWith(expectedPayload);
       // TODO: Fails
+      // I think because the change is only saved in the `copy` method not the tableCopy method?
       // await expect(db[CHANGES_TABLE].get({ '[table+key]': [ContentNode.tableName, node.id] }))
       //   .resolves.toMatchObject(change);
     });
@@ -756,11 +729,12 @@ describe('Clipboard methods', () => {
   });
 
   describe('copy method', () => {
-    let node_id, channel_id, clipboardRootId, node, siblings, where, getByNodeIdChannelId;
+    let node_id, channel_id, clipboardRootId, node, siblings, where, getByNodeIdChannelId, user_id;
     beforeEach(() => {
       node_id = uuid4();
       channel_id = uuid4();
       clipboardRootId = uuid4();
+      user_id = uuid4();
       node = {
         id: node_id,
         kind: ContentKindsNames.DOCUMENT,
@@ -771,6 +745,18 @@ describe('Clipboard methods', () => {
         .spyOn(ContentNode, 'getByNodeIdChannelId')
         .mockImplementation(() => Promise.resolve(node));
       mocks.push(getByNodeIdChannelId);
+      const store = new Store({
+        getters: {
+          currentUserId() {
+            return user_id;
+          },
+        },
+      });
+      injectVuexStore(store);
+    });
+
+    afterEach(() => {
+      injectVuexStore();
     });
 
     it('should create a bare copy of the node', async () => {
@@ -854,7 +840,7 @@ describe('ContentNodePrerequisite methods', () => {
     });
     it('should return all associated requisites, even when there is a cyclic dependency', () => {
       const cyclic = { target_node: 'id-chemistry', prerequisite: 'id-lab' };
-      return ContentNodePrerequisite.add(cyclic).then(() => {
+      return ContentNodePrerequisite.table.add(cyclic).then(() => {
         return ContentNode.getRequisites('id-integrals').then(entries => {
           expect(sortBy(entries, 'target_node')).toEqual(
             sortBy(mappings.concat([cyclic]), 'target_node')

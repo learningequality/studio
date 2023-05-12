@@ -12,6 +12,7 @@ import {
   CHANGES_TABLE,
   CHANGE_TYPES,
   CHANGE_TYPES_LOOKUP,
+  TABLE_NAMES,
   TABLE_NAMES_LOOKUP,
   IGNORED_SOURCE,
   RELATIVE_TREE_POSITIONS,
@@ -210,20 +211,33 @@ class Change {
     this.setAndValidateNotUndefined(key, 'key');
     this.setAndValidateLookup(table, 'table', TABLE_NAMES_LOOKUP);
     if (!INDEXEDDB_RESOURCES[this.table].syncable) {
-      const error = ReferenceError(`${this.table} is not a syncable table`);
+      const error = new ReferenceError(`${this.table} is not a syncable table`);
       logging.error(error);
       throw error;
     }
-    INDEXEDDB_RESOURCES[this.table].setChannelIdOnChange(this);
-    INDEXEDDB_RESOURCES[this.table].setUserIdOnChange(this);
   }
   get changeType() {
     return this.constructor.name;
   }
 
+  get channelOrUserIdSet() {
+    return !isUndefined(this.channel_id) || !isUndefined(this.user_id);
+  }
+
+  setChannelAndUserId(obj) {
+    const channel_id = INDEXEDDB_RESOURCES[this.table].getChannelId(obj);
+    if (channel_id) {
+      this.channel_id = channel_id;
+    }
+    const user_id = INDEXEDDB_RESOURCES[this.table].getUserId(obj);
+    if (user_id) {
+      this.user_id = user_id;
+    }
+  }
+
   setAndValidateLookup(value, name, lookup) {
     if (!lookup[value]) {
-      const error = ReferenceError(`${value} is not a valid ${name} value`);
+      const error = new ReferenceError(`${value} is not a valid ${name} value`);
       logging.error(error, value);
       throw error;
     }
@@ -231,7 +245,9 @@ class Change {
   }
   setAndValidateNotUndefined(value, name) {
     if (isUndefined(value)) {
-      const error = TypeError(`${name} is required for a ${this.changeType} but it was undefined`);
+      const error = new TypeError(
+        `${name} is required for a ${this.changeType} but it was undefined`
+      );
       logging.error(error, value);
       throw error;
     }
@@ -239,7 +255,7 @@ class Change {
   }
   validateObj(value, name) {
     if (!isPlainObject(value)) {
-      const error = TypeError(`${name} should be an object, but ${value} was passed instead`);
+      const error = new TypeError(`${name} should be an object, but ${value} was passed instead`);
       logging.error(error, value);
       throw error;
     }
@@ -250,7 +266,7 @@ class Change {
   }
   setAndValidateBoolean(value, name) {
     if (typeof value !== 'boolean') {
-      const error = TypeError(`${name} should be a boolean, but ${value} was passed instead`);
+      const error = new TypeError(`${name} should be a boolean, but ${value} was passed instead`);
       logging.error(error, value);
       throw error;
     }
@@ -258,7 +274,7 @@ class Change {
   }
   setAndValidateObjOrNull(value, name, mapper = obj => obj) {
     if (!isPlainObject(value) && !isNull(value)) {
-      const error = TypeError(
+      const error = new TypeError(
         `${name} should be an object or null, but ${value} was passed instead`
       );
       logging.error(error, value);
@@ -267,6 +283,11 @@ class Change {
     this[name] = mapper(value);
   }
   saveChange() {
+    if (!this.channelOrUserIdSet) {
+      throw new ReferenceError(
+        `Attempted to save ${this.changeType} change for ${this.table} before setting channel_id and user_id`
+      );
+    }
     return db[CHANGES_TABLE].add(this);
   }
 }
@@ -276,6 +297,7 @@ export class CreatedChange extends Change {
     fields.type = CHANGE_TYPES.CREATED;
     super(fields);
     this.setAndValidateObj(obj, 'obj', omitIgnoredSubFields);
+    this.setChannelAndUserId(obj);
   }
 }
 
@@ -311,6 +333,7 @@ export class UpdatedChange extends Change {
     }
     this.oldObj = oldObj;
     this.obj = newObj;
+    this.setChannelAndUserId(oldObj);
   }
   get changed() {
     return !isEmpty(this.mods);
@@ -328,6 +351,7 @@ export class DeletedChange extends Change {
     fields.type = CHANGE_TYPES.DELETED;
     super(fields);
     this.setAndValidateObj(oldObj, 'oldObj', omitIgnoredSubFields);
+    this.setChannelAndUserId(oldObj);
   }
 }
 
@@ -335,9 +359,15 @@ export class MovedChange extends Change {
   constructor({ target, position, parent, ...fields }) {
     fields.type = CHANGE_TYPES.MOVED;
     super(fields);
+    if (this.table !== TABLE_NAMES.CONTENTNODE) {
+      throw TypeError(
+        `${this.changeType} is only supported by ${TABLE_NAMES.CONTENTNODE} table but ${this.table} was passed instead`
+      );
+    }
     this.setAndValidateNotUndefined(target, 'target');
     this.setAndValidateLookup(position, 'position', RELATIVE_TREE_POSITIONS_LOOKUP);
     this.setAndValidateNotUndefined(parent, 'parent');
+    this.setChannelAndUserId();
   }
 }
 
@@ -345,12 +375,18 @@ export class CopiedChange extends Change {
   constructor({ from_key, mods, target, position, excluded_descendants, parent, ...fields }) {
     fields.type = CHANGE_TYPES.COPIED;
     super(fields);
+    if (this.table !== TABLE_NAMES.CONTENTNODE) {
+      throw TypeError(
+        `${this.changeType} is only supported by ${TABLE_NAMES.CONTENTNODE} table but ${this.table} was passed instead`
+      );
+    }
     this.setAndValidateNotUndefined(from_key, 'from_key');
     this.setAndValidateObj(mods, 'mods', omitIgnoredSubFields);
     this.setAndValidateNotUndefined(target, 'target');
     this.setAndValidateLookup(position, 'position', RELATIVE_TREE_POSITIONS_LOOKUP);
     this.setAndValidateObjOrNull(excluded_descendants, 'excluded_descendants');
     this.setAndValidateNotUndefined(parent, 'parent');
+    this.setChannelAndUserId();
   }
 }
 
@@ -358,8 +394,14 @@ export class PublishedChange extends Change {
   constructor({ version_notes, language, ...fields }) {
     fields.type = CHANGE_TYPES.PUBLISHED;
     super(fields);
+    if (this.table !== TABLE_NAMES.CHANNEL) {
+      throw TypeError(
+        `${this.changeType} is only supported by ${TABLE_NAMES.CHANNEL} table but ${this.table} was passed instead`
+      );
+    }
     this.setAndValidateNotUndefined(version_notes, 'version_notes');
     this.setAndValidateNotUndefined(language, 'language');
+    this.setChannelAndUserId({ id: this.key });
   }
 }
 
@@ -367,10 +409,16 @@ export class SyncedChange extends Change {
   constructor({ titles_and_descriptions, resource_details, files, assessment_items, ...fields }) {
     fields.type = CHANGE_TYPES.SYNCED;
     super(fields);
+    if (this.table !== TABLE_NAMES.CHANNEL) {
+      throw TypeError(
+        `${this.changeType} is only supported by ${TABLE_NAMES.CHANNEL} table but ${this.table} was passed instead`
+      );
+    }
     this.setAndValidateBoolean(titles_and_descriptions, 'titles_and_descriptions');
     this.setAndValidateBoolean(resource_details, 'resource_details');
     this.setAndValidateBoolean(files, 'files');
     this.setAndValidateBoolean(assessment_items, 'assessment_items');
+    this.setChannelAndUserId({ id: this.key });
   }
 }
 
@@ -378,5 +426,11 @@ export class DeployedChange extends Change {
   constructor(fields) {
     fields.type = CHANGE_TYPES.DEPLOYED;
     super(fields);
+    if (this.table !== TABLE_NAMES.CHANNEL) {
+      throw TypeError(
+        `${this.changeType} is only supported by ${TABLE_NAMES.CHANNEL} table but ${this.table} was passed instead`
+      );
+    }
+    this.setChannelAndUserId({ id: this.key });
   }
 }

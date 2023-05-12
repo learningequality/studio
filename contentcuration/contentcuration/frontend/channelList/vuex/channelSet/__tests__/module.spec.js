@@ -1,5 +1,5 @@
 import channelSet from '../index';
-import { ChannelSet } from 'shared/data/resources';
+import { ChannelSet, injectVuexStore } from 'shared/data/resources';
 import storeFactory from 'shared/vuex/baseStore';
 
 jest.mock('shared/vuex/connectionPlugin');
@@ -14,17 +14,19 @@ describe('channelSet actions', () => {
     edit: true,
   };
   beforeEach(() => {
+    store = storeFactory({
+      modules: {
+        channelSet,
+      },
+    });
+    store.state.session.currentUser.id = userId;
+    injectVuexStore(store);
     return ChannelSet.add(channelSetDatum).then(newId => {
       id = newId;
-      store = storeFactory({
-        modules: {
-          channelSet,
-        },
-      });
-      store.state.session.currentUser.id = userId;
     });
   });
   afterEach(() => {
+    injectVuexStore();
     return ChannelSet.table.toCollection().delete();
   });
   describe('loadChannelSetList action', () => {

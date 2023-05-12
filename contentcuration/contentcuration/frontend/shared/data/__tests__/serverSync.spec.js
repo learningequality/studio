@@ -4,6 +4,7 @@ import db from '../db';
 import { Session, Task } from 'shared/data/resources';
 import client from 'shared/client';
 import { CHANGES_TABLE, CURRENT_USER, TABLE_NAMES } from 'shared/data/constants';
+import { mockChannelScope, resetMockChannelScope } from 'shared/utils/testing';
 
 async function makeChange(key, server_rev) {
   const rev = await new CreatedChange({
@@ -21,6 +22,11 @@ describe('Debounce behaviour', () => {
   beforeEach(async () => {
     await Session.table.put({ id: 0, CURRENT_USER });
     client.post.mockReset();
+    await mockChannelScope('test-123');
+  });
+
+  afterEach(async () => {
+    await resetMockChannelScope();
   });
 
   it('should debounce sync changes', async () => {
@@ -44,9 +50,11 @@ describe('ServerSync tests', () => {
   beforeEach(async () => {
     await Session.table.put({ id: 0, CURRENT_USER });
     client.post.mockReset();
+    await mockChannelScope('test-123');
   });
 
   afterEach(async () => {
+    await resetMockChannelScope();
     await db[CHANGES_TABLE].clear();
   });
 

@@ -18,10 +18,17 @@ import {
   TASK_ID,
 } from 'shared/data/constants';
 import db from 'shared/data/db';
+import { mockChannelScope, resetMockChannelScope } from 'shared/utils/testing';
 
 describe('Change Types', () => {
-  beforeEach(() => {
-    db[CHANGES_TABLE].clear();
+  const channel_id = 'test-123';
+  beforeEach(async () => {
+    await db[CHANGES_TABLE].clear();
+    await mockChannelScope(channel_id);
+  });
+
+  afterEach(async () => {
+    await resetMockChannelScope();
   });
 
   it('should persist only the specified fields in the CreatedChange', async () => {
@@ -32,7 +39,11 @@ describe('Change Types', () => {
     });
     const rev = await change.saveChange();
     const persistedChange = await db[CHANGES_TABLE].get(rev);
-    expect(persistedChange).toEqual({ rev, ...pick(change, ['type', 'key', 'table', 'obj']) });
+    expect(persistedChange).toEqual({
+      channel_id,
+      rev,
+      ...pick(change, ['type', 'key', 'table', 'obj']),
+    });
   });
 
   it('should persist only the specified fields in the UpdatedChange', async () => {
@@ -46,6 +57,7 @@ describe('Change Types', () => {
       obj: changes,
       mods: { b: 3 },
       rev,
+      channel_id,
       ...pick(change, ['type', 'key', 'table']),
     });
   });
@@ -61,6 +73,7 @@ describe('Change Types', () => {
       obj: changes,
       mods: { 'b.c': 2 },
       rev,
+      channel_id,
       ...pick(change, ['type', 'key', 'table']),
     });
   });
@@ -76,6 +89,7 @@ describe('Change Types', () => {
       obj: changes,
       mods: { 'b.c': null },
       rev,
+      channel_id,
       ...pick(change, ['type', 'key', 'table']),
     });
   });
@@ -97,6 +111,7 @@ describe('Change Types', () => {
       obj: { a: 1, b: 3 },
       mods: { b: 3 },
       rev,
+      channel_id,
       ...pick(change, ['type', 'key', 'table']),
     });
   });
@@ -123,7 +138,11 @@ describe('Change Types', () => {
     });
     const rev = await change.saveChange();
     const persistedChange = await db[CHANGES_TABLE].get(rev);
-    expect(persistedChange).toEqual({ rev, ...pick(change, ['type', 'key', 'table', 'oldObj']) });
+    expect(persistedChange).toEqual({
+      channel_id,
+      rev,
+      ...pick(change, ['type', 'key', 'table', 'oldObj']),
+    });
   });
 
   it('should persist only the specified fields in the MovedChange', async () => {
@@ -138,6 +157,7 @@ describe('Change Types', () => {
     const persistedChange = await db[CHANGES_TABLE].get(rev);
     expect(persistedChange).toEqual({
       rev,
+      channel_id,
       ...pick(change, ['type', 'key', 'table', 'target', 'position', 'parent']),
     });
   });
@@ -157,6 +177,7 @@ describe('Change Types', () => {
     const persistedChange = await db[CHANGES_TABLE].get(rev);
     expect(persistedChange).toEqual({
       rev,
+      channel_id,
       ...pick(change, [
         'type',
         'key',
@@ -174,7 +195,7 @@ describe('Change Types', () => {
   it('should persist only the specified fields in the PublishedChange', async () => {
     const change = new PublishedChange({
       key: '1',
-      table: TABLE_NAMES.CONTENTNODE,
+      table: TABLE_NAMES.CHANNEL,
       version_notes: 'Some version notes',
       language: 'en',
     });
@@ -182,6 +203,7 @@ describe('Change Types', () => {
     const persistedChange = await db[CHANGES_TABLE].get(rev);
     expect(persistedChange).toEqual({
       rev,
+      channel_id: change.key,
       ...pick(change, ['type', 'key', 'table', 'version_notes', 'language']),
     });
   });
@@ -189,7 +211,7 @@ describe('Change Types', () => {
   it('should persist only the specified fields in the SyncedChange', async () => {
     const change = new SyncedChange({
       key: '1',
-      table: TABLE_NAMES.CONTENTNODE,
+      table: TABLE_NAMES.CHANNEL,
       titles_and_descriptions: true,
       resource_details: false,
       files: true,
@@ -199,6 +221,7 @@ describe('Change Types', () => {
     const persistedChange = await db[CHANGES_TABLE].get(rev);
     expect(persistedChange).toEqual({
       rev,
+      channel_id: change.key,
       ...pick(change, [
         'type',
         'key',
@@ -212,10 +235,14 @@ describe('Change Types', () => {
   });
 
   it('should persist only the specified fields in the DeployedChange', async () => {
-    const change = new DeployedChange({ key: '1', table: TABLE_NAMES.CONTENTNODE });
+    const change = new DeployedChange({ key: '1', table: TABLE_NAMES.CHANNEL });
     const rev = await change.saveChange();
     const persistedChange = await db[CHANGES_TABLE].get(rev);
-    expect(persistedChange).toEqual({ rev, ...pick(change, ['type', 'key', 'table']) });
+    expect(persistedChange).toEqual({
+      rev,
+      channel_id: change.key,
+      ...pick(change, ['type', 'key', 'table']),
+    });
   });
 });
 
@@ -400,7 +427,7 @@ describe('Change Types Unhappy Paths', () => {
 
   // PublishedChange
   it('should throw error when PublishedChange is instantiated without version_notes', () => {
-    expect(() => new PublishedChange({ key: '1', table: TABLE_NAMES.CONTENTNODE })).toThrow(
+    expect(() => new PublishedChange({ key: '1', table: TABLE_NAMES.CHANNEL })).toThrow(
       new TypeError('version_notes is required for a PublishedChange but it was undefined')
     );
   });
@@ -410,7 +437,7 @@ describe('Change Types Unhappy Paths', () => {
       () =>
         new PublishedChange({
           key: '1',
-          table: TABLE_NAMES.CONTENTNODE,
+          table: TABLE_NAMES.CHANNEL,
           version_notes: 'Some notes',
         })
     ).toThrow(new TypeError('language is required for a PublishedChange but it was undefined'));
@@ -418,7 +445,7 @@ describe('Change Types Unhappy Paths', () => {
 
   // SyncedChange
   it('should throw error when SyncedChange is instantiated without titles_and_descriptions', () => {
-    expect(() => new SyncedChange({ key: '1', table: TABLE_NAMES.CONTENTNODE })).toThrow(
+    expect(() => new SyncedChange({ key: '1', table: TABLE_NAMES.CHANNEL })).toThrow(
       new TypeError('titles_and_descriptions should be a boolean, but undefined was passed instead')
     );
   });
@@ -428,7 +455,7 @@ describe('Change Types Unhappy Paths', () => {
       () =>
         new SyncedChange({
           key: '1',
-          table: TABLE_NAMES.CONTENTNODE,
+          table: TABLE_NAMES.CHANNEL,
           titles_and_descriptions: 'invalid',
         })
     ).toThrow(
@@ -441,7 +468,7 @@ describe('Change Types Unhappy Paths', () => {
       () =>
         new SyncedChange({
           key: '1',
-          table: TABLE_NAMES.CONTENTNODE,
+          table: TABLE_NAMES.CHANNEL,
           titles_and_descriptions: true,
           resource_details: 'invalid',
         })
@@ -455,7 +482,7 @@ describe('Change Types Unhappy Paths', () => {
       () =>
         new SyncedChange({
           key: '1',
-          table: TABLE_NAMES.CONTENTNODE,
+          table: TABLE_NAMES.CHANNEL,
           titles_and_descriptions: true,
           resource_details: false,
           files: 'invalid',
@@ -468,7 +495,7 @@ describe('Change Types Unhappy Paths', () => {
       () =>
         new SyncedChange({
           key: '1',
-          table: TABLE_NAMES.CONTENTNODE,
+          table: TABLE_NAMES.CHANNEL,
           titles_and_descriptions: true,
           resource_details: false,
           files: true,
@@ -481,7 +508,7 @@ describe('Change Types Unhappy Paths', () => {
 
   // DeployedChange
   it('should throw error when DeployedChange is instantiated without key', () => {
-    expect(() => new DeployedChange({ table: TABLE_NAMES.CONTENTNODE })).toThrow(
+    expect(() => new DeployedChange({ table: TABLE_NAMES.CHANNEL })).toThrow(
       new TypeError('key is required for a DeployedChange but it was undefined')
     );
   });
