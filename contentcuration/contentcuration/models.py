@@ -2060,6 +2060,12 @@ class Language(models.Model):
         return self.ietf_name()
 
 
+class GeneratedCaptions(models.Model):
+    id = models.AutoField(primary_key=True)
+    generated_captions = models.JSONField()
+    language = models.CharField(max_length=10)
+    
+
 ASSESSMENT_ID_INDEX_NAME = "assessment_id_idx"
 
 
