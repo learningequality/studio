@@ -32,6 +32,7 @@ import contentcuration.views.users as registration_views
 import contentcuration.views.zip as zip_views
 from contentcuration.views import pwa
 from contentcuration.viewsets.assessmentitem import AssessmentItemViewSet
+from contentcuration.viewsets.captions import CaptionViewSet
 from contentcuration.viewsets.bookmark import BookmarkViewSet
 from contentcuration.viewsets.channel import AdminChannelViewSet
 from contentcuration.viewsets.channel import CatalogViewSet
@@ -55,6 +56,7 @@ class StagingPageRedirectView(RedirectView):
 
 router = routers.DefaultRouter(trailing_slash=False)
 router.register(r'bookmark', BookmarkViewSet, basename="bookmark")
+router.register(r'captions', CaptionViewSet)
 router.register(r'channel', ChannelViewSet)
 router.register(r'channelset', ChannelSetViewSet)
 router.register(r'catalog', CatalogViewSet, basename='catalog')
