@@ -5,7 +5,11 @@ from search.viewsets.savedsearch import SavedSearchViewSet
 from contentcuration.decorators import delay_user_storage_calculation
 from contentcuration.viewsets.assessmentitem import AssessmentItemViewSet
 from contentcuration.viewsets.bookmark import BookmarkViewSet
+<<<<<<< HEAD
 from contentcuration.viewsets.caption import CaptionViewSet, CaptionCueViewSet
+=======
+from contentcuration.viewsets.captions import CaptionViewSet
+>>>>>>> 0e3345989 (created captionviewset)
 from contentcuration.viewsets.channel import ChannelViewSet
 from contentcuration.viewsets.channelset import ChannelSetViewSet
 from contentcuration.viewsets.clipboard import ClipboardViewSet
@@ -15,8 +19,12 @@ from contentcuration.viewsets.file import FileViewSet
 from contentcuration.viewsets.invitation import InvitationViewSet
 from contentcuration.viewsets.sync.constants import ASSESSMENTITEM
 from contentcuration.viewsets.sync.constants import BOOKMARK
+<<<<<<< HEAD
 from contentcuration.viewsets.sync.constants import CAPTION_CUES
 from contentcuration.viewsets.sync.constants import CAPTION_FILE
+=======
+from contentcuration.viewsets.sync.constants import CAPTION
+>>>>>>> 0e3345989 (created captionviewset)
 from contentcuration.viewsets.sync.constants import CHANNEL
 from contentcuration.viewsets.sync.constants import CHANNELSET
 from contentcuration.viewsets.sync.constants import CLIPBOARD
