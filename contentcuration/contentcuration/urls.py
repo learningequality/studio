@@ -32,6 +32,7 @@ import contentcuration.views.users as registration_views
 import contentcuration.views.zip as zip_views
 from contentcuration.views import pwa
 from contentcuration.viewsets.assessmentitem import AssessmentItemViewSet
+from contentcuration.viewsets.captions import CaptionViewSet
 from contentcuration.viewsets.bookmark import BookmarkViewSet
 from contentcuration.viewsets.caption import CaptionViewSet, CaptionCueViewSet
 from contentcuration.viewsets.channel import AdminChannelViewSet
