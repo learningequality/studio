@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: kolibri-studio\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2023-05-10 21:55+0000\n"
-"PO-Revision-Date: 2022-10-17 20:08\n"
+"PO-Revision-Date: 2023-05-24 17:17\n"
 "Last-Translator: \n"
 "Language-Team: Hindi\n"
 "Language: hi_IN\n"
@@ -57,13 +57,10 @@ msgstr ""
 #: contentcuration/templates/base.html:38
 #: contentcuration/templates/channel_list.html:14
 msgid "Kolibri Studio"
-msgstr ""
+msgstr "Kolibri स्टूडियो"
 
 #: contentcuration/templates/base.html:129
-msgid ""
-"Contentworkshop.learningequality.org has been deprecated. Please go to <a "
-"href=\"https://studio.learningequality.org\">studio.learningequality.org</a> "
-"for the latest version of Studio"
+msgid "Contentworkshop.learningequality.org has been deprecated. Please go to <a href=\"https://studio.learningequality.org\">studio.learningequality.org</a> for the latest version of Studio"
 msgstr ""
 
 #: contentcuration/templates/channel_list.html:13
@@ -100,7 +97,7 @@ msgstr ""
 
 #: contentcuration/templates/export/user_csv_email.txt:8
 msgid "Name:"
-msgstr ""
+msgstr "नाम:"
 
 #: contentcuration/templates/export/user_csv_email.txt:9
 #: contentcuration/templates/registration/password_reset_form.html:23
@@ -132,15 +129,12 @@ msgid "Channels you have view access to: "
 msgstr ""
 
 #: contentcuration/templates/export/user_csv_email.txt:23
-msgid ""
-"Information about the resources you have uploaded has been attached as a CSV "
-"file."
+msgid "Information about the resources you have uploaded has been attached as a CSV file."
 msgstr ""
 
 #: contentcuration/templates/export/user_csv_email.txt:26
 #, python-format
-msgid ""
-"If you have any questions or concerns, please email us at %(legal_email)s."
+msgid "If you have any questions or concerns, please email us at %(legal_email)s."
 msgstr ""
 
 #: contentcuration/templates/export/user_csv_email.txt:29
@@ -192,8 +186,7 @@ msgid "Invititation to %(share_mode)s channel"
 msgstr ""
 
 #: contentcuration/templates/permissions/permissions_email.html:103
-msgid ""
-"Click one of the following links to either accept or decline your invitation:"
+msgid "Click one of the following links to either accept or decline your invitation:"
 msgstr ""
 
 #: contentcuration/templates/permissions/permissions_email.html:106
@@ -226,9 +219,7 @@ msgid "Please sign in to Kolibri Studio to accept or decline your invitation:"
 msgstr ""
 
 #: contentcuration/templates/permissions/permissions_email.txt:16
-msgid ""
-"Please follow this link to create an account (you must be signed in to "
-"accept or decline invitations):"
+msgid "Please follow this link to create an account (you must be signed in to accept or decline invitations):"
 msgstr ""
 
 #: contentcuration/templates/permissions/permissions_email_subject.txt:1
@@ -279,9 +270,7 @@ msgstr ""
 
 #: contentcuration/templates/registration/activation_needed_email.txt:6
 #, python-format
-msgid ""
-"You have requested a password reset link on %(site_name)s without first "
-"activating your account."
+msgid "You have requested a password reset link on %(site_name)s without first activating your account."
 msgstr ""
 
 #: contentcuration/templates/registration/activation_needed_email.txt:8
@@ -294,9 +283,7 @@ msgid "%(channel_name)s"
 msgstr ""
 
 #: contentcuration/templates/registration/channel_published_email.html:12
-msgid ""
-"has finished publishing! Here is the channel token (for importing it into "
-"Kolibri):"
+msgid "has finished publishing! Here is the channel token (for importing it into Kolibri):"
 msgstr ""
 
 #: contentcuration/templates/registration/channel_published_email.html:15
@@ -315,8 +302,7 @@ msgid "Version notes: %(notes)s"
 msgstr ""
 
 #: contentcuration/templates/registration/channel_published_email.html:28
-msgid ""
-"You are receiving this email because you are subscribed to this channel."
+msgid "You are receiving this email because you are subscribed to this channel."
 msgstr ""
 
 #: contentcuration/templates/registration/getting_started.html:16
@@ -337,9 +323,7 @@ msgid "Password reset unsuccessful."
 msgstr ""
 
 #: contentcuration/templates/registration/password_reset_confirm.html:21
-msgid ""
-"The password reset link was invalid, possibly because it has already been "
-"used. "
+msgid "The password reset link was invalid, possibly because it has already been used. "
 msgstr ""
 
 #: contentcuration/templates/registration/password_reset_confirm.html:22
@@ -347,9 +331,7 @@ msgid "Request a new password reset."
 msgstr ""
 
 #: contentcuration/templates/registration/password_reset_email.html:91
-msgid ""
-"You are receiving this e-mail because you requested a password reset for "
-"your user account at"
+msgid "You are receiving this e-mail because you requested a password reset for your user account at"
 msgstr ""
 
 #: contentcuration/templates/registration/password_reset_email.html:97
@@ -382,8 +364,7 @@ msgid "In case you've forgotten, your username is:"
 msgstr ""
 
 #: contentcuration/templates/registration/password_reset_form.html:16
-msgid ""
-"Enter your email, and we'll send instructions for setting a new password."
+msgid "Enter your email, and we'll send instructions for setting a new password."
 msgstr ""
 
 #: contentcuration/templates/registration/password_reset_form.html:19
@@ -401,9 +382,7 @@ msgstr ""
 
 #: contentcuration/templates/registration/registration_needed_email.txt:6
 #, python-format
-msgid ""
-"You have requested a password reset on %(site_name)s without first creating "
-"an account."
+msgid "You have requested a password reset on %(site_name)s without first creating an account."
 msgstr ""
 
 #: contentcuration/templates/registration/registration_needed_email.txt:8
@@ -416,12 +395,9 @@ msgstr ""
 
 #: contentcuration/templates/registration/welcome_new_user_email.html:82
 #, python-format
-msgid ""
-"\n"
-"      We're delighted to introduce you to <a href=\"%(domain)s\">Kolibri "
-"Studio</a>, our curricular tool to add,\n"
-"      organize, and manage your own resources or those from the Kolibri "
-"Content Library.\n"
+msgid "\n"
+"      We're delighted to introduce you to <a href=\"%(domain)s\">Kolibri Studio</a>, our curricular tool to add,\n"
+"      organize, and manage your own resources or those from the Kolibri Content Library.\n"
 "    "
 msgstr ""
 
@@ -430,30 +406,22 @@ msgid "View the Kolibri Content Library"
 msgstr ""
 
 #: contentcuration/templates/registration/welcome_new_user_email.html:93
-msgid ""
-"\n"
-"      Using Kolibri Studio, you can explore pre-organized collections of "
-"open educational resources (OER), and bundle,\n"
-"      tag, differentiate, re-order, and distribute them into custom "
-"channels.\n"
+msgid "\n"
+"      Using Kolibri Studio, you can explore pre-organized collections of open educational resources (OER), and bundle,\n"
+"      tag, differentiate, re-order, and distribute them into custom channels.\n"
 "    "
 msgstr ""
 
 #: contentcuration/templates/registration/welcome_new_user_email.html:99
-msgid ""
-"\n"
-"      Using an admin account, you can then publish and import these custom "
-"channels--either your own or those shared\n"
-"      with you -- into Kolibri with a unique \"token\" generated for each "
-"channel.\n"
+msgid "\n"
+"      Using an admin account, you can then publish and import these custom channels--either your own or those shared\n"
+"      with you -- into Kolibri with a unique \"token\" generated for each channel.\n"
 "    "
 msgstr ""
 
 #: contentcuration/templates/registration/welcome_new_user_email.html:107
-msgid ""
-"\n"
-"      Browse through the list of resources below* to learn more about "
-"Kolibri Studio and to begin creating your own\n"
+msgid "\n"
+"      Browse through the list of resources below* to learn more about Kolibri Studio and to begin creating your own\n"
 "      custom channels:\n"
 "    "
 msgstr ""
@@ -467,18 +435,14 @@ msgid "Content integration guide:"
 msgstr ""
 
 #: contentcuration/templates/registration/welcome_new_user_email.html:122
-msgid ""
-"\n"
-"          Information on licensing, compatible formats, technical "
-"integration and more.\n"
+msgid "\n"
+"          Information on licensing, compatible formats, technical integration and more.\n"
 "        "
 msgstr ""
 
 #: contentcuration/templates/registration/welcome_new_user_email.html:125
-msgid ""
-"\n"
-"          <em>Note that if you are adding a small number of resources, "
-"technical integration is not necessary.</em>\n"
+msgid "\n"
+"          <em>Note that if you are adding a small number of resources, technical integration is not necessary.</em>\n"
 "        "
 msgstr ""
 
@@ -511,12 +475,9 @@ msgid "Video compression instructions:"
 msgstr ""
 
 #: contentcuration/templates/registration/welcome_new_user_email.html:153
-msgid ""
-"\n"
-"          For optimal results, videos should be compressed in order to "
-"achieve small file sizes. Compression ensures\n"
-"          that the videos are well suited for offline distribution and "
-"playback on all Kolibri devices.\n"
+msgid "\n"
+"          For optimal results, videos should be compressed in order to achieve small file sizes. Compression ensures\n"
+"          that the videos are well suited for offline distribution and playback on all Kolibri devices.\n"
 "        "
 msgstr ""
 
@@ -525,9 +486,7 @@ msgid "View the guide to video compression"
 msgstr ""
 
 #: contentcuration/templates/registration/welcome_new_user_email.html:165
-msgid ""
-"If you need support with Kolibri Studio, please reach out to us on our "
-"Community Forum."
+msgid "If you need support with Kolibri Studio, please reach out to us on our Community Forum."
 msgstr ""
 
 #: contentcuration/templates/registration/welcome_new_user_email.html:167
@@ -543,8 +502,7 @@ msgid "*resources are presented in English"
 msgstr ""
 
 #: contentcuration/templates/registration/welcome_new_user_email_subject.txt:1
-msgid ""
-"Thank you for activating your Kolibri Studio account! Let's get started..."
+msgid "Thank you for activating your Kolibri Studio account! Let's get started..."
 msgstr ""
 
 #: contentcuration/templates/settings/account_deleted_user_email.txt:5
@@ -554,9 +512,7 @@ msgstr ""
 
 #: contentcuration/templates/settings/account_deleted_user_email.txt:7
 #, python-format
-msgid ""
-"If this was a mistake, please email us at %(legal_email)s by %(buffer_date)s "
-"(%(num_days)s days from now)."
+msgid "If this was a mistake, please email us at %(legal_email)s by %(buffer_date)s (%(num_days)s days from now)."
 msgstr ""
 
 #: contentcuration/templates/settings/issue_report_email.txt:8
@@ -564,15 +520,11 @@ msgid "Thank you for reporting your issue. Here is a copy of your report:"
 msgstr ""
 
 #: contentcuration/templates/settings/issue_report_email.txt:20
-msgid ""
-"We are currently reviewing the information that you have provided, and will "
-"file your issue accordingly."
+msgid "We are currently reviewing the information that you have provided, and will file your issue accordingly."
 msgstr ""
 
 #: contentcuration/templates/settings/issue_report_email.txt:21
-msgid ""
-"We appreciate your patience and assistance as we work to improve Kolibri "
-"Studio!"
+msgid "We appreciate your patience and assistance as we work to improve Kolibri Studio!"
 msgstr ""
 
 #: contentcuration/templates/settings/issue_report_email.txt:24
@@ -588,13 +540,7 @@ msgid "Here is a copy of your request:"
 msgstr ""
 
 #: contentcuration/templates/settings/storage_request_email.txt:43
-msgid ""
-"We are currently reviewing the information that you have provided, and will "
-"work to be in touch in a timely manner depending on the scope of your "
-"request. While Kolibri Studio is under active development, we need to be "
-"especially mindful of how much additional storage can be provided to ensure "
-"that we can successfully continue to build the Studio tool. Many thanks in "
-"advance for your understanding."
+msgid "We are currently reviewing the information that you have provided, and will work to be in touch in a timely manner depending on the scope of your request. While Kolibri Studio is under active development, we need to be especially mindful of how much additional storage can be provided to ensure that we can successfully continue to build the Studio tool. Many thanks in advance for your understanding."
 msgstr ""
 
 #: contentcuration/templates/staging_not_found.html:22
@@ -611,7 +557,7 @@ msgstr ""
 
 #: contentcuration/templates/unsupported_browser.html:49
 msgid "Sorry, your browser version is not supported."
-msgstr ""
+msgstr "क्षमा करें, आपका ब्राउज़र संस्करण समर्थित नहीं है।"
 
 #: contentcuration/templates/unsupported_browser.html:51
 msgid "To use Kolibri Studio, we recommend using Firefox or Chrome."
@@ -619,76 +565,42 @@ msgstr ""
 
 #: contentcuration/templates/unsupported_browser.html:53
 msgid "You can also try updating your current browser."
-msgstr ""
+msgstr "आप अपने वर्तमान ब्राउज़र को अपडेट करने का प्रयास भी कर सकते हैं ।"
 
 #: contentcuration/templatetags/license_tags.py:11
-msgid ""
-"The Attribution License lets others distribute, remix, tweak, and build upon "
-"your work, even commercially, as long as they credit you for the original "
-"creation. This is the most accommodating of licenses offered. Recommended "
-"for maximum dissemination and use of licensed materials."
+msgid "The Attribution License lets others distribute, remix, tweak, and build upon your work, even commercially, as long as they credit you for the original creation. This is the most accommodating of licenses offered. Recommended for maximum dissemination and use of licensed materials."
 msgstr ""
 
 #: contentcuration/templatetags/license_tags.py:16
-msgid ""
-"The Attribution-ShareAlike License lets others remix, tweak, and build upon "
-"your work even for commercial purposes, as long as they credit you and "
-"license their new creations under the identical terms. This license is often "
-"compared to \"copyleft\" free and open source software licenses. All new "
-"works based on yours will carry the same license, so any derivatives will "
-"also allow commercial use. This is the license used by Wikipedia, and is "
-"recommended for materials that would benefit from incorporating content from "
-"Wikipedia and similarly licensed projects."
+msgid "The Attribution-ShareAlike License lets others remix, tweak, and build upon your work even for commercial purposes, as long as they credit you and license their new creations under the identical terms. This license is often compared to \"copyleft\" free and open source software licenses. All new works based on yours will carry the same license, so any derivatives will also allow commercial use. This is the license used by Wikipedia, and is recommended for materials that would benefit from incorporating content from Wikipedia and similarly licensed projects."
 msgstr ""
 
 #: contentcuration/templatetags/license_tags.py:26
-msgid ""
-"The Attribution-NoDerivs License allows for redistribution, commercial and "
-"non-commercial, as long as it is passed along unchanged and in whole, with "
-"credit to you."
+msgid "The Attribution-NoDerivs License allows for redistribution, commercial and non-commercial, as long as it is passed along unchanged and in whole, with credit to you."
 msgstr ""
 
 #: contentcuration/templatetags/license_tags.py:29
-msgid ""
-"The Attribution-NonCommercial License lets others remix, tweak, and build "
-"upon your work non-commercially, and although their new works must also "
-"acknowledge you and be non-commercial, they don't have to license their "
-"derivative works on the same terms."
+msgid "The Attribution-NonCommercial License lets others remix, tweak, and build upon your work non-commercially, and although their new works must also acknowledge you and be non-commercial, they don't have to license their derivative works on the same terms."
 msgstr ""
 
 #: contentcuration/templatetags/license_tags.py:33
-msgid ""
-"The Attribution-NonCommercial-ShareAlike License lets others remix, tweak, "
-"and build upon your work non-commercially, as long as they credit you and "
-"license their new creations under the identical terms."
+msgid "The Attribution-NonCommercial-ShareAlike License lets others remix, tweak, and build upon your work non-commercially, as long as they credit you and license their new creations under the identical terms."
 msgstr ""
 
 #: contentcuration/templatetags/license_tags.py:37
-msgid ""
-"The Attribution-NonCommercial-NoDerivs License is the most restrictive of "
-"our six main licenses, only allowing others to download your works and share "
-"them with others as long as they credit you, but they can't change them in "
-"any way or use them commercially."
+msgid "The Attribution-NonCommercial-NoDerivs License is the most restrictive of our six main licenses, only allowing others to download your works and share them with others as long as they credit you, but they can't change them in any way or use them commercially."
 msgstr ""
 
 #: contentcuration/templatetags/license_tags.py:41
-msgid ""
-"The All Rights Reserved License indicates that the copyright holder "
-"reserves, or holds for their own use, all the rights provided by copyright "
-"law under one specific copyright treaty."
+msgid "The All Rights Reserved License indicates that the copyright holder reserves, or holds for their own use, all the rights provided by copyright law under one specific copyright treaty."
 msgstr ""
 
 #: contentcuration/templatetags/license_tags.py:44
-msgid ""
-"Public Domain work has been identified as being free of known restrictions "
-"under copyright law, including all related and neighboring rights."
+msgid "Public Domain work has been identified as being free of known restrictions under copyright law, including all related and neighboring rights."
 msgstr ""
 
 #: contentcuration/templatetags/license_tags.py:47
-msgid ""
-"Special Permissions is a custom license to use when the current licenses do "
-"not apply to the content. The owner of this license is responsible for "
-"creating a description of what this license entails."
+msgid "Special Permissions is a custom license to use when the current licenses do not apply to the content. The owner of this license is responsible for creating a description of what this license entails."
 msgstr ""
 
 #: contentcuration/utils/csv_writer.py:45
@@ -702,11 +614,11 @@ msgstr ""
 
 #: contentcuration/utils/csv_writer.py:71
 msgid "Channel"
-msgstr ""
+msgstr "चैनल"
 
 #: contentcuration/utils/csv_writer.py:71
 msgid "Title"
-msgstr ""
+msgstr "शीर्षक"
 
 #: contentcuration/utils/csv_writer.py:71
 msgid "Kind"
@@ -726,19 +638,19 @@ msgstr ""
 
 #: contentcuration/utils/csv_writer.py:71
 msgid "Description"
-msgstr ""
+msgstr "विवरण"
 
 #: contentcuration/utils/csv_writer.py:72
 msgid "Author"
-msgstr ""
+msgstr "लेखक"
 
 #: contentcuration/utils/csv_writer.py:72
 msgid "Language"
-msgstr ""
+msgstr "भाषा "
 
 #: contentcuration/utils/csv_writer.py:72
 msgid "License"
-msgstr ""
+msgstr "लाइसेंस"
 
 #: contentcuration/utils/csv_writer.py:72
 msgid "License Description"
@@ -757,57 +669,27 @@ msgid "Staged File"
 msgstr ""
 
 #: contentcuration/utils/incidents.py:7
-msgid ""
-"There was a problem with a third-party service. This means certain "
-"operations might be blocked. We appreciate your patience while these issues "
-"are being resolved."
+msgid "There was a problem with a third-party service. This means certain operations might be blocked. We appreciate your patience while these issues are being resolved."
 msgstr ""
 
 #: contentcuration/utils/incidents.py:16
-msgid ""
-"<b>EMERGENCY MAINTENANCE</b> Kolibri Studio is operating on read-only mode "
-"for the time being in order for us to resolve some maintenance issues. This "
-"means all editing capabilities are disabled at the moment. We're currently "
-"working very hard to fix the issue as soon as possible. If you have any "
-"questions please contact us at content@learningequality.org. We apologize "
-"for any inconvenience caused and appreciate your patience while we resolve "
-"these issues."
+msgid "<b>EMERGENCY MAINTENANCE</b> Kolibri Studio is operating on read-only mode for the time being in order for us to resolve some maintenance issues. This means all editing capabilities are disabled at the moment. We're currently working very hard to fix the issue as soon as possible. If you have any questions please contact us at content@learningequality.org. We apologize for any inconvenience caused and appreciate your patience while we resolve these issues."
 msgstr ""
 
 #: contentcuration/utils/incidents.py:31
-msgid ""
-"<b>EMERGENCY MAINTENANCE</b> Kolibri Studio is operating on read-only mode "
-"for the time being in order for us to resolve some database issues. This "
-"means all editing capabilities are disabled at the moment. We're currently "
-"working very hard to fix the issue as soon as possible. If you have any "
-"questions please contact us at content@learningequality.org. We apologize "
-"for any inconvenience caused and appreciate your patience while we resolve "
-"these issues."
+msgid "<b>EMERGENCY MAINTENANCE</b> Kolibri Studio is operating on read-only mode for the time being in order for us to resolve some database issues. This means all editing capabilities are disabled at the moment. We're currently working very hard to fix the issue as soon as possible. If you have any questions please contact us at content@learningequality.org. We apologize for any inconvenience caused and appreciate your patience while we resolve these issues."
 msgstr ""
 
 #: contentcuration/utils/incidents.py:46
-msgid ""
-"We are encountering issues with Google Cloud Storage. This means any file "
-"uploading and publishing operations are currently unavailable. We appreciate "
-"your patience while these issues are being resolved. To check the status of "
-"this service, please visit <a target='_blank' href='https://status.cloud."
-"google.com/'>here</a>"
+msgid "We are encountering issues with Google Cloud Storage. This means any file uploading and publishing operations are currently unavailable. We appreciate your patience while these issues are being resolved. To check the status of this service, please visit <a target='_blank' href='https://status.cloud.google.com/'>here</a>"
 msgstr ""
 
 #: contentcuration/utils/incidents.py:57
-msgid ""
-"We are encountering issues with a third-party service. This means publishing "
-"is currently unavailable. We appreciate your patience while these issues are "
-"being resolved."
+msgid "We are encountering issues with a third-party service. This means publishing is currently unavailable. We appreciate your patience while these issues are being resolved."
 msgstr ""
 
 #: contentcuration/utils/incidents.py:65
-msgid ""
-"We are encountering issues with our data center. This means you may "
-"encounter networking problems while using Studio. We appreciate your "
-"patience while these issues are being resolved. To check the status of this "
-"service, please visit <a target='_blank' href='https://status.cloud.google."
-"com/'>here</a>"
+msgid "We are encountering issues with our data center. This means you may encounter networking problems while using Studio. We appreciate your patience while these issues are being resolved. To check the status of this service, please visit <a target='_blank' href='https://status.cloud.google.com/'>here</a>"
 msgstr ""
 
 #: contentcuration/utils/publish.py:96
@@ -824,7 +706,7 @@ msgstr ""
 
 #: kolibri_public/views.py:220
 msgid "Resource"
-msgstr ""
+msgstr "संसाधन"
 
 #: kolibri_public/views_v1.py:63 kolibri_public/views_v1.py:74
 msgid "Api endpoint {} is not available"
