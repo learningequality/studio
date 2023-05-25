@@ -162,7 +162,7 @@ run-services:
 
 .docker/postgres/init.sql: .docker/pgpass
 	# assumes postgres is running in a docker container
-	PGPASSFILE=.docker/pgpass pg_dump --host localhost --port 5432 --username learningequality --dbname "kolibri-studio" --file $@
+	PGPASSFILE=.docker/pgpass pg_dump --host localhost --port 5432 --username learningequality --dbname "kolibri-studio" --exclude-table-data=contentcuration_change --file $@
 
 dcbuild:
 	# build all studio docker image and all dependent services using docker-compose
