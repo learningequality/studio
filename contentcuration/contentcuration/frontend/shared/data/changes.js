@@ -6,7 +6,7 @@ import isUndefined from 'lodash/isUndefined';
 import omit from 'lodash/omit';
 import sortBy from 'lodash/sortBy';
 import logging from '../logging';
-import db from 'shared/data/db';
+import db, { CLIENTID } from 'shared/data/db';
 import { promiseChunk } from 'shared/utils/helpers';
 import {
   CHANGES_TABLE,
@@ -14,7 +14,6 @@ import {
   CHANGE_TYPES_LOOKUP,
   TABLE_NAMES,
   TABLE_NAMES_LOOKUP,
-  IGNORED_SOURCE,
   RELATIVE_TREE_POSITIONS,
   RELATIVE_TREE_POSITIONS_LOOKUP,
   LAST_FETCHED,
@@ -98,7 +97,8 @@ export class ChangeTracker {
     }
 
     this._changes = await changes
-      .filter(change => !change.source.match(IGNORED_SOURCE))
+      // Filter out changes that were not made by this client/browser tab
+      .filter(change => change.source === CLIENTID)
       .sortBy('rev');
   }
 
