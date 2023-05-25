@@ -293,13 +293,13 @@ async function syncChanges(syncAllChanges) {
 // Set the sync debounce time artificially low in tests to avoid timeouts.
 const syncDebounceWait = process.env.NODE_ENV === 'test' ? 1 : SYNC_IF_NO_CHANGES_FOR * 1000;
 let syncDebounceTimer;
-const syncResolveRejectStack = [];
+const syncDeferredStack = [];
 let syncingPromise = Promise.resolve();
 
 function doSyncChanges(syncAll = false) {
   syncDebounceTimer = null;
   // Splice all the resolve/reject handlers off the stack
-  const resolveRejectStack = syncResolveRejectStack.splice(0);
+  const deferredStack = syncDeferredStack.splice(0);
   // Wait for any existing sync to complete, then sync again.
   syncingPromise = syncingPromise
     .then(() => syncChanges(syncAll))
@@ -307,13 +307,13 @@ function doSyncChanges(syncAll = false) {
       // If it is successful call all of the resolve functions that we have stored
       // from all the Promises that have been returned while this specific debounce
       // has been active.
-      for (const [resolve] of resolveRejectStack) {
+      for (const { resolve } of deferredStack) {
         resolve(result);
       }
     })
     .catch(err => {
       // If there is an error call reject for all previously returned promises.
-      for (const [, reject] of resolveRejectStack) {
+      for (const { reject } of deferredStack) {
         reject(err);
       }
     });
@@ -330,7 +330,7 @@ export function debouncedSyncChanges(flush = false, syncAll = false) {
     // Any subsequent calls will then also revoke this timeout.
     clearTimeout(syncDebounceTimer);
     // Add the resolve and reject handlers for this promise to the stack here.
-    syncResolveRejectStack.push([resolve, reject]);
+    syncDeferredStack.push({ resolve, reject });
     if (flush) {
       // If immediate invocation is required immediately call doSyncChanges
       // rather than using a timeout delay.
