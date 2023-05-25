@@ -1,7 +1,7 @@
 import Dexie from 'dexie';
 import sortBy from 'lodash/sortBy';
 import logging from '../logging';
-import { CHANGE_TYPES, IGNORED_SOURCE, TABLE_NAMES } from './constants';
+import { CHANGE_TYPES, TABLE_NAMES } from './constants';
 import db from './db';
 import { INDEXEDDB_RESOURCES } from './registry';
 
@@ -46,7 +46,6 @@ function transaction(change, ...args) {
   const callback = args.pop();
   const tableNames = [change.table, ...args];
   return db.transaction('rw', tableNames, () => {
-    Dexie.currentTransaction.source = IGNORED_SOURCE;
     return callback();
   });
 }

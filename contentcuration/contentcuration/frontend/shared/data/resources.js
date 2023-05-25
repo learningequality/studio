@@ -16,7 +16,6 @@ import { v4 as uuidv4 } from 'uuid';
 import {
   CHANGE_TYPES,
   CHANGES_TABLE,
-  IGNORED_SOURCE,
   RELATIVE_TREE_POSITIONS,
   TABLE_NAMES,
   COPYING_FLAG,
@@ -274,93 +273,87 @@ class IndexedDBResource {
 
   setData(itemData) {
     const now = Date.now();
-    // Explicitly set the source of this as a fetch
-    // from the server, to prevent us from trying
-    // to sync these changes back to the server!
-    return this.transaction(
-      { mode: 'rw', source: IGNORED_SOURCE },
-      this.tableName,
-      CHANGES_TABLE,
-      () => {
-        // Get any relevant changes that would be overwritten by this bulkPut
-        const changesPromise = db[CHANGES_TABLE].where('[table+key]')
-          .anyOf(itemData.map(datum => [this.tableName, this.getIdValue(datum)]))
-          .sortBy('rev');
-        const currentPromise = this.table
-          .where(this.idField)
-          .anyOf(itemData.map(datum => this.getIdValue(datum)))
-          .toArray();
+    // Directly write to the table, rather than using the add/update methods
+    // to avoid creating change events that we would sync back to the server.
+    return this.transaction({ mode: 'rw' }, this.tableName, CHANGES_TABLE, () => {
+      // Get any relevant changes that would be overwritten by this bulkPut
+      const changesPromise = db[CHANGES_TABLE].where('[table+key]')
+        .anyOf(itemData.map(datum => [this.tableName, this.getIdValue(datum)]))
+        .sortBy('rev');
+      const currentPromise = this.table
+        .where(this.idField)
+        .anyOf(itemData.map(datum => this.getIdValue(datum)))
+        .toArray();
 
-        return Promise.all([changesPromise, currentPromise]).then(([changes, currents]) => {
-          changes = mergeAllChanges(changes, true);
-          const collectedChanges = collectChanges(changes)[this.tableName] || {};
-          for (const changeType of Object.keys(collectedChanges)) {
-            const map = {};
-            for (const change of collectedChanges[changeType]) {
-              map[change.key] = change;
+      return Promise.all([changesPromise, currentPromise]).then(([changes, currents]) => {
+        changes = mergeAllChanges(changes, true);
+        const collectedChanges = collectChanges(changes)[this.tableName] || {};
+        for (const changeType of Object.keys(collectedChanges)) {
+          const map = {};
+          for (const change of collectedChanges[changeType]) {
+            map[change.key] = change;
+          }
+          collectedChanges[changeType] = map;
+        }
+        const currentMap = {};
+        for (const currentObj of currents) {
+          currentMap[this.getIdValue(currentObj)] = currentObj;
+        }
+        const data = itemData
+          .map(datum => {
+            const id = this.getIdValue(datum);
+            datum[LAST_FETCHED] = now;
+            // Persist TASK_ID and COPYING_FLAG attributes when directly fetching from the server
+            if (currentMap[id] && currentMap[id][TASK_ID]) {
+              datum[TASK_ID] = currentMap[id][TASK_ID];
             }
-            collectedChanges[changeType] = map;
-          }
-          const currentMap = {};
-          for (const currentObj of currents) {
-            currentMap[this.getIdValue(currentObj)] = currentObj;
-          }
-          const data = itemData
-            .map(datum => {
-              const id = this.getIdValue(datum);
-              datum[LAST_FETCHED] = now;
-              // Persist TASK_ID and COPYING_FLAG attributes when directly fetching from the server
-              if (currentMap[id] && currentMap[id][TASK_ID]) {
-                datum[TASK_ID] = currentMap[id][TASK_ID];
+            if (currentMap[id] && currentMap[id][COPYING_FLAG]) {
+              datum[COPYING_FLAG] = currentMap[id][COPYING_FLAG];
+            }
+            // If we have an updated change, apply the modifications here
+            if (
+              collectedChanges[CHANGE_TYPES.UPDATED] &&
+              collectedChanges[CHANGE_TYPES.UPDATED][id]
+            ) {
+              applyMods(datum, collectedChanges[CHANGE_TYPES.UPDATED][id].mods);
+            }
+            return datum;
+            // If we have a deleted change, just filter out this object so we don't reput it
+          })
+          .filter(
+            datum =>
+              !collectedChanges[CHANGE_TYPES.DELETED] ||
+              !collectedChanges[CHANGE_TYPES.DELETED][this.getIdValue(datum)]
+          );
+        return this.table.bulkPut(data).then(() => {
+          // Move changes need to be reapplied on top of fetched data in case anything
+          // has happened on the backend.
+          return applyChanges(Object.values(collectedChanges[CHANGE_TYPES.MOVED] || {})).then(
+            results => {
+              if (!results || !results.length) {
+                return data;
               }
-              if (currentMap[id] && currentMap[id][COPYING_FLAG]) {
-                datum[COPYING_FLAG] = currentMap[id][COPYING_FLAG];
+              const resultsMap = {};
+              for (const result of results) {
+                const id = this.getIdValue(result);
+                resultsMap[id] = result;
               }
-              // If we have an updated change, apply the modifications here
-              if (
-                collectedChanges[CHANGE_TYPES.UPDATED] &&
-                collectedChanges[CHANGE_TYPES.UPDATED][id]
-              ) {
-                applyMods(datum, collectedChanges[CHANGE_TYPES.UPDATED][id].mods);
-              }
-              return datum;
-              // If we have a deleted change, just filter out this object so we don't reput it
-            })
-            .filter(
-              datum =>
-                !collectedChanges[CHANGE_TYPES.DELETED] ||
-                !collectedChanges[CHANGE_TYPES.DELETED][this.getIdValue(datum)]
-            );
-          return this.table.bulkPut(data).then(() => {
-            // Move changes need to be reapplied on top of fetched data in case anything
-            // has happened on the backend.
-            return applyChanges(Object.values(collectedChanges[CHANGE_TYPES.MOVED] || {})).then(
-              results => {
-                if (!results || !results.length) {
-                  return data;
-                }
-                const resultsMap = {};
-                for (const result of results) {
-                  const id = this.getIdValue(result);
-                  resultsMap[id] = result;
-                }
-                return data
-                  .map(datum => {
-                    const id = this.getIdValue(datum);
-                    if (resultsMap[id]) {
-                      applyMods(datum, resultsMap[id]);
-                    }
-                    return datum;
-                    // Concatenate any unsynced created objects onto
-                    // the end of the returned objects
-                  })
-                  .concat(Object.values(collectedChanges[CHANGE_TYPES.CREATED]).map(c => c.obj));
-              }
-            );
-          });
+              return data
+                .map(datum => {
+                  const id = this.getIdValue(datum);
+                  if (resultsMap[id]) {
+                    applyMods(datum, resultsMap[id]);
+                  }
+                  return datum;
+                  // Concatenate any unsynced created objects onto
+                  // the end of the returned objects
+                })
+                .concat(Object.values(collectedChanges[CHANGE_TYPES.CREATED]).map(c => c.obj));
+            }
+          );
         });
-      }
-    );
+      });
+    });
   }
 
   where(params = {}) {
@@ -836,10 +829,9 @@ class Resource extends mix(APIResource, IndexedDBResource) {
       const now = Date.now();
       const data = response.data;
       data[LAST_FETCHED] = now;
-      // Explicitly set the source of this as a fetch
-      // from the server, to prevent us from trying
-      // to sync these changes back to the server!
-      return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
+      // Directly write to the table, rather than using the add method
+      // to avoid creating change events that we would sync back to the server.
+      return this.transaction({ mode: 'rw' }, () => {
         return this.table.put(data).then(() => {
           return data;
         });
@@ -849,10 +841,9 @@ class Resource extends mix(APIResource, IndexedDBResource) {
 
   deleteModel(id) {
     return client.delete(this.modelUrl(id)).then(() => {
-      // Explicitly set the source of this as a fetch
-      // from the server, to prevent us from trying
-      // to sync these changes back to the server!
-      return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
+      // Directly write to the table, rather than using the delete method
+      // to avoid creating change events that we would sync back to the server.
+      return this.transaction({ mode: 'rw' }, () => {
         return this.table.delete(id).then(() => {
           return true;
         });
@@ -1086,14 +1077,14 @@ export const Channel = new Resource({
 
   updateAsAdmin(id, changes) {
     return client.patch(window.Urls.adminChannelsDetail(id), changes).then(() => {
-      return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
+      return this.transaction({ mode: 'rw' }, () => {
         return this.table.update(id, changes);
       });
     });
   },
 
   publish(id, version_notes) {
-    return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
+    return this.transaction({ mode: 'rw' }, () => {
       return this.table.update(id, { publishing: true });
     }).then(() => {
       const change = new PublishedChange({
@@ -1101,23 +1092,19 @@ export const Channel = new Resource({
         version_notes,
         language: currentLanguage,
         table: this.tableName,
+        source: CLIENTID,
       });
-      return this.transaction(
-        { mode: 'rw', source: IGNORED_SOURCE },
-        CHANGES_TABLE,
-        TABLE_NAMES.CONTENTNODE,
-        () => {
-          return Promise.all([
-            this._saveAndQueueChange(change),
-            ContentNode.table.where({ channel_id: id }).modify({
-              changed: false,
-              published: true,
-              has_new_descendants: false,
-              has_updated_descendants: false,
-            }),
-          ]);
-        }
-      );
+      return this.transaction({ mode: 'rw' }, CHANGES_TABLE, TABLE_NAMES.CONTENTNODE, () => {
+        return Promise.all([
+          this._saveAndQueueChange(change),
+          ContentNode.table.where({ channel_id: id }).modify({
+            changed: false,
+            published: true,
+            has_new_descendants: false,
+            has_updated_descendants: false,
+          }),
+        ]);
+      });
     });
   },
 
@@ -1127,7 +1114,7 @@ export const Channel = new Resource({
       source: CLIENTID,
       table: this.tableName,
     });
-    return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, CHANGES_TABLE, () => {
+    return this.transaction({ mode: 'rw' }, CHANGES_TABLE, () => {
       return this._saveAndQueueChange(change);
     });
   },
@@ -1175,7 +1162,7 @@ export const Channel = new Resource({
       table: this.tableName,
       source: CLIENTID,
     });
-    return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, CHANGES_TABLE, () => {
+    return this.transaction({ mode: 'rw' }, CHANGES_TABLE, () => {
       return this._saveAndQueueChange(change);
     });
   },
@@ -1183,7 +1170,7 @@ export const Channel = new Resource({
   softDelete(id) {
     const modelUrl = this.modelUrl(id);
     // Call endpoint directly in case we need to navigate to new page
-    return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
+    return this.transaction({ mode: 'rw' }, () => {
       return this.table.update(id, { deleted: true });
     }).then(() => {
       // make sure transaction is closed before calling a non-Dexie async function
@@ -1459,8 +1446,7 @@ export const ContentNode = new TreeResource({
 
   move(id, target, position = RELATIVE_TREE_POSITIONS.FIRST_CHILD) {
     return this.resolveTreeInsert(id, target, position, false, data => {
-      // Ignore changes from this operation except for the explicit move change we generate.
-      return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, CHANGES_TABLE, async () => {
+      return this.transaction({ mode: 'rw' }, CHANGES_TABLE, async () => {
         const payload = await this.tableMove(data);
         const change = new MovedChange(data.changeData);
         await this._saveAndQueueChange(change);
@@ -1470,6 +1456,8 @@ export const ContentNode = new TreeResource({
   },
 
   async tableMove({ node, parent, payload }) {
+    // Do direct table writes here rather than using add/update methods to avoid
+    // creating unnecessary additional change events.
     const updated = await this.table.update(node.id, payload);
     // Update didn't succeed, this node probably doesn't exist, do a put instead,
     // but need to add in other parent info.
@@ -1506,9 +1494,7 @@ export const ContentNode = new TreeResource({
     return this.resolveTreeInsert(id, target, position, true, data => {
       data.change.excluded_descendants = excluded_descendants;
 
-      // Ignore changes from this operation except for the
-      // explicit copy change we generate.
-      return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, CHANGES_TABLE, async () => {
+      return this.transaction({ mode: 'rw' }, CHANGES_TABLE, async () => {
         const payload = await this.tableCopy(data);
         const change = new CopiedChange(data.changeData);
         await this._saveAndQueueChange(change);
@@ -1539,6 +1525,8 @@ export const ContentNode = new TreeResource({
     };
 
     // Manually put our changes into the tree changes for syncing table
+    // rather than use add/update methods to avoid creating unnecessary
+    // additional change events.
     await this.table.put(payload);
     return payload;
   },
@@ -1623,7 +1611,7 @@ export const Invitation = new Resource({
   accept(id) {
     const changes = { accepted: true };
     return client.patch(window.Urls.invitationDetail(id), changes).then(() => {
-      return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
+      return this.transaction({ mode: 'rw' }, () => {
         return this.table.update(id, changes);
       });
     });
@@ -1648,7 +1636,7 @@ export const User = new Resource({
 
   updateAsAdmin(id, changes) {
     return client.patch(window.Urls.adminUsersDetail(id), changes).then(() => {
-      return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
+      return this.transaction({ mode: 'rw' }, () => {
         return this.table.update(id, changes);
       });
     });
@@ -1656,7 +1644,7 @@ export const User = new Resource({
 
   // Used when get_storage_used endpoint polling returns
   updateDiskSpaceUsed(id, disk_space_used) {
-    return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
+    return this.transaction({ mode: 'rw' }, () => {
       return this.table.update(id, { disk_space_used });
     });
   },
@@ -1731,10 +1719,6 @@ export const ChannelUser = new APIResource({
       }
 
       return db.transaction('rw', User.tableName, EditorM2M.tableName, ViewerM2M.tableName, () => {
-        // Explicitly set the source of this as a fetch
-        // from the server, to prevent us from trying
-        // to sync these changes back to the server!
-        Dexie.currentTransaction.source = IGNORED_SOURCE;
         return Promise.all([
           EditorM2M.table.bulkPut(editorM2M),
           ViewerM2M.table.bulkPut(viewerM2M),
@@ -1807,7 +1791,7 @@ export const AssessmentItem = new Resource({
   },
   modifyAssessmentItemCount(nodeId, increment) {
     // Update assessment item count
-    return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, TABLE_NAMES.CONTENTNODE, () => {
+    return this.transaction({ mode: 'rw' }, TABLE_NAMES.CONTENTNODE, () => {
       return ContentNode.table.get(nodeId).then(node => {
         if (node) {
           return ContentNode.table.update(node.id, {
@@ -1857,7 +1841,7 @@ export const File = new Resource({
         if (!response) {
           return Promise.reject(fileErrors.UPLOAD_FAILED);
         }
-        return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
+        return this.transaction({ mode: 'rw' }, () => {
           return this.table.put(response.data.file).then(() => {
             return response.data;
           });
@@ -1878,7 +1862,6 @@ export const Clipboard = new TreeResource({
     // to the backend because that would affect the moved
     // nodes.
     return db.transaction('rw', this.tableName, () => {
-      Dexie.currentTransaction.source = IGNORED_SOURCE;
       return this.table.bulkDelete(ids);
     });
   },
@@ -1929,7 +1912,7 @@ export const Task = new IndexedDBResource({
       // Coerce channel_id to be a simple hex string
       task.channel_id = task.channel_id.replace('-', '');
     }
-    return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
+    return this.transaction({ mode: 'rw' }, () => {
       return this.table
         .where(this.idField)
         .noneOf(tasks.map(t => t[this.idField]))

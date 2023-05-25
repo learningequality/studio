@@ -1,7 +1,6 @@
-import Dexie from 'dexie';
 import * as Sentry from '@sentry/vue';
 import mapValues from 'lodash/mapValues';
-import { CHANGES_TABLE, IGNORED_SOURCE, TABLE_NAMES } from './constants';
+import { CHANGES_TABLE, TABLE_NAMES } from './constants';
 import db from './db';
 import { INDEXEDDB_RESOURCES } from './registry';
 import { startSyncing, stopSyncing, syncOnChanges } from './serverSync';
@@ -30,7 +29,6 @@ export function setupSchema() {
 export function resetDB() {
   const tableNames = Object.values(TABLE_NAMES);
   return db.transaction('rw', ...tableNames, () => {
-    Dexie.currentTransaction.source = IGNORED_SOURCE;
     return Promise.all(tableNames.map(table => db[table].clear()));
   });
 }

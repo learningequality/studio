@@ -7,7 +7,7 @@ import uniq from 'lodash/uniq';
 import logging from '../logging';
 import applyChanges from './applyRemoteChanges';
 import { changeRevs } from './registry';
-import { CHANGE_TYPES, CHANGES_TABLE, IGNORED_SOURCE, MAX_REV_KEY } from './constants';
+import { CHANGE_TYPES, CHANGES_TABLE, MAX_REV_KEY } from './constants';
 import db, { channelScope } from './db';
 import { Channel, Session, Task } from './resources';
 import client from 'shared/client';
@@ -179,7 +179,7 @@ function handleMaxRevs(response, userId) {
     );
     if (lastChannelEditIndex > lastPublishIndex) {
       promises.push(
-        Channel.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
+        Channel.transaction({ mode: 'rw' }, () => {
           return Channel.table.update(channelId, { unpublished_changes: true });
         })
       );

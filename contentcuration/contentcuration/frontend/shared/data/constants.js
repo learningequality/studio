@@ -55,15 +55,6 @@ export const TABLE_NAMES_LOOKUP = invert(TABLE_NAMES);
 
 export const APP_ID = 'KolibriStudio';
 
-// Transaction sources
-/**
- * This transaction source will be ignored when tracking the
- * client's changes
- *
- * @type {string}
- */
-export const IGNORED_SOURCE = 'IGNORED_SOURCE';
-
 export const RELATIVE_TREE_POSITIONS = {
   FIRST_CHILD: 'first-child',
   LAST_CHILD: 'last-child',
