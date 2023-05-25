@@ -208,7 +208,7 @@ function omitIgnoredSubFields(obj) {
 class Change {
   constructor({ type, key, table } = {}) {
     this.setAndValidateLookup(type, 'type', CHANGE_TYPES_LOOKUP);
-    this.setAndValidateNotUndefined(key, 'key');
+    this.setAndValidateNotNull(key, 'key');
     this.setAndValidateLookup(table, 'table', TABLE_NAMES_LOOKUP);
     if (!INDEXEDDB_RESOURCES[this.table].syncable) {
       const error = new ReferenceError(`${this.table} is not a syncable table`);
@@ -243,11 +243,23 @@ class Change {
     }
     this[name] = value;
   }
-  setAndValidateNotUndefined(value, name) {
+  validateNotUndefined(value, name) {
     if (isUndefined(value)) {
       const error = new TypeError(
         `${name} is required for a ${this.changeType} but it was undefined`
       );
+      logging.error(error, value);
+      throw error;
+    }
+  }
+  setAndValidateNotUndefined(value, name) {
+    this.validateNotUndefined(value, name);
+    this[name] = value;
+  }
+  setAndValidateNotNull(value, name) {
+    this.validateNotUndefined(value, name);
+    if (isNull(value)) {
+      const error = new TypeError(`${name} is required for a ${this.changeType} but it was null`);
       logging.error(error, value);
       throw error;
     }

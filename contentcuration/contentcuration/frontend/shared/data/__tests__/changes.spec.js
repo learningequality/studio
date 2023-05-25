@@ -248,6 +248,16 @@ describe('Change Types', () => {
 
 describe('Change Types Unhappy Paths', () => {
   // CreatedChange
+  it('should throw error when CreatedChange is instantiated without key', () => {
+    expect(() => new CreatedChange({ table: TABLE_NAMES.CONTENTNODE, obj: {} })).toThrow(
+      new TypeError('key is required for a CreatedChange but it was undefined')
+    );
+  });
+  it('should throw error when CreatedChange is instantiated with a null key', () => {
+    expect(() => new CreatedChange({ key: null, table: TABLE_NAMES.CONTENTNODE, obj: {} })).toThrow(
+      new TypeError('key is required for a CreatedChange but it was null')
+    );
+  });
   it('should throw error when CreatedChange is instantiated without obj', () => {
     expect(() => new CreatedChange({ key: '1', table: TABLE_NAMES.CONTENTNODE })).toThrow(
       new TypeError('obj should be an object, but undefined was passed instead')
