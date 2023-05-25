@@ -205,8 +205,8 @@ function omitIgnoredSubFields(obj) {
   return omit(obj, ignoredSubFields);
 }
 
-class Change {
-  constructor({ type, key, table } = {}) {
+export class Change {
+  constructor({ type, key, table, source } = {}) {
     this.setAndValidateLookup(type, 'type', CHANGE_TYPES_LOOKUP);
     this.setAndValidateNotNull(key, 'key');
     this.setAndValidateLookup(table, 'table', TABLE_NAMES_LOOKUP);
@@ -215,6 +215,7 @@ class Change {
       logging.error(error);
       throw error;
     }
+    this.setAndValidateString(source, 'source');
   }
   get changeType() {
     return this.constructor.name;
@@ -293,6 +294,14 @@ class Change {
       throw error;
     }
     this[name] = mapper(value);
+  }
+  setAndValidateString(value, name) {
+    if (typeof value !== 'string') {
+      const error = new TypeError(`${name} should be a string, but ${value} was passed instead`);
+      logging.error(error, value);
+      throw error;
+    }
+    this[name] = value;
   }
   saveChange() {
     if (!this.channelOrUserIdSet) {

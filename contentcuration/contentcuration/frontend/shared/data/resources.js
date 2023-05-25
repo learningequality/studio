@@ -560,6 +560,7 @@ class IndexedDBResource {
       table: this.tableName,
       oldObj,
       changes,
+      source: CLIENTID,
     });
     return this._saveAndQueueChange(change);
   }
@@ -620,6 +621,7 @@ class IndexedDBResource {
       key: id,
       table: this.tableName,
       obj,
+      source: CLIENTID,
     });
     return this._saveAndQueueChange(change);
   }
@@ -663,6 +665,7 @@ class IndexedDBResource {
         key: id,
         table: this.tableName,
         oldObj,
+        source: CLIENTID,
       });
       return this._saveAndQueueChange(change);
     });
@@ -1170,6 +1173,7 @@ export const Channel = new Resource({
       files,
       assessment_items,
       table: this.tableName,
+      source: CLIENTID,
     });
     return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, CHANGES_TABLE, () => {
       return this._saveAndQueueChange(change);
@@ -1412,6 +1416,7 @@ export const ContentNode = new TreeResource({
               parent: parent.id,
               oldObj: isCreate ? null : node,
               table: this.tableName,
+              source: CLIENTID,
             };
 
             return callback({

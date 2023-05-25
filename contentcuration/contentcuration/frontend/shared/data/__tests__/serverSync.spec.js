@@ -11,6 +11,7 @@ async function makeChange(key, server_rev) {
     key: String(key),
     table: TABLE_NAMES.CONTENTNODE,
     obj: { a: 1, b: 2 },
+    source: 'test-source-id',
   }).saveChange();
   if (server_rev) {
     await db[CHANGES_TABLE].update(rev, { server_rev });
