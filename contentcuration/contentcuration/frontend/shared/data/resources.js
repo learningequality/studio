@@ -1802,18 +1802,20 @@ export const AssessmentItem = new Resource({
       });
     });
   },
+  // Retain super's delete method
+  _delete: Resource.prototype.delete,
   delete(id) {
     const nodeId = id[0];
-    return this.transaction({ mode: 'rw' }, () => {
-      return this.table.delete(id);
-    }).then(data => {
+    return this._delete(id).then(data => {
       return this.modifyAssessmentItemCount(nodeId, -1).then(() => {
         return data;
       });
     });
   },
+  // Retain super's add method
+  _add: Resource.prototype.add,
   add(obj) {
-    return super.add(obj).then(id => {
+    return this._add(obj).then(id => {
       return this.modifyAssessmentItemCount(obj.contentnode, 1).then(() => {
         return id;
       });
