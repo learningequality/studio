@@ -1492,7 +1492,8 @@ export const ContentNode = new TreeResource({
     }
 
     return this.resolveTreeInsert(id, target, position, true, data => {
-      data.change.excluded_descendants = excluded_descendants;
+      data.changeData.excluded_descendants = excluded_descendants;
+      data.changeData.mods = {};
 
       return this.transaction({ mode: 'rw' }, CHANGES_TABLE, async () => {
         const payload = await this.tableCopy(data);
