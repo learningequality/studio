@@ -11,7 +11,7 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ("contentcuration", "0142_add_task_signature"),
+        ("contentcuration", "0141_add_task_signature"),
     ]
 
     operations = [

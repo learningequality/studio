@@ -2179,7 +2179,13 @@ class StagedFile(models.Model):
 FILE_DISTINCT_INDEX_NAME = "file_checksum_file_size_idx"
 FILE_MODIFIED_DESC_INDEX_NAME = "file_modified_desc_idx"
 FILE_DURATION_CONSTRAINT = "file_media_duration_int"
-MEDIA_PRESETS = [format_presets.AUDIO, format_presets.VIDEO_HIGH_RES, format_presets.VIDEO_LOW_RES]
+MEDIA_PRESETS = [
+    format_presets.AUDIO,
+    format_presets.AUDIO_DEPENDENCY,
+    format_presets.VIDEO_HIGH_RES,
+    format_presets.VIDEO_LOW_RES,
+    format_presets.VIDEO_DEPENDENCY,
+]
 
 
 class File(models.Model):
@@ -2331,7 +2337,12 @@ class File(models.Model):
             models.Index(fields=["-modified"], name=FILE_MODIFIED_DESC_INDEX_NAME),
         ]
         constraints = [
-            models.CheckConstraint(check=(Q(preset__in=MEDIA_PRESETS, duration__gt=0) | Q(duration__isnull=True)), name=FILE_DURATION_CONSTRAINT)
+            # enforces that duration is null when not a media preset, but the duration may be null for media presets
+            # but if not-null, should be greater than 0
+            models.CheckConstraint(
+                check=(Q(preset__in=MEDIA_PRESETS, duration__gt=0) | Q(duration__isnull=True)),
+                name=FILE_DURATION_CONSTRAINT
+            )
         ]
 
 

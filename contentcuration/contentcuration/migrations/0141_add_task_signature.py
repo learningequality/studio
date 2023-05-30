@@ -11,7 +11,7 @@ class Migration(migrations.Migration):
         super(Migration, self).__init__(name, 'django_celery_results')
 
     dependencies = [
-        ('contentcuration', '0141_soft_delete_user'),
+        ('contentcuration', '0140_delete_task'),
         ('django_celery_results', '0011_taskresult_periodic_task_name'),
     ]
 

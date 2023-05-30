@@ -9,7 +9,7 @@ from django.db import models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('contentcuration', '0140_delete_task'),
+        ('contentcuration', '0143_file_file_media_duration_int'),
     ]
 
     operations = [
