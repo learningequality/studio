@@ -180,7 +180,12 @@ export const constantStrings = createTranslator('ConstantStrings', {
 export const constantsTranslationMixin = {
   methods: {
     translateConstant(constant) {
-      return constantStrings.$tr(constant);
+      /*
+       * Prevent translation of unknown keys. Initially, translation
+       * would default to `ConstantStrings.<key>` if not found, which
+       * is not desired on the front-end.
+       */
+      return constant && constantStrings.$tr(constant);
     },
     translateLanguage(language) {
       return Languages.has(language) && Languages.get(language).native_name;
