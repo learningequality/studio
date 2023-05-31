@@ -1,3 +1,5 @@
+import invert from 'lodash/invert';
+
 export const CHANGE_TYPES = {
   CREATED: 1,
   UPDATED: 2,
@@ -18,6 +20,11 @@ export const CREATION_CHANGE_TYPES = [CHANGE_TYPES.CREATED, CHANGE_TYPES.COPIED]
  * @type {(number)[]}
  */
 export const TREE_CHANGE_TYPES = [CHANGE_TYPES.CREATED, CHANGE_TYPES.COPIED, CHANGE_TYPES.MOVED];
+
+/**
+ * An inverse lookup of CHANGE_TYPES to allow validation of CHANGE_TYPE values
+ */
+export const CHANGE_TYPES_LOOKUP = invert(CHANGE_TYPES);
 
 // Tables
 export const CHANGES_TABLE = 'changesForSyncing';
@@ -41,16 +48,12 @@ export const TABLE_NAMES = {
   BOOKMARK: 'bookmark',
 };
 
-export const APP_ID = 'KolibriStudio';
-
-// Transaction sources
 /**
- * This transaction source will be ignored when tracking the
- * client's changes
- *
- * @type {string}
+ * An inverse lookup of TABLE_NAMES to allow validation of TABLE_NAME values
  */
-export const IGNORED_SOURCE = 'IGNORED_SOURCE';
+export const TABLE_NAMES_LOOKUP = invert(TABLE_NAMES);
+
+export const APP_ID = 'KolibriStudio';
 
 export const RELATIVE_TREE_POSITIONS = {
   FIRST_CHILD: 'first-child',
@@ -58,6 +61,8 @@ export const RELATIVE_TREE_POSITIONS = {
   LEFT: 'left',
   RIGHT: 'right',
 };
+
+export const RELATIVE_TREE_POSITIONS_LOOKUP = invert(RELATIVE_TREE_POSITIONS);
 
 // Special fields used for frontend specific handling
 export const COPYING_FLAG = '__COPYING';
@@ -67,10 +72,5 @@ export const LAST_FETCHED = '__last_fetch';
 // This constant is used for saving/retrieving a current
 // user object from the session table
 export const CURRENT_USER = 'CURRENT_USER';
-
-// A key in the session table that stores the currently active channels to listen for updates
-export const ACTIVE_CHANNELS = 'ACTIVE_CHANNELS';
-
-export const CHANNEL_SYNC_KEEP_ALIVE_INTERVAL = 300 * 1000;
 
 export const MAX_REV_KEY = 'max_rev';

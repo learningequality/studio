@@ -1,6 +1,5 @@
 import pickBy from 'lodash/pickBy';
 import { NOVALUE } from 'shared/constants';
-import { IGNORED_SOURCE } from 'shared/data/constants';
 import { Bookmark, Channel, Invitation, ChannelUser } from 'shared/data/resources';
 import client from 'shared/client';
 
@@ -199,7 +198,7 @@ export function updateChannel(
 
 export function bookmarkChannel(context, { id, bookmark }) {
   if (bookmark) {
-    return Bookmark.put({ channel: id }).then(() => {
+    return Bookmark.add({ channel: id }).then(() => {
       context.commit('SET_BOOKMARK', { channel: id });
     });
   } else {
@@ -264,7 +263,7 @@ export async function sendInvitation(context, { channelId, email, shareMode }) {
     share_mode: shareMode,
     channel_id: channelId,
   });
-  await Invitation.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
+  await Invitation.transaction({ mode: 'rw' }, () => {
     return Invitation.table.put(postedInvitation.data);
   });
   context.commit('ADD_INVITATION', postedInvitation.data);

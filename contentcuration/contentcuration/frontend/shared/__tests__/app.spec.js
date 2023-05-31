@@ -45,7 +45,7 @@ describe('startApp', () => {
 
     describe('if there is a current user saved in a session', () => {
       beforeEach(async () => {
-        await Session.put({ ...USER_1, CURRENT_USER });
+        await Session.table.put({ ...USER_1, CURRENT_USER });
 
         const sessionTable = await Session.table.toArray();
         expect(sessionTable).toEqual([{ ...USER_1, CURRENT_USER }]);
@@ -77,7 +77,7 @@ describe('startApp', () => {
 
     describe('if there is the same current user saved in a session', () => {
       beforeEach(async () => {
-        await Session.put({ ...USER_1, CURRENT_USER });
+        await Session.table.put({ ...USER_1, CURRENT_USER });
 
         const sessionTable = await Session.table.toArray();
         expect(sessionTable).toEqual([{ ...USER_1, CURRENT_USER }]);
@@ -91,7 +91,7 @@ describe('startApp', () => {
 
     describe('if there is a different current user saved in a session', () => {
       beforeEach(async () => {
-        await Session.put({ ...USER_2, CURRENT_USER });
+        await Session.table.put({ ...USER_2, CURRENT_USER });
 
         const sessionTable = await Session.table.toArray();
         expect(sessionTable).toEqual([{ ...USER_2, CURRENT_USER }]);

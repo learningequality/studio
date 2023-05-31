@@ -4,6 +4,7 @@ import assessmentItem from '../../assessmentItem/index';
 import file from 'shared/vuex/file';
 import { ContentNode } from 'shared/data/resources';
 import storeFactory from 'shared/vuex/baseStore';
+import { mockChannelScope, resetMockChannelScope } from 'shared/utils/testing';
 
 jest.mock('../../currentChannel/index');
 
@@ -15,8 +16,9 @@ describe('contentNode actions', () => {
   let store;
   let id;
   const contentNodeDatum = { title: 'test', parent: parentId, lft: 1, tags: {} };
-  beforeEach(() => {
-    return ContentNode._put(contentNodeDatum).then(newId => {
+  beforeEach(async () => {
+    await mockChannelScope('test-123');
+    return ContentNode._add(contentNodeDatum).then(newId => {
       id = newId;
       contentNodeDatum.id = newId;
       jest
@@ -25,7 +27,7 @@ describe('contentNode actions', () => {
       jest
         .spyOn(ContentNode, 'fetchModel')
         .mockImplementation(() => Promise.resolve(contentNodeDatum));
-      return ContentNode._put({ title: 'notatest', parent: newId, lft: 2 }).then(() => {
+      return ContentNode._add({ title: 'notatest', parent: newId, lft: 2 }).then(() => {
         store = storeFactory({
           modules: {
             assessmentItem,
@@ -38,7 +40,8 @@ describe('contentNode actions', () => {
       });
     });
   });
-  afterEach(() => {
+  afterEach(async () => {
+    await resetMockChannelScope();
     jest.restoreAllMocks();
     return ContentNode.table.toCollection().delete();
   });

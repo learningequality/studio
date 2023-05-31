@@ -1,6 +1,7 @@
 import Dexie from 'dexie';
 import sortBy from 'lodash/sortBy';
-import { CHANGE_TYPES, IGNORED_SOURCE, TABLE_NAMES } from './constants';
+import logging from '../logging';
+import { CHANGE_TYPES, TABLE_NAMES } from './constants';
 import db from './db';
 import { INDEXEDDB_RESOURCES } from './registry';
 
@@ -45,7 +46,6 @@ function transaction(change, ...args) {
   const callback = args.pop();
   const tableNames = [change.table, ...args];
   return db.transaction('rw', tableNames, () => {
-    Dexie.currentTransaction.source = IGNORED_SOURCE;
     return callback();
   });
 }
@@ -129,18 +129,27 @@ export default async function applyChanges(changes) {
   const results = [];
   for (const change of sortBy(changes, ['server_rev', 'rev'])) {
     let result;
-    if (change.type === CHANGE_TYPES.CREATED) {
-      result = await applyCreate(change);
-    } else if (change.type === CHANGE_TYPES.UPDATED) {
-      result = await applyUpdate(change);
-    } else if (change.type === CHANGE_TYPES.DELETED) {
-      result = await applyDelete(change);
-    } else if (change.type === CHANGE_TYPES.MOVED) {
-      result = await applyMove(change);
-    } else if (change.type === CHANGE_TYPES.COPIED) {
-      result = await applyCopy(change);
-    } else if (change.type === CHANGE_TYPES.PUBLISHED) {
-      result = await applyPublish(change);
+    try {
+      if (change.type === CHANGE_TYPES.CREATED) {
+        result = await applyCreate(change);
+      } else if (change.type === CHANGE_TYPES.UPDATED) {
+        result = await applyUpdate(change);
+      } else if (change.type === CHANGE_TYPES.DELETED) {
+        result = await applyDelete(change);
+      } else if (change.type === CHANGE_TYPES.MOVED) {
+        result = await applyMove(change);
+      } else if (change.type === CHANGE_TYPES.COPIED) {
+        result = await applyCopy(change);
+      } else if (change.type === CHANGE_TYPES.PUBLISHED) {
+        result = await applyPublish(change);
+      }
+    } catch (e) {
+      logging.error(e, {
+        filename: 'change.json',
+        // strip csrf token from headers
+        data: JSON.stringify(change),
+        contentType: 'application/json',
+      });
     }
 
     if (result) {
