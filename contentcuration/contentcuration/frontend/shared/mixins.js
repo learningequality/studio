@@ -181,9 +181,8 @@ export const constantsTranslationMixin = {
   methods: {
     translateConstant(constant) {
       /*
-       * Prevent translation of unknown keys. Initially, translation
-       * would default to `ConstantStrings.<key>` if not found, which
-       * is not desired on the front-end.
+       * Prevent translation of null, undefined and empty keys. Initially, translation would
+       * default to `ConstantStrings.<key>` if not found, which is not desired on the front-end.
        */
       return constant && constantStrings.$tr(constant);
     },
