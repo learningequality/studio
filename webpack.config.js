@@ -115,9 +115,10 @@ module.exports = (env = {}) => {
       modules: [rootNodeModules],
     },
     plugins: [
-      new webpack.IgnorePlugin({
-        resourceRegExp: /\.\.\/stylus\//,
-      }),
+      new webpack.NormalModuleReplacementPlugin(
+        /vuetify\/src\/stylus\//,
+        '../../../../../modulePlaceholder.js'
+      ),
       new BundleTracker({
         filename: path.resolve(djangoProjectDir, 'build', 'webpack-stats.json'),
       }),
