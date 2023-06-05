@@ -31,7 +31,11 @@ class Command(BaseCommand):
     def _republish_problem_channels(self):
         twenty_19 = datetime(year=2019, month=1, day=1)
         five_minutes = timedelta(minutes=5)
-        chef_user = User.objects.get(email="chef@learningequality.org")
+        try:
+            chef_user = User.objects.get(email="chef@learningequality.org")
+        except User.DoesNotExist:
+            logger.error("Could not find chef user to republish channels")
+            return
         channel_qs = Channel.objects.filter(
             public=True,
             deleted=False,
