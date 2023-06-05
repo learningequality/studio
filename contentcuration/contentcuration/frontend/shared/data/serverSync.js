@@ -355,8 +355,10 @@ if (process.env.NODE_ENV !== 'production' && typeof window !== 'undefined') {
 
 let intervalTimer;
 
+const vueInstance = new Vue();
+
 export function syncOnChanges() {
-  Vue.$watch(() => changeRevs.length, debouncedSyncChanges);
+  vueInstance.$watch(() => changeRevs.length, debouncedSyncChanges);
 }
 
 export function startSyncing() {
