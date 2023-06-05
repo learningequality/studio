@@ -18,6 +18,7 @@ const webpack = require('webpack');
 const djangoProjectDir = path.resolve('contentcuration');
 const staticFilesDir = path.resolve(djangoProjectDir, 'contentcuration', 'static');
 const srcDir = path.resolve(djangoProjectDir, 'contentcuration', 'frontend');
+const dummyModule = path.resolve(srcDir, 'shared', 'styles', 'modulePlaceholder.js')
 
 const bundleOutputDir = path.resolve(staticFilesDir, 'studio');
 
@@ -41,6 +42,7 @@ module.exports = (env = {}) => {
     swDest: 'serviceWorker.js',
     exclude: dev ? [/./] : [/\.map$/, /^manifest.*\.js$/]
   });
+
 
   if (dev) {
     // Suppress the "InjectManifest has been called multiple times" warning by reaching into
@@ -117,7 +119,7 @@ module.exports = (env = {}) => {
     plugins: [
       new webpack.NormalModuleReplacementPlugin(
         /vuetify\/src\/stylus\//,
-        '../../../../../modulePlaceholder.js'
+        dummyModule
       ),
       new BundleTracker({
         filename: path.resolve(djangoProjectDir, 'build', 'webpack-stats.json'),

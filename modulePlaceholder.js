@@ -1,1 +1,0 @@
-'module-file-stub';
