@@ -6,7 +6,6 @@ from contentcuration.celery import app
 from contentcuration.models import Change
 from contentcuration.models import User
 
-logging.basicConfig()
 logger = logging.getLogger('command')
 
 

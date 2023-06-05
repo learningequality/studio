@@ -115,7 +115,7 @@
     watch: {
       fullscreen(isFullscreen) {
         if (isFullscreen) {
-          let previewElement = this.$refs.preview.$el;
+          const previewElement = this.$refs.preview.$el;
           if (previewElement.requestFullscreen) {
             previewElement.requestFullscreen();
           } else if (previewElement.msRequestFullscreen) {

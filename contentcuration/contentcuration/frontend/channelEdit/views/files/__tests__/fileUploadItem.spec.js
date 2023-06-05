@@ -30,33 +30,33 @@ function makeWrapper(props = {}, file = {}) {
 describe('fileUploadItem', () => {
   describe('render', () => {
     it("'Unknown filename' should be displayed if original_filename is 'file'", () => {
-      let file = {
+      const file = {
         original_filename: 'file',
       };
-      let wrapper = makeWrapper({}, file);
+      const wrapper = makeWrapper({}, file);
       expect(wrapper.find('[data-test="file-link"]').text()).toBe('Unknown filename');
     });
     it("'Unknown filename' should be displayed if original_filename is ''", () => {
-      let file = {
+      const file = {
         original_filename: '',
       };
-      let wrapper = makeWrapper({}, file);
+      const wrapper = makeWrapper({}, file);
       expect(wrapper.find('[data-test="file-link"]').text()).toBe('Unknown filename');
     });
     it("original_filename should be displayed if its value is not 'file'", () => {
-      let file = {
+      const file = {
         id: 'file-1',
         original_filename: 'SomeFileName',
       };
-      let wrapper = makeWrapper({}, file);
+      const wrapper = makeWrapper({}, file);
       expect(wrapper.find('[data-test="file-link"]').text()).toBe('SomeFileName');
     });
     it('should show a status error if the file has an error', () => {
-      let wrapper = makeWrapper({}, { error: true });
+      const wrapper = makeWrapper({}, { error: true });
       expect(wrapper.find('[data-test="status"]').exists()).toBe(true);
     });
     it('should show an upload button if file is null', () => {
-      let wrapper = makeWrapper({}, null);
+      const wrapper = makeWrapper({}, null);
       expect(wrapper.find('[data-test="upload-link"]').exists()).toBe(true);
       expect(wrapper.find('[data-test="radio"]').exists()).toBe(false);
     });
@@ -64,10 +64,10 @@ describe('fileUploadItem', () => {
 
   describe('props', () => {
     it('should show the remove icon only if allowFileRemove', () => {
-      let noRemoveWrapper = makeWrapper();
+      const noRemoveWrapper = makeWrapper();
       expect(noRemoveWrapper.find('[data-test="remove"]').exists()).toBe(false);
 
-      let allowRemoveWrapper = makeWrapper({ allowFileRemove: true });
+      const allowRemoveWrapper = makeWrapper({ allowFileRemove: true });
       expect(allowRemoveWrapper.find('[data-test="remove"]').exists()).toBe(true);
     });
   });

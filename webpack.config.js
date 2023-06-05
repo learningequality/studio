@@ -26,7 +26,7 @@ module.exports = (env = {}) => {
   const hot = env.hot;
   const base = baseConfig({ mode: dev ? 'development' : 'production', hot, cache: dev });
 
-  if (String(base.module.rules[2].test) !== String(/\.css$/)) {
+  if (String(base.module.rules[1].test) !== String(/\.css$/)) {
     throw Error('Check base webpack configuration for update of location of css loader');
   }
 
@@ -34,7 +34,31 @@ module.exports = (env = {}) => {
 
   const rootNodeModules = path.join(rootDir, 'node_modules');
 
-  const baseCssLoaders = base.module.rules[2].use;
+  const baseCssLoaders = base.module.rules[1].use;
+
+  const workboxPlugin = new InjectManifest({
+    swSrc: path.resolve(srcDir, 'serviceWorker/index.js'),
+    swDest: 'serviceWorker.js',
+    exclude: dev ? [/./] : [/\.map$/, /^manifest.*\.js$/]
+  });
+
+  if (dev) {
+    // Suppress the "InjectManifest has been called multiple times" warning by reaching into
+    // the private properties of the plugin and making sure it never ends up in the state
+    // where it makes that warning.
+    // https://github.com/GoogleChrome/workbox/blob/v6/packages/workbox-webpack-plugin/src/inject-manifest.ts#L260-L282
+    // Solution taken from here:
+    // https://github.com/GoogleChrome/workbox/issues/1790#issuecomment-1241356293
+    Object.defineProperty(workboxPlugin, "alreadyCalled", {
+      get() {
+        return false
+      },
+      set() {
+        // do nothing; the internals try to set it to true, which then results in a warning
+        // on the next run of webpack.
+      },
+    })
+  }
 
   return merge(base, {
     context: srcDir,
@@ -51,10 +75,11 @@ module.exports = (env = {}) => {
       htmlScreenshot: ['./shared/utils/htmlScreenshot.js'],
     },
     output: {
-      filename: '[name]-[fullhash].js',
+      filename: dev ? '[name].js' : '[name]-[fullhash].js',
       chunkFilename: '[name]-[id]-[fullhash].js',
       path: bundleOutputDir,
       publicPath: dev ? 'http://127.0.0.1:4000/dist/' : '/static/studio/',
+      pathinfo: !dev,
     },
     devServer: {
       port: 4000,
@@ -91,14 +116,14 @@ module.exports = (env = {}) => {
     },
     plugins: [
       new webpack.IgnorePlugin({
-        resourceRegExp: /vuetify\/src\/stylus\//,
+        resourceRegExp: /\.\.\/stylus\//,
       }),
       new BundleTracker({
         filename: path.resolve(djangoProjectDir, 'build', 'webpack-stats.json'),
       }),
       new MiniCssExtractPlugin({
-        filename: '[name]-[fullhash].css',
-        chunkFilename: '[name]-[fullhash]-[id].css',
+        filename: dev ? '[name].css' :'[name]-[fullhash].css',
+        chunkFilename: dev ? '[name]-[id].css' :'[name]-[fullhash]-[id].css',
       }),
       new WebpackRTLPlugin({
         minify: false,
@@ -116,18 +141,8 @@ module.exports = (env = {}) => {
         // set the current working directory for displaying module paths
         cwd: process.cwd(),
       }),
-      // This must be added in dev mode if you want to do dev work
-      // on the service worker.
-    ].concat(
-      dev
-        ? []
-        : [
-            new InjectManifest({
-              swSrc: path.resolve(srcDir, 'serviceWorker/index.js'),
-              swDest: 'serviceWorker.js',
-            }),
-          ]
-    ),
+      workboxPlugin,
+    ],
     stats: 'normal',
   });
 };

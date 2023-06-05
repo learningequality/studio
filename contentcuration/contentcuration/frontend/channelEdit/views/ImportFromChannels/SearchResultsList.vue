@@ -208,7 +208,7 @@
         { trailing: true }
       ),
       handleClickSaveSearch() {
-        let params = { ...this.$route.query };
+        const params = { ...this.$route.query };
         delete params.last;
         delete params.page_size;
         delete params.page;

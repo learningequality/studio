@@ -53,28 +53,28 @@ describe('supplementaryList', () => {
   });
   describe('methods', () => {
     it('emitted remove event from list item should call deleteFile action', () => {
-      let deleteFile = jest.fn();
+      const deleteFile = jest.fn();
       wrapper.setMethods({ deleteFile });
-      let listItem = wrapper.find(SupplementaryItem);
+      const listItem = wrapper.find(SupplementaryItem);
       listItem.vm.$emit('remove', 'test');
       expect(deleteFile).toHaveBeenCalled();
       expect(deleteFile.mock.calls[0][0]).toEqual(testFile);
     });
     it('calling uploadCompleteHandler should call updateFile action', () => {
-      let updateFile = jest.fn();
+      const updateFile = jest.fn();
       wrapper.setMethods({ updateFile });
 
-      let listItem = wrapper.find(SupplementaryItem);
-      let replacementFile = { id: 'replacementFile' };
+      const listItem = wrapper.find(SupplementaryItem);
+      const replacementFile = { id: 'replacementFile' };
       listItem.vm.uploadCompleteHandler(replacementFile);
       expect(updateFile).toHaveBeenCalled();
       expect(updateFile.mock.calls[0][0].id).toBe(replacementFile.id);
       expect(updateFile.mock.calls[0][0].language.id).toBe('en');
     });
     it('calling uploadingHandler on Uploader should call updateFile', () => {
-      let uploadFile = { id: 'filetest' };
-      let updateFile = jest.fn(() => Promise.resolve());
-      let uploader = wrapper.find(Uploader);
+      const uploadFile = { id: 'filetest' };
+      const updateFile = jest.fn(() => Promise.resolve());
+      const uploader = wrapper.find(Uploader);
 
       wrapper.setMethods({ updateFile });
       wrapper.setData({ selectedLanguage: 'en-PT' });

@@ -73,6 +73,17 @@ describe('AccessibilityOptions', () => {
     expect(wrapper.find('[data-test="checkbox-audioDescription"]').exists()).toBe(false);
   });
 
+  it('should display the correct list of accessibility options if resource is an audio', () => {
+    const wrapper = mount(AccessibilityOptions, {
+      propsData: {
+        kind: 'audio',
+      },
+    });
+
+    expect(wrapper.find('[data-test="checkbox-captionsSubtitles"]').exists()).toBe(true);
+    expect(wrapper.find('[data-test="tooltip-captionsSubtitles"]').exists()).toBe(false);
+  });
+
   it('should render appropriate tooltips along with the checkbox', () => {
     const wrapper = mount(AccessibilityOptions, {
       propsData: {

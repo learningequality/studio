@@ -203,7 +203,7 @@ function _setUpVueIntl() {
 
 export function updateTabTitle(title) {
   if (document) {
-    let site = titleStrings.$tr(window.libraryMode ? 'catalogTitle' : 'defaultTitle');
+    const site = titleStrings.$tr(window.libraryMode ? 'catalogTitle' : 'defaultTitle');
     if (title) {
       document.title = titleStrings.$tr('tabTitle', { title, site });
     } else {
@@ -286,7 +286,7 @@ export function sortLanguages(availableLanguages, currentLanguageId) {
     return language.id == currentLanguageId;
   });
 
-  let sortedLanguages = availableLanguages
+  const sortedLanguages = availableLanguages
     .sort(compareLanguages)
     .filter(language => language.id != currentLanguageId);
 

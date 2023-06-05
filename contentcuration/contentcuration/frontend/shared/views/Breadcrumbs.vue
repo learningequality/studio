@@ -90,7 +90,7 @@
     },
     methods: {
       handleOverflow() {
-        let maxWidth = this.$refs.breadcrumbs.$el.offsetWidth;
+        const maxWidth = this.$refs.breadcrumbs.$el.offsetWidth;
         let totalWidth = 0;
         this.breadcrumbStartingIndex = 0;
         this.$nextTick(() => {

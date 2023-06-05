@@ -1,0 +1,47 @@
+"""
+This is a direct copy of the constants file of the same name in kolibri.core.content
+https://github.com/learningequality/kolibri/blob/c7417e1d558a1e1e52ac8423927d61a0e44da576/kolibri/core/content/constants/schema_versions.py
+"""
+
+V020BETA1 = "v0.2.0-beta1"
+
+V040BETA3 = "v0.4.0-beta3"
+
+NO_VERSION = "unversioned"
+
+VERSION_1 = "1"
+
+VERSION_2 = "2"
+
+VERSION_3 = "3"
+
+VERSION_4 = "4"
+
+VERSION_5 = "5"
+
+# List of the content db schema versions, ordered from most recent to least recent.
+# When a new schema version is generated, it should be added here, at the top of the list.
+CONTENT_DB_SCHEMA_VERSIONS = [
+    VERSION_5,
+    VERSION_4,
+    VERSION_3,
+    VERSION_2,
+    VERSION_1,
+    NO_VERSION,
+    V040BETA3,
+    V020BETA1,
+]
+
+# The latest compatible exported schema version for this version of Kolibri
+CONTENT_SCHEMA_VERSION = VERSION_5
+
+# The version name for the current content schema,
+# which may have schema modifications not present in the export schema
+CURRENT_SCHEMA_VERSION = "current"
+
+# The minimum content schema version that we are able to provide import metadata for
+# from the Kolibri content app database tables.
+# This should be updated if we make a change to the content schema that it would be
+# exceptionally difficult for us to backfill, such as deleting a model field that
+# we cannot meaningfully infer the content of from other metadata.
+MIN_CONTENT_SCHEMA_VERSION = VERSION_5

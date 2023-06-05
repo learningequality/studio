@@ -4,9 +4,12 @@
     :header="$tr('activationExpiredTitle')"
     :text="$tr('activationExpiredText')"
   >
-    <VBtn color="primary" large :to="{ name: 'RequestNewActivationLink' }" class="mb-4">
-      {{ $tr('requestNewLink') }}
-    </VBtn>
+    <KRouterLink
+      primary
+      :text="$tr('requestNewLink')"
+      :to="{ name: 'RequestNewActivationLink' }"
+      appearance="raised-button"
+    />
   </MessageLayout>
 
 </template>

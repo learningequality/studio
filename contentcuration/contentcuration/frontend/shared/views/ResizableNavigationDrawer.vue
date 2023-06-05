@@ -113,7 +113,7 @@
         this.throttledUpdateWidth(e.clientX);
       },
       updateWidth(clientX) {
-        let offset = this.isRight ? window.innerWidth - clientX : clientX;
+        const offset = this.isRight ? window.innerWidth - clientX : clientX;
         this.width = localStorage[this.localStorageName] = Math.min(
           Math.max(this.minWidth, offset),
           this.maxWidth

@@ -2,12 +2,12 @@ import { mount, createLocalVue } from '@vue/test-utils';
 import Vuex from 'vuex';
 import VueRouter from 'vue-router';
 import cloneDeep from 'lodash/cloneDeep';
-import flushPromises from 'flush-promises';
 
 import { RouteNames } from '../../constants';
 import StagingTreePage from './index';
 import { createStore } from 'shared/vuex/draggablePlugin/test/setup';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
+import { Channel } from 'shared/data/resources';
 
 const localVue = createLocalVue();
 localVue.use(Vuex);
@@ -217,9 +217,14 @@ describe('StagingTreePage', () => {
         ];
       };
 
-      mockDeployCurrentChannel = jest.fn().mockResolvedValue('');
+      mockDeployCurrentChannel = jest.fn();
       actions.currentChannel.deployCurrentChannel = mockDeployCurrentChannel;
-      //actions.channel.loadChannel = jest.fn().mockResolvedValue('')
+
+      Channel.waitForDeploying = () => {
+        return new Promise(resolve => {
+          return resolve(ROOT_ID);
+        });
+      };
 
       wrapper = initWrapper({ getters, actions });
       // make sure router is reset before each test
@@ -414,9 +419,11 @@ describe('StagingTreePage', () => {
       });
 
       it('redirects to a root tree page after deploy channel button click', async () => {
-        getDeployDialog(wrapper).vm.$emit('submit');
-        await flushPromises();
+        const waitForDeployingSpy = jest.spyOn(Channel, 'waitForDeploying');
 
+        await getDeployDialog(wrapper).vm.$emit('submit');
+
+        expect(waitForDeployingSpy).toHaveBeenCalledTimes(1);
         expect(wrapper.vm.$router.currentRoute.name).toBe(RouteNames.TREE_VIEW);
         expect(wrapper.vm.$router.currentRoute.params).toEqual({
           nodeId: ROOT_ID,

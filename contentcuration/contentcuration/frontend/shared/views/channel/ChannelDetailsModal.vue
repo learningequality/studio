@@ -5,7 +5,7 @@
     color="black"
   >
     <template #header>
-      <span class="notranslate">{{ channel.name }}</span>
+      <span class="notranslate">{{ channel ? channel.name : '' }}</span>
     </template>
     <LoadingText v-if="loading" absolute />
     <VCardText v-else-if="channel">

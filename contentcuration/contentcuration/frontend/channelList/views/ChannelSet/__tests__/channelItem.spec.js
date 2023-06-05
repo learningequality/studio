@@ -18,7 +18,7 @@ function makeWrapper(slots = {}) {
 
 describe('channelItem', () => {
   it('should properly render slot', () => {
-    let wrapper = makeWrapper({
+    const wrapper = makeWrapper({
       default: '<div id="test"/>',
     });
     expect(wrapper.find('#test').exists()).toBe(true);

@@ -256,7 +256,7 @@ Vue.component('Menu', Menu);
 function initiateServiceWorker() {
   // Second conditional must be removed if you are doing dev work on the service
   // worker.
-  if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
+  if ('serviceWorker' in navigator) {
     const wb = new Workbox(window.Urls.service_worker());
     let registration;
 

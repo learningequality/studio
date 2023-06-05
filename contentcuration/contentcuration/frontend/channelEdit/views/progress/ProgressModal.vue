@@ -1,14 +1,21 @@
 <template>
 
   <div class="px-1">
-    <div v-if="isSyncing && !syncError" class="grey--text" data-test="progress">
+    <div
+      v-if="showSyncingProgress"
+      class="grey--text"
+      data-test="progress"
+    >
       <span>{{ $tr('syncHeader') }}</span>&nbsp;<span>{{ progressPercent }}</span>
     </div>
     <div
       v-else-if="syncError"
       class="red--text"
     >
-      <Icon small color="red">
+      <Icon
+        small
+        color="red"
+      >
         error
       </Icon>
       {{ $tr('syncError') }}
@@ -17,15 +24,25 @@
       v-else-if="currentPublishTaskError"
       class="red--text"
     >
-      <Icon small color="red">
+      <Icon
+        small
+        color="red"
+      >
         error
       </Icon>
       {{ $tr('defaultErrorText') }}
     </div>
-    <div v-else-if="isPublishing" class="grey--text" data-test="progress">
+    <div
+      v-else-if="isPublishing"
+      class="grey--text"
+      data-test="progress"
+    >
       <span>{{ $tr('publishHeader') }}</span>&nbsp;<span>{{ progressPercent }}</span>
     </div>
-    <div v-else class="grey--text">
+    <div
+      v-else
+      class="grey--text"
+    >
       {{ lastPublished ?
         $tr('lastPublished', { last_published: $formatRelative(lastPublished, now) }) :
         $tr('unpublishedText')
@@ -37,7 +54,7 @@
 
 <script>
 
-  import { mapGetters } from 'vuex';
+  import { mapActions, mapGetters } from 'vuex';
   import get from 'lodash/get';
   import { TASK_ID } from 'shared/data/constants';
 
@@ -47,8 +64,8 @@
       now: Date.now(),
     }),
     computed: {
-      ...mapGetters('task', ['getAsyncTask', 'getPublishTaskForChannel']),
       ...mapGetters('currentChannel', ['currentChannel', 'canManage']),
+      ...mapGetters('task', ['getAsyncTask', 'getPublishTaskForChannel']),
       isSyncing() {
         return this.currentTask && this.currentTask.task_name === 'sync-channel';
       },
@@ -64,8 +81,7 @@
         return this.getAsyncTask(this.currentChannel[TASK_ID]) || null;
       },
       progressPercent() {
-        const progressPercent = get(this.currentTask, ['progress'], 0);
-        return this.$formatNumber(Math.round(progressPercent || 0) / 100, {
+        return this.$formatNumber(Math.round(get(this.currentTask, ['progress'], 0) || 0) / 100, {
           style: 'percent',
           minimumFractionDigits: 0,
           maximumFractionDigits: 0,
@@ -95,6 +111,18 @@
         }
         return date;
       },
+      showSyncingProgress() {
+        return this.isSyncing && !this.syncError;
+      },
+    },
+    watch: {
+      showSyncingProgress: {
+        handler(newValue, oldValue) {
+          this.showSnackbarOnCompleteSync(newValue, oldValue);
+        },
+        immediate: true,
+        deep: true,
+      },
     },
     mounted() {
       this.timer = setInterval(() => {
@@ -104,13 +132,24 @@
     beforeDestroy() {
       clearInterval(this.timer);
     },
+    methods: {
+      ...mapActions(['showSnackbar']),
+      showSnackbarOnCompleteSync(newShowProgress, oldShowProgress) {
+        if (!newShowProgress && oldShowProgress) {
+          this.showSnackbar({
+            text: this.$tr('syncedSnackbar'),
+          });
+        }
+      },
+    },
     $trs: {
       defaultErrorText: 'Last attempt to publish failed',
       publishHeader: 'Publishing channel',
       lastPublished: 'Published {last_published}',
       unpublishedText: 'Unpublished',
-      syncHeader: 'Syncing channel',
+      syncHeader: 'Syncing resources',
       syncError: 'Last attempt to sync failed',
+      syncedSnackbar: 'Resources synced',
     },
   };
 

@@ -38,7 +38,7 @@ export function createSearch({ commit, rootState }, params) {
     saved_by: rootState.session.currentUser.id,
     created: new Date(),
   };
-  return SavedSearch.put(data).then(id => {
+  return SavedSearch.add(data).then(id => {
     commit('UPDATE_SAVEDSEARCH', {
       id,
       ...data,

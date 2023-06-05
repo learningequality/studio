@@ -29,7 +29,7 @@
               :clipped-right="$isRTL"
               app
             >
-              <VBtn data-test="close" icon dark @click="handleClose">
+              <VBtn data-test="close" icon dark @click="handleClose()">
                 <Icon>clear</Icon>
               </VBtn>
               <VToolbarTitle>{{ modalTitle }}</VToolbarTitle>
@@ -116,7 +116,7 @@
             </div>
           </VFlex>
           <VFlex shrink>
-            <VBtn color="primary" @click="handleClose">
+            <VBtn color="primary" @click="handleClose()">
               {{ $tr('finishButton') }}
             </VBtn>
           </VFlex>
@@ -299,7 +299,7 @@
         return this.$tr('editingDetailsHeader');
       },
       parentTitle() {
-        let node = this.$route.params.nodeId && this.getContentNode(this.$route.params.nodeId);
+        const node = this.$route.params.nodeId && this.getContentNode(this.$route.params.nodeId);
         return node ? node.title : '';
       },
       invalidNodes() {
@@ -357,7 +357,7 @@
             .then(() => {
               // self-healing of nodes' validation status
               // in case we receive incorrect data from backend
-              let validationPromises = [];
+              const validationPromises = [];
               allNodesIds.forEach(nodeId => {
                 const node = vm.getContentNode(nodeId);
                 const completeCheck = isNodeComplete({
@@ -421,27 +421,35 @@
       /* Button actions */
       handleClose() {
         // X button action
-        this.enableValidation(this.nodeIds);
-        let assessmentItems = this.getAssessmentItems(this.nodeIds);
-        assessmentItems.forEach(item => (item.question ? (item[DELAYED_VALIDATION] = false) : ''));
-        this.updateAssessmentItems(assessmentItems);
-        // reaches into Details Tab to run save of diffTracker
-        // before the validation pop up is executed
-        if (this.$refs.editView) {
-          this.$refs.editView.immediateSaveAll().then(() => {
-            // Catch uploads in progress and invalid nodes
-            if (this.invalidNodes.length) {
-              this.selected = [this.invalidNodes[0]];
-              this.promptInvalid = true;
-            } else if (this.contentNodesAreUploading(this.nodeIds)) {
-              this.promptUploading = true;
-            } else {
-              this.closeModal();
-            }
-          });
-        } else {
-          this.closeModal();
-        }
+        this.selected = this.nodeIds;
+        this.$nextTick(() => {
+          this.enableValidation(this.nodeIds);
+          const assessmentItems = this.getAssessmentItems(this.nodeIds);
+          assessmentItems.forEach(item =>
+            item.question ? (item[DELAYED_VALIDATION] = false) : ''
+          );
+          this.updateAssessmentItems(assessmentItems);
+
+          // reaches into Details Tab to run save of diffTracker
+          // before the validation pop up is executed
+          if (this.$refs.editView) {
+            this.$nextTick(() => {
+              this.$refs.editView.immediateSaveAll().then(() => {
+                // Catch uploads in progress and invalid nodes
+                if (this.invalidNodes.length) {
+                  this.selected = [this.invalidNodes[0]];
+                  this.promptInvalid = true;
+                } else if (this.contentNodesAreUploading(this.nodeIds)) {
+                  this.promptUploading = true;
+                } else {
+                  this.closeModal();
+                }
+              });
+            });
+          } else {
+            this.closeModal();
+          }
+        });
       },
 
       /* Creation actions */

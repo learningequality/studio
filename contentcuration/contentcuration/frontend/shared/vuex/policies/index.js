@@ -89,7 +89,7 @@ export const mutations = {
     state.selectedPolicy = policy;
   },
   SET_POLICIES(state, policies) {
-    for (let policy in policies) {
+    for (const policy in policies) {
       Vue.set(state.policies, policy, policies[policy]);
     }
   },

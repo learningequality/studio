@@ -1,7 +1,7 @@
 Feature: Access and use additional options on channel list
 	User needs to be able to access additional options to manage channels from the channel list
 
-	Background: 
+	Background:
 		Given I am signed in to Studio
 			And I am at *My Channels* tab
 

@@ -112,13 +112,14 @@
     <!-- footer buttons -->
     <template #bottom>
       <VSpacer />
+      <KCircularLoader v-if="moveHereButtonDisabled && moveNodesInProgress" :size="20" />
       <VBtn flat exact data-test="cancel" @click="dialog = false">
         {{ $tr("cancel") }}
       </VBtn>
       <VBtn
         color="primary"
         data-test="move"
-        :disabled="!movingFromTrash && currentLocationId === targetNodeId"
+        :disabled="moveHereButtonDisabled"
         @click="moveNodes"
       >
         {{ $tr("moveHere") }}
@@ -179,6 +180,7 @@
       return {
         showNewTopicModal: false,
         loading: false,
+        moveNodesInProgress: false,
         targetNodeId: null,
         previewNodeId: null,
       };
@@ -201,6 +203,14 @@
       },
       moveHeader() {
         return this.$tr('moveItems', this.getTopicAndResourceCounts(this.moveNodeIds));
+      },
+      moveHereButtonDisabled() {
+        if (this.moveNodesInProgress) {
+          return true;
+        } else if (!this.movingFromTrash && this.currentLocationId === this.targetNodeId) {
+          return true;
+        }
+        return false;
       },
       currentLocationId() {
         // If opening modal from inside TrashModal, begin navigation at root node
@@ -271,6 +281,7 @@
         });
       },
       moveNodes() {
+        this.moveNodesInProgress = true;
         this.$emit('target', this.targetNodeId);
       },
       /*
@@ -284,6 +295,7 @@
           actionText: this.$tr('goToLocationButton'),
           actionCallback: this.goToLocation,
         });
+        this.moveNodesInProgress = false;
       },
     },
     $trs: {

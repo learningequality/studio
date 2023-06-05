@@ -19,7 +19,7 @@ function makeWrapper(bookmark, toggleStub) {
 describe('star', () => {
   let starredWrapper;
   let unstarredWrapper;
-  let toggleStub = jest.fn();
+  const toggleStub = jest.fn();
   beforeEach(() => {
     starredWrapper = makeWrapper(true, toggleStub);
     unstarredWrapper = makeWrapper(false, toggleStub);

@@ -5,11 +5,11 @@
     <VToolbar dense color="transparent" flat>
       <slot name="action"></slot>
       <Breadcrumbs :items="ancestors" class="mx-1 px-2 py-0">
-        <template #item="{ item, isFirst, isLast }">
+        <template #item="{ item, isLast }">
           <!-- Current item -->
           <VLayout v-if="isLast" align-center row>
             <VFlex class="font-weight-bold text-truncate" shrink :class="getTitleClass(item)">
-              {{ isFirst ? currentChannel.name : getTitle(item) }}
+              {{ getTitle(item) }}
             </VFlex>
             <Menu v-if="item.displayNodeOptions">
               <template #activator="{ on }">
@@ -23,7 +23,7 @@
             </Menu>
           </VLayout>
           <span v-else class="grey--text" :class="getTitleClass(item)">
-            {{ isFirst ? currentChannel.name : getTitle(item) }}
+            {{ getTitle(item) }}
           </span>
         </template>
       </Breadcrumbs>
@@ -341,7 +341,7 @@
           return {
             id: ancestor.id,
             to: this.treeLink({ nodeId: ancestor.id }),
-            title: ancestor.title,
+            title: ancestor.parent ? ancestor.title : this.currentChannel.name,
             displayNodeOptions: this.rootId !== ancestor.id,
           };
         });
@@ -450,7 +450,7 @@
         });
       },
       newTopicNode() {
-        let nodeData = {
+        const nodeData = {
           kind: ContentKindsNames.TOPIC,
           title: '',
         };
@@ -458,7 +458,7 @@
         this.trackClickEvent('Add topics');
       },
       newExerciseNode() {
-        let nodeData = {
+        const nodeData = {
           kind: ContentKindsNames.EXERCISE,
           title: '',
           learning_activities: {

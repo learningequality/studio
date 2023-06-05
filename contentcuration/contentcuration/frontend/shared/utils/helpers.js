@@ -292,7 +292,7 @@ export async function generatePdf(
  * @param {Number | String} key A license identifier
  */
 export function findLicense(key, defaultValue = {}) {
-  let license = LicensesList.find(
+  const license = LicensesList.find(
     license => license.license_name === key || license.id === parseInt(key, 10)
   );
 

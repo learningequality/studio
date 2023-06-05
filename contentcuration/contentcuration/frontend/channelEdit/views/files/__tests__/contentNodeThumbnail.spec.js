@@ -81,7 +81,7 @@ describe('thumbnail', () => {
       expect(wrapper.find('[data-test="thumbnail-image"]').vm.src).toBe(testThumbnail.url);
     });
     it('encoding should be shown over thumbnail if provided', () => {
-      let encoding = { base64: 'encoding' };
+      const encoding = { base64: 'encoding' };
       wrapper.setProps({ value: testThumbnail, encoding });
       expect(wrapper.find('[data-test="thumbnail-image"]').vm.thumbnailSrc).toBe(encoding.base64);
     });
@@ -120,7 +120,7 @@ describe('thumbnail', () => {
     });
   });
   describe('cropping workflow', () => {
-    let testEncoding = { base64: 'encoding' };
+    const testEncoding = { base64: 'encoding' };
     beforeEach(() => {
       wrapper.setProps({ value: testThumbnail, encoding: testEncoding });
       wrapper.setData({ cropping: true });

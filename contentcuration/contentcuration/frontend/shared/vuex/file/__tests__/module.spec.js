@@ -1,6 +1,7 @@
 import storeFactory from 'shared/vuex/baseStore';
-import { File } from 'shared/data/resources';
+import { File, injectVuexStore } from 'shared/data/resources';
 import client from 'shared/client';
+import { mockChannelScope, resetMockChannelScope } from 'shared/utils/testing';
 
 jest.mock('shared/vuex/connectionPlugin');
 
@@ -21,18 +22,22 @@ const userId = 'some user';
 describe('file store', () => {
   let store;
   let id;
-  beforeEach(() => {
+  beforeEach(async () => {
+    await mockChannelScope('test-123');
     jest.spyOn(File, 'fetchCollection').mockImplementation(() => Promise.resolve([testFile]));
     jest.spyOn(File, 'fetchModel').mockImplementation(() => Promise.resolve(testFile));
-    return File.put(testFile).then(newId => {
+    store = storeFactory();
+    injectVuexStore(store);
+    store.state.session.currentUser.id = userId;
+    return File.add(testFile).then(newId => {
       id = newId;
-      store = storeFactory();
       store.commit('file/ADD_FILE', { id, ...testFile });
-      store.state.session.currentUser.id = userId;
     });
   });
-  afterEach(() => {
+  afterEach(async () => {
+    await resetMockChannelScope();
     jest.restoreAllMocks();
+    injectVuexStore();
     return File.table.toCollection().delete();
   });
   describe('file getters', () => {
@@ -42,14 +47,14 @@ describe('file store', () => {
       expect(file.preset.id).toBe('document');
     });
     it('contentNodesTotalSize', () => {
-      let file = {
+      const file = {
         id: 'test',
         preset: 'document_thumbnail',
         file_size: 100,
         checksum: 'checksum-1',
         contentnode,
       };
-      let file2 = {
+      const file2 = {
         id: 'test2',
         preset: 'epub',
         file_size: 100,
@@ -105,7 +110,7 @@ describe('file store', () => {
     });
     describe('upload actions', () => {
       it('uploadFileToStorage should call client.put with upload url', () => {
-        let payload = {
+        const payload = {
           id: 'file-id',
           file: { id: 'hello' },
           url: 'test_url',

@@ -220,7 +220,7 @@ export default {
       if (!e) {
         return;
       }
-      let dropEffect = this.activeDropEffect;
+      const dropEffect = this.activeDropEffect;
       if (!this.hasDescendantHoverDraggable && e.dataTransfer.dropEffect !== dropEffect) {
         e.dataTransfer.dropEffect = dropEffect;
       }
@@ -356,7 +356,7 @@ export default {
     // TODO: Add `draggableAxis` prop and switch direction checking
     // Styling explicitly for when we're dragging this item, so when we've picked this up
     // and no longer hovering over it's original placement, the height will go to zero
-    let style = {};
+    const style = {};
     if (this.isActiveDraggable && this.dragEffect === DragEffect.SORT) {
       style.height = this.hoveringOtherDraggable ? '0px' : `${this.size}px`;
     }

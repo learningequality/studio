@@ -14,12 +14,16 @@ from builtins import str
 from itertools import chain
 
 from django.conf import settings
+from django.contrib.sites.models import Site
 from django.core.files import File
 from django.core.files.storage import default_storage as storage
 from django.core.management import call_command
 from django.db.models import Count
+from django.db.models import Exists
 from django.db.models import Max
+from django.db.models import OuterRef
 from django.db.models import Q
+from django.db.models import Subquery
 from django.db.models import Sum
 from django.db.utils import IntegrityError
 from django.template.loader import render_to_string
@@ -29,6 +33,7 @@ from django.utils.translation import override
 from kolibri_content import models as kolibrimodels
 from kolibri_content.router import get_active_content_database
 from kolibri_content.router import using_content_database
+from kolibri_public.utils.mapper import ChannelMapper
 from le_utils.constants import completion_criteria
 from le_utils.constants import content_kinds
 from le_utils.constants import exercises
@@ -37,6 +42,10 @@ from le_utils.constants import format_presets
 from le_utils.constants import roles
 from past.builtins import basestring
 from past.utils import old_div
+from search.models import ChannelFullTextSearch
+from search.models import ContentNodeFullTextSearch
+from search.utils import get_fts_annotated_channel_qs
+from search.utils import get_fts_annotated_contentnode_qs
 
 from contentcuration import models as ccmodels
 from contentcuration.decorators import delay_user_storage_calculation
@@ -87,16 +96,19 @@ def send_emails(channel, user_id, version_notes=''):
     subject = render_to_string('registration/custom_email_subject.txt', {'subject': _('Kolibri Studio Channel Published')})
     token = channel.secret_tokens.filter(is_primary=True).first()
     token = '{}-{}'.format(token.token[:5], token.token[-5:])
+    domain = "https://{}".format(Site.objects.get_current().domain)
 
     if user_id:
         user = ccmodels.User.objects.get(pk=user_id)
-        message = render_to_string('registration/channel_published_email.txt', {'channel': channel, 'user': user, 'token': token, 'notes': version_notes})
-        user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL, )
+        message = render_to_string('registration/channel_published_email.html',
+                                   {'channel': channel, 'user': user, 'token': token, 'notes': version_notes, 'domain': domain})
+        user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL, html_message=message)
     else:
         # Email all users about updates to channel
         for user in itertools.chain(channel.editors.all(), channel.viewers.all()):
-            message = render_to_string('registration/channel_published_email.txt', {'channel': channel, 'user': user, 'token': token, 'notes': version_notes})
-            user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL, )
+            message = render_to_string('registration/channel_published_email.html',
+                                       {'channel': channel, 'user': user, 'token': token, 'notes': version_notes, 'domain': domain})
+            user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL, html_message=message)
 
 
 def create_content_database(channel, force, user_id, force_exercises, progress_tracker=None):
@@ -128,12 +140,15 @@ def create_content_database(channel, force, user_id, force_exercises, progress_t
             progress_tracker=progress_tracker,
         )
         tree_mapper.map_nodes()
-        map_channel_to_kolibri_channel(channel)
+        kolibri_channel = map_channel_to_kolibri_channel(channel)
         # It should be at this percent already, but just in case.
         if progress_tracker:
             progress_tracker.track(90)
         map_prerequisites(channel.main_tree)
         save_export_database(channel.pk)
+        if channel.public:
+            mapper = ChannelMapper(kolibri_channel)
+            mapper.run()
 
     return tempdb
 
@@ -820,6 +835,47 @@ def fill_published_fields(channel, version_notes):
     channel.save()
 
 
+def sync_contentnode_and_channel_tsvectors(channel_id):
+    """
+    Creates, deletes and updates tsvectors of the channel and all its content nodes
+    to reflect the current state of channel's main tree.
+    """
+    # Update or create channel tsvector entry.
+    logging.info("Setting tsvector for channel with id {}.".format(channel_id))
+
+    channel = (get_fts_annotated_channel_qs()
+               .values("keywords_tsvector", "main_tree__tree_id")
+               .get(pk=channel_id))
+
+    obj, is_created = ChannelFullTextSearch.objects.update_or_create(channel_id=channel_id, defaults={"keywords_tsvector": channel["keywords_tsvector"]})
+    del obj
+
+    if is_created:
+        logging.info("Created 1 channel tsvector.")
+    else:
+        logging.info("Updated 1 channel tsvector.")
+
+    # Update or create contentnodes tsvector entry for channel_id.
+    logging.info("Setting tsvectors for all main tree contentnodes in channel {}.".format(channel_id))
+
+    if ContentNodeFullTextSearch.objects.filter(channel_id=channel_id).exists():
+        # First, delete nodes that are no longer in main_tree.
+        nodes_no_longer_in_main_tree = ~Exists(ccmodels.ContentNode.objects.filter(id=OuterRef("contentnode_id"), tree_id=channel["main_tree__tree_id"]))
+        ContentNodeFullTextSearch.objects.filter(nodes_no_longer_in_main_tree, channel_id=channel_id).delete()
+
+        # Now, all remaining nodes are in main_tree, so let's update them.
+        # Update only changed nodes.
+        node_tsv_subquery = get_fts_annotated_contentnode_qs(channel_id).filter(id=OuterRef("contentnode_id")).order_by()
+        ContentNodeFullTextSearch.objects.filter(channel_id=channel_id, contentnode__complete=True, contentnode__changed=True).update(
+            keywords_tsvector=Subquery(node_tsv_subquery.values("keywords_tsvector")[:1]),
+            author_tsvector=Subquery(node_tsv_subquery.values("author_tsvector")[:1])
+        )
+
+    # Insert newly created nodes.
+    # "set_contentnode_tsvectors" command is defined in "search/management/commands" directory.
+    call_command("set_contentnode_tsvectors", "--channel-id={}".format(channel_id))
+
+
 @delay_user_storage_calculation
 def publish_channel(
     user_id,
@@ -841,8 +897,9 @@ def publish_channel(
         set_channel_icon_encoding(channel)
         kolibri_temp_db = create_content_database(channel, force, user_id, force_exercises, progress_tracker=progress_tracker)
         increment_channel_version(channel)
-        mark_all_nodes_as_published(channel)
         add_tokens_to_channel(channel)
+        sync_contentnode_and_channel_tsvectors(channel_id=channel.id)
+        mark_all_nodes_as_published(channel)
         fill_published_fields(channel, version_notes)
 
         # Attributes not getting set for some reason, so just save it here

@@ -3,6 +3,7 @@ import math
 
 from django.core.exceptions import PermissionDenied
 from django.http import HttpResponseBadRequest
+from le_utils.constants import file_formats
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -113,18 +114,23 @@ class FileViewSet(BulkDeleteMixin, BulkUpdateMixin, ReadOnlyValuesViewset):
 
     def delete_from_changes(self, changes):
         try:
-            # reset channel resource size cache
+            # Reset channel resource size cache.
             keys = [change["key"] for change in changes]
-            queryset = self.filter_queryset_from_keys(
+            files_qs = self.filter_queryset_from_keys(
                 self.get_edit_queryset(), keys
             ).order_by()
-            # find all root nodes for files, and reset the cache modified date
+            # Find all root nodes for files, and reset the cache modified date.
             root_nodes = ContentNode.objects.filter(
                 parent__isnull=True,
-                tree_id__in=queryset.values_list('contentnode__tree_id', flat=True).distinct(),
+                tree_id__in=files_qs.values_list('contentnode__tree_id', flat=True).distinct(),
             )
             for root_node in root_nodes:
                 ResourceSizeCache(root_node).reset_modified(None)
+
+            # Update file's contentnode content_id.
+            for file in files_qs:
+                file.update_contentnode_content_id()
+
         except Exception as e:
             report_exception(e)
 
@@ -165,6 +171,9 @@ class FileViewSet(BulkDeleteMixin, BulkUpdateMixin, ReadOnlyValuesViewset):
         retval = get_presigned_upload_url(
             filepath, checksum_base64, 600, content_length=size
         )
+
+        if file_format not in dict(file_formats.choices):
+            return HttpResponseBadRequest("Invalid file_format!")
 
         file = File(
             file_size=size,

@@ -59,10 +59,10 @@ export LDFLAGS="-L/opt/homebrew/opt/openssl/lib"
 ```
 
 ### Install frontend dependencies
-Install the version of node.js supported by Studio, and install `yarn`:
+Install the version of node.js supported by Studio, and install `yarn` version 1.x:
 ```bash
 volta install node@16
-volta install yarn
+volta install yarn@1
 ```
 After installing `yarn`, you may now install frontend dependencies:
 ```bash

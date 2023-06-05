@@ -1,6 +1,12 @@
 import translator from './translator';
 import { RouteNames } from './constants';
-import { AssessmentItemTypes } from 'shared/constants';
+import { MasteryModelsNames } from 'shared/leUtils/MasteryModels';
+import { metadataStrings, constantStrings } from 'shared/mixins';
+import {
+  AssessmentItemTypes,
+  CompletionCriteriaModels,
+  SHORT_LONG_ACTIVITY_MIDPOINT,
+} from 'shared/constants';
 
 /**
  * Get correct answer index/indices out of an array of answer objects.
@@ -83,7 +89,7 @@ export function updateAnswersToQuestionType(questionType, answers) {
     }
   }
 
-  let answersCopy = JSON.parse(JSON.stringify(answers));
+  const answersCopy = JSON.parse(JSON.stringify(answers));
 
   switch (questionType) {
     case AssessmentItemTypes.MULTIPLE_SELECTION:
@@ -149,4 +155,142 @@ export function assessmentItemKey(assessmentItem) {
     contentnode: assessmentItem.contentnode,
     assessment_id: assessmentItem.assessment_id,
   };
+}
+
+/**
+ * Converts a value in seconds to a human-readable format.
+ * If the value is greater than or equal to one hour, the format will be hh:mm:ss.
+ * If the value is less than one hour, the format will be mm:ss.
+ *
+ * @param {Number} seconds - The value in seconds to be converted.
+ * @returns {String} The value in human-readable format.
+ */
+export function secondsToHms(seconds) {
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds - hours * 3600) / 60);
+  const remainingSeconds = seconds - hours * 3600 - minutes * 60;
+
+  let hms = '';
+  if (hours > 0) {
+    hms += hours.toString().padStart(2, '0') + ':';
+  }
+  hms += minutes.toString().padStart(2, '0') + ':' + remainingSeconds.toString().padStart(2, '0');
+  return hms;
+}
+
+/**
+ * Gathers data from a content node related to its completion.
+ *
+ * @param {Object} node
+ * @returns {Object} { completionModel, completionThreshold, masteryModel,
+ *                     suggestedDurationType, suggestedDuration}
+ */
+export function getCompletionDataFromNode(node) {
+  if (!node) {
+    return;
+  }
+
+  const { model, threshold } = node.extra_fields?.options?.completion_criteria || {};
+  const masteryModel = threshold?.mastery_model;
+  const suggestedDurationType = node.extra_fields?.suggested_duration_type;
+  const suggestedDuration = node.suggested_duration;
+
+  return {
+    completionModel: model,
+    completionThreshold: threshold,
+    masteryModel,
+    suggestedDurationType,
+    suggestedDuration,
+  };
+}
+
+/**
+ * @param {Object} node
+ * @returns {Boolean, undefined}
+ */
+export function isLongActivity(node) {
+  if (!node) {
+    return;
+  }
+  const { completionModel, suggestedDuration } = getCompletionDataFromNode(node);
+  return (
+    completionModel === CompletionCriteriaModels.APPROX_TIME &&
+    suggestedDuration > SHORT_LONG_ACTIVITY_MIDPOINT
+  );
+}
+
+/**
+ * Determines completion and duration labels from completion
+ * criteria and related of a content node.
+ *
+ * @param {Object} node
+ * @returns {Object} { completion, duration }
+ */
+export function getCompletionCriteriaLabels(node) {
+  if (!node) {
+    return;
+  }
+
+  const {
+    completionModel,
+    completionThreshold,
+    masteryModel,
+    suggestedDuration,
+  } = getCompletionDataFromNode(node);
+
+  const labels = {
+    completion: '-',
+    duration: '-',
+  };
+
+  switch (completionModel) {
+    case CompletionCriteriaModels.REFERENCE:
+      labels.completion = metadataStrings.$tr('reference');
+      break;
+
+    case CompletionCriteriaModels.TIME:
+      labels.completion = metadataStrings.$tr('completeDuration');
+      if (suggestedDuration) {
+        labels.duration = secondsToHms(suggestedDuration);
+      }
+      break;
+
+    case CompletionCriteriaModels.APPROX_TIME:
+      labels.completion = metadataStrings.$tr('completeDuration');
+      if (isLongActivity(node)) {
+        labels.duration = metadataStrings.$tr('longActivity');
+      } else {
+        labels.duration = metadataStrings.$tr('shortActivity');
+      }
+      break;
+
+    case CompletionCriteriaModels.PAGES:
+      if (completionThreshold === '100%') {
+        labels.completion = metadataStrings.$tr('allContent');
+      }
+      break;
+
+    case CompletionCriteriaModels.MASTERY:
+      if (!masteryModel) {
+        break;
+      }
+      if (masteryModel === MasteryModelsNames.M_OF_N) {
+        labels.completion = metadataStrings.$tr('masteryMofN', {
+          m: completionThreshold.m,
+          n: completionThreshold.n,
+        });
+      } else {
+        labels.completion = constantStrings.$tr(masteryModel);
+      }
+      break;
+
+    case CompletionCriteriaModels.DETERMINED_BY_RESOURCE:
+      labels.completion = metadataStrings.$tr('determinedByResource');
+      break;
+
+    default:
+      break;
+  }
+
+  return labels;
 }

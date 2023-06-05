@@ -762,7 +762,7 @@ describe('channelEdit utils', () => {
 
   describe('getNodeFilesErrors', () => {
     it('throws an error if there are no valid primary files', () => {
-      let testFiles = [
+      const testFiles = [
         {
           error: ValidationErrors.UPLOAD_FAILED,
           preset: { supplementary: false },
@@ -778,7 +778,7 @@ describe('channelEdit utils', () => {
       expect(getNodeFilesErrors(testFiles)).toContain(ValidationErrors.NO_VALID_PRIMARY_FILES);
     });
     it('does not throw NO_VALID_PRIMARY_FILES if there is one valid primary file', () => {
-      let testFiles = [
+      const testFiles = [
         {
           error: ValidationErrors.UPLOAD_FAILED,
           preset: { supplementary: false },
@@ -790,7 +790,7 @@ describe('channelEdit utils', () => {
       expect(getNodeFilesErrors(testFiles)).not.toContain(ValidationErrors.NO_VALID_PRIMARY_FILES);
     });
     it('returns array of errors found on files', () => {
-      let testFiles = [
+      const testFiles = [
         {
           error: ValidationErrors.NO_STORAGE,
           preset: { supplementary: true },
@@ -803,7 +803,7 @@ describe('channelEdit utils', () => {
           preset: { supplementary: false },
         },
       ];
-      let expectedErrors = [ValidationErrors.NO_STORAGE, ValidationErrors.UPLOAD_FAILED];
+      const expectedErrors = [ValidationErrors.NO_STORAGE, ValidationErrors.UPLOAD_FAILED];
       expect(getNodeFilesErrors(testFiles)).toEqual(expectedErrors);
     });
   });

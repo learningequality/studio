@@ -4,15 +4,19 @@ import mock
 import pytest
 from django.conf import settings
 from django.core.cache import cache
+from django.core.exceptions import ValidationError
+from django.db.models import Q
 from django.db.utils import IntegrityError
 from django.utils import timezone
 from le_utils.constants import content_kinds
 from le_utils.constants import format_presets
 
 from contentcuration.constants import channel_history
+from contentcuration.constants import user_history
 from contentcuration.models import AssessmentItem
 from contentcuration.models import Channel
 from contentcuration.models import ChannelHistory
+from contentcuration.models import ChannelSet
 from contentcuration.models import ContentNode
 from contentcuration.models import CONTENTNODE_TREE_ID_CACHE_KEY
 from contentcuration.models import File
@@ -21,6 +25,7 @@ from contentcuration.models import generate_object_storage_name
 from contentcuration.models import Invitation
 from contentcuration.models import object_storage_name
 from contentcuration.models import User
+from contentcuration.models import UserHistory
 from contentcuration.tests import testdata
 from contentcuration.tests.base import StudioTestCase
 
@@ -438,6 +443,31 @@ class ContentNodeTestCase(PermissionQuerysetTestCase):
             self.assertEqual(after_move_sourcenode.tree_id, testchannel.trash_tree.tree_id)
             self.assertEqual(tree_id_from_cache, testchannel.trash_tree.tree_id)
 
+    def test_make_content_id_unique(self):
+        channel_original = testdata.channel()
+        channel_importer = testdata.channel()
+
+        # Import a node from a channel.
+        original_node = channel_original.main_tree.get_descendants().first()
+        copied_node = original_node.copy_to(target=channel_importer.main_tree)
+
+        original_node.refresh_from_db()
+        copied_node.refresh_from_db()
+
+        original_node_old_content_id = original_node.content_id
+        copied_node_old_content_id = copied_node.content_id
+
+        original_node.make_content_id_unique()
+        copied_node.make_content_id_unique()
+
+        original_node.refresh_from_db()
+        copied_node.refresh_from_db()
+
+        # Assert that original node's content_id doesn't change.
+        self.assertEqual(original_node_old_content_id, original_node.content_id)
+        # Assert copied node's content_id changes.
+        self.assertNotEqual(copied_node_old_content_id, copied_node.content_id)
+
 
 class AssessmentItemTestCase(PermissionQuerysetTestCase):
     @property
@@ -669,6 +699,15 @@ class FileTestCase(PermissionQuerysetTestCase):
                 duration=10,
             )
 
+    def test_invalid_file_format(self):
+        channel = testdata.channel()
+        with self.assertRaises(ValidationError, msg="Invalid file_format"):
+            File.objects.create(
+                contentnode=create_contentnode(channel.main_tree_id),
+                preset_id=format_presets.EPUB,
+                file_format_id='pptx',
+            )
+
 
 class AssessmentItemFilePermissionTestCase(PermissionQuerysetTestCase):
     @property
@@ -768,6 +807,51 @@ class UserTestCase(StudioTestCase):
         user.save()
         return user
 
+    def _setup_user_related_data(self):
+        user_a = self._create_user("a@tester.com")
+        user_b = self._create_user("b@tester.com")
+
+        # Create a sole editor non-public channel.
+        sole_editor_channel = Channel.objects.create(name="sole-editor")
+        sole_editor_channel.editors.add(user_a)
+
+        # Create sole-editor channel nodes.
+        for i in range(0, 3):
+            testdata.node({
+                "title": "sole-editor-channel-node",
+                "kind_id": "video",
+            }, parent=sole_editor_channel.main_tree)
+
+        # Create a sole editor public channel.
+        public_channel = testdata.channel("public")
+        public_channel.editors.add(user_a)
+        public_channel.public = True
+        public_channel.save()
+
+        # Create a shared channel.
+        shared_channel = testdata.channel("shared-channel")
+        shared_channel.editors.add(user_a)
+        shared_channel.editors.add(user_b)
+
+        # Invitations.
+        Invitation.objects.create(sender_id=user_a.id, invited_id=user_b.id)
+        Invitation.objects.create(sender_id=user_b.id, invited_id=user_a.id)
+
+        # Channel sets.
+        channel_set = ChannelSet.objects.create(name="sole-editor")
+        channel_set.editors.add(user_a)
+
+        channel_set = ChannelSet.objects.create(name="public")
+        channel_set.editors.add(user_a)
+        channel_set.public = True
+        channel_set.save()
+
+        channel_set = ChannelSet.objects.create(name="shared-channelset")
+        channel_set.editors.add(user_a)
+        channel_set.editors.add(user_b)
+
+        return user_a
+
     def test_unique_lower_email(self):
         self._create_user("tester@tester.com")
         with self.assertRaises(IntegrityError):
@@ -777,6 +861,7 @@ class UserTestCase(StudioTestCase):
         user1 = self._create_user("tester@tester.com", is_active=False)
         user2 = self._create_user("tester@Tester.com", is_active=False)
         user3 = self._create_user("Tester@Tester.com", is_active=True)
+        user4 = self._create_user("testing@test.com", is_active=True)
 
         # active should be returned first
         self.assertEqual(user3, User.get_for_email("tester@tester.com"))
@@ -790,6 +875,63 @@ class UserTestCase(StudioTestCase):
 
         # ensure nothing found doesn't error
         self.assertIsNone(User.get_for_email("tester@tester.com"))
+
+        # ensure we don't return soft-deleted users
+        user4.delete()
+        self.assertIsNone(User.get_for_email("testing@test.com"))
+
+    def test_delete(self):
+        user = self._create_user("tester@tester.com")
+        user.delete()
+
+        # Sets deleted?
+        self.assertEqual(user.deleted, True)
+        # Sets is_active to False?
+        self.assertEqual(user.is_active, False)
+        # Creates user history?
+        user_delete_history = UserHistory.objects.filter(user_id=user.id, action=user_history.DELETION).first()
+        self.assertIsNotNone(user_delete_history)
+
+    def test_recover(self):
+        user = self._create_user("tester@tester.com")
+        user.delete()
+        user.recover()
+
+        # Sets deleted to False?
+        self.assertEqual(user.deleted, False)
+        # Keeps is_active to False?
+        self.assertEqual(user.is_active, False)
+        # Creates user history?
+        user_recover_history = UserHistory.objects.filter(user_id=user.id, action=user_history.RECOVERY).first()
+        self.assertIsNotNone(user_recover_history)
+
+    def test_hard_delete_user_related_data(self):
+        user = self._setup_user_related_data()
+        user.hard_delete_user_related_data()
+
+        # Deletes sole-editor channels.
+        self.assertFalse(Channel.objects.filter(name="sole-editor").exists())
+        # Preserves shared channels.
+        self.assertTrue(Channel.objects.filter(name="shared-channel").exists())
+        # Preserves public channels.
+        self.assertTrue(Channel.objects.filter(name="public").exists())
+
+        # Deletes all user related invitations.
+        self.assertFalse(Invitation.objects.filter(Q(sender_id=user.id) | Q(invited_id=user.id)).exists())
+
+        # Deletes sole-editor channelsets.
+        self.assertFalse(ChannelSet.objects.filter(name="sole-editor").exists())
+        # Preserves shared channelsets.
+        self.assertTrue(ChannelSet.objects.filter(name="shared-channelset").exists())
+        # Preserves public channelsets.
+        self.assertTrue(ChannelSet.objects.filter(name="public").exists())
+
+        # All contentnodes of sole-editor channel points to ORPHANGE ROOT NODE?
+        self.assertFalse(ContentNode.objects.filter(~Q(parent_id=settings.ORPHANAGE_ROOT_ID)
+                                                    & Q(title="sole-editor-channel-node")).exists())
+        # Creates user history?
+        user_hard_delete_history = UserHistory.objects.filter(user_id=user.id, action=user_history.RELATED_DATA_HARD_DELETION).first()
+        self.assertIsNotNone(user_hard_delete_history)
 
 
 class ChannelHistoryTestCase(StudioTestCase):

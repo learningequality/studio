@@ -149,7 +149,7 @@
         if (this.isTopic) {
           return `${baseUrl}#/${this.node.id}`;
         }
-        return `${baseUrl}#/${this.node.parent}/${this.node.id}`;
+        return `${baseUrl}#/${this.node.parent_id}/${this.node.id}`;
       },
       resourcesMsg() {
         let count;
@@ -160,13 +160,8 @@
         }
         return this.$tr('resourcesCount', { count });
       },
-      numLocations() {
-        return this.node.location_ids.length;
-      },
       goToLocationLabel() {
-        return this.numLocations > 1
-          ? this.$tr('goToPluralLocationsAction', { count: this.numLocations })
-          : this.$tr('goToSingleLocationAction');
+        return this.$tr('goToSingleLocationAction');
       },
       isTopic() {
         return this.node.kind === ContentKindsNames.TOPIC;
@@ -189,8 +184,6 @@
     $trs: {
       tagsList: 'Tags: {tags}',
       goToSingleLocationAction: 'Go to location',
-      goToPluralLocationsAction:
-        'In {count, number} {count, plural, one {location} other {locations}}',
       addToClipboardAction: 'Copy to clipboard',
       resourcesCount: '{count, number} {count, plural, one {resource} other {resources}}',
       coach: 'Resource for coaches',
@@ -238,6 +231,7 @@
     cursor: pointer;
 
     &:hover {
+      /* stylelint-disable-next-line custom-property-pattern */
       background-color: var(--v-greyBackground-base);
     }
   }

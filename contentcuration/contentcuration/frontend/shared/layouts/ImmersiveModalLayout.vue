@@ -70,7 +70,7 @@
   }
 
   .content-wrapper {
-    margin: 32px;
+    margin: 28px;
   }
 
   .content {

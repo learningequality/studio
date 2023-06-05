@@ -18,16 +18,16 @@ export const editableFields = [
   'provider',
 ];
 
-let specialPermissions = find(LicensesList, { is_custom: true });
+const specialPermissions = find(LicensesList, { is_custom: true });
 export function generateNode(props = {}) {
-  let data = {};
+  const data = {};
   editableFields.forEach(f => {
     data[f] = Math.random()
       .toString(36)
       .substring(7);
   });
 
-  let extra_fields = {
+  const extra_fields = {
     mastery_model: 'do_all',
     randomize: false,
   };

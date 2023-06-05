@@ -6,6 +6,7 @@ from contentcuration.viewsets.sync.constants import CHANNEL
 from contentcuration.viewsets.sync.constants import COPIED
 from contentcuration.viewsets.sync.constants import CREATED
 from contentcuration.viewsets.sync.constants import DELETED
+from contentcuration.viewsets.sync.constants import DEPLOYED
 from contentcuration.viewsets.sync.constants import MOVED
 from contentcuration.viewsets.sync.constants import PUBLISHED
 from contentcuration.viewsets.sync.constants import UPDATED
@@ -74,6 +75,11 @@ def generate_publish_event(
     return event
 
 
+def generate_deploy_event(key, user_id):
+    event = _generate_event(key, CHANNEL, DEPLOYED, channel_id=key, user_id=user_id)
+    return event
+
+
 def log_sync_exception(e, user=None, change=None, changes=None):
     # Capture exception and report, but allow sync
     # to complete properly.
@@ -89,4 +95,4 @@ def log_sync_exception(e, user=None, change=None, changes=None):
     report_exception(e, user=user, contexts=contexts)
 
     # make sure we leave a record in the logs just in case.
-    logging.error(e)
+    logging.exception(e)

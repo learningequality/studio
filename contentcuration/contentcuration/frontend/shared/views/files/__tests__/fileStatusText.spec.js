@@ -37,16 +37,16 @@ describe('fileStatusText', () => {
     expect(wrapper.find('[data-test="error"]').exists()).toBe(false);
   });
   it('should hide upload link in readonly mode', () => {
-    let wrapper = makeWrapper('file-2');
+    const wrapper = makeWrapper('file-2');
     wrapper.setProps({ readonly: true });
     expect(wrapper.find('[data-test="upload"]').exists()).toBe(false);
   });
   it('should indicate if one of the files is uploading', () => {
-    let wrapper = makeWrapper('file-2');
+    const wrapper = makeWrapper('file-2');
     expect(wrapper.find('[data-test="progress"]').exists()).toBe(true);
   });
   it('should show nothing if files are done uploading', () => {
-    let wrapper = makeWrapper('file-1');
+    const wrapper = makeWrapper('file-1');
     expect(wrapper.find('[data-test="error"]').exists()).toBe(false);
     expect(wrapper.find('[data-test="progress"]').exists()).toBe(false);
   });

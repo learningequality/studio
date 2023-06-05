@@ -184,10 +184,15 @@ class NodeGettersTestCase(StudioTestCase):
         assert details["resource_count"] > 0
         assert details["resource_size"] > 0
         assert len(details["kind_count"]) > 0
-        assert len(details["authors"]) == len([author for author in details["authors"] if author])
-        assert len(details["aggregators"]) == len([aggregator for aggregator in details["aggregators"] if aggregator])
-        assert len(details["providers"]) == len([provider for provider in details["providers"] if provider])
-        assert len(details["copyright_holders"]) == len([holder for holder in details["copyright_holders"] if holder])
+
+        # assert format of list fields, including that they do not contain invalid data
+        list_fields = [
+            "kind_count", "languages", "accessible_languages", "licenses", "tags", "original_channels",
+            "authors", "aggregators", "providers", "copyright_holders"
+        ]
+        for field in list_fields:
+            self.assertIsInstance(details.get(field), list, f"Field '{field}' isn't a list")
+            self.assertEqual(len(details[field]), len([value for value in details[field] if value]), f"List field '{field}' has falsy values")
 
 
 class NodeOperationsTestCase(StudioTestCase):
@@ -748,8 +753,8 @@ class SyncNodesOperationTestCase(StudioTestCase):
         orig_video, cloned_video = self._setup_original_and_deriative_nodes()
         sync_node(
             cloned_video,
-            sync_attributes=True,
-            sync_tags=True,
+            sync_titles_and_descriptions=True,
+            sync_resource_details=True,
             sync_files=True,
             sync_assessment_items=True,
         )
@@ -762,8 +767,8 @@ class SyncNodesOperationTestCase(StudioTestCase):
         self._add_subs_to_video_node(orig_video, "en")
         sync_node(
             cloned_video,
-            sync_attributes=True,
-            sync_tags=True,
+            sync_titles_and_descriptions=True,
+            sync_resource_details=True,
             sync_files=True,
             sync_assessment_items=True,
         )
@@ -776,8 +781,8 @@ class SyncNodesOperationTestCase(StudioTestCase):
         self._add_subs_to_video_node(orig_video, "en")
         sync_node(
             cloned_video,
-            sync_attributes=True,
-            sync_tags=True,
+            sync_titles_and_descriptions=True,
+            sync_resource_details=True,
             sync_files=True,
             sync_assessment_items=True,
         )
@@ -785,8 +790,8 @@ class SyncNodesOperationTestCase(StudioTestCase):
         self._add_subs_to_video_node(orig_video, "zul")
         sync_node(
             cloned_video,
-            sync_attributes=True,
-            sync_tags=True,
+            sync_titles_and_descriptions=True,
+            sync_resource_details=True,
             sync_files=True,
             sync_assessment_items=True,
         )
