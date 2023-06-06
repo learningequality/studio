@@ -5,9 +5,10 @@ import pick from 'lodash/pick';
 import orderBy from 'lodash/orderBy';
 import uniq from 'lodash/uniq';
 import logging from '../logging';
-import applyChanges from './applyRemoteChanges';
+import { changeStream } from './applyRemoteChanges';
+import { acquireLock } from './locks';
 import { changeRevs } from './registry';
-import { CHANGE_TYPES, CHANGES_TABLE, MAX_REV_KEY } from './constants';
+import { CHANGE_TYPES, CHANGES_TABLE, MAX_REV_KEY, LOCK_NAMES } from './constants';
 import db, { channelScope } from './db';
 import { Channel, Session, Task } from './resources';
 import client from 'shared/client';
@@ -94,16 +95,6 @@ function handleAllowed(response) {
         c.server_rev = revMap[c.rev];
         c.synced = true;
       });
-  }
-  return Promise.resolve();
-}
-
-function handleReturnedChanges(response) {
-  // The changes property is an array of any changes from the server to apply in the
-  // client.
-  const returnedChanges = get(response, ['data', 'changes'], []);
-  if (returnedChanges.length) {
-    return applyChanges(returnedChanges);
   }
   return Promise.resolve();
 }
@@ -202,7 +193,11 @@ function handleTasks(response) {
 
 const noUserError = 'No user logged in';
 
-async function syncChanges(syncAllChanges) {
+/**
+ * @param {boolean} syncAllChanges
+ * @return {Promise<[{}]>} - Resolves with an array of returned changes from the server
+ */
+function syncChanges(syncAllChanges) {
   // Note: we could in theory use Dexie syncable for what
   // we are doing here, but I can't find a good way to make
   // it ignore our regular API calls for seeding the database
@@ -212,82 +207,92 @@ async function syncChanges(syncAllChanges) {
   // revisions. We will do this for now, but we have the option of doing
   // something more involved and better architectured in the future.
 
-  try {
-    // Get the current user - if there is no user, we can't sync.
-    const user = await Session.getSession();
-    if (!user) {
-      // If not logged in, nothing to do.
-      throw new Error(noUserError);
-    }
+  // Either scoping to a channel or to a user
+  const syncLock = channelScope.id
+    ? LOCK_NAMES.SYNC_CHANNEL.replace('{channel_id}', channelScope.id)
+    : LOCK_NAMES.SYNC_USER;
 
-    const channel_revs = {};
-    if (channelScope.id) {
-      channel_revs[channelScope.id] = get(user, [MAX_REV_KEY, channelScope.id], 0);
-    }
+  // If we are syncing all changes, we don't need to acquire an exclusive lock because we should
+  // already have a global lock. Hopefully this could prevent the possibility of deadlocks.
+  return acquireLock({ name: syncLock, exclusive: !syncAllChanges }, async () => {
+    try {
+      // Get the current user - if there is no user, we can't sync.
+      const user = await Session.getSession();
+      if (!user) {
+        // If not logged in, nothing to do.
+        throw new Error(noUserError);
+      }
 
-    const unAppliedChanges = await db[CHANGES_TABLE].orderBy('server_rev')
-      .filter(c => c.synced && !c.errors && !c.disallowed)
-      .toArray();
+      const channel_revs = {};
+      if (channelScope.id) {
+        channel_revs[channelScope.id] = get(user, [MAX_REV_KEY, channelScope.id], 0);
+      }
 
-    const requestPayload = {
-      changes: [],
-      channel_revs,
-      user_rev: user.user_rev || 0,
-      unapplied_revs: unAppliedChanges.map(c => c.server_rev).filter(Boolean),
-    };
+      const unAppliedChanges = await db[CHANGES_TABLE].orderBy('server_rev')
+        .filter(c => c.synced && !c.errors && !c.disallowed)
+        .toArray();
 
-    // Snapshot which revs we are syncing, so that we can
-    // removes them from the changeRevs array after the sync
-    const revsToSync = [];
-    if (syncAllChanges) {
-      const unsyncedRevs = await db[CHANGES_TABLE].filter(c => !c.synced).primaryKeys();
-      revsToSync.push(...unsyncedRevs);
-    } else {
-      revsToSync.push(...changeRevs);
-    }
-    if (revsToSync.length) {
-      const syncableChanges = db[CHANGES_TABLE].where('rev')
-        .anyOf(revsToSync)
-        .filter(c => !c.synced);
-      const changesToSync = await syncableChanges.toArray();
-      // By the time we get here, our changesToSync Array should
-      // have every change we want to sync to the server, so we
-      // can now trim it down to only what is needed to transmit over the wire.
-      // TODO: remove moves when a delete change is present for an object,
-      // because a delete will wipe out the move.
-      const changes = changesToSync.map(trimChangeForSync).filter(Boolean);
-      // Create a promise for the sync - if there is nothing to sync just resolve immediately,
-      // in order to still call our change cleanup code.
-      if (changes.length) {
-        requestPayload.changes = changes;
+      const requestPayload = {
+        changes: [],
+        channel_revs,
+        user_rev: user.user_rev || 0,
+        unapplied_revs: unAppliedChanges.map(c => c.server_rev).filter(Boolean),
+      };
+
+      // Snapshot which revs we are syncing, so that we can
+      // removes them from the changeRevs array after the sync
+      const revsToSync = [];
+      if (syncAllChanges) {
+        const unsyncedRevs = await db[CHANGES_TABLE].filter(c => !c.synced).primaryKeys();
+        revsToSync.push(...unsyncedRevs);
+      } else {
+        revsToSync.push(...changeRevs);
+      }
+      if (revsToSync.length) {
+        const syncableChanges = db[CHANGES_TABLE].where('rev')
+          .anyOf(revsToSync)
+          .filter(c => !c.synced);
+        const changesToSync = await syncableChanges.toArray();
+        // By the time we get here, our changesToSync Array should
+        // have every change we want to sync to the server, so we
+        // can now trim it down to only what is needed to transmit over the wire.
+        // TODO: remove moves when a delete change is present for an object,
+        // because a delete will wipe out the move.
+        const changes = changesToSync.map(trimChangeForSync).filter(Boolean);
+        // Create a promise for the sync - if there is nothing to sync just resolve immediately,
+        // in order to still call our change cleanup code.
+        if (changes.length) {
+          requestPayload.changes = changes;
+        }
+      }
+      // The response from the sync endpoint has the format:
+      // {
+      //   "disallowed": [],
+      //   "allowed": [],
+      //   "changes": [],
+      //   "errors": [],
+      //   "successes": [],
+      // }
+      const response = await client.post(urls['sync'](), requestPayload);
+      // Clear out this many changes from changeRevs array, since we have now synced them.
+      changeRevs.splice(0, revsToSync.length);
+      await Promise.all([
+        handleDisallowed(response),
+        handleAllowed(response),
+        handleErrors(response),
+        handleSuccesses(response),
+        handleMaxRevs(response, user.id),
+        handleTasks(response),
+      ]);
+      // Return the array of returned changes
+      return get(response, ['data', 'changes'], []);
+    } catch (err) {
+      // There was an error during syncing, log, but carry on
+      if (err.message !== noUserError) {
+        logging.error(err);
       }
     }
-    // The response from the sync endpoint has the format:
-    // {
-    //   "disallowed": [],
-    //   "allowed": [],
-    //   "changes": [],
-    //   "errors": [],
-    //   "successes": [],
-    // }
-    const response = await client.post(urls['sync'](), requestPayload);
-    // Clear out this many changes from changeRevs array, since we have now synced them.
-    changeRevs.splice(0, revsToSync.length);
-    await Promise.all([
-      handleDisallowed(response),
-      handleAllowed(response),
-      handleReturnedChanges(response),
-      handleErrors(response),
-      handleSuccesses(response),
-      handleMaxRevs(response, user.id),
-      handleTasks(response),
-    ]);
-  } catch (err) {
-    // There was an error during syncing, log, but carry on
-    if (err.message !== noUserError) {
-      logging.error(err);
-    }
-  }
+  });
 }
 
 // Set the sync debounce time artificially low in tests to avoid timeouts.
@@ -302,13 +307,31 @@ function doSyncChanges(syncAll = false) {
   const deferredStack = syncDeferredStack.splice(0);
   // Wait for any existing sync to complete, then sync again.
   syncingPromise = syncingPromise
-    .then(() => syncChanges(syncAll))
-    .then(result => {
+    .then(() =>
+      acquireLock(
+        {
+          name: LOCK_NAMES.SYNC,
+          // If syncAll is true, we want to acquire an exclusive lock, which would make it globally
+          // blocking, otherwise we want to acquire a shared lock, which would allow other shared
+          // locks to be acquired and should not intersect with a global exclusive lock if one is
+          // already held.
+          exclusive: syncAll,
+        },
+        () => syncChanges(syncAll)
+      )
+    )
+    .then(returnedChanges => {
+      // Apply returned changes
+      if (returnedChanges.length) {
+        return changeStream.write(returnedChanges);
+      }
+    })
+    .then(() => {
       // If it is successful call all of the resolve functions that we have stored
       // from all the Promises that have been returned while this specific debounce
       // has been active.
       for (const { resolve } of deferredStack) {
-        resolve(result);
+        resolve();
       }
     })
     .catch(err => {

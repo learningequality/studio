@@ -1406,6 +1406,7 @@ export const ContentNode = new TreeResource({
               // so that we can avoid doing fetches while such changes
               // are pending.
               parent: parent.id,
+              oldParent: isCreate ? null : node.parent,
               oldObj: isCreate ? null : node,
               table: this.tableName,
               source: CLIENTID,
@@ -1546,6 +1547,12 @@ export const ContentNode = new TreeResource({
     return payload;
   },
 
+  /**
+   * Resolves with an array of all ancestors, including the node itself, in descending order
+   *
+   * @param {String} id
+   * @return {Promise<[{}]>}
+   */
   getAncestors(id) {
     return this.table.get(id).then(node => {
       if (node) {
@@ -1558,7 +1565,34 @@ export const ContentNode = new TreeResource({
         }
         return [node];
       }
+      // If node wasn't found, we fetch from the server
       return this.fetchCollection({ ancestors_of: id });
+    });
+  },
+
+  /**
+   * Calls `updateCallback` on each ancestor, and calls `.update` for that ancestor
+   * with the return value from `updateCallback`
+   *
+   * @param {String} id
+   * @param {Boolean} includeSelf
+   * @param {Boolean} ignoreChanges - Ignore generating change events for the updates
+   * @param {Function} updateCallback
+   * @return {Promise<void>}
+   */
+  updateAncestors({ id, includeSelf = false, ignoreChanges = false }, updateCallback) {
+    return this.transaction({ mode: 'rw' }, async () => {
+      const ancestors = await this.getAncestors(id);
+      for (const ancestor of ancestors) {
+        if (ancestor.id === id && !includeSelf) {
+          continue;
+        }
+        if (ignoreChanges) {
+          await this.table.update(ancestor.id, updateCallback(ancestor));
+        } else {
+          await this.update(ancestor.id, updateCallback(ancestor));
+        }
+      }
     });
   },
 
