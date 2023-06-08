@@ -117,10 +117,6 @@ module.exports = (env = {}) => {
       modules: [rootNodeModules],
     },
     plugins: [
-      new webpack.NormalModuleReplacementPlugin(
-        /vuetify\/src\/stylus\//,
-        dummyModule
-      ),
       new BundleTracker({
         filename: path.resolve(djangoProjectDir, 'build', 'webpack-stats.json'),
       }),
@@ -145,7 +141,16 @@ module.exports = (env = {}) => {
         cwd: process.cwd(),
       }),
       workboxPlugin,
-    ],
+    ].concat(
+      hot
+        ? []
+        : [
+          new webpack.NormalModuleReplacementPlugin(
+            /vuetify\/src\/stylus\//,
+            dummyModule
+          )
+        ]
+    ),
     stats: 'normal',
   });
 };
