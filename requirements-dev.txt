@@ -53,7 +53,7 @@ customizable-django-profiler @ git+https://github.com/someshchaturvedi/customiza
     # via -r requirements-dev.in
 distlib==0.3.1
     # via virtualenv
-django==3.2.18
+django==3.2.19
     # via
     #   -c requirements.txt
     #   django-debug-toolbar

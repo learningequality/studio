@@ -38,7 +38,7 @@ migrate:
 # 4) Remove the management command from this `deploy-migrate` recipe
 # 5) Repeat!
 deploy-migrate:
-	echo "Nothing to do here"
+	python contentcuration/manage.py export_channels_to_kolibri_public
 
 contentnodegc:
 	python contentcuration/manage.py garbage_collect
