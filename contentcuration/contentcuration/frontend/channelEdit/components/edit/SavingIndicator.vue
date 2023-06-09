@@ -27,12 +27,12 @@
     props: {
       nodeIds: {
         type: Array,
-        default: () => [],
+        default: null,
       },
     },
     data() {
       return {
-        hasChanges: false,
+        hasNodeChanges: false,
         isSaving: false,
         lastSaved: null,
         lastSavedText: '',
@@ -43,6 +43,13 @@
     computed: {
       ...mapGetters('file', ['getContentNodeFiles']),
       ...mapGetters('assessmentItem', ['getAssessmentItems']),
+      ...mapGetters(['areAllChangesSaved']),
+      hasChanges() {
+        if (this.nodeIds) {
+          return this.hasNodeChanges;
+        }
+        return !this.areAllChangesSaved;
+      },
     },
     watch: {
       hasChanges(hasChanges) {
@@ -62,21 +69,27 @@
       },
     },
     mounted() {
-      this.interval = setInterval(() => {
-        const files = flatten(this.nodeIds.map(this.getContentNodeFiles));
-        const assessmentItems = flatten(this.nodeIds.map(this.getAssessmentItems));
-        this.checkSavingProgress({
-          contentNodeIds: this.nodeIds,
-          fileIds: files.map(f => f.id).filter(Boolean),
-          assessmentIds: assessmentItems
-            .map(ai => [ai.contentnode, ai.assessment_id])
-            .filter(Boolean),
-        }).then(hasChanges => (this.hasChanges = hasChanges));
-      }, CHECK_SAVE_INTERVAL);
+      if (this.nodeIds) {
+        this.interval = setInterval(() => {
+          const files = flatten(this.nodeIds.map(this.getContentNodeFiles));
+          const assessmentItems = flatten(this.nodeIds.map(this.getAssessmentItems));
+          this.checkSavingProgress({
+            contentNodeIds: this.nodeIds,
+            fileIds: files.map(f => f.id).filter(Boolean),
+            assessmentIds: assessmentItems
+              .map(ai => [ai.contentnode, ai.assessment_id])
+              .filter(Boolean),
+          }).then(hasChanges => (this.hasNodeChanges = hasChanges));
+        }, CHECK_SAVE_INTERVAL);
+      }
     },
     beforeDestroy() {
-      clearInterval(this.interval);
-      clearInterval(this.updateLastSavedInterval);
+      if (this.interval) {
+        clearInterval(this.interval);
+      }
+      if (this.updateLastSavedInterval) {
+        clearInterval(this.updateLastSavedInterval);
+      }
     },
     methods: {
       ...mapActions('contentNode', ['checkSavingProgress']),

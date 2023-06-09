@@ -55,6 +55,7 @@
         </router-link>
       </VToolbarItems>
       <VSpacer />
+      <SavingIndicator />
       <OfflineText indicator />
       <ProgressModal />
       <div
@@ -310,6 +311,7 @@
   import SyncResourcesModal from '../sync/SyncResourcesModal';
   import ProgressModal from '../progress/ProgressModal';
   import PublishModal from '../../components/publish/PublishModal';
+  import SavingIndicator from '../../components/edit/SavingIndicator';
   import { DraggableRegions, DraggableUniverses, RouteNames } from '../../constants';
   import MainNavigationDrawer from 'shared/views/MainNavigationDrawer';
   import IconButton from 'shared/views/IconButton';
@@ -340,6 +342,7 @@
       ContentNodeIcon,
       DraggablePlaceholder,
       MessageDialog,
+      SavingIndicator,
     },
     mixins: [titleMixin],
     props: {
