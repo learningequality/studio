@@ -66,7 +66,7 @@
     "epubjs": "^0.3.89",
     "file-saver": "^2.0.2",
     "html2canvas": "^1.0.0-rc.5",
-    "i18n-iso-countries": "^7.5.0",
+    "i18n-iso-countries": "^7.6.0",
     "intl": "1.2.5",
     "jquery": "^2.2.4",
     "jspdf": "https://github.com/parallax/jsPDF.git#b7a1d8239c596292ce86dafa77f05987bcfa2e6e",
@@ -115,7 +115,7 @@
     "less-loader": "^11.0.0",
     "npm-run-all": "^4.1.3",
     "stylus": "^0.59.0",
-    "stylus-loader": "^7.1.0",
+    "stylus-loader": "^7.1.2",
     "workbox-webpack-plugin": "^6.5.4"
   },
   "false": {},
