@@ -350,5 +350,8 @@ export default async function startApp({ store, router, index }) {
   // to the session state.
   injectVuexStore(store);
 
+  // Start listening for unsynced change events in IndexedDB
+  store.listenForIndexedDBChanges();
+
   rootVue = new Vue(config);
 }
