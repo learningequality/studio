@@ -1,4 +1,5 @@
 import SparkMD5 from 'spark-md5';
+import JSZip from 'jszip';
 import { FormatPresetsList, FormatPresetsNames } from 'shared/leUtils/FormatPresets';
 
 const BLOB_SLICE = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice;
@@ -7,8 +8,10 @@ const MEDIA_PRESETS = [
   FormatPresetsNames.AUDIO,
   FormatPresetsNames.HIGH_RES_VIDEO,
   FormatPresetsNames.LOW_RES_VIDEO,
+  FormatPresetsNames.H5P,
 ];
 const VIDEO_PRESETS = [FormatPresetsNames.HIGH_RES_VIDEO, FormatPresetsNames.LOW_RES_VIDEO];
+const H5P_PRESETS = [FormatPresetsNames.H5P];
 
 export function getHash(file) {
   return new Promise((resolve, reject) => {
@@ -61,6 +64,42 @@ export function storageUrl(checksum, file_format) {
   return `/content/storage/${checksum[0]}/${checksum[1]}/${checksum}.${file_format}`;
 }
 
+export async function getH5PMetadata(fileInput, metadata) {
+  // const file = fileInput.files[0];
+  // console.log(typeof(files), file);
+  const zip = new JSZip();
+  zip
+    .loadAsync(fileInput)
+    .then(function(zip) {
+      const h5pJson = zip.file('h5p.json');
+      // console.log(h5pJson);
+      if (h5pJson) {
+        return h5pJson.async('text');
+      } else {
+        throw new Error('h5p.json not found in the H5P file.');
+      }
+    })
+    .then(function(h5pContent) {
+      const data = JSON.parse(h5pContent);
+      if (Object.prototype.hasOwnProperty.call(data, 'title')) {
+        metadata.Title = data['title'];
+      }
+      if (Object.prototype.hasOwnProperty.call(data, 'language') && data['language'] !== 'und') {
+        metadata.language = data['language'];
+      }
+      if (Object.prototype.hasOwnProperty.call(data, 'authors')) {
+        metadata.author = data['authors'];
+      }
+      if (Object.prototype.hasOwnProperty.call(data, 'license')) {
+        metadata.license = data['license'];
+      }
+    })
+    .catch(function(error) {
+      console.error('Error loading or extracting H5P file:', error);
+    });
+  return metadata;
+}
+
 /**
  * @param {{name: String, preset: String}} file
  * @param {String|null} preset
@@ -85,24 +124,32 @@ export function extractMetadata(file, preset = null) {
     return Promise.resolve(metadata);
   }
 
+  const isH5P = H5P_PRESETS.includes(metadata.preset);
+
   // Extract additional media metadata
   const isVideo = VIDEO_PRESETS.includes(metadata.preset);
 
   return new Promise(resolve => {
-    const mediaElement = document.createElement(isVideo ? 'video' : 'audio');
-    // Add a listener to read the metadata once it has loaded.
-    mediaElement.addEventListener('loadedmetadata', () => {
-      metadata.duration = Math.floor(mediaElement.duration);
-      // Override preset based off video resolution
-      if (isVideo) {
-        metadata.preset =
-          mediaElement.videoHeight >= 720
-            ? FormatPresetsNames.HIGH_RES_VIDEO
-            : FormatPresetsNames.LOW_RES_VIDEO;
-      }
+    if (isH5P) {
+      getH5PMetadata(file, metadata);
+      console.log(metadata);
       resolve(metadata);
-    });
-    // Set the src url on the media element
-    mediaElement.src = URL.createObjectURL(file);
+    } else {
+      const mediaElement = document.createElement(isVideo ? 'video' : 'audio');
+      // Add a listener to read the metadata once it has loaded.
+      mediaElement.addEventListener('loadedmetadata', () => {
+        metadata.duration = Math.floor(mediaElement.duration);
+        // Override preset based off video resolution
+        if (isVideo) {
+          metadata.preset =
+            mediaElement.videoHeight >= 720
+              ? FormatPresetsNames.HIGH_RES_VIDEO
+              : FormatPresetsNames.LOW_RES_VIDEO;
+        }
+        resolve(metadata);
+      });
+      // Set the src url on the media element
+      mediaElement.src = URL.createObjectURL(file);
+    }
   });
 }
