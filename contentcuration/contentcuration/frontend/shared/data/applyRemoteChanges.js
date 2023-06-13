@@ -82,7 +82,7 @@ function applyMove(change) {
   }
 
   const { key, target, position } = change;
-  return resource.resolveTreeInsert(key, target, position, false, data => {
+  return resource.resolveTreeInsert({ id: key, target, position, isCreate: false }, data => {
     return transaction(change, () => {
       return resource.tableMove(data);
     });
@@ -97,7 +97,7 @@ function applyCopy(change) {
 
   const { key, target, position, from_key } = change;
   // copying takes the ID of the node to copy, so we use `from_key`
-  return resource.resolveTreeInsert(from_key, target, position, true, data => {
+  return resource.resolveTreeInsert({ id: from_key, target, position, isCreate: true }, data => {
     return transaction(change, () => {
       // Update the ID on the payload to match the received change, since isCreate=true
       // would generate new IDs

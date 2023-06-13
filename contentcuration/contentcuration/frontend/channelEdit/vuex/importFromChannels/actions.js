@@ -1,17 +1,54 @@
+import partition from 'lodash/partition';
 import client from 'shared/client';
+import urls from 'shared/urls';
+import * as publicApi from 'shared/data/public';
 import { NOVALUE, ChannelListTypes } from 'shared/constants';
 
 import { Channel, SavedSearch } from 'shared/data/resources';
 
-export function fetchResourceSearchResults(context, params) {
+export async function fetchResourceSearchResults(context, params) {
   params = { ...params };
   delete params['last'];
   params.page_size = params.page_size || 25;
   params.channel_list = params.channel_list || ChannelListTypes.PUBLIC;
-  return client.get(window.Urls.search_list(), { params }).then(response => {
-    context.commit('contentNode/ADD_CONTENTNODES', response.data.results, { root: true });
-    return response.data;
-  });
+
+  const response = await client.get(urls.search_list(), { params });
+
+  // Split nodes into public and private so we can call the separate apis
+  const [publicNodes, privateNodes] = partition(response.data.results, node => node.public);
+
+  const privatePromise = privateNodes.length
+    ? context.dispatch(
+        'contentNode/loadContentNodes',
+        {
+          id__in: privateNodes.map(node => node.id),
+        },
+        { root: true }
+      )
+    : Promise.resolve([]);
+
+  await Promise.all([
+    // the loadContentNodes action already loads the nodes into vuex
+    privatePromise,
+    Promise.all(
+      // The public API is cached, so we can hopefully call it multiple times without
+      // worrying too much about performance
+      publicNodes.map(async node => {
+        const publicNode = await publicApi.getContentNode(node.node_id).catch(() => null);
+        if (!publicNode) {
+          return;
+        }
+        return publicApi.convertContentNodeResponse(node.id, node.root_id, publicNode);
+      })
+    )
+      .then(nodes => nodes.filter(Boolean))
+      .then(nodes => {
+        context.commit('contentNode/ADD_CONTENTNODES', nodes, { root: true });
+        return nodes;
+      }),
+  ]);
+
+  return response.data;
 }
 
 export function loadChannels(context, params) {

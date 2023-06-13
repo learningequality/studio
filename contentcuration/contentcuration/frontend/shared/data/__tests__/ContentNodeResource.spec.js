@@ -298,7 +298,10 @@ describe('ContentNode methods', () => {
     it('should reject with error when attempting to set as child of itself', async () => {
       parent.id = 'abc123';
       await expect(
-        ContentNode.resolveTreeInsert('abc123', 'target', 'position', false, jest.fn())
+        ContentNode.resolveTreeInsert(
+          { id: 'abc123', target: 'target', position: 'position', isCreate: false },
+          jest.fn()
+        )
       ).rejects.toThrow('Cannot set node as child of itself');
       expect(resolveParent).toHaveBeenCalledWith('target', 'position');
     });
@@ -307,7 +310,10 @@ describe('ContentNode methods', () => {
       it('should default to appending', async () => {
         const cb = jest.fn(() => Promise.resolve('results'));
         await expect(
-          ContentNode.resolveTreeInsert('abc123', 'target', 'position', false, cb)
+          ContentNode.resolveTreeInsert(
+            { id: 'abc123', target: 'target', position: 'position', isCreate: false },
+            cb
+          )
         ).resolves.toEqual('results');
         expect(resolveParent).toHaveBeenCalledWith('target', 'position');
         expect(treeLock).toHaveBeenCalledWith(parent.root_id, expect.any(Function));
@@ -340,7 +346,10 @@ describe('ContentNode methods', () => {
         const cb = jest.fn(() => Promise.resolve('results'));
         parent.channel_id = null;
         await expect(
-          ContentNode.resolveTreeInsert('abc123', 'target', 'position', false, cb)
+          ContentNode.resolveTreeInsert(
+            { id: 'abc123', target: 'target', position: 'position', isCreate: false },
+            cb
+          )
         ).resolves.toEqual('results');
         expect(resolveParent).toHaveBeenCalledWith('target', 'position');
         expect(treeLock).toHaveBeenCalledWith(parent.root_id, expect.any(Function));
@@ -377,7 +386,10 @@ describe('ContentNode methods', () => {
           .map((_, i) => ({ id: uuid4(), lft: i, title: `Sibling ${i}` }));
 
         await expect(
-          ContentNode.resolveTreeInsert('abc123', 'target', 'position', false, cb)
+          ContentNode.resolveTreeInsert(
+            { id: 'abc123', target: 'target', position: 'position', isCreate: false },
+            cb
+          )
         ).resolves.toEqual('results');
         expect(resolveParent).toHaveBeenCalledWith('target', 'position');
         expect(treeLock).toHaveBeenCalledWith(parent.root_id, expect.any(Function));
@@ -413,7 +425,10 @@ describe('ContentNode methods', () => {
           .fill(1)
           .map((_, i) => ({ id: uuid4(), title: `Sibling ${i}` }));
         await expect(
-          ContentNode.resolveTreeInsert('abc123', 'target', 'position', false, cb)
+          ContentNode.resolveTreeInsert(
+            { id: 'abc123', target: 'target', position: 'position', isCreate: false },
+            cb
+          )
         ).rejects.toThrow('New lft value evaluated to null');
         expect(resolveParent).toHaveBeenCalledWith('target', 'position');
         expect(treeLock).toHaveBeenCalledWith(parent.root_id, expect.any(Function));
@@ -428,7 +443,10 @@ describe('ContentNode methods', () => {
       it('should default to appending', async () => {
         const cb = jest.fn(() => Promise.resolve('results'));
         await expect(
-          ContentNode.resolveTreeInsert('abc123', 'target', 'position', true, cb)
+          ContentNode.resolveTreeInsert(
+            { id: 'abc123', target: 'target', position: 'position', isCreate: true },
+            cb
+          )
         ).resolves.toEqual('results');
         expect(resolveParent).toHaveBeenCalledWith('target', 'position');
         expect(treeLock).toHaveBeenCalledWith(parent.root_id, expect.any(Function));
@@ -465,7 +483,10 @@ describe('ContentNode methods', () => {
           .fill(1)
           .map((_, i) => ({ id: uuid4(), title: `Sibling ${i}` }));
         await expect(
-          ContentNode.resolveTreeInsert('abc123', 'target', 'position', true, cb)
+          ContentNode.resolveTreeInsert(
+            { id: 'abc123', target: 'target', position: 'position', isCreate: true },
+            cb
+          )
         ).resolves.toEqual('results');
         expect(resolveParent).toHaveBeenCalledWith('target', 'position');
         expect(treeLock).toHaveBeenCalledWith(parent.root_id, expect.any(Function));
@@ -502,7 +523,10 @@ describe('ContentNode methods', () => {
           .fill(1)
           .map((_, i) => ({ id: uuid4(), title: `Sibling ${i}` }));
         await expect(
-          ContentNode.resolveTreeInsert('abc123', 'target', 'position', true, cb)
+          ContentNode.resolveTreeInsert(
+            { id: 'abc123', target: 'target', position: 'position', isCreate: true },
+            cb
+          )
         ).rejects.toThrow('New lft value evaluated to null');
         expect(resolveParent).toHaveBeenCalledWith('target', 'position');
         expect(treeLock).toHaveBeenCalledWith(parent.root_id, expect.any(Function));
