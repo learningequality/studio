@@ -21,6 +21,7 @@ const SyncProgressPlugin = store => {
         subscription.unsubscribe();
       },
     });
+    store.stopListeningForIndexedDBChanges = subscription.unsubscribe;
   };
 };
 

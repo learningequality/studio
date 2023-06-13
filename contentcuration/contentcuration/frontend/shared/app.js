@@ -317,6 +317,9 @@ export default async function startApp({ store, router, index }) {
   ) {
     await resetDB();
   }
+
+  let subscription;
+
   if (currentUser.id !== undefined && currentUser.id !== null) {
     // The user is logged on, so persist that to the session table in indexeddb
     await store.dispatch('saveSession', currentUser, { root: true });
@@ -325,7 +328,7 @@ export default async function startApp({ store, router, index }) {
       return Session.table.toCollection().first(Boolean);
     });
 
-    const subscription = observable.subscribe({
+    subscription = observable.subscribe({
       next(result) {
         if (!result && !window.location.pathname.endsWith(urls.accounts())) {
           window.location = urls.accounts();
@@ -372,4 +375,12 @@ export default async function startApp({ store, router, index }) {
   store.listenForIndexedDBChanges();
 
   rootVue = new Vue(config);
+
+  // Return a cleanup function
+  return function() {
+    if (subscription) {
+      subscription.unsubscribe();
+    }
+    store.stopListeningForIndexedDBChanges();
+  };
 }
