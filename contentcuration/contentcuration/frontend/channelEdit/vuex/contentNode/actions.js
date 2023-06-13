@@ -391,11 +391,17 @@ export function deleteContentNodes(context, contentNodeIds) {
 
 export function copyContentNode(
   context,
-  { id, target, position = RELATIVE_TREE_POSITIONS.LAST_CHILD, excluded_descendants = null } = {}
+  {
+    id,
+    target,
+    position = RELATIVE_TREE_POSITIONS.LAST_CHILD,
+    excluded_descendants = null,
+    sourceNode = null,
+  } = {}
 ) {
   // First, this will parse the tree and create the copy the local tree nodes,
   // with a `source_id` of the source node then create the content node copies
-  return ContentNode.copy(id, target, position, excluded_descendants).then(node => {
+  return ContentNode.copy(id, target, position, excluded_descendants, sourceNode).then(node => {
     context.commit('ADD_CONTENTNODE', node);
     return node;
   });
@@ -403,10 +409,16 @@ export function copyContentNode(
 
 export function copyContentNodes(
   context,
-  { id__in, target, position = RELATIVE_TREE_POSITIONS.LAST_CHILD }
+  { id__in, target, position = RELATIVE_TREE_POSITIONS.LAST_CHILD, sourceNodes = null }
 ) {
   return Promise.all(
-    id__in.map(id => context.dispatch('copyContentNode', { id, target, position }))
+    id__in.map(id => {
+      let sourceNode = null;
+      if (sourceNodes) {
+        sourceNode = sourceNodes.find(n => n.id === id);
+      }
+      return context.dispatch('copyContentNode', { id, target, position, sourceNode });
+    })
   );
 }
 
