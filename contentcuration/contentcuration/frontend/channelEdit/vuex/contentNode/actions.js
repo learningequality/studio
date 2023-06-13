@@ -401,7 +401,6 @@ export function copyContentNode(
 ) {
   // First, this will parse the tree and create the copy the local tree nodes,
   // with a `source_id` of the source node then create the content node copies
-  console.log('copyContentNode', id, target, position, excluded_descendants, { ...sourceNode });
   return ContentNode.copy(id, target, position, excluded_descendants, sourceNode).then(node => {
     context.commit('ADD_CONTENTNODE', node);
     return node;
