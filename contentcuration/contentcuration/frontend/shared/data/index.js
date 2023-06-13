@@ -37,18 +37,10 @@ if (process.env.NODE_ENV !== 'production' && typeof window !== 'undefined') {
   window.resetDB = resetDB;
 }
 
-function applyResourceListener(change) {
-  const resource = INDEXEDDB_RESOURCES[change.table];
-  if (resource && resource.listeners && resource.listeners[change.type]) {
-    resource.listeners[change.type](change);
-  }
-}
-
 export async function initializeDB() {
   try {
     setupSchema();
     await db.open();
-    db.on('changes', changes => changes.map(applyResourceListener));
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) {
         stopSyncing();

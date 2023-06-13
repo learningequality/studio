@@ -214,7 +214,6 @@ class IndexedDBResource {
     uuid = true,
     indexFields = [],
     syncable = false,
-    listeners = {},
     ...options
   } = {}) {
     this.tableName = tableName;
@@ -228,9 +227,6 @@ class IndexedDBResource {
     copyProperties(this, options);
     // By default these resources do not sync changes to the backend.
     this.syncable = syncable;
-    // An object for listening to specific change events on this resource in order to
-    // allow for side effects from changes - should be a map of change type to handler function.
-    this.listeners = listeners;
   }
 
   get table() {
@@ -977,13 +973,6 @@ export const Session = new IndexedDBResource({
   tableName: TABLE_NAMES.SESSION,
   idField: CURRENT_USER,
   uuid: false,
-  listeners: {
-    [CHANGE_TYPES.DELETED]: function() {
-      if (!window.location.pathname.endsWith(urls.accounts())) {
-        window.location = urls.accounts();
-      }
-    },
-  },
   get currentChannel() {
     return window.CHANNEL_EDIT_GLOBAL || {};
   },

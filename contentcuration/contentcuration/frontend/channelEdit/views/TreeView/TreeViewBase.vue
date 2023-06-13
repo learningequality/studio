@@ -55,6 +55,7 @@
         </router-link>
       </VToolbarItems>
       <VSpacer />
+      <SavingIndicator v-if="!offline" />
       <OfflineText indicator />
       <ProgressModal />
       <div
@@ -305,11 +306,12 @@
 
 <script>
 
-  import { mapActions, mapGetters } from 'vuex';
+  import { mapActions, mapGetters, mapState } from 'vuex';
   import Clipboard from '../../components/Clipboard';
   import SyncResourcesModal from '../sync/SyncResourcesModal';
   import ProgressModal from '../progress/ProgressModal';
   import PublishModal from '../../components/publish/PublishModal';
+  import SavingIndicator from '../../components/edit/SavingIndicator';
   import { DraggableRegions, DraggableUniverses, RouteNames } from '../../constants';
   import MainNavigationDrawer from 'shared/views/MainNavigationDrawer';
   import IconButton from 'shared/views/IconButton';
@@ -340,6 +342,7 @@
       ContentNodeIcon,
       DraggablePlaceholder,
       MessageDialog,
+      SavingIndicator,
     },
     mixins: [titleMixin],
     props: {
@@ -360,6 +363,9 @@
       };
     },
     computed: {
+      ...mapState({
+        offline: state => !state.connection.online,
+      }),
       ...mapGetters('contentNode', ['getContentNode']),
       ...mapGetters('currentChannel', ['currentChannel', 'canEdit', 'canManage', 'rootId']),
       rootNode() {
