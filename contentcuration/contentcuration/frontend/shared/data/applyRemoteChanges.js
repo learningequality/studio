@@ -1,10 +1,9 @@
 import Dexie from 'dexie';
 import sortBy from 'lodash/sortBy';
 import logging from '../logging';
-import { CHANGE_TYPES, TABLE_NAMES, LOCK_NAMES } from './constants';
+import { CHANGE_TYPES, TABLE_NAMES } from './constants';
 import db from './db';
 import { INDEXEDDB_RESOURCES } from './registry';
-import { acquireLock } from 'shared/data/locks';
 import { RolesNames } from 'shared/leUtils/Roles';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
@@ -358,14 +357,12 @@ export class ChangeStream {
       this.init();
     }
 
-    return acquireLock({ name: LOCK_NAMES.APPLY_CHANGES }, async () => {
-      for (const change of sortChanges(changes)) {
-        // write to the queue but not necessarily applied yet
-        this._writer.write(change);
-      }
-      // return/await here ensures all changes are applied, which allows us to release the lock
-      return this._writer.ready;
-    });
+    for (const change of sortChanges(changes)) {
+      // write to the queue but not necessarily applied yet
+      this._writer.write(change);
+    }
+    // return/await here ensures all changes are applied
+    return this._writer.ready;
   }
 
   /**

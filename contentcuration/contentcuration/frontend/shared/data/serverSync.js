@@ -99,6 +99,16 @@ function handleAllowed(response) {
   return Promise.resolve();
 }
 
+function handleReturnedChanges(response) {
+  // The changes property is an array of any changes from the server to apply in the
+  // client.
+  const returnedChanges = get(response, ['data', 'changes'], []);
+  if (returnedChanges.length) {
+    return changeStream.write(returnedChanges);
+  }
+  return Promise.resolve();
+}
+
 // These are keys that the changes table is indexed by, so we cannot modify these during
 // the modify call that we use to update the changes table, if they already exist.
 const noModifyKeys = {
@@ -279,13 +289,12 @@ function syncChanges(syncAllChanges) {
       await Promise.all([
         handleDisallowed(response),
         handleAllowed(response),
+        handleReturnedChanges(response),
         handleErrors(response),
         handleSuccesses(response),
         handleMaxRevs(response, user.id),
         handleTasks(response),
       ]);
-      // Return the array of returned changes
-      return get(response, ['data', 'changes'], []);
     } catch (err) {
       // There was an error during syncing, log, but carry on
       if (err.message !== noUserError) {
@@ -320,12 +329,6 @@ function doSyncChanges(syncAll = false) {
         () => syncChanges(syncAll)
       )
     )
-    .then(returnedChanges => {
-      // Apply returned changes
-      if (returnedChanges.length) {
-        return changeStream.write(returnedChanges);
-      }
-    })
     .then(() => {
       // If it is successful call all of the resolve functions that we have stored
       // from all the Promises that have been returned while this specific debounce
