@@ -46,10 +46,13 @@ class Command(BaseCommand):
         )
 
         for channel in channel_qs:
-            kolibri_temp_db = create_content_database(channel, True, chef_user.id, False)
-            os.remove(kolibri_temp_db)
-            channel.last_published = timezone.now()
-            channel.save()
+            try:
+                kolibri_temp_db = create_content_database(channel, True, chef_user.id, False)
+                os.remove(kolibri_temp_db)
+                channel.last_published = timezone.now()
+                channel.save()
+            except Exception as e:
+                logger.exception("Failed to export channel {} to kolibri_public because of error: {}".format(channel.id, e))
 
     def _export_channel(self, channel_id):
         logger.info("Putting channel {} into kolibri_public".format(channel_id))
