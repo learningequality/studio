@@ -7,6 +7,7 @@
  *
  * See bottom of file for '@typedef's
  */
+import isString from 'lodash/isString';
 import isFunction from 'lodash/isFunction';
 import { RolesNames } from 'shared/leUtils/Roles';
 import { findLicense } from 'shared/utils/helpers';
@@ -28,6 +29,14 @@ function _convertMetadataLabel(key, obj) {
   }
   return converted;
 }
+
+/**
+ * @see MPTTModel for explanation of this calculation
+ * @param obj
+ * @return {number}
+ */
+const total_count = obj =>
+  obj['kind'] === ContentKindsNames.TOPIC ? (obj['rght'] - obj['lft'] - 1) / 2 : 1;
 
 const CONTENT_NODE_FIELD_MAP = {
   // `destination field`: `source field` or value producing function
@@ -54,21 +63,23 @@ const CONTENT_NODE_FIELD_MAP = {
   categories: _convertMetadataLabel.bind({}, 'categories'),
   resource_types: _convertMetadataLabel.bind({}, 'resource_types'),
   tags: _convertMetadataLabel.bind({}, 'tags'),
-  extra_fields: obj => ({ options: JSON.parse(obj['options']) }),
+  extra_fields: obj => ({
+    options: isString(obj['options']) ? JSON.parse(obj['options']) : obj['options'],
+  }),
   role_visibility: obj => (obj['coach_content'] ? RolesNames.COACH : RolesNames.LEARNER),
   license: obj => findLicense(obj['license_name']),
   license_description: 'license_description',
   copyright_holder: 'license_owner',
   coach_count: 'num_coach_contents',
-  // see MPTTModel for explanation of this calculation
-  total_count: obj =>
-    obj['kind'] === ContentKindsNames.TOPIC ? (obj['rght'] - obj['lft'] - 1) / 2 : 1,
+
+  total_count,
   language: obj => obj['lang']['id'],
-  thumbnail_src: obj => new URL(obj['thumbnail'], window.location.origin).pathname,
+  thumbnail_src: obj =>
+    obj['thumbnail'] ? new URL(obj['thumbnail'], window.location.origin).toString() : null,
   thumbnail_encoding: () => '{}',
 
   // unavailable in public API
-  // 'resource_count': 'num_resources',
+  resource_count: total_count, // fake it, assume all nodes are resources
   // 'root_id': 'root_id',
 };
 
