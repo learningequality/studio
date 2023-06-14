@@ -263,6 +263,14 @@ class ExportChannelTestCase(StudioTestCase):
         assert completion_criteria_node.duration == 20
         assert non_completion_criteria_node.duration == 100
 
+    def test_completion_criteria_set(self):
+        completion_criteria_node = kolibri_models.ContentNode.objects.filter(title='Completion criteria test').first()
+
+        self.assertEqual(completion_criteria_node.options["completion_criteria"], {
+            "model": "time",
+            "threshold": 20
+        })
+
     def test_contentnode_channel_id_data(self):
         channel = kolibri_models.ChannelMetadata.objects.first()
         nodes = kolibri_models.ContentNode.objects.all()
