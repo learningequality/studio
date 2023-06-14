@@ -47,8 +47,8 @@ export function loadContentNodeByNodeId(context, nodeId) {
     });
 }
 
-export function loadChildren(context, { parent }) {
-  return loadContentNodes(context, { parent });
+export function loadChildren(context, { parent, ...params }) {
+  return loadContentNodes(context, { parent, ...params });
 }
 
 export function loadAncestors(context, { id }) {
