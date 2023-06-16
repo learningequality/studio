@@ -349,7 +349,7 @@ def create_bare_contentnode(ccnode, default_language, channel_id, channel_name, 
             'license_description': kolibri_license.license_description if kolibri_license is not None else None,
             'coach_content': ccnode.role_visibility == roles.COACH,
             'duration': duration,
-            'options': json.dumps(options),
+            'options': options,
             # Fields for metadata labels
             "grade_levels": ",".join(grade_levels.keys()) if grade_levels else None,
             "resource_types": ",".join(resource_types.keys()) if resource_types else None,
