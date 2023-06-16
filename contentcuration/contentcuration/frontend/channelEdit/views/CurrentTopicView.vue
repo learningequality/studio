@@ -1,14 +1,33 @@
 <template>
 
-  <VContainer v-resize="handleWindowResize" fluid class="ma-0 main pa-0 panel">
+  <VContainer
+    v-resize="handleWindowResize"
+    fluid
+    class="ma-0 main pa-0 panel"
+  >
     <!-- Breadcrumbs -->
-    <VToolbar dense color="transparent" flat>
+    <VToolbar
+      dense
+      color="transparent"
+      flat
+    >
       <slot name="action"></slot>
-      <Breadcrumbs :items="ancestors" class="mx-1 px-2 py-0">
+      <Breadcrumbs
+        :items="ancestors"
+        class="mx-1 px-2 py-0"
+      >
         <template #item="{ item, isLast }">
           <!-- Current item -->
-          <VLayout v-if="isLast" align-center row>
-            <VFlex class="font-weight-bold text-truncate" shrink :class="getTitleClass(item)">
+          <VLayout
+            v-if="isLast"
+            align-center
+            row
+          >
+            <VFlex
+              class="font-weight-bold text-truncate"
+              shrink
+              :class="getTitleClass(item)"
+            >
               {{ getTitle(item) }}
             </VFlex>
             <Menu v-if="item.displayNodeOptions">
@@ -19,10 +38,17 @@
                   v-on="on"
                 />
               </template>
-              <ContentNodeOptions v-if="node" :nodeId="topicId" />
+              <ContentNodeOptions
+                v-if="node"
+                :nodeId="topicId"
+              />
             </Menu>
           </VLayout>
-          <span v-else class="grey--text" :class="getTitleClass(item)">
+          <span
+            v-else
+            class="grey--text"
+            :class="getTitleClass(item)"
+          >
             {{ getTitle(item) }}
           </span>
         </template>
@@ -30,7 +56,11 @@
     </VToolbar>
 
     <!-- Topic actions -->
-    <ToolBar dense :flat="!elevated" style="z-index: 4;">
+    <ToolBar
+      dense
+      :flat="!elevated"
+      style="z-index: 4;"
+    >
       <div class="mx-3">
         <Checkbox
           v-if="node && node.total_count"
@@ -88,7 +118,11 @@
       <VSpacer />
 
       <VFadeTransition>
-        <div v-show="selected.length" v-if="$vuetify.breakpoint.mdAndUp" class="px-1">
+        <div
+          v-show="selected.length"
+          v-if="$vuetify.breakpoint.mdAndUp"
+          class="px-1"
+        >
           {{ selectionText }}
         </div>
       </VFadeTransition>
@@ -120,7 +154,12 @@
 
         <Menu v-if="canEdit">
           <template #activator="{ on }">
-            <VBtn color="primary" class="ml-2" style="height: 32px;" v-on="on">
+            <VBtn
+              color="primary"
+              class="ml-2"
+              style="height: 32px;"
+              v-on="on"
+            >
               {{ $tr('addButton') }}
               <Icon small>
                 arrow_drop_down
@@ -188,7 +227,10 @@
         @resize="handleResourceDrawerResize"
         @scroll="scroll"
       >
-        <template v-if="canEdit" #actions>
+        <template
+          v-if="canEdit"
+          #actions
+        >
           <IconButton
             size="small"
             icon="edit"
@@ -212,7 +254,10 @@
             />
           </Menu>
         </template>
-        <template v-else #actions>
+        <template
+          v-else
+          #actions
+        >
           <IconButton
             size="small"
             icon="clipboard"
@@ -538,7 +583,8 @@
         }
 
         // All sources should be from the same region
-        const sourceRegion = drop.sources[0].region;
+        const sources = drop.sources || [];
+        const sourceRegion = sources.length > 0 ? sources[0].region : null;
         const payload = {
           target: identity.metadata.id,
           position,
@@ -713,16 +759,16 @@
 </script>
 
 <style scoped>
-  .main {
-    background-color: white;
-  }
-  .panel {
-    height: inherit;
-    overflow-y: auto;
-  }
+.main {
+  background-color: white;
+}
+.panel {
+  height: inherit;
+  overflow-y: auto;
+}
 
-  .fade-transition-enter-active,
-  .fade-transition-leave-active {
-    transition-duration: 0.1s
-  }
+.fade-transition-enter-active,
+.fade-transition-leave-active {
+  transition-duration: 0.1s;
+}
 </style>
