@@ -1395,7 +1395,6 @@ export const ContentNode = new TreeResource({
               // so that we can avoid doing fetches while such changes
               // are pending.
               parent: parent.id,
-              oldParent: isCreate ? null : node.parent,
               oldObj: isCreate ? null : node,
               table: this.tableName,
               source: CLIENTID,
