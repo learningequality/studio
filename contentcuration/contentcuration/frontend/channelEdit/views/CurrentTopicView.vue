@@ -715,15 +715,15 @@
 
 <style scoped>
   .main {
-      background-color: white;
+    background-color: white;
   }
   .panel {
-      height: inherit;
-      overflow-y: auto;
+    height: inherit;
+    overflow-y: auto;
   }
 
   .fade-transition-enter-active,
   .fade-transition-leave-active {
-      transition-duration: 0.1s;
+    transition-duration: 0.1s;
   }
 </style>
