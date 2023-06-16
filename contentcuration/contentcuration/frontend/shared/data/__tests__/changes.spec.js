@@ -188,6 +188,7 @@ describe('Change Types', () => {
       target: '2',
       position: RELATIVE_TREE_POSITIONS.LAST_CHILD,
       parent: '3',
+      oldParent: '4',
       source: CLIENTID,
     });
     const rev = await change.saveChange();
@@ -195,7 +196,16 @@ describe('Change Types', () => {
     expect(persistedChange).toEqual({
       rev,
       channel_id,
-      ...pick(change, ['type', 'key', 'table', 'target', 'position', 'parent', 'source']),
+      ...pick(change, [
+        'type',
+        'key',
+        'table',
+        'target',
+        'position',
+        'parent',
+        'source',
+        'oldParent',
+      ]),
     });
   });
 

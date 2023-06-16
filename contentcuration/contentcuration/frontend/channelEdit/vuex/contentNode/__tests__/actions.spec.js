@@ -15,7 +15,15 @@ const parentId = '000000000000000000000000000000000000';
 describe('contentNode actions', () => {
   let store;
   let id;
-  const contentNodeDatum = { title: 'test', parent: parentId, lft: 1, tags: {} };
+  const contentNodeDatum = {
+    title: 'test',
+    parent: parentId,
+    lft: 1,
+    tags: {},
+    total_count: 0,
+    resource_count: 0,
+    coach_count: 0,
+  };
   beforeEach(async () => {
     await mockChannelScope('test-123');
     return ContentNode._add(contentNodeDatum).then(newId => {
@@ -65,6 +73,8 @@ describe('contentNode actions', () => {
         expect(Object.values(store.state.contentNode.contentNodesMap)).toEqual([
           {
             ...contentNodeDatum,
+            resource_count: 1,
+            total_count: 1,
           },
         ]);
       });
@@ -84,6 +94,8 @@ describe('contentNode actions', () => {
           thumbnail_encoding: {},
           ...contentNodeDatum,
           tags: [],
+          resource_count: 1,
+          total_count: 1,
         });
       });
     });
