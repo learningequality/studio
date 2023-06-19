@@ -998,6 +998,10 @@ export const Bookmark = new Resource({
   },
 });
 
+export const Caption = new Resource({
+  // TODO
+})
+
 export const Channel = new Resource({
   tableName: TABLE_NAMES.CHANNEL,
   urlName: 'channel',

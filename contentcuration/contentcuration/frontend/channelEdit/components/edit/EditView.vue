@@ -62,6 +62,16 @@
                 {{ relatedResourcesCount }}
               </VChip>
             </VTab>
+
+            <!-- Captions editing tab -->
+            <VTab
+              v-if="showCaptions"
+              ref="caption-tab"
+              :href="`#${tabs.CAPTIONS}`"
+              @click="trackTab('Captions')"
+            >
+            {{ $tr(tabs.CAPTIONS) }}
+            </VTab>
           </Tabs>
         </ToolBar>
         <VContainer fluid>
@@ -82,12 +92,18 @@
             <VTabItem :key="tabs.QUESTIONS" ref="questionwindow" :value="tabs.QUESTIONS" lazy>
               <AssessmentTab :nodeId="nodeIds[0]" />
             </VTabItem>
+
             <VTabItem
               :key="tabs.RELATED"
               :value="tabs.RELATED"
               lazy
             >
               <RelatedResourcesTab :nodeId="nodeIds[0]" />
+            </VTabItem>
+
+            <VTabItem
+              :key="tabs.CAPTIONS" ref="captionswindow" :value="tabs.CAPTIONS" lazy>
+              <CaptionsEditor />
             </VTabItem>
           </VTabsItems>
         </VContainer>
@@ -104,6 +120,7 @@
 
   import { TabNames } from '../../constants';
   import AssessmentTab from '../../components/AssessmentTab/AssessmentTab';
+  import CaptionsEditor from '../../components/CaptionsEditor/CaptionsEditor'
   import RelatedResourcesTab from '../../components/RelatedResourcesTab/RelatedResourcesTab';
   import DetailsTabView from './DetailsTabView';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
@@ -113,11 +130,12 @@
   export default {
     name: 'EditView',
     components: {
-      DetailsTabView,
-      AssessmentTab,
-      RelatedResourcesTab,
-      Tabs,
-      ToolBar,
+        AssessmentTab,
+        CaptionsEditor,
+        DetailsTabView,
+        RelatedResourcesTab,
+        Tabs,
+        ToolBar,
     },
     props: {
       nodeIds: {
@@ -143,6 +161,7 @@
         'getImmediateRelatedResourcesCount',
       ]),
       ...mapGetters('assessmentItem', ['getAssessmentItemsAreValid', 'getAssessmentItemsCount']),
+      ...mapGetters('currentChannel', ['isAIFeatureEnabled']),
       firstNode() {
         return this.nodes.length ? this.nodes[0] : null;
       },
@@ -166,6 +185,14 @@
       },
       showRelatedResourcesTab() {
         return this.oneSelected && this.firstNode && this.firstNode.kind !== 'topic';
+      },
+      showCaptions() {
+        return (
+          this.oneSelected && 
+          this.firstNode && 
+          (this.firstNode.kind === 'video' || this.firstNode.kind === 'audio') &&
+          this.isAIFeatureEnabled
+        )
       },
       countText() {
         const totals = reduce(
@@ -260,6 +287,8 @@
       questions: 'Questions',
       /** @see TabNames.RELATED */
       related: 'Related',
+      /** @see TabNames.CAPTIONS */
+      captions: 'Captions',
       /* eslint-enable kolibri/vue-no-unused-translations */
       noItemsToEditText: 'Please select resources or folders to edit',
       invalidFieldsToolTip: 'Some required information is missing',
