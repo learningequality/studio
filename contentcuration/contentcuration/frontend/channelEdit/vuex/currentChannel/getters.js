@@ -14,6 +14,10 @@ export function canEdit(state, getters, rootState, rootGetters) {
   );
 }
 
+export function isAIFeatureEnabled(state, getters, rootState, rootGetters) {
+  return rootGetters.featureFlags.ai_feature || false;
+}
+
 // Allow some extra actions for ricecooker channels
 export function canManage(state, getters, rootState, rootGetters) {
   return getters.currentChannel && (getters.currentChannel.edit || rootGetters.isAdmin);
