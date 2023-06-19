@@ -1,5 +1,7 @@
 from django.db import transaction
+from django.db.models.functions import Length
 from kolibri_content import models as kolibri_content_models
+from kolibri_content.base_models import MAX_TAG_LENGTH
 from kolibri_public import models as kolibri_public_models
 from kolibri_public.search import annotate_label_bitmasks
 from kolibri_public.utils.annotation import set_channel_metadata_fields
@@ -24,14 +26,14 @@ class ChannelMapper(object):
     @property
     def overrides(self):
         return {
-        kolibri_public_models.ContentNode: {
-            "available": True,
-            "tree_id": self.tree_id,
-        },
-        kolibri_public_models.LocalFile: {
-            "available": True,
+            kolibri_public_models.ContentNode: {
+                "available": True,
+                "tree_id": self.tree_id,
+            },
+            kolibri_public_models.LocalFile: {
+                "available": True,
+            }
         }
-    }
 
     def _handle_old_tree_if_exists(self):
         try:
@@ -135,17 +137,31 @@ class ChannelMapper(object):
         return [node_copy]
 
     def _copy_tags(self, node_ids):
-        source_tags_mappings = kolibri_content_models.ContentNode.tags.through.objects.filter(
+        initial_source_tag_mappings = kolibri_content_models.ContentNode.tags.through.objects.filter(
             contentnode_id__in=node_ids
         )
 
-        source_tags = kolibri_content_models.ContentTag.objects.filter(
-            id__in=source_tags_mappings.values_list("contenttag_id", flat=True)
+        source_tags = (
+            kolibri_content_models.ContentTag.objects
+            .annotate(
+                tag_name_len=Length("tag_name"),
+            )
+            .filter(
+                id__in=initial_source_tag_mappings.values_list("contenttag_id", flat=True),
+                tag_name_len__lte=MAX_TAG_LENGTH,
+            )
+        )
+
+        source_tag_mappings = (
+            initial_source_tag_mappings
+            .filter(
+                contenttag_id__in=source_tags.values_list("id", flat=True),
+            )
         )
 
         self._map_and_bulk_create_model(source_tags, kolibri_public_models.ContentTag)
 
-        self._map_and_bulk_create_model(source_tags_mappings, kolibri_public_models.ContentNode.tags.through)
+        self._map_and_bulk_create_model(source_tag_mappings, kolibri_public_models.ContentNode.tags.through)
 
     def _copy_assessment_metadata(self, node_ids):
         node_assessmentmetadata = kolibri_content_models.AssessmentMetaData.objects.filter(contentnode_id__in=node_ids)

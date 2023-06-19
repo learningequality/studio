@@ -9,6 +9,7 @@ from kolibri_content.router import get_active_content_database
 from kolibri_content.router import using_content_database
 from kolibri_public import models as kolibri_public_models
 from kolibri_public.tests.base import ChannelBuilder
+from kolibri_public.tests.base import OKAY_TAG
 from kolibri_public.utils.mapper import ChannelMapper
 
 from contentcuration.models import Channel
@@ -19,14 +20,14 @@ class ChannelMapperTest(TestCase):
     @property
     def overrides(self):
         return {
-        kolibri_public_models.ContentNode: {
-            "available": True,
-            "tree_id": self.mapper.tree_id,
-        },
-        kolibri_public_models.LocalFile: {
-            "available": True,
+            kolibri_public_models.ContentNode: {
+                "available": True,
+                "tree_id": self.mapper.tree_id,
+            },
+            kolibri_public_models.LocalFile: {
+                "available": True,
+            }
         }
-    }
 
     @classmethod
     def setUpClass(cls):
@@ -57,6 +58,10 @@ class ChannelMapperTest(TestCase):
                     self.assertEqual(getattr(source, column), getattr(mapped, column))
 
     def _assert_node(self, source, mapped):
+        """
+        :param source: kolibri_content_models.ContentNode
+        :param mapped: kolibri_public_models.ContentNode
+        """
         self._assert_model(source, mapped, kolibri_public_models.ContentNode)
 
         for src, mpd in zip(source.assessmentmetadata.all(), mapped.assessmentmetadata.all()):
@@ -65,6 +70,10 @@ class ChannelMapperTest(TestCase):
         for src, mpd in zip(source.files.all(), mapped.files.all()):
             self._assert_model(src, mpd, kolibri_public_models.File)
             self._assert_model(src.local_file, mpd.local_file, kolibri_public_models.LocalFile)
+
+        # should only map OKAY_TAG and not BAD_TAG
+        for mapped_tag in mapped.tags.all():
+            self.assertEqual(OKAY_TAG, mapped_tag.tag_name)
 
     def _recurse_and_assert(self, sources, mappeds, recursion_depth=0):
         recursion_depths = []

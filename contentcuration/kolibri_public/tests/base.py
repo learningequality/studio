@@ -32,6 +32,10 @@ def choices(sequence, k):
     return [random.choice(sequence) for _ in range(0, k)]
 
 
+OKAY_TAG = "okay_tag"
+BAD_TAG = "tag_is_too_long_because_it_is_over_30_characters"
+
+
 class ChannelBuilder(object):
     """
     This class is purely to generate all the relevant data for a single
@@ -75,8 +79,14 @@ class ChannelBuilder(object):
         self.channel = self.channel_data()
         self.files = {}
         self.localfiles = {}
+        self.content_tags = {}
+
         self.node_to_files_map = {}
         self.localfile_to_files_map = {}
+        self.content_tag_map = {}
+
+        for tag_name in [OKAY_TAG, BAD_TAG]:
+            self.content_tag_data(tag_name)
 
         self.root_node = self.generate_topic()
         if "root_id" in self.channel:
@@ -117,7 +127,19 @@ class ChannelBuilder(object):
         self.nodes = {n["id"]: n for n in map(to_dict, self._django_nodes)}
 
     def insert_into_default_db(self):
+        self.models.ContentTag.objects.bulk_create(
+            (self.models.ContentTag(**tag) for tag in self.content_tags.values())
+        )
         self.models.ContentNode.objects.bulk_create(self._django_nodes)
+        self.models.ContentNode.tags.through.objects.bulk_create(
+            (
+                self.models.ContentNode.tags.through(
+                    contentnode_id=node["id"], contenttag_id=tag["id"]
+                )
+                for node in self.nodes.values()
+                for tag in self.content_tags.values()
+            )
+        )
         self.models.ChannelMetadata.objects.create(**self.channel)
         self.models.LocalFile.objects.bulk_create(
             (self.models.LocalFile(**local) for local in self.localfiles.values())
@@ -153,6 +175,7 @@ class ChannelBuilder(object):
             "content_contentnode": list(self.nodes.values()),
             "content_file": list(self.files.values()),
             "content_localfile": list(self.localfiles.values()),
+            "content_contenttag": list(self.content_tags.values()),
         }
 
     def recurse_and_generate(self, parent_id, levels):
@@ -190,6 +213,8 @@ class ChannelBuilder(object):
             thumbnail=True,
             preset=format_presets.VIDEO_THUMBNAIL,
         )
+        for tag_id in self.content_tags:
+            self.content_tag_map[node["id"]] = [tag_id]
         return node
 
     def channel_data(self, channel_id=None, version=1):
@@ -217,6 +242,14 @@ class ChannelBuilder(object):
         for field in self._excluded_channel_fields:
             del channel_data[field]
         return channel_data
+
+    def content_tag_data(self, tag_name):
+        data = {
+            "id": uuid4_hex(),
+            "tag_name": tag_name,
+        }
+        self.content_tags[data["id"]] = data
+        return data
 
     def localfile_data(self, extension="mp4"):
         data = {
