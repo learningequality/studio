@@ -1028,6 +1028,10 @@ export const Bookmark = new Resource({
   getUserId: getUserIdFromStore,
 });
 
+export const Caption = new Resource({
+  // TODO
+})
+
 export const Channel = new Resource({
   tableName: TABLE_NAMES.CHANNEL,
   urlName: 'channel',
