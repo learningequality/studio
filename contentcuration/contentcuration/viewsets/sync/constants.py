@@ -22,7 +22,7 @@ ALL_CHANGES = set([
 
 # Client-side table constants
 BOOKMARK = "bookmark"
-CAPTION = "captions"
+CAPTION = "caption"
 CHANNEL = "channel"
 CONTENTNODE = "contentnode"
 CONTENTNODE_PREREQUISITE = "contentnode_prerequisite"

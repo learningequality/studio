@@ -5,7 +5,7 @@ from search.viewsets.savedsearch import SavedSearchViewSet
 from contentcuration.decorators import delay_user_storage_calculation
 from contentcuration.viewsets.assessmentitem import AssessmentItemViewSet
 from contentcuration.viewsets.bookmark import BookmarkViewSet
-from contentcuration.viewsets.captions import CaptionViewSet
+from contentcuration.viewsets.caption import CaptionViewSet
 from contentcuration.viewsets.channel import ChannelViewSet
 from contentcuration.viewsets.channelset import ChannelSetViewSet
 from contentcuration.viewsets.clipboard import ClipboardViewSet
