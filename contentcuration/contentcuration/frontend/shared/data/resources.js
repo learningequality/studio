@@ -1107,6 +1107,10 @@ export const CaptionCues = new Resource({
   }
 });
 
+export const Caption = new Resource({
+  // TODO
+})
+
 export const Channel = new Resource({
   tableName: TABLE_NAMES.CHANNEL,
   urlName: 'channel',
