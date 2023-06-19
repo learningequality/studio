@@ -25,7 +25,7 @@
           <VList v-for="(item, i) in collapsedItems" :key="`collapsed-${i}`">
             <VListTile :to="item.to">
               <VListTileTitle>
-                <slot name="item" :item="item" :index="i" :isLast="false"></slot>
+                <slot name="item" :item="item" :index="i" :isLast="false" :isFirst="items[0].id === item.id"></slot>
               </VListTileTitle>
             </VListTile>
           </VList>
@@ -47,7 +47,7 @@
         name="item"
         :item="item"
         :index="index"
-        :isFirst="index === 0"
+        :isFirst="items[0].id === item.id"
         :isLast="index === breadcrumbs.length - 1"
       ></slot>
     </VBreadcrumbsItem>
@@ -112,12 +112,13 @@
 
 </script>
 
-<style scoped>
+<style lang="less" scoped>
   /* Truncate text if the last item is too long */
   .breadcrumb:last-child {
     max-width: calc(100% - 76px);
   }
   /deep/ .v-breadcrumbs__item {
-    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 </style>
