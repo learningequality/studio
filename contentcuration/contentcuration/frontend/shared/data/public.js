@@ -7,7 +7,6 @@
  *
  * See bottom of file for '@typedef's
  */
-import isString from 'lodash/isString';
 import isFunction from 'lodash/isFunction';
 import { RolesNames } from 'shared/leUtils/Roles';
 import { findLicense } from 'shared/utils/helpers';
@@ -63,9 +62,27 @@ const CONTENT_NODE_FIELD_MAP = {
   categories: _convertMetadataLabel.bind({}, 'categories'),
   resource_types: _convertMetadataLabel.bind({}, 'resource_types'),
   tags: _convertMetadataLabel.bind({}, 'tags'),
-  extra_fields: obj => ({
-    options: isString(obj['options']) ? JSON.parse(obj['options']) : obj['options'],
-  }),
+  extra_fields: obj => {
+    const options = obj['options'];
+    let randomize = true;
+
+    if (obj['kind'] === ContentKindsNames.EXERCISE) {
+      const assessmentMetadata = obj['assessmentmetadata'];
+      if (!options['completion_criteria'] && assessmentMetadata['mastery_model']) {
+        options['completion_criteria'] = {
+          model: 'mastery',
+          threshold: {
+            mastery_model: JSON.parse(assessmentMetadata['mastery_model']),
+          },
+        };
+      }
+      randomize = Boolean(assessmentMetadata['randomize']);
+    }
+    return {
+      options,
+      randomize,
+    };
+  },
   role_visibility: obj => (obj['coach_content'] ? RolesNames.COACH : RolesNames.LEARNER),
   license: obj => findLicense(obj['license_name']),
   license_description: 'license_description',
@@ -88,9 +105,9 @@ const CONTENT_NODE_FIELD_MAP = {
  * @param {string} id - the actual ID of the node on Studio's side
  * @param {string} root_id - the root content node ID
  * @param {PublicContentNode} publicNode
- * @return {Promise<{id}>}
+ * @return {{id}}
  */
-export async function convertContentNodeResponse(id, root_id, publicNode) {
+export function convertContentNodeResponse(id, root_id, publicNode) {
   const contentNode = {
     // the public API does not return the actual id, but 'node_id' as the id, so this requires
     // us to know what the actual id is

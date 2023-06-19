@@ -2,7 +2,6 @@ import partition from 'lodash/partition';
 import { ImportSearchPageSize } from '../../constants';
 import client from 'shared/client';
 import urls from 'shared/urls';
-import * as publicApi from 'shared/data/public';
 import { NOVALUE, ChannelListTypes } from 'shared/constants';
 
 import { Channel, SavedSearch } from 'shared/data/resources';
@@ -34,19 +33,20 @@ export async function fetchResourceSearchResults(context, params) {
     Promise.all(
       // The public API is cached, so we can hopefully call it multiple times without
       // worrying too much about performance
-      publicNodes.map(async node => {
-        const publicNode = await publicApi.getContentNode(node.node_id).catch(() => null);
-        if (!publicNode) {
-          return;
-        }
-        return publicApi.convertContentNodeResponse(node.id, node.root_id, publicNode);
+      publicNodes.map(node => {
+        return context
+          .dispatch(
+            'contentNode/loadPublicContentNode',
+            {
+              id: node.id,
+              nodeId: node.node_id,
+              rootId: node.root_id,
+            },
+            { root: true }
+          )
+          .catch(() => null);
       })
-    )
-      .then(nodes => nodes.filter(Boolean))
-      .then(nodes => {
-        context.commit('contentNode/ADD_CONTENTNODES', nodes, { root: true });
-        return nodes;
-      }),
+    ).then(nodes => nodes.filter(Boolean)),
   ]);
 
   // In case we failed to obtain data for all nodes, filter out the ones we didn't get
