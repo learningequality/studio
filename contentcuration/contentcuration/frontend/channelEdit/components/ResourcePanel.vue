@@ -75,8 +75,8 @@
       >
         <VTab
           class="px-2"
-          :to="{ query: { tab: 'questions' } }"
           exact
+          @change="tab = 'questions'"
         >
           {{ $tr('questions') }}
           <Icon
@@ -90,8 +90,8 @@
         </VTab>
         <VTab
           class="px-2"
-          :to="{ query: { tab: 'details' } }"
           exact
+          @change="tab = 'details'"
         >
           {{ $tr('details') }}
           <Icon
@@ -587,11 +587,16 @@
         type: Boolean,
         default: false,
       },
+      useRouting: {
+        type: Boolean,
+        default: true,
+      },
     },
     data() {
       return {
         loading: false,
         showAnswers: false,
+        currentTab: 'details',
       };
     },
     computed: {
@@ -619,6 +624,10 @@
           if (!this.isExercise) {
             return;
           }
+          if (!this.useRouting) {
+            this.currentTab = value;
+            return;
+          }
           // If viewing an exercise, we need to synchronize the the route's
           // query params with the 'tab' value
           const newRoute = { query: { tab: value } };
@@ -629,8 +638,8 @@
           }
         },
         get() {
-          if (!this.isExercise) {
-            return 'details';
+          if (!this.isExercise || !this.useRouting) {
+            return this.currentTab;
           }
           return this.$route.query.tab || 'questions';
         },

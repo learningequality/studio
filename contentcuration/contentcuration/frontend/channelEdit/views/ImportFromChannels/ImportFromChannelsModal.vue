@@ -27,6 +27,7 @@
       fixed
       :permanent="false"
       :nodeId="previewNode.id"
+      :useRouting="false"
       @close="showPreview = false"
     >
       <template #actions>
