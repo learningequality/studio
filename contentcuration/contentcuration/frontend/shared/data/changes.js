@@ -383,7 +383,7 @@ export class DeletedChange extends Change {
 }
 
 export class MovedChange extends Change {
-  constructor({ target, position, parent, oldParent, ...fields }) {
+  constructor({ oldObj, target, position, parent, ...fields }) {
     fields.type = CHANGE_TYPES.MOVED;
     super(fields);
     if (this.table !== TABLE_NAMES.CONTENTNODE) {
@@ -391,10 +391,10 @@ export class MovedChange extends Change {
         `${this.changeType} is only supported by ${TABLE_NAMES.CONTENTNODE} table but ${this.table} was passed instead`
       );
     }
+    this.setAndValidateObj(oldObj, 'oldObj', omitIgnoredSubFields);
     this.setAndValidateIsDefined(target, 'target');
     this.setAndValidateLookup(position, 'position', RELATIVE_TREE_POSITIONS_LOOKUP);
     this.setAndValidateIsDefined(parent, 'parent');
-    this.setAndValidateIsDefined(oldParent, 'oldParent');
     this.setChannelAndUserId();
   }
 }

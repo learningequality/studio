@@ -295,13 +295,13 @@ class ResourceCounts extends ChangeDispatcher {
    */
   async applyMove(change) {
     // Only if the node is being moved to a new parent do we need to update the ancestor counts
-    if (change.oldParent === change.parent) {
+    if (change.oldObj.parent === change.parent) {
       return;
     }
 
     const node = await this.table.get(change.key);
     await this.resource.updateAncestors(
-      { id: change.oldParent, includeSelf: true, ignoreChanges: true },
+      { id: change.oldObj.parent, includeSelf: true, ignoreChanges: true },
       this._applyDiff.bind(this, node, -1)
     );
     await this.resource.updateAncestors(
