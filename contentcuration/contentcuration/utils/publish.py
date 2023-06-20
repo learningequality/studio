@@ -526,9 +526,9 @@ def process_assessment_metadata(ccnode, kolibrinode):
     kolibrimodels.AssessmentMetaData.objects.create(
         id=uuid.uuid4(),
         contentnode=kolibrinode,
-        assessment_item_ids=json.dumps(assessment_item_ids),
+        assessment_item_ids=assessment_item_ids,
         number_of_assessments=assessment_items.count(),
-        mastery_model=json.dumps(mastery_model),
+        mastery_model=mastery_model,
         randomize=randomize,
         is_manipulable=ccnode.kind_id == content_kinds.EXERCISE,
     )

@@ -1,6 +1,5 @@
 from __future__ import absolute_import
 
-import json
 import os
 import random
 import string
@@ -302,8 +301,8 @@ class ExportChannelTestCase(StudioTestCase):
     def test_assessment_metadata(self):
         for i, exercise in enumerate(kolibri_models.ContentNode.objects.filter(kind="exercise")):
             asm = exercise.assessmentmetadata.first()
-            self.assertTrue(isinstance(json.loads(asm.assessment_item_ids), list))
-            mastery = json.loads(asm.mastery_model)
+            self.assertTrue(isinstance(asm.assessment_item_ids, list))
+            mastery = asm.mastery_model
             self.assertTrue(isinstance(mastery, dict))
             self.assertEqual(mastery["type"], exercises.DO_ALL if i == 0 else exercises.M_OF_N)
             self.assertEqual(mastery["m"], 3 if i == 0 else 1)
