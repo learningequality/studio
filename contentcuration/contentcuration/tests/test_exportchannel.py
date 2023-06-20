@@ -397,6 +397,12 @@ class ExportChannelTestCase(StudioTestCase):
             "n": 2,
             "mastery_model": exercises.M_OF_N,
         })
+        published_exercise = kolibri_models.ContentNode.objects.get(title="Mastery test")
+        self.assertEqual(published_exercise.options["completion_criteria"]["threshold"], {
+            "m": 1,
+            "n": 2,
+            "mastery_model": exercises.M_OF_N,
+        })
 
     def test_publish_no_modify_legacy_exercise_extra_fields(self):
         current_exercise = cc.ContentNode.objects.get(title="Legacy Mastery test")
