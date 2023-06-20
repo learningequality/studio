@@ -11,6 +11,7 @@ import traceback
 import uuid
 import zipfile
 from builtins import str
+from copy import deepcopy
 from itertools import chain
 
 from django.conf import settings
@@ -495,7 +496,7 @@ def process_assessment_metadata(ccnode, kolibrinode):
     randomize = extra_fields.get('randomize') if extra_fields.get('randomize') is not None else True
     assessment_item_ids = [a.assessment_id for a in assessment_items]
 
-    exercise_data = extra_fields.get('options').get('completion_criteria').get('threshold')
+    exercise_data = deepcopy(extra_fields.get('options').get('completion_criteria').get('threshold'))
 
     exercise_data_type = exercise_data.get('mastery_model', "")
 
@@ -527,9 +528,9 @@ def process_assessment_metadata(ccnode, kolibrinode):
     kolibrimodels.AssessmentMetaData.objects.create(
         id=uuid.uuid4(),
         contentnode=kolibrinode,
-        assessment_item_ids=json.dumps(assessment_item_ids),
+        assessment_item_ids=assessment_item_ids,
         number_of_assessments=assessment_items.count(),
-        mastery_model=json.dumps(mastery_model),
+        mastery_model=mastery_model,
         randomize=randomize,
         is_manipulable=ccnode.kind_id == content_kinds.EXERCISE,
     )
