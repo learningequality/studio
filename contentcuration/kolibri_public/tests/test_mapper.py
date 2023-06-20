@@ -9,7 +9,9 @@ from kolibri_content.router import get_active_content_database
 from kolibri_content.router import using_content_database
 from kolibri_public import models as kolibri_public_models
 from kolibri_public.tests.base import ChannelBuilder
+from kolibri_public.tests.base import OKAY_TAG
 from kolibri_public.utils.mapper import ChannelMapper
+from le_utils.constants import content_kinds
 
 from contentcuration.models import Channel
 
@@ -19,14 +21,14 @@ class ChannelMapperTest(TestCase):
     @property
     def overrides(self):
         return {
-        kolibri_public_models.ContentNode: {
-            "available": True,
-            "tree_id": self.mapper.tree_id,
-        },
-        kolibri_public_models.LocalFile: {
-            "available": True,
+            kolibri_public_models.ContentNode: {
+                "available": True,
+                "tree_id": self.mapper.tree_id,
+            },
+            kolibri_public_models.LocalFile: {
+                "available": True,
+            }
         }
-    }
 
     @classmethod
     def setUpClass(cls):
@@ -36,7 +38,10 @@ class ChannelMapperTest(TestCase):
 
         with using_content_database(cls.tempdb):
             call_command("migrate", "content", database=get_active_content_database(), no_input=True)
-            builder = ChannelBuilder(models=kolibri_content_models)
+            builder = ChannelBuilder(models=kolibri_content_models, options={
+                "problematic_tags": True,
+                "problematic_nodes": True,
+            })
             builder.insert_into_default_db()
             cls.source_root = kolibri_content_models.ContentNode.objects.get(id=builder.root_node["id"])
             cls.channel = kolibri_content_models.ChannelMetadata.objects.get(id=builder.channel["id"])
@@ -57,6 +62,10 @@ class ChannelMapperTest(TestCase):
                     self.assertEqual(getattr(source, column), getattr(mapped, column))
 
     def _assert_node(self, source, mapped):
+        """
+        :param source: kolibri_content_models.ContentNode
+        :param mapped: kolibri_public_models.ContentNode
+        """
         self._assert_model(source, mapped, kolibri_public_models.ContentNode)
 
         for src, mpd in zip(source.assessmentmetadata.all(), mapped.assessmentmetadata.all()):
@@ -66,13 +75,21 @@ class ChannelMapperTest(TestCase):
             self._assert_model(src, mpd, kolibri_public_models.File)
             self._assert_model(src.local_file, mpd.local_file, kolibri_public_models.LocalFile)
 
+        # should only map OKAY_TAG and not BAD_TAG
+        for mapped_tag in mapped.tags.all():
+            self.assertEqual(OKAY_TAG, mapped_tag.tag_name)
+
     def _recurse_and_assert(self, sources, mappeds, recursion_depth=0):
         recursion_depths = []
         for source, mapped in zip(sources, mappeds):
             self._assert_node(source, mapped)
             source_children = source.children.all()
             mapped_children = mapped.children.all()
-            self.assertEqual(len(source_children), len(mapped_children))
+            if mapped.kind == content_kinds.TOPIC:
+                self.assertEqual(len(source_children), len(mapped_children))
+            else:
+                self.assertEqual(0, len(mapped_children))
+
             recursion_depths.append(
                 self._recurse_and_assert(
                     source_children,

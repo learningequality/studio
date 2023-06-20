@@ -31,6 +31,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import override
 from kolibri_content import models as kolibrimodels
+from kolibri_content.base_models import MAX_TAG_LENGTH
 from kolibri_content.router import get_active_content_database
 from kolibri_content.router import using_content_database
 from kolibri_public.utils.mapper import ChannelMapper
@@ -760,7 +761,7 @@ def map_tags_to_node(kolibrinode, ccnode):
 
     for tag in ccnode.tags.all():
         t, _new = kolibrimodels.ContentTag.objects.get_or_create(pk=tag.pk, tag_name=tag.tag_name)
-        if len(t.tag_name) <= 30:
+        if len(t.tag_name) <= MAX_TAG_LENGTH:
             tags_to_add.append(t)
 
     kolibrinode.tags.set(tags_to_add)
