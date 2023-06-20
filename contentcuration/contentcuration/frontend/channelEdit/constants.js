@@ -79,4 +79,4 @@ export const DraggableRegions = {
  * Default page size for the import search page
  * @type {number}
  */
-export const ImportSearchPageSize = 15;
+export const ImportSearchPageSize = 10;
