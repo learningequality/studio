@@ -35,6 +35,13 @@ def choices(sequence, k):
 OKAY_TAG = "okay_tag"
 BAD_TAG = "tag_is_too_long_because_it_is_over_30_characters"
 
+PROBLEMATIC_HTML5_NODE = "ab9d3fd905c848a6989936c609405abb"
+
+BUILDER_DEFAULT_OPTIONS = {
+    "problematic_tags": False,
+    "problematic_nodes": False,
+}
+
 
 class ChannelBuilder(object):
     """
@@ -53,11 +60,15 @@ class ChannelBuilder(object):
         "root_node",
     )
 
-    def __init__(self, levels=3, num_children=5, models=kolibri_public_models):
+    def __init__(self, levels=3, num_children=5, models=kolibri_public_models, options=None):
         self.levels = levels
         self.num_children = num_children
         self.models = models
+        self.options = BUILDER_DEFAULT_OPTIONS.copy()
+        if options:
+            self.options.update(options)
 
+        self.content_tags = {}
         self._excluded_channel_fields = None
         self._excluded_node_fields = None
 
@@ -79,13 +90,15 @@ class ChannelBuilder(object):
         self.channel = self.channel_data()
         self.files = {}
         self.localfiles = {}
-        self.content_tags = {}
 
         self.node_to_files_map = {}
         self.localfile_to_files_map = {}
         self.content_tag_map = {}
 
-        for tag_name in [OKAY_TAG, BAD_TAG]:
+        tags = [OKAY_TAG]
+        if self.options["problematic_tags"]:
+            tags.append(BAD_TAG)
+        for tag_name in tags:
             self.content_tag_data(tag_name)
 
         self.root_node = self.generate_topic()
@@ -98,6 +111,22 @@ class ChannelBuilder(object):
             self.root_node["children"] = self.recurse_and_generate(
                 self.root_node["id"], self.levels
             )
+            if self.options["problematic_nodes"]:
+                self.root_node["children"].extend(self.generate_problematic_nodes())
+
+    def generate_problematic_nodes(self):
+        nodes = []
+        html5_not_a_topic = self.contentnode_data(
+            node_id=PROBLEMATIC_HTML5_NODE,
+            kind=content_kinds.HTML5,
+            parent_id=self.root_node["id"],
+        )
+        # the problem: this node is not a topic, but it has children
+        html5_not_a_topic["children"] = [
+            self.contentnode_data(parent_id=PROBLEMATIC_HTML5_NODE)
+        ]
+        nodes.append(html5_not_a_topic)
+        return nodes
 
     def load_data(self):
         try:

@@ -11,6 +11,7 @@ from kolibri_public import models as kolibri_public_models
 from kolibri_public.tests.base import ChannelBuilder
 from kolibri_public.tests.base import OKAY_TAG
 from kolibri_public.utils.mapper import ChannelMapper
+from le_utils.constants import content_kinds
 
 from contentcuration.models import Channel
 
@@ -37,7 +38,10 @@ class ChannelMapperTest(TestCase):
 
         with using_content_database(cls.tempdb):
             call_command("migrate", "content", database=get_active_content_database(), no_input=True)
-            builder = ChannelBuilder(models=kolibri_content_models)
+            builder = ChannelBuilder(models=kolibri_content_models, options={
+                "problematic_tags": True,
+                "problematic_nodes": True,
+            })
             builder.insert_into_default_db()
             cls.source_root = kolibri_content_models.ContentNode.objects.get(id=builder.root_node["id"])
             cls.channel = kolibri_content_models.ChannelMetadata.objects.get(id=builder.channel["id"])
@@ -81,7 +85,11 @@ class ChannelMapperTest(TestCase):
             self._assert_node(source, mapped)
             source_children = source.children.all()
             mapped_children = mapped.children.all()
-            self.assertEqual(len(source_children), len(mapped_children))
+            if mapped.kind == content_kinds.TOPIC:
+                self.assertEqual(len(source_children), len(mapped_children))
+            else:
+                self.assertEqual(0, len(mapped_children))
+
             recursion_depths.append(
                 self._recurse_and_assert(
                     source_children,

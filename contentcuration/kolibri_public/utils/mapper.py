@@ -216,6 +216,10 @@ class ChannelMapper(object):
 
         mapped_nodes = kolibri_public_models.ContentNode.objects.bulk_create(nodes_to_create)
 
-        self._copy_associated_objects(source_nodes)
+        # filter to only the nodes that were created, since some source nodes could have
+        # been problematic
+        self._copy_associated_objects(source_nodes.filter(
+            id__in=[mapped_node.id for mapped_node in mapped_nodes],
+        ))
 
         return mapped_nodes
