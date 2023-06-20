@@ -7,6 +7,7 @@
  *
  * See bottom of file for '@typedef's
  */
+import isString from 'lodash/isString';
 import isFunction from 'lodash/isFunction';
 import { RolesNames } from 'shared/leUtils/Roles';
 import { findLicense } from 'shared/utils/helpers';
@@ -72,7 +73,10 @@ const CONTENT_NODE_FIELD_MAP = {
         options['completion_criteria'] = {
           model: 'mastery',
           threshold: {
-            mastery_model: JSON.parse(assessmentMetadata['mastery_model']),
+            // TODO: remove JSON.parse, since we shouldn't be receiving strings from the API
+            mastery_model: isString(assessmentMetadata['mastery_model'])
+              ? JSON.parse(assessmentMetadata['mastery_model'])
+              : assessmentMetadata['mastery_model'],
           },
         };
       }
