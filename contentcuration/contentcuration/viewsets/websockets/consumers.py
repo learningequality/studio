@@ -84,6 +84,14 @@ class SyncConsumer(WebsocketConsumer):
         from contentcuration.models import Channel
         from contentcuration.tasks import apply_channel_changes_task
         from contentcuration.tasks import apply_user_changes_task
+        
+        #If the message is PING message then just reply to keep connection alive
+        data = json.loads(text_data)
+        if "ping" in data:
+            self.send(json.dumps({
+                'response': "PONG!"
+            }))
+            return 
 
         response_payload = {
             "disallowed": [],

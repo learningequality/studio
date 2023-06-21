@@ -28,6 +28,9 @@ import urls from 'shared/urls';
 // change being registered, sync changes!
 const SYNC_IF_NO_CHANGES_FOR = 0.5;
 
+// Set ping interval to 25 seconds
+const WEBSOCKET_PING_INTERVAL = 25000;
+
 let socket;
 // Flag to check if a sync is currently active.
 let syncActive = false;
@@ -260,11 +263,13 @@ async function WebsocketSendChanges() {
     // in order to still call our change cleanup code.
     if (changes.length) {
       requestPayload.changes = changes;
+      //set ping to false to reset ping timmer
       socket.send(
         JSON.stringify({
           payload: requestPayload,
         })
       );
+      debouncePingMessage();
     }
   }
   syncActive = false;
@@ -375,6 +380,15 @@ const debouncedSyncChanges = debounce(() => {
   }
 }, SYNC_IF_NO_CHANGES_FOR * 1000);
 
+const debouncePingMessage = debounce(() => {
+  socket.send(
+    JSON.stringify({
+      ping: 'PING!',
+    })
+  );
+  debouncePingMessage();
+}, WEBSOCKET_PING_INTERVAL);
+
 if (process.env.NODE_ENV !== 'production' && typeof window !== 'undefined') {
   window.forceServerSync = forceServerSync;
 }
@@ -436,6 +450,9 @@ export function startSyncing() {
   socket.addEventListener('open', () => {
     console.log('Websocket connected');
   });
+
+  //Keep Pinging the websocket connection to keep connection alive
+  debouncePingMessage();
 
   // Listen for any errors due to which connection may be closed.
   socket.addEventListener('error', event => {
