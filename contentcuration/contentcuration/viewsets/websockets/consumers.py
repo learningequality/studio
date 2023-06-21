@@ -89,8 +89,8 @@ class SyncConsumer(WebsocketConsumer):
         data = json.loads(text_data)
         if "ping" in data:
             self.send(json.dumps({
-            'response': "PONG!"
-        }))
+                'response': "PONG!"
+            }))
             return 
 
         response_payload = {
