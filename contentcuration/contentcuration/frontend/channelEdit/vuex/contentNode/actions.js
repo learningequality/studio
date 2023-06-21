@@ -8,6 +8,7 @@ import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 import { findLicense } from 'shared/utils/helpers';
 import { RolesNames } from 'shared/leUtils/Roles';
 import { isNodeComplete } from 'shared/utils/validation';
+import * as publicApi from 'shared/data/public';
 
 import db from 'shared/data/db';
 
@@ -34,6 +35,20 @@ export function loadContentNode(context, id) {
     });
 }
 
+/**
+ * @param context
+ * @param {string} id
+ * @param {string} nodeId - Note: this is `node_id` not `id`
+ * @param {string} rootId
+ * @return {Promise<{}>}
+ */
+export async function loadPublicContentNode(context, { id, nodeId, rootId }) {
+  const publicNode = await publicApi.getContentNode(nodeId);
+  const localNode = publicApi.convertContentNodeResponse(id, rootId, publicNode);
+  context.commit('ADD_CONTENTNODE', localNode);
+  return localNode;
+}
+
 export function loadContentNodeByNodeId(context, nodeId) {
   const channelId = context.rootState.currentChannel.currentChannelId;
   return loadContentNodes(context, { '[node_id+channel_id]__in': [[nodeId, channelId]] })
@@ -47,8 +62,12 @@ export function loadContentNodeByNodeId(context, nodeId) {
     });
 }
 
-export function loadChildren(context, { parent }) {
-  return loadContentNodes(context, { parent });
+export function loadChildren(context, { parent, published = null }) {
+  const params = { parent };
+  if (published !== null) {
+    params.published = published;
+  }
+  return loadContentNodes(context, params);
 }
 
 export function loadAncestors(context, { id }) {
