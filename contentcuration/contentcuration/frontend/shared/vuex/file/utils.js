@@ -82,7 +82,7 @@ export async function getH5PMetadata(fileInput, metadata) {
     .then(function(h5pContent) {
       const data = JSON.parse(h5pContent);
       if (Object.prototype.hasOwnProperty.call(data, 'title')) {
-        metadata.Title = data['title'];
+        metadata.title = data['title'];
       }
       if (Object.prototype.hasOwnProperty.call(data, 'language') && data['language'] !== 'und') {
         metadata.language = data['language'];
