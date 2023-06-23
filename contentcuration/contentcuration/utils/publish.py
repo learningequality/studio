@@ -11,6 +11,7 @@ import traceback
 import uuid
 import zipfile
 from builtins import str
+from copy import deepcopy
 from itertools import chain
 
 from django.conf import settings
@@ -31,6 +32,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import override
 from kolibri_content import models as kolibrimodels
+from kolibri_content.base_models import MAX_TAG_LENGTH
 from kolibri_content.router import get_active_content_database
 from kolibri_content.router import using_content_database
 from kolibri_public.utils.mapper import ChannelMapper
@@ -349,7 +351,7 @@ def create_bare_contentnode(ccnode, default_language, channel_id, channel_name, 
             'license_description': kolibri_license.license_description if kolibri_license is not None else None,
             'coach_content': ccnode.role_visibility == roles.COACH,
             'duration': duration,
-            'options': json.dumps(options),
+            'options': options,
             # Fields for metadata labels
             "grade_levels": ",".join(grade_levels.keys()) if grade_levels else None,
             "resource_types": ",".join(resource_types.keys()) if resource_types else None,
@@ -494,7 +496,7 @@ def process_assessment_metadata(ccnode, kolibrinode):
     randomize = extra_fields.get('randomize') if extra_fields.get('randomize') is not None else True
     assessment_item_ids = [a.assessment_id for a in assessment_items]
 
-    exercise_data = extra_fields.get('options').get('completion_criteria').get('threshold')
+    exercise_data = deepcopy(extra_fields.get('options').get('completion_criteria').get('threshold'))
 
     exercise_data_type = exercise_data.get('mastery_model', "")
 
@@ -526,9 +528,9 @@ def process_assessment_metadata(ccnode, kolibrinode):
     kolibrimodels.AssessmentMetaData.objects.create(
         id=uuid.uuid4(),
         contentnode=kolibrinode,
-        assessment_item_ids=json.dumps(assessment_item_ids),
+        assessment_item_ids=assessment_item_ids,
         number_of_assessments=assessment_items.count(),
-        mastery_model=json.dumps(mastery_model),
+        mastery_model=mastery_model,
         randomize=randomize,
         is_manipulable=ccnode.kind_id == content_kinds.EXERCISE,
     )
@@ -760,7 +762,7 @@ def map_tags_to_node(kolibrinode, ccnode):
 
     for tag in ccnode.tags.all():
         t, _new = kolibrimodels.ContentTag.objects.get_or_create(pk=tag.pk, tag_name=tag.tag_name)
-        if len(t.tag_name) <= 30:
+        if len(t.tag_name) <= MAX_TAG_LENGTH:
             tags_to_add.append(t)
 
     kolibrinode.tags.set(tags_to_add)

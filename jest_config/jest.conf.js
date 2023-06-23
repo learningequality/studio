@@ -27,7 +27,7 @@ module.exports = {
   },
   transformIgnorePatterns: ['/node_modules/(?!vuetify|epubjs|kolibri-design-system|kolibri-constants|axios)'],
   snapshotSerializers: ['<rootDir>/node_modules/jest-serializer-vue'],
-  setupFilesAfterEnv: [path.resolve(__dirname, './setup')],
+  setupFilesAfterEnv: ['<rootDir>/jest_config/setup.js'],
   coverageDirectory: '<rootDir>/coverage',
   collectCoverageFrom: ['!**/node_modules/**'],
   verbose: false,

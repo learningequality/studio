@@ -11,6 +11,7 @@ from django.urls import reverse
 from django.utils.http import http_date
 from kolibri_public import models
 from kolibri_public.tests.base import ChannelBuilder
+from kolibri_public.tests.base import OKAY_TAG
 from le_utils.constants import content_kinds
 from rest_framework.test import APITestCase
 
@@ -373,6 +374,8 @@ class ContentNodeAPITestCase(ContentNodeAPIBase, APITestCase):
         response = self.client.get(
             reverse("publiccontentnode-detail", kwargs={"pk": self.root.id})
         )
+        # added by channel builder
+        tags.append(OKAY_TAG)
         self.assertEqual(set(response.data["tags"]), set(tags))
 
     def test_channelmetadata_list(self):

@@ -6,6 +6,7 @@ import isUndefined from 'lodash/isUndefined';
 import omit from 'lodash/omit';
 import sortBy from 'lodash/sortBy';
 import logging from '../logging';
+import { resourceCounts } from './applyRemoteChanges';
 import db, { CLIENTID } from 'shared/data/db';
 import { promiseChunk } from 'shared/utils/helpers';
 import {
@@ -208,7 +209,7 @@ function omitIgnoredSubFields(obj) {
 export class Change {
   constructor({ type, key, table, source } = {}) {
     this.setAndValidateLookup(type, 'type', CHANGE_TYPES_LOOKUP);
-    this.setAndValidateNotNull(key, 'key');
+    this.setAndValidateIsDefined(key, 'key');
     this.setAndValidateLookup(table, 'table', TABLE_NAMES_LOOKUP);
     if (!INDEXEDDB_RESOURCES[this.table].syncable) {
       const error = new ReferenceError(`${this.table} is not a syncable table`);
@@ -217,6 +218,7 @@ export class Change {
     }
     this.setAndValidateString(source, 'source');
   }
+
   get changeType() {
     return this.constructor.name;
   }
@@ -244,28 +246,24 @@ export class Change {
     }
     this[name] = value;
   }
-  validateNotUndefined(value, name) {
-    if (isUndefined(value)) {
+
+  validateIsDefined(value, name) {
+    if (isNull(value) || isUndefined(value)) {
       const error = new TypeError(
-        `${name} is required for a ${this.changeType} but it was undefined`
+        `${name} is required for a ${this.changeType} but it was ${
+          isNull(value) ? 'null' : 'undefined'
+        }`
       );
       logging.error(error, value);
       throw error;
     }
   }
-  setAndValidateNotUndefined(value, name) {
-    this.validateNotUndefined(value, name);
+
+  setAndValidateIsDefined(value, name) {
+    this.validateIsDefined(value, name);
     this[name] = value;
   }
-  setAndValidateNotNull(value, name) {
-    this.validateNotUndefined(value, name);
-    if (isNull(value)) {
-      const error = new TypeError(`${name} is required for a ${this.changeType} but it was null`);
-      logging.error(error, value);
-      throw error;
-    }
-    this[name] = value;
-  }
+
   validateObj(value, name) {
     if (!isPlainObject(value)) {
       const error = new TypeError(`${name} should be an object, but ${value} was passed instead`);
@@ -273,10 +271,12 @@ export class Change {
       throw error;
     }
   }
+
   setAndValidateObj(value, name, mapper = obj => obj) {
     this.validateObj(value, name);
     this[name] = mapper(value);
   }
+
   setAndValidateBoolean(value, name) {
     if (typeof value !== 'boolean') {
       const error = new TypeError(`${name} should be a boolean, but ${value} was passed instead`);
@@ -285,6 +285,7 @@ export class Change {
     }
     this[name] = value;
   }
+
   setAndValidateObjOrNull(value, name, mapper = obj => obj) {
     if (!isPlainObject(value) && !isNull(value)) {
       const error = new TypeError(
@@ -295,6 +296,7 @@ export class Change {
     }
     this[name] = mapper(value);
   }
+
   setAndValidateString(value, name) {
     if (typeof value !== 'string') {
       const error = new TypeError(`${name} should be a string, but ${value} was passed instead`);
@@ -303,13 +305,17 @@ export class Change {
     }
     this[name] = value;
   }
-  saveChange() {
+
+  async saveChange() {
     if (!this.channelOrUserIdSet) {
       throw new ReferenceError(
         `Attempted to save ${this.changeType} change for ${this.table} before setting channel_id and user_id`
       );
     }
-    return db[CHANGES_TABLE].add(this);
+    const rev = await db[CHANGES_TABLE].add(this);
+    // Do not await this
+    resourceCounts.apply(this);
+    return rev;
   }
 }
 
@@ -377,7 +383,7 @@ export class DeletedChange extends Change {
 }
 
 export class MovedChange extends Change {
-  constructor({ target, position, parent, ...fields }) {
+  constructor({ oldObj, target, position, parent, ...fields }) {
     fields.type = CHANGE_TYPES.MOVED;
     super(fields);
     if (this.table !== TABLE_NAMES.CONTENTNODE) {
@@ -385,9 +391,10 @@ export class MovedChange extends Change {
         `${this.changeType} is only supported by ${TABLE_NAMES.CONTENTNODE} table but ${this.table} was passed instead`
       );
     }
-    this.setAndValidateNotUndefined(target, 'target');
+    this.setAndValidateObj(oldObj, 'oldObj', omitIgnoredSubFields);
+    this.setAndValidateIsDefined(target, 'target');
     this.setAndValidateLookup(position, 'position', RELATIVE_TREE_POSITIONS_LOOKUP);
-    this.setAndValidateNotUndefined(parent, 'parent');
+    this.setAndValidateIsDefined(parent, 'parent');
     this.setChannelAndUserId();
   }
 }
@@ -401,12 +408,12 @@ export class CopiedChange extends Change {
         `${this.changeType} is only supported by ${TABLE_NAMES.CONTENTNODE} table but ${this.table} was passed instead`
       );
     }
-    this.setAndValidateNotUndefined(from_key, 'from_key');
+    this.setAndValidateIsDefined(from_key, 'from_key');
     this.setAndValidateObj(mods, 'mods', omitIgnoredSubFields);
-    this.setAndValidateNotUndefined(target, 'target');
+    this.setAndValidateIsDefined(target, 'target');
     this.setAndValidateLookup(position, 'position', RELATIVE_TREE_POSITIONS_LOOKUP);
     this.setAndValidateObjOrNull(excluded_descendants, 'excluded_descendants');
-    this.setAndValidateNotUndefined(parent, 'parent');
+    this.setAndValidateIsDefined(parent, 'parent');
     this.setChannelAndUserId();
   }
 }
@@ -420,8 +427,8 @@ export class PublishedChange extends Change {
         `${this.changeType} is only supported by ${TABLE_NAMES.CHANNEL} table but ${this.table} was passed instead`
       );
     }
-    this.setAndValidateNotUndefined(version_notes, 'version_notes');
-    this.setAndValidateNotUndefined(language, 'language');
+    this.setAndValidateIsDefined(version_notes, 'version_notes');
+    this.setAndValidateIsDefined(language, 'language');
     this.setChannelAndUserId({ id: this.key });
   }
 }

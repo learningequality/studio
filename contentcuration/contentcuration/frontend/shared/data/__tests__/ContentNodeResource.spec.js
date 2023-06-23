@@ -541,7 +541,7 @@ describe('ContentNode methods', () => {
 
   describe('tableMove method', () => {
     let node,
-      oldParent,
+      oldObj,
       parent,
       payload,
       change,
@@ -554,9 +554,9 @@ describe('ContentNode methods', () => {
         put: jest.fn(() => Promise.resolve()),
       };
       updated = true;
-      oldParent = { id: uuid4(), title: 'Parent' };
+      oldObj = { id: uuid4(), title: 'Parent' };
       parent = { id: uuid4(), root_id: uuid4(), title: 'Parent' };
-      node = { id: uuid4(), parent: oldParent.id, title: 'Source node' };
+      node = { id: uuid4(), parent: oldObj.id, title: 'Source node' };
       payload = { id: uuid4(), parent: parent.id, changed: true, lft: 1, title: 'Payload' };
       change = {
         key: payload.id,

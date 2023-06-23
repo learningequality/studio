@@ -80,3 +80,10 @@ export const LAST_FETCHED = '__last_fetch';
 export const CURRENT_USER = 'CURRENT_USER';
 
 export const MAX_REV_KEY = 'max_rev';
+
+export const LOCK_NAMES = {
+  SYNC: 'sync',
+  SYNC_CHANNEL: 'sync_channel:{channel_id}',
+  SYNC_USER: 'sync_user',
+  APPLY_CHANGES: 'apply_changes',
+};

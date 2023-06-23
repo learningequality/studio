@@ -116,6 +116,7 @@
     "npm-run-all": "^4.1.3",
     "stylus": "^0.59.0",
     "stylus-loader": "^7.1.2",
+    "web-streams-polyfill": "^3.2.1",
     "workbox-webpack-plugin": "^6.5.4"
   },
   "false": {},

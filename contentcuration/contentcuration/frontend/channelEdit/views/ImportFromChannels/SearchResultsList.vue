@@ -94,10 +94,12 @@
   import { mapActions, mapGetters, mapState } from 'vuex';
   import debounce from 'lodash/debounce';
   import find from 'lodash/find';
+  import { ImportSearchPageSize } from '../../constants';
   import BrowsingCard from './BrowsingCard';
   import SavedSearchesModal from './SavedSearchesModal';
   import SearchFilters from './SearchFilters';
   import SearchFilterBar from './SearchFilterBar';
+  import logging from 'shared/logging';
   import Pagination from 'shared/views/Pagination';
   import Checkbox from 'shared/views/form/Checkbox';
   import LoadingText from 'shared/views/LoadingText';
@@ -137,9 +139,13 @@
       nodes() {
         return this.getContentNodes(this.nodeIds) || [];
       },
+      pageSizeOptions() {
+        return [10, 15, 25];
+      },
       pageSize: {
         get() {
-          return Number(this.$route.query.page_size) || 25;
+          const pageSize = Number(this.$route.query.page_size);
+          return this.pageSizeOptions.find(p => p === pageSize) || ImportSearchPageSize;
         },
         set(page_size) {
           this.$router.push({
@@ -151,9 +157,6 @@
             },
           });
         },
-      },
-      pageSizeOptions() {
-        return [25, 50, 100];
       },
       isSelected() {
         return function(node) {
@@ -190,6 +193,7 @@
         function() {
           this.fetchResourceSearchResults({
             ...this.$route.query,
+            page_size: this.pageSize,
             keywords: this.currentSearchTerm,
             exclude_channel: this.currentChannelId,
             last: undefined,
@@ -200,8 +204,9 @@
               this.pageCount = page.total_pages;
               this.totalCount = page.count;
             })
-            .catch(() => {
+            .catch(e => {
               this.loadFailed = true;
+              logging.error(e);
             });
         },
         1000,
