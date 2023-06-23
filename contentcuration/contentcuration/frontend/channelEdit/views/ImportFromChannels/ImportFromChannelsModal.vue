@@ -80,6 +80,7 @@
   import ResourceDrawer from '../../components/ResourceDrawer';
   import { routerMixin } from 'shared/mixins';
   import FullscreenModal from 'shared/views/FullscreenModal';
+  import { withChangeTracker } from 'shared/data/changes';
 
   const IMPORT_ROUTES = [
     RouteNames.IMPORT_FROM_CHANNELS,
@@ -180,7 +181,7 @@
       this.updateTitleForPage();
     },
     methods: {
-      ...mapActions('contentNode', ['copyContentNodes']),
+      ...mapActions('contentNode', ['copyContentNodes', 'waitForCopyingStatus']),
       ...mapMutations('importFromChannels', {
         selectNode: 'SELECT_NODE',
         deselectNode: 'DESELECT_NODE',
@@ -209,7 +210,7 @@
           },
         });
       },
-      handleClickImport() {
+      handleClickImport: withChangeTracker(function(changeTracker) {
         const nodeIds = this.selected.map(({ id }) => id);
         // Grab the source nodes from Vuex, since search should have loaded them into it
         const sourceNodes = nodeIds.map(id => this.getContentNode(id));
@@ -217,7 +218,7 @@
           id__in: nodeIds,
           target: this.$route.params.destNodeId,
           sourceNodes,
-        }).then(() => {
+        }).then(nodes => {
           // When exiting, do not show snackbar when clearing selections
           this.showSnackbar = false;
           this.$store.commit('importFromChannels/CLEAR_NODES');
@@ -227,8 +228,17 @@
               nodeId: this.$route.params.destNodeId,
             },
           });
+
+          return Promise.allSettled(
+            nodes.map(n =>
+              this.waitForCopyingStatus({
+                contentNodeId: n.id,
+                startingRev: changeTracker._startingRev,
+              })
+            )
+          );
         });
-      },
+      }),
       // Using a click method here instead of :to attribute because
       // it prevents the close button from getting clicked on the route change
       goBackToBrowse() {

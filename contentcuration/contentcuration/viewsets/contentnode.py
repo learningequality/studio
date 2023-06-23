@@ -67,7 +67,8 @@ from contentcuration.viewsets.common import SQCount
 from contentcuration.viewsets.common import UserFilteredPrimaryKeyRelatedField
 from contentcuration.viewsets.common import UUIDInFilter
 from contentcuration.viewsets.sync.constants import CONTENTNODE
-from contentcuration.viewsets.sync.constants import COPYING_FLAG
+from contentcuration.viewsets.sync.constants import COPYING_STATUS
+from contentcuration.viewsets.sync.constants import COPYING_STATUS_VALUES
 from contentcuration.viewsets.sync.constants import CREATED
 from contentcuration.viewsets.sync.constants import DELETED
 from contentcuration.viewsets.sync.utils import generate_update_event
@@ -909,7 +910,9 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
             # Copy change will have key, must also have other attributes, defined in `copy`
             # Just pass as keyword arguments here to let copy do the validation
             copy_errors = self.copy(copy["key"], **copy)
-            if copy_errors:
+            if copy_errors is not None:
+                failed_copy_node = self.get_queryset().get(pk=copy["key"])
+                failed_copy_node.delete()
                 copy.update({"errors": copy_errors})
                 errors.append(copy)
         return errors
@@ -947,27 +950,29 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
         ).exists()
 
         with create_change_tracker(pk, CONTENTNODE, channel_id, self.request.user, "copy_nodes") as progress_tracker:
-
-            new_node = source.copy_to(
-                target,
-                position,
-                pk,
-                mods,
-                excluded_descendants,
-                can_edit_source_channel=can_edit_source_channel,
-                progress_tracker=progress_tracker,
-            )
-
-            Change.create_change(
-                generate_update_event(
+            try:
+                new_node = source.copy_to(
+                    target,
+                    position,
                     pk,
-                    CONTENTNODE,
-                    {COPYING_FLAG: False, "node_id": new_node.node_id},
-                    channel_id=channel_id
-                ),
-                applied=True,
-                created_by_id=self.request.user.id,
-            )
+                    mods,
+                    excluded_descendants,
+                    can_edit_source_channel=can_edit_source_channel,
+                    progress_tracker=progress_tracker,
+                )
+
+                Change.create_change(
+                    generate_update_event(
+                        pk,
+                        CONTENTNODE,
+                        {COPYING_STATUS: COPYING_STATUS_VALUES.SUCCESS, "node_id": new_node.node_id},
+                        channel_id=channel_id
+                    ),
+                    applied=True,
+                    created_by_id=self.request.user.id,
+                )
+            except Exception as e:
+                return str(e)
 
         return None
 

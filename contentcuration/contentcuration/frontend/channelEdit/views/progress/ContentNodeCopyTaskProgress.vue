@@ -1,11 +1,31 @@
 <template>
 
-  <VProgressCircular
-    :indeterminate="!task || !progress"
-    :progress="progress"
-    :color="progressBarColor"
-    v-bind="$attrs"
-  />
+  <div :style="{ 'cursor': hasCopyingErrored ? 'default' : 'progress' }">
+    <VProgressCircular
+      v-if="copying && !hasCopyingErrored"
+      indeterminate
+      :color="progressBarColor"
+      v-bind="$attrs"
+    />
+    <VTooltip
+      v-else-if="copying && hasCopyingErrored && showTooltip"
+      bottom
+      lazy
+    >
+      <template #activator="{ on }">
+        <Icon color="red" v-on="on">
+          error
+        </Icon>
+      </template>
+      <span>{{ $tr('copyErrorTopic') }}</span>
+    </VTooltip>
+    <Icon
+      v-else-if="copying && hasCopyingErrored && !showTooltip"
+      color="red"
+    >
+      error
+    </Icon>
+  </div>
 
 </template>
 
@@ -13,47 +33,33 @@
 <script>
 
   import { mapGetters } from 'vuex';
-  import get from 'lodash/get';
 
   export default {
     name: 'ContentNodeCopyTaskProgress',
     props: {
-      taskId: {
-        type: String,
-        default: null,
+      node: {
+        type: Object,
+        required: true,
+      },
+      showTooltip: {
+        type: Boolean,
+        default: false,
       },
     },
     computed: {
-      ...mapGetters('task', ['getAsyncTask']),
-      task() {
-        return this.getAsyncTask(this.taskId);
+      ...mapGetters('contentNode', ['isNodeInCopyingState', 'hasNodeCopyingErrored']),
+      copying() {
+        return this.isNodeInCopyingState(this.node.id);
+      },
+      hasCopyingErrored() {
+        return this.hasNodeCopyingErrored(this.node.id);
       },
       progressBarColor() {
-        if (this.currentTaskError) {
-          return this.$themeTokens.error;
-        } else if (this.isDone) {
-          return this.$themeTokens.success;
-        } else {
-          return this.$themeTokens.loading;
-        }
-      },
-      isDone() {
-        return this.progress >= 100 && !this.currentTaskError;
-      },
-      currentTaskError() {
-        return this.task ? get(this.task, ['traceback']) : null;
-      },
-      progress() {
-        return this.task ? get(this.task, ['progress']) : 0;
+        return this.$themeTokens.loading;
       },
     },
     $trs: {
-      /* eslint-disable kolibri/vue-no-unused-translations */
-      /**
-       * String for handling copy failures
-       */
       copyErrorTopic: 'Some resources failed to copy',
-      /* eslint-enable kolibri/vue-no-unused-translations */
     },
   };
 

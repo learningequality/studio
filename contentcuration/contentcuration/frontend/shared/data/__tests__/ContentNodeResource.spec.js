@@ -4,7 +4,8 @@ import find from 'lodash/find';
 import { Store } from 'vuex';
 import {
   RELATIVE_TREE_POSITIONS,
-  COPYING_FLAG,
+  COPYING_STATUS,
+  COPYING_STATUS_VALUES,
   TASK_ID,
   CHANGES_TABLE,
   CHANGE_TYPES,
@@ -666,7 +667,7 @@ describe('ContentNode methods', () => {
         source_node_id: node.node_id,
         channel_id: parent.channel_id,
         root_id: parent.root_id,
-        [COPYING_FLAG]: true,
+        [COPYING_STATUS]: COPYING_STATUS_VALUES.COPYING,
         [TASK_ID]: null,
       };
       await expect(ContentNode.tableCopy({ node, parent, payload })).resolves.toMatchObject(

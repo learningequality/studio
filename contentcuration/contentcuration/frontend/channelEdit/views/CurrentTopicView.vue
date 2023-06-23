@@ -246,11 +246,10 @@
     ContentKindLearningActivityDefaults,
   } from 'shared/leUtils/ContentKinds';
   import { titleMixin, routerMixin } from 'shared/mixins';
-  import { COPYING_FLAG, RELATIVE_TREE_POSITIONS } from 'shared/data/constants';
+  import { RELATIVE_TREE_POSITIONS } from 'shared/data/constants';
   import { DraggableTypes, DropEffect } from 'shared/mixins/draggable/constants';
   import { DraggableFlags } from 'shared/vuex/draggablePlugin/module/constants';
   import DraggableRegion from 'shared/views/draggable/DraggableRegion';
-  import { ContentNode } from 'shared/data/resources';
 
   export default {
     name: 'CurrentTopicView',
@@ -302,6 +301,7 @@
         'getContentNodeAncestors',
         'getTopicAndResourceCounts',
         'getContentNodeChildren',
+        'isNodeInCopyingState',
       ]),
       ...mapGetters('clipboard', ['getCopyTrees']),
       ...mapGetters('draggable', ['activeDraggableRegionId']),
@@ -323,7 +323,9 @@
         },
         set(value) {
           if (value) {
-            this.selected = this.children.filter(node => !node[COPYING_FLAG]).map(node => node.id);
+            this.selected = this.children
+              .filter(node => !this.isNodeInCopyingState(node.id))
+              .map(node => node.id);
             this.trackClickEvent('Select all');
           } else {
             this.selected = [];
@@ -420,13 +422,14 @@
       },
     },
     methods: {
-      ...mapActions(['showSnackbar']),
+      ...mapActions(['showSnackbar', 'clearSnackbar']),
       ...mapActions(['setViewMode', 'addViewModeOverride', 'removeViewModeOverride']),
       ...mapActions('contentNode', [
         'createContentNode',
         'loadAncestors',
         'moveContentNodes',
         'copyContentNode',
+        'waitForCopyingStatus',
       ]),
       ...mapActions('clipboard', ['copyAll']),
       clearSelections() {
@@ -646,12 +649,30 @@
           )
         ).then(nodes => {
           this.clearSelections();
-          ContentNode.waitForCopying(nodes.map(n => n.id)).then(() => {
-            this.showSnackbar({
-              text: this.$tr('copiedItems'),
-              actionText: this.$tr('undo'),
-              actionCallback: () => changeTracker.revert(),
-            }).then(() => changeTracker.cleanUp());
+          Promise.allSettled(
+            nodes.map(n =>
+              this.waitForCopyingStatus({
+                contentNodeId: n.id,
+                startingRev: changeTracker._startingRev,
+              })
+            )
+          ).then(results => {
+            let isAllCopySuccess = true;
+            for (const result of results) {
+              if (result.status === 'rejected') {
+                isAllCopySuccess = false;
+              }
+            }
+            if (isAllCopySuccess) {
+              this.showSnackbar({
+                text: this.$tr('copiedItems'),
+                actionText: this.$tr('undo'),
+                actionCallback: () => changeTracker.revert(),
+              }).then(() => changeTracker.cleanUp());
+            } else {
+              this.clearSnackbar();
+              changeTracker.cleanUp();
+            }
           });
         });
       }),
