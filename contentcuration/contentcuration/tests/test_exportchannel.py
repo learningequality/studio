@@ -117,6 +117,18 @@ class ExportChannelTestCase(StudioTestCase):
         new_exercise.complete = True
         new_exercise.parent = current_exercise.parent
         new_exercise.save()
+
+        bad_container = create_node({'kind_id': 'topic', 'title': 'Bad topic container', 'children': []})
+        bad_container.complete = True
+        bad_container.parent = self.content_channel.main_tree
+        bad_container.save()
+
+        # exercise without mastery model, but marked as complete
+        broken_exercise = create_node({'kind_id': 'exercise', 'title': 'Bad mastery test', 'extra_fields': {}})
+        broken_exercise.complete = True
+        broken_exercise.parent = bad_container
+        broken_exercise.save()
+
         thumbnail_data = create_studio_file(thumbnail_bytes, preset="exercise_thumbnail", ext="png")
         file_obj = thumbnail_data["db_file"]
         file_obj.contentnode = new_exercise
@@ -246,6 +258,9 @@ class ExportChannelTestCase(StudioTestCase):
 
         for node in incomplete_nodes:
             assert kolibri_nodes.filter(pk=node.node_id).count() == 0
+
+        # bad exercise node should not be published (technically incomplete)
+        assert kolibri_models.ContentNode.objects.filter(title='Bad mastery test').count() == 0
 
     def test_tags_greater_than_30_excluded(self):
         tag_node = kolibri_models.ContentNode.objects.filter(title='kolibri tag test').first()
