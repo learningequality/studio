@@ -40,11 +40,12 @@ export function loadContentNode(context, id) {
  * @param {string} id
  * @param {string} nodeId - Note: this is `node_id` not `id`
  * @param {string} rootId
+ * @param {string} parent - The `id` not `node_id` of the parent
  * @return {Promise<{}>}
  */
-export async function loadPublicContentNode(context, { id, nodeId, rootId }) {
+export async function loadPublicContentNode(context, { id, nodeId, rootId, parent }) {
   const publicNode = await publicApi.getContentNode(nodeId);
-  const localNode = publicApi.convertContentNodeResponse(id, rootId, publicNode);
+  const localNode = publicApi.convertContentNodeResponse(id, rootId, parent, publicNode);
   context.commit('ADD_CONTENTNODE', localNode);
   return localNode;
 }
