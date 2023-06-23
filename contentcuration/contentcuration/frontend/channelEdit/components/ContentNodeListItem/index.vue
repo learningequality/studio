@@ -167,21 +167,17 @@
                 </template>
                 <template v-else>
                   <div class="copying">
-
                     <p class="caption grey--text pr-2 pt-1">
                       <span :style="{ 'cursor': hasCopyingErrored ? 'default' : 'progress' }">
                         {{ copyingMessage }}
                       </span>
                       <slot name="copy-fail-retry-action"></slot>
                     </p>
-
                     <ContentNodeCopyTaskProgress
                       :node="node"
                       size="30"
                     />
-
                     <slot name="copy-fail-remove-action"></slot>
-
                   </div>
                   <div class="disabled-overlay"></div>
                 </template>
@@ -422,6 +418,10 @@
     padding-top: 44px;
     pointer-events: auto;
 
+    p {
+      flex-shrink: 0;
+    }
+
     p,
     div {
       margin: 0 2px;
@@ -481,6 +481,7 @@
   }
 
   .description-col {
+    flex-shrink: 1 !important;
     width: calc(100% - @thumbnail-width - 206px);
     word-break: break-word;
 
