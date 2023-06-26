@@ -41,6 +41,7 @@ export async function fetchResourceSearchResults(context, params) {
               id: node.id,
               nodeId: node.node_id,
               rootId: node.root_id,
+              parent: node.parent,
             },
             { root: true }
           )
