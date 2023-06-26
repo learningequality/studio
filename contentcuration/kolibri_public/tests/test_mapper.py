@@ -79,6 +79,8 @@ class ChannelMapperTest(TestCase):
         for mapped_tag in mapped.tags.all():
             self.assertEqual(OKAY_TAG, mapped_tag.tag_name)
 
+        self.assertEqual(mapped.ancestors, [{"id": ancestor.id, "title": ancestor.title} for ancestor in source.get_ancestors()])
+
     def _recurse_and_assert(self, sources, mappeds, recursion_depth=0):
         recursion_depths = []
         for source, mapped in zip(sources, mappeds):
