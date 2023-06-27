@@ -22,7 +22,8 @@ ALL_CHANGES = set([
 
 # Client-side table constants
 BOOKMARK = "bookmark"
-CAPTION = "caption"
+CAPTION_FILE = "caption_file"
+CAPTION_CUES = "caption_cues"
 CHANNEL = "channel"
 CONTENTNODE = "contentnode"
 CONTENTNODE_PREREQUISITE = "contentnode_prerequisite"
@@ -40,7 +41,8 @@ CLIPBOARD = "clipboard"
 ALL_TABLES = set(
     [
         BOOKMARK,
-        CAPTION,
+        CAPTION_FILE,
+        CAPTION_CUES,
         CHANNEL,
         CLIPBOARD,
         CONTENTNODE,
