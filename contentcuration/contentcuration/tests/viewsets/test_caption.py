@@ -15,8 +15,8 @@ from contentcuration.viewsets.sync.constants import CAPTION_FILE
 
 # class CRUDTestCase(StudioAPITestCase):
 
-class SyncTestCase(SyncTestMixin, StudioAPITestCase):
 
+class SyncTestCase(SyncTestMixin, StudioAPITestCase):
     @property
     def caption_file_metadata(self):
         return {
@@ -35,7 +35,7 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
             {
                 "file_id": id,
                 "language": "ru",
-            }
+            },
         ]
 
     @property
@@ -45,18 +45,16 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
             "language": "en",
         }
 
-
     def setUp(self):
         super(SyncTestCase, self).setUp()
         self.channel = testdata.channel()
         self.user = testdata.user()
         self.channel.editors.add(self.user)
 
-
     def test_create_caption(self):
         self.client.force_authenticate(user=self.user)
         caption_file = self.caption_file_metadata
-        
+
         response = self.sync_changes(
             [
                 generate_create_event(
@@ -88,10 +86,7 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         response = self.sync_changes(
             [
                 generate_create_event(
-                    pk,
-                    CAPTION_FILE,
-                    caption_file,
-                    channel_id=self.channel.id
+                    pk, CAPTION_FILE, caption_file, channel_id=self.channel.id
                 )
             ]
         )
@@ -99,34 +94,22 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
 
         # Delete the caption file
         response = self.sync_changes(
-            [
-                generate_delete_event(
-                    pk,
-                    CAPTION_FILE,
-                    channel_id=self.channel.id
-                )
-            ]
+            [generate_delete_event(pk, CAPTION_FILE, channel_id=self.channel.id)]
         )
 
         self.assertEqual(response.status_code, 200, response.content)
 
         with self.assertRaises(CaptionFile.DoesNotExist):
             caption_file_db = CaptionFile.objects.get(
-                file_id=caption_file['file_id'],
-                language=caption_file['language']
+                file_id=caption_file["file_id"], language=caption_file["language"]
             )
-
 
     def test_delete_file_with_same_file_id_different_language(self):
         self.client.force_authenticate(user=self.user)
         obj = self.same_file_different_language_metadata
 
-        caption_file_1 = CaptionFile.objects.create(
-            **obj[0]
-        )
-        caption_file_2 = CaptionFile.objects.create(
-            **obj[1]
-        )
+        caption_file_1 = CaptionFile.objects.create(**obj[0])
+        caption_file_2 = CaptionFile.objects.create(**obj[1])
 
         response = self.sync_changes(
             [
@@ -142,6 +125,5 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
 
         with self.assertRaises(CaptionFile.DoesNotExist):
             caption_file_db = CaptionFile.objects.get(
-                file_id=caption_file_2.file_id,
-                language=caption_file_2.language
+                file_id=caption_file_2.file_id, language=caption_file_2.language
             )
