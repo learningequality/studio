@@ -1,40 +1,79 @@
 from rest_framework import serializers, status
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.viewsets import ModelViewSet
-from contentcuration.models import Caption
+from contentcuration.models import CaptionCue
+from contentcuration.models import CaptionFile
+from contentcuration.viewsets.base import ValuesViewset
+
+from contentcuration.viewsets.sync.utils import log_sync_exception
+
+from django.core.exceptions import ObjectDoesNotExist
+
+
+"""
+[x] create file - POST /api/caption?file_id=..&language=..
+[x] delete file - DELETE /api/caption?file_id=..&language=..
+
+[] create file cue - POST /api/caption/cue?file_id=..&language=..
+[] update file cue - PATCH /api/caption/cue?file_id=..&language=..&cue_id=..
+[] delete file cue - DELETE /api/caption/cue?file_id=..&language=..&cue_id=..
+
+[] get the file cues - GET /api/caption?file_id=..&language=..
+"""
+
+
+class CueSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CaptionCue
+        fields = ["text", "starttime", "endtime"]
 
 
 class CaptionSerializer(serializers.ModelSerializer):
+    caption_cue = CueSerializer(many=True, required=False)
+
     class Meta:
-        model = Caption
-        fields = ["id", "caption", "language"]
+        model = CaptionFile
+        fields = ["file_id", "language", "caption_cue"]
 
 
-class CaptionViewSet(ModelViewSet):
-    queryset = Caption.objects.all()
+class CaptionViewSet(ValuesViewset):
+    # Handles operations for the CaptionFile model.
+    queryset = CaptionFile.objects.prefetch_related("caption_cue")
+    permission_classes = [IsAuthenticated]
     serializer_class = CaptionSerializer
+    values = ("file_id", "language", "caption_cue")
 
-    def create(self, request):
-        serializer = self.get_serializer(data=request.data)
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            self.perform_create(serializer=serializer)
-            headers = self.get_success_headers(serializer.data)
-            return Response(
-                serializer.data, headers=headers, status=status.HTTP_201_CREATED
-            )
+    field_map = {"file": "file_id", "language": "language"}
 
-    def update(self, request, pk=None):
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=True)
-        if not serializer.is_valid(raise_exception=True):
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
+    def delete_from_changes(self, changes):
+        errors = []
+        queryset = self.get_edit_queryset().order_by()
+        for change in changes:
+            try:
+                instance = queryset.filter(**dict(self.values_from_key(change["key"])))
 
-    def destroy(self, request):
-        instance = self.get_object()
-        self.perform_destroy(instance)
-        return Response(status=status.HTTP_204_NO_CONTENT)
+                self.perform_destroy(instance)
+            except ObjectDoesNotExist:
+                # If the object already doesn't exist, as far as the user is concerned
+                # job done!
+                pass
+            except Exception as e:
+                log_sync_exception(e, user=self.request.user, change=change)
+                change["errors"] = [str(e)]
+                errors.append(change)
+        return errors
+
+
+class CaptionCueViewSet(ValuesViewset):
+    # Handles operations for the CaptionCue model.
+    queryset = CaptionCue.objects.all()
+    permission_classes = [IsAuthenticated]
+    serializer_class = CueSerializer
+    values = ("text", "starttime", "endtime")
+
+    field_map = {
+        "text": "text",
+        "start_time": "starttime",
+        "end_time": "endtime",
+    }
+    # Add caption file in field_map?
