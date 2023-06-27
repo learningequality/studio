@@ -2,6 +2,7 @@ import hashlib
 import json
 import logging
 import os
+from typing import Any
 import urllib.parse
 import uuid
 from datetime import datetime
@@ -68,6 +69,7 @@ from rest_framework.utils.encoders import JSONEncoder
 from contentcuration.constants import channel_history
 from contentcuration.constants import completion_criteria
 from contentcuration.constants import user_history
+from contentcuration.constants.transcription_languages import CAPTIONS_LANGUAGES
 from contentcuration.constants.contentnode import kind_activity_map
 from contentcuration.db.models.expressions import Array
 from contentcuration.db.models.functions import ArrayRemove
@@ -2057,15 +2059,42 @@ class Language(models.Model):
         return self.ietf_name()
 
 
-class Caption(models.Model):
+class CaptionFile(models.Model):
     """
-    Model to store captions and support intermediary changes
+    Represents a caption file record.
+
+    - file_id: The identifier of related file in Google Cloud Storage.
+    - language: The language of the caption file.
     """
     id = UUIDField(primary_key=True, default=uuid.uuid4)
-    caption = models.JSONField()
-    language = models.CharField(max_length=10)
-    # file_id = models.CharField(unique=True, max_length=32)
-    
+    file_id = UUIDField(default=uuid.uuid4, max_length=36)
+    language = models.CharField(choices=CAPTIONS_LANGUAGES, max_length=3)
+
+    class Meta:
+        unique_together = ['file_id', 'language']
+
+    def __str__(self):
+        return "{file_id} -> {language}".format(file_id=self.file_id, language=self.language)
+
+
+class CaptionCue(models.Model):
+    """
+    Represents a caption cue in a VTT file.
+
+    - text: The caption text.
+    - starttime: The start time of the cue in seconds.
+    - endtime: The end time of the cue in seconds.
+    - caption_file (Foreign Key): The related caption file.
+    """
+    id = UUIDField(primary_key=True, default=uuid.uuid4)
+    text = models.TextField(null=False)
+    starttime = models.FloatField(null=False)
+    endtime = models.FloatField(null=False)
+    caption_file = models.ForeignKey(CaptionFile, related_name="caption_cue", on_delete=models.CASCADE)
+
+    def __str__(self):
+        return "text: {text}, start_time: {starttime}, end_time: {endtime}".format(text=self.text, starttime=self.starttime, endtime=self.endtime)
+
 
 ASSESSMENT_ID_INDEX_NAME = "assessment_id_idx"
 
