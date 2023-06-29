@@ -221,6 +221,17 @@ class TreeMapper:
 
         # Only process nodes that are either non-topics or have non-topic descendants
         if node.get_descendants(include_self=True).exclude(kind_id=content_kinds.TOPIC).exists() and node.complete:
+            # early validation to make sure we don't have any exercises without mastery models
+            # which should be unlikely when the node is complete, but just in case
+            if node.kind_id == content_kinds.EXERCISE:
+                try:
+                    # migrates and extracts the mastery model from the exercise
+                    _, mastery_model = parse_assessment_metadata(node)
+                    if not mastery_model:
+                        raise ValueError("Exercise does not have a mastery model")
+                except Exception as e:
+                    logging.warning("Unable to parse exercise {id} mastery model: {error}".format(id=node.pk, error=str(e)))
+                    return
 
             metadata = {}
 
@@ -242,12 +253,12 @@ class TreeMapper:
 
             kolibrinode = create_bare_contentnode(node, self.default_language, self.channel_id, self.channel_name, metadata)
 
-            if node.kind.kind == content_kinds.EXERCISE:
+            if node.kind_id == content_kinds.EXERCISE:
                 exercise_data = process_assessment_metadata(node, kolibrinode)
                 if self.force_exercises or node.changed or not \
                         node.files.filter(preset_id=format_presets.EXERCISE).exists():
                     create_perseus_exercise(node, kolibrinode, exercise_data, user_id=self.user_id)
-            elif node.kind.kind == content_kinds.SLIDESHOW:
+            elif node.kind_id == content_kinds.SLIDESHOW:
                 create_slideshow_manifest(node, user_id=self.user_id)
             elif node.kind_id == content_kinds.TOPIC:
                 for child in node.children.all():
@@ -486,18 +497,23 @@ def create_perseus_exercise(ccnode, kolibrinode, exercise_data, user_id=None):
         temppath and os.unlink(temppath)
 
 
-def process_assessment_metadata(ccnode, kolibrinode):
-    # Get mastery model information, set to default if none provided
-    assessment_items = ccnode.assessment_items.all().order_by('order')
+def parse_assessment_metadata(ccnode):
     extra_fields = ccnode.extra_fields
     if isinstance(extra_fields, basestring):
         extra_fields = json.loads(extra_fields)
     extra_fields = migrate_extra_fields(extra_fields) or {}
     randomize = extra_fields.get('randomize') if extra_fields.get('randomize') is not None else True
+    return randomize, extra_fields.get('options').get('completion_criteria').get('threshold')
+
+
+def process_assessment_metadata(ccnode, kolibrinode):
+    # Get mastery model information, set to default if none provided
+    assessment_items = ccnode.assessment_items.all().order_by('order')
     assessment_item_ids = [a.assessment_id for a in assessment_items]
 
-    exercise_data = deepcopy(extra_fields.get('options').get('completion_criteria').get('threshold'))
+    randomize, mastery_criteria = parse_assessment_metadata(ccnode)
 
+    exercise_data = deepcopy(mastery_criteria)
     exercise_data_type = exercise_data.get('mastery_model', "")
 
     mastery_model = {'type': exercise_data_type or exercises.M_OF_N}
