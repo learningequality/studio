@@ -66,12 +66,26 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
             },
         }
 
+    @property
+    def caption_cue_metadata(self):
+        return {
+            "file": {
+                "file_id": uuid.uuid4().hex,
+                "language": "en",
+            },
+            "cue": {
+                "text": "This is the beginning!",
+                "starttime": 0.0,
+                "endtime": 12.0,
+            },
+        }
+
     def setUp(self):
         super(SyncTestCase, self).setUp()
         self.channel = testdata.channel()
         self.user = testdata.user()
         self.channel.editors.add(self.user)
-
+    # Test for CaptionFile model
     def test_create_caption(self):
         self.client.force_authenticate(user=self.user)
         caption_file = self.caption_file_metadata
@@ -99,7 +113,6 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         # Check the values of the object in the PostgreSQL
         self.assertEqual(caption_file_db.file_id, caption_file["file_id"])
         self.assertEqual(caption_file_db.language_id, caption_file["language"])
-<<<<<<< HEAD
 
     def test_enqueue_caption_task(self):
         self.client.force_authenticate(user=self.user)
@@ -116,22 +129,13 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         )],)
         self.assertEqual(response.status_code, 200, response.content)
 
-=======
->>>>>>> 31ca620e6 (Refactor constants and integrate with Vue comp.)
 
     def test_delete_caption_file(self):
         self.client.force_authenticate(user=self.user)
         caption_file = self.caption_file_metadata
-<<<<<<< HEAD
-<<<<<<< HEAD
+
         # Explicitly set language to model object to follow Django ORM conventions
         caption_file['language'] = Language.objects.get(pk='en')
-=======
->>>>>>> c94a30ba1 (Refactor id_attr method for retrieving identifier attribute in delete_from_changes)
-=======
-        # Explicitly set language to model object to follow Django ORM conventions
-        caption_file['language'] = Language.objects.get(pk='en')
->>>>>>> 31ca620e6 (Refactor constants and integrate with Vue comp.)
         caption_file_1 = CaptionFile(**caption_file)
         pk = caption_file_1.pk
 
@@ -205,16 +209,10 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
     def test_create_caption_cue(self):
         self.client.force_authenticate(user=self.user)
         metadata = self.caption_cue_metadata
-<<<<<<< HEAD
-<<<<<<< HEAD
+
         # Explicitly set language to model object to follow Django ORM conventions 
         metadata['file']['language'] = Language.objects.get(pk="en") 
-=======
->>>>>>> c94a30ba1 (Refactor id_attr method for retrieving identifier attribute in delete_from_changes)
-=======
-        # Explicitly set language to model object to follow Django ORM conventions 
-        metadata['file']['language'] = Language.objects.get(pk="en") 
->>>>>>> 31ca620e6 (Refactor constants and integrate with Vue comp.)
+
         caption_file_1 = CaptionFile.objects.create(**metadata["file"])
         caption_cue = metadata["cue"]
         caption_cue["caption_file_id"] = caption_file_1.pk
