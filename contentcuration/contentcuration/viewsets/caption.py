@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import logging
 
 from le_utils.constants.format_presets import AUDIO, VIDEO_HIGH_RES, VIDEO_LOW_RES
@@ -13,6 +14,18 @@ from contentcuration.viewsets.sync.utils import generate_update_event
 
 
 class CaptionCueSerializer(BulkModelSerializer):
+=======
+from django.core.exceptions import ObjectDoesNotExist
+from django.http import JsonResponse
+from rest_framework import serializers, status
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from contentcuration.models import CaptionCue, CaptionFile
+from contentcuration.viewsets.base import ValuesViewset
+from contentcuration.viewsets.sync.utils import log_sync_exception
+
+class CaptionCueSerializer(serializers.ModelSerializer):
+>>>>>>> 6bfd92767 (Add failing test for CaptionFile JSON serialization)
     class Meta:
         model = CaptionCue
         fields = ["text", "starttime", "endtime", "caption_file_id"]
@@ -39,9 +52,13 @@ class CaptionCueSerializer(BulkModelSerializer):
             value["caption_file_id"] = caption_file_id
         return value
 
+<<<<<<< HEAD
 
 
 class CaptionFileSerializer(BulkModelSerializer):
+=======
+class CaptionFileSerializer(serializers.ModelSerializer):
+>>>>>>> 6bfd92767 (Add failing test for CaptionFile JSON serialization)
     caption_cue = CaptionCueSerializer(many=True, required=False)
 
     class Meta:
@@ -54,11 +71,19 @@ class CaptionViewSet(ValuesViewset):
     queryset = CaptionFile.objects.prefetch_related("caption_cue")
     permission_classes = [IsAuthenticated]
     serializer_class = CaptionFileSerializer
+<<<<<<< HEAD
     values = ("id", "file_id", "language")
 
     field_map = {
         "file_id": "file_id",
         "language": "language",
+=======
+    values = ("file_id", "language", "caption_cue")
+
+    field_map = {
+        "file": "file_id", 
+        "language": "language"
+>>>>>>> 6bfd92767 (Add failing test for CaptionFile JSON serialization)
     }
 
     def get_queryset(self):
