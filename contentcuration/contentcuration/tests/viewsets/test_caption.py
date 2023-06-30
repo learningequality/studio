@@ -2,16 +2,17 @@ from __future__ import absolute_import
 
 import uuid
 
-from django.urls import reverse
+import json
 
 from contentcuration.models import CaptionCue, CaptionFile
+from contentcuration.viewsets.caption import CaptionFileSerializer
 from contentcuration.tests.base import StudioAPITestCase
 from contentcuration.tests import testdata
 from contentcuration.tests.viewsets.base import SyncTestMixin
 from contentcuration.tests.viewsets.base import generate_create_event
 from contentcuration.tests.viewsets.base import generate_update_event
 from contentcuration.tests.viewsets.base import generate_delete_event
-from contentcuration.viewsets.sync.constants import CAPTION_FILE
+from contentcuration.viewsets.sync.constants import CAPTION_FILE, CAPTION_CUES
 
 # class CRUDTestCase(StudioAPITestCase):
 
@@ -45,12 +46,26 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
             "language": "en",
         }
 
+    @property
+    def caption_cue_metadata(self):
+        return {
+            "file": {
+                "file_id": uuid.uuid4().hex,
+                "language": "en",
+            },
+            "cue": {
+                "text": "This is the beginning!",
+                "starttime": 0.0,
+                "endtime": 12.0,
+            },
+        }
+
     def setUp(self):
         super(SyncTestCase, self).setUp()
         self.channel = testdata.channel()
         self.user = testdata.user()
         self.channel.editors.add(self.user)
-
+    # Test for CaptionFile model
     def test_create_caption(self):
         self.client.force_authenticate(user=self.user)
         caption_file = self.caption_file_metadata
@@ -127,3 +142,97 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
             caption_file_db = CaptionFile.objects.get(
                 file_id=caption_file_2.file_id, language=caption_file_2.language
             )
+
+    def test_caption_file_serialization(self):
+            metadata = self.caption_file_metadata
+            caption_file = CaptionFile.objects.create(**metadata)
+            serializer = CaptionFileSerializer(instance=caption_file)
+            try:
+                jd = json.dumps(serializer.data)  # Try to serialize the data to JSON
+            except Exception as e:
+                self.fail(f"CaptionFile serialization failed. Error: {str(e)}")
+
+    def test_caption_cue_serialization(self):
+        metadata = self.caption_cue_metadata
+        caption_file = CaptionFile.objects.create(**metadata['file'])
+        caption_cue = metadata['cue']
+        caption_cue.update({
+            "caption_file": caption_file,
+        })
+        caption_cue_1 = CaptionCue.objects.create(**caption_cue)
+        caption_cue_2 = CaptionCue.objects.create(
+            text='How are you?',
+            starttime=2.0,
+            endtime=3.0,
+            caption_file=caption_file
+        )
+        serializer = CaptionFileSerializer(instance=caption_file)
+        try:
+            json.dumps(serializer.data)  # Try to serialize the data to JSON
+        except Exception as e:
+            self.fail(f"CaptionFile serialization failed. Error: {str(e)}")
+
+    def test_create_caption_cue(self):
+        self.client.force_authenticate(user=self.user)
+        metadata = self.caption_cue_metadata
+        caption_file_1 = CaptionFile.objects.create(**metadata['file'])
+        caption_cue = metadata['cue']
+        caption_cue.update({
+            "caption_file": caption_file_1,
+        })
+        # This works: caption_cue_1 = CaptionCue.objects.create(**caption_cue)
+        response = self.sync_changes(
+            [
+                generate_create_event(
+                    uuid.uuid4(),
+                    CAPTION_CUES,
+                    caption_cue,
+                    channel_id=self.channel.id,
+                )
+            ],
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+
+        try:
+            caption_cue_db = CaptionCue.objects.get(
+                text=caption_cue['text'],
+                starttime=caption_cue['starttime'],
+                endtime=caption_cue['endtime']
+            )
+        except CaptionCue.DoesNotExist:
+            self.fail("Caption cue not found!")
+
+    def test_delete_caption_cue(self):
+        self.client.force_authenticate(user=self.user)
+        metadata = self.caption_cue_metadata
+        caption_file_1 = CaptionFile.objects.create(**metadata['file'])
+        caption_cue = metadata['cue']
+        caption_cue.update({
+            "caption_file": caption_file_1,
+        })
+        caption_cue_1 = CaptionCue.objects.create(**caption_cue)
+        try:
+            caption_cue_db = CaptionCue.objects.get(
+                text=caption_cue['text'],
+                starttime=caption_cue['starttime'],
+                endtime=caption_cue['endtime']
+            )
+        except CaptionCue.DoesNotExist:
+            self.fail("Caption cue not found!")
+
+        # Delete the caption Cue that we just created
+        response = self.sync_changes(
+            [generate_delete_event(caption_cue_db.pk , CAPTION_CUES, channel_id=self.channel.id)]
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        
+        caption_cue_db_exists = CaptionCue.objects.filter(
+            text=caption_cue['text'],
+            starttime=caption_cue['starttime'],
+            endtime=caption_cue['endtime']
+        ).exists()
+        if caption_cue_db_exists:
+            self.fail("Caption Cue still exists!")
+
+    def test_update_caption_cue(self):
+        pass
