@@ -56,7 +56,7 @@ class StagingPageRedirectView(RedirectView):
 
 router = routers.DefaultRouter(trailing_slash=False)
 router.register(r'bookmark', BookmarkViewSet, basename="bookmark")
-router.register(r'caption', CaptionViewSet)
+router.register(r'captions', CaptionViewSet, basename="captions")
 router.register(r'channel', ChannelViewSet)
 router.register(r'channelset', ChannelSetViewSet)
 router.register(r'catalog', CatalogViewSet, basename='catalog')
