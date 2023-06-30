@@ -52,12 +52,25 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
             },
         }
 
+    @property
+    def caption_cue_metadata(self):
+        return {
+            "file": {
+                "file_id": uuid.uuid4().hex,
+                "language": "en",
+            },
+            "cue": {
+                "text": "This is the beginning!",
+                "starttime": 0.0,
+                "endtime": 12.0,
+            },
+        }
+
     def setUp(self):
         super(SyncTestCase, self).setUp()
         self.channel = testdata.channel()
         self.user = testdata.user()
         self.channel.editors.add(self.user)
-
     # Test for CaptionFile model
     def test_create_caption(self):
         self.client.force_authenticate(user=self.user)
