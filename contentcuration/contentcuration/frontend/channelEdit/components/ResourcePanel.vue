@@ -532,7 +532,12 @@
   import sortBy from 'lodash/sortBy';
   import { mapActions, mapGetters } from 'vuex';
   import camelCase from 'lodash/camelCase';
-  import { isImportedContent, importedChannelLink, getCompletionCriteriaLabels } from '../utils';
+  import {
+    isImportedContent,
+    importedChannelLink,
+    getCompletionCriteriaLabels,
+    getAudioVideoDefaultDuration,
+  } from '../utils';
   import FilePreview from '../views/files/FilePreview';
   import { ContentLevels, Categories, AccessibilityCategories } from '../../shared/constants';
   import AssessmentItemPreview from './AssessmentItemPreview/AssessmentItemPreview';
@@ -614,6 +619,9 @@
         return getCompletionCriteriaLabels(this.node).completion;
       },
       duration() {
+        if (this.isAudioVideo) {
+          return getAudioVideoDefaultDuration(this.files);
+        }
         return getCompletionCriteriaLabels(this.node).duration;
       },
       files() {
@@ -664,6 +672,11 @@
       },
       isResource() {
         return !this.isTopic && !this.isExercise;
+      },
+      isAudioVideo() {
+        return (
+          this.node.kind === ContentKindsNames.AUDIO || this.node.kind === ContentKindsNames.VIDEO
+        );
       },
       isImported() {
         return isImportedContent(this.node);

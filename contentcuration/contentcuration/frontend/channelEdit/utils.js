@@ -1,12 +1,72 @@
 import translator from './translator';
 import { RouteNames } from './constants';
+import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 import { MasteryModelsNames } from 'shared/leUtils/MasteryModels';
 import { metadataStrings, constantStrings } from 'shared/mixins';
 import {
   AssessmentItemTypes,
   CompletionCriteriaModels,
   SHORT_LONG_ACTIVITY_MIDPOINT,
+  CompletionDropdownMap,
 } from 'shared/constants';
+
+// The constant mapping below is used to set
+// default completion criteria and durations
+// both as initial values in the edit modal, and
+// to ensure backwards compatibility for contentnodes
+// that were added before this was in place
+export const defaultCompletionCriteriaModels = {
+  [ContentKindsNames.VIDEO]: CompletionCriteriaModels.TIME,
+  [ContentKindsNames.AUDIO]: CompletionCriteriaModels.TIME,
+  [ContentKindsNames.DOCUMENT]: CompletionCriteriaModels.PAGES,
+  [ContentKindsNames.H5P]: CompletionCriteriaModels.DETERMINED_BY_RESOURCE,
+  [ContentKindsNames.HTML5]: CompletionCriteriaModels.APPROX_TIME,
+  [ContentKindsNames.EXERCISE]: CompletionCriteriaModels.MASTERY,
+};
+
+export const defaultCompletionCriteriaThresholds = {
+  // Audio and Video threshold defaults are dynamic based
+  // on the duration of the file itself.
+  [ContentKindsNames.DOCUMENT]: '100%',
+  [ContentKindsNames.HTML5]: 300,
+  // We cannot set an automatic default threshold for exercises.
+};
+
+export const completionCriteriaToDropdownMap = {
+  [CompletionCriteriaModels.TIME]: CompletionDropdownMap.completeDuration,
+  [CompletionCriteriaModels.APPROX_TIME]: CompletionDropdownMap.completeDuration,
+  [CompletionCriteriaModels.PAGES]: CompletionDropdownMap.allContent,
+  [CompletionCriteriaModels.DETERMINED_BY_RESOURCE]: CompletionDropdownMap.determinedByResource,
+  [CompletionCriteriaModels.MASTERY]: CompletionDropdownMap.goal,
+  [CompletionCriteriaModels.REFERENCE]: CompletionDropdownMap.reference,
+};
+
+export const CompletionOptionsDropdownMap = {
+  [ContentKindsNames.DOCUMENT]: [
+    CompletionDropdownMap.allContent,
+    CompletionDropdownMap.completeDuration,
+    CompletionDropdownMap.reference,
+  ],
+  [ContentKindsNames.EXERCISE]: [CompletionDropdownMap.goal, CompletionDropdownMap.practiceQuiz],
+  [ContentKindsNames.HTML5]: [
+    CompletionDropdownMap.completeDuration,
+    CompletionDropdownMap.determinedByResource,
+    CompletionDropdownMap.reference,
+  ],
+  [ContentKindsNames.H5P]: [
+    CompletionDropdownMap.determinedByResource,
+    CompletionDropdownMap.completeDuration,
+    CompletionDropdownMap.reference,
+  ],
+  [ContentKindsNames.VIDEO]: [
+    CompletionDropdownMap.completeDuration,
+    CompletionDropdownMap.reference,
+  ],
+  [ContentKindsNames.AUDIO]: [
+    CompletionDropdownMap.completeDuration,
+    CompletionDropdownMap.reference,
+  ],
+};
 
 /**
  * Get correct answer index/indices out of an array of answer objects.
@@ -179,6 +239,36 @@ export function secondsToHms(seconds) {
 }
 
 /**
+ * Set a default completion model for audiovisual content
+ * equal to the file length in seconds (parsed), or a fallback placeholder
+ *
+ * @param {Object} node
+ * @returns {String|Number} {from options in the map above}
+ */
+export function getAudioVideoDefaultDuration(files) {
+  return files && files[0] ? secondsToHms(files[0].duration) : '-';
+}
+
+export function generateDefaultThreshold(node) {
+  if (node.kind !== ContentKindsNames.AUDIO || node.kind !== ContentKindsNames.VIDEO) {
+    return defaultCompletionCriteriaThresholds[node.kind];
+  }
+}
+
+/**
+ * Set a default completion model for non-audiovisual content
+ * the default completion for audio video is the duration of the file length
+ *
+ * @param {Object} node
+ * @returns {String|Number} {from options in the map above}
+ */
+export function generateDefaultModel(node) {
+  if (node.kind !== ContentKindsNames.AUDIO || node.kind !== ContentKindsNames.VIDEO) {
+    return defaultCompletionCriteriaThresholds[node.kind];
+  }
+}
+
+/**
  * Gathers data from a content node related to its completion.
  *
  * @param {Object} node
@@ -190,15 +280,18 @@ export function getCompletionDataFromNode(node) {
     return;
   }
 
-  const { model, threshold } = node.extra_fields?.options?.completion_criteria || {};
-  const masteryModel = threshold?.mastery_model;
+  const completionCriteria = node.extra_fields?.options?.completion_criteria
+    ? JSON.parse(JSON.stringify(node.extra_fields?.options?.completion_criteria))
+    : null;
+  const threshold = completionCriteria?.threshold || generateDefaultThreshold(node);
+  const model = completionCriteria?.model || defaultCompletionCriteriaModels[node.kind];
   const suggestedDurationType = node.extra_fields?.suggested_duration_type;
   const suggestedDuration = node.suggested_duration;
 
   return {
     completionModel: model,
     completionThreshold: threshold,
-    masteryModel,
+    masteryModel: threshold?.mastery_model,
     suggestedDurationType,
     suggestedDuration,
   };
@@ -252,6 +345,8 @@ export function getCompletionCriteriaLabels(node) {
       labels.completion = metadataStrings.$tr('completeDuration');
       if (suggestedDuration) {
         labels.duration = secondsToHms(suggestedDuration);
+      } else {
+        getAudioVideoDefaultDuration(node);
       }
       break;
 
