@@ -8,6 +8,7 @@ import {
   importedChannelLink,
   secondsToHms,
   getCompletionCriteriaLabels,
+  getCompletionDataFromNode,
 } from '../utils';
 import router from '../router';
 import { RouteNames } from '../constants';
@@ -475,6 +476,76 @@ describe('channelEdit utils', () => {
   });
 
   describe(`getCompletionCriteriaLabels`, () => {
+    describe(`setting default values for completion and duration`, () => {
+      describe(`for audio and video content`, () => {
+        it(`returns 'When time spent is equal to duration' completion label and  duration label equal to the file length in hh:mm:ss format`, () => {
+          expect(
+            getCompletionCriteriaLabels(
+              {
+                extra_fields: {
+                  options: {},
+                },
+                kind: 'audio',
+              },
+              [{ duration: 100 }]
+            )
+          ).toEqual({
+            completion: 'When time spent is equal to duration',
+            duration: '01:40',
+          });
+        });
+        it(`returns 'When time spent is equal to duration' completion label and  duration label equal to the file length in hh:mm:ss format`, () => {
+          expect(
+            getCompletionCriteriaLabels(
+              {
+                extra_fields: {
+                  options: {},
+                },
+                kind: 'video',
+              },
+              [{ duration: 100 }]
+            )
+          ).toEqual({
+            completion: 'When time spent is equal to duration',
+            duration: '01:40',
+          });
+        });
+      });
+      describe(`for documents`, () => {
+        it(`returns 'Viewed in its entirety' completion label and empty duration label`, () => {
+          expect(
+            getCompletionCriteriaLabels(
+              {
+                extra_fields: {
+                  options: {},
+                },
+                kind: 'document',
+              },
+              []
+            )
+          ).toEqual({
+            completion: 'Viewed in its entirety',
+            duration: '-',
+          });
+        });
+      });
+      describe(`for exercises`, () => {
+        it(`sets the Completion Criteria model to 'mastery'`, () => {
+          expect(
+            getCompletionDataFromNode(
+              {
+                extra_fields: {
+                  options: {},
+                },
+                kind: 'exercise',
+              },
+              []
+            ).completionModel
+          ).toEqual('mastery');
+        });
+      });
+    });
+
     describe(`for 'reference' completion criteria`, () => {
       it(`returns 'Reference material' completion label and empty duration label`, () => {
         expect(

@@ -239,30 +239,24 @@ export function secondsToHms(seconds) {
 }
 
 /**
- * Set a default completion model for audiovisual content
+ * Set a default duration for audiovisual content
  * equal to the file length in seconds (parsed), or a fallback placeholder
  *
- * @param {Object} node
- * @returns {String|Number} {from options in the map above}
+ * @param {Array} files
+ * @returns {String|Number} {human-readable duration}
  */
 export function getAudioVideoDefaultDuration(files) {
   return files && files[0] ? secondsToHms(files[0].duration) : '-';
 }
 
-export function generateDefaultThreshold(node) {
-  if (node.kind !== ContentKindsNames.AUDIO || node.kind !== ContentKindsNames.VIDEO) {
-    return defaultCompletionCriteriaThresholds[node.kind];
-  }
-}
-
 /**
- * Set a default completion model for non-audiovisual content
- * the default completion for audio video is the duration of the file length
+ * Set a default completion threshold for audiovisual content
+ * equal to the file's duration
  *
  * @param {Object} node
- * @returns {String|Number} {from options in the map above}
+ * @returns {String|Number} {human-readable threshold}
  */
-export function generateDefaultModel(node) {
+export function generateDefaultThreshold(node) {
   if (node.kind !== ContentKindsNames.AUDIO || node.kind !== ContentKindsNames.VIDEO) {
     return defaultCompletionCriteriaThresholds[node.kind];
   }
@@ -319,8 +313,10 @@ export function isLongActivity(node) {
  * @param {Object} node
  * @returns {Object} { completion, duration }
  */
-export function getCompletionCriteriaLabels(node) {
-  if (!node) {
+export function getCompletionCriteriaLabels(node = {}, files = []) {
+  console.log('labels');
+  if (!node && !files) {
+    console.log('none');
     return;
   }
 
@@ -336,6 +332,8 @@ export function getCompletionCriteriaLabels(node) {
     duration: '-',
   };
 
+  console.log('filesss', files);
+
   switch (completionModel) {
     case CompletionCriteriaModels.REFERENCE:
       labels.completion = metadataStrings.$tr('reference');
@@ -343,10 +341,10 @@ export function getCompletionCriteriaLabels(node) {
 
     case CompletionCriteriaModels.TIME:
       labels.completion = metadataStrings.$tr('completeDuration');
-      if (suggestedDuration) {
+      if (node.kind === ContentKindsNames.AUDIO || node.kind === ContentKindsNames.VIDEO) {
+        labels.duration = getAudioVideoDefaultDuration(files);
+      } else if (suggestedDuration) {
         labels.duration = secondsToHms(suggestedDuration);
-      } else {
-        getAudioVideoDefaultDuration(node);
       }
       break;
 
