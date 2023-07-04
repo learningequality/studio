@@ -614,7 +614,7 @@
         return getCompletionCriteriaLabels(this.node).completion;
       },
       duration() {
-        return getCompletionCriteriaLabels(this.node).duration;
+        return getCompletionCriteriaLabels(this.node, this.files).duration;
       },
       files() {
         return sortBy(this.getContentNodeFiles(this.nodeId), f => f.preset.order);
