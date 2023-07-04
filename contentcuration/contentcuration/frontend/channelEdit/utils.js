@@ -314,9 +314,7 @@ export function isLongActivity(node) {
  * @returns {Object} { completion, duration }
  */
 export function getCompletionCriteriaLabels(node = {}, files = []) {
-  console.log('labels');
   if (!node && !files) {
-    console.log('none');
     return;
   }
 
@@ -331,8 +329,6 @@ export function getCompletionCriteriaLabels(node = {}, files = []) {
     completion: '-',
     duration: '-',
   };
-
-  console.log('filesss', files);
 
   switch (completionModel) {
     case CompletionCriteriaModels.REFERENCE:
