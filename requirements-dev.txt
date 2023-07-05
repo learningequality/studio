@@ -53,7 +53,7 @@ customizable-django-profiler @ git+https://github.com/someshchaturvedi/customiza
     # via -r requirements-dev.in
 distlib==0.3.1
     # via virtualenv
-django==3.2.14
+django==3.2.19
     # via
     #   -c requirements.txt
     #   django-debug-toolbar
@@ -63,7 +63,7 @@ django-concurrent-test-helper==0.7.0
     # via -r requirements-dev.in
 django-debug-panel==0.8.3
     # via -r requirements-dev.in
-django-debug-toolbar==1.9.1
+django-debug-toolbar==3.5.0
     # via
     #   -r requirements-dev.in
     #   django-debug-panel
@@ -125,8 +125,10 @@ jinja2==3.0.3
     #   locust
 locust==2.8.6
     # via -r requirements-dev.in
-markupsafe==2.0.1
-    # via jinja2
+markupsafe==2.1.2
+    # via
+    #   jinja2
+    #   werkzeug
 mccabe==0.6.1
     # via flake8
 minio==7.1.1
@@ -200,7 +202,7 @@ pytest-timeout==1.4.2
     # via -r requirements-dev.in
 pytest-watch==4.2.0
     # via -r requirements-dev.in
-python-dateutil==2.8.1
+python-dateutil==2.8.2
     # via
     #   -c requirements.txt
     #   faker
@@ -210,6 +212,7 @@ pytz==2022.1
     #   django
 pyyaml==6.0
     # via
+    #   -c requirements.txt
     #   aspy-yaml
     #   pre-commit
 pyzmq==23.1.0
@@ -255,13 +258,15 @@ tomli==1.2.3
     #   build
     #   coverage
     #   pep517
-typing-extensions==4.1.1
-    # via locust
+typing-extensions==4.5.0
+    # via
+    #   -c requirements.txt
+    #   locust
 uritemplate==3.0.1
     # via
     #   coreapi
     #   drf-yasg
-urllib3==1.26.5
+urllib3==1.26.14
     # via
     #   -c requirements.txt
     #   minio
@@ -270,11 +275,11 @@ virtualenv==20.14.1
     # via pre-commit
 watchdog==2.1.8
     # via pytest-watch
-werkzeug==2.0.1
+werkzeug==2.2.3
     # via
     #   flask
     #   locust
-wheel==0.37.1
+wheel==0.38.1
     # via pip-tools
 whitenoise==5.2.0
     # via -r requirements-dev.in

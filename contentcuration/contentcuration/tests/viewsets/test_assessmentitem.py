@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 
+import json
 import uuid
 
 from django.urls import reverse
@@ -21,6 +22,7 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
     @property
     def assessmentitem_metadata(self):
         return {
+
             "assessment_id": uuid.uuid4().hex,
             "contentnode": self.channel.main_tree.get_descendants()
             .filter(kind_id=content_kinds.EXERCISE)
@@ -105,11 +107,14 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         image_file = testdata.fileobj_exercise_image()
         image_file.uploaded_by = self.user
         image_file.save()
-        answers = "![alt_text](${}/{}.{})".format(
+        answer = "![alt_text](${}/{}.{})".format(
             exercises.IMG_PLACEHOLDER, image_file.checksum, image_file.file_format_id
         )
 
-        assessmentitem["answers"] = answers
+        answers = [{'answer': answer, 'correct': False, 'order': 1}]
+
+        assessmentitem["answers"] = json.dumps(answers)
+
         response = self.sync_changes(
             [
                 generate_create_event(
@@ -139,11 +144,16 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         image_file = testdata.fileobj_exercise_image()
         image_file.uploaded_by = self.user
         image_file.save()
-        hints = "![alt_text](${}/{}.{})".format(
+        hint = "![alt_text](${}/{}.{})".format(
             exercises.IMG_PLACEHOLDER, image_file.checksum, image_file.file_format_id
         )
+        hints = [
+            {"hint": hint, "order": 1},
+        ]
 
+        hints = json.dumps(hints)
         assessmentitem["hints"] = hints
+
         response = self.sync_changes(
             [
                 generate_create_event(
@@ -154,6 +164,7 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
                 )
             ],
         )
+
         self.assertEqual(response.status_code, 200, response.content)
         try:
             ai = models.AssessmentItem.objects.get(
@@ -182,7 +193,7 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
                     ASSESSMENTITEM,
                     assessmentitem,
                     channel_id=self.channel.id,
-                )
+                ),
             ],
         )
         self.assertEqual(response.status_code, 200, response.content)
@@ -262,12 +273,12 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         response = self.sync_changes(
             [
                 generate_update_event([
-                            self.channel.main_tree.get_descendants()
+                    self.channel.main_tree.get_descendants()
                                 .filter(kind_id=content_kinds.EXERCISE)
                                 .first()
                                 .id,
-                            uuid.uuid4().hex
-                        ],
+                    uuid.uuid4().hex
+                ],
                     ASSESSMENTITEM,
                     {"question": "but why is it missing in the first place?"},
                     channel_id=self.channel.id,
@@ -497,6 +508,103 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
             self.fail("AssessmentItem 2 was not deleted")
         except models.AssessmentItem.DoesNotExist:
             pass
+
+    def test_valid_hints_assessmentitem(self):
+        self.client.force_authenticate(user=self.user)
+        assessmentitem = self.assessmentitem_metadata
+        assessmentitem["hints"] = json.dumps([{'hint': 'asdasdwdqasd', 'order': 1}, {'hint': 'testing the hint', 'order': 2}])
+        response = self.sync_changes(
+            [
+                generate_create_event(
+                    [assessmentitem["contentnode"], assessmentitem["assessment_id"]],
+                    ASSESSMENTITEM,
+                    assessmentitem,
+                    channel_id=self.channel.id,
+                ),
+            ],
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        try:
+            models.AssessmentItem.objects.get(
+                assessment_id=assessmentitem["assessment_id"]
+            )
+        except models.AssessmentItem.DoesNotExist:
+            self.fail("AssessmentItem  was not created")
+
+    def test_invalid_hints_assessmentitem(self):
+
+        self.client.force_authenticate(user=self.user)
+        assessmentitem = self.assessmentitem_metadata
+        assessmentitem["hints"] = json.dumps("test invalid string for hints")
+        response = self.sync_changes(
+            [
+                generate_create_event(
+                    [assessmentitem["contentnode"], assessmentitem["assessment_id"]],
+                    ASSESSMENTITEM,
+                    assessmentitem,
+                    channel_id=self.channel.id,
+                ),
+            ],
+        )
+
+        self.assertEqual(response.json()["errors"][0]["table"], "assessmentitem")
+        self.assertEqual(response.json()["errors"][0]["errors"]["hints"][0], "JSON Data Invalid for hints")
+        self.assertEqual(len(response.json()["errors"]), 1)
+
+        with self.assertRaises(models.AssessmentItem.DoesNotExist, msg="AssessmentItem was created"):
+            models.AssessmentItem.objects.get(
+                assessment_id=assessmentitem["assessment_id"]
+            )
+
+    def test_valid_answers_assessmentitem(self):
+        self.client.force_authenticate(user=self.user)
+        assessmentitem = self.assessmentitem_metadata
+        assessmentitem["answers"] = json.dumps([{'answer': 'test answer 1 :)', 'correct': False, 'order': 1},
+                                                {'answer': 'test answer 2 :)', 'correct': False, 'order': 2},
+                                                {'answer': 'test answer 3 :)', 'correct': True, 'order': 3}
+                                                ])
+        response = self.sync_changes(
+            [
+                generate_create_event(
+                    [assessmentitem["contentnode"], assessmentitem["assessment_id"]],
+                    ASSESSMENTITEM,
+                    assessmentitem,
+                    channel_id=self.channel.id,
+                ),
+            ],
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        try:
+            models.AssessmentItem.objects.get(
+                assessment_id=assessmentitem["assessment_id"]
+            )
+        except models.AssessmentItem.DoesNotExist:
+            self.fail("AssessmentItem  was not created")
+
+    def test_invalid_answers_assessmentitem(self):
+
+        self.client.force_authenticate(user=self.user)
+        assessmentitem = self.assessmentitem_metadata
+        assessmentitem["answers"] = json.dumps("test invalid string for answers")
+        response = self.sync_changes(
+            [
+                generate_create_event(
+                    [assessmentitem["contentnode"], assessmentitem["assessment_id"]],
+                    ASSESSMENTITEM,
+                    assessmentitem,
+                    channel_id=self.channel.id,
+                ),
+            ],
+        )
+
+        self.assertEqual(response.json()["errors"][0]["table"], "assessmentitem")
+        self.assertEqual(response.json()["errors"][0]["errors"]["answers"][0], "JSON Data Invalid for answers")
+        self.assertEqual(len(response.json()["errors"]), 1)
+
+        with self.assertRaises(models.AssessmentItem.DoesNotExist, msg="AssessmentItem was created"):
+            models.AssessmentItem.objects.get(
+                assessment_id=assessmentitem["assessment_id"]
+            )
 
 
 class CRUDTestCase(StudioAPITestCase):
@@ -736,3 +844,155 @@ class CRUDTestCase(StudioAPITestCase):
             self.fail("AssessmentItem was not deleted")
         except models.AssessmentItem.DoesNotExist:
             pass
+
+
+class ContentIDTestCase(SyncTestMixin, StudioAPITestCase):
+    def setUp(self):
+        super(ContentIDTestCase, self).setUp()
+        self.channel = testdata.channel()
+        self.user = testdata.user()
+        self.channel.editors.add(self.user)
+        self.client.force_authenticate(user=self.user)
+
+    def _get_assessmentitem_metadata(self, assessment_id=None, contentnode_id=None):
+        return {
+            "assessment_id": assessment_id or uuid.uuid4().hex,
+            "contentnode_id": contentnode_id or self.channel.main_tree.get_descendants()
+            .filter(kind_id=content_kinds.EXERCISE)
+            .first()
+            .id,
+        }
+
+    def _create_assessmentitem(self, assessmentitem):
+        self.sync_changes(
+            [
+                generate_create_event(
+                    [assessmentitem["contentnode_id"], assessmentitem["assessment_id"]],
+                    ASSESSMENTITEM,
+                    assessmentitem,
+                    channel_id=self.channel.id,
+                )
+            ],
+        )
+
+    def _update_assessmentitem(self, assessmentitem, update_dict):
+        self.sync_changes(
+            [
+                generate_update_event(
+                    [assessmentitem["contentnode_id"], assessmentitem["assessment_id"]],
+                    ASSESSMENTITEM,
+                    update_dict,
+                    channel_id=self.channel.id,
+                )
+            ],
+        )
+
+    def _delete_assessmentitem(self, assessmentitem):
+        self.sync_changes(
+            [
+                generate_delete_event(
+                    [assessmentitem["contentnode_id"], assessmentitem["assessment_id"]],
+                    ASSESSMENTITEM,
+                    channel_id=self.channel.id,
+                )
+            ],
+        )
+
+    def test_content_id__same_on_copy(self):
+        # Make a copy of an existing assessmentitem contentnode.
+        assessmentitem_node = self.channel.main_tree.get_descendants().filter(kind_id=content_kinds.EXERCISE).first()
+        assessmentitem_node_copy = assessmentitem_node.copy_to(target=self.channel.main_tree)
+
+        # Assert after copying content_id is same.
+        assessmentitem_node.refresh_from_db()
+        assessmentitem_node_copy.refresh_from_db()
+        self.assertEqual(assessmentitem_node.content_id, assessmentitem_node_copy.content_id)
+
+    def test_content_id__changes_on_new_assessmentitem(self):
+        # Make a copy of an existing assessmentitem contentnode.
+        assessmentitem_node = self.channel.main_tree.get_descendants().filter(kind_id=content_kinds.EXERCISE).first()
+        assessmentitem_node_copy = assessmentitem_node.copy_to(target=self.channel.main_tree)
+
+        # Create a new assessmentitem.
+        self._create_assessmentitem(self._get_assessmentitem_metadata(contentnode_id=assessmentitem_node_copy.id))
+
+        # Assert after creating a new assessmentitem on copied node, it's content_id should change.
+        assessmentitem_node.refresh_from_db()
+        assessmentitem_node_copy.refresh_from_db()
+        self.assertNotEqual(assessmentitem_node.content_id, assessmentitem_node_copy.content_id)
+
+    def test_content_id__changes_on_deleting_assessmentitem(self):
+        # Make a copy of an existing assessmentitem contentnode.
+        assessmentitem_node = self.channel.main_tree.get_descendants().filter(kind_id=content_kinds.EXERCISE).first()
+        assessmentitem_node_copy = assessmentitem_node.copy_to(target=self.channel.main_tree)
+
+        # Delete an already present assessmentitem from copied contentnode.
+        assessmentitem_from_db = models.AssessmentItem.objects.filter(contentnode=assessmentitem_node_copy.id).first()
+        self._delete_assessmentitem(self._get_assessmentitem_metadata(assessmentitem_from_db.assessment_id, assessmentitem_node_copy.id))
+
+        # Assert after deleting assessmentitem on copied node, it's content_id should change.
+        assessmentitem_node.refresh_from_db()
+        assessmentitem_node_copy.refresh_from_db()
+        self.assertNotEqual(assessmentitem_node.content_id, assessmentitem_node_copy.content_id)
+
+    def test_content_id__changes_on_updating_assessmentitem(self):
+        # Make a copy of an existing assessmentitem contentnode.
+        assessmentitem_node = self.channel.main_tree.get_descendants().filter(kind_id=content_kinds.EXERCISE).first()
+        assessmentitem_node_copy = assessmentitem_node.copy_to(target=self.channel.main_tree)
+
+        # Update an already present assessmentitem from copied contentnode.
+        assessmentitem_from_db = models.AssessmentItem.objects.filter(contentnode=assessmentitem_node_copy.id).first()
+        self._update_assessmentitem(self._get_assessmentitem_metadata(assessmentitem_from_db.assessment_id, assessmentitem_node_copy.id),
+                                    {"question": "New Question!"})
+
+        # Assert after updating assessmentitem on copied node, it's content_id should change.
+        assessmentitem_node.refresh_from_db()
+        assessmentitem_node_copy.refresh_from_db()
+        self.assertNotEqual(assessmentitem_node.content_id, assessmentitem_node_copy.content_id)
+
+    def test_content_id__doesnot_changes_of_original_node(self):
+        # Make a copy of an existing assessmentitem contentnode.
+        assessmentitem_node = self.channel.main_tree.get_descendants().filter(kind_id=content_kinds.EXERCISE).first()
+        assessmentitem_node.copy_to(target=self.channel.main_tree)
+
+        content_id_before_updates = assessmentitem_node.content_id
+
+        # Create, update and delete assessmentitems from original contentnode.
+        assessmentitem_from_db = models.AssessmentItem.objects.filter(contentnode=assessmentitem_node.id).first()
+        self._update_assessmentitem(self._get_assessmentitem_metadata(assessmentitem_from_db.assessment_id, assessmentitem_node.id),
+                                    {"question": "New Question!"})
+        self._delete_assessmentitem(self._get_assessmentitem_metadata(assessmentitem_from_db.assessment_id, assessmentitem_node.id))
+        self._create_assessmentitem(self._get_assessmentitem_metadata(contentnode_id=assessmentitem_node.id))
+
+        # Assert content_id before and after updates remain same.
+        assessmentitem_node.refresh_from_db()
+        content_id_after_updates = assessmentitem_node.content_id
+        self.assertEqual(content_id_before_updates, content_id_after_updates)
+
+    def test_content_id__doesnot_changes_if_already_unique(self):
+        # Make a copy of an existing assessmentitem contentnode.
+        assessmentitem_node = self.channel.main_tree.get_descendants().filter(kind_id=content_kinds.EXERCISE).first()
+        assessmentitem_node_copy = assessmentitem_node.copy_to(target=self.channel.main_tree)
+
+        # Create, update and delete assessmentitems of copied contentnode.
+        assessmentitem_from_db = models.AssessmentItem.objects.filter(contentnode=assessmentitem_node_copy.id).first()
+        self._update_assessmentitem(self._get_assessmentitem_metadata(assessmentitem_from_db.assessment_id, assessmentitem_node_copy.id),
+                                    {"question": "New Question!"})
+        self._delete_assessmentitem(self._get_assessmentitem_metadata(assessmentitem_from_db.assessment_id, assessmentitem_node_copy.id))
+        self._create_assessmentitem(self._get_assessmentitem_metadata(contentnode_id=assessmentitem_node_copy.id))
+
+        assessmentitem_node_copy.refresh_from_db()
+        content_id_after_first_update = assessmentitem_node_copy.content_id
+
+        # Once again, let us create, update and delete assessmentitems of copied contentnode.
+        assessmentitem_from_db = models.AssessmentItem.objects.filter(contentnode=assessmentitem_node_copy.id).first()
+        self._update_assessmentitem(self._get_assessmentitem_metadata(assessmentitem_from_db.assessment_id, assessmentitem_node_copy.id),
+                                    {"question": "New Question!"})
+        self._delete_assessmentitem(self._get_assessmentitem_metadata(assessmentitem_from_db.assessment_id, assessmentitem_node_copy.id))
+        self._create_assessmentitem(self._get_assessmentitem_metadata(contentnode_id=assessmentitem_node_copy.id))
+
+        assessmentitem_node_copy.refresh_from_db()
+        content_id_after_second_update = assessmentitem_node_copy.content_id
+
+        # Assert after first and second updates of assessmentitem content_id remains same.
+        self.assertEqual(content_id_after_first_update, content_id_after_second_update)

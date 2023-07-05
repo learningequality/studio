@@ -1,6 +1,6 @@
-Feature: Edit resource details 
+Feature: Edit resource details
 
-	Background: 
+	Background:
 		Given I am signed in to Studio
 			And I am on the channel editor page
 
@@ -13,4 +13,3 @@ Feature: Edit resource details
 			Then I see a message: *Changes saved*
 			When I click the *Finish* button
 			Then I am returned at the main topic tree view
-			

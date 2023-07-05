@@ -317,10 +317,10 @@
           [DELAYED_VALIDATION]: true,
         };
 
-        let reorderedItems = [...this.sortedItems];
+        const reorderedItems = [...this.sortedItems];
         reorderedItems.splice(newItem.order, 0, newItem);
 
-        let newOrders = this.items.map(item => ({
+        const newOrders = this.items.map(item => ({
           ...assessmentItemKey(item),
           order: reorderedItems.indexOf(item),
         }));

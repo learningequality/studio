@@ -27,6 +27,7 @@
       fixed
       :permanent="false"
       :nodeId="previewNode.id"
+      :useRouting="false"
       @close="showPreview = false"
     >
       <template #actions>
@@ -74,7 +75,7 @@
 
 <script>
 
-  import { mapActions, mapMutations, mapState } from 'vuex';
+  import { mapActions, mapMutations, mapState, mapGetters } from 'vuex';
   import sumBy from 'lodash/sumBy';
   import { RouteNames } from '../../constants';
   import ResourceDrawer from '../../components/ResourceDrawer';
@@ -114,6 +115,7 @@
     },
     computed: {
       ...mapState('importFromChannels', ['selected']),
+      ...mapGetters('contentNode', ['getContentNode']),
       dialog: {
         get() {
           return IMPORT_ROUTES.includes(this.$route.name);
@@ -210,9 +212,12 @@
       },
       handleClickImport() {
         const nodeIds = this.selected.map(({ id }) => id);
+        // Grab the source nodes from Vuex, since search should have loaded them into it
+        const sourceNodes = nodeIds.map(id => this.getContentNode(id));
         return this.copyContentNodes({
           id__in: nodeIds,
           target: this.$route.params.destNodeId,
+          sourceNodes,
         }).then(() => {
           // When exiting, do not show snackbar when clearing selections
           this.showSnackbar = false;

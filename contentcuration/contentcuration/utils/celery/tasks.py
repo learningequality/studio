@@ -105,10 +105,8 @@ class CeleryTask(Task):
     track_started = True
     send_events = True
 
-    # ensure our tasks are restarted if they're interrupted
-    acks_late = True
-    acks_on_failure_or_timeout = True
-    reject_on_worker_lost = True
+    # Tasks are acknowledged just before they start executing
+    acks_late = False
 
     @property
     def TaskModel(self):
@@ -304,7 +302,7 @@ class CeleryTask(Task):
         task_ids = self.find_incomplete_ids(signature)
 
         if exclude_task_ids is not None:
-            task_ids = task_ids.exclude(task_id__in=task_ids)
+            task_ids = task_ids.exclude(task_id__in=exclude_task_ids)
         count = 0
         for task_id in task_ids:
             logging.info(f"Revoking task {task_id}")
@@ -322,6 +320,7 @@ class CeleryAsyncResult(AsyncResult):
     The properties access additional properties in the same manner as super properties,
     and our custom properties are added to the meta via TaskResultCustom.as_dict()
     """
+
     def get_model(self):
         """
         :return: The TaskResult model object

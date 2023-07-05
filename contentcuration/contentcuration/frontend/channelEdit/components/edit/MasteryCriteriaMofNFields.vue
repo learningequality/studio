@@ -135,7 +135,7 @@
           return;
         }
 
-        let data = {
+        const data = {
           ...this.value,
           ...update,
         };
@@ -152,7 +152,7 @@
       },
       isIntegerPaste(evt) {
         try {
-          let num = Number(evt.clipboardData.getData('Text'));
+          const num = Number(evt.clipboardData.getData('Text'));
           if (Number.isInteger(num) && num >= 0) {
             return true;
           } else {
@@ -199,6 +199,7 @@
       padding: 5px;
 
       &:nth-child(odd) {
+        /* stylelint-disable-next-line custom-property-pattern */
         background-color: var(--v-greyBackground-base);
       }
 

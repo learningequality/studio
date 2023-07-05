@@ -100,15 +100,22 @@
 <script>
 
   import get from 'lodash/get';
-  import MasteryCriteriaGoal from './MasteryCriteriaGoal';
-  import ActivityDuration from './ActivityDuration.vue';
+  import {
+    defaultCompletionCriteriaModels,
+    defaultCompletionCriteriaThresholds,
+    CompletionOptionsDropdownMap,
+    completionCriteriaToDropdownMap,
+  } from '../../utils';
   import MasteryCriteriaMofNFields from './MasteryCriteriaMofNFields';
+  import ActivityDuration from './ActivityDuration.vue';
+  import MasteryCriteriaGoal from './MasteryCriteriaGoal';
   import {
     CompletionCriteriaModels,
     ContentModalities,
     CompletionDropdownMap,
     DurationDropdownMap,
     nonUniqueValue,
+    SHORT_LONG_ACTIVITY_MIDPOINT,
   } from 'shared/constants';
   import Checkbox from 'shared/views/form/Checkbox';
   import { MasteryModelsNames } from 'shared/leUtils/MasteryModels';
@@ -123,60 +130,6 @@
 
   const DEFAULT_SHORT_ACTIVITY = 600;
   const DEFAULT_LONG_ACTIVITY = 3000;
-  const SHORT_LONG_ACTIVITY_MIDPOINT = 1860;
-
-  const defaultCompletionCriteriaModels = {
-    [ContentKindsNames.VIDEO]: CompletionCriteriaModels.TIME,
-    [ContentKindsNames.AUDIO]: CompletionCriteriaModels.TIME,
-    [ContentKindsNames.DOCUMENT]: CompletionCriteriaModels.PAGES,
-    [ContentKindsNames.H5P]: CompletionCriteriaModels.DETERMINED_BY_RESOURCE,
-    [ContentKindsNames.HTML5]: CompletionCriteriaModels.APPROX_TIME,
-    [ContentKindsNames.EXERCISE]: CompletionCriteriaModels.MASTERY,
-  };
-
-  const defaultCompletionCriteriaThresholds = {
-    // Audio and Video threshold defaults are dynamic based
-    // on the duration of the file itself.
-    [ContentKindsNames.DOCUMENT]: '100%',
-    [ContentKindsNames.HTML5]: 300,
-    // We cannot set an automatic default threshold for exercises.
-  };
-
-  const completionCriteriaToDropdownMap = {
-    [CompletionCriteriaModels.TIME]: CompletionDropdownMap.completeDuration,
-    [CompletionCriteriaModels.APPROX_TIME]: CompletionDropdownMap.completeDuration,
-    [CompletionCriteriaModels.PAGES]: CompletionDropdownMap.allContent,
-    [CompletionCriteriaModels.DETERMINED_BY_RESOURCE]: CompletionDropdownMap.determinedByResource,
-    [CompletionCriteriaModels.MASTERY]: CompletionDropdownMap.goal,
-    [CompletionCriteriaModels.REFERENCE]: CompletionDropdownMap.reference,
-  };
-
-  const CompletionOptionsDropdownMap = {
-    [ContentKindsNames.DOCUMENT]: [
-      CompletionDropdownMap.allContent,
-      CompletionDropdownMap.completeDuration,
-      CompletionDropdownMap.reference,
-    ],
-    [ContentKindsNames.EXERCISE]: [CompletionDropdownMap.goal, CompletionDropdownMap.practiceQuiz],
-    [ContentKindsNames.HTML5]: [
-      CompletionDropdownMap.completeDuration,
-      CompletionDropdownMap.determinedByResource,
-      CompletionDropdownMap.reference,
-    ],
-    [ContentKindsNames.H5P]: [
-      CompletionDropdownMap.determinedByResource,
-      CompletionDropdownMap.completeDuration,
-      CompletionDropdownMap.reference,
-    ],
-    [ContentKindsNames.VIDEO]: [
-      CompletionDropdownMap.completeDuration,
-      CompletionDropdownMap.reference,
-    ],
-    [ContentKindsNames.AUDIO]: [
-      CompletionDropdownMap.completeDuration,
-      CompletionDropdownMap.reference,
-    ],
-  };
 
   export default {
     name: 'CompletionOptions',
@@ -393,7 +346,7 @@
       showCorrectCompletionOptions() {
         if (this.kind) {
           return CompletionOptionsDropdownMap[this.kind].map(model => ({
-            text: this.$tr(model),
+            text: this.translateMetadataString(model),
             value: CompletionDropdownMap[model],
           }));
         }
@@ -402,7 +355,7 @@
       selectableDurationOptions() {
         return [
           {
-            text: this.$tr(DurationDropdownMap.EXACT_TIME),
+            text: this.translateMetadataString(DurationDropdownMap.EXACT_TIME),
             value: 'exactTime',
           },
           {
@@ -514,15 +467,6 @@
       },
     },
     $trs: {
-      /* eslint-disable kolibri/vue-no-unused-translations */
-      allContent: 'Viewed in its entirety',
-      completeDuration: 'When time spent is equal to duration',
-      determinedByResource: 'Determined by the resource',
-      goal: 'When goal is met',
-      practiceQuiz: 'Practice quiz',
-      reference: 'Reference material',
-      /* eslint-enable */
-      exactTime: 'Time to complete',
       referenceHint:
         'Progress will not be tracked on reference material unless learners mark it as complete',
       learnersCanMarkComplete: 'Allow learners to mark as complete',

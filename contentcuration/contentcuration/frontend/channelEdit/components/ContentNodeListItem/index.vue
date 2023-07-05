@@ -97,7 +97,7 @@
                     >
                       {{ category(node.categories) }}
                     </span>
-                    <span v-if="(isTopic && node.coach_count) || isCoach">
+                    <span v-if="isTopic && node.coach_count">
                       <!-- for each learning activity -->
                       <VTooltip bottom lazy>
                         <template #activator="{ on }">
@@ -170,7 +170,7 @@
                     <p class="caption grey--text pr-2 pt-1">
                       {{ $tr("copyingTask") }}
                     </p>
-                    <TaskProgress :taskId="taskId" size="30" />
+                    <ContentNodeCopyTaskProgress :taskId="taskId" size="30" />
                   </div>
                   <div class="disabled-overlay"></div>
                 </template>
@@ -191,10 +191,10 @@
 <script>
 
   import camelCase from 'lodash/camelCase';
-  import ContentNodeValidator from '../ContentNodeValidator';
+  import ContentNodeCopyTaskProgress from '../../views/progress/ContentNodeCopyTaskProgress';
   import ContentNodeChangedIcon from '../ContentNodeChangedIcon';
-  import TaskProgress from '../../views/progress/TaskProgress';
-  import { ContentLevel, Categories, NEW_OBJECT } from 'shared/constants';
+  import ContentNodeValidator from '../ContentNodeValidator';
+  import { ContentLevels, Categories, NEW_OBJECT } from 'shared/constants';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import { RolesNames } from 'shared/leUtils/Roles';
   import ImageOnlyThumbnail from 'shared/views/files/ImageOnlyThumbnail';
@@ -217,7 +217,7 @@
       ContentNodeValidator,
       ContentNodeChangedIcon,
       ToggleText,
-      TaskProgress,
+      ContentNodeCopyTaskProgress,
       ContentNodeLearningActivityIcon,
     },
     mixins: [titleMixin, metadataTranslationMixin],
@@ -331,7 +331,7 @@
         return null;
       },
       levels(level) {
-        let match = Object.keys(ContentLevel).find(key => ContentLevel[key] === level);
+        let match = Object.keys(ContentLevels).find(key => ContentLevels[key] === level);
         if (match) {
           if (match === 'PROFESSIONAL') {
             match = 'specializedProfessionalTraining';
@@ -353,6 +353,12 @@
         '{value, number, integer} {value, plural, one {resource for coaches} other {resources for coaches}}',
       coachTooltip: 'Resource for coaches',
       copyingTask: 'Copying',
+      /* eslint-disable kolibri/vue-no-unused-translations */
+      /**
+       * String for handling copy failures
+       */
+      copyingError: 'Copy failed.',
+      /* eslint-enable kolibri/vue-no-unused-translations */
     },
   };
 
@@ -421,6 +427,7 @@
     transition: background-color ease 500ms;
 
     .highlight & {
+      /* stylelint-disable-next-line custom-property-pattern */
       background-color: var(--v-greenHighlightBackground-base);
     }
 

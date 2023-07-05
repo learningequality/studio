@@ -24,7 +24,7 @@ function makeWrapper() {
 describe('fileUploadDefault', () => {
   it('handleFiles should get called on file drop', () => {
     const handleFiles = jest.fn();
-    let wrapper = makeWrapper();
+    const wrapper = makeWrapper();
     wrapper.setProps({ handleFiles });
     const file = {
       checksum: 'test',
@@ -34,7 +34,7 @@ describe('fileUploadDefault', () => {
   });
   it('openFileDialog should get called on button click', () => {
     const openFileDialog = jest.fn();
-    let wrapper = makeWrapper();
+    const wrapper = makeWrapper();
     wrapper.setProps({ openFileDialog });
     wrapper.find('[data-test="upload"]').trigger('click');
     expect(openFileDialog).toHaveBeenCalled();

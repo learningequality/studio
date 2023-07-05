@@ -1,6 +1,5 @@
 from __future__ import absolute_import
 
-import json
 import os
 import random
 import string
@@ -27,6 +26,7 @@ from .testdata import channel
 from .testdata import create_studio_file
 from .testdata import node as create_node
 from .testdata import slideshow
+from .testdata import thumbnail_bytes
 from contentcuration import models as cc
 from contentcuration.utils.publish import convert_channel_thumbnail
 from contentcuration.utils.publish import create_content_database
@@ -37,9 +37,6 @@ from contentcuration.utils.publish import MIN_SCHEMA_VERSION
 from contentcuration.utils.publish import set_channel_icon_encoding
 
 pytestmark = pytest.mark.django_db
-
-
-thumbnail_bytes = b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\nIDATx\x9cc\x00\x01\x00\x00\x05\x00\x01\r\n-\xb4\x00\x00\x00\x00IEND\xaeB`\x82'  # noqa E501
 
 
 def description():
@@ -120,6 +117,18 @@ class ExportChannelTestCase(StudioTestCase):
         new_exercise.complete = True
         new_exercise.parent = current_exercise.parent
         new_exercise.save()
+
+        bad_container = create_node({'kind_id': 'topic', 'title': 'Bad topic container', 'children': []})
+        bad_container.complete = True
+        bad_container.parent = self.content_channel.main_tree
+        bad_container.save()
+
+        # exercise without mastery model, but marked as complete
+        broken_exercise = create_node({'kind_id': 'exercise', 'title': 'Bad mastery test', 'extra_fields': {}})
+        broken_exercise.complete = True
+        broken_exercise.parent = bad_container
+        broken_exercise.save()
+
         thumbnail_data = create_studio_file(thumbnail_bytes, preset="exercise_thumbnail", ext="png")
         file_obj = thumbnail_data["db_file"]
         file_obj.contentnode = new_exercise
@@ -250,6 +259,9 @@ class ExportChannelTestCase(StudioTestCase):
         for node in incomplete_nodes:
             assert kolibri_nodes.filter(pk=node.node_id).count() == 0
 
+        # bad exercise node should not be published (technically incomplete)
+        assert kolibri_models.ContentNode.objects.filter(title='Bad mastery test').count() == 0
+
     def test_tags_greater_than_30_excluded(self):
         tag_node = kolibri_models.ContentNode.objects.filter(title='kolibri tag test').first()
         published_tags = tag_node.tags.all()
@@ -264,6 +276,14 @@ class ExportChannelTestCase(StudioTestCase):
 
         assert completion_criteria_node.duration == 20
         assert non_completion_criteria_node.duration == 100
+
+    def test_completion_criteria_set(self):
+        completion_criteria_node = kolibri_models.ContentNode.objects.filter(title='Completion criteria test').first()
+
+        self.assertEqual(completion_criteria_node.options["completion_criteria"], {
+            "model": "time",
+            "threshold": 20
+        })
 
     def test_contentnode_channel_id_data(self):
         channel = kolibri_models.ChannelMetadata.objects.first()
@@ -296,8 +316,8 @@ class ExportChannelTestCase(StudioTestCase):
     def test_assessment_metadata(self):
         for i, exercise in enumerate(kolibri_models.ContentNode.objects.filter(kind="exercise")):
             asm = exercise.assessmentmetadata.first()
-            self.assertTrue(isinstance(json.loads(asm.assessment_item_ids), list))
-            mastery = json.loads(asm.mastery_model)
+            self.assertTrue(isinstance(asm.assessment_item_ids, list))
+            mastery = asm.mastery_model
             self.assertTrue(isinstance(mastery, dict))
             self.assertEqual(mastery["type"], exercises.DO_ALL if i == 0 else exercises.M_OF_N)
             self.assertEqual(mastery["m"], 3 if i == 0 else 1)
@@ -388,6 +408,12 @@ class ExportChannelTestCase(StudioTestCase):
     def test_publish_no_modify_exercise_extra_fields(self):
         exercise = cc.ContentNode.objects.get(title="Mastery test")
         self.assertEqual(exercise.extra_fields["options"]["completion_criteria"]["threshold"], {
+            "m": 1,
+            "n": 2,
+            "mastery_model": exercises.M_OF_N,
+        })
+        published_exercise = kolibri_models.ContentNode.objects.get(title="Mastery test")
+        self.assertEqual(published_exercise.options["completion_criteria"]["threshold"], {
             "m": 1,
             "n": 2,
             "mastery_model": exercises.M_OF_N,

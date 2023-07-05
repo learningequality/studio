@@ -89,16 +89,10 @@ describe('PoliciesModal', () => {
     });
 
     describe('when accept policy checkbox is not checked', () => {
-      it('clicking continue button should display validation error', () => {
-        wrapper.find('[data-test="continue-button"]').trigger('click');
-
-        expect(wrapper.text()).toContain('Field is required');
-      });
-
-      it("clicking continue button shouldn't emit accept event", () => {
-        wrapper.find('[data-test="continue-button"]').trigger('click');
-
-        expect(wrapper.emitted().accept).toBeFalsy();
+      it('disable continue button', () => {
+        expect(wrapper.find('[data-test="continue-button"]').attributes().disabled).toEqual(
+          'disabled'
+        );
       });
     });
 

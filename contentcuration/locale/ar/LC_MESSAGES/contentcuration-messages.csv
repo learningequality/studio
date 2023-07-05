@@ -74,13 +74,13 @@
 "AccountCreated.accountCreatedTitle","Account successfully created","
 -- CONTEXT --
 ","تم إنشاء الحساب بنجاح"
-"AccountCreated.continueToSignIn","Continue to sign-in","
+"AccountCreated.backToLogin","Continue to sign-in page","
 -- CONTEXT --
-","المتابعة لتسجيل الدخول"
+","المتابعة إلى صفحة تسجيل الدخول"
 "AccountDeleted.accountDeletedTitle","Account successfully deleted","
 -- CONTEXT --
 ","تم حذف الحساب بنجاح"
-"AccountDeleted.continueToSignIn","Continue to sign-in page","
+"AccountDeleted.backToLogin","Continue to sign-in page","
 -- CONTEXT --
 ","المتابعة إلى صفحة تسجيل الدخول"
 "AccountNotActivated.requestNewLink","Request a new activation link","
@@ -287,9 +287,6 @@
 "BrowsingCard.coach","Resource for coaches","
 -- CONTEXT --
 ","مصدر خاص بالمدربين"
-"BrowsingCard.goToPluralLocationsAction","In {count, number} {count, plural, one {location} other {locations}}","
--- CONTEXT --
-","في {count, number} {count, plural, zero {مواقع} one {موقع} two {موقعين} few {مواقع} many {موقعاً} other {مواقع}}"
 "BrowsingCard.goToSingleLocationAction","Go to location","
 -- CONTEXT --
 ","التوجّه إلى الموقع"
@@ -1272,6 +1269,9 @@ A type of math category. See https://en.wikipedia.org/wiki/Algebra","الجبر"
 "CommonMetadataStrings.all","All","
 -- CONTEXT --
 A label for everything in the group of activities.","الكل"
+"CommonMetadataStrings.allContent","Viewed in its entirety","
+-- CONTEXT --
+One of the completion criteria types. A resource with this criteria is considered complete when learners studied it all, for example they saw all pages of a document.","معروض بالكامل"
 "CommonMetadataStrings.allLevelsBasicSkills","All levels -- basic skills","
 -- CONTEXT --
 Refers to a type of educational level.","كافة المستويات -- المهارات الأساسية"
@@ -1323,6 +1323,9 @@ Science category type. See https://en.wikipedia.org/wiki/Chemistry","الكيم�
 "CommonMetadataStrings.civicEducation","Civic education","
 -- CONTEXT --
 Category type. Civic education is the study of the rights and obligations of citizens in society. See https://en.wikipedia.org/wiki/Civics","التربية المدنية"
+"CommonMetadataStrings.completeDuration","When time spent is equal to duration","
+-- CONTEXT --
+One of the completion criteria types. A resource with this criteria is considered complete when learners spent given time studying it.","عندما يكون الوقت المستغرَق مساوياً للمدة الزمنية"
 "CommonMetadataStrings.completion","Completion","CommonMetadataStrings.completion
 
 -- CONTEXT --
@@ -1342,6 +1345,9 @@ Category type. See https://en.wikipedia.org/wiki/Everyday_life","الحياة ا
 "CommonMetadataStrings.dance","Dance","
 -- CONTEXT --
 Category type. See https://en.wikipedia.org/wiki/Dance","الرقص"
+"CommonMetadataStrings.determinedByResource","Determined by the resource","
+-- CONTEXT --
+One of the completion criteria types. Typically used for embedded html5/h5p resources that contain their own completion criteria, for example reaching a score in an educational game.","مُحدَد بواسطة المصدر"
 "CommonMetadataStrings.digitalLiteracy","Digital literacy","
 -- CONTEXT --
 Category type. See https://en.wikipedia.org/wiki/Digital_literacy","الإلمام الرقمي"
@@ -1363,6 +1369,9 @@ Category type. See https://en.wikipedia.org/wiki/Entrepreneurship","ريادة �
 "CommonMetadataStrings.environment","Environment","
 -- CONTEXT --
 Category type. See https://en.wikipedia.org/wiki/Environmental_studies","البيئة"
+"CommonMetadataStrings.exactTime","Time to complete","
+-- CONTEXT --
+One of the completion criteria types. A subset of ""When time spent is equal to duration"". For example, for an audio resource with this criteria, learnes need to hear the whole length of audio for the resource to be considered complete.","المدة اللازمة للإكمال"
 "CommonMetadataStrings.explore","Explore","
 -- CONTEXT --
 Resource and filter label for the type of learning activity. Translate as a VERB","استكشاف"
@@ -1378,6 +1387,9 @@ Category type","للمعلمين"
 "CommonMetadataStrings.geometry","Geometry","
 -- CONTEXT --
 Category type.","علم الهندسة"
+"CommonMetadataStrings.goal","When goal is met","
+-- CONTEXT --
+One of the completion criteria types specific to exercises. An exercise with this criteria is considered complete when learners reached a given goal, for example 100% correct.","عندما يتم تحقيق الهدف"
 "CommonMetadataStrings.guides","Guides","
 -- CONTEXT --
 Category label in the Kolibri resources library; refers to any guide-type material for teacher professional development.","الإرشادات"
@@ -1428,6 +1440,9 @@ Refers to a level of learning. Approximately corresponds to the first half of pr
 "CommonMetadataStrings.lowerSecondary","Lower secondary","
 -- CONTEXT --
 Refers to a level of learning. Approximately corresponds to the first half of secondary school (high school).","المرحلة الأولى من التعليم الثانوي"
+"CommonMetadataStrings.masteryMofN","Goal: {m} out of {n}","
+-- CONTEXT --
+One of the completion criteria types specific to exercises. An exercise with this criteria is considered complete when learners answered m questions out of n correctly.","الهدف: {m} من أصل {n}"
 "CommonMetadataStrings.mathematics","Mathematics","
 -- CONTEXT --
 Category type. See https://en.wikipedia.org/wiki/Mathematics","الرياضيات"
@@ -1465,6 +1480,9 @@ Category type. See https://en.wikipedia.org/wiki/Political_science.","العلو
 "CommonMetadataStrings.practice","Practice","
 -- CONTEXT --
 Resource and filter label for the type of learning activity with questions and answers. Translate as a VERB","تدريب"
+"CommonMetadataStrings.practiceQuiz","Practice quiz","
+-- CONTEXT --
+One of the completion criteria types specific to exercises. An exercise with this criteria represents a quiz.","اختبار قصير للتمرن"
 "CommonMetadataStrings.preschool","Preschool","
 -- CONTEXT --
 Refers to a level of education offered to children before they begin compulsory education at primary school.
@@ -1491,6 +1509,9 @@ School subject category","القراءة والكتابة"
 "CommonMetadataStrings.readingComprehension","Reading comprehension","
 -- CONTEXT --
 Category type.","استيعاب القراءة"
+"CommonMetadataStrings.reference","Reference material","
+-- CONTEXT --
+One of the completion criteria types. Progress made on a resource with this criteria is not tracked.","مادة مرجعية"
 "CommonMetadataStrings.reflect","Reflect","
 -- CONTEXT --
 Resource and filter label for the type of learning activity. Translate as a VERB","التأمّل"
@@ -1614,27 +1635,9 @@ Category type. See https://en.wikipedia.org/wiki/Writing","الكتابة"
 "CommunityStandardsModal.studioItem5","Hosting. Uploading your own materials (limited to materials you know are appropriately licensed to do so) from a local hard drive or other locations on the internet","
 -- CONTEXT --
 ","الاستضافة. رفع المواد الخاصة بك (يقتصر ذلك على المواد التي تعرف أنها مرخصة بشكل مناسب للقيام بذلك) سواء من قرص صلب محلي أو مواقع أخرى على الإنترنت"
-"CompletionOptions.allContent","Viewed in its entirety","
+"CompletionOptions.learnersCanMarkComplete","Allow learners to mark as complete","
 -- CONTEXT --
-","معروض بالكامل"
-"CompletionOptions.completeDuration","When time spent is equal to duration","
--- CONTEXT --
-","عندما يكون الوقت المستغرَق مساويًا للمدة الزمنية"
-"CompletionOptions.determinedByResource","Determined by the resource","
--- CONTEXT --
-","مُحدَد بواسطة المصدر"
-"CompletionOptions.exactTime","Time to complete","
--- CONTEXT --
-","المدة اللازمة للإكمال"
-"CompletionOptions.goal","When goal is met","
--- CONTEXT --
-","عندما يتم تحقيق الهدف"
-"CompletionOptions.practiceQuiz","Practice quiz","
--- CONTEXT --
-","اختبار قصير للتمرين"
-"CompletionOptions.reference","Reference material","
--- CONTEXT --
-","مادة مرجعية"
+","السماح للمتعلمين بتحديده على أنه مكتمل"
 "CompletionOptions.referenceHint","Progress will not be tracked on reference material unless learners mark it as complete","
 -- CONTEXT --
 ","لن يتم تتبع التقدم في المواد المرجعية ما لم يصنفها المتعلمون على أنها مكتملة"
@@ -1926,9 +1929,27 @@ Category type. See https://en.wikipedia.org/wiki/Writing","الكتابة"
 "ContentNodeChangedIcon.isUpdatedTopic","Folder has been updated since last publish","
 -- CONTEXT --
 ","تم تحديث المجلد منذ آخر تاريخ للنشر"
+"ContentNodeCopyTaskProgress.copyErrorTopic","Some resources failed to copy","
+-- CONTEXT --
+","فشل نسخ بعض المصادر"
+"ContentNodeEditListItem.copiedSnackbar","Copy operation complete","
+-- CONTEXT --
+","اكتملت عملية النسخ"
+"ContentNodeEditListItem.creatingCopies","Copying...","
+-- CONTEXT --
+","جاري النسخ..."
 "ContentNodeEditListItem.optionsTooltip","Options","
 -- CONTEXT --
 ","الخيارات"
+"ContentNodeEditListItem.removeNode","Remove","
+-- CONTEXT --
+","إزالة"
+"ContentNodeEditListItem.retryCopy","Retry","
+-- CONTEXT --
+","إعادة المحاولة"
+"ContentNodeEditListItem.undo","Undo","
+-- CONTEXT --
+","تراجع"
 "ContentNodeIcon.audio","Audio","
 -- CONTEXT --
 ","الملف الصوتي"
@@ -1956,12 +1977,12 @@ Category type. See https://en.wikipedia.org/wiki/Writing","الكتابة"
 "ContentNodeLearningActivityIcon.multipleLearningActivities","Multiple learning activities","
 -- CONTEXT --
 ","أنشطة تعلم متعددة"
-"ContentNodeLearningActivityIcon.topic","Folder","
--- CONTEXT --
-","مجلد"
 "ContentNodeListItem.coachTooltip","Resource for coaches","
 -- CONTEXT --
 ","مصدر خاص بالمدرب"
+"ContentNodeListItem.copyingError","Copy failed.","
+-- CONTEXT --
+","فشل النسخ."
 "ContentNodeListItem.copyingTask","Copying","
 -- CONTEXT --
 ","جاري النسخ"
@@ -2013,9 +2034,9 @@ Category type. See https://en.wikipedia.org/wiki/Writing","الكتابة"
 "ContentNodeOptions.newSubtopic","New folder","
 -- CONTEXT --
 ","مجلد جديد"
-"ContentNodeOptions.remove","Remove","
+"ContentNodeOptions.remove","Delete","
 -- CONTEXT --
-","إزالة"
+","حذف"
 "ContentNodeOptions.removedFromClipboard","Deleted from clipboard","
 -- CONTEXT --
 ","تم الحذف من الحافظة"
@@ -2121,12 +2142,12 @@ Category type. See https://en.wikipedia.org/wiki/Writing","الكتابة"
 "CountryField.noCountriesFound","No countries found","
 -- CONTEXT --
 ","لم يتم العثور على دول"
-"Create.ToSCheck","I have read and agree to the terms of service","
+"Create.ToSRequiredMessage","Please accept our terms of service and policy","
 -- CONTEXT --
-","لقد قرأت شروط الخدمة وأوافق عليها"
-"Create.ToSRequiredMessage","Please accept our terms of service","
+","الرجاء الموافقة على السياسة وشروط الخدمة"
+"Create.agreement","I have read and agree to terms of service and the privacy policy","
 -- CONTEXT --
-","الرجاء الموافقة على شروط الخدمة"
+","لقد قرأت شروط الخدمة وسياسة الخصوصية وأوافق عليها"
 "Create.backToLoginButton","Sign in","
 -- CONTEXT --
 ","تسجل الدخول"
@@ -2217,12 +2238,6 @@ Category type. See https://en.wikipedia.org/wiki/Writing","الكتابة"
 "Create.personalDemoSourceOption","Personal demo","
 -- CONTEXT --
 ","عرض شخصي"
-"Create.privacyPolicyCheck","I have read and agree to the privacy policy","
--- CONTEXT --
-","لقد قرأت سياسة الخصوصية وأوافق عليها"
-"Create.privacyPolicyRequiredMessage","Please accept our privacy policy","
--- CONTEXT --
-","يرجى الموافقة على سياسة الخصوصية"
 "Create.registrationFailed","There was an error registering your account. Please try again","
 -- CONTEXT --
 ","حصل خطأ أثناء تسجيل حسابك. الرجاء المحاولة مجدداً"
@@ -2259,10 +2274,10 @@ Category type. See https://en.wikipedia.org/wiki/Writing","الكتابة"
 "Create.usageLabel","How do you plan on using Kolibri Studio (check all that apply)","
 -- CONTEXT --
 ","كيف تخطط لاستخدام استوديو كوليبري (حدد كل ما ينطبق)"
-"Create.viewPrivacyPolicyLink","View privacy policy","
+"Create.viewPrivacyPolicyLink","View Privacy Policy","
 -- CONTEXT --
 ","عرض سياسة الخصوصية"
-"Create.viewToSLink","View terms of service","
+"Create.viewToSLink","View Terms of Service","
 -- CONTEXT --
 ","عرض شروط الخدمة"
 "Create.websiteSourceOption","Learning Equality website","
@@ -2413,6 +2428,9 @@ Category type. See https://en.wikipedia.org/wiki/Writing","الكتابة"
 "Details.authorsLabel","Authors","
 -- CONTEXT --
 ","المؤلفون"
+"Details.categoriesHeading","Categories","
+-- CONTEXT --
+","الفئات"
 "Details.coachDescription","Resources for coaches are only visible to coaches in Kolibri","
 -- CONTEXT --
 ","يمكن عرض مصادر المدرِّبين فقط للمدرِّبين في كوليبري"
@@ -2437,6 +2455,9 @@ Category type. See https://en.wikipedia.org/wiki/Writing","الكتابة"
 "Details.languagesHeading","Languages","
 -- CONTEXT --
 ","اللغات"
+"Details.levelsHeading","Levels","
+-- CONTEXT --
+","المستويات"
 "Details.licensesLabel","Licenses","
 -- CONTEXT --
 ","التراخيص"
@@ -2527,9 +2548,6 @@ Heading for the section in the resource editing window","الاستكمال"
 "DetailsTabView.languageHelpText","Leave blank to use the folder language","
 -- CONTEXT --
 ","اتركه فارغًا من أجل استخدام لغة المجلد"
-"DetailsTabView.learnersCanMarkComplete","Allow learners to mark as complete","
--- CONTEXT --
-","السماح للمتعلمين بتحديده على أنه مكتمل"
 "DetailsTabView.noTagsFoundText","No results found for ""{text}"". Press 'Enter' key to create a new tag","
 -- CONTEXT --
 ","لم يتم العثور على نتائج بحث لـ""{text}"". إضغط على 'إدخال' لإنشاء تصنيف جديد"
@@ -3028,6 +3046,9 @@ Heading for the section in the resource editing window","الاستكمال"
 "MainNavigationDrawer.administrationLink","Administration","
 -- CONTEXT --
 ","ادارة"
+"MainNavigationDrawer.changeLanguage","Change language","
+-- CONTEXT --
+","تغيير اللغة"
 "MainNavigationDrawer.channelsLink","Channels","
 -- CONTEXT --
 ","القنوات التعليمية"
@@ -3199,9 +3220,6 @@ Heading for the section in the resource editing window","الاستكمال"
 "PoliciesModal.checkboxText","I have agreed to the above terms","
 -- CONTEXT --
 ","لقد وافقت على الشروط الواردة أعلاه"
-"PoliciesModal.checkboxValidationErrorMessage","Field is required","
--- CONTEXT --
-","هذا الحقل مطلوب"
 "PoliciesModal.closeButton","Close","
 -- CONTEXT --
 ","إغلاق"
@@ -3232,9 +3250,12 @@ Heading for the section in the resource editing window","الاستكمال"
 "ProgressModal.syncError","Last attempt to sync failed","
 -- CONTEXT --
 ","فشلت آخر محاولة للمزامنة"
-"ProgressModal.syncHeader","Syncing channel","
+"ProgressModal.syncHeader","Syncing resources","
 -- CONTEXT --
-","مزامنة القناة"
+","مزامنة المصادر"
+"ProgressModal.syncedSnackbar","Resources synced","
+-- CONTEXT --
+","المصادر التي تم مزامنتها"
 "ProgressModal.unpublishedText","Unpublished","
 -- CONTEXT --
 ","لم يتم النشر"
@@ -3550,9 +3571,6 @@ Heading for the section in the resource editing window","الاستكمال"
 "ResourcePanel.coachResources","Resources for coaches","
 -- CONTEXT --
 ","مصادر للمدرِّبين"
-"ResourcePanel.completion","Completion","
--- CONTEXT --
-","الاستكمال"
 "ResourcePanel.copyrightHolder","Copyright holder","
 -- CONTEXT --
 ","صاحب حقوق النشر"
@@ -3577,27 +3595,37 @@ Heading for the section in the resource editing window","الاستكمال"
 "ResourcePanel.license","License","
 -- CONTEXT --
 ","الترخيص"
-"ResourcePanel.masteryMofN","Goal: {m} out of {n}","
--- CONTEXT --
-","الهدف: {m} من أصل {n}"
 "ResourcePanel.nextSteps","Next steps","
 -- CONTEXT --
 ","الخطوات التالية"
-"ResourcePanel.noCopyrightHolderError","Missing copyright holder","
+"ResourcePanel.noCompletionCriteriaError","Completion criteria are required","ResourcePanel.noCompletionCriteriaError
+
 -- CONTEXT --
-","صاحب حقوق النشر غير موجود"
-"ResourcePanel.noFilesError","Missing files","
+Error message notification when a specific metadata is missing.","معايير الإنجاز مطلوبة"
+"ResourcePanel.noCopyrightHolderError","Copyright holder is required","
 -- CONTEXT --
-","ملفات ناقصة"
-"ResourcePanel.noLicenseDescriptionError","Missing license description","
+","اسم صاحب حقوق النشر مطلوب"
+"ResourcePanel.noDurationError","Duration is required","
 -- CONTEXT --
-","وصف ترخيص مفقود"
-"ResourcePanel.noLicenseError","Missing license","
+","المدة الزمنية مطلوبة"
+"ResourcePanel.noFilesError","File is required","ResourcePanel.noFilesError
+
 -- CONTEXT --
-","ترخيص مفقود"
-"ResourcePanel.noMasteryModelError","Missing mastery criteria","
+Error message notification when a file is missing.","الملف مطلوب"
+"ResourcePanel.noLearningActivityError","Learning activity is required","
 -- CONTEXT --
-","معايير إتقان مفقودة"
+","نشاط التعلم مطلوب"
+"ResourcePanel.noLicenseDescriptionError","License description is required","ResourcePanel.noLicenseDescriptionError
+
+-- CONTEXT --
+Error message notification when a specific metadata is missing.","وصف الترخيص مطلوب"
+"ResourcePanel.noLicenseError","License is required","
+-- CONTEXT --
+","الترخيص مطلوب"
+"ResourcePanel.noMasteryModelError","Mastery criteria are required","ResourcePanel.noMasteryModelError
+
+-- CONTEXT --
+Error message notification when a specific metadata is missing.","معايير الاتقان مطلوبة"
 "ResourcePanel.noQuestionsError","Exercise is empty","
 -- CONTEXT --
 ","التمرين فارغ"
@@ -3925,36 +3953,42 @@ Heading for the section in the resource editing window","الاستكمال"
 "SyncResourcesModal.confirmSyncModalTitle","Confirm sync","
 -- CONTEXT --
 ","تأكيد المزامنة"
+"SyncResourcesModal.confirmSyncModalWarningExplainer","Warning: this will overwrite any changes you have made to copied or imported resources.","
+-- CONTEXT --
+","تحذير: سيؤدي هذا إلى استبدال أي تغييرات أجريتها على المصادر المنسوخة أو المستوردة."
 "SyncResourcesModal.continueButtonLabel","Continue","
 -- CONTEXT --
 ","متابعة"
 "SyncResourcesModal.syncButtonLabel","Sync","
 -- CONTEXT --
 ","مزامنة"
-"SyncResourcesModal.syncExercisesExplainer","Update questions, answers, and hints","
+"SyncResourcesModal.syncExercisesExplainer","Update questions, answers, and hints in exercises and quizzes","
 -- CONTEXT --
-","تحديث الأسئلة والإجابات والتلميحات"
+","تحديث الأسئلة والإجابات والتلميحات في التمارين والاختبارات القصيرة"
 "SyncResourcesModal.syncExercisesTitle","Assessment details","
 -- CONTEXT --
 ","تفاصيل التقييم"
-"SyncResourcesModal.syncFilesExplainer","Update all file information","
+"SyncResourcesModal.syncFilesExplainer","Update all files, including: thumbnails, subtitles, and captions","
 -- CONTEXT --
-","تحديث كافة معلومات الملف"
+","تحديث جميع الملفات، بما في ذلك: الصور المصغر والترجمات وعناوين الصور"
 "SyncResourcesModal.syncFilesTitle","Files","
 -- CONTEXT --
 ","الملفات"
-"SyncResourcesModal.syncModalExplainer","Sync and update your resources with their original source.","
+"SyncResourcesModal.syncModalExplainer","Syncing resources in Kolibri Studio updates copied or imported resources in this channel with any changes made to the original resource files.","
 -- CONTEXT --
-","مزامنة وتحديث مصادرك مع مصدرها الأصلي."
+","تسمح مزامنة المصادر في استوديو كوليبري بتحديث المصادر المنسوخة أو المستوردة في هذه القناة، مع أي تغييرات يتم إدخالها على ملفات المصادر الأصلية."
+"SyncResourcesModal.syncModalSelectAttributes","Select what you would like to sync:","
+-- CONTEXT --
+","حدد ما تريد مزامنته:"
 "SyncResourcesModal.syncModalTitle","Sync resources","
 -- CONTEXT --
 ","مزامنة المصادر"
-"SyncResourcesModal.syncTagsExplainer","Update all tags","
+"SyncResourcesModal.syncResourceDetailsExplainer","Update information about the resource: learning activity, level, requirements, category, tags, audience, and source","
 -- CONTEXT --
-","تحديث كافة التصنيفات"
-"SyncResourcesModal.syncTagsTitle","Tags","
+","تحديث المعلومات حول المصدر: نشاط التعلّم والمستوى والمتطلبات والفئة والوسوم والجمهور والمصدر"
+"SyncResourcesModal.syncResourceDetailsTitle","Resource details","
 -- CONTEXT --
-","التصنيفات"
+","تفاصيل المصدر"
 "SyncResourcesModal.syncTitlesAndDescriptionsExplainer","Update resource titles and descriptions","
 -- CONTEXT --
 ","تحديث عناوين وتوصيفات المصدر"
@@ -4403,9 +4437,10 @@ Heading for the section in the resource editing window","الاستكمال"
 "TreeViewBase.noChangesText","No changes found in channel","
 -- CONTEXT --
 ","لم يتم العثور على تغييرات في القناة"
-"TreeViewBase.noLanguageSetError","Missing channel language","
+"TreeViewBase.noLanguageSetError","Channel language is required","TreeViewBase.noLanguageSetError
+
 -- CONTEXT --
-","لغة القناة غير موجودة"
+Error message notification when a specific metadata is missing.","لغة القناة مطلوبة"
 "TreeViewBase.openTrash","Open trash","
 -- CONTEXT --
 ","فتح سلة المهملات"
@@ -4448,14 +4483,14 @@ Heading for the section in the resource editing window","الاستكمال"
 ","ملفات غير مدعومة"
 "Uploader.unsupportedFilesText","{count, plural,
  =1 {# file will not be uploaded.}
- other {# files will not be uploaded.}} 
+ other {# files will not be uploaded.}}
  {extensionCount, plural,
  =1 {Supported file type is}
  other {Supported file types are}} {extensions}","
 -- CONTEXT --
 ","{count, plural, zero {# ملفات لن يتم تحميلها} one {# ملفات لن يتم تحميلها.} two {# ملفان لن يتم تحميلهما.} few {# ملفات لن يتم تحميلها.} many {# ملفاً لن يتم تحميله.}
  =1 {# ملفاً لن يتم تحميله.}
- other {# ملفات لن يتم تحميلها.}} 
+ other {# ملفات لن يتم تحميلها.}}
  {extensionCount, plural,
  =1 {نوع الملف المدعوم هو}
  other {أنواع الملفات المدعومة هي}} {extensions}"
@@ -4474,12 +4509,9 @@ Heading for the section in the resource editing window","الاستكمال"
 "UsingStudio.bestPractice2","It is preferable to create multiple small channels rather than one giant channel with many layers of folders.","
 -- CONTEXT --
 ","يُفضّل إنشاء قنوات صغيرة متعددة عوضاً عن إنشاء قناة كبيرة واحدة بمجلدات متعددة."
-"UsingStudio.bestPractice3","Reload the page often to ensure your work is saved to the server and no network errors have occurred. Use CTRL+R on Linux/Windows or ⌘+R on Mac.","
+"UsingStudio.bestPractice3","Reload the page to confirm your work has been saved to the server. Use CTRL+R on Linux/Windows or ⌘+R on Mac.","
 -- CONTEXT --
-","قم بإعادة تحميل الصفحة بشكل دوري للتأكد من حفظ عملك على الخادم وعدم حدوث أخطاء في الشبكة. استخدم CTRL + R في أنظمة تشغيل Linux / Windows أو ⌘ + R على نظام Mac."
-"UsingStudio.bestPractice4","Avoid simultaneous edits on the same channel. Channels should not be edited by multiple users at the same time or by the same user in multiple browser windows.","
--- CONTEXT --
-","تجنب القيام بعمليات تحرير متزامنة في نفس القناة. لا يجوز أن يتم تحرير القنوات بواسطة عدة مستخدمين في نفس الوقت أو بواسطة نفس المستخدم في عدة نوافذ تصفح."
+","أعد تحميل الصفحة لتأكيد أن عملك تم حفظه إلى الخادم. استخدم CTRL+R على نظام Linux/Windows أو ⌘+R على نظام Mac."
 "UsingStudio.bestPractice5","It is possible that you will encounter timeout errors in your browser when performing operations like import and sync, on large channels. Don't be alarmed by this error message and do not repeat the same operation again right away. It doesn't mean the operation has failed- Kolibri Studio is still working in the background. Wait a few minutes and reload the page before continuing your edits.","
 -- CONTEXT --
 ","قد تواجه أخطاء مرتبطة بانتهاء المهلة على متصفحك عند القيام بعمليات مثل الاستيراد والمزامنة على القنوات الكبيرة. لا تتفاجأ برسالة الخطأ تلك ولا تكرر العملية مجدداً على الفور. هذه الرسالة لا تعني أن العملية فشلت- لا يزال استوديو كوليبري يعمل في الخلفية. انتظر لبضع دقائق ثم أعد تحميل الصفحة قبل متابعة عمليات التحرير."
@@ -4489,9 +4521,6 @@ Heading for the section in the resource editing window","الاستكمال"
 "UsingStudio.bestPractice7","PUBLISH periodically and import your channel into Kolibri to preview the content and obtain a local backup copy of your channel.","
 -- CONTEXT --
 ","قم بالنشر بشكل دوري واستورد قناتك إلى كوليبري من أجل معاينة المحتوى والحصول على نسخة احتياطية محلية من قناتك."
-"UsingStudio.bestPractice8","Do not edit the channel after you click PUBLISH. Wait for the notification email before resuming editing operations.","
--- CONTEXT --
-","لا تقم بعمليات تحرير في القناة بعد النقر على خيار ""نشر"". انتظر إشعار البريد الإلكتروني قبل متابعة عمليات التحرير."
 "UsingStudio.bestPractice9","Report issues as you encounter them.","
 -- CONTEXT --
 ","قم بالإبلاغ عن المشاكل عندما تواجهها."
@@ -4501,18 +4530,13 @@ Heading for the section in the resource editing window","الاستكمال"
 "UsingStudio.communityStandardsLink","Community standards","
 -- CONTEXT --
 ","معايير المجتمع"
-"UsingStudio.issue1","Two users have reported isolated incidents where content they imported from another channel disappeared, leaving only empty folders and subfolders. In one report, the content later re-appeared. They did not experience these problems consistently, and the incidents may possibly involve issues with a slow or unstable internet connection. If you run into this issue, please contact us as soon as possible and let us know as much information as you can remember.","
+"UsingStudio.issue1","There have been reports where users have observed the disappearance of changes they've recently made to their channels. The issue seems related to opening multiple tabs of Kolibri Studio, and eventually signing out. We advise that you disable any ‘Memory Saver/Sleeping’ tab browser feature for Kolibri Studio, and reload each tab before signing out. We're actively investigating this issue, so if you run into it, please contact us with as much information as possible.","UsingStudio.issue1
+
 -- CONTEXT --
-","لقد أبلغ اثنان من المستخدمين عن حوادث منفصلة حيث اختفى المحتوى الذي قاما باستيراده من قناة أخرى، ولم يبق سوى المجلدات الرئيسية والمجلدات الفرعية الفارغة. وأُشير في أحد التقارير أن المحتوى قد ظهر في ما بعد. لم يواجه المستخدمان هذه المشاكل بشكل مستمر، وقد تتضمن تلك الحوادث مشاكل مرتبطة باتصال الإنترنت البطيء أو غير المستقر. الرجاء الاتصال بنا بأسرع وقت ممكن في حال صادفت هذه المشكلة من أجل إطلاعنا على كل ما يمكنك تذكره من معلومات."
-"UsingStudio.issue2","Some operations in Studio are currently very slow, and so it may appear that the change you attempted to make timed out or did not take effect. In many cases, the change is still being processed and will appear once it is complete. If, after 5-10 minutes, the change still has not taken effect even after a browser refresh, please file an issue. We are working on solutions to these issues.","
--- CONTEXT --
-","بعض العمليات في الاستوديو بطيئة جدًا في الوقت الحالي، ولهذا قد يبدو أن التغيير الذي حاولت القيام به قد انتهى أو لم يتم بنجاح. في كثير من الحالات، يبقى التغيير قيد المعالجة وسيظهر حال اكتماله. في حال لم يكتمل التغيير خلال ٥-١٠ دقائق حتى بعد تحديث المتصفح، الرجاء إعلامنا بالمشكلة. نحن نعمل على إيجاد حلول لهذه المشاكل."
+A description of an issue that has been reported by users - the recommendation is to disable any memory saver feature in the browser while they are using Kolibri Studio.","هناك تقارير تفيد بأن بعض المستخدمين لاحظوا اختفاء التغييرات التي أجروها مؤخراً على قنواتهم. يبدو أن المشكلة تتعلق بفتح علامات تبويب متعددة من استوديو كوليبري وتسجيل الخروج في نهاية المطاف. ننصح بتعطيل أي ميزة ""حفظ الذاكرة/النوم"" في المتصفح عند استخدام استوديو كوليبري، وإعادة تحميل كل علامة تبويب قبل تسجيل الخروج. نحن نبحث بشكلٍ مكثف في هذه المشكلة، لذا إذا واجهتها، يُرجى الاتصال بنا وتزويدنا بأكبر قدرٍ ممكن من المعلومات."
 "UsingStudio.issueLink1","Reports of disappearing content","
 -- CONTEXT --
 ","تقارير متعلقة باختفاء المحتوى"
-"UsingStudio.issueLink2","Slow performance can lead to unexpected errors in the interface","
--- CONTEXT --
-","الأداء البطيء يمكن أن يؤدي إلى أخطاء غير متوقعة في واجهة العرض"
 "UsingStudio.issuesPageLink","View all issues","
 -- CONTEXT --
 ","عرض جميع المشكلات"

@@ -61,8 +61,8 @@
   import flatMap from 'lodash/flatMap';
   import isFunction from 'lodash/isFunction';
 
-  import FileDropzone from './FileDropzone';
   import FileStorage from './FileStorage';
+  import FileDropzone from './FileDropzone';
   import { MAX_FILE_SIZE } from 'shared/constants';
   import { fileSizeMixin } from 'shared/mixins';
   import Alert from 'shared/views/Alert';
@@ -196,7 +196,7 @@
           return this.handleUploads(files).then(fileUploads => {
             const objects = fileUploads.map(f => f.fileObject).filter(f => !f.error);
             if (fileUploads.length) {
-              for (let fileUpload of fileUploads) {
+              for (const fileUpload of fileUploads) {
                 fileUpload.uploadPromise
                   .then(fileObject => {
                     if (isFunction(this.uploadCompleteHandler)) {

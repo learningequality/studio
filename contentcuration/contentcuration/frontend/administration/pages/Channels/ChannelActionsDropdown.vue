@@ -146,14 +146,11 @@
       channel() {
         return this.getChannel(this.channelId);
       },
-      name() {
-        return this.channel.name;
-      },
       searchChannelEditorsLink() {
         return {
           name: RouteNames.USERS,
           query: {
-            keywords: `${this.name} ${this.channel.id}`,
+            keywords: `${this.channel.id}`,
           },
         };
       },

@@ -95,6 +95,18 @@ class SQRelatedArrayAgg(SQArrayAgg):
     template = "(SELECT ARRAY_AGG(%(fieldname)s::text) FROM (%(subquery)s) AS %(field)s__sum)"
 
 
+class SQJSONBKeyArrayAgg(AggregateSubquery):
+    """
+    An aggregate subquery to get all the distinct keys of a JSON field that contains maps to store
+    e.g. metadata labels.
+    """
+    # Include ALIAS at the end to support Postgres
+    template = (
+        "(SELECT ARRAY_AGG(f) FROM (SELECT DISTINCT jsonb_object_keys(%(field)s) AS f FROM (%(subquery)s) AS x) AS %(field)s__sum)"
+    )
+    output_field = ArrayField(CharField())
+
+
 dot_path_regex = re.compile(r"^([^.]+)\.(.+)$")
 
 

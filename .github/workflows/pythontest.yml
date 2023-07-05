@@ -61,7 +61,7 @@ jobs:
           # Maps port 6379 on service container to the host
           - 6379:6379
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Set up minio
       run: |
         docker run -d -p 9000:9000 --name minio \
@@ -71,11 +71,11 @@ jobs:
                     -v /tmp/minio_config:/root/.minio \
                     minio/minio server /data
     - name: Set up Python 3.9
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: 3.9
     - name: pip cache
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: ~/.cache/pip
         key: ${{ runner.os }}-pytest-${{ hashFiles('requirements.txt', 'requirements-dev.txt') }}

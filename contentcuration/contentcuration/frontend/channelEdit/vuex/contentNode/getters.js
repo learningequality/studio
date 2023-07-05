@@ -91,7 +91,7 @@ export function getContentNodeChildren(state, getters) {
 
 export function getContentNodeAncestors(state, getters) {
   return function(id, includeSelf = false) {
-    let node = getters.getContentNode(id);
+    const node = getters.getContentNode(id);
 
     if (!node || !node.parent) {
       return [node].filter(Boolean);
@@ -139,7 +139,7 @@ export function getContentNodeFilesAreValid(state, getters, rootState, rootGette
       return true;
     }
     if (contentNode && contentNode.kind !== ContentKindsNames.TOPIC) {
-      let files = rootGetters['file/getContentNodeFiles'](contentNode.id);
+      const files = rootGetters['file/getContentNodeFiles'](contentNode.id);
       if (files.length) {
         // Don't count errors before files have loaded
         return !getNodeFilesErrors(files).length;
@@ -250,7 +250,7 @@ function findNodeInMap(map, rootNodeId, nodeId) {
     visitedNodes.add(targetId);
     const nextSteps = map[targetId];
     if (nextSteps) {
-      for (let nextStep in nextSteps) {
+      for (const nextStep in nextSteps) {
         if (nextStep === nodeId) {
           return true;
         } else {

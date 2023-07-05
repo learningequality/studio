@@ -1,39 +1,34 @@
 import re
 
-from django.db.models import Case
+from django.db.models import ExpressionWrapper
 from django.db.models import F
 from django.db.models import IntegerField
 from django.db.models import OuterRef
-from django.db.models import Q
 from django.db.models import Subquery
 from django.db.models import Value
-from django.db.models import When
 from django.db.models.functions import Coalesce
 from django_filters.rest_framework import BooleanFilter
 from django_filters.rest_framework import CharFilter
 from le_utils.constants import content_kinds
 from le_utils.constants import roles
+from rest_framework.permissions import IsAuthenticated
+from search.models import ContentNodeFullTextSearch
+from search.utils import get_fts_search_query
 
 from contentcuration.models import Channel
-from contentcuration.models import ContentNode
 from contentcuration.models import File
-from contentcuration.utils.pagination import CachedListPagination
+from contentcuration.utils.pagination import ValuesViewsetPageNumberPagination
+from contentcuration.viewsets.base import ReadOnlyValuesViewset
 from contentcuration.viewsets.base import RequiredFilterSet
 from contentcuration.viewsets.common import NotNullMapArrayAgg
-from contentcuration.viewsets.common import SQArrayAgg
-from contentcuration.viewsets.common import SQCount
 from contentcuration.viewsets.common import UUIDFilter
 from contentcuration.viewsets.common import UUIDInFilter
-from contentcuration.viewsets.contentnode import ContentNodeViewSet
 
 
-class ListPagination(CachedListPagination):
+class ListPagination(ValuesViewsetPageNumberPagination):
     page_size = 25
     page_size_query_param = "page_size"
     max_page_size = 100
-
-
-uuid_re = re.compile("([a-f0-9]{32})")
 
 
 class ContentNodeFilter(RequiredFilterSet):
@@ -53,169 +48,133 @@ class ContentNodeFilter(RequiredFilterSet):
     def filter_channel_list(self, queryset, name, value):
         user = not self.request.user.is_anonymous and self.request.user
         channel_ids = []
+
         if value == "public":
-            channel_ids = Channel.objects.filter(public=True, deleted=False).values_list("id", flat=True)
+            channel_ids = Channel.get_public_channels().values_list("id", flat=True)
         elif value == "edit" and user:
-            channel_ids = user.editable_channels.values_list("id", flat=True)
+            channel_ids = user.editable_channels.filter(deleted=False).values_list("id", flat=True)
         elif value == "bookmark" and user:
-            channel_ids = user.bookmarked_channels.values_list("id", flat=True)
+            channel_ids = user.bookmarked_channels.filter(deleted=False).values_list("id", flat=True)
         elif value == "view" and user:
-            channel_ids = user.view_only_channels.values_list("id", flat=True)
+            channel_ids = user.view_only_channels.filter(deleted=False).values_list("id", flat=True)
+
         return queryset.filter(channel_id__in=list(channel_ids))
 
     def filter_keywords(self, queryset, name, value):
-        filter_query = Q(title__icontains=value) | Q(description__icontains=value)
-        tags_node_ids = ContentNode.tags.through.objects.filter(
-            contenttag__tag_name__icontains=value
-        ).values_list("contentnode_id", flat=True)[:250]
-        # Check if we have a Kolibri node id or ids and add them to the search if so.
-        # Add to, rather than replace, the filters so that we never misinterpret a search term as a UUID.
-        # node_ids = uuid_re.findall(value) + list(tags_node_ids)
-        node_ids = uuid_re.findall(value)
-        for node_id in node_ids:
-            # check for the major ID types
-            filter_query |= Q(node_id=node_id)
-            filter_query |= Q(content_id=node_id)
-            filter_query |= Q(id=node_id)
-        for node_id in tags_node_ids:
-            filter_query |= Q(id=node_id)
-
-        return queryset.filter(filter_query)
+        return queryset.filter(keywords_tsvector=get_fts_search_query(value))
 
     def filter_author(self, queryset, name, value):
-        return queryset.filter(
-            Q(author__icontains=value)
-            | Q(aggregator__icontains=value)
-            | Q(provider__icontains=value)
-        )
+        return queryset.filter(author_tsvector=get_fts_search_query(value))
 
     def filter_languages(self, queryset, name, value):
-        return queryset.filter(language__lang_code__in=value.split(","))
+        return queryset.filter(contentnode__language__lang_code__in=value.split(","))
 
     def filter_licenses(self, queryset, name, value):
         licenses = [int(li) for li in value.split(",")]
-        return queryset.filter(license__in=licenses)
+        return queryset.filter(contentnode__license__in=licenses)
 
     def filter_kinds(self, queryset, name, value):
-        return queryset.filter(kind_id__in=value.split(","))
+        return queryset.filter(contentnode__kind_id__in=value.split(","))
 
     def filter_coach(self, queryset, name, value):
-        return queryset.filter(role_visibility=roles.COACH)
+        return queryset.filter(contentnode__role_visibility=roles.COACH)
 
     def filter_resources(self, queryset, name, value):
-        return queryset.exclude(kind_id=content_kinds.TOPIC)
+        return queryset.exclude(contentnode__kind_id=content_kinds.TOPIC)
 
     def filter_assessments(self, queryset, name, value):
-        return queryset.filter(kind_id=content_kinds.EXERCISE)
+        return queryset.filter(contentnode__kind_id=content_kinds.EXERCISE)
 
     def filter_created_after(self, queryset, name, value):
         date = re.search(r"(\d{4})-0?(\d+)-(\d+)", value)
         return queryset.filter(
-            created__year__gte=date.group(1),
-            created__month__gte=date.group(2),
-            created__day__gte=date.group(3),
-        )
-
-    class Meta:
-        model = ContentNode
-        fields = (
-            "keywords",
-            "languages",
-            "licenses",
-            "kinds",
-            "coach",
-            "author",
-            "resources",
-            "assessments",
+            contentnode__created__year__gte=date.group(1),
+            contentnode__created__month__gte=date.group(2),
+            contentnode__created__day__gte=date.group(3),
         )
 
 
-class SearchContentNodeViewSet(ContentNodeViewSet):
+class SearchContentNodeViewSet(ReadOnlyValuesViewset):
     filterset_class = ContentNodeFilter
     pagination_class = ListPagination
+    permission_classes = [IsAuthenticated]
+    queryset = ContentNodeFullTextSearch.objects.all()
+
+    field_map = {
+        "id": "contentnode__id",
+        "content_id": "contentnode__content_id",
+        "node_id": "contentnode__node_id",
+        "root_id": "channel__main_tree_id",
+        "title": "contentnode__title",
+        "description": "contentnode__description",
+        "author": "contentnode__author",
+        "provider": "contentnode__provider",
+        "kind": "contentnode__kind__kind",
+        "thumbnail_encoding": "contentnode__thumbnail_encoding",
+        "published": "contentnode__published",
+        "modified": "contentnode__modified",
+        "parent": "contentnode__parent_id",
+        "changed": "contentnode__changed",
+        "public": "channel__public",
+    }
+
     values = (
-        "id",
-        "content_id",
-        "node_id",
-        "title",
-        "description",
-        "author",
-        "provider",
-        "kind__kind",
+        "channel__public",
+        "channel__main_tree_id",
+        "contentnode__id",
+        "contentnode__content_id",
+        "contentnode__node_id",
+        "contentnode__kind__kind",
+        "contentnode__parent_id",
         "channel_id",
         "resource_count",
-        "thumbnail_checksum",
-        "thumbnail_extension",
-        "thumbnail_encoding",
-        "published",
-        "modified",
-        "parent_id",
-        "changed",
-        "location_ids",
-        "content_tags",
         "original_channel_name",
+
+        # TODO: currently loading nodes separately
+        # "thumbnail_checksum",
+        # "thumbnail_extension",
+        # "content_tags",
+        # "contentnode__title",
+        # "contentnode__description",
+        # "contentnode__author",
+        # "contentnode__provider",
+        # "contentnode__changed",
+        # "contentnode__thumbnail_encoding",
+        # "contentnode__published",
+        # "contentnode__modified",
     )
 
     def annotate_queryset(self, queryset):
         """
-        1. Do a distinct by 'content_id,' using the original node if possible
-        2. Annotate lists of content node and channel pks
+        Annotates thumbnails, resources count and original channel name.
         """
-        # Get accessible content nodes that match the content id
-        content_id_query = ContentNode.filter_view_queryset(ContentNode.objects.all(), self.request.user).filter(
-            content_id=OuterRef("content_id")
-        )
-
-        # Combine by unique content id
-        deduped_content_query = (
-            content_id_query.filter(content_id=OuterRef("content_id"))
-            .annotate(
-                is_original=Case(
-                    When(original_source_node_id=F("node_id"), then=Value(1)),
-                    default=Value(2),
-                    output_field=IntegerField(),
-                ),
-            )
-            .order_by("is_original", "created")
-        )
-        queryset = queryset.filter(
-            pk__in=Subquery(deduped_content_query.values_list("id", flat=True)[:1])
-        ).order_by()
-
         thumbnails = File.objects.filter(
-            contentnode=OuterRef("id"), preset__thumbnail=True
+            contentnode=OuterRef("contentnode__id"), preset__thumbnail=True
         )
 
-        descendant_resources = (
-            ContentNode.objects.filter(
-                tree_id=OuterRef("tree_id"),
-                lft__gt=OuterRef("lft"),
-                rght__lt=OuterRef("rght"),
-            )
-            .exclude(kind_id=content_kinds.TOPIC)
-            .values("id", "role_visibility", "changed")
-            .order_by()
-        )
+        descendant_resources_count = ExpressionWrapper(((F("contentnode__rght") - F("contentnode__lft") - Value(1)) / Value(2)), output_field=IntegerField())
+
         original_channel_name = Coalesce(
             Subquery(
-                Channel.objects.filter(pk=OuterRef("original_channel_id")).values(
+                Channel.objects.filter(pk=OuterRef("contentnode__original_channel_id")).values(
                     "name"
                 )[:1]
             ),
             Subquery(
-                Channel.objects.filter(main_tree__tree_id=OuterRef("tree_id")).values(
+                Channel.objects.filter(main_tree__tree_id=OuterRef("contentnode__tree_id")).values(
                     "name"
                 )[:1]
             ),
         )
+
         queryset = queryset.annotate(
-            location_ids=SQArrayAgg(content_id_query, field="id"),
-            resource_count=SQCount(descendant_resources, field="id"),
+            resource_count=descendant_resources_count,
             thumbnail_checksum=Subquery(thumbnails.values("checksum")[:1]),
             thumbnail_extension=Subquery(
                 thumbnails.values("file_format__extension")[:1]
             ),
-            content_tags=NotNullMapArrayAgg("tags__tag_name"),
+            content_tags=NotNullMapArrayAgg("contentnode__tags__tag_name"),
             original_channel_name=original_channel_name,
         )
+
         return queryset

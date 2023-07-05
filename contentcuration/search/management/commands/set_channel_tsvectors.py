@@ -7,11 +7,8 @@ import time
 from django.core.management.base import BaseCommand
 from django.db.models import Exists
 from django.db.models import OuterRef
-from search.constants import CHANNEL_KEYWORDS_TSVECTOR
 from search.models import ChannelFullTextSearch
-
-from contentcuration.models import Channel
-from contentcuration.viewsets.channel import primary_token_subquery
+from search.utils import get_fts_annotated_channel_qs
 
 
 logmodule.basicConfig(level=logmodule.INFO)
@@ -27,10 +24,8 @@ class Command(BaseCommand):
 
         channel_not_already_inserted_query = ~Exists(ChannelFullTextSearch.objects.filter(channel_id=OuterRef("id")))
 
-        channel_query = (Channel.objects.filter(channel_not_already_inserted_query,
-                                                deleted=False, main_tree__published=True)
-                         .annotate(primary_channel_token=primary_token_subquery,
-                                   keywords_tsvector=CHANNEL_KEYWORDS_TSVECTOR)
+        channel_query = (get_fts_annotated_channel_qs().filter(channel_not_already_inserted_query,
+                                                               deleted=False, main_tree__published=True)
                          .values("id", "keywords_tsvector"))
 
         insertable_channels = list(channel_query[:CHUNKSIZE])

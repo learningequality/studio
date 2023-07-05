@@ -83,6 +83,42 @@
           </VDataTable>
         </template>
       </DetailsRow>
+      <DetailsRow :label="$tr('levelsHeading')">
+        <template #default>
+          <div v-if="!levels.length">
+            {{ defaultText }}
+          </div>
+          <VChip
+            v-for="level in levels"
+            v-else-if="!printing"
+            :key="level"
+            class="tag"
+          >
+            {{ level }}
+          </VChip>
+          <span v-else>
+            {{ levelsPrintable }}
+          </span>
+        </template>
+      </DetailsRow>
+      <DetailsRow :label="$tr('categoriesHeading')">
+        <template #default>
+          <div v-if="!categories.length">
+            {{ defaultText }}
+          </div>
+          <VChip
+            v-for="category in categories"
+            v-else-if="!printing"
+            :key="category"
+            class="tag"
+          >
+            {{ category }}
+          </VChip>
+          <span v-else>
+            {{ categoriesPrintable }}
+          </span>
+        </template>
+      </DetailsRow>
       <DetailsRow :label="$tr('containsHeading')">
         <template v-if="!printing" #default>
           <VChip v-if="details.includes.coach_content" class="tag">
@@ -274,14 +310,17 @@
 
 <script>
 
+  import camelCase from 'lodash/camelCase';
   import orderBy from 'lodash/orderBy';
-  import DetailsRow from './DetailsRow';
   import { SCALE_TEXT, SCALE, CHANNEL_SIZE_DIVISOR } from './constants';
+  import DetailsRow from './DetailsRow';
+  import { CategoriesLookup, LevelsLookup } from 'shared/constants';
   import {
     fileSizeMixin,
     constantsTranslationMixin,
     printingMixin,
     titleMixin,
+    metadataTranslationMixin,
   } from 'shared/mixins';
   import LoadingText from 'shared/views/LoadingText';
   import ExpandableList from 'shared/views/ExpandableList';
@@ -299,7 +338,13 @@
       DetailsRow,
       Thumbnail,
     },
-    mixins: [fileSizeMixin, constantsTranslationMixin, printingMixin, titleMixin],
+    mixins: [
+      fileSizeMixin,
+      constantsTranslationMixin,
+      printingMixin,
+      titleMixin,
+      metadataTranslationMixin,
+    ],
     props: {
       // Object matching that returned by the channel details and
       // node details API endpoints, see backend for details of the
@@ -337,7 +382,7 @@
         return window.libraryMode;
       },
       sizeText() {
-        let size = (this.details && this.details.resource_size) || 0;
+        const size = (this.details && this.details.resource_size) || 0;
         const sizeIndex = Math.max(
           1,
           Math.min(Math.ceil(Math.log(size / CHANNEL_SIZE_DIVISOR) / Math.log(2)), 10)
@@ -381,6 +426,34 @@
       tagPrintable() {
         return this.sortedTags.map(tag => tag.tag_name).join(', ');
       },
+      levels() {
+        return this.details.levels.map(level => {
+          level = LevelsLookup[level];
+          let translationKey;
+          if (level === 'PROFESSIONAL') {
+            translationKey = 'specializedProfessionalTraining';
+          } else if (level === 'WORK_SKILLS') {
+            translationKey = 'allLevelsWorkSkills';
+          } else if (level === 'BASIC_SKILLS') {
+            translationKey = 'allLevelsBasicSkills';
+          } else {
+            translationKey = camelCase(level);
+          }
+          return this.translateMetadataString(translationKey);
+        });
+      },
+      levelsPrintable() {
+        return this.levels.join(', ');
+      },
+      categories() {
+        return this.details.categories.map(category => {
+          category = CategoriesLookup[category];
+          return this.translateMetadataString(camelCase(category));
+        });
+      },
+      categoriesPrintable() {
+        return this.categories.join(', ');
+      },
     },
     methods: {
       channelUrl(channel) {
@@ -397,6 +470,8 @@
       tagsHeading: 'Common tags',
       creationHeading: 'Created on',
       containsHeading: 'Contains',
+      levelsHeading: 'Levels',
+      categoriesHeading: 'Categories',
       languagesHeading: 'Languages',
       subtitlesHeading: 'Captions and subtitles',
       authorsLabel: 'Authors',

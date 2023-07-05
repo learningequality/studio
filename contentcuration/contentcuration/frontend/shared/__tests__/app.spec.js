@@ -15,6 +15,7 @@ const USER_2 = { id: 1 };
 
 describe('startApp', () => {
   let store;
+  let cleanup;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -24,6 +25,10 @@ describe('startApp', () => {
   afterEach(async () => {
     global.user = undefined;
     await Session.table.clear();
+    if (cleanup) {
+      cleanup();
+    }
+    cleanup = undefined;
   });
 
   describe('for a guest', () => {
@@ -38,21 +43,21 @@ describe('startApp', () => {
       });
 
       it("the client database shouldn't be reset", async () => {
-        await startApp({ router, store });
+        cleanup = await startApp({ router, store });
         expect(resetDB).not.toHaveBeenCalled();
       });
     });
 
     describe('if there is a current user saved in a session', () => {
       beforeEach(async () => {
-        await Session.put({ ...USER_1, CURRENT_USER });
+        await Session.table.put({ ...USER_1, CURRENT_USER });
 
         const sessionTable = await Session.table.toArray();
         expect(sessionTable).toEqual([{ ...USER_1, CURRENT_USER }]);
       });
 
       it('the client database should be reset', async () => {
-        await startApp({ router, store });
+        cleanup = await startApp({ router, store });
         expect(resetDB).toHaveBeenCalledTimes(1);
       });
     });
@@ -70,35 +75,35 @@ describe('startApp', () => {
       });
 
       it("the client database shouldn't be reset", async () => {
-        await startApp({ router, store });
+        cleanup = await startApp({ router, store });
         expect(resetDB).not.toHaveBeenCalled();
       });
     });
 
     describe('if there is the same current user saved in a session', () => {
       beforeEach(async () => {
-        await Session.put({ ...USER_1, CURRENT_USER });
+        await Session.table.put({ ...USER_1, CURRENT_USER });
 
         const sessionTable = await Session.table.toArray();
         expect(sessionTable).toEqual([{ ...USER_1, CURRENT_USER }]);
       });
 
       it("the client database shouldn't be reset", async () => {
-        await startApp({ router, store });
+        cleanup = await startApp({ router, store });
         expect(resetDB).not.toHaveBeenCalled();
       });
     });
 
     describe('if there is a different current user saved in a session', () => {
       beforeEach(async () => {
-        await Session.put({ ...USER_2, CURRENT_USER });
+        await Session.table.put({ ...USER_2, CURRENT_USER });
 
         const sessionTable = await Session.table.toArray();
         expect(sessionTable).toEqual([{ ...USER_2, CURRENT_USER }]);
       });
 
       it('the client database should be reset', async () => {
-        await startApp({ router, store });
+        cleanup = await startApp({ router, store });
         expect(resetDB).toHaveBeenCalledTimes(1);
       });
     });

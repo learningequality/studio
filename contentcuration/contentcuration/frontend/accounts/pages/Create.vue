@@ -15,7 +15,7 @@
     <h2 ref="top" class="mb-4 primary--text text-xs-center">
       {{ $tr('createAnAccountTitle') }}
     </h2>
-    <VLayout justify-center class="px-4">
+    <VLayout justify-center class="px-3">
       <VForm ref="form" v-model="valid" lazy-validation @submit.prevent="submit">
         <Banner :value="!valid" error class="mb-4">
           {{ registrationFailed ? $tr('registrationFailed') : $tr('errorsMessage') }}
@@ -131,42 +131,45 @@
           />
         </VSlideYTransition>
 
-        <!-- Terms of service -->
-        <ActionLink
-          class="mt-4"
-          :text="$tr('viewToSLink')"
-          @click="showTermsOfService"
-        />
+        <!-- Agreements -->
         <Checkbox
-          v-model="form.accepted_tos"
-          :label="$tr('ToSCheck')"
+          v-model="acceptedAgreement"
+          :label="$tr('agreement')"
           required
-          :rules="tosRules"
+          :rules="tosAndPolicyRules"
           :hide-details="false"
           class="my-1 policy-checkbox"
         />
+        <div class="span-spacing">
+          <span>
+            <ActionLink
+              :text="$tr('viewPrivacyPolicyLink')"
+              @click="showPrivacyPolicy"
+            />
 
-        <!-- Policy -->
-        <ActionLink
-          class="mt-2"
-          :text="$tr('viewPrivacyPolicyLink')"
-          @click="showPrivacyPolicy"
-        />
-        <Checkbox
-          v-model="form.accepted_policy"
-          :label="$tr('privacyPolicyCheck')"
-          required
-          :rules="policyRules"
-          :hide-details="false"
-          class="mb-3 mt-1 policy-checkbox"
-        />
+          </span>
+          <span> | </span>
+          <span>
+            <ActionLink
+              :text="$tr('viewToSLink')"
+              @click="showTermsOfService"
+            />
+          </span>
+        </div>
 
-        <p class="mb-4">
-          {{ $tr('contactMessage') }}
-        </p>
-        <VBtn color="primary" large :disabled="offline" type="submit">
-          {{ $tr('finishButton') }}
-        </VBtn>
+        <div class="mt-2 span-spacing">
+          <div class="align-items">
+            {{ $tr('contactMessage') }}
+          </div>
+        </div>
+
+        <KButton
+          primary
+          class="mt-5"
+          :disabled="offline"
+          :text="$tr('finishButton')"
+          type="submit"
+        />
       </VForm>
 
     </VLayout>
@@ -238,12 +241,19 @@
       passwordConfirmRules() {
         return [value => (this.form.password1 === value ? true : this.$tr('passwordMatchMessage'))];
       },
-      tosRules() {
+      tosAndPolicyRules() {
         return [value => (value ? true : this.$tr('ToSRequiredMessage'))];
       },
-      policyRules() {
-        return [value => (value ? true : this.$tr('privacyPolicyRequiredMessage'))];
+      acceptedAgreement: {
+        get() {
+          return this.form.accepted_tos && this.form.accepted_policy;
+        },
+        set(accepted) {
+          this.form.accepted_tos = accepted;
+          this.form.accepted_policy = accepted;
+        },
       },
+
       usageOptions() {
         return [
           {
@@ -350,7 +360,7 @@
       },
       clean() {
         return data => {
-          let cleanedData = { ...data, policies: {} };
+          const cleanedData = { ...data, policies: {} };
           Object.keys(cleanedData).forEach(key => {
             // Trim text fields
             if (key === 'source') {
@@ -413,10 +423,9 @@
       showOtherField(id) {
         return id === uses.OTHER && this.form.uses.includes(id);
       },
-
       submit() {
         if (this.$refs.form.validate()) {
-          let cleanedData = this.clean(this.form);
+          const cleanedData = this.clean(this.form);
           return this.register(cleanedData)
             .then(() => {
               this.$router.push({ name: 'ActivationSent' });
@@ -439,6 +448,7 @@
         return Promise.resolve();
       },
     },
+
     $trs: {
       backToLoginButton: 'Sign in',
       createAnAccountTitle: 'Create an account',
@@ -447,7 +457,6 @@
       registrationFailed: 'There was an error registering your account. Please try again',
       registrationFailedOffline:
         'You seem to be offline. Please connect to the internet to create an account.',
-
       // Basic information strings
       basicInformationHeader: 'Basic information',
       firstNameLabel: 'First name',
@@ -492,15 +501,13 @@
       otherSourcePlaceholder: 'Please describe',
 
       // Privacy policy + terms of service
-      viewToSLink: 'View terms of service',
-      ToSCheck: 'I have read and agree to the terms of service',
-      ToSRequiredMessage: 'Please accept our terms of service',
+      viewToSLink: 'View Terms of Service',
+      ToSRequiredMessage: 'Please accept our terms of service and policy',
 
-      viewPrivacyPolicyLink: 'View privacy policy',
-      privacyPolicyCheck: 'I have read and agree to the privacy policy',
-      privacyPolicyRequiredMessage: 'Please accept our privacy policy',
+      viewPrivacyPolicyLink: 'View Privacy Policy',
       contactMessage: 'Questions or concerns? Please email us at content@learningequality.org',
       finishButton: 'Finish',
+      agreement: 'I have read and agree to terms of service and the privacy policy',
     },
   };
 
@@ -521,12 +528,36 @@
     }
   }
 
+  .policy-checkbox /deep/ .v-messages {
+    min-height: 0;
+    margin-left: 40px;
+  }
+
   iframe {
     width: 100%;
     min-height: 400px;
     padding: 8px;
     padding-right: 0;
     border: 0;
+  }
+
+  .span-spacing {
+    display: flex;
+    margin-left: 40px;
+  }
+
+  .span-spacing span {
+    margin-left: 2px;
+    font-size: 16px;
+  }
+
+  .span-spacing-email {
+    margin-left: 3px;
+    font-size: 16px;
+  }
+
+  .align-items {
+    display: block;
   }
 
 </style>

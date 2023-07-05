@@ -402,10 +402,12 @@
     cursor: pointer;
 
     &:hover:not(.hideHighlight) {
+      /* stylelint-disable-next-line custom-property-pattern */
       background-color: var(--v-greyBackground-base);
     }
 
     &.added {
+      /* stylelint-disable-next-line custom-property-pattern */
       background-color: var(--v-greenHighlightBackground-base);
     }
   }

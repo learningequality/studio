@@ -13,7 +13,10 @@
           <slot></slot>
           <p class="mt-4">
             <slot name="back">
-              <ActionLink :to="{ name: 'Main' }" :text="$tr('backToLogin')" />
+              <KRouterLink
+                :to="{ name: 'Main' }"
+                :text="$tr('backToLogin')"
+              />
             </slot>
           </p>
         </div>
