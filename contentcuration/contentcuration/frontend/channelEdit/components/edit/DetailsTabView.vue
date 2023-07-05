@@ -246,7 +246,7 @@
               ref="author"
               :items="authors"
               :label="$tr('authorLabel')"
-              :readonly="disableAuthEdits"
+              :readonly="disableSourceEdits"
               maxlength="200"
               counter
               autoSelectFirst
@@ -267,7 +267,7 @@
               ref="provider"
               :items="providers"
               :label="$tr('providerLabel')"
-              :readonly="disableAuthEdits"
+              :readonly="disableSourceEdits"
               maxlength="200"
               counter
               :placeholder="getPlaceholder('provider')"
@@ -288,7 +288,7 @@
               ref="aggregator"
               :items="aggregators"
               :label="$tr('aggregatorLabel')"
-              :readonly="disableAuthEdits"
+              :readonly="disableSourceEdits"
               maxlength="200"
               counter
               autoSelectFirst
@@ -309,7 +309,7 @@
               ref="license"
               v-model="licenseItem"
               :required="isUnique(license) && isUnique(license_description) && !disableAuthEdits"
-              :readonly="disableAuthEdits"
+              :readonly="disableSourceEdits"
               :placeholder="getPlaceholder('license')"
               :descriptionPlaceholder="getPlaceholder('license_description')"
               @focus="trackClick('License')"
@@ -328,7 +328,7 @@
               :rules="copyrightHolderRules"
               :placeholder="getPlaceholder('copyright_holder')"
               autoSelectFirst
-              :readonly="disableAuthEdits"
+              :readonly="disableSourceEdits"
               box
               :value="copyright_holder && copyright_holder.toString()"
               @input.native="(e) => (copyright_holder = e.srcElement.value)"
@@ -657,6 +657,9 @@
       /* COMPUTED PROPS */
       disableAuthEdits() {
         return this.nodes.some(node => node.freeze_authoring_data);
+      },
+      disableSourceEdits() {
+        return this.disableAuthEdits || this.isImported;
       },
       detectedImportText() {
         const count = this.nodes.filter(node => node.freeze_authoring_data).length;
