@@ -23,7 +23,9 @@
         <template #item="{ item, tile }">
           <Checkbox v-bind="tile.props" class="ma-0">
             <template #label>
-              <span :class="{ notranslate }">{{ getText(item) }}</span>
+              <span :class="{ notranslate }" class="text-truncate-ellipsis">
+                {{ getText(item) }}
+              </span>
             </template>
           </Checkbox>
         </template>
@@ -112,6 +114,15 @@
   /deep/ .v-chip__content,
   .text-truncate {
     max-width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  .text-truncate-ellipsis {
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
 </style>
