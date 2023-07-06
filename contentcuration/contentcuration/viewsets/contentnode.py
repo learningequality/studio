@@ -72,7 +72,7 @@ from contentcuration.viewsets.sync.constants import COPYING_STATUS_VALUES
 from contentcuration.viewsets.sync.constants import CREATED
 from contentcuration.viewsets.sync.constants import DELETED
 from contentcuration.viewsets.sync.utils import generate_update_event
-
+from contentcuration.viewsets.sync.utils import log_sync_exception
 
 channel_query = Channel.objects.filter(main_tree__tree_id=OuterRef("tree_id"))
 
@@ -909,12 +909,14 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
         for copy in changes:
             # Copy change will have key, must also have other attributes, defined in `copy`
             # Just pass as keyword arguments here to let copy do the validation
-            copy_errors = self.copy(copy["key"], **copy)
-            if copy_errors is not None:
+            try:
+                self.copy(copy["key"], **copy)
+            except Exception as e:
+                log_sync_exception(e, user=self.request.user, change=copy)
+                copy["errors"] = [str(e)]
+                errors.append(copy)
                 failed_copy_node = self.get_queryset().get(pk=copy["key"])
                 failed_copy_node.delete()
-                copy.update({"errors": copy_errors})
-                errors.append(copy)
         return errors
 
     def copy(
@@ -927,54 +929,44 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
         excluded_descendants=None,
         **kwargs
     ):
-        try:
-            target, position = self.validate_targeting_args(target, position)
-        except ValidationError as e:
-            return str(e)
+        target, position = self.validate_targeting_args(target, position)
 
         try:
             source = self.get_queryset().get(pk=from_key)
         except ContentNode.DoesNotExist:
-            error = ValidationError("Copy source node does not exist")
-            return str(error)
+            raise ValidationError("Copy source node does not exist")
 
         # Affected channel for the copy is the target's channel
         channel_id = target.channel_id
 
         if ContentNode.filter_by_pk(pk=pk).exists():
-            error = ValidationError("Copy pk already exists")
-            return str(error)
+            raise ValidationError("Copy pk already exists")
 
         can_edit_source_channel = ContentNode.filter_edit_queryset(
             ContentNode.filter_by_pk(pk=source.id), user=self.request.user
         ).exists()
 
         with create_change_tracker(pk, CONTENTNODE, channel_id, self.request.user, "copy_nodes") as progress_tracker:
-            try:
-                new_node = source.copy_to(
-                    target,
-                    position,
+            new_node = source.copy_to(
+                target,
+                position,
+                pk,
+                mods,
+                excluded_descendants,
+                can_edit_source_channel=can_edit_source_channel,
+                progress_tracker=progress_tracker,
+            )
+
+            Change.create_change(
+                generate_update_event(
                     pk,
-                    mods,
-                    excluded_descendants,
-                    can_edit_source_channel=can_edit_source_channel,
-                    progress_tracker=progress_tracker,
-                )
-
-                Change.create_change(
-                    generate_update_event(
-                        pk,
-                        CONTENTNODE,
-                        {COPYING_STATUS: COPYING_STATUS_VALUES.SUCCESS, "node_id": new_node.node_id},
-                        channel_id=channel_id
-                    ),
-                    applied=True,
-                    created_by_id=self.request.user.id,
-                )
-            except Exception as e:
-                return str(e)
-
-        return None
+                    CONTENTNODE,
+                    {COPYING_STATUS: COPYING_STATUS_VALUES.SUCCESS, "node_id": new_node.node_id},
+                    channel_id=channel_id
+                ),
+                applied=True,
+                created_by_id=self.request.user.id,
+            )
 
     def perform_create(self, serializer, change=None):
         instance = serializer.save()

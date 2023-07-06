@@ -43,7 +43,6 @@ const CONTENT_NODE_FIELD_MAP = {
   node_id: 'id',
   content_id: 'content_id',
   channel_id: 'channel_id',
-  parent: 'parent',
   title: 'title',
   description: 'description',
   kind: 'kind',
@@ -108,16 +107,19 @@ const CONTENT_NODE_FIELD_MAP = {
  * Convert a content node from the public API into a content node for the Studio frontend
  * @param {string} id - the actual ID of the node on Studio's side
  * @param {string} root_id - the root content node ID
+ * @param {string} parent - the parent's ID
  * @param {PublicContentNode} publicNode
  * @return {{id}}
  */
-export function convertContentNodeResponse(id, root_id, publicNode) {
+export function convertContentNodeResponse(id, root_id, parent, publicNode) {
   const contentNode = {
     // the public API does not return the actual id, but 'node_id' as the id, so this requires
     // us to know what the actual id is
     id,
     // The public API returns the channel ID as the root_id
     root_id,
+    // the public API does not return the actual id, but 'node_id' as the id
+    parent,
   };
 
   // Convert the response node into a content node
@@ -130,7 +132,7 @@ export function convertContentNodeResponse(id, root_id, publicNode) {
   }
 
   // If the parent is the channel, then set the parent to the root_id
-  if (contentNode.parent === contentNode.channel_id) {
+  if (publicNode.parent === publicNode.channel_id) {
     contentNode.parent = root_id;
   }
   return contentNode;
