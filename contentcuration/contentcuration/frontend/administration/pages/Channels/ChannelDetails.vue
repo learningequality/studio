@@ -19,7 +19,7 @@
     </template>
     <LoadingText v-if="loading" absolute />
     <VCardText v-else>
-      <Banner error :value="channel.deleted" class="mb-4">
+      <Banner error :value="Boolean(channel?.deleted)" class="mb-4">
         This channel has been deleted
       </Banner>
       <VTabsItems v-model="tab">
