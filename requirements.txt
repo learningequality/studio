@@ -6,7 +6,7 @@
 #
 amqp==5.1.1
     # via kombu
-asgiref==3.3.4
+asgiref==3.7.2
     # via django
 async-timeout==4.0.2
     # via redis
@@ -54,7 +54,7 @@ click-repl==0.2.0
     # via celery
 confusable-homoglyphs==3.2.0
     # via django-registration
-django==3.2.19
+django==4.2.3
     # via
     #   -r requirements.in
     #   django-bulk-update
@@ -226,7 +226,6 @@ python-postmark==0.5.8
 pytz==2022.1
     # via
     #   celery
-    #   django
     #   django-postmark
     #   google-api-core
 pyyaml==6.0
@@ -262,6 +261,7 @@ sqlparse==0.4.1
     # via django
 typing-extensions==4.5.0
     # via
+    #   asgiref
     #   libcst
     #   typing-inspect
 typing-inspect==0.8.0
