@@ -21,6 +21,7 @@ export const defaultCompletionCriteriaModels = {
   [ContentKindsNames.DOCUMENT]: CompletionCriteriaModels.PAGES,
   [ContentKindsNames.H5P]: CompletionCriteriaModels.DETERMINED_BY_RESOURCE,
   [ContentKindsNames.HTML5]: CompletionCriteriaModels.APPROX_TIME,
+  [ContentKindsNames.ZIM]: CompletionCriteriaModels.APPROX_TIME,
   [ContentKindsNames.EXERCISE]: CompletionCriteriaModels.MASTERY,
 };
 
@@ -49,6 +50,11 @@ export const CompletionOptionsDropdownMap = {
   ],
   [ContentKindsNames.EXERCISE]: [CompletionDropdownMap.goal, CompletionDropdownMap.practiceQuiz],
   [ContentKindsNames.HTML5]: [
+    CompletionDropdownMap.completeDuration,
+    CompletionDropdownMap.determinedByResource,
+    CompletionDropdownMap.reference,
+  ],
+  [ContentKindsNames.ZIM]: [
     CompletionDropdownMap.completeDuration,
     CompletionDropdownMap.determinedByResource,
     CompletionDropdownMap.reference,

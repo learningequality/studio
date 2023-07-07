@@ -21,6 +21,7 @@ export default function theme() {
       document: '#ff3d00',
       exercise: '#4db6ac',
       html5: '#ff8f00',
+      zim: '#ff8f00',
       slideshow: '#4ece90',
       channelHighlightDefault: colors.grey.lighten3,
       draggableDropZone: '#dddddd',
