@@ -1,16 +1,26 @@
 from django.core.exceptions import ObjectDoesNotExist
-from django.http import JsonResponse
-from rest_framework import serializers, status
-from rest_framework.permissions import IsAuthenticated
+from rest_framework import serializers
 from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+from rest_framework import status 
+
 from contentcuration.models import CaptionCue, CaptionFile
 from contentcuration.viewsets.base import ValuesViewset
 from contentcuration.viewsets.sync.utils import log_sync_exception
 
+
 class CaptionCueSerializer(serializers.ModelSerializer):
+    def validate(self, attrs):
+        """Check that the start is before the stop."""
+        super().validate(attrs)
+        if attrs["starttime"] > attrs["endtime"]:
+            raise serializers.ValidationError("The cue must finish after start.")
+        return attrs
+
     class Meta:
         model = CaptionCue
         fields = ["text", "starttime", "endtime"]
+
 
 class CaptionFileSerializer(serializers.ModelSerializer):
     caption_cue = CaptionCueSerializer(many=True, required=False)
@@ -18,6 +28,10 @@ class CaptionFileSerializer(serializers.ModelSerializer):
     class Meta:
         model = CaptionFile
         fields = ["file_id", "language", "caption_cue"]
+
+    def to_representation(self, instance):
+        # we need to change this?
+        return super().to_representation(instance)
 
 
 class CaptionViewSet(ValuesViewset):
@@ -28,9 +42,23 @@ class CaptionViewSet(ValuesViewset):
     values = ("file_id", "language", "caption_cue")
 
     field_map = {
-        "file": "file_id", 
-        "language": "language"
+        "file": "file_id",
+        "language": "language",
+        "caption_cue": "caption_cue",
     }
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        file_id = self.request.GET.get("file_id")
+        language = self.request.GET.get("language")
+
+        if file_id:
+            queryset = queryset.filter(file_id=file_id)
+        if language:
+            queryset = queryset.filter(language=language)
+
+        return queryset
 
     def delete_from_changes(self, changes):
         errors = []
@@ -56,11 +84,16 @@ class CaptionCueViewSet(ValuesViewset):
     queryset = CaptionCue.objects.all()
     permission_classes = [IsAuthenticated]
     serializer_class = CaptionCueSerializer
-    values = ("text", "starttime", "endtime")
+    values = ("text", "starttime", "endtime", "caption_file")
 
     field_map = {
         "text": "text",
         "start_time": "starttime",
         "end_time": "endtime",
+        "caption_file_id": "caption_file",
     }
-    # Add caption file in field_map?
+
+    def list(self, request, *args, **kwargs):
+        caption_file_id = kwargs['caption_file_id']
+        queryset = CaptionCue.objects.filter(caption_file_id=caption_file_id)
+        return Response(self.serialize(queryset))

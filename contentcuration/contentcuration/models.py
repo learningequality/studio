@@ -2076,7 +2076,7 @@ class CaptionFile(models.Model):
         unique_together = ['file_id', 'language']
 
     def __str__(self):
-        return "{file_id} -> {language}".format(file_id=self.file_id, language=self.language)
+        return "file_id: {file_id}, language: {language}".format(file_id=self.file_id, language=self.language)
 
 
 class CaptionCue(models.Model):
@@ -2096,7 +2096,6 @@ class CaptionCue(models.Model):
 
     def __str__(self):
         return "text: {text}, start_time: {starttime}, end_time: {endtime}".format(text=self.text, starttime=self.starttime, endtime=self.endtime)
-
 
 ASSESSMENT_ID_INDEX_NAME = "assessment_id_idx"
 
