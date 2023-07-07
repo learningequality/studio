@@ -1028,9 +1028,20 @@ export const Bookmark = new Resource({
   getUserId: getUserIdFromStore,
 });
 
-export const Caption = new Resource({
-  // TODO
-})
+export const CaptionFile = new Resource({
+  tableName: TABLE_NAMES.CAPTION_FILE,
+  urlName: 'captions',
+  idField: 'id',
+  indexFields: ['file_id', 'language'],
+  syncable: true,
+});
+
+export const CaptionCues = new Resource({
+  tableName: TABLE_NAMES.CAPTION_CUES,
+  urlName: 'caption-cues',
+  idField: '[id+caption_file]',
+  indexFields: ['text', 'starttime', 'endtime'],
+});
 
 export const Channel = new Resource({
   tableName: TABLE_NAMES.CHANNEL,

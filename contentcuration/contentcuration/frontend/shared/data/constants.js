@@ -46,7 +46,8 @@ export const TABLE_NAMES = {
   TASK: 'task',
   CHANGES_TABLE,
   BOOKMARK: 'bookmark',
-  CAPTION: 'caption'
+  CAPTION_FILE: 'caption_file',
+  CAPTION_CUES: 'caption_cues',
 };
 
 /**
