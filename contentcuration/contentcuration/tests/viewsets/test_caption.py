@@ -85,6 +85,7 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         self.channel = testdata.channel()
         self.user = testdata.user()
         self.channel.editors.add(self.user)
+
     # Test for CaptionFile model
     def test_create_caption(self):
         self.client.force_authenticate(user=self.user)
