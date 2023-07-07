@@ -56,7 +56,7 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
     def caption_cue_metadata(self):
         return {
             "file": {
-                "file_id": uuid.uuid4().hex,
+                "file_id": uuid.uuid4(),
                 "language": "en",
             },
             "cue": {
@@ -71,6 +71,7 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         self.channel = testdata.channel()
         self.user = testdata.user()
         self.channel.editors.add(self.user)
+
     # Test for CaptionFile model
     def test_create_caption(self):
         self.client.force_authenticate(user=self.user)
