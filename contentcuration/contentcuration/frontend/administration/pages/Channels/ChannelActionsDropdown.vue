@@ -146,6 +146,9 @@
       channel() {
         return this.getChannel(this.channelId);
       },
+      name() {
+        return this.channel.name;
+      },
       searchChannelEditorsLink() {
         return {
           name: RouteNames.USERS,
