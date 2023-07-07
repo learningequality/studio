@@ -55,7 +55,7 @@ export const TabNames = {
   PREVIEW: 'preview',
   QUESTIONS: 'questions',
   RELATED: 'related',
-  CAPTIONS: 'captions'
+  CAPTIONS: 'captions',
 };
 
 export const modes = {
