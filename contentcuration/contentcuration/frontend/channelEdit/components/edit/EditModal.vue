@@ -489,19 +489,19 @@
       },
       createNodesFromUploads(fileUploads) {
         fileUploads.forEach((file, index) => {
-          let title = file.original_filename
-            .split('.')
-            .slice(0, -1)
-            .join('.');
-          if (title === undefined) {
+          let title;
+          if (file.metadata.title) {
             title = file.metadata.title;
+          } else {
+            title = file.original_filename
+              .split('.')
+              .slice(0, -1)
+              .join('.');
           }
-          const language = file.metadata.language !== undefined ? file.metadata.language : null;
-          const author = file.metadata.authors !== undefined ? file.metadata.author : null;
-          const license = file.metadata.license !== undefined ? file.metadata.license : null;
+          console.log(file.metadata);
           this.createNode(
             FormatPresets.has(file.preset) && FormatPresets.get(file.preset).kind_id,
-            { title, language, author, license }
+            { title, ...file.metadata }
           ).then(newNodeId => {
             if (index === 0) {
               this.selected = [newNodeId];
