@@ -415,6 +415,7 @@
     z-index: 2;
     display: flex;
     align-items: center;
+    min-width: max-content;
     padding-top: 44px;
     pointer-events: auto;
 
