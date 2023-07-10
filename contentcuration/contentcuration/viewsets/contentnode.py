@@ -915,8 +915,9 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
                 log_sync_exception(e, user=self.request.user, change=copy)
                 copy["errors"] = [str(e)]
                 errors.append(copy)
-                failed_copy_node = self.get_queryset().get(pk=copy["key"])
-                failed_copy_node.delete()
+                failed_copy_node = self.get_queryset().filter(pk=copy["key"]).first()
+                if failed_copy_node is not None:
+                    failed_copy_node.delete()
         return errors
 
     def copy(

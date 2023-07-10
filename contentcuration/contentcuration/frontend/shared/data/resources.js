@@ -1654,6 +1654,8 @@ export const ContentNode = new TreeResource({
   /**
    * Waits for copying of contentnode to complete for id referenced in `id`.
    * @param {string} id
+   * @param {Number} startingRev -- the revision from which we start looking for
+   *                                success or failure change objects.
    * @returns {Promise<void>}
    */
   waitForCopying(id, startingRev) {
