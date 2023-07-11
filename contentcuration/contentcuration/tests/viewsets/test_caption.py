@@ -3,8 +3,6 @@ from __future__ import absolute_import
 import json
 import uuid
 
-from django.core.serializers import serialize
-
 from contentcuration.models import CaptionCue, CaptionFile
 from contentcuration.tests import testdata
 from contentcuration.tests.base import StudioAPITestCase
@@ -16,8 +14,6 @@ from contentcuration.tests.viewsets.base import (
 )
 from contentcuration.viewsets.caption import CaptionCueSerializer, CaptionFileSerializer
 from contentcuration.viewsets.sync.constants import CAPTION_CUES, CAPTION_FILE
-
-# class CRUDTestCase(StudioAPITestCase):
 
 
 class SyncTestCase(SyncTestMixin, StudioAPITestCase):
@@ -53,7 +49,7 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
     def caption_cue_metadata(self):
         return {
             "file": {
-                "file_id": uuid.uuid4(),
+                "file_id": uuid.uuid4().hex,
                 "language": "en",
             },
             "cue": {
@@ -101,21 +97,13 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
     def test_delete_caption_file(self):
         self.client.force_authenticate(user=self.user)
         caption_file = self.caption_file_metadata
-        pk = uuid.uuid4().hex
-        response = self.sync_changes(
-            [
-                generate_create_event(
-                    pk, CAPTION_FILE, caption_file, channel_id=self.channel.id
-                )
-            ]
-        )
-        self.assertEqual(response.status_code, 200, response.content)
+        caption_file_1 = CaptionFile(**caption_file)
+        pk = caption_file_1.pk
 
         # Delete the caption file
         response = self.sync_changes(
             [generate_delete_event(pk, CAPTION_FILE, channel_id=self.channel.id)]
         )
-
         self.assertEqual(response.status_code, 200, response.content)
 
         with self.assertRaises(CaptionFile.DoesNotExist):
@@ -177,14 +165,11 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
 
     def test_create_caption_cue(self):
         self.client.force_authenticate(user=self.user)
-        caption_file_1 = CaptionFile.objects.create(file_id=uuid.uuid4(), language="en")
-        caption_cue = {
-            "caption_file_id": caption_file_1,
-            "text": "This is the beginning!",
-            "starttime": 0.0,
-            "endtime": 12.0,
-        }
-        # This works: caption_cue_1 = CaptionCue.objects.create(**caption_cue)
+        metadata = self.caption_cue_metadata
+        caption_file_1 = CaptionFile.objects.create(**metadata["file"])
+        caption_cue = metadata["cue"]
+        caption_cue["caption_file_id"] = caption_file_1.pk
+
         response = self.sync_changes(
             [
                 generate_create_event(
@@ -273,6 +258,7 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
                         "text": new_text,
                         "starttime": new_starttime,
                         "endtime": new_endtime,
+                        "caption_file_id": caption_file_1.pk,
                     },
                     channel_id=self.channel.id,
                 )
