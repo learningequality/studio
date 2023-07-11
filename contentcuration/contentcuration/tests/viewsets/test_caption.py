@@ -56,7 +56,7 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
     def caption_cue_metadata(self):
         return {
             "file": {
-                "file_id": uuid.uuid4(),
+                "file_id": uuid.uuid4().hex,
                 "language": "en",
             },
             "cue": {
@@ -120,8 +120,11 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
     def test_delete_caption_file(self):
         self.client.force_authenticate(user=self.user)
         caption_file = self.caption_file_metadata
+<<<<<<< HEAD
         # Explicitly set language to model object to follow Django ORM conventions
         caption_file['language'] = Language.objects.get(pk='en')
+=======
+>>>>>>> c94a30ba1 (Refactor id_attr method for retrieving identifier attribute in delete_from_changes)
         caption_file_1 = CaptionFile(**caption_file)
         pk = caption_file_1.pk
 
@@ -195,8 +198,11 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
     def test_create_caption_cue(self):
         self.client.force_authenticate(user=self.user)
         metadata = self.caption_cue_metadata
+<<<<<<< HEAD
         # Explicitly set language to model object to follow Django ORM conventions 
         metadata['file']['language'] = Language.objects.get(pk="en") 
+=======
+>>>>>>> c94a30ba1 (Refactor id_attr method for retrieving identifier attribute in delete_from_changes)
         caption_file_1 = CaptionFile.objects.create(**metadata["file"])
         caption_cue = metadata["cue"]
         caption_cue["caption_file_id"] = caption_file_1.pk
