@@ -1087,7 +1087,7 @@ export const CaptionFile = new Resource({
 export const CaptionCues = new Resource({
   tableName: TABLE_NAMES.CAPTION_CUES,
   urlName: 'caption-cues',
-  idField: '[id+caption_file]',
+  idField: 'id',
   indexFields: ['text', 'starttime', 'endtime'],
 });
 

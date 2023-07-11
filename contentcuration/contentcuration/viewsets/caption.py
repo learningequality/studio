@@ -14,9 +14,13 @@ from contentcuration.viewsets.base import ValuesViewset
 
 
 class CaptionCueSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CaptionCue
+        fields = ["text", "starttime", "endtime", "caption_file_id"]
+
     def validate(self, attrs):
-        """Check that the start is before the stop."""
-        super().validate(attrs)
+        """Check that the cue's starttime is before the endtime."""
+        attrs = super().validate(attrs)
         if attrs["starttime"] > attrs["endtime"]:
             raise serializers.ValidationError("The cue must finish after start.")
         return attrs
@@ -161,7 +165,7 @@ class CaptionCueViewSet(ValuesViewset):
 =======
         "start_time": "starttime",
         "end_time": "endtime",
-        "caption_file_id": "caption_file",
+        "caption_file_id": "caption_file_id",
     }
 
     def list(self, request, *args, **kwargs):
