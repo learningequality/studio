@@ -90,7 +90,7 @@ flask-basicauth==0.2.0
     # via locust
 flask-cors==3.0.10
     # via locust
-fonttools==4.27.1
+fonttools==4.40.0
     # via -r requirements-dev.in
 gevent==21.12.0
     # via
