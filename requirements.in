@@ -25,7 +25,7 @@ google-cloud-core
 django-db-readonly==0.7.0
 oauth2client
 django-mathfilters
-google-cloud-kms==2.0.0
+google-cloud-kms==2.10.0
 google-crc32c==1.1.2
 backoff
 backports-abc==0.5
