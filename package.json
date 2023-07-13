@@ -92,7 +92,7 @@
     "vue-router": "3.6.5",
     "vuetify": "^1.5.24",
     "vuex": "^3.0.1",
-    "workbox-precaching": "^6.5.4",
+    "workbox-precaching": "^7.0.0",
     "workbox-window": "^6.5.4"
   },
   "devDependencies": {
