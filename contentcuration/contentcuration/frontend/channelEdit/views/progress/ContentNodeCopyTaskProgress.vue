@@ -1,6 +1,6 @@
 <template>
 
-  <div :style="{ 'cursor': hasCopyingErrored ? 'default' : 'progress' }">
+  <div :style="{ 'cursor': copying && !hasCopyingErrored ? 'progress' : 'default' }">
     <VProgressCircular
       v-if="copying && !hasCopyingErrored"
       indeterminate
@@ -8,7 +8,7 @@
       v-bind="$attrs"
     />
     <VTooltip
-      v-else-if="copying && hasCopyingErrored && showTooltip"
+      v-else-if="hasCopyingErrored && showTooltip"
       bottom
       lazy
     >
@@ -20,7 +20,7 @@
       <span>{{ $tr('copyErrorTopic') }}</span>
     </VTooltip>
     <Icon
-      v-else-if="copying && hasCopyingErrored && !showTooltip"
+      v-else-if="hasCopyingErrored && !showTooltip"
       color="red"
     >
       error

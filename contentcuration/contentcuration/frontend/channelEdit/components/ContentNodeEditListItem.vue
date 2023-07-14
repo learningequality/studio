@@ -66,7 +66,7 @@
 
         <template #copy-fail-retry-action>
           <span v-if="hasCopyingErrored">
-            <ActionLink :text="$tr('retryCopy')" @click="retryFailedCopy" />
+            <ActionLink class="copy-retry-btn" :text="$tr('retryCopy')" @click="retryFailedCopy" />
           </span>
         </template>
 
@@ -360,6 +360,10 @@
     flex: 1 1 auto;
     align-items: flex-start;
     justify-content: center;
+  }
+
+  .copy-retry-btn {
+    font-size: inherit;
   }
 
 </style>

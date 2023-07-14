@@ -167,8 +167,11 @@
                 </template>
                 <template v-else>
                   <div class="copying">
-                    <p class="caption grey--text pr-2 pt-1">
-                      <span :style="{ 'cursor': hasCopyingErrored ? 'default' : 'progress' }">
+                    <p class="caption pr-3">
+                      <span
+                        class="grey--text"
+                        :style="{ 'cursor': hasCopyingErrored ? 'default' : 'progress' }"
+                      >
                         {{ copyingMessage }}
                       </span>
                       <slot name="copy-fail-retry-action"></slot>
@@ -418,14 +421,11 @@
     min-width: max-content;
     padding-top: 44px;
     pointer-events: auto;
-
-    p {
-      flex-shrink: 0;
-    }
+    cursor: default;
 
     p,
     div {
-      margin: 0 2px;
+      margin: 0;
     }
 
     .compact & {
