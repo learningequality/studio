@@ -1032,15 +1032,46 @@ export const CaptionCues = new Resource({
   indexFields: ['text', 'starttime', 'endtime'],
   syncable: true,
 
-  getUrlFunction(endpoint) {
-    return urls[`${this.urlName}_${endpoint}`];
-  },
   collectionUrl(caption_file_id) {
     return this.getUrlFunction('list')(caption_file_id)
   },
   fetchCollection({ caption_file_id }) {
-    return client.get(this.collectionUrl(caption_file_id)); 
-  },
+    const now = Date.now();
+    const generatedUrl = this.collectionUrl(caption_file_id);
+    const cachedRequest = this._requests[generatedUrl];
+    if (
+      cachedRequest &&
+      cachedRequest[LAST_FETCHED] &&
+      cachedRequest[LAST_FETCHED] + REFRESH_INTERVAL * 1000 > now &&
+      cachedRequest.promise
+    ) {
+      return cachedRequest.promise;
+    }
+    const promise = client.get(generatedUrl).then(response => {
+      let itemData;
+      let pageData;
+      if (Array.isArray(response.data)) {
+        itemData = response.data;
+      } else if (response.data && response.data.results) {
+        pageData = response.data;
+        itemData = pageData.results;
+      } else {
+        console.error(`Unexpected response from ${this.urlName}`, response);
+        itemData = [];
+      }
+      return this.setData(itemData).then(data => {
+        if (pageData) {
+          pageData.results = data;
+        }
+        return pageData ? pageData : data;
+      });
+    });
+    this._requests[queryString] = {
+      [LAST_FETCHED]: now,
+      promise,
+    };
+    return promise;
+  }
 });
 
 export const Channel = new Resource({
