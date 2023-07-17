@@ -60,7 +60,6 @@ class CaptionFileSerializer(serializers.ModelSerializer):
         model = CaptionFile
         fields = ["file_id", "language", "caption_cue"]
 
-<<<<<<< HEAD
     @classmethod
     def id_attr(cls):
         """
@@ -72,11 +71,6 @@ class CaptionFileSerializer(serializers.ModelSerializer):
         ModelClass = cls.Meta.model
         info = model_meta.get_field_info(ModelClass)
         return getattr(cls.Meta, "update_lookup_field", info.pk.name)
-=======
-    def to_representation(self, instance):
-        # we need to change this?
-        return super().to_representation(instance)
->>>>>>> de52608ba (Adds caption editor components, updated IndexedDB Resource)
 
 
 class CaptionViewSet(ValuesViewset):
@@ -87,38 +81,12 @@ class CaptionViewSet(ValuesViewset):
     values = ("id", "file_id", "language")
 
     field_map = {
-<<<<<<< HEAD
         "file_id": "file_id",
         "language": "language",
-=======
-        "file": "file_id",
-        "language": "language",
-        "caption_cue": "caption_cue",
->>>>>>> de52608ba (Adds caption editor components, updated IndexedDB Resource)
     }
 
     def get_queryset(self):
         queryset = super().get_queryset()
-<<<<<<< HEAD
-=======
-
-        file_id = self.request.GET.get("file_id")
-        language = self.request.GET.get("language")
-
-        if file_id:
-            queryset = queryset.filter(file_id=file_id)
-        if language:
-            queryset = queryset.filter(language=language)
-
-        return queryset
-
-    def delete_from_changes(self, changes):
-        errors = []
-        queryset = self.get_edit_queryset().order_by()
-        for change in changes:
-            try:
-                instance = queryset.filter(**dict(self.values_from_key(change["key"])))
->>>>>>> de52608ba (Adds caption editor components, updated IndexedDB Resource)
 
         contentnode_ids = self.request.GET.get("contentnode_id")
         file_id = self.request.GET.get("file_id")
@@ -145,16 +113,11 @@ class CaptionCueViewSet(ValuesViewset):
     queryset = CaptionCue.objects.all()
     permission_classes = [IsAuthenticated]
     serializer_class = CaptionCueSerializer
-<<<<<<< HEAD
     values = ("id", "text", "starttime", "endtime", "caption_file_id")
-=======
-    values = ("text", "starttime", "endtime", "caption_file")
->>>>>>> de52608ba (Adds caption editor components, updated IndexedDB Resource)
 
     field_map = {
         "id": "id",
         "text": "text",
-<<<<<<< HEAD
         "starttime": "starttime",
         "endtime": "endtime",
         "caption_file": "caption_file_id",
@@ -162,14 +125,5 @@ class CaptionCueViewSet(ValuesViewset):
 
     def list(self, request, *args, **kwargs):
         caption_file_id = kwargs["caption_file_id"]
-=======
-        "start_time": "starttime",
-        "end_time": "endtime",
-        "caption_file_id": "caption_file_id",
-    }
-
-    def list(self, request, *args, **kwargs):
-        caption_file_id = kwargs['caption_file_id']
->>>>>>> de52608ba (Adds caption editor components, updated IndexedDB Resource)
         queryset = CaptionCue.objects.filter(caption_file_id=caption_file_id)
         return Response(self.serialize(queryset))
