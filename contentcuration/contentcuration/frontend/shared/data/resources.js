@@ -1027,9 +1027,20 @@ export const CaptionFile = new Resource({
 
 export const CaptionCues = new Resource({
   tableName: TABLE_NAMES.CAPTION_CUES,
-  urlName: 'caption-cues',
+  urlName: 'captioncues',
   idField: 'id',
   indexFields: ['text', 'starttime', 'endtime'],
+  syncable: true,
+
+  getUrlFunction(endpoint) {
+    return urls[`${this.urlName}_${endpoint}`];
+  },
+  collectionUrl(caption_file_id) {
+    return this.getUrlFunction('list')(caption_file_id)
+  },
+  fetchCollection({ caption_file_id }) {
+    return client.get(this.collectionUrl(caption_file_id)); 
+  },
 });
 
 export const Channel = new Resource({

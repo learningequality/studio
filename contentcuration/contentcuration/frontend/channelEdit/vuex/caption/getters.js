@@ -6,6 +6,6 @@
 
 // are accessed as properties in components using the mapGetters helper or directly from the store using the store.getters syntax.
 
-export function getCaptionFiles(state) {
-  return Object.values(state.captionsMap);
-}
+// export function getCaptionFiles(state) {
+//   return Object.values(state.captionFilesMap);
+// }
