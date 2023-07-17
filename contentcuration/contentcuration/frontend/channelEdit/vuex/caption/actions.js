@@ -77,7 +77,6 @@ export async function addCaptionFile({ state, commit }, { id, file_id, language,
 export async function loadCaptions({ commit, rootGetters }, params) {
     const isAIFeatureEnabled = rootGetters['currentChannel/isAIFeatureEnabled'];
     if(!isAIFeatureEnabled) return;
-
     // If a new file is uploaded, the contentnode_id will be string
     if(typeof params.contentnode_id === 'string') {
         params.contentnode_id = [params.contentnode_id]
