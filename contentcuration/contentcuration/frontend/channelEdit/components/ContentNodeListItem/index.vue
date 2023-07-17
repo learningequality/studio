@@ -418,18 +418,14 @@
     z-index: 2;
     display: flex;
     align-items: center;
+    align-self: center;
     min-width: max-content;
-    padding-top: 44px;
     pointer-events: auto;
     cursor: default;
 
     p,
     div {
       margin: 0;
-    }
-
-    .compact & {
-      padding-top: 12px;
     }
   }
 
