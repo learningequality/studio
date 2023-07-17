@@ -250,7 +250,7 @@
     computed: {
       ...mapGetters('contentNode', ['getContentNode', 'getContentNodeIsValid']),
       ...mapGetters('assessmentItem', ['getAssessmentItems']),
-      ...mapGetters('currentChannel', ['currentChannel', 'canEdit']),
+      ...mapGetters('currentChannel', ['currentChannel', 'canEdit', 'isAIFeatureEnabled']),
       ...mapGetters('file', ['contentNodesAreUploading', 'getContentNodeFiles']),
       ...mapState({
         online: state => state.connection.online,
@@ -305,6 +305,24 @@
       invalidNodes() {
         return this.nodeIds.filter(id => !this.getContentNodeIsValid(id));
       },
+    },
+    created() {
+      // load Caption files and cues when:
+      // 1. The user has AI feature enabled
+      // 2. Single node is being edited
+      // 3. The content kind is audio or video
+      
+      const CONTENTNODEID = this.nodeIds[0];
+      if (this.isAIFeatureEnabled && this.nodeIds.length === 1) {
+        const KIND = this.getContentNode(CONTENTNODEID).kind;
+
+        if(KIND === 'video' || KIND === 'audio') {
+          this.loadCaptionFiles({ contentnode_id: CONTENTNODEID }).then(captionFile => {
+            let captionFileID = captionFile[0].id; // FK to retrieve the cues of a caption file
+            this.loadCaptionCues({ caption_file_id: captionFileID })
+          })
+        }
+      }
     },
     beforeRouteEnter(to, from, next) {
       if (
