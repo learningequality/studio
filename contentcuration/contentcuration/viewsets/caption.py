@@ -1,8 +1,15 @@
+from le_utils.constants.format_presets import (
+    AUDIO,
+    VIDEO_HIGH_RES,
+    VIDEO_LOW_RES,
+    VIDEO_SUBTITLE,
+)
 from rest_framework import serializers
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.utils import model_meta
-from contentcuration.models import CaptionCue, CaptionFile
+
+from contentcuration.models import CaptionCue, CaptionFile, File
 from contentcuration.viewsets.base import ValuesViewset
 
 
@@ -46,19 +53,26 @@ class CaptionViewSet(ValuesViewset):
     queryset = CaptionFile.objects.prefetch_related("caption_cue")
     permission_classes = [IsAuthenticated]
     serializer_class = CaptionFileSerializer
-    values = ("id", "file_id", "language", "caption_cue")
+    values = ("id", "file_id", "language")
 
     field_map = {
         "file_id": "file_id",
         "language": "language",
-        "caption_cue": "caption_cue",
     }
 
     def get_queryset(self):
         queryset = super().get_queryset()
 
+        contentnode_id = self.request.GET.get("contentnode_id")
         file_id = self.request.GET.get("file_id")
         language = self.request.GET.get("language")
+
+        if contentnode_id:
+            file_ids = File.objects.filter(
+                preset_id__in=[AUDIO, VIDEO_HIGH_RES, VIDEO_LOW_RES, VIDEO_SUBTITLE],
+                contentnode_id=contentnode_id,
+            ).values_list("pk", flat=True)
+            queryset = queryset.filter(file_id__in=file_ids)
 
         if file_id:
             queryset = queryset.filter(file_id=file_id)
@@ -76,10 +90,11 @@ class CaptionCueViewSet(ValuesViewset):
     values = ("id", "text", "starttime", "endtime", "caption_file_id")
 
     field_map = {
+        "id": "id",
         "text": "text",
-        "start_time": "starttime",
-        "end_time": "endtime",
-        "caption_file_id": "caption_file_id",
+        "starttime": "starttime",
+        "endtime": "endtime",
+        "caption_file": "caption_file_id",
     }
 
     def list(self, request, *args, **kwargs):

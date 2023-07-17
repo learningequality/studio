@@ -1,12 +1,40 @@
-// Modify the state in vuex.
-// They are Sync functions that receive the current state and payload as arguments.
-// Mutations should be the only way to update the state in Vuex, and they ensure that state changes are tracked and consistent.
-// Mutations are committed from actions using the commit method.
-// 1. set the caption using vue.set
-// 2. delete the caption using vue.delete
+import Vue from "vue";
 
-export function ADD_CAPTIONFILES(state, captionFiles) {
-  captionFiles.forEach(captionFile => {
-    Vue.set(state.captionsMap, captionFile.id, captionFile);
-  });
+/* Mutations for Caption File */
+export function ADD_CAPTIONFILE(state, captionFile) {
+  // TODO: add some checks to File
+
+  Vue.set(state.captionFilesMap, captionFile.id, captionFile);
+}
+
+export function ADD_CAPTIONFILES(state, captionFiles = []) {
+  if (Array.isArray(captionFiles)) {  // Workaround to fix TypeError: captionFiles.forEach
+    captionFiles.forEach(captionFile => {
+      ADD_CAPTIONFILE(state, captionFile);
+    });
+  }
+}
+
+export function UPDATE_CAPTIONFILE_FROM_INDEXEDDB(state, {id, ...mods}) {
+  // TODO, is this needed?
+}
+
+export function DELETE_CAPTIONFILE(state, captionFile) {
+  // TODO
+}
+
+
+/* Mutations for Caption Cues */
+export function ADD_CUE(state, cue) {
+  // TODO: add some checks to Cue
+
+  Vue.set(state.captionCuesMap, cue.id, cue);
+}
+
+export function ADD_CAPTIONCUES(state, { data } = []) {
+  if (Array.isArray(data)) {  // Workaround to fix TypeError: data.forEach
+    data.forEach(cue => {
+      ADD_CUE(state, cue);
+    })
+  }
 }
