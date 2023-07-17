@@ -1,5 +1,6 @@
 import template from './vuex/template';
 import assessmentItem from './vuex/assessmentItem';
+import caption from './vuex/caption';
 import clipboard from './vuex/clipboard';
 import contentNode from './vuex/contentNode';
 import currentChannel from './vuex/currentChannel';
@@ -45,6 +46,7 @@ export const STORE_CONFIG = {
     task,
     template,
     assessmentItem,
+    caption,
     clipboard,
     contentNode,
     currentChannel,
