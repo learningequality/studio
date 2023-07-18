@@ -197,6 +197,7 @@
   import FileDropzone from 'shared/views/files/FileDropzone';
   import { isNodeComplete } from 'shared/utils/validation';
   import { DELAYED_VALIDATION } from 'shared/constants';
+  import { loadCaption } from '../../utils';
 
   const CHECK_STORAGE_INTERVAL = 10000;
 
@@ -307,21 +308,8 @@
       },
     },
     created() {
-      // load Caption files and cues when:
-      // 1. The user has AI feature enabled
-      // 2. Single node is being edited
-      // 3. The content kind is audio or video
-      
-      const CONTENTNODEID = this.nodeIds[0];
       if (this.isAIFeatureEnabled && this.nodeIds.length === 1) {
-        const KIND = this.getContentNode(CONTENTNODEID).kind;
-
-        if(KIND === 'video' || KIND === 'audio') {
-          this.loadCaptionFiles({ contentnode_id: CONTENTNODEID }).then(captionFile => {
-            let captionFileID = captionFile[0].id; // FK to retrieve the cues of a caption file
-            this.loadCaptionCues({ caption_file_id: captionFileID })
-          })
-        }
+        loadCaption(this.nodeIds, this.loadCaptionFiles, this.loadCaptionCues);
       }
     },
     beforeRouteEnter(to, from, next) {
