@@ -15,15 +15,6 @@ export function ADD_CAPTIONFILES(state, captionFiles = []) {
   }
 }
 
-export function UPDATE_CAPTIONFILE_FROM_INDEXEDDB(state, {id, ...mods}) {
-  // TODO, is this needed?
-}
-
-export function DELETE_CAPTIONFILE(state, captionFile) {
-  // TODO
-}
-
-
 /* Mutations for Caption Cues */
 export function ADD_CUE(state, cue) {
   // TODO: add some checks to Cue
