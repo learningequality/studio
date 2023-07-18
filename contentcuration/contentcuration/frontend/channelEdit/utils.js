@@ -1,3 +1,4 @@
+import store from './store';
 import translator from './translator';
 import { RouteNames } from './constants';
 import { MasteryModelsNames } from 'shared/leUtils/MasteryModels';
@@ -293,4 +294,29 @@ export function getCompletionCriteriaLabels(node) {
   }
 
   return labels;
+}
+
+/**
+ * Loads caption files and cues for a content node.
+ * 
+ * Caption files and cues are only loaded when:
+ * - The AI feature flag is enabled
+ * - A single node is being edited
+ * - The node kind is 'video' or 'audio'
+ * 
+ * @param {Array} nodeIds - Array containing node ID(s) being edited
+ * @param {Function} loadCaptionFiles - Vuex Action to load caption files
+ * @param {Function} loadCaptionCues - Vuex Action to load caption cues
+ */
+export function loadCaption(nodeIds, loadCaptionFiles, loadCaptionCues) {
+
+  const CONTENTNODEID = nodeIds[0];
+  const KIND = store.getters["contentNode/getContentNode"](CONTENTNODEID).kind;
+  
+  if(KIND === 'video' || KIND === 'audio') {
+    loadCaptionFiles({ contentnode_id: CONTENTNODEID }).then(captionFile => {
+      let captionFileID = captionFile[0].id; // FK to retrieve the cues of a caption file
+      loadCaptionCues({ caption_file_id: captionFileID })
+    })
+  }
 }
