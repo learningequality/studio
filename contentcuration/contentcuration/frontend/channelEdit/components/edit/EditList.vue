@@ -54,7 +54,6 @@
     },
     computed: {
       ...mapGetters('currentChannel', ['isAIFeatureEnabled']),
-      ...mapGetters('contentNode', ['getContentNode']),
       selected: {
         get() {
           return this.value;
