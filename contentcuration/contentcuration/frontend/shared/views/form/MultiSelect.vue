@@ -23,7 +23,7 @@
         <template #item="{ item, tile }">
           <Checkbox v-bind="tile.props" class="ma-0">
             <template #label>
-              <span :class="{ notranslate }" class="text-truncate-ellipsis">
+              <span :class="{ notranslate }" :style="getEllipsisStyle()">
                 {{ getText(item) }}
               </span>
             </template>
@@ -71,6 +71,14 @@
         type: Boolean,
         default: true,
       },
+      useEllipsis: {
+        type: Boolean,
+        default: false,
+      },
+      ellipsisMaxWidth: {
+        type: String,
+        default: '200px',
+      },
     },
     computed: {
       selections: {
@@ -83,6 +91,16 @@
       },
     },
     methods: {
+      getEllipsisStyle() {
+        return this.useEllipsis
+          ? {
+              maxWidth: this.ellipsisMaxWidth,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }
+          : {};
+      },
       getText(item) {
         if (typeof this.itemText === 'string') {
           return item[this.itemText];
@@ -115,13 +133,6 @@
   .text-truncate {
     max-width: 100%;
     overflow: hidden;
-    white-space: nowrap;
-  }
-
-  .text-truncate-ellipsis {
-    max-width: 200px;
-    overflow: hidden;
-    text-overflow: ellipsis;
     white-space: nowrap;
   }
 
