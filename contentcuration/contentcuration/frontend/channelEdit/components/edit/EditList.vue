@@ -25,6 +25,7 @@
   import { mapGetters, mapActions } from 'vuex';
   import EditListItem from './EditListItem';
   import Checkbox from 'shared/views/form/Checkbox';
+  import { loadCaption } from '../../utils';
 
   export default {
     name: 'EditList',
@@ -45,18 +46,9 @@
     watch: {
       // watch the selected contentnode
       value(newValue) {
-        const CONTENTNODEID = newValue[0];
-        if (this.isAIFeatureEnabled && newValue.length === 1) { // Only one node is selected to edit
-          const KIND = this.getContentNode(CONTENTNODEID).kind;
-          
-          // we make a request only when the kind is video or audio
-          if(KIND === 'video' || KIND === 'audio') {
-            // load the caption file of the contentnode and its cues
-            this.loadCaptionFiles({ contentnode_id: CONTENTNODEID }).then(captionFile => {
-              let captionFileID = captionFile[0].id; // FK to retrieve the cues of a caption file
-              this.loadCaptionCues({ caption_file_id: captionFileID })
-            })
-          }
+        if (this.isAIFeatureEnabled && newValue.length === 1) {
+          const nodeId = newValue[0];
+          loadCaption([nodeId], this.loadCaptionFiles, this.loadCaptionCues);
         }
       }
     },
