@@ -1066,7 +1066,7 @@ export const CaptionCues = new Resource({
         return pageData ? pageData : data;
       });
     });
-    this._requests[queryString] = {
+    this._requests[generatedUrl] = {
       [LAST_FETCHED]: now,
       promise,
     };
