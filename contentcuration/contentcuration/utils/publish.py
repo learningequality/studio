@@ -74,6 +74,10 @@ class NoNodesChangedError(Exception):
     pass
 
 
+class ChannelIncompleteError(Exception):
+    pass
+
+
 class SlowPublishError(Exception):
     """
     Used to track slow Publishing operations. We don't raise this error,
@@ -195,8 +199,8 @@ class TreeMapper:
         force_exercises=False,
         progress_tracker=None,
     ):
-        if not root_node.complete:
-            raise ValueError("Attempted to publish a channel with an incomplete root node")
+        if not root_node.is_publishable():
+            raise ChannelIncompleteError("Attempted to publish a channel with an incomplete root node or no resources")
 
         self.root_node = root_node
         task_percent_total = 80.0
@@ -220,7 +224,7 @@ class TreeMapper:
         logging.debug("Mapping node with id {id}".format(id=node.pk))
 
         # Only process nodes that are either non-topics or have non-topic descendants
-        if node.get_descendants(include_self=True).exclude(kind_id=content_kinds.TOPIC).exists() and node.complete:
+        if node.is_publishable():
             # early validation to make sure we don't have any exercises without mastery models
             # which should be unlikely when the node is complete, but just in case
             if node.kind_id == content_kinds.EXERCISE:
