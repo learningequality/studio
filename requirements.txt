@@ -10,10 +10,8 @@ asgiref==3.3.4
     # via django
 async-timeout==4.0.2
     # via redis
-attrs==19.3.0
-    # via
-    #   -r requirements.in
-    #   jsonschema
+attrs==23.1.0
+    # via jsonschema
 backoff==2.2.1
     # via -r requirements.in
 backports-abc==0.5
