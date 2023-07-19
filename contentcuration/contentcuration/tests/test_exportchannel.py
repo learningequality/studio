@@ -429,6 +429,29 @@ class ExportChannelTestCase(StudioTestCase):
         })
 
 
+class EmptyChannelTestCase(StudioTestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        super(EmptyChannelTestCase, cls).setUpClass()
+        cls.patch_copy_db = patch('contentcuration.utils.publish.save_export_database')
+        cls.patch_copy_db.start()
+
+    @classmethod
+    def tearDownClass(cls):
+        super(EmptyChannelTestCase, cls).tearDownClass()
+        cls.patch_copy_db.stop()
+
+    def test_publish_empty_channel(self):
+        content_channel = channel()
+        set_channel_icon_encoding(content_channel)
+        content_channel.main_tree.complete = True
+        content_channel.main_tree.save()
+        content_channel.main_tree.get_descendants().exclude(kind_id="topic").delete()
+        with self.assertRaises(ValueError):
+            create_content_database(content_channel, True, self.admin_user.id, True)
+
+
 class ChannelExportUtilityFunctionTestCase(StudioTestCase):
     @classmethod
     def setUpClass(cls):
