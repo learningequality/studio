@@ -38,6 +38,10 @@ livereload==2.6.3
     # via sphinx-autobuild
 markupsafe==1.1.1
     # via jinja2
+packaging==20.9
+    # via
+    #   -c requirements.txt
+    #   sphinx
 pathtools==0.1.2
     # via
     #   sphinx-autobuild
@@ -46,6 +50,10 @@ port-for==0.3.1
     # via sphinx-autobuild
 pygments==2.7.4
     # via sphinx
+pyparsing==2.4.7
+    # via
+    #   -c requirements.txt
+    #   packaging
 pytz==2022.1
     # via
     #   -c requirements.txt
@@ -60,10 +68,9 @@ six==1.16.0
     # via
     #   -c requirements.txt
     #   livereload
-    #   sphinx
 snowballstemmer==2.0.0
     # via sphinx
-sphinx==1.6.4
+sphinx==4.1.0
     # via
     #   -r requirements-docs.in
     #   sphinx-intl
@@ -74,17 +81,27 @@ sphinx-intl==2.0.1
     # via -r requirements-docs.in
 sphinx-rtd-theme==0.5.0
     # via -r requirements-docs.in
+sphinxcontrib-applehelp==1.0.4
+    # via sphinx
+sphinxcontrib-devhelp==1.0.2
+    # via sphinx
+sphinxcontrib-htmlhelp==2.0.1
+    # via sphinx
+sphinxcontrib-jsmath==1.0.1
+    # via sphinx
+sphinxcontrib-qthelp==1.0.3
+    # via sphinx
 sphinxcontrib-serializinghtml==1.1.4
-    # via sphinxcontrib-websupport
-sphinxcontrib-websupport==1.2.4
     # via
-    #   -r requirements-docs.in
     #   sphinx
+    #   sphinxcontrib-websupport
+sphinxcontrib-websupport==1.2.4
+    # via -r requirements-docs.in
 tornado==6.0.4
     # via
     #   livereload
     #   sphinx-autobuild
-urllib3==1.26.5
+urllib3==1.26.14
     # via
     #   -c requirements.txt
     #   requests
