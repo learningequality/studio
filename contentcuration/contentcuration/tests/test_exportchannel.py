@@ -9,6 +9,7 @@ import pytest
 from django.core.management import call_command
 from django.db import connections
 from kolibri_content import models as kolibri_models
+from kolibri_content.router import cleanup_content_database_connection
 from kolibri_content.router import get_active_content_database
 from kolibri_content.router import set_active_content_database
 from le_utils.constants import exercises
@@ -216,8 +217,7 @@ class ExportChannelTestCase(StudioTestCase):
 
     def tearDown(self):
         # Clean up datbase connection after the test
-        connections[self.tempdb].close()
-        del connections.databases[self.tempdb]
+        cleanup_content_database_connection(self.tempdb)
         super(ExportChannelTestCase, self).tearDown()
         set_active_content_database(None)
         if os.path.exists(self.tempdb):
