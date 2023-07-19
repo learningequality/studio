@@ -500,9 +500,9 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
             for mapping in node_tags_mappings
         ]
 
-        # rtibbles: For reasons I have not been able to discern, under certain circumstances
-        # these mappings can already exist in the database. This is a workaround to prevent
-        # this from breaking copying.
+        # In the case that we are copying a node that is in the weird state of having a tag
+        # that is duplicated (with a channel tag and a null channel tag) this can cause an error
+        # so we ignore conflicts here to ignore the duplicate tags.
         self.model.tags.through.objects.bulk_create(mappings_to_create, ignore_conflicts=True)
 
     def _copy_assessment_items(self, source_copy_id_map):
