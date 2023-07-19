@@ -11,9 +11,7 @@ asgiref==3.3.4
 async-timeout==4.0.2
     # via redis
 attrs==23.1.0
-    # via
-    #   -r requirements.in
-    #   jsonschema
+    # via jsonschema
 backoff==2.2.1
     # via -r requirements.in
 backports-abc==0.5

@@ -1,4 +1,3 @@
-attrs==23.1.0
 django-cte==1.2.1
 django-mptt==0.14.0
 django-filter==22.1
