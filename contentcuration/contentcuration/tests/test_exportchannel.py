@@ -29,6 +29,7 @@ from .testdata import node as create_node
 from .testdata import slideshow
 from .testdata import thumbnail_bytes
 from contentcuration import models as cc
+from contentcuration.utils.publish import ChannelIncompleteError
 from contentcuration.utils.publish import convert_channel_thumbnail
 from contentcuration.utils.publish import create_content_database
 from contentcuration.utils.publish import create_slideshow_manifest
@@ -448,7 +449,7 @@ class EmptyChannelTestCase(StudioTestCase):
         content_channel.main_tree.complete = True
         content_channel.main_tree.save()
         content_channel.main_tree.get_descendants().exclude(kind_id="topic").delete()
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ChannelIncompleteError):
             create_content_database(content_channel, True, self.admin_user.id, True)
 
 

@@ -74,6 +74,10 @@ class NoNodesChangedError(Exception):
     pass
 
 
+class ChannelIncompleteError(Exception):
+    pass
+
+
 class SlowPublishError(Exception):
     """
     Used to track slow Publishing operations. We don't raise this error,
@@ -196,7 +200,7 @@ class TreeMapper:
         progress_tracker=None,
     ):
         if not root_node.is_publishable():
-            raise ValueError("Attempted to publish a channel with an incomplete root node or no resources")
+            raise ChannelIncompleteError("Attempted to publish a channel with an incomplete root node or no resources")
 
         self.root_node = root_node
         task_percent_total = 80.0
