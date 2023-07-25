@@ -32,6 +32,17 @@ def choices(sequence, k):
     return [random.choice(sequence) for _ in range(0, k)]
 
 
+OKAY_TAG = "okay_tag"
+BAD_TAG = "tag_is_too_long_because_it_is_over_30_characters"
+
+PROBLEMATIC_HTML5_NODE = "ab9d3fd905c848a6989936c609405abb"
+
+BUILDER_DEFAULT_OPTIONS = {
+    "problematic_tags": False,
+    "problematic_nodes": False,
+}
+
+
 class ChannelBuilder(object):
     """
     This class is purely to generate all the relevant data for a single
@@ -49,11 +60,15 @@ class ChannelBuilder(object):
         "root_node",
     )
 
-    def __init__(self, levels=3, num_children=5, models=kolibri_public_models):
+    def __init__(self, levels=3, num_children=5, models=kolibri_public_models, options=None):
         self.levels = levels
         self.num_children = num_children
         self.models = models
+        self.options = BUILDER_DEFAULT_OPTIONS.copy()
+        if options:
+            self.options.update(options)
 
+        self.content_tags = {}
         self._excluded_channel_fields = None
         self._excluded_node_fields = None
 
@@ -75,8 +90,16 @@ class ChannelBuilder(object):
         self.channel = self.channel_data()
         self.files = {}
         self.localfiles = {}
+
         self.node_to_files_map = {}
         self.localfile_to_files_map = {}
+        self.content_tag_map = {}
+
+        tags = [OKAY_TAG]
+        if self.options["problematic_tags"]:
+            tags.append(BAD_TAG)
+        for tag_name in tags:
+            self.content_tag_data(tag_name)
 
         self.root_node = self.generate_topic()
         if "root_id" in self.channel:
@@ -88,6 +111,22 @@ class ChannelBuilder(object):
             self.root_node["children"] = self.recurse_and_generate(
                 self.root_node["id"], self.levels
             )
+            if self.options["problematic_nodes"]:
+                self.root_node["children"].extend(self.generate_problematic_nodes())
+
+    def generate_problematic_nodes(self):
+        nodes = []
+        html5_not_a_topic = self.contentnode_data(
+            node_id=PROBLEMATIC_HTML5_NODE,
+            kind=content_kinds.HTML5,
+            parent_id=self.root_node["id"],
+        )
+        # the problem: this node is not a topic, but it has children
+        html5_not_a_topic["children"] = [
+            self.contentnode_data(parent_id=PROBLEMATIC_HTML5_NODE)
+        ]
+        nodes.append(html5_not_a_topic)
+        return nodes
 
     def load_data(self):
         try:
@@ -117,7 +156,19 @@ class ChannelBuilder(object):
         self.nodes = {n["id"]: n for n in map(to_dict, self._django_nodes)}
 
     def insert_into_default_db(self):
+        self.models.ContentTag.objects.bulk_create(
+            (self.models.ContentTag(**tag) for tag in self.content_tags.values())
+        )
         self.models.ContentNode.objects.bulk_create(self._django_nodes)
+        self.models.ContentNode.tags.through.objects.bulk_create(
+            (
+                self.models.ContentNode.tags.through(
+                    contentnode_id=node["id"], contenttag_id=tag["id"]
+                )
+                for node in self.nodes.values()
+                for tag in self.content_tags.values()
+            )
+        )
         self.models.ChannelMetadata.objects.create(**self.channel)
         self.models.LocalFile.objects.bulk_create(
             (self.models.LocalFile(**local) for local in self.localfiles.values())
@@ -153,6 +204,7 @@ class ChannelBuilder(object):
             "content_contentnode": list(self.nodes.values()),
             "content_file": list(self.files.values()),
             "content_localfile": list(self.localfiles.values()),
+            "content_contenttag": list(self.content_tags.values()),
         }
 
     def recurse_and_generate(self, parent_id, levels):
@@ -190,6 +242,8 @@ class ChannelBuilder(object):
             thumbnail=True,
             preset=format_presets.VIDEO_THUMBNAIL,
         )
+        for tag_id in self.content_tags:
+            self.content_tag_map[node["id"]] = [tag_id]
         return node
 
     def channel_data(self, channel_id=None, version=1):
@@ -217,6 +271,14 @@ class ChannelBuilder(object):
         for field in self._excluded_channel_fields:
             del channel_data[field]
         return channel_data
+
+    def content_tag_data(self, tag_name):
+        data = {
+            "id": uuid4_hex(),
+            "tag_name": tag_name,
+        }
+        self.content_tags[data["id"]] = data
+        return data
 
     def localfile_data(self, extension="mp4"):
         data = {

@@ -75,6 +75,9 @@ def calculate_next_order(channel, public=False):
             # Ensure that this channel is always included in the list.
             Q(public=True, deleted=False, main_tree__published=True) | Q(id=channel.id)
         ).order_by("-priority").values_list("id", flat=True))
-        order = channel_list_order.index(channel.id)
-        channel.order = order
-        channel.save()
+        # this shouldn't happen, but if we're exporting a channel database to Kolibri Public
+        # and the channel does not actually exist locally, then this would fail
+        if channel.id in channel_list_order:
+            order = channel_list_order.index(channel.id)
+            channel.order = order
+            channel.save()

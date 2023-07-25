@@ -1,4 +1,6 @@
+from django.conf import settings
 from django.middleware.locale import LocaleMiddleware
+from django.utils import translation
 
 LOCALE_EXEMPT = "_locale_exempt"
 
@@ -15,6 +17,8 @@ class KolibriStudioLocaleMiddleware(LocaleMiddleware):
     def process_view(self, request, callback, callback_args, callback_kwargs):
         if self._is_exempt(callback):
             setattr(request, LOCALE_EXEMPT, True)
+            translation.activate(settings.LANGUAGE_CODE)
+            request.LANGUAGE_CODE = translation.get_language()
         return None
 
     def process_response(self, request, response):

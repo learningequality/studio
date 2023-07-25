@@ -960,6 +960,7 @@ def create_change_tracker(pk, table, channel_id, user, task_name):
         task_object.status = states.FAILURE
         task_object.traceback = traceback.format_exc()
         task_object.save()
+        raise
     finally:
         if task_object.status == states.STARTED:
             # No error reported, cleanup.

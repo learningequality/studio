@@ -214,7 +214,6 @@ class IndexedDBResource {
     uuid = true,
     indexFields = [],
     syncable = false,
-    listeners = {},
     ...options
   } = {}) {
     this.tableName = tableName;
@@ -228,9 +227,6 @@ class IndexedDBResource {
     copyProperties(this, options);
     // By default these resources do not sync changes to the backend.
     this.syncable = syncable;
-    // An object for listening to specific change events on this resource in order to
-    // allow for side effects from changes - should be a map of change type to handler function.
-    this.listeners = listeners;
   }
 
   get table() {
@@ -977,13 +973,6 @@ export const Session = new IndexedDBResource({
   tableName: TABLE_NAMES.SESSION,
   idField: CURRENT_USER,
   uuid: false,
-  listeners: {
-    [CHANGE_TYPES.DELETED]: function() {
-      if (!window.location.pathname.endsWith(urls.accounts())) {
-        window.location = urls.accounts();
-      }
-    },
-  },
   get currentChannel() {
     return window.CHANNEL_EDIT_GLOBAL || {};
   },
@@ -1347,10 +1336,11 @@ export const ContentNode = new TreeResource({
    * @param {string} target
    * @param {string} position
    * @param {Boolean} isCreate
+   * @param {Object} [sourceNode]
    * @param {Function<Promise<ContentNode>>} callback
    * @return {Promise<ContentNode>}
    */
-  resolveTreeInsert(id, target, position, isCreate, callback) {
+  resolveTreeInsert({ id, target, position, isCreate, sourceNode = null }, callback) {
     // First, resolve parent so we can determine the sort order, but also to determine
     // the tree so we can temporarily lock it while we determine those values locally
     return this.resolveParent(target, position).then(parent => {
@@ -1361,8 +1351,12 @@ export const ContentNode = new TreeResource({
       // Using root_id, we'll keep this locked while we handle this, so no other operations
       // happen while we're potentially waiting for some data we need (siblings, source node)
       return this.treeLock(parent.root_id, () => {
-        // Don't trigger fetch, if this is specified as a creation
-        const getNode = isCreate ? this.table.get(id) : this.get(id, false);
+        // Resolve to sourceNode passed in if a create
+        let getNode = Promise.resolve(sourceNode);
+        if (!sourceNode) {
+          // Don't trigger fetch, if this is specified as a creation
+          getNode = isCreate ? this.table.get(id) : this.get(id, false);
+        }
 
         // Preload the ID we're referencing, and get siblings to determine sort order
         return Promise.all([getNode, this.where({ parent: parent.id }, false)]).then(
@@ -1429,10 +1423,12 @@ export const ContentNode = new TreeResource({
     const prepared = this._prepareAdd(obj);
 
     return this.resolveTreeInsert(
-      prepared.id,
-      prepared.parent,
-      RELATIVE_TREE_POSITIONS.LAST_CHILD,
-      true,
+      {
+        id: prepared.id,
+        target: prepared.parent,
+        position: RELATIVE_TREE_POSITIONS.LAST_CHILD,
+        isCreate: true,
+      },
       data => {
         return this.transaction({ mode: 'rw' }, CHANGES_TABLE, () => {
           const obj = { ...prepared, ...data.payload };
@@ -1445,7 +1441,7 @@ export const ContentNode = new TreeResource({
   },
 
   move(id, target, position = RELATIVE_TREE_POSITIONS.FIRST_CHILD) {
-    return this.resolveTreeInsert(id, target, position, false, data => {
+    return this.resolveTreeInsert({ id, target, position, isCreate: false }, data => {
       return this.transaction({ mode: 'rw' }, CHANGES_TABLE, async () => {
         const payload = await this.tableMove(data);
         const change = new MovedChange(data.changeData);
@@ -1480,9 +1476,16 @@ export const ContentNode = new TreeResource({
    * @param {string} target The ID of the target node used for positioning
    * @param {string} position The position relative to `target`
    * @param {Object|null} [excluded_descendants] a map of node_ids to exclude from the copy
+   * @param {Object|null} [sourceNode] a source node to use for the copy instead of fetching
    * @return {Promise}
    */
-  copy(id, target, position = RELATIVE_TREE_POSITIONS.LAST_CHILD, excluded_descendants = null) {
+  copy(
+    id,
+    target,
+    position = RELATIVE_TREE_POSITIONS.LAST_CHILD,
+    excluded_descendants = null,
+    sourceNode = null
+  ) {
     if (process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test') {
       /* eslint-disable no-console */
       console.groupCollapsed(`Copying contentnode from ${id} with target ${target}`);
@@ -1491,7 +1494,7 @@ export const ContentNode = new TreeResource({
       /* eslint-enable */
     }
 
-    return this.resolveTreeInsert(id, target, position, true, data => {
+    return this.resolveTreeInsert({ id, target, position, isCreate: true, sourceNode }, data => {
       data.changeData.excluded_descendants = excluded_descendants;
       data.changeData.mods = {};
 
@@ -1532,6 +1535,12 @@ export const ContentNode = new TreeResource({
     return payload;
   },
 
+  /**
+   * Resolves with an array of all ancestors, including the node itself, in descending order
+   *
+   * @param {String} id
+   * @return {Promise<[{}]>}
+   */
   getAncestors(id) {
     return this.table.get(id).then(node => {
       if (node) {
@@ -1544,7 +1553,34 @@ export const ContentNode = new TreeResource({
         }
         return [node];
       }
+      // If node wasn't found, we fetch from the server
       return this.fetchCollection({ ancestors_of: id });
+    });
+  },
+
+  /**
+   * Calls `updateCallback` on each ancestor, and calls `.update` for that ancestor
+   * with the return value from `updateCallback`
+   *
+   * @param {String} id
+   * @param {Boolean} includeSelf
+   * @param {Boolean} ignoreChanges - Ignore generating change events for the updates
+   * @param {Function} updateCallback
+   * @return {Promise<void>}
+   */
+  updateAncestors({ id, includeSelf = false, ignoreChanges = false }, updateCallback) {
+    return this.transaction({ mode: 'rw' }, async () => {
+      const ancestors = await this.getAncestors(id);
+      for (const ancestor of ancestors) {
+        if (ancestor.id === id && !includeSelf) {
+          continue;
+        }
+        if (ignoreChanges) {
+          await this.table.update(ancestor.id, updateCallback(ancestor));
+        } else {
+          await this.update(ancestor.id, updateCallback(ancestor));
+        }
+      }
     });
   },
 

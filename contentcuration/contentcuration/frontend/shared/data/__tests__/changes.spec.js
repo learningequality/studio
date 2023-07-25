@@ -182,6 +182,7 @@ describe('Change Types', () => {
   });
 
   it('should persist only the specified fields in the MovedChange', async () => {
+    const oldObj = { parent: '4' };
     const change = new MovedChange({
       key: '1',
       table: TABLE_NAMES.CONTENTNODE,
@@ -189,13 +190,14 @@ describe('Change Types', () => {
       position: RELATIVE_TREE_POSITIONS.LAST_CHILD,
       parent: '3',
       source: CLIENTID,
+      oldObj,
     });
     const rev = await change.saveChange();
     const persistedChange = await db[CHANGES_TABLE].get(rev);
     expect(persistedChange).toEqual({
       rev,
       channel_id,
-      ...pick(change, ['type', 'key', 'table', 'target', 'position', 'parent', 'source']),
+      ...pick(change, ['type', 'key', 'table', 'target', 'position', 'parent', 'source', 'oldObj']),
     });
   });
 
@@ -417,6 +419,7 @@ describe('Change Types Unhappy Paths', () => {
 
   // MovedChange
   it('should throw error when MovedChange is instantiated without target', () => {
+    const oldObj = { a: 1, b: 2 };
     expect(
       () =>
         new MovedChange({
@@ -424,11 +427,13 @@ describe('Change Types Unhappy Paths', () => {
           table: TABLE_NAMES.CONTENTNODE,
           position: RELATIVE_TREE_POSITIONS.LAST_CHILD,
           source: CLIENTID,
+          oldObj,
         })
     ).toThrow(new TypeError('target is required for a MovedChange but it was undefined'));
   });
 
   it('should throw error when MovedChange is instantiated with incorrect position type', () => {
+    const oldObj = { a: 1, b: { c: 1 } };
     expect(
       () =>
         new MovedChange({
@@ -437,11 +442,13 @@ describe('Change Types Unhappy Paths', () => {
           target: '2',
           position: 'invalid',
           source: CLIENTID,
+          oldObj,
         })
     ).toThrow(new ReferenceError('invalid is not a valid position value'));
   });
 
   it('should throw error when MovedChange is instantiated without parent', () => {
+    const oldObj = { a: 1, b: 2, parent: 3 };
     expect(
       () =>
         new MovedChange({
@@ -450,6 +457,7 @@ describe('Change Types Unhappy Paths', () => {
           target: '2',
           position: RELATIVE_TREE_POSITIONS.LAST_CHILD,
           source: CLIENTID,
+          oldObj,
         })
     ).toThrow(new ReferenceError('parent is required for a MovedChange but it was undefined'));
   });

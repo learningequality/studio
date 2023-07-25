@@ -11,6 +11,7 @@ import traceback
 import uuid
 import zipfile
 from builtins import str
+from copy import deepcopy
 from itertools import chain
 
 from django.conf import settings
@@ -31,6 +32,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import override
 from kolibri_content import models as kolibrimodels
+from kolibri_content.base_models import MAX_TAG_LENGTH
 from kolibri_content.router import get_active_content_database
 from kolibri_content.router import using_content_database
 from kolibri_public.utils.mapper import ChannelMapper
@@ -69,6 +71,10 @@ PUBLISHING_UPDATE_THRESHOLD = 3600
 
 
 class NoNodesChangedError(Exception):
+    pass
+
+
+class ChannelIncompleteError(Exception):
     pass
 
 
@@ -193,8 +199,8 @@ class TreeMapper:
         force_exercises=False,
         progress_tracker=None,
     ):
-        if not root_node.complete:
-            raise ValueError("Attempted to publish a channel with an incomplete root node")
+        if not root_node.is_publishable():
+            raise ChannelIncompleteError("Attempted to publish a channel with an incomplete root node or no resources")
 
         self.root_node = root_node
         task_percent_total = 80.0
@@ -218,7 +224,18 @@ class TreeMapper:
         logging.debug("Mapping node with id {id}".format(id=node.pk))
 
         # Only process nodes that are either non-topics or have non-topic descendants
-        if node.get_descendants(include_self=True).exclude(kind_id=content_kinds.TOPIC).exists() and node.complete:
+        if node.is_publishable():
+            # early validation to make sure we don't have any exercises without mastery models
+            # which should be unlikely when the node is complete, but just in case
+            if node.kind_id == content_kinds.EXERCISE:
+                try:
+                    # migrates and extracts the mastery model from the exercise
+                    _, mastery_model = parse_assessment_metadata(node)
+                    if not mastery_model:
+                        raise ValueError("Exercise does not have a mastery model")
+                except Exception as e:
+                    logging.warning("Unable to parse exercise {id} mastery model: {error}".format(id=node.pk, error=str(e)))
+                    return
 
             metadata = {}
 
@@ -240,12 +257,12 @@ class TreeMapper:
 
             kolibrinode = create_bare_contentnode(node, self.default_language, self.channel_id, self.channel_name, metadata)
 
-            if node.kind.kind == content_kinds.EXERCISE:
+            if node.kind_id == content_kinds.EXERCISE:
                 exercise_data = process_assessment_metadata(node, kolibrinode)
                 if self.force_exercises or node.changed or not \
                         node.files.filter(preset_id=format_presets.EXERCISE).exists():
                     create_perseus_exercise(node, kolibrinode, exercise_data, user_id=self.user_id)
-            elif node.kind.kind == content_kinds.SLIDESHOW:
+            elif node.kind_id == content_kinds.SLIDESHOW:
                 create_slideshow_manifest(node, user_id=self.user_id)
             elif node.kind_id == content_kinds.TOPIC:
                 for child in node.children.all():
@@ -349,7 +366,7 @@ def create_bare_contentnode(ccnode, default_language, channel_id, channel_name, 
             'license_description': kolibri_license.license_description if kolibri_license is not None else None,
             'coach_content': ccnode.role_visibility == roles.COACH,
             'duration': duration,
-            'options': json.dumps(options),
+            'options': options,
             # Fields for metadata labels
             "grade_levels": ",".join(grade_levels.keys()) if grade_levels else None,
             "resource_types": ",".join(resource_types.keys()) if resource_types else None,
@@ -484,18 +501,23 @@ def create_perseus_exercise(ccnode, kolibrinode, exercise_data, user_id=None):
         temppath and os.unlink(temppath)
 
 
-def process_assessment_metadata(ccnode, kolibrinode):
-    # Get mastery model information, set to default if none provided
-    assessment_items = ccnode.assessment_items.all().order_by('order')
+def parse_assessment_metadata(ccnode):
     extra_fields = ccnode.extra_fields
     if isinstance(extra_fields, basestring):
         extra_fields = json.loads(extra_fields)
     extra_fields = migrate_extra_fields(extra_fields) or {}
     randomize = extra_fields.get('randomize') if extra_fields.get('randomize') is not None else True
+    return randomize, extra_fields.get('options').get('completion_criteria').get('threshold')
+
+
+def process_assessment_metadata(ccnode, kolibrinode):
+    # Get mastery model information, set to default if none provided
+    assessment_items = ccnode.assessment_items.all().order_by('order')
     assessment_item_ids = [a.assessment_id for a in assessment_items]
 
-    exercise_data = extra_fields.get('options').get('completion_criteria').get('threshold')
+    randomize, mastery_criteria = parse_assessment_metadata(ccnode)
 
+    exercise_data = deepcopy(mastery_criteria)
     exercise_data_type = exercise_data.get('mastery_model', "")
 
     mastery_model = {'type': exercise_data_type or exercises.M_OF_N}
@@ -526,9 +548,9 @@ def process_assessment_metadata(ccnode, kolibrinode):
     kolibrimodels.AssessmentMetaData.objects.create(
         id=uuid.uuid4(),
         contentnode=kolibrinode,
-        assessment_item_ids=json.dumps(assessment_item_ids),
+        assessment_item_ids=assessment_item_ids,
         number_of_assessments=assessment_items.count(),
-        mastery_model=json.dumps(mastery_model),
+        mastery_model=mastery_model,
         randomize=randomize,
         is_manipulable=ccnode.kind_id == content_kinds.EXERCISE,
     )
@@ -760,7 +782,7 @@ def map_tags_to_node(kolibrinode, ccnode):
 
     for tag in ccnode.tags.all():
         t, _new = kolibrimodels.ContentTag.objects.get_or_create(pk=tag.pk, tag_name=tag.tag_name)
-        if len(t.tag_name) <= 30:
+        if len(t.tag_name) <= MAX_TAG_LENGTH:
             tags_to_add.append(t)
 
     kolibrinode.tags.set(tags_to_add)

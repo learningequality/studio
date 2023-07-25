@@ -1,9 +1,12 @@
+import isString from 'lodash/isString';
 import find from 'lodash/find';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 import { RolesNames } from 'shared/leUtils/Roles';
 
 export function parseNode(node, children) {
-  const thumbnail_encoding = JSON.parse(node.thumbnail_encoding || '{}');
+  const thumbnail_encoding = isString(node.thumbnail_encoding)
+    ? JSON.parse(node.thumbnail_encoding || '{}')
+    : node.thumbnail_encoding || {};
   const tags = Object.keys(node.tags || {});
   const aggregateValues = {};
   if (node.kind === ContentKindsNames.TOPIC) {

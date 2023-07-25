@@ -2,8 +2,8 @@ import json
 import logging
 from builtins import str
 from collections import namedtuple
-
 from distutils.version import LooseVersion
+
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import PermissionDenied
 from django.core.exceptions import SuspiciousOperation
@@ -632,11 +632,14 @@ def handle_remote_node(user, node_data, parent_node):
 
 
 @delay_user_storage_calculation
-def convert_data_to_nodes(user, content_data, parent_node):
+def convert_data_to_nodes(user, content_data, parent_node):  # noqa: C901
     """ Parse dict and create nodes accordingly """
     try:
         root_mapping = {}
         parent_node = ContentNode.objects.get(pk=parent_node)
+        if parent_node.kind_id != content_kinds.TOPIC:
+            raise NodeValidationError("Parent node must be a topic/folder | actual={}".format(parent_node.kind_id))
+
         sort_order = parent_node.children.count() + 1
         existing_node_ids = ContentNode.objects.filter(
             parent_id=parent_node.pk

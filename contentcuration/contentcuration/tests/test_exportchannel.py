@@ -1,6 +1,5 @@
 from __future__ import absolute_import
 
-import json
 import os
 import random
 import string
@@ -10,6 +9,7 @@ import pytest
 from django.core.management import call_command
 from django.db import connections
 from kolibri_content import models as kolibri_models
+from kolibri_content.router import cleanup_content_database_connection
 from kolibri_content.router import get_active_content_database
 from kolibri_content.router import set_active_content_database
 from le_utils.constants import exercises
@@ -29,6 +29,7 @@ from .testdata import node as create_node
 from .testdata import slideshow
 from .testdata import thumbnail_bytes
 from contentcuration import models as cc
+from contentcuration.utils.publish import ChannelIncompleteError
 from contentcuration.utils.publish import convert_channel_thumbnail
 from contentcuration.utils.publish import create_content_database
 from contentcuration.utils.publish import create_slideshow_manifest
@@ -118,6 +119,18 @@ class ExportChannelTestCase(StudioTestCase):
         new_exercise.complete = True
         new_exercise.parent = current_exercise.parent
         new_exercise.save()
+
+        bad_container = create_node({'kind_id': 'topic', 'title': 'Bad topic container', 'children': []})
+        bad_container.complete = True
+        bad_container.parent = self.content_channel.main_tree
+        bad_container.save()
+
+        # exercise without mastery model, but marked as complete
+        broken_exercise = create_node({'kind_id': 'exercise', 'title': 'Bad mastery test', 'extra_fields': {}})
+        broken_exercise.complete = True
+        broken_exercise.parent = bad_container
+        broken_exercise.save()
+
         thumbnail_data = create_studio_file(thumbnail_bytes, preset="exercise_thumbnail", ext="png")
         file_obj = thumbnail_data["db_file"]
         file_obj.contentnode = new_exercise
@@ -205,8 +218,7 @@ class ExportChannelTestCase(StudioTestCase):
 
     def tearDown(self):
         # Clean up datbase connection after the test
-        connections[self.tempdb].close()
-        del connections.databases[self.tempdb]
+        cleanup_content_database_connection(self.tempdb)
         super(ExportChannelTestCase, self).tearDown()
         set_active_content_database(None)
         if os.path.exists(self.tempdb):
@@ -248,6 +260,9 @@ class ExportChannelTestCase(StudioTestCase):
         for node in incomplete_nodes:
             assert kolibri_nodes.filter(pk=node.node_id).count() == 0
 
+        # bad exercise node should not be published (technically incomplete)
+        assert kolibri_models.ContentNode.objects.filter(title='Bad mastery test').count() == 0
+
     def test_tags_greater_than_30_excluded(self):
         tag_node = kolibri_models.ContentNode.objects.filter(title='kolibri tag test').first()
         published_tags = tag_node.tags.all()
@@ -262,6 +277,14 @@ class ExportChannelTestCase(StudioTestCase):
 
         assert completion_criteria_node.duration == 20
         assert non_completion_criteria_node.duration == 100
+
+    def test_completion_criteria_set(self):
+        completion_criteria_node = kolibri_models.ContentNode.objects.filter(title='Completion criteria test').first()
+
+        self.assertEqual(completion_criteria_node.options["completion_criteria"], {
+            "model": "time",
+            "threshold": 20
+        })
 
     def test_contentnode_channel_id_data(self):
         channel = kolibri_models.ChannelMetadata.objects.first()
@@ -294,8 +317,8 @@ class ExportChannelTestCase(StudioTestCase):
     def test_assessment_metadata(self):
         for i, exercise in enumerate(kolibri_models.ContentNode.objects.filter(kind="exercise")):
             asm = exercise.assessmentmetadata.first()
-            self.assertTrue(isinstance(json.loads(asm.assessment_item_ids), list))
-            mastery = json.loads(asm.mastery_model)
+            self.assertTrue(isinstance(asm.assessment_item_ids, list))
+            mastery = asm.mastery_model
             self.assertTrue(isinstance(mastery, dict))
             self.assertEqual(mastery["type"], exercises.DO_ALL if i == 0 else exercises.M_OF_N)
             self.assertEqual(mastery["m"], 3 if i == 0 else 1)
@@ -390,6 +413,12 @@ class ExportChannelTestCase(StudioTestCase):
             "n": 2,
             "mastery_model": exercises.M_OF_N,
         })
+        published_exercise = kolibri_models.ContentNode.objects.get(title="Mastery test")
+        self.assertEqual(published_exercise.options["completion_criteria"]["threshold"], {
+            "m": 1,
+            "n": 2,
+            "mastery_model": exercises.M_OF_N,
+        })
 
     def test_publish_no_modify_legacy_exercise_extra_fields(self):
         current_exercise = cc.ContentNode.objects.get(title="Legacy Mastery test")
@@ -399,6 +428,29 @@ class ExportChannelTestCase(StudioTestCase):
             'm': 1,
             'n': 2
         })
+
+
+class EmptyChannelTestCase(StudioTestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        super(EmptyChannelTestCase, cls).setUpClass()
+        cls.patch_copy_db = patch('contentcuration.utils.publish.save_export_database')
+        cls.patch_copy_db.start()
+
+    @classmethod
+    def tearDownClass(cls):
+        super(EmptyChannelTestCase, cls).tearDownClass()
+        cls.patch_copy_db.stop()
+
+    def test_publish_empty_channel(self):
+        content_channel = channel()
+        set_channel_icon_encoding(content_channel)
+        content_channel.main_tree.complete = True
+        content_channel.main_tree.save()
+        content_channel.main_tree.get_descendants().exclude(kind_id="topic").delete()
+        with self.assertRaises(ChannelIncompleteError):
+            create_content_database(content_channel, True, self.admin_user.id, True)
 
 
 class ChannelExportUtilityFunctionTestCase(StudioTestCase):

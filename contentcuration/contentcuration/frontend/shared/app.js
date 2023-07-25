@@ -1,4 +1,5 @@
 import 'regenerator-runtime/runtime';
+import { liveQuery } from 'dexie';
 import * as Sentry from '@sentry/vue';
 import Vue from 'vue';
 import VueRouter from 'vue-router';
@@ -115,6 +116,7 @@ import { i18nSetup } from 'shared/i18n';
 import './styles/vuetify.css';
 import 'shared/styles/main.less';
 import Base from 'shared/Base.vue';
+import urls from 'shared/urls';
 import ActionLink from 'shared/views/ActionLink';
 import Menu from 'shared/views/Menu';
 import { initializeDB, resetDB } from 'shared/data';
@@ -315,8 +317,27 @@ export default async function startApp({ store, router, index }) {
   ) {
     await resetDB();
   }
+
+  let subscription;
+
   if (currentUser.id !== undefined && currentUser.id !== null) {
+    // The user is logged on, so persist that to the session table in indexeddb
     await store.dispatch('saveSession', currentUser, { root: true });
+    // Also watch in case the user logs out, then we should redirect to the login page
+    const observable = liveQuery(() => {
+      return Session.table.toCollection().first(Boolean);
+    });
+
+    subscription = observable.subscribe({
+      next(result) {
+        if (!result && !window.location.pathname.endsWith(urls.accounts())) {
+          window.location = urls.accounts();
+        }
+      },
+      error() {
+        subscription.unsubscribe();
+      },
+    });
   }
 
   await Session.setChannelScope();
@@ -350,5 +371,16 @@ export default async function startApp({ store, router, index }) {
   // to the session state.
   injectVuexStore(store);
 
+  // Start listening for unsynced change events in IndexedDB
+  store.listenForIndexedDBChanges();
+
   rootVue = new Vue(config);
+
+  // Return a cleanup function
+  return function() {
+    if (subscription) {
+      subscription.unsubscribe();
+    }
+    store.stopListeningForIndexedDBChanges();
+  };
 }
