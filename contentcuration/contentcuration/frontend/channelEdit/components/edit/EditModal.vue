@@ -197,7 +197,6 @@
   import FileDropzone from 'shared/views/files/FileDropzone';
   import { isNodeComplete } from 'shared/utils/validation';
   import { DELAYED_VALIDATION } from 'shared/constants';
-  import { loadCaption } from '../../utils';
 
   const CHECK_STORAGE_INTERVAL = 10000;
 
@@ -251,7 +250,7 @@
     computed: {
       ...mapGetters('contentNode', ['getContentNode', 'getContentNodeIsValid']),
       ...mapGetters('assessmentItem', ['getAssessmentItems']),
-      ...mapGetters('currentChannel', ['currentChannel', 'canEdit', 'isAIFeatureEnabled']),
+      ...mapGetters('currentChannel', ['currentChannel', 'canEdit']),
       ...mapGetters('file', ['contentNodesAreUploading', 'getContentNodeFiles']),
       ...mapState({
         online: state => state.connection.online,
@@ -307,11 +306,6 @@
         return this.nodeIds.filter(id => !this.getContentNodeIsValid(id));
       },
     },
-    created() {
-      if (this.isAIFeatureEnabled && this.nodeIds.length === 1) {
-        loadCaption(this.nodeIds, this.loadCaptionFiles, this.loadCaptionCues);
-      }
-    },
     beforeRouteEnter(to, from, next) {
       if (
         to.name === RouteNames.CONTENTNODE_DETAILS ||
@@ -347,6 +341,11 @@
               vm.loadFiles({ contentnode__in: childrenNodesIds }),
               vm.loadAssessmentItems({ contentnode__in: childrenNodesIds }),
             ];
+            if(childrenNodesIds.length === 1) {
+              promises.push(
+                vm.loadCaptions({ contentnode_id: childrenNodesIds })
+              );
+            }
           } else {
             // no need to load assessment items or files as topics have none
             promises = [vm.loadContentNode(parentTopicId)];
@@ -400,7 +399,7 @@
       ]),
       ...mapActions('file', ['loadFiles', 'updateFile']),
       ...mapActions('assessmentItem', ['loadAssessmentItems', 'updateAssessmentItems']),
-      ...mapActions('caption', ['loadCaptionFiles', 'loadCaptionCues']),
+      ...mapActions('caption', ['loadCaptions']),
       ...mapMutations('contentNode', { enableValidation: 'ENABLE_VALIDATION_ON_NODES' }),
       closeModal() {
         this.promptUploading = false;
