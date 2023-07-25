@@ -103,7 +103,7 @@
 
             <VTabItem
               :key="tabs.CAPTIONS" ref="captionswindow" :value="tabs.CAPTIONS" lazy>
-              <CaptionsEditor />
+              <CaptionsTab :nodeId="nodeIds[0]" />
             </VTabItem>
           </VTabsItems>
         </VContainer>
@@ -120,7 +120,7 @@
 
   import { TabNames } from '../../constants';
   import AssessmentTab from '../../components/AssessmentTab/AssessmentTab';
-  import CaptionsEditor from '../../components/CaptionsEditor/CaptionsEditor'
+  import CaptionsTab from '../../components/CaptionsTab/CaptionsTab'
   import RelatedResourcesTab from '../../components/RelatedResourcesTab/RelatedResourcesTab';
   import DetailsTabView from './DetailsTabView';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
@@ -131,7 +131,7 @@
     name: 'EditView',
     components: {
         AssessmentTab,
-        CaptionsEditor,
+        CaptionsTab,
         DetailsTabView,
         RelatedResourcesTab,
         Tabs,
