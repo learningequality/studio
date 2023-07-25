@@ -1,3 +1,3 @@
-// export function getCaptionFiles(state) {
-//   return Object.values(state.captionFilesMap);
-// }
+export function getContentNodeId(state) {
+    return state.currentContentNode.contentnode_id;
+}

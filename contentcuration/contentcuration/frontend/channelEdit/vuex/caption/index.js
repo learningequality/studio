@@ -7,9 +7,16 @@ export default {
   namespaced: true,
   state: () => ({
     /* List of caption files for a contentnode
-     * to be defined
+     * [
+     *     contentnode_id: {
+     *         pk: {
+     *             file_id: file_id
+     *             language: language
+     *         }
+     *     },
+     * ]
      */
-    captionFilesMap: {},
+    captionFilesMap: [],
     /* Caption Cues json to render in the frontend caption-editor
      * to be defined
      */
@@ -20,7 +27,7 @@ export default {
   actions,
   listeners: {
     [TABLE_NAMES.CAPTION_FILE]: {
-      [CHANGE_TYPES.CREATED]: 'ADD_CAPTIONFILES',
+      [CHANGE_TYPES.CREATED]: 'ADD_CAPTIONFILE',
       [CHANGE_TYPES.UPDATED]: 'UPDATE_CAPTIONFILE_FROM_INDEXEDDB',
       [CHANGE_TYPES.DELETED]: 'DELETE_CAPTIONFILE',
     },
