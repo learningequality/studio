@@ -25,7 +25,6 @@
   import { mapGetters, mapActions } from 'vuex';
   import EditListItem from './EditListItem';
   import Checkbox from 'shared/views/form/Checkbox';
-  import { loadCaption } from '../../utils';
 
   export default {
     name: 'EditList',
@@ -44,16 +43,15 @@
       },
     },
     watch: {
-      // watch the selected contentnode
+      // watch the selected contentnode to load captions 
       value(newValue) {
-        if (this.isAIFeatureEnabled && newValue.length === 1) {
-          const nodeId = newValue[0];
-          loadCaption([nodeId], this.loadCaptionFiles, this.loadCaptionCues);
+        if (newValue.length === 1) {
+          const nodeId = newValue[0]; // we dispatch action only when 1 node is selected
+          this.loadCaptions({ contentnode_id: nodeId })
         }
       }
     },
     computed: {
-      ...mapGetters('currentChannel', ['isAIFeatureEnabled']),
       selected: {
         get() {
           return this.value;
@@ -77,7 +75,7 @@
       },
     },
     methods: {
-      ...mapActions('caption', ['loadCaptionFiles', 'loadCaptionCues']),
+      ...mapActions('caption', ['loadCaptions']),
       handleRemoved(nodeId) {
         const nodeIds = this.$route.params.detailNodeIds.split(',').filter(id => id !== nodeId);
 
