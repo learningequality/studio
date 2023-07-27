@@ -63,14 +63,14 @@ class CaptionViewSet(ValuesViewset):
     def get_queryset(self):
         queryset = super().get_queryset()
 
-        contentnode_id = self.request.GET.get("contentnode_id")
+        contentnode_ids = self.request.GET.get("contentnode_id").split(',')
         file_id = self.request.GET.get("file_id")
         language = self.request.GET.get("language")
 
-        if contentnode_id:
+        if contentnode_ids:
             file_ids = File.objects.filter(
                 preset_id__in=[AUDIO, VIDEO_HIGH_RES, VIDEO_LOW_RES, VIDEO_SUBTITLE],
-                contentnode_id=contentnode_id,
+                contentnode_id__in=contentnode_ids,
             ).values_list("pk", flat=True)
             queryset = queryset.filter(file_id__in=file_ids)
 
