@@ -285,13 +285,6 @@
       if (!this.question) {
         this.openQuestion();
       }
-      // Assessments are nested inside of a scrolling panel.
-      // Instead of propagating an event all the way back to
-      // the scrolling panel, just use scrollIntoView
-      // (supported by most major browsers)
-      if (this.$el.scrollIntoView) {
-        this.$el.scrollIntoView({ behaviour: 'smooth', block: 'end' });
-      }
     },
     methods: {
       updateItem(payload) {
