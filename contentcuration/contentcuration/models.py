@@ -1971,6 +1971,9 @@ class ContentNode(MPTTModel, models.Model):
     def copy(self):
         return self.copy_to()
 
+    def is_publishable(self):
+        return self.complete and self.get_descendants(include_self=True).exclude(kind_id=content_kinds.TOPIC).exists()
+
     class Meta:
         verbose_name = "Topic"
         verbose_name_plural = "Topics"

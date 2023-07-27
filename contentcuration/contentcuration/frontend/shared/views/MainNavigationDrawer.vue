@@ -42,7 +42,7 @@
             <VListTileTitle>{{ $tr('settingsLink') }}</VListTileTitle>
           </VListTileContent>
         </VListTile>
-        <VListTile @click="showLanguageModal = true">
+        <VListTile @click="openLanguageModal">
           <VListTileAction>
             <Icon>language</Icon>
           </VListTileAction>
@@ -51,8 +51,8 @@
           </VListTileContent>
         </VListTile>
         <VListTile
-          :href="helpLink" 
-          :tabindex="handleclickTab" 
+          :href="helpLink"
+          :tabindex="handleclickTab"
           target="_blank"
           @click="trackClick('Help')"
         >
@@ -162,6 +162,10 @@
       ...mapActions(['logout']),
       trackClick(label) {
         this.$analytics.trackClick('general', `User dropdown - ${label}`);
+      },
+      openLanguageModal() {
+        this.drawer = false;
+        this.showLanguageModal = true;
       },
     },
     $trs: {

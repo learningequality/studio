@@ -15,6 +15,7 @@ const USER_2 = { id: 1 };
 
 describe('startApp', () => {
   let store;
+  let cleanup;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -24,6 +25,10 @@ describe('startApp', () => {
   afterEach(async () => {
     global.user = undefined;
     await Session.table.clear();
+    if (cleanup) {
+      cleanup();
+    }
+    cleanup = undefined;
   });
 
   describe('for a guest', () => {
@@ -38,7 +43,7 @@ describe('startApp', () => {
       });
 
       it("the client database shouldn't be reset", async () => {
-        await startApp({ router, store });
+        cleanup = await startApp({ router, store });
         expect(resetDB).not.toHaveBeenCalled();
       });
     });
@@ -52,7 +57,7 @@ describe('startApp', () => {
       });
 
       it('the client database should be reset', async () => {
-        await startApp({ router, store });
+        cleanup = await startApp({ router, store });
         expect(resetDB).toHaveBeenCalledTimes(1);
       });
     });
@@ -70,7 +75,7 @@ describe('startApp', () => {
       });
 
       it("the client database shouldn't be reset", async () => {
-        await startApp({ router, store });
+        cleanup = await startApp({ router, store });
         expect(resetDB).not.toHaveBeenCalled();
       });
     });
@@ -84,7 +89,7 @@ describe('startApp', () => {
       });
 
       it("the client database shouldn't be reset", async () => {
-        await startApp({ router, store });
+        cleanup = await startApp({ router, store });
         expect(resetDB).not.toHaveBeenCalled();
       });
     });
@@ -98,7 +103,7 @@ describe('startApp', () => {
       });
 
       it('the client database should be reset', async () => {
-        await startApp({ router, store });
+        cleanup = await startApp({ router, store });
         expect(resetDB).toHaveBeenCalledTimes(1);
       });
     });

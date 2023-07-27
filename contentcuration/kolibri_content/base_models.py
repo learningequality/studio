@@ -20,9 +20,12 @@ from mptt.models import MPTTModel
 from mptt.models import TreeForeignKey
 
 
+MAX_TAG_LENGTH = 30
+
+
 class ContentTag(models.Model):
     id = UUIDField(primary_key=True)
-    tag_name = models.CharField(max_length=30, blank=True)
+    tag_name = models.CharField(max_length=MAX_TAG_LENGTH, blank=True)
 
     class Meta:
         abstract = True

@@ -63,6 +63,7 @@ export const kindToIconMap = {
   slideshow: 'photo_library',
   topic: 'folder',
   video: 'theaters',
+  zim: 'widgets',
 };
 
 export const SharingPermissions = {

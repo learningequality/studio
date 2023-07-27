@@ -40,6 +40,7 @@ from contentcuration.models import User
 from contentcuration.utils.garbage_collect import get_deleted_chefs_root
 from contentcuration.utils.pagination import CachedListPagination
 from contentcuration.utils.pagination import ValuesViewsetPageNumberPagination
+from contentcuration.utils.publish import ChannelIncompleteError
 from contentcuration.utils.publish import publish_channel
 from contentcuration.utils.sync import sync_channel
 from contentcuration.viewsets.base import BulkListSerializer
@@ -503,6 +504,13 @@ class ChannelViewSet(ValuesViewset):
                         }, channel_id=channel.id
                     ),
                 ], applied=True)
+            except ChannelIncompleteError:
+                Change.create_changes([
+                    generate_update_event(
+                        channel.id, CHANNEL, {"publishing": False}, channel_id=channel.id
+                    ),
+                ], applied=True)
+                raise ValidationError("Channel is not ready to be published")
             except Exception:
                 Change.create_changes([
                     generate_update_event(

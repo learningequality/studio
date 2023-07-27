@@ -538,44 +538,47 @@
         }
 
         // All sources should be from the same region
-        const sourceRegion = drop.sources[0].region;
+        const sources = drop.sources || [];
+        const sourceRegion = sources.length > 0 ? sources[0].region : null;
         const payload = {
           target: identity.metadata.id,
           position,
         };
 
-        // When the source region is the clipboard, we want to make sure we use
-        // `excluded_descendants` by accessing the copy trees through the clipboard node ID
-        if (sourceRegion && sourceRegion.id === DraggableRegions.CLIPBOARD) {
-          return Promise.all(
-            data.sources.map(source => {
-              // Using `getCopyTrees` we can access the `excluded_descendants` for the node, such
-              // that we make sure to skip copying nodes that aren't intended to be copied
-              const trees = this.getCopyTrees(source.metadata.clipboardNodeId, true);
+        if (payload.target) {
+          // When the source region is the clipboard, we want to make sure we use
+          // `excluded_descendants` by accessing the copy trees through the clipboard node ID
+          if (sourceRegion && sourceRegion.id === DraggableRegions.CLIPBOARD) {
+            return Promise.all(
+              data.sources.map(source => {
+                // Using `getCopyTrees` we can access the `excluded_descendants` for the node, such
+                // that we make sure to skip copying nodes that aren't intended to be copied
+                const trees = this.getCopyTrees(source.metadata.clipboardNodeId, true);
 
-              // Since we're using `ignoreSelection=true` for `getCopyTrees`, it should only
-              // return one tree at most
-              if (trees.length === 0) {
-                return Promise.resolve();
-              } else if (trees.length > 1) {
-                throw new Error(
-                  'Multiple copy trees are unexpected for drag and drop copy operation'
-                );
-              }
+                // Since we're using `ignoreSelection=true` for `getCopyTrees`, it should only
+                // return one tree at most
+                if (trees.length === 0) {
+                  return Promise.resolve();
+                } else if (trees.length > 1) {
+                  throw new Error(
+                    'Multiple copy trees are unexpected for drag and drop copy operation'
+                  );
+                }
 
-              return this.copyContentNode({
-                ...payload,
-                id: source.metadata.id,
-                excluded_descendants: get(trees, [0, 'extra_fields', 'excluded_descendants'], {}),
-              });
-            })
-          );
+                return this.copyContentNode({
+                  ...payload,
+                  id: source.metadata.id,
+                  excluded_descendants: get(trees, [0, 'extra_fields', 'excluded_descendants'], {}),
+                });
+              })
+            );
+          }
+
+          return this.moveContentNodes({
+            ...payload,
+            id__in: data.sources.map(s => s.metadata.id),
+          });
         }
-
-        return this.moveContentNodes({
-          ...payload,
-          id__in: data.sources.map(s => s.metadata.id),
-        });
       },
       insertPosition(mask) {
         return mask & DraggableFlags.TOP

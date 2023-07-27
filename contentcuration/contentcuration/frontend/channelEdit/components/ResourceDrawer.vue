@@ -19,6 +19,7 @@
         <ResourcePanel
           :nodeId="nodeId"
           :channelId="channelId"
+          :useRouting="useRouting"
           @close="$emit('close')"
         >
           <template #navigation>
@@ -63,6 +64,10 @@
         default: null,
       },
       permanent: {
+        type: Boolean,
+        default: true,
+      },
+      useRouting: {
         type: Boolean,
         default: true,
       },

@@ -231,6 +231,33 @@ class ApiAddNodesToTreeTestCase(StudioTestCase):
 
         self.assertEqual(response.status_code, 400, response.content)
 
+    def test_add_nodes__not_a_topic(self):
+        resource_node = self._make_node_data()
+        test_data = {
+            "root_id": self.root_node.id,
+            "content_data": [
+                resource_node,
+            ],
+        }
+        response = self.admin_client().post(
+            reverse_lazy("api_add_nodes_to_tree"), data=test_data, format="json"
+        )
+        # should succeed
+        self.assertEqual(response.status_code, 200, response.content)
+        resource_node_id = next(iter(response.json().get('root_ids').values()))
+
+        invalid_child = self._make_node_data()
+        test_data = {
+            "root_id": resource_node_id,
+            "content_data": [
+                invalid_child,
+            ],
+        }
+        response = self.admin_client().post(
+            reverse_lazy("api_add_nodes_to_tree"), data=test_data, format="json"
+        )
+        self.assertEqual(response.status_code, 400, response.content)
+
     def test_invalid_metadata_label_excluded(self):
         invalid_metadata_labels = self._make_node_data()
         invalid_metadata_labels["title"] = "invalid_metadata_labels"

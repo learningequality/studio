@@ -31,8 +31,12 @@
         default: 'div',
       },
       menuHeight: {
-        type: Number,
+        type: [Number, String],
         default: 300,
+        validator: value => {
+          const parsed = parseInt(value, 10);
+          return !isNaN(parsed) && parsed > 0;
+        },
       },
     },
     data() {

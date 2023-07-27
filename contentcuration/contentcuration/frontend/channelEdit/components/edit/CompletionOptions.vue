@@ -100,6 +100,12 @@
 <script>
 
   import get from 'lodash/get';
+  import {
+    defaultCompletionCriteriaModels,
+    defaultCompletionCriteriaThresholds,
+    CompletionOptionsDropdownMap,
+    completionCriteriaToDropdownMap,
+  } from '../../utils';
   import MasteryCriteriaMofNFields from './MasteryCriteriaMofNFields';
   import ActivityDuration from './ActivityDuration.vue';
   import MasteryCriteriaGoal from './MasteryCriteriaGoal';
@@ -124,59 +130,6 @@
 
   const DEFAULT_SHORT_ACTIVITY = 600;
   const DEFAULT_LONG_ACTIVITY = 3000;
-
-  const defaultCompletionCriteriaModels = {
-    [ContentKindsNames.VIDEO]: CompletionCriteriaModels.TIME,
-    [ContentKindsNames.AUDIO]: CompletionCriteriaModels.TIME,
-    [ContentKindsNames.DOCUMENT]: CompletionCriteriaModels.PAGES,
-    [ContentKindsNames.H5P]: CompletionCriteriaModels.DETERMINED_BY_RESOURCE,
-    [ContentKindsNames.HTML5]: CompletionCriteriaModels.APPROX_TIME,
-    [ContentKindsNames.EXERCISE]: CompletionCriteriaModels.MASTERY,
-  };
-
-  const defaultCompletionCriteriaThresholds = {
-    // Audio and Video threshold defaults are dynamic based
-    // on the duration of the file itself.
-    [ContentKindsNames.DOCUMENT]: '100%',
-    [ContentKindsNames.HTML5]: 300,
-    // We cannot set an automatic default threshold for exercises.
-  };
-
-  const completionCriteriaToDropdownMap = {
-    [CompletionCriteriaModels.TIME]: CompletionDropdownMap.completeDuration,
-    [CompletionCriteriaModels.APPROX_TIME]: CompletionDropdownMap.completeDuration,
-    [CompletionCriteriaModels.PAGES]: CompletionDropdownMap.allContent,
-    [CompletionCriteriaModels.DETERMINED_BY_RESOURCE]: CompletionDropdownMap.determinedByResource,
-    [CompletionCriteriaModels.MASTERY]: CompletionDropdownMap.goal,
-    [CompletionCriteriaModels.REFERENCE]: CompletionDropdownMap.reference,
-  };
-
-  const CompletionOptionsDropdownMap = {
-    [ContentKindsNames.DOCUMENT]: [
-      CompletionDropdownMap.allContent,
-      CompletionDropdownMap.completeDuration,
-      CompletionDropdownMap.reference,
-    ],
-    [ContentKindsNames.EXERCISE]: [CompletionDropdownMap.goal, CompletionDropdownMap.practiceQuiz],
-    [ContentKindsNames.HTML5]: [
-      CompletionDropdownMap.completeDuration,
-      CompletionDropdownMap.determinedByResource,
-      CompletionDropdownMap.reference,
-    ],
-    [ContentKindsNames.H5P]: [
-      CompletionDropdownMap.determinedByResource,
-      CompletionDropdownMap.completeDuration,
-      CompletionDropdownMap.reference,
-    ],
-    [ContentKindsNames.VIDEO]: [
-      CompletionDropdownMap.completeDuration,
-      CompletionDropdownMap.reference,
-    ],
-    [ContentKindsNames.AUDIO]: [
-      CompletionDropdownMap.completeDuration,
-      CompletionDropdownMap.reference,
-    ],
-  };
 
   export default {
     name: 'CompletionOptions',
