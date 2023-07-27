@@ -22,7 +22,6 @@
 
 <script>
 
-  import { mapGetters, mapActions } from 'vuex';
   import EditListItem from './EditListItem';
   import Checkbox from 'shared/views/form/Checkbox';
 
@@ -41,15 +40,6 @@
         type: Array,
         default: () => [],
       },
-    },
-    watch: {
-      // watch the selected contentnode to load captions 
-      value(newValue) {
-        if (newValue.length === 1) {
-          const nodeId = newValue[0]; // we dispatch action only when 1 node is selected
-          this.loadCaptions({ contentnode_id: nodeId })
-        }
-      }
     },
     computed: {
       selected: {
@@ -75,7 +65,6 @@
       },
     },
     methods: {
-      ...mapActions('caption', ['loadCaptions']),
       handleRemoved(nodeId) {
         const nodeIds = this.$route.params.detailNodeIds.split(',').filter(id => id !== nodeId);
 
