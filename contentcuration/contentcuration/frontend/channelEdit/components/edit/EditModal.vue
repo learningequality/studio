@@ -342,11 +342,6 @@
               vm.loadAssessmentItems({ contentnode__in: childrenNodesIds }),
               vm.loadCaptions({ contentnode_id: childrenNodesIds })
             ];
-            if(childrenNodesIds.length === 1) {
-              promises.push(
-                vm.loadCaptions({ contentnode_id: childrenNodesIds })
-              );
-            }
           } else {
             // no need to load assessment items or files as topics have none
             promises = [vm.loadContentNode(parentTopicId)];
