@@ -69,6 +69,7 @@ from contentcuration.constants import channel_history
 from contentcuration.constants import completion_criteria
 from contentcuration.constants import user_history
 from contentcuration.constants.transcription_languages import CAPTIONS_LANGUAGES
+from contentcuration.constants.transcription_languages import CAPTIONS_LANGUAGES
 from contentcuration.constants.contentnode import kind_activity_map
 from contentcuration.db.models.expressions import Array
 from contentcuration.db.models.functions import ArrayRemove

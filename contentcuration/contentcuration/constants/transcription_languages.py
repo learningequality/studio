@@ -134,3 +134,4 @@ def create_captions_languages():
     return list(kolibri_set.intersection(model_set))
 
 CAPTIONS_LANGUAGES = create_captions_languages()
+
