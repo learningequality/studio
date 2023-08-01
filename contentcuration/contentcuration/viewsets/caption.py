@@ -2,7 +2,6 @@ from le_utils.constants.format_presets import (
     AUDIO,
     VIDEO_HIGH_RES,
     VIDEO_LOW_RES,
-    VIDEO_SUBTITLE,
 )
 from rest_framework import serializers
 from rest_framework.permissions import IsAuthenticated
@@ -26,6 +25,13 @@ class CaptionCueSerializer(serializers.ModelSerializer):
         return attrs
 
     def to_internal_value(self, data):
+        """
+        Copies the caption_file_id from the request data 
+        to the internal representation before validation.
+        
+        Without this, the caption_file_id would be lost 
+        if validation fails, leading to errors.
+        """
         caption_file_id = data.get("caption_file_id")
         value = super().to_internal_value(data)
 
@@ -43,6 +49,12 @@ class CaptionFileSerializer(serializers.ModelSerializer):
 
     @classmethod
     def id_attr(cls):
+        """
+        Returns the primary key name for the model class.
+
+        Checks Meta.update_lookup_field to allow customizable 
+        primary key names. Falls back to using the default "id".
+        """
         ModelClass = cls.Meta.model
         info = model_meta.get_field_info(ModelClass)
         return getattr(cls.Meta, "update_lookup_field", info.pk.name)
@@ -63,13 +75,14 @@ class CaptionViewSet(ValuesViewset):
     def get_queryset(self):
         queryset = super().get_queryset()
 
-        contentnode_ids = self.request.GET.get("contentnode_id").split(',')
+        contentnode_ids = self.request.GET.get("contentnode_id")
         file_id = self.request.GET.get("file_id")
         language = self.request.GET.get("language")
 
         if contentnode_ids:
+            contentnode_ids = contentnode_ids.split(',')
             file_ids = File.objects.filter(
-                preset_id__in=[AUDIO, VIDEO_HIGH_RES, VIDEO_LOW_RES, VIDEO_SUBTITLE],
+                preset_id__in=[AUDIO, VIDEO_HIGH_RES, VIDEO_LOW_RES],
                 contentnode_id__in=contentnode_ids,
             ).values_list("pk", flat=True)
             queryset = queryset.filter(file_id__in=file_ids)

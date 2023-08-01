@@ -1034,6 +1034,7 @@ export const CaptionFile = new Resource({
   idField: 'id',
   indexFields: ['file_id', 'language'],
   syncable: true,
+  getChannelId: getChannelFromChannelScope,
 });
 
 export const CaptionCues = new Resource({
@@ -1042,6 +1043,7 @@ export const CaptionCues = new Resource({
   idField: 'id',
   indexFields: ['text', 'starttime', 'endtime'],
   syncable: true,
+  getChannelId: getChannelFromChannelScope,
 
   collectionUrl(caption_file_id) {
     return this.getUrlFunction('list')(caption_file_id)
