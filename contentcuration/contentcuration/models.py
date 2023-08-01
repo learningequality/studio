@@ -2070,13 +2070,19 @@ class CaptionFile(models.Model):
     """
     id = UUIDField(primary_key=True, default=uuid.uuid4)
     file_id = UUIDField(default=uuid.uuid4, max_length=36)
-    language = models.CharField(choices=CAPTIONS_LANGUAGES, max_length=3)
+    language = models.ForeignKey(Language, related_name="caption_file", on_delete=models.CASCADE)
 
     class Meta:
         unique_together = ['file_id', 'language']
 
     def __str__(self):
         return "file_id: {file_id}, language: {language}".format(file_id=self.file_id, language=self.language)
+    
+    def save(self, *args, **kwargs):
+        # Check if the language is supported by speech-to-text AI model.
+        if self.language and self.language.lang_code not in CAPTIONS_LANGUAGES:
+            raise ValueError(f"The language is currently not supported by speech-to-text model.")
+        super(CaptionFile, self).save(*args, **kwargs)
 
 
 class CaptionCue(models.Model):

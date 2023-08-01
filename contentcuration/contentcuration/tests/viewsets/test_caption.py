@@ -3,7 +3,7 @@ from __future__ import absolute_import
 import json
 import uuid
 
-from contentcuration.models import CaptionCue, CaptionFile
+from contentcuration.models import CaptionCue, CaptionFile, Language
 from contentcuration.tests import testdata
 from contentcuration.tests.base import StudioAPITestCase
 from contentcuration.tests.viewsets.base import (
@@ -21,7 +21,7 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
     def caption_file_metadata(self):
         return {
             "file_id": uuid.uuid4().hex,
-            "language": "en",
+            "language": Language.objects.get(pk="en").pk,
         }
 
     @property
@@ -30,27 +30,20 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         return [
             {
                 "file_id": id,
-                "language": "en",
+                "language":  Language.objects.get(pk="en"),
             },
             {
                 "file_id": id,
-                "language": "ru",
+                "language":  Language.objects.get(pk="ru"),
             },
         ]
-
-    @property
-    def caption_file_db_metadata(self):
-        return {
-            "file_id": uuid.uuid4().hex,
-            "language": "en",
-        }
 
     @property
     def caption_cue_metadata(self):
         return {
             "file": {
                 "file_id": uuid.uuid4().hex,
-                "language": "en",
+                "language":  Language.objects.get(pk="en").pk,
             },
             "cue": {
                 "text": "This is the beginning!",
@@ -65,7 +58,6 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         self.user = testdata.user()
         self.channel.editors.add(self.user)
 
-    # Test for CaptionFile model
     def test_create_caption(self):
         self.client.force_authenticate(user=self.user)
         caption_file = self.caption_file_metadata
@@ -85,18 +77,20 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         try:
             caption_file_db = CaptionFile.objects.get(
                 file_id=caption_file["file_id"],
-                language=caption_file["language"],
+                language_id=caption_file["language"],
             )
         except CaptionFile.DoesNotExist:
             self.fail("caption file was not created")
 
         # Check the values of the object in the PostgreSQL
         self.assertEqual(caption_file_db.file_id, caption_file["file_id"])
-        self.assertEqual(caption_file_db.language, caption_file["language"])
+        self.assertEqual(caption_file_db.language_id, caption_file["language"])
 
     def test_delete_caption_file(self):
         self.client.force_authenticate(user=self.user)
         caption_file = self.caption_file_metadata
+        # Explicitly set language to model object to follow Django ORM conventions
+        caption_file['language'] = Language.objects.get(pk='en')
         caption_file_1 = CaptionFile(**caption_file)
         pk = caption_file_1.pk
 
@@ -108,7 +102,7 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
 
         with self.assertRaises(CaptionFile.DoesNotExist):
             caption_file_db = CaptionFile.objects.get(
-                file_id=caption_file["file_id"], language=caption_file["language"]
+                file_id=caption_file["file_id"], language_id=caption_file["language"]
             )
 
     def test_delete_file_with_same_file_id_different_language(self):
@@ -132,11 +126,13 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
 
         with self.assertRaises(CaptionFile.DoesNotExist):
             caption_file_db = CaptionFile.objects.get(
-                file_id=caption_file_2.file_id, language=caption_file_2.language
+                file_id=caption_file_2.file_id, language_id=caption_file_2.language
             )
 
     def test_caption_file_serialization(self):
         metadata = self.caption_file_metadata
+        # Explicitly set language to model object to follow Django ORM conventions 
+        metadata['language'] = Language.objects.get(pk="en")
         caption_file = CaptionFile.objects.create(**metadata)
         serializer = CaptionFileSerializer(instance=caption_file)
         try:
@@ -146,6 +142,8 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
 
     def test_caption_cue_serialization(self):
         metadata = self.caption_cue_metadata
+        # Explicitly set language to model object to follow Django ORM conventions 
+        metadata['file']['language'] = Language.objects.get(pk="en")
         caption_file = CaptionFile.objects.create(**metadata["file"])
         caption_cue = metadata["cue"]
         caption_cue.update(
@@ -166,6 +164,8 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
     def test_create_caption_cue(self):
         self.client.force_authenticate(user=self.user)
         metadata = self.caption_cue_metadata
+        # Explicitly set language to model object to follow Django ORM conventions 
+        metadata['file']['language'] = Language.objects.get(pk="en") 
         caption_file_1 = CaptionFile.objects.create(**metadata["file"])
         caption_cue = metadata["cue"]
         caption_cue["caption_file_id"] = caption_file_1.pk
@@ -194,6 +194,8 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
     def test_delete_caption_cue(self):
         self.client.force_authenticate(user=self.user)
         metadata = self.caption_cue_metadata
+        # Explicitly set language to model object to follow Django ORM conventions 
+        metadata['file']['language'] = Language.objects.get(pk="en") 
         caption_file_1 = CaptionFile.objects.create(**metadata["file"])
         caption_cue = metadata["cue"]
         caption_cue.update({"caption_file": caption_file_1})
@@ -228,6 +230,8 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
     def test_update_caption_cue(self):
         self.client.force_authenticate(user=self.user)
         metadata = self.caption_cue_metadata
+        # Explicitly set language to model object to follow Django ORM conventions 
+        metadata['file']['language'] = Language.objects.get(pk="en") 
         caption_file_1 = CaptionFile.objects.create(**metadata["file"])
 
         caption_cue = metadata["cue"]
@@ -280,6 +284,8 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
 
     def test_invalid_caption_cue_data_serialization(self):
         metadata = self.caption_cue_metadata
+        # Explicitly set language to model object to follow Django ORM conventions 
+        metadata['file']['language'] = Language.objects.get(pk="en") 
         caption_file = CaptionFile.objects.create(**metadata["file"])
         caption_cue = metadata["cue"]
         caption_cue.update(
