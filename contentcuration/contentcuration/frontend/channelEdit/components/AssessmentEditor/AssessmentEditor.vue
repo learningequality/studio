@@ -335,10 +335,9 @@
           eventLabel: 'Question',
         });
         this.$nextTick(() => {
-          if (this.$refs['questionCardRef'].length >= 1) {
-            const lastQuestionCard = this.$refs['questionCardRef'][
-              this.$refs['questionCardRef'].length - 1
-            ].$el;
+          const questionCards = this.$refs['questionCardRef'];
+          if (questionCards?.length >= 1) {
+            const lastQuestionCard = questionCards[questionCards.length - 1].$el;
             const editorDiv = document.getElementById('editViewId');
             editorDiv.scrollTo({
               top: lastQuestionCard.offsetTop,
