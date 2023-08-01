@@ -93,7 +93,9 @@ export async function loadCaptions({ commit, rootGetters }, params) {
     // If there is no Caption File for this contentnode
     // Don't request for the cues
     if(captionFiles.length === 0) return;
-    // TODO: call loadCaptionCues -> to be done after I finish saving captionFiles in indexedDB When CTA is called. So I have captions saved in the backend.
+    // TODO: call loadCaptionCues -> to be done after 
+    // I finish saving captionFiles in indexedDB When 
+    // CTA is called. So I have captions saved in the backend.
 }
 
 
@@ -102,7 +104,7 @@ export async function addCaptionFile({ commit }, { file_id, language, nodeId }) 
         file_id: file_id,
         language: language
     }
-    return CaptionFile.put(captionFile).then(id => {
+    return CaptionFile.add(captionFile).then(id => {
         captionFile.id = id;
         console.log(captionFile, nodeId);
         commit('ADD_CAPTIONFILE', { 
