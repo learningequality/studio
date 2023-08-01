@@ -1,30 +1,35 @@
 <template>
 
-  <div>
+  <div class="captions-tab-section" >
     <h1>{{ message }}</h1>
     <div v-if="noCaptions" >
       <button class="btn" @click="addCaption" >
         Generate captions for [video name]
         in language
       </button>
-      <select v-model="selectedLanguage">
-        <option v-for="lang in languages">{{ lang }}</option>
-      </select>
+      <LanguageDropdown
+        class="mb-2"
+        ref="language"
+        clearable
+        :placeholder="getPlaceholder('language')"
+        :required=true
+        :excludeLanguages="unsupportedLanguages"
+      />
     </div>
-    <button @click="mapLog">
-      log
-    </button>
   </div>
 
 </template>
 
 <script>
   import { mapState, mapActions, mapGetters } from 'vuex';
-  import { CAPTIONS_LANGUAGES as LANGUAGES } from './languages';
+  import { notSupportedCaptionLanguages } from 'shared/leUtils/TranscriptionLanguages';
+  import LanguageDropdown from 'shared/views/LanguageDropdown';
 
   export default {
     name: 'CaptionsTab',
-    components: {},
+    components: {
+      LanguageDropdown,
+    },
     props: {
       nodeId: {
         type: String,
@@ -34,8 +39,6 @@
     data() {
       return {
         message: 'Caption Editor',
-        selectedLanguage: 'default',
-        languages: LANGUAGES,
       };
     },
     computed: {
@@ -44,12 +47,13 @@
       noCaptions() {
         return !this.captionFilesMap[this.nodeId] || this.captionFilesMap[this.nodeId].length === 0;
       },
+      unsupportedLanguages() {
+        // excludeLanguages requires array of ids
+        return notSupportedCaptionLanguages.map(l => l.id);
+      },
     },
     methods: {
       ...mapActions('caption', ['addCaptionFile']),
-      mapLog() {
-        console.log(this.captionFilesMap);
-      },
       addCaption() {
         // TODO: select the `file` with longest duration as recommended by @bjester.
         // For now just create captionFile object with default language 'en'.
@@ -62,13 +66,21 @@
           nodeId: this.nodeId,
         });
       },
+      getPlaceholder(_field) {
+        return 'Select a language to generate captions'
+      },
     }
   }
 
 </script>
 
 <style>
+
   .btn {
     text-decoration: underline;
   }
+  .captions-tab-section {
+    height: 80vh;
+  }
+  
 </style>

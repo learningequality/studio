@@ -1,4 +1,13 @@
-export const CAPTIONS_LANGUAGES = {
+/**
+ * This file generates the list of supported caption languages by 
+ * filtering the full list of languages against the whisperLanguages object.
+ * To switch to a new model for supported languages, you can update the
+ * whisperLanguages object with new language codes and names.
+*/
+
+import { LanguagesList } from 'shared/leUtils/Languages';
+
+const whisperLanguages = {
     en: "english",
     zh: "chinese",
     de: "german",
@@ -99,3 +108,13 @@ export const CAPTIONS_LANGUAGES = {
     jw: "javanese",
     su: "sundanese",
 }
+
+export const supportedCaptionLanguages = LanguagesList.filter(
+    (language) => whisperLanguages.hasOwnProperty(language.lang_code)
+);
+
+export const notSupportedCaptionLanguages = LanguagesList.filter(
+    (language) => !whisperLanguages.hasOwnProperty(language.lang_code)
+);
+
+export default supportedCaptionLanguages;
