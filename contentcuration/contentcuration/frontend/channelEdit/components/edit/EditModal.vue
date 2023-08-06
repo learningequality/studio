@@ -498,7 +498,6 @@
               .slice(0, -1)
               .join('.');
           }
-          console.log(file.metadata);
           this.createNode(
             FormatPresets.has(file.preset) && FormatPresets.get(file.preset).kind_id,
             { title, ...file.metadata }
