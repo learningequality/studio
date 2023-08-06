@@ -19,7 +19,7 @@ export function getHash(file) {
     const spark = new SparkMD5.ArrayBuffer();
     let currentChunk = 0;
     const chunks = Math.ceil(file.size / CHUNK_SIZE);
-    fileReader.onload = function (e) {
+    fileReader.onload = function(e) {
       spark.append(e.target.result);
       currentChunk++;
 
@@ -64,11 +64,12 @@ export function storageUrl(checksum, file_format) {
   return `/content/storage/${checksum[0]}/${checksum[1]}/${checksum}.${file_format}`;
 }
 
-export async function getH5PMetadata(fileInput, metadata) {
+export async function getH5PMetadata(fileInput) {
   const zip = new JSZip();
+  const metadata = {};
   return zip
     .loadAsync(fileInput)
-    .then(function (zip) {
+    .then(function(zip) {
       const h5pJson = zip.file('h5p.json');
       if (h5pJson) {
         return h5pJson.async('text');
@@ -76,7 +77,7 @@ export async function getH5PMetadata(fileInput, metadata) {
         throw new Error('h5p.json not found in the H5P file.');
       }
     })
-    .then(function (h5pContent) {
+    .then(function(h5pContent) {
       const data = JSON.parse(h5pContent);
       if (Object.prototype.hasOwnProperty.call(data, 'title')) {
         metadata.title = data['title'];
@@ -90,10 +91,10 @@ export async function getH5PMetadata(fileInput, metadata) {
       if (Object.prototype.hasOwnProperty.call(data, 'license')) {
         metadata.license = data['license'];
       }
-      return metadata
+      return metadata;
     })
-    .catch(function (error) {
-      return error
+    .catch(function(error) {
+      return error;
     });
 }
 
@@ -128,7 +129,9 @@ export function extractMetadata(file, preset = null) {
 
   return new Promise(resolve => {
     if (isH5P) {
-      getH5PMetadata(file, metadata);
+      getH5PMetadata(file).then(data => {
+        if (data.constructor !== Error) Object.assign(metadata, ...data);
+      });
       resolve(metadata);
     } else {
       const mediaElement = document.createElement(isVideo ? 'video' : 'audio');

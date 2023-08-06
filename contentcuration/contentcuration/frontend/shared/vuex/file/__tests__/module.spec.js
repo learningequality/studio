@@ -1,3 +1,5 @@
+import JSZip from 'jszip';
+import { getH5PMetadata } from '../utils';
 import storeFactory from 'shared/vuex/baseStore';
 import { File, injectVuexStore } from 'shared/data/resources';
 import client from 'shared/client';
@@ -18,6 +20,27 @@ const testFile = {
 };
 
 const userId = 'some user';
+
+function get_metadata_file(data) {
+  const manifest = {
+    h5p: '1.0',
+    mainLibrary: 'content',
+    libraries: [
+      {
+        machineName: 'content',
+        majorVersion: 1,
+        minorVersion: 0,
+      },
+    ],
+    content: {
+      library: 'content',
+    },
+    ...data,
+  };
+  const manifestBlob = new Blob([JSON.stringify(manifest, null, 2)], { type: 'application/json' });
+  const manifestFile = new global.File([manifestBlob], 'h5p.json', { type: 'application/json' });
+  return manifestFile;
+}
 
 describe('file store', () => {
   let store;
@@ -119,6 +142,54 @@ describe('file store', () => {
         return store.dispatch('file/uploadFileToStorage', payload).then(() => {
           expect(client.put.mock.calls[0][0]).toBe(payload.url);
           client.post.mockRestore();
+        });
+      });
+    });
+    describe('H5P content file extract metadata', () => {
+      it('getH5PMetadata should check for h5p.json file', () => {
+        const zip = new JSZip();
+        return zip.generateAsync({ type: 'blob' }).then(async function(h5pBlob) {
+          await expect(Promise.resolve(getH5PMetadata(h5pBlob))).resolves.toThrowError(
+            'h5p.json not found in the H5P file.'
+          );
+        });
+      });
+      it('getH5PMetadata should exract metadata from h5p.json', async () => {
+        const manifestFile = get_metadata_file({ title: 'Test file' });
+        const zip = new JSZip();
+        zip.file('h5p.json', manifestFile);
+        await zip.generateAsync({ type: 'blob' }).then(async function(h5pBlob) {
+          await expect(Promise.resolve(getH5PMetadata(h5pBlob))).resolves.toEqual({
+            title: 'Test file',
+          });
+        });
+      });
+      it('getH5PMetadata should not extract und language', async () => {
+        const manifestFile = get_metadata_file({ title: 'Test file', language: 'und' });
+        const zip = new JSZip();
+        zip.file('h5p.json', manifestFile);
+        await zip.generateAsync({ type: 'blob' }).then(async function(h5pBlob) {
+          await expect(Promise.resolve(getH5PMetadata(h5pBlob))).resolves.toEqual({
+            title: 'Test file',
+          });
+        });
+      });
+      it('getH5PMetadata should exract metadata from h5p.json', async () => {
+        const manifestFile = get_metadata_file({
+          title: 'Test file',
+          language: 'en',
+          authors: 'author1',
+          license: 'license1',
+        });
+        const zip = new JSZip();
+        zip.file('h5p.json', manifestFile);
+        await zip.generateAsync({ type: 'blob' }).then(async function(h5pBlob) {
+          await expect(Promise.resolve(getH5PMetadata(h5pBlob))).resolves.toEqual({
+            title: 'Test file',
+            language: 'en',
+            author: 'author1',
+            license: 'license1',
+          });
         });
       });
     });
