@@ -489,13 +489,18 @@
       },
       createNodesFromUploads(fileUploads) {
         fileUploads.forEach((file, index) => {
-          const title = file.original_filename
-            .split('.')
-            .slice(0, -1)
-            .join('.');
+          let title;
+          if (file.metadata.title) {
+            title = file.metadata.title;
+          } else {
+            title = file.original_filename
+              .split('.')
+              .slice(0, -1)
+              .join('.');
+          }
           this.createNode(
             FormatPresets.has(file.preset) && FormatPresets.get(file.preset).kind_id,
-            { title }
+            { title, ...file.metadata }
           ).then(newNodeId => {
             if (index === 0) {
               this.selected = [newNodeId];

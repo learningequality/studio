@@ -198,6 +198,7 @@ export function uploadFile(context, { file, preset = null } = {}) {
       }); // End get upload url
     })
     .then(data => {
+      data.file.metadata = metadata;
       const fileObject = {
         ...data.file,
         loaded: 0,
