@@ -1,30 +1,18 @@
-from le_utils.constants.format_presets import (
-    AUDIO,
-    VIDEO_HIGH_RES,
-    VIDEO_LOW_RES,
-)
+import logging
+
+from le_utils.constants.format_presets import AUDIO, VIDEO_HIGH_RES, VIDEO_LOW_RES
 from rest_framework import serializers
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.utils import model_meta
 
-from contentcuration.models import CaptionCue, CaptionFile, File
-from contentcuration.viewsets.base import ValuesViewset
+from contentcuration.models import CaptionCue, CaptionFile, Change, File
+from contentcuration.tasks import generatecaptioncues_task
+from contentcuration.viewsets.base import BulkModelSerializer, ValuesViewset
+from contentcuration.viewsets.sync.constants import CAPTION_FILE
+from contentcuration.viewsets.sync.utils import generate_update_event
 
 
-
-class CaptionCueSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = CaptionCue
-        fields = ["text", "starttime", "endtime", "caption_file_id"]
-
-    def validate(self, attrs):
-        """Check that the cue's starttime is before the endtime."""
-        attrs = super().validate(attrs)
-        if attrs["starttime"] > attrs["endtime"]:
-            raise serializers.ValidationError("The cue must finish after start.")
-        return attrs
-
+class CaptionCueSerializer(BulkModelSerializer):
     class Meta:
         model = CaptionCue
         fields = ["text", "starttime", "endtime", "caption_file_id"]
@@ -38,10 +26,10 @@ class CaptionCueSerializer(serializers.ModelSerializer):
 
     def to_internal_value(self, data):
         """
-        Copies the caption_file_id from the request data 
+        Copies the caption_file_id from the request data
         to the internal representation before validation.
-        
-        Without this, the caption_file_id would be lost 
+
+        Without this, the caption_file_id would be lost
         if validation fails, leading to errors.
         """
         caption_file_id = data.get("caption_file_id")
@@ -53,24 +41,12 @@ class CaptionCueSerializer(serializers.ModelSerializer):
 
 
 
-class CaptionFileSerializer(serializers.ModelSerializer):
+class CaptionFileSerializer(BulkModelSerializer):
     caption_cue = CaptionCueSerializer(many=True, required=False)
 
     class Meta:
         model = CaptionFile
-        fields = ["file_id", "language", "caption_cue"]
-
-    @classmethod
-    def id_attr(cls):
-        """
-        Returns the primary key name for the model class.
-
-        Checks Meta.update_lookup_field to allow customizable 
-        primary key names. Falls back to using the default "id".
-        """
-        ModelClass = cls.Meta.model
-        info = model_meta.get_field_info(ModelClass)
-        return getattr(cls.Meta, "update_lookup_field", info.pk.name)
+        fields = ["id", "file_id", "language", "caption_cue"]
 
 
 class CaptionViewSet(ValuesViewset):
@@ -93,7 +69,7 @@ class CaptionViewSet(ValuesViewset):
         language = self.request.GET.get("language")
 
         if contentnode_ids:
-            contentnode_ids = contentnode_ids.split(',')
+            contentnode_ids = contentnode_ids.split(",")
             file_ids = File.objects.filter(
                 preset_id__in=[AUDIO, VIDEO_HIGH_RES, VIDEO_LOW_RES],
                 contentnode_id__in=contentnode_ids,
@@ -106,6 +82,32 @@ class CaptionViewSet(ValuesViewset):
             queryset = queryset.filter(language=language)
 
         return queryset
+
+    def perform_create(self, serializer, change=None):
+        instance = serializer.save()
+        Change.create_change(
+            generate_update_event(
+                instance.pk,
+                CAPTION_FILE,
+                {
+                    "__generating_captions": True,
+                },
+                channel_id=change['channel_id']
+            ), applied=True, created_by_id=self.request.user.id
+        )
+
+        # enqueue task of generating captions for the saved CaptionFile instance
+        try:
+            # Also sets the generating flag to false <<< Generating Completeted
+            generatecaptioncues_task.enqueue(
+                self.request.user,
+                caption_file_id=instance.pk,
+                channel_id=change['channel_id'],
+                user_id=self.request.user.id
+            )
+
+        except Exception as e:
+            logging.error(f"Failed to queue celery task.\nWith the error: {e}")
 
 
 class CaptionCueViewSet(ValuesViewset):

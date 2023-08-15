@@ -137,3 +137,34 @@ def sendcustomemails_task(subject, message, query):
         text = message.format(current_date=time.strftime("%A, %B %d"), current_time=time.strftime("%H:%M %Z"), **recipient.__dict__)
         text = render_to_string('registration/custom_email.txt', {'message': text})
         recipient.email_user(subject, text, settings.DEFAULT_FROM_EMAIL, )
+
+@app.task(name="generatecaptioncues_task")
+def generatecaptioncues_task(caption_file_id, channel_id, user_id):
+    """Start generating the Captions Cues for requested the Caption File"""
+
+    import uuid
+    from contentcuration.viewsets.caption import CaptionCueSerializer
+    from contentcuration.viewsets.sync.utils import generate_update_event
+    from contentcuration.viewsets.sync.constants import CAPTION_FILE
+
+    time.sleep(10) # AI model start generating
+
+    cue = {
+        "id": uuid.uuid4().hex,
+        "text":"hello guys",
+        "starttime": 0,
+        "endtime": 5,
+        "caption_file_id": caption_file_id
+    }
+
+    serializer = CaptionCueSerializer(data=cue)
+    if serializer.is_valid():
+        instance = serializer.save()
+        Change.create_change(generate_update_event(
+            caption_file_id,
+            CAPTION_FILE,
+            {"__generating_captions": False},
+            channel_id=channel_id,
+        ), applied=True, created_by_id=user_id)
+    else:
+        print(serializer.errors)
