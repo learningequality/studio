@@ -58,6 +58,7 @@ export const kindToIconMap = {
   channel: 'apps',
   document: 'description',
   exercise: 'star',
+  h5p: 'widgets',
   html5: 'widgets',
   image: 'image',
   slideshow: 'photo_library',
@@ -205,6 +206,7 @@ export const AccessibilityCategoriesMap = {
   video: ['CAPTIONS_SUBTITLES', 'AUDIO_DESCRIPTION', 'SIGN_LANGUAGE'],
   exercise: ['ALT_TEXT'],
   html5: ['ALT_TEXT', 'HIGH_CONTRAST'],
+  h5p: ['ALT_TEXT', 'HIGH_CONTRAST'],
   audio: ['CAPTIONS_SUBTITLES'],
 };
 
