@@ -87,6 +87,22 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         self.assertEqual(caption_file_db.file_id, caption_file["file_id"])
         self.assertEqual(caption_file_db.language_id, caption_file["language"])
 
+    def test_enqueue_caption_task(self):
+        self.client.force_authenticate(user=self.user)
+        caption_file = {
+            "file_id": uuid.uuid4().hex,
+            "language": Language.objects.get(pk="en").pk,
+        }
+
+        response = self.sync_changes([generate_create_event(
+            uuid.uuid4().hex,
+            CAPTION_FILE,
+            caption_file,
+            channel_id=self.channel.id,
+        )],)
+        self.assertEqual(response.status_code, 200, response.content)
+
+
     def test_delete_caption_file(self):
         self.client.force_authenticate(user=self.user)
         caption_file = self.caption_file_metadata

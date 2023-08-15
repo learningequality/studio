@@ -19,6 +19,7 @@ import {
   RELATIVE_TREE_POSITIONS,
   TABLE_NAMES,
   COPYING_FLAG,
+  GENERATING,
   TASK_ID,
   CURRENT_USER,
   MAX_REV_KEY,
@@ -1024,6 +1025,31 @@ export const CaptionFile = new Resource({
   indexFields: ['file_id', 'language'],
   syncable: true,
   getChannelId: getChannelFromChannelScope,
+
+  waitForCaptionCueGeneration(id) {
+    const observable = Dexie.liveQuery(() => {
+      return this.table
+        .where('id')
+        .equals(id)
+        .filter(f => !f[GENERATING])
+        .toArray();
+    });
+    
+    return new Promise((resolve, reject) => {
+      const subscription = observable.subscribe({
+        next(result) {
+          if (result.length > 0 && result[0][GENERATING] === false) {
+            subscription.unsubscribe();
+            resolve(false);
+          }
+        },
+        error() {
+          subscription.unsubscribe();
+          reject();
+        },
+      });
+    });
+  },
 });
 
 export const CaptionCues = new Resource({
