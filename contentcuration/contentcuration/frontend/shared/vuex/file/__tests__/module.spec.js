@@ -149,17 +149,17 @@ describe('file store', () => {
       it('getH5PMetadata should check for h5p.json file', () => {
         const zip = new JSZip();
         return zip.generateAsync({ type: 'blob' }).then(async function(h5pBlob) {
-          await expect(Promise.resolve(getH5PMetadata(h5pBlob))).resolves.toThrowError(
+          await expect(getH5PMetadata(h5pBlob)).rejects.toThrow(
             'h5p.json not found in the H5P file.'
           );
         });
       });
-      it('getH5PMetadata should exract metadata from h5p.json', async () => {
+      it('getH5PMetadata should extract metadata from h5p.json', async () => {
         const manifestFile = get_metadata_file({ title: 'Test file' });
         const zip = new JSZip();
         zip.file('h5p.json', manifestFile);
         await zip.generateAsync({ type: 'blob' }).then(async function(h5pBlob) {
-          await expect(Promise.resolve(getH5PMetadata(h5pBlob))).resolves.toEqual({
+          await expect(getH5PMetadata(h5pBlob)).resolves.toEqual({
             title: 'Test file',
           });
         });
@@ -169,7 +169,55 @@ describe('file store', () => {
         const zip = new JSZip();
         zip.file('h5p.json', manifestFile);
         await zip.generateAsync({ type: 'blob' }).then(async function(h5pBlob) {
-          await expect(Promise.resolve(getH5PMetadata(h5pBlob))).resolves.toEqual({
+          await expect(getH5PMetadata(h5pBlob)).resolves.toEqual({
+            title: 'Test file',
+          });
+        });
+      });
+      it.each([
+        ['CC BY', 1],
+        ['CC BY-SA', 2],
+        ['CC BY-ND', 3],
+        ['CC BY-NC', 4],
+        ['CC BY-NC-SA', 5],
+        ['CC BY-NC-ND', 6],
+        ['CC0 1.0', 8],
+      ])('getH5PMetadata should parse CC license %s', async (licenseName, licenseId) => {
+        const manifestFile = get_metadata_file({ title: 'Test file', license: licenseName });
+        const zip = new JSZip();
+        zip.file('h5p.json', manifestFile);
+        await zip.generateAsync({ type: 'blob' }).then(async function(h5pBlob) {
+          await expect(getH5PMetadata(h5pBlob)).resolves.toEqual({
+            title: 'Test file',
+            license: licenseId,
+          });
+        });
+      });
+      it.each([
+        [{ role: 'Author', name: 'Testing' }, 'author'],
+        [{ role: 'Editor', name: 'Testing' }, 'aggregator'],
+        [{ role: 'Licensee', name: 'Testing' }, 'copyright_holder'],
+        [{ role: 'Originator', name: 'Testing' }, 'provider'],
+      ])('getH5PMetadata should parse CC license %s', async (authorObj, field) => {
+        const manifestFile = get_metadata_file({ title: 'Test file', authors: [authorObj] });
+        const zip = new JSZip();
+        zip.file('h5p.json', manifestFile);
+        await zip.generateAsync({ type: 'blob' }).then(async function(h5pBlob) {
+          await expect(getH5PMetadata(h5pBlob)).resolves.toEqual({
+            title: 'Test file',
+            [field]: authorObj.name,
+          });
+        });
+      });
+      it('getH5PMetadata should not extract Firstname Surname author', async () => {
+        const manifestFile = get_metadata_file({
+          title: 'Test file',
+          authors: [{ name: 'Firstname Surname', role: 'Author' }],
+        });
+        const zip = new JSZip();
+        zip.file('h5p.json', manifestFile);
+        await zip.generateAsync({ type: 'blob' }).then(async function(h5pBlob) {
+          await expect(getH5PMetadata(h5pBlob)).resolves.toEqual({
             title: 'Test file',
           });
         });
@@ -178,17 +226,13 @@ describe('file store', () => {
         const manifestFile = get_metadata_file({
           title: 'Test file',
           language: 'en',
-          authors: 'author1',
-          license: 'license1',
         });
         const zip = new JSZip();
         zip.file('h5p.json', manifestFile);
         await zip.generateAsync({ type: 'blob' }).then(async function(h5pBlob) {
-          await expect(Promise.resolve(getH5PMetadata(h5pBlob))).resolves.toEqual({
+          await expect(getH5PMetadata(h5pBlob)).resolves.toEqual({
             title: 'Test file',
             language: 'en',
-            author: 'author1',
-            license: 'license1',
           });
         });
       });

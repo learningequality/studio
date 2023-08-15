@@ -1,6 +1,8 @@
 import SparkMD5 from 'spark-md5';
 import JSZip from 'jszip';
 import { FormatPresetsList, FormatPresetsNames } from 'shared/leUtils/FormatPresets';
+import { LicensesList } from 'shared/leUtils/Licenses';
+import LanguagesMap from 'shared/leUtils/Languages';
 
 const BLOB_SLICE = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice;
 const CHUNK_SIZE = 2097152;
@@ -64,6 +66,13 @@ export function storageUrl(checksum, file_format) {
   return `/content/storage/${checksum[0]}/${checksum[1]}/${checksum}.${file_format}`;
 }
 
+const AuthorFieldMappings = {
+  Author: 'author',
+  Editor: 'aggregator',
+  Licensee: 'copyright_holder',
+  Originator: 'provider',
+};
+
 export async function getH5PMetadata(fileInput) {
   const zip = new JSZip();
   const metadata = {};
@@ -82,19 +91,34 @@ export async function getH5PMetadata(fileInput) {
       if (Object.prototype.hasOwnProperty.call(data, 'title')) {
         metadata.title = data['title'];
       }
-      if (Object.prototype.hasOwnProperty.call(data, 'language') && data['language'] !== 'und') {
+      if (
+        Object.prototype.hasOwnProperty.call(data, 'language') &&
+        LanguagesMap.has(data['language']) &&
+        data['language'] !== 'und'
+      ) {
         metadata.language = data['language'];
       }
       if (Object.prototype.hasOwnProperty.call(data, 'authors')) {
-        metadata.author = data['authors'];
+        for (const author of data['authors']) {
+          // Ignore obvious placedholders created by online H5P editor tools
+          if (author.role && author.name !== 'Firstname Surname') {
+            if (AuthorFieldMappings[author.role]) {
+              metadata[AuthorFieldMappings[author.role]] = author.name;
+            }
+          }
+        }
       }
       if (Object.prototype.hasOwnProperty.call(data, 'license')) {
-        metadata.license = data['license'];
+        const license = LicensesList.find(license => license.license_name === data['license']);
+        if (license) {
+          metadata.license = license.id;
+        } else if (data['license'] == 'CC0 1.0') {
+          // Special case for CC0 1.0
+          // this is the hard coded license id for CC0 1.0
+          metadata.license = 8;
+        }
       }
       return metadata;
-    })
-    .catch(function(error) {
-      return error;
     });
 }
 
@@ -130,7 +154,7 @@ export function extractMetadata(file, preset = null) {
   return new Promise(resolve => {
     if (isH5P) {
       getH5PMetadata(file).then(data => {
-        if (data.constructor !== Error) Object.assign(metadata, ...data);
+        Object.assign(metadata, data);
       });
       resolve(metadata);
     } else {
