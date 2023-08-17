@@ -1034,7 +1034,7 @@ export const CaptionFile = new Resource({
         .filter(f => !f[GENERATING])
         .toArray();
     });
-    
+
     return new Promise((resolve, reject) => {
       const subscription = observable.subscribe({
         next(result) {
