@@ -17,10 +17,19 @@ export default {
      * ]
      */
     captionFilesMap: [],
-    /* Caption Cues json to render in the frontend caption-editor
-     * to be defined
+    /* Caption Cues for a contentnode
+     * [
+     *     contentnode_id: {
+     *         pk: {
+     *              id: id
+     *              starttime: starttime
+     *              endtime: endtime
+     *              text: text
+     *         }
+     *     },
+     * ]
      */
-    captionCuesMap: {},
+    captionCuesMap: [],
   }),
   getters,
   mutations,

@@ -64,7 +64,7 @@ class CaptionViewSet(ValuesViewset):
     def get_queryset(self):
         queryset = super().get_queryset()
 
-        contentnode_ids = self.request.GET.get("contentnode_id")
+        contentnode_ids = self.request.GET.get("contentnode__in")
         file_id = self.request.GET.get("file_id")
         language = self.request.GET.get("language")
 

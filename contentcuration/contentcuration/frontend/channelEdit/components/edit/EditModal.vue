@@ -340,7 +340,7 @@
               // (especially marking nodes as (in)complete)
               vm.loadFiles({ contentnode__in: childrenNodesIds }),
               vm.loadAssessmentItems({ contentnode__in: childrenNodesIds }),
-              vm.loadCaptions({ contentnode_id: childrenNodesIds })
+              vm.loadCaptions({ contentnode__in: childrenNodesIds }),
             ];
           } else {
             // no need to load assessment items or files as topics have none
