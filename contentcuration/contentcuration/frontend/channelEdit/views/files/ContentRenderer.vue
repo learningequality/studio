@@ -99,7 +99,7 @@
     },
     computed: {
       ...mapGetters('file', ['getContentNodeFileById', 'getContentNodeFiles']),
-      ...mapGetters('contentNode', ['getContentNode', 'getContentNodeChildren']),
+      ...mapGetters('contentNode', ['getContentNode']),
       node() {
         return this.getContentNode(this.nodeId);
       },
@@ -133,7 +133,9 @@
         return this.file.file_format === 'epub';
       },
       htmlPath() {
-        return `/zipcontent/${this.file.checksum}.${this.file.file_format}/${this.node.options && this.node.options.entry || ''}`;
+        return `/zipcontent/${this.file.checksum}.${this.file.file_format}/${(this.node.options &&
+          this.node.options.entry) ||
+          ''}`;
       },
       src() {
         return this.file && this.file.url;

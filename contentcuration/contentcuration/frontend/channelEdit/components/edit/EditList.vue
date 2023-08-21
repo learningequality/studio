@@ -7,11 +7,11 @@
       class="mb-2 ml-1 mt-0 px-3 py-2"
       :label="$tr('selectAllLabel')"
     />
-    <EditListItem
-      v-for="nodeId in nodeIds"
-      :key="nodeId"
+    <EditListItems
       v-model="selected"
-      :nodeId="nodeId"
+      :nodeId="parentId"
+      :nodes="nodes"
+      :nodeIds="nodeIds"
       @input="trackSelect"
       @removed="handleRemoved"
     />
@@ -22,13 +22,14 @@
 
 <script>
 
-  import EditListItem from './EditListItem';
+  import { mapGetters } from 'vuex';
+  import EditListItems from './EditListItems';
   import Checkbox from 'shared/views/form/Checkbox';
 
   export default {
     name: 'EditList',
     components: {
-      EditListItem,
+      EditListItems,
       Checkbox,
     },
     props: {
@@ -40,14 +41,25 @@
         type: Array,
         default: () => [],
       },
+      parentId: {
+        type: String,
+        require: true,
+        default: null,
+      },
     },
     computed: {
+      ...mapGetters('contentNode', ['getContentNode']),
       selected: {
         get() {
           return this.value;
         },
         set(items) {
-          this.$emit('input', items);
+          if (this.selected.includes(items[0])) {
+            this.selected = [];
+          } else {
+            this.getChildren(items[0]).forEach(item => items.push(item));
+            this.$emit('input', items);
+          }
         },
       },
       selectAll: {
@@ -63,11 +75,34 @@
           }
         },
       },
+      nodes() {
+        const nodes = {};
+        this.nodeIds.forEach(nodeId => {
+          const parentId = this.getContentNode(nodeId).parent;
+          nodes[`${nodeId}`] = this.nodeIds.includes(parentId) ? parentId : null;
+        });
+        return nodes;
+      },
     },
     methods: {
+      ...mapGetters('contentNode', ['deleteContentNode']),
+      getChildren(parent) {
+        const childrens = [];
+        Object.keys(this.nodes).forEach(nodeId => {
+          if (this.nodes[nodeId] === parent) {
+            childrens.push(...this.getChildren(nodeId));
+            childrens.push(nodeId);
+          }
+        });
+        return childrens;
+      },
       handleRemoved(nodeId) {
-        const nodeIds = this.$route.params.detailNodeIds.split(',').filter(id => id !== nodeId);
-
+        const removedNodes = this.getChildren(nodeId);
+        removedNodes.push(nodeId);
+        removedNodes.forEach(nodeId => this.deleteContentNode(nodeId));
+        const nodeIds = this.$route.params.detailNodeIds
+          .split(',')
+          .filter(id => !removedNodes.includes(id));
         this.$router.push({
           name: this.$route.name,
           params: {

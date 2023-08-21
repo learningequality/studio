@@ -71,7 +71,8 @@
                   <EditList
                     v-model="selected"
                     :nodeIds="nodeIds"
-                    @input="enableValidation(nodeIds);"
+                    :parentId="nodeIds[0]"
+                    @input="enableValidation(nodeIds)"
                   />
                 </div>
               </FileDropzone>
@@ -177,390 +178,358 @@
 
 <script>
 
-import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
-import FileUploadDefault from '../../views/files/FileUploadDefault';
-import { RouteNames, TabNames } from '../../constants';
-import SavingIndicator from './SavingIndicator';
-import EditView from './EditView';
-import EditList from './EditList';
-import { ContentKindLearningActivityDefaults } from 'shared/leUtils/ContentKinds';
-import { fileSizeMixin, routerMixin } from 'shared/mixins';
-import FileStorage from 'shared/views/files/FileStorage';
-import MessageDialog from 'shared/views/MessageDialog';
-import ResizableNavigationDrawer from 'shared/views/ResizableNavigationDrawer';
-import Uploader from 'shared/views/files/Uploader';
-import LoadingText from 'shared/views/LoadingText';
-import FormatPresets from 'shared/leUtils/FormatPresets';
-import OfflineText from 'shared/views/OfflineText';
-import ToolBar from 'shared/views/ToolBar';
-import BottomBar from 'shared/views/BottomBar';
-import FileDropzone from 'shared/views/files/FileDropzone';
-import { isNodeComplete } from 'shared/utils/validation';
-import { DELAYED_VALIDATION } from 'shared/constants';
-import { File } from 'shared/data/resources';
+  import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
+  import FileUploadDefault from '../../views/files/FileUploadDefault';
+  import { RouteNames, TabNames } from '../../constants';
+  import SavingIndicator from './SavingIndicator';
+  import EditView from './EditView';
+  import EditList from './EditList';
+  import { ContentKindLearningActivityDefaults } from 'shared/leUtils/ContentKinds';
+  import { fileSizeMixin, routerMixin } from 'shared/mixins';
+  import FileStorage from 'shared/views/files/FileStorage';
+  import MessageDialog from 'shared/views/MessageDialog';
+  import ResizableNavigationDrawer from 'shared/views/ResizableNavigationDrawer';
+  import Uploader from 'shared/views/files/Uploader';
+  import LoadingText from 'shared/views/LoadingText';
+  import FormatPresets, { FormatPresetsList } from 'shared/leUtils/FormatPresets';
+  import OfflineText from 'shared/views/OfflineText';
+  import ToolBar from 'shared/views/ToolBar';
+  import BottomBar from 'shared/views/BottomBar';
+  import FileDropzone from 'shared/views/files/FileDropzone';
+  import { isNodeComplete } from 'shared/utils/validation';
+  import { DELAYED_VALIDATION, fileErrors } from 'shared/constants';
+  import { File } from 'shared/data/resources';
 
-const CHECK_STORAGE_INTERVAL = 10000;
+  const CHECK_STORAGE_INTERVAL = 10000;
 
-export default {
-  name: 'EditModal',
-  components: {
-    EditList,
-    EditView,
-    ResizableNavigationDrawer,
-    Uploader,
-    FileStorage,
-    FileUploadDefault,
-    LoadingText,
-    MessageDialog,
-    OfflineText,
-    FileDropzone,
-    SavingIndicator,
-    ToolBar,
-    BottomBar,
-  },
-  mixins: [fileSizeMixin, routerMixin],
-  props: {
-    detailNodeIds: {
-      type: String,
-      default: '',
+  export default {
+    name: 'EditModal',
+    components: {
+      EditList,
+      EditView,
+      ResizableNavigationDrawer,
+      Uploader,
+      FileStorage,
+      FileUploadDefault,
+      LoadingText,
+      MessageDialog,
+      OfflineText,
+      FileDropzone,
+      SavingIndicator,
+      ToolBar,
+      BottomBar,
     },
-    tab: {
-      type: String,
-      default: TabNames.DETAILS,
+    mixins: [fileSizeMixin, routerMixin],
+    props: {
+      detailNodeIds: {
+        type: String,
+        default: '',
+      },
+      tab: {
+        type: String,
+        default: TabNames.DETAILS,
+      },
+      // Catch cases where user is navigating back from another view
+      // (e.g. selecting related resources)
+      targetNodeId: {
+        type: String,
+        required: false,
+        default: null,
+      },
     },
-    // Catch cases where user is navigating back from another view
-    // (e.g. selecting related resources)
-    targetNodeId: {
-      type: String,
-      required: false,
-      default: null,
+    data() {
+      return {
+        loading: false,
+        loadError: false,
+        selected: this.nodeIds,
+        promptInvalid: false,
+        promptUploading: false,
+        promptFailed: false,
+        listElevated: false,
+        storagePoll: null,
+      };
     },
-  },
-  data() {
-    return {
-      loading: false,
-      loadError: false,
-      selected: this.nodeIds,
-      promptInvalid: false,
-      promptUploading: false,
-      promptFailed: false,
-      listElevated: false,
-      storagePoll: null,
-    };
-  },
-  computed: {
-    ...mapGetters('contentNode', ['getContentNode', 'getContentNodeIsValid']),
-    ...mapGetters('assessmentItem', ['getAssessmentItems']),
-    ...mapGetters('currentChannel', ['currentChannel', 'canEdit']),
-    ...mapGetters('file', ['contentNodesAreUploading', 'getContentNodeFiles']),
-    ...mapState({
+    computed: {
+      ...mapGetters('contentNode', ['getContentNode', 'getContentNodeIsValid']),
+      ...mapGetters('assessmentItem', ['getAssessmentItems']),
+      ...mapGetters('currentChannel', ['currentChannel', 'canEdit']),
+      ...mapGetters('file', ['contentNodesAreUploading', 'getContentNodeFiles']),
+      ...mapState({
         online: state => state.connection.online,
-    }),
-    node() {
-        return this.getContentNode(this.parentId);
-    },
-    multipleNodes() {
-      // Only hide drawer when editing a single item
-      return this.nodeIds.length > 1;
-    },
-    addTopicsMode() {
-      return this.$route.name === RouteNames.ADD_TOPICS;
-    },
-    uploadMode() {
-      return this.$route.name === RouteNames.UPLOAD_FILES;
-    },
-    /* eslint-disable kolibri/vue-no-unused-properties */
-    createExerciseMode() {
-      return this.$route.name === RouteNames.ADD_EXERCISE;
-    },
-    /* eslint-enable */
-    editMode() {
-      return this.$route.name === RouteNames.CONTENTNODE_DETAILS;
-    },
-    showStorage() {
-      return this.uploadMode || this.editMode;
-    },
-    showDrawer() {
-      return (
-        !this.loading &&
-        (this.multipleNodes || (this.uploadMode && this.nodeIds.length) || this.addTopicsMode)
-      );
-    },
-    showFileUploadDefault() {
-      return this.uploadMode && !this.nodeIds.length;
-    },
-    nodeIds() {
-      return (this.detailNodeIds && this.detailNodeIds.split(',')) || [];
-    },
-    modalTitle() {
-      if (this.createExerciseMode) {
-        return this.$tr('createExerciseHeader');
-      } else if (this.uploadMode) {
-        return this.nodeIds.length ? this.$tr('editFilesHeader') : this.$tr('uploadFilesHeader');
-      } else if (this.addTopicsMode) {
-        return this.$tr('addTopicsHeader');
-      }
-      return this.$tr('editingDetailsHeader');
-    },
-    parentTitle() {
-      const node = this.$route.params.nodeId && this.getContentNode(this.$route.params.nodeId);
-      return node ? node.title : '';
-    },
-    invalidNodes() {
-        return this.nodeIds.filter(id => !this.getContentNodeIsValid(id));
-    },
-  },
-  beforeRouteEnter(to, from, next) {
-    if (
-      to.name === RouteNames.CONTENTNODE_DETAILS ||
-      to.name === RouteNames.ADD_TOPICS ||
-      to.name === RouteNames.ADD_EXERCISE ||
-      to.name === RouteNames.UPLOAD_FILES
-    ) {
-        return next(vm => {
-        // Catch view-only enters before loading data
-        if (!vm.canEdit) {
-          return vm.navigateBack();
-        }
-        vm.loading = true;
-
-        let promises;
-
-        const parentTopicId = to.params.nodeId;
-        const childrenNodesIds =
-          to.params.detailNodeIds !== undefined ? to.params.detailNodeIds.split(',') : [];
-        // remove duplicates - if a topic is being edited,
-        // then parent topic ID is also in children nodes IDs
-        const allNodesIds = [...new Set([...childrenNodesIds, parentTopicId])];
-
-        // Nice to have TODO: Refactor EditModal to make each tab
-        // responsible for fetching data that it needs
-        if (childrenNodesIds.length) {
-          promises = [
-            vm.loadContentNodes({ id__in: allNodesIds }),
-              ...childrenNodesIds.map(nodeId => vm.loadRelatedResources(nodeId)),
-            // Do not remove - there is a logic that relies heavily
-            // on assessment items and files being properly loaded
-            // (especially marking nodes as (in)complete)
-            vm.loadFiles({ contentnode__in: childrenNodesIds }),
-            vm.loadAssessmentItems({ contentnode__in: childrenNodesIds }),
-          ];
-        } else {
-          // no need to load assessment items or files as topics have none
-          promises = [vm.loadContentNode(parentTopicId)];
-        }
-        return Promise.all(promises)
-          .then(() => {
-            vm.updateTitleForPage();
-            vm.loading = false;
-          })
-          .catch(() => {
-            vm.loading = false;
-            vm.loadError = true;
-          })
-          .then(() => {
-            // self-healing of nodes' validation status
-            // in case we receive incorrect data from backend
-            const validationPromises = [];
-              allNodesIds.forEach(nodeId => {
-              const node = vm.getContentNode(nodeId);
-              const completeCheck = isNodeComplete({
-                nodeDetails: node,
-                assessmentItems: vm.getAssessmentItems(nodeId),
-                files: vm.getContentNodeFiles(nodeId),
-              });
-
-              if (completeCheck !== node.complete) {
-                validationPromises.push(
-                  vm.updateContentNode({ id: nodeId, complete: completeCheck })
-                );
-              }
-            });
-            return Promise.all(validationPromises);
-          });
-      });
-    }
-    return next(false);
-  },
-  mounted() {
-    this.hideHTMLScroll(true);
-    this.selected = this.targetNodeId ? [this.targetNodeId] : this.nodeIds;
-    this.storagePoll = setInterval(this.fetchUserStorage, CHECK_STORAGE_INTERVAL);
-  },
-  methods: {
-    ...mapActions(['fetchUserStorage']),
-    ...mapActions('contentNode', [
-      'loadContentNode',
-      'loadContentNodes',
-      'updateContentNode',
-      'loadRelatedResources',
-      'createContentNode',
-    ]),
-    ...mapActions('file', ['loadFiles', 'updateFile']),
-    ...mapActions('assessmentItem', ['loadAssessmentItems', 'updateAssessmentItems']),
-    ...mapMutations('contentNode', { enableValidation: 'ENABLE_VALIDATION_ON_NODES' }),
-    closeModal() {
-      this.promptUploading = false;
-      this.promptInvalid = false;
-      this.promptFailed = false;
-      clearInterval(this.storagePoll);
-      this.navigateBack();
-    },
-    navigateBack() {
-      this.hideHTMLScroll(false);
-      this.$router.push({
-        name: RouteNames.TREE_VIEW,
-        params: { nodeId: this.$route.params.nodeId },
-      });
-    },
-    hideHTMLScroll(hidden) {
-      document.querySelector('html').style = hidden
-        ? 'overflow-y: hidden !important;'
-        : 'overflow-y: auto !important';
-    },
-    scroll(e) {
-      this.listElevated = e.target.scrollTop > 0;
-    },
-
-    /* Button actions */
-    handleClose() {
-      // X button action
-      this.selected = this.nodeIds;
-      this.$nextTick(() => {
-        this.enableValidation(this.nodeIds);
-        const assessmentItems = this.getAssessmentItems(this.nodeIds);
-          assessmentItems.forEach(item =>
-          item.question ? (item[DELAYED_VALIDATION] = false) : ''
+      }),
+      multipleNodes() {
+        // Only hide drawer when editing a single item
+        return this.nodeIds.length > 1;
+      },
+      addTopicsMode() {
+        return this.$route.name === RouteNames.ADD_TOPICS;
+      },
+      uploadMode() {
+        return this.$route.name === RouteNames.UPLOAD_FILES;
+      },
+      /* eslint-disable kolibri/vue-no-unused-properties */
+      createExerciseMode() {
+        return this.$route.name === RouteNames.ADD_EXERCISE;
+      },
+      /* eslint-enable */
+      editMode() {
+        return this.$route.name === RouteNames.CONTENTNODE_DETAILS;
+      },
+      showStorage() {
+        return this.uploadMode || this.editMode;
+      },
+      showDrawer() {
+        return (
+          !this.loading &&
+          (this.multipleNodes || (this.uploadMode && this.nodeIds.length) || this.addTopicsMode)
         );
-        this.updateAssessmentItems(assessmentItems);
-
-        // reaches into Details Tab to run save of diffTracker
-        // before the validation pop up is executed
-        if (this.$refs.editView) {
-          this.$nextTick(() => {
-            this.$refs.editView.immediateSaveAll().then(() => {
-              // Catch uploads in progress and invalid nodes
-              if (this.invalidNodes.length) {
-                this.selected = [this.invalidNodes[0]];
-                this.promptInvalid = true;
-              } else if (this.contentNodesAreUploading(this.nodeIds)) {
-                this.promptUploading = true;
-              } else {
-                this.closeModal();
-              }
-            });
-          });
-        } else {
-          this.closeModal();
+      },
+      showFileUploadDefault() {
+        return this.uploadMode && !this.nodeIds.length;
+      },
+      nodeIds() {
+        return (this.detailNodeIds && this.detailNodeIds.split(',')) || [];
+      },
+      modalTitle() {
+        if (this.createExerciseMode) {
+          return this.$tr('createExerciseHeader');
+        } else if (this.uploadMode) {
+          return this.nodeIds.length ? this.$tr('editFilesHeader') : this.$tr('uploadFilesHeader');
+        } else if (this.addTopicsMode) {
+          return this.$tr('addTopicsHeader');
         }
-      });
+        return this.$tr('editingDetailsHeader');
+      },
+      parentTitle() {
+        const node = this.$route.params.nodeId && this.getContentNode(this.$route.params.nodeId);
+        return node ? node.title : '';
+      },
+      invalidNodes() {
+        return this.nodeIds.filter(id => !this.getContentNodeIsValid(id));
+      },
     },
-
-    /* Creation actions */
-    createNode(kind, payload = {}) {
-      this.enableValidation(this.nodeIds);
-      // Default learning activity on upload
+    beforeRouteEnter(to, from, next) {
       if (
-        !Object.keys(payload.learning_activities || {}).length &&
-        kind in ContentKindLearningActivityDefaults
+        to.name === RouteNames.CONTENTNODE_DETAILS ||
+        to.name === RouteNames.ADD_TOPICS ||
+        to.name === RouteNames.ADD_EXERCISE ||
+        to.name === RouteNames.UPLOAD_FILES
       ) {
-        payload.learning_activities = {
-          [ContentKindLearningActivityDefaults[kind]]: true,
-        };
-      }
-      return this.createContentNode({
-        kind,
-        parent: this.$route.params.nodeId,
-        channel_id: this.currentChannel.id,
-        ...payload,
-        }).then(newNodeId => {
-        this.$router.push({
-          name: this.$route.name,
-          params: {
-            nodeId: this.$route.params.nodeId,
-            detailNodeIds: this.nodeIds.concat(newNodeId).join(','),
-          },
-        });
-        return newNodeId;
-      });
-    },
-    createTopic() {
-      this.createNode('topic', {
-        title: '',
-        }).then(newNodeId => {
-        this.selected = [newNodeId];
-      });
-    },
-    async uploadResourceNode(file, orgFile) {
-      File.uploadUrl({
-        checksum: file.checksum,
-        size: file.file_size,
-        type: 'application/zip',
-        name: file.original_filename,
-        file_format: file.file_format,
-        preset: file.metadata.preset,
-        // ...orgFile,
-      }).catch((error) => {
-        let errorType = fileErrors.UPLOAD_FAILED;
-        if (error.response && error.response.status === 412) {
-          errorType = fileErrors.NO_STORAGE;
-        }
-        return Promise.reject(errorType);
-      });
-      return Promise.all([response]);
-    },
-    createNodesFromUploads(fileUploads) {
-      fileUploads.forEach((file, index) => {
-        let title;
-        if (file.metadata.title) {
-          title = file.metadata.title;
-        } else {
-          title = file.original_filename.split('.').slice(0, -1).join('.');
-        }
-        if (file.metadata.orgs === undefined) {
-          this.createNode(
-            FormatPresets.has(file.preset) && FormatPresets.get(file.preset).kind_id,
-            { title, ...file.metadata }
-          ).then((newNodeId) => {
-            if (index === 0) {
-              this.selected = [newNodeId];
-            }
-            this.updateFile({
-              ...file,
-              contentnode: newNodeId,
+        return next(vm => {
+          // Catch view-only enters before loading data
+          if (!vm.canEdit) {
+            return vm.navigateBack();
+          }
+          vm.loading = true;
+
+          let promises;
+
+          const parentTopicId = to.params.nodeId;
+          const childrenNodesIds =
+            to.params.detailNodeIds !== undefined ? to.params.detailNodeIds.split(',') : [];
+          // remove duplicates - if a topic is being edited,
+          // then parent topic ID is also in children nodes IDs
+          const allNodesIds = [...new Set([...childrenNodesIds, parentTopicId])];
+
+          // Nice to have TODO: Refactor EditModal to make each tab
+          // responsible for fetching data that it needs
+          if (childrenNodesIds.length) {
+            promises = [
+              vm.loadContentNodes({ id__in: allNodesIds }),
+              ...childrenNodesIds.map(nodeId => vm.loadRelatedResources(nodeId)),
+              // Do not remove - there is a logic that relies heavily
+              // on assessment items and files being properly loaded
+              // (especially marking nodes as (in)complete)
+              vm.loadFiles({ contentnode__in: childrenNodesIds }),
+              vm.loadAssessmentItems({ contentnode__in: childrenNodesIds }),
+            ];
+          } else {
+            // no need to load assessment items or files as topics have none
+            promises = [vm.loadContentNode(parentTopicId)];
+          }
+          return Promise.all(promises)
+            .then(() => {
+              vm.updateTitleForPage();
+              vm.loading = false;
+            })
+            .catch(() => {
+              vm.loading = false;
+              vm.loadError = true;
+            })
+            .then(() => {
+              // self-healing of nodes' validation status
+              // in case we receive incorrect data from backend
+              const validationPromises = [];
+              allNodesIds.forEach(nodeId => {
+                const node = vm.getContentNode(nodeId);
+                const completeCheck = isNodeComplete({
+                  nodeDetails: node,
+                  assessmentItems: vm.getAssessmentItems(nodeId),
+                  files: vm.getContentNodeFiles(nodeId),
+                });
+
+                if (completeCheck !== node.complete) {
+                  validationPromises.push(
+                    vm.updateContentNode({ id: nodeId, complete: completeCheck })
+                  );
+                }
+              });
+              return Promise.all(validationPromises);
             });
+        });
+      }
+      return next(false);
+    },
+    mounted() {
+      this.hideHTMLScroll(true);
+      this.selected = this.targetNodeId ? [this.targetNodeId] : this.nodeIds;
+      this.storagePoll = setInterval(this.fetchUserStorage, CHECK_STORAGE_INTERVAL);
+    },
+    methods: {
+      ...mapActions(['fetchUserStorage']),
+      ...mapActions('contentNode', [
+        'loadContentNode',
+        'loadContentNodes',
+        'updateContentNode',
+        'loadRelatedResources',
+        'createContentNode',
+      ]),
+      ...mapActions('file', ['loadFiles', 'updateFile']),
+      ...mapActions('assessmentItem', ['loadAssessmentItems', 'updateAssessmentItems']),
+      ...mapMutations('contentNode', { enableValidation: 'ENABLE_VALIDATION_ON_NODES' }),
+      closeModal() {
+        this.promptUploading = false;
+        this.promptInvalid = false;
+        this.promptFailed = false;
+        clearInterval(this.storagePoll);
+        this.navigateBack();
+      },
+      navigateBack() {
+        this.hideHTMLScroll(false);
+        this.$router.push({
+          name: RouteNames.TREE_VIEW,
+          params: { nodeId: this.$route.params.nodeId },
+        });
+      },
+      hideHTMLScroll(hidden) {
+        document.querySelector('html').style = hidden
+          ? 'overflow-y: hidden !important;'
+          : 'overflow-y: auto !important';
+      },
+      scroll(e) {
+        this.listElevated = e.target.scrollTop > 0;
+      },
+
+      /* Button actions */
+      handleClose() {
+        // X button action
+        this.selected = this.nodeIds;
+        this.$nextTick(() => {
+          this.enableValidation(this.nodeIds);
+          const assessmentItems = this.getAssessmentItems(this.nodeIds);
+          assessmentItems.forEach(item =>
+            item.question ? (item[DELAYED_VALIDATION] = false) : ''
+          );
+          this.updateAssessmentItems(assessmentItems);
+
+          // reaches into Details Tab to run save of diffTracker
+          // before the validation pop up is executed
+          if (this.$refs.editView) {
+            this.$nextTick(() => {
+              this.$refs.editView.immediateSaveAll().then(() => {
+                // Catch uploads in progress and invalid nodes
+                if (this.invalidNodes.length) {
+                  this.selected = [this.invalidNodes[0]];
+                  this.promptInvalid = true;
+                } else if (this.contentNodesAreUploading(this.nodeIds)) {
+                  this.promptUploading = true;
+                } else {
+                  this.closeModal();
+                }
+              });
+            });
+          } else {
+            this.closeModal();
+          }
+        });
+      },
+
+      /* Creation actions */
+      createNode(kind, payload = {}, parent = this.$route.params.nodeId) {
+        this.enableValidation(this.nodeIds);
+        // Default learning activity on upload
+        if (
+          !Object.keys(payload.learning_activities || {}).length &&
+          kind in ContentKindLearningActivityDefaults
+        ) {
+          payload.learning_activities = {
+            [ContentKindLearningActivityDefaults[kind]]: true,
+          };
+        }
+        return this.createContentNode({
+          kind,
+          parent: parent,
+          channel_id: this.currentChannel.id,
+          ...payload,
+        }).then(newNodeId => {
+          this.$router.push({
+            name: this.$route.name,
+            params: {
+              nodeId: this.$route.params.nodeId,
+              detailNodeIds: this.nodeIds.concat(newNodeId).join(','),
+            },
           });
-        } else if (file.metadata.orgs) {
-          this.createContentNode({
-            parent: this.$route.params.nodeId,
-            kind: 'topic',
-            ...file.metadata,
-          }).then((newNodeId) => {
-            for (let i = 0; ; i++) {
-              if (file.metadata.orgs[`org${i}`] === undefined) {
-                break;
-              } else {
-                const org = file.metadata.orgs[`org${i}`];
-                this.createContentNode({
-                  parent: newNodeId,
-                  kind: 'topic',
-                  ...org,
-                }).then((id) => {
-                  for (let j = 0; ; j++) {
-                    if (org[`file${j}`] === undefined) {
-                      break;
-                    } else {
-                      const orgFile = org[`file${j}`];
+          return newNodeId;
+        });
+      },
+      createTopic() {
+        this.createNode('topic', {
+          title: '',
+        }).then(newNodeId => {
+          this.selected = [newNodeId];
+        });
+      },
+      createNodesFromUploads(fileUploads) {
+        fileUploads.forEach((file, index) => {
+          let title;
+          if (file.metadata.title) {
+            title = file.metadata.title;
+          } else {
+            title = file.original_filename
+              .split('.')
+              .slice(0, -1)
+              .join('.');
+          }
+          if (file.metadata.orgs === undefined) {
+            this.createNode(
+              FormatPresets.has(file.preset) && FormatPresets.get(file.preset).kind_id,
+              { title, ...file.metadata }
+            ).then(newNodeId => {
+              if (index === 0) {
+                this.selected = [newNodeId];
+              }
+              this.updateFile({
+                ...file,
+                contentnode: newNodeId,
+              });
+            });
+          } else if (file.metadata.orgs) {
+            this.createNode('topic', file.metadata).then(newNodeId => {
+              Object.values(file.metadata.orgs).forEach(org => {
+                this.createNode('topic', org, newNodeId).then(topicNodeId => {
+                  Object.values(org).forEach(orgFile => {
+                    if (typeof orgFile === 'object') {
                       const extra_fields = {};
                       extra_fields['options'] = { entry: orgFile.resourceHref };
-                      let nodeId;
-                      this.createContentNode({
-                        parent: id,
-                        kind: file.metadata.preset,
-                        title: orgFile.title,
-                        ...extra_fields,
-                      }).then((resourceNodeId) => {
-                        nodeId = resourceNodeId;
+                      extra_fields['title'] = orgFile.title;
+                      let file_kind = null;
+                      FormatPresetsList.forEach(p => {
+                        if (p.id === file.metadata.preset) {
+                          file_kind = p.kind_id;
+                        }
+                      });
+
+                      this.createNode(file_kind, extra_fields, topicNodeId).then(resourceNodeId => {
                         return File.uploadUrl({
                           checksum: file.checksum,
                           size: file.file_size,
@@ -568,103 +537,103 @@ export default {
                           name: file.original_filename,
                           file_format: file.file_format,
                           preset: file.metadata.preset,
-                        })
-                          .catch((error) => {
+                        }).then(data => {
+                          const fileObject = {
+                            ...data.file,
+                            loaded: 0,
+                            total: file.size,
+                          };
+                          if (index === 0) {
+                            this.selected = [resourceNodeId];
+                          }
+                          this.updateFile({
+                            ...fileObject,
+                            contentnode: resourceNodeId,
+                          }).catch(error => {
                             let errorType = fileErrors.UPLOAD_FAILED;
                             if (error.response && error.response.status === 412) {
                               errorType = fileErrors.NO_STORAGE;
                             }
                             return Promise.reject(errorType);
-                          })
-                          .then((data) => {
-                            const fileObject = {
-                              ...data.file,
-                              loaded: 0,
-                              total: file.size,
-                            };
-                            if (index === 0) {
-                              this.selected = [nodeId];
-                            }
-                            this.updateFile({
-                              ...fileObject,
-                              contentnode: nodeId,
-                            });
                           });
+                        });
                       });
                     }
-                  }
+                  });
                 });
-              }
-            }
-          });
-        }
-      });
+              });
+            });
+          }
+        });
+      },
+      updateTitleForPage() {
+        this.updateTabTitle(this.$store.getters.appendChannelName(this.modalTitle));
+      },
+      trackUpload() {
+        this.$analytics.trackAction('file_uploader', 'Add files', {
+          eventLabel: 'Upload file',
+        });
+      },
     },
-    updateTitleForPage() {
-      this.updateTabTitle(this.$store.getters.appendChannelName(this.modalTitle));
+    $trs: {
+      editingDetailsHeader: 'Edit details',
+      uploadFilesHeader: 'Upload files',
+      editFilesHeader: 'Edit files',
+      createExerciseHeader: 'New exercise',
+      addTopicsHeader: 'New folder',
+      invalidNodesFound:
+        '{count, plural,\n =1 {# incomplete resource found}\n other {# incomplete resources found}}',
+      invalidNodesFoundText:
+        'Incomplete resources will not be published until these errors are resolved',
+      saveAnywaysButton: 'Exit anyway',
+      keepEditingButton: 'Keep editing',
+      saveFailedHeader: 'Save failed',
+      saveFailedText: 'There was a problem saving your content',
+      addTopic: 'Add new folder',
+      uploadButton: 'Upload more',
+      uploadInProgressHeader: 'Upload in progress',
+      uploadInProgressText: 'Uploads that are in progress will be lost if you exit',
+      dismissDialogButton: 'Cancel',
+      cancelUploadsButton: 'Exit',
+      closeWithoutSavingButton: 'Close without saving',
+      okButton: 'OK',
+      loadErrorText: 'Failed to load content',
+      finishButton: 'Finish',
     },
-    trackUpload() {
-      this.$analytics.trackAction('file_uploader', 'Add files', {
-        eventLabel: 'Upload file',
-      });
-    },
-  },
-  $trs: {
-    editingDetailsHeader: 'Edit details',
-    uploadFilesHeader: 'Upload files',
-    editFilesHeader: 'Edit files',
-    createExerciseHeader: 'New exercise',
-    addTopicsHeader: 'New folder',
-    invalidNodesFound:
-      '{count, plural,\n =1 {# incomplete resource found}\n other {# incomplete resources found}}',
-    invalidNodesFoundText:
-      'Incomplete resources will not be published until these errors are resolved',
-    saveAnywaysButton: 'Exit anyway',
-    keepEditingButton: 'Keep editing',
-    saveFailedHeader: 'Save failed',
-    saveFailedText: 'There was a problem saving your content',
-    addTopic: 'Add new folder',
-    uploadButton: 'Upload more',
-    uploadInProgressHeader: 'Upload in progress',
-    uploadInProgressText: 'Uploads that are in progress will be lost if you exit',
-    dismissDialogButton: 'Cancel',
-    cancelUploadsButton: 'Exit',
-    closeWithoutSavingButton: 'Close without saving',
-    okButton: 'OK',
-    loadErrorText: 'Failed to load content',
-    finishButton: 'Finish',
-  },
-};
+  };
+
 </script>
 
 <style lang="less" scoped>
-/deep/ .v-toolbar__extension {
-  padding: 0;
 
-  .v-toolbar__content {
-    border-bottom: 1px solid var(--v-grey-lighten4);
+  /deep/ .v-toolbar__extension {
+    padding: 0;
+
+    .v-toolbar__content {
+      border-bottom: 1px solid var(--v-grey-lighten4);
+    }
   }
-}
 
-// there is a conflicting style for .row class in common styles
-// that sets left and right margin to -15px which breaks Vuetify
-// elements using Vuetify's .row class
-.row {
-  margin-right: 0;
-  margin-left: 0;
-}
+  // there is a conflicting style for .row class in common styles
+  // that sets left and right margin to -15px which breaks Vuetify
+  // elements using Vuetify's .row class
+  .row {
+    margin-right: 0;
+    margin-left: 0;
+  }
 
-/deep/ .v-content__wrap {
-  max-height: calc(100vh - 128px);
-  overflow-y: auto;
-}
+  /deep/ .v-content__wrap {
+    max-height: calc(100vh - 128px);
+    overflow-y: auto;
+  }
 
-.add-wrapper {
-  position: sticky;
-  top: 0;
-  z-index: 5;
-  width: calc(100% + 4px);
-  margin: 0 -3px;
-  margin-top: -4px !important;
-}
+  .add-wrapper {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    width: calc(100% + 4px);
+    margin: 0 -3px;
+    margin-top: -4px !important;
+  }
+
 </style>

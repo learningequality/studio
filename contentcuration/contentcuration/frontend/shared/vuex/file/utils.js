@@ -3,7 +3,6 @@ import JSZip from 'jszip';
 import { FormatPresetsList, FormatPresetsNames } from 'shared/leUtils/FormatPresets';
 import { LicensesList } from 'shared/leUtils/Licenses';
 import LanguagesMap from 'shared/leUtils/Languages';
-import JSZip from 'jszip';
 
 const BLOB_SLICE = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice;
 const CHUNK_SIZE = 2097152;
@@ -13,10 +12,15 @@ const MEDIA_PRESETS = [
   FormatPresetsNames.LOW_RES_VIDEO,
   FormatPresetsNames.QTI,
   FormatPresetsNames.HTML5_DEPENDENCY,
-  FormatPresetsNames.HTML5_ZIP
+  FormatPresetsNames.HTML5_ZIP,
 ];
 const VIDEO_PRESETS = [FormatPresetsNames.HIGH_RES_VIDEO, FormatPresetsNames.LOW_RES_VIDEO];
-const IMS_PRESETS = [FormatPresetsNames.QTI, FormatPresetsNames.HTML5_DEPENDENCY, FormatPresetsNames.HTML5_ZIP]
+const H5P_PRESETS = [FormatPresetsNames.H5P];
+const IMS_PRESETS = [
+  FormatPresetsNames.QTI,
+  FormatPresetsNames.HTML5_DEPENDENCY,
+  FormatPresetsNames.HTML5_ZIP,
+];
 
 export function getHash(file) {
   return new Promise((resolve, reject) => {
@@ -47,126 +51,109 @@ export function getHash(file) {
   });
 }
 
-const getLeafNodes = (node) => {
+const getLeafNodes = node => {
   if (!node.children || node.children.length === 0) {
     return [node];
   }
-  
+
   // Recursive case: Traverse all children and collect leaf nodes
   let leafNodes = [];
-  for (let child of node.children) {
+  for (const child of node.children) {
     const childLeafNodes = getLeafNodes(child);
     leafNodes = leafNodes.concat(childLeafNodes);
   }
-  
+
   return leafNodes;
+};
+
+function extractManifestFile(data, xmlDoc) {
+  const orgs = {};
+  for (let i = 0; i < data.length; i++) {
+    let index = 0;
+    for (let j = 0; j < data[i].childNodes.length; j++) {
+      const org = {};
+      if (data[i].childNodes[j].nodeType === 1) {
+        const orgNode = data[i].childNodes[j];
+        const title = orgNode.getElementsByTagName('title');
+        org.title = title[0].textContent;
+        const items = orgNode.getElementsByTagName('item');
+        for (let k = 0; k < items.length; k++) {
+          const file = {};
+          const item = items[k];
+          file.title = title[1 + k].textContent;
+          file.identifierref = item.getAttribute('identifierref');
+          file.resourceHref = xmlDoc
+            .querySelectorAll(`[identifier=${file.identifierref}]`)[0]
+            .getAttribute('href');
+          const metadataNodes = orgNode.getElementsByTagName('metadata');
+          if (metadataNodes && metadataNodes.length != 0) {
+            for (let l = 0; l < metadataNodes.length; l++) {
+              const nodeValue = getLeafNodes(metadataNodes[l]);
+              file[`${nodeValue[0].nodeName}`] = nodeValue[0].textContent;
+            }
+          }
+          org[`file${index}`] = file;
+          index++;
+        }
+        orgs[`org${i}`] = org;
+      }
+    }
+  }
+  return orgs;
 }
 
-export async function extractIMSMetadata(fileInput, metadata){
+export async function extractIMSMetadata(fileInput) {
   const zip = new JSZip();
-  zip
+  const metadata = {};
+  return zip
     .loadAsync(fileInput)
     .then(function(zip) {
-      const manifestFile = zip.file("imsmanifest.xml");
-      const metadataFile = zip.file("imsmetadata.xml");
+      const manifestFile = zip.file('imsmanifest.xml');
       if (!manifestFile) {
-        reject(new Error("imsmanifest.xml not found in the zip file."));
-        return;
-      } else if(manifestFile && metadataFile){
-        manifestFile
-        .async("text")
-        .then(content => {
-          // Parse the XML content
-            const parser = new DOMParser();
-            const xmlDoc = parser.parseFromString(content, "application/xml");
-            const data = xmlDoc.getElementsByTagName('organizations')
-            for( let i = 0 ; i < data.length; i++){
-              let orgs = [];
-              let index = 0;
-              for( let j = 0 ; j < data[i].childNodes.length; j++){
-                let org = []
-                if(data[i].childNodes[j].nodeType === 1){
-                  const orgNode = data[i].childNodes[j];
-                  const title = orgNode.getElementsByTagName('title')
-                  org.title = title[0].textContent
-                  const items = orgNode.getElementsByTagName('item');
-                  for(let k = 0; k < items.length; k++){
-                    const file = {};
-                    const item = items[k];
-                    file.title = title[1+k].textContent;
-                    file.identifierref = item.getAttribute('identifierref');
-                    file.resourceHref = xmlDoc.querySelectorAll(`[identifier=${file.identifierref}]`)[0].getAttribute('href')
-                    org[`file${index}`] = file;
-                    index++;
-                  }
-                  orgs[`org${i}`] = org
-                }
-              }
-              metadata.orgs = orgs
-            }
-          })
-        metadataFile
-          .async("text")
-          .then(content=> {
-            const parser = new DOMParser();
-            const xmlDoc = parser.parseFromString(content, "application/xml");
-            metadata.title = xmlDoc.getElementsByTagName('lomes:title').length === 0? undefined : xmlDoc.getElementsByTagName('lomes:title')[0].children[0].textContent;
-            metadata.language = xmlDoc.getElementsByTagName("lomes:idiom").length === 0 ? undefined : xmlDoc.getElementsByTagName("lomes:idiom")[0].children[0].textContent;
-            metadata.description = xmlDoc.getElementsByTagName("lomes:description").length === 0 ? undefined: xmlDoc.getElementsByTagName("lomes:description")[0].children[0].textContent;
-          })
+        throw new Error('imsmanifest.xml not found in the zip file.');
       } else {
-        manifestFile
-        .async("text")
-        .then(content => {
-          // Parse the XML content
-          const parser = new DOMParser();
-          const xmlDoc = parser.parseFromString(content, "application/xml");
-          metadata.title = xmlDoc.getElementsByTagName('title').length === 0? undefined : xmlDoc.getElementsByTagName('title')[0].textContent;
-          metadata.language = xmlDoc.getElementsByTagName("imsmd:language").length === 0 ? undefined : xmlDoc.getElementsByTagName("imsmd:language")[0].textContent;
-          metadata.description = xmlDoc.getElementsByTagName("imsmd:description").length === 0 ? undefined: xmlDoc.getElementsByTagName("imsmd:description")[0].textContent;
-          const data = xmlDoc.getElementsByTagName('organizations')
-          for( let i = 0 ; i < data.length; i++){
-            let orgs = [];
-            let index = 0;
-            for( let j = 0 ; j < data[i].childNodes.length; j++){
-              let org = []
-              if(data[i].childNodes[j].nodeType === 1){
-                const orgNode = data[i].childNodes[j];
-                const title = orgNode.getElementsByTagName('title')
-                org.title = title[0].textContent
-                const items = orgNode.getElementsByTagName('item');
-                for(let k = 0; k < items.length; k++){
-                  const file = {};
-                  const item = items[k];
-                  file.title = title[1+k].textContent;
-                  file.identifierref = item.getAttribute('identifierref');
-                  file.resourceHref = xmlDoc.querySelectorAll(`[identifier=${file.identifierref}]`)[0].getAttribute('href')
-                  const metadataNodes = orgNode.getElementsByTagName('metadata');
-                  if(metadataNodes && metadataNodes.length != 0){
-                    for( let l = 0 ; l < metadataNodes.length ; l++){
-                      let nodeValue = getLeafNodes(metadataNodes[l]);
-                      file[`${nodeValue[0].nodeName}`] = nodeValue[0].textContent
-                    }
-                  }
-                  org[`file${index}`] = file;
-                  index++;
-                }
-                orgs[`org${i}`] = org
-              }
-            }
-            metadata.orgs = orgs
-          }
-          return metadata
-        })
-        .catch(error => {
-          reject(error); 
-        });
+        return manifestFile.async('text');
       }
     })
-    .catch(error => {
-      reject(error); // Failed to load the zip file
+    .then(manifestFile => {
+      const parser = new DOMParser();
+      const xmlDoc = parser.parseFromString(manifestFile, 'application/xml');
+      const data = xmlDoc.getElementsByTagName('organizations');
+      metadata.orgs = extractManifestFile(data, xmlDoc);
+      const metadataFile = zip.file('imsmetadata.xml');
+      if (metadataFile) {
+        metadataFile.async('text').then(content => {
+          const parser = new DOMParser();
+          const xmlDoc = parser.parseFromString(content, 'application/xml');
+          metadata.title =
+            xmlDoc.getElementsByTagName('lomes:title').length === 0
+              ? undefined
+              : xmlDoc.getElementsByTagName('lomes:title')[0].children[0].textContent;
+          metadata.language =
+            xmlDoc.getElementsByTagName('lomes:idiom').length === 0
+              ? undefined
+              : xmlDoc.getElementsByTagName('lomes:idiom')[0].children[0].textContent;
+          metadata.description =
+            xmlDoc.getElementsByTagName('lomes:description').length === 0
+              ? undefined
+              : xmlDoc.getElementsByTagName('lomes:description')[0].children[0].textContent;
+        });
+      } else {
+        metadata.title =
+          xmlDoc.getElementsByTagName('title').length === 0
+            ? undefined
+            : xmlDoc.getElementsByTagName('title')[0].textContent;
+        metadata.language =
+          xmlDoc.getElementsByTagName('imsmd:language').length === 0
+            ? undefined
+            : xmlDoc.getElementsByTagName('imsmd:language')[0].textContent;
+        metadata.description =
+          xmlDoc.getElementsByTagName('imsmd:description').length === 0
+            ? undefined
+            : xmlDoc.getElementsByTagName('imsmd:description')[0].textContent;
+      }
+      return metadata;
     });
-  return metadata
 }
 
 const extensionPresetMap = FormatPresetsList.reduce((map, value) => {
@@ -283,7 +270,9 @@ export function extractMetadata(file, preset = null) {
       });
       resolve(metadata);
     } else if (isIMSCP) {
-      extractIMSMetadata(file, metadata)
+      extractIMSMetadata(file).then(data => {
+        Object.assign(metadata, data);
+      });
       resolve(metadata);
     } else {
       const mediaElement = document.createElement(isVideo ? 'video' : 'audio');
