@@ -51,6 +51,7 @@
   import { notSupportedCaptionLanguages } from 'shared/leUtils/TranscriptionLanguages';
   import LanguageDropdown from 'shared/views/LanguageDropdown';
   import { CaptionFile, uuid4 } from 'shared/data/resources';
+  import { GENERATING } from 'shared/data/constants';
 
   export default {
     name: 'CaptionsTab',
@@ -70,6 +71,9 @@
         isGeneratingCaptions: false,
       };
     },
+    created() {
+      this.updateIsGeneratingCaptions();
+    },
     computed: {
       ...mapState('caption', ['captionFilesMap', 'captionCuesMap']),
       ...mapGetters('file', ['getContentNodeFiles']),
@@ -79,11 +83,11 @@
       },
     },
     methods: {
-      ...mapActions('caption', ['addCaptionFile', 'addCaptionCue']),
+      ...mapActions('caption', ['addCaptionFile']),
       logState() {
         console.log('nodeId ', this.nodeId);
         console.log(this.captionFilesMap[this.nodeId]);
-        console.log(this.captionCuesMap);
+        console.log(this.captionCuesMap[this.nodeId]);
       },
       addCaption() {
         // TODO: select the `file` with longest duration as recommended by @bjester.
@@ -96,8 +100,8 @@
         const fileId = this.getContentNodeFiles(this.nodeId)[0].id;
         const language = this.selectedLanguage;
         if (!language && !fileId) return;
-        this.isGeneratingCaptions = true;
 
+        this.setLoadingFlag(true);
         this.addCaptionFile({
           id: id,
           file_id: fileId,
@@ -106,16 +110,33 @@
         });
 
         CaptionFile.waitForCaptionCueGeneration(id).then(generatingFlag => {
+          // known issue: the loading doesnt stop even loaded 
+          // (means the flag is false) untill reloaded
+          this.setLoadingFlag(generatingFlag)
           this.selectedLanguage = null;
-          this.addCaptionCue({ caption_file_id: id }).then(cues => {
-            console.log(cues);
-          });
-          this.isGeneratingCaptions = generatingFlag;
+          console.log('generating_flag: ', generatingFlag);
         });
       },
       fileName() {
         const name = String(this.getContentNodeFiles(this.nodeId)[0].original_filename);
         return name.split('.')[0];
+      },
+      updateIsGeneratingCaptions() {
+        const captionFileIds = Object.keys(this.captionFilesMap[this.nodeId] || {});
+        let isAnyGenerating = false;
+        for (const id of captionFileIds) {
+          if (this.captionFilesMap[this.nodeId][id][GENERATING] === true) {
+            isAnyGenerating = true;
+            break; // Exit loop if a generating flag is found
+          }
+        }
+        this.setLoadingFlag(isAnyGenerating);
+        // TODO: here set a UI like (generating "en" for this contentnode file)
+        // this adds more detail to what is generating
+        // by using the vuex[nodeId][id].language
+      },
+      setLoadingFlag(value) {
+        this.isGeneratingCaptions = value;
       },
     },
     $trs: {

@@ -1056,10 +1056,15 @@ export const CaptionCues = new Resource({
   tableName: TABLE_NAMES.CAPTION_CUES,
   urlName: 'captioncues',
   idField: 'id',
-  indexFields: ['text', 'starttime', 'endtime'],
+  indexFields: ['text', 'starttime', 'endtime', 'caption_file_id'],
   syncable: true,
   getChannelId: getChannelFromChannelScope,
-
+  filterCuesByFileId(caption_file_id) {
+    return this.table
+      .where('id')
+      .equals(caption_file_id)
+      .toArray();
+  },
   collectionUrl(caption_file_id) {
     return this.getUrlFunction('list')(caption_file_id)
   },

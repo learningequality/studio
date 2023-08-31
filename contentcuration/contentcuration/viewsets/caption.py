@@ -89,21 +89,19 @@ class CaptionViewSet(ValuesViewset):
             generate_update_event(
                 instance.pk,
                 CAPTION_FILE,
-                {
-                    "__generating_captions": True,
-                },
+                { "__generating_captions": True, },
                 channel_id=change['channel_id']
             ), applied=True, created_by_id=self.request.user.id
         )
 
         # enqueue task of generating captions for the saved CaptionFile instance
         try:
-            # Also sets the generating flag to false <<< Generating Completeted
+            # Also sets the generating flag to false <<< Generating Completed
             generatecaptioncues_task.enqueue(
                 self.request.user,
                 caption_file_id=instance.pk,
                 channel_id=change['channel_id'],
-                user_id=self.request.user.id
+                user_id=self.request.user.id,
             )
 
         except Exception as e:
