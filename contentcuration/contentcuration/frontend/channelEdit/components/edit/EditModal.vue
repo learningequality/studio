@@ -500,7 +500,7 @@
               .slice(0, -1)
               .join('.');
           }
-          if (file.metadata.orgs === undefined) {
+          if (file.metadata.folders === undefined) {
             this.createNode(
               FormatPresets.has(file.preset) && FormatPresets.get(file.preset).kind_id,
               { title, ...file.metadata }
@@ -513,52 +513,50 @@
                 contentnode: newNodeId,
               });
             });
-          } else if (file.metadata.orgs) {
+          } else if (file.metadata.folders) {
             this.createNode('topic', file.metadata).then(newNodeId => {
-              Object.values(file.metadata.orgs).forEach(org => {
+              file.metadata.folders.forEach(org => {
                 this.createNode('topic', org, newNodeId).then(topicNodeId => {
-                  Object.values(org).forEach(orgFile => {
-                    if (typeof orgFile === 'object') {
-                      const extra_fields = {};
-                      extra_fields['options'] = { entry: orgFile.resourceHref };
-                      extra_fields['title'] = orgFile.title;
-                      let file_kind = null;
-                      FormatPresetsList.forEach(p => {
-                        if (p.id === file.metadata.preset) {
-                          file_kind = p.kind_id;
-                        }
-                      });
+                  org.files.forEach(orgFile => {
+                    const extra_fields = {};
+                    extra_fields['options'] = { entry: orgFile.resourceHref };
+                    extra_fields['title'] = orgFile.title;
+                    let file_kind = null;
+                    FormatPresetsList.forEach(p => {
+                      if (p.id === file.metadata.preset) {
+                        file_kind = p.kind_id;
+                      }
+                    });
 
-                      this.createNode(file_kind, extra_fields, topicNodeId).then(resourceNodeId => {
-                        return File.uploadUrl({
-                          checksum: file.checksum,
-                          size: file.file_size,
-                          type: 'application/zip',
-                          name: file.original_filename,
-                          file_format: file.file_format,
-                          preset: file.metadata.preset,
-                        }).then(data => {
-                          const fileObject = {
-                            ...data.file,
-                            loaded: 0,
-                            total: file.size,
-                          };
-                          if (index === 0) {
-                            this.selected = [resourceNodeId];
+                    this.createNode(file_kind, extra_fields, topicNodeId).then(resourceNodeId => {
+                      return File.uploadUrl({
+                        checksum: file.checksum,
+                        size: file.file_size,
+                        type: 'application/zip',
+                        name: file.original_filename,
+                        file_format: file.file_format,
+                        preset: file.metadata.preset,
+                      }).then(data => {
+                        const fileObject = {
+                          ...data.file,
+                          loaded: 0,
+                          total: file.size,
+                        };
+                        if (index === 0) {
+                          this.selected = [resourceNodeId];
+                        }
+                        this.updateFile({
+                          ...fileObject,
+                          contentnode: resourceNodeId,
+                        }).catch(error => {
+                          let errorType = fileErrors.UPLOAD_FAILED;
+                          if (error.response && error.response.status === 412) {
+                            errorType = fileErrors.NO_STORAGE;
                           }
-                          this.updateFile({
-                            ...fileObject,
-                            contentnode: resourceNodeId,
-                          }).catch(error => {
-                            let errorType = fileErrors.UPLOAD_FAILED;
-                            if (error.response && error.response.status === 412) {
-                              errorType = fileErrors.NO_STORAGE;
-                            }
-                            return Promise.reject(errorType);
-                          });
+                          return Promise.reject(errorType);
                         });
                       });
-                    }
+                    });
                   });
                 });
               });

@@ -54,12 +54,7 @@
           return this.value;
         },
         set(items) {
-          if (this.selected.includes(items[0])) {
-            this.selected = [];
-          } else {
-            this.getChildren(items[0]).forEach(item => items.push(item));
-            this.$emit('input', items);
-          }
+          this.$emit('input', items);
         },
       },
       selectAll: {

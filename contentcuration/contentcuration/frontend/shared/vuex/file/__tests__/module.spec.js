@@ -1,5 +1,5 @@
 import JSZip from 'jszip';
-import { getH5PMetadata } from '../utils';
+import { getH5PMetadata, extractIMSMetadata } from '../utils';
 import storeFactory from 'shared/vuex/baseStore';
 import { File, injectVuexStore } from 'shared/data/resources';
 import client from 'shared/client';
@@ -233,6 +233,292 @@ describe('file store', () => {
           await expect(getH5PMetadata(h5pBlob)).resolves.toEqual({
             title: 'Test file',
             language: 'en',
+          });
+        });
+      });
+    });
+    describe('IMS content file extract metadata', () => {
+      it('extractIMSMetadata should check for imsmanifest.xml file', () => {
+        const zip = new JSZip();
+        return zip.generateAsync({ type: 'blob' }).then(async function(IMSBlob) {
+          await expect(extractIMSMetadata(IMSBlob)).rejects.toThrow(
+            'imsmanifest.xml not found in the zip file.'
+          );
+        });
+      });
+      it('extractIMSMetadata should extract metadata from imsmanifest.xml', async () => {
+        // const manifestFile = get_imsmanifest_file({ title: 'Test file' });
+        const manifestContent = `
+        <manifest xmlns:imsmd="http://www.imsglobal.org/xsd/imsmd_v1p2">
+          <metadata>
+            <imsmd:lom>
+              <imsmd:general>
+                <imsmd:title>
+                  <imsmd:langstring xml:lang="en">Test File</imsmd:langstring>
+                </imsmd:title>
+                <imsmd:language>en</imsmd:language>
+                <imsmd:description>
+                  <imsmd:langstring xml:lang="en">Example of test file</imsmd:langstring>
+                </imsmd:description>
+              </imsmd:general>
+            </imsmd:lom>
+          </metadata>
+          <organizations>
+            <organization>
+              <title>Folder 1</title>
+              <item identifierref="file1Ref">
+                <title>Test File1</title>
+              </item>
+              <item identifierref="file2Ref">
+                <title>Test File2</title>
+                <organizations>
+                  <organization>
+                    <title>Folder 1</title>
+                    <item identifierref="file1Ref">
+                      <title>Test File1</title>
+                    </item>
+                    <item identifierref="file2Ref">
+                      <title>Test File2</title>
+                    </item>
+                  </organization>
+                  <organization>
+                    <title>Folder 2</title>
+                    <item identifierref="file3Ref">
+                      <title>Test File3</title>
+                    </item>
+                    <item identifierref="file4Ref">
+                      <title>Test File4</title>
+                    </item>
+                  </organization>
+                </organizations>
+              </item>
+            </organization>
+            <organization>
+              <title>Folder 2</title>
+              <item identifierref="file3Ref">
+                <title>Test File3</title>
+              </item>
+              <item identifierref="file4Ref">
+                <title>Test File4</title>
+              </item>
+            </organization>
+          </organizations>
+          <resources>
+            <resource identifier="file1Ref" type="webcontent" href="file1.html">
+            </resource>
+            <resource identifier="file2Ref" type="webcontent" href="file2.html">
+            </resource>
+            <resource identifier="file3Ref" type="webcontent" href="file3.html">
+            </resource>
+            <resource identifier="file4Ref" type="webcontent" href="file4.html">
+            </resource>
+          </resources>
+        </manifest>`;
+
+        const zip = new JSZip();
+        zip.file('imsmanifest.xml', manifestContent);
+        // zip.folder('ims_package.zip');
+        await zip.generateAsync({ type: 'blob' }).then(async function(imsBlob) {
+          await expect(extractIMSMetadata(imsBlob)).resolves.toEqual({
+            title: 'Test File',
+            folders: [
+              {
+                files: [
+                  {
+                    identifierref: 'file1Ref',
+                    resourceHref: 'file1.html',
+                    title: 'Test File1',
+                  },
+                  {
+                    identifierref: 'file2Ref',
+                    resourceHref: 'file2.html',
+                    title: 'Test File2',
+                    folders: [
+                      {
+                        files: [
+                          {
+                            identifierref: 'file1Ref',
+                            resourceHref: 'file1.html',
+                            title: 'Test File1',
+                          },
+                          {
+                            identifierref: 'file2Ref',
+                            resourceHref: 'file2.html',
+                            title: 'Test File2',
+                          },
+                        ],
+                        title: 'Folder 1',
+                      },
+                      {
+                        files: [
+                          {
+                            identifierref: 'file3Ref',
+                            resourceHref: 'file3.html',
+                            title: 'Test File3',
+                          },
+                          {
+                            identifierref: 'file4Ref',
+                            resourceHref: 'file4.html',
+                            title: 'Test File4',
+                          },
+                        ],
+                        title: 'Folder 2',
+                      },
+                    ],
+                  },
+                ],
+                title: 'Folder 1',
+              },
+              {
+                files: [
+                  {
+                    identifierref: 'file3Ref',
+                    resourceHref: 'file3.html',
+                    title: 'Test File3',
+                  },
+                  {
+                    identifierref: 'file4Ref',
+                    resourceHref: 'file4.html',
+                    title: 'Test File4',
+                  },
+                ],
+                title: 'Folder 2',
+              },
+            ],
+            description: 'Example of test file',
+            language: 'en',
+          });
+        });
+      });
+      it('extractIMSMetadata should extract metadata from multiple manifest file', async () => {
+        const manifestContent = `
+        <manifest>
+          <organizations>
+            <organization>
+              <title>Folder 1</title>
+              <item identifierref="file1Ref">
+                <title>Test File1</title>
+              </item>
+              <item identifierref="file2Ref">
+                <title>Test File2</title>
+              </item>
+            </organization>
+          </organizations>
+          <resources>
+            <resource identifier="file1Ref" type="webcontent" href="file/file1.html">
+            </resource>
+            <resource identifier="file2Ref" type="webcontent" href="file/file2.html">
+            </resource>
+          </resources>
+        </manifest>`;
+
+        const subManifestContent = `
+        <manifest>
+          <organizations>
+            <organization>
+              <title>Folder 1</title>
+              <item identifierref="file3Ref">
+                <title>Test File3</title>
+              </item>
+              <item identifierref="file4Ref">
+                <title>Test File4</title>
+              </item>
+            </organization>
+          </organizations>
+          <resources>
+            <resource identifier="file3Ref" type="webcontent" href="file3.html">
+            </resource>
+            <resource identifier="file4Ref" type="webcontent" href="file4.html">
+            </resource>
+          </resources>
+        </manifest>`;
+        const zip = new JSZip();
+        zip.file('imsmanifest.xml', manifestContent);
+        zip.file('file/imsmanifest.xml', subManifestContent);
+
+        await zip.generateAsync({ type: 'blob' }).then(async function(imsBlob) {
+          await expect(extractIMSMetadata(imsBlob)).resolves.toEqual({
+            folders: [
+              {
+                files: [
+                  {
+                    identifierref: 'file1Ref',
+                    resourceHref: 'file/file1.html',
+                    title: 'Test File1',
+                  },
+                  {
+                    identifierref: 'file2Ref',
+                    resourceHref: 'file/file2.html',
+                    title: 'Test File2',
+                  },
+                  {
+                    identifierref: 'file3Ref',
+                    resourceHref: 'file3.html',
+                    title: 'Test File3',
+                  },
+                  {
+                    identifierref: 'file4Ref',
+                    resourceHref: 'file4.html',
+                    title: 'Test File4',
+                  },
+                ],
+                title: 'Folder 1',
+              },
+            ],
+          });
+        });
+      });
+      it('extractIMSMetadata should extract metadata from imsmanifest and imsmetadata files', async () => {
+        const manifestContent = ``;
+
+        const metadataContent = `
+        <manifest>
+          <lomes:lom xmlns:lomes="http://ltsc.ieee.org/xsd/LOM">
+                <lomes:general>
+                    <lomes:title>
+                        <lomes:string language="en">Test File</lomes:string>
+                    </lomes:title>
+                    <lomes:idiom>
+                        <lomes:string language="en">en</lomes:string>
+                    </lomes:idiom>
+                    <lomes:description>
+                        <lomes:string language="en">Example of test file</lomes:string>
+                    </lomes:description>
+                </lomes:general>
+          </lomes:lom>
+        </manifest>`;
+        const zip = new JSZip();
+        zip.file('imsmanifest.xml', manifestContent);
+        zip.file('imsmetadata.xml', metadataContent);
+
+        await zip.generateAsync({ type: 'blob' }).then(async function(imsBlob) {
+          await expect(extractIMSMetadata(imsBlob)).resolves.toEqual({
+            title: 'Test File',
+            description: 'Example of test file',
+            language: 'en',
+          });
+        });
+      });
+      it('extractIMSMetadata should not extract und language', async () => {
+        const manifestContent = `
+        <manifest xmlns:imsmd="http://www.imsglobal.org/xsd/imsmd_v1p2">
+          <metadata>
+            <imsmd:lom>
+              <imsmd:general>
+                <imsmd:title>
+                  <imsmd:langstring xml:lang="en">Test File</imsmd:langstring>
+                </imsmd:title>
+                <imsmd:language>und</imsmd:language>
+              </imsmd:general>
+            </imsmd:lom>
+          </metadata>
+        </manifest>`;
+        const zip = new JSZip();
+        zip.file('imsmanifest.xml', manifestContent);
+
+        await zip.generateAsync({ type: 'blob' }).then(async function(imsBlob) {
+          await expect(extractIMSMetadata(imsBlob)).resolves.toEqual({
+            title: 'Test File',
           });
         });
       });
