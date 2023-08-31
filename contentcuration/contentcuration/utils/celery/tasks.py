@@ -8,9 +8,7 @@ from collections import OrderedDict
 
 from celery import states
 from celery.app.task import Task
-from celery.result import AsyncResult
 from django.db import transaction
-from django.db.utils import IntegrityError
 
 from contentcuration.constants.locking import TASK_LOCK
 from contentcuration.db.advisory_lock import advisory_lock
@@ -166,10 +164,11 @@ class CeleryTask(Task):
     def find_ids(self, signature):
         """
         :param signature: An hex string representing an md5 hash of task metadata
-        :return: A TaskResult queryset
+        :return: A CustomTaskResult queryset
         :rtype: django.db.models.query.QuerySet
         """
-        return self.TaskModel.objects.filter(signature=signature)\
+        from contentcuration.models import CustomTaskResult
+        return CustomTaskResult.objects.filter(signature=signature)\
             .values_list("task_id", flat=True)
 
     def find_incomplete_ids(self, signature):
@@ -178,7 +177,10 @@ class CeleryTask(Task):
         :return: A TaskResult queryset
         :rtype: django.db.models.query.QuerySet
         """
-        return self.find_ids(signature).filter(status__in=states.UNREADY_STATES)
+        # Get the filtered task_ids from CustomTaskResult model
+        filtered_task_ids = self.find_ids(signature)
+        # Use the filtered task_ids to query TaskResult model
+        return self.TaskModel.objects.filter(task_id__in=filtered_task_ids, status__in=states.UNREADY_STATES)
 
     def fetch(self, task_id):
         """
@@ -200,6 +202,7 @@ class CeleryTask(Task):
         :rtype: CeleryAsyncResult
         """
         from contentcuration.models import User
+        from contentcuration.models import CustomTaskResult
 
         if user is None or not isinstance(user, User):
             raise TypeError("All tasks must be assigned to a user.")
@@ -211,36 +214,26 @@ class CeleryTask(Task):
         task_id = uuid.uuid4().hex
         prepared_kwargs = self._prepare_kwargs(kwargs)
         channel_id = prepared_kwargs.get("channel_id")
+        custom_task_result = CustomTaskResult(
+            task_id=task_id,
+            user=user,
+            signature=signature,
+            channel_id=channel_id
+        )
+        custom_task_result.save()
 
         logging.info(f"Enqueuing task:id {self.name}:{task_id} for user:channel {user.pk}:{channel_id} | {signature}")
 
         # returns a CeleryAsyncResult
         async_result = self.apply_async(
             task_id=task_id,
+            task_name=self.name,
+            task_kwargs=self.backend.encode(prepared_kwargs),
             kwargs=prepared_kwargs,
         )
 
         # ensure the result is saved to the backend (database)
         self.backend.add_pending_result(async_result)
-
-        saved = False
-        tries = 0
-        while not saved:
-            # after calling apply, we should ideally have a task result model saved to the DB, but it relies on celery's
-            # event consumption, and we might try to retrieve it before it has actually saved, so we retry
-            try:
-                task_result = get_task_model(self, task_id)
-                task_result.task_name = self.name
-                task_result.task_kwargs = self.backend.encode(prepared_kwargs)
-                task_result.user = user
-                task_result.channel_id = channel_id
-                task_result.signature = signature
-                task_result.save()
-                saved = True
-            except IntegrityError as e:
-                tries += 1
-                if tries > 3:
-                    raise e
         return async_result
 
     def fetch_or_enqueue(self, user, **kwargs):
@@ -263,7 +256,7 @@ class CeleryTask(Task):
         # create an advisory lock to obtain exclusive control on preventing task duplicates
         with self._lock_signature(signature):
             # order by most recently created
-            task_ids = self.find_incomplete_ids(signature).order_by("-date_created")[:1]
+            task_ids = self.find_incomplete_ids(signature).order_by("-date_created")[:1].values_list("task_id", flat=True)
             if task_ids:
                 async_result = self.fetch(task_ids[0])
                 # double check
@@ -284,7 +277,7 @@ class CeleryTask(Task):
         request = self.request
         if request is None:
             raise NotImplementedError("This method should only be called within the execution of a task")
-        task_result = get_task_model(self, request.id)
+        task_result = self.TaskModel.objects.filter(task_id__in=request.id)
         task_kwargs = request.kwargs.copy()
         task_kwargs.update(kwargs)
         signature = self.generate_signature(kwargs)
@@ -311,31 +304,3 @@ class CeleryTask(Task):
         # be sure the database backend has these marked appropriately
         self.TaskModel.objects.filter(task_id__in=task_ids).update(status=states.REVOKED)
         return count
-
-
-class CeleryAsyncResult(AsyncResult):
-    """
-    Custom result class which has access to task data stored in the backend
-
-    The properties access additional properties in the same manner as super properties,
-    and our custom properties are added to the meta via TaskResultCustom.as_dict()
-    """
-
-    def get_model(self):
-        """
-        :return: The TaskResult model object
-        :rtype: contentcuration.models.TaskResult
-        """
-        return get_task_model(self, self.task_id)
-
-    @property
-    def user_id(self):
-        return self._get_task_meta().get('user_id')
-
-    @property
-    def channel_id(self):
-        return self._get_task_meta().get('channel_id')
-
-    @property
-    def progress(self):
-        return self._get_task_meta().get('progress')

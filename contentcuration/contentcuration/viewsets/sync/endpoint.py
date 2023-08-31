@@ -12,6 +12,7 @@ from rest_framework.views import APIView
 
 from contentcuration.models import Change
 from contentcuration.models import Channel
+from contentcuration.models import CustomTaskResult
 from contentcuration.models import TaskResult
 from contentcuration.tasks import apply_channel_changes_task
 from contentcuration.tasks import apply_user_changes_task
@@ -123,20 +124,37 @@ class SyncView(APIView):
         return {"changes": changes, "errors": errors, "successes": successes}
 
     def return_tasks(self, request, channel_revs):
+        customTaskObjectsids = CustomTaskResult.objects.filter(channel_id__in=channel_revs.keys()).values_list("task_id", flat=True)
+
         tasks = TaskResult.objects.filter(
-            channel_id__in=channel_revs.keys(),
+            task_id__in=customTaskObjectsids,
             status__in=[states.STARTED, states.FAILURE],
         ).exclude(task_name__in=[apply_channel_changes_task.name, apply_user_changes_task.name])
-        return {
-            "tasks": tasks.values(
-                "task_id",
-                "task_name",
-                "traceback",
-                "progress",
-                "channel_id",
-                "status",
-            )
+
+        # get all the task ids
+        task_ids = [task.task_id for task in tasks]
+
+        customTaskObjects = CustomTaskResult.objects.filter(task_id__in=task_ids)
+
+        response_payload = {
+        "tasks": [],
         }
+
+        for task in tasks:
+            custom_task = customTaskObjects.filter(task_id=task.task_id).first()
+            task_data = {
+                "task_id": task.task_id,
+                "task_name": task.task_name,
+                "traceback": task.traceback,
+                "progress": custom_task.progress,
+                "channel_id": custom_task.channel_id,
+                "status": task.status,
+            }
+
+            # Add the task data to the response_payload
+            response_payload["tasks"].append(task_data)
+
+        return response_payload
 
     def post(self, request):
         response_payload = {
