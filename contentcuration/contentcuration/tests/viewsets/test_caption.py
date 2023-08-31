@@ -134,7 +134,6 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
     def test_delete_caption_file(self):
         self.client.force_authenticate(user=self.user)
         caption_file = self.caption_file_metadata
-
         # Explicitly set language to model object to follow Django ORM conventions
         caption_file['language'] = Language.objects.get(pk='en')
         caption_file_1 = CaptionFile(**caption_file)

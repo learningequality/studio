@@ -150,8 +150,6 @@ def generatecaptioncues_task(caption_file_id, channel_id, user_id):
 
     # if the response is success, we send cues to frontend with change event
     # by creating changes set the generating flag to false.
-    print(reverse("automation:transcribe"))
-
 
     cue = {
         "id": uuid.uuid4().hex,
