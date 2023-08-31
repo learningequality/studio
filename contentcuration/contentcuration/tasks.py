@@ -14,6 +14,7 @@ from django.conf import settings
 from django.core.mail import EmailMessage
 from django.template.loader import render_to_string
 from django.utils.translation import override
+from django.urls import reverse
 
 from contentcuration.celery import app
 from contentcuration.models import Change
@@ -144,27 +145,46 @@ def generatecaptioncues_task(caption_file_id, channel_id, user_id):
 
     import uuid
     from contentcuration.viewsets.caption import CaptionCueSerializer
-    from contentcuration.viewsets.sync.utils import generate_update_event
-    from contentcuration.viewsets.sync.constants import CAPTION_FILE
+    from contentcuration.viewsets.sync.constants import CAPTION_FILE, CAPTION_CUES
+    from contentcuration.viewsets.sync.utils import generate_update_event, generate_create_event
 
-    time.sleep(10) # AI model start generating
+    # if the response is success, we send cues to frontend with change event
+    # by creating changes set the generating flag to false.
+    print(reverse("automation:transcribe"))
+
 
     cue = {
         "id": uuid.uuid4().hex,
-        "text":"hello guys",
+        "text": "hello",
         "starttime": 0,
         "endtime": 5,
-        "caption_file_id": caption_file_id
+        "caption_file_id": caption_file_id,
     }
 
     serializer = CaptionCueSerializer(data=cue)
     if serializer.is_valid():
-        instance = serializer.save()
-        Change.create_change(generate_update_event(
-            caption_file_id,
-            CAPTION_FILE,
-            {"__generating_captions": False},
-            channel_id=channel_id,
+        serializer.save()
+        Change.create_change(generate_create_event(
+                cue["id"],
+                CAPTION_CUES,
+                {
+                    "id": cue["id"],
+                    "text": cue["text"],
+                    "starttime": cue["starttime"],
+                    "endtime": cue["endtime"],
+                    "caption_file_id": cue["caption_file_id"],
+                },
+                channel_id=channel_id,
         ), applied=True, created_by_id=user_id)
+
+        time.sleep(10)
+
+        Change.create_change(generate_update_event(
+                caption_file_id,
+                CAPTION_FILE,
+                {"__generating_captions": False},
+                channel_id=channel_id,
+            ), applied=True, created_by_id=user_id)
+
     else:
         print(serializer.errors)

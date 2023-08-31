@@ -34,15 +34,31 @@ export function ADD_CAPTIONFILES(state, { captionFiles, nodeIds }) {
 }
 
 /* Mutations for Caption Cues */
-export function ADD_CUE(state, cue) {
-  // TODO: add some checks to Cue
-  Vue.set(state.captionCuesMap, cue.id, cue);
+export function ADD_CUE(state, { cue, nodeId }) {
+  
+  console.log(cue, nodeId);
+  
+  if (!cue && !nodeId) return;
+  // Check if there is Map for the current nodeId
+  if (!state.captionCuesMap[nodeId]) {
+    Vue.set(state.captionCuesMap, nodeId, {});
+  }
+
+  // Check if the pk exists in the contentNode's object
+  if (!state.captionCuesMap[nodeId][cue.captiop_file_id]) {
+    Vue.set(state.captionCuesMap[nodeId], cue.captiop_file_id, {});
+  }
+
+  Vue.set(state.captionCuesMap[nodeId][cue.caption_file_id], 'id', cue.id);
+  Vue.set(state.captionCuesMap[nodeId][cue.caption_file_id], 'text', cue.text);
+  Vue.set(state.captionCuesMap[nodeId][cue.caption_file_id], 'starttime', cue.starttime);
+  Vue.set(state.captionCuesMap[nodeId][cue.caption_file_id], 'endtime', cue.endtime);
 }
 
-export function ADD_CAPTIONCUES(state, { cues } = []) {
-  if (Array.isArray(cues)) {
+export function ADD_CAPTIONCUES(state, { cues, nodeId }) {
+  if(Array.isArray(cues)) {
     cues.forEach(cue => {
-      ADD_CUE(state, { cue });
+      ADD_CUE(state, { cue, nodeId });
     });
   }
 }

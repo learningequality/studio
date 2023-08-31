@@ -10,8 +10,10 @@ export default {
      * [
      *     contentnode_id: {
      *         pk: {
+     *             id: pk
      *             file_id: file_id
      *             language: language
+     *             __generating_captions: boolean
      *         }
      *     },
      * ]
@@ -20,7 +22,7 @@ export default {
     /* Caption Cues for a contentnode
      * [
      *     contentnode_id: {
-     *         pk: {
+     *         caption_file_id: {
      *              id: id
      *              starttime: starttime
      *              endtime: endtime
