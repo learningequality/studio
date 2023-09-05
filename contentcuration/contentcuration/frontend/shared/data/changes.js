@@ -18,7 +18,7 @@ import {
   RELATIVE_TREE_POSITIONS,
   RELATIVE_TREE_POSITIONS_LOOKUP,
   LAST_FETCHED,
-  COPYING_FLAG,
+  COPYING_STATUS,
   TASK_ID,
 } from 'shared/data/constants';
 import { INDEXEDDB_RESOURCES } from 'shared/data/registry';
@@ -196,7 +196,7 @@ export class ChangeTracker {
 // These fields should not be included in change objects that we
 // store in the changes table for syncing to the backend
 // as they are only used for tracking state locally
-const ignoredSubFields = [COPYING_FLAG, LAST_FETCHED, TASK_ID];
+const ignoredSubFields = [COPYING_STATUS, LAST_FETCHED, TASK_ID];
 
 function omitIgnoredSubFields(obj) {
   return omit(obj, ignoredSubFields);
