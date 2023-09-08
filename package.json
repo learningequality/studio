@@ -74,7 +74,7 @@
     "kolibri-constants": "^0.1.41",
     "kolibri-design-system": "https://github.com/learningequality/kolibri-design-system#e9a2ff34716bb6412fe99f835ded5b17345bab94",
     "lodash": "^4.17.21",
-    "material-icons": "0.3.1",
+    "material-icons": "1.13.11",
     "mutex-js": "^1.1.5",
     "node-vibrant": "^3.1.6",
     "papaparse": "^5.4.1",
