@@ -10,6 +10,7 @@ from django.db.utils import IntegrityError
 from django.http import Http404
 from django.http.request import HttpRequest
 from django_bulk_update.helper import bulk_update
+from django_celery_results.models import TaskResult
 from django_filters.constants import EMPTY_VALUES
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import FilterSet
@@ -29,7 +30,8 @@ from rest_framework.utils import model_meta
 from rest_framework.viewsets import GenericViewSet
 
 from contentcuration.models import Change
-from contentcuration.models import TaskResult
+from contentcuration.models import CustomTaskMetadata
+from contentcuration.utils.celery.tasks import generate_task_signature
 from contentcuration.utils.celery.tasks import ProgressTracker
 from contentcuration.viewsets.common import MissingRequiredParamsException
 from contentcuration.viewsets.sync.constants import TASK_ID
@@ -929,24 +931,33 @@ class BulkDeleteMixin(DestroyModelMixin):
 
 @contextmanager
 def create_change_tracker(pk, table, channel_id, user, task_name):
+    task_kwargs = json.dumps({'pk': pk, 'table': table})
+
     # Clean up any previous tasks specific to this in case there were failures.
-    meta = json.dumps(dict(pk=pk, table=table))
-    TaskResult.objects.filter(channel_id=channel_id, task_name=task_name, meta=meta).delete()
+    signature = generate_task_signature(task_name, task_kwargs=task_kwargs, channel_id=channel_id)
+
+    task_id_to_delete = CustomTaskMetadata.objects.filter(channel_id=channel_id, signature=signature)
+    if task_id_to_delete:
+        TaskResult.objects.filter(task_id=task_id_to_delete, task_name=task_name).delete()
 
     task_id = uuid.uuid4().hex
+
     task_object = TaskResult.objects.create(
         task_id=task_id,
         status=states.STARTED,
-        channel_id=channel_id,
         task_name=task_name,
+    )
+    custom_task_metadata_object = CustomTaskMetadata.objects.create(
+        task_id=task_id,
+        channel_id=channel_id,
         user=user,
-        meta=meta
+        signature=signature
     )
 
     def update_progress(progress=None):
         if progress:
-            task_object.progress = progress
-            task_object.save()
+            custom_task_metadata_object.progress = progress
+            custom_task_metadata_object.save()
 
     Change.create_change(
         generate_update_event(pk, table, {TASK_ID: task_object.task_id}, channel_id=channel_id), applied=True
@@ -968,3 +979,4 @@ def create_change_tracker(pk, table, channel_id, user, task_name):
                 generate_update_event(pk, table, {TASK_ID: None}, channel_id=channel_id), applied=True
             )
             task_object.delete()
+            custom_task_metadata_object.delete()

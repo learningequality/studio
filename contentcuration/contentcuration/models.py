@@ -2564,63 +2564,7 @@ class Change(models.Model):
         return self.serialize(self)
 
 
-# class TaskResultCustom(object):
-#     """
-#     Custom fields to add to django_celery_results's TaskResult model
-
-#     If adding fields to this class, run `makemigrations` then move the generated migration from the
-#     `django_celery_results` app to the `contentcuration` app and override the constructor to change
-#     the app_label. See `0141_add_task_signature` for an example
-#     """
-#     # user shouldn't be null, but in order to append the field, this needs to be allowed
-#     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="tasks", on_delete=models.CASCADE, null=True)
-#     channel_id = DjangoUUIDField(db_index=True, null=True, blank=True)
-#     progress = models.IntegerField(null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(100)])
-#     # a hash of the task name and kwargs for identifying repeat tasks
-#     signature = models.CharField(null=True, blank=False, max_length=32)
-
-#     super_as_dict = TaskResult.as_dict
-
-#     def as_dict(self):
-#         """
-#         :return: A dictionary representation
-#         """
-#         super_dict = self.super_as_dict()
-#         super_dict.update(
-#             user_id=self.user_id,
-#             channel_id=self.channel_id,
-#             progress=self.progress,
-#         )
-#         return super_dict
-
-#     @classmethod
-#     def contribute_to_class(cls, model_class=TaskResult):
-#         """
-#         Adds fields to model, by default TaskResult
-#         :param model_class: TaskResult model
-#         """
-#         for field in dir(cls):
-#             if not field.startswith("_") and field not in ('contribute_to_class', 'Meta'):
-#                 model_class.add_to_class(field, getattr(cls, field))
-
-#         # manually add Meta afterwards
-#         setattr(model_class._meta, 'indexes', getattr(model_class._meta, 'indexes', []) + cls.Meta.indexes)
-
-#     class Meta:
-#         indexes = [
-#             # add index that matches query usage for signature
-#             models.Index(
-#                 fields=['signature'],
-#                 name='task_result_signature_idx',
-#                 condition=Q(status__in=celery_states.UNREADY_STATES),
-#             ),
-#         ]
-
-
-# # trigger class contributions immediately
-# TaskResultCustom.contribute_to_class()
-
-class CustomTaskResult(models.Model):
+class CustomTaskMetadata(models.Model):
     # Task_id for reference
     task_id = models.CharField(
         max_length=255,  # Adjust the max_length as needed
@@ -2639,7 +2583,7 @@ class CustomTaskResult(models.Model):
         """
         return {
             "task_id": str(self.task_id),
-            "user_id": self.user_id,
+            "user_id": self.user.id,
             "channel_id": str(self.channel_id),
             "progress": self.progress,
             "signature": self.signature,
