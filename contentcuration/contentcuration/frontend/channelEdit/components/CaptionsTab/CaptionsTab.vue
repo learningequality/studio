@@ -1,13 +1,22 @@
 <template>
 
   <div class="captions-tab-section">
-    <div>
-      <h2>
-        {{ $tr('header') }}
+    <div class="title my-4 px-4" >
+      <ContentNodeIcon
+        v-if="node && node.kind"
+        :kind="node.kind"
+        class="mr-1"
+      />
+      <h2
+        v-if="node && node.title"
+        class="headline mx-2 notranslate"
+        data-test="title"
+      >
+        {{ $tr('header', { fileName: node.title}) }}
       </h2>
     </div>
 
-    <div v-if="!isGeneratingCaptions">
+    <div v-if="!isGeneratingCaptions" class="mb-2 mt-2 px-4" >
       <p class="my-2">
         {{ $tr('captionGenerationHelpText') }}
       </p>
@@ -20,12 +29,15 @@
         :excludeLanguages="excludedLanguages"
       />
 
-      <p v-if="selectedLanguage && !isGeneratingCaptions">
-        <ActionLink
-          :text="$tr('generateBtn')"
+      <VBtn
+          v-if="selectedLanguage && !isGeneratingCaptions"
+          flat
+          color="primary"
+          class="font-weight-bold ml-0"
           @click="addCaption"
-        />
-      </p>
+        >
+          {{ $tr('generateBtn') }}
+      </VBtn>
     </div>
 
     <button @click="logState">
@@ -35,7 +47,7 @@
     <!-- TODO -->
     <!-- est. time, time elapsed can be good -->
     <p v-if="isGeneratingCaptions">
-      {{ $tr('generating', { fileName: fileName() }) }}
+      {{ $tr('generating', { fileName: node.title}) }}
       <LoadingText />
       <br>
     </p>
@@ -46,16 +58,17 @@
 
 <script>
 
-  import { mapState, mapActions, mapGetters } from 'vuex';
-  import LoadingText from 'shared/views/LoadingText';
-  import { notSupportedCaptionLanguages } from 'shared/leUtils/TranscriptionLanguages';
-  import LanguageDropdown from 'shared/views/LanguageDropdown';
-  import { CaptionFile, uuid4 } from 'shared/data/resources';
-  import { GENERATING } from 'shared/data/constants';
+import { mapState, mapActions, mapGetters } from 'vuex';
+import { CaptionFile, uuid4 } from 'shared/data/resources';
+import { notSupportedCaptionLanguages } from 'shared/leUtils/TranscriptionLanguages';
+import ContentNodeIcon from 'shared/views/ContentNodeIcon';
+import LoadingText from 'shared/views/LoadingText';
+import LanguageDropdown from 'shared/views/LanguageDropdown';
 
   export default {
     name: 'CaptionsTab',
     components: {
+      ContentNodeIcon,
       LanguageDropdown,
       LoadingText,
     },
@@ -68,19 +81,23 @@
     data() {
       return {
         selectedLanguage: null,
-        isGeneratingCaptions: false,
       };
-    },
-    created() {
-      this.updateIsGeneratingCaptions();
     },
     computed: {
       ...mapState('caption', ['captionFilesMap', 'captionCuesMap']),
+      ...mapGetters('contentNode', ['getContentNode']),
+      ...mapGetters('caption', ['isGeneratingGetter']),
       ...mapGetters('file', ['getContentNodeFiles']),
+      node() {
+        return this.getContentNode(this.nodeId);
+      },
       excludedLanguages() {
         // excludeLanguages requires array of ids
         return notSupportedCaptionLanguages.map(l => l.id);
       },
+      isGeneratingCaptions() {
+        return this.isGeneratingGetter(this.nodeId);
+      }
     },
     methods: {
       ...mapActions('caption', ['addCaptionFile']),
@@ -90,18 +107,11 @@
         console.log(this.captionCuesMap[this.nodeId]);
       },
       addCaption() {
-        // TODO: select the `file` with longest duration as recommended by @bjester.
-        // For now just create captionFile object with default language 'en'.
-
-        // Create a PK and watch CaptionCues model with this FK
-        // for changes with dexie liveQuery
-
         const id = uuid4();
-        const fileId = this.getContentNodeFiles(this.nodeId)[0].id;
+        const fileId = this.getLongestDurationFileId();
         const language = this.selectedLanguage;
         if (!language && !fileId) return;
 
-        this.setLoadingFlag(true);
         this.addCaptionFile({
           id: id,
           file_id: fileId,
@@ -110,37 +120,17 @@
         });
 
         CaptionFile.waitForCaptionCueGeneration(id).then(generatingFlag => {
-          // known issue: the loading doesnt stop even loaded 
-          // (means the flag is false) untill reloaded
-          this.setLoadingFlag(generatingFlag)
           this.selectedLanguage = null;
-          console.log('generating_flag: ', generatingFlag);
         });
       },
-      fileName() {
-        const name = String(this.getContentNodeFiles(this.nodeId)[0].original_filename);
-        return name.split('.')[0];
-      },
-      updateIsGeneratingCaptions() {
-        const captionFileIds = Object.keys(this.captionFilesMap[this.nodeId] || {});
-        let isAnyGenerating = false;
-        for (const id of captionFileIds) {
-          if (this.captionFilesMap[this.nodeId][id][GENERATING] === true) {
-            isAnyGenerating = true;
-            break; // Exit loop if a generating flag is found
-          }
-        }
-        this.setLoadingFlag(isAnyGenerating);
-        // TODO: here set a UI like (generating "en" for this contentnode file)
-        // this adds more detail to what is generating
-        // by using the vuex[nodeId][id].language
-      },
-      setLoadingFlag(value) {
-        this.isGeneratingCaptions = value;
+      getLongestDurationFileId() {
+        let files = this.getContentNodeFiles(this.nodeId);
+        let { id } = files.reduce((max, file) => file.duration > max.duration ? file : max, { duration: 0 });
+        return id;
       },
     },
     $trs: {
-      header: 'Add Captions',
+      header: 'Add Captions for {fileName}',
       generateBtn: 'Generate Captions',
       captionGenerationHelpText:
         'Select a language to automatically generate captions for this video',
@@ -150,14 +140,15 @@
 
 </script>
 
-<style>
-.btn {
-  text-decoration: underline;
-}
+<style lang="less" scoped>
+  .captions-tab-section {
+    vertical-align: text-top;
+    height: 80vh;
+  }
 
-.captions-tab-section {
-  vertical-align: text-top;
-  margin-left: 10px;
-  height: 80vh;
-}
+  .title {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-start;
+  }
 </style>
