@@ -187,12 +187,13 @@ class CeleryTask(Task):
         # Get the filtered task_ids from CustomTaskMetadata model
         filtered_task_ids = self.find_ids(signature)
 
+        task_objects_ids = None
         attempts = 0
-        while attempts < 15:
+        while attempts < 8:
             # Use the filtered task_ids to query TaskResult model
             task_objects_ids = TaskResult.objects.filter(task_id__in=filtered_task_ids, status__in=states.UNREADY_STATES).values_list("task_id", flat=True)
             if task_objects_ids:
-                break
+                return task_objects_ids
             time.sleep(2)
         return task_objects_ids
 
@@ -316,10 +317,6 @@ class CeleryTask(Task):
             self.app.control.revoke(task_id, terminate=True)
             count += 1
         # be sure the database backend has these marked appropriately
-        print(task_ids)
-        test = TaskResult.objects.filter(task_id__in=task_ids)
-        print("testttttttttttttttttttt")
-        print(test)
         TaskResult.objects.filter(task_id__in=task_ids).update(status=states.REVOKED)
         return count
 

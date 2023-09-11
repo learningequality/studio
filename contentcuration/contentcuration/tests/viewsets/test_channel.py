@@ -288,8 +288,6 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
 
         self.client.force_authenticate(user=user)
         for i in range(1, 5):
-            print("here comess the debuggggggggggg")
-            print(i)
             sync_channel_mock.reset_mock()
             args = [channel.id, False, False, False, False]
             args[i] = True

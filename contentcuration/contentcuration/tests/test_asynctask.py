@@ -130,8 +130,6 @@ class AsyncTaskTestCase(TransactionTestCase):
         super(AsyncTaskTestCase, cls).tearDownClass()
         # tell the work thread to stop through the celery control API
         if cls.worker_thread:
-            # cls.monitor_thread_event.set()
-            # cls.monitor_thread.join(5)
             app.control.shutdown()
             cls.worker_thread.join(5)
 
