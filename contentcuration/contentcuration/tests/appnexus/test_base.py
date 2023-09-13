@@ -1,4 +1,4 @@
-from contentcuration.utils.appNexus.base import Backend, Adapter
+from contentcuration.utils.appnexus.base import Backend, Adapter
 
 class MockBackend(Backend):
     _instance = None
