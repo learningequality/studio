@@ -20,6 +20,7 @@ export default function theme() {
       audio: '#f06292',
       document: '#ff3d00',
       exercise: '#4db6ac',
+      h5p: '#ff8f00',
       html5: '#ff8f00',
       zim: '#ff8f00',
       slideshow: '#4ece90',
