@@ -47,13 +47,9 @@ class BackendFactory:
     def create_backend(self, backend: Optional[Backend] = None) -> Backend:
         """
         Create a Backend instance based on Django or manual settings.
+        :param: backend (optional): An optional pre-existing Backend instance.
 
-        Args:
-            backend (Optional[Backend], optional): 
-            An optional pre-existing Backend instance.
-
-        Returns:
-            Backend: A Backend instance.
+        :returns: Backend: A backend instance.
         """
         return backend or self._create_backend_from_settings()
 
@@ -69,7 +65,7 @@ class Adapter:
     This class should be inherited by adapter classes that facilitate
     interaction with different backend implementation.
     """
-    def __init__(self, backend: Optional[Backend] = None) -> None:
+    def __init__(self, backend: Backend) -> None:
         self.backend = BackendFactory().create_backend(backend=backend)
 
     def request(self):
