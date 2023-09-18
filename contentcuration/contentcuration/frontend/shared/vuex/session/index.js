@@ -85,14 +85,11 @@ export default {
     featureFlags(state) {
       return state.currentUser.feature_flags || {};
     },
-    hasFeatureEnabled(state, getters) {
-      /**
-       * @param {string} flag - shared.constants.FeatureFlagKeys.*
-       * @return {Boolean}
-       */
-      return function(flag) {
-        return getters.isAdmin || Boolean(getters.featureFlags[flag]);
-      };
+    isAIFeatureEnabled(state, getters) {
+      if (getters.loggedIn) {
+        return Boolean(getters.featureFlags['ai_feature']);
+      }
+      return false;
     },
   },
   actions: {
