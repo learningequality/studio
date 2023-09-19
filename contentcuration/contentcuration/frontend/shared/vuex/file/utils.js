@@ -62,7 +62,7 @@ async function getFolderMetadata(data, xmlDoc, zip, procssedFiles) {
         };
         if (orgNode.nodeType === 1) {
           const title = orgNode.getElementsByTagName('title');
-          org.title = title[0].textContent.replace(/ {2}|\r\n|\n|\r/gm, '');
+          org.title = title[0].textContent.trim();
           const files = orgNode.getElementsByTagName('item');
           const immediateChildNodes = [];
           const childNodes = Object.values(orgNode.children);
@@ -74,7 +74,7 @@ async function getFolderMetadata(data, xmlDoc, zip, procssedFiles) {
           await Promise.all(
             immediateChildNodes.map(async (fileNode, k) => {
               const file = {};
-              file.title = title[1 + k].textContent.replace(/ {2}|\r\n|\n|\r/gm, '');
+              file.title = title[1 + k].textContent.trim();
               file.identifierref = fileNode.getAttribute('identifierref');
               file.resourceHref = xmlDoc
                 .querySelectorAll(`[identifier=${file.identifierref}]`)[0]
@@ -149,41 +149,37 @@ async function getManifestMetadata(manifestFile, zip, procssedFiles) {
       if (xmlDoc.getElementsByTagName('lomes:title').length) {
         metadata.title = xmlDoc
           .getElementsByTagName('lomes:title')[0]
-          .children[0].textContent.replace(/ {2}|\r\n|\n|\r/gm, '');
+          .children[0].textContent.trim();
       }
       if (
         xmlDoc.getElementsByTagName('lomes:idiom').length &&
-        xmlDoc
-          .getElementsByTagName('lomes:idiom')[0]
-          .textContent.replace(/ {2}|\r\n|\n|\r/gm, '') !== 'und'
+        LanguagesMap.has(xmlDoc.getElementsByTagName('lomes:idiom')[0].textContent.trim()) &&
+        xmlDoc.getElementsByTagName('lomes:idiom')[0].textContent.trim() !== 'und'
       ) {
         metadata.language = xmlDoc
           .getElementsByTagName('lomes:idiom')[0]
-          .children[0].textContent.replace(/ {2}|\r\n|\n|\r/gm, '');
+          .children[0].textContent.trim();
       }
       if (xmlDoc.getElementsByTagName('lomes:description').length) {
         metadata.description = xmlDoc
           .getElementsByTagName('lomes:description')[0]
-          .children[0].textContent.replace(/ {2}|\r\n|\n|\r/gm, '');
+          .children[0].textContent.trim();
       }
     } else {
       if (xmlDoc.getElementsByTagName('imsmd:title').length) {
-        metadata.title = xmlDoc
-          .getElementsByTagName('imsmd:title')[0]
-          .textContent.replace(/ {2}|\r\n|\n|\r/gm, '');
+        metadata.title = xmlDoc.getElementsByTagName('imsmd:title')[0].textContent.trim();
       }
       if (
         xmlDoc.getElementsByTagName('imsmd:language').length &&
-        xmlDoc.getElementsByTagName('imsmd:language')[0].textContent !== 'und'
+        LanguagesMap.has(xmlDoc.getElementsByTagName('imsmd:language')[0].textContent.trim()) &&
+        xmlDoc.getElementsByTagName('imsmd:language')[0].textContent.trim() !== 'und'
       ) {
-        metadata.language = xmlDoc
-          .getElementsByTagName('imsmd:language')[0]
-          .textContent.replace(/ {2}|\r\n|\n|\r/gm, '');
+        metadata.language = xmlDoc.getElementsByTagName('imsmd:language')[0].textContent.trim();
       }
       if (xmlDoc.getElementsByTagName('imsmd:description').length) {
         metadata.description = xmlDoc
           .getElementsByTagName('imsmd:description')[0]
-          .textContent.replace(/ {2}|\r\n|\n|\r/gm, '');
+          .textContent.trim();
       }
     }
     return metadata;
@@ -204,9 +200,7 @@ export async function extractIMSMetadata(fileInput) {
       }
     })
     .then(async manifestFile => {
-      return await getManifestMetadata(manifestFile, zip, procssedFiles).then(metadata => {
-        return metadata;
-      });
+      return await getManifestMetadata(manifestFile, zip, procssedFiles);
     });
 }
 

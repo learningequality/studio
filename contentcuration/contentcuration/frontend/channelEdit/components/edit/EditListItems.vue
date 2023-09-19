@@ -8,7 +8,7 @@
       @input="trackSelect"
       @removed="handleRemoved"
     />
-    <div v-if="getChildren !== undefined">
+    <div v-if="getChildren !== undefined && getChildren.length">
       <EditListItems
         v-for="childId in getChildren"
         :key="childId"

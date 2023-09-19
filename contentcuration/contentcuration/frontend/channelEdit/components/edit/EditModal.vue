@@ -515,12 +515,12 @@
             });
           } else if (file.metadata.folders) {
             this.createNode('topic', file.metadata).then(newNodeId => {
-              file.metadata.folders.forEach(org => {
-                this.createNode('topic', org, newNodeId).then(topicNodeId => {
-                  org.files.forEach(orgFile => {
+              file.metadata.folders.forEach(folder => {
+                this.createNode('topic', folder, newNodeId).then(topicNodeId => {
+                  folder.files.forEach(folderFile => {
                     const extra_fields = {};
-                    extra_fields['options'] = { entry: orgFile.resourceHref };
-                    extra_fields['title'] = orgFile.title;
+                    extra_fields['options'] = { entry: folderFile.resourceHref };
+                    extra_fields['title'] = folderFile.title;
                     let file_kind = null;
                     FormatPresetsList.forEach(p => {
                       if (p.id === file.metadata.preset) {
@@ -532,7 +532,6 @@
                       return File.uploadUrl({
                         checksum: file.checksum,
                         size: file.file_size,
-                        type: 'application/zip',
                         name: file.original_filename,
                         file_format: file.file_format,
                         preset: file.metadata.preset,
@@ -542,7 +541,7 @@
                           loaded: 0,
                           total: file.size,
                         };
-                        if (index === 0) {
+                        if (!this.selected.length) {
                           this.selected = [resourceNodeId];
                         }
                         this.updateFile({

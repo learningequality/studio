@@ -247,7 +247,6 @@ describe('file store', () => {
         });
       });
       it('extractIMSMetadata should extract metadata from imsmanifest.xml', async () => {
-        // const manifestFile = get_imsmanifest_file({ title: 'Test file' });
         const manifestContent = `
         <manifest xmlns:imsmd="http://www.imsglobal.org/xsd/imsmd_v1p2">
           <metadata>
@@ -317,7 +316,6 @@ describe('file store', () => {
 
         const zip = new JSZip();
         zip.file('imsmanifest.xml', manifestContent);
-        // zip.folder('ims_package.zip');
         await zip.generateAsync({ type: 'blob' }).then(async function(imsBlob) {
           await expect(extractIMSMetadata(imsBlob)).resolves.toEqual({
             title: 'Test File',
@@ -506,7 +504,7 @@ describe('file store', () => {
             <imsmd:lom>
               <imsmd:general>
                 <imsmd:title>
-                  <imsmd:langstring xml:lang="en">Test File</imsmd:langstring>
+                  <imsmd:langstring xml:lang="und">\t\t\t\n\n\n\nTest File\n</imsmd:langstring>
                 </imsmd:title>
                 <imsmd:language>und</imsmd:language>
               </imsmd:general>
