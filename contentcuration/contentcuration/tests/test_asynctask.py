@@ -256,7 +256,7 @@ class AsyncTaskTestCase(TransactionTestCase):
         async_result = test_task_delayed.enqueue(self.user, channel_id=channel_id)
         # A bit delay to let the task object be saved async,
         # This delay is relatively small and hopefully wont cause any issues in the real time
-        time.sleep(0.005)
+        time.sleep(0.5)
         test_task_delayed.revoke(channel_id=channel_id)
 
         # this should raise an exception, even though revoked, because the task is in ready state but not success
