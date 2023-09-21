@@ -41,7 +41,7 @@ def test_task(self, **kwargs):
 def test_task_delayed(self, delay_seconds=100, **kwargs):
     """
     This is a mock task that takes a bit longer to execute
-    so that revoke function the task can be called succesfully,
+    so that revoke function can be called succesfully without test being SUCCESS before hand,
     to be used ONLY for unit-testing various pieces of the
     async task API.
     :return: The number 42
@@ -255,7 +255,7 @@ class AsyncTaskTestCase(TransactionTestCase):
         channel_id = uuid.uuid4()
         async_result = test_task_delayed.enqueue(self.user, channel_id=channel_id)
         # A bit delay to let the task object be saved async,
-        # This delay is relatively small and hopefully and wont cause any problems in real time
+        # This delay is relatively small and hopefully wont cause any issues in the real time
         time.sleep(0.005)
         test_task_delayed.revoke(channel_id=channel_id)
 
