@@ -29,7 +29,7 @@
         <template #item="{ item }">
           <VTooltip bottom lazy>
             <template #activator="{ on }">
-              <span class="text-truncate" v-on="on">{{ languageText(item) }}</span>
+              <span class="text-truncate" dir="auto" v-on="on">{{ languageText(item) }}</span>
             </template>
             <span>{{ languageText(item) }}</span>
           </VTooltip>
