@@ -116,7 +116,7 @@
 
 <script>
 
-  import { mapActions, mapState, mapGetters } from 'vuex';
+  import { mapActions, mapState } from 'vuex';
   import EmailField from 'shared/views/form/EmailField';
   import PasswordField from 'shared/views/form/PasswordField';
   import Banner from 'shared/views/Banner';
@@ -146,14 +146,10 @@
       ...mapState({
         offline: state => !state.connection.online,
       }),
-      ...mapGetters(['isAIFeatureEnabled']),
       nextParam() {
         const params = new URLSearchParams(window.location.search.substring(1));
         return params.get('next');
       },
-    },
-    mounted() {
-      console.log('isAIFeatureEnabled from Main = ', this.isAIFeatureEnabled);
     },
     methods: {
       ...mapActions(['login']),

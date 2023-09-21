@@ -134,7 +134,6 @@
       }),
       ...mapGetters(['loggedIn']),
       ...mapGetters('channelList', ['invitations']),
-      ...mapGetters(['isAIFeatureEnabled']),
       fullPageError() {
         return this.$store.state.errors.fullPageError;
       },
@@ -219,7 +218,6 @@
       }
     },
     mounted() {
-      console.log('isAIFeatureEnabled from ChannelListIndex = ', this.isAIFeatureEnabled);
       if (localStorage.snackbar) {
         this.$store.dispatch('showSnackbarSimple', localStorage.snackbar);
         delete localStorage.snackbar;
