@@ -254,11 +254,14 @@ class AsyncTaskTestCase(TransactionTestCase):
     def test_revoke_task(self):
         channel_id = uuid.uuid4()
         async_result = test_task_delayed.enqueue(self.user, channel_id=channel_id)
+        # A bit delay to let the task object be saved async,
+        # This delay is relatively small and hopefully and wont cause any problems in real time
+        time.sleep(0.005)
         test_task_delayed.revoke(channel_id=channel_id)
 
         # this should raise an exception, even though revoked, because the task is in ready state but not success
-        # with self.assertRaises(Exception):
-        #     self._wait_for(async_result)
+        with self.assertRaises(Exception):
+            self._wait_for(async_result)
 
         try:
             TaskResult.objects.get(task_id=async_result.task_id, status=states.REVOKED)

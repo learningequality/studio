@@ -2576,6 +2576,11 @@ class CustomTaskMetadata(models.Model):
     progress = models.IntegerField(null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(100)])
     # a hash of the task name and kwargs for identifying repeat tasks
     signature = models.CharField(null=True, blank=False, max_length=32)
+    date_created = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name=_('Created DateTime'),
+        help_text=_('Datetime field when the custom_metadata for task was created in UTC')
+    )
 
     def as_dict(self):
         """
