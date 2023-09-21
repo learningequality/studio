@@ -1,8 +1,6 @@
 from contentcuration.utils.appnexus.base import Backend, Adapter
 
 class MockBackend(Backend):
-    _instance = None
-
     def connect(self) -> None:
         return super().connect()
 

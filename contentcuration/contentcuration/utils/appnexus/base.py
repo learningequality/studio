@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from builtins import NotImplementedError
-from typing import Optional, Union, Dict
+from typing import Union, Dict
 
 
 class Backend(ABC):
@@ -43,18 +43,10 @@ class Backend(ABC):
         raise NotImplementedError("Subclasses should implement the creation of instance")
 
 
-class BackendFactory:
-    def create_backend(self, backend: Optional[Backend] = None) -> Backend:
-        """
-        Create a Backend instance based on Django or manual settings.
-        :param: backend (optional): An optional pre-existing Backend instance.
-
-        :returns: Backend: A backend instance.
-        """
-        return backend or self._create_backend_from_settings()
-
-    def _create_backend_from_settings(self) -> Backend:
-        # TODO: use Django settings to create backend.
+class BackendFactory(ABC):
+    @abstractmethod
+    def create_backend(self) -> Backend:
+        """ Create a Backend instance from the given backend. """
         pass
 
 
@@ -63,10 +55,10 @@ class Adapter:
     Base class for adapters that interact with a backend interface.
 
     This class should be inherited by adapter classes that facilitate
-    interaction with different backend implementation.
+    interaction with different backend implementations.
     """
     def __init__(self, backend: Backend) -> None:
-        self.backend = BackendFactory().create_backend(backend=backend)
+        self.backend = backend
 
     def request(self):
         """ Forward the request to the chosen Backend """
