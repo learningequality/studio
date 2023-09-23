@@ -98,7 +98,7 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
     def caption_cue_metadata(self):
         return {
             "file": {
-                "file_id": uuid.uuid4(),
+                "file_id": uuid.uuid4().hex,
                 "language": "en",
             },
             "cue": {
