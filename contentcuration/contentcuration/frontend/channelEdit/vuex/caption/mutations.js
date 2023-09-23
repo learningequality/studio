@@ -1,6 +1,5 @@
 import Vue from 'vue';
 import { GENERATING } from 'shared/data/constants';
-// import { applyMods } from 'shared/data/applyRemoteChanges';
 
 /* Mutations for Caption File */
 export function ADD_CAPTIONFILE(state, { captionFile, nodeId }) {
@@ -27,6 +26,7 @@ export function ADD_CAPTIONFILE(state, { captionFile, nodeId }) {
 }
 
 export function ADD_CAPTIONFILES(state, { captionFiles, nodeIds }) {
+  // TODO: this causes to not update vuex state correctly on initial loading of component
   captionFiles.forEach((captionFile, index) => {
     const nodeId = nodeIds[index];
     ADD_CAPTIONFILE(state, { captionFile, nodeId });

@@ -2,7 +2,7 @@ from rest_framework.viewsets import ViewSet
 from rest_framework.response import Response
 
 from contentcuration.models import CaptionFile, File
-from automation.ai_models.automatic_speech_recognition import WhisperModel
+from automation.ai_models.automatic_speech_recognition import WhisperTranscriber
 from automation.utils.transcription_converter import whisper_converter
 
 class TranscriptionsViewSet(ViewSet):
@@ -15,8 +15,8 @@ class TranscriptionsViewSet(ViewSet):
         file_instance = File.objects.get(pk=file_id)
         url = file_instance.file_on_disk.url
 
-        whisper_model = WhisperModel() # <<< here we can set tiny or large-2
-        transcriptions = whisper_model.transcribe(media_url=url)
+        whisper = WhisperTranscriber()
+        transcriptions = whisper.transcribe(media_url=url)
         cues = whisper_converter(
             transcriptions=transcriptions,
             caption_file_id=str(caption_file_id)
