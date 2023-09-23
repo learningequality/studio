@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import logging
 
 from le_utils.constants.format_presets import AUDIO, VIDEO_HIGH_RES, VIDEO_LOW_RES
@@ -14,32 +13,10 @@ from contentcuration.viewsets.sync.utils import generate_update_event
 
 
 class CaptionCueSerializer(BulkModelSerializer):
-=======
-from django.core.exceptions import ObjectDoesNotExist
-from rest_framework import serializers
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
-from rest_framework import status 
-
-from contentcuration.models import CaptionCue, CaptionFile
-from contentcuration.viewsets.base import ValuesViewset
-from contentcuration.viewsets.sync.utils import log_sync_exception
-
-
-class CaptionCueSerializer(serializers.ModelSerializer):
-    def validate(self, attrs):
-        """Check that the start is before the stop."""
-        super().validate(attrs)
-        if attrs["starttime"] > attrs["endtime"]:
-            raise serializers.ValidationError("The cue must finish after start.")
-        return attrs
-
->>>>>>> 9c697776d (Adds caption editor components, updated IndexedDB Resource)
     class Meta:
         model = CaptionCue
         fields = ["text", "starttime", "endtime", "caption_file_id"]
 
-<<<<<<< HEAD
     def validate(self, attrs):
         """Check that the cue's starttime is before the endtime."""
         attrs = super().validate(attrs)
@@ -51,7 +28,6 @@ class CaptionCueSerializer(serializers.ModelSerializer):
         """
         Copies the caption_file_id from the request data
         to the internal representation before validation.
-
         Without this, the caption_file_id would be lost
         if validation fails, leading to errors.
         """
@@ -65,19 +41,12 @@ class CaptionCueSerializer(serializers.ModelSerializer):
 
 
 class CaptionFileSerializer(BulkModelSerializer):
-=======
-
-class CaptionFileSerializer(serializers.ModelSerializer):
->>>>>>> 9c697776d (Adds caption editor components, updated IndexedDB Resource)
     caption_cue = CaptionCueSerializer(many=True, required=False)
 
     class Meta:
         model = CaptionFile
         fields = ["id", "file_id", "language", "caption_cue"]
 
-    def to_representation(self, instance):
-        # we need to change this?
-        return super().to_representation(instance)
 
 
 class CaptionViewSet(ValuesViewset):
@@ -88,38 +57,12 @@ class CaptionViewSet(ValuesViewset):
     values = ("id", "file_id", "language")
 
     field_map = {
-<<<<<<< HEAD
         "file_id": "file_id",
         "language": "language",
-=======
-        "file": "file_id",
-        "language": "language",
-        "caption_cue": "caption_cue",
->>>>>>> 9c697776d (Adds caption editor components, updated IndexedDB Resource)
     }
 
     def get_queryset(self):
         queryset = super().get_queryset()
-<<<<<<< HEAD
-=======
-
-        file_id = self.request.GET.get("file_id")
-        language = self.request.GET.get("language")
-
-        if file_id:
-            queryset = queryset.filter(file_id=file_id)
-        if language:
-            queryset = queryset.filter(language=language)
-
-        return queryset
-
-    def delete_from_changes(self, changes):
-        errors = []
-        queryset = self.get_edit_queryset().order_by()
-        for change in changes:
-            try:
-                instance = queryset.filter(**dict(self.values_from_key(change["key"])))
->>>>>>> 9c697776d (Adds caption editor components, updated IndexedDB Resource)
 
         contentnode_ids = self.request.GET.get("contentnode__in")
         file_id = self.request.GET.get("file_id")
@@ -164,22 +107,16 @@ class CaptionViewSet(ValuesViewset):
         except Exception as e:
             logging.error(f"Failed to queue celery task.\nWith the error: {e}")
 
-
 class CaptionCueViewSet(ValuesViewset):
     # Handles operations for the CaptionCue model.
     queryset = CaptionCue.objects.all()
     permission_classes = [IsAuthenticated]
     serializer_class = CaptionCueSerializer
-<<<<<<< HEAD
     values = ("id", "text", "starttime", "endtime", "caption_file_id")
-=======
-    values = ("text", "starttime", "endtime", "caption_file")
->>>>>>> 9c697776d (Adds caption editor components, updated IndexedDB Resource)
 
     field_map = {
         "id": "id",
         "text": "text",
-<<<<<<< HEAD
         "starttime": "starttime",
         "endtime": "endtime",
         "caption_file": "caption_file_id",
@@ -187,14 +124,5 @@ class CaptionCueViewSet(ValuesViewset):
 
     def list(self, request, *args, **kwargs):
         caption_file_id = kwargs["caption_file_id"]
-=======
-        "start_time": "starttime",
-        "end_time": "endtime",
-        "caption_file_id": "caption_file",
-    }
-
-    def list(self, request, *args, **kwargs):
-        caption_file_id = kwargs['caption_file_id']
->>>>>>> 9c697776d (Adds caption editor components, updated IndexedDB Resource)
         queryset = CaptionCue.objects.filter(caption_file_id=caption_file_id)
         return Response(self.serialize(queryset))
