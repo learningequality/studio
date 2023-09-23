@@ -1058,6 +1058,7 @@ export const CaptionCues = new Resource({
   idField: 'id',
   indexFields: ['text', 'starttime', 'endtime', 'caption_file_id'],
   syncable: true,
+<<<<<<< HEAD
   getChannelId: getChannelFromChannelScope,
   filterCuesByFileId(caption_file_id) {
     return this.table
@@ -1065,6 +1066,9 @@ export const CaptionCues = new Resource({
       .equals(caption_file_id)
       .toArray();
   },
+=======
+
+>>>>>>> 5bde2813e (Adds check for Request Cache and to IndexedDB for fetchCollection)
   collectionUrl(caption_file_id) {
     return this.getUrlFunction('list')(caption_file_id)
   },
