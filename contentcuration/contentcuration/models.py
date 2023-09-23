@@ -2100,7 +2100,7 @@ class CaptionCue(models.Model):
     endtime = models.FloatField(null=False)
     caption_file = models.ForeignKey(CaptionFile, related_name="caption_cue", on_delete=models.CASCADE)
 
-AddsAdds    def __str__(self):
+    def __str__(self):
         return "text: {text}, start_time: {starttime}, end_time: {endtime}".format(text=self.text, starttime=self.starttime, endtime=self.endtime)
 
 ASSESSMENT_ID_INDEX_NAME = "assessment_id_idx"
