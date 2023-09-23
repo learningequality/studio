@@ -3,13 +3,7 @@ from __future__ import absolute_import
 import json
 import uuid
 
-<<<<<<< HEAD
 from contentcuration.models import CaptionCue, CaptionFile, Language
-=======
-from django.core.serializers import serialize
-
-from contentcuration.models import CaptionCue, CaptionFile
->>>>>>> de52608ba (Adds caption editor components, updated IndexedDB Resource)
 from contentcuration.tests import testdata
 from contentcuration.tests.base import StudioAPITestCase
 from contentcuration.tests.viewsets.base import (
@@ -20,11 +14,6 @@ from contentcuration.tests.viewsets.base import (
 )
 from contentcuration.viewsets.caption import CaptionCueSerializer, CaptionFileSerializer
 from contentcuration.viewsets.sync.constants import CAPTION_CUES, CAPTION_FILE
-<<<<<<< HEAD
-=======
-
-# class CRUDTestCase(StudioAPITestCase):
->>>>>>> de52608ba (Adds caption editor components, updated IndexedDB Resource)
 
 
 class SyncTestCase(SyncTestMixin, StudioAPITestCase):
@@ -53,13 +42,8 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
     def caption_cue_metadata(self):
         return {
             "file": {
-<<<<<<< HEAD
                 "file_id": uuid.uuid4().hex,
                 "language":  Language.objects.get(pk="en").pk,
-=======
-                "file_id": uuid.uuid4(),
-                "language": "en",
->>>>>>> de52608ba (Adds caption editor components, updated IndexedDB Resource)
             },
             "cue": {
                 "text": "This is the beginning!",
@@ -347,11 +331,8 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
 
     def test_invalid_caption_cue_data_serialization(self):
         metadata = self.caption_cue_metadata
-<<<<<<< HEAD
         # Explicitly set language to model object to follow Django ORM conventions 
         metadata['file']['language'] = Language.objects.get(pk="en") 
-=======
->>>>>>> de52608ba (Adds caption editor components, updated IndexedDB Resource)
         caption_file = CaptionFile.objects.create(**metadata["file"])
         caption_cue = metadata["cue"]
         caption_cue.update(
