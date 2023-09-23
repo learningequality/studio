@@ -71,7 +71,7 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         return {
             "file": {
                 "file_id": uuid.uuid4().hex,
-                "language": "en",
+                "language":  Language.objects.get(pk="en").pk,
             },
             "cue": {
                 "text": "This is the beginning!",
@@ -86,7 +86,6 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         self.user = testdata.user()
         self.channel.editors.add(self.user)
 
-    # Test for CaptionFile model
     def test_create_caption(self):
         self.client.force_authenticate(user=self.user)
         caption_file = self.caption_file_metadata
@@ -134,7 +133,6 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
     def test_delete_caption_file(self):
         self.client.force_authenticate(user=self.user)
         caption_file = self.caption_file_metadata
-
         # Explicitly set language to model object to follow Django ORM conventions
         caption_file['language'] = Language.objects.get(pk='en')
         caption_file_1 = CaptionFile(**caption_file)
