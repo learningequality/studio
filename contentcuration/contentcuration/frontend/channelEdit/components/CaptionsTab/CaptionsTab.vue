@@ -85,6 +85,10 @@
         // excludeLanguages requires array of ids
         return notSupportedCaptionLanguages.map(l => l.id);
       },
+      unsupportedLanguages() {
+        // excludeLanguages requires array of ids
+        return notSupportedCaptionLanguages.map(l => l.id);
+      },
     },
     methods: {
       ...mapActions('caption', ['addCaptionFile']),
