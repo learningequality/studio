@@ -75,19 +75,45 @@ export async function addCaptionFile({ state, commit }, { id, file_id, language,
 }
 
 export async function loadCaptions({ commit, rootGetters }, params) {
-    const AI_FEATURE_FLAG = rootGetters['currentChannel/isAIFeatureEnabled']
-    if(!AI_FEATURE_FLAG) return;
+    const isAIFeatureEnabled = rootGetters['currentChannel/isAIFeatureEnabled'];
+    if(!isAIFeatureEnabled) return;
 
-    const FILE_TYPE = rootGetters['contentNode/getContentNode'](params.contentnode_id).kind;
-    if(FILE_TYPE === 'video' || FILE_TYPE === 'audio') {
-        const captionFiles = await loadCaptionFiles(commit, params);
-        // If there is no Caption File for this contentnode
-        // Don't request for the cues
-        if(captionFiles.length === 0) return;
-        // TODO: call loadCaptionCues -> to be done after I finish saving captionFiles in indexedDB When CTA is called. So I have captions saved in the backend.
+    // If a new file is uploaded, the contentnode_id will be string
+    if(typeof params.contentnode_id === 'string') {
+        params.contentnode_id = [params.contentnode_id]
     }
+    const nodeIdsToLoad = [];
+    for (const nodeId of params.contentnode_id) {
+        const node = rootGetters['contentNode/getContentNode'](nodeId);
+        if (node && (node.kind === 'video' || node.kind === 'audio')) {
+            nodeIdsToLoad.push(nodeId); // already in vuex
+        } else if(!node) {
+            nodeIdsToLoad.push(nodeId); // Assume that its audio/video
+        }
+    }
+
+    const captionFiles = await loadCaptionFiles(commit, {
+        contentnode_id: nodeIdsToLoad
+    });
+
+    // If there is no Caption File for this contentnode
+    // Don't request for the cues
+    if(captionFiles.length === 0) return;
+    // TODO: call loadCaptionCues -> to be done after I finish saving captionFiles in indexedDB When CTA is called. So I have captions saved in the backend.
 }
 
-export async function addCaptionFile({ commit }, { captionFile, nodeId }) {
-    commit('ADD_CAPTIONFILE', { captionFile, nodeId });
+
+export async function addCaptionFile({ commit }, { file_id, language, nodeId }) {
+    const captionFile = {
+        file_id: file_id,
+        language: language
+    }
+    return CaptionFile.put(captionFile).then(id => {
+        captionFile.id = id;
+        console.log(captionFile, nodeId);
+        commit('ADD_CAPTIONFILE', { 
+            captionFile, 
+            nodeId 
+        });
+    })
 }
