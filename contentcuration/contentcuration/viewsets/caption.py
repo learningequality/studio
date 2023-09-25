@@ -48,7 +48,6 @@ class CaptionFileSerializer(BulkModelSerializer):
         fields = ["id", "file_id", "language", "caption_cue"]
 
 
-
 class CaptionViewSet(ValuesViewset):
     # Handles operations for the CaptionFile model.
     queryset = CaptionFile.objects.prefetch_related("caption_cue")
