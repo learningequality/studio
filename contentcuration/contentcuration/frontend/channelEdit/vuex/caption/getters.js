@@ -1,6 +1,6 @@
 import { GENERATING } from 'shared/data/constants';
 
-export function isGeneratingGetter(state, getters, rootState, rootGetters) {
+export function isGeneratingGetter(state, _getters, _rootState, _rootGetters) {
     return (contentnode_id) => {
         const captionFileIds = Object.keys(state.captionFilesMap[contentnode_id] || {});
         let isAnyGenerating = false;

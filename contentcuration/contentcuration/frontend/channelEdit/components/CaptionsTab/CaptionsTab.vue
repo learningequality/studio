@@ -95,14 +95,9 @@ import LanguageDropdown from 'shared/views/LanguageDropdown';
         // excludeLanguages requires array of ids
         return notSupportedCaptionLanguages.map(l => l.id);
       },
-      unsupportedLanguages() {
-        // excludeLanguages requires array of ids
-        return notSupportedCaptionLanguages.map(l => l.id);
-      },
-      unsupportedLanguages() {
-        // excludeLanguages requires array of ids
-        return notSupportedCaptionLanguages.map(l => l.id);
-      },
+      isGeneratingCaptions() {
+        return this.isGeneratingGetter(this.nodeId);
+      }
     },
     methods: {
       ...mapActions('caption', ['addCaptionFile']),
@@ -124,13 +119,15 @@ import LanguageDropdown from 'shared/views/LanguageDropdown';
           nodeId: this.nodeId,
         });
 
-        CaptionFile.waitForCaptionCueGeneration(id).then(generatingFlag => {
+        CaptionFile.waitForCaptionCueGeneration(id).then(_generatingFlag => {
           this.selectedLanguage = null;
         });
       },
       getLongestDurationFileId() {
         let files = this.getContentNodeFiles(this.nodeId);
-        let { id } = files.reduce((max, file) => file.duration > max.duration ? file : max, { duration: 0 });
+        let { id } = files.reduce((max, file) => (
+          file.duration > max.duration ? file : max
+        ), { duration: 0 });
         return id;
       },
     },

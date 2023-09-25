@@ -52,62 +52,6 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
             },
         }
 
-    @property
-    def caption_cue_metadata(self):
-        return {
-            "file": {
-                "file_id": uuid.uuid4().hex,
-                "language":  Language.objects.get(pk="en").pk,
-            },
-            "cue": {
-                "text": "This is the beginning!",
-                "starttime": 0.0,
-                "endtime": 12.0,
-            },
-        }
-
-    @property
-    def caption_cue_metadata(self):
-        return {
-            "file": {
-                "file_id": uuid.uuid4().hex,
-                "language":  Language.objects.get(pk="en").pk,
-            },
-            "cue": {
-                "text": "This is the beginning!",
-                "starttime": 0.0,
-                "endtime": 12.0,
-            },
-        }
-
-    @property
-    def caption_cue_metadata(self):
-        return {
-            "file": {
-                "file_id": uuid.uuid4().hex,
-                "language":  Language.objects.get(pk="en").pk,
-            },
-            "cue": {
-                "text": "This is the beginning!",
-                "starttime": 0.0,
-                "endtime": 12.0,
-            },
-        }
-
-    @property
-    def caption_cue_metadata(self):
-        return {
-            "file": {
-                "file_id": uuid.uuid4().hex,
-                "language": "en",
-            },
-            "cue": {
-                "text": "This is the beginning!",
-                "starttime": 0.0,
-                "endtime": 12.0,
-            },
-        }
-
     def setUp(self):
         super(SyncTestCase, self).setUp()
         self.channel = testdata.channel()
