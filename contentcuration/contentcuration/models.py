@@ -2582,18 +2582,6 @@ class CustomTaskMetadata(models.Model):
         help_text=_('Datetime field when the custom_metadata for task was created in UTC')
     )
 
-    def as_dict(self):
-        """
-        :return: A dictionary representation
-        """
-        return {
-            "task_id": str(self.task_id),
-            "user_id": self.user.id,
-            "channel_id": str(self.channel_id),
-            "progress": self.progress,
-            "signature": self.signature,
-        }
-
     class Meta:
         indexes = [
             # add index that matches query usage for signature
