@@ -318,12 +318,16 @@ class CeleryAsyncResult(AsyncResult):
     We access those from the CustomTaskMetadata model.
     """
 
+    _cached_model = None
+
     def get_model(self):
         """
         :return: The CustomTaskMetadatamodel object
         :rtype: contentcuration.models.CustomTaskMetadata
         """
-        return get_task_model(self, self.task_id)
+        if self._cached_model is None:
+            self._cached_model = get_task_model(self, self.task_id)
+        return self._cached_model
 
     @property
     def user_id(self):
