@@ -88,7 +88,7 @@
           </VTooltip>
           <VSpacer />
           <VFlex shrink>
-            <router-link
+            <KRouterLink
               v-if="!libraryMode"
               :to="channelDetailsLink"
             >
@@ -103,7 +103,7 @@
                 @mouseleave.native="hideHighlight = false"
               />
 
-            </router-link>
+            </KRouterLink>
 
             <IconButton
               v-if="!allowEdit && channel.published"
