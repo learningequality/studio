@@ -9,6 +9,7 @@ import pytest
 from django.core.management import call_command
 from django.db import connections
 from kolibri_content import models as kolibri_models
+from kolibri_content.router import cleanup_content_database_connection
 from kolibri_content.router import get_active_content_database
 from kolibri_content.router import set_active_content_database
 from le_utils.constants import exercises
@@ -28,6 +29,7 @@ from .testdata import node as create_node
 from .testdata import slideshow
 from .testdata import thumbnail_bytes
 from contentcuration import models as cc
+from contentcuration.utils.publish import ChannelIncompleteError
 from contentcuration.utils.publish import convert_channel_thumbnail
 from contentcuration.utils.publish import create_content_database
 from contentcuration.utils.publish import create_slideshow_manifest
@@ -216,8 +218,7 @@ class ExportChannelTestCase(StudioTestCase):
 
     def tearDown(self):
         # Clean up datbase connection after the test
-        connections[self.tempdb].close()
-        del connections.databases[self.tempdb]
+        cleanup_content_database_connection(self.tempdb)
         super(ExportChannelTestCase, self).tearDown()
         set_active_content_database(None)
         if os.path.exists(self.tempdb):
@@ -427,6 +428,29 @@ class ExportChannelTestCase(StudioTestCase):
             'm': 1,
             'n': 2
         })
+
+
+class EmptyChannelTestCase(StudioTestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        super(EmptyChannelTestCase, cls).setUpClass()
+        cls.patch_copy_db = patch('contentcuration.utils.publish.save_export_database')
+        cls.patch_copy_db.start()
+
+    @classmethod
+    def tearDownClass(cls):
+        super(EmptyChannelTestCase, cls).tearDownClass()
+        cls.patch_copy_db.stop()
+
+    def test_publish_empty_channel(self):
+        content_channel = channel()
+        set_channel_icon_encoding(content_channel)
+        content_channel.main_tree.complete = True
+        content_channel.main_tree.save()
+        content_channel.main_tree.get_descendants().exclude(kind_id="topic").delete()
+        with self.assertRaises(ChannelIncompleteError):
+            create_content_database(content_channel, True, self.admin_user.id, True)
 
 
 class ChannelExportUtilityFunctionTestCase(StudioTestCase):

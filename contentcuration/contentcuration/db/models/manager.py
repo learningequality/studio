@@ -487,6 +487,7 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
                 tag_id_map[tag.id] = new_tag.id
                 tags_to_create.append(new_tag)
 
+        # TODO: Can cleanup the above and change the below to use ignore_conflicts=True
         ContentTag.objects.bulk_create(tags_to_create)
 
         mappings_to_create = [
@@ -499,7 +500,10 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
             for mapping in node_tags_mappings
         ]
 
-        self.model.tags.through.objects.bulk_create(mappings_to_create)
+        # In the case that we are copying a node that is in the weird state of having a tag
+        # that is duplicated (with a channel tag and a null channel tag) this can cause an error
+        # so we ignore conflicts here to ignore the duplicate tags.
+        self.model.tags.through.objects.bulk_create(mappings_to_create, ignore_conflicts=True)
 
     def _copy_assessment_items(self, source_copy_id_map):
         from contentcuration.models import File

@@ -2,9 +2,9 @@ import os
 import tempfile
 
 from django.core.management import call_command
-from django.db import connections
 from django.test import TestCase
 from kolibri_content import models as kolibri_content_models
+from kolibri_content.router import cleanup_content_database_connection
 from kolibri_content.router import get_active_content_database
 from kolibri_content.router import using_content_database
 from kolibri_public import models as kolibri_public_models
@@ -116,8 +116,7 @@ class ChannelMapperTest(TestCase):
     @classmethod
     def tearDownClass(cls):
         # Clean up datbase connection after the test
-        connections[cls.tempdb].close()
-        del connections.databases[cls.tempdb]
+        cleanup_content_database_connection(cls.tempdb)
         super(ChannelMapperTest, cls).tearDownClass()
         if os.path.exists(cls.tempdb):
             os.remove(cls.tempdb)

@@ -59,7 +59,7 @@ class ImportMetadataViewset(GenericViewSet):
             )
         return error
 
-    def retrieve(self, request, pk=None):
+    def retrieve(self, request, pk=None):  # noqa: C901
         """
         An endpoint to retrieve all content metadata required for importing a content node
         all of its ancestors, and any relevant needed metadata.
@@ -139,8 +139,18 @@ class ImportMetadataViewset(GenericViewSet):
             # Map the table name from the kolibri_public table name to the equivalent Kolibri table name
             table_name = kc_model._meta.db_table
             # Tweak our introspection here to rely on Django model meta instead of SQLAlchemy
-            # Read from the base_models here, as those are the ones required for this schema version
-            raw_fields = [field.column for field in base_model._meta.fields]
+            # Read valid field names from the combination of the base model, and the mptt tree fields
+            # of the kc_model - because the base model is abstract, it does not get the mptt fields applied
+            # to its meta fields attribute, so we need to read the actual fields from the kc_model, but filter
+            # them only to names valid for the base model.
+            field_names = {field.column for field in base_model._meta.fields}
+            if hasattr(base_model, "_mptt_meta"):
+                field_names.add(base_model._mptt_meta.parent_attr)
+                field_names.add(base_model._mptt_meta.tree_id_attr)
+                field_names.add(base_model._mptt_meta.left_attr)
+                field_names.add(base_model._mptt_meta.right_attr)
+                field_names.add(base_model._mptt_meta.level_attr)
+            raw_fields = [field.column for field in kc_model._meta.fields if field.column in field_names]
             if qs.model is models.Language:
                 raw_fields = [rf for rf in raw_fields if rf != "lang_name"] + ["native_name"]
             qs = qs.values(*raw_fields)

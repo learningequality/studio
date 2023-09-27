@@ -18,7 +18,7 @@ import {
   RELATIVE_TREE_POSITIONS,
   RELATIVE_TREE_POSITIONS_LOOKUP,
   LAST_FETCHED,
-  COPYING_FLAG,
+  COPYING_STATUS,
   TASK_ID,
 } from 'shared/data/constants';
 import { INDEXEDDB_RESOURCES } from 'shared/data/registry';
@@ -160,12 +160,8 @@ export class ChangeTracker {
           change.type === CHANGE_TYPES.COPIED ||
           (change.type === CHANGE_TYPES.MOVED && !change.oldObj)
         ) {
-          // Get the primary key's field name off the table to make sure we delete by
-          // the change key
-          return resource.table
-            .where(resource.table.schema.primKey.keyPath)
-            .equals(change.key)
-            .delete();
+          // Use resource's delete method to propogate sync object to backend.
+          return resource.delete(change.key);
         } else if (change.type === CHANGE_TYPES.UPDATED || change.type === CHANGE_TYPES.DELETED) {
           // If we updated or deleted it, we just want the old stuff back
           return resource.table.put(change.oldObj);
@@ -200,7 +196,7 @@ export class ChangeTracker {
 // These fields should not be included in change objects that we
 // store in the changes table for syncing to the backend
 // as they are only used for tracking state locally
-const ignoredSubFields = [COPYING_FLAG, LAST_FETCHED, TASK_ID];
+const ignoredSubFields = [COPYING_STATUS, LAST_FETCHED, TASK_ID];
 
 function omitIgnoredSubFields(obj) {
   return omit(obj, ignoredSubFields);

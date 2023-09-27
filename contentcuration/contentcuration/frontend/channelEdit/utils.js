@@ -6,6 +6,7 @@ import { metadataStrings, constantStrings } from 'shared/mixins';
 import {
   AssessmentItemTypes,
   CompletionCriteriaModels,
+  ContentModalities,
   SHORT_LONG_ACTIVITY_MIDPOINT,
   CompletionDropdownMap,
 } from 'shared/constants';
@@ -21,6 +22,7 @@ export const defaultCompletionCriteriaModels = {
   [ContentKindsNames.DOCUMENT]: CompletionCriteriaModels.PAGES,
   [ContentKindsNames.H5P]: CompletionCriteriaModels.DETERMINED_BY_RESOURCE,
   [ContentKindsNames.HTML5]: CompletionCriteriaModels.APPROX_TIME,
+  [ContentKindsNames.ZIM]: CompletionCriteriaModels.APPROX_TIME,
   [ContentKindsNames.EXERCISE]: CompletionCriteriaModels.MASTERY,
 };
 
@@ -49,6 +51,11 @@ export const CompletionOptionsDropdownMap = {
   ],
   [ContentKindsNames.EXERCISE]: [CompletionDropdownMap.goal, CompletionDropdownMap.practiceQuiz],
   [ContentKindsNames.HTML5]: [
+    CompletionDropdownMap.completeDuration,
+    CompletionDropdownMap.determinedByResource,
+    CompletionDropdownMap.reference,
+  ],
+  [ContentKindsNames.ZIM]: [
     CompletionDropdownMap.completeDuration,
     CompletionDropdownMap.determinedByResource,
     CompletionDropdownMap.reference,
@@ -274,18 +281,20 @@ export function getCompletionDataFromNode(node) {
     return;
   }
 
-  const completionCriteria = node.extra_fields?.options?.completion_criteria
-    ? JSON.parse(JSON.stringify(node.extra_fields?.options?.completion_criteria))
-    : null;
+  const extraFields = node?.extra_fields || {};
+  const options = extraFields?.options || {};
+  const completionCriteria = options?.completion_criteria || null;
   const threshold = completionCriteria?.threshold || generateDefaultThreshold(node);
   const model = completionCriteria?.model || defaultCompletionCriteriaModels[node.kind];
-  const suggestedDurationType = node.extra_fields?.suggested_duration_type;
+  const modality = options?.modality || null;
+  const suggestedDurationType = extraFields?.suggested_duration_type;
   const suggestedDuration = node.suggested_duration;
 
   return {
     completionModel: model,
     completionThreshold: threshold,
     masteryModel: threshold?.mastery_model,
+    modality,
     suggestedDurationType,
     suggestedDuration,
   };
@@ -317,11 +326,11 @@ export function getCompletionCriteriaLabels(node = {}, files = []) {
   if (!node && !files) {
     return;
   }
-
   const {
     completionModel,
     completionThreshold,
     masteryModel,
+    modality,
     suggestedDuration,
   } = getCompletionDataFromNode(node);
 
@@ -368,6 +377,11 @@ export function getCompletionCriteriaLabels(node = {}, files = []) {
           m: completionThreshold.m,
           n: completionThreshold.n,
         });
+      } else if (
+        masteryModel === MasteryModelsNames.DO_ALL &&
+        modality === ContentModalities.QUIZ
+      ) {
+        labels.completion = metadataStrings.$tr('practiceQuiz');
       } else {
         labels.completion = constantStrings.$tr(masteryModel);
       }

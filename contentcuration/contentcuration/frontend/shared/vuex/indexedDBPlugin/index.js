@@ -116,7 +116,7 @@ export default function IndexedDBPlugin(db, listeners = []) {
       }
       // omit the last fetched attribute used only in resource layer
       const mods = omit(obj, [LAST_FETCHED]);
-      if (Object.keys(mods).length === 0) {
+      if (Object.keys(mods).length === 0 && change.type === CHANGE_TYPES.UPDATED) {
         return;
       }
       events.emit(getEventName(change.table, change.type), {

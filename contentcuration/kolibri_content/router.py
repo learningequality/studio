@@ -72,6 +72,16 @@ def get_content_database_connection(alias=None):
     return connections[alias].connection
 
 
+def cleanup_content_database_connection(alias):
+    try:
+        connection = connections[alias]
+        connection.close()
+        del connections.databases[alias]
+    except (ConnectionDoesNotExist, KeyError):
+        # Already cleaned up, nothing to do here!
+        pass
+
+
 class ContentDBRouter(object):
     """A router that decides what content database to read from based on a thread-local variable."""
 
@@ -158,6 +168,7 @@ class using_content_database(object):
 
     def __exit__(self, exc_type, exc_value, traceback):
         set_active_content_database(self.previous_alias)
+        cleanup_content_database_connection(self.alias)
 
     def __call__(self, querying_func):
         # allow using the context manager as a decorator

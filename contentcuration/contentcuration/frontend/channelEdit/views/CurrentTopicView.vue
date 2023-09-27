@@ -246,11 +246,10 @@
     ContentKindLearningActivityDefaults,
   } from 'shared/leUtils/ContentKinds';
   import { titleMixin, routerMixin } from 'shared/mixins';
-  import { COPYING_FLAG, RELATIVE_TREE_POSITIONS } from 'shared/data/constants';
+  import { RELATIVE_TREE_POSITIONS } from 'shared/data/constants';
   import { DraggableTypes, DropEffect } from 'shared/mixins/draggable/constants';
   import { DraggableFlags } from 'shared/vuex/draggablePlugin/module/constants';
   import DraggableRegion from 'shared/views/draggable/DraggableRegion';
-  import { ContentNode } from 'shared/data/resources';
 
   export default {
     name: 'CurrentTopicView',
@@ -302,6 +301,7 @@
         'getContentNodeAncestors',
         'getTopicAndResourceCounts',
         'getContentNodeChildren',
+        'isNodeInCopyingState',
       ]),
       ...mapGetters('clipboard', ['getCopyTrees']),
       ...mapGetters('draggable', ['activeDraggableRegionId']),
@@ -323,7 +323,9 @@
         },
         set(value) {
           if (value) {
-            this.selected = this.children.filter(node => !node[COPYING_FLAG]).map(node => node.id);
+            this.selected = this.children
+              .filter(node => !this.isNodeInCopyingState(node.id))
+              .map(node => node.id);
             this.trackClickEvent('Select all');
           } else {
             this.selected = [];
@@ -420,13 +422,14 @@
       },
     },
     methods: {
-      ...mapActions(['showSnackbar']),
+      ...mapActions(['showSnackbar', 'clearSnackbar']),
       ...mapActions(['setViewMode', 'addViewModeOverride', 'removeViewModeOverride']),
       ...mapActions('contentNode', [
         'createContentNode',
         'loadAncestors',
         'moveContentNodes',
         'copyContentNode',
+        'waitForCopyingStatus',
       ]),
       ...mapActions('clipboard', ['copyAll']),
       clearSelections() {
@@ -538,44 +541,47 @@
         }
 
         // All sources should be from the same region
-        const sourceRegion = drop.sources[0].region;
+        const sources = drop.sources || [];
+        const sourceRegion = sources.length > 0 ? sources[0].region : null;
         const payload = {
           target: identity.metadata.id,
           position,
         };
 
-        // When the source region is the clipboard, we want to make sure we use
-        // `excluded_descendants` by accessing the copy trees through the clipboard node ID
-        if (sourceRegion && sourceRegion.id === DraggableRegions.CLIPBOARD) {
-          return Promise.all(
-            data.sources.map(source => {
-              // Using `getCopyTrees` we can access the `excluded_descendants` for the node, such
-              // that we make sure to skip copying nodes that aren't intended to be copied
-              const trees = this.getCopyTrees(source.metadata.clipboardNodeId, true);
+        if (payload.target) {
+          // When the source region is the clipboard, we want to make sure we use
+          // `excluded_descendants` by accessing the copy trees through the clipboard node ID
+          if (sourceRegion && sourceRegion.id === DraggableRegions.CLIPBOARD) {
+            return Promise.all(
+              data.sources.map(source => {
+                // Using `getCopyTrees` we can access the `excluded_descendants` for the node, such
+                // that we make sure to skip copying nodes that aren't intended to be copied
+                const trees = this.getCopyTrees(source.metadata.clipboardNodeId, true);
 
-              // Since we're using `ignoreSelection=true` for `getCopyTrees`, it should only
-              // return one tree at most
-              if (trees.length === 0) {
-                return Promise.resolve();
-              } else if (trees.length > 1) {
-                throw new Error(
-                  'Multiple copy trees are unexpected for drag and drop copy operation'
-                );
-              }
+                // Since we're using `ignoreSelection=true` for `getCopyTrees`, it should only
+                // return one tree at most
+                if (trees.length === 0) {
+                  return Promise.resolve();
+                } else if (trees.length > 1) {
+                  throw new Error(
+                    'Multiple copy trees are unexpected for drag and drop copy operation'
+                  );
+                }
 
-              return this.copyContentNode({
-                ...payload,
-                id: source.metadata.id,
-                excluded_descendants: get(trees, [0, 'extra_fields', 'excluded_descendants'], {}),
-              });
-            })
-          );
+                return this.copyContentNode({
+                  ...payload,
+                  id: source.metadata.id,
+                  excluded_descendants: get(trees, [0, 'extra_fields', 'excluded_descendants'], {}),
+                });
+              })
+            );
+          }
+
+          return this.moveContentNodes({
+            ...payload,
+            id__in: data.sources.map(s => s.metadata.id),
+          });
         }
-
-        return this.moveContentNodes({
-          ...payload,
-          id__in: data.sources.map(s => s.metadata.id),
-        });
       },
       insertPosition(mask) {
         return mask & DraggableFlags.TOP
@@ -646,12 +652,30 @@
           )
         ).then(nodes => {
           this.clearSelections();
-          ContentNode.waitForCopying(nodes.map(n => n.id)).then(() => {
-            this.showSnackbar({
-              text: this.$tr('copiedItems'),
-              actionText: this.$tr('undo'),
-              actionCallback: () => changeTracker.revert(),
-            }).then(() => changeTracker.cleanUp());
+          Promise.allSettled(
+            nodes.map(n =>
+              this.waitForCopyingStatus({
+                contentNodeId: n.id,
+                startingRev: changeTracker._startingRev,
+              })
+            )
+          ).then(results => {
+            let isAllCopySuccess = true;
+            for (const result of results) {
+              if (result.status === 'rejected') {
+                isAllCopySuccess = false;
+              }
+            }
+            if (isAllCopySuccess) {
+              this.showSnackbar({
+                text: this.$tr('copiedItems'),
+                actionText: this.$tr('undo'),
+                actionCallback: () => changeTracker.revert(),
+              }).then(() => changeTracker.cleanUp());
+            } else {
+              this.clearSnackbar();
+              changeTracker.cleanUp();
+            }
           });
         });
       }),
