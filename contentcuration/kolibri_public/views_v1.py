@@ -1,6 +1,7 @@
 import json
 
 from django.conf import settings
+from django.contrib.sites.models import Site
 from django.db.models import Q
 from django.db.models import TextField
 from django.db.models import Value
@@ -8,6 +9,7 @@ from django.http import HttpResponseNotFound
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.cache import cache_page
 from kolibri_content.constants.schema_versions import MIN_CONTENT_SCHEMA_VERSION
+from le_utils.uuidv5 import generate_ecosystem_namespaced_uuid
 from rest_framework import viewsets
 from rest_framework.decorators import api_view
 from rest_framework.decorators import permission_classes
@@ -120,6 +122,20 @@ device_info_keys = {
 }
 
 DEVICE_INFO_VERSION = "3"
+INSTANCE_ID = None
+
+
+def get_instance_id():
+    """
+    Returns a namespaced UUID for Studio based of the domain. The current site is configured
+    through Django settings
+    :return: A uuid
+    """
+    global INSTANCE_ID
+
+    if INSTANCE_ID is None:
+        INSTANCE_ID = generate_ecosystem_namespaced_uuid(Site.objects.get_current().domain).hex
+    return INSTANCE_ID
 
 
 def get_device_info(version=DEVICE_INFO_VERSION):
@@ -136,7 +152,7 @@ def get_device_info(version=DEVICE_INFO_VERSION):
     all_info = {
         "application": "studio",
         "kolibri_version": "0.16.0",
-        "instance_id": None,
+        "instance_id": get_instance_id(),
         'device_name': "Kolibri Studio",
         "operating_system": None,
         "subset_of_users_device": False,
