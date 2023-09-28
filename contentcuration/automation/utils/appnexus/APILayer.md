@@ -33,7 +33,7 @@ ABSTRACT CLASS Backend:
     ABSTRACT METHOD request(params)
 		# provide blue print for the request object
 		pass
-	
+
 	ABSTRACT METHOD response(params)
 		# provides blue print for the response object
 		pass
