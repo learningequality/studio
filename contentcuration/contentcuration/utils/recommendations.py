@@ -1,10 +1,34 @@
 from automation.utils.appnexus.base import Adapter
 from automation.utils.appnexus.base import Backend
 from automation.utils.appnexus.base import BackendFactory
-from automation.utils.appnexus.base import EmbeddingsRequest
-from automation.utils.appnexus.base import EmbeddingsResponse
-from automation.utils.appnexus.base import RecommedationsRequest
-from automation.utils.appnexus.base import RecommendationsResponse
+
+
+class RecommendationsBackendRequest(object):
+    pass
+
+
+class RecommedationsRequest(RecommendationsBackendRequest):
+    def __init__(self) -> None:
+        super().__init__()
+
+
+class EmbeddingsRequest(RecommendationsBackendRequest):
+    def __init__(self) -> None:
+        super().__init__()
+
+
+class RecommendationsBackendResponse(object):
+    pass
+
+
+class RecommendationsResponse(RecommendationsBackendResponse):
+    def __init__(self) -> None:
+        pass
+
+
+class EmbeddingsResponse(RecommendationsBackendResponse):
+    def __init__(self) -> None:
+        pass
 
 
 class RecommendationsBackendFatory(BackendFactory):

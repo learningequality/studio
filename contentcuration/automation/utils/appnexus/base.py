@@ -1,35 +1,8 @@
 from abc import ABC
 from abc import abstractmethod
 from builtins import NotImplementedError
+from typing import Dict
 from typing import Union
-
-
-class RecommendationsBackendRequest(object):
-    pass
-
-
-class RecommedationsRequest(RecommendationsBackendRequest):
-    def __init__(self) -> None:
-        super().__init__()
-
-
-class EmbeddingsRequest(RecommendationsBackendRequest):
-    def __init__(self) -> None:
-        super().__init__()
-
-
-class RecommendationsBackendResponse(object):
-    pass
-
-
-class RecommendationsResponse(RecommendationsBackendResponse):
-    def __init__(self) -> None:
-        pass
-
-
-class EmbeddingsResponse(RecommendationsBackendResponse):
-    def __init__(self) -> None:
-        pass
 
 
 class Backend(ABC):
@@ -47,7 +20,7 @@ class Backend(ABC):
         pass
 
     @abstractmethod
-    def make_request(self, request) -> Union[RecommendationsResponse, EmbeddingsResponse]:
+    def make_request(self, request) -> Union[bytes, str, Dict]:
         """ Make a request based on "request" """
         pass
 
