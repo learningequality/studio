@@ -1,5 +1,6 @@
-from automation.utils.appnexus.backends import Recommendations
 from django.test import TestCase
+
+from contentcuration.utils.recommendations import Recommendations
 
 
 class RecommendationsTestCase(TestCase):
