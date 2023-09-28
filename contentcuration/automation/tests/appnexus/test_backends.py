@@ -3,6 +3,7 @@ from django.test import TestCase
 
 
 class RecommendationsTestCase(TestCase):
-    def test_recommendations_backend_initialization(self):
+    def test_backend_initialization(self):
         recomendations = Recommendations()
-        assert isinstance(recomendations.get_instance(), Recommendations)
+        self.assertIsNotNone(recomendations)
+        self.assertIsInstance(recomendations.get_instance(), Recommendations)
