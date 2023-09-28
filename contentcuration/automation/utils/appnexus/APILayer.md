@@ -52,7 +52,7 @@ Different backends can now be created by implementing the base `Backend` class:
 ```python
 # Implement CONCRETE CLASS using ABSTRACT Backend class
 CLASS GCS IMPLEMENTS Backend:
-	METHOD make_request(params):
+	METHOD make_request(request):
 		# make request to Google Cloud Storage services
 
 	METHOD connect(params):
@@ -62,7 +62,7 @@ CLASS GCS IMPLEMENTS Backend:
 		# initialize a GCS Backend instance
 
 CLASS ML IMPLEMENTS Backend:
-	METHOD make_request(params):
+	METHOD make_request(request):
 		# make request to DeepLearning models hosted as service
 
 	METHOD connect(params):
@@ -128,18 +128,18 @@ With this `Adapter` class in place, we can create Adapter that are able interact
 
 ```python
 CLASS Recommendation INHERITS ADAPTER:
-	METHOD generateEmbeddings(self, params) -> Boolean
+	METHOD generateEmbeddings(self, request) -> Boolean
 		# [ Implementation ]
 
-	METHOD getRecommendation(self, params) -> Array
+	METHOD getRecommendation(self, request) -> Array
 		# [ Implementation ]
 
 CLASS Transcription INHERITS ADAPTER:
-	METHOD generateCaption(self, params) -> Array
+	METHOD generateCaption(self, request) -> Array
 		# [ Implementation ]
 
 CLASS OtherAdapter INHERITS ADAPTER:
-	METHOD someOperation(self, params) -> Any
+	METHOD someOperation(self, request) -> Any
 		# Operation that any backend wants
 ```
 

@@ -6,8 +6,8 @@ class MockBackend(Backend):
     def connect(self) -> None:
         return super().connect()
 
-    def make_request(self, url: str, params=None):
-        return super().make_request(url, params)
+    def make_request(self, request):
+        return super().make_request(request)
 
     def request(self) -> None:
         return super().request()
