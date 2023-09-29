@@ -3,9 +3,11 @@ from typing import Union
 from automation.utils.appnexus.base import Adapter
 from automation.utils.appnexus.base import Backend
 from automation.utils.appnexus.base import BackendFactory
+from automation.utils.appnexus.base import BackendRequest
+from automation.utils.appnexus.base import BackendResponse
 
 
-class RecommendationsBackendRequest(object):
+class RecommendationsBackendRequest(BackendRequest):
     pass
 
 
@@ -19,7 +21,7 @@ class EmbeddingsRequest(RecommendationsBackendRequest):
         super().__init__()
 
 
-class RecommendationsBackendResponse(object):
+class RecommendationsBackendResponse(BackendResponse):
     pass
 
 
@@ -57,12 +59,6 @@ class Recommendations(Backend):
 
     def make_request(self, request) -> Union[EmbeddingsResponse, RecommendationsResponse]:
         return super().make_request(request)
-
-    def request(self) -> None:
-        return super().request()
-
-    def response(self) -> None:
-        return super().response()
 
     @classmethod
     def _create_instance(cls) -> 'Recommendations':

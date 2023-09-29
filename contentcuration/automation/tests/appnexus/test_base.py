@@ -9,12 +9,6 @@ class MockBackend(Backend):
     def make_request(self, request):
         return super().make_request(request)
 
-    def request(self) -> None:
-        return super().request()
-
-    def response(self) -> None:
-        return super().response()
-
     @classmethod
     def _create_instance(cls) -> 'MockBackend':
         return cls()
