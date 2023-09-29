@@ -33,7 +33,7 @@ class EmbeddingsResponse(RecommendationsBackendResponse):
         pass
 
 
-class RecommendationsBackendFatory(BackendFactory):
+class RecommendationsBackendFactory(BackendFactory):
     def create_backend(self) -> Backend:
         # Return backend based on some setting.
         return super().create_backend()
