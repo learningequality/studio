@@ -1,3 +1,5 @@
+import pytest
+
 from automation.utils.appnexus.base import Adapter
 from automation.utils.appnexus.base import Backend
 
@@ -18,6 +20,11 @@ class MockAdapter(Adapter):
     def mockoperation(self):
         pass
 
+
+def test_backend_error():
+    with pytest.raises(NotImplementedError) as error:
+        Backend.get_instance()
+    assert "Subclasses should implement the creation of instance" in str(error.value)
 
 def test_backend_singleton():
     b1, b2 = MockBackend.get_instance(), MockBackend.get_instance()
