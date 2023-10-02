@@ -1,6 +1,16 @@
-from abc import ABC, abstractmethod
+from abc import ABC
+from abc import abstractmethod
 from builtins import NotImplementedError
-from typing import Union, Dict
+
+
+class BackendRequest(object):
+    """ Class that should be inherited by specific backend for its requests"""
+    pass
+
+
+class BackendResponse(object):
+    """ Class that should be inherited by specific backend for its responses"""
+    pass
 
 
 class Backend(ABC):
@@ -18,18 +28,8 @@ class Backend(ABC):
         pass
 
     @abstractmethod
-    def make_request(self, url: str, params=None) -> Union[bytes, str, Dict]:
-        """ Makes an HTTP request to a given URL using the specified method. """
-        pass
-
-    @abstractmethod
-    def request(self) -> None:
-        """ Blueprint for the request object. """
-        pass
-
-    @abstractmethod
-    def response(self) -> None:
-        """ Blueprint for the response object. """
+    def make_request(self, request) -> BackendResponse:
+        """ Make a request based on "request" """
         pass
 
     @classmethod
@@ -57,13 +57,6 @@ class Adapter:
     This class should be inherited by adapter classes that facilitate
     interaction with different backend implementations.
     """
+
     def __init__(self, backend: Backend) -> None:
         self.backend = backend
-
-    def request(self):
-        """ Forward the request to the chosen Backend """
-        return self.backend.request()
-
-    def response(self):
-        """ Forward the response to the chosen Backend """
-        return self.backend.response()
