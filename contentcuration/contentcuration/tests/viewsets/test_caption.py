@@ -63,16 +63,12 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         self.client.force_authenticate(user=self.user)
         caption_file = self.caption_file_metadata
 
-        response = self.sync_changes(
-            [
-                generate_create_event(
-                    uuid.uuid4().hex,
-                    CAPTION_FILE,
-                    caption_file,
-                    channel_id=self.channel.id,
-                )
-            ],
-        )
+        response = self.sync_changes([generate_create_event(
+            uuid.uuid4().hex,
+            CAPTION_FILE,
+            caption_file,
+            channel_id=self.channel.id,
+        )],)
         self.assertEqual(response.status_code, 200, response.content)
 
         try:
@@ -142,7 +138,7 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         self.assertEqual(response.status_code, 200, response.content)
 
         with self.assertRaises(CaptionFile.DoesNotExist):
-            caption_file_db = CaptionFile.objects.get(
+            CaptionFile.objects.get(
                 file_id=caption_file_2.file_id, language_id=caption_file_2.language
             )
 
@@ -153,7 +149,7 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         caption_file = CaptionFile.objects.create(**metadata)
         serializer = CaptionFileSerializer(instance=caption_file)
         try:
-            jd = json.dumps(serializer.data)  # Try to serialize the data to JSON
+            json.dumps(serializer.data)  # Try to serialize the data to JSON
         except Exception as e:
             self.fail(f"CaptionFile serialization failed. Error: {str(e)}")
 
@@ -168,8 +164,8 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
                 "caption_file": caption_file,
             }
         )
-        caption_cue_1 = CaptionCue.objects.create(**caption_cue)
-        caption_cue_2 = CaptionCue.objects.create(
+        CaptionCue.objects.create(**caption_cue)
+        CaptionCue.objects.create(
             text="How are you?", starttime=2.0, endtime=3.0, caption_file=caption_file
         )
         serializer = CaptionFileSerializer(instance=caption_file)
@@ -202,7 +198,7 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         self.assertEqual(response.status_code, 200, response.content)
 
         try:
-            caption_cue_db = CaptionCue.objects.get(
+            CaptionCue.objects.get(
                 text=caption_cue["text"],
                 starttime=caption_cue["starttime"],
                 endtime=caption_cue["endtime"],
@@ -218,7 +214,7 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         caption_file_1 = CaptionFile.objects.create(**metadata["file"])
         caption_cue = metadata["cue"]
         caption_cue.update({"caption_file": caption_file_1})
-        caption_cue_1 = CaptionCue.objects.create(**caption_cue)
+        CaptionCue.objects.create(**caption_cue)
         try:
             caption_cue_db = CaptionCue.objects.get(
                 text=caption_cue["text"],
@@ -258,7 +254,7 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
 
         caption_cue_1 = CaptionCue.objects.create(**caption_cue)
         try:
-            caption_cue_db = CaptionCue.objects.get(
+            CaptionCue.objects.get(
                 text=caption_cue["text"],
                 starttime=caption_cue["starttime"],
                 endtime=caption_cue["endtime"],
