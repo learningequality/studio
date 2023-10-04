@@ -74,6 +74,7 @@ latest-node 16
 nodeenv --python-virtualenv --node 16.16.0
 ```
 Use `node --version` to check if node has succesfully installed
+
 Now use npm to install yarn
 ```bash
 npm install -g yarn
