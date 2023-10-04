@@ -64,6 +64,21 @@ Install the version of node.js supported by Studio, and install `yarn` version 1
 volta install node@16
 volta install yarn@1
 ```
+Alternatively,
+```bash
+# Installing node@16 and yarn@1 using node-env
+pip install nodeenv
+nodeenv -l
+function latest-node() { curl -s "https://nodejs.org/dist/latest-v$1.x/" | egrep -m 1 -o "$1\.[0-9]+\.[0-9]+" | head -1; }
+latest-node 16
+nodeenv --python-virtualenv --node 16.16.0
+```
+Use `node --version` to check if node has succesfully installed
+Now use npm to install yarn
+```bash
+npm install -g yarn
+```
+
 After installing `yarn`, you may now install frontend dependencies:
 ```bash
 yarn install
