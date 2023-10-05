@@ -150,7 +150,7 @@ def generatecaptioncues_task(caption_file_id: str, channel_id, user_id) -> None:
     backend = WhisperBackendFactory().create_backend()
     adapter = WhisperAdapter(backend=backend)
 
-    cues = adapter.transcribe(caption_file_id=caption_file_id)
+    cues = adapter.transcribe(caption_file_id=caption_file_id).get_cues(caption_file_id)
 
     for cue in cues:
         serializer = CaptionCueSerializer(data=cue)

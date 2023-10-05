@@ -49,8 +49,8 @@ class WhisperResponse(BackendResponse):
             cue = {
                 "id": uuid.uuid4().hex,
                 "text": text,
-                "start_time": start_time,
-                "end_time": end_time,
+                "starttime": start_time,
+                "endtime": end_time,
                 "caption_file_id": caption_file_id,
             }
             cues.append(cue)
@@ -66,19 +66,23 @@ class Whisper(Backend):
         raise NotImplementedError("The 'connect' method is not implemented for the 'Whisper' backend.")
 
 class LocalWhisper(Backend):
+    def __init__(self) -> None:
+        self.pipe = None
+
     def make_request(self, request: WhisperRequest) -> WhisperResponse:
+        self.connect()
         media_url = request.get_file_url()
-        pipe = pipeline(
-            model=DEV_TRANSCRIPTION_MODEL,
-            chunk_length_s=CHUNK_LENGTH,
-            device=DEVICE,
-            return_timestamps=True,
-        )
-        result = pipe(media_url, max_new_tokens=MAX_TOKEN_LENGTH)
+        result = self.pipe(media_url, max_new_tokens=MAX_TOKEN_LENGTH)
         return WhisperResponse(response=result)
 
     def connect(self) -> None:
-        raise NotImplementedError("The 'connect' method is not implemented for the 'Whisper' backend.")
+        if self.pipe is None:
+            self.pipe = pipeline(
+                model=DEV_TRANSCRIPTION_MODEL,
+                chunk_length_s=CHUNK_LENGTH,
+                device=DEVICE,
+                return_timestamps=True,
+            )
 
 
 class WhisperBackendFactory(BackendFactory):
