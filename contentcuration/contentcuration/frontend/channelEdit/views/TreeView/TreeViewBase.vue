@@ -20,7 +20,7 @@
         v-if="$vuetify.breakpoint.smAndUp"
         class="ml-4"
       >
-        <router-link
+        <KRouterLink
           :to="viewChannelDetailsLink"
           @click="trackClickEvent('Summary')"
         >
@@ -29,8 +29,8 @@
             icon="info"
             :text="$tr('channelDetails')"
           />
-        </router-link>
-        <router-link
+        </KRouterLink>
+        <KRouterLink
           :to="editChannelLink"
           @click="trackClickEvent('Edit channel')"
         >
@@ -52,7 +52,7 @@
               :text="$tr('editChannel')"
             />
           </VBadge>
-        </router-link>
+        </KRouterLink>
       </VToolbarItems>
       <VSpacer />
       <SavingIndicator v-if="!offline" />
