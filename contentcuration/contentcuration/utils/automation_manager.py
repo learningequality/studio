@@ -4,9 +4,9 @@ from contentcuration.utils.recommendations import RecommendationsBackendFactory
 
 class AutomationManager:
     def __init__(self):
-        self.reccomendations_backend_factory = RecommendationsBackendFactory()
-        self.reccomendations_backend_instance = self.reccomendations_backend_factory.create_backend()
-        self.recommendations_backend_adapter = RecommendationsAdapter(self.reccomendations_backend_instance)
+        self.recommendations_backend_factory = RecommendationsBackendFactory()
+        self.recommendations_backend_instance = self.recommendations_backend_factory.create_backend()
+        self.recommendations_backend_adapter = RecommendationsAdapter(self.recommendations_backend_instance)
 
     def generate_embedding(self, text):
         """
