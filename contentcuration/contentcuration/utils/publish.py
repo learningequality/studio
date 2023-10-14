@@ -13,6 +13,7 @@ import zipfile
 from builtins import str
 from copy import deepcopy
 from itertools import chain
+from datetime import timedelta
 
 from django.conf import settings
 from django.contrib.sites.models import Site
@@ -26,6 +27,7 @@ from django.db.models import OuterRef
 from django.db.models import Q
 from django.db.models import Subquery
 from django.db.models import Sum
+from django.db.models.query import QuerySet
 from django.db.utils import IntegrityError
 from django.template.loader import render_to_string
 from django.utils import timezone
@@ -166,6 +168,15 @@ def create_kolibri_license_object(ccnode):
         license_description=ccnode.license.license_description if use_license_description else ccnode.license_description
     )
 
+def generate_webvtt_file(caption_cues: QuerySet[ccmodels.CaptionCue]) -> str:
+    """:returns: webvtt_content as string"""
+    webvtt_content = "WEBVTT\n\n"
+    for cue in caption_cues.order_by('starttime'):
+        st = str(timedelta(seconds=cue.starttime))
+        et = str(timedelta(seconds=cue.endtime))
+        webvtt_content += f"{st}.000 --> {et}.000\n"
+        webvtt_content += f"- {cue.text}\n\n"
+    return webvtt_content
 
 def increment_channel_version(channel):
     channel.version += 1
@@ -264,6 +275,14 @@ class TreeMapper:
                     create_perseus_exercise(node, kolibrinode, exercise_data, user_id=self.user_id)
             elif node.kind_id == content_kinds.SLIDESHOW:
                 create_slideshow_manifest(node, user_id=self.user_id)
+            elif node.kind_id in [content_kinds.AUDIO, content_kinds.VIDEO]:
+                file_ids = node.files.all().values_list('id')
+                caption_files_queryset = ccmodels.CaptionFile.objects.filter(file_id__in=file_ids)
+                for caption_file in caption_files_queryset:
+                    caption_cues = ccmodels.CaptionCue.objects.filter(caption_file=caption_file)
+                    if caption_cues.exists():
+                        lang, webvtt_content = caption_file.language, generate_webvtt_file(caption_cues)
+                        create_webvtt(node, webvtt_content, lang, self.user_id)
             elif node.kind_id == content_kinds.TOPIC:
                 for child in node.children.all():
                     self.recurse_nodes(child, metadata)
@@ -473,6 +492,30 @@ def create_associated_file_objects(kolibrinode, ccnode):
             local_file=kolibrilocalfilemodel,
         )
 
+def create_webvtt(ccnode: ccmodels.ContentNode, vtt_content: str, language: str, user_id: int = None) -> None:
+    logging.debug(f"Creating WebVTT for Node {ccnode.title}")
+    filename = "{0}_{1}.{ext}".format(ccnode.title, language, ext=file_formats.VTT)
+    temppath = None
+    try:
+        with tempfile.NamedTemporaryFile(suffix="vtt", delete=False) as tempf:
+            temppath = tempf.name
+            tempf.write(vtt_content.encode('utf-8'))
+            file_size = tempf.tell()
+            tempf.flush()
+
+            file_obj = ccmodels.File.objects.create(
+                file_on_disk=File(open(temppath, 'rb'), name=filename),
+                contentnode=ccnode,
+                file_format_id=file_formats.VTT,
+                preset_id=format_presets.VIDEO_SUBTITLE,
+                original_filename=filename,
+                file_size=file_size,
+                uploaded_by_id=user_id,
+                language=language,
+            )
+            logging.debug("Created vtt for {0} with checksum {1}".format(ccnode.title, file_obj.checksum))
+    finally:
+        temppath and os.unlink(temppath)
 
 def create_perseus_exercise(ccnode, kolibrinode, exercise_data, user_id=None):
     logging.debug("Creating Perseus Exercise for Node {}".format(ccnode.title))

@@ -1,5 +1,6 @@
 import uuid
 from typing import Optional
+from importlib import import_module
 
 import requests
 from automation.settings import CHUNK_LENGTH
@@ -13,8 +14,8 @@ from automation.utils.appnexus.base import BackendRequest
 from automation.utils.appnexus.base import BackendResponse
 from contentcuration.models import CaptionFile
 from contentcuration.models import File
+from contentcuration.not_production_settings import WHISPER_BACKEND
 
-from django.conf import settings
 from transformers import pipeline
 
 
@@ -87,7 +88,16 @@ class LocalWhisper(Backend):
 
 class WhisperBackendFactory(BackendFactory):
     def create_backend(self) -> Backend:
-        return LocalWhisper() # if settings.DEBUG else Whisper()
+        mod, backend = WHISPER_BACKEND.rsplit('.', 1) # module, backend
+        try:
+            mod = import_module(mod)
+            backend = getattr(mod, backend) # get `backend` from `module`
+            return backend()
+        except ModuleNotFoundError:
+            raise ImportError(f'Failed to import `{mod}`')
+        except AttributeError:
+            raise ImportError(f"Failed to find attribute `{backend}` in module `{backend}`")
+
 
 class WhisperAdapter(Adapter):
     def transcribe(self, caption_file_id: str) -> WhisperResponse:
