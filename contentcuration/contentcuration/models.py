@@ -2065,12 +2065,16 @@ class CaptionFile(models.Model):
     """
     Represents a caption file record.
 
-    - file_id: The identifier of related file in Google Cloud Storage.
+    - file_id: The identifier of related Video/Audio File object.
     - language: The language of the caption file.
+    - output_file: The FK to the associated generated VTT File object.
     """
     id = UUIDField(primary_key=True, default=uuid.uuid4)
     file_id = UUIDField(default=uuid.uuid4, max_length=36)
     language = models.ForeignKey(Language, related_name="caption_file", on_delete=models.CASCADE)
+    modified = models.DateTimeField(auto_now=True, verbose_name="modified")
+    output_file = models.ForeignKey('File', null=True, blank=True,
+                                    on_delete=models.SET_NULL)
 
     class Meta:
         unique_together = ['file_id', 'language']
