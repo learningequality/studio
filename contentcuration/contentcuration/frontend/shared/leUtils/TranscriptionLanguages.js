@@ -110,11 +110,11 @@ const whisperLanguages = {
 }
 
 export const supportedCaptionLanguages = LanguagesList.filter(
-    (language) => whisperLanguages.hasOwnProperty(language.lang_code)
+    (language) => language.lang_code in whisperLanguages
 );
 
 export const notSupportedCaptionLanguages = LanguagesList.filter(
-    (language) => !whisperLanguages.hasOwnProperty(language.lang_code)
+    (language) => !(language.lang_code in whisperLanguages)
 );
 
 export default supportedCaptionLanguages;

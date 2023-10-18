@@ -119,7 +119,7 @@ import LanguageDropdown from 'shared/views/LanguageDropdown';
           nodeId: this.nodeId,
         });
 
-        CaptionFile.waitForCaptionCueGeneration(id).then(_generatingFlag => {
+        CaptionFile.waitForCaptionCueGeneration(id).then(() => {
           this.selectedLanguage = null;
         });
       },
