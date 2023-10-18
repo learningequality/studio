@@ -35,6 +35,10 @@ click==8.1.3
     #   -c requirements.txt
     #   flask
     #   pip-tools
+cmake==3.27.7
+    # via
+    #   -c requirements.txt
+    #   triton
 colorama==0.4.4
     # via pytest-watch
 configargparse==1.5.3
@@ -81,7 +85,9 @@ filelock==3.12.4
     # via
     #   -c requirements.txt
     #   huggingface-hub
+    #   torch
     #   transformers
+    #   triton
     #   virtualenv
 flake8==3.4.1
     # via -r requirements-dev.in
@@ -130,14 +136,21 @@ itsdangerous==2.0.1
     # via flask
 itypes==1.2.0
     # via coreapi
-jinja2==3.0.3
+jinja2==3.1.2
     # via
+    #   -c requirements.txt
     #   coreschema
     #   flask
+    #   torch
+lit==17.0.3
+    # via
+    #   -c requirements.txt
+    #   triton
 locust==2.15.1
     # via -r requirements-dev.in
-markupsafe==2.1.2
+markupsafe==2.1.3
     # via
+    #   -c requirements.txt
     #   jinja2
     #   werkzeug
 mccabe==0.6.1
@@ -150,8 +163,16 @@ mock==4.0.3
     # via
     #   -r requirements-dev.in
     #   django-concurrent-test-helper
+mpmath==1.3.0
+    # via
+    #   -c requirements.txt
+    #   sympy
 msgpack==1.0.4
     # via locust
+networkx==3.1
+    # via
+    #   -c requirements.txt
+    #   torch
 nodeenv==1.6.0
     # via
     #   -r requirements-dev.in
@@ -160,6 +181,52 @@ numpy==1.26.0
     # via
     #   -c requirements.txt
     #   transformers
+nvidia-cublas-cu11==11.10.3.66
+    # via
+    #   -c requirements.txt
+    #   nvidia-cudnn-cu11
+    #   nvidia-cusolver-cu11
+    #   torch
+nvidia-cuda-cupti-cu11==11.7.101
+    # via
+    #   -c requirements.txt
+    #   torch
+nvidia-cuda-nvrtc-cu11==11.7.99
+    # via
+    #   -c requirements.txt
+    #   torch
+nvidia-cuda-runtime-cu11==11.7.99
+    # via
+    #   -c requirements.txt
+    #   torch
+nvidia-cudnn-cu11==8.5.0.96
+    # via
+    #   -c requirements.txt
+    #   torch
+nvidia-cufft-cu11==10.9.0.58
+    # via
+    #   -c requirements.txt
+    #   torch
+nvidia-curand-cu11==10.2.10.91
+    # via
+    #   -c requirements.txt
+    #   torch
+nvidia-cusolver-cu11==11.4.0.1
+    # via
+    #   -c requirements.txt
+    #   torch
+nvidia-cusparse-cu11==11.7.4.91
+    # via
+    #   -c requirements.txt
+    #   torch
+nvidia-nccl-cu11==2.14.3
+    # via
+    #   -c requirements.txt
+    #   torch
+nvidia-nvtx-cu11==11.7.91
+    # via
+    #   -c requirements.txt
+    #   torch
 packaging==20.9
     # via
     #   -c requirements.txt
@@ -268,6 +335,10 @@ sqlparse==0.4.1
     #   -c requirements.txt
     #   django
     #   django-debug-toolbar
+sympy==1.12
+    # via
+    #   -c requirements.txt
+    #   torch
 tabulate==0.8.2
     # via -r requirements-dev.in
 tblib==1.7.0
@@ -287,6 +358,11 @@ tomli==1.2.3
     #   build
     #   coverage
     #   pep517
+torch==2.0.1
+    # via
+    #   -c requirements.txt
+    #   -r requirements-dev.in
+    #   triton
 tqdm==4.66.1
     # via
     #   -c requirements.txt
@@ -296,11 +372,16 @@ transformers==4.29.2
     # via
     #   -c requirements.txt
     #   -r requirements-dev.in
+triton==2.0.0
+    # via
+    #   -c requirements.txt
+    #   torch
 typing-extensions==4.8.0
     # via
     #   -c requirements.txt
     #   huggingface-hub
     #   locust
+    #   torch
 uritemplate==3.0.1
     # via
     #   coreapi
@@ -318,8 +399,16 @@ werkzeug==2.2.3
     # via
     #   flask
     #   locust
-wheel==0.38.1
-    # via pip-tools
+wheel==0.41.2
+    # via
+    #   -c requirements.txt
+    #   nvidia-cublas-cu11
+    #   nvidia-cuda-cupti-cu11
+    #   nvidia-cuda-runtime-cu11
+    #   nvidia-curand-cu11
+    #   nvidia-cusparse-cu11
+    #   nvidia-nvtx-cu11
+    #   pip-tools
 whitenoise==5.2.0
     # via -r requirements-dev.in
 zipp==3.4.1

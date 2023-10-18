@@ -26,4 +26,5 @@ git+https://github.com/someshchaturvedi/customizable-django-profiler.git#customi
 tabulate==0.8.2
 fonttools
 minio==7.1.1
+torch==2.0.1
 transformers==4.29.2
