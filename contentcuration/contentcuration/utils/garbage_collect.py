@@ -16,14 +16,15 @@ from django.db.models.expressions import OuterRef
 from django.db.models.expressions import Value
 from django.db.models.signals import post_delete
 from django.utils.timezone import now
+from django_celery_results.models import TaskResult
 from le_utils.constants import content_kinds
 
 from contentcuration.constants import feature_flags
 from contentcuration.constants import user_history
 from contentcuration.db.models.functions import JSONObjectKeys
 from contentcuration.models import ContentNode
+from contentcuration.models import CustomTaskMetadata
 from contentcuration.models import File
-from contentcuration.models import TaskResult
 from contentcuration.models import User
 from contentcuration.models import UserHistory
 
@@ -164,8 +165,10 @@ def clean_up_tasks():
     """
     with DisablePostDeleteSignal():
         date_cutoff = now() - datetime.timedelta(days=7)
-        count, _ = TaskResult.objects.filter(date_done__lt=date_cutoff, status__in=states.READY_STATES).delete()
 
+        tasks_to_delete = TaskResult.objects.filter(date_done__lt=date_cutoff, status__in=states.READY_STATES)
+        CustomTaskMetadata.objects.filter(task_id__in=tasks_to_delete.values_list("task_id", flat=True)).delete()
+        count, _ = tasks_to_delete.delete()
     logging.info("Deleted {} completed task(s) from the task table".format(count))
 
 

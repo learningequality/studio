@@ -373,7 +373,6 @@ class ContentNodeViewSetTestCase(StudioAPITestCase):
                 self.viewset_url(pk=contentnode.id), format="json",
             )
         self.assertEqual(response.status_code, 200, response.content)
-        print(response.data["extra_fields"])
         self.assertEqual(response.data["extra_fields"]["options"]["completion_criteria"]["threshold"]["m"], 3)
         self.assertEqual(response.data["extra_fields"]["options"]["completion_criteria"]["threshold"]["n"], 6)
         self.assertEqual(response.data["extra_fields"]["options"]["completion_criteria"]["threshold"]["mastery_model"], exercises.M_OF_N)
