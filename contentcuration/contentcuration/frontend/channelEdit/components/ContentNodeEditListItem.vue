@@ -364,6 +364,7 @@
 
   .copy-retry-btn {
     font-size: inherit;
+    padding-bottom: 3.5px;
   }
 
 </style>
