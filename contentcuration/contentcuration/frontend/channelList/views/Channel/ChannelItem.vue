@@ -144,9 +144,9 @@
                   data-test="edit-channel"
                   @click.stop
                 >
-                  <VListTileAction>
+                  <VListTileAvatar>
                     <Icon>edit</Icon>
-                  </VListTileAction>
+                  </VListTileAvatar>
                   <VListTileTitle>{{ $tr('editChannel') }}</VListTileTitle>
                 </VListTile>
                 <VListTile
@@ -154,9 +154,9 @@
                   data-test="token-listitem"
                   @click="tokenDialog = true"
                 >
-                  <VListTileAction>
+                  <VListTileAvatar>
                     <Icon>content_copy</Icon>
-                  </VListTileAction>
+                  </VListTileAvatar>
                   <VListTileTitle>{{ $tr('copyToken') }}</VListTileTitle>
                 </VListTile>
                 <VListTile
@@ -165,11 +165,11 @@
                   target="_blank"
                   @click.stop
                 >
-                  <VListTileAction>
+                  <VListTileAvatar>
                     <Icon class="rtl-flip">
                       launch
                     </Icon>
-                  </VListTileAction>
+                  </VListTileAvatar>
                   <VListTileTitle>{{ $tr('goToWebsite') }}</VListTileTitle>
                 </VListTile>
                 <VListTile
@@ -177,11 +177,11 @@
                   :href="channel.demo_server_url"
                   target="_blank"
                 >
-                  <VListTileAction>
+                  <VListTileAvatar>
                     <Icon class="rtl-flip">
                       launch
                     </Icon>
-                  </VListTileAction>
+                  </VListTileAvatar>
                   <VListTileTitle>{{ $tr('viewContent') }}</VListTileTitle>
                 </VListTile>
                 <VListTile
@@ -189,9 +189,9 @@
                   data-test="delete-channel"
                   @click.stop="deleteDialog = true"
                 >
-                  <VListTileAction>
+                  <VListTileAvatar>
                     <Icon>delete</Icon>
-                  </VListTileAction>
+                  </VListTileAvatar>
                   <VListTileTitle>{{ $tr('deleteChannel') }}</VListTileTitle>
                 </VListTile>
               </VList>
