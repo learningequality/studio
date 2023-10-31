@@ -363,6 +363,7 @@
   }
 
   .copy-retry-btn {
+    padding-bottom: 2px;
     font-size: inherit;
   }
 
