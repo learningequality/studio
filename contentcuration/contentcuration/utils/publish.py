@@ -182,7 +182,7 @@ def process_webvtt_file_publishing(
     :param caption_file: A CaptionFile to associate with the WebVTT file.
     :param user_id: The ID of the user creating the WebVTT file (optional).
     """
-    logging.debug(f"{action} WebVTT for Node {ccnode.title}")
+    logging.debug(f"{action[:-1]}ing WebVTT for Node {ccnode.title}")
     vtt_content = generate_webvtt_file(caption_cues=caption_file.caption_cue.all())
     filename = "{name}_{lang}.{ext}".format(name=ccnode.title, lang=caption_file.language, ext=file_formats.VTT)
     temppath = None
@@ -207,9 +207,11 @@ def process_webvtt_file_publishing(
 
             if action == 'update' and caption_file.output_file:
                 caption_file.output_file.contentnode = None
-                caption_file.save(update_fields=['contentnode'])
+                caption_file.output_file.save(update_fields=['contentnode'])
 
             caption_file.output_file = new_vtt_file
+            # specifying output_field to be updated because by default the addition of FK updates
+            # the modified of CaptionFile obj results in always vtt_file.modified > caption_file.modified
             caption_file.save(update_fields=['output_file'])
     except Exception as e:
         logging.error(f"Error creating VTT file for {ccnode.title}: {str(e)}")

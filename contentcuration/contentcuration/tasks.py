@@ -20,7 +20,6 @@ from contentcuration.models import Change
 from contentcuration.models import ContentNode
 from contentcuration.models import User
 from contentcuration.utils.csv_writer import write_user_csv
-from contentcuration.utils.transcription import WhisperAdapter, WhisperBackendFactory
 from contentcuration.utils.nodes import calculate_resource_size
 from contentcuration.utils.nodes import generate_diff
 from contentcuration.viewsets.user import AdminUserFilter
@@ -144,8 +143,13 @@ def generatecaptioncues_task(caption_file_id: str, channel_id, user_id) -> None:
     """Start generating the Captions Cues for requested the Caption File"""
 
     from contentcuration.viewsets.caption import CaptionCueSerializer
-    from contentcuration.viewsets.sync.constants import CAPTION_FILE, CAPTION_CUES
-    from contentcuration.viewsets.sync.utils import generate_update_event, generate_create_event
+    from contentcuration.viewsets.sync.constants import CAPTION_FILE
+    from contentcuration.viewsets.sync.constants import CAPTION_CUES
+    from contentcuration.viewsets.sync.utils import generate_update_event
+    from contentcuration.viewsets.sync.utils import generate_create_event
+    from contentcuration.utils.transcription import WhisperAdapter
+    from contentcuration.utils.transcription import WhisperBackendFactory
+
 
     backend = WhisperBackendFactory().create_backend()
     adapter = WhisperAdapter(backend=backend)
@@ -168,9 +172,8 @@ def generatecaptioncues_task(caption_file_id: str, channel_id, user_id) -> None:
                     },
                     channel_id=channel_id,
             ), applied=True, created_by_id=user_id)
-
         else:
-            print(serializer.errors)
+            raise ValueError(f"Error in cue serialization: {serializer.errors}")
 
     Change.create_change(generate_update_event(
         caption_file_id,

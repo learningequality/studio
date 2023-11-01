@@ -35,9 +35,6 @@ export function ADD_CAPTIONFILES(state, { captionFiles, nodeIds }) {
 
 /* Mutations for Caption Cues */
 export function ADD_CUE(state, { cue, nodeId }) {
-  
-  console.log(cue, nodeId);
-  
   if (!cue && !nodeId) return;
   // Check if there is Map for the current nodeId
   if (!state.captionCuesMap[nodeId]) {
@@ -71,5 +68,4 @@ export function UPDATE_CAPTIONFILE_FROM_INDEXEDDB(state, { id, ...mods }) {
       break;
     }
   }
-  console.log('done');
 }

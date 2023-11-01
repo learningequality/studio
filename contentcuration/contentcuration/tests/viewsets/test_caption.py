@@ -30,11 +30,11 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         return [
             {
                 "file_id": id,
-                "language":  Language.objects.get(pk="en"),
+                "language": Language.objects.get(pk="en"),
             },
             {
                 "file_id": id,
-                "language":  Language.objects.get(pk="ru"),
+                "language": Language.objects.get(pk="ru"),
             },
         ]
 
@@ -43,7 +43,7 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         return {
             "file": {
                 "file_id": uuid.uuid4().hex,
-                "language":  Language.objects.get(pk="en").pk,
+                "language": Language.objects.get(pk="en").pk,
             },
             "cue": {
                 "text": "This is the beginning!",
@@ -63,12 +63,16 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         self.client.force_authenticate(user=self.user)
         caption_file = self.caption_file_metadata
 
-        response = self.sync_changes([generate_create_event(
-            uuid.uuid4().hex,
-            CAPTION_FILE,
-            caption_file,
-            channel_id=self.channel.id,
-        )],)
+        response = self.sync_changes(
+            [
+                generate_create_event(
+                    uuid.uuid4().hex,
+                    CAPTION_FILE,
+                    caption_file,
+                    channel_id=self.channel.id,
+                )
+            ],
+        )
         self.assertEqual(response.status_code, 200, response.content)
 
         try:
@@ -83,27 +87,11 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         self.assertEqual(caption_file_db.file_id, caption_file["file_id"])
         self.assertEqual(caption_file_db.language_id, caption_file["language"])
 
-    def test_enqueue_caption_task(self):
-        self.client.force_authenticate(user=self.user)
-        caption_file = {
-            "file_id": uuid.uuid4().hex,
-            "language": Language.objects.get(pk="en").pk,
-        }
-
-        response = self.sync_changes([generate_create_event(
-            uuid.uuid4().hex,
-            CAPTION_FILE,
-            caption_file,
-            channel_id=self.channel.id,
-        )],)
-        self.assertEqual(response.status_code, 200, response.content)
-
-
     def test_delete_caption_file(self):
         self.client.force_authenticate(user=self.user)
         caption_file = self.caption_file_metadata
         # Explicitly set language to model object to follow Django ORM conventions
-        caption_file['language'] = Language.objects.get(pk='en')
+        caption_file["language"] = Language.objects.get(pk="en")
         caption_file_1 = CaptionFile(**caption_file)
         pk = caption_file_1.pk
 
@@ -144,8 +132,7 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
 
     def test_caption_file_serialization(self):
         metadata = self.caption_file_metadata
-        # Explicitly set language to model object to follow Django ORM conventions 
-        metadata['language'] = Language.objects.get(pk="en")
+        metadata["language"] = Language.objects.get(pk="en")
         caption_file = CaptionFile.objects.create(**metadata)
         serializer = CaptionFileSerializer(instance=caption_file)
         try:
@@ -155,8 +142,7 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
 
     def test_caption_cue_serialization(self):
         metadata = self.caption_cue_metadata
-        # Explicitly set language to model object to follow Django ORM conventions 
-        metadata['file']['language'] = Language.objects.get(pk="en")
+        metadata["file"]["language"] = Language.objects.get(pk="en")
         caption_file = CaptionFile.objects.create(**metadata["file"])
         caption_cue = metadata["cue"]
         caption_cue.update(
@@ -178,8 +164,7 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         self.client.force_authenticate(user=self.user)
         metadata = self.caption_cue_metadata
 
-        # Explicitly set language to model object to follow Django ORM conventions 
-        metadata['file']['language'] = Language.objects.get(pk="en") 
+        metadata["file"]["language"] = Language.objects.get(pk="en")
 
         caption_file_1 = CaptionFile.objects.create(**metadata["file"])
         caption_cue = metadata["cue"]
@@ -209,8 +194,7 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
     def test_delete_caption_cue(self):
         self.client.force_authenticate(user=self.user)
         metadata = self.caption_cue_metadata
-        # Explicitly set language to model object to follow Django ORM conventions 
-        metadata['file']['language'] = Language.objects.get(pk="en") 
+        metadata["file"]["language"] = Language.objects.get(pk="en")
         caption_file_1 = CaptionFile.objects.create(**metadata["file"])
         caption_cue = metadata["cue"]
         caption_cue.update({"caption_file": caption_file_1})
@@ -245,8 +229,7 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
     def test_update_caption_cue(self):
         self.client.force_authenticate(user=self.user)
         metadata = self.caption_cue_metadata
-        # Explicitly set language to model object to follow Django ORM conventions 
-        metadata['file']['language'] = Language.objects.get(pk="en") 
+        metadata["file"]["language"] = Language.objects.get(pk="en")
         caption_file_1 = CaptionFile.objects.create(**metadata["file"])
 
         caption_cue = metadata["cue"]
@@ -299,8 +282,7 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
 
     def test_invalid_caption_cue_data_serialization(self):
         metadata = self.caption_cue_metadata
-        # Explicitly set language to model object to follow Django ORM conventions 
-        metadata['file']['language'] = Language.objects.get(pk="en") 
+        metadata["file"]["language"] = Language.objects.get(pk="en")
         caption_file = CaptionFile.objects.create(**metadata["file"])
         caption_cue = metadata["cue"]
         caption_cue.update(

@@ -9,6 +9,8 @@
 # https://github.com/learningequality/studio/blob/unstable/contentcuration/contentcuration/frontend/shared/leUtils/TranscriptionLanguages.js
 
 import json
+from typing import List, Dict
+
 import le_utils.resources as resources
 
 WHISPER_LANGUAGES = {
@@ -113,22 +115,27 @@ WHISPER_LANGUAGES = {
     "su": "sundanese",
 }
 
-def _load_kolibri_languages():
-    """Load Kolibri languages from JSON file and return the language codes as a list."""
+
+def _load_kolibri_languages() -> List[str]:
+    """Loads the language codes from languagelookup.json and returns them as a list."""
     filepath = resources.__path__[0]
     kolibri_languages = []
-    with open(f'{filepath}/languagelookup.json') as f:
+    with open(f"{filepath}/languagelookup.json") as f:
         kolibri_languages = list(json.load(f).keys())
     return kolibri_languages
 
-def _load_model_languages(languages):
-    """Load languages supported by the speech-to-text model."""
+
+def _load_model_languages(languages: Dict[str, str]) -> List[str]:
+    """Load languages supported by the speech-to-text model.
+    :param: languages: dict mapping language codes to language names"""
     return list(languages.keys())
 
-def create_captions_languages():
-    """Create the intersection of transcription model and Kolibri languages."""
+
+def create_captions_languages() -> List[str]:
+    """Finds the intersection of Kolibri languages and model languages and returns it."""
     kolibri_set = set(_load_kolibri_languages())
     model_set = set(_load_model_languages(languages=WHISPER_LANGUAGES))
     return list(kolibri_set.intersection(model_set))
+
 
 CAPTIONS_LANGUAGES = create_captions_languages()

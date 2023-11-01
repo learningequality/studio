@@ -39,11 +39,6 @@
           {{ $tr('generateBtn') }}
       </VBtn>
     </div>
-
-    <button @click="logState">
-      log state
-    </button>
-
     <!-- TODO -->
     <!-- est. time, time elapsed can be good -->
     <p v-if="isGeneratingCaptions">
@@ -101,11 +96,6 @@ import LanguageDropdown from 'shared/views/LanguageDropdown';
     },
     methods: {
       ...mapActions('caption', ['addCaptionFile']),
-      logState() {
-        console.log('nodeId ', this.nodeId);
-        console.log(this.captionFilesMap[this.nodeId]);
-        console.log(this.captionCuesMap[this.nodeId]);
-      },
       addCaption() {
         const id = uuid4();
         const fileId = this.getLongestDurationFileId();

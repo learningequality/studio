@@ -429,6 +429,47 @@ class ExportChannelTestCase(StudioTestCase):
             'n': 2
         })
 
+    def test_vtt_on_publish(self):
+        from contentcuration.utils.publish import process_webvtt_file_publishing
+        # Set up a video node with captions 
+        new_video = create_node({'kind_id': 'video', 'title': 'caption creation test'})
+        new_video.complete = True
+        new_video.parent = self.content_channel.main_tree
+        new_video.save()
+
+        # create a CaptionFile associated with contentnode
+        video_files = new_video.files.all()
+        caption_file_data = {
+            "file_id": video_files[0].id,
+            "language": cc.Language.objects.get(pk="en"),
+        }
+        caption_file = cc.CaptionFile(**caption_file_data)
+        caption_file.save()
+
+        # create a CaptionCue associated with CaptionFile
+        cues = cc.CaptionCue(text='a test string', starttime=0, endtime=3, caption_file=caption_file)
+        cues.save()
+
+        assert caption_file.output_file is None
+        process_webvtt_file_publishing('create', new_video, caption_file)
+        assert caption_file.output_file is not None
+
+        expected_webvtt = 'WEBVTT\n\n0:00:00.000 --> 0:00:03.000\n- a test string\n\n'.encode('utf-8')
+        webvtt = caption_file.output_file.file_on_disk.read() # output_file is the VTT file
+        assert webvtt == expected_webvtt
+
+        # Update caption text
+        caption_cue = caption_file.caption_cue.first()
+        caption_cue.text = "Updated text"
+        caption_cue.save()
+        
+        # Publish again to update VTT file
+        process_webvtt_file_publishing('update', new_video, caption_file)
+        updated_vtt = caption_file.output_file.file_on_disk.read()
+
+        # Assert VTT files are different
+        assert webvtt != updated_vtt
+        assert updated_vtt == 'WEBVTT\n\n0:00:00.000 --> 0:00:03.000\n- Updated text\n\n'.encode('utf-8')
 
 class EmptyChannelTestCase(StudioTestCase):
 

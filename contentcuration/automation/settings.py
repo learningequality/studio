@@ -1,3 +1,4 @@
+from enum import Enum
 from torch.cuda import is_available as is_gpu_available
 
 DEVICE = "cuda:0" if is_gpu_available() else "cpu"
@@ -16,6 +17,10 @@ WHISPER_MODELS = dict(
 
 DEV_TRANSCRIPTION_MODEL = WHISPER_MODELS['TINY']
 TRANSCRIPTION_MODEL = WHISPER_MODELS['TINY']
+
+class WhisperTask(Enum):
+    TRANSLATE = "translate"
+    TRANSCRIBE = "transcribe"
 
 # https://huggingface.co/docs/transformers/v4.29.1/en/generation_strategies#customize-text-generation
 MAX_TOKEN_LENGTH = 448

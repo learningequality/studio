@@ -7,11 +7,13 @@ from automation.settings import CHUNK_LENGTH
 from automation.settings import DEVICE
 from automation.settings import DEV_TRANSCRIPTION_MODEL
 from automation.settings import MAX_TOKEN_LENGTH
+# from automation.settings import WhisperTask
 from automation.utils.appnexus.base import Adapter
 from automation.utils.appnexus.base import Backend
 from automation.utils.appnexus.base import BackendFactory
 from automation.utils.appnexus.base import BackendRequest
 from automation.utils.appnexus.base import BackendResponse
+from contentcuration.constants.transcription_languages import WHISPER_LANGUAGES as LANGS
 from contentcuration.models import CaptionFile
 from contentcuration.models import File
 from contentcuration.not_production_settings import WHISPER_BACKEND
@@ -35,7 +37,7 @@ class WhisperRequest(BackendRequest):
 
     def get_binary_data(self) -> bytes: return self.binary
     def get_file_url(self) -> str: return self.url
-    def get_langauge(self) -> str: return self.language
+    def get_language(self) -> str: return self.language
 
 
 class WhisperResponse(BackendResponse):
@@ -102,7 +104,7 @@ class WhisperBackendFactory(BackendFactory):
 class WhisperAdapter(Adapter):
     def transcribe(self, caption_file_id: str) -> WhisperResponse:
         f = CaptionFile.objects.get(pk=caption_file_id)
-        file_id, language = f.file_id, f.language # TODO: set language of transcription
+        file_id, language = f.file_id, LANGS[f.language.lang_code]
         media_file = File.objects.get(pk=file_id).file_on_disk.url
 
         request = WhisperRequest(url=media_file, language=language)
