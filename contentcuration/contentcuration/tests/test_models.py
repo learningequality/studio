@@ -20,6 +20,7 @@ from contentcuration.models import ChannelHistory
 from contentcuration.models import ChannelSet
 from contentcuration.models import ContentNode
 from contentcuration.models import CONTENTNODE_TREE_ID_CACHE_KEY
+from contentcuration.models import Embeddings
 from contentcuration.models import File
 from contentcuration.models import FILE_DURATION_CONSTRAINT
 from contentcuration.models import FlagFeedbackEvent
@@ -988,6 +989,28 @@ class ChannelHistoryTestCase(StudioTestCase):
         ChannelHistory.prune()
         self.assertEqual(2, ChannelHistory.objects.count())
         self.assertEqual(2, ChannelHistory.objects.filter(id__in=last_history_ids).count())
+
+
+class EmbeddingsTestCase(StudioTestCase):
+    @classmethod
+    def setUpClass(cls):
+        super(EmbeddingsTestCase, cls).setUpClass()
+        # Two closely placed vectors i.e. they are similar.
+        Embeddings.objects.create(content_id=uuid.uuid4().hex, embedding=[2, 3])
+        Embeddings.objects.create(content_id=uuid.uuid4().hex, embedding=[2, 2])
+        # A vector placed at far distance i.e. not similar to above vectors.
+        Embeddings.objects.create(content_id=uuid.uuid4().hex, embedding=[4, 1])
+
+    def test_can_create_embeddings(self):
+        embeddings_count = Embeddings.objects.count()
+        self.assertEqual(embeddings_count, 3)
+
+    def test_get_nearest_neighbors(self):
+        from pgvector.django import L2Distance
+        import numpy as np
+        # Get the nearest neighbor of [2, 3] which is [2, 2].
+        closest_embedding = list(Embeddings.objects.order_by(L2Distance('embedding', [2, 3]))[1:2])[0]
+        self.assertTrue(np.array_equal(closest_embedding.embedding, np.array([2, 2])))
 
 
 class FeedbackModelTests(StudioTestCase):
