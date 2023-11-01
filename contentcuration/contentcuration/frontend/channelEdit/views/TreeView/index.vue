@@ -11,11 +11,11 @@
         <VLayout align-center justify-start>
           <Icon>build</Icon>
           <span class="pl-1">
-            <router-link
+            <KRouterLink
               :to="stagingTreeLink"
               :style="{ 'text-decoration': 'underline' }"
               data-test="staging-tree-link"
-            >{{ $tr('updatedResourcesReadyForReview') }}</router-link>
+            >{{ $tr('updatedResourcesReadyForReview') }}</KRouterLink>
             (<time :datetime="channelModifiedDate">{{ prettyChannelModifiedDate }}</time>)
           </span>
         </VLayout>

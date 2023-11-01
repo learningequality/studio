@@ -299,8 +299,8 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
             )
 
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(sync_channel_mock.call_args.args[i], True)
             sync_channel_mock.assert_called_once()
+            self.assertEqual(sync_channel_mock.call_args.args[i], True)
 
     def test_deploy_channel_event(self):
         channel = testdata.channel()

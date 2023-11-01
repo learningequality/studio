@@ -11,9 +11,9 @@
       <VToolbarSideIcon @click="drawer = true" />
       <VToolbarTitle>
         {{ $tr('deploy') }} <span class="notranslate">{{ currentChannel.name }}</span>
-        <router-link :to="rootTreeRoute" class="body-1 pl-2" data-test="root-tree-link">
+        <KRouterLink :to="rootTreeRoute" class="body-1 pl-2" data-test="root-tree-link">
           {{ $tr('backToViewing') }}
-        </router-link>
+        </KRouterLink>
       </VToolbarTitle>
 
       <VSpacer />

@@ -47,8 +47,27 @@ class RecommendationsAdapter(Adapter):
         request = EmbeddingsRequest()
         return self.backend.make_request(request)
 
-    def get_recommendations(self) -> RecommendationsResponse:
-        request = RecommedationsRequest()
+    def embedding_exists(self, embedding) -> bool:
+        # Need to implement the logic to check if the embeddigns exist
+        # Return True if the embedding exists, or False otherwise
+        return True
+
+    def cache_embeddings(self, embeddings_list) -> bool:
+        for embedding in embeddings_list:
+            try:
+                # Attempt to cache the embedding
+                # Write the caching logic
+                # A conrner case to look at here is if one of the embedding fails to get cached
+                # we need to handel it so that only the once that were not succesfull
+                # are attempted to cache again
+                pass
+            except Exception as e:
+                print(e)
+                return False
+        return True
+
+    def get_recommendations(self, embedding) -> RecommendationsResponse:
+        request = RecommedationsRequest(embedding)
         return self.backend.make_request(request)
 
 

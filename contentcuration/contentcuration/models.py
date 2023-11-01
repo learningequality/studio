@@ -7,7 +7,6 @@ import uuid
 from datetime import datetime
 
 import pytz
-from celery import states as celery_states
 from django.conf import settings
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.base_user import BaseUserManager
@@ -46,7 +45,6 @@ from django.db.models.sql import Query
 from django.dispatch import receiver
 from django.utils import timezone
 from django.utils.translation import gettext as _
-from django_celery_results.models import TaskResult
 from django_cte import With
 from le_utils import proquint
 from le_utils.constants import content_kinds
@@ -68,8 +66,8 @@ from rest_framework.utils.encoders import JSONEncoder
 from contentcuration.constants import channel_history
 from contentcuration.constants import completion_criteria
 from contentcuration.constants import user_history
-from contentcuration.constants.transcription_languages import CAPTIONS_LANGUAGES
 from contentcuration.constants.contentnode import kind_activity_map
+from contentcuration.constants.transcription_languages import CAPTIONS_LANGUAGES
 from contentcuration.db.models.expressions import Array
 from contentcuration.db.models.functions import ArrayRemove
 from contentcuration.db.models.functions import Unnest
@@ -2081,11 +2079,11 @@ class CaptionFile(models.Model):
 
     def __str__(self):
         return "file_id: {file_id}, language: {language}".format(file_id=self.file_id, language=self.language)
-    
+
     def save(self, *args, **kwargs):
         # Check if the language is supported by speech-to-text AI model.
         if self.language and self.language.lang_code not in CAPTIONS_LANGUAGES:
-            raise ValueError(f"The language is currently not supported by speech-to-text model.")
+            raise ValueError("The language is currently not supported by speech-to-text model.")
         super(CaptionFile, self).save(*args, **kwargs)
 
 
@@ -2106,6 +2104,7 @@ class CaptionCue(models.Model):
 
     def __str__(self):
         return "text: {text}, start_time: {starttime}, end_time: {endtime}".format(text=self.text, starttime=self.starttime, endtime=self.endtime)
+
 
 ASSESSMENT_ID_INDEX_NAME = "assessment_id_idx"
 
@@ -2240,7 +2239,7 @@ MEDIA_PRESETS = [
 
 class File(models.Model):
     """
-    The bottom layer of the contentDB schema, defines the basic building brick for content.
+    The bottom layer of the contentDB schema, defines the basic build2086ing brick for content.
     Things it can represent are, for example, mp4, avi, mov, html, css, jpeg, pdf, mp3...
     """
     id = UUIDField(primary_key=True, default=uuid.uuid4)
@@ -2613,58 +2612,29 @@ class Change(models.Model):
         return self.serialize(self)
 
 
-class TaskResultCustom(object):
-    """
-    Custom fields to add to django_celery_results's TaskResult model
-
-    If adding fields to this class, run `makemigrations` then move the generated migration from the
-    `django_celery_results` app to the `contentcuration` app and override the constructor to change
-    the app_label. See `0141_add_task_signature` for an example
-    """
+class CustomTaskMetadata(models.Model):
+    # Task_id for reference
+    task_id = models.CharField(
+        max_length=255,  # Adjust the max_length as needed
+        unique=True,
+    )
     # user shouldn't be null, but in order to append the field, this needs to be allowed
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="tasks", on_delete=models.CASCADE, null=True)
     channel_id = DjangoUUIDField(db_index=True, null=True, blank=True)
     progress = models.IntegerField(null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(100)])
     # a hash of the task name and kwargs for identifying repeat tasks
     signature = models.CharField(null=True, blank=False, max_length=32)
-
-    super_as_dict = TaskResult.as_dict
-
-    def as_dict(self):
-        """
-        :return: A dictionary representation
-        """
-        super_dict = self.super_as_dict()
-        super_dict.update(
-            user_id=self.user_id,
-            channel_id=self.channel_id,
-            progress=self.progress,
-        )
-        return super_dict
-
-    @classmethod
-    def contribute_to_class(cls, model_class=TaskResult):
-        """
-        Adds fields to model, by default TaskResult
-        :param model_class: TaskResult model
-        """
-        for field in dir(cls):
-            if not field.startswith("_") and field not in ('contribute_to_class', 'Meta'):
-                model_class.add_to_class(field, getattr(cls, field))
-
-        # manually add Meta afterwards
-        setattr(model_class._meta, 'indexes', getattr(model_class._meta, 'indexes', []) + cls.Meta.indexes)
+    date_created = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name=_('Created DateTime'),
+        help_text=_('Datetime field when the custom_metadata for task was created in UTC')
+    )
 
     class Meta:
         indexes = [
             # add index that matches query usage for signature
             models.Index(
                 fields=['signature'],
-                name='task_result_signature_idx',
-                condition=Q(status__in=celery_states.UNREADY_STATES),
+                name='task_result_signature',
             ),
         ]
-
-
-# trigger class contributions immediately
-TaskResultCustom.contribute_to_class()
