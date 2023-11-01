@@ -27,7 +27,7 @@ jobs:
     if: ${{ needs.pre_job.outputs.should_skip != 'true' }}
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Use Node.js
       uses: actions/setup-node@v3
       with:
@@ -49,7 +49,7 @@ jobs:
       if: github.event.pull_request && github.event.pull_request.head.repo.full_name == github.repository
       id: git-check
       run: echo ::set-output name=modified::$(git diff-index --name-only HEAD)
-    - uses: tibdex/github-app-token@v1
+    - uses: tibdex/github-app-token@v2
       if: github.event.pull_request && github.event.pull_request.head.repo.full_name == github.repository && steps.git-check.outputs.modified != ''
       id: generate-token
       with:
