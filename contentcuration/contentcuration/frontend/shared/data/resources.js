@@ -1031,16 +1031,16 @@ export const CaptionFile = new Resource({
       ContentNode.table
         .where({ channel_id: id })
         .and(node => node.has_children == true)
-        .modify({ changed: true })
+        .modify({ changed: true });
     });
   },
 
   _add: Resource.prototype.add,
   add(obj) {
-    return this._add(obj).then(id => {
+    return this._add(obj).then(() => { // id
       const contentnodeId = this.getChannelId();
       return this.updateContentNodeChanged(contentnodeId);
-    })
+    });
   },
 
   waitForCaptionCueGeneration(id) {
@@ -1082,7 +1082,7 @@ export const CaptionCues = new Resource({
       .toArray();
   },
   collectionUrl(caption_file_id) {
-    return this.getUrlFunction('list')(caption_file_id)
+    return this.getUrlFunction('list')(caption_file_id);
   },
   fetchCollection({ caption_file_id }) {
     const now = Date.now();
@@ -1120,7 +1120,7 @@ export const CaptionCues = new Resource({
       promise,
     };
     return promise;
-  }
+  },
 });
 
 export const Channel = new Resource({

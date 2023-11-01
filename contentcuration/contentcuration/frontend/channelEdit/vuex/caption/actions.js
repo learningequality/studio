@@ -53,7 +53,7 @@ export async function addCaptionFile({ state, commit }, { id, file_id, language,
     file_id: file_id,
     language: language,
   };
-  // The file_id and language should be unique together in the vuex state. 
+  // The file_id and language should be unique together in the vuex state.
   // This check avoids duplicating existing caption data already loaded into vuex.
   const alreadyExists = state.captionFilesMap[nodeId]
     ? Object.values(state.captionFilesMap[nodeId]).find(

@@ -53,7 +53,7 @@ export function ADD_CUE(state, { cue, nodeId }) {
 }
 
 export function ADD_CAPTIONCUES(state, { cues, nodeId }) {
-  if(Array.isArray(cues)) {
+  if (Array.isArray(cues)) {
     cues.forEach(cue => {
       ADD_CUE(state, { cue, nodeId });
     });

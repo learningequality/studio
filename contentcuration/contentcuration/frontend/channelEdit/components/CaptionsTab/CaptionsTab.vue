@@ -1,7 +1,7 @@
 <template>
 
   <div class="captions-tab-section">
-    <div class="title my-4 px-4" >
+    <div class="my-4 px-4 title">
       <ContentNodeIcon
         v-if="node && node.kind"
         :kind="node.kind"
@@ -12,11 +12,11 @@
         class="headline mx-2 notranslate"
         data-test="title"
       >
-        {{ $tr('header', { fileName: node.title}) }}
+        {{ $tr('header', { fileName: node.title }) }}
       </h2>
     </div>
 
-    <div v-if="!isGeneratingCaptions" class="mb-2 mt-2 px-4" >
+    <div v-if="!isGeneratingCaptions" class="mb-2 mt-2 px-4">
       <p class="my-2">
         {{ $tr('captionGenerationHelpText') }}
       </p>
@@ -30,19 +30,19 @@
       />
 
       <VBtn
-          v-if="selectedLanguage && !isGeneratingCaptions"
-          flat
-          color="primary"
-          class="font-weight-bold ml-0"
-          @click="addCaption"
-        >
-          {{ $tr('generateBtn') }}
+        v-if="selectedLanguage && !isGeneratingCaptions"
+        flat
+        color="primary"
+        class="font-weight-bold ml-0"
+        @click="addCaption"
+      >
+        {{ $tr('generateBtn') }}
       </VBtn>
     </div>
     <!-- TODO -->
     <!-- est. time, time elapsed can be good -->
     <p v-if="isGeneratingCaptions">
-      {{ $tr('generating', { fileName: node.title}) }}
+      {{ $tr('generating', { fileName: node.title }) }}
       <LoadingText />
       <br>
     </p>
@@ -53,12 +53,12 @@
 
 <script>
 
-import { mapState, mapActions, mapGetters } from 'vuex';
-import { CaptionFile, uuid4 } from 'shared/data/resources';
-import { notSupportedCaptionLanguages } from 'shared/leUtils/TranscriptionLanguages';
-import ContentNodeIcon from 'shared/views/ContentNodeIcon';
-import LoadingText from 'shared/views/LoadingText';
-import LanguageDropdown from 'shared/views/LanguageDropdown';
+  import { mapActions, mapGetters } from 'vuex';
+  import { CaptionFile, uuid4 } from 'shared/data/resources';
+  import { notSupportedCaptionLanguages } from 'shared/leUtils/TranscriptionLanguages';
+  import ContentNodeIcon from 'shared/views/ContentNodeIcon';
+  import LoadingText from 'shared/views/LoadingText';
+  import LanguageDropdown from 'shared/views/LanguageDropdown';
 
   export default {
     name: 'CaptionsTab',
@@ -79,10 +79,10 @@ import LanguageDropdown from 'shared/views/LanguageDropdown';
       };
     },
     computed: {
-      ...mapState('caption', ['captionFilesMap', 'captionCuesMap']),
       ...mapGetters('contentNode', ['getContentNode']),
       ...mapGetters('caption', ['isGeneratingGetter']),
       ...mapGetters('file', ['getContentNodeFiles']),
+      // ...mapState('caption', ['captionFilesMap', 'captionCuesMap']),
       node() {
         return this.getContentNode(this.nodeId);
       },
@@ -92,7 +92,7 @@ import LanguageDropdown from 'shared/views/LanguageDropdown';
       },
       isGeneratingCaptions() {
         return this.isGeneratingGetter(this.nodeId);
-      }
+      },
     },
     methods: {
       ...mapActions('caption', ['addCaptionFile']),
@@ -114,10 +114,10 @@ import LanguageDropdown from 'shared/views/LanguageDropdown';
         });
       },
       getLongestDurationFileId() {
-        let files = this.getContentNodeFiles(this.nodeId);
-        let { id } = files.reduce((max, file) => (
-          file.duration > max.duration ? file : max
-        ), { duration: 0 });
+        const files = this.getContentNodeFiles(this.nodeId);
+        const { id } = files.reduce((max, file) => (file.duration > max.duration ? file : max), {
+          duration: 0,
+        });
         return id;
       },
     },
@@ -133,9 +133,10 @@ import LanguageDropdown from 'shared/views/LanguageDropdown';
 </script>
 
 <style lang="less" scoped>
+
   .captions-tab-section {
-    vertical-align: text-top;
     height: 80vh;
+    vertical-align: text-top;
   }
 
   .title {
@@ -143,4 +144,5 @@ import LanguageDropdown from 'shared/views/LanguageDropdown';
     align-items: center;
     justify-content: flex-start;
   }
+
 </style>
