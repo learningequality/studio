@@ -57,6 +57,7 @@ from model_utils import FieldTracker
 from mptt.models import MPTTModel
 from mptt.models import raise_if_unsaved
 from mptt.models import TreeForeignKey
+from pgvector.django import VectorField
 from postmark.core import PMMailInactiveRecipientException
 from postmark.core import PMMailUnauthorizedException
 from rest_framework.authtoken.models import Token
@@ -1980,6 +1981,19 @@ class ContentNode(MPTTModel, models.Model):
         indexes = [
             models.Index(fields=["node_id"], name=NODE_ID_INDEX_NAME),
             models.Index(fields=["-modified"], name=NODE_MODIFIED_DESC_INDEX_NAME),
+        ]
+
+
+class Embeddings(models.Model):
+    """
+    A model that caches embeddings.
+    """
+    content_id = UUIDField(primary_key=False)
+    embedding = VectorField()
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["content_id"]),
         ]
 
 

@@ -1,0 +1,4 @@
+# Installs pgvector to postgres base image.
+ARG PG_MAJOR
+FROM postgres:$PG_MAJOR
+RUN apt-get update && apt-get install -y postgresql-$PG_MAJOR-pgvector
