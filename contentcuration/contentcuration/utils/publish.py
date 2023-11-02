@@ -226,11 +226,18 @@ def generate_webvtt_file(caption_cues: QuerySet[ccmodels.CaptionCue]) -> str:
     """
     webvtt_content = "WEBVTT\n\n"
     for cue in caption_cues.order_by('starttime'):
-        st = str(timedelta(seconds=cue.starttime))
-        et = str(timedelta(seconds=cue.endtime))
-        webvtt_content += f"{st}.000 --> {et}.000\n"
-        webvtt_content += f"- {cue.text}\n\n"
+        st = float_to_timedelta(seconds=cue.starttime)
+        et = float_to_timedelta(seconds=cue.endtime)
+        webvtt_content += f"{st} --> {et}\n"
+        webvtt_content += f"{cue.text}\n\n"
     return webvtt_content.encode('utf-8')
+
+def float_to_timedelta(seconds: float) -> str:
+    s = int(seconds)
+    ms = int((seconds-s)*1000)
+    if ms == 0:
+        return f"{timedelta(seconds=s)}.000"
+    return f"{timedelta(seconds=s)}.{ms}"
 
 def increment_channel_version(channel):
     channel.version += 1
