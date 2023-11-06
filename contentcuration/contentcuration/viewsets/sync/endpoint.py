@@ -4,8 +4,6 @@ and deals with processing all the changes to make appropriate
 bulk creates, updates, and deletes.
 """
 from celery import states
-from django.db.models import Exists
-from django.db.models import OuterRef
 from django.db.models import Q
 from django_celery_results.models import TaskResult
 from rest_framework.authentication import SessionAuthentication
@@ -127,18 +125,10 @@ class SyncView(APIView):
 
     def return_tasks(self, request, channel_revs):
         custom_task_objects = CustomTaskMetadata.objects.filter(
-            channel_id__in=channel_revs.keys()
-        ).annotate(
-            has_matching_task=Exists(
-                TaskResult.objects.filter(
-                    task_id=OuterRef('task_id'),
-                    status__in=[states.STARTED, states.FAILURE],
-                ).exclude(
-                task_name__in=[apply_channel_changes_task.name, apply_user_changes_task.name]
-                )
-            )
-        ).filter(
-            has_matching_task=True
+            channel_id__in=channel_revs.keys(),
+            task_id__in=TaskResult.objects.filter(
+                status__in=[states.STARTED, states.FAILURE]
+            ).exclude(task_name__in=[apply_channel_changes_task.name, apply_user_changes_task.name]).values_list("task_id", flat=True)
         )
 
         response_payload = {
@@ -146,13 +136,14 @@ class SyncView(APIView):
         }
 
         for custom_task in custom_task_objects:
+            task = TaskResult.objects.get(task_id=custom_task.task_id)
             task_data = {
-                "task_id": custom_task.task_id,
-                "task_name": custom_task.task_name,
-                "traceback": custom_task.task_result.traceback,
+                "task_id": task.task_id,
+                "task_name": task.task_name,
+                "traceback": task.traceback,
                 "progress": custom_task.progress,
                 "channel_id": custom_task.channel_id,
-                "status": custom_task.task_result.status,
+                "status": task.status,
             }
 
             # Add the task data to the response_payload
