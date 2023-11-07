@@ -125,16 +125,16 @@ class SyncView(APIView):
     def return_tasks(self, request, channel_revs):
         sql_query = """
         WITH CustomTaskCTE AS (
-                SELECT c.*, t.task_name, t.traceback, t.status
-                FROM contentcuration_customtaskmetadata c
-                INNER JOIN django_celery_results_taskresult t ON c.task_id = t.task_id
-                WHERE c.channel_id = ANY(%(channel_ids)s::uuid[])
-            )
-            SELECT t.task_id, t.task_name, t.traceback, c.progress, c.channel_id, t.status
-            FROM CustomTaskCTE c
-            JOIN django_celery_results_taskresult t ON c.task_id = t.task_id
-            WHERE t.status = ANY(%(statuses)s)
-            AND t.task_name NOT IN %(exclude_task_names)s;
+            SELECT c.*, t.task_name, t.traceback, t.status
+            FROM contentcuration_customtaskmetadata c
+            INNER JOIN django_celery_results_taskresult t
+            ON c.task_id = t.task_id
+            WHERE c.channel_id = ANY(%(channel_ids)s::uuid[])
+            AND t.status = ANY(%(statuses)s)
+            AND t.task_name NOT IN %(exclude_task_names)s
+        )
+        SELECT t.task_id, t.task_name, t.traceback, c.progress, c.channel_id, t.status
+        FROM CustomTaskCTE c
         """
 
         params = {
