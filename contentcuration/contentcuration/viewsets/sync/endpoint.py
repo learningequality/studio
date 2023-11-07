@@ -133,7 +133,7 @@ class SyncView(APIView):
             AND t.status = ANY(%(statuses)s)
             AND t.task_name NOT IN %(exclude_task_names)s
         )
-        SELECT t.task_id, t.task_name, t.traceback, c.progress, c.channel_id, t.status
+        SELECT c.task_id, c.task_name, c.traceback, c.progress, c.channel_id, c.status
         FROM CustomTaskCTE c
         """
 
