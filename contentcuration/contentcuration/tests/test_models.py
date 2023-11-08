@@ -21,6 +21,7 @@ from contentcuration.models import ChannelSet
 from contentcuration.models import ContentNode
 from contentcuration.models import CONTENTNODE_TREE_ID_CACHE_KEY
 from contentcuration.models import Embeddings
+from contentcuration.models import EmbeddingsContentNode
 from contentcuration.models import File
 from contentcuration.models import FILE_DURATION_CONSTRAINT
 from contentcuration.models import FlagFeedbackEvent
@@ -995,11 +996,28 @@ class EmbeddingsTestCase(StudioTestCase):
     @classmethod
     def setUpClass(cls):
         super(EmbeddingsTestCase, cls).setUpClass()
+        node_1 = testdata.node({
+            "kind_id": "video",
+            "title": "first"
+        })
+        node_2 = testdata.node({
+            "kind_id": "video",
+            "title": "second"
+        })
+        node_3 = testdata.node({
+            "kind_id": "video",
+            "title": "third"
+        })
+
+        embedded_node_1 = EmbeddingsContentNode.objects.create(cid=node_1.content_id, contentnode=node_1)
+        embedded_node_2 = EmbeddingsContentNode.objects.create(cid=node_2.content_id, contentnode=node_2)
+        embedded_node_3 = EmbeddingsContentNode.objects.create(cid=node_3.content_id, contentnode=node_3)
+
         # Two closely placed vectors i.e. they are similar.
-        Embeddings.objects.create(content_id=uuid.uuid4().hex, embedding=[2, 3])
-        Embeddings.objects.create(content_id=uuid.uuid4().hex, embedding=[2, 2])
+        Embeddings.objects.create(model="studio-embedder-v1.0", embedded_node=embedded_node_1, embedding=[2, 3])
+        Embeddings.objects.create(model="studio-embedder-v1.0", embedded_node=embedded_node_2, embedding=[2, 2])
         # A vector placed at far distance i.e. not similar to above vectors.
-        Embeddings.objects.create(content_id=uuid.uuid4().hex, embedding=[4, 1])
+        Embeddings.objects.create(model="studio-embedder-v1.0", embedded_node=embedded_node_3, embedding=[4, 1])
 
     def test_can_create_embeddings(self):
         embeddings_count = Embeddings.objects.count()
