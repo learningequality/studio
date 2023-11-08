@@ -1984,17 +1984,22 @@ class ContentNode(MPTTModel, models.Model):
         ]
 
 
+class EmbeddingsContentNode(models.Model):
+    """
+    A model that stores the canonical contentnode for embedding purposes.
+    """
+    cid = models.CharField(primary_key=True, max_length=64)
+    contentnode = models.ForeignKey(ContentNode, related_name="node_cid", blank=False, null=False, on_delete=models.CASCADE)
+
+
 class Embeddings(models.Model):
     """
-    A model that caches embeddings.
+    A model that stores generated embeddings.
     """
-    content_id = UUIDField(primary_key=False)
+    embedding_id = UUIDField(primary_key=True, default=uuid.uuid4)
+    model = models.CharField(max_length=64, db_index=True)
+    embedded_node = models.ForeignKey(EmbeddingsContentNode, related_name="embeddings", blank=False, null=False, on_delete=models.CASCADE)
     embedding = VectorField()
-
-    class Meta:
-        indexes = [
-            models.Index(fields=["content_id"]),
-        ]
 
 
 class ContentKind(models.Model):
