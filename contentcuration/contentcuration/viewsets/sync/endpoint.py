@@ -139,8 +139,13 @@ class SyncView(APIView):
         )
 
         response_payload = {
-            "tasks": query.values("task_id", "task_name", "traceback", "progress", "channel_id", "status"),
+            "tasks": [],
         }
+
+        if query.exists():
+            response_payload = {
+                "tasks": query.values("task_id", "task_name", "traceback", "progress", "channel_id", "status"),
+            }
 
         return response_payload
 
