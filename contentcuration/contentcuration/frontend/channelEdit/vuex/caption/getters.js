@@ -2,14 +2,7 @@ import { GENERATING } from 'shared/data/constants';
 
 export function isGeneratingGetter(state) {
   return contentnode_id => {
-    const captionFileIds = Object.keys(state.captionFilesMap[contentnode_id] || {});
-    let isAnyGenerating = false;
-    for (const id of captionFileIds) {
-      if (state.captionFilesMap[contentnode_id][id][GENERATING] === true) {
-        isAnyGenerating = true;
-        break; // Exit loop if a generating flag is found
-      }
-    }
-    return isAnyGenerating;
+    const captionFiles = Object.values(state.captionFilesMap[contentnode_id] || {});
+    return captionFiles.some(file => file[GENERATING] === true);
   };
 }

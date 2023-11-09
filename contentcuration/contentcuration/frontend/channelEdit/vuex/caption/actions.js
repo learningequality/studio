@@ -1,20 +1,20 @@
 import { CaptionFile, CaptionCues } from 'shared/data/resources';
 import { GENERATING } from 'shared/data/constants';
 
-export async function loadCaptionFiles(commit, params) {
+async function loadCaptionFiles(commit, params) {
   const captionFiles = await CaptionFile.where(params);
   commit('ADD_CAPTIONFILES', { captionFiles, nodeIds: params.contentnode__in });
   return captionFiles;
 }
 
-export async function loadCaptionCues(commit, { caption_file_id }) {
+async function loadCaptionCues(commit, { caption_file_id }) {
   const cues = await CaptionCues.where({ caption_file_id });
   commit('ADD_CAPTIONCUES', cues);
   return cues;
 }
 
 export async function loadCaptions({ commit, rootGetters }, params) {
-  const isAIFeatureEnabled = rootGetters['currentChannel/isAIFeatureEnabled'];
+  const isAIFeatureEnabled = rootGetters['isAIFeatureEnabled'];
   if (!isAIFeatureEnabled) return;
 
   // If a new file is uploaded, the contentnode_id will be string
@@ -41,9 +41,7 @@ export async function loadCaptions({ commit, rootGetters }, params) {
   captionFiles.forEach(file => {
     // Load all the cues associated with the file_id
     const caption_file_id = file.id;
-    loadCaptionCues(commit, {
-      caption_file_id,
-    });
+    loadCaptionCues(commit, { caption_file_id });
   });
 }
 
@@ -55,13 +53,13 @@ export async function addCaptionFile({ state, commit }, { id, file_id, language,
   };
   // The file_id and language should be unique together in the vuex state.
   // This check avoids duplicating existing caption data already loaded into vuex.
-  const alreadyExists = state.captionFilesMap[nodeId]
+  const existingCaptionFile = state.captionFilesMap[nodeId]
     ? Object.values(state.captionFilesMap[nodeId]).find(
         file => file.language === captionFile.language && file.file_id === captionFile.file_id
       )
     : null;
 
-  if (!alreadyExists) {
+  if (!existingCaptionFile) {
     // new created file will enqueue generate caption celery task
     captionFile[GENERATING] = true;
     return CaptionFile.add(captionFile).then(id => {

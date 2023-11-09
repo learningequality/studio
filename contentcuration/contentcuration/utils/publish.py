@@ -169,6 +169,7 @@ def create_kolibri_license_object(ccnode):
         license_description=ccnode.license.license_description if use_license_description else ccnode.license_description
     )
 
+
 def process_webvtt_file_publishing(
         action: Literal["create", "update"],
         ccnode: ccmodels.ContentNode,
@@ -218,6 +219,7 @@ def process_webvtt_file_publishing(
     finally:
         temppath and os.unlink(temppath)
 
+
 def generate_webvtt_file(caption_cues: QuerySet[ccmodels.CaptionCue]) -> str:
     """ Generate the content of a WebVTT file based on CaptionCue's.
 
@@ -232,12 +234,14 @@ def generate_webvtt_file(caption_cues: QuerySet[ccmodels.CaptionCue]) -> str:
         webvtt_content += f"{cue.text}\n\n"
     return webvtt_content.encode('utf-8')
 
+
 def float_to_timedelta(seconds: float) -> str:
     s = int(seconds)
     ms = int((seconds-s)*1000)
     if ms == 0:
         return f"{timedelta(seconds=s)}.000"
     return f"{timedelta(seconds=s)}.{ms}"
+
 
 def increment_channel_version(channel):
     channel.version += 1

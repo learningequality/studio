@@ -7,7 +7,6 @@ from automation.settings import CHUNK_LENGTH
 from automation.settings import DEVICE
 from automation.settings import DEV_TRANSCRIPTION_MODEL
 from automation.settings import MAX_TOKEN_LENGTH
-# from automation.settings import WhisperTask
 from automation.utils.appnexus.base import Adapter
 from automation.utils.appnexus.base import Backend
 from automation.utils.appnexus.base import BackendFactory
@@ -17,8 +16,6 @@ from contentcuration.constants.transcription_languages import WHISPER_LANGUAGES 
 from contentcuration.models import CaptionFile
 from contentcuration.models import File
 from contentcuration.not_production_settings import WHISPER_BACKEND
-
-from transformers import pipeline
 
 
 class WhisperRequest(BackendRequest):
@@ -68,6 +65,7 @@ class Whisper(Backend):
     def connect(self) -> None:
         raise NotImplementedError("The 'connect' method is not implemented for the 'Whisper' backend.")
 
+
 class LocalWhisper(Backend):
     def __init__(self) -> None:
         self.pipe = None
@@ -80,6 +78,7 @@ class LocalWhisper(Backend):
 
     def connect(self) -> None:
         if self.pipe is None:
+            from transformers import pipeline
             self.pipe = pipeline(
                 model=DEV_TRANSCRIPTION_MODEL,
                 chunk_length_s=CHUNK_LENGTH,

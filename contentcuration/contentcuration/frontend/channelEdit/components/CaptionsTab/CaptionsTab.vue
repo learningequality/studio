@@ -35,6 +35,7 @@
         color="primary"
         class="font-weight-bold ml-0"
         @click="addCaption"
+        :disabled="isCaptionFileExisting"
       >
         {{ $tr('generateBtn') }}
       </VBtn>
@@ -53,7 +54,7 @@
 
 <script>
 
-  import { mapActions, mapGetters } from 'vuex';
+  import { mapActions, mapGetters, mapState } from 'vuex';
   import { CaptionFile, uuid4 } from 'shared/data/resources';
   import { notSupportedCaptionLanguages } from 'shared/leUtils/TranscriptionLanguages';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
@@ -82,7 +83,7 @@
       ...mapGetters('contentNode', ['getContentNode']),
       ...mapGetters('caption', ['isGeneratingGetter']),
       ...mapGetters('file', ['getContentNodeFiles']),
-      // ...mapState('caption', ['captionFilesMap', 'captionCuesMap']),
+      ...mapState('caption', ['captionFilesMap']),
       node() {
         return this.getContentNode(this.nodeId);
       },
@@ -93,15 +94,27 @@
       isGeneratingCaptions() {
         return this.isGeneratingGetter(this.nodeId);
       },
+      isCaptionFileExisting() {
+        const language = this.selectedLanguage;
+        const fileId = this.getLongestDurationFileId();
+        return this.checkExistingFile(this.captionFilesMap[this.nodeId], fileId, language)
+      }
     },
     methods: {
       ...mapActions('caption', ['addCaptionFile']),
+      checkExistingFile(captionFilesMap, captionFileId, language) {
+        if(!captionFilesMap) return false;
+        return Object.values(captionFilesMap).some(file => {
+          return file.file_id === captionFileId && file.language === language;
+        })
+      },
       addCaption() {
         const id = uuid4();
         const fileId = this.getLongestDurationFileId();
         const language = this.selectedLanguage;
-        if (!language && !fileId) return;
-
+        if (!language || !fileId) return;
+        const fileExists = this.checkExistingFile(this.captionFilesMap[this.nodeId], fileId, language);
+        if(fileExists) return;
         this.addCaptionFile({
           id: id,
           file_id: fileId,

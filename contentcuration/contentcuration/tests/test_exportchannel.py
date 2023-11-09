@@ -454,7 +454,7 @@ class ExportChannelTestCase(StudioTestCase):
         process_webvtt_file_publishing('create', new_video, caption_file)
         assert caption_file.output_file is not None
 
-        expected_webvtt = 'WEBVTT\n\n0:00:00.000 --> 0:00:03.000\n- a test string\n\n'.encode('utf-8')
+        expected_webvtt = 'WEBVTT\n\n0:00:00.000 --> 0:00:03.000\na test string\n\n'.encode('utf-8')
         webvtt = caption_file.output_file.file_on_disk.read() # output_file is the VTT file
         assert webvtt == expected_webvtt
 
@@ -469,7 +469,7 @@ class ExportChannelTestCase(StudioTestCase):
 
         # Assert VTT files are different
         assert webvtt != updated_vtt
-        assert updated_vtt == 'WEBVTT\n\n0:00:00.000 --> 0:00:03.000\n- Updated text\n\n'.encode('utf-8')
+        assert updated_vtt == 'WEBVTT\n\n0:00:00.000 --> 0:00:03.000\nUpdated text\n\n'.encode('utf-8')
 
 class EmptyChannelTestCase(StudioTestCase):
 

@@ -161,7 +161,7 @@
         'getImmediateRelatedResourcesCount',
       ]),
       ...mapGetters('assessmentItem', ['getAssessmentItemsAreValid', 'getAssessmentItemsCount']),
-      ...mapGetters('currentChannel', ['isAIFeatureEnabled']),
+      ...mapGetters(['isAIFeatureEnabled']),
       firstNode() {
         return this.nodes.length ? this.nodes[0] : null;
       },

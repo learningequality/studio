@@ -2239,7 +2239,7 @@ MEDIA_PRESETS = [
 
 class File(models.Model):
     """
-    The bottom layer of the contentDB schema, defines the basic build2086ing brick for content.
+    The bottom layer of the contentDB schema, defines the basic building brick for content.
     Things it can represent are, for example, mp4, avi, mov, html, css, jpeg, pdf, mp3...
     """
     id = UUIDField(primary_key=True, default=uuid.uuid4)

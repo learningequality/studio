@@ -1038,8 +1038,8 @@ export const CaptionFile = new Resource({
   _add: Resource.prototype.add,
   add(obj) {
     return this._add(obj).then(() => { // id
-      const contentnodeId = this.getChannelId();
-      return this.updateContentNodeChanged(contentnodeId);
+      const channelId = this.getChannelId();
+      return this.updateContentNodeChanged(channelId);
     });
   },
 
@@ -1072,7 +1072,7 @@ export const CaptionCues = new Resource({
   tableName: TABLE_NAMES.CAPTION_CUES,
   urlName: 'captioncues',
   idField: 'id',
-  indexFields: ['text', 'starttime', 'endtime', 'caption_file_id'],
+  indexFields: ['starttime', 'endtime', 'caption_file_id'],
   syncable: true,
   getChannelId: getChannelFromChannelScope,
   filterCuesByFileId(caption_file_id) {
@@ -1098,22 +1098,13 @@ export const CaptionCues = new Resource({
     }
     const promise = client.get(generatedUrl).then(response => {
       let itemData;
-      let pageData;
       if (Array.isArray(response.data)) {
         itemData = response.data;
-      } else if (response.data && response.data.results) {
-        pageData = response.data;
-        itemData = pageData.results;
       } else {
         console.error(`Unexpected response from ${this.urlName}`, response);
         itemData = [];
       }
-      return this.setData(itemData).then(data => {
-        if (pageData) {
-          pageData.results = data;
-        }
-        return pageData ? pageData : data;
-      });
+      return this.setData(itemData);
     });
     this._requests[generatedUrl] = {
       [LAST_FETCHED]: now,

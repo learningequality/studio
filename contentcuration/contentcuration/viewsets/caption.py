@@ -5,7 +5,7 @@ from rest_framework import serializers
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from contentcuration.models import CaptionCue, CaptionFile, Change, File
+from contentcuration.models import CaptionCue, CaptionFile, Change, File, ContentNode
 from contentcuration.tasks import generatecaptioncues_task
 from contentcuration.viewsets.base import BulkModelSerializer, ValuesViewset
 from contentcuration.viewsets.sync.constants import CAPTION_FILE
@@ -68,15 +68,27 @@ class CaptionViewSet(ValuesViewset):
         language = self.request.GET.get("language")
 
         if contentnode_ids:
-            contentnode_ids = contentnode_ids.split(",")
+            allowed_contentnodes = set(
+                ContentNode.filter_edit_queryset(
+                    ContentNode.objects.all(), self.request.user
+                )
+                .filter(id__in=contentnode_ids.split(","))
+                .values_list("id", flat=True)
+            )
             file_ids = File.objects.filter(
                 preset_id__in=[AUDIO, VIDEO_HIGH_RES, VIDEO_LOW_RES],
-                contentnode_id__in=contentnode_ids,
+                contentnode_id__in=allowed_contentnodes,
             ).values_list("pk", flat=True)
             queryset = queryset.filter(file_id__in=file_ids)
 
         if file_id:
-            queryset = queryset.filter(file_id=file_id)
+            allowed_file_id = set(
+                File.filter_edit_queryset(
+                    File.objects.get(pk=file_id), self.request.user
+                )
+                .values_list("id", flat=True)
+            )
+            queryset = queryset.filter(file_id=allowed_file_id)
         if language:
             queryset = queryset.filter(language=language)
 
@@ -88,9 +100,13 @@ class CaptionViewSet(ValuesViewset):
             generate_update_event(
                 instance.pk,
                 CAPTION_FILE,
-                { "__generating_captions": True, },
-                channel_id=change['channel_id']
-            ), applied=True, created_by_id=self.request.user.id
+                {
+                    "__generating_captions": True,
+                },
+                channel_id=change["channel_id"],
+            ),
+            applied=True,
+            created_by_id=self.request.user.id,
         )
 
         # enqueue task of generating captions for the saved CaptionFile instance
@@ -99,12 +115,13 @@ class CaptionViewSet(ValuesViewset):
             generatecaptioncues_task.enqueue(
                 self.request.user,
                 caption_file_id=instance.pk,
-                channel_id=change['channel_id'],
+                channel_id=change["channel_id"],
                 user_id=self.request.user.id,
             )
 
         except Exception as e:
             logging.error(f"Failed to queue celery task.\nWith the error: {e}")
+
 
 class CaptionCueViewSet(ValuesViewset):
     # Handles operations for the CaptionCue model.
