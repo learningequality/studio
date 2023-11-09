@@ -5,6 +5,9 @@ bulk creates, updates, and deletes.
 """
 from celery import states
 from django.db.models import Q
+from django_celery_results.models import TaskResult
+from django_cte import CTEQuerySet
+from django_cte import With
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -17,8 +20,7 @@ from contentcuration.tasks import apply_channel_changes_task
 from contentcuration.tasks import apply_user_changes_task
 from contentcuration.viewsets.sync.constants import CHANNEL
 from contentcuration.viewsets.sync.constants import CREATED
-from django_celery_results.models import TaskResult
-from django_cte import With , CTEQuerySet
+
 
 class SyncView(APIView):
     authentication_classes = (SessionAuthentication,)
@@ -126,20 +128,20 @@ class SyncView(APIView):
     def return_tasks(self, request, channel_revs):
         custom_task_cte = With(CustomTaskMetadata.objects.filter(channel_id__in=channel_revs.keys()))
         task_result_querySet = CTEQuerySet(model=TaskResult)
-        query = custom_task_cte.join(task_result_querySet,
-                task_id=custom_task_cte.col.task_id)\
-                .with_cte(custom_task_cte)\
-                .filter(status__in=[states.STARTED, states.FAILURE],)\
-                .exclude(
-                    task_name__in=[apply_channel_changes_task.name, apply_user_changes_task.name]
-                ).annotate(
-                    progress = custom_task_cte.col.progress,
-                    channel_id = custom_task_cte.col.channel_id,
-                )
+        query = custom_task_cte.join(task_result_querySet, task_id=custom_task_cte.col.task_id)\
+            .with_cte(custom_task_cte)\
+            .filter(status__in=[states.STARTED, states.FAILURE],)\
+            .exclude(
+                task_name__in=[apply_channel_changes_task.name, apply_user_changes_task.name]
+            ).annotate(
+                progress=custom_task_cte.col.progress,
+                channel_id=custom_task_cte.col.channel_id,
+        )
 
         response_payload = {
             "tasks": query.values("task_id", "task_name", "traceback", "progress", "channel_id", "status"),
         }
+
         return response_payload
 
     def post(self, request):
