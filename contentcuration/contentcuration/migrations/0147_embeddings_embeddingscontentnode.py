@@ -34,10 +34,3 @@ class Migration(migrations.Migration):
             ],
         ),
     ]
-
-    # Enable Pgvector postgres extension only when pytest is running.
-    # For development, its enabled via devsetup management command.
-    # For production, it'll be enabled manually.
-    if getattr(settings, "TEST_ENV", False) is True:
-        from pgvector.django import VectorExtension
-        operations.insert(0, VectorExtension())

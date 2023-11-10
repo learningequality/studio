@@ -42,6 +42,14 @@ TAGS = ["Tag 1", "Tag 2", "Tag 3"]
 SORT_ORDER = 0
 
 
+def enable_pgvector_extension(connection):
+    """
+    Enables pgvector extension in postgres.
+    """
+    with connection.cursor() as cursor:
+        cursor.execute("CREATE EXTENSION IF NOT EXISTS %s;" % VectorExtension().name)
+
+
 class Command(BaseCommand):
 
     def add_arguments(self, parser):
@@ -68,8 +76,8 @@ class Command(BaseCommand):
         except DBError as e:
             logging.error('Error creating cache table: {}'.format(str(e)))
 
-        with connection.cursor() as cursor:
-            cursor.execute("CREATE EXTENSION IF NOT EXISTS %s;" % VectorExtension().name)
+        # Enable pgvector extension.
+        enable_pgvector_extension(connection)
 
         # Run migrations
         call_command('migrate')
