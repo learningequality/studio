@@ -5,6 +5,7 @@ from search.viewsets.savedsearch import SavedSearchViewSet
 from contentcuration.decorators import delay_user_storage_calculation
 from contentcuration.viewsets.assessmentitem import AssessmentItemViewSet
 from contentcuration.viewsets.bookmark import BookmarkViewSet
+from contentcuration.viewsets.caption import CaptionViewSet, CaptionCueViewSet
 from contentcuration.viewsets.channel import ChannelViewSet
 from contentcuration.viewsets.channelset import ChannelSetViewSet
 from contentcuration.viewsets.clipboard import ClipboardViewSet
@@ -14,6 +15,8 @@ from contentcuration.viewsets.file import FileViewSet
 from contentcuration.viewsets.invitation import InvitationViewSet
 from contentcuration.viewsets.sync.constants import ASSESSMENTITEM
 from contentcuration.viewsets.sync.constants import BOOKMARK
+from contentcuration.viewsets.sync.constants import CAPTION_CUES
+from contentcuration.viewsets.sync.constants import CAPTION_FILE
 from contentcuration.viewsets.sync.constants import CHANNEL
 from contentcuration.viewsets.sync.constants import CHANNELSET
 from contentcuration.viewsets.sync.constants import CLIPBOARD
@@ -73,6 +76,8 @@ viewset_mapping = OrderedDict(
         (EDITOR_M2M, ChannelUserViewSet),
         (VIEWER_M2M, ChannelUserViewSet),
         (SAVEDSEARCH, SavedSearchViewSet),
+        (CAPTION_FILE, CaptionViewSet),
+        (CAPTION_CUES, CaptionCueViewSet),
     ]
 )
 

@@ -19,6 +19,7 @@ import {
   RELATIVE_TREE_POSITIONS,
   TABLE_NAMES,
   COPYING_FLAG,
+  GENERATING,
   TASK_ID,
   CURRENT_USER,
   MAX_REV_KEY,
@@ -1015,6 +1016,85 @@ export const Bookmark = new Resource({
   urlName: 'bookmark',
   idField: 'channel',
   getUserId: getUserIdFromStore,
+});
+
+export const CaptionFile = new Resource({
+  tableName: TABLE_NAMES.CAPTION_FILE,
+  urlName: 'captions',
+  idField: 'id',
+  indexFields: ['file_id', 'language'],
+  syncable: true,
+  getChannelId: getChannelFromChannelScope,
+
+  waitForCaptionCueGeneration(id) {
+    const observable = Dexie.liveQuery(() => {
+      return this.table
+        .where('id')
+        .equals(id)
+        .filter(f => !f[GENERATING])
+        .toArray();
+    });
+    return new Promise((resolve, reject) => {
+      const subscription = observable.subscribe({
+        next(result) {
+          if (result.length > 0 && result[0][GENERATING] === false) {
+            subscription.unsubscribe();
+            resolve(false);
+          }
+        },
+        error() {
+          subscription.unsubscribe();
+          reject();
+        },
+      });
+    });
+  },
+});
+
+export const CaptionCues = new Resource({
+  tableName: TABLE_NAMES.CAPTION_CUES,
+  urlName: 'captioncues',
+  idField: 'id',
+  indexFields: ['starttime', 'endtime', 'caption_file_id'],
+  syncable: true,
+  getChannelId: getChannelFromChannelScope,
+  filterCuesByFileId(caption_file_id) {
+    return this.table
+      .where('id')
+      .equals(caption_file_id)
+      .toArray();
+  },
+  collectionUrl(caption_file_id) {
+    return this.getUrlFunction('list')(caption_file_id);
+  },
+  fetchCollection({ caption_file_id }) {
+    const now = Date.now();
+    const generatedUrl = this.collectionUrl(caption_file_id);
+    const cachedRequest = this._requests[generatedUrl];
+    if (
+      cachedRequest &&
+      cachedRequest[LAST_FETCHED] &&
+      cachedRequest[LAST_FETCHED] + REFRESH_INTERVAL * 1000 > now &&
+      cachedRequest.promise
+    ) {
+      return cachedRequest.promise;
+    }
+    const promise = client.get(generatedUrl).then(response => {
+      let itemData;
+      if (Array.isArray(response.data)) {
+        itemData = response.data;
+      } else {
+        console.error(`Unexpected response from ${this.urlName}`, response);
+        itemData = [];
+      }
+      return this.setData(itemData);
+    });
+    this._requests[generatedUrl] = {
+      [LAST_FETCHED]: now,
+      promise,
+    };
+    return promise;
+  },
 });
 
 export const Channel = new Resource({

@@ -137,3 +137,47 @@ def sendcustomemails_task(subject, message, query):
         text = message.format(current_date=time.strftime("%A, %B %d"), current_time=time.strftime("%H:%M %Z"), **recipient.__dict__)
         text = render_to_string('registration/custom_email.txt', {'message': text})
         recipient.email_user(subject, text, settings.DEFAULT_FROM_EMAIL, )
+
+@app.task(name="generatecaptioncues_task")
+def generatecaptioncues_task(caption_file_id: str, channel_id, user_id) -> None:
+    """Start generating the Captions Cues for requested the Caption File"""
+
+    from contentcuration.viewsets.caption import CaptionCueSerializer
+    from contentcuration.viewsets.sync.constants import CAPTION_FILE
+    from contentcuration.viewsets.sync.constants import CAPTION_CUES
+    from contentcuration.viewsets.sync.utils import generate_update_event
+    from contentcuration.viewsets.sync.utils import generate_create_event
+    from contentcuration.utils.transcription import WhisperAdapter
+    from contentcuration.utils.transcription import WhisperBackendFactory
+
+
+    backend = WhisperBackendFactory().create_backend()
+    adapter = WhisperAdapter(backend=backend)
+
+    cues = adapter.transcribe(caption_file_id=caption_file_id).get_cues(caption_file_id)
+
+    for cue in cues:
+        serializer = CaptionCueSerializer(data=cue)
+        if serializer.is_valid():
+            serializer.save()
+            Change.create_change(generate_create_event(
+                    cue["id"],
+                    CAPTION_CUES,
+                    {
+                        "id": cue["id"],
+                        "text": cue["text"],
+                        "starttime": cue["starttime"],
+                        "endtime": cue["endtime"],
+                        "caption_file_id": cue["caption_file_id"],
+                    },
+                    channel_id=channel_id,
+            ), applied=True, created_by_id=user_id)
+        else:
+            raise ValueError(f"Error in cue serialization: {serializer.errors}")
+
+    Change.create_change(generate_update_event(
+        caption_file_id,
+        CAPTION_FILE,
+        {"__generating_captions": False},
+        channel_id=channel_id,
+    ), applied=True, created_by_id=user_id)

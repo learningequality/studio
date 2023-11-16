@@ -1,5 +1,6 @@
 import urllib.parse
 
+from automation.urls import urlpatterns as automation_urlpatterns
 from django.conf import settings
 from django.contrib import admin
 from django.core.files.storage import default_storage
@@ -75,6 +76,8 @@ urlpatterns = urlpatterns + [
     re_path(r"^api-auth/", include("rest_framework.urls", namespace="rest_framework")),
     re_path(r"^content/(?P<storage_path>.+)$", file_server),
 ]
+
+urlpatterns += automation_urlpatterns
 
 if getattr(settings, "DEBUG_PANEL_ACTIVE", False):
 

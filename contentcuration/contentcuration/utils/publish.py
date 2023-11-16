@@ -12,7 +12,9 @@ import uuid
 import zipfile
 from builtins import str
 from copy import deepcopy
+from datetime import timedelta
 from itertools import chain
+from typing import Literal
 
 from django.conf import settings
 from django.contrib.sites.models import Site
@@ -26,6 +28,7 @@ from django.db.models import OuterRef
 from django.db.models import Q
 from django.db.models import Subquery
 from django.db.models import Sum
+from django.db.models.query import QuerySet
 from django.db.utils import IntegrityError
 from django.template.loader import render_to_string
 from django.utils import timezone
@@ -167,6 +170,79 @@ def create_kolibri_license_object(ccnode):
     )
 
 
+def process_webvtt_file_publishing(
+        action: Literal["create", "update"],
+        ccnode: ccmodels.ContentNode,
+        caption_file: ccmodels.CaptionFile,
+        user_id: int = None
+    ) -> None:
+    """Create or Update a WebVTT file and associate it with a CaptionFile.
+
+    :param action: 'create' to create a new WebVTT file and 'update' to update an existing WebVTT file
+    :param ccnode: The ContentNode associated with the WebVTT file.
+    :param caption_file: A CaptionFile to associate with the WebVTT file.
+    :param user_id: The ID of the user creating the WebVTT file (optional).
+    """
+    logging.debug(f"{action[:-1]}ing WebVTT for Node {ccnode.title}")
+    vtt_content = generate_webvtt_file(caption_cues=caption_file.caption_cue.all())
+    filename = "{name}_{lang}.{ext}".format(name=ccnode.title, lang=caption_file.language, ext=file_formats.VTT)
+    temppath = None
+    try:
+        with tempfile.NamedTemporaryFile(suffix="vtt", delete=False) as tempf:
+            temppath = tempf.name
+            tempf.write(vtt_content)
+            file_size = tempf.tell()
+            tempf.flush()
+
+            new_vtt_file = ccmodels.File.objects.create(
+                file_on_disk=File(open(temppath, 'rb'), name=filename),
+                contentnode=ccnode,
+                file_format_id=file_formats.VTT,
+                preset_id=format_presets.VIDEO_SUBTITLE,
+                original_filename=filename,
+                file_size=file_size,
+                uploaded_by_id=user_id,
+                language=caption_file.language,
+            )
+            logging.debug("Created VTT for {0} with checksum {1}".format(ccnode.title, new_vtt_file.checksum))
+
+            if action == 'update' and caption_file.output_file:
+                caption_file.output_file.contentnode = None
+                caption_file.output_file.save(update_fields=['contentnode'])
+
+            caption_file.output_file = new_vtt_file
+            # specifying output_field to be updated because by default the addition of FK updates
+            # the modified of CaptionFile obj results in always vtt_file.modified > caption_file.modified
+            caption_file.save(update_fields=['output_file'])
+    except Exception as e:
+        logging.error(f"Error creating VTT file for {ccnode.title}: {str(e)}")
+    finally:
+        temppath and os.unlink(temppath)
+
+
+def generate_webvtt_file(caption_cues: QuerySet[ccmodels.CaptionCue]) -> str:
+    """ Generate the content of a WebVTT file based on CaptionCue's.
+
+    :param: caption_cues: QuerySet of CaptionCues to include in the WebVTT.
+    :returns: The WebVTT content as a UTF-8 encoded string.
+    """
+    webvtt_content = "WEBVTT\n\n"
+    for cue in caption_cues.order_by('starttime'):
+        st = float_to_timedelta(seconds=cue.starttime)
+        et = float_to_timedelta(seconds=cue.endtime)
+        webvtt_content += f"{st} --> {et}\n"
+        webvtt_content += f"{cue.text}\n\n"
+    return webvtt_content.encode('utf-8')
+
+
+def float_to_timedelta(seconds: float) -> str:
+    s = int(seconds)
+    ms = int((seconds-s)*1000)
+    if ms == 0:
+        return f"{timedelta(seconds=s)}.000"
+    return f"{timedelta(seconds=s)}.{ms}"
+
+
 def increment_channel_version(channel):
     channel.version += 1
     channel.save()
@@ -264,6 +340,16 @@ class TreeMapper:
                     create_perseus_exercise(node, kolibrinode, exercise_data, user_id=self.user_id)
             elif node.kind_id == content_kinds.SLIDESHOW:
                 create_slideshow_manifest(node, user_id=self.user_id)
+            elif node.kind_id in [content_kinds.AUDIO, content_kinds.VIDEO]:
+                if node.changed:
+                    file_ids = node.files.all().values_list('id')
+                    caption_files = ccmodels.CaptionFile.objects.filter(file_id__in=file_ids)
+                    for cf in caption_files:
+                        vtt_file = cf.output_file
+                        if vtt_file and vtt_file.modified < cf.modified:
+                            process_webvtt_file_publishing('update', node, cf, self.user_id)
+                        elif vtt_file is None:
+                            process_webvtt_file_publishing('create', node, cf, self.user_id)
             elif node.kind_id == content_kinds.TOPIC:
                 for child in node.children.all():
                     self.recurse_nodes(child, metadata)
@@ -472,7 +558,6 @@ def create_associated_file_objects(kolibrinode, ccnode):
             priority=preset.order,
             local_file=kolibrilocalfilemodel,
         )
-
 
 def create_perseus_exercise(ccnode, kolibrinode, exercise_data, user_id=None):
     logging.debug("Creating Perseus Exercise for Node {}".format(ccnode.title))
