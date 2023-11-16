@@ -15,59 +15,53 @@ export function ADD_CAPTIONFILE(state, { captionFile, nodeId }) {
     id: captionFile.id,
     file_id: captionFile.file_id,
     language: captionFile.language,
-    [GENERATING]: captionFile[GENERATING] || false
-  })
+    [GENERATING]: captionFile[GENERATING] || false,
+  });
 }
 
 export function ADD_CAPTIONFILES(state, { captionFiles, nodeIds }) {
   // TODO: this causes to not update Vuex state correctly on the initial loading of the component
-  let currentIndex = 0;
+  let currentIndex = 0; // pointer to nodeIds
+  if (Array.isArray(captionFiles)) {
+    captionFiles.forEach((captionFile, index) => {
+      if (index > 0) {
+        const prevCaptionFile = captionFiles[index - 1];
+        if (captionFile.file_id !== prevCaptionFile.file_id) currentIndex++;
+      }
 
-  //forEach errors: Failed to load content
-  for (let index = 0; index < captionFiles.length; index++) {
-    const captionFile = captionFiles[index];
-    if (currentIndex >= nodeIds.length) {
-      currentIndex = nodeIds.length - 1;
-    }
-
-    if (index > 0) {
-      const prevCaptionFile = captionFiles[index - 1];
-      if (captionFile.file_id !== prevCaptionFile.file_id) currentIndex++;
-    }
-    const nodeId = nodeIds[currentIndex];
-    ADD_CAPTIONFILE(state, { captionFile, nodeId });
+      const nodeId = currentIndex < nodeIds.length ? nodeIds[currentIndex] : null;
+      if (nodeId !== null) {
+        ADD_CAPTIONFILE(state, { captionFile, nodeId });
+      }
+    });
   }
 }
 
 /* Mutations for Caption Cues */
-export function ADD_CUE(state, { cue, nodeId }) {
-  if (!cue && !nodeId) return;
-  // Check if there is Map for the current nodeId
-  if (!state.captionCuesMap[nodeId]) {
-    Vue.set(state.captionCuesMap, nodeId, {});
+export function ADD_CUE(state, { cue }) {
+  if (!cue) return;
+
+  if (!state.captionCuesMap[cue.caption_file_id]) {
+    Vue.set(state.captionCuesMap, cue.caption_file_id, {});
   }
 
-  // Check if the pk exists in the contentNode's object
-  if (!state.captionCuesMap[nodeId][cue.caption_file_id]) {
-    Vue.set(state.captionCuesMap[nodeId], cue.caption_file_id, {});
-  }
+  const fileMap = state.captionCuesMap[cue.caption_file_id];
 
-  Vue.set(state.captionCuesMap, nodeId, {
-    ...nodeIdMap,
-    [cue.caption_file_id]: {
-      ...fileMap,
+  Vue.set(state.captionCuesMap, cue.caption_file_id, {
+    ...fileMap,
+    [cue.id]: {
       id: cue.id,
       text: cue.text,
       starttime: cue.starttime,
-      endtime: cue.endtime
-    }
+      endtime: cue.endtime,
+    },
   });
 }
 
-export function ADD_CAPTIONCUES(state, { cues, nodeId }) {
+export function ADD_CAPTIONCUES(state, { cues }) {
   if (Array.isArray(cues)) {
-    cues.forEach(cue => {
-      ADD_CUE(state, { cue, nodeId });
+    cues.forEach((cue) => {
+      ADD_CUE(state, { cue });
     });
   }
 }

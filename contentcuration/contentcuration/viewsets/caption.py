@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from contentcuration.models import CaptionCue, CaptionFile, Change, File, ContentNode
 from contentcuration.tasks import generatecaptioncues_task
 from contentcuration.viewsets.base import BulkModelSerializer, ValuesViewset
-from contentcuration.viewsets.sync.constants import CAPTION_FILE
+from contentcuration.viewsets.sync.constants import CAPTION_FILE, CONTENTNODE
 from contentcuration.viewsets.sync.utils import generate_update_event
 
 
@@ -108,6 +108,24 @@ class CaptionViewSet(ValuesViewset):
             applied=True,
             created_by_id=self.request.user.id,
         )
+
+        # Set the contentnode's changed to True
+        try:
+            file_id = instance.file_id
+            cnn_id = File.objects.get(pk=file_id).contentnode_id
+            if cnn_id:
+                cnn = ContentNode.objects.get(pk=cnn_id)
+                cnn.changed = True
+                cnn.save()
+
+            Change.create_change(generate_update_event(
+                cnn_id,
+                CONTENTNODE,
+                {'changed': True},
+                channel_id=change["channel_id"],
+            ), applied=True, created_by_id=self.request.user.id)
+        except Exception as e:
+            print(e)
 
         # enqueue task of generating captions for the saved CaptionFile instance
         try:

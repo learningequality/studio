@@ -9,7 +9,7 @@ async function loadCaptionFiles(commit, params) {
 
 async function loadCaptionCues(commit, { caption_file_id }) {
   const cues = await CaptionCues.where({ caption_file_id });
-  commit('ADD_CAPTIONCUES', cues);
+  commit('ADD_CAPTIONCUES', { cues });
   return cues;
 }
 
@@ -38,7 +38,7 @@ export async function loadCaptions({ commit, rootGetters }, params) {
   // If there is no Caption File for this contentnode don't request for the cues
   if (captionFiles.length === 0) return;
 
-  captionFiles.forEach(file => {
+  captionFiles.forEach((file) => {
     // Load all the cues associated with the file_id
     const caption_file_id = file.id;
     loadCaptionCues(commit, { caption_file_id });
@@ -55,14 +55,14 @@ export async function addCaptionFile({ state, commit }, { id, file_id, language,
   // This check avoids duplicating existing caption data already loaded into vuex.
   const existingCaptionFile = state.captionFilesMap[nodeId]
     ? Object.values(state.captionFilesMap[nodeId]).find(
-        file => file.language === captionFile.language && file.file_id === captionFile.file_id
+        (file) => file.language === captionFile.language && file.file_id === captionFile.file_id
       )
     : null;
 
   if (!existingCaptionFile) {
     // new created file will enqueue generate caption celery task
     captionFile[GENERATING] = true;
-    return CaptionFile.add(captionFile).then(id => {
+    return CaptionFile.add(captionFile).then((id) => {
       commit('ADD_CAPTIONFILE', {
         id,
         captionFile,

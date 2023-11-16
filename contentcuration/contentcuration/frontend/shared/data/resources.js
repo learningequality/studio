@@ -1026,23 +1026,6 @@ export const CaptionFile = new Resource({
   syncable: true,
   getChannelId: getChannelFromChannelScope,
 
-  updateContentNodeChanged(id) {
-    return this.transaction({ mode: 'rw' }, CHANGES_TABLE, TABLE_NAMES.CONTENTNODE, () => {
-      ContentNode.table
-        .where({ channel_id: id })
-        .and(node => node.has_children == true)
-        .modify({ changed: true });
-    });
-  },
-
-  _add: Resource.prototype.add,
-  add(obj) {
-    return this._add(obj).then(() => { // id
-      const channelId = this.getChannelId();
-      return this.updateContentNodeChanged(channelId);
-    });
-  },
-
   waitForCaptionCueGeneration(id) {
     const observable = Dexie.liveQuery(() => {
       return this.table

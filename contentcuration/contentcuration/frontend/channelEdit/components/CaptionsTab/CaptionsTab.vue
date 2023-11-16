@@ -113,7 +113,8 @@
         const fileId = this.getLongestDurationFileId();
         const language = this.selectedLanguage;
         if (!language || !fileId) return;
-        const fileExists = this.checkExistingFile(this.captionFilesMap[this.nodeId], fileId, language);
+        const fileExists = this.checkExistingFile(
+          this.captionFilesMap[this.nodeId], fileId, language);
         if(fileExists) return;
         this.addCaptionFile({
           id: id,

@@ -67,7 +67,7 @@ from contentcuration.constants import channel_history
 from contentcuration.constants import completion_criteria
 from contentcuration.constants import user_history
 from contentcuration.constants.contentnode import kind_activity_map
-from contentcuration.constants.transcription_languages import CAPTIONS_LANGUAGES
+from contentcuration.constants.transcription_languages import CAPTION_LANGUAGES
 from contentcuration.db.models.expressions import Array
 from contentcuration.db.models.functions import ArrayRemove
 from contentcuration.db.models.functions import Unnest
@@ -2082,7 +2082,7 @@ class CaptionFile(models.Model):
 
     def save(self, *args, **kwargs):
         # Check if the language is supported by speech-to-text AI model.
-        if self.language and self.language.lang_code not in CAPTIONS_LANGUAGES:
+        if self.language and self.language.lang_code not in CAPTION_LANGUAGES:
             raise ValueError("The language is currently not supported by speech-to-text model.")
         super(CaptionFile, self).save(*args, **kwargs)
 

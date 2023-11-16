@@ -21,14 +21,12 @@ export default {
     captionFilesMap: [],
     /* Caption Cues for a contentnode
      * [
-     *     contentnode_id: {
-     *         caption_file_id: {
-     *              id: id
-     *              starttime: starttime
-     *              endtime: endtime
-     *              text: text
-     *         }
-     *     },
+     *    caption_file_id: {
+     *      id: id
+     *      starttime: starttime
+     *      endtime: endtime
+     *      text: text
+     *    }
      * ]
      */
     captionCuesMap: [],
