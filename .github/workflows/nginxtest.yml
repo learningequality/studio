@@ -1,0 +1,31 @@
+name: Nginx tests
+
+on:
+  push:
+    branches:
+      - unstable
+      - hotfixes
+      - master
+  pull_request:
+
+jobs:
+  pre_job:
+    name: Path match check
+    runs-on: ubuntu-latest
+    # Map a step output to a job output
+    outputs:
+      should_skip: ${{ steps.skip_check.outputs.should_skip }}
+    steps:
+      - id: skip_check
+        uses: fkirc/skip-duplicate-actions@master
+        with:
+          github_token: ${{ github.token }}
+          paths: '[".github/workflows/nginxtest.yml", "docker-compose.yml", "k8s/images/**"]'
+  docker_build_test:
+    name: Build and test docker images
+    runs-on: ubuntu-latest
+    needs: pre_job
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build docker images
+        run: docker-compose build studio-nginx
