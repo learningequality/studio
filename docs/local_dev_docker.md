@@ -1,6 +1,6 @@
-# Local development instructions: With Docker
+# Local development instructions: With Docker (recommended)
 
-The following guide utilizes docker and docker-compose to run select services required for Studio to function. If you would rather install these services on your host, please follow the [host-setup guide](./local_dev_host.md).
+The following guide utilizes docker and docker-compose to run select services required for Studio to function. It's our recommended setup. However, if you would rather install these services on your host, please follow the [host-setup guide](./local_dev_host.md).
 
 ## Prerequisites
 Please install these prerequisites, or alternatives for setting up your local development environment:
