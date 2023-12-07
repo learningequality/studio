@@ -106,7 +106,7 @@
     },
     methods: {
       languageText(item) {
-        return this.$tr('languageItemText', { language: item.native_name, code: item.id });
+        return this.$tr('languageItemText', { language: item.first_native_name, code: item.id });
       },
     },
     $trs: {
