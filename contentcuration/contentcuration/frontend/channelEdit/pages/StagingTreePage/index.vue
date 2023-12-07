@@ -146,7 +146,7 @@
         </VLayout>
       </VContent>
 
-      <BottomBar app>
+      <BottomToolBar app>
         <VLayout align-center justify-space-between row fill-height wrap>
           <VFlex>
             <span class="pl-2" data-test="bottom-bar-stats-resources-count">
@@ -187,7 +187,7 @@
             </VBtn>
           </VFLex>
         </VLayout>
-      </BottomBar>
+      </BottomToolBar>
 
       <KModal
         v-if="displaySummaryDetailsDialog"
@@ -250,7 +250,7 @@
   import Diff from './Diff';
   import { fileSizeMixin, titleMixin, routerMixin } from 'shared/mixins';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
-  import BottomBar from 'shared/views/BottomBar';
+  import BottomToolBar from '../../../shared/views/BottomToolBar.vue';
   import Breadcrumbs from 'shared/views/Breadcrumbs';
   import IconButton from 'shared/views/IconButton';
   import LoadingText from 'shared/views/LoadingText';
@@ -263,7 +263,7 @@
   export default {
     name: 'StagingTreePage',
     components: {
-      BottomBar,
+      BottomToolBar,
       Breadcrumbs,
       ContentNodeListItem,
       Diff,

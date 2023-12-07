@@ -104,7 +104,7 @@
           </template>
         </Uploader>
       </VCard>
-      <BottomBar v-if="!loading && !loadError && !showFileUploadDefault">
+      <BottomToolBar v-if="!loading && !loadError && !showFileUploadDefault">
         <VLayout row align-center fill-height class="px-2">
           <VFlex v-if="showStorage" shrink>
             <FileStorage />
@@ -121,7 +121,7 @@
             </VBtn>
           </VFlex>
         </VLayout>
-      </BottomBar>
+      </BottomToolBar>
     </VDialog>
 
     <!-- Dialog for catching unsaved changes -->
@@ -193,7 +193,7 @@
   import FormatPresets from 'shared/leUtils/FormatPresets';
   import OfflineText from 'shared/views/OfflineText';
   import ToolBar from 'shared/views/ToolBar';
-  import BottomBar from 'shared/views/BottomBar';
+  import BottomToolBar from '../../../shared/views/BottomToolBar.vue';
   import FileDropzone from 'shared/views/files/FileDropzone';
   import { isNodeComplete } from 'shared/utils/validation';
   import { DELAYED_VALIDATION } from 'shared/constants';
@@ -215,7 +215,7 @@
       FileDropzone,
       SavingIndicator,
       ToolBar,
-      BottomBar,
+      BottomToolBar,
     },
     mixins: [fileSizeMixin, routerMixin],
     props: {
