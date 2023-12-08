@@ -105,10 +105,10 @@
   import ContentNodeListItem from './ContentNodeListItem';
   import ContentNodeOptions from './ContentNodeOptions';
   import ContentNodeContextMenu from './ContentNodeContextMenu';
+  import EditTitleDescriptionModal from './quickEdit/EditTitleDescriptionModal.vue';
   import Checkbox from 'shared/views/form/Checkbox';
   import IconButton from 'shared/views/IconButton';
   import DraggableItem from 'shared/views/draggable/DraggableItem';
-  import EditTitleDescriptionModal from './quickEdit/EditTitleDescriptionModal.vue';
   import { COPYING_FLAG } from 'shared/data/constants';
   import { DragEffect, DropEffect, EffectAllowed } from 'shared/mixins/draggable/constants';
   import { DraggableRegions } from 'frontend/channelEdit/constants';
@@ -160,7 +160,7 @@
         activated: false,
         showQuickEdit: {
           titleDescription: false,
-        }
+        },
       };
     },
     computed: {
@@ -224,16 +224,16 @@
         });
       },
     },
-    methods: {
-      showTitleDescriptionModal() {
-        this.showQuickEdit.titleDescription = true;
-      },
-    },
     beforeDestroy() {
       // Unselect before removing
       if (this.selected) {
         this.selected = false;
       }
+    },
+    methods: {
+      showTitleDescriptionModal() {
+        this.showQuickEdit.titleDescription = true;
+      },
     },
     $trs: {
       optionsTooltip: 'Options',

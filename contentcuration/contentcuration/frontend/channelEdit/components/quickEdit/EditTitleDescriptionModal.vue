@@ -1,4 +1,5 @@
 <template>
+
   <div
     @click.stop
     @dblclick.stop
@@ -11,9 +12,9 @@
       @cancel="close"
     >
       <KTextbox
+        v-model="title"
         autofocus
         showInvalidText
-        v-model="title"
         :maxlength="200"
         :label="$tr('titleLabel')"
         :invalid="!!titleError"
@@ -22,14 +23,15 @@
         @blur="validateTitle"
       />
       <KTextbox
-        textArea
         v-model="description"
+        textArea
         :maxlength="400"
         :label="$tr('descriptionLabel')"
         style="margin-top: 0.5em"
       />
     </KModal>
   </div>
+
 </template>
 
 
@@ -38,6 +40,7 @@
   import { mapActions } from 'vuex';
 
   export default {
+    name: 'EditTitleDescriptionModal',
     props: {
       node: {
         type: Object,
@@ -52,9 +55,7 @@
       };
     },
     methods: {
-      ...mapActions('contentNode', [
-        'updateContentNode',
-      ]),
+      ...mapActions('contentNode', ['updateContentNode']),
       validateTitle() {
         if (this.title.trim().length === 0) {
           this.titleError = this.$tr('fieldRequired');
@@ -90,5 +91,6 @@
       fieldRequired: 'Field is required',
       editedTitleDescription: 'Edited title and description',
     },
-  }
+  };
+
 </script>
