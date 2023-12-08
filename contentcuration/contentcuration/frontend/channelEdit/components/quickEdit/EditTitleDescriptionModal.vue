@@ -11,22 +11,22 @@
       @cancel="close"
     >
       <KTextbox
-        v-model="title"
-        :label="$tr('titleLabel')"
-        :invalid="!!errors.title"
-        :invalidText="errors.title"
-        showInvalidText
         autofocus
-        @input="errors.title = ''"
+        showInvalidText
+        v-model="title"
+        :maxlength="200"
+        :label="$tr('titleLabel')"
+        :invalid="!!titleError"
+        :invalidText="titleError"
+        @input="titleError = ''"
+        @blur="validateTitle"
       />
       <KTextbox
-        v-model="description"
-        :label="$tr('descriptionLabel')"
-        :invalid="!!errors.description"
-        :invalidText="errors.description"
         textArea
-        showInvalidText
-        @input="errors.description = ''"
+        v-model="description"
+        :maxlength="400"
+        :label="$tr('descriptionLabel')"
+        style="margin-top: 0.5em"
       />
     </KModal>
   </div>
@@ -35,7 +35,7 @@
 
 <script>
 
-  import { mapGetters, mapActions } from 'vuex';
+  import { mapActions } from 'vuex';
 
   export default {
     props: {
@@ -48,34 +48,35 @@
       return {
         title: this.node.title || '',
         description: this.node.description || '',
-        errors: {},
+        titleError: '',
       };
     },
     methods: {
       ...mapActions('contentNode', [
         'updateContentNode',
       ]),
+      validateTitle() {
+        if (this.title.trim().length === 0) {
+          this.titleError = this.$tr('fieldRequired');
+          return false;
+        }
+        return true;
+      },
       close() {
         this.$emit('close');
       },
       handleSave() {
-        const { title, description } = this;
-        const errors = {};
-
-        if (!title) {
-          errors.title = this.$tr('fieldRequired');
-        }
-
-        if (Object.keys(errors).length) {
-          this.errors = errors;
+        if (!this.validateTitle()) {
           return;
         }
 
+        const { node, title, description } = this;
         this.updateContentNode({
-          id: this.node.id,
-          title,
-          description,
+          id: node.id,
+          title: title.trim(),
+          description: description.trim(),
         });
+
         this.close();
       },
     },
@@ -89,6 +90,3 @@
     },
   }
 </script>
-
-
-<style scoped lang="scss"></style>
