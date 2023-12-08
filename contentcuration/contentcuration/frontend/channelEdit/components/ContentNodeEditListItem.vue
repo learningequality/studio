@@ -1,80 +1,99 @@
 <template>
 
-  <DraggableItem
-    :draggableId="contentNode.id"
-    :draggableMetadata="contentNode"
-    :dragEffect="dragEffect"
-    :dropEffect="draggableDropEffect"
-    :beforeStyle="dragBeforeStyle"
-    :afterStyle="dragAfterStyle"
-  >
-    <template #default>
-      <ContentNodeListItem
-        :node="contentNode"
-        :compact="compact"
-        :comfortable="comfortable"
-        :active="active"
-        :canEdit="canEdit"
-        :draggableHandle="{
-          grouped: selected,
-          draggable,
-          draggableMetadata: contentNode,
-          effectAllowed: draggableEffectAllowed,
-        }"
-        :aria-selected="selected"
-        class="content-node-edit-item"
-        @infoClick="$emit('infoClick', $event)"
-        @topicChevronClick="$emit('topicChevronClick', $event)"
-      >
-        <template #actions-start="{ hover }">
-          <VListTileAction class="handle-col" :aria-hidden="!hover" @click.stop>
-            <transition name="fade">
-              <VBtn :disabled="copying" flat icon>
-                <Icon color="#686868">
-                  drag_indicator
-                </Icon>
-              </VBtn>
-            </transition>
-          </VListTileAction>
-          <VListTileAction class="mx-2 select-col" @click.stop>
-            <Checkbox
-              v-model="selected"
-              :disabled="copying"
-              class="mt-0 pt-0"
-              @dblclick.stop
-            />
-          </VListTileAction>
-        </template>
+  <div>
+    <DraggableItem
+      :draggableId="contentNode.id"
+      :draggableMetadata="contentNode"
+      :dragEffect="dragEffect"
+      :dropEffect="draggableDropEffect"
+      :beforeStyle="dragBeforeStyle"
+      :afterStyle="dragAfterStyle"
+    >
+      <template #default>
+        <ContentNodeListItem
+          :node="contentNode"
+          :compact="compact"
+          :comfortable="comfortable"
+          :active="active"
+          :canEdit="canEdit"
+          :draggableHandle="{
+            grouped: selected,
+            draggable,
+            draggableMetadata: contentNode,
+            effectAllowed: draggableEffectAllowed,
+          }"
+          :aria-selected="selected"
+          class="content-node-edit-item"
+          @infoClick="$emit('infoClick', $event)"
+          @topicChevronClick="$emit('topicChevronClick', $event)"
+        >
+          <template #actions-start="{ hover }">
+            <VListTileAction class="handle-col" :aria-hidden="!hover" @click.stop>
+              <transition name="fade">
+                <VBtn :disabled="copying" flat icon>
+                  <Icon color="#686868">
+                    drag_indicator
+                  </Icon>
+                </VBtn>
+              </transition>
+            </VListTileAction>
+            <VListTileAction class="mx-2 select-col" @click.stop>
+              <Checkbox
+                v-model="selected"
+                :disabled="copying"
+                class="mt-0 pt-0"
+                @dblclick.stop
+              />
+            </VListTileAction>
+          </template>
 
-        <template #actions-end>
-          <VListTileAction :aria-hidden="!active" class="action-icon px-1">
-            <Menu v-model="activated">
-              <template #activator="{ on }">
+          <template #actions-end>
+            <VListTileAction class="action-icon px-1" @click.stop>
+              <transition name="fade">
                 <IconButton
-                  icon="optionsVertical"
-                  :text="$tr('optionsTooltip')"
+                  icon="edit"
                   size="small"
+                  :text="$tr('editTooltip')"
                   :disabled="copying"
-                  v-on="on"
                   @click.stop
+                  @click="showTitleDescriptionModal"
                 />
-              </template>
-              <ContentNodeOptions v-if="!copying" :nodeId="nodeId" />
-            </Menu>
-          </VListTileAction>
-        </template>
+              </transition>
+            </VListTileAction>
+            <VListTileAction :aria-hidden="!active" class="action-icon px-1">
+              <Menu v-model="activated">
+                <template #activator="{ on }">
+                  <IconButton
+                    icon="optionsVertical"
+                    :text="$tr('optionsTooltip')"
+                    size="small"
+                    :disabled="copying"
+                    v-on="on"
+                    @click.stop
+                  />
+                </template>
+                <ContentNodeOptions v-if="!copying" :nodeId="nodeId" />
+              </Menu>
+            </VListTileAction>
+          </template>
 
-        <template #context-menu="{ showContextMenu, positionX, positionY }">
-          <ContentNodeContextMenu
-            :show="showContextMenu"
-            :positionX="positionX"
-            :positionY="positionY"
-            :nodeId="nodeId"
-          />
-        </template>
-      </ContentNodeListItem>
-    </template>
-  </DraggableItem>
+          <template #context-menu="{ showContextMenu, positionX, positionY }">
+            <ContentNodeContextMenu
+              :show="showContextMenu"
+              :positionX="positionX"
+              :positionY="positionY"
+              :nodeId="nodeId"
+            />
+          </template>
+        </ContentNodeListItem>
+      </template>
+    </DraggableItem>
+    <EditTitleDescriptionModal
+      v-if="showQuickEdit.titleDescription"
+      :node="contentNode"
+      @close="showQuickEdit.titleDescription = false"
+    />
+  </div>
 
 </template>
 
@@ -89,6 +108,7 @@
   import Checkbox from 'shared/views/form/Checkbox';
   import IconButton from 'shared/views/IconButton';
   import DraggableItem from 'shared/views/draggable/DraggableItem';
+  import EditTitleDescriptionModal from './quickEdit/EditTitleDescriptionModal.vue';
   import { COPYING_FLAG } from 'shared/data/constants';
   import { DragEffect, DropEffect, EffectAllowed } from 'shared/mixins/draggable/constants';
   import { DraggableRegions } from 'frontend/channelEdit/constants';
@@ -102,6 +122,7 @@
       ContentNodeContextMenu,
       Checkbox,
       IconButton,
+      EditTitleDescriptionModal,
     },
     props: {
       nodeId: {
@@ -137,6 +158,9 @@
     data() {
       return {
         activated: false,
+        showQuickEdit: {
+          titleDescription: false,
+        }
       };
     },
     computed: {
@@ -200,6 +224,11 @@
         });
       },
     },
+    methods: {
+      showTitleDescriptionModal() {
+        this.showQuickEdit.titleDescription = true;
+      },
+    },
     beforeDestroy() {
       // Unselect before removing
       if (this.selected) {
@@ -217,6 +246,7 @@
       creatingCopies: 'Copying...',
       copiedSnackbar: 'Copy operation complete',
       undo: 'Undo',
+      editTooltip: 'Edit Title & Description',
       /* eslint-enable kolibri/vue-no-unused-translations */
     },
   };
