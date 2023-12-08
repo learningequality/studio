@@ -77,6 +77,7 @@
           description: description.trim(),
         });
 
+        this.$store.dispatch('showSnackbarSimple', this.$tr('editedTitleDescription'));
         this.close();
       },
     },
@@ -87,6 +88,7 @@
       saveAction: 'Save',
       cancelAction: 'Cancel',
       fieldRequired: 'Field is required',
+      editedTitleDescription: 'Edited title and description',
     },
   }
 </script>
