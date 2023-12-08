@@ -51,6 +51,7 @@
         <PasswordField
           v-model="form.password1"
           :label="$tr('passwordLabel')"
+          :additionalRules="passwordValidationRules"
         />
         <PasswordField
           v-model="form.password2"
@@ -240,6 +241,9 @@
       ...mapGetters('policies', ['getPolicyAcceptedData']),
       passwordConfirmRules() {
         return [value => (this.form.password1 === value ? true : this.$tr('passwordMatchMessage'))];
+      },
+      passwordValidationRules() {
+        return [value =>(this.form.password1.length >= 8 ? true : this.$tr('passwordValidationMessage'))];
       },
       tosAndPolicyRules() {
         return [value => (value ? true : this.$tr('ToSRequiredMessage'))];
@@ -465,6 +469,7 @@
       passwordLabel: 'Password',
       confirmPasswordLabel: 'Confirm password',
       passwordMatchMessage: "Passwords don't match",
+      passwordValidationMessage: "Password should be atleast 8 characters long",
 
       // Usage question
       usageLabel: 'How do you plan on using Kolibri Studio (check all that apply)',
