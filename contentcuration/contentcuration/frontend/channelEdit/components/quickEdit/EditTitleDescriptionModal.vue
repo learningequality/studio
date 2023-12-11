@@ -8,11 +8,13 @@
       :title="$tr('editTitleDescription')"
       :submitText="$tr('saveAction')"
       :cancelText="$tr('cancelAction')"
+      data-test="edit-title-description-modal"
       @submit="handleSave"
       @cancel="close"
     >
       <KTextbox
         v-model="title"
+        data-test="title-input"
         autofocus
         showInvalidText
         :maxlength="200"
@@ -24,6 +26,7 @@
       />
       <KTextbox
         v-model="description"
+        data-test="description-input"
         textArea
         :maxlength="400"
         :label="$tr('descriptionLabel')"
