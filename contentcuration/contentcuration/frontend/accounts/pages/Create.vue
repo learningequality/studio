@@ -243,7 +243,7 @@
         return [value => (this.form.password1 === value ? true : this.$tr('passwordMatchMessage'))];
       },
       passwordValidationRules() {
-        return [value =>(this.form.password1.length >= 8 ? true : this.$tr('passwordValidationMessage'))];
+        return [value =>(value.length >= 8 ? true : this.$tr('passwordValidationMessage'))];
       },
       tosAndPolicyRules() {
         return [value => (value ? true : this.$tr('ToSRequiredMessage'))];
