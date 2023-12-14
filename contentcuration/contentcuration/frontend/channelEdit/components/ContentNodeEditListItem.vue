@@ -56,7 +56,7 @@
                   :text="$tr('editTooltip')"
                   :disabled="copying"
                   @click.stop
-                  @click="showTitleDescriptionModal"
+                  @click="$emit('editTitleDescription')"
                 />
               </transition>
             </VListTileAction>
@@ -88,11 +88,6 @@
         </ContentNodeListItem>
       </template>
     </DraggableItem>
-    <EditTitleDescriptionModal
-      v-if="showQuickEdit.titleDescription"
-      :node="contentNode"
-      @close="showQuickEdit.titleDescription = false"
-    />
   </div>
 
 </template>
@@ -105,7 +100,6 @@
   import ContentNodeListItem from './ContentNodeListItem';
   import ContentNodeOptions from './ContentNodeOptions';
   import ContentNodeContextMenu from './ContentNodeContextMenu';
-  import EditTitleDescriptionModal from './quickEdit/EditTitleDescriptionModal.vue';
   import Checkbox from 'shared/views/form/Checkbox';
   import IconButton from 'shared/views/IconButton';
   import DraggableItem from 'shared/views/draggable/DraggableItem';
@@ -122,7 +116,6 @@
       ContentNodeContextMenu,
       Checkbox,
       IconButton,
-      EditTitleDescriptionModal,
     },
     props: {
       nodeId: {
@@ -158,9 +151,6 @@
     data() {
       return {
         activated: false,
-        showQuickEdit: {
-          titleDescription: false,
-        },
       };
     },
     computed: {
@@ -229,11 +219,6 @@
       if (this.selected) {
         this.selected = false;
       }
-    },
-    methods: {
-      showTitleDescriptionModal() {
-        this.showQuickEdit.titleDescription = true;
-      },
     },
     $trs: {
       optionsTooltip: 'Options',

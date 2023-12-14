@@ -40,23 +40,33 @@
 
 <script>
 
-  import { mapActions } from 'vuex';
+  import { mapActions, mapGetters } from 'vuex';
   import { getTitleValidators, getInvalidText } from 'shared/utils/validation';
 
   export default {
     name: 'EditTitleDescriptionModal',
     props: {
-      node: {
-        type: Object,
+      nodeId: {
+        type: String,
         required: true,
       },
     },
     data() {
       return {
-        title: this.node.title || '',
-        description: this.node.description || '',
+        title: '',
+        description: '',
         titleError: '',
       };
+    },
+    computed: {
+      ...mapGetters('contentNode', ['getContentNode']),
+      contentNode() {
+        return this.getContentNode(this.nodeId);
+      },
+    },
+    created() {
+      this.title = this.contentNode.title || '';
+      this.description = this.contentNode.description || '';
     },
     methods: {
       ...mapActions('contentNode', ['updateContentNode']),
@@ -72,9 +82,9 @@
           return;
         }
 
-        const { node, title, description } = this;
+        const { nodeId, title, description } = this;
         this.updateContentNode({
-          id: node.id,
+          id: nodeId,
           title: title.trim(),
           description: description.trim(),
         });
