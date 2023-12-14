@@ -41,6 +41,7 @@
 <script>
 
   import { mapActions } from 'vuex';
+  import { getTitleValidators, getInvalidText } from 'shared/utils/validation';
 
   export default {
     name: 'EditTitleDescriptionModal',
@@ -60,17 +61,14 @@
     methods: {
       ...mapActions('contentNode', ['updateContentNode']),
       validateTitle() {
-        if (this.title.trim().length === 0) {
-          this.titleError = this.$tr('fieldRequired');
-          return false;
-        }
-        return true;
+        this.titleError = getInvalidText(getTitleValidators(), this.title);
       },
       close() {
         this.$emit('close');
       },
       handleSave() {
-        if (!this.validateTitle()) {
+        this.validateTitle();
+        if (this.titleError) {
           return;
         }
 
@@ -91,7 +89,6 @@
       descriptionLabel: 'Description',
       saveAction: 'Save',
       cancelAction: 'Cancel',
-      fieldRequired: 'Field is required',
       editedTitleDescription: 'Edited title and description',
     },
   };
