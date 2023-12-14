@@ -1,39 +1,34 @@
 <template>
 
-  <div
-    @click.stop
-    @dblclick.stop
+  <KModal
+    :title="$tr('editTitleDescription')"
+    :submitText="$tr('saveAction')"
+    :cancelText="$tr('cancelAction')"
+    data-test="edit-title-description-modal"
+    @submit="handleSave"
+    @cancel="close"
   >
-    <KModal
-      :title="$tr('editTitleDescription')"
-      :submitText="$tr('saveAction')"
-      :cancelText="$tr('cancelAction')"
-      data-test="edit-title-description-modal"
-      @submit="handleSave"
-      @cancel="close"
-    >
-      <KTextbox
-        v-model="title"
-        data-test="title-input"
-        autofocus
-        showInvalidText
-        :maxlength="200"
-        :label="$tr('titleLabel')"
-        :invalid="!!titleError"
-        :invalidText="titleError"
-        @input="titleError = ''"
-        @blur="validateTitle"
-      />
-      <KTextbox
-        v-model="description"
-        data-test="description-input"
-        textArea
-        :maxlength="400"
-        :label="$tr('descriptionLabel')"
-        style="margin-top: 0.5em"
-      />
-    </KModal>
-  </div>
+    <KTextbox
+      v-model="title"
+      data-test="title-input"
+      autofocus
+      showInvalidText
+      :maxlength="200"
+      :label="$tr('titleLabel')"
+      :invalid="!!titleError"
+      :invalidText="titleError"
+      @input="titleError = ''"
+      @blur="validateTitle"
+    />
+    <KTextbox
+      v-model="description"
+      data-test="description-input"
+      textArea
+      :maxlength="400"
+      :label="$tr('descriptionLabel')"
+      style="margin-top: 0.5em"
+    />
+  </KModal>
 
 </template>
 
