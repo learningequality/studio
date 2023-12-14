@@ -469,7 +469,7 @@
       passwordLabel: 'Password',
       confirmPasswordLabel: 'Confirm password',
       passwordMatchMessage: "Passwords don't match",
-      passwordValidationMessage: "Password should be atleast 8 characters long",
+      passwordValidationMessage: "Password should be at least 8 characters long",
 
       // Usage question
       usageLabel: 'How do you plan on using Kolibri Studio (check all that apply)',
