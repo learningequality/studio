@@ -71,11 +71,6 @@
         searchInput: '',
       };
     },
-    methods:{
-      searchInputClear(){
-        this.searchInput=''
-      }
-    },
     computed: {
       locations: {
         get() {
@@ -83,8 +78,7 @@
         },
         set(value) {
           this.$emit('input', value);
-          setTimeout(this.searchInputClear,1)
-          
+          setTimeout(this.searchInputClear, 1);
         },
       },
       options() {
@@ -99,6 +93,11 @@
       },
       rules() {
         return [v => (!this.required || v.length ? true : this.$tr('locationRequiredMessage'))];
+      },
+    },
+    methods: {
+      searchInputClear() {
+        this.searchInput = '';
       },
     },
     $trs: {
