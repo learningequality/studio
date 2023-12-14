@@ -2,8 +2,10 @@ import { mount } from '@vue/test-utils';
 import Vuex from 'vuex';
 import EditTitleDescriptionModal from '../EditTitleDescriptionModal.vue';
 
+const nodeId = 'test-id';
+
 const node = {
-  id: 'test-id',
+  id: nodeId,
   title: 'test-title',
   description: 'test-description',
 };
@@ -26,6 +28,9 @@ describe('EditTitleDescriptionModal', () => {
         contentNode: {
           namespaced: true,
           actions: contentNodeActions,
+          getters: {
+            getContentNode: () => () => node,
+          },
         },
       },
     });
@@ -33,8 +38,9 @@ describe('EditTitleDescriptionModal', () => {
 
   test('smoke test', () => {
     const wrapper = mount(EditTitleDescriptionModal, {
+      store,
       propsData: {
-        node,
+        nodeId,
       },
     });
     expect(wrapper.isVueInstance()).toBe(true);
@@ -42,8 +48,9 @@ describe('EditTitleDescriptionModal', () => {
 
   test('should display the correct title and description on first render', () => {
     const wrapper = mount(EditTitleDescriptionModal, {
+      store,
       propsData: {
-        node,
+        nodeId,
       },
     });
 
@@ -55,7 +62,7 @@ describe('EditTitleDescriptionModal', () => {
     const wrapper = mount(EditTitleDescriptionModal, {
       store,
       propsData: {
-        node,
+        nodeId,
       },
     });
 
@@ -67,7 +74,7 @@ describe('EditTitleDescriptionModal', () => {
     const wrapper = mount(EditTitleDescriptionModal, {
       store,
       propsData: {
-        node,
+        nodeId,
       },
     });
 
@@ -79,7 +86,7 @@ describe('EditTitleDescriptionModal', () => {
     wrapper.find('[data-test="edit-title-description-modal"]').vm.$emit('submit');
 
     expect(contentNodeActions.updateContentNode).toHaveBeenCalledWith(expect.anything(), {
-      id: node.id,
+      id: nodeId,
       title: newTitle,
       description: newDescription,
     });
@@ -89,7 +96,7 @@ describe('EditTitleDescriptionModal', () => {
     const wrapper = mount(EditTitleDescriptionModal, {
       store,
       propsData: {
-        node,
+        nodeId,
       },
     });
 
@@ -100,7 +107,7 @@ describe('EditTitleDescriptionModal', () => {
     wrapper.find('[data-test="edit-title-description-modal"]').vm.$emit('submit');
 
     expect(contentNodeActions.updateContentNode).toHaveBeenCalledWith(expect.anything(), {
-      id: node.id,
+      id: nodeId,
       title: newTitle,
       description: '',
     });
@@ -110,7 +117,7 @@ describe('EditTitleDescriptionModal', () => {
     const wrapper = mount(EditTitleDescriptionModal, {
       store,
       propsData: {
-        node,
+        nodeId,
       },
     });
 
@@ -124,7 +131,7 @@ describe('EditTitleDescriptionModal', () => {
     const wrapper = mount(EditTitleDescriptionModal, {
       store,
       propsData: {
-        node,
+        nodeId,
       },
     });
 
@@ -138,7 +145,7 @@ describe('EditTitleDescriptionModal', () => {
     const wrapper = mount(EditTitleDescriptionModal, {
       store,
       propsData: {
-        node,
+        nodeId,
       },
     });
 
@@ -153,7 +160,7 @@ describe('EditTitleDescriptionModal', () => {
     const wrapper = mount(EditTitleDescriptionModal, {
       store,
       propsData: {
-        node,
+        nodeId,
       },
     });
 
@@ -165,7 +172,7 @@ describe('EditTitleDescriptionModal', () => {
     const wrapper = mount(EditTitleDescriptionModal, {
       store,
       propsData: {
-        node,
+        nodeId,
       },
     });
 
