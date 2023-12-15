@@ -244,6 +244,21 @@ export function getActivityDurationValidators() {
   ];
 }
 
+/**
+ * Get invalid text for a given value using a list of validators.
+ * @param {Array<Function>} validators
+ * @param {*} value Value to validate.
+ * @returns {String}  Translated error message of the first validator that returns an error.
+                      Empty string if value is valid.
+ */
+export function getInvalidText(validators, value) {
+  return (
+    validators
+      .map(validator => translateValidator(validator)(value))
+      .find(validation => validation !== true) || ''
+  );
+}
+
 // Node validation
 // These functions return an array of error codes
 export function getNodeTitleErrors(node) {

@@ -47,6 +47,18 @@
         </template>
 
         <template #actions-end>
+          <VListTileAction class="action-icon px-1" @click.stop>
+            <transition name="fade">
+              <IconButton
+                icon="edit"
+                size="small"
+                :text="$tr('editTooltip')"
+                :disabled="copying"
+                @click.stop
+                @click="$emit('editTitleDescription')"
+              />
+            </transition>
+          </VListTileAction>
           <VListTileAction :aria-hidden="!active" class="action-icon px-1">
             <Menu v-model="activated">
               <template #activator="{ on }">
@@ -217,6 +229,7 @@
       creatingCopies: 'Copying...',
       copiedSnackbar: 'Copy operation complete',
       undo: 'Undo',
+      editTooltip: 'Edit Title & Description',
       /* eslint-enable kolibri/vue-no-unused-translations */
     },
   };
