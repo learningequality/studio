@@ -9,7 +9,7 @@ from django.contrib.auth.views import PasswordResetConfirmView
 from django.contrib.auth.views import PasswordResetView
 from django.contrib.sites.models import Site
 from django.contrib.sites.shortcuts import get_current_site
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.mail import send_mail
 from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
@@ -162,6 +162,7 @@ class UserRegistrationView(RegistrationView):
     http_method_names = ["post"]
 
     def post(self, request):
+        print("Hello ji")
         data = json.loads(request.body)
         form = self.form_class(data)
         try:
@@ -169,6 +170,14 @@ class UserRegistrationView(RegistrationView):
             if form.is_valid():
                 self.register(form)
                 return HttpResponse()
+            
+            # Password validation failed response
+            # if 'password1' in form.errors.keys():
+            #     password_errors = form.errors['password1']
+            #     print(password_errors, "Print")
+            #     return HttpResponseBadRequest(
+            #         status=400, reason="Password should be at least 8 characters long."
+            #     )
 
             # Legacy handle invitations where users haven't activated their accounts
             inactive_user = User.get_for_email(data['email'], is_active=False, password='')
@@ -188,8 +197,22 @@ class UserRegistrationView(RegistrationView):
                 return HttpResponseBadRequest(
                     status=405, reason="Account hasn't been activated"
                 )
-            return HttpResponseBadRequest()
-        except UserWarning:
+                
+            # if form._errors["password1"]:
+            #     password_errors = form.errors['password1']
+            #     print(password_errors, form._errors["password1"], "Print3")
+            #     return HttpResponseBadRequest(
+            #         status=400, reason="Password should be at least 8 characters long."
+            #     )
+            return HttpResponseBadRequest()     
+        except ValidationError:
+            print("Hello ji 3")
+            # if form.errors["password1"]:
+            #     password_errors = form.errors['password1']
+            #     print(password_errors, form._errors["password1"], "Print2")
+            #     return HttpResponseBadRequest(
+            #         status=400, reason="Password should be at least 8 characters long."
+            #     )
             return HttpResponseForbidden()
 
     def send_activation_email(self, user):

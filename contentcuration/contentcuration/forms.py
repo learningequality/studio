@@ -9,6 +9,7 @@ from django.contrib.auth.forms import UserCreationForm
 from django.core import signing
 from django.db.models import Q
 from django.template.loader import render_to_string
+from django.core.exceptions import ValidationError
 
 from contentcuration.models import User
 
@@ -49,6 +50,15 @@ class RegistrationForm(UserCreationForm, ExtraFormMixin):
         if User.objects.filter(Q(is_active=True) | Q(deleted=True), email__iexact=email).exists():
             raise UserWarning
         return email
+    
+    def clean_password1(self):
+        print(self.cleaned_data['password1'],"Hello ji 2")
+        password1 = self.cleaned_data['password1']
+        if len(password1) < 8:
+            # raise ValidationError()
+            raise ValidationError("Password must be at least 8 characters long.", code='password_too_short')
+            # raise UserWarning
+        return password1
 
     def clean(self):
         super(RegistrationForm, self).clean()

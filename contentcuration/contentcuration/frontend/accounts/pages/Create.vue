@@ -51,7 +51,8 @@
         <PasswordField
           v-model="form.password1"
           :label="$tr('passwordLabel')"
-          :additionalRules="passwordValidationRules"
+         
+          :error-messages="password1Errors"
         />
         <PasswordField
           v-model="form.password2"
@@ -242,9 +243,9 @@
       passwordConfirmRules() {
         return [value => (this.form.password1 === value ? true : this.$tr('passwordMatchMessage'))];
       },
-      passwordValidationRules() {
-        return [value =>(value.length >= 8 ? true : this.$tr('passwordValidationMessage'))];
-      },
+      // passwordValidationRules() {
+      //   return [value =>(value.length >= 8 ? true : this.$tr('passwordValidationMessage'))];
+      // },
       tosAndPolicyRules() {
         return [value => (value ? true : this.$tr('ToSRequiredMessage'))];
       },
@@ -437,7 +438,10 @@
             .catch(error => {
               if (error.message === 'Network Error') {
                 this.$refs.top.scrollIntoView({ behavior: 'smooth' });
-              } else if (error.response.status === 403) {
+              } else if (error.response.status === 400) {
+                this.password1Errors = [this.$tr('passwordValidationMessage')];
+              }
+              else if (error.response.status === 403) {
                 this.emailErrors = [this.$tr('emailExistsMessage')];
               } else if (error.response.status === 405) {
                 this.$router.push({ name: 'AccountNotActivated' });
