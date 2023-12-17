@@ -106,7 +106,7 @@
     },
     methods: {
       languageText(item) {
-        const firstNativeName = item.native_name.split(',')[0].trim()
+        const firstNativeName = item.native_name.split(',')[0].trim();
         return this.$tr('languageItemText', { language: firstNativeName, code: item.id });
       },
     },
