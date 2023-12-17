@@ -59,7 +59,7 @@
           </VLayout>
         </VFlex>
       </VLayout>
-      <BottomToolBar
+      <BottomBar
         v-if="selecting"
         clipped-left
         color="white"
@@ -99,7 +99,7 @@
           </VFlex>
         </VLayout>
 
-      </BottomToolBar>
+      </BottomBar>
     </VContainer>
   </div>
 
@@ -118,7 +118,7 @@
   import ChannelItem from './ChannelItem';
   import LoadingText from 'shared/views/LoadingText';
   import Pagination from 'shared/views/Pagination';
-  import BottomToolBar from 'shared/views/BottomToolBar';
+  import BottomBar from 'shared/views/BottomBar';
   import Checkbox from 'shared/views/form/Checkbox';
   import ToolBar from 'shared/views/ToolBar';
   import OfflineText from 'shared/views/OfflineText';
@@ -132,7 +132,7 @@
       LoadingText,
       CatalogFilters,
       Pagination,
-      BottomToolBar,
+      BottomBar,
       Checkbox,
       ToolBar,
       OfflineText,
