@@ -54,10 +54,9 @@ services:
 
   postgres:
     build:
+      image: ghcr.io/learningequality/postgres
       context: ./docker
       dockerfile: Dockerfile.postgres.dev
-      args:
-        PG_MAJOR: 12
     environment:
       PGDATA: /var/lib/postgresql/data/pgdata
       POSTGRES_USER: learningequality

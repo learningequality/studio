@@ -52,7 +52,7 @@ click-repl==0.2.0
     # via celery
 confusable-homoglyphs==3.2.0
     # via django-registration
-django==3.2.19
+django==3.2.23
     # via
     #   -r requirements.in
     #   django-bulk-update
@@ -103,6 +103,7 @@ future==0.18.3
     # via -r requirements.in
 google-api-core[grpc]==1.27.0
     # via
+    #   google-api-core
     #   google-cloud-core
     #   google-cloud-error-reporting
     #   google-cloud-kms
