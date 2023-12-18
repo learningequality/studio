@@ -53,8 +53,8 @@ services:
       - .docker/minio:/data
 
   postgres:
+    image: ghcr.io/learningequality/postgres
     build:
-      image: ghcr.io/learningequality/postgres
       context: ./docker
       dockerfile: Dockerfile.postgres.dev
     environment:
