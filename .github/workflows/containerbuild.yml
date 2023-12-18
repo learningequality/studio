@@ -21,8 +21,9 @@ jobs:
       - id: skip_check
         uses: fkirc/skip-duplicate-actions@master
         with:
+          skip_after_successful_duplicate: false
           github_token: ${{ github.token }}
-          paths: '["docker/Dockerfile.postgres.dev"]'
+          paths: '["docker/Dockerfile.postgres.dev", ".github/workflows/containerbuild.yml"]'
   build_and_push_postgres:
     name: Postgres - build and push Docker image to GitHub Container Registry
     needs: pre_job
