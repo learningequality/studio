@@ -348,8 +348,6 @@
     $trs: {
       newSubtopic: 'New folder',
       editTitleDescription: 'Edit title and description',
-      editTopicDetails: 'Edit folder details',
-      editDetails: 'Edit details',
       editAllDetails: 'Edit all details',
       editTags: 'Edit tags',
       editLanguage: 'Edit language',
