@@ -1,44 +1,103 @@
 <template>
 
-  <VList>
-    <VListTile v-if="isTopic && canEdit" @click="newTopicNode">
-      <VListTileTitle>{{ $tr('newSubtopic') }}</VListTileTitle>
-    </VListTile>
-    <VListTile v-if="canEdit && !hideEditLink" :to="editLink" @click="trackAction('Edit')">
-      <VListTileTitle>
-        {{ isTopic ? $tr('editTopicDetails') : $tr('editDetails') }}
-      </VListTileTitle>
-    </VListTile>
-    <VListTile v-if="!hideDetailsLink" :to="viewLink" @click="trackAction('View')">
-      <VListTileTitle>{{ $tr('viewDetails') }}</VListTileTitle>
-    </VListTile>
-    <VListTile v-if="canEdit" @click.stop="moveModalOpen = true">
-      <VListTileTitle>{{ $tr('move') }}</VListTileTitle>
-      <MoveModal
-        v-if="moveModalOpen"
-        ref="moveModal"
-        v-model="moveModalOpen"
-        :moveNodeIds="[nodeId]"
-        @target="moveNode"
-      />
-    </VListTile>
-    <VListTile v-if="canEdit" @click="duplicateNode()">
-      <VListTileTitle>{{ $tr('makeACopy') }}</VListTileTitle>
-    </VListTile>
-    <VListTile @click="copyToClipboard()">
-      <VListTileTitle>{{ $tr('copyToClipboard') }}</VListTileTitle>
-    </VListTile>
-    <VListTile v-if="canEdit" @click="removeNode()">
-      <VListTileTitle>{{ $tr('remove') }}</VListTileTitle>
-    </VListTile>
-  </VList>
+  <div
+    style="max-height: 80vh"
+  >
+    <VList>
+      <VListTile v-if="!hideDetailsLink" :to="viewLink" @click="trackAction('View')">
+        <VListTileTitle>{{ $tr('viewDetails') }}</VListTileTitle>
+      </VListTile>
+      <VListTile v-if="canEdit" @click="editTitleDescription()">
+        <VListTileTitle>{{ $tr('editTitleDescription') }}</VListTileTitle>
+      </VListTile>
+
+      <VListTile class="divider-item">
+        <span class="divider" :style="dividerStyle"></span>
+      </VListTile>
+
+      <VListTile v-if="canEdit && !hideEditLink" :to="editLink" @click="trackAction('Edit')">
+        <VListTileTitle>
+          {{ $tr('editAllDetails') }}
+        </VListTileTitle>
+      </VListTile>
+      <VListTile v-if="canEdit" @click.stop="moveModalOpen = true">
+        <VListTileTitle>{{ $tr('move') }}</VListTileTitle>
+        <MoveModal
+          v-if="moveModalOpen"
+          ref="moveModal"
+          v-model="moveModalOpen"
+          :moveNodeIds="[nodeId]"
+          @target="moveNode"
+        />
+      </VListTile>
+      <VListTile @click="copyToClipboard()">
+        <VListTileTitle>{{ $tr('copyToClipboard') }}</VListTileTitle>
+      </VListTile>
+      <VListTile v-if="canEdit" @click="duplicateNode()">
+        <VListTileTitle>{{ $tr('makeACopy') }}</VListTileTitle>
+      </VListTile>
+      <VListTile v-if="isTopic && canEdit" @click="newTopicNode">
+        <VListTileTitle>{{ $tr('newSubtopic') }}</VListTileTitle>
+      </VListTile>
+      <VListTile v-if="canEdit" @click="removeNode()">
+        <VListTileTitle>{{ $tr('remove') }}</VListTileTitle>
+      </VListTile>
+
+      <VListTile class="divider-item">
+        <span class="divider" :style="dividerStyle"></span>
+      </VListTile>
+
+      <VListTile v-if="canEdit" @click="editTags()">
+        <VListTileTitle>{{ $tr('editTags') }}</VListTileTitle>
+      </VListTile>
+      <VListTile v-if="canEdit" @click="editLanguage()">
+        <VListTileTitle>{{ $tr('editLanguage') }}</VListTileTitle>
+      </VListTile>
+
+      <VListTile class="divider-item">
+        <span class="divider" :style="dividerStyle"></span>
+      </VListTile>
+
+      <VListTile v-if="canEdit" @click="editCategories()">
+        <VListTileTitle>{{ $tr('editCategories') }}</VListTileTitle>
+      </VListTile>
+      <VListTile v-if="canEdit" @click="editLevels()">
+        <VListTileTitle>{{ $tr('editLevels') }}</VListTileTitle>
+      </VListTile>
+      <VListTile v-if="canEdit" @click="editLearningActivities()">
+        <VListTileTitle>{{ $tr('editLearningActivities') }}</VListTileTitle>
+      </VListTile>
+
+      <VListTile class="divider-item">
+        <span class="divider" :style="dividerStyle"></span>
+      </VListTile>
+
+      <VListTile v-if="canEdit" @click="editSource()">
+        <VListTileTitle>{{ $tr('editSource') }}</VListTileTitle>
+      </VListTile>
+      <VListTile v-if="canEdit" @click="editAudience()">
+        <VListTileTitle>{{ $tr('editAudience') }}</VListTileTitle>
+      </VListTile>
+
+      <VListTile class="divider-item">
+        <span class="divider" :style="dividerStyle"></span>
+      </VListTile>
+
+      <VListTile v-if="canEdit" @click="editCompletion()">
+        <VListTileTitle>{{ $tr('editCompletion') }}</VListTileTitle>
+      </VListTile>
+      <VListTile v-if="canEdit" @click="editWhatIsNeeded()">
+        <VListTileTitle>{{ $tr('editWhatIsNeeded') }}</VListTileTitle>
+      </VListTile>
+    </VList>
+  </div>
 
 </template>
 
 <script>
 
-  import { mapActions, mapGetters } from 'vuex';
-  import { RouteNames, TabNames } from '../constants';
+  import { mapActions, mapGetters, mapMutations } from 'vuex';
+  import { RouteNames, TabNames, QuickEditModals } from '../constants';
   import MoveModal from './move/MoveModal';
   import { ContentNode } from 'shared/data/resources';
   import { withChangeTracker } from 'shared/data/changes';
@@ -95,6 +154,11 @@
           },
         };
       },
+      dividerStyle() {
+        return {
+          borderTop: `solid 1px ${this.$themeTokens.fineLine}`,
+        };
+      },
     },
     watch: {
       moveModalOpen(open) {
@@ -104,6 +168,9 @@
       },
     },
     methods: {
+      ...mapMutations('contentNode', {
+        openQuickEditModal: 'SET_QUICK_EDIT_MODAL_OPEN',
+      }),
       ...mapActions(['showSnackbar']),
       ...mapActions('contentNode', ['createContentNode', 'moveContentNodes', 'copyContentNode']),
       ...mapActions('clipboard', ['copy']),
@@ -150,6 +217,76 @@
 
         // Otherwise, don't do anything
         return () => {};
+      },
+      editTitleDescription() {
+        this.trackAction('Edit title and description');
+        this.openQuickEditModal({
+          modal: QuickEditModals.TITLE_DESCRIPTION,
+          nodeIds: [this.nodeId],
+        });
+      },
+      editTags() {
+        this.trackAction('Edit tags');
+        this.openQuickEditModal({
+          modal: QuickEditModals.TAGS,
+          nodeIds: [this.nodeId],
+        });
+      },
+      editLanguage() {
+        this.trackAction('Edit language');
+        this.openQuickEditModal({
+          modal: QuickEditModals.LANGUAGE,
+          nodeIds: [this.nodeId],
+        });
+      },
+      editCategories() {
+        this.trackAction('Edit categories');
+        this.openQuickEditModal({
+          modal: QuickEditModals.CATEGORIES,
+          nodeIds: [this.nodeId],
+        });
+      },
+      editLevels() {
+        this.trackAction('Edit levels');
+        this.openQuickEditModal({
+          modal: QuickEditModals.LEVELS,
+          nodeIds: [this.nodeId],
+        });
+      },
+      editLearningActivities() {
+        this.trackAction('Edit learning activities');
+        this.openQuickEditModal({
+          modal: QuickEditModals.LEARNING_ACTIVITIES,
+          nodeIds: [this.nodeId],
+        });
+      },
+      editSource() {
+        this.trackAction('Edit source');
+        this.openQuickEditModal({
+          modal: QuickEditModals.SOURCE,
+          nodeIds: [this.nodeId],
+        });
+      },
+      editAudience() {
+        this.trackAction('Edit audience');
+        this.openQuickEditModal({
+          modal: QuickEditModals.AUDIENCE,
+          nodeIds: [this.nodeId],
+        });
+      },
+      editCompletion() {
+        this.trackAction('Edit completion');
+        this.openQuickEditModal({
+          modal: QuickEditModals.COMPLETION,
+          nodeIds: [this.nodeId],
+        });
+      },
+      editWhatIsNeeded() {
+        this.trackAction('Edit what is needed');
+        this.openQuickEditModal({
+          modal: QuickEditModals.WHAT_IS_NEEDED,
+          nodeIds: [this.nodeId],
+        });
       },
       removeNode: withChangeTracker(function(changeTracker) {
         this.trackAction('Delete');
@@ -210,8 +347,19 @@
 
     $trs: {
       newSubtopic: 'New folder',
+      editTitleDescription: 'Edit title and description',
       editTopicDetails: 'Edit folder details',
       editDetails: 'Edit details',
+      editAllDetails: 'Edit all details',
+      editTags: 'Edit tags',
+      editLanguage: 'Edit language',
+      editCategories: 'Edit categories',
+      editLevels: 'Edit levels',
+      editLearningActivities: 'Edit learning activities',
+      editSource: 'Edit source',
+      editAudience: 'Edit audience',
+      editCompletion: 'Edit completion',
+      editWhatIsNeeded: "Edit 'what is needed'",
       viewDetails: 'View details',
       move: 'Move',
       makeACopy: 'Make a copy',
@@ -228,5 +376,20 @@
 </script>
 
 <style scoped>
-
+  .divider-item {
+    .v-list__tile {
+      height: unset;
+      padding: 8px 0!important;
+      .divider {
+        width: 100%;
+      }
+    }
+    &:first-child,
+    &:last-child { /* Avoid top and bottom borders */
+      display: none;
+    }
+    & + .divider-item { /* Avoid double dividers */
+      display: none;
+    }
+  }
 </style>
