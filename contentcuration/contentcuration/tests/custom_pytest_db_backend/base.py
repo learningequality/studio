@@ -23,6 +23,8 @@ class CustomDBCreationForPytest(PostgresDatabaseCreation):
         # Enable pgvector extension.
         enable_pgvector_extension(self.connection)
 
+        return self.connection.settings_dict["NAME"]
+
 
 class DatabaseWrapper(PostgresDatabaseWrapper):
     """
