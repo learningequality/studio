@@ -326,6 +326,7 @@ export class CreatedChange extends Change {
 
 export class UpdatedChange extends Change {
   constructor({ oldObj, changes, ...fields }) {
+    console.log('UpdatedChange', { oldObj, changes, ...fields });
     fields.type = CHANGE_TYPES.UPDATED;
     super(fields);
     this.validateObj(changes, 'changes');
