@@ -39,11 +39,13 @@ import {
   PublishedChange,
   SyncedChange,
   DeployedChange,
+  UpdatedDescendantsChange,
 } from './changes';
 import urls from 'shared/urls';
 import { currentLanguage } from 'shared/i18n';
 import client, { paramsSerializer } from 'shared/client';
 import { DELAYED_VALIDATION, fileErrors, NEW_OBJECT } from 'shared/constants';
+import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
 // Number of seconds after which data is considered stale.
 const REFRESH_INTERVAL = 5;
@@ -307,6 +309,7 @@ class IndexedDBResource {
               datum[COPYING_FLAG] = currentMap[id][COPYING_FLAG];
             }
             // If we have an updated change, apply the modifications here
+            // HERE FLAG
             if (
               collectedChanges[CHANGE_TYPES.UPDATED] &&
               collectedChanges[CHANGE_TYPES.UPDATED][id]
@@ -1630,6 +1633,53 @@ export const ContentNode = new TreeResource({
           reject();
         },
       });
+    });
+  },
+  async _updateDescendantsChange(id, changes) {
+    const oldObj = await this.table.get(id);
+    if (!oldObj) {
+      return Promise.resolve();
+    }
+
+    const change = new UpdatedDescendantsChange({
+      key: id,
+      table: this.tableName,
+      oldObj,
+      changes,
+      source: CLIENTID,
+    });
+    return this._saveAndQueueChange(change);
+  },
+  /**
+   * Load descendants of a content node that are already in IndexDB
+   * @param {string} id
+   * @returns {Promise<string[]>}
+   *
+   */
+  async getLoadedDescendantsIds(id) {
+    const children = await this.table.where({ parent: id }).toArray();
+    if (!children.length) {
+      return [id];
+    }
+    const descendants = await Promise.all(
+      children.map(child => {
+        if (child.kind === ContentKindsNames.TOPIC) {
+          return this.getLoadedDescendantsIds(child.id);
+        }
+        return child.id;
+      })
+    );
+    return [id].concat(flatMap(descendants, d => d));
+  },
+  updateDescendants(id, changes) {
+    return this.transaction({ mode: 'rw' }, CHANGES_TABLE, async () => {
+      changes = this._cleanNew(changes);
+
+      // Update node descendants that are already loaded
+      const ids = await this.getLoadedDescendantsIds(id);
+      await this.table.where('id').anyOf(...ids).modify(changes);
+
+      return this._updateDescendantsChange(id, changes);
     });
   },
 });

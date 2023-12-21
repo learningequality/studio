@@ -326,7 +326,6 @@ export class CreatedChange extends Change {
 
 export class UpdatedChange extends Change {
   constructor({ oldObj, changes, ...fields }) {
-    console.log('UpdatedChange', { oldObj, changes, ...fields });
     fields.type = CHANGE_TYPES.UPDATED;
     super(fields);
     this.validateObj(changes, 'changes');
@@ -457,5 +456,32 @@ export class DeployedChange extends Change {
       );
     }
     this.setChannelAndUserId({ id: this.key });
+  }
+}
+
+export class UpdatedDescendantsChange extends Change {
+  constructor({ oldObj, changes, ...fields }) {
+    fields.type = CHANGE_TYPES.UPDATED_DESCENDANTS;
+    super(fields);
+    if (this.table !== TABLE_NAMES.CONTENTNODE) {
+      throw TypeError(
+        `${this.changeType} is only supported by ${TABLE_NAMES.CONTENTNODE} table but ${this.table} was passed instead`
+      );
+    }
+    this.validateObj(changes, 'changes');
+    changes = omitIgnoredSubFields(changes);
+    this.mods = changes;
+    this.setChannelAndUserId(oldObj);
+  }
+
+  get changed() {
+    return !isEmpty(this.mods);
+  }
+
+  saveChange() {
+    if (!this.changed) {
+      return Promise.resolve(null);
+    }
+    return super.saveChange();
   }
 }

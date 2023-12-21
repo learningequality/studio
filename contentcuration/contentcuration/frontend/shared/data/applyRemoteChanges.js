@@ -76,6 +76,8 @@ export class ChangeDispatcher {
         result = await this.applyCopy(change);
       } else if (change.type === CHANGE_TYPES.PUBLISHED && this.applyPublish) {
         result = await this.applyPublish(change);
+      } else if (change.type === CHANGE_TYPES.UPDATED_DESCENDANTS && this.applyUpdate) {
+        result = await this.applyUpdate(change);
       }
     } catch (e) {
       logging.error(e, {
@@ -183,6 +185,26 @@ class ReturnedChanges extends ChangeDispatcher {
         .where({ channel_id: change.channel_id })
         .modify({ changed: false, published: true });
     });
+  }
+
+  /**
+   * @param {UpdatedDescendantsChange} change
+   * @return {Promise<void>}
+   */
+  applyUpdateDescendants(change) {
+    if (change.table !== TABLE_NAMES.CONTENTNODE) {
+      return Promise.resolve();
+    }
+
+    const resource = INDEXEDDB_RESOURCES[TABLE_NAMES.CONTENTNODE];
+    if (!resource || !resource.updateDescendants) {
+      return Promise.resolve();
+    }
+
+    return resource.updateDescendants(change.key, change.mods);
+  }
+
+  _applyUpdateDescendants(change) {
   }
 }
 

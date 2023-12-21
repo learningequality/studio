@@ -374,9 +374,14 @@ export function updateContentNodeDescendants(context, { id, ...payload } = {}) {
     throw ReferenceError('id must be defined to update a contentNode and its descendants');
   }
 
+  const node = context.getters.getContentNode(id);
+  if (!node || node.kind !== ContentKindsNames.TOPIC) {
+    throw TypeError('Only topics can have descendants');
+  }
+
   for (const field in payload) {
     if (!DescendantsUpdatableFields.includes(field)) {
-      throw Error(`Cannot update field ${field} on all descendants`);
+      throw TypeError(`Cannot update field ${field} on all descendants`);
     }
   }
 
@@ -391,6 +396,7 @@ export function updateContentNodeDescendants(context, { id, ...payload } = {}) {
   }));
 
   context.commit('ADD_CONTENTNODES', contentNodesData);
+  return ContentNode.updateDescendants(id, contentNodeData);
 }
 
 export function addTags(context, { ids, tags }) {
