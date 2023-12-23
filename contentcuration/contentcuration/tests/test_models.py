@@ -993,9 +993,12 @@ class ChannelHistoryTestCase(StudioTestCase):
 
 
 class EmbeddingsTestCase(StudioTestCase):
+    persist_bucket = True
+
     @classmethod
     def setUpClass(cls):
         super(EmbeddingsTestCase, cls).setUpClass()
+        cls.create_bucket()
         node_1 = testdata.node({
             "kind_id": "video",
             "title": "first"
@@ -1018,6 +1021,11 @@ class EmbeddingsTestCase(StudioTestCase):
         Embeddings.objects.create(model="studio-embedder-v1.0", embedded_node=embedded_node_2, embedding=[2, 2])
         # A vector placed at far distance i.e. not similar to above vectors.
         Embeddings.objects.create(model="studio-embedder-v1.0", embedded_node=embedded_node_3, embedding=[4, 1])
+
+    @classmethod
+    def tearDownClass(cls):
+        super(EmbeddingsTestCase, cls).tearDownClass()
+        cls.delete_bucket()
 
     def test_can_create_embeddings(self):
         embeddings_count = Embeddings.objects.count()
