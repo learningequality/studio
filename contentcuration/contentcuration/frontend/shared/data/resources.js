@@ -269,31 +269,19 @@ class IndexedDBResource {
     });
   }
 
-  async getInheritedChanges(itemData=[]) {
+  async getInheritedChanges(itemData = []) {
     if (this.tableName !== TABLE_NAMES.CONTENTNODE || !itemData.length) {
       return Promise.resolve([]);
     }
 
-    const updatedDescendantsChanges = await db[CHANGES_TABLE]
-      .where('type')
+    const updatedDescendantsChanges = await db[CHANGES_TABLE].where('type')
       .equals(CHANGE_TYPES.UPDATED_DESCENDANTS)
       .toArray();
-    console.log("updatedDescendantsChanges", updatedDescendantsChanges);
     if (!updatedDescendantsChanges.length) {
       return Promise.resolve([]);
     }
 
     const inheritedChanges = [];
-    itemData.forEach(item => {
-      const changes = updatedDescendantsChanges
-        .filter(change => change.key === item.id)
-        .map(change => ({
-          ...change,
-          type: CHANGE_TYPES.UPDATED,
-        }));
-      inheritedChanges.push(...changes);
-    });
-
     const parentIds = [...new Set(itemData.map(item => item.parent).filter(Boolean))];
     const ancestorsPromises = parentIds.map(parentId => this.getAncestors(parentId));
     const parentsAncestors = await Promise.all(ancestorsPromises);
@@ -301,27 +289,42 @@ class IndexedDBResource {
     parentsAncestors.forEach(ancestors => {
       const parent = ancestors[ancestors.length - 1];
       const ancestorsIds = ancestors.map(ancestor => ancestor.id);
-      const parentChanges = updatedDescendantsChanges.filter(change => ancestorsIds.includes(change.key));
+      const parentChanges = updatedDescendantsChanges.filter(change =>
+        ancestorsIds.includes(change.key)
+      );
       if (!parentChanges.length) {
         return;
       }
-      
+
       itemData
         .filter(item => item.parent === parent.id)
         .forEach(item => {
-          inheritedChanges.push(...parentChanges.map(change => ({
-            ...change,
-            key: item.id,
-            type: CHANGE_TYPES.UPDATED,
-          })));
+          inheritedChanges.push(
+            ...parentChanges.map(change => ({
+              ...change,
+              key: item.id,
+              type: CHANGE_TYPES.UPDATED,
+            }))
+          );
         });
     });
 
     return inheritedChanges;
   }
 
+  mergeDescendantsChanges(changes, inheritedChanges) {
+    if (inheritedChanges.length) {
+      changes.push(...inheritedChanges);
+      changes = sortBy(changes, 'rev');
+    }
+    changes
+      .filter(change => change.type === CHANGE_TYPES.UPDATED_DESCENDANTS)
+      .forEach(change => (change.type = CHANGE_TYPES.UPDATED));
+
+    return changes;
+  }
+
   setData(itemData) {
-    console.log("Hellooo", itemData);
     const now = Date.now();
     // Directly write to the table, rather than using the add/update methods
     // to avoid creating change events that we would sync back to the server.
@@ -336,83 +339,77 @@ class IndexedDBResource {
         .anyOf(itemData.map(datum => this.getIdValue(datum)))
         .toArray();
 
-      return Promise.all([
-        changesPromise,
-        inheritedChangesPromise,
-        currentPromise
-      ]).then(([changes, inheritedChanges, currents]) => {
-        if (inheritedChanges.length) {
-          changes.push(...inheritedChanges);
-          changes = sortBy(changes, 'rev');
-        }
-        changes = mergeAllChanges(changes, true);
-        const collectedChanges = collectChanges(changes)[this.tableName] || {};
-        for (const changeType of Object.keys(collectedChanges)) {
-          const map = {};
-          for (const change of collectedChanges[changeType]) {
-            map[change.key] = change;
+      return Promise.all([changesPromise, inheritedChangesPromise, currentPromise]).then(
+        ([changes, inheritedChanges, currents]) => {
+          changes = this.mergeDescendantsChanges(changes, inheritedChanges);
+          changes = mergeAllChanges(changes, true);
+          const collectedChanges = collectChanges(changes)[this.tableName] || {};
+          for (const changeType of Object.keys(collectedChanges)) {
+            const map = {};
+            for (const change of collectedChanges[changeType]) {
+              map[change.key] = change;
+            }
+            collectedChanges[changeType] = map;
           }
-          collectedChanges[changeType] = map;
-        }
-        const currentMap = {};
-        for (const currentObj of currents) {
-          currentMap[this.getIdValue(currentObj)] = currentObj;
-        }
-        const data = itemData
-          .map(datum => {
-            const id = this.getIdValue(datum);
-            datum[LAST_FETCHED] = now;
-            // Persist TASK_ID and COPYING_FLAG attributes when directly fetching from the server
-            if (currentMap[id] && currentMap[id][TASK_ID]) {
-              datum[TASK_ID] = currentMap[id][TASK_ID];
-            }
-            if (currentMap[id] && currentMap[id][COPYING_FLAG]) {
-              datum[COPYING_FLAG] = currentMap[id][COPYING_FLAG];
-            }
-            // If we have an updated change, apply the modifications here
-            // HERE FLAG
-            if (
-              collectedChanges[CHANGE_TYPES.UPDATED] &&
-              collectedChanges[CHANGE_TYPES.UPDATED][id]
-            ) {
-              applyMods(datum, collectedChanges[CHANGE_TYPES.UPDATED][id].mods);
-            }
-            return datum;
-            // If we have a deleted change, just filter out this object so we don't reput it
-          })
-          .filter(
-            datum =>
-              !collectedChanges[CHANGE_TYPES.DELETED] ||
-              !collectedChanges[CHANGE_TYPES.DELETED][this.getIdValue(datum)]
-          );
-        return this.table.bulkPut(data).then(() => {
-          // Move changes need to be reapplied on top of fetched data in case anything
-          // has happened on the backend.
-          return applyChanges(Object.values(collectedChanges[CHANGE_TYPES.MOVED] || {})).then(
-            results => {
-              if (!results || !results.length) {
-                return data;
+          const currentMap = {};
+          for (const currentObj of currents) {
+            currentMap[this.getIdValue(currentObj)] = currentObj;
+          }
+          const data = itemData
+            .map(datum => {
+              const id = this.getIdValue(datum);
+              datum[LAST_FETCHED] = now;
+              // Persist TASK_ID and COPYING_FLAG attributes when directly fetching from the server
+              if (currentMap[id] && currentMap[id][TASK_ID]) {
+                datum[TASK_ID] = currentMap[id][TASK_ID];
               }
-              const resultsMap = {};
-              for (const result of results) {
-                const id = this.getIdValue(result);
-                resultsMap[id] = result;
+              if (currentMap[id] && currentMap[id][COPYING_FLAG]) {
+                datum[COPYING_FLAG] = currentMap[id][COPYING_FLAG];
               }
-              return data
-                .map(datum => {
-                  const id = this.getIdValue(datum);
-                  if (resultsMap[id]) {
-                    applyMods(datum, resultsMap[id]);
-                  }
-                  return datum;
-                  // Concatenate any unsynced created objects onto
-                  // the end of the returned objects
-                })
-                .concat(Object.values(collectedChanges[CHANGE_TYPES.CREATED]).map(c => c.obj));
-            }
-          );
-        });
-      });
+              // If we have an updated change, apply the modifications here
+              if (
+                collectedChanges[CHANGE_TYPES.UPDATED] &&
+                collectedChanges[CHANGE_TYPES.UPDATED][id]
+              ) {
+                applyMods(datum, collectedChanges[CHANGE_TYPES.UPDATED][id].mods);
+              }
+              return datum;
+              // If we have a deleted change, just filter out this object so we don't reput it
+            })
+            .filter(
+              datum =>
+                !collectedChanges[CHANGE_TYPES.DELETED] ||
+                !collectedChanges[CHANGE_TYPES.DELETED][this.getIdValue(datum)]
+            );
+          return this.table.bulkPut(data).then(() => {
+            // Move changes need to be reapplied on top of fetched data in case anything
+            // has happened on the backend.
+            return applyChanges(Object.values(collectedChanges[CHANGE_TYPES.MOVED] || {})).then(
+              results => {
+                if (!results || !results.length) {
+                  return data;
+                }
+                const resultsMap = {};
+                for (const result of results) {
+                  const id = this.getIdValue(result);
+                  resultsMap[id] = result;
+                }
+                return data
+                  .map(datum => {
+                    const id = this.getIdValue(datum);
+                    if (resultsMap[id]) {
+                      applyMods(datum, resultsMap[id]);
+                    }
+                    return datum;
+                    // Concatenate any unsynced created objects onto
+                    // the end of the returned objects
+                  })
+                  .concat(Object.values(collectedChanges[CHANGE_TYPES.CREATED]).map(c => c.obj));
+              }
+            );
+          });
+        }
+      );
     });
   }
 
@@ -1712,7 +1709,7 @@ export const ContentNode = new TreeResource({
     return this._saveAndQueueChange(change);
   },
   /**
-   * Load descendants of a content node that are already in IndexDB
+   * Load descendants of a content node that are already in IndexedDB
    * @param {string} id
    * @returns {Promise<string[]>}
    *
@@ -1738,7 +1735,10 @@ export const ContentNode = new TreeResource({
 
       // Update node descendants that are already loaded
       const ids = await this.getLoadedDescendantsIds(id);
-      await this.table.where('id').anyOf(...ids).modify(changes);
+      await this.table
+        .where('id')
+        .anyOf(...ids)
+        .modify(changes);
 
       return this._updateDescendantsChange(id, changes);
     });

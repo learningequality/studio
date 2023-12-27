@@ -80,6 +80,10 @@
         }
 
         const { nodeId, title, description } = this;
+        this.updateContentNode({
+          id: nodeId,
+          title: title.trim(),
+        });
         this.updateContentNodeDescendants({
           id: nodeId,
           description: description.trim(),

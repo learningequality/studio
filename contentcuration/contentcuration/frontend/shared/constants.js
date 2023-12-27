@@ -233,12 +233,12 @@ export const nonUniqueValue = {};
 nonUniqueValue.toString = () => '';
 
 /**
- * Not all fields are updatable on descendants, many of them it does not
- * make sense to update all the descendants, such as the title.
+ * Not all fields are updatable on descendants, for many of them does not
+ * make sense to update to all the descendants, such as the title.
  */
 export const DescendantsUpdatableFields = [
   'description', // Just for testing pourposes, should be removed in the future
   'language',
   'categories',
-  'grade_levels'
+  'grade_levels',
 ];
