@@ -61,6 +61,8 @@ class SyncView(APIView):
             if user_only_changes:
                 apply_user_changes_task.fetch_or_enqueue(request.user, user_id=request.user.id)
             for channel_id in allowed_ids:
+                print("HOLAAAA ********\nHOLAAAA ********\nHOLAAAA ********\nHOLAAAA ********\nHOLAAAA ********\nHOLAAAA ********\n")
+
                 apply_channel_changes_task.fetch_or_enqueue(request.user, channel_id=channel_id)
             allowed_changes = [{"rev": c.client_rev, "server_rev": c.server_rev} for c in change_models]
 
