@@ -9,6 +9,7 @@ import {
   PublishedChange,
   SyncedChange,
   DeployedChange,
+  UpdatedDescendantsChange,
 } from '../changes';
 import {
   CHANGES_TABLE,
@@ -286,6 +287,26 @@ describe('Change Types', () => {
       rev,
       channel_id: change.key,
       ...pick(change, ['type', 'key', 'table', 'source']),
+    });
+  });
+
+  it('should persist only the specified fields in the UpdatedDescendantsChange', async () => {
+    const changes = { language: 'es' };
+    const change = new UpdatedDescendantsChange({
+      key: '1',
+      table: TABLE_NAMES.CONTENTNODE,
+      oldObj: { title: 'test', language: 'en' },
+      changes,
+      source: CLIENTID,
+    });
+    const rev = await change.saveChange();
+    const persistedChange = await db[CHANGES_TABLE].get(rev);
+
+    expect(persistedChange).toEqual({
+      rev,
+      channel_id,
+      mods: changes,
+      ...pick(change, ['type', 'key', 'table', 'oldObj', 'source']),
     });
   });
 });
@@ -647,5 +668,25 @@ describe('Change Types Unhappy Paths', () => {
     expect(() => new DeployedChange({ key: '1', table: 'test', source: CLIENTID })).toThrow(
       new ReferenceError('test is not a valid table value')
     );
+  });
+
+  // UpdatedDescendantsChange
+  it('should throw error when UpdatedDescendantsChange is instantiated without changes', () => {
+    expect(
+      () =>
+        new UpdatedDescendantsChange({ key: '1', table: TABLE_NAMES.CONTENTNODE, source: CLIENTID })
+    ).toThrow(new TypeError('changes should be an object, but undefined was passed instead'));
+  });
+
+  it('should throw error if UpdatedDescendantsChange is instantiated with a table different than CONTENTNODE', () => {
+    expect(
+      () =>
+        new UpdatedDescendantsChange({
+          key: '1',
+          table: TABLE_NAMES.CHANNEL,
+          changes: {},
+          source: CLIENTID,
+        })
+    ).toThrow();
   });
 });

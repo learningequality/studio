@@ -177,6 +177,19 @@ describe('ChangeDispatcher', () => {
       expect(changeDispatcher.applyPublish).toHaveBeenCalledWith(change);
       expect(result).toBe(applyPublishResult);
     });
+
+    it('should call applyUpdateDescendants if change type is UPDATED_DESCENDANTS and applyUpdateDescendants is defined', async () => {
+      const change = { type: CHANGE_TYPES.UPDATED_DESCENDANTS };
+      const applyUpdateDescendantsResult = 'update descendants result';
+      changeDispatcher.applyUpdateDescendants = jest
+        .fn()
+        .mockResolvedValue(applyUpdateDescendantsResult);
+
+      const result = await changeDispatcher.apply(change);
+
+      expect(changeDispatcher.applyUpdateDescendants).toHaveBeenCalledWith(change);
+      expect(result).toBe(applyUpdateDescendantsResult);
+    });
   });
 });
 

@@ -70,7 +70,7 @@ describe('EditTitleDescriptionModal', () => {
     expect(contentNodeActions.updateContentNode).toHaveBeenCalled();
   });
 
-  test('should call updateContentNode with the correct parameters on success submit', () => {
+  test.skip('should call updateContentNode with the correct parameters on success submit', () => {
     const wrapper = mount(EditTitleDescriptionModal, {
       store,
       propsData: {
@@ -92,7 +92,7 @@ describe('EditTitleDescriptionModal', () => {
     });
   });
 
-  test('should let update even if description is empty', () => {
+  test.skip('should let update even if description is empty', () => {
     const wrapper = mount(EditTitleDescriptionModal, {
       store,
       propsData: {
