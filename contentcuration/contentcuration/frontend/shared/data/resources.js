@@ -269,7 +269,59 @@ class IndexedDBResource {
     });
   }
 
+  async getInheritedChanges(itemData=[]) {
+    if (this.tableName !== TABLE_NAMES.CONTENTNODE || !itemData.length) {
+      return Promise.resolve([]);
+    }
+
+    const updatedDescendantsChanges = await db[CHANGES_TABLE]
+      .where('type')
+      .equals(CHANGE_TYPES.UPDATED_DESCENDANTS)
+      .toArray();
+    console.log("updatedDescendantsChanges", updatedDescendantsChanges);
+    if (!updatedDescendantsChanges.length) {
+      return Promise.resolve([]);
+    }
+
+    const inheritedChanges = [];
+    itemData.forEach(item => {
+      const changes = updatedDescendantsChanges
+        .filter(change => change.key === item.id)
+        .map(change => ({
+          ...change,
+          type: CHANGE_TYPES.UPDATED,
+        }));
+      inheritedChanges.push(...changes);
+    });
+
+    const parentIds = [...new Set(itemData.map(item => item.parent).filter(Boolean))];
+    const ancestorsPromises = parentIds.map(parentId => this.getAncestors(parentId));
+    const parentsAncestors = await Promise.all(ancestorsPromises);
+
+    parentsAncestors.forEach(ancestors => {
+      const parent = ancestors[ancestors.length - 1];
+      const ancestorsIds = ancestors.map(ancestor => ancestor.id);
+      const parentChanges = updatedDescendantsChanges.filter(change => ancestorsIds.includes(change.key));
+      if (!parentChanges.length) {
+        return;
+      }
+      
+      itemData
+        .filter(item => item.parent === parent.id)
+        .forEach(item => {
+          inheritedChanges.push(...parentChanges.map(change => ({
+            ...change,
+            key: item.id,
+            type: CHANGE_TYPES.UPDATED,
+          })));
+        });
+    });
+
+    return inheritedChanges;
+  }
+
   setData(itemData) {
+    console.log("Hellooo", itemData);
     const now = Date.now();
     // Directly write to the table, rather than using the add/update methods
     // to avoid creating change events that we would sync back to the server.
@@ -278,12 +330,21 @@ class IndexedDBResource {
       const changesPromise = db[CHANGES_TABLE].where('[table+key]')
         .anyOf(itemData.map(datum => [this.tableName, this.getIdValue(datum)]))
         .sortBy('rev');
+      const inheritedChangesPromise = this.getInheritedChanges(itemData);
       const currentPromise = this.table
         .where(this.idField)
         .anyOf(itemData.map(datum => this.getIdValue(datum)))
         .toArray();
 
-      return Promise.all([changesPromise, currentPromise]).then(([changes, currents]) => {
+      return Promise.all([
+        changesPromise,
+        inheritedChangesPromise,
+        currentPromise
+      ]).then(([changes, inheritedChanges, currents]) => {
+        if (inheritedChanges.length) {
+          changes.push(...inheritedChanges);
+          changes = sortBy(changes, 'rev');
+        }
         changes = mergeAllChanges(changes, true);
         const collectedChanges = collectChanges(changes)[this.tableName] || {};
         for (const changeType of Object.keys(collectedChanges)) {
