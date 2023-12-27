@@ -79,8 +79,8 @@ export class ChangeDispatcher {
         result = await this.applyCopy(change);
       } else if (change.type === CHANGE_TYPES.PUBLISHED && this.applyPublish) {
         result = await this.applyPublish(change);
-      } else if (change.type === CHANGE_TYPES.UPDATED_DESCENDANTS && this.applyUpdate) {
-        result = await this.applyUpdate(change);
+      } else if (change.type === CHANGE_TYPES.UPDATED_DESCENDANTS && this.applyUpdateDescendants) {
+        result = await this.applyUpdateDescendants(change);
       }
     } catch (e) {
       logging.error(e, {
@@ -204,7 +204,14 @@ class ReturnedChanges extends ChangeDispatcher {
       return Promise.resolve();
     }
 
-    return resource.updateDescendants(change.key, change.mods);
+    return transaction(change, TABLE_NAMES.CONTENTNODE, async () => {
+      const ids = await resource.getLoadedDescendantsIds(change.key);
+      return db
+        .table(TABLE_NAMES.CONTENTNODE)
+        .where(':id')
+        .anyOf(ids)
+        .modify(obj => applyMods(obj, change.mods));
+    });
   }
 
   _applyUpdateDescendants(change) {
