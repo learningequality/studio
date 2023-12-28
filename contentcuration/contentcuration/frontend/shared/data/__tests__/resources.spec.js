@@ -47,7 +47,7 @@ describe('Resources', () => {
 
   describe('ContentNode resource', () => {
     describe('Updated descendants changes', () => {
-      const saveChange = async (changes, key=parentId) => {
+      const saveChange = async (changes, key = parentId) => {
         const change = new UpdatedDescendantsChange({
           key,
           table: TABLE_NAMES.CONTENTNODE,
@@ -61,19 +61,19 @@ describe('Resources', () => {
 
       it('should get empty array if no data is passed', async () => {
         await saveChange({ lang: 'en' });
-        
+
         const inheritedChanges = await ContentNode.getInheritedChanges([]);
         expect(inheritedChanges).toEqual([]);
       });
 
       it('should get empty array if no descendants changes have been made', async () => {
-        const inheritedChanges = await ContentNode.getInheritedChanges([contentNodes[2]])
+        const inheritedChanges = await ContentNode.getInheritedChanges([contentNodes[2]]);
         expect(inheritedChanges).toEqual([]);
       });
 
       it('should get empty array if no descendants changes have been made to the correct ascendants', async () => {
         await saveChange({ lang: 'en' }, 'test-123');
-        const inheritedChanges = await ContentNode.getInheritedChanges([contentNodes[2]])
+        const inheritedChanges = await ContentNode.getInheritedChanges([contentNodes[2]]);
         expect(inheritedChanges).toEqual([]);
       });
 
@@ -93,16 +93,13 @@ describe('Resources', () => {
 
       it('descendants should inherit changes as "UPDATED" type of change for themsleves', async () => {
         await saveChange({ lang: 'en' });
-        const [ change ] = await ContentNode.getInheritedChanges([contentNodes[2]]);
+        const [change] = await ContentNode.getInheritedChanges([contentNodes[2]]);
         expect(change.type).toEqual(CHANGE_TYPES.UPDATED);
         expect(change.key).toEqual(contentNodes[2].id);
       });
 
       it('should return multiple inherited changes', async () => {
-        const revs = await Promise.all([
-          saveChange({ lang: 'en' }),
-          saveChange({ lang: 'es' }),
-        ]);
+        const revs = await Promise.all([saveChange({ lang: 'en' }), saveChange({ lang: 'es' })]);
         const inheritedChanges = await ContentNode.getInheritedChanges([contentNodes[1]]);
         expect(inheritedChanges.length).toEqual(revs.length);
         expect(inheritedChanges.map(change => change.rev)).toEqual(revs);
@@ -110,10 +107,13 @@ describe('Resources', () => {
 
       it('should return the inherited changes for multiple descendants', async () => {
         const rev = await saveChange({ lang: 'en' });
-        const inheritedChanges = await ContentNode.getInheritedChanges([contentNodes[1], contentNodes[2]]);
+        const inheritedChanges = await ContentNode.getInheritedChanges([
+          contentNodes[1],
+          contentNodes[2],
+        ]);
         expect(inheritedChanges.length).toEqual(2);
-        
-        const [ first, second ] = inheritedChanges;
+
+        const [first, second] = inheritedChanges;
         expect(first.rev).toEqual(rev);
         expect(second.rev).toEqual(rev);
         expect(first.key).toEqual(contentNodes[1].id);
@@ -153,16 +153,18 @@ describe('Resources', () => {
 
       it('shouldnt update other nodes', async () => {
         await ContentNode.updateDescendants('test-123', changes);
-      const node = await db[TABLE_NAMES.CONTENTNODE].get(parentId);
+        const node = await db[TABLE_NAMES.CONTENTNODE].get(parentId);
         expect(node.language).not.toEqual(changes.lang);
       });
 
       it('should save a new UPDATED DESCENDANTS change', async () => {
         await ContentNode.updateDescendants(parentId, changes);
-        
-        const change = await db[TABLE_NAMES.CHANGES_TABLE].where({
-          type: CHANGE_TYPES.UPDATED_DESCENDANTS,
-        }).first();
+
+        const change = await db[TABLE_NAMES.CHANGES_TABLE]
+          .where({
+            type: CHANGE_TYPES.UPDATED_DESCENDANTS,
+          })
+          .first();
         expect(change).toBeDefined();
         expect(change.key).toEqual(parentId);
         expect(change.mods).toEqual(changes);
