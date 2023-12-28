@@ -12,168 +12,137 @@ export const FeedbackTypeOptions = {
   flagged: 'flagged',
 };
 
-const RECCOMMENDATION_EVENT_URL = '/api/recommendationevent/';
-const RECCOMMENDATION_INTERACTION_EVENT_URL = '/api/reccomendationinteractionevent/';
-const FLAG_FEEDBACK_EVENT_URL = '/api/flagged/';
+// This is mock currently, fixed value of URL still to be decided
+export const FLAG_FEEDBACK_EVENT_URL = '/api/flagged/';
 
-//Detrmine the feedbackType
-function determineFeedbackType(feedbackObject) {
-  let feedbackType;
-  if ('completed_at' in feedbackObject) {
-    feedbackType = 'RecommendationsEvent';
-  } else if ('recommendation_event_id' in feedbackObject) {
-    feedbackType = 'RecommendationsInteractionEvent';
-  } else if ('target_topic_id' in feedbackObject) {
-    feedbackType = 'FlagFeedbackEvent';
-  } else {
-    // Handle unknown feedback types if needed
-    throw new Error('Unknown feedback type');
+/**
+ * Base class for feedback data objects.
+ */
+class BaseFeedback {
+  /**
+   * Initializes a new BaseFeedback object.
+   *
+   * @class
+   * @classdesc Represents a base feedback object with common properties and methods.
+   *
+   * @param {Object} object - Object passed down following the .
+   * @param {Object} [object.context={}] - The context associated with the ObjectType.
+   * @param {string} object.contentnode_id - Id for ContentNode that does not change.
+   * @param {string} object.content_id - content_id of ContentNode wrt to ObjectType.
+   */
+  constructor({ context = {}, contentnode_id, content_id }) {
+    this.id = uuidv4();
+    this.context = context;
+    this.contentnode_id = contentnode_id;
+    this.content_id = content_id;
   }
-  return feedbackType;
-}
 
-//Create endpoint URL according to feedbackType
-function determineFeedbackUrl(feedbackType) {
-  let endpoint;
-  switch (feedbackType) {
-    case 'RecommendationsEvent':
-      endpoint = RECCOMMENDATION_EVENT_URL;
-      break;
-    case 'RecommendationsInteractionEvent':
-      endpoint = RECCOMMENDATION_INTERACTION_EVENT_URL;
-      break;
-    case 'FlagFeedbackEvent':
-      endpoint = FLAG_FEEDBACK_EVENT_URL;
-      break;
-    default:
-      // Handle unknown feedback types if needed
-      throw new Error('Unknown feedback type');
+  // Creates a data object according to Backends expectation,
+  // excluding functions and the "URL" property.
+  getDataObject() {
+    const dataObject = {};
+    for (const key in this) {
+      if (
+        Object.prototype.hasOwnProperty.call(this, key) &&
+        typeof this[key] !== 'function' &&
+        key !== 'URL'
+      ) {
+        dataObject[key] = this[key];
+      }
+    }
+    return dataObject;
   }
-  return endpoint;
+
+  // Return URL associated with the ObjectType
+  getUrl() {
+    if (this.defaultURL === null || this.URL === undefined) {
+      throw new Error('URL is not defined for the FeedBack Object.');
+    }
+    return this.URL;
+  }
 }
 
-// Common function for creating base feedback object
-function createBaseFeedback({ context = {}, contentnode_id, content_id }) {
-  const id = uuidv4();
-  const created_at = new Date();
-  return {
-    id,
-    context: context,
-    created_at,
-    contentnode_id: contentnode_id,
-    content_id: content_id,
-  };
+/**
+ * Initializes a new BaseFeedbackEvent object.
+ *
+ * @param {Object} params - Parameters for initializing the object.
+ * @param {Object} params.user - The user associated with the feedback event.
+ * @param {string} params.target_channel_id - The ID of the target channel for the feedback event.
+ * @param {Object} baseFeedbackParams - Additional parameters inherited from the base feedbackclass.
+ */
+// eslint-disable-next-line no-unused-vars
+class BaseFeedbackEvent extends BaseFeedback {
+  constructor({ user, target_channel_id, ...baseFeedbackParams }) {
+    super(baseFeedbackParams);
+    this.user = user;
+    this.target_channel_id = target_channel_id;
+  }
 }
 
-// Common function for creating base feedback event object
-function createBaseFeedbackEvent({ user, target_channel_id, ...baseFeedbackParams }) {
-  const baseFeedback = createBaseFeedback(baseFeedbackParams);
-  return {
-    user,
-    target_channel_id,
-    ...baseFeedback,
-  };
+/**
+ * Initializes a new BaseFeedbackInteractionEvent object.
+ * @param {Object} params - Parameters for initializing the interaction event.
+ * @param {string} params.feedback_type - The type of feedback for the interaction event.
+ * @param {string} params.feedback_reason - The reason associated with the feedback.
+ * @param {Object} baseFeedbackParams - Additional parameters inherited from the base feedbackclass.
+ */
+class BaseFeedbackInteractionEvent extends BaseFeedback {
+  constructor({ feedback_type, feedback_reason, ...baseFeedbackParams }) {
+    super(baseFeedbackParams);
+    this.feedback_type = feedback_type;
+    this.feedback_reason = feedback_reason;
+  }
 }
 
-// Common function for creating base feedback interaction event object
-function createBaseFeedbackInteractionEvent({
-  feedback_type,
-  feedback_reason,
-  ...baseFeedbackParams
-}) {
-  const baseFeedback = createBaseFeedback(baseFeedbackParams);
-  return {
-    feedback_type,
-    feedback_reason,
-    ...baseFeedback,
-  };
+/**
+ * Initializes a new BaseFlagFeedback object.
+ *
+ * @param {Object} params - Parameters for initializing the flag feedback.
+ * @param {string} params.target_topic_id - The ID of the target topic associated with
+ * the flag feedback.
+ * @param {Object} baseFeedbackParams - Additional parameters inherited from the
+ * base interaction event class.
+ */
+class BaseFlagFeedback extends BaseFeedbackInteractionEvent {
+  constructor({ target_topic_id, ...baseFeedbackParams }) {
+    super({ ...baseFeedbackParams });
+    this.target_topic_id = target_topic_id;
+  }
 }
 
-// Helper function that accumulates data for RecommendationsEvent Class
-export const RecommendationsEvent = function createRecommendationsEvent({
-  user,
-  target_channel_id,
-  context,
-  contentnode_id,
-  content_id,
-  content,
-}) {
-  const baseFeedbackEvent = createBaseFeedbackEvent({
-    user,
-    target_channel_id,
-    context,
-    contentnode_id,
-    content_id,
-  });
-  return {
-    completed_at: null, // needs to be figured out
-    content,
-    ...baseFeedbackEvent,
-  };
-};
+/**
+ * Initializes a new FlagFeedbackEvent object.
+ *
+ *
+ * @param {Object} params - Parameters for initializing the flag feedback event.
+ * @param {string} params.target_topic_id - Id of the topic where the flagged content is located.
+ * @param {Object} baseFeedbackParams - Additional parameters inherited from the
+ * base flag feedback class.
+ */
+export class FlagFeedbackEvent extends BaseFlagFeedback {
+  constructor({ target_topic_id, ...baseFeedbackParams }) {
+    super({ target_topic_id, ...baseFeedbackParams });
+    this.URL = FLAG_FEEDBACK_EVENT_URL;
+  }
+}
 
-// Helper function that accumulates data for RecommendationsInteractionEvent Class
-export const RecommendationsInteractionEvent = function createRecommendationsInteractionEvent({
-  feedback_type,
-  feedback_reason,
-  context,
-  contentnode_id,
-  contentId,
-  recommendation_event_id,
-}) {
-  const baseFeedbackInteractionEvent = createBaseFeedbackInteractionEvent({
-    feedback_type,
-    feedback_reason,
-    context,
-    contentnode_id,
-    contentId,
-  });
-  return {
-    recommendation_event_id,
-    ...baseFeedbackInteractionEvent,
-  };
-};
-
-// Helper function that accumulates data for FlagFeedbackEvent Class
-export const FlagFeedbackEvent = function createFlagFeedbackEvent({
-  user,
-  target_channel_id,
-  context,
-  contentnode_id,
-  contentId,
-  feedback_type,
-  feedback_reason,
-  target_topic_id,
-}) {
-  const baseFeedbackEvent = createBaseFeedbackEvent({
-    user,
-    target_channel_id,
-    context,
-    contentnode_id,
-    contentId,
-  });
-  const baseFeedbackInteractionEvent = createBaseFeedbackInteractionEvent({
-    feedback_type,
-    feedback_reason,
-    context,
-    contentnode_id,
-    contentId,
-  });
-  return {
-    target_topic_id,
-    ...baseFeedbackEvent,
-    ...baseFeedbackInteractionEvent,
-  };
-};
-
-// Hit the feedback API'S
-export const sendFeedbackRequest = async function createAndSendFeedbackRequest(feedbackObject) {
-  const feedbackType = determineFeedbackType(feedbackObject);
-  const endpoint = determineFeedbackUrl(feedbackType);
+/**
+ * Sends a request using the provided feedback object.
+ *
+ * @function
+ *
+ * @param {BaseFeedback} feedbackObject - The feedback object to use for the request.
+ * @throws {Error} Throws an error if the URL is not defined for the feedback object.
+ * @returns {Promise<Object>} A promise that resolves to the response data from the API.
+ */
+export async function sendRequest(feedbackObject) {
   try {
-    const response = await client.post(endpoint, feedbackObject);
+    const url = feedbackObject.getUrl();
+    const response = await client.post(url, feedbackObject.getDataObject());
     console.log('API response:', response.data);
+    return response.data;
   } catch (error) {
-    console.log(error);
+    console.error('Error:', error);
+    throw error;
   }
-};
+}
