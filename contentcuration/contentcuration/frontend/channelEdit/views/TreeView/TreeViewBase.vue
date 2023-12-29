@@ -24,10 +24,11 @@
           :to="viewChannelDetailsLink"
           @click="trackClickEvent('Summary')"
         >
-          <IconButton
+          <KIconButton
             class="toolbar-icon-btn"
+            :tooltip="$tr('channelDetails')"
             icon="info"
-            :text="$tr('channelDetails')"
+            
           />
         </KRouterLink>
         <KRouterLink
@@ -45,11 +46,11 @@
                 error
               </Icon>
             </template>
-            <IconButton
+            <KIconButton
               v-if="canEdit"
               class="toolbar-icon-btn"
               icon="edit"
-              :text="$tr('editChannel')"
+              :tooltip="$tr('editChannel')"
             />
           </VBadge>
         </KRouterLink>
