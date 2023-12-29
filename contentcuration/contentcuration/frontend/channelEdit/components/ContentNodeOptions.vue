@@ -31,6 +31,9 @@
     <VListTile v-if="canEdit" @click="removeNode()">
       <VListTileTitle>{{ $tr('remove') }}</VListTileTitle>
     </VListTile>
+    <VListTile v-if="canShowFlagOption" @click="$emit('node-flagged')">
+      <VListTileTitle>{{ $tr('flag') }}</VListTileTitle>
+    </VListTile>
   </VList>
 
 </template>
@@ -69,8 +72,9 @@
       };
     },
     computed: {
-      ...mapGetters('currentChannel', ['canEdit', 'trashId']),
+      ...mapGetters('currentChannel', ['canEdit', 'trashId', 'currentChannel']),
       ...mapGetters('contentNode', ['getContentNode', 'getContentNodeDescendants']),
+      ...mapGetters(['isAdmin', 'isAIFeatureEnabled']),
       node() {
         return this.getContentNode(this.nodeId);
       },
@@ -94,6 +98,11 @@
             detailNodeId: this.nodeId,
           },
         };
+      },
+      canShowFlagOption() {
+        return (
+          this.isAIFeatureEnabled && !this.isTopic && (!this.currentChannel.edit || this.isAdmin)
+        );
       },
     },
     watch: {
@@ -222,6 +231,7 @@
       copiedSnackbar: 'Copy operation complete',
       copiedToClipboardSnackbar: 'Copied to clipboard',
       removedItems: 'Sent to trash',
+      flag: 'Flag content',
     },
   };
 
