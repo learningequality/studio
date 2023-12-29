@@ -51,13 +51,13 @@
         }"
       >
         <VLayout row class="px-3">
-          <IconButton
+          <KRouterLink
             icon="collapseAll"
             :text="$tr('collapseAllButton')"
             @click="collapseAll"
           />
           <VSpacer />
-          <IconButton
+          <KRouterLink
             :disabled="!ancestors || !ancestors.length"
             icon="myLocation"
             :text="$tr('openCurrentLocationButton')"
