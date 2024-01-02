@@ -1,4 +1,5 @@
 <template>
+
   <KModal
     :title="$tr('editLanguage')"
     :submitText="$tr('saveAction')"
@@ -17,13 +18,14 @@
       />
     </div>
   </KModal>
+
 </template>
 
 
 <script>
-  import { LanguagesList } from 'shared/leUtils/Languages';
 
   import { mapGetters } from 'vuex';
+  import { LanguagesList } from 'shared/leUtils/Languages';
 
   export default {
     name: 'EditLanguageModal',
@@ -32,10 +34,6 @@
         type: Array,
         required: true,
       },
-    },
-    mounted() {
-      console.log("nodeIds", this.nodeIds[0]);
-      console.log("getContentNodeChildren", this.getContentNodeChildren(this.nodeIds[0]));
     },
     data() {
       return {
@@ -48,12 +46,18 @@
         return LanguagesList;
       },
     },
+    mounted() {
+      console.log('Aa', this.nodeIds, this.getContentNodeChildren(this.nodeIds[0]));
+    },
     methods: {
       validateLanguage() {
         return true;
       },
       languageText(langObject) {
-        return this.$tr('languageItemText', { language: langObject.native_name, code: langObject.id });
+        return this.$tr('languageItemText', {
+          language: langObject.native_name,
+          code: langObject.id,
+        });
       },
       close() {
         this.$emit('close');
@@ -63,7 +67,10 @@
           return;
         }
 
-        this.$store.dispatch('showSnackbarSimple', this.$tr('editedLanguage', { count: this.nodes.length }));
+        this.$store.dispatch(
+          'showSnackbarSimple',
+          this.$tr('editedLanguage', { count: this.nodes.length })
+        );
         this.close();
       },
     },
@@ -72,8 +79,8 @@
       languageItemText: '{language} ({code})',
       saveAction: 'Save',
       cancelAction: 'Cancel',
-      fieldRequired: 'Field is required',
-      editedLanguage: 'Edited language for {count, number, integer} {count, plural, one {resource} other {resources}}',
+      editedLanguage:
+        'Edited language for {count, number, integer} {count, plural, one {resource} other {resources}}',
     },
   };
 

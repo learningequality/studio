@@ -241,7 +241,13 @@
   import MoveModal from '../components/move/MoveModal';
   import ContentNodeOptions from '../components/ContentNodeOptions';
   import ResourceDrawer from '../components/ResourceDrawer';
-  import { RouteNames, viewModes, DraggableRegions, DraggableUniverses, QuickEditModals } from '../constants';
+  import {
+    RouteNames,
+    viewModes,
+    DraggableRegions,
+    DraggableUniverses,
+    QuickEditModals,
+  } from '../constants';
   import NodePanel from './NodePanel';
   import IconButton from 'shared/views/IconButton';
   import ToolBar from 'shared/views/ToolBar';
@@ -488,7 +494,6 @@
         });
       },
       editLanguage(nodeIds) {
-        console.log("nodeIds", nodeIds);
         this.trackClickEvent('Edit language');
         this.openQuickEditModal({
           modal: QuickEditModals.LANGUAGE,
