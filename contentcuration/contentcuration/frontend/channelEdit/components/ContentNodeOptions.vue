@@ -4,92 +4,35 @@
     style="max-height: 80vh"
   >
     <VList>
-      <VListTile v-if="!hideDetailsLink" :to="viewLink" @click="trackAction('View')">
-        <VListTileTitle>{{ $tr('viewDetails') }}</VListTileTitle>
-      </VListTile>
-      <VListTile v-if="canEdit" @click="editTitleDescription()">
-        <VListTileTitle>{{ $tr('editTitleDescription') }}</VListTileTitle>
-      </VListTile>
-
-      <VListTile class="divider-item">
-        <span class="divider" :style="dividerStyle"></span>
-      </VListTile>
-
-      <VListTile v-if="canEdit && !hideEditLink" :to="editLink" @click="trackAction('Edit')">
-        <VListTileTitle>
-          {{ $tr('editAllDetails') }}
-        </VListTileTitle>
-      </VListTile>
-      <VListTile v-if="canEdit" @click.stop="moveModalOpen = true">
-        <VListTileTitle>{{ $tr('move') }}</VListTileTitle>
-        <MoveModal
-          v-if="moveModalOpen"
-          ref="moveModal"
-          v-model="moveModalOpen"
-          :moveNodeIds="[nodeId]"
-          @target="moveNode"
+      <template
+        v-for="(group, groupIndex) in groupedOptions"
+      >
+        <VListTile
+          v-for="(option, index) in group"
+          :key="groupIndex + '-' + index"
+          ripple
+          :to="option.to"
+          @click="option.onClick($event)"
+        >
+          <VListTileTitle>
+            {{ option.label }}
+          </VListTileTitle>
+        </VListTile>
+        <VDivider
+          v-if="groupIndex < groupedOptions.length - 1"
+          :key="groupIndex + '-divider'"
+          class="divider"
         />
-      </VListTile>
-      <VListTile @click="copyToClipboard()">
-        <VListTileTitle>{{ $tr('copyToClipboard') }}</VListTileTitle>
-      </VListTile>
-      <VListTile v-if="canEdit" @click="duplicateNode()">
-        <VListTileTitle>{{ $tr('makeACopy') }}</VListTileTitle>
-      </VListTile>
-      <VListTile v-if="isTopic && canEdit" @click="newTopicNode">
-        <VListTileTitle>{{ $tr('newSubtopic') }}</VListTileTitle>
-      </VListTile>
-      <VListTile v-if="canEdit" @click="removeNode()">
-        <VListTileTitle>{{ $tr('remove') }}</VListTileTitle>
-      </VListTile>
-
-      <VListTile class="divider-item">
-        <span class="divider" :style="dividerStyle"></span>
-      </VListTile>
-
-      <VListTile v-if="canEdit" @click="editTags()">
-        <VListTileTitle>{{ $tr('editTags') }}</VListTileTitle>
-      </VListTile>
-      <VListTile v-if="canEdit" @click="editLanguage()">
-        <VListTileTitle>{{ $tr('editLanguage') }}</VListTileTitle>
-      </VListTile>
-
-      <VListTile class="divider-item">
-        <span class="divider" :style="dividerStyle"></span>
-      </VListTile>
-
-      <VListTile v-if="canEdit" @click="editCategories()">
-        <VListTileTitle>{{ $tr('editCategories') }}</VListTileTitle>
-      </VListTile>
-      <VListTile v-if="canEdit" @click="editLevels()">
-        <VListTileTitle>{{ $tr('editLevels') }}</VListTileTitle>
-      </VListTile>
-      <VListTile v-if="canEdit" @click="editLearningActivities()">
-        <VListTileTitle>{{ $tr('editLearningActivities') }}</VListTileTitle>
-      </VListTile>
-
-      <VListTile class="divider-item">
-        <span class="divider" :style="dividerStyle"></span>
-      </VListTile>
-
-      <VListTile v-if="canEdit" @click="editSource()">
-        <VListTileTitle>{{ $tr('editSource') }}</VListTileTitle>
-      </VListTile>
-      <VListTile v-if="canEdit" @click="editAudience()">
-        <VListTileTitle>{{ $tr('editAudience') }}</VListTileTitle>
-      </VListTile>
-
-      <VListTile class="divider-item">
-        <span class="divider" :style="dividerStyle"></span>
-      </VListTile>
-
-      <VListTile v-if="canEdit" @click="editCompletion()">
-        <VListTileTitle>{{ $tr('editCompletion') }}</VListTileTitle>
-      </VListTile>
-      <VListTile v-if="canEdit" @click="editWhatIsNeeded()">
-        <VListTileTitle>{{ $tr('editWhatIsNeeded') }}</VListTileTitle>
-      </VListTile>
+      </template>
     </VList>
+
+    <MoveModal
+      v-if="moveModalOpen"
+      ref="moveModal"
+      v-model="moveModalOpen"
+      :moveNodeIds="[nodeId]"
+      @target="moveNode"
+    />
   </div>
 
 </template>
@@ -136,6 +79,121 @@
       isTopic() {
         return this.node.kind === 'topic';
       },
+      /**
+       * Returns a list of options to display in the menu
+       * @returns {Array<Array<Object>>} List of lists, where each inner list is a group of options
+       *                                 already filtered by the render condition
+       */
+      groupedOptions() {
+        const options = [
+          [
+            {
+              label: this.$tr('viewDetails'),
+              to: this.viewLink,
+              onClick: () => this.trackAction('View'),
+              condition: !this.hideDetailsLink,
+            },
+            {
+              label: this.$tr('editTitleDescription'),
+              onClick: this.editTitleDescription,
+              condition: this.canEdit,
+            },
+          ],
+          [
+            {
+              label: this.$tr('editAllDetails'),
+              to: this.editLink,
+              onClick: () => this.trackAction('Edit'),
+              condition: this.canEdit && !this.hideEditLink,
+            },
+            {
+              label: this.$tr('move'),
+              onClick: $event => {
+                $event.stopPropagation();
+                this.moveModalOpen = true;
+              },
+              condition: this.canEdit,
+            },
+            {
+              label: this.$tr('copyToClipboard'),
+              onClick: this.copyToClipboard,
+              condition: true,
+            },
+            {
+              label: this.$tr('makeACopy'),
+              onClick: this.duplicateNode,
+              condition: this.canEdit,
+            },
+            {
+              label: this.$tr('newSubtopic'),
+              onClick: this.newTopicNode,
+              condition: this.canEdit && this.isTopic,
+            },
+            {
+              label: this.$tr('remove'),
+              onClick: this.removeNode,
+              condition: this.canEdit,
+            },
+          ],
+          [
+            {
+              label: this.$tr('editTags'),
+              onClick: this.editTags,
+              condition: this.canEdit,
+            },
+            {
+              label: this.$tr('editLanguage'),
+              onClick: this.editLanguage,
+              condition: this.canEdit,
+            },
+          ],
+          [
+            {
+              label: this.$tr('editCategories'),
+              onClick: this.editCategories,
+              condition: this.canEdit,
+            },
+            {
+              label: this.$tr('editLevels'),
+              onClick: this.editLevels,
+              condition: this.canEdit,
+            },
+            {
+              label: this.$tr('editLearningActivities'),
+              onClick: this.editLearningActivities,
+              condition: this.canEdit,
+            },
+          ],
+          [
+            {
+              label: this.$tr('editSource'),
+              onClick: this.editSource,
+              condition: this.canEdit,
+            },
+            {
+              label: this.$tr('editAudience'),
+              onClick: this.editAudience,
+              condition: this.canEdit,
+            },
+          ],
+          [
+            {
+              label: this.$tr('editCompletion'),
+              onClick: this.editCompletion,
+              condition: this.canEdit,
+            },
+            {
+              label: this.$tr('editWhatIsNeeded'),
+              onClick: this.editWhatIsNeeded,
+              condition: this.canEdit,
+            },
+          ],
+        ];
+
+        return options
+          .filter(group => group.some(option => option.condition))
+          .map(group => group.filter(option => option.condition));
+      },
       editLink() {
         return {
           name: RouteNames.CONTENTNODE_DETAILS,
@@ -152,11 +210,6 @@
             ...this.$route.params,
             detailNodeId: this.nodeId,
           },
-        };
-      },
-      dividerStyle() {
-        return {
-          borderTop: `solid 1px ${this.$themeTokens.fineLine}`,
         };
       },
     },
@@ -374,20 +427,7 @@
 </script>
 
 <style scoped>
-  .divider-item {
-    .v-list__tile {
-      height: unset;
-      padding: 8px 0!important;
-      .divider {
-        width: 100%;
-      }
-    }
-    &:first-child,
-    &:last-child { /* Avoid top and bottom borders */
-      display: none;
-    }
-    & + .divider-item { /* Avoid double dividers */
-      display: none;
-    }
+  .divider {
+    margin: 8px 0!important;
   }
 </style>
