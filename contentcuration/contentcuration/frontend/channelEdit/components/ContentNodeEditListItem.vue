@@ -55,7 +55,7 @@
                 :text="$tr('editTooltip')"
                 :disabled="copying"
                 @click.stop
-                @click="$emit('editTitleDescription')"
+                @click="editTitleDescription()"
               />
             </transition>
           </VListTileAction>
@@ -93,8 +93,9 @@
 
 <script>
 
-  import { mapGetters } from 'vuex';
+  import { mapGetters, mapMutations } from 'vuex';
 
+  import { QuickEditModals, DraggableRegions } from '../constants';
   import ContentNodeListItem from './ContentNodeListItem';
   import ContentNodeOptions from './ContentNodeOptions';
   import ContentNodeContextMenu from './ContentNodeContextMenu';
@@ -103,7 +104,6 @@
   import DraggableItem from 'shared/views/draggable/DraggableItem';
   import { COPYING_FLAG } from 'shared/data/constants';
   import { DragEffect, DropEffect, EffectAllowed } from 'shared/mixins/draggable/constants';
-  import { DraggableRegions } from 'frontend/channelEdit/constants';
 
   export default {
     name: 'ContentNodeEditListItem',
@@ -217,6 +217,17 @@
       if (this.selected) {
         this.selected = false;
       }
+    },
+    methods: {
+      ...mapMutations('contentNode', {
+        openQuickEditModal: 'SET_QUICK_EDIT_MODAL_OPEN',
+      }),
+      editTitleDescription() {
+        this.openQuickEditModal({
+          modal: QuickEditModals.TITLE_DESCRIPTION,
+          nodeIds: [this.nodeId],
+        });
+      },
     },
     $trs: {
       optionsTooltip: 'Options',

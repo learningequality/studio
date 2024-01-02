@@ -223,6 +223,7 @@
       :channel="currentChannel"
       @syncing="syncInProgress"
     />
+    <QuickEditModal />
     <MessageDialog
       v-model="showDeleteModal"
       :header="$tr('deleteTitle')"
@@ -311,6 +312,7 @@
   import SyncResourcesModal from '../sync/SyncResourcesModal';
   import ProgressModal from '../progress/ProgressModal';
   import PublishModal from '../../components/publish/PublishModal';
+  import QuickEditModal from '../../components/QuickEditModal';
   import SavingIndicator from '../../components/edit/SavingIndicator';
   import { DraggableRegions, DraggableUniverses, RouteNames } from '../../constants';
   import MainNavigationDrawer from 'shared/views/MainNavigationDrawer';
@@ -343,6 +345,7 @@
       DraggablePlaceholder,
       MessageDialog,
       SavingIndicator,
+      QuickEditModal,
     },
     mixins: [titleMixin],
     props: {

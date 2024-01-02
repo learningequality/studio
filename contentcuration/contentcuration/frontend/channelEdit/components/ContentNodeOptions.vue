@@ -1,44 +1,46 @@
 <template>
 
-  <VList>
-    <VListTile v-if="isTopic && canEdit" @click="newTopicNode">
-      <VListTileTitle>{{ $tr('newSubtopic') }}</VListTileTitle>
-    </VListTile>
-    <VListTile v-if="canEdit && !hideEditLink" :to="editLink" @click="trackAction('Edit')">
-      <VListTileTitle>
-        {{ isTopic ? $tr('editTopicDetails') : $tr('editDetails') }}
-      </VListTileTitle>
-    </VListTile>
-    <VListTile v-if="!hideDetailsLink" :to="viewLink" @click="trackAction('View')">
-      <VListTileTitle>{{ $tr('viewDetails') }}</VListTileTitle>
-    </VListTile>
-    <VListTile v-if="canEdit" @click.stop="moveModalOpen = true">
-      <VListTileTitle>{{ $tr('move') }}</VListTileTitle>
-      <MoveModal
-        v-if="moveModalOpen"
-        ref="moveModal"
-        v-model="moveModalOpen"
-        :moveNodeIds="[nodeId]"
-        @target="moveNode"
-      />
-    </VListTile>
-    <VListTile v-if="canEdit" @click="duplicateNode()">
-      <VListTileTitle>{{ $tr('makeACopy') }}</VListTileTitle>
-    </VListTile>
-    <VListTile @click="copyToClipboard()">
-      <VListTileTitle>{{ $tr('copyToClipboard') }}</VListTileTitle>
-    </VListTile>
-    <VListTile v-if="canEdit" @click="removeNode()">
-      <VListTileTitle>{{ $tr('remove') }}</VListTileTitle>
-    </VListTile>
-  </VList>
+  <div
+    style="max-height: 80vh"
+  >
+    <VList>
+      <template
+        v-for="(group, groupIndex) in groupedOptions"
+      >
+        <VListTile
+          v-for="(option, index) in group"
+          :key="groupIndex + '-' + index"
+          ripple
+          :to="option.to"
+          @click="option.onClick($event)"
+        >
+          <VListTileTitle>
+            {{ option.label }}
+          </VListTileTitle>
+        </VListTile>
+        <VDivider
+          v-if="groupIndex < groupedOptions.length - 1"
+          :key="groupIndex + '-divider'"
+          class="divider"
+        />
+      </template>
+    </VList>
+
+    <MoveModal
+      v-if="moveModalOpen"
+      ref="moveModal"
+      v-model="moveModalOpen"
+      :moveNodeIds="[nodeId]"
+      @target="moveNode"
+    />
+  </div>
 
 </template>
 
 <script>
 
-  import { mapActions, mapGetters } from 'vuex';
-  import { RouteNames, TabNames } from '../constants';
+  import { mapActions, mapGetters, mapMutations } from 'vuex';
+  import { RouteNames, TabNames, QuickEditModals } from '../constants';
   import MoveModal from './move/MoveModal';
   import { ContentNode } from 'shared/data/resources';
   import { withChangeTracker } from 'shared/data/changes';
@@ -77,6 +79,121 @@
       isTopic() {
         return this.node.kind === 'topic';
       },
+      /**
+       * Returns a list of options to display in the menu
+       * @returns {Array<Array<Object>>} List of lists, where each inner list is a group of options
+       *                                 already filtered by the render condition
+       */
+      groupedOptions() {
+        const options = [
+          [
+            {
+              label: this.$tr('viewDetails'),
+              to: this.viewLink,
+              onClick: () => this.trackAction('View'),
+              condition: !this.hideDetailsLink,
+            },
+            {
+              label: this.$tr('editTitleDescription'),
+              onClick: this.editTitleDescription,
+              condition: this.canEdit,
+            },
+          ],
+          [
+            {
+              label: this.$tr('editAllDetails'),
+              to: this.editLink,
+              onClick: () => this.trackAction('Edit'),
+              condition: this.canEdit && !this.hideEditLink,
+            },
+            {
+              label: this.$tr('move'),
+              onClick: $event => {
+                $event.stopPropagation();
+                this.moveModalOpen = true;
+              },
+              condition: this.canEdit,
+            },
+            {
+              label: this.$tr('copyToClipboard'),
+              onClick: this.copyToClipboard,
+              condition: true,
+            },
+            {
+              label: this.$tr('makeACopy'),
+              onClick: this.duplicateNode,
+              condition: this.canEdit,
+            },
+            {
+              label: this.$tr('newSubtopic'),
+              onClick: this.newTopicNode,
+              condition: this.canEdit && this.isTopic,
+            },
+            {
+              label: this.$tr('remove'),
+              onClick: this.removeNode,
+              condition: this.canEdit,
+            },
+          ],
+          [
+            {
+              label: this.$tr('editTags'),
+              onClick: this.editTags,
+              condition: this.canEdit,
+            },
+            {
+              label: this.$tr('editLanguage'),
+              onClick: this.editLanguage,
+              condition: this.canEdit,
+            },
+          ],
+          [
+            {
+              label: this.$tr('editCategories'),
+              onClick: this.editCategories,
+              condition: this.canEdit,
+            },
+            {
+              label: this.$tr('editLevels'),
+              onClick: this.editLevels,
+              condition: this.canEdit,
+            },
+            {
+              label: this.$tr('editLearningActivities'),
+              onClick: this.editLearningActivities,
+              condition: this.canEdit,
+            },
+          ],
+          [
+            {
+              label: this.$tr('editSource'),
+              onClick: this.editSource,
+              condition: this.canEdit,
+            },
+            {
+              label: this.$tr('editAudience'),
+              onClick: this.editAudience,
+              condition: this.canEdit,
+            },
+          ],
+          [
+            {
+              label: this.$tr('editCompletion'),
+              onClick: this.editCompletion,
+              condition: this.canEdit,
+            },
+            {
+              label: this.$tr('editWhatIsNeeded'),
+              onClick: this.editWhatIsNeeded,
+              condition: this.canEdit,
+            },
+          ],
+        ];
+
+        return options
+          .filter(group => group.some(option => option.condition))
+          .map(group => group.filter(option => option.condition));
+      },
       editLink() {
         return {
           name: RouteNames.CONTENTNODE_DETAILS,
@@ -104,6 +221,9 @@
       },
     },
     methods: {
+      ...mapMutations('contentNode', {
+        openQuickEditModal: 'SET_QUICK_EDIT_MODAL_OPEN',
+      }),
       ...mapActions(['showSnackbar']),
       ...mapActions('contentNode', ['createContentNode', 'moveContentNodes', 'copyContentNode']),
       ...mapActions('clipboard', ['copy']),
@@ -150,6 +270,76 @@
 
         // Otherwise, don't do anything
         return () => {};
+      },
+      editTitleDescription() {
+        this.trackAction('Edit title and description');
+        this.openQuickEditModal({
+          modal: QuickEditModals.TITLE_DESCRIPTION,
+          nodeIds: [this.nodeId],
+        });
+      },
+      editTags() {
+        this.trackAction('Edit tags');
+        this.openQuickEditModal({
+          modal: QuickEditModals.TAGS,
+          nodeIds: [this.nodeId],
+        });
+      },
+      editLanguage() {
+        this.trackAction('Edit language');
+        this.openQuickEditModal({
+          modal: QuickEditModals.LANGUAGE,
+          nodeIds: [this.nodeId],
+        });
+      },
+      editCategories() {
+        this.trackAction('Edit categories');
+        this.openQuickEditModal({
+          modal: QuickEditModals.CATEGORIES,
+          nodeIds: [this.nodeId],
+        });
+      },
+      editLevels() {
+        this.trackAction('Edit levels');
+        this.openQuickEditModal({
+          modal: QuickEditModals.LEVELS,
+          nodeIds: [this.nodeId],
+        });
+      },
+      editLearningActivities() {
+        this.trackAction('Edit learning activities');
+        this.openQuickEditModal({
+          modal: QuickEditModals.LEARNING_ACTIVITIES,
+          nodeIds: [this.nodeId],
+        });
+      },
+      editSource() {
+        this.trackAction('Edit source');
+        this.openQuickEditModal({
+          modal: QuickEditModals.SOURCE,
+          nodeIds: [this.nodeId],
+        });
+      },
+      editAudience() {
+        this.trackAction('Edit audience');
+        this.openQuickEditModal({
+          modal: QuickEditModals.AUDIENCE,
+          nodeIds: [this.nodeId],
+        });
+      },
+      editCompletion() {
+        this.trackAction('Edit completion');
+        this.openQuickEditModal({
+          modal: QuickEditModals.COMPLETION,
+          nodeIds: [this.nodeId],
+        });
+      },
+      editWhatIsNeeded() {
+        this.trackAction('Edit what is needed');
+        this.openQuickEditModal({
+          modal: QuickEditModals.WHAT_IS_NEEDED,
+          nodeIds: [this.nodeId],
+        });
       },
       removeNode: withChangeTracker(function(changeTracker) {
         this.trackAction('Delete');
@@ -210,8 +400,17 @@
 
     $trs: {
       newSubtopic: 'New folder',
-      editTopicDetails: 'Edit folder details',
-      editDetails: 'Edit details',
+      editTitleDescription: 'Edit title and description',
+      editAllDetails: 'Edit all details',
+      editTags: 'Edit tags',
+      editLanguage: 'Edit language',
+      editCategories: 'Edit categories',
+      editLevels: 'Edit levels',
+      editLearningActivities: 'Edit learning activities',
+      editSource: 'Edit source',
+      editAudience: 'Edit audience',
+      editCompletion: 'Edit completion',
+      editWhatIsNeeded: "Edit 'what is needed'",
       viewDetails: 'View details',
       move: 'Move',
       makeACopy: 'Make a copy',
@@ -228,5 +427,7 @@
 </script>
 
 <style scoped>
-
+  .divider {
+    margin: 8px 0!important;
+  }
 </style>

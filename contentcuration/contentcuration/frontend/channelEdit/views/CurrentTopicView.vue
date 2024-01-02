@@ -223,12 +223,6 @@
         </template>
       </ResourceDrawer>
     </VLayout>
-
-    <EditTitleDescriptionModal
-      v-if="editTitleDescriptionModal"
-      :nodeId="editTitleDescriptionModal.nodeId"
-      @close="editTitleDescriptionModal = null"
-    />
   </VContainer>
 
 </template>
@@ -241,7 +235,6 @@
   import ContentNodeOptions from '../components/ContentNodeOptions';
   import ResourceDrawer from '../components/ResourceDrawer';
   import { RouteNames, viewModes, DraggableRegions, DraggableUniverses } from '../constants';
-  import EditTitleDescriptionModal from '../components/quickEdit/EditTitleDescriptionModal';
   import NodePanel from './NodePanel';
   import IconButton from 'shared/views/IconButton';
   import ToolBar from 'shared/views/ToolBar';
@@ -271,7 +264,6 @@
       Checkbox,
       MoveModal,
       DraggableRegion,
-      EditTitleDescriptionModal,
     },
     mixins: [titleMixin, routerMixin],
     props: {
@@ -290,7 +282,6 @@
         loadingAncestors: false,
         elevated: false,
         moveModalOpen: false,
-        editTitleDescriptionModal: null,
       };
     },
     computed: {
