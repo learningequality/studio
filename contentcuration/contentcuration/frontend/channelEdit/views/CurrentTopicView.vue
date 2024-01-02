@@ -75,6 +75,13 @@
             data-test="delete-selected-btn"
             @click="removeNodes(selected)"
           />
+          <IconButton
+            v-if="canEdit"
+            icon="language"
+            :text="$tr('editLanguageButton')"
+            data-test="change-langugage-btn"
+            @click="editLanguage(selected)"
+          />
         </div>
       </VSlideXTransition>
 
@@ -229,12 +236,12 @@
 
 <script>
 
-  import { mapActions, mapGetters, mapState } from 'vuex';
+  import { mapActions, mapGetters, mapState, mapMutations } from 'vuex';
   import get from 'lodash/get';
   import MoveModal from '../components/move/MoveModal';
   import ContentNodeOptions from '../components/ContentNodeOptions';
   import ResourceDrawer from '../components/ResourceDrawer';
-  import { RouteNames, viewModes, DraggableRegions, DraggableUniverses } from '../constants';
+  import { RouteNames, viewModes, DraggableRegions, DraggableUniverses, QuickEditModals } from '../constants';
   import NodePanel from './NodePanel';
   import IconButton from 'shared/views/IconButton';
   import ToolBar from 'shared/views/ToolBar';
@@ -429,6 +436,9 @@
         'copyContentNode',
       ]),
       ...mapActions('clipboard', ['copyAll']),
+      ...mapMutations('contentNode', {
+        openQuickEditModal: 'SET_QUICK_EDIT_MODAL_OPEN',
+      }),
       clearSelections() {
         this.selected = [];
       },
@@ -475,6 +485,14 @@
           params: {
             detailNodeIds: ids.join(','),
           },
+        });
+      },
+      editLanguage(nodeIds) {
+        console.log("nodeIds", nodeIds);
+        this.trackClickEvent('Edit language');
+        this.openQuickEditModal({
+          modal: QuickEditModals.LANGUAGE,
+          nodeIds,
         });
       },
       treeLink(params) {
@@ -696,6 +714,7 @@
       importFromChannels: 'Import from channels',
       addButton: 'Add',
       editButton: 'Edit',
+      editLanguageButton: 'Edit language',
       optionsButton: 'Options',
       copyToClipboardButton: 'Copy to clipboard',
       [viewModes.DEFAULT]: 'Default view',
