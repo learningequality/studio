@@ -72,7 +72,6 @@
     mixins: [constantsTranslationMixin],
     data() {
       return {
-        languageFilter: '',
         channels: [],
         pageCount: 0,
         loading: false,
@@ -95,6 +94,21 @@
           this.loadPage();
         },
       },
+      languageFilter: {
+        get() {
+          return this.$route.query.languages || '';
+        },
+        set(languages) {
+          this.$router.push({
+            ...this.$route,
+            query: {
+              ...this.$route.query,
+              languages,
+            },
+          });
+          this.loadPage();
+        },
+      },
       channelFilterOptions() {
         return Object.values(ChannelListTypes).map(value => {
           return {
@@ -106,9 +120,6 @@
     },
     watch: {
       '$route.query.page'() {
-        this.loadPage();
-      },
-      languageFilter() {
         this.loadPage();
       },
     },
