@@ -32,6 +32,7 @@ const GETTERS = {
     getContentNodeChildren: () => jest.fn(),
     getContentNodeAncestors: () => jest.fn(),
     getContentNode: () => jest.fn(),
+    isNodeInCopyingState: () => jest.fn(),
   },
 };
 
