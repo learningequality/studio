@@ -156,14 +156,23 @@ class ReturnedChanges extends ChangeDispatcher {
     }
 
     const { key, target, position, from_key } = change;
-    // copying takes the ID of the node to copy, so we use `from_key`
-    return resource.resolveTreeInsert({ id: from_key, target, position, isCreate: true }, data => {
-      return transaction(change, () => {
-        // Update the ID on the payload to match the received change, since isCreate=true
-        // would generate new IDs
-        data.payload.id = key;
-        return resource.tableCopy(data);
-      });
+    // 1. Fetch `from_key` node from indexed DB, if not there then
+    // only fetches from server.
+    return resource.get(from_key, false).then(sourceNode => {
+      // 2. Pass the node we get from above to `resolveTreeInsert` as sourceNode.
+      // because its actually the "source" node.
+      return resource.resolveTreeInsert(
+        // copying takes the ID of the node to copy, so we use `from_key`.
+        { id: from_key, target, position, isCreate: true, sourceNode: sourceNode },
+        data => {
+          return transaction(change, () => {
+            // Update the ID on the payload to match the received change, since isCreate=true
+            // would generate new IDs
+            data.payload.id = key;
+            return resource.tableCopy(data);
+          });
+        }
+      );
     });
   }
 
