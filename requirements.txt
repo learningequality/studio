@@ -178,7 +178,7 @@ packaging==20.9
     #   google-cloud-kms
 pathlib==1.0.1
     # via -r requirements.in
-pillow==9.4.0
+pillow==10.2.0
     # via -r requirements.in
 prometheus-client==0.10.1
     # via django-prometheus
