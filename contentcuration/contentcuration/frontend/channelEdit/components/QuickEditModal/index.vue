@@ -16,6 +16,11 @@
       :nodeIds="nodeIds"
       @close="close"
     />
+    <EditCategoriesModal
+      v-if="isCategoriesOpen"
+      :nodeIds="nodeIds"
+      @close="close"
+    />
   </div>
 
 </template>
@@ -26,6 +31,7 @@
   import { mapGetters, mapMutations } from 'vuex';
   import { QuickEditModals } from '../../constants';
   import EditLanguageModal from './EditLanguageModal';
+  import EditCategoriesModal from './EditCategoriesModal';
   import EditResourcesNeededModal from './EditResourcesNeededModal';
   import EditTitleDescriptionModal from './EditTitleDescriptionModal';
 
@@ -34,6 +40,7 @@
     components: {
       EditLanguageModal,
       EditResourcesNeededModal,
+      EditCategoriesModal,
       EditTitleDescriptionModal,
     },
     computed: {
@@ -60,6 +67,9 @@
       },
       isResourcesNeededOpen() {
         return this.openedModal === QuickEditModals.WHAT_IS_NEEDED;
+      },
+      isCategoriesOpen() {
+        return this.openedModal === QuickEditModals.CATEGORIES;
       },
     },
     methods: {

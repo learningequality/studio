@@ -3,6 +3,10 @@ import debounce from 'lodash/debounce';
 import memoize from 'lodash/memoize';
 import merge from 'lodash/merge';
 
+import {
+  Categories,
+  CategoriesLookup,
+} from 'shared/constants';
 import { LicensesList } from 'shared/leUtils/Licenses';
 
 function safeParseInt(str) {
@@ -448,4 +452,79 @@ export function cleanBooleanMaps(contentNode) {
       });
     }
   });
+}
+
+/**
+ * Copied implementation from Kolibri to have the same categories order.
+ * From: https://github.com/learningequality/kolibri/blob/c372cd05ddd105a7688db9e3698dc21b842ac3e5/kolibri/plugins/learn/assets/src/composables/useSearch.js#L77
+ */
+function getCategoriesTree() {
+  const libraryCategories = {};
+
+  const availablePaths = {};
+
+  (Object.values(Categories) || []).map(key => {
+    const paths = key.split('.');
+    let path = '';
+    for (const path_segment of paths) {
+      path = path === '' ? path_segment : path + '.' + path_segment;
+      availablePaths[path] = true;
+    }
+  });
+  // Create a nested object representing the hierarchy of categories
+  for (const value of Object.values(Categories)
+    // Sort by the length of the key path to deal with
+    // shorter key paths first.
+    .sort((a, b) => a.length - b.length)) {
+    // Split the value into the paths so we can build the object
+    // down the path to create the nested representation
+    const ids = value.split('.');
+    // Start with an empty path
+    let path = '';
+    // Start with the global object
+    let nested = libraryCategories;
+    for (const fragment of ids) {
+      // Add the fragment to create the path we examine
+      path += fragment;
+      // Check to see if this path is one of the paths
+      // that is available on this device
+      if (availablePaths[path]) {
+        // Lookup the human readable key for this path
+        const nestedKey = CategoriesLookup[path];
+        // Check if we have already represented this in the object
+        if (!nested[nestedKey]) {
+          // If not, add an object representing this category
+          nested[nestedKey] = {
+            // The value is the whole path to this point, so the value
+            // of the key.
+            value: path,
+            // Nested is an object that contains any subsidiary categories
+            nested: {},
+          };
+        }
+        // For the next stage of the loop the relevant object to edit is
+        // the nested object under this key.
+        nested = nested[nestedKey].nested;
+        // Add '.' to path so when we next append to the path,
+        // it is properly '.' separated.
+        path += '.';
+      } else {
+        break;
+      }
+    }
+  }
+  return libraryCategories;
+};
+
+export function getSortedCategories() {
+  const categoriesTree = getCategoriesTree();
+  const categoriesSorted = {}
+  const sortCategories = function(categories) {
+    Object.entries(categories).forEach(([name, category]) => {
+      categoriesSorted[category.value] = name;
+      sortCategories(category.nested);
+    });
+  };
+  sortCategories(categoriesTree);
+  return categoriesSorted;
 }
