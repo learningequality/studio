@@ -4,13 +4,16 @@
     :title="$tr('editLanguage')"
     :submitText="$tr('saveAction')"
     :cancelText="$tr('cancelAction')"
-    data-test="edit-langugage"
+    data-test="edit-language-modal"
     :submitDisabled="!selectedLanguage"
     @submit="handleSave"
     @cancel="close"
   >
-    <p>
+    <p data-test="resources-selected-message">
       {{ $tr('resourcesSelected', { count: nodeIds.length }) }}
+    </p>
+    <p v-if="isMultipleNodeLanguages" data-test="different-languages-message">
+      {{ $tr('differentLanguages') }}
     </p>
     <KTextbox
       autofocus
@@ -19,7 +22,21 @@
       :label="$tr('selectLanguage')"
       style="margin-top: 0.5em"
     />
-    <div ref="languages" class="languages-options">
+    <template v-if="isTopicSelected">
+      <KCheckbox
+        v-model="updateDescendants"
+        data-test="update-descendants-checkbox"
+        :label="$tr('updateDescendantsCheckbox')"
+      />
+      <hr
+        :style="dividerStyle"
+      >
+    </template>
+    <div
+      ref="languages"
+      class="languages-options"
+      data-test="language-options-list"
+    >
       <KRadioButton
         v-for="language in languageOptions"
         :key="language.id"
@@ -62,7 +79,7 @@
       isTopicSelected() {
         return this.nodes.some(node => node.kind === ContentKindsNames.TOPIC);
       },
-      isMultipleNodesLanguages() {
+      isMultipleNodeLanguages() {
         const languages = new Set(
           this.nodes
             .map(node => node.language)
@@ -81,6 +98,13 @@
             lang[key]?.toLowerCase().includes(searchQuery)
           ))
         ));
+      },
+      dividerStyle() {
+        return {
+          border: 0,
+          borderBottom: `1px solid ${this.$themeTokens.fineLine}`,
+          margin: '1em 0',
+        };
       },
     },
     created() {
@@ -150,6 +174,8 @@
         'Edited language for {count, number, integer} {count, plural, one {resource} other {resources}}',
       selectLanguage: 'Select / Type Language',
       resourcesSelected: '{count, number, integer} {count, plural, one {resource} other {resources}} selected',
+      differentLanguages: 'The selected resources have different languages set. Choosing an option below will apply the language to all the selected resources',
+      updateDescendantsCheckbox: 'Apply to all resources and folders nested within the selected folders',
     },
   };
 
