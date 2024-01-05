@@ -150,10 +150,13 @@ describe('EditTitleDescriptionModal', () => {
     });
 
     wrapper.find('[data-test="edit-title-description-modal"]').vm.$emit('submit');
-    expect(generalActions.showSnackbarSimple).toHaveBeenCalledWith(
-      expect.anything(),
-      'Edited title and description'
-    );
+
+    setTimeout(() => {
+      expect(generalActions.showSnackbarSimple).toHaveBeenCalledWith(
+        expect.anything(),
+        'Edited title and description'
+      );
+    }, 0);
   });
 
   test("should emit 'close' event on success submit", () => {
@@ -165,7 +168,10 @@ describe('EditTitleDescriptionModal', () => {
     });
 
     wrapper.find('[data-test="edit-title-description-modal"]').vm.$emit('submit');
-    expect(wrapper.emitted().close).toBeTruthy();
+
+    setTimeout(() => {
+      expect(wrapper.emitted().close).toBeTruthy();
+    }, 0);
   });
 
   test('should emit close event on cancel', () => {

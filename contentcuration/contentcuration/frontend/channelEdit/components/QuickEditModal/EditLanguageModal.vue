@@ -16,8 +16,8 @@
       {{ $tr('differentLanguages') }}
     </p>
     <KTextbox
-      autofocus
       v-model="searchQuery"
+      autofocus
       data-test="search-input"
       :label="$tr('selectLanguage')"
       style="margin-top: 0.5em"
@@ -80,11 +80,7 @@
         return this.nodes.some(node => node.kind === ContentKindsNames.TOPIC);
       },
       isMultipleNodeLanguages() {
-        const languages = new Set(
-          this.nodes
-            .map(node => node.language)
-            .filter(Boolean)
-        );
+        const languages = new Set(this.nodes.map(node => node.language).filter(Boolean));
         return languages.size > 1;
       },
       languageOptions() {
@@ -93,11 +89,9 @@
           return LanguagesList;
         }
         const criteria = ['id', 'native_name', 'readable_name'];
-        return LanguagesList.filter(lang => (
-          criteria.some(key => (
-            lang[key]?.toLowerCase().includes(searchQuery)
-          ))
-        ));
+        return LanguagesList.filter(lang =>
+          criteria.some(key => lang[key]?.toLowerCase().includes(searchQuery))
+        );
       },
       dividerStyle() {
         return {
@@ -108,9 +102,7 @@
       },
     },
     created() {
-      const languages = [...new Set(
-        this.nodes.map(node => node.language)
-      )];
+      const languages = [...new Set(this.nodes.map(node => node.language))];
       if (languages.length === 1) {
         this.selectedLanguage = languages[0] || '';
       }
@@ -124,7 +116,7 @@
         selectedRadio?.scrollIntoView?.();
       }
     },
-    methods: {  
+    methods: {
       ...mapActions('contentNode', ['updateContentNode']),
       languageText(langObject) {
         return this.$tr('languageItemText', {
@@ -142,10 +134,8 @@
 
         await Promise.all(
           this.nodes.map(node => {
-            if (
-              this.updateDescendants &&
-              node.kind === ContentKindsNames.TOPIC
-            ) { // will update with the new function to update all descendants
+            if (this.updateDescendants && node.kind === ContentKindsNames.TOPIC) {
+              // will update with the new function to update all descendants
               return this.updateContentNode({
                 id: node.id,
                 language: this.selectedLanguage,
@@ -173,9 +163,12 @@
       editedLanguage:
         'Edited language for {count, number, integer} {count, plural, one {resource} other {resources}}',
       selectLanguage: 'Select / Type Language',
-      resourcesSelected: '{count, number, integer} {count, plural, one {resource} other {resources}} selected',
-      differentLanguages: 'The selected resources have different languages set. Choosing an option below will apply the language to all the selected resources',
-      updateDescendantsCheckbox: 'Apply to all resources and folders nested within the selected folders',
+      resourcesSelected:
+        '{count, number, integer} {count, plural, one {resource} other {resources}} selected',
+      differentLanguages:
+        'The selected resources have different languages set. Choosing an option below will apply the language to all the selected resources',
+      updateDescendantsCheckbox:
+        'Apply to all resources and folders nested within the selected folders',
     },
   };
 
