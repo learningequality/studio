@@ -72,11 +72,13 @@
     mixins: [constantsTranslationMixin],
     data() {
       return {
+        languageFilter: '',
         channels: [],
         pageCount: 0,
         loading: false,
       };
     },
+    emits: ['updateLanguage'],
     computed: {
       ...mapState('currentChannel', ['currentChannelId']),
       channelFilter: {
@@ -94,21 +96,6 @@
           this.loadPage();
         },
       },
-      languageFilter: {
-        get() {
-          return this.$route.query.languages || '';
-        },
-        set(languages) {
-          this.$router.push({
-            ...this.$route,
-            query: {
-              ...this.$route.query,
-              languages,
-            },
-          });
-          this.loadPage();
-        },
-      },
       channelFilterOptions() {
         return Object.values(ChannelListTypes).map(value => {
           return {
@@ -120,6 +107,10 @@
     },
     watch: {
       '$route.query.page'() {
+        this.loadPage();
+      },
+      languageFilter() {
+        this.$emit('updateLanguage', this.languageFilter);
         this.loadPage();
       },
     },

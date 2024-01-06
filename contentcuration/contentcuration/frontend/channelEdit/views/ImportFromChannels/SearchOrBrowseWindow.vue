@@ -48,6 +48,7 @@
         <!-- Search or Topics Browsing -->
         <ChannelList
           v-if="isBrowsing && !$route.params.channelId"
+          @updateLanguage="updateLanguageQuery"
         />
         <ContentTreeList
           v-else-if="isBrowsing"
@@ -96,6 +97,7 @@
         searchTerm: '',
         topicNode: null,
         copyNode: null,
+        languages: '',
       };
     },
     computed: {
@@ -140,7 +142,11 @@
         clearNodes: 'CLEAR_NODES',
       }),
       handleBackToBrowse() {
+        this.languages = '';
         this.$router.push(this.backToBrowseRoute);
+      },
+      updateLanguageQuery(language) {
+        this.languages = language;
       },
       handleSearchTerm() {
         if (this.searchIsValid) {
@@ -151,6 +157,7 @@
             },
             query: {
               ...this.$route.query,
+              ...(this.languages !== '' ? { languages: this.languages } : ''),
               last: this.$route.query.last || this.$route.path,
             },
           });
