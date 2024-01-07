@@ -3,10 +3,7 @@ import debounce from 'lodash/debounce';
 import memoize from 'lodash/memoize';
 import merge from 'lodash/merge';
 
-import {
-  Categories,
-  CategoriesLookup,
-} from 'shared/constants';
+import { Categories, CategoriesLookup } from 'shared/constants';
 import { LicensesList } from 'shared/leUtils/Licenses';
 
 function safeParseInt(str) {
@@ -514,11 +511,11 @@ function getCategoriesTree() {
     }
   }
   return libraryCategories;
-};
+}
 
 export function getSortedCategories() {
   const categoriesTree = getCategoriesTree();
-  const categoriesSorted = {}
+  const categoriesSorted = {};
   const sortCategories = function(categories) {
     Object.entries(categories).forEach(([name, category]) => {
       categoriesSorted[category.value] = name;

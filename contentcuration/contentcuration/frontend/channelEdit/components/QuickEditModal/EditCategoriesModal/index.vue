@@ -5,20 +5,26 @@
     :submitText="$tr('saveAction')"
     :cancelText="$tr('cancelAction')"
     data-test="edit-language-modal"
-    :submitDisabled="!selectedLanguage"
     @submit="handleSave"
     @cancel="close"
   >
     <p data-test="resources-selected-message">
       {{ $tr('resourcesSelected', { count: nodeIds.length }) }}
     </p>
-    <CategoriesFilter />
-    <KTextbox
-      v-model="searchQuery"
-      autofocus
-      data-test="search-input"
+    <VAutocomplete
+      :value="selectedCategoriesValues"
+      :items="categoriesWithMixedOptions"
+      :searchInput.sync="searchQuery"
       :label="$tr('selectCategory')"
-      style="margin-top: 0.5em"
+      box
+      clearable
+      chips
+      deletableChips
+      multiple
+      item-value="value"
+      item-text="label"
+      :menu-props="{ height: 0, maxHeight: 0 } /* hide menu */"
+      @input="inputUpdate"
     />
     <template v-if="isTopicSelected">
       <KCheckbox
@@ -30,16 +36,16 @@
         :style="dividerStyle"
       >
     </template>
-    <div
-      ref="languages"
-      class="languages-options"
-      data-test="language-options-list"
-    >
-      <KRadioButton
-        v-for="language in languageOptions"
-        :key="language.id"
-        v-model="selectedLanguage"
-        :value="language.id"
+    <div class="categories-options">
+      <KCheckbox
+        v-for="category in categoriesOptions"
+        :key="category.value"
+        :value="category.value"
+        :label="category.label"
+        :style="treeItemStyle(category)"
+        :ripple="false"
+        :checked="isSelected(category)"
+        @change="value => onSelectCategory(category, value)"
       />
     </div>
   </KModal>
@@ -48,27 +54,30 @@
 
 
 <script>
+
+  import camelCase from 'lodash/camelCase';
   import { mapGetters, mapActions } from 'vuex';
-  import { LanguagesList } from 'shared/leUtils/Languages';
+  import { metadataTranslationMixin } from 'shared/mixins';
+  import { getSortedCategories } from 'shared/utils/helpers';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
-  import CategoriesFilter from './CategoriesFilter';
+
+  const MIXED = 'mixed';
 
   export default {
     name: 'EditCategoriesModal',
+    mixins: [metadataTranslationMixin],
     props: {
       nodeIds: {
         type: Array,
         required: true,
       },
     },
-    components: {
-      CategoriesFilter,
-    },
     data() {
       return {
-        selectedLanguage: '',
-        searchQuery: '',
         updateDescendants: false,
+        categories: [],
+        searchQuery: '',
+        selectedCategories: {},
       };
     },
     computed: {
@@ -79,15 +88,21 @@
       isTopicSelected() {
         return this.nodes.some(node => node.kind === ContentKindsNames.TOPIC);
       },
-      languageOptions() {
-        const searchQuery = this.searchQuery.trim().toLowerCase();
+      categoriesOptions() {
+        const searchQuery = this.searchQuery?.trim().toLowerCase();
         if (!this.searchQuery) {
-          return LanguagesList;
+          return this.categories;
         }
-        const criteria = ['id', 'native_name', 'readable_name'];
-        return LanguagesList.filter(lang =>
-          criteria.some(key => lang[key]?.toLowerCase().includes(searchQuery))
+        return this.categories.filter(category =>
+          category.label.toLowerCase().includes(searchQuery)
         );
+      },
+      flatList() {
+        return this.searchQuery && this.searchQuery.trim().length > 0;
+      },
+      isSelected() {
+        return category =>
+          Object.keys(this.selectedCategories).some(key => key.startsWith(category.value));
       },
       dividerStyle() {
         return {
@@ -96,21 +111,45 @@
           margin: '1em 0',
         };
       },
+      categoriesWithMixedOptions() {
+        return [
+          {
+            value: MIXED,
+            label: this.$tr('mixedLabel'),
+            level: 0,
+          },
+          ...this.categories,
+        ];
+      },
+      selectedCategoriesValues() {
+        return Object.entries(this.selectedCategories)
+          .filter((entry) => entry[1] === true) // no mixed values
+          .map(([key]) => key);
+      },
     },
     created() {
-      const languages = [...new Set(this.nodes.map(node => node.language))];
-      if (languages.length === 1) {
-        this.selectedLanguage = languages[0] || '';
-      }
-    },
-    mounted() {
-      if (this.selectedLanguage) {
-        // Search for the selected KRadioButton and scroll to it
-        const selectedRadio = this.$refs.languages.querySelector(
-          `input[value="${this.selectedLanguage}"]`
-        );
-        selectedRadio?.scrollIntoView?.();
-      }
+      const categories = getSortedCategories();
+      this.categories = Object.entries(categories).map(([id, category]) => ({
+        value: id,
+        label: this.translateMetadataString(camelCase(category)),
+        level: id.split('.').length,
+      }));
+
+      const categoriesCount = {};
+
+      this.nodes.forEach(node => {
+        node.tags.forEach(tag => {
+          if (categoriesCount[tag]) {
+            categoriesCount[tag] += 1;
+          } else {
+            categoriesCount[tag] = 1;
+          }
+        });
+      });
+
+      Object.entries(categoriesCount).forEach(([key, value]) => {
+        this.selectedCategories[key] = value === this.nodes.length ? true : MIXED;
+      });
     },
     methods: {
       ...mapActions('contentNode', ['updateContentNode']),
@@ -142,6 +181,34 @@
         );
         this.close();
       },
+      treeItemStyle(item) {
+        const rule = this.$isRTL ? 'paddingRight' : 'paddingLeft';
+        return this.flatList ? {} : { [rule]: `${item.level * 24}px` };
+      },
+      onSelectCategory(category, value) {
+        if (value) {
+          this.selectedCategories = {
+            ...this.selectedCategories,
+            [category.value]: true,
+          };
+        } else {
+          const newSelectedCategories = { ...this.selectedCategories };
+
+          Object.keys(this.selectedCategories).forEach(key => {
+            if (key.startsWith(category.value)) {
+              delete newSelectedCategories[key];
+            }
+          });
+          this.selectedCategories = newSelectedCategories;
+        }
+      },
+      inputUpdate(selected) {
+        const newSelectedCategories = {};
+        selected.forEach(category => {
+          newSelectedCategories[category] = true;
+        });
+        this.selectedCategories = newSelectedCategories;
+      },
     },
     $trs: {
       editCategories: 'Edit Categories',
@@ -154,11 +221,14 @@
         '{count, number, integer} {count, plural, one {resource} other {resources}} selected',
       updateDescendantsCheckbox:
         'Apply to all resources and folders nested within the selected folders',
+      mixedLabel: 'Mixed',
     },
   };
+
 </script>
+
 <style scoped>
-  .languages-options {
+  .categories-options {
     height: 350px;
     overflow-y: auto;
   }
