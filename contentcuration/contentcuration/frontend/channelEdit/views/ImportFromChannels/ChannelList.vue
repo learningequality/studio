@@ -78,7 +78,6 @@
         loading: false,
       };
     },
-    emits: ['updateLanguage'],
     computed: {
       ...mapState('currentChannel', ['currentChannelId']),
       channelFilter: {
@@ -110,8 +109,8 @@
         this.loadPage();
       },
       languageFilter() {
-        this.$emit('updateLanguage', this.languageFilter);
         this.loadPage();
+        this.$emit('update-language', this.languageFilter);
       },
     },
     mounted() {

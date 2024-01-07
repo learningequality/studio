@@ -48,7 +48,7 @@
         <!-- Search or Topics Browsing -->
         <ChannelList
           v-if="isBrowsing && !$route.params.channelId"
-          @updateLanguage="updateLanguageQuery"
+          @update-language="updateLanguageQuery"
         />
         <ContentTreeList
           v-else-if="isBrowsing"
