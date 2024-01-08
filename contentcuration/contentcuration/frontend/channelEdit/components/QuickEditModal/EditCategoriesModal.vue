@@ -25,7 +25,25 @@
       item-text="label"
       :menu-props="{ height: 0, maxHeight: 0 } /* hide menu */"
       @input="inputUpdate"
-    />
+    >
+      <template #selection="data">
+        <VTooltip top lazy>
+          <template #activator="{ on, attrs }">
+            <VChip
+              v-bind="attrs"
+              :close="!data.item.undeletable"
+              v-on="on"
+              @input="onSelectCategory(data.item, false)"
+            >
+              {{ data.item.label }}
+            </VChip>
+          </template>
+          <div>
+            <div>{{ tooltipText(data.item.value) }}</div>
+          </div>
+        </VTooltip>
+      </template>
+    </VAutocomplete>
     <template v-if="isTopicSelected">
       <KCheckbox
         v-model="updateDescendants"
@@ -44,7 +62,8 @@
         :label="category.label"
         :style="treeItemStyle(category)"
         :ripple="false"
-        :checked="isSelected(category)"
+        :checked="isCheckboxSelected(category)"
+        :indeterminate="isCheckboxIndeterminate(category)"
         @change="value => onSelectCategory(category, value)"
       />
     </div>
@@ -57,6 +76,7 @@
 
   import camelCase from 'lodash/camelCase';
   import { mapGetters, mapActions } from 'vuex';
+  import { CategoriesLookup } from 'shared/constants';
   import { metadataTranslationMixin } from 'shared/mixins';
   import { getSortedCategories } from 'shared/utils/helpers';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
@@ -100,10 +120,6 @@
       flatList() {
         return this.searchQuery && this.searchQuery.trim().length > 0;
       },
-      isSelected() {
-        return category =>
-          Object.keys(this.selectedCategories).some(key => key.startsWith(category.value));
-      },
       dividerStyle() {
         return {
           border: 0,
@@ -116,15 +132,19 @@
           {
             value: MIXED,
             label: this.$tr('mixedLabel'),
-            level: 0,
+            undeletable: true,
           },
           ...this.categories,
         ];
       },
       selectedCategoriesValues() {
-        return Object.entries(this.selectedCategories)
-          .filter((entry) => entry[1] === true) // no mixed values
+        const selectedCategories = Object.entries(this.selectedCategories)
+          .filter(entry => entry[1] === true) // no mixed values
           .map(([key]) => key);
+        if (Object.values(this.selectedCategories).some(value => value !== true)) {
+          selectedCategories.push(MIXED);
+        }
+        return selectedCategories;
       },
     },
     created() {
@@ -135,20 +155,23 @@
         level: id.split('.').length,
       }));
 
-      const categoriesCount = {};
+      const categoriesNodes = {};
 
       this.nodes.forEach(node => {
-        node.tags.forEach(tag => {
-          if (categoriesCount[tag]) {
-            categoriesCount[tag] += 1;
-          } else {
-            categoriesCount[tag] = 1;
-          }
-        });
+        Object.entries(node.categories)
+          .filter(entry => entry[1] === true)
+          .forEach(([category]) => {
+            categoriesNodes[category] = categoriesNodes[category] || [];
+            categoriesNodes[category].push(node.id);
+          });
       });
 
-      Object.entries(categoriesCount).forEach(([key, value]) => {
-        this.selectedCategories[key] = value === this.nodes.length ? true : MIXED;
+      Object.entries(categoriesNodes).forEach(([key, nodeIds]) => {
+        if (nodeIds.length === this.nodeIds.length) {
+          this.selectedCategories[key] = true;
+        } else {
+          this.selectedCategories[key] = nodeIds;
+        }
       });
     },
     methods: {
@@ -156,22 +179,63 @@
       close() {
         this.$emit('close');
       },
-      async handleSave() {
-        if (!this.selectedLanguage) {
-          return;
+      isCheckboxSelected(category) {
+        if (this.selectedCategories[category.value]) {
+          return this.selectedCategories[category.value] === true;
         }
+
+        const categoriesValues = Object.keys(this.selectedCategories)
+          .filter(selectedCategory => selectedCategory.startsWith(category.value))
+          .map(selectedCategory => this.selectedCategories[selectedCategory]);
+        if (categoriesValues.length === 0) {
+          return false;
+        } else if (categoriesValues.length === 1) {
+          return categoriesValues[0] === true;
+        }
+        // Child categories are selected
+        if (categoriesValues.some(value => value === true)) {
+          // if some child category is selected for all nodes, then it is selected
+          return true;
+        }
+
+        // Here all child categories are mixed, we need to check if together
+        // they are all selected for the parent category
+        const nodeIds = new Set();
+        categoriesValues.forEach(categoryNodeIds => {
+          categoryNodeIds.forEach(nodeId => nodeIds.add(nodeId));
+        });
+        return nodeIds.size === this.nodeIds.length;
+      },
+      isCheckboxIndeterminate(category) {
+        if (this.selectedCategories[category.value]) {
+          return this.selectedCategories[category.value] !== true;
+        }
+
+        return (
+          Object.keys(this.selectedCategories).some(selectedCategory =>
+            selectedCategory.startsWith(category.value)
+          ) && !this.isCheckboxSelected(category)
+        );
+      },
+      async handleSave() {
         await Promise.all(
           this.nodes.map(node => {
+            const categories = {};
+            Object.entries(this.selectedCategories).forEach(([key, value]) => {
+              if (value === true || value.includes(node.id)) {
+                categories[key] = true;
+              }
+            });
             if (this.updateDescendants && node.kind === ContentKindsNames.TOPIC) {
               // will update with the new function to update all descendants
               return this.updateContentNode({
                 id: node.id,
-                language: this.selectedLanguage,
+                categories,
               });
             }
             return this.updateContentNode({
               id: node.id,
-              language: this.selectedLanguage,
+              categories,
             });
           })
         );
@@ -180,10 +244,6 @@
           this.$tr('editedCategories', { count: this.nodes.length })
         );
         this.close();
-      },
-      treeItemStyle(item) {
-        const rule = this.$isRTL ? 'paddingRight' : 'paddingLeft';
-        return this.flatList ? {} : { [rule]: `${item.level * 24}px` };
       },
       onSelectCategory(category, value) {
         if (value) {
@@ -208,6 +268,24 @@
           newSelectedCategories[category] = true;
         });
         this.selectedCategories = newSelectedCategories;
+      },
+      treeItemStyle(item) {
+        const rule = this.$isRTL ? 'paddingRight' : 'paddingLeft';
+        return this.flatList ? {} : { [rule]: `${item.level * 24}px` };
+      },
+      tooltipText(category) {
+        if (category === MIXED) {
+          return this.$tr('mixedLabel');
+        }
+        const parentCategories = category.split('.');
+        let prefixId = '';
+        return parentCategories
+          .map(category => {
+            const categoryName = CategoriesLookup[`${prefixId}${category}`];
+            prefixId += `${category}.`;
+            return this.translateMetadataString(camelCase(categoryName)) || '';
+          })
+          .join(' - ');
       },
     },
     $trs: {

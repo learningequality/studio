@@ -85,11 +85,19 @@
           <IconButton
             v-if="canEdit"
             icon="dashboard"
+            :text="$tr('editCategoriesButton')"
+            data-test="change-categories-btn"
+            @click="editCategories(selected)"
+          />
+          <IconButton
+            v-if="canEdit"
+            icon="lesson"
             :text="$tr('editWhatIsNeededButton')"
             data-test="change-resources-neded-btn"
             @click="editResourcesNeeded(selected)"
           />
         </div>
+
       </VSlideXTransition>
 
       <MoveModal
@@ -510,6 +518,13 @@
           nodeIds,
         });
       },
+      editCategories(nodeIds) {
+        this.trackClickEvent('Edit categories');
+        this.openQuickEditModal({
+          modal: QuickEditModals.CATEGORIES,
+          nodeIds,
+        });
+      },
       editResourcesNeeded(nodeIds) {
         this.trackClickEvent('Edit what is needed');
         this.openQuickEditModal({
@@ -737,6 +752,7 @@
       addButton: 'Add',
       editButton: 'Edit',
       editLanguageButton: 'Edit language',
+      editCategoriesButton: 'Edit categories',
       editWhatIsNeededButton: "Edit 'what is needed'",
       optionsButton: 'Options',
       copyToClipboardButton: 'Copy to clipboard',
