@@ -28,7 +28,6 @@
             class="toolbar-icon-btn"
             :tooltip="$tr('channelDetails')"
             icon="info"
-            
           />
         </KRouterLink>
         <KRouterLink
@@ -315,7 +314,6 @@
   import SavingIndicator from '../../components/edit/SavingIndicator';
   import { DraggableRegions, DraggableUniverses, RouteNames } from '../../constants';
   import MainNavigationDrawer from 'shared/views/MainNavigationDrawer';
-  import IconButton from 'shared/views/IconButton';
   import ToolBar from 'shared/views/ToolBar';
   import ChannelTokenModal from 'shared/views/channel/ChannelTokenModal';
   import OfflineText from 'shared/views/OfflineText';
@@ -331,7 +329,6 @@
     name: 'TreeViewBase',
     components: {
       DraggableRegion,
-      IconButton,
       MainNavigationDrawer,
       ToolBar,
       PublishModal,
