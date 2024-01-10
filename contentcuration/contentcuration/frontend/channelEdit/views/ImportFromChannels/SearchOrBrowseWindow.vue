@@ -142,7 +142,6 @@
         clearNodes: 'CLEAR_NODES',
       }),
       handleBackToBrowse() {
-        this.languages = '';
         this.$router.push(this.backToBrowseRoute);
       },
       updateLanguageQuery(language) {
@@ -161,6 +160,7 @@
               last: this.$route.query.last || this.$route.path,
             },
           });
+          this.languages = '';
           this.clearNodes();
           this.$analytics.trackAction('import_modal', 'Search');
         }
