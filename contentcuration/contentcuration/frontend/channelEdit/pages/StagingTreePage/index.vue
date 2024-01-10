@@ -51,22 +51,18 @@
         }"
       >
         <VLayout row class="px-3">
-          <KRouterLink>
-            <KIcon
-              icon="collapseAll"
-              :text="$tr('collapseAllButton')"
-              @click="collapseAll"
-            />
-          </KRouterLink>
+          <KIconButton
+            icon="collapseAll"
+            :tooltip="$tr('collapseAllButton')"
+            @click="collapseAll"
+          />
           <VSpacer />
-          <KRouterLink>
-            <KIcon
-              :disabled="!ancestors || !ancestors.length"
-              icon="myLocation"
-              :text="$tr('openCurrentLocationButton')"
-              @click="jumpToLocation"
-            />
-          </KRouterLink>
+          <KIconButton
+            :disabled="!ancestors || !ancestors.length"
+            icon="myLocation"
+            :text="$tr('openCurrentLocationButton')"
+            @click="jumpToLocation"
+          />
         </VLayout>
         <div class="px-3">
           <StudioTree
