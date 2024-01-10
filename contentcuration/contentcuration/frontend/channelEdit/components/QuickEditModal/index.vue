@@ -6,6 +6,11 @@
       :nodeId="nodeIds[0]"
       @close="close"
     />
+    <EditLanguageModal
+      v-if="isLanguageOpen"
+      :nodeIds="nodeIds"
+      @close="close"
+    />
   </div>
 
 </template>
@@ -15,11 +20,13 @@
 
   import { mapGetters, mapMutations } from 'vuex';
   import { QuickEditModals } from '../../constants';
-  import EditTitleDescriptionModal from './EditTitleDescriptionModal.vue';
+  import EditLanguageModal from './EditLanguageModal';
+  import EditTitleDescriptionModal from './EditTitleDescriptionModal';
 
   export default {
     name: 'QuickEditModal',
     components: {
+      EditLanguageModal,
       EditTitleDescriptionModal,
     },
     computed: {
@@ -40,6 +47,9 @@
       },
       isTitleDescriptionOpen() {
         return this.openedModal === QuickEditModals.TITLE_DESCRIPTION;
+      },
+      isLanguageOpen() {
+        return this.openedModal === QuickEditModals.LANGUAGE;
       },
     },
     methods: {

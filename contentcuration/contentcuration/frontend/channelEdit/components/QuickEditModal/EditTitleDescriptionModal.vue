@@ -73,14 +73,14 @@
       close() {
         this.$emit('close');
       },
-      handleSave() {
+      async handleSave() {
         this.validateTitle();
         if (this.titleError) {
           return;
         }
 
         const { nodeId, title, description } = this;
-        this.updateContentNode({
+        await this.updateContentNode({
           id: nodeId,
           title: title.trim(),
           description: description.trim(),
