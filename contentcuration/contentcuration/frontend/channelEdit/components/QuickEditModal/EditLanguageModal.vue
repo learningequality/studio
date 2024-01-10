@@ -90,7 +90,7 @@
         }
         const criteria = ['id', 'native_name', 'readable_name'];
         return LanguagesList.filter(lang =>
-          criteria.some(key => lang[key]?.toLowerCase().includes(searchQuery))
+          criteria.some(key => lang[key] && lang[key].toLowerCase().includes(searchQuery))
         );
       },
       dividerStyle() {
@@ -113,7 +113,9 @@
         const selectedRadio = this.$refs.languages.querySelector(
           `input[value="${this.selectedLanguage}"]`
         );
-        selectedRadio?.scrollIntoView?.();
+        if (selectedRadio && selectedRadio.scrollIntoView) {
+          selectedRadio.scrollIntoView();
+        }
       }
     },
     methods: {

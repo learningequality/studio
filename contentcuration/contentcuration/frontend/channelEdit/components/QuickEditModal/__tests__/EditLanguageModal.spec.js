@@ -152,14 +152,13 @@ describe('EditTitleDescriptionModal', () => {
     expect(submitButton.element.disabled).toBeFalsy();
   });
 
-  test('should call updateContentNode with the right language on success submit', async () => {
+  test('should call updateContentNode with the right language on success submit', () => {
     const wrapper = makeWrapper(['test-en-res']);
 
     wrapper.find('input[value="en"]').setChecked(true);
     wrapper.find('[data-test="edit-language-modal"]').vm.$emit('submit');
 
-    setTimeout(() => {
-      // wait async
+    const animationFrameId = requestAnimationFrame(() => {
       expect(contentNodeActions.updateContentNode).toHaveBeenCalledWith(expect.anything(), {
         id: 'test-es-res',
         language: 'en',
@@ -168,7 +167,8 @@ describe('EditTitleDescriptionModal', () => {
         id: 'test-en-res',
         language: 'en',
       });
-    }, 0);
+      cancelAnimationFrame(animationFrameId);
+    });
   });
 
   test('should emit close event on success submit', () => {
@@ -177,10 +177,10 @@ describe('EditTitleDescriptionModal', () => {
     wrapper.find('input[value="en"]').setChecked(true);
     wrapper.find('[data-test="edit-language-modal"]').vm.$emit('submit');
 
-    setTimeout(() => {
-      // wait async
+    const animationFrameId = requestAnimationFrame(() => {
       expect(wrapper.emitted('close')).toBeTruthy();
-    }, 0);
+      cancelAnimationFrame(animationFrameId);
+    });
   });
 
   test('should emit close event on cancel', () => {
@@ -188,10 +188,10 @@ describe('EditTitleDescriptionModal', () => {
 
     wrapper.find('[data-test="edit-language-modal"]').vm.$emit('cancel');
 
-    setTimeout(() => {
-      // wait async
+    const animationFrameId = requestAnimationFrame(() => {
       expect(wrapper.emitted('close')).toBeTruthy();
-    }, 0);
+      cancelAnimationFrame(animationFrameId);
+    });
   });
 
   test('should show a confirmation snackbar on success submit', () => {
@@ -200,10 +200,10 @@ describe('EditTitleDescriptionModal', () => {
     wrapper.find('input[value="en"]').setChecked(true);
     wrapper.find('[data-test="edit-language-modal"]').vm.$emit('submit');
 
-    setTimeout(() => {
-      // wait async
+    const animationFrameId = requestAnimationFrame(() => {
       expect(generalActions.showSnackbarSimple).toHaveBeenCalled();
-    }, 0);
+      cancelAnimationFrame(animationFrameId);
+    });
   });
 
   describe('topic nodes present', () => {
@@ -225,12 +225,12 @@ describe('EditTitleDescriptionModal', () => {
       wrapper.find('input[value="es"]').setChecked(true);
       wrapper.find('[data-test="edit-language-modal"]').vm.$emit('submit');
 
-      setTimeout(() => {
-        // wait async
+      const animationFrameId = requestAnimationFrame(() => {
         expect(contentNodeActions.updateContentNode).toHaveBeenCalledWith(expect.anything(), {
           id: 'test-en-topic',
           language: 'es',
         });
+        cancelAnimationFrame(animationFrameId);
       });
     });
 
@@ -241,12 +241,12 @@ describe('EditTitleDescriptionModal', () => {
       wrapper.find('[data-test="update-descendants-checkbox"] input').setChecked(true);
       wrapper.find('[data-test="edit-language-modal"]').vm.$emit('submit');
 
-      setTimeout(() => {
-        // wait async
+      const animationFrameId = requestAnimationFrame(() => {
         expect(contentNodeActions.updateContentNode).toHaveBeenCalledWith(expect.anything(), {
           id: 'test-en-topic',
           language: 'es',
         });
+        cancelAnimationFrame(animationFrameId);
       });
     });
   });
