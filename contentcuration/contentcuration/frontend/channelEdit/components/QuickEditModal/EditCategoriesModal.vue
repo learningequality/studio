@@ -48,9 +48,10 @@
     </VAutocomplete>
     <template v-if="isTopicSelected">
       <KCheckbox
-        v-model="updateDescendants"
+        :checked="updateDescendants"
         data-test="update-descendants-checkbox"
         :label="$tr('updateDescendantsCheckbox')"
+        @change="(value) => { updateDescendants = value }"
       />
       <hr
         :style="dividerStyle"
@@ -191,7 +192,7 @@
       });
     },
     methods: {
-      ...mapActions('contentNode', ['updateContentNode']),
+      ...mapActions('contentNode', ['updateContentNode', 'updateContentNodeDescendants']),
       close() {
         this.$emit('close');
       },
@@ -243,8 +244,7 @@
               }
             });
             if (this.updateDescendants && node.kind === ContentKindsNames.TOPIC) {
-              // will update with the new function to update all descendants
-              return this.updateContentNode({
+              return this.updateContentNodeDescendants({
                 id: node.id,
                 categories,
               });

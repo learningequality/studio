@@ -80,6 +80,7 @@ describe('EditCategoriesModal', () => {
     };
     contentNodeActions = {
       updateContentNode: jest.fn(),
+      updateContentNodeDescendants: jest.fn(),
     };
     generalActions = {
       showSnackbarSimple: jest.fn(),
@@ -473,7 +474,7 @@ describe('EditCategoriesModal', () => {
       });
     });
 
-    test('should call updateContentNode on success submit if the user checks the checkbox', () => {
+    test('should call updateContentNodeDescendants on success submit if the user checks the checkbox', () => {
       nodes['node1'].kind = ContentKindsNames.TOPIC;
 
       const wrapper = makeWrapper(['node1']);
@@ -482,7 +483,7 @@ describe('EditCategoriesModal', () => {
       wrapper.find('[data-test="edit-categories-modal"]').vm.$emit('submit');
 
       const animationFrameId = requestAnimationFrame(() => {
-        expect(contentNodeActions.updateContentNode).toHaveBeenCalledWith(expect.anything(), {
+        expect(contentNodeActions.updateContentNodeDescendants).toHaveBeenCalledWith(expect.anything(), {
           id: 'node1',
           categories: {},
         });
