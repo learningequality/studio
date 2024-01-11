@@ -60,7 +60,7 @@
           <KIconButton
             :disabled="!ancestors || !ancestors.length"
             icon="myLocation"
-            :text="$tr('openCurrentLocationButton')"
+            :tooltip="$tr('openCurrentLocationButton')"
             @click="jumpToLocation"
           />
         </VLayout>
