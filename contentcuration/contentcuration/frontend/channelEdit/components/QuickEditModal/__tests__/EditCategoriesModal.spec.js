@@ -483,10 +483,13 @@ describe('EditCategoriesModal', () => {
       wrapper.find('[data-test="edit-categories-modal"]').vm.$emit('submit');
 
       const animationFrameId = requestAnimationFrame(() => {
-        expect(contentNodeActions.updateContentNodeDescendants).toHaveBeenCalledWith(expect.anything(), {
-          id: 'node1',
-          categories: {},
-        });
+        expect(contentNodeActions.updateContentNodeDescendants).toHaveBeenCalledWith(
+          expect.anything(),
+          {
+            id: 'node1',
+            categories: {},
+          }
+        );
         cancelAnimationFrame(animationFrameId);
       });
     });
