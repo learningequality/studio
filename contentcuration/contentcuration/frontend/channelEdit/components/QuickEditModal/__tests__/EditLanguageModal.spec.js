@@ -28,6 +28,7 @@ describe('EditTitleDescriptionModal', () => {
   beforeEach(() => {
     contentNodeActions = {
       updateContentNode: jest.fn(),
+      updateContentNodeDescendants: jest.fn(),
     };
     generalActions = {
       showSnackbarSimple: jest.fn(),
@@ -234,7 +235,7 @@ describe('EditTitleDescriptionModal', () => {
       });
     });
 
-    test('should call updateContentNode with the right language on success submit if the user checks the checkbox', () => {
+    test('should call updateContentNodeDescendants with the right language on success submit if the user checks the checkbox', () => {
       const wrapper = makeWrapper(['test-en-topic', 'test-en-res']);
 
       wrapper.find('input[value="es"]').setChecked(true);
@@ -242,7 +243,7 @@ describe('EditTitleDescriptionModal', () => {
       wrapper.find('[data-test="edit-language-modal"]').vm.$emit('submit');
 
       const animationFrameId = requestAnimationFrame(() => {
-        expect(contentNodeActions.updateContentNode).toHaveBeenCalledWith(expect.anything(), {
+        expect(contentNodeActions.updateContentNodeDescendants).toHaveBeenCalledWith(expect.anything(), {
           id: 'test-en-topic',
           language: 'es',
         });

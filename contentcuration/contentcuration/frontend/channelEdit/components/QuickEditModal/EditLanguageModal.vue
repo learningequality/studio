@@ -24,9 +24,10 @@
     />
     <template v-if="isTopicSelected">
       <KCheckbox
-        v-model="updateDescendants"
+        :checked="updateDescendants"
         data-test="update-descendants-checkbox"
         :label="$tr('updateDescendantsCheckbox')"
+        @change="(value) => { updateDescendants = value }"
       />
       <hr
         :style="dividerStyle"
@@ -119,7 +120,7 @@
       }
     },
     methods: {
-      ...mapActions('contentNode', ['updateContentNode']),
+      ...mapActions('contentNode', ['updateContentNode', 'updateContentNodeDescendants']),
       languageText(langObject) {
         return this.$tr('languageItemText', {
           language: langObject.native_name,
@@ -137,8 +138,7 @@
         await Promise.all(
           this.nodes.map(node => {
             if (this.updateDescendants && node.kind === ContentKindsNames.TOPIC) {
-              // will update with the new function to update all descendants
-              return this.updateContentNode({
+              return this.updateContentNodeDescendants({
                 id: node.id,
                 language: this.selectedLanguage,
               });
