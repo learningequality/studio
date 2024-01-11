@@ -67,6 +67,12 @@
         :indeterminate="isCheckboxIndeterminate(category)"
         @change="value => onSelectCategory(category, value)"
       />
+      <p
+        v-if="!categoriesOptions.length"
+        :style="{ color: $themeTokens.annotation }"
+      >
+        {{ $tr('emptyCategoriesSearch') }}
+      </p>
     </div>
   </KModal>
 
@@ -301,6 +307,7 @@
       updateDescendantsCheckbox:
         'Apply to all resources and folders nested within the selected folders',
       mixedLabel: 'Mixed',
+      emptyCategoriesSearch: 'No categories matches the search',
     },
   };
 
