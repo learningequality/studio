@@ -24,7 +24,7 @@ const makeWrapper = nodeIds => {
   });
 };
 
-describe('EditTitleDescriptionModal', () => {
+describe('EditLanguageModal', () => {
   beforeEach(() => {
     contentNodeActions = {
       updateContentNode: jest.fn(),

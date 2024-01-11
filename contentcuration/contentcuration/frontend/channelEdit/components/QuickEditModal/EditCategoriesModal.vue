@@ -4,7 +4,7 @@
     :title="$tr('editCategories')"
     :submitText="$tr('saveAction')"
     :cancelText="$tr('cancelAction')"
-    data-test="edit-language-modal"
+    data-test="edit-categories-modal"
     @submit="handleSave"
     @cancel="close"
   >
@@ -23,6 +23,7 @@
       multiple
       item-value="value"
       item-text="label"
+      data-test="category-autocomplete"
       :menu-props="{ height: 0, maxHeight: 0 } /* hide menu */"
       @input="inputUpdate"
     >
@@ -32,6 +33,7 @@
             <VChip
               v-bind="attrs"
               :close="!data.item.undeletable"
+              data-test="category-chip"
               v-on="on"
               @input="onSelectCategory(data.item, false)"
             >
@@ -58,10 +60,9 @@
       <KCheckbox
         v-for="category in categoriesOptions"
         :key="category.value"
-        :value="category.value"
+        data-test="category-checkbox"
         :label="category.label"
         :style="treeItemStyle(category)"
-        :ripple="false"
         :checked="isCheckboxSelected(category)"
         :indeterminate="isCheckboxIndeterminate(category)"
         @change="value => onSelectCategory(category, value)"
@@ -158,7 +159,7 @@
       const categoriesNodes = {};
 
       this.nodes.forEach(node => {
-        Object.entries(node.categories)
+        Object.entries(node.categories || {})
           .filter(entry => entry[1] === true)
           .forEach(([category]) => {
             categoriesNodes[category] = categoriesNodes[category] || [];
