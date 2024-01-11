@@ -892,6 +892,7 @@ class BulkUpdateMixin(UpdateModelMixin):
                             error[self.id_attr()],
                         )
                     ):
+                        print("NO SE PROP QUE ESTA AQUIIII DIOOOOOOSSSSS", error, datum)
                         error = ValidationError("Not found").detail
                     datum.update({"errors": error})
                     errors.append(datum)
