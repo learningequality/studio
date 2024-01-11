@@ -51,16 +51,16 @@
         }"
       >
         <VLayout row class="px-3">
-          <IconButton
+          <KIconButton
             icon="collapseAll"
-            :text="$tr('collapseAllButton')"
+            :tooltip="$tr('collapseAllButton')"
             @click="collapseAll"
           />
           <VSpacer />
-          <IconButton
+          <KIconButton
             :disabled="!ancestors || !ancestors.length"
             icon="myLocation"
-            :text="$tr('openCurrentLocationButton')"
+            :tooltip="$tr('openCurrentLocationButton')"
             @click="jumpToLocation"
           />
         </VLayout>
