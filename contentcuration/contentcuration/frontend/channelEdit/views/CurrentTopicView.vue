@@ -82,6 +82,13 @@
             data-test="change-langugage-btn"
             @click="editLanguage(selected)"
           />
+          <IconButton
+            v-if="canEdit"
+            icon="dashboard"
+            :text="$tr('editWhatIsNeededButton')"
+            data-test="change-resources-neded-btn"
+            @click="editResourcesNeeded(selected)"
+          />
         </div>
       </VSlideXTransition>
 
@@ -500,6 +507,13 @@
           nodeIds,
         });
       },
+      editResourcesNeeded(nodeIds) {
+        this.trackClickEvent('Edit what is needed');
+        this.openQuickEditModal({
+          modal: QuickEditModals.WHAT_IS_NEEDED,
+          nodeIds,
+        });
+      },
       treeLink(params) {
         return {
           name: RouteNames.TREE_VIEW,
@@ -720,6 +734,7 @@
       addButton: 'Add',
       editButton: 'Edit',
       editLanguageButton: 'Edit language',
+      editWhatIsNeededButton: 'Edit \'what is needed\'',
       optionsButton: 'Options',
       copyToClipboardButton: 'Copy to clipboard',
       [viewModes.DEFAULT]: 'Default view',

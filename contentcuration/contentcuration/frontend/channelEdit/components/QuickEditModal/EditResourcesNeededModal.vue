@@ -22,7 +22,7 @@
       >
     </template>
     <div
-      data-test="requirements-options-list"
+      data-test="resources-options-list"
     >
       <KCheckbox
         v-for="resource in resourcesOptions"
