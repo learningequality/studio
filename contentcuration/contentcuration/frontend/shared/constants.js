@@ -242,3 +242,12 @@ export const DescendantsUpdatableFields = [
   'grade_levels',
   'learner_needs',
 ];
+
+export const ResourcesNeededOptions = [
+  'PEERS',
+  'TEACHER',
+  'INTERNET',
+  'SPECIAL_SOFTWARE',
+  'PAPER_PENCIL',
+  'OTHER_SUPPLIES',
+];

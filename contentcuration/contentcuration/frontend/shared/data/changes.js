@@ -21,6 +21,7 @@ import {
   COPYING_FLAG,
   TASK_ID,
 } from 'shared/data/constants';
+import { Categories, ResourcesNeededTypes, ResourcesNeededOptions } from 'shared/constants';
 import { INDEXEDDB_RESOURCES } from 'shared/data/registry';
 
 /**
@@ -475,11 +476,35 @@ export class UpdatedDescendantsChange extends Change {
     this.validateObj(changes, 'changes');
     changes = omitIgnoredSubFields(changes);
     this.mods = changes;
+    this.setModsDeletedProperties();
     this.setChannelAndUserId(oldObj);
   }
 
   get changed() {
     return !isEmpty(this.mods);
+  }
+
+  /**
+   * To ensure that the mods properties that are multi valued have set
+   * to true just the options that are present in the mods object. All
+   * other options are set to null.
+   */
+  setModsDeletedProperties() {
+    if (!this.mods) return;
+
+    const multiValueProperties = {
+      categories: Object.values(Categories),
+      learner_needs: ResourcesNeededOptions.map(option => ResourcesNeededTypes[option]),
+    };
+    Object.entries(multiValueProperties).forEach(([key, values]) => {
+      if (this.mods[key]) {
+        values.forEach(value => {
+          if (!this.mods[key][value]) {
+            this.mods[key][value] = null;
+          }
+        });
+      }
+    });
   }
 
   saveChange() {
