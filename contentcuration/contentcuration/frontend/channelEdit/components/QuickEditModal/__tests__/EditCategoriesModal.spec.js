@@ -12,7 +12,7 @@ let contentNodeActions;
 let generalActions;
 
 const makeWrapper = nodeIds => {
-  const wrapper = mount(EditCategoriesModal, {
+  return mount(EditCategoriesModal, {
     store,
     propsData: {
       nodeIds,
@@ -23,10 +23,6 @@ const makeWrapper = nodeIds => {
       },
     },
   });
-  // replace "translateMetadataString" with (value) => value
-  wrapper.vm.translateMetadataString;
-
-  return wrapper;
 };
 
 const CheckboxValue = {
@@ -74,7 +70,7 @@ const findCategoryCheckbox = (wrapper, category) => {
   });
 };
 
-describe('EditLanguageModal', () => {
+describe('EditCategoriesModal', () => {
   beforeEach(() => {
     nodes = {
       node1: { id: 'node1' },
