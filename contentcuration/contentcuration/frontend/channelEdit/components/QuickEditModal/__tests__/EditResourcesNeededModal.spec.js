@@ -69,6 +69,7 @@ describe('EditResourcesNeededModal', () => {
     };
     contentNodeActions = {
       updateContentNode: jest.fn(),
+      updateContentNodeDescendants: jest.fn(),
     };
     generalActions = {
       showSnackbarSimple: jest.fn(),
@@ -257,7 +258,7 @@ describe('EditResourcesNeededModal', () => {
       });
     });
 
-    test('should call updateContentNode on success submit if the user checks the checkbox', () => {
+    test('should call updateContentNodeDescendants on success submit if the user checks the checkbox', () => {
       nodes['node1'].kind = ContentKindsNames.TOPIC;
 
       const wrapper = makeWrapper(['node1']);
@@ -266,10 +267,13 @@ describe('EditResourcesNeededModal', () => {
       wrapper.find('[data-test="edit-resources-needed-modal"]').vm.$emit('submit');
 
       const animationFrameId = requestAnimationFrame(() => {
-        expect(contentNodeActions.updateContentNode).toHaveBeenCalledWith(expect.anything(), {
-          id: 'node1',
-          learner_needs: {},
-        });
+        expect(contentNodeActions.updateContentNodeDescendants).toHaveBeenCalledWith(
+          expect.anything(),
+          {
+            id: 'node1',
+            learner_needs: {},
+          }
+        );
         cancelAnimationFrame(animationFrameId);
       });
     });
