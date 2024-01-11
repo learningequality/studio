@@ -60,7 +60,7 @@
       },
       isResourcesNeededOpen() {
         return this.openedModal === QuickEditModals.WHAT_IS_NEEDED;
-      }
+      },
     },
     methods: {
       ...mapMutations('contentNode', {

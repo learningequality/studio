@@ -27,7 +27,7 @@
       <KCheckbox
         v-for="resource in resourcesOptions"
         :key="resource.value"
-        data-test="category-checkbox"
+        data-test="resource-checkbox"
         :label="resource.label"
         :checked="isCheckboxSelected(resource)"
         :indeterminate="isCheckboxIndeterminate(resource)"
@@ -47,14 +47,14 @@
   import { metadataTranslationMixin } from 'shared/mixins';
 
   export default {
-    name: 'EditLanguageModal',
+    name: 'EditResourcesNeededModal',
+    mixins: [metadataTranslationMixin],
     props: {
       nodeIds: {
         type: Array,
         required: true,
       },
     },
-    mixins: [metadataTranslationMixin],
     data() {
       return {
         updateDescendants: false,
@@ -102,7 +102,6 @@
             resourcesNodes[resource].push(node.id);
           });
       });
-      console.log("resourcesNodes", resourcesNodes);
       Object.entries(resourcesNodes).forEach(([key, nodeIds]) => {
         if (nodeIds.length === this.nodeIds.length) {
           this.selectedResources[key] = true;
@@ -118,15 +117,13 @@
       },
       isCheckboxSelected(resource) {
         return (
-          this.selectedResources[resource.value] &&
-          this.selectedResources[resource.value] === true
-        )
+          this.selectedResources[resource.value] && this.selectedResources[resource.value] === true
+        );
       },
       isCheckboxIndeterminate(resource) {
         return (
-          this.selectedResources[resource.value] &&
-          this.selectedResources[resource.value] !== true
-        )
+          this.selectedResources[resource.value] && this.selectedResources[resource.value] !== true
+        );
       },
       onSelectResource(resource, value) {
         if (value) {
@@ -174,12 +171,9 @@
       saveAction: 'Save',
       cancelAction: 'Cancel',
       editedResourcesNeeded:
-        'Edited \'what will you need\' for {count, number, integer} {count, plural, one {resource} other {resources}}',
-      selectLanguage: 'Select / Type Language',
+        "Edited 'what will you need' for {count, number, integer} {count, plural, one {resource} other {resources}}",
       resourcesSelected:
         '{count, number, integer} {count, plural, one {resource} other {resources}} selected',
-      differentLanguages:
-        'The selected resources have different languages set. Choosing an option below will apply the language to all the selected resources',
       updateDescendantsCheckbox:
         'Apply to all resources and folders nested within the selected folders',
     },

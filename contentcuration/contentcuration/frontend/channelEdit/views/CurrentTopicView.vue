@@ -734,7 +734,7 @@
       addButton: 'Add',
       editButton: 'Edit',
       editLanguageButton: 'Edit language',
-      editWhatIsNeededButton: 'Edit \'what is needed\'',
+      editWhatIsNeededButton: "Edit 'what is needed'",
       optionsButton: 'Options',
       copyToClipboardButton: 'Copy to clipboard',
       [viewModes.DEFAULT]: 'Default view',
