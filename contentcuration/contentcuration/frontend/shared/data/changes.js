@@ -459,6 +459,10 @@ export class DeployedChange extends Change {
   }
 }
 
+/**
+ * Change that represents an update to a content node and its descendants
+ * It can be used just with the content node table.
+ */
 export class UpdatedDescendantsChange extends Change {
   constructor({ oldObj, changes, ...fields }) {
     fields.type = CHANGE_TYPES.UPDATED_DESCENDANTS;

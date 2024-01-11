@@ -269,6 +269,13 @@ class IndexedDBResource {
     });
   }
 
+  /**
+   * Search the "updated descendants" changes of the current resource and its
+   * parents to find any changes that should be applied to the current resource.
+   * And it transforms these "updated descendants" changes into "updated" changes
+   * to the current resource.
+   * @returns
+   */
   async getInheritedChanges(itemData = []) {
     if (this.tableName !== TABLE_NAMES.CONTENTNODE || !itemData.length) {
       return Promise.resolve([]);
@@ -1709,7 +1716,8 @@ export const ContentNode = new TreeResource({
     return this._saveAndQueueChange(change);
   },
   /**
-   * Load descendants of a content node that are already in IndexedDB
+   * Load descendants of a content node that are already in IndexedDB.
+   * It also returns the node itself.
    * @param {string} id
    * @returns {Promise<string[]>}
    *
@@ -1729,6 +1737,12 @@ export const ContentNode = new TreeResource({
     );
     return [id].concat(flatMap(descendants, d => d));
   },
+  /**
+   * Update a node and all its descendants that are already loaded in IndexedDB
+   * @param {*} id parent node to update
+   * @param {*} changes actual changes to made
+   * @returns {Promise<any>}
+   */
   updateDescendants(id, changes) {
     return this.transaction({ mode: 'rw' }, CHANGES_TABLE, async () => {
       changes = this._cleanNew(changes);

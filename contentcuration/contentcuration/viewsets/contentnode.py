@@ -983,6 +983,7 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
             )
 
     def update_descendants(self, pk, mods):
+        """ Update a node and all of its descendants with the given mods """
         root = ContentNode.objects.get(id=pk)
 
         if root.kind_id != content_kinds.TOPIC:

@@ -369,6 +369,11 @@ export function updateContentNode(context, { id, ...payload } = {}) {
   return ContentNode.update(id, contentNodeData);
 }
 
+/**
+ * Update a content node and all its descendants with the given payload.
+ * @param {*} context
+ * @param {string} param.id Id of the parent content to edit. It must be a topic.
+ */
 export function updateContentNodeDescendants(context, { id, ...payload } = {}) {
   if (!id) {
     throw ReferenceError('id must be defined to update a contentNode and its descendants');

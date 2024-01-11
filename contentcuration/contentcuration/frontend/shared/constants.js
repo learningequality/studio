@@ -237,8 +237,8 @@ nonUniqueValue.toString = () => '';
  * make sense to update to all the descendants, such as the title.
  */
 export const DescendantsUpdatableFields = [
-  'description', // Just for testing pourposes, should be removed in the future
   'language',
   'categories',
   'grade_levels',
+  'learner_needs',
 ];

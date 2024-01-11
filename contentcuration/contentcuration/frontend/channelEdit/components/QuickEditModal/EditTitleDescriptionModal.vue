@@ -66,7 +66,7 @@
       this.description = this.contentNode.description || '';
     },
     methods: {
-      ...mapActions('contentNode', ['updateContentNode', 'updateContentNodeDescendants']),
+      ...mapActions('contentNode', ['updateContentNode']),
       validateTitle() {
         this.titleError = getInvalidText(getTitleValidators(), this.title);
       },
@@ -83,9 +83,6 @@
         this.updateContentNode({
           id: nodeId,
           title: title.trim(),
-        });
-        this.updateContentNodeDescendants({
-          id: nodeId,
           description: description.trim(),
         });
 
