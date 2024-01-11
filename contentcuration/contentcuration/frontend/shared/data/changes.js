@@ -458,3 +458,34 @@ export class DeployedChange extends Change {
     this.setChannelAndUserId({ id: this.key });
   }
 }
+
+/**
+ * Change that represents an update to a content node and its descendants
+ * It can be used just with the content node table.
+ */
+export class UpdatedDescendantsChange extends Change {
+  constructor({ oldObj, changes, ...fields }) {
+    fields.type = CHANGE_TYPES.UPDATED_DESCENDANTS;
+    super(fields);
+    if (this.table !== TABLE_NAMES.CONTENTNODE) {
+      throw TypeError(
+        `${this.changeType} is only supported by ${TABLE_NAMES.CONTENTNODE} table but ${this.table} was passed instead`
+      );
+    }
+    this.validateObj(changes, 'changes');
+    changes = omitIgnoredSubFields(changes);
+    this.mods = changes;
+    this.setChannelAndUserId(oldObj);
+  }
+
+  get changed() {
+    return !isEmpty(this.mods);
+  }
+
+  saveChange() {
+    if (!this.changed) {
+      return Promise.resolve(null);
+    }
+    return super.saveChange();
+  }
+}

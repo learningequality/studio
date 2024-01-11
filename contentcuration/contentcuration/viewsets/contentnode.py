@@ -981,3 +981,28 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
                 created_by_id=change["created_by_id"],
                 applied=True
             )
+
+    def update_descendants(self, pk, mods):
+        """ Update a node and all of its descendants with the given mods """
+        root = ContentNode.objects.get(id=pk)
+
+        if root.kind_id != content_kinds.TOPIC:
+            raise ValidationError("Only topics can have descendants to update")
+
+        descendants = root.get_descendants(include_self=True).values("id")
+
+        changes = [{ "key": descendant["id"], "mods": mods } for descendant in descendants]
+
+        return self.update_from_changes(changes) # Bulk update
+
+    def update_descendants_from_changes(self, changes):
+        errors = []
+        for change in changes:
+            try:
+                change_errors = self.update_descendants(change["key"], change["mods"])
+                errors += change_errors
+            except Exception as e:
+                log_sync_exception(e, user=self.request.user, change=change)
+                change["errors"] = [str(e)]
+                errors.append(change)
+        return errors

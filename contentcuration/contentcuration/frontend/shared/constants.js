@@ -231,3 +231,14 @@ export const DurationDropdownMap = {
 // Define an object to act as the place holder for non unique values.
 export const nonUniqueValue = {};
 nonUniqueValue.toString = () => '';
+
+/**
+ * Not all fields are updatable on descendants, for many of them does not
+ * make sense to update to all the descendants, such as the title.
+ */
+export const DescendantsUpdatableFields = [
+  'language',
+  'categories',
+  'grade_levels',
+  'learner_needs',
+];

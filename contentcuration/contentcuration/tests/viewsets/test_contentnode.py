@@ -28,6 +28,7 @@ from contentcuration.tests.viewsets.base import generate_copy_event
 from contentcuration.tests.viewsets.base import generate_create_event
 from contentcuration.tests.viewsets.base import generate_delete_event
 from contentcuration.tests.viewsets.base import generate_update_event
+from contentcuration.tests.viewsets.base import generate_update_descendants_event
 from contentcuration.tests.viewsets.base import SyncTestMixin
 from contentcuration.utils.db_tools import TreeBuilder
 from contentcuration.viewsets.contentnode import ContentNodeFilter
@@ -573,6 +574,35 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
             models.ContentNode.objects.get(id=contentnode.id).title, new_title
         )
 
+    def test_update_descendants_contentnode(self):
+        root_node = testdata.tree(parent=self.channel.main_tree)
+        new_language = "es"
+        
+        response = self.sync_changes(
+            [generate_update_descendants_event(root_node.id, {"language": new_language}, channel_id=self.channel.id)],
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+
+        descendants = root_node.get_descendants(include_self=True)
+        for descendant in descendants:
+            language = models.ContentNode.objects.get(id=descendant.id).language
+            language = str(language)
+            self.assertEqual(language, new_language)
+    
+    def test_cannot_update_descendants_when_updating_non_topic_node(self):
+        root_node = testdata.tree()
+        video_node = root_node.get_descendants().filter(kind_id=content_kinds.VIDEO).first()
+        new_language = "pt"
+        
+        response = self.sync_changes(
+            [generate_update_descendants_event(video_node.id, {"language": new_language}, channel_id=self.channel.id)],
+        )
+
+        self.assertEqual(len(response.data["errors"]), 1)
+        self.assertNotEqual(
+            models.ContentNode.objects.get(id=video_node.id).language, new_language
+        )
+    
     def test_update_contentnode_exercise_mastery_model(self):
         metadata = self.contentnode_db_metadata
         metadata["kind_id"] = content_kinds.EXERCISE

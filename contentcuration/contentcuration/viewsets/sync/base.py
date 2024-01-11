@@ -23,6 +23,7 @@ from contentcuration.viewsets.sync.constants import COPIED
 from contentcuration.viewsets.sync.constants import CREATED
 from contentcuration.viewsets.sync.constants import DELETED
 from contentcuration.viewsets.sync.constants import DEPLOYED
+from contentcuration.viewsets.sync.constants import UPDATED_DESCENDANTS
 from contentcuration.viewsets.sync.constants import EDITOR_M2M
 from contentcuration.viewsets.sync.constants import FILE
 from contentcuration.viewsets.sync.constants import INVITATION
@@ -94,6 +95,7 @@ event_handlers = {
     PUBLISHED: "publish_from_changes",
     SYNCED: "sync_from_changes",
     DEPLOYED: "deploy_from_changes",
+    UPDATED_DESCENDANTS: "update_descendants_from_changes",
 }
 
 

@@ -1,6 +1,6 @@
 import flatMap from 'lodash/flatMap';
 import uniq from 'lodash/uniq';
-import { NEW_OBJECT, NOVALUE } from 'shared/constants';
+import { NEW_OBJECT, NOVALUE, DescendantsUpdatableFields } from 'shared/constants';
 import client from 'shared/client';
 import { RELATIVE_TREE_POSITIONS, CHANGES_TABLE, TABLE_NAMES } from 'shared/data/constants';
 import { ContentNode } from 'shared/data/resources';
@@ -367,6 +367,41 @@ export function updateContentNode(context, { id, ...payload } = {}) {
 
   context.commit('ADD_CONTENTNODE', { id, ...contentNodeData });
   return ContentNode.update(id, contentNodeData);
+}
+
+/**
+ * Update a content node and all its descendants with the given payload.
+ * @param {*} context
+ * @param {string} param.id Id of the parent content to edit. It must be a topic.
+ */
+export function updateContentNodeDescendants(context, { id, ...payload } = {}) {
+  if (!id) {
+    throw ReferenceError('id must be defined to update a contentNode and its descendants');
+  }
+
+  const node = context.getters.getContentNode(id);
+  if (!node || node.kind !== ContentKindsNames.TOPIC) {
+    throw TypeError('Only topics can have descendants');
+  }
+
+  for (const field in payload) {
+    if (!DescendantsUpdatableFields.includes(field)) {
+      throw TypeError(`Cannot update field ${field} on all descendants`);
+    }
+  }
+
+  const contentNodeData = generateContentNodeData(payload);
+
+  const descendants = context.getters.getContentNodeDescendants(id);
+  const contentNodeIds = [id, ...descendants.map(node => node.id)];
+
+  const contentNodesData = contentNodeIds.map(contentNodeId => ({
+    id: contentNodeId,
+    ...contentNodeData,
+  }));
+
+  context.commit('ADD_CONTENTNODES', contentNodesData);
+  return ContentNode.updateDescendants(id, contentNodeData);
 }
 
 export function addTags(context, { ids, tags }) {
