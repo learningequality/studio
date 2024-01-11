@@ -104,6 +104,15 @@
         updateDescendants: false,
         categories: [],
         searchQuery: '',
+        /**
+         * selectedCategories is an object with the following structure:
+         * {
+         *  [categoryId]: true | [nodeId1, nodeId2, ...]
+         * }
+         * If the value is true, it means that the category is selected for all nodes
+         * If the value is an array of nodeIds, it means that the category is selected
+         * just for those nodes
+         */
         selectedCategories: {},
       };
     },

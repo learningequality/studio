@@ -78,51 +78,9 @@
       },
     },
     data() {
-      console.log('publicLanguages', publicLanguages);
       return {
         languageInput: '',
-        availableLanguages: [
-          {
-            id: 'en',
-            name: 'English',
-            count: 1,
-            related_names: [
-              'Argh! Pirates!',
-              'en-PT',
-              'English, Pirate',
-              'British English',
-              'en-GB',
-              'English, Britain',
-              'English',
-              'en',
-              'English',
-            ],
-          },
-          {
-            id: 'es',
-            name: 'Spanish',
-            count: 1,
-            related_names: ['Spanish'],
-          },
-          {
-            id: 'es2',
-            name: 'Spanish2',
-            count: 1,
-            related_names: ['Spanish2'],
-          },
-          {
-            id: 'es3',
-            name: 'Spanish3',
-            count: 1,
-            related_names: ['Spanish3'],
-          },
-          {
-            id: 'es4',
-            name: 'Spanish4',
-            count: 1,
-            related_names: ['Spanish4'],
-          },
-        ],
+        availableLanguages: publicLanguages,
       };
     },
     computed: {
