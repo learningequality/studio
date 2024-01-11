@@ -97,7 +97,7 @@
         searchTerm: '',
         topicNode: null,
         copyNode: null,
-        languages: '',
+        languageFromChannelList: null,
       };
     },
     computed: {
@@ -145,7 +145,7 @@
         this.$router.push(this.backToBrowseRoute);
       },
       updateLanguageQuery(language) {
-        this.languages = language;
+        this.languageFromChannelList = language;
       },
       handleSearchTerm() {
         if (this.searchIsValid) {
@@ -156,11 +156,11 @@
             },
             query: {
               ...this.$route.query,
-              ...(this.languages !== '' ? { languages: this.languages } : ''),
+              ...(this.isBrowsing ? { languages: this.languageFromChannelList } : {}),
               last: this.$route.query.last || this.$route.path,
             },
           });
-          this.languages = '';
+          this.languageFromChannelList = null;
           this.clearNodes();
           this.$analytics.trackAction('import_modal', 'Search');
         }

@@ -72,7 +72,7 @@
     mixins: [constantsTranslationMixin],
     data() {
       return {
-        languageFilter: '',
+        languageFilter: null,
         channels: [],
         pageCount: 0,
         loading: false,
