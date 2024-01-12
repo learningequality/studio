@@ -11,6 +11,11 @@
       :nodeIds="nodeIds"
       @close="close"
     />
+    <EditResourcesNeededModal
+      v-if="isResourcesNeededOpen"
+      :nodeIds="nodeIds"
+      @close="close"
+    />
   </div>
 
 </template>
@@ -21,12 +26,14 @@
   import { mapGetters, mapMutations } from 'vuex';
   import { QuickEditModals } from '../../constants';
   import EditLanguageModal from './EditLanguageModal';
+  import EditResourcesNeededModal from './EditResourcesNeededModal';
   import EditTitleDescriptionModal from './EditTitleDescriptionModal';
 
   export default {
     name: 'QuickEditModal',
     components: {
       EditLanguageModal,
+      EditResourcesNeededModal,
       EditTitleDescriptionModal,
     },
     computed: {
@@ -50,6 +57,9 @@
       },
       isLanguageOpen() {
         return this.openedModal === QuickEditModals.LANGUAGE;
+      },
+      isResourcesNeededOpen() {
+        return this.openedModal === QuickEditModals.WHAT_IS_NEEDED;
       },
     },
     methods: {

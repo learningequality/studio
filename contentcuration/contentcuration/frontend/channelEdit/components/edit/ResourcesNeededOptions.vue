@@ -24,18 +24,9 @@
 
 <script>
 
-  import { ResourcesNeededTypes } from 'shared/constants';
+  import { ResourcesNeededTypes, ResourcesNeededOptions } from 'shared/constants';
   import { constantsTranslationMixin, metadataTranslationMixin } from 'shared/mixins';
   import DropdownWrapper from 'shared/views/form/DropdownWrapper';
-
-  const dropdownItems = [
-    'PEERS',
-    'TEACHER',
-    'INTERNET',
-    'SPECIAL_SOFTWARE',
-    'PAPER_PENCIL',
-    'OTHER_SUPPLIES',
-  ];
 
   export default {
     name: 'ResourcesNeededOptions',
@@ -57,7 +48,7 @@
         },
       },
       resources() {
-        return dropdownItems.map(key => ({
+        return ResourcesNeededOptions.map(key => ({
           text: this.translateMetadataString(key),
           value: ResourcesNeededTypes[key],
         }));

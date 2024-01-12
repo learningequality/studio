@@ -243,10 +243,13 @@ describe('EditTitleDescriptionModal', () => {
       wrapper.find('[data-test="edit-language-modal"]').vm.$emit('submit');
 
       const animationFrameId = requestAnimationFrame(() => {
-        expect(contentNodeActions.updateContentNodeDescendants).toHaveBeenCalledWith(expect.anything(), {
-          id: 'test-en-topic',
-          language: 'es',
-        });
+        expect(contentNodeActions.updateContentNodeDescendants).toHaveBeenCalledWith(
+          expect.anything(),
+          {
+            id: 'test-en-topic',
+            language: 'es',
+          }
+        );
         cancelAnimationFrame(animationFrameId);
       });
     });
