@@ -1,6 +1,5 @@
 import Vuex from 'vuex';
 import { mount } from '@vue/test-utils';
-import camelCase from 'lodash/camelCase';
 import EditBooleanMapModal from '../EditBooleanMapModal';
 import { Categories } from 'shared/constants';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
@@ -62,7 +61,7 @@ const options = Object.entries(Categories).map(([key, value]) => {
     value,
   };
 });
-const makeWrapper = ({ nodeIds, field='categories', ...restOptions }) => {
+const makeWrapper = ({ nodeIds, field = 'categories', ...restOptions }) => {
   return mount(EditBooleanMapModal, {
     store,
     propsData: {
@@ -107,14 +106,14 @@ describe('EditBooleanMapModal', () => {
   });
 
   test('smoke test', () => {
-    const wrapper = makeWrapper({ nodeIds: ['node1']});
+    const wrapper = makeWrapper({ nodeIds: ['node1'] });
     expect(wrapper.isVueInstance()).toBe(true);
   });
 
   describe('Selected options on first render', () => {
     describe('Options checkboxes', () => {
       test('no option should be selected if a single node does not have options set', () => {
-        const wrapper = makeWrapper({ nodeIds: ['node1']});
+        const wrapper = makeWrapper({ nodeIds: ['node1'] });
 
         const optionsValues = getOptionsValues(wrapper);
         expect(
@@ -137,7 +136,7 @@ describe('EditBooleanMapModal', () => {
           [Categories.FOUNDATIONS]: true,
         };
 
-        const wrapper = makeWrapper({ nodeIds: ['node1']});
+        const wrapper = makeWrapper({ nodeIds: ['node1'] });
 
         const optionsValues = getOptionsValues(wrapper);
         const {
@@ -220,9 +219,9 @@ describe('EditBooleanMapModal', () => {
             [Categories.DAILY_LIFE]: true, // root categories
             [Categories.FOUNDATIONS]: true,
           };
-  
+
           const wrapper = makeWrapper({ nodeIds: ['node1'], showHierarchy: true });
-  
+
           const optionsValues = getOptionsValues(wrapper);
           const {
             [Categories.DAILY_LIFE]: dailyLifeValue,
@@ -235,21 +234,21 @@ describe('EditBooleanMapModal', () => {
           expect(dailyLifeValue).toBe(CheckboxValue.CHECKED);
           expect(foundationsValue).toBe(CheckboxValue.CHECKED);
         });
-  
+
         test('parent categories should be selected depending on the categories set for a single node when showing hierarchy', () => {
           nodes['node1'].categories = {
             [Categories.DIVERSITY]: true, // Daily Life -> Diversity
           };
-  
+
           const wrapper = makeWrapper({ nodeIds: ['node1'], showHierarchy: true });
-  
+
           const optionsValues = getOptionsValues(wrapper);
           const {
             [Categories.DAILY_LIFE]: dailyLifeValue,
             [Categories.DIVERSITY]: diversityValue,
             ...otheroptionsValues
           } = optionsValues;
-  
+
           expect(
             Object.values(otheroptionsValues).every(value => value === CheckboxValue.UNCHECKED)
           ).toBeTruthy();
@@ -261,15 +260,12 @@ describe('EditBooleanMapModal', () => {
           nodes['node1'].categories = {
             [Categories.DIVERSITY]: true, // Daily Life -> Diversity
           };
-  
+
           const wrapper = makeWrapper({ nodeIds: ['node1'], showHierarchy: false });
-  
+
           const optionsValues = getOptionsValues(wrapper);
-          const {
-            [Categories.DIVERSITY]: diversityValue,
-            ...otheroptionsValues
-          } = optionsValues;
-  
+          const { [Categories.DIVERSITY]: diversityValue, ...otheroptionsValues } = optionsValues;
+
           expect(
             Object.values(otheroptionsValues).every(value => value === CheckboxValue.UNCHECKED)
           ).toBeTruthy();
@@ -280,9 +276,9 @@ describe('EditBooleanMapModal', () => {
           nodes['node1'].categories = {
             [Categories.DIVERSITY]: true, // Daily Life -> Diversity
           };
-  
+
           const wrapper = makeWrapper({ nodeIds: ['node1', 'node2'], showHierarchy: true });
-  
+
           const optionsValues = getOptionsValues(wrapper);
           const {
             [Categories.DAILY_LIFE]: dailyLifeValue,
@@ -291,7 +287,7 @@ describe('EditBooleanMapModal', () => {
           expect(dailyLifeValue).toBe(CheckboxValue.INDETERMINATE);
           expect(diversityValue).toBe(CheckboxValue.INDETERMINATE);
         });
-  
+
         test('multiple parent checkbox categories should be indeterminate if not all nodes have the same parent categories set', () => {
           nodes['node1'].categories = {
             [Categories.DIVERSITY]: true, // Daily Life -> Diversity
@@ -299,9 +295,9 @@ describe('EditBooleanMapModal', () => {
           nodes['node2'].categories = {
             [Categories.GUIDES]: true, // For teachers -> Guides
           };
-  
+
           const wrapper = makeWrapper({ nodeIds: ['node1', 'node2'], showHierarchy: true });
-  
+
           const optionsValues = getOptionsValues(wrapper);
           const {
             [Categories.DAILY_LIFE]: dailyLifeValue,
@@ -310,7 +306,7 @@ describe('EditBooleanMapModal', () => {
           expect(dailyLifeValue).toBe(CheckboxValue.INDETERMINATE);
           expect(forTeachersValue).toBe(CheckboxValue.INDETERMINATE);
         });
-  
+
         test('parent checkbox category should be checked if all nodes have the same parent categories set', () => {
           nodes['node1'].categories = {
             [Categories.DIVERSITY]: true, // Daily Life -> Diversity
@@ -318,9 +314,9 @@ describe('EditBooleanMapModal', () => {
           nodes['node2'].categories = {
             [Categories.CURRENT_EVENTS]: true, // Daily Life -> Current Events
           };
-  
+
           const wrapper = makeWrapper({ nodeIds: ['node1', 'node2'], showHierarchy: true });
-  
+
           const optionsValues = getOptionsValues(wrapper);
           const {
             [Categories.DAILY_LIFE]: dailyLifeValue,
@@ -362,7 +358,11 @@ describe('EditBooleanMapModal', () => {
           [Categories.FOUNDATIONS]: true,
         };
 
-        const wrapper = makeWrapper({ nodeIds: ['node1'], field: 'learner_needs', showAutocomplete: true });
+        const wrapper = makeWrapper({
+          nodeIds: ['node1'],
+          field: 'learner_needs',
+          showAutocomplete: true,
+        });
 
         const categoriesChips = getOptionsChips(wrapper);
         expect(categoriesChips.length).toBe(2);
@@ -387,7 +387,11 @@ describe('EditBooleanMapModal', () => {
           [Categories.DIVERSITY]: true, // Daily Life -> Diversity
         };
 
-        const wrapper = makeWrapper({ nodeIds: ['node1'], showAutocomplete: true, showHierarchy: true });
+        const wrapper = makeWrapper({
+          nodeIds: ['node1'],
+          showAutocomplete: true,
+          showHierarchy: true,
+        });
 
         const categoriesChips = getOptionsChips(wrapper);
         expect(categoriesChips.length).toBe(1);
@@ -409,11 +413,11 @@ describe('EditBooleanMapModal', () => {
 
       test('should filter options based on autocomplete search query', () => {
         const searchQuery = 'drama';
-    
+
         const wrapper = makeWrapper({ nodeIds: ['node1'], showAutocomplete: true });
         const animationFrameId = requestAnimationFrame(() => {
           wrapper.find('[data-test="options-autocomplete"]').setValue(searchQuery);
-    
+
           const categoriesOptions = wrapper.findAll('[data-test="option-checkbox"]');
           categoriesOptions.wrappers.forEach(checkbox => {
             const { label } = checkbox.vm.$props || {};
@@ -422,12 +426,12 @@ describe('EditBooleanMapModal', () => {
           cancelAnimationFrame(animationFrameId);
         });
       });
-    
+
       test('should flatten options if autocomplete search query is not empty', () => {
         const wrapper = makeWrapper({ nodeIds: ['node1'], showAutocomplete: true });
         const animationFrameId = requestAnimationFrame(() => {
           wrapper.find('[data-test="options-autocomplete"]').setValue('a');
-    
+
           const categoriesOptions = wrapper.findAll('[data-test="option-checkbox"]');
           categoriesOptions.wrappers.forEach(checkbox => {
             expect(checkbox.element.style.paddingLeft).toBeFalsy();
@@ -447,7 +451,7 @@ describe('EditBooleanMapModal', () => {
   });
 
   test('should render the message of the number of resources selected - 2', () => {
-    const wrapper = makeWrapper({ nodeIds: ['node1', 'node2', 'node3', 'node4']});
+    const wrapper = makeWrapper({ nodeIds: ['node1', 'node2', 'node3', 'node4'] });
 
     const resourcesCounter = wrapper.find('[data-test="resources-selected-message"]');
     expect(resourcesCounter.exists()).toBeTruthy();
@@ -506,12 +510,12 @@ describe('EditBooleanMapModal', () => {
   describe('Submit', () => {
     test('should call updateContentNode with the right options on success submit - categories', () => {
       const wrapper = makeWrapper({ nodeIds: ['node1', 'node2'] });
-  
+
       const schoolCheckbox = findOptionCheckbox(wrapper, Categories.SCHOOL);
       schoolCheckbox.element.click();
       const sociologyCheckbox = findOptionCheckbox(wrapper, Categories.SOCIOLOGY);
       sociologyCheckbox.element.click();
-  
+
       const animationFrameId = requestAnimationFrame(() => {
         wrapper.find('[data-test="edit-booleanMap-modal"]').vm.$emit('submit');
         expect(contentNodeActions.updateContentNode).toHaveBeenCalledWith(expect.anything(), {
@@ -534,12 +538,12 @@ describe('EditBooleanMapModal', () => {
 
     test('should call updateContentNode with the right options on success submit - learner_needs', () => {
       const wrapper = makeWrapper({ nodeIds: ['node1', 'node2'] });
-  
+
       const schoolCheckbox = findOptionCheckbox(wrapper, Categories.SCHOOL);
       schoolCheckbox.element.click();
       const sociologyCheckbox = findOptionCheckbox(wrapper, Categories.SOCIOLOGY);
       sociologyCheckbox.element.click();
-  
+
       const animationFrameId = requestAnimationFrame(() => {
         wrapper.find('[data-test="edit-booleanMap-modal"]').vm.$emit('submit');
         expect(contentNodeActions.updateContentNode).toHaveBeenCalledWith(expect.anything(), {
@@ -561,10 +565,10 @@ describe('EditBooleanMapModal', () => {
     });
 
     test('should emit close event on success submit', () => {
-      const wrapper = makeWrapper({ nodeIds: ['node1']});
-  
+      const wrapper = makeWrapper({ nodeIds: ['node1'] });
+
       wrapper.find('[data-test="edit-booleanMap-modal"]').vm.$emit('submit');
-  
+
       const animationFrameId = requestAnimationFrame(() => {
         expect(wrapper.emitted('close')).toBeTruthy();
         cancelAnimationFrame(animationFrameId);
@@ -572,10 +576,10 @@ describe('EditBooleanMapModal', () => {
     });
 
     test('should show a confirmation snackbar on success submit', () => {
-      const wrapper = makeWrapper({ nodeIds: ['node1']});
-  
+      const wrapper = makeWrapper({ nodeIds: ['node1'] });
+
       wrapper.find('[data-test="edit-booleanMap-modal"]').vm.$emit('submit');
-  
+
       const animationFrameId = requestAnimationFrame(() => {
         expect(generalActions.showSnackbarSimple).toHaveBeenCalled();
         cancelAnimationFrame(animationFrameId);
@@ -584,7 +588,7 @@ describe('EditBooleanMapModal', () => {
   });
 
   test('should emit close event on cancel', () => {
-    const wrapper = makeWrapper({ nodeIds: ['node1']});
+    const wrapper = makeWrapper({ nodeIds: ['node1'] });
 
     wrapper.find('[data-test="edit-booleanMap-modal"]').vm.$emit('cancel');
 

@@ -142,7 +142,7 @@
       confirmationMessage: {
         type: String,
         required: true,
-      }
+      },
     },
     data() {
       return {
@@ -173,9 +173,7 @@
         if (!this.searchQuery) {
           return this.options;
         }
-        return this.options.filter(option =>
-          option.label.toLowerCase().includes(searchQuery)
-        );
+        return this.options.filter(option => option.label.toLowerCase().includes(searchQuery));
       },
       flatList() {
         if (!this.showHierarchy) {
@@ -300,10 +298,7 @@
             });
           })
         );
-        this.$store.dispatch(
-          'showSnackbarSimple',
-          this.confirmationMessage || ''
-        );
+        this.$store.dispatch('showSnackbarSimple', this.confirmationMessage || '');
         this.close();
       },
       setOption(optionId, value) {
@@ -314,7 +309,7 @@
           };
         } else {
           const newSelectedValues = { ...this.selectedValues };
-          
+
           if (this.showHierarchy) {
             // Remove all children values
             Object.keys(this.selectedValues).forEach(selectedValue => {
@@ -360,7 +355,8 @@
         const level = this.getLevel(optionId);
         for (let i = level - 1; i > 0; i--) {
           const parentOption = this.options.find(
-            option => this.isSubLevel(currentOption, option.value) && this.getLevel(option.value) === i
+            option =>
+              this.isSubLevel(currentOption, option.value) && this.getLevel(option.value) === i
           );
           if (parentOption) {
             text = `${parentOption.label} - ${text}`;
