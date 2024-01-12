@@ -2,9 +2,11 @@ import Vue from 'vue';
 import isEmpty from 'lodash/isEmpty';
 import { NEW_OBJECT } from 'shared/constants';
 import { mergeMapItem } from 'shared/vuex/utils';
+import { cleanBooleanMaps } from 'shared/utils/helpers';
 import { applyMods } from 'shared/data/applyRemoteChanges';
 
 export function ADD_CONTENTNODE(state, contentNode) {
+  cleanBooleanMaps(contentNode);
   state.contentNodesMap = mergeMapItem(state.contentNodesMap, contentNode);
 }
 
@@ -18,7 +20,9 @@ export function UPDATE_CONTENTNODE_FROM_INDEXEDDB(state, { id, ...updates }) {
   if (id && state.contentNodesMap[id]) {
     // Need to do object spread to return a new object for setting in the map
     // otherwise nested changes will not trigger reactive updates
-    Vue.set(state.contentNodesMap, id, { ...applyMods(state.contentNodesMap[id], updates) });
+    const contentNode = { ...applyMods(state.contentNodesMap[id], updates) };
+    cleanBooleanMaps(contentNode);
+    Vue.set(state.contentNodesMap, id, contentNode);
   }
 }
 

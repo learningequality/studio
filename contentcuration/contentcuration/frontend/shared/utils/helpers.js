@@ -424,3 +424,22 @@ export function memoizeDebounce(func, wait = 0, options = {}) {
     mem.apply(this, arguments).apply(this, arguments);
   };
 }
+
+/**
+ * Remove falsy properties in contentNode boolean maps.
+ * This is necessary as in many places we rely on Object.keys() to
+ * get the values of a field, but if the value is false, it should not
+ * be considered a valid value.
+ */
+export function cleanBooleanMaps(contentNode) {
+  const booleanMapFields = ['grade_levels', 'learner_needs', 'accessibility_labels', 'learning_activities', 'categories'];
+  booleanMapFields.forEach(field => {
+    if (contentNode[field]) {
+      Object.keys(contentNode[field]).forEach(key => {
+        if (!contentNode[field][key]) {
+          delete contentNode[field][key];
+        }
+      });
+    }
+  });
+}
