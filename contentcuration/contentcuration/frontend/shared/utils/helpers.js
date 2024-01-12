@@ -432,7 +432,13 @@ export function memoizeDebounce(func, wait = 0, options = {}) {
  * be considered a valid value.
  */
 export function cleanBooleanMaps(contentNode) {
-  const booleanMapFields = ['grade_levels', 'learner_needs', 'accessibility_labels', 'learning_activities', 'categories'];
+  const booleanMapFields = [
+    'grade_levels',
+    'learner_needs',
+    'accessibility_labels',
+    'learning_activities',
+    'categories',
+  ];
   booleanMapFields.forEach(field => {
     if (contentNode[field]) {
       Object.keys(contentNode[field]).forEach(key => {
