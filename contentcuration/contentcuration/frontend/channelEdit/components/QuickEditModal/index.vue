@@ -21,6 +21,11 @@
       :nodeIds="nodeIds"
       @close="close"
     />
+    <EditLevelsModal
+      v-if="isLevelsOpen"
+      :nodeIds="nodeIds"
+      @close="close"
+    />
   </div>
 
 </template>
@@ -30,6 +35,7 @@
 
   import { mapGetters, mapMutations } from 'vuex';
   import { QuickEditModals } from '../../constants';
+  import EditLevelsModal from './EditLevelsModal';
   import EditLanguageModal from './EditLanguageModal';
   import EditCategoriesModal from './EditCategoriesModal';
   import EditResourcesNeededModal from './EditResourcesNeededModal';
@@ -38,9 +44,10 @@
   export default {
     name: 'QuickEditModal',
     components: {
+      EditLevelsModal,
       EditLanguageModal,
-      EditResourcesNeededModal,
       EditCategoriesModal,
+      EditResourcesNeededModal,
       EditTitleDescriptionModal,
     },
     computed: {
@@ -70,6 +77,9 @@
       },
       isCategoriesOpen() {
         return this.openedModal === QuickEditModals.CATEGORIES;
+      },
+      isLevelsOpen() {
+        return this.openedModal === QuickEditModals.LEVELS;
       },
     },
     methods: {

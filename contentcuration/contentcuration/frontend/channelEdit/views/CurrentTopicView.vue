@@ -96,6 +96,13 @@
             data-test="change-resources-neded-btn"
             @click="editResourcesNeeded(selected)"
           />
+          <IconButton
+            v-if="canEdit"
+            icon="filterList"
+            :text="$tr('editLevelsButton')"
+            data-test="change-levels-btn"
+            @click="editLevels(selected)"
+          />
         </div>
 
       </VSlideXTransition>
@@ -532,6 +539,13 @@
           nodeIds,
         });
       },
+      editLevels(nodeIds) {
+        this.trackClickEvent('Edit levels');
+        this.openQuickEditModal({
+          modal: QuickEditModals.LEVELS,
+          nodeIds,
+        });
+      },
       treeLink(params) {
         return {
           name: RouteNames.TREE_VIEW,
@@ -751,6 +765,7 @@
       importFromChannels: 'Import from channels',
       addButton: 'Add',
       editButton: 'Edit',
+      editLevelsButton: 'Edit levels',
       editLanguageButton: 'Edit language',
       editCategoriesButton: 'Edit categories',
       editWhatIsNeededButton: "Edit 'what is needed'",

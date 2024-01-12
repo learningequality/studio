@@ -21,7 +21,7 @@ import {
   COPYING_FLAG,
   TASK_ID,
 } from 'shared/data/constants';
-import { Categories, ResourcesNeededTypes, ResourcesNeededOptions } from 'shared/constants';
+import { Categories, ResourcesNeededTypes, ResourcesNeededOptions, ContentLevels } from 'shared/constants';
 import { INDEXEDDB_RESOURCES } from 'shared/data/registry';
 
 /**
@@ -495,6 +495,7 @@ export class UpdatedDescendantsChange extends Change {
     const multiValueProperties = {
       categories: Object.values(Categories),
       learner_needs: ResourcesNeededOptions.map(option => ResourcesNeededTypes[option]),
+      grade_levels: Object.values(ContentLevels),
     };
     Object.entries(multiValueProperties).forEach(([key, values]) => {
       if (this.mods[key]) {
