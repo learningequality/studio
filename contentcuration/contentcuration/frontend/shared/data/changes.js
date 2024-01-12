@@ -21,7 +21,12 @@ import {
   COPYING_FLAG,
   TASK_ID,
 } from 'shared/data/constants';
-import { Categories, ResourcesNeededTypes, ResourcesNeededOptions, ContentLevels } from 'shared/constants';
+import {
+  Categories,
+  ResourcesNeededTypes,
+  ResourcesNeededOptions,
+  ContentLevels,
+} from 'shared/constants';
 import { INDEXEDDB_RESOURCES } from 'shared/data/registry';
 
 /**

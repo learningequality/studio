@@ -16,8 +16,8 @@
 <script>
 
   import camelCase from 'lodash/camelCase';
-  import { ContentLevels } from 'shared/constants';
   import EditBooleanMapModal from './EditBooleanMapModal';
+  import { ContentLevels } from 'shared/constants';
   import { metadataTranslationMixin } from 'shared/mixins';
 
   export default {
@@ -37,7 +37,7 @@
         const replaceTranslationMap = {
           PROFESSIONAL: 'specializedProfessionalTraining',
           WORK_SKILLS: 'allLevelsWorkSkills',
-          BASIC_SKILLS: 'allLevelsBasicSkills'
+          BASIC_SKILLS: 'allLevelsBasicSkills',
         };
         return Object.entries(ContentLevels).map(([key, value]) => ({
           label: this.translateMetadataString(replaceTranslationMap[key] || camelCase(key)),
@@ -53,7 +53,7 @@
     $trs: {
       editLevelsTitle: 'What Levels',
       editedLevels:
-        "Edited levels for {count, number, integer} {count, plural, one {resource} other {resources}}",
+        'Edited levels for {count, number, integer} {count, plural, one {resource} other {resources}}',
     },
   };
 

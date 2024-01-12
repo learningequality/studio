@@ -254,18 +254,18 @@
 
         // If we are showing a hierarchy, then we need to check if any
         // of the children options are selected or indeterminate
-        const mapValues = Object.keys(this.selectedValues)
+        const childrenOptionsValues = Object.keys(this.selectedValues)
           .filter(selectedValue => this.isSubLevel(selectedValue, optionId))
           .map(selectedValue => this.selectedValues[selectedValue]);
-        if (mapValues.length === 0) {
+        if (childrenOptionsValues.length === 0) {
           return false; // No childen options
-        } else if (mapValues.length === 1) {
+        } else if (childrenOptionsValues.length === 1) {
           // just one child option, the value is deterrmined by if it is selected
-          return mapValues[0] === true;
+          return childrenOptionsValues[0] === true;
         }
 
         // Here multiple children are selected or indeterminate
-        if (mapValues.some(value => value === true)) {
+        if (childrenOptionsValues.some(value => value === true)) {
           // if some child value is selected for all nodes, then the parent option is selected
           return true;
         }
@@ -273,7 +273,7 @@
         // Here all children options are mixed, we need to check if together
         // the parent option is common for all nodes
         const nodeIds = new Set();
-        mapValues.forEach(valueNodeIds => {
+        childrenOptionsValues.forEach(valueNodeIds => {
           valueNodeIds.forEach(nodeId => nodeIds.add(nodeId));
         });
         return nodeIds.size === this.nodeIds.length;
