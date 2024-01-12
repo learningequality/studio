@@ -119,10 +119,17 @@
         type: Boolean,
         default: false,
       },
+      /**
+       * If the options are hierarchical, this function should return true if the first value
+       * is a sublevel of the second value
+       */
       isSubLevel: {
         type: Function,
         default: (value1, value2) => value1.startsWith(value2),
       },
+      /**
+       * If the options are hierarchical, this function should return the level of the option
+       */
       getLevel: {
         type: Function,
         default: value => value.split('.').length,
@@ -234,29 +241,37 @@
         this.$emit('close');
       },
       isCheckboxSelected(optionId) {
+        // If the value is truthy (true or an array of nodeIds) then
+        // it is selected just if it is true (not an array)
         if (this.selectedValues[optionId]) {
           return this.selectedValues[optionId] === true;
         }
+        // If we dont want to show a hierarchy, then we dont need to
+        // look further
         if (!this.showHierarchy) {
           return false;
         }
 
+        // If we are showing a hierarchy, then we need to check if any
+        // of the children options are selected or indeterminate
         const mapValues = Object.keys(this.selectedValues)
           .filter(selectedValue => this.isSubLevel(selectedValue, optionId))
           .map(selectedValue => this.selectedValues[selectedValue]);
         if (mapValues.length === 0) {
-          return false;
+          return false; // No childen options
         } else if (mapValues.length === 1) {
+          // just one child option, the value is deterrmined by if it is selected
           return mapValues[0] === true;
         }
-        // Children values are selected
+
+        // Here multiple children are selected or indeterminate
         if (mapValues.some(value => value === true)) {
-          // if some child value is selected for all nodes, then it is selected
+          // if some child value is selected for all nodes, then the parent option is selected
           return true;
         }
 
-        // Here all child values are mixed, we need to check if together
-        // they are all selected for the parent value
+        // Here all children options are mixed, we need to check if together
+        // the parent option is common for all nodes
         const nodeIds = new Set();
         mapValues.forEach(valueNodeIds => {
           valueNodeIds.forEach(nodeId => nodeIds.add(nodeId));
