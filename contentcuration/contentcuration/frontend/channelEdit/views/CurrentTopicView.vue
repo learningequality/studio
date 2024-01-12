@@ -103,6 +103,13 @@
             data-test="change-levels-btn"
             @click="editLevels(selected)"
           />
+          <IconButton
+            v-if="canEdit && !isTopicSelected"
+            icon="coach"
+            :text="$tr('editLearningActivitiesButton')"
+            data-test="change-learning-activities-btn"
+            @click="editLearningActivities(selected)"
+          />
         </div>
 
       </VSlideXTransition>
@@ -374,6 +381,12 @@
       node() {
         return this.getContentNode(this.topicId);
       },
+      selectedNodes() {
+        return this.getContentNodes(this.selected);
+      },
+      isTopicSelected() {
+        return this.selectedNodes.some(node => node.kind === ContentKindsNames.TOPIC);
+      },
       ancestors() {
         return this.getContentNodeAncestors(this.topicId, true).map(ancestor => {
           return {
@@ -543,6 +556,13 @@
         this.trackClickEvent('Edit levels');
         this.openQuickEditModal({
           modal: QuickEditModals.LEVELS,
+          nodeIds,
+        });
+      },
+      editLearningActivities(nodeIds) {
+        this.trackClickEvent('Edit learning activities');
+        this.openQuickEditModal({
+          modal: QuickEditModals.LEARNING_ACTIVITIES,
           nodeIds,
         });
       },
@@ -769,6 +789,7 @@
       editLanguageButton: 'Edit language',
       editCategoriesButton: 'Edit categories',
       editWhatIsNeededButton: "Edit 'what is needed'",
+      editLearningActivitiesButton: 'Edit learning activities',
       optionsButton: 'Options',
       copyToClipboardButton: 'Copy to clipboard',
       [viewModes.DEFAULT]: 'Default view',

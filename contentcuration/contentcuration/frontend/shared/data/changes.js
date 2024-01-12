@@ -23,9 +23,9 @@ import {
 } from 'shared/data/constants';
 import {
   Categories,
+  ContentLevels,
   ResourcesNeededTypes,
   ResourcesNeededOptions,
-  ContentLevels,
 } from 'shared/constants';
 import { INDEXEDDB_RESOURCES } from 'shared/data/registry';
 

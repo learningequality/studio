@@ -76,6 +76,9 @@
         {{ emptyText || $tr('emptyOptionsSearch') }}
       </p>
     </div>
+    <span v-if="error" class="red--text">
+      {{ error }}
+    </span>
   </KModal>
 
 </template>
@@ -85,6 +88,7 @@
 
   import { mapGetters, mapActions } from 'vuex';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
+  import { getInvalidText } from 'shared/utils/validation';
 
   const MIXED = 'mixed';
 
@@ -150,11 +154,16 @@
         type: String,
         required: true,
       },
+      validators: {
+        type: Array,
+        default: () => [],
+      },
     },
     data() {
       return {
         updateDescendants: false,
         searchQuery: '',
+        error: '',
         /**
          * selectedValues is an object with the following structure:
          * {
@@ -292,7 +301,22 @@
           ) && !this.isCheckboxSelected(optionId)
         );
       },
+      validate() {
+        if (this.validators && this.validators.length) {
+          this.error = getInvalidText(
+            this.validators,
+            Object.keys(this.selectedValues).filter(key => this.selectedValues[key] === true)
+          );
+        } else {
+          this.error = '';
+        }
+      },
       async handleSave() {
+        this.validate();
+        if (this.error) {
+          return;
+        }
+
         await Promise.all(
           this.nodes.map(node => {
             const fieldValue = {};
@@ -338,6 +362,7 @@
 
           this.selectedValues = newSelectedValues;
         }
+        this.validate();
       },
       autocompleteInputUpdate(selected) {
         const newSelectedValues = {};
@@ -345,6 +370,7 @@
           newSelectedValues[optionId] = true;
         });
         this.selectedValues = newSelectedValues;
+        this.validate();
       },
       treeItemStyle(optionId) {
         if (this.flatList) {

@@ -26,6 +26,11 @@
       :nodeIds="nodeIds"
       @close="close"
     />
+    <EditLearningActivitiesModal
+      v-if="isLearningActivitiesOpen"
+      :nodeIds="nodeIds"
+      @close="close"
+    />
   </div>
 
 </template>
@@ -40,6 +45,7 @@
   import EditCategoriesModal from './EditCategoriesModal';
   import EditResourcesNeededModal from './EditResourcesNeededModal';
   import EditTitleDescriptionModal from './EditTitleDescriptionModal';
+  import EditLearningActivitiesModal from './EditLearningActivitiesModal.vue';
 
   export default {
     name: 'QuickEditModal',
@@ -49,6 +55,7 @@
       EditCategoriesModal,
       EditResourcesNeededModal,
       EditTitleDescriptionModal,
+      EditLearningActivitiesModal,
     },
     computed: {
       ...mapGetters('contentNode', ['getQuickEditModalOpen']),
@@ -80,6 +87,9 @@
       },
       isLevelsOpen() {
         return this.openedModal === QuickEditModals.LEVELS;
+      },
+      isLearningActivitiesOpen() {
+        return this.openedModal === QuickEditModals.LEARNING_ACTIVITIES;
       },
     },
     methods: {
