@@ -76,7 +76,7 @@
               <KIcon 
                 icon="warningIncomplete"
               />
-                
+              
             </div>
           </template>
           <span>{{ $tr('incompleteDescendantsText', { count: errorsInChannel }) }}</span>
