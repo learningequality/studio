@@ -1,35 +1,36 @@
-import colors from 'vuetify/es5/util/colors';
-import { themeTokens } from 'kolibri-design-system/lib/styles/theme';
+import { themeBrand, themePalette, themeTokens } from 'kolibri-design-system/lib/styles/theme';
 
 export default function theme() {
+  const palette = themePalette();
+  const brand = themeBrand();
+  const tokens = themeTokens();
   return Object.assign(
     {
-      purple: '#996189',
-      primary: '#996189',
-      secondary: '#8DC5B6',
-      primaryBackground: colors.purple.lighten5,
-      backgroundColor: colors.grey.lighten5,
-      greyBackground: colors.grey.lighten3,
-      greyBorder: colors.grey.lighten1,
-      grey: colors.grey.darken1,
-      darkGrey: colors.grey.darken2,
-      greenSuccess: '#4db6ac',
-      topic: colors.grey.base,
-      video: '#283593',
-      image: '#283593', // IDK what this is supposed to be
-      audio: '#f06292',
-      document: '#ff3d00',
-      exercise: '#4db6ac',
-      h5p: '#ff8f00',
-      html5: '#ff8f00',
-      zim: '#ff8f00',
-      slideshow: '#4ece90',
-      channelHighlightDefault: colors.grey.lighten3,
-      draggableDropZone: '#dddddd',
-      draggableDropOverlay: '#996189',
-      greenHighlightBackground: '#E3F0ED',
-      roleVisibilityCoach: '#01a9f3',
+      secondary: brand.secondary.v_1000,
+      primaryBackground: brand.primary.v_200,
+      backgroundColor: palette.grey.v_50,
+      greyBackground: palette.grey.v_200,
+      greyBorder: palette.grey.v_400,
+      grey: palette.grey.v_600,
+      darkGrey: palette.grey.v_800,
+      greenSuccess: tokens.success,
+      topic: palette.grey.v_400,
+      video: tokens.watch,
+      audio: tokens.listen,
+      document: tokens.read,
+      exercise: tokens.practice,
+      h5p: tokens.explore,
+      html5: tokens.explore,
+      zim: tokens.explore,
+      slideshow: tokens.read,
+      channelHighlightDefault: palette.grey.v_200,
+      draggableDropZone: palette.grey.v_100,
+      draggableDropOverlay: brand.primary.v_400,
+      greenHighlightBackground: brand.secondary.v_200,
+      roleVisibilityCoach: palette.lightblue.v_600,
     },
-    themeTokens()
+    tokens
   );
 }
+
+console.log(themeTokens());
