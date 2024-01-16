@@ -3735,7 +3735,7 @@ autoprefixer@^9.6.1:
     postcss "^7.0.32"
     postcss-value-parser "^4.1.0"
 
-autosize@^3.0.20, autosize@^3.0.21:
+autosize@^3.0.21:
   version "3.0.21"
   resolved "https://registry.yarnpkg.com/autosize/-/autosize-3.0.21.tgz#f182f40d17757d978a139a4c9ca40c4c0e448603"
   integrity sha512-xGFj5jTV4up6+fxRwtnAWiCIx/5N0tEnFn5rdhAkK1Lq2mliLMuGJgP5Bf4phck3sHGYrVKpYwugfJ61MSz9nA==
@@ -5206,11 +5206,6 @@ deep-is@~0.1.3:
   version "0.1.4"
   resolved "https://registry.yarnpkg.com/deep-is/-/deep-is-0.1.4.tgz#a6f2dce612fadd2ef1f519b73551f17e85199831"
   integrity sha512-oIPzksmTg4/MriiaYGO+okXDT7ztn/w3Eptv/+gSIdMdKsJo0u4CfYNFJPy+4SKMuCqGw2wxnA+URMg3t8a/bQ==
-
-deepmerge@^2.0.1:
-  version "2.2.1"
-  resolved "https://registry.yarnpkg.com/deepmerge/-/deepmerge-2.2.1.tgz#5d3ff22a01c00f645405a2fbc17d0778a1801170"
-  integrity sha512-R9hc1Xa/NOBi9WRVUWg19rl1UB7Tt4kuPd+thNJgFZoxXsTz7ncaPaeIm+40oSGuP33DfMb4sZt1QIGiJzC4EA==
 
 deepmerge@^4.2.2:
   version "4.2.2"
@@ -9061,17 +9056,6 @@ jszip@^3.7.1:
     readable-stream "~2.3.6"
     setimmediate "^1.0.5"
 
-keen-ui@^1.3.0:
-  version "1.3.2"
-  resolved "https://registry.yarnpkg.com/keen-ui/-/keen-ui-1.3.2.tgz#252cab973282d4cd477c45ac92015595d1b1fff1"
-  integrity sha512-WlyNRB8+ei47n87Om973HXUzLqL+Ili7hcNkG6gar/Jqfykpghgx+eSy2vyRq7oEBO2dGr0QgZ3A9eXq/eP14Q==
-  dependencies:
-    autosize "^3.0.20"
-    deepmerge "^2.0.1"
-    fuzzysearch "^1.0.3"
-    lodash.debounce "^4.0.8"
-    tippy.js "^4.2.1"
-
 kind-of@^3.0.2, kind-of@^3.0.3, kind-of@^3.2.0:
   version "3.2.2"
   resolved "https://registry.yarnpkg.com/kind-of/-/kind-of-3.2.2.tgz#31ea21a734bab9bbb0f32466d893aea51e4a3c64"
@@ -9116,9 +9100,9 @@ kolibri-constants@^0.2.0:
   resolved "https://registry.yarnpkg.com/kolibri-constants/-/kolibri-constants-0.2.0.tgz#47c9d773894e23251ba5ac4db420822e45603142"
   integrity sha512-WYDMGDzB9gNxRbpX1O2cGe1HrJvLvSZGwMuAv6dqrxJgPf7iO+Hi40/1CXjHM7nk5CRt+hn5bqnMzCBmj1omPA==
 
-"kolibri-design-system@https://github.com/learningequality/kolibri-design-system#v3.0.0":
+"kolibri-design-system@https://github.com/LianaHarris360/kolibri-design-system.git#finalize-theme-tokens":
   version "1.3.0"
-  resolved "https://github.com/learningequality/kolibri-design-system#24a7dfef611f7daf1432bbb9e0f569a0f9821844"
+  resolved "https://github.com/LianaHarris360/kolibri-design-system.git#7d773a79abc4daceca8cf2e6c0d7c9f6a876f176"
   dependencies:
     "@vue/composition-api" "^1.7.2"
     aphrodite "https://github.com/learningequality/aphrodite/"
@@ -9127,7 +9111,6 @@ kolibri-constants@^0.2.0:
     date-fns "^1.30.1"
     frame-throttle "^3.0.0"
     fuzzysearch "^1.0.3"
-    keen-ui "^1.3.0"
     lodash "^4.17.15"
     popper.js "^1.14.6"
     purecss "^0.6.2"
