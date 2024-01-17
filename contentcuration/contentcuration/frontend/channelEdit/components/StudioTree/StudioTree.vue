@@ -122,7 +122,9 @@
                       />
                       <Menu
                         v-else
+                        v-model="showMenu"
                         data-test="editMenu"
+
                       >
                         <template #activator="{ on }">
                           <IconButton
@@ -132,7 +134,7 @@
                             @click.stop
                           />
                         </template>
-                        <ContentNodeOptions :nodeId="nodeId" />
+                        <ContentNodeOptions v-if="showMenu" :nodeId="nodeId" />
                       </Menu>
                     </VFlex>
                     <ContentNodeContextMenu
@@ -143,10 +145,12 @@
                       :nodeId="nodeId"
                       data-test="contextMenu"
                     >
-                      <div class="caption grey--text pt-2 px-3" :class="getTitleClass(node)">
-                        {{ getTitle(node) }}
-                      </div>
-                      <ContentNodeOptions :nodeId="nodeId" />
+                      <template #default="{ showMenu }">
+                        <div class="caption grey--text pt-2 px-3" :class="getTitleClass(node)">
+                          {{ getTitle(node) }}
+                        </div>
+                        <ContentNodeOptions v-if="showMenu" :nodeId="nodeId" />
+                      </template>
                     </ContentNodeContextMenu>
                   </VLayout>
                 </DraggableHandle>
@@ -257,6 +261,7 @@
         draggableSize: 5,
         draggableExpanded: false,
         debouncedLoad: null,
+        showMenu: false,
       };
     },
     computed: {

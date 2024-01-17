@@ -2,8 +2,8 @@
 
   <Menu v-model="value" :position-x="positionX" :position-y="positionY" absolute>
     <VCard>
-      <slot>
-        <ContentNodeOptions :nodeId="nodeId" :hideDetailsLink="hideDetailsLink" />
+      <slot :showMenu="value">
+        <ContentNodeOptions v-if="value" :nodeId="nodeId" :hideDetailsLink="hideDetailsLink" />
       </slot>
     </VCard>
   </Menu>
