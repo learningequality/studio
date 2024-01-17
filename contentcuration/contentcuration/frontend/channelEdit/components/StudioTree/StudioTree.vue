@@ -124,7 +124,6 @@
                         v-else
                         v-model="showMenu"
                         data-test="editMenu"
-
                       >
                         <template #activator="{ on }">
                           <IconButton
@@ -145,12 +144,10 @@
                       :nodeId="nodeId"
                       data-test="contextMenu"
                     >
-                      <template #default="{ showMenu }">
-                        <div class="caption grey--text pt-2 px-3" :class="getTitleClass(node)">
-                          {{ getTitle(node) }}
-                        </div>
-                        <ContentNodeOptions v-if="showMenu" :nodeId="nodeId" />
-                      </template>
+                      <div class="caption grey--text pt-2 px-3" :class="getTitleClass(node)">
+                        {{ getTitle(node) }}
+                      </div>
+                      <ContentNodeOptions :nodeId="nodeId" />
                     </ContentNodeContextMenu>
                   </VLayout>
                 </DraggableHandle>

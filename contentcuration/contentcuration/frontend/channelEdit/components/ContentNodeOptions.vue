@@ -216,31 +216,31 @@
         };
       },
     },
-    beforeMount() {
-      this.lastFocus = document.activeElement;
-    },
-    mounted() {
-        const animationFrame1 = requestAnimationFrame(() => {
-          const animationFrame2 = requestAnimationFrame(() => {
-            const { optionsList } = this.$refs;
-            const firstOption = optionsList.$el.querySelector('a');
-            if (firstOption) {
-              firstOption.focus();
-            }
-            cancelAnimationFrame(animationFrame2);
-          });
-          cancelAnimationFrame(animationFrame1);
-        });
-    },
-    destroyed() {
-      this.lastFocus && this.lastFocus.focus();
-    },
     watch: {
       moveModalOpen(open) {
         if (open) {
           this.trackAction('Move');
         }
       },
+    },
+    beforeMount() {
+      this.lastFocus = document.activeElement;
+    },
+    mounted() {
+      const animationFrame1 = requestAnimationFrame(() => {
+        const animationFrame2 = requestAnimationFrame(() => {
+          const { optionsList } = this.$refs;
+          const firstOption = optionsList.$el.querySelector('a');
+          if (firstOption) {
+            firstOption.focus();
+          }
+          cancelAnimationFrame(animationFrame2);
+        });
+        cancelAnimationFrame(animationFrame1);
+      });
+    },
+    destroyed() {
+      this.lastFocus && this.lastFocus.focus();
     },
     methods: {
       ...mapMutations('contentNode', {
@@ -310,7 +310,7 @@
         return () => {};
       },
       quickEditModalFactory(modal) {
-        return ($event) => {
+        return $event => {
           this.openQuickEditModal({
             modal,
             nodeIds: [this.nodeId],
