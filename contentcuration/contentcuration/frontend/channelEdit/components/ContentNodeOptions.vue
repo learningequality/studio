@@ -3,7 +3,7 @@
   <div
     style="max-height: 80vh"
   >
-    <VList>
+    <VList ref="optionsList">
       <template
         v-for="(group, groupIndex) in groupedOptions"
       >
@@ -12,7 +12,10 @@
           :key="groupIndex + '-' + index"
           ripple
           :to="option.to"
+          tabindex="0"
           @click="option.onClick($event)"
+          @keydown.enter="option.onClick($event)"
+          @keydown.tab="handleTab($event)"
         >
           <VListTileTitle>
             {{ option.label }}
@@ -95,7 +98,7 @@
             },
             {
               label: this.$tr('editTitleDescription'),
-              onClick: this.editTitleDescription,
+              onClick: this.quickEditModalFactory(QuickEditModals.TITLE_DESCRIPTION),
               condition: this.canEdit,
             },
           ],
@@ -138,53 +141,53 @@
           [
             {
               label: this.$tr('editTags'),
-              onClick: this.editTags,
+              onClick: this.quickEditModalFactory(QuickEditModals.TAGS),
               condition: this.canEdit,
             },
             {
               label: this.$tr('editLanguage'),
-              onClick: this.editLanguage,
+              onClick: this.quickEditModalFactory(QuickEditModals.LANGUAGE),
               condition: this.canEdit,
             },
           ],
           [
             {
               label: this.$tr('editCategories'),
-              onClick: this.editCategories,
+              onClick: this.quickEditModalFactory(QuickEditModals.CATEGORIES),
               condition: this.canEdit,
             },
             {
               label: this.$tr('editLevels'),
-              onClick: this.editLevels,
+              onClick: this.quickEditModalFactory(QuickEditModals.LEVELS),
               condition: this.canEdit,
             },
             {
               label: this.$tr('editLearningActivities'),
-              onClick: this.editLearningActivities,
+              onClick: this.quickEditModalFactory(QuickEditModals.LEARNING_ACTIVITIES),
               condition: this.canEdit,
             },
           ],
           [
             {
               label: this.$tr('editSource'),
-              onClick: this.editSource,
+              onClick: this.quickEditModalFactory(QuickEditModals.SOURCE),
               condition: this.canEdit,
             },
             {
               label: this.$tr('editAudience'),
-              onClick: this.editAudience,
+              onClick: this.quickEditModalFactory(QuickEditModals.AUDIENCE),
               condition: this.canEdit,
             },
           ],
           [
             {
               label: this.$tr('editCompletion'),
-              onClick: this.editCompletion,
+              onClick: this.quickEditModalFactory(QuickEditModals.COMPLETION),
               condition: this.canEdit,
             },
             {
               label: this.$tr('editWhatIsNeeded'),
-              onClick: this.editWhatIsNeeded,
+              onClick: this.quickEditModalFactory(QuickEditModals.WHAT_IS_NEEDED),
               condition: this.canEdit,
             },
           ],
@@ -213,6 +216,25 @@
         };
       },
     },
+    beforeMount() {
+      this.lastFocus = document.activeElement;
+    },
+    mounted() {
+        const animationFrame1 = requestAnimationFrame(() => {
+          const animationFrame2 = requestAnimationFrame(() => {
+            const { optionsList } = this.$refs;
+            const firstOption = optionsList.$el.querySelector('a');
+            if (firstOption) {
+              firstOption.focus();
+            }
+            cancelAnimationFrame(animationFrame2);
+          });
+          cancelAnimationFrame(animationFrame1);
+        });
+    },
+    destroyed() {
+      this.lastFocus && this.lastFocus.focus();
+    },
     watch: {
       moveModalOpen(open) {
         if (open) {
@@ -227,6 +249,22 @@
       ...mapActions(['showSnackbar']),
       ...mapActions('contentNode', ['createContentNode', 'moveContentNodes', 'copyContentNode']),
       ...mapActions('clipboard', ['copy']),
+      handleTab($event) {
+        const optionsList = this.$refs.optionsList;
+        const options = optionsList.$el.querySelectorAll('a');
+        const index = Array.from(options).indexOf($event.target);
+        if (
+          (index === 0 && $event.shiftKey) ||
+          (index === options.length - 1 && !$event.shiftKey)
+        ) {
+          // destroy component
+          this.$destroy();
+        }
+        const nextIndex = $event.shiftKey ? index - 1 : index + 1;
+        const nextOption = options[nextIndex];
+        nextOption && nextOption.focus();
+        $event.preventDefault();
+      },
       newTopicNode() {
         this.trackAction('New topic');
         const nodeData = {
@@ -271,75 +309,16 @@
         // Otherwise, don't do anything
         return () => {};
       },
-      editTitleDescription() {
-        this.trackAction('Edit title and description');
-        this.openQuickEditModal({
-          modal: QuickEditModals.TITLE_DESCRIPTION,
-          nodeIds: [this.nodeId],
-        });
-      },
-      editTags() {
-        this.trackAction('Edit tags');
-        this.openQuickEditModal({
-          modal: QuickEditModals.TAGS,
-          nodeIds: [this.nodeId],
-        });
-      },
-      editLanguage() {
-        this.trackAction('Edit language');
-        this.openQuickEditModal({
-          modal: QuickEditModals.LANGUAGE,
-          nodeIds: [this.nodeId],
-        });
-      },
-      editCategories() {
-        this.trackAction('Edit categories');
-        this.openQuickEditModal({
-          modal: QuickEditModals.CATEGORIES,
-          nodeIds: [this.nodeId],
-        });
-      },
-      editLevels() {
-        this.trackAction('Edit levels');
-        this.openQuickEditModal({
-          modal: QuickEditModals.LEVELS,
-          nodeIds: [this.nodeId],
-        });
-      },
-      editLearningActivities() {
-        this.trackAction('Edit learning activities');
-        this.openQuickEditModal({
-          modal: QuickEditModals.LEARNING_ACTIVITIES,
-          nodeIds: [this.nodeId],
-        });
-      },
-      editSource() {
-        this.trackAction('Edit source');
-        this.openQuickEditModal({
-          modal: QuickEditModals.SOURCE,
-          nodeIds: [this.nodeId],
-        });
-      },
-      editAudience() {
-        this.trackAction('Edit audience');
-        this.openQuickEditModal({
-          modal: QuickEditModals.AUDIENCE,
-          nodeIds: [this.nodeId],
-        });
-      },
-      editCompletion() {
-        this.trackAction('Edit completion');
-        this.openQuickEditModal({
-          modal: QuickEditModals.COMPLETION,
-          nodeIds: [this.nodeId],
-        });
-      },
-      editWhatIsNeeded() {
-        this.trackAction('Edit what is needed');
-        this.openQuickEditModal({
-          modal: QuickEditModals.WHAT_IS_NEEDED,
-          nodeIds: [this.nodeId],
-        });
+      quickEditModalFactory(modal) {
+        return ($event) => {
+          this.openQuickEditModal({
+            modal,
+            nodeIds: [this.nodeId],
+          });
+          const trackActionLabel = modal.replace(/_/g, ' ').toLowerCase();
+          this.trackAction(`Edit ${trackActionLabel}`);
+          $event.preventDefault();
+        };
       },
       removeNode: withChangeTracker(function(changeTracker) {
         this.trackAction('Delete');
