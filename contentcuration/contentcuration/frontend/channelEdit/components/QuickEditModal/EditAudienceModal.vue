@@ -28,9 +28,9 @@
       <KRadioButton
         v-for="rol in rolesOptions"
         :key="rol.value"
+        v-model="selectedRol"
         data-test="rol-checkbox"
         :label="rol.label"
-        v-model="selectedRol"
         :value="rol.value"
         :description="rol.description"
       />
@@ -100,10 +100,12 @@
         const languages = new Set(this.nodes.map(node => node.role_visibility).filter(Boolean));
         if (languages.size > 1) {
           return true;
-        };
-        const forBeginners = new Set(this.nodes.map(node =>
-          Boolean(node.learner_needs && node.learner_needs[ResourcesNeededTypes.FOR_BEGINNERS])
-        ));
+        }
+        const forBeginners = new Set(
+          this.nodes.map(node =>
+            Boolean(node.learner_needs && node.learner_needs[ResourcesNeededTypes.FOR_BEGINNERS])
+          )
+        );
         return forBeginners.size > 1;
       },
     },
@@ -147,14 +149,16 @@
       saveAction: 'Save',
       cancelAction: 'Cancel',
       editedAudience:
-        "Edited audience for {count, number, integer} {count, plural, one {resource} other {resources}}",
+        'Edited audience for {count, number, integer} {count, plural, one {resource} other {resources}}',
       resourcesSelected:
         '{count, number, integer} {count, plural, one {resource} other {resources}} selected',
       forBeginnersCheckbox: 'For beginners',
       visibleTo: 'Visible to:',
       visibleToAnyone: 'Resources are visible to anyone',
-      visibleToCoaches: 'Resources are visible only to coaches (teachers, facilitators, administrators)',
-      multipleAudience: 'The selected resources have a mixed audience visbility. Choosing from the options below will apply the changes to all the selected resources'
+      visibleToCoaches:
+        'Resources are visible only to coaches (teachers, facilitators, administrators)',
+      multipleAudience:
+        'The selected resources have a mixed audience visbility. Choosing from the options below will apply the changes to all the selected resources',
     },
   };
 
