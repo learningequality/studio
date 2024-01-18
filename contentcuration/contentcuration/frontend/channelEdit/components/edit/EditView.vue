@@ -181,8 +181,7 @@
         return this.$tr('editingMultipleCount', totals);
       },
       areDetailsValid() {
-        this.setErrors(this.getNodeDetailsErrorsList(this.nodeIds[0]));
-
+        this.setErrors(this.nodeIds[0]);
         return !this.oneSelected || this.getContentNodeDetailsAreValid(this.nodeIds[0]);
       },
       areAssessmentItemsValid() {
