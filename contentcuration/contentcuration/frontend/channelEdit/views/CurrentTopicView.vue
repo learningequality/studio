@@ -11,7 +11,7 @@
             <VFlex class="font-weight-bold text-truncate" shrink :class="getTitleClass(item)">
               {{ getTitle(item) }}
             </VFlex>
-            <Menu v-if="item.displayNodeOptions">
+            <Menu v-if="item.displayNodeOptions" v-model="breadcrumbsMenu">
               <template #activator="{ on }">
                 <IconButton
                   icon="dropdown"
@@ -19,7 +19,7 @@
                   v-on="on"
                 />
               </template>
-              <ContentNodeOptions v-if="node" :nodeId="topicId" />
+              <ContentNodeOptions v-if="node && breadcrumbsMenu" :nodeId="topicId" />
             </Menu>
           </VLayout>
           <span v-else class="grey--text" :class="getTitleClass(item)">
@@ -210,7 +210,7 @@
             :text="$tr('editButton')"
             @click="editNodes([detailNodeId])"
           />
-          <Menu>
+          <Menu v-model="resourceDrawerMenu">
             <template #activator="{ on }">
               <IconButton
                 size="small"
@@ -220,6 +220,7 @@
               />
             </template>
             <ContentNodeOptions
+              v-if="resourceDrawerMenu"
               :nodeId="detailNodeId"
               hideDetailsLink
               hideEditLink
@@ -302,6 +303,8 @@
         loadingAncestors: false,
         elevated: false,
         moveModalOpen: false,
+        breadcrumbsMenu: false,
+        resourceDrawerMenu: false,
       };
     },
     computed: {

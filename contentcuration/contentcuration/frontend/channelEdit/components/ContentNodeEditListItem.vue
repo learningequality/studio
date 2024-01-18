@@ -71,7 +71,7 @@
                   @click.stop
                 />
               </template>
-              <ContentNodeOptions v-if="!copying" :nodeId="nodeId" />
+              <ContentNodeOptions v-if="!copying && activated" :nodeId="nodeId" />
             </Menu>
           </VListTileAction>
         </template>
