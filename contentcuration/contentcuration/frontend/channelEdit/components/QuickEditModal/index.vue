@@ -41,6 +41,11 @@
       :nodeIds="nodeIds"
       @close="close"
     />
+    <EditCompletionModal
+      v-if="isCompletionOpen"
+      :nodeId="nodeIds[0]"
+      @close="close"
+    />
   </div>
 
 </template>
@@ -55,6 +60,7 @@
   import EditLanguageModal from './EditLanguageModal';
   import EditAudienceModal from './EditAudienceModal';
   import EditCategoriesModal from './EditCategoriesModal';
+  import EditCompletionModal from './EditCompletionModal';
   import EditResourcesNeededModal from './EditResourcesNeededModal';
   import EditTitleDescriptionModal from './EditTitleDescriptionModal';
   import EditLearningActivitiesModal from './EditLearningActivitiesModal.vue';
@@ -67,6 +73,7 @@
       EditLanguageModal,
       EditAudienceModal,
       EditCategoriesModal,
+      EditCompletionModal,
       EditResourcesNeededModal,
       EditTitleDescriptionModal,
       EditLearningActivitiesModal,
@@ -110,6 +117,9 @@
       },
       isAudienceOpen() {
         return this.openedModal === QuickEditModals.AUDIENCE;
+      },
+      isCompletionOpen() {
+        return this.openedModal === QuickEditModals.COMPLETION;
       },
     },
     methods: {
