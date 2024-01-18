@@ -47,11 +47,8 @@
   import { QuickEditModals } from '../../constants';
   import EditLevelsModal from './EditLevelsModal';
   import EditLanguageModal from './EditLanguageModal';
-<<<<<<< HEAD
-  import EditCategoriesModal from './EditCategoriesModal';
-=======
   import EditAudienceModal from './EditAudienceModal';
->>>>>>> 5fa394fed (Add quick edit modal to edit audience)
+  import EditCategoriesModal from './EditCategoriesModal';
   import EditResourcesNeededModal from './EditResourcesNeededModal';
   import EditTitleDescriptionModal from './EditTitleDescriptionModal';
   import EditLearningActivitiesModal from './EditLearningActivitiesModal.vue';
@@ -61,11 +58,8 @@
     components: {
       EditLevelsModal,
       EditLanguageModal,
-<<<<<<< HEAD
-      EditCategoriesModal,
-=======
       EditAudienceModal,
->>>>>>> 5fa394fed (Add quick edit modal to edit audience)
+      EditCategoriesModal,
       EditResourcesNeededModal,
       EditTitleDescriptionModal,
       EditLearningActivitiesModal,
@@ -95,7 +89,6 @@
       isResourcesNeededOpen() {
         return this.openedModal === QuickEditModals.WHAT_IS_NEEDED;
       },
-<<<<<<< HEAD
       isCategoriesOpen() {
         return this.openedModal === QuickEditModals.CATEGORIES;
       },
@@ -104,10 +97,9 @@
       },
       isLearningActivitiesOpen() {
         return this.openedModal === QuickEditModals.LEARNING_ACTIVITIES;
-=======
+      },
       isAudienceOpen() {
         return this.openedModal === QuickEditModals.AUDIENCE;
->>>>>>> 5fa394fed (Add quick edit modal to edit audience)
       },
     },
     methods: {
