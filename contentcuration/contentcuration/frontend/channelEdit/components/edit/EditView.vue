@@ -13,11 +13,7 @@
         <ToolBar v-if="showTabs" :flat="!tabsElevated" class="tabs" color="white">
           <Tabs v-model="currentTab" slider-color="primary" height="64px">
             <!-- Details tab -->
-            <VTab
-              ref="detailstab"
-              :href="`#${tabs.DETAILS}`"
-              @click="trackTab('Details')"
-            >
+            <VTab ref="detailstab" :href="`#${tabs.DETAILS}`" @click="trackTab('Details')">
               {{ $tr(tabs.DETAILS) }}
               <VTooltip v-if="!areDetailsValid || !areFilesValid" top lazy>
                 <template #activator="{ on }">
@@ -72,21 +68,22 @@
               </VAlert>
               <VAlert v-else-if="!areDetailsValid" :value="true" type="error" outline icon="error">
                 {{ $tr('errorBannerText') }}
+                <ul>
+                  <li
+                    v-for="(error, index) in errorsList"
+                    :key="index"
+                    @click="handleErrorClick(error)"
+                  >
+                    {{ error }}
+                  </li>
+                </ul>
               </VAlert>
-              <DetailsTabView
-                :key="nodeIds.join('-')"
-                ref="detailsTab"
-                :nodeIds="nodeIds"
-              />
+              <DetailsTabView :key="nodeIds.join('-')" ref="detailsTab" :nodeIds="nodeIds" />
             </VTabItem>
             <VTabItem :key="tabs.QUESTIONS" ref="questionwindow" :value="tabs.QUESTIONS" lazy>
               <AssessmentTab :nodeId="nodeIds[0]" />
             </VTabItem>
-            <VTabItem
-              :key="tabs.RELATED"
-              :value="tabs.RELATED"
-              lazy
-            >
+            <VTabItem :key="tabs.RELATED" :value="tabs.RELATED" lazy>
               <RelatedResourcesTab :nodeId="nodeIds[0]" />
             </VTabItem>
           </VTabsItems>
@@ -133,6 +130,7 @@
       return {
         currentTab: null,
         tabsElevated: false,
+        errorsList: [],
       };
     },
     computed: {
@@ -141,6 +139,7 @@
         'getContentNodeDetailsAreValid',
         'getContentNodeFilesAreValid',
         'getImmediateRelatedResourcesCount',
+        'getNodeDetailsErrorsList',
       ]),
       ...mapGetters('assessmentItem', ['getAssessmentItemsAreValid', 'getAssessmentItemsCount']),
       firstNode() {
@@ -182,6 +181,8 @@
         return this.$tr('editingMultipleCount', totals);
       },
       areDetailsValid() {
+        this.setErrors(this.getNodeDetailsErrorsList(this.nodeIds[0]));
+
         return !this.oneSelected || this.getContentNodeDetailsAreValid(this.nodeIds[0]);
       },
       areAssessmentItemsValid() {
@@ -242,6 +243,59 @@
       },
       trackTab(name) {
         this.$analytics.trackClick('channel_editor_modal', name);
+      },
+      handleErrorClick(error) {
+        const errorRefs = {
+          Title: 'title',
+          License: 'license',
+          'Copyright holder': 'copyright_holder',
+          Completion: 'randomize',
+          'Learning Activity': 'learning_activities',
+        };
+
+        const errorRef = errorRefs[error];
+
+        const targetElement = this.$refs.detailsTab.$refs[errorRef];
+
+        console.log(targetElement, 'target');
+
+        if (!targetElement) {
+          console.error(`Target element ref not found for error: ${error}`);
+        }
+
+        const nativeElement = targetElement.$el;
+
+        if (nativeElement.scrollIntoView) {
+          nativeElement.scrollIntoView({ behavior: 'smooth' });
+        }
+      },
+      setErrors(errorTags) {
+        const errorsTagList = this.getNodeDetailsErrorsList(errorTags);
+        // fetch unique errors
+        // set that to errorsList
+        const errorRefs = {
+          TITLE_REQUIRED: 'Title',
+          LICENSE_REQUIRED: 'License',
+          COPYRIGHT_HOLDER_REQUIRED: 'Copyright holder',
+          MASTERY_MODEL_REQUIRED: 'Completion',
+          MASTERY_MODEL_M_REQUIRED: 'Completion',
+          MASTERY_MODEL_M_WHOLE_NUMBER: 'Completion',
+          MASTERY_MODEL_M_GT_ZERO: 'Completion',
+          MASTERY_MODEL_M_LTE_N: 'Completion',
+          MASTERY_MODEL_N_REQUIRED: 'Completion',
+          MASTERY_MODEL_N_WHOLE_NUMBER: 'Completion',
+          MASTERY_MODEL_N_GT_ZERO: 'Completion',
+          LEARNING_ACTIVITY_REQUIRED: 'Learning Activity',
+        };
+
+        const uniqueErrorsSet = new Set();
+        for (const error of errorsTagList) {
+          if (Object.prototype.hasOwnProperty.call(errorRefs, error)) {
+            uniqueErrorsSet.add(errorRefs[error]);
+          }
+        }
+        const arr = [...uniqueErrorsSet];
+        this.errorsList = arr;
       },
       /*
        * @public
