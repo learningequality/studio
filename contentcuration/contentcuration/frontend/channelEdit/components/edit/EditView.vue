@@ -74,7 +74,7 @@
                     :key="index"
                     @click="handleErrorClick(error)"
                   >
-                    {{ error }}
+                    <a class="error-ref">  {{ error }} </a>
                   </li>
                 </ul>
               </VAlert>
@@ -106,6 +106,14 @@
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import ToolBar from 'shared/views/ToolBar';
   import Tabs from 'shared/views/Tabs';
+
+  const EditFields = {
+    TITLE: 'Title',
+    LICENSE: 'License',
+    COPYRIGHT_HOLDER: 'Copyright holder',
+    COMPLETION: 'Completion',
+    LEARNING_ACTIVITY: 'Learning activity',
+  };
 
   export default {
     name: 'EditView',
@@ -245,51 +253,49 @@
       },
       handleErrorClick(error) {
         const errorRefs = {
-          Title: 'title',
-          License: 'license',
-          'Copyright holder': 'copyright_holder',
-          Completion: 'randomize',
-          'Learning Activity': 'learning_activities',
+          [EditFields.TITLE]: 'title',
+          [EditFields.LICENSE]: 'license',
+          [EditFields.COPYRIGHT_HOLDER]: 'copyright_holder',
+          [EditFields.COMPLETION]: 'randomize',
+          [EditFields.LEARNING_ACTIVITY]: 'learning_activities',
         };
 
         const errorRef = errorRefs[error];
-
         const targetElement = this.$refs.detailsTab.$refs[errorRef];
-
-        console.log(targetElement, 'target');
 
         if (!targetElement) {
           console.error(`Target element ref not found for error: ${error}`);
+          return;
         }
 
         const nativeElement = targetElement.$el;
-
-        if (nativeElement.scrollIntoView) {
-          nativeElement.scrollIntoView({ behavior: 'smooth' });
-        }
+        const containerElement = this.$refs.editview;
+        const position = nativeElement.getBoundingClientRect();
+        const offsetY = position.top - nativeElement.clientHeight - 50; //  additional padding of 50 to adjust position.
+        containerElement.scrollTo({ top: offsetY, behavior: 'smooth' });
       },
-      setErrors(errorTags) {
-        const errorsTagList = this.getNodeDetailsErrorsList(errorTags);
+      setErrors(nodeId) {
+        const errorsTagList = this.getNodeDetailsErrorsList(nodeId);
         // fetch unique errors
         // set that to errorsList
         const errorRefs = {
-          TITLE_REQUIRED: 'Title',
-          LICENSE_REQUIRED: 'License',
-          COPYRIGHT_HOLDER_REQUIRED: 'Copyright holder',
-          MASTERY_MODEL_REQUIRED: 'Completion',
-          MASTERY_MODEL_M_REQUIRED: 'Completion',
-          MASTERY_MODEL_M_WHOLE_NUMBER: 'Completion',
-          MASTERY_MODEL_M_GT_ZERO: 'Completion',
-          MASTERY_MODEL_M_LTE_N: 'Completion',
-          MASTERY_MODEL_N_REQUIRED: 'Completion',
-          MASTERY_MODEL_N_WHOLE_NUMBER: 'Completion',
-          MASTERY_MODEL_N_GT_ZERO: 'Completion',
-          LEARNING_ACTIVITY_REQUIRED: 'Learning Activity',
+          TITLE_REQUIRED: EditFields.TITLE,
+          LICENSE_REQUIRED: EditFields.LICENSE,
+          COPYRIGHT_HOLDER_REQUIRED: EditFields.COPYRIGHT_HOLDER,
+          MASTERY_MODEL_REQUIRED: EditFields.COMPLETION,
+          MASTERY_MODEL_M_REQUIRED: EditFields.COMPLETION,
+          MASTERY_MODEL_M_WHOLE_NUMBER: EditFields.COMPLETION,
+          MASTERY_MODEL_M_GT_ZERO: EditFields.COMPLETION,
+          MASTERY_MODEL_M_LTE_N: EditFields.COMPLETION,
+          MASTERY_MODEL_N_REQUIRED: EditFields.COMPLETION,
+          MASTERY_MODEL_N_WHOLE_NUMBER: EditFields.COMPLETION,
+          MASTERY_MODEL_N_GT_ZERO: EditFields.COMPLETION,
+          LEARNING_ACTIVITY_REQUIRED: EditFields.LEARNING_ACTIVITY,
         };
 
         const uniqueErrorsSet = new Set();
         for (const error of errorsTagList) {
-          if (Object.prototype.hasOwnProperty.call(errorRefs, error)) {
+          if (errorRefs[error]) {
             uniqueErrorsSet.add(errorRefs[error]);
           }
         }
@@ -366,6 +372,11 @@
     min-width: 100%;
     max-height: inherit;
     overflow: auto;
+  }
+
+  .error-ref {
+    color: inherit;
+    text-decoration: underline;
   }
 
 </style>
