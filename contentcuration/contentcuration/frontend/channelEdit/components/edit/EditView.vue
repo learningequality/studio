@@ -74,7 +74,7 @@
                     :key="index"
                     @click="handleErrorClick(error)"
                   >
-                    <a class="error-ref">  {{ error }} </a>
+                    <a class="error-ref"> {{ $tr(error) }} </a>
                   </li>
                 </ul>
               </VAlert>
@@ -108,11 +108,11 @@
   import Tabs from 'shared/views/Tabs';
 
   const EditFields = {
-    TITLE: 'Title',
-    LICENSE: 'License',
-    COPYRIGHT_HOLDER: 'Copyright holder',
-    COMPLETION: 'Completion',
-    LEARNING_ACTIVITY: 'Learning activity',
+    TITLE: 'titleLabel',
+    LICENSE: 'licenseLabel',
+    COPYRIGHT_HOLDER: 'copyrightHolderLabel',
+    COMPLETION: 'completionLabel',
+    LEARNING_ACTIVITY: 'learningActivityLabel',
   };
 
   export default {
@@ -325,6 +325,11 @@
       errorBannerText: 'Please provide the required information',
       editingMultipleCount:
         'Editing details for {topicCount, plural,\n =1 {# folder}\n other {# folders}}, {resourceCount, plural,\n =1 {# resource}\n other {# resources}}',
+      titleLabel: 'Title',
+      licenseLabel: 'License',
+      copyrightHolderLabel: 'Copyright holder',
+      completionLabel: 'Completion',
+      learningActivityLabel: 'Learning activity',
     },
   };
 
