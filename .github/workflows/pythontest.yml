@@ -70,12 +70,12 @@ jobs:
                     -v /tmp/minio_data:/data \
                     -v /tmp/minio_config:/root/.minio \
                     minio/minio server /data
-    - name: Set up Python 3.9
+    - name: Set up Python 3.10
       uses: actions/setup-python@v5
       with:
-        python-version: 3.9
+        python-version: '3.10'
     - name: pip cache
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ~/.cache/pip
         key: ${{ runner.os }}-pytest-${{ hashFiles('requirements.txt', 'requirements-dev.txt') }}
