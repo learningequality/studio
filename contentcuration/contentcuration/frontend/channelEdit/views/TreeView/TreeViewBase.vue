@@ -73,10 +73,10 @@
               v-on="on"
             >
               {{ $formatNumber(errorsInChannel) }}
-              <KIcon 
+              <KIcon
                 icon="warningIncomplete"
               />
-              
+
             </div>
           </template>
           <span>{{ $tr('incompleteDescendantsText', { count: errorsInChannel }) }}</span>
