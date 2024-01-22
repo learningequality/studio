@@ -153,12 +153,12 @@
                 </VListTileContent>
                 <template v-if="!copying">
                   <VListTileAction class="actions-end-col">
-                    <IconButton
+                    <KIconButton
                       v-if="isTopic"
                       :aria-hidden="hover"
                       data-test="btn-chevron"
                       icon="chevronRight"
-                      :text="$tr('openTopic')"
+                      :tooltip="$tr('openTopic')"
                       size="small"
                       @click="$emit('topicChevronClick')"
                     />
@@ -209,7 +209,6 @@
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import { RolesNames } from 'shared/leUtils/Roles';
   import ImageOnlyThumbnail from 'shared/views/files/ImageOnlyThumbnail';
-  import IconButton from 'shared/views/IconButton';
   import ToggleText from 'shared/views/ToggleText';
   import ContextMenuCloak from 'shared/views/ContextMenuCloak';
   import DraggableHandle from 'shared/views/draggable/DraggableHandle';
@@ -223,7 +222,6 @@
       DraggableHandle,
       ContextMenuCloak,
       ImageOnlyThumbnail,
-      IconButton,
       ContentNodeValidator,
       ContentNodeChangedIcon,
       ToggleText,

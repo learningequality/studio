@@ -31,21 +31,35 @@
           <Menu>
             <template #activator="{ on }">
               <VBtn flat style="text-transform: none;" v-on="on">
-                <Icon>person</Icon>
+                <KIconButton
+                  disabled="true"
+                  icon="person"
+                  color="white"
+                />
                 <span class="mx-2 subheading">{{ user.first_name }}</span>
-                <Icon>arrow_drop_down</Icon>
+                <KIconButton
+                  disabled="true"
+                  icon="dropdown"
+                  color="white"
+                />
               </VBtn>
             </template>
             <VList>
               <VListTile v-if="user.is_admin" :href="administrationLink">
                 <VListTileAction>
-                  <Icon>people</Icon>
+                  <KIconButton
+                    disabled="true"
+                    icon="people"
+                  />
                 </VListTileAction>
                 <VListTileTitle v-text="$tr('administration')" />
               </VListTile>
               <VListTile :href="settingsLink">
                 <VListTileAction>
-                  <Icon>settings</Icon>
+                  <KIconButton
+                    disabled="true"
+                    icon="settings"
+                  />
                 </VListTileAction>
                 <VListTileTitle v-text="$tr('settings')" />
               </VListTile>
@@ -53,7 +67,10 @@
                 @click="showLanguageModal = true"
               >
                 <VListTileAction>
-                  <Icon>language</Icon>
+                  <KIconButton
+                    disabled="true"
+                    icon="language"
+                  />
                 </VListTileAction>
                 <VListTileTitle v-text="$tr('changeLanguage')" />
               </VListTile>
@@ -62,13 +79,19 @@
                 target="_blank"
               >
                 <VListTileAction>
-                  <Icon>open_in_new</Icon>
+                  <KIconButton
+                    disabled="true"
+                    icon="openNewTab"
+                  />
                 </VListTileAction>
                 <VListTileTitle v-text="$tr('help')" />
               </VListTile>
               <VListTile @click="logout">
                 <VListTileAction>
-                  <Icon>exit_to_app</Icon>
+                  <KIconButton
+                    disabled="true"
+                    icon="logout"
+                  />
                 </VListTileAction>
                 <VListTileTitle v-text="$tr('logOut')" />
               </VListTile>
