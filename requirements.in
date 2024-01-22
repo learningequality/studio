@@ -12,7 +12,6 @@ jsonfield==3.1.0
 newrelic>=2.86.3.70
 celery==5.2.7
 redis
-pathlib
 python-postmark==0.5.8
 Django==3.2.23
 django-webpack-loader==0.7.0
@@ -22,12 +21,10 @@ django-s3-storage==0.14.0
 requests>=2.20.0
 google-cloud-core
 django-db-readonly==0.7.0
-oauth2client
 django-mathfilters
 google-cloud-kms==2.10.0
 google-crc32c==1.1.2
 backoff
-backports-abc==0.5
 django-model-utils==4.3.1
 django-redis
 django-prometheus
@@ -38,5 +35,4 @@ html5lib==1.1
 pillow==10.2.0
 python-dateutil>=2.8.1
 jsonschema>=3.2.0
-importlib-metadata==1.7.0
 django-celery-results
