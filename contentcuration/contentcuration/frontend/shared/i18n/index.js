@@ -1,15 +1,25 @@
 import Vue from 'vue';
 import has from 'lodash/has';
-import { languageDirections, defaultLanguage } from 'kolibri-design-system/lib/utils/i18n';
 import importVueIntlLocaleData from './vue-intl-locale-data';
 import importIntlLocale from './intl-locale-data';
 
-export {
-  languageDirections,
-  defaultLanguage,
-  languageValidator,
-  getContentLangDir,
-} from 'kolibri-design-system/lib/utils/i18n';
+const languageDirections = {
+  LTR: 'ltr',
+  RTL: 'rtl',
+};
+const defaultLanguage = {
+  id: 'en',
+  lang_name: 'English',
+  lang_direction: languageDirections.LTR,
+};
+const languageValidator = language => {
+  return ['id', 'lang_name', 'lang_direction'].reduce((valid, key) => valid && language[key], true);
+};
+const getContentLangDir = language => {
+  return (language || {}).lang_direction || languageDirections.LTR;
+};
+
+export { languageDirections, defaultLanguage, languageValidator, getContentLangDir };
 
 let _i18nReady = false;
 
