@@ -93,23 +93,23 @@
               :to="channelDetailsLink"
             >
 
-              <IconButton
+              <KIconButton
                 :color="$themeTokens.primary"
                 data-test="details-button"
                 class="mr-1"
                 icon="info"
-                :text="$tr('details')"
+                :tooltip="$tr('details')"
                 @mouseenter.native="hideHighlight = true"
                 @mouseleave.native="hideHighlight = false"
               />
 
             </KRouterLink>
 
-            <IconButton
+            <KIconButton
               v-if="!allowEdit && channel.published"
               class="mr-1"
               icon="copy"
-              :text="$tr('copyToken')"
+              :tooltip="$tr('copyToken')"
               data-test="token-button"
               @click.stop.prevent="tokenDialog = true"
               @mouseenter.native="hideHighlight = true"
@@ -145,7 +145,10 @@
                   @click.stop
                 >
                   <VListTileAvatar>
-                    <Icon>edit</Icon>
+                    <KIconButton
+                      disabled="true"
+                      icon="edit"
+                    />
                   </VListTileAvatar>
                   <VListTileTitle>{{ $tr('editChannel') }}</VListTileTitle>
                 </VListTile>
@@ -155,7 +158,10 @@
                   @click="tokenDialog = true"
                 >
                   <VListTileAvatar>
-                    <Icon>content_copy</Icon>
+                    <KIconButton
+                      disabled="true"
+                      icon="copy"
+                    />
                   </VListTileAvatar>
                   <VListTileTitle>{{ $tr('copyToken') }}</VListTileTitle>
                 </VListTile>
@@ -190,7 +196,10 @@
                   @click.stop="deleteDialog = true"
                 >
                   <VListTileAvatar>
-                    <Icon>delete</Icon>
+                    <KIconButton
+                      disabled="true"
+                      icon="delete"
+                    />
                   </VListTileAvatar>
                   <VListTileTitle>{{ $tr('deleteChannel') }}</VListTileTitle>
                 </VListTile>
@@ -232,7 +241,6 @@
   import ChannelTokenModal from 'shared/views/channel/ChannelTokenModal';
   import Thumbnail from 'shared/views/files/Thumbnail';
   import Languages from 'shared/leUtils/Languages';
-  import IconButton from 'shared/views/IconButton';
 
   export default {
     name: 'ChannelItem',
@@ -240,7 +248,6 @@
       ChannelStar,
       ChannelTokenModal,
       Thumbnail,
-      IconButton,
     },
     props: {
       channelId: {
