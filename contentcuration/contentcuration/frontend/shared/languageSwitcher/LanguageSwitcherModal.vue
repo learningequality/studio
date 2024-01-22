@@ -19,7 +19,7 @@
           v-for="language in languageCol"
           :key="language.id"
           v-model="selectedLanguage"
-          :value="language.id"
+          :buttonValue="language.id"
           :label="language.lang_name"
           :title="language.english_name"
           class="language-name"
