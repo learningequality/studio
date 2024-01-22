@@ -3083,6 +3083,11 @@
   optionalDependencies:
     prettier "^1.18.2 || ^2.0.0"
 
+"@vue/composition-api@^1.7.2":
+  version "1.7.2"
+  resolved "https://registry.yarnpkg.com/@vue/composition-api/-/composition-api-1.7.2.tgz#0b656f3ec39fefc2cf40aaa8c12426bcfeae1b44"
+  integrity sha512-M8jm9J/laYrYT02665HkZ5l2fWTK4dcVg3BsDHm/pfz+MjDYwX+9FUaZyGwEyXEDonQYRCo0H7aLgdklcIELjw==
+
 "@vue/test-utils@1.0.0-beta.29":
   version "1.0.0-beta.29"
   resolved "https://registry.yarnpkg.com/@vue/test-utils/-/test-utils-1.0.0-beta.29.tgz#c942cf25e891cf081b6a03332b4ae1ef430726f0"
@@ -5124,6 +5129,11 @@ data-urls@^3.0.2:
     abab "^2.0.6"
     whatwg-mimetype "^3.0.0"
     whatwg-url "^11.0.0"
+
+date-fns@^1.30.1:
+  version "1.30.1"
+  resolved "https://registry.yarnpkg.com/date-fns/-/date-fns-1.30.1.tgz#2e71bf0b119153dbb4cc4e88d9ea5acfb50dc05c"
+  integrity sha512-hBSVCvSmWC+QypYObzwGOd9wqdDpOt+0wl0KbU+R+uuZBS1jN8VsD1ss3irQDknRj5NvxiTF6oj/nDRnN/UQNw==
 
 de-indent@^1.0.2:
   version "1.0.2"
@@ -9106,13 +9116,15 @@ kolibri-constants@^0.2.0:
   resolved "https://registry.yarnpkg.com/kolibri-constants/-/kolibri-constants-0.2.0.tgz#47c9d773894e23251ba5ac4db420822e45603142"
   integrity sha512-WYDMGDzB9gNxRbpX1O2cGe1HrJvLvSZGwMuAv6dqrxJgPf7iO+Hi40/1CXjHM7nk5CRt+hn5bqnMzCBmj1omPA==
 
-"kolibri-design-system@https://github.com/learningequality/kolibri-design-system#e9a2ff34716bb6412fe99f835ded5b17345bab94":
+"kolibri-design-system@https://github.com/learningequality/kolibri-design-system#v3.0.0":
   version "1.3.0"
-  resolved "https://github.com/learningequality/kolibri-design-system#e9a2ff34716bb6412fe99f835ded5b17345bab94"
+  resolved "https://github.com/learningequality/kolibri-design-system#24a7dfef611f7daf1432bbb9e0f569a0f9821844"
   dependencies:
+    "@vue/composition-api" "^1.7.2"
     aphrodite "https://github.com/learningequality/aphrodite/"
     autosize "^3.0.21"
     css-element-queries "^1.2.0"
+    date-fns "^1.30.1"
     frame-throttle "^3.0.0"
     fuzzysearch "^1.0.3"
     keen-ui "^1.3.0"
@@ -9120,6 +9132,8 @@ kolibri-constants@^0.2.0:
     popper.js "^1.14.6"
     purecss "^0.6.2"
     tippy.js "^4.2.1"
+    vue-intl "^3.1.0"
+    xstate "^4.38.3"
 
 kolibri-tools@0.16.0-dev.3:
   version "0.16.0-dev.3"
@@ -13474,7 +13488,7 @@ vue-hot-reload-api@^2.3.0:
   resolved "https://registry.yarnpkg.com/vue-hot-reload-api/-/vue-hot-reload-api-2.3.4.tgz#532955cc1eb208a3d990b3a9f9a70574657e08f2"
   integrity sha512-BXq3jwIagosjgNVae6tkHzzIk6a8MHFtzAdwhnV5VlvPTFxDCvIttgSiHWjdGoTJvXtmRu5HacExfdarRcFhog==
 
-vue-intl@^3.0.0:
+vue-intl@^3.0.0, vue-intl@^3.1.0:
   version "3.1.0"
   resolved "https://registry.yarnpkg.com/vue-intl/-/vue-intl-3.1.0.tgz#707f1f7406595c9b4afc6049254b333093be37be"
   integrity sha512-0v3S5gspuYnt6j1G+KLfPUsNnjRdbMOcYrWYoSd1gYk6rX8VuOyh7NLztPrSIJt+NLs/qzLOZXxI1LORukEiqA==
@@ -14176,6 +14190,11 @@ xmldom@^0.1.22:
   version "0.1.31"
   resolved "https://registry.yarnpkg.com/xmldom/-/xmldom-0.1.31.tgz#b76c9a1bd9f0a9737e5a72dc37231cf38375e2ff"
   integrity sha512-yS2uJflVQs6n+CyjHoaBmVSqIDevTAWrzMmjG1Gc7h1qQ7uVozNhEPJAwZXWyGQ/Gafo3fCwrcaokezLPupVyQ==
+
+xstate@^4.38.3:
+  version "4.38.3"
+  resolved "https://registry.yarnpkg.com/xstate/-/xstate-4.38.3.tgz#4e15e7ad3aa0ca1eea2010548a5379966d8f1075"
+  integrity sha512-SH7nAaaPQx57dx6qvfcIgqKRXIh4L0A1iYEqim4s1u7c9VoCgzZc+63FY90AKU4ZzOC2cfJzTnpO4zK7fCUzzw==
 
 xtend@^4.0.0:
   version "4.0.2"
