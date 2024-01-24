@@ -261,20 +261,30 @@
           return false;
         }
 
-        // If we are showing a hierarchy, then we need to check if any
-        // of the children options are selected or indeterminate
-        const childrenOptionsValues = Object.keys(this.selectedValues)
+        // If we are showing a hierarchy, then we need to check its children
+        return this.isCheckboxSelectedByChildren(optionId);
+      },
+      /**
+       * Returns true if the given option should be selected thanks to its children.
+       * An option will be selected thanks to your children if:
+       * * One of the children is selected
+       * * It has several indeterminate children, but by joining all the contentNodes of the
+       *   child options, together they constitute the same array of selected contentNodes.
+       */
+      isCheckboxSelectedByChildren(optionId) {
+        const childrenOptions = Object.keys(this.selectedValues)
           .filter(selectedValue => this.isSubLevel(selectedValue, optionId))
           .map(selectedValue => this.selectedValues[selectedValue]);
-        if (childrenOptionsValues.length === 0) {
+
+        if (childrenOptions.length === 0) {
           return false; // No childen options
-        } else if (childrenOptionsValues.length === 1) {
+        } else if (childrenOptions.length === 1) {
           // just one child option, the value is deterrmined by if it is selected
-          return childrenOptionsValues[0] === true;
+          return childrenOptions[0] === true;
         }
 
         // Here multiple children are selected or indeterminate
-        if (childrenOptionsValues.some(value => value === true)) {
+        if (childrenOptions.some(value => value === true)) {
           // if some child value is selected for all nodes, then the parent option is selected
           return true;
         }
@@ -282,7 +292,7 @@
         // Here all children options are mixed, we need to check if together
         // the parent option is common for all nodes
         const nodeIds = new Set();
-        childrenOptionsValues.forEach(valueNodeIds => {
+        childrenOptions.forEach(valueNodeIds => {
           valueNodeIds.forEach(nodeId => nodeIds.add(nodeId));
         });
         return nodeIds.size === this.nodeIds.length;
