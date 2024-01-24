@@ -16,6 +16,21 @@
       :nodeIds="nodeIds"
       @close="close"
     />
+    <EditCategoriesModal
+      v-if="isCategoriesOpen"
+      :nodeIds="nodeIds"
+      @close="close"
+    />
+    <EditLevelsModal
+      v-if="isLevelsOpen"
+      :nodeIds="nodeIds"
+      @close="close"
+    />
+    <EditLearningActivitiesModal
+      v-if="isLearningActivitiesOpen"
+      :nodeIds="nodeIds"
+      @close="close"
+    />
   </div>
 
 </template>
@@ -25,16 +40,22 @@
 
   import { mapGetters, mapMutations } from 'vuex';
   import { QuickEditModals } from '../../constants';
+  import EditLevelsModal from './EditLevelsModal';
   import EditLanguageModal from './EditLanguageModal';
+  import EditCategoriesModal from './EditCategoriesModal';
   import EditResourcesNeededModal from './EditResourcesNeededModal';
   import EditTitleDescriptionModal from './EditTitleDescriptionModal';
+  import EditLearningActivitiesModal from './EditLearningActivitiesModal.vue';
 
   export default {
     name: 'QuickEditModal',
     components: {
+      EditLevelsModal,
       EditLanguageModal,
+      EditCategoriesModal,
       EditResourcesNeededModal,
       EditTitleDescriptionModal,
+      EditLearningActivitiesModal,
     },
     computed: {
       ...mapGetters('contentNode', ['getQuickEditModalOpen']),
@@ -60,6 +81,15 @@
       },
       isResourcesNeededOpen() {
         return this.openedModal === QuickEditModals.WHAT_IS_NEEDED;
+      },
+      isCategoriesOpen() {
+        return this.openedModal === QuickEditModals.CATEGORIES;
+      },
+      isLevelsOpen() {
+        return this.openedModal === QuickEditModals.LEVELS;
+      },
+      isLearningActivitiesOpen() {
+        return this.openedModal === QuickEditModals.LEARNING_ACTIVITIES;
       },
     },
     methods: {

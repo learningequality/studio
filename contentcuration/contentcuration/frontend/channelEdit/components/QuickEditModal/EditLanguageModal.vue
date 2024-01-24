@@ -45,6 +45,12 @@
         :value="language.id"
         :label="languageText(language)"
       />
+      <p
+        v-if="!languageOptions.length"
+        :style="{ color: $themeTokens.annotation }"
+      >
+        {{ $tr('emptyLanguagesSearch') }}
+      </p>
     </div>
   </KModal>
 
@@ -171,6 +177,7 @@
         'The selected resources have different languages set. Choosing an option below will apply the language to all the selected resources',
       updateDescendantsCheckbox:
         'Apply to all resources and folders nested within the selected folders',
+      emptyLanguagesSearch: 'No languages matches the search',
     },
   };
 

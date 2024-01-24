@@ -164,7 +164,7 @@
             {
               label: this.$tr('editLearningActivities'),
               onClick: this.quickEditModalFactory(QuickEditModals.LEARNING_ACTIVITIES),
-              condition: this.canEdit,
+              condition: this.canEdit && !this.isTopic,
             },
           ],
           [

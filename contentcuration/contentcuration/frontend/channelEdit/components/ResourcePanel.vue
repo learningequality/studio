@@ -830,7 +830,7 @@
         }
       },
       category(options) {
-        const ids = Object.keys(options || []);
+        const ids = Object.keys(options || {});
         const matches = Object.keys(Categories)
           .sort()
           .filter(k => ids.includes(Categories[k]));
