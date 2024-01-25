@@ -2,7 +2,6 @@ import json
 import re
 
 from django.db import transaction
-from django_bulk_update.helper import bulk_update
 from le_utils.constants import exercises
 from rest_framework import serializers
 from rest_framework.permissions import IsAuthenticated
@@ -193,7 +192,7 @@ class AssessmentItemSerializer(BulkModelSerializer):
                 raise ValidationError(
                     "Attempted to set files to an assessment item that do not have a file on the server"
                 )
-            bulk_update(source_files)
+            File.objects.bulk_update(source_files, ['assessment_item'])
 
     def create(self, validated_data):
         with transaction.atomic():
