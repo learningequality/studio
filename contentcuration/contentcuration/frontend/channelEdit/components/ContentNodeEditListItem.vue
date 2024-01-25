@@ -76,6 +76,22 @@
           </VListTileAction>
         </template>
 
+        <template #copy-fail-retry-action>
+          <span v-if="hasCopyingErrored">
+            <ActionLink class="copy-retry-btn" :text="$tr('retryCopy')" @click="retryFailedCopy" />
+          </span>
+        </template>
+
+        <template #copy-fail-remove-action>
+          <IconButton
+            v-if="hasCopyingErrored"
+            icon="close"
+            :text="$tr('removeNode')"
+            size="small"
+            @click="removeFailedCopyNode"
+          />
+        </template>
+
         <template #context-menu="{ showContextMenu, positionX, positionY }">
           <ContentNodeContextMenu
             :show="showContextMenu"
@@ -93,17 +109,19 @@
 
 <script>
 
-  import { mapGetters, mapMutations } from 'vuex';
+  import { mapGetters, mapActions, mapMutations } from 'vuex';
 
-  import { QuickEditModals, DraggableRegions } from '../constants';
   import ContentNodeListItem from './ContentNodeListItem';
   import ContentNodeOptions from './ContentNodeOptions';
   import ContentNodeContextMenu from './ContentNodeContextMenu';
   import Checkbox from 'shared/views/form/Checkbox';
   import IconButton from 'shared/views/IconButton';
   import DraggableItem from 'shared/views/draggable/DraggableItem';
-  import { COPYING_FLAG } from 'shared/data/constants';
+  import { ContentNode } from 'shared/data/resources';
   import { DragEffect, DropEffect, EffectAllowed } from 'shared/mixins/draggable/constants';
+  import { QuickEditModals, DraggableRegions } from 'frontend/channelEdit/constants';
+  import { withChangeTracker } from 'shared/data/changes';
+  import { COPYING_STATUS, COPYING_STATUS_VALUES } from 'shared/data/constants';
 
   export default {
     name: 'ContentNodeEditListItem',
@@ -153,7 +171,11 @@
     },
     computed: {
       ...mapGetters('currentChannel', ['canEdit']),
-      ...mapGetters('contentNode', ['getContentNode']),
+      ...mapGetters('contentNode', [
+        'getContentNode',
+        'isNodeInCopyingState',
+        'hasNodeCopyingErrored',
+      ]),
       ...mapGetters('draggable', ['activeDraggableRegionId']),
       selected: {
         get() {
@@ -175,7 +197,10 @@
         return !this.copying;
       },
       copying() {
-        return this.contentNode[COPYING_FLAG];
+        return this.isNodeInCopyingState(this.nodeId);
+      },
+      hasCopyingErrored() {
+        return this.hasNodeCopyingErrored(this.nodeId);
       },
       dragEffect() {
         return DragEffect.SORT;
@@ -219,6 +244,12 @@
       }
     },
     methods: {
+      ...mapActions(['showSnackbar', 'clearSnackbar']),
+      ...mapActions('contentNode', [
+        'updateContentNode',
+        'waitForCopyingStatus',
+        'deleteContentNode',
+      ]),
       ...mapMutations('contentNode', {
         openQuickEditModal: 'SET_QUICK_EDIT_MODAL_OPEN',
       }),
@@ -228,20 +259,51 @@
           nodeIds: [this.nodeId],
         });
       },
+      retryFailedCopy: withChangeTracker(function(changeTracker) {
+        this.updateContentNode({
+          id: this.nodeId,
+          [COPYING_STATUS]: COPYING_STATUS_VALUES.COPYING,
+        });
+
+        this.showSnackbar({
+          duration: null,
+          text: this.$tr('creatingCopies'),
+          // TODO: determine how to cancel copying while it's in progress,
+          // TODO: if that's something we want
+          // actionText: this.$tr('cancel'),
+          // actionCallback: () => changeTracker.revert(),
+        });
+
+        ContentNode.retryCopyChange(this.nodeId);
+
+        return this.waitForCopyingStatus({
+          contentNodeId: this.nodeId,
+          startingRev: changeTracker._startingRev,
+        })
+          .then(() => {
+            this.showSnackbar({
+              text: this.$tr('copiedSnackbar'),
+              actionText: this.$tr('undo'),
+              actionCallback: () => changeTracker.revert(),
+            }).then(() => changeTracker.cleanUp());
+          })
+          .catch(() => {
+            this.clearSnackbar();
+            changeTracker.cleanUp();
+          });
+      }),
+      removeFailedCopyNode() {
+        return this.deleteContentNode(this.nodeId);
+      },
     },
     $trs: {
       optionsTooltip: 'Options',
-      /* eslint-disable kolibri/vue-no-unused-translations */
-      /**
-       * Strings for handling copy failures
-       */
       removeNode: 'Remove',
       retryCopy: 'Retry',
       creatingCopies: 'Copying...',
       copiedSnackbar: 'Copy operation complete',
       undo: 'Undo',
       editTooltip: 'Edit Title & Description',
-      /* eslint-enable kolibri/vue-no-unused-translations */
     },
   };
 
@@ -320,6 +382,11 @@
     flex: 1 1 auto;
     align-items: flex-start;
     justify-content: center;
+  }
+
+  .copy-retry-btn {
+    padding-bottom: 2px;
+    font-size: inherit;
   }
 
 </style>

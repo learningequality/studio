@@ -45,7 +45,6 @@
   import { mapActions, mapGetters, mapMutations } from 'vuex';
   import { RouteNames, TabNames, QuickEditModals } from '../constants';
   import MoveModal from './move/MoveModal';
-  import { ContentNode } from 'shared/data/resources';
   import { withChangeTracker } from 'shared/data/changes';
   import { RELATIVE_TREE_POSITIONS } from 'shared/data/constants';
 
@@ -243,12 +242,17 @@
       this.lastFocus && this.lastFocus.focus();
     },
     methods: {
+      ...mapActions(['showSnackbar', 'clearSnackbar']),
+      ...mapActions('contentNode', [
+        'createContentNode',
+        'moveContentNodes',
+        'copyContentNode',
+        'waitForCopyingStatus',
+      ]),
+      ...mapActions('clipboard', ['copy']),
       ...mapMutations('contentNode', {
         openQuickEditModal: 'SET_QUICK_EDIT_MODAL_OPEN',
       }),
-      ...mapActions(['showSnackbar']),
-      ...mapActions('contentNode', ['createContentNode', 'moveContentNodes', 'copyContentNode']),
-      ...mapActions('clipboard', ['copy']),
       handleTab($event) {
         const optionsList = this.$refs.optionsList;
         const options = optionsList.$el.querySelectorAll('a');
@@ -346,7 +350,7 @@
           }
         );
       }),
-      duplicateNode: withChangeTracker(function(changeTracker) {
+      duplicateNode: withChangeTracker(async function(changeTracker) {
         this.trackAction('Copy');
         this.showSnackbar({
           duration: null,
@@ -356,19 +360,27 @@
           // actionText: this.$tr('cancel'),
           // actionCallback: () => changeTracker.revert(),
         });
-        return this.copyContentNode({
+        const copiedContentNode = await this.copyContentNode({
           id: this.nodeId,
           target: this.nodeId,
           position: RELATIVE_TREE_POSITIONS.RIGHT,
-        }).then(node => {
-          ContentNode.waitForCopying([node.id]).then(() => {
+        });
+
+        this.waitForCopyingStatus({
+          contentNodeId: copiedContentNode.id,
+          startingRev: changeTracker._startingRev,
+        })
+          .then(() => {
             this.showSnackbar({
               text: this.$tr('copiedSnackbar'),
               actionText: this.$tr('undo'),
               actionCallback: () => changeTracker.revert(),
             }).then(() => changeTracker.cleanUp());
+          })
+          .catch(() => {
+            this.clearSnackbar();
+            changeTracker.cleanUp();
           });
-        });
       }),
       trackAction(eventLabel) {
         this.$analytics.trackAction('channel_editor_node', 'Click', {

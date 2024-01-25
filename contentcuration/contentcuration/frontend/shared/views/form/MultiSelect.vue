@@ -23,7 +23,7 @@
         <template #item="{ item, tile }">
           <Checkbox v-bind="tile.props" class="ma-0">
             <template #label>
-              <span :class="{ notranslate }" :style="getEllipsisStyle()">
+              <span :class="{ notranslate }" :style="getEllipsisStyle()" dir="auto">
                 {{ getText(item) }}
               </span>
             </template>

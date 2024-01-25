@@ -57,7 +57,15 @@ ALL_TABLES = set(
 )
 
 
-# Key to use for whether a node is currently copying
-COPYING_FLAG = "__COPYING"
+# Enum for copying states
+class COPYING_STATUS_VALUES:
+    COPYING = "COPYING"
+    FAILED = "FAILED"
+    SUCCESS = "SUCCESS"
+
+
+# Key to track copying status
+COPYING_STATUS = "__COPYING_STATUS"
+
 # Key for tracking id of async task that is relevant to this indexedDB row
 TASK_ID = "__TASK_ID"

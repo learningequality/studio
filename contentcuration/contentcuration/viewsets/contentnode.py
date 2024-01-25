@@ -67,7 +67,8 @@ from contentcuration.viewsets.common import SQCount
 from contentcuration.viewsets.common import UserFilteredPrimaryKeyRelatedField
 from contentcuration.viewsets.common import UUIDInFilter
 from contentcuration.viewsets.sync.constants import CONTENTNODE
-from contentcuration.viewsets.sync.constants import COPYING_FLAG
+from contentcuration.viewsets.sync.constants import COPYING_STATUS
+from contentcuration.viewsets.sync.constants import COPYING_STATUS_VALUES
 from contentcuration.viewsets.sync.constants import CREATED
 from contentcuration.viewsets.sync.constants import DELETED
 from contentcuration.viewsets.sync.utils import generate_update_event
@@ -914,6 +915,9 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
                 log_sync_exception(e, user=self.request.user, change=copy)
                 copy["errors"] = [str(e)]
                 errors.append(copy)
+                failed_copy_node = self.get_queryset().filter(pk=copy["key"]).first()
+                if failed_copy_node is not None:
+                    failed_copy_node.delete()
         return errors
 
     def copy(
@@ -944,7 +948,6 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
         ).exists()
 
         with create_change_tracker(pk, CONTENTNODE, channel_id, self.request.user, "copy_nodes") as progress_tracker:
-
             new_node = source.copy_to(
                 target,
                 position,
@@ -959,7 +962,7 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
                 generate_update_event(
                     pk,
                     CONTENTNODE,
-                    {COPYING_FLAG: False, "node_id": new_node.node_id},
+                    {COPYING_STATUS: COPYING_STATUS_VALUES.SUCCESS, "node_id": new_node.node_id},
                     channel_id=channel_id
                 ),
                 applied=True,

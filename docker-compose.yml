@@ -53,7 +53,10 @@ services:
       - .docker/minio:/data
 
   postgres:
-    image: postgres:12
+    image: ghcr.io/learningequality/postgres
+    build:
+      context: ./docker
+      dockerfile: Dockerfile.postgres.dev
     environment:
       PGDATA: /var/lib/postgresql/data/pgdata
       POSTGRES_USER: learningequality

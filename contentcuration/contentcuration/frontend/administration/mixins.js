@@ -160,7 +160,7 @@ export const tableMixin = {
         ...this.$route.query,
       };
       if (params.sortBy) {
-        params.ordering = (params.descending ? '-' : '') + params.sortBy;
+        params.ordering = (String(params.descending) === 'true' ? '-' : '') + params.sortBy;
         delete params.sortBy;
         delete params.descending;
       }

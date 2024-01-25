@@ -26,8 +26,8 @@ const commonFields = ['type', 'key', 'table', 'rev', 'channel_id', 'user_id'];
 const ChangeTypeMapFields = {
   [CHANGE_TYPES.CREATED]: commonFields.concat(['obj']),
   [CHANGE_TYPES.UPDATED]: commonFields.concat(['mods']),
-  [CHANGE_TYPES.DELETED]: commonFields,
-  [CHANGE_TYPES.MOVED]: commonFields.concat(['target', 'position']),
+  [CHANGE_TYPES.DELETED]: commonFields.concat(['oldObj']),
+  [CHANGE_TYPES.MOVED]: commonFields.concat(['target', 'position', 'oldObj', 'parent']),
   [CHANGE_TYPES.COPIED]: commonFields.concat([
     'from_key',
     'mods',

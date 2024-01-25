@@ -65,8 +65,14 @@ export const RELATIVE_TREE_POSITIONS = {
 
 export const RELATIVE_TREE_POSITIONS_LOOKUP = invert(RELATIVE_TREE_POSITIONS);
 
+export const COPYING_STATUS_VALUES = {
+  COPYING: 'COPYING',
+  FAILED: 'FAILED',
+  SUCCESS: 'SUCCESS',
+};
+
 // Special fields used for frontend specific handling
-export const COPYING_FLAG = '__COPYING';
+export const COPYING_STATUS = '__COPYING_STATUS';
 export const TASK_ID = '__TASK_ID';
 export const LAST_FETCHED = '__last_fetch';
 

@@ -104,8 +104,9 @@
                     >
                       <ContentNodeCopyTaskProgress
                         class="progress-loader"
-                        :taskId="taskId"
+                        :node="node"
                         size="24"
+                        showTooltip
                       />
                     </VFlex>
                     <VFlex
@@ -195,7 +196,6 @@
   import DraggableItem from 'shared/views/draggable/DraggableItem';
   import DraggableHandle from 'shared/views/draggable/DraggableHandle';
   import { titleMixin } from 'shared/mixins';
-  import { COPYING_FLAG, TASK_ID } from 'shared/data/constants';
   import { DropEffect, EffectAllowed } from 'shared/mixins/draggable/constants';
   import { objectValuesValidator } from 'shared/mixins/draggable/utils';
 
@@ -265,7 +265,12 @@
       ...mapGetters('currentChannel', ['canEdit']),
       ...mapState('draggable', ['activeDraggableUniverse']),
       ...mapGetters('draggable', ['deepestActiveDraggable']),
-      ...mapGetters('contentNode', ['getContentNode', 'getContentNodeChildren', 'nodeExpanded']),
+      ...mapGetters('contentNode', [
+        'getContentNode',
+        'getContentNodeChildren',
+        'nodeExpanded',
+        'isNodeInCopyingState',
+      ]),
       node() {
         return this.getContentNode(this.nodeId);
       },
@@ -303,10 +308,7 @@
         return EffectAllowed.NONE;
       },
       copying() {
-        return this.node && this.node[COPYING_FLAG];
-      },
-      taskId() {
-        return this.node && this.node[TASK_ID];
+        return this.node && this.isNodeInCopyingState(this.node.id);
       },
       activeDropEffect() {
         // Don't allow dropping into itself

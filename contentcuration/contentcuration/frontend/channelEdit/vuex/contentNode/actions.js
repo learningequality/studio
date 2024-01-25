@@ -2,7 +2,13 @@ import flatMap from 'lodash/flatMap';
 import uniq from 'lodash/uniq';
 import { NEW_OBJECT, NOVALUE, DescendantsUpdatableFields } from 'shared/constants';
 import client from 'shared/client';
-import { RELATIVE_TREE_POSITIONS, CHANGES_TABLE, TABLE_NAMES } from 'shared/data/constants';
+import {
+  RELATIVE_TREE_POSITIONS,
+  CHANGES_TABLE,
+  TABLE_NAMES,
+  COPYING_STATUS,
+  COPYING_STATUS_VALUES,
+} from 'shared/data/constants';
 import { ContentNode } from 'shared/data/resources';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 import { findLicense } from 'shared/utils/helpers';
@@ -241,8 +247,12 @@ function generateContentNodeData({
   learning_activities = NOVALUE,
   categories = NOVALUE,
   suggested_duration = NOVALUE,
+  [COPYING_STATUS]: copy_status_value = NOVALUE,
 } = {}) {
   const contentNodeData = {};
+  if (copy_status_value !== NOVALUE) {
+    contentNodeData[COPYING_STATUS] = copy_status_value;
+  }
   if (title !== NOVALUE) {
     contentNodeData.title = title;
   }
@@ -442,6 +452,16 @@ export function deleteContentNodes(context, contentNodeIds) {
       return deleteContentNode(context, id);
     })
   );
+}
+
+export function waitForCopyingStatus(context, { contentNodeId, startingRev }) {
+  return ContentNode.waitForCopying(contentNodeId, startingRev).catch(e => {
+    context.dispatch('updateContentNode', {
+      id: contentNodeId,
+      [COPYING_STATUS]: COPYING_STATUS_VALUES.FAILED,
+    });
+    return Promise.reject(e);
+  });
 }
 
 export function copyContentNode(
