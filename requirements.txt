@@ -65,8 +65,6 @@ django==3.2.23
     #   django-s3-storage
     #   djangorestframework
     #   jsonfield
-django-bulk-update==2.2.0
-    # via -r requirements.in
 django-celery-results==2.4.0
     # via -r requirements.in
 django-cte==1.2.1

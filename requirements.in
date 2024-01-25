@@ -33,7 +33,6 @@ django-redis
 django-prometheus
 future
 sentry-sdk
-django-bulk-update
 html5lib==1.1
 pillow==9.4.0
 python-dateutil>=2.8.1
