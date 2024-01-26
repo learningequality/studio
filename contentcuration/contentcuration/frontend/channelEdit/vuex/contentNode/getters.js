@@ -155,6 +155,13 @@ export function getContentNodeDetailsAreValid(state) {
   };
 }
 
+export function getNodeDetailsErrorsList(state) {
+  return function(contentNodeId) {
+    const contentNode = state.contentNodesMap[contentNodeId];
+    return getNodeDetailsErrors(contentNode);
+  };
+}
+
 export function getContentNodeFilesAreValid(state, getters, rootState, rootGetters) {
   return function(contentNodeId) {
     const contentNode = state.contentNodesMap[contentNodeId];
