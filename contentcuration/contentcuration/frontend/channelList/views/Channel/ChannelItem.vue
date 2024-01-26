@@ -198,7 +198,7 @@
                   <VListTileAvatar>
                     <KIconButton
                       disabled="true"
-                      icon="delete"
+                      icon="trash"
                     />
                   </VListTileAvatar>
                   <VListTileTitle>{{ $tr('deleteChannel') }}</VListTileTitle>
