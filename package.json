@@ -103,7 +103,7 @@
     "babel-jest": "^26.0.1",
     "circular-dependency-plugin": "^5.2.0",
     "eslint-import-resolver-webpack": "0.13.2",
-    "fake-indexeddb": "^4.0.0",
+    "fake-indexeddb": "^5.0.2",
     "file-loader": "^6.2.0",
     "flush-promises": "^1.0.2",
     "identity-obj-proxy": "^3.0.0",
