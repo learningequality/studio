@@ -322,7 +322,8 @@ class BulkListSerializer(SimpleReprMixin, ListSerializer):
             self.missing_keys = set(all_validated_data_by_id.keys())\
                 .difference(updated_keys)
 
-        self.child.Meta.model.objects.bulk_update(updated_objects, list(properties_to_update))
+        if len(properties_to_update) > 0:
+            self.child.Meta.model.objects.bulk_update(updated_objects, list(properties_to_update))
 
         return updated_objects
 
