@@ -110,6 +110,13 @@
             data-test="change-learning-activities-btn"
             @click="editLearningActivities(selected)"
           />
+          <IconButton
+            v-if="canEdit && !isTopicSelected"
+            icon="socialSciencesResource"
+            :text="$tr('editAudienceButton')"
+            data-test="change-audience-btn"
+            @click="editAudience(selected)"
+          />
         </div>
 
       </VSlideXTransition>
@@ -569,6 +576,13 @@
           nodeIds,
         });
       },
+      editAudience(nodeIds) {
+        this.trackClickEvent('Edit audience');
+        this.openQuickEditModal({
+          modal: QuickEditModals.AUDIENCE,
+          nodeIds,
+        });
+      },
       treeLink(params) {
         return {
           name: RouteNames.TREE_VIEW,
@@ -806,11 +820,12 @@
       importFromChannels: 'Import from channels',
       addButton: 'Add',
       editButton: 'Edit',
-      editLevelsButton: 'Edit levels',
-      editLanguageButton: 'Edit language',
-      editCategoriesButton: 'Edit categories',
-      editWhatIsNeededButton: "Edit 'what is needed'",
-      editLearningActivitiesButton: 'Edit learning activities',
+      editLevelsButton: 'Edit Levels',
+      editLanguageButton: 'Edit Language',
+      editAudienceButton: 'Edit Audience',
+      editCategoriesButton: 'Edit Categories',
+      editWhatIsNeededButton: "Edit 'What is needed'",
+      editLearningActivitiesButton: 'Edit Learning Activity',
       optionsButton: 'Options',
       copyToClipboardButton: 'Copy to clipboard',
       [viewModes.DEFAULT]: 'Default view',
