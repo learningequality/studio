@@ -4,14 +4,14 @@
     :title="$tr('editAudienceTitle')"
     :submitText="$tr('saveAction')"
     :cancelText="$tr('cancelAction')"
-    data-test="edit-resources-needed-modal"
+    data-test="edit-audience-modal"
     @submit="handleSave"
     @cancel="close"
   >
     <p data-test="resources-selected-message">
       {{ $tr('resourcesSelected', { count: nodeIds.length }) }}
     </p>
-    <template v-if="!isMultipleAudience">
+    <template v-if="isMultipleAudience">
       <p data-test="multiple-audience-message">
         {{ $tr('multipleAudience') }}
       </p>
@@ -29,7 +29,7 @@
         v-for="rol in rolesOptions"
         :key="rol.value"
         v-model="selectedRol"
-        data-test="rol-checkbox"
+        data-test="rol-radio-button"
         :label="rol.label"
         :value="rol.value"
         :description="rol.description"
