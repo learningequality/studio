@@ -75,7 +75,7 @@ describe('EditAudienceModal', () => {
 
   describe('Selected audience on first render', () => {
     test('no rol should be selected if a single node does not have set rol', () => {
-    const wrapper = makeWrapper(['node1']);
+      const wrapper = makeWrapper(['node1']);
 
       const rolesValues = getRolesValues(wrapper);
       Object.values(rolesValues).forEach(value => {
@@ -150,7 +150,7 @@ describe('EditAudienceModal', () => {
       nodes['node2'].role_visibility = RolesNames.LEARNER;
 
       const wrapper = makeWrapper(['node1', 'node2']);
-  
+
       expect(wrapper.find('[data-test="multiple-audience-message"]').exists()).toBeTruthy();
     });
 
@@ -160,7 +160,7 @@ describe('EditAudienceModal', () => {
       };
 
       const wrapper = makeWrapper(['node1', 'node2']);
-  
+
       expect(wrapper.find('[data-test="multiple-audience-message"]').exists()).toBeTruthy();
     });
 
@@ -175,7 +175,7 @@ describe('EditAudienceModal', () => {
       };
 
       const wrapper = makeWrapper(['node1', 'node2']);
-  
+
       expect(wrapper.find('[data-test="multiple-audience-message"]').exists()).toBeFalsy();
     });
   });
