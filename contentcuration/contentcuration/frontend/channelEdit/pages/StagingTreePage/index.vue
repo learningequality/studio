@@ -392,21 +392,17 @@
       },
     },
     watch: {
-  nodeId(newNodeId) {
-    this.elevated = false;
-    this.isLoadingchild = true;
+      nodeId(newNodeId) {
+        this.elevated = false;
+        this.isLoadingchild = true;
 
-    Promise.all([
-      this.loadAncestors({ id: newNodeId }),
-      this.loadChildren({ parent: newNodeId, root_id: this.stagingId }),
-      this.loadCurrentChannel({ staging: true }),
-    ]).then(() => {
-      this.isLoadingchild = false;
-      this.loadCurrentChannelStagingDiff();
-    }).catch(error => {
-      throw new Error(error);
-    });
-  },
+        Promise.all([
+          this.loadAncestors({ id: newNodeId }),
+          this.loadChildren({ parent: newNodeId, root_id: this.stagingId }),
+        ]).then(() => {
+          this.isLoadingchild = false;
+        });
+      },
       detailNodeId(newDetailNodeId) {
         if (!newDetailNodeId) {
           this.removeViewModeOverride({
