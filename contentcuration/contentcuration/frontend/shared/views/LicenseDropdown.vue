@@ -4,6 +4,7 @@
     <DropdownWrapper component="VLayout" class="license-dropdown" row align-center>
       <template #default="{ attach, menuProps }">
         <VSelect
+          box
           ref="license"
           v-model="license"
           :items="licenses"
@@ -16,28 +17,21 @@
           :readonly="readonly"
           :rules="licenseRules"
           :placeholder="placeholder"
-          :menu-props="menuProps"
+          :menu-props="{ ...menuProps, maxHeight: 250 }"
           class="ma-0"
-          box
+          :class="{ 'with-trailing-input-icon': box }"
           :attach="attach"
           @focus="$emit('focus')"
         >
           <template #append-outer>
-            <InfoModal :header="$tr('licenseInfoHeader')" :items="licenses">
-              <template #header="{ item }">
-                {{ translate(item) }}
-              </template>
-              <template #description="{ item }">
-                {{ translateDescription(item) }}
-                <p v-if="item.license_url" class="mt-1">
-                  <ActionLink
-                    :href="getLicenseUrl(item)"
-                    target="_blank"
-                    :text="$tr('learnMoreButton')"
-                  />
-                </p>
-              </template>
-            </InfoModal>
+            <Icon
+              class="info-icon"
+              color="primary"
+              data-test="info-icon"
+              @click="setShowAboutLicenses(true)"
+            >
+              help
+            </Icon>
           </template>
         </VSelect>
       </template>
@@ -65,7 +59,7 @@
 
 <script>
 
-  import InfoModal from './InfoModal.vue';
+  import { mapMutations } from 'vuex';
   import {
     getLicenseValidators,
     getLicenseDescriptionValidators,
@@ -80,7 +74,6 @@
     name: 'LicenseDropdown',
     components: {
       DropdownWrapper,
-      InfoModal,
     },
     filters: {},
     mixins: [constantsTranslationMixin],
@@ -112,6 +105,10 @@
       descriptionPlaceholder: {
         type: String,
         default: '',
+      },
+      box: {
+        type: Boolean,
+        default: false,
       },
     },
     computed: {
@@ -156,33 +153,45 @@
       },
     },
     methods: {
+      ...mapMutations({
+        setShowAboutLicenses: 'SET_SHOW_ABOUT_LICENSES',
+      }),
       translate(item) {
         return (item.id && item.id !== '' && this.translateConstant(item.license_name)) || '';
-      },
-      translateDescription(item) {
-        return (
-          (item.id &&
-            item.id !== '' &&
-            this.translateConstant(item.license_name + '_description')) ||
-          ''
-        );
-      },
-      getLicenseUrl(item) {
-        const isCC = item.license_url.includes('creativecommons.org');
-        const language = window.languageCode || 'en';
-        return isCC ? `${item.license_url}deed.${language}` : item.license_url;
       },
     },
     $trs: {
       licenseLabel: 'License',
       licenseDescriptionLabel: 'License description',
-      learnMoreButton: 'Learn More',
-      licenseInfoHeader: 'About licenses',
     },
   };
 
 </script>
 
-<style lang="less" scoped>
-
+<style lang="scss" scoped>
+  .with-trailing-input-icon {
+    /deep/ .v-input__append-inner {
+      margin-right: 32px;
+    }
+    /deep/ .v-input__append-outer {
+      position: absolute;
+      right: 12px;
+    }
+    /deep/ .v-input__control > .v-input__slot {
+      background: #e9e9e9 !important;
+      &::before {
+        border-color: rgba(0, 0, 0, 0.12) !important;
+      }
+    }
+    &.v-input--has-state {
+      /deep/ .v-input__control > .v-input__slot::before {
+        border-color: currentColor  !important;
+      }
+    }
+    &:hover {
+      /deep/ .v-input__control > .v-input__slot::before {
+        border-color: rgba(0, 0, 0, 0.3) !important;
+      }
+    }
+  }
 </style>

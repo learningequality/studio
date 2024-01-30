@@ -225,6 +225,9 @@
       @syncing="syncInProgress"
     />
     <QuickEditModal />
+    <AboutLicensesModal
+      v-if="isAboutLicensesModalOpen"
+    />
     <MessageDialog
       v-model="showDeleteModal"
       :header="$tr('deleteTitle')"
@@ -321,6 +324,7 @@
   import ChannelTokenModal from 'shared/views/channel/ChannelTokenModal';
   import OfflineText from 'shared/views/OfflineText';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
+  import AboutLicensesModal from 'shared/views/AboutLicensesModal';
   import MessageDialog from 'shared/views/MessageDialog';
   import { RouteNames as ChannelRouteNames } from 'frontend/channelList/constants';
   import { titleMixin } from 'shared/mixins';
@@ -345,6 +349,7 @@
       MessageDialog,
       SavingIndicator,
       QuickEditModal,
+      AboutLicensesModal,
     },
     mixins: [titleMixin],
     props: {
@@ -368,6 +373,7 @@
       ...mapState({
         offline: state => !state.connection.online,
       }),
+      ...mapGetters(['isAboutLicensesModalOpen']),
       ...mapGetters('contentNode', ['getContentNode']),
       ...mapGetters('currentChannel', ['currentChannel', 'canEdit', 'canManage', 'rootId']),
       rootNode() {
