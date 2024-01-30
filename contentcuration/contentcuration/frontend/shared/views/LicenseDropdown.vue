@@ -183,6 +183,10 @@
         border-color: rgba(0, 0, 0, 0.12) !important;
       }
     }
+    /deep/ .v-icon {
+      margin: unset !important;
+      position: unset !important;
+    }
     &.v-input--has-state {
       /deep/ .v-input__control > .v-input__slot::before {
         border-color: currentColor  !important;

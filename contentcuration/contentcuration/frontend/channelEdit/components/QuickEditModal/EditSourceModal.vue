@@ -40,10 +40,15 @@
         />
         <HelpTooltip :text="$tr('aggregatorToolTip')" top :small="false" />
       </div>
-      <LicenseDropdown box/>
+      <div class="input-container">
+        <LicenseDropdown
+          v-model="licenseItem"
+          box
+        />
+      </div>
       <div class="input-container">
         <KTextbox
-          v-model="copyrightHolder"
+          v-model="copyright_holder"
           autofocus
           data-test="copyright-holder-input"
           showInvalidText
@@ -71,8 +76,8 @@
   export default {
     name: 'EditTitleDescriptionModal',
     props: {
-      nodeId: {
-        type: String,
+      nodeIds: {
+        type: Array,
         required: true,
       },
     },
@@ -86,8 +91,8 @@
         provider: '',
         aggregator: '',
         license: '',
-        licenseDescription: '',
-        copyrightHolder: '',
+        license_description: '',
+        copyright_holder: '',
         licenseError: '',
         licenseDescriptionError: '',
         copyrightHolderError: '',
@@ -99,10 +104,37 @@
       nodes() {
         return this.getContentNodes(this.nodeIds);
       },
+      licenseItem: {
+        get() {
+          return {
+            license: this.license,
+            license_description: this.license_description,
+          }
+        },
+        set(value) {
+          this.license = value.license;
+          this.license_description = value.license_description;
+        },
+      },
     },
     created() {
-      this.title = this.contentNode.title || '';
-      this.description = this.contentNode.description || '';
+      console.log('EditSourceModal created', this.nodes);
+      const sourceProps = ['author', 'provider', 'aggregator', 'license', 'license_description', 'copyright_holder'];
+      const values = {};
+      this.nodes.forEach((node) => {
+        sourceProps.forEach((prop) => {
+          if (node[prop]) {
+            if (!values[prop]) {
+              values[prop] = node[prop];
+            } else if (values[prop] !== node[prop]) {
+              values[prop] = 'Mixed';
+            }
+          }
+        });
+      });
+      sourceProps.forEach((prop) => {
+        this[prop] = values[prop] || '';
+      });
     },
     methods: {
       ...mapActions('contentNode', ['updateContentNode']),
@@ -128,6 +160,7 @@
         this.$store.dispatch('showSnackbarSimple', this.$tr('editedAttribution', { count: this.nodes.length }));
         this.close();
       },
+      getPropertyValue() {},
     },
     $trs: {
       editAttribution: 'Edit Attribution',
@@ -155,6 +188,7 @@
   .input-container {
     display: flex;
     align-items: flex-start;
+    position: relative;
     &:not(:last-of-type) {
       margin-bottom: 10px;
     }
@@ -164,7 +198,7 @@
     /deep/ .v-icon {
       margin: 14px 0 0 8px;
       position: absolute;
-      right: 36px;
+      right: 12px;
     }
     /deep/ input {
       padding-right: 40px;
