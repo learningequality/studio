@@ -31,6 +31,11 @@
       :nodeIds="nodeIds"
       @close="close"
     />
+    <EditSourceModal
+      v-if="isEditSourceOpen"
+      :nodeIds="nodeIds"
+      @close="close"
+    />
     <EditAudienceModal
       v-if="isAudienceOpen"
       :nodeIds="nodeIds"
@@ -45,6 +50,7 @@
 
   import { mapGetters, mapMutations } from 'vuex';
   import { QuickEditModals } from '../../constants';
+  import EditSourceModal from './EditSourceModal';
   import EditLevelsModal from './EditLevelsModal';
   import EditLanguageModal from './EditLanguageModal';
   import EditAudienceModal from './EditAudienceModal';
@@ -56,6 +62,7 @@
   export default {
     name: 'QuickEditModal',
     components: {
+      EditSourceModal,
       EditLevelsModal,
       EditLanguageModal,
       EditAudienceModal,
@@ -97,6 +104,9 @@
       },
       isLearningActivitiesOpen() {
         return this.openedModal === QuickEditModals.LEARNING_ACTIVITIES;
+      },
+      isEditSourceOpen() {
+        return this.openedModal === QuickEditModals.SOURCE;
       },
       isAudienceOpen() {
         return this.openedModal === QuickEditModals.AUDIENCE;
