@@ -336,7 +336,7 @@
               this.close();
             })
             .finally(() => {
-              this.saving = false; 
+              this.saving = false;
             });
         }
       },
