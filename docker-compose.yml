@@ -40,6 +40,7 @@ services:
     depends_on:
       - studio-app
     environment: *studio-environment
+
   studio-app:
     <<: *studio-worker
     entrypoint: python docker/entrypoint.py
