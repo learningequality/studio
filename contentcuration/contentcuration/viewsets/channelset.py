@@ -75,11 +75,9 @@ class ChannelSetViewSet(ValuesViewset):
     field_map = {"secret_token": "secret_token__token"}
 
     def get_queryset(self):
-        queryset = super(ChannelSetViewSet, self).get_queryset()
         user_id = not self.request.user.is_anonymous and self.request.user.id
-        edit = Exists(User.channel_sets.through.objects.filter(user_id=user_id, channelset_id=OuterRef("id")))
-        queryset = queryset.filter(edit=True)
-        return queryset.annotate(edit=edit)
+        queryset = super(ChannelSetViewSet, self).get_queryset().annotate( edit=Exists( User.channel_sets.through.objects.filter( user_id=user_id, channelset_id=OuterRef("id") ) ) ).filter(edit=True)
+        return queryset
 
     def annotate_queryset(self, queryset):
         return queryset.annotate(
