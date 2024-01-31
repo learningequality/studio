@@ -12,7 +12,7 @@
     >
       <div class="input-container">
         <KTextbox
-          v-model="author"
+          v-model="author_value"
           autofocus
           data-test="author-input"
           :maxlength="200"
@@ -22,8 +22,7 @@
       </div>
       <div class="input-container">
         <KTextbox
-          v-model="provider"
-          autofocus
+          v-model="provider_value"
           data-test="provider-input"
           :maxlength="200"
           :label="$tr('providerLabel')"
@@ -32,8 +31,7 @@
       </div>
       <div class="input-container">
         <KTextbox
-          v-model="aggregator"
-          autofocus
+          v-model="aggregator_value"
           data-test="aggregator-input"
           :maxlength="200"
           :label="$tr('aggregatorLabel')"
@@ -48,8 +46,7 @@
       </div>
       <div class="input-container">
         <KTextbox
-          v-model="copyright_holder"
-          autofocus
+          v-model="copyright_holder_value"
           data-test="copyright-holder-input"
           showInvalidText
           :maxlength="200"
@@ -69,9 +66,34 @@
 <script>
 
   import { mapActions, mapGetters } from 'vuex';
+  import { nonUniqueValue } from 'shared/constants';
   import HelpTooltip from 'shared/views/HelpTooltip';
   import LicenseDropdown from 'shared/views/LicenseDropdown';
-  import { getTitleValidators, getInvalidText } from 'shared/utils/validation';
+
+  function generateGetterSetter(key) {
+    return {
+      get() {
+        if (this[key] === nonUniqueValue) {
+          return this.$tr('mixed');
+        }
+        return this[key];
+      },
+      set(value) {
+        this[key] = value;
+      },
+    };
+  };
+
+  function mapFormGettersSetters(keys) {
+    return keys.reduce((acc, key) => {
+      return {
+        ...acc,
+        [`${key}_value`]: generateGetterSetter(key),
+      };
+    }, {});
+  }
+
+  const sourceKeys = ['author', 'provider', 'aggregator', 'license', 'license_description', 'copyright_holder'];
 
   export default {
     name: 'EditTitleDescriptionModal',
@@ -101,14 +123,16 @@
     computed: {
       ...mapGetters(['isAboutLicensesModalOpen']),
       ...mapGetters('contentNode', ['getContentNodes']),
+      ...mapFormGettersSetters(sourceKeys),
       nodes() {
         return this.getContentNodes(this.nodeIds);
       },
       licenseItem: {
         get() {
+          const { license, license_description } = this;
           return {
-            license: this.license,
-            license_description: this.license_description,
+            license,
+            license_description,
           }
         },
         set(value) {
@@ -116,51 +140,62 @@
           this.license_description = value.license_description;
         },
       },
+      hasError() {
+        return (
+          this.licenseError ||
+          this.licenseDescriptionError ||
+          this.copyrightHolderError
+        );
+      }
     },
     created() {
-      console.log('EditSourceModal created', this.nodes);
-      const sourceProps = ['author', 'provider', 'aggregator', 'license', 'license_description', 'copyright_holder'];
       const values = {};
       this.nodes.forEach((node) => {
-        sourceProps.forEach((prop) => {
+        sourceKeys.forEach((prop) => {
           if (node[prop]) {
             if (!values[prop]) {
               values[prop] = node[prop];
             } else if (values[prop] !== node[prop]) {
-              values[prop] = 'Mixed';
+              values[prop] = nonUniqueValue;
             }
           }
         });
       });
-      sourceProps.forEach((prop) => {
+      sourceKeys.forEach((prop) => {
         this[prop] = values[prop] || '';
       });
     },
     methods: {
       ...mapActions('contentNode', ['updateContentNode']),
-      validateTitle() {
-        this.titleError = getInvalidText(getTitleValidators(), this.title);
+      validate() {
       },
       close() {
         this.$emit('close');
       },
       async handleSave() {
-        this.validateTitle();
-        if (this.titleError) {
+        this.validate();
+        if (this.hasError) {
           return;
         }
 
-        const { nodeId, title, description } = this;
-        await this.updateContentNode({
-          id: nodeId,
-          title: title.trim(),
-          description: description.trim(),
-        });
+        await Promise.all(
+          this.nodes.map(node => {
+            const payload = {
+              id: node.id,
+            };
+            sourceKeys.forEach((prop) => {
+              const value = this[prop];
+              if (value !== nonUniqueValue) {
+                payload[prop] = value;
+              }
+            });
+            return this.updateContentNode(payload);
+          })
+        );
 
         this.$store.dispatch('showSnackbarSimple', this.$tr('editedAttribution', { count: this.nodes.length }));
         this.close();
       },
-      getPropertyValue() {},
     },
     $trs: {
       editAttribution: 'Edit Attribution',
@@ -174,7 +209,7 @@
       copyrightHolderLabel: 'Copyright holder',
       cannotEditPublic: 'Cannot edit for public channel resources',
       editOnlyLocal: 'Edits will be reflected only for local resources',
-      mixedLabel: 'Mixed',
+      mixed: 'Mixed',
       saveAction: 'Save',
       cancelAction: 'Cancel',
       editedAttribution: 'Edited attribution for {count, number, integer} {count, plural, one {resource} other {resources}}',

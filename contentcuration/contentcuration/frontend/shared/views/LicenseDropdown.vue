@@ -17,6 +17,7 @@
           :readonly="readonly"
           :rules="licenseRules"
           :placeholder="placeholder"
+          :hide-selected="isMixedLicense"
           :menu-props="{ ...menuProps, maxHeight: 250 }"
           class="ma-0"
           :class="{ 'with-trailing-input-icon': box }"
@@ -59,15 +60,18 @@
 
 <script>
 
+  const MIXED_VALUE = 'mixed';
+
   import { mapMutations } from 'vuex';
   import {
     getLicenseValidators,
     getLicenseDescriptionValidators,
     translateValidator,
   } from 'shared/utils/validation';
+  import { nonUniqueValue } from 'shared/constants';
+  import { findLicense } from 'shared/utils/helpers';
   import { LicensesList } from 'shared/leUtils/Licenses';
   import { constantsTranslationMixin } from 'shared/mixins';
-  import { findLicense } from 'shared/utils/helpers';
   import DropdownWrapper from 'shared/views/form/DropdownWrapper';
 
   export default {
@@ -114,6 +118,9 @@
     computed: {
       license: {
         get() {
+          if (this.isMixedLicense) {
+            return MIXED_VALUE;
+          }
           return this.value && findLicense(this.value.license).id;
         },
         set(value) {
@@ -134,14 +141,29 @@
           });
         },
       },
+      isMixedLicense() {
+        return this.value && this.value.license === nonUniqueValue;
+      },
       selectedLicense() {
+        if (this.isMixedLicense) {
+          return null;
+        }
         return this.value && findLicense(this.value.license);
       },
       isCustom() {
         return this.selectedLicense && this.selectedLicense.is_custom;
       },
       licenses() {
-        return LicensesList;
+        if (!this.isMixedLicense) {
+          return LicensesList;
+        }
+        return [
+          ...LicensesList,
+          {
+            id: MIXED_VALUE,
+            license_name: this.$tr('mixed'),
+          },
+        ];
       },
       licenseRules() {
         return this.required ? getLicenseValidators().map(translateValidator) : [];
@@ -157,10 +179,14 @@
         setShowAboutLicenses: 'SET_SHOW_ABOUT_LICENSES',
       }),
       translate(item) {
+        if (item.id === MIXED_VALUE) {
+          return this.$tr('mixed');
+        }
         return (item.id && item.id !== '' && this.translateConstant(item.license_name)) || '';
       },
     },
     $trs: {
+      mixed: 'Mixed',
       licenseLabel: 'License',
       licenseDescriptionLabel: 'License description',
     },
