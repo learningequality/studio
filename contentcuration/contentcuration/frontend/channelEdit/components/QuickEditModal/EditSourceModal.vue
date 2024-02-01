@@ -10,52 +10,76 @@
       @submit="handleSave"
       @cancel="close"
     >
-      <div class="input-container">
-        <KTextbox
-          v-model="author_value"
-          autofocus
-          data-test="author-input"
-          :maxlength="200"
-          :label="$tr('authorLabel')"
-        />
-        <HelpTooltip :text="$tr('authorToolTip')" top :small="false" />
+      <div class="form-item">
+        <div class="input-container">
+          <KTextbox
+            v-model="author_value"
+            autofocus
+            data-test="author-input"
+            :maxlength="200"
+            :disabled="!isEditable"
+            :label="$tr('authorLabel')"
+          />
+          <HelpTooltip :text="$tr('authorToolTip')" top :small="false" />
+        </div>
+        <p v-if="helpText" class="help">
+          {{ helpText }}
+        </p>
       </div>
-      <div class="input-container">
-        <KTextbox
-          v-model="provider_value"
-          data-test="provider-input"
-          :maxlength="200"
-          :label="$tr('providerLabel')"
-        />
-        <HelpTooltip :text="$tr('providerToolTip')" top :small="false" />
+      <div class="form-item">
+        <div class="input-container">
+          <KTextbox
+            v-model="provider_value"
+            data-test="provider-input"
+            :maxlength="200"
+            :disabled="!isEditable"
+            :label="$tr('providerLabel')"
+          />
+          <HelpTooltip :text="$tr('providerToolTip')" top :small="false" />
+        </div>
       </div>
-      <div class="input-container">
-        <KTextbox
-          v-model="aggregator_value"
-          data-test="aggregator-input"
-          :maxlength="200"
-          :label="$tr('aggregatorLabel')"
-        />
-        <HelpTooltip :text="$tr('aggregatorToolTip')" top :small="false" />
+      <div class="form-item">
+        <div class="input-container">
+          <KTextbox
+            v-model="aggregator_value"
+            data-test="aggregator-input"
+            :maxlength="200"
+            :disabled="!isEditable"
+            :label="$tr('aggregatorLabel')"
+          />
+          <HelpTooltip :text="$tr('aggregatorToolTip')" top :small="false" />
+        </div>
       </div>
-      <div class="input-container">
-        <LicenseDropdown
-          v-model="licenseItem"
-          box
-        />
+      <div class="form-item">
+        <div class="input-container">
+          <LicenseDropdown
+            box
+            v-model="licenseItem"
+            :disabled="!isEditable"
+          />
+        </div>
+        <p v-if="helpText" class="help" style="margin-bottom: 8px">
+          {{ helpText }}
+        </p>
       </div>
-      <div class="input-container">
-        <KTextbox
-          v-model="copyright_holder_value"
-          data-test="copyright-holder-input"
-          showInvalidText
-          :maxlength="200"
-          :label="$tr('copyrightHolderLabel')"
-          :invalid="!!copyrightHolderError"
-          :invalidText="copyrightHolderError"
-          @input="copyrightHolderError = ''"
-          @blur="() => {}"
-        />
+      <div class="form-item">
+        <div class="input-container">
+          <KTextbox
+            v-model="copyright_holder_value"
+            data-test="copyright-holder-input"
+            showInvalidText
+            :maxlength="200"
+            :label="$tr('copyrightHolderLabel')"
+            :invalid="!!copyrightHolderError"
+            :invalidText="copyrightHolderError"
+            :disabled="!isEditable"
+            @input="copyrightHolderError = ''"
+            @blur="() => {}"
+          />
+        </div>
+        <p v-if="helpText" class="help">
+          {{ helpText }}
+        </p>
       </div>
     </KModal>
   </div>
@@ -69,6 +93,7 @@
   import { nonUniqueValue } from 'shared/constants';
   import HelpTooltip from 'shared/views/HelpTooltip';
   import LicenseDropdown from 'shared/views/LicenseDropdown';
+  import { isDisableSourceEdits } from '../../utils';
 
   function generateGetterSetter(key) {
     return {
@@ -140,12 +165,28 @@
           this.license_description = value.license_description;
         },
       },
+      isEditable() {
+        // If at least one is editable
+        return this.nodes.some(node => !isDisableSourceEdits(node));
+      },
+      hasSomeEditDisabled() {
+        return this.nodes.some(node => isDisableSourceEdits(node));
+      },
       hasError() {
         return (
           this.licenseError ||
           this.licenseDescriptionError ||
           this.copyrightHolderError
         );
+      },
+      helpText() {
+        if (!this.isEditable) {
+          return this.$tr('cannotEditPublic');
+        }
+        if (this.hasSomeEditDisabled) {
+          return this.$tr('editOnlyLocal');
+        }
+        return '';
       }
     },
     created() {
@@ -167,33 +208,35 @@
     },
     methods: {
       ...mapActions('contentNode', ['updateContentNode']),
-      validate() {
-      },
       close() {
         this.$emit('close');
       },
       async handleSave() {
+        if (!this.isEditable) {
+          return this.close();
+        }
         this.validate();
         if (this.hasError) {
           return;
         }
-
+        const nodesToEdit = this.nodes.filter(node => !isDisableSourceEdits(node));
         await Promise.all(
-          this.nodes.map(node => {
-            const payload = {
-              id: node.id,
-            };
-            sourceKeys.forEach((prop) => {
-              const value = this[prop];
-              if (value !== nonUniqueValue) {
-                payload[prop] = value;
-              }
-            });
-            return this.updateContentNode(payload);
-          })
+          nodesToEdit
+            .map(node => {
+              const payload = {
+                id: node.id,
+              };
+              sourceKeys.forEach((prop) => {
+                const value = this[prop];
+                if (value !== nonUniqueValue) {
+                  payload[prop] = value;
+                }
+              });
+              return this.updateContentNode(payload);
+            })
         );
 
-        this.$store.dispatch('showSnackbarSimple', this.$tr('editedAttribution', { count: this.nodes.length }));
+        this.$store.dispatch('showSnackbarSimple', this.$tr('editedAttribution', { count: nodesToEdit.length }));
         this.close();
       },
     },
@@ -220,23 +263,34 @@
 
 <style lang="scss" scoped>
 
-  .input-container {
-    display: flex;
-    align-items: flex-start;
+  .form-item {
     position: relative;
     &:not(:last-of-type) {
       margin-bottom: 10px;
     }
-    & > div {
-      width: 100%;
-    }
-    /deep/ .v-icon {
-      margin: 14px 0 0 8px;
+    & > p.help {
       position: absolute;
-      right: 12px;
+      bottom: 0px;
+      left: 10px;
+      color: var(--v-text-lighten4);
+      font-size: 12px;
+      margin-bottom: 14px;
     }
-    /deep/ input {
-      padding-right: 40px;
+    .input-container {
+      display: flex;
+      align-items: flex-start;
+      position: relative;
+      & > div {
+        width: 100%;
+      }
+      /deep/ .v-icon {
+        margin: 14px 0 0 8px;
+        position: absolute;
+        right: 12px;
+      }
+      /deep/ input {
+        padding-right: 40px;
+      }
     }
   }
 
