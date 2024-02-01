@@ -53,8 +53,8 @@
       <div class="form-item">
         <div class="input-container">
           <LicenseDropdown
-            box
             v-model="licenseItem"
+            box
             :disabled="!isEditable"
           />
         </div>
@@ -90,10 +90,10 @@
 <script>
 
   import { mapActions, mapGetters } from 'vuex';
+  import { isDisableSourceEdits } from '../../utils';
   import { nonUniqueValue } from 'shared/constants';
   import HelpTooltip from 'shared/views/HelpTooltip';
   import LicenseDropdown from 'shared/views/LicenseDropdown';
-  import { isDisableSourceEdits } from '../../utils';
 
   function generateGetterSetter(key) {
     return {
@@ -107,32 +107,38 @@
         this[key] = value;
       },
     };
-  };
+  }
 
   function mapFormGettersSetters(keys) {
     return keys.reduce((acc, key) => {
-      return {
-        ...acc,
-        [`${key}_value`]: generateGetterSetter(key),
-      };
+      acc[`${key}_value`] = generateGetterSetter(key);
+      return acc;
     }, {});
   }
 
-  const sourceKeys = ['author', 'provider', 'aggregator', 'license', 'license_description', 'copyright_holder'];
+  const sourceKeys = [
+    'author',
+    'provider',
+    'aggregator',
+    'license',
+    'license_description',
+    'copyright_holder',
+  ];
 
   export default {
-    name: 'EditTitleDescriptionModal',
+    name: 'EditSourceModal',
+    components: {
+      HelpTooltip,
+      LicenseDropdown,
+    },
     props: {
       nodeIds: {
         type: Array,
         required: true,
       },
     },
-    components: {
-      HelpTooltip,
-      LicenseDropdown,
-    },
     data() {
+      /* eslint-disable  kolibri/vue-no-unused-properties */
       return {
         author: '',
         provider: '',
@@ -158,7 +164,7 @@
           return {
             license,
             license_description,
-          }
+          };
         },
         set(value) {
           this.license = value.license;
@@ -166,18 +172,13 @@
         },
       },
       isEditable() {
-        // If at least one is editable
         return this.nodes.some(node => !isDisableSourceEdits(node));
       },
       hasSomeEditDisabled() {
         return this.nodes.some(node => isDisableSourceEdits(node));
       },
       hasError() {
-        return (
-          this.licenseError ||
-          this.licenseDescriptionError ||
-          this.copyrightHolderError
-        );
+        return this.licenseError || this.licenseDescriptionError || this.copyrightHolderError;
       },
       helpText() {
         if (!this.isEditable) {
@@ -187,12 +188,12 @@
           return this.$tr('editOnlyLocal');
         }
         return '';
-      }
+      },
     },
     created() {
       const values = {};
-      this.nodes.forEach((node) => {
-        sourceKeys.forEach((prop) => {
+      this.nodes.forEach(node => {
+        sourceKeys.forEach(prop => {
           if (node[prop]) {
             if (!values[prop]) {
               values[prop] = node[prop];
@@ -202,7 +203,7 @@
           }
         });
       });
-      sourceKeys.forEach((prop) => {
+      sourceKeys.forEach(prop => {
         this[prop] = values[prop] || '';
       });
     },
@@ -221,22 +222,24 @@
         }
         const nodesToEdit = this.nodes.filter(node => !isDisableSourceEdits(node));
         await Promise.all(
-          nodesToEdit
-            .map(node => {
-              const payload = {
-                id: node.id,
-              };
-              sourceKeys.forEach((prop) => {
-                const value = this[prop];
-                if (value !== nonUniqueValue) {
-                  payload[prop] = value;
-                }
-              });
-              return this.updateContentNode(payload);
-            })
+          nodesToEdit.map(node => {
+            const payload = {
+              id: node.id,
+            };
+            sourceKeys.forEach(prop => {
+              const value = this[prop];
+              if (value !== nonUniqueValue) {
+                payload[prop] = value;
+              }
+            });
+            return this.updateContentNode(payload);
+          })
         );
 
-        this.$store.dispatch('showSnackbarSimple', this.$tr('editedAttribution', { count: nodesToEdit.length }));
+        this.$store.dispatch(
+          'showSnackbarSimple',
+          this.$tr('editedAttribution', { count: nodesToEdit.length })
+        );
         this.close();
       },
     },
@@ -255,7 +258,8 @@
       mixed: 'Mixed',
       saveAction: 'Save',
       cancelAction: 'Cancel',
-      editedAttribution: 'Edited attribution for {count, number, integer} {count, plural, one {resource} other {resources}}',
+      editedAttribution:
+        'Edited attribution for {count, number, integer} {count, plural, one {resource} other {resources}}',
     },
   };
 
@@ -265,29 +269,35 @@
 
   .form-item {
     position: relative;
+
     &:not(:last-of-type) {
       margin-bottom: 10px;
     }
-    & > p.help {
+
+    > p.help {
       position: absolute;
-      bottom: 0px;
+      bottom: 0;
       left: 10px;
-      color: var(--v-text-lighten4);
-      font-size: 12px;
       margin-bottom: 14px;
+      font-size: 12px;
+      color: var(--v-text-lighten4);
     }
+
     .input-container {
+      position: relative;
       display: flex;
       align-items: flex-start;
-      position: relative;
-      & > div {
+
+      > div {
         width: 100%;
       }
+
       /deep/ .v-icon {
-        margin: 14px 0 0 8px;
         position: absolute;
         right: 12px;
+        margin: 14px 0 0 8px;
       }
+
       /deep/ input {
         padding-right: 40px;
       }

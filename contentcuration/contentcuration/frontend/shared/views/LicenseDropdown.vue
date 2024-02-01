@@ -4,9 +4,9 @@
     <DropdownWrapper component="VLayout" class="license-dropdown" row align-center>
       <template #default="{ attach, menuProps }">
         <VSelect
-          box
           ref="license"
           v-model="license"
+          box
           :items="licenses"
           :label="$tr('licenseLabel')"
           color="primary"
@@ -60,8 +60,6 @@
 
 <script>
 
-  const MIXED_VALUE = 'mixed';
-
   import { mapMutations } from 'vuex';
   import {
     getLicenseValidators,
@@ -73,6 +71,8 @@
   import { LicensesList } from 'shared/leUtils/Licenses';
   import { constantsTranslationMixin } from 'shared/mixins';
   import DropdownWrapper from 'shared/views/form/DropdownWrapper';
+
+  const MIXED_VALUE = 'mixed';
 
   export default {
     name: 'LicenseDropdown',
@@ -195,33 +195,41 @@
 </script>
 
 <style lang="scss" scoped>
+
   .with-trailing-input-icon {
     /deep/ .v-input__append-inner {
       margin-right: 32px;
     }
+
     /deep/ .v-input__append-outer {
       position: absolute;
       right: 12px;
     }
+
     /deep/ .v-input__control > .v-input__slot {
       background: #e9e9e9 !important;
+
       &::before {
         border-color: rgba(0, 0, 0, 0.12) !important;
       }
     }
+
     /deep/ .v-icon {
-      margin: unset !important;
       position: unset !important;
+      margin: unset !important;
     }
+
     &.v-input--has-state {
       /deep/ .v-input__control > .v-input__slot::before {
-        border-color: currentColor  !important;
+        border-color: currentcolor !important;
       }
     }
+
     &:hover {
       /deep/ .v-input__control > .v-input__slot::before {
         border-color: rgba(0, 0, 0, 0.3) !important;
       }
     }
   }
+
 </style>

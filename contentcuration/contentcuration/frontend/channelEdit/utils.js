@@ -204,10 +204,7 @@ export function isImportedContent(node) {
 }
 
 export function isDisableSourceEdits(node) {
-  return (
-    node.freeze_authoring_data ||
-    isImportedContent(node)
-  );
+  return node.freeze_authoring_data || isImportedContent(node);
 }
 
 export function importedChannelLink(node, router) {

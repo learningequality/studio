@@ -1,4 +1,5 @@
 <template>
+
   <KModal
     :title="$tr('licenseInfoHeader')"
     :cancelText="$tr('close')"
@@ -6,10 +7,10 @@
   >
     <div v-for="(license, index) in licences" :key="index" class="mb-4 mt-3">
       <h2 class="font-weight-bold mb-1 subheading">
-        {{  license.name  }}
+        {{ license.name }}
       </h2>
       <p class="body-1 grey--text mb-1">
-        {{  license.description  }}
+        {{ license.description }}
       </p>
       <p v-if="license.license_url">
         <ActionLink
@@ -20,26 +21,26 @@
       </p>
     </div>
   </KModal>
+
 </template>
 
 <script>
+
+  import { mapMutations } from 'vuex';
   import { constantsTranslationMixin } from 'shared/mixins';
   import { LicensesList } from 'shared/leUtils/Licenses';
-  import { mapMutations } from 'vuex';
 
   export default {
     name: 'AboutLicensesModal',
     mixins: [constantsTranslationMixin],
     computed: {
       licences() {
-        return LicensesList
-          .filter(license => license.id)
-          .map(license => ({
-            ...license,
-            name: this.translateConstant(license.license_name),
-            description: this.translateConstant(license.license_name + '_description'),
-          }));
-      }
+        return LicensesList.filter(license => license.id).map(license => ({
+          ...license,
+          name: this.translateConstant(license.license_name),
+          description: this.translateConstant(license.license_name + '_description'),
+        }));
+      },
     },
     methods: {
       ...mapMutations({
@@ -56,6 +57,6 @@
       learnMoreButton: 'Learn More',
       licenseInfoHeader: 'About licenses',
     },
-  }
+  };
 
 </script>

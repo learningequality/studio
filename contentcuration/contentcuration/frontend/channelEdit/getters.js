@@ -12,7 +12,7 @@ export function isComfortableViewMode(state) {
 
 export function isAboutLicensesModalOpen(state) {
   return state.aboutLicensesModalOpen;
-};
+}
 
 // Convenience function to format strings like "Page Name - Channel Name"
 // for tab titles
