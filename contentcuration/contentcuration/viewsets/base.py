@@ -9,7 +9,6 @@ from django.db.models import Q
 from django.db.utils import IntegrityError
 from django.http import Http404
 from django.http.request import HttpRequest
-from django_bulk_update.helper import bulk_update
 from django_celery_results.models import TaskResult
 from django_filters.constants import EMPTY_VALUES
 from django_filters.rest_framework import DjangoFilterBackend
@@ -323,7 +322,8 @@ class BulkListSerializer(SimpleReprMixin, ListSerializer):
             self.missing_keys = set(all_validated_data_by_id.keys())\
                 .difference(updated_keys)
 
-        bulk_update(updated_objects, update_fields=properties_to_update)
+        if len(properties_to_update) > 0:
+            self.child.Meta.model.objects.bulk_update(updated_objects, list(properties_to_update))
 
         return updated_objects
 
