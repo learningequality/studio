@@ -233,7 +233,7 @@ def sync_node_assessment_items(node, original):  # noqa C901
         node.changed = True
 
     if ai_to_update:
-        AssessmentItem.objects.bulk_update(ai_to_update, ['assessment_item_fields'])
+        AssessmentItem.objects.bulk_update(ai_to_update, list(assessment_item_fields))
         node.changed = True
 
     if files_to_delete:
