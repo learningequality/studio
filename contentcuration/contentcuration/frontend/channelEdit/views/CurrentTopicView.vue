@@ -69,8 +69,9 @@
             @click="duplicateNodes(selected)"
           />
           <IconButton
+            v-if="canEdit"
             icon="copy"
-            :text="$tr('')"
+            :text="$tr('SortAlphabetically')"
             @click="sortNodes(selected)"
           />
           <IconButton
@@ -445,34 +446,34 @@
         const selectedNodes = selected.map(id => this.getContentNode(id));
         const orderedNodes = selectedNodes.sort(this.compareNodeTitles);
 
-        const nodeX = this.findNodeBeforeFirstSelected(orderedNodes);
+        const reversedNodes = orderedNodes.reverse();
+
+        const nodeX = this.findNodeBeforeFirstSelected(orderedNodes, selected);
 
         const targetParent = this.node.id;
+        const targetNode = nodeX || targetParent;
         const targetPosition = nodeX
           ? RELATIVE_TREE_POSITIONS.RIGHT
           : RELATIVE_TREE_POSITIONS.FIRST_CHILD;
 
-        orderedNodes.forEach(node => {
-          const position =
-            targetPosition === RELATIVE_TREE_POSITIONS.RIGHT
-              ? targetPosition
-              : RELATIVE_TREE_POSITIONS.LAST_CHILD;
-          this.moveContentNodes({
-            id__in: [String(node.id)],
-            parent: targetParent,
-            position,
-          });
+        const nodeIdsToMove = reversedNodes.map(node => String(node.id));
+
+        this.moveContentNodes({
+          id__in: nodeIdsToMove,
+          target: targetNode,
+          position: targetPosition,
         });
       },
 
-      findNodeBeforeFirstSelected(nodes) {
+      findNodeBeforeFirstSelected(nodes, selected) {
         for (let i = 1; i < nodes.length; i++) {
-          if (this.compareNodeTitles(nodes[i - 1], nodes[i]) > 0) {
+          if (selected.includes(nodes[i])) {
             return nodes[i - 1];
           }
         }
         return null;
       },
+
       compareNodeTitles(nodeA, nodeB) {
         const titleA = nodeA.title.toLowerCase();
         const titleB = nodeB.title.toLowerCase();
@@ -750,6 +751,7 @@
     },
     $trs: {
       addTopic: 'New folder',
+      SortAlphabetically: 'Sort alphabetically',
       addExercise: 'New exercise',
       uploadFiles: 'Upload files',
       importFromChannels: 'Import from channels',
