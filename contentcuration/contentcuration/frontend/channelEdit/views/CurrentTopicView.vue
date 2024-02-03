@@ -70,7 +70,7 @@
           />
           <IconButton
             v-if="canEdit"
-            icon="copy"
+            icon="alternativeRoute"
             :text="$tr('SortAlphabetically')"
             @click="sortNodes(selected)"
           />
