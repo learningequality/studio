@@ -6,10 +6,13 @@
       :title="$tr('editAttribution')"
       :submitText="$tr('saveAction')"
       :cancelText="$tr('cancelAction')"
-      data-test="edit-title-description-modal"
+      data-test="edit-source-modal"
       @submit="handleSave"
       @cancel="close"
     >
+      <p data-test="resources-selected-message">
+        {{ $tr('resourcesSelected', { count: nodeIds.length }) }}
+      </p>
       <div class="form-item">
         <div class="input-container">
           <KTextbox
@@ -212,6 +215,7 @@
       close() {
         this.$emit('close');
       },
+      validate() {},
       async handleSave() {
         if (!this.isEditable) {
           return this.close();
@@ -252,6 +256,8 @@
       aggregatorLabel: 'Aggregator',
       aggregatorToolTip:
         'Website or org hosting the content collection but not necessarily the creator or copyright holder',
+      resourcesSelected:
+        '{count, number, integer} {count, plural, one {resource} other {resources}} selected',
       copyrightHolderLabel: 'Copyright holder',
       cannotEditPublic: 'Cannot edit for public channel resources',
       editOnlyLocal: 'Edits will be reflected only for local resources',

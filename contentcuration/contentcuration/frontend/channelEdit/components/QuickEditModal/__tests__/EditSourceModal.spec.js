@@ -3,9 +3,6 @@ import Vuex from 'vuex';
 import EditSourceModal from '../EditSourceModal';
 import { LicensesList } from 'shared/leUtils/Licenses';
 import { constantsTranslationMixin } from 'shared/mixins';
-import EditTitleDescriptionModal from '../EditTitleDescriptionModal';
-
-const nodeId = 'test-id';
 
 let nodes;
 
@@ -14,10 +11,10 @@ let contentNodeActions;
 let generalActions;
 let generalGetters;
 
-const MIXED_VALUE = 'mixed';
+const MIXED_VALUE = 'Mixed';
 
 const getLicenseId = translatedLicense => {
-  if (translatedLicense === 'Mixed') {
+  if (translatedLicense === MIXED_VALUE) {
     return MIXED_VALUE;
   }
   const translatedLicenses = LicensesList.reduce((acc, license) => {
@@ -84,145 +81,216 @@ describe('EditSourceModal', () => {
   });
 
   describe('Selected source on first render', () => {
-    test.only('should display the correct source values when 1 node is selected', async () => {
-      nodes['node1'].author = 'author1';
-      nodes['node1'].license = 9;
-      nodes['node1'].license_description = 'abdcds';
+    test('should display the correct source values when one node is selected', () => {
+      const testValues = {
+        author: 'Test author',
+        provider: 'Test provider',
+        aggregator: 'Test aggregator',
+        license: 9,
+        license_description: 'Test license description',
+        copyright_holder: 'Test copyright',
+      };
+      Object.assign(nodes.node1, testValues);
       const wrapper = makeWrapper(['node1']);
 
-      console.log('aaa wrapper html', wrapper.html());
-      console.log('aaa', getSourceValues(wrapper));
-      expect(true).toBe(true);
-    });
-  });
-
-  test('should call updateContentNode on success submit', () => {
-    const wrapper = mount(EditTitleDescriptionModal, {
-      store,
-      propsData: {
-        nodeId,
-      },
+      expect(getSourceValues(wrapper)).toEqual(expect.anything(), testValues);
     });
 
-    wrapper.find('[data-test="edit-title-description-modal"]').vm.$emit('submit');
-    expect(contentNodeActions.updateContentNode).toHaveBeenCalled();
-  });
+    test('should display the common source values when multiple nodes are selected', () => {
+      const testValues = {
+        author: 'Test author',
+        provider: 'Test provider',
+      };
+      Object.assign(nodes.node1, testValues);
+      Object.assign(nodes.node2, testValues);
 
-  test('should call updateContentNode with the correct parameters on success submit', () => {
-    const wrapper = mount(EditTitleDescriptionModal, {
-      store,
-      propsData: {
-        nodeId,
-      },
+      const wrapper = makeWrapper(['node1', 'node2']);
+
+      expect(getSourceValues(wrapper)).toEqual(expect.anything(), testValues);
     });
 
-    const newTitle = 'new-title';
-    const newDescription = 'new-description';
-    wrapper.find('[data-test="title-input"]').vm.$emit('input', 'new-title');
-    wrapper.find('[data-test="description-input"]').vm.$emit('input', 'new-description');
+    test('should display the mixed value when the selected nodes have different values', () => {
+      nodes['node1'].author = 'Test author';
+      nodes['node2'].author = 'Test author 2';
 
-    wrapper.find('[data-test="edit-title-description-modal"]').vm.$emit('submit');
+      const wrapper = makeWrapper(['node1', 'node2']);
 
-    expect(contentNodeActions.updateContentNode).toHaveBeenCalledWith(expect.anything(), {
-      id: nodeId,
-      title: newTitle,
-      description: newDescription,
-    });
-  });
-
-  test('should let update even if description is empty', () => {
-    const wrapper = mount(EditTitleDescriptionModal, {
-      store,
-      propsData: {
-        nodeId,
-      },
+      const sourceValues = getSourceValues(wrapper);
+      expect(sourceValues.author).toEqual(MIXED_VALUE);
     });
 
-    const newTitle = 'new-title';
-    wrapper.find('[data-test="title-input"]').vm.$emit('input', 'new-title');
-    wrapper.find('[data-test="description-input"]').vm.$emit('input', '');
+    test('should disable inputs when all nodes are imported', () => {
+      nodes['node1'].original_source_node_id = 'original_node1';
+      nodes['node2'].original_source_node_id = 'original_node2';
 
-    wrapper.find('[data-test="edit-title-description-modal"]').vm.$emit('submit');
+      const wrapper = makeWrapper(['node1', 'node2']);
 
-    expect(contentNodeActions.updateContentNode).toHaveBeenCalledWith(expect.anything(), {
-      id: nodeId,
-      title: newTitle,
-      description: '',
-    });
-  });
-
-  test('should validate title on blur', () => {
-    const wrapper = mount(EditTitleDescriptionModal, {
-      store,
-      propsData: {
-        nodeId,
-      },
-    });
-
-    wrapper.find('[data-test="title-input"]').vm.$emit('input', '');
-    wrapper.find('[data-test="title-input"]').vm.$emit('blur');
-
-    expect(wrapper.find('[data-test="title-input"]').vm.$props.invalidText).toBeTruthy();
-  });
-
-  test('should validate title on submit', () => {
-    const wrapper = mount(EditTitleDescriptionModal, {
-      store,
-      propsData: {
-        nodeId,
-      },
-    });
-
-    wrapper.find('[data-test="title-input"]').vm.$emit('input', '');
-    wrapper.find('[data-test="edit-title-description-modal"]').vm.$emit('submit');
-
-    expect(wrapper.find('[data-test="title-input"]').vm.$props.invalidText).toBeTruthy();
-  });
-
-  test("should show 'Edited title and description' on a snackbar on success submit", () => {
-    const wrapper = mount(EditTitleDescriptionModal, {
-      store,
-      propsData: {
-        nodeId,
-      },
-    });
-
-    wrapper.find('[data-test="edit-title-description-modal"]').vm.$emit('submit');
-
-    const animationFrameId = requestAnimationFrame(() => {
-      expect(generalActions.showSnackbarSimple).toHaveBeenCalledWith(
-        expect.anything(),
-        'Edited title and description'
+      expect(wrapper.find('[data-test="author-input"] input').element.disabled).toBe(true);
+      expect(wrapper.find('[data-test="provider-input"] input').element.disabled).toBe(true);
+      expect(wrapper.find('[data-test="aggregator-input"] input').element.disabled).toBe(true);
+      expect(wrapper.find('[data-test="copyright-holder-input"] input').element.disabled).toBe(
+        true
       );
-      cancelAnimationFrame(animationFrameId);
+    });
+
+    test('should show message that source cannot be edited when all nodes are imported', () => {
+      nodes['node1'].original_source_node_id = 'original_node1';
+      nodes['node2'].original_source_node_id = 'original_node2';
+
+      const wrapper = makeWrapper(['node1', 'node2']);
+
+      expect(wrapper.find('.help').text()).toContain('Cannot edit');
+    });
+
+    test('should disable inputs when node has freeze_authoring_data set to true', () => {
+      nodes['node1'].freeze_authoring_data = true;
+
+      const wrapper = makeWrapper(['node1']);
+
+      expect(wrapper.find('[data-test="author-input"] input').element.disabled).toBe(true);
+      expect(wrapper.find('[data-test="provider-input"] input').element.disabled).toBe(true);
+      expect(wrapper.find('[data-test="aggregator-input"] input').element.disabled).toBe(true);
+      expect(wrapper.find('[data-test="copyright-holder-input"] input').element.disabled).toBe(
+        true
+      );
+    });
+
+    test('should show message that source cannot be edited when node has freeze_authoring_data set to true', () => {
+      nodes['node1'].freeze_authoring_data = true;
+
+      const wrapper = makeWrapper(['node1']);
+
+      expect(wrapper.find('.help').text()).toContain('Cannot edit');
+    });
+
+    test('should not disable inputs when not all nodes are imported', () => {
+      nodes['node1'].original_source_node_id = 'original_node1';
+
+      const wrapper = makeWrapper(['node1', 'node2']);
+
+      expect(wrapper.find('[data-test="author-input"] input').element.disabled).toBe(false);
+      expect(wrapper.find('[data-test="provider-input"] input').element.disabled).toBe(false);
+      expect(wrapper.find('[data-test="aggregator-input"] input').element.disabled).toBe(false);
+      expect(wrapper.find('[data-test="copyright-holder-input"] input').element.disabled).toBe(
+        false
+      );
+    });
+
+    test('should show a message that edits will be reflected only for local resources if just some nodes are imported, but not all', () => {
+      nodes['node1'].original_source_node_id = 'original_node1';
+
+      const wrapper = makeWrapper(['node1', 'node2']);
+
+      expect(wrapper.find('.help').text()).toContain(
+        'Edits will be reflected only for local resources'
+      );
     });
   });
 
-  test("should emit 'close' event on success submit", () => {
-    const wrapper = mount(EditTitleDescriptionModal, {
-      store,
-      propsData: {
-        nodeId,
-      },
+  describe('On submit', () => {
+    test('should call updateContentNode on success submit for all editable nodes', () => {
+      const wrapper = makeWrapper(['node1', 'node2']);
+      wrapper.find('[data-test="edit-source-modal"]').vm.$emit('submit');
+
+      expect(contentNodeActions.updateContentNode).toHaveBeenCalled();
     });
 
-    wrapper.find('[data-test="edit-title-description-modal"]').vm.$emit('submit');
+    test('should call updateContentNode with the correct parameters on success submit for all editable nodes', () => {
+      nodes['node1'].author = 'Test author';
+      const newAuthor = 'new-author';
 
-    const animationFrameId = requestAnimationFrame(() => {
-      expect(wrapper.emitted().close).toBeTruthy();
-      cancelAnimationFrame(animationFrameId);
+      const wrapper = makeWrapper(['node1', 'node2']);
+      wrapper.find('[data-test="author-input"]').vm.$emit('input', newAuthor);
+      wrapper.find('[data-test="edit-source-modal"]').vm.$emit('submit');
+
+      expect(contentNodeActions.updateContentNode).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          id: 'node1',
+          author: newAuthor,
+        })
+      );
     });
+
+    test('should call updateContentNode on submit just for the editable nodes', () => {
+      nodes['node1'].original_source_node_id = 'original_node1';
+      const wrapper = makeWrapper(['node1', 'node2']);
+      wrapper.find('[data-test="edit-source-modal"]').vm.$emit('submit');
+
+      expect(contentNodeActions.updateContentNode).toHaveBeenCalledTimes(1);
+      expect(contentNodeActions.updateContentNode).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          id: 'node2',
+        })
+      );
+      expect(contentNodeActions.updateContentNode).not.toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          id: 'node1',
+        })
+      );
+    });
+
+    test('should not call updateContentNode on submit if all nodes are imported', () => {
+      nodes['node1'].original_source_node_id = 'original_node1';
+      nodes['node2'].original_source_node_id = 'original_node2';
+      const wrapper = makeWrapper(['node1', 'node2']);
+      wrapper.find('[data-test="edit-source-modal"]').vm.$emit('submit');
+
+      expect(contentNodeActions.updateContentNode).not.toHaveBeenCalled();
+    });
+
+    test('should show a snackbar with the correct number of edited nodes on success submit', () => {
+      const wrapper = makeWrapper(['node1', 'node2']);
+      wrapper.find('[data-test="edit-source-modal"]').vm.$emit('submit');
+
+      const animationFrameId = requestAnimationFrame(() => {
+        expect(generalActions.showSnackbarSimple).toHaveBeenCalledWith(
+          expect.anything(),
+          'Edited attribution for 2 resources'
+        );
+        cancelAnimationFrame(animationFrameId);
+      });
+    });
+
+    test('should show a snack bar with the correct number of edited nodes on success submit if some nodes are imported', () => {
+      nodes['node1'].original_source_node_id = 'original_node1';
+      const wrapper = makeWrapper(['node1', 'node2']);
+      wrapper.find('[data-test="edit-source-modal"]').vm.$emit('submit');
+
+      const animationFrameId = requestAnimationFrame(() => {
+        expect(generalActions.showSnackbarSimple).toHaveBeenCalledWith(
+          expect.anything(),
+          'Edited attribution for 1 resource'
+        );
+        cancelAnimationFrame(animationFrameId);
+      });
+    });
+
+    test('should emit close event on success submit', () => {
+      const wrapper = makeWrapper(['node1', 'node2']);
+      wrapper.find('[data-test="edit-source-modal"]').vm.$emit('submit');
+
+      const animationFrameId = requestAnimationFrame(() => {
+        expect(wrapper.emitted('close')).toBeTruthy();
+        cancelAnimationFrame(animationFrameId);
+      });
+    });
+  });
+
+  test('should render the message of the number of resources selected', () => {
+    const wrapper = makeWrapper(['node1', 'node2']);
+
+    const resourcesCounter = wrapper.find('[data-test="resources-selected-message"]');
+    expect(resourcesCounter.exists()).toBeTruthy();
+    expect(resourcesCounter.text()).toContain('2');
   });
 
   test('should emit close event on cancel', () => {
-    const wrapper = mount(EditTitleDescriptionModal, {
-      store,
-      propsData: {
-        nodeId,
-      },
-    });
+    const wrapper = makeWrapper(['node1', 'node2']);
 
-    wrapper.find('[data-test="edit-title-description-modal"]').vm.$emit('cancel');
-    expect(wrapper.emitted().close).toBeTruthy();
+    wrapper.find('[data-test="edit-source-modal"]').vm.$emit('cancel');
+    expect(wrapper.emitted('close')).toBeTruthy();
   });
 });
