@@ -50,10 +50,9 @@ click-repl==0.2.0
     # via celery
 confusable-homoglyphs==3.2.0
     # via django-registration
-django==3.2.23
+django==3.2.24
     # via
     #   -r requirements.in
-    #   django-bulk-update
     #   django-db-readonly
     #   django-filter
     #   django-js-reverse
