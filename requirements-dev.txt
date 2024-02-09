@@ -53,7 +53,7 @@ customizable-django-profiler @ git+https://github.com/someshchaturvedi/customiza
     # via -r requirements-dev.in
 distlib==0.3.1
     # via virtualenv
-django==3.2.23
+django==3.2.24
     # via
     #   -c requirements.txt
     #   django-debug-toolbar
@@ -107,9 +107,7 @@ idna==2.10
     #   -c requirements.txt
     #   requests
 importlib-metadata==1.7.0
-    # via
-    #   -c requirements.txt
-    #   pre-commit
+    # via pre-commit
 inflection==0.5.1
     # via drf-yasg
 iniconfig==1.1.1
@@ -280,9 +278,7 @@ wheel==0.38.1
 whitenoise==5.2.0
     # via -r requirements-dev.in
 zipp==3.4.1
-    # via
-    #   -c requirements.txt
-    #   importlib-metadata
+    # via importlib-metadata
 zope-event==4.5.0
     # via gevent
 zope-interface==5.4.0
