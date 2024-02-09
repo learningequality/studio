@@ -6,7 +6,7 @@
 #
 amqp==5.1.1
     # via kombu
-asgiref==3.3.4
+asgiref==3.7.2
     # via django
 async-timeout==4.0.2
     # via redis
@@ -50,7 +50,7 @@ click-repl==0.2.0
     # via celery
 confusable-homoglyphs==3.2.0
     # via django-registration
-django==3.2.24
+django==5.0.2
     # via
     #   -r requirements.in
     #   django-db-readonly
@@ -206,7 +206,6 @@ python-postmark==0.5.8
 pytz==2022.1
     # via
     #   celery
-    #   django
     #   django-postmark
     #   google-api-core
 redis==4.5.4
@@ -235,6 +234,8 @@ six==1.16.0
     #   python-dateutil
 sqlparse==0.4.1
     # via django
+typing-extensions==4.9.0
+    # via asgiref
 urllib3==1.26.18
     # via
     #   botocore
