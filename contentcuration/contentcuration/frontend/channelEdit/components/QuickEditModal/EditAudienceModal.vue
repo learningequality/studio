@@ -96,17 +96,28 @@
           [RolesNames.LEARNER]: this.$tr('visibleToAnyone'),
         };
       },
-      isMultipleAudience() {
-        const languages = new Set(this.nodes.map(node => node.role_visibility).filter(Boolean));
-        if (languages.size > 1) {
-          return true;
-        }
-        const forBeginners = new Set(
-          this.nodes.map(node =>
-            Boolean(node.learner_needs && node.learner_needs[ResourcesNeededTypes.FOR_BEGINNERS])
-          )
+      hasMultipleRoleVisibilities() {
+        const roleVisibilities = new Set(
+          this.nodes.map(node => node.role_visibility).filter(Boolean)
         );
-        return forBeginners.size > 1;
+        return roleVisibilities.size > 1;
+      },
+      hasMultipleForBeginnersValues() {
+        let accValue = null;
+        for (const node of this.nodes) {
+          const value = Boolean(
+            node.learner_needs && node.learner_needs[ResourcesNeededTypes.FOR_BEGINNERS]
+          );
+          if (accValue === null) {
+            accValue = value;
+          } else if (accValue !== value) {
+            return true;
+          }
+        }
+        return false;
+      },
+      isMultipleAudience() {
+        return this.hasMultipleRoleVisibilities || this.hasMultipleForBeginnersValues;
       },
     },
     created() {
