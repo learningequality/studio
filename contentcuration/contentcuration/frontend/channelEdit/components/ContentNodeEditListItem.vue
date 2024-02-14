@@ -50,7 +50,7 @@
           <VListTileAction class="action-icon px-1" @click.stop>
             <transition name="fade">
               <IconButton
-                icon="edit"
+                icon="rename"
                 size="small"
                 :text="$tr('editTooltip')"
                 :disabled="copying"

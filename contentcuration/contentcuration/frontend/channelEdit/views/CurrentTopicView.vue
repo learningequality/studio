@@ -84,7 +84,7 @@
           />
           <IconButton
             v-if="canEdit"
-            icon="dashboard"
+            icon="categories"
             :text="$tr('editCategoriesButton')"
             data-test="change-categories-btn"
             @click="editCategories(selected)"
@@ -98,14 +98,14 @@
           />
           <IconButton
             v-if="canEdit"
-            icon="filterList"
+            icon="levels"
             :text="$tr('editLevelsButton')"
             data-test="change-levels-btn"
             @click="editLevels(selected)"
           />
           <IconButton
             v-if="canEdit && !isTopicSelected"
-            icon="coach"
+            icon="activities"
             :text="$tr('editLearningActivitiesButton')"
             data-test="change-learning-activities-btn"
             @click="editLearningActivities(selected)"
