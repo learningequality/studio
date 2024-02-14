@@ -175,7 +175,7 @@
             {
               label: this.$tr('editAudience'),
               onClick: this.quickEditModalFactory(QuickEditModals.AUDIENCE),
-              condition: this.canEdit,
+              condition: this.canEdit && !this.isTopic,
             },
           ],
           [

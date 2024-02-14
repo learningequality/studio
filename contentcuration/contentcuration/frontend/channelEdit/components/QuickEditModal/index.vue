@@ -31,6 +31,11 @@
       :nodeIds="nodeIds"
       @close="close"
     />
+    <EditAudienceModal
+      v-if="isAudienceOpen"
+      :nodeIds="nodeIds"
+      @close="close"
+    />
   </div>
 
 </template>
@@ -42,6 +47,7 @@
   import { QuickEditModals } from '../../constants';
   import EditLevelsModal from './EditLevelsModal';
   import EditLanguageModal from './EditLanguageModal';
+  import EditAudienceModal from './EditAudienceModal';
   import EditCategoriesModal from './EditCategoriesModal';
   import EditResourcesNeededModal from './EditResourcesNeededModal';
   import EditTitleDescriptionModal from './EditTitleDescriptionModal';
@@ -52,6 +58,7 @@
     components: {
       EditLevelsModal,
       EditLanguageModal,
+      EditAudienceModal,
       EditCategoriesModal,
       EditResourcesNeededModal,
       EditTitleDescriptionModal,
@@ -90,6 +97,9 @@
       },
       isLearningActivitiesOpen() {
         return this.openedModal === QuickEditModals.LEARNING_ACTIVITIES;
+      },
+      isAudienceOpen() {
+        return this.openedModal === QuickEditModals.AUDIENCE;
       },
     },
     methods: {
