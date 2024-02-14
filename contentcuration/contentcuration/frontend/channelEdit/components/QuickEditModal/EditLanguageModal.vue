@@ -42,7 +42,7 @@
         v-for="language in languageOptions"
         :key="language.id"
         v-model="selectedLanguage"
-        :value="language.id"
+        :buttonValue="language.id"
         :label="languageText(language)"
       />
       <p
