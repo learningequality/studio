@@ -2,10 +2,10 @@
 
   <!-- Adding div wrapper as tests fail when VTooltip is the root -->
   <div style="display: inline-block;">
-    <IconButton
+    <KIconButton
       data-test="button"
       :icon="bookmark ? 'star' : 'starBorder'"
-      :text="starText"
+      :tooltip="starText"
       v-bind="$attrs"
       @click="toggleStar"
     />
@@ -16,13 +16,10 @@
 <script>
 
   import { mapActions, mapGetters } from 'vuex';
-  import IconButton from 'shared/views/IconButton';
 
   export default {
     name: 'ChannelStar',
-    components: {
-      IconButton,
-    },
+
     props: {
       channelId: {
         type: String,
