@@ -58,6 +58,7 @@
           <LicenseDropdown
             v-model="licenseItem"
             box
+            :required="isEditable"
             :disabled="!isEditable"
           />
         </div>
@@ -77,7 +78,7 @@
             :invalidText="copyrightHolderError"
             :disabled="!isEditable"
             @input="copyrightHolderError = ''"
-            @blur="() => {}"
+            @blur="validateCopyrightHolder"
           />
         </div>
         <p v-if="helpText" class="help">
@@ -97,6 +98,7 @@
   import { nonUniqueValue } from 'shared/constants';
   import HelpTooltip from 'shared/views/HelpTooltip';
   import LicenseDropdown from 'shared/views/LicenseDropdown';
+  import { getCopyrightHolderValidators, getInvalidText } from 'shared/utils/validation';
 
   function generateGetterSetter(key) {
     return {
@@ -149,10 +151,9 @@
         license: '',
         license_description: '',
         copyright_holder: '',
-        licenseError: '',
-        licenseDescriptionError: '',
         copyrightHolderError: '',
       };
+      /* eslint-enable  kolibri/vue-no-unused-properties */
     },
     computed: {
       ...mapGetters(['isAboutLicensesModalOpen']),
@@ -181,7 +182,7 @@
         return this.nodes.some(node => isDisableSourceEdits(node));
       },
       hasError() {
-        return this.licenseError || this.licenseDescriptionError || this.copyrightHolderError;
+        return this.copyrightHolderError;
       },
       helpText() {
         if (!this.isEditable) {
@@ -215,7 +216,19 @@
       close() {
         this.$emit('close');
       },
-      validate() {},
+      validateCopyrightHolder() {
+        if (this.copyright_holder === nonUniqueValue) {
+          return;
+        }
+        this.copyrightHolderError = getInvalidText(
+          getCopyrightHolderValidators(),
+          this.copyright_holder
+        );
+      },
+      validate() {
+        // License is required, but it is handled by the LicenseDropdown component
+        this.validateCopyrightHolder();
+      },
       async handleSave() {
         if (!this.isEditable) {
           return this.close();

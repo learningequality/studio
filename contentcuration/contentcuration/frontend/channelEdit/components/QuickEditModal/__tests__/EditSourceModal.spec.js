@@ -48,8 +48,14 @@ const makeWrapper = nodeIds => {
 describe('EditSourceModal', () => {
   beforeEach(() => {
     nodes = {
-      node1: { id: 'node1' },
-      node2: { id: 'node2' },
+      node1: {
+        id: 'node1',
+        copyright_holder: 'Test',
+      },
+      node2: {
+        id: 'node2',
+        copyright_holder: 'Test',
+      },
     };
     contentNodeActions = {
       updateContentNode: jest.fn(),
@@ -188,6 +194,14 @@ describe('EditSourceModal', () => {
   });
 
   describe('On submit', () => {
+    test('should not call updateContentNode on submit if copyright holder is missing', () => {
+      nodes['node1'].copyright_holder = '';
+      const wrapper = makeWrapper(['node1']);
+      wrapper.find('[data-test="edit-source-modal"]').vm.$emit('submit');
+
+      expect(contentNodeActions.updateContentNode).not.toHaveBeenCalled();
+    });
+
     test('should call updateContentNode on success submit for all editable nodes', () => {
       const wrapper = makeWrapper(['node1', 'node2']);
       wrapper.find('[data-test="edit-source-modal"]').vm.$emit('submit');
