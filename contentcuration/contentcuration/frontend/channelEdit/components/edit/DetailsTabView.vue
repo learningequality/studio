@@ -374,7 +374,7 @@
   import ContentNodeThumbnail from '../../views/files/thumbnails/ContentNodeThumbnail';
   import FileUpload from '../../views/files/FileUpload';
   import SubtitlesList from '../../views/files/supplementaryLists/SubtitlesList';
-  import { isImportedContent, importedChannelLink } from '../../utils';
+  import { isImportedContent, isDisableSourceEdits, importedChannelLink } from '../../utils';
   import AccessibilityOptions from './AccessibilityOptions.vue';
   import LevelsOptions from './LevelsOptions.vue';
   import ResourcesNeededOptions from './ResourcesNeededOptions.vue';
@@ -659,7 +659,7 @@
         return this.nodes.some(node => node.freeze_authoring_data);
       },
       disableSourceEdits() {
-        return this.disableAuthEdits || this.isImported;
+        return this.nodes.some(isDisableSourceEdits);
       },
       detectedImportText() {
         const count = this.nodes.filter(node => node.freeze_authoring_data).length;

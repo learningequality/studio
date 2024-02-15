@@ -112,6 +112,13 @@
           />
           <IconButton
             v-if="canEdit && !isTopicSelected"
+            icon="person"
+            :text="$tr('editSourceButton')"
+            data-test="change-learning-activities-btn"
+            @click="editSource(selected)"
+          />
+          <IconButton
+            v-if="canEdit && !isTopicSelected"
             icon="socialSciencesResource"
             :text="$tr('editAudienceButton')"
             data-test="change-audience-btn"
@@ -583,6 +590,13 @@
           nodeIds,
         });
       },
+      editSource(nodeIds) {
+        this.trackClickEvent('Edit source');
+        this.openQuickEditModal({
+          modal: QuickEditModals.SOURCE,
+          nodeIds,
+        });
+      },
       treeLink(params) {
         return {
           name: RouteNames.TREE_VIEW,
@@ -820,6 +834,7 @@
       importFromChannels: 'Import from channels',
       addButton: 'Add',
       editButton: 'Edit',
+      editSourceButton: 'Edit source',
       editLevelsButton: 'Edit Levels',
       editLanguageButton: 'Edit Language',
       editAudienceButton: 'Edit Audience',
