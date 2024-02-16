@@ -1,5 +1,4 @@
 import json
-from builtins import object
 
 from django import forms
 from django.conf import settings
@@ -7,9 +6,9 @@ from django.contrib.auth.forms import PasswordResetForm
 from django.contrib.auth.forms import UserChangeForm
 from django.contrib.auth.forms import UserCreationForm
 from django.core import signing
+from django.core.exceptions import ValidationError
 from django.db.models import Q
 from django.template.loader import render_to_string
-from django.core.exceptions import ValidationError
 
 from contentcuration.models import User
 
@@ -17,23 +16,16 @@ from contentcuration.models import User
 REGISTRATION_SALT = getattr(settings, 'REGISTRATION_SALT', 'registration')
 
 
-class ExtraFormMixin(object):
-
-    def check_field(self, field, error):
-        if not self.cleaned_data.get(field):
-            self.errors[field] = self.error_class()
-            self.add_error(field, error)
-            return False
-        return self.cleaned_data.get(field)
-
-
 # LOGIN/REGISTRATION FORMS
 #################################################################
-class RegistrationForm(UserCreationForm, ExtraFormMixin):
+class RegistrationForm(UserCreationForm):
+    CODE_ACCOUNT_ACTIVE = 'account_active'
+    CODE_ACCOUNT_INACTIVE = 'account_inactive'
+
     first_name = forms.CharField(required=True)
     last_name = forms.CharField(required=True)
-    email = forms.CharField(required=True)
-    password1 = forms.CharField(required=True)
+    email = forms.EmailField(required=True)
+    password1 = forms.CharField(required=True, min_length=8)
     password2 = forms.CharField(required=True)
     uses = forms.CharField(required=True)
     other_use = forms.CharField(required=False)
@@ -46,31 +38,18 @@ class RegistrationForm(UserCreationForm, ExtraFormMixin):
     locations = forms.CharField(required=True)
 
     def clean_email(self):
-        email = self.cleaned_data['email'].strip().lower()
-        if User.objects.filter(Q(is_active=True) | Q(deleted=True), email__iexact=email).exists():
-            raise UserWarning
+        # ensure email is lower case
+        email = self.cleaned_data["email"].strip().lower()
+        user_qs = User.objects.filter(email__iexact=email)
+        if user_qs.exists():
+            if user_qs.filter(Q(is_active=True) | Q(deleted=True)).exists():
+                raise ValidationError("Account already active", code=self.CODE_ACCOUNT_ACTIVE)
+            else:
+                raise ValidationError("Already registered.", code=self.CODE_ACCOUNT_INACTIVE)
         return email
-    
-    def clean_password1(self):
-        print(self.cleaned_data['password1'],"Hello ji 2")
-        password1 = self.cleaned_data['password1']
-        if len(password1) < 8:
-            # raise ValidationError()
-            raise ValidationError("Password must be at least 8 characters long.", code='password_too_short')
-            # raise UserWarning
-        return password1
-
-    def clean(self):
-        super(RegistrationForm, self).clean()
-
-        # Errors should be caught on the frontend
-        # or a warning should be thrown if the account exists
-        self.errors.clear()
-        return self.cleaned_data
 
     def save(self, commit=True):
-        user = super(RegistrationForm, self).save(commit=commit)
-        user.set_password(self.cleaned_data["password1"])
+        user = super(RegistrationForm, self).save(commit=False)
         user.first_name = self.cleaned_data["first_name"]
         user.last_name = self.cleaned_data["last_name"]
         user.information = {
@@ -175,7 +154,7 @@ class UsernameChangeForm(UserChangeForm):
         return user
 
 
-class StorageRequestForm(forms.Form, ExtraFormMixin):
+class StorageRequestForm(forms.Form):
     # Nature of content
     storage = forms.CharField(required=True)
     kind = forms.CharField(required=True)
@@ -204,7 +183,7 @@ class StorageRequestForm(forms.Form, ExtraFormMixin):
                   "audience", "import_count", "location", "uploading_for", "organization_type", "time_constraint", "message")
 
 
-class IssueReportForm(forms.Form, ExtraFormMixin):
+class IssueReportForm(forms.Form):
     operating_system = forms.CharField(required=True)
     browser = forms.CharField(required=True)
     channel = forms.CharField(required=False)
@@ -214,7 +193,7 @@ class IssueReportForm(forms.Form, ExtraFormMixin):
         fields = ("operating_system", "browser", "channel", "description")
 
 
-class DeleteAccountForm(forms.Form, ExtraFormMixin):
+class DeleteAccountForm(forms.Form):
     email = forms.CharField(required=True)
 
     def __init__(self, user, *args, **kwargs):
@@ -224,5 +203,5 @@ class DeleteAccountForm(forms.Form, ExtraFormMixin):
     def clean_email(self):
         email = self.cleaned_data['email'].strip().lower()
         if self.user.is_admin or self.user.email.lower() != self.cleaned_data['email']:
-            raise UserWarning
+            raise ValidationError("Not allowed")
         return email

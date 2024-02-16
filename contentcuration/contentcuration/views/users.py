@@ -9,11 +9,12 @@ from django.contrib.auth.views import PasswordResetConfirmView
 from django.contrib.auth.views import PasswordResetView
 from django.contrib.sites.models import Site
 from django.contrib.sites.shortcuts import get_current_site
-from django.core.exceptions import PermissionDenied, ValidationError
+from django.core.exceptions import PermissionDenied
 from django.core.mail import send_mail
 from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
 from django.http import HttpResponseForbidden
+from django.http import HttpResponseNotAllowed
 from django.shortcuts import redirect
 from django.template.loader import render_to_string
 from django.urls import reverse_lazy
@@ -113,6 +114,7 @@ def deferred_user_space_by_kind(request):
         }
     )
 
+
 @api_view(["GET"])
 @authentication_classes((SessionAuthentication,))
 @permission_classes((IsAuthenticated,))
@@ -161,59 +163,26 @@ class UserRegistrationView(RegistrationView):
     template_name = "registration/registration_information_form.html"
     http_method_names = ["post"]
 
-    def post(self, request):
-        print("Hello ji")
-        data = json.loads(request.body)
-        form = self.form_class(data)
-        try:
-            # Registration is valid or user hasn't set account up (invitation workflow)
-            if form.is_valid():
-                self.register(form)
-                return HttpResponse()
-            
-            # Password validation failed response
-            # if 'password1' in form.errors.keys():
-            #     password_errors = form.errors['password1']
-            #     print(password_errors, "Print")
-            #     return HttpResponseBadRequest(
-            #         status=400, reason="Password should be at least 8 characters long."
-            #     )
+    def get_form_kwargs(self):
+        kwargs = super(UserRegistrationView, self).get_form_kwargs()
+        # override the form data with the json data
+        kwargs["data"] = json.loads(self.request.body)
+        return kwargs
 
-            # Legacy handle invitations where users haven't activated their accounts
-            inactive_user = User.get_for_email(data['email'], is_active=False, password='')
-            if inactive_user:
-                form.errors.clear()
-                user = form.save(commit=False)
-                inactive_user.set_password(form.cleaned_data["password1"])
-                inactive_user.first_name = user.first_name
-                inactive_user.last_name = user.last_name
-                inactive_user.information = user.information
-                inactive_user.policies = user.policies
-                inactive_user.save()
-                self.send_activation_email(inactive_user)
-                return HttpResponse()
+    def form_valid(self, form):
+        self.register(form)
+        return HttpResponse()
 
-            if form._errors["email"]:
-                return HttpResponseBadRequest(
-                    status=405, reason="Account hasn't been activated"
-                )
-                
-            # if form._errors["password1"]:
-            #     password_errors = form.errors['password1']
-            #     print(password_errors, form._errors["password1"], "Print3")
-            #     return HttpResponseBadRequest(
-            #         status=400, reason="Password should be at least 8 characters long."
-            #     )
-            return HttpResponseBadRequest()     
-        except ValidationError:
-            print("Hello ji 3")
-            # if form.errors["password1"]:
-            #     password_errors = form.errors['password1']
-            #     print(password_errors, form._errors["password1"], "Print2")
-            #     return HttpResponseBadRequest(
-            #         status=400, reason="Password should be at least 8 characters long."
-            #     )
-            return HttpResponseForbidden()
+    def form_invalid(self, form):
+        # frontend handles the error messages
+        error_response = json.dumps(list(form.errors.keys()))
+
+        if form.has_error("email", code=form.CODE_ACCOUNT_ACTIVE):
+            return HttpResponseForbidden(error_response)
+        elif form.has_error("email", code=form.CODE_ACCOUNT_INACTIVE):
+            return HttpResponseNotAllowed(error_response)
+
+        return HttpResponseBadRequest(error_response)
 
     def send_activation_email(self, user):
         activation_key = self.get_activation_key(user)
