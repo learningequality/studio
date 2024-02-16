@@ -112,14 +112,14 @@
           />
           <IconButton
             v-if="canEdit && !isTopicSelected"
-            icon="person"
+            icon="attribution"
             :text="$tr('editSourceButton')"
             data-test="change-learning-activities-btn"
             @click="editSource(selected)"
           />
           <IconButton
             v-if="canEdit && !isTopicSelected"
-            icon="socialSciencesResource"
+            icon="audience"
             :text="$tr('editAudienceButton')"
             data-test="change-audience-btn"
             @click="editAudience(selected)"
