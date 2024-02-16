@@ -108,6 +108,7 @@ import VueIntl from 'vue-intl';
 import Croppa from 'vue-croppa';
 import { Workbox, messageSW } from 'workbox-window';
 import KThemePlugin from 'kolibri-design-system/lib/KThemePlugin';
+import trackInputModality from 'kolibri-design-system/lib/styles/trackInputModality';
 
 import AnalyticsPlugin from './analytics/plugin';
 import { theme, icons } from 'shared/vuetify';
@@ -305,6 +306,7 @@ function initiateServiceWorker() {
 export let rootVue;
 
 export default async function startApp({ store, router, index }) {
+  trackInputModality();
   await initiateServiceWorker();
   await initializeDB();
   await i18nSetup();
