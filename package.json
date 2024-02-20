@@ -119,6 +119,7 @@
     "stylus": "^0.59.0",
     "stylus-loader": "^8.1.0",
     "workbox-webpack-plugin": "^7.0.0",
+    "wrap-ansi": "7.0.0",
     "web-streams-polyfill": "^3.2.1"
   },
   "false": {},
