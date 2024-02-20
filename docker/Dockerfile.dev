@@ -34,9 +34,9 @@ RUN apt-get update \
 
 
 # Node packages ################################################################
-RUN npm install -g yarn && npm cache clean --force
-COPY ./package.json ./yarn.lock   /src/
-RUN yarn install && yarn cache clean
+RUN corepack enable pnpm
+COPY ./package.json ./pnpm-lock.yaml  /src/
+RUN pnpm install
 ################################################################################
 
 
@@ -54,4 +54,4 @@ RUN pip install -r requirements-dev.txt
 RUN apt-get -y autoremove
 ################################################################################
 
-CMD ["yarn", "run", "devserver"]
+CMD ["pnpm", "run", "devserver"]

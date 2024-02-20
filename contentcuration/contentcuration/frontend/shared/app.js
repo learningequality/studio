@@ -1,6 +1,6 @@
 import 'regenerator-runtime/runtime';
 import { liveQuery } from 'dexie';
-import * as Sentry from '@sentry/vue';
+import { init as SentryInit, globalHandlersIntegration } from '@sentry/vue';
 import Vue from 'vue';
 import VueRouter from 'vue-router';
 import Vuetify, {
@@ -130,7 +130,7 @@ import { Session, injectVuexStore } from 'shared/data/resources';
 if (process.env.NODE_ENV !== 'production') {
   Vue.config.devtools = true;
 } else if (window.sentryActive) {
-  Sentry.init({
+  SentryInit({
     Vue,
     dsn: window.sentryDSN,
     environment: window.sentryEnvironment,
@@ -142,7 +142,7 @@ if (process.env.NODE_ENV !== 'production') {
     // get another error report with more useful data anyway, so ignore these for now.
     // They are most commonly triggered by a 500 response from an API endpoint call.
     integrations: [
-      new Sentry.Integrations.GlobalHandlers({ onerror: true, onunhandledrejection: false }),
+      globalHandlersIntegration({ onerror: true, onunhandledrejection: false }),
     ],
     beforeSend: function(event) {
       // Ignore errors when CloudFlare-AlwaysOnline is in the user agent as these are errors serving

@@ -25,7 +25,7 @@ import * as resources from 'shared/data/resources';
 import icons from 'shared/vuetify/icons';
 import ActionLink from 'shared/views/ActionLink';
 import { i18nSetup } from 'shared/i18n';
-import { resetJestGlobal } from 'shared/utils/testing'
+import { resetJestGlobal, clearMockedComponentMethods } from 'shared/utils/testing'
 
 global.beforeEach(() => {
   return new Promise(resolve => {

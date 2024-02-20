@@ -1,4 +1,4 @@
-const path = require('path');
+const path = require('node:path');
 
 const frontendDir = '<rootDir>/contentcuration/contentcuration/frontend';
 
@@ -17,9 +17,13 @@ module.exports = {
     '\\.worker.min.js': path.resolve(__dirname, './globalMocks/fileMock.js'),
     'shared/client': path.resolve(__dirname, './globalMocks/client.js'),
     'shared/urls': path.resolve(__dirname, './globalMocks/urls.js'),
+    '^dexie$': require.resolve('dexie'),
   },
+  testEnvironment: 'jsdom',
   testMatch: ['**/?(*.)+(spec|test).[jt]s?(x)'],
-  testURL: 'http://studio.time',
+  testEnvironmentOptions: {
+    url: 'http://studio.time',
+  },
   transform: {
     '^.+\\.js$': '<rootDir>/node_modules/babel-jest',
     '.*\\.(vue)$': '<rootDir>/node_modules/vue-jest',

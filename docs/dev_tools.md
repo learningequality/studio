@@ -8,7 +8,7 @@ With Studio's services running, you may run tests with the following commands:
 # backend
 make test
 # frontend
-yarn run test
+pnpm run test
 ```
 
 View [more testing tips](./running_tests.md)
@@ -18,13 +18,13 @@ View [more testing tips](./running_tests.md)
 Front-end linting is run using:
 
 ```bash
-yarn run lint-frontend
+pnpm run lint-frontend
 ```
 
 Some linting errors can be fixed automatically by running:
 
 ```bash
-yarn run lint-frontend:format
+pnpm run lint-frontend:format
 ```
 
 Make sure you've set up pre-commit hooks as described above. This will ensure that linting is automatically run on staged changes before every commit.
