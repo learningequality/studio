@@ -1,8 +1,3 @@
-/**
- * @jest-environment jest-environment-jsdom-sixteen
- */
-// Jsdom@^16 is required to test custom elements.
-
 import { registerMarkdownFormulaField } from 'shared/views/MarkdownEditor/plugins/formulas/MarkdownFormulaField';
 
 // we need to mock the component's style import for the element to successfully register in jsdom
