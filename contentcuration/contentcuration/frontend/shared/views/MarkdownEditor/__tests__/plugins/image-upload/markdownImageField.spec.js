@@ -1,8 +1,3 @@
-/**
- * @jest-environment jest-environment-jsdom-sixteen
- */
-// Jsdom@^16 is required to test custom elements.
-
 import Vue from 'vue';
 import { registerMarkdownImageField } from 'shared/views/MarkdownEditor/plugins/image-upload/MarkdownImageField';
 
