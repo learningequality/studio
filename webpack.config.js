@@ -1,9 +1,10 @@
 /* eslint-env node */
 
-const path = require('path');
-const process = require('process');
-const fs = require('fs');
-const { execSync } = require('child_process');
+const path = require('node:path');
+const process = require('node:process');
+const fs = require('node:fs');
+const { execSync } = require('node:child_process');
+
 const baseConfig = require('kolibri-tools/lib/webpack.config.base');
 const { merge } = require('webpack-merge');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
@@ -57,12 +58,15 @@ module.exports = (env = {}) => {
   const rootDir = __dirname;
   const rootNodeModules = path.join(rootDir, 'node_modules');
   const baseCssLoaders = base.module.rules[1].use;
+  // For pnpm, this directory holds symlinks to a particular version of each package, not unlike
+  // a hoisted node_modules directory.
+  const pnpmNodeModules = path.join(rootDir, 'node_modules', '.pnpm', 'node_modules');
 
   // Determine the appropriate dev server host and public path based on environment
   const isWSLEnvironment = isWSL();
   const devServerHost = isWSLEnvironment ? '0.0.0.0' : '127.0.0.1';
-  const devPublicPath = isWSLEnvironment ? 
-    `http://${getWSLIP()}:4000/dist/` : 
+  const devPublicPath = isWSLEnvironment ?
+    `http://${getWSLIP()}:4000/dist/` :
     'http://127.0.0.1:4000/dist/';
 
   const workboxPlugin = new InjectManifest({
@@ -127,7 +131,7 @@ module.exports = (env = {}) => {
         },
         {
           test: /\.styl(us)?$/,
-          use: baseCssLoaders.concat('stylus-loader'),
+          use: baseCssLoaders.concat(require.resolve('stylus-loader')),
         },
       ],
     },
@@ -141,7 +145,8 @@ module.exports = (env = {}) => {
         static: staticFilesDir,
       },
       extensions: ['.js', '.vue', '.css'],
-      modules: [rootNodeModules],
+      symlinks: true,
+      modules: [rootNodeModules, pnpmNodeModules],
     },
     resolveLoader: {
       modules: [rootNodeModules],
@@ -168,7 +173,7 @@ module.exports = (env = {}) => {
         // e.g. via import(/* webpackMode: "weak" */ './file.js')
         allowAsyncCycles: false,
         // set the current working directory for displaying module paths
-        
+
         cwd: process.cwd(),
       }),
       workboxPlugin,

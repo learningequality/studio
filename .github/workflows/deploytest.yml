@@ -20,7 +20,7 @@ jobs:
         uses: fkirc/skip-duplicate-actions@master
         with:
           github_token: ${{ github.token }}
-          paths: '["**.py", "requirements.txt", ".github/workflows/deploytest.yml", "**.vue", "**.js", "yarn.lock", "package.json"]'
+          paths: '["**.py", "requirements.txt", ".github/workflows/deploytest.yml", "**.vue", "**.js", "pnpm-lock.yaml", "package.json"]'
   build_assets:
     name: Build frontend assets
     needs: pre_job
@@ -28,23 +28,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+    - name: Use pnpm
+      uses: pnpm/action-setup@v4
     - name: Use Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '18.x'
-    - name: Cache Node.js modules
-      uses: actions/cache@v4
-      with:
-        path: '**/node_modules'
-        key: ${{ runner.OS }}-node-${{ hashFiles('**/yarn.lock') }}
-        restore-keys: |
-          ${{ runner.OS }}-node-
+        cache: 'pnpm'
     - name: Install dependencies
       run: |
-        yarn --frozen-lockfile
-        npm rebuild node-sass
+        pnpm install --frozen-lockfile
+        pnpm rebuild node-sass
     - name: Build frontend
-      run: yarn run build
+      run: pnpm run build
   make_messages:
     name: Build all message files
     needs: pre_job
@@ -68,21 +64,17 @@ jobs:
         python -m pip install --upgrade pip
         pip install pip-tools
         pip-sync requirements.txt
+    - name: Use pnpm
+      uses: pnpm/action-setup@v4
     - name: Use Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '18.x'
-    - name: Cache Node.js modules
-      uses: actions/cache@v4
-      with:
-        path: '**/node_modules'
-        key: ${{ runner.OS }}-node-${{ hashFiles('**/yarn.lock') }}
-        restore-keys: |
-          ${{ runner.OS }}-node-
+        cache: 'pnpm'
     - name: Install node dependencies
       run: |
-        yarn --frozen-lockfile
-        npm rebuild node-sass
+        pnpm install --frozen-lockfile
+        pnpm rebuild node-sass
     - name: Install gettext
       run: |
         sudo apt-get update -y
