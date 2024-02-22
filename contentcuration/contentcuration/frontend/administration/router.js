@@ -1,6 +1,6 @@
 import VueRouter from 'vue-router';
 import { RouteNames } from './constants';
-import ChannelTable from './pages/Channels/ChannelTable';
+import ChannelTable from './pages/Channels/ChannelTable.vue';
 import ChannelDetails from './pages/Channels/ChannelDetails';
 import UserTable from './pages/Users/UserTable';
 import UserDetails from './pages/Users/UserDetails';

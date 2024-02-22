@@ -150,6 +150,7 @@
         return RouteToListTypeMapping[this.$route.name];
       },
       toolbarHeight() {
+        console.log('loggedIn', this.loggedIn);
         return this.loggedIn && !this.isFAQPage ? 112 : 64;
       },
       contentOffset() {
