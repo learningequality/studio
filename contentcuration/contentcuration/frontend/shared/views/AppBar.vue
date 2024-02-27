@@ -3,10 +3,9 @@
   <div>
     <VToolbar
       app
-      dark
       :clipped-left="!$isRTL"
       :clipped-right="$isRTL"
-      color="primary"
+      color="secondary"
       height="56"
       :tabs="Boolean($slots.tabs)"
     >
@@ -34,13 +33,13 @@
                 <KIconButton
                   disabled="true"
                   icon="person"
-                  color="white"
+                  color="black"
                 />
                 <span class="mx-2 subheading">{{ user.first_name }}</span>
                 <KIconButton
                   disabled="true"
                   icon="dropdown"
-                  color="white"
+                  color="black"
                 />
               </VBtn>
             </template>

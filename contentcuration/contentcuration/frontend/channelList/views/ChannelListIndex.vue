@@ -31,7 +31,7 @@
           :to="getChannelLink(listType)"
           @click="trackTabClick(listType)"
         >
-          <VBadge :value="invitationsByListCounts[listType]" color="secondary">
+          <VBadge :value="invitationsByListCounts[listType]" color="black">
             <template #badge>
               <span>{{ $formatNumber(invitationsByListCounts[listType]) }}</span>
             </template>
