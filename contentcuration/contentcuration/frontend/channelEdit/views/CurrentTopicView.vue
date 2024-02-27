@@ -407,7 +407,7 @@
               label: this.$tr('editLearningActivitiesButton'),
               icon: 'activities',
               onClick: this.quickEditModalFactory(QuickEditModals.LEARNING_ACTIVITIES),
-              condition: this.canEdit,
+              condition: this.canEdit && this.isResourceSelected,
               disabled: this.isTopicSelected,
               dataTest: 'change-learning-activities-btn',
             },
@@ -417,7 +417,7 @@
               label: this.$tr('editSourceButton'),
               icon: 'attribution',
               onClick: this.quickEditModalFactory(QuickEditModals.SOURCE),
-              condition: this.canEdit,
+              condition: this.canEdit && this.isResourceSelected,
               disabled: this.isTopicSelected,
               dataTest: 'change-learning-activities-btn',
             },
@@ -425,7 +425,7 @@
               label: this.$tr('editAudienceButton'),
               icon: 'audience',
               onClick: this.quickEditModalFactory(QuickEditModals.AUDIENCE),
-              condition: this.canEdit,
+              condition: this.canEdit && this.isResourceSelected,
               disabled: this.isTopicSelected,
               dataTest: 'change-audience-btn',
             },
@@ -462,6 +462,9 @@
       },
       isTopicSelected() {
         return this.selectedNodes.some(node => node.kind === ContentKindsNames.TOPIC);
+      },
+      isResourceSelected() {
+        return this.selectedNodes.some(node => node.kind !== ContentKindsNames.TOPIC);
       },
       ancestors() {
         return this.getContentNodeAncestors(this.topicId, true).map(ancestor => {
