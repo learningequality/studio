@@ -185,7 +185,7 @@
 
 <style scoped>
   .languages-options {
-    height: 350px;
+    height: 250px;
     overflow-y: auto;
   }
 </style>

@@ -12,7 +12,7 @@
     :emptyText="$tr('emptyCategoriesSearch')"
     :confirmationMessage="$tr('editedCategories', { count: nodeIds.length })"
     :optionsListStyle="{
-      height: '350px',
+      height: '250px',
       overflowY: 'auto',
     }"
     @close="close"
