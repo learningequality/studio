@@ -8,9 +8,12 @@
       style="z-index: 1000;"
       :right="$isRTL"
     >
-      <VToolbar color="primary" dark>
+      <VToolbar color="secondary">
         <VBtn flat icon :tabindex="handleclickTab" @click="drawer = false">
-          <Icon>clear</Icon>
+          <KIconButton
+            icon="clear"
+            color="black"
+          />
         </VBtn>
         <VToolbarTitle class="notranslate">
           Kolibri Studio
