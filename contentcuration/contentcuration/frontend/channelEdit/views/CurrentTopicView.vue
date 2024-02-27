@@ -96,6 +96,7 @@
               <template #menu>
                 <KDropdownMenu
                   :options="overflowItems"
+                  @select="(option) => option.onClick()"
                 />
               </template>
             </KIconButton>
@@ -382,7 +383,7 @@
             {
               label: this.$tr('editLanguageButton'),
               icon: 'language',
-              onClick: () => this.quickEditModalFactory(QuickEditModals.LANGUAGE),
+              onClick: this.quickEditModalFactory(QuickEditModals.LANGUAGE),
               condition: this.canEdit,
               dataTest: 'change-langugage-btn',
             },
@@ -391,21 +392,21 @@
             {
               label: this.$tr('editCategoriesButton'),
               icon: 'categories',
-              onClick: () => this.quickEditModalFactory(QuickEditModals.CATEGORIES),
+              onClick: this.quickEditModalFactory(QuickEditModals.CATEGORIES),
               condition: this.canEdit,
               dataTest: 'change-categories-btn',
             },
             {
               label: this.$tr('editLevelsButton'),
               icon: 'levels',
-              onClick: () => this.quickEditModalFactory(QuickEditModals.LEVELS),
+              onClick: this.quickEditModalFactory(QuickEditModals.LEVELS),
               condition: this.canEdit,
               dataTest: 'change-levels-btn',
             },
             {
               label: this.$tr('editLearningActivitiesButton'),
               icon: 'activities',
-              onClick: () => this.quickEditModalFactory(QuickEditModals.LEARNING_ACTIVITIES),
+              onClick: this.quickEditModalFactory(QuickEditModals.LEARNING_ACTIVITIES),
               condition: this.canEdit,
               disabled: this.isTopicSelected,
               dataTest: 'change-learning-activities-btn',
@@ -415,7 +416,7 @@
             {
               label: this.$tr('editSourceButton'),
               icon: 'attribution',
-              onClick: () => this.quickEditModalFactory(QuickEditModals.SOURCE),
+              onClick: this.quickEditModalFactory(QuickEditModals.SOURCE),
               condition: this.canEdit,
               disabled: this.isTopicSelected,
               dataTest: 'change-learning-activities-btn',
@@ -423,7 +424,7 @@
             {
               label: this.$tr('editAudienceButton'),
               icon: 'audience',
-              onClick: () => this.quickEditModalFactory(QuickEditModals.AUDIENCE),
+              onClick: this.quickEditModalFactory(QuickEditModals.AUDIENCE),
               condition: this.canEdit,
               disabled: this.isTopicSelected,
               dataTest: 'change-audience-btn',
@@ -431,7 +432,7 @@
             {
               label: this.$tr('editWhatIsNeededButton'),
               icon: 'lesson',
-              onClick: () => this.quickEditModalFactory(QuickEditModals.WHAT_IS_NEEDED),
+              onClick: this.quickEditModalFactory(QuickEditModals.WHAT_IS_NEEDED),
               condition: this.canEdit,
               dataTest: 'change-resources-neded-btn',
             },
