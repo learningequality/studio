@@ -3,6 +3,7 @@
   <FullscreenModal
     v-model="dialog"
     color="black"
+    :dark="true"
   >
     <template #header>
       <span class="notranslate">{{ channel ? channel.name : '' }}</span>

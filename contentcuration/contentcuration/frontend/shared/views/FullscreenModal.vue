@@ -13,7 +13,7 @@
     <VCard style="overflow-y: auto;">
       <VToolbar
         :color="color"
-        dark
+        :dark="dark"
         fixed
         :extension-height="48"
         clipped-left
@@ -81,7 +81,11 @@
       },
       color: {
         type: String,
-        default: 'primary',
+        default: 'secondary',
+      },
+      dark: {
+        type: Boolean,
+        default: false,
       },
     },
     computed: {
