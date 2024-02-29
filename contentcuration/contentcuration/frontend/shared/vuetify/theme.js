@@ -32,5 +32,3 @@ export default function theme() {
     tokens
   );
 }
-
-console.log(themeTokens());
