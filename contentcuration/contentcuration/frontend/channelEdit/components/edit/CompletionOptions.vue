@@ -191,9 +191,7 @@
         );
       },
       showReferenceHint() {
-        /*
-          The reference hint should be shown only when "Reference" is selected
-        */
+        // The reference hint should be shown only when "Reference" is selected
         return this.model === CompletionCriteriaModels.REFERENCE;
       },
       completionDropdown: {

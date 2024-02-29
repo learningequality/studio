@@ -85,6 +85,7 @@ class Paginator {
       this.offset = this.offset || 0;
     }
     if (this.pageNumberType && this.limitOffsetType) {
+      // eslint-disable-next-line no-console
       console.warn(
         'Specified both page number type pagination and limit offset may get unexpected results'
       );
@@ -721,6 +722,7 @@ class Resource extends mix(APIResource, IndexedDBResource) {
         pageData = response.data;
         itemData = pageData.results;
       } else {
+        // eslint-disable-next-line no-console
         console.error(`Unexpected response from ${this.urlName}`, response);
         itemData = [];
       }

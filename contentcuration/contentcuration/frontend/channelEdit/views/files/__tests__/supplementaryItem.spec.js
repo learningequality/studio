@@ -7,7 +7,7 @@ function makeWrapper(props = {}) {
   const store = factory();
   return mount(SupplementaryItem, {
     store,
-    attachToDocument: true,
+    attachTo: 'body',
     propsData: {
       fileId: 'test',
       presetID: 'video_subtitle',

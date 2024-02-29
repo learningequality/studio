@@ -7,6 +7,8 @@ import VueRouter from 'vue-router';
 import Vuex from 'vuex';
 import KThemePlugin from 'kolibri-design-system/lib/KThemePlugin';
 import 'shared/i18n/setup';
+// Polyfill structured clone for indexeddb with JSDOM
+import "core-js/stable/structured-clone";
 // Polyfill indexeddb
 import 'fake-indexeddb/auto';
 // Polyfill webstreams
@@ -25,7 +27,7 @@ import * as resources from 'shared/data/resources';
 import icons from 'shared/vuetify/icons';
 import ActionLink from 'shared/views/ActionLink';
 import { i18nSetup } from 'shared/i18n';
-import { resetJestGlobal, clearMockedComponentMethods } from 'shared/utils/testing'
+import { resetJestGlobal } from 'shared/utils/testing'
 
 global.beforeEach(() => {
   return new Promise(resolve => {
