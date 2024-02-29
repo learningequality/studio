@@ -27,6 +27,32 @@
           </span>
         </template>
       </Breadcrumbs>
+      <Menu
+        v-if="!loadingAncestors"
+        class="pa-1"
+      >
+        <template #activator="{ on }">
+          <IconButton
+            icon="list"
+            :text="$tr('viewModeTooltip')"
+            v-on="on"
+          />
+        </template>
+        <VList>
+          <VListTile
+            v-for="mode in viewModes"
+            :key="mode"
+            @click="setViewMode(mode), trackViewMode(mode)"
+          >
+            <VListTileAction style="min-width: 32px;">
+              <Icon v-if="mode === viewMode">
+                check
+              </Icon>
+            </VListTileAction>
+            <VListTileTitle>{{ $tr(mode) }}</VListTileTitle>
+          </VListTile>
+        </VList>
+      </Menu>
     </VToolbar>
 
     <!-- Topic actions -->
@@ -39,94 +65,49 @@
           :label="selected.length ? '' : $tr('selectAllLabel')"
         />
       </div>
-      <VSlideXTransition>
-        <div v-if="selected.length">
-          <IconButton
-            v-if="canEdit"
-            icon="edit"
-            :text="$tr('editSelectedButton')"
-            data-test="edit-selected-btn"
-            @click="editNodes(selected)"
-          />
-          <IconButton
-            icon="clipboard"
-            :text="$tr('copySelectedButton')"
-            data-test="copy-selected-to-clipboard-btn"
-            @click="copyToClipboard(selected)"
-          />
-          <IconButton
-            v-if="canEdit"
-            icon="move"
-            :text="$tr('moveSelectedButton')"
-            data-test="move-selected-btn"
-            @click="openMoveModal"
-          />
-          <IconButton
-            v-if="canEdit"
-            icon="copy"
-            :text="$tr('duplicateSelectedButton')"
-            data-test="duplicate-selected-btn"
-            @click="duplicateNodes(selected)"
-          />
-          <IconButton
-            v-if="canEdit"
-            icon="remove"
-            :text="$tr('deleteSelectedButton')"
-            data-test="delete-selected-btn"
-            @click="removeNodes(selected)"
-          />
-          <IconButton
-            v-if="canEdit"
-            icon="language"
-            :text="$tr('editLanguageButton')"
-            data-test="change-langugage-btn"
-            @click="editLanguage(selected)"
-          />
-          <IconButton
-            v-if="canEdit"
-            icon="categories"
-            :text="$tr('editCategoriesButton')"
-            data-test="change-categories-btn"
-            @click="editCategories(selected)"
-          />
-          <IconButton
-            v-if="canEdit"
-            icon="lesson"
-            :text="$tr('editWhatIsNeededButton')"
-            data-test="change-resources-neded-btn"
-            @click="editResourcesNeeded(selected)"
-          />
-          <IconButton
-            v-if="canEdit"
-            icon="levels"
-            :text="$tr('editLevelsButton')"
-            data-test="change-levels-btn"
-            @click="editLevels(selected)"
-          />
-          <IconButton
-            v-if="canEdit && !isTopicSelected"
-            icon="activities"
-            :text="$tr('editLearningActivitiesButton')"
-            data-test="change-learning-activities-btn"
-            @click="editLearningActivities(selected)"
-          />
-          <IconButton
-            v-if="canEdit && !isTopicSelected"
-            icon="attribution"
-            :text="$tr('editSourceButton')"
-            data-test="change-learning-activities-btn"
-            @click="editSource(selected)"
-          />
-          <IconButton
-            v-if="canEdit && !isTopicSelected"
-            icon="audience"
-            :text="$tr('editAudienceButton')"
-            data-test="change-audience-btn"
-            @click="editAudience(selected)"
-          />
-        </div>
-
-      </VSlideXTransition>
+      <div
+        v-show="selected.length"
+        v-if="$vuetify.breakpoint.mdAndUp"
+        class="no-shrink px-1"
+      >
+        {{ selectionText }}
+      </div>
+      <div v-if="selected.length" class="command-palette-wrapper">
+        <KListWithOverflow
+          :items="commandPaletteOptions"
+          :appearanceOverrides="{ justifyContent: 'flex-end' }"
+        >
+          <template #item="{ item }">
+            <KIconButton
+              :icon="item.icon"
+              :tooltip="item.label"
+              :disabled="item.disabled"
+              :data-test="item.dataTest"
+              @click="item.onClick()"
+            />
+          </template>
+          <template #more="{ overflowItems }">
+            <KIconButton
+              tooltip="More"
+              icon="optionsVertical"
+              appearance="flat-button"
+              :primary="false"
+            >
+              <template #menu>
+                <KDropdownMenu
+                  :options="overflowItems"
+                  @select="(option) => option.onClick()"
+                />
+              </template>
+            </KIconButton>
+          </template>
+          <template #divider>
+            <div class="divider-wrapper">
+              <div :style="dividerStyle"></div>
+            </div>
+          </template>
+        </KListWithOverflow>
+      </div>
 
       <MoveModal
         ref="moveModal"
@@ -134,40 +115,8 @@
         :moveNodeIds="selected"
         @target="moveNodes"
       />
-
-      <VSpacer />
-
-      <VFadeTransition>
-        <div v-show="selected.length" v-if="$vuetify.breakpoint.mdAndUp" class="px-1">
-          {{ selectionText }}
-        </div>
-      </VFadeTransition>
-
+      <VSpacer v-if="!selected.length" />
       <VToolbarItems v-if="!loadingAncestors">
-        <Menu class="pa-1">
-          <template #activator="{ on }">
-            <IconButton
-              icon="list"
-              :text="$tr('viewModeTooltip')"
-              v-on="on"
-            />
-          </template>
-          <VList>
-            <VListTile
-              v-for="mode in viewModes"
-              :key="mode"
-              @click="setViewMode(mode), trackViewMode(mode)"
-            >
-              <VListTileAction style="min-width: 32px;">
-                <Icon v-if="mode === viewMode">
-                  check
-                </Icon>
-              </VListTileAction>
-              <VListTileTitle>{{ $tr(mode) }}</VListTileTitle>
-            </VListTile>
-          </VList>
-        </Menu>
-
         <Menu v-if="canEdit">
           <template #activator="{ on }">
             <VBtn color="primary" class="ml-2" style="height: 32px;" v-on="on">
@@ -391,6 +340,117 @@
           }
         },
       },
+      commandPaletteOptions() {
+        const groupedOptions = [
+          [
+            {
+              label: this.$tr('editSelectedButton'),
+              icon: 'edit',
+              onClick: () => this.editNodes(this.selected),
+              condition: this.canEdit,
+              dataTest: 'edit-selected-btn',
+            },
+            {
+              label: this.$tr('moveSelectedButton'),
+              icon: 'move',
+              onClick: () => this.openMoveModal(),
+              condition: this.canEdit,
+              dataTest: 'move-selected-btn',
+            },
+            {
+              label: this.$tr('copySelectedButton'),
+              icon: 'clipboard',
+              onClick: () => this.copyToClipboard(this.selected),
+              condition: true,
+              dataTest: 'copy-selected-to-clipboard-btn',
+            },
+            {
+              label: this.$tr('duplicateSelectedButton'),
+              icon: 'copy',
+              onClick: () => this.duplicateNodes(this.selected),
+              condition: this.canEdit,
+              dataTest: 'duplicate-selected-btn',
+            },
+            {
+              label: this.$tr('deleteSelectedButton'),
+              icon: 'remove',
+              onClick: () => this.removeNodes(this.selected),
+              condition: this.canEdit,
+              dataTest: 'delete-selected-btn',
+            },
+          ],
+          [
+            {
+              label: this.$tr('editLanguageButton'),
+              icon: 'language',
+              onClick: this.quickEditModalFactory(QuickEditModals.LANGUAGE),
+              condition: this.canEdit,
+              dataTest: 'change-langugage-btn',
+            },
+          ],
+          [
+            {
+              label: this.$tr('editCategoriesButton'),
+              icon: 'categories',
+              onClick: this.quickEditModalFactory(QuickEditModals.CATEGORIES),
+              condition: this.canEdit,
+              dataTest: 'change-categories-btn',
+            },
+            {
+              label: this.$tr('editLevelsButton'),
+              icon: 'levels',
+              onClick: this.quickEditModalFactory(QuickEditModals.LEVELS),
+              condition: this.canEdit,
+              dataTest: 'change-levels-btn',
+            },
+            {
+              label: this.$tr('editLearningActivitiesButton'),
+              icon: 'activities',
+              onClick: this.quickEditModalFactory(QuickEditModals.LEARNING_ACTIVITIES),
+              condition: this.canEdit && this.isResourceSelected,
+              disabled: this.isTopicSelected,
+              dataTest: 'change-learning-activities-btn',
+            },
+          ],
+          [
+            {
+              label: this.$tr('editSourceButton'),
+              icon: 'attribution',
+              onClick: this.quickEditModalFactory(QuickEditModals.SOURCE),
+              condition: this.canEdit && this.isResourceSelected,
+              disabled: this.isTopicSelected,
+              dataTest: 'change-learning-activities-btn',
+            },
+            {
+              label: this.$tr('editAudienceButton'),
+              icon: 'audience',
+              onClick: this.quickEditModalFactory(QuickEditModals.AUDIENCE),
+              condition: this.canEdit && this.isResourceSelected,
+              disabled: this.isTopicSelected,
+              dataTest: 'change-audience-btn',
+            },
+            {
+              label: this.$tr('editWhatIsNeededButton'),
+              icon: 'lesson',
+              onClick: this.quickEditModalFactory(QuickEditModals.WHAT_IS_NEEDED),
+              condition: this.canEdit,
+              dataTest: 'change-resources-neded-btn',
+            },
+          ],
+        ];
+
+        const filteredOptions = groupedOptions
+          .filter(group => group.some(option => option.condition))
+          .map(group => group.filter(option => option.condition));
+
+        // Flatten the array with a divider between each group
+        return filteredOptions.reduce((acc, group, index) => {
+          if (index > 0) {
+            acc.push({ type: 'divider' });
+          }
+          return acc.concat(group);
+        }, []);
+      },
       height() {
         return this.hasStagingTree ? 'calc(100vh - 224px)' : 'calc(100vh - 160px)';
       },
@@ -402,6 +462,9 @@
       },
       isTopicSelected() {
         return this.selectedNodes.some(node => node.kind === ContentKindsNames.TOPIC);
+      },
+      isResourceSelected() {
+        return this.selectedNodes.some(node => node.kind !== ContentKindsNames.TOPIC);
       },
       ancestors() {
         return this.getContentNodeAncestors(this.topicId, true).map(ancestor => {
@@ -447,6 +510,13 @@
         return this.activeDraggableRegionId === DraggableRegions.CLIPBOARD
           ? DropEffect.COPY
           : DropEffect.MOVE;
+      },
+      dividerStyle() {
+        return {
+          height: '100%',
+          backgroundColor: this.$themeTokens.fineLine,
+          width: '1px',
+        };
       },
     },
     watch: {
@@ -548,54 +618,15 @@
           },
         });
       },
-      editLanguage(nodeIds) {
-        this.trackClickEvent('Edit language');
-        this.openQuickEditModal({
-          modal: QuickEditModals.LANGUAGE,
-          nodeIds,
-        });
-      },
-      editCategories(nodeIds) {
-        this.trackClickEvent('Edit categories');
-        this.openQuickEditModal({
-          modal: QuickEditModals.CATEGORIES,
-          nodeIds,
-        });
-      },
-      editResourcesNeeded(nodeIds) {
-        this.trackClickEvent('Edit what is needed');
-        this.openQuickEditModal({
-          modal: QuickEditModals.WHAT_IS_NEEDED,
-          nodeIds,
-        });
-      },
-      editLevels(nodeIds) {
-        this.trackClickEvent('Edit levels');
-        this.openQuickEditModal({
-          modal: QuickEditModals.LEVELS,
-          nodeIds,
-        });
-      },
-      editLearningActivities(nodeIds) {
-        this.trackClickEvent('Edit learning activities');
-        this.openQuickEditModal({
-          modal: QuickEditModals.LEARNING_ACTIVITIES,
-          nodeIds,
-        });
-      },
-      editAudience(nodeIds) {
-        this.trackClickEvent('Edit audience');
-        this.openQuickEditModal({
-          modal: QuickEditModals.AUDIENCE,
-          nodeIds,
-        });
-      },
-      editSource(nodeIds) {
-        this.trackClickEvent('Edit source');
-        this.openQuickEditModal({
-          modal: QuickEditModals.SOURCE,
-          nodeIds,
-        });
+      quickEditModalFactory(modal) {
+        return () => {
+          this.openQuickEditModal({
+            modal,
+            nodeIds: this.selected,
+          });
+          const trackActionLabel = modal.replace(/_/g, ' ').toLowerCase();
+          this.trackClickEvent(`Edit ${trackActionLabel}`);
+        };
       },
       treeLink(params) {
         return {
@@ -878,4 +909,17 @@
   .fade-transition-leave-active {
     transition-duration: 0.1s
   }
+
+  .divider-wrapper {
+    padding: 8px 12px;
+  }
+  .command-palette-wrapper {
+    min-width: 0;
+    flex-grow: 1;
+    padding-right: 4px;
+  }
+  .no-shrink {
+    flex-shrink: 0;
+  }
+
 </style>
