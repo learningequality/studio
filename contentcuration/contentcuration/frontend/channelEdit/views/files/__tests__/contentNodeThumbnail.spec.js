@@ -103,7 +103,10 @@ describe('thumbnail', () => {
       expect(wrapper.find('[data-test="progress"]').exists()).toBe(true);
     });
     it('hasError should be true if file upload fails', () => {
-      wrapper.vm.$store.commit('file/ADD_FILE', { id: fileUploadId, error: 'ERROR' });
+      wrapper.vm.$store.commit('file/ADD_FILE', {
+        id: fileUploadId,
+        error: 'ERROR',
+      });
       expect(wrapper.vm.hasError).toBe(true);
     });
     it('cancelling upload should revert to the original state', () => {
@@ -144,7 +147,9 @@ describe('thumbnail', () => {
         },
       });
       wrapper.find('[data-test="save"]').trigger('click');
-      expect(wrapper.emitted('encoded')[0][0]).toEqual({ base64: 'new encoding' });
+      expect(wrapper.emitted('encoded')[0][0]).toEqual({
+        base64: 'new encoding',
+      });
       expect(wrapper.vm.cropping).toBe(false);
     });
     it('cancel should keep the original image by default', () => {

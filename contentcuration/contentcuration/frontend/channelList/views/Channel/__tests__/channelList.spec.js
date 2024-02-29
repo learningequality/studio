@@ -50,7 +50,9 @@ describe('ChannelList', () => {
     let wrapper;
 
     beforeEach(() => {
-      wrapper = makeWrapper({ propsData: { listType: ChannelListTypes.VIEW_ONLY } });
+      wrapper = makeWrapper({
+        propsData: { listType: ChannelListTypes.VIEW_ONLY },
+      });
     });
 
     it("shouldn't show the new channel button", () => {
@@ -72,7 +74,10 @@ describe('ChannelList', () => {
           createChannel: createChannelMock,
         },
       };
-      wrapper = makeWrapper({ propsData: { listType: ChannelListTypes.EDITABLE }, actions });
+      wrapper = makeWrapper({
+        propsData: { listType: ChannelListTypes.EDITABLE },
+        actions,
+      });
     });
 
     it('should show the new channel button', () => {

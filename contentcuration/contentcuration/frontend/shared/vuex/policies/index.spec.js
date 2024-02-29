@@ -124,7 +124,9 @@ describe('policies store', () => {
       });
 
       it('should call policy_update endpoint', async () => {
-        const policyAcceptedData = { privacy_policy_2020_12_10: '12/05/2021 09:56' };
+        const policyAcceptedData = {
+          privacy_policy_2020_12_10: '12/05/2021 09:56',
+        };
         await actions.acceptPolicy({ getters, dispatch }, policyAcceptedData);
 
         expect(client.post.mock.calls.length).toBe(1);
@@ -135,7 +137,9 @@ describe('policies store', () => {
       });
 
       it('should call setPolicies with the new data and closePolicy', async () => {
-        const policyAcceptedData = { privacy_policy_2020_12_10: '12/05/2021 09:56' };
+        const policyAcceptedData = {
+          privacy_policy_2020_12_10: '12/05/2021 09:56',
+        };
         await actions.acceptPolicy({ getters, dispatch }, policyAcceptedData);
 
         expect(dispatch.mock.calls.length).toBe(1);

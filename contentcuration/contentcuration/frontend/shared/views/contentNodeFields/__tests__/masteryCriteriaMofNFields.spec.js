@@ -119,7 +119,9 @@ describe('masteryCriteriaMofNFields', () => {
       ).toBe(false);
     });
     it('should flag if m is not a whole number', () => {
-      wrapper.setProps({ value: { mastery_model: 'm_of_n', m: 0.1231, n: 10 } });
+      wrapper.setProps({
+        value: { mastery_model: 'm_of_n', m: 0.1231, n: 10 },
+      });
       formWrapper.vm.validate();
       expect(
         wrapper

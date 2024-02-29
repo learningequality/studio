@@ -119,7 +119,9 @@ describe.skip('detailsTabView', () => {
       });
       it('certain fields should be visible for video nodes', () => {
         localStore.commit('edit_modal/SET_NODE', videoIndex);
-        localStore.commit('edit_modal/UPDATE_NODE', { license: specialPermissions.id });
+        localStore.commit('edit_modal/UPDATE_NODE', {
+          license: specialPermissions.id,
+        });
         expect(wrapper.vm.allResources).toBe(true);
       });
       it('certain fields should be visible for topics', () => {

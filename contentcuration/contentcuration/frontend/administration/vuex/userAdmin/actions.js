@@ -40,7 +40,11 @@ export function updateUser(context, { id, ...data }) {
 }
 
 export function sendEmail(context, { query, subject, message }) {
-  return client.post(window.Urls.send_custom_email(), { query, subject, message });
+  return client.post(window.Urls.send_custom_email(), {
+    query,
+    subject,
+    message,
+  });
 }
 
 export function deleteUser({ commit }, id) {

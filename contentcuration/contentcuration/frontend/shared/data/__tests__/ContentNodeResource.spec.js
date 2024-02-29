@@ -300,7 +300,12 @@ describe('ContentNode methods', () => {
       parent.id = 'abc123';
       await expect(
         ContentNode.resolveTreeInsert(
-          { id: 'abc123', target: 'target', position: 'position', isCreate: false },
+          {
+            id: 'abc123',
+            target: 'target',
+            position: 'position',
+            isCreate: false,
+          },
           jest.fn()
         )
       ).rejects.toThrow('Cannot set node as child of itself');
@@ -312,7 +317,12 @@ describe('ContentNode methods', () => {
         const cb = jest.fn(() => Promise.resolve('results'));
         await expect(
           ContentNode.resolveTreeInsert(
-            { id: 'abc123', target: 'target', position: 'position', isCreate: false },
+            {
+              id: 'abc123',
+              target: 'target',
+              position: 'position',
+              isCreate: false,
+            },
             cb
           )
         ).resolves.toEqual('results');
@@ -348,7 +358,12 @@ describe('ContentNode methods', () => {
         parent.channel_id = null;
         await expect(
           ContentNode.resolveTreeInsert(
-            { id: 'abc123', target: 'target', position: 'position', isCreate: false },
+            {
+              id: 'abc123',
+              target: 'target',
+              position: 'position',
+              isCreate: false,
+            },
             cb
           )
         ).resolves.toEqual('results');
@@ -388,7 +403,12 @@ describe('ContentNode methods', () => {
 
         await expect(
           ContentNode.resolveTreeInsert(
-            { id: 'abc123', target: 'target', position: 'position', isCreate: false },
+            {
+              id: 'abc123',
+              target: 'target',
+              position: 'position',
+              isCreate: false,
+            },
             cb
           )
         ).resolves.toEqual('results');
@@ -427,7 +447,12 @@ describe('ContentNode methods', () => {
           .map((_, i) => ({ id: uuid4(), title: `Sibling ${i}` }));
         await expect(
           ContentNode.resolveTreeInsert(
-            { id: 'abc123', target: 'target', position: 'position', isCreate: false },
+            {
+              id: 'abc123',
+              target: 'target',
+              position: 'position',
+              isCreate: false,
+            },
             cb
           )
         ).rejects.toThrow('New lft value evaluated to null');
@@ -445,7 +470,12 @@ describe('ContentNode methods', () => {
         const cb = jest.fn(() => Promise.resolve('results'));
         await expect(
           ContentNode.resolveTreeInsert(
-            { id: 'abc123', target: 'target', position: 'position', isCreate: true },
+            {
+              id: 'abc123',
+              target: 'target',
+              position: 'position',
+              isCreate: true,
+            },
             cb
           )
         ).resolves.toEqual('results');
@@ -485,7 +515,12 @@ describe('ContentNode methods', () => {
           .map((_, i) => ({ id: uuid4(), title: `Sibling ${i}` }));
         await expect(
           ContentNode.resolveTreeInsert(
-            { id: 'abc123', target: 'target', position: 'position', isCreate: true },
+            {
+              id: 'abc123',
+              target: 'target',
+              position: 'position',
+              isCreate: true,
+            },
             cb
           )
         ).resolves.toEqual('results');
@@ -525,7 +560,12 @@ describe('ContentNode methods', () => {
           .map((_, i) => ({ id: uuid4(), title: `Sibling ${i}` }));
         await expect(
           ContentNode.resolveTreeInsert(
-            { id: 'abc123', target: 'target', position: 'position', isCreate: true },
+            {
+              id: 'abc123',
+              target: 'target',
+              position: 'position',
+              isCreate: true,
+            },
             cb
           )
         ).rejects.toThrow('New lft value evaluated to null');
@@ -557,7 +597,13 @@ describe('ContentNode methods', () => {
       oldObj = { id: uuid4(), title: 'Parent' };
       parent = { id: uuid4(), root_id: uuid4(), title: 'Parent' };
       node = { id: uuid4(), parent: oldObj.id, title: 'Source node' };
-      payload = { id: uuid4(), parent: parent.id, changed: true, lft: 1, title: 'Payload' };
+      payload = {
+        id: uuid4(),
+        parent: parent.id,
+        changed: true,
+        lft: 1,
+        title: 'Payload',
+      };
       change = {
         key: payload.id,
         from_key: null,
@@ -577,7 +623,9 @@ describe('ContentNode methods', () => {
       await expect(ContentNode.tableMove({ node, parent, payload, change })).resolves.toBe(payload);
       expect(table.update).toHaveBeenCalledWith(node.id, payload);
       expect(table.put).not.toBeCalled();
-      expect(table.update).not.toHaveBeenCalledWith(node.parent, { changed: true });
+      expect(table.update).not.toHaveBeenCalledWith(node.parent, {
+        changed: true,
+      });
     });
 
     it('should put the node if not updated', async () => {
@@ -589,7 +637,9 @@ describe('ContentNode methods', () => {
       );
       expect(table.update).toHaveBeenCalledWith(node.id, payload);
       expect(table.put).toHaveBeenCalledWith(newPayload);
-      expect(table.update).not.toHaveBeenCalledWith(node.parent, { changed: true });
+      expect(table.update).not.toHaveBeenCalledWith(node.parent, {
+        changed: true,
+      });
     });
 
     it('should mark the old parent as changed', async () => {
@@ -605,7 +655,9 @@ describe('ContentNode methods', () => {
     it.skip('should add a change record', async () => {
       await expect(ContentNode.tableMove({ node, parent, payload, change })).resolves.toBe(payload);
       await expect(
-        db[CHANGES_TABLE].get({ '[table+key]': [ContentNode.tableName, node.id] })
+        db[CHANGES_TABLE].get({
+          '[table+key]': [ContentNode.tableName, node.id],
+        })
       ).resolves.toMatchObject(change);
     });
   });
@@ -708,7 +760,9 @@ describe('ContentNode methods', () => {
       await expect(ContentNode.getByNodeIdChannelId(node_id, channel_id)).resolves.toMatchObject(
         node
       );
-      expect(table.get).toHaveBeenCalledWith({ '[node_id+channel_id]': [node_id, channel_id] });
+      expect(table.get).toHaveBeenCalledWith({
+        '[node_id+channel_id]': [node_id, channel_id],
+      });
       expect(fetchCollection).not.toBeCalled();
     });
 
@@ -718,7 +772,9 @@ describe('ContentNode methods', () => {
       await expect(ContentNode.getByNodeIdChannelId(node_id, channel_id)).resolves.toMatchObject(
         collection[0]
       );
-      expect(table.get).toHaveBeenCalledWith({ '[node_id+channel_id]': [node_id, channel_id] });
+      expect(table.get).toHaveBeenCalledWith({
+        '[node_id+channel_id]': [node_id, channel_id],
+      });
       expect(fetchCollection).toHaveBeenCalledWith({
         '[node_id+channel_id]__in': [[node_id, channel_id]],
       });
@@ -729,7 +785,9 @@ describe('ContentNode methods', () => {
       node = null;
       collection = [];
       await expect(ContentNode.getByNodeIdChannelId(node_id, channel_id)).resolves.toBeFalsy();
-      expect(table.get).toHaveBeenCalledWith({ '[node_id+channel_id]': [node_id, channel_id] });
+      expect(table.get).toHaveBeenCalledWith({
+        '[node_id+channel_id]': [node_id, channel_id],
+      });
       expect(fetchCollection).toHaveBeenCalledWith({
         '[node_id+channel_id]__in': [[node_id, channel_id]],
       });

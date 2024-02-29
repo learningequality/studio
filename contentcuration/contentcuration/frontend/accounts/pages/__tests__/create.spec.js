@@ -97,7 +97,11 @@ describe('create', () => {
   });
   it('should automatically fill the email if provided in the query param', () => {
     router.push({ name: 'Create', query: { email: 'newtest@test.com' } });
-    const wrapper = mount(Create, { router, stubs: ['PolicyModals'], mocks: connectionStateMocks });
+    const wrapper = mount(Create, {
+      router,
+      stubs: ['PolicyModals'],
+      mocks: connectionStateMocks,
+    });
     expect(wrapper.vm.form.email).toBe('newtest@test.com');
   });
   describe('validation', () => {

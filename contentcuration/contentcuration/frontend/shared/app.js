@@ -144,7 +144,10 @@ if (process.env.NODE_ENV !== 'production') {
     // get another error report with more useful data anyway, so ignore these for now.
     // They are most commonly triggered by a 500 response from an API endpoint call.
     integrations: [
-      new Sentry.Integrations.GlobalHandlers({ onerror: true, onunhandledrejection: false }),
+      new Sentry.Integrations.GlobalHandlers({
+        onerror: true,
+        onunhandledrejection: false,
+      }),
     ],
     beforeSend: function(event) {
       // Ignore errors when CloudFlare-AlwaysOnline is in the user agent as these are errors serving

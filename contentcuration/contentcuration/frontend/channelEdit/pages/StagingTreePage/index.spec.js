@@ -214,8 +214,16 @@ describe('StagingTreePage', () => {
       getters.contentNode.getContentNodeChildren = () => () => {
         return [
           { id: 'id-topic', title: 'Topic', kind: ContentKindsNames.TOPIC },
-          { id: 'id-document', title: 'Document', kind: ContentKindsNames.DOCUMENT },
-          { id: 'id-exercise', title: 'Exercise', kind: ContentKindsNames.EXERCISE },
+          {
+            id: 'id-document',
+            title: 'Document',
+            kind: ContentKindsNames.DOCUMENT,
+          },
+          {
+            id: 'id-exercise',
+            title: 'Exercise',
+            kind: ContentKindsNames.EXERCISE,
+          },
         ];
       };
 

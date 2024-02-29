@@ -88,7 +88,10 @@ export function addChannels(context, { channelSetId, channelIds = [] } = {}) {
 export function removeChannels(context, { channelSetId, channelIds = [] } = {}) {
   const updates = {};
   for (const channelId of channelIds) {
-    context.commit('REMOVE_CHANNEL_FROM_CHANNELSET', { channelSetId, channelId });
+    context.commit('REMOVE_CHANNEL_FROM_CHANNELSET', {
+      channelSetId,
+      channelId,
+    });
     updates[`channels.${channelId}`] = undefined;
   }
   return ChannelSet.update(channelSetId, updates);

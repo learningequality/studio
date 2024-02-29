@@ -37,8 +37,12 @@ function get_metadata_file(data) {
     },
     ...data,
   };
-  const manifestBlob = new Blob([JSON.stringify(manifest, null, 2)], { type: 'application/json' });
-  const manifestFile = new global.File([manifestBlob], 'h5p.json', { type: 'application/json' });
+  const manifestBlob = new Blob([JSON.stringify(manifest, null, 2)], {
+    type: 'application/json',
+  });
+  const manifestFile = new global.File([manifestBlob], 'h5p.json', {
+    type: 'application/json',
+  });
   return manifestFile;
 }
 
@@ -165,7 +169,10 @@ describe('file store', () => {
         });
       });
       it('getH5PMetadata should not extract und language', async () => {
-        const manifestFile = get_metadata_file({ title: 'Test file', language: 'und' });
+        const manifestFile = get_metadata_file({
+          title: 'Test file',
+          language: 'und',
+        });
         const zip = new JSZip();
         zip.file('h5p.json', manifestFile);
         await zip.generateAsync({ type: 'blob' }).then(async function(h5pBlob) {
@@ -183,7 +190,10 @@ describe('file store', () => {
         ['CC BY-NC-ND', 6],
         ['CC0 1.0', 8],
       ])('getH5PMetadata should parse CC license %s', async (licenseName, licenseId) => {
-        const manifestFile = get_metadata_file({ title: 'Test file', license: licenseName });
+        const manifestFile = get_metadata_file({
+          title: 'Test file',
+          license: licenseName,
+        });
         const zip = new JSZip();
         zip.file('h5p.json', manifestFile);
         await zip.generateAsync({ type: 'blob' }).then(async function(h5pBlob) {
@@ -199,7 +209,10 @@ describe('file store', () => {
         [{ role: 'Licensee', name: 'Testing' }, 'copyright_holder'],
         [{ role: 'Originator', name: 'Testing' }, 'provider'],
       ])('getH5PMetadata should parse CC license %s', async (authorObj, field) => {
-        const manifestFile = get_metadata_file({ title: 'Test file', authors: [authorObj] });
+        const manifestFile = get_metadata_file({
+          title: 'Test file',
+          authors: [authorObj],
+        });
         const zip = new JSZip();
         zip.file('h5p.json', manifestFile);
         await zip.generateAsync({ type: 'blob' }).then(async function(h5pBlob) {

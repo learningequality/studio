@@ -60,7 +60,9 @@ export async function loadPublicContentNode(context, { id, nodeId, rootId, paren
 
 export function loadContentNodeByNodeId(context, nodeId) {
   const channelId = context.rootState.currentChannel.currentChannelId;
-  return loadContentNodes(context, { '[node_id+channel_id]__in': [[nodeId, channelId]] })
+  return loadContentNodes(context, {
+    '[node_id+channel_id]__in': [[nodeId, channelId]],
+  })
     .then(contentNodes => contentNodes[0])
     .then(contentNode => {
       context.commit('ADD_CONTENTNODE', contentNode);
@@ -129,7 +131,10 @@ export function loadRelatedResources(context, nodeId) {
  *                                from target's content node previous steps.
  */
 export function removePreviousStepFromNode(context, { targetId, previousStepId }) {
-  context.commit('REMOVE_PREVIOUS_STEP', { target_node: targetId, prerequisite: previousStepId });
+  context.commit('REMOVE_PREVIOUS_STEP', {
+    target_node: targetId,
+    prerequisite: previousStepId,
+  });
   return ContentNode.removePrerequisite(targetId, previousStepId);
 }
 
@@ -155,7 +160,10 @@ export function removeNextStepFromNode(context, { targetId, nextStepId }) {
  *                                to target's content node previous steps.
  */
 export function addPreviousStepToNode(context, { targetId, previousStepId }) {
-  context.commit('ADD_PREVIOUS_STEP', { target_node: targetId, prerequisite: previousStepId });
+  context.commit('ADD_PREVIOUS_STEP', {
+    target_node: targetId,
+    prerequisite: previousStepId,
+  });
   return ContentNode.addPrerequisite(targetId, previousStepId);
 }
 
@@ -190,7 +198,9 @@ export function createContentNode(context, { parent, kind, ...payload }) {
     // content_defaults for historical reason has stored the license as a string constant,
     // but the serializers and frontend now use the license ID. So make sure that we pass
     // a license ID when we create the content node.
-    contentDefaults.license = findLicense(contentDefaults.license, { id: null }).id;
+    contentDefaults.license = findLicense(contentDefaults.license, {
+      id: null,
+    }).id;
   }
   const contentNodeData = {
     title: '',
@@ -526,7 +536,12 @@ export function copyContentNodes(
       if (sourceNodes) {
         sourceNode = sourceNodes.find(n => n.id === id);
       }
-      return context.dispatch('copyContentNode', { id, target, position, sourceNode });
+      return context.dispatch('copyContentNode', {
+        id,
+        target,
+        position,
+        sourceNode,
+      });
     })
   );
 }

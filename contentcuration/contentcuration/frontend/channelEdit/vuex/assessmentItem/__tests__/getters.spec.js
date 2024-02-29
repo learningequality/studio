@@ -147,7 +147,10 @@ describe('assessmentItem getters', () => {
 
     it("doesn't include invalid nodes errors that are new if `ignoreDelayed` set to true", () => {
       expect(
-        getAssessmentItemsErrors(state)({ contentNodeId: 'content-node-id-2', ignoreDelayed: true })
+        getAssessmentItemsErrors(state)({
+          contentNodeId: 'content-node-id-2',
+          ignoreDelayed: true,
+        })
       ).toEqual({
         'assessment-id-2': [
           ValidationErrors.QUESTION_REQUIRED,
@@ -160,7 +163,11 @@ describe('assessmentItem getters', () => {
 
   describe('getInvalidAssessmentItemsCount', () => {
     it('returns a correct number of invalid assessment items of a content node', () => {
-      expect(getInvalidAssessmentItemsCount(state)({ contentNodeId: 'content-node-id-2' })).toBe(2);
+      expect(
+        getInvalidAssessmentItemsCount(state)({
+          contentNodeId: 'content-node-id-2',
+        })
+      ).toBe(2);
     });
 
     it("doesn't count invalid nodes that are new if `ignoreDelayed` set to true", () => {
@@ -175,11 +182,19 @@ describe('assessmentItem getters', () => {
 
   describe('getAssessmentItemsAreValid', () => {
     it('returns true if all assessment items of a content node are valid', () => {
-      expect(getAssessmentItemsAreValid(state)({ contentNodeId: 'content-node-id-1' })).toBe(true);
+      expect(
+        getAssessmentItemsAreValid(state)({
+          contentNodeId: 'content-node-id-1',
+        })
+      ).toBe(true);
     });
 
     it('returns false if all assessment items of a content node are not valid', () => {
-      expect(getAssessmentItemsAreValid(state)({ contentNodeId: 'content-node-id-2' })).toBe(false);
+      expect(
+        getAssessmentItemsAreValid(state)({
+          contentNodeId: 'content-node-id-2',
+        })
+      ).toBe(false);
     });
 
     it('returns true if all assessment items are not valid and marked as new if `ignoreDelayed` set to true', () => {

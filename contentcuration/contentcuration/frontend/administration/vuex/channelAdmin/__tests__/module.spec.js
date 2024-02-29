@@ -60,7 +60,10 @@ describe('channel admin actions', () => {
       });
     });
     it('REMOVE_CHANNEL should remove channel from pageData', () => {
-      store.commit('channelAdmin/SET_PAGE_DATA', { results: testList, count: 1 });
+      store.commit('channelAdmin/SET_PAGE_DATA', {
+        results: testList,
+        count: 1,
+      });
       store.commit('channelAdmin/REMOVE_CHANNEL', testChannel.id);
 
       expect(store.state.channelAdmin.pageData.results).toEqual([testChannel2.id]);

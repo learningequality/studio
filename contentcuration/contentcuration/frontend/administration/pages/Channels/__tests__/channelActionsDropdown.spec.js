@@ -53,7 +53,10 @@ describe('channelActionsDropdown', () => {
     });
     it('confirm restore channel should call updateChannel with deleted = false', () => {
       wrapper.find('[data-test="confirm-restore"]').vm.$emit('confirm');
-      expect(updateChannel).toHaveBeenCalledWith({ id: channelId, deleted: false });
+      expect(updateChannel).toHaveBeenCalledWith({
+        id: channelId,
+        deleted: false,
+      });
     });
     it('delete channel should open delete confirmation', () => {
       wrapper.find('[data-test="delete"]').trigger('click');
@@ -88,7 +91,10 @@ describe('channelActionsDropdown', () => {
     });
     it('confirm make public should call updateChannel with isPublic = true', () => {
       wrapper.find('[data-test="confirm-public"]').vm.$emit('confirm');
-      expect(updateChannel).toHaveBeenCalledWith({ id: channelId, isPublic: true });
+      expect(updateChannel).toHaveBeenCalledWith({
+        id: channelId,
+        isPublic: true,
+      });
     });
     it('soft delete button should open soft delete confirmation', () => {
       wrapper.find('[data-test="softdelete"]').trigger('click');
@@ -96,7 +102,10 @@ describe('channelActionsDropdown', () => {
     });
     it('confirm soft delete button should call updateChannel with deleted = true', () => {
       wrapper.find('[data-test="confirm-softdelete"]').vm.$emit('confirm');
-      expect(updateChannel).toHaveBeenCalledWith({ id: channelId, deleted: true });
+      expect(updateChannel).toHaveBeenCalledWith({
+        id: channelId,
+        deleted: true,
+      });
     });
   });
   describe('public channel actions', () => {
@@ -109,7 +118,10 @@ describe('channelActionsDropdown', () => {
     });
     it('confirm make private should call updateChannel with isPublic = false', () => {
       wrapper.find('[data-test="confirm-private"]').vm.$emit('confirm');
-      expect(updateChannel).toHaveBeenCalledWith({ id: channelId, isPublic: false });
+      expect(updateChannel).toHaveBeenCalledWith({
+        id: channelId,
+        isPublic: false,
+      });
     });
   });
 });

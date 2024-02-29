@@ -5,7 +5,11 @@ import { factory } from '../../../store';
 import Uploader from 'shared/views/files/Uploader';
 
 const testNodeId = 'testnode';
-const testFile = { id: 'file-1', language: { id: 'en' }, preset: { id: 'video_subtitle' } };
+const testFile = {
+  id: 'file-1',
+  language: { id: 'en' },
+  preset: { id: 'video_subtitle' },
+};
 
 function makeWrapper() {
   const store = factory();

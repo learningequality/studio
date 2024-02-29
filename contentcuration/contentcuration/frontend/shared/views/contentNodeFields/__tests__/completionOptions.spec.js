@@ -32,7 +32,11 @@ describe('CompletionOptions', () => {
           const wrapper = mount(CompletionOptions, {
             propsData: {
               kind: 'audio',
-              value: { model: 'time', threshold: 600, suggested_duration_type: 'time' },
+              value: {
+                model: 'time',
+                threshold: 600,
+                suggested_duration_type: 'time',
+              },
             },
           });
           expect(wrapper.vm.completionDropdown).toBe('completeDuration');
@@ -197,7 +201,11 @@ describe('CompletionOptions', () => {
           const wrapper = mount(CompletionOptions, {
             propsData: {
               kind: 'exercise',
-              value: { model: 'mastery', threshold: { m: 3, n: 5 }, modality: 'QUIZ' },
+              value: {
+                model: 'mastery',
+                threshold: { m: 3, n: 5 },
+                modality: 'QUIZ',
+              },
             },
           });
           wrapper.find({ ref: 'completion' }).vm.$emit('input', 'practiceQuiz');
@@ -245,7 +253,11 @@ describe('CompletionOptions', () => {
         const wrapper = mount(CompletionOptions, {
           propsData: {
             kind: 'exercise',
-            value: { model: 'mastery', threshold: { m: 3, n: 5 }, suggested_duration: null },
+            value: {
+              model: 'mastery',
+              threshold: { m: 3, n: 5 },
+              suggested_duration: null,
+            },
           },
         });
         const dropdown = wrapper.find({ ref: 'duration' });
@@ -503,7 +515,11 @@ describe('CompletionOptions', () => {
           const wrapper = mount(CompletionOptions, {
             propsData: {
               kind: 'exercise',
-              value: { model: 'mastery', threshold: { m: 3, n: 5 }, modality: 'QUIZ' },
+              value: {
+                model: 'mastery',
+                threshold: { m: 3, n: 5 },
+                modality: 'QUIZ',
+              },
             },
           });
           wrapper.find({ ref: 'duration' }).vm.$emit('input', 'shortActivity');
@@ -514,7 +530,11 @@ describe('CompletionOptions', () => {
           const wrapper = mount(CompletionOptions, {
             propsData: {
               kind: 'exercise',
-              value: { model: 'mastery', threshold: { m: 3, n: 5 }, modality: 'QUIZ' },
+              value: {
+                model: 'mastery',
+                threshold: { m: 3, n: 5 },
+                modality: 'QUIZ',
+              },
             },
           });
           wrapper.find({ ref: 'duration' }).vm.$emit('input', 'longActivity');
@@ -525,7 +545,11 @@ describe('CompletionOptions', () => {
           const wrapper = mount(CompletionOptions, {
             propsData: {
               kind: 'exercise',
-              value: { model: 'mastery', threshold: { m: 3, n: 5 }, modality: 'QUIZ' },
+              value: {
+                model: 'mastery',
+                threshold: { m: 3, n: 5 },
+                modality: 'QUIZ',
+              },
             },
           });
           wrapper.find({ ref: 'duration' }).vm.$emit('input', 'exactTime');

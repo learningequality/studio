@@ -186,14 +186,18 @@ export function addClipboardNodeFromListener(context, obj) {
 
   // Load channel and create color if not already present on the clipboard
   if (!context.getters.channelIds.includes(obj.source_channel_id)) {
-    promise = context.dispatch('loadChannels', { id__in: [obj.source_channel_id] });
+    promise = context.dispatch('loadChannels', {
+      id__in: [obj.source_channel_id],
+    });
   }
 
   return promise
     .then(() =>
       context.dispatch(
         'contentNode/loadContentNodes',
-        { '[node_id+channel_id]__in': [[obj.source_node_id, obj.source_channel_id]] },
+        {
+          '[node_id+channel_id]__in': [[obj.source_node_id, obj.source_channel_id]],
+        },
         { root }
       )
     )

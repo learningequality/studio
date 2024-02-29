@@ -175,7 +175,13 @@ class ReturnedChanges extends ChangeDispatcher {
       // because its actually the "source" node.
       return resource.resolveTreeInsert(
         // copying takes the ID of the node to copy, so we use `from_key`.
-        { id: from_key, target, position, isCreate: true, sourceNode: sourceNode },
+        {
+          id: from_key,
+          target,
+          position,
+          isCreate: true,
+          sourceNode: sourceNode,
+        },
         data => {
           return transaction(change, () => {
             // Update the ID on the payload to match the received change, since isCreate=true

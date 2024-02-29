@@ -103,7 +103,9 @@ export const actions = {
    */
   acceptPolicy(context, policyAcceptedData) {
     return client
-      .post(window.Urls.policy_update(), { policy: JSON.stringify(policyAcceptedData) })
+      .post(window.Urls.policy_update(), {
+        policy: JSON.stringify(policyAcceptedData),
+      })
       .then(() => context.dispatch('setPolicies', policyAcceptedData));
   },
 };

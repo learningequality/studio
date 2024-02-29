@@ -53,7 +53,10 @@ export function getAssessmentItemsErrors(state) {
 export function getInvalidAssessmentItemsCount(state) {
   return function({ contentNodeId, ignoreDelayed = false }) {
     let count = 0;
-    const assessmentItemsErrors = getAssessmentItemsErrors(state)({ contentNodeId, ignoreDelayed });
+    const assessmentItemsErrors = getAssessmentItemsErrors(state)({
+      contentNodeId,
+      ignoreDelayed,
+    });
 
     for (const assessmentItemId in assessmentItemsErrors) {
       if (assessmentItemsErrors[assessmentItemId].length) {
@@ -71,6 +74,11 @@ export function getInvalidAssessmentItemsCount(state) {
  */
 export function getAssessmentItemsAreValid(state) {
   return function({ contentNodeId, ignoreDelayed = false }) {
-    return getInvalidAssessmentItemsCount(state)({ contentNodeId, ignoreDelayed }) === 0;
+    return (
+      getInvalidAssessmentItemsCount(state)({
+        contentNodeId,
+        ignoreDelayed,
+      }) === 0
+    );
   };
 }
