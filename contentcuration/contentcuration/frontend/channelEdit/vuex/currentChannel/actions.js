@@ -4,7 +4,9 @@ import client from 'shared/client';
 
 export function loadChannel(context, { staging = false } = {}) {
   return context
-    .dispatch('channel/loadChannel', context.state.currentChannelId, { root: true })
+    .dispatch('channel/loadChannel', context.state.currentChannelId, {
+      root: true,
+    })
     .then(channel => {
       if (channel) {
         Vue.$analytics.trackCurrentChannel(channel, staging);
@@ -26,12 +28,16 @@ export function loadCurrentChannelStagingDiff(context) {
     .catch(error => {
       // Diff is being generated, so try again in 5 seconds
       if (error.response && error.response.status === 302) {
-        context.commit('SAVE_CURRENT_CHANNEL_STAGING_DIFF', { _status: 'loading' });
+        context.commit('SAVE_CURRENT_CHANNEL_STAGING_DIFF', {
+          _status: 'loading',
+        });
         setTimeout(() => {
           loadCurrentChannelStagingDiff(context);
         }, 5000);
       } else {
-        context.commit('SAVE_CURRENT_CHANNEL_STAGING_DIFF', { _status: 'error' });
+        context.commit('SAVE_CURRENT_CHANNEL_STAGING_DIFF', {
+          _status: 'error',
+        });
       }
     });
 }
@@ -40,7 +46,9 @@ export function reloadCurrentChannelStagingDiff(context) {
   return client
     .post(window.Urls.generate_node_diff(context.getters.stagingId, context.getters.rootId))
     .then(() => {
-      context.commit('SAVE_CURRENT_CHANNEL_STAGING_DIFF', { _status: 'loading' });
+      context.commit('SAVE_CURRENT_CHANNEL_STAGING_DIFF', {
+        _status: 'loading',
+      });
       setTimeout(() => {
         loadCurrentChannelStagingDiff(context);
       }, 5000);

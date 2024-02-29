@@ -54,7 +54,9 @@ export function UPDATE_CHANNEL(state, { id, content_defaults = {}, ...payload } 
 
 export function UPDATE_CHANNEL_FROM_INDEXEDDB(state, { id, ...mods }) {
   if (id && state.channelsMap[id]) {
-    Vue.set(state.channelsMap, id, { ...applyMods(state.channelsMap[id], mods) });
+    Vue.set(state.channelsMap, id, {
+      ...applyMods(state.channelsMap[id], mods),
+    });
   }
 }
 

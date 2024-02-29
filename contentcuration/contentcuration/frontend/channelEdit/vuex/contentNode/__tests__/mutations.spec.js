@@ -12,7 +12,10 @@ describe('contentNode mutations', () => {
         { target_node: 'id-elementary-math', prerequisite: 'id-reading' },
         { target_node: 'id-physics', prerequisite: 'id-integrals' },
         { target_node: 'id-astronomy', prerequisite: 'id-physics' },
-        { target_node: 'id-spaceships-contruction', prerequisite: 'id-astronomy' },
+        {
+          target_node: 'id-spaceships-contruction',
+          prerequisite: 'id-astronomy',
+        },
         { target_node: 'id-chemistry', prerequisite: 'id-integrals' },
         { target_node: 'id-lab', prerequisite: 'id-chemistry' },
       ];
@@ -191,7 +194,10 @@ describe('contentNode mutations', () => {
   describe('UPDATE_CONTENTNODE_FROM_INDEXEDDB', () => {
     it('should ensure that nested object properties are reactively set', async () => {
       const store = factory();
-      store.commit('contentNode/ADD_CONTENTNODE', { id: 'test', extra_fields: null });
+      store.commit('contentNode/ADD_CONTENTNODE', {
+        id: 'test',
+        extra_fields: null,
+      });
       await Vue.nextTick();
       const spy = jest.fn();
       store.watch(state => {

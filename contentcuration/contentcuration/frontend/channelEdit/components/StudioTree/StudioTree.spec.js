@@ -403,7 +403,11 @@ describe('StudioTree', () => {
     it('emits a click event when a subtopic of a root topic is clicked', async () => {
       const mockOnNodeClick = jest.fn();
       const wrapper = initWrapper({
-        propsData: { nodeId: 'root-topic', root: true, onNodeClick: mockOnNodeClick },
+        propsData: {
+          nodeId: 'root-topic',
+          root: true,
+          onNodeClick: mockOnNodeClick,
+        },
         getters,
       });
       await nextTickWaitFor(wrapper, () => Boolean(getItems(wrapper).length));

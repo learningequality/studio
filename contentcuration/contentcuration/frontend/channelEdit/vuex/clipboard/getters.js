@@ -87,7 +87,11 @@ export function getClipboardChildren(state, getters, rootState, rootGetters) {
     const rootId = rootGetters['clipboardRootId'];
 
     if (id === rootId) {
-      return getters.channelIds.map(id => ({ id, channel_id: id, parent: rootId }));
+      return getters.channelIds.map(id => ({
+        id,
+        channel_id: id,
+        parent: rootId,
+      }));
     }
 
     // This is a channel level node, so return the nodes from that channel

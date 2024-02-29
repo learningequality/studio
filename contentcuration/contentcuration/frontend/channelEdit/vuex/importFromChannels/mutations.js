@@ -17,7 +17,9 @@ export function UPDATE_SAVEDSEARCH(state, search) {
 
 export function UPDATE_SAVEDSEARCH_FROM_INDEXEDDB(state, { id, ...updates }) {
   if (id && state.savedSearches[id]) {
-    Vue.set(state.savedSearches, id, { ...applyMods(state.savedSearches[id], updates) });
+    Vue.set(state.savedSearches, id, {
+      ...applyMods(state.savedSearches[id], updates),
+    });
   }
 }
 
