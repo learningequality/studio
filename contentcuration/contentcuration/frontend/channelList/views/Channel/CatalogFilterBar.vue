@@ -29,13 +29,13 @@
   import { catalogFilterMixin } from './mixins';
   import { constantsTranslationMixin } from 'shared/mixins';
 
-  /*
-    Returns the expected format for filters
-    {
-      text: string to display for filter
-      onclose: action to do if filter is removed
-    }
-  */
+  /**
+   * Returns the expected format for filters
+   * {
+   *   text: string to display for filter
+   *   onclose: action to do if filter is removed
+   * }
+   */
   function createFilter(value, text, onclose) {
     return value ? { text, onclose } : false;
   }

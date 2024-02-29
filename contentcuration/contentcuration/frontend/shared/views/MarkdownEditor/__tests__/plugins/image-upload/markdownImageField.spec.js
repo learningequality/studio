@@ -16,16 +16,15 @@ describe('MarkdownImageField custom element', () => {
     registerMarkdownImageField();
   });
 
-  test('renders some image markdown as an `img` element', async done => {
+  test('renders some image markdown as an `img` element', async () => {
     await window.customElements.whenDefined('markdown-image-field');
     const innerImgEl = imageEl.shadowRoot.querySelector('img');
     expect(innerImgEl.getAttribute('src')).toBe('/content/storage/c/h/checksum.jpg');
 
     expect(innerImgEl.getAttribute('width')).toBe('100');
-    done();
   });
 
-  it('can update its markdown upon resizing', async done => {
+  it('can update its markdown upon resizing', async () => {
     await window.customElements.whenDefined('markdown-image-field');
     const imageVueComponent = imageEl.getVueInstance();
     imageVueComponent.image.width = 5000000;
@@ -39,7 +38,5 @@ describe('MarkdownImageField custom element', () => {
 
     expect(imageEl.innerHTML).toBe(expectedMd);
     expect(imageVueComponent.markdown).toBe(expectedMd);
-
-    done();
   });
 });

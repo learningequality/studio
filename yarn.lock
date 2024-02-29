@@ -43,7 +43,7 @@
   resolved "https://registry.yarnpkg.com/@babel/compat-data/-/compat-data-7.26.5.tgz#df93ac37f4417854130e21d72c66ff3d4b897fc7"
   integrity sha512-XvcZi1KWf88RVbF9wn8MN6tYFloU5qX8KjuF3E1PVBmJ9eypXfs4GRiJwLuTZL0iSnJUKn1BFPa5BPZZJyFzPg==
 
-"@babel/core@^7.11.6", "@babel/core@^7.12.3", "@babel/core@^7.23.6", "@babel/core@^7.23.9", "@babel/core@^7.24.4":
+"@babel/core@^7.11.6", "@babel/core@^7.12.3", "@babel/core@^7.23.7", "@babel/core@^7.23.9", "@babel/core@^7.24.4":
   version "7.26.0"
   resolved "https://registry.yarnpkg.com/@babel/core/-/core-7.26.0.tgz#d78b6023cc8f3114ccf049eb219613f74a747b40"
   integrity sha512-i1SLeK+DzNnQ3LL/CswPCa/E5u4lh1k6IAEphON8F+cXt0t9euTshDru0q7/IqMa1PMPz5RnHuHscF8/ZJsStg==
@@ -726,7 +726,7 @@
   dependencies:
     "@babel/helper-plugin-utils" "^7.25.9"
 
-"@babel/plugin-transform-runtime@^7.23.6":
+"@babel/plugin-transform-runtime@^7.23.7":
   version "7.25.9"
   resolved "https://registry.yarnpkg.com/@babel/plugin-transform-runtime/-/plugin-transform-runtime-7.25.9.tgz#62723ea3f5b31ffbe676da9d6dae17138ae580ea"
   integrity sha512-nZp7GlEl+yULJrClz0SwHPqir3lc0zsPrDHQUcxGspSL7AKrexNSEfTbfqnDNJUO13bgKyfuOLMF8Xqtu8j3YQ==
@@ -805,7 +805,7 @@
     "@babel/helper-create-regexp-features-plugin" "^7.25.9"
     "@babel/helper-plugin-utils" "^7.25.9"
 
-"@babel/preset-env@^7.11.0", "@babel/preset-env@^7.23.6":
+"@babel/preset-env@^7.11.0", "@babel/preset-env@^7.23.8":
   version "7.26.0"
   resolved "https://registry.yarnpkg.com/@babel/preset-env/-/preset-env-7.26.0.tgz#30e5c6bc1bcc54865bff0c5a30f6d4ccdc7fa8b1"
   integrity sha512-H84Fxq0CQJNdPFT2DrfnylZ3cf5K43rGfWK4LJGPpjKHiZlk0/RzwEus3PDDZZg+/Er7lCA03MVacueUuXdzfw==
@@ -1304,7 +1304,7 @@
   resolved "https://registry.yarnpkg.com/@jridgewell/sourcemap-codec/-/sourcemap-codec-1.5.0.tgz#3188bcb273a414b0d215fd22a58540b989b9409a"
   integrity sha512-gv3ZRaISU3fjPAgNsriBRqGWQL6quFx04YMPW/zD8XMLsU32mhCCbfbO6KZFLjvYpCZ8zyDEgqsgf+PwPaM7GQ==
 
-"@jridgewell/trace-mapping@^0.3.12", "@jridgewell/trace-mapping@^0.3.18", "@jridgewell/trace-mapping@^0.3.24", "@jridgewell/trace-mapping@^0.3.25":
+"@jridgewell/trace-mapping@^0.3.12", "@jridgewell/trace-mapping@^0.3.18", "@jridgewell/trace-mapping@^0.3.21", "@jridgewell/trace-mapping@^0.3.24", "@jridgewell/trace-mapping@^0.3.25":
   version "0.3.25"
   resolved "https://registry.yarnpkg.com/@jridgewell/trace-mapping/-/trace-mapping-0.3.25.tgz#15f190e98895f3fc23276ee14bc76b675c2e50f0"
   integrity sha512-vNk6aEwybGtawWmy/PzwnGDOjCkLWSD2wqvjGGAgOAwCGWySYXfYoxt00IJkTF+8Lb57DwOb3Aa0o9CApepiYQ==
@@ -2957,10 +2957,10 @@ broadcast-channel@^5.1.0:
     p-queue "6.6.2"
     unload "2.4.1"
 
-browserslist-config-kolibri@0.16.0-dev.7:
-  version "0.16.0-dev.7"
-  resolved "https://registry.yarnpkg.com/browserslist-config-kolibri/-/browserslist-config-kolibri-0.16.0-dev.7.tgz#15d2c8d76378b85642ae38f32b079ea5468367e2"
-  integrity sha512-QT0kap3ueOSC/wqSpxbjRDCBYdnsSPehe8DRj1hRGGmWyPO7RGp8hfDLKprXxSUw6ZtIm63NhSvBrTNQv/8+Jw==
+browserslist-config-kolibri@0.16.1-dev.0:
+  version "0.16.1-dev.0"
+  resolved "https://registry.yarnpkg.com/browserslist-config-kolibri/-/browserslist-config-kolibri-0.16.1-dev.0.tgz#e6737d65f2a32d7c83f5e8fc61617ecb04cf8c37"
+  integrity sha512-2Hn4Lts5uPjFIelgy98V0TE2psdIOJI/6+QdViooYQLVeTGGcgMm4UNRagndNdckLSItybLsSLASq7Gmwp2weQ==
 
 browserslist@^4.0.0, browserslist@^4.21.10, browserslist@^4.23.0, browserslist@^4.23.3, browserslist@^4.24.0, browserslist@^4.24.3:
   version "4.24.4"
@@ -3637,17 +3637,17 @@ css-loader@6.8.1:
     postcss-value-parser "^4.2.0"
     semver "^7.3.8"
 
-css-minimizer-webpack-plugin@5.0.1:
-  version "5.0.1"
-  resolved "https://registry.yarnpkg.com/css-minimizer-webpack-plugin/-/css-minimizer-webpack-plugin-5.0.1.tgz#33effe662edb1a0bf08ad633c32fa75d0f7ec565"
-  integrity sha512-3caImjKFQkS+ws1TGcFn0V1HyDJFq1Euy589JlD6/3rV2kj+w7r5G9WDMgSHvpvXHNZ2calVypZWuEDQd9wfLg==
+css-minimizer-webpack-plugin@6.0.0:
+  version "6.0.0"
+  resolved "https://registry.yarnpkg.com/css-minimizer-webpack-plugin/-/css-minimizer-webpack-plugin-6.0.0.tgz#eb79947af785467739375faf7fcb8c2dbf4f06dc"
+  integrity sha512-BLpR9CCDkKvhO3i0oZQgad6v9pCxUuhSc5RT6iUEy9M8hBXi4TJb5vqF2GQ2deqYHmRi3O6IR9hgAZQWg0EBwA==
   dependencies:
-    "@jridgewell/trace-mapping" "^0.3.18"
-    cssnano "^6.0.1"
-    jest-worker "^29.4.3"
-    postcss "^8.4.24"
-    schema-utils "^4.0.1"
-    serialize-javascript "^6.0.1"
+    "@jridgewell/trace-mapping" "^0.3.21"
+    cssnano "^6.0.3"
+    jest-worker "^29.7.0"
+    postcss "^8.4.33"
+    schema-utils "^4.2.0"
+    serialize-javascript "^6.0.2"
 
 css-select@^5.1.0:
   version "5.1.0"
@@ -3742,7 +3742,7 @@ cssnano-utils@^4.0.2:
   resolved "https://registry.yarnpkg.com/cssnano-utils/-/cssnano-utils-4.0.2.tgz#56f61c126cd0f11f2eef1596239d730d9fceff3c"
   integrity sha512-ZR1jHg+wZ8o4c3zqf1SIUSTIvm/9mU343FMR6Obe/unskbvpGhZOo1J6d/r8D1pzkRQYuwbcH3hToOuoA2G7oQ==
 
-cssnano@^6.0.1:
+cssnano@^6.0.3:
   version "6.1.2"
   resolved "https://registry.yarnpkg.com/cssnano/-/cssnano-6.1.2.tgz#4bd19e505bd37ee7cf0dc902d3d869f6d79c66b8"
   integrity sha512-rYk5UeX7VAM/u0lNqewCdasdtPK81CgX8wJFLEIXHbV2oldWRgJAsZrdhRXkV1NJzA2g850KiFm9mMU2HxNxMA==
@@ -4522,10 +4522,10 @@ eslint-plugin-jest@^23.3.0:
   dependencies:
     "@typescript-eslint/experimental-utils" "^2.5.0"
 
-eslint-plugin-kolibri@0.16.0-dev.7:
-  version "0.16.0-dev.7"
-  resolved "https://registry.yarnpkg.com/eslint-plugin-kolibri/-/eslint-plugin-kolibri-0.16.0-dev.7.tgz#a55d3c02392f2843532e4dbe757cfa6c0cc096b1"
-  integrity sha512-u2PTDWLt1pjDisDm+BVFYJ8ffWRYVffvEIyMSjDz9DCYkiFD0RNen3lGC3dSYWMfh/voVD9AxtGwIqMTuupd3w==
+eslint-plugin-kolibri@0.16.1-dev.0:
+  version "0.16.1-dev.0"
+  resolved "https://registry.yarnpkg.com/eslint-plugin-kolibri/-/eslint-plugin-kolibri-0.16.1-dev.0.tgz#5178d06624a70d06c544b413dc58db3cb52ba794"
+  integrity sha512-lvv/FcT4Z3ZuHFyQePzgfkSmwRT0R+VtRxBUrden84n+7Vsc9M08/3aQbZrv5XKavWz68eEsfn5BysIQa+nxmw==
   dependencies:
     requireindex "^1.1.0"
 
@@ -5287,7 +5287,7 @@ glob-to-regexp@^0.4.1:
   resolved "https://registry.yarnpkg.com/glob-to-regexp/-/glob-to-regexp-0.4.1.tgz#c75297087c851b9a578bd217dd59a92f59fe546e"
   integrity sha512-lkX1HJXwyMcprw/5YUZc2s7DrpAiHB21/V+E1rHUrVNokkvB6bqMzT0VfV6/86ZNabt1k14YOIaT7nDvOX3Iiw==
 
-glob@^10.3.10, glob@^10.3.3:
+glob@^10.3.3:
   version "10.4.5"
   resolved "https://registry.yarnpkg.com/glob/-/glob-10.4.5.tgz#f4d9f0b90ffdbab09c9d77f5f29b4262517b0956"
   integrity sha512-7Bv8RF0k6xjo7d4A/PxYLbUCfb6c+Vpd2/mB2yRDlew7Jb5hEXiCD9ibfO7wpk8i4sevK6DFny9h7EYbM3/sHg==
@@ -6709,7 +6709,7 @@ jest-worker@^27.4.5:
     merge-stream "^2.0.0"
     supports-color "^8.0.0"
 
-jest-worker@^29.4.3, jest-worker@^29.7.0:
+jest-worker@^29.7.0:
   version "29.7.0"
   resolved "https://registry.yarnpkg.com/jest-worker/-/jest-worker-29.7.0.tgz#acad073acbbaeb7262bd5389e1bcf43e10058d4a"
   integrity sha512-eIz2msL/EzL9UFTFFx7jBTkeZfku0yUAyZZZmJ93H2TYEiroIx2PQjEXcwYtYl8zXCxb+PAmA2hLIt/6ZEkPHw==
@@ -7024,15 +7024,15 @@ kolibri-design-system@^5.0.0-rc10:
     vue2-teleport "1.1.4"
     xstate "4.38.3"
 
-kolibri-tools@0.16.0-dev.7:
-  version "0.16.0-dev.7"
-  resolved "https://registry.yarnpkg.com/kolibri-tools/-/kolibri-tools-0.16.0-dev.7.tgz#e6c567f250391913c318b64bbc51566de61e2f8b"
-  integrity sha512-90RTlRGjK2VUvPvJM1KRzEIW0XCHatBmtSoDEiun2AoMw/u50BC5eX6gICtTAaAIIc2ULEJK3p4kZiBV29Fyng==
+kolibri-tools@0.16.1-dev.0:
+  version "0.16.1-dev.0"
+  resolved "https://registry.yarnpkg.com/kolibri-tools/-/kolibri-tools-0.16.1-dev.0.tgz#55f1913f3e8371c806d848aa9cfede8df1a40671"
+  integrity sha512-yEA0RCkHiJ+Q1BvrSYfu4gC6Td9DcvWXQd+oPrYhhYuVfNr0XCP+ilYEjIZZ/dNGOyO2LjDuIKjNcAQFtujThQ==
   dependencies:
-    "@babel/core" "^7.23.6"
+    "@babel/core" "^7.23.7"
     "@babel/plugin-syntax-import-assertions" "^7.22.5"
-    "@babel/plugin-transform-runtime" "^7.23.6"
-    "@babel/preset-env" "^7.23.6"
+    "@babel/plugin-transform-runtime" "^7.23.7"
+    "@babel/preset-env" "^7.23.8"
     "@testing-library/jest-dom" "^6.1.6"
     "@vue/test-utils" "^1.3.6"
     ast-traverse "^0.1.1"
@@ -7040,7 +7040,7 @@ kolibri-tools@0.16.0-dev.7:
     babel-core "7.0.0-bridge.0"
     babel-jest "^29.7.0"
     babel-loader "^9.1.3"
-    browserslist-config-kolibri "0.16.0-dev.7"
+    browserslist-config-kolibri "0.16.1-dev.0"
     chalk "4.1.2"
     check-node-version "^4.2.1"
     chokidar "^3.5.3"
@@ -7048,7 +7048,7 @@ kolibri-tools@0.16.0-dev.7:
     commander "^11.1.0"
     core-js "^3"
     css-loader "6.8.1"
-    css-minimizer-webpack-plugin "5.0.1"
+    css-minimizer-webpack-plugin "6.0.0"
     csv-parse "^5.5.3"
     csv-writer "^1.3.0"
     del "^6.1.1"
@@ -7058,12 +7058,12 @@ kolibri-tools@0.16.0-dev.7:
     eslint-config-vue "^2.0.2"
     eslint-plugin-import "^2.29.1"
     eslint-plugin-jest "^23.3.0"
-    eslint-plugin-kolibri "0.16.0-dev.7"
+    eslint-plugin-kolibri "0.16.1-dev.0"
     eslint-plugin-vue "^7.3.0"
     espree "9.6.1"
     esquery "^1.5.0"
     express "^4.18.2"
-    glob "^10.3.10"
+    fast-glob "^3.3.2"
     htmlhint "^1.1.4"
     ini "^4.1.1"
     jest "^29.7.0"
@@ -7095,7 +7095,7 @@ kolibri-tools@0.16.0-dev.7:
     stylelint-config-sass-guidelines "10.0.0"
     stylelint-config-standard "24.0.0"
     stylelint-csstree-validator "3.0.0"
-    stylelint-scss "5.3.1"
+    stylelint-scss "5.3.2"
     temp "^0.8.3"
     terser-webpack-plugin "^5.3.9"
     toml "^3.0.0"
@@ -8743,7 +8743,7 @@ postcss@^7.0.36:
     picocolors "^0.2.1"
     source-map "^0.6.1"
 
-postcss@^8.2.14, postcss@^8.4.14, postcss@^8.4.16, postcss@^8.4.21, postcss@^8.4.24, postcss@^8.4.32:
+postcss@^8.2.14, postcss@^8.4.14, postcss@^8.4.16, postcss@^8.4.21, postcss@^8.4.32, postcss@^8.4.33:
   version "8.5.0"
   resolved "https://registry.yarnpkg.com/postcss/-/postcss-8.5.0.tgz#15244b9fd65f809b2819682456f0e7e1e30c145b"
   integrity sha512-27VKOqrYfPncKA2NrFOVhP5MGAfHKLYn/Q0mz9cNQyRAKYi3VNHwYU2qKKqPCqgBmeeJ0uAFB56NumXZ5ZReXg==
@@ -9423,7 +9423,7 @@ schema-utils@^3.0.0, schema-utils@^3.2.0:
     ajv "^6.12.5"
     ajv-keywords "^3.5.2"
 
-schema-utils@^4.0.0, schema-utils@^4.0.1, schema-utils@^4.3.0:
+schema-utils@^4.0.0, schema-utils@^4.2.0, schema-utils@^4.3.0:
   version "4.3.0"
   resolved "https://registry.yarnpkg.com/schema-utils/-/schema-utils-4.3.0.tgz#3b669f04f71ff2dfb5aba7ce2d5a9d79b35622c0"
   integrity sha512-Gf9qqc58SpCA/xdziiHz35F4GNIWYWZrEshUc/G/r5BnLph6xpKuLeoJoQuj5WfBIx/eQLf+hmVPYHaxJu7V2g==
@@ -10285,10 +10285,10 @@ stylelint-order@6.x:
     postcss "^8.4.32"
     postcss-sorting "^8.0.2"
 
-stylelint-scss@5.3.1:
-  version "5.3.1"
-  resolved "https://registry.yarnpkg.com/stylelint-scss/-/stylelint-scss-5.3.1.tgz#7f0f5f06d0a2a3c515aa71d3a8de3548045e03e1"
-  integrity sha512-5I9ZDIm77BZrjOccma5WyW2nJEKjXDd4Ca8Kk+oBapSO4pewSlno3n+OyimcyVJJujQZkBN2D+xuMkIamSc6hA==
+stylelint-scss@5.3.2:
+  version "5.3.2"
+  resolved "https://registry.yarnpkg.com/stylelint-scss/-/stylelint-scss-5.3.2.tgz#c54564dfbd98de0c08742b9c43025cda91acf940"
+  integrity sha512-4LzLaayFhFyneJwLo0IUa8knuIvj+zF0vBFueQs4e3tEaAMIQX8q5th8ziKkgOavr6y/y9yoBe+RXN/edwLzsQ==
   dependencies:
     known-css-properties "^0.29.0"
     postcss-media-query-parser "^0.2.3"
@@ -11629,7 +11629,7 @@ workbox-window@7.3.0, workbox-window@^7.0.0:
     string-width "^4.1.0"
     strip-ansi "^6.0.0"
 
-wrap-ansi@7.0.0, wrap-ansi@^7.0.0:
+wrap-ansi@^7.0.0:
   version "7.0.0"
   resolved "https://registry.yarnpkg.com/wrap-ansi/-/wrap-ansi-7.0.0.tgz#67e145cff510a6a6984bdf1152911d69d2eb9e43"
   integrity sha512-YVGIj2kamLSTxw6NsZjoBxfSwsn0ycdesmc4p+Q21c5zPuZ1pl+NfxVdxPtdHvmNVOQ6XSYG4AUtyt/Fi7D16Q==
