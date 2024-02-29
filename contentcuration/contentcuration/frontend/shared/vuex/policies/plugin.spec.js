@@ -28,7 +28,9 @@ describe('PoliciesPlugin', () => {
 
   it('should update `window.user` with new data on policies store update', () => {
     window.user.policies = { terms_of_service_2020_12_10: '01/01/2000 12:12' };
-    store.dispatch('policies/setPolicies', { privacy_policy_2020_12_10: '12/05/2021 09:56' });
+    store.dispatch('policies/setPolicies', {
+      privacy_policy_2020_12_10: '12/05/2021 09:56',
+    });
 
     expect(window.user.policies).toEqual({
       terms_of_service_2020_12_10: '01/01/2000 12:12',

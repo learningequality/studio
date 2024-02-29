@@ -288,8 +288,14 @@ describe('Channel sharing vuex', () => {
       return User.add(user).then(() => {
         return ViewerM2M.add({ user: user.id, channel: channelDatum.id }).then(() => {
           return Invitation.table.bulkPut(invitations).then(() => {
-            store.commit('channel/ADD_CHANNEL', { id: channelId, ...channelDatum });
-            store.commit('channel/SET_USERS_TO_CHANNEL', { channelId, users: [user] });
+            store.commit('channel/ADD_CHANNEL', {
+              id: channelId,
+              ...channelDatum,
+            });
+            store.commit('channel/SET_USERS_TO_CHANNEL', {
+              channelId,
+              users: [user],
+            });
             store.commit('channel/ADD_INVITATIONS', invitations);
           });
         });
@@ -449,7 +455,10 @@ describe('Channel sharing vuex', () => {
     it('should call ChannelUser.makeEditor', () => {
       const makeEditorSpy = jest.spyOn(ChannelUser, 'makeEditor');
       return store
-        .dispatch('channel/makeEditor', { channelId: channelDatum.id, userId: testUser.id })
+        .dispatch('channel/makeEditor', {
+          channelId: channelDatum.id,
+          userId: testUser.id,
+        })
         .then(() => {
           expect(makeEditorSpy).toHaveBeenCalled();
           makeEditorSpy.mockRestore();
@@ -457,14 +466,19 @@ describe('Channel sharing vuex', () => {
     });
     it('should set the editors and viewers according to update', () => {
       return store
-        .dispatch('channel/makeEditor', { channelId: channelDatum.id, userId: testUser.id })
+        .dispatch('channel/makeEditor', {
+          channelId: channelDatum.id,
+          userId: testUser.id,
+        })
         .then(() => {
           expect(store.state.channel.channelEditorsMap).toEqual({
             [channelDatum.id]: {
               [testUser.id]: true,
             },
           });
-          expect(store.state.channel.channelViewersMap).toEqual({ [channelDatum.id]: {} });
+          expect(store.state.channel.channelViewersMap).toEqual({
+            [channelDatum.id]: {},
+          });
         });
     });
   });
@@ -472,7 +486,10 @@ describe('Channel sharing vuex', () => {
     it('should call ChannelUser.removeViewer with removed viewer', () => {
       const removeViewerSpy = jest.spyOn(ChannelUser, 'removeViewer');
       return store
-        .dispatch('channel/removeViewer', { channelId: channelDatum.id, userId: testUser.id })
+        .dispatch('channel/removeViewer', {
+          channelId: channelDatum.id,
+          userId: testUser.id,
+        })
         .then(() => {
           expect(removeViewerSpy).toHaveBeenCalled();
           removeViewerSpy.mockRestore();
@@ -480,9 +497,14 @@ describe('Channel sharing vuex', () => {
     });
     it('should set the viewers according to update', () => {
       return store
-        .dispatch('channel/removeViewer', { channelId: channelDatum.id, userId: testUser.id })
+        .dispatch('channel/removeViewer', {
+          channelId: channelDatum.id,
+          userId: testUser.id,
+        })
         .then(() => {
-          expect(store.state.channel.channelViewersMap).toEqual({ [channelDatum.id]: {} });
+          expect(store.state.channel.channelViewersMap).toEqual({
+            [channelDatum.id]: {},
+          });
         });
     });
   });

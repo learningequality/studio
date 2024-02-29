@@ -747,7 +747,9 @@ export const routerMixin = {
   },
 };
 
-export const contentNodeStrings = createTranslator('ContentNodeStrings', { untitled: 'Untitled' });
+export const contentNodeStrings = createTranslator('ContentNodeStrings', {
+  untitled: 'Untitled',
+});
 export const titleMixin = {
   computed: {
     hasTitle() {
