@@ -204,7 +204,6 @@
       },
     },
     mounted() {
-      console.log('AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA');
       this.updateTabTitle('Channels - Administration');
     },
     methods: {

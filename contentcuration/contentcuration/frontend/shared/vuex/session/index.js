@@ -61,7 +61,6 @@ export default {
       return state.currentUser.id;
     },
     loggedIn(state) {
-      console.log('state.currentUser', JSON.stringify(state.currentUser));
       return (
         state.currentUser && state.currentUser.id !== undefined && state.currentUser.id !== null
       );
