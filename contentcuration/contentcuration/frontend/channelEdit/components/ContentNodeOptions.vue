@@ -141,7 +141,7 @@
             {
               label: this.$tr('editTags'),
               onClick: this.quickEditModalFactory(QuickEditModals.TAGS),
-              condition: this.canEdit,
+              condition: this.canEdit && false,
             },
             {
               label: this.$tr('editLanguage'),
@@ -170,7 +170,7 @@
             {
               label: this.$tr('editSource'),
               onClick: this.quickEditModalFactory(QuickEditModals.SOURCE),
-              condition: this.canEdit,
+              condition: this.canEdit && !this.isTopic,
             },
             {
               label: this.$tr('editAudience'),
