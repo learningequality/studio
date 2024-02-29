@@ -39,6 +39,16 @@
         </VLayout>
       </VFlex>
     </VLayout>
+
+    <div class="">
+      <KCard
+        layout="horizontal"
+        thumbnailDisplay="small"
+        title="title"
+        :headingLevel="3"
+        :to="{ name: 'channel-list' }"
+      />
+    </div>
   </VContainer>
 
 </template>
@@ -49,6 +59,7 @@
   import { mapGetters, mapActions } from 'vuex';
   import orderBy from 'lodash/orderBy';
   import { RouteNames } from '../../constants';
+  import KCard from '../KCard';
   import ChannelItem from './ChannelItem';
   import LoadingText from 'shared/views/LoadingText';
   import { ChannelListTypes } from 'shared/constants';
@@ -63,6 +74,7 @@
     components: {
       ChannelItem,
       LoadingText,
+      KCard,
     },
     props: {
       listType: {
