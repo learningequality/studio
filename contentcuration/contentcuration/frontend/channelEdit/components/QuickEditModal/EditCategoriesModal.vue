@@ -29,7 +29,6 @@
   export default {
     name: 'EditCategoriesModal',
     components: {
-      CategoryOptions,
       EditBooleanMapModal,
     },
     mixins: [metadataTranslationMixin],
@@ -44,17 +43,17 @@
         categoriesOptions: [],
       };
     },
+    computed: {
+      CategoryOptionsComponent() {
+        return CategoryOptions;
+      },
+    },
     created() {
       const categories = getSortedCategories();
       this.categoriesOptions = Object.entries(categories).map(([id, category]) => ({
         value: id,
         label: this.translateMetadataString(camelCase(category)),
       }));
-    },
-    computed: {
-      CategoryOptionsComponent() {
-        return CategoryOptions;
-      },
     },
     methods: {
       close() {

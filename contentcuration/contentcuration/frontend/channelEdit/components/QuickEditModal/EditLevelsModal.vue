@@ -15,9 +15,7 @@
 
 <script>
 
-  import camelCase from 'lodash/camelCase';
   import EditBooleanMapModal from './EditBooleanMapModal';
-  import { ContentLevels } from 'shared/constants';
   import { metadataTranslationMixin } from 'shared/mixins';
   import LevelsOptions from 'shared/views/contentNodeFields/LevelsOptions';
 
@@ -25,7 +23,6 @@
     name: 'EditLevelsModal',
     components: {
       EditBooleanMapModal,
-      LevelsOptions,
     },
     mixins: [metadataTranslationMixin],
     props: {
@@ -35,17 +32,6 @@
       },
     },
     computed: {
-      levelsOptions() {
-        const replaceTranslationMap = {
-          PROFESSIONAL: 'specializedProfessionalTraining',
-          WORK_SKILLS: 'allLevelsWorkSkills',
-          BASIC_SKILLS: 'allLevelsBasicSkills',
-        };
-        return Object.entries(ContentLevels).map(([key, value]) => ({
-          label: this.translateMetadataString(replaceTranslationMap[key] || camelCase(key)),
-          value,
-        }));
-      },
       LevelsOptionsComponent() {
         return LevelsOptions;
       },

@@ -15,19 +15,29 @@
           multiple
           item-value="value"
           item-text="text"
-          :menu-props="{ ...menuProps, zIndex: 4 }"
+          :menu-props="{
+            ...menuProps,
+            zIndex: 4,
+            height: expanded ? 0 : 'auto',
+            maxHeight: expanded ? 0 : 300,
+          }"
           :attach="attach"
           @click:clear="$nextTick(() => removeAll())"
         >
           <template #selection="data">
             <VTooltip bottom lazy>
               <template #activator="{ on, attrs }">
-                <VChip v-bind="attrs" close v-on="on" @input="remove(data.item.value)">
+                <VChip
+                  v-bind="attrs"
+                  :close="!data.item.undeletable"
+                  v-on="on"
+                  @input="remove(data.item.value)"
+                >
                   {{ data.item.text }}
                 </VChip>
               </template>
               <div>
-                <div>{{ tooltipHelper(data.item.value) }}</div>
+                <div>{{ tooltipText(data.item.value) }}</div>
               </div>
             </VTooltip>
           </template>
@@ -63,9 +73,9 @@
       </template>
     </DropdownWrapper>
 
-    <slot name="prependOptions" />
-    
-    <div class="checkbox-list-wrapper" v-if="expanded">
+    <slot name="prependOptions"></slot>
+
+    <div v-if="expanded" class="checkbox-list-wrapper">
       <KCheckbox
         v-for="option in filteredCategories"
         :key="option.value"
@@ -80,72 +90,19 @@
         v-if="!filteredCategories.length"
         :style="{ color: $themeTokens.annotation }"
       >
-        {{ emptyText || $tr('emptyOptionsSearch') }}
+        {{ $tr('noCategoryFoundText') }}
       </p>
     </div>
   </div>
+
 </template>
 
 <script>
 
   import camelCase from 'lodash/camelCase';
-  import { constantsTranslationMixin, metadataTranslationMixin } from 'shared/mixins';
-  import { Categories, CategoriesLookup } from 'shared/constants';
+  import { getSortedCategories } from 'shared/utils/helpers';
   import DropdownWrapper from 'shared/views/form/DropdownWrapper';
-
-  const availablePaths = {};
-  const categoriesObj = {};
-  const dropdown = [];
-
-  Object.assign(availablePaths, CategoriesLookup);
-
-  /*
-   * This is used to create the categories object from which the dropdown list is generated
-   * and is the same as this to make sure the order in Kolibri and Studio are the same:
-   * https://github.com/learningequality/kolibri/blob/develop/kolibri/plugins/learn/assets/
-   *   src/views/CategorySearchModal/CategorySearchOptions.vue#L73
-   */
-  for (const subjectKey of Object.entries(Categories)
-    .sort((a, b) => a[1].length - b[1].length)
-    .map(a => a[0])) {
-    const ids = Categories[subjectKey].split('.');
-
-    let path = '';
-    let nested = categoriesObj;
-    for (const fragment of ids) {
-      path += fragment;
-      if (availablePaths[path]) {
-        const nestedKey = CategoriesLookup[path];
-        if (!nested[nestedKey]) {
-          nested[nestedKey] = {
-            value: path,
-            nested: {},
-          };
-        }
-        nested = nested[nestedKey].nested;
-        path += '.';
-      } else {
-        break;
-      }
-    }
-  }
-
-  const flattenCategories = obj => {
-    Object.keys(obj).forEach(key => {
-      if (key !== 'value' && key !== 'nested') {
-        dropdown.push({
-          text: key,
-          value: obj[key]['value'],
-        });
-      }
-      if (typeof obj[key] === 'object') {
-        flattenCategories(obj[key]);
-      }
-    });
-    return dropdown;
-  };
-
-  flattenCategories(categoriesObj);
+  import { constantsTranslationMixin, metadataTranslationMixin } from 'shared/mixins';
 
   const MIXED = 'mixed';
 
@@ -155,7 +112,7 @@
     mixins: [constantsTranslationMixin, metadataTranslationMixin],
     props: {
       value: {
-        type: Array | Object,
+        type: [Array, Object],
         default: () => [],
       },
       nodeIds: {
@@ -174,13 +131,12 @@
     },
     computed: {
       categoriesList() {
-        return dropdown.map(category => {
-          return {
-            ...category,
-            text: this.translateMetadataString(camelCase(category.text)),
-            level: this.findDepth(Categories[category.text]),
-          };
-        });
+        const categories = getSortedCategories();
+        return Object.entries(categories).map(([id, category]) => ({
+          value: id,
+          text: this.translateMetadataString(camelCase(category)),
+          level: this.findDepth(id),
+        }));
       },
       selected: {
         get() {
@@ -191,11 +147,12 @@
         },
       },
       autocompleteOptions() {
-        const options =  [...this.categoriesList];
-        if (!Array.isArray(this.selected)){
-          options.unshift({
+        const options = [...this.categoriesList];
+        if (!Array.isArray(this.selected)) {
+          // Just boolean maps can have indeterminate values
+          options.push({
             value: MIXED,
-            label: this.$tr('mixedLabel'),
+            text: this.$tr('mixedLabel'),
             undeletable: true,
           });
         }
@@ -206,7 +163,7 @@
           return this.selected;
         }
         const selectedValues = Object.entries(this.selected)
-          .filter(entry => entry[1] === true) // no mixed values
+          .filter(entry => entry[1] === true) // no mixed values for boolean maps
           .map(([key]) => key);
         if (Object.values(this.selected).some(value => value !== true)) {
           selectedValues.push(MIXED);
@@ -221,7 +178,9 @@
         if (!searchQuery) {
           return this.categoriesList;
         }
-        return this.categoriesList.filter(option => option.text.toLowerCase().includes(searchQuery));
+        return this.categoriesList.filter(option =>
+          option.text.toLowerCase().includes(searchQuery)
+        );
       },
     },
     methods: {
@@ -230,39 +189,56 @@
         return this.nested ? { [rule]: `${item.level * 24}px` } : {};
       },
       add(value) {
-        this.selected = [...this.selected, value];
+        if (Array.isArray(this.selected)) {
+          this.selected = [...this.selected, value];
+          return;
+        }
+        this.selected = { ...this.selected, [value]: true };
       },
       remove(value) {
-        this.selected = this.selected.filter(i => !i.startsWith(value));
+        if (Array.isArray(this.selected)) {
+          this.selected = this.selected.filter(i => !i.startsWith(value));
+          return;
+        }
+        const newSelected = { ...this.selected };
+        Object.keys(this.selected)
+          .filter(selectedValue => selectedValue.startsWith(value))
+          .forEach(selectedValue => {
+            delete newSelected[selectedValue];
+          });
+        this.selected = newSelected;
       },
       removeAll() {
-        this.selected = [];
+        if (Array.isArray(this.selected)) {
+          this.selected = [];
+          return;
+        }
+        this.selected = {};
       },
-      tooltipHelper(id) {
-        return this.displayFamilyTree(dropdown, id)
-          .map(node => this.translateMetadataString(camelCase(node.text)))
-          .join(' - ');
+      tooltipText(optionId) {
+        if (optionId === MIXED) {
+          return this.$tr('mixedLabel');
+        }
+        const option = this.categoriesList.find(option => option.value === optionId);
+        if (!option) {
+          return '';
+        }
+        let currentOption = optionId;
+        let text = option.text || '';
+        const level = option.level;
+        for (let i = level - 1; i >= 0; i--) {
+          const parentOption = this.categoriesList.find(
+            option => currentOption.startsWith(option.value) && option.level === i
+          );
+          if (parentOption) {
+            text = `${parentOption.text} - ${text}`;
+            currentOption = parentOption.value;
+          }
+        }
+        return text;
       },
       findDepth(val) {
         return val.split('.').length - 1;
-      },
-      displayFamilyTree(nodes, id) {
-        return nodes.filter(node => this.findFamilyTreeIds(id).includes(node.value));
-      },
-      /**
-       * @param {String} id The id of the selected category
-       * @returns {Array} An array of all ids of the family beginning with the selected category
-       */
-      findFamilyTreeIds(id) {
-        const family = [];
-        let familyMember = id;
-        while (familyMember) {
-          family.push(familyMember);
-          familyMember = familyMember.includes('.')
-            ? familyMember.substring(0, familyMember.lastIndexOf('.'))
-            : null;
-        }
-        return family;
       },
       isSelected(value) {
         if (Array.isArray(this.selected)) {
@@ -315,6 +291,7 @@
         return nodeIds.size === this.nodeIds.length;
       },
       isCheckboxIndeterminate(optionId) {
+        // Just boolean maps can have indeterminate values
         if (Array.isArray(this.selected)) {
           return false;
         }
@@ -322,35 +299,21 @@
           return this.selected[optionId] !== true;
         }
         return (
-          Object.keys(this.selected).some(selectedValue =>
-            selectedValue.startsWith(optionId)
-          ) && !this.isSelected(optionId)
+          Object.keys(this.selected).some(selectedValue => selectedValue.startsWith(optionId)) &&
+          !this.isSelected(optionId)
         );
       },
       onChange(optionId) {
-        if (Array.isArray(this.selected)) {
-          if (this.isSelected(optionId)) {
-            this.selected = this.selected.filter(v => !v.startsWith(optionId));
-          } else {
-            this.selected = [...this.selected, optionId];
-          }
-          return;
-        }
         if (this.isSelected(optionId)) {
-          const newSelected = { ...this.selected };
-          Object.keys(this.selected)
-            .filter(selectedValue => selectedValue.startsWith(optionId))
-            .forEach(selectedValue => {
-              delete newSelected[selectedValue];
-            });
-          this.selected = newSelected;
+          this.remove(optionId);
         } else {
-          this.selected = { ...this.selected, [optionId]: true };
+          this.add(optionId);
         }
       },
     },
     $trs: {
       noCategoryFoundText: 'Category not found',
+      mixedLabel: 'Mixed',
     },
   };
 

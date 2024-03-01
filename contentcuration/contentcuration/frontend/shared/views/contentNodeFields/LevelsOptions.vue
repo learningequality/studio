@@ -1,7 +1,7 @@
 <template>
 
   <div>
-    <slot name="prependOptions" />
+    <slot name="prependOptions"></slot>
     <ExpandableSelect
       v-model="level"
       multiple
