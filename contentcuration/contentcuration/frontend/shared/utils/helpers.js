@@ -5,6 +5,8 @@ import merge from 'lodash/merge';
 
 import { Categories, CategoriesLookup } from 'shared/constants';
 import { LicensesList } from 'shared/leUtils/Licenses';
+import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
+import FormatPresetsMap, { FormatPresetsNames } from 'shared/leUtils/FormatPresets';
 
 function safeParseInt(str) {
   const parsed = parseInt(str);
@@ -524,4 +526,38 @@ export function getSortedCategories() {
   };
   sortCategories(categoriesTree);
   return categoriesSorted;
+}
+
+export function isAllowedFileType(file) {
+  if (!file || !file.file_format) {
+    return false;
+  }
+
+  let allowedFileTypes = [];
+  // add the relevant format presets for audio and video
+  // high res and low res are currently the same, so only one is included
+  allowedFileTypes.push(FormatPresetsMap.get(FormatPresetsNames.HIGH_RES_VIDEO).allowed_formats);
+  allowedFileTypes.push(FormatPresetsMap.get(FormatPresetsNames.AUDIO).allowed_formats);
+  allowedFileTypes = allowedFileTypes.flat();
+  return allowedFileTypes.includes(file.file_format);
+}
+
+export function getFileDuration(nodeFiles, kind) {
+  if (
+    !nodeFiles ||
+    !nodeFiles.length ||
+    ![ContentKindsNames.AUDIO, ContentKindsNames.VIDEO].includes(kind)
+  ) {
+    return null;
+  }
+
+  // filter for the correct file types,
+  // to exclude files such as subtitle or cc
+  const audioVideoFiles = nodeFiles.filter(file => isAllowedFileType(file));
+  // return the last item in the array
+  const file = audioVideoFiles[audioVideoFiles.length - 1];
+  if (!file || !file.duration) {
+    return null;
+  }
+  return file.duration;
 }

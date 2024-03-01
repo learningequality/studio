@@ -57,10 +57,10 @@
   import debounce from 'lodash/debounce';
   import { CompletionDropdownMap, DurationDropdownMap } from 'shared/constants';
   import {
-    getShortActivityDurationValidators,
-    getLongActivityDurationValidators,
-    getActivityDurationValidators,
     translateValidator,
+    getActivityDurationValidators,
+    getLongActivityDurationValidators,
+    getShortActivityDurationValidators,
   } from 'shared/utils/validation';
   import DropdownWrapper from 'shared/views/form/DropdownWrapper';
 

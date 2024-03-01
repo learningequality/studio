@@ -2,37 +2,34 @@
 
   <div>
     <!-- Checkbox for "Allow learners to mark complete" -->
-    <Checkbox
-      v-model="learnerManaged"
-      color="primary"
-      :indeterminate="notUnique"
+    <KCheckbox
+      :checked="learnerManaged"
       :disabled="notUnique"
+      :indeterminate="notUnique"
       :label="$tr('learnersCanMarkComplete')"
-      style="padding-bottom: 16px;"
+      @change="(value) => (learnerManaged = value)"
     />
+    <Divider v-if="expanded" />
     <!-- Layout when practice quizzes are enabled -->
-    <VLayout xs6 md6>
+    <VLayout
+      :column="expanded"
+    >
       <!-- "Completion" dropdown menu  -->
-      <DropdownWrapper component="VFlex" xs6 md6 class="pr-2">
-        <template #default="{ attach, menuProps }">
-          <VSelect
-            ref="completion"
-            v-model="completionDropdown"
-            box
-            :placeholder="getPlaceholder('value')"
-            :items="showCorrectCompletionOptions"
-            :label="translateMetadataString('completion')"
-            :required="required"
-            :rules="completionRules"
-            :menu-props="menuProps"
-            :attach="attach"
-            @focus="trackClick('Completion')"
-          />
-        </template>
-      </DropdownWrapper>
-      <VFlex>
+      <ExpandableSelect
+        ref="completion"
+        v-model="completionDropdown"
+        :expanded="expanded"
+        :options="showCorrectCompletionOptions"
+        :placeholder="getPlaceholder('value')"
+        :label="translateMetadataString('completion')"
+        :required="required"
+        :rules="completionRules"
+        :class="expanded ? '' : 'pr-2 xs6 md6'"
+        @focus="trackClick('Completion')"
+      />
+
+      <VFlex v-if="showMasteryCriteriaGoalDropdown">
         <MasteryCriteriaGoal
-          v-if="showMasteryCriteriaGoalDropdown"
           ref="mastery_model"
           v-model="masteryModel"
           :placeholder="getPlaceholder('mastery_model')"
@@ -58,26 +55,26 @@
     </VLayout>
 
     <VLayout row wrap>
-      <DropdownWrapper v-if="showDuration" component="VFlex" xs6 md6 class="pr-2">
-        <template #default="{ attach, menuProps }">
-          <VSelect
-            ref="duration"
-            v-model="durationDropdown"
-            box
-            :placeholder="getPlaceholder('value')"
-            :items="selectableDurationOptions"
-            :label="translateMetadataString('duration')"
-            :required="required"
-            :rules="durationRules"
-            :menu-props="{ ...menuProps, zIndex: 4 }"
-            :attach="attach"
-            @focus="trackClick('Duration')"
-          />
-        </template>
-      </DropdownWrapper>
+      <!-- "Duration" dropdown menu  -->
+      <ExpandableSelect
+        v-if="showDuration || showDisabledDuration"
+        ref="duration"
+        v-model="durationDropdown"
+        :disabled="showDisabledDuration"
+        :expanded="expanded"
+        :options="selectableDurationOptions"
+        :label="translateMetadataString('duration')"
+        :required="required"
+        :rules="durationRules"
+        :class="expanded ? '' : 'pr-2 xs6 md6'"
+        @focus="trackClick('Duration')"
+      />
 
       <!-- "Activity duration" minutes input -->
-      <VFlex v-if="showDuration" xs6 md6>
+      <VFlex
+        v-if="showDuration"
+        :class="expanded ? '' : 'xs6 md6'"
+      >
         <ActivityDuration
           ref="activity_duration"
           v-model="durationValue"
@@ -89,8 +86,13 @@
       </VFlex>
 
       <!-- Reference hint -->
-      <VFlex v-if="showReferenceHint" style="margin-bottom: 8px" xs6 md6>
-        {{ $tr('referenceHint') }}
+      <VFlex
+        v-if="showReferenceHint"
+        style="margin-bottom: 8px"
+        :xs6="!expanded"
+        :md6="!expanded"
+      >
+        {{ $tr("referenceHint") }}
       </VFlex>
     </VLayout>
   </div>
@@ -100,24 +102,22 @@
 <script>
 
   import get from 'lodash/get';
+  import ActivityDuration from './ActivityDuration';
+  import MasteryCriteriaGoal from './MasteryCriteriaGoal';
+  import MasteryCriteriaMofNFields from './MasteryCriteriaMofNFields';
+  import Divider from 'shared/views/Divider';
   import {
+    nonUniqueValue,
+    ContentModalities,
+    DurationDropdownMap,
+    CompletionDropdownMap,
+    CompletionCriteriaModels,
+    CompletionOptionsDropdownMap,
+    SHORT_LONG_ACTIVITY_MIDPOINT,
+    completionCriteriaToDropdownMap,
     defaultCompletionCriteriaModels,
     defaultCompletionCriteriaThresholds,
-    CompletionOptionsDropdownMap,
-    completionCriteriaToDropdownMap,
-  } from '../../utils';
-  import MasteryCriteriaMofNFields from './MasteryCriteriaMofNFields';
-  import ActivityDuration from './ActivityDuration.vue';
-  import MasteryCriteriaGoal from './MasteryCriteriaGoal';
-  import {
-    CompletionCriteriaModels,
-    ContentModalities,
-    CompletionDropdownMap,
-    DurationDropdownMap,
-    nonUniqueValue,
-    SHORT_LONG_ACTIVITY_MIDPOINT,
   } from 'shared/constants';
-  import Checkbox from 'shared/views/form/Checkbox';
   import { MasteryModelsNames } from 'shared/leUtils/MasteryModels';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import {
@@ -126,7 +126,7 @@
     translateValidator,
   } from 'shared/utils/validation';
   import { metadataStrings, metadataTranslationMixin } from 'shared/mixins';
-  import DropdownWrapper from 'shared/views/form/DropdownWrapper';
+  import ExpandableSelect from 'shared/views/form/ExpandableSelect';
 
   const DEFAULT_SHORT_ACTIVITY = 600;
   const DEFAULT_LONG_ACTIVITY = 3000;
@@ -134,9 +134,9 @@
   export default {
     name: 'CompletionOptions',
     components: {
-      Checkbox,
-      DropdownWrapper,
+      Divider,
       ActivityDuration,
+      ExpandableSelect,
       MasteryCriteriaMofNFields,
       MasteryCriteriaGoal,
     },
@@ -159,6 +159,10 @@
         type: Object,
         required: false,
         default: () => ({}),
+      },
+      expanded: {
+        type: Boolean,
+        default: false,
       },
     },
     computed: {
@@ -190,10 +194,13 @@
           this.model === CompletionCriteriaModels.APPROX_TIME
         );
       },
+      showDisabledDuration() {
+        return !this.showDuration && this.expanded && this.audioVideoResource;
+      },
       showReferenceHint() {
         /*
-          The reference hint should be shown only when "Reference" is selected
-        */
+            The reference hint should be shown only when "Reference" is selected
+          */
         return this.model === CompletionCriteriaModels.REFERENCE;
       },
       completionDropdown: {
@@ -295,6 +302,7 @@
           return this.timeBasedModel ? this.threshold : this.value.suggested_duration;
         },
         set(duration) {
+          console.log('duration set', duration);
           const update = {
             duration,
           };
@@ -321,6 +329,7 @@
           return DurationDropdownMap.SHORT_ACTIVITY;
         },
         set(dropdownValue) {
+          console.log(dropdownValue);
           const update = {};
           if (dropdownValue === DurationDropdownMap.EXACT_TIME) {
             update.durationType = CompletionCriteriaModels.TIME;
@@ -328,9 +337,10 @@
             dropdownValue === DurationDropdownMap.LONG_ACTIVITY ||
             dropdownValue === DurationDropdownMap.SHORT_ACTIVITY
           ) {
+            console.log(this.durationValue);
             update.durationType = CompletionCriteriaModels.APPROX_TIME;
             update.duration = this.handleMinutesInputFromActivityDuration(
-              this.durationValue,
+              this.durationValue || 0,
               dropdownValue
             );
           } else {

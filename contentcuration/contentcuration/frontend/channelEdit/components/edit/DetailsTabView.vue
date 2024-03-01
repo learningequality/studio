@@ -141,7 +141,7 @@
             v-model="completionAndDuration"
             :kind="firstNode.kind"
             :fileDuration="fileDuration"
-            :required="!anyIsDocument || !allSameKind"
+            :required="!anyIsDocument"
           />
         </VFlex>
       </VLayout>
@@ -380,14 +380,13 @@
   import ResourcesNeededOptions from './ResourcesNeededOptions.vue';
   import LearningActivityOptions from './LearningActivityOptions.vue';
   import CategoryOptions from './CategoryOptions.vue';
-  import CompletionOptions from './CompletionOptions.vue';
-  import FormatPresetsMap, { FormatPresetsNames } from 'shared/leUtils/FormatPresets';
+  import CompletionOptions from 'shared/views/contentNodeFields/CompletionOptions';
   import {
     getTitleValidators,
     getCopyrightHolderValidators,
     translateValidator,
   } from 'shared/utils/validation';
-  import { findLicense, memoizeDebounce } from 'shared/utils/helpers';
+  import { findLicense, memoizeDebounce, getFileDuration } from 'shared/utils/helpers';
   import LanguageDropdown from 'shared/views/LanguageDropdown';
   import HelpTooltip from 'shared/views/HelpTooltip';
   import LicenseDropdown from 'shared/views/LicenseDropdown';
@@ -693,20 +692,7 @@
         return (this.firstNode && this.getContentNodeFiles(this.firstNode.id)) || [];
       },
       fileDuration() {
-        if (
-          this.firstNode.kind === ContentKindsNames.AUDIO ||
-          this.firstNode.kind === ContentKindsNames.VIDEO
-        ) {
-          // filter for the correct file types,
-          // to exclude files such as subtitle or cc
-          const audioVideoFiles = this.nodeFiles.filter(file => this.allowedFileType(file));
-          // return the last item in the array
-          const file = audioVideoFiles[audioVideoFiles.length - 1];
-          if (file) {
-            return file.duration;
-          }
-        }
-        return null;
+        return getFileDuration(this.nodeFiles, this.firstNode.kind);
       },
       videoSelected() {
         return this.oneSelected && this.firstNode.kind === ContentKindsNames.VIDEO;
@@ -787,17 +773,6 @@
       },
       isUnique(value) {
         return value !== nonUniqueValue;
-      },
-      allowedFileType(file) {
-        let allowedFileTypes = [];
-        // add the relevant format presets for audio and video
-        // high res and low res are currently the same, so only one is included
-        allowedFileTypes.push(
-          FormatPresetsMap.get(FormatPresetsNames.HIGH_RES_VIDEO).allowed_formats
-        );
-        allowedFileTypes.push(FormatPresetsMap.get(FormatPresetsNames.AUDIO).allowed_formats);
-        allowedFileTypes = allowedFileTypes.flat();
-        return allowedFileTypes.includes(file.file_format);
       },
       getValueFromNodes(key) {
         const results = uniq(

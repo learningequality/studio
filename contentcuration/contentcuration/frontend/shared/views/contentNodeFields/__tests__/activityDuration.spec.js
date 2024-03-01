@@ -1,7 +1,7 @@
 import Vue from 'vue';
 import Vuetify from 'vuetify';
 import { shallowMount, mount } from '@vue/test-utils';
-import ActivityDuration from '../ActivityDuration.vue';
+import ActivityDuration from '../CompletionOptions/ActivityDuration';
 
 Vue.use(Vuetify);
 
