@@ -32,8 +32,7 @@
     <h5 v-if="!hideLabel">
       {{ label }}
     </h5>
-    <slot name="prepend-options"/>
-    <div :style="optionsListStyle">
+    <div>
       <template v-if="!multiple">
         <KRadioButton
           v-for="option in options"
@@ -138,7 +137,7 @@
         return this.valueModel[value] === true;
       },
       isCheckboxIndeterminate(value) {
-        return this.valueModel[value] !== true && this.valueModel[value] !== false;
+        return this.valueModel[value] && this.valueModel[value] !== true;
       },
       setOption(optionId, value) {
         if (value) {

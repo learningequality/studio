@@ -11,10 +11,7 @@
     :autocompleteLabel="$tr('selectCategory')"
     :emptyText="$tr('emptyCategoriesSearch')"
     :confirmationMessage="$tr('editedCategories', { count: nodeIds.length })"
-    :optionsListStyle="{
-      height: '250px',
-      overflowY: 'auto',
-    }"
+    :inputComponent="CategoryOptionsComponent"
     @close="close"
   />
 
@@ -27,10 +24,12 @@
   import EditBooleanMapModal from './EditBooleanMapModal.vue';
   import { metadataTranslationMixin } from 'shared/mixins';
   import { getSortedCategories } from 'shared/utils/helpers';
+  import CategoryOptions from 'shared/views/contentNodeFields/CategoryOptions';
 
   export default {
     name: 'EditCategoriesModal',
     components: {
+      CategoryOptions,
       EditBooleanMapModal,
     },
     mixins: [metadataTranslationMixin],
@@ -51,6 +50,11 @@
         value: id,
         label: this.translateMetadataString(camelCase(category)),
       }));
+    },
+    computed: {
+      CategoryOptionsComponent() {
+        return CategoryOptions;
+      },
     },
     methods: {
       close() {

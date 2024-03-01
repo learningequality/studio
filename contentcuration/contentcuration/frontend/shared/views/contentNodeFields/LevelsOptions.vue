@@ -1,38 +1,25 @@
 <template>
 
-  <!-- <DropdownWrapper>
-    <template #default="{ attach, menuProps }">
-      <VSelect
-        ref="level"
-        v-model="level"
-        :items="levels"
-        box
-        chips
-        clearable
-        :label="translateMetadataString('level')"
-        multiple
-        deletableChips
-        :menu-props="menuProps"
-        :attach="attach"
-      />
-    </template>
-  </DropdownWrapper> -->
+  <div>
+    <slot name="prependOptions" />
+    <ExpandableSelect
+      v-model="level"
+      multiple
+      :expanded="expanded"
+      :options="levels"
+      :hideLabel="hideLabel"
+      :label="translateMetadataString('level')"
+    />
+  </div>
 
-  <ExpandableSelect
-    v-model="level"
-    multiple
-    :expanded="expanded"
-    :options="levels"
-    :label="translateMetadataString('level')"
-  />
 </template>
 
 <script>
 
   import camelCase from 'lodash/camelCase';
   import { ContentLevels } from 'shared/constants';
-  import { constantsTranslationMixin, metadataTranslationMixin } from 'shared/mixins';
   import ExpandableSelect from 'shared/views/form/ExpandableSelect';
+  import { constantsTranslationMixin, metadataTranslationMixin } from 'shared/mixins';
 
   export default {
     name: 'LevelsOptions',
@@ -44,6 +31,10 @@
         default: () => [],
       },
       expanded: {
+        type: Boolean,
+        default: false,
+      },
+      hideLabel: {
         type: Boolean,
         default: false,
       },

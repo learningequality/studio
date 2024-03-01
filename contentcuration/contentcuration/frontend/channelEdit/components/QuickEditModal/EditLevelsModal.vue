@@ -5,7 +5,7 @@
     isDescendantsUpdatable
     :title="$tr('editLevelsTitle')"
     :nodeIds="nodeIds"
-    :options="levelsOptions"
+    :inputComponent="LevelsOptionsComponent"
     :confirmationMessage="$tr('editedLevels', { count: nodeIds.length })"
     @close="close"
   />
@@ -19,11 +19,13 @@
   import EditBooleanMapModal from './EditBooleanMapModal';
   import { ContentLevels } from 'shared/constants';
   import { metadataTranslationMixin } from 'shared/mixins';
+  import LevelsOptions from 'shared/views/contentNodeFields/LevelsOptions';
 
   export default {
     name: 'EditLevelsModal',
     components: {
       EditBooleanMapModal,
+      LevelsOptions,
     },
     mixins: [metadataTranslationMixin],
     props: {
@@ -43,6 +45,9 @@
           label: this.translateMetadataString(replaceTranslationMap[key] || camelCase(key)),
           value,
         }));
+      },
+      LevelsOptionsComponent() {
+        return LevelsOptions;
       },
     },
     methods: {

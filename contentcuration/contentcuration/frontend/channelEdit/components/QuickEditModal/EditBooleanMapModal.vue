@@ -11,7 +11,26 @@
     <p data-test="resources-selected-message">
       {{ $tr('resourcesSelected', { count: nodeIds.length }) }}
     </p>
-    <VAutocomplete
+    <component
+      v-model="selectedValues"
+      expanded
+      hideLabel
+      :is="inputComponent"
+      :nodeIds="nodeIds"
+    >
+      <template #prependOptions v-if="isDescendantsUpdatable && isTopicSelected">
+        <KCheckbox
+          :checked="updateDescendants"
+          data-test="update-descendants-checkbox"
+          :label="$tr('updateDescendantsCheckbox')"
+          @change="(value) => { updateDescendants = value }"
+        />
+        <hr
+          :style="dividerStyle"
+        >
+      </template>
+    </component>
+    <!-- <VAutocomplete
       v-if="showAutocomplete"
       :value="autocompleteValues"
       :items="autocompleteOptions"
@@ -78,7 +97,7 @@
     </div>
     <span v-if="error" class="red--text">
       {{ error }}
-    </span>
+    </span> -->
   </KModal>
 
 </template>
@@ -157,6 +176,10 @@
       validators: {
         type: Array,
         default: () => [],
+      },
+      inputComponent: {
+        type: Object,
+        required: true,
       },
     },
     data() {

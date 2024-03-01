@@ -379,7 +379,7 @@
   import LevelsOptions from 'shared/views/contentNodeFields/LevelsOptions';
   import ResourcesNeededOptions from './ResourcesNeededOptions.vue';
   import LearningActivityOptions from './LearningActivityOptions.vue';
-  import CategoryOptions from './CategoryOptions.vue';
+  import CategoryOptions from 'shared/views/contentNodeFields/CategoryOptions';
   import CompletionOptions from 'shared/views/contentNodeFields/CompletionOptions';
   import {
     getTitleValidators,
