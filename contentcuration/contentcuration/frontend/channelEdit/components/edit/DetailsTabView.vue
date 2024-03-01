@@ -376,7 +376,7 @@
   import SubtitlesList from '../../views/files/supplementaryLists/SubtitlesList';
   import { isImportedContent, isDisableSourceEdits, importedChannelLink } from '../../utils';
   import AccessibilityOptions from './AccessibilityOptions.vue';
-  import LevelsOptions from './LevelsOptions.vue';
+  import LevelsOptions from 'shared/views/contentNodeFields/LevelsOptions';
   import ResourcesNeededOptions from './ResourcesNeededOptions.vue';
   import LearningActivityOptions from './LearningActivityOptions.vue';
   import CategoryOptions from './CategoryOptions.vue';

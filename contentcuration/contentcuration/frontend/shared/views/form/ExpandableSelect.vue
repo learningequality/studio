@@ -17,6 +17,10 @@
         :rules="rules"
         :menu-props="menuProps"
         :attach="attach"
+        :chips="multiple"
+        :multiple="multiple"
+        :clearable="multiple"
+        :deletableChips="multiple"
         @focus="$emit('focus')"
       />
     </template>
@@ -25,16 +29,33 @@
     v-else
     :class="disabled ? 'disabled' : ''"
   >
-    <h5>
+    <h5 v-if="!hideLabel">
       {{ label }}
     </h5>
-    <KRadioButton
-      v-for="duration in options"
-      :key="duration.value"
-      v-model="valueModel"
-      :buttonValue="duration.value"
-      :label="duration.text"
-    />
+    <slot name="prepend-options"/>
+    <div :style="optionsListStyle">
+      <template v-if="!multiple">
+        <KRadioButton
+          v-for="option in options"
+          :key="option.value"
+          v-model="valueModel"
+          :buttonValue="option.value"
+          :label="option.text"
+        />
+      </template>
+      <template v-else>
+        <KCheckbox
+          v-for="option in options"
+          :key="option.value"
+          :label="option.text"
+          :checked="isCheckboxSelected(option.value)"
+          :indeterminate="isCheckboxIndeterminate(option.value)"
+          data-test="option-checkbox"
+          @change="value => setOption(option.value, value)"
+        />
+      </template>
+    </div>
+
   </div>
 
 </template>
@@ -67,6 +88,11 @@
         required: false,
         default: '',
       },
+      hideLabel: {
+        type: Boolean,
+        required: false,
+        default: false,
+      },
       rules: {
         type: Array,
         required: false,
@@ -81,6 +107,10 @@
         default: false,
       },
       expanded: {
+        type: Boolean,
+        default: false,
+      },
+      multiple: {
         type: Boolean,
         default: false,
       },
@@ -102,6 +132,20 @@
       validate() {
         if (this.rules && this.rules.length) {
           return getInvalidText(this.rules, this.valueModel);
+        }
+      },
+      isCheckboxSelected(value) {
+        return this.valueModel[value] === true;
+      },
+      isCheckboxIndeterminate(value) {
+        return this.valueModel[value] !== true && this.valueModel[value] !== false;
+      },
+      setOption(optionId, value) {
+        if (value) {
+          this.valueModel = { ...this.valueModel, [optionId]: true };
+        } else {
+          const newValueModel = { ...this.valueModel };
+          delete newValueModel[optionId];
         }
       },
     },
