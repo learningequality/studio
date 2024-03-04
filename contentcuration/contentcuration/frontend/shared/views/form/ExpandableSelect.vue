@@ -145,6 +145,7 @@
         } else {
           const newValueModel = { ...this.valueModel };
           delete newValueModel[optionId];
+          this.valueModel = newValueModel;
         }
       },
     },

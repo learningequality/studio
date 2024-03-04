@@ -376,11 +376,11 @@
   import SubtitlesList from '../../views/files/supplementaryLists/SubtitlesList';
   import { isImportedContent, isDisableSourceEdits, importedChannelLink } from '../../utils';
   import AccessibilityOptions from './AccessibilityOptions.vue';
-  import ResourcesNeededOptions from './ResourcesNeededOptions.vue';
-  import LearningActivityOptions from './LearningActivityOptions.vue';
   import LevelsOptions from 'shared/views/contentNodeFields/LevelsOptions';
   import CategoryOptions from 'shared/views/contentNodeFields/CategoryOptions';
   import CompletionOptions from 'shared/views/contentNodeFields/CompletionOptions';
+  import LearningActivityOptions from 'shared/views/contentNodeFields/LearningActivityOptions';
+  import ResourcesNeededOptions from 'shared/views/contentNodeFields/ResourcesNeededOptions';
   import {
     getTitleValidators,
     getCopyrightHolderValidators,

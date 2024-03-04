@@ -30,6 +30,9 @@
         >
       </template>
     </component>
+    <span v-if="error" class="red--text">
+      {{ error }}
+    </span>
   </KModal>
 
 </template>
@@ -169,6 +172,11 @@
         this.$store.dispatch('showSnackbarSimple', this.confirmationMessage || '');
         this.close();
       },
+    },
+    watch: {
+      selectedValues() {
+        this.validate();
+      }
     },
     $trs: {
       saveAction: 'Save',

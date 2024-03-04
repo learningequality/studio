@@ -1,23 +1,18 @@
 <template>
 
-  <DropdownWrapper>
-    <template #default="{ attach, menuProps }">
-      <VSelect
-        v-model="learningActivity"
-        :items="learningActivities"
-        :disabled="disabled"
-        box
-        chips
-        clearable
-        :label="translateMetadataString('learningActivity')"
-        multiple
-        deletableChips
-        :menu-props="menuProps"
-        :rules="learningActivityRules"
-        :attach="attach"
-      />
-    </template>
-  </DropdownWrapper>
+  <div>
+    <slot name="prependOptions"></slot>
+    <ExpandableSelect
+      v-model="learningActivity"
+      multiple
+      :disabled="disabled"
+      :expanded="expanded"
+      :options="learningActivities"
+      :hideLabel="hideLabel"
+      :rules="learningActivityRules"
+      :label="translateMetadataString('learningActivity')"
+    />
+  </div>
 
 </template>
 
@@ -27,11 +22,11 @@
   import { LearningActivities } from 'shared/constants';
   import { constantsTranslationMixin, metadataTranslationMixin } from 'shared/mixins';
   import { getLearningActivityValidators, translateValidator } from 'shared/utils/validation';
-  import DropdownWrapper from 'shared/views/form/DropdownWrapper';
+  import ExpandableSelect from 'shared/views/form/ExpandableSelect';
 
   export default {
     name: 'LearningActivityOptions',
-    components: { DropdownWrapper },
+    components: { ExpandableSelect },
     mixins: [constantsTranslationMixin, metadataTranslationMixin],
     props: {
       value: {
@@ -39,6 +34,14 @@
         default: () => [],
       },
       disabled: {
+        type: Boolean,
+        default: false,
+      },
+      expanded: {
+        type: Boolean,
+        default: false,
+      },
+      hideLabel: {
         type: Boolean,
         default: false,
       },

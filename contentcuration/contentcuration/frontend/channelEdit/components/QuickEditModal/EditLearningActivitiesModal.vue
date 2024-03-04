@@ -5,8 +5,8 @@
     isDescendantsUpdatable
     :title="$tr('editLearningActivitiesTitle')"
     :nodeIds="nodeIds"
-    :options="learningActivitiesOptions"
     :validators="learningActivityValidators"
+    :inputComponent="LearningActivityOptionsComponent"
     :confirmationMessage="$tr('editedLearningActivities', { count: nodeIds.length })"
     @close="close"
   />
@@ -16,11 +16,10 @@
 
 <script>
 
-  import camelCase from 'lodash/camelCase';
   import EditBooleanMapModal from './EditBooleanMapModal';
-  import { LearningActivities } from 'shared/constants';
   import { metadataTranslationMixin } from 'shared/mixins';
   import { getLearningActivityValidators } from 'shared/utils/validation';
+  import LearningActivityOptions from 'shared/views/contentNodeFields/LearningActivityOptions';
 
   export default {
     name: 'EditLearningActivitiesModal',
@@ -35,14 +34,11 @@
       },
     },
     computed: {
-      learningActivitiesOptions() {
-        return Object.entries(LearningActivities).map(([key, value]) => ({
-          label: this.translateMetadataString(camelCase(key)),
-          value,
-        }));
-      },
       learningActivityValidators() {
         return getLearningActivityValidators();
+      },
+      LearningActivityOptionsComponent() {
+        return LearningActivityOptions;
       },
     },
     methods: {
