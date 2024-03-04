@@ -20,9 +20,9 @@
 
   import camelCase from 'lodash/camelCase';
   import { LearningActivities } from 'shared/constants';
+  import ExpandableSelect from 'shared/views/form/ExpandableSelect';
   import { constantsTranslationMixin, metadataTranslationMixin } from 'shared/mixins';
   import { getLearningActivityValidators, translateValidator } from 'shared/utils/validation';
-  import ExpandableSelect from 'shared/views/form/ExpandableSelect';
 
   export default {
     name: 'LearningActivityOptions',
@@ -30,7 +30,7 @@
     mixins: [constantsTranslationMixin, metadataTranslationMixin],
     props: {
       value: {
-        type: Array,
+        type: [Array, Object],
         default: () => [],
       },
       disabled: {

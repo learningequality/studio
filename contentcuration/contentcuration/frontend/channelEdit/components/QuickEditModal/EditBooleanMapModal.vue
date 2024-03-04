@@ -108,6 +108,11 @@
         };
       },
     },
+    watch: {
+      selectedValues() {
+        this.validate();
+      },
+    },
     created() {
       const optionsNodes = {};
 
@@ -172,11 +177,6 @@
         this.$store.dispatch('showSnackbarSimple', this.confirmationMessage || '');
         this.close();
       },
-    },
-    watch: {
-      selectedValues() {
-        this.validate();
-      }
     },
     $trs: {
       saveAction: 'Save',

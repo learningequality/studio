@@ -21,6 +21,8 @@
         :multiple="multiple"
         :clearable="multiple"
         :deletableChips="multiple"
+        :hint="hint"
+        :persistent-hint="!!hint"
         @focus="$emit('focus')"
       />
     </template>
@@ -54,6 +56,12 @@
         />
       </template>
     </div>
+    <p
+      v-if="hint"
+      :style="{ color: $themeTokens.annotation }"
+    >
+      {{ hint }}
+    </p>
 
   </div>
 
@@ -69,7 +77,7 @@
     components: { DropdownWrapper },
     props: {
       value: {
-        type: String,
+        type: [String, Object, Array],
         required: false,
         default: '',
       },
@@ -112,6 +120,10 @@
       multiple: {
         type: Boolean,
         default: false,
+      },
+      hint: {
+        type: String,
+        default: '',
       },
     },
     computed: {

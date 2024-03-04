@@ -1,41 +1,42 @@
 <template>
 
-  <DropdownWrapper>
-    <template #default="{ attach, menuProps }">
-      <VSelect
-        ref="need"
-        v-model="need"
-        :items="resources"
-        box
-        chips
-        :label="$tr('resourcesNeededLabel')"
-        multiple
-        deletableChips
-        clearable
-        :menu-props="menuProps"
-        :attach="attach"
-        :hint="hint"
-        persistent-hint
-      />
-    </template>
-  </DropdownWrapper>
+  <div>
+    <slot name="prependOptions"></slot>
+    <ExpandableSelect
+      v-model="need"
+      multiple
+      :expanded="expanded"
+      :options="resources"
+      :hideLabel="hideLabel"
+      :label="$tr('resourcesNeededLabel')"
+      :hint="hint"
+    />
+  </div>
 
 </template>
 
 <script>
 
+  import ExpandableSelect from 'shared/views/form/ExpandableSelect';
   import { ResourcesNeededTypes, ResourcesNeededOptions } from 'shared/constants';
   import { constantsTranslationMixin, metadataTranslationMixin } from 'shared/mixins';
-  import DropdownWrapper from 'shared/views/form/DropdownWrapper';
 
   export default {
     name: 'ResourcesNeededOptions',
-    components: { DropdownWrapper },
+    components: { ExpandableSelect },
     mixins: [constantsTranslationMixin, metadataTranslationMixin],
     props: {
       value: {
-        type: Array,
+        type: [Array, Object],
         default: () => [],
+      },
+      expanded: {
+        type: Boolean,
+        default: false,
+      },
+      hideLabel: {
+        type: Boolean,
+        default: false,
       },
     },
     computed: {
@@ -54,9 +55,13 @@
         }));
       },
       hint() {
-        return this.value && this.value.includes(ResourcesNeededTypes.OTHER_SUPPLIES)
-          ? this.$tr('furtherExplanation')
-          : '';
+        if (Array.isArray(this.value) && this.value.includes(ResourcesNeededTypes.OTHER_SUPPLIES)) {
+          return this.$tr('furtherExplanation');
+        }
+        if (this.value && this.value[ResourcesNeededTypes.OTHER_SUPPLIES]) {
+          return this.$tr('furtherExplanation');
+        }
+        return '';
       },
     },
     $trs: {

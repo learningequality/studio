@@ -27,7 +27,7 @@
     mixins: [constantsTranslationMixin, metadataTranslationMixin],
     props: {
       value: {
-        type: Array,
+        type: [Array, Object],
         default: () => [],
       },
       expanded: {
