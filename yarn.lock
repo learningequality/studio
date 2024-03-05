@@ -3012,7 +3012,7 @@
   optionalDependencies:
     prettier "^1.18.2 || ^2.0.0"
 
-"@vue/composition-api@^1.7.2":
+"@vue/composition-api@1.7.2":
   version "1.7.2"
   resolved "https://registry.yarnpkg.com/@vue/composition-api/-/composition-api-1.7.2.tgz#0b656f3ec39fefc2cf40aaa8c12426bcfeae1b44"
   integrity sha512-M8jm9J/laYrYT02665HkZ5l2fWTK4dcVg3BsDHm/pfz+MjDYwX+9FUaZyGwEyXEDonQYRCo0H7aLgdklcIELjw==
@@ -3425,17 +3425,17 @@ anymatch@^3.0.3, anymatch@~3.1.2:
     normalize-path "^3.0.0"
     picomatch "^2.0.4"
 
-"aphrodite@https://github.com/learningequality/aphrodite.git":
+"aphrodite@git+https://github.com/learningequality/aphrodite.git":
   version "2.2.3"
-  resolved "https://github.com/learningequality/aphrodite.git#fdc8d7be8912a5cf17f74ff10f124013c52c3e32"
+  resolved "git+https://github.com/learningequality/aphrodite.git#fdc8d7be8912a5cf17f74ff10f124013c52c3e32"
   dependencies:
     asap "^2.0.3"
     inline-style-prefixer "^4.0.2"
     string-hash "^1.1.3"
 
-"aphrodite@https://github.com/learningequality/aphrodite/":
+"aphrodite@https://github.com/learningequality/aphrodite.git":
   version "2.2.3"
-  resolved "https://github.com/learningequality/aphrodite/#fdc8d7be8912a5cf17f74ff10f124013c52c3e32"
+  resolved "https://github.com/learningequality/aphrodite.git#fdc8d7be8912a5cf17f74ff10f124013c52c3e32"
   dependencies:
     asap "^2.0.3"
     inline-style-prefixer "^4.0.2"
@@ -3664,7 +3664,7 @@ autoprefixer@^9.6.1:
     postcss "^7.0.32"
     postcss-value-parser "^4.1.0"
 
-autosize@^3.0.21:
+autosize@3.0.21:
   version "3.0.21"
   resolved "https://registry.yarnpkg.com/autosize/-/autosize-3.0.21.tgz#f182f40d17757d978a139a4c9ca40c4c0e448603"
   integrity sha512-xGFj5jTV4up6+fxRwtnAWiCIx/5N0tEnFn5rdhAkK1Lq2mliLMuGJgP5Bf4phck3sHGYrVKpYwugfJ61MSz9nA==
@@ -4829,10 +4829,10 @@ css-declaration-sorter@^6.3.1:
   resolved "https://registry.yarnpkg.com/css-declaration-sorter/-/css-declaration-sorter-6.4.0.tgz#630618adc21724484b3e9505bce812def44000ad"
   integrity sha512-jDfsatwWMWN0MODAFuHszfjphEXfNw9JUAhmY4pLu3TyTU+ohUpsbVtbU+1MZn4a47D9kqh03i4eyOm+74+zew==
 
-css-element-queries@^1.2.0:
-  version "1.2.3"
-  resolved "https://registry.yarnpkg.com/css-element-queries/-/css-element-queries-1.2.3.tgz#e14940b1fcd4bf0da60ea4145d05742d7172e516"
-  integrity sha512-QK9uovYmKTsV2GXWQiMOByVNrLn2qz6m3P7vWpOR4IdD6I3iXoDw5qtgJEN3Xq7gIbdHVKvzHjdAtcl+4Arc4Q==
+css-element-queries@1.2.0:
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/css-element-queries/-/css-element-queries-1.2.0.tgz#081373d7f30302adad46b7c29b83b85f8ef8f62c"
+  integrity sha512-4gaxpioSFueMcp9yj1TJFCLjfooGv38y6ZdwFUS3GuS+9NIVijdeiExXKwSIHoQDADfpgnaYSTzmJs+bV+Hehg==
 
 css-functions-list@^3.1.0:
   version "3.1.0"
@@ -5059,7 +5059,7 @@ data-urls@^3.0.2:
     whatwg-mimetype "^3.0.0"
     whatwg-url "^11.0.0"
 
-date-fns@^1.30.1:
+date-fns@1.30.1:
   version "1.30.1"
   resolved "https://registry.yarnpkg.com/date-fns/-/date-fns-1.30.1.tgz#2e71bf0b119153dbb4cc4e88d9ea5acfb50dc05c"
   integrity sha512-hBSVCvSmWC+QypYObzwGOd9wqdDpOt+0wl0KbU+R+uuZBS1jN8VsD1ss3irQDknRj5NvxiTF6oj/nDRnN/UQNw==
@@ -6483,7 +6483,7 @@ fragment-cache@^0.2.1:
   dependencies:
     map-cache "^0.2.2"
 
-frame-throttle@^3.0.0:
+frame-throttle@3.0.0:
   version "3.0.0"
   resolved "https://registry.yarnpkg.com/frame-throttle/-/frame-throttle-3.0.0.tgz#a666e007c10af6239909cf73871be09a7ea1c6d1"
   integrity sha512-ENBi8VP95xoHf8JpxPwEaCdZneOrtxl0U2H5p2oS896u3NzriR9kRcylvJ+FcCW3qZfZFJ5TDeOT5LbENndBnQ==
@@ -6550,7 +6550,7 @@ functions-have-names@^1.2.2:
   resolved "https://registry.yarnpkg.com/functions-have-names/-/functions-have-names-1.2.3.tgz#0404fe4ee2ba2f607f0e0ec3c80bae994133b834"
   integrity sha512-xckBUXyTIqT97tq2x2AMb+g163b5JFysYk0x4qxNFwbfQkmNZoiRHb6sPzI9/QV33WeuvVYBUIiD4NzNIyqaRQ==
 
-fuzzysearch@^1.0.3:
+fuzzysearch@1.0.3:
   version "1.0.3"
   resolved "https://registry.yarnpkg.com/fuzzysearch/-/fuzzysearch-1.0.3.tgz#dffc80f6d6b04223f2226aa79dd194231096d008"
   integrity sha512-s+kNWQuI3mo9OALw0HJ6YGmMbLqEufCh2nX/zzV5CrICQ/y4AwPxM+6TIiF9ItFCHXFCyM/BfCCmN57NTIJuPg==
@@ -9029,23 +9029,24 @@ kolibri-constants@^0.2.0:
   resolved "https://registry.yarnpkg.com/kolibri-constants/-/kolibri-constants-0.2.5.tgz#2b9df4c477119d0ade2d66bf8aef8a4172f0418f"
   integrity sha512-ZoFZ83xgteZhFZtYjiOmITcZeSF+X42i12TOo87zmcdA78jj0dZbPYB+ttO855UxoKY8h4HHeDVZIUkE5TGa5g==
 
-"kolibri-design-system@https://github.com/LianaHarris360/kolibri-design-system.git#finalize-theme-tokens":
-  version "1.3.0"
-  resolved "https://github.com/LianaHarris360/kolibri-design-system.git#7d773a79abc4daceca8cf2e6c0d7c9f6a876f176"
+kolibri-design-system@^4.0.1:
+  version "4.0.1"
+  resolved "https://registry.yarnpkg.com/kolibri-design-system/-/kolibri-design-system-4.0.1.tgz#24cb0b81c53b1c9731c941df297397a58ec5e667"
+  integrity sha512-wMbRMX6lTSdG77G9OVVeJek0GKg/d5RoGifZhjIq0x0lpgWLDecJpMtBGZfn+/nLGWXguvOsf/EAxY6wIqjPMg==
   dependencies:
-    "@vue/composition-api" "^1.7.2"
+    "@vue/composition-api" "1.7.2"
     aphrodite "https://github.com/learningequality/aphrodite/"
-    autosize "^3.0.21"
-    css-element-queries "^1.2.0"
-    date-fns "^1.30.1"
-    frame-throttle "^3.0.0"
-    fuzzysearch "^1.0.3"
-    lodash "^4.17.15"
-    popper.js "^1.14.6"
-    purecss "^0.6.2"
-    tippy.js "^4.2.1"
-    vue-intl "^3.1.0"
-    xstate "^4.38.3"
+    autosize "3.0.21"
+    css-element-queries "1.2.0"
+    date-fns "1.30.1"
+    frame-throttle "3.0.0"
+    fuzzysearch "1.0.3"
+    lodash "4.17.15"
+    popper.js "1.14.6"
+    purecss "0.6.2"
+    tippy.js "4.2.1"
+    vue-intl "3.1.0"
+    xstate "4.38.3"
 
 kolibri-tools@0.16.0-dev.3:
   version "0.16.0-dev.3"
@@ -9309,6 +9310,11 @@ lodash.without@^4.4.0:
   version "4.4.0"
   resolved "https://registry.yarnpkg.com/lodash.without/-/lodash.without-4.4.0.tgz#3cd4574a00b67bae373a94b748772640507b7aac"
   integrity sha512-M3MefBwfDhgKgINVuBJCO1YR3+gf6s9HNJsIiZ/Ru77Ws6uTb9eBuvrkpzO+9iLoAaRodGuq7tyrPCx+74QYGQ==
+
+lodash@4.17.15:
+  version "4.17.15"
+  resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.15.tgz#b447f6670a0455bbfeedd11392eff330ea097548"
+  integrity sha512-8xOcRHvCjnocdS5cpwXQXVzmmh5e5+saE2QGoeQmbKmRS6J3VQppPOIt0MnmE+4xlZoumy0GPG0D0MVIQbNA1A==
 
 lodash@4.17.21, lodash@^4.17.11, lodash@^4.17.14, lodash@^4.17.15, lodash@^4.17.19, lodash@^4.17.20, lodash@^4.17.21, lodash@^4.17.4, lodash@^4.7.0, lodash@~4.17.10:
   version "4.17.21"
@@ -10521,7 +10527,12 @@ pngjs@^3.0.0, pngjs@^3.3.3:
   resolved "https://registry.yarnpkg.com/pngjs/-/pngjs-3.4.0.tgz#99ca7d725965fb655814eaf65f38f12bbdbf555f"
   integrity sha512-NCrCHhWmnQklfH4MtJMRjZ2a8c80qXeMlQMv2uVp9ISJMTt562SbGd6n2oq0PaPgKm7Z6pL9E2UlLIhC+SHL3w==
 
-popper.js@^1.14.6, popper.js@^1.14.7:
+popper.js@1.14.6:
+  version "1.14.6"
+  resolved "https://registry.yarnpkg.com/popper.js/-/popper.js-1.14.6.tgz#ab20dd4edf9288b8b3b6531c47c361107b60b4b0"
+  integrity sha512-AGwHGQBKumlk/MDfrSOf0JHhJCImdDMcGNoqKmKkU+68GFazv3CQ6q9r7Ja1sKDZmYWTckY/uLyEznheTDycnA==
+
+popper.js@^1.14.7:
   version "1.16.1"
   resolved "https://registry.yarnpkg.com/popper.js/-/popper.js-1.16.1.tgz#2a223cb3dc7b6213d740e40372be40de43e65b1b"
   integrity sha512-Wb4p1J4zyFTbM+u6WuO4XstYx4Ky9Cewe4DWrel7B0w6VVICvPwdOpotjzcf6eD8TsckVnIMNONQyPIUFOUbCQ==
@@ -11013,7 +11024,7 @@ pure-rand@^6.0.0:
   resolved "https://registry.yarnpkg.com/pure-rand/-/pure-rand-6.0.2.tgz#a9c2ddcae9b68d736a8163036f088a2781c8b306"
   integrity sha512-6Yg0ekpKICSjPswYOuC5sku/TSWaRYlA0qsXqJgM/d/4pLPHPuTxK7Nbf7jFKzAeedUhR8C7K9Uv63FBsSo8xQ==
 
-purecss@^0.6.2:
+purecss@0.6.2:
   version "0.6.2"
   resolved "https://registry.yarnpkg.com/purecss/-/purecss-0.6.2.tgz#f0827d227e909543c5138f36d56c8c613f476b8c"
   integrity sha512-6BZF+rr9UAy8xwWDW6mi//2TnImxqMAjfLTYCO80OzPcavSI3DMjnD4fY92383KB5FA+gEHO/ug46q/yeitu9w==
@@ -12841,10 +12852,10 @@ tinycolor2@^1.4.1:
   resolved "https://registry.yarnpkg.com/tinycolor2/-/tinycolor2-1.4.2.tgz#3f6a4d1071ad07676d7fa472e1fac40a719d8803"
   integrity sha512-vJhccZPs965sV/L2sU4oRQVAos0pQXwsvTLkWYdqJ+a8Q5kPFzJTuOFwy7UniPli44NKQGAglksjvOcpo95aZA==
 
-tippy.js@^4.2.1:
-  version "4.3.5"
-  resolved "https://registry.yarnpkg.com/tippy.js/-/tippy.js-4.3.5.tgz#882bff8d92f09bb0546d2826d5668c0560006f54"
-  integrity sha512-NDq3efte8nGK6BOJ1dDN1/WelAwfmh3UtIYXXck6+SxLzbIQNZE/cmRSnwScZ/FyiKdIcvFHvYUgqmoGx8CcyA==
+tippy.js@4.2.1:
+  version "4.2.1"
+  resolved "https://registry.yarnpkg.com/tippy.js/-/tippy.js-4.2.1.tgz#9e4939d976465f77229b05a3cb233b5dc28cf850"
+  integrity sha512-xEE7zYNgQxCDdPcuT6T04f0frPh0wO7CcIqJKMFazU/NqusyjCgYSkLRosIHoiRkZMRzSPOudC8wRN5GjvAyOQ==
   dependencies:
     popper.js "^1.14.7"
 
@@ -13400,7 +13411,7 @@ vue-hot-reload-api@^2.3.0:
   resolved "https://registry.yarnpkg.com/vue-hot-reload-api/-/vue-hot-reload-api-2.3.4.tgz#532955cc1eb208a3d990b3a9f9a70574657e08f2"
   integrity sha512-BXq3jwIagosjgNVae6tkHzzIk6a8MHFtzAdwhnV5VlvPTFxDCvIttgSiHWjdGoTJvXtmRu5HacExfdarRcFhog==
 
-vue-intl@^3.0.0, vue-intl@^3.1.0:
+vue-intl@3.1.0, vue-intl@^3.0.0:
   version "3.1.0"
   resolved "https://registry.yarnpkg.com/vue-intl/-/vue-intl-3.1.0.tgz#707f1f7406595c9b4afc6049254b333093be37be"
   integrity sha512-0v3S5gspuYnt6j1G+KLfPUsNnjRdbMOcYrWYoSd1gYk6rX8VuOyh7NLztPrSIJt+NLs/qzLOZXxI1LORukEiqA==
@@ -14103,7 +14114,7 @@ xmldom@^0.1.22:
   resolved "https://registry.yarnpkg.com/xmldom/-/xmldom-0.1.31.tgz#b76c9a1bd9f0a9737e5a72dc37231cf38375e2ff"
   integrity sha512-yS2uJflVQs6n+CyjHoaBmVSqIDevTAWrzMmjG1Gc7h1qQ7uVozNhEPJAwZXWyGQ/Gafo3fCwrcaokezLPupVyQ==
 
-xstate@^4.38.3:
+xstate@4.38.3:
   version "4.38.3"
   resolved "https://registry.yarnpkg.com/xstate/-/xstate-4.38.3.tgz#4e15e7ad3aa0ca1eea2010548a5379966d8f1075"
   integrity sha512-SH7nAaaPQx57dx6qvfcIgqKRXIh4L0A1iYEqim4s1u7c9VoCgzZc+63FY90AKU4ZzOC2cfJzTnpO4zK7fCUzzw==
