@@ -52,7 +52,7 @@
           >
             <div style="padding:0.5em;">
               <KImg
-                src="https://upload.wikimedia.org/wikipedia/commons/8/84/Male_and_female_chicken_sitting_together.jpg"
+                :src="imageSource"
                 height="200px"
                 width="100%"
                 :appearanceOverrides="{ borderRadius: '10%' }"
@@ -77,12 +77,12 @@
             :layout8="{ span: 4 }"
             :layout4="{ span: 2 }"
           >
-            <div style="width:100px;height:100px;margin:0;">
+            <div style="width:100px;height:100px;">
               <KImg
-                src="https://upload.wikimedia.org/wikipedia/commons/8/84/Male_and_female_chicken_sitting_together.jpg"
-                height="130px"
+                :src="imageSource"
+                height="145px"
                 width="150%"
-                :appearanceOverrides="{ 'object-fit': 'cover' }"
+                :appearanceOverrides="{ 'object-fit': 'cover',borderRadius: '10px 0px 0px 10px' }"
               />
             </div>
           </KGridItem>
@@ -93,18 +93,20 @@
             :layout4="{ span: 2 }"
             style="width:65%;"
           >
-            <p>{{ $tr('className') }}</p>
+            <div style="padding:0.5em;">
+              <p>{{ $tr('className') }}</p>
+  
+              <KTextTruncator
+                :text="description"
+                :maxLines="2"
+                class="description-style"
+              />
+              <ProgressBar
+                :progressPercent="30"
+                :currentTaskError="false"
+              />
 
-            <KTextTruncator
-              :text="description"
-              :maxLines="2"
-              class="description-style"
-            />
-
-            <ProgressBar
-              :progressPercent="30"
-              :currentTaskError="false"
-            />
+            </div>
           </KGridItem>
         </KGrid>
       </component>
@@ -137,7 +139,7 @@
         v-if="thumbnailDisplay === 'small'"
       >
         <KImg
-          src="https://upload.wikimedia.org/wikipedia/commons/8/84/Male_and_female_chicken_sitting_together.jpg"
+          :src="imageSource"
           height="200px"
           width="100%"
         />
@@ -161,7 +163,7 @@
         v-if="thumbnailDisplay === 'large'"
       >
         <KImg
-          src="https://upload.wikimedia.org/wikipedia/commons/8/84/Male_and_female_chicken_sitting_together.jpg"
+          :src="imageSource"
           height="200px"
           width="100%"
         />
@@ -213,6 +215,11 @@ export default {
         type: String,
         required: false,
         default:''
+      },
+      imageSource:{
+        type: String,
+        required: false,
+        default: null
       }
     },
     data() {

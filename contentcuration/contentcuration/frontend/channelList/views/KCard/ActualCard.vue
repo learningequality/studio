@@ -64,3 +64,9 @@
     },
   };
 </script>
+<style scoped>
+.card{
+  padding: 0;
+  margin: 0;
+}
+</style>
