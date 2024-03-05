@@ -12,14 +12,13 @@
         v-if="thumbnailDisplay === 'none'"
       >
         <p>Class name 2</p>
-        <div
-          style="font-weight:bold;"
-        >
-          <KTextTruncator
-            :text="description"
-            :maxLines="2"
-          />
-        </div>
+
+        <KTextTruncator
+          :text="description"
+          :maxLines="2"
+          class="description-style"
+        />
+
 
         <ProgressBar
           :progressPercent="30"
@@ -33,23 +32,22 @@
       >
         <KGrid>
           <KGridItem
-            :layout12="{ span: 8 }"
+            :layout12="{ span: 7 }"
             :layout8="{ span: 5 }"
             :layout4="{ span: 2 }"
           >
             <p>Class name 2</p>
-            <p
-              style="font-weight:bold;font-size:1.5em;"
-            >
-              <KTextTruncator
-                :text="description"
-                :maxLines="2"
-              />
-            </p>
+
+            <KTextTruncator
+              :text="description"
+              :maxLines="2"
+              class="description-style"
+            />
+
           </KGridItem>
 
           <KGridItem
-            :layout12="{ span: 4 }"
+            :layout12="{ span: 5 }"
             :layout8="{ span: 3 }"
             :layout4="{ span: 2 }"
           >
@@ -57,7 +55,7 @@
               <KImg
                 src="https://upload.wikimedia.org/wikipedia/commons/8/84/Male_and_female_chicken_sitting_together.jpg"
                 height="200px"
-                width="200px"
+                width="100%"
                 :appearanceOverrides="{ borderRadius: '10%' }"
               />
             </div>
@@ -80,31 +78,33 @@
             :layout8="{ span: 4 }"
             :layout4="{ span: 2 }"
           >
-            <KImg
-              src="./../../../../static/img/kolibri-logo.png"
-              height="100px"
-              width="100px"
-            />
+            <div style="width:100px;height:100px;margin:0;">
+              <KImg
+                src="https://upload.wikimedia.org/wikipedia/commons/8/84/Male_and_female_chicken_sitting_together.jpg"
+                height="130px"
+                width="150%"
+                :appearanceOverrides="{ 'object-fit': 'cover' }"
+              />
+            </div>
           </KGridItem>
 
           <KGridItem
-            :layout12="{ span: 6 }"
+            :layout12="{ span: 8 }"
             :layout8="{ span: 4 }"
             :layout4="{ span: 2 }"
+            style="width:65%;"
           >
             <p>Class name 2</p>
-            <p 
-              style="font-weight:bold;"
-            >
-              <KTextTruncator
-                :text="description"
-                :maxLines="2"
-              />
-            </p>
-            <KIcon icon="" />
+
+            <KTextTruncator
+              :text="description"
+              :maxLines="2"
+              class="description-style"
+            />
+
             <ProgressBar
               :progressPercent="30"
-              :currentTaskError="true"
+              :currentTaskError="false"
             />
           </KGridItem>
         </KGrid>
@@ -119,19 +119,18 @@
         v-if="thumbnailDisplay === 'none'"
       >
         <p>Class name 2</p>
-        <p
-          style="font-weight:bold;font-size:1.5em;"
-        >
-          <KTextTruncator
-            :text="description"
-            :maxLines="2"
-          />
-        </p>
+
+        <KTextTruncator
+          :text="description"
+          :maxLines="2"
+          class="description-style"
+        />
+
         <ProgressBar
           :progressPercent="30"
-          :currentTaskError="true"
+          :currentTaskError="false"
         />
-        <p>Footer</p>
+
       </component>
 
       <component
@@ -139,26 +138,23 @@
         v-if="thumbnailDisplay === 'small'"
       >
         <KImg
-          src="./../../../../static/img/kolibri-logo.png"
-          height="100px"
-          width="100px"
+          src="https://upload.wikimedia.org/wikipedia/commons/8/84/Male_and_female_chicken_sitting_together.jpg"
+          height="200px"
+          width="100%"
         />
 
         <p>Class name 2</p>
-        <p 
-          style="font-weight:bold;font-size:1.5em;"
-        >
-          <KTextTruncator
-            :text="description"
-            :maxLines="2"
-          />
-        </p>
+
+        <KTextTruncator
+          :text="description"
+          :maxLines="2"
+          class="description-style"
+        />
 
         <ProgressBar
           :progressPercent="30"
-          :currentTaskError="true"
+          :currentTaskError="false"
         />
-        <p>Footer</p>
       </component>
 
       <component
@@ -166,27 +162,23 @@
         v-if="thumbnailDisplay === 'large'"
       >
         <KImg
-          src="./../../../../static/img/kolibri-logo.png"
-          height="100px"
-          width="100px"
+          src="https://upload.wikimedia.org/wikipedia/commons/8/84/Male_and_female_chicken_sitting_together.jpg"
+          height="200px"
+          width="100%"
         />
-        <p>Class name 2</p>
-        <p 
-          style="font-weight:bold;font-size:1.5em;"
-        >
-          <KTextTruncator
-            :text="description"
-            :maxLines="2"
-          />
-        </p>
 
-        <p>Practice</p>
+        <p>Class name 2</p>
+
+        <KTextTruncator
+          :text="description"
+          :maxLines="2"
+          class="description-style"
+        />
+
         <ProgressBar
           :progressPercent="30"
-          :currentTaskError="true"
+          :currentTaskError="false"
         />
-
-        <p>Footer</p>
       </component>
     </div>
   </ActualCard>
@@ -231,3 +223,10 @@ export default {
     },
 }
 </script>
+
+<style scoped>
+.description-style{
+  font-size:1.5em;
+  font-weight:bold;
+}
+</style>

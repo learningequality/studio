@@ -40,7 +40,7 @@
       </VFlex>
     </VLayout>
 
-    <div class="" style="width:700px">
+    <div class="" style="width:600px">
       <KCard
         layout="horizontal"
         thumbnailDisplay="none"
