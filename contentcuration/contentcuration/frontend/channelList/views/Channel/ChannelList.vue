@@ -43,7 +43,7 @@
     <div class="" style="width:600px">
       <KCard
         layout="horizontal"
-        thumbnailDisplay="none"
+        thumbnailDisplay="small"
         :headingLevel="3"
         :to="{ name: 'channel-list' }"
       />

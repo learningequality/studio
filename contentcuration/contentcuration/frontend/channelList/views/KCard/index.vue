@@ -11,14 +11,13 @@
         :is="'div'"
         v-if="thumbnailDisplay === 'none'"
       >
-        <p>Class name 2</p>
+        <p>{{ $tr('className') }}</p>
 
         <KTextTruncator
           :text="description"
           :maxLines="2"
           class="description-style"
         />
-
 
         <ProgressBar
           :progressPercent="30"
@@ -36,7 +35,7 @@
             :layout8="{ span: 5 }"
             :layout4="{ span: 2 }"
           >
-            <p>Class name 2</p>
+            <p>{{ $tr('className') }}</p>
 
             <KTextTruncator
               :text="description"
@@ -94,7 +93,7 @@
             :layout4="{ span: 2 }"
             style="width:65%;"
           >
-            <p>Class name 2</p>
+            <p>{{ $tr('className') }}</p>
 
             <KTextTruncator
               :text="description"
@@ -111,14 +110,14 @@
       </component>
     </div>
 
-    <div 
+    <div
       v-if="layout === 'vertical'"
     >
       <component
         :is="'div'"
         v-if="thumbnailDisplay === 'none'"
       >
-        <p>Class name 2</p>
+        <p>{{ $tr('className')}}</p>
 
         <KTextTruncator
           :text="description"
@@ -143,7 +142,7 @@
           width="100%"
         />
 
-        <p>Class name 2</p>
+        <p>{{ $tr('className') }}</p>
 
         <KTextTruncator
           :text="description"
@@ -167,7 +166,7 @@
           width="100%"
         />
 
-        <p>Class name 2</p>
+        <p>{{ $tr('className') }}</p>
 
         <KTextTruncator
           :text="description"
@@ -221,12 +220,15 @@ export default {
         description :"It is not meant to be the Rather, it offers a logic that is common to all of them and makes creation logic that is common to all of them and makes creation logic that is common to all of them and makes creation ",
       }
     },
+    $trs: {
+      className: 'Class name 2',
+    }
 }
 </script>
 
 <style scoped>
 .description-style{
-  font-size:1.5em;
+  font-size:1.2em;
   font-weight:bold;
 }
 </style>
