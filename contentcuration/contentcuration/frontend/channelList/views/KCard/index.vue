@@ -10,6 +10,7 @@
       <component
         :is="'div'"
         v-if="thumbnailDisplay === 'none'"
+        class="spacing"
       >
         <p>{{ $tr('className') }}</p>
 
@@ -28,6 +29,7 @@
       <component
         :is="'div'"
         v-if="thumbnailDisplay === 'small'"
+        class="spacing"
       >
         <KGrid>
           <KGridItem
@@ -50,7 +52,7 @@
             :layout8="{ span: 3 }"
             :layout4="{ span: 2 }"
           >
-            <div style="padding:0.5em;">
+            <div style="margin-top: 0.5em;">
               <KImg
                 :src="imageSource"
                 height="200px"
@@ -118,6 +120,7 @@
       <component
         :is="'div'"
         v-if="thumbnailDisplay === 'none'"
+        class="spacing"
       >
         <p>{{ $tr('className')}}</p>
 
@@ -137,6 +140,7 @@
       <component
         :is="'div'"
         v-if="thumbnailDisplay === 'small'"
+        class="spacing"
       >
         <KImg
           :src="imageSource"
@@ -156,6 +160,7 @@
           :progressPercent="30"
           :currentTaskError="false"
         />
+
       </component>
 
       <component
@@ -167,19 +172,21 @@
           height="200px"
           width="100%"
         />
+        <div class="spacing">
+          <p>{{ $tr('className') }}</p>
 
-        <p>{{ $tr('className') }}</p>
+          <KTextTruncator
+            :text="description"
+            :maxLines="2"
+            class="description-style"
+          />
 
-        <KTextTruncator
-          :text="description"
-          :maxLines="2"
-          class="description-style"
-        />
+          <ProgressBar
+            :progressPercent="30"
+            :currentTaskError="false"
+          />
 
-        <ProgressBar
-          :progressPercent="30"
-          :currentTaskError="false"
-        />
+        </div>
       </component>
     </div>
   </ActualCard>
@@ -237,5 +244,9 @@ export default {
 .description-style{
   font-size:1.2em;
   font-weight:bold;
+}
+
+.spacing{
+  margin: 1em;
 }
 </style>

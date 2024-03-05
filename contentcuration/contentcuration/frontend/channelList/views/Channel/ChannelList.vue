@@ -42,7 +42,7 @@
 
     <div class="" style="width:600px">
       <KCard
-        layout="horizontal"
+        layout="vertical"
         thumbnailDisplay="large"
         imageSource="https://upload.wikimedia.org/wikipedia/commons/8/84/Male_and_female_chicken_sitting_together.jpg"
         :headingLevel="3"
