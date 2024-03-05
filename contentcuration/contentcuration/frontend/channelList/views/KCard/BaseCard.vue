@@ -19,14 +19,9 @@
     
     
     <script>
-
-    import KTextTruncator from 'kolibri-design-system/lib/KTextTruncator';
     
       export default {
         name: 'BaseCard',
-        components: {
-          KTextTruncator,
-        },
         props: {
           title: {
             type: String,

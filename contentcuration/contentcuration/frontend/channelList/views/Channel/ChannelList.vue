@@ -40,11 +40,10 @@
       </VFlex>
     </VLayout>
 
-    <div class="">
+    <div class="" style="width:700px">
       <KCard
         layout="horizontal"
-        thumbnailDisplay="small"
-        title="title"
+        thumbnailDisplay="none"
         :headingLevel="3"
         :to="{ name: 'channel-list' }"
       />

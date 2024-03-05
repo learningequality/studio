@@ -94,8 +94,8 @@
     data() {
       return {
         styleObject: {
-          height: this.imgHeight,
-          width: this.imgWidth,
+          height: this.height,
+          width: this.width,
           maxHeight: this.imgMaxHeight,
           minHeight: this.imgMinHeight,
           maxWidth: this.imgMaxWidth,
@@ -108,12 +108,12 @@
       alternateText() {
         return this.isDecorative ? '' : this.altText;
       },
-      imgHeight() {
-        return this.validateAndFormatUnits(this.height);
-      },
-      imgWidth() {
-        return this.validateAndFormatUnits(this.width);
-      },
+      // imgHeight() {
+      //   return this.validateAndFormatUnits(this.height);
+      // },
+      // imgWidth() {
+      //   return this.validateAndFormatUnits(this.width);
+      // },
       imgMaxHeight() {
         return this.validateAndFormatUnits(this.maxHeight);
       },

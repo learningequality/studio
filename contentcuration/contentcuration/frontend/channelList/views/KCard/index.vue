@@ -12,16 +12,19 @@
         v-if="thumbnailDisplay === 'none'"
       >
         <p>Class name 2</p>
-        <p
+        <div
           style="font-weight:bold;"
         >
-          It is not meant to be the 
-          final card displayed in the Learning Equality Products. 
-          Rather, it offers a logic that is common to all of 
-          them and makes creation 
-        </p>
-        <p>In progress</p>
-        <p>Footer</p>
+          <KTextTruncator
+            :text="description"
+            :maxLines="2"
+          />
+        </div>
+
+        <ProgressBar
+          :progressPercent="30"
+          :currentTaskError="false"
+        />
       </component>
 
       <component
@@ -30,39 +33,41 @@
       >
         <KGrid>
           <KGridItem
-            :layout12="{ span: 6 }"
-            :layout8="{ span: 4 }"
+            :layout12="{ span: 8 }"
+            :layout8="{ span: 5 }"
             :layout4="{ span: 2 }"
           >
             <p>Class name 2</p>
             <p
-              style="font-weight:bold;"
+              style="font-weight:bold;font-size:1.5em;"
             >
-              It is not meant to be the 
-              final card displayed in the Learning Equality Products. 
-              Rather, it offers a logic that is common to all of 
-              them and makes creation 
+              <KTextTruncator
+                :text="description"
+                :maxLines="2"
+              />
             </p>
-            <p>In progress</p>
-            <p>Footer</p>
           </KGridItem>
 
           <KGridItem
-            :layout12="{ span: 6 }"
-            :layout8="{ span: 4 }"
+            :layout12="{ span: 4 }"
+            :layout8="{ span: 3 }"
             :layout4="{ span: 2 }"
           >
-            <div class="" style="width:100px;height:100px;">
+            <div style="padding:0.5em;">
               <KImg
-                src="./../../../../static/img/kolibri-logo.png"
-                height="100px"
-                width="100px"
+                src="https://upload.wikimedia.org/wikipedia/commons/8/84/Male_and_female_chicken_sitting_together.jpg"
+                height="200px"
+                width="200px"
+                :appearanceOverrides="{ borderRadius: '10%' }"
               />
             </div>
           </KGridItem>
         </KGrid>
        
-        <p>Footer</p>
+        <ProgressBar
+          :progressPercent="30"
+          :currentTaskError="false"
+        />
       </component>
 
       <component
@@ -71,12 +76,14 @@
       >
         <KGrid>
           <KGridItem
-            :layout12="{ span: 6 }"
+            :layout12="{ span: 4 }"
             :layout8="{ span: 4 }"
             :layout4="{ span: 2 }"
           >
             <KImg
               src="./../../../../static/img/kolibri-logo.png"
+              height="100px"
+              width="100px"
             />
           </KGridItem>
 
@@ -89,12 +96,16 @@
             <p 
               style="font-weight:bold;"
             >
-              It is not meant to be the 
-              final card displayed in the Learning Equality Products. 
-              Rather, it offers a logic that is common to all of 
-              them and makes creation 
+              <KTextTruncator
+                :text="description"
+                :maxLines="2"
+              />
             </p>
-            <p>In progress</p>
+            <KIcon icon="" />
+            <ProgressBar
+              :progressPercent="30"
+              :currentTaskError="true"
+            />
           </KGridItem>
         </KGrid>
       </component>
@@ -108,15 +119,18 @@
         v-if="thumbnailDisplay === 'none'"
       >
         <p>Class name 2</p>
-        <p 
-          style="font-weight:bold;"
+        <p
+          style="font-weight:bold;font-size:1.5em;"
         >
-          It is not meant to be the 
-          final card displayed in the Learning Equality Products. 
-          Rather, it offers a logic that is common to all of 
-          them and makes creation 
+          <KTextTruncator
+            :text="description"
+            :maxLines="2"
+          />
         </p>
-        <p>In progress</p>
+        <ProgressBar
+          :progressPercent="30"
+          :currentTaskError="true"
+        />
         <p>Footer</p>
       </component>
 
@@ -126,18 +140,24 @@
       >
         <KImg
           src="./../../../../static/img/kolibri-logo.png"
+          height="100px"
+          width="100px"
         />
 
         <p>Class name 2</p>
         <p 
-          style="font-weight:bold;"
+          style="font-weight:bold;font-size:1.5em;"
         >
-          It is not meant to be the 
-          final card displayed in the Learning Equality Products. 
-          Rather, it offers a logic that is common to all of 
-          them and makes creation 
+          <KTextTruncator
+            :text="description"
+            :maxLines="2"
+          />
         </p>
-        <p>In progress</p>
+
+        <ProgressBar
+          :progressPercent="30"
+          :currentTaskError="true"
+        />
         <p>Footer</p>
       </component>
 
@@ -147,17 +167,25 @@
       >
         <KImg
           src="./../../../../static/img/kolibri-logo.png"
+          height="100px"
+          width="100px"
         />
         <p>Class name 2</p>
         <p 
-          style="font-weight:bold;"
+          style="font-weight:bold;font-size:1.5em;"
         >
-          It is not meant to be the 
-          final card displayed in the Learning Equality Products. 
-          Rather, it offers a logic that is common to all of 
-          them and makes creation 
+          <KTextTruncator
+            :text="description"
+            :maxLines="2"
+          />
         </p>
-        <p>In progress</p>
+
+        <p>Practice</p>
+        <ProgressBar
+          :progressPercent="30"
+          :currentTaskError="true"
+        />
+
         <p>Footer</p>
       </component>
     </div>
@@ -165,12 +193,13 @@
 </template>
 
 <script>
+import ProgressBar from '../../../channelEdit/views/progress/ProgressBar.vue';
 import KImg from '../KImg';
 import ActualCard from './ActualCard.vue';
 
 export default {
     name: "KCard",
-    components: { ActualCard , KImg},
+    components: { ActualCard , KImg, ProgressBar},
     props:{
       title: {
         type: String,
@@ -194,6 +223,11 @@ export default {
         required: false,
         default:''
       }
-    }
+    },
+    data() {
+      return {
+        description :"It is not meant to be the Rather, it offers a logic that is common to all of them and makes creation logic that is common to all of them and makes creation logic that is common to all of them and makes creation ",
+      }
+    },
 }
 </script>
