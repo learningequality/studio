@@ -1,5 +1,5 @@
 <template>
-  <ActualCard
+  <BaseCard
     :title="title"
     :headingLevel="headingLevel"
     :to="to"
@@ -189,17 +189,17 @@
         </div>
       </component>
     </div>
-  </ActualCard>
+  </BaseCard>
 </template>
 
 <script>
 import ProgressBar from '../../../channelEdit/views/progress/ProgressBar.vue';
 import KImg from '../KImg';
-import ActualCard from './ActualCard.vue';
+import BaseCard from './BaseCard.vue';
 
 export default {
     name: "KCard",
-    components: { ActualCard , KImg, ProgressBar},
+    components: { BaseCard , KImg, ProgressBar},
     props:{
       title: {
         type: String,

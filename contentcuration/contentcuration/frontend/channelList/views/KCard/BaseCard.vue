@@ -1,18 +1,26 @@
 <template>
-
   <div
-    :class="$computedClass({ ':focus': $coreOutline })"
+    class="card"
+    tabindex="0"
+    @focus="cardFocus"
+    @hover="cardHover"
   >
-    <li class="remove-list-style">
-      <component
-        :is="'h' + headingLevel"
-        v-if="title !== null"
-      >
-        <a :href="to">
-          <KTextTruncator :text="title" :maxLines="1" />
-        </a>
-      </component>
-    </li>
+    <div
+      :class="$computedClass({ ':focus': $coreOutline })"
+    >
+      <li class="remove-list-style">
+        <component
+          :is="'h' + headingLevel"
+          v-if="title !== null"
+        >
+          <a :href="to">
+            <KTextTruncator :text="title" :maxLines="1" />
+          </a>
+        </component>
+      </li>
+
+    </div>
+    <slot></slot>
   </div>
 
 </template>
@@ -35,6 +43,14 @@
           to: {
             type: Object,
             required: true,
+          },
+        },
+        methods: {
+          cardFocus(e) {
+            this.$emit('focus', e);
+          },
+          cardHover(e) {
+            this.$emit('hover', e);
           },
         },
       };
