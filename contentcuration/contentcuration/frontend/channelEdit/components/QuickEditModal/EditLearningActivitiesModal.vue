@@ -8,7 +8,7 @@
     :validators="learningActivityValidators"
     :inputComponent="LearningActivityOptionsComponent"
     :confirmationMessage="$tr('editedLearningActivities', { count: nodeIds.length })"
-    @close="close"
+    @close="() => $emit('close')"
   />
 
 </template>
@@ -17,7 +17,6 @@
 <script>
 
   import EditBooleanMapModal from './EditBooleanMapModal';
-  import { metadataTranslationMixin } from 'shared/mixins';
   import { getLearningActivityValidators } from 'shared/utils/validation';
   import LearningActivityOptions from 'shared/views/contentNodeFields/LearningActivityOptions';
 
@@ -26,7 +25,6 @@
     components: {
       EditBooleanMapModal,
     },
-    mixins: [metadataTranslationMixin],
     props: {
       nodeIds: {
         type: Array,
@@ -39,11 +37,6 @@
       },
       LearningActivityOptionsComponent() {
         return LearningActivityOptions;
-      },
-    },
-    methods: {
-      close() {
-        this.$emit('close');
       },
     },
     $trs: {

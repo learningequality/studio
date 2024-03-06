@@ -40,6 +40,11 @@
 
 <script>
 
+  /**
+   * EditBooleanMapModal
+   * This component is a modal responsible for reusing the logic of saving
+   * the edition of a boolean map field for multiple nodes.
+   */
   import { mapGetters, mapActions } from 'vuex';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import { getInvalidText } from 'shared/utils/validation';
@@ -71,6 +76,14 @@
         type: Array,
         default: () => [],
       },
+      /**
+       * inputComponent is a component that will be used to render the input(s)
+       * that will be used to edit the boolean map field.
+       * It should be a component that accepts a v-model prop and a nodeIds prop.
+       *
+       * The v-model prop should support an object with the same structure as the
+       * `this.selectedValues` data property.
+       */
       inputComponent: {
         type: Object,
         required: true,

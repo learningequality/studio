@@ -7,7 +7,7 @@
     :nodeIds="nodeIds"
     :inputComponent="LevelsOptionsComponent"
     :confirmationMessage="$tr('editedLevels', { count: nodeIds.length })"
-    @close="close"
+    @close="() => $emit('close')"
   />
 
 </template>
@@ -16,7 +16,6 @@
 <script>
 
   import EditBooleanMapModal from './EditBooleanMapModal';
-  import { metadataTranslationMixin } from 'shared/mixins';
   import LevelsOptions from 'shared/views/contentNodeFields/LevelsOptions';
 
   export default {
@@ -24,7 +23,6 @@
     components: {
       EditBooleanMapModal,
     },
-    mixins: [metadataTranslationMixin],
     props: {
       nodeIds: {
         type: Array,
@@ -34,11 +32,6 @@
     computed: {
       LevelsOptionsComponent() {
         return LevelsOptions;
-      },
-    },
-    methods: {
-      close() {
-        this.$emit('close');
       },
     },
     $trs: {

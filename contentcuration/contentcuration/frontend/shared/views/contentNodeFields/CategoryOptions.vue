@@ -111,10 +111,24 @@
     components: { DropdownWrapper },
     mixins: [constantsTranslationMixin, metadataTranslationMixin],
     props: {
+      /**
+       * It can receive a value as an array of strings of the selected categories, or
+       * an object with the following structure:
+       * {
+       *  [categoryId]: true | [nodeId1, nodeId2, ...]
+       * }
+       * If the value is true, it means that the option is selected for all nodes
+       * If the value is an array of nodeIds, it means that the option is selected
+       * just for those nodes
+       */
       value: {
         type: [Array, Object],
         default: () => [],
       },
+      /**
+       * An array of nodeIds that we are editing. If none, we will asume that we
+       * are editing just one node
+       */
       nodeIds: {
         type: Array,
         default: () => [],

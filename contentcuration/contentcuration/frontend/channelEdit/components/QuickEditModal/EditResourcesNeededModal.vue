@@ -7,7 +7,7 @@
     :nodeIds="nodeIds"
     :confirmationMessage="$tr('editedResourcesNeeded', { count: nodeIds.length })"
     :inputComponent="ResourcesNeededOptionsComponent"
-    @close="close"
+    @close="() => $emit('close')"
   />
 
 </template>
@@ -32,11 +32,6 @@
     computed: {
       ResourcesNeededOptionsComponent() {
         return ResourcesNeededOptions;
-      },
-    },
-    methods: {
-      close() {
-        this.$emit('close');
       },
     },
     $trs: {

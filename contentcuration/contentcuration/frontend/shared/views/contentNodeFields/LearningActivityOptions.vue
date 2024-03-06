@@ -29,6 +29,16 @@
     components: { ExpandableSelect },
     mixins: [constantsTranslationMixin, metadataTranslationMixin],
     props: {
+      /**
+       * It can receive a value as an array of strings of the selected learning activities, or
+       * an object with the following structure:
+       * {
+       *  [learningActivityId]: true | [nodeId1, nodeId2, ...]
+       * }
+       * If the value is true, it means that the option is selected for all nodes
+       * If the value is an array of nodeIds, it means that the option is selected
+       * just for those nodes
+       */
       value: {
         type: [Array, Object],
         default: () => [],
