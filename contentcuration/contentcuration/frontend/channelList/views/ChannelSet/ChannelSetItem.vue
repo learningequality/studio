@@ -17,13 +17,17 @@
         <template #activator="{ on }">
           <VBtn flat block v-on="on">
             {{ $tr('options') }}
-            <Icon>arrow_drop_down</Icon>
+            <Icon
+              icon="dropdown"
+            />
           </VBtn>
         </template>
         <VList>
           <VListTile data-test="edit" :to="channelSetDetailsLink">
             <VListTileAction>
-              <Icon>edit</Icon>
+              <Icon
+                icon="edit"
+              />
             </VListTileAction>
             <VListTileTitle>{{ $tr('edit') }}</VListTileTitle>
           </VListTile>

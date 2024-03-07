@@ -134,7 +134,9 @@
                   @mouseenter="hideHighlight = true"
                   @mouseleave="hideHighlight = false"
                 >
-                  <Icon>more_vert</Icon>
+                  <Icon
+                    icon="optionsVertical"
+                  />
                 </VBtn>
               </template>
               <VList>

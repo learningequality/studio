@@ -34,9 +34,11 @@
             icon
             v-on="on"
           >
-            <Icon color="grey darken-1">
-              more_vert
-            </Icon>
+            <Icon
+              icon="optionsVertical"
+              color="grey darken-1"
+            />
+
           </VBtn>
         </template>
 
