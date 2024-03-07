@@ -65,9 +65,10 @@
         </h1>
         <div v-for="option in usageOptions" :key="option.id">
           <KCheckbox
-            :checked="form.uses"
+            :checked="form.uses.includes(option.id)"
             :label="option.label"
             :value="option.id"
+            @change="handleUsageOptionClick(option.id)"
           />
           <VSlideYTransition>
             <TextField
@@ -411,6 +412,13 @@
     methods: {
       ...mapActions('account', ['register']),
       ...mapActions('policies', ['openPolicy']),
+      handleUsageOptionClick(id) {
+        if (this.form.uses.includes(id)) {
+          this.form.uses = this.form.uses.filter(use => use !== id);
+        } else {
+          this.form.uses.push(id);
+        }
+      },
       showTermsOfService() {
         this.openPolicy(policies.TERMS_OF_SERVICE);
       },
