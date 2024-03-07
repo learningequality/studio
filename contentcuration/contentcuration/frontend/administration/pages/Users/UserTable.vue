@@ -68,9 +68,9 @@
 
       <template #headerCell="{ header }">
         <div style="display: inline-block; width: min-content;" @click.stop>
-          <Checkbox
+          <KCheckbox
             v-if="header.class === 'first'"
-            v-model="selectAll"
+            :checked="selectAll"
             class="ma-0"
             :indeterminate="Boolean(selected.length) && selected.length !== users.length"
           />
@@ -109,7 +109,6 @@
   import UserItem from './UserItem';
   import { routerMixin } from 'shared/mixins';
   import IconButton from 'shared/views/IconButton';
-  import Checkbox from 'shared/views/form/Checkbox';
   import CountryField from 'shared/views/form/CountryField';
 
   const userFilters = {
@@ -124,7 +123,6 @@
   export default {
     name: 'UserTable',
     components: {
-      Checkbox,
       IconButton,
       EmailUsersDialog,
       UserItem,

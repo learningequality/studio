@@ -43,7 +43,7 @@
           </template>
 
           <template v-if="isMultipleSelection">
-            <Checkbox
+            <KCheckbox
               v-for="(answer, idx) in answers"
               :key="idx"
               v-model="correctAnswersIndices"
@@ -55,7 +55,7 @@
                   <MarkdownViewer :markdown="answer.answer" />
                 </div>
               </template>
-            </Checkbox>
+            </KCheckbox>
           </template>
 
           <VList v-if="isInputQuestion">
@@ -114,14 +114,12 @@
   import { getCorrectAnswersIndices } from '../../utils';
   import translator from '../../translator';
   import { AssessmentItemTypes } from 'shared/constants';
-  import Checkbox from 'shared/views/form/Checkbox';
   import MarkdownViewer from 'shared/views/MarkdownEditor/MarkdownViewer/MarkdownViewer.vue';
 
   export default {
     name: 'AssessmentItemPreview',
     components: {
-      MarkdownViewer,
-      Checkbox,
+      MarkdownViewer
     },
     props: {
       /**

@@ -37,8 +37,8 @@
             </transition>
           </VListTileAction>
           <VListTileAction class="mx-2 select-col" @click.stop>
-            <Checkbox
-              v-model="selected"
+            <KCheckbox
+              :checked="selected"
               :disabled="copying"
               class="mt-0 pt-0"
               @dblclick.stop
@@ -102,7 +102,6 @@
   import ContentNodeListItem from './ContentNodeListItem';
   import ContentNodeOptions from './ContentNodeOptions';
   import ContentNodeContextMenu from './ContentNodeContextMenu';
-  import Checkbox from 'shared/views/form/Checkbox';
   import IconButton from 'shared/views/IconButton';
   import DraggableItem from 'shared/views/draggable/DraggableItem';
   import { ContentNode } from 'shared/data/resources';
@@ -118,7 +117,6 @@
       ContentNodeListItem,
       ContentNodeOptions,
       ContentNodeContextMenu,
-      Checkbox,
       IconButton,
     },
     props: {

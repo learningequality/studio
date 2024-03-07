@@ -2,12 +2,12 @@
 
   <tr :class="user.is_active ? '' : 'red--text'">
     <td v-if="$vuetify.breakpoint.smAndDown" class="pt-2">
-      <Checkbox v-model="selected" />
+      <KCheckbox :checked="selected" />
     </td>
     <td>
       <VLayout align-center justify-start fill-height>
         <VFlex v-if="$vuetify.breakpoint.mdAndUp" shrink class="pb-3 pt-3">
-          <Checkbox v-model="selected" />
+          <KCheckbox :checked="selected" />
         </VFlex>
         <VFlex shrink>
           <VTooltip v-if="user.is_admin" bottom z-index="200" lazy>
@@ -99,12 +99,10 @@
   import UserActionsDropdown from './UserActionsDropdown';
   import UserStorage from './UserStorage';
   import { fileSizeMixin } from 'shared/mixins';
-  import Checkbox from 'shared/views/form/Checkbox';
 
   export default {
     name: 'UserItem',
     components: {
-      Checkbox,
       UserActionsDropdown,
       UserStorage,
     },

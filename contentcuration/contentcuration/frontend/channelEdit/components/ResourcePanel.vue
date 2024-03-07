@@ -128,8 +128,8 @@
             class="my-3"
           >
             <VFlex>
-              <Checkbox
-                v-model="showAnswers"
+              <KCheckbox
+                :checked="showAnswers"
                 :label="$tr('showAnswers')"
                 class="ma-0"
               />
@@ -552,7 +552,6 @@
   import DetailsRow from 'shared/views/details/DetailsRow';
   import ExpandableList from 'shared/views/ExpandableList';
   import Licenses from 'shared/leUtils/Licenses';
-  import Checkbox from 'shared/views/form/Checkbox';
   import Banner from 'shared/views/Banner';
   import Tabs from 'shared/views/Tabs';
   import {
@@ -572,7 +571,6 @@
       FilePreview,
       ExpandableList,
       AssessmentItemPreview,
-      Checkbox,
       ContentNodeValidator,
       Banner,
       Tabs,

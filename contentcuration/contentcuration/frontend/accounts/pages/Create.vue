@@ -64,8 +64,8 @@
           {{ $tr('usageLabel') }}*
         </h1>
         <div v-for="option in usageOptions" :key="option.id">
-          <Checkbox
-            v-model="form.uses"
+          <KCheckbox
+            :checked="form.uses"
             :label="option.label"
             :value="option.id"
           />

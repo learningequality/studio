@@ -2,8 +2,8 @@
 
   <VContainer fluid>
     <template v-if="sortedItems && sortedItems.length">
-      <Checkbox
-        v-model="displayAnswersPreview"
+      <KCheckbox
+        :checked="displayAnswersPreview"
         :label="$tr('showAnswers')"
         class="mb-4"
         data-test="showAnswersCheckbox"
@@ -132,7 +132,6 @@
   import AssessmentItemToolbar from '../AssessmentItemToolbar';
   import AssessmentItemEditor from '../AssessmentItemEditor/AssessmentItemEditor';
   import AssessmentItemPreview from '../AssessmentItemPreview/AssessmentItemPreview';
-  import Checkbox from 'shared/views/form/Checkbox';
   import { AssessmentItemTypes, DELAYED_VALIDATION } from 'shared/constants';
 
   function areItemsEqual(item1, item2) {
@@ -151,7 +150,6 @@
       AssessmentItemToolbar,
       AssessmentItemEditor,
       AssessmentItemPreview,
-      Checkbox,
     },
     props: {
       nodeId: {

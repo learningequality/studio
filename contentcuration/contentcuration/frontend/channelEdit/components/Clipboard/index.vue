@@ -32,7 +32,7 @@
               <VListTile class="grow">
                 <VSlideXTransition hide-on-leave>
                   <VListTileAction v-if="!initializing && channels.length && !previewSourceNode">
-                    <Checkbox
+                    <KCheckbox
                       ref="checkbox"
                       class="ma-0 pa-0"
                       :value="selected"
@@ -142,7 +142,6 @@
   import clipboardMixin from './mixins';
   import Channel from './Channel';
   import ResizableNavigationDrawer from 'shared/views/ResizableNavigationDrawer';
-  import Checkbox from 'shared/views/form/Checkbox';
   import IconButton from 'shared/views/IconButton';
   import ToolBar from 'shared/views/ToolBar';
   import LoadingText from 'shared/views/LoadingText';
@@ -158,7 +157,6 @@
       ResizableNavigationDrawer,
       ResourcePanel,
       Channel,
-      Checkbox,
       IconButton,
       ToolBar,
       LoadingText,

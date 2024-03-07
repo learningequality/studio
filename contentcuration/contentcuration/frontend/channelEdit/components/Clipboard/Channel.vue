@@ -9,7 +9,7 @@
     <template #header>
       <VListTile class="channel-tile py-2" inactive>
         <VListTileAction class="select-col">
-          <Checkbox
+          <KCheckbox
             ref="checkbox"
             class="ma-0 pa-0"
             :value="selected"
@@ -51,7 +51,6 @@
   import { mapGetters } from 'vuex';
   import clipboardMixin, { parentMixin } from './mixins';
   import ContentNode from './ContentNode';
-  import Checkbox from 'shared/views/form/Checkbox';
   import { SelectionFlags } from 'frontend/channelEdit/vuex/clipboard/constants';
   import LazyListGroup from 'shared/views/LazyListGroup';
 
@@ -59,7 +58,6 @@
     name: 'Channel',
     components: {
       ContentNode,
-      Checkbox,
       LazyListGroup,
     },
     mixins: [clipboardMixin, parentMixin],
