@@ -61,6 +61,7 @@
 
   import { mapGetters, mapActions } from 'vuex';
   import { LanguagesList } from 'shared/leUtils/Languages';
+  import { hasMultipleFieldValues } from 'shared/utils/helpers';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
   export default {
@@ -87,8 +88,7 @@
         return this.nodes.some(node => node.kind === ContentKindsNames.TOPIC);
       },
       isMultipleNodeLanguages() {
-        const languages = new Set(this.nodes.map(node => node.language).filter(Boolean));
-        return languages.size > 1;
+        return hasMultipleFieldValues(this.nodes, 'language');
       },
       languageOptions() {
         const searchQuery = this.searchQuery.trim().toLowerCase();

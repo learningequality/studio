@@ -55,6 +55,7 @@
   import { RolesList, RolesNames } from 'shared/leUtils/Roles';
   import { ResourcesNeededTypes } from 'shared/constants';
   import { constantsTranslationMixin } from 'shared/mixins';
+  import { hasMultipleFieldValues } from 'shared/utils/helpers';
 
   export default {
     name: 'EditAudienceModal',
@@ -97,10 +98,7 @@
         };
       },
       hasMultipleRoleVisibilities() {
-        const roleVisibilities = new Set(
-          this.nodes.map(node => node.role_visibility).filter(Boolean)
-        );
-        return roleVisibilities.size > 1;
+        return hasMultipleFieldValues(this.nodes, 'role_visibility');
       },
       hasMultipleForBeginnersValues() {
         let accValue = null;

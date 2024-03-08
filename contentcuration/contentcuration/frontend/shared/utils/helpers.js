@@ -561,3 +561,18 @@ export function getFileDuration(nodeFiles, kind) {
   }
   return file.duration;
 }
+
+export function hasMultipleFieldValues(array, field) {
+  let value;
+  for (const item of array) {
+    if (!item[field]) {
+      continue;
+    }
+    if (value === undefined) {
+      value = item[field];
+    } else if (value !== item[field]) {
+      return true;
+    }
+  }
+  return false;
+}

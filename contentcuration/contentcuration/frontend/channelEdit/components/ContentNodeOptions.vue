@@ -10,6 +10,7 @@
         <VListTile
           v-for="(option, index) in group"
           :key="groupIndex + '-' + index"
+          class="options-list-item"
           ripple
           :to="option.to"
           tabindex="0"
@@ -226,17 +227,7 @@
       this.lastFocus = document.activeElement;
     },
     mounted() {
-      const animationFrame1 = requestAnimationFrame(() => {
-        const animationFrame2 = requestAnimationFrame(() => {
-          const { optionsList } = this.$refs;
-          const firstOption = optionsList.$el.querySelector('a');
-          if (firstOption) {
-            firstOption.focus();
-          }
-          cancelAnimationFrame(animationFrame2);
-        });
-        cancelAnimationFrame(animationFrame1);
-      });
+      this.focusFirstOption();
     },
     destroyed() {
       this.lastFocus && this.lastFocus.focus();
@@ -253,7 +244,17 @@
       ...mapMutations('contentNode', {
         openQuickEditModal: 'SET_QUICK_EDIT_MODAL_OPEN',
       }),
+      async focusFirstOption() {
+        const { optionsList } = this.$refs;
+        const firstOption = optionsList.$el.querySelector('a');
+        let tries = 0;
+        while (document.activeElement !== firstOption && tries++ < 20) {
+          await new Promise(resolve => setTimeout(resolve, 0));
+          firstOption.focus();
+        }
+      },
       handleTab($event) {
+        $event.preventDefault();
         const optionsList = this.$refs.optionsList;
         const options = optionsList.$el.querySelectorAll('a');
         const index = Array.from(options).indexOf($event.target);
@@ -267,7 +268,6 @@
         const nextIndex = $event.shiftKey ? index - 1 : index + 1;
         const nextOption = options[nextIndex];
         nextOption && nextOption.focus();
-        $event.preventDefault();
       },
       newTopicNode() {
         this.trackAction('New topic');
