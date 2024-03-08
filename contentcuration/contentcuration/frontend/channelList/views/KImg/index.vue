@@ -26,7 +26,8 @@
         default: null,
       },
       /**
-       * Alternate text for the image. This is required and will throw a warning when it's not provided (empty) unless isDecorative is true
+       * Alternate text for the image. This is required and will
+       * throw a warning when it's not provided (empty) unless isDecorative is true
        */
       altText: {
         type: String,
@@ -82,8 +83,10 @@
         default: undefined,
       },
       /**
-       * Accepts a Vue dynamic styles object to override the default styles to modify the appearance of the component.
-       * It's attributes always take precedence over any specified styling (internal component's styles, styles calculated from props etc.)
+       * Accepts a Vue dynamic styles object to override the default styles to modify the appearance
+       * of the component.
+       * It's attributes always take precedence over any specified styling (internal
+       *  component's styles, styles calculated from props etc.)
        */
       appearanceOverrides: {
         type: Object,
@@ -167,7 +170,8 @@
       },
       onError(event) {
         /**
-         * Emitted when the image fails to load. The DOM event that triggered the error is available in the payload.
+         * Emitted when the image fails to load. The DOM event that
+         * triggered the error is available in the payload.
          */
         this.$emit('error', event);
       },

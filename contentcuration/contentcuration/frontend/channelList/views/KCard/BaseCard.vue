@@ -10,11 +10,14 @@
     >
       <li class="remove-list-style">
         <component
-          :is="'h' + headingLevel"
-          v-if="title !== null"
+          :is="headerLevel"
         >
           <a :href="to">
-            <KTextTruncator :text="title" :maxLines="1" />
+            <KTextTruncator
+              v-if="title !== null"
+              :text="title"
+              :maxLines="1"
+            />
           </a>
         </component>
       </li>
@@ -44,6 +47,11 @@
             type: Object,
             required: true,
           },
+        },
+        computed:{
+          headerLevel(){
+            return 'h' + this.headingLevel;
+          }
         },
         methods: {
           cardFocus(e) {
