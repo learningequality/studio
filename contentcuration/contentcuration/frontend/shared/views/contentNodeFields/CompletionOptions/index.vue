@@ -169,6 +169,7 @@
       maxMenuHeight: {
         type: Number,
         required: false,
+        default: 300,
       },
     },
     computed: {
@@ -483,7 +484,12 @@
        * @public
        */
       validate() {
-        const fieldsRefs = ['completion', 'activity_duration', 'mastery_model', 'mastery_model_m_of_n'];
+        const fieldsRefs = [
+          'completion',
+          'activity_duration',
+          'mastery_model',
+          'mastery_model_m_of_n',
+        ];
         for (const ref of fieldsRefs) {
           const field = this.$refs[ref];
           if (field && field.validate) {

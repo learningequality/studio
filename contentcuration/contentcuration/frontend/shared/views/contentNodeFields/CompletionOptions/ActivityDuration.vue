@@ -134,9 +134,7 @@
         return this.isShortActivity ? 5 : 10;
       },
       availableNumbers() {
-        return this.isShortActivity
-          ? SHORT_ACTIVITY_RANGE
-          : LONG_ACTIVITY_RANGE;
+        return this.isShortActivity ? SHORT_ACTIVITY_RANGE : LONG_ACTIVITY_RANGE;
       },
       minutes: {
         get() {
@@ -188,7 +186,7 @@
             background: this.$themeTokens.primary,
           },
         };
-      }
+      },
     },
     methods: {
       convertToMinutes(seconds) {
@@ -233,17 +231,17 @@
   }
 
   .slider-wrapper {
-    width: 100%;
     flex: 1;
-    margin: 20px 16px 0 16px;
+    width: 100%;
+    margin: 20px 16px 0;
   }
 
   input[type='range'] {
+    width: 100%;
     max-width: 300px;
     height: 2px;
-    appearance: none;
     outline: none;
-    width: 100%;
+    appearance: none;
   }
 
   input[type='range']::-webkit-slider-thumb {
@@ -253,6 +251,5 @@
     cursor: pointer;
     border-radius: 50%;
   }
-
 
 </style>

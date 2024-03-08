@@ -52,10 +52,10 @@
     getMasteryModelMValidators,
     getMasteryModelNValidators,
     translateValidator,
+    getInvalidText,
   } from 'shared/utils/validation';
   import MasteryModels from 'shared/leUtils/MasteryModels';
   import { constantsTranslationMixin } from 'shared/mixins';
-  import { getInvalidText } from 'shared/utils/validation';
 
   export default {
     name: 'MasteryCriteriaMofNFields',

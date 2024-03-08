@@ -101,10 +101,7 @@
        */
       validate() {
         if (this.rules && this.rules.length) {
-          return getInvalidText(
-            this.rules,
-            this.valueModel,
-          );
+          return getInvalidText(this.rules, this.valueModel);
         }
       },
     },

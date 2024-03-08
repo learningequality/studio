@@ -30,11 +30,14 @@
 
 <script>
 
-  import { getMasteryModelValidators, translateValidator } from 'shared/utils/validation';
+  import {
+    getMasteryModelValidators,
+    translateValidator,
+    getInvalidText,
+  } from 'shared/utils/validation';
   import MasteryModels, { MasteryModelsList } from 'shared/leUtils/MasteryModels';
   import { constantsTranslationMixin } from 'shared/mixins';
   import DropdownWrapper from 'shared/views/form/DropdownWrapper';
-  import { getInvalidText } from 'shared/utils/validation';
 
   export default {
     name: 'MasteryCriteriaGoal',
@@ -88,6 +91,8 @@
       masteryRules() {
         return this.required ? getMasteryModelValidators().map(translateValidator) : [];
       },
+    },
+    methods: {
       /**
        * @public
        */
