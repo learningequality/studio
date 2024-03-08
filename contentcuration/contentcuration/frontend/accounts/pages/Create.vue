@@ -424,6 +424,7 @@
         return id === uses.OTHER && this.form.uses.includes(id);
       },
       submit() {
+        console.log(this.form.uses);
         if (this.$refs.form.validate()) {
           const cleanedData = this.clean(this.form);
           return this.register(cleanedData)
