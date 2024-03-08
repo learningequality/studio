@@ -1,15 +1,15 @@
 <template>
 
   <VFlex>
-    <VLayout row wrap justify-space-between>
+    <VLayout row wrap>
       <VFlex
-        v-if="audioVideoUpload && selectedDuration === 'exactTime'"
+        v-if="audioVideoUpload && isExactTime"
         class="defaultUpload md2 sm3"
       >
         {{ convertToHHMMSS(duration || `00:00`) }}
       </VFlex>
       <VFlex
-        v-else-if="selectedDuration === 'shortActivity' || selectedDuration === 'longActivity'"
+        v-else-if="isShortActivity || isLongActivity"
         md3
         sm3
       >
@@ -39,6 +39,20 @@
           :rules="minutesRules"
         />
       </VFlex>
+      <div
+        v-if="showSlider"
+        class="slider-wrapper"
+      >
+        <input
+          v-if="isShortActivity || isLongActivity"
+          v-model="minutes"
+          :class="$computedClass(sliderStyle)"
+          type="range"
+          :min="minRange"
+          :max="maxRange"
+          :step="increments"
+        >
+      </div>
     </VLayout>
     <VLayout row wrap>
       <VFlex v-if="showRequiredLabel">
@@ -54,7 +68,6 @@
 
 <script>
 
-  import debounce from 'lodash/debounce';
   import { CompletionDropdownMap, DurationDropdownMap } from 'shared/constants';
   import {
     translateValidator,
@@ -64,10 +77,6 @@
   } from 'shared/utils/validation';
   import DropdownWrapper from 'shared/views/form/DropdownWrapper';
 
-  const SHORT_MIN = 1;
-  const SHORT_MAX = 30;
-  const LONG_MIN = 31;
-  const LONG_MAX = 120;
   const EXACT_MIN = 1;
   const EXACT_MAX = 1200;
   const SHORT_ACTIVITY_RANGE = [5, 10, 15, 20, 25, 30];
@@ -97,8 +106,21 @@
         type: Number,
         default: null,
       },
+      showSlider: {
+        type: Boolean,
+        default: false,
+      },
     },
     computed: {
+      isShortActivity() {
+        return this.selectedDuration === DurationDropdownMap.SHORT_ACTIVITY;
+      },
+      isLongActivity() {
+        return this.selectedDuration === DurationDropdownMap.LONG_ACTIVITY;
+      },
+      isExactTime() {
+        return this.selectedDuration === DurationDropdownMap.EXACT_TIME;
+      },
       showRequiredLabel() {
         if (this.audioVideoUpload) {
           return false;
@@ -106,17 +128,16 @@
         return this.selectedCompletion === CompletionDropdownMap.completeDuration;
       },
       showOptionalLabel() {
-        return this.selectedDuration !== DurationDropdownMap.EXACT_TIME;
+        return !this.isExactTime;
       },
       increments() {
-        return this.selectedDuration === DurationDropdownMap.SHORT_ACTIVITY ? 5 : 10;
+        return this.isShortActivity ? 5 : 10;
       },
       availableNumbers() {
-        return this.selectedDuration === DurationDropdownMap.SHORT_ACTIVITY
+        return this.isShortActivity
           ? SHORT_ACTIVITY_RANGE
           : LONG_ACTIVITY_RANGE;
       },
-
       minutes: {
         get() {
           if (!this.value) {
@@ -125,43 +146,49 @@
           return this.convertToMinutes(this.value);
         },
         set(value) {
-          this.handleUpdatedInput(value);
+          this.handleInput(value);
         },
       },
       maxRange() {
-        if (this.selectedDuration === DurationDropdownMap.SHORT_ACTIVITY) {
-          return SHORT_MAX;
-        } else if (this.selectedDuration === 'longActivity') {
-          return LONG_MAX;
+        if (this.isShortActivity) {
+          return SHORT_ACTIVITY_RANGE[SHORT_ACTIVITY_RANGE.length - 1];
+        } else if (this.isLongActivity) {
+          return LONG_ACTIVITY_RANGE[LONG_ACTIVITY_RANGE.length - 1];
         } else {
           return EXACT_MAX;
         }
       },
       minRange() {
-        if (this.selectedDuration === 'shortActvity') {
-          return SHORT_MIN;
-        } else if (this.selectedDuration === DurationDropdownMap.LONG_ACTIVITY) {
-          return LONG_MIN;
+        if (this.isShortActivity) {
+          return SHORT_ACTIVITY_RANGE[0];
+        } else if (this.isLongActivity) {
+          return LONG_ACTIVITY_RANGE[0];
         } else {
           return EXACT_MIN;
         }
       },
       minutesRules() {
-        if (this.selectedDuration === DurationDropdownMap.SHORT_ACTIVITY) {
+        if (this.isShortActivity) {
           return getShortActivityDurationValidators().map(translateValidator);
-        } else if (this.selectedDuration === DurationDropdownMap.LONG_ACTIVITY) {
+        } else if (this.isLongActivity) {
           return getLongActivityDurationValidators().map(translateValidator);
         } else if (
-          this.selectedDuration === DurationDropdownMap.EXACT_TIME &&
+          this.isExactTime &&
           this.selectedCompletion === CompletionDropdownMap.completeDuration
         ) {
           return getActivityDurationValidators().map(translateValidator);
         }
         return [];
       },
-    },
-    created() {
-      this.handleUpdatedInput = debounce(this.handleInput, 500);
+      sliderStyle() {
+        const percent = ((this.minutes - this.minRange) / (this.maxRange - this.minRange)) * 100;
+        return {
+          background: `linear-gradient(to right, ${this.$themeTokens.primary} 0%, ${this.$themeTokens.primary} ${percent}%, ${this.$themeTokens.fineLine} ${percent}%, ${this.$themeTokens.fineLine} 100%)`,
+          '::-webkit-slider-thumb': {
+            background: this.$themeTokens.primary,
+          },
+        };
+      }
     },
     methods: {
       convertToMinutes(seconds) {
@@ -204,5 +231,28 @@
     margin: 0.8em;
     font-size: 1.2em;
   }
+
+  .slider-wrapper {
+    width: 100%;
+    flex: 1;
+    margin: 20px 16px 0 16px;
+  }
+
+  input[type='range'] {
+    max-width: 300px;
+    height: 2px;
+    appearance: none;
+    outline: none;
+    width: 100%;
+  }
+
+  input[type='range']::-webkit-slider-thumb {
+    width: 12px;
+    height: 12px;
+    appearance: none;
+    cursor: pointer;
+    border-radius: 50%;
+  }
+
 
 </style>

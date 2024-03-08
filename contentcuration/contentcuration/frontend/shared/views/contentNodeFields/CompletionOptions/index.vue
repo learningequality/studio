@@ -78,6 +78,7 @@
         <ActivityDuration
           ref="activity_duration"
           v-model="durationValue"
+          :showSlider="expanded"
           :selectedDuration="durationDropdown"
           :duration="fileDuration"
           :selectedCompletion="completionDropdown"
@@ -302,7 +303,6 @@
           return this.timeBasedModel ? this.threshold : this.value.suggested_duration;
         },
         set(duration) {
-          console.log('duration set', duration);
           const update = {
             duration,
           };
@@ -329,7 +329,6 @@
           return DurationDropdownMap.SHORT_ACTIVITY;
         },
         set(dropdownValue) {
-          console.log(dropdownValue);
           const update = {};
           if (dropdownValue === DurationDropdownMap.EXACT_TIME) {
             update.durationType = CompletionCriteriaModels.TIME;
@@ -337,7 +336,6 @@
             dropdownValue === DurationDropdownMap.LONG_ACTIVITY ||
             dropdownValue === DurationDropdownMap.SHORT_ACTIVITY
           ) {
-            console.log(this.durationValue);
             update.durationType = CompletionCriteriaModels.APPROX_TIME;
             update.duration = this.handleMinutesInputFromActivityDuration(
               this.durationValue || 0,

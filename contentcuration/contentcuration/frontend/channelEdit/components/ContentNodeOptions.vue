@@ -182,7 +182,7 @@
             {
               label: this.$tr('editCompletion'),
               onClick: this.quickEditModalFactory(QuickEditModals.COMPLETION),
-              condition: this.canEdit,
+              condition: this.canEdit && !this.isTopic,
             },
             {
               label: this.$tr('editWhatIsNeeded'),
