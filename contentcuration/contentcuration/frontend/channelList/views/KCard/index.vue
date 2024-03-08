@@ -12,18 +12,11 @@
         v-if="thumbnailDisplay === 'none'"
         class="spacing"
       >
-        <p>{{ $tr('className') }}</p>
+        <slot name="aboveTitle"></slot>
+        <slot name="title"></slot>
+        <slot name="belowTitle"></slot>
+        <slot name="footer"></slot>
 
-        <KTextTruncator
-          :text="description"
-          :maxLines="2"
-          class="description-style"
-        />
-
-        <ProgressBar
-          :progressPercent="30"
-          :currentTaskError="false"
-        />
       </component>
 
       <component
@@ -37,13 +30,9 @@
             :layout8="{ span: 5 }"
             :layout4="{ span: 2 }"
           >
-            <p>{{ $tr('className') }}</p>
-
-            <KTextTruncator
-              :text="description"
-              :maxLines="2"
-              class="description-style"
-            />
+            <slot name="aboveTitle"></slot>
+            <slot name="title"></slot>
+            <slot name="belowTitle"></slot>
 
           </KGridItem>
 
@@ -59,14 +48,12 @@
                 width="100%"
                 :appearanceOverrides="{ borderRadius: '10%' }"
               />
+              <slot name="thumbnailPlaceholder"></slot>
             </div>
           </KGridItem>
         </KGrid>
        
-        <ProgressBar
-          :progressPercent="30"
-          :currentTaskError="false"
-        />
+        <slot name="footer"></slot>
       </component>
 
       <component
@@ -82,10 +69,11 @@
             <div style="width:100px;height:100px;">
               <KImg
                 :src="thumbnailSrc"
-                height="145px"
+                height="100px"
                 width="150%"
                 :appearanceOverrides="{ 'object-fit': 'cover',borderRadius: '10px 0px 0px 10px' }"
               />
+              <slot name="thumbnailPlaceholder"></slot>
             </div>
           </KGridItem>
 
@@ -96,18 +84,11 @@
             style="width:65%;"
           >
             <div style="padding:0.5em;">
-              <p>{{ $tr('className') }}</p>
-  
-              <KTextTruncator
-                :text="description"
-                :maxLines="2"
-                class="description-style"
-              />
-              <ProgressBar
-                :progressPercent="30"
-                :currentTaskError="false"
-              />
+              <slot name="aboveTitle"></slot>
+              <slot name="title"></slot>
+              <slot name="belowTitle"></slot>
 
+              <slot name="footer"></slot>
             </div>
           </KGridItem>
         </KGrid>
@@ -122,18 +103,10 @@
         v-if="thumbnailDisplay === 'none'"
         class="spacing"
       >
-        <p>{{ $tr('className')}}</p>
-
-        <KTextTruncator
-          :text="description"
-          :maxLines="2"
-          class="description-style"
-        />
-
-        <ProgressBar
-          :progressPercent="30"
-          :currentTaskError="false"
-        />
+        <slot name="aboveTitle"></slot>
+        <slot name="title"></slot>
+        <slot name="belowTitle"></slot>
+        <slot name="footer"></slot>
 
       </component>
 
@@ -147,20 +120,12 @@
           height="200px"
           width="100%"
         />
+        <slot name="thumbnailPlaceholder"></slot>
 
-        <p>{{ $tr('className') }}</p>
-
-        <KTextTruncator
-          :text="description"
-          :maxLines="2"
-          class="description-style"
-        />
-
-        <ProgressBar
-          :progressPercent="30"
-          :currentTaskError="false"
-        />
-
+        <slot name="aboveTitle"></slot>
+        <slot name="title"></slot>
+        <slot name="belowTitle"></slot>
+        <slot name="footer"></slot>
       </component>
 
       <component
@@ -172,20 +137,13 @@
           height="200px"
           width="100%"
         />
+        <slot name="thumbnailPlaceholder"></slot>
+
         <div class="spacing">
-          <p>{{ $tr('className') }}</p>
-
-          <KTextTruncator
-            :text="description"
-            :maxLines="2"
-            class="description-style"
-          />
-
-          <ProgressBar
-            :progressPercent="30"
-            :currentTaskError="false"
-          />
-
+          <slot name="aboveTitle"></slot>
+          <slot name="title"></slot>
+          <slot name="belowTitle"></slot>
+          <slot name="footer"></slot>
         </div>
       </component>
     </div>
@@ -193,13 +151,12 @@
 </template>
 
 <script>
-import ProgressBar from '../../../channelEdit/views/progress/ProgressBar.vue';
 import KImg from '../KImg';
 import BaseCard from './BaseCard.vue';
 
 export default {
     name: "KCard",
-    components: { BaseCard , KImg, ProgressBar},
+    components: { BaseCard , KImg},
     props:{
       title: {
         type: String,
@@ -221,30 +178,24 @@ export default {
       thumbnailDisplay: {
         type: String,
         required: false,
-        default:''
+        default:'none'
       },
       thumbnailSrc:{
         type: String,
         required: false,
         default: null
+      },
+      thumbnailScaleType:{
+        type: String,
+        required: false,
+        default: 'centerInside'
       }
     },
-    data() {
-      return {
-        description :"It is not meant to be the Rather, it offers a logic that is common to all of them and makes creation logic that is common to all of them and makes creation logic that is common to all of them and makes creation ",
-      }
-    },
-    $trs: {
-      className: 'Class name 2',
-    }
 }
 </script>
 
 <style scoped>
-.description-style{
-  font-size:1.2em;
-  font-weight:bold;
-}
+
 
 .spacing{
   margin: 1em;

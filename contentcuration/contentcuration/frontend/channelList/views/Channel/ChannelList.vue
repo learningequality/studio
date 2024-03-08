@@ -43,11 +43,32 @@
     <div class="" style="width:600px">
       <KCard
         layout="vertical"
-        thumbnailDisplay="large"
+        thumbnailDisplay="none"
         thumbnailSrc="https://upload.wikimedia.org/wikipedia/commons/8/84/Male_and_female_chicken_sitting_together.jpg"
         :headingLevel="3"
         :to="{ }"
-      />
+        thumbnailScaleType=""
+      >
+        <template #aboveTitle>
+          <p>{{ $tr('className') }}</p>
+        </template>
+
+        <template #footer>
+          <div>
+            <ProgressBar
+              :progressPercent="30"
+              :currentTaskError="false"
+            />
+          </div>
+        </template>
+        <template #belowTitle>
+          <KTextTruncator
+            :text="description"
+            :maxLines="2"
+            class="description-style"
+          />
+        </template>
+      </KCard>
     </div>
   </VContainer>
 
@@ -59,6 +80,7 @@
   import { mapGetters, mapActions } from 'vuex';
   import orderBy from 'lodash/orderBy';
   import { RouteNames } from '../../constants';
+  import ProgressBar from '../../../channelEdit/views/progress/ProgressBar.vue';
   import KCard from '../KCard';
   import ChannelItem from './ChannelItem';
   import LoadingText from 'shared/views/LoadingText';
@@ -75,6 +97,7 @@
       ChannelItem,
       LoadingText,
       KCard,
+      ProgressBar
     },
     props: {
       listType: {
@@ -86,6 +109,8 @@
     data() {
       return {
         loading: false,
+        description :"It is not meant to be the Rather, it offers a logic that is common to all of them and makes creation logic that is common to all of them and makes creation logic that is common to all of them and makes creation ",
+
       };
     },
     computed: {
@@ -147,6 +172,7 @@
     $trs: {
       noChannelsFound: 'No channels found',
       channel: 'New channel',
+      className: 'Class name 2',
     },
   };
 
@@ -157,6 +183,10 @@
 
   .add-channel-button {
     margin: 0;
+  }
+  .description-style{
+    font-size:1.2em;
+    font-weight:bold;
   }
 
 </style>
