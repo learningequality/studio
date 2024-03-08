@@ -1,12 +1,12 @@
 <template>
   <div
-    class="card"
-    tabindex="0"
-    @focus="cardFocus"
-    @hover="cardHover"
+    :class="$computedClass({ ':focus': $coreOutline })"
   >
     <div
-      :class="$computedClass({ ':focus': $coreOutline })"
+      class="card"
+      tabindex="0"
+      @focus="cardFocus"
+      @hover="cardHover"
     >
       <li class="remove-list-style">
         <component
@@ -22,8 +22,8 @@
         </component>
       </li>
 
+      <slot></slot>
     </div>
-    <slot></slot>
   </div>
 
 </template>
