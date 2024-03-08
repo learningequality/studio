@@ -54,7 +54,7 @@
           >
             <div style="margin-top: 0.5em;">
               <KImg
-                :src="imageSource"
+                :src="thumbnailSrc"
                 height="200px"
                 width="100%"
                 :appearanceOverrides="{ borderRadius: '10%' }"
@@ -81,7 +81,7 @@
           >
             <div style="width:100px;height:100px;">
               <KImg
-                :src="imageSource"
+                :src="thumbnailSrc"
                 height="145px"
                 width="150%"
                 :appearanceOverrides="{ 'object-fit': 'cover',borderRadius: '10px 0px 0px 10px' }"
@@ -143,7 +143,7 @@
         class="spacing"
       >
         <KImg
-          :src="imageSource"
+          :src="thumbnailSrc"
           height="200px"
           width="100%"
         />
@@ -168,7 +168,7 @@
         v-if="thumbnailDisplay === 'large'"
       >
         <KImg
-          :src="imageSource"
+          :src="thumbnailSrc"
           height="200px"
           width="100%"
         />
@@ -223,7 +223,7 @@ export default {
         required: false,
         default:''
       },
-      imageSource:{
+      thumbnailSrc:{
         type: String,
         required: false,
         default: null

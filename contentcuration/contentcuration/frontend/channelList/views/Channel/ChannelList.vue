@@ -44,7 +44,7 @@
       <KCard
         layout="vertical"
         thumbnailDisplay="large"
-        imageSource="https://upload.wikimedia.org/wikipedia/commons/8/84/Male_and_female_chicken_sitting_together.jpg"
+        thumbnailSrc="https://upload.wikimedia.org/wikipedia/commons/8/84/Male_and_female_chicken_sitting_together.jpg"
         :headingLevel="3"
         :to="{ }"
       />
