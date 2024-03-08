@@ -159,7 +159,7 @@ function _getErrorMsg(error) {
     [ValidationErrors.ACTIVITY_DURATION_TOO_LONG]: translator.$tr('activityDurationTooLongWarning'),
   };
 
-  return messages[error];
+  return messages[error] || error;
 }
 
 // Helpers

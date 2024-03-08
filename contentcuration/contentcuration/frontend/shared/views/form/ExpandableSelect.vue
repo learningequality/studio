@@ -42,6 +42,7 @@
 <script>
 
   import DropdownWrapper from './DropdownWrapper';
+  import { getInvalidText } from 'shared/utils/validation';
 
   export default {
     name: 'ExpandableSelect',
@@ -92,6 +93,19 @@
         set(value) {
           this.$emit('input', value);
         },
+      },
+    },
+    methods: {
+      /**
+       * @public
+       */
+      validate() {
+        if (this.rules && this.rules.length) {
+          return getInvalidText(
+            this.rules,
+            this.valueModel,
+          );
+        }
       },
     },
   };

@@ -55,6 +55,7 @@
   } from 'shared/utils/validation';
   import MasteryModels from 'shared/leUtils/MasteryModels';
   import { constantsTranslationMixin } from 'shared/mixins';
+  import { getInvalidText } from 'shared/utils/validation';
 
   export default {
     name: 'MasteryCriteriaMofNFields',
@@ -163,6 +164,23 @@
           evt.preventDefault();
           return false;
         }
+      },
+      /**
+       * @public
+       */
+      validate() {
+        let error;
+        if (this.$refs.mValue || this.$refs.nValue) {
+          this.$refs.mValue.validate(true);
+          this.$refs.nValue.validate(true);
+        }
+        if (this.mRules && this.mRules.length) {
+          error = getInvalidText(this.mRules, this.mValue);
+        }
+        if (this.nRules && this.nRules.length) {
+          error = error || getInvalidText(this.nRules, this.nValue);
+        }
+        return error;
       },
     },
     $trs: {

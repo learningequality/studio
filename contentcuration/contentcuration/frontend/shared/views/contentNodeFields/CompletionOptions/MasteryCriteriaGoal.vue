@@ -16,7 +16,7 @@
             :readonly="readonly"
             :disabled="disabled"
             :rules="masteryRules"
-            :menu-props="{ ...menuProps, lazy: false }"
+            :menu-props="{ ...menuProps, lazy: false, maxHeight: maxMenuHeight }"
             :attach="attach"
             class="mb-2"
             @focus="$emit('focus')"
@@ -34,6 +34,7 @@
   import MasteryModels, { MasteryModelsList } from 'shared/leUtils/MasteryModels';
   import { constantsTranslationMixin } from 'shared/mixins';
   import DropdownWrapper from 'shared/views/form/DropdownWrapper';
+  import { getInvalidText } from 'shared/utils/validation';
 
   export default {
     name: 'MasteryCriteriaGoal',
@@ -64,6 +65,10 @@
         type: Boolean,
         default: false,
       },
+      maxMenuHeight: {
+        type: Number,
+        default: 300,
+      },
     },
     computed: {
       masteryModel: {
@@ -82,6 +87,17 @@
       },
       masteryRules() {
         return this.required ? getMasteryModelValidators().map(translateValidator) : [];
+      },
+      /**
+       * @public
+       */
+      validate() {
+        if (this.masteryRules.length) {
+          if (this.$refs.masteryModel) {
+            this.$refs.masteryModel.validate(true);
+          }
+          return getInvalidText(this.masteryRules, this.masteryModel);
+        }
       },
     },
     $trs: {

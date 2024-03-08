@@ -9,9 +9,11 @@
     @cancel="close"
   >
     <CompletionOptions
+      ref="completionOptions"
       v-model="completionAndDuration"
       required
       expanded
+      :maxMenuHeight="150"
       :kind="contentNode.kind"
       :fileDuration="fileDuration"
     />
@@ -79,7 +81,14 @@
     },
     methods: {
       ...mapActions('contentNode', ['updateContentNode']),
+      validate() {
+        return this.$refs.completionOptions.validate();
+      },
       handleSave() {
+        const error = this.validate();
+        if (error) {
+          return;
+        }
         const {
           suggested_duration,
           suggested_duration_type,

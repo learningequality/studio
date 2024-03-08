@@ -32,6 +32,7 @@
         <MasteryCriteriaGoal
           ref="mastery_model"
           v-model="masteryModel"
+          :maxMenuHeight="maxMenuHeight"
           :placeholder="getPlaceholder('mastery_model')"
           :required="isUnique(masteryModel)"
           @focus="trackClick('Mastery model')"
@@ -164,6 +165,10 @@
       expanded: {
         type: Boolean,
         default: false,
+      },
+      maxMenuHeight: {
+        type: Number,
+        required: false,
       },
     },
     computed: {
@@ -472,6 +477,22 @@
       },
       getPlaceholder(field) {
         return this.isUnique(get(this, field)) ? '' : '---';
+      },
+
+      /**
+       * @public
+       */
+      validate() {
+        const fieldsRefs = ['completion', 'activity_duration', 'mastery_model', 'mastery_model_m_of_n'];
+        for (const ref of fieldsRefs) {
+          const field = this.$refs[ref];
+          if (field && field.validate) {
+            const error = field.validate();
+            if (error) {
+              return error;
+            }
+          }
+        }
       },
     },
     $trs: {
