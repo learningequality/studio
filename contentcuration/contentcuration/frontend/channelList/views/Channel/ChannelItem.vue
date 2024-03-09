@@ -67,12 +67,11 @@
             <template #activator="{ on }">
               <Icon
                 v-if="allowEdit && hasUnpublishedChanges"
-                color="greenSuccess"
-                :size="12"
+                icon="unpublishedResource"
                 v-on="on"
-              >
-                lens
-              </Icon>
+              />
+
+
             </template>
             <span>
               {{ $tr(
