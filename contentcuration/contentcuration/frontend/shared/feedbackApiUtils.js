@@ -2,18 +2,27 @@
 // Feedback mechanism endpoints
 import { v4 as uuidv4 } from 'uuid';
 import client from './client';
+import urls from 'shared/urls';
 
 export const FeedbackTypeOptions = {
   imported: 'imported',
   rejected: 'rejected',
-  previewd: 'previewd',
+  previwed: 'previewd',
   showmore: 'showmore',
   ignored: 'ignored',
   flagged: 'flagged',
 };
 
 // This is mock currently, fixed value of URL still to be decided
-export const FLAG_FEEDBACK_EVENT_URL = '/api/flagged/';
+// referencing the url by name
+export const FLAG_FEEDBACK_EVENT_URL = urls[`${this.urlName}_${'flagged'}`];
+
+/**
+ * @typedef {Object} BaseFeedbackParams
+ * @property {Object} context - The context associated with the ObjectType.
+ * @property {string} contentnode_id - Id for ContentNode that does not change.
+ * @property {string} content_id - content_id of ContentNode wrt to ObjectType.
+ */
 
 /**
  * Base class for feedback data objects.
@@ -24,11 +33,7 @@ class BaseFeedback {
    *
    * @class
    * @classdesc Represents a base feedback object with common properties and methods.
-   *
-   * @param {Object} object - Object passed down following the .
-   * @param {Object} [object.context={}] - The context associated with the ObjectType.
-   * @param {string} object.contentnode_id - Id for ContentNode that does not change.
-   * @param {string} object.content_id - content_id of ContentNode wrt to ObjectType.
+   * @param {BaseFeedbackParams} object
    */
   constructor({ context = {}, contentnode_id, content_id }) {
     this.id = uuidv4();
@@ -66,15 +71,16 @@ class BaseFeedback {
  * Initializes a new BaseFeedbackEvent object.
  *
  * @param {Object} params - Parameters for initializing the object.
- * @param {Object} params.user - The user associated with the feedback event.
+ * @param {string} params.user_id - The user_id associated with the feedback event.
  * @param {string} params.target_channel_id - The ID of the target channel for the feedback event.
- * @param {Object} baseFeedbackParams - Additional parameters inherited from the base feedbackclass.
+ * @param {BaseFeedbackParams} baseFeedbackParams - Additional parameters inherited
+ * from the base feedbackclass.
  */
 // eslint-disable-next-line no-unused-vars
 class BaseFeedbackEvent extends BaseFeedback {
-  constructor({ user, target_channel_id, ...baseFeedbackParams }) {
+  constructor({ user_id, target_channel_id, ...baseFeedbackParams }) {
     super(baseFeedbackParams);
-    this.user = user;
+    this.user_id = user_id;
     this.target_channel_id = target_channel_id;
   }
 }
@@ -84,7 +90,8 @@ class BaseFeedbackEvent extends BaseFeedback {
  * @param {Object} params - Parameters for initializing the interaction event.
  * @param {string} params.feedback_type - The type of feedback for the interaction event.
  * @param {string} params.feedback_reason - The reason associated with the feedback.
- * @param {Object} baseFeedbackParams - Additional parameters inherited from the base feedbackclass.
+ * @param {BaseFeedbackParams} baseFeedbackParams - Additional parameters inherited from the
+ * base feedbackclass.
  */
 class BaseFeedbackInteractionEvent extends BaseFeedback {
   constructor({ feedback_type, feedback_reason, ...baseFeedbackParams }) {
@@ -100,7 +107,7 @@ class BaseFeedbackInteractionEvent extends BaseFeedback {
  * @param {Object} params - Parameters for initializing the flag feedback.
  * @param {string} params.target_topic_id - The ID of the target topic associated with
  * the flag feedback.
- * @param {Object} baseFeedbackParams - Additional parameters inherited from the
+ * @param {BaseFeedbackParams} baseFeedbackParams - Additional parameters inherited from the
  * base interaction event class.
  */
 class BaseFlagFeedback extends BaseFeedbackInteractionEvent {
