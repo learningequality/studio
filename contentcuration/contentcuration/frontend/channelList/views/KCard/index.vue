@@ -4,27 +4,23 @@
     :headingLevel="headingLevel"
     :to="to"
   >
-    <div 
+    <div
       v-if="layout === 'horizontal'"
     >
       <component
-        :is="'div'"
-        v-if="thumbnailDisplay === 'none'"
+        :is="divSection"
+        v-if="thumbnailDisplay !== 'large'"
         class="spacing"
       >
-        <slot name="aboveTitle"></slot>
-        <slot name="title"></slot>
-        <slot name="belowTitle"></slot>
-        <slot name="footer"></slot>
+        <div v-if="thumbnailDisplay === 'none'">
+          <slot name="aboveTitle"></slot>
+          <slot name="title"></slot>
+          <slot name="belowTitle"></slot>
+        </div>
 
-      </component>
-
-      <component
-        :is="'div'"
-        v-if="thumbnailDisplay === 'small'"
-        class="spacing"
-      >
-        <KGrid>
+        <KGrid
+          v-if="thumbnailDisplay === 'small'"
+        >
           <KGridItem
             :layout12="{ span: 7 }"
             :layout8="{ span: 5 }"
@@ -52,12 +48,14 @@
             </div>
           </KGridItem>
         </KGrid>
-       
+
         <slot name="footer"></slot>
+
       </component>
 
+
       <component
-        :is="'div'"
+        :is="divSection"
         v-if="thumbnailDisplay === 'large'"
       >
         <KGrid>
@@ -71,7 +69,7 @@
                 :src="thumbnailSrc"
                 height="100px"
                 width="150%"
-                :appearanceOverrides="{ 'object-fit': 'cover',borderRadius: '10px 0px 0px 10px' }"
+                :appearanceOverrides="{ 'object-fit': 'contain',borderRadius: '10px 0px 0px 10px' }"
               />
               <slot name="thumbnailPlaceholder"></slot>
             </div>
@@ -99,53 +97,38 @@
       v-if="layout === 'vertical'"
     >
       <component
-        :is="'div'"
-        v-if="thumbnailDisplay === 'none'"
+        :is="divSection"
         class="spacing"
       >
-        <slot name="aboveTitle"></slot>
-        <slot name="title"></slot>
-        <slot name="belowTitle"></slot>
-        <slot name="footer"></slot>
-
-      </component>
-
-      <component
-        :is="'div'"
-        v-if="thumbnailDisplay === 'small'"
-        class="spacing"
-      >
-        <KImg
-          :src="thumbnailSrc"
-          height="200px"
-          width="100%"
-        />
-        <slot name="thumbnailPlaceholder"></slot>
-
-        <slot name="aboveTitle"></slot>
-        <slot name="title"></slot>
-        <slot name="belowTitle"></slot>
-        <slot name="footer"></slot>
-      </component>
-
-      <component
-        :is="'div'"
-        v-if="thumbnailDisplay === 'large'"
-      >
-        <KImg
-          :src="thumbnailSrc"
-          height="200px"
-          width="100%"
-        />
-        <slot name="thumbnailPlaceholder"></slot>
-
-        <div class="spacing">
-          <slot name="aboveTitle"></slot>
-          <slot name="title"></slot>
-          <slot name="belowTitle"></slot>
-          <slot name="footer"></slot>
+        <div
+          v-if="thumbnailDisplay === 'small'"
+        >
+          <KImg
+            :src="thumbnailSrc"
+            height="200px"
+            width="100%"
+          />
+          <slot name="thumbnailPlaceholder"></slot>
         </div>
+
+        <div
+          v-if="thumbnailDisplay === 'large'"
+        >
+          <KImg
+            :src="thumbnailSrc"
+            height="200px"
+            width="100%"
+          />
+          <slot name="thumbnailPlaceholder"></slot>
+        </div>
+
+        <slot name="aboveTitle"></slot>
+        <slot name="title"></slot>
+        <slot name="belowTitle"></slot>
+        <slot name="footer"></slot>
+
       </component>
+
     </div>
   </BaseCard>
 </template>
@@ -191,6 +174,11 @@ export default {
         default: 'centerInside'
       }
     },
+    computed:{
+      divSection(){
+        return 'div';
+      }
+    }
 }
 </script>
 
