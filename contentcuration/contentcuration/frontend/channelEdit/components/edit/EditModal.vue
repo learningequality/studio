@@ -50,6 +50,7 @@
               app
               style="height: calc(100% - 64px);"
               :minWidth="150"
+              :defaultWidth="250"
               :maxWidth="500"
               @scroll="scroll"
             >
