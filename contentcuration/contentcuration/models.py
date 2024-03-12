@@ -57,6 +57,7 @@ from model_utils import FieldTracker
 from mptt.models import MPTTModel
 from mptt.models import raise_if_unsaved
 from mptt.models import TreeForeignKey
+from pgvector.django import VectorField
 from postmark.core import PMMailInactiveRecipientException
 from postmark.core import PMMailUnauthorizedException
 from rest_framework.authtoken.models import Token
@@ -1981,6 +1982,24 @@ class ContentNode(MPTTModel, models.Model):
             models.Index(fields=["node_id"], name=NODE_ID_INDEX_NAME),
             models.Index(fields=["-modified"], name=NODE_MODIFIED_DESC_INDEX_NAME),
         ]
+
+
+class EmbeddingsContentNode(models.Model):
+    """
+    A model that stores the canonical contentnode for embedding purposes.
+    """
+    cid = models.CharField(primary_key=True, max_length=64)
+    contentnode = models.ForeignKey(ContentNode, related_name="node_cid", blank=False, null=False, on_delete=models.CASCADE)
+
+
+class Embeddings(models.Model):
+    """
+    A model that stores generated embeddings.
+    """
+    embedding_id = UUIDField(primary_key=True, default=uuid.uuid4)
+    model = models.CharField(max_length=64, db_index=True)
+    embedded_node = models.ForeignKey(EmbeddingsContentNode, related_name="embeddings", blank=False, null=False, on_delete=models.CASCADE)
+    embedding = VectorField()
 
 
 class ContentKind(models.Model):

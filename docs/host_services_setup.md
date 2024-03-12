@@ -130,7 +130,7 @@ yarn run services
 ```
 
 ## Initializing Studio
-With the services running, in a separate terminal/terminal-tab, we can now initialize the database for Studio development purposes. The command below will initialize the database, in addition to adding a user account for development:
+With the services running, in a separate terminal/terminal-tab, we can now initialize the database for Studio development purposes. The command below will initialize the database then it will enable the required postgres extensions in addition to adding a user account for development:
 ```bash
 yarn run devsetup
 ```
