@@ -7,6 +7,7 @@ import { parseNode } from './utils';
 import { getNodeDetailsErrors, getNodeFilesErrors } from 'shared/utils/validation';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 import { NEW_OBJECT } from 'shared/constants';
+import { COPYING_STATUS, COPYING_STATUS_VALUES } from 'shared/data/constants';
 
 function sorted(nodes) {
   return sortBy(nodes, ['lft']);
@@ -45,6 +46,31 @@ export function getContentNodeDescendants(state, getters) {
 export function hasChildren(state, getters) {
   return function(id) {
     return getters.getContentNode(id).total_count > 0;
+  };
+}
+
+/**
+ * Whether the contentnode's interactivity should be disabled or not while copying?
+ * When the contentnode is copying or the copying has failed, we need
+ * to keep interactivity disabled. Hence, the FAILED condition is also there.
+ */
+export function isNodeInCopyingState(state, getters) {
+  return function(contentNodeId) {
+    const contentNode = getters.getContentNode(contentNodeId);
+    return (
+      contentNode[COPYING_STATUS] === COPYING_STATUS_VALUES.COPYING ||
+      contentNode[COPYING_STATUS] === COPYING_STATUS_VALUES.FAILED
+    );
+  };
+}
+
+/**
+ * Whether the contentnode's copying has errored or not?
+ */
+export function hasNodeCopyingErrored(state, getters) {
+  return function(contentNodeId) {
+    const contentNode = getters.getContentNode(contentNodeId);
+    return contentNode[COPYING_STATUS] === COPYING_STATUS_VALUES.FAILED;
   };
 }
 
@@ -126,6 +152,13 @@ export function getContentNodeDetailsAreValid(state) {
   return function(contentNodeId) {
     const contentNode = state.contentNodesMap[contentNodeId];
     return contentNode && (contentNode[NEW_OBJECT] || !getNodeDetailsErrors(contentNode).length);
+  };
+}
+
+export function getNodeDetailsErrorsList(state) {
+  return function(contentNodeId) {
+    const contentNode = state.contentNodesMap[contentNodeId];
+    return getNodeDetailsErrors(contentNode);
   };
 }
 

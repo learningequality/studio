@@ -5,6 +5,7 @@ from django.db import connection
 from django.db.models import Q
 from django.urls import reverse
 from django.utils.http import http_date
+from kolibri_content import base_models
 from kolibri_content import models as content
 from kolibri_content.constants.schema_versions import CONTENT_SCHEMA_VERSION
 from kolibri_public import models as public
@@ -44,11 +45,20 @@ class ImportMetadataTestCase(APITestCase):
         response = self.client.get(
             reverse("publicimportmetadata-detail", kwargs={"pk": self.node.id})
         )
+        fields = Model._meta.fields
+        BaseModel = getattr(base_models, Model.__name__, Model)
+        field_names = {field.column for field in BaseModel._meta.fields}
+        if hasattr(BaseModel, "_mptt_meta"):
+            field_names.add(BaseModel._mptt_meta.parent_attr)
+            field_names.add(BaseModel._mptt_meta.tree_id_attr)
+            field_names.add(BaseModel._mptt_meta.left_attr)
+            field_names.add(BaseModel._mptt_meta.right_attr)
+            field_names.add(BaseModel._mptt_meta.level_attr)
         for response_data, obj in zip(response.data[ContentModel._meta.db_table], queryset):
             # Ensure that we are not returning any empty objects
             self.assertNotEqual(response_data, {})
-            for field in Model._meta.fields:
-                if field.column in response_data:
+            for field in fields:
+                if field.column in field_names:
                     value = response_data[field.column]
                     if hasattr(field, "from_db_value"):
                         value = field.from_db_value(value, None, connection)

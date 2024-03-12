@@ -18,13 +18,13 @@ $ cat runtime.txt
 # inside Ubuntu Bionic, which is used to build images for Studio.
 # We encode it here so that it can be picked up by Github's dependabot
 # to manage automated package upgrades.
-python-3.9.13
+python-3.10.13
 ```
 Use `pyenv` to install the version of Python listed in that file, and to also set up a virtual environment:
 ```bash
-pyenv install 3.9.13
-pyenv virtualenv 3.9.13 studio-py3.9
-pyenv activate studio-py3.9
+pyenv install 3.10.13
+pyenv virtualenv 3.10.13 studio-py3.10
+pyenv activate studio-py3.10
 ```
 Now you may install Studio's Python dependencies:
 ```bash

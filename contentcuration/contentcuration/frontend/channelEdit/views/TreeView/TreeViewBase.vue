@@ -24,10 +24,10 @@
           :to="viewChannelDetailsLink"
           @click="trackClickEvent('Summary')"
         >
-          <IconButton
+          <KIconButton
             class="toolbar-icon-btn"
+            :tooltip="$tr('channelDetails')"
             icon="info"
-            :text="$tr('channelDetails')"
           />
         </KRouterLink>
         <KRouterLink
@@ -45,11 +45,11 @@
                 error
               </Icon>
             </template>
-            <IconButton
+            <KIconButton
               v-if="canEdit"
               class="toolbar-icon-btn"
               icon="edit"
-              :text="$tr('editChannel')"
+              :tooltip="$tr('editChannel')"
             />
           </VBadge>
         </KRouterLink>
@@ -73,9 +73,10 @@
               v-on="on"
             >
               {{ $formatNumber(errorsInChannel) }}
-              <Icon color="amber">
-                warning
-              </Icon>
+              <KIcon
+                icon="warningIncomplete"
+              />
+
             </div>
           </template>
           <span>{{ $tr('incompleteDescendantsText', { count: errorsInChannel }) }}</span>
@@ -314,7 +315,6 @@
   import SavingIndicator from '../../components/edit/SavingIndicator';
   import { DraggableRegions, DraggableUniverses, RouteNames } from '../../constants';
   import MainNavigationDrawer from 'shared/views/MainNavigationDrawer';
-  import IconButton from 'shared/views/IconButton';
   import ToolBar from 'shared/views/ToolBar';
   import ChannelTokenModal from 'shared/views/channel/ChannelTokenModal';
   import OfflineText from 'shared/views/OfflineText';
@@ -330,7 +330,6 @@
     name: 'TreeViewBase',
     components: {
       DraggableRegion,
-      IconButton,
       MainNavigationDrawer,
       ToolBar,
       PublishModal,
