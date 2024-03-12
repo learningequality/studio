@@ -37,14 +37,15 @@
             :layout8="{ span: 3 }"
             :layout4="{ span: 2 }"
           >
-            <div style="margin-top: 0.5em;">
+            <div>
               <KImg
+                v-if="thumbnailSrc !== null"
                 :src="thumbnailSrc"
                 :height="200"
                 :width="200"
                 :appearanceOverrides="{ borderRadius: '10%' }"
               />
-              <slot name="thumbnailPlaceholder"></slot>
+              <slot v-else name="thumbnailPlaceholder"></slot>
             </div>
           </KGridItem>
         </KGrid>
@@ -64,14 +65,15 @@
             :layout8="{ span: 4 }"
             :layout4="{ span: 2 }"
           >
-            <div style="width:100px;height:100px;">
+            <div>
               <KImg
+                v-if="thumbnailSrc !== null"
                 :src="thumbnailSrc"
                 :height="142"
                 :width="180"
                 :appearanceOverrides="{ 'object-fit': 'contain',borderRadius: '10px 0px 0px 10px' }"
               />
-              <slot name="thumbnailPlaceholder"></slot>
+              <slot v-else name="thumbnailPlaceholder"></slot>
             </div>
           </KGridItem>
 
@@ -81,7 +83,7 @@
             :layout4="{ span: 2 }"
             style="width:65%;"
           >
-            <div style="padding:0.5em;">
+            <div class="spacing">
               <slot name="aboveTitle"></slot>
               <slot name="title"></slot>
               <slot name="belowTitle"></slot>
@@ -104,6 +106,7 @@
           class="spacing"
         >
           <KImg
+            v-if="thumbnailSrc !== null"
             :src="thumbnailSrc"
             :height="300"
             :width="560"
@@ -112,18 +115,19 @@
               backgroundColor: 'grey'
             }"
           />
-          <slot name="thumbnailPlaceholder"></slot>
+          <slot v-else name="thumbnailPlaceholder"></slot>
         </div>
 
         <div
           v-if="thumbnailDisplay === 'large'"
         >
           <KImg
+            v-if="thumbnailSrc !== null"
             :src="thumbnailSrc"
             :height="300"
             :width="600"
           />
-          <slot name="thumbnailPlaceholder"></slot>
+          <slot v-else name="thumbnailPlaceholder"></slot>
         </div>
         <div class="spacing">
           <slot name="aboveTitle"></slot>

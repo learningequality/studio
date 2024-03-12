@@ -43,8 +43,7 @@
     <div class="" style="width:600px">
       <KCard
         layout="horizontal"
-        thumbnailDisplay="none"
-        thumbnailSrc="https://upload.wikimedia.org/wikipedia/commons/8/84/Male_and_female_chicken_sitting_together.jpg"
+        thumbnailDisplay="small"
         :headingLevel="3"
         :to="{ }"
         thumbnailScaleType=""
@@ -66,6 +65,14 @@
             :text="description"
             :maxLines="2"
             class="description-style"
+          />
+        </template>
+        <template #thumbnailPlaceholder>
+          <KImg
+            src="https://via.placeholder.com/200"
+            :height="142"
+            :width="180"
+            :appearanceOverrides="{ 'object-fit': 'contain',borderRadius: '10px 0px 0px 10px' }"
           />
         </template>
       </KCard>
