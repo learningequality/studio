@@ -15,7 +15,7 @@ export const FeedbackTypeOptions = {
 
 // This is mock currently, fixed value of URL still to be decided
 // referencing the url by name
-export const FLAG_FEEDBACK_EVENT_URL = urls[`${this.urlName}_${'flagged'}`];
+export const FLAG_FEEDBACK_EVENT_URL = urls[`${'flagged'}_${'list'}`];
 
 /**
  * @typedef {Object} BaseFeedbackParams
