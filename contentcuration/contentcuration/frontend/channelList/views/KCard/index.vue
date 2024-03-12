@@ -40,8 +40,8 @@
             <div style="margin-top: 0.5em;">
               <KImg
                 :src="thumbnailSrc"
-                height="200px"
-                width="100%"
+                :height="200"
+                :width="200"
                 :appearanceOverrides="{ borderRadius: '10%' }"
               />
               <slot name="thumbnailPlaceholder"></slot>
@@ -67,8 +67,8 @@
             <div style="width:100px;height:100px;">
               <KImg
                 :src="thumbnailSrc"
-                height="100px"
-                width="150%"
+                :height="142"
+                :width="180"
                 :appearanceOverrides="{ 'object-fit': 'contain',borderRadius: '10px 0px 0px 10px' }"
               />
               <slot name="thumbnailPlaceholder"></slot>
@@ -98,15 +98,15 @@
     >
       <component
         :is="divSection"
-        class="spacing"
       >
         <div
           v-if="thumbnailDisplay === 'small'"
+          class="spacing"
         >
           <KImg
             :src="thumbnailSrc"
-            :height="200"
-            :width="100"
+            :height="300"
+            :width="560"
             :appearanceOverrides="{
               objectFit: thumbnailScaleType,
               backgroundColor: 'grey'
@@ -120,17 +120,17 @@
         >
           <KImg
             :src="thumbnailSrc"
-            :height="200"
-            :width="100"
+            :height="300"
+            :width="600"
           />
           <slot name="thumbnailPlaceholder"></slot>
         </div>
-
-        <slot name="aboveTitle"></slot>
-        <slot name="title"></slot>
-        <slot name="belowTitle"></slot>
-        <slot name="footer"></slot>
-
+        <div class="spacing">
+          <slot name="aboveTitle"></slot>
+          <slot name="title"></slot>
+          <slot name="belowTitle"></slot>
+          <slot name="footer"></slot>
+        </div>
       </component>
 
     </div>
@@ -190,6 +190,6 @@ export default {
 
 
 .spacing{
-  margin: 1em;
+  padding: 1em;
 }
 </style>

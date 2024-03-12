@@ -31,7 +31,7 @@
         <slot name="topRight"></slot>
       </span>
       <span
-        v-if="$slots.bottomLeft"  
+        v-if="$slots.bottomLeft"
         :style="{ position: 'absolute', bottom: '0', left: '0', zIndex: '2' }"
       >
         <!-- @slot Places content on top of an image, to its bottom left corner. -->
@@ -390,7 +390,8 @@
       },
       onError(event) {
         /**
-         * Emitted when the image fails to load. The DOM event that triggered the error is available in the payload.
+         * Emitted when the image fails to load. The DOM event that 
+         * triggered the error is available in the payload.
          */
         this.$emit('error', event);
       },
