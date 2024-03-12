@@ -1,20 +1,93 @@
 <template>
 
-  <div>
-    <img
-      :src="src"
-      :alt="alternateText"
-      :style="styleObject"
-      @error="onError"
-    >
-    <slot></slot>
-  </div>
+  <span :style="rootContainerStyles">
+    <span :style="ratioContainerStyles">
+      <img
+        :src="src"
+        :alt="alternativeText"
+        :style="imgStyles"
+        @error="onError"
+      >
+      <span
+        v-if="$slots.placeholder"
+        :style="{ position: 'absolute', top: '0', right: '0', left: '0', bottom: '0', zIndex: '0' }"
+      >
+        <!-- @slot Places content to the placeholder area. -->
+        <slot name="placeholder"></slot>
+      </span>
+
+      <span
+        v-if="$slots.topLeft"
+        :style="{ position: 'absolute', top: '0',left: '0', zIndex: '2' }"
+      >
+        <!-- @slot Places content on top of an image, to its top left corner. -->
+        <slot name="topLeft"></slot>
+      </span>
+      <span
+        v-if="$slots.topRight"
+        :style="{ position: 'absolute', top: '0', right: '0', zIndex: '2' }"
+      >
+        <!-- @slot Places content on top of an image, to its top right corner. -->
+        <slot name="topRight"></slot>
+      </span>
+      <span
+        v-if="$slots.bottomLeft"  
+        :style="{ position: 'absolute', bottom: '0', left: '0', zIndex: '2' }"
+      >
+        <!-- @slot Places content on top of an image, to its bottom left corner. -->
+        <slot name="bottomLeft"></slot>
+      </span>
+      <span
+        v-if="$slots.bottomRight"
+        :style="{ position: 'absolute', bottom: '0', right: '0', zIndex: '2' }"
+      >
+        <!-- @slot Places content on top of an image, to its bottom right corner. -->
+        <slot name="bottomRight"></slot>
+      </span>
+
+    </span>
+  </span>
 
 </template>
 
 
 <script>
 
+  const ScaleTypes = {
+    CENTER_INSIDE: 'centerInside',
+    CONTAIN: 'contain',
+    FIT_XY: 'fitXY',
+  };
+  const RATIO_REGEX = /^(\d+):(\d+)$/;
+
+  function isValidScaleType(value) {
+    return value && Object.values(ScaleTypes).includes(value);
+  }
+
+  /**
+   * Extract x and y from an aspect ratio x:y
+   *
+   * @param {String} value aspect ratio in "x:y" format
+   * @returns {Object} { x, y }
+   */
+  function extractAspectRatio(value) {
+    const match = value.match(RATIO_REGEX);
+    return { x: match[1], y: match[2] };
+  }
+
+  /**
+   * @returns {Boolean} Returns true if value satisfies "x:y"
+   *                    format where x and y are numbers
+   */
+  function isValidAspectRatio(value) {
+    return RATIO_REGEX.test(value);
+  }
+
+  /**
+   * Displays an image and provides additional functionality
+   * to manipulate it such as setting an aspect ratio,
+   * scaling, and more.
+   */
   export default {
     name: 'KImg',
     props: {
@@ -26,108 +99,257 @@
         default: null,
       },
       /**
-       * Alternate text for the image. This is required and will
-       * throw a warning when it's not provided (empty) unless isDecorative is true
+       * Alternative text for the image. Required unless `isDecorative` is true.
        */
       altText: {
         type: String,
-        default: '',
+        default: null,
       },
       /**
-       * Sets the image as decorative. This sets the alt image property to an empty string.
+       * Sets the image as decorative.
        */
       isDecorative: {
         type: Boolean,
         default: false,
       },
       /**
-       * Sets the height for the component
+       * Sets the height of the image container
        */
       height: {
         type: [Number, String],
-        default: undefined,
+        default: null,
       },
       /**
-       * Sets the width for the component
+       * Sets the width of the image container
        */
       width: {
         type: [Number, String],
-        default: undefined,
+        default: null,
       },
       /**
-       * Sets the maximum height for the component
+       * Sets the maximum height of the image container
        */
       maxHeight: {
         type: [Number, String],
-        default: undefined,
+        default: null,
       },
       /**
-       * Sets the minimum height for the component
+       * Sets the minimum height of the image container
        */
       minHeight: {
         type: [Number, String],
-        default: undefined,
+        default: null,
       },
       /**
-       * Sets the maximum width for the component
+       * Sets the maximum width of the image container
        */
       maxWidth: {
         type: [Number, String],
-        default: undefined,
+        default: null,
       },
       /**
-       * 	Sets the minimum width for the component
+       * 	Sets the minimum width of the image container
        */
       minWidth: {
         type: [Number, String],
-        default: undefined,
+        default: null,
       },
       /**
-       * Accepts a Vue dynamic styles object to override the default styles to modify the appearance
-       * of the component.
-       * It's attributes always take precedence over any specified styling (internal
-       *  component's styles, styles calculated from props etc.)
+       * Sets the ratio of the width(w) to the height(h)
+       * of the image container. The required format is `w:h`.
+       */
+      aspectRatio: {
+        type: String,
+        default: null,
+        validator: isValidAspectRatio,
+      },
+      /**
+       * Specifies how an image should be scaled within the container.
+       * Can be one of  `'centerInside'`, `'contain'`, or `'fitXY'`.
+       */
+      scaleType: {
+        type: String,
+        default: 'centerInside', // needs to be duplicated rather than using ScaleTypes.CENTER_INSIDE, otherwise it doesn't render correctly in the auto-generated Props documentation
+        validator: isValidScaleType,
+      },
+      /**
+       * A color to be displayed instead or behind an image.
+       * It creates a background area which respects the dimensions
+       * set on the image container.
+       *
+       * It can serve as (1) a color of the area surrounding an image when
+       * it's letterboxed, (2) a placeholder area displayed
+       * over the whole container when an image source is not provided,
+       * (3) a progressive loading experience as the colored background
+       * is displayed while an image is loading.
+       *
+       * Its default value is `$themePalette.grey.v_200`.
+       */
+      backgroundColor: {
+        type: String,
+        required: false,
+        default: null,
+      },
+      /**
+       * The border radius of the image container or the placeholder area
+       */
+      borderRadius: {
+        type: String,
+        required: false,
+        default: null,
+      },
+      /**
+       * A dynamic style object that overrides the default styles
        */
       appearanceOverrides: {
         type: Object,
         default: () => ({}),
       },
     },
-    
-    data() {
-      return {
-        styleObject: {
-          height: this.height,
-          width: this.width,
-          maxHeight: this.imgMaxHeight,
-          minHeight: this.imgMinHeight,
-          maxWidth: this.imgMaxWidth,
-          minWidth: this.imgMinWidth,
-          ...this.appearanceOverrides,
-        },
-      };
-    },
     computed: {
-      alternateText() {
+      ratio() {
+        return extractAspectRatio(this.aspectRatio);
+      },
+      alternativeText() {
         return this.isDecorative ? '' : this.altText;
       },
-      // imgHeight() {
-      //   return this.validateAndFormatUnits(this.height);
-      // },
-      // imgWidth() {
-      //   return this.validateAndFormatUnits(this.width);
-      // },
-      imgMaxHeight() {
-        return this.validateAndFormatUnits(this.maxHeight);
+      baseStyles() {
+        const backgroundColor = this.backgroundColor
+          ? this.backgroundColor
+          : this.$themePalette.grey.v_200;
+        const borderRadius = this.borderRadius ? this.borderRadius : 0;
+
+        return {
+          rootContainer: {
+            display: 'block',
+            position: 'relative',
+            backgroundColor,
+            borderRadius,
+            overflow: 'hidden',
+            height: this.validateAndFormatUnits(this.height),
+            width: this.validateAndFormatUnits(this.width),
+            maxHeight: this.validateAndFormatUnits(this.maxHeight),
+            minHeight: this.validateAndFormatUnits(this.minHeight),
+            maxWidth: this.validateAndFormatUnits(this.maxWidth),
+            minWidth: this.validateAndFormatUnits(this.minWidth),
+          },
+          ratioContainer: {
+            display: 'block',
+          },
+          img: {
+            display: 'block',
+            position: 'relative',
+            zIndex: '1',
+          },
+        };
       },
-      imgMinHeight() {
-        return this.validateAndFormatUnits(this.minHeight);
+      /**
+       * Returns all styles related to the logic
+       * that controls how the image scales within
+       * the image container
+       */
+      scaleStyles() {
+        const scaleKind = isValidScaleType(this.scaleType) ? this.scaleType : ScaleTypes.CONTAIN;
+        const scaleStyles = {
+          [ScaleTypes.CONTAIN]: {
+            rootContainer: {},
+            ratioContainer: {
+              height: '100%',
+              width: '100%',
+            },
+            img: {
+              objectFit: 'contain',
+              height: '100%',
+              width: '100%',
+            },
+          },
+          [ScaleTypes.FIT_XY]: {
+            rootContainer: {},
+            ratioContainer: {
+              height: '100%',
+              width: '100%',
+            },
+            img: {
+              width: '100%',
+              height: '100%',
+            },
+          },
+          [ScaleTypes.CENTER_INSIDE]: {
+            rootContainer: {
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+            },
+            ratioContainer: {},
+            img: {
+              maxWidth: '100%',
+              maxHeight: '100%',
+            },
+          },
+        };
+        return scaleStyles[scaleKind];
       },
-      imgMaxWidth() {
-        return this.validateAndFormatUnits(this.maxWidth);
+      /**
+       * Returns all styles related to the logic
+       * that controls the image ratio
+       */
+      ratioStyles() {
+        if (!this.aspectRatio) {
+          return {
+            rootContainer: {},
+            ratioContainer: {},
+            img: {},
+          };
+        }
+        // https://www.sitepoint.com/maintain-image-aspect-ratios-responsive-web-design/
+        const paddingTopInPercent = (this.ratio.y / this.ratio.x) * 100;
+        return {
+          rootContainer: {},
+          ratioContainer: {
+            position: 'relative',
+            display: 'block',
+            height: 0,
+            width: '100%',
+            padding: `${paddingTopInPercent}% 0 0`,
+          },
+          img: {
+            position: 'absolute',
+            display: 'block',
+            maxWidth: '100%',
+            maxHeight: '100%',
+            margin: 'auto',
+            top: 0,
+            right: 0,
+            bottom: 0,
+            left: 0,
+            zIndex: 2,
+          },
+        };
       },
-      imgMinWidth() {
-        return this.validateAndFormatUnits(this.minWidth);
+      rootContainerStyles() {
+        // order matters
+        return {
+          ...this.baseStyles.rootContainer,
+          ...this.scaleStyles.rootContainer,
+          ...this.ratioStyles.rootContainer,
+          ...this.appearanceOverrides,
+        };
+      },
+      ratioContainerStyles() {
+        // order matters
+        return {
+          ...this.baseStyles.ratioContainer,
+          ...this.scaleStyles.ratioContainer,
+          ...this.ratioStyles.ratioContainer,
+        };
+      },
+      imgStyles() {
+        // order matters
+        return {
+          ...this.baseStyles.img,
+          ...this.scaleStyles.img,
+          ...this.ratioStyles.img,
+        };
       },
     },
     created() {
@@ -139,10 +361,8 @@
       validateAndFormatUnits(propValue) {
         if (propValue) {
           if (!isNaN(propValue)) {
-            console.log("its a number");
             return `${propValue}px`;
           } else {
-            console.log("its not a number");
             // split numbers apart from units
             const [, ...arr] = propValue.match(/(\d*\.?\d+)([a-zA-Z | %]*)/);
             const validUnits = [
@@ -170,8 +390,7 @@
       },
       onError(event) {
         /**
-         * Emitted when the image fails to load. The DOM event that
-         * triggered the error is available in the payload.
+         * Emitted when the image fails to load. The DOM event that triggered the error is available in the payload.
          */
         this.$emit('error', event);
       },

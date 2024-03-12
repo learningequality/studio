@@ -105,8 +105,12 @@
         >
           <KImg
             :src="thumbnailSrc"
-            height="200px"
-            width="100%"
+            :height="200"
+            :width="100"
+            :appearanceOverrides="{
+              objectFit: thumbnailScaleType,
+              backgroundColor: 'grey'
+            }"
           />
           <slot name="thumbnailPlaceholder"></slot>
         </div>
@@ -116,8 +120,8 @@
         >
           <KImg
             :src="thumbnailSrc"
-            height="200px"
-            width="100%"
+            :height="200"
+            :width="100"
           />
           <slot name="thumbnailPlaceholder"></slot>
         </div>

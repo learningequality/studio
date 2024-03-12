@@ -75,7 +75,6 @@
     
         position: relative;
         display: block;
-        padding: 16px;
         margin-bottom: 24px;
         text-align: left;
         text-decoration: none;
