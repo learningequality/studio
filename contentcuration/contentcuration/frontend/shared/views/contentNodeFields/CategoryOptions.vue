@@ -73,8 +73,6 @@
       </template>
     </DropdownWrapper>
 
-    <slot name="prependOptions"></slot>
-
     <div v-if="expanded" class="checkbox-list-wrapper">
       <KCheckbox
         v-for="option in filteredCategories"

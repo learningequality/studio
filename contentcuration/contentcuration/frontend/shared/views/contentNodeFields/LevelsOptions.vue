@@ -1,16 +1,13 @@
 <template>
 
-  <div>
-    <slot name="prependOptions"></slot>
-    <ExpandableSelect
-      v-model="level"
-      multiple
-      :expanded="expanded"
-      :options="levels"
-      :hideLabel="hideLabel"
-      :label="translateMetadataString('level')"
-    />
-  </div>
+  <ExpandableSelect
+    v-model="level"
+    multiple
+    :expanded="expanded"
+    :options="levels"
+    :hideLabel="hideLabel"
+    :label="translateMetadataString('level')"
+  />
 
 </template>
 

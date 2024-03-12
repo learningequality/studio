@@ -9,7 +9,17 @@
     :inputComponent="LearningActivityOptionsComponent"
     :confirmationMessage="$tr('editedLearningActivities', { count: nodeIds.length })"
     @close="() => $emit('close')"
-  />
+  >
+    <template #input="{ value, inputHandler }">
+      <LearningActivityOptions
+        expanded
+        hideLabel
+        :value="value"
+        :nodeIds="nodeIds"
+        @input="inputHandler"
+      />
+    </template>
+  </EditBooleanMapModal>
 
 </template>
 
@@ -24,6 +34,7 @@
     name: 'EditLearningActivitiesModal',
     components: {
       EditBooleanMapModal,
+      LearningActivityOptions,
     },
     props: {
       nodeIds: {
@@ -34,9 +45,6 @@
     computed: {
       learningActivityValidators() {
         return getLearningActivityValidators();
-      },
-      LearningActivityOptionsComponent() {
-        return LearningActivityOptions;
       },
     },
     $trs: {

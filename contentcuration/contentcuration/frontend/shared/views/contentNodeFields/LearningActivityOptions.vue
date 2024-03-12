@@ -1,18 +1,15 @@
 <template>
 
-  <div>
-    <slot name="prependOptions"></slot>
-    <ExpandableSelect
-      v-model="learningActivity"
-      multiple
-      :disabled="disabled"
-      :expanded="expanded"
-      :options="learningActivities"
-      :hideLabel="hideLabel"
-      :rules="learningActivityRules"
-      :label="translateMetadataString('learningActivity')"
-    />
-  </div>
+  <ExpandableSelect
+    v-model="learningActivity"
+    multiple
+    :disabled="disabled"
+    :expanded="expanded"
+    :options="learningActivities"
+    :hideLabel="hideLabel"
+    :rules="learningActivityRules"
+    :label="translateMetadataString('learningActivity')"
+  />
 
 </template>
 

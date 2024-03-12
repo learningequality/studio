@@ -6,9 +6,18 @@
     :title="$tr('editResourcesNeededTitle')"
     :nodeIds="nodeIds"
     :confirmationMessage="$tr('editedResourcesNeeded', { count: nodeIds.length })"
-    :inputComponent="ResourcesNeededOptionsComponent"
     @close="() => $emit('close')"
-  />
+  >
+    <template #input="{ value, inputHandler }">
+      <ResourcesNeededOptions
+        expanded
+        hideLabel
+        :value="value"
+        :nodeIds="nodeIds"
+        @input="inputHandler"
+      />
+    </template>
+  </EditBooleanMapModal>
 
 </template>
 
@@ -22,16 +31,12 @@
     name: 'EditResourcesNeededModal',
     components: {
       EditBooleanMapModal,
+      ResourcesNeededOptions,
     },
     props: {
       nodeIds: {
         type: Array,
         required: true,
-      },
-    },
-    computed: {
-      ResourcesNeededOptionsComponent() {
-        return ResourcesNeededOptions;
       },
     },
     $trs: {

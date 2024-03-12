@@ -11,25 +11,31 @@
     <p data-test="resources-selected-message">
       {{ $tr('resourcesSelected', { count: nodeIds.length }) }}
     </p>
+    <template v-if="isDescendantsUpdatable && isTopicSelected">
+      <KCheckbox
+        :checked="updateDescendants"
+        data-test="update-descendants-checkbox"
+        :label="$tr('updateDescendantsCheckbox')"
+        @change="(value) => { updateDescendants = value }"
+      />
+      <hr
+        :style="dividerStyle"
+      >
+    </template>
+    <slot
+      name="input"
+      :value="selectedValues"
+      :inputHandler="(value) => { selectedValues = value }"
+    ></slot>
+
     <component
       :is="inputComponent"
       v-model="selectedValues"
       expanded
       hideLabel
       :nodeIds="nodeIds"
-    >
-      <template v-if="isDescendantsUpdatable && isTopicSelected" #prependOptions>
-        <KCheckbox
-          :checked="updateDescendants"
-          data-test="update-descendants-checkbox"
-          :label="$tr('updateDescendantsCheckbox')"
-          @change="(value) => { updateDescendants = value }"
-        />
-        <hr
-          :style="dividerStyle"
-        >
-      </template>
-    </component>
+    />
+
     <span v-if="error" class="red--text">
       {{ error }}
     </span>

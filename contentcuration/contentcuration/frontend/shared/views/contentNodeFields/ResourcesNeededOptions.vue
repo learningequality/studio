@@ -1,17 +1,14 @@
 <template>
 
-  <div>
-    <slot name="prependOptions"></slot>
-    <ExpandableSelect
-      v-model="need"
-      multiple
-      :expanded="expanded"
-      :options="resources"
-      :hideLabel="hideLabel"
-      :label="$tr('resourcesNeededLabel')"
-      :hint="hint"
-    />
-  </div>
+  <ExpandableSelect
+    v-model="need"
+    multiple
+    :expanded="expanded"
+    :options="resources"
+    :hideLabel="hideLabel"
+    :label="$tr('resourcesNeededLabel')"
+    :hint="hint"
+  />
 
 </template>
 

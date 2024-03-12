@@ -6,9 +6,18 @@
     :title="$tr('editCategories')"
     :nodeIds="nodeIds"
     :confirmationMessage="$tr('editedCategories', { count: nodeIds.length })"
-    :inputComponent="CategoryOptionsComponent"
     @close="() => $emit('close')"
-  />
+  >
+    <template #input="{ value, inputHandler }">
+      <CategoryOptions
+        expanded
+        hideLabel
+        :value="value"
+        :nodeIds="nodeIds"
+        @input="inputHandler"
+      />
+    </template>
+  </EditBooleanMapModal>
 
 </template>
 
@@ -21,17 +30,13 @@
   export default {
     name: 'EditCategoriesModal',
     components: {
+      CategoryOptions,
       EditBooleanMapModal,
     },
     props: {
       nodeIds: {
         type: Array,
         required: true,
-      },
-    },
-    computed: {
-      CategoryOptionsComponent() {
-        return CategoryOptions;
       },
     },
     $trs: {

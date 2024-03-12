@@ -5,10 +5,19 @@
     isDescendantsUpdatable
     :title="$tr('editLevelsTitle')"
     :nodeIds="nodeIds"
-    :inputComponent="LevelsOptionsComponent"
     :confirmationMessage="$tr('editedLevels', { count: nodeIds.length })"
     @close="() => $emit('close')"
-  />
+  >
+    <template #input="{ value, inputHandler }">
+      <LevelsOptions
+        expanded
+        hideLabel
+        :value="value"
+        :nodeIds="nodeIds"
+        @input="inputHandler"
+      />
+    </template>
+  </EditBooleanMapModal>
 
 </template>
 
@@ -21,17 +30,13 @@
   export default {
     name: 'EditLevelsModal',
     components: {
+      LevelsOptions,
       EditBooleanMapModal,
     },
     props: {
       nodeIds: {
         type: Array,
         required: true,
-      },
-    },
-    computed: {
-      LevelsOptionsComponent() {
-        return LevelsOptions;
       },
     },
     $trs: {
