@@ -12,7 +12,9 @@
         v-if="thumbnailDisplay !== 'large'"
         class="spacing"
       >
-        <div v-if="thumbnailDisplay === 'none'">
+        <div
+          v-if="thumbnailDisplay === 'none'"
+        >
           <slot name="aboveTitle"></slot>
           <slot name="title"></slot>
           <slot name="belowTitle"></slot>
@@ -45,12 +47,18 @@
                 :width="200"
                 :appearanceOverrides="{ borderRadius: '10%' }"
               />
-              <slot v-else name="thumbnailPlaceholder"></slot>
+              <slot
+                v-else
+                name="thumbnailPlaceholder"
+              ></slot>
             </div>
           </KGridItem>
         </KGrid>
 
-        <slot name="footer"></slot>
+        <slot
+          class="footer"
+          name="footer"
+        ></slot>
 
       </component>
 
@@ -88,7 +96,7 @@
               <slot name="title"></slot>
               <slot name="belowTitle"></slot>
 
-              <slot name="footer"></slot>
+              <slot class="footer" name="footer"></slot>
             </div>
           </KGridItem>
         </KGrid>
@@ -133,7 +141,7 @@
           <slot name="aboveTitle"></slot>
           <slot name="title"></slot>
           <slot name="belowTitle"></slot>
-          <slot name="footer"></slot>
+          <slot class="footer" name="footer"></slot>
         </div>
       </component>
 
@@ -192,8 +200,11 @@ export default {
 
 <style scoped>
 
-
-.spacing{
-  padding: 1em;
-}
+  .spacing{
+    padding: 1em;
+  }
+.footer{
+    position: absolute;
+    bottom: 0;
+  }
 </style>
