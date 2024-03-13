@@ -1,7 +1,5 @@
 <template>
-  <div
-    :class="outlinedStyle"
-  >
+  <button>
     <div
       class="card"
       tabindex="0"
@@ -24,79 +22,73 @@
 
       <slot></slot>
     </div>
-  </div>
+  </button>
 
 </template>
 
 
-    <script>
+<script>
 
-      export default {
-        name: 'BaseCard',
-        props: {
-          title: {
-            type: String,
-            required: false,
-            default: null,
-          },
-          headingLevel: {
-            type: Number,
-            required: true,
-          },
-          to: {
-            type: Object,
-            required: true,
-          },
-        },
-        computed:{
-          headerLevel(){
-            return 'h' + this.headingLevel;
-          },
-          outlinedStyle(){
-            return this.$computedClass({
-              ':focus': this.$coreOutline,
-            });
-          }
-        },
-        methods: {
-          cardFocus(e) {
-            this.$emit('focus', e);
-          },
-          cardHover(e) {
-            this.$emit('hover', e);
-          },
-        },
-      };
+  export default {
+    name: 'BaseCard',
+    props: {
+      title: {
+        type: String,
+        required: false,
+        default: null,
+      },
+      headingLevel: {
+        type: Number,
+        required: true,
+      },
+      to: {
+        type: Object,
+        required: true,
+      },
+    },
+    computed:{
+      headerLevel(){
+        return 'h' + this.headingLevel;
+      },
+    },
+    methods: {
+      cardFocus(e) {
+        this.$emit('focus', e);
+      },
+      cardHover(e) {
+        this.$emit('hover', e);
+      },
+    },
+  };
     
-    </script>
+</script>
     
     
-    <style lang="scss">
-    
-      @import './definitions';
-    
-      .card {
-        @extend %dropshadow-2dp;
-    
-        position: relative;
-        display: block;
-        margin-bottom: 24px;
-        text-align: left;
-        text-decoration: none;
-        cursor: pointer;
-        border-radius: 0.5em;
-        // transition: box-shadow $core-time ease;
-        outline-offset: -1px; 
-        transition: background-color $core-time ease;
+<style lang="scss">
 
-    
-        &:hover{
-          @extend %dropshadow-8dp;
-        }
-      }
-    
-      .remove-list-style {
-        list-style-type: none;
-      }
-    
-    </style>
+  @import './definitions';
+
+  .card {
+    @extend %dropshadow-2dp;
+
+    position: relative;
+    display: block;
+    margin-bottom: 24px;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+    border-radius: 0.5em;
+    transition: border-color $core-time ease;
+    outline-offset: -1px; 
+
+    &:hover,
+    &:focus{
+      @extend %dropshadow-8dp;
+    }
+  }
+
+  .remove-list-style {
+    list-style-type: none;
+  }
+
+</style>
