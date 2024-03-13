@@ -39,44 +39,11 @@
         </VLayout>
       </VFlex>
     </VLayout>
-
-    <div class="" style="width:600px">
-      <KCard
-        layout="horizontal"
-        thumbnailDisplay="small"
-        :headingLevel="3"
-        :to="{ }"
-        thumbnailScaleType=""
-      >
-        <template #aboveTitle>
-          <p>{{ $tr('className') }}</p>
-        </template>
-
-        <template #footer>
-          <div>
-            <ProgressBar
-              :progressPercent="30"
-              :currentTaskError="false"
-            />
-          </div>
-        </template>
-        <template #belowTitle>
-          <KTextTruncator
-            :text="description"
-            :maxLines="2"
-            class="description-style"
-          />
-        </template>
-        <template #thumbnailPlaceholder>
-          <KImg
-            src="https://via.placeholder.com/200"
-            :height="142"
-            :width="180"
-            :appearanceOverrides="{ 'object-fit': 'contain',borderRadius: '10px 0px 0px 10px' }"
-          />
-        </template>
-      </KCard>
+    
+    <div style="width:500px">
+      <RecommendedResourceCard />
     </div>
+
   </VContainer>
 
 </template>
@@ -87,9 +54,8 @@
   import { mapGetters, mapActions } from 'vuex';
   import orderBy from 'lodash/orderBy';
   import { RouteNames } from '../../constants';
-  import ProgressBar from '../../../channelEdit/views/progress/ProgressBar.vue';
-  import KCard from '../KCard';
   import ChannelItem from './ChannelItem';
+  import RecommendedResourceCard from './../KCard/RecommendedResourceCard.vue';
   import LoadingText from 'shared/views/LoadingText';
   import { ChannelListTypes } from 'shared/constants';
 
@@ -103,8 +69,7 @@
     components: {
       ChannelItem,
       LoadingText,
-      KCard,
-      ProgressBar
+      RecommendedResourceCard
     },
     props: {
       listType: {
@@ -116,8 +81,6 @@
     data() {
       return {
         loading: false,
-        description :"It is not meant to be the Rather, it offers a logic that is common to all of them and makes creation logic that is common to all of them and makes creation logic that is common to all of them and makes creation ",
-
       };
     },
     computed: {
@@ -177,9 +140,8 @@
       },
     },
     $trs: {
-      noChannelsFound: 'No channels found',
-      channel: 'New channel',
-      className: 'Class name 2',
+       noChannelsFound: 'No channels found',
+       channel: 'New channel',
     },
   };
 
@@ -190,10 +152,6 @@
 
   .add-channel-button {
     margin: 0;
-  }
-  .description-style{
-    font-size:1.2em;
-    font-weight:bold;
   }
 
 </style>

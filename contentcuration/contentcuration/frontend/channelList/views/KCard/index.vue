@@ -7,8 +7,7 @@
     <div
       v-if="layout === 'horizontal'"
     >
-      <component
-        :is="divSection"
+      <div
         v-if="thumbnailDisplay !== 'large'"
         class="spacing"
       >
@@ -26,7 +25,7 @@
           <KGridItem
             :layout12="{ span: 7 }"
             :layout8="{ span: 5 }"
-            :layout4="{ span: 2 }"
+            :layout4="{ span: 4 }"
           >
             <slot name="aboveTitle"></slot>
             <slot name="title"></slot>
@@ -37,7 +36,7 @@
           <KGridItem
             :layout12="{ span: 5 }"
             :layout8="{ span: 3 }"
-            :layout4="{ span: 2 }"
+            :layout4="{ span: 4 }"
           >
             <div>
               <KImg
@@ -60,11 +59,9 @@
           name="footer"
         ></slot>
 
-      </component>
+      </div>
 
-
-      <component
-        :is="divSection"
+      <div
         v-if="thumbnailDisplay === 'large'"
       >
         <KGrid>
@@ -100,15 +97,13 @@
             </div>
           </KGridItem>
         </KGrid>
-      </component>
+      </div>
     </div>
 
     <div
       v-if="layout === 'vertical'"
     >
-      <component
-        :is="divSection"
-      >
+      <div>
         <div
           v-if="thumbnailDisplay === 'small'"
           class="spacing"
@@ -143,8 +138,7 @@
           <slot name="belowTitle"></slot>
           <slot class="footer" name="footer"></slot>
         </div>
-      </component>
-
+      </div>
     </div>
   </BaseCard>
 </template>
@@ -189,12 +183,8 @@ export default {
         required: false,
         default: 'centerInside'
       }
+    
     },
-    computed:{
-      divSection(){
-        return 'div';
-      }
-    }
 }
 </script>
 
@@ -202,9 +192,11 @@ export default {
 
   .spacing{
     padding: 1em;
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
   }
-.footer{
-    position: absolute;
-    bottom: 0;
+  .footer{
+    margin-top: auto;
   }
 </style>

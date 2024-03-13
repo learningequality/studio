@@ -1,6 +1,6 @@
 <template>
   <div
-    :class="$computedClass({ ':focus': $coreOutline })"
+    :class="outlinedStyle"
   >
     <div
       class="card"
@@ -27,10 +27,10 @@
   </div>
 
 </template>
-    
-    
+
+
     <script>
-    
+
       export default {
         name: 'BaseCard',
         props: {
@@ -51,6 +51,11 @@
         computed:{
           headerLevel(){
             return 'h' + this.headingLevel;
+          },
+          outlinedStyle(){
+            return this.$computedClass({
+              ':focus': this.$coreOutline,
+            });
           }
         },
         methods: {
@@ -80,10 +85,12 @@
         text-decoration: none;
         cursor: pointer;
         border-radius: 0.5em;
-        transition: box-shadow $core-time ease;
+        // transition: box-shadow $core-time ease;
+        outline-offset: -1px; 
+        transition: background-color $core-time ease;
+
     
-        &:hover,
-        &:focus {
+        &:hover{
           @extend %dropshadow-8dp;
         }
       }
