@@ -41,40 +41,40 @@
       </div>
       <VSlideXTransition>
         <div v-if="selected.length">
-          <IconButton
+          <KIconButton
             v-if="canEdit"
             icon="edit"
             :text="$tr('editSelectedButton')"
             data-test="edit-selected-btn"
             @click="editNodes(selected)"
           />
-          <IconButton
+          <KIconButton
             icon="clipboard"
             :text="$tr('copySelectedButton')"
             data-test="copy-selected-to-clipboard-btn"
             @click="copyToClipboard(selected)"
           />
-          <IconButton
+          <KIconButton
             v-if="canEdit"
             icon="move"
             :text="$tr('moveSelectedButton')"
             data-test="move-selected-btn"
             @click="openMoveModal"
           />
-          <IconButton
+          <KIconButton
             v-if="canEdit"
             icon="copy"
             :text="$tr('duplicateSelectedButton')"
             data-test="duplicate-selected-btn"
             @click="duplicateNodes(selected)"
           />
-          <IconButton
+          <KIconButton
             v-if="canEdit"
-            icon="alternativeRoute"
+            icon="sort"
             :text="$tr('SortAlphabetically')"
             @click="sortNodes(selected)"
           />
-          <IconButton
+          <KIconButton
             v-if="canEdit"
             icon="remove"
             :text="$tr('deleteSelectedButton')"
