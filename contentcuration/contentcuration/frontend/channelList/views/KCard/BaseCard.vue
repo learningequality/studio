@@ -10,13 +10,13 @@
         <component
           :is="headerLevel"
         >
-          <a :href="to">
+          <KRouterLink :to="to">
             <KTextTruncator
               v-if="title !== null"
               :text="title"
               :maxLines="1"
             />
-          </a>
+          </KRouterLink>
         </component>
       </li>
 
