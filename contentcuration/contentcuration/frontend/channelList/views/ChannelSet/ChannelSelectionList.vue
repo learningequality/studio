@@ -23,7 +23,7 @@
           <Checkbox
             v-model="selectedChannels"
             color="primary"
-            data-test="checkbox"
+            :data-test="`checkbox-${channel.id}`"
             :value="channel.id"
             class="channel ma-0"
           >

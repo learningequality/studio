@@ -26,7 +26,7 @@
     },
     model: {
       prop: 'state',
-      event: 'toggle',
+      event: 'input',
     },
     props: {
       /*
@@ -76,13 +76,26 @@
       },
       /*
        * The reactive state of the checkbox which is used with v-model.
-       * It is changed with the "toggle" event.
+       * It is changed with the "input" event.
        * If used as an array, it stores the values of the checked checkboxes in no particular order.
        * If used as a number, it treats any non-zero value as checked and zero as unchecked.
+       * If used as an object, it should have a getter and setter for the checked state.
+       * If used as a boolean, it stores the checked state of the checkbox.
        */
       state: {
-        type: [Boolean, Array, Number],
+        type: [Boolean, Array, Number, Object],
         default: false,
+        validator: (value) => {
+          if (Array.isArray(value)) {
+            return value.every((v) => typeof v === 'string' || typeof v === 'number');
+          } else if (typeof value === 'number') {
+            return true;
+          } else if (typeof value === "object") {
+            return typeof value.get === 'function' && typeof value.set === 'function';
+          } else {
+            return typeof value === 'boolean';
+          }
+        },
       },
     },
     computed: {
@@ -100,16 +113,16 @@
           if (Array.isArray(this.state)) {
             const index = this.state.indexOf(this.value);
             if (checked && index === -1) {
-              this.$emit('toggle', [this.value, ...this.state]);
+              this.$emit('input', [this.value, ...this.state]);
             } else if (!checked && index !== -1) {
               const newState = [...this.state];
               newState.splice(index, 1);
-              this.$emit('toggle', newState);
+              this.$emit('input', newState);
             }
           } else if (typeof this.state === 'number') {
-            this.$emit('toggle', checked ? 1 : 0);
+            this.$emit('input', checked ? 1 : 0);
           } else {
-            this.$emit('toggle', checked);
+            this.$emit('input', checked);
           }
         },
       },
