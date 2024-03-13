@@ -50,10 +50,9 @@ click-repl==0.2.0
     # via celery
 confusable-homoglyphs==3.2.0
     # via django-registration
-django==3.2.23
+django==3.2.24
     # via
     #   -r requirements.in
-    #   django-bulk-update
     #   django-db-readonly
     #   django-filter
     #   django-js-reverse
@@ -63,8 +62,6 @@ django==3.2.23
     #   django-s3-storage
     #   djangorestframework
     #   jsonfield
-django-bulk-update==2.2.0
-    # via -r requirements.in
 django-celery-results==2.4.0
     # via -r requirements.in
 django-cte==1.2.1
@@ -136,7 +133,7 @@ googleapis-common-protos[grpc]==1.57.0
     #   grpc-google-iam-v1
 grpc-google-iam-v1==0.12.4
     # via google-cloud-kms
-grpcio==1.53.0
+grpcio==1.53.2
     # via
     #   google-api-core
     #   googleapis-common-protos
