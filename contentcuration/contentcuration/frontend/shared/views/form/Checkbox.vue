@@ -85,12 +85,12 @@
       state: {
         type: [Boolean, Array, Number, Object],
         default: false,
-        validator: (value) => {
+        validator: value => {
           if (Array.isArray(value)) {
-            return value.every((v) => typeof v === 'string' || typeof v === 'number');
+            return value.every(v => typeof v === 'string' || typeof v === 'number');
           } else if (typeof value === 'number') {
             return true;
-          } else if (typeof value === "object") {
+          } else if (typeof value === 'object') {
             return typeof value.get === 'function' && typeof value.set === 'function';
           } else {
             return typeof value === 'boolean';
