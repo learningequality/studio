@@ -10,7 +10,9 @@
         <component
           :is="headerLevel"
         >
-          <KRouterLink :to="to">
+          <KRouterLink
+            :to="to"
+          >
             <KTextTruncator
               v-if="title !== null"
               :text="title"
@@ -73,7 +75,6 @@
 
     position: relative;
     display: block;
-    margin-bottom: 24px;
     text-align: left;
     text-decoration: none;
     cursor: pointer;

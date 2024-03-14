@@ -40,7 +40,7 @@
       </VFlex>
     </VLayout>
     
-    <div style="width:500px">
+    <div style="width:600px">
       <RecommendedResourceCard />
     </div>
 

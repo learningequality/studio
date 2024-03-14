@@ -38,7 +38,7 @@
             :layout8="{ span: 3 }"
             :layout4="{ span: 4 }"
           >
-            <div>
+            <div :style="{ backgroundColor: $themePalette.grey.v_50 }">
               <KImg
                 v-if="thumbnailSrc !== null"
                 :src="thumbnailSrc"
@@ -68,15 +68,18 @@
           <KGridItem
             :layout12="{ span: 4 }"
             :layout8="{ span: 4 }"
-            :layout4="{ span: 2 }"
+            :layout4="{ span: 4 }"
           >
-            <div>
+            <div style="display: flex;height: 100%;">
               <KImg
                 v-if="thumbnailSrc !== null"
                 :src="thumbnailSrc"
-                :height="142"
-                :width="180"
-                :appearanceOverrides="{ 'object-fit': 'contain',borderRadius: '10px 0px 0px 10px' }"
+                :height="auto"
+                :width="auto"
+                :appearanceOverrides="{ 
+                  'object-fit': thumbnailScaleType,
+                  borderRadius: '10px 0px 0px 10px' 
+                }"
               />
               <slot v-else name="thumbnailPlaceholder"></slot>
             </div>
@@ -85,8 +88,7 @@
           <KGridItem
             :layout12="{ span: 8 }"
             :layout8="{ span: 4 }"
-            :layout4="{ span: 2 }"
-            style="width:65%;"
+            :layout4="{ span: 4 }"
           >
             <div class="spacing">
               <slot name="aboveTitle"></slot>

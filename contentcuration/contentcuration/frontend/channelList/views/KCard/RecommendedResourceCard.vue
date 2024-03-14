@@ -3,7 +3,8 @@
     <div class="">
       <KCard
         layout="horizontal"
-        thumbnailDisplay="small"
+        thumbnailDisplay="large"
+        thumbnailSrc="https://i.guim.co.uk/img/media/30646649ad38eca6e8ddd6108af6de13e43117a4/475_196_4518_3323/master/4518.jpg?width=1900&dpr=2&s=none"
         :headingLevel="3"
         :to="{ }"
         thumbnailScaleType="contain"
