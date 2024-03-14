@@ -12,9 +12,9 @@ describe('ActivityDuration', () => {
   });
 
   describe(`minutes input`, () => {
-    const shortActivityMin = 1;
+    const shortActivityMin = 5;
     const shortActivityMax = 30;
-    const longActivityMin = 31;
+    const longActivityMin = 40;
     const longActivityMax = 120;
 
     describe(`convert seconds to minutes for display`, () => {
@@ -35,8 +35,6 @@ describe('ActivityDuration', () => {
         const seconds = 2400;
         const wrapper = mount(ActivityDuration);
         wrapper.vm.minutes = 40;
-        // Ensure debounced function gets called
-        wrapper.vm.handleUpdatedInput.flush();
 
         return Vue.nextTick().then(() => {
           const emittedTime = wrapper.emitted('input').pop()[0];
@@ -55,7 +53,7 @@ describe('ActivityDuration', () => {
         expect(wrapper.html()).toContain(`step="5"`);
         expect(wrapper.html()).not.toContain(`step="10"`);
       });
-      it(`minimum accepted input should be 1 minute`, () => {
+      it(`minimum accepted input should be 5 minutes`, () => {
         expect(wrapper.vm.minRange).toBe(shortActivityMin);
         expect(wrapper.vm.minRange).not.toBe(longActivityMin);
       });
@@ -75,7 +73,7 @@ describe('ActivityDuration', () => {
         expect(wrapper.html()).toContain(`step="10"`);
         expect(wrapper.html()).not.toContain(`step="5"`);
       });
-      it(`minimum accepted input should be 31 minutes`, () => {
+      it(`minimum accepted input should be 40 minutes`, () => {
         expect(wrapper.vm.minRange).not.toBe(shortActivityMin);
         expect(wrapper.vm.minRange).toBe(longActivityMin);
       });
