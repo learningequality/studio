@@ -110,18 +110,15 @@
     mixins: [constantsTranslationMixin, metadataTranslationMixin],
     props: {
       /**
-       * It can receive a value as an array of strings of the selected categories, or
-       * an object with the following structure:
+       * This prop receives an object with the following structure:
        * {
-       *  [categoryId]: true | [nodeId1, nodeId2, ...]
+       *  [categoryId]: [nodeId1, nodeId2, ...]
        * }
-       * If the value is true, it means that the option is selected for all nodes
-       * If the value is an array of nodeIds, it means that the option is selected
-       * just for those nodes
+       * Where nodeId is the id of the node that has the category selected
        */
       value: {
-        type: [Array, Object],
-        default: () => [],
+        type: Object,
+        required: true,
       },
       /**
        * An array of nodeIds that we are editing. If none, we will asume that we
@@ -160,7 +157,7 @@
       },
       autocompleteOptions() {
         const options = [...this.categoriesList];
-        if (!Array.isArray(this.selected)) {
+        if (this.expanded) {
           // Just boolean maps can have indeterminate values
           options.push({
             value: MIXED,
@@ -171,13 +168,14 @@
         return options;
       },
       autocompleteValues() {
-        if (Array.isArray(this.selected)) {
-          return this.selected;
-        }
         const selectedValues = Object.entries(this.selected)
-          .filter(entry => entry[1] === true) // no mixed values for boolean maps
+          .filter(entry => entry[1].length === this.nodeIds.length)
           .map(([key]) => key);
-        if (Object.values(this.selected).some(value => value !== true)) {
+        if (
+          this.expanded &&
+          Object.values(this.selected)
+            .some(value => value.length < this.nodeIds.length)
+        ) {
           selectedValues.push(MIXED);
         }
         return selectedValues;
@@ -201,17 +199,12 @@
         return this.nested ? { [rule]: `${item.level * 24}px` } : {};
       },
       add(value) {
-        if (Array.isArray(this.selected)) {
-          this.selected = [...this.selected, value];
-          return;
-        }
-        this.selected = { ...this.selected, [value]: true };
+        this.selected = {
+          ...this.selected,
+          [value]: this.nodeIds,
+        };
       },
       remove(value) {
-        if (Array.isArray(this.selected)) {
-          this.selected = this.selected.filter(i => !i.startsWith(value));
-          return;
-        }
         const newSelected = { ...this.selected };
         Object.keys(this.selected)
           .filter(selectedValue => selectedValue.startsWith(value))
@@ -221,10 +214,6 @@
         this.selected = newSelected;
       },
       removeAll() {
-        if (Array.isArray(this.selected)) {
-          this.selected = [];
-          return;
-        }
         this.selected = {};
       },
       tooltipText(optionId) {
@@ -253,15 +242,12 @@
         return val.split('.').length - 1;
       },
       isSelected(value) {
-        if (Array.isArray(this.selected)) {
-          return this.selected.some(v => v.startsWith(value));
-        }
-        // If not, this.selected is a boolean map
-
         // If the value is truthy (true or an array of nodeIds) then
         // it is selected just if it is true (not an array)
-        if (this.selected[value]) {
-          return this.selected[value] === true;
+        if (
+          this.selected[value] &&
+          this.selected[value].length === this.nodeIds.length) {
+          return true;
         }
 
         return this.isCheckboxSelectedByChildren(value);
@@ -274,9 +260,6 @@
        *   child options, together they constitute the same array of selected contentNodes.
        */
       isCheckboxSelectedByChildren(optionId) {
-        if (!this.nodeIds || !this.nodeIds.length) {
-          return false;
-        }
         const childrenOptions = Object.keys(this.selected)
           .filter(selectedValue => selectedValue.startsWith(optionId))
           .map(selectedValue => this.selected[selectedValue]);
@@ -285,11 +268,11 @@
           return false; // No childen options
         } else if (childrenOptions.length === 1) {
           // just one child option, the value is deterrmined by if it is selected
-          return childrenOptions[0] === true;
+          return childrenOptions[0].length === this.nodeIds.length;
         }
 
         // Here multiple children are selected or indeterminate
-        if (childrenOptions.some(value => value === true)) {
+        if (childrenOptions.some(value => value.length === this.nodeIds.length)) {
           // if some child value is selected for all nodes, then the parent option is selected
           return true;
         }
@@ -303,12 +286,8 @@
         return nodeIds.size === this.nodeIds.length;
       },
       isCheckboxIndeterminate(optionId) {
-        // Just boolean maps can have indeterminate values
-        if (Array.isArray(this.selected)) {
-          return false;
-        }
-        if (this.selected[optionId]) {
-          return this.selected[optionId] !== true;
+        if (this.selected[optionId] && this.selected[optionId].length < this.nodeIds.length) {
+          return true;
         }
         return (
           Object.keys(this.selected).some(selectedValue => selectedValue.startsWith(optionId)) &&

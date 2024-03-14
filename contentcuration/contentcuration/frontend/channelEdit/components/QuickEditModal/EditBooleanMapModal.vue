@@ -28,14 +28,6 @@
       :inputHandler="(value) => { selectedValues = value }"
     ></slot>
 
-    <component
-      :is="inputComponent"
-      v-model="selectedValues"
-      expanded
-      hideLabel
-      :nodeIds="nodeIds"
-    />
-
     <span v-if="error" class="red--text">
       {{ error }}
     </span>
@@ -82,18 +74,6 @@
         type: Array,
         default: () => [],
       },
-      /**
-       * inputComponent is a component that will be used to render the input(s)
-       * that will be used to edit the boolean map field.
-       * It should be a component that accepts a v-model prop and a nodeIds prop.
-       *
-       * The v-model prop should support an object with the same structure as the
-       * `this.selectedValues` data property.
-       */
-      inputComponent: {
-        type: Object,
-        required: true,
-      },
     },
     data() {
       return {
@@ -102,11 +82,9 @@
         /**
          * selectedValues is an object with the following structure:
          * {
-         *  [optionId]: true | [nodeId1, nodeId2, ...]
+         *  [optionId]: [nodeId1, nodeId2, ...]
          * }
-         * If the value is true, it means that the option is selected for all nodes
-         * If the value is an array of nodeIds, it means that the option is selected
-         * just for those nodes
+         * Where nodeIds is the id of the nodes that have the option selected
          */
         selectedValues: {},
       };
@@ -144,13 +122,7 @@
           });
       });
 
-      Object.entries(optionsNodes).forEach(([key, nodeIds]) => {
-        if (nodeIds.length === this.nodeIds.length) {
-          this.selectedValues[key] = true;
-        } else {
-          this.selectedValues[key] = nodeIds;
-        }
-      });
+      this.selectedValues = optionsNodes;
     },
     methods: {
       ...mapActions('contentNode', ['updateContentNode', 'updateContentNodeDescendants']),
@@ -161,7 +133,8 @@
         if (this.validators && this.validators.length) {
           this.error = getInvalidText(
             this.validators,
-            Object.keys(this.selectedValues).filter(key => this.selectedValues[key] === true)
+            Object.keys(this.selectedValues)
+              .filter(key => this.selectedValues[key].length === this.nodes.length)
           );
         } else {
           this.error = '';
@@ -177,7 +150,7 @@
           this.nodes.map(node => {
             const fieldValue = {};
             Object.entries(this.selectedValues).forEach(([key, value]) => {
-              if (value === true || value.includes(node.id)) {
+              if (value.includes(node.id)) {
                 fieldValue[key] = true;
               }
             });

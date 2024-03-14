@@ -62,7 +62,6 @@ const options = Object.entries(Categories).map(([key, value]) => {
 const makeWrapper = ({
   nodeIds,
   field = 'categories',
-  inputComponent = CategoryOptions,
   ...restOptions
 }) => {
   return mount(EditBooleanMapModal, {
@@ -72,7 +71,6 @@ const makeWrapper = ({
       options,
       title: 'Edit Categories',
       field,
-      inputComponent,
       autocompleteLabel: 'Select option',
       confirmationMessage: 'edited',
       ...restOptions,

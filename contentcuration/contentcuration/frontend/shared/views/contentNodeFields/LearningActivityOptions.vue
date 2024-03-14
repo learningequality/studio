@@ -9,6 +9,7 @@
     :hideLabel="hideLabel"
     :rules="learningActivityRules"
     :label="translateMetadataString('learningActivity')"
+    :availableItems="nodeIds"
   />
 
 </template>
@@ -27,18 +28,15 @@
     mixins: [constantsTranslationMixin, metadataTranslationMixin],
     props: {
       /**
-       * It can receive a value as an array of strings of the selected learning activities, or
-       * an object with the following structure:
+       * This prop receives an object with the following structure:
        * {
-       *  [learningActivityId]: true | [nodeId1, nodeId2, ...]
+       *  [learningActivityId]: [nodeId1, nodeId2, ...]
        * }
-       * If the value is true, it means that the option is selected for all nodes
-       * If the value is an array of nodeIds, it means that the option is selected
-       * just for those nodes
+       * Where nodeId is the id of the node that has the learning activity selected
        */
       value: {
-        type: [Array, Object],
-        default: () => [],
+        type: Object,
+        required: true
       },
       disabled: {
         type: Boolean,
@@ -52,6 +50,10 @@
         type: Boolean,
         default: false,
       },
+      nodeIds: {
+        type: Array,
+        required: true,
+      },
     },
     computed: {
       learningActivity: {
@@ -59,7 +61,7 @@
           if (!this.disabled) {
             return this.value;
           }
-          return null;
+          return {};
         },
         set(value) {
           if (!this.disabled) {

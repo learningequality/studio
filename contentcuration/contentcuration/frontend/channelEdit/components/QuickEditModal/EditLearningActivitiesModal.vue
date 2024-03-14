@@ -6,7 +6,6 @@
     :title="$tr('editLearningActivitiesTitle')"
     :nodeIds="nodeIds"
     :validators="learningActivityValidators"
-    :inputComponent="LearningActivityOptionsComponent"
     :confirmationMessage="$tr('editedLearningActivities', { count: nodeIds.length })"
     @close="() => $emit('close')"
   >

@@ -7,7 +7,7 @@
   >
     <template #default="{ attach, menuProps }">
       <VSelect
-        v-model="valueModel"
+        v-model="selectInputValueModel"
         box
         :disabled="disabled"
         :placeholder="placeholder"
@@ -49,8 +49,8 @@
           v-for="option in options"
           :key="option.value"
           :label="option.text"
-          :checked="isCheckboxSelected(option.value)"
-          :indeterminate="isCheckboxIndeterminate(option.value)"
+          :checked="isSelected(option.value)"
+          :indeterminate="isIndeterminate(option.value)"
           data-test="option-checkbox"
           @change="value => setOption(option.value, value)"
         />
@@ -76,14 +76,30 @@
     name: 'ExpandableSelect',
     components: { DropdownWrapper },
     props: {
+      /**
+       * It can receive a value as a string for single select or an object with
+       * the following structure for multiple select:
+       * {
+       *   [optionId]: [itemId1, itemId2, ...]
+       * }
+       * where itemId is the id of the item that has the option selected
+       */
       value: {
-        type: [String, Object, Array],
-        required: false,
-        default: '',
+        type: [String, Object],
+        required: true,
       },
       options: {
         type: Array,
         required: true,
+      },
+      /**
+       * If the select is multiple, this prop is required, and it
+       * represents the available items that can have the options selected
+       */
+      availableItems: {
+        type: Array,
+        required: false,
+        default: () => [],
       },
       placeholder: {
         type: String,
@@ -135,6 +151,26 @@
           this.$emit('input', value);
         },
       },
+      selectInputValueModel: {
+        get() {
+          if (this.multiple) {
+            return Object.keys(this.valueModel)
+              .filter(key => this.valueModel[key].length === this.availableItems.length);
+          }
+          return this.valueModel;
+        },
+        set(value) {
+          if (this.multiple) {
+            const newValueModel = {};
+            value.forEach(optionId => {
+              newValueModel[optionId] = this.availableItems;
+            });
+            this.valueModel = newValueModel;
+          } else {
+            this.valueModel = value;
+          }
+        },
+      }
     },
     methods: {
       /**
@@ -145,15 +181,24 @@
           return getInvalidText(this.rules, this.valueModel);
         }
       },
-      isCheckboxSelected(value) {
-        return this.valueModel[value] === true;
+      isSelected(value) {
+        if (!this.valueModel[value]) {
+          return false;
+        }
+        return this.valueModel[value].length === this.availableItems.length;
       },
-      isCheckboxIndeterminate(value) {
-        return this.valueModel[value] && this.valueModel[value] !== true;
+      isIndeterminate(value) {
+        if (!this.valueModel[value]) {
+          return false;
+        }
+        return this.valueModel[value].length < this.availableItems.length;
       },
       setOption(optionId, value) {
         if (value) {
-          this.valueModel = { ...this.valueModel, [optionId]: true };
+          this.valueModel = {
+            ...this.valueModel,
+            [optionId]: this.availableItems,
+          };
         } else {
           const newValueModel = { ...this.valueModel };
           delete newValueModel[optionId];
