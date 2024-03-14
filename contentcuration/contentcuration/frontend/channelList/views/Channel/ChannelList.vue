@@ -40,9 +40,6 @@
       </VFlex>
     </VLayout>
     
-    <div style="width:600px">
-      <RecommendedResourceCard />
-    </div>
 
   </VContainer>
 
@@ -55,7 +52,6 @@
   import orderBy from 'lodash/orderBy';
   import { RouteNames } from '../../constants';
   import ChannelItem from './ChannelItem';
-  import RecommendedResourceCard from './../KCard/RecommendedResourceCard.vue';
   import LoadingText from 'shared/views/LoadingText';
   import { ChannelListTypes } from 'shared/constants';
 
@@ -69,7 +65,6 @@
     components: {
       ChannelItem,
       LoadingText,
-      RecommendedResourceCard
     },
     props: {
       listType: {
