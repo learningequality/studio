@@ -87,9 +87,6 @@
       isTopicSelected() {
         return this.nodes.some(node => node.kind === ContentKindsNames.TOPIC);
       },
-      isMultipleNodeLanguages() {
-        return hasMultipleFieldValues(this.nodes, 'language');
-      },
       languageOptions() {
         const searchQuery = this.searchQuery.trim().toLowerCase();
         if (!this.searchQuery) {
@@ -113,13 +110,15 @@
       if (languages.length === 1) {
         this.selectedLanguage = languages[0] || '';
       }
+      this.isMultipleNodeLanguages = languages.length > 1;
     },
     mounted() {
       if (this.selectedLanguage) {
         // Search for the selected KRadioButton and scroll to it
-        const selectedRadio = this.$refs.languages.querySelector(
+        const selectedInput = this.$refs.languages.querySelector(
           `input[value="${this.selectedLanguage}"]`
         );
+        const selectedRadio = selectedInput && selectedInput.parentElement;
         if (selectedRadio && selectedRadio.scrollIntoView) {
           selectedRadio.scrollIntoView();
         }
