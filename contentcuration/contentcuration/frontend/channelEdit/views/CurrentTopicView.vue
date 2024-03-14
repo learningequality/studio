@@ -372,6 +372,13 @@
               dataTest: 'duplicate-selected-btn',
             },
             {
+              label: this.$tr('sortAlphabetically'),
+              icon: 'sort',
+              onClick: () => this.sortNodes(this.selected),
+              condition: this.canEdit,
+              dataTest: 'sort-selected-btn',
+            },
+            {
               label: this.$tr('deleteSelectedButton'),
               icon: 'remove',
               onClick: () => this.removeNodes(this.selected),
@@ -572,6 +579,44 @@
       }),
       clearSelections() {
         this.selected = [];
+      },
+
+      sortNodes(selected) {
+        const selectedNodes = selected.map(id => this.getContentNode(id));
+        const orderedNodes = selectedNodes.sort(this.compareNodeTitles);
+
+        const reversedNodes = orderedNodes.reverse();
+
+        const nodeX = this.findNodeBeforeFirstSelected(orderedNodes, selected);
+
+        const targetParent = this.node.id;
+        const targetNode = nodeX || targetParent;
+        const targetPosition = nodeX
+          ? RELATIVE_TREE_POSITIONS.RIGHT
+          : RELATIVE_TREE_POSITIONS.FIRST_CHILD;
+
+        const nodeIdsToMove = reversedNodes.map(node => String(node.id));
+
+        this.moveContentNodes({
+          id__in: nodeIdsToMove,
+          target: targetNode,
+          position: targetPosition,
+        });
+      },
+
+      findNodeBeforeFirstSelected(nodes, selected) {
+        for (let i = 1; i < nodes.length; i++) {
+          if (selected.includes(nodes[i])) {
+            return nodes[i - 1];
+          }
+        }
+        return null;
+      },
+
+      compareNodeTitles(nodeA, nodeB) {
+        const titleA = nodeA.title.toLowerCase();
+        const titleB = nodeB.title.toLowerCase();
+        return titleA.localeCompare(titleB);
       },
       updateTitleForPage() {
         let detailTitle;
@@ -860,6 +905,7 @@
     },
     $trs: {
       addTopic: 'New folder',
+      sortAlphabetically: 'Sort alphabetically',
       addExercise: 'New exercise',
       uploadFiles: 'Upload files',
       importFromChannels: 'Import from channels',
