@@ -38,7 +38,7 @@ describe('LevelsOptions', () => {
         abc: ['node1'],
         gefo: ['node1'],
       };
-      const wrapper = makeWrapper({ value, nodeIds: ["node1"] });
+      const wrapper = makeWrapper({ value, nodeIds: ['node1'] });
       const dropdown = wrapper.find({ name: 'v-select' });
 
       expect(dropdown.props('value')).toEqual(['abc', 'gefo']);
@@ -46,7 +46,7 @@ describe('LevelsOptions', () => {
       wrapper.setProps({
         value: {
           def: ['node1'],
-        }
+        },
       });
       expect(dropdown.props('value')).toEqual(['def']);
     });
@@ -55,7 +55,7 @@ describe('LevelsOptions', () => {
       const value = {
         abc: ['node1'],
       };
-      const wrapper = makeWrapper({ value, nodeIds: ["node1"] });
+      const wrapper = makeWrapper({ value, nodeIds: ['node1'] });
       const dropdown = wrapper.find({ name: 'v-select' });
       dropdown.vm.$emit('input', ['abc', 'gefo']);
 

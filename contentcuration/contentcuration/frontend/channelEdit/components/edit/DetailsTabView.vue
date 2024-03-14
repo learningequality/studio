@@ -629,10 +629,7 @@
       forBeginners: {
         get() {
           const value = this.resourcesNeeded[ResourcesNeededTypes.FOR_BEGINNERS];
-          return (
-            value &&
-            value.length === this.nodes.length
-          );
+          return value && value.length === this.nodes.length;
         },
         set(value) {
           if (value) {

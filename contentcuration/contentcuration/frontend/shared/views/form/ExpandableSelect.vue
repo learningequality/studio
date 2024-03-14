@@ -154,8 +154,9 @@
       selectInputValueModel: {
         get() {
           if (this.multiple) {
-            return Object.keys(this.valueModel)
-              .filter(key => this.valueModel[key].length === this.availableItems.length);
+            return Object.keys(this.valueModel).filter(
+              key => this.valueModel[key].length === this.availableItems.length
+            );
           }
           return this.valueModel;
         },
@@ -170,7 +171,7 @@
             this.valueModel = value;
           }
         },
-      }
+      },
     },
     methods: {
       /**

@@ -1,6 +1,6 @@
 import Vue from 'vue';
 import Vuetify from 'vuetify';
-import { shallowMount, mount } from '@vue/test-utils';
+import { mount } from '@vue/test-utils';
 import ResourcesNeededOptions from '../ResourcesNeededOptions.vue';
 
 Vue.use(Vuetify);
@@ -27,7 +27,7 @@ describe('ResourcesNeededOptions', () => {
         person: ['node1'],
         book: ['node1'],
       };
-      const wrapper = makeWrapper({ value, nodeIds: ["node1"] });
+      const wrapper = makeWrapper({ value, nodeIds: ['node1'] });
       const dropdown = wrapper.find({ name: 'v-select' });
 
       expect(dropdown.props('value')).toEqual(['person', 'book']);
@@ -35,7 +35,7 @@ describe('ResourcesNeededOptions', () => {
       wrapper.setProps({
         value: {
           train: ['node1'],
-        }
+        },
       });
       expect(dropdown.props('value')).toEqual(['train']);
     });
@@ -44,7 +44,7 @@ describe('ResourcesNeededOptions', () => {
       const resourcesNeeded = {
         person: ['node1'],
       };
-      const wrapper = makeWrapper({ value: resourcesNeeded, nodeIds: ["node1"] });
+      const wrapper = makeWrapper({ value: resourcesNeeded, nodeIds: ['node1'] });
       const dropdown = wrapper.find({ name: 'v-select' });
       dropdown.vm.$emit('input', ['person', 'book']);
 

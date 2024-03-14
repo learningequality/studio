@@ -59,11 +59,7 @@ const options = Object.entries(Categories).map(([key, value]) => {
     value,
   };
 });
-const makeWrapper = ({
-  nodeIds,
-  field = 'categories',
-  ...restOptions
-}) => {
+const makeWrapper = ({ nodeIds, field = 'categories', ...restOptions }) => {
   return mount(EditBooleanMapModal, {
     store,
     propsData: {
@@ -76,17 +72,17 @@ const makeWrapper = ({
       ...restOptions,
     },
     scopedSlots: {
-      input: function (props) {
+      input: function(props) {
         return this.$createElement(CategoryOptions, {
           props: {
             ...props,
             expanded: true,
             hideLabel: true,
             nodeIds,
-          }
+          },
         });
-      }
-    }
+      },
+    },
   });
 };
 

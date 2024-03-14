@@ -173,8 +173,7 @@
           .map(([key]) => key);
         if (
           this.expanded &&
-          Object.values(this.selected)
-            .some(value => value.length < this.nodeIds.length)
+          Object.values(this.selected).some(value => value.length < this.nodeIds.length)
         ) {
           selectedValues.push(MIXED);
         }
@@ -244,9 +243,7 @@
       isSelected(value) {
         // If the value is truthy (true or an array of nodeIds) then
         // it is selected just if it is true (not an array)
-        if (
-          this.selected[value] &&
-          this.selected[value].length === this.nodeIds.length) {
+        if (this.selected[value] && this.selected[value].length === this.nodeIds.length) {
           return true;
         }
 

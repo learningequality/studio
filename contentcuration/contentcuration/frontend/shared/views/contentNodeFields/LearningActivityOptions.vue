@@ -36,7 +36,7 @@
        */
       value: {
         type: Object,
-        required: true
+        required: true,
       },
       disabled: {
         type: Boolean,

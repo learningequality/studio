@@ -5,14 +5,14 @@ import CategoryOptions from '../CategoryOptions.vue';
 
 Vue.use(Vuetify);
 
-function makeWrapper({ value = {}, nodeIds = ["node1"] } = {}) {
+function makeWrapper({ value = {}, nodeIds = ['node1'] } = {}) {
   return shallowMount(CategoryOptions, {
     propsData: {
       value,
       nodeIds,
     },
   });
-};
+}
 
 describe('CategoryOptions', () => {
   it('smoke test', () => {
@@ -54,7 +54,7 @@ describe('CategoryOptions', () => {
       wrapper.vm.add(item);
 
       expect(wrapper.vm.$emit.mock.calls[0][0]).toBe('input');
-      expect(wrapper.vm.$emit.mock.calls[0][1]).toEqual({ abcd: ["node1"] });
+      expect(wrapper.vm.$emit.mock.calls[0][1]).toEqual({ abcd: ['node1'] });
     });
     it('when user unchecks an item, that is emitted to the parent component', () => {
       const wrapper = makeWrapper();
@@ -73,7 +73,7 @@ describe('CategoryOptions', () => {
         value: {
           'remove me': ['node1'],
           'keep me': ['node1'],
-        }
+        },
       });
       const originalChipsLength = Object.keys(wrapper.vm.selected).length;
       wrapper.vm.remove('remove me');

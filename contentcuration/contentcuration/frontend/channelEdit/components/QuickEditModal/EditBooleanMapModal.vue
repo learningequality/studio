@@ -133,8 +133,9 @@
         if (this.validators && this.validators.length) {
           this.error = getInvalidText(
             this.validators,
-            Object.keys(this.selectedValues)
-              .filter(key => this.selectedValues[key].length === this.nodes.length)
+            Object.keys(this.selectedValues).filter(
+              key => this.selectedValues[key].length === this.nodes.length
+            )
           );
         } else {
           this.error = '';

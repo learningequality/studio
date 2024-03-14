@@ -37,7 +37,7 @@ describe('LearningActivityOptions', () => {
         activity_1: ['node1'],
         activity_2: ['node1'],
       };
-      const wrapper = makeWrapper({ value: learningActivity, nodeIds: ["node1"] });
+      const wrapper = makeWrapper({ value: learningActivity, nodeIds: ['node1'] });
       const dropdown = wrapper.find({ name: 'v-select' });
 
       expect(dropdown.props('value')).toEqual(['activity_1', 'activity_2']);
@@ -45,7 +45,7 @@ describe('LearningActivityOptions', () => {
       wrapper.setProps({
         value: {
           activity_4: ['node1'],
-        }
+        },
       });
       expect(dropdown.props('value')).toEqual(['activity_4']);
     });
