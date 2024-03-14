@@ -61,7 +61,6 @@
 
   import { mapGetters, mapActions } from 'vuex';
   import { LanguagesList } from 'shared/leUtils/Languages';
-  import { hasMultipleFieldValues } from 'shared/utils/helpers';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
   export default {
