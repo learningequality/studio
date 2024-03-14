@@ -75,6 +75,18 @@ const makeWrapper = ({
       confirmationMessage: 'edited',
       ...restOptions,
     },
+    scopedSlots: {
+      input: function (props) {
+        return this.$createElement(CategoryOptions, {
+          props: {
+            ...props,
+            expanded: true,
+            hideLabel: true,
+            nodeIds,
+          }
+        });
+      }
+    }
   });
 };
 

@@ -5,44 +5,55 @@ import ResourcesNeededOptions from '../ResourcesNeededOptions.vue';
 
 Vue.use(Vuetify);
 
-function makeWrapper(value) {
+function makeWrapper({ value = {}, nodeIds = ['node1'] } = {}) {
   return mount(ResourcesNeededOptions, {
     propsData: {
       value,
+      nodeIds,
     },
   });
 }
 
 describe('ResourcesNeededOptions', () => {
   it('smoke test', () => {
-    const wrapper = shallowMount(ResourcesNeededOptions);
+    const wrapper = makeWrapper();
 
     expect(wrapper.isVueInstance()).toBe(true);
   });
 
   describe('updating state', () => {
     it('should update resources field with new values received from a parent', () => {
-      const resourcesNeeded = ['person', 'book'];
-      const wrapper = makeWrapper(resourcesNeeded);
+      const value = {
+        person: ['node1'],
+        book: ['node1'],
+      };
+      const wrapper = makeWrapper({ value, nodeIds: ["node1"] });
       const dropdown = wrapper.find({ name: 'v-select' });
 
-      expect(dropdown.props('value')).toEqual(resourcesNeeded);
+      expect(dropdown.props('value')).toEqual(['person', 'book']);
 
       wrapper.setProps({
-        value: ['cat'],
+        value: {
+          train: ['node1'],
+        }
       });
-      expect(dropdown.props('value')).toEqual(['cat']);
+      expect(dropdown.props('value')).toEqual(['train']);
     });
 
-    it('should emit new input values', () => {
-      const resourcesNeeded = ['person', 'book', 'train'];
-      const wrapper = makeWrapper([]);
+    it('should emit new input values', async () => {
+      const resourcesNeeded = {
+        person: ['node1'],
+      };
+      const wrapper = makeWrapper({ value: resourcesNeeded, nodeIds: ["node1"] });
       const dropdown = wrapper.find({ name: 'v-select' });
-      dropdown.vm.$emit('input', resourcesNeeded);
+      dropdown.vm.$emit('input', ['person', 'book']);
 
-      return Vue.nextTick().then(() => {
-        const emittedLevels = wrapper.emitted('input').pop()[0];
-        expect(emittedLevels).toEqual(resourcesNeeded);
+      await wrapper.vm.$nextTick();
+
+      const emittedLevels = wrapper.emitted('input').pop()[0];
+      expect(emittedLevels).toEqual({
+        person: ['node1'],
+        book: ['node1'],
       });
     });
   });

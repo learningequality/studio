@@ -6,10 +6,11 @@ import { LearningActivities } from 'shared/constants';
 
 Vue.use(Vuetify);
 
-function makeWrapper(value) {
+function makeWrapper({ value = {}, nodeIds = ['node1'] } = {}) {
   return mount(LearningActivityOptions, {
     propsData: {
       value,
+      nodeIds,
     },
   });
 }
@@ -21,7 +22,7 @@ describe('LearningActivityOptions', () => {
   });
 
   it('number of items in the dropdown should be equal to number of items available in ', async () => {
-    const wrapper = makeWrapper([]);
+    const wrapper = makeWrapper();
     await wrapper.find('.v-input__slot').trigger('click');
 
     const numberOfDropdownItems = Object.keys(LearningActivities).length;
@@ -32,27 +33,35 @@ describe('LearningActivityOptions', () => {
 
   describe('updating state', () => {
     it('should update learning_activity field with new values received from a parent', () => {
-      const learningActivity = ['activity_1', 'activity_2'];
-      const wrapper = makeWrapper(learningActivity);
+      const learningActivity = {
+        activity_1: ['node1'],
+        activity_2: ['node1'],
+      };
+      const wrapper = makeWrapper({ value: learningActivity, nodeIds: ["node1"] });
       const dropdown = wrapper.find({ name: 'v-select' });
 
-      expect(dropdown.props('value')).toEqual(learningActivity);
+      expect(dropdown.props('value')).toEqual(['activity_1', 'activity_2']);
 
       wrapper.setProps({
-        value: ['activity_4'],
+        value: {
+          activity_4: ['node1'],
+        }
       });
       expect(dropdown.props('value')).toEqual(['activity_4']);
     });
 
     it('should emit new input values', () => {
-      const learningActivity = ['activity_1', 'activity_2', 'activity_3'];
-      const wrapper = makeWrapper({});
+      const learningActivity = ['activity_1', 'activity_2'];
+      const wrapper = makeWrapper();
       const dropdown = wrapper.find({ name: 'v-select' });
       dropdown.vm.$emit('input', learningActivity);
 
       return Vue.nextTick().then(() => {
         const emittedLevels = wrapper.emitted('input').pop()[0];
-        expect(emittedLevels).toEqual(learningActivity);
+        expect(emittedLevels).toEqual({
+          activity_1: ['node1'],
+          activity_2: ['node1'],
+        });
       });
     });
   });
