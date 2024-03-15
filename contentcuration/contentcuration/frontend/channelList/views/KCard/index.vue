@@ -3,6 +3,7 @@
     :title="title"
     :headingLevel="headingLevel"
     :to="to"
+    :titleLines="titleLines"
   >
     <div
       v-if="layout === 'horizontal'"
@@ -161,6 +162,11 @@ export default {
       headingLevel: {
         type: Number,
         required: true,
+      },
+      titleLines:{
+        type:Number,
+        required:true,
+        default:2
       },
       to: {
         type: Object,

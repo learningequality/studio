@@ -16,7 +16,7 @@
             <KTextTruncator
               v-if="title !== null"
               :text="title"
-              :maxLines="1"
+              :maxLines="titleLines"
             />
           </KRouterLink>
         </component>
@@ -46,6 +46,11 @@
       to: {
         type: Object,
         required: true,
+      },
+      titleLines:{
+        type:Number,
+        required:true,
+        default:2
       },
     },
     computed:{
