@@ -5,49 +5,38 @@
     isDescendantsUpdatable
     :title="$tr('editLevelsTitle')"
     :nodeIds="nodeIds"
-    :options="levelsOptions"
     :confirmationMessage="$tr('editedLevels', { count: nodeIds.length })"
-    @close="close"
-  />
+    @close="() => $emit('close')"
+  >
+    <template #input="{ value, inputHandler }">
+      <LevelsOptions
+        expanded
+        hideLabel
+        :value="value"
+        :nodeIds="nodeIds"
+        @input="inputHandler"
+      />
+    </template>
+  </EditBooleanMapModal>
 
 </template>
 
 
 <script>
 
-  import camelCase from 'lodash/camelCase';
   import EditBooleanMapModal from './EditBooleanMapModal';
-  import { ContentLevels } from 'shared/constants';
-  import { metadataTranslationMixin } from 'shared/mixins';
+  import LevelsOptions from 'shared/views/contentNodeFields/LevelsOptions';
 
   export default {
     name: 'EditLevelsModal',
     components: {
+      LevelsOptions,
       EditBooleanMapModal,
     },
-    mixins: [metadataTranslationMixin],
     props: {
       nodeIds: {
         type: Array,
         required: true,
-      },
-    },
-    computed: {
-      levelsOptions() {
-        const replaceTranslationMap = {
-          PROFESSIONAL: 'specializedProfessionalTraining',
-          WORK_SKILLS: 'allLevelsWorkSkills',
-          BASIC_SKILLS: 'allLevelsBasicSkills',
-        };
-        return Object.entries(ContentLevels).map(([key, value]) => ({
-          label: this.translateMetadataString(replaceTranslationMap[key] || camelCase(key)),
-          value,
-        }));
-      },
-    },
-    methods: {
-      close() {
-        this.$emit('close');
       },
     },
     $trs: {

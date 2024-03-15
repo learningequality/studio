@@ -5,10 +5,19 @@
     isDescendantsUpdatable
     :title="$tr('editResourcesNeededTitle')"
     :nodeIds="nodeIds"
-    :options="resourcesOptions"
     :confirmationMessage="$tr('editedResourcesNeeded', { count: nodeIds.length })"
-    @close="close"
-  />
+    @close="() => $emit('close')"
+  >
+    <template #input="{ value, inputHandler }">
+      <ResourcesNeededOptions
+        expanded
+        hideLabel
+        :value="value"
+        :nodeIds="nodeIds"
+        @input="inputHandler"
+      />
+    </template>
+  </EditBooleanMapModal>
 
 </template>
 
@@ -16,32 +25,18 @@
 <script>
 
   import EditBooleanMapModal from './EditBooleanMapModal';
-  import { ResourcesNeededTypes, ResourcesNeededOptions } from 'shared/constants';
-  import { metadataTranslationMixin } from 'shared/mixins';
+  import ResourcesNeededOptions from 'shared/views/contentNodeFields/ResourcesNeededOptions';
 
   export default {
     name: 'EditResourcesNeededModal',
     components: {
       EditBooleanMapModal,
+      ResourcesNeededOptions,
     },
-    mixins: [metadataTranslationMixin],
     props: {
       nodeIds: {
         type: Array,
         required: true,
-      },
-    },
-    computed: {
-      resourcesOptions() {
-        return ResourcesNeededOptions.map(key => ({
-          label: this.translateMetadataString(key),
-          value: ResourcesNeededTypes[key],
-        }));
-      },
-    },
-    methods: {
-      close() {
-        this.$emit('close');
       },
     },
     $trs: {

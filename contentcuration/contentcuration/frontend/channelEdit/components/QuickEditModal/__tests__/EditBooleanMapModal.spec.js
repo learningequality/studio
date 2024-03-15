@@ -1,8 +1,11 @@
 import Vuex from 'vuex';
 import { mount } from '@vue/test-utils';
+import camelCase from 'lodash/camelCase';
 import EditBooleanMapModal from '../EditBooleanMapModal';
-import { Categories } from 'shared/constants';
+import { metadataTranslationMixin } from 'shared/mixins';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
+import { Categories } from 'shared/constants';
+import CategoryOptions from 'shared/views/contentNodeFields/CategoryOptions';
 
 let nodes;
 
@@ -16,9 +19,12 @@ const CheckboxValue = {
   INDETERMINATE: 'INDETERMINATE',
 };
 
+const { translateMetadataString } = metadataTranslationMixin.methods;
+
 const categoriesLookup = {};
 Object.entries(Categories).forEach(([key, value]) => {
-  categoriesLookup[key] = value;
+  const newKey = translateMetadataString(camelCase(key));
+  categoriesLookup[newKey] = value;
 });
 
 const getOptionsValues = wrapper => {
@@ -37,14 +43,6 @@ const getOptionsValues = wrapper => {
     categories[categoriesLookup[label]] = value;
   });
   return categories;
-};
-
-const getOptionsChips = wrapper => {
-  const chips = wrapper.findAll('[data-test="option-chip"]');
-  return chips.wrappers.map(chip => {
-    const [{ text } = {}] = chip.vm.$slots.default || [];
-    return categoriesLookup[text.trim()] || text.trim();
-  });
 };
 
 const findOptionCheckbox = (wrapper, category) => {
@@ -72,6 +70,18 @@ const makeWrapper = ({ nodeIds, field = 'categories', ...restOptions }) => {
       autocompleteLabel: 'Select option',
       confirmationMessage: 'edited',
       ...restOptions,
+    },
+    scopedSlots: {
+      input: function(props) {
+        return this.$createElement(CategoryOptions, {
+          props: {
+            ...props,
+            expanded: true,
+            hideLabel: true,
+            nodeIds,
+          },
+        });
+      },
     },
   });
 };
@@ -151,27 +161,6 @@ describe('EditBooleanMapModal', () => {
         expect(foundationsValue).toBe(CheckboxValue.CHECKED);
       });
 
-      test('checkbox options should be selected depending on the options set for a single node - learner_needs', () => {
-        nodes['node1'].learner_needs = {
-          [Categories.DAILY_LIFE]: true,
-          [Categories.FOUNDATIONS]: true,
-        };
-
-        const wrapper = makeWrapper({ nodeIds: ['node1'], field: 'learner_needs' });
-
-        const optionsValues = getOptionsValues(wrapper);
-        const {
-          [Categories.DAILY_LIFE]: dailyLifeValue,
-          [Categories.FOUNDATIONS]: foundationsValue,
-          ...otheroptionsValues
-        } = optionsValues;
-        expect(
-          Object.values(otheroptionsValues).every(value => value === CheckboxValue.UNCHECKED)
-        ).toBeTruthy();
-        expect(dailyLifeValue).toBe(CheckboxValue.CHECKED);
-        expect(foundationsValue).toBe(CheckboxValue.CHECKED);
-      });
-
       test('checkbox option should be checked if all nodes have the same option set', () => {
         nodes['node1'].categories = {
           [Categories.DAILY_LIFE]: true,
@@ -212,233 +201,6 @@ describe('EditBooleanMapModal', () => {
         expect(dailyLifeValue).toBe(CheckboxValue.CHECKED);
         expect(foundationsValue).toBe(CheckboxValue.INDETERMINATE);
       });
-
-      describe('Showing hierarchy', () => {
-        test('just root categories should be selected depending on the categories set for a single node', () => {
-          nodes['node1'].categories = {
-            [Categories.DAILY_LIFE]: true, // root categories
-            [Categories.FOUNDATIONS]: true,
-          };
-
-          const wrapper = makeWrapper({ nodeIds: ['node1'], showHierarchy: true });
-
-          const optionsValues = getOptionsValues(wrapper);
-          const {
-            [Categories.DAILY_LIFE]: dailyLifeValue,
-            [Categories.FOUNDATIONS]: foundationsValue,
-            ...otheroptionsValues
-          } = optionsValues;
-          expect(
-            Object.values(otheroptionsValues).every(value => value === CheckboxValue.UNCHECKED)
-          ).toBeTruthy();
-          expect(dailyLifeValue).toBe(CheckboxValue.CHECKED);
-          expect(foundationsValue).toBe(CheckboxValue.CHECKED);
-        });
-
-        test('parent categories should be selected depending on the categories set for a single node when showing hierarchy', () => {
-          nodes['node1'].categories = {
-            [Categories.DIVERSITY]: true, // Daily Life -> Diversity
-          };
-
-          const wrapper = makeWrapper({ nodeIds: ['node1'], showHierarchy: true });
-
-          const optionsValues = getOptionsValues(wrapper);
-          const {
-            [Categories.DAILY_LIFE]: dailyLifeValue,
-            [Categories.DIVERSITY]: diversityValue,
-            ...otheroptionsValues
-          } = optionsValues;
-
-          expect(
-            Object.values(otheroptionsValues).every(value => value === CheckboxValue.UNCHECKED)
-          ).toBeTruthy();
-          expect(dailyLifeValue).toBe(CheckboxValue.CHECKED);
-          expect(diversityValue).toBe(CheckboxValue.CHECKED);
-        });
-
-        test('parent categories should not be selected when not showing hierarchy', () => {
-          nodes['node1'].categories = {
-            [Categories.DIVERSITY]: true, // Daily Life -> Diversity
-          };
-
-          const wrapper = makeWrapper({ nodeIds: ['node1'], showHierarchy: false });
-
-          const optionsValues = getOptionsValues(wrapper);
-          const { [Categories.DIVERSITY]: diversityValue, ...otheroptionsValues } = optionsValues;
-
-          expect(
-            Object.values(otheroptionsValues).every(value => value === CheckboxValue.UNCHECKED)
-          ).toBeTruthy();
-          expect(diversityValue).toBe(CheckboxValue.CHECKED);
-        });
-
-        test('parent checkbox category should be indeterminate if not all nodes have the same parent categories set', () => {
-          nodes['node1'].categories = {
-            [Categories.DIVERSITY]: true, // Daily Life -> Diversity
-          };
-
-          const wrapper = makeWrapper({ nodeIds: ['node1', 'node2'], showHierarchy: true });
-
-          const optionsValues = getOptionsValues(wrapper);
-          const {
-            [Categories.DAILY_LIFE]: dailyLifeValue,
-            [Categories.DIVERSITY]: diversityValue,
-          } = optionsValues;
-          expect(dailyLifeValue).toBe(CheckboxValue.INDETERMINATE);
-          expect(diversityValue).toBe(CheckboxValue.INDETERMINATE);
-        });
-
-        test('multiple parent checkbox categories should be indeterminate if not all nodes have the same parent categories set', () => {
-          nodes['node1'].categories = {
-            [Categories.DIVERSITY]: true, // Daily Life -> Diversity
-          };
-          nodes['node2'].categories = {
-            [Categories.GUIDES]: true, // For teachers -> Guides
-          };
-
-          const wrapper = makeWrapper({ nodeIds: ['node1', 'node2'], showHierarchy: true });
-
-          const optionsValues = getOptionsValues(wrapper);
-          const {
-            [Categories.DAILY_LIFE]: dailyLifeValue,
-            [Categories.FOR_TEACHERS]: forTeachersValue,
-          } = optionsValues;
-          expect(dailyLifeValue).toBe(CheckboxValue.INDETERMINATE);
-          expect(forTeachersValue).toBe(CheckboxValue.INDETERMINATE);
-        });
-
-        test('parent checkbox category should be checked if all nodes have the same parent categories set', () => {
-          nodes['node1'].categories = {
-            [Categories.DIVERSITY]: true, // Daily Life -> Diversity
-          };
-          nodes['node2'].categories = {
-            [Categories.CURRENT_EVENTS]: true, // Daily Life -> Current Events
-          };
-
-          const wrapper = makeWrapper({ nodeIds: ['node1', 'node2'], showHierarchy: true });
-
-          const optionsValues = getOptionsValues(wrapper);
-          const {
-            [Categories.DAILY_LIFE]: dailyLifeValue,
-            [Categories.DIVERSITY]: diversityValue,
-            [Categories.CURRENT_EVENTS]: currentEventsValue,
-          } = optionsValues;
-          expect(diversityValue).toBe(CheckboxValue.INDETERMINATE);
-          expect(currentEventsValue).toBe(CheckboxValue.INDETERMINATE);
-          expect(dailyLifeValue).toBe(CheckboxValue.CHECKED);
-        });
-      });
-    });
-
-    describe('Showing autocomplete', () => {
-      test('no chip should be displayed if nodes does not have options set', () => {
-        const wrapper = makeWrapper({ nodeIds: ['node1'], showAutocomplete: true });
-
-        const categoriesChips = getOptionsChips(wrapper);
-        expect(categoriesChips.length).toBe(0);
-      });
-
-      test('should render selected options chips if showing autocomplete - categories', () => {
-        nodes['node1'].categories = {
-          [Categories.DAILY_LIFE]: true,
-          [Categories.FOUNDATIONS]: true,
-        };
-
-        const wrapper = makeWrapper({ nodeIds: ['node1'], showAutocomplete: true });
-
-        const categoriesChips = getOptionsChips(wrapper);
-        expect(categoriesChips.length).toBe(2);
-        expect(categoriesChips).toContain(Categories.DAILY_LIFE);
-        expect(categoriesChips).toContain(Categories.FOUNDATIONS);
-      });
-
-      test('should render selected options chips  if showing autocomplete - learner_needs', () => {
-        nodes['node1'].learner_needs = {
-          [Categories.DAILY_LIFE]: true,
-          [Categories.FOUNDATIONS]: true,
-        };
-
-        const wrapper = makeWrapper({
-          nodeIds: ['node1'],
-          field: 'learner_needs',
-          showAutocomplete: true,
-        });
-
-        const categoriesChips = getOptionsChips(wrapper);
-        expect(categoriesChips.length).toBe(2);
-        expect(categoriesChips).toContain(Categories.DAILY_LIFE);
-        expect(categoriesChips).toContain(Categories.FOUNDATIONS);
-      });
-
-      test('should not render selected options chips if not showing autocomplete', () => {
-        nodes['node1'].categories = {
-          [Categories.DAILY_LIFE]: true,
-          [Categories.FOUNDATIONS]: true,
-        };
-
-        const wrapper = makeWrapper({ nodeIds: ['node1'], showAutocomplete: false });
-
-        const categoriesChips = getOptionsChips(wrapper);
-        expect(categoriesChips.length).toBe(0);
-      });
-
-      test('should not render parent category chips even though showing hierarchy', () => {
-        nodes['node1'].categories = {
-          [Categories.DIVERSITY]: true, // Daily Life -> Diversity
-        };
-
-        const wrapper = makeWrapper({
-          nodeIds: ['node1'],
-          showAutocomplete: true,
-          showHierarchy: true,
-        });
-
-        const categoriesChips = getOptionsChips(wrapper);
-        expect(categoriesChips.length).toBe(1);
-        expect(categoriesChips).toContain(Categories.DIVERSITY);
-      });
-
-      test('should render "Mixed" chip if there are mixed options set', () => {
-        nodes['node1'].categories = {
-          [Categories.DAILY_LIFE]: true,
-          [Categories.FOUNDATIONS]: true,
-        };
-
-        const wrapper = makeWrapper({ nodeIds: ['node1', 'node2'], showAutocomplete: true });
-
-        const categoriesChips = getOptionsChips(wrapper);
-        expect(categoriesChips.length).toBe(1);
-        expect(categoriesChips).toContain('Mixed');
-      });
-
-      test('should filter options based on autocomplete search query', () => {
-        const searchQuery = 'drama';
-
-        const wrapper = makeWrapper({ nodeIds: ['node1'], showAutocomplete: true });
-        const animationFrameId = requestAnimationFrame(() => {
-          wrapper.find('[data-test="options-autocomplete"]').setValue(searchQuery);
-
-          const categoriesOptions = wrapper.findAll('[data-test="option-checkbox"]');
-          categoriesOptions.wrappers.forEach(checkbox => {
-            const { label } = checkbox.vm.$props || {};
-            expect(label.toLowerCase()).toContain(searchQuery);
-          });
-          cancelAnimationFrame(animationFrameId);
-        });
-      });
-
-      test('should flatten options if autocomplete search query is not empty', () => {
-        const wrapper = makeWrapper({ nodeIds: ['node1'], showAutocomplete: true });
-        const animationFrameId = requestAnimationFrame(() => {
-          wrapper.find('[data-test="options-autocomplete"]').setValue('a');
-
-          const categoriesOptions = wrapper.findAll('[data-test="option-checkbox"]');
-          categoriesOptions.wrappers.forEach(checkbox => {
-            expect(checkbox.element.style.paddingLeft).toBeFalsy();
-          });
-          cancelAnimationFrame(animationFrameId);
-        });
-      });
     });
   });
 
@@ -456,55 +218,6 @@ describe('EditBooleanMapModal', () => {
     const resourcesCounter = wrapper.find('[data-test="resources-selected-message"]');
     expect(resourcesCounter.exists()).toBeTruthy();
     expect(resourcesCounter.text()).toContain('4');
-  });
-
-  test('should display hierarchy of options using more padding on each child level if showing hierarchy', () => {
-    const wrapper = makeWrapper({ nodeIds: ['node1'], showHierarchy: true });
-
-    const categoriesOptions = wrapper.findAll('[data-test="option-checkbox"]');
-    let schoolPadding;
-    let socialSciencesPadding; // school -> social sciences
-    let anthropologyPadding; // school -> social sciences -> anthropology
-    categoriesOptions.wrappers.forEach(checkbox => {
-      const { label } = checkbox.vm.$props || {};
-      const padding = checkbox.element.style.paddingLeft;
-      const paddingNumber = parseInt(padding.replace('px', ''));
-      if (label === 'SCHOOL') {
-        schoolPadding = paddingNumber;
-      } else if (label === 'SOCIAL_SCIENCES') {
-        socialSciencesPadding = paddingNumber;
-      } else if (label === 'ANTHROPOLOGY') {
-        anthropologyPadding = paddingNumber;
-      }
-    });
-
-    expect(schoolPadding).toBeLessThan(socialSciencesPadding);
-    expect(socialSciencesPadding).toBeLessThan(anthropologyPadding);
-  });
-
-  test('should not display hierarchy of options if not showing hierarchy', () => {
-    const wrapper = makeWrapper({ nodeIds: ['node1'], showHierarchy: false });
-
-    const categoriesOptions = wrapper.findAll('[data-test="option-checkbox"]');
-    let schoolPadding;
-    let socialSciencesPadding; // school -> social sciences
-    let anthropologyPadding; // school -> social sciences -> anthropology
-    categoriesOptions.wrappers.forEach(checkbox => {
-      const { label } = checkbox.vm.$props || {};
-      const padding = checkbox.element.style.paddingLeft;
-      const paddingNumber = parseInt(padding.replace('px', ''));
-      if (label === 'school') {
-        schoolPadding = paddingNumber;
-      } else if (label === 'socialSciences') {
-        socialSciencesPadding = paddingNumber;
-      } else if (label === 'anthropology') {
-        anthropologyPadding = paddingNumber;
-      }
-    });
-
-    expect(schoolPadding).toBeFalsy();
-    expect(socialSciencesPadding).toBeFalsy();
-    expect(anthropologyPadding).toBeFalsy();
   });
 
   describe('Submit', () => {
@@ -528,34 +241,6 @@ describe('EditBooleanMapModal', () => {
         expect(contentNodeActions.updateContentNode).toHaveBeenCalledWith(expect.anything(), {
           id: 'node2',
           categories: {
-            [Categories.SCHOOL]: true,
-            [Categories.SOCIOLOGY]: true,
-          },
-        });
-        cancelAnimationFrame(animationFrameId);
-      });
-    });
-
-    test('should call updateContentNode with the right options on success submit - learner_needs', () => {
-      const wrapper = makeWrapper({ nodeIds: ['node1', 'node2'] });
-
-      const schoolCheckbox = findOptionCheckbox(wrapper, Categories.SCHOOL);
-      schoolCheckbox.element.click();
-      const sociologyCheckbox = findOptionCheckbox(wrapper, Categories.SOCIOLOGY);
-      sociologyCheckbox.element.click();
-
-      const animationFrameId = requestAnimationFrame(() => {
-        wrapper.find('[data-test="edit-booleanMap-modal"]').vm.$emit('submit');
-        expect(contentNodeActions.updateContentNode).toHaveBeenCalledWith(expect.anything(), {
-          id: 'node1',
-          learner_needs: {
-            [Categories.SCHOOL]: true,
-            [Categories.SOCIOLOGY]: true,
-          },
-        });
-        expect(contentNodeActions.updateContentNode).toHaveBeenCalledWith(expect.anything(), {
-          id: 'node2',
-          learner_needs: {
             [Categories.SCHOOL]: true,
             [Categories.SOCIOLOGY]: true,
           },
