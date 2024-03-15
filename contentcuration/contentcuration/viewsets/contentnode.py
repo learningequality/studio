@@ -992,9 +992,9 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
         if root.kind_id != content_kinds.TOPIC:
             raise ValidationError("Only topics can have descendants to update")
 
-        descendants = root.get_descendants(include_self=True).values("id")
+        descendantsIds = root.get_descendants(include_self=True).values_list("id", flat=True)
 
-        changes = [{ "key": descendant["id"], "mods": mods } for descendant in descendants]
+        changes = [{ "key": descendantId, "mods": mods } for descendantId in descendantsIds]
 
         return self.update_from_changes(changes) # Bulk update
 
