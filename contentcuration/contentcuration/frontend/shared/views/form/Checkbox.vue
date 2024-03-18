@@ -105,6 +105,8 @@
             return this.state.includes(this.value);
           } else if (typeof this.state === 'number') {
             return this.state !== 0;
+          } else if (typeof this.state === 'object') {
+            return this.state.get();
           } else {
             return this.state;
           }
@@ -121,7 +123,10 @@
             }
           } else if (typeof this.state === 'number') {
             this.$emit('input', checked ? 1 : 0);
-          } else {
+          } else if (typeof this.state === 'object') {
+            this.state.set(checked);
+          }
+          else {
             this.$emit('input', checked);
           }
         },
