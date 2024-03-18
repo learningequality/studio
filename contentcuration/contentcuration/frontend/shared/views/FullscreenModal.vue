@@ -81,11 +81,11 @@
       },
       color: {
         type: String,
-        default: 'secondary',
+        default: 'black',
       },
       dark: {
         type: Boolean,
-        default: false,
+        default: true,
       },
     },
     computed: {
