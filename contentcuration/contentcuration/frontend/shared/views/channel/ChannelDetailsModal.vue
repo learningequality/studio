@@ -2,7 +2,7 @@
 
   <FullscreenModal
     v-model="dialog"
-    color="black"
+    color="appBarDark"
     :dark="true"
   >
     <template #header>

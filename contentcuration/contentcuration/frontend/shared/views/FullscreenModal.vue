@@ -81,7 +81,7 @@
       },
       color: {
         type: String,
-        default: 'black',
+        default: 'appBarDark',
       },
       dark: {
         type: Boolean,

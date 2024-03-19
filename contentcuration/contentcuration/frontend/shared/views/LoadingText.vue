@@ -11,7 +11,7 @@
       <VProgressCircular
         :size="70"
         :width="7"
-        color="secondary"
+        color="loading"
         indeterminate
       />
     </VFlex>

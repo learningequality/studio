@@ -3,7 +3,7 @@
   <VApp>
     <VToolbar
       v-if="libraryMode || isFAQPage"
-      color="primary"
+      color="appBarDark"
       dark
       :clipped-left="!$isRTL"
       :clipped-right="$isRTL"

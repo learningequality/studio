@@ -6,7 +6,7 @@ export default function theme() {
   const tokens = themeTokens();
   return Object.assign(
     {
-      secondary: brand.secondary.v_1000,
+      loading: palette.black,
       primaryBackground: brand.primary.v_200,
       backgroundColor: palette.grey.v_50,
       greyBackground: palette.grey.v_200,

@@ -125,7 +125,7 @@
       },
       color: {
         type: String,
-        default: 'secondary',
+        default: 'appBar',
       },
     },
     data() {

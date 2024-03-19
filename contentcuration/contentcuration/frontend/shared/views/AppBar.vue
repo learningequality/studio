@@ -5,7 +5,7 @@
       app
       :clipped-left="!$isRTL"
       :clipped-right="$isRTL"
-      color="secondary"
+      color="appBar"
       height="56"
       :tabs="Boolean($slots.tabs)"
     >
