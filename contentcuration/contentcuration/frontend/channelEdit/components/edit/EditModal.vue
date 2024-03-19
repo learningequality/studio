@@ -22,7 +22,7 @@
             <!-- Toolbar + extension -->
             <VToolbar
               dark
-              color="primary"
+              color="appBarDark"
               fixed
               flat
               :clipped-left="!$isRTL"

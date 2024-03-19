@@ -9,7 +9,7 @@
   <span v-else-if="error" class="mx-2">
     <VTooltip bottom lazy>
       <template #activator="{ on }">
-        <Icon color="red" v-on="on">
+        <Icon :color="$themePalette.red.v_1100" v-on="on">
           error
         </Icon>
       </template>
@@ -19,7 +19,7 @@
   <span v-else-if="warning" class="mx-2">
     <VTooltip bottom lazy>
       <template #activator="{ on }">
-        <Icon color="amber" v-on="on">
+        <Icon :color="$themePalette.yellow.v_1100" v-on="on">
           warning
         </Icon>
       </template>

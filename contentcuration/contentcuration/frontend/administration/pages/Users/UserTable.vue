@@ -63,7 +63,7 @@
       :class="{ expanded: $vuetify.breakpoint.mdAndUp }"
     >
       <template #progress>
-        <VProgressLinear v-if="loading" color="primary" indeterminate />
+        <VProgressLinear v-if="loading" color="loading" indeterminate />
       </template>
 
       <template #headerCell="{ header }">

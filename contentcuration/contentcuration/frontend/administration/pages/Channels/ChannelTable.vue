@@ -52,7 +52,7 @@
       <template #progress>
         <VProgressLinear
           v-if="loading"
-          color="primary"
+          color="loading"
           indeterminate
           data-test="loading"
         />
