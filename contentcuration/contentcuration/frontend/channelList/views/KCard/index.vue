@@ -170,6 +170,13 @@ export default {
       headingLevel: {
         type: Number,
         required: true,
+        validator(value) {
+          if (!value) {
+            console.error('Error: Prop headingLevel is required and cannot be empty.');
+            return false;
+          }
+          return true;
+        },
       },
       titleLines:{
         type:Number,
@@ -179,10 +186,24 @@ export default {
       to: {
         type: Object,
         required: true,
+        validator(value) {
+          if (!value) {
+            console.error('Error: Prop  to is required.');
+            return false; 
+          }
+          return true;
+        },
       },
       layout: {
         type: String,
-        required: true
+        required: true,
+        validator(value) {
+          if (!value) {
+            console.error('Error: Prop layout is required and cannot be empty.');
+            return false;
+          }
+          return true;
+        },
       },
       thumbnailDisplay: {
         type: String,
