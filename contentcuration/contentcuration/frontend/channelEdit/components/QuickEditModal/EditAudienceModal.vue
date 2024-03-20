@@ -15,9 +15,8 @@
       <p data-test="multiple-audience-message">
         {{ $tr('multipleAudience') }}
       </p>
-      <hr
-        :style="dividerStyle"
-      >
+      <Divider />
+
     </template>
     <h4 class="modal-subheading">
       {{ $tr('visibleTo') }}
@@ -35,9 +34,8 @@
         :description="rol.description"
       />
     </div>
-    <hr
-      :style="dividerStyle"
-    >
+    <Divider />
+
     <KCheckbox
       :checked="forBeginners"
       data-test="for-beginners-checkbox"
@@ -83,13 +81,6 @@
           label: this.translateConstant(role),
           description: this.rolesDescription[role],
         }));
-      },
-      dividerStyle() {
-        return {
-          border: 0,
-          borderBottom: `1px solid ${this.$themeTokens.fineLine}`,
-          margin: '24px 0',
-        };
       },
       rolesDescription() {
         return {

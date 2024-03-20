@@ -18,9 +18,7 @@
         :label="$tr('updateDescendantsCheckbox')"
         @change="(value) => { updateDescendants = value }"
       />
-      <hr
-        :style="dividerStyle"
-      >
+      <Divider />
     </template>
     <slot
       name="input"
@@ -96,13 +94,6 @@
       },
       isTopicSelected() {
         return this.nodes.some(node => node.kind === ContentKindsNames.TOPIC);
-      },
-      dividerStyle() {
-        return {
-          border: 0,
-          borderBottom: `1px solid ${this.$themeTokens.fineLine}`,
-          margin: '1em 0',
-        };
       },
     },
     watch: {

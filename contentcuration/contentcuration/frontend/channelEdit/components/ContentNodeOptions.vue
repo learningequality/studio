@@ -16,7 +16,7 @@
           tabindex="0"
           @click="option.onClick($event)"
           @keydown.enter="option.onClick($event)"
-          @keydown.tab="handleTab($event)"
+          @keydown.tab="checkTabBoundaries($event)"
         >
           <VListTileTitle>
             {{ option.label }}
@@ -253,8 +253,7 @@
           firstOption.focus();
         }
       },
-      handleTab($event) {
-        $event.preventDefault();
+      checkTabBoundaries($event) {
         const optionsList = this.$refs.optionsList;
         const options = optionsList.$el.querySelectorAll('a');
         const index = Array.from(options).indexOf($event.target);
@@ -263,11 +262,9 @@
           (index === options.length - 1 && !$event.shiftKey)
         ) {
           // destroy component
+          $event.preventDefault();
           this.$destroy();
         }
-        const nextIndex = $event.shiftKey ? index - 1 : index + 1;
-        const nextOption = options[nextIndex];
-        nextOption && nextOption.focus();
       },
       newTopicNode() {
         this.trackAction('New topic');
@@ -315,13 +312,13 @@
       },
       quickEditModalFactory(modal) {
         return $event => {
+          $event.preventDefault();
           this.openQuickEditModal({
             modal,
             nodeIds: [this.nodeId],
           });
           const trackActionLabel = modal.replace(/_/g, ' ').toLowerCase();
           this.trackAction(`Edit ${trackActionLabel}`);
-          $event.preventDefault();
         };
       },
       removeNode: withChangeTracker(function(changeTracker) {

@@ -528,18 +528,16 @@ export function getSortedCategories() {
   return categoriesSorted;
 }
 
-export function isAllowedFileType(file) {
+export function isAudioVideoFile(file) {
   if (!file || !file.file_format) {
     return false;
   }
 
-  let allowedFileTypes = [];
-  // add the relevant format presets for audio and video
-  // high res and low res are currently the same, so only one is included
-  allowedFileTypes.push(FormatPresetsMap.get(FormatPresetsNames.HIGH_RES_VIDEO).allowed_formats);
-  allowedFileTypes.push(FormatPresetsMap.get(FormatPresetsNames.AUDIO).allowed_formats);
-  allowedFileTypes = allowedFileTypes.flat();
-  return allowedFileTypes.includes(file.file_format);
+  const videoAllowedFormats = FormatPresetsMap.get(FormatPresetsNames.VIDEO).allowed_formats;
+  const audioAllowedFormats = FormatPresetsMap.get(FormatPresetsNames.AUDIO).allowed_formats;
+  return (
+    videoAllowedFormats.includes(file.file_format) || audioAllowedFormats.includes(file.file_format)
+  );
 }
 
 export function getFileDuration(nodeFiles, kind) {
@@ -553,7 +551,7 @@ export function getFileDuration(nodeFiles, kind) {
 
   // filter for the correct file types,
   // to exclude files such as subtitle or cc
-  const audioVideoFiles = nodeFiles.filter(file => isAllowedFileType(file));
+  const audioVideoFiles = nodeFiles.filter(file => isAudioVideoFile(file));
   // return the last item in the array
   const file = audioVideoFiles[audioVideoFiles.length - 1];
   if (!file || !file.duration) {

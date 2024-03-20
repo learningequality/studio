@@ -13,7 +13,7 @@
     props: {
       margin: {
         type: String,
-        default: '1em 0',
+        default: '16px 0',
       },
     },
     computed: {

@@ -107,7 +107,6 @@
   import ActivityDuration from './ActivityDuration';
   import MasteryCriteriaGoal from './MasteryCriteriaGoal';
   import MasteryCriteriaMofNFields from './MasteryCriteriaMofNFields';
-  import Divider from 'shared/views/Divider';
   import {
     nonUniqueValue,
     ContentModalities,
@@ -136,7 +135,6 @@
   export default {
     name: 'CompletionOptions',
     components: {
-      Divider,
       ActivityDuration,
       ExpandableSelect,
       MasteryCriteriaMofNFields,

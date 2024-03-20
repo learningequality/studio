@@ -29,9 +29,7 @@
         :label="$tr('updateDescendantsCheckbox')"
         @change="(value) => { updateDescendants = value }"
       />
-      <hr
-        :style="dividerStyle"
-      >
+      <Divider />
     </template>
     <div
       ref="languages"
@@ -96,13 +94,6 @@
           criteria.some(key => lang[key] && lang[key].toLowerCase().includes(searchQuery))
         );
       },
-      dividerStyle() {
-        return {
-          border: 0,
-          borderBottom: `1px solid ${this.$themeTokens.fineLine}`,
-          margin: '1em 0',
-        };
-      },
     },
     created() {
       const languages = [...new Set(this.nodes.map(node => node.language))];
@@ -119,7 +110,7 @@
         );
         const selectedRadio = selectedInput && selectedInput.parentElement;
         if (selectedRadio && selectedRadio.scrollIntoView) {
-          selectedRadio.scrollIntoView();
+          selectedRadio.scrollIntoView({ behavior: 'instant' });
         }
       }
     },

@@ -132,6 +132,9 @@
       },
       description: {
         get() {
+          if (this.isMixedDescription) {
+            return this.$tr('mixed');
+          }
           return this.value && this.value.license_description;
         },
         set(value) {
@@ -143,6 +146,9 @@
       },
       isMixedLicense() {
         return this.value && this.value.license === nonUniqueValue;
+      },
+      isMixedDescription() {
+        return this.value && this.value.license_description === nonUniqueValue;
       },
       selectedLicense() {
         if (this.isMixedLicense) {

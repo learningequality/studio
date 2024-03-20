@@ -911,7 +911,7 @@
       importFromChannels: 'Import from channels',
       addButton: 'Add',
       editButton: 'Edit',
-      editSourceButton: 'Edit source',
+      editSourceButton: 'Edit Source',
       editLevelsButton: 'Edit Levels',
       editLanguageButton: 'Edit Language',
       editAudienceButton: 'Edit Audience',
