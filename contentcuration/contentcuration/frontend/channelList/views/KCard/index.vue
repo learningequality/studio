@@ -45,6 +45,8 @@
                 :src="thumbnailSrc"
                 :height="200"
                 :width="200"
+                :isDecorative="false"
+                altText="thumbnail image"
                 :appearanceOverrides="{ borderRadius: '10%' }"
               />
               <slot
@@ -77,6 +79,8 @@
                 :src="thumbnailSrc"
                 :height="auto"
                 :width="auto"
+                :isDecorative="false"
+                altText="thumbnail image"
                 :appearanceOverrides="{ 
                   'object-fit': thumbnailScaleType,
                   borderRadius: '10px 0px 0px 10px' 
@@ -116,6 +120,8 @@
             :src="thumbnailSrc"
             :height="300"
             :width="560"
+            :isDecorative="false"
+            altText="thumbnail image"
             :appearanceOverrides="{
               objectFit: thumbnailScaleType,
               backgroundColor: 'grey'
@@ -132,6 +138,8 @@
             :src="thumbnailSrc"
             :height="300"
             :width="600"
+            :isDecorative="false"
+            altText="thumbnail image"
           />
           <slot v-else name="thumbnailPlaceholder"></slot>
         </div>
