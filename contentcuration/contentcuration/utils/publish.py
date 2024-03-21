@@ -813,13 +813,19 @@ def mark_all_nodes_as_published(channel):
 def save_export_database(channel_id, version):
     logging.debug("Saving export database")
     current_export_db_location = get_active_content_database()
-    target_export_db_location = os.path.join(
-        settings.DB_ROOT, "{}-{}.sqlite3".format(channel_id, version)
-    )
+    target_paths = [
+        os.path.join(
+            settings.DB_ROOT, "{id}.sqlite3".format(id=channel_id)
+        ),
+        os.path.join(
+            settings.DB_ROOT, "{}-{}.sqlite3".format(channel_id, version)
+        ),
+    ]
 
-    with open(current_export_db_location, 'rb') as currentf:
-        storage.save(target_export_db_location, currentf)
-    logging.info("Successfully copied to {}".format(target_export_db_location))
+    for target_export_db_location in target_paths:
+        with open(current_export_db_location, 'rb') as currentf:
+            storage.save(target_export_db_location, currentf)
+        logging.info("Successfully copied to {}".format(target_export_db_location))
 
 
 def add_tokens_to_channel(channel):
