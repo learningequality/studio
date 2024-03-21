@@ -1,7 +1,29 @@
+import time
+import requests
 from abc import ABC
 from abc import abstractmethod
 from builtins import NotImplementedError
 
+
+class SessionWithMaxConnectionAge(requests.Session):
+    """
+        Session with a maximum connection age. If the connection is older than the specified age, it will be closed and a new one will be created.
+        The age is specified in seconds.
+    """
+    def __init__(self, age = 10):
+        self.age = age
+        self.last_used = time.time()
+        super().__init__()
+
+    def request(self, *args, **kwargs):
+        current_time = time.time()
+        if current_time - self.last_used > self.age:
+            self.close()
+            self.__init__(self.age)
+
+        self.last_used = current_time
+
+        return super().request(*args, **kwargs)
 
 class BackendRequest(object):
     """ Class that should be inherited by specific backend for its requests"""
