@@ -20,7 +20,7 @@ jobs:
         uses: fkirc/skip-duplicate-actions@master
         with:
           github_token: ${{ github.token }}
-          paths: '["**.vue", "**.js", "yarn.lock"]'
+          paths: '["**.vue", "**.js", "pnpm-lock.yaml"]'
   test:
     name: Frontend tests
     needs: pre_job
@@ -36,12 +36,12 @@ jobs:
       uses: actions/cache@v4
       with:
         path: '**/node_modules'
-        key: ${{ runner.OS }}-node-${{ hashFiles('**/yarn.lock') }}
+        key: ${{ runner.OS }}-node-${{ hashFiles('**/pnpm-lock.yaml') }}
         restore-keys: |
           ${{ runner.OS }}-node-
     - name: Install dependencies
       run: |
-        yarn --frozen-lockfile
+        pnpm --frozen-lockfile
         npm rebuild node-sass
     - name: Run tests
-      run: yarn run test
+      run: pnpm run test

@@ -20,7 +20,7 @@ jobs:
         uses: fkirc/skip-duplicate-actions@master
         with:
           github_token: ${{ github.token }}
-          paths: '["**.vue", "**.js", "yarn.lock", ".github/workflows/frontendlint.yml"]'
+          paths: '["**.vue", "**.js", "pnpm-lock.yaml", ".github/workflows/frontendlint.yml"]'
   test:
     name: Frontend linting
     needs: pre_job
@@ -36,15 +36,15 @@ jobs:
       uses: actions/cache@v4
       with:
         path: '**/node_modules'
-        key: ${{ runner.OS }}-node-${{ hashFiles('**/yarn.lock') }}
+        key: ${{ runner.OS }}-node-${{ hashFiles('**/pnpm-lock.yaml') }}
         restore-keys: |
           ${{ runner.OS }}-node-
     - name: Install dependencies
       run: |
-        yarn --frozen-lockfile
+        pnpm --frozen-lockfile
         npm rebuild node-sass
     - name: Run tests
-      run: yarn run lint-frontend:format
+      run: pnpm run lint-frontend:format
     - name: Run pre-commit-ci-lite
       uses: pre-commit-ci/lite-action@v1.1.0
       if: always()
