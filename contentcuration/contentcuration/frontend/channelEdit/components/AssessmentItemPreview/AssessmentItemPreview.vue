@@ -112,9 +112,9 @@
   import { AssessmentItemTypeLabels } from '../../constants';
   import { getCorrectAnswersIndices } from '../../utils';
   import translator from '../../translator';
+  import MarkdownViewer from 'shared/views/MarkdownEditor/MarkdownViewer/MarkdownViewer.vue';
   import { AssessmentItemTypes } from 'shared/constants';
   import Checkbox from 'shared/views/form/Checkbox';
-  import MarkdownViewer from 'shared/views/MarkdownEditor/MarkdownViewer/MarkdownViewer.vue';
 
   export default {
     name: 'AssessmentItemPreview',

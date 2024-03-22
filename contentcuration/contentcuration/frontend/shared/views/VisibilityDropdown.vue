@@ -48,8 +48,8 @@
 
 <script>
 
-  import Roles, { RolesList } from 'shared/leUtils/Roles';
   import InfoModal from 'shared/views/InfoModal.vue';
+  import Roles, { RolesList } from 'shared/leUtils/Roles';
   import { constantsTranslationMixin } from 'shared/mixins';
   import DropdownWrapper from 'shared/views/form/DropdownWrapper';
 
