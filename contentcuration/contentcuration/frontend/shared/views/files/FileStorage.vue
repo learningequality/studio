@@ -46,8 +46,8 @@
 <script>
 
   import { mapActions, mapGetters } from 'vuex';
-  import { fileSizeMixin } from 'shared/mixins';
   import ActionLink from 'shared/views/ActionLink.vue';
+  import { fileSizeMixin } from 'shared/mixins';
 
   export default {
     name: 'FileStorage',
