@@ -22,7 +22,7 @@ google-cloud-core
 django-db-readonly==0.7.0
 django-mathfilters
 google-cloud-kms==2.10.0
-google-crc32c==1.1.2
+google-crc32c==1.5.0
 backoff
 django-model-utils==4.5.1
 django-redis
