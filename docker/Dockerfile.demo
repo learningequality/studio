@@ -21,9 +21,10 @@ RUN apt-get update \
     && apt-get install -y nodejs
 RUN npm install --location=global yarn && npm cache clean --force
 
+RUN corepack enable pnpm
 COPY ./package.json .
-COPY ./yarn.lock .
-RUN yarn install && yarn cache clean
+COPY ./pnpm-lock.yaml .
+RUN pnpm install
 
 COPY requirements.txt .
 
