@@ -20,7 +20,7 @@ jobs:
         uses: fkirc/skip-duplicate-actions@master
         with:
           github_token: ${{ github.token }}
-          paths: '["**.py", "requirements.txt", ".github/workflows/deploytest.yml", "**.vue", "**.js", "yarn.lock", "package.json"]'
+          paths: '["**.py", "requirements.txt", ".github/workflows/deploytest.yml", "**.vue", "**.js", "pnpm-lock.yaml", "package.json"]'
   build_assets:
     name: Build frontend assets
     needs: pre_job
@@ -36,15 +36,15 @@ jobs:
       uses: actions/cache@v4
       with:
         path: '**/node_modules'
-        key: ${{ runner.OS }}-node-${{ hashFiles('**/yarn.lock') }}
+        key: ${{ runner.OS }}-node-${{ hashFiles('**/pnpm-lock.yaml') }}
         restore-keys: |
           ${{ runner.OS }}-node-
     - name: Install dependencies
       run: |
-        yarn --frozen-lockfile
+        pnpm --frozen-lockfile
         npm rebuild node-sass
     - name: Build frontend
-      run: yarn run build
+      run: pnpm run build
   make_messages:
     name: Build all message files
     needs: pre_job
@@ -76,12 +76,12 @@ jobs:
       uses: actions/cache@v4
       with:
         path: '**/node_modules'
-        key: ${{ runner.OS }}-node-${{ hashFiles('**/yarn.lock') }}
+        key: ${{ runner.OS }}-node-${{ hashFiles('**/pnpm-lock.yaml') }}
         restore-keys: |
           ${{ runner.OS }}-node-
     - name: Install node dependencies
       run: |
-        yarn --frozen-lockfile
+        pnpm --frozen-lockfile
         npm rebuild node-sass
     - name: Install gettext
       run: |
