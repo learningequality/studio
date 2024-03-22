@@ -11,9 +11,9 @@
   outputs = { self, nixpkgs, nixpkgsOld }:
     let
       overlay = self: super: {
-        # this overlay is to replace yarn's dep from the latest nodejs, to nodejs 18.
-        yarn = with self;
-          super.yarn.overrideAttrs (old: { buildInputs = [ nodejs-18_x ]; });
+        # this overlay is to replace pnpm's dep from the latest nodejs, to nodejs 18.
+        pnpm = with self;
+          super.pnpm.overrideAttrs (old: { buildInputs = [ nodejs-18_x ]; });
       };
 
     in {
@@ -26,7 +26,7 @@
 
         };
         buildTimePkgs = with npkgs; [
-          yarn
+          pnpm
           nodejs-18_x
           python36
           python36Packages.venvShellHook

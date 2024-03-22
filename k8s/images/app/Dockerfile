@@ -20,11 +20,11 @@ RUN apt-get update \
     && apt-get update \
     && apt-get install -y nodejs
 
-RUN npm install --location=global yarn && npm cache clean --force
+RUN corepack enable pnpm
 
 COPY ./package.json .
-COPY ./yarn.lock .
-RUN yarn install && yarn cache clean
+COPY ./pnpm-lock.yaml .
+RUN pnpm install
 
 COPY requirements.txt .
 
@@ -37,7 +37,7 @@ WORKDIR /contentcuration
 # generate the node bundles
 RUN mkdir -p contentcuration/static/js/bundles
 RUN ln -s /node_modules /contentcuration/node_modules
-RUN yarn run build
+RUN pnpm run build
 
 ARG COMMIT_SHA
 ENV RELEASE_COMMIT_SHA=$COMMIT_SHA
