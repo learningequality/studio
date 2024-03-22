@@ -112,38 +112,38 @@ export LDFLAGS="-L/opt/homebrew/opt/openssl/lib"
 ```
 
 ## Install frontend dependencies
-Ready the version of node.js supported by Studio, and install yarn.
+Ready the version of node.js supported by Studio, and install pnpm.
 ```bash
 volta install node@18
-volta install yarn
+volta install pnpm
 ```
 Then you can install frontend dependencies
 ```bash
-yarn install
+pnpm install
 ```
 
 ## Run the services
 
-Having installed all the necessary services, initialized your python virtual environment, and installed `yarn`, you're now ready to start the services. Generally speaking, you'll want to open a separate terminal/terminal-tab to run the services. The following will ensure all services are started, in addition to starting the celery workers service:
+Having installed all the necessary services, initialized your python virtual environment, and installed `pnpm`, you're now ready to start the services. Generally speaking, you'll want to open a separate terminal/terminal-tab to run the services. The following will ensure all services are started, in addition to starting the celery workers service:
 ```bash
-yarn run services
+pnpm run services
 ```
 
 ## Initializing Studio
 With the services running, in a separate terminal/terminal-tab, we can now initialize the database for Studio development purposes. The command below will initialize the database, in addition to adding a user account for development:
 ```bash
-yarn run devsetup
+pnpm run devsetup
 ```
 
 ## Running the development server
 With the services running, in a separate terminal/terminal-tab, and the database initialized, we can start the dev server:
 ```bash
-yarn run devserver:hot  # with Vue hot module reloading
+pnpm run devserver:hot  # with Vue hot module reloading
 # or
-yarn run devserver  # without hot module reloading
+pnpm run devserver  # without hot module reloading
 ```
 
-Either of the above commands will take a few minutes to build the frontend. When it's done, you can sign in with the account created by the `yarn run devsetup` command:
+Either of the above commands will take a few minutes to build the frontend. When it's done, you can sign in with the account created by the `pnpm run devsetup` command:
 - url: `http://localhost:8080/accounts/login/`
 - username: `a@a.com`
 - password: `a`
