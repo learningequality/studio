@@ -6,15 +6,15 @@ Make sure you've installed the requirements in `requirements-dev.txt`, set up a 
     make test
 
 ## Frontend tests
-Make sure you've installed all frontend requirements (`yarn install`). Then you may use the following command to run all frontend tests:
+Make sure you've installed all frontend requirements (`pnpm install`). Then you may use the following command to run all frontend tests:
 
-    yarn run test
+    pnpm run test
 
 ## Tests within Docker
 You may run either of the above in `docker` by using `docker-compose run studio-app`. For example:
 
     docker-compose run studio-app make test
-    docker-compose run studio-app yarn run test
+    docker-compose run studio-app pnpm run test
 
 You may run arbitrary commands in the docker container, including customized test runs like those below, by prepending `docker-compose run studio-app ` to the command.
 
@@ -50,15 +50,15 @@ For running tests continuously during development, `pytest-watch` is included. T
     ptw contentcuration -- --reuse-db
 
 ### Frontend tests
-The JavaScript tests use the `jest` test runner. The `yarn run test` command automatically includes the `jest` configuration in its invocation of tests. To execute a subset of all tests, like a specific test you're modifying, you may pass along a file path:
+The JavaScript tests use the `jest` test runner. The `pnpm run test` command automatically includes the `jest` configuration in its invocation of tests. To execute a subset of all tests, like a specific test you're modifying, you may pass along a file path:
 
-    yarn run test contentcuration/contentcuration/frontend/shared/utils/helpers.spec.js
+    pnpm run test contentcuration/contentcuration/frontend/shared/utils/helpers.spec.js
 
 #### Automatically running tests during development
-For running tests continuously during development, we have `yarn` script which will watch for file changes and re-execute tests when they change:
+For running tests continuously during development, we have `pnpm` script which will watch for file changes and re-execute tests when they change:
 
-    yarn run test-jest:dev
+    pnpm run test-jest:dev
 
 This also supports only a subset of tests, like passing a file:
 
-    yarn run test-jest:dev contentcuration/contentcuration/frontend/shared/utils/helpers.spec.js
+    pnpm run test-jest:dev contentcuration/contentcuration/frontend/shared/utils/helpers.spec.js
