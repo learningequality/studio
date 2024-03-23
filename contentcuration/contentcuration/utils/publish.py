@@ -151,7 +151,9 @@ def create_content_database(channel, force, user_id, force_exercises, progress_t
         if progress_tracker:
             progress_tracker.track(90)
         map_prerequisites(channel.main_tree)
-        save_export_database(channel.pk, channel.version)
+        save_export_database(
+            channel.pk, channel.version + 1
+        )  # Need to save as version being published, not current version
         if channel.public:
             mapper = ChannelMapper(kolibri_channel)
             mapper.run()
