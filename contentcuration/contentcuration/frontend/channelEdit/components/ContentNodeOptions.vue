@@ -6,7 +6,7 @@
     @select="handleSelect"
   >
     <template #header>
-      <slot name="header" />
+      <slot name="header"></slot>
     </template>
   </KDropdownMenu>
 
