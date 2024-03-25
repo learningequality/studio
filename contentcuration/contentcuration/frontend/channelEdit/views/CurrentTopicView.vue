@@ -11,16 +11,15 @@
             <VFlex class="font-weight-bold text-truncate" shrink :class="getTitleClass(item)">
               {{ getTitle(item) }}
             </VFlex>
-            <Menu v-if="item.displayNodeOptions" v-model="breadcrumbsMenu">
-              <template #activator="{ on }">
-                <IconButton
-                  icon="dropdown"
-                  :text="$tr('optionsButton')"
-                  v-on="on"
-                />
+            <KIconButton
+              v-if="item.displayNodeOptions"
+              icon="dropdown"
+              :tooltip="$tr('optionsButton')"
+            >
+              <template #menu>
+                <ContentNodeOptions v-if="node" :nodeId="topicId" />
               </template>
-              <ContentNodeOptions v-if="node && breadcrumbsMenu" :nodeId="topicId" />
-            </Menu>
+            </KIconButton>
           </VLayout>
           <span v-else class="grey--text" :class="getTitleClass(item)">
             {{ getTitle(item) }}
@@ -195,23 +194,18 @@
             :text="$tr('editButton')"
             @click="editNodes([detailNodeId])"
           />
-          <Menu v-model="resourceDrawerMenu">
-            <template #activator="{ on }">
-              <IconButton
-                size="small"
-                icon="optionsVertical"
-                :text="$tr('optionsButton')"
-                v-on="on"
+          <KIconButton
+            icon="optionsVertical"
+            :tooltip="$tr('optionsButton')"
+          >
+            <template #menu>
+              <ContentNodeOptions
+                hideEditLink
+                hideDetailsLink
+                :nodeId="detailNodeId"
               />
             </template>
-            <ContentNodeOptions
-              v-if="resourceDrawerMenu"
-              :nodeId="detailNodeId"
-              hideDetailsLink
-              hideEditLink
-              @removed="closePanel"
-            />
-          </Menu>
+          </KIconButton>
         </template>
         <template v-else #actions>
           <IconButton
@@ -287,8 +281,6 @@
         loadingAncestors: false,
         elevated: false,
         moveModalOpen: false,
-        breadcrumbsMenu: false,
-        resourceDrawerMenu: false,
       };
     },
     computed: {
