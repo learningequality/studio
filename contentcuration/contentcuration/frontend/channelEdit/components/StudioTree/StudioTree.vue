@@ -126,13 +126,15 @@
                     @click.stop
                   >
                     <template #menu>
-                      <ContentNodeOptions :nodeId="nodeId" />
+                      <ContentNodeOptions :nodeId="nodeId" data-test="editMenu" />
                     </template>
                   </KIconButton>
                 </VFlex>
                 <ContentNodeOptions
+                  v-if="allowEditing && !copying"
                   isContextMenu
                   :nodeId="nodeId"
+                  data-test="contextMenu"
                 >
                   <template #header>
                     <div class="caption grey--text pt-2 px-3" :class="getTitleClass(node)">
