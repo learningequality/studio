@@ -2,8 +2,6 @@
 
   <VHover :disabled="copying">
     <template #default="{ hover }">
-      <ContextMenuCloak :disabled="contextMenuDisabled">
-        <template #default="contextMenuProps">
           <DraggableHandle v-bind="draggableHandle">
             <template #default>
               <VListTile
@@ -184,14 +182,10 @@
                   </div>
                   <div class="disabled-overlay"></div>
                 </template>
-                <slot name="context-menu" v-bind="contextMenuProps"></slot>
+                <slot name="context-menu" v-if="!contextMenuDisabled"></slot>
               </VListTile>
-
             </template>
           </DraggableHandle>
-
-        </template>
-      </ContextMenuCloak>
     </template>
   </VHover>
 

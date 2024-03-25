@@ -20,136 +20,129 @@
         @draggableDragLeave="dragLeave"
       >
         <template #default="itemProps">
-          <ContextMenuCloak :disabled="!allowEditing || copying">
-            <template #default="{ showContextMenu, positionX, positionY }">
-              <VFlex
-                v-if="node && !root"
-                tag="v-flex"
-                class="node-item px-1"
-                :class="{
-                  disabled: copying,
-                }"
+          <VFlex
+            v-if="node && !root"
+            tag="v-flex"
+            class="node-item px-1"
+            :class="{
+              disabled: copying,
+            }"
+            :style="{
+              backgroundColor: !root && selected
+                ? $vuetify.theme.greyBackground
+                : 'transparent',
+            }"
+            data-test="item"
+            @click="click"
+          >
+            <DraggableHandle
+              :draggable="draggable"
+              :draggableMetadata="node"
+              :effectAllowed="draggableEffectAllowed"
+            >
+              <VLayout
+                row
+                align-center
+                class="draggable-background"
                 :style="{
-                  backgroundColor: !root && selected
-                    ? $vuetify.theme.greyBackground
-                    : 'transparent',
+                  height: '40px',
+                  backgroundColor: itemProps.isDraggingOver && itemProps.isDropAllowed
+                    ? $vuetify.theme.draggableDropZone
+                    : 'transparent'
                 }"
-                data-test="item"
-                @click="click"
               >
-                <DraggableHandle
-                  :draggable="draggable"
-                  :draggableMetadata="node"
-                  :effectAllowed="draggableEffectAllowed"
-                >
-                  <VLayout
-                    row
-                    align-center
-                    class="draggable-background"
-                    :style="{
-                      height: '40px',
-                      backgroundColor: itemProps.isDraggingOver && itemProps.isDropAllowed
-                        ? $vuetify.theme.draggableDropZone
-                        : 'transparent'
-                    }"
+                <div v-if="copying" class="disabled-overlay"></div>
+                <VFlex shrink style="min-width: 28px;" class="text-xs-center">
+                  <VBtn
+                    v-if="showExpansion"
+                    icon
+                    class="ma-0"
+                    data-test="expansionToggle"
+                    :style="{ transform: toggleTransform }"
+                    @click.stop="toggle"
                   >
-                    <div v-if="copying" class="disabled-overlay"></div>
-                    <VFlex shrink style="min-width: 28px;" class="text-xs-center">
-                      <VBtn
-                        v-if="showExpansion"
-                        icon
-                        class="ma-0"
-                        data-test="expansionToggle"
-                        :style="{ transform: toggleTransform }"
-                        @click.stop="toggle"
-                      >
-                        <Icon>keyboard_arrow_right</Icon>
-                      </VBtn>
-                    </VFlex>
-                    <VFlex shrink class="px-1">
-                      <VTooltip :disabled="!hasTitle(node)" bottom open-delay="500" lazy>
-                        <template #activator="{ on }">
-                          <Icon v-on="on">
-                            {{ node.resource_count ? "folder" : "folder_open" }}
-                          </Icon>
-                        </template>
-                        <span>{{ getTitle(node) }}</span>
-                      </VTooltip>
-                    </VFlex>
-                    <VFlex
-                      class="caption px-1 text-truncate"
-                      :class="getTitleClass(node)"
-                    >
-                      <span v-if="hasTitle(node) || !allowEditing" class="content-title">
-                        {{ getTitle(node) }}
-                      </span>
-                      <span v-else class="red--text">
-                        {{ $tr('missingTitle') }}
-                      </span>
-                    </VFlex>
-                    <VSpacer />
-                    <VFlex v-if="canEdit && !copying" shrink>
-                      <ContentNodeValidator
-                        v-if="!node.complete || node.error_count"
-                        :node="node"
-                        hideTitleValidation
-                      />
-                      <ContentNodeChangedIcon v-else :node="node" />
-                    </VFlex>
-                    <VFlex
-                      v-if="copying"
-                      class="mx-2"
-                      style="width: 24px;"
-                      shrink
-                    >
-                      <ContentNodeCopyTaskProgress
-                        class="progress-loader"
-                        :node="node"
-                        size="24"
-                        showTooltip
-                      />
-                    </VFlex>
-                    <VFlex
-                      v-if="allowEditing && !copying"
-                      style="width: 40px;"
-                      shrink
-                    >
-                      <VProgressCircular
-                        v-if="loading"
-                        class="mx-3"
-                        indeterminate
-                        size="15"
-                        width="2"
-                      />
-                      <KIconButton
-                        v-else
-                        icon="optionsVertical"
-                        :tooltip="$tr('optionsTooltip')"
-                        @click.stop
-                      >
-                        <template #menu>
-                          <ContentNodeOptions :nodeId="nodeId" />
-                        </template>
-                      </KIconButton>
-                    </VFlex>
-                    <ContentNodeContextMenu
-                      v-if="allowEditing && !copying && false"
-                      :show="showContextMenu"
-                      :positionX="positionX"
-                      :positionY="positionY"
-                      :nodeId="nodeId"
-                      data-test="contextMenu"
-                    >
-                      <div class="caption grey--text pt-2 px-3" :class="getTitleClass(node)">
-                        {{ getTitle(node) }}
-                      </div>
+                    <Icon>keyboard_arrow_right</Icon>
+                  </VBtn>
+                </VFlex>
+                <VFlex shrink class="px-1">
+                  <VTooltip :disabled="!hasTitle(node)" bottom open-delay="500" lazy>
+                    <template #activator="{ on }">
+                      <Icon v-on="on">
+                        {{ node.resource_count ? "folder" : "folder_open" }}
+                      </Icon>
+                    </template>
+                    <span>{{ getTitle(node) }}</span>
+                  </VTooltip>
+                </VFlex>
+                <VFlex
+                  class="caption px-1 text-truncate"
+                  :class="getTitleClass(node)"
+                >
+                  <span v-if="hasTitle(node) || !allowEditing" class="content-title">
+                    {{ getTitle(node) }}
+                  </span>
+                  <span v-else class="red--text">
+                    {{ $tr('missingTitle') }}
+                  </span>
+                </VFlex>
+                <VSpacer />
+                <VFlex v-if="canEdit && !copying" shrink>
+                  <ContentNodeValidator
+                    v-if="!node.complete || node.error_count"
+                    :node="node"
+                    hideTitleValidation
+                  />
+                  <ContentNodeChangedIcon v-else :node="node" />
+                </VFlex>
+                <VFlex
+                  v-if="copying"
+                  class="mx-2"
+                  style="width: 24px;"
+                  shrink
+                >
+                  <ContentNodeCopyTaskProgress
+                    class="progress-loader"
+                    :node="node"
+                    size="24"
+                    showTooltip
+                  />
+                </VFlex>
+                <VFlex
+                  v-if="allowEditing && !copying"
+                  style="width: 40px;"
+                  shrink
+                >
+                  <VProgressCircular
+                    v-if="loading"
+                    class="mx-3"
+                    indeterminate
+                    size="15"
+                    width="2"
+                  />
+                  <KIconButton
+                    v-else
+                    icon="optionsVertical"
+                    :tooltip="$tr('optionsTooltip')"
+                    @click.stop
+                  >
+                    <template #menu>
                       <ContentNodeOptions :nodeId="nodeId" />
-                    </ContentNodeContextMenu>
-                  </VLayout>
-                </DraggableHandle>
-              </VFlex>
-            </template>
-          </ContextMenuCloak>
+                    </template>
+                  </KIconButton>
+                </VFlex>
+                <ContentNodeOptions
+                  isContextMenu
+                  :nodeId="nodeId"
+                >
+                  <template #header>
+                    <div class="caption grey--text pt-2 px-3" :class="getTitleClass(node)">
+                      {{ getTitle(node) }}
+                    </div>
+                  </template>
+                </ContentNodeOptions>
+              </VLayout>
+            </DraggableHandle>
+          </VFlex>
         </template>
       </DraggableItem>
       <VFlex v-if="node && (root || hasContent) && !loading && !copying">
@@ -181,12 +174,9 @@
   import ContentNodeOptions from '../ContentNodeOptions';
   import ContentNodeChangedIcon from '../ContentNodeChangedIcon';
   import ContentNodeValidator from '../ContentNodeValidator';
-  import ContentNodeContextMenu from '../ContentNodeContextMenu';
   import ContentNodeCopyTaskProgress from '../../views/progress/ContentNodeCopyTaskProgress';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
-  import ContextMenuCloak from 'shared/views/ContextMenuCloak';
   import LoadingText from 'shared/views/LoadingText';
-  import IconButton from 'shared/views/IconButton';
   import DraggableCollection from 'shared/views/draggable/DraggableCollection';
   import DraggableItem from 'shared/views/draggable/DraggableItem';
   import DraggableHandle from 'shared/views/draggable/DraggableHandle';
@@ -200,13 +190,10 @@
       DraggableHandle,
       DraggableItem,
       DraggableCollection,
-      ContextMenuCloak,
-      ContentNodeContextMenu,
       ContentNodeOptions,
       ContentNodeChangedIcon,
       ContentNodeValidator,
       LoadingText,
-      IconButton,
       ContentNodeCopyTaskProgress,
     },
     mixins: [titleMixin],
