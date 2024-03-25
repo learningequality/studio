@@ -545,3 +545,7 @@ export async function checkSavingProgress(
     .first();
   return Boolean(query);
 }
+
+export function setQuickEditModal(context, open) {
+  context.commit('SET_QUICK_EDIT_MODAL', open);
+}

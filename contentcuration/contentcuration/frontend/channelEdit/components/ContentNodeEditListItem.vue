@@ -109,7 +109,7 @@
 
 <script>
 
-  import { mapGetters, mapActions, mapMutations } from 'vuex';
+  import { mapGetters, mapActions } from 'vuex';
 
   import ContentNodeListItem from './ContentNodeListItem';
   import ContentNodeOptions from './ContentNodeOptions';
@@ -249,12 +249,10 @@
         'updateContentNode',
         'waitForCopyingStatus',
         'deleteContentNode',
+        'setQuickEditModal',
       ]),
-      ...mapMutations('contentNode', {
-        openQuickEditModal: 'SET_QUICK_EDIT_MODAL_OPEN',
-      }),
       editTitleDescription() {
-        this.openQuickEditModal({
+        this.setQuickEditModal({
           modal: QuickEditModals.TITLE_DESCRIPTION,
           nodeIds: [this.nodeId],
         });

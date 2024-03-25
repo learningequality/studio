@@ -229,7 +229,7 @@
 
 <script>
 
-  import { mapActions, mapGetters, mapState, mapMutations } from 'vuex';
+  import { mapActions, mapGetters, mapState } from 'vuex';
   import get from 'lodash/get';
   import MoveModal from '../components/move/MoveModal';
   import ContentNodeOptions from '../components/ContentNodeOptions';
@@ -572,11 +572,9 @@
         'moveContentNodes',
         'copyContentNode',
         'waitForCopyingStatus',
+        'setQuickEditModal',
       ]),
       ...mapActions('clipboard', ['copyAll']),
-      ...mapMutations('contentNode', {
-        openQuickEditModal: 'SET_QUICK_EDIT_MODAL_OPEN',
-      }),
       clearSelections() {
         this.selected = [];
       },
@@ -665,7 +663,7 @@
       },
       quickEditModalFactory(modal) {
         return () => {
-          this.openQuickEditModal({
+          this.setQuickEditModal({
             modal,
             nodeIds: this.selected,
           });

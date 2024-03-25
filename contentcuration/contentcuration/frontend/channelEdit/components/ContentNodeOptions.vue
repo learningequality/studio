@@ -43,7 +43,7 @@
 
 <script>
 
-  import { mapActions, mapGetters, mapMutations } from 'vuex';
+  import { mapActions, mapGetters } from 'vuex';
   import { RouteNames, TabNames, QuickEditModals } from '../constants';
   import MoveModal from './move/MoveModal';
   import { withChangeTracker } from 'shared/data/changes';
@@ -239,11 +239,9 @@
         'moveContentNodes',
         'copyContentNode',
         'waitForCopyingStatus',
+        'setQuickEditModal',
       ]),
       ...mapActions('clipboard', ['copy']),
-      ...mapMutations('contentNode', {
-        openQuickEditModal: 'SET_QUICK_EDIT_MODAL_OPEN',
-      }),
       async focusFirstOption() {
         const { optionsList } = this.$refs;
         const firstOption = optionsList.$el.querySelector('a');
@@ -313,7 +311,7 @@
       quickEditModalFactory(modal) {
         return $event => {
           $event.preventDefault();
-          this.openQuickEditModal({
+          this.setQuickEditModal({
             modal,
             nodeIds: [this.nodeId],
           });

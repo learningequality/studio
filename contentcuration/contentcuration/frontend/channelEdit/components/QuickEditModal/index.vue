@@ -53,7 +53,7 @@
 
 <script>
 
-  import { mapGetters, mapMutations } from 'vuex';
+  import { mapGetters, mapActions } from 'vuex';
   import { QuickEditModals } from '../../constants';
   import EditSourceModal from './EditSourceModal';
   import EditLevelsModal from './EditLevelsModal';
@@ -123,11 +123,9 @@
       },
     },
     methods: {
-      ...mapMutations('contentNode', {
-        setQuickEditModalOpen: 'SET_QUICK_EDIT_MODAL_OPEN',
-      }),
+      ...mapActions('contentNode', ['setQuickEditModal']),
       close() {
-        this.setQuickEditModalOpen(null);
+        this.setQuickEditModal(null);
       },
     },
   };

@@ -533,7 +533,8 @@ export function isAudioVideoFile(file) {
     return false;
   }
 
-  const videoAllowedFormats = FormatPresetsMap.get(FormatPresetsNames.VIDEO).allowed_formats;
+  const videoAllowedFormats = FormatPresetsMap.get(FormatPresetsNames.HIGH_RES_VIDEO)
+    .allowed_formats;
   const audioAllowedFormats = FormatPresetsMap.get(FormatPresetsNames.AUDIO).allowed_formats;
   return (
     videoAllowedFormats.includes(file.file_format) || audioAllowedFormats.includes(file.file_format)

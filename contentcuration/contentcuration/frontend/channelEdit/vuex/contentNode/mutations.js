@@ -78,7 +78,7 @@ export function SET_MOVE_NODES(state, ids) {
   state.moveNodes = ids;
 }
 
-export function SET_QUICK_EDIT_MODAL_OPEN(state, quickEditModalOpen) {
+export function SET_QUICK_EDIT_MODAL(state, quickEditModalOpen) {
   state.quickEditModalOpen = quickEditModalOpen;
 }
 
