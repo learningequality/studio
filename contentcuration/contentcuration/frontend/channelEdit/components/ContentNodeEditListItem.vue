@@ -91,11 +91,8 @@
         </template>
 
         <template #context-menu="{ showContextMenu, positionX, positionY }">
-          <ContentNodeContextMenu
-            v-if="false"
-            :show="showContextMenu"
-            :positionX="positionX"
-            :positionY="positionY"
+          <ContentNodeOptions
+            isContextMenu
             :nodeId="nodeId"
           />
         </template>

@@ -357,3 +357,9 @@ export function getQuickEditModalOpen(state) {
     return state.quickEditModalOpen;
   };
 }
+
+export function getMoveNodesIds(state) {
+  return function() {
+    return state.moveNodes;
+  }
+}
