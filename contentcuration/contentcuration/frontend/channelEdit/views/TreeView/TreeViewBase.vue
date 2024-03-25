@@ -382,10 +382,7 @@
         offline: state => !state.connection.online,
       }),
       ...mapGetters(['isAboutLicensesModalOpen']),
-      ...mapGetters('contentNode', [
-        'getContentNode',
-        'getMoveNodesIds',
-      ]),
+      ...mapGetters('contentNode', ['getContentNode', 'getMoveNodesIds']),
       ...mapGetters('currentChannel', ['currentChannel', 'canEdit', 'canManage', 'rootId']),
       rootNode() {
         return this.getContentNode(this.rootId);
@@ -489,9 +486,7 @@
       },
       moveModalDialog: {
         get() {
-          return (
-            this.moveNodeIds && this.moveNodeIds.length > 0
-          )
+          return this.moveNodeIds && this.moveNodeIds.length > 0;
         },
         set(value) {
           if (!value) {
@@ -502,10 +497,7 @@
     },
     methods: {
       ...mapActions('channel', ['deleteChannel']),
-      ...mapActions('contentNode', [
-        'setMoveNodesIds',
-        'moveContentNodes',
-      ]),
+      ...mapActions('contentNode', ['setMoveNodesIds', 'moveContentNodes']),
       handleDelete() {
         this.deleteChannel(this.currentChannel.id).then(() => {
           localStorage.snackbar = this.$tr('channelDeletedSnackbar');

@@ -90,7 +90,7 @@
           />
         </template>
 
-        <template #context-menu="{ showContextMenu, positionX, positionY }">
+        <template #context-menu>
           <ContentNodeOptions
             isContextMenu
             :nodeId="nodeId"
@@ -109,7 +109,6 @@
 
   import ContentNodeListItem from './ContentNodeListItem';
   import ContentNodeOptions from './ContentNodeOptions';
-  import ContentNodeContextMenu from './ContentNodeContextMenu';
   import Checkbox from 'shared/views/form/Checkbox';
   import IconButton from 'shared/views/IconButton';
   import DraggableItem from 'shared/views/draggable/DraggableItem';
@@ -125,7 +124,6 @@
       DraggableItem,
       ContentNodeListItem,
       ContentNodeOptions,
-      ContentNodeContextMenu,
       Checkbox,
       IconButton,
     },

@@ -361,5 +361,5 @@ export function getQuickEditModalOpen(state) {
 export function getMoveNodesIds(state) {
   return function() {
     return state.moveNodes;
-  }
+  };
 }

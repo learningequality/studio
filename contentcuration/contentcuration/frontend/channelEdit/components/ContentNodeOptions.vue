@@ -4,7 +4,11 @@
     :isContextMenu="isContextMenu"
     :options="menuOptions"
     @select="handleSelect"
-  />
+  >
+    <template #header>
+      <slot name="header" />
+    </template>
+  </KDropdownMenu>
 
 </template>
 
