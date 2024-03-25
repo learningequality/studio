@@ -121,24 +121,19 @@
                         size="15"
                         width="2"
                       />
-                      <Menu
+                      <KIconButton
                         v-else
-                        v-model="showMenu"
-                        data-test="editMenu"
+                        icon="optionsVertical"
+                        :tooltip="$tr('optionsTooltip')"
+                        @click.stop
                       >
-                        <template #activator="{ on }">
-                          <IconButton
-                            icon="optionsVertical"
-                            :text="$tr('optionsTooltip')"
-                            v-on="on"
-                            @click.stop
-                          />
+                        <template #menu>
+                          <ContentNodeOptions :nodeId="nodeId" />
                         </template>
-                        <ContentNodeOptions v-if="showMenu" :nodeId="nodeId" />
-                      </Menu>
+                      </KIconButton>
                     </VFlex>
                     <ContentNodeContextMenu
-                      v-if="allowEditing && !copying"
+                      v-if="allowEditing && !copying && false"
                       :show="showContextMenu"
                       :positionX="positionX"
                       :positionY="positionY"
@@ -258,7 +253,6 @@
         draggableSize: 5,
         draggableExpanded: false,
         debouncedLoad: null,
-        showMenu: false,
       };
     },
     computed: {

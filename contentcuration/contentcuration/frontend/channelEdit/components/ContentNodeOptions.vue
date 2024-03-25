@@ -1,6 +1,10 @@
 <template>
 
-  <div
+  <KDropdownMenu
+    :options="menuOptions"
+    @select="onSelect"
+  />
+  <!-- <div
     style="max-height: 80vh"
   >
     <VList ref="optionsList">
@@ -37,7 +41,7 @@
       :moveNodeIds="[nodeId]"
       @target="moveNode"
     />
-  </div>
+  </div> -->
 
 </template>
 
@@ -197,6 +201,14 @@
           .filter(group => group.some(option => option.condition))
           .map(group => group.filter(option => option.condition));
       },
+      menuOptions() {
+        return this.groupedOptions.reduce((acc, group, idx) => {
+          if (idx > 0) {
+            acc.push({ type: 'divider' });
+          }
+          return acc.concat(group);
+        });
+      },
       editLink() {
         return {
           name: RouteNames.CONTENTNODE_DETAILS,
@@ -243,13 +255,13 @@
       ]),
       ...mapActions('clipboard', ['copy']),
       async focusFirstOption() {
-        const { optionsList } = this.$refs;
-        const firstOption = optionsList.$el.querySelector('a');
-        let tries = 0;
-        while (document.activeElement !== firstOption && tries++ < 20) {
-          await new Promise(resolve => setTimeout(resolve, 0));
-          firstOption.focus();
-        }
+        // const { optionsList } = this.$refs;
+        // const firstOption = optionsList.$el.querySelector('a');
+        // let tries = 0;
+        // while (document.activeElement !== firstOption && tries++ < 20) {
+        //   await new Promise(resolve => setTimeout(resolve, 0));
+        //   firstOption.focus();
+        // }
       },
       checkTabBoundaries($event) {
         const optionsList = this.$refs.optionsList;
@@ -262,6 +274,14 @@
           // destroy component
           $event.preventDefault();
           this.$destroy();
+        }
+      },
+      onSelect(option) {
+        if (option.onClick) {
+          option.onClick();
+        }
+        if (option.to) {
+          this.$router.push(option.to);
         }
       },
       newTopicNode() {
@@ -309,8 +329,7 @@
         return () => {};
       },
       quickEditModalFactory(modal) {
-        return $event => {
-          $event.preventDefault();
+        return () => {
           this.setQuickEditModal({
             modal,
             nodeIds: [this.nodeId],

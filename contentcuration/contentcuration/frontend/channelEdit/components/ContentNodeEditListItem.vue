@@ -49,10 +49,10 @@
         <template #actions-end>
           <VListTileAction class="action-icon px-1" @click.stop>
             <transition name="fade">
-              <IconButton
+              <KIconButton
                 icon="rename"
                 size="small"
-                :text="$tr('editTooltip')"
+                :tooltip="$tr('editTooltip')"
                 :disabled="copying"
                 @click.stop
                 @click="editTitleDescription()"
@@ -60,19 +60,17 @@
             </transition>
           </VListTileAction>
           <VListTileAction :aria-hidden="!active" class="action-icon px-1">
-            <Menu v-model="activated">
-              <template #activator="{ on }">
-                <IconButton
-                  icon="optionsVertical"
-                  :text="$tr('optionsTooltip')"
-                  size="small"
-                  :disabled="copying"
-                  v-on="on"
-                  @click.stop
-                />
+            <KIconButton
+              icon="optionsVertical"
+              size="small"
+              :tooltip="$tr('optionsTooltip')"
+              :disabled="copying"
+              @click.stop
+            >
+              <template #menu>
+                <ContentNodeOptions v-if="!copying" :nodeId="nodeId" />
               </template>
-              <ContentNodeOptions v-if="!copying && activated" :nodeId="nodeId" />
-            </Menu>
+            </KIconButton>
           </VListTileAction>
         </template>
 
@@ -94,6 +92,7 @@
 
         <template #context-menu="{ showContextMenu, positionX, positionY }">
           <ContentNodeContextMenu
+            v-if="false"
             :show="showContextMenu"
             :positionX="positionX"
             :positionY="positionY"
@@ -164,11 +163,6 @@
         default: false,
       },
     },
-    data() {
-      return {
-        activated: false,
-      };
-    },
     computed: {
       ...mapGetters('currentChannel', ['canEdit']),
       ...mapGetters('contentNode', [
@@ -186,7 +180,7 @@
         },
       },
       active() {
-        return this.selected || this.activated || this.previewing;
+        return this.selected || this.previewing;
       },
       contentNode() {
         return this.getContentNode(this.nodeId);
