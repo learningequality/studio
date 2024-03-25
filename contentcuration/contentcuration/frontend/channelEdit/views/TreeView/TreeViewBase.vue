@@ -228,6 +228,12 @@
     <AboutLicensesModal
       v-if="isAboutLicensesModalOpen"
     />
+    <MoveModal
+      ref="moveModal"
+      v-model="moveModalDialog"
+      :moveNodeIds="moveNodeIds"
+      @target="moveNodes"
+    />
     <MessageDialog
       v-model="showDeleteModal"
       :header="$tr('deleteTitle')"
@@ -317,6 +323,7 @@
   import ProgressModal from '../progress/ProgressModal';
   import PublishModal from '../../components/publish/PublishModal';
   import QuickEditModal from '../../components/QuickEditModal';
+  import MoveModal from '../../components/move/MoveModal';
   import SavingIndicator from '../../components/edit/SavingIndicator';
   import { DraggableRegions, DraggableUniverses, RouteNames } from '../../constants';
   import MainNavigationDrawer from 'shared/views/MainNavigationDrawer';
@@ -348,6 +355,7 @@
       DraggablePlaceholder,
       MessageDialog,
       SavingIndicator,
+      MoveModal,
       QuickEditModal,
       AboutLicensesModal,
     },
@@ -374,7 +382,10 @@
         offline: state => !state.connection.online,
       }),
       ...mapGetters(['isAboutLicensesModalOpen']),
-      ...mapGetters('contentNode', ['getContentNode']),
+      ...mapGetters('contentNode', [
+        'getContentNode',
+        'getMoveNodesIds',
+      ]),
       ...mapGetters('currentChannel', ['currentChannel', 'canEdit', 'canManage', 'rootId']),
       rootNode() {
         return this.getContentNode(this.rootId);
@@ -473,9 +484,28 @@
       dropEffect() {
         return DropEffect.COPY;
       },
+      moveNodeIds() {
+        return this.getMoveNodesIds();
+      },
+      moveModalDialog: {
+        get() {
+          return (
+            this.moveNodeIds && this.moveNodeIds.length > 0
+          )
+        },
+        set(value) {
+          if (!value) {
+            this.setMoveNodesIds([]);
+          }
+        },
+      },
     },
     methods: {
       ...mapActions('channel', ['deleteChannel']),
+      ...mapActions('contentNode', [
+        'setMoveNodesIds',
+        'moveContentNodes',
+      ]),
       handleDelete() {
         this.deleteChannel(this.currentChannel.id).then(() => {
           localStorage.snackbar = this.$tr('channelDeletedSnackbar');
@@ -496,6 +526,11 @@
       publishChannel() {
         this.showPublishModal = true;
         this.trackClickEvent('Publish');
+      },
+      moveNodes(target) {
+        return this.moveContentNodes({ id__in: [this.nodeId], parent: target }).then(
+          this.$refs.moveModal.moveComplete
+        );
       },
       trackClickEvent(eventLabel) {
         this.$analytics.trackClick('channel_editor_toolbar', eventLabel);

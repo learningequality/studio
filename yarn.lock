@@ -9123,10 +9123,9 @@ kolibri-constants@^0.2.0:
   resolved "https://registry.yarnpkg.com/kolibri-constants/-/kolibri-constants-0.2.0.tgz#47c9d773894e23251ba5ac4db420822e45603142"
   integrity sha512-WYDMGDzB9gNxRbpX1O2cGe1HrJvLvSZGwMuAv6dqrxJgPf7iO+Hi40/1CXjHM7nk5CRt+hn5bqnMzCBmj1omPA==
 
-kolibri-design-system@3.1.0:
+"kolibri-design-system@https://github.com/AlexVelezLl/kolibri-design-system.git#8b8808f35a330e0e25103720ea63f42154f6e678":
   version "3.1.0"
-  resolved "https://registry.yarnpkg.com/kolibri-design-system/-/kolibri-design-system-3.1.0.tgz#b8cfeeba3c41b0d2c43b4098732367e6732763a8"
-  integrity sha512-Xynv24J0uKJFQvhTgbOOWZdRRUMO3NSsobCCrD6R6lvzUqCEqcrJTLgK0ls6LX0MZu2dzxMGA0riLZx4qwikJw==
+  resolved "https://github.com/AlexVelezLl/kolibri-design-system.git#8b8808f35a330e0e25103720ea63f42154f6e678"
   dependencies:
     "@vue/composition-api" "^1.7.2"
     aphrodite "https://github.com/learningequality/aphrodite/"

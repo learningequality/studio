@@ -1,47 +1,10 @@
 <template>
 
   <KDropdownMenu
+    :isContextMenu="isContextMenu"
     :options="menuOptions"
-    @select="onSelect"
+    @select="handleSelect"
   />
-  <!-- <div
-    style="max-height: 80vh"
-  >
-    <VList ref="optionsList">
-      <template
-        v-for="(group, groupIndex) in groupedOptions"
-      >
-        <VListTile
-          v-for="(option, index) in group"
-          :key="groupIndex + '-' + index"
-          class="options-list-item"
-          ripple
-          :to="option.to"
-          tabindex="0"
-          @click="option.onClick($event)"
-          @keydown.enter="option.onClick($event)"
-          @keydown.tab="checkTabBoundaries($event)"
-        >
-          <VListTileTitle>
-            {{ option.label }}
-          </VListTileTitle>
-        </VListTile>
-        <VDivider
-          v-if="groupIndex < groupedOptions.length - 1"
-          :key="groupIndex + '-divider'"
-          class="divider"
-        />
-      </template>
-    </VList>
-
-    <MoveModal
-      v-if="moveModalOpen"
-      ref="moveModal"
-      v-model="moveModalOpen"
-      :moveNodeIds="[nodeId]"
-      @target="moveNode"
-    />
-  </div> -->
 
 </template>
 
@@ -49,15 +12,11 @@
 
   import { mapActions, mapGetters } from 'vuex';
   import { RouteNames, TabNames, QuickEditModals } from '../constants';
-  import MoveModal from './move/MoveModal';
   import { withChangeTracker } from 'shared/data/changes';
   import { RELATIVE_TREE_POSITIONS } from 'shared/data/constants';
 
   export default {
     name: 'ContentNodeOptions',
-    components: {
-      MoveModal,
-    },
     props: {
       nodeId: {
         type: String,
@@ -71,11 +30,10 @@
         type: Boolean,
         default: false,
       },
-    },
-    data() {
-      return {
-        moveModalOpen: false,
-      };
+      isContextMenu: {
+        type: Boolean,
+        default: false,
+      },
     },
     computed: {
       ...mapGetters('currentChannel', ['canEdit', 'trashId']),
@@ -117,7 +75,8 @@
               label: this.$tr('move'),
               onClick: $event => {
                 $event.stopPropagation();
-                this.moveModalOpen = true;
+                this.trackAction('Move');
+                this.setMoveNodesIds([this.nodeId]);
               },
               condition: this.canEdit,
             },
@@ -228,22 +187,6 @@
         };
       },
     },
-    watch: {
-      moveModalOpen(open) {
-        if (open) {
-          this.trackAction('Move');
-        }
-      },
-    },
-    beforeMount() {
-      this.lastFocus = document.activeElement;
-    },
-    mounted() {
-      this.focusFirstOption();
-    },
-    destroyed() {
-      this.lastFocus && this.lastFocus.focus();
-    },
     methods: {
       ...mapActions(['showSnackbar', 'clearSnackbar']),
       ...mapActions('contentNode', [
@@ -252,33 +195,12 @@
         'copyContentNode',
         'waitForCopyingStatus',
         'setQuickEditModal',
+        'setMoveNodesIds',
       ]),
       ...mapActions('clipboard', ['copy']),
-      async focusFirstOption() {
-        // const { optionsList } = this.$refs;
-        // const firstOption = optionsList.$el.querySelector('a');
-        // let tries = 0;
-        // while (document.activeElement !== firstOption && tries++ < 20) {
-        //   await new Promise(resolve => setTimeout(resolve, 0));
-        //   firstOption.focus();
-        // }
-      },
-      checkTabBoundaries($event) {
-        const optionsList = this.$refs.optionsList;
-        const options = optionsList.$el.querySelectorAll('a');
-        const index = Array.from(options).indexOf($event.target);
-        if (
-          (index === 0 && $event.shiftKey) ||
-          (index === options.length - 1 && !$event.shiftKey)
-        ) {
-          // destroy component
-          $event.preventDefault();
-          this.$destroy();
-        }
-      },
-      onSelect(option) {
+      handleSelect(option, $event) {
         if (option.onClick) {
-          option.onClick();
+          option.onClick($event);
         }
         if (option.to) {
           this.$router.push(option.to);
@@ -300,11 +222,6 @@
             },
           });
         });
-      },
-      moveNode(target) {
-        return this.moveContentNodes({ id__in: [this.nodeId], parent: target }).then(
-          this.$refs.moveModal.moveComplete
-        );
       },
       getRemoveNodeRedirect() {
         // Returns a callback to do appropriate post-removal navigation
@@ -329,7 +246,8 @@
         return () => {};
       },
       quickEditModalFactory(modal) {
-        return () => {
+        return $event => {
+          $event.preventDefault();
           this.setQuickEditModal({
             modal,
             nodeIds: [this.nodeId],
