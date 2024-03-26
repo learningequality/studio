@@ -25,7 +25,7 @@
       KCheckbox,
     },
     model: {
-      prop: 'state',
+      prop: 'inputValue',
       event: 'input',
     },
     props: {
@@ -47,7 +47,8 @@
        * The value of the checkbox.
        * If the checkbox is used with a v-model of array type,
        * then this value would be added/removed from the array based on the checkbox state.
-       * If the checkbox is used with a v-model of boolean type, then this value would be ignored.
+       * If the checkbox is used with a v-model of any other type, then the v-model would
+       * be set to this value when the checkbox is checked and set to null when unchecked.
        */
       value: {
         type: [String, Number],
@@ -77,64 +78,63 @@
       /*
        * The reactive state of the checkbox which is used with v-model.
        * It is changed with the "input" event.
-       * If used as an array, it stores the values of the checked checkboxes in no particular order.
-       * If used as a number, it treats any non-zero value as checked and zero as unchecked.
-       * If used as an object, it should have a getter and setter for the checked state.
-       * If used as a boolean, it stores the checked state of the checkbox.
+       * If used as an array, "value" prop is added/removed from it based on the checkbox state.
+       * If used as a boolean, it is set to true when checked and false when unchecked.
+       * If used as any other type, it is set to "value" prop when checked and null when unchecked.
        */
-      state: {
-        type: [Boolean, Array, Number, Object],
+      inputValue: {
+        type: [Array, Boolean, Number, String, Object],
         default: false,
-        validator: value => {
-          if (Array.isArray(value)) {
-            return value.every(v => typeof v === 'string' || typeof v === 'number');
-          } else if (typeof value === 'number') {
-            return true;
-          } else if (typeof value === 'object') {
-            return typeof value.get === 'function' && typeof value.set === 'function';
-          } else {
-            return typeof value === 'boolean';
-          }
-        },
       },
     },
     computed: {
       isChecked: {
         get() {
-          if (Array.isArray(this.state)) {
-            return this.state.includes(this.value);
-          } else if (typeof this.state === 'number') {
-            return this.state !== 0;
-          } else if (typeof this.state === 'object') {
-            return this.state.get();
-          } else {
-            return this.state;
+          if (Array.isArray(this.inputValue)) {
+            return this.inputValue.includes(this.value);
           }
+
+          if (typeof this.inputValue === 'boolean') {
+            return this.inputValue;
+          }
+
+          return Boolean(this.inputValue);
         },
         set(checked) {
-          if (Array.isArray(this.state)) {
-            const index = this.state.indexOf(this.value);
+          if (Array.isArray(this.inputValue)) {
+            const index = this.inputValue.indexOf(this.value);
             if (checked && index === -1) {
-              this.$emit('input', [this.value, ...this.state]);
+              this.updateInputValue([this.value, ...this.inputValue]);
             } else if (!checked && index !== -1) {
-              const newState = [...this.state];
-              newState.splice(index, 1);
-              this.$emit('input', newState);
+              const newInputValue = [...this.inputValue];
+              newInputValue.splice(index, 1);
+              this.updateInputValue(newInputValue);
             }
-          } else if (typeof this.state === 'number') {
-            this.$emit('input', checked ? 1 : 0);
-          } else if (typeof this.state === 'object') {
-            this.state.set(checked);
+            return;
           }
-          else {
-            this.$emit('input', checked);
+
+          if (typeof this.inputValue === 'boolean') {
+            this.updateInputValue(checked);
+            return;
+          }
+
+          if (checked) {
+            this.updateInputValue(this.value);
+          } else {
+            this.updateInputValue(null);
           }
         },
       },
     },
+    mounted() {
+      // console.log(this.value, this.inputValue, this.isChecked)
+    },
     methods: {
       handleChange(checked) {
         this.isChecked = checked;
+      },
+      updateInputValue(newValue) {
+        this.$emit('input', newValue);
       },
     },
   };
