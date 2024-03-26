@@ -46,8 +46,9 @@
                 <Checkbox
                   v-if="isMultipleSelection"
                   :key="answerIdx"
-                  :v-model="correctAnswersIndices"
                   :value="answerIdx"
+                  :inputValue="correctAnswersIndices"
+                  @change="onCorrectAnswersIndicesUpdate"
                 />
               </VFlex>
 
