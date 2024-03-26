@@ -29,7 +29,7 @@
         <template #item="{ item }">
           <VTooltip bottom lazy>
             <template #activator="{ on }">
-              <span class="text-truncate" v-on="on">{{ languageText(item) }}</span>
+              <span class="text-truncate" dir="auto" v-on="on">{{ languageText(item) }}</span>
             </template>
             <span>{{ languageText(item) }}</span>
           </VTooltip>
@@ -106,7 +106,8 @@
     },
     methods: {
       languageText(item) {
-        return this.$tr('languageItemText', { language: item.native_name, code: item.id });
+        const firstNativeName = item.native_name.split(',')[0].trim();
+        return this.$tr('languageItemText', { language: firstNativeName, code: item.id });
       },
     },
     $trs: {

@@ -1,7 +1,7 @@
 Feature: Share channels
 	A user needs to be able to invite collaborators to view or edit channels
 
-	Background: 
+	Background:
 		Given I am signed in to Studio
 			And I am on the channel editor page
 		When I click the *...* (options) button in the topbar

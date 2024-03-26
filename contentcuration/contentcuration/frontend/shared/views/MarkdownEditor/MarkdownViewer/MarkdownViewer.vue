@@ -68,7 +68,7 @@
     methods: {
       initStaticMathFields() {
         const mathFieldEls = this.$el.getElementsByClassName(CLASS_MATH_FIELD);
-        for (let mathFieldEl of mathFieldEls) {
+        for (const mathFieldEl of mathFieldEls) {
           this.mathQuill.StaticMath(mathFieldEl);
         }
       },

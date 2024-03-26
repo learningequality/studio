@@ -153,7 +153,7 @@
         return {
           name: RouteNames.USERS,
           query: {
-            keywords: `${this.name} ${this.channel.id}`,
+            keywords: `${this.channel.id}`,
           },
         };
       },

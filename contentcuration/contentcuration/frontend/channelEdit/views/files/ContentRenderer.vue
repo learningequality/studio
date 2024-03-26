@@ -103,7 +103,7 @@
         return this.getContentNodeFileById(this.nodeId, this.fileId);
       },
       supplementaryFiles() {
-        let files = this.nodeId ? this.getContentNodeFiles(this.nodeId) : [];
+        const files = this.nodeId ? this.getContentNodeFiles(this.nodeId) : [];
         return files.filter(f => f.preset.supplementary);
       },
       subtitles() {
@@ -180,6 +180,7 @@
   embed,
   iframe,
   .epub {
+    /* stylelint-disable-next-line custom-property-pattern */
     border-color: var(--v-greyBorder-base) !important;
     border-style: solid;
     border-width: 1px;

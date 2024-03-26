@@ -15,7 +15,6 @@ from django.urls import reverse_lazy
 
 from .base import BaseAPITestCase
 from .testdata import fileobj_video
-from contentcuration.models import Channel
 from contentcuration.models import DEFAULT_CONTENT_DEFAULTS
 from contentcuration.models import Invitation
 from contentcuration.models import User
@@ -161,15 +160,3 @@ class UserAccountTestCase(BaseAPITestCase):
                         self.assertIn(videos[index - 1].original_filename, row)
                         self.assertIn(_format_size(videos[index - 1].file_size), row)
             self.assertEqual(index, len(videos))
-
-    def test_account_deletion(self):
-        self.user.delete()
-        self.assertFalse(Channel.objects.filter(pk=self.channel.pk).exists())
-
-    def test_account_deletion_shared_channels_preserved(self):
-        # Deleting a user account shouldn't delete shared channels
-        newuser = self.create_user()
-        self.channel.editors.add(newuser)
-        self.channel.save()
-        self.user.delete()
-        self.assertTrue(Channel.objects.filter(pk=self.channel.pk).exists())

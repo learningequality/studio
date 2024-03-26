@@ -115,7 +115,7 @@
         this.created_after = null;
       },
       removeChannel(channelId) {
-        this.channels = this.channels.filter(c => c !== channelId);
+        this.channel_id__in = this.channel_id__in.filter(c => c !== channelId);
       },
     },
     $trs: {

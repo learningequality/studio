@@ -1,6 +1,6 @@
 Feature: Edit account information
 
-	Background: 
+	Background:
 		Given I am signed in to Studio
 			And I am on Studio *Settings > Account* page
 
@@ -10,7 +10,7 @@ Feature: Edit account information
 			And I press *Save changes* button in the modal
 		Then I see a snackbar appears to confirm my password was updated
 			And the modal is dismissed
-	
+
 	Scenario: Editing full name
 		When I click the *Edit* hyperlink near my username
 			And I make changes to my full name

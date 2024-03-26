@@ -162,7 +162,7 @@ export function clearDraggableDropped(context, identity) {
   const { key } = new DraggableIdentityHelper(identity);
 
   // If this identity maps to another key, use that
-  let targetKey = isString(context.state.draggableContainerDrops[key])
+  const targetKey = isString(context.state.draggableContainerDrops[key])
     ? context.state.draggableContainerDrops[key]
     : key;
 

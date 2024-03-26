@@ -20,13 +20,13 @@ from django.urls import include
 from django.urls import path
 from django.urls import re_path
 from django.views.generic.base import RedirectView
+from kolibri_public.urls import urlpatterns as kolibri_public_urls
 from rest_framework import routers
 
 import contentcuration.views.admin as admin_views
 import contentcuration.views.base as views
 import contentcuration.views.internal as internal_views
 import contentcuration.views.nodes as node_views
-import contentcuration.views.public as public_views
 import contentcuration.views.settings as settings_views
 import contentcuration.views.users as registration_views
 import contentcuration.views.zip as zip_views
@@ -71,13 +71,14 @@ router.register(r'clipboard', ClipboardViewSet, basename='clipboard')
 urlpatterns = [
     re_path(r'^api/', include(router.urls)),
     re_path(r'^serviceWorker.js$', pwa.ServiceWorkerView.as_view(), name="service_worker"),
-    re_path(r'^api/activate_channel$', views.activate_channel_endpoint, name='activate_channel'),
     re_path(r'^healthz$', views.health, name='health'),
     re_path(r'^stealthz$', views.stealth, name='stealth'),
     re_path(r'^api/search/', include('search.urls'), name='search'),
     re_path(r'^api/probers/get_prober_channel', views.get_prober_channel, name='get_prober_channel'),
     re_path(r'^api/probers/publishing_status', views.publishing_status, name='publishing_status'),
     re_path(r'^api/probers/celery_worker_status', views.celery_worker_status, name='celery_worker_status'),
+    re_path(r'^api/probers/task_queue_status', views.task_queue_status, name='task_queue_status'),
+    re_path(r'^api/probers/unapplied_changes_status', views.unapplied_changes_status, name='unapplied_changes_status'),
     re_path(r'^api/sync/$', SyncView.as_view(), name="sync"),
 ]
 
@@ -89,12 +90,7 @@ if "django_prometheus" in settings.INSTALLED_APPS:
 
 
 # Add public api endpoints
-urlpatterns += [
-    re_path(r'^api/public/channel/(?P<channel_id>[^/]+)', public_views.get_channel_name_by_id, name='get_channel_name_by_id'),
-    re_path(r'^api/public/(?P<version>[^/]+)/channels$', public_views.get_public_channel_list, name='get_public_channel_list'),
-    re_path(r'^api/public/(?P<version>[^/]+)/channels/lookup/(?P<identifier>[^/]+)', public_views.get_public_channel_lookup, name='get_public_channel_lookup'),
-    re_path(r'^api/public/info', public_views.InfoViewSet.as_view({'get': 'list'}), name='info'),
-]
+urlpatterns += kolibri_public_urls
 
 # Add node api enpoints
 urlpatterns += [
@@ -127,7 +123,6 @@ urlpatterns += [
     re_path(r'^api/internal/file_diff$', internal_views.file_diff, name="file_diff"),
     re_path(r'^api/internal/file_upload$', internal_views.api_file_upload, name="api_file_upload"),
     re_path(r'^api/internal/publish_channel$', internal_views.api_publish_channel, name="api_publish_channel"),
-    re_path(r'^api/internal/activate_channel_internal$', internal_views.activate_channel_internal, name='activate_channel_internal'),
     re_path(r'^api/internal/check_user_is_editor$', internal_views.check_user_is_editor, name='check_user_is_editor'),
     re_path(r'^api/internal/get_tree_data$', internal_views.get_tree_data, name='get_tree_data'),
     re_path(r'^api/internal/get_node_tree_data$', internal_views.get_node_tree_data, name='get_node_tree_data'),
@@ -145,10 +140,6 @@ urlpatterns += [
 urlpatterns += [re_path(r'^jsreverse/$', django_js_reverse_views.urls_js, name='js_reverse')]
 
 # I18N Endpoints
-js_info_dict = {
-    'packages': ('your.app.package',),
-}
-
 urlpatterns += [
     re_path(r'^i18n/', include('django.conf.urls.i18n')),
 ]
@@ -171,7 +162,8 @@ urlpatterns += i18n_patterns(
     re_path(r'^activate/(?P<activation_key>[-:\w]+)/$', registration_views.UserActivationView.as_view(), name='registration_activate'),
     re_path(r'^api/send_invitation_email/$', registration_views.send_invitation_email, name='send_invitation_email'),
     re_path(r'^new/accept_invitation/(?P<email>[^/]+)/', registration_views.new_user_redirect, name="accept_invitation_and_registration"),
-    re_path(r'^api/deferred_user_data/$', registration_views.deferred_user_data, name="deferred_user_data"),
+    re_path(r'^api/deferred_user_space_by_kind/$', registration_views.deferred_user_space_by_kind, name="deferred_user_space_by_kind"),
+    re_path(r'^api/deferred_user_api_token/$', registration_views.deferred_user_api_token, name="deferred_user_api_token"),
     re_path(r'^settings/$', settings_views.settings, name='settings'),
     re_path(r'^administration/', admin_views.administration, name='administration'),
     re_path(r'^manifest.webmanifest$', pwa.ManifestView.as_view(), name="manifest"),

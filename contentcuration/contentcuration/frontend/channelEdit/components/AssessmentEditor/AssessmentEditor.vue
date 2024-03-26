@@ -12,6 +12,7 @@
       <transition-group name="list-complete" tag="div">
         <VCard
           v-for="(item, idx) in sortedItems"
+          ref="questionCardRef"
           :key="`question-${item.assessment_id}`"
           pa-1
           class="elevation-4 list-complete-item"
@@ -317,10 +318,10 @@
           [DELAYED_VALIDATION]: true,
         };
 
-        let reorderedItems = [...this.sortedItems];
+        const reorderedItems = [...this.sortedItems];
         reorderedItems.splice(newItem.order, 0, newItem);
 
-        let newOrders = this.items.map(item => ({
+        const newOrders = this.items.map(item => ({
           ...assessmentItemKey(item),
           order: reorderedItems.indexOf(item),
         }));
@@ -332,6 +333,17 @@
         this.openItem(newItem);
         this.$analytics.trackAction('exercise_editor', 'Add', {
           eventLabel: 'Question',
+        });
+        this.$nextTick(() => {
+          const questionCards = this.$refs['questionCardRef'];
+          if (questionCards?.length >= 1) {
+            const lastQuestionCard = questionCards[questionCards.length - 1].$el;
+            const editorDiv = document.getElementById('editViewId');
+            editorDiv.scrollTo({
+              top: lastQuestionCard.offsetTop,
+              behavior: 'smooth',
+            });
+          }
         });
       },
       async deleteItem(itemToDelete) {

@@ -76,6 +76,10 @@ class DelayUserStorageCalculation(ContextDecorator):
     def is_active(self):
         return self.depth > 0
 
+    def add(self, user_id):
+        if user_id not in self.queue:
+            self.queue.append(user_id)
+
     def __enter__(self):
         self.depth += 1
 

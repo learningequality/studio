@@ -463,7 +463,8 @@
     bottom: 0;
     left: 0;
     background-color: rgba(153, 97, 137, 0.2);
-    border: 5px solid var(--v-draggableDropOverlay-base);
+    /* stylelint-disable-next-line custom-property-pattern */
+    border: 5px solidvar(--v-draggabledropoverlay-base);
   }
 
 </style>

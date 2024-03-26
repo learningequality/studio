@@ -9,50 +9,73 @@
       :right="$isRTL"
     >
       <VToolbar color="primary" dark>
-        <VBtn flat icon @click="drawer = false">
-          <Icon>clear</Icon>
+        <VBtn flat icon :tabindex="handleclickTab" @click="drawer = false">
+          <KIconButton
+            icon="clear"
+            color="white"
+          />
         </VBtn>
         <VToolbarTitle class="notranslate">
           Kolibri Studio
         </VToolbarTitle>
       </VToolbar>
       <VList>
-        <VListTile :href="channelsLink">
+        <VListTile :href="channelsLink" :tabindex="handleclickTab">
           <VListTileAction>
-            <Icon>home</Icon>
+            <KIconButton
+              disabled="true"
+              icon="home"
+            />
           </VListTileAction>
           <VListTileContent class="subheading">
             <VListTileTitle>{{ $tr('channelsLink') }}</VListTileTitle>
           </VListTileContent>
         </VListTile>
-        <VListTile v-if="user.is_admin" :href="administrationLink">
+        <VListTile v-if="user.is_admin" :href="administrationLink" :tabindex="handleclickTab">
           <VListTileAction>
-            <Icon>people</Icon>
+            <KIconButton
+              disabled="true"
+              icon="people"
+            />
           </VListTileAction>
           <VListTileContent class="subheading">
             <VListTileTitle>{{ $tr('administrationLink') }}</VListTileTitle>
           </VListTileContent>
 
         </VListTile>
-        <VListTile :href="settingsLink" @click="trackClick('Settings')">
+        <VListTile :href="settingsLink" :tabindex="handleclickTab" @click="trackClick('Settings')">
           <VListTileAction>
-            <Icon>settings</Icon>
+            <KIconButton
+              disabled="true"
+              icon="settings"
+            />
           </VListTileAction>
           <VListTileContent class="subheading">
             <VListTileTitle>{{ $tr('settingsLink') }}</VListTileTitle>
           </VListTileContent>
         </VListTile>
-        <VListTile @click="showLanguageModal = true">
+        <VListTile @click="openLanguageModal">
           <VListTileAction>
-            <Icon>language</Icon>
+            <KIconButton
+              disabled="true"
+              icon="language"
+            />
           </VListTileAction>
           <VListTileContent class="subheading">
             <VListTileTitle v-text="$tr('changeLanguage')" />
           </VListTileContent>
         </VListTile>
-        <VListTile :href="helpLink" target="_blank" @click="trackClick('Help')">
+        <VListTile
+          :href="helpLink"
+          :tabindex="handleclickTab"
+          target="_blank"
+          @click="trackClick('Help')"
+        >
           <VListTileAction>
-            <Icon>open_in_new</Icon>
+            <KIconButton
+              disabled="true"
+              icon="openNewTab"
+            />
           </VListTileAction>
           <VListTileContent class="subheading">
             <VListTileTitle>{{ $tr('helpLink') }}</VListTileTitle>
@@ -60,7 +83,10 @@
         </VListTile>
         <VListTile @click="logout">
           <VListTileAction>
-            <Icon>exit_to_app</Icon>
+            <KIconButton
+              disabled="true"
+              icon="logout"
+            />
           </VListTileAction>
           <VListTileContent class="subheading">
             <VListTileTitle>{{ $tr('logoutLink') }}</VListTileTitle>
@@ -73,12 +99,14 @@
           :text="$tr('copyright', { year: new Date().getFullYear() })"
           href="https://learningequality.org/"
           target="_blank"
+          :tabindex="handleclickTab"
         />
         <p class="mt-4">
           <ActionLink
             href="https://community.learningequality.org/c/support/studio"
             target="_blank"
             :text="$tr('giveFeedback')"
+            :tabindex="handleclickTab"
           />
         </p>
       </VContainer>
@@ -123,6 +151,13 @@
       ...mapState({
         user: state => state.session.currentUser,
       }),
+      handleclickTab() {
+        if (this.value) {
+          return 0;
+        } else {
+          return -1;
+        }
+      },
       drawer: {
         get() {
           return this.value;
@@ -148,6 +183,10 @@
       ...mapActions(['logout']),
       trackClick(label) {
         this.$analytics.trackClick('general', `User dropdown - ${label}`);
+      },
+      openLanguageModal() {
+        this.drawer = false;
+        this.showLanguageModal = true;
       },
     },
     $trs: {

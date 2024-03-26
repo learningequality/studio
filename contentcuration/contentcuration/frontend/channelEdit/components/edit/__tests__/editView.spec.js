@@ -11,7 +11,7 @@ import {
 const testNodes = [DEFAULT_TOPIC, DEFAULT_VIDEO, DEFAULT_EXERCISE];
 
 function makeWrapper(props = {}) {
-  let wrapper = mount(EditView, {
+  const wrapper = mount(EditView, {
     store: localStore,
     attachToDocument: true,
     propsData: props,
@@ -55,7 +55,7 @@ describe.skip('editView', () => {
     expect(wrapper.vm.showRelatedResourcesTab).toBe(true);
   });
   it('related resources tab should be hidden on clipboard items', () => {
-    let testWrapper = makeWrapper({ isClipboard: true });
+    const testWrapper = makeWrapper({ isClipboard: true });
     localStore.commit('edit_modal/SET_NODE', 1);
     expect(testWrapper.find({ ref: 'related-resources-tab' }).exists()).toBe(false);
   });

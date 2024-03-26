@@ -74,3 +74,9 @@ export const DraggableRegions = {
   TOPIC_VIEW: 'topicView',
   CLIPBOARD: 'clipboard',
 };
+
+/**
+ * Default page size for the import search page
+ * @type {number}
+ */
+export const ImportSearchPageSize = 10;

@@ -30,7 +30,16 @@ const TOPIC_NODE = {
 
 function mountComponent(opts = {}) {
   return mount(ContentNodeListItem, {
-    store: createStore(),
+    store: createStore({
+      modules: {
+        contentNode: {
+          namespaced: true,
+          getters: {
+            isNodeInCopyingState: () => jest.fn(),
+          },
+        },
+      },
+    }),
     ...opts,
   });
 }

@@ -1,6 +1,6 @@
 Feature: Create a channel
 
-	Background: 
+	Background:
 		Given I am signed in to Studio
 			And I am on the *My Channels* tab
 
@@ -16,4 +16,4 @@ Feature: Create a channel
 
 	Examples:
 	| channel_name  | channel_description  | language |
-	| ck-12         | sample channel       | english  | 
+	| ck-12         | sample channel       | english  |

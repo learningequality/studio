@@ -22,7 +22,7 @@ localStore.commit('edit_modal/RESET_STATE');
 localStore.commit('edit_modal/SET_NODES', testNodes);
 localStore.commit('edit_modal/SET_LOADED_NODES', testNodes);
 
-let specialPermissions = find(LicensesList, { is_custom: true });
+const specialPermissions = find(LicensesList, { is_custom: true });
 
 function makeWrapper(props = {}) {
   return mount(DetailsTabView, {
@@ -51,10 +51,10 @@ window.Urls = {
 
 describe.skip('detailsTabView', () => {
   let wrapper;
-  let topicIndex = _.findIndex(testNodes, { id: DEFAULT_TOPIC.id });
-  let videoIndex = _.findIndex(testNodes, { id: DEFAULT_VIDEO.id });
-  let exerciseIndex = _.findIndex(testNodes, { id: DEFAULT_EXERCISE.id });
-  let exercise2Index = _.findIndex(testNodes, { id: DEFAULT_EXERCISE2.id });
+  const topicIndex = _.findIndex(testNodes, { id: DEFAULT_TOPIC.id });
+  const videoIndex = _.findIndex(testNodes, { id: DEFAULT_VIDEO.id });
+  const exerciseIndex = _.findIndex(testNodes, { id: DEFAULT_EXERCISE.id });
+  const exercise2Index = _.findIndex(testNodes, { id: DEFAULT_EXERCISE2.id });
   beforeEach(() => {
     localStore.commit('edit_modal/SET_NODE', exerciseIndex);
     wrapper = makeWrapper();
@@ -64,7 +64,7 @@ describe.skip('detailsTabView', () => {
     // TODO: add defaults for 'grade_levels' field
     // TODO: add defaults for 'learner_needs' field
     it('all fields should match node field values', () => {
-      let keys = [
+      const keys = [
         'language',
         'title',
         'description',
@@ -97,7 +97,7 @@ describe.skip('detailsTabView', () => {
       DEFAULT_VIDEO.license = null;
       localStore.commit('edit_modal/SELECT_NODE', videoIndex);
       wrapper.vm.$nextTick(() => {
-        let keys = [
+        const keys = [
           'license',
           'role_visibility',
           'language',
@@ -154,7 +154,7 @@ describe.skip('detailsTabView', () => {
   });
   describe('on validation', () => {
     describe('automatic validation', () => {
-      let validationMethod = jest.fn();
+      const validationMethod = jest.fn();
       beforeEach(() => {
         wrapper.setMethods({
           handleValidation: validationMethod,

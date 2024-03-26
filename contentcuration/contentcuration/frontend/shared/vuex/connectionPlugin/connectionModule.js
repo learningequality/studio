@@ -36,9 +36,9 @@ export default {
       if (state.polling) return; // polling has already been initiated
 
       // used https://github.com/Aupajo/backoff-calculator to tune this
-      let maximumPollingDelay = 30 * 60; // 30 minutes
-      let initialPollingDelay = 1; // 1 second
-      let delaySeconds = i => Math.min(i ** 2 + initialPollingDelay, maximumPollingDelay);
+      const maximumPollingDelay = 30 * 60; // 30 minutes
+      const initialPollingDelay = 1; // 1 second
+      const delaySeconds = i => Math.min(i ** 2 + initialPollingDelay, maximumPollingDelay);
 
       const stealth = window.Urls.stealth();
       const pollingClient = axios.create();

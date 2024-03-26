@@ -117,7 +117,7 @@ def get_thumbnail_encoding(filename, dimension=THUMBNAIL_WIDTH):
             # aspect ratio. So a square image will remain square rather
             # than being distorted to a 16:9 aspect ratio. This removes
             # the need to make any changes like cropping the image.
-            image.thumbnail(thumbnail_size, Image.ANTIALIAS)
+            image.thumbnail(thumbnail_size, Image.LANCZOS)
 
             image.save(outbuffer, image_format)
         return "data:image/{};base64,{}".format(ext[1:], base64.b64encode(outbuffer.getvalue()).decode('utf-8'))

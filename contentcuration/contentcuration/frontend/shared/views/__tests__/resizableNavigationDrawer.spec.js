@@ -7,7 +7,7 @@ function makeWrapper(props = {}) {
 
 describe('resizableNavigationDrawer', () => {
   it('slot should render content', () => {
-    let wrapper = makeWrapper({
+    const wrapper = makeWrapper({
       slots: {
         default: 'test content',
       },

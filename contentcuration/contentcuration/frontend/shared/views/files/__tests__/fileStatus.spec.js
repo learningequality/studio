@@ -36,11 +36,11 @@ describe('fileStatus', () => {
     expect(wrapper.vm.hasErrors).toBe(false);
   });
   it('should indicate if the file is uploading', () => {
-    let wrapper = makeWrapper('file-2');
+    const wrapper = makeWrapper('file-2');
     expect(wrapper.find('[data-test="progress"]').exists()).toBe(true);
   });
   it('should indicate if the file finished uploading', () => {
-    let wrapper = makeWrapper('file-1');
+    const wrapper = makeWrapper('file-1');
     expect(wrapper.find('[data-test="done"]').exists()).toBe(true);
   });
 });

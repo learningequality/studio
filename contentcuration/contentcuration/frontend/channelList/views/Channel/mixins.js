@@ -13,7 +13,7 @@ export const catalogFilterMixin = {
     },
     languages: {
       get() {
-        let languages = this.$route.query.languages;
+        const languages = this.$route.query.languages;
         return languages ? languages.split(',') : [];
       },
       set(value) {
@@ -22,7 +22,7 @@ export const catalogFilterMixin = {
     },
     licenses: {
       get() {
-        let licenses = this.$route.query.licenses;
+        const licenses = this.$route.query.licenses;
         return licenses ? licenses.split(',').map(Number) : [];
       },
       set(value) {
@@ -31,7 +31,7 @@ export const catalogFilterMixin = {
     },
     kinds: {
       get() {
-        let kinds = this.$route.query.kinds;
+        const kinds = this.$route.query.kinds;
         return kinds ? kinds.split(',') : [];
       },
       set(value) {
@@ -81,7 +81,7 @@ export const catalogFilterMixin = {
   },
   methods: {
     setQueryParam(field, value) {
-      let params = Object.assign({}, { ...this.$route.query });
+      const params = Object.assign({}, { ...this.$route.query });
       if (isArray(value)) {
         value = uniq(value).join(',');
       }

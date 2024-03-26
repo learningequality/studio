@@ -9,7 +9,7 @@ export function ADD_CONTENTNODE(state, contentNode) {
 }
 
 export function ADD_CONTENTNODES(state, contentNodes = []) {
-  for (let contentNode of contentNodes) {
+  for (const contentNode of contentNodes) {
     ADD_CONTENTNODE(state, contentNode);
   }
 }
@@ -114,7 +114,7 @@ export function ADD_PREVIOUS_STEP(state, { target_node, prerequisite }) {
  *                                        ]
  */
 export function SAVE_NEXT_STEPS(state, { mappings = [] } = {}) {
-  for (let mapping of mappings) {
+  for (const mapping of mappings) {
     ADD_PREVIOUS_STEP(state, mapping);
   }
 }

@@ -136,8 +136,12 @@
         );
       },
       handleRemove() {
-        this.$destroy();
-        this.$el.parentNode.removeChild(this.$el);
+        this.editorField.dispatchEvent(
+          new CustomEvent('remove', {
+            bubbles: true,
+            cancelable: true,
+          })
+        );
       },
       handleResize() {
         this.resizing = true;

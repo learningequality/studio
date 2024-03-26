@@ -1,6 +1,6 @@
 Feature: Resource count gets updated properly
 
-	Background: 
+	Background:
 		Given I am signed in to Studio
 			And I am on the <channel> editing page
 

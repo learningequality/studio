@@ -87,7 +87,7 @@
         this.showErrorAlert = true;
       },
       generateVideoThumbnail() {
-        let video = document.createElement('video');
+        const video = document.createElement('video');
         video.width = this.width;
         video.height = this.height;
         video.crossOrigin = 'anonymous';
@@ -97,30 +97,30 @@
           video.currentTime = (video.duration / 4) * 3;
         };
         video.ontimeupdate = () => {
-          let canvas = document.createElement('canvas');
+          const canvas = document.createElement('canvas');
           canvas.getContext('2d').drawImage(video, 0, 0, this.width, this.height);
           this.handleGenerated(canvas.toDataURL('image/png'));
         };
       },
       generateAudioThumbnail() {
-        let canvas = document.createElement('canvas');
-        let context = canvas.getContext('2d');
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
         // Add light background
         context.fillStyle = 'black';
         context.fillRect(0, 0, this.width, this.height);
         context.fillStyle = this.$vuetify.theme.primary;
         this.getAudioData(this.filePath)
           .then(data => {
-            let sampleStart = Math.max(0, (data.length - MAX_AUDIO_SAMPLE_SIZE) / 2);
-            let sampleEnd = Math.min(data.length, (data.length + MAX_AUDIO_SAMPLE_SIZE) / 2);
+            const sampleStart = Math.max(0, (data.length - MAX_AUDIO_SAMPLE_SIZE) / 2);
+            const sampleEnd = Math.min(data.length, (data.length + MAX_AUDIO_SAMPLE_SIZE) / 2);
             data = data.slice(sampleStart, sampleEnd);
-            let amp = this.height / 2;
-            let peaks = chunk(data, Math.ceil(data.length / this.width));
+            const amp = this.height / 2;
+            const peaks = chunk(data, Math.ceil(data.length / this.width));
 
             // Go through set of peaks and draw the max range (highest peak to lowest peak)
             peaks.forEach((peakArray, x) => {
-              let minPeak = min(peakArray);
-              let maxPeak = max(peakArray);
+              const minPeak = min(peakArray);
+              const maxPeak = max(peakArray);
               context.fillRect(x, (1 + minPeak) * amp, 1, Math.max(1, (maxPeak - minPeak) * amp));
             });
             this.handleGenerated(canvas.toDataURL('image/png'));
@@ -128,14 +128,14 @@
           .catch(this.handleError);
       },
       generatePDFThumbnail() {
-        let canvas = document.createElement('canvas');
+        const canvas = document.createElement('canvas');
         pdfJSLib
           .getDocument(this.filePath)
           .promise.then(pdf => {
             pdf
               .getPage(1)
               .then(page => {
-                let viewport = page.getViewport({ scale: 1 });
+                const viewport = page.getViewport({ scale: 1 });
                 page
                   .render({
                     canvasContext: canvas.getContext('2d'),

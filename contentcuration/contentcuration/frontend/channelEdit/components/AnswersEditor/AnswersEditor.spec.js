@@ -82,7 +82,7 @@ describe('AnswersEditor', () => {
       const inputs = wrapper.findAll('input');
 
       expect(inputs.length).toBe(2);
-      for (let n in [0, 1]) {
+      for (const n in [0, 1]) {
         expect(inputs.at(n).attributes()['type']).toBe('radio');
       }
     });
@@ -133,7 +133,7 @@ describe('AnswersEditor', () => {
       const inputs = wrapper.findAll('input');
 
       expect(inputs.length).toBe(3);
-      for (let n in [0, 1, 2]) {
+      for (const n in [0, 1, 2]) {
         expect(inputs.at(n).attributes()['type']).toBe('checkbox');
       }
     });
@@ -185,7 +185,7 @@ describe('AnswersEditor', () => {
       const inputs = wrapper.findAll('input');
 
       expect(inputs.length).toBe(2);
-      for (let n in [0, 1]) {
+      for (const n in [0, 1]) {
         expect(inputs.at(n).attributes()['type']).toBe('radio');
       }
     });

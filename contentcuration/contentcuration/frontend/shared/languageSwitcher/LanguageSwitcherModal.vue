@@ -19,7 +19,7 @@
           v-for="language in languageCol"
           :key="language.id"
           v-model="selectedLanguage"
-          :value="language.id"
+          :buttonValue="language.id"
           :label="language.lang_name"
           :title="language.english_name"
           class="language-name"
@@ -47,8 +47,8 @@
     },
     computed: {
       splitLanguageOptions() {
-        let secondCol = this.languageOptions;
-        let firstCol = secondCol.splice(0, Math.ceil(secondCol.length / 2));
+        const secondCol = this.languageOptions;
+        const firstCol = secondCol.splice(0, Math.ceil(secondCol.length / 2));
 
         return [firstCol, secondCol];
       },

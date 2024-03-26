@@ -199,24 +199,6 @@ Response:
     }
 
 
-
-### api/internal/activate_channel_internal
-_Method: contentcuration.views.internal.activate_channel_internal_
-Deploys a staged channel to the live channel
-
-    POST api/internal/activate_channel_internal
-    Header: ---
-    Body:
-    {"channel_id": "{uuid.hex}"}
-
-Response:
-
-    {
-      "success": True
-    }
-
-
-
 ### api/internal/get_tree_data
 _Method: contentcuration.views.internal.get_tree_data_
 Returns the complete tree hierarchy information (for tree specified in `tree`).
@@ -309,18 +291,6 @@ Response:
 
 Channel endpoints
 --------------------------
-### api/activate_channel
-_Method: contentcuration.views.base.activate_channel_endpoint_
-Moves the channel's staging tree to the main tree
-
-    POST api/activate_channel
-    Body: {"channel_id": "{uuid.hex}"}
-  Response:
-
-    {
-      "success": true
-    }
-
 
 ### api/get_staged_diff_endpoint
 _Method: contentcuration.views.base.get_staged_diff_endpoint_

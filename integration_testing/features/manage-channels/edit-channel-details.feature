@@ -1,6 +1,6 @@
-Feature: Edit channel details 
+Feature: Edit channel details
 
-	Background: 
+	Background:
 		Given I am signed in to Studio
 			And I am on the channel editor view
 

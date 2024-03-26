@@ -1,6 +1,6 @@
 Feature: Delete account
 
-	Background: 
+	Background:
 		Given I am signed in to Studio
 			And I am on the *Settings > Account* page
 

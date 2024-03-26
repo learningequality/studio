@@ -298,6 +298,7 @@
 <style lang="less" scoped>
 
   .card-border-light {
+    /* stylelint-disable-next-line custom-property-pattern */
     border: 1px solid var(--v-greyBorder-lighten1);
 
     &:not(:first-child) {
@@ -310,6 +311,7 @@
 
     &.closed:hover {
       cursor: pointer;
+      /* stylelint-disable-next-line custom-property-pattern */
       background-color: var(--v-greyBackground-lighten1);
     }
   }

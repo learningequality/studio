@@ -16,33 +16,33 @@ function makeWrapper(filePath) {
 
 describe('thumbnailGenerator', () => {
   it('correct generation code should be called', () => {
-    let generateVideoThumbnail = jest.fn();
-    let videoWrapper = makeWrapper('test.mp4');
+    const generateVideoThumbnail = jest.fn();
+    const videoWrapper = makeWrapper('test.mp4');
     const fileExists = jest.fn(() => true);
     videoWrapper.setMethods({ fileExists, generateVideoThumbnail });
     videoWrapper.vm.generate();
     expect(generateVideoThumbnail).toHaveBeenCalled();
 
-    let videoWrapperWebm = makeWrapper('test.webm');
+    const videoWrapperWebm = makeWrapper('test.webm');
     videoWrapperWebm.setMethods({ fileExists, generateVideoThumbnail });
     videoWrapperWebm.vm.generate();
     expect(generateVideoThumbnail).toHaveBeenCalled();
 
-    let generateAudioThumbnail = jest.fn();
-    let audioWrapper = makeWrapper('test.mp3');
+    const generateAudioThumbnail = jest.fn();
+    const audioWrapper = makeWrapper('test.mp3');
     audioWrapper.setMethods({ generateAudioThumbnail });
     audioWrapper.vm.generate();
     expect(generateAudioThumbnail).toHaveBeenCalled();
   });
   it('error alert should show if the file path is an unrecognized type', () => {
-    let wrapper = makeWrapper('test.wut');
+    const wrapper = makeWrapper('test.wut');
     const fileExists = jest.fn(() => true);
     wrapper.setMethods({ fileExists });
     wrapper.vm.generate();
     expect(wrapper.vm.showErrorAlert).toBe(true);
   });
   it('handleGenerated should not call handleFiles if cancelled', () => {
-    let wrapper = makeWrapper('test.wut');
+    const wrapper = makeWrapper('test.wut');
     const handleFiles = jest.fn(() => true);
     wrapper.setMethods({ handleFiles });
     wrapper.setData({ cancelled: true });

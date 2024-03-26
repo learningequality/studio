@@ -72,7 +72,7 @@
     mixins: [constantsTranslationMixin],
     data() {
       return {
-        languageFilter: '',
+        languageFilter: null,
         channels: [],
         pageCount: 0,
         loading: false,
@@ -110,6 +110,7 @@
       },
       languageFilter() {
         this.loadPage();
+        this.$emit('update-language', this.languageFilter);
       },
     },
     mounted() {

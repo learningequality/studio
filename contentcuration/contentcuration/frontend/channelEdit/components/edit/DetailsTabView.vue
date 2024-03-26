@@ -246,7 +246,7 @@
               ref="author"
               :items="authors"
               :label="$tr('authorLabel')"
-              :readonly="disableAuthEdits"
+              :disabled="disableSourceEdits"
               maxlength="200"
               counter
               autoSelectFirst
@@ -267,7 +267,7 @@
               ref="provider"
               :items="providers"
               :label="$tr('providerLabel')"
-              :readonly="disableAuthEdits"
+              :disabled="disableSourceEdits"
               maxlength="200"
               counter
               :placeholder="getPlaceholder('provider')"
@@ -288,7 +288,7 @@
               ref="aggregator"
               :items="aggregators"
               :label="$tr('aggregatorLabel')"
-              :readonly="disableAuthEdits"
+              :disabled="disableSourceEdits"
               maxlength="200"
               counter
               autoSelectFirst
@@ -309,7 +309,7 @@
               ref="license"
               v-model="licenseItem"
               :required="isUnique(license) && isUnique(license_description) && !disableAuthEdits"
-              :readonly="disableAuthEdits"
+              :disabled="disableSourceEdits"
               :placeholder="getPlaceholder('license')"
               :descriptionPlaceholder="getPlaceholder('license_description')"
               @focus="trackClick('License')"
@@ -328,7 +328,7 @@
               :rules="copyrightHolderRules"
               :placeholder="getPlaceholder('copyright_holder')"
               autoSelectFirst
-              :readonly="disableAuthEdits"
+              :disabled="disableSourceEdits"
               box
               :value="copyright_holder && copyright_holder.toString()"
               @input.native="(e) => (copyright_holder = e.srcElement.value)"
@@ -453,7 +453,7 @@
             // by mapping the fields for each selected node...
             ...this.nodes.map(node => {
               // checking the diffTracker first, then the node...
-              for (let obj of [this.diffTracker[node.id] || {}, node]) {
+              for (const obj of [this.diffTracker[node.id] || {}, node]) {
                 // returning the keys of the field
                 if (Object.prototype.hasOwnProperty.call(obj, key)) {
                   return Object.keys(obj[key]);
@@ -468,7 +468,7 @@
       },
       set(value) {
         const newMap = {};
-        for (let label of value) {
+        for (const label of value) {
           newMap[label] = true;
         }
         this.update({ [key]: newMap });
@@ -554,12 +554,7 @@
         return this.firstNode.original_channel_name;
       },
       requiresAccessibility() {
-        return (
-          this.oneSelected &&
-          this.nodes.every(
-            node => node.kind !== ContentKindsNames.AUDIO && node.kind !== ContentKindsNames.TOPIC
-          )
-        );
+        return this.oneSelected && this.nodes.every(node => node.kind !== ContentKindsNames.TOPIC);
       },
       audioAccessibility() {
         return this.oneSelected && this.firstNode.kind === 'audio';
@@ -663,6 +658,9 @@
       disableAuthEdits() {
         return this.nodes.some(node => node.freeze_authoring_data);
       },
+      disableSourceEdits() {
+        return this.disableAuthEdits || this.isImported;
+      },
       detectedImportText() {
         const count = this.nodes.filter(node => node.freeze_authoring_data).length;
         return this.$tr('detectedImportText', { count });
@@ -671,7 +669,7 @@
         return this.nodes.length === 1;
       },
       languageHint() {
-        let topLevel = this.nodes.some(node => node.parent === this.currentChannel.main_tree);
+        const topLevel = this.nodes.some(node => node.parent === this.currentChannel.main_tree);
         return topLevel ? this.$tr('languageChannelHelpText') : this.$tr('languageHelpText');
       },
       copyrightHolderRequired() {
@@ -701,14 +699,14 @@
         ) {
           // filter for the correct file types,
           // to exclude files such as subtitle or cc
-          let audioVideoFiles;
-          audioVideoFiles = this.nodeFiles.filter(file => this.allowedFileType(file));
+          const audioVideoFiles = this.nodeFiles.filter(file => this.allowedFileType(file));
           // return the last item in the array
           const file = audioVideoFiles[audioVideoFiles.length - 1];
-          return file.duration;
-        } else {
-          return null;
+          if (file) {
+            return file.duration;
+          }
         }
+        return null;
       },
       videoSelected() {
         return this.oneSelected && this.firstNode.kind === ContentKindsNames.VIDEO;

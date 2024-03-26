@@ -19,13 +19,11 @@
         :menuProps="menuProps"
         clearable
         v-bind="$attrs"
-        @change="searchInput = ''"
       />
     </template>
   </DropdownWrapper>
 
 </template>
-
 
 <script>
 
@@ -80,6 +78,7 @@
         },
         set(value) {
           this.$emit('input', value);
+          setTimeout(this.searchInputClear, 1);
         },
       },
       options() {
@@ -94,6 +93,11 @@
       },
       rules() {
         return [v => (!this.required || v.length ? true : this.$tr('locationRequiredMessage'))];
+      },
+    },
+    methods: {
+      searchInputClear() {
+        this.searchInput = '';
       },
     },
     $trs: {

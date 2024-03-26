@@ -56,7 +56,6 @@
   import { RouteNames } from '../constants';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import LoadingText from 'shared/views/LoadingText';
-  import { COPYING_FLAG } from 'shared/data/constants';
 
   export default {
     name: 'NodePanel',
@@ -84,7 +83,11 @@
     computed: {
       ...mapGetters(['isCompactViewMode', 'isComfortableViewMode']),
       ...mapGetters('currentChannel', ['rootId', 'canEdit']),
-      ...mapGetters('contentNode', ['getContentNode', 'getContentNodeChildren']),
+      ...mapGetters('contentNode', [
+        'getContentNode',
+        'getContentNodeChildren',
+        'isNodeInCopyingState',
+      ]),
       node() {
         return this.getContentNode(this.parentId);
       },
@@ -138,7 +141,7 @@
       },
       onNodeDoubleClick(node) {
         // Don't try to navigate to nodes that are still copying
-        if (!node[COPYING_FLAG]) {
+        if (!this.isNodeInCopyingState(node.id)) {
           if (node.kind === ContentKindsNames.TOPIC) {
             this.goToTopic(node.id);
           } else {
@@ -165,6 +168,7 @@
     min-height: 100%;
     padding: 0;
     padding-bottom: 88px;
+    /* stylelint-disable-next-line custom-property-pattern */
     background-color: var(--v-backgroundColor-base);
   }
 

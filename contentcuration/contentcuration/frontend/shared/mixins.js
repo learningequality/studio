@@ -180,7 +180,11 @@ export const constantStrings = createTranslator('ConstantStrings', {
 export const constantsTranslationMixin = {
   methods: {
     translateConstant(constant) {
-      return constantStrings.$tr(constant);
+      /*
+       * Prevent translation of null, undefined and empty keys. Initially, translation would
+       * default to `ConstantStrings.<key>` if not found, which is not desired on the front-end.
+       */
+      return constant && constantStrings.$tr(constant);
     },
     translateLanguage(language) {
       return Languages.has(language) && Languages.get(language).native_name;
@@ -212,6 +216,48 @@ export const metadataStrings = createTranslator('CommonMetadataStrings', {
     message: 'Category',
     context: 'A title for the metadata that explains the subject matter of an activity',
   },
+  // Completion criteria types
+  reference: {
+    message: 'Reference material',
+    context:
+      'One of the completion criteria types. Progress made on a resource with this criteria is not tracked.',
+  },
+  completeDuration: {
+    message: 'When time spent is equal to duration',
+    context:
+      'One of the completion criteria types. A resource with this criteria is considered complete when learners spent given time studying it.',
+  },
+  exactTime: {
+    message: 'Time to complete',
+    context:
+      'One of the completion criteria types. A subset of "When time spent is equal to duration". For example, for an audio resource with this criteria, learnes need to hear the whole length of audio for the resource to be considered complete.',
+  },
+  allContent: {
+    message: 'Viewed in its entirety',
+    context:
+      'One of the completion criteria types. A resource with this criteria is considered complete when learners studied it all, for example they saw all pages of a document.',
+  },
+  determinedByResource: {
+    message: 'Determined by the resource',
+    context:
+      'One of the completion criteria types. Typically used for embedded html5/h5p resources that contain their own completion criteria, for example reaching a score in an educational game.',
+  },
+  masteryMofN: {
+    message: 'Goal: {m} out of {n}',
+    context:
+      'One of the completion criteria types specific to exercises. An exercise with this criteria is considered complete when learners answered m questions out of n correctly.',
+  },
+  goal: {
+    message: 'When goal is met',
+    context:
+      'One of the completion criteria types specific to exercises. An exercise with this criteria is considered complete when learners reached a given goal, for example 100% correct.',
+  },
+  practiceQuiz: {
+    message: 'Practice quiz',
+    context:
+      'One of the completion criteria types specific to exercises. An exercise with this criteria represents a quiz.',
+  },
+
   // Learning Activities
   all: {
     message: 'All',
@@ -761,13 +807,13 @@ export function generateSearchMixin(filterMap) {
     },
     methods: {
       deleteQueryParam(key) {
-        let query = { ...this.$route.query };
+        const query = { ...this.$route.query };
         delete query[key];
 
         this.navigate(query);
       },
       updateQueryParams(params) {
-        let query = {
+        const query = {
           ...this.$route.query,
           ...params,
         };

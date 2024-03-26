@@ -1,0 +1,105 @@
+name: Container Build
+
+on:
+  push:
+    branches:
+    - unstable
+    - hotfixes
+    - master
+    tags:
+    - 'v*'
+  pull_request:
+
+jobs:
+  pre_postgres:
+    name: Path match check - postgres
+    runs-on: ubuntu-latest
+    # Map a step output to a job output
+    outputs:
+      should_skip: ${{ steps.skip_check.outputs.should_skip }}
+    steps:
+      - id: skip_check
+        uses: fkirc/skip-duplicate-actions@master
+        with:
+          skip_after_successful_duplicate: false
+          github_token: ${{ github.token }}
+          paths: '["docker/Dockerfile.postgres.dev", ".github/workflows/containerbuild.yml"]'
+
+  build_and_push_postgres:
+    name: Postgres - build and push Docker image to GitHub Container Registry
+    needs: pre_postgres
+    if: ${{ needs.pre_postgres.outputs.should_skip != 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout codebase
+      uses: actions/checkout@v4
+
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Log in to Docker Hub
+      if: github.event_name != 'pull_request'
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Extract metadata (tags, labels) for Docker
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ghcr.io/learningequality/postgres
+      env:
+        DOCKER_METADATA_ANNOTATIONS_LEVELS: manifest,index
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./docker
+        file: ./docker/Dockerfile.postgres.dev
+        platforms: linux/amd64,linux/arm64
+        push: ${{ github.event_name != 'pull_request' }}
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        annotations: ${{ steps.meta.outputs.annotations }}
+
+  pre_nginx:
+    name: Path match check - nginx
+    runs-on: ubuntu-latest
+    # Map a step output to a job output
+    outputs:
+      should_skip: ${{ steps.skip_check.outputs.should_skip }}
+    steps:
+      - id: skip_check
+        uses: fkirc/skip-duplicate-actions@master
+        with:
+          skip_after_successful_duplicate: false
+          github_token: ${{ github.token }}
+          paths: '["k8s/images/nginx/*", ".github/workflows/containerbuild.yml"]'
+
+  build_nginx:
+    name: nginx - test build of nginx Docker image
+    needs: pre_nginx
+    if: ${{ needs.pre_nginx.outputs.should_skip != 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout codebase
+      uses: actions/checkout@v4
+
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./
+        file: ./k8s/images/nginx/Dockerfile
+        platforms: linux/amd64
+        push: false

@@ -136,6 +136,7 @@
     }
 
     &:hover {
+      /* stylelint-disable-next-line custom-property-pattern */
       background-color: var(--v-channelHighlightDefault-base);
     }
   }

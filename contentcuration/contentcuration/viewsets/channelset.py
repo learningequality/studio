@@ -78,7 +78,8 @@ class ChannelSetViewSet(ValuesViewset):
         queryset = super(ChannelSetViewSet, self).get_queryset()
         user_id = not self.request.user.is_anonymous and self.request.user.id
         edit = Exists(User.channel_sets.through.objects.filter(user_id=user_id, channelset_id=OuterRef("id")))
-        return queryset.annotate(edit=edit)
+        queryset = queryset.annotate(edit=edit).filter(edit=True)
+        return queryset
 
     def annotate_queryset(self, queryset):
         return queryset.annotate(

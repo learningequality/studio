@@ -1,4 +1,9 @@
-import { clearNodeFormat } from '../MarkdownEditor/utils';
+/**
+ * @jest-environment jest-environment-jsdom-sixteen
+ */
+// Jsdom@^16 is required to test toast UI, as it relies on the Range API.
+
+import { clearNodeFormat, generateCustomConverter } from '../MarkdownEditor/utils';
 
 const htmlStringToFragment = htmlString => {
   const template = document.createElement('template');
@@ -53,6 +58,20 @@ describe('clearNodeFormat', () => {
 
     expect(fragmentToHtmlString(clearedFragment)).toBe(
       'What co<i class="keep">lo</i>r is th<i class="keep">e sky</i>'
+    );
+  });
+});
+
+describe('markdown conversion', () => {
+  it('converts image tags to markdown without escaping them', () => {
+    const el = document.createElement('div');
+    const CustomConvertor = generateCustomConverter(el);
+    const converter = new CustomConvertor();
+    const html =
+      '<span is="markdown-image-field" vce-ready="" contenteditable="false" class="markdown-field-753aa86a-8159-403b-8b1c-d2b8f9504408 markdown-field-34843d46-79b8-40b4-866c-b83dc8916a47" editing="true" markdown="![](${☣ CONTENTSTORAGE}/bc1c5a86e1e46f20a6b4ee2c1bb6d6ff.png =485.453125x394)">![](${☣ CONTENTSTORAGE}/bc1c5a86e1e46f20a6b4ee2c1bb6d6ff.png =485.453125x394)</span>';
+
+    expect(converter.toMarkdown(html)).toBe(
+      '![](${☣ CONTENTSTORAGE}/bc1c5a86e1e46f20a6b4ee2c1bb6d6ff.png =485.453125x394)'
     );
   });
 });

@@ -83,6 +83,12 @@ def map_files_to_node(user, node, data):  # noqa: C901
             duration=file_data.get("duration"),
         )
         resource_obj.file_on_disk.name = file_path
+
+        if kind_preset and kind_preset.thumbnail:
+            # If this is a thumbnail, delete any other thumbnails that are
+            # already attached to the file.
+            node.files.filter(preset=kind_preset).delete()
+
         resource_obj.save()
 
         # Handle thumbnail

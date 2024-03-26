@@ -116,7 +116,7 @@
         return this.expanded ? this.items && this.items.length : this.max;
       },
       toggleText() {
-        let moreCount = this.items.length - this.max;
+        const moreCount = this.items.length - this.max;
         return this.isExpanded
           ? this.$tr('less')
           : this.$tr('more', { more: this.$formatNumber(moreCount) });

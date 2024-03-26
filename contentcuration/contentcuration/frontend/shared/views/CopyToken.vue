@@ -56,7 +56,7 @@
           navigator.clipboard
             .writeText(this.displayToken)
             .then(() => {
-              let text = this.successText || this.$tr('copiedTokenId');
+              const text = this.successText || this.$tr('copiedTokenId');
               this.$store.dispatch('showSnackbar', { text });
               this.$analytics.trackEvent('copy_token');
               this.$emit('copied');

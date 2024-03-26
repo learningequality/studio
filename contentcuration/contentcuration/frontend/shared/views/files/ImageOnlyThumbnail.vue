@@ -136,6 +136,7 @@
     border-radius: 3px;
 
     &.nothumbnail {
+      /* stylelint-disable-next-line custom-property-pattern */
       background-color: var(--v-greyBackground-base);
     }
   }
