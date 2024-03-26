@@ -17,6 +17,7 @@
               v-if="title !== null"
               :text="title"
               :maxLines="titleLines"
+              class="spacing"
             />
           </KRouterLink>
         </component>
@@ -95,6 +96,9 @@
 
   .remove-list-style {
     list-style-type: none;
+  }
+  .spacing{
+    padding: 1em;
   }
 
 </style>
