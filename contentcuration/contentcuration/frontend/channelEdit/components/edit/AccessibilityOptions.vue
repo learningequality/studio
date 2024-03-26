@@ -14,7 +14,7 @@
           color="primary"
           :data-test="`checkbox-${accessibilityItem.help}`"
         >
-          <template #label>
+          <template>
             <span class="text-xs-left">{{ accessibilityItem.label }}</span>
             &nbsp;
             <HelpTooltip

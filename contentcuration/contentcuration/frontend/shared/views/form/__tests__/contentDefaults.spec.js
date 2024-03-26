@@ -25,10 +25,14 @@ function updateFieldValues(keys, fields, contentDefaults) {
     const field = fields.filter(f => f.contains(selector)).at(0);
     const input = field.find(`.v-input ${selector}`);
 
-    if (input.is('[type="checkbox"]')) {
-      input.setChecked(contentDefaults[key]);
-    } else {
+    if (input.exists()) {
+      // The element is a Vuetify input
       input.setValue(contentDefaults[key]);
+    } else {
+      // The element is a KDS checkbox
+      if (field.props('inputValue') !== contentDefaults[key]) {
+        field.find('input').element.click();
+      }
     }
   });
 }
@@ -86,6 +90,7 @@ function updateFormValues(wrapper, contentDefaults) {
   }
 
   const checkboxes = wrapper.findAll({ name: 'Checkbox' });
+  expect(checkboxes.length).toEqual(4);
   updateFieldValues(
     [
       'auto_derive_audio_thumbnail',
@@ -94,7 +99,8 @@ function updateFormValues(wrapper, contentDefaults) {
       'auto_derive_video_thumbnail',
     ],
     checkboxes,
-    contentDefaults
+    contentDefaults,
+    'inputValue'
   );
 }
 

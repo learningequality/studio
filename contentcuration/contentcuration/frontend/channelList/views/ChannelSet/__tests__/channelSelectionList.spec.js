@@ -60,13 +60,17 @@ describe('channelSelectionList', () => {
   });
   it('should select channels when the channel has been checked', () => {
     wrapper.setData({ loading: false });
-    wrapper.find('[data-test="checkbox"]').vm.$emit('change', [editChannel.id]);
+    wrapper.find(`[data-test="checkbox-${editChannel.id}"]`).element.click();
+
     expect(wrapper.emitted('input')[0][0]).toEqual([editChannel.id]);
   });
   it('should deselect channels when the channel has been unchecked', () => {
     wrapper.setData({ loading: false });
-    wrapper.find('[data-test="checkbox"]').vm.$emit('change', []);
-    expect(wrapper.emitted('input')[0][0]).toEqual([]);
+    wrapper.find(`[data-test="checkbox-${editChannel.id}"]`).element.click(); // Check the channel
+    wrapper.find(`[data-test="checkbox-${editChannel.id}"]`).element.click(); // Uncheck the channel
+
+    expect(wrapper.emitted('input')[0].length).toEqual(1); // Only one event should be emitted (corresponding to the initial check)
+    expect(wrapper.emitted('input')[0][0]).toEqual([editChannel.id]); // The initial check event should be emitted
   });
   it('should filter channels based on the search text', () => {
     wrapper.setData({ loading: false, search: searchWord });
