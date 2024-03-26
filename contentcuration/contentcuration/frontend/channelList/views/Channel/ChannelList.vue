@@ -39,42 +39,6 @@
         </VLayout>
       </VFlex>
     </VLayout>
-    <VLayout row wrap justify-center>
-      <VFlex xs12 sm10 md8 lg6>
-        <VLayout row justify-center>
-          <VFlex xs12>
-            <KCard
-              style="width:700px;"
-              title="Section 1.10.32 of de Finibus Bonorum et Malorum, written by Cicero in 45 BC"
-              headingLevel="2"
-              :to="{ }"
-              layout="horizontal"
-              thumbnailScaleType="cover"
-              thumbnailDisplay="large"
-              thumbnailSrc="https://domf5oio6qrcr.cloudfront.net/medialibrary/11525/0a5ae820-7051-4495-bcca-61bf02897472.jpg"
-            >
-              <template #aboveTitle>
-                <p>
-                  Lorem ipsum dolor, sit amet consectetur adipisicing elit. 
-                  Corporis eligendi quis impedit voluptatibus recusandae ratione sed,
-                  voluptatem at nostrum nobis quidem architecto magnam quod nemo 
-                  a rerum dolores neque quas?
-                </p>
-              </template>
-              <template #title>
-                <p>Title section of the KCard component</p>
-              </template>
-              <template #belowTitle>
-                <p>below title slot section for the KCard component</p>
-              </template>
-              <template #footer>
-                <p>footer section for the KCard component </p>
-              </template>
-            </KCard>
-          </VFlex>
-        </VLayout>
-      </VFlex>
-    </VLayout>
   </VContainer>
 
 </template>
@@ -86,7 +50,6 @@
   import orderBy from 'lodash/orderBy';
   import { RouteNames } from '../../constants';
   import ChannelItem from './ChannelItem';
-  import KCard from './../KCard/index.vue';
   import LoadingText from 'shared/views/LoadingText';
   import { ChannelListTypes } from 'shared/constants';
 
@@ -98,10 +61,9 @@
   export default {
     name: 'ChannelList',
     components: {
-    ChannelItem,
-    LoadingText,
-    KCard
-},
+      ChannelItem,
+      LoadingText,
+    },
     props: {
       listType: {
         type: String,
@@ -171,8 +133,8 @@
       },
     },
     $trs: {
-       noChannelsFound: 'No channels found',
-       channel: 'New channel',
+      noChannelsFound: 'No channels found',
+      channel: 'New channel',
     },
   };
 
