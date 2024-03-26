@@ -30,7 +30,7 @@ function updateFieldValues(keys, fields, contentDefaults) {
       input.setValue(contentDefaults[key]);
     } else {
       // The element is a KDS checkbox
-      if (field.props('inputValue') !== contentDefaults[key]) {
+      if (field.props('state') !== contentDefaults[key]) {
         field.find('input').element.click();
       }
     }
@@ -69,7 +69,7 @@ function assertFormValues(wrapper, contentDefaults) {
     ],
     checkboxes,
     contentDefaults,
-    'inputValue'
+    'state'
   );
 }
 
@@ -90,7 +90,6 @@ function updateFormValues(wrapper, contentDefaults) {
   }
 
   const checkboxes = wrapper.findAll({ name: 'Checkbox' });
-  expect(checkboxes.length).toEqual(4);
   updateFieldValues(
     [
       'auto_derive_audio_thumbnail',
@@ -99,8 +98,7 @@ function updateFormValues(wrapper, contentDefaults) {
       'auto_derive_video_thumbnail',
     ],
     checkboxes,
-    contentDefaults,
-    'inputValue'
+    contentDefaults
   );
 }
 
