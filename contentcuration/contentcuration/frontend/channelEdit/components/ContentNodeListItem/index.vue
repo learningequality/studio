@@ -97,7 +97,7 @@
                     >
                       {{ category(node.categories) }}
                     </span>
-                    <span v-if="(isTopic && node.coach_count) || isCoach">
+                    <span v-if="isTopic && node.coach_count">
                       <!-- for each learning activity -->
                       <VTooltip bottom lazy>
                         <template #activator="{ on }">
@@ -153,12 +153,12 @@
                 </VListTileContent>
                 <template v-if="!copying">
                   <VListTileAction class="actions-end-col">
-                    <IconButton
+                    <KIconButton
                       v-if="isTopic"
                       :aria-hidden="hover"
                       data-test="btn-chevron"
                       icon="chevronRight"
-                      :text="$tr('openTopic')"
+                      :tooltip="$tr('openTopic')"
                       size="small"
                       @click="$emit('topicChevronClick')"
                     />
@@ -167,10 +167,20 @@
                 </template>
                 <template v-else>
                   <div class="copying">
-                    <p class="caption grey--text pr-2 pt-1">
-                      {{ $tr("copyingTask") }}
+                    <p class="caption pr-3">
+                      <span
+                        class="grey--text"
+                        :style="{ 'cursor': hasCopyingErrored ? 'default' : 'progress' }"
+                      >
+                        {{ copyingMessage }}
+                      </span>
+                      <slot name="copy-fail-retry-action"></slot>
                     </p>
-                    <TaskProgress :taskId="taskId" size="30" />
+                    <ContentNodeCopyTaskProgress
+                      :node="node"
+                      size="30"
+                    />
+                    <slot name="copy-fail-remove-action"></slot>
                   </div>
                   <div class="disabled-overlay"></div>
                 </template>
@@ -190,20 +200,19 @@
 
 <script>
 
+  import { mapGetters } from 'vuex';
   import camelCase from 'lodash/camelCase';
-  import ContentNodeValidator from '../ContentNodeValidator';
+  import ContentNodeCopyTaskProgress from '../../views/progress/ContentNodeCopyTaskProgress';
   import ContentNodeChangedIcon from '../ContentNodeChangedIcon';
-  import TaskProgress from '../../views/progress/TaskProgress';
-  import { ContentLevel, Categories, NEW_OBJECT } from 'shared/constants';
+  import ContentNodeValidator from '../ContentNodeValidator';
+  import { ContentLevels, Categories, NEW_OBJECT } from 'shared/constants';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import { RolesNames } from 'shared/leUtils/Roles';
   import ImageOnlyThumbnail from 'shared/views/files/ImageOnlyThumbnail';
-  import IconButton from 'shared/views/IconButton';
   import ToggleText from 'shared/views/ToggleText';
   import ContextMenuCloak from 'shared/views/ContextMenuCloak';
   import DraggableHandle from 'shared/views/draggable/DraggableHandle';
   import { titleMixin, metadataTranslationMixin } from 'shared/mixins';
-  import { COPYING_FLAG, TASK_ID } from 'shared/data/constants';
   import { EffectAllowed } from 'shared/mixins/draggable/constants';
   import ContentNodeLearningActivityIcon from 'shared/views/ContentNodeLearningActivityIcon';
 
@@ -213,11 +222,10 @@
       DraggableHandle,
       ContextMenuCloak,
       ImageOnlyThumbnail,
-      IconButton,
       ContentNodeValidator,
       ContentNodeChangedIcon,
       ToggleText,
-      TaskProgress,
+      ContentNodeCopyTaskProgress,
       ContentNodeLearningActivityIcon,
     },
     mixins: [titleMixin, metadataTranslationMixin],
@@ -256,6 +264,7 @@
       };
     },
     computed: {
+      ...mapGetters('contentNode', ['isNodeInCopyingState', 'hasNodeCopyingErrored']),
       isCompact() {
         return this.compact || !this.$vuetify.breakpoint.mdAndUp;
       },
@@ -290,10 +299,17 @@
         return !this.$scopedSlots['context-menu'] || this.copying;
       },
       copying() {
-        return this.node[COPYING_FLAG];
+        return this.isNodeInCopyingState(this.node.id);
       },
-      taskId() {
-        return this.node[TASK_ID];
+      hasCopyingErrored() {
+        return this.hasNodeCopyingErrored(this.node.id);
+      },
+      copyingMessage() {
+        if (this.hasCopyingErrored) {
+          return this.$tr('copyingError');
+        } else {
+          return this.$tr('copyingTask');
+        }
       },
     },
     watch: {
@@ -331,7 +347,7 @@
         return null;
       },
       levels(level) {
-        let match = Object.keys(ContentLevel).find(key => ContentLevel[key] === level);
+        let match = Object.keys(ContentLevels).find(key => ContentLevels[key] === level);
         if (match) {
           if (match === 'PROFESSIONAL') {
             match = 'specializedProfessionalTraining';
@@ -353,6 +369,7 @@
         '{value, number, integer} {value, plural, one {resource for coaches} other {resources for coaches}}',
       coachTooltip: 'Resource for coaches',
       copyingTask: 'Copying',
+      copyingError: 'Copy failed.',
     },
   };
 
@@ -398,16 +415,16 @@
   .copying {
     z-index: 2;
     display: flex;
-    padding-top: 44px;
-    cursor: progress;
+    align-items: center;
+    align-self: center;
+    min-width: max-content;
+    line-height: 1.6;
+    pointer-events: auto;
+    cursor: default;
 
     p,
     div {
-      margin: 0 2px;
-    }
-
-    .compact & {
-      padding-top: 12px;
+      margin: 0;
     }
   }
 
@@ -421,6 +438,7 @@
     transition: background-color ease 500ms;
 
     .highlight & {
+      /* stylelint-disable-next-line custom-property-pattern */
       background-color: var(--v-greenHighlightBackground-base);
     }
 
@@ -459,6 +477,7 @@
   }
 
   .description-col {
+    flex-shrink: 1 !important;
     width: calc(100% - @thumbnail-width - 206px);
     word-break: break-word;
 

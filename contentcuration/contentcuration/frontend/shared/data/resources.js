@@ -15,29 +15,37 @@ import uniqBy from 'lodash/uniqBy';
 
 import { v4 as uuidv4 } from 'uuid';
 import {
-  ACTIVE_CHANNELS,
-  CHANGES_TABLE,
   CHANGE_TYPES,
-  CHANNEL_SYNC_KEEP_ALIVE_INTERVAL,
-  COPYING_FLAG,
-  CURRENT_USER,
-  CREATION_CHANGE_TYPES,
-  IGNORED_SOURCE,
-  LAST_FETCHED,
-  MAX_REV_KEY,
+  CHANGES_TABLE,
   RELATIVE_TREE_POSITIONS,
   TABLE_NAMES,
+  COPYING_STATUS,
+  COPYING_STATUS_VALUES,
   TASK_ID,
+  CURRENT_USER,
+  MAX_REV_KEY,
+  LAST_FETCHED,
+  CREATION_CHANGE_TYPES,
   TREE_CHANGE_TYPES,
 } from './constants';
 import applyChanges, { applyMods, collectChanges } from './applyRemoteChanges';
 import mergeAllChanges from './mergeChanges';
 import db, { channelScope, CLIENTID, Collection } from './db';
-import { API_RESOURCES, INDEXEDDB_RESOURCES } from './registry';
-import { DELAYED_VALIDATION, fileErrors, NEW_OBJECT } from 'shared/constants';
+import { API_RESOURCES, INDEXEDDB_RESOURCES, changeRevs } from './registry';
+import {
+  CreatedChange,
+  UpdatedChange,
+  DeletedChange,
+  MovedChange,
+  CopiedChange,
+  PublishedChange,
+  SyncedChange,
+  DeployedChange,
+} from './changes';
 import urls from 'shared/urls';
 import { currentLanguage } from 'shared/i18n';
 import client, { paramsSerializer } from 'shared/client';
+import { DELAYED_VALIDATION, fileErrors, NEW_OBJECT } from 'shared/constants';
 
 /**
  * Task names for which it is only useful to keep the most recent task object
@@ -125,6 +133,18 @@ export function injectVuexStore(store) {
   vuexStore = store;
 }
 
+function getUserIdFromStore() {
+  if (vuexStore) {
+    return vuexStore.getters.currentUserId;
+  }
+  throw ReferenceError(
+    ```
+  Attempted to get the user_id from the store to set on a change object,
+  but the store has not been injected into the resources.js module using injectVuexStore function
+  ```
+  );
+}
+
 // Custom uuid4 function to match our dashless uuids on the server side
 export function uuid4() {
   return uuidv4().replace(/-/g, '');
@@ -141,7 +161,7 @@ function mix(...mixins) {
 
   // Programmatically add all the methods and accessors
   // of the mixins to class Mix.
-  for (let mixin of mixins) {
+  for (const mixin of mixins) {
     copyProperties(Mix, mixin);
     copyProperties(Mix.prototype, mixin.prototype);
   }
@@ -149,9 +169,9 @@ function mix(...mixins) {
 }
 
 function copyProperties(target, source) {
-  for (let key of Reflect.ownKeys(source)) {
+  for (const key of Reflect.ownKeys(source)) {
     if (key !== 'constructor' && key !== 'prototype' && key !== 'name') {
-      let desc = Object.getOwnPropertyDescriptor(source, key);
+      const desc = Object.getOwnPropertyDescriptor(source, key);
       Object.defineProperty(target, key, desc);
     }
   }
@@ -202,7 +222,6 @@ class IndexedDBResource {
     uuid = true,
     indexFields = [],
     syncable = false,
-    listeners = {},
     ...options
   } = {}) {
     this.tableName = tableName;
@@ -216,9 +235,6 @@ class IndexedDBResource {
     copyProperties(this, options);
     // By default these resources do not sync changes to the backend.
     this.syncable = syncable;
-    // An object for listening to specific change events on this resource in order to
-    // allow for side effects from changes - should be a map of change type to handler function.
-    this.listeners = listeners;
   }
 
   get table() {
@@ -251,8 +267,7 @@ class IndexedDBResource {
   transaction({ mode = 'rw', source = null } = {}, ...extraTables) {
     const callback = extraTables.pop();
     if (source === null) {
-      const channelScopeId = channelScope.id;
-      source = channelScopeId === null ? CLIENTID : `${CLIENTID}::${channelScopeId}`;
+      source = CLIENTID;
     }
     return db.transaction(mode, this.tableName, ...extraTables, () => {
       Dexie.currentTransaction.source = source;
@@ -262,76 +277,87 @@ class IndexedDBResource {
 
   setData(itemData) {
     const now = Date.now();
-    // Explicitly set the source of this as a fetch
-    // from the server, to prevent us from trying
-    // to sync these changes back to the server!
-    return this.transaction(
-      { mode: 'rw', source: IGNORED_SOURCE },
-      this.tableName,
-      CHANGES_TABLE,
-      () => {
-        // Get any relevant changes that would be overwritten by this bulkPut
-        return db[CHANGES_TABLE].where('[table+key]')
-          .anyOf(itemData.map(datum => [this.tableName, this.getIdValue(datum)]))
-          .sortBy('rev', changes => {
-            changes = mergeAllChanges(changes, true);
-            const collectedChanges = collectChanges(changes)[this.tableName] || {};
-            for (let changeType of Object.keys(collectedChanges)) {
-              const map = {};
-              for (let change of collectedChanges[changeType]) {
-                map[change.key] = change;
-              }
-              collectedChanges[changeType] = map;
+    // Directly write to the table, rather than using the add/update methods
+    // to avoid creating change events that we would sync back to the server.
+    return this.transaction({ mode: 'rw' }, this.tableName, CHANGES_TABLE, () => {
+      // Get any relevant changes that would be overwritten by this bulkPut
+      const changesPromise = db[CHANGES_TABLE].where('[table+key]')
+        .anyOf(itemData.map(datum => [this.tableName, this.getIdValue(datum)]))
+        .sortBy('rev');
+      const currentPromise = this.table
+        .where(this.idField)
+        .anyOf(itemData.map(datum => this.getIdValue(datum)))
+        .toArray();
+
+      return Promise.all([changesPromise, currentPromise]).then(([changes, currents]) => {
+        changes = mergeAllChanges(changes, true);
+        const collectedChanges = collectChanges(changes)[this.tableName] || {};
+        for (const changeType of Object.keys(collectedChanges)) {
+          const map = {};
+          for (const change of collectedChanges[changeType]) {
+            map[change.key] = change;
+          }
+          collectedChanges[changeType] = map;
+        }
+        const currentMap = {};
+        for (const currentObj of currents) {
+          currentMap[this.getIdValue(currentObj)] = currentObj;
+        }
+        const data = itemData
+          .map(datum => {
+            const id = this.getIdValue(datum);
+            datum[LAST_FETCHED] = now;
+            // Persist TASK_ID and COPYING_STATUS attributes when directly fetching from the server
+            if (currentMap[id] && currentMap[id][TASK_ID]) {
+              datum[TASK_ID] = currentMap[id][TASK_ID];
             }
-            const data = itemData
-              .map(datum => {
-                datum[LAST_FETCHED] = now;
-                const id = this.getIdValue(datum);
-                // If we have an updated change, apply the modifications here
-                if (
-                  collectedChanges[CHANGE_TYPES.UPDATED] &&
-                  collectedChanges[CHANGE_TYPES.UPDATED][id]
-                ) {
-                  applyMods(datum, collectedChanges[CHANGE_TYPES.UPDATED][id].mods);
-                }
-                return datum;
-                // If we have a deleted change, just filter out this object so we don't reput it
-              })
-              .filter(
-                datum =>
-                  !collectedChanges[CHANGE_TYPES.DELETED] ||
-                  !collectedChanges[CHANGE_TYPES.DELETED][this.getIdValue(datum)]
-              );
-            return this.table.bulkPut(data).then(() => {
-              // Move changes need to be reapplied on top of fetched data in case anything
-              // has happened on the backend.
-              return applyChanges(Object.values(collectedChanges[CHANGE_TYPES.MOVED] || {})).then(
-                results => {
-                  if (!results || !results.length) {
-                    return data;
+            if (currentMap[id] && currentMap[id][COPYING_STATUS]) {
+              datum[COPYING_STATUS] = currentMap[id][COPYING_STATUS];
+            }
+            // If we have an updated change, apply the modifications here
+            if (
+              collectedChanges[CHANGE_TYPES.UPDATED] &&
+              collectedChanges[CHANGE_TYPES.UPDATED][id]
+            ) {
+              applyMods(datum, collectedChanges[CHANGE_TYPES.UPDATED][id].mods);
+            }
+            return datum;
+            // If we have a deleted change, just filter out this object so we don't reput it
+          })
+          .filter(
+            datum =>
+              !collectedChanges[CHANGE_TYPES.DELETED] ||
+              !collectedChanges[CHANGE_TYPES.DELETED][this.getIdValue(datum)]
+          );
+        return this.table.bulkPut(data).then(() => {
+          // Move changes need to be reapplied on top of fetched data in case anything
+          // has happened on the backend.
+          return applyChanges(Object.values(collectedChanges[CHANGE_TYPES.MOVED] || {})).then(
+            results => {
+              if (!results || !results.length) {
+                return data;
+              }
+              const resultsMap = {};
+              for (const result of results) {
+                const id = this.getIdValue(result);
+                resultsMap[id] = result;
+              }
+              return data
+                .map(datum => {
+                  const id = this.getIdValue(datum);
+                  if (resultsMap[id]) {
+                    applyMods(datum, resultsMap[id]);
                   }
-                  const resultsMap = {};
-                  for (let result of results) {
-                    const id = this.getIdValue(result);
-                    resultsMap[id] = result;
-                  }
-                  return data
-                    .map(datum => {
-                      const id = this.getIdValue(datum);
-                      if (resultsMap[id]) {
-                        applyMods(datum, resultsMap[id]);
-                      }
-                      return datum;
-                      // Concatenate any unsynced created objects onto
-                      // the end of the returned objects
-                    })
-                    .concat(Object.values(collectedChanges[CHANGE_TYPES.CREATED]).map(c => c.obj));
-                }
-              );
-            });
-          });
-      }
-    );
+                  return datum;
+                  // Concatenate any unsynced created objects onto
+                  // the end of the returned objects
+                })
+                .concat(Object.values(collectedChanges[CHANGE_TYPES.CREATED]).map(c => c.obj));
+            }
+          );
+        });
+      });
+    });
   }
 
   where(params = {}) {
@@ -350,7 +376,7 @@ class IndexedDBResource {
 
     // Setup paginator.
     const paginator = new Paginator(params);
-    for (let key of Object.keys(params)) {
+    for (const key of Object.keys(params)) {
       // Partition our parameters
       const [rootParam, suffix] = key.split(SUFFIX_SEPERATOR);
       if (suffix && VALID_SUFFIXES.has(suffix) && suffix !== QUERY_SUFFIXES.IN) {
@@ -508,18 +534,42 @@ class IndexedDBResource {
     return out;
   }
 
-  update(id, changes) {
-    return this.transaction({ mode: 'rw' }, () => {
-      return this.table.update(id, this._cleanNew(changes));
+  _saveAndQueueChange(change) {
+    return change.saveChange().then(rev => {
+      if (rev !== null) {
+        changeRevs.push(rev);
+      }
     });
   }
 
-  modifyByIds(ids, changes) {
-    return this.transaction({ mode: 'rw' }, () => {
-      return this.table
-        .where(this.rawIdField)
-        .anyOf(ids)
-        .modify(this._cleanNew(changes));
+  async _updateChange(id, changes, oldObj = null) {
+    if (!this.syncable) {
+      return Promise.resolve();
+    }
+    if (!oldObj) {
+      oldObj = await this.table.get(id);
+    }
+    if (!oldObj) {
+      return Promise.resolve();
+    }
+    const change = new UpdatedChange({
+      key: id,
+      table: this.tableName,
+      oldObj,
+      changes,
+      source: CLIENTID,
+    });
+    return this._saveAndQueueChange(change);
+  }
+
+  update(id, changes) {
+    return this.transaction({ mode: 'rw' }, CHANGES_TABLE, () => {
+      changes = this._cleanNew(changes);
+      // Do the update change first so that we can diff against the
+      // non-updated object.
+      return this._updateChange(id, changes).then(() => {
+        return this.table.update(id, changes);
+      });
     });
   }
 
@@ -547,12 +597,12 @@ class IndexedDBResource {
    */
   createObj(obj) {
     return {
-      ...this._preparePut(obj),
+      ...this._prepareAdd(obj),
       [NEW_OBJECT]: true,
     };
   }
 
-  _preparePut(obj) {
+  _prepareAdd(obj) {
     const idMap = this._prepareCopy({});
     return this._cleanNew({
       ...idMap,
@@ -560,24 +610,29 @@ class IndexedDBResource {
     });
   }
 
+  _createChange(id, obj) {
+    if (!this.syncable) {
+      return Promise.resolve();
+    }
+    const change = new CreatedChange({
+      key: id,
+      table: this.tableName,
+      obj,
+      source: CLIENTID,
+    });
+    return this._saveAndQueueChange(change);
+  }
+
   /**
    * @param {Object} obj
    * @return {Promise<string>}
    */
-  put(obj) {
-    return this.transaction({ mode: 'rw' }, () => {
-      return this.table.put(this._preparePut(obj));
-    });
-  }
-
-  /**
-   * @param {Object[]} objs
-   * @return {Promise<string[]>}
-   */
-  bulkPut(objs) {
-    const putObjs = objs.map(this._preparePut);
-    return this.transaction({ mode: 'rw' }, () => {
-      return this.table.bulkPut(putObjs);
+  add(obj) {
+    return this.transaction({ mode: 'rw' }, CHANGES_TABLE, () => {
+      obj = this._prepareAdd(obj);
+      return this.table.add(obj).then(id => {
+        return this._createChange(id, obj).then(() => id);
+      });
     });
   }
 
@@ -595,30 +650,49 @@ class IndexedDBResource {
     });
   }
 
+  _deleteChange(id) {
+    if (!this.syncable) {
+      return Promise.resolve();
+    }
+    return this.table.get(id).then(oldObj => {
+      if (!oldObj) {
+        return Promise.resolve();
+      }
+      const change = new DeletedChange({
+        key: id,
+        table: this.tableName,
+        oldObj,
+        source: CLIENTID,
+      });
+      return this._saveAndQueueChange(change);
+    });
+  }
+
   delete(id) {
-    return this.transaction({ mode: 'rw' }, () => {
-      return this.table.delete(id);
+    return this.transaction({ mode: 'rw' }, CHANGES_TABLE, () => {
+      // Generate delete change first so that we can look up the existing object
+      return this._deleteChange(id).then(() => {
+        return this.table.delete(id);
+      });
     });
   }
 
   /**
-   * Set the channel_id property on a change
-   * object before we put it in the store, if relevant
-   * @param {Object} change
+   * Return the channel_id for a change, given the object
+   * @param {Object} obj
    * @returns {Object}
    */
-  setChannelIdOnChange(change) {
-    return change;
+  getChannelId() {
+    return;
   }
 
   /**
-   * Set the user_id property on a change
-   * object before we put it in the store, if relevant
-   * @param {Object} change
+   * Return the user_id for a change, given the object
+   * @param {Object} obj
    * @returns {Object}
    */
-  setUserIdOnChange(change) {
-    return change;
+  getUserId() {
+    return;
   }
 }
 
@@ -759,10 +833,9 @@ class Resource extends mix(APIResource, IndexedDBResource) {
       const now = Date.now();
       const data = response.data;
       data[LAST_FETCHED] = now;
-      // Explicitly set the source of this as a fetch
-      // from the server, to prevent us from trying
-      // to sync these changes back to the server!
-      return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
+      // Directly write to the table, rather than using the add method
+      // to avoid creating change events that we would sync back to the server.
+      return this.transaction({ mode: 'rw' }, () => {
         return this.table.put(data).then(() => {
           return data;
         });
@@ -772,10 +845,9 @@ class Resource extends mix(APIResource, IndexedDBResource) {
 
   deleteModel(id) {
     return client.delete(this.modelUrl(id)).then(() => {
-      // Explicitly set the source of this as a fetch
-      // from the server, to prevent us from trying
-      // to sync these changes back to the server!
-      return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
+      // Directly write to the table, rather than using the delete method
+      // to avoid creating change events that we would sync back to the server.
+      return this.transaction({ mode: 'rw' }, () => {
         return this.table.delete(id).then(() => {
           return true;
         });
@@ -909,40 +981,11 @@ export const Session = new IndexedDBResource({
   tableName: TABLE_NAMES.SESSION,
   idField: CURRENT_USER,
   uuid: false,
-  listeners: {
-    [CHANGE_TYPES.DELETED]: function() {
-      if (!window.location.pathname.endsWith(urls.accounts())) {
-        window.location = urls.accounts();
-      }
-    },
-  },
   get currentChannel() {
     return window.CHANNEL_EDIT_GLOBAL || {};
   },
   get currentChannelId() {
     return this.currentChannel.channel_id || null;
-  },
-  channelSyncKeepAlive() {
-    if (this.currentChannelId && document.hasFocus()) {
-      this.updateSession({ [`${ACTIVE_CHANNELS}.${this.currentChannelId}`]: Date.now() });
-    }
-  },
-  monitorKeepAlive() {
-    if (this.currentChannelId) {
-      this.channelSyncKeepAlive();
-      if (!this._keepAliveInterval) {
-        this._keepAliveInterval = setInterval(
-          () => this.channelSyncKeepAlive(),
-          CHANNEL_SYNC_KEEP_ALIVE_INTERVAL
-        );
-      }
-    }
-  },
-  stopMonitorKeepAlive() {
-    if (this._keepAliveInterval) {
-      clearInterval(this._keepAliveInterval);
-      this._keepAliveInterval = null;
-    }
   },
   async setChannelScope() {
     const channelId = this.currentChannelId;
@@ -954,23 +997,21 @@ export const Session = new IndexedDBResource({
       await this.updateSession({
         [`${MAX_REV_KEY}.${channelId}`]: channelRev,
       });
-      this.monitorKeepAlive();
-      window.addEventListener('focus', () => this.monitorKeepAlive());
-      window.addEventListener('blur', () => this.stopMonitorKeepAlive());
-      document.addEventListener('visibilitychange', () => {
-        if (document.hidden) {
-          this.stopMonitorKeepAlive();
-        } else {
-          this.monitorKeepAlive();
-        }
+    }
+  },
+  async clearChannelScope() {
+    if (channelScope.id) {
+      await this.updateSession({
+        [`${MAX_REV_KEY}.${channelScope.id}`]: null,
       });
+      channelScope.id = null;
     }
   },
   async getSession() {
     return this.get(CURRENT_USER);
   },
   setSession(currentUser) {
-    return this.put({ CURRENT_USER, ...currentUser });
+    return this.table.put({ CURRENT_USER, ...currentUser });
   },
   updateSession(currentUser) {
     return this.update(CURRENT_USER, currentUser);
@@ -981,11 +1022,7 @@ export const Bookmark = new Resource({
   tableName: TABLE_NAMES.BOOKMARK,
   urlName: 'bookmark',
   idField: 'channel',
-  setUserIdOnChange(change) {
-    if (vuexStore) {
-      change.user_id = vuexStore.getters.currentUserId;
-    }
-  },
+  getUserId: getUserIdFromStore,
 });
 
 export const Channel = new Resource({
@@ -1018,84 +1055,119 @@ export const Channel = new Resource({
    * @return {Promise}
    */
   update(id, { content_defaults = {}, ...changes }) {
-    return this.transaction({ mode: 'rw' }, () => {
-      return this.table
-        .where('id')
-        .equals(id)
-        .modify(channel => {
-          if (Object.keys(content_defaults).length) {
-            if (!channel.content_defaults) {
-              channel.content_defaults = {};
-            }
-            Object.assign(channel.content_defaults, content_defaults);
-          }
-
-          Object.assign(channel, changes);
+    return this.transaction({ mode: 'rw' }, CHANGES_TABLE, () => {
+      return this.table.get(id).then(channel => {
+        if (Object.keys(content_defaults).length) {
+          const mergedContentDefaults = {};
+          Object.assign(mergedContentDefaults, channel.content_defaults || {}, content_defaults);
+          changes.content_defaults = mergedContentDefaults;
+        }
+        // Create the update change for consistency with the super update method
+        // although we could do it after as we are explicity passing in
+        // the pre change channel object
+        return this._updateChange(id, changes, channel).then(() => {
+          return this.table.update(id, changes);
         });
+      });
     });
   },
 
   updateAsAdmin(id, changes) {
     return client.patch(window.Urls.adminChannelsDetail(id), changes).then(() => {
-      return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
+      return this.transaction({ mode: 'rw' }, () => {
         return this.table.update(id, changes);
       });
     });
   },
 
   publish(id, version_notes) {
-    return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
+    return this.transaction({ mode: 'rw' }, () => {
       return this.table.update(id, { publishing: true });
     }).then(() => {
-      const change = {
+      const change = new PublishedChange({
         key: id,
         version_notes,
         language: currentLanguage,
-        source: CLIENTID,
         table: this.tableName,
-        type: CHANGE_TYPES.PUBLISHED,
-        channel_id: id,
-      };
-      return this.transaction(
-        { mode: 'rw', source: IGNORED_SOURCE },
-        CHANGES_TABLE,
-        TABLE_NAMES.CONTENTNODE,
-        () => {
-          return Promise.all([
-            db[CHANGES_TABLE].put(change),
-            ContentNode.table.where({ channel_id: id }).modify({
-              changed: false,
-              published: true,
-              has_new_descendants: false,
-              has_updated_descendants: false,
-            }),
-          ]);
-        }
-      );
+        source: CLIENTID,
+      });
+      return this.transaction({ mode: 'rw' }, CHANGES_TABLE, TABLE_NAMES.CONTENTNODE, () => {
+        return Promise.all([
+          this._saveAndQueueChange(change),
+          ContentNode.table.where({ channel_id: id }).modify({
+            changed: false,
+            published: true,
+            has_new_descendants: false,
+            has_updated_descendants: false,
+          }),
+        ]);
+      });
     });
   },
 
-  sync(id, { attributes = false, tags = false, files = false, assessment_items = false } = {}) {
-    const change = {
+  deploy(id) {
+    const change = new DeployedChange({
       key: id,
-      attributes,
-      tags,
-      files,
-      assessment_items,
       source: CLIENTID,
       table: this.tableName,
-      type: CHANGE_TYPES.SYNCED,
-      channel_id: id,
-    };
-    return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, CHANGES_TABLE, () => {
-      return db[CHANGES_TABLE].put(change);
+    });
+    return this.transaction({ mode: 'rw' }, CHANGES_TABLE, () => {
+      return this._saveAndQueueChange(change);
+    });
+  },
+
+  waitForDeploying(id) {
+    const observable = Dexie.liveQuery(() => {
+      return this.table
+        .where('id')
+        .equals(id)
+        .filter(channel => !channel['staging_root_id'] || channel['staging_root_id'] === null)
+        .toArray();
+    });
+
+    return new Promise((resolve, reject) => {
+      const subscription = observable.subscribe({
+        next(result) {
+          if (result.length === 1) {
+            subscription.unsubscribe();
+            resolve(result[0].root_id);
+          }
+        },
+        error() {
+          subscription.unsubscribe();
+          reject();
+        },
+      });
+    });
+  },
+
+  sync(
+    id,
+    {
+      titles_and_descriptions = false,
+      resource_details = false,
+      files = false,
+      assessment_items = false,
+    } = {}
+  ) {
+    const change = new SyncedChange({
+      key: id,
+      titles_and_descriptions,
+      resource_details,
+      files,
+      assessment_items,
+      table: this.tableName,
+      source: CLIENTID,
+    });
+    return this.transaction({ mode: 'rw' }, CHANGES_TABLE, () => {
+      return this._saveAndQueueChange(change);
     });
   },
 
   softDelete(id) {
-    let modelUrl = this.modelUrl(id);
+    const modelUrl = this.modelUrl(id);
     // Call endpoint directly in case we need to navigate to new page
-    return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
+    return this.transaction({ mode: 'rw' }, () => {
       return this.table.update(id, { deleted: true });
     }).then(() => {
       // make sure transaction is closed before calling a non-Dexie async function
@@ -1103,17 +1175,20 @@ export const Channel = new Resource({
       return client.delete(modelUrl);
     });
   },
-  setChannelIdOnChange(change) {
+  getChannelId(obj) {
     // For channels, the appropriate channel_id for a change is just the key
-    change.channel_id = change.key;
+    return obj.id;
   },
 });
 
-function setChannelIdFromTransactionSource(change) {
-  const channel_id = change.source.split('::').slice(1)[0];
+function getChannelFromChannelScope() {
+  const channel_id = channelScope.id;
   if (channel_id) {
-    change.channel_id = channel_id;
+    return channel_id;
   }
+  throw ReferenceError(
+    'Attempted to get the channel_id from the channelScope object, but it has not been set.'
+  );
 }
 
 export const ContentNodePrerequisite = new IndexedDBResource({
@@ -1122,7 +1197,7 @@ export const ContentNodePrerequisite = new IndexedDBResource({
   idField: '[target_node+prerequisite]',
   uuid: false,
   syncable: true,
-  setChannelIdOnChange: setChannelIdFromTransactionSource,
+  getChannelId: getChannelFromChannelScope,
 });
 
 export const ContentNode = new TreeResource({
@@ -1149,7 +1224,7 @@ export const ContentNode = new TreeResource({
       if (entry) {
         return Promise.reject('No cyclic prerequisites');
       }
-      return ContentNodePrerequisite.put({
+      return ContentNodePrerequisite.add({
         target_node,
         prerequisite,
       });
@@ -1269,10 +1344,11 @@ export const ContentNode = new TreeResource({
    * @param {string} target
    * @param {string} position
    * @param {Boolean} isCreate
+   * @param {Object} [sourceNode]
    * @param {Function<Promise<ContentNode>>} callback
    * @return {Promise<ContentNode>}
    */
-  resolveTreeInsert(id, target, position, isCreate, callback) {
+  resolveTreeInsert({ id, target, position, isCreate, sourceNode = null }, callback) {
     // First, resolve parent so we can determine the sort order, but also to determine
     // the tree so we can temporarily lock it while we determine those values locally
     return this.resolveParent(target, position).then(parent => {
@@ -1283,8 +1359,12 @@ export const ContentNode = new TreeResource({
       // Using root_id, we'll keep this locked while we handle this, so no other operations
       // happen while we're potentially waiting for some data we need (siblings, source node)
       return this.treeLock(parent.root_id, () => {
-        // Don't trigger fetch, if this is specified as a creation
-        const getNode = isCreate ? this.table.get(id) : this.get(id, false);
+        // Resolve to sourceNode passed in if a create
+        let getNode = Promise.resolve(sourceNode);
+        if (!sourceNode) {
+          // Don't trigger fetch, if this is specified as a creation
+          getNode = isCreate ? this.table.get(id) : this.get(id, false);
+        }
 
         // Preload the ID we're referencing, and get siblings to determine sort order
         return Promise.all([getNode, this.where({ parent: parent.id }, false)]).then(
@@ -1312,26 +1392,8 @@ export const ContentNode = new TreeResource({
               changed: true,
             };
 
-            let channel_id = parent.channel_id;
-
-            // This should really only happen when this is a move operation to the trash tree.
-            // Other cases like copying shouldn't encounter this because they should always have the
-            // channel_id on the destination. The trash tree root node does not have the channel_id
-            // annotated on it, and using the source node's channel_id should be reliable
-            // in that case
-            if (!channel_id && node) {
-              channel_id = node.channel_id;
-
-              // The change would be disallowed anyway, so prevent the frontend from applying it
-              if (!channel_id) {
-                return Promise.reject(
-                  new Error('Missing channel_id for tree insertion change event')
-                );
-              }
-            }
-
             // Prep the change data tracked in the changes table
-            const change = {
+            const changeData = {
               key: payload.id,
               from_key: isCreate ? id : null,
               target,
@@ -1342,17 +1404,15 @@ export const ContentNode = new TreeResource({
               // are pending.
               parent: parent.id,
               oldObj: isCreate ? null : node,
-              source: CLIENTID,
               table: this.tableName,
-              type: isCreate ? CHANGE_TYPES.COPIED : CHANGE_TYPES.MOVED,
-              channel_id,
+              source: CLIENTID,
             };
 
             return callback({
               node,
               parent,
               payload,
-              change,
+              changeData,
             });
           }
         );
@@ -1360,41 +1420,48 @@ export const ContentNode = new TreeResource({
     });
   },
 
-  // Retain super's put method that does not handle tree insertion
-  _put: TreeResource.prototype.put,
+  // Retain super's add method that does not handle tree insertion
+  _add: TreeResource.prototype.add,
 
   /**
    * @param {Object} obj
    * @return {Promise<string>}
    */
-  put(obj) {
-    const prepared = this._preparePut(obj);
+  add(obj) {
+    const prepared = this._prepareAdd(obj);
 
     return this.resolveTreeInsert(
-      prepared.id,
-      prepared.parent,
-      RELATIVE_TREE_POSITIONS.LAST_CHILD,
-      true,
+      {
+        id: prepared.id,
+        target: prepared.parent,
+        position: RELATIVE_TREE_POSITIONS.LAST_CHILD,
+        isCreate: true,
+      },
       data => {
-        return this.transaction({ mode: 'rw' }, () => {
-          return this.table.put({ ...prepared, ...data.payload });
+        return this.transaction({ mode: 'rw' }, CHANGES_TABLE, () => {
+          const obj = { ...prepared, ...data.payload };
+          return this.table.add(obj).then(id => {
+            return this._createChange(id, obj).then(() => id);
+          });
         });
       }
     );
   },
 
   move(id, target, position = RELATIVE_TREE_POSITIONS.FIRST_CHILD) {
-    return this.resolveTreeInsert(id, target, position, false, data => {
-      // Ignore changes from this operation except for the explicit move change we generate.
-      return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, CHANGES_TABLE, async () => {
+    return this.resolveTreeInsert({ id, target, position, isCreate: false }, data => {
+      return this.transaction({ mode: 'rw' }, CHANGES_TABLE, async () => {
         const payload = await this.tableMove(data);
-        await db[CHANGES_TABLE].put(data.change);
+        const change = new MovedChange(data.changeData);
+        await this._saveAndQueueChange(change);
         return payload;
       });
     });
   },
 
   async tableMove({ node, parent, payload }) {
+    // Do direct table writes here rather than using add/update methods to avoid
+    // creating unnecessary additional change events.
     const updated = await this.table.update(node.id, payload);
     // Update didn't succeed, this node probably doesn't exist, do a put instead,
     // but need to add in other parent info.
@@ -1417,9 +1484,16 @@ export const ContentNode = new TreeResource({
    * @param {string} target The ID of the target node used for positioning
    * @param {string} position The position relative to `target`
    * @param {Object|null} [excluded_descendants] a map of node_ids to exclude from the copy
+   * @param {Object|null} [sourceNode] a source node to use for the copy instead of fetching
    * @return {Promise}
    */
-  copy(id, target, position = RELATIVE_TREE_POSITIONS.LAST_CHILD, excluded_descendants = null) {
+  copy(
+    id,
+    target,
+    position = RELATIVE_TREE_POSITIONS.LAST_CHILD,
+    excluded_descendants = null,
+    sourceNode = null
+  ) {
     if (process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test') {
       /* eslint-disable no-console */
       console.groupCollapsed(`Copying contentnode from ${id} with target ${target}`);
@@ -1428,15 +1502,62 @@ export const ContentNode = new TreeResource({
       /* eslint-enable */
     }
 
-    return this.resolveTreeInsert(id, target, position, true, data => {
-      data.change.excluded_descendants = excluded_descendants;
+    return this.resolveTreeInsert({ id, target, position, isCreate: true, sourceNode }, data => {
+      data.changeData.excluded_descendants = excluded_descendants;
+      data.changeData.mods = {};
 
-      // Ignore changes from this operation except for the
-      // explicit copy change we generate.
-      return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, CHANGES_TABLE, async () => {
+      return this.transaction({ mode: 'rw' }, CHANGES_TABLE, async () => {
         const payload = await this.tableCopy(data);
-        await db[CHANGES_TABLE].put(data.change);
+        const change = new CopiedChange(data.changeData);
+        await this._saveAndQueueChange(change);
         return payload;
+      });
+    });
+  },
+
+  /**
+   * Figures out the new target and position for the failed copy node.
+   * And then queues a CopyChange object for syncing to the backend.
+   * @param {string} id
+   * @returns {Promise}
+   */
+  retryCopyChange(id) {
+    // Get the latest change for contentnode `id` that has an error and is of copy type.
+    const change = db[CHANGES_TABLE].orderBy('rev')
+      .filter(
+        change =>
+          change.key === id &&
+          change.table === this.tableName &&
+          (change.errors || change.errors === '') &&
+          change.type === CHANGE_TYPES.COPIED
+      )
+      .last();
+
+    // Figure out the new target and position.
+    return this.table.get(id).then(failedCopyNode => {
+      const target = this.table
+        .orderBy('lft')
+        .filter(
+          node =>
+            node.id !== id &&
+            node.parent === failedCopyNode.parent &&
+            node.lft <= failedCopyNode.lft &&
+            node[COPYING_STATUS] !== COPYING_STATUS_VALUES.FAILED &&
+            node[COPYING_STATUS] !== COPYING_STATUS_VALUES.COPYING
+        )
+        .last();
+
+      return Promise.all([change, target]).then(([change, target]) => {
+        if (target) {
+          change.target = target.id;
+          change.position = RELATIVE_TREE_POSITIONS.RIGHT;
+        } else {
+          change.target = failedCopyNode.parent;
+          change.position = RELATIVE_TREE_POSITIONS.FIRST_CHILD;
+        }
+
+        // Fire up the change object to sync.
+        this._saveAndQueueChange(new CopiedChange(change));
       });
     });
   },
@@ -1456,17 +1577,25 @@ export const ContentNode = new TreeResource({
       root_id: parent.root_id,
       // Set this node as copying until we get confirmation from the
       // backend that it has finished copying
-      [COPYING_FLAG]: true,
+      [COPYING_STATUS]: COPYING_STATUS_VALUES.COPYING,
       // Set to null, but this should update to a task id to track the copy
       // task once it has been initiated
       [TASK_ID]: null,
     };
 
     // Manually put our changes into the tree changes for syncing table
+    // rather than use add/update methods to avoid creating unnecessary
+    // additional change events.
     await this.table.put(payload);
     return payload;
   },
 
+  /**
+   * Resolves with an array of all ancestors, including the node itself, in descending order
+   *
+   * @param {String} id
+   * @return {Promise<[{}]>}
+   */
   getAncestors(id) {
     return this.table.get(id).then(node => {
       if (node) {
@@ -1479,7 +1608,34 @@ export const ContentNode = new TreeResource({
         }
         return [node];
       }
+      // If node wasn't found, we fetch from the server
       return this.fetchCollection({ ancestors_of: id });
+    });
+  },
+
+  /**
+   * Calls `updateCallback` on each ancestor, and calls `.update` for that ancestor
+   * with the return value from `updateCallback`
+   *
+   * @param {String} id
+   * @param {Boolean} includeSelf
+   * @param {Boolean} ignoreChanges - Ignore generating change events for the updates
+   * @param {Function} updateCallback
+   * @return {Promise<void>}
+   */
+  updateAncestors({ id, includeSelf = false, ignoreChanges = false }, updateCallback) {
+    return this.transaction({ mode: 'rw' }, async () => {
+      const ancestors = await this.getAncestors(id);
+      for (const ancestor of ancestors) {
+        if (ancestor.id === id && !includeSelf) {
+          continue;
+        }
+        if (ignoreChanges) {
+          await this.table.update(ancestor.id, updateCallback(ancestor));
+        } else {
+          await this.update(ancestor.id, updateCallback(ancestor));
+        }
+      }
     });
   },
 
@@ -1500,28 +1656,63 @@ export const ContentNode = new TreeResource({
       return node;
     });
   },
-  setChannelIdOnChange: setChannelIdFromTransactionSource,
+  getChannelId: getChannelFromChannelScope,
 
   /**
-   * Waits for copying of content nodes to complete for all ids referenced in `ids` array
-   * @param {string[]} ids
+   * Waits for copying of contentnode to complete for id referenced in `id`.
+   * @param {string} id
+   * @param {Number} startingRev -- the revision from which we start looking for
+   *                                success or failure change objects.
    * @returns {Promise<void>}
    */
-  waitForCopying(ids) {
-    const observable = Dexie.liveQuery(() => {
-      return this.table
+  waitForCopying(id, startingRev) {
+    const observable = Dexie.liveQuery(async () => {
+      let copy_success_flag = 0;
+      let change_error_flag = 0;
+
+      copy_success_flag = await this.table
         .where('id')
-        .anyOf(ids)
-        .filter(node => !node[COPYING_FLAG])
-        .toArray();
+        .equals(id)
+        .filter(node => node[COPYING_STATUS] === COPYING_STATUS_VALUES.SUCCESS)
+        .count();
+
+      if (copy_success_flag === 1) {
+        return {
+          copy_success_flag,
+          change_error_flag,
+        };
+      }
+
+      change_error_flag = await db[CHANGES_TABLE].where('[table+key]')
+        .equals([this.tableName, id])
+        .filter(change => {
+          if (
+            (change['errors'] || change['errors'] === '') &&
+            change['type'] === CHANGE_TYPES.COPIED
+          ) {
+            if (!startingRev || change['rev'] > startingRev) {
+              return true;
+            }
+          }
+          return false;
+        })
+        .count();
+
+      return {
+        copy_success_flag,
+        change_error_flag,
+      };
     });
 
     return new Promise((resolve, reject) => {
       const subscription = observable.subscribe({
         next(result) {
-          if (result.length === ids.length) {
+          if (result.copy_success_flag) {
             subscription.unsubscribe();
             resolve();
+          } else if (result.change_error_flag) {
+            subscription.unsubscribe();
+            reject();
           }
         },
         error() {
@@ -1536,6 +1727,7 @@ export const ContentNode = new TreeResource({
 export const ChannelSet = new Resource({
   tableName: TABLE_NAMES.CHANNELSET,
   urlName: 'channelset',
+  getUserId: getUserIdFromStore,
 });
 
 export const Invitation = new Resource({
@@ -1546,16 +1738,16 @@ export const Invitation = new Resource({
   accept(id) {
     const changes = { accepted: true };
     return client.patch(window.Urls.invitationDetail(id), changes).then(() => {
-      return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
+      return this.transaction({ mode: 'rw' }, () => {
         return this.table.update(id, changes);
       });
     });
   },
-  setChannelIdOnChange(change) {
-    change.channel_id = change.obj.channel;
+  getChannelId(obj) {
+    return obj.channel;
   },
-  setUserIdOnChange(change) {
-    change.user_id = change.obj.invited;
+  getUserId(obj) {
+    return obj.invited;
   },
 });
 
@@ -1571,7 +1763,7 @@ export const User = new Resource({
 
   updateAsAdmin(id, changes) {
     return client.patch(window.Urls.adminUsersDetail(id), changes).then(() => {
-      return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
+      return this.transaction({ mode: 'rw' }, () => {
         return this.table.update(id, changes);
       });
     });
@@ -1579,9 +1771,12 @@ export const User = new Resource({
 
   // Used when get_storage_used endpoint polling returns
   updateDiskSpaceUsed(id, disk_space_used) {
-    return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
+    return this.transaction({ mode: 'rw' }, () => {
       return this.table.update(id, { disk_space_used });
     });
+  },
+  getUserId(obj) {
+    return obj.id;
   },
 });
 
@@ -1591,11 +1786,11 @@ export const EditorM2M = new IndexedDBResource({
   idField: '[user+channel]',
   uuid: false,
   syncable: true,
-  setChannelIdOnChange(change) {
-    change.channel_id = change.obj.channel;
+  getChannelId(obj) {
+    return obj.channel;
   },
-  setUserIdOnChange(change) {
-    change.user_id = change.obj.user;
+  getUserId(obj) {
+    return obj.user;
   },
 });
 
@@ -1605,11 +1800,11 @@ export const ViewerM2M = new IndexedDBResource({
   idField: '[user+channel]',
   uuid: false,
   syncable: true,
-  setChannelIdOnChange(change) {
-    change.channel_id = change.obj.channel;
+  getChannelId(obj) {
+    return obj.channel;
   },
-  setUserIdOnChange(change) {
-    change.user_id = change.obj.user;
+  getUserId(obj) {
+    return obj.user;
   },
 });
 
@@ -1617,7 +1812,7 @@ export const ChannelUser = new APIResource({
   urlName: 'channeluser',
   makeEditor(channel, user) {
     return ViewerM2M.delete([user, channel]).then(() => {
-      return EditorM2M.put({ user, channel });
+      return EditorM2M.add({ user, channel });
     });
   },
   removeViewer(channel, user) {
@@ -1630,7 +1825,7 @@ export const ChannelUser = new APIResource({
       const userData = [];
       const editorM2M = [];
       const viewerM2M = [];
-      for (let datum of itemData) {
+      for (const datum of itemData) {
         const userDatum = {
           ...datum,
         };
@@ -1651,10 +1846,6 @@ export const ChannelUser = new APIResource({
       }
 
       return db.transaction('rw', User.tableName, EditorM2M.tableName, ViewerM2M.tableName, () => {
-        // Explicitly set the source of this as a fetch
-        // from the server, to prevent us from trying
-        // to sync these changes back to the server!
-        Dexie.currentTransaction.source = IGNORED_SOURCE;
         return Promise.all([
           EditorM2M.table.bulkPut(editorM2M),
           ViewerM2M.table.bulkPut(viewerM2M),
@@ -1727,7 +1918,7 @@ export const AssessmentItem = new Resource({
   },
   modifyAssessmentItemCount(nodeId, increment) {
     // Update assessment item count
-    return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, TABLE_NAMES.CONTENTNODE, () => {
+    return this.transaction({ mode: 'rw' }, TABLE_NAMES.CONTENTNODE, () => {
       return ContentNode.table.get(nodeId).then(node => {
         if (node) {
           return ContentNode.table.update(node.id, {
@@ -1738,26 +1929,26 @@ export const AssessmentItem = new Resource({
       });
     });
   },
+  // Retain super's delete method
+  _delete: Resource.prototype.delete,
   delete(id) {
     const nodeId = id[0];
-    return this.transaction({ mode: 'rw' }, () => {
-      return this.table.delete(id);
-    }).then(data => {
+    return this._delete(id).then(data => {
       return this.modifyAssessmentItemCount(nodeId, -1).then(() => {
         return data;
       });
     });
   },
-  put(obj) {
-    return this.transaction({ mode: 'rw' }, () => {
-      return this.table.put(this._preparePut(obj));
-    }).then(id => {
+  // Retain super's add method
+  _add: Resource.prototype.add,
+  add(obj) {
+    return this._add(obj).then(id => {
       return this.modifyAssessmentItemCount(obj.contentnode, 1).then(() => {
         return id;
       });
     });
   },
-  setChannelIdOnChange: setChannelIdFromTransactionSource,
+  getChannelId: getChannelFromChannelScope,
 });
 
 export const File = new Resource({
@@ -1779,14 +1970,14 @@ export const File = new Resource({
         if (!response) {
           return Promise.reject(fileErrors.UPLOAD_FAILED);
         }
-        return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
+        return this.transaction({ mode: 'rw' }, () => {
           return this.table.put(response.data.file).then(() => {
             return response.data;
           });
         });
       });
   },
-  setChannelIdOnChange: setChannelIdFromTransactionSource,
+  getChannelId: getChannelFromChannelScope,
 });
 
 export const Clipboard = new TreeResource({
@@ -1800,7 +1991,6 @@ export const Clipboard = new TreeResource({
     // to the backend because that would affect the moved
     // nodes.
     return db.transaction('rw', this.tableName, () => {
-      Dexie.currentTransaction.source = IGNORED_SOURCE;
       return this.table.bulkDelete(ids);
     });
   },
@@ -1834,28 +2024,26 @@ export const Clipboard = new TreeResource({
       };
 
       return this.transaction({ mode: 'rw' }, CHANGES_TABLE, () => {
-        return this.table.put(data).then(() => data);
+        return this.table.add(data).then(id => {
+          return this._createChange(id, data).then(() => data);
+        });
       });
     });
   },
-  setUserIdOnChange(change) {
-    if (vuexStore) {
-      change.user_id = vuexStore.getters.currentUserId;
-    }
-  },
+  getUserId: getUserIdFromStore,
 });
 
 export const Task = new IndexedDBResource({
   tableName: TABLE_NAMES.TASK,
   idField: 'task_id',
   setTasks(tasks) {
-    for (let task of tasks) {
+    for (const task of tasks) {
       // Coerce channel_id to be a simple hex string
       task.channel_id = task.channel_id.replace('-', '');
     }
-    return this.transaction({ mode: 'rw', source: IGNORED_SOURCE }, () => {
+    return this.transaction({ mode: 'rw' }, () => {
       let deletePromise = Promise.resolve();
-      let taskDeletes = intersection(
+      const taskDeletes = intersection(
         SINGULAR_TASKS,
         tasks.map(t => t.task_name)
       );

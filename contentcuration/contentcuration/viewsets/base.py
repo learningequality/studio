@@ -8,9 +8,10 @@ from celery import states
 from channels.layers import get_channel_layer
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
+from django.db.utils import IntegrityError
 from django.http import Http404
 from django.http.request import HttpRequest
-from django_bulk_update.helper import bulk_update
+from django_celery_results.models import TaskResult
 from django_filters.constants import EMPTY_VALUES
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import FilterSet
@@ -28,10 +29,11 @@ from rest_framework.status import HTTP_201_CREATED
 from rest_framework.status import HTTP_204_NO_CONTENT
 from rest_framework.utils import html
 from rest_framework.utils import model_meta
-from rest_framework.viewsets import ReadOnlyModelViewSet
+from rest_framework.viewsets import GenericViewSet
 
 from contentcuration.models import Change
-from contentcuration.models import TaskResult
+from contentcuration.models import CustomTaskMetadata
+from contentcuration.utils.celery.tasks import generate_task_signature
 from contentcuration.utils.celery.tasks import ProgressTracker
 from contentcuration.viewsets.common import MissingRequiredParamsException
 from contentcuration.viewsets.sync.constants import TASK_ID
@@ -328,7 +330,8 @@ class BulkListSerializer(SimpleReprMixin, ListSerializer):
             self.missing_keys = set(all_validated_data_by_id.keys())\
                 .difference(updated_keys)
 
-        bulk_update(updated_objects, update_fields=properties_to_update)
+        if len(properties_to_update) > 0:
+            self.child.Meta.model.objects.bulk_update(updated_objects, list(properties_to_update))
 
         return updated_objects
 
@@ -438,13 +441,57 @@ class ValuesViewsetOrderingFilter(OrderingFilter):
         return ordering
 
 
-class ReadOnlyValuesViewset(SimpleReprMixin, ReadOnlyModelViewSet):
+class RequiredFilterSet(FilterSet):
+
+    def __init__(self, required=False, **kwargs):
+        self._required = required
+        super().__init__(**kwargs)
+
+    @property
+    def qs(self):
+        if self._required:
+            has_filtering_queries = False
+            if self.form.is_valid():
+                for name, filter_ in self.filters.items():
+                    value = self.form.cleaned_data.get(name)
+
+                    if value not in EMPTY_VALUES:
+                        has_filtering_queries = True
+                        break
+            if not has_filtering_queries and self.request.method == "GET":
+                raise MissingRequiredParamsException("No valid filter parameters supplied")
+        return super(FilterSet, self).qs
+
+
+class RequiredFiltersFilterBackend(DjangoFilterBackend):
+    """
+    Override the default filter backend to conditionalize initialization
+    if we are using a RequiredFilterSet
+    """
+    def get_filterset(self, request, queryset, view):
+        filterset_class = self.get_filterset_class(view, queryset)
+        if filterset_class is None:
+            return None
+
+        kwargs = self.get_filterset_kwargs(request, queryset, view)
+
+        if issubclass(filterset_class, RequiredFilterSet):
+            action_handler = getattr(view, view.action)
+            # Either this is a list action, or it's a decorated action that
+            # had its detail attribute explicitly set to False.
+            if view.action == "list" or not getattr(action_handler, "detail", True):
+                kwargs["required"] = True
+
+        return filterset_class(**kwargs)
+
+
+class BaseValuesViewset(SimpleReprMixin, GenericViewSet):
     """
     A viewset that uses a values call to get all model/queryset data in
     a single database query, rather than delegating serialization to a
     DRF ModelSerializer.
     """
-    filter_backends = (DjangoFilterBackend, ValuesViewsetOrderingFilter)
+    filter_backends = (RequiredFiltersFilterBackend, ValuesViewsetOrderingFilter)
 
     # A tuple of values to get from the queryset
     values = None
@@ -456,7 +503,7 @@ class ReadOnlyValuesViewset(SimpleReprMixin, ReadOnlyModelViewSet):
     field_map = {}
 
     def __init__(self, *args, **kwargs):
-        super(ReadOnlyValuesViewset, self).__init__(*args, **kwargs)
+        super(BaseValuesViewset, self).__init__(*args, **kwargs)
         if not isinstance(self.values, tuple):
             raise TypeError("values must be defined as a tuple")
         self._values = tuple(self.values)
@@ -530,7 +577,7 @@ class ReadOnlyValuesViewset(SimpleReprMixin, ReadOnlyModelViewSet):
         return Serializer
 
     def get_queryset(self):
-        queryset = super(ReadOnlyValuesViewset, self).get_queryset()
+        queryset = super(BaseValuesViewset, self).get_queryset()
         if hasattr(queryset.model, "filter_view_queryset"):
             return queryset.model.filter_view_queryset(queryset, self.request.user)
         return queryset
@@ -540,7 +587,7 @@ class ReadOnlyValuesViewset(SimpleReprMixin, ReadOnlyModelViewSet):
         Return a filtered copy of the queryset to only the objects
         that a user is able to edit, rather than view.
         """
-        queryset = super(ReadOnlyValuesViewset, self).get_queryset()
+        queryset = super(BaseValuesViewset, self).get_queryset()
         if hasattr(queryset.model, "filter_edit_queryset"):
             return queryset.model.filter_edit_queryset(queryset, self.request.user)
         return self.get_queryset()
@@ -598,13 +645,25 @@ class ReadOnlyValuesViewset(SimpleReprMixin, ReadOnlyModelViewSet):
     def consolidate(self, items, queryset):
         return items
 
-    def _cast_queryset_to_values(self, queryset):
-        queryset = self.annotate_queryset(queryset)
-        return queryset.values(*self._values)
-
     def serialize(self, queryset):
-        return self.consolidate(list(map(self._map_fields, queryset or [])), queryset)
+        queryset = self.annotate_queryset(queryset)
+        values_queryset = queryset.values(*self._values)
+        return self.consolidate(
+            list(map(self._map_fields, values_queryset or [])), queryset
+        )
 
+    def serialize_object(self, **filter_kwargs):
+        try:
+            filter_kwargs = filter_kwargs or self._get_lookup_filter()
+            queryset = self.get_queryset().filter(**filter_kwargs)
+            return self.serialize(self.filter_queryset(queryset))[0]
+        except (IndexError, ValueError, TypeError):
+            raise Http404(
+                "No %s matches the given query." % queryset.model._meta.object_name
+            )
+
+
+class ListModelMixin(object):
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
 
@@ -613,27 +672,19 @@ class ReadOnlyValuesViewset(SimpleReprMixin, ReadOnlyModelViewSet):
         if page_queryset is not None:
             queryset = page_queryset
 
-        queryset = self._cast_queryset_to_values(queryset)
-
         if page_queryset is not None:
             return self.get_paginated_response(self.serialize(queryset))
 
         return Response(self.serialize(queryset))
 
-    def serialize_object(self, **filter_kwargs):
-        queryset = self.get_queryset()
-        try:
-            filter_kwargs = filter_kwargs or self._get_lookup_filter()
-            return self.serialize(
-                self._cast_queryset_to_values(queryset.filter(**filter_kwargs))
-            )[0]
-        except IndexError:
-            raise Http404(
-                "No %s matches the given query." % queryset.model._meta.object_name
-            )
 
+class RetrieveModelMixin(object):
     def retrieve(self, request, *args, **kwargs):
         return Response(self.serialize_object())
+
+
+class ReadOnlyValuesViewset(BaseValuesViewset, RetrieveModelMixin, ListModelMixin):
+    pass
 
 
 class CreateModelMixin(object):
@@ -667,7 +718,12 @@ class CreateModelMixin(object):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
+
+        try:
+            self.perform_create(serializer)
+
+        except IntegrityError as e:
+            return Response({"error": str(e)}, status=409)
         instance = serializer.instance
         return Response(self.serialize_object(pk=instance.pk), status=HTTP_201_CREATED)
 
@@ -881,34 +937,24 @@ class BulkDeleteMixin(DestroyModelMixin):
         return errors
 
 
-class RequiredFilterSet(FilterSet):
-    @property
-    def qs(self):
-        has_filtering_queries = False
-        if self.form.is_valid():
-            for name, filter_ in self.filters.items():
-                value = self.form.cleaned_data.get(name)
-
-                if value not in EMPTY_VALUES:
-                    has_filtering_queries = True
-                    break
-        if not has_filtering_queries:
-            raise MissingRequiredParamsException("No valid filter parameters supplied")
-        return super(FilterSet, self).qs
-
-
 @contextmanager
 def create_change_tracker(pk, table, channel_id, user, task_name):
+    task_kwargs = json.dumps({'pk': pk, 'table': table})
+
     # Clean up any previous tasks specific to this in case there were failures.
-    meta = json.dumps(dict(pk=pk, table=table))
-    TaskResult.objects.filter(channel_id=channel_id, task_name=task_name, meta=meta).delete()
+    signature = generate_task_signature(task_name, task_kwargs=task_kwargs, channel_id=channel_id)
+
+    task_id_to_delete = CustomTaskMetadata.objects.filter(channel_id=channel_id, signature=signature)
+    if task_id_to_delete:
+        TaskResult.objects.filter(task_id=task_id_to_delete, task_name=task_name).delete()
+
     progress = 0
     status = states.STARTED
 
+    task_id = uuid.uuid4().hex
+
     channel_layer = get_channel_layer()
     room_group_name = channel_id
-
-    task_id = uuid.uuid4().hex
 
     async_to_sync(channel_layer.group_send)(
         str(room_group_name),
@@ -954,7 +1000,7 @@ def create_change_tracker(pk, table, channel_id, user, task_name):
 
     try:
         yield tracker
-    except Exception as e:
+    except Exception:
         status = states.FAILURE
         traceback_str = traceback.format_exc()
         async_to_sync(channel_layer.group_send)(
@@ -967,12 +1013,13 @@ def create_change_tracker(pk, table, channel_id, user, task_name):
                     'task_id': task_id,
                     'task_name': task_name,
                     'traceback': traceback_str,
-                    'progress': progress,
+                    'progress': 100,
                     'channel_id': channel_id,
                     'status': status,
                 }
             }
         )
+        raise
     finally:
         if status == states.STARTED:
             progress = 100

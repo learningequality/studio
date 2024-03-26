@@ -117,6 +117,7 @@
       padding: 5px;
 
       &:nth-child(odd) {
+        /* stylelint-disable-next-line custom-property-pattern */
         background-color: var(--v-greyBackground-base);
       }
 

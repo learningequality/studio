@@ -1,15 +1,25 @@
 import Vue from 'vue';
 import has from 'lodash/has';
-import { languageDirections, defaultLanguage } from 'kolibri-design-system/lib/utils/i18n';
 import importVueIntlLocaleData from './vue-intl-locale-data';
 import importIntlLocale from './intl-locale-data';
 
-export {
-  languageDirections,
-  defaultLanguage,
-  languageValidator,
-  getContentLangDir,
-} from 'kolibri-design-system/lib/utils/i18n';
+const languageDirections = {
+  LTR: 'ltr',
+  RTL: 'rtl',
+};
+const defaultLanguage = {
+  id: 'en',
+  lang_name: 'English',
+  lang_direction: languageDirections.LTR,
+};
+const languageValidator = language => {
+  return ['id', 'lang_name', 'lang_direction'].reduce((valid, key) => valid && language[key], true);
+};
+const getContentLangDir = language => {
+  return (language || {}).lang_direction || languageDirections.LTR;
+};
+
+export { languageDirections, defaultLanguage, languageValidator, getContentLangDir };
 
 let _i18nReady = false;
 
@@ -203,7 +213,7 @@ function _setUpVueIntl() {
 
 export function updateTabTitle(title) {
   if (document) {
-    let site = titleStrings.$tr(window.libraryMode ? 'catalogTitle' : 'defaultTitle');
+    const site = titleStrings.$tr(window.libraryMode ? 'catalogTitle' : 'defaultTitle');
     if (title) {
       document.title = titleStrings.$tr('tabTitle', { title, site });
     } else {
@@ -286,7 +296,7 @@ export function sortLanguages(availableLanguages, currentLanguageId) {
     return language.id == currentLanguageId;
   });
 
-  let sortedLanguages = availableLanguages
+  const sortedLanguages = availableLanguages
     .sort(compareLanguages)
     .filter(language => language.id != currentLanguageId);
 

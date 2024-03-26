@@ -1,6 +1,6 @@
 Feature: Review used storage
 
-	Background: 
+	Background:
 		Given I am signed in to Studio
 			And I am on the *Settings > Storage* page
 

@@ -1,6 +1,9 @@
 <template>
 
-  <VContainer fluid class="pa-0">
+  <VContainer
+    fluid
+    class="pa-0"
+  >
     <ToolBar
       v-if="currentChannel"
       color="white"
@@ -13,60 +16,91 @@
       <VToolbarTitle class="notranslate">
         {{ currentChannel.name }}
       </VToolbarTitle>
-      <VToolbarItems v-if="$vuetify.breakpoint.smAndUp" class="ml-4">
-        <router-link
+      <VToolbarItems
+        v-if="$vuetify.breakpoint.smAndUp"
+        class="ml-4"
+      >
+        <KRouterLink
           :to="viewChannelDetailsLink"
           @click="trackClickEvent('Summary')"
         >
-          <IconButton
+          <KIconButton
             class="toolbar-icon-btn"
+            :tooltip="$tr('channelDetails')"
             icon="info"
-            :text="$tr('channelDetails')"
           />
-        </router-link>
-        <router-link
+        </KRouterLink>
+        <KRouterLink
           :to="editChannelLink"
           @click="trackClickEvent('Edit channel')"
         >
           <VBadge color="transparent">
             <template #badge>
-              <Icon v-if="!currentChannel.language" color="red" small class="edit-channel-error">
+              <Icon
+                v-if="!currentChannel.language"
+                color="red"
+                small
+                class="edit-channel-error"
+              >
                 error
               </Icon>
             </template>
-            <IconButton
+            <KIconButton
               v-if="canEdit"
               class="toolbar-icon-btn"
               icon="edit"
-              :text="$tr('editChannel')"
+              :tooltip="$tr('editChannel')"
             />
           </VBadge>
-        </router-link>
+        </KRouterLink>
       </VToolbarItems>
       <VSpacer />
+      <SavingIndicator v-if="!offline" />
       <OfflineText indicator />
       <ProgressModal />
-      <div v-if="errorsInChannel && canEdit" class="mx-1">
-        <VTooltip bottom lazy>
+      <div
+        v-if="errorsInChannel && canEdit"
+        class="mx-1"
+      >
+        <VTooltip
+          bottom
+          lazy
+        >
           <template #activator="{ on }">
-            <div class="amber--text title" style="width: max-content;" v-on="on">
+            <div
+              class="amber--text title"
+              style="width: max-content;"
+              v-on="on"
+            >
               {{ $formatNumber(errorsInChannel) }}
-              <Icon color="amber">
-                warning
-              </Icon>
+              <KIcon
+                icon="warningIncomplete"
+              />
+
             </div>
           </template>
           <span>{{ $tr('incompleteDescendantsText', { count: errorsInChannel }) }}</span>
         </VTooltip>
       </div>
       <template v-if="$vuetify.breakpoint.smAndUp">
-        <span v-if="canManage && isRicecooker" class="font-weight-bold grey--text subheading">
+        <span
+          v-if="canManage && isRicecooker"
+          class="font-weight-bold grey--text subheading"
+        >
           {{ $tr('apiGenerated') }}
         </span>
-        <VTooltip v-if="!loading && canManage" bottom attach="body" lazy>
+        <VTooltip
+          v-if="!loading && canManage"
+          bottom
+          attach="body"
+          lazy
+        >
           <template #activator="{ on }">
             <!-- Need to wrap in div to enable tooltip when button is disabled -->
-            <div style="height: 100%;" v-on="on">
+            <div
+              style="height: 100%;"
+              v-on="on"
+            >
               <VBtn
                 color="primary"
                 flat
@@ -82,14 +116,21 @@
           </template>
           <span>{{ publishButtonTooltip }}</span>
         </VTooltip>
-        <span v-else-if="!loading" class="font-weight-bold grey--text subheading">
+        <span
+          v-else-if="!loading"
+          class="font-weight-bold grey--text subheading"
+        >
           {{ $tr('viewOnly') }}
         </span>
       </template>
       <VToolbarItems>
         <Menu v-if="showChannelMenu">
           <template #activator="{ on }">
-            <VBtn flat icon v-on="on">
+            <VBtn
+              flat
+              icon
+              v-on="on"
+            >
               <Icon>more_horiz</Icon>
             </VBtn>
           </template>
@@ -105,7 +146,10 @@
               <VListTile :to="viewChannelDetailsLink">
                 <VListTileTitle>{{ $tr('channelDetails') }}</VListTileTitle>
               </VListTile>
-              <VListTile v-if="canEdit" :to="editChannelLink">
+              <VListTile
+                v-if="canEdit"
+                :to="editChannelLink"
+              >
                 <VListTileTitle>
                   {{ $tr('editChannel') }}
                   <Icon
@@ -164,9 +208,15 @@
     <MainNavigationDrawer v-model="drawer" />
     <slot></slot>
 
-    <PublishModal v-if="showPublishModal" v-model="showPublishModal" />
+    <PublishModal
+      v-if="showPublishModal"
+      v-model="showPublishModal"
+    />
     <template v-if="isPublished">
-      <ChannelTokenModal v-model="showTokenModal" :channel="currentChannel" />
+      <ChannelTokenModal
+        v-model="showTokenModal"
+        :channel="currentChannel"
+      />
     </template>
     <SyncResourcesModal
       v-if="currentChannel"
@@ -174,14 +224,25 @@
       :channel="currentChannel"
       @syncing="syncInProgress"
     />
-    <MessageDialog v-model="showDeleteModal" :header="$tr('deleteTitle')">
+    <MessageDialog
+      v-model="showDeleteModal"
+      :header="$tr('deleteTitle')"
+    >
       {{ $tr('deletePrompt') }}
       <template #buttons="{ close }">
         <VSpacer />
-        <VBtn color="primary" flat @click="close">
+        <VBtn
+          color="primary"
+          flat
+          @click="close"
+        >
           {{ $tr('cancel') }}
         </VBtn>
-        <VBtn color="primary" data-test="delete" @click="handleDelete">
+        <VBtn
+          color="primary"
+          data-test="delete"
+          @click="handleDelete"
+        >
           {{ $tr('deleteChannelButton') }}
         </VBtn>
       </template>
@@ -203,7 +264,11 @@
           @draggableDrop="$emit('dropToClipboard', $event)"
         >
           <template #default>
-            <VBtn v-model="showClipboard" fab class="clipboard-fab">
+            <VBtn
+              v-model="showClipboard"
+              fab
+              class="clipboard-fab"
+            >
               <Icon>content_paste</Icon>
             </VBtn>
           </template>
@@ -242,14 +307,14 @@
 
 <script>
 
-  import { mapActions, mapGetters } from 'vuex';
+  import { mapActions, mapGetters, mapState } from 'vuex';
   import Clipboard from '../../components/Clipboard';
   import SyncResourcesModal from '../sync/SyncResourcesModal';
   import ProgressModal from '../progress/ProgressModal';
   import PublishModal from '../../components/publish/PublishModal';
+  import SavingIndicator from '../../components/edit/SavingIndicator';
   import { DraggableRegions, DraggableUniverses, RouteNames } from '../../constants';
   import MainNavigationDrawer from 'shared/views/MainNavigationDrawer';
-  import IconButton from 'shared/views/IconButton';
   import ToolBar from 'shared/views/ToolBar';
   import ChannelTokenModal from 'shared/views/channel/ChannelTokenModal';
   import OfflineText from 'shared/views/OfflineText';
@@ -265,7 +330,6 @@
     name: 'TreeViewBase',
     components: {
       DraggableRegion,
-      IconButton,
       MainNavigationDrawer,
       ToolBar,
       PublishModal,
@@ -277,6 +341,7 @@
       ContentNodeIcon,
       DraggablePlaceholder,
       MessageDialog,
+      SavingIndicator,
     },
     mixins: [titleMixin],
     props: {
@@ -297,6 +362,9 @@
       };
     },
     computed: {
+      ...mapState({
+        offline: state => !state.connection.online,
+      }),
       ...mapGetters('contentNode', ['getContentNode']),
       ...mapGetters('currentChannel', ['currentChannel', 'canEdit', 'canManage', 'rootId']),
       rootNode() {
@@ -438,7 +506,7 @@
       apiGenerated: 'Generated by API',
       noChangesText: 'No changes found in channel',
       emptyChannelTooltip: 'You cannot publish an empty channel',
-      noLanguageSetError: 'Missing channel language',
+      noLanguageSetError: 'Channel language is required',
       incompleteDescendantsText:
         '{count, number, integer} {count, plural, one {resource is incomplete and cannot be published} other {resources are incomplete and cannot be published}}',
 

@@ -1,4 +1,4 @@
-<template functional>
+<template>
 
   <VLayout
     align-center
@@ -20,6 +20,14 @@
   </VLayout>
 
 </template>
+
+<script>
+
+  export default {
+    name: 'AppError',
+  };
+
+</script>
 
 
 <style lang="less" scoped>

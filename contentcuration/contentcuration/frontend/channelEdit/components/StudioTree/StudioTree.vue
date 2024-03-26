@@ -102,10 +102,11 @@
                       style="width: 24px;"
                       shrink
                     >
-                      <TaskProgress
+                      <ContentNodeCopyTaskProgress
                         class="progress-loader"
-                        :taskId="taskId"
+                        :node="node"
                         size="24"
+                        showTooltip
                       />
                     </VFlex>
                     <VFlex
@@ -181,11 +182,11 @@
   import { mapState, mapActions, mapGetters, mapMutations } from 'vuex';
   import debounce from 'lodash/debounce';
 
-  import TaskProgress from '../../views/progress/TaskProgress';
-  import ContentNodeContextMenu from '../ContentNodeContextMenu';
-  import ContentNodeValidator from '../ContentNodeValidator';
-  import ContentNodeChangedIcon from '../ContentNodeChangedIcon';
   import ContentNodeOptions from '../ContentNodeOptions';
+  import ContentNodeChangedIcon from '../ContentNodeChangedIcon';
+  import ContentNodeValidator from '../ContentNodeValidator';
+  import ContentNodeContextMenu from '../ContentNodeContextMenu';
+  import ContentNodeCopyTaskProgress from '../../views/progress/ContentNodeCopyTaskProgress';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import ContextMenuCloak from 'shared/views/ContextMenuCloak';
   import LoadingText from 'shared/views/LoadingText';
@@ -194,7 +195,6 @@
   import DraggableItem from 'shared/views/draggable/DraggableItem';
   import DraggableHandle from 'shared/views/draggable/DraggableHandle';
   import { titleMixin } from 'shared/mixins';
-  import { COPYING_FLAG, TASK_ID } from 'shared/data/constants';
   import { DropEffect, EffectAllowed } from 'shared/mixins/draggable/constants';
   import { objectValuesValidator } from 'shared/mixins/draggable/utils';
 
@@ -211,7 +211,7 @@
       ContentNodeValidator,
       LoadingText,
       IconButton,
-      TaskProgress,
+      ContentNodeCopyTaskProgress,
     },
     mixins: [titleMixin],
     inject: ['draggableUniverse'],
@@ -263,7 +263,12 @@
       ...mapGetters('currentChannel', ['canEdit']),
       ...mapState('draggable', ['activeDraggableUniverse']),
       ...mapGetters('draggable', ['deepestActiveDraggable']),
-      ...mapGetters('contentNode', ['getContentNode', 'getContentNodeChildren', 'nodeExpanded']),
+      ...mapGetters('contentNode', [
+        'getContentNode',
+        'getContentNodeChildren',
+        'nodeExpanded',
+        'isNodeInCopyingState',
+      ]),
       node() {
         return this.getContentNode(this.nodeId);
       },
@@ -301,10 +306,7 @@
         return EffectAllowed.NONE;
       },
       copying() {
-        return this.node && this.node[COPYING_FLAG];
-      },
-      taskId() {
-        return this.node && this.node[TASK_ID];
+        return this.node && this.isNodeInCopyingState(this.node.id);
       },
       activeDropEffect() {
         // Don't allow dropping into itself
@@ -437,6 +439,7 @@
     &.dragging-over-bottom + &.tree-container::before,
     &.dragging-over-bottom:last-child::after {
       height: 5px;
+      /* stylelint-disable-next-line custom-property-pattern */
       background-color: var(--v-draggableDropZone-base);
     }
   }
@@ -479,7 +482,7 @@
   }
 
   .content-title {
-    color: var(--v-darkGrey-base);
+    color: var(--v-darkGrey-base); /* stylelint-disable-line custom-property-pattern */
   }
 
   .slide-y-transition-enter-active,

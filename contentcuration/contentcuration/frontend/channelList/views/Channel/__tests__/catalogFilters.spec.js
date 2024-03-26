@@ -25,14 +25,14 @@ describe('catalogFilters', () => {
 
   describe('keywords', () => {
     it('should call setKeywords when keywords change', () => {
-      let setKeywordsMock = jest.fn();
-      let setKeywords = () => {
+      const setKeywordsMock = jest.fn();
+      const setKeywords = () => {
         return () => {
           setKeywordsMock();
         };
       };
       wrapper = makeWrapper({ setKeywords });
-      let keywords = wrapper.find('[data-test="keywords"]');
+      const keywords = wrapper.find('[data-test="keywords"]');
       keywords.element.value = 'test';
       keywords.trigger('input');
       expect(setKeywordsMock).toHaveBeenCalled();

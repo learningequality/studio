@@ -5,7 +5,7 @@
   >
     <template #back>
       <VBtn color="primary" :to="{ name: 'Main' }" large>
-        {{ $tr('continueToSignIn') }}
+        {{ $tr('backToLogin') }}
       </VBtn>
     </template>
   </MessageLayout>
@@ -24,7 +24,7 @@
     },
     $trs: {
       accountCreatedTitle: 'Account successfully created',
-      continueToSignIn: 'Continue to sign-in',
+      backToLogin: 'Continue to sign-in page',
     },
   };
 

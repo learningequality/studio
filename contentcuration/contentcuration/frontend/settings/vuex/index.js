@@ -3,9 +3,13 @@ import client from 'shared/client';
 
 const throttleTime = 30 * 1000;
 
-const settingsDeferredUser = throttle(
+const settingsDeferredUserApiToken = function() {
+  return client.get(window.Urls.deferred_user_api_token());
+};
+
+const settingsDeferredUserSpaceByKind = throttle(
   function() {
-    return client.get(window.Urls.deferred_user_data());
+    return client.get(window.Urls.deferred_user_space_by_kind());
   },
   throttleTime,
   { trailing: false }
@@ -78,14 +82,37 @@ export default {
       return client.post(window.Urls.delete_user_account(), { email });
     },
 
-    // Fetch fields that take longer to calculate
-    fetchDeferredUserData(context) {
-      if (context.getters.storageUseByKind && context.state.currentUser.api_token) {
+    // Fetch the user API token
+    fetchDeferredUserApiToken(context) {
+      if (context.rootState.session.currentUser.api_token) {
         return;
       }
 
-      return settingsDeferredUser().then(response => {
-        context.commit('UPDATE_SESSION', response.data, { root: true });
+      return settingsDeferredUserApiToken().then(response => {
+        context.commit(
+          'UPDATE_SESSION',
+          {
+            api_token: response.data.api_token,
+          },
+          { root: true }
+        );
+      });
+    },
+
+    // Fetch the user storage details
+    fetchDeferredUserStorageByKind(context) {
+      if (context.rootGetters.storageUseByKind) {
+        return;
+      }
+
+      return settingsDeferredUserSpaceByKind().then(response => {
+        context.commit(
+          'UPDATE_SESSION',
+          {
+            space_used_by_kind: response.data.space_used_by_kind,
+          },
+          { root: true }
+        );
       });
     },
   },

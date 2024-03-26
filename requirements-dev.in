@@ -14,7 +14,6 @@ pytest-pythonpath
 pytest-timeout
 pytest-watch
 pre-commit==1.15.1
-codecov
 coverage
 pytest-cov
 nodeenv

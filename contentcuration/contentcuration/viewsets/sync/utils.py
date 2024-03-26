@@ -1,11 +1,14 @@
 import logging
 
+from django.conf import settings
+
 from contentcuration.utils.sentry import report_exception
 from contentcuration.viewsets.sync.constants import ALL_TABLES
 from contentcuration.viewsets.sync.constants import CHANNEL
 from contentcuration.viewsets.sync.constants import COPIED
 from contentcuration.viewsets.sync.constants import CREATED
 from contentcuration.viewsets.sync.constants import DELETED
+from contentcuration.viewsets.sync.constants import DEPLOYED
 from contentcuration.viewsets.sync.constants import MOVED
 from contentcuration.viewsets.sync.constants import PUBLISHED
 from contentcuration.viewsets.sync.constants import UPDATED
@@ -74,6 +77,11 @@ def generate_publish_event(
     return event
 
 
+def generate_deploy_event(key, user_id):
+    event = _generate_event(key, CHANNEL, DEPLOYED, channel_id=key, user_id=user_id)
+    return event
+
+
 def log_sync_exception(e, user=None, change=None, changes=None):
     # Capture exception and report, but allow sync
     # to complete properly.
@@ -86,7 +94,9 @@ def log_sync_exception(e, user=None, change=None, changes=None):
     elif changes is not None:
         contexts["changes"] = changes
 
-    report_exception(e, user=user, contexts=contexts)
+    # in production, we'll get duplicates in Sentry if we log the exception here.
+    if settings.DEBUG:
+        # make sure we leave a record in the logs just in case.
+        logging.exception(e)
 
-    # make sure we leave a record in the logs just in case.
-    logging.error(e)
+    report_exception(e, user=user, contexts=contexts)

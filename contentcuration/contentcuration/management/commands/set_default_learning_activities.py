@@ -6,7 +6,6 @@ from django.core.management.base import BaseCommand
 from contentcuration.constants.contentnode import kind_activity_map
 from contentcuration.models import ContentNode
 
-logmodule.basicConfig(level=logmodule.INFO)
 logging = logmodule.getLogger('command')
 
 

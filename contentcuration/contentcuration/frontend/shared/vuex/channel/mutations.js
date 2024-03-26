@@ -81,7 +81,7 @@ export function DELETE_INVITATION(state, invitationId) {
 }
 
 export function SET_USERS_TO_CHANNEL(state, { channelId, users = [] } = {}) {
-  for (let user of users) {
+  for (const user of users) {
     const canEdit = user.can_edit;
     const canView = user.can_view;
     delete user.can_edit;

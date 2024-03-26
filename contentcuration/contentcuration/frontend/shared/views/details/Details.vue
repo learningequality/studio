@@ -3,50 +3,50 @@
   <div :class="{ printing }">
     <div style="max-width: 300px">
       <Thumbnail
-        :src="isChannel ? details.thumbnail_url : details.thumbnail_src"
-        :encoding="isChannel ? details.thumbnail_encoding : null"
+        :src="isChannel ? _details.thumbnail_url : _details.thumbnail_src"
+        :encoding="isChannel ? _details.thumbnail_encoding : null"
       />
     </div>
     <br>
     <h1 class="notranslate" dir="auto">
-      {{ isChannel ? details.name : details.title }}
+      {{ isChannel ? _details.name : _details.title }}
     </h1>
     <p class="notranslate" dir="auto">
-      {{ details.description }}
+      {{ _details.description }}
     </p>
     <br>
 
     <template v-if="isChannel">
-      <DetailsRow v-if="details.published && details.primary_token" :label="$tr('tokenHeading')">
+      <DetailsRow v-if="_details.published && _details.primary_token" :label="$tr('tokenHeading')">
         <template #default>
           <CopyToken
             v-if="!printing"
-            :token="details.primary_token"
+            :token="_details.primary_token"
             style="max-width:max-content;"
           />
           <span v-else>
             {{
-              details.primary_token.slice(0, 5) + '-' + details.primary_token.slice(5)
+              _details.primary_token.slice(0, 5) + '-' + _details.primary_token.slice(5)
             }}
           </span>
         </template>
       </DetailsRow>
       <DetailsRow :label="$tr('publishedHeading')">
-        <span v-if="details.published">{{ publishedDate }}</span>
+        <span v-if="_details.published">{{ publishedDate }}</span>
         <em v-else>{{ $tr('unpublishedText') }}</em>
       </DetailsRow>
       <DetailsRow :label="$tr('currentVersionHeading')">
-        <template v-if="details.published">
-          {{ details.version }}
+        <template v-if="_details.published">
+          {{ _details.version }}
         </template>
         <template v-else>
           {{ defaultText }}
         </template>
       </DetailsRow>
       <DetailsRow
-        v-if="details.language"
+        v-if="_details.language"
         :label="$tr('primaryLanguageHeading')"
-        :text="translateLanguage(details.language)"
+        :text="translateLanguage(_details.language)"
       />
     </template>
 
@@ -62,7 +62,7 @@
       />
       <DetailsRow :label="$tr('resourceHeading')">
         <template #default>
-          <p>{{ $formatNumber(details.resource_count) }}</p>
+          <p>{{ $formatNumber(_details.resource_count) }}</p>
           <VDataTable
             :items="kindCount"
             hide-actions
@@ -83,15 +83,51 @@
           </VDataTable>
         </template>
       </DetailsRow>
+      <DetailsRow :label="$tr('levelsHeading')">
+        <template #default>
+          <div v-if="!levels.length">
+            {{ defaultText }}
+          </div>
+          <VChip
+            v-for="level in levels"
+            v-else-if="!printing"
+            :key="level"
+            class="tag"
+          >
+            {{ level }}
+          </VChip>
+          <span v-else>
+            {{ levelsPrintable }}
+          </span>
+        </template>
+      </DetailsRow>
+      <DetailsRow :label="$tr('categoriesHeading')">
+        <template #default>
+          <div v-if="!categories.length">
+            {{ defaultText }}
+          </div>
+          <VChip
+            v-for="category in categories"
+            v-else-if="!printing"
+            :key="category"
+            class="tag"
+          >
+            {{ category }}
+          </VChip>
+          <span v-else>
+            {{ categoriesPrintable }}
+          </span>
+        </template>
+      </DetailsRow>
       <DetailsRow :label="$tr('containsHeading')">
         <template v-if="!printing" #default>
-          <VChip v-if="details.includes.coach_content" class="tag">
+          <VChip v-if="_details.includes.coach_content" class="tag">
             {{ $tr('coachHeading') }}
           </VChip>
-          <VChip v-if="details.includes.exercises" class="tag">
+          <VChip v-if="_details.includes.exercises" class="tag">
             {{ $tr('assessmentsIncludedText') }}
           </VChip>
-          <div v-if="!details.includes.exercises && !details.includes.coach_content">
+          <div v-if="!_details.includes.exercises && !_details.includes.coach_content">
             {{ defaultText }}
           </div>
         </template>
@@ -101,7 +137,7 @@
       </DetailsRow>
       <DetailsRow
         :label="$tr('coachHeading')"
-        :text="$formatNumber(details.includes.coach_content || 0)"
+        :text="$formatNumber(_details.includes.coach_content)"
         :definition="!printing ? $tr('coachDescription') : ''"
       />
       <DetailsRow :label="$tr('tagsHeading')">
@@ -126,7 +162,7 @@
         <template #default>
           <ExpandableList
             :noItemsText="defaultText"
-            :items="details.languages"
+            :items="_details.languages"
             :printing="printing"
             inline
           />
@@ -136,7 +172,7 @@
         <template #default>
           <ExpandableList
             :noItemsText="defaultText"
-            :items="details.accessible_languages"
+            :items="_details.accessible_languages"
             :printing="printing"
             inline
           />
@@ -150,7 +186,7 @@
         <template #default>
           <ExpandableList
             :noItemsText="defaultText"
-            :items="details.authors"
+            :items="_details.authors"
             :printing="printing"
             inline
           />
@@ -163,7 +199,7 @@
         <template #default>
           <ExpandableList
             :noItemsText="defaultText"
-            :items="details.providers"
+            :items="_details.providers"
             :printing="printing"
             inline
           />
@@ -176,7 +212,7 @@
         <template #default>
           <ExpandableList
             :noItemsText="defaultText"
-            :items="details.aggregators"
+            :items="_details.aggregators"
             :printing="printing"
             inline
           />
@@ -186,7 +222,7 @@
       <DetailsRow :label="$tr('licensesLabel')">
         <template #default>
           <template v-if="!printing">
-            <VTooltip v-for="license in details.licenses" :key="license" top lazy>
+            <VTooltip v-for="license in _details.licenses" :key="license" top lazy>
               <template #activator="{ on }">
                 <VChip class="tag" v-on="on">
                   {{ translateConstant(license) }}
@@ -203,7 +239,7 @@
       <DetailsRow :label="$tr('copyrightHoldersLabel')">
         <template #default>
           <ExpandableList
-            :items="details.copyright_holders"
+            :items="_details.copyright_holders"
             :no-items-text="defaultText"
             :printing="printing"
             inline
@@ -212,12 +248,12 @@
       </DetailsRow>
 
       <DetailsRow
-        v-if="details.original_channels.length"
+        v-if="_details.original_channels.length"
         :label="$tr('containsContentHeading')"
       >
         <template #default>
           <VLayout
-            v-for="channel in details.original_channels"
+            v-for="channel in _details.original_channels"
             :key="channel.id"
             class="preview-row"
             align-center
@@ -243,7 +279,7 @@
       </DetailsRow>
 
       <label
-        v-if="details.sample_nodes.length"
+        v-if="_details.sample_nodes.length"
         class="body-1 font-weight-bold"
         :style="{ color: $vuetify.theme.darkGrey }"
       >
@@ -251,7 +287,7 @@
       </label>
       <VLayout row :wrap="!printing" class="my-4 pt-1 sample-nodes">
         <VFlex
-          v-for="node in details.sample_nodes"
+          v-for="node in _details.sample_nodes"
           :key="node.node_id"
           :xs12="!printing"
           :xs3="printing"
@@ -274,20 +310,58 @@
 
 <script>
 
+  import cloneDeep from 'lodash/cloneDeep';
+  import defaultsDeep from 'lodash/defaultsDeep';
+  import camelCase from 'lodash/camelCase';
   import orderBy from 'lodash/orderBy';
-  import DetailsRow from './DetailsRow';
   import { SCALE_TEXT, SCALE, CHANNEL_SIZE_DIVISOR } from './constants';
+  import DetailsRow from './DetailsRow';
+  import { CategoriesLookup, LevelsLookup } from 'shared/constants';
   import {
     fileSizeMixin,
     constantsTranslationMixin,
     printingMixin,
     titleMixin,
+    metadataTranslationMixin,
   } from 'shared/mixins';
   import LoadingText from 'shared/views/LoadingText';
   import ExpandableList from 'shared/views/ExpandableList';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
   import Thumbnail from 'shared/views/files/Thumbnail';
   import CopyToken from 'shared/views/CopyToken';
+
+  const DEFAULT_DETAILS = {
+    name: '',
+    title: '',
+    description: '',
+    thumbnail_url: null,
+    thumbnail_src: null,
+    thumbnail_encoding: null,
+    published: false,
+    version: null,
+    primary_token: null,
+    language: null,
+    last_update: null,
+    created: null,
+    last_published: null,
+    resource_count: 0,
+    resource_size: 0,
+    includes: { coach_content: 0, exercises: 0 },
+    kind_count: [],
+    languages: [],
+    accessible_languages: [],
+    licenses: [],
+    tags: [],
+    copyright_holders: [],
+    authors: [],
+    aggregators: [],
+    providers: [],
+    sample_pathway: [],
+    original_channels: [],
+    sample_nodes: [],
+    levels: [],
+    categories: [],
+  };
 
   export default {
     name: 'Details',
@@ -299,7 +373,13 @@
       DetailsRow,
       Thumbnail,
     },
-    mixins: [fileSizeMixin, constantsTranslationMixin, printingMixin, titleMixin],
+    mixins: [
+      fileSizeMixin,
+      constantsTranslationMixin,
+      printingMixin,
+      titleMixin,
+      metadataTranslationMixin,
+    ],
     props: {
       // Object matching that returned by the channel details and
       // node details API endpoints, see backend for details of the
@@ -319,13 +399,19 @@
       },
     },
     computed: {
+      _details() {
+        const details = cloneDeep(this.details);
+        defaultsDeep(details, DEFAULT_DETAILS);
+        details.published = Boolean(details.last_published);
+        return details;
+      },
       defaultText() {
         // Making this a computed property so it's easier to update
         return '---';
       },
       publishedDate() {
         if (this.isChannel) {
-          return this.$formatDate(this.details.last_published, {
+          return this.$formatDate(this._details.last_published, {
             year: 'numeric',
             month: 'long',
             day: 'numeric',
@@ -337,7 +423,7 @@
         return window.libraryMode;
       },
       sizeText() {
-        let size = (this.details && this.details.resource_size) || 0;
+        const size = this._details.resource_size;
         const sizeIndex = Math.max(
           1,
           Math.min(Math.ceil(Math.log(size / CHANNEL_SIZE_DIVISOR) / Math.log(2)), 10)
@@ -348,10 +434,10 @@
         });
       },
       kindCount() {
-        return orderBy(this.details.kind_count, ['count', 'kind_id'], ['desc', 'asc']);
+        return orderBy(this._details.kind_count, ['count', 'kind_id'], ['desc', 'asc']);
       },
       createdDate() {
-        return this.$formatDate(this.details.created, {
+        return this.$formatDate(this._details.created, {
           year: 'numeric',
           month: 'long',
           day: 'numeric',
@@ -361,25 +447,53 @@
         return Object.keys(this.details).length;
       },
       sortedTags() {
-        return orderBy(this.details.tags, ['count'], ['desc']);
+        return orderBy(this._details.tags, ['count'], ['desc']);
       },
       includesPrintable() {
         const includes = [];
-        if (this.details.includes.coach_content) {
+        if (this._details.includes.coach_content) {
           includes.push(this.$tr('coachHeading'));
         }
 
-        if (this.details.includes.exercises) {
+        if (this._details.includes.exercises) {
           includes.push(this.$tr('assessmentsIncludedText'));
         }
 
         return includes.length ? includes.join(', ') : this.defaultText;
       },
       licensesPrintable() {
-        return this.details.licenses.map(this.translateConstant).join(', ');
+        return this._details.licenses.map(this.translateConstant).join(', ');
       },
       tagPrintable() {
         return this.sortedTags.map(tag => tag.tag_name).join(', ');
+      },
+      levels() {
+        return this._details.levels.map(level => {
+          level = LevelsLookup[level];
+          let translationKey;
+          if (level === 'PROFESSIONAL') {
+            translationKey = 'specializedProfessionalTraining';
+          } else if (level === 'WORK_SKILLS') {
+            translationKey = 'allLevelsWorkSkills';
+          } else if (level === 'BASIC_SKILLS') {
+            translationKey = 'allLevelsBasicSkills';
+          } else {
+            translationKey = camelCase(level);
+          }
+          return this.translateMetadataString(translationKey);
+        });
+      },
+      levelsPrintable() {
+        return this.levels.join(', ');
+      },
+      categories() {
+        return this._details.categories.map(category => {
+          category = CategoriesLookup[category];
+          return this.translateMetadataString(camelCase(category));
+        });
+      },
+      categoriesPrintable() {
+        return this.categories.join(', ');
       },
     },
     methods: {
@@ -397,6 +511,8 @@
       tagsHeading: 'Common tags',
       creationHeading: 'Created on',
       containsHeading: 'Contains',
+      levelsHeading: 'Levels',
+      categoriesHeading: 'Categories',
       languagesHeading: 'Languages',
       subtitlesHeading: 'Captions and subtitles',
       authorsLabel: 'Authors',

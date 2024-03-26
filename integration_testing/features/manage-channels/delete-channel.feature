@@ -1,6 +1,6 @@
-Feature: Delete channel 
+Feature: Delete channel
 
-	Background: 
+	Background:
 		Given I am signed in to Studio
 			And I have permissions to edit
 			And I am on *My Channels* tab

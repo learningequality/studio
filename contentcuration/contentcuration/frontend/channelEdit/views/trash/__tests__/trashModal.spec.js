@@ -77,7 +77,7 @@ describe('trashModal', () => {
       expect(wrapper.find('[data-test="loading"]').exists()).toBe(true);
     });
     it('should show empty text if there are no items', () => {
-      let emptyWrapper = makeWrapper([]);
+      const emptyWrapper = makeWrapper([]);
       emptyWrapper.setData({ loading: false });
       expect(emptyWrapper.find('[data-test="empty"]').exists()).toBe(true);
     });

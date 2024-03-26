@@ -8,6 +8,7 @@ import {
   ViewerM2M,
   EditorM2M,
   User,
+  injectVuexStore,
 } from 'shared/data/resources';
 import { SharingPermissions } from 'shared/constants';
 import storeFactory from 'shared/vuex/baseStore';
@@ -22,18 +23,20 @@ describe('channel actions', () => {
   let id;
   const channelDatum = { name: 'test', deleted: false, edit: true };
   beforeEach(() => {
-    return Channel.put(channelDatum).then(newId => {
+    store = storeFactory({
+      modules: {
+        channel,
+      },
+    });
+    injectVuexStore(store);
+    store.state.session.currentUser.id = userId;
+    return Channel.add(channelDatum).then(newId => {
       id = newId;
       channelDatum.id = id;
-      store = storeFactory({
-        modules: {
-          channel,
-        },
-      });
-      store.state.session.currentUser.id = userId;
     });
   });
   afterEach(() => {
+    injectVuexStore();
     return Channel.table.toCollection().delete();
   });
   describe('loadChannelList action', () => {
@@ -178,14 +181,14 @@ describe('channel actions', () => {
     });
   });
   describe('bookmarkChannel action', () => {
-    it('should call Bookmark.put when creating a bookmark', () => {
-      const putSpy = jest.spyOn(Bookmark, 'put');
+    it('should call Bookmark.add when creating a bookmark', () => {
+      const addSpy = jest.spyOn(Bookmark, 'add');
       store.commit('channel/ADD_CHANNEL', {
         id,
         name: 'test',
       });
       return store.dispatch('channel/bookmarkChannel', { id, bookmark: true }).then(() => {
-        expect(putSpy).toHaveBeenCalledWith({ channel: id });
+        expect(addSpy).toHaveBeenCalledWith({ channel: id });
       });
     });
     it('should call Bookmark.delete when removing a bookmark', () => {
@@ -268,7 +271,14 @@ describe('Channel sharing vuex', () => {
     jest
       .spyOn(ChannelUser, 'fetchCollection')
       .mockImplementation(() => Promise.resolve([testUser]));
-    return Channel.put(channelDatum).then(newId => {
+    store = storeFactory({
+      modules: {
+        channel,
+      },
+    });
+    injectVuexStore(store);
+    store.state.session.currentUser.id = userId;
+    return Channel.add(channelDatum).then(newId => {
       channelId = newId;
       const user = {
         ...testUser,
@@ -276,15 +286,9 @@ describe('Channel sharing vuex', () => {
       const invitations = makeInvitations(channelId);
       testInvitations = invitations;
 
-      return User.put(user).then(() => {
-        return ViewerM2M.put({ user: user.id, channel: channelDatum.id }).then(() => {
+      return User.add(user).then(() => {
+        return ViewerM2M.add({ user: user.id, channel: channelDatum.id }).then(() => {
           return Invitation.table.bulkPut(invitations).then(() => {
-            store = storeFactory({
-              modules: {
-                channel,
-              },
-            });
-            store.state.session.currentUser.id = userId;
             store.commit('channel/ADD_CHANNEL', { id: channelId, ...channelDatum });
             store.commit('channel/SET_USERS_TO_CHANNEL', { channelId, users: [user] });
             store.commit('channel/ADD_INVITATIONS', invitations);
@@ -295,6 +299,7 @@ describe('Channel sharing vuex', () => {
   });
   afterEach(() => {
     jest.restoreAllMocks();
+    injectVuexStore();
     return Promise.all([
       Channel.table.toCollection().delete(),
       ViewerM2M.table.toCollection().delete(),
@@ -380,9 +385,11 @@ describe('Channel sharing vuex', () => {
         id: 'choosy-invitation',
         email: 'choosy-collaborator@test.com',
         declined: true,
+        channel: 'some-other-channel',
+        user: 'some-other-user',
       };
 
-      Invitation.put(declinedInvitation).then(() => {
+      Invitation.add(declinedInvitation).then(() => {
         store.dispatch('channel/loadChannelUsers', channelId).then(() => {
           expect(Object.keys(store.state.channel.invitationsMap)).not.toContain(
             'choosy-invitation'

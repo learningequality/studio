@@ -5,7 +5,7 @@
   >
     <template #back>
       <VBtn color="primary" :to="{ name: 'Main' }" large>
-        {{ $tr('continueToSignIn') }}
+        {{ $tr('backToLogin') }}
       </VBtn>
     </template>
   </MessageLayout>
@@ -24,7 +24,7 @@
     },
     $trs: {
       accountDeletedTitle: 'Account successfully deleted',
-      continueToSignIn: 'Continue to sign-in page',
+      backToLogin: 'Continue to sign-in page',
     },
   };
 

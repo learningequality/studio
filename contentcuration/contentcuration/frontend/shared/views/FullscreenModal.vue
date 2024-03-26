@@ -100,6 +100,9 @@
         this.hideHTMLScroll(!!val);
       },
     },
+    beforeDestroy() {
+      this.hideHTMLScroll(false); // Ensure scroll is restored when the component is destroyed
+    },
     mounted() {
       this.hideHTMLScroll(true);
       this.$refs.dialog.initDetach();

@@ -34,6 +34,7 @@ const initWrapper = ({ getters = {}, mutations = {}, actions = {}, propsData = {
           getContentNode: () => jest.fn(),
           getContentNodeChildren: () => jest.fn(),
           nodeExpanded: () => jest.fn(),
+          isNodeInCopyingState: () => jest.fn(),
           ...getters,
         },
         mutations: {
