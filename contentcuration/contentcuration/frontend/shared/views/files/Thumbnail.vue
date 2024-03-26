@@ -181,10 +181,12 @@
 
     &:not(.icon-only) {
       background-color: white;
+      /* stylelint-disable-next-line custom-property-pattern */
       border: 1px solid var(--v-greyBorder-lighten1);
     }
 
     &.nothumbnail {
+      /* stylelint-disable-next-line custom-property-pattern */
       background-color: var(--v-greyBackground-base);
     }
   }

@@ -59,7 +59,7 @@ const router = new VueRouter({
     },
     {
       name: RouteNames.CATALOG_DETAILS,
-      path: '/public/:channelId',
+      path: '/public/:channelId/details',
       component: ChannelDetailsModal,
       props: true,
     },

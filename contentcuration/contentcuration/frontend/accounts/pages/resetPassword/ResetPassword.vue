@@ -16,9 +16,12 @@
         :label="$tr('passwordConfirmLabel')"
         :additionalRules="passwordConfirmRules"
       />
-      <VBtn block color="primary" large type="submit">
-        {{ $tr('submitButton') }}
-      </VBtn>
+      <KButton
+        primary
+        class="w-100"
+        :text="$tr('submitButton')"
+        type="submit"
+      />
     </VForm>
   </MessageLayout>
 
@@ -55,7 +58,7 @@
       submit() {
         this.error = false;
         if (this.$refs.form.validate()) {
-          let payload = {
+          const payload = {
             ...this.$route.query,
             new_password1: this.new_password1,
             new_password2: this.new_password2,
@@ -84,3 +87,11 @@
   };
 
 </script>
+
+<style lang="less" scoped>
+
+  .w-100 {
+    width: 100%;
+  }
+
+</style>

@@ -9,7 +9,16 @@ import KThemePlugin from 'kolibri-design-system/lib/KThemePlugin';
 import 'shared/i18n/setup';
 // Polyfill indexeddb
 import 'fake-indexeddb/auto';
+// Ponyfill webstreams
+import {ReadableStream, WritableStream, TransformStream, CountQueuingStrategy} from 'web-streams-polyfill/ponyfill/es2018';
 import jquery from 'jquery';
+
+window.jQuery = window.$ = jquery;
+window.ReadableStream = global.ReadableStream = ReadableStream;
+window.WritableStream = global.WritableStream = WritableStream;
+window.TransformStream = global.TransformStream = TransformStream;
+window.CountQueuingStrategy = global.CountQueuingStrategy = CountQueuingStrategy;
+
 import AnalyticsPlugin from 'shared/analytics/plugin';
 import { setupSchema } from 'shared/data';
 import * as resources from 'shared/data/resources';
@@ -33,8 +42,6 @@ global.afterEach(() => {
     return process.nextTick(resolve);
   });
 });
-
-window.jQuery = window.$ = jquery;
 
 window.storageBaseUrl = '/content/storage/';
 

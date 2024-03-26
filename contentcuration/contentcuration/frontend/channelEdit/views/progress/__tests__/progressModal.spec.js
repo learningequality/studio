@@ -165,7 +165,7 @@ describe('ProgressModal', () => {
       });
 
       it('should display syncing message', () => {
-        expect(wrapper.text()).toContain('Syncing channel');
+        expect(wrapper.text()).toContain('Syncing resources');
       });
 
       it('should display progress', () => {

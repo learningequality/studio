@@ -12,6 +12,10 @@
  *
  */
 
-export default markdown => {
-  return markdown.replace(/\$\$(.*?)\$\$/g, '<span is="markdown-formula-field">$1</span>');
+export default (markdown, editing) => {
+  const editAttr = editing ? ' editing="true"' : '';
+  return markdown.replace(
+    /\$\$(.*?)\$\$/g,
+    `<span is="markdown-formula-field"${editAttr}>$1</span>`
+  );
 };

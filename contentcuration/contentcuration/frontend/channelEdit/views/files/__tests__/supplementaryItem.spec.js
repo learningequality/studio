@@ -52,15 +52,15 @@ describe('supplementaryItem', () => {
   });
   it('uploading should be true if progress < 1', () => {
     expect(wrapper.find('[data-test="uploading"]').exists()).toBe(false);
-    let testwrapper = makeWrapper({ progress: 0.5 });
+    const testwrapper = makeWrapper({ progress: 0.5 });
     expect(testwrapper.find('[data-test="uploading"]').exists()).toBe(true);
   });
   it('should disable ability to upload other files during a file upload', () => {
-    let testwrapper = makeWrapper({ progress: 0.5 });
+    const testwrapper = makeWrapper({ progress: 0.5 });
     expect(testwrapper.find('[data-test="upload-file"]').exists()).toBe(false);
   });
   it('clicking remove button should emit remove event with file id', () => {
-    let wrapper = makeWrapper({ id: 'test-remove' });
+    const wrapper = makeWrapper({ id: 'test-remove' });
     wrapper.find('[data-test="remove"]').trigger('click');
     expect(wrapper.emitted('remove')[0][0]).toBe('test-remove');
   });

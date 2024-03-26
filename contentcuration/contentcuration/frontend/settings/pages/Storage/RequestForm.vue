@@ -142,7 +142,7 @@
       v-for="affiliation in affiliationOptions"
       :key="affiliation.value"
       v-model="org_or_personal"
-      :value="affiliation.value"
+      :buttonValue="affiliation.value"
       :invalid="errors.org_or_personal"
       :showInvalidText="errors.org_or_personal"
       :invalidText="$tr('fieldRequiredText')"
@@ -172,7 +172,7 @@
       v-for="orgType in organizationTypeOptions"
       :key="orgType.value"
       v-model="organization_type"
-      :value="orgType.value"
+      :buttonValue="orgType.value"
       :invalid="errors.organization_type"
       :showInvalidText="errors.organization_type"
       :invalidText="$tr('fieldRequiredText')"
@@ -199,7 +199,7 @@
       v-for="constraint in timeConstraintOptions"
       :key="constraint.value"
       v-model="time_constraint"
-      :value="constraint.value"
+      :buttonValue="constraint.value"
       :label="constraint.text"
     />
 

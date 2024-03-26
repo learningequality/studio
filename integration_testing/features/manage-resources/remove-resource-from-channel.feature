@@ -1,6 +1,6 @@
 Feature: Remove a topic or a resource from a channel
 
-	Background: 
+	Background:
 		Given I am signed in to Studio
 			And I am on the <channel> editor page
 			And I have edit permissions for <channel>
@@ -10,38 +10,38 @@ Feature: Remove a topic or a resource from a channel
 			And I click on a *···* button for more options
 		Then I can see the *Remove* option
 		When I select the *Remove* option
-		Then I can see the *Sent to trash* snackbar notification 
+		Then I can see the *Sent to trash* snackbar notification
 			And I see the *Undo* button
 			And I don't see the <topic> topic anymore
 		When I click the *Undo* button
-		Then I can see the <topic> topic again 
+		Then I can see the <topic> topic again
 
 	Scenario: Remove a resource from *···* (more options)
 		When I hover over a <resource> resource
 			And I click on a *···* button for more options
 		Then I can see the *Remove* option
 		When I select the *Remove* option
-		Then I can see the *Sent to trash* snackbar notification 
+		Then I can see the *Sent to trash* snackbar notification
 			And I see the *Undo* button
 			And I don't see the <resource> resource anymore
 		When I click the *Undo* button
-		Then I can see the <resource> resource again 
+		Then I can see the <resource> resource again
 
 	Scenario: Remove a topic from toolbar
 		When I check the <topic> topic checkbox
-		Then I see the toolbar options for <topic> topic  
+		Then I see the toolbar options for <topic> topic
 		When I click the *Delete selected items* button
-		Then I can see the *Sent to trash* snackbar notification 
+		Then I can see the *Sent to trash* snackbar notification
 			And I see the *Undo* button
 			And I don't see the <topic> topic anymore
 		When I click the *Undo* button
-		Then I can see the <topic> topic again 
+		Then I can see the <topic> topic again
 
 	Scenario: Remove a resource from toolbar
 		When I hover over a <resource> resource checkbox
-		Then I see the toolbar options for <resource> resource 
+		Then I see the toolbar options for <resource> resource
 		When I click the *Delete selected items* button
-		Then I can see the *Sent to trash* snackbar notification 
+		Then I can see the *Sent to trash* snackbar notification
 			And I see the *Undo* button
 			And I don't see the <resource> resource anymore
 		When I click the *Undo* button

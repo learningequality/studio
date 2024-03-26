@@ -46,7 +46,7 @@ function makeWrapper(allowEdit, deleteStub, libraryMode) {
 
 describe('channelItem', () => {
   let wrapper;
-  let deleteStub = jest.fn();
+  const deleteStub = jest.fn();
   beforeEach(() => {
     deleteStub.mockReset();
     wrapper = makeWrapper(true, deleteStub);

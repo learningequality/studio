@@ -6,9 +6,34 @@ from django.db import connection
 
 logging = logger.getLogger(__name__)
 
+# signed limits are 2**32 or 2**64, so one less power of 2
+# to become unsigned limits (half above 0, half below 0)
+INT_32BIT = 2**31
+INT_64BIT = 2**63
+
 
 class AdvisoryLockBusy(RuntimeError):
     pass
+
+
+def _prepare_keys(keys):
+    """
+    Ensures that integers do not exceed postgres constraints:
+      - signed 64bit allowed with single key
+      - signed 32bit allowed with two keys
+    :param keys: A list of unsigned integers
+    :return: A list of signed integers
+    """
+    limit = INT_64BIT if len(keys) == 1 else INT_32BIT
+    new_keys = []
+    for key in keys:
+        # if key is over the limit, convert to negative int since key should be unsigned int
+        if key >= limit:
+            key = limit - key
+        if key < -limit or key >= limit:
+            raise OverflowError(f"Advisory lock key '{key}' is too large")
+        new_keys.append(key)
+    return new_keys
 
 
 @contextmanager
@@ -32,6 +57,7 @@ def execute_lock(key1, key2=None, unlock=False, session=False, shared=False, wai
     keys = [key1]
     if key2 is not None:
         keys.append(key2)
+    keys = _prepare_keys(keys)
 
     query = "SELECT pg{_try}_advisory_{xact_}{lock}{_shared}({keys}) AS lock;".format(
         _try="" if wait else "_try",
@@ -41,11 +67,11 @@ def execute_lock(key1, key2=None, unlock=False, session=False, shared=False, wai
         keys=", ".join(["%s" for i in range(0, 2 if key2 is not None else 1)])
     )
 
-    log_query = "'{}' with params {}".format(query, keys)
-    logging.debug("Acquiring advisory lock: {}".format(query, log_query))
+    log_query = f"'{query}' with params {keys}"
+    logging.debug(f"Acquiring advisory lock: {log_query}")
     with connection.cursor() as c:
         c.execute(query, keys)
-        logging.debug("Acquired advisory lock: {}".format(query, log_query))
+        logging.debug(f"Acquired advisory lock: {log_query}")
         yield c
 
 

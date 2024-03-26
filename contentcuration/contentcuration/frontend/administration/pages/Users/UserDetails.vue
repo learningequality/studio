@@ -163,8 +163,8 @@
   import capitalize from 'lodash/capitalize';
   import { mapActions, mapGetters } from 'vuex';
   import { RouteNames } from '../../constants';
-  import UserActionsDropdown from './UserActionsDropdown';
   import UserStorage from './UserStorage';
+  import UserActionsDropdown from './UserActionsDropdown';
   import { routerMixin, fileSizeMixin } from 'shared/mixins';
   import LoadingText from 'shared/views/LoadingText';
   import FullscreenModal from 'shared/views/FullscreenModal';

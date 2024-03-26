@@ -48,7 +48,7 @@ class Analytics {
       // See https://developers.google.com/tag-platform/devguides/datalayer#reset
       this.reset();
 
-      for (let item of dataLayer) {
+      for (const item of dataLayer) {
         // Do our own reset of the `gtm.element` variable
         if (item['gtm.element']) {
           item['gtm.element'] = null;

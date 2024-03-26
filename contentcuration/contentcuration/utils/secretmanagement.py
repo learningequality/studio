@@ -2,8 +2,10 @@
 import logging
 import os
 
-from google.cloud import kms_v1
+import six
+from google.cloud import kms
 from google.cloud.storage import Client
+from google_crc32c import value as _crc32c
 
 ENV_VARS = "ENV_VARS"
 KMS_GCS = 2
@@ -71,10 +73,22 @@ def decrypt_secret(ciphertext, project_id, loc, env, secret_name):
     """
     Decrypt the ciphertext by using the GCloud KMS keys for that secret.
     """
-    kms_client = kms_v1.KeyManagementServiceClient()
-    key_path = kms_client.crypto_key_path_path(project_id, loc, env, secret_name)
+    kms_client = kms.KeyManagementServiceClient()
+    key_path = kms_client.crypto_key_path(project_id, loc, env, secret_name)
 
-    response = kms_client.decrypt(key_path, ciphertext)
+    # Optional, but recommended: compute ciphertext's CRC32C.
+    # See crc32c() function defined below.
+    ciphertext_crc32c = crc32c(ciphertext)
+
+    response = kms_client.decrypt(
+        request={'name': key_path, 'ciphertext': ciphertext, 'ciphertext_crc32c': ciphertext_crc32c})
+
+    # Optional, but recommended: perform integrity verification on decrypt_response.
+    # For more details on ensuring E2E in-transit integrity to and from Cloud KMS visit:
+    # https://cloud.google.com/kms/docs/data-integrity-guidelines
+    if not response.plaintext_crc32c == crc32c(response.plaintext):
+        raise Exception('The response received from the server was corrupted in-transit.')
+
     return response.plaintext
 
 
@@ -103,3 +117,14 @@ def get_encrypted_secret(secret_name, project_id, env):
         )
 
     return ret
+
+
+def crc32c(data):
+    """
+    Calculates the CRC32C checksum of the provided data.
+    Args:
+        data: the bytes over which the checksum should be calculated.
+    Returns:
+        An int representing the CRC32C checksum of the provided bytes.
+    """
+    return _crc32c(six.ensure_binary(data))

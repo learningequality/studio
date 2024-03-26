@@ -29,6 +29,7 @@
       item-value="id"
       :disabled="loadingChannels"
       notranslate
+      useEllipsis
     />
 
     <p class="font-weight-bold grey--text mb-1">

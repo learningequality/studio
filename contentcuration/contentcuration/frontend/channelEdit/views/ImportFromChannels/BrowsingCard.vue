@@ -149,7 +149,7 @@
         if (this.isTopic) {
           return `${baseUrl}#/${this.node.id}`;
         }
-        return `${baseUrl}#/${this.node.parent_id}/${this.node.id}`;
+        return `${baseUrl}#/${this.node.parent}/${this.node.id}`;
       },
       resourcesMsg() {
         let count;
@@ -231,6 +231,7 @@
     cursor: pointer;
 
     &:hover {
+      /* stylelint-disable-next-line custom-property-pattern */
       background-color: var(--v-greyBackground-base);
     }
   }

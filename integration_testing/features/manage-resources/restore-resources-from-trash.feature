@@ -1,6 +1,6 @@
 Feature: Restore resources from trash
 
-	Background: 
+	Background:
 		Given I am signed in to Studio
 			And I am on the <channel> editing page
 
@@ -22,7 +22,7 @@ Feature: Restore resources from trash
 		Then I see the *Managing deleted content* modal again
 		When I click the *Close* button
 			And I open the <topic> topic
-			And I reload the page 
+			And I reload the page
 			#not sure if this is a bug or a feature, but I had to do it
 		Then I see the <resource> resource restored to the <topic> inside the <channel>
 
@@ -44,7 +44,7 @@ Feature: Restore resources from trash
 		Then I see the *Managing deleted content* modal again
 		When I click the *Close* button
 			And I open the <topic> topic
-			And I reload the page 
+			And I reload the page
 			#not sure if this is a bug or a feature, but I had to do it
 		Then I see the <resource> resource restored to the <topic> inside the <channel>
 

@@ -1,3 +1,10 @@
+import * as Showdown from 'showdown';
+import Editor from '@toast-ui/editor';
+import { stripHtml } from 'string-strip-html';
+
+import imagesHtmlToMd from '../plugins/image-upload/image-html-to-md';
+import formulaHtmlToMd from '../plugins/formulas/formula-html-to-md';
+
 /**
  * Clear DOM node by keeping only its text content.
  *
@@ -73,4 +80,38 @@ export const getExtensionMenuPosition = ({ editorEl, targetX, targetY }) => {
     left: menuLeft,
     right: menuRight,
   };
+};
+
+export const generateCustomConverter = el => {
+  // This is currently the only way of inheriting and adjusting
+  // default TUI's convertor methods
+  // see https://github.com/nhn/tui.editor/issues/615
+  const tmpEditor = new Editor({ el });
+  const showdown = new Showdown.Converter();
+  const Convertor = tmpEditor.convertor.constructor;
+  class CustomConvertor extends Convertor {
+    toMarkdown(content) {
+      content = showdown.makeMarkdown(content);
+      content = imagesHtmlToMd(content);
+      content = formulaHtmlToMd(content);
+      // TUI.editor sprinkles in extra `<br>` tags that Kolibri renders literally
+      // When showdown has already added linebreaks to render these in markdown
+      // so we just remove these here.
+      content = content.replaceAll('<br>', '');
+
+      // any copy pasted rich text that renders as HTML but does not get converted
+      // will linger here, so remove it as Kolibri will render it literally also.
+      content = stripHtml(content).result;
+      return content;
+    }
+    toHTML(content) {
+      // Kolibri and showdown assume double newlines for a single line break,
+      // wheras TUI.editor prefers single newline characters.
+      content = content.replaceAll('\n\n', '\n');
+      content = super.toHTML(content);
+      return content;
+    }
+  }
+  tmpEditor.remove();
+  return CustomConvertor;
 };

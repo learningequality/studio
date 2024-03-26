@@ -167,7 +167,7 @@
         );
       },
       invitationsByListCounts() {
-        let inviteMap = {};
+        const inviteMap = {};
         Object.values(ChannelListTypes).forEach(type => {
           inviteMap[type] = this.invitations.filter(
             i => ChannelInvitationMapping[i.share_mode] === type

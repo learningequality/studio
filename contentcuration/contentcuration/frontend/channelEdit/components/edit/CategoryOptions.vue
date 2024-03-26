@@ -83,14 +83,14 @@
    * https://github.com/learningequality/kolibri/blob/develop/kolibri/plugins/learn/assets/
    *   src/views/CategorySearchModal/CategorySearchOptions.vue#L73
    */
-  for (let subjectKey of Object.entries(Categories)
+  for (const subjectKey of Object.entries(Categories)
     .sort((a, b) => a[1].length - b[1].length)
     .map(a => a[0])) {
     const ids = Categories[subjectKey].split('.');
 
     let path = '';
     let nested = categoriesObj;
-    for (let fragment of ids) {
+    for (const fragment of ids) {
       path += fragment;
       if (availablePaths[path]) {
         const nestedKey = CategoriesLookup[path];

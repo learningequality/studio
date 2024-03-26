@@ -98,8 +98,9 @@ def get_node_diff(request, updated_id, original_id):
         if data:
             return Response(data)
 
+        signature = generatenodediff_task.generate_signature(dict(updated_id=updated_id, original_id=original_id))
         # See if there's already a staging task in progress
-        if generatenodediff_task.find_incomplete_ids(updated_id=updated_id, original_id=original_id).exists():
+        if generatenodediff_task.find_incomplete_ids(signature).exists():
             return Response('Diff is being generated', status=status.HTTP_302_FOUND)
     except ContentNode.DoesNotExist:
         pass

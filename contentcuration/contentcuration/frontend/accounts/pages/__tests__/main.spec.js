@@ -5,7 +5,7 @@ import Main from '../Main';
 const login = jest.fn();
 
 function makeWrapper() {
-  let wrapper = mount(Main, {
+  const wrapper = mount(Main, {
     router,
     stubs: ['GlobalSnackbar', 'PolicyModals'],
     mocks: {

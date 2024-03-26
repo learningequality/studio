@@ -24,7 +24,8 @@ Vue.use(Vuex);
 function parseListeners(moduleName, listeners, namespaced = false) {
   const parsedListeners = [];
 
-  for (let [tableName, tableListeners] of Object.entries(listeners)) {
+  for (const [tableName, tableListeners] of Object.entries(listeners)) {
+    /* eslint-disable-next-line prefer-const */
     for (let [changeType, listener] of Object.entries(tableListeners)) {
       if (!(listener instanceof Listener)) {
         listener = commitListener(listener);
@@ -57,7 +58,7 @@ export default function storeFactory({
   };
 
   const parsedListeners = parseListeners(null, listeners);
-  for (let [moduleName, module] of Object.entries(modules)) {
+  for (const [moduleName, module] of Object.entries(modules)) {
     if (module.listeners) {
       parsedListeners.push(...parseListeners(moduleName, module.listeners, module.namespaced));
       delete module.listeners;

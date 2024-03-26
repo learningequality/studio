@@ -84,6 +84,8 @@
             return this.$tr('exercise');
           case 'document':
             return this.$tr('document');
+          case 'h5p':
+            return this.$tr('html5');
           case 'html5':
             return this.$tr('html5');
           default:

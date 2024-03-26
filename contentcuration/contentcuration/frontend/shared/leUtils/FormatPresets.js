@@ -185,7 +185,7 @@ const FormatPresetsMap = new Map([
       supplementary: false,
       thumbnail: false,
       subtitle: false,
-      display: false,
+      display: true,
       order: 1,
       kind_id: 'h5p',
       allowed_formats: ['h5p'],

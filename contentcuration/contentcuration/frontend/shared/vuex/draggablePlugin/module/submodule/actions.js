@@ -34,7 +34,7 @@ export function updateHoverDraggable(context, { id, minX, maxX, minY, maxY }) {
     return;
   }
 
-  let { clientX, clientY } = context.rootState.draggable;
+  const { clientX, clientY } = context.rootState.draggable;
   let section = DraggableFlags.NONE;
 
   // Determine the quadrant of the element's bounds that the user is dragging over

@@ -74,13 +74,13 @@
 "AccountCreated.accountCreatedTitle","Account successfully created","
 -- CONTEXT --
 ","Cuenta creada con éxito"
-"AccountCreated.continueToSignIn","Continue to sign-in","
+"AccountCreated.backToLogin","Continue to sign-in page","
 -- CONTEXT --
 ","Continuar a la página de inicio de sesión"
 "AccountDeleted.accountDeletedTitle","Account successfully deleted","
 -- CONTEXT --
 ","Cuenta eliminada con éxito"
-"AccountDeleted.continueToSignIn","Continue to sign-in page","
+"AccountDeleted.backToLogin","Continue to sign-in page","
 -- CONTEXT --
 ","Continuar a la página de inicio de sesión"
 "AccountNotActivated.requestNewLink","Request a new activation link","
@@ -287,9 +287,6 @@
 "BrowsingCard.coach","Resource for coaches","
 -- CONTEXT --
 ","Recurso para tutores"
-"BrowsingCard.goToPluralLocationsAction","In {count, number} {count, plural, one {location} other {locations}}","
--- CONTEXT --
-","En {count, number} {count, plural, one {ubicación} other {ubicaciones}}"
 "BrowsingCard.goToSingleLocationAction","Go to location","
 -- CONTEXT --
 ","Ir a la ubicación"
@@ -1272,6 +1269,9 @@ A type of math category. See https://en.wikipedia.org/wiki/Algebra","Álgebra"
 "CommonMetadataStrings.all","All","
 -- CONTEXT --
 A label for everything in the group of activities.","Todo"
+"CommonMetadataStrings.allContent","Viewed in its entirety","
+-- CONTEXT --
+One of the completion criteria types. A resource with this criteria is considered complete when learners studied it all, for example they saw all pages of a document.","Visto en su totalidad"
 "CommonMetadataStrings.allLevelsBasicSkills","All levels -- basic skills","
 -- CONTEXT --
 Refers to a type of educational level.","Todos los niveles -- habilidades básicas"
@@ -1323,6 +1323,9 @@ Science category type. See https://en.wikipedia.org/wiki/Chemistry","Química"
 "CommonMetadataStrings.civicEducation","Civic education","
 -- CONTEXT --
 Category type. Civic education is the study of the rights and obligations of citizens in society. See https://en.wikipedia.org/wiki/Civics","Educación cívica"
+"CommonMetadataStrings.completeDuration","When time spent is equal to duration","
+-- CONTEXT --
+One of the completion criteria types. A resource with this criteria is considered complete when learners spent given time studying it.","Cuando el tiempo empleado es igual a la duración"
 "CommonMetadataStrings.completion","Completion","CommonMetadataStrings.completion
 
 -- CONTEXT --
@@ -1342,6 +1345,9 @@ Category type. See https://en.wikipedia.org/wiki/Everyday_life","Vida diaria"
 "CommonMetadataStrings.dance","Dance","
 -- CONTEXT --
 Category type. See https://en.wikipedia.org/wiki/Dance","Danza"
+"CommonMetadataStrings.determinedByResource","Determined by the resource","
+-- CONTEXT --
+One of the completion criteria types. Typically used for embedded html5/h5p resources that contain their own completion criteria, for example reaching a score in an educational game.","Determinado por el recurso"
 "CommonMetadataStrings.digitalLiteracy","Digital literacy","
 -- CONTEXT --
 Category type. See https://en.wikipedia.org/wiki/Digital_literacy","Alfabetización digital"
@@ -1363,6 +1369,9 @@ Category type. See https://en.wikipedia.org/wiki/Entrepreneurship","Emprendimien
 "CommonMetadataStrings.environment","Environment","
 -- CONTEXT --
 Category type. See https://en.wikipedia.org/wiki/Environmental_studies","Medio ambiente"
+"CommonMetadataStrings.exactTime","Time to complete","
+-- CONTEXT --
+One of the completion criteria types. A subset of ""When time spent is equal to duration"". For example, for an audio resource with this criteria, learnes need to hear the whole length of audio for the resource to be considered complete.","Tiempo para completar"
 "CommonMetadataStrings.explore","Explore","
 -- CONTEXT --
 Resource and filter label for the type of learning activity. Translate as a VERB","Explorar"
@@ -1378,6 +1387,9 @@ Category type","Para profesores"
 "CommonMetadataStrings.geometry","Geometry","
 -- CONTEXT --
 Category type.","Geometría"
+"CommonMetadataStrings.goal","When goal is met","
+-- CONTEXT --
+One of the completion criteria types specific to exercises. An exercise with this criteria is considered complete when learners reached a given goal, for example 100% correct.","Cuando se alcanza el objetivo"
 "CommonMetadataStrings.guides","Guides","
 -- CONTEXT --
 Category label in the Kolibri resources library; refers to any guide-type material for teacher professional development.","Guías"
@@ -1428,6 +1440,9 @@ Refers to a level of learning. Approximately corresponds to the first half of pr
 "CommonMetadataStrings.lowerSecondary","Lower secondary","
 -- CONTEXT --
 Refers to a level of learning. Approximately corresponds to the first half of secondary school (high school).","Secundaria inferior"
+"CommonMetadataStrings.masteryMofN","Goal: {m} out of {n}","
+-- CONTEXT --
+One of the completion criteria types specific to exercises. An exercise with this criteria is considered complete when learners answered m questions out of n correctly.","Objetivo: {m} de {n}"
 "CommonMetadataStrings.mathematics","Mathematics","
 -- CONTEXT --
 Category type. See https://en.wikipedia.org/wiki/Mathematics","Matemáticas"
@@ -1465,6 +1480,9 @@ Category type. See https://en.wikipedia.org/wiki/Political_science.","Ciencias p
 "CommonMetadataStrings.practice","Practice","
 -- CONTEXT --
 Resource and filter label for the type of learning activity with questions and answers. Translate as a VERB","Practicar"
+"CommonMetadataStrings.practiceQuiz","Practice quiz","
+-- CONTEXT --
+One of the completion criteria types specific to exercises. An exercise with this criteria represents a quiz.","Prueba para practicar"
 "CommonMetadataStrings.preschool","Preschool","
 -- CONTEXT --
 Refers to a level of education offered to children before they begin compulsory education at primary school.
@@ -1491,9 +1509,12 @@ School subject category","Lectura y escritura"
 "CommonMetadataStrings.readingComprehension","Reading comprehension","
 -- CONTEXT --
 Category type.","Comprensión lectora"
+"CommonMetadataStrings.reference","Reference material","
+-- CONTEXT --
+One of the completion criteria types. Progress made on a resource with this criteria is not tracked.","Material de referencia"
 "CommonMetadataStrings.reflect","Reflect","
 -- CONTEXT --
-Resource and filter label for the type of learning activity. Translate as a VERB","Reflejar"
+Resource and filter label for the type of learning activity. Translate as a VERB","Reflexionar"
 "CommonMetadataStrings.school","School","
 -- CONTEXT --
 Category type.","Escuela"
@@ -1614,27 +1635,9 @@ Category type. See https://en.wikipedia.org/wiki/Writing","Escritura"
 "CommunityStandardsModal.studioItem5","Hosting. Uploading your own materials (limited to materials you know are appropriately licensed to do so) from a local hard drive or other locations on the internet","
 -- CONTEXT --
 ","Alojar. Subir sus propios materiales (limitado a materiales con la licencia adecuada para hacerlo confirmada) desde un disco duro local u otras ubicaciones en Internet."
-"CompletionOptions.allContent","Viewed in its entirety","
+"CompletionOptions.learnersCanMarkComplete","Allow learners to mark as complete","
 -- CONTEXT --
-","Visto en su totalidad"
-"CompletionOptions.completeDuration","When time spent is equal to duration","
--- CONTEXT --
-","Cuando el tiempo empleado es igual a la duración"
-"CompletionOptions.determinedByResource","Determined by the resource","
--- CONTEXT --
-","Determinado por el recurso"
-"CompletionOptions.exactTime","Time to complete","
--- CONTEXT --
-","Tiempo para completar"
-"CompletionOptions.goal","When goal is met","
--- CONTEXT --
-","Cuando se alcanza el objetivo"
-"CompletionOptions.practiceQuiz","Practice quiz","
--- CONTEXT --
-","Prueba de prácticas"
-"CompletionOptions.reference","Reference material","
--- CONTEXT --
-","Material de referencia"
+","Permitir a los estudiantes marcar como completado"
 "CompletionOptions.referenceHint","Progress will not be tracked on reference material unless learners mark it as complete","
 -- CONTEXT --
 ","No se graba el seguimiento de progreso en el material de referencia a menos que los estudiantes lo marquen como completo"
@@ -1926,9 +1929,27 @@ Category type. See https://en.wikipedia.org/wiki/Writing","Escritura"
 "ContentNodeChangedIcon.isUpdatedTopic","Folder has been updated since last publish","
 -- CONTEXT --
 ","La carpeta ha sido actualizada desde la última publicación"
+"ContentNodeCopyTaskProgress.copyErrorTopic","Some resources failed to copy","
+-- CONTEXT --
+","Fallo al copiar algunos recursos"
+"ContentNodeEditListItem.copiedSnackbar","Copy operation complete","
+-- CONTEXT --
+","Operación de copiar finalizada"
+"ContentNodeEditListItem.creatingCopies","Copying...","
+-- CONTEXT --
+","Copiando..."
 "ContentNodeEditListItem.optionsTooltip","Options","
 -- CONTEXT --
 ","Opciones"
+"ContentNodeEditListItem.removeNode","Remove","
+-- CONTEXT --
+","Eliminar"
+"ContentNodeEditListItem.retryCopy","Retry","
+-- CONTEXT --
+","Reintentar"
+"ContentNodeEditListItem.undo","Undo","
+-- CONTEXT --
+","Deshacer"
 "ContentNodeIcon.audio","Audio","
 -- CONTEXT --
 ","Audio"
@@ -1956,12 +1977,12 @@ Category type. See https://en.wikipedia.org/wiki/Writing","Escritura"
 "ContentNodeLearningActivityIcon.multipleLearningActivities","Multiple learning activities","
 -- CONTEXT --
 ","Múltiples actividades de aprendizaje"
-"ContentNodeLearningActivityIcon.topic","Folder","
--- CONTEXT --
-","Carpeta"
 "ContentNodeListItem.coachTooltip","Resource for coaches","
 -- CONTEXT --
 ","Recurso para tutores"
+"ContentNodeListItem.copyingError","Copy failed.","
+-- CONTEXT --
+","Hubo un fallo al copiar."
 "ContentNodeListItem.copyingTask","Copying","
 -- CONTEXT --
 ","Copiando"
@@ -2013,7 +2034,7 @@ Category type. See https://en.wikipedia.org/wiki/Writing","Escritura"
 "ContentNodeOptions.newSubtopic","New folder","
 -- CONTEXT --
 ","Nueva carpeta"
-"ContentNodeOptions.remove","Remove","
+"ContentNodeOptions.remove","Delete","
 -- CONTEXT --
 ","Eliminar"
 "ContentNodeOptions.removedFromClipboard","Deleted from clipboard","
@@ -2121,12 +2142,12 @@ Category type. See https://en.wikipedia.org/wiki/Writing","Escritura"
 "CountryField.noCountriesFound","No countries found","
 -- CONTEXT --
 ","No se han encontrado países"
-"Create.ToSCheck","I have read and agree to the terms of service","
+"Create.ToSRequiredMessage","Please accept our terms of service and policy","
 -- CONTEXT --
-","He leído y estoy de acuerdo con los términos del servicio"
-"Create.ToSRequiredMessage","Please accept our terms of service","
+","Por favor, acepte nuestra política y términos de servicio"
+"Create.agreement","I have read and agree to terms of service and the privacy policy","
 -- CONTEXT --
-","Por favor, acepte nuestros términos de servicio"
+","He leído y estoy de acuerdo con los términos de servicio y la política de privacidad"
 "Create.backToLoginButton","Sign in","
 -- CONTEXT --
 ","Iniciar sesión"
@@ -2217,12 +2238,6 @@ Category type. See https://en.wikipedia.org/wiki/Writing","Escritura"
 "Create.personalDemoSourceOption","Personal demo","
 -- CONTEXT --
 ","Demo personal"
-"Create.privacyPolicyCheck","I have read and agree to the privacy policy","
--- CONTEXT --
-","He leído y estoy de acuerdo con la política de privacidad"
-"Create.privacyPolicyRequiredMessage","Please accept our privacy policy","
--- CONTEXT --
-","Por favor, acepte nuestra política de privacidad"
 "Create.registrationFailed","There was an error registering your account. Please try again","
 -- CONTEXT --
 ","Hubo un error al crear la cuenta. Por favor, inténtelo nuevamente."
@@ -2259,10 +2274,10 @@ Category type. See https://en.wikipedia.org/wiki/Writing","Escritura"
 "Create.usageLabel","How do you plan on using Kolibri Studio (check all that apply)","
 -- CONTEXT --
 ","¿Cómo piensa utilizar Kolibri Studio? (marcar todo que procede)"
-"Create.viewPrivacyPolicyLink","View privacy policy","
+"Create.viewPrivacyPolicyLink","View Privacy Policy","
 -- CONTEXT --
 ","Ver política de privacidad"
-"Create.viewToSLink","View terms of service","
+"Create.viewToSLink","View Terms of Service","
 -- CONTEXT --
 ","Ver términos de servicio"
 "Create.websiteSourceOption","Learning Equality website","
@@ -2405,6 +2420,9 @@ Category type. See https://en.wikipedia.org/wiki/Writing","Escritura"
 "Details.authorsLabel","Authors","
 -- CONTEXT --
 ","Autores"
+"Details.categoriesHeading","Categories","
+-- CONTEXT --
+","Categorías"
 "Details.coachDescription","Resources for coaches are only visible to coaches in Kolibri","
 -- CONTEXT --
 ","Los recursos para tutores son visibles sólo a los tutores en Kolibri"
@@ -2429,6 +2447,9 @@ Category type. See https://en.wikipedia.org/wiki/Writing","Escritura"
 "Details.languagesHeading","Languages","
 -- CONTEXT --
 ","Idiomas"
+"Details.levelsHeading","Levels","
+-- CONTEXT --
+","Niveles"
 "Details.licensesLabel","Licenses","
 -- CONTEXT --
 ","Licencias"
@@ -2519,9 +2540,6 @@ Heading for the section in the resource editing window","Tipo de finalización"
 "DetailsTabView.languageHelpText","Leave blank to use the folder language","
 -- CONTEXT --
 ","Dejar en blanco para usar el idioma de la carpeta"
-"DetailsTabView.learnersCanMarkComplete","Allow learners to mark as complete","
--- CONTEXT --
-","Permitir a los estudiantes marcar como completado"
 "DetailsTabView.noTagsFoundText","No results found for ""{text}"". Press 'Enter' key to create a new tag","
 -- CONTEXT --
 ","No se han encontrado resultados para ""{text}"". Pulse la tecla 'Entrar' para crear una nueva etiqueta"
@@ -3012,6 +3030,9 @@ Heading for the section in the resource editing window","Tipo de finalización"
 "MainNavigationDrawer.administrationLink","Administration","
 -- CONTEXT --
 ","Administración"
+"MainNavigationDrawer.changeLanguage","Change language","
+-- CONTEXT --
+","Cambiar idioma"
 "MainNavigationDrawer.channelsLink","Channels","
 -- CONTEXT --
 ","Canales"
@@ -3174,9 +3195,6 @@ Heading for the section in the resource editing window","Tipo de finalización"
 "PoliciesModal.checkboxText","I have agreed to the above terms","
 -- CONTEXT --
 ","He leído y estoy de acuerdo con los términos anteriores"
-"PoliciesModal.checkboxValidationErrorMessage","Field is required","
--- CONTEXT --
-","Este campo es obligatorio"
 "PoliciesModal.closeButton","Close","
 -- CONTEXT --
 ","Cerrar"
@@ -3207,9 +3225,12 @@ Heading for the section in the resource editing window","Tipo de finalización"
 "ProgressModal.syncError","Last attempt to sync failed","
 -- CONTEXT --
 ","Último intento de sincronización fallido"
-"ProgressModal.syncHeader","Syncing channel","
+"ProgressModal.syncHeader","Syncing resources","
 -- CONTEXT --
-","Sincronizando canal"
+","Sincronizando recursos"
+"ProgressModal.syncedSnackbar","Resources synced","
+-- CONTEXT --
+","Recursos sincronizados"
 "ProgressModal.unpublishedText","Unpublished","
 -- CONTEXT --
 ","No publicado"
@@ -3525,9 +3546,6 @@ Heading for the section in the resource editing window","Tipo de finalización"
 "ResourcePanel.coachResources","Resources for coaches","
 -- CONTEXT --
 ","Recursos para tutores"
-"ResourcePanel.completion","Completion","
--- CONTEXT --
-","Finalización"
 "ResourcePanel.copyrightHolder","Copyright holder","
 -- CONTEXT --
 ","Titular de derechos de autor"
@@ -3552,27 +3570,37 @@ Heading for the section in the resource editing window","Tipo de finalización"
 "ResourcePanel.license","License","
 -- CONTEXT --
 ","Licencia"
-"ResourcePanel.masteryMofN","Goal: {m} out of {n}","
--- CONTEXT --
-","Objetivo: {m} de {n}"
 "ResourcePanel.nextSteps","Next steps","
 -- CONTEXT --
 ","Pasos siguientes"
-"ResourcePanel.noCopyrightHolderError","Missing copyright holder","
+"ResourcePanel.noCompletionCriteriaError","Completion criteria are required","ResourcePanel.noCompletionCriteriaError
+
 -- CONTEXT --
-","Falta titular de derechos de autor"
-"ResourcePanel.noFilesError","Missing files","
+Error message notification when a specific metadata is missing.","Los criterios de finalización son obligatorios"
+"ResourcePanel.noCopyrightHolderError","Copyright holder is required","
 -- CONTEXT --
-","Faltan ficheros"
-"ResourcePanel.noLicenseDescriptionError","Missing license description","
+","Hay que especificar el titular de los derechos de autor"
+"ResourcePanel.noDurationError","Duration is required","
 -- CONTEXT --
-","Falta la descripción de licencia"
-"ResourcePanel.noLicenseError","Missing license","
+","Este campo es obligatorio"
+"ResourcePanel.noFilesError","File is required","ResourcePanel.noFilesError
+
 -- CONTEXT --
-","Falta licencia"
-"ResourcePanel.noMasteryModelError","Missing mastery criteria","
+Error message notification when a file is missing.","El archivo es requerido"
+"ResourcePanel.noLearningActivityError","Learning activity is required","
 -- CONTEXT --
-","Faltan criterios de dominio"
+","Este campo es obligatorio"
+"ResourcePanel.noLicenseDescriptionError","License description is required","ResourcePanel.noLicenseDescriptionError
+
+-- CONTEXT --
+Error message notification when a specific metadata is missing.","La descripción de la licencia es obligatoria"
+"ResourcePanel.noLicenseError","License is required","
+-- CONTEXT --
+","Se requiere licencia"
+"ResourcePanel.noMasteryModelError","Mastery criteria are required","ResourcePanel.noMasteryModelError
+
+-- CONTEXT --
+Error message notification when a specific metadata is missing.","Los criterios de dominio son obligatorios"
 "ResourcePanel.noQuestionsError","Exercise is empty","
 -- CONTEXT --
 ","Ejercicio no tiene preguntas"
@@ -3900,36 +3928,42 @@ Heading for the section in the resource editing window","Tipo de finalización"
 "SyncResourcesModal.confirmSyncModalTitle","Confirm sync","
 -- CONTEXT --
 ","Confirmar sincronización"
+"SyncResourcesModal.confirmSyncModalWarningExplainer","Warning: this will overwrite any changes you have made to copied or imported resources.","
+-- CONTEXT --
+","Advertencia: esto sobrescribirá cualquier cambio que haya hecho a los recursos copiados o importados."
 "SyncResourcesModal.continueButtonLabel","Continue","
 -- CONTEXT --
 ","Continuar"
 "SyncResourcesModal.syncButtonLabel","Sync","
 -- CONTEXT --
 ","Sincronizar"
-"SyncResourcesModal.syncExercisesExplainer","Update questions, answers, and hints","
+"SyncResourcesModal.syncExercisesExplainer","Update questions, answers, and hints in exercises and quizzes","
 -- CONTEXT --
-","Actualizar preguntas, respuestas y pistas"
+","Actualizar preguntas, respuestas y sugerencias en ejercicios y cuestionarios"
 "SyncResourcesModal.syncExercisesTitle","Assessment details","
 -- CONTEXT --
 ","Detalles de los ejercicios"
-"SyncResourcesModal.syncFilesExplainer","Update all file information","
+"SyncResourcesModal.syncFilesExplainer","Update all files, including: thumbnails, subtitles, and captions","
 -- CONTEXT --
-","Actualizar toda la información del fichero"
+","Actualizar todos los archivos, incluyendo miniaturas y subtítulos"
 "SyncResourcesModal.syncFilesTitle","Files","
 -- CONTEXT --
 ","Archivos"
-"SyncResourcesModal.syncModalExplainer","Sync and update your resources with their original source.","
+"SyncResourcesModal.syncModalExplainer","Syncing resources in Kolibri Studio updates copied or imported resources in this channel with any changes made to the original resource files.","
 -- CONTEXT --
-","Sincroniza y actualiza los recursos con sus canales de origen."
+","Sincronizar recursos en Kolibri Studio actualiza los recursos copiados o importados en este canal con cualquier cambio en los ficheros de recursos originales."
+"SyncResourcesModal.syncModalSelectAttributes","Select what you would like to sync:","
+-- CONTEXT --
+","Seleccionar lo que se va a sincronizar:"
 "SyncResourcesModal.syncModalTitle","Sync resources","
 -- CONTEXT --
 ","Sincronizar recursos"
-"SyncResourcesModal.syncTagsExplainer","Update all tags","
+"SyncResourcesModal.syncResourceDetailsExplainer","Update information about the resource: learning activity, level, requirements, category, tags, audience, and source","
 -- CONTEXT --
-","Actualizar todas las etiquetas"
-"SyncResourcesModal.syncTagsTitle","Tags","
+","Actualizar información sobre el recurso: actividad de aprendizaje, nivel, requisitos, categoría, etiquetas, público y fuente"
+"SyncResourcesModal.syncResourceDetailsTitle","Resource details","
 -- CONTEXT --
-","Etiquetas"
+","Detalles del recurso"
 "SyncResourcesModal.syncTitlesAndDescriptionsExplainer","Update resource titles and descriptions","
 -- CONTEXT --
 ","Actualizar títulos y descripciones de recursos"
@@ -4370,9 +4404,10 @@ Heading for the section in the resource editing window","Tipo de finalización"
 "TreeViewBase.noChangesText","No changes found in channel","
 -- CONTEXT --
 ","No se encontraron cambios en el canal"
-"TreeViewBase.noLanguageSetError","Missing channel language","
+"TreeViewBase.noLanguageSetError","Channel language is required","TreeViewBase.noLanguageSetError
+
 -- CONTEXT --
-","Falta el idioma del canal"
+Error message notification when a specific metadata is missing.","El idioma del canal es obligatorio"
 "TreeViewBase.openTrash","Open trash","
 -- CONTEXT --
 ","Abrir papelera"
@@ -4415,14 +4450,14 @@ Heading for the section in the resource editing window","Tipo de finalización"
 ","Ficheros no permitidos"
 "Uploader.unsupportedFilesText","{count, plural,
  =1 {# file will not be uploaded.}
- other {# files will not be uploaded.}} 
+ other {# files will not be uploaded.}}
  {extensionCount, plural,
  =1 {Supported file type is}
  other {Supported file types are}} {extensions}","
 -- CONTEXT --
 ","{count, plural,
  =1 {# fichero no será subido.}
- other {# ficheros no serán subidos.}} 
+ other {# ficheros no serán subidos.}}
  {extensionCount, plural,
  =1 {Tipo de fichero permitido es}
  other {Tipos de fichero permitido son}} {extensions}"
@@ -4441,12 +4476,9 @@ Heading for the section in the resource editing window","Tipo de finalización"
 "UsingStudio.bestPractice2","It is preferable to create multiple small channels rather than one giant channel with many layers of folders.","
 -- CONTEXT --
 ","Es preferible crear múltiples canales pequeños en lugar de un canal gigante con muchas carpetas anidadas."
-"UsingStudio.bestPractice3","Reload the page often to ensure your work is saved to the server and no network errors have occurred. Use CTRL+R on Linux/Windows or ⌘+R on Mac.","
+"UsingStudio.bestPractice3","Reload the page to confirm your work has been saved to the server. Use CTRL+R on Linux/Windows or ⌘+R on Mac.","
 -- CONTEXT --
-","Recargar la página a menudo para asegurarse de que su trabajo se guarda en el servidor y no se han producido errores de red. Utilice CTRL+R en Linux/Windows o ⌘+R en Mac."
-"UsingStudio.bestPractice4","Avoid simultaneous edits on the same channel. Channels should not be edited by multiple users at the same time or by the same user in multiple browser windows.","
--- CONTEXT --
-","Evitar ediciones simultáneas del mismo canal. Los canales no deben ser editados por varios usuarios al mismo tiempo, o por el mismo usuario en múltiples ventanas del navegador."
+","Recargar la página para confirmar que los cambios han sido guardados en el servidor. Usar CTRL+R en Linux/Windows o ⌘+R en Mac."
 "UsingStudio.bestPractice5","It is possible that you will encounter timeout errors in your browser when performing operations like import and sync, on large channels. Don't be alarmed by this error message and do not repeat the same operation again right away. It doesn't mean the operation has failed- Kolibri Studio is still working in the background. Wait a few minutes and reload the page before continuing your edits.","
 -- CONTEXT --
 ","Es posible que encuentre errores de tiempo de espera en su navegador cuando realice operaciones como importar y sincronizar en canales grandes. No hay que alarmarse con este mensaje de error, ya que eso no significa que la operación haya fallado - Kolibri Studio todavía está trabajando en segundo plano. Por esta razón no hace falta repetir la misma operación de inmediato, sino esperar unos minutos y volver a cargar la página antes de continuar editando."
@@ -4456,9 +4488,6 @@ Heading for the section in the resource editing window","Tipo de finalización"
 "UsingStudio.bestPractice7","PUBLISH periodically and import your channel into Kolibri to preview the content and obtain a local backup copy of your channel.","
 -- CONTEXT --
 ","PUBLICAR periódicamente e importar el canal en Kolibri, para previsualizar el contenido y tener una copia de seguridad local del canal."
-"UsingStudio.bestPractice8","Do not edit the channel after you click PUBLISH. Wait for the notification email before resuming editing operations.","
--- CONTEXT --
-","No editar el canal después de hacer clic en PUBLICAR. Esperar el correo de notificación antes de volver a editar."
 "UsingStudio.bestPractice9","Report issues as you encounter them.","
 -- CONTEXT --
 ","Informar sobre problemas a medida que se vayan encontrando."
@@ -4468,18 +4497,13 @@ Heading for the section in the resource editing window","Tipo de finalización"
 "UsingStudio.communityStandardsLink","Community standards","
 -- CONTEXT --
 ","Normas de la comunidad"
-"UsingStudio.issue1","Two users have reported isolated incidents where content they imported from another channel disappeared, leaving only empty folders and subfolders. In one report, the content later re-appeared. They did not experience these problems consistently, and the incidents may possibly involve issues with a slow or unstable internet connection. If you run into this issue, please contact us as soon as possible and let us know as much information as you can remember.","
+"UsingStudio.issue1","There have been reports where users have observed the disappearance of changes they've recently made to their channels. The issue seems related to opening multiple tabs of Kolibri Studio, and eventually signing out. We advise that you disable any ‘Memory Saver/Sleeping’ tab browser feature for Kolibri Studio, and reload each tab before signing out. We're actively investigating this issue, so if you run into it, please contact us with as much information as possible.","UsingStudio.issue1
+
 -- CONTEXT --
-","Dos usuarios han informado de incidentes aislados donde desaparecieron los contenidos importados de otro canal, dejando sólo carpetas y subcarpetas vacías. En un reporte, el contenido más tarde volvió a aparecer. No experimentaron estos problemas de forma consistente, y los incidentes podrían implicar problemas con una conexión Internet lenta o inestable. Si encuentra este problema, por favor contacte lo antes posible e informe de todos los detalles."
-"UsingStudio.issue2","Some operations in Studio are currently very slow, and so it may appear that the change you attempted to make timed out or did not take effect. In many cases, the change is still being processed and will appear once it is complete. If, after 5-10 minutes, the change still has not taken effect even after a browser refresh, please file an issue. We are working on solutions to these issues.","
--- CONTEXT --
-","Algunas operaciones en Studio son actualmente muy lentas, por lo que puede parecer que el cambio haya caducado o no tuvo efecto. En muchos casos, el cambio sigue siendo procesado y aparecerá una vez que esté completo. Si, después de 5-10 minutos el cambio aún no ha tenido efecto incluso después de volver a cargar la página del navegador, informe sobre lo ocurrido, por favor. Estamos trabajando en soluciones para estos problemas."
+A description of an issue that has been reported by users - the recommendation is to disable any memory saver feature in the browser while they are using Kolibri Studio.","Ha habido informes en los que usuarios han observado la desaparición de cambios que han hecho recientemente en sus canales. El problema parece estar relacionado con la apertura de múltiples pestañas de Kolibri Studio, y luego cerrar la sesión. Recomendamos deshabilitar cualquier función de navegador relacionada con 'Memory Saver/Sleep' (ahorro de memoria, suspensión) para Kolibri Studio, y volver a cargar cada pestaña antes de salir y cerrar sesión. Estamos investigando activamente este problema, por favor contáctanos con tanta información como sea posible si lo encuentras."
 "UsingStudio.issueLink1","Reports of disappearing content","
 -- CONTEXT --
 ","Informes sobre el contenido que parece desaparecer"
-"UsingStudio.issueLink2","Slow performance can lead to unexpected errors in the interface","
--- CONTEXT --
-","El rendimiento lento puede conducir a errores inesperados en la interfaz"
 "UsingStudio.issuesPageLink","View all issues","
 -- CONTEXT --
 ","Ver todas las incidencias"

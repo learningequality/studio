@@ -67,6 +67,17 @@ const LanguagesMap = new Map([
     },
   ],
   [
+    'rsn',
+    {
+      id: 'rsn',
+      lang_code: 'rsn',
+      lang_subcode: null,
+      readable_name: 'Rwandan Sign Language',
+      native_name: "Amarenga y'Ikinyarwanda",
+      lang_direction: 'ltr',
+    },
+  ],
+  [
     'an',
     {
       id: 'an',
@@ -195,6 +206,17 @@ const LanguagesMap = new Map([
       lang_subcode: null,
       readable_name: 'Bukusu',
       native_name: 'Bukusu',
+      lang_direction: 'ltr',
+    },
+  ],
+  [
+    'csx',
+    {
+      id: 'csx',
+      lang_code: 'csx',
+      lang_subcode: null,
+      readable_name: 'Cambodian Sign Language',
+      native_name: 'Cambodian Sign Language',
       lang_direction: 'ltr',
     },
   ],
@@ -1431,6 +1453,17 @@ const LanguagesMap = new Map([
     },
   ],
   [
+    'xki',
+    {
+      id: 'xki',
+      lang_code: 'xki',
+      lang_subcode: null,
+      readable_name: 'Kenyan Sign Language',
+      native_name: 'Swahili Lugha ya ishara',
+      lang_direction: 'ltr',
+    },
+  ],
+  [
     'be-tara',
     {
       id: 'be-tara',
@@ -2565,6 +2598,18 @@ const LanguagesMap = new Map([
     },
   ],
   [
+    'nsp',
+    {
+      id: 'nsp',
+      lang_code: 'nsp',
+      lang_subcode: null,
+      readable_name: 'Nepalese Sign Language',
+      native_name:
+        '\u0928\u0947\u092a\u093e\u0932\u0940 \u0938\u093e\u0902\u0915\u0947\u0924\u093f\u0915 \u092d\u093e\u0937\u093e',
+      lang_direction: 'ltr',
+    },
+  ],
+  [
     'pi',
     {
       id: 'pi',
@@ -3011,6 +3056,7 @@ export const LanguagesNames = {
   AF: 'af',
   AK: 'ak',
   AKA: 'aka',
+  RSN: 'rsn',
   AN: 'an',
   EN_PT: 'en-PT',
   IG: 'ig',
@@ -3023,6 +3069,7 @@ export const LanguagesNames = {
   EN_GB: 'en-GB',
   BUG: 'bug',
   BXK: 'bxk',
+  CSX: 'csx',
   CA: 'ca',
   CEB: 'ceb',
   CH: 'ch',
@@ -3135,6 +3182,7 @@ export const LanguagesNames = {
   PBT: 'pbt',
   SV_SE: 'sv-SE',
   SV_FI: 'sv-FI',
+  XKI: 'xki',
   BE_TARA: 'be-tara',
   VI: 'vi',
   TPI: 'tpi',
@@ -3237,6 +3285,7 @@ export const LanguagesNames = {
   NEW: 'new',
   NE: 'ne',
   NE_NP: 'ne-NP',
+  NSP: 'nsp',
   PI: 'pi',
   BH: 'bh',
   BHO: 'bho',

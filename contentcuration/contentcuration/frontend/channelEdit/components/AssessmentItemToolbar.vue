@@ -15,7 +15,7 @@
             v-on="on"
             @click="clickItem(action)"
           >
-            <Icon :color="iconColor(action)">
+            <Icon v-if="config[action] && config[action].icon" :color="iconColor(action)">
               {{ config[action].icon }}
             </Icon>
           </VBtn>

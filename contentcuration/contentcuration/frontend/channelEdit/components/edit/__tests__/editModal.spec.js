@@ -8,7 +8,7 @@ import Uploader from 'shared/views/files/Uploader';
 const testNodes = [DEFAULT_TOPIC, DEFAULT_TOPIC2];
 
 function makeWrapper(props = {}) {
-  let wrapper = mount(EditModal, {
+  const wrapper = mount(EditModal, {
     store: localStore,
     attachToDocument: true,
     propsData: props,
@@ -72,7 +72,7 @@ describe.skip('editModal', () => {
       expect(mockFunctions.copyNodes).toHaveBeenCalled();
     });
     it('should open an alert when there is related content', () => {
-      let alert = wrapper.find({ ref: 'relatedalert' }).find({ ref: 'alert' });
+      const alert = wrapper.find({ ref: 'relatedalert' }).find({ ref: 'alert' });
       wrapper.find('[data-test="copy"]').trigger('click');
       expect(alert.vm.dialog).toBe(false);
       localStore.commit('edit_modal/SET_NODES', [generateNode({ prerequisite: ['test'] })]);
@@ -81,13 +81,13 @@ describe.skip('editModal', () => {
     });
   });
   describe('on open', () => {
-    let addStub = jest.fn();
+    const addStub = jest.fn();
     beforeEach(() => {
       addStub.mockReset();
       localStore.commit('edit_modal/SET_MODE', modes.EDIT);
     });
     it('should not automatically create a new item on EDIT mode', () => {
-      let originalLength = localStore.state.edit_modal.nodes.length;
+      const originalLength = localStore.state.edit_modal.nodes.length;
       wrapper.vm.openModal();
       expect(originalLength).toEqual(localStore.state.edit_modal.nodes.length);
     });

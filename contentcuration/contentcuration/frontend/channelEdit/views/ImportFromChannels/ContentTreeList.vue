@@ -61,6 +61,7 @@
   import Checkbox from 'shared/views/form/Checkbox';
   import LoadingText from 'shared/views/LoadingText';
   import { constantsTranslationMixin } from 'shared/mixins';
+  import { ChannelListTypes } from 'shared/constants';
 
   export default {
     name: 'ContentTreeList',
@@ -154,8 +155,16 @@
     },
     mounted() {
       this.loading = true;
+      let params = {};
+      const channelListType = this.$route.query.channel_list || ChannelListTypes.PUBLIC;
+      if (channelListType === ChannelListTypes.PUBLIC) {
+        // TODO: load from public API instead
+        // TODO: challenging because of node_id->id and root_id->channel_id
+        params = { published: true };
+      }
+
       return Promise.all([
-        this.loadChildren({ parent: this.topicId }),
+        this.loadChildren({ parent: this.topicId, ...params }),
         this.loadAncestors({ id: this.topicId }),
       ]).then(() => {
         this.loading = false;

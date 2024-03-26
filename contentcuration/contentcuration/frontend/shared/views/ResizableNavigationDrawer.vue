@@ -37,6 +37,10 @@
         type: Number,
         default: 100,
       },
+      defaultWidth: {
+        type: Number,
+        default: 150,
+      },
       maxWidth: {
         type: Number,
         default: window.innerWidth - 100,
@@ -68,7 +72,7 @@
       const localStorageName = this.localName + '-drawer-width';
       return {
         dragging: false,
-        width: parseFloat(localStorage[localStorageName]) || this.minWidth,
+        width: parseFloat(localStorage[localStorageName]) || this.defaultWidth || this.minWidth,
         localStorageName,
       };
     },
@@ -113,7 +117,7 @@
         this.throttledUpdateWidth(e.clientX);
       },
       updateWidth(clientX) {
-        let offset = this.isRight ? window.innerWidth - clientX : clientX;
+        const offset = this.isRight ? window.innerWidth - clientX : clientX;
         this.width = localStorage[this.localStorageName] = Math.min(
           Math.max(this.minWidth, offset),
           this.maxWidth

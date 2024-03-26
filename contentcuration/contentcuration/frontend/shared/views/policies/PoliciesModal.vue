@@ -20,15 +20,13 @@
               data-test="accept-checkbox"
               @change="togglePolicyAccepted"
             />
-            <div class="red--text" :style="{ height: '14pt' }">
-              <span v-if="showError">{{ $tr('checkboxValidationErrorMessage') }}</span>
-            </div>
           </KGridItem>
           <KGridItem :layout="{ span: 1 }">
             <KButton
               :text="$tr('continueButton')"
               :primary="true"
               :style="{ 'display': 'block', 'margin-left': 'auto' }"
+              :disabled="!policyAccepted"
               data-test="continue-button"
               @click="onPolicyAccept"
             />
@@ -87,7 +85,6 @@
     data() {
       return {
         policyAccepted: false,
-        showError: false,
       };
     },
     computed: {
@@ -104,7 +101,6 @@
         this.$emit('close');
       },
       validate() {
-        this.showError = !this.policyAccepted;
         return this.policyAccepted;
       },
       onPolicyAccept() {
@@ -117,7 +113,6 @@
       lastUpdated: 'Last updated {date}',
       closeButton: 'Close',
       continueButton: 'Continue',
-      checkboxValidationErrorMessage: 'Field is required',
       checkboxText: 'I have agreed to the above terms',
     },
   };

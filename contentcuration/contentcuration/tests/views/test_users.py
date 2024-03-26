@@ -98,6 +98,14 @@ class LoginTestCase(StudioAPITestCase):
             self.assertIsInstance(redirect, HttpResponseRedirectBase)
             self.assertIn("channels", redirect['Location'])
 
+    def test_after_delete__no_login(self):
+        with mock.patch("contentcuration.views.users.djangologin") as djangologin:
+            self.user.delete()
+            response = login(self.request)
+
+            self.assertIsInstance(response, HttpResponseForbidden)
+            djangologin.assert_not_called()
+
 
 class UserRegistrationViewTestCase(StudioAPITestCase):
     def setUp(self):
@@ -118,6 +126,12 @@ class UserRegistrationViewTestCase(StudioAPITestCase):
 
     def test_post__no_duplicate_registration(self):
         testdata.user(email="tester@tester.com")
+        response = self.view.post(self.request)
+        self.assertIsInstance(response, HttpResponseForbidden)
+
+    def test_after_delete__no_registration(self):
+        user = testdata.user(email="tester@tester.com")
+        user.delete()
         response = self.view.post(self.request)
         self.assertIsInstance(response, HttpResponseForbidden)
 

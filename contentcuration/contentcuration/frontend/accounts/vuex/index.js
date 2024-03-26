@@ -17,7 +17,7 @@ export default {
       return client.post(window.Urls.auth_password_reset(), { email });
     },
     setPassword(context, { uidb64, token, new_password1, new_password2 }) {
-      let data = {
+      const data = {
         new_password1,
         new_password2,
       };

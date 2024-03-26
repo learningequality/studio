@@ -443,8 +443,8 @@ export function getCopyTrees(state, getters, rootState, rootGetters) {
     // can now switch mode to just return a mask of unselected node_ids
     if (!(selectionState & SelectionFlags.ALL_DESCENDANTS) && !ignoreSelection) {
       // Some of the children are not selected, so get the node_ids that aren't selected
-      for (let child of children) {
-        for (let key of recurseForUnselectedIds(child.id)) {
+      for (const child of children) {
+        for (const key of recurseForUnselectedIds(child.id)) {
           update.extra_fields.excluded_descendants[key] = true;
         }
       }

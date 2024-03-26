@@ -29,7 +29,7 @@ function makeWrapper(deleteStub) {
 
 describe('channelSetItem', () => {
   let wrapper;
-  let deleteStub = jest.fn();
+  const deleteStub = jest.fn();
   beforeEach(() => {
     deleteStub.mockReset();
     wrapper = makeWrapper(deleteStub);

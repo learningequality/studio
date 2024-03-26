@@ -6,6 +6,7 @@ import { Session, User } from 'shared/data/resources';
 import { forceServerSync } from 'shared/data/serverSync';
 import translator from 'shared/translator';
 import { applyMods } from 'shared/data/applyRemoteChanges';
+import { FeatureFlagKeys } from 'shared/constants';
 
 function langCode(language) {
   // Turns a Django language name (en-gb) into an ISO language code (en-GB)
@@ -93,6 +94,12 @@ export default {
       return function(flag) {
         return getters.isAdmin || Boolean(getters.featureFlags[flag]);
       };
+    },
+    isAIFeatureEnabled(state, getters) {
+      if (getters.loggedIn) {
+        return getters.hasFeatureEnabled(FeatureFlagKeys.ai_feature);
+      }
+      return false;
     },
   },
   actions: {

@@ -11,7 +11,6 @@ Sets the following attributes:
 import concurrent.futures
 import os
 
-import progressbar
 from django.core.files.storage import default_storage
 from django.core.management.base import BaseCommand
 
@@ -26,15 +25,11 @@ class Command(BaseCommand):
         futures = []
         with concurrent.futures.ThreadPoolExecutor() as e:
             print("Scheduling all metadata update jobs...")
-            progbar = progressbar.ProgressBar()
-            for blob in progbar(blobs):
+            for blob in blobs:
                 future = e.submit(self._update_metadata, blob)
                 futures.append(future)
 
             print("Waiting for all jobs to finish...")
-            progbar = progressbar.ProgressBar(max_value=len(futures))
-            for _ in progbar(concurrent.futures.as_completed(futures)):
-                pass
 
     def _determine_cache_control(self, name):
         _, ext = os.path.splitext(name)

@@ -16,11 +16,9 @@ from search.models import ContentNodeFullTextSearch
 from search.utils import get_fts_search_query
 
 from contentcuration.models import Channel
-from contentcuration.models import File
 from contentcuration.utils.pagination import ValuesViewsetPageNumberPagination
 from contentcuration.viewsets.base import ReadOnlyValuesViewset
 from contentcuration.viewsets.base import RequiredFilterSet
-from contentcuration.viewsets.common import NotNullMapArrayAgg
 from contentcuration.viewsets.common import UUIDFilter
 from contentcuration.viewsets.common import UUIDInFilter
 
@@ -104,48 +102,42 @@ class SearchContentNodeViewSet(ReadOnlyValuesViewset):
         "id": "contentnode__id",
         "content_id": "contentnode__content_id",
         "node_id": "contentnode__node_id",
-        "title": "contentnode__title",
-        "description": "contentnode__description",
-        "author": "contentnode__author",
-        "provider": "contentnode__provider",
-        "kind__kind": "contentnode__kind__kind",
-        "thumbnail_encoding": "contentnode__thumbnail_encoding",
-        "published": "contentnode__published",
-        "modified": "contentnode__modified",
-        "parent_id": "contentnode__parent_id",
-        "changed": "contentnode__changed",
+        "root_id": "channel__main_tree_id",
+        "kind": "contentnode__kind__kind",
+        "parent": "contentnode__parent_id",
+        "public": "channel__public",
     }
 
     values = (
+        "channel__public",
+        "channel__main_tree_id",
         "contentnode__id",
         "contentnode__content_id",
         "contentnode__node_id",
-        "contentnode__title",
-        "contentnode__description",
-        "contentnode__author",
-        "contentnode__provider",
         "contentnode__kind__kind",
-        "contentnode__thumbnail_encoding",
-        "contentnode__published",
-        "contentnode__modified",
         "contentnode__parent_id",
-        "contentnode__changed",
         "channel_id",
         "resource_count",
-        "thumbnail_checksum",
-        "thumbnail_extension",
-        "content_tags",
         "original_channel_name",
+
+        # TODO: currently loading nodes separately
+        # "thumbnail_checksum",
+        # "thumbnail_extension",
+        # "content_tags",
+        # "contentnode__title",
+        # "contentnode__description",
+        # "contentnode__author",
+        # "contentnode__provider",
+        # "contentnode__changed",
+        # "contentnode__thumbnail_encoding",
+        # "contentnode__published",
+        # "contentnode__modified",
     )
 
     def annotate_queryset(self, queryset):
         """
         Annotates thumbnails, resources count and original channel name.
         """
-        thumbnails = File.objects.filter(
-            contentnode=OuterRef("contentnode__id"), preset__thumbnail=True
-        )
-
         descendant_resources_count = ExpressionWrapper(((F("contentnode__rght") - F("contentnode__lft") - Value(1)) / Value(2)), output_field=IntegerField())
 
         original_channel_name = Coalesce(
@@ -163,11 +155,6 @@ class SearchContentNodeViewSet(ReadOnlyValuesViewset):
 
         queryset = queryset.annotate(
             resource_count=descendant_resources_count,
-            thumbnail_checksum=Subquery(thumbnails.values("checksum")[:1]),
-            thumbnail_extension=Subquery(
-                thumbnails.values("file_format__extension")[:1]
-            ),
-            content_tags=NotNullMapArrayAgg("contentnode__tags__tag_name"),
             original_channel_name=original_channel_name,
         )
 

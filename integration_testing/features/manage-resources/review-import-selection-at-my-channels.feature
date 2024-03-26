@@ -1,6 +1,6 @@
 Feature: Review import selection at *My Channels*
 
-	Background: 
+	Background:
 		Given I am signed in to Studio
 			And I am on *My Channels > edit* page
 

@@ -10,9 +10,6 @@ from django.core.exceptions import SuspiciousOperation
 from django.core.files.storage import default_storage
 
 import contentcuration.models as models
-from contentcuration.utils.garbage_collect import get_deleted_chefs_root
-from contentcuration.viewsets.sync.constants import CHANNEL
-from contentcuration.viewsets.sync.utils import generate_update_event
 
 
 def write_file_to_storage(fobj, check_valid=False, name=None):
@@ -68,33 +65,3 @@ def get_hash(fobj):
         md5.update(chunk)
     fobj.seek(0)
     return md5.hexdigest()
-
-
-def activate_channel(channel, user):
-    user.check_channel_space(channel)
-
-    if channel.previous_tree and channel.previous_tree != channel.main_tree:
-        # IMPORTANT: Do not remove this block, MPTT updating the deleted chefs block could hang the server
-        with models.ContentNode.objects.disable_mptt_updates():
-            garbage_node = get_deleted_chefs_root()
-            channel.previous_tree.parent = garbage_node
-            channel.previous_tree.title = "Previous tree for channel {}".format(channel.pk)
-            channel.previous_tree.save()
-
-    channel.previous_tree = channel.main_tree
-    channel.main_tree = channel.staging_tree
-    channel.staging_tree = None
-    channel.save()
-
-    user.staged_files.all().delete()
-    user.set_space_used()
-
-    models.Change.create_change(generate_update_event(
-        channel.id,
-        CHANNEL,
-        {
-            "root_id": channel.main_tree.id,
-            "staging_root_id": None
-        },
-        channel_id=channel.id,
-    ), applied=True, created_by_id=user.id)

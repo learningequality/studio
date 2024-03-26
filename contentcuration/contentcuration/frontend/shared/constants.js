@@ -1,11 +1,11 @@
 import invert from 'lodash/invert';
 import Subjects from 'kolibri-constants/labels/Subjects';
 import CompletionCriteria from 'kolibri-constants/CompletionCriteria';
+import ContentLevels from 'kolibri-constants/labels/Levels';
 import featureFlagsSchema from 'static/feature_flags.json';
 
 export { default as LearningActivities } from 'kolibri-constants/labels/LearningActivities';
 export { default as CompletionCriteriaModels } from 'kolibri-constants/CompletionCriteria';
-export { default as ContentLevel } from 'kolibri-constants/labels/Levels';
 export { default as Categories } from 'kolibri-constants/labels/Subjects';
 export { default as AccessibilityCategories } from 'kolibri-constants/labels/AccessibilityCategories';
 export { default as ContentLevels } from 'kolibri-constants/labels/Levels';
@@ -13,6 +13,7 @@ export { default as ResourcesNeededTypes } from 'kolibri-constants/labels/Needs'
 
 export const CategoriesLookup = invert(Subjects);
 export const CompletionCriteriaLookup = invert(CompletionCriteria);
+export const LevelsLookup = invert(ContentLevels);
 
 export const ContentDefaults = {
   author: 'author',
@@ -57,11 +58,13 @@ export const kindToIconMap = {
   channel: 'apps',
   document: 'description',
   exercise: 'star',
+  h5p: 'widgets',
   html5: 'widgets',
   image: 'image',
   slideshow: 'photo_library',
   topic: 'folder',
   video: 'theaters',
+  zim: 'widgets',
 };
 
 export const SharingPermissions = {
@@ -199,12 +202,16 @@ export const ContentModalities = {
 };
 
 export const AccessibilityCategoriesMap = {
-  // Note: audio is not included, as it is rendered in the UI differently.
   document: ['ALT_TEXT', 'HIGH_CONTRAST', 'TAGGED_PDF'],
   video: ['CAPTIONS_SUBTITLES', 'AUDIO_DESCRIPTION', 'SIGN_LANGUAGE'],
   exercise: ['ALT_TEXT'],
   html5: ['ALT_TEXT', 'HIGH_CONTRAST'],
+  h5p: ['ALT_TEXT', 'HIGH_CONTRAST'],
+  audio: ['CAPTIONS_SUBTITLES'],
 };
+
+// an activity with duration longer than this value is considered long, otherwise short
+export const SHORT_LONG_ACTIVITY_MIDPOINT = 1860;
 
 export const CompletionDropdownMap = {
   allContent: 'allContent',

@@ -285,13 +285,6 @@
       if (!this.question) {
         this.openQuestion();
       }
-      // Assessments are nested inside of a scrolling panel.
-      // Instead of propagating an event all the way back to
-      // the scrolling panel, just use scrollIntoView
-      // (supported by most major browsers)
-      if (this.$el.scrollIntoView) {
-        this.$el.scrollIntoView({ behaviour: 'smooth' });
-      }
     },
     methods: {
       updateItem(payload) {
@@ -434,6 +427,7 @@
 
     &:hover {
       cursor: pointer;
+      /* stylelint-disable-next-line custom-property-pattern */
       background-color: var(--v-greyBackground-base);
     }
   }

@@ -28,7 +28,7 @@
 ","Basic Information"
 "Account.changePasswordAction","Change password","
 -- CONTEXT --
-","Change password"
+","पासवर्ड बदलें"
 "Account.completelyDeleteAccountLabel","Completely remove your account from Kolibri Studio","
 -- CONTEXT --
 ","Completely remove your account from Kolibri Studio"
@@ -58,29 +58,29 @@
 ","Data export started"
 "Account.fullNameLabel","Full name","
 -- CONTEXT --
-","Full name"
+","पूरा नाम"
 "Account.handleChannelsBeforeAccount","You must delete these channels manually or invite others to edit them before you can delete your account.","
 -- CONTEXT --
 ","You must delete these channels manually or invite others to edit them before you can delete your account."
 "Account.passwordLabel","Password","
 -- CONTEXT --
-","Password"
+","पासवर्ड"
 "Account.unableToDeleteAdminAccount","Unable to delete an admin account","
 -- CONTEXT --
 ","Unable to delete an admin account"
 "Account.usernameLabel","Username","
 -- CONTEXT --
-","Username"
+","यूजरनेम"
 "AccountCreated.accountCreatedTitle","Account successfully created","
 -- CONTEXT --
 ","Account successfully created"
-"AccountCreated.continueToSignIn","Continue to sign-in","
+"AccountCreated.backToLogin","Continue to sign-in page","
 -- CONTEXT --
-","Continue to sign-in"
+","Continue to sign-in page"
 "AccountDeleted.accountDeletedTitle","Account successfully deleted","
 -- CONTEXT --
 ","Account successfully deleted"
-"AccountDeleted.continueToSignIn","Continue to sign-in page","
+"AccountDeleted.backToLogin","Continue to sign-in page","
 -- CONTEXT --
 ","Continue to sign-in page"
 "AccountNotActivated.requestNewLink","Request a new activation link","
@@ -136,13 +136,13 @@
 ","Add previous step"
 "AddRelatedResourcesModal.addStepBtnLabel","Add","
 -- CONTEXT --
-","Add"
+","जोड़ें"
 "AddRelatedResourcesModal.cancelBtnLabel","Cancel","
 -- CONTEXT --
-","Cancel"
+","रद्द करें"
 "AddRelatedResourcesModal.previewStepBtnLabel","Preview","
 -- CONTEXT --
-","Preview"
+","पूर्वावलोकन"
 "AddRelatedResourcesModal.resourcesDisplayedText","Only showing available resources for","
 -- CONTEXT --
 ","Only showing available resources for"
@@ -160,16 +160,16 @@
 ","You need to be an administrator of Studio to view this page"
 "AdministrationIndex.channelsLabel","Channels","
 -- CONTEXT --
-","Channels"
+","चैनल"
 "AdministrationIndex.usersLabel","Users","
 -- CONTEXT --
-","Users"
+","उपयोगकर्ता"
 "Alert.closeButtonLabel","OK","
 -- CONTEXT --
 ","OK"
 "Alert.dontShowAgain","Don't show this message again","
 -- CONTEXT --
-","Don't show this message again"
+","यह संदेश दोबारा न दिखाएँ"
 "AnswersEditor.answersLabel","Answers","
 -- CONTEXT --
 ","Answers"
@@ -187,25 +187,25 @@
 ","Administration"
 "AppBar.changeLanguage","Change language","
 -- CONTEXT --
-","Change language"
+","भाषा बदलें"
 "AppBar.help","Help and support","
 -- CONTEXT --
 ","Help and support"
 "AppBar.logIn","Sign in","
 -- CONTEXT --
-","Sign in"
+","साइन इन करें"
 "AppBar.logOut","Sign out","
 -- CONTEXT --
-","Sign out"
+","साइन आउट करें"
 "AppBar.settings","Settings","
 -- CONTEXT --
-","Settings"
+","सेटिंग"
 "AppBar.title","Kolibri Studio","
 -- CONTEXT --
-","Kolibri Studio"
+","Kolibri स्टूडियो"
 "AssessmentEditor.closeBtnLabel","Close","
 -- CONTEXT --
-","Close"
+","बंद करें"
 "AssessmentEditor.incompleteItemIndicatorLabel","Incomplete","
 -- CONTEXT --
 ","Incomplete"
@@ -220,7 +220,7 @@
 ","Show answers"
 "AssessmentEditor.toolbarItemLabel","question","
 -- CONTEXT --
-","question"
+","प्रश्न"
 "AssessmentItemEditor.dialogMessageChangeToInput","Switching to 'numeric input' will set all answers as correct and remove all non-numeric answers. Continue?","
 -- CONTEXT --
 ","Switching to 'numeric input' will set all answers as correct and remove all non-numeric answers. Continue?"
@@ -232,13 +232,13 @@
 ","Switching to 'true or false' will remove all current answers. Continue?"
 "AssessmentItemEditor.dialogSubmitBtnLabel","Change","
 -- CONTEXT --
-","Change"
+","बदलें"
 "AssessmentItemEditor.dialogTitle","Changing question type","
 -- CONTEXT --
 ","Changing question type"
 "AssessmentItemEditor.questionLabel","Question","
 -- CONTEXT --
-","Question"
+","प्रश्न"
 "AssessmentItemEditor.questionTypeLabel","Response type","
 -- CONTEXT --
 ","Response type"
@@ -262,10 +262,10 @@
 ","Add {itemLabel} below"
 "AssessmentItemToolbar.toolbarLabelDelete","Delete","
 -- CONTEXT --
-","Delete"
+","हटाएँ"
 "AssessmentItemToolbar.toolbarLabelEdit","Edit","
 -- CONTEXT --
-","Edit"
+","संपादित करें (एडिट)"
 "AssessmentItemToolbar.toolbarLabelMoveDown","Move down","
 -- CONTEXT --
 ","Move down"
@@ -274,7 +274,7 @@
 ","Move up"
 "AssessmentTab.dialogCancelBtnLabel","Cancel","
 -- CONTEXT --
-","Cancel"
+","रद्द करें"
 "AssessmentTab.dialogSubmitBtnLabel","Submit","
 -- CONTEXT --
 ","Submit"
@@ -283,13 +283,10 @@
 ","{invalidItemsCount} incomplete {invalidItemsCount, plural, one {question} other {questions}}"
 "BrowsingCard.addToClipboardAction","Copy to clipboard","
 -- CONTEXT --
-","Copy to clipboard"
+","क्लिपबोर्ड पर कॉपी करें"
 "BrowsingCard.coach","Resource for coaches","
 -- CONTEXT --
 ","Resource for coaches"
-"BrowsingCard.goToPluralLocationsAction","In {count, number} {count, plural, one {location} other {locations}}","
--- CONTEXT --
-","In {count, number} {count, plural, one {location} other {locations}}"
 "BrowsingCard.goToSingleLocationAction","Go to location","
 -- CONTEXT --
 ","Go to location"
@@ -301,7 +298,7 @@
 ","View details"
 "BrowsingCard.resourcesCount","{count, number} {count, plural, one {resource} other {resources}}","
 -- CONTEXT --
-","{count, number} {count, plural, one {resource} other {resources}}"
+","{count, number} {count, plural, one {संसाधन} other {संसाधन}}"
 "BrowsingCard.tagsList","Tags: {tags}","
 -- CONTEXT --
 ","Tags: {tags}"
@@ -340,7 +337,7 @@
 ","Welcome to the Kolibri Content Library Catalog! "
 "CatalogFAQ.aboutKolibriHeader","About Kolibri","
 -- CONTEXT --
-","About Kolibri"
+","Kolibri के बारे में"
 "CatalogFAQ.aboutLibraryHeader","About the Kolibri Content Library","
 -- CONTEXT --
 ","About the Kolibri Content Library"
@@ -379,7 +376,7 @@
 ","Download Kolibri"
 "CatalogFAQ.downloadLink","Download","
 -- CONTEXT --
-","Download"
+","डाउनलोड करें"
 "CatalogFAQ.endoresementQuestion","Have these sources been vetted or endorsed as classroom-safe and ready?","
 -- CONTEXT --
 ","Have these sources been vetted or endorsed as classroom-safe and ready?"
@@ -509,10 +506,10 @@
  other {# channels}}"
 "CatalogFilterBar.clearAll","Clear all","
 -- CONTEXT --
-","Clear all"
+","सभी साफ़ करें"
 "CatalogFilterBar.close","Close","
 -- CONTEXT --
-","Close"
+","बंद करें"
 "CatalogFilterBar.coachContent","Coach content","
 -- CONTEXT --
 ","Coach content"
@@ -533,7 +530,7 @@
 ","Starred"
 "CatalogFilterBar.subtitles","Subtitles","
 -- CONTEXT --
-","Subtitles"
+","उपशीर्षक"
 "CatalogFilters.coachDescription","Resources for coaches are only visible to coaches in Kolibri","
 -- CONTEXT --
 ","Resources for coaches are only visible to coaches in Kolibri"
@@ -557,10 +554,10 @@
 ","Licenses"
 "CatalogFilters.searchLabel","Keywords","
 -- CONTEXT --
-","Keywords"
+","कीबोर्ड"
 "CatalogFilters.searchText","Search","
 -- CONTEXT --
-","Search"
+","खोज"
 "CatalogFilters.starredLabel","Starred","
 -- CONTEXT --
 ","Starred"
@@ -569,7 +566,7 @@
 ","Captions or subtitles"
 "CatalogList.cancelButton","Cancel","
 -- CONTEXT --
-","Cancel"
+","रद्द करें"
 "CatalogList.channelSelectionCount","{count, plural,
  =1 {# channel selected}
  other {# channels selected}}","
@@ -579,16 +576,16 @@
  other {# channels selected}}"
 "CatalogList.downloadButton","Download","
 -- CONTEXT --
-","Download"
+","डाउनलोड करें"
 "CatalogList.downloadCSV","Download CSV","
 -- CONTEXT --
-","Download CSV"
+","CSV डाउनलोड करें"
 "CatalogList.downloadPDF","Download PDF","
 -- CONTEXT --
 ","Download PDF"
 "CatalogList.downloadingMessage","Download started","
 -- CONTEXT --
-","Download started"
+","डाउनलोड शुरू"
 "CatalogList.resultsText","{count, plural,
  =1 {# result found}
  other {# results found}}","
@@ -598,7 +595,7 @@
  other {# results found}}"
 "CatalogList.selectAll","Select all","
 -- CONTEXT --
-","Select all"
+","सभी का चयन करें"
 "CatalogList.selectChannels","Download a summary of selected channels","
 -- CONTEXT --
 ","Download a summary of selected channels"
@@ -607,10 +604,10 @@
 ","Category not found"
 "ChangePasswordForm.cancelAction","Cancel","
 -- CONTEXT --
-","Cancel"
+","रद्द करें"
 "ChangePasswordForm.changePasswordHeader","Change password","
 -- CONTEXT --
-","Change password"
+","पासवर्ड बदलें"
 "ChangePasswordForm.confirmNewPasswordLabel","Confirm new password","
 -- CONTEXT --
 ","Confirm new password"
@@ -628,7 +625,7 @@
 ","Password updated"
 "ChangePasswordForm.saveChangesAction","Save changes","
 -- CONTEXT --
-","Save changes"
+","परिवर्तनों को सेव करें"
 "ChannelCatalogFrontPage.assessmentsIncludedText","Assessments","
 -- CONTEXT --
 ","Assessments"
@@ -652,7 +649,7 @@
 ","Formats"
 "ChannelCatalogFrontPage.languagesHeading","Languages","
 -- CONTEXT --
-","Languages"
+","भाषाएँ"
 "ChannelCatalogFrontPage.numberOfChannels","{ num } channels","
 -- CONTEXT --
 ","{ num } channels"
@@ -661,19 +658,19 @@
 ","Captions or subtitles"
 "ChannelDeletedError.backToHomeAction","Back to home","
 -- CONTEXT --
-","Back to home"
+","होमपेज पर वापिस जाएं"
 "ChannelDeletedError.channelDeletedDetails","This channel does not exist or may have been removed. Please contact us at content@learningequality.org if you think this is a mistake.","
 -- CONTEXT --
 ","This channel does not exist or may have been removed. Please contact us at content@learningequality.org if you think this is a mistake."
 "ChannelDeletedError.channelDeletedHeader","Channel not found","
 -- CONTEXT --
-","Channel not found"
+","चैनल नहीं मिला"
 "ChannelDetailsModal.downloadButton","Download channel summary","
 -- CONTEXT --
 ","Download channel summary"
 "ChannelDetailsModal.downloadCSV","Download CSV","
 -- CONTEXT --
-","Download CSV"
+","CSV डाउनलोड करें"
 "ChannelDetailsModal.downloadPDF","Download PDF","
 -- CONTEXT --
 ","Download PDF"
@@ -694,7 +691,7 @@
 ","Copyright holders"
 "ChannelExportStrings.description","Description","
 -- CONTEXT --
-","Description"
+","विवरण"
 "ChannelExportStrings.downloadFilename","{year}_{month}_Kolibri_Content_Library","
 -- CONTEXT --
 ","{year}_{month}_Kolibri_Content_Library"
@@ -703,7 +700,7 @@
 ","Channel ID"
 "ChannelExportStrings.language","Language","
 -- CONTEXT --
-","Language"
+","भाषा "
 "ChannelExportStrings.languages","Included languages","
 -- CONTEXT --
 ","Included languages"
@@ -712,16 +709,16 @@
 ","Licenses"
 "ChannelExportStrings.name","Name","
 -- CONTEXT --
-","Name"
+","नाम"
 "ChannelExportStrings.no","No","
 -- CONTEXT --
-","No"
+","नहीं"
 "ChannelExportStrings.providers","Providers","
 -- CONTEXT --
 ","Providers"
 "ChannelExportStrings.resources","Resources","
 -- CONTEXT --
-","Resources"
+","संसाधन"
 "ChannelExportStrings.size","Total resources","
 -- CONTEXT --
 ","Total resources"
@@ -739,22 +736,22 @@
 ","Token"
 "ChannelExportStrings.yes","Yes","
 -- CONTEXT --
-","Yes"
+","हाँ"
 "ChannelInfoCard.resourceCount","{count, number} {count, plural, one {resource} other {resources}}","
 -- CONTEXT --
-","{count, number} {count, plural, one {resource} other {resources}}"
+","{count, number} {count, plural, one {संसाधन} other {संसाधन}}"
 "ChannelInvitation.accept","Accept","
 -- CONTEXT --
-","Accept"
+","स्वीकार करें"
 "ChannelInvitation.acceptedSnackbar","Accepted invitation","
 -- CONTEXT --
 ","Accepted invitation"
 "ChannelInvitation.cancel","Cancel","
 -- CONTEXT --
-","Cancel"
+","रद्द करें"
 "ChannelInvitation.decline","Decline","
 -- CONTEXT --
-","Decline"
+","अस्वीकार करें"
 "ChannelInvitation.declinedSnackbar","Declined invitation","
 -- CONTEXT --
 ","Declined invitation"
@@ -775,7 +772,7 @@
 ","{sender} has invited you to view {channel}"
 "ChannelItem.cancel","Cancel","
 -- CONTEXT --
-","Cancel"
+","रद्द करें"
 "ChannelItem.channelDeletedSnackbar","Channel deleted","
 -- CONTEXT --
 ","Channel deleted"
@@ -787,7 +784,7 @@
 ","Copy channel token"
 "ChannelItem.deleteChannel","Delete channel","
 -- CONTEXT --
-","Delete channel"
+","चैनल हटाएँ"
 "ChannelItem.deletePrompt","This channel will be permanently deleted. This cannot be undone.","
 -- CONTEXT --
 ","This channel will be permanently deleted. This cannot be undone."
@@ -796,7 +793,7 @@
 ","Delete this channel"
 "ChannelItem.details","Details","
 -- CONTEXT --
-","Details"
+","विवरण"
 "ChannelItem.editChannel","Edit channel details","
 -- CONTEXT --
 ","Edit channel details"
@@ -821,7 +818,7 @@
 ","Unpublished"
 "ChannelItem.versionText","Version {version}","
 -- CONTEXT --
-","Version {version}"
+","संस्करण {version}"
 "ChannelItem.viewContent","View channel on Kolibri","
 -- CONTEXT --
 ","View channel on Kolibri"
@@ -830,7 +827,7 @@
 ","New channel"
 "ChannelList.channelFilterLabel","Channels","
 -- CONTEXT --
-","Channels"
+","चैनल"
 "ChannelList.noChannelsFound","No channels found","
 -- CONTEXT --
 ","No channels found"
@@ -864,7 +861,7 @@
 ","Channels generated automatically are not editable."
 "ChannelModal.changesSaved","Changes saved","
 -- CONTEXT --
-","Changes saved"
+","परिवर्तन सहेजे गए"
 "ChannelModal.channelDescription","Channel description","
 -- CONTEXT --
 ","Channel description"
@@ -873,13 +870,13 @@
 ","Field is required"
 "ChannelModal.channelName","Channel name","
 -- CONTEXT --
-","Channel name"
+","चैनल का नाम"
 "ChannelModal.closeButton","Exit without saving","
 -- CONTEXT --
 ","Exit without saving"
 "ChannelModal.createButton","Create","
 -- CONTEXT --
-","Create"
+","बनाएँ"
 "ChannelModal.creatingHeader","New channel","
 -- CONTEXT --
 ","New channel"
@@ -888,7 +885,7 @@
 ","Channel details"
 "ChannelModal.editTab","Details","
 -- CONTEXT --
-","Details"
+","विवरण"
 "ChannelModal.keepEditingButton","Keep editing","
 -- CONTEXT --
 ","Keep editing"
@@ -897,7 +894,7 @@
 ","Channel does not exist"
 "ChannelModal.saveChangesButton","Save changes","
 -- CONTEXT --
-","Save changes"
+","परिवर्तनों को सेव करें"
 "ChannelModal.shareTab","Sharing","
 -- CONTEXT --
 ","Sharing"
@@ -912,22 +909,22 @@
 ","You will lose any unsaved changes. Are you sure you want to exit?"
 "ChannelNotFoundError.backToHomeAction","Back to home","
 -- CONTEXT --
-","Back to home"
+","होमपेज पर वापिस जाएं"
 "ChannelNotFoundError.channelNotFoundDetails","This channel does not exist or may have been removed. Please contact us at content@learningequality.org if you think this is a mistake.","
 -- CONTEXT --
 ","This channel does not exist or may have been removed. Please contact us at content@learningequality.org if you think this is a mistake."
 "ChannelNotFoundError.channelNotFoundHeader","Channel not found","
 -- CONTEXT --
-","Channel not found"
+","चैनल नहीं मिला"
 "ChannelSelectionList.noChannelsFound","No channels found","
 -- CONTEXT --
 ","No channels found"
 "ChannelSelectionList.searchText","Search for a channel","
 -- CONTEXT --
-","Search for a channel"
+","किसी चैनल को खोजें"
 "ChannelSetItem.cancel","Cancel","
 -- CONTEXT --
-","Cancel"
+","रद्द करें"
 "ChannelSetItem.delete","Delete collection","
 -- CONTEXT --
 ","Delete collection"
@@ -942,7 +939,7 @@
 ","Edit collection"
 "ChannelSetItem.options","Options","
 -- CONTEXT --
-","Options"
+","विकल्प"
 "ChannelSetItem.saving","Saving","
 -- CONTEXT --
 ","Saving"
@@ -957,7 +954,7 @@
 ","New collection"
 "ChannelSetList.cancelButtonLabel","Close","
 -- CONTEXT --
-","Close"
+","बंद करें"
 "ChannelSetList.channelNumber","Number of channels","
 -- CONTEXT --
 ","Number of channels"
@@ -975,7 +972,7 @@
 ","You can package together multiple channels to create a collection. The entire collection can then be imported to Kolibri at once by using a collection token."
 "ChannelSetList.options","Options","
 -- CONTEXT --
-","Options"
+","विकल्प"
 "ChannelSetList.title","Collection name","
 -- CONTEXT --
 ","Collection name"
@@ -1008,7 +1005,7 @@
 ","This collection does not exist"
 "ChannelSetModal.createButton","Create","
 -- CONTEXT --
-","Create"
+","बनाएँ"
 "ChannelSetModal.creatingChannelSet","New collection","
 -- CONTEXT --
 ","New collection"
@@ -1017,7 +1014,7 @@
 ","My Channels"
 "ChannelSetModal.finish","Finish","
 -- CONTEXT --
-","Finish"
+","समाप्त"
 "ChannelSetModal.public","Public","
 -- CONTEXT --
 ","Public"
@@ -1026,7 +1023,7 @@
 ","Only published channels are available for selection"
 "ChannelSetModal.removeText","Remove","
 -- CONTEXT --
-","Remove"
+","हटा दें"
 "ChannelSetModal.saveButton","Save and close","
 -- CONTEXT --
 ","Save and close"
@@ -1089,7 +1086,7 @@
 ","Please enter a valid email"
 "ChannelSharingTable.cancelButton","Cancel","
 -- CONTEXT --
-","Cancel"
+","रद्द करें"
 "ChannelSharingTable.currentUserText","{first_name} {last_name} (you)","
 -- CONTEXT --
 ","{first_name} {last_name} (you)"
@@ -1147,7 +1144,7 @@
 ","No users found"
 "ChannelSharingTable.optionsDropdown","Options","
 -- CONTEXT --
-","Options"
+","विकल्प"
 "ChannelSharingTable.removeViewer","Revoke view permissions","
 -- CONTEXT --
 ","Revoke view permissions"
@@ -1187,7 +1184,7 @@
 ","Removed from starred channels"
 "ChannelThumbnail.cancel","Cancel","
 -- CONTEXT --
-","Cancel"
+","रद्द करें"
 "ChannelThumbnail.crop","Crop","
 -- CONTEXT --
 ","Crop"
@@ -1202,13 +1199,13 @@
 ","No thumbnail"
 "ChannelThumbnail.remove","Remove","
 -- CONTEXT --
-","Remove"
+","हटा दें"
 "ChannelThumbnail.retryUpload","Retry upload","
 -- CONTEXT --
 ","Retry upload"
 "ChannelThumbnail.save","Save","
 -- CONTEXT --
-","Save"
+","सेव करें"
 "ChannelThumbnail.upload","Upload image","
 -- CONTEXT --
 ","Upload image"
@@ -1220,13 +1217,13 @@
 ","Uploading"
 "ChannelThumbnail.zoomIn","Zoom in","
 -- CONTEXT --
-","Zoom in"
+","ज़ूम इन करें"
 "ChannelThumbnail.zoomOut","Zoom out","
 -- CONTEXT --
-","Zoom out"
+","ज़ूम आउट करें"
 "ChannelTokenModal.close","Close","
 -- CONTEXT --
-","Close"
+","बंद करें"
 "ChannelTokenModal.copyTitle","Copy channel token","
 -- CONTEXT --
 ","Copy channel token"
@@ -1238,13 +1235,13 @@
 ","Clipboard"
 "Clipboard.close","Close","
 -- CONTEXT --
-","Close"
+","बंद करें"
 "Clipboard.copiedItemsToClipboard","Copied in clipboard","
 -- CONTEXT --
 ","Copied in clipboard"
 "Clipboard.deleteSelectedButton","Delete","
 -- CONTEXT --
-","Delete"
+","हटाएँ"
 "Clipboard.duplicateSelectedButton","Make a copy","
 -- CONTEXT --
 ","Make a copy"
@@ -1262,54 +1259,57 @@
 ","Deleted from clipboard"
 "Clipboard.selectAll","Select all","
 -- CONTEXT --
-","Select all"
+","सभी का चयन करें"
 "CommonMetadataStrings.accessibility","Accessibility","
 -- CONTEXT --
-Allows the user to filter for all the resources with accessibility features for learners with disabilities.","Accessibility"
+Allows the user to filter for all the resources with accessibility features for learners with disabilities.","पहुँच क्षमता"
 "CommonMetadataStrings.algebra","Algebra","
 -- CONTEXT --
-A type of math category. See https://en.wikipedia.org/wiki/Algebra","Algebra"
+A type of math category. See https://en.wikipedia.org/wiki/Algebra","बीजगणित"
 "CommonMetadataStrings.all","All","
 -- CONTEXT --
-A label for everything in the group of activities.","All"
+A label for everything in the group of activities.","सभी"
+"CommonMetadataStrings.allContent","Viewed in its entirety","
+-- CONTEXT --
+One of the completion criteria types. A resource with this criteria is considered complete when learners studied it all, for example they saw all pages of a document.","Viewed in its entirety"
 "CommonMetadataStrings.allLevelsBasicSkills","All levels -- basic skills","
 -- CONTEXT --
-Refers to a type of educational level.","All levels -- basic skills"
+Refers to a type of educational level.","सभी स्तर -- मूलभूत कौशल"
 "CommonMetadataStrings.allLevelsWorkSkills","All levels -- work skills","
 -- CONTEXT --
-Refers to a type of educational level.","All levels -- work skills"
+Refers to a type of educational level.","सभी स्तर -- कार्य कौशल"
 "CommonMetadataStrings.altText","Includes alternative text descriptions for images","
 -- CONTEXT --
 Alternative text, or alt text, is a written substitute for an image. It is used to describe information being provided by an image, graph, or any other visual element on a web page. It provides information about the context and function of an image for people with varying degrees of visual and cognitive impairments. When a screen reader encounters an image, it will read aloud the alternative text.
 https://www.med.unc.edu/webguide/accessibility/alt-text/","Includes alternative text descriptions for images"
 "CommonMetadataStrings.anthropology","Anthropology","
 -- CONTEXT --
-Category type. See https://en.wikipedia.org/wiki/Anthropology","Anthropology"
+Category type. See https://en.wikipedia.org/wiki/Anthropology","एंथ्रोपोलॉजी"
 "CommonMetadataStrings.arithmetic","Arithmetic","
 -- CONTEXT --
-Math category type. See https://en.wikipedia.org/wiki/Arithmetic","Arithmetic"
+Math category type. See https://en.wikipedia.org/wiki/Arithmetic","अंकगणित"
 "CommonMetadataStrings.arts","Arts","
 -- CONTEXT --
-Refers to a category group type. See https://en.wikipedia.org/wiki/The_arts","Arts"
+Refers to a category group type. See https://en.wikipedia.org/wiki/The_arts","कला"
 "CommonMetadataStrings.astronomy","Astronomy","
 -- CONTEXT --
-Science category type. See https://en.wikipedia.org/wiki/Astronomy","Astronomy"
+Science category type. See https://en.wikipedia.org/wiki/Astronomy","खगोल विज्ञान"
 "CommonMetadataStrings.audioDescription","Includes audio descriptions","
 -- CONTEXT --
 Content has narration used to provide information surrounding key visual elements for the benefit of blind and visually impaired users.
 https://en.wikipedia.org/wiki/Audio_description","Includes audio descriptions"
 "CommonMetadataStrings.basicSkills","Basic skills","
 -- CONTEXT --
-Category type. Basic skills refer to learning resources focused on aspects like literacy, numeracy and digital literacy.","Basic skills"
+Category type. Basic skills refer to learning resources focused on aspects like literacy, numeracy and digital literacy.","मूलभूत कौशल"
 "CommonMetadataStrings.biology","Biology","
 -- CONTEXT --
-Science category type. See https://en.wikipedia.org/wiki/Biology","Biology"
+Science category type. See https://en.wikipedia.org/wiki/Biology","जीव विज्ञान"
 "CommonMetadataStrings.browseChannel","Browse channel","
 -- CONTEXT --
-Heading on page where a user can browse the content within a channel","Browse channel"
+Heading on page where a user can browse the content within a channel","चैनल ब्राउज़ करें"
 "CommonMetadataStrings.calculus","Calculus","
 -- CONTEXT --
-Math category type. https://en.wikipedia.org/wiki/Calculus","Calculus"
+Math category type. https://en.wikipedia.org/wiki/Calculus","कैल्कुलस"
 "CommonMetadataStrings.captionsSubtitles","Includes captions or subtitles","
 -- CONTEXT --
 Accessibility filter to search for video and audio resources that have text captions for users who are deaf or hard of hearing.
@@ -1319,130 +1319,145 @@ https://www.w3.org/WAI/media/av/captions/","Includes captions or subtitles"
 A title for the metadata that explains the subject matter of an activity","Category"
 "CommonMetadataStrings.chemistry","Chemistry","
 -- CONTEXT --
-Science category type. See https://en.wikipedia.org/wiki/Chemistry","Chemistry"
+Science category type. See https://en.wikipedia.org/wiki/Chemistry","रसायन विज्ञान"
 "CommonMetadataStrings.civicEducation","Civic education","
 -- CONTEXT --
-Category type. Civic education is the study of the rights and obligations of citizens in society. See https://en.wikipedia.org/wiki/Civics","Civic education"
+Category type. Civic education is the study of the rights and obligations of citizens in society. See https://en.wikipedia.org/wiki/Civics","नागरिक शास्त्र"
+"CommonMetadataStrings.completeDuration","When time spent is equal to duration","
+-- CONTEXT --
+One of the completion criteria types. A resource with this criteria is considered complete when learners spent given time studying it.","When time spent is equal to duration"
 "CommonMetadataStrings.completion","Completion","CommonMetadataStrings.completion
 
 -- CONTEXT --
 A title for the metadata that explains when an activity is considered completed","Completion"
 "CommonMetadataStrings.computerScience","Computer science","
 -- CONTEXT --
-Category type. See https://en.wikipedia.org/wiki/Computer_science","Computer science"
+Category type. See https://en.wikipedia.org/wiki/Computer_science","कम्प्यूटर साइंस"
 "CommonMetadataStrings.create","Create","
 -- CONTEXT --
-Resource and filter label for the type of learning activity. Translate as a VERB","Create"
+Resource and filter label for the type of learning activity. Translate as a VERB","बनाएँ"
 "CommonMetadataStrings.currentEvents","Current events","
 -- CONTEXT --
-Category type. Could also be translated as 'News'. See https://en.wikipedia.org/wiki/News","Current events"
+Category type. Could also be translated as 'News'. See https://en.wikipedia.org/wiki/News","वर्तमान घटनाएं"
 "CommonMetadataStrings.dailyLife","Daily life","
 -- CONTEXT --
-Category type. See https://en.wikipedia.org/wiki/Everyday_life","Daily life"
+Category type. See https://en.wikipedia.org/wiki/Everyday_life","दैनिक जीवन"
 "CommonMetadataStrings.dance","Dance","
 -- CONTEXT --
-Category type. See https://en.wikipedia.org/wiki/Dance","Dance"
+Category type. See https://en.wikipedia.org/wiki/Dance","नृत्य"
+"CommonMetadataStrings.determinedByResource","Determined by the resource","
+-- CONTEXT --
+One of the completion criteria types. Typically used for embedded html5/h5p resources that contain their own completion criteria, for example reaching a score in an educational game.","Determined by the resource"
 "CommonMetadataStrings.digitalLiteracy","Digital literacy","
 -- CONTEXT --
-Category type. See https://en.wikipedia.org/wiki/Digital_literacy","Digital literacy"
+Category type. See https://en.wikipedia.org/wiki/Digital_literacy","डिजिटल साक्षरता"
 "CommonMetadataStrings.diversity","Diversity","
 -- CONTEXT --
-Category type. See https://en.wikipedia.org/wiki/Diversity_(politics)","Diversity"
+Category type. See https://en.wikipedia.org/wiki/Diversity_(politics)","विविधता"
 "CommonMetadataStrings.drama","Drama","
 -- CONTEXT --
-Category type. See https://en.wikipedia.org/wiki/Drama","Drama"
+Category type. See https://en.wikipedia.org/wiki/Drama","नाटक"
 "CommonMetadataStrings.duration","Duration","
 -- CONTEXT --
 A title for the metadata that explains how long an activity will take","Duration"
 "CommonMetadataStrings.earthScience","Earth science","
 -- CONTEXT --
-Category type. See https://en.wikipedia.org/wiki/Earth_science","Earth science"
+Category type. See https://en.wikipedia.org/wiki/Earth_science","पृथ्वी विज्ञान"
 "CommonMetadataStrings.entrepreneurship","Entrepreneurship","
 -- CONTEXT --
-Category type. See https://en.wikipedia.org/wiki/Entrepreneurship","Entrepreneurship"
+Category type. See https://en.wikipedia.org/wiki/Entrepreneurship","उद्यमिता"
 "CommonMetadataStrings.environment","Environment","
 -- CONTEXT --
-Category type. See https://en.wikipedia.org/wiki/Environmental_studies","Environment"
+Category type. See https://en.wikipedia.org/wiki/Environmental_studies","पर्यावरण"
+"CommonMetadataStrings.exactTime","Time to complete","
+-- CONTEXT --
+One of the completion criteria types. A subset of ""When time spent is equal to duration"". For example, for an audio resource with this criteria, learnes need to hear the whole length of audio for the resource to be considered complete.","Time to complete"
 "CommonMetadataStrings.explore","Explore","
 -- CONTEXT --
-Resource and filter label for the type of learning activity. Translate as a VERB","Explore"
+Resource and filter label for the type of learning activity. Translate as a VERB","अन्वेषण करें"
 "CommonMetadataStrings.financialLiteracy","Financial literacy","
 -- CONTEXT --
-Category type. See https://en.wikipedia.org/wiki/Financial_literacy","Financial literacy"
+Category type. See https://en.wikipedia.org/wiki/Financial_literacy","वित्तीय साक्षरता"
 "CommonMetadataStrings.forBeginners","For beginners","
 -- CONTEXT --
-Filter option and a label for the resources in the Kolibri Library.","For beginners"
+Filter option and a label for the resources in the Kolibri Library.","नौसिखियों के लिए"
 "CommonMetadataStrings.forTeachers","For teachers","
 -- CONTEXT --
-Category type","For teachers"
+Category type","शिक्षकों के लिए"
 "CommonMetadataStrings.geometry","Geometry","
 -- CONTEXT --
-Category type.","Geometry"
+Category type.","रेखागणित"
+"CommonMetadataStrings.goal","When goal is met","
+-- CONTEXT --
+One of the completion criteria types specific to exercises. An exercise with this criteria is considered complete when learners reached a given goal, for example 100% correct.","When goal is met"
 "CommonMetadataStrings.guides","Guides","
 -- CONTEXT --
-Category label in the Kolibri resources library; refers to any guide-type material for teacher professional development.","Guides"
+Category label in the Kolibri resources library; refers to any guide-type material for teacher professional development.","गाइड्स"
 "CommonMetadataStrings.highContrast","Includes high contrast text for learners with low vision","
 -- CONTEXT --
 Accessibility filter used to search for resources that have high contrast color themes for users with low vision ('display' refers to digital content, not the hardware like screens or monitors).
 https://veroniiiica.com/2019/10/25/high-contrast-color-schemes-low-vision/","Includes high contrast text for learners with low vision"
 "CommonMetadataStrings.history","History","
 -- CONTEXT --
-Category type.","History"
+Category type.","इतिहास"
 "CommonMetadataStrings.industryAndSectorSpecific","Industry and sector specific","
 -- CONTEXT --
-Subcategory type for technical and vocational training.","Industry and sector specific"
+Subcategory type for technical and vocational training.","उद्योग और क्षेत्र विशिष्ट"
 "CommonMetadataStrings.languageLearning","Language learning","
 -- CONTEXT --
-Category type.","Language learning"
+Category type.","भाषा सीखना"
 "CommonMetadataStrings.learningActivity","Learning Activity","
 -- CONTEXT --
 A title for the category of education material interaction, i.e. watch, read, listen","Learning Activity"
 "CommonMetadataStrings.learningSkills","Learning skills","
 -- CONTEXT --
 A category label and type of basic skill.
-https://en.wikipedia.org/wiki/Study_skills","Learning skills"
+https://en.wikipedia.org/wiki/Study_skills","सीखने के कौशल"
 "CommonMetadataStrings.lessonPlans","Lesson plans","
 -- CONTEXT --
-Category label in the Kolibri resources library; refers to lesson planning materials for teachers.","Lesson plans"
+Category label in the Kolibri resources library; refers to lesson planning materials for teachers.","पाठ योजनाएं"
 "CommonMetadataStrings.level","Level","
 -- CONTEXT --
-Refers to the educational learning level, such a preschool, primary, secondary, etc.","Level"
+Refers to the educational learning level, such a preschool, primary, secondary, etc.","स्तर"
 "CommonMetadataStrings.listen","Listen","
 -- CONTEXT --
-Resource and filter label for the type of learning activity with audio. Translate as a VERB","Listen"
+Resource and filter label for the type of learning activity with audio. Translate as a VERB","सुनें"
 "CommonMetadataStrings.literacy","Literacy","
 -- CONTEXT --
-Category type. See https://en.wikipedia.org/wiki/Literacy","Literacy"
+Category type. See https://en.wikipedia.org/wiki/Literacy","साक्षरता"
 "CommonMetadataStrings.literature","Literature","
 -- CONTEXT --
-Category type. See https://en.wikipedia.org/wiki/Literature","Literature"
+Category type. See https://en.wikipedia.org/wiki/Literature","साहित्य"
 "CommonMetadataStrings.logicAndCriticalThinking","Logic and critical thinking","
 -- CONTEXT --
-Category type. See https://en.wikipedia.org/wiki/Critical_thinking","Logic and critical thinking"
+Category type. See https://en.wikipedia.org/wiki/Critical_thinking","तर्क और आलोचनात्मक सोच"
 "CommonMetadataStrings.longActivity","Long activity","
 -- CONTEXT --
-Label with time estimation for learning activities that take more than 30 minutes.","Long activity"
+Label with time estimation for learning activities that take more than 30 minutes.","लंबी गतिविधि"
 "CommonMetadataStrings.lowerPrimary","Lower primary","
 -- CONTEXT --
-Refers to a level of learning. Approximately corresponds to the first half of primary school.","Lower primary"
+Refers to a level of learning. Approximately corresponds to the first half of primary school.","पूर्व प्राथमिक"
 "CommonMetadataStrings.lowerSecondary","Lower secondary","
 -- CONTEXT --
-Refers to a level of learning. Approximately corresponds to the first half of secondary school (high school).","Lower secondary"
+Refers to a level of learning. Approximately corresponds to the first half of secondary school (high school).","पूर्व माध्यमिक"
+"CommonMetadataStrings.masteryMofN","Goal: {m} out of {n}","
+-- CONTEXT --
+One of the completion criteria types specific to exercises. An exercise with this criteria is considered complete when learners answered m questions out of n correctly.","Goal: {m} out of {n}"
 "CommonMetadataStrings.mathematics","Mathematics","
 -- CONTEXT --
-Category type. See https://en.wikipedia.org/wiki/Mathematics","Mathematics"
+Category type. See https://en.wikipedia.org/wiki/Mathematics","गणित"
 "CommonMetadataStrings.mechanicalEngineering","Mechanical engineering","
 -- CONTEXT --
-Category type. See https://en.wikipedia.org/wiki/Mechanical_engineering.","Mechanical engineering"
+Category type. See https://en.wikipedia.org/wiki/Mechanical_engineering.","मैकेनिकल इंजीनियरिंग"
 "CommonMetadataStrings.mediaLiteracy","Media literacy","
 -- CONTEXT --
-Category type. See https://en.wikipedia.org/wiki/Media_literacy","Media literacy"
+Category type. See https://en.wikipedia.org/wiki/Media_literacy","मीडिया साक्षरता"
 "CommonMetadataStrings.mentalHealth","Mental health","
 -- CONTEXT --
-Category type. See https://en.wikipedia.org/wiki/Mental_health","Mental health"
+Category type. See https://en.wikipedia.org/wiki/Mental_health","मानसिक स्वास्थ्य"
 "CommonMetadataStrings.music","Music","
 -- CONTEXT --
-Category type. See https://en.wikipedia.org/wiki/Music","Music"
+Category type. See https://en.wikipedia.org/wiki/Music","संगीत"
 "CommonMetadataStrings.needsInternet","Internet connection","
 -- CONTEXT --
 Refers to a filter for resources.","Internet connection"
@@ -1452,57 +1467,63 @@ Refers to a filter for resources.
 ","Other supplies"
 "CommonMetadataStrings.numeracy","Numeracy","
 -- CONTEXT --
-Category type. See https://en.wikipedia.org/wiki/Numeracy","Numeracy"
+Category type. See https://en.wikipedia.org/wiki/Numeracy","अंकों का ज्ञान"
 "CommonMetadataStrings.peers","Working with peers","
 -- CONTEXT --
 Refers to a filter for resources that require a learner to work with other learners to be used.","Working with peers"
 "CommonMetadataStrings.physics","Physics","
 -- CONTEXT --
-Category type. See https://en.wikipedia.org/wiki/Physics.","Physics"
+Category type. See https://en.wikipedia.org/wiki/Physics.","भौतिक विज्ञान"
 "CommonMetadataStrings.politicalScience","Political science","
 -- CONTEXT --
-Category type. See https://en.wikipedia.org/wiki/Political_science.","Political science"
+Category type. See https://en.wikipedia.org/wiki/Political_science.","राजनीतिशास्त्र"
 "CommonMetadataStrings.practice","Practice","
 -- CONTEXT --
-Resource and filter label for the type of learning activity with questions and answers. Translate as a VERB","Practice"
+Resource and filter label for the type of learning activity with questions and answers. Translate as a VERB","अभ्यास"
+"CommonMetadataStrings.practiceQuiz","Practice quiz","
+-- CONTEXT --
+One of the completion criteria types specific to exercises. An exercise with this criteria represents a quiz.","Practice quiz"
 "CommonMetadataStrings.preschool","Preschool","
 -- CONTEXT --
 Refers to a level of education offered to children before they begin compulsory education at primary school.
 
-See https://en.wikipedia.org/wiki/Preschool","Preschool"
+See https://en.wikipedia.org/wiki/Preschool","बालवाड़ी"
 "CommonMetadataStrings.professionalSkills","Professional skills","
 -- CONTEXT --
-Category type. Refers to skills that are related to a profession or a job.","Professional skills"
+Category type. Refers to skills that are related to a profession or a job.","पेशेवर कौशल"
 "CommonMetadataStrings.programming","Programming","
 -- CONTEXT --
-Category type. See https://en.wikipedia.org/wiki/Computer_programming","Programming"
+Category type. See https://en.wikipedia.org/wiki/Computer_programming","प्रोग्रामिंग"
 "CommonMetadataStrings.publicHealth","Public health","
 -- CONTEXT --
-Category type. See https://en.wikipedia.org/wiki/Public_health.","Public health"
+Category type. See https://en.wikipedia.org/wiki/Public_health.","लोक स्वास्थ्य"
 "CommonMetadataStrings.read","Read","
 -- CONTEXT --
-Resource and filter label for the type of learning activity with documents. Translate as a VERB","Read"
+Resource and filter label for the type of learning activity with documents. Translate as a VERB","पढ़ें"
 "CommonMetadataStrings.readReference","Reference","
 -- CONTEXT --
-Label displayed for the 'Read' learning activity, used instead of the time duration information, to indicate a resource that may not need sequential reading from the beginning to the end. Similar concept as the 'reference' books in the traditional library, that the user just  'consults', and does not read from cover to cover.","Reference"
+Label displayed for the 'Read' learning activity, used instead of the time duration information, to indicate a resource that may not need sequential reading from the beginning to the end. Similar concept as the 'reference' books in the traditional library, that the user just  'consults', and does not read from cover to cover.","संदर्भ"
 "CommonMetadataStrings.readingAndWriting","Reading and writing","
 -- CONTEXT --
-School subject category","Reading and writing"
+School subject category","पढ़ना और लिखना"
 "CommonMetadataStrings.readingComprehension","Reading comprehension","
 -- CONTEXT --
-Category type.","Reading comprehension"
+Category type.","निबंध पढ़ना"
+"CommonMetadataStrings.reference","Reference material","
+-- CONTEXT --
+One of the completion criteria types. Progress made on a resource with this criteria is not tracked.","Reference material"
 "CommonMetadataStrings.reflect","Reflect","
 -- CONTEXT --
-Resource and filter label for the type of learning activity. Translate as a VERB","Reflect"
+Resource and filter label for the type of learning activity. Translate as a VERB","प्रतिबिंबित"
 "CommonMetadataStrings.school","School","
 -- CONTEXT --
-Category type.","School"
+Category type.","विद्यालय"
 "CommonMetadataStrings.sciences","Sciences","
 -- CONTEXT --
-Category type. See https://en.wikipedia.org/wiki/Science","Sciences"
+Category type. See https://en.wikipedia.org/wiki/Science","विज्ञान"
 "CommonMetadataStrings.shortActivity","Short activity","
 -- CONTEXT --
-Label with time estimation for learning activities that take less than 30 minutes.","Short activity"
+Label with time estimation for learning activities that take less than 30 minutes.","छोटी गतिविधि"
 "CommonMetadataStrings.signLanguage","Includes sign language captions","
 -- CONTEXT --
 https://en.wikipedia.org/wiki/Sign_language
@@ -1510,68 +1531,68 @@ https://en.wikipedia.org/wiki/List_of_sign_languages
 Wherever communities of deaf people exist, sign languages have developed as useful means of communication, and they form the core of local Deaf cultures. Although signing is used primarily by the deaf and hard of hearing, it is also used by hearing individuals, such as those unable to physically speak, those who have trouble with spoken language due to a disability or condition (augmentative and alternative communication), or those with deaf family members, such as children of deaf adults. ","Includes sign language captions"
 "CommonMetadataStrings.skillsTraining","Skills training","
 -- CONTEXT --
-Subcategory type for technical and vocational training.","Skills training"
+Subcategory type for technical and vocational training.","कौशल प्रशिक्षण"
 "CommonMetadataStrings.socialSciences","Social sciences","
 -- CONTEXT --
-Category type. See https://en.wikipedia.org/wiki/Social_science","Social sciences"
+Category type. See https://en.wikipedia.org/wiki/Social_science","सामाजिक विज्ञान"
 "CommonMetadataStrings.sociology","Sociology","
 -- CONTEXT --
-Category type. See https://en.wikipedia.org/wiki/Sociology","Sociology"
+Category type. See https://en.wikipedia.org/wiki/Sociology","समाज शास्त्र"
 "CommonMetadataStrings.softwareTools","Other software tools","
 -- CONTEXT --
 Refers to a filter for resources that need additional software to be used.","Other software tools"
 "CommonMetadataStrings.softwareToolsAndTraining","Software tools and training","
 -- CONTEXT --
-Subcategory type for technical and vocational training.","Software tools and training"
+Subcategory type for technical and vocational training.","सॉफ्टवेयर साधन और प्रशिक्षण"
 "CommonMetadataStrings.specializedProfessionalTraining","Specialized professional training","
 -- CONTEXT --
-Level of education that refers to training for a profession (job).","Specialized professional training"
+Level of education that refers to training for a profession (job).","विशेषज्ञता पेशेवर प्रशिक्षण"
 "CommonMetadataStrings.statistics","Statistics","
 -- CONTEXT --
-A math category. See https://en.wikipedia.org/wiki/Statistics","Statistics"
+A math category. See https://en.wikipedia.org/wiki/Statistics","सांख्यिकी"
 "CommonMetadataStrings.taggedPdf","Tagged PDF","
 -- CONTEXT --
 A tagged PDF includes hidden accessibility markups (tags) that make the document accessible to those who use screen readers and other assistive technology (AT).
 
-https://taggedpdf.com/what-is-a-tagged-pdf/","Tagged PDF"
+https://taggedpdf.com/what-is-a-tagged-pdf/","टैग की गयी PDF फाइल"
 "CommonMetadataStrings.teacher","Working with a teacher","
 -- CONTEXT --
 Refers to a filter for resources that require a learner to work with a teacher to be used.","Working with a teacher"
 "CommonMetadataStrings.technicalAndVocationalTraining","Technical and vocational training","
 -- CONTEXT --
-A level of education. See https://en.wikipedia.org/wiki/TVET_(Technical_and_Vocational_Education_and_Training)","Technical and vocational training"
+A level of education. See https://en.wikipedia.org/wiki/TVET_(Technical_and_Vocational_Education_and_Training)","तकनीकी और व्यावसायिक प्रशिक्षण"
 "CommonMetadataStrings.tertiary","Tertiary","
 -- CONTEXT --
-A level of education. See https://en.wikipedia.org/wiki/Tertiary_education","Tertiary"
+A level of education. See https://en.wikipedia.org/wiki/Tertiary_education","तृतीय"
 "CommonMetadataStrings.toUseWithPaperAndPencil","Paper and pencil","
 -- CONTEXT --
 Refers to a filter for resources.
 ","Paper and pencil"
 "CommonMetadataStrings.topicLabel","Folder","
 -- CONTEXT --
-A collection of resources and other subfolders within a channel. Nested folders allow a channel to be organized as a tree or hierarchy.","Folder"
+A collection of resources and other subfolders within a channel. Nested folders allow a channel to be organized as a tree or hierarchy.","फोल्डर"
 "CommonMetadataStrings.upperPrimary","Upper primary","
 -- CONTEXT --
 Refers to a level of education. Approximately corresponds to the second half of primary school.
-","Upper primary"
+","उच्च प्राथमिक"
 "CommonMetadataStrings.upperSecondary","Upper secondary","
 -- CONTEXT --
-Refers to a level of education. Approximately corresponds to the second half of secondary school.","Upper secondary"
+Refers to a level of education. Approximately corresponds to the second half of secondary school.","उच्च माध्यमिक"
 "CommonMetadataStrings.visualArt","Visual art","
 -- CONTEXT --
-Category type. See https://en.wikipedia.org/wiki/Visual_arts","Visual art"
+Category type. See https://en.wikipedia.org/wiki/Visual_arts","दृश्य कला"
 "CommonMetadataStrings.watch","Watch","
 -- CONTEXT --
-Resource and filter label for the type of learning activity with video. Translate as a VERB","Watch"
+Resource and filter label for the type of learning activity with video. Translate as a VERB","देखें"
 "CommonMetadataStrings.webDesign","Web design","
 -- CONTEXT --
-Category type. See https://en.wikipedia.org/wiki/Web_design","Web design"
+Category type. See https://en.wikipedia.org/wiki/Web_design","वेब डिजाइन"
 "CommonMetadataStrings.work","Work","
 -- CONTEXT --
-Top level category group that contains resources for acquisition of professional skills.","Work"
+Top level category group that contains resources for acquisition of professional skills.","कार्य"
 "CommonMetadataStrings.writing","Writing","
 -- CONTEXT --
-Category type. See https://en.wikipedia.org/wiki/Writing","Writing"
+Category type. See https://en.wikipedia.org/wiki/Writing","लेखन"
 "CommunityStandardsModal.communityStandardsHeader","Community Standards","
 -- CONTEXT --
 ","Community Standards"
@@ -1614,27 +1635,9 @@ Category type. See https://en.wikipedia.org/wiki/Writing","Writing"
 "CommunityStandardsModal.studioItem5","Hosting. Uploading your own materials (limited to materials you know are appropriately licensed to do so) from a local hard drive or other locations on the internet","
 -- CONTEXT --
 ","Hosting. Uploading your own materials (limited to materials you know are appropriately licensed to do so) from a local hard drive or other locations on the internet"
-"CompletionOptions.allContent","Viewed in its entirety","
+"CompletionOptions.learnersCanMarkComplete","Allow learners to mark as complete","
 -- CONTEXT --
-","Viewed in its entirety"
-"CompletionOptions.completeDuration","When time spent is equal to duration","
--- CONTEXT --
-","When time spent is equal to duration"
-"CompletionOptions.determinedByResource","Determined by the resource","
--- CONTEXT --
-","Determined by the resource"
-"CompletionOptions.exactTime","Time to complete","
--- CONTEXT --
-","Time to complete"
-"CompletionOptions.goal","When goal is met","
--- CONTEXT --
-","When goal is met"
-"CompletionOptions.practiceQuiz","Practice quiz","
--- CONTEXT --
-","Practice quiz"
-"CompletionOptions.reference","Reference material","
--- CONTEXT --
-","Reference material"
+","Allow learners to mark as complete"
 "CompletionOptions.referenceHint","Progress will not be tracked on reference material unless learners mark it as complete","
 -- CONTEXT --
 ","Progress will not be tracked on reference material unless learners mark it as complete"
@@ -1646,19 +1649,19 @@ Category type. See https://en.wikipedia.org/wiki/Writing","Writing"
 ","The All Rights Reserved License indicates that the copyright holder reserves, or holds for their own use, all the rights provided by copyright law under one specific copyright treaty."
 "ConstantStrings.CC BY","CC BY","
 -- CONTEXT --
-","CC BY"
+","निम्न द्वारा CC"
 "ConstantStrings.CC BY-NC","CC BY-NC","
 -- CONTEXT --
-","CC BY-NC"
+","NC द्वारा CC"
 "ConstantStrings.CC BY-NC-ND","CC BY-NC-ND","
 -- CONTEXT --
-","CC BY-NC-ND"
+","NC-ND द्वारा CC"
 "ConstantStrings.CC BY-NC-ND_description","The Attribution-NonCommercial-NoDerivs License is the most restrictive of our six main licenses, only allowing others to download your works and share them with others as long as they credit you, but they can't change them in any way or use them commercially.","
 -- CONTEXT --
 ","The Attribution-NonCommercial-NoDerivs License is the most restrictive of our six main licenses, only allowing others to download your works and share them with others as long as they credit you, but they can't change them in any way or use them commercially."
 "ConstantStrings.CC BY-NC-SA","CC BY-NC-SA","
 -- CONTEXT --
-","CC BY-NC-SA"
+","NC-SA द्वारा CC"
 "ConstantStrings.CC BY-NC-SA_description","The Attribution-NonCommercial-ShareAlike License lets others remix, tweak, and build upon your work non-commercially, as long as they credit you and license their new creations under the identical terms.","
 -- CONTEXT --
 ","The Attribution-NonCommercial-ShareAlike License lets others remix, tweak, and build upon your work non-commercially, as long as they credit you and license their new creations under the identical terms."
@@ -1667,13 +1670,13 @@ Category type. See https://en.wikipedia.org/wiki/Writing","Writing"
 ","The Attribution-NonCommercial License lets others remix, tweak, and build upon your work non-commercially, and although their new works must also acknowledge you and be non-commercial, they don't have to license their derivative works on the same terms."
 "ConstantStrings.CC BY-ND","CC BY-ND","
 -- CONTEXT --
-","CC BY-ND"
+","ND द्वारा CC"
 "ConstantStrings.CC BY-ND_description","The Attribution-NoDerivs License allows for redistribution, commercial and non-commercial, as long as it is passed along unchanged and in whole, with credit to you.","
 -- CONTEXT --
 ","The Attribution-NoDerivs License allows for redistribution, commercial and non-commercial, as long as it is passed along unchanged and in whole, with credit to you."
 "ConstantStrings.CC BY-SA","CC BY-SA","
 -- CONTEXT --
-","CC BY-SA"
+","SA द्वारा CC"
 "ConstantStrings.CC BY-SA_description","The Attribution-ShareAlike License lets others remix, tweak, and build upon your work even for commercial purposes, as long as they credit you and license their new creations under the identical terms. This license is often compared to ""copyleft"" free and open source software licenses. All new works based on yours will carry the same license, so any derivatives will also allow commercial use. This is the license used by Wikipedia, and is recommended for materials that would benefit from incorporating content from Wikipedia and similarly licensed projects.","
 -- CONTEXT --
 ","The Attribution-ShareAlike License lets others remix, tweak, and build upon your work even for commercial purposes, as long as they credit you and license their new creations under the identical terms. This license is often compared to ""copyleft"" free and open source software licenses. All new works based on yours will carry the same license, so any derivatives will also allow commercial use. This is the license used by Wikipedia, and is recommended for materials that would benefit from incorporating content from Wikipedia and similarly licensed projects."
@@ -1694,7 +1697,7 @@ Category type. See https://en.wikipedia.org/wiki/Writing","Writing"
 ","Special Permissions is a custom license to use when the current licenses do not apply to the content. The owner of this license is responsible for creating a description of what this license entails."
 "ConstantStrings.audio","Audio","
 -- CONTEXT --
-","Audio"
+","ऑडियो"
 "ConstantStrings.audio_thumbnail","Thumbnail","
 -- CONTEXT --
 ","Thumbnail"
@@ -1703,7 +1706,7 @@ Category type. See https://en.wikipedia.org/wiki/Writing","Writing"
 ","Starred"
 "ConstantStrings.coach","Coaches","
 -- CONTEXT --
-","Coaches"
+","कोच"
 "ConstantStrings.do_all","Goal: 100% correct","
 -- CONTEXT --
 ","Goal: 100% correct"
@@ -1712,7 +1715,7 @@ Category type. See https://en.wikipedia.org/wiki/Writing","Writing"
 ","Learner must answer all questions in the exercise correctly (not recommended for long exercises)"
 "ConstantStrings.document","Document","
 -- CONTEXT --
-","Document"
+","दस्तावेज़"
 "ConstantStrings.document_thumbnail","Thumbnail","
 -- CONTEXT --
 ","Thumbnail"
@@ -1724,7 +1727,7 @@ Category type. See https://en.wikipedia.org/wiki/Writing","Writing"
 ","EPub document"
 "ConstantStrings.exercise","Exercise","
 -- CONTEXT --
-","Exercise"
+","अभ्यास"
 "ConstantStrings.exercise_thumbnail","Thumbnail","
 -- CONTEXT --
 ","Thumbnail"
@@ -1829,13 +1832,13 @@ Category type. See https://en.wikipedia.org/wiki/Writing","Writing"
 ","Single choice"
 "ConstantStrings.slideshow","Slideshow","
 -- CONTEXT --
-","Slideshow"
+","स्लाइडशो"
 "ConstantStrings.svg","SVG image","
 -- CONTEXT --
 ","SVG image"
 "ConstantStrings.topic","Folder","
 -- CONTEXT --
-","Folder"
+","फोल्डर"
 "ConstantStrings.topic_thumbnail","Thumbnail","
 -- CONTEXT --
 ","Thumbnail"
@@ -1847,10 +1850,10 @@ Category type. See https://en.wikipedia.org/wiki/Writing","Writing"
 ","Unknown question type"
 "ConstantStrings.video","Video","
 -- CONTEXT --
-","Video"
+","वीडियो"
 "ConstantStrings.video_subtitle","Captions","
 -- CONTEXT --
-","Captions"
+","कैप्शन"
 "ConstantStrings.video_thumbnail","Thumbnail","
 -- CONTEXT --
 ","Thumbnail"
@@ -1871,10 +1874,10 @@ Category type. See https://en.wikipedia.org/wiki/Writing","Writing"
 ","Aggregator"
 "ContentDefaults.author","Author","
 -- CONTEXT --
-","Author"
+","लेखक"
 "ContentDefaults.copyrightHolder","Copyright holder","
 -- CONTEXT --
-","Copyright holder"
+","कॉपीराइट धारक"
 "ContentDefaults.defaultsSubTitle","New resources will be automatically given these values","
 -- CONTEXT --
 ","New resources will be automatically given these values"
@@ -1883,13 +1886,13 @@ Category type. See https://en.wikipedia.org/wiki/Writing","Writing"
 ","Default copyright settings for new resources (optional)"
 "ContentDefaults.documents","Documents","
 -- CONTEXT --
-","Documents"
+","दस्तावेज़"
 "ContentDefaults.html5","HTML5 apps","
 -- CONTEXT --
 ","HTML5 apps"
 "ContentDefaults.license","License","
 -- CONTEXT --
-","License"
+","लाइसेंस"
 "ContentDefaults.licenseDescription","License description","
 -- CONTEXT --
 ","License description"
@@ -1904,7 +1907,7 @@ Category type. See https://en.wikipedia.org/wiki/Writing","Writing"
 ","Automatically generate thumbnails for the following resource types"
 "ContentDefaults.videos","Videos","
 -- CONTEXT --
-","Videos"
+","वीडियो"
 "ContentNodeChangedIcon.containsNew","Contains unpublished resources","
 -- CONTEXT --
 ","Contains unpublished resources"
@@ -1926,42 +1929,60 @@ Category type. See https://en.wikipedia.org/wiki/Writing","Writing"
 "ContentNodeChangedIcon.isUpdatedTopic","Folder has been updated since last publish","
 -- CONTEXT --
 ","Folder has been updated since last publish"
+"ContentNodeCopyTaskProgress.copyErrorTopic","Some resources failed to copy","
+-- CONTEXT --
+","Some resources failed to copy"
+"ContentNodeEditListItem.copiedSnackbar","Copy operation complete","
+-- CONTEXT --
+","Copy operation complete"
+"ContentNodeEditListItem.creatingCopies","Copying...","
+-- CONTEXT --
+","Copying..."
 "ContentNodeEditListItem.optionsTooltip","Options","
 -- CONTEXT --
-","Options"
+","विकल्प"
+"ContentNodeEditListItem.removeNode","Remove","
+-- CONTEXT --
+","Remove"
+"ContentNodeEditListItem.retryCopy","Retry","
+-- CONTEXT --
+","Retry"
+"ContentNodeEditListItem.undo","Undo","
+-- CONTEXT --
+","Undo"
 "ContentNodeIcon.audio","Audio","
 -- CONTEXT --
-","Audio"
+","ऑडियो"
 "ContentNodeIcon.document","Document","
 -- CONTEXT --
-","Document"
+","दस्तावेज़"
 "ContentNodeIcon.exercise","Exercise","
 -- CONTEXT --
-","Exercise"
+","अभ्यास"
 "ContentNodeIcon.html5","HTML5 App","
 -- CONTEXT --
 ","HTML5 App"
 "ContentNodeIcon.slideshow","Slideshow","
 -- CONTEXT --
-","Slideshow"
+","स्लाइडशो"
 "ContentNodeIcon.topic","Folder","
 -- CONTEXT --
-","Folder"
+","फोल्डर"
 "ContentNodeIcon.unsupported","Unsupported","
 -- CONTEXT --
 ","Unsupported"
 "ContentNodeIcon.video","Video","
 -- CONTEXT --
-","Video"
+","वीडियो"
 "ContentNodeLearningActivityIcon.multipleLearningActivities","Multiple learning activities","
 -- CONTEXT --
-","Multiple learning activities"
-"ContentNodeLearningActivityIcon.topic","Folder","
--- CONTEXT --
-","Folder"
+","सीखने की अनेक गतिविधियाँ"
 "ContentNodeListItem.coachTooltip","Resource for coaches","
 -- CONTEXT --
 ","Resource for coaches"
+"ContentNodeListItem.copyingError","Copy failed.","
+-- CONTEXT --
+","Copy failed."
 "ContentNodeListItem.copyingTask","Copying","
 -- CONTEXT --
 ","Copying"
@@ -1973,10 +1994,10 @@ Category type. See https://en.wikipedia.org/wiki/Writing","Writing"
 ","Open folder"
 "ContentNodeListItem.questions","{value, number, integer} {value, plural, one {question} other {questions}}","
 -- CONTEXT --
-","{value, number, integer} {value, plural, one {question} other {questions}}"
+","{value, number, integer} {value, plural, one {प्रश्न} other {प्रश्न}}"
 "ContentNodeListItem.resources","{value, number, integer} {value, plural, one {resource} other {resources}}","
 -- CONTEXT --
-","{value, number, integer} {value, plural, one {resource} other {resources}}"
+","{value, number, integer} {value, plural, one {संसाधन} other {संसाधन}}"
 "ContentNodeOptions.copiedItemsToClipboard","Copied in clipboard","
 -- CONTEXT --
 ","Copied in clipboard"
@@ -1985,16 +2006,16 @@ Category type. See https://en.wikipedia.org/wiki/Writing","Writing"
 ","Copy operation complete"
 "ContentNodeOptions.copiedToClipboardSnackbar","Copied to clipboard","
 -- CONTEXT --
-","Copied to clipboard"
+","क्लिपबोर्ड पर कॉपी कर दिया गया"
 "ContentNodeOptions.copyToClipboard","Copy to clipboard","
 -- CONTEXT --
-","Copy to clipboard"
+","क्लिपबोर्ड पर कॉपी करें"
 "ContentNodeOptions.creatingCopies","Copying...","
 -- CONTEXT --
 ","Copying..."
 "ContentNodeOptions.editDetails","Edit details","
 -- CONTEXT --
-","Edit details"
+","विवरण संपादित करें"
 "ContentNodeOptions.editTopicDetails","Edit folder details","
 -- CONTEXT --
 ","Edit folder details"
@@ -2013,9 +2034,9 @@ Category type. See https://en.wikipedia.org/wiki/Writing","Writing"
 "ContentNodeOptions.newSubtopic","New folder","
 -- CONTEXT --
 ","New folder"
-"ContentNodeOptions.remove","Remove","
+"ContentNodeOptions.remove","Delete","
 -- CONTEXT --
-","Remove"
+","Delete"
 "ContentNodeOptions.removedFromClipboard","Deleted from clipboard","
 -- CONTEXT --
 ","Deleted from clipboard"
@@ -2024,7 +2045,7 @@ Category type. See https://en.wikipedia.org/wiki/Writing","Writing"
 ","Sent to trash"
 "ContentNodeOptions.undo","Undo","
 -- CONTEXT --
-","Undo"
+","अकृत करें"
 "ContentNodeOptions.viewDetails","View details","
 -- CONTEXT --
 ","View details"
@@ -2033,7 +2054,7 @@ Category type. See https://en.wikipedia.org/wiki/Writing","Writing"
 ","Untitled"
 "ContentNodeThumbnail.cancel","Cancel","
 -- CONTEXT --
-","Cancel"
+","रद्द करें"
 "ContentNodeThumbnail.crop","Crop","
 -- CONTEXT --
 ","Crop"
@@ -2054,13 +2075,13 @@ Category type. See https://en.wikipedia.org/wiki/Writing","Writing"
 ","No thumbnail"
 "ContentNodeThumbnail.remove","Remove","
 -- CONTEXT --
-","Remove"
+","हटा दें"
 "ContentNodeThumbnail.retryUpload","Retry upload","
 -- CONTEXT --
 ","Retry upload"
 "ContentNodeThumbnail.save","Save","
 -- CONTEXT --
-","Save"
+","सेव करें"
 "ContentNodeThumbnail.upload","Upload image","
 -- CONTEXT --
 ","Upload image"
@@ -2072,10 +2093,10 @@ Category type. See https://en.wikipedia.org/wiki/Writing","Writing"
 ","Uploading"
 "ContentNodeThumbnail.zoomIn","Zoom in","
 -- CONTEXT --
-","Zoom in"
+","ज़ूम इन करें"
 "ContentNodeThumbnail.zoomOut","Zoom out","
 -- CONTEXT --
-","Zoom out"
+","ज़ूम आउट करें"
 "ContentNodeValidator.allIncompleteDescendantsText","{count, plural, one {{count, number, integer} resource is incomplete and cannot be published} other {All {count, number, integer} resources are incomplete and cannot be published}}","
 -- CONTEXT --
 ","{count, plural, one {{count, number, integer} resource is incomplete and cannot be published} other {All {count, number, integer} resources are incomplete and cannot be published}}"
@@ -2096,13 +2117,13 @@ Category type. See https://en.wikipedia.org/wiki/Writing","Writing"
 ","Preview unavailable"
 "ContentTreeList.allChannelsLabel","Channels","
 -- CONTEXT --
-","Channels"
+","चैनल"
 "ContentTreeList.noResourcesOrTopics","There are no resources or folders here","
 -- CONTEXT --
 ","There are no resources or folders here"
 "ContentTreeList.selectAllAction","Select all","
 -- CONTEXT --
-","Select all"
+","सभी का चयन करें"
 "CopyToken.copiedTokenId","Token copied","
 -- CONTEXT --
 ","Token copied"
@@ -2121,15 +2142,15 @@ Category type. See https://en.wikipedia.org/wiki/Writing","Writing"
 "CountryField.noCountriesFound","No countries found","
 -- CONTEXT --
 ","No countries found"
-"Create.ToSCheck","I have read and agree to the terms of service","
+"Create.ToSRequiredMessage","Please accept our terms of service and policy","
 -- CONTEXT --
-","I have read and agree to the terms of service"
-"Create.ToSRequiredMessage","Please accept our terms of service","
+","Please accept our terms of service and policy"
+"Create.agreement","I have read and agree to terms of service and the privacy policy","
 -- CONTEXT --
-","Please accept our terms of service"
+","I have read and agree to terms of service and the privacy policy"
 "Create.backToLoginButton","Sign in","
 -- CONTEXT --
-","Sign in"
+","साइन इन करें"
 "Create.basicInformationHeader","Basic information","
 -- CONTEXT --
 ","Basic information"
@@ -2150,7 +2171,7 @@ Category type. See https://en.wikipedia.org/wiki/Writing","Writing"
 ","Conversation with Learning Equality"
 "Create.createAnAccountTitle","Create an account","
 -- CONTEXT --
-","Create an account"
+","अकाउंट बनाएँ"
 "Create.creatingExercisesUsageOption","Creating exercises","
 -- CONTEXT --
 ","Creating exercises"
@@ -2168,7 +2189,7 @@ Category type. See https://en.wikipedia.org/wiki/Writing","Writing"
 ","Finding and adding additional content sources"
 "Create.finishButton","Finish","
 -- CONTEXT --
-","Finish"
+","समाप्त"
 "Create.firstNameLabel","First name","
 -- CONTEXT --
 ","First name"
@@ -2210,19 +2231,13 @@ Category type. See https://en.wikipedia.org/wiki/Writing","Writing"
 ","Please describe"
 "Create.passwordLabel","Password","
 -- CONTEXT --
-","Password"
+","पासवर्ड"
 "Create.passwordMatchMessage","Passwords don't match","
 -- CONTEXT --
 ","Passwords don't match"
 "Create.personalDemoSourceOption","Personal demo","
 -- CONTEXT --
 ","Personal demo"
-"Create.privacyPolicyCheck","I have read and agree to the privacy policy","
--- CONTEXT --
-","I have read and agree to the privacy policy"
-"Create.privacyPolicyRequiredMessage","Please accept our privacy policy","
--- CONTEXT --
-","Please accept our privacy policy"
 "Create.registrationFailed","There was an error registering your account. Please try again","
 -- CONTEXT --
 ","There was an error registering your account. Please try again"
@@ -2259,12 +2274,12 @@ Category type. See https://en.wikipedia.org/wiki/Writing","Writing"
 "Create.usageLabel","How do you plan on using Kolibri Studio (check all that apply)","
 -- CONTEXT --
 ","How do you plan on using Kolibri Studio (check all that apply)"
-"Create.viewPrivacyPolicyLink","View privacy policy","
+"Create.viewPrivacyPolicyLink","View Privacy Policy","
 -- CONTEXT --
-","View privacy policy"
-"Create.viewToSLink","View terms of service","
+","View Privacy Policy"
+"Create.viewToSLink","View Terms of Service","
 -- CONTEXT --
-","View terms of service"
+","View Terms of Service"
 "Create.websiteSourceOption","Learning Equality website","
 -- CONTEXT --
 ","Learning Equality website"
@@ -2279,7 +2294,7 @@ Category type. See https://en.wikipedia.org/wiki/Writing","Writing"
 ","Default view"
 "CurrentTopicView.addButton","Add","
 -- CONTEXT --
-","Add"
+","जोड़ें"
 "CurrentTopicView.addExercise","New exercise","
 -- CONTEXT --
 ","New exercise"
@@ -2291,28 +2306,28 @@ Category type. See https://en.wikipedia.org/wiki/Writing","Writing"
 ","Copy operation complete"
 "CurrentTopicView.copiedItemsToClipboard","Copied to clipboard","
 -- CONTEXT --
-","Copied to clipboard"
+","क्लिपबोर्ड पर कॉपी कर दिया गया"
 "CurrentTopicView.copySelectedButton","Copy to clipboard","
 -- CONTEXT --
-","Copy to clipboard"
+","क्लिपबोर्ड पर कॉपी करें"
 "CurrentTopicView.copyToClipboardButton","Copy to clipboard","
 -- CONTEXT --
-","Copy to clipboard"
+","क्लिपबोर्ड पर कॉपी करें"
 "CurrentTopicView.creatingCopies","Copying...","
 -- CONTEXT --
 ","Copying..."
 "CurrentTopicView.deleteSelectedButton","Delete","
 -- CONTEXT --
-","Delete"
+","हटाएँ"
 "CurrentTopicView.duplicateSelectedButton","Make a copy","
 -- CONTEXT --
 ","Make a copy"
 "CurrentTopicView.editButton","Edit","
 -- CONTEXT --
-","Edit"
+","संपादित करें (एडिट)"
 "CurrentTopicView.editSelectedButton","Edit","
 -- CONTEXT --
-","Edit"
+","संपादित करें (एडिट)"
 "CurrentTopicView.importFromChannels","Import from channels","
 -- CONTEXT --
 ","Import from channels"
@@ -2321,13 +2336,13 @@ Category type. See https://en.wikipedia.org/wiki/Writing","Writing"
 ","Move"
 "CurrentTopicView.optionsButton","Options","
 -- CONTEXT --
-","Options"
+","विकल्प"
 "CurrentTopicView.removedItems","Sent to trash","
 -- CONTEXT --
 ","Sent to trash"
 "CurrentTopicView.selectAllLabel","Select all","
 -- CONTEXT --
-","Select all"
+","सभी का चयन करें"
 "CurrentTopicView.selectionCount","{topicCount, plural,
  =1 {# folder}
  other {# folders}}, {resourceCount, plural,
@@ -2341,16 +2356,16 @@ Category type. See https://en.wikipedia.org/wiki/Writing","Writing"
  other {# resources}}"
 "CurrentTopicView.undo","Undo","
 -- CONTEXT --
-","Undo"
+","अकृत करें"
 "CurrentTopicView.uploadFiles","Upload files","
 -- CONTEXT --
 ","Upload files"
 "CurrentTopicView.viewModeTooltip","View","
 -- CONTEXT --
-","View"
+","देखें"
 "DeleteAccountForm.cancelButton","Cancel","
 -- CONTEXT --
-","Cancel"
+","रद्द करें"
 "DeleteAccountForm.deleteAccountConfirmationPrompt","Are you sure you want to permanently delete your account? This cannot be undone","
 -- CONTEXT --
 ","Are you sure you want to permanently delete your account? This cannot be undone"
@@ -2405,6 +2420,9 @@ Category type. See https://en.wikipedia.org/wiki/Writing","Writing"
 "Details.authorsLabel","Authors","
 -- CONTEXT --
 ","Authors"
+"Details.categoriesHeading","Categories","
+-- CONTEXT --
+","Categories"
 "Details.coachDescription","Resources for coaches are only visible to coaches in Kolibri","
 -- CONTEXT --
 ","Resources for coaches are only visible to coaches in Kolibri"
@@ -2428,7 +2446,10 @@ Category type. See https://en.wikipedia.org/wiki/Writing","Writing"
 ","Published version"
 "Details.languagesHeading","Languages","
 -- CONTEXT --
-","Languages"
+","भाषाएँ"
+"Details.levelsHeading","Levels","
+-- CONTEXT --
+","Levels"
 "Details.licensesLabel","Licenses","
 -- CONTEXT --
 ","Licenses"
@@ -2467,7 +2488,7 @@ Category type. See https://en.wikipedia.org/wiki/Writing","Writing"
 ","Common tags"
 "Details.tokenHeading","Channel token","
 -- CONTEXT --
-","Channel token"
+","चैनल टोकन"
 "Details.unpublishedText","Unpublished","
 -- CONTEXT --
 ","Unpublished"
@@ -2485,7 +2506,7 @@ Category type. See https://en.wikipedia.org/wiki/Writing","Writing"
 ","Audience"
 "DetailsTabView.authorLabel","Author","
 -- CONTEXT --
-","Author"
+","लेखक"
 "DetailsTabView.authorToolTip","Person or organization who created this content","
 -- CONTEXT --
 ","Person or organization who created this content"
@@ -2499,10 +2520,10 @@ Category type. See https://en.wikipedia.org/wiki/Writing","Writing"
 Heading for the section in the resource editing window","Completion"
 "DetailsTabView.copyrightHolderLabel","Copyright holder","
 -- CONTEXT --
-","Copyright holder"
+","कॉपीराइट धारक"
 "DetailsTabView.descriptionLabel","Description","
 -- CONTEXT --
-","Description"
+","विवरण"
 "DetailsTabView.detectedImportText","{count, plural,
  =1 {# resource has view-only permission}
  other {# resources have view-only permission}}","
@@ -2519,9 +2540,6 @@ Heading for the section in the resource editing window","Completion"
 "DetailsTabView.languageHelpText","Leave blank to use the folder language","
 -- CONTEXT --
 ","Leave blank to use the folder language"
-"DetailsTabView.learnersCanMarkComplete","Allow learners to mark as complete","
--- CONTEXT --
-","Allow learners to mark as complete"
 "DetailsTabView.noTagsFoundText","No results found for ""{text}"". Press 'Enter' key to create a new tag","
 -- CONTEXT --
 ","No results found for ""{text}"". Press 'Enter' key to create a new tag"
@@ -2545,7 +2563,7 @@ Heading for the section in the resource editing window","Completion"
 ","Thumbnail"
 "DetailsTabView.titleLabel","Title","
 -- CONTEXT --
-","Title"
+","शीर्षक"
 "Diff.negativeSign","-","
 -- CONTEXT --
 ","-"
@@ -2563,19 +2581,19 @@ Heading for the section in the resource editing window","Completion"
 ","Staged"
 "DiffTable.headerType","Type","
 -- CONTEXT --
-","Type"
+","प्रकार"
 "DiffTable.typeAudios","Audios","
 -- CONTEXT --
 ","Audios"
 "DiffTable.typeDocuments","Documents","
 -- CONTEXT --
-","Documents"
+","दस्तावेज़"
 "DiffTable.typeExercises","Exercises","
 -- CONTEXT --
-","Exercises"
+","अभ्यास"
 "DiffTable.typeFileSize","File size","
 -- CONTEXT --
-","File size"
+","फ़ाइल का साइज़"
 "DiffTable.typeHtml5Apps","HTML5 apps","
 -- CONTEXT --
 ","HTML5 apps"
@@ -2584,16 +2602,16 @@ Heading for the section in the resource editing window","Completion"
 ","Slideshows"
 "DiffTable.typeTopics","Folders","
 -- CONTEXT --
-","Folders"
+","फ़ोल्डर्स"
 "DiffTable.typeVersion","API version","
 -- CONTEXT --
 ","API version"
 "DiffTable.typeVideos","Videos","
 -- CONTEXT --
-","Videos"
+","वीडियो"
 "EditList.selectAllLabel","Select all","
 -- CONTEXT --
-","Select all"
+","सभी का चयन करें"
 "EditListItem.questionCount","{count, plural,
  =1 {# question}
  other {# questions}}","
@@ -2618,16 +2636,16 @@ Heading for the section in the resource editing window","Completion"
 ","New exercise"
 "EditModal.dismissDialogButton","Cancel","
 -- CONTEXT --
-","Cancel"
+","रद्द करें"
 "EditModal.editFilesHeader","Edit files","
 -- CONTEXT --
 ","Edit files"
 "EditModal.editingDetailsHeader","Edit details","
 -- CONTEXT --
-","Edit details"
+","विवरण संपादित करें"
 "EditModal.finishButton","Finish","
 -- CONTEXT --
-","Finish"
+","समाप्त"
 "EditModal.invalidNodesFound","{count, plural,
  =1 {# incomplete resource found}
  other {# incomplete resources found}}","
@@ -2670,10 +2688,10 @@ Heading for the section in the resource editing window","Completion"
 ","Uploads that are in progress will be lost if you exit"
 "EditSearchModal.cancelAction","Cancel","
 -- CONTEXT --
-","Cancel"
+","रद्द करें"
 "EditSearchModal.changesSavedSnackbar","Changes saved","
 -- CONTEXT --
-","Changes saved"
+","परिवर्तन सहेजे गए"
 "EditSearchModal.editSavedSearchTitle","Edit search title","
 -- CONTEXT --
 ","Edit search title"
@@ -2682,13 +2700,13 @@ Heading for the section in the resource editing window","Completion"
 ","Field is required"
 "EditSearchModal.saveChangesAction","Save","
 -- CONTEXT --
-","Save"
+","सेव करें"
 "EditSearchModal.searchTitleLabel","Search title","
 -- CONTEXT --
 ","Search title"
 "EditView.details","Details","
 -- CONTEXT --
-","Details"
+","विवरण"
 "EditView.editingMultipleCount","Editing details for {topicCount, plural,
  =1 {# folder}
  other {# folders}}, {resourceCount, plural,
@@ -2711,13 +2729,13 @@ Heading for the section in the resource editing window","Completion"
 ","Please select resources or folders to edit"
 "EditView.preview","Preview","
 -- CONTEXT --
-","Preview"
+","पूर्वावलोकन"
 "EditView.questions","Questions","
 -- CONTEXT --
-","Questions"
+","प्रश्न"
 "EditView.related","Related","
 -- CONTEXT --
-","Related"
+","संबंधित"
 "EmailField.emailLabel","Email","
 -- CONTEXT --
 ","Email"
@@ -2729,13 +2747,13 @@ Heading for the section in the resource editing window","Completion"
 ","Please enter a valid email"
 "ExpandableList.less","Show less","
 -- CONTEXT --
-","Show less"
+","कम दिखाएँ"
 "ExpandableList.more","Show more ({more})","
 -- CONTEXT --
 ","Show more ({more})"
 "FilePreview.exitFullscreen","Exit fullscreen","
 -- CONTEXT --
-","Exit fullscreen"
+","फ़ुल स्क्रीन से बाहर जाएँ"
 "FilePreview.fullscreenModeText","Fullscreen mode","
 -- CONTEXT --
 ","Fullscreen mode"
@@ -2786,7 +2804,7 @@ Heading for the section in the resource editing window","Completion"
 ","Upload to '{title}'"
 "FileUploadItem.removeFileButton","Remove","
 -- CONTEXT --
-","Remove"
+","हटा दें"
 "FileUploadItem.retryUpload","Retry upload","
 -- CONTEXT --
 ","Retry upload"
@@ -2819,10 +2837,10 @@ Heading for the section in the resource editing window","Completion"
 ","Special characters"
 "FullNameForm.cancelAction","Cancel","
 -- CONTEXT --
-","Cancel"
+","रद्द करें"
 "FullNameForm.changesSavedMessage","Changes saved","
 -- CONTEXT --
-","Changes saved"
+","परिवर्तन सहेजे गए"
 "FullNameForm.editNameHeader","Edit full name","
 -- CONTEXT --
 ","Edit full name"
@@ -2840,25 +2858,25 @@ Heading for the section in the resource editing window","Completion"
 ","Last name"
 "FullNameForm.saveChangesAction","Save changes","
 -- CONTEXT --
-","Save changes"
+","परिवर्तनों को सेव करें"
 "GenericError.backToHomeAction","Back to home","
 -- CONTEXT --
-","Back to home"
+","होमपेज पर वापिस जाएं"
 "GenericError.genericErrorDetails","Try refreshing this page or going back to the home page","
 -- CONTEXT --
-","Try refreshing this page or going back to the home page"
+","इस पेज को रीफ्रेश करने या होमपेज पर वापस जाने की कोशिश करें"
 "GenericError.genericErrorHeader","Sorry, something went wrong","
 -- CONTEXT --
 ","Sorry, something went wrong"
 "GenericError.helpByReportingAction","Help us by reporting this error","
 -- CONTEXT --
-","Help us by reporting this error"
+","इस त्रुटि की रिपोर्ट करके हमारी मदद करें"
 "GenericError.refreshAction","Refresh","
 -- CONTEXT --
-","Refresh"
+","रीफ़्रेश करें"
 "HintsEditor.hintsLabel","Hints","
 -- CONTEXT --
-","Hints"
+","संकेत"
 "HintsEditor.newHintBtnLabel","New hint","
 -- CONTEXT --
 ","New hint"
@@ -2879,7 +2897,7 @@ Heading for the section in the resource editing window","Completion"
 ","Image description"
 "ImagesMenu.btnLabelCancel","Cancel","
 -- CONTEXT --
-","Cancel"
+","रद्द करें"
 "ImagesMenu.btnLabelInsert","Insert","
 -- CONTEXT --
 ","Insert"
@@ -2900,25 +2918,25 @@ Heading for the section in the resource editing window","Completion"
 ","Select file"
 "ImportFromChannelsModal.addButton","Add","
 -- CONTEXT --
-","Add"
+","जोड़ें"
 "ImportFromChannelsModal.addedText","Added","
 -- CONTEXT --
-","Added"
+","जोड़ा गया"
 "ImportFromChannelsModal.importAction","Import","
 -- CONTEXT --
-","Import"
+","आयात करें"
 "ImportFromChannelsModal.importTitle","Import from other channels","
 -- CONTEXT --
 ","Import from other channels"
 "ImportFromChannelsModal.removeButton","Remove","
 -- CONTEXT --
-","Remove"
+","हटा दें"
 "ImportFromChannelsModal.resourcesAddedSnackbar","{count, number} {count, plural, one {resource selected} other {resources selected}}","
 -- CONTEXT --
 ","{count, number} {count, plural, one {resource selected} other {resources selected}}"
 "ImportFromChannelsModal.resourcesRemovedSnackbar","{count, number} {count, plural, one {resource removed} other {resources removed}}","
 -- CONTEXT --
-","{count, number} {count, plural, one {resource removed} other {resources removed}}"
+","{count, number} {count, plural, one {संसाधन हटाया गया} other {संसाधन हटाए गए}} "
 "ImportFromChannelsModal.resourcesSelected","{count, number} {count, plural, one {resource selected} other {resources selected}}","
 -- CONTEXT --
 ","{count, number} {count, plural, one {resource selected} other {resources selected}}"
@@ -2930,10 +2948,10 @@ Heading for the section in the resource editing window","Completion"
 ","Resource selection"
 "InfoModal.close","Close","
 -- CONTEXT --
-","Close"
+","बंद करें"
 "LanguageDropdown.labelText","Language","
 -- CONTEXT --
-","Language"
+","भाषा "
 "LanguageDropdown.languageItemText","{language} ({code})","
 -- CONTEXT --
 ","{language} ({code})"
@@ -2945,22 +2963,22 @@ Heading for the section in the resource editing window","Completion"
 ","Language not found"
 "LanguageFilter.languageLabel","Languages","
 -- CONTEXT --
-","Languages"
+","भाषाएँ"
 "LanguageFilter.noMatchingLanguageText","No language matches the search","
 -- CONTEXT --
 ","No language matches the search"
 "LanguageSwitcherList.showMoreLanguagesSelector","More languages","
 -- CONTEXT --
-","More languages"
+","अन्य भाषाएं"
 "LanguageSwitcherModal.cancelAction","Cancel","
 -- CONTEXT --
-","Cancel"
+","रद्द करें"
 "LanguageSwitcherModal.changeLanguageModalHeader","Change language","
 -- CONTEXT --
-","Change language"
+","भाषा बदलें"
 "LanguageSwitcherModal.confirmAction","Confirm","
 -- CONTEXT --
-","Confirm"
+","पुष्टि करें"
 "LicenseDropdown.learnMoreButton","Learn More","
 -- CONTEXT --
 ","Learn More"
@@ -2972,7 +2990,7 @@ Heading for the section in the resource editing window","Completion"
 ","About licenses"
 "LicenseDropdown.licenseLabel","License","
 -- CONTEXT --
-","License"
+","लाइसेंस"
 "Main.TOSLink","Terms of service","
 -- CONTEXT --
 ","Terms of service"
@@ -2981,7 +2999,7 @@ Heading for the section in the resource editing window","Completion"
 ","© {year} Learning Equality"
 "Main.createAccountButton","Create an account","
 -- CONTEXT --
-","Create an account"
+","अकाउंट बनाएँ"
 "Main.forgotPasswordLink","Forgot your password?","
 -- CONTEXT --
 ","Forgot your password?"
@@ -2990,7 +3008,7 @@ Heading for the section in the resource editing window","Completion"
 ","Explore without an account"
 "Main.kolibriStudio","Kolibri Studio","
 -- CONTEXT --
-","Kolibri Studio"
+","Kolibri स्टूडियो"
 "Main.loginFailed","Email or password is incorrect","
 -- CONTEXT --
 ","Email or password is incorrect"
@@ -3002,19 +3020,22 @@ Heading for the section in the resource editing window","Completion"
 ","You must sign in to view that page"
 "Main.passwordLabel","Password","
 -- CONTEXT --
-","Password"
+","पासवर्ड"
 "Main.privacyPolicyLink","Privacy policy","
 -- CONTEXT --
 ","Privacy policy"
 "Main.signInButton","Sign in","
 -- CONTEXT --
-","Sign in"
+","साइन इन करें"
 "MainNavigationDrawer.administrationLink","Administration","
 -- CONTEXT --
 ","Administration"
+"MainNavigationDrawer.changeLanguage","Change language","
+-- CONTEXT --
+","Change language"
 "MainNavigationDrawer.channelsLink","Channels","
 -- CONTEXT --
-","Channels"
+","चैनल"
 "MainNavigationDrawer.copyright","© {year} Learning Equality","
 -- CONTEXT --
 ","© {year} Learning Equality"
@@ -3026,10 +3047,10 @@ Heading for the section in the resource editing window","Completion"
 ","Help and support"
 "MainNavigationDrawer.logoutLink","Sign out","
 -- CONTEXT --
-","Sign out"
+","साइन आउट करें"
 "MainNavigationDrawer.settingsLink","Settings","
 -- CONTEXT --
-","Settings"
+","सेटिंग"
 "MarkdownEditor.bold","Bold (Ctrl+B)","
 -- CONTEXT --
 ","Bold (Ctrl+B)"
@@ -3047,10 +3068,10 @@ Heading for the section in the resource editing window","Completion"
 ","Minimize (Ctrl+M)"
 "MarkdownImageField.editImageOption","Edit","
 -- CONTEXT --
-","Edit"
+","संपादित करें (एडिट)"
 "MarkdownImageField.removeImageOption","Remove","
 -- CONTEXT --
-","Remove"
+","हटा दें"
 "MarkdownImageField.resizeImageOption","Resize","
 -- CONTEXT --
 ","Resize"
@@ -3071,7 +3092,7 @@ Heading for the section in the resource editing window","Completion"
 ","Add new folder"
 "MoveModal.cancel","Cancel","
 -- CONTEXT --
-","Cancel"
+","रद्द करें"
 "MoveModal.emptyTopicText","No resources found","
 -- CONTEXT --
 ","No resources found"
@@ -3110,10 +3131,10 @@ Heading for the section in the resource editing window","Completion"
 ","No items found"
 "NewTopicModal.cancel","Cancel","
 -- CONTEXT --
-","Cancel"
+","रद्द करें"
 "NewTopicModal.create","Create","
 -- CONTEXT --
-","Create"
+","बनाएँ"
 "NewTopicModal.createTopic","Create new folder","
 -- CONTEXT --
 ","Create new folder"
@@ -3146,7 +3167,7 @@ Heading for the section in the resource editing window","Completion"
 ","You seem to be offline. Your changes will be saved once your connection is back."
 "PageNotFoundError.backToHomeAction","Back to home","
 -- CONTEXT --
-","Back to home"
+","होमपेज पर वापिस जाएं"
 "PageNotFoundError.pageNotFoundDetails","Sorry, that page does not exist","
 -- CONTEXT --
 ","Sorry, that page does not exist"
@@ -3158,7 +3179,7 @@ Heading for the section in the resource editing window","Completion"
 ","Field is required"
 "PasswordField.passwordLabel","Password","
 -- CONTEXT --
-","Password"
+","पासवर्ड"
 "PasswordInstructionsSent.passwordInstructionsHeader","Instructions sent. Thank you!","
 -- CONTEXT --
 ","Instructions sent. Thank you!"
@@ -3167,22 +3188,19 @@ Heading for the section in the resource editing window","Completion"
 ","If there is already an account with the email address provided, you should receive the instructions shortly. If you don't see an email from us, please check your spam folder."
 "PermissionsError.goToHomePageAction","Go to home page","
 -- CONTEXT --
-","Go to home page"
+","होमपेज पर जाएं"
 "PermissionsError.permissionDeniedHeader","Did you forget to sign in?","
 -- CONTEXT --
-","Did you forget to sign in?"
+","क्या आप साइन इन करना भूल गए?"
 "PoliciesModal.checkboxText","I have agreed to the above terms","
 -- CONTEXT --
 ","I have agreed to the above terms"
-"PoliciesModal.checkboxValidationErrorMessage","Field is required","
--- CONTEXT --
-","Field is required"
 "PoliciesModal.closeButton","Close","
 -- CONTEXT --
-","Close"
+","बंद करें"
 "PoliciesModal.continueButton","Continue","
 -- CONTEXT --
-","Continue"
+","जारी रखें"
 "PoliciesModal.lastUpdated","Last updated {date}","
 -- CONTEXT --
 ","Last updated {date}"
@@ -3207,15 +3225,18 @@ Heading for the section in the resource editing window","Completion"
 "ProgressModal.syncError","Last attempt to sync failed","
 -- CONTEXT --
 ","Last attempt to sync failed"
-"ProgressModal.syncHeader","Syncing channel","
+"ProgressModal.syncHeader","Syncing resources","
 -- CONTEXT --
-","Syncing channel"
+","Syncing resources"
+"ProgressModal.syncedSnackbar","Resources synced","
+-- CONTEXT --
+","Resources synced"
 "ProgressModal.unpublishedText","Unpublished","
 -- CONTEXT --
 ","Unpublished"
 "PublishModal.cancelButton","Cancel","
 -- CONTEXT --
-","Cancel"
+","रद्द करें"
 "PublishModal.descriptionDescriptionTooltip","This description will be shown to Kolibri admins before they update channel versions","
 -- CONTEXT --
 ","This description will be shown to Kolibri admins before they update channel versions"
@@ -3233,7 +3254,7 @@ Heading for the section in the resource editing window","Completion"
 ","Incomplete resources will not be published and made available for download in Kolibri."
 "PublishModal.nextButton","Continue","
 -- CONTEXT --
-","Continue"
+","जारी रखें"
 "PublishModal.publishButton","Publish","
 -- CONTEXT --
 ","Publish"
@@ -3245,7 +3266,7 @@ Heading for the section in the resource editing window","Completion"
 ","Version description"
 "RelatedResourcesList.removeBtnLabel","Remove","
 -- CONTEXT --
-","Remove"
+","हटा दें"
 "RelatedResourcesTab.addNextStepBtnLabel","Add next step","
 -- CONTEXT --
 ","Add next step"
@@ -3254,13 +3275,13 @@ Heading for the section in the resource editing window","Completion"
 ","Add previous step"
 "RelatedResourcesTab.dialogCloseBtnLabel","Close","
 -- CONTEXT --
-","Close"
+","बंद करें"
 "RelatedResourcesTab.nextStepsExplanation","Recommended resources that build on skills or concepts learned in this resource","
 -- CONTEXT --
 ","Recommended resources that build on skills or concepts learned in this resource"
 "RelatedResourcesTab.nextStepsTitle","Next steps","
 -- CONTEXT --
-","Next steps"
+","अगले कदम"
 "RelatedResourcesTab.previewHelpText","Related resources are displayed as recommendations when learners engage with this resource","
 -- CONTEXT --
 ","Related resources are displayed as recommendations when learners engage with this resource"
@@ -3299,28 +3320,28 @@ Heading for the section in the resource editing window","Completion"
 ","Limit the number of previous steps to create a more guided learning experience"
 "ReportErrorModal.closeAction","Close","
 -- CONTEXT --
-","Close"
+","बंद करें"
 "ReportErrorModal.emailDescription","Contact the support team with your error details and we’ll do our best to help.","
 -- CONTEXT --
-","Contact the support team with your error details and we’ll do our best to help."
+","अपने त्रुटि विवरण के साथ समर्थन टीम से संपर्क करें और हम मदद करने की पूरी कोशिश करेंगे ।"
 "ReportErrorModal.emailPrompt","Send an email to the developers","
 -- CONTEXT --
-","Send an email to the developers"
+","डेवलपर को ई-मेल करें"
 "ReportErrorModal.errorDetailsHeader","Error details","
 -- CONTEXT --
-","Error details"
+","त्रुटि विवरण"
 "ReportErrorModal.forumPostingTips","Include a description of what you were trying to do and what you clicked on when the error appeared.","
 -- CONTEXT --
-","Include a description of what you were trying to do and what you clicked on when the error appeared."
+","आप क्या करने की कोशिश कर रहे थे और किस पर क्लिक किया जब त्रुटि दिखाई दी, इस सबका वर्णन शामिल करें।"
 "ReportErrorModal.forumPrompt","Visit the community forums","
 -- CONTEXT --
-","Visit the community forums"
+","समुदाय फ़ोरम पर जाएं"
 "ReportErrorModal.forumUseTips","Search the community forum to see if others encountered similar issues. If there are none reported, please open a new forum post and paste the error details below inside so we can rectify the error in a future version of Kolibri Studio.","
 -- CONTEXT --
 ","Search the community forum to see if others encountered similar issues. If there are none reported, please open a new forum post and paste the error details below inside so we can rectify the error in a future version of Kolibri Studio."
 "ReportErrorModal.reportErrorHeader","Report Error","
 -- CONTEXT --
-","Report Error"
+","त्रुटि की सूचना दें"
 "RequestForm.approximatelyHowManyResourcesLabel","Approximately how many individual resources are you planning to upload?","
 -- CONTEXT --
 ","Approximately how many individual resources are you planning to upload?"
@@ -3422,7 +3443,7 @@ Heading for the section in the resource editing window","Completion"
 ","6+ months"
 "RequestForm.sizePlaceholder","Size","
 -- CONTEXT --
-","Size"
+","साइज़"
 "RequestForm.smallNgoLabel","Small NGO with annual budget < $25k","
 -- CONTEXT --
 ","Small NGO with annual budget < $25k"
@@ -3449,7 +3470,7 @@ Heading for the section in the resource editing window","Completion"
 ","What type of organization or group is coordinating the use of Kolibri (if applicable)?"
 "RequestForm.unknownLabel","Unknown","
 -- CONTEXT --
-","Unknown"
+","अज्ञात"
 "RequestForm.uploadingOnBehalfLabel","I am uploading content on behalf of:","
 -- CONTEXT --
 ","I am uploading content on behalf of:"
@@ -3518,28 +3539,25 @@ Heading for the section in the resource editing window","Completion"
 ","Audience"
 "ResourcePanel.author","Author","
 -- CONTEXT --
-","Author"
+","लेखक"
 "ResourcePanel.availableFormats","Available formats","
 -- CONTEXT --
 ","Available formats"
 "ResourcePanel.coachResources","Resources for coaches","
 -- CONTEXT --
 ","Resources for coaches"
-"ResourcePanel.completion","Completion","
--- CONTEXT --
-","Completion"
 "ResourcePanel.copyrightHolder","Copyright holder","
 -- CONTEXT --
-","Copyright holder"
+","कॉपीराइट धारक"
 "ResourcePanel.description","Description","
 -- CONTEXT --
-","Description"
+","विवरण"
 "ResourcePanel.details","Details","
 -- CONTEXT --
-","Details"
+","विवरण"
 "ResourcePanel.fileSize","Size","
 -- CONTEXT --
-","Size"
+","साइज़"
 "ResourcePanel.files","Files","
 -- CONTEXT --
 ","Files"
@@ -3548,31 +3566,41 @@ Heading for the section in the resource editing window","Completion"
 ","{count, plural, one {# incomplete question} other {# incomplete questions}}"
 "ResourcePanel.language","Language","
 -- CONTEXT --
-","Language"
+","भाषा "
 "ResourcePanel.license","License","
 -- CONTEXT --
-","License"
-"ResourcePanel.masteryMofN","Goal: {m} out of {n}","
--- CONTEXT --
-","Goal: {m} out of {n}"
+","लाइसेंस"
 "ResourcePanel.nextSteps","Next steps","
 -- CONTEXT --
-","Next steps"
-"ResourcePanel.noCopyrightHolderError","Missing copyright holder","
+","अगले कदम"
+"ResourcePanel.noCompletionCriteriaError","Completion criteria are required","ResourcePanel.noCompletionCriteriaError
+
 -- CONTEXT --
-","Missing copyright holder"
-"ResourcePanel.noFilesError","Missing files","
+Error message notification when a specific metadata is missing.","Completion criteria are required"
+"ResourcePanel.noCopyrightHolderError","Copyright holder is required","
 -- CONTEXT --
-","Missing files"
-"ResourcePanel.noLicenseDescriptionError","Missing license description","
+","Copyright holder is required"
+"ResourcePanel.noDurationError","Duration is required","
 -- CONTEXT --
-","Missing license description"
-"ResourcePanel.noLicenseError","Missing license","
+","Duration is required"
+"ResourcePanel.noFilesError","File is required","ResourcePanel.noFilesError
+
 -- CONTEXT --
-","Missing license"
-"ResourcePanel.noMasteryModelError","Missing mastery criteria","
+Error message notification when a file is missing.","File is required"
+"ResourcePanel.noLearningActivityError","Learning activity is required","
 -- CONTEXT --
-","Missing mastery criteria"
+","Learning activity is required"
+"ResourcePanel.noLicenseDescriptionError","License description is required","ResourcePanel.noLicenseDescriptionError
+
+-- CONTEXT --
+Error message notification when a specific metadata is missing.","License description is required"
+"ResourcePanel.noLicenseError","License is required","
+-- CONTEXT --
+","License is required"
+"ResourcePanel.noMasteryModelError","Mastery criteria are required","ResourcePanel.noMasteryModelError
+
+-- CONTEXT --
+Error message notification when a specific metadata is missing.","Mastery criteria are required"
 "ResourcePanel.noQuestionsError","Exercise is empty","
 -- CONTEXT --
 ","Exercise is empty"
@@ -3587,16 +3615,16 @@ Heading for the section in the resource editing window","Completion"
 ","Provider"
 "ResourcePanel.questionCount","{value, number, integer} {value, plural, one {question} other {questions}}","
 -- CONTEXT --
-","{value, number, integer} {value, plural, one {question} other {questions}}"
+","{value, number, integer} {value, plural, one {प्रश्न} other {प्रश्न}}"
 "ResourcePanel.questions","Questions","
 -- CONTEXT --
-","Questions"
+","प्रश्न"
 "ResourcePanel.relatedResources","Related resources","
 -- CONTEXT --
 ","Related resources"
 "ResourcePanel.resources","Resources","
 -- CONTEXT --
-","Resources"
+","संसाधन"
 "ResourcePanel.showAnswers","Show answers","
 -- CONTEXT --
 ","Show answers"
@@ -3623,25 +3651,25 @@ Heading for the section in the resource editing window","Completion"
 ","Requirements"
 "ReviewSelectionsPage.noResourcesSelected","No resources selected","
 -- CONTEXT --
-","No resources selected"
+","कोई भी संसाधन नहीं चुने गए है"
 "ReviewSelectionsPage.removeAction","Remove","
 -- CONTEXT --
-","Remove"
+","हटा दें"
 "ReviewSelectionsPage.resourcesInTopic","{count, number} {count, plural, one {resource} other {resources}}","
 -- CONTEXT --
-","{count, number} {count, plural, one {resource} other {resources}}"
+","{count, number} {count, plural, one {संसाधन} other {संसाधन}}"
 "ReviewSelectionsPage.reviewSelectionHeader","Review selections","
 -- CONTEXT --
 ","Review selections"
 "SavedSearchesModal.cancelAction","Cancel","
 -- CONTEXT --
-","Cancel"
+","रद्द करें"
 "SavedSearchesModal.closeButtonLabel","Close","
 -- CONTEXT --
-","Close"
+","बंद करें"
 "SavedSearchesModal.deleteAction","Delete","
 -- CONTEXT --
-","Delete"
+","हटाएँ"
 "SavedSearchesModal.deleteConfirmation","Are you sure you want to delete this saved search?","
 -- CONTEXT --
 ","Are you sure you want to delete this saved search?"
@@ -3650,7 +3678,7 @@ Heading for the section in the resource editing window","Completion"
 ","Delete saved search"
 "SavedSearchesModal.editAction","Edit","
 -- CONTEXT --
-","Edit"
+","संपादित करें (एडिट)"
 "SavedSearchesModal.filterCount","{count, number} {count, plural, one {filter} other {filters}}","
 -- CONTEXT --
 ","{count, number} {count, plural, one {filter} other {filters}}"
@@ -3677,7 +3705,7 @@ Heading for the section in the resource editing window","Completion"
 ","Assessments"
 "SearchFilterBar.clearAll","Clear all","
 -- CONTEXT --
-","Clear all"
+","सभी साफ़ करें"
 "SearchFilterBar.coachContent","Resources for coaches","
 -- CONTEXT --
 ","Resources for coaches"
@@ -3701,7 +3729,7 @@ Heading for the section in the resource editing window","Completion"
 ","Channel type"
 "SearchFilters.channelsHeader","Channels","
 -- CONTEXT --
-","Channels"
+","चैनल"
 "SearchFilters.coachContentLabel","Show resources for coaches","
 -- CONTEXT --
 ","Show resources for coaches"
@@ -3716,19 +3744,19 @@ Heading for the section in the resource editing window","Completion"
 ","Format"
 "SearchFilters.licensesLabel","License","
 -- CONTEXT --
-","License"
+","लाइसेंस"
 "SearchOrBrowseWindow.backToBrowseAction","Back to browse","
 -- CONTEXT --
 ","Back to browse"
 "SearchOrBrowseWindow.copiedToClipboard","Copied to clipboard","
 -- CONTEXT --
-","Copied to clipboard"
+","क्लिपबोर्ड पर कॉपी कर दिया गया"
 "SearchOrBrowseWindow.copyFailed","Failed to copy to clipboard","
 -- CONTEXT --
 ","Failed to copy to clipboard"
 "SearchOrBrowseWindow.searchAction","Search","
 -- CONTEXT --
-","Search"
+","खोज"
 "SearchOrBrowseWindow.searchLabel","Search for resources…","
 -- CONTEXT --
 ","Search for resources…"
@@ -3755,7 +3783,7 @@ Heading for the section in the resource editing window","Completion"
 ","Account"
 "SettingsIndex.settingsTitle","Settings","
 -- CONTEXT --
-","Settings"
+","सेटिंग"
 "SettingsIndex.storageLabel","Storage","
 -- CONTEXT --
 ","Storage"
@@ -3767,13 +3795,13 @@ Heading for the section in the resource editing window","Completion"
 ","Back to viewing"
 "StagingTreePage.cancelDeployBtn","Cancel","
 -- CONTEXT --
-","Cancel"
+","रद्द करें"
 "StagingTreePage.channelDeployed","Channel has been deployed","
 -- CONTEXT --
 ","Channel has been deployed"
 "StagingTreePage.closeSummaryDetailsDialogBtn","Close","
 -- CONTEXT --
-","Close"
+","बंद करें"
 "StagingTreePage.collapseAllButton","Collapse all","
 -- CONTEXT --
 ","Collapse all"
@@ -3827,7 +3855,7 @@ Heading for the section in the resource editing window","Completion"
 ","Total resources"
 "StagingTreePage.totalSize","Total size","
 -- CONTEXT --
-","Total size"
+","कुल साइज़"
 "StagingTreePage.viewDetails","View details","
 -- CONTEXT --
 ","View details"
@@ -3866,7 +3894,7 @@ Heading for the section in the resource editing window","Completion"
 ","Missing title"
 "StudioTree.optionsTooltip","Options","
 -- CONTEXT --
-","Options"
+","विकल्प"
 "SubtitlesList.acceptedFormatsTooltip","Supported formats: {extensions}","
 -- CONTEXT --
 ","Supported formats: {extensions}"
@@ -3890,46 +3918,52 @@ Heading for the section in the resource editing window","Completion"
 ","Select file"
 "SyncResourcesModal.backButtonLabel","Back","
 -- CONTEXT --
-","Back"
+","वापस जाएं"
 "SyncResourcesModal.cancelButtonLabel","Cancel","
 -- CONTEXT --
-","Cancel"
+","रद्द करें"
 "SyncResourcesModal.confirmSyncModalExplainer","You are about to sync and update the following:","
 -- CONTEXT --
 ","You are about to sync and update the following:"
 "SyncResourcesModal.confirmSyncModalTitle","Confirm sync","
 -- CONTEXT --
 ","Confirm sync"
+"SyncResourcesModal.confirmSyncModalWarningExplainer","Warning: this will overwrite any changes you have made to copied or imported resources.","
+-- CONTEXT --
+","Warning: this will overwrite any changes you have made to copied or imported resources."
 "SyncResourcesModal.continueButtonLabel","Continue","
 -- CONTEXT --
-","Continue"
+","जारी रखें"
 "SyncResourcesModal.syncButtonLabel","Sync","
 -- CONTEXT --
-","Sync"
-"SyncResourcesModal.syncExercisesExplainer","Update questions, answers, and hints","
+","सिंक"
+"SyncResourcesModal.syncExercisesExplainer","Update questions, answers, and hints in exercises and quizzes","
 -- CONTEXT --
-","Update questions, answers, and hints"
+","Update questions, answers, and hints in exercises and quizzes"
 "SyncResourcesModal.syncExercisesTitle","Assessment details","
 -- CONTEXT --
 ","Assessment details"
-"SyncResourcesModal.syncFilesExplainer","Update all file information","
+"SyncResourcesModal.syncFilesExplainer","Update all files, including: thumbnails, subtitles, and captions","
 -- CONTEXT --
-","Update all file information"
+","Update all files, including: thumbnails, subtitles, and captions"
 "SyncResourcesModal.syncFilesTitle","Files","
 -- CONTEXT --
 ","Files"
-"SyncResourcesModal.syncModalExplainer","Sync and update your resources with their original source.","
+"SyncResourcesModal.syncModalExplainer","Syncing resources in Kolibri Studio updates copied or imported resources in this channel with any changes made to the original resource files.","
 -- CONTEXT --
-","Sync and update your resources with their original source."
+","Syncing resources in Kolibri Studio updates copied or imported resources in this channel with any changes made to the original resource files."
+"SyncResourcesModal.syncModalSelectAttributes","Select what you would like to sync:","
+-- CONTEXT --
+","Select what you would like to sync:"
 "SyncResourcesModal.syncModalTitle","Sync resources","
 -- CONTEXT --
 ","Sync resources"
-"SyncResourcesModal.syncTagsExplainer","Update all tags","
+"SyncResourcesModal.syncResourceDetailsExplainer","Update information about the resource: learning activity, level, requirements, category, tags, audience, and source","
 -- CONTEXT --
-","Update all tags"
-"SyncResourcesModal.syncTagsTitle","Tags","
+","Update information about the resource: learning activity, level, requirements, category, tags, audience, and source"
+"SyncResourcesModal.syncResourceDetailsTitle","Resource details","
 -- CONTEXT --
-","Tags"
+","Resource details"
 "SyncResourcesModal.syncTitlesAndDescriptionsExplainer","Update resource titles and descriptions","
 -- CONTEXT --
 ","Update resource titles and descriptions"
@@ -3938,13 +3972,13 @@ Heading for the section in the resource editing window","Completion"
 ","Titles and descriptions"
 "TechnicalTextBlock.copiedToClipboardConfirmation","Copied to clipboard","
 -- CONTEXT --
-","Copied to clipboard"
+","क्लिपबोर्ड पर कॉपी कर दिया गया"
 "TechnicalTextBlock.copiedToClipboardFailure","Copy to clipboard failed","
 -- CONTEXT --
 ","Copy to clipboard failed"
 "TechnicalTextBlock.copyToClipboardButtonPrompt","Copy to clipboard","
 -- CONTEXT --
-","Copy to clipboard"
+","क्लिपबोर्ड पर कॉपी करें"
 "Template.templateString","You have {count, plural,
  =1 {# node for testing}
  other {# nodes for testing}}","
@@ -4251,22 +4285,22 @@ Heading for the section in the resource editing window","Completion"
 ","Kolibri Content Library Catalog"
 "TitleStrings.defaultTitle","Kolibri Studio","
 -- CONTEXT --
-","Kolibri Studio"
+","Kolibri स्टूडियो"
 "TitleStrings.tabTitle","{title} - {site}","
 -- CONTEXT --
 ","{title} - {site}"
 "ToggleText.less","Show less","
 -- CONTEXT --
-","Show less"
+","कम दिखाएँ"
 "ToggleText.more","Show more","
 -- CONTEXT --
-","Show more"
+","और दिखाएँ"
 "TrashModal.deleteButton","Delete","
 -- CONTEXT --
-","Delete"
+","हटाएँ"
 "TrashModal.deleteConfirmationCancelButton","Cancel","
 -- CONTEXT --
-","Cancel"
+","रद्द करें"
 "TrashModal.deleteConfirmationDeleteButton","Delete permanently","
 -- CONTEXT --
 ","Delete permanently"
@@ -4295,7 +4329,7 @@ Heading for the section in the resource editing window","Completion"
 ","Restore"
 "TrashModal.selectAllHeader","Select all","
 -- CONTEXT --
-","Select all"
+","सभी का चयन करें"
 "TrashModal.selectedCountText","{topicCount, plural,
  =1 {# folder}
  other {# folders}}, {resourceCount, plural,
@@ -4318,7 +4352,7 @@ Heading for the section in the resource editing window","Completion"
 ","Trash"
 "TreeView.closeDrawer","Close","
 -- CONTEXT --
-","Close"
+","बंद करें"
 "TreeView.collapseAllButton","Collapse all","
 -- CONTEXT --
 ","Collapse all"
@@ -4336,7 +4370,7 @@ Heading for the section in the resource editing window","Completion"
 ","Generated by API"
 "TreeViewBase.cancel","Cancel","
 -- CONTEXT --
-","Cancel"
+","रद्द करें"
 "TreeViewBase.channelDeletedSnackbar","Channel deleted","
 -- CONTEXT --
 ","Channel deleted"
@@ -4345,10 +4379,10 @@ Heading for the section in the resource editing window","Completion"
 ","View channel details"
 "TreeViewBase.deleteChannel","Delete channel","
 -- CONTEXT --
-","Delete channel"
+","चैनल हटाएँ"
 "TreeViewBase.deleteChannelButton","Delete channel","
 -- CONTEXT --
-","Delete channel"
+","चैनल हटाएँ"
 "TreeViewBase.deletePrompt","This channel will be permanently deleted. This cannot be undone.","
 -- CONTEXT --
 ","This channel will be permanently deleted. This cannot be undone."
@@ -4370,9 +4404,10 @@ Heading for the section in the resource editing window","Completion"
 "TreeViewBase.noChangesText","No changes found in channel","
 -- CONTEXT --
 ","No changes found in channel"
-"TreeViewBase.noLanguageSetError","Missing channel language","
+"TreeViewBase.noLanguageSetError","Channel language is required","TreeViewBase.noLanguageSetError
+
 -- CONTEXT --
-","Missing channel language"
+Error message notification when a specific metadata is missing.","Channel language is required"
 "TreeViewBase.openTrash","Open trash","
 -- CONTEXT --
 ","Open trash"
@@ -4415,14 +4450,14 @@ Heading for the section in the resource editing window","Completion"
 ","Unsupported files"
 "Uploader.unsupportedFilesText","{count, plural,
  =1 {# file will not be uploaded.}
- other {# files will not be uploaded.}} 
+ other {# files will not be uploaded.}}
  {extensionCount, plural,
  =1 {Supported file type is}
  other {Supported file types are}} {extensions}","
 -- CONTEXT --
 ","{count, plural,
  =1 {# file will not be uploaded.}
- other {# files will not be uploaded.}} 
+ other {# files will not be uploaded.}}
  {extensionCount, plural,
  =1 {Supported file type is}
  other {Supported file types are}} {extensions}"
@@ -4441,12 +4476,9 @@ Heading for the section in the resource editing window","Completion"
 "UsingStudio.bestPractice2","It is preferable to create multiple small channels rather than one giant channel with many layers of folders.","
 -- CONTEXT --
 ","It is preferable to create multiple small channels rather than one giant channel with many layers of folders."
-"UsingStudio.bestPractice3","Reload the page often to ensure your work is saved to the server and no network errors have occurred. Use CTRL+R on Linux/Windows or ⌘+R on Mac.","
+"UsingStudio.bestPractice3","Reload the page to confirm your work has been saved to the server. Use CTRL+R on Linux/Windows or ⌘+R on Mac.","
 -- CONTEXT --
-","Reload the page often to ensure your work is saved to the server and no network errors have occurred. Use CTRL+R on Linux/Windows or ⌘+R on Mac."
-"UsingStudio.bestPractice4","Avoid simultaneous edits on the same channel. Channels should not be edited by multiple users at the same time or by the same user in multiple browser windows.","
--- CONTEXT --
-","Avoid simultaneous edits on the same channel. Channels should not be edited by multiple users at the same time or by the same user in multiple browser windows."
+","Reload the page to confirm your work has been saved to the server. Use CTRL+R on Linux/Windows or ⌘+R on Mac."
 "UsingStudio.bestPractice5","It is possible that you will encounter timeout errors in your browser when performing operations like import and sync, on large channels. Don't be alarmed by this error message and do not repeat the same operation again right away. It doesn't mean the operation has failed- Kolibri Studio is still working in the background. Wait a few minutes and reload the page before continuing your edits.","
 -- CONTEXT --
 ","It is possible that you will encounter timeout errors in your browser when performing operations like import and sync, on large channels. Don't be alarmed by this error message and do not repeat the same operation again right away. It doesn't mean the operation has failed- Kolibri Studio is still working in the background. Wait a few minutes and reload the page before continuing your edits."
@@ -4456,9 +4488,6 @@ Heading for the section in the resource editing window","Completion"
 "UsingStudio.bestPractice7","PUBLISH periodically and import your channel into Kolibri to preview the content and obtain a local backup copy of your channel.","
 -- CONTEXT --
 ","PUBLISH periodically and import your channel into Kolibri to preview the content and obtain a local backup copy of your channel."
-"UsingStudio.bestPractice8","Do not edit the channel after you click PUBLISH. Wait for the notification email before resuming editing operations.","
--- CONTEXT --
-","Do not edit the channel after you click PUBLISH. Wait for the notification email before resuming editing operations."
 "UsingStudio.bestPractice9","Report issues as you encounter them.","
 -- CONTEXT --
 ","Report issues as you encounter them."
@@ -4468,18 +4497,13 @@ Heading for the section in the resource editing window","Completion"
 "UsingStudio.communityStandardsLink","Community standards","
 -- CONTEXT --
 ","Community standards"
-"UsingStudio.issue1","Two users have reported isolated incidents where content they imported from another channel disappeared, leaving only empty folders and subfolders. In one report, the content later re-appeared. They did not experience these problems consistently, and the incidents may possibly involve issues with a slow or unstable internet connection. If you run into this issue, please contact us as soon as possible and let us know as much information as you can remember.","
+"UsingStudio.issue1","There have been reports where users have observed the disappearance of changes they've recently made to their channels. The issue seems related to opening multiple tabs of Kolibri Studio, and eventually signing out. We advise that you disable any ‘Memory Saver/Sleeping’ tab browser feature for Kolibri Studio, and reload each tab before signing out. We're actively investigating this issue, so if you run into it, please contact us with as much information as possible.","UsingStudio.issue1
+
 -- CONTEXT --
-","Two users have reported isolated incidents where content they imported from another channel disappeared, leaving only empty folders and subfolders. In one report, the content later re-appeared. They did not experience these problems consistently, and the incidents may possibly involve issues with a slow or unstable internet connection. If you run into this issue, please contact us as soon as possible and let us know as much information as you can remember."
-"UsingStudio.issue2","Some operations in Studio are currently very slow, and so it may appear that the change you attempted to make timed out or did not take effect. In many cases, the change is still being processed and will appear once it is complete. If, after 5-10 minutes, the change still has not taken effect even after a browser refresh, please file an issue. We are working on solutions to these issues.","
--- CONTEXT --
-","Some operations in Studio are currently very slow, and so it may appear that the change you attempted to make timed out or did not take effect. In many cases, the change is still being processed and will appear once it is complete. If, after 5-10 minutes, the change still has not taken effect even after a browser refresh, please file an issue. We are working on solutions to these issues."
+A description of an issue that has been reported by users - the recommendation is to disable any memory saver feature in the browser while they are using Kolibri Studio.","There have been reports where users have observed the disappearance of changes they've recently made to their channels. The issue seems related to opening multiple tabs of Kolibri Studio, and eventually signing out. We advise that you disable any ‘Memory Saver/Sleeping’ tab browser feature for Kolibri Studio, and reload each tab before signing out. We're actively investigating this issue, so if you run into it, please contact us with as much information as possible."
 "UsingStudio.issueLink1","Reports of disappearing content","
 -- CONTEXT --
 ","Reports of disappearing content"
-"UsingStudio.issueLink2","Slow performance can lead to unexpected errors in the interface","
--- CONTEXT --
-","Slow performance can lead to unexpected errors in the interface"
 "UsingStudio.issuesPageLink","View all issues","
 -- CONTEXT --
 ","View all issues"
@@ -4530,7 +4554,7 @@ Heading for the section in the resource editing window","Completion"
 ","Question is required"
 "channelEditVue.false","False","
 -- CONTEXT --
-","False"
+","गलत"
 "channelEditVue.questionTypeInput","Numeric input","
 -- CONTEXT --
 ","Numeric input"
@@ -4548,7 +4572,7 @@ Heading for the section in the resource editing window","Completion"
 ","True/False"
 "channelEditVue.true","True","
 -- CONTEXT --
-","True"
+","सही"
 "formStrings.errorText","Please fix {count, plural,
  =1 {# error}
  other {# errors}} below","
@@ -4561,7 +4585,7 @@ Heading for the section in the resource editing window","Completion"
 ","Value must be equal to or greater than 1"
 "sharedVue.activityDurationRequired","This field is required","
 -- CONTEXT --
-","This field is required"
+","यह जानकारी ज़रूरी है"
 "sharedVue.activityDurationTooLongWarning","This value is very high. Please make sure this is how long learners should work on the resource for, in order to complete it.","
 -- CONTEXT --
 ","This value is very high. Please make sure this is how long learners should work on the resource for, in order to complete it."
@@ -4576,7 +4600,7 @@ Heading for the section in the resource editing window","Completion"
 ","Duration is required"
 "sharedVue.fieldRequired","This field is required","
 -- CONTEXT --
-","This field is required"
+","यह जानकारी ज़रूरी है"
 "sharedVue.learningActivityRequired","Learning activity is required","
 -- CONTEXT --
 ","Learning activity is required"
@@ -4600,7 +4624,7 @@ Heading for the section in the resource editing window","Completion"
 ","Must be lesser than or equal to N"
 "sharedVue.masteryModelMRequired","Required","
 -- CONTEXT --
-","Required"
+","आवश्यक"
 "sharedVue.masteryModelMWholeNumber","Must be a whole number","
 -- CONTEXT --
 ","Must be a whole number"
@@ -4609,7 +4633,7 @@ Heading for the section in the resource editing window","Completion"
 ","Must be at least 1"
 "sharedVue.masteryModelNRequired","Required","
 -- CONTEXT --
-","Required"
+","आवश्यक"
 "sharedVue.masteryModelNWholeNumber","Must be a whole number","
 -- CONTEXT --
 ","Must be a whole number"

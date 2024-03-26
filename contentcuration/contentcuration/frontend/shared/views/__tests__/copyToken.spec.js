@@ -15,7 +15,7 @@ describe('copyToken', () => {
     wrapper = makeWrapper();
   });
   it('text should be populated on load', () => {
-    let token = wrapper.find({ name: 'v-text-field' });
+    const token = wrapper.find({ name: 'v-text-field' });
     expect(token.props().value).toEqual('testt-oken');
     expect(wrapper.vm.copyStatus === 'IDLE');
   });

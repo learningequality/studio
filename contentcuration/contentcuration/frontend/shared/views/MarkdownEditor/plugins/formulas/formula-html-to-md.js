@@ -31,10 +31,10 @@ export default html => {
   const mathFieldsEls = doc.querySelectorAll('span[is="markdown-formula-field"]');
 
   for (const mathFieldEl of mathFieldsEls) {
-    let formula = mathFieldEl.innerHTML;
+    const formula = mathFieldEl.innerHTML;
     mathFieldEl.replaceWith('$$' + formula.trim() + '$$');
   }
 
-  let newHtml = doc.body.innerHTML;
+  const newHtml = doc.body.innerHTML;
   return newHtml;
 };

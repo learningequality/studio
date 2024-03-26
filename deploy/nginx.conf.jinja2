@@ -87,6 +87,7 @@ http {
             proxy_pass         http://studio;
             proxy_redirect     off;
             proxy_set_header   Host $host;
+            proxy_read_timeout 100s;
         }
 
         location /ws/ {

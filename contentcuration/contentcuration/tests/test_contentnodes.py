@@ -78,7 +78,7 @@ def _check_files_for_object(source, copy):
 
 
 def _check_tags_for_node(source, copy):
-    source_tags = source.tags.all().order_by("tag_name")
+    source_tags = source.tags.all().order_by("tag_name").distinct("tag_name")
     copy_tags = copy.tags.all().order_by("tag_name")
     assert len(source_tags) == len(copy_tags)
     for source_tag, copy_tag in zip(source_tags, copy_tags):
@@ -184,10 +184,15 @@ class NodeGettersTestCase(StudioTestCase):
         assert details["resource_count"] > 0
         assert details["resource_size"] > 0
         assert len(details["kind_count"]) > 0
-        assert len(details["authors"]) == len([author for author in details["authors"] if author])
-        assert len(details["aggregators"]) == len([aggregator for aggregator in details["aggregators"] if aggregator])
-        assert len(details["providers"]) == len([provider for provider in details["providers"] if provider])
-        assert len(details["copyright_holders"]) == len([holder for holder in details["copyright_holders"] if holder])
+
+        # assert format of list fields, including that they do not contain invalid data
+        list_fields = [
+            "kind_count", "languages", "accessible_languages", "licenses", "tags", "original_channels",
+            "authors", "aggregators", "providers", "copyright_holders"
+        ]
+        for field in list_fields:
+            self.assertIsInstance(details.get(field), list, f"Field '{field}' isn't a list")
+            self.assertEqual(len(details[field]), len([value for value in details[field] if value]), f"List field '{field}' has falsy values")
 
 
 class NodeOperationsTestCase(StudioTestCase):
@@ -410,6 +415,40 @@ class NodeOperationsTestCase(StudioTestCase):
             num_test_tags_before, ContentTag.objects.filter(tag_name="test").count()
         )
 
+    def test_duplicate_nodes_with_duplicate_tags(self):
+        """
+        Ensures that when we copy nodes with duplicated tags they get copied
+        """
+        new_channel = testdata.channel()
+
+        tree = TreeBuilder(tags=True)
+        self.channel.main_tree = tree.root
+        self.channel.save()
+
+        # Add a legacy tag with a set channel to test the tag copying behaviour.
+        legacy_tag = ContentTag.objects.create(tag_name="test", channel=self.channel)
+        # Add an identical tag without a set channel to make sure it gets reused.
+        identical_tag = ContentTag.objects.create(tag_name="test")
+
+        num_test_tags_before = ContentTag.objects.filter(tag_name="test").count()
+
+        # Add both the legacy and the new style tag and ensure that it doesn't break.
+        self.channel.main_tree.get_children().first().tags.add(legacy_tag)
+        self.channel.main_tree.get_children().first().tags.add(identical_tag)
+
+        self.channel.main_tree.copy_to(new_channel.main_tree, batch_size=1000)
+
+        _check_node_copy(
+            self.channel.main_tree,
+            new_channel.main_tree.get_children().last(),
+            original_channel_id=self.channel.id,
+            channel=new_channel,
+        )
+
+        self.assertEqual(
+            num_test_tags_before, ContentTag.objects.filter(tag_name="test").count()
+        )
+
     def test_duplicate_nodes_deep(self):
         """
         Ensures that when we copy nodes in a deep way, a full copy happens
@@ -528,8 +567,7 @@ class NodeOperationsTestCase(StudioTestCase):
 
     def test_duplicate_nodes_no_freeze_authoring_data_edit(self):
         """
-        Ensures that when we copy nodes, we can exclude nodes from the descendant
-        hierarchy
+        Ensures that when we copy nodes, we can modify fields if they are not frozen for editing
         """
         new_channel = testdata.channel()
 
@@ -548,8 +586,7 @@ class NodeOperationsTestCase(StudioTestCase):
 
     def test_duplicate_nodes_freeze_authoring_data_edit(self):
         """
-        Ensures that when we copy nodes, we can exclude nodes from the descendant
-        hierarchy
+        Ensures that when we copy nodes, we can't modify fields if they are frozen for editing
         """
         new_channel = testdata.channel()
 
@@ -748,8 +785,8 @@ class SyncNodesOperationTestCase(StudioTestCase):
         orig_video, cloned_video = self._setup_original_and_deriative_nodes()
         sync_node(
             cloned_video,
-            sync_attributes=True,
-            sync_tags=True,
+            sync_titles_and_descriptions=True,
+            sync_resource_details=True,
             sync_files=True,
             sync_assessment_items=True,
         )
@@ -762,8 +799,8 @@ class SyncNodesOperationTestCase(StudioTestCase):
         self._add_subs_to_video_node(orig_video, "en")
         sync_node(
             cloned_video,
-            sync_attributes=True,
-            sync_tags=True,
+            sync_titles_and_descriptions=True,
+            sync_resource_details=True,
             sync_files=True,
             sync_assessment_items=True,
         )
@@ -776,8 +813,8 @@ class SyncNodesOperationTestCase(StudioTestCase):
         self._add_subs_to_video_node(orig_video, "en")
         sync_node(
             cloned_video,
-            sync_attributes=True,
-            sync_tags=True,
+            sync_titles_and_descriptions=True,
+            sync_resource_details=True,
             sync_files=True,
             sync_assessment_items=True,
         )
@@ -785,8 +822,8 @@ class SyncNodesOperationTestCase(StudioTestCase):
         self._add_subs_to_video_node(orig_video, "zul")
         sync_node(
             cloned_video,
-            sync_attributes=True,
-            sync_tags=True,
+            sync_titles_and_descriptions=True,
+            sync_resource_details=True,
             sync_files=True,
             sync_assessment_items=True,
         )
@@ -1058,6 +1095,15 @@ class NodeCompletionTestCase(StudioTestCase):
         new_obj = ContentNode(title="yes", kind_id=content_kinds.EXERCISE, parent=channel.main_tree, license_id=licenses[0], extra_fields=self.new_extra_fields)
         new_obj.save()
         AssessmentItem.objects.create(contentnode=new_obj, question="This is a question", answers="[{\"correct\": true, \"text\": \"answer\"}]")
+        new_obj.mark_complete()
+        self.assertTrue(new_obj.complete)
+
+    def test_create_exercise_valid_assessment_items_raw_data(self):
+        licenses = list(License.objects.filter(copyright_holder_required=False, is_custom=False).values_list("pk", flat=True))
+        channel = testdata.channel()
+        new_obj = ContentNode(title="yes", kind_id=content_kinds.EXERCISE, parent=channel.main_tree, license_id=licenses[0], extra_fields=self.new_extra_fields)
+        new_obj.save()
+        AssessmentItem.objects.create(contentnode=new_obj, raw_data="{\"question\": {}}")
         new_obj.mark_complete()
         self.assertTrue(new_obj.complete)
 

@@ -13,11 +13,11 @@ function makeWrapper(options) {
 
 describe('messageDialog', () => {
   it('header and text should render properly from props', () => {
-    let wrapper = makeWrapper();
+    const wrapper = makeWrapper();
     expect(wrapper.find('[data-test="text"]').text()).toEqual('text');
   });
   it('slots should render content correctly', () => {
-    let wrapper = makeWrapper({
+    const wrapper = makeWrapper({
       slots: {
         default: ['new text'],
         buttons: ['buttons'],
@@ -27,7 +27,7 @@ describe('messageDialog', () => {
     expect(wrapper.find('[data-test="buttons"]').text()).toContain('buttons');
   });
   it('close should emit an input event to close the modal', () => {
-    let wrapper = makeWrapper();
+    const wrapper = makeWrapper();
     wrapper.vm.close();
     expect(wrapper.emitted('input')[0][0]).toBe(false);
   });

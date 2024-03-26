@@ -431,6 +431,7 @@
   @exercise-answer-wrong: #ef5350;
 
   .card-border-light {
+    /* stylelint-disable-next-line custom-property-pattern */
     border: 1px solid var(--v-greyBorder-lighten1);
 
     &:not(:first-child) {

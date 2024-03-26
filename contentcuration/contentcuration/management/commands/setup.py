@@ -26,7 +26,6 @@ from contentcuration.utils.files import duplicate_file
 from contentcuration.utils.publish import publish_channel
 from contentcuration.utils.storage_common import is_gcs_backend
 
-logmodule.basicConfig()
 logging = logmodule.getLogger(__name__)
 
 DESCRIPTION = """

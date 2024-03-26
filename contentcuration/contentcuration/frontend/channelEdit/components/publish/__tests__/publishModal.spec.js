@@ -85,7 +85,7 @@ describe('publishModal', () => {
     });
   });
   describe('on publish step', () => {
-    let publishChannel = jest.fn();
+    const publishChannel = jest.fn();
     beforeEach(() => {
       wrapper.setData({ step: steps.PUBLISH });
       wrapper.setMethods({
@@ -118,7 +118,7 @@ describe('publishModal', () => {
       expect(publishChannel).not.toHaveBeenCalled();
     });
     it('publish button should call publishChannel if description is given', () => {
-      let description = 'Version notes';
+      const description = 'Version notes';
       wrapper.setData({ publishDescription: description });
       wrapper
         .find('[data-test="confirm-publish-modal"]')

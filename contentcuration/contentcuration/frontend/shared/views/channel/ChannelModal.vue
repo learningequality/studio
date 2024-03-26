@@ -72,7 +72,7 @@
                 v-model="contentDefaults"
               />
 
-              <VBtn class="mt-5" color="primary" type="submit">
+              <VBtn class="mt-5" color="primary" type="submit" :disabled="isDisable">
                 {{ isNew ? $tr('createButton') : $tr('saveChangesButton' ) }}
               </VBtn>
             </VForm>
@@ -109,8 +109,8 @@
 
   import Vue from 'vue';
   import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
-  import ChannelSharing from './ChannelSharing';
   import ChannelThumbnail from './ChannelThumbnail';
+  import ChannelSharing from './ChannelSharing';
   import { NEW_OBJECT, ErrorTypes } from 'shared/constants';
   import MessageDialog from 'shared/views/MessageDialog';
   import LanguageDropdown from 'shared/views/LanguageDropdown';
@@ -153,6 +153,7 @@
         showUnsavedDialog: false,
         diffTracker: {},
         dialog: true,
+        isDisable: false,
       };
     },
     computed: {
@@ -287,21 +288,25 @@
       ...mapActions('channel', ['updateChannel', 'loadChannel', 'commitChannel']),
       ...mapMutations('channel', ['REMOVE_CHANNEL']),
       saveChannel() {
+        this.isDisable = true;
         if (this.$refs.detailsform.validate()) {
           this.changed = false;
           if (this.isNew) {
             return this.commitChannel({ id: this.channelId, ...this.diffTracker }).then(() => {
               // TODO: Make sure channel gets created before navigating to channel
               window.location = window.Urls.channel(this.channelId);
+              this.isDisable = false;
             });
           } else {
             return this.updateChannel({ id: this.channelId, ...this.diffTracker }).then(() => {
               this.$store.dispatch('showSnackbarSimple', this.$tr('changesSaved'));
               this.header = this.channel.name;
+              this.isDisable = false;
             });
           }
         } else if (this.$refs.detailsform.$el.scrollIntoView) {
           this.$refs.detailsform.$el.scrollIntoView({ behavior: 'smooth' });
+          this.isDisable = false;
         }
       },
       updateTitleForPage() {
@@ -321,7 +326,7 @@
         this.dialog = value;
       },
       setChannel(data) {
-        for (let key in data) {
+        for (const key in data) {
           Vue.set(this.diffTracker, key, data[key]);
         }
         this.changed = true;

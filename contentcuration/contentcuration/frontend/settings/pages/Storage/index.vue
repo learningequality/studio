@@ -18,7 +18,7 @@
 
         <KFixedGridItem :key="`${kind}1`" span="3" class="row">
           <span class="mr-2 pa-2" :style="{ backgroundColor: theme[kind] }">
-            <KIcon :icon="kind" :color="$themeTokens.textInverted" />
+            <KIcon :icon="kindIcon(kind)" :color="$themeTokens.textInverted" />
           </span>
 
           <span>{{ translateConstant(kind) }}</span>
@@ -88,6 +88,15 @@
         // Remove topic and h5p apps from the list
         const hiddenKinds = [ContentKindsNames.H5P, ContentKindsNames.TOPIC];
         return ContentKindsList.filter(k => !hiddenKinds.includes(k));
+      },
+      kindIcon() {
+        return kind => {
+          // KIcon doesn't have an icon for ZIM, so we use the HTML5 icon instead
+          if (kind === ContentKindsNames.ZIM) {
+            return ContentKindsNames.HTML5;
+          }
+          return kind;
+        };
       },
       storageUsagePercentage() {
         // Math.round to fix ParseInt issues for really small divisions to force the float to int
