@@ -1,11 +1,12 @@
 <template>
+
   <BaseCard
     :title="title"
     :headingLevel="headingLevel"
     :to="to"
     :titleLines="titleLines"
   >
-    <div class="">
+    <div>
       <KImg
         v-if="layout === 'vertical' && thumbnailDisplay !== 'none'"
         :src="thumbnailSrc"
@@ -22,7 +23,7 @@
       <slot v-if="!thumbnailSrc" name="thumbnailPlaceholder"></slot>
 
       <div class="horizontal-layout-style">
-        
+
         <KImg
           v-if="layout === 'horizontal' && thumbnailDisplay === 'large'"
           :src="thumbnailSrc"
@@ -38,8 +39,8 @@
         <slot v-if="!thumbnailSrc" name="thumbnailPlaceholder"></slot>
 
         <div>
-          <div 
-            v-if="thumbnailDisplay === 'none'" 
+          <div
+            v-if="thumbnailDisplay === 'none'"
             class="spacing"
           >
             <slot name="aboveTitle"></slot>
@@ -90,16 +91,19 @@
       </div>
     </div>
   </BaseCard>
+
 </template>
 
-<script>
-import KImg from '../KImg';
-import BaseCard from './BaseCard.vue';
 
-export default {
-    name: "KCard",
-    components: { BaseCard , KImg},
-    props:{
+<script>
+
+  import KImg from '../KImg';
+  import BaseCard from './BaseCard.vue';
+
+  export default {
+    name: 'KCard',
+    components: { BaseCard, KImg },
+    props: {
       title: {
         type: String,
         required: false,
@@ -116,10 +120,10 @@ export default {
           return true;
         },
       },
-      titleLines:{
-        type:Number,
-        required:true,
-        default:2
+      titleLines: {
+        type: Number,
+        required: true,
+        default: 2,
       },
       to: {
         type: Object,
@@ -127,7 +131,7 @@ export default {
         validator(value) {
           if (!value) {
             console.error('Error: Prop  to is required.');
-            return false; 
+            return false;
           }
           return true;
         },
@@ -146,38 +150,42 @@ export default {
       thumbnailDisplay: {
         type: String,
         required: false,
-        default:'none'
+        default: 'none',
       },
-      thumbnailSrc:{
+      thumbnailSrc: {
         type: String,
         required: false,
-        default: null
+        default: null,
       },
-      thumbnailScaleType:{
+      thumbnailScaleType: {
         type: String,
         required: false,
-        default: 'centerInside'
-      }
-    
+        default: 'centerInside',
+      },
     },
-    computed:{
-      KImgVerticalSmallStyle(){
-        if(this.thumbnailDisplay === 'small'){
+    computed: {
+      KImgVerticalSmallStyle() {
+        if (this.thumbnailDisplay === 'small') {
           return {
             padding: '2em',
           };
-        }else{
+        } else {
           return {
             padding: '0em',
           };
         }
       },
-      isVerticalLayout(){
-        return this.layout === 'vertical' || (this.layout === 'horizontal' && this.thumbnailDisplay === 'large');
-      }
-    }
-}
+      isVerticalLayout() {
+        return (
+          this.layout === 'vertical' ||
+          (this.layout === 'horizontal' && this.thumbnailDisplay === 'large')
+        );
+      },
+    },
+  };
+
 </script>
+
 
 <style scoped>
 
