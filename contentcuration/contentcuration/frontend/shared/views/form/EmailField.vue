@@ -17,6 +17,8 @@
 
 <script>
 
+  import commonStrings from 'shared/translator';
+
   export default {
     name: 'EmailField',
     props: {
@@ -46,7 +48,8 @@
       emailRules() {
         // TODO: fix checking if email exists
         return [
-          v => (!this.required || v.trim() ? true : this.$tr('emailRequiredMessage')),
+          /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
+          v => (!this.required || v.trim() ? true : commonStrings.$tr('fieldRequired')),
           v => /.+@.+\..+/.test(v) || this.$tr('validEmailMessage'),
         ];
       },
@@ -54,7 +57,6 @@
     $trs: {
       emailLabel: 'Email',
       validEmailMessage: 'Please enter a valid email',
-      emailRequiredMessage: 'Field is required',
     },
   };
 
