@@ -72,7 +72,6 @@ from contentcuration.db.models.functions import ArrayRemove
 from contentcuration.db.models.functions import Unnest
 from contentcuration.db.models.manager import CustomContentNodeTreeManager
 from contentcuration.db.models.manager import CustomManager
-from contentcuration.statistics import record_channel_stats
 from contentcuration.utils.cache import delete_public_channel_cache_keys
 from contentcuration.utils.parser import load_json_string
 from contentcuration.viewsets.sync.constants import ALL_CHANGES
@@ -874,7 +873,6 @@ class Channel(models.Model):
         return files['resource_size'] or 0
 
     def on_create(self):
-        record_channel_stats(self, None)
         if not self.content_defaults:
             self.content_defaults = DEFAULT_CONTENT_DEFAULTS
 
@@ -909,7 +907,6 @@ class Channel(models.Model):
     def on_update(self):
         from contentcuration.utils.user import calculate_user_storage
         original_values = self._field_updates.changed()
-        record_channel_stats(self, original_values)
 
         blacklist = set([
             "public",
