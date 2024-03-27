@@ -20,13 +20,9 @@
 
 <script>
 
-  import Icon from 'shared/views/Icon.vue';
-
   export default {
     name: 'HelpTooltip',
-    components: {
-      Icon,
-    },
+
     props: {
       text: {
         type: String,

@@ -22,7 +22,7 @@
         <VToolbarItems>
           <slot name="close">
             <VBtn flat icon exact data-test="close" @click="$emit('input', false)">
-              <Icon>clear</Icon>
+              <Icon icon="clear" color="white" />
             </VBtn>
           </slot>
         </VToolbarItems>

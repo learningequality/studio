@@ -33,7 +33,9 @@
           </VListTile>
           <VListTile @click.prevent="deleteDialog = true">
             <VListTileAction>
-              <Icon>delete</Icon>
+              <Icon
+                icon="trash"
+              />
             </VListTileAction>
             <VListTileTitle>{{ $tr('delete') }}</VListTileTitle>
           </VListTile>

@@ -239,6 +239,7 @@
   import { mapActions, mapGetters, mapMutations } from 'vuex';
   import { RouteNames } from '../../constants';
   import ChannelStar from './ChannelStar';
+
   import ChannelTokenModal from 'shared/views/channel/ChannelTokenModal';
   import Thumbnail from 'shared/views/files/Thumbnail';
   import Languages from 'shared/leUtils/Languages';

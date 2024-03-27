@@ -13,9 +13,9 @@
           <VTooltip v-if="user.is_admin" bottom z-index="200" lazy>
             <template #activator="{ on }">
               <span class="px-1 py-2" v-on="on">
-                <Icon color="light-green accent-4">
-                  $vuetify.icons.indicator
-                </Icon>
+                <Icon
+                  icon="unpublishedResource"
+                />
               </span>
             </template>
             <span>Administrator</span>
@@ -41,9 +41,9 @@
         <template #activator="{ on }">
           {{ formatFileSize(user.disk_space) }}
           <VBtn icon small v-on="on">
-            <Icon small>
-              edit
-            </Icon>
+            <Icon
+              icon="edit"
+            />
           </VBtn>
         </template>
         <VCard>
@@ -62,9 +62,7 @@
     <td>
       {{ user.edit_count }}
       <VBtn icon small :to="searchUserChannelsLink" target="_blank">
-        <Icon small>
-          launch
-        </Icon>
+        <Icon icon="openNewTab" />
       </VBtn>
     </td>
     <td>{{ user.view_count }}</td>
