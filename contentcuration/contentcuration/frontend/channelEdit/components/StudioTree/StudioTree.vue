@@ -123,6 +123,7 @@
                       />
                       <Menu
                         v-else
+                        v-model="showMenu"
                         data-test="editMenu"
                       >
                         <template #activator="{ on }">
@@ -133,7 +134,7 @@
                             @click.stop
                           />
                         </template>
-                        <ContentNodeOptions :nodeId="nodeId" />
+                        <ContentNodeOptions v-if="showMenu" :nodeId="nodeId" />
                       </Menu>
                     </VFlex>
                     <ContentNodeContextMenu
@@ -257,6 +258,7 @@
         draggableSize: 5,
         draggableExpanded: false,
         debouncedLoad: null,
+        showMenu: false,
       };
     },
     computed: {

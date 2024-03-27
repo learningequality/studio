@@ -80,3 +80,16 @@ export const DraggableRegions = {
  * @type {number}
  */
 export const ImportSearchPageSize = 10;
+
+export const QuickEditModals = {
+  TITLE_DESCRIPTION: 'TITLE_DESCRIPTION',
+  TAGS: 'TAGS',
+  LANGUAGE: 'LANGUAGE',
+  CATEGORIES: 'CATEGORIES',
+  LEVELS: 'LEVELS',
+  LEARNING_ACTIVITIES: 'LEARNING_ACTIVITIES',
+  SOURCE: 'SOURCE',
+  AUDIENCE: 'AUDIENCE',
+  COMPLETION: 'COMPLETION',
+  WHAT_IS_NEEDED: 'WHAT_IS_NEEDED',
+};

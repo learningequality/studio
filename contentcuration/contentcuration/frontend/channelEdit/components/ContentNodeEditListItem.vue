@@ -47,6 +47,18 @@
         </template>
 
         <template #actions-end>
+          <VListTileAction class="action-icon px-1" @click.stop>
+            <transition name="fade">
+              <IconButton
+                icon="rename"
+                size="small"
+                :text="$tr('editTooltip')"
+                :disabled="copying"
+                @click.stop
+                @click="editTitleDescription()"
+              />
+            </transition>
+          </VListTileAction>
           <VListTileAction :aria-hidden="!active" class="action-icon px-1">
             <Menu v-model="activated">
               <template #activator="{ on }">
@@ -59,7 +71,7 @@
                   @click.stop
                 />
               </template>
-              <ContentNodeOptions v-if="!copying" :nodeId="nodeId" />
+              <ContentNodeOptions v-if="!copying && activated" :nodeId="nodeId" />
             </Menu>
           </VListTileAction>
         </template>
@@ -107,7 +119,7 @@
   import DraggableItem from 'shared/views/draggable/DraggableItem';
   import { ContentNode } from 'shared/data/resources';
   import { DragEffect, DropEffect, EffectAllowed } from 'shared/mixins/draggable/constants';
-  import { DraggableRegions } from 'frontend/channelEdit/constants';
+  import { QuickEditModals, DraggableRegions } from 'frontend/channelEdit/constants';
   import { withChangeTracker } from 'shared/data/changes';
   import { COPYING_STATUS, COPYING_STATUS_VALUES } from 'shared/data/constants';
 
@@ -237,7 +249,14 @@
         'updateContentNode',
         'waitForCopyingStatus',
         'deleteContentNode',
+        'setQuickEditModal',
       ]),
+      editTitleDescription() {
+        this.setQuickEditModal({
+          modal: QuickEditModals.TITLE_DESCRIPTION,
+          nodeIds: [this.nodeId],
+        });
+      },
       retryFailedCopy: withChangeTracker(function(changeTracker) {
         this.updateContentNode({
           id: this.nodeId,
@@ -282,6 +301,7 @@
       creatingCopies: 'Copying...',
       copiedSnackbar: 'Copy operation complete',
       undo: 'Undo',
+      editTooltip: 'Edit Title & Description',
     },
   };
 

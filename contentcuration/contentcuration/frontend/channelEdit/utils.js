@@ -4,76 +4,13 @@ import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 import { MasteryModelsNames } from 'shared/leUtils/MasteryModels';
 import { metadataStrings, constantStrings } from 'shared/mixins';
 import {
+  ContentModalities,
   AssessmentItemTypes,
   CompletionCriteriaModels,
-  ContentModalities,
   SHORT_LONG_ACTIVITY_MIDPOINT,
-  CompletionDropdownMap,
+  defaultCompletionCriteriaModels,
+  defaultCompletionCriteriaThresholds,
 } from 'shared/constants';
-
-// The constant mapping below is used to set
-// default completion criteria and durations
-// both as initial values in the edit modal, and
-// to ensure backwards compatibility for contentnodes
-// that were added before this was in place
-export const defaultCompletionCriteriaModels = {
-  [ContentKindsNames.VIDEO]: CompletionCriteriaModels.TIME,
-  [ContentKindsNames.AUDIO]: CompletionCriteriaModels.TIME,
-  [ContentKindsNames.DOCUMENT]: CompletionCriteriaModels.PAGES,
-  [ContentKindsNames.H5P]: CompletionCriteriaModels.DETERMINED_BY_RESOURCE,
-  [ContentKindsNames.HTML5]: CompletionCriteriaModels.APPROX_TIME,
-  [ContentKindsNames.ZIM]: CompletionCriteriaModels.APPROX_TIME,
-  [ContentKindsNames.EXERCISE]: CompletionCriteriaModels.MASTERY,
-};
-
-export const defaultCompletionCriteriaThresholds = {
-  // Audio and Video threshold defaults are dynamic based
-  // on the duration of the file itself.
-  [ContentKindsNames.DOCUMENT]: '100%',
-  [ContentKindsNames.HTML5]: 300,
-  // We cannot set an automatic default threshold for exercises.
-};
-
-export const completionCriteriaToDropdownMap = {
-  [CompletionCriteriaModels.TIME]: CompletionDropdownMap.completeDuration,
-  [CompletionCriteriaModels.APPROX_TIME]: CompletionDropdownMap.completeDuration,
-  [CompletionCriteriaModels.PAGES]: CompletionDropdownMap.allContent,
-  [CompletionCriteriaModels.DETERMINED_BY_RESOURCE]: CompletionDropdownMap.determinedByResource,
-  [CompletionCriteriaModels.MASTERY]: CompletionDropdownMap.goal,
-  [CompletionCriteriaModels.REFERENCE]: CompletionDropdownMap.reference,
-};
-
-export const CompletionOptionsDropdownMap = {
-  [ContentKindsNames.DOCUMENT]: [
-    CompletionDropdownMap.allContent,
-    CompletionDropdownMap.completeDuration,
-    CompletionDropdownMap.reference,
-  ],
-  [ContentKindsNames.EXERCISE]: [CompletionDropdownMap.goal, CompletionDropdownMap.practiceQuiz],
-  [ContentKindsNames.HTML5]: [
-    CompletionDropdownMap.completeDuration,
-    CompletionDropdownMap.determinedByResource,
-    CompletionDropdownMap.reference,
-  ],
-  [ContentKindsNames.ZIM]: [
-    CompletionDropdownMap.completeDuration,
-    CompletionDropdownMap.determinedByResource,
-    CompletionDropdownMap.reference,
-  ],
-  [ContentKindsNames.H5P]: [
-    CompletionDropdownMap.determinedByResource,
-    CompletionDropdownMap.completeDuration,
-    CompletionDropdownMap.reference,
-  ],
-  [ContentKindsNames.VIDEO]: [
-    CompletionDropdownMap.completeDuration,
-    CompletionDropdownMap.reference,
-  ],
-  [ContentKindsNames.AUDIO]: [
-    CompletionDropdownMap.completeDuration,
-    CompletionDropdownMap.reference,
-  ],
-};
 
 /**
  * Get correct answer index/indices out of an array of answer objects.
@@ -201,6 +138,10 @@ export function isImportedContent(node) {
   return Boolean(
     node && node.original_source_node_id && node.node_id !== node.original_source_node_id
   );
+}
+
+export function isDisableSourceEdits(node) {
+  return node.freeze_authoring_data || isImportedContent(node);
 }
 
 export function importedChannelLink(node, router) {
