@@ -1,4 +1,5 @@
 <template>
+
   <button>
     <div
       class="card"
@@ -11,10 +12,10 @@
           :is="headerLevel"
         >
           <KRouterLink
+            v-if="title !== null"
             :to="to"
           >
             <KTextTruncator
-              v-if="title !== null"
               :text="title"
               :maxLines="titleLines"
               class="spacing"
@@ -48,14 +49,14 @@
         type: Object,
         required: true,
       },
-      titleLines:{
-        type:Number,
-        required:true,
-        default:2
+      titleLines: {
+        type: Number,
+        required: true,
+        default: 2,
       },
     },
-    computed:{
-      headerLevel(){
+    computed: {
+      headerLevel() {
         return 'h' + this.headingLevel;
       },
     },
@@ -68,10 +69,10 @@
       },
     },
   };
-    
+
 </script>
-    
-    
+
+
 <style lang="scss">
 
   @import './definitions';
@@ -85,11 +86,11 @@
     text-decoration: none;
     cursor: pointer;
     border-radius: 0.5em;
+    outline-offset: -1px;
     transition: border-color $core-time ease;
-    outline-offset: -1px; 
 
     &:hover,
-    &:focus{
+    &:focus {
       @extend %dropshadow-8dp;
     }
   }
@@ -97,8 +98,10 @@
   .remove-list-style {
     list-style-type: none;
   }
-  .spacing{
+
+  .spacing {
     padding: 1em;
+    color: black;
   }
 
 </style>

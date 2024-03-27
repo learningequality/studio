@@ -11,7 +11,7 @@
         v-if="layout === 'vertical' && thumbnailDisplay !== 'none'"
         :src="thumbnailSrc"
         :height="300"
-        :width="700"
+        :width="500"
         :isDecorative="false"
         altText="thumbnail image"
         :appearanceOverrides="{
@@ -27,8 +27,8 @@
         <KImg
           v-if="layout === 'horizontal' && thumbnailDisplay === 'large'"
           :src="thumbnailSrc"
-          :height="600"
-          :width="1000"
+          :height="300"
+          :width="600"
           :isDecorative="false"
           altText="thumbnail image"
           :appearanceOverrides="{
