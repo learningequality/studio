@@ -51,7 +51,6 @@ from search.utils import get_fts_annotated_contentnode_qs
 
 from contentcuration import models as ccmodels
 from contentcuration.decorators import delay_user_storage_calculation
-from contentcuration.statistics import record_publish_stats
 from contentcuration.utils.cache import delete_public_channel_cache_keys
 from contentcuration.utils.files import create_thumbnail_from_base64
 from contentcuration.utils.files import get_thumbnail_encoding
@@ -940,8 +939,6 @@ def publish_channel(
 
         # use SQLite backup API to put DB into archives folder.
         # Then we can use the empty db name to have SQLite use a temporary DB (https://www.sqlite.org/inmemorydb.html)
-
-        record_publish_stats(channel)
 
         if progress_tracker:
             progress_tracker.track(100)
