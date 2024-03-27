@@ -7,15 +7,17 @@
       @focus="cardFocus"
       @hover="cardHover"
     >
+
       <li class="remove-list-style">
         <component
           :is="headerLevel"
         >
           <KRouterLink
-            v-if="title !== null"
             :to="to"
           >
+
             <KTextTruncator
+              v-if="title !== null"
               :text="title"
               :maxLines="titleLines"
               class="spacing"
@@ -24,7 +26,9 @@
         </component>
       </li>
 
-      <slot></slot>
+      <slot name="default"></slot>
+
+
     </div>
   </button>
 

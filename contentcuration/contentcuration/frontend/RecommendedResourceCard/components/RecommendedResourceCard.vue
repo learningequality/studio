@@ -2,12 +2,13 @@
 
   <div>
     <KCard
-      title
-      headingLevel="2"
-      :to="{ }"
+      title="sample title"
+      :headingLevel="2"
+      :to="sampleRoute"
       layout="horizontal"
       thumbnailScaleType="cover"
       thumbnailDisplay="small"
+      :titleLines="3"
       thumbnailSrc="https://domf5oio6qrcr.cloudfront.net/medialibrary/11525/0a5ae820-7051-4495-bcca-61bf02897472.jpg"
     >
       <template #aboveTitle>
@@ -30,8 +31,8 @@
       </template>
       <template #footer>
         <div class="align-right-style">
-          <KIconButton icon="openNewTab" />
-          <KIconButton icon="thumbDown" />
+          <KIconButton icon="openNewTab" @click.stop="handleClick('open new tab')" />
+          <KIconButton icon="thumbDown" @click.stop="handleClick('thumb up')" />
         </div>
       </template>
     </KCard>
@@ -46,6 +47,18 @@
     name: 'RecommendedResourceCard',
     components: {
       KCard,
+    },
+    computed: {
+      sampleRoute() {
+        return {
+          path: '/starred',
+        };
+      },
+    },
+    methods: {
+      handleClick(icon) {
+        console.log(icon + ' clicked');
+      },
     },
   };
 
