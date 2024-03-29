@@ -27,9 +27,9 @@ describe('MarkdownFormulaField custom element', () => {
 
   it('renders some MathQuill markup in a shadowRoot', async done => {
     await window.customElements.whenDefined('markdown-formula-field');
-    let shadowRoot = formulaEl.shadowRoot;
+    const shadowRoot = formulaEl.shadowRoot;
     expect(shadowRoot).toBeTruthy();
-    let varEls = shadowRoot.querySelectorAll('var');
+    const varEls = shadowRoot.querySelectorAll('var');
     expect(varEls[0].innerHTML).toBe('x');
     expect(varEls[1].innerHTML).toBe('y');
     done();

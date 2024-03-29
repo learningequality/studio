@@ -1,4 +1,5 @@
 import 'regenerator-runtime/runtime';
+import { liveQuery } from 'dexie';
 import * as Sentry from '@sentry/vue';
 import Vue from 'vue';
 import VueRouter from 'vue-router';
@@ -55,6 +56,7 @@ import Vuetify, {
   VListTileContent,
   VListTileSubTitle,
   VListTileTitle,
+  VListTileAvatar,
   VMenu,
   VNavigationDrawer,
   VPagination,
@@ -106,6 +108,7 @@ import VueIntl from 'vue-intl';
 import Croppa from 'vue-croppa';
 import { Workbox, messageSW } from 'workbox-window';
 import KThemePlugin from 'kolibri-design-system/lib/KThemePlugin';
+import trackInputModality from 'kolibri-design-system/lib/styles/trackInputModality';
 
 import AnalyticsPlugin from './analytics/plugin';
 import { theme, icons } from 'shared/vuetify';
@@ -115,6 +118,7 @@ import { i18nSetup } from 'shared/i18n';
 import './styles/vuetify.css';
 import 'shared/styles/main.less';
 import Base from 'shared/Base.vue';
+import urls from 'shared/urls';
 import ActionLink from 'shared/views/ActionLink';
 import Menu from 'shared/views/Menu';
 import { initializeDB, resetDB } from 'shared/data';
@@ -197,6 +201,7 @@ Vue.use(Vuetify, {
     VListTileContent,
     VListTileSubTitle,
     VListTileTitle,
+    VListTileAvatar,
     VMenu,
     VNavigationDrawer,
     VPagination,
@@ -256,7 +261,7 @@ Vue.component('Menu', Menu);
 function initiateServiceWorker() {
   // Second conditional must be removed if you are doing dev work on the service
   // worker.
-  if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
+  if ('serviceWorker' in navigator) {
     const wb = new Workbox(window.Urls.service_worker());
     let registration;
 
@@ -301,6 +306,7 @@ function initiateServiceWorker() {
 export let rootVue;
 
 export default async function startApp({ store, router, index }) {
+  trackInputModality();
   await initiateServiceWorker();
   await initializeDB();
   await i18nSetup();
@@ -315,8 +321,27 @@ export default async function startApp({ store, router, index }) {
   ) {
     await resetDB();
   }
+
+  let subscription;
+
   if (currentUser.id !== undefined && currentUser.id !== null) {
+    // The user is logged on, so persist that to the session table in indexeddb
     await store.dispatch('saveSession', currentUser, { root: true });
+    // Also watch in case the user logs out, then we should redirect to the login page
+    const observable = liveQuery(() => {
+      return Session.table.toCollection().first(Boolean);
+    });
+
+    subscription = observable.subscribe({
+      next(result) {
+        if (!result && !window.location.pathname.endsWith(urls.accounts())) {
+          window.location = urls.accounts();
+        }
+      },
+      error() {
+        subscription.unsubscribe();
+      },
+    });
   }
 
   await Session.setChannelScope();
@@ -350,5 +375,16 @@ export default async function startApp({ store, router, index }) {
   // to the session state.
   injectVuexStore(store);
 
+  // Start listening for unsynced change events in IndexedDB
+  store.listenForIndexedDBChanges();
+
   rootVue = new Vue(config);
+
+  // Return a cleanup function
+  return function() {
+    if (subscription) {
+      subscription.unsubscribe();
+    }
+    store.stopListeningForIndexedDBChanges();
+  };
 }

@@ -127,7 +127,7 @@ export default function mergeAllChanges(changes, flatten = false, changesToSync 
     changesToSync['unmergeableChanges'] = {};
   }
   let lastRev;
-  for (let change of changes) {
+  for (const change of changes) {
     // Ensure changes are merged in order
     if (!('rev' in change) || typeof change.rev === 'undefined') {
       console.error('This change has no `rev`:', change);

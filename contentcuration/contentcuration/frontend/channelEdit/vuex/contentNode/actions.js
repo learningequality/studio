@@ -2,12 +2,19 @@ import flatMap from 'lodash/flatMap';
 import uniq from 'lodash/uniq';
 import { NEW_OBJECT, NOVALUE } from 'shared/constants';
 import client from 'shared/client';
-import { RELATIVE_TREE_POSITIONS, CHANGES_TABLE, TABLE_NAMES } from 'shared/data/constants';
+import {
+  RELATIVE_TREE_POSITIONS,
+  CHANGES_TABLE,
+  TABLE_NAMES,
+  COPYING_STATUS,
+  COPYING_STATUS_VALUES,
+} from 'shared/data/constants';
 import { ContentNode } from 'shared/data/resources';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 import { findLicense } from 'shared/utils/helpers';
 import { RolesNames } from 'shared/leUtils/Roles';
 import { isNodeComplete } from 'shared/utils/validation';
+import * as publicApi from 'shared/data/public';
 
 import db from 'shared/data/db';
 
@@ -34,6 +41,21 @@ export function loadContentNode(context, id) {
     });
 }
 
+/**
+ * @param context
+ * @param {string} id
+ * @param {string} nodeId - Note: this is `node_id` not `id`
+ * @param {string} rootId
+ * @param {string} parent - The `id` not `node_id` of the parent
+ * @return {Promise<{}>}
+ */
+export async function loadPublicContentNode(context, { id, nodeId, rootId, parent }) {
+  const publicNode = await publicApi.getContentNode(nodeId);
+  const localNode = publicApi.convertContentNodeResponse(id, rootId, parent, publicNode);
+  context.commit('ADD_CONTENTNODE', localNode);
+  return localNode;
+}
+
 export function loadContentNodeByNodeId(context, nodeId) {
   const channelId = context.rootState.currentChannel.currentChannelId;
   return loadContentNodes(context, { '[node_id+channel_id]__in': [[nodeId, channelId]] })
@@ -47,8 +69,12 @@ export function loadContentNodeByNodeId(context, nodeId) {
     });
 }
 
-export function loadChildren(context, { parent }) {
-  return loadContentNodes(context, { parent });
+export function loadChildren(context, { parent, published = null }) {
+  const params = { parent };
+  if (published !== null) {
+    params.published = published;
+  }
+  return loadContentNodes(context, params);
 }
 
 export function loadAncestors(context, { id }) {
@@ -191,7 +217,7 @@ export function createContentNode(context, { parent, kind, ...payload }) {
     assessmentItems: [],
     files: [],
   });
-  return ContentNode.put(contentNodeData).then(id => {
+  return ContentNode.add(contentNodeData).then(id => {
     context.commit('ADD_CONTENTNODE', {
       id,
       ...contentNodeData,
@@ -221,8 +247,12 @@ function generateContentNodeData({
   learning_activities = NOVALUE,
   categories = NOVALUE,
   suggested_duration = NOVALUE,
+  [COPYING_STATUS]: copy_status_value = NOVALUE,
 } = {}) {
   const contentNodeData = {};
+  if (copy_status_value !== NOVALUE) {
+    contentNodeData[COPYING_STATUS] = copy_status_value;
+  }
   if (title !== NOVALUE) {
     contentNodeData.title = title;
   }
@@ -353,7 +383,7 @@ export function addTags(context, { ids, tags }) {
   return Promise.all(
     ids.map(id => {
       const updates = {};
-      for (let tag of tags) {
+      for (const tag of tags) {
         context.commit('ADD_TAG', { id, tag });
         updates[`tags.${tag}`] = true;
       }
@@ -366,7 +396,7 @@ export function removeTags(context, { ids, tags }) {
   return Promise.all(
     ids.map(id => {
       const updates = {};
-      for (let tag of tags) {
+      for (const tag of tags) {
         context.commit('REMOVE_TAG', { id, tag });
         updates[`tags.${tag}`] = undefined;
       }
@@ -389,13 +419,29 @@ export function deleteContentNodes(context, contentNodeIds) {
   );
 }
 
+export function waitForCopyingStatus(context, { contentNodeId, startingRev }) {
+  return ContentNode.waitForCopying(contentNodeId, startingRev).catch(e => {
+    context.dispatch('updateContentNode', {
+      id: contentNodeId,
+      [COPYING_STATUS]: COPYING_STATUS_VALUES.FAILED,
+    });
+    return Promise.reject(e);
+  });
+}
+
 export function copyContentNode(
   context,
-  { id, target, position = RELATIVE_TREE_POSITIONS.LAST_CHILD, excluded_descendants = null } = {}
+  {
+    id,
+    target,
+    position = RELATIVE_TREE_POSITIONS.LAST_CHILD,
+    excluded_descendants = null,
+    sourceNode = null,
+  } = {}
 ) {
   // First, this will parse the tree and create the copy the local tree nodes,
   // with a `source_id` of the source node then create the content node copies
-  return ContentNode.copy(id, target, position, excluded_descendants).then(node => {
+  return ContentNode.copy(id, target, position, excluded_descendants, sourceNode).then(node => {
     context.commit('ADD_CONTENTNODE', node);
     return node;
   });
@@ -403,10 +449,16 @@ export function copyContentNode(
 
 export function copyContentNodes(
   context,
-  { id__in, target, position = RELATIVE_TREE_POSITIONS.LAST_CHILD }
+  { id__in, target, position = RELATIVE_TREE_POSITIONS.LAST_CHILD, sourceNodes = null }
 ) {
   return Promise.all(
-    id__in.map(id => context.dispatch('copyContentNode', { id, target, position }))
+    id__in.map(id => {
+      let sourceNode = null;
+      if (sourceNodes) {
+        sourceNode = sourceNodes.find(n => n.id === id);
+      }
+      return context.dispatch('copyContentNode', { id, target, position, sourceNode });
+    })
   );
 }
 

@@ -48,10 +48,7 @@ export function reloadCurrentChannelStagingDiff(context) {
 }
 
 export function deployCurrentChannel(context) {
-  let payload = {
-    channel_id: context.state.currentChannelId,
-  };
-  return client.post(window.Urls.activate_channel(), payload);
+  return Channel.deploy(context.state.currentChannelId);
 }
 
 export function publishChannel(context, version_notes) {

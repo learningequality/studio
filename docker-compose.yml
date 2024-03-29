@@ -30,6 +30,17 @@ x-studio-worker:
     environment: *studio-environment
 
 services:
+  studio-nginx:
+    platform: linux/amd64
+    build:
+      context: .
+      dockerfile: k8s/images/nginx/Dockerfile
+    ports:
+      - "8081:8080"
+    depends_on:
+      - studio-app
+    environment: *studio-environment
+
   studio-app:
     <<: *studio-worker
     entrypoint: python docker/entrypoint.py
@@ -50,10 +61,13 @@ services:
       MINIO_SECRET_KEY: development
       MINIO_API_CORS_ALLOW_ORIGIN: 'http://localhost:8080,http://127.0.0.1:8080'
     volumes:
-      - minio_data:/data
+      - .docker/minio:/data
 
   postgres:
-    image: postgres:12
+    image: ghcr.io/learningequality/postgres
+    build:
+      context: ./docker
+      dockerfile: Dockerfile.postgres.dev
     environment:
       PGDATA: /var/lib/postgresql/data/pgdata
       POSTGRES_USER: learningequality
@@ -61,6 +75,7 @@ services:
       POSTGRES_DB: kolibri-studio
     volumes:
       - pgdata:/var/lib/postgresql/data/pgdata
+      - .docker/postgres:/docker-entrypoint-initdb.d
 
   redis:
     image: redis:6.0.9

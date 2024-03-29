@@ -6,12 +6,12 @@
       justify-center
       class="main pt-5"
     >
-      <h3 class="corner">
-        <OfflineText indicator />
-      </h3>
       <div>
         <!-- Sign in -->
-        <VCard class="pa-4" style="width: 300px;margin: 0 auto;">
+        <VCard
+          class="pa-4"
+          style="width: 300px;margin: 0 auto;"
+        >
           <VImg
             height="200"
             maxHeight="100"
@@ -22,30 +22,63 @@
           <h2 class="primary--text py-2 text-xs-center">
             {{ $tr('kolibriStudio') }}
           </h2>
-          <Banner :value="loginFailed" :text="$tr('loginFailed')" error />
-          <Banner :value="offline" :text="$tr('loginFailedOffline')" error />
+          <Banner
+            :value="loginFailed"
+            :text="$tr('loginFailed')"
+            error
+          />
+          <Banner
+            :value="offline"
+            :text="$tr('loginFailedOffline')"
+            error
+          />
           <Banner
             :value="Boolean(nextParam)"
             :text="$tr('loginToProceed')"
             class="pb-0 px-0"
             data-test="loginToProceed"
           />
-          <VForm ref="form" lazy-validation class="py-3" @submit.prevent="submit">
-            <EmailField v-model="username" autofocus />
-            <PasswordField v-model="password" :label="$tr('passwordLabel')" />
+          <VForm
+            ref="form"
+            lazy-validation
+            class="py-3"
+            @submit.prevent="submit"
+          >
+            <EmailField
+              v-model="username"
+              autofocus
+            />
+            <PasswordField
+              v-model="password"
+              :label="$tr('passwordLabel')"
+            />
             <p>
-              <ActionLink :to="{ name: 'ForgotPassword' }" :text="$tr('forgotPasswordLink')" />
+              <ActionLink
+                :to="{ name: 'ForgotPassword' }"
+                :text="$tr('forgotPasswordLink')"
+              />
             </p>
-            <VBtn block color="primary" large type="submit" :disabled="offline || busy">
-              {{ $tr('signInButton') }}
-            </VBtn>
-            <VBtn block flat color="primary" class="mt-2" :to="{ name: 'Create' }">
-              {{ $tr('createAccountButton') }}
-            </VBtn>
+            <KButton
+              primary
+              class="w-100"
+              :text="$tr('signInButton')"
+              :disabled="offline || busy"
+              type="submit"
+            />
+            <KRouterLink
+              primary
+              class="mt-2 w-100"
+              :text="$tr('createAccountButton')"
+              :to="{ name: 'Create' }"
+              appearance="flat-button"
+            />
           </VForm>
           <VDivider />
           <p class="mt-4 text-xs-center">
-            <ActionLink href="/channels" :text="$tr('guestModeLink')" />
+            <ActionLink
+              href="/channels"
+              :text="$tr('guestModeLink')"
+            />
           </p>
         </VCard>
 
@@ -90,7 +123,6 @@
   import PolicyModals from 'shared/views/policies/PolicyModals';
   import { policies } from 'shared/constants';
   import LanguageSwitcherList from 'shared/languageSwitcher/LanguageSwitcherList';
-  import OfflineText from 'shared/views/OfflineText';
 
   export default {
     name: 'Main',
@@ -100,7 +132,6 @@
       LanguageSwitcherList,
       PasswordField,
       PolicyModals,
-      OfflineText,
     },
     data() {
       return {
@@ -132,7 +163,7 @@
       submit() {
         if (this.$refs.form.validate()) {
           this.busy = true;
-          let credentials = {
+          const credentials = {
             username: this.username,
             password: this.password,
           };
@@ -180,6 +211,7 @@
 
   .main {
     overflow: auto;
+    /* stylelint-disable-next-line custom-property-pattern */
     background-color: var(--v-backgroundColor-base);
   }
 
@@ -191,10 +223,8 @@
     content: '•';
   }
 
-  .corner {
-    position: absolute;
-    top: 1em;
-    left: 1em;
+  .w-100 {
+    width: 100%;
   }
 
 </style>

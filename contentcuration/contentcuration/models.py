@@ -45,7 +45,6 @@ from django.db.models.sql import Query
 from django.dispatch import receiver
 from django.utils import timezone
 from django.utils.translation import gettext as _
-from django_celery_results.models import TaskResult
 from django_cte import With
 from le_utils import proquint
 from le_utils.constants import content_kinds
@@ -66,6 +65,7 @@ from rest_framework.utils.encoders import JSONEncoder
 
 from contentcuration.constants import channel_history
 from contentcuration.constants import completion_criteria
+from contentcuration.constants import user_history
 from contentcuration.constants.contentnode import kind_activity_map
 from contentcuration.db.models.expressions import Array
 from contentcuration.db.models.functions import ArrayRemove
@@ -200,6 +200,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     policies = JSONField(default=dict, null=True)
     feature_flags = JSONField(default=dict, null=True)
 
+    deleted = models.BooleanField(default=False, db_index=True)
+
     _field_updates = FieldTracker(fields=[
         # Field to watch for changes
         "disk_space",
@@ -213,27 +215,67 @@ class User(AbstractBaseUser, PermissionsMixin):
         return self.email
 
     def delete(self):
-        from contentcuration.viewsets.common import SQCount
-        # Remove any invitations associated to this account
-        self.sent_to.all().delete()
+        """
+        Soft deletes the user account.
+        """
+        self.deleted = True
+        # Deactivate the user to disallow authentication and also
+        # to let the user verify the email again after recovery.
+        self.is_active = False
+        self.save()
+        self.history.create(user_id=self.pk, action=user_history.DELETION)
 
-        # Delete channels associated with this user (if user is the only editor)
-        user_query = (
+    def recover(self):
+        """
+        Use this method when we want to recover a user.
+        """
+        self.deleted = False
+        self.save()
+        self.history.create(user_id=self.pk, action=user_history.RECOVERY)
+
+    def hard_delete_user_related_data(self):
+        """
+        Hard delete all user related data. But keeps the user record itself intact.
+
+        User related data that gets hard deleted are:
+            - sole editor non-public channels.
+            - sole editor non-public channelsets.
+            - sole editor non-public channels' content nodes and its underlying files that are not
+            used by any other channel.
+            - all user invitations.
+        """
+        from contentcuration.viewsets.common import SQCount
+
+        # Hard delete invitations associated to this account.
+        self.sent_to.all().delete()
+        self.sent_by.all().delete()
+
+        editable_channels_user_query = (
             User.objects.filter(editable_channels__id=OuterRef('id'))
                         .values_list('id', flat=True)
                         .distinct()
         )
-        self.editable_channels.annotate(num_editors=SQCount(user_query, field="id")).filter(num_editors=1).delete()
+        non_public_channels_sole_editor = self.editable_channels.annotate(num_editors=SQCount(
+            editable_channels_user_query, field="id")).filter(num_editors=1, public=False)
 
-        # Delete channel collections associated with this user (if user is the only editor)
+        # Point sole editor non-public channels' contentnodes to orphan tree to let
+        # our garbage collection delete the nodes and underlying files.
+        ContentNode._annotate_channel_id(ContentNode.objects).filter(channel_id__in=list(
+            non_public_channels_sole_editor.values_list("id", flat=True))).update(parent_id=settings.ORPHANAGE_ROOT_ID)
+
+        # Hard delete non-public channels associated with this user (if user is the only editor).
+        non_public_channels_sole_editor.delete()
+
+        # Hard delete non-public channel collections associated with this user (if user is the only editor).
         user_query = (
             User.objects.filter(channel_sets__id=OuterRef('id'))
                         .values_list('id', flat=True)
                         .distinct()
         )
-        self.channel_sets.annotate(num_editors=SQCount(user_query, field="id")).filter(num_editors=1).delete()
+        self.channel_sets.annotate(num_editors=SQCount(user_query, field="id")).filter(num_editors=1, public=False).delete()
 
-        super(User, self).delete()
+        # Create history!
+        self.history.create(user_id=self.pk, action=user_history.RELATED_DATA_HARD_DELETION)
 
     def can_edit(self, channel_id):
         return Channel.filter_edit_queryset(Channel.objects.all(), self).filter(pk=channel_id).exists()
@@ -405,18 +447,23 @@ class User(AbstractBaseUser, PermissionsMixin):
         return queryset.filter(pk=user.pk)
 
     @classmethod
-    def get_for_email(cls, email, **filters):
+    def get_for_email(cls, email, deleted=False, **filters):
         """
         Returns the appropriate User record given an email, ordered by:
          - those with is_active=True first, which there should only ever be one
          - otherwise by ID DESC so most recent inactive shoud be returned
 
+        Filters out deleted User records by default. To include both deleted and
+        undeleted user records pass None to the deleted argument.
+
         :param email: A string of the user's email
         :param filters: Additional filters to filter the User queryset
         :return: User or None
         """
-        return User.objects.filter(email__iexact=email.strip(), **filters)\
-            .order_by("-is_active", "-id").first()
+        user_qs = User.objects.filter(email__iexact=email.strip())
+        if deleted is not None:
+            user_qs = user_qs.filter(deleted=deleted)
+        return user_qs.filter(**filters).order_by("-is_active", "-id").first()
 
 
 class UUIDField(models.CharField):
@@ -1038,6 +1085,16 @@ class ChannelHistory(models.Model):
         ]
 
 
+class UserHistory(models.Model):
+    """
+    Model that stores the user's action history.
+    """
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=False, blank=False, related_name="history", on_delete=models.CASCADE)
+    action = models.CharField(max_length=32, choices=user_history.choices)
+
+    performed_at = models.DateTimeField(default=timezone.now)
+
+
 class ChannelSet(models.Model):
     # NOTE: this is referred to as "channel collections" on the front-end, but we need to call it
     # something else as there is already a ChannelCollection model on the front-end
@@ -1465,13 +1522,12 @@ class ContentNode(MPTTModel, models.Model):
         from contentcuration.viewsets.common import SQCount
         from contentcuration.viewsets.common import SQRelatedArrayAgg
         from contentcuration.viewsets.common import SQSum
+        from contentcuration.viewsets.common import SQJSONBKeyArrayAgg
 
         node = ContentNode.objects.filter(pk=self.id, tree_id=self.tree_id).order_by()
 
         descendants = (
             self.get_descendants()
-            .prefetch_related("children", "files", "tags")
-            .select_related("license", "language")
             .values("id")
         )
 
@@ -1490,17 +1546,19 @@ class ContentNode(MPTTModel, models.Model):
                 "resource_size": 0,
                 "includes": {"coach_content": 0, "exercises": 0},
                 "kind_count": [],
-                "languages": "",
-                "accessible_languages": "",
-                "licenses": "",
+                "languages": [],
+                "accessible_languages": [],
+                "licenses": [],
                 "tags": [],
-                "copyright_holders": "",
-                "authors": "",
-                "aggregators": "",
-                "providers": "",
+                "copyright_holders": [],
+                "authors": [],
+                "aggregators": [],
+                "providers": [],
                 "sample_pathway": [],
                 "original_channels": [],
                 "sample_nodes": [],
+                "levels": [],
+                "categories": [],
             }
 
             # Set cache with latest data
@@ -1595,6 +1653,14 @@ class ContentNode(MPTTModel, models.Model):
             exercises=SQCount(
                 resources.filter(kind_id=content_kinds.EXERCISE), field="id"
             ),
+            levels=SQJSONBKeyArrayAgg(
+                descendants.exclude(grade_levels__isnull=True),
+                field="grade_levels",
+            ),
+            all_categories=SQJSONBKeyArrayAgg(
+                descendants.exclude(categories__isnull=True),
+                field="categories",
+            ),
         )
 
         # Get sample pathway by getting longest path
@@ -1684,6 +1750,8 @@ class ContentNode(MPTTModel, models.Model):
                 "tags_list",
                 "kind_count",
                 "exercises",
+                "levels",
+                "all_categories",
             )
             .first()
         )
@@ -1713,6 +1781,8 @@ class ContentNode(MPTTModel, models.Model):
             "aggregators": list(filter(bool, node["aggregators"])),
             "providers": list(filter(bool, node["providers"])),
             "copyright_holders": list(filter(bool, node["copyright_holders"])),
+            "levels": node.get("levels") or [],
+            "categories": node.get("all_categories") or [],
         }
 
         # Set cache with latest data
@@ -1756,12 +1826,15 @@ class ContentNode(MPTTModel, models.Model):
             if self.kind_id == content_kinds.EXERCISE:
                 # Check to see if the exercise has at least one assessment item that has:
                 if not self.assessment_items.filter(
-                    # A non-blank question
-                    ~Q(question='')
-                    # Non-blank answers
-                    & ~Q(answers='[]')
-                    # With either an input question or one answer marked as correct
-                    & (Q(type=exercises.INPUT_QUESTION) | Q(answers__iregex=r'"correct":\s*true'))
+                    # Item with non-blank raw data
+                    ~Q(raw_data="") | (
+                        # A non-blank question
+                        ~Q(question='')
+                        # Non-blank answers
+                        & ~Q(answers='[]')
+                        # With either an input question or one answer marked as correct
+                        & (Q(type=exercises.INPUT_QUESTION) | Q(answers__iregex=r'"correct":\s*true'))
+                    )
                 ).exists():
                     errors.append("No questions with question text and complete answers")
                 # Check that it has a mastery model set
@@ -1777,6 +1850,16 @@ class ContentNode(MPTTModel, models.Model):
                         errors.append("Mastery criterion is defined but is invalid")
         self.complete = not errors
         return errors
+
+    def make_content_id_unique(self):
+        """
+        If self is NOT an original contentnode (in other words, a copied contentnode)
+        and a contentnode with same content_id exists then we update self's content_id.
+        """
+        is_node_original = self.original_source_node_id is None or self.original_source_node_id == self.node_id
+        node_same_content_id = ContentNode.objects.exclude(pk=self.pk).filter(content_id=self.content_id)
+        if (not is_node_original) and node_same_content_id.exists():
+            ContentNode.objects.filter(pk=self.pk).update(content_id=uuid.uuid4().hex)
 
     def on_create(self):
         self.changed = True
@@ -1885,6 +1968,9 @@ class ContentNode(MPTTModel, models.Model):
 
     def copy(self):
         return self.copy_to()
+
+    def is_publishable(self):
+        return self.complete and self.get_descendants(include_self=True).exclude(kind_id=content_kinds.TOPIC).exists()
 
     class Meta:
         verbose_name = "Topic"
@@ -2052,6 +2138,28 @@ class AssessmentItem(models.Model):
 
         return queryset.filter(Q(view=True) | Q(edit=True) | Q(public=True))
 
+    def on_create(self):
+        """
+        When an exercise is added to a contentnode, update its content_id
+        if it's a copied contentnode.
+        """
+        self.contentnode.make_content_id_unique()
+
+    def on_update(self):
+        """
+        When an exercise is updated of a contentnode, update its content_id
+        if it's a copied contentnode.
+        """
+        self.contentnode.make_content_id_unique()
+
+    def delete(self, *args, **kwargs):
+        """
+        When an exercise is deleted from a contentnode, update its content_id
+        if it's a copied contentnode.
+        """
+        self.contentnode.make_content_id_unique()
+        return super(AssessmentItem, self).delete(*args, **kwargs)
+
 
 class SlideshowSlide(models.Model):
     contentnode = models.ForeignKey('ContentNode', related_name="slideshow_slides", blank=True, null=True,
@@ -2072,7 +2180,13 @@ class StagedFile(models.Model):
 FILE_DISTINCT_INDEX_NAME = "file_checksum_file_size_idx"
 FILE_MODIFIED_DESC_INDEX_NAME = "file_modified_desc_idx"
 FILE_DURATION_CONSTRAINT = "file_media_duration_int"
-MEDIA_PRESETS = [format_presets.AUDIO, format_presets.VIDEO_HIGH_RES, format_presets.VIDEO_LOW_RES]
+MEDIA_PRESETS = [
+    format_presets.AUDIO,
+    format_presets.AUDIO_DEPENDENCY,
+    format_presets.VIDEO_HIGH_RES,
+    format_presets.VIDEO_LOW_RES,
+    format_presets.VIDEO_DEPENDENCY,
+]
 
 
 class File(models.Model):
@@ -2169,10 +2283,19 @@ class File(models.Model):
 
         return os.path.basename(self.file_on_disk.name)
 
+    def update_contentnode_content_id(self):
+        """
+        If the file is attached to a contentnode and is not a thumbnail
+        then update that contentnode's content_id if it's a copied contentnode.
+        """
+        if self.contentnode and self.preset.thumbnail is False:
+            self.contentnode.make_content_id_unique()
+
     def on_update(self):
         # since modified was added later as a nullable field to File, we don't use a default but
         # instead we'll just make sure it's always updated through our serializers
         self.modified = timezone.now()
+        self.update_contentnode_content_id()
 
     def save(self, set_by_file_on_disk=True, *args, **kwargs):
         """
@@ -2215,7 +2338,12 @@ class File(models.Model):
             models.Index(fields=["-modified"], name=FILE_MODIFIED_DESC_INDEX_NAME),
         ]
         constraints = [
-            models.CheckConstraint(check=(Q(preset__in=MEDIA_PRESETS, duration__gt=0) | Q(duration__isnull=True)), name=FILE_DURATION_CONSTRAINT)
+            # enforces that duration is null when not a media preset, but the duration may be null for media presets
+            # but if not-null, should be greater than 0
+            models.CheckConstraint(
+                check=(Q(preset__in=MEDIA_PRESETS, duration__gt=0) | Q(duration__isnull=True)),
+                name=FILE_DURATION_CONSTRAINT
+            )
         ]
 
 
@@ -2436,39 +2564,29 @@ class Change(models.Model):
         return self.serialize(self)
 
 
-class TaskResultCustom(object):
-    """
-    Custom fields to add to django_celery_results's TaskResult model
-    """
+class CustomTaskMetadata(models.Model):
+    # Task_id for reference
+    task_id = models.CharField(
+        max_length=255,  # Adjust the max_length as needed
+        unique=True,
+    )
     # user shouldn't be null, but in order to append the field, this needs to be allowed
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="tasks", on_delete=models.CASCADE, null=True)
     channel_id = DjangoUUIDField(db_index=True, null=True, blank=True)
     progress = models.IntegerField(null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(100)])
+    # a hash of the task name and kwargs for identifying repeat tasks
+    signature = models.CharField(null=True, blank=False, max_length=32)
+    date_created = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name=_('Created DateTime'),
+        help_text=_('Datetime field when the custom_metadata for task was created in UTC')
+    )
 
-    super_as_dict = TaskResult.as_dict
-
-    def as_dict(self):
-        """
-        :return: A dictionary representation
-        """
-        super_dict = self.super_as_dict()
-        super_dict.update(
-            user_id=self.user_id,
-            channel_id=self.channel_id,
-            progress=self.progress,
-        )
-        return super_dict
-
-    @classmethod
-    def contribute_to_class(cls, model_class=TaskResult):
-        """
-        Adds fields to model, by default TaskResult
-        :param model_class: TaskResult model
-        """
-        for field in dir(cls):
-            if not field.startswith("_"):
-                model_class.add_to_class(field, getattr(cls, field))
-
-
-# trigger class contributions immediately
-TaskResultCustom.contribute_to_class()
+    class Meta:
+        indexes = [
+            # add index that matches query usage for signature
+            models.Index(
+                fields=['signature'],
+                name='task_result_signature',
+            ),
+        ]

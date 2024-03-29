@@ -11,9 +11,12 @@
     >
       <Banner :text="$tr('activationRequestFailed')" :value="error" error class="mb-4" />
       <EmailField v-model="email" autofocus />
-      <VBtn color="primary" large type="submit" block>
-        {{ $tr('submitButton') }}
-      </VBtn>
+      <KButton
+        primary
+        class="w-100"
+        :text="$tr('submitButton')"
+        type="submit"
+      />
     </VForm>
   </MessageLayout>
 
@@ -64,3 +67,11 @@
   };
 
 </script>
+
+<style lang="less" scoped>
+
+  .w-100 {
+    width: 100%;
+  }
+
+</style>

@@ -66,7 +66,7 @@
     },
     methods: {
       handleRemoved(nodeId) {
-        let nodeIds = this.$route.params.detailNodeIds.split(',').filter(id => id !== nodeId);
+        const nodeIds = this.$route.params.detailNodeIds.split(',').filter(id => id !== nodeId);
 
         this.$router.push({
           name: this.$route.name,
@@ -77,7 +77,7 @@
         });
         if (this.selected.includes(nodeId)) {
           if (this.selected.length === 1) {
-            let viableNodes = this.nodeIds.filter(id => id !== nodeId);
+            const viableNodes = this.nodeIds.filter(id => id !== nodeId);
             this.selected = [viableNodes[viableNodes.length - 1]];
           } else {
             this.selected = this.selected.filter(id => id !== nodeId);

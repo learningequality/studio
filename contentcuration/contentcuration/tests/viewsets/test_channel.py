@@ -2,13 +2,18 @@ from __future__ import absolute_import
 
 import uuid
 
+import mock
 from django.urls import reverse
+from le_utils.constants import content_kinds
 
 from contentcuration import models
+from contentcuration import models as cc
 from contentcuration.tests import testdata
 from contentcuration.tests.base import StudioAPITestCase
 from contentcuration.tests.viewsets.base import generate_create_event
 from contentcuration.tests.viewsets.base import generate_delete_event
+from contentcuration.tests.viewsets.base import generate_deploy_channel_event
+from contentcuration.tests.viewsets.base import generate_sync_channel_event
 from contentcuration.tests.viewsets.base import generate_update_event
 from contentcuration.tests.viewsets.base import SyncTestMixin
 from contentcuration.viewsets.sync.constants import CHANNEL
@@ -272,6 +277,99 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         self.assertEqual(response.status_code, 200, response.content)
         self.assertTrue(models.Channel.objects.get(id=channel1.id).deleted)
         self.assertFalse(models.Channel.objects.get(id=channel2.id).deleted)
+
+    @mock.patch("contentcuration.viewsets.channel.sync_channel")
+    def test_sync_channel_called_correctly(self, sync_channel_mock):
+        user = testdata.user()
+        channel = testdata.channel()
+        channel.editors.add(user)
+        channel_node = channel.main_tree.get_descendants().first()
+        channel_node.copy_to(target=channel.main_tree)
+
+        self.client.force_authenticate(user=user)
+        for i in range(1, 5):
+            sync_channel_mock.reset_mock()
+            args = [channel.id, False, False, False, False]
+            args[i] = True
+
+            response = self.sync_changes(
+                [
+                    generate_sync_channel_event(*args)
+                ]
+            )
+
+            self.assertEqual(response.status_code, 200)
+            sync_channel_mock.assert_called_once()
+            self.assertEqual(sync_channel_mock.call_args.args[i], True)
+
+    def test_deploy_channel_event(self):
+        channel = testdata.channel()
+        user = testdata.user()
+        channel.editors.add(user)
+        self.client.force_authenticate(
+            user
+        )  # This will skip all authentication checks
+        channel.main_tree.refresh_from_db()
+
+        channel.staging_tree = cc.ContentNode(
+            kind_id=content_kinds.TOPIC, title="test", node_id="aaa"
+        )
+        channel.staging_tree.save()
+        channel.previous_tree = cc.ContentNode(
+            kind_id=content_kinds.TOPIC, title="test", node_id="bbb"
+        )
+        channel.previous_tree.save()
+        channel.chef_tree = cc.ContentNode(
+            kind_id=content_kinds.TOPIC, title="test", node_id="ccc"
+        )
+        channel.chef_tree.save()
+        channel.save()
+
+        self.contentnode = cc.ContentNode.objects.create(kind_id="video")
+
+        response = self.sync_changes(
+                    [
+                        generate_deploy_channel_event(channel.id, user.id)
+                    ]
+                )
+
+        self.assertEqual(response.status_code, 200)
+        modified_channel = models.Channel.objects.get(id=channel.id)
+        self.assertEqual(modified_channel.main_tree, channel.staging_tree)
+        self.assertEqual(modified_channel.staging_tree, None)
+        self.assertEqual(modified_channel.previous_tree, channel.main_tree)
+
+    def test_deploy_with_staging_tree_None(self):
+        channel = testdata.channel()
+        user = testdata.user()
+        channel.editors.add(user)
+        self.client.force_authenticate(
+            user
+        )  # This will skip all authentication checks
+        channel.main_tree.refresh_from_db()
+
+        channel.staging_tree = None
+        channel.previous_tree = cc.ContentNode(
+            kind_id=content_kinds.TOPIC, title="test", node_id="bbb"
+        )
+        channel.previous_tree.save()
+        channel.chef_tree = cc.ContentNode(
+            kind_id=content_kinds.TOPIC, title="test", node_id="ccc"
+        )
+        channel.chef_tree.save()
+        channel.save()
+
+        self.contentnode = cc.ContentNode.objects.create(kind_id="video")
+        response = self.sync_changes(
+                    [
+                        generate_deploy_channel_event(channel.id, user.id)
+                    ]
+                )
+        # Should raise validation error as staging tree was set to NONE
+        self.assertEqual(len(response.json()["errors"]), 1, response.content)
+        modified_channel = models.Channel.objects.get(id=channel.id)
+        self.assertNotEqual(modified_channel.main_tree, channel.staging_tree)
+        self.assertNotEqual(modified_channel.previous_tree, channel.main_tree)
 
 
 class CRUDTestCase(StudioAPITestCase):

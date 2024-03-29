@@ -1,7 +1,7 @@
 Feature: Add a channel to the *Starred* tab
 	A user needs to be able to mark channels with a star to label them as favorite for easy access
 
-	Background: 
+	Background:
 		Given I am signed in to Studio
 			And I am on any of the tabs (*My Channels*, *Starred*, *View-only*, or *Content Library*)
 			And I see a channel that is not starred (white star)
@@ -9,8 +9,8 @@ Feature: Add a channel to the *Starred* tab
 	Scenario: Add channel to the *Starred* tab
 		When I click the *Add to starred channels* button for the desired channel
 		Then I see that the channel's *Add to starred channels* button is now black
-			And I see a message that the channel was added to the starred channels 
-		When I click and open the *Starred* tab 
+			And I see a message that the channel was added to the starred channels
+		When I click and open the *Starred* tab
 		Then I see that the channel is displayed among the starred channels
 
 	Scenario: Unstar a channel
@@ -19,11 +19,11 @@ Feature: Add a channel to the *Starred* tab
 		When I click the *Remove from starred channels* button for the channel
 		Then I see that the channel's *Remove from starred channels* button is now white
 			And I see a message that the channel was removed from the starred channels
-		When I click and open the *Starred* tab 
+		When I click and open the *Starred* tab
 		Then I see the list of starred channels
 			But I don't see the unstarred channel on the list
 
-	Scenario: Remove channel directly from the *Starred* tab 
+	Scenario: Remove channel directly from the *Starred* tab
 		Given I am on the *Starred* tab
 			And I see a starred channel
 		When I click the *Remove from starred channels* button for the channel

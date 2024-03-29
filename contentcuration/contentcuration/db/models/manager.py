@@ -12,6 +12,7 @@ from le_utils.constants import content_kinds
 from mptt.managers import TreeManager
 from mptt.signals import node_moved
 
+from contentcuration.constants.locking import TREE_LOCK
 from contentcuration.db.advisory_lock import advisory_lock
 from contentcuration.db.models.query import CustomTreeQuerySet
 from contentcuration.utils.cache import ResourceSizeCache
@@ -32,7 +33,6 @@ logging = logger.getLogger(__name__)
 # The exact optimum batch size is probably highly dependent on tree
 # topology also, so these rudimentary tests are likely insufficient
 BATCH_SIZE = 100
-TREE_LOCK = 1001
 
 
 class CustomManager(Manager.from_queryset(CTEQuerySet)):
@@ -47,14 +47,33 @@ def log_lock_time_spent(timespent):
     logging.debug("Spent {} seconds inside an mptt lock".format(timespent))
 
 
-def execute_queryset_without_results(queryset):
-    query = queryset.query
-    compiler = query.get_compiler(queryset.db)
-    sql, params = compiler.as_sql()
-    if not sql:
-        return
-    cursor = compiler.connection.cursor()
-    cursor.execute(sql, params)
+# Fields that are allowed to be overridden on copies coming from a source that the user
+# does not have edit rights to.
+ALLOWED_OVERRIDES = {
+    "node_id",
+    "title",
+    "description",
+    "aggregator",
+    "provider",
+    "language_id",
+    "grade_levels",
+    "resource_types",
+    "learning_activities",
+    "accessibility_labels",
+    "categories",
+    "learner_needs",
+    "role",
+    "extra_fields",
+    "suggested_duration",
+}
+
+EDIT_ALLOWED_OVERRIDES = ALLOWED_OVERRIDES.union({
+    "license_id",
+    "license_description",
+    "extra_fields",
+    "copyright_holder",
+    "author",
+})
 
 
 class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)):
@@ -272,7 +291,10 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
         copy.update(self.get_source_attributes(source))
 
         if isinstance(mods, dict):
-            copy.update(mods)
+            allowed_keys = EDIT_ALLOWED_OVERRIDES if can_edit_source_channel else ALLOWED_OVERRIDES
+            for key, value in mods.items():
+                if key in copy and key in allowed_keys:
+                    copy[key] = value
 
         # There might be some legacy nodes that don't have these, so ensure they are added
         if (
@@ -465,6 +487,7 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
                 tag_id_map[tag.id] = new_tag.id
                 tags_to_create.append(new_tag)
 
+        # TODO: Can cleanup the above and change the below to use ignore_conflicts=True
         ContentTag.objects.bulk_create(tags_to_create)
 
         mappings_to_create = [
@@ -477,7 +500,10 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
             for mapping in node_tags_mappings
         ]
 
-        self.model.tags.through.objects.bulk_create(mappings_to_create)
+        # In the case that we are copying a node that is in the weird state of having a tag
+        # that is duplicated (with a channel tag and a null channel tag) this can cause an error
+        # so we ignore conflicts here to ignore the duplicate tags.
+        self.model.tags.through.objects.bulk_create(mappings_to_create, ignore_conflicts=True)
 
     def _copy_assessment_items(self, source_copy_id_map):
         from contentcuration.models import File

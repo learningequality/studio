@@ -28,6 +28,7 @@ from search.models import ChannelFullTextSearch
 from search.models import ContentNodeFullTextSearch
 from search.utils import get_fts_search_query
 
+import contentcuration.models as models
 from contentcuration.decorators import cache_no_user_data
 from contentcuration.models import Change
 from contentcuration.models import Channel
@@ -36,8 +37,10 @@ from contentcuration.models import File
 from contentcuration.models import generate_storage_url
 from contentcuration.models import SecretToken
 from contentcuration.models import User
+from contentcuration.utils.garbage_collect import get_deleted_chefs_root
 from contentcuration.utils.pagination import CachedListPagination
 from contentcuration.utils.pagination import ValuesViewsetPageNumberPagination
+from contentcuration.utils.publish import ChannelIncompleteError
 from contentcuration.utils.publish import publish_channel
 from contentcuration.utils.sync import sync_channel
 from contentcuration.viewsets.base import BulkListSerializer
@@ -377,9 +380,18 @@ channel_field_map = {
 
 
 def _unpublished_changes_query(channel):
+    """
+    :param channel: Either an `OuterRef` or `Channel` object
+    :type channel: Channel|OuterRef
+    :return: QuerySet for unpublished changes
+    """
+    # double wrap the channel if it's an outer ref so that we can match the outermost channel
+    # to optimize query performance
+    channel_ref = OuterRef(channel) if isinstance(channel, OuterRef) else channel
+
     return Change.objects.filter(
         server_rev__gt=Coalesce(Change.objects.filter(
-            channel=OuterRef("channel"),
+            channel=channel_ref,
             change_type=PUBLISHED,
             errored=False
         ).values("server_rev").order_by("-server_rev")[:1], Value(0)),
@@ -491,6 +503,13 @@ class ChannelViewSet(ValuesViewset):
                             "unpublished_changes": bool(_unpublished_changes_query(channel.id).exists())
                         }, channel_id=channel.id
                     ), created_by_id=self.request.user.id, applied=True)
+            except ChannelIncompleteError:
+                Change.create_changes([
+                    generate_update_event(
+                        channel.id, CHANNEL, {"publishing": False}, channel_id=channel.id
+                    ),
+                ], created_by_id=self.request.user.id, applied=True)
+                raise ValidationError("Channel is not ready to be published")
             except Exception:
                 Change.create_changes([
                     generate_update_event(
@@ -502,12 +521,12 @@ class ChannelViewSet(ValuesViewset):
     def sync_from_changes(self, changes):
         errors = []
         for sync in changes:
-            # Publish change will have key, attributes, tags, files, and assessment_items.
+            # Publish change will have key, titles_and_descriptions, resource_details, files, and assessment_items.
             try:
                 self.sync(
                     sync["key"],
-                    attributes=sync.get("attributes"),
-                    tags=sync.get("tags"),
+                    titles_and_descriptions=sync.get("titles_and_descriptions"),
+                    resource_details=sync.get("resource_details"),
                     files=sync.get("files"),
                     assessment_items=sync.get("assessment_items")
                 )
@@ -517,7 +536,7 @@ class ChannelViewSet(ValuesViewset):
                 errors.append(sync)
         return errors
 
-    def sync(self, pk, attributes=False, tags=False, files=False, assessment_items=False):
+    def sync(self, pk, titles_and_descriptions=False, resource_details=False, files=False, assessment_items=False):
         logging.debug("Entering the sync channel endpoint")
 
         channel = self.get_edit_queryset().get(pk=pk)
@@ -541,12 +560,58 @@ class ChannelViewSet(ValuesViewset):
         with create_change_tracker(pk, CHANNEL, channel.id, self.request.user, "sync-channel") as progress_tracker:
             sync_channel(
                 channel,
-                attributes,
-                tags,
+                titles_and_descriptions,
+                resource_details,
                 files,
-                tags,
+                assessment_items,
                 progress_tracker=progress_tracker,
             )
+
+    def deploy_from_changes(self, changes):
+        errors = []
+        for deploy in changes:
+            try:
+                self.deploy(self.request.user, deploy["key"])
+            except Exception as e:
+                log_sync_exception(e, user=self.request.user, change=deploy)
+                deploy["errors"] = [str(e)]
+                errors.append(deploy)
+        return errors
+
+    def deploy(self, user, pk):
+
+        channel = self.get_edit_queryset().get(pk=pk)
+
+        if channel.staging_tree is None:
+            raise ValidationError("Cannot deploy a channel without staging tree")
+
+        user.check_channel_space(channel)
+
+        if channel.previous_tree and channel.previous_tree != channel.main_tree:
+            # IMPORTANT: Do not remove this block, MPTT updating the deleted chefs block could hang the server
+            with models.ContentNode.objects.disable_mptt_updates():
+                garbage_node = get_deleted_chefs_root()
+                channel.previous_tree.parent = garbage_node
+                channel.previous_tree.title = "Previous tree for channel {}".format(channel.pk)
+                channel.previous_tree.save()
+
+        channel.previous_tree = channel.main_tree
+        channel.main_tree = channel.staging_tree
+        channel.staging_tree = None
+        channel.save()
+
+        user.staged_files.all().delete()
+        user.set_space_used()
+
+        models.Change.create_change(generate_update_event(
+            channel.id,
+            CHANNEL,
+            {
+                "root_id": channel.main_tree.id,
+                "staging_root_id": None
+            },
+            channel_id=channel.id,
+        ), applied=True, created_by_id=user.id)
 
 
 @method_decorator(

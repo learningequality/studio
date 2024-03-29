@@ -331,6 +331,7 @@
 
   .thumbnail {
     padding: 28% 0;
+    /* stylelint-disable-next-line custom-property-pattern */
     border-color: var(--v-greyBorder-base) !important;
     border-style: solid;
     border-width: 1px;

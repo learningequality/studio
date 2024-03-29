@@ -1,5 +1,6 @@
 import get from 'lodash/get';
 import partition from 'lodash/partition';
+import chunk from 'lodash/chunk';
 import uniq from 'lodash/uniq';
 import uniqBy from 'lodash/uniqBy';
 import defer from 'lodash/defer';
@@ -83,12 +84,20 @@ export function loadClipboardNodes(context, { parent }) {
       const legacyNodeIds = legacyNodes.map(n => n.id);
 
       return Promise.all([
-        context.dispatch(
-          'contentNode/loadContentNodes',
-          { '[node_id+channel_id]__in': nodeIdChannelIdPairs },
-          { root }
+        // To avoid error code 414 URI Too Long errors, we chunk the pairs
+        // Given URI limit is 2000 chars:
+        // base URL at 100 chars + each pair at 70 chars = max 27 pairs
+        ...chunk(nodeIdChannelIdPairs, 25).map(chunkPairs =>
+          context.dispatch(
+            'contentNode/loadContentNodes',
+            { '[node_id+channel_id]__in': chunkPairs },
+            { root }
+          )
         ),
-        context.dispatch('contentNode/loadContentNodes', { id__in: legacyNodeIds }, { root }),
+        // Chunk legacy nodes, double the size since not pairs
+        ...chunk(legacyNodeIds, 50).map(legacyChunk =>
+          context.dispatch('contentNode/loadContentNodes', { id__in: legacyChunk }, { root })
+        ),
       ]).then(() => {
         return context.dispatch('addClipboardNodes', {
           nodes: clipboardNodes,
@@ -463,7 +472,7 @@ export function moveClipboardNodes(context, { legacyTrees, newTrees, target }) {
     );
   }
   if (newTrees.length) {
-    for (let copyNode of newTrees) {
+    for (const copyNode of newTrees) {
       promises.push(
         context.dispatch(
           'contentNode/copyContentNode',

@@ -192,6 +192,7 @@
         changed: false,
         showUnsavedDialog: false,
         diffTracker: {},
+        saving: false,
       };
     },
     computed: {
@@ -306,7 +307,7 @@
         }
       },
       setChannelSet(data) {
-        for (let key in data) {
+        for (const key in data) {
           Vue.set(this.diffTracker, key, data[key]);
         }
         this.changed = true;
@@ -316,6 +317,10 @@
         this.title = this.isNew ? this.$tr('creatingChannelSet') : this.channelSet.name;
       },
       save() {
+        if (this.saving) {
+          return;
+        }
+        this.saving = true;
         this.showUnsavedDialog = false;
         if (this.$refs.channelsetform.validate()) {
           let promise;
@@ -326,7 +331,13 @@
               return this.updateChannelSet({ id: this.channelSetId, ...this.diffTracker });
             });
           }
-          promise.then(this.close);
+          promise
+            .then(() => {
+              this.close();
+            })
+            .finally(() => {
+              this.saving = false;
+            });
         }
       },
       cancelChanges() {

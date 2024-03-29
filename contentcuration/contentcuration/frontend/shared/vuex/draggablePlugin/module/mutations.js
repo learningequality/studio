@@ -42,13 +42,13 @@ export function RESET_DRAGGABLE_DIRECTION(state) {
 }
 
 export function ADD_DRAGGABLE_CONTAINER_DROPS(state, data) {
-  for (let key in data) {
+  for (const key in data) {
     Vue.set(state.draggableContainerDrops, key, data[key]);
   }
 }
 
 export function REMOVE_DRAGGABLE_CONTAINER_DROPS(state, keys) {
-  for (let key of keys) {
+  for (const key of keys) {
     Vue.delete(state.draggableContainerDrops, key);
   }
 }

@@ -11,9 +11,9 @@
       <VToolbarSideIcon @click="drawer = true" />
       <VToolbarTitle>
         {{ $tr('deploy') }} <span class="notranslate">{{ currentChannel.name }}</span>
-        <router-link :to="rootTreeRoute" class="body-1 pl-2" data-test="root-tree-link">
+        <KRouterLink :to="rootTreeRoute" class="body-1 pl-2" data-test="root-tree-link">
           {{ $tr('backToViewing') }}
-        </router-link>
+        </KRouterLink>
       </VToolbarTitle>
 
       <VSpacer />
@@ -21,7 +21,7 @@
       <span class="grey--darken-2 grey--text">{{ $tr('reviewMode') }}</span>
     </ToolBar>
     <MainNavigationDrawer v-model="drawer" />
-    <LoadingText v-if="isLoading" />
+    <LoadingText v-if="isLoading || isDeploying" />
     <VContent v-else-if="isEmpty">
       <VLayout justify-center fill-height class="pt-5">
         <VFlex class="text-xs-center">
@@ -51,16 +51,16 @@
         }"
       >
         <VLayout row class="px-3">
-          <IconButton
+          <KIconButton
             icon="collapseAll"
-            :text="$tr('collapseAllButton')"
+            :tooltip="$tr('collapseAllButton')"
             @click="collapseAll"
           />
           <VSpacer />
-          <IconButton
+          <KIconButton
             :disabled="!ancestors || !ancestors.length"
             icon="myLocation"
-            :text="$tr('openCurrentLocationButton')"
+            :tooltip="$tr('openCurrentLocationButton')"
             @click="jumpToLocation"
           />
         </VLayout>
@@ -98,7 +98,13 @@
         </ToolBar>
 
         <VLayout class="main-content">
-          <VFlex v-if="!children.length" class="pa-4 subheading text-xs-center">
+          <VFlex v-if="isLoadingchild" class="pa-4 subheading text-xs-center">
+            <KCircularLoader />
+          </VFlex>
+          <VFlex
+            v-else-if="!children.length && !isLoadingchild"
+            class="pa-4 subheading text-xs-center"
+          >
             {{ $tr('emptyTopicText') }}
           </VFlex>
           <div v-else class="main-list" @scroll="scroll">
@@ -204,6 +210,8 @@
         data-test="deploy-dialog"
         :title="$tr('deployChannel')"
         :submitText="$tr('confirmDeployBtn')"
+        :submitDisabled="isDeploying"
+        :cancelDisabled="isDeploying"
         :cancelText="$tr('cancelDeployBtn')"
         @submit="onDeployChannelClick"
         @cancel="displayDeployDialog = false"
@@ -256,6 +264,7 @@
   import ToolBar from 'shared/views/ToolBar';
   import MainNavigationDrawer from 'shared/views/MainNavigationDrawer';
   import OfflineText from 'shared/views/OfflineText';
+  import { Channel } from 'shared/data/resources';
 
   export default {
     name: 'StagingTreePage',
@@ -288,11 +297,13 @@
     },
     data() {
       return {
+        isLoadingchild: false,
         isLoading: true,
         displaySummaryDetailsDialog: false,
         displayDeployDialog: false,
         drawer: false,
         elevated: false,
+        isDeploying: false,
       };
     },
     computed: {
@@ -383,8 +394,14 @@
     watch: {
       nodeId(newNodeId) {
         this.elevated = false;
-        this.loadAncestors({ id: newNodeId });
-        this.loadChildren({ parent: newNodeId, root_id: this.stagingId });
+        this.isLoadingchild = true;
+
+        Promise.all([
+          this.loadAncestors({ id: newNodeId }),
+          this.loadChildren({ parent: newNodeId, root_id: this.stagingId }),
+        ]).then(() => {
+          this.isLoadingchild = false;
+        });
       },
       detailNodeId(newDetailNodeId) {
         if (!newDetailNodeId) {
@@ -400,9 +417,11 @@
         });
       },
       stagingId() {
-        this.$router.push({
-          name: RouteNames.STAGING_TREE_VIEW_REDIRECT,
-        });
+        if (this.hasStagingTree) {
+          this.$router.push({
+            name: RouteNames.STAGING_TREE_VIEW_REDIRECT,
+          });
+        }
       },
     },
     created() {
@@ -429,7 +448,6 @@
     },
     methods: {
       ...mapActions(['showSnackbar', 'addViewModeOverride', 'removeViewModeOverride']),
-      ...mapActions('channel', ['loadChannel']),
       ...mapActions('currentChannel', [
         'loadCurrentChannelStagingDiff',
         'deployCurrentChannel',
@@ -503,15 +521,24 @@
       scroll(e) {
         this.elevated = e.target.scrollTop > 0;
       },
-      async onDeployChannelClick() {
-        await this.deployCurrentChannel();
-        await this.loadChannel(this.currentChannel.id);
+      onDeployChannelClick() {
+        this.displayDeployDialog = false;
+        this.isDeploying = true;
 
-        this.$router.push(this.rootTreeRoute);
-
-        this.showSnackbar({
-          text: this.$tr('channelDeployed'),
+        Channel.waitForDeploying(this.currentChannel.id).then(rootId => {
+          this.isDeploying = false;
+          this.$router.push({
+            name: RouteNames.TREE_VIEW,
+            params: {
+              nodeId: rootId,
+            },
+          });
+          this.showSnackbar({
+            text: this.$tr('channelDeployed'),
+          });
         });
+
+        this.deployCurrentChannel();
       },
     },
     $trs: {

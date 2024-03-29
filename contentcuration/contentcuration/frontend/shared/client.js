@@ -1,3 +1,4 @@
+import omit from 'lodash/omit';
 import axios from 'axios';
 import qs from 'qs';
 import * as Sentry from '@sentry/vue';
@@ -26,18 +27,25 @@ export function paramsSerializer(params) {
 const client = axios.create({
   xsrfCookieName: 'csrftoken',
   xsrfHeaderName: 'X-CSRFToken',
-  paramsSerializer,
+  paramsSerializer: {
+    serialize: paramsSerializer,
+  },
+});
+
+// Track when the browser was last offline for error reporting purposes
+let lastOffline = null;
+window.addEventListener('offline', () => {
+  lastOffline = Date.now();
 });
 
 client.interceptors.response.use(
   response => response,
   error => {
-    let message;
-    let url;
-    let config;
+    const url = error.config.url;
+    let message = error.message;
+    let status = 0;
     if (error.response) {
-      config = error.response.config;
-      url = config.url;
+      status = error.response.status;
       message = error.response.statusText;
       // Don't send a Sentry report for permissions errors
       // Many 404s are in fact also unauthorized requests so
@@ -45,48 +53,38 @@ client.interceptors.response.use(
       // to catch legitimate request issues in the backend.
       //
       // Allow 412 too as that's specific to out of storage checks
-      if (
-        error.response.status === 403 ||
-        error.response.status === 404 ||
-        error.response.status === 405 ||
-        error.response.status === 412
-      ) {
+      if (status === 403 || status === 404 || status === 405 || status === 412) {
         return Promise.reject(error);
       }
-
-      if (error.response.status === 0) {
-        message = 'Network Error: ' + url;
-      }
-
-      // Put the URL in the main message for timeouts
-      // so we can see which timeouts are most frequent.
-      if (error.response.status === 504) {
-        message = 'Request Timed Out: ' + url;
-      }
-    } else if (error.request && error.request.config) {
-      // Request was sent but no response received
-      config = error.request.config;
-      url = config.url;
-      message = 'Network Error: ' + url;
-    } else {
-      message = error.message;
     }
 
-    const extraData = {
-      url,
-      type: config ? config.responseType : null,
-      data: config ? config.data : null,
-      status: error.response ? error.response.status : null,
-      error: message,
-      response: error.response ? error.response.data : null,
-    };
+    message = message ? `${message}: [${status}] ${url}` : `Network Error: [${status}] ${url}`;
+
     if (process.env.NODE_ENV !== 'production') {
       // In dev build log warnings to console for developer use
       console.warn('AJAX Request Error: ' + message); // eslint-disable-line no-console
-      console.warn('Error data: ' + JSON.stringify(extraData)); // eslint-disable-line no-console
-    } else {
-      Sentry.captureMessage(message, {
-        extra: extraData,
+      console.warn('Error data: ', error); // eslint-disable-line no-console
+    } else if (error.code !== 'ECONNABORTED') {
+      Sentry.withScope(function(scope) {
+        scope.addAttachment({
+          filename: 'error.json',
+          // strip csrf token from headers
+          data: JSON.stringify(omit(error, ['config.headers.X-CSRFToken'])),
+          contentType: 'application/json',
+        });
+        Sentry.captureException(new Error(message), {
+          extra: {
+            Request: {
+              headers: error.config.headers,
+              method: error.config.method,
+              url,
+            },
+            Network: {
+              lastOffline: lastOffline ? `${Date.now() - lastOffline}ms ago` : 'never',
+              online: navigator.onLine,
+            },
+          },
+        });
       });
     }
     return Promise.reject(error);

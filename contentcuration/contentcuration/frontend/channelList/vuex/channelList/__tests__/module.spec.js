@@ -3,7 +3,6 @@ import channelList from '../index';
 import { Channel, Invitation } from 'shared/data/resources';
 import storeFactory from 'shared/vuex/baseStore';
 
-jest.mock('shared/client');
 jest.mock('shared/vuex/connectionPlugin');
 
 const channel_id = '11111111111111111111111111111111';
@@ -18,7 +17,7 @@ describe('invitation actions', () => {
   let store;
   let id;
   beforeEach(() => {
-    return Invitation.put(invitation).then(newId => {
+    return Invitation.add(invitation).then(newId => {
       id = newId;
       store = storeFactory({
         modules: {
@@ -59,7 +58,7 @@ describe('invitation actions', () => {
   //   const channel = { id: channel_id, name: 'test', deleted: false, edit: true };
   //   beforeEach(() => {
   //     store.commit('channelList/SET_INVITATION_LIST', [{ id, ...invitation }]);
-  //     return Channel.put(channel);
+  //     return Channel.add(channel);
   //   });
   //   afterEach(() => {
   //     return Channel.table.toCollection().delete();

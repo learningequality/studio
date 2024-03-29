@@ -30,8 +30,10 @@ export const paramsToImageMd = ({ src, alt, width, height }) => {
   }
 };
 
-export const imageMdToImageFieldHTML = imageMd =>
-  `<span is='markdown-image-field'>${imageMd}</span>`;
+export const imageMdToImageFieldHTML = (imageMd, editing) => {
+  const editAttr = editing ? ' editing="true"' : '';
+  return `<span is='markdown-image-field'${editAttr}>${imageMd}</span>`;
+};
 export const paramsToImageFieldHTML = params => imageMdToImageFieldHTML(paramsToImageMd(params));
 
 export default imageUploadExtension;

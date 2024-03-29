@@ -5,8 +5,8 @@ import CollapseAllIcon from '../views/icons/CollapseAllIcon';
 import IndicatorIcon from '../views/icons/IndicatorIcon';
 import LightBulbIcon from '../views/icons/LightBulbIcon';
 import ViewOnlyIcon from '../views/icons/ViewOnlyIcon';
-import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 import Icon from 'shared/views/Icon';
+import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
 Vue.component(Icon.name, Icon);
 
@@ -20,6 +20,7 @@ export const CONTENT_KIND_ICONS = {
   [ContentKindsNames.EXERCISE]: 'assignment',
   [ContentKindsNames.DOCUMENT]: 'class',
   [ContentKindsNames.HTML5]: 'widgets',
+  [ContentKindsNames.ZIM]: 'widgets',
 };
 
 export function getContentKindIcon(kind, isEmpty = false) {
@@ -71,7 +72,7 @@ export default function icons(additional = {}) {
 
   // Update icons to use our custom `Icon` component which adds a layer between implementation
   // within Vuetify and our code, and the underlying `VIcon` component
-  let vuetifyUpdatedIcons = Object.entries(iconMap)
+  const vuetifyUpdatedIcons = Object.entries(iconMap)
     .map(([name, mdName]) => {
       return {
         [name]: {

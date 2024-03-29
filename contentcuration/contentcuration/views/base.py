@@ -7,12 +7,14 @@ from django.contrib.auth.decorators import login_required
 from django.core.cache import cache
 from django.core.exceptions import PermissionDenied
 from django.db.models import Count
+from django.db.models import Exists
 from django.db.models import IntegerField
 from django.db.models import OuterRef
 from django.db.models import Subquery
 from django.db.models import UUIDField
 from django.db.models.functions import Cast
 from django.http import HttpResponse
+from django.http import HttpResponseBadRequest
 from django.http import HttpResponseForbidden
 from django.http import HttpResponseNotFound
 from django.shortcuts import redirect
@@ -27,6 +29,7 @@ from django.utils.translation import get_language
 from django.utils.translation import LANGUAGE_SESSION_KEY
 from django.views.decorators.http import require_POST
 from django.views.i18n import LANGUAGE_QUERY_PARAMETER
+from django_celery_results.models import TaskResult
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.authentication import TokenAuthentication
@@ -39,7 +42,6 @@ from rest_framework.response import Response
 
 from .json_dump import json_for_parse_from_data
 from .json_dump import json_for_parse_from_serializer
-from contentcuration.api import activate_channel
 from contentcuration.constants import channel_history
 from contentcuration.decorators import browser_is_supported
 from contentcuration.models import Change
@@ -47,10 +49,10 @@ from contentcuration.models import Channel
 from contentcuration.models import ChannelHistory
 from contentcuration.models import ChannelSet
 from contentcuration.models import ContentKind
+from contentcuration.models import CustomTaskMetadata
 from contentcuration.models import DEFAULT_USER_PREFERENCES
 from contentcuration.models import Language
 from contentcuration.models import License
-from contentcuration.models import TaskResult
 from contentcuration.serializers import SimplifiedChannelProbeCheckSerializer
 from contentcuration.utils.messages import get_messages
 from contentcuration.viewsets.channelset import PublicChannelSetSerializer
@@ -132,17 +134,16 @@ def get_prober_channel(request):
 
     return Response(SimplifiedChannelProbeCheckSerializer(channel).data)
 
-
 @api_view(["GET"])
 @authentication_classes((TokenAuthentication, SessionAuthentication))
 @permission_classes((IsAuthenticated,))
 def publishing_status(request):
     if not request.user.is_admin:
         return HttpResponseForbidden()
-
+    associated_custom_task_metadata_ids = CustomTaskMetadata.objects.filter(channel_id=Cast(OuterRef(OuterRef("channel_id")), UUIDField())).values_list("task_id",flat=True)
     associated_tasks = TaskResult.objects.filter(
         task_name="export-channel",
-        channel_id=Cast(OuterRef("channel_id"), UUIDField()),
+        task_id__in=Subquery(associated_custom_task_metadata_ids),
     )
     channel_publish_status = (
         ChannelHistory.objects
@@ -171,6 +172,39 @@ def celery_worker_status(request):
     # should return dict with structure like:
     # {'celery@hostname': {'ok': 'pong'}}
     return Response(app.control.inspect().ping() or {})
+
+
+@api_view(["GET"])
+@authentication_classes((TokenAuthentication, SessionAuthentication))
+@permission_classes((IsAuthenticated,))
+def task_queue_status(request):
+    if not request.user.is_admin:
+        return HttpResponseForbidden()
+
+    from contentcuration.celery import app
+
+    return Response({
+        'queued_task_count': app.count_queued_tasks(),
+    })
+
+
+@api_view(["GET"])
+@authentication_classes((TokenAuthentication, SessionAuthentication))
+@permission_classes((IsAuthenticated,))
+def unapplied_changes_status(request):
+    if not request.user.is_admin:
+        return HttpResponseForbidden()
+
+    from contentcuration.celery import app
+
+    active_task_count = 0
+    for _ in app.get_active_and_reserved_tasks():
+        active_task_count += 1
+
+    return Response({
+        'active_task_count': active_task_count,
+        'unapplied_changes_count': Change.objects.filter(applied=False, errored=False).count(),
+    })
 
 
 """ END HEALTH CHECKS """
@@ -323,23 +357,6 @@ class SQCountDistinct(Subquery):
         "(SELECT COUNT(DISTINCT %(field)s) FROM (%(subquery)s) AS %(field)s__sum)"
     )
     output_field = IntegerField()
-
-
-@api_view(['POST'])
-@authentication_classes((SessionAuthentication,))
-@permission_classes((IsAuthenticated,))
-def activate_channel_endpoint(request):
-    data = request.data
-    try:
-        channel = Channel.filter_edit_queryset(Channel.objects.all(), request.user).get(pk=data["channel_id"])
-    except Channel.DoesNotExist:
-        return HttpResponseNotFound("Channel not found")
-    try:
-        activate_channel(channel, request.user)
-    except PermissionDenied as e:
-        return HttpResponseForbidden(str(e))
-
-    return HttpResponse(json.dumps({"success": True}))
 
 
 @require_POST

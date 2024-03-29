@@ -5,11 +5,11 @@
     <VToolbar dense color="transparent" flat>
       <slot name="action"></slot>
       <Breadcrumbs :items="ancestors" class="mx-1 px-2 py-0">
-        <template #item="{ item, isFirst, isLast }">
+        <template #item="{ item, isLast }">
           <!-- Current item -->
           <VLayout v-if="isLast" align-center row>
             <VFlex class="font-weight-bold text-truncate" shrink :class="getTitleClass(item)">
-              {{ isFirst ? currentChannel.name : getTitle(item) }}
+              {{ getTitle(item) }}
             </VFlex>
             <Menu v-if="item.displayNodeOptions">
               <template #activator="{ on }">
@@ -23,7 +23,7 @@
             </Menu>
           </VLayout>
           <span v-else class="grey--text" :class="getTitleClass(item)">
-            {{ isFirst ? currentChannel.name : getTitle(item) }}
+            {{ getTitle(item) }}
           </span>
         </template>
       </Breadcrumbs>
@@ -41,34 +41,40 @@
       </div>
       <VSlideXTransition>
         <div v-if="selected.length">
-          <IconButton
+          <KIconButton
             v-if="canEdit"
             icon="edit"
             :text="$tr('editSelectedButton')"
             data-test="edit-selected-btn"
             @click="editNodes(selected)"
           />
-          <IconButton
+          <KIconButton
             icon="clipboard"
             :text="$tr('copySelectedButton')"
             data-test="copy-selected-to-clipboard-btn"
             @click="copyToClipboard(selected)"
           />
-          <IconButton
+          <KIconButton
             v-if="canEdit"
             icon="move"
             :text="$tr('moveSelectedButton')"
             data-test="move-selected-btn"
             @click="openMoveModal"
           />
-          <IconButton
+          <KIconButton
             v-if="canEdit"
             icon="copy"
             :text="$tr('duplicateSelectedButton')"
             data-test="duplicate-selected-btn"
             @click="duplicateNodes(selected)"
           />
-          <IconButton
+          <KIconButton
+            v-if="canEdit"
+            icon="sort"
+            :text="$tr('SortAlphabetically')"
+            @click="sortNodes(selected)"
+          />
+          <KIconButton
             v-if="canEdit"
             icon="remove"
             :text="$tr('deleteSelectedButton')"
@@ -246,11 +252,10 @@
     ContentKindLearningActivityDefaults,
   } from 'shared/leUtils/ContentKinds';
   import { titleMixin, routerMixin } from 'shared/mixins';
-  import { COPYING_FLAG, RELATIVE_TREE_POSITIONS } from 'shared/data/constants';
+  import { RELATIVE_TREE_POSITIONS } from 'shared/data/constants';
   import { DraggableTypes, DropEffect } from 'shared/mixins/draggable/constants';
   import { DraggableFlags } from 'shared/vuex/draggablePlugin/module/constants';
   import DraggableRegion from 'shared/views/draggable/DraggableRegion';
-  import { ContentNode } from 'shared/data/resources';
 
   export default {
     name: 'CurrentTopicView',
@@ -302,6 +307,7 @@
         'getContentNodeAncestors',
         'getTopicAndResourceCounts',
         'getContentNodeChildren',
+        'isNodeInCopyingState',
       ]),
       ...mapGetters('clipboard', ['getCopyTrees']),
       ...mapGetters('draggable', ['activeDraggableRegionId']),
@@ -323,7 +329,9 @@
         },
         set(value) {
           if (value) {
-            this.selected = this.children.filter(node => !node[COPYING_FLAG]).map(node => node.id);
+            this.selected = this.children
+              .filter(node => !this.isNodeInCopyingState(node.id))
+              .map(node => node.id);
             this.trackClickEvent('Select all');
           } else {
             this.selected = [];
@@ -341,7 +349,7 @@
           return {
             id: ancestor.id,
             to: this.treeLink({ nodeId: ancestor.id }),
-            title: ancestor.title,
+            title: ancestor.parent ? ancestor.title : this.currentChannel.name,
             displayNodeOptions: this.rootId !== ancestor.id,
           };
         });
@@ -420,17 +428,56 @@
       },
     },
     methods: {
-      ...mapActions(['showSnackbar']),
+      ...mapActions(['showSnackbar', 'clearSnackbar']),
       ...mapActions(['setViewMode', 'addViewModeOverride', 'removeViewModeOverride']),
       ...mapActions('contentNode', [
         'createContentNode',
         'loadAncestors',
         'moveContentNodes',
         'copyContentNode',
+        'waitForCopyingStatus',
       ]),
       ...mapActions('clipboard', ['copyAll']),
       clearSelections() {
         this.selected = [];
+      },
+
+      sortNodes(selected) {
+        const selectedNodes = selected.map(id => this.getContentNode(id));
+        const orderedNodes = selectedNodes.sort(this.compareNodeTitles);
+
+        const reversedNodes = orderedNodes.reverse();
+
+        const nodeX = this.findNodeBeforeFirstSelected(orderedNodes, selected);
+
+        const targetParent = this.node.id;
+        const targetNode = nodeX || targetParent;
+        const targetPosition = nodeX
+          ? RELATIVE_TREE_POSITIONS.RIGHT
+          : RELATIVE_TREE_POSITIONS.FIRST_CHILD;
+
+        const nodeIdsToMove = reversedNodes.map(node => String(node.id));
+
+        this.moveContentNodes({
+          id__in: nodeIdsToMove,
+          target: targetNode,
+          position: targetPosition,
+        });
+      },
+
+      findNodeBeforeFirstSelected(nodes, selected) {
+        for (let i = 1; i < nodes.length; i++) {
+          if (selected.includes(nodes[i])) {
+            return nodes[i - 1];
+          }
+        }
+        return null;
+      },
+
+      compareNodeTitles(nodeA, nodeB) {
+        const titleA = nodeA.title.toLowerCase();
+        const titleB = nodeB.title.toLowerCase();
+        return titleA.localeCompare(titleB);
       },
       updateTitleForPage() {
         let detailTitle;
@@ -450,7 +497,7 @@
         });
       },
       newTopicNode() {
-        let nodeData = {
+        const nodeData = {
           kind: ContentKindsNames.TOPIC,
           title: '',
         };
@@ -458,7 +505,7 @@
         this.trackClickEvent('Add topics');
       },
       newExerciseNode() {
-        let nodeData = {
+        const nodeData = {
           kind: ContentKindsNames.EXERCISE,
           title: '',
           learning_activities: {
@@ -538,44 +585,47 @@
         }
 
         // All sources should be from the same region
-        const sourceRegion = drop.sources[0].region;
+        const sources = drop.sources || [];
+        const sourceRegion = sources.length > 0 ? sources[0].region : null;
         const payload = {
           target: identity.metadata.id,
           position,
         };
 
-        // When the source region is the clipboard, we want to make sure we use
-        // `excluded_descendants` by accessing the copy trees through the clipboard node ID
-        if (sourceRegion && sourceRegion.id === DraggableRegions.CLIPBOARD) {
-          return Promise.all(
-            data.sources.map(source => {
-              // Using `getCopyTrees` we can access the `excluded_descendants` for the node, such
-              // that we make sure to skip copying nodes that aren't intended to be copied
-              const trees = this.getCopyTrees(source.metadata.clipboardNodeId, true);
+        if (payload.target) {
+          // When the source region is the clipboard, we want to make sure we use
+          // `excluded_descendants` by accessing the copy trees through the clipboard node ID
+          if (sourceRegion && sourceRegion.id === DraggableRegions.CLIPBOARD) {
+            return Promise.all(
+              data.sources.map(source => {
+                // Using `getCopyTrees` we can access the `excluded_descendants` for the node, such
+                // that we make sure to skip copying nodes that aren't intended to be copied
+                const trees = this.getCopyTrees(source.metadata.clipboardNodeId, true);
 
-              // Since we're using `ignoreSelection=true` for `getCopyTrees`, it should only
-              // return one tree at most
-              if (trees.length === 0) {
-                return Promise.resolve();
-              } else if (trees.length > 1) {
-                throw new Error(
-                  'Multiple copy trees are unexpected for drag and drop copy operation'
-                );
-              }
+                // Since we're using `ignoreSelection=true` for `getCopyTrees`, it should only
+                // return one tree at most
+                if (trees.length === 0) {
+                  return Promise.resolve();
+                } else if (trees.length > 1) {
+                  throw new Error(
+                    'Multiple copy trees are unexpected for drag and drop copy operation'
+                  );
+                }
 
-              return this.copyContentNode({
-                ...payload,
-                id: source.metadata.id,
-                excluded_descendants: get(trees, [0, 'extra_fields', 'excluded_descendants'], {}),
-              });
-            })
-          );
+                return this.copyContentNode({
+                  ...payload,
+                  id: source.metadata.id,
+                  excluded_descendants: get(trees, [0, 'extra_fields', 'excluded_descendants'], {}),
+                });
+              })
+            );
+          }
+
+          return this.moveContentNodes({
+            ...payload,
+            id__in: data.sources.map(s => s.metadata.id),
+          });
         }
-
-        return this.moveContentNodes({
-          ...payload,
-          id__in: data.sources.map(s => s.metadata.id),
-        });
       },
       insertPosition(mask) {
         return mask & DraggableFlags.TOP
@@ -646,12 +696,30 @@
           )
         ).then(nodes => {
           this.clearSelections();
-          ContentNode.waitForCopying(nodes.map(n => n.id)).then(() => {
-            this.showSnackbar({
-              text: this.$tr('copiedItems'),
-              actionText: this.$tr('undo'),
-              actionCallback: () => changeTracker.revert(),
-            }).then(() => changeTracker.cleanUp());
+          Promise.allSettled(
+            nodes.map(n =>
+              this.waitForCopyingStatus({
+                contentNodeId: n.id,
+                startingRev: changeTracker._startingRev,
+              })
+            )
+          ).then(results => {
+            let isAllCopySuccess = true;
+            for (const result of results) {
+              if (result.status === 'rejected') {
+                isAllCopySuccess = false;
+              }
+            }
+            if (isAllCopySuccess) {
+              this.showSnackbar({
+                text: this.$tr('copiedItems'),
+                actionText: this.$tr('undo'),
+                actionCallback: () => changeTracker.revert(),
+              }).then(() => changeTracker.cleanUp());
+            } else {
+              this.clearSnackbar();
+              changeTracker.cleanUp();
+            }
           });
         });
       }),
@@ -683,6 +751,7 @@
     },
     $trs: {
       addTopic: 'New folder',
+      SortAlphabetically: 'Sort alphabetically',
       addExercise: 'New exercise',
       uploadFiles: 'Upload files',
       importFromChannels: 'Import from channels',

@@ -23,7 +23,7 @@ describe('currentChannel store', () => {
       });
     });
     it('publishChannel action should post to publish_channel endpoint', () => {
-      let notes = 'version notes';
+      const notes = 'version notes';
       const spy = jest.spyOn(Channel, 'publish').mockImplementation(() => Promise.resolve());
       return store.dispatch('currentChannel/publishChannel', notes).then(() => {
         expect(spy.mock.calls[0][0]).toBe(store.state.currentChannel.currentChannelId);
