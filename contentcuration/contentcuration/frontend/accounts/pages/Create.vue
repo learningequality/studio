@@ -132,12 +132,12 @@
         </VSlideYTransition>
 
         <!-- Agreements -->
-        <Checkbox
+        <VCheckbox
           v-model="acceptedAgreement"
           :label="$tr('agreement')"
           required
           :rules="tosAndPolicyRules"
-          :hideDetails="false"
+          :hide-details="false"
           class="my-1 policy-checkbox"
         />
         <div class="span-spacing">
