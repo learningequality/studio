@@ -30,7 +30,7 @@
               app
             >
               <VBtn data-test="close" icon dark @click="handleClose()">
-                <Icon>clear</Icon>
+                <Icon icon="clear" color="white" />
               </VBtn>
               <VToolbarTitle>{{ modalTitle }}</VToolbarTitle>
               <VSpacer />

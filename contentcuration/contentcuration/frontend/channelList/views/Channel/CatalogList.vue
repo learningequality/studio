@@ -81,9 +81,12 @@
                 <template #activator="{ on }">
                   <VBtn color="primary" class="ma-0 mx-2" v-on="on">
                     {{ $tr('downloadButton') }}
-                    <Icon class="ml-1">
-                      arrow_drop_up
-                    </Icon>
+                    <Icon
+                      class="ml-1"
+                      icon="dropdown"
+                      :style="{ transform: 'rotate(180deg)' }"
+                      color="white"
+                    />
                   </VBtn>
                 </template>
                 <VList>

@@ -21,10 +21,8 @@
       <VContainer class="filters pa-3">
         <VToolbar v-if="$vuetify.breakpoint.xsOnly" color="transparent" flat dense>
           <VSpacer />
-          <VBtn icon flat style="text-align: right;">
-            <Icon @click="drawer = false">
-              clear
-            </Icon>
+          <VBtn icon flat style="text-align: right;" @click="drawer = false">
+            <Icon icon="clear" />
           </VBtn>
         </VToolbar>
 

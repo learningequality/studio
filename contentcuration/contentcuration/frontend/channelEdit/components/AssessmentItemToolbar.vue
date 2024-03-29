@@ -15,9 +15,14 @@
             v-on="on"
             @click="clickItem(action)"
           >
-            <Icon v-if="config[action] && config[action].icon" :color="iconColor(action)">
-              {{ config[action].icon }}
-            </Icon>
+            <Icon
+              v-if="config[action] && config[action].icon"
+              :icon="
+                config[action].icon
+              "
+              :color="iconColor(action)"
+            />
+
           </VBtn>
         </template>
         <span>{{ config[action].label }}</span>
@@ -166,11 +171,11 @@
             label: this.$tr('toolbarLabelEdit'),
           },
           [AssessmentItemToolbarActions.MOVE_ITEM_UP]: {
-            icon: 'keyboard_arrow_up',
+            icon: 'chevronUp',
             label: this.$tr('toolbarLabelMoveUp'),
           },
           [AssessmentItemToolbarActions.MOVE_ITEM_DOWN]: {
-            icon: 'keyboard_arrow_down',
+            icon: 'chevronDown',
             label: this.$tr('toolbarLabelMoveDown'),
           },
           [AssessmentItemToolbarActions.DELETE_ITEM]: {
