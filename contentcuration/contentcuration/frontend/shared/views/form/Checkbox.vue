@@ -8,7 +8,6 @@
     :disabled="disabled"
     :description="description"
     :checked="isChecked"
-    :style="isErrorState ? 'border-color: #DC143C	 ;' : ''"
     @change="handleChange"
   >
     <slot></slot>
