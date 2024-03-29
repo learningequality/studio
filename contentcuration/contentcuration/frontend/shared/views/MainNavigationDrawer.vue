@@ -76,7 +76,10 @@
         </VListTile>
       </VList>
       <VContainer>
-        <KolibriLogo :height="75" />
+        <KLogo
+          altText="Kolibri logo"
+          :size="150"
+        />
         <ActionLink
           :text="$tr('copyright', { year: new Date().getFullYear() })"
           href="https://learningequality.org/"
@@ -109,13 +112,11 @@
 <script>
 
   import { mapActions, mapState } from 'vuex';
-  import KolibriLogo from './KolibriLogo';
   import LanguageSwitcherModal from 'shared/languageSwitcher/LanguageSwitcherModal';
 
   export default {
     name: 'MainNavigationDrawer',
     components: {
-      KolibriLogo,
       LanguageSwitcherModal,
     },
     props: {

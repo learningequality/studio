@@ -12,11 +12,16 @@
       <VToolbarSideIcon
         :href="homeLink"
         exact
-        color="white"
+        color="appBarDark"
         class="ma-0"
         style="border-radius: 8px;"
       >
-        <KolibriLogo />
+        <KLogo
+          altText="Kolibri Logo with rectangular background"
+          backgroundStyle="rect"
+          :showBackground="true"
+          :size="40"
+        />
       </VToolbarSideIcon>
 
       <VToolbarTitle class="notranslate">
@@ -96,7 +101,6 @@
   import { ChannelListTypes } from 'shared/constants';
   import { constantsTranslationMixin, routerMixin } from 'shared/mixins';
   import GlobalSnackbar from 'shared/views/GlobalSnackbar';
-  import KolibriLogo from 'shared/views/KolibriLogo';
   import AppBar from 'shared/views/AppBar';
   import OfflineText from 'shared/views/OfflineText';
   import PolicyModals from 'shared/views/policies/PolicyModals';
@@ -123,7 +127,6 @@
       ChannelInvitation,
       ChannelListAppError,
       GlobalSnackbar,
-      KolibriLogo,
       PolicyModals,
       OfflineText,
     },

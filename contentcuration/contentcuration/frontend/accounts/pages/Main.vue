@@ -12,13 +12,13 @@
           class="pa-4"
           style="width: 300px;margin: 0 auto;"
         >
-          <VImg
-            height="200"
-            maxHeight="100"
-            contain
-            :lazy-src="require('shared/images/kolibri-logo.svg')"
-            :src="require('shared/images/kolibri-logo.svg')"
-          />
+          <div class="k-logo-container">
+            <KLogo
+              altText="Kolibri Logo with background"
+              :showBackground="true"
+              :size="150"
+            />
+          </div>
           <h2 class="primary--text py-2 text-xs-center">
             {{ $tr('kolibriStudio') }}
           </h2>
@@ -225,6 +225,11 @@
 
   .w-100 {
     width: 100%;
+  }
+
+  .k-logo-container {
+    display: flex;
+    justify-content: center;
   }
 
 </style>

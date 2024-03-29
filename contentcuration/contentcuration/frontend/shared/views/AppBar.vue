@@ -14,11 +14,17 @@
         v-else
         :href="homeLink"
         exact
-        color="white"
+        color="appBar"
         class="ma-0"
         style="border-radius: 8px;"
       >
-        <KolibriLogo />
+        <KLogo
+          altText="Kolibri Logo with rectangular background"
+          backgroundStyle="rect"
+          :showBackground="true"
+          colorScheme="monoBlack"
+          :size="40"
+        />
       </VToolbarSideIcon>
 
       <VToolbarTitle>
@@ -131,7 +137,6 @@
 <script>
 
   import { mapActions, mapState, mapGetters } from 'vuex';
-  import KolibriLogo from './KolibriLogo';
   import Tabs from 'shared/views/Tabs';
   import MainNavigationDrawer from 'shared/views/MainNavigationDrawer';
   import LanguageSwitcherModal from 'shared/languageSwitcher/LanguageSwitcherModal';
@@ -139,7 +144,6 @@
   export default {
     name: 'AppBar',
     components: {
-      KolibriLogo,
       LanguageSwitcherModal,
       MainNavigationDrawer,
       Tabs,
