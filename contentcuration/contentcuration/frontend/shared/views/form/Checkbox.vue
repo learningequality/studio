@@ -8,8 +8,18 @@
     :disabled="disabled"
     :description="description"
     :checked="isChecked"
+    :style="isErrorState ? 'border-color: var(--v-error);' : ''"
     @change="handleChange"
   >
+    <!-- Render the error messages -->
+    <template #details>
+      <div v-if="!hideDetails && errorMessages.length !== 0" class="error-messages">
+        <div v-for="error in errorMessages" :key="error" class="error-message">
+          {{ error }}
+        </div>
+      </div>
+    </template>
+
     <slot></slot>
   </KCheckbox>
 
@@ -76,6 +86,33 @@
         default: false,
       },
       /*
+       * Validation rules for the input field.
+       * Accepts a mixed array of types function, boolean and string.
+       * Functions pass an input value as an argument and must return either true / false
+       * or a string containing an error message.
+       * The input field will enter an error state if a function
+       * returns (or any value in the array contains) false or is a string.
+       */
+      rules: {
+        type: Array,
+        default: () => [],
+        validator: rules => {
+          return rules.every(rule => {
+            if (typeof rule === 'function') {
+              return typeof rule('') === 'boolean' || typeof rule('') === 'string';
+            }
+            return typeof rule === 'boolean' || typeof rule === 'string';
+          });
+        },
+      },
+      /*
+       * Whether to hide the details (validation errors) of the checkbox
+       */
+      hideDetails: {
+        type: Boolean,
+        default: false,
+      },
+      /*
        * The reactive state of the checkbox which is used with v-model.
        * It is changed with the "input" event.
        * If used as an array, "value" prop is added/removed from it based on the checkbox state.
@@ -125,9 +162,30 @@
           }
         },
       },
-    },
-    mounted() {
-      // console.log(this.value, this.inputValue, this.isChecked)
+      /*
+       * Returns an array of error messages (string) for the input field.
+       */
+      errorMessages() {
+        return this.rules
+          .map(rule => {
+            if (typeof rule === 'function') {
+              return rule(this.inputValue);
+            }
+            return rule;
+          })
+          .filter(rule => typeof rule === 'string');
+      },
+      /*
+       * Returns a boolean indicating whether the input field is in an error state.
+       */
+      isErrorState() {
+        return this.rules.some(rule => {
+          if (typeof rule === 'function') {
+            return rule(this.inputValue) === false || typeof rule(this.inputValue) === 'string';
+          }
+          return rule === false || typeof rule === 'string';
+        });
+      },
     },
     methods: {
       handleChange(checked) {
@@ -147,6 +205,15 @@
   /deep/ label.theme--light {
     padding: 0 8px;
     color: var(--v-text);
+  }
+
+  .error-messages {
+    margin-top: 8px;
+  }
+
+  .error-message {
+    font-size: 12px;
+    color: var(--v-error);
   }
 
 </style>

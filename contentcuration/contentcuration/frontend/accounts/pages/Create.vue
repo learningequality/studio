@@ -137,7 +137,7 @@
           :label="$tr('agreement')"
           required
           :rules="tosAndPolicyRules"
-          :hide-details="false"
+          :hideDetails="false"
           class="my-1 policy-checkbox"
         />
         <div class="span-spacing">
