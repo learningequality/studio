@@ -73,7 +73,7 @@ const checkShowAnswers = wrapper => {
   wrapper
     .find('[data-test="showAnswersCheckbox"]')
     .find('input')
-    .setChecked(true);
+    .element.click();
 };
 
 const getItems = wrapper => {
