@@ -59,47 +59,46 @@
           </VLayout>
         </VFlex>
       </VLayout>
-      <BottomToolBar
+      <BottomBar
         v-if="selecting"
-        clipped-left
-        color="white"
-        flat
         data-test="toolbar"
         :height="$vuetify.breakpoint.xsOnly ? '72px' : '56px'"
       >
-        <VLayout row wrap align-center>
-          <VFlex xs12 sm4 class="pb-1">
-            {{ $tr('channelSelectionCount', { count: selectedCount }) }}
-          </VFlex>
-          <VFlex xs12 sm8>
-            <VLayout row>
-              <VSpacer />
-              <VBtn flat data-test="cancel" class="ma-0" @click="setSelection(false)">
-                {{ $tr('cancelButton') }}
-              </VBtn>
-              <Menu top>
-                <template #activator="{ on }">
-                  <VBtn color="primary" class="ma-0 mx-2" v-on="on">
-                    {{ $tr('downloadButton') }}
-                    <Icon class="ml-1">
-                      arrow_drop_up
-                    </Icon>
-                  </VBtn>
-                </template>
-                <VList>
-                  <VListTile @click="downloadPDF">
-                    <VListTileTitle>{{ $tr('downloadPDF') }}</VListTileTitle>
-                  </VListTile>
-                  <VListTile data-test="download-csv" @click="downloadCSV">
-                    <VListTileTitle>{{ $tr('downloadCSV') }}</VListTileTitle>
-                  </VListTile>
-                </VList>
-              </Menu>
-            </VLayout>
-          </VFlex>
-        </VLayout>
+        <div class="content-wrapper">
+          <VLayout row wrap align-center>
+            <VFlex xs12 sm4 class="pb-1">
+              {{ $tr('channelSelectionCount', { count: selectedCount }) }}
+            </VFlex>
+            <VFlex xs12 sm8>
+              <VLayout row>
+                <VSpacer />
+                <VBtn flat data-test="cancel" class="ma-0" @click="setSelection(false)">
+                  {{ $tr('cancelButton') }}
+                </VBtn>
+                <Menu top>
+                  <template #activator="{ on }">
+                    <VBtn color="primary" class="ma-0 mx-2" v-on="on">
+                      {{ $tr('downloadButton') }}
+                      <Icon class="ml-1">
+                        arrow_drop_up
+                      </Icon>
+                    </VBtn>
+                  </template>
+                  <VList>
+                    <VListTile @click="downloadPDF">
+                      <VListTileTitle>{{ $tr('downloadPDF') }}</VListTileTitle>
+                    </VListTile>
+                    <VListTile data-test="download-csv" @click="downloadCSV">
+                      <VListTileTitle>{{ $tr('downloadCSV') }}</VListTileTitle>
+                    </VListTile>
+                  </VList>
+                </Menu>
+              </VLayout>
+            </VFlex>
+          </VLayout>
+        </div>
 
-      </BottomToolBar>
+      </BottomBar>
     </VContainer>
   </div>
 
@@ -118,7 +117,7 @@
   import ChannelItem from './ChannelItem';
   import LoadingText from 'shared/views/LoadingText';
   import Pagination from 'shared/views/Pagination';
-  import BottomToolBar from 'shared/views/BottomToolBar';
+  import BottomBar from 'shared/views/BottomBar';
   import Checkbox from 'shared/views/form/Checkbox';
   import ToolBar from 'shared/views/ToolBar';
   import OfflineText from 'shared/views/OfflineText';
@@ -132,7 +131,7 @@
       LoadingText,
       CatalogFilters,
       Pagination,
-      BottomToolBar,
+      BottomBar,
       Checkbox,
       ToolBar,
       OfflineText,
@@ -280,6 +279,11 @@
   .list-wrapper {
     max-width: 1080px;
     margin: 0 auto;
+  }
+
+  .content-wrapper {
+    display:flex;
+    width: 100%;
   }
 
 </style>

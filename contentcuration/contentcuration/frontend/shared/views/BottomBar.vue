@@ -17,7 +17,9 @@
   .bottom-bar {
     position: fixed;
     bottom: 0;
+    left: 0;
     z-index: 3;
+    display: flex;
     width: 100%;
     height: 64px;
     background-color: #ffffff;

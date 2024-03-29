@@ -47,9 +47,11 @@
       <VContainer :style="`margin-top: ${contentOffset}px;`" fluid class="pa-0">
         <slot></slot>
       </VContainer>
-      <BottomToolBar v-if="$slots.bottom" color="white" flat clipped-left clipped-right>
-        <slot name="bottom"></slot>
-      </BottomToolBar>
+      <BottomBar v-if="$slots.bottom">
+        <div class="slot-wrapper">
+          <slot name="bottom"></slot>
+        </div>
+      </BottomBar>
     </VCard>
   </VDialog>
 
@@ -59,14 +61,14 @@
 
   import { mapState } from 'vuex';
   import OfflineText from './OfflineText';
-  import BottomToolBar from './BottomToolBar';
+  import BottomBar from './BottomBar';
   import Tabs from './Tabs';
 
   export default {
     name: 'FullscreenModal',
     components: {
       OfflineText,
-      BottomToolBar,
+      BottomBar,
       Tabs,
     },
     props: {
@@ -127,6 +129,12 @@
 
   /deep/ .v-tabs__container {
     padding: 0;
+  }
+
+  .slot-wrapper {
+    display: flex;
+    align-items: center;
+    width: 100%;
   }
 
 </style>
