@@ -55,10 +55,10 @@
 
                   <Icon
                     color="grey darken-1"
+                    icon="edit"
                     class="mr-2"
-                  >
-                    edit
-                  </Icon>
+                  />
+
                 </VLayout>
               </div>
             </keep-alive>

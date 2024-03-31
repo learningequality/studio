@@ -8,9 +8,7 @@
     >
       <VCardText>
         <VLayout align-center justify-center fill-height>
-          <Icon color="red">
-            error
-          </Icon>
+          <Icon icon="error" />
           &nbsp; {{ $tr('fileError') }}
         </VLayout>
       </VCardText>

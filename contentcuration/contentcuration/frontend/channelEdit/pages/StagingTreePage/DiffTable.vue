@@ -53,9 +53,8 @@
     </template>
   </VDataTable>
   <VLayout v-else justify-center column>
-    <Icon color="red" large class="mb-2">
-      error
-    </Icon>
+    <Icon icon="error" class="mb-2" />
+
     <!-- TODO: wrap string -->
     <div class="text-xs-center">
       <ActionLink text="Retry" @click="$emit('reload')" />

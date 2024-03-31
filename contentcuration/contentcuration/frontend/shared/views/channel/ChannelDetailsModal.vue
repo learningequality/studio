@@ -16,7 +16,7 @@
             <VBtn color="primary" dark :block="$vuetify.breakpoint.xsOnly" v-on="on">
               {{ $tr('downloadButton') }}
               &nbsp;
-              <Icon>arrow_drop_down</Icon>
+              <Icon icon="dropdown" />
             </VBtn>
           </template>
           <VList>
