@@ -7,21 +7,30 @@
     </span>
   </span>
   <span v-else-if="error" class="mx-2">
-    <VTooltip bottom lazy>
-      <template #activator="{ on }">
-        <Icon icon="error" v-on="on" />
-      </template>
-      <span>{{ error }}</span>
-    </VTooltip>
+    <Icon ref="contentNodeError" icon="error" />
+    <KTooltip
+      reference="contentNodeError"
+      placement="bottom"
+      :refs="$refs"
+      v-bind="$attrs"
+    >
+      {{ error }}
+
+    </KTooltip>
+
   </span>
   <span v-else-if="warning" class="mx-2">
-    <VTooltip bottom lazy>
-      <template #activator="{ on }">
-        <Icon icon="warningIncomplete" v-on="on" />
+    <Icon ref="contentNodeWarning" icon="warningIncomplete" />
+    <KTooltip
+      reference="contentNodeWarning"
+      placement="bottom"
+      :refs="$refs"
+      v-bind="$attrs"
+    >
+      {{ warning }}
 
-      </template>
-      <span>{{ warning }}</span>
-    </VTooltip>
+    </KTooltip>
+
   </span>
 
 </template>
@@ -70,6 +79,7 @@
 </script>
 
 <style scoped>
+
   .v-icon {
     vertical-align: bottom;
     cursor: default;

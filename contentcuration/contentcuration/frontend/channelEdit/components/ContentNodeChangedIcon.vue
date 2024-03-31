@@ -1,14 +1,21 @@
 <template>
 
-  <span v-if="message">
-    <VTooltip bottom lazy>
-      <template #activator="{ on }">
-        <Icon color="greenSuccess" small v-on="on">
-          {{ showFilled ? 'lens' : 'trip_origin' }}
-        </Icon>
-      </template>
-      <span>{{ message }}</span>
-    </VTooltip>
+  <span v-if="message" class="mx-2">
+
+    <Icon
+      ref="contentNode"
+      :icon="showFilled ? 'unpublishedResource' : 'unpublishedChange'"
+    />
+
+    <KTooltip
+      reference="contentNode"
+      placement="bottom"
+      :refs="$refs"
+      v-bind="$attrs"
+    >
+      {{ message }}
+
+    </KTooltip>
   </span>
 
 </template>

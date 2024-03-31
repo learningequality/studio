@@ -30,9 +30,7 @@
           <VListTileAction class="handle-col" :aria-hidden="!hover" @click.stop>
             <transition name="fade">
               <VBtn :disabled="copying" flat icon>
-                <Icon color="#686868">
-                  drag_indicator
-                </Icon>
+                <Icon color="#686868" icon="dragVertical" />
               </VBtn>
             </transition>
           </VListTileAction>
