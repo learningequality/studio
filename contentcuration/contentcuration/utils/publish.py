@@ -151,7 +151,9 @@ def create_content_database(channel, force, user_id, force_exercises, progress_t
         if progress_tracker:
             progress_tracker.track(90)
         map_prerequisites(channel.main_tree)
-        save_export_database(channel.pk)
+        save_export_database(
+            channel.pk, channel.version + 1
+        )  # Need to save as version being published, not current version
         if channel.public:
             mapper = ChannelMapper(kolibri_channel)
             mapper.run()
@@ -810,14 +812,22 @@ def mark_all_nodes_as_published(channel):
     logging.info("Marked all nodes as published.")
 
 
-def save_export_database(channel_id):
+def save_export_database(channel_id, version):
     logging.debug("Saving export database")
     current_export_db_location = get_active_content_database()
-    target_export_db_location = os.path.join(settings.DB_ROOT, "{id}.sqlite3".format(id=channel_id))
+    target_paths = [
+        os.path.join(
+            settings.DB_ROOT, "{id}.sqlite3".format(id=channel_id)
+        ),
+        os.path.join(
+            settings.DB_ROOT, "{}-{}.sqlite3".format(channel_id, version)
+        ),
+    ]
 
-    with open(current_export_db_location, 'rb') as currentf:
-        storage.save(target_export_db_location, currentf)
-    logging.info("Successfully copied to {}".format(target_export_db_location))
+    for target_export_db_location in target_paths:
+        with open(current_export_db_location, 'rb') as currentf:
+            storage.save(target_export_db_location, currentf)
+        logging.info("Successfully copied to {}".format(target_export_db_location))
 
 
 def add_tokens_to_channel(channel):

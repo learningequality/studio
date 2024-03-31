@@ -90,9 +90,12 @@ describe('trashModal', () => {
       wrapper.find('[data-test="item"]').trigger('click');
       expect(wrapper.vm.previewNodeId).toBe(testChildren[0].id);
     });
-    it('checking item in list should set selected', () => {
-      wrapper.find('[data-test="checkbox"]').vm.$emit('change', ['selected']);
-      expect(wrapper.vm.selected).toEqual(['selected']);
+    it('checking item in list should add the item ID to the selected array', () => {
+      wrapper
+        .find('[data-test="checkbox"]')
+        .find('input[type="checkbox"]')
+        .element.click();
+      expect(wrapper.vm.selected).toEqual(['test1']);
     });
     it('checking select all checkbox should check all items', () => {
       wrapper.find('[data-test="selectall"]').vm.$emit('change', true);
