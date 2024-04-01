@@ -29,8 +29,17 @@ class SessionWithMaxConnectionAge(requests.Session):
         return super().request(*args, **kwargs)
 
 class BackendRequest(object):
-    """ Class that should be inherited by specific backend for its requests"""
-    pass
+    def __init__(self, method, path, params=None, data=None, json=None, headers=None, max_retries=1, **kwargs):
+        self.method = method
+        self.path = path
+        self.params = params
+        self.data = data
+        self.json = json
+        self.headers = headers
+        self.max_retries = max_retries
+        self.tried = 0
+        for key, value in kwargs.items():
+            setattr(self, key, value)
 
 
 class BackendResponse(object):
@@ -47,14 +56,15 @@ class Backend(ABC):
     base_url = None
     connect_endpoint = None
 
-    def __new__(class_, *args, url_prefix="", **kwargs):
+    def __new__(class_, url_prefix="", *args, **kwargs):
         if not isinstance(class_._instance, class_):
             class_._instance = object.__new__(class_, *args, **kwargs)
             class_._instance.url_prefix = url_prefix
         return class_._instance
 
-    def __init__(self):
+    def __init__(self, url_prefix=""):
         self.session = SessionWithMaxConnectionAge()
+        self.url_prefix = url_prefix
 
     def _construct_full_url(self, path):
         """This method should combine base_url, url_prefix, and path in that order, removing any trailing slashes beforehand."""
@@ -62,25 +72,32 @@ class Backend(ABC):
         if self.base_url:
             url_array.append(self.base_url.rstrip("/"))
         if self.url_prefix:
-            url_array.append(self.url_prefix.rstrip("/"))
+            url_array.append(self.url_prefix.rstrip("/").lstrip("/"))
         if path:
             url_array.append(path.lstrip("/"))
         return "/".join(url_array)
 
-    def _make_request(self, path, **kwargs):
-        url = self._construct_full_url(path)
-        is_retry = kwargs.pop("is_retry", False)
-        try: 
-            return self.session.request(url, **kwargs)
+    def _make_request(self, request):
+        url = self._construct_full_url(request.path)
+        try:
+            request.tried += 1
+            return self.session.request(
+                request.method,
+                url,
+                params=request.params,
+                data=request.data,
+                headers=request.headers,
+                json=request.json,
+            )
         except (
             requests.exceptions.ConnectionError,
             requests.exceptions.RequestException,
         ) as e:
-            if is_retry:
+            if request.tried >= request.max_retries:
                 logging.error(str(e))
-                raise errors.ConnectionError("Connection error occurred. Retried request and failed again.")
+                raise errors.ConnectionError("Connection error occurred.")
             logging.warning(f"Connection error occurred. Retrying request to {url}")
-            return self.make_request(path, is_retry=True, **kwargs)
+            return self._make_request(request)
         except (
             requests.exceptions.SSLError,
         ) as e:
@@ -116,39 +133,33 @@ class Backend(ABC):
             logging.error(str(e))
             raise errors.InvalidResponse(f"Invalid response from {url}")
     
+    @abstractmethod
     def connect(self):
         """ Establishes a connection to the backend service. """
         try:
-            response = self.make_request(self.connect_endpoint, method="GET")
+            request = BackendRequest(method="GET", path=self.connect_endpoint)
+            response = self._make_request(request)
             if response.status_code != 200:
                 return False
             return True
         except Exception as e:
             return False
 
+    @abstractmethod
     def make_request(self, path, **kwargs):
         response = self._make_request(path, **kwargs)
         try:
             info = response.json()
+            info.update({"status_code": response.status_code})
             return BackendResponse(**info)
         except ValueError as e:
             logging.error(str(e))
             raise errors.InvalidResponse("Invalid response from backend")
 
-    @abstractmethod
-    def connect(self) -> None:
-        """ Establishes a connection to the backend service. """
-        pass
-
-    @abstractmethod
-    def make_request(self, request) -> BackendResponse:
-        """ Make a request based on "request" """
-        pass
-
     @classmethod
-    def get_instance(cls) -> 'Backend':
+    def get_instance(cls, *args, **kargs) -> 'Backend':
         """ Returns existing instance, if not then create one. """
-        return cls._instance if cls._instance else cls._create_instance()
+        return cls._instance if cls._instance else cls._create_instance(*args, **kargs)
 
     @classmethod
     def _create_instance(cls) -> 'Backend':
