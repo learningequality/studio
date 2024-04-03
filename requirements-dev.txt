@@ -187,7 +187,7 @@ pytest==6.2.4
     #   pytest-pythonpath
     #   pytest-timeout
     #   pytest-watch
-pytest-cov==2.12.0
+pytest-cov==5.0.0
     # via -r requirements-dev.in
 pytest-django==4.3.0
     # via -r requirements-dev.in
