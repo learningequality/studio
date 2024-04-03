@@ -13,9 +13,7 @@
           <VTooltip v-if="user.is_admin" bottom z-index="200" lazy>
             <template #activator="{ on }">
               <span class="px-1 py-2" v-on="on">
-                <Icon
-                  icon="unpublishedResource"
-                />
+                <VIconWrapper color="light-green accent-4">$vuetify.icons.indicator</VIconWrapper>
               </span>
             </template>
             <span>Administrator</span>

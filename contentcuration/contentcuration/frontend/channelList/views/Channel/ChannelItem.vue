@@ -173,9 +173,7 @@
                   @click.stop
                 >
                   <VListTileAvatar>
-                    <Icon class="rtl-flip">
-                      launch
-                    </Icon>
+                    <Icon class="rtl-flip" icon="openNewTab" />
                   </VListTileAvatar>
                   <VListTileTitle>{{ $tr('goToWebsite') }}</VListTileTitle>
                 </VListTile>
@@ -185,9 +183,7 @@
                   target="_blank"
                 >
                   <VListTileAvatar>
-                    <Icon class="rtl-flip">
-                      launch
-                    </Icon>
+                    <Icon class="rtl-flip" icon="openNewTab" />
                   </VListTileAvatar>
                   <VListTileTitle>{{ $tr('viewContent') }}</VListTileTitle>
                 </VListTile>

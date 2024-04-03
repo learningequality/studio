@@ -102,14 +102,14 @@
                       <VTooltip bottom lazy>
                         <template #activator="{ on }">
                           <div style="display: inline-block;" v-on="on">
-                            <Icon
+                            <VIconWrapper
                               color="roleVisibilityCoach"
                               small
                               class="mx-1"
                               style="vertical-align: sub;"
                             >
                               local_library
-                            </Icon>
+                            </VIconWrapper>
                             <span v-if="isTopic">
                               {{ $formatNumber(node.coach_count) }}
                             </span>

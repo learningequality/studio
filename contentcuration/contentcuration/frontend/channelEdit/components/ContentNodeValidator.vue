@@ -1,36 +1,30 @@
 <template>
 
   <span v-if="noTitle && !hideTitleValidation" class="red--text title">
-    <Icon icon="error" />
+    <VIconWrapper color="red">error</VIconWrapper>
     <span class="mx-1">
       {{ $tr('missingTitle') }}
     </span>
   </span>
   <span v-else-if="error" class="mx-2">
-    <Icon ref="contentNodeError" icon="error" />
-    <KTooltip
-      reference="contentNodeError"
-      placement="bottom"
-      :refs="$refs"
-      v-bind="$attrs"
-    >
-      {{ error }}
-
-    </KTooltip>
-
+    <VTooltip bottom lazy>
+      <template #activator="{ on }">
+        <VIconWrapper color="red" v-on="on">
+          error
+        </VIconWrapper>
+      </template>
+      <span>{{ error }}</span>
+    </VTooltip>
   </span>
   <span v-else-if="warning" class="mx-2">
-    <Icon ref="contentNodeWarning" icon="warningIncomplete" />
-    <KTooltip
-      reference="contentNodeWarning"
-      placement="bottom"
-      :refs="$refs"
-      v-bind="$attrs"
-    >
-      {{ warning }}
-
-    </KTooltip>
-
+    <VTooltip bottom lazy>
+      <template #activator="{ on }">
+        <VIconWrapper color="amber" v-on="on">
+          warning
+        </VIconWrapper>
+      </template>
+      <span>{{ warning }}</span>
+    </VTooltip>
   </span>
 
 </template>
@@ -79,7 +73,6 @@
 </script>
 
 <style scoped>
-
   .v-icon {
     vertical-align: bottom;
     cursor: default;
