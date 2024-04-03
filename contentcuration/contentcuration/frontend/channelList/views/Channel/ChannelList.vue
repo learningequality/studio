@@ -34,7 +34,9 @@
                 allowEdit
                 fullWidth
               />
+
               <RecommendedResourceCard />
+
             </template>
           </VFlex>
         </VLayout>

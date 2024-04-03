@@ -1,36 +1,27 @@
 <template>
 
-  <button>
-    <div
-      class="card"
-      tabindex="0"
-      @focus="cardFocus"
-      @hover="cardHover"
+  <li
+    :class="['remove-list-style card',$computedClass(coreOutlineFocus)]"
+    tabindex="0"
+    @focus="cardFocus"
+    @hover="cardHover"
+  >
+    <component
+      :is="headerLevel"
     >
-
-      <li class="remove-list-style">
-        <component
-          :is="headerLevel"
-        >
-          <KRouterLink
-            :to="to"
-          >
-
-            <KTextTruncator
-              v-if="title !== null"
-              :text="title"
-              :maxLines="titleLines"
-              class="spacing"
-            />
-          </KRouterLink>
-        </component>
-      </li>
-
-      <slot name="default"></slot>
-
-
-    </div>
-  </button>
+      <KRouterLink
+        :to="to"
+      >
+        <KTextTruncator
+          v-if="title !== null"
+          :text="title"
+          :maxLines="titleLines"
+          class="spacing"
+        />
+      </KRouterLink>
+    </component>
+    <slot name="default"></slot>
+  </li>
 
 </template>
 
@@ -63,6 +54,14 @@
       headerLevel() {
         return 'h' + this.headingLevel;
       },
+      coreOutlineFocus() {
+        return {
+          ':focus': {
+            ...this.$coreOutline,
+            outlineOffset: '-6px',
+          },
+        };
+      },
     },
     methods: {
       cardFocus(e) {
@@ -77,9 +76,9 @@
 </script>
 
 
-<style lang="scss">
+<style lang="scss" scoped>
 
-  @import './definitions';
+  @import '~kolibri-design-system/lib/styles/definitions';
 
   .card {
     @extend %dropshadow-2dp;
