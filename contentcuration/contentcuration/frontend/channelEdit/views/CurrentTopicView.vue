@@ -41,34 +41,40 @@
       </div>
       <VSlideXTransition>
         <div v-if="selected.length">
-          <IconButton
+          <KIconButton
             v-if="canEdit"
             icon="edit"
             :text="$tr('editSelectedButton')"
             data-test="edit-selected-btn"
             @click="editNodes(selected)"
           />
-          <IconButton
+          <KIconButton
             icon="clipboard"
             :text="$tr('copySelectedButton')"
             data-test="copy-selected-to-clipboard-btn"
             @click="copyToClipboard(selected)"
           />
-          <IconButton
+          <KIconButton
             v-if="canEdit"
             icon="move"
             :text="$tr('moveSelectedButton')"
             data-test="move-selected-btn"
             @click="openMoveModal"
           />
-          <IconButton
+          <KIconButton
             v-if="canEdit"
             icon="copy"
             :text="$tr('duplicateSelectedButton')"
             data-test="duplicate-selected-btn"
             @click="duplicateNodes(selected)"
           />
-          <IconButton
+          <KIconButton
+            v-if="canEdit"
+            icon="sort"
+            :text="$tr('SortAlphabetically')"
+            @click="sortNodes(selected)"
+          />
+          <KIconButton
             v-if="canEdit"
             icon="remove"
             :text="$tr('deleteSelectedButton')"
@@ -435,6 +441,44 @@
       clearSelections() {
         this.selected = [];
       },
+
+      sortNodes(selected) {
+        const selectedNodes = selected.map(id => this.getContentNode(id));
+        const orderedNodes = selectedNodes.sort(this.compareNodeTitles);
+
+        const reversedNodes = orderedNodes.reverse();
+
+        const nodeX = this.findNodeBeforeFirstSelected(orderedNodes, selected);
+
+        const targetParent = this.node.id;
+        const targetNode = nodeX || targetParent;
+        const targetPosition = nodeX
+          ? RELATIVE_TREE_POSITIONS.RIGHT
+          : RELATIVE_TREE_POSITIONS.FIRST_CHILD;
+
+        const nodeIdsToMove = reversedNodes.map(node => String(node.id));
+
+        this.moveContentNodes({
+          id__in: nodeIdsToMove,
+          target: targetNode,
+          position: targetPosition,
+        });
+      },
+
+      findNodeBeforeFirstSelected(nodes, selected) {
+        for (let i = 1; i < nodes.length; i++) {
+          if (selected.includes(nodes[i])) {
+            return nodes[i - 1];
+          }
+        }
+        return null;
+      },
+
+      compareNodeTitles(nodeA, nodeB) {
+        const titleA = nodeA.title.toLowerCase();
+        const titleB = nodeB.title.toLowerCase();
+        return titleA.localeCompare(titleB);
+      },
       updateTitleForPage() {
         let detailTitle;
         const topicTitle = this.getTitle(this.getContentNode(this.topicId));
@@ -707,6 +751,7 @@
     },
     $trs: {
       addTopic: 'New folder',
+      SortAlphabetically: 'Sort alphabetically',
       addExercise: 'New exercise',
       uploadFiles: 'Upload files',
       importFromChannels: 'Import from channels',
