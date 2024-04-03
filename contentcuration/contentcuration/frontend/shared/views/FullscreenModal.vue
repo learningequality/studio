@@ -10,7 +10,7 @@
     transition="dialog-bottom-transition"
     v-bind="$attrs"
   >
-    <VCard style="overflow-y: auto;">
+    <VCard style="overflow-y: auto">
       <VToolbar
         :color="color"
         dark
@@ -34,11 +34,7 @@
         <VSpacer />
         <slot name="action"></slot>
         <template v-if="$slots.tabs" #extension>
-          <Tabs
-            :color="color"
-            slider-color="white"
-            align-with-title
-          >
+          <Tabs :color="color" slider-color="white" align-with-title>
             <slot name="tabs"></slot>
           </Tabs>
         </template>
@@ -119,7 +115,6 @@
   };
 
 </script>
-
 
 <style lang="less" scoped>
 
