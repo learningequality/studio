@@ -9,6 +9,13 @@
 
   export default {
     name: 'BottomBar',
+    props: {
+      // eslint-disable-next-line kolibri/vue-no-unused-properties
+      appearanceOverrides: {
+        type: Object,
+        default: () => ({ height: '64px' }),
+      },
+    },
   };
 
 </script>
@@ -21,7 +28,7 @@
     z-index: 3;
     display: flex;
     width: 100%;
-    height: 64px;
+    height: v-bind('appearanceOverrides.height');
     background-color: #ffffff;
     border-top: 1px solid #dddddd;
   }

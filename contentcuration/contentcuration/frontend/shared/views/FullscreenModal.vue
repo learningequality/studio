@@ -44,9 +44,7 @@
         <slot></slot>
       </VContainer>
       <BottomBar v-if="$slots.bottom">
-        <div class="slot-wrapper">
-          <slot name="bottom"></slot>
-        </div>
+        <slot name="bottom"></slot>
       </BottomBar>
     </VCard>
   </VDialog>
@@ -124,12 +122,6 @@
 
   /deep/ .v-tabs__container {
     padding: 0;
-  }
-
-  .slot-wrapper {
-    display: flex;
-    align-items: center;
-    width: 100%;
   }
 
 </style>
