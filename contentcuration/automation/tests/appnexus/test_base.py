@@ -19,10 +19,6 @@ class MockBackend(Backend):
     def make_request(self, request):
         return super().make_request(request)
 
-    @classmethod
-    def _create_instance(cls, url_prefix="") -> 'MockBackend':
-        return cls(url_prefix=url_prefix)
-
 class ErrorBackend(Backend):
     base_url = 'https://bad-url.com'
     connect_endpoint = '/status'
@@ -31,10 +27,6 @@ class ErrorBackend(Backend):
     
     def make_request(self, request):
         return super().make_request(request)
-    
-    @classmethod
-    def _create_instance(cls, url_prefix="") -> 'ErrorBackend':
-        return cls(url_prefix=url_prefix)
 
 
 class MockAdapter(Adapter):
@@ -42,13 +34,8 @@ class MockAdapter(Adapter):
         pass
 
 
-def test_backend_error():
-    with pytest.raises(NotImplementedError) as error:
-        Backend.get_instance()
-    assert "Subclasses should implement the creation of instance" in str(error.value)
-
 def test_backend_singleton():
-    b1, b2 = MockBackend.get_instance(), MockBackend.get_instance()
+    b1, b2 = MockBackend(), MockBackend()
     assert id(b1) == id(b2)
 
 
@@ -97,13 +84,13 @@ def test_session_with_max_connection_age_closing_connections():
         assert mock_request.call_count == 2
 
 def test_backend_connect():
-    backend = MockBackend.get_instance()
+    backend = MockBackend()
     connected = backend.connect()
 
     assert connected is True
 
 def test_backend_connect_error():
-    backend = ErrorBackend.get_instance()
+    backend = ErrorBackend()
     connected = backend.connect()
 
     assert connected is False
@@ -111,7 +98,7 @@ def test_backend_connect_error():
 def test_backend_request():
     request = BackendRequest('GET', '/api/public/info')
 
-    backend = MockBackend.get_instance()
+    backend = MockBackend()
     response = backend.make_request(request)
 
     assert response.status_code == 200
@@ -120,7 +107,7 @@ def test_backend_request():
 def test_backend_request_error():
     request = BackendRequest('GET', '/api/public/info')
 
-    backend = ErrorBackend.get_instance()
+    backend = ErrorBackend()
 
     with pytest.raises(ConnectionError) as error:
         backend.make_request(request)

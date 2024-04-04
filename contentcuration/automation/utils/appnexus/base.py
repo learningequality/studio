@@ -14,15 +14,14 @@ class SessionWithMaxConnectionAge(requests.Session):
         The age is specified in seconds.
     """
     def __init__(self, age = 10):
+        super().__init__()
         self.age = age
         self.last_used = time.time()
-        super().__init__()
 
     def request(self, *args, **kwargs):
         current_time = time.time()
         if current_time - self.last_used > self.age:
             self.close()
-            self.__init__(self.age)
 
         self.last_used = current_time
 
@@ -56,11 +55,10 @@ class Backend(ABC):
     base_url = None
     connect_endpoint = None
 
-    def __new__(class_, url_prefix="", *args, **kwargs):
-        if not isinstance(class_._instance, class_):
-            class_._instance = object.__new__(class_, *args, **kwargs)
-            class_._instance.url_prefix = url_prefix
-        return class_._instance
+    def __new__(cls, *args, **kwargs):
+        if not isinstance(cls._instance, cls):
+            cls._instance = object.__new__(cls)
+        return cls._instance
 
     def __init__(self, url_prefix=""):
         self.session = SessionWithMaxConnectionAge()
@@ -155,16 +153,6 @@ class Backend(ABC):
         except ValueError as e:
             logging.error(str(e))
             raise errors.InvalidResponse("Invalid response from backend")
-
-    @classmethod
-    def get_instance(cls, *args, **kargs) -> 'Backend':
-        """ Returns existing instance, if not then create one. """
-        return cls._instance if cls._instance else cls._create_instance(*args, **kargs)
-
-    @classmethod
-    def _create_instance(cls) -> 'Backend':
-        """ Returns the instance after creating it. """
-        raise NotImplementedError("Subclasses should implement the creation of instance")
 
 
 class BackendFactory(ABC):
