@@ -92,7 +92,8 @@
         get() {
           return this.value;
         },
-        set(value) {
+        set(val) {
+          const value = val || null; // Ensure null is returned if no value is selected
           this.$emit('input', value);
         },
       },
