@@ -112,4 +112,4 @@ def test_backend_request_error():
     with pytest.raises(ConnectionError) as error:
         backend.make_request(request)
     
-    assert "Connection error occurred." in str(error.value)
+    assert "Unable to connect to" in str(error.value)
