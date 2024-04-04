@@ -63,28 +63,28 @@
               {{ $tr('unpublishedText') }}
             </VCardText>
           </VFlex>
-          <VTooltip bottom lazy>
-            <template #activator="{ on }">
-              <Icon
-                v-if="allowEdit && hasUnpublishedChanges"
-                icon="unpublishedResource"
-                v-on="on"
-              />
+          <KTooltip
+            reference="lastUpdatedTime"
+            placement="bottom"
+            :refs="$refs"
+            v-bind="$attrs"
+          >
+            {{ $tr(
+              'lastUpdated',
+              {
+                'updated': $formatRelative(
+                  channel.modified,
+                  { now: new Date() }
+                )
+              })
+            }}
+          </KTooltip>
+          <Icon
+            v-if="allowEdit && hasUnpublishedChanges"
+            ref="lastUpdatedTime"
+            icon="unpublishedResource"
+          />
 
-
-            </template>
-            <span>
-              {{ $tr(
-                'lastUpdated',
-                {
-                  'updated': $formatRelative(
-                    channel.modified,
-                    { now: new Date() }
-                  )
-                })
-              }}
-            </span>
-          </VTooltip>
           <VSpacer />
           <VFlex shrink>
             <KRouterLink

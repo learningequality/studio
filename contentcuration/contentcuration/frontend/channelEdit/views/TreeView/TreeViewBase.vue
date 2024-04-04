@@ -38,12 +38,9 @@
             <template #badge>
               <Icon
                 v-if="!currentChannel.language"
-                color="red"
-                small
+                icon="error"
                 class="edit-channel-error"
-              >
-                error
-              </Icon>
+              />
             </template>
             <KIconButton
               v-if="canEdit"
@@ -131,7 +128,7 @@
               icon
               v-on="on"
             >
-              <Icon>more_horiz</Icon>
+              <Icon icon="optionsHorizontal" />
             </VBtn>
           </template>
           <VList>
@@ -155,12 +152,10 @@
                   <Icon
                     v-if="!currentChannel.language"
                     class="mx-1"
-                    small
-                    color="red"
+                    icon="error"
                     style="vertical-align: baseline;"
-                  >
-                    error
-                  </Icon>
+                  />
+
                 </VListTileTitle>
               </VListTile>
             </template>
@@ -269,7 +264,7 @@
               fab
               class="clipboard-fab"
             >
-              <Icon>content_paste</Icon>
+              <Icon icon="clipboard" />
             </VBtn>
           </template>
         </DraggableRegion>
