@@ -92,7 +92,7 @@
                     class="mx-1 rtl-flip"
                     @click.stop="targetNodeId = node.id"
                   >
-                    <Icon>keyboard_arrow_right</Icon>
+                    <Icon icon="chevronRight" />
                   </VBtn>
                 </div>
               </VListTileAction>

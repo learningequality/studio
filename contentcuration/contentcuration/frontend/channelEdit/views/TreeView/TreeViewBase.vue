@@ -128,7 +128,7 @@
               icon
               v-on="on"
             >
-              <Icon icon="optionsHorizontal" />
+              <Icon icon="optionsHorizontal" style="font-size: 25px;" />
             </VBtn>
           </template>
           <VList>
@@ -264,7 +264,7 @@
               fab
               class="clipboard-fab"
             >
-              <Icon icon="clipboard" />
+              <Icon icon="clipboard" style="font-size: 25px;" />
             </VBtn>
           </template>
         </DraggableRegion>

@@ -20,6 +20,7 @@
               :icon="
                 config[action].icon
               "
+              style="font-size: 20px;"
               :color="iconColor(action)"
             />
 
