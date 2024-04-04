@@ -1,19 +1,16 @@
 /* eslint-env node */
-
-const path = require('path');
-const process = require('process');
-const baseConfig = require('kolibri-tools/lib/webpack.config.base');
-const { merge } = require('webpack-merge');
-const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-
-const BundleTracker = require('kolibri-tools/lib/webpackBundleTracker');
-const CircularDependencyPlugin = require('circular-dependency-plugin');
-
-const WebpackRTLPlugin = require('kolibri-tools/lib/webpackRtlPlugin');
-
-const { InjectManifest } = require('workbox-webpack-plugin');
+const path = require('node:path');
+const process = require('node:process');
 
 const webpack = require('webpack');
+const { merge } = require('webpack-merge');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const { InjectManifest } = require('workbox-webpack-plugin');
+const CircularDependencyPlugin = require('circular-dependency-plugin');
+
+const baseConfig = require('kolibri-tools/lib/webpack.config.base');
+const BundleTracker = require('kolibri-tools/lib/webpackBundleTracker');
+const WebpackRTLPlugin = require('kolibri-tools/lib/webpackRtlPlugin');
 
 const djangoProjectDir = path.resolve('contentcuration');
 const staticFilesDir = path.resolve(djangoProjectDir, 'contentcuration', 'static');
@@ -25,7 +22,12 @@ const bundleOutputDir = path.resolve(staticFilesDir, 'studio');
 module.exports = (env = {}) => {
   const dev = env.dev;
   const hot = env.hot;
-  const base = baseConfig({ mode: dev ? 'development' : 'production', hot, cache: dev, transpile: !dev });
+  const base = baseConfig({
+    mode: dev ? 'development' : 'production',
+    hot,
+    cache: dev,
+    transpile: !dev,
+  });
 
   if (String(base.module.rules[1].test) !== String(/\.css$/)) {
     throw Error('Check base webpack configuration for update of location of css loader');
@@ -34,6 +36,9 @@ module.exports = (env = {}) => {
   const rootDir = __dirname;
 
   const rootNodeModules = path.join(rootDir, 'node_modules');
+  // For pnpm, this directory holds symlinks to a particular version of each package, not unlike
+  // a hoisted node_modules directory.
+  const pnpmNodeModules = path.join(rootDir, 'node_modules', '.pnpm', 'node_modules');
 
   const baseCssLoaders = base.module.rules[1].use;
 
@@ -99,11 +104,11 @@ module.exports = (env = {}) => {
         },
         {
           test: /\.styl(us)?$/,
-          use: baseCssLoaders.concat('stylus-loader'),
+          use: baseCssLoaders.concat(require.resolve('stylus-loader')),
         },
         {
           test: /\.less?$/,
-          use: baseCssLoaders.concat('less-loader'),
+          use: baseCssLoaders.concat(require.resolve('less-loader')),
         },
       ],
     },
@@ -117,10 +122,14 @@ module.exports = (env = {}) => {
         static: staticFilesDir,
       },
       extensions: ['.js', '.vue', '.css', '.less'],
-      modules: [rootNodeModules],
+      symlinks: true,
+      modules: [rootNodeModules, pnpmNodeModules],
     },
     resolveLoader: {
-      modules: [rootNodeModules],
+      modules: [
+        rootNodeModules,
+        pnpmNodeModules
+      ],
     },
     plugins: [
       new BundleTracker({
