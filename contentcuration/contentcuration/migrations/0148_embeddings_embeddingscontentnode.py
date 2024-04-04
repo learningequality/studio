@@ -13,7 +13,7 @@ import contentcuration.models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('contentcuration', '0146_drop_taskresult_fields'),
+        ('contentcuration', '0147_alter_formatpreset_id'),
     ]
 
     operations = [
