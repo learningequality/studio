@@ -3,7 +3,6 @@
   <BaseCard
     :title="title"
     :headingLevel="headingLevel"
-    :to="to"
     :titleLines="titleLines"
   >
     <div>
@@ -42,9 +41,10 @@
           <KRouterLink
             :to="to"
             :appearanceOverrides="{
-              textDecoration: 'none',
-              cursor: 'pointer',
+              'text-decoration': 'none',
+              'cursor': 'pointer',
             }"
+            tabindex="-1"
           >
             <div
               v-if="thumbnailDisplay === 'none'"
@@ -54,8 +54,10 @@
               <slot name="title"></slot>
               <slot name="belowTitle"></slot>
             </div>
-            <KGrid v-else>
-
+            <KGrid
+              v-else
+              tabindex="-1"
+            >
               <KGridItem
                 :layout12="{ span: isVerticalLayout ? 12 : 6 }"
                 :layout8="{ span: isVerticalLayout ? 8 : 4 }"
@@ -201,6 +203,7 @@
 
   .spacing{
     padding: 1em;
+    color:black
   }
   .footer{
     margin-top: auto;

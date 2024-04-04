@@ -3,22 +3,19 @@
   <li
     :class="['remove-list-style card',$computedClass(coreOutlineFocus)]"
     tabindex="0"
+    data-focus="true"
     @focus="cardFocus"
     @hover="cardHover"
   >
     <component
       :is="headerLevel"
     >
-      <KRouterLink
-        :to="to"
-      >
-        <KTextTruncator
-          v-if="title !== null"
-          :text="title"
-          :maxLines="titleLines"
-          class="spacing"
-        />
-      </KRouterLink>
+      <KTextTruncator
+        v-if="title !== null"
+        :text="title"
+        :maxLines="titleLines"
+        class="spacing"
+      />
     </component>
     <slot name="default"></slot>
   </li>
@@ -40,10 +37,6 @@
         type: Number,
         required: true,
       },
-      to: {
-        type: Object,
-        required: true,
-      },
       titleLines: {
         type: Number,
         required: true,
@@ -58,7 +51,6 @@
         return {
           ':focus': {
             ...this.$coreOutline,
-            outlineOffset: '-6px',
           },
         };
       },
