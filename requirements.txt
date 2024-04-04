@@ -98,7 +98,6 @@ future==0.18.3
     # via -r requirements.in
 google-api-core[grpc]==1.27.0
     # via
-    #   google-api-core
     #   google-cloud-core
     #   google-cloud-error-reporting
     #   google-cloud-kms
@@ -163,7 +162,7 @@ packaging==20.9
     #   google-api-core
     #   google-cloud-error-reporting
     #   google-cloud-kms
-pillow==10.2.0
+pillow==10.3.0
     # via -r requirements.in
 prometheus-client==0.10.1
     # via django-prometheus
