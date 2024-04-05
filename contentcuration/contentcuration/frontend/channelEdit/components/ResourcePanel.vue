@@ -426,7 +426,7 @@
                 class="red--text"
               >
                 <Icon
-                  cicon="error"
+                  icon="error"
                 />
                 <span class="mx-1">{{ $tr('noLicenseError') }}</span>
               </span>

@@ -82,9 +82,7 @@
                     class="mx-1"
                     @click.stop="previewNodeId = node.id"
                   >
-                    <Icon color="primary">
-                      info
-                    </Icon>
+                    <Icon icon="info" style="font-size:20px" :color="$themeTokens.primary" />
                   </VBtn>
                   <VBtn
                     v-if="node.kind === 'topic'"

@@ -7,29 +7,25 @@
     style="max-height: 100%; width: 100%;"
   >
     <template #divider>
-      <Icon class="rtl-flip">
-        arrow_forward_ios
-      </Icon>
+      <Icon class="rtl-flip" icon="chevronRight" style="font-size: 20px;" />
     </template>
     <!-- Overflow menu -->
     <VBreadcrumbsItem v-if="breadcrumbStartingIndex > 0" tag="div">
       <Menu bottom>
         <template #activator="{ on }">
           <VBtn icon flat class="ma-0" v-on="on">
-            <Icon medium>
-              more_horiz
-            </Icon>
+            <Icon icon="optionsHorizontal" />
           </VBtn>
         </template>
         <VCard style="max-width: 300px;">
           <VList v-for="(item, i) in collapsedItems" :key="`collapsed-${i}`">
             <VListTile :to="item.to">
               <VListTileTitle>
-                <slot 
-                  name="item" 
-                  :item="item" 
-                  :index="i" 
-                  :isLast="false" 
+                <slot
+                  name="item"
+                  :item="item"
+                  :index="i"
+                  :isLast="false"
                   :isFirst="items[0].id === item.id"
                 >
                 </slot>
