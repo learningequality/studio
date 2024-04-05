@@ -128,7 +128,7 @@ module.exports = (env = {}) => {
     resolveLoader: {
       modules: [
         rootNodeModules,
-        pnpmNodeModules
+        // pnpmNodeModules
       ],
     },
     plugins: [
