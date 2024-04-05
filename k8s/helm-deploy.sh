@@ -35,5 +35,4 @@ helm upgrade --install \
      --set cloudsql-proxy.cloudsql.instances[0].project=$PROJECT_ID \
      --set cloudsql-proxy.cloudsql.instances[0].region=$DATABASE_REGION \
      --set cloudsql-proxy.cloudsql.instances[0].port=5432 \
-     --set newRelic.licenseKey=$(get_secret newrelic-license-key) \
      $RELEASE_NAME $K8S_DIR
