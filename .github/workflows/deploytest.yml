@@ -37,7 +37,7 @@ jobs:
         cache: 'pnpm'
     - name: Install dependencies
       run: |
-        pnpm --frozen-lockfile
+        pnpm install --frozen-lockfile
         npm rebuild node-sass
     - name: Build frontend
       run: pnpm run build
