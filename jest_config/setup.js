@@ -7,6 +7,8 @@ import VueRouter from 'vue-router';
 import Vuex from 'vuex';
 import KThemePlugin from 'kolibri-design-system/lib/KThemePlugin';
 import 'shared/i18n/setup';
+// Polyfill structured clone for indexeddb with JSDOM
+import "core-js/stable/structured-clone";
 // Polyfill indexeddb
 import 'fake-indexeddb/auto';
 // Polyfill webstreams

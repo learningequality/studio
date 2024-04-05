@@ -8,7 +8,7 @@ With Studio's services running, you may run tests with the following commands:
 # backend
 make test
 # frontend
-yarn run test
+pnpm run test
 ```
 
 View [more testing tips](./running_tests.md)
@@ -18,13 +18,13 @@ View [more testing tips](./running_tests.md)
 Front-end linting is run using:
 
 ```bash
-yarn run lint-frontend
+pnpm run lint-frontend
 ```
 
 Some linting errors can be fixed automatically by running:
 
 ```bash
-yarn run lint-frontend:format
+pnpm run lint-frontend:format
 ```
 
 Make sure you've set up pre-commit hooks as described above. This will ensure that linting is automatically run on staged changes before every commit.
@@ -35,11 +35,11 @@ If you want to test the performance of your changes, you can start up a local se
 
 ```bash
 # build frontend dependencies
-yarn run build
+pnpm run build
 # run the server (no webpack)
-yarn run runserver
+pnpm run runserver
 # or for profiling production more closely
-yarn run runserver:prod-profiling
+pnpm run runserver:prod-profiling
 ```
 
 Once the local production server is running, you can also use Locust to test your changes under scenarios of high demand like so:
@@ -63,7 +63,7 @@ To activate it an env variable called `PROFILE_STUDIO_FULL` must be set.
 
 Example of use:
 
-`PROFILE_STUDIO_FULL=y yarn runserver`
+`PROFILE_STUDIO_FULL=y pnpm runserver`
 
 Afterwards no further treatment of the generated files is needed. You can open directly the html files in your browser.
 
@@ -75,7 +75,7 @@ If an env variable called `PROFILE_STUDIO_FILTER` is used, the profiler will be 
 
 Example of use:
 
-`PROFILE_STUDIO_FILTER=edit yarn localprodserver`
+`PROFILE_STUDIO_FILTER=edit pnpm localprodserver`
 
 For this case, only html requests having the text _edit_ in their request path will be profiled. The profile folder will not have html files, but binary dump files (with the timestamp as filename) of the profiler information that can be later seen by different profiling tools (`snakeviz` that can be installed using pip is recommended). Also while the server is running,  the ten most time consuming lines of code of the filtered request will be shown in the console where Studio has been launched.
 

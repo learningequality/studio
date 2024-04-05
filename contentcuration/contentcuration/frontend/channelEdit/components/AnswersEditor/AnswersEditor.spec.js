@@ -71,7 +71,11 @@ describe('AnswersEditor', () => {
         propsData: {
           questionKind: AssessmentItemTypes.SINGLE_SELECTION,
           answers: [
-            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+            {
+              answer: 'Mayonnaise (I mean you can, but...)',
+              correct: true,
+              order: 1,
+            },
             { answer: 'Peanut butter', correct: false, order: 2 },
           ],
         },
@@ -107,7 +111,11 @@ describe('AnswersEditor', () => {
         expect(wrapper.emitted().update).toBeTruthy();
         expect(wrapper.emitted().update.length).toBe(1);
         expect(wrapper.emitted().update[0][0]).toEqual([
-          { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+          {
+            answer: 'Mayonnaise (I mean you can, but...)',
+            correct: true,
+            order: 1,
+          },
           { answer: 'Peanut butter', correct: false, order: 2 },
           { answer: '', correct: false, order: 3 },
         ]);
@@ -121,7 +129,11 @@ describe('AnswersEditor', () => {
         propsData: {
           questionKind: AssessmentItemTypes.MULTIPLE_SELECTION,
           answers: [
-            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+            {
+              answer: 'Mayonnaise (I mean you can, but...)',
+              correct: true,
+              order: 1,
+            },
             { answer: 'Peanut butter', correct: false, order: 2 },
             { answer: 'Jelly', correct: true, order: 3 },
           ],
@@ -159,7 +171,11 @@ describe('AnswersEditor', () => {
         expect(wrapper.emitted().update).toBeTruthy();
         expect(wrapper.emitted().update.length).toBe(1);
         expect(wrapper.emitted().update[0][0]).toEqual([
-          { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+          {
+            answer: 'Mayonnaise (I mean you can, but...)',
+            correct: true,
+            order: 1,
+          },
           { answer: 'Peanut butter', correct: false, order: 2 },
           { answer: 'Jelly', correct: true, order: 3 },
           { answer: '', correct: false, order: 4 },
@@ -208,7 +224,11 @@ describe('AnswersEditor', () => {
         propsData: {
           questionKind: AssessmentItemTypes.INPUT_QUESTION,
           answers: [
-            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+            {
+              answer: 'Mayonnaise (I mean you can, but...)',
+              correct: true,
+              order: 1,
+            },
             { answer: 'Peanut butter', correct: true, order: 2 },
           ],
         },
@@ -222,7 +242,11 @@ describe('AnswersEditor', () => {
         propsData: {
           questionKind: AssessmentItemTypes.INPUT_QUESTION,
           answers: [
-            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+            {
+              answer: 'Mayonnaise (I mean you can, but...)',
+              correct: true,
+              order: 1,
+            },
             { answer: 'Peanut butter', correct: true, order: 2 },
           ],
         },
@@ -244,7 +268,11 @@ describe('AnswersEditor', () => {
         expect(wrapper.emitted().update).toBeTruthy();
         expect(wrapper.emitted().update.length).toBe(1);
         expect(wrapper.emitted().update[0][0]).toEqual([
-          { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+          {
+            answer: 'Mayonnaise (I mean you can, but...)',
+            correct: true,
+            order: 1,
+          },
           { answer: 'Peanut butter', correct: true, order: 2 },
           { answer: '', correct: true, order: 3 },
         ]);
@@ -258,7 +286,11 @@ describe('AnswersEditor', () => {
         propsData: {
           questionKind: AssessmentItemTypes.SINGLE_SELECTION,
           answers: [
-            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+            {
+              answer: 'Mayonnaise (I mean you can, but...)',
+              correct: true,
+              order: 1,
+            },
             { answer: 'Peanut butter', correct: false, order: 2 },
           ],
         },
@@ -280,7 +312,11 @@ describe('AnswersEditor', () => {
         propsData: {
           questionKind: AssessmentItemTypes.SINGLE_SELECTION,
           answers: [
-            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+            {
+              answer: 'Mayonnaise (I mean you can, but...)',
+              correct: true,
+              order: 1,
+            },
             { answer: '  ', correct: true, order: 2 },
             { answer: 'Peanut butter', correct: false, order: 3 },
           ],
@@ -294,7 +330,11 @@ describe('AnswersEditor', () => {
       expect(wrapper.emitted().update).toBeTruthy();
       expect(wrapper.emitted().update.length).toBe(1);
       expect(wrapper.emitted().update[0][0]).toEqual([
-        { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+        {
+          answer: 'Mayonnaise (I mean you can, but...)',
+          correct: true,
+          order: 1,
+        },
         { answer: '  ', correct: true, order: 2 },
         { answer: 'Peanut butter', correct: false, order: 3 },
         { answer: '', correct: false, order: 4 },
@@ -314,7 +354,11 @@ describe('AnswersEditor', () => {
         propsData: {
           questionKind: AssessmentItemTypes.SINGLE_SELECTION,
           answers: [
-            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+            {
+              answer: 'Mayonnaise (I mean you can, but...)',
+              correct: true,
+              order: 1,
+            },
             { answer: 'Peanut butter', correct: false, order: 2 },
           ],
           openAnswerIdx: 1,
@@ -329,7 +373,11 @@ describe('AnswersEditor', () => {
       expect(wrapper.emitted().update).toBeTruthy();
       expect(wrapper.emitted().update.length).toBe(1);
       expect(wrapper.emitted().update[0][0]).toEqual([
-        { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+        {
+          answer: 'Mayonnaise (I mean you can, but...)',
+          correct: true,
+          order: 1,
+        },
         { answer: 'European butter', correct: false, order: 2 },
       ]);
     });
@@ -341,7 +389,11 @@ describe('AnswersEditor', () => {
         propsData: {
           questionKind: AssessmentItemTypes.SINGLE_SELECTION,
           answers: [
-            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+            {
+              answer: 'Mayonnaise (I mean you can, but...)',
+              correct: true,
+              order: 1,
+            },
             { answer: 'Peanut butter', correct: false, order: 2 },
           ],
           openAnswerIdx: 1,
@@ -358,7 +410,11 @@ describe('AnswersEditor', () => {
       expect(wrapper.emitted().update).toBeTruthy();
       expect(wrapper.emitted().update.length).toBe(1);
       expect(wrapper.emitted().update[0][0]).toEqual([
-        { answer: 'Mayonnaise (I mean you can, but...)', correct: false, order: 1 },
+        {
+          answer: 'Mayonnaise (I mean you can, but...)',
+          correct: false,
+          order: 1,
+        },
         { answer: 'Peanut butter', correct: true, order: 2 },
       ]);
     });
@@ -370,7 +426,11 @@ describe('AnswersEditor', () => {
         propsData: {
           questionKind: AssessmentItemTypes.SINGLE_SELECTION,
           answers: [
-            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+            {
+              answer: 'Mayonnaise (I mean you can, but...)',
+              correct: true,
+              order: 1,
+            },
             { answer: 'Peanut butter', correct: false, order: 2 },
           ],
         },
@@ -384,7 +444,11 @@ describe('AnswersEditor', () => {
       expect(wrapper.emitted().update.length).toBe(1);
       expect(wrapper.emitted().update[0][0]).toEqual([
         { answer: 'Peanut butter', correct: false, order: 1 },
-        { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 2 },
+        {
+          answer: 'Mayonnaise (I mean you can, but...)',
+          correct: true,
+          order: 2,
+        },
       ]);
     });
 
@@ -427,7 +491,11 @@ describe('AnswersEditor', () => {
         propsData: {
           questionKind: AssessmentItemTypes.SINGLE_SELECTION,
           answers: [
-            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+            {
+              answer: 'Mayonnaise (I mean you can, but...)',
+              correct: true,
+              order: 1,
+            },
             { answer: 'Peanut butter', correct: false, order: 2 },
           ],
         },
@@ -441,7 +509,11 @@ describe('AnswersEditor', () => {
       expect(wrapper.emitted().update.length).toBe(1);
       expect(wrapper.emitted().update[0][0]).toEqual([
         { answer: 'Peanut butter', correct: false, order: 1 },
-        { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 2 },
+        {
+          answer: 'Mayonnaise (I mean you can, but...)',
+          correct: true,
+          order: 2,
+        },
       ]);
     });
 
@@ -484,7 +556,11 @@ describe('AnswersEditor', () => {
         propsData: {
           questionKind: AssessmentItemTypes.SINGLE_SELECTION,
           answers: [
-            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+            {
+              answer: 'Mayonnaise (I mean you can, but...)',
+              correct: true,
+              order: 1,
+            },
             { answer: 'Peanut butter', correct: false, order: 2 },
           ],
         },

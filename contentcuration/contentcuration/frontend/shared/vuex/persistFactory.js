@@ -82,7 +82,10 @@ class PersistStorage {
 function prepareMutations(ns, mutations, prefixMutations) {
   const prefix = prefixMutations ? `${ns}/` : '';
   return mutations.reduce(
-    (mutationMap, mutation) => ({ ...mutationMap, [prefix + mutation]: mutation }),
+    (mutationMap, mutation) => ({
+      ...mutationMap,
+      [prefix + mutation]: mutation,
+    }),
     {}
   );
 }

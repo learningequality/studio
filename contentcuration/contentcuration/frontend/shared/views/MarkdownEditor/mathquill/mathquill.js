@@ -1031,7 +1031,10 @@ JS environment could actually contain many instances. */
 
     function config(currentOptions, newOptions) {
       if (newOptions && newOptions.handlers) {
-        newOptions.handlers = { fns: newOptions.handlers, APIClasses: APIClasses };
+        newOptions.handlers = {
+          fns: newOptions.handlers,
+          APIClasses: APIClasses,
+        };
       }
       for (var name in newOptions)
         if (Object.prototype.hasOwnProperty.call(newOptions, name)) {

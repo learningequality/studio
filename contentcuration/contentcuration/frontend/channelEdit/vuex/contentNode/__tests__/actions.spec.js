@@ -35,7 +35,11 @@ describe('contentNode actions', () => {
       jest
         .spyOn(ContentNode, 'fetchModel')
         .mockImplementation(() => Promise.resolve(contentNodeDatum));
-      return ContentNode._add({ title: 'notatest', parent: newId, lft: 2 }).then(() => {
+      return ContentNode._add({
+        title: 'notatest',
+        parent: newId,
+        lft: 2,
+      }).then(() => {
         store = storeFactory({
           modules: {
             assessmentItem,
@@ -103,7 +107,10 @@ describe('contentNode actions', () => {
   describe('createContentNode action for a new contentNode', () => {
     it('should add a new contentNode with an id', () => {
       return store
-        .dispatch('contentNode/createContentNode', { parent: id, kind: 'topic' })
+        .dispatch('contentNode/createContentNode', {
+          parent: id,
+          kind: 'topic',
+        })
         .then(newId => {
           expect(store.getters['contentNode/getContentNode'](newId)).not.toBeUndefined();
         });

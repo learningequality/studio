@@ -143,7 +143,10 @@ describe('channelSharing', () => {
     });
   });
   it('should call sendInvitation with correct share permission', () => {
-    wrapper.setData({ email: 'test@test.com', shareMode: SharingPermissions.VIEW_ONLY });
+    wrapper.setData({
+      email: 'test@test.com',
+      shareMode: SharingPermissions.VIEW_ONLY,
+    });
     wrapper.vm.submitEmail();
     expect(sendInvitation).toHaveBeenCalledWith({
       email: 'test@test.com',

@@ -34,7 +34,9 @@ export function ADD_FILES(state, files = []) {
 
 export function UPDATE_FILE_FROM_INDEXEDDB(state, { id, ...mods }) {
   if (id && state.fileUploadsMap[id]) {
-    Vue.set(state.fileUploadsMap, id, { ...applyMods(state.fileUploadsMap[id], mods) });
+    Vue.set(state.fileUploadsMap, id, {
+      ...applyMods(state.fileUploadsMap[id], mods),
+    });
     updateFileMaps(state, state.fileUploadsMap[id]);
   }
 }

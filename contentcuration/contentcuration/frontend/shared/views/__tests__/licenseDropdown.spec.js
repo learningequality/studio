@@ -49,14 +49,20 @@ describe('licenseDropdown', () => {
     );
     it('should display licenseDescription prop', () => {
       wrapper.setProps({
-        value: { license: specialPermissions.id, license_description: 'test description' },
+        value: {
+          license: specialPermissions.id,
+          license_description: 'test description',
+        },
       });
       expect(wrapper.vm.$refs.description.value).toContain('test description');
     });
   });
   describe('props', () => {
     it('setting readonly should prevent any edits', () => {
-      wrapper.setProps({ readonly: true, value: { license: specialPermissions.id } });
+      wrapper.setProps({
+        readonly: true,
+        value: { license: specialPermissions.id },
+      });
       expect(wrapper.find('input[readonly]').exists()).toBe(true);
       expect(wrapper.find('textarea[readonly]').exists()).toBe(true);
     });
@@ -69,7 +75,10 @@ describe('licenseDropdown', () => {
       expect(wrapper.find('textarea:required').exists()).toBe(true);
     });
     it('setting disabled should make fields disabled', () => {
-      wrapper.setProps({ disabled: true, value: { license: specialPermissions.id } });
+      wrapper.setProps({
+        disabled: true,
+        value: { license: specialPermissions.id },
+      });
       expect(wrapper.find('input:disabled').exists()).toBe(true);
       expect(wrapper.find('textarea:disabled').exists()).toBe(true);
     });
@@ -134,7 +143,9 @@ describe('licenseDropdown', () => {
           .find('.error--text')
           .exists()
       ).toBe(true);
-      wrapper.setProps({ value: { license: specialPermissions.id, license_description: 'test' } });
+      wrapper.setProps({
+        value: { license: specialPermissions.id, license_description: 'test' },
+      });
       formWrapper.vm.validate();
       expect(
         wrapper

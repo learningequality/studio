@@ -1,4 +1,4 @@
-import * as Sentry from '@sentry/vue';
+import { captureException } from '@sentry/vue';
 import mapValues from 'lodash/mapValues';
 import { CHANGES_TABLE, TABLE_NAMES } from './constants';
 import db from './db';
@@ -53,6 +53,6 @@ export async function initializeDB() {
     }
     syncOnChanges();
   } catch (e) {
-    Sentry.captureException(e);
+    captureException(e);
   }
 }
