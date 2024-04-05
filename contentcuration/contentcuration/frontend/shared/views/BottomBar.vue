@@ -1,6 +1,6 @@
 <template>
 
-  <div class="bottom-bar pa-2">
+  <div class="bottom-bar pa-2" :style="appearanceOverrides">
     <slot></slot>
   </div>
 
@@ -10,10 +10,9 @@
   export default {
     name: 'BottomBar',
     props: {
-      // eslint-disable-next-line kolibri/vue-no-unused-properties
       appearanceOverrides: {
         type: Object,
-        default: () => ({ height: '64px' }),
+        default: () => {},
       },
     },
   };
@@ -28,7 +27,7 @@
     z-index: 3;
     display: flex;
     width: 100%;
-    height: v-bind('appearanceOverrides.height');
+    height: 64px;
     background-color: #ffffff;
     border-top: 1px solid #dddddd;
   }
