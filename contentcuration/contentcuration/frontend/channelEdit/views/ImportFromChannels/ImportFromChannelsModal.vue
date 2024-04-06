@@ -3,9 +3,7 @@
   <FullscreenModal v-model="dialog" :header="headerText">
     <template v-if="isReview" #close>
       <VBtn icon @click.stop="goBackToBrowse">
-        <Icon class="rtl-flip">
-          arrow_back
-        </Icon>
+        <Icon class="rtl-flip" icon="back" color="white" />
       </VBtn>
     </template>
     <!-- Hack to make sure preview overlay appears inside import modal -->
