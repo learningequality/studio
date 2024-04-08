@@ -3,7 +3,7 @@
   <div :style="{ display: 'inline' }">
     <Icon
       icon="help"
-      :color="$theme.primary"
+      :color="$themeTokens.primary"
       data-test="info-icon"
       @click="displayDialog = !displayDialog"
     />
