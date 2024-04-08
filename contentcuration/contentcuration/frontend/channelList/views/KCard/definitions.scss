@@ -49,6 +49,7 @@ $core-time: 0.25s;
   .partial-fonts-loaded & {
     font-family: 'noto-subset', 'noto-common', sans-serif;
   }
+
   .full-fonts-loaded & {
     // Continue to include the common and subset font subsets since they may contain
     // glyphs not available in the language's default font.
