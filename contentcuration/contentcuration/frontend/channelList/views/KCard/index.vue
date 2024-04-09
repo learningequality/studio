@@ -15,7 +15,7 @@
         :isDecorative="false"
         altText="thumbnail image"
         :appearanceOverrides="{
-          objectFit: thumbnailScaleType,
+          scaleType: thumbnailScaleType,
           backgroundColor: $themeTokens.fineLine
         }"
         :style="KImgVerticalSmallStyle"
@@ -32,72 +32,62 @@
           :isDecorative="false"
           altText="thumbnail image"
           :appearanceOverrides="{
-            objectFit: thumbnailScaleType,
+            scaleType: thumbnailScaleType,
             backgroundColor: $themeTokens.fineLine
           }"
         />
         <slot v-if="!thumbnailSrc" name="thumbnailPlaceholder"></slot>
 
         <div>
-          <KRouterLink
-            :to="to"
-            :appearanceOverrides="{
-              'text-decoration': 'none',
-              'cursor': 'pointer',
-            }"
-            tabindex="-1"
+          <div
+            v-if="thumbnailDisplay === 'none'"
+            class="spacing"
           >
-            <div
-              v-if="thumbnailDisplay === 'none'"
-              class="spacing"
+            <slot name="aboveTitle"></slot>
+            <slot name="title"></slot>
+            <slot name="belowTitle"></slot>
+          </div>
+          <KGrid
+            v-else
+          >
+            <KGridItem
+              :layout12="{ span: isVerticalLayout ? 12 : 6 }"
+              :layout8="{ span: isVerticalLayout ? 8 : 4 }"
+              :layout4="{ span: 4 }"
             >
-              <slot name="aboveTitle"></slot>
-              <slot name="title"></slot>
-              <slot name="belowTitle"></slot>
-            </div>
-            <KGrid
-              v-else
+              <div
+                class="spacing"
+                :style="textColor"
+              >
+                <slot name="aboveTitle"></slot>
+                <slot name="title"></slot>
+                <slot name="belowTitle"></slot>
+              </div>
+            </KGridItem>
+
+            <KGridItem
+              v-if="layout === 'horizontal'"
+              :layout12="{ span: 6 }"
+              :layout8="{ span: 4 }"
+              :layout4="{ span: 4 }"
             >
-              <KGridItem
-                :layout12="{ span: isVerticalLayout ? 12 : 6 }"
-                :layout8="{ span: isVerticalLayout ? 8 : 4 }"
-                :layout4="{ span: 4 }"
-              >
-                <div
-                  class="spacing"
-                  :style="textColor"
-                >
-                  <slot name="aboveTitle"></slot>
-                  <slot name="title"></slot>
-                  <slot name="belowTitle"></slot>
-                </div>
-              </KGridItem>
+              <KImg
+                v-if="thumbnailDisplay === 'small'"
+                :src="thumbnailSrc"
+                :height="300"
+                :width="300"
+                :isDecorative="false"
+                altText="thumbnail image"
+                :appearanceOverrides="{
+                  scaleType: thumbnailScaleType,
+                  backgroundColor: $themeTokens.fineLine
+                }"
+                style="border-radius:20px;"
+              />
+              <slot v-if="!thumbnailSrc" name="thumbnailPlaceholder"></slot>
 
-              <KGridItem
-                v-if="layout === 'horizontal'"
-                :layout12="{ span: 6 }"
-                :layout8="{ span: 4 }"
-                :layout4="{ span: 4 }"
-              >
-                <KImg
-                  v-if="thumbnailDisplay === 'small'"
-                  :src="thumbnailSrc"
-                  :height="300"
-                  :width="300"
-                  :isDecorative="false"
-                  altText="thumbnail image"
-                  :appearanceOverrides="{
-                    objectFit: thumbnailScaleType,
-                    backgroundColor: $themeTokens.fineLine
-                  }"
-                  style="border-radius:20px;"
-                />
-                <slot v-if="!thumbnailSrc" name="thumbnailPlaceholder"></slot>
-
-              </KGridItem>
-            </KGrid>
-          </KRouterLink>
-
+            </KGridItem>
+          </KGrid>
 
           <div class="spacing">
             <slot name="footer"></slot>
