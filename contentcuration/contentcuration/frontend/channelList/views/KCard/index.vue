@@ -12,8 +12,7 @@
         :src="thumbnailSrc"
         :height="300"
         :width="500"
-        :isDecorative="false"
-        altText="thumbnail image"
+        :isDecorative="true"
         :appearanceOverrides="{
           scaleType: thumbnailScaleType,
           backgroundColor: $themeTokens.fineLine
@@ -29,8 +28,7 @@
           :src="thumbnailSrc"
           :height="300"
           :width="600"
-          :isDecorative="false"
-          altText="thumbnail image"
+          :isDecorative="true"
           :appearanceOverrides="{
             scaleType: thumbnailScaleType,
             backgroundColor: $themeTokens.fineLine
@@ -76,8 +74,7 @@
                 :src="thumbnailSrc"
                 :height="300"
                 :width="300"
-                :isDecorative="false"
-                altText="thumbnail image"
+                :isDecorative="true"
                 :appearanceOverrides="{
                   scaleType: thumbnailScaleType,
                   backgroundColor: $themeTokens.fineLine
