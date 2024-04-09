@@ -57,7 +57,6 @@
             </div>
             <KGrid
               v-else
-              tabindex="-1"
             >
               <KGridItem
                 :layout12="{ span: isVerticalLayout ? 12 : 6 }"
