@@ -15,7 +15,6 @@
         :isDecorative="true"
         :appearanceOverrides="{
           scaleType: thumbnailScaleType,
-          backgroundColor: $themeTokens.fineLine
         }"
         :style="KImgVerticalSmallStyle"
       />
@@ -31,7 +30,6 @@
           :isDecorative="true"
           :appearanceOverrides="{
             scaleType: thumbnailScaleType,
-            backgroundColor: $themeTokens.fineLine
           }"
         />
         <slot v-if="!thumbnailSrc" name="thumbnailPlaceholder"></slot>
@@ -77,7 +75,6 @@
                 :isDecorative="true"
                 :appearanceOverrides="{
                   scaleType: thumbnailScaleType,
-                  backgroundColor: $themeTokens.fineLine
                 }"
                 style="border-radius:20px;"
               />

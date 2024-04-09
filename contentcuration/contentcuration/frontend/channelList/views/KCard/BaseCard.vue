@@ -12,7 +12,6 @@
     >
       <KRouterLink
         :to="to"
-        class="spacing"
       >
         <KTextTruncator
           v-if="title !== null"
