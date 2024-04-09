@@ -4,6 +4,7 @@
     :title="title"
     :headingLevel="headingLevel"
     :titleLines="titleLines"
+    :to="to"
   >
     <div>
       <KImg
@@ -63,7 +64,10 @@
                 :layout8="{ span: isVerticalLayout ? 8 : 4 }"
                 :layout4="{ span: 4 }"
               >
-                <div class="spacing">
+                <div
+                  class="spacing"
+                  :style="textColor"
+                >
                   <slot name="aboveTitle"></slot>
                   <slot name="title"></slot>
                   <slot name="belowTitle"></slot>
@@ -140,13 +144,6 @@
       to: {
         type: Object,
         required: true,
-        validator(value) {
-          if (!value) {
-            console.error('Error: Prop  to is required.');
-            return false;
-          }
-          return true;
-        },
       },
       layout: {
         type: String,
@@ -193,6 +190,11 @@
           (this.layout === 'horizontal' && this.thumbnailDisplay === 'large')
         );
       },
+      textColor() {
+        return {
+          color: this.$themeTokens.text,
+        };
+      },
     },
   };
 
@@ -203,7 +205,6 @@
 
   .spacing{
     padding: 1em;
-    color:black
   }
   .footer{
     margin-top: auto;

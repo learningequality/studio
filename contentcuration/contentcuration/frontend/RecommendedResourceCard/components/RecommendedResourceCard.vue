@@ -30,8 +30,8 @@
     </template>
     <template #footer>
       <div class="align-right-style">
-        <KIconButton icon="openNewTab" @click.stop="handleClick('open new tab')" />
-        <KIconButton icon="thumbDown" @click.stop="handleClick('thumb up')" />
+        <KIcon icon="openNewTab" />
+        <KIcon icon="thumbDown" />
       </div>
     </template>
   </KCard>
@@ -51,11 +51,6 @@
         return {
           path: '/starred',
         };
-      },
-    },
-    methods: {
-      handleClick(icon) {
-        console.log(icon + ' clicked');
       },
     },
   };

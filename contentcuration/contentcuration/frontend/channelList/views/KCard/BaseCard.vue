@@ -10,12 +10,17 @@
     <component
       :is="headerLevel"
     >
-      <KTextTruncator
-        v-if="title !== null"
-        :text="title"
-        :maxLines="titleLines"
+      <KRouterLink
+        :to="to"
         class="spacing"
-      />
+      >
+        <KTextTruncator
+          v-if="title !== null"
+          :text="title"
+          :maxLines="titleLines"
+          class="spacing"
+        />
+      </KRouterLink>
     </component>
     <slot name="default"></slot>
   </li>
@@ -39,8 +44,12 @@
       },
       titleLines: {
         type: Number,
-        required: true,
+        required: false,
         default: 2,
+      },
+      to: {
+        type: Object,
+        required: true,
       },
     },
     computed: {
