@@ -6,6 +6,7 @@
     data-focus="true"
     @focus="cardFocus"
     @hover="cardHover"
+    @click="cardClick()"
   >
     <component
       :is="headerLevel"
@@ -76,6 +77,9 @@
       },
       cardHover(e) {
         this.$emit('hover', e);
+      },
+      cardClick() {
+        this.$router.push(this.to);
       },
     },
   };
