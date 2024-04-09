@@ -2,6 +2,7 @@ import { createTranslator } from 'shared/i18n';
 
 const MESSAGES = {
   fieldRequired: 'This field is required',
+  fieldHasError: 'This field has an error',
   titleRequired: 'Title is required',
   licenseRequired: 'License is required',
   copyrightHolderRequired: 'Copyright holder is required',
