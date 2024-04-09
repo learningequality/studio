@@ -41,6 +41,13 @@
       headingLevel: {
         type: Number,
         required: true,
+        validator(value) {
+          if (!value) {
+            console.error('Error: Prop headingLevel is required and can not be empty.');
+            return false;
+          }
+          return true;
+        },
       },
       titleLines: {
         type: Number,
