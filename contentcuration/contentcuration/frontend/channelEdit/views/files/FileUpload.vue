@@ -23,9 +23,9 @@
             <VLayout align-center justify-center fill-height>
               <VTooltip bottom lazy>
                 <template #activator="{ on }">
-                  <Icon color="red" v-on="on">
+                  <VIconWrapper color="red" v-on="on">
                     error
-                  </Icon>
+                  </VIconWrapper>
                 </template>
                 <span>{{ $tr('noFileText') }}</span>
               </VTooltip>

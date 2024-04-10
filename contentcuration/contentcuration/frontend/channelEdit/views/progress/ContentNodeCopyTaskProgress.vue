@@ -13,18 +13,18 @@
       lazy
     >
       <template #activator="{ on }">
-        <Icon color="red" v-on="on">
+        <VIconWrapper color="red" v-on="on">
           error
-        </Icon>
+        </VIconWrapper>
       </template>
       <span>{{ $tr('copyErrorTopic') }}</span>
     </VTooltip>
-    <Icon
+    <VIconWrapper
       v-else-if="hasCopyingErrored && !showTooltip"
       color="red"
     >
       error
-    </Icon>
+    </VIconWrapper>
   </div>
 
 </template>

@@ -34,19 +34,19 @@
         </div>
         <VTooltip v-else-if="erroredFiles.length" top lazy>
           <template #activator="{ on }">
-            <Icon color="red" v-on="on">
+            <VIconWrapper color="red" v-on="on">
               error
-            </Icon>
+            </VIconWrapper>
           </template>
           <span>{{ errorMessage(erroredFiles[0].checksum) }}</span>
         </VTooltip>
-        <Icon
+        <VIconWrapper
           v-else-if="showUploadProgress && progress >= 1"
           color="secondary"
           data-test="done"
         >
           check_circle
-        </Icon>
+        </VIconWrapper>
         <VProgressCircular
           v-else-if="showUploadProgress"
           :size="20"

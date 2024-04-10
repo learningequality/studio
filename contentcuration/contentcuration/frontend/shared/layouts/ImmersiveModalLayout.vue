@@ -3,14 +3,14 @@
   <VApp>
     <VToolbar app dark color="primary">
       <VBtn v-if="backButton" flat :to="previousPage" exact>
-        <Icon class="rtl-flip">
+        <VIconWrapper class="rtl-flip">
           arrow_back
-        </Icon>
+        </VIconWrapper>
         <span class="back-text">{{ appBarText }}</span>
       </VBtn>
       <template v-else>
         <VBtn icon dark :to="previousPage" exact>
-          <Icon>close</Icon>
+          <VIconWrapper>close</VIconWrapper>
         </VBtn>
         <VToolbarTitle>
           {{ appBarText }}
