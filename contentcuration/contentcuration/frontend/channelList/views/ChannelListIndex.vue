@@ -17,10 +17,10 @@
         style="border-radius: 8px;"
       >
         <KLogo
-          altText="Kolibri Logo with rectangular background"
-          backgroundStyle="rect"
+          altText="Kolibri Logo with background"
           :showBackground="true"
-          :size="40"
+          colorScheme="monoSecondary"
+          :size="36"
         />
       </VToolbarSideIcon>
 

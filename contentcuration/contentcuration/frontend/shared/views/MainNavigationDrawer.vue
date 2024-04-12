@@ -78,7 +78,8 @@
       <VContainer>
         <KLogo
           altText="Kolibri logo"
-          :size="150"
+          :showBackground="true"
+          :size="88"
         />
         <ActionLink
           :text="$tr('copyright', { year: new Date().getFullYear() })"

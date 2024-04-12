@@ -16,7 +16,7 @@
             <KLogo
               altText="Kolibri Logo with background"
               :showBackground="true"
-              :size="150"
+              :size="120"
             />
           </div>
           <h2 class="primary--text py-2 text-xs-center">
