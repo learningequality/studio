@@ -19,7 +19,6 @@
         <KLogo
           altText="Kolibri Logo with background"
           :showBackground="true"
-          colorScheme="monoSecondary"
           :size="36"
         />
       </VToolbarSideIcon>
