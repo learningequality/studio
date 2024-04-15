@@ -6,10 +6,8 @@ import pytest
 from django.conf import settings
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
-from django.core.management import call_command
 from django.db.models import Q
 from django.db.utils import IntegrityError
-from django.test import TestCase
 from django.utils import timezone
 from le_utils.constants import content_kinds
 from le_utils.constants import format_presets
@@ -989,14 +987,14 @@ class ChannelHistoryTestCase(StudioTestCase):
         self.assertEqual(2, ChannelHistory.objects.filter(id__in=last_history_ids).count())
 
 
-class FeedbackModelTests(TestCase):
+class FeedbackModelTests(StudioTestCase):
 
     @classmethod
     def setUpClass(cls):
-        super(TestCase, cls).setUpClass()
-        call_command("loadconstants")
+        super(FeedbackModelTests, cls).setUpClass()
 
     def setUp(self):
+        super(FeedbackModelTests, self).setUp()
         self.user = testdata.user()
 
     def _create_base_feedback_data(self, context, contentnode_id, content_id):
