@@ -54,7 +54,7 @@
                   <MarkdownViewer :markdown="question" />
 
                   <Icon
-                    color="grey darken-1"
+                    :color="$themePalette.grey.v_800"
                     icon="edit"
                     class="mr-2"
                   />

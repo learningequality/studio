@@ -42,7 +42,7 @@
           >
             <Icon
               icon="optionsVertical"
-              color="grey darken-1"
+              :color="$themePalette.grey.v_800"
             />
 
           </VBtn>
@@ -265,27 +265,27 @@
         switch (action) {
           case AssessmentItemToolbarActions.EDIT_ITEM:
             if (this.canEdit) {
-              return 'grey darken-1';
+              return this.$themePalette.grey.v_800;
             } else {
-              return 'grey lighten-2';
+              return this.$themeTokens.textDisabled;
             }
 
           case AssessmentItemToolbarActions.MOVE_ITEM_UP:
             if (this.canMoveUp) {
-              return 'grey darken-1';
+              return this.$themePalette.grey.v_800;
             } else {
-              return 'grey lighten-2';
+              return this.$themeTokens.textDisabled;
             }
 
           case AssessmentItemToolbarActions.MOVE_ITEM_DOWN:
             if (this.canMoveDown) {
-              return 'grey darken-1';
+              return this.$themePalette.grey.v_800;
             } else {
-              return 'grey lighten-2';
+              return this.$themeTokens.textDisabled;
             }
 
           default:
-            return 'grey darken-1';
+            return this.$themePalette.grey.v_800;
         }
       },
       clickItem(action) {

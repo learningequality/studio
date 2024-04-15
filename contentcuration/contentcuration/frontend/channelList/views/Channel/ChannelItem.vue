@@ -67,7 +67,6 @@
             reference="lastUpdatedTime"
             placement="bottom"
             :refs="$refs"
-            v-bind="$attrs"
           >
             {{ $tr(
               'lastUpdated',

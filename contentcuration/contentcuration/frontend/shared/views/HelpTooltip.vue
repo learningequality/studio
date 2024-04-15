@@ -12,7 +12,6 @@
       reference="tooltip"
       placement="bottom"
       :refs="$refs"
-      v-bind="$attrs"
     >
       {{ text }}
     </KTooltip>

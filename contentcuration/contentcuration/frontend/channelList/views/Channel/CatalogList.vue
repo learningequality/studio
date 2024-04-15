@@ -78,7 +78,7 @@
                     <Icon
                       class="ml-1"
                       icon="dropup"
-                      color="white"
+                      :color="$themeTokens.textInverted"
                     />
 
                   </VBtn>

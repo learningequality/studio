@@ -30,7 +30,7 @@
               app
             >
               <VBtn data-test="close" icon dark @click="handleClose()">
-                <Icon icon="clear" color="white" />
+                <Icon icon="clear" :color="$themeTokens.textInverted" />
               </VBtn>
               <VToolbarTitle>{{ modalTitle }}</VToolbarTitle>
               <VSpacer />
@@ -59,7 +59,7 @@
                   v-if="addTopicsMode || uploadMode"
                   :flat="!listElevated"
                   class="add-wrapper"
-                  color="white"
+                  :color="$themeTokens.textInverted"
                 >
                   <VBtn v-if="addTopicsMode" color="greyBackground" @click="createTopic">
                     {{ $tr('addTopic') }}

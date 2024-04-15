@@ -11,7 +11,6 @@
       reference="contentNode"
       placement="bottom"
       :refs="$refs"
-      v-bind="$attrs"
     >
       {{ message }}
 

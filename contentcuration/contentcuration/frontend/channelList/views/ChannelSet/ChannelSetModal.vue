@@ -12,7 +12,7 @@
       <VBtn icon class="rtl-flip" @click="step--">
         <Icon
           icon="back"
-          color="white"
+          :color="$themeTokens.textInverted"
         />
       </VBtn>
     </template>

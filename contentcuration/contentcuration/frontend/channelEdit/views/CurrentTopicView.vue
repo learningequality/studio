@@ -126,7 +126,7 @@
           <template #activator="{ on }">
             <VBtn color="primary" class="ml-2" style="height: 32px;" v-on="on">
               {{ $tr('addButton') }}
-              <Icon icon="dropdown" color="white" />
+              <Icon icon="dropdown" :color="$themeTokens.textInverted" />
             </VBtn>
           </template>
           <VList>

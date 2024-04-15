@@ -58,18 +58,17 @@
                   mr-2
                 >
                   <template v-if="$vuetify.breakpoint.lgAndUp">
-                    <Icon class="red--text" icon="error" />
+                    <Icon icon="error" />
                     <span class="font-weight-bold red--text">
                       {{ $tr('incompleteItemIndicatorLabel') }}
                     </span>
                   </template>
                   <template v-else>
-                    <Icon ref="incompleteError" class="red--text" icon="error" />
+                    <Icon ref="incompleteError" icon="error" />
                     <KTooltip
                       reference="incompleteError"
                       placement="bottom"
                       :refs="$refs"
-                      v-bind="$attrs"
                     >
                       {{ $tr('incompleteItemIndicatorLabel') }}
 
