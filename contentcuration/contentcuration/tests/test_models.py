@@ -990,8 +990,13 @@ class ChannelHistoryTestCase(StudioTestCase):
 
 
 class FeedbackModelTests(TestCase):
-    def setUp(self):
+
+    @classmethod
+    def setUpClass(cls):
+        super(TestCase, cls).setUpClass()
         call_command("loadconstants")
+
+    def setUp(self):
         self.user = testdata.user()
 
     def _create_base_feedback_data(self, context, contentnode_id, content_id):

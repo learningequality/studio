@@ -2647,7 +2647,6 @@ class FlagFeedbackEvent(BaseFeedback, BaseFeedbackEvent, BaseFeedbackInteraction
 
 class RecommendationsInteractionEvent(BaseFeedback, BaseFeedbackInteractionEvent):
     recommendation_event_id = models.UUIDField()
-    pass
 
 
 class RecommendationsEvent(BaseFeedback, BaseFeedbackEvent):
@@ -2655,4 +2654,3 @@ class RecommendationsEvent(BaseFeedback, BaseFeedbackEvent):
     time_hidden = models.DateTimeField()
     # A list of JSON blobs, representing the content items in the list of recommendations.
     content = models.JSONField(default=list)
-    pass
