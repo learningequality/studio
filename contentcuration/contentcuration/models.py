@@ -2635,7 +2635,7 @@ class BaseFeedbackEvent(models.Model):
 
 class BaseFeedbackInteractionEvent(models.Model):
     feedback_type = models.CharField(max_length=50, choices=feedback.FEEDBACK_TYPE_CHOICES)
-    feedback_reason = models.TextField()
+    feedback_reason = models.TextField(max_length=1500)
 
     class Meta:
         abstract = True
