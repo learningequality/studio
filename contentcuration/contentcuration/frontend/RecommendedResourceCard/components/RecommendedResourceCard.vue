@@ -30,8 +30,8 @@
     </template>
     <template #footer>
       <div class="align-right-style">
-        <KIcon icon="openNewTab" class="card-icon-size" />
-        <KIcon icon="thumbDown" class="card-icon-size" />
+        <KIconButton icon="openNewTab" class="card-icon-size" />
+        <KIconButton icon="thumbDown" class="card-icon-size" />
       </div>
     </template>
   </KCard>
