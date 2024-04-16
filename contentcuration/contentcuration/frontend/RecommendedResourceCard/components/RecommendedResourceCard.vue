@@ -12,7 +12,7 @@
   >
     <template #aboveTitle>
       <div>
-        <KIconButton
+        <KIcon
           icon="practiceSolid"
         />
         <span>Practice</span>
