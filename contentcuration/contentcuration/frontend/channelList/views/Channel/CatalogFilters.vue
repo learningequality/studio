@@ -79,9 +79,11 @@
           v-model="coach"
           color="primary"
         >
-          {{ $tr('coachLabel') }}
+          <template>
+            {{ $tr('coachLabel') }}
 
-          <HelpTooltip :text="$tr('coachDescription')" bottom class="px-2" />
+            <HelpTooltip :text="$tr('coachDescription')" bottom class="px-2" />
+          </template>
         </Checkbox>
         <Checkbox v-model="subtitles" color="primary" :label="$tr('subtitlesLabel')" />
         <ActionLink
