@@ -68,7 +68,7 @@
         >
           <template #activator="{ on }">
             <div
-              class="black--text title"
+              class="amber--text title"
               style="width: max-content;"
               v-on="on"
             >
