@@ -132,14 +132,20 @@
         </VSlideYTransition>
 
         <!-- Agreements -->
-        <VCheckbox
+        <Checkbox
           v-model="acceptedAgreement"
           :label="$tr('agreement')"
-          required
-          :rules="tosAndPolicyRules"
-          :hide-details="false"
           class="my-1 policy-checkbox"
         />
+        <!-- Error message for Agreements -->
+        <VSlideYTransition>
+          <div v-if="!acceptedAgreement" class="error--text policy-error theme--light v-messages">
+            <div class="v-messages__message">
+              {{ $tr("ToSRequiredMessage") }}
+            </div>
+          </div>
+        </VSlideYTransition>
+
         <div class="span-spacing">
           <span>
             <ActionLink
@@ -240,9 +246,6 @@
       ...mapGetters('policies', ['getPolicyAcceptedData']),
       passwordConfirmRules() {
         return [value => (this.form.password1 === value ? true : this.$tr('passwordMatchMessage'))];
-      },
-      tosAndPolicyRules() {
-        return [value => (value ? true : this.$tr('ToSRequiredMessage'))];
       },
       acceptedAgreement: {
         get() {
@@ -424,7 +427,9 @@
         return id === uses.OTHER && this.form.uses.includes(id);
       },
       submit() {
-        if (this.$refs.form.validate()) {
+        // We need to check the "acceptedAgreement" here explicitly because it is not a
+        // Vuetify form field and does not trigger the form validation.
+        if (this.$refs.form.validate() && this.acceptedAgreement) {
           const cleanedData = this.clean(this.form);
           return this.register(cleanedData)
             .then(() => {
@@ -528,8 +533,9 @@
     }
   }
 
-  .policy-checkbox /deep/ .v-messages {
+  .policy-error {
     min-height: 0;
+    margin-bottom: 4px;
     margin-left: 40px;
   }
 
