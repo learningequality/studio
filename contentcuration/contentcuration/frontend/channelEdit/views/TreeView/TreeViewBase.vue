@@ -73,7 +73,7 @@
               v-on="on"
             >
               {{ $formatNumber(errorsInChannel) }}
-              <Icon color="black">
+              <Icon :color="$themePalette.yellow.v_1100">
                 warning
               </Icon>
             </div>
