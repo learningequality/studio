@@ -7,7 +7,7 @@
     style="max-height: 100%; width: 100%;"
   >
     <template #divider>
-      <Icon class="rtl-flip" icon="chevronRight" style="font-size: 20px;" />
+      <Icon icon="chevronRight" style="font-size: 20px;" />
     </template>
     <!-- Overflow menu -->
     <VBreadcrumbsItem v-if="breadcrumbStartingIndex > 0" tag="div">

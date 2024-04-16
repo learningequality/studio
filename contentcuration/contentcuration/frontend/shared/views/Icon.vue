@@ -4,7 +4,6 @@
     v-bind="$attrs"
     :icon="icon"
     :color="color"
-    :class="{ 'rtl-flip': rtlFlip }"
     v-on="$listeners"
   />
 
@@ -26,10 +25,6 @@
         type: String,
         required: false,
         default: themeTokens.text,
-      },
-      rtlFlip: {
-        type: Boolean,
-        default: false,
       },
     },
   };
