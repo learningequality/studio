@@ -27,7 +27,7 @@ export default function theme() {
       draggableDropZone: palette.grey.v_100,
       draggableDropOverlay: brand.primary.v_400,
       greenHighlightBackground: brand.secondary.v_200,
-      roleVisibilityCoach: palette.lightblue.v_600,
+      roleVisibilityCoach: palette.lightblue.v_1100,
     },
     tokens
   );
