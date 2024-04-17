@@ -18,10 +18,10 @@
         type: String,
         required: true,
       },
-      /* eslint-disable vue/require-default-prop */
       color: {
         type: String,
         required: false,
+        default: null,
       },
     },
   };
