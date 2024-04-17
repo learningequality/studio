@@ -11,8 +11,6 @@
 
 <script>
 
-  import { themeTokens } from 'kolibri-design-system/lib/styles/theme.js';
-
   export default {
     name: 'Icon',
     props: {
@@ -20,11 +18,10 @@
         type: String,
         required: true,
       },
-
+      /* eslint-disable vue/require-default-prop */
       color: {
         type: String,
         required: false,
-        default: themeTokens.text,
       },
     },
   };

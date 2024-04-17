@@ -11,6 +11,7 @@
     <KTooltip
       reference="tooltip"
       placement="bottom"
+      maxWidth="80%"
       :refs="$refs"
     >
       {{ text }}
