@@ -2,7 +2,7 @@
 
   <div class="mx-2">
     <template v-if="hasChanges">
-      <VProgressCircular indeterminate size="16" width="2" color="secondary" />
+      <VProgressCircular indeterminate size="16" width="2" color="loading" />
       <span class="mx-2" style="vertical-align: middle;">
         {{ $tr('savingIndicator') }}
       </span>

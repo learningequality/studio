@@ -118,6 +118,7 @@
                         v-if="loading"
                         class="mx-3"
                         indeterminate
+                        color="loading"
                         size="15"
                         width="2"
                       />
