@@ -89,10 +89,10 @@
           :text="$tr('frequentlyAskedQuestionsLink')"
         />
       </VContainer>
-      <VFooter class="pb-3 pt-2 px-4" color="transparent" height="64">
+      <VFooter class="pb-3 pt-2 px-4" color="transparent" height="100">
         <div>
           <VImg
-            height="24"
+            height="60"
             width="78"
             class="mb-1 mr-2"
             contain
@@ -231,7 +231,7 @@
 
   .filters {
     width: 100%;
-    height: calc(100% - 64px);
+    height: calc(100% - 100px);
     overflow: auto;
   }
 
