@@ -50,9 +50,9 @@
       <VLayout align-center justify-center fill-height data-test="not-supported">
         <VTooltip bottom lazy>
           <template #activator="{ on }">
-            <Icon color="grey lighten-2" large v-on="on">
+            <VIconWrapper color="grey lighten-2" large v-on="on">
               visibility_off
-            </Icon>
+            </VIconWrapper>
           </template>
           <span>{{ $tr('previewNotSupported') }}</span>
         </VTooltip>

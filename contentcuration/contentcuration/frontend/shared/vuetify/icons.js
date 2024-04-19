@@ -5,10 +5,10 @@ import CollapseAllIcon from '../views/icons/CollapseAllIcon';
 import IndicatorIcon from '../views/icons/IndicatorIcon';
 import LightBulbIcon from '../views/icons/LightBulbIcon';
 import ViewOnlyIcon from '../views/icons/ViewOnlyIcon';
-import Icon from 'shared/views/Icon';
+import VIconWrapper from 'shared/views/VIconWrapper';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
-Vue.component(Icon.name, Icon);
+Vue.component(VIconWrapper.name, VIconWrapper);
 
 const EMPTY = '_empty';
 export const CONTENT_KIND_ICONS = {
@@ -76,7 +76,7 @@ export default function icons(additional = {}) {
     .map(([name, mdName]) => {
       return {
         [name]: {
-          component: Icon.name,
+          component: VIconWrapper.name,
           props: {
             iconName: mdName,
           },

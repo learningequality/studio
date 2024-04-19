@@ -102,20 +102,28 @@
           <Menu>
             <template #activator="{ on }">
               <VBtn flat style="text-transform: none;" v-on="on">
-                <Icon>person</Icon>
-                <Icon>arrow_drop_down</Icon>
+                <Icon
+                  icon="person"
+                />
+                <Icon
+                  icon="dropdown"
+                />
               </VBtn>
             </template>
             <VList>
               <VListTile :href="'/accounts/'">
                 <VListTileAction>
-                  <Icon>exit_to_app</Icon>
+                  <Icon
+                    icon="login"
+                  />
                 </VListTileAction>
                 <VListTileTitle v-text="$tr('logIn')" />
               </VListTile>
               <VListTile @click="showLanguageModal = true">
                 <VListTileAction>
-                  <Icon>language</Icon>
+                  <Icon
+                    icon="language"
+                  />
                 </VListTileAction>
                 <VListTileTitle v-text="$tr('changeLanguage')" />
               </VListTile>

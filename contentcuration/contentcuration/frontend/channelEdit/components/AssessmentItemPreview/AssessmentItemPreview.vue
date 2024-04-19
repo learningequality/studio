@@ -80,7 +80,7 @@
               data-test="hintsToggle"
               @click="areHintsOpen = !areHintsOpen"
             >
-              <Icon class="icon" small>chevron_right</Icon>
+              <Icon icon="chevronRight" />
               <span>{{ hintsToggleLabel }}</span>
             </span>
 

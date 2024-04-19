@@ -63,15 +63,15 @@
                         :style="{ transform: toggleTransform }"
                         @click.stop="toggle"
                       >
-                        <Icon>keyboard_arrow_right</Icon>
+                        <Icon icon="chevronRight" />
                       </VBtn>
                     </VFlex>
                     <VFlex shrink class="px-1">
                       <VTooltip :disabled="!hasTitle(node)" bottom open-delay="500" lazy>
                         <template #activator="{ on }">
-                          <Icon v-on="on">
+                          <VIconWrapper v-on="on">
                             {{ node.resource_count ? "folder" : "folder_open" }}
-                          </Icon>
+                          </VIconWrapper>
                         </template>
                         <span>{{ getTitle(node) }}</span>
                       </VTooltip>

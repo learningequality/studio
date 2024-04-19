@@ -12,15 +12,15 @@
       :style="{ width: fillWidth ? '100%' : 'unset' }"
       capture-as-image
     >
-      <Icon small :color="fontColor" v-bind="$attrs">
+      <VIconWrapper small :color="fontColor" v-bind="$attrs">
         {{ icon }}
-      </Icon>
+      </VIconWrapper>
       <span v-if="includeText" class="ml-2">{{ text }}</span>
     </VChip>
     <span v-else capture-as-image>
-      <Icon :color="fontColor" v-bind="$attrs">
+      <VIconWrapper :color="fontColor" v-bind="$attrs">
         {{ icon }}
-      </Icon>
+      </VIconWrapper>
       <span v-if="includeText">{{ text }}</span>
     </span>
   </span>

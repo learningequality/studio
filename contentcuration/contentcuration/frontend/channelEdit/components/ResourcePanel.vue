@@ -39,7 +39,7 @@
           class="ma-0"
           @click="$emit('close')"
         >
-          <Icon>clear</Icon>
+          <Icon icon="clear" />
         </VBtn>
       </VLayout>
     </VFlex>
@@ -81,12 +81,10 @@
           {{ $tr('questions') }}
           <Icon
             v-if="invalidQuestions"
-            color="red"
-            small
+            icon="error"
             class="mx-2"
-          >
-            error
-          </Icon>
+          />
+
         </VTab>
         <VTab
           class="px-2"
@@ -96,12 +94,10 @@
           {{ $tr('details') }}
           <Icon
             v-if="invalidDetails"
-            color="red"
-            small
+            icon="error"
             class="mx-2"
-          >
-            error
-          </Icon>
+          />
+
         </VTab>
       </Tabs>
       <VTabsItems
@@ -190,11 +186,9 @@
               >
                 <template #activator="{ on }">
                   <Icon
-                    color="red"
+                    icon="error"
                     v-on="on"
-                  >
-                    error
-                  </Icon>
+                  />
                 </template>
                 <span>{{ $tr('noFilesError') }}</span>
               </VTooltip>
@@ -211,9 +205,8 @@
               class="red--text"
             >
               <Icon
-                color="red"
-                small
-              >error</Icon>
+                icon="error"
+              />
               <span class="mx-1">{{ $tr('noQuestionsError') }}</span>
             </span>
             <span v-else>
@@ -246,9 +239,8 @@
               class="red--text"
             >
               <Icon
-                color="red"
-                small
-              >error</Icon>
+                icon="error"
+              />
               <span class="mx-1">{{ $tr('noMasteryModelError') }}</span>
             </span>
             <span v-else>
@@ -434,9 +426,8 @@
                 class="red--text"
               >
                 <Icon
-                  color="red"
-                  small
-                >error</Icon>
+                  icon="error"
+                />
                 <span class="mx-1">{{ $tr('noLicenseError') }}</span>
               </span>
               <p v-else>
@@ -447,11 +438,8 @@
                 class="red--text"
               >
                 <Icon
-                  color="red"
-                  small
-                >
-                  error
-                </Icon>
+                  icon="error"
+                />
                 <span class="mx-1">{{ $tr('noLicenseDescriptionError') }}</span>
               </p>
               <p
@@ -467,9 +455,8 @@
                 class="red--text"
               >
                 <Icon
-                  color="red"
-                  small
-                >error</Icon>
+                  icon="error"
+                />
                 <span class="mx-1">{{ $tr('noCopyrightHolderError') }}</span>
               </span>
               <span
@@ -494,9 +481,8 @@
                   class="red--text"
                 >
                   <Icon
-                    color="red"
-                    small
-                  >error</Icon>
+                    icon="error"
+                  />
                   <span class="mx-1">{{ $tr('noFilesError') }}</span>
                 </span>
                 <ExpandableList
