@@ -73,11 +73,13 @@
         <div class="subheading">
           {{ $tr('includesLabel') }}
         </div>
-        <Checkbox v-model="coach" color="primary">
-          <template #label>
-            <span class="text-xs-left">{{ $tr('coachLabel') }}</span>
-            <HelpTooltip :text="$tr('coachDescription')" bottom class="px-2" />
-          </template>
+        <Checkbox
+          v-model="coach"
+          color="primary"
+        >
+          {{ $tr('coachLabel') }}
+
+          <HelpTooltip :text="$tr('coachDescription')" bottom class="px-2" />
         </Checkbox>
         <Checkbox v-model="subtitles" color="primary" :label="$tr('subtitlesLabel')" />
         <ActionLink
