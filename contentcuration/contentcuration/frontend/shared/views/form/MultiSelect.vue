@@ -20,15 +20,6 @@
             {{ getText(item) }}
           </VChip>
         </template>
-        <template #item="{ item, tile }">
-          <Checkbox v-bind="tile.props" class="ma-0">
-            <template #label>
-              <span :class="{ notranslate }" :style="getEllipsisStyle()" dir="auto">
-                {{ getText(item) }}
-              </span>
-            </template>
-          </Checkbox>
-        </template>
       </VSelect>
     </template>
   </DropdownWrapper>

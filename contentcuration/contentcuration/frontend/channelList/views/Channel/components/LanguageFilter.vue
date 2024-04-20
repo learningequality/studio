@@ -28,20 +28,6 @@
         <span>{{ item.name }}</span>
       </VTooltip>
     </template>
-    <template #item="{ item }">
-      <Checkbox :key="item.id" :input-value="value" :value="item.id" class="mt-0">
-        <template #label>
-          <VTooltip bottom lazy>
-            <template #activator="{ on }">
-              <div class="text-truncate" style="width: 250px;" v-on="on">
-                {{ item.name }}
-              </div>
-            </template>
-            <span>{{ item.name }}</span>
-          </VTooltip>
-        </template>
-      </Checkbox>
-    </template>
   </VAutocomplete>
 
 </template>
@@ -95,7 +81,7 @@
     },
     methods: {
       languageSearchValue(item) {
-        return item.name + (item.related_names || []).join('') + item.id;
+        return item.name;
       },
     },
     $trs: {
