@@ -11,7 +11,8 @@
     <component
       :is="headerLevel"
     >
-      <KRouterLink
+      <router-link
+        tabindex="-1"
         :to="to"
       >
         <KTextTruncator
@@ -20,7 +21,7 @@
           :maxLines="titleLines"
           class="spacing"
         />
-      </KRouterLink>
+      </router-link>
     </component>
     <slot name="default"></slot>
   </li>
