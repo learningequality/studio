@@ -1644,7 +1644,9 @@ export const ContentNode = new TreeResource({
     const values = [nodeId, channelId];
     return this.table.get({ '[node_id+channel_id]': values }).then(node => {
       if (!node) {
-        return this.fetchCollection({ '[node_id+channel_id]__in': [values] }).then(nodes => nodes[0]);
+        return this.fetchCollection({ '[node_id+channel_id]__in': [values] }).then(
+          nodes => nodes[0]
+        );
       }
       return node;
     });
