@@ -1,7 +1,6 @@
 from __future__ import absolute_import
 
 from django.db.models.query import QuerySet
-from django.utils import timezone
 from le_utils.constants import content_kinds
 from rest_framework import serializers
 
@@ -219,7 +218,6 @@ class FlagFeedbackSerializerTestCase(BaseAPITestCase):
             'user': self.user.id,  # Assuming you are just using user ID
             'target_channel_id': str(self.channel.id),
             'context': {'test_key': 'test_value'},
-            'created_at': timezone.now(),
             'contentnode_id': str(self.flagged_node.id),
             'content_id': str(self.flagged_node.content_id),
             'feedback_type': 'FLAGGED',

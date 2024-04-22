@@ -24,6 +24,7 @@ class BaseFeedbackSerializer(serializers.ModelSerializer):
     class Meta:
         model = BaseFeedback
         fields = ['id', 'context', 'created_at', 'contentnode_id', 'content_id']
+        read_only_fields = ['id', 'created_at']
 
 
 class BaseFeedbackEventSerializer(serializers.ModelSerializer):
