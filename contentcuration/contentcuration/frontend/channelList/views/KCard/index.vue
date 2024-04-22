@@ -108,35 +108,35 @@
         required: false,
         default: null,
       },
-       /**
-     * Sets the HTML heading level (h1, h2, etc.) for the title.
-     */
+      /**
+       * Sets the HTML heading level (h1, h2, etc.) for the title.
+       */
       headingLevel: {
         type: Number,
         required: true,
       },
-       /**
-     * The number of lines to display for the title. Defaults to 2.
-     */
+      /**
+       * The number of lines to display for the title. Defaults to 2.
+       */
       titleLines: {
         type: Number,
         required: true,
         default: 2,
       },
       /**
-     * An object containing the route definition for the link. Required.
-     */
+       * An object containing the route definition for the link. Required.
+       */
       to: {
         type: Object,
         required: true,
       },
       /**
-     * The layout style of the hero banner. Required and cannot be empty.
-     *
-     * @validator
-     * @param {String} value - The layout value.
-     * @returns {Boolean} - True if the value is not empty, false otherwise.
-     */
+       * The layout style of the hero banner. Required and cannot be empty.
+       *
+       * @validator
+       * @param {String} value - The layout value.
+       * @returns {Boolean} - True if the value is not empty, false otherwise.
+       */
       layout: {
         type: String,
         required: true,
@@ -148,27 +148,27 @@
           return true;
         },
       },
-        /**
-     * Controls the display of the thumbnail image.
-     * Options: 'none' (default), 'block', or 'inline'.
-     */
+      /**
+       * Controls the display of the thumbnail image.
+       * Options: 'none' (default), 'block', or 'inline'.
+       */
       thumbnailDisplay: {
         type: String,
         required: false,
         default: 'none',
       },
-       /**
-     * Set the source URL of the thumbnail image.
-     */
+      /**
+       * Set the source URL of the thumbnail image.
+       */
       thumbnailSrc: {
         type: String,
         required: false,
         default: null,
       },
-       /**
-     * sets the scale type for the thumbnail image.
-     *  Options: 'centerInside' (default), 'cover', or 'contain'.
-     */
+      /**
+       * sets the scale type for the thumbnail image.
+       *  Options: 'centerInside' (default), 'cover', or 'contain'.
+       */
       thumbnailScaleType: {
         type: String,
         required: false,
