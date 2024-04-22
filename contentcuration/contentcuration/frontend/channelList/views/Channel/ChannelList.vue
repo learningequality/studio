@@ -35,8 +35,6 @@
                 fullWidth
               />
 
-              <RecommendedResourceCard />
-
             </template>
           </VFlex>
         </VLayout>
@@ -52,7 +50,6 @@
   import { mapGetters, mapActions } from 'vuex';
   import orderBy from 'lodash/orderBy';
   import { RouteNames } from '../../constants';
-  import RecommendedResourceCard from '../../../RecommendedResourceCard/components/RecommendedResourceCard.vue';
   import ChannelItem from './ChannelItem';
   import LoadingText from 'shared/views/LoadingText';
   import { ChannelListTypes } from 'shared/constants';
@@ -67,7 +64,6 @@
     components: {
       ChannelItem,
       LoadingText,
-      RecommendedResourceCard,
     },
     props: {
       listType: {
