@@ -13,9 +13,6 @@
         :height="300"
         :width="500"
         :isDecorative="true"
-        :appearanceOverrides="{
-          scaleType: thumbnailScaleType,
-        }"
         :style="KImgVerticalSmallStyle"
       />
       <slot v-if="!thumbnailSrc" name="thumbnailPlaceholder"></slot>
@@ -28,9 +25,6 @@
           :height="300"
           :width="600"
           :isDecorative="true"
-          :appearanceOverrides="{
-            scaleType: thumbnailScaleType,
-          }"
         />
         <slot v-if="!thumbnailSrc" name="thumbnailPlaceholder"></slot>
 
@@ -39,8 +33,11 @@
             v-if="thumbnailDisplay === 'none'"
             class="spacing"
           >
+            <!-- @slot Places content to be placed above the title.. -->
             <slot name="aboveTitle"></slot>
+            <!-- @slot for the title content -->
             <slot name="title"></slot>
+            <!-- @slot  Places content below the title.. -->
             <slot name="belowTitle"></slot>
           </div>
           <KGrid
@@ -152,7 +149,8 @@
         },
       },
         /**
-     * Controls the display of the thumbnail image. Options: 'none' (default), 'block', or 'inline'.
+     * Controls the display of the thumbnail image.
+     * Options: 'none' (default), 'block', or 'inline'.
      */
       thumbnailDisplay: {
         type: String,
@@ -168,7 +166,8 @@
         default: null,
       },
        /**
-     * sets the scale type for the thumbnail image. Options: 'centerInside' (default), 'cover', or 'contain'.
+     * sets the scale type for the thumbnail image.
+     *  Options: 'centerInside' (default), 'cover', or 'contain'.
      */
       thumbnailScaleType: {
         type: String,

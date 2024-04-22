@@ -1,6 +1,7 @@
 <template>
 
   <KCard
+    tabindex="-1"
     title="sample title"
     :headingLevel="2"
     :to="sampleRoute"
