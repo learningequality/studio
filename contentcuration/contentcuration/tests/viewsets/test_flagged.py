@@ -13,7 +13,7 @@ class CRUDTestCase(StudioAPITestCase):
             'contentnode_id': self.contentNode.id,
             'content_id': self.contentNode.content_id,
             'target_channel_id': self.channel.id,
-            'user': self.user,
+            'user': self.user.id,
             'feedback_type': 'FLAGGED',
             'feedback_reason': 'Some reason provided by the user'
         }
@@ -29,10 +29,25 @@ class CRUDTestCase(StudioAPITestCase):
         self.channel = testdata.channel()
         self.user = testdata.user()
 
+#    def test_list_flagged_content_super_admin(self):
+#        pass
+
     def test_create_flag_event(self):
         self.client.force_authenticate(user=self.user)
         flagged_content = self.flag_feedback_object
         response = self.client.post(
-            reverse("flagged"), flagged_content, format="json",
+            reverse("flagged-list"), flagged_content, format="json",
         )
         self.assertEqual(response.status_code, 201, response.content)
+
+    def test_create_flag_event_fails_for_unauthorized_user(self):
+        flagged_content = self.flag_feedback_object
+        response = self.client.post(
+            reverse("flagged-list"), flagged_content, format="json",
+        )
+        self.assertEqual(response.status_code, 403, response.content)
+
+    def test_list_fails_for_normal_user(self):
+        self.client.force_authenticate(user=self.user)
+        response = self.client.get(reverse("flagged-list"), format="json")
+        self.assertEqual(response.status_code, 403, response.content)
