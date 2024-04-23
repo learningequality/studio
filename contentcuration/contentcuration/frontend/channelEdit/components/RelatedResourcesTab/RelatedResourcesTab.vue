@@ -34,11 +34,6 @@
     >
       <img src="./relatedresources.png" class="resource-preview">
       <VLayout mt-3>
-        <!-- <VFlex>
-          <VIconWrapper color="primary" class="mx-1">
-            $vuetify.icons.light_bulb
-          </VIconWrapper>
-        </VFlex> -->
         <VFlex class="mx-2">
           <p>{{ $tr('resourcePreviewDialogHelpText') }}</p>
         </VFlex>
