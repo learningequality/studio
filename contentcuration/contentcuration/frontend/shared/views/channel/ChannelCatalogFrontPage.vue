@@ -2,7 +2,7 @@
 
   <div>
     <img
-      height="96"
+      height="99"
       width="148"
       :src="require('shared/images/le-logo.svg')"
     >

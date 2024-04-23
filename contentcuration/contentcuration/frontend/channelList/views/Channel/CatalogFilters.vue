@@ -93,7 +93,7 @@
         <div>
           <VImg
             height="60"
-            width="78"
+            width="90"
             class="mb-1 mr-2"
             contain
             :src="require('shared/images/le-logo.svg')"
