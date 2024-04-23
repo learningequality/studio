@@ -193,7 +193,7 @@ export function addClipboardNodeFromListener(context, obj) {
     .then(() =>
       context.dispatch(
         'contentNode/loadContentNodes',
-        { '[node_id+channel_id]__in': [obj.source_node_id, obj.source_channel_id] },
+        { '[node_id+channel_id]__in': [[obj.source_node_id, obj.source_channel_id]] },
         { root }
       )
     )
