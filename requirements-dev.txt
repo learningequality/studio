@@ -261,7 +261,7 @@ virtualenv==20.14.1
     # via pre-commit
 watchdog==2.1.8
     # via pytest-watch
-werkzeug==2.2.3
+werkzeug==2.3.8
     # via
     #   flask
     #   locust
