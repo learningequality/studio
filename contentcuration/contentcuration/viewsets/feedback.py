@@ -17,7 +17,9 @@ class IsAdminForListAndDestroy(permissions.BasePermission):
                 return request.user and request.user.is_admin
             except AttributeError:
                 return False
-        return True
+        if request.user.check_feature_flag('test_dev_feature'):
+            return True
+        return False
 
 
 class BaseFeedbackSerializer(serializers.ModelSerializer):

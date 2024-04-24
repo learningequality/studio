@@ -292,6 +292,10 @@ class User(AbstractBaseUser, PermissionsMixin):
         if space < size:
             raise PermissionDenied(_("Not enough space. Check your storage under Settings page."))
 
+    def check_feature_flag(self, flag_name):
+        feature_flags = self.feature_flags or {}
+        return feature_flags.get(flag_name, False)
+
     def check_channel_space(self, channel):
         active_files = self.get_user_active_files()
         staging_tree_id = channel.staging_tree.tree_id

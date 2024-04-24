@@ -184,10 +184,19 @@ class ContentDefaultsSerializerUseTestCase(BaseAPITestCase):
 
 
 class FlagFeedbackSerializerTestCase(BaseAPITestCase):
+    @property
+    def serializer(self):
+        return FlagFeedbackEventSerializer(instance=self.flag_feedback_event)
+
     def setUp(self):
         super(FlagFeedbackSerializerTestCase, self).setUp()
         self.channel = testdata.channel("testchannel")
-        self.flagged_node = testdata.node({"kind_id": content_kinds.TOPIC, "title": "SuS ContentNode"})
+        self.flagged_node = testdata.node(
+            {
+                "kind_id": content_kinds.VIDEO,
+                "title": "Suspicious Video content",
+            },
+        )
         self.base_feedback_data = self._create_base_feedback_data(
             {'spam': 'Spam or misleading'},
             self.flagged_node.id,
@@ -209,13 +218,9 @@ class FlagFeedbackSerializerTestCase(BaseAPITestCase):
         }
         return base_feedback_data
 
-    @property
-    def serializer(self):
-        return FlagFeedbackEventSerializer(instance=self.flag_feedback_event)
-
     def test_deserialization_and_validation(self):
         data = {
-            'user': self.user.id,  # Assuming you are just using user ID
+            'user': self.user.id,
             'target_channel_id': str(self.channel.id),
             'context': {'test_key': 'test_value'},
             'contentnode_id': str(self.flagged_node.id),
@@ -224,7 +229,7 @@ class FlagFeedbackSerializerTestCase(BaseAPITestCase):
             'feedback_reason': 'Reason1.....'
         }
         serializer = FlagFeedbackEventSerializer(data=data)
-        self.assertTrue(serializer.is_valid(), serializer.errors)  # This will help to debug if validation fails
+        self.assertTrue(serializer.is_valid(), serializer.errors)
         instance = serializer.save()
         self.assertEqual(instance.context, data['context'])
         self.assertEqual(instance.user.id, data['user'])
