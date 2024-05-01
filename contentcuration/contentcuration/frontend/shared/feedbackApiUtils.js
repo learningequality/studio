@@ -7,7 +7,7 @@ import urls from 'shared/urls';
 export const FeedbackTypeOptions = {
   imported: 'imported',
   rejected: 'rejected',
-  previwed: 'previewd',
+  previewed: 'previewed',
   showmore: 'showmore',
   ignored: 'ignored',
   flagged: 'flagged',
