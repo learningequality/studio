@@ -11,7 +11,7 @@ django-postmark==0.1.6
 jsonfield==3.1.0
 celery==5.2.7
 redis
-python-postmark==0.5.8
+python-postmark==0.6.0
 Django==3.2.24
 django-webpack-loader==0.7.0
 google-cloud-error-reporting
