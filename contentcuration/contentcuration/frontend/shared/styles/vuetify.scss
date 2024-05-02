@@ -1,4 +1,5 @@
 /* stylelint-disable */
+@import '~kolibri-design-system/lib/styles/definitions';
 
 /* Need a ! so that the following comment won't get removed during build process */
 
@@ -4541,9 +4542,8 @@ p {
   border-color: #424242;
 }
 .v-card {
+  @extend %dropshadow-2dp;
   text-decoration: none;
-  box-shadow: 0 3px 1px -2px rgba(0, 0, 0, 0.2), 0 2px 2px 0 rgba(0, 0, 0, 0.14),
-    0 1px 5px 0 rgba(0, 0, 0, 0.12);
 }
 .v-card > :first-child:not(.v-btn):not(.v-chip) {
   border-top-left-radius: inherit;
@@ -4562,8 +4562,10 @@ p {
   transition-property: box-shadow;
 }
 .v-card--hover:hover {
-  box-shadow: 0 5px 5px -3px rgba(0, 0, 0, 0.2), 0 8px 10px 1px rgba(0, 0, 0, 0.14),
-    0 3px 14px 2px rgba(0, 0, 0, 0.12);
+  @extend %dropshadow-4dp;
+}
+.v-card--hover.v-card--flat:hover {
+  @extend %dropshadow-2dp;
 }
 .v-card__title {
   display: flex;

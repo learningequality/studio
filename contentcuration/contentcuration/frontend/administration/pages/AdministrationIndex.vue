@@ -161,7 +161,7 @@
 
     tr:hover td {
       /* stylelint-disable-next-line custom-property-pattern */
-      background-color: var(--v-greyBackground-base) !important;
+      background-color: var(--v-greyBackground-lighten1) !important;
     }
 
     /deep/ .v-table__overflow {

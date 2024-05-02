@@ -7,7 +7,7 @@
       :icon="bookmark ? 'star' : 'starBorder'"
       :text="starText"
       v-bind="$attrs"
-      @click="toggleStar"
+      @click.stop.prevent="toggleStar"
     />
   </div>
 
