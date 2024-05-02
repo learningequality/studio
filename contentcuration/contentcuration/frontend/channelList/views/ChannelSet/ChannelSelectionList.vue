@@ -18,6 +18,7 @@
           v-for="channel in listChannels"
           :key="channel.id"
           flat
+          hover
           class="px-3"
         >
           <Checkbox
@@ -133,11 +134,6 @@
     /deep/ label,
     /deep/ .v-input__control {
       width: 100% !important;
-    }
-
-    &:hover {
-      /* stylelint-disable-next-line custom-property-pattern */
-      background-color: var(--v-channelHighlightDefault-base);
     }
   }
 

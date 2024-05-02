@@ -113,7 +113,7 @@ import { theme, icons } from 'shared/vuetify';
 
 import { i18nSetup } from 'shared/i18n';
 
-import './styles/vuetify.css';
+import './styles/vuetify.scss';
 import 'shared/styles/main.less';
 import Base from 'shared/Base.vue';
 import urls from 'shared/urls';

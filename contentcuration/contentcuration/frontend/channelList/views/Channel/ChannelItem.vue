@@ -3,7 +3,8 @@
   <div>
     <VCard
       class="channel my-3"
-      :class="{ hideHighlight, added }"
+      hover
+      :class="{ added }"
       data-test="channel-card"
       tabindex="0"
       :href="linkToChannelTree ? channelHref : null"
@@ -99,8 +100,6 @@
                 class="mr-1"
                 icon="info"
                 :text="$tr('details')"
-                @mouseenter.native="hideHighlight = true"
-                @mouseleave.native="hideHighlight = false"
               />
 
             </router-link>
@@ -112,16 +111,12 @@
               :text="$tr('copyToken')"
               data-test="token-button"
               @click.stop.prevent="tokenDialog = true"
-              @mouseenter.native="hideHighlight = true"
-              @mouseleave.native="hideHighlight = false"
             />
             <ChannelStar
               v-if="loggedIn"
               :channelId="channelId"
               :bookmark="channel.bookmark"
               class="mr-1"
-              @mouseenter.native="hideHighlight = true"
-              @mouseleave.native="hideHighlight = false"
             />
             <Menu v-if="showOptions">
               <template #activator="{ on }">
@@ -131,8 +126,6 @@
                   data-test="menu"
                   v-on="on"
                   @click.stop.prevent
-                  @mouseenter="hideHighlight = true"
-                  @mouseleave="hideHighlight = false"
                 >
                   <Icon>more_vert</Icon>
                 </VBtn>
@@ -152,7 +145,7 @@
                 <VListTile
                   v-if="allowEdit && channel.published"
                   data-test="token-listitem"
-                  @click="tokenDialog = true"
+                  @click.stop="tokenDialog = true"
                 >
                   <VListTileAction>
                     <Icon>content_copy</Icon>
@@ -264,7 +257,6 @@
       return {
         deleteDialog: false,
         tokenDialog: false,
-        hideHighlight: false,
         added: false,
       };
     },
@@ -356,17 +348,10 @@
           this.$store.dispatch('showSnackbarSimple', this.$tr('channelDeletedSnackbar'));
         });
       },
-      goToChannelRoute(e) {
-        // preventDefault whenever we have clicked a button
-        // that is a child of this card to avoid redirect
-        // overriding the action of the clicked button
-        if (this.hideHighlight) {
-          e.preventDefault();
-        } else {
-          this.linkToChannelTree
-            ? (window.location.href = this.channelHref)
-            : this.$router.push(this.channelDetailsLink).catch(() => {});
-        }
+      goToChannelRoute() {
+        this.linkToChannelTree
+          ? (window.location.href = this.channelHref)
+          : this.$router.push(this.channelDetailsLink).catch(() => {});
       },
       trackTokenCopy() {
         this.$analytics.trackAction('channel_list', 'Copy token', {
@@ -400,11 +385,6 @@
   .v-card {
     width: 100%;
     cursor: pointer;
-
-    &:hover:not(.hideHighlight) {
-      /* stylelint-disable-next-line custom-property-pattern */
-      background-color: var(--v-greyBackground-base);
-    }
 
     &.added {
       /* stylelint-disable-next-line custom-property-pattern */
