@@ -38,7 +38,6 @@
 
 <script>
 
-  import Checkbox from './Checkbox';
   import DropdownWrapper from './DropdownWrapper';
 
   export default {
