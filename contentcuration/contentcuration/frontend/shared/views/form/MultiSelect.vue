@@ -21,11 +21,13 @@
           </VChip>
         </template>
         <template #item="{ item, tile }">
-          <Checkbox v-bind="tile.props" class="ma-0">
-              <span :class="{ notranslate }" :style="getEllipsisStyle()" dir="auto">
-                {{ getText(item) }}
-              </span>
-          </Checkbox>
+          <KCheckbox
+            :checked="selections.includes(item)"
+            :label="getText(item)"
+            :value="item"
+            :style="getEllipsisStyle()"
+            :ripple="false"
+          />
         </template>
       </VSelect>
     </template>
