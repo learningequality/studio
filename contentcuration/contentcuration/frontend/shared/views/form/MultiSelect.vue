@@ -20,7 +20,7 @@
             {{ getText(item) }}
           </VChip>
         </template>
-        <template #item="{ item, tile }">
+        <template #item="{ item }">
           <KCheckbox
             :checked="selections.includes(item)"
             :label="getText(item)"
@@ -43,7 +43,7 @@
 
   export default {
     name: 'MultiSelect',
-    components: { Checkbox, DropdownWrapper },
+    components: { DropdownWrapper },
     // $attrs are rebound to a descendent component
     inheritAttrs: false,
     props: {

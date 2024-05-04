@@ -93,7 +93,7 @@
     },
     methods: {
       languageSearchValue(item) {
-        return item.name;
+        return item.name + (item.related_names || []).join('') + item.id;
       },
     },
     $trs: {
