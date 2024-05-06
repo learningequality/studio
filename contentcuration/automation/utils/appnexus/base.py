@@ -40,7 +40,7 @@ class BackendRequest(object):
         data=None,
         json=None,
         headers=None,
-        timeout=(5, 10),
+        timeout=(5, 100),
         **kwargs
     ):
         self.method = method
