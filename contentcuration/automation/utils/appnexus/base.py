@@ -40,6 +40,7 @@ class BackendRequest(object):
         data=None,
         json=None,
         headers=None,
+        timeout=(5, 10),
         **kwargs
     ):
         self.method = method
@@ -48,6 +49,7 @@ class BackendRequest(object):
         self.data = data
         self.json = json
         self.headers = headers
+        self.timeout = timeout
         for key, value in kwargs.items():
             setattr(self, key, value)
 
@@ -114,6 +116,7 @@ class Backend(ABC):
                 data=request.data,
                 headers=request.headers,
                 json=request.json,
+                timeout=request.timeout,
             )
         except (
             requests.exceptions.ConnectionError,
@@ -153,10 +156,10 @@ class Backend(ABC):
             raise errors.InvalidResponse(f"Invalid response from {url}")
     
     @abstractmethod
-    def connect(self):
+    def connect(self, **kwargs):
         """ Establishes a connection to the backend service. """
         try:
-            request = BackendRequest(method="GET", path=self.connect_endpoint)
+            request = BackendRequest(method="GET", path=self.connect_endpoint, **kwargs)
             response = self._make_request(request)
             if response.status_code != 200:
                 return False
@@ -165,9 +168,9 @@ class Backend(ABC):
             return False
 
     @abstractmethod
-    def make_request(self, path, **kwargs):
+    def make_request(self, request):
         """ Make a request to the backend service. """
-        response = self._make_request(path, **kwargs)
+        response = self._make_request(request)
         try:
             info = response.json()
             info.update({"status_code": response.status_code})
