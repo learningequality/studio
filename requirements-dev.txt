@@ -134,7 +134,7 @@ mock==4.0.3
     #   django-concurrent-test-helper
 msgpack==1.0.4
     # via locust
-nodeenv==1.6.0
+nodeenv==1.8.0
     # via
     #   -r requirements-dev.in
     #   pre-commit
