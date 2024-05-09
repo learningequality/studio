@@ -84,7 +84,7 @@ flask==2.0.3
     #   locust
 flask-basicauth==0.2.0
     # via locust
-flask-cors==3.0.10
+flask-cors==4.0.1
     # via locust
 fonttools==4.43.0
     # via -r requirements-dev.in
@@ -222,7 +222,6 @@ six==1.16.0
     #   -c requirements.txt
     #   django-concurrent-test-helper
     #   faker
-    #   flask-cors
     #   geventhttpclient
     #   pre-commit
     #   python-dateutil
