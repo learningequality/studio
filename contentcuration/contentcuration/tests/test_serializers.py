@@ -12,7 +12,6 @@ from contentcuration.tests import testdata
 from contentcuration.viewsets.channel import ChannelSerializer as BaseChannelSerializer
 from contentcuration.viewsets.common import ContentDefaultsSerializer
 from contentcuration.viewsets.contentnode import ContentNodeSerializer
-from contentcuration.viewsets.feedback import FlagFeedbackEvent
 from contentcuration.viewsets.feedback import FlagFeedbackEventSerializer
 
 
@@ -184,10 +183,6 @@ class ContentDefaultsSerializerUseTestCase(BaseAPITestCase):
 
 
 class FlagFeedbackSerializerTestCase(BaseAPITestCase):
-    @property
-    def serializer(self):
-        return FlagFeedbackEventSerializer(instance=self.flag_feedback_event)
-
     def setUp(self):
         super(FlagFeedbackSerializerTestCase, self).setUp()
         self.channel = testdata.channel("testchannel")
@@ -196,18 +191,6 @@ class FlagFeedbackSerializerTestCase(BaseAPITestCase):
                 "kind_id": content_kinds.VIDEO,
                 "title": "Suspicious Video content",
             },
-        )
-        self.base_feedback_data = self._create_base_feedback_data(
-            {'spam': 'Spam or misleading'},
-            self.flagged_node.id,
-            self.flagged_node.content_id
-        )
-        self.flag_feedback_event = FlagFeedbackEvent.objects.create(
-            user=self.user,
-            target_channel_id=self.channel.id,
-            feedback_type='FLAGGED',
-            feedback_reason='In-appropriate content',
-            **self.base_feedback_data
         )
 
     def _create_base_feedback_data(self, context, contentnode_id, content_id):

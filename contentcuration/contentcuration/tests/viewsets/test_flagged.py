@@ -72,6 +72,22 @@ class CRUDTestCase(StudioAPITestCase):
         response = self.client.get(reverse("flagged-list"), format="json")
         self.assertEqual(response.status_code, 200, response.content)
 
+    def test_retreive_fails_for_normal_user(self):
+        self.client.force_authenticate(user=self.user)
+        flag_feedback_object = FlagFeedbackEvent.objects.create(
+            **{
+                'context': {'spam': 'Spam or misleading'},
+                'contentnode_id': self.contentNode.id,
+                'content_id': self.contentNode.content_id,
+                'target_channel_id': self.channel.id,
+                'feedback_type': 'FLAGGED',
+                'feedback_reason': 'Some reason provided by the user'
+            },
+            user=self.user,
+        )
+        response = self.client.get(reverse("flagged-detail", kwargs={"pk": flag_feedback_object.id}), format="json")
+        self.assertEqual(response.status_code, 403, response.content)
+
     def test_list_fails_for_normal_user(self):
         self.client.force_authenticate(user=self.user)
         response = self.client.get(reverse("flagged-list"), format="json")

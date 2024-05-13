@@ -3,16 +3,13 @@ from rest_framework import serializers
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 
-from contentcuration.models import BaseFeedback
-from contentcuration.models import BaseFeedbackEvent
-from contentcuration.models import BaseFeedbackInteractionEvent
 from contentcuration.models import FlagFeedbackEvent
 
 
 class IsAdminForListAndDestroy(permissions.BasePermission):
     def has_permission(self, request, view):
         # only allow list and destroy of flagged content to admins
-        if view.action in ['list', 'destroy']:
+        if view.action in ['list', 'destroy', 'retrieve']:
             try:
                 return request.user and request.user.is_admin
             except AttributeError:
@@ -24,20 +21,18 @@ class IsAdminForListAndDestroy(permissions.BasePermission):
 
 class BaseFeedbackSerializer(serializers.ModelSerializer):
     class Meta:
-        model = BaseFeedback
-        fields = ['id', 'context', 'created_at', 'contentnode_id', 'content_id']
-        read_only_fields = ['id', 'created_at']
+        fields = ['id', 'context', 'contentnode_id', 'content_id']
+        read_only_fields = ['id']
 
 
 class BaseFeedbackEventSerializer(serializers.ModelSerializer):
     class Meta:
-        model = BaseFeedbackEvent
         fields = ['user', 'target_channel_id']
+        read_only_fields = ['user']
 
 
 class BaseFeedbackInteractionEventSerializer(serializers.ModelSerializer):
     class Meta:
-        model = BaseFeedbackInteractionEvent
         fields = ['feedback_type', 'feedback_reason']
 
 
