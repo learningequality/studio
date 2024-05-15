@@ -63,7 +63,7 @@ django-debug-toolbar==3.5.0
     # via
     #   -r requirements-dev.in
     #   django-debug-panel
-djangorestframework==3.12.4
+djangorestframework==3.15.1
     # via
     #   -c requirements.txt
     #   drf-yasg
