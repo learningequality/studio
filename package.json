@@ -96,7 +96,7 @@
     "workbox-window": "^7.0.0"
   },
   "devDependencies": {
-    "@vue/test-utils": "1.0.0-beta.29",
+    "@vue/test-utils": "2.4.6",
     "aphrodite": "https://github.com/learningequality/aphrodite.git",
     "autoprefixer": "^10.4.19",
     "babel-jest": "^26.0.1",
