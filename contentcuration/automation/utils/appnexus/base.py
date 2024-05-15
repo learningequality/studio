@@ -15,7 +15,7 @@ class SessionWithMaxConnectionAge(requests.Session):
         Session with a maximum connection age. If the connection is older than the specified age, it will be closed and a new one will be created.
         The age is specified in seconds.
     """
-    def __init__(self, age = 10):
+    def __init__(self, age = 100):
         super().__init__()
         self.age = age
         self.last_used = time.time()
@@ -109,7 +109,7 @@ class Backend(ABC):
     def _make_request(self, request):
         url = self._construct_full_url(request.path)
         try:
-            return self.session.request(
+            response = self.session.request(
                 request.method,
                 url,
                 params=request.params,
@@ -118,6 +118,8 @@ class Backend(ABC):
                 json=request.json,
                 timeout=request.timeout,
             )
+            response.raise_for_status()
+            return response
         except (
             requests.exceptions.ConnectionError,
             requests.exceptions.RequestException,
@@ -155,19 +157,15 @@ class Backend(ABC):
             logging.exception(e)
             raise errors.InvalidResponse(f"Invalid response from {url}")
     
-    @abstractmethod
     def connect(self, **kwargs):
         """ Establishes a connection to the backend service. """
         try:
             request = BackendRequest(method="GET", path=self.connect_endpoint, **kwargs)
-            response = self._make_request(request)
-            if response.status_code != 200:
-                return False
+            self._make_request(request)
             return True
         except Exception as e:
             return False
 
-    @abstractmethod
     def make_request(self, request):
         """ Make a request to the backend service. """
         response = self._make_request(request)
