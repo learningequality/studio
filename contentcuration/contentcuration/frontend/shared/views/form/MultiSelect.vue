@@ -27,6 +27,7 @@
             :value="item"
             :style="getEllipsisStyle()"
             :ripple="false"
+            :class="{ notranslate }"
           />
         </template>
       </VSelect>
