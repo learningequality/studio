@@ -83,6 +83,7 @@
         return this.getChannel(this.channelId);
       },
       channelColor() {
+        console.log(this.getChannelColor(this.channelId));
         return this.getChannelColor(this.channelId) || this.$vuetify.theme.channelHighlightDefault;
       },
       thumbnailSrc() {
