@@ -19,7 +19,7 @@
           :key="channel.id"
           flat
           hover
-          class="px-3"
+          class="list-card-hover px-3"
         >
           <Checkbox
             v-model="selectedChannels"
@@ -135,6 +135,11 @@
     /deep/ .v-input__control {
       width: 100% !important;
     }
+  }
+
+  .list-card-hover {
+    margin: 16px;
+    box-shadow: 0 3px 5px 0 rgba(0, 0, 0, 0.2);
   }
 
 </style>
