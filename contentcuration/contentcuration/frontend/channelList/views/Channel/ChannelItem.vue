@@ -63,29 +63,27 @@
               {{ $tr('unpublishedText') }}
             </VCardText>
           </VFlex>
-          <VTooltip bottom lazy>
-            <template #activator="{ on }">
-              <Icon
-                v-if="allowEdit && hasUnpublishedChanges"
-                color="greenSuccess"
-                :size="12"
-                v-on="on"
-              >
-                lens
-              </Icon>
-            </template>
-            <span>
-              {{ $tr(
-                'lastUpdated',
-                {
-                  'updated': $formatRelative(
-                    channel.modified,
-                    { now: new Date() }
-                  )
-                })
-              }}
-            </span>
-          </VTooltip>
+          <KTooltip
+            reference="lastUpdatedTime"
+            placement="bottom"
+            :refs="$refs"
+          >
+            {{ $tr(
+              'lastUpdated',
+              {
+                'updated': $formatRelative(
+                  channel.modified,
+                  { now: new Date() }
+                )
+              })
+            }}
+          </KTooltip>
+          <Icon
+            v-if="allowEdit && hasUnpublishedChanges"
+            ref="lastUpdatedTime"
+            icon="unpublishedResource"
+          />
+
           <VSpacer />
           <VFlex shrink>
             <KRouterLink
@@ -134,7 +132,9 @@
                   @mouseenter="hideHighlight = true"
                   @mouseleave="hideHighlight = false"
                 >
-                  <Icon>more_vert</Icon>
+                  <Icon
+                    icon="optionsVertical"
+                  />
                 </VBtn>
               </template>
               <VList>
@@ -172,9 +172,7 @@
                   @click.stop
                 >
                   <VListTileAvatar>
-                    <Icon class="rtl-flip">
-                      launch
-                    </Icon>
+                    <Icon icon="openNewTab" />
                   </VListTileAvatar>
                   <VListTileTitle>{{ $tr('goToWebsite') }}</VListTileTitle>
                 </VListTile>
@@ -184,9 +182,7 @@
                   target="_blank"
                 >
                   <VListTileAvatar>
-                    <Icon class="rtl-flip">
-                      launch
-                    </Icon>
+                    <Icon icon="openNewTab" />
                   </VListTileAvatar>
                   <VListTileTitle>{{ $tr('viewContent') }}</VListTileTitle>
                 </VListTile>
@@ -238,6 +234,7 @@
   import { mapActions, mapGetters, mapMutations } from 'vuex';
   import { RouteNames } from '../../constants';
   import ChannelStar from './ChannelStar';
+
   import ChannelTokenModal from 'shared/views/channel/ChannelTokenModal';
   import Thumbnail from 'shared/views/files/Thumbnail';
   import Languages from 'shared/leUtils/Languages';

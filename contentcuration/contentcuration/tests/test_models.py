@@ -1,4 +1,5 @@
 import uuid
+from uuid import uuid4
 
 import mock
 import pytest
@@ -21,9 +22,12 @@ from contentcuration.models import ContentNode
 from contentcuration.models import CONTENTNODE_TREE_ID_CACHE_KEY
 from contentcuration.models import File
 from contentcuration.models import FILE_DURATION_CONSTRAINT
+from contentcuration.models import FlagFeedbackEvent
 from contentcuration.models import generate_object_storage_name
 from contentcuration.models import Invitation
 from contentcuration.models import object_storage_name
+from contentcuration.models import RecommendationsEvent
+from contentcuration.models import RecommendationsInteractionEvent
 from contentcuration.models import User
 from contentcuration.models import UserHistory
 from contentcuration.tests import testdata
@@ -981,3 +985,92 @@ class ChannelHistoryTestCase(StudioTestCase):
         ChannelHistory.prune()
         self.assertEqual(2, ChannelHistory.objects.count())
         self.assertEqual(2, ChannelHistory.objects.filter(id__in=last_history_ids).count())
+
+
+class FeedbackModelTests(StudioTestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        super(FeedbackModelTests, cls).setUpClass()
+
+    def setUp(self):
+        super(FeedbackModelTests, self).setUp()
+        self.user = testdata.user()
+
+    def _create_base_feedback_data(self, context, contentnode_id, content_id):
+        base_feedback_data = {
+            'context': context,
+            'contentnode_id': contentnode_id,
+            'content_id': content_id,
+        }
+        return base_feedback_data
+
+    def _create_recommendation_event(self):
+        channel = testdata.channel()
+        node_where_import_was_initiated = testdata.node({"kind_id": content_kinds.TOPIC, "title": "recomendations provided here"})
+        base_feedback_data = self._create_base_feedback_data(
+            {'model_version': 1, 'breadcrums': "#Title#->Random"},
+            node_where_import_was_initiated.id,
+            node_where_import_was_initiated.content_id
+        )
+        recommendations_event = RecommendationsEvent.objects.create(
+            user=self.user,
+            target_channel_id=channel.id,
+            time_hidden=timezone.now(),
+            content=[{'content_id': str(uuid4()), 'node_id': str(uuid4()), 'channel_id': str(uuid4()), 'score': 4}],
+            **base_feedback_data
+        )
+
+        return recommendations_event
+
+    def test_create_flag_feedback_event(self):
+        channel = testdata.channel("testchannel")
+        flagged_node = testdata.node({"kind_id": content_kinds.TOPIC, "title": "SuS ContentNode"})
+        base_feedback_data = self._create_base_feedback_data(
+            {'spam': 'Spam or misleading'},
+            flagged_node.id,
+            flagged_node.content_id
+        )
+        flag_feedback_event = FlagFeedbackEvent.objects.create(
+            user=self.user,
+            target_channel_id=channel.id,
+            **base_feedback_data
+        )
+        self.assertEqual(flag_feedback_event.user, self.user)
+        self.assertEqual(flag_feedback_event.context['spam'], 'Spam or misleading')
+
+    def test_create_recommendations_interaction_event(self):
+        # This represents a node that was recommended by the model and was interacted by user!
+        recommended_node = testdata.node({"kind_id": content_kinds.TOPIC, "title": "This node was recommended by the model"})
+        base_feedback_data = self._create_base_feedback_data(
+            {"comment": "explicit reason given by user why he rejected this node!"},
+            recommended_node.id,
+            recommended_node.content_id
+            )
+        fk = self._create_recommendation_event().id
+        rec_interaction_event = RecommendationsInteractionEvent.objects.create(
+            feedback_type='rejected',
+            feedback_reason='some predefined reasons like (not related)',
+            recommendation_event_id=fk,
+            **base_feedback_data
+        )
+        self.assertEqual(rec_interaction_event.feedback_type, 'rejected')
+        self.assertEqual(rec_interaction_event.feedback_reason, 'some predefined reasons like (not related)')
+
+    def test_create_recommendations_event(self):
+        channel = testdata.channel()
+        node_where_import_was_initiated = testdata.node({"kind_id": content_kinds.TOPIC, "title": "recomendations provided here"})
+        base_feedback_data = self._create_base_feedback_data(
+            {'model_version': 1, 'breadcrums': "#Title#->Random"},
+            node_where_import_was_initiated.id,
+            node_where_import_was_initiated.content_id
+        )
+        recommendations_event = RecommendationsEvent.objects.create(
+            user=self.user,
+            target_channel_id=channel.id,
+            time_hidden=timezone.now(),
+            content=[{'content_id': str(uuid4()), 'node_id': str(uuid4()), 'channel_id': str(uuid4()), 'score': 4}],
+            **base_feedback_data
+        )
+        self.assertEqual(len(recommendations_event.content), 1)
+        self.assertEqual(recommendations_event.content[0]['score'], 4)

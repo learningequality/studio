@@ -29,25 +29,24 @@
     <VListTileAction class="mr-1 status-indicator">
       <div>
         <div v-if="!uploadingFiles.length">
-          <Icon v-if="!nodeIsValid" color="red" class="error-icon">
-            error
-          </Icon>
+          <Icon v-if="!nodeIsValid" icon="error" class="error-icon" />
+
         </div>
         <VTooltip v-else-if="erroredFiles.length" top lazy>
           <template #activator="{ on }">
-            <Icon color="red" v-on="on">
+            <VIconWrapper color="red" v-on="on">
               error
-            </Icon>
+            </VIconWrapper>
           </template>
           <span>{{ errorMessage(erroredFiles[0].checksum) }}</span>
         </VTooltip>
-        <Icon
+        <VIconWrapper
           v-else-if="showUploadProgress && progress >= 1"
           color="secondary"
           data-test="done"
         >
           check_circle
-        </Icon>
+        </VIconWrapper>
         <VProgressCircular
           v-else-if="showUploadProgress"
           :size="20"
@@ -61,7 +60,7 @@
     </VListTileAction>
     <VListTileAction v-if="canRemove">
       <VBtn icon flat class="remove-item" @click.stop="removeNode">
-        <Icon>clear</Icon>
+        <Icon icon="clear" />
       </VBtn>
     </VListTileAction>
 

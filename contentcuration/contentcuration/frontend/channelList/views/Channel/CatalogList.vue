@@ -74,10 +74,13 @@
               <Menu top>
                 <template #activator="{ on }">
                   <VBtn color="primary" class="ma-0 mx-2" v-on="on">
-                    {{ $tr("downloadButton") }}
-                    <Icon class="ml-1">
-                      arrow_drop_up
-                    </Icon>
+                    {{ $tr('downloadButton') }}
+                    <Icon
+                      class="ml-1"
+                      icon="dropup"
+                      :color="$themeTokens.textInverted"
+                    />
+
                   </VBtn>
                 </template>
                 <VList>

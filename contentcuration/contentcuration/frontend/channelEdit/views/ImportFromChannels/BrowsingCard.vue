@@ -32,13 +32,10 @@
                 <template #activator="{ on }">
                   <div class="my-1" style="display: inline-block;" v-on="on">
                     <Icon
-                      color="roleVisibilityCoach"
-                      small
+                      icon="coachContent"
                       style="vertical-align: text-top;"
                       class="mx-1"
-                    >
-                      local_library
-                    </Icon>
+                    />
                     <template v-if="isTopic">
                       {{ $formatNumber(node.coach_count) }}
                     </template>

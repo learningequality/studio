@@ -34,6 +34,7 @@
                 allowEdit
                 fullWidth
               />
+
             </template>
           </VFlex>
         </VLayout>

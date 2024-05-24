@@ -24,9 +24,7 @@
             <template #header="{ item }">
               <span>
                 {{ item.text }}
-                <Icon v-if="roleIcon(item.value)" :color="roleColor(item.value)">
-                  {{ roleIcon(item.value) }}
-                </Icon>
+                <Icon v-if="roleIcon(item.value)" :icon="roleIcon(item.value)" />
               </span>
             </template>
             <template #description="{ item }">
@@ -35,15 +33,11 @@
           </InfoModal>
         </template>
         <template #selection="{ item }">
-          <Icon v-if="roleIcon(item.value)" :color="roleColor(item.value)" class="pr-2">
-            {{ roleIcon(item.value) }}
-          </Icon>
+          <Icon v-if="roleIcon(item.value)" :icon="roleIcon(item.value)" class="pr-2" />
           {{ item.text }}
         </template>
         <template #item="{ item }">
-          <Icon v-if="roleIcon(item.value)" :color="roleColor(item.value)" class="pr-2">
-            {{ roleIcon(item.value) }}
-          </Icon>
+          <Icon v-if="roleIcon(item.value)" :icon="roleIcon(item.value)" class="pr-2" />
           {{ item.text }}
         </template>
       </VSelect>
@@ -59,8 +53,7 @@
   import { constantsTranslationMixin } from 'shared/mixins';
   import DropdownWrapper from 'shared/views/form/DropdownWrapper';
 
-  const roleIcons = { coach: 'local_library' };
-  const roleColors = { coach: 'roleVisibilityCoach' };
+  const roleIcons = { coach: 'coachContent' };
 
   export default {
     name: 'VisibilityDropdown',
@@ -114,9 +107,6 @@
     methods: {
       roleIcon(role) {
         return roleIcons[role];
-      },
-      roleColor(role) {
-        return roleColors[role] || 'primary';
       },
     },
     $trs: {

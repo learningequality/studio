@@ -26,7 +26,7 @@ certifi==2020.12.5
     #   requests
 cfgv==3.3.1
     # via pre-commit
-chardet==4.0.0
+charset-normalizer==3.3.2
     # via
     #   -c requirements.txt
     #   requests
@@ -63,7 +63,7 @@ django-debug-toolbar==3.5.0
     # via
     #   -r requirements-dev.in
     #   django-debug-panel
-djangorestframework==3.12.4
+djangorestframework==3.15.1
     # via
     #   -c requirements.txt
     #   drf-yasg
@@ -84,7 +84,7 @@ flask==2.0.3
     #   locust
 flask-basicauth==0.2.0
     # via locust
-flask-cors==3.0.10
+flask-cors==4.0.1
     # via locust
 fonttools==4.43.0
     # via -r requirements-dev.in
@@ -112,7 +112,7 @@ itsdangerous==2.0.1
     # via flask
 itypes==1.2.0
     # via coreapi
-jinja2==3.0.3
+jinja2==3.1.4
     # via
     #   coreschema
     #   flask
@@ -134,7 +134,7 @@ mock==4.0.3
     #   django-concurrent-test-helper
 msgpack==1.0.4
     # via locust
-nodeenv==1.6.0
+nodeenv==1.8.0
     # via
     #   -r requirements-dev.in
     #   pre-commit
@@ -206,7 +206,7 @@ pyyaml==6.0
     #   pre-commit
 pyzmq==23.1.0
     # via locust
-requests==2.25.1
+requests==2.32.2
     # via
     #   -c requirements.txt
     #   coreapi
@@ -222,7 +222,6 @@ six==1.16.0
     #   -c requirements.txt
     #   django-concurrent-test-helper
     #   faker
-    #   flask-cors
     #   geventhttpclient
     #   pre-commit
     #   python-dateutil
@@ -261,7 +260,7 @@ virtualenv==20.14.1
     # via pre-commit
 watchdog==2.1.8
     # via pytest-watch
-werkzeug==2.2.3
+werkzeug==3.0.3
     # via
     #   flask
     #   locust

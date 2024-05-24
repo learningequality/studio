@@ -62,7 +62,7 @@
                       <VListTileAction
                         class="action-col px-1 v-list__group__header__append-icon"
                       >
-                        <Icon>arrow_drop_down</Icon>
+                        <Icon icon="dropdown" />
                       </VListTileAction>
                       <VSpacer />
                     </template>
@@ -85,7 +85,7 @@
                             v-on="on"
                             @click.stop
                           >
-                            <Icon>more_horiz</Icon>
+                            <Icon icon="optionsHorizontal" />
                           </VBtn>
                         </template>
 

@@ -10,9 +10,10 @@
     </template>
     <template v-if="step === 2" #close>
       <VBtn icon class="rtl-flip" @click="step--">
-        <Icon>
-          arrow_back
-        </Icon>
+        <Icon
+          icon="back"
+          :color="$themeTokens.textInverted"
+        />
       </VBtn>
     </template>
     <VWindow v-model="step">

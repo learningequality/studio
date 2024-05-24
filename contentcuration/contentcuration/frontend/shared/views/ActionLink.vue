@@ -18,9 +18,13 @@
       >
         {{ text }}
       </span>
-      <Icon v-if="target === '_blank'" small class="mx-1 rtl-flip">
-        open_in_new
-      </Icon>
+      <Icon
+        v-if="target === '_blank'"
+        icon="openNewTab"
+        :color="$themeTokens.primary"
+        class="mx-1 rtl-flip"
+      />
+
     </slot>
   </VBtn>
 

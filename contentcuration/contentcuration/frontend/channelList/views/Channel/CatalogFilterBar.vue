@@ -36,9 +36,9 @@
           >
             <VLayout>
               <div class="px-2 text-xs-center">
-                <Icon style="font-size: 75px;">
+                <VIconWrapper style="font-size: 75px;">
                   local_hospital
-                </Icon>
+                </VIconWrapper>
               </div>
               <VCardTitle primary-title class="pb-2 pt-2">
 

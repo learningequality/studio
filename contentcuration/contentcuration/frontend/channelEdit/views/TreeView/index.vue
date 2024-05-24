@@ -9,7 +9,7 @@
         data-test="staging-tree-banner"
       >
         <VLayout align-center justify-start>
-          <Icon>build</Icon>
+          <VIconWrapper>build</VIconWrapper>
           <span class="pl-1">
             <KRouterLink
               :to="stagingTreeLink"
