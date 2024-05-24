@@ -223,7 +223,7 @@ export function getMasteryModelNValidators() {
 export function getShortActivityDurationValidators() {
   return [
     v => v !== '' || ValidationErrors.ACTIVITY_DURATION_REQUIRED,
-    v => v >= 1 || ValidationErrors.ACTIVITY_DURATION_MIN_FOR_SHORT_ACTIVITY,
+    v => v >= 5 || ValidationErrors.ACTIVITY_DURATION_MIN_FOR_SHORT_ACTIVITY,
     v => v <= 30 || ValidationErrors.ACTIVITY_DURATION_MAX_FOR_SHORT_ACTIVITY,
   ];
 }
@@ -231,7 +231,7 @@ export function getShortActivityDurationValidators() {
 export function getLongActivityDurationValidators() {
   return [
     v => v !== '' || ValidationErrors.ACTIVITY_DURATION_REQUIRED,
-    v => v > 30 || ValidationErrors.ACTIVITY_DURATION_MIN_FOR_LONG_ACTIVITY,
+    v => v > 40 || ValidationErrors.ACTIVITY_DURATION_MIN_FOR_LONG_ACTIVITY,
     v => v <= 120 || ValidationErrors.ACTIVITY_DURATION_MAX_FOR_LONG_ACTIVITY,
   ];
 }
