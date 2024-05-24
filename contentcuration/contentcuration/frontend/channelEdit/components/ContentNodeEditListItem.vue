@@ -49,10 +49,10 @@
         <template #actions-end>
           <VListTileAction class="action-icon px-1" @click.stop>
             <transition name="fade">
-              <IconButton
+              <KIconButton
                 icon="rename"
                 size="small"
-                :text="$tr('editTooltip')"
+                :tooltip="$tr('editTooltip')"
                 :disabled="copying"
                 @click.stop
                 @click="editTitleDescription()"
@@ -60,19 +60,17 @@
             </transition>
           </VListTileAction>
           <VListTileAction :aria-hidden="!active" class="action-icon px-1">
-            <Menu v-model="activated">
-              <template #activator="{ on }">
-                <IconButton
-                  icon="optionsVertical"
-                  :text="$tr('optionsTooltip')"
-                  size="small"
-                  :disabled="copying"
-                  v-on="on"
-                  @click.stop
-                />
+            <KIconButton
+              icon="optionsVertical"
+              size="small"
+              :tooltip="$tr('optionsTooltip')"
+              :disabled="copying"
+              @click.stop
+            >
+              <template #menu>
+                <ContentNodeOptions v-if="!copying" :nodeId="nodeId" />
               </template>
-              <ContentNodeOptions v-if="!copying && activated" :nodeId="nodeId" />
-            </Menu>
+            </KIconButton>
           </VListTileAction>
         </template>
 
@@ -92,11 +90,9 @@
           />
         </template>
 
-        <template #context-menu="{ showContextMenu, positionX, positionY }">
-          <ContentNodeContextMenu
-            :show="showContextMenu"
-            :positionX="positionX"
-            :positionY="positionY"
+        <template #context-menu>
+          <ContentNodeOptions
+            isContextMenu
             :nodeId="nodeId"
           />
         </template>
@@ -113,7 +109,6 @@
 
   import ContentNodeListItem from './ContentNodeListItem';
   import ContentNodeOptions from './ContentNodeOptions';
-  import ContentNodeContextMenu from './ContentNodeContextMenu';
   import Checkbox from 'shared/views/form/Checkbox';
   import IconButton from 'shared/views/IconButton';
   import DraggableItem from 'shared/views/draggable/DraggableItem';
@@ -129,7 +124,6 @@
       DraggableItem,
       ContentNodeListItem,
       ContentNodeOptions,
-      ContentNodeContextMenu,
       Checkbox,
       IconButton,
     },
@@ -164,11 +158,6 @@
         default: false,
       },
     },
-    data() {
-      return {
-        activated: false,
-      };
-    },
     computed: {
       ...mapGetters('currentChannel', ['canEdit']),
       ...mapGetters('contentNode', [
@@ -186,7 +175,7 @@
         },
       },
       active() {
-        return this.selected || this.activated || this.previewing;
+        return this.selected || this.previewing;
       },
       contentNode() {
         return this.getContentNode(this.nodeId);

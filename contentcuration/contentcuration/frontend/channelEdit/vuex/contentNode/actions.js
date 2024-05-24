@@ -546,6 +546,10 @@ export async function checkSavingProgress(
   return Boolean(query);
 }
 
+export function setMoveNodesIds(context, ids) {
+  context.commit('SET_MOVE_NODES', ids);
+}
+
 export function setQuickEditModal(context, open) {
   context.commit('SET_QUICK_EDIT_MODAL', open);
 }
