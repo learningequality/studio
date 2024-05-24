@@ -23,7 +23,7 @@
               <VLayout v-if="props.header.selectAll" row align-center>
                 <VFlex shrink>
                   <Checkbox
-                    :value="selected.length === items.length"
+                    :inputValue="selected.length === items.length"
                     :indeterminate="!!selected.length && selected.length !== items.length"
                     data-test="selectall"
                     @input="toggleSelectAll"
