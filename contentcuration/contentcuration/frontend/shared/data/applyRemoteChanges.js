@@ -193,8 +193,8 @@ class ReturnedChanges extends ChangeDispatcher {
         .and(node => {
           const unpublishedNodeIds = db[TABLE_NAMES.CHANGES_TABLE]
             .where({ table: TABLE_NAMES.CONTENTNODE })
-            .toArray()
-            .map(change => change.key);
+            .map(change => change.key)
+            .toArray();
           return !unpublishedNodeIds.includes(node.id);
         })
         .modify({ changed: false, published: true });
