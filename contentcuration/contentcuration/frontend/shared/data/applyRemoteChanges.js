@@ -186,10 +186,17 @@ class ReturnedChanges extends ChangeDispatcher {
     }
 
     // Publish changes associate with the channel, but we open a transaction on contentnode
-    return transaction(change, TABLE_NAMES.CONTENTNODE, () => {
+    return transaction(change, TABLE_NAMES.CONTENTNODE, TABLE_NAMES.CHANGES_TABLE, () => {
       return db
         .table(TABLE_NAMES.CONTENTNODE)
         .where({ channel_id: change.channel_id })
+        .and(node => {
+          const unpublishedNodeIds = db[TABLE_NAMES.CHANGES_TABLE]
+            .where({ table: TABLE_NAMES.CONTENTNODE })
+            .toArray()
+            .map(change => change.obj.node_id);
+          return !unpublishedNodeIds.includes(node.node_id);
+        })
         .modify({ changed: false, published: true });
     });
   }
