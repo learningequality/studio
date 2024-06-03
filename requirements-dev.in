@@ -17,7 +17,7 @@ pre-commit==1.15.1
 nodeenv
 pip-tools==6.8.0
 locust
-drf-yasg
+drf-yasg==1.21.5
 pyinstrument
 pypandoc
 git+https://github.com/someshchaturvedi/customizable-django-profiler.git#customizable-django-profiler
