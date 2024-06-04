@@ -157,8 +157,9 @@ kombu==5.2.4
     # via celery
 le-utils==0.2.5
     # via -r requirements.in
-packaging==20.9
+packaging==24.0
     # via
+    #   -r requirements.in
     #   google-api-core
     #   google-cloud-error-reporting
     #   google-cloud-kms
@@ -189,9 +190,7 @@ pyasn1-modules==0.2.8
 pycparser==2.20
     # via cffi
 pyparsing==2.4.7
-    # via
-    #   httplib2
-    #   packaging
+    # via httplib2
 pyrsistent==0.17.3
     # via jsonschema
 python-dateutil==2.8.2
