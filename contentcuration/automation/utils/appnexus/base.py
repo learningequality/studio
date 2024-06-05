@@ -1,9 +1,9 @@
-import time
 import logging
-import requests
+import time
 from abc import ABC
 from abc import abstractmethod
-from builtins import NotImplementedError
+
+import requests
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 
@@ -15,7 +15,7 @@ class SessionWithMaxConnectionAge(requests.Session):
         Session with a maximum connection age. If the connection is older than the specified age, it will be closed and a new one will be created.
         The age is specified in seconds.
     """
-    def __init__(self, age = 100):
+    def __init__(self, age=100):
         super().__init__()
         self.age = age
         self.last_used = time.time()
@@ -56,7 +56,8 @@ class BackendRequest(object):
 
 class BackendResponse(object):
     """ Class that should be inherited by specific backend for its responses"""
-    def __init__(self, **kwargs):
+    def __init__(self, error=None, **kwargs):
+        self.error = error
         for key, value in kwargs.items():
             setattr(self, key, value)
 
@@ -67,8 +68,8 @@ class Backend(ABC):
     session = None
     base_url = None
     connect_endpoint = None
-    max_retries=1
-    backoff_factor=0.3
+    max_retries = 1
+    backoff_factor = 0.3
 
     def __new__(cls, *args, **kwargs):
         if not isinstance(cls._instance, cls):
@@ -156,14 +157,14 @@ class Backend(ABC):
         ) as e:
             logging.exception(e)
             raise errors.InvalidResponse(f"Invalid response from {url}")
-    
+
     def connect(self, **kwargs):
         """ Establishes a connection to the backend service. """
         try:
             request = BackendRequest(method="GET", path=self.connect_endpoint, **kwargs)
             self._make_request(request)
             return True
-        except Exception as e:
+        except Exception:
             return False
 
     def make_request(self, request):
