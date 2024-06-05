@@ -192,10 +192,10 @@ class ReturnedChanges extends ChangeDispatcher {
         .where({ channel_id: change.channel_id })
         .and(node => {
           const unpublishedNodeIds = db[TABLE_NAMES.CHANGES_TABLE]
-            .where({ table: TABLE_NAMES.CONTENTNODE })
-            .map(change => change.key)
+            .where({ table: TABLE_NAMES.CONTENTNODE, key: node.id })
+            .limit(1)
             .toArray();
-          return !unpublishedNodeIds.includes(node.id);
+          return unpublishedNodeIds.length === 0;
         })
         .modify({ changed: false, published: true });
     });
