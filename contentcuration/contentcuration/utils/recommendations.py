@@ -105,7 +105,7 @@ class RecommendationsAdapter(Adapter):
             raise errors.ConnectionError("Connection to the backend failed")
 
         try:
-            resources = [self.__extract_content(node) for node in nodes]
+            resources = [self.extract_content(node) for node in nodes]
             json = {
                 'resources': resources,
                 'metadata': {}
@@ -115,7 +115,7 @@ class RecommendationsAdapter(Adapter):
         except Exception as e:
             return EmbeddingsResponse(error=e)
 
-    def __extract_content(self, node: ContentNode) -> Dict[str, Any]:
+    def extract_content(self, node: ContentNode) -> Dict[str, Any]:
         return {}
 
 
