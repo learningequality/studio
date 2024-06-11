@@ -20,14 +20,15 @@
             {{ getText(item) }}
           </VChip>
         </template>
-        <template #item="{ item, tile }">
-          <Checkbox v-bind="tile.props" class="ma-0">
-            <template #label>
-              <span :class="{ notranslate }" :style="getEllipsisStyle()" dir="auto">
-                {{ getText(item) }}
-              </span>
-            </template>
-          </Checkbox>
+        <template #item="{ item }">
+          <KCheckbox
+            :checked="selections.includes(item)"
+            :label="getText(item)"
+            :value="item"
+            :style="getEllipsisStyle()"
+            :ripple="false"
+            :class="{ notranslate }"
+          />
         </template>
       </VSelect>
     </template>
@@ -38,12 +39,11 @@
 
 <script>
 
-  import Checkbox from './Checkbox';
   import DropdownWrapper from './DropdownWrapper';
 
   export default {
     name: 'MultiSelect',
-    components: { Checkbox, DropdownWrapper },
+    components: { DropdownWrapper },
     // $attrs are rebound to a descendent component
     inheritAttrs: false,
     props: {
