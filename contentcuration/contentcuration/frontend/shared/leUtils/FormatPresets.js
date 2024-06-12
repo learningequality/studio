@@ -464,6 +464,22 @@ const FormatPresetsMap = new Map([
       associated_mimetypes: ['image/jpeg', 'image/png'],
     },
   ],
+  [
+    'bloompub',
+    {
+      id: 'bloompub',
+      readable_name: 'Bloom Document',
+      multi_language: false,
+      supplementary: false,
+      thumbnail: false,
+      subtitle: false,
+      display: true,
+      order: 1,
+      kind_id: 'document',
+      allowed_formats: ['bloompub'],
+      associated_mimetypes: ['application/bloompub+zip'],
+    },
+  ],
 ]);
 
 export default FormatPresetsMap;
@@ -500,4 +516,5 @@ export const FormatPresetsNames = {
   VIDEO_THUMBNAIL: 'video_thumbnail',
   ZIM: 'zim',
   ZIM_THUMBNAIL: 'zim_thumbnail',
+  BLOOMPUB: 'bloompub',
 };
