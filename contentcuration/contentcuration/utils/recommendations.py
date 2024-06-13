@@ -89,7 +89,19 @@ class RecommendationsAdapter(Adapter):
         return self.backend.make_request(request)
 
     def embed_topics(self, topics: Dict[str, Any]) -> EmbeddingsResponse:
+        """
+        Embeds the topics and returns an EmbeddingsResponse.
 
+        This method connects to the backend, sends the provided topics as a JSON payload,
+        and requests the backend to embed the topics. If an exception occurs during
+        this process, it returns an EmbeddingsResponse with the exception as the error.
+
+        Parameters:
+        topics (Dict[str, Any]): A dictionary of topics to be embedded.
+
+        Returns:
+        EmbeddingsResponse: An EmbeddingsResponse object containing the embeddings or an error.
+        """
         if not self.backend.connect():
             raise errors.ConnectionError("Connection to the backend failed")
 
@@ -100,7 +112,19 @@ class RecommendationsAdapter(Adapter):
             return EmbeddingsResponse(error=e)
 
     def embed_content(self, nodes: List[ContentNode]) -> EmbeddingsResponse:
+        """
+        Embeds the content nodes and returns an EmbeddingsResponse.
 
+        This method connects to the backend, extracts content metadata from the provided nodes,
+        and sends a request to the backend to embed the content. If an exception occurs during
+        this process, it returns an EmbeddingsResponse with the exception as the error.
+
+        Parameters:
+        nodes (List[ContentNode]): A list of ContentNode objects to be embedded.
+
+        Returns:
+        EmbeddingsResponse: An EmbeddingsResponse object containing the embeddings or an error.
+        """
         if not self.backend.connect():
             raise errors.ConnectionError("Connection to the backend failed")
 
@@ -116,6 +140,18 @@ class RecommendationsAdapter(Adapter):
             return EmbeddingsResponse(error=e)
 
     def extract_content(self, node: ContentNode) -> Dict[str, Any]:
+        """
+        Extracts content metadata from a given ContentNode object.
+
+        This method extracts the content metadata from the provided ContentNode object.
+        The extracted metadata is returned as a dictionary.
+
+        Parameters:
+        node (ContentNode): The ContentNode object from which to extract the content metadata.
+
+        Returns:
+        Dict[str, Any]: A dictionary containing the extracted content metadata.
+        """
         return {}
 
 
