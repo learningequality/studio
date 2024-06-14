@@ -1,15 +1,18 @@
-
 class ConnectionError(Exception):
-  pass
+    pass
+
 
 class TimeoutError(Exception):
-  pass
+    pass
+
 
 class HttpError(Exception):
-  pass
+    pass
+
 
 class InvalidRequest(Exception):
-  pass
+    pass
+
 
 class InvalidResponse(Exception):
-  pass
+    pass

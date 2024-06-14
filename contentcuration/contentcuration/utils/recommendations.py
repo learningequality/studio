@@ -1,38 +1,56 @@
+from typing import Any
+from typing import Dict
+from typing import List
 from typing import Union
 
+from automation.utils.appnexus import errors
 from automation.utils.appnexus.base import Adapter
 from automation.utils.appnexus.base import Backend
 from automation.utils.appnexus.base import BackendFactory
 from automation.utils.appnexus.base import BackendRequest
 from automation.utils.appnexus.base import BackendResponse
 
+from contentcuration.models import ContentNode
+
 
 class RecommendationsBackendRequest(BackendRequest):
-    pass
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
 
-class RecommedationsRequest(RecommendationsBackendRequest):
-    def __init__(self) -> None:
-        super().__init__()
+class RecommendationsRequest(RecommendationsBackendRequest):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
 
 class EmbeddingsRequest(RecommendationsBackendRequest):
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
 
 class RecommendationsBackendResponse(BackendResponse):
-    pass
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
 
 class RecommendationsResponse(RecommendationsBackendResponse):
-    def __init__(self) -> None:
-        pass
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
+class EmbedTopicsRequest(RecommendationsBackendRequest):
+    path = '/embed-topics'
+    method = 'POST'
+
+
+class EmbedContentRequest(RecommendationsBackendRequest):
+    path = '/embed-content'
+    method = 'POST'
 
 
 class EmbeddingsResponse(RecommendationsBackendResponse):
-    def __init__(self) -> None:
-        pass
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
 
 class RecommendationsBackendFactory(BackendFactory):
@@ -67,8 +85,38 @@ class RecommendationsAdapter(Adapter):
         return True
 
     def get_recommendations(self, embedding) -> RecommendationsResponse:
-        request = RecommedationsRequest(embedding)
+        request = RecommendationsRequest(embedding)
         return self.backend.make_request(request)
+
+    def embed_topics(self, topics: Dict[str, Any]) -> EmbeddingsResponse:
+
+        if not self.backend.connect():
+            raise errors.ConnectionError("Connection to the backend failed")
+
+        try:
+            embed_topics_request = EmbedTopicsRequest(json=topics)
+            return self.backend.make_request(embed_topics_request)
+        except Exception as e:
+            return EmbeddingsResponse(error=e)
+
+    def embed_content(self, nodes: List[ContentNode]) -> EmbeddingsResponse:
+
+        if not self.backend.connect():
+            raise errors.ConnectionError("Connection to the backend failed")
+
+        try:
+            resources = [self.extract_content(node) for node in nodes]
+            json = {
+                'resources': resources,
+                'metadata': {}
+            }
+            embed_content_request = EmbedContentRequest(json=json)
+            return self.backend.make_request(embed_content_request)
+        except Exception as e:
+            return EmbeddingsResponse(error=e)
+
+    def extract_content(self, node: ContentNode) -> Dict[str, Any]:
+        return {}
 
 
 class Recommendations(Backend):
