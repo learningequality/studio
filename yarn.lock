@@ -3012,6 +3012,11 @@
   optionalDependencies:
     prettier "^1.18.2 || ^2.0.0"
 
+"@vue/composition-api@1.7.2":
+  version "1.7.2"
+  resolved "https://registry.yarnpkg.com/@vue/composition-api/-/composition-api-1.7.2.tgz#0b656f3ec39fefc2cf40aaa8c12426bcfeae1b44"
+  integrity sha512-M8jm9J/laYrYT02665HkZ5l2fWTK4dcVg3BsDHm/pfz+MjDYwX+9FUaZyGwEyXEDonQYRCo0H7aLgdklcIELjw==
+
 "@vue/test-utils@1.0.0-beta.29":
   version "1.0.0-beta.29"
   resolved "https://registry.yarnpkg.com/@vue/test-utils/-/test-utils-1.0.0-beta.29.tgz#c942cf25e891cf081b6a03332b4ae1ef430726f0"
@@ -3659,7 +3664,7 @@ autoprefixer@^9.6.1:
     postcss "^7.0.32"
     postcss-value-parser "^4.1.0"
 
-autosize@^3.0.20, autosize@^3.0.21:
+autosize@3.0.21:
   version "3.0.21"
   resolved "https://registry.yarnpkg.com/autosize/-/autosize-3.0.21.tgz#f182f40d17757d978a139a4c9ca40c4c0e448603"
   integrity sha512-xGFj5jTV4up6+fxRwtnAWiCIx/5N0tEnFn5rdhAkK1Lq2mliLMuGJgP5Bf4phck3sHGYrVKpYwugfJ61MSz9nA==
@@ -4824,10 +4829,10 @@ css-declaration-sorter@^6.3.1:
   resolved "https://registry.yarnpkg.com/css-declaration-sorter/-/css-declaration-sorter-6.4.0.tgz#630618adc21724484b3e9505bce812def44000ad"
   integrity sha512-jDfsatwWMWN0MODAFuHszfjphEXfNw9JUAhmY4pLu3TyTU+ohUpsbVtbU+1MZn4a47D9kqh03i4eyOm+74+zew==
 
-css-element-queries@^1.2.0:
-  version "1.2.3"
-  resolved "https://registry.yarnpkg.com/css-element-queries/-/css-element-queries-1.2.3.tgz#e14940b1fcd4bf0da60ea4145d05742d7172e516"
-  integrity sha512-QK9uovYmKTsV2GXWQiMOByVNrLn2qz6m3P7vWpOR4IdD6I3iXoDw5qtgJEN3Xq7gIbdHVKvzHjdAtcl+4Arc4Q==
+css-element-queries@1.2.0:
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/css-element-queries/-/css-element-queries-1.2.0.tgz#081373d7f30302adad46b7c29b83b85f8ef8f62c"
+  integrity sha512-4gaxpioSFueMcp9yj1TJFCLjfooGv38y6ZdwFUS3GuS+9NIVijdeiExXKwSIHoQDADfpgnaYSTzmJs+bV+Hehg==
 
 css-functions-list@^3.1.0:
   version "3.1.0"
@@ -5054,6 +5059,11 @@ data-urls@^3.0.2:
     whatwg-mimetype "^3.0.0"
     whatwg-url "^11.0.0"
 
+date-fns@1.30.1:
+  version "1.30.1"
+  resolved "https://registry.yarnpkg.com/date-fns/-/date-fns-1.30.1.tgz#2e71bf0b119153dbb4cc4e88d9ea5acfb50dc05c"
+  integrity sha512-hBSVCvSmWC+QypYObzwGOd9wqdDpOt+0wl0KbU+R+uuZBS1jN8VsD1ss3irQDknRj5NvxiTF6oj/nDRnN/UQNw==
+
 de-indent@^1.0.2:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/de-indent/-/de-indent-1.0.2.tgz#b2038e846dc33baa5796128d0804b455b8c1e21d"
@@ -5125,11 +5135,6 @@ deep-is@~0.1.3:
   version "0.1.4"
   resolved "https://registry.yarnpkg.com/deep-is/-/deep-is-0.1.4.tgz#a6f2dce612fadd2ef1f519b73551f17e85199831"
   integrity sha512-oIPzksmTg4/MriiaYGO+okXDT7ztn/w3Eptv/+gSIdMdKsJo0u4CfYNFJPy+4SKMuCqGw2wxnA+URMg3t8a/bQ==
-
-deepmerge@^2.0.1:
-  version "2.2.1"
-  resolved "https://registry.yarnpkg.com/deepmerge/-/deepmerge-2.2.1.tgz#5d3ff22a01c00f645405a2fbc17d0778a1801170"
-  integrity sha512-R9hc1Xa/NOBi9WRVUWg19rl1UB7Tt4kuPd+thNJgFZoxXsTz7ncaPaeIm+40oSGuP33DfMb4sZt1QIGiJzC4EA==
 
 deepmerge@^4.2.2:
   version "4.2.2"
@@ -6478,7 +6483,7 @@ fragment-cache@^0.2.1:
   dependencies:
     map-cache "^0.2.2"
 
-frame-throttle@^3.0.0:
+frame-throttle@3.0.0:
   version "3.0.0"
   resolved "https://registry.yarnpkg.com/frame-throttle/-/frame-throttle-3.0.0.tgz#a666e007c10af6239909cf73871be09a7ea1c6d1"
   integrity sha512-ENBi8VP95xoHf8JpxPwEaCdZneOrtxl0U2H5p2oS896u3NzriR9kRcylvJ+FcCW3qZfZFJ5TDeOT5LbENndBnQ==
@@ -6545,7 +6550,7 @@ functions-have-names@^1.2.2:
   resolved "https://registry.yarnpkg.com/functions-have-names/-/functions-have-names-1.2.3.tgz#0404fe4ee2ba2f607f0e0ec3c80bae994133b834"
   integrity sha512-xckBUXyTIqT97tq2x2AMb+g163b5JFysYk0x4qxNFwbfQkmNZoiRHb6sPzI9/QV33WeuvVYBUIiD4NzNIyqaRQ==
 
-fuzzysearch@^1.0.3:
+fuzzysearch@1.0.3:
   version "1.0.3"
   resolved "https://registry.yarnpkg.com/fuzzysearch/-/fuzzysearch-1.0.3.tgz#dffc80f6d6b04223f2226aa79dd194231096d008"
   integrity sha512-s+kNWQuI3mo9OALw0HJ6YGmMbLqEufCh2nX/zzV5CrICQ/y4AwPxM+6TIiF9ItFCHXFCyM/BfCCmN57NTIJuPg==
@@ -8980,17 +8985,6 @@ jszip@^3.7.1:
     readable-stream "~2.3.6"
     setimmediate "^1.0.5"
 
-keen-ui@^1.3.0:
-  version "1.3.2"
-  resolved "https://registry.yarnpkg.com/keen-ui/-/keen-ui-1.3.2.tgz#252cab973282d4cd477c45ac92015595d1b1fff1"
-  integrity sha512-WlyNRB8+ei47n87Om973HXUzLqL+Ili7hcNkG6gar/Jqfykpghgx+eSy2vyRq7oEBO2dGr0QgZ3A9eXq/eP14Q==
-  dependencies:
-    autosize "^3.0.20"
-    deepmerge "^2.0.1"
-    fuzzysearch "^1.0.3"
-    lodash.debounce "^4.0.8"
-    tippy.js "^4.2.1"
-
 kind-of@^3.0.2, kind-of@^3.0.3, kind-of@^3.2.0:
   version "3.2.2"
   resolved "https://registry.yarnpkg.com/kind-of/-/kind-of-3.2.2.tgz#31ea21a734bab9bbb0f32466d893aea51e4a3c64"
@@ -9030,25 +9024,29 @@ known-css-properties@^0.25.0:
   resolved "https://registry.yarnpkg.com/known-css-properties/-/known-css-properties-0.25.0.tgz#6ebc4d4b412f602e5cfbeb4086bd544e34c0a776"
   integrity sha512-b0/9J1O9Jcyik1GC6KC42hJ41jKwdO/Mq8Mdo5sYN+IuRTXs2YFHZC3kZSx6ueusqa95x3wLYe/ytKjbAfGixA==
 
-kolibri-constants@^0.1.41:
-  version "0.1.42"
-  resolved "https://registry.yarnpkg.com/kolibri-constants/-/kolibri-constants-0.1.42.tgz#2f62a8d8b8894e5cfbd47ee6564b31018818c93f"
-  integrity sha512-2hUxYnzUEfhLFJO9egVSwYW8/PKob9wLeDYfB74mtIzgQ4zy6huRj3574WetK9gREi+W1Jcm7HGPsfZIFzFvrA==
+kolibri-constants@^0.2.0:
+  version "0.2.5"
+  resolved "https://registry.yarnpkg.com/kolibri-constants/-/kolibri-constants-0.2.5.tgz#2b9df4c477119d0ade2d66bf8aef8a4172f0418f"
+  integrity sha512-ZoFZ83xgteZhFZtYjiOmITcZeSF+X42i12TOo87zmcdA78jj0dZbPYB+ttO855UxoKY8h4HHeDVZIUkE5TGa5g==
 
-"kolibri-design-system@https://github.com/learningequality/kolibri-design-system#e9a2ff34716bb6412fe99f835ded5b17345bab94":
-  version "1.3.0"
-  resolved "https://github.com/learningequality/kolibri-design-system#e9a2ff34716bb6412fe99f835ded5b17345bab94"
+kolibri-design-system@^4.2.0:
+  version "4.2.0"
+  resolved "https://registry.yarnpkg.com/kolibri-design-system/-/kolibri-design-system-4.2.0.tgz#7ef5355ecfd330893e4f9b37ec2bcad6b4cd9e56"
+  integrity sha512-50lkYsPIx0zfrbAwsEC5QPMJcpmZGmne8BhFVtgcWS4xEn6Uc6BefHQAxqZriomnLRd5otAP3XwFkrkycly0fA==
   dependencies:
+    "@vue/composition-api" "1.7.2"
     aphrodite "https://github.com/learningequality/aphrodite/"
-    autosize "^3.0.21"
-    css-element-queries "^1.2.0"
-    frame-throttle "^3.0.0"
-    fuzzysearch "^1.0.3"
-    keen-ui "^1.3.0"
-    lodash "^4.17.15"
-    popper.js "^1.14.6"
-    purecss "^0.6.2"
-    tippy.js "^4.2.1"
+    autosize "3.0.21"
+    css-element-queries "1.2.0"
+    date-fns "1.30.1"
+    frame-throttle "3.0.0"
+    fuzzysearch "1.0.3"
+    lodash "4.17.21"
+    popper.js "1.16.1"
+    purecss "2.2.0"
+    tippy.js "4.2.1"
+    vue-intl "3.1.0"
+    xstate "4.38.3"
 
 kolibri-tools@0.16.0-dev.3:
   version "0.16.0-dev.3"
@@ -10524,7 +10522,7 @@ pngjs@^3.0.0, pngjs@^3.3.3:
   resolved "https://registry.yarnpkg.com/pngjs/-/pngjs-3.4.0.tgz#99ca7d725965fb655814eaf65f38f12bbdbf555f"
   integrity sha512-NCrCHhWmnQklfH4MtJMRjZ2a8c80qXeMlQMv2uVp9ISJMTt562SbGd6n2oq0PaPgKm7Z6pL9E2UlLIhC+SHL3w==
 
-popper.js@^1.14.6, popper.js@^1.14.7:
+popper.js@1.16.1, popper.js@^1.14.7:
   version "1.16.1"
   resolved "https://registry.yarnpkg.com/popper.js/-/popper.js-1.16.1.tgz#2a223cb3dc7b6213d740e40372be40de43e65b1b"
   integrity sha512-Wb4p1J4zyFTbM+u6WuO4XstYx4Ky9Cewe4DWrel7B0w6VVICvPwdOpotjzcf6eD8TsckVnIMNONQyPIUFOUbCQ==
@@ -11016,10 +11014,10 @@ pure-rand@^6.0.0:
   resolved "https://registry.yarnpkg.com/pure-rand/-/pure-rand-6.0.2.tgz#a9c2ddcae9b68d736a8163036f088a2781c8b306"
   integrity sha512-6Yg0ekpKICSjPswYOuC5sku/TSWaRYlA0qsXqJgM/d/4pLPHPuTxK7Nbf7jFKzAeedUhR8C7K9Uv63FBsSo8xQ==
 
-purecss@^0.6.2:
-  version "0.6.2"
-  resolved "https://registry.yarnpkg.com/purecss/-/purecss-0.6.2.tgz#f0827d227e909543c5138f36d56c8c613f476b8c"
-  integrity sha512-6BZF+rr9UAy8xwWDW6mi//2TnImxqMAjfLTYCO80OzPcavSI3DMjnD4fY92383KB5FA+gEHO/ug46q/yeitu9w==
+purecss@2.2.0:
+  version "2.2.0"
+  resolved "https://registry.yarnpkg.com/purecss/-/purecss-2.2.0.tgz#71249802e1babd562b236cf5d0b75b16f158a421"
+  integrity sha512-jEPrAALLgE+InDARWdPDt0AkZ1Bi0yXxHj4BOwWImq06sGIDe5CagPyS6Z9WGyEgMuZonrrhinInJ80nAHTIUA==
 
 qs@6.10.3:
   version "6.10.3"
@@ -12257,7 +12255,16 @@ string-trim-spaces-only@^3.1.0:
   dependencies:
     "@babel/runtime" "^7.14.0"
 
-"string-width-cjs@npm:string-width@^4.2.0", "string-width@^1.0.2 || 2 || 3 || 4", string-width@^4.1.0, string-width@^4.2.0, string-width@^4.2.3:
+"string-width-cjs@npm:string-width@^4.2.0":
+  version "4.2.3"
+  resolved "https://registry.yarnpkg.com/string-width/-/string-width-4.2.3.tgz#269c7117d27b05ad2e536830a8ec895ef9c6d010"
+  integrity sha512-wKyQRQpjJ0sIp62ErSZdGsjMJWsap5oRNihHhu6G7JVO/9jIB6UyevL+tXuOqrng8j/cxKTWyWUwvSTriiZz/g==
+  dependencies:
+    emoji-regex "^8.0.0"
+    is-fullwidth-code-point "^3.0.0"
+    strip-ansi "^6.0.1"
+
+"string-width@^1.0.2 || 2 || 3 || 4", string-width@^4.1.0, string-width@^4.2.0, string-width@^4.2.3:
   version "4.2.3"
   resolved "https://registry.yarnpkg.com/string-width/-/string-width-4.2.3.tgz#269c7117d27b05ad2e536830a8ec895ef9c6d010"
   integrity sha512-wKyQRQpjJ0sIp62ErSZdGsjMJWsap5oRNihHhu6G7JVO/9jIB6UyevL+tXuOqrng8j/cxKTWyWUwvSTriiZz/g==
@@ -12375,7 +12382,14 @@ stringify-object@^3.3.0:
     is-obj "^1.0.1"
     is-regexp "^1.0.0"
 
-"strip-ansi-cjs@npm:strip-ansi@^6.0.1", strip-ansi@6.0.1, strip-ansi@^6.0.0, strip-ansi@^6.0.1:
+"strip-ansi-cjs@npm:strip-ansi@^6.0.1":
+  version "6.0.1"
+  resolved "https://registry.yarnpkg.com/strip-ansi/-/strip-ansi-6.0.1.tgz#9e26c63d30f53443e9489495b2105d37b67a85d9"
+  integrity sha512-Y38VPSHcqkFrCpFnQ9vuSXmquuv5oXOKpGeT6aGrr3o3Gc9AlVa6JBfUSOCnbxGGZF+/0ooI7KrPuUSztUdU5A==
+  dependencies:
+    ansi-regex "^5.0.1"
+
+strip-ansi@6.0.1, strip-ansi@^6.0.0, strip-ansi@^6.0.1:
   version "6.0.1"
   resolved "https://registry.yarnpkg.com/strip-ansi/-/strip-ansi-6.0.1.tgz#9e26c63d30f53443e9489495b2105d37b67a85d9"
   integrity sha512-Y38VPSHcqkFrCpFnQ9vuSXmquuv5oXOKpGeT6aGrr3o3Gc9AlVa6JBfUSOCnbxGGZF+/0ooI7KrPuUSztUdU5A==
@@ -12844,10 +12858,10 @@ tinycolor2@^1.4.1:
   resolved "https://registry.yarnpkg.com/tinycolor2/-/tinycolor2-1.4.2.tgz#3f6a4d1071ad07676d7fa472e1fac40a719d8803"
   integrity sha512-vJhccZPs965sV/L2sU4oRQVAos0pQXwsvTLkWYdqJ+a8Q5kPFzJTuOFwy7UniPli44NKQGAglksjvOcpo95aZA==
 
-tippy.js@^4.2.1:
-  version "4.3.5"
-  resolved "https://registry.yarnpkg.com/tippy.js/-/tippy.js-4.3.5.tgz#882bff8d92f09bb0546d2826d5668c0560006f54"
-  integrity sha512-NDq3efte8nGK6BOJ1dDN1/WelAwfmh3UtIYXXck6+SxLzbIQNZE/cmRSnwScZ/FyiKdIcvFHvYUgqmoGx8CcyA==
+tippy.js@4.2.1:
+  version "4.2.1"
+  resolved "https://registry.yarnpkg.com/tippy.js/-/tippy.js-4.2.1.tgz#9e4939d976465f77229b05a3cb233b5dc28cf850"
+  integrity sha512-xEE7zYNgQxCDdPcuT6T04f0frPh0wO7CcIqJKMFazU/NqusyjCgYSkLRosIHoiRkZMRzSPOudC8wRN5GjvAyOQ==
   dependencies:
     popper.js "^1.14.7"
 
@@ -13403,7 +13417,7 @@ vue-hot-reload-api@^2.3.0:
   resolved "https://registry.yarnpkg.com/vue-hot-reload-api/-/vue-hot-reload-api-2.3.4.tgz#532955cc1eb208a3d990b3a9f9a70574657e08f2"
   integrity sha512-BXq3jwIagosjgNVae6tkHzzIk6a8MHFtzAdwhnV5VlvPTFxDCvIttgSiHWjdGoTJvXtmRu5HacExfdarRcFhog==
 
-vue-intl@^3.0.0:
+vue-intl@3.1.0, vue-intl@^3.0.0:
   version "3.1.0"
   resolved "https://registry.yarnpkg.com/vue-intl/-/vue-intl-3.1.0.tgz#707f1f7406595c9b4afc6049254b333093be37be"
   integrity sha512-0v3S5gspuYnt6j1G+KLfPUsNnjRdbMOcYrWYoSd1gYk6rX8VuOyh7NLztPrSIJt+NLs/qzLOZXxI1LORukEiqA==
@@ -13980,8 +13994,7 @@ workbox-window@7.0.0, workbox-window@^7.0.0:
     "@types/trusted-types" "^2.0.2"
     workbox-core "7.0.0"
 
-"wrap-ansi-cjs@npm:wrap-ansi@^7.0.0", wrap-ansi@^7.0.0:
-  name wrap-ansi-cjs
+"wrap-ansi-cjs@npm:wrap-ansi@^7.0.0":
   version "7.0.0"
   resolved "https://registry.yarnpkg.com/wrap-ansi/-/wrap-ansi-7.0.0.tgz#67e145cff510a6a6984bdf1152911d69d2eb9e43"
   integrity sha512-YVGIj2kamLSTxw6NsZjoBxfSwsn0ycdesmc4p+Q21c5zPuZ1pl+NfxVdxPtdHvmNVOQ6XSYG4AUtyt/Fi7D16Q==
@@ -13994,6 +14007,15 @@ wrap-ansi@^6.2.0:
   version "6.2.0"
   resolved "https://registry.yarnpkg.com/wrap-ansi/-/wrap-ansi-6.2.0.tgz#e9393ba07102e6c91a3b221478f0257cd2856e53"
   integrity sha512-r6lPcBGxZXlIcymEu7InxDMhdW0KDxpLgoFLcguasxCaJ/SOIZwINatK9KY/tf+ZrlywOKU0UDj3ATXUBfxJXA==
+  dependencies:
+    ansi-styles "^4.0.0"
+    string-width "^4.1.0"
+    strip-ansi "^6.0.0"
+
+wrap-ansi@^7.0.0:
+  version "7.0.0"
+  resolved "https://registry.yarnpkg.com/wrap-ansi/-/wrap-ansi-7.0.0.tgz#67e145cff510a6a6984bdf1152911d69d2eb9e43"
+  integrity sha512-YVGIj2kamLSTxw6NsZjoBxfSwsn0ycdesmc4p+Q21c5zPuZ1pl+NfxVdxPtdHvmNVOQ6XSYG4AUtyt/Fi7D16Q==
   dependencies:
     ansi-styles "^4.0.0"
     string-width "^4.1.0"
@@ -14105,6 +14127,11 @@ xmldom@^0.1.22:
   version "0.1.31"
   resolved "https://registry.yarnpkg.com/xmldom/-/xmldom-0.1.31.tgz#b76c9a1bd9f0a9737e5a72dc37231cf38375e2ff"
   integrity sha512-yS2uJflVQs6n+CyjHoaBmVSqIDevTAWrzMmjG1Gc7h1qQ7uVozNhEPJAwZXWyGQ/Gafo3fCwrcaokezLPupVyQ==
+
+xstate@4.38.3:
+  version "4.38.3"
+  resolved "https://registry.yarnpkg.com/xstate/-/xstate-4.38.3.tgz#4e15e7ad3aa0ca1eea2010548a5379966d8f1075"
+  integrity sha512-SH7nAaaPQx57dx6qvfcIgqKRXIh4L0A1iYEqim4s1u7c9VoCgzZc+63FY90AKU4ZzOC2cfJzTnpO4zK7fCUzzw==
 
 xtend@^4.0.0:
   version "4.0.2"

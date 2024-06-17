@@ -1,6 +1,6 @@
 <template>
 
-  <VCard @click="handleClick">
+  <VCard hover @click="handleClick">
     <VCardTitle>
       <VLayout row wrap>
         <VFlex class="pt-2 px-4 thumbnail-column">
@@ -229,11 +229,6 @@
 
   .v-card {
     cursor: pointer;
-
-    &:hover {
-      /* stylelint-disable-next-line custom-property-pattern */
-      background-color: var(--v-greyBackground-base);
-    }
   }
 
   h3 {

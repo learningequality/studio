@@ -420,6 +420,7 @@
     align-items: center;
     align-self: center;
     min-width: max-content;
+    line-height: 1.6;
     pointer-events: auto;
     cursor: default;
 

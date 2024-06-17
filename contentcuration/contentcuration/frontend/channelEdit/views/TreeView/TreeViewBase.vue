@@ -73,7 +73,7 @@
               v-on="on"
             >
               {{ $formatNumber(errorsInChannel) }}
-              <Icon color="amber">
+              <Icon :color="$themePalette.yellow.v_1100">
                 warning
               </Icon>
             </div>
@@ -204,7 +204,7 @@
         <slot name="extension"></slot>
       </template>
     </ToolBar>
-    <MainNavigationDrawer v-model="drawer" />
+    <MainNavigationDrawer v-model="drawer" color="white" />
     <slot></slot>
 
     <PublishModal
