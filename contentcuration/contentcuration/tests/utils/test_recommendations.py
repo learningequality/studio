@@ -7,6 +7,7 @@ from contentcuration.models import ContentNode
 from contentcuration.utils.recommendations import EmbeddingsResponse
 from contentcuration.utils.recommendations import Recommendations
 from contentcuration.utils.recommendations import RecommendationsAdapter
+from contentcuration.utils.recommendations import RecommendationsResponse
 
 
 class RecommendationsTestCase(TestCase):
@@ -41,33 +42,33 @@ class RecommendationsAdapterTestCase(TestCase):
         self.assertIsInstance(self.adapter, RecommendationsAdapter)
 
     @patch('contentcuration.utils.recommendations.EmbedTopicsRequest')
-    def test_embed_topics_backend_connect_success(self, embed_topics_request_mock):
+    def test_get_recommendations_backend_connect_success(self, get_recommendations_request_mock):
         self.adapter.backend.connect.return_value = True
-        self.adapter.backend.make_request.return_value = MagicMock(spec=EmbeddingsResponse)
-        response = self.adapter.embed_topics(self.topic)
+        self.adapter.backend.make_request.return_value = MagicMock(spec=RecommendationsResponse)
+        response = self.adapter.get_recommendations(self.topic)
         self.adapter.backend.connect.assert_called_once()
         self.adapter.backend.make_request.assert_called_once()
-        self.assertIsInstance(response, EmbeddingsResponse)
+        self.assertIsInstance(response, RecommendationsResponse)
 
-    def test_embed_topics_backend_connect_failure(self):
+    def test_get_recommendations_backend_connect_failure(self):
         self.adapter.backend.connect.return_value = False
         with self.assertRaises(errors.ConnectionError):
-            self.adapter.embed_topics(self.topic)
+            self.adapter.get_recommendations(self.topic)
         self.adapter.backend.connect.assert_called_once()
         self.adapter.backend.make_request.assert_not_called()
 
     @patch('contentcuration.utils.recommendations.EmbedTopicsRequest')
-    def test_embed_topics_make_request_exception(self, embed_topics_request_mock):
+    def test_get_recommendations_make_request_exception(self, get_recommendations_request_mock):
         self.adapter.backend.connect.return_value = True
         self.adapter.backend.make_request.side_effect = Exception("Mocked exception")
-        response = self.adapter.embed_topics(self.topic)
+        response = self.adapter.get_recommendations(self.topic)
         self.adapter.backend.connect.assert_called_once()
         self.adapter.backend.make_request.assert_called_once()
-        self.assertIsInstance(response, EmbeddingsResponse)
+        self.assertIsInstance(response, RecommendationsResponse)
         self.assertEqual(str(response.error), "Mocked exception")
 
     @patch('contentcuration.utils.recommendations.EmbedContentRequest')
-    def test_embed_content_backend_connect_success(self, embed_content_request_mock):
+    def test_embed_content_backend_connect_success(self, get_recommendations_request_mock):
         self.adapter.backend.connect.return_value = True
         self.adapter.backend.make_request.return_value = MagicMock(spec=EmbeddingsResponse)
         response = self.adapter.embed_content(self.resources)

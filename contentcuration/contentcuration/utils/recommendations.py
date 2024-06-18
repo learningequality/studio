@@ -9,6 +9,7 @@ from automation.utils.appnexus.base import Backend
 from automation.utils.appnexus.base import BackendFactory
 from automation.utils.appnexus.base import BackendRequest
 from automation.utils.appnexus.base import BackendResponse
+from le_utils.constants import content_kinds
 
 from contentcuration.models import ContentNode
 
@@ -38,12 +39,12 @@ class RecommendationsResponse(RecommendationsBackendResponse):
         super().__init__(*args, **kwargs)
 
 
-class EmbedTopicsRequest(RecommendationsBackendRequest):
+class EmbedTopicsRequest(EmbeddingsRequest):
     path = '/embed-topics'
     method = 'POST'
 
 
-class EmbedContentRequest(RecommendationsBackendRequest):
+class EmbedContentRequest(EmbeddingsRequest):
     path = '/embed-content'
     method = 'POST'
 
@@ -61,8 +62,16 @@ class RecommendationsBackendFactory(BackendFactory):
 
 class RecommendationsAdapter(Adapter):
 
-    def generate_embedding(self, text) -> EmbeddingsResponse:
-        request = EmbeddingsRequest()
+    def generate_embedding(self, request: EmbeddingsRequest) -> EmbeddingsResponse:
+        """
+        Generate an embedding vector for the given content.
+
+        Parameters:
+            :param request: The EmbeddingsRequest object containing the request details.
+            :param content: The topic for which to generate an embedding vector.
+        Returns:
+            EmbeddingsResponse: An object containing the embeddings or an error.
+        """
         return self.backend.make_request(request)
 
     def embedding_exists(self, embedding) -> bool:
@@ -84,32 +93,43 @@ class RecommendationsAdapter(Adapter):
                 return False
         return True
 
-    def get_recommendations(self, embedding) -> RecommendationsResponse:
-        request = RecommendationsRequest(embedding)
-        return self.backend.make_request(request)
-
-    def embed_topics(self, topics: Dict[str, Any]) -> EmbeddingsResponse:
+    def get_recommendations(self, topic: Dict[str, Any], override_threshold=False) -> RecommendationsResponse:
         """
-        Embeds the topics and returns an EmbeddingsResponse.
+        Get recommendations for the given topic.
 
-        This method connects to the backend, sends the provided topics as a JSON payload,
-        and requests the backend to embed the topics. If an exception occurs during
-        this process, it returns an EmbeddingsResponse with the exception as the error.
+        This method connects to the backend, sends a request to get recommendations for a given
+        topic, and returns a RecommendationsResponse object containing the recommendations
+        or an error.
 
         Parameters:
-        topics (Dict[str, Any]): A dictionary of topics to be embedded.
+            :param topic: The topic for which to get recommendations.
+            :param override_threshold: A boolean flag to override the recommendation threshold.
 
         Returns:
-        EmbeddingsResponse: An EmbeddingsResponse object containing the embeddings or an error.
+            RecommendationsResponse: An object containing a list of recommendations or an error.
         """
         if not self.backend.connect():
             raise errors.ConnectionError("Connection to the backend failed")
-
         try:
-            embed_topics_request = EmbedTopicsRequest(json=topics)
-            return self.backend.make_request(embed_topics_request)
+            # Generate the embedding for the topic
+            request = EmbedTopicsRequest(json=topic)
+            embedding = self.generate_embedding(request)
+            if embedding.error is not None:
+                return RecommendationsResponse(error=embedding.error)
+            # Cache the embedding if it does not exist
+            if not self.embedding_exists(embedding):
+                self.cache_embeddings([embedding])
+
+            # Send a request to get recommendations for the topic
+            request = RecommendationsRequest(
+                method='GET',
+                path='/recommendations',
+                params={'override_threshold': override_threshold},
+                json=topic,
+            )
+            return self.backend.make_request(request)
         except Exception as e:
-            return EmbeddingsResponse(error=e)
+            return RecommendationsResponse(error=e)
 
     def embed_content(self, nodes: List[ContentNode]) -> EmbeddingsResponse:
         """
@@ -129,13 +149,20 @@ class RecommendationsAdapter(Adapter):
             raise errors.ConnectionError("Connection to the backend failed")
 
         try:
-            resources = [self.extract_content(node) for node in nodes]
-            json = {
-                'resources': resources,
-                'metadata': {}
-            }
-            embed_content_request = EmbedContentRequest(json=json)
-            return self.backend.make_request(embed_content_request)
+            failed_requests = []
+            for node in nodes:
+                resource = self.extract_content(node)
+                json = {
+                    'resources': [resource],
+                    'metadata': {}
+                }
+                request = EmbedContentRequest(json=json)
+                embedding = self.generate_embedding(request)
+                if embedding.error is not None:
+                    failed_requests.append(request)
+                if embedding.error is None and not self.embedding_exists(embedding):
+                    self.cache_embeddings([embedding])
+            return EmbeddingsResponse(failed_requests=failed_requests)
         except Exception as e:
             return EmbeddingsResponse(error=e)
 
@@ -152,6 +179,32 @@ class RecommendationsAdapter(Adapter):
         Returns:
         Dict[str, Any]: A dictionary containing the extracted content metadata.
         """
+        contentkind = node.kind
+        if contentkind.kind == content_kinds.AUDIO:
+            # handle audio content
+            pass
+        elif contentkind.kind == content_kinds.VIDEO:
+            # handle video content
+            pass
+        elif contentkind.kind == content_kinds.EXERCISE:
+            # handle exercise content
+            pass
+        elif contentkind.kind == content_kinds.DOCUMENT:
+            # handle document content
+            pass
+        elif contentkind.kind == content_kinds.HTML5:
+            # handle html5 content
+            pass
+        elif contentkind.kind == content_kinds.H5P:
+            # handle h5p content
+            pass
+        elif contentkind.kind == content_kinds.ZIM:
+            # handle zim content
+            pass
+        else:
+            # handle topic content or any other kind
+            pass
+
         return {}
 
 
