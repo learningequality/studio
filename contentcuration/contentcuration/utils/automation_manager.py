@@ -1,3 +1,6 @@
+from typing import Any
+from typing import Dict
+
 from contentcuration.utils.recommendations import RecommendationsAdapter
 from contentcuration.utils.recommendations import RecommendationsBackendFactory
 
@@ -8,16 +11,15 @@ class AutomationManager:
         self.recommendations_backend_instance = self.recommendations_backend_factory.create_backend()
         self.recommendations_backend_adapter = RecommendationsAdapter(self.recommendations_backend_instance)
 
-    def generate_embedding(self, text):
+    def generate_embedding(self, topic: Dict[str, Any]):
         """
-        Generate an embedding vector for the given text.
+        Generate an embedding vector for the given topic.
         Args:
-            text (str): The text for which to generate an embedding.
+            topic (dict): The topic for which to generate an embedding vector.
         Returns:
             Vector: The generated embedding vector.
         """
-        embedding_vector = self.recommendations_backend_adapter.generate_embedding(text=text)
-        return embedding_vector
+        return self.recommendations_backend_adapter.generate_embedding(topic)
 
     def embedding_exists(self, embedding):
         """
@@ -29,16 +31,18 @@ class AutomationManager:
         """
         return self.recommendations_backend_adapter.embedding_exists(embedding=embedding)
 
-    def load_recommendations(self, embedding):
+    def load_recommendations(self, topic: Dict[str, Any], override_threshold=False):
         """
-        Load recommendations based on the given embedding vector.
-        Args:
-            embedding (Vector): The embedding vector to use for recommendations.
+        Load recommendations for the given topic.
+
+        Parameters:
+            :param topic: A dictionary containing the topic for which to get recommendations.
+            :param override_threshold: A boolean flag to override the recommendation threshold.
+
         Returns:
-            list: A list of recommended items.
+            list: A list of recommended resources.
         """
-        # Need to extract the recommendation list from the ResponseObject and change the return statement
-        self.recommendations_backend_adapter.get_recommendations(embedding=embedding)
+        self.recommendations_backend_adapter.get_recommendations(topic=topic, override_threshold=override_threshold)
         return []
 
     def cache_embeddings(self, embeddings):
