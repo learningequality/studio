@@ -38,6 +38,7 @@
             <template #badge>
               <Icon
                 v-if="!currentChannel.language"
+                color="red"
                 icon="error"
                 class="edit-channel-error"
               />
@@ -152,6 +153,7 @@
                   <Icon
                     v-if="!currentChannel.language"
                     class="mx-1"
+                    color="red"
                     icon="error"
                     style="vertical-align: baseline;"
                   />
@@ -200,7 +202,7 @@
         <slot name="extension"></slot>
       </template>
     </ToolBar>
-    <MainNavigationDrawer v-model="drawer" />
+    <MainNavigationDrawer v-model="drawer" color="white" />
     <slot></slot>
 
     <PublishModal

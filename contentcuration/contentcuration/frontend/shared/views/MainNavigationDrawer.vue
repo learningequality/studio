@@ -8,11 +8,11 @@
       style="z-index: 1000;"
       :right="$isRTL"
     >
-      <VToolbar color="primary" dark>
+      <VToolbar :color="color">
         <VBtn flat icon :tabindex="handleclickTab" @click="drawer = false">
           <KIconButton
             icon="clear"
-            color="white"
+            color="black"
           />
         </VBtn>
         <VToolbarTitle class="notranslate">
@@ -94,7 +94,11 @@
         </VListTile>
       </VList>
       <VContainer>
-        <KolibriLogo :height="75" />
+        <KLogo
+          altText="Kolibri logo"
+          :showBackground="true"
+          :size="88"
+        />
         <ActionLink
           :text="$tr('copyright', { year: new Date().getFullYear() })"
           href="https://learningequality.org/"
@@ -127,19 +131,21 @@
 <script>
 
   import { mapActions, mapState } from 'vuex';
-  import KolibriLogo from './KolibriLogo';
   import LanguageSwitcherModal from 'shared/languageSwitcher/LanguageSwitcherModal';
 
   export default {
     name: 'MainNavigationDrawer',
     components: {
-      KolibriLogo,
       LanguageSwitcherModal,
     },
     props: {
       value: {
         type: Boolean,
         default: false,
+      },
+      color: {
+        type: String,
+        default: 'appBar',
       },
     },
     data() {

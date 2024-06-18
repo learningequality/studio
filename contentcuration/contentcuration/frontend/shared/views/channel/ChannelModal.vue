@@ -20,7 +20,7 @@
     <VProgressLinear
       v-if="loading"
       indeterminate
-      color="primary"
+      color="loading"
       style="margin: 0;"
       height="5"
     />

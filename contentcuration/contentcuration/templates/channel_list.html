@@ -31,7 +31,6 @@
 		var publicLanguages = JSON.parse({{ public_languages | safe }});
 		var publicLicenses = JSON.parse({{ public_licenses | safe }});
 		var publicKinds = JSON.parse({{ public_kinds | safe }});
-		var publicCollections = JSON.parse({{ public_collections | safe }});
 	</script>
 	{% render_bundle 'channel_list' 'js' %}
 

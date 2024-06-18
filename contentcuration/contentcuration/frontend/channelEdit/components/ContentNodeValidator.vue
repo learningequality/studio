@@ -9,7 +9,7 @@
   <span v-else-if="error" class="mx-2">
     <VTooltip bottom lazy>
       <template #activator="{ on }">
-        <VIconWrapper color="red" v-on="on">
+        <VIconWrapper :color="$themePalette.red.v_1100" v-on="on">
           error
         </VIconWrapper>
       </template>
@@ -19,7 +19,7 @@
   <span v-else-if="warning" class="mx-2">
     <VTooltip bottom lazy>
       <template #activator="{ on }">
-        <VIconWrapper color="amber" v-on="on">
+        <VIconWrapper :color="$themePalette.yellow.v_1100" v-on="on">
           warning
         </VIconWrapper>
       </template>

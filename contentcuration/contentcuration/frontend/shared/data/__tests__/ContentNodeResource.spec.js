@@ -720,7 +720,7 @@ describe('ContentNode methods', () => {
       );
       expect(table.get).toHaveBeenCalledWith({ '[node_id+channel_id]': [node_id, channel_id] });
       expect(fetchCollection).toHaveBeenCalledWith({
-        _node_id_channel_id_: [node_id, channel_id],
+        '[node_id+channel_id]__in': [[node_id, channel_id]],
       });
     });
 
@@ -731,7 +731,7 @@ describe('ContentNode methods', () => {
       await expect(ContentNode.getByNodeIdChannelId(node_id, channel_id)).resolves.toBeFalsy();
       expect(table.get).toHaveBeenCalledWith({ '[node_id+channel_id]': [node_id, channel_id] });
       expect(fetchCollection).toHaveBeenCalledWith({
-        _node_id_channel_id_: [node_id, channel_id],
+        '[node_id+channel_id]__in': [[node_id, channel_id]],
       });
     });
   });

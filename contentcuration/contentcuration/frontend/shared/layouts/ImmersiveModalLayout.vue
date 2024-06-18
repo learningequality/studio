@@ -1,7 +1,7 @@
 <template>
 
   <VApp>
-    <VToolbar app dark color="primary">
+    <VToolbar app dark color="appBarDark">
       <VBtn v-if="backButton" flat :to="previousPage" exact>
         <VIconWrapper class="rtl-flip">
           arrow_back

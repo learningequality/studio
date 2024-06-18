@@ -264,23 +264,6 @@ def channel_list(request):
         kinds = list(public_kind_query)
         cache.set(PUBLIC_CHANNELS_CACHE_KEYS["kinds"], json_for_parse_from_data(kinds), None)
 
-    # Get public channel sets
-    collections = cache.get(PUBLIC_CHANNELS_CACHE_KEYS["collections"])
-    if collections is None:
-        public_channelset_query = ChannelSet.objects.filter(public=True).annotate(
-            count=SQCountDistinct(
-                Channel.objects.filter(
-                    secret_tokens=OuterRef("secret_token"),
-                    public=True,
-                    main_tree__published=True,
-                    deleted=False,
-                ).values_list("id", flat=True),
-                field="id",
-            )
-        )
-        cache.set(PUBLIC_CHANNELS_CACHE_KEYS["collections"], json_for_parse_from_serializer(
-            PublicChannelSetSerializer(public_channelset_query, many=True)), None)
-
     return render(
         request,
         "channel_list.html",
@@ -292,7 +275,6 @@ def channel_list(request):
             "public_languages": languages,
             "public_kinds": kinds,
             "public_licenses": licenses,
-            "public_collections": collections,
         },
     )
 
