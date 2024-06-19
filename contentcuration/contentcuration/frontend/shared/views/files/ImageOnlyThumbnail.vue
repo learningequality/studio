@@ -132,7 +132,7 @@
   .thumbnail {
     position: relative;
     /* stylelint-disable-next-line  */
-    padding-bottom: calc(100% * 9 / 16);
+    padding-bottom: 100% * 9 / 16;
     border-radius: 3px;
 
     &.nothumbnail {
@@ -175,14 +175,14 @@
 
   @svg-scale: 1.25;
 
-  @svg-width: calc(100% * 9 / 16 / @svg-scale);
+  @svg-width: 100% * 9 / 16 / @svg-scale;
 
-  @svg-top: calc((100% * 9 / 16 / 2) - (@svg-width / 2));
+  @svg-top: (100% * 9 / 16 / 2) - (@svg-width / 2);
 
   svg.thumbnail-image {
     top: 0;
-    left: calc(50% - (@svg-width / 4));
-    width: calc(@svg-width / 4);
+    left: 50% - (@svg-width / 4);
+    width: @svg-width / 4;
     margin: 0 auto;
     overflow: visible;
 
