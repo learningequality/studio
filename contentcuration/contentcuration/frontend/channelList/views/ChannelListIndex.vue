@@ -3,7 +3,7 @@
   <VApp>
     <VToolbar
       v-if="libraryMode || isFAQPage"
-      color="primary"
+      color="appBarDark"
       dark
       :clipped-left="!$isRTL"
       :clipped-right="$isRTL"
@@ -12,11 +12,15 @@
       <VToolbarSideIcon
         :href="homeLink"
         exact
-        color="white"
+        color="appBarDark"
         class="ma-0"
         style="border-radius: 8px;"
       >
-        <KolibriLogo />
+        <KLogo
+          altText="Kolibri Logo with background"
+          :showBackground="true"
+          :size="36"
+        />
       </VToolbarSideIcon>
 
       <VToolbarTitle class="notranslate">
@@ -31,7 +35,7 @@
           :to="getChannelLink(listType)"
           @click="trackTabClick(listType)"
         >
-          <VBadge :value="invitationsByListCounts[listType]" color="secondary">
+          <VBadge :value="invitationsByListCounts[listType]" color="black">
             <template #badge>
               <span>{{ $formatNumber(invitationsByListCounts[listType]) }}</span>
             </template>
@@ -96,7 +100,6 @@
   import { ChannelListTypes } from 'shared/constants';
   import { constantsTranslationMixin, routerMixin } from 'shared/mixins';
   import GlobalSnackbar from 'shared/views/GlobalSnackbar';
-  import KolibriLogo from 'shared/views/KolibriLogo';
   import AppBar from 'shared/views/AppBar';
   import OfflineText from 'shared/views/OfflineText';
   import PolicyModals from 'shared/views/policies/PolicyModals';
@@ -123,7 +126,6 @@
       ChannelInvitation,
       ChannelListAppError,
       GlobalSnackbar,
-      KolibriLogo,
       PolicyModals,
       OfflineText,
     },

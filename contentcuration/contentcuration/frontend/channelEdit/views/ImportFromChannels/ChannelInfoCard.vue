@@ -1,6 +1,6 @@
 <template>
 
-  <VCard :to="channelRoute">
+  <VCard hover :to="channelRoute">
     <VCardTitle>
       <VLayout row wrap>
         <VFlex lg2 md4 sm5 xs12 class="px-3">
@@ -113,11 +113,6 @@
 
   .v-card {
     cursor: pointer;
-
-    &:hover {
-      /* stylelint-disable-next-line custom-property-pattern */
-      background-color: var(--v-greyBackground-base);
-    }
   }
 
 </style>

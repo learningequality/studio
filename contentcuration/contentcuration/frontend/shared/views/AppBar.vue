@@ -3,10 +3,9 @@
   <div>
     <VToolbar
       app
-      dark
       :clipped-left="!$isRTL"
       :clipped-right="$isRTL"
-      color="primary"
+      color="appBar"
       height="56"
       :tabs="Boolean($slots.tabs)"
     >
@@ -15,11 +14,14 @@
         v-else
         :href="homeLink"
         exact
-        color="white"
+        color="appBar"
         class="ma-0"
         style="border-radius: 8px;"
       >
-        <KolibriLogo />
+        <KLogo
+          altText="Kolibri Logo with background"
+          :size="36"
+        />
       </VToolbarSideIcon>
 
       <VToolbarTitle>
@@ -32,15 +34,15 @@
             <template #activator="{ on }">
               <VBtn flat style="text-transform: none;" v-on="on">
                 <KIconButton
-                  disabled="true"
+                  :disabled="true"
                   icon="person"
-                  color="white"
+                  color="black"
                 />
                 <span class="mx-2 subheading">{{ user.first_name }}</span>
                 <KIconButton
-                  disabled="true"
+                  :disabled="true"
                   icon="dropdown"
-                  color="white"
+                  color="black"
                 />
               </VBtn>
             </template>
@@ -48,7 +50,7 @@
               <VListTile v-if="user.is_admin" :href="administrationLink">
                 <VListTileAction>
                   <KIconButton
-                    disabled="true"
+                    :disabled="true"
                     icon="people"
                   />
                 </VListTileAction>
@@ -57,7 +59,7 @@
               <VListTile :href="settingsLink">
                 <VListTileAction>
                   <KIconButton
-                    disabled="true"
+                    :disabled="true"
                     icon="settings"
                   />
                 </VListTileAction>
@@ -68,7 +70,7 @@
               >
                 <VListTileAction>
                   <KIconButton
-                    disabled="true"
+                    :disabled="true"
                     icon="language"
                   />
                 </VListTileAction>
@@ -80,7 +82,7 @@
               >
                 <VListTileAction>
                   <KIconButton
-                    disabled="true"
+                    :disabled="true"
                     icon="openNewTab"
                   />
                 </VListTileAction>
@@ -89,7 +91,7 @@
               <VListTile @click="logout">
                 <VListTileAction>
                   <KIconButton
-                    disabled="true"
+                    :disabled="true"
                     icon="logout"
                   />
                 </VListTileAction>
@@ -155,7 +157,6 @@
 <script>
 
   import { mapActions, mapState, mapGetters } from 'vuex';
-  import KolibriLogo from './KolibriLogo';
   import Tabs from 'shared/views/Tabs';
   import MainNavigationDrawer from 'shared/views/MainNavigationDrawer';
   import LanguageSwitcherModal from 'shared/languageSwitcher/LanguageSwitcherModal';
@@ -163,7 +164,6 @@
   export default {
     name: 'AppBar',
     components: {
-      KolibriLogo,
       LanguageSwitcherModal,
       MainNavigationDrawer,
       Tabs,

@@ -19,68 +19,6 @@
         @click="clearFilters"
       />
     </div>
-    <div v-else>
-      <VLayout row wrap>
-        <VFlex
-          v-for="collection in collections"
-          :key="`public-collection-${collection.id}`"
-          xs12
-          class="py-2"
-        >
-          <VCard
-            tabindex="0"
-            class="pt-2"
-            data-test="collection"
-            @click="setCollection(collection.id)"
-            @keyup.enter="setCollection(collection.id)"
-          >
-            <VLayout>
-              <div class="px-2 text-xs-center">
-                <VIconWrapper style="font-size: 75px;">
-                  local_hospital
-                </VIconWrapper>
-              </div>
-              <VCardTitle primary-title class="pb-2 pt-2">
-
-                <!-- TODO: add 'notranslate' class once we figure out how to handle collections
-                          that have multiple channel languages inside -->
-                <h3 class="headline mb-0">
-                  {{ collection.name }}
-                </h3>
-                <p class="body-1 grey--text">
-                  {{ $tr('channelCount', { count: collection.count }) }}
-                </p>
-                <p v-if="collection.description">
-                  {{ collection.description }}
-                </p>
-              </VCardTitle>
-            </VLayout>
-            <VCardActions>
-              <VSpacer />
-              <IconButton
-                icon="copy"
-                :text="$tr('copyToken')"
-                @click.stop="displayToken = collection.token"
-              />
-            </VCardActions>
-          </VCard>
-        </VFlex>
-      </VLayout>
-
-      <KModal
-        v-if="displayToken"
-        :title="$tr('copyTitle')"
-        :text="$tr('copyTokenInstructions')"
-        :cancelText="$tr('close')"
-        @cancel="displayToken = null"
-      >
-        <div class="mb-3">
-          {{ $tr('copyTokenInstructions') }}
-        </div>
-        <CopyToken :token="displayToken" />
-      </KModal>
-
-    </div>
   </VContainer>
 
 </template>
@@ -90,10 +28,6 @@
   import flatten from 'lodash/flatten'; // Tests fail with native Array.flat() method
   import { catalogFilterMixin } from './mixins';
   import { constantsTranslationMixin } from 'shared/mixins';
-  import IconButton from 'shared/views/IconButton';
-  import CopyToken from 'shared/views/CopyToken';
-
-  const publicCollections = window.publicCollections || [];
 
   /*
     Returns the expected format for filters
@@ -108,16 +42,7 @@
 
   export default {
     name: 'CatalogFilterBar',
-    components: {
-      IconButton,
-      CopyToken,
-    },
     mixins: [constantsTranslationMixin, catalogFilterMixin],
-    data() {
-      return {
-        displayToken: null,
-      };
-    },
     computed: {
       currentFilters() {
         return flatten([
@@ -150,24 +75,10 @@
           createFilter(this.coach, this.$tr('coachContent'), this.resetCoach),
           createFilter(this.assessments, this.$tr('assessments'), this.resetAssessments),
           createFilter(this.subtitles, this.$tr('subtitles'), this.resetSubtitles),
-          createFilter(this.collection, this.getCollectionName(), this.resetCollection),
         ]).filter(Boolean);
-      },
-      collections() {
-        return publicCollections;
       },
     },
     methods: {
-      getCollectionName() {
-        const collection = this.collections.find(c => c.id === this.collection);
-        return collection && collection.name;
-      },
-      setCollection(collectionId) {
-        this.collection = collectionId;
-      },
-      resetCollection() {
-        this.setCollection(null);
-      },
       resetKeywords() {
         this.keywords = '';
       },
@@ -200,12 +111,6 @@
       subtitles: 'Subtitles',
       starred: 'Starred',
       clearAll: 'Clear all',
-      channelCount: '{count, plural,\n =1 {# channel}\n other {# channels}}',
-      copyToken: 'Copy collection token',
-      copyTitle: 'Copy collection token',
-      copyTokenInstructions:
-        'Paste this token into Kolibri to import the channels contained in this collection',
-      close: 'Close',
     },
   };
 

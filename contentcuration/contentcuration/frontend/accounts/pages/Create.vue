@@ -5,13 +5,13 @@
     :appBarText="$tr('backToLoginButton')"
     backButton
   >
-    <VImg
-      height="200"
-      maxHeight="100"
-      contain
-      :lazy-src="require('shared/images/kolibri-logo.svg')"
-      :src="require('shared/images/kolibri-logo.svg')"
-    />
+    <div class="align-center d-flex justify-center mb-2">
+      <KLogo
+        altText="Kolibri Logo with background"
+        :showBackground="true"
+        :size="120"
+      />
+    </div>
     <h2 ref="top" class="mb-4 primary--text text-xs-center">
       {{ $tr('createAnAccountTitle') }}
     </h2>
