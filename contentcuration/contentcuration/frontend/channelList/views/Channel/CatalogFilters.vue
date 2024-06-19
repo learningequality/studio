@@ -77,9 +77,11 @@
           v-model="coach"
           color="primary"
         >
-          {{ $tr('coachLabel') }}
+          <div class="label-container">
+            {{ $tr('coachLabel') }}
 
-          <HelpTooltip :text="$tr('coachDescription')" bottom class="px-2" />
+            <HelpTooltip :text="$tr('coachDescription')" bottom class="px-2" />
+          </div>
         </Checkbox>
         <Checkbox v-model="subtitles" color="primary" :label="$tr('subtitlesLabel')" />
         <ActionLink
@@ -237,6 +239,11 @@
 
   /deep/ .v-label * {
     vertical-align: bottom;
+  }
+
+  .label-container {
+    display: flex;
+    align-items: center;
   }
 
 </style>
