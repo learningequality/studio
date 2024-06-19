@@ -23,7 +23,7 @@
         <VListTile :href="channelsLink" :tabindex="handleclickTab">
           <VListTileAction>
             <KIconButton
-              disabled="true"
+              :disabled="true"
               icon="home"
             />
           </VListTileAction>
@@ -34,7 +34,7 @@
         <VListTile v-if="user.is_admin" :href="administrationLink" :tabindex="handleclickTab">
           <VListTileAction>
             <KIconButton
-              disabled="true"
+              :disabled="true"
               icon="people"
             />
           </VListTileAction>
@@ -46,7 +46,7 @@
         <VListTile :href="settingsLink" :tabindex="handleclickTab" @click="trackClick('Settings')">
           <VListTileAction>
             <KIconButton
-              disabled="true"
+              :disabled="true"
               icon="settings"
             />
           </VListTileAction>
@@ -57,7 +57,7 @@
         <VListTile @click="openLanguageModal">
           <VListTileAction>
             <KIconButton
-              disabled="true"
+              :disabled="true"
               icon="language"
             />
           </VListTileAction>
@@ -73,7 +73,7 @@
         >
           <VListTileAction>
             <KIconButton
-              disabled="true"
+              :disabled="true"
               icon="openNewTab"
             />
           </VListTileAction>
@@ -84,7 +84,7 @@
         <VListTile @click="logout">
           <VListTileAction>
             <KIconButton
-              disabled="true"
+              :disabled="true"
               icon="logout"
             />
           </VListTileAction>

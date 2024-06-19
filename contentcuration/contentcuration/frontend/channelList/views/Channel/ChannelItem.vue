@@ -139,7 +139,7 @@
                 >
                   <VListTileAvatar>
                     <KIconButton
-                      disabled="true"
+                      :disabled="true"
                       icon="edit"
                     />
                   </VListTileAvatar>
@@ -152,7 +152,7 @@
                 >
                   <VListTileAvatar>
                     <KIconButton
-                      disabled="true"
+                      :disabled="true"
                       icon="copy"
                     />
                   </VListTileAvatar>
@@ -186,7 +186,7 @@
                 >
                   <VListTileAvatar>
                     <KIconButton
-                      disabled="true"
+                      :disabled="true"
                       icon="trash"
                     />
                   </VListTileAvatar>

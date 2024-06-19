@@ -34,13 +34,13 @@
             <template #activator="{ on }">
               <VBtn flat style="text-transform: none;" v-on="on">
                 <KIconButton
-                  disabled="true"
+                  :disabled="true"
                   icon="person"
                   color="black"
                 />
                 <span class="mx-2 subheading">{{ user.first_name }}</span>
                 <KIconButton
-                  disabled="true"
+                  :disabled="true"
                   icon="dropdown"
                   color="black"
                 />
@@ -50,7 +50,7 @@
               <VListTile v-if="user.is_admin" :href="administrationLink">
                 <VListTileAction>
                   <KIconButton
-                    disabled="true"
+                    :disabled="true"
                     icon="people"
                   />
                 </VListTileAction>
@@ -59,7 +59,7 @@
               <VListTile :href="settingsLink">
                 <VListTileAction>
                   <KIconButton
-                    disabled="true"
+                    :disabled="true"
                     icon="settings"
                   />
                 </VListTileAction>
@@ -70,7 +70,7 @@
               >
                 <VListTileAction>
                   <KIconButton
-                    disabled="true"
+                    :disabled="true"
                     icon="language"
                   />
                 </VListTileAction>
@@ -82,7 +82,7 @@
               >
                 <VListTileAction>
                   <KIconButton
-                    disabled="true"
+                    :disabled="true"
                     icon="openNewTab"
                   />
                 </VListTileAction>
@@ -91,7 +91,7 @@
               <VListTile @click="logout">
                 <VListTileAction>
                   <KIconButton
-                    disabled="true"
+                    :disabled="true"
                     icon="logout"
                   />
                 </VListTileAction>
