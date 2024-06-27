@@ -89,9 +89,7 @@
               data-test="default-image"
               @click="openFileDialog"
             >
-              <Icon large>
-                image
-              </Icon>
+              <Icon icon="image" style="font-size: 25px;" />
             </ThumbnailCard>
           </FileDropzone>
         </div>

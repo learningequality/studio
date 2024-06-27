@@ -19,15 +19,15 @@ jobs:
     steps:
       - name: Escape title double quotes
         id: escape_title
-        run: |
-          title='${{ github.event.issue.title }}'
-          echo "ISSUE_TITLE=${title//\"/\\\"}" >> "$GITHUB_OUTPUT"
+        env:
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+        run: echo "ISSUE_TITLE=${ISSUE_TITLE//\"/\\\"}" >> "$GITHUB_OUTPUT"
 
       - name: Send message to Slack channel
         env:
             SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
             SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
-        uses: slackapi/slack-github-action@v1.25.0
+        uses: slackapi/slack-github-action@v1.26.0
         with:
           payload: |
             {

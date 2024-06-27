@@ -17,9 +17,9 @@
               {{ $tr(tabs.DETAILS) }}
               <VTooltip v-if="!areDetailsValid || !areFilesValid" top lazy>
                 <template #activator="{ on }">
-                  <Icon color="red" dark small class="ml-2" v-on="on">
+                  <VIconWrapper color="red" dark small class="ml-2" v-on="on">
                     error
-                  </Icon>
+                  </VIconWrapper>
                 </template>
                 <span>{{ $tr('invalidFieldsToolTip') }}</span>
               </VTooltip>
@@ -35,9 +35,9 @@
               {{ $tr(tabs.QUESTIONS) }}
               <VTooltip v-if="!areAssessmentItemsValid" top lazy>
                 <template #activator="{ on }">
-                  <Icon color="red" dark v-on="on">
+                  <VIconWrapper color="red" dark v-on="on">
                     error
-                  </Icon>
+                  </VIconWrapper>
                 </template>
                 <span>{{ $tr('invalidFieldsToolTip') }}</span>
               </VTooltip>

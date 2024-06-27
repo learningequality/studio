@@ -251,7 +251,7 @@ export async function generatePdf(
               context.fillRect(0, 0, canvas.width, canvas.height);
               const img = new Image();
               img.onload = function() {
-                context.drawImage(img, 0, 0);
+                context.drawImage(img, 0, 0, width, height);
                 doc.addImage(
                   canvas.toDataURL(),
                   'PNG',

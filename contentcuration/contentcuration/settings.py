@@ -22,7 +22,6 @@ from django.utils.timezone import now
 from contentcuration.utils.incidents import INCIDENTS
 from contentcuration.utils.secretmanagement import get_secret
 
-logging.getLogger("newrelic").setLevel(logging.CRITICAL)
 logging.getLogger("botocore").setLevel(logging.WARNING)
 logging.getLogger("boto3").setLevel(logging.WARNING)
 logging.basicConfig(level="INFO")

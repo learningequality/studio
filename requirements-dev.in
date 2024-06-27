@@ -14,12 +14,10 @@ pytest-pythonpath
 pytest-timeout
 pytest-watch
 pre-commit==1.15.1
-coverage
-pytest-cov
 nodeenv
 pip-tools==6.8.0
 locust
-drf-yasg
+drf-yasg==1.21.5
 pyinstrument
 pypandoc
 git+https://github.com/someshchaturvedi/customizable-django-profiler.git#customizable-django-profiler

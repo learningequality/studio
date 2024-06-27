@@ -24,9 +24,7 @@
                 hideDetails
               >
                 <template #prepend-inner>
-                  <Icon>
-                    search
-                  </Icon>
+                  <Icon icon="search" />
                 </template>
                 <template #append-outer>
                   <VBtn

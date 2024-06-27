@@ -18,7 +18,7 @@
       :class="kind"
     >
       <VFlex shrink class="px-1">
-        <Icon
+        <VIconWrapper
           v-if="!compact"
           dark
           small
@@ -40,9 +40,9 @@
 
     <!-- If printing the default icon, need to set as printable icon -->
     <div v-else-if="printing" class="printable-icon">
-      <Icon :color="$vuetify.theme[kind]" capture-as-image>
+      <VIconWrapper :color="$vuetify.theme[kind]" capture-as-image>
         {{ icon }}
-      </Icon>
+      </VIconWrapper>
     </div>
 
     <!-- Bury icon within SVG so it's more responsive, since font-size scaling is more difficult -->

@@ -60,12 +60,9 @@
                       </VFlex>
                       <VFlex v-if="!isTopic && isCoach" class="px-1">
                         <Icon
-                          color="roleVisibilityCoach"
-                          small
+                          icon="coachContent"
                           style="vertical-align: middle;"
-                        >
-                          local_library
-                        </Icon>
+                        />
                       </VFlex>
                       <VFlex>
                         <ContentNodeValidator
@@ -103,13 +100,10 @@
                         <template #activator="{ on }">
                           <div style="display: inline-block;" v-on="on">
                             <Icon
-                              color="roleVisibilityCoach"
-                              small
+                              icon="coachContent"
                               class="mx-1"
                               style="vertical-align: sub;"
-                            >
-                              local_library
-                            </Icon>
+                            />
                             <span v-if="isTopic">
                               {{ $formatNumber(node.coach_count) }}
                             </span>

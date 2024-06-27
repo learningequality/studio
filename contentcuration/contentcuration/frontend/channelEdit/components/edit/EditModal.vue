@@ -22,7 +22,7 @@
             <!-- Toolbar + extension -->
             <VToolbar
               dark
-              color="primary"
+              color="appBarDark"
               fixed
               flat
               :clipped-left="!$isRTL"
@@ -30,7 +30,7 @@
               app
             >
               <VBtn data-test="close" icon dark @click="handleClose()">
-                <Icon>clear</Icon>
+                <Icon icon="clear" :color="$themeTokens.textInverted" />
               </VBtn>
               <VToolbarTitle>{{ modalTitle }}</VToolbarTitle>
               <VSpacer />
@@ -59,7 +59,7 @@
                   v-if="addTopicsMode || uploadMode"
                   :flat="!listElevated"
                   class="add-wrapper"
-                  color="white"
+                  :color="$themeTokens.textInverted"
                 >
                   <VBtn v-if="addTopicsMode" color="greyBackground" @click="createTopic">
                     {{ $tr('addTopic') }}
@@ -82,9 +82,7 @@
             <VContent>
               <VLayout v-if="loadError" align-center justify-center fill-height class="py-5">
                 <VFlex class="text-xs-center">
-                  <Icon color="red">
-                    error
-                  </Icon>
+                  <Icon icon="error" />
                   <p>{{ $tr('loadErrorText') }}</p>
                 </VFlex>
               </VLayout>

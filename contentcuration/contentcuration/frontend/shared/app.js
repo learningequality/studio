@@ -47,6 +47,7 @@ import Vuetify, {
   VFooter,
   VForm,
   VHover,
+  VIcon,
   VImg,
   VInput,
   VLayout,
@@ -116,11 +117,12 @@ import { theme, icons } from 'shared/vuetify';
 
 import { i18nSetup } from 'shared/i18n';
 
-import './styles/vuetify.css';
+import './styles/vuetify.scss';
 import 'shared/styles/main.less';
 import Base from 'shared/Base.vue';
 import urls from 'shared/urls';
 import ActionLink from 'shared/views/ActionLink';
+import Icon from 'shared/views/Icon';
 import Menu from 'shared/views/Menu';
 import Divider from 'shared/views/Divider';
 import { initializeDB, resetDB } from 'shared/data';
@@ -195,6 +197,7 @@ Vue.use(Vuetify, {
     VFooter,
     VForm,
     VHover,
+    VIcon,
     VImg,
     VInput,
     VLayout,
@@ -261,6 +264,7 @@ Vue.use(AnalyticsPlugin, { dataLayer: window.dataLayer });
 Vue.component('ActionLink', ActionLink);
 Vue.component('Menu', Menu);
 Vue.component('Divider', Divider);
+Vue.component('Icon', Icon);
 
 function initiateServiceWorker() {
   // Second conditional must be removed if you are doing dev work on the service

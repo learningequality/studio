@@ -7,14 +7,13 @@ module.exports = {
   moduleFileExtensions: ['js', 'json', 'vue'],
   modulePaths: [frontendDir],
   moduleNameMapper: {
-    '\\.(css|less|styl)$': 'identity-obj-proxy',
+    '\\.(css|scss|less|styl)$': 'identity-obj-proxy',
     '^frontend/(.*)': '<rootDir>/contentcuration/contentcuration/frontend/$1',
     '^static/(.*)': '<rootDir>/contentcuration/contentcuration/static/$1',
     '\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$': path.resolve(
       __dirname,
       './globalMocks/fileMock.js'
     ),
-    'broadcast-channel$': path.resolve(__dirname, './globalMocks/broadcastChannelMock.js'),
     '\\.worker.min.js': path.resolve(__dirname, './globalMocks/fileMock.js'),
     'shared/client': path.resolve(__dirname, './globalMocks/client.js'),
     'shared/urls': path.resolve(__dirname, './globalMocks/urls.js'),

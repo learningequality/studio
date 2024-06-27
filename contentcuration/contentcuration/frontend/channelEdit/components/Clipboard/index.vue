@@ -50,7 +50,11 @@
                         class="back-to-clipboard"
                         @click.prevent="resetPreviewNode"
                       >
-                        <span class="link-icon"><Icon color="primary" small>arrow_back</Icon></span>
+                        <span class="link-icon"><Icon
+                          icon="back"
+                          :color="$themeTokens.primary"
+                        />
+                        </span>
                         <span class="link-text">{{ $tr('backToClipboard') }}</span>
                       </KButton>
                     </div>

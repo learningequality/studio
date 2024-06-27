@@ -65,6 +65,7 @@ from rest_framework.utils.encoders import JSONEncoder
 
 from contentcuration.constants import channel_history
 from contentcuration.constants import completion_criteria
+from contentcuration.constants import feedback
 from contentcuration.constants import user_history
 from contentcuration.constants.contentnode import kind_activity_map
 from contentcuration.db.models.expressions import Array
@@ -72,7 +73,6 @@ from contentcuration.db.models.functions import ArrayRemove
 from contentcuration.db.models.functions import Unnest
 from contentcuration.db.models.manager import CustomContentNodeTreeManager
 from contentcuration.db.models.manager import CustomManager
-from contentcuration.statistics import record_channel_stats
 from contentcuration.utils.cache import delete_public_channel_cache_keys
 from contentcuration.utils.parser import load_json_string
 from contentcuration.viewsets.sync.constants import ALL_CHANGES
@@ -874,7 +874,6 @@ class Channel(models.Model):
         return files['resource_size'] or 0
 
     def on_create(self):
-        record_channel_stats(self, None)
         if not self.content_defaults:
             self.content_defaults = DEFAULT_CONTENT_DEFAULTS
 
@@ -909,7 +908,6 @@ class Channel(models.Model):
     def on_update(self):
         from contentcuration.utils.user import calculate_user_storage
         original_values = self._field_updates.changed()
-        record_channel_stats(self, original_values)
 
         blacklist = set([
             "public",
@@ -2590,3 +2588,66 @@ class CustomTaskMetadata(models.Model):
                 name='task_result_signature',
             ),
         ]
+
+
+class BaseFeedback(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    context = models.JSONField()
+
+    # for RecommendationInteractionEvent class contentnode_id represents:
+    # the date/time this interaction happened
+    #
+    # for RecommendationEvent class contentnode_id represents:
+    # time_shown: timestamp of when the recommendations are first shown
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    # for RecommendationsEvent class conntentnode_id represents:
+    # target_topic_id that the ID of the topic the user
+    # initiated the import from (where the imported content will go)
+    #
+    # for ReccomendationsInteractionEvent class contentnode_id represents:
+    # contentNode_id of one of the item being interacted with
+    # (this must correspond to one of the items in the “content” array on the RecommendationEvent)
+    #
+    # for RecommendationsFlaggedEvent class contentnode_id represents:
+    # contentnode_id of the content that is being flagged.
+    contentnode_id = models.UUIDField()
+
+    # These are corresponding values of content_id to given contentNode_id for a ContentNode.
+    content_id = models.UUIDField()
+
+    class Meta:
+        abstract = True
+
+
+class BaseFeedbackEvent(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    # The ID of the channel being worked on (where the content is being imported into)
+    # or the Channel Id where the flagged content exists.
+    target_channel_id = models.UUIDField()
+
+    class Meta:
+        abstract = True
+
+
+class BaseFeedbackInteractionEvent(models.Model):
+    feedback_type = models.CharField(max_length=50, choices=feedback.FEEDBACK_TYPE_CHOICES)
+    feedback_reason = models.TextField(max_length=1500)
+
+    class Meta:
+        abstract = True
+
+
+class FlagFeedbackEvent(BaseFeedback, BaseFeedbackEvent, BaseFeedbackInteractionEvent):
+    pass
+
+
+class RecommendationsInteractionEvent(BaseFeedback, BaseFeedbackInteractionEvent):
+    recommendation_event_id = models.UUIDField()
+
+
+class RecommendationsEvent(BaseFeedback, BaseFeedbackEvent):
+    # timestamp of when the user navigated away from the recommendation list
+    time_hidden = models.DateTimeField()
+    # A list of JSON blobs, representing the content items in the list of recommendations.
+    content = models.JSONField(default=list)

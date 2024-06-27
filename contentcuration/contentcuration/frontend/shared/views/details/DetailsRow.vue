@@ -2,10 +2,12 @@
 
   <VLayout row wrap class="my-4">
     <VFlex :xs12="!printing" :xs4="printing" :sm5="!printing" md4 xl4>
-      <label class="body-1 font-weight-bold" :style="{ color: $vuetify.theme.darkGrey }">
-        {{ label }}
+      <div class="label-container">
+        <label class="body-1 font-weight-bold" :style="{ color: $vuetify.theme.darkGrey }">
+          {{ label }}
+        </label>
         <HelpTooltip v-if="definition" :text="definition" bottom class="mx-1" />
-      </label>
+      </div>
     </VFlex>
     <VFlex
       :xs12="!printing"
@@ -65,6 +67,11 @@
 
   .flex:last-child {
     padding-left: 10px;
+  }
+
+  .label-container {
+    display: flex;
+    align-items: center;
   }
 
   label {

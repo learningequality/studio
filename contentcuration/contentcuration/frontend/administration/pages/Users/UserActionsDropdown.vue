@@ -40,9 +40,7 @@
       <template #activator="{ on }">
         <VBtn v-bind="$attrs" v-on="on">
           Actions
-          <Icon small>
-            arrow_drop_down
-          </Icon>
+          <Icon icon="dropdown" />
         </VBtn>
       </template>
       <VList>
