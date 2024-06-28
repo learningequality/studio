@@ -159,7 +159,7 @@ function _getErrorMsg(error) {
     [ValidationErrors.ACTIVITY_DURATION_TOO_LONG]: translator.$tr('activityDurationTooLongWarning'),
   };
 
-  return messages[error];
+  return messages[error] || error;
 }
 
 // Helpers
@@ -223,7 +223,7 @@ export function getMasteryModelNValidators() {
 export function getShortActivityDurationValidators() {
   return [
     v => v !== '' || ValidationErrors.ACTIVITY_DURATION_REQUIRED,
-    v => v >= 1 || ValidationErrors.ACTIVITY_DURATION_MIN_FOR_SHORT_ACTIVITY,
+    v => v >= 5 || ValidationErrors.ACTIVITY_DURATION_MIN_FOR_SHORT_ACTIVITY,
     v => v <= 30 || ValidationErrors.ACTIVITY_DURATION_MAX_FOR_SHORT_ACTIVITY,
   ];
 }
@@ -231,7 +231,7 @@ export function getShortActivityDurationValidators() {
 export function getLongActivityDurationValidators() {
   return [
     v => v !== '' || ValidationErrors.ACTIVITY_DURATION_REQUIRED,
-    v => v > 30 || ValidationErrors.ACTIVITY_DURATION_MIN_FOR_LONG_ACTIVITY,
+    v => v > 40 || ValidationErrors.ACTIVITY_DURATION_MIN_FOR_LONG_ACTIVITY,
     v => v <= 120 || ValidationErrors.ACTIVITY_DURATION_MAX_FOR_LONG_ACTIVITY,
   ];
 }
@@ -242,6 +242,21 @@ export function getActivityDurationValidators() {
     v => v >= 1 || ValidationErrors.ACTIVITY_DURATION_MIN_REQUIREMENT,
     v => v <= 1200 || ValidationErrors.ACTIVITY_DURATION_TOO_LONG,
   ];
+}
+
+/**
+ * Get invalid text for a given value using a list of validators.
+ * @param {Array<Function>} validators
+ * @param {*} value Value to validate.
+ * @returns {String}  Translated error message of the first validator that returns an error.
+                      Empty string if value is valid.
+ */
+export function getInvalidText(validators, value) {
+  return (
+    validators
+      .map(validator => translateValidator(validator)(value))
+      .find(validation => validation !== true) || ''
+  );
 }
 
 // Node validation

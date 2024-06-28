@@ -14,14 +14,14 @@ export function setupSchema() {
   if (!Object.keys(resources).length) {
     console.warn('No resources defined!'); // eslint-disable-line no-console
   }
-  // Version incremented to 2 to add Bookmark table and new index on CHANGES_TABLE.
-  db.version(2).stores({
+  // Version incremented to 3 to add new index on CHANGES_TABLE.
+  db.version(3).stores({
     // A special table for logging unsynced changes
     // Dexie.js appears to have a table for this,
     // but it seems to squash and remove changes in ways
     // that I do not currently understand, so we engage
     // in somewhat duplicative behaviour instead.
-    [CHANGES_TABLE]: 'rev++,[table+key],server_rev',
+    [CHANGES_TABLE]: 'rev++,[table+key],server_rev,type',
     ...mapValues(INDEXEDDB_RESOURCES, value => value.schema),
   });
 }

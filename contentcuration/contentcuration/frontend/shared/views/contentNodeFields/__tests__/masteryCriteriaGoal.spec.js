@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils';
-import TestForm from '../../../../shared/views/__tests__/TestForm.vue';
-import MasteryCriteriaGoal from '../MasteryCriteriaGoal.vue';
+import MasteryCriteriaGoal from '../CompletionOptions/MasteryCriteriaGoal';
+import TestForm from 'shared/views/__tests__/TestForm';
 import { constantStrings } from 'shared/mixins';
 import MasteryModels from 'shared/leUtils/MasteryModels';
 

@@ -221,6 +221,10 @@
       :channel="currentChannel"
       @syncing="syncInProgress"
     />
+    <QuickEditModal />
+    <AboutLicensesModal
+      v-if="isAboutLicensesModalOpen"
+    />
     <MessageDialog
       v-model="showDeleteModal"
       :header="$tr('deleteTitle')"
@@ -309,6 +313,7 @@
   import SyncResourcesModal from '../sync/SyncResourcesModal';
   import ProgressModal from '../progress/ProgressModal';
   import PublishModal from '../../components/publish/PublishModal';
+  import QuickEditModal from '../../components/QuickEditModal';
   import SavingIndicator from '../../components/edit/SavingIndicator';
   import { DraggableRegions, DraggableUniverses, RouteNames } from '../../constants';
   import MainNavigationDrawer from 'shared/views/MainNavigationDrawer';
@@ -316,6 +321,7 @@
   import ChannelTokenModal from 'shared/views/channel/ChannelTokenModal';
   import OfflineText from 'shared/views/OfflineText';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
+  import AboutLicensesModal from 'shared/views/AboutLicensesModal';
   import MessageDialog from 'shared/views/MessageDialog';
   import { RouteNames as ChannelRouteNames } from 'frontend/channelList/constants';
   import { titleMixin } from 'shared/mixins';
@@ -339,6 +345,8 @@
       DraggablePlaceholder,
       MessageDialog,
       SavingIndicator,
+      QuickEditModal,
+      AboutLicensesModal,
     },
     mixins: [titleMixin],
     props: {
@@ -362,6 +370,7 @@
       ...mapState({
         offline: state => !state.connection.online,
       }),
+      ...mapGetters(['isAboutLicensesModalOpen']),
       ...mapGetters('contentNode', ['getContentNode']),
       ...mapGetters('currentChannel', ['currentChannel', 'canEdit', 'canManage', 'rootId']),
       rootNode() {

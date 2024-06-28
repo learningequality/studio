@@ -15,6 +15,18 @@ export default {
       contentNodesMap: {},
       expandedNodes,
 
+      /**
+       * Object to store information about the current quick edit modal opened.
+       * Making this part of the vuex store as the quick edit modal can be opened
+       * from multiple places and deep in the tree.
+       *
+       * This object contains the following properties:
+       * - nodeIds: the ids of the nodes to be edited
+       * - modal: The name of the quick edit modal being
+       *          opened (from the "QuickEditModals" object in constants.js)
+       */
+      quickEditModalOpen: null,
+
       /*
         Making this part of the vuex store as it seems like the cleanest solution for
         managing moving nodes. Alternative solutions are:

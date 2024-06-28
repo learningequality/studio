@@ -16,7 +16,7 @@
             :readonly="readonly"
             :disabled="disabled"
             :rules="masteryRules"
-            :menu-props="{ ...menuProps, lazy: false }"
+            :menu-props="{ ...menuProps, lazy: false, maxHeight: maxMenuHeight }"
             :attach="attach"
             class="mb-2"
             @focus="$emit('focus')"
@@ -30,7 +30,11 @@
 
 <script>
 
-  import { getMasteryModelValidators, translateValidator } from 'shared/utils/validation';
+  import {
+    getMasteryModelValidators,
+    translateValidator,
+    getInvalidText,
+  } from 'shared/utils/validation';
   import MasteryModels, { MasteryModelsList } from 'shared/leUtils/MasteryModels';
   import { constantsTranslationMixin } from 'shared/mixins';
   import DropdownWrapper from 'shared/views/form/DropdownWrapper';
@@ -64,6 +68,10 @@
         type: Boolean,
         default: false,
       },
+      maxMenuHeight: {
+        type: Number,
+        default: 300,
+      },
     },
     computed: {
       masteryModel: {
@@ -82,6 +90,19 @@
       },
       masteryRules() {
         return this.required ? getMasteryModelValidators().map(translateValidator) : [];
+      },
+    },
+    methods: {
+      /**
+       * @public
+       */
+      validate() {
+        if (this.masteryRules.length) {
+          if (this.$refs.masteryModel) {
+            this.$refs.masteryModel.validate(true);
+          }
+          return getInvalidText(this.masteryRules, this.masteryModel);
+        }
       },
     },
     $trs: {

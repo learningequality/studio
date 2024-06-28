@@ -7,7 +7,16 @@ import { INDEXEDDB_RESOURCES } from './registry';
 import { RolesNames } from 'shared/leUtils/Roles';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
-const { CREATED, DELETED, UPDATED, MOVED, PUBLISHED, SYNCED, DEPLOYED } = CHANGE_TYPES;
+const {
+  CREATED,
+  DELETED,
+  UPDATED,
+  MOVED,
+  PUBLISHED,
+  SYNCED,
+  DEPLOYED,
+  UPDATED_DESCENDANTS,
+} = CHANGE_TYPES;
 
 export function applyMods(obj, mods) {
   for (const keyPath in mods) {
@@ -32,6 +41,7 @@ export function collectChanges(changes) {
         [PUBLISHED]: [],
         [SYNCED]: [],
         [DEPLOYED]: [],
+        [UPDATED_DESCENDANTS]: [],
       };
     }
     collectedChanges[change.table][change.type].push(change);
@@ -76,6 +86,8 @@ export class ChangeDispatcher {
         result = await this.applyCopy(change);
       } else if (change.type === CHANGE_TYPES.PUBLISHED && this.applyPublish) {
         result = await this.applyPublish(change);
+      } else if (change.type === CHANGE_TYPES.UPDATED_DESCENDANTS && this.applyUpdateDescendants) {
+        result = await this.applyUpdateDescendants(change);
       }
     } catch (e) {
       logging.error(e, {
@@ -198,6 +210,30 @@ class ReturnedChanges extends ChangeDispatcher {
           return unpublishedNodeIds.length === 0;
         })
         .modify({ changed: false, published: true });
+    });
+  }
+
+  /**
+   * @param {UpdatedDescendantsChange} change
+   * @return {Promise<void>}
+   */
+  applyUpdateDescendants(change) {
+    if (change.table !== TABLE_NAMES.CONTENTNODE) {
+      return Promise.resolve();
+    }
+
+    const resource = INDEXEDDB_RESOURCES[TABLE_NAMES.CONTENTNODE];
+    if (!resource || !resource.updateDescendants) {
+      return Promise.resolve();
+    }
+
+    return transaction(change, TABLE_NAMES.CONTENTNODE, async () => {
+      const ids = await resource.getLoadedDescendantsIds(change.key);
+      return db
+        .table(TABLE_NAMES.CONTENTNODE)
+        .where(':id')
+        .anyOf(ids)
+        .modify(obj => applyMods(obj, change.mods));
     });
   }
 }
