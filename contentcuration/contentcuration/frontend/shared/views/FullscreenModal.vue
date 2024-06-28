@@ -100,7 +100,7 @@
         this.hideHTMLScroll(!!val);
       },
     },
-    activated(){
+    activated() {
       this.hideHTMLScroll(true);
     },
     deactivated() {
