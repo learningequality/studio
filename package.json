@@ -91,6 +91,7 @@
     "vue-custom-element": "https://github.com/learningequality/vue-custom-element.git#master",
     "vue-intl": "^3.0.0",
     "vue-router": "3.6.5",
+    "vue2-teleport": "^1.1.4",
     "vuetify": "^1.5.24",
     "vuex": "^3.0.1",
     "workbox-precaching": "^7.1.0",
