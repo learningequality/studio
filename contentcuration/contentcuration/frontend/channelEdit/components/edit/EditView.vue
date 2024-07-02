@@ -15,14 +15,30 @@
             <!-- Details tab -->
             <VTab ref="detailstab" :href="`#${tabs.DETAILS}`" @click="trackTab('Details')">
               {{ $tr(tabs.DETAILS) }}
-              <VTooltip v-if="!areDetailsValid || !areFilesValid" top lazy>
-                <template #activator="{ on }">
-                  <VIconWrapper color="red" dark small class="ml-2" v-on="on">
-                    error
-                  </VIconWrapper>
-                </template>
-                <span>{{ $tr('invalidFieldsToolTip') }}</span>
-              </VTooltip>
+              <template v-if="!areDetailsValid || !areFilesValid">
+                <KIcon
+                  ref="errorDetails"
+                  icon="error"
+                  :style="{ fontSize: '20px', marginLeft: '8px' }"
+                />
+                <!--
+                  teleported since when rendered in Vuetify's
+                  .v-tabs__ components, the tooltip gets cut off
+                  (previously used VTooltip used this approach
+                  as well under the hood)
+                -->
+                <Teleport
+                  to="#tooltips"
+                >
+                  <KTooltip
+                    reference="errorDetails"
+                    :refs="$refs"
+                    placement="top"
+                  >
+                    {{ $tr('invalidFieldsToolTip') }}
+                  </KTooltip>
+                </Teleport>
+              </template>
             </VTab>
 
             <!-- Questions tab -->
@@ -33,14 +49,30 @@
               @click="trackTab('Questions')"
             >
               {{ $tr(tabs.QUESTIONS) }}
-              <VTooltip v-if="!areAssessmentItemsValid" top lazy>
-                <template #activator="{ on }">
-                  <VIconWrapper color="red" dark v-on="on">
-                    error
-                  </VIconWrapper>
-                </template>
-                <span>{{ $tr('invalidFieldsToolTip') }}</span>
-              </VTooltip>
+              <template v-if="!areAssessmentItemsValid">
+                <KIcon
+                  ref="errorQuestions"
+                  icon="error"
+                  :style="{ fontSize: '20px', marginLeft: '8px' }"
+                />
+                <!--
+                  teleported since when rendered in Vuetify's
+                  .v-tabs__ components, the tooltip gets cut off
+                  (previously used VTooltip used this approach
+                  as well under the hood)
+                -->
+                <Teleport
+                  to="#tooltips"
+                >
+                  <KTooltip
+                    reference="errorQuestions"
+                    :refs="$refs"
+                    placement="top"
+                  >
+                    {{ $tr('invalidFieldsToolTip') }}
+                  </KTooltip>
+                </Teleport>
+              </template>
               <VChip v-else color="gray" dark>
                 {{ assessmentItemsCount }}
               </VChip>
@@ -98,6 +130,7 @@
 
   import reduce from 'lodash/reduce';
   import { mapGetters } from 'vuex';
+  import Teleport from 'vue2-teleport';
 
   import { TabNames } from '../../constants';
   import AssessmentTab from '../../components/AssessmentTab/AssessmentTab';
@@ -123,6 +156,7 @@
       RelatedResourcesTab,
       Tabs,
       ToolBar,
+      Teleport,
     },
     props: {
       nodeIds: {
