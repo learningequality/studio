@@ -96,26 +96,24 @@
                     </span>
                     <span v-if="isTopic && node.coach_count">
                       <!-- for each learning activity -->
-                      <VTooltip bottom lazy>
-                        <template #activator="{ on }">
-                          <div style="display: inline-block;" v-on="on">
-                            <Icon
-                              icon="coachContent"
-                              class="mx-1"
-                              style="vertical-align: sub;"
-                            />
-                            <span v-if="isTopic">
-                              {{ $formatNumber(node.coach_count) }}
-                            </span>
-                          </div>
-                        </template>
-                        <span>
-                          {{ isTopic ?
-                            $tr('hasCoachTooltip', { value: node.coach_count })
-                            : $tr('coachTooltip')
-                          }}
-                        </span>
-                      </VTooltip>
+                      <KIcon
+                        ref="coachContent"
+                        icon="coachContent"
+                        :style="{ marginLeft: '6px' }"
+                      />
+                      <span v-if="isTopic">
+                        {{ $formatNumber(node.coach_count) }}
+                      </span>
+                      <KTooltip
+                        reference="coachContent"
+                        :refs="$refs"
+                        placement="bottom"
+                      >
+                        {{ isTopic ?
+                          $tr('hasCoachTooltip', { value: node.coach_count })
+                          : $tr('coachTooltip')
+                        }}
+                      </KTooltip>
                     </span>
                   </VListTileSubTitle>
                   <span v-if="!isCompact">
