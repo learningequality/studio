@@ -67,14 +67,20 @@
                       </VBtn>
                     </VFlex>
                     <VFlex shrink class="px-1">
-                      <VTooltip :disabled="!hasTitle(node)" bottom open-delay="500" lazy>
-                        <template #activator="{ on }">
-                          <VIconWrapper v-on="on">
-                            {{ node.resource_count ? "folder" : "folder_open" }}
-                          </VIconWrapper>
-                        </template>
-                        <span>{{ getTitle(node) }}</span>
-                      </VTooltip>
+                      <KIcon
+                        ref="topic"
+                        :color="$themeTokens.annotation"
+                        :icon="node.resource_count ? 'topic' : 'emptyTopic'"
+                        :style="{ fontSize: '22px' }"
+                      />
+                      <KTooltip
+                        v-if="hasTitle(node)"
+                        reference="topic"
+                        :refs="$refs"
+                        placement="bottom"
+                      >
+                        {{ getTitle(node) }}
+                      </KTooltip>
                     </VFlex>
                     <VFlex
                       class="caption px-1 text-truncate"
