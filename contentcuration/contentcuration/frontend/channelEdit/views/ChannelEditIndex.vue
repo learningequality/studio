@@ -5,6 +5,13 @@
     <router-view v-else />
     <PolicyModals />
     <GlobalSnackbar />
+    <!--
+      For tooltips that need to be teleported high in the DOM. Search for <Teleport to="#tooltips">.
+      An alternative to teleporting to <body> which is said
+      to have performance issues
+      https://css-tricks.com/dont-attach-tooltips-to-document-body/
+    -->
+    <div id="tooltips"></div>
   </VApp>
 
 </template>
