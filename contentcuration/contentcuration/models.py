@@ -2565,14 +2565,13 @@ class Change(models.Model):
 class CustomTaskMetadata(models.Model):
     # Task_id for reference
     task_id = models.CharField(
-        max_length=255,  # Adjust the max_length as needed
+        max_length=255,
         unique=True,
     )
-    # user shouldn't be null, but in order to append the field, this needs to be allowed
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="tasks", on_delete=models.CASCADE, null=True)
     channel_id = DjangoUUIDField(db_index=True, null=True, blank=True)
     progress = models.IntegerField(null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(100)])
-    # a hash of the task name and kwargs for identifying repeat tasks
+    # A hash of the task name and kwargs for identifying repeat tasks
     signature = models.CharField(null=True, blank=False, max_length=32)
     date_created = models.DateTimeField(
         auto_now_add=True,
@@ -2582,7 +2581,6 @@ class CustomTaskMetadata(models.Model):
 
     class Meta:
         indexes = [
-            # add index that matches query usage for signature
             models.Index(
                 fields=['signature'],
                 name='task_result_signature',
