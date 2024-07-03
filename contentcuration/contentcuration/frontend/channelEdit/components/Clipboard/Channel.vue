@@ -2,7 +2,7 @@
 
   <LazyListGroup
     v-model="open"
-    appendIcon="arrow_drop_down"
+    appendIcon="dropdown"
     class="channel-item"
     :style="{ 'border-left-color': channelColor }"
   >

@@ -6,13 +6,13 @@
       @click="open = !open"
     >
       <div v-if="prependIcon" class="icon-container">
-        <VIconWrapper>{{ prependIcon }}</VIconWrapper>
+        <KIcon :icon="prependIcon" :style="{ fontSize: '22px' }" />
       </div>
       <div class="header-content" :class="{ 'has-icon': appendIcon || prependIcon }">
         <slot name="header"></slot>
       </div>
       <div v-if="appendIcon" class="icon-container">
-        <VIconWrapper>{{ appendIcon }}</VIconWrapper>
+        <KIcon :icon="appendIcon" :style="{ fontSize: '22px' }" />
       </div>
     </header>
     <VExpandTransition>
@@ -113,7 +113,7 @@
     // stylelint-enable
   }
 
-  .list-group.open > .list-group-header .v-icon {
+  .list-group.open > .list-group-header svg {
     transform: rotate(-180deg);
   }
 
