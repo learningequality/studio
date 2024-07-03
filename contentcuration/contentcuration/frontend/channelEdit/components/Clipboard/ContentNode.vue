@@ -62,7 +62,7 @@
                       <VListTileAction
                         class="action-col px-1 v-list__group__header__append-icon"
                       >
-                        <Icon icon="dropdown" />
+                        <Icon :icon="open ? 'dropup' : 'dropdown'" :style="{ fontSize: '22px' }" />
                       </VListTileAction>
                       <VSpacer />
                     </template>
