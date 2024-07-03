@@ -17,7 +17,7 @@
     </VChip>
     <span v-else capture-as-image>
       <KIcon :icon="icon" :color="fontColor" />
-      <span v-if="includeText">{{ text }}</span>
+      <span v-if="includeText" class="ml-2">{{ text }}</span>
     </span>
   </span>
 
