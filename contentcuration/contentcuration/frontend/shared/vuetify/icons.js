@@ -11,7 +11,7 @@ import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 Vue.component(VIconWrapper.name, VIconWrapper);
 
 const EMPTY = '_empty';
-export const CONTENT_KIND_ICONS = {
+export const CONTENT_KIND_ICONS_VUETIFY = {
   [ContentKindsNames.TOPIC]: 'folder',
   [ContentKindsNames.TOPIC + EMPTY]: 'folder_open',
   [ContentKindsNames.VIDEO]: 'ondemand_video',
@@ -23,9 +23,11 @@ export const CONTENT_KIND_ICONS = {
   [ContentKindsNames.ZIM]: 'widgets',
 };
 
-export function getContentKindIcon(kind, isEmpty = false) {
-  const icon = (isEmpty ? [kind + EMPTY] : []).concat([kind]).find(k => k in CONTENT_KIND_ICONS);
-  return icon ? CONTENT_KIND_ICONS[icon] : 'error_outline';
+export function getContentKindIconDeprecated(kind, isEmpty = false) {
+  const icon = (isEmpty ? [kind + EMPTY] : [])
+    .concat([kind])
+    .find(k => k in CONTENT_KIND_ICONS_VUETIFY);
+  return icon ? CONTENT_KIND_ICONS_VUETIFY[icon] : 'error_outline';
 }
 
 export function getLearningActivityIcon(activity) {

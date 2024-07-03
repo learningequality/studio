@@ -81,7 +81,7 @@
 <script>
 
   import { constantsTranslationMixin, printingMixin } from 'shared/mixins';
-  import { getContentKindIcon } from 'shared/vuetify/icons';
+  import { getContentKindIconDeprecated } from 'shared/vuetify/icons';
 
   export default {
     name: 'Thumbnail',
@@ -141,7 +141,7 @@
         return this.kind ? 'cover' : 'contain';
       },
       icon() {
-        return getContentKindIcon(this.kind, this.isEmpty);
+        return getContentKindIconDeprecated(this.kind, this.isEmpty);
       },
       thumbnailSrc() {
         return this.encoding && this.encoding.base64 ? this.encoding.base64 : this.src;

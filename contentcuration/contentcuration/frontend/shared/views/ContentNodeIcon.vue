@@ -12,15 +12,11 @@
       :style="{ width: fillWidth ? '100%' : 'unset' }"
       capture-as-image
     >
-      <VIconWrapper small :color="fontColor" v-bind="$attrs">
-        {{ icon }}
-      </VIconWrapper>
+      <KIcon :icon="icon" :color="fontColor" />
       <span v-if="includeText" class="ml-2">{{ text }}</span>
     </VChip>
     <span v-else capture-as-image>
-      <VIconWrapper :color="fontColor" v-bind="$attrs">
-        {{ icon }}
-      </VIconWrapper>
+      <KIcon :icon="icon" :color="fontColor" />
       <span v-if="includeText">{{ text }}</span>
     </span>
   </span>
@@ -30,7 +26,7 @@
 <script>
 
   import ContentKinds from 'shared/leUtils/ContentKinds';
-  import { getContentKindIcon } from 'shared/vuetify/icons';
+  import { getContentKindIcon } from 'shared/utils/icons';
 
   export default {
     name: 'ContentNodeIcon',
@@ -65,7 +61,7 @@
     },
     computed: {
       fontColor() {
-        return this.showColor ? 'white' : 'grey darken-1';
+        return this.showColor ? this.$themeTokens.textInverted : this.$themeTokens.annotation;
       },
       icon() {
         return getContentKindIcon(this.kind, this.isEmpty);
