@@ -21,14 +21,18 @@
         <div class="preview-wrapper">
           <VCard v-if="!primaryFileCount" flat class="mb-2 message-card">
             <VLayout align-center justify-center fill-height>
-              <VTooltip bottom lazy>
-                <template #activator="{ on }">
-                  <VIconWrapper color="red" v-on="on">
-                    error
-                  </VIconWrapper>
-                </template>
-                <span>{{ $tr('noFileText') }}</span>
-              </VTooltip>
+              <KIcon
+                ref="noFileError"
+                icon="error"
+                :style="{ fontSize: '20px' }"
+              />
+              <KTooltip
+                reference="noFileError"
+                placement="bottom"
+                :refs="$refs"
+              >
+                {{ $tr('noFileText') }}
+              </KTooltip>
             </VLayout>
           </VCard>
           <FilePreview
