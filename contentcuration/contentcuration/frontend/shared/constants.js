@@ -53,20 +53,6 @@ export const NEW_OBJECT = Symbol('New object');
 // validation should be delayed
 export const DELAYED_VALIDATION = Symbol('Delayed validation');
 
-export const kindToIconMap = {
-  audio: 'headset',
-  channel: 'apps',
-  document: 'description',
-  exercise: 'star',
-  h5p: 'widgets',
-  html5: 'widgets',
-  image: 'image',
-  slideshow: 'photo_library',
-  topic: 'folder',
-  video: 'theaters',
-  zim: 'widgets',
-};
-
 export const SharingPermissions = {
   EDIT: 'edit',
   VIEW_ONLY: 'view',
