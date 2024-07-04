@@ -9,7 +9,11 @@
         data-test="staging-tree-banner"
       >
         <VLayout align-center justify-start>
-          <VIconWrapper>build</VIconWrapper>
+          <KIcon
+            icon="systemUpdate"
+            :color="$themeTokens.annotation"
+            :style="{ fontSize: '20px' }"
+          />
           <span class="pl-1">
             <KRouterLink
               :to="stagingTreeLink"
