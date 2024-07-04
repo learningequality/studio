@@ -32,21 +32,21 @@
           <Icon v-if="!nodeIsValid" icon="error" class="error-icon" />
 
         </div>
-        <VTooltip v-else-if="erroredFiles.length" top lazy>
-          <template #activator="{ on }">
-            <VIconWrapper color="red" v-on="on">
-              error
-            </VIconWrapper>
-          </template>
-          <span>{{ errorMessage(erroredFiles[0].checksum) }}</span>
-        </VTooltip>
-        <VIconWrapper
+        <template v-else-if="erroredFiles.length">
+          <KIcon ref="erroredFiles" icon="error" />
+          <KTooltip
+            reference="erroredFiles"
+            placement="top"
+            :refs="$refs"
+          >
+            {{ errorMessage(erroredFiles[0].checksum) }}
+          </KTooltip>
+        </template>
+        <KIcon
           v-else-if="showUploadProgress && progress >= 1"
-          color="secondary"
-          data-test="done"
-        >
-          check_circle
-        </VIconWrapper>
+          icon="correct"
+          :color="$themePalette.yellow.v_1000"
+        />
         <VProgressCircular
           v-else-if="showUploadProgress"
           :size="20"
