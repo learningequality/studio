@@ -1,22 +1,26 @@
 <template>
 
   <div>
-    <VTooltip v-if="hasErrors" top lazy>
-      <template #activator="{ on }">
-        <VIconWrapper color="red" :large="large" v-on="on">
-          error
-        </VIconWrapper>
-      </template>
-      <span>{{ statusMessage(id) }}</span>
-    </VTooltip>
-    <VIconWrapper
+    <template v-if="hasErrors">
+      <KIcon
+        ref="error"
+        icon="error"
+        :style="{ fontSize: large ? '32px' : '20px' }"
+      />
+      <KTooltip
+        reference="error"
+        placement="top"
+        :refs="$refs"
+      >
+        {{ statusMessage(id) }}
+      </KTooltip>
+    </template>
+    <KIcon
       v-else-if="progress >= 1"
-      :large="large"
-      color="greenSuccess"
+      icon="correct"
       data-test="done"
-    >
-      check_circle
-    </VIconWrapper>
+      :style="{ fontSize: large ? '32px' : '20px' }"
+    />
     <VProgressCircular
       v-else
       :size="large ? 60 : 20"
