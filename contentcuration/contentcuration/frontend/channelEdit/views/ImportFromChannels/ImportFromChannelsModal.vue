@@ -31,10 +31,11 @@
       <template #actions>
         <VFadeTransition hide-on-leave>
           <VLayout v-show="previewIsSelected" align-center justify-end>
-            <VIconWrapper small>
-              check_circle
-            </VIconWrapper>
-            <span class="mx-1">{{ $tr('addedText') }}</span>
+            <KLabeledIcon
+              icon="correct"
+              :label="$tr('addedText')"
+              :color="$themeTokens.annotation"
+            />
             <VBtn color="primary" @click="deselectNode(previewNode)">
               {{ $tr('removeButton') }}
             </VBtn>
