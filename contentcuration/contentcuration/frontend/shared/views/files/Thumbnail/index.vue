@@ -80,11 +80,15 @@
 
 <script>
 
+  import { getContentKindIconDeprecated } from './icons';
+  import VIconWrapper from './VIconWrapper';
   import { constantsTranslationMixin, printingMixin } from 'shared/mixins';
-  import { getContentKindIconDeprecated } from 'shared/vuetify/icons';
 
   export default {
     name: 'Thumbnail',
+    components: {
+      VIconWrapper,
+    },
     mixins: [constantsTranslationMixin, printingMixin],
     props: {
       src: {
