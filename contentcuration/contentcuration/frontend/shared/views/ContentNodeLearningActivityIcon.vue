@@ -45,7 +45,7 @@
 
   import camelCase from 'lodash/camelCase';
   import { LearningActivities } from '../constants';
-  import { getLearningActivityIcon } from 'shared/vuetify/icons';
+  import { getLearningActivityIcon } from 'shared/utils/icons';
   import { metadataTranslationMixin } from 'shared/mixins';
 
   export default {

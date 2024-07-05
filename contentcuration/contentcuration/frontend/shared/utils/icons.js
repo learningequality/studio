@@ -1,3 +1,4 @@
+import camelCase from 'lodash/camelCase';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
 const EMPTY = '_empty';
@@ -16,4 +17,14 @@ const CONTENT_KIND_ICONS = {
 export function getContentKindIcon(kind, isEmpty = false) {
   const icon = (isEmpty ? [kind + EMPTY] : []).concat([kind]).find(k => k in CONTENT_KIND_ICONS);
   return icon ? CONTENT_KIND_ICONS[icon] : 'error';
+}
+
+export function getLearningActivityIcon(activity) {
+  if (activity.toLowerCase() === 'explore') {
+    return 'interactShaded';
+  } else if (activity === 'multiple') {
+    return 'allActivities';
+  } else {
+    return `${camelCase(activity) + 'Solid'}`;
+  }
 }

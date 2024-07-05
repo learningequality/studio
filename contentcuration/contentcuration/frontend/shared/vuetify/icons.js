@@ -1,6 +1,5 @@
 import Vue from 'vue';
 import vuetifyIcons from 'vuetify/lib/components/Vuetify/mixins/icons';
-import camelCase from 'lodash/camelCase';
 import VIconWrapper from 'shared/views/VIconWrapper';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
@@ -24,16 +23,6 @@ export function getContentKindIconDeprecated(kind, isEmpty = false) {
     .concat([kind])
     .find(k => k in CONTENT_KIND_ICONS_VUETIFY);
   return icon ? CONTENT_KIND_ICONS_VUETIFY[icon] : 'error_outline';
-}
-
-export function getLearningActivityIcon(activity) {
-  if (activity.toLowerCase() === 'explore') {
-    return 'interactShaded';
-  } else if (activity === 'multiple') {
-    return 'allActivities';
-  } else {
-    return `${camelCase(activity) + 'Solid'}`;
-  }
 }
 
 export default function icons(additional = {}) {
