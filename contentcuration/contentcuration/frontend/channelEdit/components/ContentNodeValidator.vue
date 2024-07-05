@@ -3,6 +3,7 @@
   <KLabeledIcon
     v-if="noTitle && !hideTitleValidation"
     icon="error"
+    class="icon"
     :color="$themeTokens.error"
     :style="{ fontSize: '20px' }"
   >
@@ -14,6 +15,7 @@
     <KIcon
       ref="error"
       icon="error"
+      class="icon"
       :aria-label="error"
       :style="{ fontSize: '20px', marginLeft: '16px' }"
     />
@@ -40,6 +42,7 @@
       ref="warning"
       icon="warningIncomplete"
       :aria-label="warning"
+      class="icon"
       :style="{ fontSize: '20px', marginLeft: '16px' }"
     />
     <!--
@@ -112,8 +115,7 @@
 </script>
 
 <style scoped>
-  .v-icon {
-    vertical-align: bottom;
+  .icon {
     cursor: default;
   }
 </style>

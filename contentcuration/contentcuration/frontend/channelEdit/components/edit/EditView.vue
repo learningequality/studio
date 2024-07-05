@@ -390,11 +390,6 @@
   .v-tabs__div {
     min-width: 150px;
     font-weight: bold;
-
-    .v-icon {
-      margin-left: 5px;
-      font-size: 12pt;
-    }
   }
 
   .v-chip {

@@ -448,10 +448,6 @@
         padding-top: 16px;
       }
     }
-
-    .updated .v-icon {
-      vertical-align: middle;
-    }
   }
 
   .thumbnail-col {

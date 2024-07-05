@@ -133,14 +133,6 @@
         vertical-align: middle;
       }
 
-      .v-icon:not(.v-icon--is-component) {
-        font-size: 16pt !important;
-        /* stylelint-disable-next-line custom-property-pattern */
-        color: var(--v-darkGrey-darken1) !important;
-        opacity: 1 !important;
-        transform: none !important;
-      }
-
       .v-input--checkbox {
         display: inline-block;
         width: min-content;

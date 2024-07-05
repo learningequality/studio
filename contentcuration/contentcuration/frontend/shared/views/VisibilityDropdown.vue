@@ -24,7 +24,7 @@
             <template #header="{ item }">
               <span>
                 {{ item.text }}
-                <KIcon v-if="roleIcon(item.value)" :icon="roleIcon(item.value)" />
+                <KIcon v-if="roleIcon(item.value)" :icon="roleIcon(item.value)" class="icon" />
               </span>
             </template>
             <template #description="{ item }">
@@ -33,11 +33,11 @@
           </InfoModal>
         </template>
         <template #selection="{ item }">
-          <KIcon v-if="roleIcon(item.value)" :icon="roleIcon(item.value)" class="pr-2" />
+          <KIcon v-if="roleIcon(item.value)" :icon="roleIcon(item.value)" class="icon pr-2" />
           {{ item.text }}
         </template>
         <template #item="{ item }">
-          <KIcon v-if="roleIcon(item.value)" :icon="roleIcon(item.value)" class="pr-2" />
+          <KIcon v-if="roleIcon(item.value)" :icon="roleIcon(item.value)" class="icon pr-2" />
           {{ item.text }}
         </template>
       </VSelect>
@@ -126,10 +126,9 @@
 
 <style lang="less" scoped>
 
-  .v-icon {
-    margin-left: 5px;
-    font-size: 12pt;
-    vertical-align: text-top;
+  .icon {
+    padding-bottom: 4px;
+    font-size: 20px;
   }
 
   .role-visibility-container {

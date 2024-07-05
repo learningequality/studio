@@ -46,7 +46,7 @@
         </VListTileContent>
         <VListTileAction v-if="!readonly">
           <VBtn icon flat data-test="remove" @click.stop="$emit('remove', file.id)">
-            <KIcon icon="clear" />
+            <KIcon class="clear-icon" icon="clear" />
           </VBtn>
         </VListTileAction>
       </VListTile>
@@ -136,9 +136,9 @@
 
 <style lang="less" scoped>
 
-  .v-icon {
+  .clear-icon {
+    padding-bottom: 4px;
     font-size: 14pt;
-    vertical-align: middle;
   }
 
 </style>

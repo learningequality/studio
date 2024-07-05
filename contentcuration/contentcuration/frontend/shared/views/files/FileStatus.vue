@@ -65,11 +65,3 @@
   };
 
 </script>
-
-<style lang="less" scoped>
-
-  .v-icon {
-    cursor: default;
-  }
-
-</style>

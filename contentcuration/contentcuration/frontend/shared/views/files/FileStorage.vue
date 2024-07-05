@@ -23,7 +23,7 @@
       </span>
     </span>
     <span v-else-if="showWarning">
-      <KIcon icon="warningIncomplete" />
+      <KIcon icon="warningIncomplete" class="warning-icon" />
       <span v-if="showProgress">{{ $tr('storageLow') }}</span>
       <span v-else>
         {{ $tr('storageLowWithSize', {
@@ -104,7 +104,7 @@
 
 <style lang="less" scoped>
 
-  .v-icon {
+  .warning-icon {
     margin-right: 5px;
     vertical-align: sub !important;
   }

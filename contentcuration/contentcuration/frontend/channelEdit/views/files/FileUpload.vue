@@ -195,10 +195,6 @@
     border-color: var(--v-greyBorder-base) !important;
     border-style: solid;
     border-width: 1px;
-
-    .v-icon {
-      cursor: default;
-    }
   }
 
   .v-input--radio-group {

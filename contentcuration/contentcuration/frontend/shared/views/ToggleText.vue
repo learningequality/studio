@@ -11,6 +11,7 @@
       <a v-if="overflowText" class="caption toggler" @click.stop.prevent="toggle">
         <span>{{ togglerText }}</span>
         <KIcon
+          class="icon"
           :icon="expanded ? 'chevronUp' : 'chevronDown' "
         />
       </a>
@@ -109,8 +110,8 @@
       text-decoration: underline;
     }
 
-    .v-icon {
-      vertical-align: bottom;
+    .icon {
+      vertical-align: middle;
     }
   }
 

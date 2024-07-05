@@ -72,8 +72,4 @@
     min-width: 0;
   }
 
-  .v-icon {
-    vertical-align: baseline;
-  }
-
 </style>

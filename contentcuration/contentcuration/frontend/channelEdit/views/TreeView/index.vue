@@ -423,14 +423,6 @@
     flex-direction: column;
   }
 
-  .hierarchy-toggle /deep/ .v-icon {
-    transform: scaleX(-1);
-
-    [dir='rtl'] & {
-      transform: none;
-    }
-  }
-
   .main-content {
     transition: padding-left 0s !important;
   }
