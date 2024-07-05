@@ -1,10 +1,6 @@
 import Vue from 'vue';
 import vuetifyIcons from 'vuetify/lib/components/Vuetify/mixins/icons';
 import camelCase from 'lodash/camelCase';
-import CollapseAllIcon from '../views/icons/CollapseAllIcon';
-import IndicatorIcon from '../views/icons/IndicatorIcon';
-import LightBulbIcon from '../views/icons/LightBulbIcon';
-import ViewOnlyIcon from '../views/icons/ViewOnlyIcon';
 import VIconWrapper from 'shared/views/VIconWrapper';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
@@ -40,34 +36,6 @@ export function getLearningActivityIcon(activity) {
   }
 }
 
-// Can use $vuetify.icons.iconName in <Icon> tags
-const customIcons = {
-  collapse_all: {
-    component: CollapseAllIcon,
-    props: {
-      iconName: 'collapse_all',
-    },
-  },
-  light_bulb: {
-    component: LightBulbIcon,
-    props: {
-      iconsName: 'light_bulb',
-    },
-  },
-  view_only: {
-    component: ViewOnlyIcon,
-    props: {
-      iconName: 'view_only',
-    },
-  },
-  indicator: {
-    component: IndicatorIcon,
-    props: {
-      iconName: 'indicator',
-    },
-  },
-};
-
 export default function icons(additional = {}) {
   // Grab icon name mapping from Vuetify. `md` is default icon font set
   const iconMap = vuetifyIcons('md', additional);
@@ -88,6 +56,5 @@ export default function icons(additional = {}) {
     .reduce((icons, icon) => Object.assign(icons, icon), {});
   return {
     ...vuetifyUpdatedIcons,
-    ...customIcons,
   };
 }
