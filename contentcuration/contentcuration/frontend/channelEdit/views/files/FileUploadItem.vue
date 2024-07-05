@@ -56,7 +56,7 @@
             <div v-if="allowFileRemove" class="remove-icon">
               <KIconButton
                 icon="clear"
-                color="grey"
+                :color="$themeTokens.annotation"
                 :tooltip="$tr('removeFileButton')"
                 :ariaLabel="$tr('removeFileButton')"
                 data-test="remove"

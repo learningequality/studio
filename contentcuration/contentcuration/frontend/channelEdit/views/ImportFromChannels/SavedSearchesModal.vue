@@ -36,7 +36,7 @@
             <VListTileAction>
               <KIconButton
                 icon="edit"
-                color="grey"
+                :color="$themeTokens.annotation"
                 :tooltip="$tr('editAction')"
                 :ariaLabel="$tr('editAction')"
                 @click="handleClickEdit(search.id)"
@@ -46,7 +46,7 @@
             <VListTileAction>
               <KIconButton
                 icon="clear"
-                color="grey"
+                :color="$themeTokens.annotation"
                 :tooltip="$tr('deleteAction')"
                 :ariaLabel="$tr('deleteAction')"
                 @click="handleClickDelete(search.id)"
