@@ -36,7 +36,7 @@
         >
           <VBadge color="transparent">
             <template #badge>
-              <Icon
+              <KIcon
                 v-if="!currentChannel.language"
                 color="red"
                 icon="error"
@@ -129,7 +129,7 @@
               icon
               v-on="on"
             >
-              <Icon icon="optionsHorizontal" style="font-size: 25px;" />
+              <KIcon icon="optionsHorizontal" style="font-size: 25px;" />
             </VBtn>
           </template>
           <VList>
@@ -150,7 +150,7 @@
               >
                 <VListTileTitle>
                   {{ $tr('editChannel') }}
-                  <Icon
+                  <KIcon
                     v-if="!currentChannel.language"
                     class="mx-1"
                     color="red"
@@ -266,7 +266,7 @@
               fab
               class="clipboard-fab"
             >
-              <Icon icon="clipboard" style="font-size: 25px;" />
+              <KIcon icon="clipboard" style="font-size: 25px;" />
             </VBtn>
           </template>
         </DraggableRegion>

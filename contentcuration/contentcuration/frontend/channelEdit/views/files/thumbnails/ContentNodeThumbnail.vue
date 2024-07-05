@@ -89,7 +89,7 @@
               data-test="default-image"
               @click="openFileDialog"
             >
-              <Icon icon="image" style="font-size: 25px;" />
+              <KIcon icon="image" style="font-size: 25px;" />
             </ThumbnailCard>
           </FileDropzone>
         </div>

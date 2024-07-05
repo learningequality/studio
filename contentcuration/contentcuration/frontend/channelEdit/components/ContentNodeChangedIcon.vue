@@ -2,7 +2,7 @@
 
   <span v-if="message" class="mx-2">
 
-    <Icon
+    <KIcon
       ref="contentNode"
       :icon="showFilled ? 'unpublishedResource' : 'unpublishedChange'"
     />

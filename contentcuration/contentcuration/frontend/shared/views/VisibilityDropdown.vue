@@ -24,7 +24,7 @@
             <template #header="{ item }">
               <span>
                 {{ item.text }}
-                <Icon v-if="roleIcon(item.value)" :icon="roleIcon(item.value)" />
+                <KIcon v-if="roleIcon(item.value)" :icon="roleIcon(item.value)" />
               </span>
             </template>
             <template #description="{ item }">
@@ -33,11 +33,11 @@
           </InfoModal>
         </template>
         <template #selection="{ item }">
-          <Icon v-if="roleIcon(item.value)" :icon="roleIcon(item.value)" class="pr-2" />
+          <KIcon v-if="roleIcon(item.value)" :icon="roleIcon(item.value)" class="pr-2" />
           {{ item.text }}
         </template>
         <template #item="{ item }">
-          <Icon v-if="roleIcon(item.value)" :icon="roleIcon(item.value)" class="pr-2" />
+          <KIcon v-if="roleIcon(item.value)" :icon="roleIcon(item.value)" class="pr-2" />
           {{ item.text }}
         </template>
       </VSelect>

@@ -3,7 +3,7 @@
   <FullscreenModal v-model="dialog" :header="headerText">
     <template v-if="isReview" #close>
       <VBtn icon @click.stop="goBackToBrowse">
-        <Icon icon="back" :color="$themeTokens.textInverted" />
+        <KIcon icon="back" :color="$themeTokens.textInverted" />
       </VBtn>
     </template>
     <!-- Hack to make sure preview overlay appears inside import modal -->

@@ -22,7 +22,7 @@
         <VToolbar v-if="$vuetify.breakpoint.xsOnly" color="transparent" flat dense>
           <VSpacer />
           <VBtn icon flat style="text-align: right;" @click="drawer = false">
-            <Icon icon="clear" />
+            <KIcon icon="clear" />
           </VBtn>
         </VToolbar>
 

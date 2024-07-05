@@ -39,7 +39,7 @@
           class="ma-0"
           @click="$emit('close')"
         >
-          <Icon icon="clear" />
+          <KIcon icon="clear" />
         </VBtn>
       </VLayout>
     </VFlex>
@@ -79,7 +79,7 @@
           @change="tab = 'questions'"
         >
           {{ $tr('questions') }}
-          <Icon
+          <KIcon
             v-if="invalidQuestions"
             icon="error"
             class="mx-2"
@@ -92,7 +92,7 @@
           @change="tab = 'details'"
         >
           {{ $tr('details') }}
-          <Icon
+          <KIcon
             v-if="invalidDetails"
             icon="error"
             class="mx-2"
@@ -186,7 +186,7 @@
                 lazy
               >
                 <template #activator="{ on }">
-                  <Icon
+                  <KIcon
                     icon="error"
                     v-on="on"
                   />
@@ -205,7 +205,7 @@
               v-if="!assessmentItems.length"
               class="red--text"
             >
-              <Icon
+              <KIcon
                 icon="error"
               />
               <span class="mx-1">{{ $tr('noQuestionsError') }}</span>
@@ -239,7 +239,7 @@
               v-if="isExercise && noMasteryModel"
               class="red--text"
             >
-              <Icon
+              <KIcon
                 icon="error"
               />
               <span class="mx-1">{{ $tr('noMasteryModelError') }}</span>
@@ -426,7 +426,7 @@
                 v-if="noLicense"
                 class="red--text"
               >
-                <Icon
+                <KIcon
                   icon="error"
                 />
                 <span class="mx-1">{{ $tr('noLicenseError') }}</span>
@@ -438,7 +438,7 @@
                 v-if="noLicenseDescription"
                 class="red--text"
               >
-                <Icon
+                <KIcon
                   icon="error"
                 />
                 <span class="mx-1">{{ $tr('noLicenseDescriptionError') }}</span>
@@ -455,7 +455,7 @@
                 v-if="noCopyrightHolder"
                 class="red--text"
               >
-                <Icon
+                <KIcon
                   icon="error"
                 />
                 <span class="mx-1">{{ $tr('noCopyrightHolderError') }}</span>
@@ -481,7 +481,7 @@
                   v-if="!primaryFiles.length"
                   class="red--text"
                 >
-                  <Icon
+                  <KIcon
                     icon="error"
                   />
                   <span class="mx-1">{{ $tr('noFilesError') }}</span>

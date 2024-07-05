@@ -63,7 +63,7 @@
                         :style="{ transform: toggleTransform }"
                         @click.stop="toggle"
                       >
-                        <Icon icon="chevronRight" />
+                        <KIcon icon="chevronRight" />
                       </VBtn>
                     </VFlex>
                     <VFlex shrink class="px-1">

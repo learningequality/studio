@@ -82,7 +82,7 @@
                     class="mx-1"
                     @click.stop="previewNodeId = node.id"
                   >
-                    <Icon icon="info" style="font-size:20px" :color="$themeTokens.primary" />
+                    <KIcon icon="info" style="font-size:20px" :color="$themeTokens.primary" />
                   </VBtn>
                   <VBtn
                     v-if="node.kind === 'topic'"
@@ -90,7 +90,7 @@
                     class="mx-1 rtl-flip"
                     @click.stop="targetNodeId = node.id"
                   >
-                    <Icon icon="chevronRight" />
+                    <KIcon icon="chevronRight" />
                   </VBtn>
                 </div>
               </VListTileAction>

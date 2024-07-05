@@ -55,7 +55,7 @@
         <template #activator="{ on }">
           {{ formatFileSize(user.disk_space) }}
           <VBtn icon small v-on="on">
-            <Icon
+            <KIcon
               icon="edit"
             />
           </VBtn>
@@ -76,7 +76,7 @@
     <td>
       {{ user.edit_count }}
       <VBtn icon small :to="searchUserChannelsLink" target="_blank">
-        <Icon icon="openNewTab" />
+        <KIcon icon="openNewTab" />
       </VBtn>
     </td>
     <td>{{ user.view_count }}</td>

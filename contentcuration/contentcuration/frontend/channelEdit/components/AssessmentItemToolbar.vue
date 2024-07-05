@@ -15,7 +15,7 @@
             v-on="on"
             @click="clickItem(action)"
           >
-            <Icon
+            <KIcon
               v-if="config[action] && config[action].icon"
               :icon="
                 config[action].icon
@@ -40,7 +40,7 @@
             icon
             v-on="on"
           >
-            <Icon
+            <KIcon
               icon="optionsVertical"
               :color="$themePalette.grey.v_800"
             />

@@ -20,7 +20,7 @@
           v-on="on"
           @click.stop
         >
-          <Icon icon="optionsHorizontal" />
+          <KIcon icon="optionsHorizontal" />
         </VBtn>
       </template>
       <VList>

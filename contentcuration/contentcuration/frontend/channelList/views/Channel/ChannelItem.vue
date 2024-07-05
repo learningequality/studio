@@ -79,7 +79,7 @@
               })
             }}
           </KTooltip>
-          <Icon
+          <KIcon
             v-if="allowEdit && hasUnpublishedChanges"
             ref="lastUpdatedTime"
             icon="unpublishedResource"
@@ -125,7 +125,7 @@
                   v-on="on"
                   @click.stop.prevent
                 >
-                  <Icon
+                  <KIcon
                     icon="optionsVertical"
                   />
                 </VBtn>
@@ -165,7 +165,7 @@
                   @click.stop
                 >
                   <VListTileAvatar>
-                    <Icon icon="openNewTab" />
+                    <KIcon icon="openNewTab" />
                   </VListTileAvatar>
                   <VListTileTitle>{{ $tr('goToWebsite') }}</VListTileTitle>
                 </VListTile>
@@ -175,7 +175,7 @@
                   target="_blank"
                 >
                   <VListTileAvatar>
-                    <Icon icon="openNewTab" />
+                    <KIcon icon="openNewTab" />
                   </VListTileAvatar>
                   <VListTileTitle>{{ $tr('viewContent') }}</VListTileTitle>
                 </VListTile>

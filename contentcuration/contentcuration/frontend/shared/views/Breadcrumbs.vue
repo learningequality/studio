@@ -7,14 +7,14 @@
     style="max-height: 100%; width: 100%;"
   >
     <template #divider>
-      <Icon icon="chevronRight" style="font-size: 20px;" />
+      <KIcon icon="chevronRight" style="font-size: 20px;" />
     </template>
     <!-- Overflow menu -->
     <VBreadcrumbsItem v-if="breadcrumbStartingIndex > 0" tag="div">
       <Menu bottom>
         <template #activator="{ on }">
           <VBtn icon flat class="ma-0" v-on="on">
-            <Icon icon="optionsHorizontal" />
+            <KIcon icon="optionsHorizontal" />
           </VBtn>
         </template>
         <VCard style="max-width: 300px;">

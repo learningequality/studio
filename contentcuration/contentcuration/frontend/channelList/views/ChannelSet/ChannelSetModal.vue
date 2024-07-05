@@ -10,7 +10,7 @@
     </template>
     <template v-if="step === 2" #close>
       <VBtn icon class="rtl-flip" @click="step--">
-        <Icon
+        <KIcon
           icon="back"
           :color="$themeTokens.textInverted"
         />

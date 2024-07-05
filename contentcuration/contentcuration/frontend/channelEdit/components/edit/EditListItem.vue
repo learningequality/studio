@@ -29,7 +29,7 @@
     <VListTileAction class="mr-1 status-indicator">
       <div>
         <div v-if="!uploadingFiles.length">
-          <Icon v-if="!nodeIsValid" icon="error" class="error-icon" />
+          <KIcon v-if="!nodeIsValid" icon="error" class="error-icon" />
 
         </div>
         <template v-else-if="erroredFiles.length">
@@ -60,7 +60,7 @@
     </VListTileAction>
     <VListTileAction v-if="canRemove">
       <VBtn icon flat class="remove-item" @click.stop="removeNode">
-        <Icon icon="clear" />
+        <KIcon icon="clear" />
       </VBtn>
     </VListTileAction>
 

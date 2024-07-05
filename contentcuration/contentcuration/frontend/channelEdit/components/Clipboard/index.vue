@@ -50,7 +50,7 @@
                         class="back-to-clipboard"
                         @click.prevent="resetPreviewNode"
                       >
-                        <span class="link-icon"><Icon
+                        <span class="link-icon"><KIcon
                           icon="back"
                           :color="$themeTokens.primary"
                         />

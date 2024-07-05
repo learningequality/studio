@@ -116,7 +116,7 @@
               @click="setViewMode(mode), trackViewMode(mode)"
             >
               <VListTileAction style="min-width: 32px;">
-                <Icon v-if="mode === viewMode" icon="check" />
+                <KIcon v-if="mode === viewMode" icon="check" />
               </VListTileAction>
               <VListTileTitle>{{ $tr(mode) }}</VListTileTitle>
             </VListTile>
@@ -127,7 +127,7 @@
           <template #activator="{ on }">
             <VBtn color="primary" class="ml-2" style="height: 32px;" v-on="on">
               {{ $tr('addButton') }}
-              <Icon icon="dropdown" :color="$themeTokens.textInverted" />
+              <KIcon icon="dropdown" :color="$themeTokens.textInverted" />
             </VBtn>
           </template>
           <VList>

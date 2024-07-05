@@ -10,7 +10,7 @@
       </VSlideYTransition>
       <a v-if="overflowText" class="caption toggler" @click.stop.prevent="toggle">
         <span>{{ togglerText }}</span>
-        <Icon
+        <KIcon
           :icon="expanded ? 'chevronUp' : 'chevronDown' "
         />
       </a>

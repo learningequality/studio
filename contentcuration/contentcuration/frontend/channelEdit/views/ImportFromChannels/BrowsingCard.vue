@@ -31,7 +31,7 @@
               <VTooltip bottom lazy>
                 <template #activator="{ on }">
                   <div class="my-1" style="display: inline-block;" v-on="on">
-                    <Icon
+                    <KIcon
                       icon="coachContent"
                       style="vertical-align: text-top;"
                       class="mx-1"

@@ -16,7 +16,7 @@
                 v-on="on"
                 @click="accept"
               >
-                <Icon icon="done" />
+                <KIcon icon="done" />
               </VBtn>
             </template>
             <span>{{ $tr('accept') }}</span>
@@ -31,7 +31,7 @@
                 v-on="on"
                 @click="dialog = true"
               >
-                <Icon color="red" icon="clear" />
+                <KIcon color="red" icon="clear" />
               </VBtn>
             </template>
             <span>{{ $tr('decline') }}</span>

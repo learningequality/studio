@@ -1,7 +1,7 @@
 <template>
 
   <div>
-    <Icon
+    <KIcon
       ref="tooltip"
       :color="$themeTokens.primary"
       style="font-size:20px;"

@@ -17,7 +17,7 @@
             <VBtn color="primary" dark :block="$vuetify.breakpoint.xsOnly" v-on="on">
               {{ $tr('downloadButton') }}
               &nbsp;
-              <Icon icon="dropdown" :color="$themeTokens.textInverted" />
+              <KIcon icon="dropdown" :color="$themeTokens.textInverted" />
             </VBtn>
           </template>
           <VList>

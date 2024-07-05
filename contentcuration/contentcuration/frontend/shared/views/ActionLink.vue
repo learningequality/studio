@@ -18,7 +18,7 @@
       >
         {{ text }}
       </span>
-      <Icon
+      <KIcon
         v-if="target === '_blank'"
         icon="openNewTab"
         :color="$themeTokens.primary"

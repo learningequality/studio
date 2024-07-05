@@ -22,7 +22,7 @@
         <VToolbarItems>
           <slot name="close">
             <VBtn flat icon exact data-test="close" @click="$emit('input', false)">
-              <Icon icon="clear" :color="$themeTokens.textInverted" />
+              <KIcon icon="clear" :color="$themeTokens.textInverted" />
             </VBtn>
           </slot>
         </VToolbarItems>

@@ -21,7 +21,7 @@
       <VFlex class="pl-4">
         <VContainer v-if="loadFailed">
           <p class="text-xs-center">
-            <Icon icon="error" />
+            <KIcon icon="error" />
           </p>
           <p class="text-xs-center">
             {{ $tr('failedToLoad') }}

@@ -59,7 +59,7 @@
                         </h3>
                       </VFlex>
                       <VFlex v-if="!isTopic && isCoach" class="px-1">
-                        <Icon
+                        <KIcon
                           icon="coachContent"
                           style="vertical-align: middle;"
                         />

@@ -62,7 +62,7 @@
                       <VListTileAction
                         class="action-col px-1 v-list__group__header__append-icon"
                       >
-                        <Icon :icon="open ? 'dropup' : 'dropdown'" :style="{ fontSize: '22px' }" />
+                        <KIcon :icon="open ? 'dropup' : 'dropdown'" :style="{ fontSize: '22px' }" />
                       </VListTileAction>
                       <VSpacer />
                     </template>
@@ -85,7 +85,7 @@
                             v-on="on"
                             @click.stop
                           >
-                            <Icon icon="optionsHorizontal" />
+                            <KIcon icon="optionsHorizontal" />
                           </VBtn>
                         </template>
 

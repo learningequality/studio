@@ -1,7 +1,7 @@
 <template>
 
   <div :style="{ display: 'inline' }">
-    <Icon
+    <KIcon
       icon="help"
       :color="$themeTokens.primary"
       data-test="info-icon"

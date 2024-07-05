@@ -53,7 +53,7 @@
     </template>
   </VDataTable>
   <VLayout v-else justify-center column>
-    <Icon icon="error" class="mb-2" />
+    <KIcon icon="error" class="mb-2" />
 
     <!-- TODO: wrap string -->
     <div class="text-xs-center">

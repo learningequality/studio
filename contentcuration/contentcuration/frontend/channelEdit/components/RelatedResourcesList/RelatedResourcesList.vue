@@ -41,7 +41,7 @@
                 v-on="on"
                 @click="onRemoveClick(item.id)"
               >
-                <Icon icon="clear" />
+                <KIcon icon="clear" />
               </VBtn>
             </template>
             <span>{{ removeBtnLabel }}</span>
@@ -59,7 +59,6 @@
 
   import ActionLink from 'shared/views/ActionLink';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
-  import Icon from 'shared/views/Icon';
   import { titleMixin } from 'shared/mixins';
 
   export default {
@@ -67,7 +66,6 @@
     components: {
       ActionLink,
       ContentNodeIcon,
-      Icon,
     },
     mixins: [titleMixin],
     props: {
