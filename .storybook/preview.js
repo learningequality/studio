@@ -4,11 +4,10 @@ import Vuetify from 'vuetify';
 
 import 'vuetify/dist/vuetify.min.css';
 
-import { icons, theme } from 'shared/vuetify';
+import { theme } from 'shared/vuetify';
 
 Vue.use(Vuetify, {
-  theme: theme(),
-  icons: icons(),
+  theme: theme()
 });
 
 addDecorator(() => ({

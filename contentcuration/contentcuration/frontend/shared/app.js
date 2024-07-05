@@ -47,7 +47,6 @@ import Vuetify, {
   VFooter,
   VForm,
   VHover,
-  VIcon,
   VImg,
   VInput,
   VLayout,
@@ -112,7 +111,7 @@ import KThemePlugin from 'kolibri-design-system/lib/KThemePlugin';
 import trackInputModality from 'kolibri-design-system/lib/styles/trackInputModality';
 
 import AnalyticsPlugin from './analytics/plugin';
-import { theme, icons } from 'shared/vuetify';
+import { theme } from 'shared/vuetify';
 
 import { i18nSetup } from 'shared/i18n';
 
@@ -194,7 +193,6 @@ Vue.use(Vuetify, {
     VFooter,
     VForm,
     VHover,
-    VIcon,
     VImg,
     VInput,
     VLayout,
@@ -248,7 +246,6 @@ Vue.use(Vuetify, {
     customProperties: true,
   },
   theme: theme(),
-  icons: icons(),
 });
 
 // Register kolibri-design-system plugin
