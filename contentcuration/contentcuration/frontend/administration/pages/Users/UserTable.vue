@@ -3,12 +3,13 @@
   <div>
     <h1 class="font-weight-bold px-4 py-2 title">
       {{ `${$formatNumber(count)} ${count === 1 ? 'user' : 'users'}` }}
-      <IconButton
+      <KIconButton
         v-if="count"
         icon="email"
         class="ma-0"
         :color="$themeTokens.primary"
-        :text="`Email ${$formatNumber(count)} ${count === 1 ? 'user' : 'users'}`"
+        :tooltip="`Email ${$formatNumber(count)} ${count === 1 ? 'user' : 'users'}`"
+        :ariaLabel="`Email ${$formatNumber(count)} ${count === 1 ? 'user' : 'users'}`"
         @click="showMassEmailDialog = true"
       />
       <EmailUsersDialog
@@ -78,10 +79,11 @@
 
         <template v-if="header.class === 'first' && selected.length">
           <span>({{ selectedCount }})</span>
-          <IconButton
+          <KIconButton
             icon="email"
             class="ma-0"
-            text="Email"
+            tooltip="Email"
+            ariaLabel="Email"
             data-test="email"
             @click="showEmailDialog = true"
           />
@@ -108,7 +110,6 @@
   import EmailUsersDialog from './EmailUsersDialog';
   import UserItem from './UserItem';
   import { routerMixin } from 'shared/mixins';
-  import IconButton from 'shared/views/IconButton';
   import Checkbox from 'shared/views/form/Checkbox';
   import CountryField from 'shared/views/form/CountryField';
 
@@ -125,7 +126,6 @@
     name: 'UserTable',
     components: {
       Checkbox,
-      IconButton,
       EmailUsersDialog,
       UserItem,
       CountryField,

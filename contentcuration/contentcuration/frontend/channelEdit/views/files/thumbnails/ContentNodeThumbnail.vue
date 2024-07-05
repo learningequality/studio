@@ -108,10 +108,11 @@
             @error="cancelPendingFile"
           >
             <template #default="{ generate }">
-              <IconButton
+              <KIconButton
                 :disabled="!primaryFilePath"
                 icon="generateThumbnail"
-                :text="$tr('generate')"
+                :tooltip="$tr('generate')"
+                :ariaLabel="$tr('generate')"
                 class="ma-0"
                 @click="generate"
               />
@@ -120,19 +121,21 @@
 
           <!-- Cropping options -->
           <span v-if="cropping">
-            <IconButton
+            <KIconButton
               icon="plus"
               data-test="zoomin"
-              :text="$tr('zoomIn')"
+              :tooltip="$tr('zoomIn')"
+              :ariaLabel="$tr('zoomIn')"
               class="ma-0"
               @click="Cropper && Cropper.zoomIn()"
               @mousedown="cropZoomIn"
               @mouseup="cropZoomStop"
             />
-            <IconButton
+            <KIconButton
               icon="minus"
               data-test="zoomout"
-              :text="$tr('zoomOut')"
+              :tooltip="$tr('zoomOut')"
+              :ariaLabel="$tr('zoomOut')"
               class="ma-0"
               @click="Cropper && Cropper.zoomOut()"
               @mousedown="cropZoomOut"
@@ -142,16 +145,18 @@
 
           <!-- Default options -->
           <template v-else-if="!loading">
-            <IconButton
+            <KIconButton
               icon="image"
-              :text="$tr('upload')"
+              :tooltip="$tr('upload')"
+              :ariaLabel="$tr('upload')"
               class="ma-0"
               @click="openFileDialog"
             />
-            <IconButton
+            <KIconButton
               v-if="!hasError && value"
               icon="crop"
-              :text="$tr('crop')"
+              :tooltip="$tr('crop')"
+              :ariaLabel="$tr('crop')"
               class="ma-0"
               @click="startCropping(false)"
             />
@@ -168,11 +173,12 @@
               />
               <ActionLink :text="$tr('save')" data-test="save" @click="save" />
             </span>
-            <IconButton
+            <KIconButton
               v-else-if="value"
               icon="clear"
               data-test="remove"
-              :text="$tr('remove')"
+              :tooltip="$tr('remove')"
+              :ariaLabel="$tr('remove')"
               @click="$emit('input', null)"
             />
           </div>
@@ -194,7 +200,6 @@
   import FileDropzone from 'shared/views/files/FileDropzone';
   import FileStatus from 'shared/views/files/FileStatus';
   import FileStatusText from 'shared/views/files/FileStatusText';
-  import IconButton from 'shared/views/IconButton';
   import Thumbnail from 'shared/views/files/Thumbnail';
   import { ASPECT_RATIO, THUMBNAIL_WIDTH } from 'shared/constants';
 
@@ -206,7 +211,6 @@
       FileStatus,
       FileStatusText,
       ThumbnailGenerator,
-      IconButton,
       Thumbnail,
       ThumbnailCard,
     },

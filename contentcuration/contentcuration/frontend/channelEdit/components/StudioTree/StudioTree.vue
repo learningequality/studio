@@ -133,9 +133,10 @@
                         data-test="editMenu"
                       >
                         <template #activator="{ on }">
-                          <IconButton
+                          <KIconButton
                             icon="optionsVertical"
-                            :text="$tr('optionsTooltip')"
+                            :tooltip="$tr('optionsTooltip')"
+                            :ariaLabel="$tr('optionsTooltip')"
                             v-on="on"
                             @click.stop
                           />
@@ -197,7 +198,6 @@
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import ContextMenuCloak from 'shared/views/ContextMenuCloak';
   import LoadingText from 'shared/views/LoadingText';
-  import IconButton from 'shared/views/IconButton';
   import DraggableCollection from 'shared/views/draggable/DraggableCollection';
   import DraggableItem from 'shared/views/draggable/DraggableItem';
   import DraggableHandle from 'shared/views/draggable/DraggableHandle';
@@ -217,7 +217,6 @@
       ContentNodeChangedIcon,
       ContentNodeValidator,
       LoadingText,
-      IconButton,
       ContentNodeCopyTaskProgress,
     },
     mixins: [titleMixin],

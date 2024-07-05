@@ -13,9 +13,10 @@
             </VFlex>
             <Menu v-if="item.displayNodeOptions">
               <template #activator="{ on }">
-                <IconButton
+                <KIconButton
                   icon="dropdown"
-                  :text="$tr('optionsButton')"
+                  :tooltip="$tr('optionsButton')"
+                  :ariaLabel="$tr('optionsButton')"
                   v-on="on"
                 />
               </template>
@@ -103,9 +104,10 @@
       <VToolbarItems v-if="!loadingAncestors">
         <Menu class="pa-1">
           <template #activator="{ on }">
-            <IconButton
+            <KIconButton
               icon="list"
-              :text="$tr('viewModeTooltip')"
+              :tooltip="$tr('viewModeTooltip')"
+              :ariaLabel="$tr('viewModeTooltip')"
               v-on="on"
             />
           </template>
@@ -192,18 +194,20 @@
         @scroll="scroll"
       >
         <template v-if="canEdit" #actions>
-          <IconButton
+          <KIconButton
             size="small"
             icon="edit"
-            :text="$tr('editButton')"
+            :tooltip="$tr('editButton')"
+            :ariaLabel="$tr('editButton')"
             @click="editNodes([detailNodeId])"
           />
           <Menu>
             <template #activator="{ on }">
-              <IconButton
+              <KIconButton
                 size="small"
                 icon="optionsVertical"
-                :text="$tr('optionsButton')"
+                :tooltip="$tr('optionsButton')"
+                :ariaLabel="$tr('optionsButton')"
                 v-on="on"
               />
             </template>
@@ -216,10 +220,11 @@
           </Menu>
         </template>
         <template v-else #actions>
-          <IconButton
+          <KIconButton
             size="small"
             icon="clipboard"
-            :text="$tr('copyToClipboardButton')"
+            :tooltip="$tr('copyToClipboardButton')"
+            :ariaLabel="$tr('copyToClipboardButton')"
             @click="copyToClipboard([detailNodeId])"
           />
         </template>
@@ -239,7 +244,6 @@
   import ResourceDrawer from '../components/ResourceDrawer';
   import { RouteNames, viewModes, DraggableRegions, DraggableUniverses } from '../constants';
   import NodePanel from './NodePanel';
-  import IconButton from 'shared/views/IconButton';
   import ToolBar from 'shared/views/ToolBar';
   import Breadcrumbs from 'shared/views/Breadcrumbs';
   import Checkbox from 'shared/views/form/Checkbox';
@@ -257,7 +261,6 @@
   export default {
     name: 'CurrentTopicView',
     components: {
-      IconButton,
       ToolBar,
       NodePanel,
       ResourceDrawer,

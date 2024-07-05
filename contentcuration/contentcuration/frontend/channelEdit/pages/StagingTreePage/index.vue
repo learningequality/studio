@@ -128,10 +128,11 @@
                   </template>
                   <template v-if="isTopic(child)" #actions-end>
                     <VListTileAction>
-                      <IconButton
+                      <KIconButton
                         :color="$themeTokens.primary"
                         icon="info"
-                        :text="$tr('viewDetails')"
+                        :tooltip="$tr('viewDetails')"
+                        :ariaLabel="$tr('viewDetails')"
                         data-test="btn-info"
                         size="small"
                         @click.stop.prevent="goToNodeDetail(child.id)"
@@ -258,7 +259,6 @@
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import BottomBar from 'shared/views/BottomBar';
   import Breadcrumbs from 'shared/views/Breadcrumbs';
-  import IconButton from 'shared/views/IconButton';
   import LoadingText from 'shared/views/LoadingText';
   import ResizableNavigationDrawer from 'shared/views/ResizableNavigationDrawer';
   import ToolBar from 'shared/views/ToolBar';
@@ -274,7 +274,6 @@
       ContentNodeListItem,
       Diff,
       DiffTable,
-      IconButton,
       LoadingText,
       ResizableNavigationDrawer,
       StudioTree,

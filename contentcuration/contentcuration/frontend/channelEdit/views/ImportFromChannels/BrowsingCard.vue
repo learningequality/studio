@@ -72,14 +72,16 @@
         :href="openLocationUrl"
         :text="goToLocationLabel"
       />
-      <IconButton
-        :text="$tr('previewAction')"
+      <KIconButton
+        :tooltip="$tr('previewAction')"
+        :ariaLabel="$tr('previewAction')"
         icon="info"
         :color="$themeTokens.primary"
         @click.stop="$emit('preview')"
       />
-      <IconButton
-        :text="$tr('addToClipboardAction')"
+      <KIconButton
+        :tooltip="$tr('addToClipboardAction')"
+        :ariaLabel="$tr('addToClipboardAction')"
         icon="clipboard"
         @click.stop="$emit('copy_to_clipboard')"
       />
@@ -91,7 +93,6 @@
 
 <script>
 
-  import IconButton from 'shared/views/IconButton';
   import Thumbnail from 'shared/views/files/Thumbnail';
   import ToggleText from 'shared/views/ToggleText';
   import { constantsTranslationMixin, titleMixin } from 'shared/mixins';
@@ -102,7 +103,6 @@
     name: 'BrowsingCard',
     inject: ['RouteNames'],
     components: {
-      IconButton,
       Thumbnail,
       ToggleText,
     },

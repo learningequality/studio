@@ -48,9 +48,10 @@
           <VListTileAction :aria-hidden="!active" class="action-icon px-1">
             <Menu v-model="activated">
               <template #activator="{ on }">
-                <IconButton
+                <KIconButton
                   icon="optionsVertical"
-                  :text="$tr('optionsTooltip')"
+                  :tooltip="$tr('optionsTooltip')"
+                  :ariaLabel="$tr('optionsTooltip')"
                   size="small"
                   :disabled="copying"
                   v-on="on"
@@ -69,10 +70,11 @@
         </template>
 
         <template #copy-fail-remove-action>
-          <IconButton
+          <KIconButton
             v-if="hasCopyingErrored"
             icon="close"
-            :text="$tr('removeNode')"
+            :tooltip="$tr('removeNode')"
+            :ariaLabel="$tr('removeNode')"
             size="small"
             @click="removeFailedCopyNode"
           />
@@ -101,7 +103,6 @@
   import ContentNodeOptions from './ContentNodeOptions';
   import ContentNodeContextMenu from './ContentNodeContextMenu';
   import Checkbox from 'shared/views/form/Checkbox';
-  import IconButton from 'shared/views/IconButton';
   import DraggableItem from 'shared/views/draggable/DraggableItem';
   import { ContentNode } from 'shared/data/resources';
   import { DragEffect, DropEffect, EffectAllowed } from 'shared/mixins/draggable/constants';
@@ -117,7 +118,6 @@
       ContentNodeOptions,
       ContentNodeContextMenu,
       Checkbox,
-      IconButton,
     },
     props: {
       nodeId: {

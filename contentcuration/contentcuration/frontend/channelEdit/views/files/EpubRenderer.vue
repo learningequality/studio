@@ -2,21 +2,19 @@
 
   <VLayout align-center fill-height row style="background-color: white;">
     <VFlex shrink class="px-2">
-      <IconButton
+      <KIconButton
         icon="chevronLeft"
-        text=""
+        tooltip=""
         size="small"
-        rtlFlip
         @click="rendition.prev()"
       />
     </VFlex>
     <div ref="epub" :style="{ height: '100%', width }"></div>
     <VFlex shrink class="px-2">
-      <IconButton
+      <KIconButton
         icon="chevronRight"
-        text=""
+        tooltip=""
         size="small"
-        rtlFlip
         @click="rendition.next()"
       />
     </VFlex>
@@ -27,13 +25,9 @@
 <script>
 
   import ePub from 'epubjs';
-  import IconButton from 'shared/views/IconButton';
 
   export default {
     name: 'EpubRenderer',
-    components: {
-      IconButton,
-    },
     props: {
       src: {
         type: String,

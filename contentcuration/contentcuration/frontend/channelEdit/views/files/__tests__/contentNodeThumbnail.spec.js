@@ -1,7 +1,6 @@
 import { mount } from '@vue/test-utils';
 import ContentNodeThumbnail from '../thumbnails/ContentNodeThumbnail';
 import { factory } from '../../../store';
-import IconButton from 'shared/views/IconButton';
 
 const testThumbnail = {
   id: 'test-image',
@@ -189,7 +188,7 @@ describe('thumbnail', () => {
       wrapper.setProps({ value: testThumbnail });
       wrapper
         .find('[data-test="remove"]')
-        .find(IconButton)
+        .findComponent({ name: 'KIconButton' })
         .vm.$emit('click');
       expect(wrapper.emitted('input')[0][0]).toBe(null);
     });

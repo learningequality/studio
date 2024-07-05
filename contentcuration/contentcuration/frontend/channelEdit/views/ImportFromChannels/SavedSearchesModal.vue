@@ -34,19 +34,21 @@
             </VListTileContent>
 
             <VListTileAction>
-              <IconButton
+              <KIconButton
                 icon="edit"
                 color="grey"
-                :text="$tr('editAction')"
+                :tooltip="$tr('editAction')"
+                :ariaLabel="$tr('editAction')"
                 @click="handleClickEdit(search.id)"
               />
             </VListTileAction>
 
             <VListTileAction>
-              <IconButton
+              <KIconButton
                 icon="clear"
                 color="grey"
-                :text="$tr('deleteAction')"
+                :tooltip="$tr('deleteAction')"
+                :ariaLabel="$tr('deleteAction')"
                 @click="handleClickDelete(search.id)"
               />
             </VListTileAction>
@@ -88,7 +90,6 @@
   import { mapActions, mapGetters } from 'vuex';
   import EditSearchModal from './EditSearchModal';
   import MessageDialog from 'shared/views/MessageDialog';
-  import IconButton from 'shared/views/IconButton';
 
   export default {
     name: 'SavedSearchesModal',
@@ -96,7 +97,6 @@
     components: {
       EditSearchModal,
       MessageDialog,
-      IconButton,
     },
     props: {
       value: {

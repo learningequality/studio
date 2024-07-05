@@ -54,10 +54,11 @@
           <VSpacer />
           <VListTileAction v-if="fileDisplay">
             <div v-if="allowFileRemove" class="remove-icon">
-              <IconButton
+              <KIconButton
                 icon="clear"
                 color="grey"
-                :text="$tr('removeFileButton')"
+                :tooltip="$tr('removeFileButton')"
+                :ariaLabel="$tr('removeFileButton')"
                 data-test="remove"
                 @click="$emit('remove', file)"
               />
@@ -75,7 +76,6 @@
   import { mapGetters } from 'vuex';
   import FileStatusText from 'shared/views/files/FileStatusText';
   import Uploader from 'shared/views/files/Uploader';
-  import IconButton from 'shared/views/IconButton';
   import { constantsTranslationMixin, fileSizeMixin, fileStatusMixin } from 'shared/mixins';
   import FileDropzone from 'shared/views/files/FileDropzone';
 
@@ -85,7 +85,6 @@
       Uploader,
       FileDropzone,
       FileStatusText,
-      IconButton,
     },
     mixins: [constantsTranslationMixin, fileSizeMixin, fileStatusMixin],
     props: {
