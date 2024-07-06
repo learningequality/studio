@@ -936,7 +936,7 @@ def create_change_tracker(pk, table, channel_id, user, task_name):
     # Clean up any previous tasks specific to this in case there were failures.
     signature = generate_task_signature(task_name, task_kwargs=task_kwargs, channel_id=channel_id)
 
-    task_id_to_delete = CustomTaskMetadata.objects.filter(channel_id=channel_id, signature=signature)
+    task_id_to_delete = CustomTaskMetadata.objects.filter(channel_id=channel_id, signature=signature).value_list('task_id')
     if task_id_to_delete:
         TaskResult.objects.filter(task_id=task_id_to_delete, task_name=task_name).delete()
 
