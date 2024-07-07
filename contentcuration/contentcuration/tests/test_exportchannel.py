@@ -592,11 +592,8 @@ class PublishFailCleansUpTaskObjects(StudioTestCase):
         assert CustomTaskMetadata.objects.filter(task_id=task_id).exists()
 
         with create_change_tracker(pk, table, channel_id, self.user, task_name):
-            pass
-
-        assert not TaskResult.objects.filter(task_id=task_id).exists()
-        assert not CustomTaskMetadata.objects.filter(task_id=task_id).exists()
-
-        new_task_result = TaskResult.objects.get(task_name=task_name, status=states.STARTED)
-        new_custom_task_metadata = CustomTaskMetadata.objects.get(channel_id=channel_id, user=self.user, signature=signature)
-        assert new_custom_task_metadata.task_id == new_task_result.task_id
+            assert not TaskResult.objects.filter(task_id=task_id).exists()
+            assert not CustomTaskMetadata.objects.filter(task_id=task_id).exists()
+            new_task_result = TaskResult.objects.filter(task_name=task_name, status=states.STARTED).first()
+            new_custom_task_metadata = CustomTaskMetadata.objects.get(channel_id=channel_id, user=self.user, signature=signature)
+            assert new_custom_task_metadata.task_id == new_task_result.task_id
