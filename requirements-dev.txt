@@ -265,7 +265,7 @@ wheel==0.38.1
     # via pip-tools
 whitenoise==5.2.0
     # via -r requirements-dev.in
-zipp==3.4.1
+zipp==3.19.1
     # via importlib-metadata
 zope-event==4.5.0
     # via gevent
