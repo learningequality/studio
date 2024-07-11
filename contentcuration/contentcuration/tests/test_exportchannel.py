@@ -1,13 +1,17 @@
 from __future__ import absolute_import
 
+import json
 import os
 import random
 import string
 import tempfile
+import uuid
 
 import pytest
+from celery import states
 from django.core.management import call_command
 from django.db import connections
+from django_celery_results.models import TaskResult
 from kolibri_content import models as kolibri_models
 from kolibri_content.router import cleanup_content_database_connection
 from kolibri_content.router import get_active_content_database
@@ -29,6 +33,8 @@ from .testdata import node as create_node
 from .testdata import slideshow
 from .testdata import thumbnail_bytes
 from contentcuration import models as cc
+from contentcuration.models import CustomTaskMetadata
+from contentcuration.utils.celery.tasks import generate_task_signature
 from contentcuration.utils.publish import ChannelIncompleteError
 from contentcuration.utils.publish import convert_channel_thumbnail
 from contentcuration.utils.publish import create_content_database
@@ -37,6 +43,7 @@ from contentcuration.utils.publish import fill_published_fields
 from contentcuration.utils.publish import map_prerequisites
 from contentcuration.utils.publish import MIN_SCHEMA_VERSION
 from contentcuration.utils.publish import set_channel_icon_encoding
+from contentcuration.viewsets.base import create_change_tracker
 
 pytestmark = pytest.mark.django_db
 
@@ -553,3 +560,40 @@ class ChannelExportPublishedData(StudioTestCase):
         self.assertTrue(channel.published_data)
         self.assertIsNotNone(channel.published_data.get(0))
         self.assertEqual(channel.published_data[0]['version_notes'], version_notes)
+
+
+class PublishFailCleansUpTaskObjects(StudioTestCase):
+    def setUp(self):
+        super(PublishFailCleansUpTaskObjects, self).setUpBase()
+
+    def test_failed_task_objects_cleaned_up_when_publishing(self):
+        channel_id = self.channel.id
+        task_name = 'export-channel'
+        task_id = uuid.uuid4().hex
+        pk = 'ab684452f2ad4ba6a1426d6410139f60'
+        table = 'channel'
+        task_kwargs = json.dumps({'pk': pk, 'table': table})
+        signature = generate_task_signature(task_name, task_kwargs=task_kwargs, channel_id=channel_id)
+
+        TaskResult.objects.create(
+            task_id=task_id,
+            status=states.FAILURE,
+            task_name=task_name,
+        )
+
+        CustomTaskMetadata.objects.create(
+            task_id=task_id,
+            channel_id=channel_id,
+            user=self.user,
+            signature=signature
+        )
+
+        assert TaskResult.objects.filter(task_id=task_id).exists()
+        assert CustomTaskMetadata.objects.filter(task_id=task_id).exists()
+
+        with create_change_tracker(pk, table, channel_id, self.user, task_name):
+            assert not TaskResult.objects.filter(task_id=task_id).exists()
+            assert not CustomTaskMetadata.objects.filter(task_id=task_id).exists()
+            new_task_result = TaskResult.objects.filter(task_name=task_name, status=states.STARTED).first()
+            new_custom_task_metadata = CustomTaskMetadata.objects.get(channel_id=channel_id, user=self.user, signature=signature)
+            assert new_custom_task_metadata.task_id == new_task_result.task_id
