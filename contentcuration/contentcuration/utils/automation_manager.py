@@ -19,17 +19,10 @@ class AutomationManager:
         Returns:
             Vector: The generated embedding vector.
         """
-        return self.recommendations_backend_adapter.generate_embedding(topic)
+        return self.recommendations_backend_adapter.generate_embeddings(topic)
 
-    def embedding_exists(self, embedding):
-        """
-        Check if the given embedding vector exists.
-        Args:
-            embedding (Vector): The embedding vector to check.
-        Returns:
-            bool: True if the embedding exists, False otherwise.
-        """
-        return self.recommendations_backend_adapter.embedding_exists(embedding=embedding)
+    def response_exists(self, request):
+        return self.recommendations_backend_adapter.response_exists(request=request)
 
     def load_recommendations(self, topic: Dict[str, Any], override_threshold=False):
         """
@@ -45,12 +38,5 @@ class AutomationManager:
         self.recommendations_backend_adapter.get_recommendations(topic=topic, override_threshold=override_threshold)
         return []
 
-    def cache_embeddings(self, embeddings):
-        """
-        Cache a list of embedding vectors.
-        Args:
-            embeddings (list): A list of embedding vectors to cache.
-        Returns:
-            bool: True if caching was successful, False otherwise.
-        """
-        return self.recommendations_backend_adapter.cache_embeddings(embeddings)
+    def cache_embeddings(self, request, response):
+        return self.recommendations_backend_adapter.cache_embeddings_request(request, response)
