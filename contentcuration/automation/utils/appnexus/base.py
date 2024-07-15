@@ -56,8 +56,7 @@ class BackendRequest(object):
 
 class BackendResponse(object):
     """ Class that should be inherited by specific backend for its responses"""
-    def __init__(self, error=None, **kwargs):
-        self.error = error
+    def __init__(self, **kwargs):
         for key, value in kwargs.items():
             setattr(self, key, value)
 
