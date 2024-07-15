@@ -1,42 +1,36 @@
 from typing import Any
 from typing import Dict
+from typing import List
 
+from contentcuration.models import ContentNode
 from contentcuration.utils.recommendations import RecommendationsAdapter
 from contentcuration.utils.recommendations import RecommendationsBackendFactory
 
 
 class AutomationManager:
     def __init__(self):
-        self.recommendations_backend_factory = RecommendationsBackendFactory()
-        self.recommendations_backend_instance = self.recommendations_backend_factory.create_backend()
-        self.recommendations_backend_adapter = RecommendationsAdapter(self.recommendations_backend_instance)
+        self.factory = RecommendationsBackendFactory()
+        self.instance = self.factory.create_backend()
+        self.adapter = RecommendationsAdapter(self.instance)
 
-    def generate_embedding(self, topic: Dict[str, Any]):
+    def generate_embeddings(self, nodes: List[ContentNode]):
         """
-        Generate an embedding vector for the given topic.
-        Args:
-            topic (dict): The topic for which to generate an embedding vector.
-        Returns:
-            Vector: The generated embedding vector.
-        """
-        return self.recommendations_backend_adapter.generate_embeddings(topic)
+        Generates embeddings for the given list of nodes. This process is async.
 
-    def response_exists(self, request):
-        return self.recommendations_backend_adapter.response_exists(request=request)
+        :param nodes: The list of nodes for which to generate embeddings.
+
+        :return: A boolean indicating that the process has started.
+        """
+        return self.adapter.embed_content(nodes)
 
     def load_recommendations(self, topic: Dict[str, Any], override_threshold=False):
         """
-        Load recommendations for the given topic.
+        Loads recommendations for the given topic.
 
-        Parameters:
-            :param topic: A dictionary containing the topic for which to get recommendations.
-            :param override_threshold: A boolean flag to override the recommendation threshold.
+        :param topic: A dictionary containing the topic for which to get recommendations.
+        :param override_threshold: A boolean flag to override the recommendation threshold.
 
-        Returns:
-            list: A list of recommended resources.
+        :return: A list of recommendations for the given topic.
         """
-        self.recommendations_backend_adapter.get_recommendations(topic=topic, override_threshold=override_threshold)
+        self.adapter.get_recommendations(topic=topic, override_threshold=override_threshold)
         return []
-
-    def cache_embeddings(self, request, response):
-        return self.recommendations_backend_adapter.cache_embeddings_request(request, response)
