@@ -187,6 +187,16 @@
         return Promise.resolve();
       },
     },
+      if(
+        to.query?.showPolicy &&
+        Object.values(policies).includes(to.query.showPolicy) &&
+        !from.name   // Prevents the modal from showing when navigating back
+      ) {
+        next(vm => vm.openPolicy(to.query.showPolicy));
+      } else {
+        next();
+      }
+    },
     $trs: {
       kolibriStudio: 'Kolibri Studio',
       passwordLabel: 'Password',
