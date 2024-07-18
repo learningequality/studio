@@ -153,6 +153,17 @@ import { availableLanguages, currentLanguage, sortLanguages } from '../../shared
         return params.get('next');
       },
     },
+    beforeRouteEnter(to, from, next) {
+      if (
+        get(to, 'query.showPolicy', false) &&
+        Object.values(policies).includes(to.query.showPolicy) &&
+        !from.name // Prevents the modal from showing when navigating back
+      ) {
+        next(vm => vm.openPolicy(to.query.showPolicy));
+      } else {
+        next();
+      }
+    },
     methods: {
       ...mapActions(['login']),
       ...mapActions('policies', ['openPolicy']),
@@ -188,23 +199,6 @@ import { availableLanguages, currentLanguage, sortLanguages } from '../../shared
         }
         return Promise.resolve();
       },
-    },
-    beforeRouteEnter(to, from, next) {
-      console.log(availableLanguages);
-      for(const policy of Object.values(policies)) {
-        for(const lang of Object.keys(availableLanguages)) {
-          console.log(`https://studio.learningequality.org/${lang}/accounts?showPolicy=${policy}`);
-        }
-      }
-      if(
-        get(to, 'query.showPolicy', false) &&
-        Object.values(policies).includes(to.query.showPolicy) &&
-        !from.name   // Prevents the modal from showing when navigating back
-      ) {
-        next(vm => vm.openPolicy(to.query.showPolicy));
-      } else {
-        next();
-      }
     },
     $trs: {
       kolibriStudio: 'Kolibri Studio',
