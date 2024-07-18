@@ -117,6 +117,8 @@
 <script>
 
   import { mapActions, mapState } from 'vuex';
+import { availableLanguages, currentLanguage, sortLanguages } from '../../shared/i18n';
+  import get from 'lodash/get';
   import EmailField from 'shared/views/form/EmailField';
   import PasswordField from 'shared/views/form/PasswordField';
   import Banner from 'shared/views/Banner';
@@ -187,8 +189,15 @@
         return Promise.resolve();
       },
     },
+    beforeRouteEnter(to, from, next) {
+      console.log(availableLanguages);
+      for(const policy of Object.values(policies)) {
+        for(const lang of Object.keys(availableLanguages)) {
+          console.log(`https://studio.learningequality.org/${lang}/accounts?showPolicy=${policy}`);
+        }
+      }
       if(
-        to.query?.showPolicy &&
+        get(to, 'query.showPolicy', false) &&
         Object.values(policies).includes(to.query.showPolicy) &&
         !from.name   // Prevents the modal from showing when navigating back
       ) {
