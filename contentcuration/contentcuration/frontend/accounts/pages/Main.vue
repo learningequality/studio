@@ -117,7 +117,6 @@
 <script>
 
   import { mapActions, mapState } from 'vuex';
-import { availableLanguages, currentLanguage, sortLanguages } from '../../shared/i18n';
   import get from 'lodash/get';
   import EmailField from 'shared/views/form/EmailField';
   import PasswordField from 'shared/views/form/PasswordField';
