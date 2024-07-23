@@ -362,7 +362,9 @@ class ApiAddExerciseNodesToTreeTestCase(StudioTestCase):
                 }
             ],
         }
-        self.resp = self.admin_client().post(
+
+    def _make_request(self):
+        return self.admin_client().post(
             reverse_lazy("api_add_nodes_to_tree"), data=self.sample_data, format="json"
         )
 
@@ -378,15 +380,17 @@ class ApiAddExerciseNodesToTreeTestCase(StudioTestCase):
         """
         Check that we return 200 if passed in a valid JSON.
         """
+        response = self._make_request()
         # check that we returned 200 with that POST request
-        assert self.resp.status_code == 200, "Got a request error: {}".format(
-            self.resp.content
+        assert response.status_code == 200, "Got a request error: {}".format(
+            response.content
         )
 
     def test_creates_nodes(self):
         """
         Test that it creates a node with the given title and parent.
         """
+        self._make_request()
         # make sure a node with our given self.title exists, with the given parent.
         assert ContentNode.get_nodes_with_title(
             title=self.title, limit_to_children_of=self.root_node.id
@@ -397,6 +401,7 @@ class ApiAddExerciseNodesToTreeTestCase(StudioTestCase):
         Check that the file we created beforehand is now associated
         with the node we just created through add_nodes.
         """
+        self._make_request()
         c = ContentNode.objects.get(title=self.title)
 
         # there shold be no files associated with the condent node
@@ -421,6 +426,7 @@ class ApiAddExerciseNodesToTreeTestCase(StudioTestCase):
         Check that the files we created beforehand are now associated with the
         correct assesment items.
         """
+        self._make_request()
         c = ContentNode.objects.get(title=self.title)
 
         question1 = c.assessment_items.get(
@@ -451,6 +457,17 @@ class ApiAddExerciseNodesToTreeTestCase(StudioTestCase):
         assert (
             file2.original_filename == self.exercise_graphie.original_filename
         ), "wrong original_filename"
+
+    def test_duplicate_assessment_item_returns_400_status_code(self):
+        """
+        Check that we return 400 if passed in duplicate assessment items.
+        """
+        self.sample_data["content_data"][0]["questions"][1]["assessment_id"] = self.sample_data["content_data"][0]["questions"][0]["assessment_id"]
+        response = self._make_request()
+        # check that we returned 400 with that POST request
+        assert response.status_code == 400, "Got a non-400 request error: {}".format(
+            response.status_code
+        )
 
 
 class PublishEndpointTestCase(BaseAPITestCase):
