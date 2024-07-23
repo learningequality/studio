@@ -29,6 +29,8 @@ from le_utils.constants.labels import needs
 from le_utils.constants.labels import resource_type
 from le_utils.constants.labels import subjects
 from rest_framework.decorators import action
+from rest_framework.pagination import Cursor
+from rest_framework.pagination import replace_query_param
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.serializers import BooleanField
@@ -55,6 +57,7 @@ from contentcuration.models import UUIDField
 from contentcuration.tasks import calculate_resource_size_task
 from contentcuration.utils.nodes import calculate_resource_size
 from contentcuration.utils.nodes import migrate_extra_fields
+from contentcuration.utils.pagination import ValuesViewsetCursorPagination
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import BulkUpdateMixin
@@ -651,12 +654,56 @@ def dict_if_none(obj, field_name=None):
     return obj[field_name] if field_name in obj and obj[field_name] else {}
 
 
+class ContentNodePagination(ValuesViewsetCursorPagination):
+    """
+    A simplified cursor pagination class for ContentNodeViewSet.
+    Instead of using an opaque cursor, it uses the lft value for filtering.
+    As such, if this pagination scheme is used without applying a filter
+    that will guarantee membership to a specific MPTT tree, such as parent
+    or tree_id, the pagination scheme will not be predictable.
+    """
+    cursor_query_param = "lft__gt"
+    ordering = "lft"
+    page_size_query_param = "max_results"
+    max_page_size = 100
+
+    def decode_cursor(self, request):
+        """
+        Given a request with a cursor, return a `Cursor` instance.
+        """
+        # Determine if we have a cursor, and if so then decode it.
+        value = request.query_params.get(self.cursor_query_param)
+        if value is None:
+            return None
+
+        return Cursor(offset=0, reverse=False, position=value)
+
+    def encode_cursor(self, cursor):
+        """
+        Given a Cursor instance, return an url with query parameter.
+        """
+        return replace_query_param(self.base_url, self.cursor_query_param, str(cursor.position))
+
+    def get_more(self):
+        position, offset = self._get_more_position_offset()
+        if position is None and offset is None:
+            return None
+        params = self.request.query_params.copy()
+        params.update({
+            self.cursor_query_param: position,
+        })
+        return params
+
+
 # Apply mixin first to override ValuesViewset
 class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
     queryset = ContentNode.objects.all()
     serializer_class = ContentNodeSerializer
     permission_classes = [IsAuthenticated]
     filterset_class = ContentNodeFilter
+    pagination_class = ContentNodePagination
+    # This must exactly match the ordering on the pagination class defined above.
+    ordering = ["lft"]
     values = (
         "id",
         "content_id",
