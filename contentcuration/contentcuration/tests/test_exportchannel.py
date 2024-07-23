@@ -493,20 +493,21 @@ class ChannelExportUtilityFunctionTestCase(StudioTestCase):
         clear_tasks()
 
     def test_convert_channel_thumbnail_empty_thumbnail(self):
-        channel = cc.Channel.objects.create()
+        channel = cc.Channel.objects.create(actor_id=self.admin_user.id)
         self.assertEqual("", convert_channel_thumbnail(channel))
 
     def test_convert_channel_thumbnail_static_thumbnail(self):
-        channel = cc.Channel.objects.create(thumbnail="/static/kolibri_flapping_bird.png")
+        channel = cc.Channel.objects.create(thumbnail="/static/kolibri_flapping_bird.png", actor_id=self.admin_user.id)
         self.assertEqual("", convert_channel_thumbnail(channel))
 
     def test_convert_channel_thumbnail_encoding_valid(self):
-        channel = cc.Channel.objects.create(thumbnail="/content/kolibri_flapping_bird.png", thumbnail_encoding={"base64": "flappy_bird"})
+        channel = cc.Channel.objects.create(
+            thumbnail="/content/kolibri_flapping_bird.png", thumbnail_encoding={"base64": "flappy_bird"}, actor_id=self.admin_user.id)
         self.assertEqual("flappy_bird", convert_channel_thumbnail(channel))
 
     def test_convert_channel_thumbnail_encoding_invalid(self):
         with patch("contentcuration.utils.publish.get_thumbnail_encoding", return_value="this is a test"):
-            channel = cc.Channel.objects.create(thumbnail="/content/kolibri_flapping_bird.png", thumbnail_encoding={})
+            channel = cc.Channel.objects.create(thumbnail="/content/kolibri_flapping_bird.png", thumbnail_encoding={}, actor_id=self.admin_user.id)
             self.assertEqual("this is a test", convert_channel_thumbnail(channel))
 
     def test_create_slideshow_manifest(self):
@@ -543,7 +544,7 @@ class ChannelExportPrerequisiteTestCase(StudioTestCase):
             os.remove(self.output_db)
 
     def test_nonexistent_prerequisites(self):
-        channel = cc.Channel.objects.create()
+        channel = cc.Channel.objects.create(actor_id=self.admin_user.id)
         node1 = cc.ContentNode.objects.create(kind_id="exercise", parent_id=channel.main_tree.pk, complete=True)
         exercise = cc.ContentNode.objects.create(kind_id="exercise", complete=True)
 
@@ -554,7 +555,7 @@ class ChannelExportPrerequisiteTestCase(StudioTestCase):
 class ChannelExportPublishedData(StudioTestCase):
     def test_fill_published_fields(self):
         version_notes = description()
-        channel = cc.Channel.objects.create()
+        channel = cc.Channel.objects.create(actor_id=self.admin_user.id)
         channel.last_published
         fill_published_fields(channel, version_notes)
         self.assertTrue(channel.published_data)

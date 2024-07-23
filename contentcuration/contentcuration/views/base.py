@@ -130,7 +130,7 @@ def get_prober_channel(request):
 
     channel = Channel.objects.filter(editors=request.user).first()
     if not channel:
-        channel = Channel.objects.create(name="Prober channel", editors=[request.user])
+        channel = Channel.objects.create(actor_id=request.user.id, name="Prober channel", editors=[request.user])
 
     return Response(SimplifiedChannelProbeCheckSerializer(channel).data)
 

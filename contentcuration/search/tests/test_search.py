@@ -51,7 +51,7 @@ class SearchViewsetTestCase(StudioAPITestCase):
             user = testdata.user(email="a{}@a.com".format(i))
             users.append(user)
 
-            channel = Channel.objects.create(name="user_a{}_channel".format(i))
+            channel = Channel.objects.create(actor_id=user.id, name="user_a{}_channel".format(i))
             channel.save()
             channels.append(channel)
             channel.editors.add(user)

@@ -8,6 +8,7 @@ from le_utils.constants import content_kinds
 
 from contentcuration import models
 from contentcuration import models as cc
+from contentcuration.constants import channel_history
 from contentcuration.tests import testdata
 from contentcuration.tests.base import StudioAPITestCase
 from contentcuration.tests.viewsets.base import generate_create_event
@@ -66,7 +67,7 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
 
     def test_update_channel(self):
         user = testdata.user()
-        channel = models.Channel.objects.create(**self.channel_metadata)
+        channel = models.Channel.objects.create(actor_id=user.id, **self.channel_metadata)
         channel.editors.add(user)
         new_name = "This is not the old name"
 
@@ -79,7 +80,7 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
 
     def test_update_channel_thumbnail_encoding(self):
         user = testdata.user()
-        channel = models.Channel.objects.create(**self.channel_metadata)
+        channel = models.Channel.objects.create(actor_id=user.id, **self.channel_metadata)
         channel.editors.add(user)
         new_encoding = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAfQA"
         self.client.force_authenticate(user=user)
@@ -97,7 +98,7 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
 
     def test_cannot_update_channel(self):
         user = testdata.user()
-        channel = models.Channel.objects.create(**self.channel_metadata)
+        channel = models.Channel.objects.create(actor_id=user.id, **self.channel_metadata)
         new_name = "This is not the old name"
 
         self.client.force_authenticate(user=user)
@@ -109,7 +110,7 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
 
     def test_viewer_cannot_update_channel(self):
         user = testdata.user()
-        channel = models.Channel.objects.create(**self.channel_metadata)
+        channel = models.Channel.objects.create(actor_id=user.id, **self.channel_metadata)
         channel.viewers.add(user)
         new_name = "This is not the old name"
 
@@ -122,7 +123,7 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
 
     def test_update_channel_defaults(self):
         user = testdata.user()
-        channel = models.Channel.objects.create(**self.channel_metadata)
+        channel = models.Channel.objects.create(actor_id=user.id, **self.channel_metadata)
         channel.editors.add(user)
         author = "This is not the old author"
 
@@ -160,9 +161,9 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
 
     def test_update_channels(self):
         user = testdata.user()
-        channel1 = models.Channel.objects.create(**self.channel_metadata)
+        channel1 = models.Channel.objects.create(actor_id=user.id, **self.channel_metadata)
         channel1.editors.add(user)
-        channel2 = models.Channel.objects.create(**self.channel_metadata)
+        channel2 = models.Channel.objects.create(actor_id=user.id, **self.channel_metadata)
         channel2.editors.add(user)
         new_name = "This is not the old name"
 
@@ -179,9 +180,9 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
 
     def test_cannot_update_some_channels(self):
         user = testdata.user()
-        channel1 = models.Channel.objects.create(**self.channel_metadata)
+        channel1 = models.Channel.objects.create(actor_id=user.id, **self.channel_metadata)
         channel1.editors.add(user)
-        channel2 = models.Channel.objects.create(**self.channel_metadata)
+        channel2 = models.Channel.objects.create(actor_id=user.id, **self.channel_metadata)
         new_name = "This is not the old name"
 
         self.client.force_authenticate(user=user)
@@ -197,9 +198,9 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
 
     def test_viewer_cannot_update_some_channels(self):
         user = testdata.user()
-        channel1 = models.Channel.objects.create(**self.channel_metadata)
+        channel1 = models.Channel.objects.create(actor_id=user.id, **self.channel_metadata)
         channel1.editors.add(user)
-        channel2 = models.Channel.objects.create(**self.channel_metadata)
+        channel2 = models.Channel.objects.create(actor_id=user.id, **self.channel_metadata)
         channel2.viewers.add(user)
         new_name = "This is not the old name"
 
@@ -216,17 +217,19 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
 
     def test_delete_channel(self):
         user = testdata.user()
-        channel = models.Channel.objects.create(**self.channel_metadata)
+        channel = models.Channel.objects.create(actor_id=user.id, **self.channel_metadata)
         channel.editors.add(user)
 
         self.client.force_authenticate(user=user)
         response = self.sync_changes([generate_delete_event(channel.id, CHANNEL, channel_id=channel.id)])
         self.assertEqual(response.status_code, 200, response.content)
-        self.assertTrue(models.Channel.objects.get(id=channel.id).deleted)
+        channel = models.Channel.objects.get(id=channel.id)
+        self.assertTrue(channel.deleted)
+        self.assertEqual(1, channel.deletion_history.filter(actor=user).count())
 
     def test_cannot_delete_channel(self):
         user = testdata.user()
-        channel = models.Channel.objects.create(**self.channel_metadata)
+        channel = models.Channel.objects.create(actor_id=user.id, **self.channel_metadata)
 
         self.client.force_authenticate(user=user)
         response = self.sync_changes(
@@ -242,10 +245,10 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
 
     def test_delete_channels(self):
         user = testdata.user()
-        channel1 = models.Channel.objects.create(**self.channel_metadata)
+        channel1 = models.Channel.objects.create(actor_id=user.id, **self.channel_metadata)
         channel1.editors.add(user)
 
-        channel2 = models.Channel.objects.create(**self.channel_metadata)
+        channel2 = models.Channel.objects.create(actor_id=user.id, **self.channel_metadata)
         channel2.editors.add(user)
 
         self.client.force_authenticate(user=user)
@@ -261,9 +264,9 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
 
     def test_cannot_delete_some_channels(self):
         user = testdata.user()
-        channel1 = models.Channel.objects.create(**self.channel_metadata)
+        channel1 = models.Channel.objects.create(actor_id=user.id, **self.channel_metadata)
         channel1.editors.add(user)
-        channel2 = models.Channel.objects.create(**self.channel_metadata)
+        channel2 = models.Channel.objects.create(actor_id=user.id, **self.channel_metadata)
 
         self.client.force_authenticate(user=user)
         response = self.sync_changes(
@@ -382,8 +385,8 @@ class CRUDTestCase(StudioAPITestCase):
         }
 
     def test_fetch_channel_for_admin(self):
-        channel = models.Channel.objects.create(**self.channel_metadata)
         user = testdata.user()
+        channel = models.Channel.objects.create(actor_id=user.id, **self.channel_metadata)
         user.is_admin = True
         user.save()
         self.client.force_authenticate(user=user)
@@ -393,8 +396,8 @@ class CRUDTestCase(StudioAPITestCase):
         self.assertEqual(response.status_code, 200, response.content)
 
     def test_fetch_admin_channels_invalid_filter(self):
-        models.Channel.objects.create(**self.channel_metadata)
         user = testdata.user()
+        models.Channel.objects.create(actor_id=user.id, **self.channel_metadata)
         user.is_admin = True
         user.is_staff = True
         user.save()
@@ -417,7 +420,7 @@ class CRUDTestCase(StudioAPITestCase):
 
     def test_update_channel(self):
         user = testdata.user()
-        channel = models.Channel.objects.create(**self.channel_metadata)
+        channel = models.Channel.objects.create(actor_id=user.id, **self.channel_metadata)
         channel.editors.add(user)
         new_name = "This is not the old name"
 
@@ -432,7 +435,7 @@ class CRUDTestCase(StudioAPITestCase):
 
     def test_delete_channel(self):
         user = testdata.user()
-        channel = models.Channel.objects.create(**self.channel_metadata)
+        channel = models.Channel.objects.create(actor_id=user.id, **self.channel_metadata)
         channel.editors.add(user)
 
         self.client.force_authenticate(user=user)
@@ -440,4 +443,27 @@ class CRUDTestCase(StudioAPITestCase):
             reverse("channel-detail", kwargs={"pk": channel.id})
         )
         self.assertEqual(response.status_code, 204, response.content)
-        self.assertTrue(models.Channel.objects.get(id=channel.id).deleted)
+        channel = models.Channel.objects.get(id=channel.id)
+        self.assertTrue(channel.deleted)
+        self.assertEqual(1, channel.deletion_history.filter(actor=user).count())
+
+    def test_admin_restore_channel(self):
+        user = testdata.user()
+        user.is_admin = True
+        user.is_staff = True
+        user.save()
+        channel = models.Channel.objects.create(actor_id=user.id, **self.channel_metadata)
+        channel.editors.add(user)
+        channel.deleted = True
+        channel.save(actor_id=user.id)
+
+        self.client.force_authenticate(user=user)
+        response = self.client.patch(
+            reverse("admin-channels-detail", kwargs={"pk": channel.id}),
+            {"deleted": False},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        channel = models.Channel.objects.get(id=channel.id)
+        self.assertFalse(channel.deleted)
+        self.assertEqual(1, channel.history.filter(actor=user, action=channel_history.RECOVERY).count())

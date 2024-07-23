@@ -67,7 +67,7 @@ def create_channel(
     domain = uuid.uuid5(uuid.NAMESPACE_DNS, name)
     node_id = uuid.uuid5(domain, name)
 
-    channel, _new = Channel.objects.get_or_create(pk=node_id.hex)
+    channel, _new = Channel.objects.get_or_create(actor_id=editors[0].id, pk=node_id.hex)
 
     channel.name = name
     channel.description = description
@@ -86,7 +86,6 @@ def create_channel(
         channel.viewers.add(v)
 
     channel.save()
-    channel.mark_created(editors[0])
     channel.main_tree.get_descendants().delete()
     channel.staging_tree and channel.staging_tree.get_descendants().delete()
     return channel

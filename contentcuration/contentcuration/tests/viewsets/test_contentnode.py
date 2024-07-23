@@ -1424,7 +1424,7 @@ class CRUDTestCase(StudioAPITestCase):
 
     def test_fetch_contentnode__by_parent(self):
 
-        channel = models.Channel.objects.create(name="Test channel")
+        channel = models.Channel.objects.create(actor_id=self.user.id, name="Test channel")
         channel.editors.add(self.user)
         channel.save()
 
@@ -1440,7 +1440,7 @@ class CRUDTestCase(StudioAPITestCase):
         self.assertEqual(response.data[0]["id"], contentnode.id)
 
     def test_fetch_contentnode__by_node_id_channel_id(self):
-        channel = models.Channel.objects.create(name="Test channel")
+        channel = models.Channel.objects.create(actor_id=self.user.id, name="Test channel")
         channel.editors.add(self.user)
         channel.save()
 

@@ -271,10 +271,12 @@ class ChannelSerializer(BulkModelSerializer):
         validated_data["content_defaults"] = self.fields["content_defaults"].create(
             content_defaults
         )
-        instance = super(ChannelSerializer, self).create(validated_data)
+        instance = Channel(**validated_data)
+        user = None
         if "request" in self.context:
             user = self.context["request"].user
-            instance.mark_created(user)
+        instance.save(actor_id=user.id)
+        if user:
             try:
                 # Wrap in try catch, fix for #3049
                 # This has been newly created so add the current user as an editor
@@ -299,7 +301,6 @@ class ChannelSerializer(BulkModelSerializer):
 
     def update(self, instance, validated_data):
         content_defaults = validated_data.pop("content_defaults", None)
-        is_deleted = validated_data.get("deleted")
         if content_defaults is not None:
             validated_data["content_defaults"] = self.fields["content_defaults"].update(
                 instance.content_defaults, content_defaults
@@ -309,14 +310,9 @@ class ChannelSerializer(BulkModelSerializer):
         if "request" in self.context:
             user_id = self.context["request"].user.id
 
-        was_deleted = instance.deleted
-        instance = super(ChannelSerializer, self).update(instance, validated_data)
-        # mark the instance as deleted or recovered, if requested
-        if user_id is not None and is_deleted is not None and is_deleted != was_deleted:
-            if is_deleted:
-                instance.mark_deleted(user_id)
-            else:
-                instance.mark_recovered(user_id)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save(actor_id=user_id)
         return instance
 
 
@@ -415,7 +411,7 @@ class ChannelViewSet(ValuesViewset):
 
     def perform_destroy(self, instance):
         instance.deleted = True
-        instance.save(update_fields=["deleted"])
+        instance.save(update_fields=["deleted"], actor_id=self.request.user.id)
 
     def get_queryset(self):
         queryset = super(ChannelViewSet, self).get_queryset()

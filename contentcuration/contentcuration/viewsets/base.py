@@ -156,11 +156,10 @@ class BulkModelSerializer(SimpleReprMixin, ModelSerializer):
                 raise ValueError("Many to many fields must be explicitly handled", attr)
             setattr(instance, attr, value)
 
-        if hasattr(instance, "on_update") and callable(instance.on_update):
-            instance.on_update()
-
         if not getattr(self, "parent"):
             instance.save()
+        elif hasattr(instance, "on_update") and callable(instance.on_update):
+            instance.on_update()
 
         return instance
 
@@ -191,11 +190,10 @@ class BulkModelSerializer(SimpleReprMixin, ModelSerializer):
 
         instance = ModelClass(**validated_data)
 
-        if hasattr(instance, "on_create") and callable(instance.on_create):
-            instance.on_create()
-
         if not getattr(self, "parent", False):
             instance.save()
+        elif hasattr(instance, "on_create") and callable(instance.on_create):
+            instance.on_create()
 
         return instance
 

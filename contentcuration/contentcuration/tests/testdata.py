@@ -211,7 +211,8 @@ def tree(parent=None):
 
 
 def channel(name="testchannel"):
-    channel = cc.Channel.objects.create(name=name)
+    channel_creator = user()
+    channel = cc.Channel.objects.create(name=name, actor_id=channel_creator.id)
     channel.save()
 
     channel.main_tree = tree()
