@@ -167,7 +167,7 @@
       },
       searchFilterCount(savedSearch) {
         return Object.entries(savedSearch.params).reduce((sum, [key, val]) => {
-          if (key === 'keywords') {
+          if (key === 'keywords' || val === null) {
             return sum;
           } else if (typeof val === 'boolean') {
             return sum + 1;

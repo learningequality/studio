@@ -1749,6 +1749,10 @@ export const Invitation = new Resource({
 export const SavedSearch = new Resource({
   tableName: TABLE_NAMES.SAVEDSEARCH,
   urlName: 'savedsearch',
+
+  getUserId(obj) {
+    return obj.saved_by;
+  },
 });
 
 export const User = new Resource({
