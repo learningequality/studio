@@ -18,6 +18,7 @@ from django.utils.timezone import now
 from django_cte import CTEQuerySet
 from django_filters.rest_framework import CharFilter
 from django_filters.rest_framework import UUIDFilter
+from django_filters.rest_framework import BooleanFilter
 from le_utils.constants import completion_criteria
 from le_utils.constants import content_kinds
 from le_utils.constants import roles
@@ -86,6 +87,7 @@ class ContentNodeFilter(RequiredFilterSet):
     ancestors_of = UUIDFilter(method="filter_ancestors_of")
     parent__in = UUIDInFilter(field_name="parent")
     _node_id_channel_id___in = CharFilter(method="filter__node_id_channel_id")
+    complete = BooleanFilter(field_name="complete")
 
     class Meta:
         model = ContentNode
