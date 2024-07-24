@@ -262,7 +262,7 @@
             <VFlex class="source-thumbnail">
               <Thumbnail :src="channel.thumbnail" />
             </VFlex>
-            <VFlex v-if="libraryMode" class="font-weight-bold notranslate px-4 subheading">
+            <VFlex v-if="printing" class="font-weight-bold notranslate px-4 subheading">
               {{ channel.name }}
             </VFlex>
             <a
@@ -418,9 +418,6 @@
           });
         }
         return '';
-      },
-      libraryMode() {
-        return window.libraryMode;
       },
       sizeText() {
         const size = this._details.resource_size;
