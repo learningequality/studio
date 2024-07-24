@@ -34,6 +34,7 @@ class RecommendationsAdapterTestCase(TestCase):
                 }
             ]
         }
+        self.channel_id = 'test_channel_id'
         self.resources = [
             MagicMock(spec=ContentNode),
         ]
@@ -41,6 +42,51 @@ class RecommendationsAdapterTestCase(TestCase):
     def test_adapter_initialization(self):
         self.assertIsNotNone(self.adapter)
         self.assertIsInstance(self.adapter, RecommendationsAdapter)
+
+    def test_generate_embeddings_connect_failure(self):
+        mock_response = MagicMock(spec=EmbeddingsResponse)
+
+        self.adapter.backend.connect.return_value = False
+        self.adapter.backend.make_request.return_value = mock_response
+        with self.assertRaises(errors.ConnectionError):
+            self.adapter.generate_embeddings(EmbedTopicsRequest(
+                method='POST',
+                url='http://test.com',
+                path='/test/path',
+            ))
+        self.adapter.backend.connect.assert_called_once()
+        self.adapter.backend.make_request.assert_not_called()
+
+    def test_generate_embeddings(self):
+        mock_response = MagicMock(spec=EmbeddingsResponse)
+        mock_response.error = None
+
+        self.adapter.backend.connect.return_value = True
+        self.adapter.backend.make_request.return_value = mock_response
+        response = self.adapter.generate_embeddings(EmbedTopicsRequest(
+            method='POST',
+            url='http://test.com',
+            path='/test/path',
+        ))
+        self.adapter.backend.connect.assert_called_once()
+        self.adapter.backend.make_request.assert_called_once()
+        self.assertIsInstance(response, EmbeddingsResponse)
+
+    def test_generate_embeddings_failure(self):
+        mock_response = MagicMock(spec=EmbeddingsResponse)
+        mock_response.error = {}
+
+        self.adapter.backend.connect.return_value = True
+        self.adapter.backend.make_request.return_value = mock_response
+        response = self.adapter.generate_embeddings(EmbedTopicsRequest(
+            method='POST',
+            url='http://test.com',
+            path='/test/path',
+        ))
+        self.adapter.backend.connect.assert_called_once()
+        self.adapter.backend.make_request.assert_called_once()
+        self.assertIsInstance(response, EmbeddingsResponse)
+        self.assertIsNotNone(response.error)
 
     @patch('contentcuration.utils.recommendations.EmbedTopicsRequest')
     def test_get_recommendations_backend_connect_success(self, get_recommendations_request_mock):
@@ -73,7 +119,7 @@ class RecommendationsAdapterTestCase(TestCase):
 
         self.adapter.backend.connect.return_value = True
         self.adapter.backend.make_request.return_value = mock_response
-        response = self.adapter.embed_content(self.resources)
+        response = self.adapter.embed_content(self.channel_id, self.resources)
         self.adapter.backend.connect.assert_called_once()
         self.adapter.backend.make_request.assert_called_once()
         self.assertIsInstance(response, bool)
@@ -83,6 +129,6 @@ class RecommendationsAdapterTestCase(TestCase):
     def test_embed_content_backend_connect_failure(self, embed_content_request_mock):
         self.adapter.backend.connect.return_value = False
         with self.assertRaises(errors.ConnectionError):
-            self.adapter.embed_content(self.resources)
+            self.adapter.embed_content(self.channel_id, self.resources)
         self.adapter.backend.connect.assert_called_once()
         self.adapter.backend.make_request.assert_not_called()
