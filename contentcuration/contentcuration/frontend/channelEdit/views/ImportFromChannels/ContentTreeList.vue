@@ -155,7 +155,9 @@
     },
     mounted() {
       this.loading = true;
-      let params = {};
+      let params = {
+        complete: true,
+      };
       const channelListType = this.$route.query.channel_list || ChannelListTypes.PUBLIC;
       if (channelListType === ChannelListTypes.PUBLIC) {
         // TODO: load from public API instead
