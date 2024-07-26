@@ -7,7 +7,7 @@ from kolibri_public.models import ContentNode
 class RecommendationsCache(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     request_hash = models.CharField(max_length=32, null=True)
-    response = models.ForeignKey(
+    contentnode_id = models.ForeignKey(
         ContentNode,
         null=True,
         blank=True,

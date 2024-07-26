@@ -99,12 +99,11 @@ class RecommendationsAdapter(Adapter):
         """
         try:
             request_hash = self._generate_request_hash(request)
-            cache = list(
-                RecommendationsCache.objects.filter(request_hash=request_hash).order_by('rank'))
-            data = [{
-                'contentnode_id': entry.response,
-                'rank': entry.rank,
-            } for entry in cache]
+            data = list(
+                RecommendationsCache.objects.filter(request_hash=request_hash)
+                .order_by('rank')
+                .values('contentnode_id', 'rank')
+            )
             if len(data) > 0:
                 return EmbeddingsResponse(data=data)
             else:
@@ -146,7 +145,7 @@ class RecommendationsAdapter(Adapter):
             cache = [
                 RecommendationsCache(
                     request_hash=request_hash,
-                    response=node['contentnode_id'],
+                    contentnode_id=node['contentnode_id'],
                     rank=node['rank'],
                     override_threshold=override_threshold,
                 ) for node in nodes
