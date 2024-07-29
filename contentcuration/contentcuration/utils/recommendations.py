@@ -119,11 +119,18 @@ class RecommendationsAdapter(Adapter):
         This method serializes the request attributes that make it unique,
         then generates a hash of this serialization.
 
+        To prevent cache duplication, the hash is generated
+        independent of the override_threshold parameter.
+
         :param request: The request for which to generate a unique hash.
         :return: A unique hash representing the request
         """
+
+        params_copy = request.params.copy() if request.params else {}
+        params_copy.pop('override_threshold', None)
+
         unique_attributes = json.dumps({
-            'params': request.params,
+            'params': params_copy,
             'json': request.json,
         }, sort_keys=True).encode('utf-8')
 
@@ -131,30 +138,44 @@ class RecommendationsAdapter(Adapter):
 
     def cache_embeddings_request(self, request: BackendRequest, response: BackendResponse) -> bool:
         """
-        Caches the recommendations request and response.
+        Caches the recommendations request and response. It performs a bulk insert of the
+        recommendations into the RecommendationsCache table, ignoring any conflicts.
 
         :param request: The request to cache.
         :param response: The response to cache.
         :return: A boolean indicating whether the caching was successful.
         :rtype: bool
         """
+
         try:
-            request_hash = self._generate_request_hash(request)
             nodes = self._extract_data(response)
-            override_threshold = request.params.get('override_threshold', False)
-            cache = [
+            request_hash = self._generate_request_hash(request)
+            existing_cache = set(RecommendationsCache.objects.filter(request_hash=request_hash)
+                                 .values_list('contentnode_id', flat=True))
+            override_threshold = self._extract_override_threshold(request)
+            new_cache = [
                 RecommendationsCache(
                     request_hash=request_hash,
                     contentnode_id=node['contentnode_id'],
                     rank=node['rank'],
                     override_threshold=override_threshold,
-                ) for node in nodes
+                ) for node in nodes if node['contentnode_id'] not in existing_cache
             ]
-            RecommendationsCache.objects.bulk_create(cache)
+            RecommendationsCache.objects.bulk_create(new_cache, ignore_conflicts=True)
             return True
         except Exception as e:
             logging.exception(e)
             return False
+
+    def _extract_override_threshold(self, request) -> bool:
+        """
+        Extracts the override_threshold parameter from the request safely.
+
+        :param request: The request containing the parameters.
+        :return: The value of the override_threshold parameter, or False if not present.
+        :rtype: bool
+        """
+        return request.params.get('override_threshold', False) if request.params else False
 
     def get_recommendations(self, topic: Dict[str, Any],
                             override_threshold=False) -> RecommendationsResponse:
