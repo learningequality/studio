@@ -148,6 +148,7 @@
         this.loading = true;
         return this.loadChildren({
           parent,
+          complete: true,
         }).then(() => {
           this.loading = false;
         });
@@ -155,12 +156,14 @@
     },
     mounted() {
       this.loading = true;
-      let params = {};
+      const params = {
+        complete: true,
+      };
       const channelListType = this.$route.query.channel_list || ChannelListTypes.PUBLIC;
       if (channelListType === ChannelListTypes.PUBLIC) {
         // TODO: load from public API instead
         // TODO: challenging because of node_id->id and root_id->channel_id
-        params = { published: true };
+        params.published = true;
       }
 
       return Promise.all([
