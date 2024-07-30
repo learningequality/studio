@@ -114,10 +114,8 @@ class RecommendationsAdapter(Adapter):
 
     def _generate_request_hash(self, request) -> str:
         """
-        Generates a unique hash for a given request.
-
-        This method serializes the request attributes that make it unique,
-        then generates a hash of this serialization.
+        Generates a unique hash for a given request. It serializes the request
+        attributes that make it unique, then generates a hash of this serialization.
 
         To prevent cache duplication, the hash is generated
         independent of the override_threshold parameter.
