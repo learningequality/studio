@@ -6,7 +6,7 @@ from kolibri_public.models import ContentNode
 
 REQUEST_HASH_INDEX_NAME = "request_hash_idx"
 CONTENTNODE_ID_INDEX_NAME = "contentnode_id_idx"
-REQUEST_CONTENTNODE_INDEX_NAME = "request_hash_contentnode_id_idx"
+REQUEST_CONTENTNODE_INDEX_NAME = "request_hash_contentnode_idx"
 
 
 class RecommendationsCache(models.Model):
