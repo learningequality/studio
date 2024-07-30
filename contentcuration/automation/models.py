@@ -17,3 +17,6 @@ class RecommendationsCache(models.Model):
     rank = models.FloatField(default=0.0, null=True)
     override_threshold = models.BooleanField(default=False)
     timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('request_hash', 'contentnode_id')
