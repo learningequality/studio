@@ -13,10 +13,16 @@ from automation.utils.appnexus.base import Backend
 from automation.utils.appnexus.base import BackendFactory
 from automation.utils.appnexus.base import BackendRequest
 from automation.utils.appnexus.base import BackendResponse
+from django.db.models import F
+from django.db.models import OuterRef
+from django.db.models import Subquery
+from django.db.models import Value
+from django.db.models.functions import Replace
 from kolibri_public.models import ContentNode as PublicContentNode
 from le_utils.constants import content_kinds
 from le_utils.constants import format_presets
 
+from contentcuration.models import Channel
 from contentcuration.models import ContentNode as ContentNode
 from contentcuration.models import File
 
@@ -99,11 +105,11 @@ class RecommendationsAdapter(Adapter):
         """
         try:
             request_hash = self._generate_request_hash(request)
-            data = list(
-                RecommendationsCache.objects.filter(request_hash=request_hash)
-                .order_by('rank')
-                .values('contentnode_id', 'rank')
-            )
+            override_threshold = self._extract_override_threshold(request)
+            data = list(RecommendationsCache.objects
+                        .filter(request_hash=request_hash, override_threshold=override_threshold)
+                        .order_by('override_threshold', 'rank')
+                        .values('contentnode_id', 'rank'))
             if len(data) > 0:
                 return EmbeddingsResponse(data=data)
             else:
@@ -203,7 +209,21 @@ class RecommendationsAdapter(Adapter):
         nodes = self._extract_data(response)
         if len(nodes) > 0:
             node_ids = [node['contentnode_id'] for node in nodes]
-            recommendations = list(ContentNode.objects.filter(id__in=node_ids))
+
+            # Get the channel_id from PublicContentNode based on matching node_id from ContentNode
+            channel_id_subquery = PublicContentNode.objects.filter(
+                self._normalize_uuid(F('id')) == self._normalize_uuid(OuterRef('node_id'))
+            ).values('channel_id')[:1]
+
+            # Get main_tree_id from Channel based on channel_id obtained from channel_id_subquery
+            main_tree_id_subquery = Channel.objects.filter(
+                self._normalize_uuid(F('id')) == self._normalize_uuid(Subquery(channel_id_subquery))
+            ).values('main_tree_id')[:1]
+
+            # Annotate main_tree_id onto ContentNode
+            recommendations = ContentNode.objects.filter(id__in=node_ids).annotate(
+                main_tree_id=Subquery(main_tree_id_subquery)
+            ).values('id', 'node_id', 'main_tree_id', 'parent_id')
 
         return RecommendationsResponse(results=recommendations)
 
@@ -227,6 +247,15 @@ class RecommendationsAdapter(Adapter):
         :rtype: List[Dict[str, Any]]
         """
         return response.data if not response.data else []
+
+    def _normalize_uuid(self, field):
+        """
+        Removes hyphens from a UUID field.
+
+        :param field: The field (such as F() object or OuterRef) whose value needs normalization.
+        :return: The normalized field expression without hyphens.
+        """
+        return Replace(field, Value('-'), Value(''))
 
     def embed_content(self, channel_id: str,
                       nodes: List[Union[ContentNode, PublicContentNode]]) -> bool:
