@@ -47,11 +47,24 @@
     </h2>
     <p>
       {{ $tr('apiTokenMessage') }}
-      <KExternalLink
+      <!-- <KExternalLink
         href="https://ricecooker.readthedocs.io/en/latest/index.html"
         target="_blank"
-        :text="$tr('apiDocumentation')"
         rel="noopener noreferrer"
+      > 
+        {{ $tr('apiDocumentation') }}
+        <KIconButton
+          :disabled="true"
+          icon="openNewTab"
+          class="inline-icon"
+        />
+      </KExternalLink> -->
+      <ActionLink
+        class="inline-icon"
+        :text="$tr('apiDocumentation')"
+        href="https://learningequality.org/"
+        target="_blank"
+        :tabindex="handleclickTab"
       />
     </p>
     <CopyToken
@@ -232,6 +245,10 @@
 
 .row {
   padding: 8px 0;
+}
+.inline-icon {
+  margin-bottom: 4px !important;
+  vertical-align: middle; /* Align icon with text */
 }
 
 </style>

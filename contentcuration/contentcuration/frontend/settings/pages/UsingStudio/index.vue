@@ -31,9 +31,15 @@
       <KExternalLink
         href="https://kolibri-studio.readthedocs.io/en/latest/index.html"
         target="_blank"
-        :text="$tr('userDocsLink')"
         rel="noopener noreferrer"
-      />
+      >
+        {{ $tr('userDocsLink') }}             
+        <KIconButton
+          :disabled="true"
+          icon="openNewTab"
+          class="inline-icon"
+        />
+      </KExternalLink>
     </p>
 
     <!-- About Studio -->
@@ -51,10 +57,18 @@
         <li>
           <KExternalLink
             href="https://ricecooker.readthedocs.io/en/latest/video_compression.html"
-            :text="$tr('bestPractice6')"
             target="_blank"
             rel="noopener noreferrer"
-          />
+          >
+            {{ $tr('bestPractice6') }}
+            <KIconButton
+              :disabled="true"
+              icon="openNewTab"
+              class="inline-icon"
+            />
+          </KExternalLink>
+          
+
         </li>
         <li>{{ $tr('bestPractice7') }}</li>
         <li>{{ $tr('bestPractice9') }}</li>
@@ -65,17 +79,29 @@
     <h2>{{ $tr('notableIssues') }}</h2>
     <KExternalLink
       href="https://github.com/learningequality/studio/issues/3992"
-      :text="$tr('issueLink1')"
       target="_blank"
       rel="noopener noreferrer"
-    />
+    >
+      {{ $tr('issueLink1') }}
+      <KIconButton
+        :disabled="true"
+        icon="openNewTab"
+        class="inline-icon"
+      />
+    </KExternalLink>
     <p>{{ $tr('issue1') }}</p>
     <KExternalLink
       href="https://github.com/learningequality/studio/issues"
-      :text="$tr('issuesPageLink')"
       target="_blank"
       rel="noopener noreferrer"
-    />
+    >
+      {{ $tr('issuesPageLink') }}
+      <KIconButton
+        :disabled="true"
+        icon="openNewTab"
+        class="inline-icon"
+      />
+    </KExternalLink>
   </div>
 
 </template>
@@ -141,4 +167,13 @@
   h2 {
     margin-top: 32px;
   }
+
+  .inline-icon {
+  display: inline;
+  margin-left: -8px;
+  vertical-align: middle; 
+  transform: scale(0.7);
+}
+  .external-link {
+}
 </style>

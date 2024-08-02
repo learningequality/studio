@@ -1,33 +1,31 @@
-version: '3.4'
+version: "3.4"
 
-x-studio-environment:
-  &studio-environment
-    MPLBACKEND: ps
-    SHELL: /bin/bash
-    AWS_S3_ENDPOINT_URL: http://minio:9000
-    DATA_DB_HOST: postgres
-    DJANGO_SETTINGS_MODULE: contentcuration.dev_settings
-    RUN_MODE: docker-compose
-    CELERY_TIMEZONE: America/Los_Angeles
-    CELERY_REDIS_DB: 0
-    CELERY_BROKER_ENDPOINT: redis
-    CELERY_RESULT_BACKEND_ENDPOINT: redis
-    CELERY_REDIS_PASSWORD: ""
-    PROBER_STUDIO_BASE_URL: http://studio-app:8080/{path}
+x-studio-environment: &studio-environment
+  MPLBACKEND: ps
+  SHELL: /bin/bash
+  AWS_S3_ENDPOINT_URL: http://minio:9000
+  DATA_DB_HOST: postgres
+  DJANGO_SETTINGS_MODULE: contentcuration.dev_settings
+  RUN_MODE: docker-compose
+  CELERY_TIMEZONE: America/Los_Angeles
+  CELERY_REDIS_DB: 0
+  CELERY_BROKER_ENDPOINT: redis
+  CELERY_RESULT_BACKEND_ENDPOINT: redis
+  CELERY_REDIS_PASSWORD: ""
+  PROBER_STUDIO_BASE_URL: http://studio-app:8080/{path}
 
-x-studio-worker:
-  &studio-worker
-    build:
-      context: .
-      dockerfile: docker/Dockerfile.dev
-    image: learningequality/studio-app-dev
-    depends_on:
-      - minio
-      - postgres
-      - redis
-    volumes:
-      - .:/src
-    environment: *studio-environment
+x-studio-worker: &studio-worker
+  build:
+    context: .
+    dockerfile: docker/Dockerfile.dev
+  image: learningequality/studio-app-dev
+  depends_on:
+    - minio
+    - postgres
+    - redis
+  volumes:
+    - .:/src
+  environment: *studio-environment
 
 services:
   studio-nginx:
@@ -59,7 +57,7 @@ services:
     environment:
       MINIO_ACCESS_KEY: development
       MINIO_SECRET_KEY: development
-      MINIO_API_CORS_ALLOW_ORIGIN: 'http://localhost:8080,http://127.0.0.1:8080'
+      MINIO_API_CORS_ALLOW_ORIGIN: "http://localhost:8080,http://127.0.0.1:8080"
     volumes:
       - .docker/minio:/data
 
@@ -90,7 +88,6 @@ services:
     depends_on:
       - studio-app
       - celery-worker
-
 
 volumes:
   minio_data:
