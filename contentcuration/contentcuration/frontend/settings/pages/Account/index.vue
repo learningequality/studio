@@ -47,18 +47,6 @@
     </h2>
     <p>
       {{ $tr('apiTokenMessage') }}
-      <!-- <KExternalLink
-        href="https://ricecooker.readthedocs.io/en/latest/index.html"
-        target="_blank"
-        rel="noopener noreferrer"
-      > 
-        {{ $tr('apiDocumentation') }}
-        <KIconButton
-          :disabled="true"
-          icon="openNewTab"
-          class="inline-icon"
-        />
-      </KExternalLink> -->
       <ActionLink
         class="inline-icon"
         :text="$tr('apiDocumentation')"
@@ -248,7 +236,7 @@
 }
 .inline-icon {
   margin-bottom: 4px !important;
-  vertical-align: middle; /* Align icon with text */
+
 }
 
 </style>

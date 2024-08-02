@@ -41,7 +41,7 @@
 
       <span>{{ $tr('requestMoreSpaceMessage') }}</span>
 
-      <KExternalLink
+      <!-- <KExternalLink
         style="display: inline;"
         href="https://kolibri-studio.readthedocs.io/en/latest/add_content.html#import-content-from-other-channels"
         target="_blank"
@@ -53,7 +53,14 @@
           class="inline-icon"
         />
       
-      </KExternalLink>
+      </KExternalLink> -->
+      <ActionLink
+        class="inline-icon"
+        :text="$tr('learnMoreAboutImportingContentFromChannels')"
+        href="https://learningequality.org/"
+        target="_blank"
+        :tabindex="handleclickTab"
+      />
 
     </p>
 
@@ -168,10 +175,8 @@
     }
   }
   .inline-icon {
-  display: inline;
-  margin-left: -8px;
-  vertical-align: middle; /* Align icon with text */
-  transform: scale(0.7);
+  margin-bottom: 4px !important;
 }
+
 
 </style>
