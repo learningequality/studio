@@ -28,22 +28,10 @@
       />
     </p>
     <p>
-      <!-- <KExternalLink
-        href="https://kolibri-studio.readthedocs.io/en/latest/index.html"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        {{ $tr('userDocsLink') }}             
-        <KIconButton
-          :disabled="true"
-          icon="openNewTab"
-          class="inline-icon"
-        />
-      </KExternalLink> -->
       <ActionLink
         class="inline-icon"
         :text="$tr('userDocsLink')"
-        href="https://learningequality.org/"
+        href="https://kolibri-studio.readthedocs.io/en/latest/index.html"
         target="_blank"
         :tabindex="handleclickTab"
       />
@@ -62,22 +50,10 @@
         <li>{{ $tr('bestPractice3') }}</li>
         <li>{{ $tr('bestPractice5') }}</li>
         <li>
-          <!-- <KExternalLink
-            href="https://ricecooker.readthedocs.io/en/latest/video_compression.html"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {{ $tr('bestPractice6') }}
-            <KIconButton
-              :disabled="true"
-              icon="openNewTab"
-              class="inline-icon"
-            />
-          </KExternalLink> -->
           <ActionLink
             class="inline-icon"
             :text="$tr('bestPractice6')"
-            href="https://learningequality.org/"
+            href="https://ricecooker.readthedocs.io/en/latest/video_compression.html"
             target="_blank"
             :tabindex="handleclickTab"
           />
@@ -90,42 +66,18 @@
 
     <!-- Issues -->
     <h2>{{ $tr('notableIssues') }}</h2>
-    <!-- <KExternalLink
-      href="https://github.com/learningequality/studio/issues/3992"
-      target="_blank"
-      rel="noopener noreferrer"
-    >
-      {{ $tr('issueLink1') }}
-      <KIconButton
-        :disabled="true"
-        icon="openNewTab"
-        class="inline-icon"
-      />
-    </KExternalLink> -->
     <ActionLink
       class="inline-icon"
       :text="$tr('issueLink1')"
-      href="https://learningequality.org/"
+      href="https://github.com/learningequality/studio/issues/3992"
       target="_blank"
       :tabindex="handleclickTab"
     />
     <p>{{ $tr('issue1') }}</p>
-    <!-- <KExternalLink
-      href="https://github.com/learningequality/studio/issues"
-      target="_blank"
-      rel="noopener noreferrer"
-    >
-      {{ $tr('issuesPageLink') }}
-      <KIconButton
-        :disabled="true"
-        icon="openNewTab"
-        class="inline-icon"
-      />
-    </KExternalLink> -->
     <ActionLink
       class="inline-icon"
       :text="$tr('issuesPageLink')"
-      href="https://learningequality.org/"
+      href="https://github.com/learningequality/studio/issues"
       target="_blank"
       :tabindex="handleclickTab"
     />

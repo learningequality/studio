@@ -50,7 +50,7 @@
       <ActionLink
         class="inline-icon"
         :text="$tr('apiDocumentation')"
-        href="https://learningequality.org/"
+        href="https://ricecooker.readthedocs.io/en/latest/index.html"
         target="_blank"
         :tabindex="handleclickTab"
       />

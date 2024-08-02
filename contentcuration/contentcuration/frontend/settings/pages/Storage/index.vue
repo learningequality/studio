@@ -40,24 +40,10 @@
     <p>
 
       <span>{{ $tr('requestMoreSpaceMessage') }}</span>
-
-      <!-- <KExternalLink
-        style="display: inline;"
-        href="https://kolibri-studio.readthedocs.io/en/latest/add_content.html#import-content-from-other-channels"
-        target="_blank"
-      >
-        {{ $tr('learnMoreAboutImportingContentFromChannels') }}
-        <KIconButton
-          :disabled="true"
-          icon="openNewTab"
-          class="inline-icon"
-        />
-      
-      </KExternalLink> -->
       <ActionLink
         class="inline-icon"
         :text="$tr('learnMoreAboutImportingContentFromChannels')"
-        href="https://learningequality.org/"
+        href="https://kolibri-studio.readthedocs.io/en/latest/add_content.html#import-content-from-other-channels"
         target="_blank"
         :tabindex="handleclickTab"
       />
