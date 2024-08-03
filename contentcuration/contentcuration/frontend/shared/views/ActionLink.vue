@@ -22,7 +22,7 @@
         v-if="target === '_blank'"
         icon="openNewTab"
         :color="$themeTokens.primary"
-        class="mx-1 rtl-flip"
+        class="mx-1"
       />
 
     </slot>

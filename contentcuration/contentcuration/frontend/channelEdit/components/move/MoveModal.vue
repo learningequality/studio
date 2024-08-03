@@ -87,7 +87,7 @@
                   <VBtn
                     v-if="node.kind === 'topic'"
                     icon
-                    class="mx-1 rtl-flip"
+                    class="mx-1"
                     @click.stop="targetNodeId = node.id"
                   >
                     <KIcon icon="chevronRight" />

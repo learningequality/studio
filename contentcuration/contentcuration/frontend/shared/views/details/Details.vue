@@ -272,7 +272,7 @@
               class="notranslate primary--text"
             >
               <span>{{ channel.name }}</span>
-              <KIcon class="mx-1 rtl-flip" icon="openNewTab" />
+              <KIcon class="mx-1" icon="openNewTab" />
             </a>
           </VLayout>
         </template>
