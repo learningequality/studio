@@ -164,5 +164,4 @@
     margin-left: -8px;
     display: inline !important;
   }
-
 </style>
