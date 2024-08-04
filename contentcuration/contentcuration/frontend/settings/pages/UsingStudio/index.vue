@@ -28,12 +28,12 @@
       />
     </p>
     <p>
-      <ActionLink
-        class="inline-icon"
-        :text="$tr('userDocsLink')"
+      <KExternalLink
+        class="kexternal-redirect"
         href="https://kolibri-studio.readthedocs.io/en/latest/index.html"
-        target="_blank"
-        :tabindex="handleclickTab"
+        openInNewTab="true"
+        :text="$tr('userDocsLink')"
+        rel="noopener noreferrer"
       />
     </p>
 
@@ -50,14 +50,13 @@
         <li>{{ $tr('bestPractice3') }}</li>
         <li>{{ $tr('bestPractice5') }}</li>
         <li>
-          <ActionLink
-            class="inline-icon"
-            :text="$tr('bestPractice6')"
+          <KExternalLink
+            class="kexternal-redirect"
             href="https://ricecooker.readthedocs.io/en/latest/video_compression.html"
-            target="_blank"
-            :tabindex="handleclickTab"
+            :text="$tr('bestPractice6')"
+            openInNewTab="true"
+            rel="noopener noreferrer"
           />
-
         </li>
         <li>{{ $tr('bestPractice7') }}</li>
         <li>{{ $tr('bestPractice9') }}</li>
@@ -66,20 +65,20 @@
 
     <!-- Issues -->
     <h2>{{ $tr('notableIssues') }}</h2>
-    <ActionLink
-      class="inline-icon"
-      :text="$tr('issueLink1')"
+    <KExternalLink
+      class="kexternal-redirect"
       href="https://github.com/learningequality/studio/issues/3992"
-      target="_blank"
-      :tabindex="handleclickTab"
+      :text="$tr('issueLink1')"
+      openInNewTab="true"
+      rel="noopener noreferrer"
     />
     <p>{{ $tr('issue1') }}</p>
-    <ActionLink
-      class="inline-icon"
-      :text="$tr('issuesPageLink')"
+    <KExternalLink
+      class="kexternal-redirect"
       href="https://github.com/learningequality/studio/issues"
-      target="_blank"
-      :tabindex="handleclickTab"
+      :text="$tr('issuesPageLink')"
+      openInNewTab="true"
+      rel="noopener noreferrer"
     />
   </div>
 
@@ -146,9 +145,7 @@
   h2 {
     margin-top: 32px;
   }
-
-  .inline-icon {
-  margin-bottom: 4px !important;
-}
-
+  .kexternal-redirect{
+    margin-left: -8px;
+  }
 </style>

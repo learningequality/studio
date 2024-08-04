@@ -40,12 +40,12 @@
     <p>
 
       <span>{{ $tr('requestMoreSpaceMessage') }}</span>
-      <ActionLink
-        class="inline-icon"
+
+      <KExternalLink
+        class="kexternal-redirect"
         :text="$tr('learnMoreAboutImportingContentFromChannels')"
         href="https://kolibri-studio.readthedocs.io/en/latest/add_content.html#import-content-from-other-channels"
-        target="_blank"
-        :tabindex="handleclickTab"
+        openInNewTab="true"
       />
 
     </p>
@@ -160,9 +160,9 @@
       height: 8px !important;
     }
   }
-  .inline-icon {
-  margin-bottom: 4px !important;
-}
-
+  .kexternal-redirect{
+    margin-left: -8px;
+    display: inline !important;
+  }
 
 </style>

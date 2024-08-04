@@ -47,12 +47,12 @@
     </h2>
     <p>
       {{ $tr('apiTokenMessage') }}
-      <ActionLink
-        class="inline-icon"
-        :text="$tr('apiDocumentation')"
+      <KExternalLink
+        class="kexternal-redirect"
         href="https://ricecooker.readthedocs.io/en/latest/index.html"
-        target="_blank"
-        :tabindex="handleclickTab"
+        openInNewTab="true"
+        :text="$tr('apiDocumentation')"
+        rel="noopener noreferrer"
       />
     </p>
     <CopyToken
@@ -198,7 +198,7 @@
       completelyDeleteAccountLabel: 'Completely remove your account from Kolibri Studio',
       unableToDeleteAdminAccount: 'Unable to delete an admin account',
       handleChannelsBeforeAccount:
-        'You must delete these channels manually or invite others to edit them before you can delete your account.',
+        'You cannot delete accounts that have channels. You must delete these channels manually before you can delete your account.',
 
       // API strings
       apiTokenHeading: 'API Token',
@@ -234,9 +234,9 @@
 .row {
   padding: 8px 0;
 }
-.inline-icon {
-  margin-bottom: 4px !important;
-
-}
+.kexternal-redirect{
+    margin-left: -8px;
+    display: inline !important;
+  }
 
 </style>
