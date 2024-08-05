@@ -157,6 +157,7 @@ export class ChangeTracker {
       if (change.type === CHANGE_TYPES.MOVED && change.oldObj) {
         const { parent } = change.oldObj;
         siblings = await resource.where({ parent }, false);
+        siblings = siblings.filter(sibling => sibling.id !== change.key);
       }
 
       return resource.transaction({}, CHANGES_TABLE, () => {
