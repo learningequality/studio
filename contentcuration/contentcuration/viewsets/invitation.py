@@ -1,9 +1,11 @@
 from django_filters.rest_framework import CharFilter
 from django_filters.rest_framework import FilterSet
 from rest_framework import serializers
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from contentcuration.models import Change
 from contentcuration.models import Channel
 from contentcuration.models import Invitation
 from contentcuration.viewsets.base import BulkListSerializer
@@ -135,11 +137,13 @@ class InvitationViewSet(ValuesViewset):
         instance = serializer.save()
         instance.save()
 
-    def update(self, request, *args, **kwargs):
-        partial = kwargs.pop("partial", False)
-        instance = self.get_edit_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        self.perform_update(serializer)
-
-        return Response(self.serialize_object(id=instance.id))
+    @action(detail=True, methods=["post"])
+    def accept(self, request, pk=None):
+        invitation = self.get_object()
+        invitation.accept()
+        Change.create_change(
+            generate_update_event(
+                invitation.id, INVITATION, {"accepted": True}, channel_id=invitation.channel_id
+            ), applied=True, created_by_id=request.user.id
+        )
+        return Response({"status": "success"})

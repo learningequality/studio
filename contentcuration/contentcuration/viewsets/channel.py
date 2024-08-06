@@ -21,9 +21,11 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import AllowAny
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 from rest_framework.serializers import CharField
 from rest_framework.serializers import FloatField
 from rest_framework.serializers import IntegerField
+from rest_framework.status import HTTP_201_CREATED
 from search.models import ChannelFullTextSearch
 from search.models import ContentNodeFullTextSearch
 from search.utils import get_fts_search_query
@@ -48,6 +50,8 @@ from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import create_change_tracker
 from contentcuration.viewsets.base import ReadOnlyValuesViewset
 from contentcuration.viewsets.base import RequiredFilterSet
+from contentcuration.viewsets.base import RESTDestroyModelMixin
+from contentcuration.viewsets.base import RESTUpdateModelMixin
 from contentcuration.viewsets.base import ValuesViewset
 from contentcuration.viewsets.common import ContentDefaultsSerializer
 from contentcuration.viewsets.common import JSONFieldDictSerializer
@@ -56,6 +60,7 @@ from contentcuration.viewsets.common import SQSum
 from contentcuration.viewsets.common import UUIDInFilter
 from contentcuration.viewsets.sync.constants import CHANNEL
 from contentcuration.viewsets.sync.constants import PUBLISHED
+from contentcuration.viewsets.sync.utils import generate_create_event
 from contentcuration.viewsets.sync.utils import generate_update_event
 from contentcuration.viewsets.sync.utils import log_sync_exception
 from contentcuration.viewsets.user import IsAdminUser
@@ -409,6 +414,19 @@ class ChannelViewSet(ValuesViewset):
     field_map = channel_field_map
     values = base_channel_values + ("edit", "view", "unpublished_changes")
 
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        try:
+            self.perform_create(serializer)
+
+        except IntegrityError as e:
+            return Response({"error": str(e)}, status=409)
+        instance = serializer.instance
+        Change.create_change(generate_create_event(instance.id, CHANNEL, request.data, channel_id=instance.id), applied=True, created_by_id=request.user.id)
+        return Response(self.serialize_object(pk=instance.pk), status=HTTP_201_CREATED)
+
     def perform_destroy(self, instance):
         instance.deleted = True
         instance.save(update_fields=["deleted"], actor_id=self.request.user.id)
@@ -710,7 +728,7 @@ class AdminChannelSerializer(ChannelSerializer):
         nested_writes = True
 
 
-class AdminChannelViewSet(ChannelViewSet):
+class AdminChannelViewSet(ChannelViewSet, RESTUpdateModelMixin, RESTDestroyModelMixin):
     pagination_class = CatalogListPagination
     permission_classes = [IsAdminUser]
     serializer_class = AdminChannelSerializer
@@ -742,7 +760,21 @@ class AdminChannelViewSet(ChannelViewSet):
     )
 
     def perform_destroy(self, instance):
+        # Note that we deliberately do not create a delete event for the channel
+        # as because it will have no channel to refer to in its foreign key, it
+        # will never propagated back to the client.
         instance.delete()
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop("partial", False)
+        instance = self.get_edit_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        Change.create_change(generate_update_event(instance.id, CHANNEL, request.data, channel_id=instance.id), applied=True, created_by_id=request.user.id)
+
+        return Response(self.serialize_object())
 
     def get_queryset(self):
         channel_main_tree_nodes = ContentNode.objects.filter(

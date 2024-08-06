@@ -821,33 +821,6 @@ class Resource extends mix(APIResource, IndexedDBResource) {
     });
   }
 
-  createModel(data) {
-    return client.post(this.collectionUrl(), data).then(response => {
-      const now = Date.now();
-      const data = response.data;
-      data[LAST_FETCHED] = now;
-      // Directly write to the table, rather than using the add method
-      // to avoid creating change events that we would sync back to the server.
-      return this.transaction({ mode: 'rw' }, () => {
-        return this.table.put(data).then(() => {
-          return data;
-        });
-      });
-    });
-  }
-
-  deleteModel(id) {
-    return client.delete(this.modelUrl(id)).then(() => {
-      // Directly write to the table, rather than using the delete method
-      // to avoid creating change events that we would sync back to the server.
-      return this.transaction({ mode: 'rw' }, () => {
-        return this.table.delete(id).then(() => {
-          return true;
-        });
-      });
-    });
-  }
-
   /**
    * @param {String} id
    * @param {Boolean} [doRefresh=true] -- Whether or not to refresh async from server
@@ -874,6 +847,27 @@ class Resource extends mix(APIResource, IndexedDBResource) {
       }
 
       return obj;
+    });
+  }
+}
+
+/**
+ * Resource that allows directly creating through the API,
+ * rather than through IndexedDB. API must explicitly support this.
+ */
+class CreateModelResource extends Resource {
+  createModel(data) {
+    return client.post(this.collectionUrl(), data).then(response => {
+      const now = Date.now();
+      const data = response.data;
+      data[LAST_FETCHED] = now;
+      // Directly write to the table, rather than using the add method
+      // to avoid creating change events that we would sync back to the server.
+      return this.transaction({ mode: 'rw' }, () => {
+        return this.table.put(data).then(() => {
+          return data;
+        });
+      });
     });
   }
 }
@@ -1018,7 +1012,7 @@ export const Bookmark = new Resource({
   getUserId: getUserIdFromStore,
 });
 
-export const Channel = new Resource({
+export const Channel = new CreateModelResource({
   tableName: TABLE_NAMES.CHANNEL,
   urlName: 'channel',
   indexFields: ['name', 'language'],
@@ -1719,7 +1713,7 @@ export const ContentNode = new TreeResource({
   },
 });
 
-export const ChannelSet = new Resource({
+export const ChannelSet = new CreateModelResource({
   tableName: TABLE_NAMES.CHANNELSET,
   urlName: 'channelset',
   getUserId: getUserIdFromStore,
@@ -1757,7 +1751,7 @@ export const User = new Resource({
   uuid: false,
 
   updateAsAdmin(id, changes) {
-    return client.patch(window.Urls.adminUsersDetail(id), changes).then(() => {
+    return client.post(window.Urls.adminUsersAccept(id)).then(() => {
       return this.transaction({ mode: 'rw' }, () => {
         return this.table.update(id, changes);
       });

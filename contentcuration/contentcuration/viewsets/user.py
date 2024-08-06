@@ -29,7 +29,8 @@ from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import ReadOnlyValuesViewset
 from contentcuration.viewsets.base import RequiredFilterSet
-from contentcuration.viewsets.base import ValuesViewset
+from contentcuration.viewsets.base import RESTDestroyModelMixin
+from contentcuration.viewsets.base import RESTUpdateModelMixin
 from contentcuration.viewsets.common import NotNullArrayAgg
 from contentcuration.viewsets.common import SQCount
 from contentcuration.viewsets.common import UUIDFilter
@@ -346,7 +347,7 @@ class AdminUserSerializer(UserSerializer):
         list_serializer_class = BulkListSerializer
 
 
-class AdminUserViewSet(ValuesViewset):
+class AdminUserViewSet(ReadOnlyValuesViewset, RESTUpdateModelMixin, RESTDestroyModelMixin):
     pagination_class = UserListPagination
     permission_classes = [IsAdminUser]
     serializer_class = AdminUserSerializer
