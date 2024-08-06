@@ -39,7 +39,7 @@
 
     <p>
 
-      <span>{{ $tr('requestMoreSpaceMessage') }}</span>
+      <span>{{ $tr('requestMoreSpaceMessage') + " " }}</span>
 
       <KExternalLink
         class="kexternal-redirect"
