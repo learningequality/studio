@@ -117,7 +117,6 @@
 <script>
 
   import { mapActions, mapState } from 'vuex';
-  import get from 'lodash/get';
   import EmailField from 'shared/views/form/EmailField';
   import PasswordField from 'shared/views/form/PasswordField';
   import Banner from 'shared/views/Banner';
@@ -151,17 +150,6 @@
         const params = new URLSearchParams(window.location.search.substring(1));
         return params.get('next');
       },
-    },
-    beforeRouteEnter(to, from, next) {
-      if (
-        get(to, 'query.showPolicy', false) &&
-        Object.values(policies).includes(to.query.showPolicy) &&
-        !from.name // Prevents the modal from showing when navigating back
-      ) {
-        next(vm => vm.openPolicy(to.query.showPolicy));
-      } else {
-        next();
-      }
     },
     methods: {
       ...mapActions(['login']),

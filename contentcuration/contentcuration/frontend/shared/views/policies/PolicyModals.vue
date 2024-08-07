@@ -67,6 +67,12 @@
         return this.selectedPolicy === policies.COMMUNITY_STANDARDS;
       },
     },
+    created() {
+      const { query } = this.$route;
+      if (query.showPolicy && Object.values(policies).includes(query.showPolicy)) {
+        this.openPolicy(query.showPolicy);
+      }
+    },
     methods: {
       ...mapActions('policies', ['acceptPolicy', 'openPolicy', 'closePolicy']),
     },
