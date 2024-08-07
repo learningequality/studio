@@ -231,6 +231,12 @@ class RecommendationsAdapterTestCase(TestCase):
         ]
         self.cache_request_test_helper({'topic': 'new_test_topic_3'}, duplicate_data, 1)
 
+    def test_cache_embeddings_request_invalid_data(self):
+        invalid_data = [
+            {'contentnode_id': '1234567890abcdef1234567890abcdee', 'rank': 0.6}
+        ]
+        self.cache_request_test_helper({'topic': 'new_test_topic_4'}, invalid_data, 0)
+
     @patch('contentcuration.utils.recommendations.RecommendationsAdapter.cache_embeddings_request')
     @patch('contentcuration.utils.recommendations.RecommendationsAdapter.generate_embeddings')
     @patch('contentcuration.utils.recommendations.RecommendationsAdapter.response_exists')
