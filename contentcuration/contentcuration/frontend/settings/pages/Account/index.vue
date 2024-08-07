@@ -48,7 +48,6 @@
     <p>
       {{ $tr('apiTokenMessage') }}
       <KExternalLink
-        class="kexternal-redirect"
         href="https://ricecooker.readthedocs.io/en/latest/index.html"
         openInNewTab
         :text="$tr('apiDocumentation')"
@@ -234,7 +233,4 @@
 .row {
   padding: 8px 0;
 }
-.kexternal-redirect{
-    margin-left: -8px;
-  }
 </style>

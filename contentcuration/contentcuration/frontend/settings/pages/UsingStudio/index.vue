@@ -29,7 +29,6 @@
     </p>
     <p>
       <KExternalLink
-        class="kexternal-redirect"
         href="https://kolibri-studio.readthedocs.io/en/latest/index.html"
         openInNewTab
         :text="$tr('userDocsLink')"
@@ -51,7 +50,6 @@
         <li>{{ $tr('bestPractice5') }}</li>
         <li>
           <KExternalLink
-            class="kexternal-redirect"
             href="https://ricecooker.readthedocs.io/en/latest/video_compression.html"
             :text="$tr('bestPractice6')"
             openInNewTab
@@ -66,7 +64,6 @@
     <!-- Issues -->
     <h2>{{ $tr('notableIssues') }}</h2>
     <KExternalLink
-      class="kexternal-redirect"
       href="https://github.com/learningequality/studio/issues/3992"
       :text="$tr('issueLink1')"
       openInNewTab
@@ -74,7 +71,6 @@
     />
     <p>{{ $tr('issue1') }}</p>
     <KExternalLink
-      class="kexternal-redirect"
       href="https://github.com/learningequality/studio/issues"
       :text="$tr('issuesPageLink')"
       openInNewTab
@@ -144,8 +140,5 @@
 <style scoped>
   h2 {
     margin-top: 32px;
-  }
-  .kexternal-redirect{
-    margin-left: -8px;
   }
 </style>

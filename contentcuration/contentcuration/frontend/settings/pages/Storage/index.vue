@@ -42,7 +42,6 @@
       <span>{{ $tr('requestMoreSpaceMessage') + " " }}</span>
 
       <KExternalLink
-        class="kexternal-redirect"
         :text="$tr('learnMoreAboutImportingContentFromChannels')"
         href="https://kolibri-studio.readthedocs.io/en/latest/add_content.html#import-content-from-other-channels"
         openInNewTab
@@ -159,8 +158,5 @@
     /deep/.is-determinate {
       height: 8px !important;
     }
-  }
-  .kexternal-redirect{
-    margin-left: -8px;
   }
 </style>
