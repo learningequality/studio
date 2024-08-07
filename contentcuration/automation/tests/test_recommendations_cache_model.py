@@ -18,7 +18,7 @@ class TestRecommendationsCache(StudioTestCase):
         )
         self.cache = RecommendationsCache.objects.create(
             request_hash='test_hash',
-            contentnode_id=self.content_node,
+            contentnode=self.content_node,
             rank=1.0,
             override_threshold=False
         )
@@ -26,7 +26,7 @@ class TestRecommendationsCache(StudioTestCase):
     def test_cache_creation(self):
         self.assertIsInstance(self.cache, RecommendationsCache)
         self.assertEqual(self.cache.request_hash, 'test_hash')
-        self.assertEqual(self.cache.contentnode_id, self.content_node)
+        self.assertEqual(self.cache.contentnode, self.content_node)
         self.assertEqual(self.cache.rank, 1.0)
         self.assertFalse(self.cache.override_threshold)
 
@@ -38,7 +38,7 @@ class TestRecommendationsCache(StudioTestCase):
         with self.assertRaises(IntegrityError):
             RecommendationsCache.objects.create(
                 request_hash='test_hash',
-                contentnode_id=self.content_node,
+                contentnode=self.content_node,
                 rank=2.0,
                 override_threshold=True
             )
