@@ -16,8 +16,8 @@ from automation.utils.appnexus.base import BackendResponse
 from django.db.models import F
 from django.db.models import OuterRef
 from django.db.models import Subquery
-from django.db.models import Value
-from django.db.models.functions import Replace
+from django.db.models import UUIDField
+from django.db.models.functions import Cast
 from kolibri_public.models import ContentNode as PublicContentNode
 from le_utils.constants import content_kinds
 from le_utils.constants import format_presets
@@ -153,9 +153,8 @@ class RecommendationsAdapter(Adapter):
 
         try:
             nodes = self._extract_data(response)
+            valid_nodes = self._validate_nodes(nodes)
             request_hash = self._generate_request_hash(request)
-            existing_cache = set(RecommendationsCache.objects.filter(request_hash=request_hash)
-                                 .values_list('contentnode_id', flat=True))
             override_threshold = self._extract_override_threshold(request)
             new_cache = [
                 RecommendationsCache(
@@ -163,7 +162,7 @@ class RecommendationsAdapter(Adapter):
                     contentnode_id=node['contentnode_id'],
                     rank=node['rank'],
                     override_threshold=override_threshold,
-                ) for node in nodes if node['contentnode_id'] not in existing_cache
+                ) for node in valid_nodes
             ]
             RecommendationsCache.objects.bulk_create(new_cache, ignore_conflicts=True)
             return True
@@ -172,7 +171,7 @@ class RecommendationsAdapter(Adapter):
             return False
 
     def _extract_override_threshold(self, request) -> bool:
-        """
+        """\
         Extracts the override_threshold parameter from the request safely.
 
         :param request: The request containing the parameters.
@@ -208,21 +207,25 @@ class RecommendationsAdapter(Adapter):
 
         nodes = self._extract_data(response)
         if len(nodes) > 0:
-            node_ids = [node['contentnode_id'] for node in nodes]
+            node_ids = self._extract_node_ids(nodes)
 
-            # Get the channel_id from PublicContentNode based on matching node_id from ContentNode
-            channel_id_subquery = PublicContentNode.objects.filter(
-                self._normalize_uuid(F('id')) == self._normalize_uuid(OuterRef('node_id'))
-            ).values('channel_id')[:1]
-
-            # Get main_tree_id from Channel based on channel_id obtained from channel_id_subquery
-            main_tree_id_subquery = Channel.objects.filter(
-                self._normalize_uuid(F('id')) == self._normalize_uuid(Subquery(channel_id_subquery))
+            # Get Channel.main_tree_id using the PublicContentNode.channel_id
+            channel_subquery = Channel.objects.annotate(
+                channel_id=self._cast_to_uuid(F('id'))
+            ).filter(
+                channel_id=OuterRef('channel_id')
             ).values('main_tree_id')[:1]
 
-            # Annotate main_tree_id onto ContentNode
-            recommendations = ContentNode.objects.filter(id__in=node_ids).annotate(
-                main_tree_id=Subquery(main_tree_id_subquery)
+            # Get the PublicContentNode.channel_id based on ContentNode.node_id
+            public_contentnode_subquery = PublicContentNode.objects.filter(
+                id=self._cast_to_uuid(OuterRef('node_id'))
+            ).annotate(
+                main_tree_id=Subquery(channel_subquery)
+            ).values('main_tree_id')[:1]
+
+            # Annotate `main_tree_id` onto ContentNode
+            recommendations = ContentNode.objects.filter(node_id__in=node_ids).annotate(
+                main_tree_id=Subquery(public_contentnode_subquery),
             ).values('id', 'node_id', 'main_tree_id', 'parent_id')
 
         return RecommendationsResponse(results=recommendations)
@@ -246,16 +249,39 @@ class RecommendationsAdapter(Adapter):
         :return: The extracted data.
         :rtype: List[Dict[str, Any]]
         """
-        return response.data if not response.data else []
+        return response.data if response.data else []
 
-    def _normalize_uuid(self, field):
+    def _validate_nodes(self, nodes: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """
-        Removes hyphens from a UUID field.
+        Validates the recommended nodes by checking if they exist in the database.
 
-        :param field: The field (such as F() object or OuterRef) whose value needs normalization.
-        :return: The normalized field expression without hyphens.
+        :param nodes: The nodes to validate.
+        :return: A list of valid recommended nodes that exist in the database.
+        :rtype: List[Dict[str, Any]]
         """
-        return Replace(field, Value('-'), Value(''))
+        node_ids = self._extract_node_ids(nodes)
+        existing_node_ids = set(
+            PublicContentNode.objects.filter(id__in=node_ids).values_list('id', flat=True))
+        return [node for node in nodes if node['contentnode_id'] in existing_node_ids]
+
+    def _extract_node_ids(self, nodes: List[Dict[str, Any]]) -> List[str]:
+        """
+        Extracts the node IDs from the given nodes.
+
+        :param nodes: The nodes from which to extract the node IDs.
+        :return: A list of node IDs.
+        :rtype: List[str]
+        """
+        return [node['contentnode_id'] for node in nodes]
+
+    def _cast_to_uuid(self, field):
+        """
+        Casts the given field to a UUIDField.
+
+        :param field: The field (such as F() object or OuterRef) to cast.
+        :return: The field cast to a UUIDField.
+        """
+        return Cast(field, output_field=UUIDField())
 
     def embed_content(self, channel_id: str,
                       nodes: List[Union[ContentNode, PublicContentNode]]) -> bool:
