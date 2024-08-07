@@ -45,7 +45,7 @@
         class="kexternal-redirect"
         :text="$tr('learnMoreAboutImportingContentFromChannels')"
         href="https://kolibri-studio.readthedocs.io/en/latest/add_content.html#import-content-from-other-channels"
-        openInNewTab="true"
+        openInNewTab
       />
 
     </p>
@@ -162,6 +162,5 @@
   }
   .kexternal-redirect{
     margin-left: -8px;
-    display: inline !important;
   }
 </style>

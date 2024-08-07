@@ -50,7 +50,7 @@
       <KExternalLink
         class="kexternal-redirect"
         href="https://ricecooker.readthedocs.io/en/latest/index.html"
-        openInNewTab="true"
+        openInNewTab
         :text="$tr('apiDocumentation')"
         rel="noopener noreferrer"
       />
@@ -236,6 +236,5 @@
 }
 .kexternal-redirect{
     margin-left: -8px;
-    display: inline !important;
   }
 </style>

@@ -31,7 +31,7 @@
       <KExternalLink
         class="kexternal-redirect"
         href="https://kolibri-studio.readthedocs.io/en/latest/index.html"
-        openInNewTab="true"
+        openInNewTab
         :text="$tr('userDocsLink')"
         rel="noopener noreferrer"
       />
@@ -54,7 +54,7 @@
             class="kexternal-redirect"
             href="https://ricecooker.readthedocs.io/en/latest/video_compression.html"
             :text="$tr('bestPractice6')"
-            openInNewTab="true"
+            openInNewTab
             rel="noopener noreferrer"
           />
         </li>
@@ -69,7 +69,7 @@
       class="kexternal-redirect"
       href="https://github.com/learningequality/studio/issues/3992"
       :text="$tr('issueLink1')"
-      openInNewTab="true"
+      openInNewTab
       rel="noopener noreferrer"
     />
     <p>{{ $tr('issue1') }}</p>
@@ -77,7 +77,7 @@
       class="kexternal-redirect"
       href="https://github.com/learningequality/studio/issues"
       :text="$tr('issuesPageLink')"
-      openInNewTab="true"
+      openInNewTab
       rel="noopener noreferrer"
     />
   </div>
