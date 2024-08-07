@@ -26,6 +26,7 @@ from rest_framework.serializers import CharField
 from rest_framework.serializers import FloatField
 from rest_framework.serializers import IntegerField
 from rest_framework.status import HTTP_201_CREATED
+from rest_framework.status import HTTP_204_NO_CONTENT
 from search.models import ChannelFullTextSearch
 from search.models import ContentNodeFullTextSearch
 from search.utils import get_fts_search_query
@@ -426,6 +427,16 @@ class ChannelViewSet(ValuesViewset):
         instance = serializer.instance
         Change.create_change(generate_create_event(instance.id, CHANNEL, request.data, channel_id=instance.id), applied=True, created_by_id=request.user.id)
         return Response(self.serialize_object(pk=instance.pk), status=HTTP_201_CREATED)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_edit_object()
+        self.perform_destroy(instance)
+        Change.create_change(
+            generate_update_event(
+                instance.id, CHANNEL, {"deleted": True}, channel_id=instance.id
+            ), applied=True, created_by_id=request.user.id
+        )
+        return Response(status=HTTP_204_NO_CONTENT)
 
     def perform_destroy(self, instance):
         instance.deleted = True

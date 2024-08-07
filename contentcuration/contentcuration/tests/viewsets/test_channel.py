@@ -441,7 +441,10 @@ class CRUDTestCase(StudioAPITestCase):
         response = self.client.delete(
             reverse("channel-detail", kwargs={"pk": channel.id})
         )
-        self.assertEqual(response.status_code, 405, response.content)
+        self.assertEqual(response.status_code, 204, response.content)
+        channel = models.Channel.objects.get(id=channel.id)
+        self.assertTrue(channel.deleted)
+        self.assertEqual(1, channel.deletion_history.filter(actor=user).count())
 
     def test_admin_restore_channel(self):
         user = testdata.user()
