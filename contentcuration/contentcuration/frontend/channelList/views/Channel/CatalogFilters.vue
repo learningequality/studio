@@ -65,7 +65,6 @@
         <Checkbox
           v-if="loggedIn"
           v-model="bookmark"
-          color="primary"
           :label="$tr('starredLabel')"
         />
 
@@ -75,7 +74,6 @@
         </div>
         <Checkbox
           v-model="coach"
-          color="primary"
         >
           <div class="label-container">
             {{ $tr('coachLabel') }}
@@ -83,7 +81,10 @@
             <HelpTooltip :text="$tr('coachDescription')" bottom class="px-2" />
           </div>
         </Checkbox>
-        <Checkbox v-model="subtitles" color="primary" :label="$tr('subtitlesLabel')" />
+        <Checkbox
+          v-model="subtitles"
+          :label="$tr('subtitlesLabel')"
+        />
         <ActionLink
           :to="faqLink"
           target="_blank"

@@ -28,9 +28,9 @@
         <VFlex shrink>
           <Checkbox
             :key="`checkbox-${node.id}`"
-            :input-value="isSelected(node)"
+            :inputValue="isSelected(node)"
             :disabled="ancestorIsSelected"
-            @change="toggleSelected(node)"
+            @input="toggleSelected(node)"
           />
         </VFlex>
         <VFlex class="pa-4">

@@ -31,7 +31,7 @@
             class="mb-4 mx-2"
             :label="$tr('selectAll')"
             data-test="select-all"
-            :indeterminate="0 < selected.length && selected.length < channels.length"
+            :indeterminate="selected.length > 0 && selected.length < channels.length"
           />
         </VFlex>
         <VFlex xs12>

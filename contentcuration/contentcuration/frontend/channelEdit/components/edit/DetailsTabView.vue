@@ -127,6 +127,7 @@
             v-model="randomizeOrder"
             :label="$tr('randomizeQuestionLabel')"
             :indeterminate="!isUnique(randomizeOrder)"
+            style="font-size: 16px;"
           />
         </VFlex>
       </VLayout>
