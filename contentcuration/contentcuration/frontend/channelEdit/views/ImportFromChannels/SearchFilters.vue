@@ -52,10 +52,8 @@
 
     <!-- Show coach content toggle -->
     <Checkbox v-model="coach" class="mb-4 mt-2">
-      <template #label>
         <Icon icon="coachContent" />
         <span class="mx-2 text-xs-left">{{ $tr('coachContentLabel') }}</span>
-      </template>
     </Checkbox>
 
     <!-- Formats -->

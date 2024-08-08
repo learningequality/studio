@@ -60,9 +60,9 @@
               <VFlex class="px-1" shrink>
                 <Checkbox
                   :key="`checkbox-${node.id}`"
-                  :input-value="isSelected(node)"
+                  :inputValue="isSelected(node)"
                   class="mt-0 pt-0"
-                  @change="toggleSelected(node)"
+                  @input="toggleSelected(node)"
                 />
               </VFlex>
               <VFlex shrink grow style="width: 100%;">
