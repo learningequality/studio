@@ -12,9 +12,9 @@
           <Checkbox
             ref="checkbox"
             class="ma-0 pa-0"
-            :value="selected"
+            :inputValue="selected"
             :indeterminate="indeterminate"
-            @click.stop.prevent="goNextSelectionState"
+            @input="goNextSelectionState"
           />
         </VListTileAction>
         <div class="mr-2">

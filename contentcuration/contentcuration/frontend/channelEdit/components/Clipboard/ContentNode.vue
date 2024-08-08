@@ -34,7 +34,7 @@
                         class="mt-0 pt-0"
                         :inputValue="selected"
                         :indeterminate="indeterminate"
-                        @click.stop.prevent="goNextSelectionState"
+                        @input="goNextSelectionState"
                       />
                     </VListTileAction>
                     <div
