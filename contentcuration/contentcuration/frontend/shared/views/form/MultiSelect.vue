@@ -21,7 +21,7 @@
           </VChip>
         </template>
         <template #item="{ item, tile }">
-          <Checkbox v-bind="tile.props" class="ma-0 mt-1 mb-0">
+          <Checkbox v-bind="tile.props" class="ma-0 mb-0 mt-1">
             <span :class="{ notranslate }" :style="getEllipsisStyle()" dir="auto">
               {{ getText(item) }}
             </span>
