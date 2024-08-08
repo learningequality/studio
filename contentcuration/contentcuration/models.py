@@ -1846,6 +1846,13 @@ class ContentNode(MPTTModel, models.Model):
                         completion_criteria.validate(criterion, kind=content_kinds.EXERCISE)
                     except completion_criteria.ValidationError:
                         errors.append("Mastery criterion is defined but is invalid")
+            else:
+                criterion = self.extra_fields.get("options", {}).get("completion_criteria", {})
+                if criterion:
+                    try:
+                        completion_criteria.validate(criterion, kind=self.kind_id)
+                    except completion_criteria.ValidationError:
+                        errors.append("Completion criterion is defined but is invalid")
         self.complete = not errors
         return errors
 

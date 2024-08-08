@@ -854,7 +854,7 @@ class ApiAddRemoteNodesToTreeTestCase(StudioTestCase):
             "license_description": "This is a fake license",
             "copyright_holder": random_data.copyright_holder,
             "questions": [],
-            "extra_fields": "{}",
+            "extra_fields": {},
             "role": "learner",
         }
 

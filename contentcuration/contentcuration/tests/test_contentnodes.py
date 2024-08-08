@@ -1040,6 +1040,33 @@ class NodeCompletionTestCase(StudioTestCase):
         new_obj.mark_complete()
         self.assertFalse(new_obj.complete)
 
+    def test_create_video_invalid_completion_criterion(self):
+        licenses = list(License.objects.filter(copyright_holder_required=False, is_custom=False).values_list("pk", flat=True))
+        channel = testdata.channel()
+        new_obj = ContentNode(
+            title="yes",
+            kind_id=content_kinds.VIDEO,
+            parent=channel.main_tree,
+            license_id=licenses[0],
+            copyright_holder="Some person",
+            extra_fields={
+                "randomize": False,
+                "options": {
+                    "completion_criteria": {
+                        "threshold": {
+                            "mastery_model": exercises.M_OF_N,
+                            "n": 5,
+                        },
+                        "model": completion_criteria.MASTERY,
+                    }
+                }
+            },
+        )
+        new_obj.save()
+        File.objects.create(contentnode=new_obj, preset_id=format_presets.VIDEO_HIGH_RES, checksum=uuid.uuid4().hex)
+        new_obj.mark_complete()
+        self.assertFalse(new_obj.complete)
+
     def test_create_exercise_no_assessment_items(self):
         licenses = list(License.objects.filter(copyright_holder_required=False, is_custom=False).values_list("pk", flat=True))
         channel = testdata.channel()
