@@ -334,36 +334,7 @@ class CRUDTestCase(StudioAPITestCase):
             {"channels": {self.channel.id: True}},
             format="json",
         )
-        self.assertEqual(response.status_code, 200, response.content)
-        self.assertTrue(
-            models.ChannelSet.objects.get(id=channelset.id)
-            .secret_token.channels.filter(pk=self.channel.id)
-            .exists()
-        )
-
-    def test_update_channelset_empty(self):
-
-        channelset = models.ChannelSet.objects.create(**self.channelset_db_metadata)
-        channelset.editors.add(self.user)
-        self.client.force_authenticate(user=self.user)
-        response = self.client.patch(
-            reverse("channelset-detail", kwargs={"pk": channelset.id}),
-            {},
-            format="json",
-        )
-        self.assertEqual(response.status_code, 200, response.content)
-
-    def test_update_channelset_unwriteable_fields(self):
-
-        channelset = models.ChannelSet.objects.create(**self.channelset_db_metadata)
-        channelset.editors.add(self.user)
-        self.client.force_authenticate(user=self.user)
-        response = self.client.patch(
-            reverse("channelset-detail", kwargs={"pk": channelset.id}),
-            {"not_a_field": "not_a_value"},
-            format="json",
-        )
-        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(response.status_code, 405, response.content)
 
     def test_delete_channelset(self):
         channelset = models.ChannelSet.objects.create(**self.channelset_db_metadata)
@@ -373,9 +344,4 @@ class CRUDTestCase(StudioAPITestCase):
         response = self.client.delete(
             reverse("channelset-detail", kwargs={"pk": channelset.id})
         )
-        self.assertEqual(response.status_code, 204, response.content)
-        try:
-            models.ChannelSet.objects.get(id=channelset.id)
-            self.fail("ChannelSet was not deleted")
-        except models.ChannelSet.DoesNotExist:
-            pass
+        self.assertEqual(response.status_code, 405, response.content)

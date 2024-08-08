@@ -137,6 +137,35 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
             models.File.objects.get(id=file.id).preset_id, new_preset,
         )
 
+    def test_update_file_no_node_permission(self):
+        file = models.File.objects.create(**self.file_db_metadata)
+        new_channel = testdata.channel()
+        new_channel_node = new_channel.main_tree.get_descendants().first().id
+
+        self.sync_changes(
+            [generate_update_event(file.id, FILE, {"contentnode": new_channel_node}, channel_id=self.channel.id)],
+        )
+        self.assertNotEqual(
+            models.File.objects.get(id=file.id).contentnode, new_channel_node,
+        )
+
+    def test_update_file_no_assessmentitem_permission(self):
+        file = models.File.objects.create(**self.file_db_metadata)
+        new_channel = testdata.channel()
+        new_channel_exercise = (
+            new_channel.main_tree.get_descendants()
+            .filter(kind_id=content_kinds.EXERCISE)
+            .first()
+        )
+        new_channel_assessmentitem = new_channel_exercise.assessment_items.first().id
+
+        self.sync_changes(
+            [generate_update_event(file.id, FILE, {"assessment_item": new_channel_assessmentitem}, channel_id=self.channel.id)],
+        )
+        self.assertNotEqual(
+            models.File.objects.get(id=file.id).assessment_item, new_channel_assessmentitem,
+        )
+
     def test_update_files(self):
 
         file1 = models.File.objects.create(**self.file_db_metadata)
@@ -260,124 +289,14 @@ class CRUDTestCase(StudioAPITestCase):
             {"preset": new_preset},
             format="json",
         )
-        self.assertEqual(response.status_code, 200, response.content)
-        self.assertEqual(
-            models.File.objects.get(id=file.id).preset_id, new_preset,
-        )
-
-    def test_update_file_no_channel(self):
-        file_metadata = self.file_db_metadata
-        contentnode_id = file_metadata.pop("contentnode_id")
-        file = models.File.objects.create(**file_metadata)
-
-        self.client.force_authenticate(user=self.user)
-        response = self.client.patch(
-            reverse("file-detail", kwargs={"pk": file.id}),
-            {"contentnode": contentnode_id},
-            format="json",
-        )
-        self.assertEqual(response.status_code, 200, response.content)
-        self.assertEqual(
-            models.File.objects.get(id=file.id).contentnode_id, contentnode_id,
-        )
-
-    def test_update_file_no_channel_permission(self):
-        file = models.File.objects.create(**self.file_db_metadata)
-        new_preset = format_presets.VIDEO_HIGH_RES
-
-        self.channel.editors.remove(self.user)
-
-        self.client.force_authenticate(user=self.user)
-        response = self.client.patch(
-            reverse("file-detail", kwargs={"pk": file.id}),
-            {"preset": new_preset},
-            format="json",
-        )
-        self.assertEqual(response.status_code, 404, response.content)
-        self.assertNotEqual(
-            models.File.objects.get(id=file.id).preset_id, new_preset,
-        )
-
-    def test_update_file_no_channel_edit_permission(self):
-        file = models.File.objects.create(**self.file_db_metadata)
-        new_preset = format_presets.VIDEO_HIGH_RES
-
-        self.channel.editors.remove(self.user)
-        self.channel.viewers.add(self.user)
-
-        self.client.force_authenticate(user=self.user)
-        response = self.client.patch(
-            reverse("file-detail", kwargs={"pk": file.id}),
-            {"preset": new_preset},
-            format="json",
-        )
-        self.assertEqual(response.status_code, 404, response.content)
-        self.assertNotEqual(
-            models.File.objects.get(id=file.id).preset_id, new_preset,
-        )
-
-    def test_update_file_no_node_permission(self):
-        file = models.File.objects.create(**self.file_db_metadata)
-        new_channel = testdata.channel()
-        new_channel_node = new_channel.main_tree.get_descendants().first().id
-
-        self.client.force_authenticate(user=self.user)
-        response = self.client.patch(
-            reverse("file-detail", kwargs={"pk": file.id}),
-            {"contentnode": new_channel_node},
-            format="json",
-        )
-        self.assertEqual(response.status_code, 400, response.content)
-
-    def test_update_file_no_assessmentitem_permission(self):
-        file = models.File.objects.create(**self.file_db_metadata)
-        new_channel = testdata.channel()
-        new_channel_exercise = (
-            new_channel.main_tree.get_descendants()
-            .filter(kind_id=content_kinds.EXERCISE)
-            .first()
-        )
-        new_channel_assessmentitem = new_channel_exercise.assessment_items.first().id
-
-        self.client.force_authenticate(user=self.user)
-        response = self.client.patch(
-            reverse("file-detail", kwargs={"pk": file.id}),
-            {"assessment_item": new_channel_assessmentitem},
-            format="json",
-        )
-        self.assertEqual(response.status_code, 400, response.content)
-
-    def test_update_file_empty(self):
-
-        file = models.File.objects.create(**self.file_db_metadata)
-        self.client.force_authenticate(user=self.user)
-        response = self.client.patch(
-            reverse("file-detail", kwargs={"pk": file.id}), {}, format="json",
-        )
-        self.assertEqual(response.status_code, 200, response.content)
-
-    def test_update_file_unwriteable_fields(self):
-
-        file = models.File.objects.create(**self.file_db_metadata)
-        self.client.force_authenticate(user=self.user)
-        response = self.client.patch(
-            reverse("file-detail", kwargs={"pk": file.id}),
-            {"not_a_field": "not_a_value"},
-            format="json",
-        )
-        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(response.status_code, 405, response.content)
 
     def test_delete_file(self):
         file = models.File.objects.create(**self.file_db_metadata)
 
         self.client.force_authenticate(user=self.user)
         response = self.client.delete(reverse("file-detail", kwargs={"pk": file.id}))
-        self.assertEqual(response.status_code, 204, response.content)
-        try:
-            models.File.objects.get(id=file.id)
-            self.fail("File was not deleted")
-        except models.File.DoesNotExist:
-            pass
+        self.assertEqual(response.status_code, 405, response.content)
 
 
 class UploadFileURLTestCase(StudioAPITestCase):

@@ -156,11 +156,10 @@ class BulkModelSerializer(SimpleReprMixin, ModelSerializer):
                 raise ValueError("Many to many fields must be explicitly handled", attr)
             setattr(instance, attr, value)
 
-        if hasattr(instance, "on_update") and callable(instance.on_update):
-            instance.on_update()
-
         if not getattr(self, "parent"):
             instance.save()
+        elif hasattr(instance, "on_update") and callable(instance.on_update):
+            instance.on_update()
 
         return instance
 
@@ -191,11 +190,10 @@ class BulkModelSerializer(SimpleReprMixin, ModelSerializer):
 
         instance = ModelClass(**validated_data)
 
-        if hasattr(instance, "on_create") and callable(instance.on_create):
-            instance.on_create()
-
         if not getattr(self, "parent", False):
             instance.save()
+        elif hasattr(instance, "on_create") and callable(instance.on_create):
+            instance.on_create()
 
         return instance
 
@@ -707,6 +705,8 @@ class CreateModelMixin(object):
 
         return errors
 
+
+class RESTCreateModelMixin(CreateModelMixin):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -728,11 +728,6 @@ class DestroyModelMixin(object):
     def _map_delete_change(self, change):
         return change["key"]
 
-    def destroy(self, request, *args, **kwargs):
-        instance = self.get_edit_object()
-        self.perform_destroy(instance)
-        return Response(status=HTTP_204_NO_CONTENT)
-
     def perform_destroy(self, instance):
         instance.delete()
 
@@ -753,6 +748,13 @@ class DestroyModelMixin(object):
                 change["errors"] = [str(e)]
                 errors.append(change)
         return errors
+
+
+class RESTDestroyModelMixin(DestroyModelMixin):
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_edit_object()
+        self.perform_destroy(instance)
+        return Response(status=HTTP_204_NO_CONTENT)
 
 
 class UpdateModelMixin(object):
@@ -792,6 +794,8 @@ class UpdateModelMixin(object):
                 errors.append(change)
         return errors
 
+
+class RESTUpdateModelMixin(UpdateModelMixin):
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop("partial", False)
         instance = self.get_edit_object()

@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 from django.db.models.query import QuerySet
 from le_utils.constants import content_kinds
+from mock import Mock
 from rest_framework import serializers
 
 from .base import BaseAPITestCase
@@ -146,12 +147,15 @@ class ContentDefaultsSerializerUseTestCase(BaseAPITestCase):
             nested_writes = True
 
     def test_save__create(self):
+        request = Mock()
+        request.user = self.user
         s = self.ChannelSerializer(
             data=dict(
                 name="New test channel",
                 description="This is the best test channel",
                 content_defaults=dict(author="Buster"),
-            )
+            ),
+            context=dict(request=request),
         )
 
         self.assertTrue(s.is_valid())
@@ -167,7 +171,7 @@ class ContentDefaultsSerializerUseTestCase(BaseAPITestCase):
             description="This is the best test channel",
             content_defaults=dict(author="Buster"),
         )
-        c.save()
+        c.save(actor_id=self.user.id)
 
         s = self.ChannelSerializer(
             c, data=dict(content_defaults=dict(license="Special Permissions"))

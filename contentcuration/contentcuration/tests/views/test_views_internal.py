@@ -503,7 +503,7 @@ class PublishEndpointTestCase(BaseAPITestCase):
                 del connections.databases[alias]
 
     def test_404_not_authorized(self):
-        new_channel = Channel.objects.create()
+        new_channel = Channel.objects.create(actor_id=self.user.id)
         response = self.post(
             reverse_lazy("api_publish_channel"), {"channel_id": new_channel.id}
         )
@@ -654,7 +654,7 @@ class APICommitChannelEndpointTestCase(BaseAPITestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_404_no_permission(self):
-        new_channel = Channel.objects.create()
+        new_channel = Channel.objects.create(actor_id=self.user.id)
         response = self.post(
             reverse_lazy("api_finish_channel"), {"channel_id": new_channel.id}
         )
@@ -669,7 +669,7 @@ class CheckUserIsEditorEndpointTestCase(BaseAPITestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_404_no_permission(self):
-        new_channel = Channel.objects.create()
+        new_channel = Channel.objects.create(actor_id=self.user.id)
         response = self.post(
             reverse_lazy("check_user_is_editor"), {"channel_id": new_channel.id}
         )
@@ -685,7 +685,7 @@ class GetTreeDataEndpointTestCase(BaseAPITestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_404_no_permission(self):
-        new_channel = Channel.objects.create()
+        new_channel = Channel.objects.create(actor_id=self.user.id)
         response = self.post(
             reverse_lazy("get_tree_data"),
             {"channel_id": new_channel.id, "tree": "main"},
@@ -702,7 +702,7 @@ class GetNodeTreeDataEndpointTestCase(BaseAPITestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_404_no_permission(self):
-        new_channel = Channel.objects.create()
+        new_channel = Channel.objects.create(actor_id=self.user.id)
         response = self.post(
             reverse_lazy("get_node_tree_data"),
             {"channel_id": new_channel.id, "tree": "main"},
@@ -718,7 +718,7 @@ class GetChannelStatusBulkEndpointTestCase(BaseAPITestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_404_no_permission(self):
-        new_channel = Channel.objects.create()
+        new_channel = Channel.objects.create(actor_id=self.user.id)
         response = self.post(
             reverse_lazy("get_channel_status_bulk"),
             {"channel_ids": [self.channel.id, new_channel.id]},

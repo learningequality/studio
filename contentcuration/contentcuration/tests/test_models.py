@@ -165,7 +165,7 @@ class ChannelTestCase(PermissionQuerysetTestCase):
     def test_filter_view_queryset__public_channel__deleted(self):
         channel = self.public_channel
         channel.deleted = True
-        channel.save()
+        channel.save(actor_id=self.admin_user.id)
 
         queryset = Channel.filter_view_queryset(self.base_queryset, user=self.forbidden_user)
         self.assertQuerysetDoesNotContain(queryset, pk=channel.id)
@@ -816,7 +816,7 @@ class UserTestCase(StudioTestCase):
         user_b = self._create_user("b@tester.com")
 
         # Create a sole editor non-public channel.
-        sole_editor_channel = Channel.objects.create(name="sole-editor")
+        sole_editor_channel = Channel.objects.create(name="sole-editor", actor_id=user_a.id)
         sole_editor_channel.editors.add(user_a)
 
         # Create sole-editor channel nodes.
@@ -944,18 +944,20 @@ class ChannelHistoryTestCase(StudioTestCase):
         self.channel = testdata.channel()
 
     def test_mark_channel_created(self):
-        self.assertEqual(0, self.channel.history.filter(action=channel_history.CREATION).count())
-        self.channel.mark_created(self.admin_user)
-        self.assertEqual(1, self.channel.history.filter(actor=self.admin_user, action=channel_history.CREATION).count())
+        self.assertEqual(1, self.channel.history.filter(action=channel_history.CREATION).count())
 
     def test_mark_channel_deleted(self):
         self.assertEqual(0, self.channel.deletion_history.count())
-        self.channel.mark_deleted(self.admin_user)
+        self.channel.deleted = True
+        self.channel.save(actor_id=self.admin_user.id)
         self.assertEqual(1, self.channel.deletion_history.filter(actor=self.admin_user).count())
 
     def test_mark_channel_recovered(self):
         self.assertEqual(0, self.channel.history.filter(actor=self.admin_user, action=channel_history.RECOVERY).count())
-        self.channel.mark_recovered(self.admin_user)
+        self.channel.deleted = True
+        self.channel.save(actor_id=self.admin_user.id)
+        self.channel.deleted = False
+        self.channel.save(actor_id=self.admin_user.id)
         self.assertEqual(1, self.channel.history.filter(actor=self.admin_user, action=channel_history.RECOVERY).count())
 
     def test_prune(self):
@@ -966,6 +968,7 @@ class ChannelHistoryTestCase(StudioTestCase):
             testdata.channel()
         ]
         last_history_ids = []
+        ChannelHistory.objects.all().delete()
 
         self.assertEqual(0, ChannelHistory.objects.count())
 

@@ -11,6 +11,7 @@ from contentcuration.models import User
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import FilterSet
+from contentcuration.viewsets.base import RESTCreateModelMixin
 from contentcuration.viewsets.base import ValuesViewset
 from contentcuration.viewsets.common import NotNullMapArrayAgg
 from contentcuration.viewsets.common import UserFilteredPrimaryKeyRelatedField
@@ -65,7 +66,7 @@ class ChannelSetFilter(FilterSet):
         fields = ("edit",)
 
 
-class ChannelSetViewSet(ValuesViewset):
+class ChannelSetViewSet(ValuesViewset, RESTCreateModelMixin):
     queryset = ChannelSet.objects.all()
     serializer_class = ChannelSetSerializer
     filter_class = ChannelSetFilter

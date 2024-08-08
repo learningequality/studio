@@ -876,7 +876,7 @@ class SyncNodesOperationTestCase(StudioTestCase):
 
         # Setup derivative channel
         self.new_channel = Channel.objects.create(
-            name="derivative of teschannel", source_id="lkajs"
+            name="derivative of teschannel", source_id="lkajs", actor_id=self.admin_user.id
         )
         self.new_channel.save()
         self.new_channel.main_tree = self._create_empty_tree()
