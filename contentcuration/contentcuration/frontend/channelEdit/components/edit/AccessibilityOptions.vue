@@ -10,11 +10,10 @@
         <Checkbox
           v-model="accessibility"
           :value="accessibilityItem.value"
-          :label="accessibilityItem.label"
           color="primary"
           :data-test="`checkbox-${accessibilityItem.help}`"
         >
-          <template>
+          <div class="d-flex">
             <span class="text-xs-left">{{ accessibilityItem.label }}</span>
             &nbsp;
             <HelpTooltip
@@ -24,7 +23,7 @@
               class="px-2"
               :data-test="`tooltip-${accessibilityItem.help}`"
             />
-          </template>
+          </div>
         </Checkbox>
       </VFlex>
     </VLayout>
