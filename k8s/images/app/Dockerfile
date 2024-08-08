@@ -3,9 +3,6 @@ FROM python:3.10-slim-bookworm
 # Set the timezone
 RUN ln -fs /usr/share/zoneinfo/America/Los_Angeles /etc/localtime
 
-ARG COMMIT_SHA
-ENV RELEASE_COMMIT_SHA=$COMMIT_SHA
-
 ENV DEBIAN_FRONTEND noninteractive
 # Default Python file.open file encoding to UTF-8 instead of ASCII, workaround for le-utils setup.py issue
 ENV LANG C.UTF-8
@@ -41,6 +38,9 @@ WORKDIR /contentcuration
 RUN mkdir -p contentcuration/static/js/bundles
 RUN ln -s /node_modules /contentcuration/node_modules
 RUN yarn run build
+
+ARG COMMIT_SHA
+ENV RELEASE_COMMIT_SHA=$COMMIT_SHA
 
 EXPOSE 8000
 
