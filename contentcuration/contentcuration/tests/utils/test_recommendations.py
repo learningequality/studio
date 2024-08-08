@@ -54,8 +54,8 @@ class RecommendationsAdapterTestCase(TestCase):
             json=cls.topic
         )
         cls.api_response = BackendResponse(data=[
-            {'contentnode_id': '1234567890abcdef1234567890abcdef', 'rank': 0.9},
-            {'contentnode_id': 'abcdef1234567890abcdef1234567890', 'rank': 0.8}
+            {'contentnode_id': 'f0ab32ce7dee4ee8a2d8e3dc2cf8a4a3', 'rank': 0.9},
+            {'contentnode_id': '98bd9283c7d24e02b338d7f52eabf9f6', 'rank': 0.8}
         ])
         cls.recommendations_response = [
             {
@@ -82,7 +82,7 @@ class RecommendationsAdapterTestCase(TestCase):
                 title='Main tree 1',
                 content_id=uuid.uuid4(),
                 node_id='e947222469504e789476cf3ffc5e3801',
-                kind=cls.content_kind
+                kind=cls.content_kind,
             )
         )
         cls.channel_2 = Channel.objects.create(
@@ -93,36 +93,36 @@ class RecommendationsAdapterTestCase(TestCase):
                 title='Main tree 2',
                 content_id=uuid.uuid4(),
                 node_id='f7547941d75d4712a53f566b4bf93250',
-                kind=cls.content_kind
+                kind=cls.content_kind,
             )
         )
 
         cls.public_content_node_1 = PublicContentNode.objects.create(
-            id=uuid.UUID('1234567890abcdef1234567890abcdef'),
+            id=uuid.UUID('f0ab32ce7dee4ee8a2d8e3dc2cf8a4a3'),
             title='Public Content Node 1',
             content_id=uuid.uuid4(),
             channel_id=uuid.UUID('ddec09d74e834241a580c480ee37879c'),
         )
         cls.public_content_node_2 = PublicContentNode.objects.create(
-            id=uuid.UUID('abcdef1234567890abcdef1234567890'),
+            id=uuid.UUID('98bd9283c7d24e02b338d7f52eabf9f6'),
             title='Public Content Node 2',
             content_id=uuid.uuid4(),
             channel_id=uuid.UUID('84fcaec1e0514b62899d7f436384c401'),
         )
 
         cls.content_node_1 = ContentNode.objects.create(
-            id='1234567890abcdef1234567890abcdef',
+            id='3c4d5847dd2f45568ce9ecd53e843a76',
             title='Content Node 1',
             content_id=uuid.uuid4(),
-            node_id='1234567890abcdef1234567890abcdef',
-            kind=cls.content_kind
+            node_id='f0ab32ce7dee4ee8a2d8e3dc2cf8a4a3',
+            kind=cls.content_kind,
         )
         cls.content_node_2 = ContentNode.objects.create(
-            id='abcdef1234567890abcdef1234567890',
+            id='b41b9289c1e84ea4869a8fbbf85b9a15',
             title='Content Node 2',
             content_id=uuid.uuid4(),
-            node_id='abcdef1234567890abcdef1234567890',
-            kind=cls.content_kind
+            node_id='98bd9283c7d24e02b338d7f52eabf9f6',
+            kind=cls.content_kind,
         )
 
         cls.cache = RecommendationsCache.objects.create(

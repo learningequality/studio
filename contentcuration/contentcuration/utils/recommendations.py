@@ -1,6 +1,7 @@
 import hashlib
 import json
 import logging
+import uuid
 from typing import Any
 from typing import Dict
 from typing import List
@@ -13,11 +14,12 @@ from automation.utils.appnexus.base import Backend
 from automation.utils.appnexus.base import BackendFactory
 from automation.utils.appnexus.base import BackendRequest
 from automation.utils.appnexus.base import BackendResponse
+from django.db.models import Exists
 from django.db.models import F
 from django.db.models import OuterRef
-from django.db.models import Subquery
 from django.db.models import UUIDField
 from django.db.models.functions import Cast
+from django_cte import With
 from kolibri_public.models import ContentNode as PublicContentNode
 from le_utils.constants import content_kinds
 from le_utils.constants import format_presets
@@ -208,25 +210,37 @@ class RecommendationsAdapter(Adapter):
         nodes = self._extract_data(response)
         if len(nodes) > 0:
             node_ids = self._extract_node_ids(nodes)
+            cast_node_ids = [uuid.UUID(node_id) for node_id in node_ids]
 
-            # Get Channel.main_tree_id using the PublicContentNode.channel_id
-            channel_subquery = Channel.objects.annotate(
-                channel_id=self._cast_to_uuid(F('id'))
-            ).filter(
-                channel_id=OuterRef('channel_id')
-            ).values('main_tree_id')[:1]
+            channel_cte = With(
+                Channel.objects.annotate(
+                    channel_id=self._cast_to_uuid(F('id'))
+                ).filter(
+                    Exists(
+                        PublicContentNode.objects.filter(
+                            id__in=cast_node_ids,
+                            channel_id=OuterRef('channel_id')
+                        )
+                    )
+                ).values(
+                    'main_tree_id',
+                    tree_id=F('main_tree__tree_id'),
+                ).distinct()
+            )
+            print(list(Channel.objects.all()))
 
-            # Get the PublicContentNode.channel_id based on ContentNode.node_id
-            public_contentnode_subquery = PublicContentNode.objects.filter(
-                id=self._cast_to_uuid(OuterRef('node_id'))
-            ).annotate(
-                main_tree_id=Subquery(channel_subquery)
-            ).values('main_tree_id')[:1]
-
-            # Annotate `main_tree_id` onto ContentNode
-            recommendations = ContentNode.objects.filter(node_id__in=node_ids).annotate(
-                main_tree_id=Subquery(public_contentnode_subquery),
-            ).values('id', 'node_id', 'main_tree_id', 'parent_id')
+            recommendations = channel_cte.join(
+                ContentNode.objects.filter(node_id__in=node_ids),
+                tree_id=channel_cte.col.tree_id
+            ).with_cte(channel_cte) .annotate(
+                main_tree_id=channel_cte.col.main_tree_id
+            ).values(
+                'id',
+                'node_id',
+                'main_tree_id',
+                'parent_id',
+            )
+            print(list(recommendations))
 
         return RecommendationsResponse(results=recommendations)
 
