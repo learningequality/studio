@@ -2,8 +2,8 @@ import json
 import logging
 from builtins import str
 from collections import namedtuple
-from distutils.version import LooseVersion
 
+from distutils.version import LooseVersion
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import PermissionDenied
 from django.core.exceptions import SuspiciousOperation
@@ -777,6 +777,11 @@ def create_node(node_data, parent_node, sort_order):  # noqa: C901
 
 def create_exercises(user, node, data):
     """ Generate exercise from data """
+    # First check that all assessment_ids are unique within the node
+    assessment_ids = [question.get("assessment_id") for question in data]
+    if len(assessment_ids) != len(set(assessment_ids)):
+        raise NodeValidationError("Duplicate assessment_ids found in node {}".format(node.node_id))
+
     with transaction.atomic():
         order = 0
 
