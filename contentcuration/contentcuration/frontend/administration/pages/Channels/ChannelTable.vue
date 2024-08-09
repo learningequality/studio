@@ -140,7 +140,9 @@
       selectAll: {
         get() {
           return (
-            this.selected.length && this.selected.length === this.channels.length && !this.loading
+            Boolean(this.selected.length) &&
+            this.selected.length === this.channels.length &&
+            !this.loading
           );
         },
         set(value) {

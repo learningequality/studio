@@ -8,7 +8,7 @@
       :indeterminate="notUnique"
       :disabled="notUnique"
       :label="$tr('learnersCanMarkComplete')"
-      style="padding-bottom: 16px;"
+      style="padding-bottom: 16px; font-size: 16px;"
     />
     <!-- Layout when practice quizzes are enabled -->
     <VLayout xs6 md6>

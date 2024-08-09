@@ -28,9 +28,7 @@
             :value="channel.id"
             class="channel ma-0"
           >
-            <template #label>
-              <ChannelItem :channelId="channel.id" />
-            </template>
+            <ChannelItem :channelId="channel.id" />
           </Checkbox>
         </VCard>
       </template>
@@ -130,11 +128,8 @@
     margin: 0;
   }
 
-  .channel {
-    /deep/ label,
-    /deep/ .v-input__control {
-      width: 100% !important;
-    }
+  .channel /deep/ .k-checkbox {
+    vertical-align: middle;
   }
 
   .list-card-hover {

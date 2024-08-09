@@ -48,7 +48,7 @@
                   :key="answerIdx"
                   :value="answerIdx"
                   :inputValue="correctAnswersIndices"
-                  @change="onCorrectAnswersIndicesUpdate"
+                  @input="onCorrectAnswersIndicesUpdate"
                 />
               </VFlex>
 

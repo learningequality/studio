@@ -128,6 +128,7 @@
                 v-model="showAnswers"
                 :label="$tr('showAnswers')"
                 class="ma-0"
+                style="font-size: 16px;"
               />
             </VFlex>
             <VFlex

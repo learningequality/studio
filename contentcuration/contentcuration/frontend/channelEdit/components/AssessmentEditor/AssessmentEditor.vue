@@ -7,6 +7,7 @@
         :label="$tr('showAnswers')"
         class="mb-4"
         data-test="showAnswersCheckbox"
+        style="font-size: 16px;"
       />
 
       <transition-group name="list-complete" tag="div">
