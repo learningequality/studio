@@ -33,6 +33,7 @@ from contentcuration.utils.db_tools import TreeBuilder
 from contentcuration.viewsets.contentnode import ContentNodeFilter
 from contentcuration.viewsets.sync.constants import CONTENTNODE
 from contentcuration.viewsets.sync.constants import CONTENTNODE_PREREQUISITE
+from contentcuration.viewsets.sync.constants import UPDATED
 
 
 nested_subjects = [subject for subject in SUBJECTSLIST if "." in subject]
@@ -660,6 +661,24 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         self.assertEqual(
             models.ContentNode.objects.get(id=contentnode.id).extra_fields["options"]["completion_criteria"]["model"], completion_criteria.MASTERY
         )
+
+    def test_update_contentnode_exercise_incomplete_mastery_model_marked_complete(self):
+        metadata = self.contentnode_db_metadata
+        metadata["kind_id"] = content_kinds.EXERCISE
+        contentnode = models.ContentNode.objects.create(**metadata)
+
+        response = self.sync_changes(
+            [generate_update_event(contentnode.id, CONTENTNODE, {
+                "complete": True,
+            }, channel_id=self.channel.id)],
+        )
+
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertFalse(
+            models.ContentNode.objects.get(id=contentnode.id).complete
+        )
+        change = models.Change.objects.filter(channel=self.channel, change_type=UPDATED, table=CONTENTNODE).last()
+        self.assertFalse(change.kwargs["mods"]["complete"])
 
     def test_update_contentnode_extra_fields(self):
         contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
