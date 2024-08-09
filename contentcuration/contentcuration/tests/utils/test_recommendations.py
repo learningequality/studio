@@ -9,9 +9,9 @@ from kolibri_public.models import ContentNode as PublicContentNode
 from mock import MagicMock
 from mock import patch
 
-from contentcuration.models import Channel
-from contentcuration.models import ContentKind
 from contentcuration.models import ContentNode
+from contentcuration.tests import testdata
+from contentcuration.tests.base import StudioTestCase
 from contentcuration.utils.recommendations import EmbeddingsResponse
 from contentcuration.utils.recommendations import EmbedTopicsRequest
 from contentcuration.utils.recommendations import Recommendations
@@ -26,7 +26,8 @@ class RecommendationsTestCase(TestCase):
         self.assertIsInstance(recommendations, Recommendations)
 
 
-class RecommendationsAdapterTestCase(TestCase):
+class RecommendationsAdapterTestCase(StudioTestCase):
+
     @classmethod
     def setUpTestData(cls):
         cls.adapter = RecommendationsAdapter(MagicMock())
@@ -54,75 +55,23 @@ class RecommendationsAdapterTestCase(TestCase):
             json=cls.topic
         )
         cls.api_response = BackendResponse(data=[
-            {'contentnode_id': 'f0ab32ce7dee4ee8a2d8e3dc2cf8a4a3', 'rank': 0.9},
-            {'contentnode_id': '98bd9283c7d24e02b338d7f52eabf9f6', 'rank': 0.8}
+            {'contentnode_id': '1234567890abcdef1234567890abcdef', 'rank': 0.9},
+            {'contentnode_id': 'abcdef1234567890abcdef1234567890', 'rank': 0.8},
+            {'contentnode_id': '00000000000000000000000000000003', 'rank': 0.8},
+            {'contentnode_id': '00000000000000000000000000000005', 'rank': 0.8},
         ])
-        cls.recommendations_response = [
-            {
-                'id': '1234567890abcdef1234567890abcdef',
-                'node_id': '1234567890abcdef1234567890abcdef',
-                'parent_id': None,
-                'main_tree_id': '4387374055304864a731f3e705d64639'
-            },
-            {
-                'id': 'abcdef1234567890abcdef1234567890',
-                'node_id': 'abcdef1234567890abcdef1234567890',
-                'parent_id': None,
-                'main_tree_id': '0548a548dda8487b8ac2f81145737cfc'
-            }
-        ]
-
-        cls.content_kind = ContentKind.objects.create(kind='topic')
-
-        cls.channel_1 = Channel.objects.create(
-            id='ddec09d74e834241a580c480ee37879c',
-            name='Channel 1',
-            main_tree=ContentNode.objects.create(
-                id='4387374055304864a731f3e705d64639',
-                title='Main tree 1',
-                content_id=uuid.uuid4(),
-                node_id='e947222469504e789476cf3ffc5e3801',
-                kind=cls.content_kind,
-            )
-        )
-        cls.channel_2 = Channel.objects.create(
-            id='84fcaec1e0514b62899d7f436384c401',
-            name='Channel 2',
-            main_tree=ContentNode.objects.create(
-                id='0548a548dda8487b8ac2f81145737cfc',
-                title='Main tree 2',
-                content_id=uuid.uuid4(),
-                node_id='f7547941d75d4712a53f566b4bf93250',
-                kind=cls.content_kind,
-            )
-        )
 
         cls.public_content_node_1 = PublicContentNode.objects.create(
-            id=uuid.UUID('f0ab32ce7dee4ee8a2d8e3dc2cf8a4a3'),
+            id=uuid.UUID('1234567890abcdef1234567890abcdef'),
             title='Public Content Node 1',
             content_id=uuid.uuid4(),
             channel_id=uuid.UUID('ddec09d74e834241a580c480ee37879c'),
         )
         cls.public_content_node_2 = PublicContentNode.objects.create(
-            id=uuid.UUID('98bd9283c7d24e02b338d7f52eabf9f6'),
+            id=uuid.UUID('abcdef1234567890abcdef1234567890'),
             title='Public Content Node 2',
             content_id=uuid.uuid4(),
             channel_id=uuid.UUID('84fcaec1e0514b62899d7f436384c401'),
-        )
-
-        cls.content_node_1 = ContentNode.objects.create(
-            id='3c4d5847dd2f45568ce9ecd53e843a76',
-            title='Content Node 1',
-            content_id=uuid.uuid4(),
-            node_id='f0ab32ce7dee4ee8a2d8e3dc2cf8a4a3',
-            kind=cls.content_kind,
-        )
-        cls.content_node_2 = ContentNode.objects.create(
-            id='b41b9289c1e84ea4869a8fbbf85b9a15',
-            title='Content Node 2',
-            content_id=uuid.uuid4(),
-            node_id='98bd9283c7d24e02b338d7f52eabf9f6',
-            kind=cls.content_kind,
         )
 
         cls.cache = RecommendationsCache.objects.create(
@@ -216,6 +165,7 @@ class RecommendationsAdapterTestCase(TestCase):
         cached_items = RecommendationsCache.objects.filter(
             request_hash=self.adapter._generate_request_hash(new_request)
         )
+        print(list(cached_items.values('request_hash', 'contentnode', 'rank', 'override_threshold')))
         self.assertEqual(cached_items.count(), expected_count)
 
     def test_cache_embeddings_request_success(self):
@@ -243,6 +193,23 @@ class RecommendationsAdapterTestCase(TestCase):
     @patch('contentcuration.utils.recommendations.EmbedTopicsRequest')
     def test_get_recommendations_success(self, mock_embed_topics_request, mock_response_exists,
                                          mock_generate_embeddings, mock_cache_embeddings_request):
+        channel = testdata.channel('Public Channel')
+        channel.public = True
+        channel.save()
+
+        public_node_1 = PublicContentNode.objects.create(
+            id=uuid.UUID('00000000000000000000000000000003'),
+            title='Video 1',
+            content_id=uuid.uuid4(),
+            channel_id=uuid.UUID(channel.id),
+        )
+        public_node_2 = PublicContentNode.objects.create(
+            id=uuid.UUID('00000000000000000000000000000005'),
+            title='Exercise 1',
+            content_id=uuid.uuid4(),
+            channel_id=uuid.UUID(channel.id),
+        )
+
         mock_response_exists.return_value = None
         mock_response = MagicMock(spec=EmbeddingsResponse)
         mock_response.data = copy.deepcopy(self.api_response.data)
@@ -250,12 +217,15 @@ class RecommendationsAdapterTestCase(TestCase):
         mock_generate_embeddings.return_value = mock_response
 
         response = self.adapter.get_recommendations(self.topic)
+        results = list(response.results)
+        expected_node_ids = [public_node_1.id.hex, public_node_2.id.hex]
+        actual_node_ids = [result["node_id"] for result in results]
 
         mock_response_exists.assert_called_once()
         mock_generate_embeddings.assert_called_once()
         self.assertIsInstance(response, RecommendationsResponse)
-        self.assertListEqual(list(response.results), self.recommendations_response)
-        self.assertEqual(len(response.results), 2)
+        self.assertListEqual(expected_node_ids, actual_node_ids)
+        self.assertEqual(len(results), 2)
 
     @patch('contentcuration.utils.recommendations.RecommendationsAdapter._extract_data')
     @patch('contentcuration.utils.recommendations.RecommendationsAdapter.response_exists')
