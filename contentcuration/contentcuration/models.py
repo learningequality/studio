@@ -77,6 +77,8 @@ from contentcuration.utils.cache import delete_public_channel_cache_keys
 from contentcuration.utils.parser import load_json_string
 from contentcuration.viewsets.sync.constants import ALL_CHANGES
 from contentcuration.viewsets.sync.constants import ALL_TABLES
+from contentcuration.viewsets.sync.constants import PUBLISHABLE_CHANGE_TABLES
+from contentcuration.viewsets.sync.constants import PUBLISHED
 
 
 EDIT_ACCESS = "edit"
@@ -2545,14 +2547,36 @@ class Change(models.Model):
     kwargs = JSONField(encoder=JSONEncoder)
     applied = models.BooleanField(default=False)
     errored = models.BooleanField(default=False)
+    # Add an additional flag for change events that are only intended
+    # to transmit a message to the client, and not to actually apply any publishable changes.
+    # Make it nullable, so that we don't have to back fill historic change objects, and we just
+    # exclude true values when we are looking for publishable changes.
+    # This deliberately uses 'unpublishable' so that we can easily filter out by 'not true',
+    # and also that if we are ever interacting with it in Python code, both null and False values
+    # will be falsy.
+    unpublishable = models.BooleanField(null=True, blank=True, default=False)
 
     @classmethod
-    def _create_from_change(cls, created_by_id=None, channel_id=None, user_id=None, session_key=None, applied=False, table=None, rev=None, **data):
+    def _create_from_change(
+        cls,
+        created_by_id=None,
+        channel_id=None,
+        user_id=None,
+        session_key=None,
+        applied=False,
+        table=None,
+        rev=None,
+        unpublishable=False,
+        **data
+    ):
         change_type = data.pop("type")
         if table is None or table not in ALL_TABLES:
             raise TypeError("table is a required argument for creating changes and must be a valid table name")
         if change_type is None or change_type not in ALL_CHANGES:
             raise TypeError("change_type is a required argument for creating changes and must be a valid change type integer")
+        # Don't let someone mark a change as unpublishable if it's not in the list of tables that make changes that we can publish
+        # also, by definition, publishing is not a publishable change - this probably doesn't matter, but making sense is nice.
+        unpublishable = unpublishable or table not in PUBLISHABLE_CHANGE_TABLES or change_type == PUBLISHED
         return cls(
             session_id=session_key,
             created_by_id=created_by_id,
@@ -2562,21 +2586,30 @@ class Change(models.Model):
             table=table,
             change_type=change_type,
             kwargs=data,
-            applied=applied
+            applied=applied,
+            unpublishable=unpublishable,
         )
 
     @classmethod
-    def create_changes(cls, changes, created_by_id=None, session_key=None, applied=False):
+    def create_changes(cls, changes, created_by_id=None, session_key=None, applied=False, unpublishable=False):
         change_models = []
         for change in changes:
-            change_models.append(cls._create_from_change(created_by_id=created_by_id, session_key=session_key, applied=applied, **change))
+            change_models.append(
+                cls._create_from_change(
+                    created_by_id=created_by_id,
+                    session_key=session_key,
+                    applied=applied,
+                    unpublishable=unpublishable,
+                    **change
+                )
+            )
 
         cls.objects.bulk_create(change_models)
         return change_models
 
     @classmethod
-    def create_change(cls, change, created_by_id=None, session_key=None, applied=False):
-        obj = cls._create_from_change(created_by_id=created_by_id, session_key=session_key, applied=applied, **change)
+    def create_change(cls, change, created_by_id=None, session_key=None, applied=False, unpublishable=False):
+        obj = cls._create_from_change(created_by_id=created_by_id, session_key=session_key, applied=applied, unpublishable=unpublishable, **change)
         obj.save()
         return obj
 

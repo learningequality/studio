@@ -16,9 +16,9 @@ from django.db.models.functions import Coalesce
 from django.http import Http404
 from django.utils.timezone import now
 from django_cte import CTEQuerySet
+from django_filters.rest_framework import BooleanFilter
 from django_filters.rest_framework import CharFilter
 from django_filters.rest_framework import UUIDFilter
-from django_filters.rest_framework import BooleanFilter
 from le_utils.constants import completion_criteria
 from le_utils.constants import content_kinds
 from le_utils.constants import roles
@@ -969,6 +969,8 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
                 ),
                 applied=True,
                 created_by_id=self.request.user.id,
+                # This is not a publishable change, as it is just updating ephemeral status updates.
+                unpublishable=True,
             )
 
     def perform_create(self, serializer, change=None):

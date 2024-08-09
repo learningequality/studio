@@ -397,10 +397,12 @@ def _unpublished_changes_query(channel):
             change_type=PUBLISHED,
             errored=False
         ).values("server_rev").order_by("-server_rev")[:1], Value(0)),
-        created_by__isnull=False,
         channel=channel,
-        user__isnull=True
-    )
+        # Going forwards, these changes will be marked as unpublishable,
+        # but leave these filters here for now for backwards compatibility
+        created_by__isnull=False,
+        user__isnull=True,
+    ).exclude(unpublishable=True)
 
 
 class ChannelViewSet(ValuesViewset):
@@ -528,20 +530,20 @@ class ChannelViewSet(ValuesViewset):
                             "unpublished_changes": _unpublished_changes_query(channel).exists()
                         }, channel_id=channel.id
                     ),
-                ], applied=True)
+                ], applied=True, unpublishable=True)
             except ChannelIncompleteError:
                 Change.create_changes([
                     generate_update_event(
                         channel.id, CHANNEL, {"publishing": False}, channel_id=channel.id
                     ),
-                ], applied=True)
+                ], applied=True, unpublishable=True)
                 raise ValidationError("Channel is not ready to be published")
             except Exception:
                 Change.create_changes([
                     generate_update_event(
                         channel.id, CHANNEL, {"publishing": False, "unpublished_changes": True}, channel_id=channel.id
                     ),
-                ], applied=True)
+                ], applied=True, unpublishable=True)
                 raise
 
     def sync_from_changes(self, changes):

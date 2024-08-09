@@ -27,9 +27,11 @@ from contentcuration.tests.base import StudioAPITestCase
 from contentcuration.tests.viewsets.base import generate_copy_event
 from contentcuration.tests.viewsets.base import generate_create_event
 from contentcuration.tests.viewsets.base import generate_delete_event
+from contentcuration.tests.viewsets.base import generate_publish_channel_event
 from contentcuration.tests.viewsets.base import generate_update_event
 from contentcuration.tests.viewsets.base import SyncTestMixin
 from contentcuration.utils.db_tools import TreeBuilder
+from contentcuration.viewsets.channel import _unpublished_changes_query
 from contentcuration.viewsets.contentnode import ContentNodeFilter
 from contentcuration.viewsets.sync.constants import CONTENTNODE
 from contentcuration.viewsets.sync.constants import CONTENTNODE_PREREQUISITE
@@ -1153,6 +1155,23 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
             self.fail("ContentNode was not copied")
 
         self.assertEqual(new_node.parent_id, self.channel.main_tree_id)
+
+    def test_copy_contentnode_finalization_does_not_make_publishable(self):
+        self.channel.editors.add(self.user)
+        contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
+        new_node_id = uuid.uuid4().hex
+        response = self.sync_changes(
+            [
+                generate_copy_event(
+                    new_node_id, CONTENTNODE, contentnode.id, self.channel.main_tree_id, channel_id=self.channel.id
+                ),
+                # Save a published change for the channel, so that the finalization change will be generated
+                # after the publish change, and we can check that it is properly not making the channel appear publishable.
+                generate_publish_channel_event(self.channel.id),
+            ],
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(_unpublished_changes_query(self.channel).count(), 0)
 
     def test_cannot_copy_contentnode__source_permission(self):
         source_channel = testdata.channel()
