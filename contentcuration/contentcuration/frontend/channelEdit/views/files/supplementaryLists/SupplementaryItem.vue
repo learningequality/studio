@@ -46,9 +46,7 @@
         </VListTileContent>
         <VListTileAction v-if="!readonly">
           <VBtn icon flat data-test="remove" @click.stop="$emit('remove', file.id)">
-            <Icon>
-              clear
-            </Icon>
+            <Icon icon="clear" />
           </VBtn>
         </VListTileAction>
       </VListTile>

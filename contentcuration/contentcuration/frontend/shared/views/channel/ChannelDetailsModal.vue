@@ -2,7 +2,8 @@
 
   <FullscreenModal
     v-model="dialog"
-    color="black"
+    color="appBarDark"
+    :dark="true"
   >
     <template #header>
       <span class="notranslate">{{ channel ? channel.name : '' }}</span>
@@ -16,7 +17,7 @@
             <VBtn color="primary" dark :block="$vuetify.breakpoint.xsOnly" v-on="on">
               {{ $tr('downloadButton') }}
               &nbsp;
-              <Icon>arrow_drop_down</Icon>
+              <Icon icon="dropdown" :color="$themeTokens.textInverted" />
             </VBtn>
           </template>
           <VList>

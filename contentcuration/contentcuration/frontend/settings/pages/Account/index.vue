@@ -49,7 +49,7 @@
       {{ $tr('apiTokenMessage') }}
       <KExternalLink
         href="https://ricecooker.readthedocs.io/en/latest/index.html"
-        target="_blank"
+        openInNewTab
         :text="$tr('apiDocumentation')"
         rel="noopener noreferrer"
       />
@@ -100,7 +100,13 @@
         :text="$tr('deleteAccountLabel')"
         :appearanceOverrides="{
           backgroundColor: $themeTokens.error,
-          color: $themeTokens.textInverted
+          color: $themeTokens.textInverted,
+          ':hover': {
+            // Vuetify generates this based on theme colors, but oddly it doesn't make it
+            // available in the theme tokens
+            // TODO: Replace with KDS lighten/darken utilities
+            backgroundColor: 'var(--v-error-darken1)',
+          },
         }"
         @click="showDeleteConfirmation = true"
       />
@@ -191,7 +197,7 @@
       completelyDeleteAccountLabel: 'Completely remove your account from Kolibri Studio',
       unableToDeleteAdminAccount: 'Unable to delete an admin account',
       handleChannelsBeforeAccount:
-        'You must delete these channels manually or invite others to edit them before you can delete your account.',
+        'You cannot delete accounts that have channels. You must delete these channels manually before you can delete your account.',
 
       // API strings
       apiTokenHeading: 'API Token',
@@ -227,5 +233,4 @@
 .row {
   padding: 8px 0;
 }
-
 </style>

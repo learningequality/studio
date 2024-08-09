@@ -24,9 +24,7 @@
                 hideDetails
               >
                 <template #prepend-inner>
-                  <Icon>
-                    search
-                  </Icon>
+                  <Icon icon="search" />
                 </template>
                 <template #append-outer>
                   <VBtn
@@ -48,6 +46,7 @@
         <!-- Search or Topics Browsing -->
         <ChannelList
           v-if="isBrowsing && !$route.params.channelId"
+          @update-language="updateLanguageQuery"
         />
         <ContentTreeList
           v-else-if="isBrowsing"
@@ -96,6 +95,7 @@
         searchTerm: '',
         topicNode: null,
         copyNode: null,
+        languageFromChannelList: null,
       };
     },
     computed: {
@@ -142,6 +142,9 @@
       handleBackToBrowse() {
         this.$router.push(this.backToBrowseRoute);
       },
+      updateLanguageQuery(language) {
+        this.languageFromChannelList = language;
+      },
       handleSearchTerm() {
         if (this.searchIsValid) {
           this.$router.push({
@@ -151,9 +154,11 @@
             },
             query: {
               ...this.$route.query,
+              ...(this.isBrowsing ? { languages: this.languageFromChannelList } : {}),
               last: this.$route.query.last || this.$route.path,
             },
           });
+          this.languageFromChannelList = null;
           this.clearNodes();
           this.$analytics.trackAction('import_modal', 'Search');
         }

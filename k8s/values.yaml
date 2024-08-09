@@ -34,9 +34,6 @@ studioNginx:
 sentry:
   dsnKey: ""
 
-newRelic:
-  licenseKey: "replaceme"
-
 cloudsql-proxy:
   enabled: true
   cloudsql:
@@ -68,8 +65,6 @@ studioWorkers:
 
 studioProber:
   imageName: "REPLACEME"
-  newrelicKey: "REPLACEME"
-  newrelicAccountId: "REPLACEME"
   loginProberUsername: "REPLACEME"
   loginProberPassword: "REPLACEME"
   port: 9313

@@ -15,9 +15,7 @@
       @cancel="close"
     >
       <p class="subheading">
-        <Icon color="amber">
-          warning
-        </Icon>
+        <Icon icon="warningIncomplete" />
         <span class="mx-2">
           {{ $tr('incompleteCount', { count: node.error_count }) }}
         </span>

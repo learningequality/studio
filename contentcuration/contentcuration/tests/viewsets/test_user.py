@@ -70,6 +70,14 @@ class CRUDTestCase(StudioAPITestCase):
         response = self.client.post(reverse("user-list"), user, format="json",)
         self.assertEqual(response.status_code, 405, response.content)
 
+    def test_admin_no_create_user(self):
+        self.user.is_admin = True
+        self.user.save()
+        self.client.force_authenticate(user=self.user)
+        user = {}
+        response = self.client.post(reverse("admin-users-list"), user, format="json",)
+        self.assertEqual(response.status_code, 405, response.content)
+
     def test_no_update_user(self):
         self.client.force_authenticate(user=self.user)
         response = self.client.patch(
@@ -79,12 +87,36 @@ class CRUDTestCase(StudioAPITestCase):
         )
         self.assertEqual(response.status_code, 405, response.content)
 
+    def test_admin_update_user(self):
+        self.user.is_admin = True
+        self.user.save()
+        self.client.force_authenticate(user=self.user)
+        response = self.client.patch(
+            reverse("admin-users-detail", kwargs={"pk": self.user.id}),
+            {"is_active": False},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.user.refresh_from_db()
+        self.assertFalse(self.user.is_active)
+
     def test_no_delete_user(self):
         self.client.force_authenticate(user=self.user)
         response = self.client.delete(
             reverse("user-detail", kwargs={"pk": self.user.id})
         )
         self.assertEqual(response.status_code, 405, response.content)
+
+    def test_admin_delete_user(self):
+        self.user.is_admin = True
+        self.user.save()
+        self.client.force_authenticate(user=self.user)
+        response = self.client.delete(
+            reverse("admin-users-detail", kwargs={"pk": self.user.id})
+        )
+        self.assertEqual(response.status_code, 204, response.content)
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.deleted)
 
 
 class ChannelUserCRUDTestCase(StudioAPITestCase):

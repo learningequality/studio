@@ -37,7 +37,6 @@ from contentcuration.forms import RegistrationForm
 from contentcuration.models import Channel
 from contentcuration.models import Invitation
 from contentcuration.models import User
-from contentcuration.statistics import record_user_registration_stats
 from contentcuration.viewsets.invitation import InvitationSerializer
 
 
@@ -200,8 +199,6 @@ class UserRegistrationView(RegistrationView):
         subject = "".join(subject.splitlines())
         message = render_to_string(self.email_body_template, context)
         user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL)
-
-        record_user_registration_stats(user)
 
 
 class UserActivationView(ActivationView):

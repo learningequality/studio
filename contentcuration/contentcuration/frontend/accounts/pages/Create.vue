@@ -5,13 +5,13 @@
     :appBarText="$tr('backToLoginButton')"
     backButton
   >
-    <VImg
-      height="200"
-      maxHeight="100"
-      contain
-      :lazy-src="require('shared/images/kolibri-logo.svg')"
-      :src="require('shared/images/kolibri-logo.svg')"
-    />
+    <div class="align-center d-flex justify-center mb-2">
+      <KLogo
+        altText="Kolibri Logo with background"
+        :showBackground="true"
+        :size="120"
+      />
+    </div>
     <h2 ref="top" class="mb-4 primary--text text-xs-center">
       {{ $tr('createAnAccountTitle') }}
     </h2>
@@ -144,11 +144,17 @@
         <Checkbox
           v-model="acceptedAgreement"
           :label="$tr('agreement')"
-          required
-          :rules="tosAndPolicyRules"
-          :hide-details="false"
           class="my-1 policy-checkbox"
         />
+        <!-- Error message for Agreements -->
+        <VSlideYTransition>
+          <div v-if="!acceptedAgreement" class="error--text policy-error theme--light v-messages">
+            <div class="v-messages__message">
+              {{ $tr("ToSRequiredMessage") }}
+            </div>
+          </div>
+        </VSlideYTransition>
+
         <div class="span-spacing">
           <span>
             <ActionLink
@@ -259,9 +265,6 @@
       },
       passwordValidationRules() {
         return [value => (value.length >= 8 ? true : this.$tr('passwordValidationMessage'))];
-      },
-      tosAndPolicyRules() {
-        return [value => (value ? true : this.$tr('ToSRequiredMessage'))];
       },
       acceptedAgreement: {
         get() {
@@ -446,7 +449,9 @@
         return id === uses.OTHER && this.form.uses.includes(id);
       },
       submit() {
-        if (this.$refs.form.validate()) {
+        // We need to check the "acceptedAgreement" here explicitly because it is not a
+        // Vuetify form field and does not trigger the form validation.
+        if (this.$refs.form.validate() && this.acceptedAgreement) {
           const cleanedData = this.clean(this.form);
           return this.register(cleanedData)
             .then(() => {
@@ -572,8 +577,9 @@
     }
   }
 
-  .policy-checkbox /deep/ .v-messages {
+  .policy-error {
     min-height: 0;
+    margin-bottom: 4px;
     margin-left: 40px;
   }
 

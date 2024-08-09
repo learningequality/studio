@@ -1,13 +1,22 @@
 <template>
 
-  <VTooltip maxWidth="150px" v-bind="$attrs" lazy>
-    <template #activator="{ on }">
-      <Icon color="primary" :small="small" v-on="on">
-        {{ icon }}
-      </Icon>
-    </template>
-    <span class="text-xs-center">{{ text }}</span>
-  </VTooltip>
+  <div>
+    <Icon
+      ref="tooltip"
+      :color="$themeTokens.primary"
+      style="font-size:20px;"
+      :icon="icon"
+    />
+
+    <KTooltip
+      reference="tooltip"
+      placement="bottom"
+      maxWidth="80%"
+      :refs="$refs"
+    >
+      {{ text }}
+    </KTooltip>
+  </div>
 
 </template>
 
@@ -15,6 +24,7 @@
 
   export default {
     name: 'HelpTooltip',
+
     props: {
       text: {
         type: String,
@@ -24,10 +34,6 @@
         type: String,
         default: 'info',
       },
-      small: {
-        type: Boolean,
-        default: true,
-      },
     },
   };
 
@@ -35,8 +41,8 @@
 
 <style lang="less" scoped>
 
-  .v-icon {
-    cursor: pointer;
+  /deep/.k-tooltip {
+    width: 100%;
   }
 
 </style>

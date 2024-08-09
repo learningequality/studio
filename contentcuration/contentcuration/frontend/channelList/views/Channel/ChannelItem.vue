@@ -3,7 +3,8 @@
   <div>
     <VCard
       class="channel my-3"
-      :class="{ hideHighlight, added }"
+      hover
+      :class="{ added }"
       data-test="channel-card"
       tabindex="0"
       :href="linkToChannelTree ? channelHref : null"
@@ -63,29 +64,27 @@
               {{ $tr('unpublishedText') }}
             </VCardText>
           </VFlex>
-          <VTooltip bottom lazy>
-            <template #activator="{ on }">
-              <Icon
-                v-if="allowEdit && hasUnpublishedChanges"
-                color="greenSuccess"
-                :size="12"
-                v-on="on"
-              >
-                lens
-              </Icon>
-            </template>
-            <span>
-              {{ $tr(
-                'lastUpdated',
-                {
-                  'updated': $formatRelative(
-                    channel.modified,
-                    { now: new Date() }
-                  )
-                })
-              }}
-            </span>
-          </VTooltip>
+          <KTooltip
+            reference="lastUpdatedTime"
+            placement="bottom"
+            :refs="$refs"
+          >
+            {{ $tr(
+              'lastUpdated',
+              {
+                'updated': $formatRelative(
+                  channel.modified,
+                  { now: new Date() }
+                )
+              })
+            }}
+          </KTooltip>
+          <Icon
+            v-if="allowEdit && hasUnpublishedChanges"
+            ref="lastUpdatedTime"
+            icon="unpublishedResource"
+          />
+
           <VSpacer />
           <VFlex shrink>
             <KRouterLink
@@ -93,35 +92,29 @@
               :to="channelDetailsLink"
             >
 
-              <IconButton
+              <KIconButton
                 :color="$themeTokens.primary"
                 data-test="details-button"
                 class="mr-1"
                 icon="info"
-                :text="$tr('details')"
-                @mouseenter.native="hideHighlight = true"
-                @mouseleave.native="hideHighlight = false"
+                :tooltip="$tr('details')"
               />
 
             </KRouterLink>
 
-            <IconButton
+            <KIconButton
               v-if="!allowEdit && channel.published"
               class="mr-1"
               icon="copy"
-              :text="$tr('copyToken')"
+              :tooltip="$tr('copyToken')"
               data-test="token-button"
               @click.stop.prevent="tokenDialog = true"
-              @mouseenter.native="hideHighlight = true"
-              @mouseleave.native="hideHighlight = false"
             />
             <ChannelStar
               v-if="loggedIn"
               :channelId="channelId"
               :bookmark="channel.bookmark"
               class="mr-1"
-              @mouseenter.native="hideHighlight = true"
-              @mouseleave.native="hideHighlight = false"
             />
             <Menu v-if="showOptions">
               <template #activator="{ on }">
@@ -131,10 +124,10 @@
                   data-test="menu"
                   v-on="on"
                   @click.stop.prevent
-                  @mouseenter="hideHighlight = true"
-                  @mouseleave="hideHighlight = false"
                 >
-                  <Icon>more_vert</Icon>
+                  <Icon
+                    icon="optionsVertical"
+                  />
                 </VBtn>
               </template>
               <VList>
@@ -145,17 +138,23 @@
                   @click.stop
                 >
                   <VListTileAvatar>
-                    <Icon>edit</Icon>
+                    <KIconButton
+                      :disabled="true"
+                      icon="edit"
+                    />
                   </VListTileAvatar>
                   <VListTileTitle>{{ $tr('editChannel') }}</VListTileTitle>
                 </VListTile>
                 <VListTile
                   v-if="allowEdit && channel.published"
                   data-test="token-listitem"
-                  @click="tokenDialog = true"
+                  @click.stop="tokenDialog = true"
                 >
                   <VListTileAvatar>
-                    <Icon>content_copy</Icon>
+                    <KIconButton
+                      :disabled="true"
+                      icon="copy"
+                    />
                   </VListTileAvatar>
                   <VListTileTitle>{{ $tr('copyToken') }}</VListTileTitle>
                 </VListTile>
@@ -166,9 +165,7 @@
                   @click.stop
                 >
                   <VListTileAvatar>
-                    <Icon class="rtl-flip">
-                      launch
-                    </Icon>
+                    <Icon icon="openNewTab" />
                   </VListTileAvatar>
                   <VListTileTitle>{{ $tr('goToWebsite') }}</VListTileTitle>
                 </VListTile>
@@ -178,9 +175,7 @@
                   target="_blank"
                 >
                   <VListTileAvatar>
-                    <Icon class="rtl-flip">
-                      launch
-                    </Icon>
+                    <Icon icon="openNewTab" />
                   </VListTileAvatar>
                   <VListTileTitle>{{ $tr('viewContent') }}</VListTileTitle>
                 </VListTile>
@@ -190,7 +185,10 @@
                   @click.stop="deleteDialog = true"
                 >
                   <VListTileAvatar>
-                    <Icon>delete</Icon>
+                    <KIconButton
+                      :disabled="true"
+                      icon="trash"
+                    />
                   </VListTileAvatar>
                   <VListTileTitle>{{ $tr('deleteChannel') }}</VListTileTitle>
                 </VListTile>
@@ -232,7 +230,6 @@
   import ChannelTokenModal from 'shared/views/channel/ChannelTokenModal';
   import Thumbnail from 'shared/views/files/Thumbnail';
   import Languages from 'shared/leUtils/Languages';
-  import IconButton from 'shared/views/IconButton';
 
   export default {
     name: 'ChannelItem',
@@ -240,7 +237,6 @@
       ChannelStar,
       ChannelTokenModal,
       Thumbnail,
-      IconButton,
     },
     props: {
       channelId: {
@@ -264,7 +260,6 @@
       return {
         deleteDialog: false,
         tokenDialog: false,
-        hideHighlight: false,
         added: false,
       };
     },
@@ -356,17 +351,10 @@
           this.$store.dispatch('showSnackbarSimple', this.$tr('channelDeletedSnackbar'));
         });
       },
-      goToChannelRoute(e) {
-        // preventDefault whenever we have clicked a button
-        // that is a child of this card to avoid redirect
-        // overriding the action of the clicked button
-        if (this.hideHighlight) {
-          e.preventDefault();
-        } else {
-          this.linkToChannelTree
-            ? (window.location.href = this.channelHref)
-            : this.$router.push(this.channelDetailsLink).catch(() => {});
-        }
+      goToChannelRoute() {
+        this.linkToChannelTree
+          ? (window.location.href = this.channelHref)
+          : this.$router.push(this.channelDetailsLink).catch(() => {});
       },
       trackTokenCopy() {
         this.$analytics.trackAction('channel_list', 'Copy token', {
@@ -400,11 +388,6 @@
   .v-card {
     width: 100%;
     cursor: pointer;
-
-    &:hover:not(.hideHighlight) {
-      /* stylelint-disable-next-line custom-property-pattern */
-      background-color: var(--v-greyBackground-base);
-    }
 
     &.added {
       /* stylelint-disable-next-line custom-property-pattern */

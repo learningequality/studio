@@ -16,6 +16,7 @@ from django.db.models.functions import Coalesce
 from django.http import Http404
 from django.utils.timezone import now
 from django_cte import CTEQuerySet
+from django_filters.rest_framework import BooleanFilter
 from django_filters.rest_framework import CharFilter
 from django_filters.rest_framework import UUIDFilter
 from le_utils.constants import completion_criteria
@@ -67,7 +68,8 @@ from contentcuration.viewsets.common import SQCount
 from contentcuration.viewsets.common import UserFilteredPrimaryKeyRelatedField
 from contentcuration.viewsets.common import UUIDInFilter
 from contentcuration.viewsets.sync.constants import CONTENTNODE
-from contentcuration.viewsets.sync.constants import COPYING_FLAG
+from contentcuration.viewsets.sync.constants import COPYING_STATUS
+from contentcuration.viewsets.sync.constants import COPYING_STATUS_VALUES
 from contentcuration.viewsets.sync.constants import CREATED
 from contentcuration.viewsets.sync.constants import DELETED
 from contentcuration.viewsets.sync.utils import generate_update_event
@@ -85,6 +87,7 @@ class ContentNodeFilter(RequiredFilterSet):
     ancestors_of = UUIDFilter(method="filter_ancestors_of")
     parent__in = UUIDInFilter(field_name="parent")
     _node_id_channel_id___in = CharFilter(method="filter__node_id_channel_id")
+    complete = BooleanFilter(field_name="complete")
 
     class Meta:
         model = ContentNode
@@ -409,6 +412,24 @@ class ContentNodeSerializer(BulkModelSerializer):
         except DjangoValidationError as e:
             raise ValidationError(e)
 
+    def _ensure_complete(self, instance):
+        """
+        If an instance is marked as complete, ensure that it is actually complete.
+        If it is not, update the value, save, and issue a change event.
+        """
+        if instance.complete:
+            instance.mark_complete()
+            if not instance.complete:
+                instance.save()
+                user_id = None
+                if "request" in self.context:
+                    user_id = self.context["request"].user.id
+                Change.create_change(
+                    generate_update_event(
+                        instance.id, CONTENTNODE, {"complete": False}, channel_id=instance.get_channel_id()
+                    ), created_by_id=user_id, applied=True
+                )
+
     def create(self, validated_data):
         tags = None
         if "tags" in validated_data:
@@ -420,6 +441,8 @@ class ContentNodeSerializer(BulkModelSerializer):
 
         if tags:
             set_tags({instance.id: tags})
+
+        self._ensure_complete(instance)
 
         return instance
 
@@ -436,7 +459,10 @@ class ContentNodeSerializer(BulkModelSerializer):
 
         self._check_completion_criteria(validated_data.get("kind", instance.kind_id), validated_data.get("complete", instance.complete), validated_data)
 
-        return super(ContentNodeSerializer, self).update(instance, validated_data)
+        instance = super(ContentNodeSerializer, self).update(instance, validated_data)
+
+        self._ensure_complete(instance)
+        return instance
 
 
 def retrieve_thumbail_src(item):
@@ -914,6 +940,9 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
                 log_sync_exception(e, user=self.request.user, change=copy)
                 copy["errors"] = [str(e)]
                 errors.append(copy)
+                failed_copy_node = self.get_queryset().filter(pk=copy["key"]).first()
+                if failed_copy_node is not None:
+                    failed_copy_node.delete()
         return errors
 
     def copy(
@@ -944,7 +973,6 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
         ).exists()
 
         with create_change_tracker(pk, CONTENTNODE, channel_id, self.request.user, "copy_nodes") as progress_tracker:
-
             new_node = source.copy_to(
                 target,
                 position,
@@ -959,7 +987,7 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
                 generate_update_event(
                     pk,
                     CONTENTNODE,
-                    {COPYING_FLAG: False, "node_id": new_node.node_id},
+                    {COPYING_STATUS: COPYING_STATUS_VALUES.SUCCESS, "node_id": new_node.node_id},
                     channel_id=channel_id
                 ),
                 applied=True,

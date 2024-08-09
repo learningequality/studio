@@ -37,38 +37,45 @@
           v-model="selectAll"
           :indeterminate="selected.length > 0 && !selectAll"
           :label="selected.length ? '' : $tr('selectAllLabel')"
+          style="font-size: 16px;"
         />
       </div>
       <VSlideXTransition>
         <div v-if="selected.length">
-          <IconButton
+          <KIconButton
             v-if="canEdit"
             icon="edit"
             :text="$tr('editSelectedButton')"
             data-test="edit-selected-btn"
             @click="editNodes(selected)"
           />
-          <IconButton
+          <KIconButton
             icon="clipboard"
             :text="$tr('copySelectedButton')"
             data-test="copy-selected-to-clipboard-btn"
             @click="copyToClipboard(selected)"
           />
-          <IconButton
+          <KIconButton
             v-if="canEdit"
             icon="move"
             :text="$tr('moveSelectedButton')"
             data-test="move-selected-btn"
             @click="openMoveModal"
           />
-          <IconButton
+          <KIconButton
             v-if="canEdit"
             icon="copy"
             :text="$tr('duplicateSelectedButton')"
             data-test="duplicate-selected-btn"
             @click="duplicateNodes(selected)"
           />
-          <IconButton
+          <KIconButton
+            v-if="canEdit"
+            icon="sort"
+            :text="$tr('SortAlphabetically')"
+            @click="sortNodes(selected)"
+          />
+          <KIconButton
             v-if="canEdit"
             icon="remove"
             :text="$tr('deleteSelectedButton')"
@@ -109,9 +116,7 @@
               @click="setViewMode(mode), trackViewMode(mode)"
             >
               <VListTileAction style="min-width: 32px;">
-                <Icon v-if="mode === viewMode">
-                  check
-                </Icon>
+                <Icon v-if="mode === viewMode" icon="check" />
               </VListTileAction>
               <VListTileTitle>{{ $tr(mode) }}</VListTileTitle>
             </VListTile>
@@ -122,9 +127,7 @@
           <template #activator="{ on }">
             <VBtn color="primary" class="ml-2" style="height: 32px;" v-on="on">
               {{ $tr('addButton') }}
-              <Icon small>
-                arrow_drop_down
-              </Icon>
+              <Icon icon="dropdown" :color="$themeTokens.textInverted" />
             </VBtn>
           </template>
           <VList>
@@ -246,11 +249,10 @@
     ContentKindLearningActivityDefaults,
   } from 'shared/leUtils/ContentKinds';
   import { titleMixin, routerMixin } from 'shared/mixins';
-  import { COPYING_FLAG, RELATIVE_TREE_POSITIONS } from 'shared/data/constants';
+  import { RELATIVE_TREE_POSITIONS } from 'shared/data/constants';
   import { DraggableTypes, DropEffect } from 'shared/mixins/draggable/constants';
   import { DraggableFlags } from 'shared/vuex/draggablePlugin/module/constants';
   import DraggableRegion from 'shared/views/draggable/DraggableRegion';
-  import { ContentNode } from 'shared/data/resources';
 
   export default {
     name: 'CurrentTopicView',
@@ -302,6 +304,7 @@
         'getContentNodeAncestors',
         'getTopicAndResourceCounts',
         'getContentNodeChildren',
+        'isNodeInCopyingState',
       ]),
       ...mapGetters('clipboard', ['getCopyTrees']),
       ...mapGetters('draggable', ['activeDraggableRegionId']),
@@ -323,7 +326,9 @@
         },
         set(value) {
           if (value) {
-            this.selected = this.children.filter(node => !node[COPYING_FLAG]).map(node => node.id);
+            this.selected = this.children
+              .filter(node => !this.isNodeInCopyingState(node.id))
+              .map(node => node.id);
             this.trackClickEvent('Select all');
           } else {
             this.selected = [];
@@ -420,17 +425,56 @@
       },
     },
     methods: {
-      ...mapActions(['showSnackbar']),
+      ...mapActions(['showSnackbar', 'clearSnackbar']),
       ...mapActions(['setViewMode', 'addViewModeOverride', 'removeViewModeOverride']),
       ...mapActions('contentNode', [
         'createContentNode',
         'loadAncestors',
         'moveContentNodes',
         'copyContentNode',
+        'waitForCopyingStatus',
       ]),
       ...mapActions('clipboard', ['copyAll']),
       clearSelections() {
         this.selected = [];
+      },
+
+      sortNodes(selected) {
+        const selectedNodes = selected.map(id => this.getContentNode(id));
+        const orderedNodes = selectedNodes.sort(this.compareNodeTitles);
+
+        const reversedNodes = orderedNodes.reverse();
+
+        const nodeX = this.findNodeBeforeFirstSelected(orderedNodes, selected);
+
+        const targetParent = this.node.id;
+        const targetNode = nodeX || targetParent;
+        const targetPosition = nodeX
+          ? RELATIVE_TREE_POSITIONS.RIGHT
+          : RELATIVE_TREE_POSITIONS.FIRST_CHILD;
+
+        const nodeIdsToMove = reversedNodes.map(node => String(node.id));
+
+        this.moveContentNodes({
+          id__in: nodeIdsToMove,
+          target: targetNode,
+          position: targetPosition,
+        });
+      },
+
+      findNodeBeforeFirstSelected(nodes, selected) {
+        for (let i = 1; i < nodes.length; i++) {
+          if (selected.includes(nodes[i])) {
+            return nodes[i - 1];
+          }
+        }
+        return null;
+      },
+
+      compareNodeTitles(nodeA, nodeB) {
+        const titleA = nodeA.title.toLowerCase();
+        const titleB = nodeB.title.toLowerCase();
+        return titleA.localeCompare(titleB);
       },
       updateTitleForPage() {
         let detailTitle;
@@ -649,12 +693,30 @@
           )
         ).then(nodes => {
           this.clearSelections();
-          ContentNode.waitForCopying(nodes.map(n => n.id)).then(() => {
-            this.showSnackbar({
-              text: this.$tr('copiedItems'),
-              actionText: this.$tr('undo'),
-              actionCallback: () => changeTracker.revert(),
-            }).then(() => changeTracker.cleanUp());
+          Promise.allSettled(
+            nodes.map(n =>
+              this.waitForCopyingStatus({
+                contentNodeId: n.id,
+                startingRev: changeTracker._startingRev,
+              })
+            )
+          ).then(results => {
+            let isAllCopySuccess = true;
+            for (const result of results) {
+              if (result.status === 'rejected') {
+                isAllCopySuccess = false;
+              }
+            }
+            if (isAllCopySuccess) {
+              this.showSnackbar({
+                text: this.$tr('copiedItems'),
+                actionText: this.$tr('undo'),
+                actionCallback: () => changeTracker.revert(),
+              }).then(() => changeTracker.cleanUp());
+            } else {
+              this.clearSnackbar();
+              changeTracker.cleanUp();
+            }
           });
         });
       }),
@@ -686,6 +748,7 @@
     },
     $trs: {
       addTopic: 'New folder',
+      SortAlphabetically: 'Sort alphabetically',
       addExercise: 'New exercise',
       uploadFiles: 'Upload files',
       importFromChannels: 'Import from channels',

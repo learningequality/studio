@@ -156,14 +156,23 @@ class ReturnedChanges extends ChangeDispatcher {
     }
 
     const { key, target, position, from_key } = change;
-    // copying takes the ID of the node to copy, so we use `from_key`
-    return resource.resolveTreeInsert({ id: from_key, target, position, isCreate: true }, data => {
-      return transaction(change, () => {
-        // Update the ID on the payload to match the received change, since isCreate=true
-        // would generate new IDs
-        data.payload.id = key;
-        return resource.tableCopy(data);
-      });
+    // 1. Fetch `from_key` node from indexed DB, if not there then
+    // only fetches from server.
+    return resource.get(from_key, false).then(sourceNode => {
+      // 2. Pass the node we get from above to `resolveTreeInsert` as sourceNode.
+      // because its actually the "source" node.
+      return resource.resolveTreeInsert(
+        // copying takes the ID of the node to copy, so we use `from_key`.
+        { id: from_key, target, position, isCreate: true, sourceNode: sourceNode },
+        data => {
+          return transaction(change, () => {
+            // Update the ID on the payload to match the received change, since isCreate=true
+            // would generate new IDs
+            data.payload.id = key;
+            return resource.tableCopy(data);
+          });
+        }
+      );
     });
   }
 
@@ -177,10 +186,17 @@ class ReturnedChanges extends ChangeDispatcher {
     }
 
     // Publish changes associate with the channel, but we open a transaction on contentnode
-    return transaction(change, TABLE_NAMES.CONTENTNODE, () => {
+    return transaction(change, TABLE_NAMES.CONTENTNODE, TABLE_NAMES.CHANGES_TABLE, () => {
       return db
         .table(TABLE_NAMES.CONTENTNODE)
         .where({ channel_id: change.channel_id })
+        .and(node => {
+          const unpublishedNodeIds = db[TABLE_NAMES.CHANGES_TABLE]
+            .where({ table: TABLE_NAMES.CONTENTNODE, key: node.id })
+            .limit(1)
+            .toArray();
+          return unpublishedNodeIds.length === 0;
+        })
         .modify({ changed: false, published: true });
     });
   }

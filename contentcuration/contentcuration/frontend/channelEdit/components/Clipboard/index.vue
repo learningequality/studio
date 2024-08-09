@@ -35,10 +35,10 @@
                     <Checkbox
                       ref="checkbox"
                       class="ma-0 pa-0"
-                      :value="selected"
+                      :inputValue="selected"
                       :label="selectionState ? '' : $tr('selectAll')"
                       :indeterminate="indeterminate"
-                      @click.stop.prevent="goNextSelectionState"
+                      @input="goNextSelectionState"
                     />
                   </VListTileAction>
                 </VSlideXTransition>
@@ -50,7 +50,11 @@
                         class="back-to-clipboard"
                         @click.prevent="resetPreviewNode"
                       >
-                        <span class="link-icon"><Icon color="primary" small>arrow_back</Icon></span>
+                        <span class="link-icon"><Icon
+                          icon="back"
+                          :color="$themeTokens.primary"
+                        />
+                        </span>
                         <span class="link-text">{{ $tr('backToClipboard') }}</span>
                       </KButton>
                     </div>

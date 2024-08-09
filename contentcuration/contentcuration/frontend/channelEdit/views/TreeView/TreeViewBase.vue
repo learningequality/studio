@@ -24,10 +24,10 @@
           :to="viewChannelDetailsLink"
           @click="trackClickEvent('Summary')"
         >
-          <IconButton
+          <KIconButton
             class="toolbar-icon-btn"
+            :tooltip="$tr('channelDetails')"
             icon="info"
-            :text="$tr('channelDetails')"
           />
         </KRouterLink>
         <KRouterLink
@@ -39,17 +39,15 @@
               <Icon
                 v-if="!currentChannel.language"
                 color="red"
-                small
+                icon="error"
                 class="edit-channel-error"
-              >
-                error
-              </Icon>
+              />
             </template>
-            <IconButton
+            <KIconButton
               v-if="canEdit"
               class="toolbar-icon-btn"
               icon="edit"
-              :text="$tr('editChannel')"
+              :tooltip="$tr('editChannel')"
             />
           </VBadge>
         </KRouterLink>
@@ -73,9 +71,10 @@
               v-on="on"
             >
               {{ $formatNumber(errorsInChannel) }}
-              <Icon color="amber">
-                warning
-              </Icon>
+              <KIcon
+                icon="warningIncomplete"
+              />
+
             </div>
           </template>
           <span>{{ $tr('incompleteDescendantsText', { count: errorsInChannel }) }}</span>
@@ -130,7 +129,7 @@
               icon
               v-on="on"
             >
-              <Icon>more_horiz</Icon>
+              <Icon icon="optionsHorizontal" style="font-size: 25px;" />
             </VBtn>
           </template>
           <VList>
@@ -154,12 +153,11 @@
                   <Icon
                     v-if="!currentChannel.language"
                     class="mx-1"
-                    small
                     color="red"
+                    icon="error"
                     style="vertical-align: baseline;"
-                  >
-                    error
-                  </Icon>
+                  />
+
                 </VListTileTitle>
               </VListTile>
             </template>
@@ -204,7 +202,7 @@
         <slot name="extension"></slot>
       </template>
     </ToolBar>
-    <MainNavigationDrawer v-model="drawer" />
+    <MainNavigationDrawer v-model="drawer" color="white" />
     <slot></slot>
 
     <PublishModal
@@ -268,7 +266,7 @@
               fab
               class="clipboard-fab"
             >
-              <Icon>content_paste</Icon>
+              <Icon icon="clipboard" style="font-size: 25px;" />
             </VBtn>
           </template>
         </DraggableRegion>
@@ -314,7 +312,6 @@
   import SavingIndicator from '../../components/edit/SavingIndicator';
   import { DraggableRegions, DraggableUniverses, RouteNames } from '../../constants';
   import MainNavigationDrawer from 'shared/views/MainNavigationDrawer';
-  import IconButton from 'shared/views/IconButton';
   import ToolBar from 'shared/views/ToolBar';
   import ChannelTokenModal from 'shared/views/channel/ChannelTokenModal';
   import OfflineText from 'shared/views/OfflineText';
@@ -330,7 +327,6 @@
     name: 'TreeViewBase',
     components: {
       DraggableRegion,
-      IconButton,
       MainNavigationDrawer,
       ToolBar,
       PublishModal,

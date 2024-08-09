@@ -182,8 +182,9 @@ class StorageSettingsView(PostFormMixin, FormView):
                 "channels": channels,
             },
         )
+
         send_mail(
-            "Kolibri Studio storage request",
+            f"Kolibri Studio storage request from {self.request.user.email}",
             message,
             ccsettings.DEFAULT_FROM_EMAIL,
             [ccsettings.SPACE_REQUEST_EMAIL, self.request.user.email],

@@ -18,7 +18,7 @@ import {
   RELATIVE_TREE_POSITIONS,
   RELATIVE_TREE_POSITIONS_LOOKUP,
   LAST_FETCHED,
-  COPYING_FLAG,
+  COPYING_STATUS,
   TASK_ID,
 } from 'shared/data/constants';
 import { INDEXEDDB_RESOURCES } from 'shared/data/registry';
@@ -140,7 +140,7 @@ export class ChangeTracker {
     // We'll go through each change one by one and revert each.
     //
     // R. Tibbles: I think this could be done in two queries (TODO)
-    return promiseChunk(this._changes.reverse(), 1, ([change]) => {
+    return promiseChunk(this._changes.reverse(), 1, async ([change]) => {
       const resource = INDEXEDDB_RESOURCES[change.table];
       if (!resource) {
         if (process.env.NODE_ENV !== 'production') {
@@ -150,6 +150,16 @@ export class ChangeTracker {
         }
         return Promise.resolve();
       }
+
+      // Query siblings before starting the transaction
+      // to avoid any potential API call inside the transaction
+      let siblings;
+      if (change.type === CHANGE_TYPES.MOVED && change.oldObj) {
+        const { parent } = change.oldObj;
+        siblings = await resource.where({ parent }, false);
+        siblings = siblings.filter(sibling => sibling.id !== change.key);
+      }
+
       return resource.transaction({}, CHANGES_TABLE, () => {
         // If we had created something, we'll delete it
         // Special MOVED case here comes from the operation of COPY then MOVE for duplicating
@@ -170,17 +180,15 @@ export class ChangeTracker {
           const { parent, lft } = change.oldObj;
 
           // Collect the affected node's siblings prior to the change
-          return resource.where({ parent }, false).then(siblings => {
-            // Search the siblings ordered by `lft` to find the first a sibling
-            // where we should move the node, positioned before that sibling
-            const relativeSibling = sortBy(siblings, 'lft').find(sibling => sibling.lft >= lft);
-            if (relativeSibling) {
-              return resource.move(change.key, relativeSibling.id, RELATIVE_TREE_POSITIONS.LEFT);
-            }
+          // Search the siblings ordered by `lft` to find the first a sibling
+          // where we should move the node, positioned before that sibling
+          const relativeSibling = sortBy(siblings, 'lft').find(sibling => sibling.lft >= lft);
+          if (relativeSibling) {
+            return resource.move(change.key, relativeSibling.id, RELATIVE_TREE_POSITIONS.LEFT);
+          }
 
-            // this handles if there were no siblings OR if the deleted node was at the end
-            return resource.move(change.key, parent, RELATIVE_TREE_POSITIONS.LAST_CHILD);
-          });
+          // this handles if there were no siblings OR if the deleted node was at the end
+          return resource.move(change.key, parent, RELATIVE_TREE_POSITIONS.LAST_CHILD);
         } else {
           if (process.env.NODE_ENV !== 'production') {
             /* eslint-disable no-console */
@@ -196,7 +204,7 @@ export class ChangeTracker {
 // These fields should not be included in change objects that we
 // store in the changes table for syncing to the backend
 // as they are only used for tracking state locally
-const ignoredSubFields = [COPYING_FLAG, LAST_FETCHED, TASK_ID];
+const ignoredSubFields = [COPYING_STATUS, LAST_FETCHED, TASK_ID];
 
 function omitIgnoredSubFields(obj) {
   return omit(obj, ignoredSubFields);

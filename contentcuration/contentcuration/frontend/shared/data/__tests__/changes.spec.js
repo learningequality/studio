@@ -16,7 +16,8 @@ import {
   TABLE_NAMES,
   RELATIVE_TREE_POSITIONS,
   LAST_FETCHED,
-  COPYING_FLAG,
+  COPYING_STATUS,
+  COPYING_STATUS_VALUES,
   TASK_ID,
 } from 'shared/data/constants';
 import db from 'shared/data/db';
@@ -124,7 +125,7 @@ describe('Change Types', () => {
       b: 3,
       [LAST_FETCHED]: new Date(),
       [TASK_ID]: '18292183921',
-      [COPYING_FLAG]: true,
+      [COPYING_STATUS]: COPYING_STATUS_VALUES.COPYING,
     };
     const change = new UpdatedChange({
       key: '1',
@@ -152,7 +153,7 @@ describe('Change Types', () => {
       b: 2,
       [LAST_FETCHED]: new Date(),
       [TASK_ID]: '18292183921',
-      [COPYING_FLAG]: true,
+      [COPYING_STATUS]: COPYING_STATUS_VALUES.COPYING,
     };
     const change = new UpdatedChange({
       key: '1',

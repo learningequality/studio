@@ -13,9 +13,9 @@
           <VTooltip v-if="channel.public && !channel.deleted" bottom z-index="200" lazy>
             <template #activator="{ on }">
               <span class="px-1 py-2" v-on="on">
-                <Icon color="light-green accent-4">
-                  $vuetify.icons.indicator
-                </Icon>
+                <Icon
+                  icon="unpublishedResource"
+                />
               </span>
             </template>
             <span>This channel is public</span>
@@ -38,9 +38,9 @@
             target="_blank"
             class="ma-0"
           >
-            <Icon small>
-              launch
-            </Icon>
+            <Icon
+              icon="openNewTab"
+            />
           </VBtn>
         </VFlex>
       </VLayout>
@@ -73,9 +73,9 @@
         :to="searchChannelEditorsLink"
         target="_blank"
       >
-        <Icon small>
-          open_in_new
-        </Icon>
+        <Icon
+          icon="openNewTab"
+        />
       </VBtn>
     </td>
     <td class="text-xs-right">
@@ -109,9 +109,9 @@
         />
         <span v-else class="grey--text">Not set</span>
         <VBtn small icon flat>
-          <Icon small>
-            edit
-          </Icon>
+          <Icon
+            icon="edit"
+          />
         </VBtn>
         <template #input>
           <VTextField
@@ -145,9 +145,9 @@
         />
         <span v-else class="grey--text">Not set</span>
         <VBtn small icon flat>
-          <Icon small>
-            edit
-          </Icon>
+          <Icon
+            icon="edit"
+          />
         </VBtn>
         <template #input>
           <VTextField

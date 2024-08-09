@@ -3,10 +3,9 @@
   <div>
     <VToolbar
       app
-      dark
       :clipped-left="!$isRTL"
       :clipped-right="$isRTL"
-      color="primary"
+      color="appBar"
       height="56"
       :tabs="Boolean($slots.tabs)"
     >
@@ -15,11 +14,14 @@
         v-else
         :href="homeLink"
         exact
-        color="white"
+        color="appBar"
         class="ma-0"
         style="border-radius: 8px;"
       >
-        <KolibriLogo />
+        <KLogo
+          altText="Kolibri Logo with background"
+          :size="36"
+        />
       </VToolbarSideIcon>
 
       <VToolbarTitle>
@@ -31,21 +33,35 @@
           <Menu>
             <template #activator="{ on }">
               <VBtn flat style="text-transform: none;" v-on="on">
-                <Icon>person</Icon>
+                <KIconButton
+                  :disabled="true"
+                  icon="person"
+                  color="black"
+                />
                 <span class="mx-2 subheading">{{ user.first_name }}</span>
-                <Icon>arrow_drop_down</Icon>
+                <KIconButton
+                  :disabled="true"
+                  icon="dropdown"
+                  color="black"
+                />
               </VBtn>
             </template>
             <VList>
               <VListTile v-if="user.is_admin" :href="administrationLink">
                 <VListTileAction>
-                  <Icon>people</Icon>
+                  <KIconButton
+                    :disabled="true"
+                    icon="people"
+                  />
                 </VListTileAction>
                 <VListTileTitle v-text="$tr('administration')" />
               </VListTile>
               <VListTile :href="settingsLink">
                 <VListTileAction>
-                  <Icon>settings</Icon>
+                  <KIconButton
+                    :disabled="true"
+                    icon="settings"
+                  />
                 </VListTileAction>
                 <VListTileTitle v-text="$tr('settings')" />
               </VListTile>
@@ -53,7 +69,10 @@
                 @click="showLanguageModal = true"
               >
                 <VListTileAction>
-                  <Icon>language</Icon>
+                  <KIconButton
+                    :disabled="true"
+                    icon="language"
+                  />
                 </VListTileAction>
                 <VListTileTitle v-text="$tr('changeLanguage')" />
               </VListTile>
@@ -62,13 +81,19 @@
                 target="_blank"
               >
                 <VListTileAction>
-                  <Icon>open_in_new</Icon>
+                  <KIconButton
+                    :disabled="true"
+                    icon="openNewTab"
+                  />
                 </VListTileAction>
                 <VListTileTitle v-text="$tr('help')" />
               </VListTile>
               <VListTile @click="logout">
                 <VListTileAction>
-                  <Icon>exit_to_app</Icon>
+                  <KIconButton
+                    :disabled="true"
+                    icon="logout"
+                  />
                 </VListTileAction>
                 <VListTileTitle v-text="$tr('logOut')" />
               </VListTile>
@@ -79,20 +104,28 @@
           <Menu>
             <template #activator="{ on }">
               <VBtn flat style="text-transform: none;" v-on="on">
-                <Icon>person</Icon>
-                <Icon>arrow_drop_down</Icon>
+                <Icon
+                  icon="person"
+                />
+                <Icon
+                  icon="dropdown"
+                />
               </VBtn>
             </template>
             <VList>
               <VListTile :href="'/accounts/'">
                 <VListTileAction>
-                  <Icon>exit_to_app</Icon>
+                  <Icon
+                    icon="login"
+                  />
                 </VListTileAction>
                 <VListTileTitle v-text="$tr('logIn')" />
               </VListTile>
               <VListTile @click="showLanguageModal = true">
                 <VListTileAction>
-                  <Icon>language</Icon>
+                  <Icon
+                    icon="language"
+                  />
                 </VListTileAction>
                 <VListTileTitle v-text="$tr('changeLanguage')" />
               </VListTile>
@@ -124,7 +157,6 @@
 <script>
 
   import { mapActions, mapState, mapGetters } from 'vuex';
-  import KolibriLogo from './KolibriLogo';
   import Tabs from 'shared/views/Tabs';
   import MainNavigationDrawer from 'shared/views/MainNavigationDrawer';
   import LanguageSwitcherModal from 'shared/languageSwitcher/LanguageSwitcherModal';
@@ -132,7 +164,6 @@
   export default {
     name: 'AppBar',
     components: {
-      KolibriLogo,
       LanguageSwitcherModal,
       MainNavigationDrawer,
       Tabs,

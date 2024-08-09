@@ -63,15 +63,15 @@
                         :style="{ transform: toggleTransform }"
                         @click.stop="toggle"
                       >
-                        <Icon>keyboard_arrow_right</Icon>
+                        <Icon icon="chevronRight" />
                       </VBtn>
                     </VFlex>
                     <VFlex shrink class="px-1">
                       <VTooltip :disabled="!hasTitle(node)" bottom open-delay="500" lazy>
                         <template #activator="{ on }">
-                          <Icon v-on="on">
+                          <VIconWrapper v-on="on">
                             {{ node.resource_count ? "folder" : "folder_open" }}
-                          </Icon>
+                          </VIconWrapper>
                         </template>
                         <span>{{ getTitle(node) }}</span>
                       </VTooltip>
@@ -104,8 +104,9 @@
                     >
                       <ContentNodeCopyTaskProgress
                         class="progress-loader"
-                        :taskId="taskId"
+                        :node="node"
                         size="24"
+                        showTooltip
                       />
                     </VFlex>
                     <VFlex
@@ -117,6 +118,7 @@
                         v-if="loading"
                         class="mx-3"
                         indeterminate
+                        color="loading"
                         size="15"
                         width="2"
                       />
@@ -194,7 +196,6 @@
   import DraggableItem from 'shared/views/draggable/DraggableItem';
   import DraggableHandle from 'shared/views/draggable/DraggableHandle';
   import { titleMixin } from 'shared/mixins';
-  import { COPYING_FLAG, TASK_ID } from 'shared/data/constants';
   import { DropEffect, EffectAllowed } from 'shared/mixins/draggable/constants';
   import { objectValuesValidator } from 'shared/mixins/draggable/utils';
 
@@ -263,7 +264,12 @@
       ...mapGetters('currentChannel', ['canEdit']),
       ...mapState('draggable', ['activeDraggableUniverse']),
       ...mapGetters('draggable', ['deepestActiveDraggable']),
-      ...mapGetters('contentNode', ['getContentNode', 'getContentNodeChildren', 'nodeExpanded']),
+      ...mapGetters('contentNode', [
+        'getContentNode',
+        'getContentNodeChildren',
+        'nodeExpanded',
+        'isNodeInCopyingState',
+      ]),
       node() {
         return this.getContentNode(this.nodeId);
       },
@@ -301,10 +307,7 @@
         return EffectAllowed.NONE;
       },
       copying() {
-        return this.node && this.node[COPYING_FLAG];
-      },
-      taskId() {
-        return this.node && this.node[TASK_ID];
+        return this.node && this.isNodeInCopyingState(this.node.id);
       },
       activeDropEffect() {
         // Don't allow dropping into itself

@@ -18,18 +18,17 @@
           v-for="channel in listChannels"
           :key="channel.id"
           flat
-          class="px-3"
+          hover
+          class="list-card-hover px-3"
         >
           <Checkbox
             v-model="selectedChannels"
             color="primary"
-            data-test="checkbox"
+            :data-test="`checkbox-${channel.id}`"
             :value="channel.id"
             class="channel ma-0"
           >
-            <template #label>
-              <ChannelItem :channelId="channel.id" />
-            </template>
+            <ChannelItem :channelId="channel.id" />
           </Checkbox>
         </VCard>
       </template>
@@ -129,16 +128,13 @@
     margin: 0;
   }
 
-  .channel {
-    /deep/ label,
-    /deep/ .v-input__control {
-      width: 100% !important;
-    }
+  .channel /deep/ .k-checkbox {
+    vertical-align: middle;
+  }
 
-    &:hover {
-      /* stylelint-disable-next-line custom-property-pattern */
-      background-color: var(--v-channelHighlightDefault-base);
-    }
+  .list-card-hover {
+    margin: 16px;
+    box-shadow: 0 3px 5px 0 rgba(0, 0, 0, 0.2);
   }
 
 </style>

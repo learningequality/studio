@@ -60,12 +60,9 @@
                       </VFlex>
                       <VFlex v-if="!isTopic && isCoach" class="px-1">
                         <Icon
-                          color="roleVisibilityCoach"
-                          small
+                          icon="coachContent"
                           style="vertical-align: middle;"
-                        >
-                          local_library
-                        </Icon>
+                        />
                       </VFlex>
                       <VFlex>
                         <ContentNodeValidator
@@ -103,13 +100,10 @@
                         <template #activator="{ on }">
                           <div style="display: inline-block;" v-on="on">
                             <Icon
-                              color="roleVisibilityCoach"
-                              small
+                              icon="coachContent"
                               class="mx-1"
                               style="vertical-align: sub;"
-                            >
-                              local_library
-                            </Icon>
+                            />
                             <span v-if="isTopic">
                               {{ $formatNumber(node.coach_count) }}
                             </span>
@@ -153,12 +147,12 @@
                 </VListTileContent>
                 <template v-if="!copying">
                   <VListTileAction class="actions-end-col">
-                    <IconButton
+                    <KIconButton
                       v-if="isTopic"
                       :aria-hidden="hover"
                       data-test="btn-chevron"
                       icon="chevronRight"
-                      :text="$tr('openTopic')"
+                      :tooltip="$tr('openTopic')"
                       size="small"
                       @click="$emit('topicChevronClick')"
                     />
@@ -167,10 +161,20 @@
                 </template>
                 <template v-else>
                   <div class="copying">
-                    <p class="caption grey--text pr-2 pt-1">
-                      {{ $tr("copyingTask") }}
+                    <p class="caption pr-3">
+                      <span
+                        class="grey--text"
+                        :style="{ 'cursor': hasCopyingErrored ? 'default' : 'progress' }"
+                      >
+                        {{ copyingMessage }}
+                      </span>
+                      <slot name="copy-fail-retry-action"></slot>
                     </p>
-                    <ContentNodeCopyTaskProgress :taskId="taskId" size="30" />
+                    <ContentNodeCopyTaskProgress
+                      :node="node"
+                      size="30"
+                    />
+                    <slot name="copy-fail-remove-action"></slot>
                   </div>
                   <div class="disabled-overlay"></div>
                 </template>
@@ -190,6 +194,7 @@
 
 <script>
 
+  import { mapGetters } from 'vuex';
   import camelCase from 'lodash/camelCase';
   import ContentNodeCopyTaskProgress from '../../views/progress/ContentNodeCopyTaskProgress';
   import ContentNodeChangedIcon from '../ContentNodeChangedIcon';
@@ -198,12 +203,10 @@
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import { RolesNames } from 'shared/leUtils/Roles';
   import ImageOnlyThumbnail from 'shared/views/files/ImageOnlyThumbnail';
-  import IconButton from 'shared/views/IconButton';
   import ToggleText from 'shared/views/ToggleText';
   import ContextMenuCloak from 'shared/views/ContextMenuCloak';
   import DraggableHandle from 'shared/views/draggable/DraggableHandle';
   import { titleMixin, metadataTranslationMixin } from 'shared/mixins';
-  import { COPYING_FLAG, TASK_ID } from 'shared/data/constants';
   import { EffectAllowed } from 'shared/mixins/draggable/constants';
   import ContentNodeLearningActivityIcon from 'shared/views/ContentNodeLearningActivityIcon';
 
@@ -213,7 +216,6 @@
       DraggableHandle,
       ContextMenuCloak,
       ImageOnlyThumbnail,
-      IconButton,
       ContentNodeValidator,
       ContentNodeChangedIcon,
       ToggleText,
@@ -256,6 +258,7 @@
       };
     },
     computed: {
+      ...mapGetters('contentNode', ['isNodeInCopyingState', 'hasNodeCopyingErrored']),
       isCompact() {
         return this.compact || !this.$vuetify.breakpoint.mdAndUp;
       },
@@ -290,10 +293,17 @@
         return !this.$scopedSlots['context-menu'] || this.copying;
       },
       copying() {
-        return this.node[COPYING_FLAG];
+        return this.isNodeInCopyingState(this.node.id);
       },
-      taskId() {
-        return this.node[TASK_ID];
+      hasCopyingErrored() {
+        return this.hasNodeCopyingErrored(this.node.id);
+      },
+      copyingMessage() {
+        if (this.hasCopyingErrored) {
+          return this.$tr('copyingError');
+        } else {
+          return this.$tr('copyingTask');
+        }
       },
     },
     watch: {
@@ -353,12 +363,7 @@
         '{value, number, integer} {value, plural, one {resource for coaches} other {resources for coaches}}',
       coachTooltip: 'Resource for coaches',
       copyingTask: 'Copying',
-      /* eslint-disable kolibri/vue-no-unused-translations */
-      /**
-       * String for handling copy failures
-       */
       copyingError: 'Copy failed.',
-      /* eslint-enable kolibri/vue-no-unused-translations */
     },
   };
 
@@ -404,16 +409,16 @@
   .copying {
     z-index: 2;
     display: flex;
-    padding-top: 44px;
-    cursor: progress;
+    align-items: center;
+    align-self: center;
+    min-width: max-content;
+    line-height: 1.6;
+    pointer-events: auto;
+    cursor: default;
 
     p,
     div {
-      margin: 0 2px;
-    }
-
-    .compact & {
-      padding-top: 12px;
+      margin: 0;
     }
   }
 
@@ -466,6 +471,7 @@
   }
 
   .description-col {
+    flex-shrink: 1 !important;
     width: calc(100% - @thumbnail-width - 206px);
     word-break: break-word;
 

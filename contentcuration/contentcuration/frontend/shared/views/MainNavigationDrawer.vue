@@ -8,9 +8,12 @@
       style="z-index: 1000;"
       :right="$isRTL"
     >
-      <VToolbar color="primary" dark>
+      <VToolbar :color="color">
         <VBtn flat icon :tabindex="handleclickTab" @click="drawer = false">
-          <Icon>clear</Icon>
+          <KIconButton
+            icon="clear"
+            color="black"
+          />
         </VBtn>
         <VToolbarTitle class="notranslate">
           Kolibri Studio
@@ -19,7 +22,10 @@
       <VList>
         <VListTile :href="channelsLink" :tabindex="handleclickTab">
           <VListTileAction>
-            <Icon>home</Icon>
+            <KIconButton
+              :disabled="true"
+              icon="home"
+            />
           </VListTileAction>
           <VListTileContent class="subheading">
             <VListTileTitle>{{ $tr('channelsLink') }}</VListTileTitle>
@@ -27,7 +33,10 @@
         </VListTile>
         <VListTile v-if="user.is_admin" :href="administrationLink" :tabindex="handleclickTab">
           <VListTileAction>
-            <Icon>people</Icon>
+            <KIconButton
+              :disabled="true"
+              icon="people"
+            />
           </VListTileAction>
           <VListTileContent class="subheading">
             <VListTileTitle>{{ $tr('administrationLink') }}</VListTileTitle>
@@ -36,7 +45,10 @@
         </VListTile>
         <VListTile :href="settingsLink" :tabindex="handleclickTab" @click="trackClick('Settings')">
           <VListTileAction>
-            <Icon>settings</Icon>
+            <KIconButton
+              :disabled="true"
+              icon="settings"
+            />
           </VListTileAction>
           <VListTileContent class="subheading">
             <VListTileTitle>{{ $tr('settingsLink') }}</VListTileTitle>
@@ -44,7 +56,10 @@
         </VListTile>
         <VListTile @click="openLanguageModal">
           <VListTileAction>
-            <Icon>language</Icon>
+            <KIconButton
+              :disabled="true"
+              icon="language"
+            />
           </VListTileAction>
           <VListTileContent class="subheading">
             <VListTileTitle v-text="$tr('changeLanguage')" />
@@ -57,7 +72,10 @@
           @click="trackClick('Help')"
         >
           <VListTileAction>
-            <Icon>open_in_new</Icon>
+            <KIconButton
+              :disabled="true"
+              icon="openNewTab"
+            />
           </VListTileAction>
           <VListTileContent class="subheading">
             <VListTileTitle>{{ $tr('helpLink') }}</VListTileTitle>
@@ -65,7 +83,10 @@
         </VListTile>
         <VListTile @click="logout">
           <VListTileAction>
-            <Icon>exit_to_app</Icon>
+            <KIconButton
+              :disabled="true"
+              icon="logout"
+            />
           </VListTileAction>
           <VListTileContent class="subheading">
             <VListTileTitle>{{ $tr('logoutLink') }}</VListTileTitle>
@@ -73,7 +94,11 @@
         </VListTile>
       </VList>
       <VContainer>
-        <KolibriLogo :height="75" />
+        <KLogo
+          altText="Kolibri logo"
+          :showBackground="true"
+          :size="88"
+        />
         <ActionLink
           :text="$tr('copyright', { year: new Date().getFullYear() })"
           href="https://learningequality.org/"
@@ -106,19 +131,21 @@
 <script>
 
   import { mapActions, mapState } from 'vuex';
-  import KolibriLogo from './KolibriLogo';
   import LanguageSwitcherModal from 'shared/languageSwitcher/LanguageSwitcherModal';
 
   export default {
     name: 'MainNavigationDrawer',
     components: {
-      KolibriLogo,
       LanguageSwitcherModal,
     },
     props: {
       value: {
         type: Boolean,
         default: false,
+      },
+      color: {
+        type: String,
+        default: 'appBar',
       },
     },
     data() {

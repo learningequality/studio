@@ -1,7 +1,7 @@
 <template>
 
   <span v-if="noTitle && !hideTitleValidation" class="red--text title">
-    <Icon color="red">error</Icon>
+    <VIconWrapper color="red">error</VIconWrapper>
     <span class="mx-1">
       {{ $tr('missingTitle') }}
     </span>
@@ -9,9 +9,9 @@
   <span v-else-if="error" class="mx-2">
     <VTooltip bottom lazy>
       <template #activator="{ on }">
-        <Icon color="red" v-on="on">
+        <VIconWrapper :color="$themePalette.red.v_1100" v-on="on">
           error
-        </Icon>
+        </VIconWrapper>
       </template>
       <span>{{ error }}</span>
     </VTooltip>
@@ -19,9 +19,9 @@
   <span v-else-if="warning" class="mx-2">
     <VTooltip bottom lazy>
       <template #activator="{ on }">
-        <Icon color="amber" v-on="on">
+        <VIconWrapper :color="$themePalette.yellow.v_1100" v-on="on">
           warning
-        </Icon>
+        </VIconWrapper>
       </template>
       <span>{{ warning }}</span>
     </VTooltip>

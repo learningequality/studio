@@ -21,10 +21,8 @@
       <VContainer class="filters pa-3">
         <VToolbar v-if="$vuetify.breakpoint.xsOnly" color="transparent" flat dense>
           <VSpacer />
-          <VBtn icon flat style="text-align: right;">
-            <Icon @click="drawer = false">
-              clear
-            </Icon>
+          <VBtn icon flat style="text-align: right;" @click="drawer = false">
+            <Icon icon="clear" />
           </VBtn>
         </VToolbar>
 
@@ -67,7 +65,6 @@
         <Checkbox
           v-if="loggedIn"
           v-model="bookmark"
-          color="primary"
           :label="$tr('starredLabel')"
         />
 
@@ -75,13 +72,19 @@
         <div class="subheading">
           {{ $tr('includesLabel') }}
         </div>
-        <Checkbox v-model="coach" color="primary">
-          <template #label>
-            <span class="text-xs-left">{{ $tr('coachLabel') }}</span>
+        <Checkbox
+          v-model="coach"
+        >
+          <div class="label-container">
+            {{ $tr('coachLabel') }}
+
             <HelpTooltip :text="$tr('coachDescription')" bottom class="px-2" />
-          </template>
+          </div>
         </Checkbox>
-        <Checkbox v-model="subtitles" color="primary" :label="$tr('subtitlesLabel')" />
+        <Checkbox
+          v-model="subtitles"
+          :label="$tr('subtitlesLabel')"
+        />
         <ActionLink
           :to="faqLink"
           target="_blank"
@@ -89,11 +92,11 @@
           :text="$tr('frequentlyAskedQuestionsLink')"
         />
       </VContainer>
-      <VFooter class="pb-3 pt-2 px-4" color="transparent" height="64">
+      <VFooter class="pb-3 pt-2 px-4" color="transparent" height="100">
         <div>
           <VImg
-            height="24"
-            width="78"
+            height="60"
+            width="90"
             class="mb-1 mr-2"
             contain
             :src="require('shared/images/le-logo.svg')"
@@ -231,12 +234,17 @@
 
   .filters {
     width: 100%;
-    height: calc(100% - 64px);
+    height: calc(100% - 100px);
     overflow: auto;
   }
 
   /deep/ .v-label * {
     vertical-align: bottom;
+  }
+
+  .label-container {
+    display: flex;
+    align-items: center;
   }
 
 </style>

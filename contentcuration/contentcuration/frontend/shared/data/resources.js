@@ -18,7 +18,8 @@ import {
   CHANGES_TABLE,
   RELATIVE_TREE_POSITIONS,
   TABLE_NAMES,
-  COPYING_FLAG,
+  COPYING_STATUS,
+  COPYING_STATUS_VALUES,
   TASK_ID,
   CURRENT_USER,
   MAX_REV_KEY,
@@ -299,12 +300,12 @@ class IndexedDBResource {
           .map(datum => {
             const id = this.getIdValue(datum);
             datum[LAST_FETCHED] = now;
-            // Persist TASK_ID and COPYING_FLAG attributes when directly fetching from the server
+            // Persist TASK_ID and COPYING_STATUS attributes when directly fetching from the server
             if (currentMap[id] && currentMap[id][TASK_ID]) {
               datum[TASK_ID] = currentMap[id][TASK_ID];
             }
-            if (currentMap[id] && currentMap[id][COPYING_FLAG]) {
-              datum[COPYING_FLAG] = currentMap[id][COPYING_FLAG];
+            if (currentMap[id] && currentMap[id][COPYING_STATUS]) {
+              datum[COPYING_STATUS] = currentMap[id][COPYING_STATUS];
             }
             // If we have an updated change, apply the modifications here
             if (
@@ -820,33 +821,6 @@ class Resource extends mix(APIResource, IndexedDBResource) {
     });
   }
 
-  createModel(data) {
-    return client.post(this.collectionUrl(), data).then(response => {
-      const now = Date.now();
-      const data = response.data;
-      data[LAST_FETCHED] = now;
-      // Directly write to the table, rather than using the add method
-      // to avoid creating change events that we would sync back to the server.
-      return this.transaction({ mode: 'rw' }, () => {
-        return this.table.put(data).then(() => {
-          return data;
-        });
-      });
-    });
-  }
-
-  deleteModel(id) {
-    return client.delete(this.modelUrl(id)).then(() => {
-      // Directly write to the table, rather than using the delete method
-      // to avoid creating change events that we would sync back to the server.
-      return this.transaction({ mode: 'rw' }, () => {
-        return this.table.delete(id).then(() => {
-          return true;
-        });
-      });
-    });
-  }
-
   /**
    * @param {String} id
    * @param {Boolean} [doRefresh=true] -- Whether or not to refresh async from server
@@ -873,6 +847,27 @@ class Resource extends mix(APIResource, IndexedDBResource) {
       }
 
       return obj;
+    });
+  }
+}
+
+/**
+ * Resource that allows directly creating through the API,
+ * rather than through IndexedDB. API must explicitly support this.
+ */
+class CreateModelResource extends Resource {
+  createModel(data) {
+    return client.post(this.collectionUrl(), data).then(response => {
+      const now = Date.now();
+      const data = response.data;
+      data[LAST_FETCHED] = now;
+      // Directly write to the table, rather than using the add method
+      // to avoid creating change events that we would sync back to the server.
+      return this.transaction({ mode: 'rw' }, () => {
+        return this.table.put(data).then(() => {
+          return data;
+        });
+      });
     });
   }
 }
@@ -1017,7 +1012,7 @@ export const Bookmark = new Resource({
   getUserId: getUserIdFromStore,
 });
 
-export const Channel = new Resource({
+export const Channel = new CreateModelResource({
   tableName: TABLE_NAMES.CHANNEL,
   urlName: 'channel',
   indexFields: ['name', 'language'],
@@ -1362,6 +1357,7 @@ export const ContentNode = new TreeResource({
         return Promise.all([getNode, this.where({ parent: parent.id }, false)]).then(
           ([node, siblings]) => {
             let lft = 1;
+            siblings = siblings.filter(s => s.id !== id);
             if (siblings.length) {
               // If we're creating, we don't need to worry about passing the ID
               lft = this.getNewSortOrder(isCreate ? null : id, target, position, siblings);
@@ -1507,6 +1503,53 @@ export const ContentNode = new TreeResource({
     });
   },
 
+  /**
+   * Figures out the new target and position for the failed copy node.
+   * And then queues a CopyChange object for syncing to the backend.
+   * @param {string} id
+   * @returns {Promise}
+   */
+  retryCopyChange(id) {
+    // Get the latest change for contentnode `id` that has an error and is of copy type.
+    const change = db[CHANGES_TABLE].orderBy('rev')
+      .filter(
+        change =>
+          change.key === id &&
+          change.table === this.tableName &&
+          (change.errors || change.errors === '') &&
+          change.type === CHANGE_TYPES.COPIED
+      )
+      .last();
+
+    // Figure out the new target and position.
+    return this.table.get(id).then(failedCopyNode => {
+      const target = this.table
+        .orderBy('lft')
+        .filter(
+          node =>
+            node.id !== id &&
+            node.parent === failedCopyNode.parent &&
+            node.lft <= failedCopyNode.lft &&
+            node[COPYING_STATUS] !== COPYING_STATUS_VALUES.FAILED &&
+            node[COPYING_STATUS] !== COPYING_STATUS_VALUES.COPYING
+        )
+        .last();
+
+      return Promise.all([change, target]).then(([change, target]) => {
+        if (target) {
+          change.target = target.id;
+          change.position = RELATIVE_TREE_POSITIONS.RIGHT;
+        } else {
+          change.target = failedCopyNode.parent;
+          change.position = RELATIVE_TREE_POSITIONS.FIRST_CHILD;
+        }
+
+        // Fire up the change object to sync.
+        this._saveAndQueueChange(new CopiedChange(change));
+      });
+    });
+  },
+
   async tableCopy({ node, parent, payload }) {
     payload = {
       ...node,
@@ -1522,7 +1565,7 @@ export const ContentNode = new TreeResource({
       root_id: parent.root_id,
       // Set this node as copying until we get confirmation from the
       // backend that it has finished copying
-      [COPYING_FLAG]: true,
+      [COPYING_STATUS]: COPYING_STATUS_VALUES.COPYING,
       // Set to null, but this should update to a task id to track the copy
       // task once it has been initiated
       [TASK_ID]: null,
@@ -1596,7 +1639,9 @@ export const ContentNode = new TreeResource({
     const values = [nodeId, channelId];
     return this.table.get({ '[node_id+channel_id]': values }).then(node => {
       if (!node) {
-        return this.fetchCollection({ _node_id_channel_id_: values }).then(nodes => nodes[0]);
+        return this.fetchCollection({ '[node_id+channel_id]__in': [values] }).then(
+          nodes => nodes[0]
+        );
       }
       return node;
     });
@@ -1604,25 +1649,60 @@ export const ContentNode = new TreeResource({
   getChannelId: getChannelFromChannelScope,
 
   /**
-   * Waits for copying of content nodes to complete for all ids referenced in `ids` array
-   * @param {string[]} ids
+   * Waits for copying of contentnode to complete for id referenced in `id`.
+   * @param {string} id
+   * @param {Number} startingRev -- the revision from which we start looking for
+   *                                success or failure change objects.
    * @returns {Promise<void>}
    */
-  waitForCopying(ids) {
-    const observable = Dexie.liveQuery(() => {
-      return this.table
+  waitForCopying(id, startingRev) {
+    const observable = Dexie.liveQuery(async () => {
+      let copy_success_flag = 0;
+      let change_error_flag = 0;
+
+      copy_success_flag = await this.table
         .where('id')
-        .anyOf(ids)
-        .filter(node => !node[COPYING_FLAG])
-        .toArray();
+        .equals(id)
+        .filter(node => node[COPYING_STATUS] === COPYING_STATUS_VALUES.SUCCESS)
+        .count();
+
+      if (copy_success_flag === 1) {
+        return {
+          copy_success_flag,
+          change_error_flag,
+        };
+      }
+
+      change_error_flag = await db[CHANGES_TABLE].where('[table+key]')
+        .equals([this.tableName, id])
+        .filter(change => {
+          if (
+            (change['errors'] || change['errors'] === '') &&
+            change['type'] === CHANGE_TYPES.COPIED
+          ) {
+            if (!startingRev || change['rev'] > startingRev) {
+              return true;
+            }
+          }
+          return false;
+        })
+        .count();
+
+      return {
+        copy_success_flag,
+        change_error_flag,
+      };
     });
 
     return new Promise((resolve, reject) => {
       const subscription = observable.subscribe({
         next(result) {
-          if (result.length === ids.length) {
+          if (result.copy_success_flag) {
             subscription.unsubscribe();
             resolve();
+          } else if (result.change_error_flag) {
+            subscription.unsubscribe();
+            reject();
           }
         },
         error() {
@@ -1634,7 +1714,7 @@ export const ContentNode = new TreeResource({
   },
 });
 
-export const ChannelSet = new Resource({
+export const ChannelSet = new CreateModelResource({
   tableName: TABLE_NAMES.CHANNELSET,
   urlName: 'channelset',
   getUserId: getUserIdFromStore,
@@ -1664,6 +1744,10 @@ export const Invitation = new Resource({
 export const SavedSearch = new Resource({
   tableName: TABLE_NAMES.SAVEDSEARCH,
   urlName: 'savedsearch',
+
+  getUserId(obj) {
+    return obj.saved_by;
+  },
 });
 
 export const User = new Resource({
@@ -1672,7 +1756,7 @@ export const User = new Resource({
   uuid: false,
 
   updateAsAdmin(id, changes) {
-    return client.patch(window.Urls.adminUsersDetail(id), changes).then(() => {
+    return client.post(window.Urls.adminUsersAccept(id)).then(() => {
       return this.transaction({ mode: 'rw' }, () => {
         return this.table.update(id, changes);
       });

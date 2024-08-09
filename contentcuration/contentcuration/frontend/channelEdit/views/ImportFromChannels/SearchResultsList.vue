@@ -21,9 +21,7 @@
       <VFlex class="pl-4">
         <VContainer v-if="loadFailed">
           <p class="text-xs-center">
-            <Icon color="red">
-              error
-            </Icon>
+            <Icon icon="error" />
           </p>
           <p class="text-xs-center">
             {{ $tr('failedToLoad') }}
@@ -62,9 +60,9 @@
               <VFlex class="px-1" shrink>
                 <Checkbox
                   :key="`checkbox-${node.id}`"
-                  :input-value="isSelected(node)"
+                  :inputValue="isSelected(node)"
                   class="mt-0 pt-0"
-                  @change="toggleSelected(node)"
+                  @input="toggleSelected(node)"
                 />
               </VFlex>
               <VFlex shrink grow style="width: 100%;">

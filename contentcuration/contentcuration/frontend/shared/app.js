@@ -47,6 +47,7 @@ import Vuetify, {
   VFooter,
   VForm,
   VHover,
+  VIcon,
   VImg,
   VInput,
   VLayout,
@@ -108,17 +109,19 @@ import VueIntl from 'vue-intl';
 import Croppa from 'vue-croppa';
 import { Workbox, messageSW } from 'workbox-window';
 import KThemePlugin from 'kolibri-design-system/lib/KThemePlugin';
+import trackInputModality from 'kolibri-design-system/lib/styles/trackInputModality';
 
 import AnalyticsPlugin from './analytics/plugin';
 import { theme, icons } from 'shared/vuetify';
 
 import { i18nSetup } from 'shared/i18n';
 
-import './styles/vuetify.css';
+import './styles/vuetify.scss';
 import 'shared/styles/main.less';
 import Base from 'shared/Base.vue';
 import urls from 'shared/urls';
 import ActionLink from 'shared/views/ActionLink';
+import Icon from 'shared/views/Icon';
 import Menu from 'shared/views/Menu';
 import { initializeDB, resetDB } from 'shared/data';
 import { Session, injectVuexStore } from 'shared/data/resources';
@@ -191,6 +194,7 @@ Vue.use(Vuetify, {
     VFooter,
     VForm,
     VHover,
+    VIcon,
     VImg,
     VInput,
     VLayout,
@@ -256,6 +260,7 @@ Vue.use(AnalyticsPlugin, { dataLayer: window.dataLayer });
 // Register global components
 Vue.component('ActionLink', ActionLink);
 Vue.component('Menu', Menu);
+Vue.component('Icon', Icon);
 
 function initiateServiceWorker() {
   // Second conditional must be removed if you are doing dev work on the service
@@ -305,6 +310,7 @@ function initiateServiceWorker() {
 export let rootVue;
 
 export default async function startApp({ store, router, index }) {
+  trackInputModality();
   await initiateServiceWorker();
   await initializeDB();
   await i18nSetup();

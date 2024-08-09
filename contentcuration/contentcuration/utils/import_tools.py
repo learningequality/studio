@@ -99,10 +99,10 @@ def import_channel(source_id, target_id=None, download_url=None, editor=None, lo
 
         # Start by creating channel
         log.info("Creating channel...")
-        channel, root_pk = create_channel(conn, target_id)
-        if editor:
-            channel.editors.add(models.User.objects.get(email=editor))
-            channel.save()
+        editor = models.User.objects.get(email=editor)
+        channel, root_pk = create_channel(conn, target_id, editor)
+        channel.editors.add(editor)
+        channel.save()
 
         # Create root node
         root = models.ContentNode.objects.create(
@@ -140,7 +140,7 @@ def import_channel(source_id, target_id=None, download_url=None, editor=None, lo
     log.info("\n\n********** IMPORT COMPLETE **********\n\n")
 
 
-def create_channel(cursor, target_id):
+def create_channel(cursor, target_id, editor):
     """ create_channel: Create channel at target id
         Args:
             cursor (sqlite3.Connection): connection to export database
@@ -150,7 +150,7 @@ def create_channel(cursor, target_id):
     id, name, description, thumbnail, root_pk, version, last_updated = cursor.execute(
         'SELECT id, name, description, thumbnail, root_pk, version, last_updated FROM {table}'
         .format(table=CHANNEL_TABLE)).fetchone()
-    channel, is_new = models.Channel.objects.get_or_create(pk=target_id)
+    channel, is_new = models.Channel.objects.get_or_create(pk=target_id, actor_id=editor.id)
     channel.name = name
     channel.description = description
     channel.thumbnail = write_to_thumbnail_file(thumbnail)

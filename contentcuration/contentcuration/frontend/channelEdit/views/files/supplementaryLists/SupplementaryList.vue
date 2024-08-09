@@ -49,9 +49,7 @@
           <VSpacer />
           <VListTileAction v-if="addingFile">
             <VBtn icon @click="reset">
-              <Icon>
-                clear
-              </Icon>
+              <Icon icon="clear" />
             </VBtn>
           </VListTileAction>
         </VListTile>
