@@ -70,8 +70,8 @@
                       <MoveModal
                         v-if="allowMove && moveModalOpen"
                         ref="moveModal"
-                        :moveNodeIds="selectedSourceNodeIds"
                         v-model="moveModalOpen"
+                        :moveNodeIds="selectedSourceNodeIds"
                         @target="moveNodes"
                       />
                       <IconButton
@@ -245,8 +245,8 @@
           ? DropEffect.COPY
           : DropEffect.NONE;
       },
-      selectedSourceNodeIds(){
-        return this.selectedNodeIds.map(this.getContentNodeForRender).map(n => n.id)
+      selectedSourceNodeIds() {
+        return this.selectedNodeIds.map(this.getContentNodeForRender).map(n => n.id);
       },
     },
     watch: {
