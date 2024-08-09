@@ -9,7 +9,7 @@
     </VListTile>
     <VListTile v-if="allowMove" @click.stop="calculateMoveNodes">
       <VListTileTitle>{{ $tr('moveTo') }}</VListTileTitle>
-      <MoveModal v-if="moveModalOpen" ref="moveModal" v-model="moveModalOpen" @target="moveNodes" />
+      <MoveModal v-if="moveModalOpen" ref="moveModal" v-model="moveModalOpen" @target="moveNodes"  :moveNodeIds="[contentNode.id]"/>
     </VListTile>
     <VListTile @click="removeNode()">
       <VListTileTitle>{{ $tr('remove') }}</VListTileTitle>

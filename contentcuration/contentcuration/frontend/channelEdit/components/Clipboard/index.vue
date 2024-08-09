@@ -70,6 +70,7 @@
                       <MoveModal
                         v-if="allowMove && moveModalOpen"
                         ref="moveModal"
+                        :moveNodeIds="selectedSourceNodeIds"
                         v-model="moveModalOpen"
                         @target="moveNodes"
                       />
@@ -207,6 +208,7 @@
         'getMoveTrees',
         'legacyNodesSelected',
         'previewSourceNode',
+        'getContentNodeForRender',
       ]),
       ...mapGetters('contentNode', {
         getRealContentNodes: 'getContentNodes',
@@ -242,6 +244,9 @@
         return this.activeDraggableId !== DraggableRegions.CLIPBOARD
           ? DropEffect.COPY
           : DropEffect.NONE;
+      },
+      selectedSourceNodeIds(){
+        return this.selectedNodeIds.map(this.getContentNodeForRender).map(n => n.id)
       },
     },
     watch: {
