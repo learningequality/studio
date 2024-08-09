@@ -1357,6 +1357,7 @@ export const ContentNode = new TreeResource({
         return Promise.all([getNode, this.where({ parent: parent.id }, false)]).then(
           ([node, siblings]) => {
             let lft = 1;
+            siblings = siblings.filter(s => s.id !== id);
             if (siblings.length) {
               // If we're creating, we don't need to worry about passing the ID
               lft = this.getNewSortOrder(isCreate ? null : id, target, position, siblings);
