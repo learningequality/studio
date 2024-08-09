@@ -227,12 +227,11 @@ class RecommendationsAdapter(Adapter):
                     tree_id=F('main_tree__tree_id'),
                 ).distinct()
             )
-            print(list(Channel.objects.all()))
 
             recommendations = channel_cte.join(
                 ContentNode.objects.filter(node_id__in=node_ids),
                 tree_id=channel_cte.col.tree_id
-            ).with_cte(channel_cte) .annotate(
+            ).with_cte(channel_cte).annotate(
                 main_tree_id=channel_cte.col.main_tree_id
             ).values(
                 'id',
@@ -240,7 +239,6 @@ class RecommendationsAdapter(Adapter):
                 'main_tree_id',
                 'parent_id',
             )
-            print(list(recommendations))
 
         return RecommendationsResponse(results=recommendations)
 
