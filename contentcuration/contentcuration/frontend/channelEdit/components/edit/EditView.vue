@@ -21,23 +21,14 @@
                   icon="error"
                   :style="{ fontSize: '20px', marginLeft: '8px' }"
                 />
-                <!--
-                  teleported since when rendered in Vuetify's
-                  .v-tabs__ components, the tooltip gets cut off
-                  (previously used VTooltip used this approach
-                  as well under the hood)
-                -->
-                <Teleport
-                  to="#tooltips"
+                <KTooltip
+                  reference="errorDetails"
+                  :refs="$refs"
+                  placement="top"
+                  appendToRoot
                 >
-                  <KTooltip
-                    reference="errorDetails"
-                    :refs="$refs"
-                    placement="top"
-                  >
-                    {{ $tr('invalidFieldsToolTip') }}
-                  </KTooltip>
-                </Teleport>
+                  {{ $tr('invalidFieldsToolTip') }}
+                </KTooltip>
               </template>
             </VTab>
 
@@ -55,23 +46,14 @@
                   icon="error"
                   :style="{ fontSize: '20px', marginLeft: '8px' }"
                 />
-                <!--
-                  teleported since when rendered in Vuetify's
-                  .v-tabs__ components, the tooltip gets cut off
-                  (previously used VTooltip used this approach
-                  as well under the hood)
-                -->
-                <Teleport
-                  to="#tooltips"
+                <KTooltip
+                  reference="errorQuestions"
+                  :refs="$refs"
+                  placement="top"
+                  appendToRoot
                 >
-                  <KTooltip
-                    reference="errorQuestions"
-                    :refs="$refs"
-                    placement="top"
-                  >
-                    {{ $tr('invalidFieldsToolTip') }}
-                  </KTooltip>
-                </Teleport>
+                  {{ $tr('invalidFieldsToolTip') }}
+                </KTooltip>
               </template>
               <VChip v-else color="gray" dark>
                 {{ assessmentItemsCount }}
@@ -130,7 +112,6 @@
 
   import reduce from 'lodash/reduce';
   import { mapGetters } from 'vuex';
-  import Teleport from 'vue2-teleport';
 
   import { TabNames } from '../../constants';
   import AssessmentTab from '../../components/AssessmentTab/AssessmentTab';
@@ -156,7 +137,6 @@
       RelatedResourcesTab,
       Tabs,
       ToolBar,
-      Teleport,
     },
     props: {
       nodeIds: {

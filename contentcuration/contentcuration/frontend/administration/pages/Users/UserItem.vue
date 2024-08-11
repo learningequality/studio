@@ -18,22 +18,14 @@
             :color="$themePalette.green.v_800"
             :style="{ marginRight: '4px', fontSize: '10px' }"
           />
-          <!--
-            teleported since when rendered in the row,
-            the tooltip gets cut off due to sticky-related styles
-            used to achieve the table's fixed first row/column
-          -->
-          <Teleport
-            to="#tooltips"
+          <KTooltip
+            reference="admin"
+            :refs="$refs"
+            placement="bottom"
+            appendToRoot
           >
-            <KTooltip
-              reference="admin"
-              :refs="$refs"
-              placement="bottom"
-            >
-              Administrator
-            </KTooltip>
-          </Teleport>
+            Administrator
+          </KTooltip>
         </VFlex>
         <VFlex class="py-2 text-truncate" grow style="max-width: 200px;">
           <ActionLink
@@ -105,7 +97,6 @@
 
 <script>
 
-  import Teleport from 'vue2-teleport';
   import capitalize from 'lodash/capitalize';
   import { mapGetters } from 'vuex';
   import { RouteNames } from '../../constants';
@@ -120,7 +111,6 @@
       Checkbox,
       UserActionsDropdown,
       UserStorage,
-      Teleport,
     },
     filters: {
       capitalize,

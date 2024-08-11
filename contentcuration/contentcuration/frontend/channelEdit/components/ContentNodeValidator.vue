@@ -19,23 +19,14 @@
       :aria-label="error"
       :style="{ fontSize: '20px', marginLeft: '16px' }"
     />
-    <!--
-      teleported since when rendered in Vuetify's
-      .v-list__ components, the tooltip gets cut off
-      (previously used VTooltip used this approach
-      as well under the hood)
-    -->
-    <Teleport
-      to="#tooltips"
+    <KTooltip
+      reference="error"
+      :refs="$refs"
+      placement="bottom"
+      appendToRoot
     >
-      <KTooltip
-        reference="error"
-        :refs="$refs"
-        placement="bottom"
-      >
-        {{ error }}
-      </KTooltip>
-    </Teleport>
+      {{ error }}
+    </KTooltip>
   </span>
   <span v-else-if="warning">
     <KIcon
@@ -45,35 +36,21 @@
       class="icon"
       :style="{ fontSize: '20px', marginLeft: '16px' }"
     />
-    <!--
-      teleported since when rendered in Vuetify's
-      .v-list__ components, the tooltip gets cut off
-      (previously used VTooltip used this approach
-      as well under the hood)
-    -->
-    <Teleport
-      to="#tooltips"
+    <KTooltip
+      reference="warning"
+      :refs="$refs"
+      placement="bottom"
+      appendToRoot
     >
-      <KTooltip
-        reference="warning"
-        :refs="$refs"
-        placement="bottom"
-      >
-        {{ warning }}
-      </KTooltip>
-    </Teleport>
+      {{ warning }}
+    </KTooltip>
   </span>
 
 </template>
 <script>
 
-  import Teleport from 'vue2-teleport';
-
   export default {
     name: 'ContentNodeValidator',
-    components: {
-      Teleport,
-    },
     props: {
       node: {
         type: Object,
