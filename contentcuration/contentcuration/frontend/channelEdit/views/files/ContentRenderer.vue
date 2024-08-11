@@ -48,14 +48,19 @@
 
     <VCard v-else class="message-card" flat>
       <VLayout align-center justify-center fill-height data-test="not-supported">
-        <VTooltip bottom lazy>
-          <template #activator="{ on }">
-            <VIconWrapper color="grey lighten-2" large v-on="on">
-              visibility_off
-            </VIconWrapper>
-          </template>
-          <span>{{ $tr('previewNotSupported') }}</span>
-        </VTooltip>
+        <KTooltip
+          reference="previewUnavailableIcon"
+          placement="bottom"
+          :refs="$refs"
+        >
+          {{ $tr('previewNotSupported') }}
+        </KTooltip>
+        <KIcon
+          ref="previewUnavailableIcon"
+          icon="previewUnavailable"
+          :color="$themeTokens.annotation"
+          :style="{ fontSize: '40px' }"
+        />
       </VLayout>
     </VCard>
   </VLayout>
