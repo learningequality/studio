@@ -18,16 +18,16 @@ function makeWrapper(kind) {
 
 describe('ContentNodeIcon', () => {
   const testIcons = [
-    { value: 'topic', icon: 'folder' },
-    { value: 'video', icon: 'ondemand_video' },
-    { value: 'audio', icon: 'music_note' },
-    { value: 'exercise', icon: 'assignment' },
-    { value: 'document', icon: 'class' },
-    { value: 'html5', icon: 'widgets' },
-    { value: 'zim', icon: 'widgets' },
+    { value: 'topic', icon: 'topic' },
+    { value: 'video', icon: 'video' },
+    { value: 'audio', icon: 'audio' },
+    { value: 'exercise', icon: 'exercise' },
+    { value: 'document', icon: 'document' },
+    { value: 'html5', icon: 'html5' },
+    { value: 'zim', icon: 'html5' },
   ];
-  it.each(testIcons)('should display the correct icon $value', kind => {
+  it.each(testIcons)('should pass the correct icon value to KIcon', kind => {
     const wrapper = makeWrapper(kind.value);
-    expect(wrapper.find('.v-icon').text()).toContain(kind.icon);
+    expect(wrapper.find('[data-test="icon"]').props().icon).toBe(kind.icon);
   });
 });

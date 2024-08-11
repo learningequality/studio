@@ -12,11 +12,11 @@
       :style="{ width: fillWidth ? '100%' : 'unset' }"
       capture-as-image
     >
-      <KIcon :icon="icon" :color="fontColor" />
+      <KIcon :icon="icon" :color="fontColor" data-test="icon" />
       <span v-if="includeText" class="ml-2">{{ text }}</span>
     </VChip>
     <span v-else capture-as-image>
-      <KIcon :icon="icon" :color="fontColor" />
+      <KIcon :icon="icon" :color="fontColor" data-test="icon" />
       <span v-if="includeText" class="ml-2">{{ text }}</span>
     </span>
   </span>
