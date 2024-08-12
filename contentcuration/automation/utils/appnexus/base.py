@@ -56,8 +56,7 @@ class BackendRequest(object):
 
 class BackendResponse(object):
     """ Class that should be inherited by specific backend for its responses"""
-    def __init__(self, error=None, **kwargs):
-        self.error = error
+    def __init__(self, **kwargs):
         for key, value in kwargs.items():
             setattr(self, key, value)
 
@@ -169,11 +168,10 @@ class Backend(ABC):
 
     def make_request(self, request):
         """ Make a request to the backend service. """
-        response = self._make_request(request)
         try:
-            info = response.json()
-            info.update({"status_code": response.status_code})
-            return BackendResponse(**info)
+            response = self._make_request(request)
+            response_body = dict(data=response.json())
+            return BackendResponse(**response_body)
         except ValueError as e:
             logging.exception(e)
             raise errors.InvalidResponse("Invalid response from backend")

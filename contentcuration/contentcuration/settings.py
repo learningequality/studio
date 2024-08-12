@@ -89,6 +89,7 @@ INSTALLED_APPS = (
     'django.contrib.postgres',
     'django_celery_results',
     'kolibri_public',
+    'automation',
 )
 
 SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"
