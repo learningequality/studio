@@ -1033,4 +1033,5 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
                 log_sync_exception(e, user=self.request.user, change=change)
                 change["errors"] = [str(e)]
                 errors.append(change)
+        print("errorsv", errors)
         return errors

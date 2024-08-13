@@ -577,6 +577,11 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
 
     def test_update_descendants_contentnode(self):
         root_node = testdata.tree(parent=self.channel.main_tree)
+
+        descendants = root_node.get_descendants(include_self=True)
+        # Fix undefined extra_fields
+        descendants.exclude(kind_id=content_kinds.TOPIC).update(extra_fields={})
+
         new_language = "es"
         
         response = self.sync_changes(
