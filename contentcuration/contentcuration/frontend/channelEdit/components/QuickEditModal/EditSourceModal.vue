@@ -22,8 +22,9 @@
             :maxlength="200"
             :disabled="!isEditable"
             :label="$tr('authorLabel')"
+            class="input-textbox"
           />
-          <HelpTooltip :text="$tr('authorToolTip')" top :small="false" />
+          <HelpTooltip :text="$tr('authorToolTip')" top :small="false" class="input-tooltip" />
         </div>
         <p v-if="helpText" class="help">
           {{ helpText }}
@@ -37,8 +38,9 @@
             :maxlength="200"
             :disabled="!isEditable"
             :label="$tr('providerLabel')"
+            class="input-textbox"
           />
-          <HelpTooltip :text="$tr('providerToolTip')" top :small="false" />
+          <HelpTooltip :text="$tr('providerToolTip')" top :small="false" class="input-tooltip" />
         </div>
       </div>
       <div class="form-item">
@@ -49,8 +51,9 @@
             :maxlength="200"
             :disabled="!isEditable"
             :label="$tr('aggregatorLabel')"
+            class="input-textbox"
           />
-          <HelpTooltip :text="$tr('aggregatorToolTip')" top :small="false" />
+          <HelpTooltip :text="$tr('aggregatorToolTip')" top :small="false" class="input-tooltip" />
         </div>
       </div>
       <div class="form-item">
@@ -77,6 +80,7 @@
             :invalid="!!copyrightHolderError"
             :invalidText="copyrightHolderError"
             :disabled="!isEditable"
+            class="input-textbox"
             @input="copyrightHolderError = ''"
             @blur="validateCopyrightHolder"
           />
@@ -307,11 +311,11 @@
       display: flex;
       align-items: flex-start;
 
-      > div {
+      .input-textbox {
         width: 100%;
       }
 
-      /deep/ .v-icon {
+      .input-tooltip {
         position: absolute;
         right: 12px;
         margin: 14px 0 0 8px;

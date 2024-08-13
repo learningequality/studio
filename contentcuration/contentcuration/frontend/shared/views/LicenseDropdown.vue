@@ -25,14 +25,13 @@
           @focus="$emit('focus')"
         >
           <template #append-outer>
-            <Icon
+            <KIconButton
               class="info-icon"
-              color="primary"
               data-test="info-icon"
+              icon="help"
+              :color="$themeTokens.primary"
               @click="setShowAboutLicenses(true)"
-            >
-              help
-            </Icon>
+            />
           </template>
         </VSelect>
       </template>
@@ -209,7 +208,8 @@
 
     /deep/ .v-input__append-outer {
       position: absolute;
-      right: 12px;
+      right: 4px;
+      margin-top: 8px !important;
     }
 
     /deep/ .v-input__control > .v-input__slot {
@@ -218,11 +218,6 @@
       &::before {
         border-color: rgba(0, 0, 0, 0.12) !important;
       }
-    }
-
-    /deep/ .v-icon {
-      position: unset !important;
-      margin: unset !important;
     }
 
     &.v-input--has-state {

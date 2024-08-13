@@ -953,6 +953,7 @@
 
   .divider-wrapper {
     padding: 8px 12px;
+    align-self: stretch;
   }
   .command-palette-wrapper {
     min-width: 0;

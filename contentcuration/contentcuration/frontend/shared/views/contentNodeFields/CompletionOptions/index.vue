@@ -7,8 +7,8 @@
       :disabled="notUnique"
       :indeterminate="notUnique"
       :label="$tr('learnersCanMarkComplete')"
-      @change="(value) => (learnerManaged = value)"
       style="padding-bottom: 16px; font-size: 16px;"
+      @change="(value) => (learnerManaged = value)"
     />
     <Divider v-if="expanded" />
     <!-- Layout when practice quizzes are enabled -->
