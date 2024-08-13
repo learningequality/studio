@@ -716,6 +716,32 @@ class PermissionCTE(With):
         return Exists(self.queryset().filter(*filters).values("user_id"))
 
 
+class ChannelModelQuerySet(models.QuerySet):
+    def create(self, **kwargs):
+        """
+        Create a new object with the given kwargs, saving it to the database
+        and returning the created object.
+        Overriding the Django default here to allow passing through the actor_id
+        to register this event in the channel history.
+        """
+        # Either allow the actor_id to be passed in, or read from a special attribute
+        # on the queryset, this makes super calls to other methods easier to handle
+        # without having to reimplement the entire method.
+        actor_id = kwargs.pop("actor_id", getattr(self, "_actor_id", None))
+        obj = self.model(**kwargs)
+        self._for_write = True
+        obj.save(force_insert=True, using=self.db, actor_id=actor_id)
+        return obj
+
+    def get_or_create(self, defaults=None, **kwargs):
+        self._actor_id = kwargs.pop("actor_id", None)
+        return super().get_or_create(defaults, **kwargs)
+
+    def update_or_create(self, defaults=None, **kwargs):
+        self._actor_id = kwargs.pop("actor_id", None)
+        return super().update_or_create(defaults, **kwargs)
+
+
 class Channel(models.Model):
     """ Permissions come from association with organizations """
     id = UUIDField(primary_key=True, default=uuid.uuid4)
@@ -800,6 +826,8 @@ class Channel(models.Model):
         "version",
     ])
 
+    objects = ChannelModelQuerySet.as_manager()
+
     @classmethod
     def get_editable(cls, user, channel_id):
         return cls.filter_edit_queryset(cls.objects.all(), user).get(id=channel_id)
@@ -874,6 +902,10 @@ class Channel(models.Model):
         return files['resource_size'] or 0
 
     def on_create(self):
+        actor_id = getattr(self, "_actor_id", None)
+        if actor_id is None:
+            raise ValueError("No actor_id passed to save method")
+
         if not self.content_defaults:
             self.content_defaults = DEFAULT_CONTENT_DEFAULTS
 
@@ -905,7 +937,7 @@ class Channel(models.Model):
         if self.public and (self.main_tree and self.main_tree.published):
             delete_public_channel_cache_keys()
 
-    def on_update(self):
+    def on_update(self):  # noqa C901
         from contentcuration.utils.user import calculate_user_storage
         original_values = self._field_updates.changed()
 
@@ -929,14 +961,23 @@ class Channel(models.Model):
             for editor in self.editors.all():
                 calculate_user_storage(editor.pk)
 
-        # Delete db if channel has been deleted and mark as unpublished
         if "deleted" in original_values and not original_values["deleted"]:
             self.pending_editors.all().delete()
+            # Delete db if channel has been deleted and mark as unpublished
             export_db_storage_path = os.path.join(settings.DB_ROOT, "{channel_id}.sqlite3".format(channel_id=self.id))
             if default_storage.exists(export_db_storage_path):
                 default_storage.delete(export_db_storage_path)
                 if self.main_tree:
                     self.main_tree.published = False
+        # mark the instance as deleted or recovered, if requested
+        if "deleted" in original_values:
+            user_id = getattr(self, "_actor_id", None)
+            if user_id is None:
+                raise ValueError("No actor_id passed to save method")
+            if original_values["deleted"]:
+                self.history.create(actor_id=user_id, action=channel_history.RECOVERY)
+            else:
+                self.history.create(actor_id=user_id, action=channel_history.DELETION)
 
         if self.main_tree and self.main_tree._field_updates.changed():
             self.main_tree.save()
@@ -946,12 +987,19 @@ class Channel(models.Model):
             delete_public_channel_cache_keys()
 
     def save(self, *args, **kwargs):
-        if self._state.adding:
+        self._actor_id = kwargs.pop("actor_id", None)
+        creating = self._state.adding
+        if creating:
+            if self._actor_id is None:
+                raise ValueError("No actor_id passed to save method")
             self.on_create()
         else:
             self.on_update()
 
         super(Channel, self).save(*args, **kwargs)
+
+        if creating:
+            self.history.create(actor_id=self._actor_id, action=channel_history.CREATION)
 
     def get_thumbnail(self):
         return get_channel_thumbnail(self)
@@ -996,23 +1044,10 @@ class Channel(models.Model):
 
         return self
 
-    def mark_created(self, user):
-        self.history.create(actor_id=to_pk(user), action=channel_history.CREATION)
-
     def mark_publishing(self, user):
         self.history.create(actor_id=to_pk(user), action=channel_history.PUBLICATION)
         self.main_tree.publishing = True
         self.main_tree.save()
-
-    def mark_deleted(self, user):
-        self.history.create(actor_id=to_pk(user), action=channel_history.DELETION)
-        self.deleted = True
-        self.save()
-
-    def mark_recovered(self, user):
-        self.history.create(actor_id=to_pk(user), action=channel_history.RECOVERY)
-        self.deleted = False
-        self.save()
 
     @property
     def deletion_history(self):
@@ -1846,6 +1881,13 @@ class ContentNode(MPTTModel, models.Model):
                         completion_criteria.validate(criterion, kind=content_kinds.EXERCISE)
                     except completion_criteria.ValidationError:
                         errors.append("Mastery criterion is defined but is invalid")
+            else:
+                criterion = self.extra_fields.get("options", {}).get("completion_criteria", {})
+                if criterion:
+                    try:
+                        completion_criteria.validate(criterion, kind=self.kind_id)
+                    except completion_criteria.ValidationError:
+                        errors.append("Completion criterion is defined but is invalid")
         self.complete = not errors
         return errors
 
@@ -2565,14 +2607,13 @@ class Change(models.Model):
 class CustomTaskMetadata(models.Model):
     # Task_id for reference
     task_id = models.CharField(
-        max_length=255,  # Adjust the max_length as needed
+        max_length=255,
         unique=True,
     )
-    # user shouldn't be null, but in order to append the field, this needs to be allowed
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="tasks", on_delete=models.CASCADE, null=True)
     channel_id = DjangoUUIDField(db_index=True, null=True, blank=True)
     progress = models.IntegerField(null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(100)])
-    # a hash of the task name and kwargs for identifying repeat tasks
+    # A hash of the task name and kwargs for identifying repeat tasks
     signature = models.CharField(null=True, blank=False, max_length=32)
     date_created = models.DateTimeField(
         auto_now_add=True,
@@ -2582,7 +2623,6 @@ class CustomTaskMetadata(models.Model):
 
     class Meta:
         indexes = [
-            # add index that matches query usage for signature
             models.Index(
                 fields=['signature'],
                 name='task_result_signature',

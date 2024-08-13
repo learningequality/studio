@@ -37,7 +37,7 @@ class SyncTestCase(StudioTestCase):
 
     def setUp(self):
         super(SyncTestCase, self).setUpBase()
-        self.derivative_channel = Channel.objects.create(name="testchannel")
+        self.derivative_channel = Channel.objects.create(name="testchannel", actor_id=self.admin_user.id)
         self.channel.main_tree.copy_to(self.derivative_channel.main_tree)
         self.derivative_channel.main_tree.refresh_from_db()
         self.derivative_channel.save()

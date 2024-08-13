@@ -35,10 +35,10 @@
                     <Checkbox
                       ref="checkbox"
                       class="ma-0 pa-0"
-                      :value="selected"
+                      :inputValue="selected"
                       :label="selectionState ? '' : $tr('selectAll')"
                       :indeterminate="indeterminate"
-                      @click.stop.prevent="goNextSelectionState"
+                      @input="goNextSelectionState"
                     />
                   </VListTileAction>
                 </VSlideXTransition>

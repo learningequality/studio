@@ -69,10 +69,13 @@ export function loadContentNodeByNodeId(context, nodeId) {
     });
 }
 
-export function loadChildren(context, { parent, published = null }) {
+export function loadChildren(context, { parent, published = null, complete = null }) {
   const params = { parent };
   if (published !== null) {
     params.published = published;
+  }
+  if (complete !== null) {
+    params.complete = complete;
   }
   return loadContentNodes(context, params);
 }

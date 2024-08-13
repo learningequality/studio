@@ -34,6 +34,7 @@ from contentcuration.utils.db_tools import TreeBuilder
 from contentcuration.viewsets.contentnode import ContentNodeFilter
 from contentcuration.viewsets.sync.constants import CONTENTNODE
 from contentcuration.viewsets.sync.constants import CONTENTNODE_PREREQUISITE
+from contentcuration.viewsets.sync.constants import UPDATED
 
 
 nested_subjects = [subject for subject in SUBJECTSLIST if "." in subject]
@@ -691,6 +692,24 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
             models.ContentNode.objects.get(id=contentnode.id).extra_fields["options"]["completion_criteria"]["model"], completion_criteria.MASTERY
         )
 
+    def test_update_contentnode_exercise_incomplete_mastery_model_marked_complete(self):
+        metadata = self.contentnode_db_metadata
+        metadata["kind_id"] = content_kinds.EXERCISE
+        contentnode = models.ContentNode.objects.create(**metadata)
+
+        response = self.sync_changes(
+            [generate_update_event(contentnode.id, CONTENTNODE, {
+                "complete": True,
+            }, channel_id=self.channel.id)],
+        )
+
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertFalse(
+            models.ContentNode.objects.get(id=contentnode.id).complete
+        )
+        change = models.Change.objects.filter(channel=self.channel, change_type=UPDATED, table=CONTENTNODE).last()
+        self.assertFalse(change.kwargs["mods"]["complete"])
+
     def test_update_contentnode_extra_fields(self):
         contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
         # Update extra_fields.randomize
@@ -960,6 +979,25 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         self.assertFalse(
             models.ContentNode.objects.get(id=contentnode.id)
             .tags.filter(tag_name=other_tag)
+            .exists()
+        )
+
+    def test_update_contentnode_tag_greater_than_30_chars(self):
+
+        contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
+        tag = "kolibri studio, kolibri studio!"
+
+        response = self.sync_changes(
+            [
+                generate_update_event(
+                    contentnode.id, CONTENTNODE, {"tags.{}".format(tag): True}, channel_id=self.channel.id
+                )
+            ],
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertFalse(
+            models.ContentNode.objects.get(id=contentnode.id)
+            .tags.filter(tag_name=tag)
             .exists()
         )
 
@@ -1454,7 +1492,7 @@ class CRUDTestCase(StudioAPITestCase):
 
     def test_fetch_contentnode__by_parent(self):
 
-        channel = models.Channel.objects.create(name="Test channel")
+        channel = models.Channel.objects.create(actor_id=self.user.id, name="Test channel")
         channel.editors.add(self.user)
         channel.save()
 
@@ -1470,7 +1508,7 @@ class CRUDTestCase(StudioAPITestCase):
         self.assertEqual(response.data[0]["id"], contentnode.id)
 
     def test_fetch_contentnode__by_node_id_channel_id(self):
-        channel = models.Channel.objects.create(name="Test channel")
+        channel = models.Channel.objects.create(actor_id=self.user.id, name="Test channel")
         channel.editors.add(self.user)
         channel.save()
 
@@ -1530,42 +1568,7 @@ class CRUDTestCase(StudioAPITestCase):
         response = self.client.post(
             reverse("contentnode-list"), contentnode, format="json",
         )
-        self.assertEqual(response.status_code, 201, response.content)
-        try:
-            models.ContentNode.objects.get(id=contentnode["id"])
-        except models.ContentNode.DoesNotExist:
-            self.fail("ContentNode was not created")
-
-    def test_create_contentnode_tag(self):
-        tag = "howzat!"
-
-        contentnode = self.contentnode_metadata
-        contentnode["tags"] = {
-            tag: True,
-        }
-        response = self.client.post(
-            reverse("contentnode-list"), contentnode, format="json",
-        )
-        self.assertEqual(response.status_code, 201, response.content)
-        self.assertTrue(
-            models.ContentNode.objects.get(id=contentnode["id"])
-            .tags.filter(tag_name=tag)
-            .exists()
-        )
-
-    def test_contentnode_tag_greater_than_30_chars(self):
-        tag = "kolibri studio, kolibri studio!"
-
-        contentnode = self.contentnode_metadata
-        contentnode["tags"] = {
-            tag: True,
-        }
-
-        response = self.client.post(
-            reverse("contentnode-list"), contentnode, format="json",
-        )
-
-        self.assertEqual(response.status_code, 400, response.content)
+        self.assertEqual(response.status_code, 405, response.content)
 
     def test_update_contentnode(self):
         contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
@@ -1576,96 +1579,7 @@ class CRUDTestCase(StudioAPITestCase):
             {"title": new_title},
             format="json",
         )
-        self.assertEqual(response.status_code, 200, response.content)
-        self.assertEqual(
-            models.ContentNode.objects.get(id=contentnode.id).title, new_title
-        )
-
-    def test_update_contentnode_tags(self):
-        contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
-        tag = "howzat!"
-
-        response = self.client.patch(
-            reverse("contentnode-detail", kwargs={"pk": contentnode.id}),
-            {"tags.{}".format(tag): True},
-            format="json",
-        )
-        self.assertEqual(response.status_code, 200, response.content)
-        self.assertTrue(
-            models.ContentNode.objects.get(id=contentnode.id)
-            .tags.filter(tag_name=tag)
-            .exists()
-        )
-
-        other_tag = "LBW!"
-
-        response = self.client.patch(
-            reverse("contentnode-detail", kwargs={"pk": contentnode.id}),
-            {"tags.{}".format(other_tag): True},
-            format="json",
-        )
-        self.assertEqual(response.status_code, 200, response.content)
-        self.assertTrue(
-            models.ContentNode.objects.get(id=contentnode.id)
-            .tags.filter(tag_name=tag)
-            .exists()
-        )
-        self.assertTrue(
-            models.ContentNode.objects.get(id=contentnode.id)
-            .tags.filter(tag_name=other_tag)
-            .exists()
-        )
-
-        response = self.client.patch(
-            reverse("contentnode-detail", kwargs={"pk": contentnode.id}),
-            {"tags.{}".format(other_tag): None},
-            format="json",
-        )
-        self.assertEqual(response.status_code, 200, response.content)
-        self.assertTrue(
-            models.ContentNode.objects.get(id=contentnode.id)
-            .tags.filter(tag_name=tag)
-            .exists()
-        )
-        self.assertFalse(
-            models.ContentNode.objects.get(id=contentnode.id)
-            .tags.filter(tag_name=other_tag)
-            .exists()
-        )
-
-    def test_update_contentnode_suggested_duration(self):
-        user = testdata.user()
-        contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
-        new_suggested_duration = 600
-
-        self.client.force_authenticate(user=user)
-        response = self.client.patch(
-            reverse("contentnode-detail", kwargs={"pk": contentnode.id}),
-            {"suggested_duration": new_suggested_duration},
-            format="json",
-        )
-        self.assertEqual(response.status_code, 200, response.content)
-        self.assertEqual(
-            models.ContentNode.objects.get(id=contentnode.id).suggested_duration, new_suggested_duration
-        )
-
-    def test_update_contentnode_tags_dont_duplicate(self):
-        contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
-        tag = "howzat!"
-
-        old_tag = models.ContentTag.objects.create(tag_name=tag)
-
-        response = self.client.patch(
-            reverse("contentnode-detail", kwargs={"pk": contentnode.id}),
-            {"tags.{}".format(tag): True},
-            format="json",
-        )
-        self.assertEqual(response.status_code, 200, response.content)
-        self.assertTrue(
-            models.ContentNode.objects.get(id=contentnode.id)
-            .tags.filter(id=old_tag.id)
-            .exists()
-        )
+        self.assertEqual(response.status_code, 405, response.content)
 
     def test_delete_contentnode(self):
         contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
@@ -1673,66 +1587,7 @@ class CRUDTestCase(StudioAPITestCase):
         response = self.client.delete(
             reverse("contentnode-detail", kwargs={"pk": contentnode.id})
         )
-        self.assertEqual(response.status_code, 204, response.content)
-        try:
-            models.ContentNode.objects.get(id=contentnode.id)
-            self.fail("ContentNode was not deleted")
-        except models.ContentNode.DoesNotExist:
-            pass
-
-    def test_create_contentnode_moveable(self):
-        """
-        Regression test to ensure that nodes created here are able to be moved to
-        other MPTT trees without invalidating data.
-        """
-        contentnode = self.contentnode_metadata
-        response = self.client.post(
-            reverse("contentnode-list"), contentnode, format="json",
-        )
-        self.assertEqual(response.status_code, 201, response.content)
-        try:
-            new_node = models.ContentNode.objects.get(id=contentnode["id"])
-        except models.ContentNode.DoesNotExist:
-            self.fail("ContentNode was not created")
-
-        new_root = models.ContentNode.objects.create(
-            title="Aron's cool contentnode",
-            kind_id=content_kinds.VIDEO,
-            description="coolest contentnode this side of the Pacific",
-        )
-
-        new_node.move_to(new_root, "last-child")
-
-        try:
-            new_node.get_root()
-        except models.ContentNode.MultipleObjectsReturned:
-            self.fail("Moving caused a breakdown of the tree structure")
-
-    def test_update_orphanage_root(self):
-        new_title = "This is not the old title"
-
-        response = self.client.patch(
-            reverse("contentnode-detail", kwargs={"pk": settings.ORPHANAGE_ROOT_ID}),
-            {"title": new_title},
-            format="json",
-        )
-        self.assertEqual(response.status_code, 404, response.content)
-        self.assertNotEqual(
-            models.ContentNode.objects.get(id=settings.ORPHANAGE_ROOT_ID).title,
-            new_title,
-        )
-
-    def test_delete_orphanage_root(self):
-        models.ContentNode.objects.create(**self.contentnode_db_metadata)
-
-        response = self.client.delete(
-            reverse("contentnode-detail", kwargs={"pk": settings.ORPHANAGE_ROOT_ID})
-        )
-        self.assertEqual(response.status_code, 404, response.content)
-        try:
-            models.ContentNode.objects.get(id=settings.ORPHANAGE_ROOT_ID)
-        except models.ContentNode.DoesNotExist:
-            self.fail("Orphanage root was deleted")
+        self.assertEqual(response.status_code, 405, response.content)
 
     @mock.patch("contentcuration.utils.nodes.STALE_MAX_CALCULATION_SIZE", 5000)
     def test_resource_size(self):

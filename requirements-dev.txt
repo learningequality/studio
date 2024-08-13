@@ -16,7 +16,7 @@ attrs==23.1.0
     #   pytest
 brotli==1.0.9
     # via geventhttpclient
-build==0.8.0
+build==1.2.1
     # via pip-tools
 certifi==2020.12.5
     # via
@@ -144,9 +144,7 @@ packaging==24.0
     #   build
     #   drf-yasg
     #   pytest
-pep517==0.12.0
-    # via build
-pip-tools==6.8.0
+pip-tools==7.4.1
     # via -r requirements-dev.in
 platformdirs==2.4.0
     # via virtualenv
@@ -170,6 +168,10 @@ pympler==1.0.1
     # via -r requirements-dev.in
 pypandoc==1.8.1
     # via -r requirements-dev.in
+pyproject-hooks==1.1.0
+    # via
+    #   build
+    #   pip-tools
 pytest==6.2.4
     # via
     #   -r requirements-dev.in
@@ -241,7 +243,7 @@ toml==0.10.2
 tomli==1.2.3
     # via
     #   build
-    #   pep517
+    #   pip-tools
 typing-extensions==4.5.0
     # via locust
 uritemplate==3.0.1
@@ -265,7 +267,7 @@ wheel==0.38.1
     # via pip-tools
 whitenoise==5.2.0
     # via -r requirements-dev.in
-zipp==3.4.1
+zipp==3.19.1
     # via importlib-metadata
 zope-event==4.5.0
     # via gevent

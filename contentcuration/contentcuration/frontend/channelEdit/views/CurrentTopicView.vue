@@ -61,6 +61,7 @@
           v-model="selectAll"
           :indeterminate="selected.length > 0 && !selectAll"
           :label="selected.length ? '' : $tr('selectAllLabel')"
+          style="font-size: 16px;"
         />
       </div>
       <div

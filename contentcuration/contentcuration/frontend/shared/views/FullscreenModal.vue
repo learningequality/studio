@@ -100,11 +100,13 @@
         this.hideHTMLScroll(!!val);
       },
     },
-    beforeDestroy() {
+    activated() {
+      this.hideHTMLScroll(true);
+    },
+    deactivated() {
       this.hideHTMLScroll(false); // Ensure scroll is restored when the component is destroyed
     },
     mounted() {
-      this.hideHTMLScroll(true);
       this.$refs.dialog.initDetach();
     },
     methods: {

@@ -2,14 +2,17 @@ import json
 
 from django.http.response import HttpResponseBadRequest
 from django.http.response import HttpResponseForbidden
+from django.http.response import HttpResponseNotAllowed
 from django.http.response import HttpResponseRedirectBase
+from django.urls import reverse_lazy
 from mock import mock
 
+from contentcuration.models import User
 from contentcuration.tests import testdata
+from contentcuration.tests.base import BaseAPITestCase
 from contentcuration.tests.base import StudioAPITestCase
 from contentcuration.views.users import login
 from contentcuration.views.users import UserActivationView
-from contentcuration.views.users import UserRegistrationView
 
 
 class LoginTestCase(StudioAPITestCase):
@@ -107,32 +110,46 @@ class LoginTestCase(StudioAPITestCase):
             djangologin.assert_not_called()
 
 
-class UserRegistrationViewTestCase(StudioAPITestCase):
+class UserRegistrationViewTestCase(BaseAPITestCase):
     def setUp(self):
         super(UserRegistrationViewTestCase, self).setUp()
-        self.view = UserRegistrationView()
-        self.request = mock.Mock()
-        self.request.body = json.dumps(dict(
+        User.objects.filter(email="tester@tester.com").delete()
+        self.view = reverse_lazy("register")
+        self.request_data = dict(
             first_name="Tester",
             last_name="Tester",
             email="tester@tester.com",
-            pasword1="tester",
-            pasword2="tester",
+            pasword1="tester123",
+            pasword2="tester123",
             uses="IDK",
             source="IDK",
             policies=json.dumps(dict(policy_etc=True)),
             locations="IDK",
-        ))
+        )
 
     def test_post__no_duplicate_registration(self):
         testdata.user(email="tester@tester.com")
-        response = self.view.post(self.request)
+        response = self.post(self.view, self.request_data)
         self.assertIsInstance(response, HttpResponseForbidden)
 
-    def test_after_delete__no_registration(self):
+    def test_post__inactive_registration(self):
+        user = testdata.user(email="tester@tester.com")
+        user.is_active = False
+        user.save()
+        response = self.post(self.view, self.request_data)
+        self.assertIsInstance(response, HttpResponseNotAllowed)
+
+    def test_post__password_too_short(self):
+        self.request_data["pasword1"] = "123"
+        self.request_data["pasword2"] = "123"
+        response = self.post(self.view, self.request_data)
+        self.assertIsInstance(response, HttpResponseBadRequest)
+        self.assertIn("password1", response.content.decode())
+
+    def test_post__after_delete(self):
         user = testdata.user(email="tester@tester.com")
         user.delete()
-        response = self.view.post(self.request)
+        response = self.post(self.view, self.request_data)
         self.assertIsInstance(response, HttpResponseForbidden)
 
 

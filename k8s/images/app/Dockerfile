@@ -39,6 +39,9 @@ RUN mkdir -p contentcuration/static/js/bundles
 RUN ln -s /node_modules /contentcuration/node_modules
 RUN yarn run build
 
+ARG COMMIT_SHA
+ENV RELEASE_COMMIT_SHA=$COMMIT_SHA
+
 EXPOSE 8000
 
 ENTRYPOINT ["make", "altprodserver"]

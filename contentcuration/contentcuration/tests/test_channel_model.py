@@ -145,7 +145,7 @@ class ChannelGetDateModifiedTestCase(StudioTestCase):
         # add a new node
         node(
             parent=self.channel.main_tree,
-            data={"node_id": "nodez", "title": "new child", "kind_id": "video",},
+            data={"node_id": "nodez", "title": "new child", "kind_id": "video"},
         )
         # check that the returned date is newer
         assert self.channel.get_date_modified() > old_date
@@ -160,7 +160,7 @@ class GetAllChannelsTestCase(StudioTestCase):
         super(GetAllChannelsTestCase, self).setUp()
 
         # create 10 channels for comparison
-        self.channels = mixer.cycle(10).blend(Channel)
+        self.channels = [Channel.objects.create(actor_id=self.admin_user.id) for _ in range(10)]
 
     def test_returns_all_channels_in_the_db(self):
         """
@@ -179,9 +179,10 @@ class ChannelSetTestCase(BaseAPITestCase):
     def setUp(self):
         super(ChannelSetTestCase, self).setUp()
         self.channelset = mixer.blend(ChannelSet, editors=[self.user])
-        self.channels = mixer.cycle(10).blend(
-            Channel, secret_tokens=[self.channelset.secret_token], editors=[self.user]
-        )
+        self.channels = [Channel.objects.create(actor_id=self.user.id) for _ in range(10)]
+        for chann in self.channels:
+            chann.secret_tokens.add(self.channelset.secret_token)
+            chann.editors.add(self.user)
 
     def test_get_user_channel_sets(self):
         """ Make sure get_user_channel_sets returns the correct sets """
@@ -215,7 +216,7 @@ class ChannelSetTestCase(BaseAPITestCase):
     def test_save_channels_to_token(self):
         """ Check endpoint will assign token to channels """
         token = self.channelset.secret_token
-        channels = mixer.cycle(5).blend(Channel)
+        channels = [Channel.objects.create(actor_id=self.user.id) for _ in range(5)]
         channels = Channel.objects.filter(
             pk__in=[c.pk for c in channels]
         )  # Make this a queryset
@@ -274,7 +275,7 @@ class ChannelMetadataSaveTestCase(StudioTestCase):
 
     def setUp(self):
         super(ChannelMetadataSaveTestCase, self).setUp()
-        self.channels = mixer.cycle(5).blend(Channel)
+        self.channels = [Channel.objects.create(actor_id=self.admin_user.id) for _ in range(5)]
         for c in self.channels:
             c.main_tree.changed = False
             c.main_tree.save()

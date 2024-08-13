@@ -419,7 +419,7 @@ if key:
 
 SENTRY_DSN = 'https://{secret}@sentry.io/1252819'.format(secret=key) if key else None
 SENTRY_ENVIRONMENT = get_secret("BRANCH_ENVIRONMENT")
-SENTRY_RELEASE = get_secret("RELEASE_COMMIT_SHA")
+SENTRY_RELEASE = os.environ.get("RELEASE_COMMIT_SHA")
 SENTRY_ACTIVE = False
 
 if SENTRY_DSN and SENTRY_RELEASE and SENTRY_ENVIRONMENT:

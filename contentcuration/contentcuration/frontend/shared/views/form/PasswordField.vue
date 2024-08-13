@@ -7,6 +7,7 @@
     :rules="rules"
     :label="label || $tr('passwordLabel')"
     :validate-on-blur="!validate"
+    :error-messages="errorMessages"
     type="password"
     @keyup.enter="validate = true"
     @keydown="validate = false"
@@ -16,6 +17,8 @@
 
 
 <script>
+
+  import commonStrings from 'shared/translator';
 
   export default {
     name: 'PasswordField',
@@ -40,6 +43,12 @@
         type: Boolean,
         default: true,
       },
+      errorMessages: {
+        type: Array,
+        default() {
+          return [];
+        },
+      },
     },
     data() {
       return {
@@ -56,14 +65,14 @@
         },
       },
       rules() {
-        return [v => (!this.required || v ? true : this.$tr('fieldRequiredMessage'))].concat(
+        /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
+        return [v => (!this.required || v ? true : commonStrings.$tr('fieldRequired'))].concat(
           this.additionalRules
         );
       },
     },
     $trs: {
       passwordLabel: 'Password',
-      fieldRequiredMessage: 'Field is required',
     },
   };
 

@@ -11,6 +11,7 @@ steps:
   - -c
   - >
     docker build
+    --build_arg COMMIT_SHA=$COMMIT_SHA
     -f k8s/images/app/Dockerfile
     --cache-from gcr.io/$PROJECT_ID/learningequality-studio-app:latest
     -t gcr.io/$PROJECT_ID/learningequality-studio-app:$COMMIT_SHA
