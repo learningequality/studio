@@ -58,6 +58,7 @@ from contentcuration.tasks import calculate_resource_size_task
 from contentcuration.utils.nodes import calculate_resource_size
 from contentcuration.utils.nodes import migrate_extra_fields
 from contentcuration.utils.pagination import ValuesViewsetCursorPagination
+from contentcuration.utils.nodes import validate_and_conform_to_schema_threshold_none
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import BulkUpdateMixin
@@ -285,6 +286,10 @@ class CompletionCriteriaSerializer(JSONFieldDictSerializer):
 class ExtraFieldsOptionsSerializer(JSONFieldDictSerializer):
     modality = ChoiceField(choices=(("QUIZ", "Quiz"),), allow_null=True, required=False)
     completion_criteria = CompletionCriteriaSerializer(required=False)
+
+    def update(self, instance, validated_data):
+        validated_data = validate_and_conform_to_schema_threshold_none(validated_data)
+        return super(ExtraFieldsOptionsSerializer, self).update(instance, validated_data)
 
 
 class ExtraFieldsSerializer(JSONFieldDictSerializer):
