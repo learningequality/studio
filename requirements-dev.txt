@@ -230,7 +230,7 @@ sqlparse==0.4.1
     #   -c requirements.txt
     #   django
     #   django-debug-toolbar
-tabulate==0.8.2
+tabulate==0.9.0
     # via -r requirements-dev.in
 tblib==1.7.0
     # via django-concurrent-test-helper
