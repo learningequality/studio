@@ -101,13 +101,13 @@ def fileobj_video(contents=None):
 def node_json(data):
     node_data = {
         "title": "Recipes",
-        "node_id": "acedacedacedacedacedacedacedaced",
+        "node_id": data.get("node_id", "acedacedacedacedacedacedacedaced"),
         "content_id": "aa480b60a7f4526f886e7df9f4e9b8cc",
         "description": "Recipes for various dishes.",
         "author": "Bradley Smoker",
         "kind": data['kind'],
         "license": data['license'],
-        "extra_fields": "",
+        "extra_fields": {},
         "files": [],
         "questions": []
     }

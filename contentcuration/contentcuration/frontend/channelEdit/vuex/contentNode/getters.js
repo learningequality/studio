@@ -351,3 +351,9 @@ export function nodeExpanded(state) {
     return Boolean(state.expandedNodes[id]);
   };
 }
+
+export function getQuickEditModalOpen(state) {
+  return function() {
+    return state.quickEditModalOpen;
+  };
+}

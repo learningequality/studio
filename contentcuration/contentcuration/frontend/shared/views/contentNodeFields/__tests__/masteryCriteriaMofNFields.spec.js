@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils';
-import TestForm from '../../../../shared/views/__tests__/TestForm.vue';
-import MasteryCriteriaMofNFields from '../MasteryCriteriaMofNFields.vue';
+import MasteryCriteriaMofNFields from '../CompletionOptions/MasteryCriteriaMofNFields';
+import TestForm from 'shared/views/__tests__/TestForm';
 
 document.body.setAttribute('data-app', true); // Vuetify prints a warning without this
 

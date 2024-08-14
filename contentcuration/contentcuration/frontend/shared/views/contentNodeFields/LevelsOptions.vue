@@ -1,22 +1,14 @@
 <template>
 
-  <DropdownWrapper>
-    <template #default="{ attach, menuProps }">
-      <VSelect
-        ref="level"
-        v-model="level"
-        :items="levels"
-        box
-        chips
-        clearable
-        :label="translateMetadataString('level')"
-        multiple
-        deletableChips
-        :menu-props="menuProps"
-        :attach="attach"
-      />
-    </template>
-  </DropdownWrapper>
+  <ExpandableSelect
+    v-model="level"
+    multiple
+    :expanded="expanded"
+    :options="levels"
+    :hideLabel="hideLabel"
+    :label="translateMetadataString('level')"
+    :availableItems="nodeIds"
+  />
 
 </template>
 
@@ -24,17 +16,36 @@
 
   import camelCase from 'lodash/camelCase';
   import { ContentLevels } from 'shared/constants';
+  import ExpandableSelect from 'shared/views/form/ExpandableSelect';
   import { constantsTranslationMixin, metadataTranslationMixin } from 'shared/mixins';
-  import DropdownWrapper from 'shared/views/form/DropdownWrapper';
 
   export default {
     name: 'LevelsOptions',
-    components: { DropdownWrapper },
+    components: { ExpandableSelect },
     mixins: [constantsTranslationMixin, metadataTranslationMixin],
     props: {
+      /**
+       * This prop receives an object with the following structure:
+       * {
+       *  [levelId]: [nodeId1, nodeId2, ...]
+       * }
+       * Where nodeId is the id of the node that has the level selected
+       */
       value: {
+        type: Object,
+        required: true,
+      },
+      expanded: {
+        type: Boolean,
+        default: false,
+      },
+      hideLabel: {
+        type: Boolean,
+        default: false,
+      },
+      nodeIds: {
         type: Array,
-        default: () => [],
+        required: true,
       },
     },
     computed: {

@@ -21,6 +21,12 @@ import {
   COPYING_STATUS,
   TASK_ID,
 } from 'shared/data/constants';
+import {
+  Categories,
+  ContentLevels,
+  ResourcesNeededTypes,
+  ResourcesNeededOptions,
+} from 'shared/constants';
 import { INDEXEDDB_RESOURCES } from 'shared/data/registry';
 
 /**
@@ -464,5 +470,61 @@ export class DeployedChange extends Change {
       );
     }
     this.setChannelAndUserId({ id: this.key });
+  }
+}
+
+/**
+ * Change that represents an update to a content node and its descendants
+ * It can be used just with the content node table.
+ */
+export class UpdatedDescendantsChange extends Change {
+  constructor({ oldObj, changes, ...fields }) {
+    fields.type = CHANGE_TYPES.UPDATED_DESCENDANTS;
+    super(fields);
+    if (this.table !== TABLE_NAMES.CONTENTNODE) {
+      throw TypeError(
+        `${this.changeType} is only supported by ${TABLE_NAMES.CONTENTNODE} table but ${this.table} was passed instead`
+      );
+    }
+    this.validateObj(changes, 'changes');
+    changes = omitIgnoredSubFields(changes);
+    this.mods = changes;
+    this.setModsDeletedProperties();
+    this.setChannelAndUserId(oldObj);
+  }
+
+  get changed() {
+    return !isEmpty(this.mods);
+  }
+
+  /**
+   * To ensure that the mods properties that are multi valued have set
+   * to true just the options that are present in the mods object. All
+   * other options are set to null.
+   */
+  setModsDeletedProperties() {
+    if (!this.mods) return;
+
+    const multiValueProperties = {
+      categories: Object.values(Categories),
+      learner_needs: ResourcesNeededOptions.map(option => ResourcesNeededTypes[option]),
+      grade_levels: Object.values(ContentLevels),
+    };
+    Object.entries(multiValueProperties).forEach(([key, values]) => {
+      if (this.mods[key]) {
+        values.forEach(value => {
+          if (!this.mods[key][value]) {
+            this.mods[key][value] = null;
+          }
+        });
+      }
+    });
+  }
+
+  saveChange() {
+    if (!this.changed) {
+      return Promise.resolve(null);
+    }
+    return super.saveChange();
   }
 }
