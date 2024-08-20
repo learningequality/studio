@@ -67,6 +67,13 @@
         },
       },
     },
+    watch: {
+      completionObject() {
+        this.$nextTick(() => {
+          this.validate();
+        });
+      },
+    },
     mounted() {
       const { suggested_duration, extra_fields = {} } = this.contentNode;
       const { suggested_duration_type, options } = extra_fields || {};

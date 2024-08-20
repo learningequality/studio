@@ -48,9 +48,9 @@
         v-model="mOfN"
         :showMofN="showMofN"
         :mPlaceholder="getPlaceholder('mOfN.m')"
-        :mRequired="isUnique(mOfN.m)"
+        :mRequired="showMofN && isUnique(mOfN.m)"
         :nPlaceholder="getPlaceholder('mOfN.n')"
-        :nRequired="isUnique(mOfN.n)"
+        :nRequired="showMofN && isUnique(mOfN.n)"
         @mFocus="trackClick('Mastery m value')"
         @nFocus="trackClick('Mastery n value')"
       />
