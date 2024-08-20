@@ -45,6 +45,7 @@
         />
       </template>
     </VList>
+    <slot name="pagination"></slot>
   </div>
 
 </template>
