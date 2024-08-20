@@ -102,6 +102,7 @@
             </VContent>
           </template>
         </Uploader>
+
       </VCard>
       <BottomBar v-if="!loading && !loadError && !showFileUploadDefault">
         <VLayout row align-center fill-height class="px-2">
@@ -123,6 +124,9 @@
       </BottomBar>
       <AboutLicensesModal
         v-if="isAboutLicensesModalOpen"
+      />
+      <InheritAncestorMetadataModal
+        :inheritableMetadataItems="dummyAncestorMetadata"
       />
     </VDialog>
 
@@ -185,6 +189,7 @@
   import SavingIndicator from './SavingIndicator';
   import EditView from './EditView';
   import EditList from './EditList';
+  import InheritAncestorMetadataModal from './InheritAncestorMetadataModal.vue';
   import { ContentKindLearningActivityDefaults } from 'shared/leUtils/ContentKinds';
   import { fileSizeMixin, routerMixin } from 'shared/mixins';
   import FileStorage from 'shared/views/files/FileStorage';
@@ -203,6 +208,18 @@
 
   const CHECK_STORAGE_INTERVAL = 10000;
 
+  const dummyAncestorMetadata = {
+    categories: {
+      // PbGoe2MV
+      EHcbjuKq: '4f9be4145e7946438af6f28d225c3cb0',
+      HGIc9sZq: '4f9be4145e7946438af6f28d225c3cb0',
+    },
+    levels: {
+      BkGYi3lD: '4f9be4145e7946438af6f28d225c3cb0',
+    },
+    language: 'en',
+  };
+
   export default {
     name: 'EditModal',
     components: {
@@ -210,6 +227,7 @@
       EditView,
       ResizableNavigationDrawer,
       Uploader,
+      InheritAncestorMetadataModal,
       FileStorage,
       FileUploadDefault,
       LoadingText,
@@ -309,6 +327,9 @@
       },
       invalidNodes() {
         return this.nodeIds.filter(id => !this.getContentNodeIsValid(id));
+      },
+      dummyAncestorMetadata() {
+        return dummyAncestorMetadata;
       },
     },
     beforeRouteEnter(to, from, next) {
