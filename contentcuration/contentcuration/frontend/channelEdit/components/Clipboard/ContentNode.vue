@@ -55,7 +55,7 @@
                       </VListTileContent>
                       <VListTileAction style="min-width: unset;" class="pl-3 pr-1">
                         <div class="badge caption font-weight-bold">
-                          {{ contentNode.resource_count }}
+                          {{ contentNodeResourceCount }}
                         </div>
                       </VListTileAction>
                       <!-- Custom placement of dropdown indicator -->
@@ -117,7 +117,7 @@
 </template>
 <script>
 
-  import { mapActions, mapGetters } from 'vuex';
+  import { mapActions, mapGetters, mapState } from 'vuex';
   import clipboardMixin, { parentMixin } from './mixins';
   import ContentNodeOptions from './ContentNodeOptions';
   import Checkbox from 'shared/views/form/Checkbox';
@@ -150,6 +150,7 @@
       };
     },
     computed: {
+      ...mapState('clipboard', ['clipboardNodesMap']),
       ...mapGetters('clipboard', ['isPreloading', 'isLoaded']),
       thumbnailAttrs() {
         if (this.contentNode) {
@@ -180,6 +181,10 @@
         // See CurrentTopicView.handleDragDrop
         const contentNode = this.contentNode || {};
         return { ...contentNode, clipboardNodeId: this.nodeId };
+      },
+      contentNodeResourceCount() {
+        return Object.values(this.clipboardNodesMap).filter(node => node.parent === this.nodeId)
+          .length;
       },
     },
     watch: {
