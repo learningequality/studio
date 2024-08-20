@@ -7,7 +7,7 @@ from contentcuration.models import FlagFeedbackEvent
 
 
 class IsAdminForListAndDestroy(permissions.BasePermission):
-    def has_permission(self, request, view):
+    def _check_admin_or_feature_flag(self, request, view):
         # only allow list and destroy of flagged content to admins
         if view.action in ['list', 'destroy', 'retrieve']:
             try:
@@ -17,6 +17,12 @@ class IsAdminForListAndDestroy(permissions.BasePermission):
         if request.user.check_feature_flag('test_dev_feature'):
             return True
         return False
+
+    def has_permission(self, request, view):
+        return self._check_admin_or_feature_flag(request, view)
+
+    def has_object_permission(self, request, view, obj):
+        return self._check_admin_or_feature_flag(request, view)
 
 
 class BaseFeedbackSerializer(serializers.ModelSerializer):

@@ -235,8 +235,9 @@ def user(email='user@test.com', feature_flags=None):
     if is_new:
         user.set_password('password')
         user.is_active = True
-        if feature_flags is not None:
-            user.feature_flags = feature_flags
+        user.save()
+    if feature_flags is not None:
+        user.feature_flags = feature_flags
         user.save()
     return user
 
