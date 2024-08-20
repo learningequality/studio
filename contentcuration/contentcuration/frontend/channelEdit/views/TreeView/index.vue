@@ -128,6 +128,13 @@
             />
           </div>
         </template>
+        <template #pagination>
+          <div class="pagination-container">
+            <KButton v-if="more" :disabled="moreLoading" @click="loadMore">
+              {{ $tr('showMore') }}
+            </KButton>
+          </div>
+        </template>
       </CurrentTopicView>
     </VContent>
   </TreeViewBase>
@@ -192,6 +199,8 @@
         },
         loading: true,
         listElevated: false,
+        more: null,
+        moreLoading: false,
       };
     },
     computed: {
@@ -285,25 +294,30 @@
       },
     },
     created() {
-      let childrenPromise;
-      // If viewing the root-level node, don't request anything, since the NodePanel.created
-      // hook will make a redundant request
-      if (this.nodeId === this.rootId) {
-        childrenPromise = Promise.resolve();
-      } else {
-        childrenPromise = this.loadContentNodes({ parent: this.rootId });
-      }
-      Promise.all([childrenPromise, this.loadAncestors({ id: this.nodeId })]).then(() => {
-        this.loading = false;
-        this.jumpToLocation();
-      });
+      const childrenPromise = this.loadChildren({ parent: this.rootId });
+      Promise.all([childrenPromise, this.loadAncestors({ id: this.nodeId })]).then(
+        ([childrenResponse]) => {
+          this.loading = false;
+          this.more = childrenResponse.more || null;
+          this.jumpToLocation();
+        }
+      );
     },
     methods: {
       ...mapMutations('contentNode', {
         collapseAll: 'COLLAPSE_ALL_EXPANDED',
         setExpanded: 'SET_EXPANSION',
       }),
-      ...mapActions('contentNode', ['loadAncestors', 'loadContentNodes']),
+      ...mapActions('contentNode', ['loadAncestors', 'loadChildren', 'loadContentNodes']),
+      loadMore() {
+        if (this.more && !this.moreLoading) {
+          this.moreLoading = true;
+          this.loadContentNodes(this.more).then(response => {
+            this.more = response.more || null;
+            this.moreLoading = false;
+          });
+        }
+      },
       verifyContentNodeId(id) {
         this.nodeNotFound = false;
         return this.$store.dispatch('contentNode/headContentNode', id).catch(() => {
@@ -400,6 +414,7 @@
       openCurrentLocationButton: 'Expand to current folder location',
       updatedResourcesReadyForReview: 'Updated resources are ready for review',
       closeDrawer: 'Close',
+      showMore: 'Show more',
     },
   };
 
@@ -445,6 +460,12 @@
       /* stylelint-disable-next-line custom-property-pattern */
       background-color: var(--v-draggableDropZone-base);
     }
+  }
+
+  .pagination-container {
+    display: flex;
+    justify-content: flex-start;
+    margin: 4px;
   }
 
 </style>
