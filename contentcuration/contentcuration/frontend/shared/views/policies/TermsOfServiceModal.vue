@@ -186,7 +186,7 @@
         <p>
           <ActionLink
             :text="$tr('communityStandardsLink')"
-            @click="$emit('open', policies.COMMUNITY_STANDARDS)"
+            @click="$router.push({ query: { showPolicy: policies.COMMUNITY_STANDARDS } })"
           />
         </p>
       </div>
@@ -198,7 +198,7 @@
         <p>
           <ActionLink
             :text="$tr('yourPrivacyLink')"
-            @click="$emit('open', policies.PRIVACY)"
+            @click="$router.push({ query: { showPolicy: policies.PRIVACY } })"
           />
         </p>
       </div>
