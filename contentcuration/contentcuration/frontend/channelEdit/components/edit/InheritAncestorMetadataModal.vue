@@ -1,6 +1,7 @@
 <template>
 
   <KModal
+    v-if="active"
     data-test="inheritable-metadata-dialog"
     :title="$tr('applyResourceDetailsTitle')"
     :submitText="$tr('continueAction')"
@@ -14,9 +15,9 @@
       </p>
       <div class="inherit-metadata-dialog-checkboxes">
         <KCheckbox
-          v-for="item in inheritableMetadataItems"
-          :key="item.value"
-          :label="generateLabel(item)"
+          v-for="item, key in inheritableMetadataItems"
+          :key="key"
+          :label="generateLabel(key)"
         />
       </div>
       <div class="divider"></div>
@@ -31,13 +32,114 @@
 
 <script>
 
+  import isEmpty from 'lodash/isEmpty';
+  import { ContentNode } from 'shared/data/resources';
+
   export default {
     name: 'InheritAncestorMetadataModal',
     props: {
-      inheritableMetadataItems: {
+      contentNode: {
         type: Object,
-        required: true,
+        default: null,
       },
+    },
+    data() {
+      return {
+        categories: {},
+        grade_levels: {},
+        language: null,
+        learner_needs: {},
+      };
+    },
+    computed: {
+      active() {
+        return (
+          this.contentNode !== null &&
+          this.contentNode.parent &&
+          (!isEmpty(this.categories) ||
+            !isEmpty(this.grade_levels) ||
+            this.language ||
+            !isEmpty(this.learner_needs))
+        );
+      },
+      inheritableMetadataItems() {
+        const returnValue = {};
+        if (!this.contentNode) {
+          return returnValue;
+        }
+        const categories = Object.keys(this.categories)
+          .filter(
+            key =>
+              !Object.keys(this.contentNode['categories'] || {}).some(category =>
+                category.startsWith(key)
+              )
+          )
+          .reduce((acc, key) => {
+            acc[key] = true;
+            return acc;
+          }, {});
+        if (!isEmpty(categories)) {
+          returnValue.categories = categories;
+        }
+        const grade_levels = Object.keys(this.grade_levels)
+          .filter(key => !(this.contentNode['grade_levels'] || {})[key])
+          .reduce((acc, key) => {
+            acc[key] = true;
+            return acc;
+          }, {});
+        if (!isEmpty(grade_levels)) {
+          returnValue.grade_levels = grade_levels;
+        }
+        const language = this.contentNode.language !== this.language ? this.language : null;
+        if (language) {
+          returnValue.language = language;
+        }
+        const learner_needs = Object.keys(this.learner_needs)
+          .filter(key => !(this.contentNode['learner_needs'] || {})[key])
+          .reduce((acc, key) => {
+            acc[key] = true;
+            return acc;
+          }, {});
+        if (!isEmpty(learner_needs)) {
+          returnValue.learner_needs = learner_needs;
+        }
+
+        return returnValue;
+      },
+    },
+    created() {
+      if (this.contentNode && this.contentNode.parent) {
+        ContentNode.getAncestors(this.contentNode.parent).then(ancestors => {
+          this.categories = ancestors.reduce((acc, ancestor) => {
+            const returnValue = {
+              ...acc,
+              ...ancestor.categories,
+            };
+            for (const key in returnValue) {
+              if (Object.keys(returnValue).some(k => k.startsWith(key) && k !== key)) {
+                // Delete the key if it is a parent category of another key
+                delete returnValue[key];
+              }
+            }
+            return returnValue;
+          }, {});
+          this.grade_levels = ancestors.reduce((acc, ancestor) => {
+            return {
+              ...acc,
+              ...ancestor.grade_levels,
+            };
+          }, {});
+          this.language = ancestors.reduce((acc, ancestor) => {
+            return ancestor.language || acc;
+          }, null);
+          this.learner_needs = ancestors.reduce((acc, ancestor) => {
+            return {
+              ...acc,
+              ...ancestor.learner_needs,
+            };
+          }, {});
+        });
+      }
     },
     methods: {
       handleContinue() {

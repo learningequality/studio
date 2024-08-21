@@ -126,7 +126,7 @@
         v-if="isAboutLicensesModalOpen"
       />
       <InheritAncestorMetadataModal
-        :inheritableMetadataItems="dummyAncestorMetadata"
+        :contentNode="createMode ? { parent: $route.params.nodeId } : null"
       />
     </VDialog>
 
@@ -208,18 +208,6 @@
 
   const CHECK_STORAGE_INTERVAL = 10000;
 
-  const dummyAncestorMetadata = {
-    categories: {
-      // PbGoe2MV
-      EHcbjuKq: '4f9be4145e7946438af6f28d225c3cb0',
-      HGIc9sZq: '4f9be4145e7946438af6f28d225c3cb0',
-    },
-    levels: {
-      BkGYi3lD: '4f9be4145e7946438af6f28d225c3cb0',
-    },
-    language: 'en',
-  };
-
   export default {
     name: 'EditModal',
     components: {
@@ -288,11 +276,12 @@
       uploadMode() {
         return this.$route.name === RouteNames.UPLOAD_FILES;
       },
-      /* eslint-disable kolibri/vue-no-unused-properties */
       createExerciseMode() {
         return this.$route.name === RouteNames.ADD_EXERCISE;
       },
-      /* eslint-enable */
+      createMode() {
+        return this.addTopicsMode || this.uploadMode || this.createExerciseMode;
+      },
       editMode() {
         return this.$route.name === RouteNames.CONTENTNODE_DETAILS;
       },
@@ -327,9 +316,6 @@
       },
       invalidNodes() {
         return this.nodeIds.filter(id => !this.getContentNodeIsValid(id));
-      },
-      dummyAncestorMetadata() {
-        return dummyAncestorMetadata;
       },
     },
     beforeRouteEnter(to, from, next) {
