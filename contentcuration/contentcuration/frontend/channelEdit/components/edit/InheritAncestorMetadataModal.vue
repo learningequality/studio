@@ -28,7 +28,9 @@
         :checked="dontShowAgain"
         @change="dontShowAgain = !dontShowAgain"
       />
-      <p>{{ $tr('doNotShowAgainDescription') }}</p>
+      <p class="helper-text">
+        {{ $tr('doNotShowAgainDescription') }}
+      </p>
     </div>
   </KModal>
 
@@ -259,3 +261,19 @@
   };
 
 </script>
+
+
+<style lang="less" scoped>
+
+  .divider {
+    margin: 16px 0;
+    border-bottom: 1px solid #e6e6e6;
+  }
+
+  .helper-text {
+    margin: -8px 32px;
+    font-size: 12px;
+    color: #9e9e9e;
+  }
+
+</style>
