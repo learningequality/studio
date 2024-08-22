@@ -97,42 +97,8 @@ class Command(BaseCommand):
             "original_source_node_f_changed",
         ).order_by()
 
-        # diff_provider = diff.annotate(coalesced_provider=Coalesce('provider', Value(''))).annotate(
-        #     original_source_node_f_changed=Exists(original_source_nodes.annotate(coalesced_provider=Coalesce('provider', Value(''))).exclude(coalesced_provider=OuterRef('coalesced_provider')))
-        # ).filter(
-        #     original_source_node_f_changed=True
-        # )
-
-        # diff_author = diff.annotate(coalesced_author=Coalesce('author', Value(''))).annotate(
-        #     original_source_node_f_changed=Exists(original_source_nodes.annotate(coalesced_author=Coalesce('author', Value(''))).exclude(coalesced_author=OuterRef('coalesced_author')))
-        # ).filter(
-        #     original_source_node_f_changed=True
-        # )
-
-        # diff_aggregator = diff.annotate(coalesced_aggregator=Coalesce('aggregator', Value(''))).annotate(
-        #     original_source_node_f_changed=Exists(original_source_nodes.annotate(coalesced_aggregator=Coalesce('aggregator', Value(''))).exclude(coalesced_aggregator=OuterRef('coalesced_aggregator')))
-        # ).filter(
-        #     original_source_node_f_changed=True
-        #  )
-
-        # diff_lic = diff.annotate(coalesced_license_id=Coalesce('license_id', -1)).annotate(
-        #     original_source_node_f_changed=Exists(original_source_nodes.annotate(coalesced_license_id=Coalesce('license_id', -1)).exclude(coalesced_license_id=OuterRef('coalesced_license_id')))
-        # ).filter(
-        #     original_source_node_f_changed=True
-        # )
-
-        # final_nodes_author = diff_author.values('id', 'original_channel_id', 'original_source_node_id', 'source_node_f_changed', 'original_source_node_f_changed').order_by()
-
-        # final_nodes_provider = diff_provider.values('id', 'original_channel_id', 'original_source_node_id', 'source_node_f_changed', 'original_source_node_f_changed').order_by()
-
-        # final_nodes_aggregator = diff_aggregator.values('id', 'original_channel_id', 'original_source_node_id',  'coalesced_aggregator','source_node_f_changed', 'original_source_node_f_changed').order_by()
-
-        # final_nodes_license = diff_lic.values('id', 'original_channel_id', 'original_source_node_id',  'coalesced_license_id','source_node_f_changed', 'original_source_node_f_changed').order_by()
-
-        # final_nodes = final_nodes_provider + final_nodes_aggregator + final_nodes_license + final_nodes_author
-
         for item in final_nodes:
-            base_node = ContentNode.objects.filter(pk=item["id"])
+            base_node = ContentNode.objects.get(pk=item["id"])
 
             original_source_channel_id = item["original_channel_id"]
             original_source_node_id = item["original_source_node_id"]
@@ -146,8 +112,8 @@ class Command(BaseCommand):
             )
 
             if original_source_channel_id is not None and original_source_node.exists():
-                ## original source node exists and its source fields dont match
-                ## update the base node
+                # original source node exists and its source fields dont match
+                # update the base node
                 if base_node[0].author != original_source_node[0].author:
                     base_node[0].author = original_source_node[0].author
                 if base_node[0].provider != original_source_node[0].provider:
