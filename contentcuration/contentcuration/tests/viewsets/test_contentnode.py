@@ -851,7 +851,6 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
                     )
                 ],
         )
-
         self.assertEqual(len(response.data["errors"]), 0)
         updated_contentnode = models.ContentNode.objects.get(id=contentnode.id)
         self.assertEqual(updated_contentnode.extra_fields["options"]["completion_criteria"]["model"], completion_criteria.DETERMINED_BY_RESOURCE)

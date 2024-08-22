@@ -282,14 +282,14 @@ class CompletionCriteriaSerializer(JSONFieldDictSerializer):
     model = CharField()
     learner_managed = BooleanField(required=False, allow_null=True)
 
+    def update(self, instance, validated_data):
+        validated_data = validate_and_conform_to_schema_threshold_none(validated_data)
+        return super(CompletionCriteriaSerializer, self).update(instance, validated_data)
+
 
 class ExtraFieldsOptionsSerializer(JSONFieldDictSerializer):
     modality = ChoiceField(choices=(("QUIZ", "Quiz"),), allow_null=True, required=False)
     completion_criteria = CompletionCriteriaSerializer(required=False)
-
-    def update(self, instance, validated_data):
-        validated_data = validate_and_conform_to_schema_threshold_none(validated_data)
-        return super(ExtraFieldsOptionsSerializer, self).update(instance, validated_data)
 
 
 class ExtraFieldsSerializer(JSONFieldDictSerializer):
