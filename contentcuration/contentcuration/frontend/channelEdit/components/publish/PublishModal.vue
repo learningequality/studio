@@ -174,7 +174,7 @@
         this.step++;
       }
     },
-    async mounted() {
+    mounted() {
       this.loading = true;
       // TODO: re-enable when re-added to design
       // // needs ...mapActions('currentChannel', ['loadChannelSize']),
