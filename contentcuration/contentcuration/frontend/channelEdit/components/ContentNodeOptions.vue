@@ -134,7 +134,7 @@
             },
             {
               label: this.$tr('remove'),
-              onClick: this.removeNode,
+              onClick: () => this.removeNode([this.nodeId]),
               condition: this.canEdit,
             },
           ],
@@ -319,10 +319,10 @@
           this.trackAction(`Edit ${trackActionLabel}`);
         };
       },
-      removeNode: withChangeTracker(function(changeTracker) {
+      removeNode: withChangeTracker(function(id__in, changeTracker) {
         this.trackAction('Delete');
         const redirect = this.getRemoveNodeRedirect();
-        return this.moveContentNodes({ id__in: [this.nodeId], parent: this.trashId }).then(() => {
+        return this.moveContentNodes({ id__in, parent: this.trashId }).then(() => {
           redirect();
           this.showSnackbar({
             text: this.$tr('removedItems'),
