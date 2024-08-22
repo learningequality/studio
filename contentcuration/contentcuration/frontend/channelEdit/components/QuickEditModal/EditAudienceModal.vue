@@ -54,6 +54,7 @@
   import { ResourcesNeededTypes } from 'shared/constants';
   import { constantsTranslationMixin } from 'shared/mixins';
   import { hasMultipleFieldValues } from 'shared/utils/helpers';
+  import commonStrings from 'shared/translator';
 
   export default {
     name: 'EditAudienceModal',
@@ -137,10 +138,8 @@
             });
           })
         );
-        this.$store.dispatch(
-          'showSnackbarSimple',
-          this.$tr('editedAudience', { count: this.nodes.length })
-        );
+        /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
+        this.$store.dispatch('showSnackbarSimple', commonStrings.$tr('changesSaved'));
         this.close();
       },
     },
@@ -148,8 +147,6 @@
       editAudienceTitle: 'Edit Audience',
       saveAction: 'Save',
       cancelAction: 'Cancel',
-      editedAudience:
-        'Edited audience for {count, number, integer} {count, plural, one {resource} other {resources}}',
       resourcesSelected:
         '{count, number, integer} {count, plural, one {resource} other {resources}} selected',
       forBeginnersCheckbox: 'For beginners',

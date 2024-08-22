@@ -39,6 +39,7 @@
 
   import { mapActions, mapGetters } from 'vuex';
   import { getTitleValidators, getInvalidText } from 'shared/utils/validation';
+  import commonStrings from 'shared/translator';
 
   export default {
     name: 'EditTitleDescriptionModal',
@@ -85,8 +86,8 @@
           title: title.trim(),
           description: description.trim(),
         });
-
-        this.$store.dispatch('showSnackbarSimple', this.$tr('editedTitleDescription'));
+        /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
+        this.$store.dispatch('showSnackbarSimple', commonStrings.$tr('changesSaved'));
         this.close();
       },
     },
@@ -96,7 +97,6 @@
       descriptionLabel: 'Description',
       saveAction: 'Save',
       cancelAction: 'Cancel',
-      editedTitleDescription: 'Edited title and description',
     },
   };
 
