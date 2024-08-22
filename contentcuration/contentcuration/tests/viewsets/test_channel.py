@@ -4,11 +4,13 @@ import uuid
 
 import mock
 from django.urls import reverse
+from kolibri_public.models import ContentNode as PublicContentNode
 from le_utils.constants import content_kinds
 
 from contentcuration import models
 from contentcuration import models as cc
 from contentcuration.constants import channel_history
+from contentcuration.models import ContentNode
 from contentcuration.tests import testdata
 from contentcuration.tests.base import StudioAPITestCase
 from contentcuration.tests.viewsets.base import generate_create_event
@@ -466,3 +468,94 @@ class CRUDTestCase(StudioAPITestCase):
         channel = models.Channel.objects.get(id=channel.id)
         self.assertFalse(channel.deleted)
         self.assertEqual(1, channel.history.filter(actor=user, action=channel_history.RECOVERY).count())
+
+
+class ChannelLanguageTestCase(StudioAPITestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        super(ChannelLanguageTestCase, cls).setUpClass()
+        cls.channel = testdata.channel()
+        cls.channel.language_id = 'en'
+        cls.channel.save()
+
+        cls.channel_id = cls.channel.id
+        cls.node_id = '00000000000000000000000000000003'
+        cls.public_node = PublicContentNode.objects.create(
+            id=uuid.UUID(cls.node_id),
+            title='Video 1',
+            content_id=uuid.uuid4(),
+            channel_id=uuid.UUID(cls.channel.id),
+            lang_id='en',
+        )
+
+    def test_channel_language_exists_valid_channel(self):
+
+        ContentNode.objects.filter(node_id=self.public_node.id).update(language_id='en')
+        response = self._perform_action("channel-language-exists", self.channel.id)
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertTrue(response.json()["exists"])
+
+    def test_channel_language_doesnt_exists_valid_channel(self):
+
+        PublicContentNode.objects.filter(id=self.public_node.id).update(lang_id='es')
+        response = self._perform_action("channel-language-exists", self.channel.id)
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertFalse(response.json()["exists"])
+
+    def test_channel_language_exists_invalid_channel(self):
+
+        response = self._perform_action("channel-language-exists", 'unknown_channel_id')
+        self.assertEqual(response.status_code, 404, response.content)
+
+    def test_channel_language_exists_invalid_request(self):
+
+        response = self._perform_action("channel-language-exists", None)
+        self.assertEqual(response.status_code, 404, response.content)
+
+    def test_get_languages_in_channel_success_languages(self):
+        new_language = 'swa'
+        self.channel.language_id = new_language
+        self.channel.save()
+        PublicContentNode.objects.filter(id=self.public_node.id).update(lang_id=new_language)
+        ContentNode.objects.filter(node_id=self.public_node.id).update(language_id=new_language)
+
+        response = self._perform_action("channel-languages", self.channel.id)
+        languages = response.json()["languages"]
+
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertListEqual(languages, [new_language])
+
+    def test_get_languages_in_channel_success_channel_language_excluded(self):
+        new_language = 'fr'
+        channel_lang = 'en'
+        self.channel.language_id = channel_lang
+        self.channel.save()
+        PublicContentNode.objects.filter(id=self.public_node.id).update(lang_id=new_language)
+        ContentNode.objects.filter(node_id=self.public_node.id).update(language_id=new_language)
+
+        response = self._perform_action("channel-languages", self.channel.id)
+        languages = response.json()["languages"]
+
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertListEqual(languages, [new_language])
+        self.assertFalse(channel_lang in languages)
+
+    def test_get_languages_in_channel_success_no_languages(self):
+
+        response = self._perform_action("channel-languages", self.channel.id)
+        languages = response.json()["languages"]
+
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertListEqual(languages, [])
+
+    def test_get_languages_in_channel_invalid_request(self):
+
+        response = self._perform_action("channel-languages", None)
+        self.assertEqual(response.status_code, 404, response.content)
+
+    def _perform_action(self, url_path, channel_id):
+        user = testdata.user()
+        self.client.force_authenticate(user=user)
+        response = self.client.get(reverse(url_path, kwargs={"pk": channel_id}), format="json")
+        return response

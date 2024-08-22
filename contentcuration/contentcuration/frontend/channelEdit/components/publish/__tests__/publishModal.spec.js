@@ -110,16 +110,20 @@ describe('publishModal', () => {
         "Please describe what's new in this version before publishing"
       );
     });
-    it('publishing should be blocked if no description is given', () => {
+    it('publishing should be blocked if no description & language are given', () => {
       wrapper
         .find('[data-test="confirm-publish-modal"]')
         .find('form')
         .trigger('submit');
       expect(publishChannel).not.toHaveBeenCalled();
     });
-    it('publish button should call publishChannel if description is given', () => {
+    it('publish button should call publishChannel if description and language are given', () => {
       const description = 'Version notes';
-      wrapper.setData({ publishDescription: description });
+      const language = {
+        value: 'en',
+        label: 'English',
+      };
+      wrapper.setData({ publishDescription: description, language });
       wrapper
         .find('[data-test="confirm-publish-modal"]')
         .find('form')
