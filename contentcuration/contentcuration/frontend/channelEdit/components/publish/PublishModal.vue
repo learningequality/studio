@@ -58,7 +58,7 @@
           <HelpTooltip :text="$tr('descriptionDescriptionTooltip')" bottom />
         </KGridItem>
 
-        <KGridItem v-if="showLanguageDropdown" :layout="{ span: 11 }">
+        <KGridItem v-show="showLanguageDropdown" :layout="{ span: 11 }">
           <KSelect
             v-model="language"
             :label="$tr('languageLabel')"
@@ -68,7 +68,7 @@
             @change="showLanguageInvalidText = !isLanguageValid"
           />
         </KGridItem>
-        <KGridItem v-if="showLanguageDropdown" :layout="{ span: 1 }">
+        <KGridItem v-show="showLanguageDropdown" :layout="{ span: 1 }">
           <HelpTooltip :text="$tr('languageDescriptionTooltip')" bottom />
         </KGridItem>
       </KFixedGrid>
@@ -190,6 +190,9 @@
             this.channelLanguages = languages.length ? languages : [this.currentChannel.language];
             this.language = this.defaultLanguage;
           });
+        } else {
+          this.channelLanguages = [this.currentChannel.language];
+          this.language = this.defaultLanguage;
         }
       });
     },
