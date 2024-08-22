@@ -51,8 +51,8 @@ export function deployCurrentChannel(context) {
   return Channel.deploy(context.state.currentChannelId);
 }
 
-export function publishChannel(context, { version_notes, language }) {
-  return Channel.publish(context.state.currentChannelId, version_notes, language);
+export function publishChannel(context, version_notes) {
+  return Channel.publish(context.state.currentChannelId, version_notes);
 }
 
 export function channelLanguageExistsInResources(context) {

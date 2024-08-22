@@ -24,16 +24,12 @@ describe('currentChannel store', () => {
     });
     it('publishChannel action should post to publish_channel endpoint', () => {
       const notes = 'version notes';
-      const language = 'en';
       const spy = jest.spyOn(Channel, 'publish').mockImplementation(() => Promise.resolve());
-      return store
-        .dispatch('currentChannel/publishChannel', { version_notes: notes, language })
-        .then(() => {
-          expect(spy.mock.calls[0][0]).toBe(store.state.currentChannel.currentChannelId);
-          expect(spy.mock.calls[0][1]).toBe(notes);
-          expect(spy.mock.calls[0][2]).toBe(language);
-          spy.mockRestore();
-        });
+      return store.dispatch('currentChannel/publishChannel', notes).then(() => {
+        expect(spy.mock.calls[0][0]).toBe(store.state.currentChannel.currentChannelId);
+        expect(spy.mock.calls[0][1]).toBe(notes);
+        spy.mockRestore();
+      });
     });
     it('channelLanguageExistsInResources action should call `language_exists` endpoint', () => {
       const spy = jest

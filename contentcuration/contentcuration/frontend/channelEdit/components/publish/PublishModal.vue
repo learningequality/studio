@@ -194,6 +194,7 @@
       });
     },
     methods: {
+      ...mapActions('channel', ['updateChannel']),
       ...mapActions('currentChannel', [
         'publishChannel',
         'channelLanguageExistsInResources',
@@ -214,10 +215,13 @@
           if (!this.areAllChangesSaved) {
             await forceServerSync();
           }
-          this.publishChannel({
-            version_notes: this.publishDescription,
+
+          this.updateChannel({
+            id: this.currentChannel.id,
             language: this.language.value,
-          }).then(this.close);
+          }).then(() => {
+            this.publishChannel(this.publishDescription).then(this.close);
+          });
         }
       },
       filterLanguages(filterFn) {

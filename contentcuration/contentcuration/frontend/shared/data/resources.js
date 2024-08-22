@@ -44,6 +44,7 @@ import {
   UpdatedDescendantsChange,
 } from './changes';
 import urls from 'shared/urls';
+import { currentLanguage } from 'shared/i18n';
 import client, { paramsSerializer } from 'shared/client';
 import { DELAYED_VALIDATION, fileErrors, NEW_OBJECT } from 'shared/constants';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
@@ -1136,14 +1137,14 @@ export const Channel = new CreateModelResource({
     });
   },
 
-  publish(id, version_notes, language) {
+  publish(id, version_notes) {
     return this.transaction({ mode: 'rw' }, () => {
       return this.table.update(id, { publishing: true });
     }).then(() => {
       const change = new PublishedChange({
         key: id,
         version_notes,
-        language,
+        language: currentLanguage,
         table: this.tableName,
         source: CLIENTID,
       });

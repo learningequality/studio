@@ -85,17 +85,21 @@ describe('publishModal', () => {
     });
   });
   describe('on publish step', () => {
+    const updateChannel = jest.fn();
     const publishChannel = jest.fn();
+
     beforeEach(() => {
       wrapper.setData({ step: steps.PUBLISH });
       wrapper.setMethods({
-        publishChannel: () => {
+        updateChannel: () => {
           return new Promise(resolve => {
+            updateChannel();
             publishChannel();
             resolve();
           });
         },
       });
+      updateChannel.mockReset();
       publishChannel.mockReset();
     });
     it('publish button should trigger form validation', () => {
@@ -115,9 +119,10 @@ describe('publishModal', () => {
         .find('[data-test="confirm-publish-modal"]')
         .find('form')
         .trigger('submit');
+      expect(updateChannel).not.toHaveBeenCalled();
       expect(publishChannel).not.toHaveBeenCalled();
     });
-    it('publish button should call publishChannel if description and language are given', () => {
+    it('publish button should call updateChannel if description and language are given', () => {
       const description = 'Version notes';
       const language = {
         value: 'en',
@@ -128,6 +133,7 @@ describe('publishModal', () => {
         .find('[data-test="confirm-publish-modal"]')
         .find('form')
         .trigger('submit');
+      expect(updateChannel).toHaveBeenCalled();
       expect(publishChannel).toHaveBeenCalled();
     });
     it('cancel button on publish step should also close modal', () => {
