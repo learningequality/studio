@@ -472,20 +472,19 @@ class CRUDTestCase(StudioAPITestCase):
 
 class ChannelLanguageTestCase(StudioAPITestCase):
 
-    @classmethod
-    def setUpClass(cls):
-        super(ChannelLanguageTestCase, cls).setUpClass()
-        cls.channel = testdata.channel()
-        cls.channel.language_id = 'en'
-        cls.channel.save()
+    def setUp(self):
+        super(ChannelLanguageTestCase, self).setUp()
+        self.channel = testdata.channel()
+        self.channel.language_id = 'en'
+        self.channel.save()
 
-        cls.channel_id = cls.channel.id
-        cls.node_id = '00000000000000000000000000000003'
-        cls.public_node = PublicContentNode.objects.create(
-            id=uuid.UUID(cls.node_id),
+        self.channel_id = self.channel.id
+        self.node_id = '00000000000000000000000000000003'
+        self.public_node = PublicContentNode.objects.create(
+            id=uuid.UUID(self.node_id),
             title='Video 1',
             content_id=uuid.uuid4(),
-            channel_id=uuid.UUID(cls.channel.id),
+            channel_id=uuid.UUID(self.channel.id),
             lang_id='en',
         )
 
