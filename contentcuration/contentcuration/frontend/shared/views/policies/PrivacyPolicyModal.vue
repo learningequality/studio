@@ -5,7 +5,7 @@
     :title="title"
     :needsAcceptance="needsAcceptance"
     data-test="privacy-modal"
-    @accept="$emit('accept')"
+    @accept="$emit('accept', policy)"
     @close="$emit('close')"
   >
     <div class="privacy-wrapper" dir="auto">
