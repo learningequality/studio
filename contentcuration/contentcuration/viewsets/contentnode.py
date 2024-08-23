@@ -1044,6 +1044,8 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
                 ),
                 applied=True,
                 created_by_id=self.request.user.id,
+                # This is not a publishable change, as it is just updating ephemeral status updates.
+                unpublishable=True,
             )
 
     def perform_create(self, serializer, change=None):

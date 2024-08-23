@@ -56,6 +56,18 @@ ALL_TABLES = set(
     ]
 )
 
+# Some edits have implications for channels,
+# but do not affect whether a channel is publishable or not
+# only edits to these tables are considered publishable changes
+# although individual changes can still be marked as unpublishable.
+PUBLISHABLE_CHANGE_TABLES = set([
+    CHANNEL,
+    CONTENTNODE,
+    CONTENTNODE_PREREQUISITE,
+    ASSESSMENTITEM,
+    FILE,
+])
+
 
 # Enum for copying states
 class COPYING_STATUS_VALUES:

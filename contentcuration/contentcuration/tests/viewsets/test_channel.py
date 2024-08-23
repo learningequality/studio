@@ -3,6 +3,8 @@ from __future__ import absolute_import
 import uuid
 
 import mock
+from django.db.models import Exists
+from django.db.models import OuterRef
 from django.urls import reverse
 from le_utils.constants import content_kinds
 
@@ -14,9 +16,11 @@ from contentcuration.tests.base import StudioAPITestCase
 from contentcuration.tests.viewsets.base import generate_create_event
 from contentcuration.tests.viewsets.base import generate_delete_event
 from contentcuration.tests.viewsets.base import generate_deploy_channel_event
+from contentcuration.tests.viewsets.base import generate_publish_channel_event
 from contentcuration.tests.viewsets.base import generate_sync_channel_event
 from contentcuration.tests.viewsets.base import generate_update_event
 from contentcuration.tests.viewsets.base import SyncTestMixin
+from contentcuration.viewsets.channel import _unpublished_changes_query
 from contentcuration.viewsets.sync.constants import CHANNEL
 
 
@@ -374,6 +378,19 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         self.assertNotEqual(modified_channel.main_tree, channel.staging_tree)
         self.assertNotEqual(modified_channel.previous_tree, channel.main_tree)
 
+    def test_publish_does_not_make_publishable(self):
+        user = testdata.user()
+        channel = models.Channel.objects.create(actor_id=user.id, **self.channel_metadata)
+        channel.editors.add(user)
+
+        self.sync_changes(
+            [
+                generate_publish_channel_event(channel.id)
+            ]
+        )
+
+        self.assertEqual(_unpublished_changes_query(channel).count(), 0)
+
 
 class CRUDTestCase(StudioAPITestCase):
     @property
@@ -466,3 +483,134 @@ class CRUDTestCase(StudioAPITestCase):
         channel = models.Channel.objects.get(id=channel.id)
         self.assertFalse(channel.deleted)
         self.assertEqual(1, channel.history.filter(actor=user, action=channel_history.RECOVERY).count())
+
+
+class UnpublishedChangesQueryTestCase(StudioAPITestCase):
+    def test_unpublished_changes_query_with_channel_object(self):
+        channel = testdata.channel()
+        user = testdata.user()
+        models.Change.create_change(generate_update_event(channel.id, CHANNEL, {"name": "new name"}, channel_id=channel.id), created_by_id=user.id)
+        models.Change.create_change(generate_publish_channel_event(channel.id), created_by_id=user.id)
+        models.Change.create_change(generate_update_event(channel.id, CHANNEL, {"name": "new name 2"}, channel_id=channel.id), created_by_id=user.id)
+
+        queryset = _unpublished_changes_query(channel)
+        self.assertEqual(queryset.count(), 1)
+        self.assertEqual(queryset[0].kwargs["mods"]["name"], "new name 2")
+
+    def test_unpublished_changes_query_with_channel_object_none_since_publish(self):
+        channel = testdata.channel()
+        user = testdata.user()
+        models.Change.create_change(generate_update_event(channel.id, CHANNEL, {"name": "new name"}, channel_id=channel.id), created_by_id=user.id)
+        models.Change.create_change(generate_update_event(channel.id, CHANNEL, {"name": "new name 2"}, channel_id=channel.id), created_by_id=user.id)
+        models.Change.create_change(generate_publish_channel_event(channel.id), created_by_id=user.id)
+
+        queryset = _unpublished_changes_query(channel)
+        self.assertEqual(queryset.count(), 0)
+
+    def test_unpublished_changes_query_with_channel_object_no_publishable_since_publish(self):
+        channel = testdata.channel()
+        user = testdata.user()
+        models.Change.create_change(generate_update_event(channel.id, CHANNEL, {"name": "new name"}, channel_id=channel.id), created_by_id=user.id)
+        models.Change.create_change(generate_publish_channel_event(channel.id), created_by_id=user.id)
+        models.Change.create_change(
+            generate_update_event(
+                channel.id,
+                CHANNEL,
+                {"name": "new name 2"},
+                channel_id=channel.id
+            ),
+            created_by_id=user.id,
+            unpublishable=True,
+        )
+
+        queryset = _unpublished_changes_query(channel)
+        self.assertEqual(queryset.count(), 0)
+
+    def test_unpublished_changes_query_with_channel_object_no_publishable_since_publish_if_publish_fails_through_error(self):
+        channel = testdata.channel()
+        user = testdata.user()
+        channel.main_tree = None
+        channel.save()
+        models.Change.create_change(generate_publish_channel_event(channel.id), created_by_id=user.id)
+
+        queryset = _unpublished_changes_query(channel)
+        self.assertEqual(queryset.count(), 0)
+
+    def test_unpublished_changes_query_with_channel_object_no_publishable_since_publish_if_publish_fails_because_incomplete(self):
+        channel = testdata.channel()
+        user = testdata.user()
+        channel.main_tree.complete = False
+        channel.save()
+        models.Change.create_change(generate_publish_channel_event(channel.id), created_by_id=user.id)
+
+        queryset = _unpublished_changes_query(channel)
+        self.assertEqual(queryset.count(), 0)
+
+    def test_unpublished_changes_query_with_outerref(self):
+        channel = testdata.channel()
+        user = testdata.user()
+        models.Change.create_change(generate_update_event(channel.id, CHANNEL, {"name": "new name"}, channel_id=channel.id), created_by_id=user.id)
+        models.Change.create_change(generate_publish_channel_event(channel.id), created_by_id=user.id)
+        models.Change.create_change(generate_update_event(channel.id, CHANNEL, {"name": "new name 2"}, channel_id=channel.id), created_by_id=user.id)
+
+        outer_ref = OuterRef("id")
+        unpublished_changes = _unpublished_changes_query(outer_ref)
+        channels = models.Channel.objects.filter(pk=channel.pk).annotate(unpublished_changes=Exists(unpublished_changes))
+        self.assertTrue(channels[0].unpublished_changes)
+
+    def test_unpublished_changes_query_with_outerref_none_since_publish(self):
+        channel = testdata.channel()
+        user = testdata.user()
+        models.Change.create_change(generate_update_event(channel.id, CHANNEL, {"name": "new name"}, channel_id=channel.id), created_by_id=user.id)
+        models.Change.create_change(generate_update_event(channel.id, CHANNEL, {"name": "new name 2"}, channel_id=channel.id), created_by_id=user.id)
+        models.Change.create_change(generate_publish_channel_event(channel.id), created_by_id=user.id)
+
+        outer_ref = OuterRef("id")
+        unpublished_changes = _unpublished_changes_query(outer_ref)
+        channels = models.Channel.objects.filter(pk=channel.pk).annotate(unpublished_changes=Exists(unpublished_changes))
+        self.assertFalse(channels[0].unpublished_changes)
+
+    def test_unpublished_changes_query_with_outerref_no_publishable_since_publish(self):
+        channel = testdata.channel()
+        user = testdata.user()
+        models.Change.create_change(generate_update_event(channel.id, CHANNEL, {"name": "new name"}, channel_id=channel.id), created_by_id=user.id)
+        models.Change.create_change(generate_publish_channel_event(channel.id), created_by_id=user.id)
+        models.Change.create_change(
+            generate_update_event(
+                channel.id,
+                CHANNEL,
+                {"name": "new name 2"},
+                channel_id=channel.id
+            ),
+            created_by_id=user.id,
+            unpublishable=True
+        )
+
+        outer_ref = OuterRef("id")
+        unpublished_changes = _unpublished_changes_query(outer_ref)
+        channels = models.Channel.objects.filter(pk=channel.pk).annotate(unpublished_changes=Exists(unpublished_changes))
+        self.assertFalse(channels[0].unpublished_changes)
+
+    def test_unpublished_changes_query_no_publishable_since_publish_if_publish_fails_through_error(self):
+        channel = testdata.channel()
+        user = testdata.user()
+        channel.main_tree = None
+        channel.save()
+        models.Change.create_change(generate_publish_channel_event(channel.id), created_by_id=user.id)
+
+        outer_ref = OuterRef("id")
+        unpublished_changes = _unpublished_changes_query(outer_ref)
+        channels = models.Channel.objects.filter(pk=channel.pk).annotate(unpublished_changes=Exists(unpublished_changes))
+        self.assertFalse(channels[0].unpublished_changes)
+
+    def test_unpublished_changes_query_no_publishable_since_publish_if_publish_fails_because_incomplete(self):
+        channel = testdata.channel()
+        user = testdata.user()
+        channel.main_tree.complete = False
+        channel.save()
+        models.Change.create_change(generate_publish_channel_event(channel.id), created_by_id=user.id)
+
+        outer_ref = OuterRef("id")
+        unpublished_changes = _unpublished_changes_query(outer_ref)
+        channels = models.Channel.objects.filter(pk=channel.pk).annotate(unpublished_changes=Exists(unpublished_changes))
+        self.assertFalse(channels[0].unpublished_changes)
