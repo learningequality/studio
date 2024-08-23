@@ -121,7 +121,6 @@
         this.selectedChannels = this.selectedChannels.includes(channelId)
           ? this.selectedChannels.filter(id => id !== channelId)
           : [...this.selectedChannels, channelId];
-        console.log('clicked');
       },
     },
     $trs: {
