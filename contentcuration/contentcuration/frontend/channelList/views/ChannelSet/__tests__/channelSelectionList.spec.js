@@ -95,7 +95,6 @@ describe('channelSelectionList', () => {
     expect(wrapper.vm.listChannels.find(c => c.id === editChannel.id)).toBeTruthy();
     expect(wrapper.vm.listChannels.find(c => c.id === editChannel2.id)).toBeFalsy();
   });
-
   it('should select channels when the channel card has been clicked', () => {
     wrapper.setData({ loading: false });
     wrapper.find(`[data-test="channel-item-${editChannel.id}"]`).trigger('click');
