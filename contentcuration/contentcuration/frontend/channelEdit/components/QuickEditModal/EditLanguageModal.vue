@@ -9,7 +9,7 @@
     @submit="handleSave"
     @cancel="close"
   >
-    <p data-test="resources-selected-message">
+    <p v-if="nodeIds.length > 1" data-test="resources-selected-message">
       {{ $tr('resourcesSelected', { count: nodeIds.length }) }}
     </p>
     <p v-if="isMultipleNodeLanguages" data-test="different-languages-message">

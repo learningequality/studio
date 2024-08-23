@@ -10,7 +10,7 @@
       @submit="handleSave"
       @cancel="close"
     >
-      <p data-test="resources-selected-message" style="margin-top: 8px;">
+      <p v-if="nodeIds.length > 1" data-test="resources-selected-message" style="margin-top: 8px;">
         {{ $tr('resourcesSelected', { count: nodeIds.length }) }}
       </p>
       <div class="form-item">
