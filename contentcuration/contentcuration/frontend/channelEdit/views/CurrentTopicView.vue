@@ -172,11 +172,7 @@
             @deselect="selected = selected.filter(id => id !== $event)"
             @scroll="scroll"
             @editTitleDescription="showTitleDescriptionModal"
-          >
-            <template #pagination>
-              <slot name="pagination"></slot>
-            </template>
-          </NodePanel>
+          />
         </DraggableRegion>
       </VFadeTransition>
       <ResourceDrawer

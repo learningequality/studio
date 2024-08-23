@@ -753,12 +753,10 @@ class Resource extends mix(APIResource, IndexedDBResource) {
   }
 
   savePagination(queryString, more) {
-    if (more) {
-      return this.transaction({ mode: 'rw' }, PAGINATION_TABLE, () => {
-        return db[PAGINATION_TABLE].put({ table: this.tableName, queryString, more });
-      });
-    }
-    return Promise.resolve();
+    return this.transaction({ mode: 'rw' }, PAGINATION_TABLE, () => {
+      // Always save the pagination even if null, so we know we have fetched it
+      return db[PAGINATION_TABLE].put({ table: this.tableName, queryString, more });
+    });
   }
 
   loadPagination(queryString) {
