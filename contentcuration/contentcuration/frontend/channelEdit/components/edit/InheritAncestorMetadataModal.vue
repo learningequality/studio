@@ -7,20 +7,45 @@
     :submitText="$tr('continueAction')"
     :cancelText="$tr('cancelAction')"
     @submit="handleContinue"
-    @cancel="close"
+    @cancel="closed = true"
   >
-    <div class="inherit-metadata-dialog">
-      <p class="inherit-metadata-dialog__description">
+    <div>
+      <p v-if="parentHasInheritableMetadata">
         {{ $tr('inheritMetadataDescription') }}
       </p>
-      <div class="inherit-metadata-dialog-checkboxes">
+      <div>
         <KCheckbox
-          v-for="item, key in inheritableMetadataItems"
-          :key="key"
-          :checked="checks[key]"
-          :label="generateLabel(key)"
-          @change="checks[key] = !checks[key]"
+          v-if="!!inheritableMetadataItems.categories"
+          key="categories"
+          :label="generateInheritableCategories(inheritableMetadataItems.categories)"
+          :checked="checks['categories']"
+          @change="checks['categories'] = !checks['categories']"
         />
+        <KCheckbox
+          v-if="!!inheritableMetadataItems.grade_levels"
+          key="levels"
+          :checked="checks['grade_levels']"
+          :label="generateInheritableLevels(inheritableMetadataItems.grade_levels)"
+          @change="checks['grade_levels'] = !checks['grade_levels']"
+        />
+        <KCheckbox
+          v-if="!!inheritableMetadataItems.learner_needs"
+          key="needs"
+          :checked="checks['learner_needs']"
+          :label="generateInheritableLearnerNeeds(inheritableMetadataItems.learner_needs)"
+          @change="checks['learner_needs'] = !checks['learner_needs']"
+        />
+        <p v-if="!!inheritableMetadataItems.language" class="language-description">
+          {{ $tr('updateLanguage') }}
+        </p>
+        <KCheckbox
+          v-if="!!inheritableMetadataItems.language"
+          key="language"
+          :label="generateInheritableLanguage(inheritableMetadataItems.language)"
+          :checked="checks['language']"
+          @change="checks['language'] = !checks['language']"
+        />
+
       </div>
       <div class="divider"></div>
       <KCheckbox
@@ -40,13 +65,19 @@
 
   import { mapActions } from 'vuex';
   import isEmpty from 'lodash/isEmpty';
+  import camelCase from 'lodash/camelCase';
   import isUndefined from 'lodash/isUndefined';
   import { ContentNode } from 'shared/data/resources';
+  import { ContentLevels, ResourcesNeededTypes, Categories } from 'shared/constants';
+  import LanguagesMap from 'shared/leUtils/Languages';
+  import { metadataTranslationMixin } from 'shared/mixins';
 
   const inheritableFields = ['categories', 'grade_levels', 'language', 'learner_needs'];
 
   export default {
     name: 'InheritAncestorMetadataModal',
+    mixins: [metadataTranslationMixin],
+
     props: {
       contentNode: {
         type: Object,
@@ -237,19 +268,67 @@
         }
         this.closed = true;
       },
-      generateLabel(item) {
-        // TO DO generate label with all of the metadata le-consts, etc.
-        return `${item}`;
+      generateInheritableCategories(categories) {
+        let categoryTranslationKeys = [];
+        Object.keys(categories).forEach(id => {
+          categoryTranslationKeys.push(Object.keys(Categories).find(key => Categories[key] === id));
+        });
+        categoryTranslationKeys = categoryTranslationKeys
+          .map(key => {
+            return this.translateMetadataString(camelCase(key));
+          })
+          .join(', ');
+        return this.$tr('categories', { categories: categoryTranslationKeys });
       },
-      close() {
-        this.$emit('close');
+      generateInheritableLearnerNeeds(learnerNeeds) {
+        let learnerNeedsTranslationKeys = [];
+        Object.keys(learnerNeeds).forEach(id => {
+          learnerNeedsTranslationKeys.push(
+            Object.keys(ResourcesNeededTypes).find(key => ResourcesNeededTypes[key] === id)
+          );
+        });
+        learnerNeedsTranslationKeys = learnerNeedsTranslationKeys
+          .map(key => {
+            return this.translateMetadataString(camelCase(key));
+          })
+          .join(', ');
+        return this.$tr('learnerNeeds', { learnerNeeds: learnerNeedsTranslationKeys });
+      },
+      generateInheritableLevels(gradeLevels) {
+        let gradeLevelsTranslationKeys = [];
+        Object.keys(gradeLevels).forEach(id => {
+          gradeLevelsTranslationKeys.push(
+            Object.keys(ContentLevels).find(key => ContentLevels[key] === id)
+          );
+        });
+        gradeLevelsTranslationKeys = gradeLevelsTranslationKeys
+          .map(level => {
+            let translationKey;
+            if (level === 'PROFESSIONAL') {
+              translationKey = 'specializedProfessionalTraining';
+            } else if (level === 'WORK_SKILLS') {
+              translationKey = 'allLevelsWorkSkills';
+            } else if (level === 'BASIC_SKILLS') {
+              translationKey = 'allLevelsBasicSkills';
+            } else {
+              translationKey = this.translateMetadataString(camelCase(level));
+            }
+            return translationKey;
+          })
+          .join(', ');
+        return this.$tr('levels', { levels: gradeLevelsTranslationKeys });
+      },
+
+      generateInheritableLanguage(parentLanguage) {
+        const language = LanguagesMap.get(parentLanguage).native_name || parentLanguage;
+        return this.$tr('language', { language: language });
       },
     },
     $trs: {
       applyResourceDetailsTitle: 'Apply resource details',
       /* eslint-disable kolibri/vue-no-unused-translations */
       applyResourceDetailsDescriptionUpload:
-        'The folder `{folder}` has the following details. Select the details you want to apply to your upload.',
+        'The folder `{folder}` has the following details. Select the details you want to apply to your upload. You can add edit these details and add additional resource information later.',
       applyResourceDetailsDescriptionImport:
         'The folder `{folder}` has the following details. Select the details you want to apply to the {resource, plural, one {resource}, other {resources}} you are importing.',
       applyResourceDetailsDescriptionMoving:
@@ -257,10 +336,15 @@
       /* eslint-enable kolibri/vue-no-unused-translations */
       continueAction: 'Continue',
       cancelAction: 'Cancel',
-      inheritMetadataDescription: 'Inherit metadata from the folder above',
+      inheritMetadataDescription: 'Add metadata from the folder above',
+      updateLanguage: 'Update language to match the folder above',
       doNotShowThisAgain: "Don't ask me about this folder again",
       doNotShowAgainDescription:
         'All future additions to this folder will have the selected information by default',
+      language: 'Language: {language}',
+      categories: 'Categories: {categories}',
+      learnerNeeds: 'Learner needs: {learnerNeeds}',
+      levels: 'Levels: {levels}',
     },
   };
 
@@ -278,6 +362,10 @@
     margin: -8px 32px;
     font-size: 12px;
     color: #9e9e9e;
+  }
+
+  .language-description {
+    margin: 16px 0 8px;
   }
 
 </style>

@@ -127,6 +127,7 @@
       />
       <InheritAncestorMetadataModal
         :contentNode="createMode ? { parent: $route.params.nodeId } : null"
+        @inherit="indicateInheritableMetadata"
       />
     </VDialog>
 
@@ -255,6 +256,7 @@
         promptFailed: false,
         listElevated: false,
         storagePoll: null,
+        parentNodeMetadataToInherit: {},
       };
     },
     computed: {
@@ -429,6 +431,9 @@
       scroll(e) {
         this.listElevated = e.target.scrollTop > 0;
       },
+      indicateInheritableMetadata(args) {
+        this.parentNodeMetadataToInherit = args;
+      },
 
       /* Button actions */
       handleClose() {
@@ -475,6 +480,10 @@
           payload.learning_activities = {
             [ContentKindLearningActivityDefaults[kind]]: true,
           };
+        }
+        if (Object.keys(this.parentNodeMetadataToInherit).length) {
+          console.log('Inheriting metadata', this.parentNodeMetadataToInherit);
+          payload = { ...this.parentNodeMetadataToInherit };
         }
         return this.createContentNode({
           kind,
