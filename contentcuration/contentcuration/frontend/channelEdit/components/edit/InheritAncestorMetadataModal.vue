@@ -86,7 +86,8 @@
           this.contentNode !== null &&
           this.contentNode.parent &&
           !this.allFieldsDesignatedByParent &&
-          !this.closed
+          !this.closed &&
+          this.parentHasInheritableMetadata
         );
       },
       inheritableMetadataItems() {
@@ -135,6 +136,9 @@
       },
       fieldsToInherit() {
         return Object.keys(this.inheritableMetadataItems).filter(field => this.checks[field]);
+      },
+      parentHasInheritableMetadata() {
+        return this.inheritableMetadataItems && !isEmpty(this.inheritableMetadataItems);
       },
     },
     created() {
