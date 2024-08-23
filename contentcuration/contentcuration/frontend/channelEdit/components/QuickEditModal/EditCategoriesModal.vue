@@ -6,6 +6,7 @@
     :title="$tr('editCategories')"
     :nodeIds="nodeIds"
     :confirmationMessage="changesSaved"
+    :resourcesSelectedText="resourcesSelectedText"
     @close="() => $emit('close')"
   >
     <template #input="{ value, inputHandler }">
@@ -38,6 +39,10 @@
       nodeIds: {
         type: Array,
         required: true,
+      },
+      resourcesSelectedText: {
+        type: String,
+        default: '',
       },
     },
     computed: {

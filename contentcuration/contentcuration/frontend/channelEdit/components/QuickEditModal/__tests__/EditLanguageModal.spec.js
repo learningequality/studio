@@ -20,6 +20,7 @@ const makeWrapper = nodeIds => {
     store,
     propsData: {
       nodeIds,
+      resourcesSelectedText: '2 resources',
     },
   });
 };
@@ -101,7 +102,7 @@ describe('EditLanguageModal', () => {
 
     const resourcesCounter = wrapper.find('[data-test="resources-selected-message"]');
     expect(resourcesCounter.exists()).toBeTruthy();
-    expect(resourcesCounter.text()).toContain('4');
+    expect(resourcesCounter.text()).toContain('2 resources');
   });
 
   test('should filter languages options based on search query', () => {
