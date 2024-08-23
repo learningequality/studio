@@ -5,7 +5,7 @@
     isDescendantsUpdatable
     :title="$tr('editLevelsTitle')"
     :nodeIds="nodeIds"
-    :confirmationMessage="$tr('editedLevels', { count: nodeIds.length })"
+    :confirmationMessage="changesSaved"
     @close="() => $emit('close')"
   >
     <template #input="{ value, inputHandler }">
@@ -26,6 +26,7 @@
 
   import EditBooleanMapModal from './EditBooleanMapModal';
   import LevelsOptions from 'shared/views/contentNodeFields/LevelsOptions';
+  import commonStrings from 'shared/translator';
 
   export default {
     name: 'EditLevelsModal',
@@ -39,10 +40,14 @@
         required: true,
       },
     },
+    computed: {
+      changesSaved() {
+        /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
+        return commonStrings.$tr('changesSaved');
+      },
+    },
     $trs: {
       editLevelsTitle: 'What Levels',
-      editedLevels:
-        'Edited levels for {count, number, integer} {count, plural, one {resource} other {resources}}',
     },
   };
 

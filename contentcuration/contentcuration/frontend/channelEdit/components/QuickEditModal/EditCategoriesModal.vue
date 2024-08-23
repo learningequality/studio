@@ -5,7 +5,7 @@
     isDescendantsUpdatable
     :title="$tr('editCategories')"
     :nodeIds="nodeIds"
-    :confirmationMessage="$tr('editedCategories', { count: nodeIds.length })"
+    :confirmationMessage="changesSaved"
     @close="() => $emit('close')"
   >
     <template #input="{ value, inputHandler }">
@@ -26,6 +26,7 @@
 
   import EditBooleanMapModal from './EditBooleanMapModal.vue';
   import CategoryOptions from 'shared/views/contentNodeFields/CategoryOptions';
+  import commonStrings from 'shared/translator';
 
   export default {
     name: 'EditCategoriesModal',
@@ -39,10 +40,14 @@
         required: true,
       },
     },
+    computed: {
+      changesSaved() {
+        /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
+        return commonStrings.$tr('changesSaved');
+      },
+    },
     $trs: {
       editCategories: 'Edit Categories',
-      editedCategories:
-        'Edited categories for {count, number, integer} {count, plural, one {resource} other {resources}}',
     },
   };
 

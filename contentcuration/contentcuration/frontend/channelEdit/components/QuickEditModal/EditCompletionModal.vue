@@ -26,6 +26,7 @@
   import { mapGetters, mapActions } from 'vuex';
   import { getFileDuration } from 'shared/utils/helpers';
   import CompletionOptions from 'shared/views/contentNodeFields/CompletionOptions';
+  import commonStrings from 'shared/translator';
 
   export default {
     name: 'EditCompletionModal',
@@ -120,8 +121,8 @@
         };
 
         this.updateContentNode({ id: this.nodeId, ...payload });
-
-        this.$store.dispatch('showSnackbarSimple', this.$tr('editedCompletion', { count: 1 }));
+        /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
+        this.$store.dispatch('showSnackbarSimple', commonStrings.$tr('changesSaved'));
         this.close();
       },
       close() {
@@ -132,8 +133,6 @@
       editCompletion: 'Edit Completion',
       saveAction: 'Save',
       cancelAction: 'Cancel',
-      editedCompletion:
-        'Edited completion for {count, number, integer} {count, plural, one {resource} other {resources}}',
     },
   };
 

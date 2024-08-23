@@ -6,7 +6,7 @@
     :title="$tr('editLearningActivitiesTitle')"
     :nodeIds="nodeIds"
     :validators="learningActivityValidators"
-    :confirmationMessage="$tr('editedLearningActivities', { count: nodeIds.length })"
+    :confirmationMessage="changesSaved"
     @close="() => $emit('close')"
   >
     <template #input="{ value, inputHandler }">
@@ -28,6 +28,7 @@
   import EditBooleanMapModal from './EditBooleanMapModal';
   import { getLearningActivityValidators } from 'shared/utils/validation';
   import LearningActivityOptions from 'shared/views/contentNodeFields/LearningActivityOptions';
+  import commonStrings from 'shared/translator';
 
   export default {
     name: 'EditLearningActivitiesModal',
@@ -45,11 +46,13 @@
       learningActivityValidators() {
         return getLearningActivityValidators();
       },
+      changesSaved() {
+        /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
+        return commonStrings.$tr('changesSaved');
+      },
     },
     $trs: {
       editLearningActivitiesTitle: 'Edit Learning Activities',
-      editedLearningActivities:
-        'Edited learning activities for {count, number, integer} {count, plural, one {resource} other {resources}}',
     },
   };
 
