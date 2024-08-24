@@ -119,7 +119,7 @@
 
   /* Truncate text if the last item is too long */
   .breadcrumb:last-child {
-    max-width: calc(100% - 76px);
+    max-width: calc(100% - 86px);
   }
 
   /deep/ .v-breadcrumbs__item {
