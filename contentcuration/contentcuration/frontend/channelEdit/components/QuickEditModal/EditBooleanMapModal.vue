@@ -15,7 +15,7 @@
       <KCheckbox
         :checked="updateDescendants"
         data-test="update-descendants-checkbox"
-        :label="$tr('updateDescendantsCheckbox')"
+        :label="$tr('updateDescendantCheckbox')"
         @change="(value) => { updateDescendants = value }"
       />
       <Divider />
@@ -169,8 +169,8 @@
     $trs: {
       saveAction: 'Save',
       cancelAction: 'Cancel',
-      updateDescendantsCheckbox:
-        'Apply to all resources and folders nested within the selected folders',
+      updateDescendantCheckbox:
+        'Apply to all resources, folders, and subfolders contained within the selected folders.',
     },
   };
 

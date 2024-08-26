@@ -19,7 +19,7 @@
       v-model="searchQuery"
       autofocus
       data-test="search-input"
-      :label="$tr('selectLanguage')"
+      :label="$tr('searchAction')"
       style="margin-top: 0.5em"
     />
     <template v-if="isTopicSelected">
@@ -155,15 +155,15 @@
       },
     },
     $trs: {
-      editLanguage: 'Edit Language',
+      editLanguage: 'Edit language',
       languageItemText: '{language} ({code})',
       saveAction: 'Save',
       cancelAction: 'Cancel',
-      selectLanguage: 'Select / Type Language',
+      searchAction: 'Search',
       differentLanguages:
-        'The selected resources have different languages set. Choosing an option below will apply the language to all the selected resources',
+        'You selected resources in different languages. The language you choose below will be applied to all selected resources.',
       updateDescendantsCheckbox:
-        'Apply to all resources and folders nested within the selected folders',
+        'Apply the chosen language to all resources, folders, and subfolders contained within the selected folders.',
       emptyLanguagesSearch: 'No languages matches the search',
     },
   };

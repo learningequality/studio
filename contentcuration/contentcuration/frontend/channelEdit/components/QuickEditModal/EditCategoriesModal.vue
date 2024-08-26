@@ -52,7 +52,7 @@
       },
     },
     $trs: {
-      editCategories: 'Edit Categories',
+      editCategories: 'Edit categories',
     },
   };
 

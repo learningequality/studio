@@ -52,7 +52,7 @@
       },
     },
     $trs: {
-      editResourcesNeededTitle: 'What will you need?',
+      editResourcesNeededTitle: 'Requirements',
     },
   };
 

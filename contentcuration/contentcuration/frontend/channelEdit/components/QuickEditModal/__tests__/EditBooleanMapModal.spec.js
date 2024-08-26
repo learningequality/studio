@@ -65,7 +65,7 @@ const makeWrapper = ({ nodeIds, field = 'categories', ...restOptions }) => {
     propsData: {
       nodeIds,
       options,
-      title: 'Edit Categories',
+      title: 'Edit categories',
       field,
       autocompleteLabel: 'Select option',
       confirmationMessage: 'edited',

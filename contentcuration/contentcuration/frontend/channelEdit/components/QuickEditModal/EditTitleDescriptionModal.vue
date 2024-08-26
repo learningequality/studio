@@ -92,7 +92,7 @@
       },
     },
     $trs: {
-      editTitleDescription: 'Edit Title and Description',
+      editTitleDescription: 'Edit title and description',
       titleLabel: 'Title',
       descriptionLabel: 'Description',
       saveAction: 'Save',
