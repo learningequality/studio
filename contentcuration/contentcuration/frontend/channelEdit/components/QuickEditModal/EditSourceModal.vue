@@ -10,7 +10,7 @@
       @submit="handleSave"
       @cancel="close"
     >
-      <p data-test="resources-selected-message" style="margin-top: 8px;">
+      <p v-if="nodeIds.length > 1" data-test="resources-selected-message" style="margin-top: 8px;">
         {{ $tr('resourcesSelected', { count: nodeIds.length }) }}
       </p>
       <div class="form-item">
@@ -103,6 +103,7 @@
   import HelpTooltip from 'shared/views/HelpTooltip';
   import LicenseDropdown from 'shared/views/LicenseDropdown';
   import { getCopyrightHolderValidators, getInvalidText } from 'shared/utils/validation';
+  import commonStrings from 'shared/translator';
 
   function generateGetterSetter(key) {
     return {
@@ -256,11 +257,8 @@
             return this.updateContentNode(payload);
           })
         );
-
-        this.$store.dispatch(
-          'showSnackbarSimple',
-          this.$tr('editedAttribution', { count: nodesToEdit.length })
-        );
+        /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
+        this.$store.dispatch('showSnackbarSimple', commonStrings.$tr('changesSaved'));
         this.close();
       },
     },
@@ -281,8 +279,6 @@
       mixed: 'Mixed',
       saveAction: 'Save',
       cancelAction: 'Cancel',
-      editedAttribution:
-        'Edited attribution for {count, number, integer} {count, plural, one {resource} other {resources}}',
     },
   };
 

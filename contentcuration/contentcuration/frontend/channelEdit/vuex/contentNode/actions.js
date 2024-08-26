@@ -19,9 +19,10 @@ import * as publicApi from 'shared/data/public';
 import db from 'shared/data/db';
 
 export function loadContentNodes(context, params = {}) {
-  return ContentNode.where(params).then(contentNodes => {
+  return ContentNode.where(params).then(response => {
+    const contentNodes = response.results ? response.results : response;
     context.commit('ADD_CONTENTNODES', contentNodes);
-    return contentNodes;
+    return response;
   });
 }
 
@@ -70,7 +71,7 @@ export function loadContentNodeByNodeId(context, nodeId) {
 }
 
 export function loadChildren(context, { parent, published = null, complete = null }) {
-  const params = { parent };
+  const params = { parent, max_results: 25 };
   if (published !== null) {
     params.published = published;
   }

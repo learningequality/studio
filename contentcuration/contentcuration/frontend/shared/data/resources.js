@@ -3,11 +3,9 @@ import Mutex from 'mutex-js';
 import findIndex from 'lodash/findIndex';
 import flatMap from 'lodash/flatMap';
 import isArray from 'lodash/isArray';
-import isNumber from 'lodash/isNumber';
 import isString from 'lodash/isString';
 import matches from 'lodash/matches';
 import overEvery from 'lodash/overEvery';
-import pick from 'lodash/pick';
 import sortBy from 'lodash/sortBy';
 import compact from 'lodash/compact';
 import uniq from 'lodash/uniq';
@@ -17,6 +15,7 @@ import { v4 as uuidv4 } from 'uuid';
 import {
   CHANGE_TYPES,
   CHANGES_TABLE,
+  PAGINATION_TABLE,
   RELATIVE_TREE_POSITIONS,
   TABLE_NAMES,
   COPYING_STATUS,
@@ -61,6 +60,7 @@ const QUERY_SUFFIXES = {
 };
 
 const ORDER_FIELD = 'ordering';
+const PAGINATION_FIELD = 'max_results';
 
 const VALID_SUFFIXES = new Set(Object.values(QUERY_SUFFIXES));
 
@@ -68,60 +68,6 @@ const SUFFIX_SEPERATOR = '__';
 const validPositions = new Set(Object.values(RELATIVE_TREE_POSITIONS));
 
 const EMPTY_ARRAY = Symbol('EMPTY_ARRAY');
-
-class Paginator {
-  constructor(params) {
-    // Get parameters for page number based pagination
-    Object.assign(this, pick(params, 'page', 'page_size'));
-    // At a minimum, this pagination style requires a page_size
-    // parameter, so we check to see if that exists.
-    if (this.page_size) {
-      this.pageNumberType = true;
-      this.page = this.page || 1;
-    }
-    // Get parameters for limit offset pagination
-    Object.assign(this, pick(params, 'limit', 'offset'));
-    // At a minimum, this pagination style requires a limit
-    // parameter, so we check to see if that exists.
-    if (this.limit) {
-      this.limitOffsetType = true;
-      this.offset = this.offset || 0;
-    }
-    if (this.pageNumberType && this.limitOffsetType) {
-      console.warn(
-        'Specified both page number type pagination and limit offset may get unexpected results'
-      );
-    }
-  }
-  paginate(collection) {
-    let offset;
-    let limit;
-    if (this.pageNumberType) {
-      offset = (this.page - 1) * this.page_size;
-      limit = this.page_size;
-    }
-    if (this.limitOffsetType) {
-      offset = this.offset;
-      limit = this.limit;
-    }
-    if (isNumber(offset) && isNumber(limit)) {
-      const countPromise = collection.count();
-      const resultPromise = collection
-        .offset(offset)
-        .limit(limit)
-        .toArray();
-      return Promise.all([countPromise, resultPromise]).then(([count, results]) => {
-        const out = { count, results };
-        if (this.pageNumberType) {
-          out.total_pages = Math.ceil(count / this.page_size);
-          out.page = this.page;
-        }
-        return out;
-      });
-    }
-    return collection.toArray();
-  }
-}
 
 let vuexStore;
 
@@ -423,7 +369,7 @@ class IndexedDBResource {
     });
   }
 
-  where(params = {}) {
+  async where(params = {}) {
     const table = db[this.tableName];
     // Indexed parameters
     const whereParams = {};
@@ -437,9 +383,17 @@ class IndexedDBResource {
     let sortBy;
     let reverse;
 
-    // Setup paginator.
-    const paginator = new Paginator(params);
+    // Check for pagination
+    const maxResults = Number(params[PAGINATION_FIELD]);
+    const paginationActive = !isNaN(maxResults);
+    if (paginationActive && !params[ORDER_FIELD]) {
+      params[ORDER_FIELD] = this.defaultOrdering;
+    }
     for (const key of Object.keys(params)) {
+      if (key === PAGINATION_FIELD) {
+        // Don't filter by parameters that are used for pagination
+        continue;
+      }
       // Partition our parameters
       const [rootParam, suffix] = key.split(SUFFIX_SEPERATOR);
       if (suffix && VALID_SUFFIXES.has(suffix) && suffix !== QUERY_SUFFIXES.IN) {
@@ -461,8 +415,7 @@ class IndexedDBResource {
         } else {
           sortBy = ordering;
         }
-      } else if (!paginator[key]) {
-        // Don't filter by parameters that are used for pagination
+      } else {
         filterParams[rootParam] = params[key];
       }
     }
@@ -516,8 +469,11 @@ class IndexedDBResource {
         sortBy = null;
       }
     } else {
-      if (sortBy && this.indexFields.has(sortBy) && !reverse) {
+      if (sortBy && this.indexFields.has(sortBy)) {
         collection = table.orderBy(sortBy);
+        if (reverse) {
+          collection = collection.reverse();
+        }
         sortBy = null;
       } else {
         collection = table.toCollection();
@@ -569,13 +525,40 @@ class IndexedDBResource {
     if (filterFn) {
       collection = collection.filter(filterFn);
     }
+    if (paginationActive) {
+      let results;
+      if (sortBy) {
+        // If we still have a sortBy value here, then we have not sorted using orderBy
+        // so we need to sort here.
+        if (reverse) {
+          collection = collection.reverse();
+        }
+        results = (await collection.sortBy(sortBy)).slice(0, maxResults + 1);
+      } else {
+        results = await collection.limit(maxResults + 1).toArray();
+      }
+      const hasMore = results.length > maxResults;
+      return {
+        results: results.slice(0, maxResults),
+        more: hasMore
+          ? {
+              ...params,
+              lft__gt: results[maxResults - 1].lft,
+            }
+          : null,
+      };
+    }
     if (sortBy) {
       if (reverse) {
         collection = collection.reverse();
       }
       collection = collection.sortBy(sortBy);
     }
-    return paginator.paginate(collection);
+    return collection.toArray();
+  }
+
+  whereLiveQuery(params = {}) {
+    return Dexie.liveQuery(() => this.where(params));
   }
 
   get(id) {
@@ -770,6 +753,21 @@ class Resource extends mix(APIResource, IndexedDBResource) {
     this._requests = {};
   }
 
+  savePagination(queryString, more) {
+    if (more) {
+      return this.transaction({ mode: 'rw' }, PAGINATION_TABLE, () => {
+        return db[PAGINATION_TABLE].put({ table: this.tableName, queryString, more });
+      });
+    }
+    return Promise.resolve();
+  }
+
+  loadPagination(queryString) {
+    return db[PAGINATION_TABLE].get([this.tableName, queryString]).then(pagination => {
+      return pagination ? pagination.more : null;
+    });
+  }
+
   fetchCollection(params) {
     const now = Date.now();
     const queryString = paramsSerializer(params);
@@ -785,16 +783,21 @@ class Resource extends mix(APIResource, IndexedDBResource) {
     const promise = client.get(this.collectionUrl(), { params }).then(response => {
       let itemData;
       let pageData;
+      let more;
       if (Array.isArray(response.data)) {
         itemData = response.data;
       } else if (response.data && response.data.results) {
         pageData = response.data;
         itemData = pageData.results;
+        more = pageData.more;
       } else {
         console.error(`Unexpected response from ${this.urlName}`, response);
         itemData = [];
       }
-      return this.setData(itemData).then(data => {
+      const paginationPromise = pageData
+        ? this.savePagination(queryString, more)
+        : Promise.resolve();
+      return Promise.all([this.setData(itemData), paginationPromise]).then(([data]) => {
         // setData also applies any outstanding local change events to the data
         // so we return the data returned from setData to make sure the most up to date
         // representation is returned from the fetch.
@@ -814,6 +817,50 @@ class Resource extends mix(APIResource, IndexedDBResource) {
     return promise;
   }
 
+  conditionalFetch(objs, params, doRefresh) {
+    if (objs === EMPTY_ARRAY) {
+      return [];
+    }
+    // if there are no objects, and it's also not an empty paginated response (objs.results),
+    // or we mean to refresh
+    if ((!objs.length && !objs.results?.length) || doRefresh) {
+      let refresh = Promise.resolve(true);
+      // ContentNode tree operations are the troublemakers causing the logic below
+      if (this.tableName === TABLE_NAMES.CONTENTNODE) {
+        // Only fetch new updates if we don't have pending changes to ContentNode that
+        // affect local tree structure
+        refresh = db[CHANGES_TABLE].where('table')
+          .equals(TABLE_NAMES.CONTENTNODE)
+          .filter(c => {
+            if (!TREE_CHANGE_TYPES.includes(c.type)) {
+              return false;
+            }
+            let parent = c.parent;
+            if (c.type === CHANGE_TYPES.CREATED) {
+              parent = c.obj.parent;
+            }
+            return (
+              params.parent === parent ||
+              params.parent === c.key ||
+              (params.id__in || []).includes(c.key)
+            );
+          })
+          .count()
+          .then(pendingCount => pendingCount === 0);
+      }
+
+      const fetch = refresh.then(shouldFetch => {
+        const emptyResults = isArray(objs) ? [] : { results: [] };
+        return shouldFetch ? this.fetchCollection(params) : emptyResults;
+      });
+      // Be sure to return the fetch promise to relay fetched objects in this condition
+      if (!objs.length && !objs.results?.length) {
+        return fetch;
+      }
+    }
+    return objs;
+  }
+
   /**
    * @param {Object} params
    * @param {Boolean} [doRefresh=true] -- Whether or not to refresh async from server
@@ -827,48 +874,37 @@ class Resource extends mix(APIResource, IndexedDBResource) {
       console.groupEnd();
       /* eslint-enable */
     }
-    return super.where(params).then(objs => {
-      if (objs === EMPTY_ARRAY) {
-        return [];
-      }
-      // if there are no objects, and it's also not an empty paginated response (objs.count),
-      // or we mean to refresh
-      if ((!objs.length && !objs.count) || doRefresh) {
-        let refresh = Promise.resolve(true);
-        // ContentNode tree operations are the troublemakers causing the logic below
-        if (this.tableName === TABLE_NAMES.CONTENTNODE) {
-          // Only fetch new updates if we don't have pending changes to ContentNode that
-          // affect local tree structure
-          refresh = db[CHANGES_TABLE].where('table')
-            .equals(TABLE_NAMES.CONTENTNODE)
-            .filter(c => {
-              if (!TREE_CHANGE_TYPES.includes(c.type)) {
-                return false;
-              }
-              let parent = c.parent;
-              if (c.type === CHANGE_TYPES.CREATED) {
-                parent = c.obj.parent;
-              }
-              return (
-                params.parent === parent ||
-                params.parent === c.key ||
-                (params.id__in || []).includes(c.key)
-              );
-            })
-            .count()
-            .then(pendingCount => pendingCount === 0);
-        }
-
-        const fetch = refresh.then(shouldFetch => {
-          return shouldFetch ? this.fetchCollection(params) : [];
-        });
-        // Be sure to return the fetch promise to relay fetched objects in this condition
-        if (!objs.length && !objs.count) {
-          return fetch;
-        }
+    const paginationLoadPromise = params[PAGINATION_FIELD]
+      ? this.loadPagination(paramsSerializer(params))
+      : Promise.resolve(null);
+    return Promise.all([super.where(params), paginationLoadPromise]).then(([objs, more]) => {
+      objs = this.conditionalFetch(objs, params, doRefresh);
+      if (!isArray(objs) && !objs.more && more) {
+        objs.more = more;
       }
       return objs;
     });
+  }
+
+  whereLiveQuery(params = {}, doRefresh = true) {
+    if (process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test') {
+      /* eslint-disable no-console */
+      console.groupCollapsed(`Getting liveQuery for ${this.tableName} table with params: `, params);
+      console.trace();
+      console.groupEnd();
+      /* eslint-enable */
+    }
+    const observable = Dexie.liveQuery(() => super.where(params));
+    let fetched = false;
+    observable.subscribe({
+      next: objs => {
+        if (!fetched) {
+          fetched = true;
+          this.conditionalFetch(objs, params, doRefresh);
+        }
+      },
+    });
+    return observable;
   }
 
   headModel(id) {
@@ -1309,6 +1345,7 @@ export const ContentNode = new TreeResource({
     '[root_id+parent]',
     '[node_id+channel_id]',
   ],
+  defaultOrdering: 'lft',
 
   addPrerequisite(target_node, prerequisite) {
     if (target_node === prerequisite) {
@@ -1465,7 +1502,12 @@ export const ContentNode = new TreeResource({
         return Promise.all([getNode, this.where({ parent: parent.id }, false)]).then(
           ([node, siblings]) => {
             let lft = 1;
-            siblings = siblings.filter(s => s.id !== id);
+            // if isCreate is true and target === id, it means it is inserting a node after the
+            // same node (duplicating it), so we will need this node among the siblings to get
+            // the right sort order
+            if (!isCreate || target !== id) {
+              siblings = siblings.filter(s => s.id !== id);
+            }
             if (siblings.length) {
               // If we're creating, we don't need to worry about passing the ID
               lft = this.getNewSortOrder(isCreate ? null : id, target, position, siblings);

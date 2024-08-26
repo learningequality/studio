@@ -27,15 +27,16 @@ from contentcuration.tests.base import StudioAPITestCase
 from contentcuration.tests.viewsets.base import generate_copy_event
 from contentcuration.tests.viewsets.base import generate_create_event
 from contentcuration.tests.viewsets.base import generate_delete_event
+from contentcuration.tests.viewsets.base import generate_publish_channel_event
 from contentcuration.tests.viewsets.base import generate_update_event
 from contentcuration.tests.viewsets.base import generate_update_descendants_event
 from contentcuration.tests.viewsets.base import SyncTestMixin
 from contentcuration.utils.db_tools import TreeBuilder
+from contentcuration.viewsets.channel import _unpublished_changes_query
 from contentcuration.viewsets.contentnode import ContentNodeFilter
 from contentcuration.viewsets.sync.constants import CONTENTNODE
 from contentcuration.viewsets.sync.constants import CONTENTNODE_PREREQUISITE
 from contentcuration.viewsets.sync.constants import UPDATED
-
 
 nested_subjects = [subject for subject in SUBJECTSLIST if "." in subject]
 
@@ -816,6 +817,47 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         self.assertEqual(c.extra_fields["options"]["completion_criteria"]["model"], completion_criteria.TIME)
         self.assertEqual(c.extra_fields["options"]["completion_criteria"]["threshold"], 10)
 
+    def test_update_completion_criteria_model_to_determined_by_resource_edge_case(self):
+        metadata = self.contentnode_db_metadata
+        metadata["kind_id"] = content_kinds.HTML5
+        metadata["extra_fields"] = {
+            "options": {
+                "completion_criteria": {
+                    "model": completion_criteria.REFERENCE,
+                    "threshold": None,
+                    "learner_managed": False
+                }
+            }
+        }
+        contentnode = models.ContentNode.objects.create(**metadata)
+
+        response = self.sync_changes(
+                [
+                    generate_update_event(
+                        contentnode.id,
+                        CONTENTNODE,
+                        {
+                            "complete": True,
+                            "extra_fields.options.completion_criteria.threshold": 600,
+                            "extra_fields.options.completion_criteria.model": completion_criteria.APPROX_TIME
+                        },
+                        channel_id=self.channel.id
+                    ),
+                    generate_update_event(
+                        contentnode.id,
+                        CONTENTNODE,
+                        {
+                            "extra_fields.options.completion_criteria.model": completion_criteria.DETERMINED_BY_RESOURCE
+                        },
+                        channel_id=self.channel.id
+                    )
+                ],
+        )
+        self.assertEqual(len(response.data["errors"]), 0)
+        updated_contentnode = models.ContentNode.objects.get(id=contentnode.id)
+        self.assertEqual(updated_contentnode.extra_fields["options"]["completion_criteria"]["model"], completion_criteria.DETERMINED_BY_RESOURCE)
+        self.assertNotIn("threshold", updated_contentnode.extra_fields["options"]["completion_criteria"])
+
     def test_update_contentnode_update_options_invalid_completion_criteria(self):
         metadata = self.contentnode_db_metadata
         metadata["extra_fields"] = {
@@ -1207,6 +1249,23 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
             self.fail("ContentNode was not copied")
 
         self.assertEqual(new_node.parent_id, self.channel.main_tree_id)
+
+    def test_copy_contentnode_finalization_does_not_make_publishable(self):
+        self.channel.editors.add(self.user)
+        contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
+        new_node_id = uuid.uuid4().hex
+        response = self.sync_changes(
+            [
+                generate_copy_event(
+                    new_node_id, CONTENTNODE, contentnode.id, self.channel.main_tree_id, channel_id=self.channel.id
+                ),
+                # Save a published change for the channel, so that the finalization change will be generated
+                # after the publish change, and we can check that it is properly not making the channel appear publishable.
+                generate_publish_channel_event(self.channel.id),
+            ],
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(_unpublished_changes_query(self.channel).count(), 0)
 
     def test_cannot_copy_contentnode__source_permission(self):
         source_channel = testdata.channel()

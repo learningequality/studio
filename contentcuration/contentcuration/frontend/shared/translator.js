@@ -25,6 +25,7 @@ const MESSAGES = {
   longActivityLteOneTwenty: 'Value must be equal or less than 120',
   activityDurationTooLongWarning:
     'This value is very high. Please make sure this is how long learners should work on the resource for, in order to complete it.',
+  changesSaved: 'Changes saved',
 };
 
 export default createTranslator('sharedVue', MESSAGES);

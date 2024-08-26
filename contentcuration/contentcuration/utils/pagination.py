@@ -153,13 +153,13 @@ class ValuesViewsetCursorPagination(CursorPagination):
             *ordering
         )
 
-    def get_more(self):  # noqa C901
+    def _get_more_position_offset(self):
         """
         Vendored and modified from
         https://github.com/encode/django-rest-framework/blob/6ea95b6ad1bc0d4a4234a267b1ba32701878c6bb/rest_framework/pagination.py#L694
         """
         if not self.has_next:
-            return None
+            return None, None
 
         if (
             self.page
@@ -211,6 +211,13 @@ class ValuesViewsetCursorPagination(CursorPagination):
 
         if not self.page:
             position = self.next_position
+
+        return position, offset
+
+    def get_more(self):
+        position, offset = self._get_more_position_offset()
+        if position is None and offset is None:
+            return None
 
         tokens = {}
         if offset != 0:

@@ -22,7 +22,7 @@ const GETTERS = {
     canManage: jest.fn(() => true),
   },
   contentNode: {
-    getContentNodeChildren: () => jest.fn(() => []),
+    getContentNodeChildren: () => jest.fn(() => ({ results: [], more: null })),
     getContentNodeAncestors: () => jest.fn(() => []),
     getContentNode: () => jest.fn(() => ({})),
     getTopicAndResourceCounts: () => jest.fn(() => ({ topicCount: 0, resourceCount: 0 })),
@@ -35,7 +35,7 @@ const ACTIONS = {
     loadContentNode: jest.fn(),
     headContentNode: () => jest.fn(),
     loadContentNodes: jest.fn(),
-    loadChildren: jest.fn(),
+    loadChildren: jest.fn(() => ({ results: [], more: null })),
   },
 };
 

@@ -230,11 +230,14 @@ def random_string(chars=10):
     return ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(chars))
 
 
-def user(email='user@test.com'):
+def user(email='user@test.com', feature_flags=None):
     user, is_new = cc.User.objects.get_or_create(email=email)
     if is_new:
         user.set_password('password')
         user.is_active = True
+        user.save()
+    if feature_flags is not None:
+        user.feature_flags = feature_flags
         user.save()
     return user
 

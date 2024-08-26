@@ -5,7 +5,7 @@
     isDescendantsUpdatable
     :title="$tr('editResourcesNeededTitle')"
     :nodeIds="nodeIds"
-    :confirmationMessage="$tr('editedResourcesNeeded', { count: nodeIds.length })"
+    :confirmationMessage="changesSaved"
     @close="() => $emit('close')"
   >
     <template #input="{ value, inputHandler }">
@@ -26,6 +26,7 @@
 
   import EditBooleanMapModal from './EditBooleanMapModal';
   import ResourcesNeededOptions from 'shared/views/contentNodeFields/ResourcesNeededOptions';
+  import commonStrings from 'shared/translator';
 
   export default {
     name: 'EditResourcesNeededModal',
@@ -39,10 +40,14 @@
         required: true,
       },
     },
+    computed: {
+      changesSaved() {
+        /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
+        return commonStrings.$tr('changesSaved');
+      },
+    },
     $trs: {
       editResourcesNeededTitle: 'What will you need?',
-      editedResourcesNeeded:
-        "Edited 'what will you need' for {count, number, integer} {count, plural, one {resource} other {resources}}",
     },
   };
 

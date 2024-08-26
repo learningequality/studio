@@ -5,7 +5,7 @@
     :title="title"
     :needsAcceptance="needsAcceptance"
     data-test="privacy-modal"
-    @accept="$emit('accept')"
+    @accept="$emit('accept', policy)"
     @close="$emit('close')"
   >
     <div class="privacy-wrapper" dir="auto">
@@ -16,7 +16,7 @@
         {{ $untranslated('introductionP1Part1') }}
         <ActionLink
           :text="$untranslated('introductionP1TC')"
-          @click="$emit('open', policies.TERMS_OF_SERVICE)"
+          @click="$router.push({ query: { showPolicy: policies.COMMUNITY_STANDARDS } })"
         />
         {{ $untranslated('introductionP1Part2') }}
         <b>{{ $untranslated('introductionP1TU') }}</b>
@@ -204,7 +204,7 @@
           {{ $untranslated('expectationOfPrivacyP1') }}
           <ActionLink
             :text="$untranslated('expectationOfPrivacyP1TC')"
-            @click="$emit('open', policies.TERMS_OF_SERVICE)"
+            @click="$router.push({ query: { showPolicy: policies.TERMS_OF_SERVICE } })"
           />
         </p>
       </div>

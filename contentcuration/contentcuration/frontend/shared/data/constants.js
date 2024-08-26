@@ -29,6 +29,7 @@ export const CHANGE_TYPES_LOOKUP = invert(CHANGE_TYPES);
 
 // Tables
 export const CHANGES_TABLE = 'changesForSyncing';
+export const PAGINATION_TABLE = 'pagination';
 
 export const TABLE_NAMES = {
   SESSION: 'session',

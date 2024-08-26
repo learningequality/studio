@@ -9,7 +9,7 @@
     @submit="handleSave"
     @cancel="close"
   >
-    <p data-test="resources-selected-message">
+    <p v-if="nodeIds.length > 1" data-test="resources-selected-message">
       {{ $tr('resourcesSelected', { count: nodeIds.length }) }}
     </p>
     <p v-if="isMultipleNodeLanguages" data-test="different-languages-message">
@@ -60,6 +60,7 @@
   import { mapGetters, mapActions } from 'vuex';
   import { LanguagesList } from 'shared/leUtils/Languages';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
+  import commonStrings from 'shared/translator';
 
   export default {
     name: 'EditLanguageModal',
@@ -144,11 +145,8 @@
             });
           })
         );
-
-        this.$store.dispatch(
-          'showSnackbarSimple',
-          this.$tr('editedLanguage', { count: this.nodes.length })
-        );
+        /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
+        this.$store.dispatch('showSnackbarSimple', commonStrings.$tr('changesSaved'));
         this.close();
       },
     },
@@ -157,8 +155,6 @@
       languageItemText: '{language} ({code})',
       saveAction: 'Save',
       cancelAction: 'Cancel',
-      editedLanguage:
-        'Edited language for {count, number, integer} {count, plural, one {resource} other {resources}}',
       selectLanguage: 'Select / Type Language',
       resourcesSelected:
         '{count, number, integer} {count, plural, one {resource} other {resources}} selected',
