@@ -322,6 +322,9 @@ function generateContentNodeData({
     if (extra_fields.suggested_duration_type) {
       contentNodeData.extra_fields.suggested_duration_type = extra_fields.suggested_duration_type;
     }
+    if (extra_fields.inherit_metadata) {
+      contentNodeData.extra_fields.inherit_metadata = extra_fields.inherit_metadata;
+    }
   }
   if (prerequisite !== NOVALUE) {
     contentNodeData.prerequisite = prerequisite;
@@ -354,6 +357,14 @@ export function updateContentNode(context, { id, ...payload } = {}) {
         ...(extraFields.options || {}),
         ...contentNodeData.extra_fields.options,
       };
+    }
+
+    if (contentNodeData.extra_fields.inherit_metadata) {
+      // Don't set inherit_metadata on non-topic nodes
+      // as they cannot have children to bequeath metadata to
+      if (node.kind !== ContentKindsNames.TOPIC) {
+        delete contentNodeData.extra_fields.inherit_metadata;
+      }
     }
 
     contentNodeData = {

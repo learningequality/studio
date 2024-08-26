@@ -17,12 +17,16 @@
         <KCheckbox
           v-for="item, key in inheritableMetadataItems"
           :key="key"
+          :checked="checks[key]"
           :label="generateLabel(key)"
+          @change="checks[key] = !checks[key]"
         />
       </div>
       <div class="divider"></div>
       <KCheckbox
         :label="$tr('doNotShowThisAgain')"
+        :checked="dontShowAgain"
+        @change="dontShowAgain = !dontShowAgain"
       />
       <p>{{ $tr('doNotShowAgainDescription') }}</p>
     </div>
@@ -32,8 +36,12 @@
 
 <script>
 
+  import { mapActions } from 'vuex';
   import isEmpty from 'lodash/isEmpty';
+  import isUndefined from 'lodash/isUndefined';
   import { ContentNode } from 'shared/data/resources';
+
+  const inheritableFields = ['categories', 'grade_levels', 'language', 'learner_needs'];
 
   export default {
     name: 'InheritAncestorMetadataModal',
@@ -44,22 +52,39 @@
       },
     },
     data() {
+      const checks = {};
+      for (const field of inheritableFields) {
+        checks[field] = true;
+      }
       return {
         categories: {},
         grade_levels: {},
         language: null,
         learner_needs: {},
+        checks,
+        parent: null,
+        dontShowAgain: false,
+        closed: true,
       };
     },
     computed: {
+      allFieldsDesignatedByParent() {
+        // Check if all fields that could be inherited from the parent have already been selected
+        // as to be inherited or not by a previous interaction with the modal.
+        return Boolean(
+          this.parent &&
+            this.parent?.extra_fields?.inherit_metadata &&
+            Object.keys(this.inheritableMetadataItems).every(
+              field => !isUndefined(this.parent.extra_fields.inherit_metadata[field])
+            )
+        );
+      },
       active() {
         return (
           this.contentNode !== null &&
           this.contentNode.parent &&
-          (!isEmpty(this.categories) ||
-            !isEmpty(this.grade_levels) ||
-            this.language ||
-            !isEmpty(this.learner_needs))
+          !this.allFieldsDesignatedByParent &&
+          !this.closed
         );
       },
       inheritableMetadataItems() {
@@ -106,10 +131,22 @@
 
         return returnValue;
       },
+      fieldsToInherit() {
+        return Object.keys(this.inheritableMetadataItems).filter(field => this.checks[field]);
+      },
     },
     created() {
       if (this.contentNode && this.contentNode.parent) {
         ContentNode.getAncestors(this.contentNode.parent).then(ancestors => {
+          this.parent = ancestors[ancestors.length - 1];
+          for (const field of inheritableFields) {
+            if (
+              this.parent.extra_fields.inherit_metadata &&
+              this.parent.extra_fields.inherit_metadata[field]
+            ) {
+              this.checks[field] = this.parent.extra_fields.inherit_metadata[field];
+            }
+          }
           this.categories = ancestors.reduce((acc, ancestor) => {
             const returnValue = {
               ...acc,
@@ -138,13 +175,61 @@
               ...ancestor.learner_needs,
             };
           }, {});
+          this.$nextTick(() => {
+            if (this.allFieldsDesignatedByParent) {
+              // If all fields have been designated by the parent, automatically continue
+              this.handleContinue();
+            } else {
+              // Wait for the data to be updated before showing the dialog
+              this.closed = false;
+            }
+          });
         });
       }
     },
     methods: {
+      ...mapActions('contentNode', ['updateContentNode']),
+      storePreferences() {
+        // When the user asks to not show this dialog again, store the preferences
+        // so we can use this information in the future to apply metadata automatically
+        if (!this.parent) {
+          // Shouldn't get to this point if there is no parent
+          // but just in case, return
+          return;
+        }
+        const inherit_metadata = {
+          ...(this.parent?.extra_fields.inherit_metadata || {}),
+        };
+        for (const field of inheritableFields) {
+          if (this.inheritableMetadataItems[field]) {
+            // Only store preferences for fields that have been shown to the user as inheritable
+            inherit_metadata[field] = this.checks[field];
+          }
+        }
+        this.updateContentNode({
+          id: this.parent.id,
+          extra_fields: {
+            inherit_metadata,
+          },
+        });
+      },
       handleContinue() {
-        // TO DO apply metadata to the selected resources, or alternatively, just emit with event
-        this.$emit('handleContinue');
+        const payload = {};
+        for (const field of this.fieldsToInherit) {
+          if (this.inheritableMetadataItems[field] instanceof Object) {
+            payload[field] = {
+              ...this.contentNode[field],
+              ...this.inheritableMetadataItems[field],
+            };
+          } else {
+            payload[field] = this.inheritableMetadataItems[field];
+          }
+        }
+        this.$emit('inherit', payload);
+        if (this.dontShowAgain) {
+          this.storePreferences();
+        }
+        this.closed = true;
       },
       generateLabel(item) {
         // TO DO generate label with all of the metadata le-consts, etc.
