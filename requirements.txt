@@ -157,12 +157,16 @@ kombu==5.2.4
     # via celery
 le-utils==0.2.5
     # via -r requirements.in
+numpy==1.26.0
+    # via pgvector
 packaging==24.0
     # via
     #   -r requirements.in
     #   google-api-core
     #   google-cloud-error-reporting
     #   google-cloud-kms
+pgvector==0.2.3
+    # via -r requirements.in
 pillow==10.3.0
     # via -r requirements.in
 prometheus-client==0.10.1

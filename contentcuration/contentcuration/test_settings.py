@@ -11,3 +11,5 @@ TEST_ENV = True
 INSTALLED_APPS += ("django_concurrent_tests",)  # noqa F405
 
 MANAGE_PY_PATH = "./contentcuration/manage.py"
+
+DATABASES["default"]["ENGINE"] = "contentcuration.tests.custom_pytest_db_backend" # noqa
