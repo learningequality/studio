@@ -9,6 +9,7 @@
       <PasswordField
         v-model="new_password1"
         :label="$tr('passwordLabel')"
+        :additionalRules="passwordValidationRules"
         autofocus
       />
       <PasswordField
@@ -52,6 +53,9 @@
       passwordConfirmRules() {
         return [value => (this.new_password1 === value ? true : this.$tr('passwordMatchMessage'))];
       },
+      passwordValidationRules() {
+        return [value => (value.length >= 8 ? true : this.$tr('passwordValidationMessage'))];
+      },
     },
     methods: {
       ...mapActions('account', ['setPassword']),
@@ -80,6 +84,7 @@
       resetPasswordPrompt: 'Enter and confirm your new password',
       passwordLabel: 'New password',
       passwordConfirmLabel: 'Confirm password',
+      passwordValidationMessage: 'Password should be at least 8 characters long',
       passwordMatchMessage: "Passwords don't match",
       submitButton: 'Submit',
       resetPasswordFailed: 'Failed to reset password. Please try again.',
