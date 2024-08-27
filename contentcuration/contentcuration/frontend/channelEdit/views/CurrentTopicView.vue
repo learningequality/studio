@@ -224,14 +224,19 @@
         </template>
       </ResourceDrawer>
     </VLayout>
+    <InheritAncestorMetadataModal
+      :parent="inheritanceParent"
+      @inherit="inheritMetadata"
+    />
   </VContainer>
 
 </template>
 
 <script>
 
-  import { mapActions, mapGetters, mapState } from 'vuex';
+  import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
   import get from 'lodash/get';
+  import InheritAncestorMetadataModal from '../components/edit/InheritAncestorMetadataModal';
   import MoveModal from '../components/move/MoveModal';
   import ContentNodeOptions from '../components/ContentNodeOptions';
   import ResourceDrawer from '../components/ResourceDrawer';
@@ -270,6 +275,7 @@
       Checkbox,
       MoveModal,
       DraggableRegion,
+      InheritAncestorMetadataModal,
     },
     mixins: [titleMixin, routerMixin],
     props: {
@@ -312,6 +318,7 @@
         'getContentNodeChildren',
         'isNodeInCopyingState',
       ]),
+      ...mapState('contentNode', ['inheritingNodes']),
       ...mapGetters('clipboard', ['getCopyTrees']),
       ...mapGetters('draggable', ['activeDraggableRegionId']),
       selected: {
@@ -526,6 +533,21 @@
           width: '1px',
         };
       },
+      currentInheritingNodes() {
+        if (!this.inheritingNodes) {
+          return [];
+        }
+        // Handle inheritance modals one parent at a time.
+        const firstNode = this.inheritingNodes[0];
+        return this.inheritingNodes.filter(n => n.parent === firstNode.parent);
+      },
+      inheritanceParent() {
+        const firstNode = this.currentInheritingNodes[0];
+        if (!firstNode) {
+          return;
+        }
+        return this.getContentNode(firstNode.parent);
+      },
     },
     watch: {
       topicId: {
@@ -575,6 +597,7 @@
         'waitForCopyingStatus',
         'setQuickEditModal',
       ]),
+      ...mapMutations('contentNode', ['ADD_INHERITING_NODE', 'CLEAR_INHERITING_NODES']),
       ...mapActions('clipboard', ['copyAll']),
       clearSelections() {
         this.selected = [];
@@ -772,6 +795,14 @@
           return this.moveContentNodes({
             ...payload,
             id__in: data.sources.map(s => s.metadata.id),
+          }).then(ids => {
+            if (this.topicId !== payload.target) {
+              // If we are not moving within the same parent
+              // trigger the node inheritance behaviour.
+              for (const id of ids) {
+                this.ADD_INHERITING_NODE(this.getContentNode(id));
+              }
+            }
           });
         }
       },
@@ -900,6 +931,13 @@
         this.editTitleDescriptionModal = {
           nodeId,
         };
+      },
+      inheritMetadata(metadata) {
+        const nodeIds = this.currentInheritingNodes.map(n => n.id);
+        for (const nodeId of nodeIds) {
+          this.updateContentNode({ id: nodeId, ...metadata, mergeMapFields: true });
+        }
+        this.CLEAR_INHERITING_NODES(nodeIds);
       },
     },
     $trs: {
