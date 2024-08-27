@@ -1934,7 +1934,7 @@ export const Invitation = new Resource({
 
   accept(id) {
     const changes = { accepted: true };
-    return client.patch(window.Urls.invitationDetail(id), changes).then(() => {
+    return client.post(window.Urls.invitationAccept(id), changes).then(() => {
       return this.transaction({ mode: 'rw' }, () => {
         return this.table.update(id, changes);
       });
