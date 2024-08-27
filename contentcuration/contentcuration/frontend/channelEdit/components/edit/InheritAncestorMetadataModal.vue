@@ -17,7 +17,7 @@
         <KCheckbox
           v-if="!!inheritableMetadataItems.categories"
           key="categories"
-          :label="generateInheritableCategories(inheritableMetadataItems.categories)"
+          :label="categoriesLabels"
           :checked="checks['categories']"
           @change="checks['categories'] = !checks['categories']"
         />
@@ -25,14 +25,14 @@
           v-if="!!inheritableMetadataItems.grade_levels"
           key="levels"
           :checked="checks['grade_levels']"
-          :label="generateInheritableLevels(inheritableMetadataItems.grade_levels)"
+          :label="levelsLabels"
           @change="checks['grade_levels'] = !checks['grade_levels']"
         />
         <KCheckbox
           v-if="!!inheritableMetadataItems.learner_needs"
           key="needs"
           :checked="checks['learner_needs']"
-          :label="generateInheritableLearnerNeeds(inheritableMetadataItems.learner_needs)"
+          :label="learnerNeedsLabels"
           @change="checks['learner_needs'] = !checks['learner_needs']"
         />
         <p v-if="!!inheritableMetadataItems.language" class="language-description">
@@ -41,7 +41,7 @@
         <KCheckbox
           v-if="!!inheritableMetadataItems.language"
           key="language"
-          :label="generateInheritableLanguage(inheritableMetadataItems.language)"
+          :label="languageLabel"
           :checked="checks['language']"
           @change="checks['language'] = !checks['language']"
         />
@@ -65,10 +65,9 @@
 
   import { mapActions } from 'vuex';
   import isEmpty from 'lodash/isEmpty';
-  import camelCase from 'lodash/camelCase';
   import isUndefined from 'lodash/isUndefined';
   import { ContentNode } from 'shared/data/resources';
-  import { ContentLevels, ResourcesNeededTypes, Categories } from 'shared/constants';
+  import { LevelsLookup, NeedsLookup, CategoriesLookup } from 'shared/constants';
   import LanguagesMap from 'shared/leUtils/Languages';
   import { metadataTranslationMixin } from 'shared/mixins';
 
@@ -79,7 +78,7 @@
     mixins: [metadataTranslationMixin],
 
     props: {
-      contentNode: {
+      parent: {
         type: Object,
         default: null,
       },
@@ -95,7 +94,6 @@
         language: null,
         learner_needs: {},
         checks,
-        parent: null,
         dontShowAgain: false,
         closed: true,
       };
@@ -114,8 +112,7 @@
       },
       active() {
         return (
-          this.contentNode !== null &&
-          this.contentNode.parent &&
+          this.parent !== null &&
           !this.allFieldsDesignatedByParent &&
           !this.closed &&
           this.parentHasInheritableMetadata
@@ -123,44 +120,20 @@
       },
       inheritableMetadataItems() {
         const returnValue = {};
-        if (!this.contentNode) {
+        if (!this.parent) {
           return returnValue;
         }
-        const categories = Object.keys(this.categories)
-          .filter(
-            key =>
-              !Object.keys(this.contentNode['categories'] || {}).some(category =>
-                category.startsWith(key)
-              )
-          )
-          .reduce((acc, key) => {
-            acc[key] = true;
-            return acc;
-          }, {});
-        if (!isEmpty(categories)) {
-          returnValue.categories = categories;
+        if (!isEmpty(this.categories)) {
+          returnValue.categories = this.categories;
         }
-        const grade_levels = Object.keys(this.grade_levels)
-          .filter(key => !(this.contentNode['grade_levels'] || {})[key])
-          .reduce((acc, key) => {
-            acc[key] = true;
-            return acc;
-          }, {});
-        if (!isEmpty(grade_levels)) {
-          returnValue.grade_levels = grade_levels;
+        if (!isEmpty(this.grade_levels)) {
+          returnValue.grade_levels = this.grade_levels;
         }
-        const language = this.contentNode.language !== this.language ? this.language : null;
-        if (language) {
-          returnValue.language = language;
+        if (this.language) {
+          returnValue.language = this.language;
         }
-        const learner_needs = Object.keys(this.learner_needs)
-          .filter(key => !(this.contentNode['learner_needs'] || {})[key])
-          .reduce((acc, key) => {
-            acc[key] = true;
-            return acc;
-          }, {});
-        if (!isEmpty(learner_needs)) {
-          returnValue.learner_needs = learner_needs;
+        if (!isEmpty(this.learner_needs)) {
+          returnValue.learner_needs = this.learner_needs;
         }
 
         return returnValue;
@@ -169,63 +142,103 @@
         return Object.keys(this.inheritableMetadataItems).filter(field => this.checks[field]);
       },
       parentHasInheritableMetadata() {
-        return this.inheritableMetadataItems && !isEmpty(this.inheritableMetadataItems);
+        return !isEmpty(this.inheritableMetadataItems);
+      },
+      categoriesLabels() {
+        const categoryTranslationLabels = Object.keys(this.categories).map(id => {
+          return this.translateMetadataString(CategoriesLookup[id]);
+        });
+        return this.$tr('categories', { categories: categoryTranslationLabels.join(', ') });
+      },
+      learnerNeedsLabels() {
+        const needsTranslationLabels = Object.keys(this.learner_needs).map(id => {
+          return this.translateMetadataString(NeedsLookup[id]);
+        });
+        return this.$tr('learnerNeeds', { learnerNeeds: needsTranslationLabels.join(', ') });
+      },
+      levelsLabels() {
+        const levelsTranslationLabels = Object.keys(this.grade_levels).map(id => {
+          return this.translateMetadataString(LevelsLookup[id]);
+        });
+        return this.$tr('levels', { levels: levelsTranslationLabels.join(', ') });
+      },
+
+      languageLabel() {
+        const language = LanguagesMap.get(this.language).native_name || this.language.name;
+        return this.$tr('language', { language: language });
+      },
+    },
+    watch: {
+      parent(newParent, oldParent) {
+        console.log(newParent, oldParent);
+        if ((!oldParent && newParent) || oldParent.id !== newParent.id) {
+          this.resetData();
+        }
       },
     },
     created() {
-      if (this.contentNode && this.contentNode.parent) {
-        ContentNode.getAncestors(this.contentNode.parent).then(ancestors => {
-          this.parent = ancestors[ancestors.length - 1];
-          for (const field of inheritableFields) {
-            if (
-              this.parent.extra_fields.inherit_metadata &&
-              this.parent.extra_fields.inherit_metadata[field]
-            ) {
-              this.checks[field] = this.parent.extra_fields.inherit_metadata[field];
-            }
-          }
-          this.categories = ancestors.reduce((acc, ancestor) => {
-            const returnValue = {
-              ...acc,
-              ...ancestor.categories,
-            };
-            for (const key in returnValue) {
-              if (Object.keys(returnValue).some(k => k.startsWith(key) && k !== key)) {
-                // Delete the key if it is a parent category of another key
-                delete returnValue[key];
-              }
-            }
-            return returnValue;
-          }, {});
-          this.grade_levels = ancestors.reduce((acc, ancestor) => {
-            return {
-              ...acc,
-              ...ancestor.grade_levels,
-            };
-          }, {});
-          this.language = ancestors.reduce((acc, ancestor) => {
-            return ancestor.language || acc;
-          }, null);
-          this.learner_needs = ancestors.reduce((acc, ancestor) => {
-            return {
-              ...acc,
-              ...ancestor.learner_needs,
-            };
-          }, {});
-          this.$nextTick(() => {
-            if (this.allFieldsDesignatedByParent) {
-              // If all fields have been designated by the parent, automatically continue
-              this.handleContinue();
-            } else {
-              // Wait for the data to be updated before showing the dialog
-              this.closed = false;
-            }
-          });
-        });
-      }
+      this.resetData();
     },
     methods: {
       ...mapActions('contentNode', ['updateContentNode']),
+      resetData() {
+        if (this.parent) {
+          this.dontShowAgain = false;
+          const checks = {};
+          for (const field of inheritableFields) {
+            checks[field] = true;
+          }
+          this.checks = checks;
+          ContentNode.getAncestors(this.parent.id).then(ancestors => {
+            for (const field of inheritableFields) {
+              if (
+                this.parent.extra_fields.inherit_metadata &&
+                this.parent.extra_fields.inherit_metadata[field]
+              ) {
+                this.checks[field] = this.parent.extra_fields.inherit_metadata[field];
+              }
+            }
+            this.categories = ancestors.reduce((acc, ancestor) => {
+              const returnValue = {
+                ...acc,
+                ...ancestor.categories,
+              };
+              for (const key in returnValue) {
+                if (Object.keys(returnValue).some(k => k.startsWith(key) && k !== key)) {
+                  // Delete the key if it is a parent category of another key
+                  delete returnValue[key];
+                }
+              }
+              return returnValue;
+            }, {});
+            this.grade_levels = ancestors.reduce((acc, ancestor) => {
+              return {
+                ...acc,
+                ...ancestor.grade_levels,
+              };
+            }, {});
+            this.language = ancestors.reduce((acc, ancestor) => {
+              return ancestor.language || acc;
+            }, null);
+            this.learner_needs = ancestors.reduce((acc, ancestor) => {
+              return {
+                ...acc,
+                ...ancestor.learner_needs,
+              };
+            }, {});
+            this.$nextTick(() => {
+              if (this.allFieldsDesignatedByParent || !this.parentHasInheritableMetadata) {
+                // If all fields have been designated by the parent, or there is nothing to inherit,
+                // automatically continue
+                this.handleContinue();
+              } else {
+                // Wait for the data to be updated before showing the dialog
+                this.closed = false;
+              }
+            });
+          });
+        }
+      },
       storePreferences() {
         // When the user asks to not show this dialog again, store the preferences
         // so we can use this information in the future to apply metadata automatically
@@ -255,7 +268,6 @@
         for (const field of this.fieldsToInherit) {
           if (this.inheritableMetadataItems[field] instanceof Object) {
             payload[field] = {
-              ...this.contentNode[field],
               ...this.inheritableMetadataItems[field],
             };
           } else {
@@ -267,61 +279,6 @@
           this.storePreferences();
         }
         this.closed = true;
-      },
-      generateInheritableCategories(categories) {
-        let categoryTranslationKeys = [];
-        Object.keys(categories).forEach(id => {
-          categoryTranslationKeys.push(Object.keys(Categories).find(key => Categories[key] === id));
-        });
-        categoryTranslationKeys = categoryTranslationKeys
-          .map(key => {
-            return this.translateMetadataString(camelCase(key));
-          })
-          .join(', ');
-        return this.$tr('categories', { categories: categoryTranslationKeys });
-      },
-      generateInheritableLearnerNeeds(learnerNeeds) {
-        let learnerNeedsTranslationKeys = [];
-        Object.keys(learnerNeeds).forEach(id => {
-          learnerNeedsTranslationKeys.push(
-            Object.keys(ResourcesNeededTypes).find(key => ResourcesNeededTypes[key] === id)
-          );
-        });
-        learnerNeedsTranslationKeys = learnerNeedsTranslationKeys
-          .map(key => {
-            return this.translateMetadataString(camelCase(key));
-          })
-          .join(', ');
-        return this.$tr('learnerNeeds', { learnerNeeds: learnerNeedsTranslationKeys });
-      },
-      generateInheritableLevels(gradeLevels) {
-        let gradeLevelsTranslationKeys = [];
-        Object.keys(gradeLevels).forEach(id => {
-          gradeLevelsTranslationKeys.push(
-            Object.keys(ContentLevels).find(key => ContentLevels[key] === id)
-          );
-        });
-        gradeLevelsTranslationKeys = gradeLevelsTranslationKeys
-          .map(level => {
-            let translationKey;
-            if (level === 'PROFESSIONAL') {
-              translationKey = 'specializedProfessionalTraining';
-            } else if (level === 'WORK_SKILLS') {
-              translationKey = 'allLevelsWorkSkills';
-            } else if (level === 'BASIC_SKILLS') {
-              translationKey = 'allLevelsBasicSkills';
-            } else {
-              translationKey = this.translateMetadataString(camelCase(level));
-            }
-            return translationKey;
-          })
-          .join(', ');
-        return this.$tr('levels', { levels: gradeLevelsTranslationKeys });
-      },
-
-      generateInheritableLanguage(parentLanguage) {
-        const language = LanguagesMap.get(parentLanguage).native_name || parentLanguage;
-        return this.$tr('language', { language: language });
       },
     },
     $trs: {

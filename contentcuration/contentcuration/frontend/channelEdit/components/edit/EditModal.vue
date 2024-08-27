@@ -126,8 +126,8 @@
         v-if="isAboutLicensesModalOpen"
       />
       <InheritAncestorMetadataModal
-        :contentNode="createMode ? { parent: $route.params.nodeId } : null"
-        @inherit="indicateInheritableMetadata"
+        :parent="(createMode && detailNodeIds.length) ? parent : null"
+        @inherit="inheritMetadata"
       />
     </VDialog>
 
@@ -190,7 +190,7 @@
   import SavingIndicator from './SavingIndicator';
   import EditView from './EditView';
   import EditList from './EditList';
-  import InheritAncestorMetadataModal from './InheritAncestorMetadataModal.vue';
+  import InheritAncestorMetadataModal from './InheritAncestorMetadataModal';
   import { ContentKindLearningActivityDefaults } from 'shared/leUtils/ContentKinds';
   import { fileSizeMixin, routerMixin } from 'shared/mixins';
   import FileStorage from 'shared/views/files/FileStorage';
@@ -256,7 +256,6 @@
         promptFailed: false,
         listElevated: false,
         storagePoll: null,
-        parentNodeMetadataToInherit: {},
       };
     },
     computed: {
@@ -312,9 +311,11 @@
         }
         return this.$tr('editingDetailsHeader');
       },
+      parent() {
+        return this.$route.params.nodeId && this.getContentNode(this.$route.params.nodeId);
+      },
       parentTitle() {
-        const node = this.$route.params.nodeId && this.getContentNode(this.$route.params.nodeId);
-        return node ? node.title : '';
+        return this.parent ? this.parent.title : '';
       },
       invalidNodes() {
         return this.nodeIds.filter(id => !this.getContentNodeIsValid(id));
@@ -431,9 +432,6 @@
       scroll(e) {
         this.listElevated = e.target.scrollTop > 0;
       },
-      indicateInheritableMetadata(args) {
-        this.parentNodeMetadataToInherit = args;
-      },
 
       /* Button actions */
       handleClose() {
@@ -480,10 +478,6 @@
           payload.learning_activities = {
             [ContentKindLearningActivityDefaults[kind]]: true,
           };
-        }
-        if (Object.keys(this.parentNodeMetadataToInherit).length) {
-          console.log('Inheriting metadata', this.parentNodeMetadataToInherit);
-          payload = { ...this.parentNodeMetadataToInherit };
         }
         return this.createContentNode({
           kind,
@@ -540,6 +534,11 @@
         this.$analytics.trackAction('file_uploader', 'Add files', {
           eventLabel: 'Upload file',
         });
+      },
+      inheritMetadata(metadata) {
+        for (const nodeId of this.nodeIds) {
+          this.updateContentNode({ id: nodeId, ...metadata, mergeMapFields: true });
+        }
       },
     },
     $trs: {

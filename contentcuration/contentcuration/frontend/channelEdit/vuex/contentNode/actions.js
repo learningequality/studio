@@ -339,7 +339,17 @@ function generateContentNodeData({
   return contentNodeData;
 }
 
-export function updateContentNode(context, { id, ...payload } = {}) {
+const mapFields = [
+  'accessibility_labels',
+  'grade_levels',
+  'learner_needs',
+  'categories',
+  'learning_activities',
+  'resource_types',
+  'tags',
+];
+
+export function updateContentNode(context, { id, mergeMapFields, ...payload } = {}) {
   if (!id) {
     throw ReferenceError('id must be defined to update a contentNode');
   }
@@ -374,6 +384,41 @@ export function updateContentNode(context, { id, ...payload } = {}) {
         ...contentNodeData.extra_fields,
       },
     };
+  }
+
+  if (mergeMapFields) {
+    for (const mapField of mapFields) {
+      if (contentNodeData[mapField]) {
+        if (mapField === 'categories') {
+          // Reduce categories to the minimal set
+          const existingCategories = Object.keys(node.categories || {});
+          const newCategories = Object.keys(contentNodeData.categories);
+          const newMap = {};
+          for (const category of existingCategories) {
+            // If any of the new categories are more specific than the existing category,
+            // omit this.
+            if (!newCategories.some(newCategory => newCategory.startsWith(category))) {
+              newMap[category] = true;
+            }
+          }
+          for (const category of newCategories) {
+            if (
+              !existingCategories.some(
+                existingCategory =>
+                  existingCategory.startsWith(category) && category !== existingCategory
+              )
+            ) {
+              newMap[category] = true;
+            }
+          }
+        } else {
+          contentNodeData[mapField] = {
+            ...node[mapField],
+            ...contentNodeData[mapField],
+          };
+        }
+      }
+    }
   }
 
   const newNode = {
