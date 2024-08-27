@@ -7,6 +7,7 @@
     :nodeIds="nodeIds"
     :validators="learningActivityValidators"
     :confirmationMessage="changesSaved"
+    :resourcesSelectedText="resourcesSelectedText"
     @close="() => $emit('close')"
   >
     <template #input="{ value, inputHandler }">
@@ -40,6 +41,10 @@
       nodeIds: {
         type: Array,
         required: true,
+      },
+      resourcesSelectedText: {
+        type: String,
+        default: '',
       },
     },
     computed: {

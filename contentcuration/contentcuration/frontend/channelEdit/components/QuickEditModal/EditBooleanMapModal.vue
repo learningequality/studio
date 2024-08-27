@@ -8,8 +8,8 @@
     @submit="handleSave"
     @cancel="close"
   >
-    <p v-if="nodeIds.length > 1" data-test="resources-selected-message">
-      {{ $tr('resourcesSelected', { count: nodeIds.length }) }}
+    <p v-if="resourcesSelectedText.length > 0" data-test="resources-selected-message">
+      {{ resourcesSelectedText }}
     </p>
     <template v-if="isDescendantsUpdatable && isTopicSelected">
       <KCheckbox
@@ -71,6 +71,10 @@
       validators: {
         type: Array,
         default: () => [],
+      },
+      resourcesSelectedText: {
+        type: String,
+        default: '',
       },
     },
     data() {
@@ -165,8 +169,6 @@
     $trs: {
       saveAction: 'Save',
       cancelAction: 'Cancel',
-      resourcesSelected:
-        '{count, number, integer} {count, plural, one {resource} other {resources}} selected',
       updateDescendantsCheckbox:
         'Apply to all resources and folders nested within the selected folders',
     },

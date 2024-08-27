@@ -14,6 +14,8 @@ const MESSAGES = {
   errorMissingAnswer: 'Choose a correct answer',
   errorChooseAtLeastOneCorrectAnswer: 'Choose at least one correct answer',
   errorProvideAtLeastOneCorrectAnswer: 'Provide at least one correct answer',
+  selectionCount:
+    '{topicCount, plural, =0 {} one {# folder, } other {# folders, }}{resourceCount, plural, one {# resource} other {# resources}}',
 };
 
 export default createTranslator(NAMESPACE, MESSAGES);

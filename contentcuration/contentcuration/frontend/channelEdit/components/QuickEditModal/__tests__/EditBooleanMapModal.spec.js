@@ -69,6 +69,7 @@ const makeWrapper = ({ nodeIds, field = 'categories', ...restOptions }) => {
       field,
       autocompleteLabel: 'Select option',
       confirmationMessage: 'edited',
+      resourcesSelectedText: '2 resources',
       ...restOptions,
     },
     scopedSlots: {
@@ -217,7 +218,7 @@ describe('EditBooleanMapModal', () => {
 
     const resourcesCounter = wrapper.find('[data-test="resources-selected-message"]');
     expect(resourcesCounter.exists()).toBeTruthy();
-    expect(resourcesCounter.text()).toContain('4');
+    expect(resourcesCounter.text()).toContain('2 resources');
   });
 
   describe('Submit', () => {

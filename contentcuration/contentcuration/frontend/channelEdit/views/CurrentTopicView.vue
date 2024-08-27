@@ -60,16 +60,9 @@
           v-if="node && node.total_count"
           v-model="selectAll"
           :indeterminate="selected.length > 0 && !selectAll"
-          :label="selected.length ? '' : $tr('selectAllLabel')"
+          :label="selected.length ? selectionText : $tr('selectAllLabel')"
           style="font-size: 16px;"
         />
-      </div>
-      <div
-        v-show="selected.length"
-        v-if="$vuetify.breakpoint.mdAndUp"
-        class="no-shrink px-1"
-      >
-        {{ selectionText }}
       </div>
       <div v-if="selected.length" class="command-palette-wrapper">
         <KListWithOverflow
@@ -308,7 +301,7 @@
         'getContentNode',
         'getContentNodes',
         'getContentNodeAncestors',
-        'getTopicAndResourceCounts',
+        'getSelectedTopicAndResourceCountText',
         'getContentNodeChildren',
         'isNodeInCopyingState',
       ]),
@@ -502,7 +495,7 @@
         };
       },
       selectionText() {
-        return this.$tr('selectionCount', this.getTopicAndResourceCounts(this.selected));
+        return this.getSelectedTopicAndResourceCountText(this.selected);
       },
       draggableId() {
         return DraggableRegions.TOPIC_VIEW;
@@ -927,8 +920,6 @@
       moveSelectedButton: 'Move',
       duplicateSelectedButton: 'Make a copy',
       deleteSelectedButton: 'Delete',
-      selectionCount:
-        '{topicCount, plural,\n =1 {# folder}\n other {# folders}}, {resourceCount, plural,\n =1 {# resource}\n other {# resources}}',
       undo: 'Undo',
       creatingCopies: 'Copying...',
       copiedItems: 'Copy operation complete',

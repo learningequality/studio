@@ -10,8 +10,8 @@
       @submit="handleSave"
       @cancel="close"
     >
-      <p v-if="nodeIds.length > 1" data-test="resources-selected-message" style="margin-top: 8px;">
-        {{ $tr('resourcesSelected', { count: nodeIds.length }) }}
+      <p v-if="resourcesSelectedText.length > 0" data-test="resources-selected-message">
+        {{ resourcesSelectedText }}
       </p>
       <div class="form-item">
         <div class="input-container">
@@ -146,6 +146,10 @@
         type: Array,
         required: true,
       },
+      resourcesSelectedText: {
+        type: String,
+        default: '',
+      },
     },
     data() {
       /* eslint-disable  kolibri/vue-no-unused-properties */
@@ -271,8 +275,6 @@
       aggregatorLabel: 'Aggregator',
       aggregatorToolTip:
         'Website or org hosting the content collection but not necessarily the creator or copyright holder',
-      resourcesSelected:
-        '{count, number, integer} {count, plural, one {resource} other {resources}} selected',
       copyrightHolderLabel: 'Copyright holder',
       cannotEditPublic: 'Cannot edit for public channel resources',
       editOnlyLocal: 'Edits will be reflected only for local resources',
