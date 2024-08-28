@@ -101,13 +101,13 @@ def fileobj_video(contents=None):
 def node_json(data):
     node_data = {
         "title": "Recipes",
-        "node_id": "acedacedacedacedacedacedacedaced",
+        "node_id": data.get("node_id", "acedacedacedacedacedacedacedaced"),
         "content_id": "aa480b60a7f4526f886e7df9f4e9b8cc",
         "description": "Recipes for various dishes.",
         "author": "Bradley Smoker",
         "kind": data['kind'],
         "license": data['license'],
-        "extra_fields": "",
+        "extra_fields": {},
         "files": [],
         "questions": []
     }
@@ -230,11 +230,14 @@ def random_string(chars=10):
     return ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(chars))
 
 
-def user(email='user@test.com'):
+def user(email='user@test.com', feature_flags=None):
     user, is_new = cc.User.objects.get_or_create(email=email)
     if is_new:
         user.set_password('password')
         user.is_active = True
+        user.save()
+    if feature_flags is not None:
+        user.feature_flags = feature_flags
         user.save()
     return user
 

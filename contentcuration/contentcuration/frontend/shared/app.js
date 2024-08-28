@@ -106,6 +106,7 @@ import {
 } from 'vuetify/lib/directives';
 import VueIntl from 'vue-intl';
 import Croppa from 'vue-croppa';
+import VueCompositionApi from '@vue/composition-api';
 import { Workbox, messageSW } from 'workbox-window';
 import KThemePlugin from 'kolibri-design-system/lib/KThemePlugin';
 import trackInputModality from 'kolibri-design-system/lib/styles/trackInputModality';
@@ -121,6 +122,7 @@ import Base from 'shared/Base.vue';
 import urls from 'shared/urls';
 import ActionLink from 'shared/views/ActionLink';
 import Menu from 'shared/views/Menu';
+import Divider from 'shared/views/Divider';
 import { initializeDB, resetDB } from 'shared/data';
 import { Session, injectVuexStore } from 'shared/data/resources';
 
@@ -158,6 +160,7 @@ if (process.env.NODE_ENV !== 'production') {
 Vue.use(Croppa);
 Vue.use(VueIntl);
 Vue.use(VueRouter);
+Vue.use(VueCompositionApi);
 Vue.use(Vuetify, {
   components: {
     // Explicitly register used Vuetify components globally
@@ -256,6 +259,7 @@ Vue.use(AnalyticsPlugin, { dataLayer: window.dataLayer });
 // Register global components
 Vue.component('ActionLink', ActionLink);
 Vue.component('Menu', Menu);
+Vue.component('Divider', Divider);
 
 function initiateServiceWorker() {
   // Second conditional must be removed if you are doing dev work on the service

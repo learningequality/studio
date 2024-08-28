@@ -127,7 +127,8 @@
       },
     },
     methods: {
-      handleChange(checked) {
+      handleChange(checked, e) {
+        e.stopPropagation();
         this.isChecked = checked;
       },
       updateInputValue(newValue) {

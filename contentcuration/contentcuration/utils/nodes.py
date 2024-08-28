@@ -453,3 +453,11 @@ def migrate_extra_fields(extra_fields):
             "model": completion_criteria.MASTERY,
         }
     return extra_fields
+
+
+def validate_and_conform_to_schema_threshold_none(completion_criteria_validated):
+    model = completion_criteria_validated.get("model", {})
+    if model in ["reference", "determined_by_resource"]:
+        if "threshold" not in completion_criteria_validated or completion_criteria_validated["threshold"] is not None:
+            completion_criteria_validated["threshold"] = None
+    return completion_criteria_validated

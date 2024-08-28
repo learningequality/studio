@@ -72,6 +72,8 @@
                         v-if="allowMove && moveModalOpen"
                         ref="moveModal"
                         v-model="moveModalOpen"
+                        :moveNodeIds="selectedNodeIds"
+                        :clipboardTopicResourceCount="topicAndResourceCount"
                         @target="moveNodes"
                       />
                       <KIconButton
@@ -201,7 +203,7 @@
     },
     computed: {
       ...mapGetters(['clipboardRootId']),
-      ...mapState('clipboard', ['initializing']),
+      ...mapState('clipboard', ['initializing', 'clipboardNodesMap']),
       ...mapGetters('clipboard', [
         'channels',
         'selectedNodeIds',
@@ -244,6 +246,21 @@
         return this.activeDraggableId !== DraggableRegions.CLIPBOARD
           ? DropEffect.COPY
           : DropEffect.NONE;
+      },
+      topicAndResourceCount() {
+        let topicCount = 0;
+        let resourceCount = 0;
+        this.selectedNodeIds.forEach(id => {
+          const kind = this.clipboardNodesMap[id]?.kind;
+          if (kind === 'topic' || !kind) {
+            // Increment topicCount if kind is "topic" or not set
+            topicCount++;
+          } else {
+            // Increment resourceCount for any other kind
+            resourceCount++;
+          }
+        });
+        return { topicCount: topicCount, resourceCount: resourceCount };
       },
     },
     watch: {

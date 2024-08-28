@@ -173,6 +173,10 @@
         type: Boolean,
         default: false,
       },
+      clipboardTopicResourceCount: {
+        type: Object,
+        default: () => ({}),
+      },
     },
     data() {
       return {
@@ -200,7 +204,10 @@
         },
       },
       moveHeader() {
-        return this.$tr('moveItems', this.getTopicAndResourceCounts(this.moveNodeIds));
+        const resourceCounts = Object.keys(this.clipboardTopicResourceCount).length
+          ? this.clipboardTopicResourceCount
+          : this.getTopicAndResourceCounts(this.moveNodeIds);
+        return this.$tr('moveItems', resourceCounts);
       },
       moveHereButtonDisabled() {
         if (this.moveNodesInProgress) {

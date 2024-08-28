@@ -2,6 +2,7 @@ import invert from 'lodash/invert';
 import Subjects from 'kolibri-constants/labels/Subjects';
 import CompletionCriteria from 'kolibri-constants/CompletionCriteria';
 import ContentLevels from 'kolibri-constants/labels/Levels';
+import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 import featureFlagsSchema from 'static/feature_flags.json';
 
 export { default as LearningActivities } from 'kolibri-constants/labels/LearningActivities';
@@ -217,3 +218,87 @@ export const DurationDropdownMap = {
 // Define an object to act as the place holder for non unique values.
 export const nonUniqueValue = {};
 nonUniqueValue.toString = () => '';
+
+/**
+ * Not all fields are updatable on descendants, for many of them does not
+ * make sense to update to all the descendants, such as the title.
+ */
+export const DescendantsUpdatableFields = [
+  'language',
+  'categories',
+  'grade_levels',
+  'learner_needs',
+];
+
+export const ResourcesNeededOptions = [
+  'PEERS',
+  'TEACHER',
+  'INTERNET',
+  'SPECIAL_SOFTWARE',
+  'PAPER_PENCIL',
+  'OTHER_SUPPLIES',
+];
+
+// The constant mapping below is used to set
+// default completion criteria and durations
+// both as initial values in the edit modal, and
+// to ensure backwards compatibility for contentnodes
+// that were added before this was in place
+export const defaultCompletionCriteriaModels = {
+  [ContentKindsNames.VIDEO]: CompletionCriteria.TIME,
+  [ContentKindsNames.AUDIO]: CompletionCriteria.TIME,
+  [ContentKindsNames.DOCUMENT]: CompletionCriteria.PAGES,
+  [ContentKindsNames.H5P]: CompletionCriteria.DETERMINED_BY_RESOURCE,
+  [ContentKindsNames.HTML5]: CompletionCriteria.APPROX_TIME,
+  [ContentKindsNames.ZIM]: CompletionCriteria.APPROX_TIME,
+  [ContentKindsNames.EXERCISE]: CompletionCriteria.MASTERY,
+};
+
+export const defaultCompletionCriteriaThresholds = {
+  // Audio and Video threshold defaults are dynamic based
+  // on the duration of the file itself.
+  [ContentKindsNames.DOCUMENT]: '100%',
+  [ContentKindsNames.HTML5]: 300,
+  // We cannot set an automatic default threshold for exercises.
+};
+
+export const CompletionOptionsDropdownMap = {
+  [ContentKindsNames.DOCUMENT]: [
+    CompletionDropdownMap.allContent,
+    CompletionDropdownMap.completeDuration,
+    CompletionDropdownMap.reference,
+  ],
+  [ContentKindsNames.EXERCISE]: [CompletionDropdownMap.goal, CompletionDropdownMap.practiceQuiz],
+  [ContentKindsNames.HTML5]: [
+    CompletionDropdownMap.completeDuration,
+    CompletionDropdownMap.determinedByResource,
+    CompletionDropdownMap.reference,
+  ],
+  [ContentKindsNames.ZIM]: [
+    CompletionDropdownMap.completeDuration,
+    CompletionDropdownMap.determinedByResource,
+    CompletionDropdownMap.reference,
+  ],
+  [ContentKindsNames.H5P]: [
+    CompletionDropdownMap.determinedByResource,
+    CompletionDropdownMap.completeDuration,
+    CompletionDropdownMap.reference,
+  ],
+  [ContentKindsNames.VIDEO]: [
+    CompletionDropdownMap.completeDuration,
+    CompletionDropdownMap.reference,
+  ],
+  [ContentKindsNames.AUDIO]: [
+    CompletionDropdownMap.completeDuration,
+    CompletionDropdownMap.reference,
+  ],
+};
+
+export const completionCriteriaToDropdownMap = {
+  [CompletionCriteria.TIME]: CompletionDropdownMap.completeDuration,
+  [CompletionCriteria.APPROX_TIME]: CompletionDropdownMap.completeDuration,
+  [CompletionCriteria.PAGES]: CompletionDropdownMap.allContent,
+  [CompletionCriteria.DETERMINED_BY_RESOURCE]: CompletionDropdownMap.determinedByResource,
+  [CompletionCriteria.MASTERY]: CompletionDropdownMap.goal,
+  [CompletionCriteria.REFERENCE]: CompletionDropdownMap.reference,
+};

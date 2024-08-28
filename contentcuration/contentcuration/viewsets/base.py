@@ -967,7 +967,8 @@ def create_change_tracker(pk, table, channel_id, user, task_name):
             custom_task_metadata_object.save()
 
     Change.create_change(
-        generate_update_event(pk, table, {TASK_ID: task_object.task_id}, channel_id=channel_id), applied=True
+        # These changes are purely for ephemeral progress updating, and do not constitute a publishable change.
+        generate_update_event(pk, table, {TASK_ID: task_object.task_id}, channel_id=channel_id), applied=True, unpublishable=True
     )
 
     tracker = ProgressTracker(task_id, update_progress)
@@ -982,8 +983,9 @@ def create_change_tracker(pk, table, channel_id, user, task_name):
     finally:
         if task_object.status == states.STARTED:
             # No error reported, cleanup.
+            # Mark as unpublishable, as this is a continuation of the progress updating, and not a publishable change.
             Change.create_change(
-                generate_update_event(pk, table, {TASK_ID: None}, channel_id=channel_id), applied=True
+                generate_update_event(pk, table, {TASK_ID: None}, channel_id=channel_id), applied=True, unpublishable=True
             )
             task_object.delete()
             custom_task_metadata_object.delete()

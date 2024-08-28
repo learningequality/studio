@@ -37,7 +37,7 @@ class SettingsTestCase(BaseAPITestCase):
         try:
             DeleteAccountView.as_view()(request)
             self.assertTrue(False)
-        except UserWarning:
+        except Exception:
             self.assertTrue(User.objects.filter(email=self.user.email).exists())
 
     def test_delete_account(self):

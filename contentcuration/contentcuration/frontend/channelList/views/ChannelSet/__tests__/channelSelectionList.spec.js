@@ -1,4 +1,5 @@
 import { mount } from '@vue/test-utils';
+import Vuex from 'vuex';
 import ChannelSelectionList from '../ChannelSelectionList';
 import { ChannelListTypes } from 'shared/constants';
 
@@ -25,6 +26,25 @@ const publicChannel = {
   published: true,
 };
 
+const getters = {
+  channels: jest.fn(() => [editChannel, editChannel2, publicChannel]),
+  getChannel: jest.fn(() => () => editChannel),
+};
+
+const actions = {
+  loadChannelList: jest.fn(() => Promise.resolve()),
+};
+
+const store = new Vuex.Store({
+  modules: {
+    channel: {
+      namespaced: true,
+      getters,
+      actions,
+    },
+  },
+});
+
 function makeWrapper() {
   return mount(ChannelSelectionList, {
     sync: false,
@@ -41,9 +61,7 @@ function makeWrapper() {
         return Promise.resolve();
       },
     },
-    stubs: {
-      ChannelItem: true,
-    },
+    store,
   });
 }
 
@@ -76,5 +94,18 @@ describe('channelSelectionList', () => {
     wrapper.setData({ loading: false, search: searchWord });
     expect(wrapper.vm.listChannels.find(c => c.id === editChannel.id)).toBeTruthy();
     expect(wrapper.vm.listChannels.find(c => c.id === editChannel2.id)).toBeFalsy();
+  });
+  it('should select channels when the channel card has been clicked', () => {
+    wrapper.setData({ loading: false });
+    wrapper.find(`[data-test="channel-item-${editChannel.id}"]`).trigger('click');
+    expect(wrapper.emitted('input')[0][0]).toEqual([editChannel.id]);
+  });
+  it('should deselect channels when the channel card has been clicked', () => {
+    wrapper.setData({ loading: false });
+    wrapper.find(`[data-test="channel-item-${editChannel.id}"]`).element.click(); // Check the channel
+    wrapper.find(`[data-test="channel-item-${editChannel.id}"]`).element.click(); // Uncheck the channel
+
+    expect(wrapper.emitted('input')[0].length).toEqual(1); // Only one event should be emitted (corresponding to the initial check)
+    expect(wrapper.emitted('input')[0][0]).toEqual([editChannel.id]); // The initial check event should be emitted
   });
 });

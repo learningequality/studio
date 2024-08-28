@@ -41,9 +41,11 @@
           @infoClick="goToNodeDetail(child.id)"
           @topicChevronClick="goToTopic(child.id)"
           @dblclick.native="onNodeDoubleClick(child)"
+          @editTitleDescription="$emit('editTitleDescription', child.id)"
         />
       </template>
     </VList>
+    <slot name="pagination"></slot>
   </div>
 
 </template>

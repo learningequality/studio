@@ -1,23 +1,16 @@
 <template>
 
-  <DropdownWrapper>
-    <template #default="{ attach, menuProps }">
-      <VSelect
-        v-model="learningActivity"
-        :items="learningActivities"
-        :disabled="disabled"
-        box
-        chips
-        clearable
-        :label="translateMetadataString('learningActivity')"
-        multiple
-        deletableChips
-        :menu-props="menuProps"
-        :rules="learningActivityRules"
-        :attach="attach"
-      />
-    </template>
-  </DropdownWrapper>
+  <ExpandableSelect
+    v-model="learningActivity"
+    multiple
+    :disabled="disabled"
+    :expanded="expanded"
+    :options="learningActivities"
+    :hideLabel="hideLabel"
+    :rules="learningActivityRules"
+    :label="translateMetadataString('learningActivity')"
+    :availableItems="nodeIds"
+  />
 
 </template>
 
@@ -25,22 +18,41 @@
 
   import camelCase from 'lodash/camelCase';
   import { LearningActivities } from 'shared/constants';
+  import ExpandableSelect from 'shared/views/form/ExpandableSelect';
   import { constantsTranslationMixin, metadataTranslationMixin } from 'shared/mixins';
   import { getLearningActivityValidators, translateValidator } from 'shared/utils/validation';
-  import DropdownWrapper from 'shared/views/form/DropdownWrapper';
 
   export default {
     name: 'LearningActivityOptions',
-    components: { DropdownWrapper },
+    components: { ExpandableSelect },
     mixins: [constantsTranslationMixin, metadataTranslationMixin],
     props: {
+      /**
+       * This prop receives an object with the following structure:
+       * {
+       *  [learningActivityId]: [nodeId1, nodeId2, ...]
+       * }
+       * Where nodeId is the id of the node that has the learning activity selected
+       */
       value: {
-        type: Array,
-        default: () => [],
+        type: Object,
+        required: true,
       },
       disabled: {
         type: Boolean,
         default: false,
+      },
+      expanded: {
+        type: Boolean,
+        default: false,
+      },
+      hideLabel: {
+        type: Boolean,
+        default: false,
+      },
+      nodeIds: {
+        type: Array,
+        required: true,
       },
     },
     computed: {
@@ -49,7 +61,7 @@
           if (!this.disabled) {
             return this.value;
           }
-          return null;
+          return {};
         },
         set(value) {
           if (!this.disabled) {

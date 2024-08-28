@@ -5,6 +5,7 @@ from django.conf import settings
 from contentcuration.utils.sentry import report_exception
 from contentcuration.viewsets.sync.constants import ALL_TABLES
 from contentcuration.viewsets.sync.constants import CHANNEL
+from contentcuration.viewsets.sync.constants import CONTENTNODE
 from contentcuration.viewsets.sync.constants import COPIED
 from contentcuration.viewsets.sync.constants import CREATED
 from contentcuration.viewsets.sync.constants import DELETED
@@ -12,6 +13,7 @@ from contentcuration.viewsets.sync.constants import DEPLOYED
 from contentcuration.viewsets.sync.constants import MOVED
 from contentcuration.viewsets.sync.constants import PUBLISHED
 from contentcuration.viewsets.sync.constants import UPDATED
+from contentcuration.viewsets.sync.constants import UPDATED_DESCENDANTS
 
 
 def validate_table(table):
@@ -81,6 +83,10 @@ def generate_deploy_event(key, user_id):
     event = _generate_event(key, CHANNEL, DEPLOYED, channel_id=key, user_id=user_id)
     return event
 
+def generate_update_descendants_event(key, mods, channel_id=None, user_id=None):
+    event = _generate_event(key, CONTENTNODE, UPDATED_DESCENDANTS, channel_id, user_id)
+    event["mods"] = mods
+    return event
 
 def log_sync_exception(e, user=None, change=None, changes=None):
     # Capture exception and report, but allow sync

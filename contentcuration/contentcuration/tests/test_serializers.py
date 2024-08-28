@@ -9,9 +9,11 @@ from .base import BaseAPITestCase
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
 from contentcuration.models import DEFAULT_CONTENT_DEFAULTS
+from contentcuration.tests import testdata
 from contentcuration.viewsets.channel import ChannelSerializer as BaseChannelSerializer
 from contentcuration.viewsets.common import ContentDefaultsSerializer
 from contentcuration.viewsets.contentnode import ContentNodeSerializer
+from contentcuration.viewsets.feedback import FlagFeedbackEventSerializer
 
 
 def ensure_no_querysets_in_serializer(object):
@@ -182,3 +184,46 @@ class ContentDefaultsSerializerUseTestCase(BaseAPITestCase):
         self.assertEqual(
             dict(author="Buster", license="Special Permissions"), c.content_defaults
         )
+
+
+class FlagFeedbackSerializerTestCase(BaseAPITestCase):
+    def setUp(self):
+        super(FlagFeedbackSerializerTestCase, self).setUp()
+        self.channel = testdata.channel("testchannel")
+        self.flagged_node = testdata.node(
+            {
+                "kind_id": content_kinds.VIDEO,
+                "title": "Suspicious Video content",
+            },
+        )
+
+    def _create_base_feedback_data(self, context, contentnode_id, content_id):
+        base_feedback_data = {
+            'context': context,
+            'contentnode_id': contentnode_id,
+            'content_id': content_id,
+        }
+        return base_feedback_data
+
+    def test_deserialization_and_validation(self):
+        data = {
+            'user': self.user.id,
+            'target_channel_id': str(self.channel.id),
+            'context': {'test_key': 'test_value'},
+            'contentnode_id': str(self.flagged_node.id),
+            'content_id': str(self.flagged_node.content_id),
+            'feedback_type': 'FLAGGED',
+            'feedback_reason': 'Reason1.....'
+        }
+        serializer = FlagFeedbackEventSerializer(data=data)
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        instance = serializer.save()
+        self.assertEqual(instance.context, data['context'])
+        self.assertEqual(instance.user.id, data['user'])
+        self.assertEqual(instance.feedback_type, data['feedback_type'])
+        self.assertEqual(instance.feedback_reason, data['feedback_reason'])
+
+    def test_invalid_data(self):
+        data = {'context': 'invalid'}
+        serializer = FlagFeedbackEventSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
