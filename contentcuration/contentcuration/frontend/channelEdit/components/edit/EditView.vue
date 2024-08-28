@@ -25,7 +25,7 @@
                   reference="errorDetails"
                   :refs="$refs"
                   placement="top"
-                  appendToRoot
+                  appendToOverlay
                 >
                   {{ $tr('invalidFieldsToolTip') }}
                 </KTooltip>
@@ -50,7 +50,7 @@
                   reference="errorQuestions"
                   :refs="$refs"
                   placement="top"
-                  appendToRoot
+                  appendToOverlay
                 >
                   {{ $tr('invalidFieldsToolTip') }}
                 </KTooltip>

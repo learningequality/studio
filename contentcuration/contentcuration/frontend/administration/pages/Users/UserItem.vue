@@ -22,7 +22,7 @@
             reference="admin"
             :refs="$refs"
             placement="bottom"
-            appendToRoot
+            appendToOverlay
           >
             Administrator
           </KTooltip>

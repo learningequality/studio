@@ -23,7 +23,7 @@
       reference="error"
       :refs="$refs"
       placement="bottom"
-      appendToRoot
+      appendToOverlay
     >
       {{ error }}
     </KTooltip>
@@ -40,7 +40,7 @@
       reference="warning"
       :refs="$refs"
       placement="bottom"
-      appendToRoot
+      appendToOverlay
     >
       {{ warning }}
     </KTooltip>
