@@ -396,7 +396,7 @@
       editSource: 'Edit source',
       editAudience: 'Edit audience',
       editCompletion: 'Edit completion',
-      editWhatIsNeeded: "Edit 'what is needed'",
+      editWhatIsNeeded: 'Edit requirements',
       viewDetails: 'View details',
       move: 'Move',
       makeACopy: 'Make a copy',

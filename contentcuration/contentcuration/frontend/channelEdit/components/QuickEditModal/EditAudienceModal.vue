@@ -148,7 +148,7 @@
       },
     },
     $trs: {
-      editAudienceTitle: 'Edit Audience',
+      editAudienceTitle: 'Edit audience',
       saveAction: 'Save',
       cancelAction: 'Cancel',
       forBeginnersCheckbox: 'For beginners',
@@ -157,7 +157,7 @@
       visibleToCoaches:
         'Resources are visible only to coaches (teachers, facilitators, administrators)',
       multipleAudience:
-        'The selected resources have a mixed audience visbility. Choosing from the options below will apply the changes to all the selected resources',
+        'The selected resources are visible to different audiences. Choosing an option below will change the visibility of all selected resources.',
     },
   };
 

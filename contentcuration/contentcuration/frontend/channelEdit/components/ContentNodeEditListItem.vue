@@ -299,7 +299,7 @@
       creatingCopies: 'Copying...',
       copiedSnackbar: 'Copy operation complete',
       undo: 'Undo',
-      editTooltip: 'Edit Title & Description',
+      editTooltip: 'Edit title and description',
     },
   };
 

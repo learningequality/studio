@@ -130,7 +130,7 @@
       },
     },
     $trs: {
-      editCompletion: 'Edit Completion',
+      editCompletion: 'Edit completion',
       saveAction: 'Save',
       cancelAction: 'Cancel',
     },
