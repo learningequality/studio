@@ -1,3 +1,4 @@
+import isEqual from 'lodash/isEqual';
 import sortBy from 'lodash/sortBy';
 
 export function savedSearches(state) {
@@ -6,5 +7,5 @@ export function savedSearches(state) {
 }
 
 export function getSavedSearch(state) {
-  return searchId => state.savedSearches[searchId];
+  return params => savedSearches(state).find(search => isEqual(search.params, params));
 }

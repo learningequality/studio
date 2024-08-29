@@ -39,7 +39,8 @@
               </span>
               <ActionLink
                 class="mx-2"
-                :text="$tr('saveSearchAction')"
+                :disabled="searchIsNotEmpty || currentSearchSaved"
+                :text="currentSearchSaved ? $tr('searchSavedSnackbar') : $tr('saveSearchAction')"
                 @click="handleClickSaveSearch"
               />
             </VFlex>
@@ -92,6 +93,7 @@
   import { mapActions, mapGetters, mapState } from 'vuex';
   import debounce from 'lodash/debounce';
   import find from 'lodash/find';
+  import pickBy from 'lodash/pickBy';
   import { ImportSearchPageSize } from '../../constants';
   import BrowsingCard from './BrowsingCard';
   import SavedSearchesModal from './SavedSearchesModal';
@@ -133,6 +135,7 @@
     },
     computed: {
       ...mapGetters('contentNode', ['getContentNodes']),
+      ...mapGetters('importFromChannels', ['getSavedSearch']),
       ...mapState('currentChannel', ['currentChannelId']),
       nodes() {
         return this.getContentNodes(this.nodeIds) || [];
@@ -167,6 +170,19 @@
       searchIsNotEmpty() {
         return this.nodes.length > 0;
       },
+      savedSearchParams() {
+        const params = { ...this.$route.query };
+        delete params.last;
+        delete params.page_size;
+        delete params.page;
+        return pickBy({
+          ...params,
+          keywords: this.$route.params.searchTerm,
+        });
+      },
+      currentSearchSaved() {
+        return Boolean(this.getSavedSearch(this.savedSearchParams));
+      },
     },
     watch: {
       '$route.query'() {
@@ -177,15 +193,20 @@
       this.showSavedSearches = false;
       next();
     },
-    mounted() {
+    created() {
       this.fetch();
     },
     methods: {
-      ...mapActions('importFromChannels', ['fetchResourceSearchResults', 'createSearch']),
+      ...mapActions('importFromChannels', [
+        'fetchResourceSearchResults',
+        'createSearch',
+        'loadSavedSearches',
+      ]),
       fetch() {
         this.loading = true;
         this.loadFailed = false;
         this.fetchResultsDebounced();
+        this.loadSavedSearches();
       },
       fetchResultsDebounced: debounce(
         function() {
@@ -211,15 +232,7 @@
         { trailing: true }
       ),
       handleClickSaveSearch() {
-        const params = { ...this.$route.query };
-        delete params.last;
-        delete params.page_size;
-        delete params.page;
-
-        this.createSearch({
-          ...params,
-          keywords: this.$route.params.searchTerm,
-        }).then(() => {
+        this.createSearch(this.savedSearchParams).then(() => {
           this.$store.dispatch('showSnackbarSimple', this.$tr('searchSavedSnackbar'));
         });
       },
