@@ -251,20 +251,20 @@
         let resourceCount = 0;
         const contentNodesValues = Object.values(this.contentNodesMap);
         this.selectedNodeIds.forEach(id => {
-            let node = this.clipboardNodesMap[id];
-            let kind = node?.kind;
-            // Check contentNodesMap for node kind if missing in clipboardNodesMap
-            if (!kind && node?.source_node_id) {
-              const contentNode = contentNodesValues.find(n => n.node_id === node.source_node_id);
-              kind = contentNode?.kind;
-            }
+          const node = this.clipboardNodesMap[id];
+          let kind = node?.kind;
+          // Check contentNodesMap for node kind if missing in clipboardNodesMap
+          if (!kind && node?.source_node_id) {
+            const contentNode = contentNodesValues.find(n => n.node_id === node.source_node_id);
+            kind = contentNode?.kind;
+          }
 
-            if (kind === 'topic') {
-              topicCount++;
-            } else {
-              resourceCount++;
-            }
-          });
+          if (kind === 'topic') {
+            topicCount++;
+          } else {
+            resourceCount++;
+          }
+        });
         return { topicCount: topicCount, resourceCount: resourceCount };
       },
     },
