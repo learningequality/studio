@@ -596,6 +596,7 @@
         'copyContentNode',
         'waitForCopyingStatus',
         'setQuickEditModal',
+        'updateContentNode',
       ]),
       ...mapMutations('contentNode', ['ADD_INHERITING_NODE', 'CLEAR_INHERITING_NODES']),
       ...mapActions('clipboard', ['copyAll']),

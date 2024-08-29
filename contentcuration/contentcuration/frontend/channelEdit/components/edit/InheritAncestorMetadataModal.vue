@@ -170,8 +170,11 @@
     },
     watch: {
       parent(newParent, oldParent) {
-        console.log(newParent, oldParent);
-        if ((!oldParent && newParent) || oldParent.id !== newParent.id) {
+        if (
+          (!oldParent && newParent) ||
+          (oldParent && !newParent) ||
+          oldParent.id !== newParent.id
+        ) {
           this.resetData();
         }
       },
