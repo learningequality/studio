@@ -3,7 +3,7 @@
   <KModal
     v-if="active"
     data-test="inheritable-metadata-dialog"
-    :title="$tr('applyResourceDetailsTitle')"
+    :title="$tr('applyResourceDetailsTitle', { folder: parent.title })"
     :submitText="$tr('continueAction')"
     :cancelText="$tr('cancelAction')"
     @submit="handleContinue"
@@ -285,22 +285,15 @@
       },
     },
     $trs: {
-      applyResourceDetailsTitle: 'Apply resource details',
+      applyResourceDetailsTitle: "Apply details from the folder '{folder}'",
       /* eslint-disable kolibri/vue-no-unused-translations */
-      applyResourceDetailsDescriptionUpload:
-        'The folder `{folder}` has the following details. Select the details you want to apply to your upload. You can add edit these details and add additional resource information later.',
-      applyResourceDetailsDescriptionImport:
-        'The folder `{folder}` has the following details. Select the details you want to apply to the {resource, plural, one {resource}, other {resources}} you are importing.',
-      applyResourceDetailsDescriptionMoving:
-        'The folder `{folder}` has the following details. Select the details you want to apply to the {resource, plural, one {resource}, other {resources}} you are moving.',
-      /* eslint-enable kolibri/vue-no-unused-translations */
       continueAction: 'Continue',
       cancelAction: 'Cancel',
-      inheritMetadataDescription: 'Add metadata from the folder above',
-      updateLanguage: 'Update language to match the folder above',
+      inheritMetadataDescription: 'Select details to add:',
+      updateLanguage: 'Update language:',
       doNotShowThisAgain: "Don't ask me about this folder again",
       doNotShowAgainDescription:
-        'All future additions to this folder will have the selected information by default',
+        'All future additions to this folder will have the selected details by default',
       language: 'Language: {language}',
       categories: 'Categories: {categories}',
       learnerNeeds: 'Learner needs: {learnerNeeds}',
