@@ -42,7 +42,7 @@
         {{ $tr('publishMessageLabel') }}
       </p>
 
-      <KFixedGrid :numCols="12">
+      <KFixedGrid :numCols="12" style="height: 200px;">
         <KGridItem :layout="{ span: 11 }">
           <KTextbox
             v-model="publishDescription"
