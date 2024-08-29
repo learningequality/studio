@@ -202,6 +202,7 @@
     computed: {
       ...mapGetters(['clipboardRootId']),
       ...mapState('clipboard', ['initializing', 'clipboardNodesMap']),
+      ...mapState('contentNode', ['contentNodesMap']),
       ...mapGetters('clipboard', [
         'channels',
         'selectedNodeIds',
@@ -248,16 +249,22 @@
       topicAndResourceCount() {
         let topicCount = 0;
         let resourceCount = 0;
+        const contentNodesValues = Object.values(this.contentNodesMap);
         this.selectedNodeIds.forEach(id => {
-          const kind = this.clipboardNodesMap[id]?.kind;
-          if (kind === 'topic' || !kind) {
-            // Increment topicCount if kind is "topic" or not set
-            topicCount++;
-          } else {
-            // Increment resourceCount for any other kind
-            resourceCount++;
-          }
-        });
+            let node = this.clipboardNodesMap[id];
+            let kind = node?.kind;
+            // Check contentNodesMap for node kind if missing in clipboardNodesMap
+            if (!kind && node?.source_node_id) {
+              const contentNode = contentNodesValues.find(n => n.node_id === node.source_node_id);
+              kind = contentNode?.kind;
+            }
+
+            if (kind === 'topic') {
+              topicCount++;
+            } else {
+              resourceCount++;
+            }
+          });
         return { topicCount: topicCount, resourceCount: resourceCount };
       },
     },
