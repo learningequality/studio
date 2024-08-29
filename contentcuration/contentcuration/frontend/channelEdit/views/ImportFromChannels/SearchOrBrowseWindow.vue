@@ -2,7 +2,7 @@
 
   <ImportFromChannelsModal>
     <template #default="{ preview }">
-      <VSheet>
+      <div style="width: 1400px;">
         <div v-if="!isBrowsing" class="my-2 px-2">
           <ActionLink
             :text="$tr('backToBrowseAction')"
@@ -10,62 +10,84 @@
           />
         </div>
 
-        <!-- Search bar -->
-        <VLayout row wrap class="mt-4 px-2">
-          <VFlex style="max-width: 700px">
-            <VForm ref="search" @submit.prevent="handleSearchTerm">
-              <VTextField
-                v-model="searchTerm"
-                class="searchtext"
-                color="primary"
-                :label="$tr('searchLabel')"
-                box
-                clearable
-                hideDetails
-              >
-                <template #prepend-inner>
-                  <Icon icon="search" />
-                </template>
-                <template #append-outer>
-                  <VBtn
-                    class="px-4 search-btn"
+        <KGrid debug>
+          <!-- Main panel >= 800px -->
+          <KGridItem
+            :layout12="{ span: 8 }"
+            :layout8="{ span: 5 }"
+            :layout4="{ span: 3 }"
+          >
+            <!-- Search bar -->
+            <KGrid row wrap class="mt-4 px-3">
+              <KGridItem>
+                <VForm ref="search" @submit.prevent="handleSearchTerm">
+                  <VTextField
+                    v-model="searchTerm"
+                    class="searchtext"
                     color="primary"
-                    type="submit"
-                    :disabled="!searchIsValid"
-                    depressed
-                    large
+                    :label="$tr('searchLabel')"
+                    box
+                    clearable
+                    hideDetails
                   >
-                    {{ $tr('searchAction') }}
-                  </VBtn>
-                </template>
-              </VTextField>
-            </VForm>
-          </VFlex>
-        </VLayout>
+                    <template #prepend-inner>
+                      <Icon icon="search" />
+                    </template>
+                    <template #append-outer>
+                      <VBtn
+                        class="px-4 search-btn"
+                        color="primary"
+                        type="submit"
+                        :disabled="!searchIsValid"
+                        depressed
+                        large
+                      >
+                        {{ $tr('searchAction') }}
+                      </VBtn>
+                    </template>
+                  </VTextField>
+                </VForm>
+              </KGridItem>
+            </KGrid>
 
-        <!-- Search or Topics Browsing -->
-        <ChannelList
-          v-if="isBrowsing && !$route.params.channelId"
-          @update-language="updateLanguageQuery"
-        />
-        <ContentTreeList
-          v-else-if="isBrowsing"
-          ref="contentTreeList"
-          :topicNode="topicNode"
-          :selected.sync="selected"
-          :topicId="$route.params.nodeId"
-          @preview="preview($event)"
-          @change_selected="handleChangeSelected"
-          @copy_to_clipboard="handleCopyToClipboard"
-        />
-        <SearchResultsList
-          v-else
-          :selected.sync="selected"
-          @preview="preview($event)"
-          @change_selected="handleChangeSelected"
-          @copy_to_clipboard="handleCopyToClipboard"
-        />
-      </VSheet>
+            <!-- Search or Topics Browsing -->
+            <KGrid>
+              <KGridItem>
+                <ChannelList
+                  v-if="isBrowsing && !$route.params.channelId"
+                  @update-language="updateLanguageQuery"
+                />
+                <ContentTreeList
+                  v-else-if="isBrowsing"
+                  ref="contentTreeList"
+                  :topicNode="topicNode"
+                  :selected.sync="selected"
+                  :topicId="$route.params.nodeId"
+                  @preview="preview($event)"
+                  @change_selected="handleChangeSelected"
+                  @copy_to_clipboard="handleCopyToClipboard"
+                />
+                <SearchResultsList
+                  v-else
+                  :selected.sync="selected"
+                  @preview="preview($event)"
+                  @change_selected="handleChangeSelected"
+                  @copy_to_clipboard="handleCopyToClipboard"
+                />
+              </KGridItem>
+            </KGrid>
+          </KGridItem>
+
+          <!-- Recommended resources panel >= 400px -->
+          <KGridItem
+            :layout12="{ span: 4 }"
+            :layout8="{ span: 3 }"
+            :layout4="{ span: 1 }"
+          >
+            <p>Test width</p>
+          </KGridItem>
+        </KGrid>
+      </div>
     </template>
   </ImportFromChannelsModal>
 
