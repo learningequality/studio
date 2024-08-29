@@ -26,6 +26,8 @@ const MESSAGES = {
   activityDurationTooLongWarning:
     'This value is very high. Please make sure this is how long learners should work on the resource for, in order to complete it.',
   changesSaved: 'Changes saved',
+  addAdditionalCatgoriesDescription:
+    'You selected resources that have different categories. The categories you choose below will be added to all selected resources. This will not remove existing categories.',
 };
 
 export default createTranslator('sharedVue', MESSAGES);
