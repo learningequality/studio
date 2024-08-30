@@ -20,9 +20,9 @@ from contentcuration.utils.user import calculate_user_storage
 from contentcuration.viewsets.base import BulkDeleteMixin
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
-from contentcuration.viewsets.base import BulkUpdateMixin
 from contentcuration.viewsets.base import ReadOnlyValuesViewset
 from contentcuration.viewsets.base import RequiredFilterSet
+from contentcuration.viewsets.base import UpdateModelMixin
 from contentcuration.viewsets.common import UserFilteredPrimaryKeyRelatedField
 from contentcuration.viewsets.common import UUIDInFilter
 
@@ -53,6 +53,7 @@ class FileSerializer(BulkModelSerializer):
     )
 
     def update(self, instance, validated_data):
+        update_node = None
         if "contentnode" in validated_data:
             # if we're updating the file's related node, we'll trigger a reset for the
             # old channel's cache modified date
@@ -61,6 +62,12 @@ class FileSerializer(BulkModelSerializer):
                 ResourceSizeCache.reset_modified_for_file(instance)
 
         results = super(FileSerializer, self).update(instance, validated_data)
+        results.on_update()  # Make sure contentnode.content_id is unique
+
+        if results.contentnode:
+            results.contentnode.refresh_from_db()
+            if not len(results.contentnode.mark_complete()):
+                results.contentnode.save()
         if instance.uploaded_by_id:
             calculate_user_storage(instance.uploaded_by_id)
         return results
@@ -83,7 +90,7 @@ def retrieve_storage_url(item):
     return generate_storage_url("{}.{}".format(item["checksum"], item["file_format"]))
 
 
-class FileViewSet(BulkDeleteMixin, BulkUpdateMixin, ReadOnlyValuesViewset):
+class FileViewSet(BulkDeleteMixin, UpdateModelMixin, ReadOnlyValuesViewset):
     queryset = File.objects.all()
     serializer_class = FileSerializer
     permission_classes = [IsAuthenticated]
