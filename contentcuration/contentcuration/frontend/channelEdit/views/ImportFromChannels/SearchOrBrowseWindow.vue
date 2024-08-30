@@ -122,15 +122,23 @@
         );
       },
     },
+    beforeRouteEnter(to, from, next) {
+      next(vm => {
+        vm.searchTerm = to.params.searchTerm || '';
+        vm.showSavedSearches = false;
+      });
+    },
+    beforeRouteUpdate(to, from, next) {
+      this.searchTerm = to.params.searchTerm || '';
+      this.showSavedSearches = false;
+      next();
+    },
     beforeRouteLeave(to, from, next) {
       // Clear selections if going back to TreeView
       if (to.name === RouteNames.TREE_VIEW) {
         this.$store.commit('importFromChannels/CLEAR_NODES');
       }
       next();
-    },
-    mounted() {
-      this.searchTerm = this.$route.params.searchTerm || '';
     },
     methods: {
       ...mapActions('clipboard', ['copy']),
