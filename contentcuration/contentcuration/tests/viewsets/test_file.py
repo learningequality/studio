@@ -108,6 +108,34 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
             models.File.objects.get(id=file.id).contentnode_id, contentnode_id,
         )
 
+    def test_update_file_with_complete_contentnode(self):
+        file_data = self.file_db_metadata
+        del file_data["contentnode_id"]
+        file = models.File.objects.create(**file_data)
+
+        complete_except_no_file = models.ContentNode(
+            title="yes",
+            kind_id=file.preset,
+            parent=self.channel.main_tree,
+            license_id=models.License.objects.first().id,
+            license_description="don't do this!",
+            copyright_holder="Some person"
+        )
+        errors = complete_except_no_file.mark_complete()
+        complete_except_no_file.save()
+
+        self.assertTrue(len(errors) > 0)
+
+        self.assertEqual(complete_except_no_file.complete, False)
+
+        self.sync_changes(
+            [generate_update_event(file.id, FILE, {"contentnode": complete_except_no_file.id}, channel_id=self.channel.id)],
+        )
+
+        complete_except_no_file.refresh_from_db()
+
+        self.assertTrue(complete_except_no_file.complete)
+
     def test_update_file_no_channel_permission(self):
         file = models.File.objects.create(**self.file_db_metadata)
         new_preset = format_presets.VIDEO_HIGH_RES
