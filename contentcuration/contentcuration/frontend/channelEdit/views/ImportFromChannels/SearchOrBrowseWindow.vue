@@ -21,6 +21,7 @@
                 box
                 clearable
                 hideDetails
+                @click:clear="handleBackToBrowse"
               >
                 <template #prepend-inner>
                   <Icon icon="search" />
