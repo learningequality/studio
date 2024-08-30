@@ -69,7 +69,8 @@
 
 <style lang="less" scoped>
 
-  .subheading /deep/ .v-icon {
+  // align help icon
+  .subheading /deep/ svg {
     margin-left: 4px;
     vertical-align: text-top;
   }

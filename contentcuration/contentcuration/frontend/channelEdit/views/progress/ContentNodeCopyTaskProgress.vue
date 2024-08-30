@@ -7,24 +7,25 @@
       :color="progressBarColor"
       v-bind="$attrs"
     />
-    <VTooltip
-      v-else-if="hasCopyingErrored && showTooltip"
-      bottom
-      lazy
-    >
-      <template #activator="{ on }">
-        <VIconWrapper color="red" v-on="on">
-          error
-        </VIconWrapper>
-      </template>
-      <span>{{ $tr('copyErrorTopic') }}</span>
-    </VTooltip>
-    <VIconWrapper
+    <template v-else-if="hasCopyingErrored && showTooltip">
+      <KIcon
+        ref="copyError"
+        icon="error"
+        :style="{ fontSize: '20px' }"
+      />
+      <KTooltip
+        reference="copyError"
+        placement="bottom"
+        :refs="$refs"
+      >
+        {{ $tr('copyErrorTopic') }}
+      </KTooltip>
+    </template>
+    <KIcon
       v-else-if="hasCopyingErrored && !showTooltip"
-      color="red"
-    >
-      error
-    </VIconWrapper>
+      icon="error"
+      :style="{ fontSize: '20px' }"
+    />
   </div>
 
 </template>

@@ -53,7 +53,7 @@
                 <VLayout align-start justify-space-between>
                   <MarkdownViewer :markdown="question" />
 
-                  <Icon
+                  <KIcon
                     :color="$themePalette.grey.v_800"
                     icon="edit"
                     class="mr-2"

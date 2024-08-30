@@ -1,7 +1,7 @@
 <template>
 
-  <div>
-    <Icon
+  <span>
+    <KIcon
       ref="tooltip"
       :color="$themeTokens.primary"
       style="font-size:20px;"
@@ -16,7 +16,7 @@
     >
       {{ text }}
     </KTooltip>
-  </div>
+  </span>
 
 </template>
 
@@ -38,11 +38,3 @@
   };
 
 </script>
-
-<style lang="less" scoped>
-
-  /deep/.k-tooltip {
-    width: 100%;
-  }
-
-</style>

@@ -17,7 +17,7 @@
         <template #activator="{ on }">
           <VBtn flat block v-on="on">
             {{ $tr('options') }}
-            <Icon
+            <KIcon
               icon="dropdown"
             />
           </VBtn>
@@ -25,7 +25,7 @@
         <VList>
           <VListTile data-test="edit" :to="channelSetDetailsLink">
             <VListTileAction>
-              <Icon
+              <KIcon
                 icon="edit"
               />
             </VListTileAction>
@@ -33,7 +33,7 @@
           </VListTile>
           <VListTile @click.prevent="deleteDialog = true">
             <VListTileAction>
-              <Icon
+              <KIcon
                 icon="trash"
               />
             </VListTileAction>

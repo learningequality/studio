@@ -9,7 +9,11 @@
         data-test="staging-tree-banner"
       >
         <VLayout align-center justify-start>
-          <VIconWrapper>build</VIconWrapper>
+          <KIcon
+            icon="systemUpdate"
+            :color="$themeTokens.annotation"
+            :style="{ fontSize: '20px' }"
+          />
           <span class="pl-1">
             <KRouterLink
               :to="stagingTreeLink"
@@ -64,22 +68,25 @@
               :flat="!listElevated"
               style="width: calc(100% - 1px);"
             >
-              <IconButton
+              <KIconButton
                 icon="collapseAll"
-                :text="$tr('collapseAllButton')"
+                :tooltip="$tr('collapseAllButton')"
+                :ariaLabel="$tr('collapseAllButton')"
                 @click="collapseAll"
               />
               <VSpacer />
-              <IconButton
+              <KIconButton
                 :disabled="!ancestors || !ancestors.length"
                 icon="myLocation"
-                :text="$tr('openCurrentLocationButton')"
+                :tooltip="$tr('openCurrentLocationButton')"
+                :ariaLabel="$tr('openCurrentLocationButton')"
                 @click="jumpToLocation"
               />
               <div v-if="hideHierarchyDrawer">
-                <IconButton
+                <KIconButton
                   icon="clear"
-                  :text="$tr('closeDrawer')"
+                  :tooltip="$tr('closeDrawer')"
+                  :ariaLabel="$tr('closeDrawer')"
                   @click="drawer.open = false"
                 />
               </div>
@@ -121,9 +128,10 @@
       >
         <template #action>
           <div v-if="hasTopics && !drawer.permanent" class="hierarchy-toggle">
-            <IconButton
+            <KIconButton
               icon="sidebar"
-              :text="$tr('showSidebar')"
+              :tooltip="$tr('showSidebar')"
+              :ariaLabel="$tr('showSidebar')"
               @click="drawer.open = true"
             />
           </div>
@@ -150,7 +158,6 @@
   import { RouteNames, DraggableRegions, DraggableUniverses } from '../../constants';
   import TreeViewBase from './TreeViewBase';
   import Banner from 'shared/views/Banner';
-  import IconButton from 'shared/views/IconButton';
   import PageNotFoundError from 'shared/views/errors/PageNotFoundError';
   import LoadingText from 'shared/views/LoadingText';
   import ResizableNavigationDrawer from 'shared/views/ResizableNavigationDrawer';
@@ -171,7 +178,6 @@
       TreeViewBase,
       StudioTree,
       Banner,
-      IconButton,
       PageNotFoundError,
       ResizableNavigationDrawer,
       CurrentTopicView,
@@ -430,14 +436,6 @@
   .tree-drawer /deep/ .drawer-contents {
     display: flex;
     flex-direction: column;
-  }
-
-  .hierarchy-toggle /deep/ .v-icon {
-    transform: scaleX(-1);
-
-    [dir='rtl'] & {
-      transform: none;
-    }
   }
 
   .main-content {

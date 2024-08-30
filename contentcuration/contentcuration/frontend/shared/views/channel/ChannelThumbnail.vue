@@ -73,28 +73,31 @@
               />
             </span>
             <VSpacer />
-            <IconButton
+            <KIconButton
               icon="clear"
               data-test="remove"
-              :text="$tr('cancel')"
+              :tooltip="$tr('cancel')"
+              :ariaLabel="$tr('cancel')"
               @click="cancelPendingFile"
             />
           </template>
 
           <!-- Cropping options -->
           <template v-else-if="cropping">
-            <IconButton
+            <KIconButton
               icon="plus"
               data-test="zoomin"
-              :text="$tr('zoomIn')"
+              :tooltip="$tr('zoomIn')"
+              :ariaLabel="$tr('zoomIn')"
               @click="Cropper && Cropper.zoomIn()"
               @mousedown="cropZoomIn"
               @mouseup="cropZoomStop"
             />
-            <IconButton
+            <KIconButton
               icon="minus"
               data-test="zoomout"
-              :text="$tr('zoomOut')"
+              :tooltip="$tr('zoomOut')"
+              :ariaLabel="$tr('zoomOut')"
               @click="Cropper && Cropper.zoomOut()"
               @mousedown="cropZoomOut"
               @mouseup="cropZoomStop"
@@ -111,23 +114,26 @@
 
           <!-- Default options -->
           <template v-else>
-            <IconButton
+            <KIconButton
               icon="image"
-              :text="$tr('upload')"
+              :tooltip="$tr('upload')"
+              :ariaLabel="$tr('upload')"
               @click="openFileDialog"
             />
-            <IconButton
+            <KIconButton
               v-if="hasThumbnail"
               icon="crop"
-              :text="$tr('crop')"
+              :tooltip="$tr('crop')"
+              :ariaLabel="$tr('crop')"
               @click="cropping = true"
             />
             <VSpacer />
-            <IconButton
+            <KIconButton
               v-if="hasThumbnail"
               icon="clear"
               data-test="remove"
-              :text="$tr('remove')"
+              :tooltip="$tr('remove')"
+              :ariaLabel="$tr('remove')"
               @click="remove"
             />
           </template>
@@ -141,7 +147,6 @@
 <script>
 
   import { mapGetters } from 'vuex';
-  import IconButton from '../IconButton';
   import Uploader from 'shared/views/files/Uploader';
   import FileStatus from 'shared/views/files/FileStatus';
   import FileStatusText from 'shared/views/files/FileStatusText';
@@ -161,7 +166,6 @@
       FileDropzone,
       FileStatus,
       FileStatusText,
-      IconButton,
       Thumbnail,
       Uploader,
     },

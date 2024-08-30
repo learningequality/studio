@@ -13,7 +13,7 @@
           <VTooltip v-if="channel.public && !channel.deleted" bottom z-index="200" lazy>
             <template #activator="{ on }">
               <span class="px-1 py-2" v-on="on">
-                <Icon
+                <KIcon
                   icon="unpublishedResource"
                 />
               </span>
@@ -38,7 +38,7 @@
             target="_blank"
             class="ma-0"
           >
-            <Icon
+            <KIcon
               icon="openNewTab"
             />
           </VBtn>
@@ -73,7 +73,7 @@
         :to="searchChannelEditorsLink"
         target="_blank"
       >
-        <Icon
+        <KIcon
           icon="openNewTab"
         />
       </VBtn>
@@ -109,7 +109,7 @@
         />
         <span v-else class="grey--text">Not set</span>
         <VBtn small icon flat>
-          <Icon
+          <KIcon
             icon="edit"
           />
         </VBtn>
@@ -145,7 +145,7 @@
         />
         <span v-else class="grey--text">Not set</span>
         <VBtn small icon flat>
-          <Icon
+          <KIcon
             icon="edit"
           />
         </VBtn>

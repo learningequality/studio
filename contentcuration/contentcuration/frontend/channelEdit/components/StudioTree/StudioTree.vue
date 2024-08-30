@@ -63,18 +63,24 @@
                         :style="{ transform: toggleTransform }"
                         @click.stop="toggle"
                       >
-                        <Icon icon="chevronRight" />
+                        <KIcon icon="chevronRight" />
                       </VBtn>
                     </VFlex>
                     <VFlex shrink class="px-1">
-                      <VTooltip :disabled="!hasTitle(node)" bottom open-delay="500" lazy>
-                        <template #activator="{ on }">
-                          <VIconWrapper v-on="on">
-                            {{ node.resource_count ? "folder" : "folder_open" }}
-                          </VIconWrapper>
-                        </template>
-                        <span>{{ getTitle(node) }}</span>
-                      </VTooltip>
+                      <KIcon
+                        ref="topic"
+                        :color="$themeTokens.annotation"
+                        :icon="node.resource_count ? 'topic' : 'emptyTopic'"
+                        :style="{ fontSize: '22px' }"
+                      />
+                      <KTooltip
+                        v-if="hasTitle(node)"
+                        reference="topic"
+                        :refs="$refs"
+                        placement="bottom"
+                      >
+                        {{ getTitle(node) }}
+                      </KTooltip>
                     </VFlex>
                     <VFlex
                       class="caption px-1 text-truncate"
@@ -128,9 +134,10 @@
                         data-test="editMenu"
                       >
                         <template #activator="{ on }">
-                          <IconButton
+                          <KIconButton
                             icon="optionsVertical"
-                            :text="$tr('optionsTooltip')"
+                            :tooltip="$tr('optionsTooltip')"
+                            :ariaLabel="$tr('optionsTooltip')"
                             v-on="on"
                             @click.stop
                           />
@@ -192,7 +199,6 @@
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import ContextMenuCloak from 'shared/views/ContextMenuCloak';
   import LoadingText from 'shared/views/LoadingText';
-  import IconButton from 'shared/views/IconButton';
   import DraggableCollection from 'shared/views/draggable/DraggableCollection';
   import DraggableItem from 'shared/views/draggable/DraggableItem';
   import DraggableHandle from 'shared/views/draggable/DraggableHandle';
@@ -212,7 +218,6 @@
       ContentNodeChangedIcon,
       ContentNodeValidator,
       LoadingText,
-      IconButton,
       ContentNodeCopyTaskProgress,
     },
     mixins: [titleMixin],

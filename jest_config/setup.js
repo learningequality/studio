@@ -22,7 +22,6 @@ window.CountQueuingStrategy = global.CountQueuingStrategy = CountQueuingStrategy
 import AnalyticsPlugin from 'shared/analytics/plugin';
 import { setupSchema } from 'shared/data';
 import * as resources from 'shared/data/resources';
-import icons from 'shared/vuetify/icons';
 import ActionLink from 'shared/views/ActionLink';
 import { i18nSetup } from 'shared/i18n';
 import { resetJestGlobal } from 'shared/utils/testing'
@@ -47,9 +46,7 @@ window.storageBaseUrl = '/content/storage/';
 
 Vue.use(VueRouter);
 Vue.use(Vuex);
-Vue.use(Vuetify, {
-  icons: icons(),
-});
+Vue.use(Vuetify);
 // Register kolibri-design-system plugin
 Vue.use(KThemePlugin);
 

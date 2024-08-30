@@ -30,7 +30,7 @@
               app
             >
               <VBtn data-test="close" icon dark @click="handleClose()">
-                <Icon icon="clear" :color="$themeTokens.textInverted" />
+                <KIcon icon="clear" :color="$themeTokens.textInverted" />
               </VBtn>
               <VToolbarTitle>{{ modalTitle }}</VToolbarTitle>
               <VSpacer />
@@ -82,7 +82,7 @@
             <VContent>
               <VLayout v-if="loadError" align-center justify-center fill-height class="py-5">
                 <VFlex class="text-xs-center">
-                  <Icon icon="error" />
+                  <KIcon icon="error" />
                   <p>{{ $tr('loadErrorText') }}</p>
                 </VFlex>
               </VLayout>

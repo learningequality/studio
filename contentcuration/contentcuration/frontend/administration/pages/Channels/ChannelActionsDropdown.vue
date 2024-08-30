@@ -46,7 +46,7 @@
       <template #activator="{ on }">
         <VBtn v-bind="$attrs" v-on="on">
           actions
-          <Icon
+          <KIcon
             icon="dropdown"
             class="ml-1"
           />

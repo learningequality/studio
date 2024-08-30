@@ -3,7 +3,7 @@
   <FullscreenModal v-model="dialog" :header="headerText">
     <template v-if="isReview" #close>
       <VBtn icon @click.stop="goBackToBrowse">
-        <Icon icon="back" :color="$themeTokens.textInverted" />
+        <KIcon icon="back" :color="$themeTokens.textInverted" />
       </VBtn>
     </template>
     <!-- Hack to make sure preview overlay appears inside import modal -->
@@ -31,10 +31,11 @@
       <template #actions>
         <VFadeTransition hide-on-leave>
           <VLayout v-show="previewIsSelected" align-center justify-end>
-            <VIconWrapper small>
-              check_circle
-            </VIconWrapper>
-            <span class="mx-1">{{ $tr('addedText') }}</span>
+            <KLabeledIcon
+              icon="correct"
+              :label="$tr('addedText')"
+              :color="$themeTokens.annotation"
+            />
             <VBtn color="primary" @click="deselectNode(previewNode)">
               {{ $tr('removeButton') }}
             </VBtn>

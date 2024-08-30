@@ -14,7 +14,7 @@
       data-test="copy"
       @click="copyToClipboard"
     >
-      <Icon
+      <KIcon
         icon="copy"
       />
     </VBtn>

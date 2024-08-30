@@ -80,11 +80,15 @@
 
 <script>
 
+  import { getContentKindIconDeprecated } from './icons';
+  import VIconWrapper from './VIconWrapper';
   import { constantsTranslationMixin, printingMixin } from 'shared/mixins';
-  import { getContentKindIcon } from 'shared/vuetify/icons';
 
   export default {
     name: 'Thumbnail',
+    components: {
+      VIconWrapper,
+    },
     mixins: [constantsTranslationMixin, printingMixin],
     props: {
       src: {
@@ -141,7 +145,7 @@
         return this.kind ? 'cover' : 'contain';
       },
       icon() {
-        return getContentKindIcon(this.kind, this.isEmpty);
+        return getContentKindIconDeprecated(this.kind, this.isEmpty);
       },
       thumbnailSrc() {
         return this.encoding && this.encoding.base64 ? this.encoding.base64 : this.src;

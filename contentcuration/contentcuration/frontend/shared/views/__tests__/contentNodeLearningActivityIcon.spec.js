@@ -9,7 +9,6 @@ document.body.setAttribute('data-app', true); // Vuetify prints a warning withou
 
 describe('ContentNodeLearningActivityIcon', () => {
   let wrapper;
-  // expect(wrapper.find('.v-icon').text()).toContain(kind.icon);
   describe('labeled icons', () => {
     wrapper = mount(ContentNodeLearningActivityIcon, {
       propsData: {

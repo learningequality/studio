@@ -32,7 +32,7 @@
               <template #activator="{ on }">
                 <VBtn flat v-on="on">
                   {{ $tr('optionsDropdown') }}
-                  <Icon class="ml-1" icon="dropdown" />
+                  <KIcon class="ml-1" icon="dropdown" />
                 </VBtn>
               </template>
               <VList>

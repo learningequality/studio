@@ -3,7 +3,7 @@
   <FullscreenModal v-if="user" v-model="dialog">
     <template #close>
       <VBtn flat exact style="font-size: 14pt; text-transform: none;" @click="dialog = false">
-        <Icon class="mr-2" icon="back" :color="$themeTokens.textInverted" />
+        <KIcon class="mr-2" icon="back" :color="$themeTokens.textInverted" />
         User list
       </VBtn>
     </template>

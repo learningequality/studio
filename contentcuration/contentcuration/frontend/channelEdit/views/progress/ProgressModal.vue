@@ -12,7 +12,7 @@
       v-else-if="syncError"
       class="red--text"
     >
-      <Icon
+      <KIcon
         icon="error"
       />
       {{ $tr('syncError') }}
@@ -21,7 +21,7 @@
       v-else-if="currentPublishTaskError"
       class="red--text"
     >
-      <Icon
+      <KIcon
         icon="error"
       />
       {{ $tr('defaultErrorText') }}

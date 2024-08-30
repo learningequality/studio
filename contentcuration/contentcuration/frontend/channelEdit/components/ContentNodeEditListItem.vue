@@ -30,7 +30,7 @@
           <VListTileAction class="handle-col" :aria-hidden="!hover" @click.stop>
             <transition name="fade">
               <VBtn :disabled="copying" flat icon>
-                <Icon :color="$themePalette.grey.v_600" icon="dragVertical" />
+                <KIcon :color="$themePalette.grey.v_600" icon="dragVertical" />
               </VBtn>
             </transition>
           </VListTileAction>
@@ -47,22 +47,23 @@
         <template #actions-end>
           <VListTileAction class="action-icon px-1" @click.stop>
             <transition name="fade">
-              <IconButton
+              <KIconButton
                 icon="rename"
                 size="small"
-                :text="$tr('editTooltip')"
+                :tooltip="$tr('editTooltip')"
+                :ariaLabel="$tr('editTooltip')"
                 :disabled="copying"
-                @click.stop
-                @click="editTitleDescription()"
+                @click.stop="editTitleDescription()"
               />
             </transition>
           </VListTileAction>
           <VListTileAction :aria-hidden="!active" class="action-icon px-1">
             <Menu v-model="activated">
               <template #activator="{ on }">
-                <IconButton
+                <KIconButton
                   icon="optionsVertical"
-                  :text="$tr('optionsTooltip')"
+                  :tooltip="$tr('optionsTooltip')"
+                  :ariaLabel="$tr('optionsTooltip')"
                   size="small"
                   :disabled="copying"
                   v-on="on"
@@ -81,10 +82,11 @@
         </template>
 
         <template #copy-fail-remove-action>
-          <IconButton
+          <KIconButton
             v-if="hasCopyingErrored"
             icon="close"
-            :text="$tr('removeNode')"
+            :tooltip="$tr('removeNode')"
+            :ariaLabel="$tr('removeNode')"
             size="small"
             @click="removeFailedCopyNode"
           />
@@ -113,7 +115,6 @@
   import ContentNodeOptions from './ContentNodeOptions';
   import ContentNodeContextMenu from './ContentNodeContextMenu';
   import Checkbox from 'shared/views/form/Checkbox';
-  import IconButton from 'shared/views/IconButton';
   import DraggableItem from 'shared/views/draggable/DraggableItem';
   import { ContentNode } from 'shared/data/resources';
   import { DragEffect, DropEffect, EffectAllowed } from 'shared/mixins/draggable/constants';
@@ -129,7 +130,6 @@
       ContentNodeOptions,
       ContentNodeContextMenu,
       Checkbox,
-      IconButton,
     },
     props: {
       nodeId: {

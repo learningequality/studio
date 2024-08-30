@@ -1,9 +1,10 @@
 <template>
 
   <div :style="{ display: 'inline' }">
-    <Icon
+    <KIconButton
       icon="help"
       :color="$themeTokens.primary"
+      size="small"
       data-test="info-icon"
       @click="displayDialog = !displayDialog"
     />

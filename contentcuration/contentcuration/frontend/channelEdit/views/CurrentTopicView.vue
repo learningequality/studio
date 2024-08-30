@@ -13,9 +13,10 @@
             </VFlex>
             <Menu v-if="item.displayNodeOptions" v-model="breadcrumbsMenu">
               <template #activator="{ on }">
-                <IconButton
+                <KIconButton
                   icon="dropdown"
-                  :text="$tr('optionsButton')"
+                  :tooltip="$tr('optionsButton')"
+                  :ariaLabel="$tr('optionsButton')"
                   v-on="on"
                 />
               </template>
@@ -32,9 +33,10 @@
         class="pa-1"
       >
         <template #activator="{ on }">
-          <IconButton
+          <KIconButton
             icon="list"
-            :text="$tr('viewModeTooltip')"
+            :tooltip="$tr('viewModeTooltip')"
+            :ariaLabel="$tr('viewModeTooltip')"
             v-on="on"
           />
         </template>
@@ -45,7 +47,7 @@
             @click="setViewMode(mode), trackViewMode(mode)"
           >
             <VListTileAction style="min-width: 32px;">
-              <Icon v-if="mode === viewMode" icon="check" />
+              <KIcon v-if="mode === viewMode" icon="check" />
             </VListTileAction>
             <VListTileTitle>{{ $tr(mode) }}</VListTileTitle>
           </VListTile>
@@ -111,10 +113,14 @@
       <VToolbarItems v-if="!loadingAncestors">
         <Menu v-if="canEdit">
           <template #activator="{ on }">
-            <VBtn color="primary" class="ml-2" style="height: 32px;" v-on="on">
-              {{ $tr('addButton') }}
-              <Icon icon="dropdown" :color="$themeTokens.textInverted" />
-            </VBtn>
+            <KButton
+              primary
+              :text="$tr('addButton')"
+              iconAfter="dropdown"
+              class="ml-2"
+              style="height: 32px;"
+              v-on="on"
+            />
           </template>
           <VList>
             <VListTile @click="newTopicNode">
@@ -183,18 +189,20 @@
         @scroll="scroll"
       >
         <template v-if="canEdit" #actions>
-          <IconButton
+          <KIconButton
             size="small"
             icon="edit"
-            :text="$tr('editButton')"
+            :tooltip="$tr('editButton')"
+            :ariaLabel="$tr('editButton')"
             @click="editNodes([detailNodeId])"
           />
           <Menu v-model="resourceDrawerMenu">
             <template #activator="{ on }">
-              <IconButton
+              <KIconButton
                 size="small"
                 icon="optionsVertical"
-                :text="$tr('optionsButton')"
+                :tooltip="$tr('optionsButton')"
+                :ariaLabel="$tr('optionsButton')"
                 v-on="on"
               />
             </template>
@@ -208,10 +216,11 @@
           </Menu>
         </template>
         <template v-else #actions>
-          <IconButton
+          <KIconButton
             size="small"
             icon="clipboard"
-            :text="$tr('copyToClipboardButton')"
+            :tooltip="$tr('copyToClipboardButton')"
+            :ariaLabel="$tr('copyToClipboardButton')"
             @click="copyToClipboard([detailNodeId])"
           />
         </template>
@@ -241,7 +250,6 @@
     QuickEditModals,
   } from '../constants';
   import NodePanel from './NodePanel';
-  import IconButton from 'shared/views/IconButton';
   import ToolBar from 'shared/views/ToolBar';
   import Breadcrumbs from 'shared/views/Breadcrumbs';
   import Checkbox from 'shared/views/form/Checkbox';
@@ -259,7 +267,6 @@
   export default {
     name: 'CurrentTopicView',
     components: {
-      IconButton,
       ToolBar,
       NodePanel,
       ResourceDrawer,

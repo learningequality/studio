@@ -50,7 +50,7 @@
                         class="back-to-clipboard"
                         @click.prevent="resetPreviewNode"
                       >
-                        <span class="link-icon"><Icon
+                        <span class="link-icon"><KIcon
                           icon="back"
                           :color="$themeTokens.primary"
                         />
@@ -61,10 +61,11 @@
                   </VSlideXReverseTransition>
                   <VSlideXTransition leave-absolute>
                     <div v-if="selectionState && !previewSourceNode">
-                      <IconButton
+                      <KIconButton
                         v-if="allowMove"
                         icon="move"
-                        :text="$tr('moveSelectedButton')"
+                        :tooltip="$tr('moveSelectedButton')"
+                        :ariaLabel="$tr('moveSelectedButton')"
                         @click="calculateMoveNodes()"
                       />
                       <MoveModal
@@ -75,25 +76,28 @@
                         :clipboardTopicResourceCount="topicAndResourceCount"
                         @target="moveNodes"
                       />
-                      <IconButton
+                      <KIconButton
                         icon="copy"
-                        :text="$tr('duplicateSelectedButton')"
+                        :tooltip="$tr('duplicateSelectedButton')"
+                        :ariaLabel="$tr('duplicateSelectedButton')"
                         :disabled="legacyNodesSelected"
                         @click="duplicateNodes()"
                       />
-                      <IconButton
+                      <KIconButton
                         icon="remove"
-                        :text="$tr('deleteSelectedButton')"
+                        :tooltip="$tr('deleteSelectedButton')"
+                        :ariaLabel="$tr('deleteSelectedButton')"
                         @click="removeNodes()"
                       />
                     </div>
                   </VSlideXTransition>
                 </VListTileContent>
                 <VListTileAction style="min-width: 24px">
-                  <IconButton
+                  <KIconButton
                     class="ma-0"
                     icon="close"
-                    :text="$tr('close')"
+                    :tooltip="$tr('close')"
+                    :ariaLabel="$tr('close')"
                     @click="handleClose"
                   />
                 </VListTileAction>
@@ -149,7 +153,6 @@
   import Channel from './Channel';
   import ResizableNavigationDrawer from 'shared/views/ResizableNavigationDrawer';
   import Checkbox from 'shared/views/form/Checkbox';
-  import IconButton from 'shared/views/IconButton';
   import ToolBar from 'shared/views/ToolBar';
   import LoadingText from 'shared/views/LoadingText';
   import { promiseChunk } from 'shared/utils/helpers';
@@ -165,7 +168,6 @@
       ResourcePanel,
       Channel,
       Checkbox,
-      IconButton,
       ToolBar,
       LoadingText,
       MoveModal,

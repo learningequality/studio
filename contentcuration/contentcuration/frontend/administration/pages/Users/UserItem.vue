@@ -10,14 +10,22 @@
           <Checkbox v-model="selected" />
         </VFlex>
         <VFlex shrink>
-          <VTooltip v-if="user.is_admin" bottom z-index="200" lazy>
-            <template #activator="{ on }">
-              <span class="px-1 py-2" v-on="on">
-                <VIconWrapper color="light-green accent-4">$vuetify.icons.indicator</VIconWrapper>
-              </span>
-            </template>
-            <span>Administrator</span>
-          </VTooltip>
+          <KIcon
+            v-if="user.is_admin"
+            ref="admin"
+            icon="dot"
+            aria-label="Administrator"
+            :color="$themePalette.green.v_800"
+            :style="{ marginRight: '4px', fontSize: '10px' }"
+          />
+          <KTooltip
+            reference="admin"
+            :refs="$refs"
+            placement="bottom"
+            appendToOverlay
+          >
+            Administrator
+          </KTooltip>
         </VFlex>
         <VFlex class="py-2 text-truncate" grow style="max-width: 200px;">
           <ActionLink
@@ -39,7 +47,7 @@
         <template #activator="{ on }">
           {{ formatFileSize(user.disk_space) }}
           <VBtn icon small v-on="on">
-            <Icon
+            <KIcon
               icon="edit"
             />
           </VBtn>
@@ -60,7 +68,7 @@
     <td>
       {{ user.edit_count }}
       <VBtn icon small :to="searchUserChannelsLink" target="_blank">
-        <Icon icon="openNewTab" />
+        <KIcon icon="openNewTab" />
       </VBtn>
     </td>
     <td>{{ user.view_count }}</td>

@@ -24,7 +24,7 @@
                 hideDetails
               >
                 <template #prepend-inner>
-                  <Icon icon="search" />
+                  <KIcon icon="search" />
                 </template>
                 <template #append-outer>
                   <VBtn

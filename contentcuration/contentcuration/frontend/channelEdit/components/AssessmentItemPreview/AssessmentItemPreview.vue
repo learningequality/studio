@@ -79,7 +79,7 @@
               data-test="hintsToggle"
               @click="areHintsOpen = !areHintsOpen"
             >
-              <Icon icon="chevronRight" />
+              <KIcon icon="chevronRight" />
               <span>{{ hintsToggleLabel }}</span>
             </span>
 

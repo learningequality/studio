@@ -1,30 +1,49 @@
 <template>
 
-  <span v-if="noTitle && !hideTitleValidation" class="red--text title">
-    <VIconWrapper color="red">error</VIconWrapper>
-    <span class="mx-1">
+  <KLabeledIcon
+    v-if="noTitle && !hideTitleValidation"
+    icon="error"
+    class="icon"
+    :color="$themeTokens.error"
+    :style="{ fontSize: '20px' }"
+  >
+    <span :style="{ color: $themeTokens.error }">
       {{ $tr('missingTitle') }}
     </span>
+  </KLabeledIcon>
+  <span v-else-if="error">
+    <KIcon
+      ref="error"
+      icon="error"
+      class="icon"
+      :aria-label="error"
+      :style="{ fontSize: '20px', marginLeft: '16px' }"
+    />
+    <KTooltip
+      reference="error"
+      :refs="$refs"
+      placement="bottom"
+      appendToOverlay
+    >
+      {{ error }}
+    </KTooltip>
   </span>
-  <span v-else-if="error" class="mx-2">
-    <VTooltip bottom lazy>
-      <template #activator="{ on }">
-        <VIconWrapper :color="$themePalette.red.v_1100" v-on="on">
-          error
-        </VIconWrapper>
-      </template>
-      <span>{{ error }}</span>
-    </VTooltip>
-  </span>
-  <span v-else-if="warning" class="mx-2">
-    <VTooltip bottom lazy>
-      <template #activator="{ on }">
-        <VIconWrapper :color="$themePalette.yellow.v_1100" v-on="on">
-          warning
-        </VIconWrapper>
-      </template>
-      <span>{{ warning }}</span>
-    </VTooltip>
+  <span v-else-if="warning">
+    <KIcon
+      ref="warning"
+      icon="warningIncomplete"
+      :aria-label="warning"
+      class="icon"
+      :style="{ fontSize: '20px', marginLeft: '16px' }"
+    />
+    <KTooltip
+      reference="warning"
+      :refs="$refs"
+      placement="bottom"
+      appendToOverlay
+    >
+      {{ warning }}
+    </KTooltip>
   </span>
 
 </template>
@@ -73,8 +92,7 @@
 </script>
 
 <style scoped>
-  .v-icon {
-    vertical-align: bottom;
+  .icon {
     cursor: default;
   }
 </style>

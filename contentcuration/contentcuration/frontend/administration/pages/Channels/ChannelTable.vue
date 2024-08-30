@@ -69,17 +69,19 @@
 
         <template v-if="header.class === 'first' && selected.length">
           <span>({{ selectedCount }})</span>
-          <IconButton
+          <KIconButton
             icon="download"
             class="ma-0"
-            text="Download CSV"
+            tooltip="Download CSV"
+            ariaLabel="Download CSV"
             data-test="csv"
             @click="downloadCSV"
           />
-          <IconButton
+          <KIconButton
             icon="pdf"
             class="ma-0"
-            text="Download PDF"
+            tooltip="Download PDF"
+            ariaLabel="Download PDF"
             data-test="pdf"
             @click="downloadPDF"
           />
@@ -106,7 +108,6 @@
   import { channelExportMixin } from 'shared/views/channel/mixins';
   import { routerMixin } from 'shared/mixins';
   import Checkbox from 'shared/views/form/Checkbox';
-  import IconButton from 'shared/views/IconButton';
   import LanguageDropdown from 'shared/views/LanguageDropdown';
 
   const channelFilters = {
@@ -127,7 +128,6 @@
       Checkbox,
       ChannelItem,
       LanguageDropdown,
-      IconButton,
     },
     mixins: [tableMixin, filterMixin, channelExportMixin, routerMixin],
     data() {

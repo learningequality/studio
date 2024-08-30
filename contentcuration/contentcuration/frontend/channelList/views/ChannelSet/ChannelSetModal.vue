@@ -9,8 +9,8 @@
       <span class="notranslate">{{ title }}</span>
     </template>
     <template v-if="step === 2" #close>
-      <VBtn icon class="rtl-flip" @click="step--">
-        <Icon
+      <VBtn icon @click="step--">
+        <KIcon
           icon="back"
           :color="$themeTokens.textInverted"
         />

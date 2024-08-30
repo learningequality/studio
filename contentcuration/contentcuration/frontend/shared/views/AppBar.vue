@@ -104,10 +104,10 @@
           <Menu>
             <template #activator="{ on }">
               <VBtn flat style="text-transform: none;" v-on="on">
-                <Icon
+                <KIcon
                   icon="person"
                 />
-                <Icon
+                <KIcon
                   icon="dropdown"
                 />
               </VBtn>
@@ -115,7 +115,7 @@
             <VList>
               <VListTile :href="'/accounts/'">
                 <VListTileAction>
-                  <Icon
+                  <KIcon
                     icon="login"
                   />
                 </VListTileAction>
@@ -123,7 +123,7 @@
               </VListTile>
               <VListTile @click="showLanguageModal = true">
                 <VListTileAction>
-                  <Icon
+                  <KIcon
                     icon="language"
                   />
                 </VListTileAction>

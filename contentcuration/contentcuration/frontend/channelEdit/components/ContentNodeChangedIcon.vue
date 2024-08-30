@@ -2,9 +2,10 @@
 
   <span v-if="message" class="mx-2">
 
-    <Icon
+    <KIcon
       ref="contentNode"
       :icon="showFilled ? 'unpublishedResource' : 'unpublishedChange'"
+      class="icon"
     />
 
     <KTooltip
@@ -85,8 +86,7 @@
 </script>
 
 <style scoped>
-  .v-icon {
-    vertical-align: bottom;
+  .icon {
     cursor: default;
   }
 </style>

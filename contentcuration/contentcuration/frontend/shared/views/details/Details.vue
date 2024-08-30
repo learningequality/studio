@@ -272,7 +272,7 @@
               class="notranslate primary--text"
             >
               <span>{{ channel.name }}</span>
-              <Icon class="mx-1 rtl-flip" icon="openNewTab" />
+              <KIcon class="mx-1" icon="openNewTab" />
             </a>
           </VLayout>
         </template>
@@ -548,10 +548,6 @@
 
   .printing /deep/ * {
     font-family: 'Noto Sans', helvetica !important;
-
-    &.material-icons {
-      font-family: 'Material Icons' !important;
-    }
   }
 
   .v-toolbar__title {

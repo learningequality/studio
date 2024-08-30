@@ -11,9 +11,12 @@
               :encoding="channel.thumbnail_encoding"
               style="width: 100%;"
             />
-            <VIconWrapper v-else size="80px" class="channel-icon">
-              apps
-            </VIconWrapper>
+            <KIcon
+              v-else
+              icon="channel"
+              :style="{ fontSize: '80px' }"
+              :color="$themeTokens.annotation"
+            />
           </VLayout>
         </VFlex>
 
@@ -91,10 +94,6 @@
     margin-left: -7px;
     text-decoration: underline;
     text-transform: none !important;
-  }
-
-  .channel-icon {
-    font-size: 100px;
   }
 
   .arrow-icon {
