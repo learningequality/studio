@@ -35,15 +35,6 @@
 
             <VListTileAction>
               <IconButton
-                icon="edit"
-                color="grey"
-                :text="$tr('editAction')"
-                @click="handleClickEdit(search.id)"
-              />
-            </VListTileAction>
-
-            <VListTileAction>
-              <IconButton
                 icon="clear"
                 color="grey"
                 :text="$tr('deleteAction')"
@@ -70,14 +61,6 @@
         </VBtn>
       </template>
     </MessageDialog>
-
-    <EditSearchModal
-      v-if="searchId"
-      v-model="showEdit"
-      :searchId="searchId"
-      @submit="showEdit = false"
-      @cancel="showEdit = false"
-    />
   </div>
 
 </template>
@@ -86,7 +69,6 @@
 <script>
 
   import { mapActions, mapGetters } from 'vuex';
-  import EditSearchModal from './EditSearchModal';
   import MessageDialog from 'shared/views/MessageDialog';
   import IconButton from 'shared/views/IconButton';
 
@@ -94,7 +76,6 @@
     name: 'SavedSearchesModal',
     inject: ['RouteNames'],
     components: {
-      EditSearchModal,
       MessageDialog,
       IconButton,
     },
@@ -108,7 +89,6 @@
       return {
         loading: true,
         showDelete: false,
-        showEdit: false,
         searchId: null,
       };
     },
@@ -116,7 +96,7 @@
       ...mapGetters('importFromChannels', ['savedSearches']),
       dialog: {
         get() {
-          return this.value && !this.showDelete && !this.showEdit;
+          return this.value && !this.showDelete;
         },
         set(value) {
           this.$emit('input', value);
@@ -133,12 +113,7 @@
       ...mapActions('importFromChannels', ['loadSavedSearches', 'deleteSearch']),
       handleCancel() {
         this.searchId = null;
-        this.showEdit = false;
         this.showDelete = false;
-      },
-      handleClickEdit(searchId) {
-        this.searchId = searchId;
-        this.showEdit = true;
       },
       handleClickDelete(searchId) {
         this.searchId = searchId;
@@ -178,7 +153,6 @@
     },
     $trs: {
       closeButtonLabel: 'Close',
-      editAction: 'Edit',
       deleteAction: 'Delete',
       savedSearchesTitle: 'Saved searches',
       noSavedSearches: 'You do not have any saved searches',
