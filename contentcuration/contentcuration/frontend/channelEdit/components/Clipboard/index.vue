@@ -252,17 +252,19 @@
         const contentNodesValues = Object.values(this.contentNodesMap);
         this.selectedNodeIds.forEach(id => {
           const node = this.clipboardNodesMap[id];
-          let kind = node?.kind;
+          let kind = node.kind;
           // Check contentNodesMap for node kind if missing in clipboardNodesMap
-          if (!kind && node?.source_node_id) {
+          if (!kind && node.source_node_id) {
             const contentNode = contentNodesValues.find(n => n.node_id === node.source_node_id);
-            kind = contentNode?.kind;
+            kind = contentNode.kind;
           }
 
           if (kind === 'topic') {
             topicCount++;
-          } else {
+          } else if (kind) {
             resourceCount++;
+          } else {
+            console.error('`kind` missing from content.');
           }
         });
         return { topicCount: topicCount, resourceCount: resourceCount };
