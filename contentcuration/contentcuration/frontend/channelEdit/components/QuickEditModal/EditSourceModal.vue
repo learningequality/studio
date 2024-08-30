@@ -267,7 +267,7 @@
       },
     },
     $trs: {
-      editAttribution: 'Edit Attribution',
+      editAttribution: 'Edit source',
       authorLabel: 'Author',
       authorToolTip: 'Person or organization who created this content',
       providerLabel: 'Provider',

@@ -52,7 +52,7 @@
       },
     },
     $trs: {
-      editResourcesNeededTitle: 'Requirements',
+      editResourcesNeededTitle: 'Edit requirements',
     },
   };
 

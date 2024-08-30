@@ -52,7 +52,7 @@
       },
     },
     $trs: {
-      editLevelsTitle: 'Edit Levels',
+      editLevelsTitle: 'Edit levels',
     },
   };
 

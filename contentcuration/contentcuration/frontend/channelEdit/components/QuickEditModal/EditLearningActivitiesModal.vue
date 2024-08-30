@@ -57,7 +57,7 @@
       },
     },
     $trs: {
-      editLearningActivitiesTitle: 'Edit Learning Activities',
+      editLearningActivitiesTitle: 'Edit learning activities',
     },
   };
 
