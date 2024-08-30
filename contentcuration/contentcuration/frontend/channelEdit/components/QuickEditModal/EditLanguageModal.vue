@@ -79,6 +79,7 @@
         selectedLanguage: '',
         searchQuery: '',
         updateDescendants: false,
+        isMultipleNodeLanguages: false,
       };
     },
     computed: {
@@ -127,14 +128,18 @@
           code: langObject.id,
         });
       },
-      close() {
-        this.$emit('close');
+      close(changed = false) {
+        this.$emit('close', {
+          changed,
+          updateDescendants: this.updateDescendants,
+        });
       },
       async handleSave() {
         if (!this.selectedLanguage) {
           return;
         }
 
+        const changed = this.nodes.some(node => node.language !== this.selectedLanguage);
         await Promise.all(
           this.nodes.map(node => {
             if (this.updateDescendants && node.kind === ContentKindsNames.TOPIC) {
@@ -151,7 +156,7 @@
         );
         /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
         this.$store.dispatch('showSnackbarSimple', commonStrings.$tr('changesSaved'));
-        this.close();
+        this.close(changed);
       },
     },
     $trs: {

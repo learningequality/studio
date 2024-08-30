@@ -71,8 +71,10 @@
       validateTitle() {
         this.titleError = getInvalidText(getTitleValidators(), this.title);
       },
-      close() {
-        this.$emit('close');
+      close(changed = false) {
+        this.$emit('close', {
+          changed: this.titleError ? false : changed,
+        });
       },
       async handleSave() {
         this.validateTitle();
@@ -81,6 +83,10 @@
         }
 
         const { nodeId, title, description } = this;
+        const changed =
+          this.contentNode.title !== title.trim() ||
+          this.contentNode.description !== description.trim();
+
         await this.updateContentNode({
           id: nodeId,
           title: title.trim(),
@@ -88,7 +94,7 @@
         });
         /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
         this.$store.dispatch('showSnackbarSimple', commonStrings.$tr('changesSaved'));
-        this.close();
+        this.close(changed);
       },
     },
     $trs: {

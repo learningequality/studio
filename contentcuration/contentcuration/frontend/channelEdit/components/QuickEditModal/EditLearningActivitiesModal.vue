@@ -8,7 +8,7 @@
     :validators="learningActivityValidators"
     :confirmationMessage="changesSaved"
     :resourcesSelectedText="resourcesSelectedText"
-    @close="() => $emit('close')"
+    v-on="$listeners"
   >
     <template #input="{ value, inputHandler }">
       <LearningActivityOptions
