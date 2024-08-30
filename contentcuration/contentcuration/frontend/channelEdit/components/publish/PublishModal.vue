@@ -42,7 +42,10 @@
         {{ $tr('publishMessageLabel') }}
       </p>
 
-      <KFixedGrid :numCols="12">
+      <!-- Setting the height is a temporal fix for -->
+      <!-- https://github.com/learningequality/kolibri-design-system/issues/324 -->
+      <!-- Should be removed after it is fixed -->
+      <KFixedGrid :numCols="12" style="height: 200px;">
         <KGridItem :layout="{ span: 11 }">
           <KTextbox
             v-model="publishDescription"
