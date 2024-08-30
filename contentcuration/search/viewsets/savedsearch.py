@@ -28,7 +28,6 @@ class SavedSearchSerializer(BulkModelSerializer):
             "params",
             "saved_by",
         )
-        read_only_fields = ("id",)
         list_serializer_class = BulkListSerializer
 
 
@@ -44,6 +43,10 @@ class SavedSearchViewSet(ValuesViewset):
         "params",
         "saved_by",
     )
+
+    field_map = {
+        "id": lambda x: x["id"].replace("-", ""),
+    }
 
     def get_queryset(self):
         user_id = not self.request.user.is_anonymous and self.request.user.id
