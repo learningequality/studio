@@ -102,6 +102,7 @@
             </VContent>
           </template>
         </Uploader>
+
       </VCard>
       <BottomBar v-if="!loading && !loadError && !showFileUploadDefault">
         <VLayout row align-center fill-height class="px-2">
@@ -123,6 +124,10 @@
       </BottomBar>
       <AboutLicensesModal
         v-if="isAboutLicensesModalOpen"
+      />
+      <InheritAncestorMetadataModal
+        :parent="(createMode && detailNodeIds.length) ? parent : null"
+        @inherit="inheritMetadata"
       />
     </VDialog>
 
@@ -185,6 +190,7 @@
   import SavingIndicator from './SavingIndicator';
   import EditView from './EditView';
   import EditList from './EditList';
+  import InheritAncestorMetadataModal from './InheritAncestorMetadataModal';
   import { ContentKindLearningActivityDefaults } from 'shared/leUtils/ContentKinds';
   import { fileSizeMixin, routerMixin } from 'shared/mixins';
   import FileStorage from 'shared/views/files/FileStorage';
@@ -210,6 +216,7 @@
       EditView,
       ResizableNavigationDrawer,
       Uploader,
+      InheritAncestorMetadataModal,
       FileStorage,
       FileUploadDefault,
       LoadingText,
@@ -270,11 +277,12 @@
       uploadMode() {
         return this.$route.name === RouteNames.UPLOAD_FILES;
       },
-      /* eslint-disable kolibri/vue-no-unused-properties */
       createExerciseMode() {
         return this.$route.name === RouteNames.ADD_EXERCISE;
       },
-      /* eslint-enable */
+      createMode() {
+        return this.addTopicsMode || this.uploadMode || this.createExerciseMode;
+      },
       editMode() {
         return this.$route.name === RouteNames.CONTENTNODE_DETAILS;
       },
@@ -303,9 +311,11 @@
         }
         return this.$tr('editingDetailsHeader');
       },
+      parent() {
+        return this.$route.params.nodeId && this.getContentNode(this.$route.params.nodeId);
+      },
       parentTitle() {
-        const node = this.$route.params.nodeId && this.getContentNode(this.$route.params.nodeId);
-        return node ? node.title : '';
+        return this.parent ? this.parent.title : '';
       },
       invalidNodes() {
         return this.nodeIds.filter(id => !this.getContentNodeIsValid(id));
@@ -524,6 +534,11 @@
         this.$analytics.trackAction('file_uploader', 'Add files', {
           eventLabel: 'Upload file',
         });
+      },
+      inheritMetadata(metadata) {
+        for (const nodeId of this.nodeIds) {
+          this.updateContentNode({ id: nodeId, ...metadata, mergeMapFields: true });
+        }
       },
     },
     $trs: {
