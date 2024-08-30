@@ -9,7 +9,6 @@
             @click="handleBackToBrowse"
           />
         </div>
-
         <!-- Search bar -->
         <VLayout row wrap class="mt-4 px-2">
           <VFlex style="max-width: 700px">
@@ -43,6 +42,15 @@
           </VFlex>
         </VLayout>
 
+        <div class="my-2 px-2">
+          <ActionLink
+            class="mb-3"
+            :text="$tr('savedSearchesLabel')"
+            :disabled="!savedSearchesExist"
+            @click="showSavedSearches = true"
+          />
+        </div>
+
         <!-- Search or Topics Browsing -->
         <ChannelList
           v-if="isBrowsing && !$route.params.channelId"
@@ -66,6 +74,7 @@
           @copy_to_clipboard="handleCopyToClipboard"
         />
       </VSheet>
+      <SavedSearchesModal v-model="showSavedSearches" />
     </template>
   </ImportFromChannelsModal>
 
@@ -74,11 +83,12 @@
 
 <script>
 
-  import { mapActions, mapMutations, mapState } from 'vuex';
+  import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
   import { RouteNames } from '../../constants';
   import ChannelList from './ChannelList';
   import ContentTreeList from './ContentTreeList';
   import SearchResultsList from './SearchResultsList';
+  import SavedSearchesModal from './SavedSearchesModal';
   import ImportFromChannelsModal from './ImportFromChannelsModal';
   import { withChangeTracker } from 'shared/data/changes';
 
@@ -89,6 +99,7 @@
       ContentTreeList,
       SearchResultsList,
       ChannelList,
+      SavedSearchesModal,
     },
     data() {
       return {
@@ -96,9 +107,11 @@
         topicNode: null,
         copyNode: null,
         languageFromChannelList: null,
+        showSavedSearches: false,
       };
     },
     computed: {
+      ...mapGetters('importFromChannels', ['savedSearchesExist']),
       ...mapState('importFromChannels', ['selected']),
       isBrowsing() {
         return this.$route.name === RouteNames.IMPORT_FROM_CHANNELS_BROWSE;
@@ -204,6 +217,7 @@
       backToBrowseAction: 'Back to browse',
       searchLabel: 'Search for resources…',
       searchAction: 'Search',
+      savedSearchesLabel: 'View saved searches',
 
       // Copy strings
       // undo: 'Undo',

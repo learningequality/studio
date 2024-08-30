@@ -5,13 +5,7 @@
     <SearchFilterBar />
     <VLayout row>
       <VFlex shrink>
-        <div class="px-2">
-          <ActionLink
-            class="mb-3"
-            :text="$tr('savedSearchesLabel')"
-            @click="showSavedSearches = true"
-          />
-        </div>
+
         <SearchFilters
           :searchResults="nodes"
         />
@@ -83,7 +77,6 @@
         </VContainer>
       </VFlex>
     </VLayout>
-    <SavedSearchesModal v-model="showSavedSearches" />
   </div>
 
 </template>
@@ -96,7 +89,6 @@
   import pickBy from 'lodash/pickBy';
   import { ImportSearchPageSize } from '../../constants';
   import BrowsingCard from './BrowsingCard';
-  import SavedSearchesModal from './SavedSearchesModal';
   import SearchFilters from './SearchFilters';
   import SearchFilterBar from './SearchFilterBar';
   import logging from 'shared/logging';
@@ -110,7 +102,6 @@
     components: {
       BrowsingCard,
       Pagination,
-      SavedSearchesModal,
       SearchFilters,
       SearchFilterBar,
       Checkbox,
@@ -127,7 +118,6 @@
       return {
         loading: false,
         loadFailed: false,
-        showSavedSearches: false,
         nodeIds: [],
         pageCount: 0,
         totalCount: 0,
@@ -189,10 +179,6 @@
         this.fetch();
       },
     },
-    beforeRouteUpdate(to, from, next) {
-      this.showSavedSearches = false;
-      next();
-    },
     created() {
       this.fetch();
     },
@@ -245,7 +231,6 @@
         "{count, number} {count, plural, one {result} other {results}} for '{searchTerm}'",
       resultsPerPageLabel: 'Results per page',
       saveSearchAction: 'Save search',
-      savedSearchesLabel: 'View saved searches',
       searchSavedSnackbar: 'Search saved',
       failedToLoad: 'Failed to load search results',
     },
