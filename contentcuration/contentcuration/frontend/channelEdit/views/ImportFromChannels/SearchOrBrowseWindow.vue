@@ -84,6 +84,13 @@
             :layout8="{ span: 3 }"
             :layout4="{ span: 1 }"
           >
+            <h3 class="px-2 py-2">
+              {{
+                resourcesMightBeRelevantTitle$({
+                  channelName: 'CK-12'
+                })
+              }}
+            </h3>
             <div class="my-2 px-2">
               <ActionLink
                 :text="aboutRecommendationsText$()"
@@ -119,10 +126,14 @@
       ChannelList,
     },
     setup() {
-      const { aboutRecommendationsText$ } = searchRecommendationsStrings;
+      const {
+        aboutRecommendationsText$,
+        resourcesMightBeRelevantTitle$,
+      } = searchRecommendationsStrings;
 
       return {
         aboutRecommendationsText$,
+        resourcesMightBeRelevantTitle$,
       };
     },
     data() {
