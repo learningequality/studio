@@ -87,18 +87,30 @@
             <h3 class="px-2 py-2">
               {{
                 resourcesMightBeRelevantTitle$({
-                  channelName: 'CK-12'
+                  topic: 'Basic Addition'
                 })
               }}
             </h3>
             <div class="my-2 px-2">
               <ActionLink
                 :text="aboutRecommendationsText$()"
-                @click="handleBackToBrowse"
+                @click="handleAboutRecommendations"
               />
             </div>
           </KGridItem>
         </KGrid>
+
+        <KModal
+          v-if="showAboutRecommendations"
+          :title="aboutRecommendationsText$()"
+          :cancelText="closeAction$()"
+          @cancel="closeAboutRecommendations"
+        >
+          <p>
+            {{ aboutRecommendationsDescription$() }}
+          </p>
+        </KModal>
+
       </div>
     </template>
   </ImportFromChannelsModal>
@@ -127,13 +139,17 @@
     },
     setup() {
       const {
+        closeAction$,
         aboutRecommendationsText$,
         resourcesMightBeRelevantTitle$,
+        aboutRecommendationsDescription$,
       } = searchRecommendationsStrings;
 
       return {
+        closeAction$,
         aboutRecommendationsText$,
         resourcesMightBeRelevantTitle$,
+        aboutRecommendationsDescription$,
       };
     },
     data() {
@@ -142,6 +158,7 @@
         topicNode: null,
         copyNode: null,
         languageFromChannelList: null,
+        showAboutRecommendations: false,
       };
     },
     computed: {
@@ -237,6 +254,12 @@
             throw error;
           });
       }),
+      handleAboutRecommendations() {
+        this.showAboutRecommendations = true;
+      },
+      closeAboutRecommendations() {
+        this.showAboutRecommendations = false;
+      },
     },
     $trs: {
       backToBrowseAction: 'Back to browse',
