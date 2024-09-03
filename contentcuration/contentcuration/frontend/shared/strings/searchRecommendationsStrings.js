@@ -7,8 +7,14 @@ export const searchRecommendationsStrings = createTranslator('SearchRecommendati
   },
   aboutRecommendationsDescription: {
     message:
-      'Our recommendation system learns from the titles and descriptions of what you already have in your channel, and uses that to show you other potentially relevant resources across the Kolibri Library.\n\nInteracting with these recommendations, whether by using them or marking them as not relevant, will help us improve the quality of the recommendations you see.',
+      'Our recommendation system learns from the titles and descriptions of what you already have in your channel, and uses that to show you other potentially relevant resources across the Kolibri Library.',
     context: 'A description that explains how the recommendation system works',
+  },
+  aboutRecommendationsFeedbackDescription: {
+    message:
+      'Interacting with these recommendations, whether by using them or marking them as not relevant, will help us improve the quality of the recommendations you see.',
+    context:
+      'A description that explains how the user can help improve the quality of the recommendations',
   },
   goToLocationText: {
     message: 'Go to location',
