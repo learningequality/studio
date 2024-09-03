@@ -15,7 +15,7 @@ export const searchRecommendationsStrings = createTranslator('SearchRecommendati
     context: 'A label for an action that takes the user to a specific location',
   },
   resourcesMightBeRelevantTitle: {
-    message: "These resources might be relevant to '{ channelName }'",
+    message: "These resources might be relevant to '{ topic }'",
     context:
       'A title for a list of resources that might be relevant to the user for a currently viewed channel',
   },
