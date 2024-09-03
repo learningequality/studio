@@ -2,7 +2,7 @@
 
   <ImportFromChannelsModal>
     <template #default="{ preview }">
-      <div style="width: 1400px;">
+      <div style="width: 1200px; ">
         <div v-if="!isBrowsing" class="my-2 px-2">
           <ActionLink
             :text="$tr('backToBrowseAction')"
@@ -84,7 +84,12 @@
             :layout8="{ span: 3 }"
             :layout4="{ span: 1 }"
           >
-            <p>Test width</p>
+            <div class="my-2 px-2">
+              <ActionLink
+                :text="aboutRecommendationsText$()"
+                @click="handleBackToBrowse"
+              />
+            </div>
           </KGridItem>
         </KGrid>
       </div>
@@ -103,6 +108,7 @@
   import SearchResultsList from './SearchResultsList';
   import ImportFromChannelsModal from './ImportFromChannelsModal';
   import { withChangeTracker } from 'shared/data/changes';
+  import { searchRecommendationsStrings } from 'shared/strings/searchRecommendationsStrings';
 
   export default {
     name: 'SearchOrBrowseWindow',
@@ -111,6 +117,13 @@
       ContentTreeList,
       SearchResultsList,
       ChannelList,
+    },
+    setup() {
+      const { aboutRecommendationsText$ } = searchRecommendationsStrings;
+
+      return {
+        aboutRecommendationsText$,
+      };
     },
     data() {
       return {
@@ -232,7 +245,7 @@
 <style lang="less" scoped>
 
   .v-form {
-    max-width: 900px;
+    max-width: 100%;
   }
 
   .searchtext /deep/ .v-input__append-outer {
