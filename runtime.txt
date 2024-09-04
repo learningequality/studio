@@ -3,4 +3,4 @@
 # inside Ubuntu Bionic, which is used to build images for Studio.
 # We encode it here so that it can be picked up by Github's dependabot
 # to manage automated package upgrades.
-python-3.10.13
+Version: python-3.10.13
