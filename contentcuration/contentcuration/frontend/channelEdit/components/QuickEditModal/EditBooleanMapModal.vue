@@ -41,6 +41,7 @@
    * This component is a modal responsible for reusing the logic of saving
    * the edition of a boolean map field for multiple nodes.
    */
+  import isEqual from 'lodash/isEqual';
   import { mapGetters, mapActions } from 'vuex';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import { getInvalidText } from 'shared/utils/validation';
@@ -89,6 +90,7 @@
          * Where nodeIds is the id of the nodes that have the option selected
          */
         selectedValues: {},
+        changed: false,
       };
     },
     computed: {
@@ -101,8 +103,9 @@
       },
     },
     watch: {
-      selectedValues() {
+      selectedValues(newValue, oldValue) {
         this.validate();
+        this.changed = !isEqual(newValue, oldValue);
       },
     },
     created() {
@@ -118,11 +121,18 @@
       });
 
       this.selectedValues = optionsNodes;
+      // reset
+      this.$nextTick(() => {
+        this.changed = false;
+      });
     },
     methods: {
       ...mapActions('contentNode', ['updateContentNode', 'updateContentNodeDescendants']),
-      close() {
-        this.$emit('close');
+      close(changed = false) {
+        this.$emit('close', {
+          changed: this.error ? false : changed,
+          updateDescendants: this.updateDescendants,
+        });
       },
       validate() {
         if (this.validators && this.validators.length) {
@@ -163,7 +173,7 @@
           })
         );
         this.$store.dispatch('showSnackbarSimple', this.confirmationMessage || '');
-        this.close();
+        this.close(this.changed);
       },
     },
     $trs: {

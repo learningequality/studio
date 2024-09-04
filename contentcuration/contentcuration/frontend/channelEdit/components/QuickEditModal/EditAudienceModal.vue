@@ -125,10 +125,20 @@
     },
     methods: {
       ...mapActions('contentNode', ['updateContentNode']),
-      close() {
-        this.$emit('close');
+      close(changed = false) {
+        this.$emit('close', {
+          changed,
+        });
       },
       async handleSave() {
+        const changed = this.nodes.some(node => {
+          return (
+            node.role_visibility !== this.selectedRol ||
+            (node.learner_needs &&
+              node.learner_needs[ResourcesNeededTypes.FOR_BEGINNERS] !== this.forBeginners)
+          );
+        });
+
         await Promise.all(
           this.nodes.map(node => {
             const learnerNeeds = {
@@ -144,7 +154,7 @@
         );
         /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
         this.$store.dispatch('showSnackbarSimple', commonStrings.$tr('changesSaved'));
-        this.close();
+        this.close(changed);
       },
     },
     $trs: {

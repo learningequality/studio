@@ -138,7 +138,7 @@
       :text="$tr('invalidNodesFoundText')"
     >
       <template #buttons="{ close }">
-        <VBtn flat data-test="saveanyways" color="primary" @click="closeModal">
+        <VBtn flat data-test="saveanyways" color="primary" @click="closeModal(true)">
           {{ $tr('saveAnywaysButton') }}
         </VBtn>
         <VBtn color="primary" @click="close">
@@ -256,6 +256,7 @@
         promptFailed: false,
         listElevated: false,
         storagePoll: null,
+        openTime: null,
       };
     },
     computed: {
@@ -397,6 +398,14 @@
       this.hideHTMLScroll(true);
       this.selected = this.targetNodeId ? [this.targetNodeId] : this.nodeIds;
       this.storagePoll = setInterval(this.fetchUserStorage, CHECK_STORAGE_INTERVAL);
+      this.openTime = new Date().getTime();
+
+      if (!this.uploadMode) {
+        this.$analytics.trackAction('legacy_edit', 'Open', {
+          eventLabel: this.$route.name,
+          numEditNodes: this.nodeIds.length,
+        });
+      }
     },
     methods: {
       ...mapActions(['fetchUserStorage']),
@@ -410,7 +419,15 @@
       ...mapActions('file', ['loadFiles', 'updateFile']),
       ...mapActions('assessmentItem', ['loadAssessmentItems', 'updateAssessmentItems']),
       ...mapMutations('contentNode', { enableValidation: 'ENABLE_VALIDATION_ON_NODES' }),
-      closeModal() {
+      closeModal(changed = false) {
+        if (!this.uploadMode) {
+          const eventAction = changed ? 'Save' : 'Close';
+          this.$analytics.trackAction('legacy_edit', eventAction, {
+            eventLabel: this.$route.name,
+            secondsOpen: Math.ceil((new Date().getTime() - this.openTime) / 1000),
+          });
+        }
+
         this.promptUploading = false;
         this.promptInvalid = false;
         this.promptFailed = false;
@@ -449,7 +466,7 @@
           // before the validation pop up is executed
           if (this.$refs.editView) {
             this.$nextTick(() => {
-              this.$refs.editView.immediateSaveAll().then(() => {
+              this.$refs.editView.immediateSaveAll().then(changed => {
                 // Catch uploads in progress and invalid nodes
                 if (this.invalidNodes.length) {
                   this.selected = [this.invalidNodes[0]];
@@ -457,7 +474,7 @@
                 } else if (this.contentNodesAreUploading(this.nodeIds)) {
                   this.promptUploading = true;
                 } else {
-                  this.closeModal();
+                  this.closeModal(changed);
                 }
               });
             });
