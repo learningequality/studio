@@ -54,6 +54,7 @@
         title: '',
         description: '',
         titleError: '',
+        changed: false,
       };
     },
     computed: {
@@ -62,9 +63,19 @@
         return this.getContentNode(this.nodeId);
       },
     },
+    watch: {
+      title(newTitle, oldTitle) {
+        this.changed = this.changed || newTitle !== oldTitle;
+      },
+      description(newDescription, oldDescription) {
+        this.changed = this.changed || newDescription !== oldDescription;
+      },
+    },
     created() {
       this.title = this.contentNode.title || '';
       this.description = this.contentNode.description || '';
+      // Reset changed flag after the component is created
+      this.$nextTick(() => (this.changed = false));
     },
     methods: {
       ...mapActions('contentNode', ['updateContentNode']),
@@ -83,10 +94,6 @@
         }
 
         const { nodeId, title, description } = this;
-        const changed =
-          this.contentNode.title !== title.trim() ||
-          this.contentNode.description !== description.trim();
-
         await this.updateContentNode({
           id: nodeId,
           title: title.trim(),
@@ -94,7 +101,7 @@
         });
         /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
         this.$store.dispatch('showSnackbarSimple', commonStrings.$tr('changesSaved'));
-        this.close(changed);
+        this.close(this.changed);
       },
     },
     $trs: {

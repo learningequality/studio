@@ -80,6 +80,7 @@
         searchQuery: '',
         updateDescendants: false,
         isMultipleNodeLanguages: false,
+        changed: false,
       };
     },
     computed: {
@@ -101,12 +102,21 @@
         );
       },
     },
+    watch: {
+      selectedLanguage(newLanguage, oldLanguage) {
+        this.changed = this.changed || newLanguage !== oldLanguage;
+      },
+    },
     created() {
       const languages = [...new Set(this.nodes.map(node => node.language))];
       if (languages.length === 1) {
         this.selectedLanguage = languages[0] || '';
       }
       this.isMultipleNodeLanguages = languages.length > 1;
+      // Reset the changed flag after the initial value is set
+      this.$nextTick(() => {
+        this.changed = false;
+      });
     },
     mounted() {
       if (this.selectedLanguage) {
@@ -139,7 +149,6 @@
           return;
         }
 
-        const changed = this.nodes.some(node => node.language !== this.selectedLanguage);
         await Promise.all(
           this.nodes.map(node => {
             if (this.updateDescendants && node.kind === ContentKindsNames.TOPIC) {
@@ -156,7 +165,7 @@
         );
         /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
         this.$store.dispatch('showSnackbarSimple', commonStrings.$tr('changesSaved'));
-        this.close(changed);
+        this.close(this.changed);
       },
     },
     $trs: {
