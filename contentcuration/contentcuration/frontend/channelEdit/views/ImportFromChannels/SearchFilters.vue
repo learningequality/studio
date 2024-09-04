@@ -3,7 +3,7 @@
   <VNavigationDrawer
     permanent
     floating
-    class="import-search-filters px-2"
+    class="import-search-filters"
   >
     <!-- Channel -->
     <p class="font-weight-bold grey--text mb-1">

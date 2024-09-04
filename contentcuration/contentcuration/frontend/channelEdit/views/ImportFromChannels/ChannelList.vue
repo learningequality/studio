@@ -9,7 +9,7 @@
         md6
         lg6
         xl6
-        class="px-3"
+        class="pr-3"
       >
         <template #default="{ attach, menuProps }">
           <VSelect
@@ -23,7 +23,7 @@
           />
         </template>
       </DropdownWrapper>
-      <VFlex sm6 md6 lg6 xl6 class="pr-3">
+      <VFlex sm6 md6 lg6 xl6>
         <LanguageDropdown v-model="languageFilter" />
       </VFlex>
     </VLayout>
@@ -38,7 +38,7 @@
         v-for="channel in channels"
         :key="channel.id"
         :channel="channel"
-        class="mb-3 mx-3"
+        class="mb-3"
       />
       <VLayout justify-center class="mt-4">
         <Pagination :totalPages="pageCount" />

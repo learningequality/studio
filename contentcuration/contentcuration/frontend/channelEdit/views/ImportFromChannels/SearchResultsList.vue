@@ -5,7 +5,7 @@
     <SearchFilterBar />
     <VLayout row>
       <VFlex shrink>
-        <div class="px-2">
+        <div>
           <ActionLink
             class="mb-3"
             :text="$tr('savedSearchesLabel')"

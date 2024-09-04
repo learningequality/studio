@@ -2,116 +2,113 @@
 
   <ImportFromChannelsModal>
     <template #default="{ preview }">
-      <div style="width: 1200px; ">
-        <div v-if="!isBrowsing" class="my-2 px-2">
-          <ActionLink
-            :text="$tr('backToBrowseAction')"
-            @click="handleBackToBrowse"
-          />
-        </div>
 
-        <KGrid debug>
-          <!-- Main panel >= 800px -->
-          <KGridItem
-            :layout12="{ span: 8 }"
-            :layout8="{ span: 5 }"
-            :layout4="{ span: 3 }"
-          >
-            <!-- Search bar -->
-            <KGrid row wrap class="mt-4 px-3">
-              <KGridItem>
-                <VForm ref="search" @submit.prevent="handleSearchTerm">
-                  <VTextField
-                    v-model="searchTerm"
-                    class="searchtext"
-                    color="primary"
-                    :label="$tr('searchLabel')"
-                    box
-                    clearable
-                    hideDetails
-                  >
-                    <template #prepend-inner>
-                      <Icon icon="search" />
-                    </template>
-                    <template #append-outer>
-                      <VBtn
-                        class="px-4 search-btn"
-                        color="primary"
-                        type="submit"
-                        :disabled="!searchIsValid"
-                        depressed
-                        large
-                      >
-                        {{ $tr('searchAction') }}
-                      </VBtn>
-                    </template>
-                  </VTextField>
-                </VForm>
-              </KGridItem>
-            </KGrid>
+      <KGrid style="width: 1200px;">
 
-            <!-- Search or Topics Browsing -->
-            <KGrid>
-              <KGridItem>
-                <ChannelList
-                  v-if="isBrowsing && !$route.params.channelId"
-                  @update-language="updateLanguageQuery"
-                />
-                <ContentTreeList
-                  v-else-if="isBrowsing"
-                  ref="contentTreeList"
-                  :topicNode="topicNode"
-                  :selected.sync="selected"
-                  :topicId="$route.params.nodeId"
-                  @preview="preview($event)"
-                  @change_selected="handleChangeSelected"
-                  @copy_to_clipboard="handleCopyToClipboard"
-                />
-                <SearchResultsList
-                  v-else
-                  :selected.sync="selected"
-                  @preview="preview($event)"
-                  @change_selected="handleChangeSelected"
-                  @copy_to_clipboard="handleCopyToClipboard"
-                />
-              </KGridItem>
-            </KGrid>
-          </KGridItem>
-
-          <!-- Recommended resources panel >= 400px -->
-          <KGridItem
-            :layout12="{ span: 4 }"
-            :layout8="{ span: 3 }"
-            :layout4="{ span: 1 }"
-          >
-            <h3 class="px-2 py-2">
-              {{
-                resourcesMightBeRelevantTitle$({
-                  topic: 'Basic Addition'
-                })
-              }}
-            </h3>
-            <div class="my-2 px-2">
-              <ActionLink
-                :text="aboutRecommendationsText$()"
-                @click="handleAboutRecommendations"
-              />
-            </div>
-          </KGridItem>
-        </KGrid>
-
-        <KModal
-          v-if="showAboutRecommendations"
-          :title="aboutRecommendationsText$()"
-          :cancelText="closeAction$()"
-          @cancel="closeAboutRecommendations"
+        <!-- Back to browse button -->
+        <KGridItem
+          :layout12="{ span: 12 }"
+          :layout8="{ span: 8 }"
+          :layout4="{ span: 4 }"
         >
-          <p>
-            {{ aboutRecommendationsDescription$() }}
-          </p>
-        </KModal>
+          <div v-if="!isBrowsing" class="my-2">
+            <ActionLink
+              :text="$tr('backToBrowseAction')"
+              @click="handleBackToBrowse"
+            />
+          </div>
+        </KGridItem>
 
-      </div>
+        <!-- Main panel >= 800px -->
+        <KGridItem
+          :layout12="{ span: layoutFitsTwoColumns ? 8 : 12 }"
+          :layout8="{ span: 8 }"
+          :layout4="{ span: 4 }"
+        >
+          <!-- Search bar -->
+          <VForm ref="search" @submit.prevent="handleSearchTerm">
+            <VTextField
+              v-model="searchTerm"
+              class="searchtext"
+              color="primary"
+              :label="$tr('searchLabel')"
+              box
+              clearable
+              hideDetails
+            >
+              <template #prepend-inner>
+                <Icon icon="search" />
+              </template>
+              <template #append-outer>
+                <VBtn
+                  class="px-4 search-btn"
+                  color="primary"
+                  type="submit"
+                  :disabled="!searchIsValid"
+                  depressed
+                  large
+                >
+                  {{ $tr('searchAction') }}
+                </VBtn>
+              </template>
+            </VTextField>
+          </VForm>
+          <!-- Search or Topics Browsing -->
+          <ChannelList
+            v-if="isBrowsing && !$route.params.channelId"
+            @update-language="updateLanguageQuery"
+          />
+          <ContentTreeList
+            v-else-if="isBrowsing"
+            ref="contentTreeList"
+            :topicNode="topicNode"
+            :selected.sync="selected"
+            :topicId="$route.params.nodeId"
+            @preview="preview($event)"
+            @change_selected="handleChangeSelected"
+            @copy_to_clipboard="handleCopyToClipboard"
+          />
+          <SearchResultsList
+            v-else
+            :selected.sync="selected"
+            @preview="preview($event)"
+            @change_selected="handleChangeSelected"
+            @copy_to_clipboard="handleCopyToClipboard"
+          />
+        </KGridItem>
+
+        <!-- Recommended resources panel >= 400px -->
+        <KGridItem
+          :layout12="{ span: layoutFitsTwoColumns ? 4 : 12 }"
+          :layout8="{ span: 8 }"
+          :layout4="{ span: 4 }"
+        >
+          <h3 class="pb-2 pt-0 px-2">
+            {{ resourcesMightBeRelevantTitle$({ topic: 'Basic Addition' }) }}
+          </h3>
+          <div class="my-2 px-2">
+            <ActionLink
+              :text="aboutRecommendationsText$()"
+              @click="handleAboutRecommendations"
+            />
+          </div>
+        </KGridItem>
+      </KGrid>
+
+      <!-- About Recommendations Modal -->
+      <KModal
+        v-if="showAboutRecommendations"
+        :title="aboutRecommendationsText$()"
+        :cancelText="closeAction$()"
+        @cancel="closeAboutRecommendations"
+      >
+        <p class="pb-2">
+          {{ aboutRecommendationsDescription$() }}
+        </p>
+        <p>
+          {{ aboutRecommendationsFeedbackDescription$() }}
+        </p>
+      </KModal>
     </template>
   </ImportFromChannelsModal>
 
@@ -121,6 +118,8 @@
 <script>
 
   import { mapActions, mapMutations, mapState } from 'vuex';
+  import { computed } from '@vue/composition-api';
+  import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
   import { RouteNames } from '../../constants';
   import ChannelList from './ChannelList';
   import ContentTreeList from './ContentTreeList';
@@ -138,18 +137,28 @@
       ChannelList,
     },
     setup() {
+      const { windowWidth } = useKResponsiveWindow();
+
       const {
         closeAction$,
         aboutRecommendationsText$,
         resourcesMightBeRelevantTitle$,
         aboutRecommendationsDescription$,
+        aboutRecommendationsFeedbackDescription$,
       } = searchRecommendationsStrings;
+
+      const layoutFitsTwoColumns = computed(function() {
+        return windowWidth.value >= 960;
+      });
 
       return {
         closeAction$,
         aboutRecommendationsText$,
         resourcesMightBeRelevantTitle$,
         aboutRecommendationsDescription$,
+        aboutRecommendationsFeedbackDescription$,
+
+        layoutFitsTwoColumns,
       };
     },
     data() {
