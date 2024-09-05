@@ -178,7 +178,7 @@
         'You selected resources in different languages. The language you choose below will be applied to all selected resources.',
       updateDescendantsCheckbox:
         'Apply the chosen language to all resources, folders, and subfolders contained within the selected folders.',
-      emptyLanguagesSearch: 'No languages matches the search',
+      emptyLanguagesSearch: 'No language matches the search',
     },
   };
 
