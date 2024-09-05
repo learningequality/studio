@@ -6,6 +6,7 @@ from django.urls import reverse
 from le_utils.constants import content_kinds
 from le_utils.constants import file_formats
 from le_utils.constants import format_presets
+from mock import MagicMock
 
 from contentcuration import models
 from contentcuration.tests import testdata
@@ -128,9 +129,13 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
 
         self.assertEqual(complete_except_no_file.complete, False)
 
+        models.Change.create_change = MagicMock()
+
         self.sync_changes(
             [generate_update_event(file.id, FILE, {"contentnode": complete_except_no_file.id}, channel_id=self.channel.id)],
         )
+
+        self.assertTrue(models.Change.create_change.called)
 
         complete_except_no_file.refresh_from_db()
 
