@@ -4,6 +4,7 @@
     :style="{ color: $vuetify.theme.primary }"
     :target="target"
     :class="{ truncate }"
+    :disabled="disabled"
     v-bind="$attrs"
     flat
     exact
@@ -48,6 +49,10 @@
         default: false,
       },
       notranslate: {
+        type: Boolean,
+        default: false,
+      },
+      disabled: {
         type: Boolean,
         default: false,
       },

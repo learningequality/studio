@@ -53,6 +53,15 @@
               </template>
             </VTextField>
           </VForm>
+
+          <div class="my-2 px-2">
+            <ActionLink
+              class="mb-3"
+              :text="$tr('savedSearchesLabel')"
+              :disabled="!savedSearchesExist"
+              @click="showSavedSearches = true"
+            />
+          </div>
           <!-- Search or Topics Browsing -->
           <ChannelList
             v-if="isBrowsing && !$route.params.channelId"
@@ -101,7 +110,7 @@
           </ul>
         </KGridItem>
       </KGrid>
-
+      <SavedSearchesModal v-model="showSavedSearches" />
       <!-- About Recommendations Modal -->
       <KModal
         v-if="showAboutRecommendations"
@@ -124,7 +133,7 @@
 
 <script>
 
-  import { mapActions, mapMutations, mapState } from 'vuex';
+  import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
   import { computed } from '@vue/composition-api';
   import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
   import { RouteNames } from '../../constants';
@@ -132,6 +141,7 @@
   import ChannelList from './ChannelList';
   import ContentTreeList from './ContentTreeList';
   import SearchResultsList from './SearchResultsList';
+  import SavedSearchesModal from './SavedSearchesModal';
   import ImportFromChannelsModal from './ImportFromChannelsModal';
   import { withChangeTracker } from 'shared/data/changes';
   import { searchRecommendationsStrings } from 'shared/strings/searchRecommendationsStrings';
@@ -144,6 +154,7 @@
       ContentTreeList,
       SearchResultsList,
       ChannelList,
+      SavedSearchesModal,
       RecommendedResourceCard,
     },
     setup() {
@@ -177,11 +188,13 @@
         topicNode: null,
         copyNode: null,
         languageFromChannelList: null,
+        showSavedSearches: false,
         showAboutRecommendations: false,
         recommendations: [],
       };
     },
     computed: {
+      ...mapGetters('importFromChannels', ['savedSearchesExist']),
       ...mapState('importFromChannels', ['selected']),
       isBrowsing() {
         return this.$route.name === RouteNames.IMPORT_FROM_CHANNELS_BROWSE;
@@ -204,6 +217,17 @@
           this.searchTerm.trim() !== this.$route.params.searchTerm
         );
       },
+    },
+    beforeRouteEnter(to, from, next) {
+      next(vm => {
+        vm.searchTerm = to.params.searchTerm || '';
+        vm.showSavedSearches = false;
+      });
+    },
+    beforeRouteUpdate(to, from, next) {
+      this.searchTerm = to.params.searchTerm || '';
+      this.showSavedSearches = false;
+      next();
     },
     beforeRouteLeave(to, from, next) {
       // Clear selections if going back to TreeView
@@ -295,6 +319,7 @@
       backToBrowseAction: 'Back to browse',
       searchLabel: 'Search for resources…',
       searchAction: 'Search',
+      savedSearchesLabel: 'View saved searches',
 
       // Copy strings
       // undo: 'Undo',

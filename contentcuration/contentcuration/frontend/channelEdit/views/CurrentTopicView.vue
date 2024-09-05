@@ -60,16 +60,9 @@
           v-if="node && node.total_count"
           v-model="selectAll"
           :indeterminate="selected.length > 0 && !selectAll"
-          :label="selected.length ? '' : $tr('selectAllLabel')"
+          :label="selected.length ? selectionText : $tr('selectAllLabel')"
           style="font-size: 16px;"
         />
-      </div>
-      <div
-        v-show="selected.length"
-        v-if="$vuetify.breakpoint.mdAndUp"
-        class="no-shrink px-1"
-      >
-        {{ selectionText }}
       </div>
       <div v-if="selected.length" class="command-palette-wrapper">
         <KListWithOverflow
@@ -224,14 +217,19 @@
         </template>
       </ResourceDrawer>
     </VLayout>
+    <InheritAncestorMetadataModal
+      :parent="inheritanceParent"
+      @inherit="inheritMetadata"
+    />
   </VContainer>
 
 </template>
 
 <script>
 
-  import { mapActions, mapGetters, mapState } from 'vuex';
+  import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
   import get from 'lodash/get';
+  import InheritAncestorMetadataModal from '../components/edit/InheritAncestorMetadataModal';
   import MoveModal from '../components/move/MoveModal';
   import ContentNodeOptions from '../components/ContentNodeOptions';
   import ResourceDrawer from '../components/ResourceDrawer';
@@ -270,6 +268,7 @@
       Checkbox,
       MoveModal,
       DraggableRegion,
+      InheritAncestorMetadataModal,
     },
     mixins: [titleMixin, routerMixin],
     props: {
@@ -308,10 +307,11 @@
         'getContentNode',
         'getContentNodes',
         'getContentNodeAncestors',
-        'getTopicAndResourceCounts',
+        'getSelectedTopicAndResourceCountText',
         'getContentNodeChildren',
         'isNodeInCopyingState',
       ]),
+      ...mapState('contentNode', ['inheritingNodes']),
       ...mapGetters('clipboard', ['getCopyTrees']),
       ...mapGetters('draggable', ['activeDraggableRegionId']),
       selected: {
@@ -502,7 +502,7 @@
         };
       },
       selectionText() {
-        return this.$tr('selectionCount', this.getTopicAndResourceCounts(this.selected));
+        return this.getSelectedTopicAndResourceCountText(this.selected);
       },
       draggableId() {
         return DraggableRegions.TOPIC_VIEW;
@@ -525,6 +525,21 @@
           backgroundColor: this.$themeTokens.fineLine,
           width: '1px',
         };
+      },
+      currentInheritingNodes() {
+        if (!this.inheritingNodes) {
+          return [];
+        }
+        // Handle inheritance modals one parent at a time.
+        const firstNode = this.inheritingNodes[0];
+        return this.inheritingNodes.filter(n => n.parent === firstNode.parent);
+      },
+      inheritanceParent() {
+        const firstNode = this.currentInheritingNodes[0];
+        if (!firstNode) {
+          return;
+        }
+        return this.getContentNode(firstNode.parent);
       },
     },
     watch: {
@@ -574,7 +589,9 @@
         'copyContentNode',
         'waitForCopyingStatus',
         'setQuickEditModal',
+        'updateContentNode',
       ]),
+      ...mapMutations('contentNode', ['ADD_INHERITING_NODE', 'CLEAR_INHERITING_NODES']),
       ...mapActions('clipboard', ['copyAll']),
       clearSelections() {
         this.selected = [];
@@ -772,6 +789,14 @@
           return this.moveContentNodes({
             ...payload,
             id__in: data.sources.map(s => s.metadata.id),
+          }).then(ids => {
+            if (this.topicId !== payload.target) {
+              // If we are not moving within the same parent
+              // trigger the node inheritance behaviour.
+              for (const id of ids) {
+                this.ADD_INHERITING_NODE(this.getContentNode(id));
+              }
+            }
           });
         }
       },
@@ -901,6 +926,13 @@
           nodeId,
         };
       },
+      inheritMetadata(metadata) {
+        const nodeIds = this.currentInheritingNodes.map(n => n.id);
+        for (const nodeId of nodeIds) {
+          this.updateContentNode({ id: nodeId, ...metadata, mergeMapFields: true });
+        }
+        this.CLEAR_INHERITING_NODES(nodeIds);
+      },
     },
     $trs: {
       addTopic: 'New folder',
@@ -910,25 +942,23 @@
       importFromChannels: 'Import from channels',
       addButton: 'Add',
       editButton: 'Edit',
-      editSourceButton: 'Edit Source',
-      editLevelsButton: 'Edit Levels',
-      editLanguageButton: 'Edit Language',
-      editAudienceButton: 'Edit Audience',
-      editCategoriesButton: 'Edit Categories',
-      editWhatIsNeededButton: "Edit 'What is needed'",
-      editLearningActivitiesButton: 'Edit Learning Activity',
+      editSourceButton: 'Edit source',
+      editLevelsButton: 'Edit levels',
+      editLanguageButton: 'Edit language',
+      editAudienceButton: 'Edit audience',
+      editCategoriesButton: 'Edit categories',
+      editWhatIsNeededButton: 'Edit requirements',
+      editLearningActivitiesButton: 'Edit learning activities',
       optionsButton: 'Options',
       copyToClipboardButton: 'Copy to clipboard',
       [viewModes.DEFAULT]: 'Default view',
       [viewModes.COMFORTABLE]: 'Comfortable view',
       [viewModes.COMPACT]: 'Compact view',
-      editSelectedButton: 'Edit',
+      editSelectedButton: 'Edit details',
       copySelectedButton: 'Copy to clipboard',
       moveSelectedButton: 'Move',
       duplicateSelectedButton: 'Make a copy',
-      deleteSelectedButton: 'Delete',
-      selectionCount:
-        '{topicCount, plural,\n =1 {# folder}\n other {# folders}}, {resourceCount, plural,\n =1 {# resource}\n other {# resources}}',
+      deleteSelectedButton: 'Remove',
       undo: 'Undo',
       creatingCopies: 'Copying...',
       copiedItems: 'Copy operation complete',

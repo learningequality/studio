@@ -41,6 +41,7 @@ const makeWrapper = nodeIds => {
     store,
     propsData: {
       nodeIds,
+      resourcesSelectedText: '2 resources',
     },
   });
 };

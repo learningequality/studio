@@ -8,14 +8,14 @@
     @submit="handleSave"
     @cancel="close"
   >
-    <p v-if="nodeIds.length > 1" data-test="resources-selected-message">
-      {{ $tr('resourcesSelected', { count: nodeIds.length }) }}
+    <p v-if="resourcesSelectedText.length > 0" data-test="resources-selected-message">
+      {{ resourcesSelectedText }}
     </p>
     <template v-if="isDescendantsUpdatable && isTopicSelected">
       <KCheckbox
         :checked="updateDescendants"
         data-test="update-descendants-checkbox"
-        :label="$tr('updateDescendantsCheckbox')"
+        :label="$tr('updateDescendantCheckbox')"
         @change="(value) => { updateDescendants = value }"
       />
       <Divider />
@@ -41,6 +41,7 @@
    * This component is a modal responsible for reusing the logic of saving
    * the edition of a boolean map field for multiple nodes.
    */
+  import isEqual from 'lodash/isEqual';
   import { mapGetters, mapActions } from 'vuex';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import { getInvalidText } from 'shared/utils/validation';
@@ -72,6 +73,10 @@
         type: Array,
         default: () => [],
       },
+      resourcesSelectedText: {
+        type: String,
+        default: '',
+      },
     },
     data() {
       return {
@@ -85,6 +90,7 @@
          * Where nodeIds is the id of the nodes that have the option selected
          */
         selectedValues: {},
+        changed: false,
       };
     },
     computed: {
@@ -97,8 +103,9 @@
       },
     },
     watch: {
-      selectedValues() {
+      selectedValues(newValue, oldValue) {
         this.validate();
+        this.changed = !isEqual(newValue, oldValue);
       },
     },
     created() {
@@ -114,11 +121,18 @@
       });
 
       this.selectedValues = optionsNodes;
+      // reset
+      this.$nextTick(() => {
+        this.changed = false;
+      });
     },
     methods: {
       ...mapActions('contentNode', ['updateContentNode', 'updateContentNodeDescendants']),
-      close() {
-        this.$emit('close');
+      close(changed = false) {
+        this.$emit('close', {
+          changed: this.error ? false : changed,
+          updateDescendants: this.updateDescendants,
+        });
       },
       validate() {
         if (this.validators && this.validators.length) {
@@ -159,16 +173,14 @@
           })
         );
         this.$store.dispatch('showSnackbarSimple', this.confirmationMessage || '');
-        this.close();
+        this.close(this.changed);
       },
     },
     $trs: {
       saveAction: 'Save',
       cancelAction: 'Cancel',
-      resourcesSelected:
-        '{count, number, integer} {count, plural, one {resource} other {resources}} selected',
-      updateDescendantsCheckbox:
-        'Apply to all resources and folders nested within the selected folders',
+      updateDescendantCheckbox:
+        'Apply to all resources, folders, and subfolders contained within the selected folders.',
     },
   };
 

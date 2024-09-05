@@ -7,7 +7,8 @@
     :nodeIds="nodeIds"
     :validators="learningActivityValidators"
     :confirmationMessage="changesSaved"
-    @close="() => $emit('close')"
+    :resourcesSelectedText="resourcesSelectedText"
+    v-on="$listeners"
   >
     <template #input="{ value, inputHandler }">
       <LearningActivityOptions
@@ -41,6 +42,10 @@
         type: Array,
         required: true,
       },
+      resourcesSelectedText: {
+        type: String,
+        default: '',
+      },
     },
     computed: {
       learningActivityValidators() {
@@ -52,7 +57,7 @@
       },
     },
     $trs: {
-      editLearningActivitiesTitle: 'Edit Learning Activities',
+      editLearningActivitiesTitle: 'Edit learning activities',
     },
   };
 
