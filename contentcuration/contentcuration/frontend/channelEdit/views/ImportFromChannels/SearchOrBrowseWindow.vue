@@ -92,6 +92,13 @@
               @click="handleAboutRecommendations"
             />
           </div>
+
+          <ul>
+            <RecommendedResourceCard
+              v-for="recommendation in recommendations"
+              :key="recommendation.id"
+            />
+          </ul>
         </KGridItem>
       </KGrid>
 
@@ -121,12 +128,14 @@
   import { computed } from '@vue/composition-api';
   import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
   import { RouteNames } from '../../constants';
+  import RecommendedResourceCard from '../../../RecommendedResourceCard/components/RecommendedResourceCard';
   import ChannelList from './ChannelList';
   import ContentTreeList from './ContentTreeList';
   import SearchResultsList from './SearchResultsList';
   import ImportFromChannelsModal from './ImportFromChannelsModal';
   import { withChangeTracker } from 'shared/data/changes';
   import { searchRecommendationsStrings } from 'shared/strings/searchRecommendationsStrings';
+  import client from 'shared/client';
 
   export default {
     name: 'SearchOrBrowseWindow',
@@ -135,6 +144,7 @@
       ContentTreeList,
       SearchResultsList,
       ChannelList,
+      RecommendedResourceCard,
     },
     setup() {
       const { windowWidth } = useKResponsiveWindow();
@@ -168,6 +178,7 @@
         copyNode: null,
         languageFromChannelList: null,
         showAboutRecommendations: false,
+        recommendations: [],
       };
     },
     computed: {
@@ -203,6 +214,7 @@
     },
     mounted() {
       this.searchTerm = this.$route.params.searchTerm || '';
+      this.loadSamplePublicContentNode();
     },
     methods: {
       ...mapActions('clipboard', ['copy']),
@@ -268,6 +280,15 @@
       },
       closeAboutRecommendations() {
         this.showAboutRecommendations = false;
+      },
+      loadSamplePublicContentNode() {
+        client
+          .get(
+            'https://studio.learningequality.org/api/public/v2/contentnode/cd99a903a0a24483ac933402bb452f54/'
+          )
+          .then(response => {
+            this.recommendations = Array(4).fill(response.data);
+          });
       },
     },
     $trs: {
