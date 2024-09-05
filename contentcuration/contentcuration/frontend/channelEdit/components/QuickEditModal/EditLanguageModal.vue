@@ -9,8 +9,8 @@
     @submit="handleSave"
     @cancel="close"
   >
-    <p v-if="nodeIds.length > 1" data-test="resources-selected-message">
-      {{ $tr('resourcesSelected', { count: nodeIds.length }) }}
+    <p v-if="resourcesSelectedText.length > 0" data-test="resources-selected-message">
+      {{ resourcesSelectedText }}
     </p>
     <p v-if="isMultipleNodeLanguages" data-test="different-languages-message">
       {{ $tr('differentLanguages') }}
@@ -19,7 +19,7 @@
       v-model="searchQuery"
       autofocus
       data-test="search-input"
-      :label="$tr('selectLanguage')"
+      :label="$tr('searchAction')"
       style="margin-top: 0.5em"
     />
     <template v-if="isTopicSelected">
@@ -69,12 +69,18 @@
         type: Array,
         required: true,
       },
+      resourcesSelectedText: {
+        type: String,
+        default: '',
+      },
     },
     data() {
       return {
         selectedLanguage: '',
         searchQuery: '',
         updateDescendants: false,
+        isMultipleNodeLanguages: false,
+        changed: false,
       };
     },
     computed: {
@@ -96,12 +102,21 @@
         );
       },
     },
+    watch: {
+      selectedLanguage(newLanguage, oldLanguage) {
+        this.changed = this.changed || newLanguage !== oldLanguage;
+      },
+    },
     created() {
       const languages = [...new Set(this.nodes.map(node => node.language))];
       if (languages.length === 1) {
         this.selectedLanguage = languages[0] || '';
       }
       this.isMultipleNodeLanguages = languages.length > 1;
+      // Reset the changed flag after the initial value is set
+      this.$nextTick(() => {
+        this.changed = false;
+      });
     },
     mounted() {
       if (this.selectedLanguage) {
@@ -123,8 +138,11 @@
           code: langObject.id,
         });
       },
-      close() {
-        this.$emit('close');
+      close(changed = false) {
+        this.$emit('close', {
+          changed,
+          updateDescendants: this.updateDescendants,
+        });
       },
       async handleSave() {
         if (!this.selectedLanguage) {
@@ -147,21 +165,19 @@
         );
         /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
         this.$store.dispatch('showSnackbarSimple', commonStrings.$tr('changesSaved'));
-        this.close();
+        this.close(this.changed);
       },
     },
     $trs: {
-      editLanguage: 'Edit Language',
+      editLanguage: 'Edit language',
       languageItemText: '{language} ({code})',
       saveAction: 'Save',
       cancelAction: 'Cancel',
-      selectLanguage: 'Select / Type Language',
-      resourcesSelected:
-        '{count, number, integer} {count, plural, one {resource} other {resources}} selected',
+      searchAction: 'Search',
       differentLanguages:
-        'The selected resources have different languages set. Choosing an option below will apply the language to all the selected resources',
+        'You selected resources in different languages. The language you choose below will be applied to all selected resources.',
       updateDescendantsCheckbox:
-        'Apply to all resources and folders nested within the selected folders',
+        'Apply the chosen language to all resources, folders, and subfolders contained within the selected folders.',
       emptyLanguagesSearch: 'No languages matches the search',
     },
   };

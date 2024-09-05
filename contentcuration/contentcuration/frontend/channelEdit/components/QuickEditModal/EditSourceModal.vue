@@ -10,8 +10,8 @@
       @submit="handleSave"
       @cancel="close"
     >
-      <p v-if="nodeIds.length > 1" data-test="resources-selected-message" style="margin-top: 8px;">
-        {{ $tr('resourcesSelected', { count: nodeIds.length }) }}
+      <p v-if="resourcesSelectedText.length > 0" data-test="resources-selected-message">
+        {{ resourcesSelectedText }}
       </p>
       <div class="form-item">
         <div class="input-container">
@@ -135,6 +135,10 @@
     'copyright_holder',
   ];
 
+  const hasChanged = function(newValue, oldValue) {
+    this.changed = newValue !== oldValue;
+  };
+
   export default {
     name: 'EditSourceModal',
     components: {
@@ -145,6 +149,10 @@
       nodeIds: {
         type: Array,
         required: true,
+      },
+      resourcesSelectedText: {
+        type: String,
+        default: '',
       },
     },
     data() {
@@ -157,6 +165,7 @@
         license_description: '',
         copyright_holder: '',
         copyrightHolderError: '',
+        changed: false,
       };
       /* eslint-enable  kolibri/vue-no-unused-properties */
     },
@@ -199,6 +208,14 @@
         return '';
       },
     },
+    watch: {
+      author: hasChanged,
+      provider: hasChanged,
+      aggregator: hasChanged,
+      license: hasChanged,
+      license_description: hasChanged,
+      copyright_holder: hasChanged,
+    },
     created() {
       const values = {};
       this.nodes.forEach(node => {
@@ -215,11 +232,17 @@
       sourceKeys.forEach(prop => {
         this[prop] = values[prop] || '';
       });
+      // reset changed flag
+      this.$nextTick(() => {
+        this.changed = false;
+      });
     },
     methods: {
       ...mapActions('contentNode', ['updateContentNode']),
-      close() {
-        this.$emit('close');
+      close(changed = false) {
+        this.$emit('close', {
+          changed: this.hasError ? false : changed,
+        });
       },
       validateCopyrightHolder() {
         if (this.copyright_holder === nonUniqueValue) {
@@ -259,11 +282,11 @@
         );
         /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
         this.$store.dispatch('showSnackbarSimple', commonStrings.$tr('changesSaved'));
-        this.close();
+        this.close(this.changed);
       },
     },
     $trs: {
-      editAttribution: 'Edit Attribution',
+      editAttribution: 'Edit source',
       authorLabel: 'Author',
       authorToolTip: 'Person or organization who created this content',
       providerLabel: 'Provider',
@@ -271,8 +294,6 @@
       aggregatorLabel: 'Aggregator',
       aggregatorToolTip:
         'Website or org hosting the content collection but not necessarily the creator or copyright holder',
-      resourcesSelected:
-        '{count, number, integer} {count, plural, one {resource} other {resources}} selected',
       copyrightHolderLabel: 'Copyright holder',
       cannotEditPublic: 'Cannot edit for public channel resources',
       editOnlyLocal: 'Edits will be reflected only for local resources',

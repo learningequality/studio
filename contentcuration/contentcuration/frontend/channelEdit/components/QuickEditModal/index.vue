@@ -9,36 +9,43 @@
     <EditLanguageModal
       v-if="isLanguageOpen"
       :nodeIds="nodeIds"
+      :resourcesSelectedText="displayedResourceSelectedText"
       @close="close"
     />
     <EditResourcesNeededModal
       v-if="isResourcesNeededOpen"
       :nodeIds="nodeIds"
+      :resourcesSelectedText="displayedResourceSelectedText"
       @close="close"
     />
     <EditCategoriesModal
       v-if="isCategoriesOpen"
       :nodeIds="nodeIds"
+      :resourcesSelectedText="displayedResourceSelectedText"
       @close="close"
     />
     <EditLevelsModal
       v-if="isLevelsOpen"
       :nodeIds="nodeIds"
+      :resourcesSelectedText="displayedResourceSelectedText"
       @close="close"
     />
     <EditLearningActivitiesModal
       v-if="isLearningActivitiesOpen"
       :nodeIds="nodeIds"
+      :resourcesSelectedText="displayedResourceSelectedText"
       @close="close"
     />
     <EditSourceModal
       v-if="isEditSourceOpen"
       :nodeIds="nodeIds"
+      :resourcesSelectedText="displayedResourceSelectedText"
       @close="close"
     />
     <EditAudienceModal
       v-if="isAudienceOpen"
       :nodeIds="nodeIds"
+      :resourcesSelectedText="displayedResourceSelectedText"
       @close="close"
     />
     <EditCompletionModal
@@ -55,6 +62,7 @@
 
   import { mapGetters, mapActions } from 'vuex';
   import { QuickEditModals } from '../../constants';
+  import messages from '../../translator';
   import EditSourceModal from './EditSourceModal';
   import EditLevelsModal from './EditLevelsModal';
   import EditLanguageModal from './EditLanguageModal';
@@ -78,8 +86,17 @@
       EditTitleDescriptionModal,
       EditLearningActivitiesModal,
     },
+    data() {
+      return {
+        lastOpenTime: null,
+      };
+    },
     computed: {
-      ...mapGetters('contentNode', ['getQuickEditModalOpen']),
+      ...mapGetters('contentNode', [
+        'getQuickEditModalOpen',
+        'getSelectedTopicAndResourceCountText',
+        'getTopicAndResourceCounts',
+      ]),
       openedModal() {
         const quickEditModal = this.getQuickEditModalOpen();
         if (!quickEditModal) {
@@ -93,6 +110,19 @@
           return [];
         }
         return quickEditModal.nodeIds;
+      },
+      resourcesSelectedText() {
+        return this.getSelectedTopicAndResourceCountText(this.nodeIds);
+      },
+      singleResourceSelected() {
+        return (
+          this.resourcesSelectedText ===
+          // eslint-disable-next-line kolibri/vue-no-undefined-string-uses
+          messages.$tr('selectionCount', { topicCount: 0, resourceCount: 1 })
+        );
+      },
+      displayedResourceSelectedText() {
+        return this.singleResourceSelected ? '' : this.resourcesSelectedText;
       },
       isTitleDescriptionOpen() {
         return this.openedModal === QuickEditModals.TITLE_DESCRIPTION;
@@ -122,9 +152,33 @@
         return this.openedModal === QuickEditModals.COMPLETION;
       },
     },
+    watch: {
+      openedModal(newValue, oldValue) {
+        if (Boolean(newValue) && !oldValue) {
+          this.lastOpenTime = new Date().getTime();
+          this.$analytics.trackAction('quick_edit', 'Open', {
+            eventLabel: newValue,
+            numEditNodes: this.nodeIds.length,
+          });
+        }
+      },
+    },
     methods: {
       ...mapActions('contentNode', ['setQuickEditModal']),
-      close() {
+      close({ changed = false, updateDescendants = false } = {}) {
+        const eventAction = changed ? 'Save' : 'Close';
+        let numEditNodes = this.nodeIds.length;
+        if (updateDescendants) {
+          const { topicCount, resourceCount } = this.getTopicAndResourceCounts(this.nodeIds);
+          numEditNodes = topicCount + resourceCount;
+        }
+        this.$analytics.trackAction('quick_edit', eventAction, {
+          eventLabel: this.openedModal,
+          quickUpdateDescendants: updateDescendants,
+          numEditNodes,
+          secondsOpen: Math.ceil((new Date().getTime() - this.lastOpenTime) / 1000),
+        });
+
         this.setQuickEditModal(null);
       },
     },
@@ -134,5 +188,5 @@
 
 
 <style lang="scss" scoped>
-  
+
 </style>

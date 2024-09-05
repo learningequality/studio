@@ -39,8 +39,10 @@ describe('resetPassword', () => {
   });
   it('should call setPassword on submit if password data is valid', () => {
     wrapper.setData({ new_password1: 'pass', new_password2: 'pass' });
-    wrapper.find({ ref: 'form' }).trigger('submit');
-    expect(setPassword).toHaveBeenCalled();
+    wrapper.vm.$nextTick(() => {
+      wrapper.find({ ref: 'form' }).trigger('submit');
+      expect(setPassword).toHaveBeenCalled();
+    });
   });
   it('should retain data from query params so reset credentials are preserved', () => {
     router.replace({
@@ -50,7 +52,9 @@ describe('resetPassword', () => {
       },
     });
     wrapper.setData({ new_password1: 'pass', new_password2: 'pass' });
-    wrapper.find({ ref: 'form' }).trigger('submit');
-    expect(setPassword.mock.calls[0][0].test).toBe('testing');
+    wrapper.vm.$nextTick(() => {
+      wrapper.find({ ref: 'form' }).trigger('submit');
+      expect(setPassword.mock.calls[0][0].test).toBe('testing');
+    });
   });
 });

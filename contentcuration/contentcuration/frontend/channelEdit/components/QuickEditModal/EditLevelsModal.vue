@@ -6,7 +6,8 @@
     :title="$tr('editLevelsTitle')"
     :nodeIds="nodeIds"
     :confirmationMessage="changesSaved"
-    @close="() => $emit('close')"
+    :resourcesSelectedText="resourcesSelectedText"
+    v-on="$listeners"
   >
     <template #input="{ value, inputHandler }">
       <LevelsOptions
@@ -39,6 +40,10 @@
         type: Array,
         required: true,
       },
+      resourcesSelectedText: {
+        type: String,
+        default: '',
+      },
     },
     computed: {
       changesSaved() {
@@ -47,7 +52,7 @@
       },
     },
     $trs: {
-      editLevelsTitle: 'What Levels',
+      editLevelsTitle: 'Edit levels',
     },
   };
 

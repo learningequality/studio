@@ -78,6 +78,18 @@ export function SET_MOVE_NODES(state, ids) {
   state.moveNodes = ids;
 }
 
+export function ADD_INHERITING_NODE(state, node) {
+  state.inheritingNodes = (state.inheritingNodes || []).concat(node);
+}
+
+export function CLEAR_INHERITING_NODES(state, ids) {
+  if (!state.inheritingNodes) {
+    return;
+  }
+  const nodes = state.inheritingNodes.filter(n => !ids.includes(n.id));
+  state.inheritingNodes = nodes.length ? nodes : null;
+}
+
 export function SET_QUICK_EDIT_MODAL(state, quickEditModalOpen) {
   state.quickEditModalOpen = quickEditModalOpen;
 }

@@ -135,7 +135,7 @@
 </template>
 <script>
 
-  import { mapGetters, mapActions } from 'vuex';
+  import { mapGetters, mapActions, mapMutations } from 'vuex';
   import ResourceDrawer from '../ResourceDrawer';
   import { RouteNames } from '../../constants';
   import NewTopicModal from './NewTopicModal';
@@ -248,6 +248,7 @@
     },
     methods: {
       ...mapActions('contentNode', ['createContentNode', 'loadChildren']),
+      ...mapMutations('contentNode', ['ADD_INHERITING_NODE']),
       isDisabled(node) {
         return this.moveNodeIds.includes(node.id);
       },
@@ -300,6 +301,9 @@
           actionText: this.$tr('goToLocationButton'),
           actionCallback: this.goToLocation,
         });
+        for (const nodeId of this.moveNodeIds) {
+          this.ADD_INHERITING_NODE(this.getContentNode(nodeId));
+        }
         this.moveNodesInProgress = false;
       },
     },

@@ -7,6 +7,7 @@ import isString from 'lodash/isString';
 import matches from 'lodash/matches';
 import overEvery from 'lodash/overEvery';
 import sortBy from 'lodash/sortBy';
+import compact from 'lodash/compact';
 import uniq from 'lodash/uniq';
 import uniqBy from 'lodash/uniqBy';
 
@@ -1271,6 +1272,44 @@ export const Channel = new CreateModelResource({
     // For channels, the appropriate channel_id for a change is just the key
     return obj.id;
   },
+  async languageExistsInResources(id) {
+    let langExists = await this.transaction(
+      { mode: 'r' },
+      TABLE_NAMES.CHANNEL,
+      TABLE_NAMES.CONTENTNODE,
+      () => {
+        return Channel.table.get(id).then(async channel => {
+          return (
+            (await ContentNode.table
+              .where({
+                channel_id: id,
+                language: channel.language,
+              })
+              .count()) > 0
+          );
+        });
+      }
+    );
+    if (!langExists) {
+      langExists = await client
+        .get(this.getUrlFunction('language_exists')(id))
+        .then(response => response.data.exists);
+    }
+    return langExists;
+  },
+  async languagesInResources(id) {
+    const localLanguages = await this.transaction({ mode: 'r' }, TABLE_NAMES.CONTENTNODE, () => {
+      return ContentNode.table
+        .where({ channel_id: id })
+        .filter(node => node.language !== null)
+        .toArray()
+        .then(nodes => nodes.map(node => node.language));
+    });
+    const remoteLanguages = await client
+      .get(this.getUrlFunction('languages')(id))
+      .then(response => response.data.languages);
+    return uniq(compact(localLanguages.concat(remoteLanguages)));
+  },
 });
 
 function getChannelFromChannelScope() {
@@ -1895,7 +1934,7 @@ export const Invitation = new Resource({
 
   accept(id) {
     const changes = { accepted: true };
-    return client.patch(window.Urls.invitationDetail(id), changes).then(() => {
+    return client.post(window.Urls.invitationAccept(id), changes).then(() => {
       return this.transaction({ mode: 'rw' }, () => {
         return this.table.update(id, changes);
       });
