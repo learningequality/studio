@@ -2,7 +2,8 @@
 
   <KModal
     :title="title"
-    :submitText="canSave ? $tr('saveAction') : null"
+    :submitText="$tr('saveAction')"
+    :submitDisabled="!canSave"
     :cancelText="$tr('cancelAction')"
     data-test="edit-booleanMap-modal"
     @submit="handleSave"
@@ -11,13 +12,19 @@
     <p v-if="resourcesSelectedText.length > 0" data-test="resources-selected-message">
       {{ resourcesSelectedText }}
     </p>
+
+    <!-- Display helper text if categories are mixed -->
+    <p v-if="hasMixedCategories" data-test="additional-categories-description">
+      {{ $tr('addAdditionalCategoriesDescription') }}
+    </p>
+
     <template v-if="isDescendantsUpdatable && isTopicSelected">
       <KCheckbox
         :checked="updateDescendants"
         data-test="update-descendants-checkbox"
         :label="$tr('updateDescendantCheckbox')"
         @change="(value) => { updateDescendants = value }"
-      />
+        />
       <Divider />
     </template>
     <slot
@@ -102,6 +109,11 @@
       canSave() {
         return Object.values(this.selectedValues).some(value => value.length > 0);
       },
+      hasMixedCategories() {
+      const selectedNodes = this.nodes.filter(node => this.selectedValues[node.id]);
+      const categories = selectedNodes.map(node => node.categories || []);
+      return selectedNodes.length > 0 && new Set(categories.flat()).size > 1;
+     },
     },
     watch: {
       selectedValues() {
@@ -169,6 +181,8 @@
       cancelAction: 'Cancel',
       updateDescendantCheckbox:
         'Apply to all resources, folders, and subfolders contained within the selected folders.',
+      addAdditionalCategoriesDescription:
+        'You selected resources that have different categories. The categories you choose below will be added to all selected resources. This will not remove existing categories.',
     },
   };
 
