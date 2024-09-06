@@ -10,10 +10,6 @@ export function isComfortableViewMode(state) {
   return viewMode === viewModes.COMFORTABLE;
 }
 
-export function isAboutLicensesModalOpen(state) {
-  return state.aboutLicensesModalOpen;
-}
-
 // Convenience function to format strings like "Page Name - Channel Name"
 // for tab titles
 export function appendChannelName(state, getters) {
