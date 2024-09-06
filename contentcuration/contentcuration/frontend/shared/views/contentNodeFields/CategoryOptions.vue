@@ -157,14 +157,6 @@
       },
       autocompleteOptions() {
         const options = [...this.categoriesList];
-        if (this.expanded) {
-          // Just boolean maps can have indeterminate values
-          options.push({
-            value: MIXED,
-            text: this.$tr('mixedLabel'),
-            undeletable: true,
-          });
-        }
         return options;
       },
       autocompleteValues() {
@@ -216,9 +208,6 @@
         this.selected = {};
       },
       tooltipText(optionId) {
-        if (optionId === MIXED) {
-          return this.$tr('mixedLabel');
-        }
         const option = this.categoriesList.find(option => option.value === optionId);
         if (!option) {
           return '';
@@ -301,7 +290,6 @@
     },
     $trs: {
       noCategoryFoundText: 'Category not found',
-      mixedLabel: 'Mixed',
     },
   };
 

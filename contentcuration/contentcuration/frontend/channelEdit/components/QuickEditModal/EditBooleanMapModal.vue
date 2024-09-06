@@ -2,7 +2,7 @@
 
   <KModal
     :title="title"
-    :submitText="$tr('saveAction')"
+    :submitText="error ? null : $tr('saveAction')"
     :cancelText="$tr('cancelAction')"
     data-test="edit-booleanMap-modal"
     @submit="handleSave"
@@ -26,9 +26,9 @@
       :inputHandler="(value) => { selectedValues = value }"
     ></slot>
 
-    <span v-if="error" class="red--text">
+    <!-- <span v-if="error" class="red--text">
       {{ error }}
-    </span>
+    </span> -->
   </KModal>
 
 </template>
