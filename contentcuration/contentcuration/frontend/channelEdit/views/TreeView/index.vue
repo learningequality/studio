@@ -128,13 +128,6 @@
             />
           </div>
         </template>
-        <template #pagination>
-          <div class="pagination-container">
-            <KButton v-if="more" :disabled="moreLoading" @click="loadMore">
-              {{ $tr('showMore') }}
-            </KButton>
-          </div>
-        </template>
       </CurrentTopicView>
     </VContent>
   </TreeViewBase>
@@ -199,8 +192,6 @@
         },
         loading: true,
         listElevated: false,
-        more: null,
-        moreLoading: false,
       };
     },
     computed: {
@@ -308,16 +299,7 @@
         collapseAll: 'COLLAPSE_ALL_EXPANDED',
         setExpanded: 'SET_EXPANSION',
       }),
-      ...mapActions('contentNode', ['loadAncestors', 'loadChildren', 'loadContentNodes']),
-      loadMore() {
-        if (this.more && !this.moreLoading) {
-          this.moreLoading = true;
-          this.loadContentNodes(this.more).then(response => {
-            this.more = response.more || null;
-            this.moreLoading = false;
-          });
-        }
-      },
+      ...mapActions('contentNode', ['loadAncestors', 'loadChildren']),
       verifyContentNodeId(id) {
         this.nodeNotFound = false;
         return this.$store.dispatch('contentNode/headContentNode', id).catch(() => {
@@ -414,7 +396,6 @@
       openCurrentLocationButton: 'Expand to current folder location',
       updatedResourcesReadyForReview: 'Updated resources are ready for review',
       closeDrawer: 'Close',
-      showMore: 'Show more',
     },
   };
 
@@ -460,12 +441,6 @@
       /* stylelint-disable-next-line custom-property-pattern */
       background-color: var(--v-draggableDropZone-base);
     }
-  }
-
-  .pagination-container {
-    display: flex;
-    justify-content: flex-start;
-    margin: 4px;
   }
 
 </style>
