@@ -2,7 +2,7 @@
 
   <KModal
     :title="title"
-    :submitText="error ? null : $tr('saveAction')"
+    :submitText="canSave ? $tr('saveAction') : null"
     :cancelText="$tr('cancelAction')"
     data-test="edit-booleanMap-modal"
     @submit="handleSave"
@@ -99,6 +99,9 @@
       isTopicSelected() {
         return this.nodes.some(node => node.kind === ContentKindsNames.TOPIC);
       },
+      canSave() {
+        return Object.values(this.selectedValues).some(value => value.length > 0);
+      },
     },
     watch: {
       selectedValues() {
@@ -137,11 +140,6 @@
         }
       },
       async handleSave() {
-        this.validate();
-        if (this.error) {
-          return;
-        }
-
         await Promise.all(
           this.nodes.map(node => {
             const fieldValue = {};
