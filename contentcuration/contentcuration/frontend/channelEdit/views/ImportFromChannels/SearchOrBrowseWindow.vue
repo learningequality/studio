@@ -54,7 +54,7 @@
             </VTextField>
           </VForm>
 
-          <div class="my-2 px-2">
+          <div v-if="!isBrowsing" class="my-2 px-2">
             <ActionLink
               class="mb-3"
               :text="$tr('savedSearchesLabel')"
@@ -106,6 +106,10 @@
             <RecommendedResourceCard
               v-for="recommendation in recommendations"
               :key="recommendation.id"
+              :to="{}"
+              :title="recommendation.title"
+              :description="recommendation.description"
+              :headingLevel="2"
             />
           </ul>
         </KGridItem>

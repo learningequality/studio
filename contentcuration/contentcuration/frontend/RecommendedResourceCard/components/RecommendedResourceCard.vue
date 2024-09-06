@@ -13,21 +13,17 @@
     :style="{ margin: '16px 0 16px 0' }"
   >
     <template #aboveTitle>
-      <div>
-        <KIcon
-          icon="practiceSolid"
-        />
+      <span>
+        <KIcon icon="practiceSolid" />
         <span>Practice</span>
-      </div>
-    </template>
-    <template #title>
+      </span>
     </template>
     <template #belowTitle>
-      <div class="bellow-title-style">
-        <p>
-          below title slot section for the KCard component:
-          below title slot section for the KCard component
-        </p>
+      <div>
+        <KTextTruncator
+          :text="description"
+          :maxLines="2"
+        />
       </div>
     </template>
     <template #footer>
@@ -54,6 +50,10 @@
         type: String,
         default: null,
       },
+      description: {
+        type: String,
+        default: null,
+      },
       headingLevel: {
         type: Number,
         required: true,
@@ -74,6 +74,6 @@
       justify-content: flex-end;
   }
   .recommended-resource-card {
-    max-width:400px
+    width: 100%;
   }
 </style>
