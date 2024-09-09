@@ -102,7 +102,7 @@
             />
           </div>
 
-          <ul>
+          <div class="ml-1">
             <RecommendedResourceCard
               v-for="recommendation in recommendations"
               :key="recommendation.id"
@@ -111,7 +111,7 @@
               :description="recommendation.description"
               :headingLevel="2"
             />
-          </ul>
+          </div>
         </KGridItem>
       </KGrid>
       <SavedSearchesModal v-model="showSavedSearches" />
