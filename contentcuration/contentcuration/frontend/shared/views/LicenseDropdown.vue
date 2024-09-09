@@ -30,7 +30,7 @@
       <KButton
         class="info-link"
         appearance="basic-link"
-        :text="reqeuestFormStrings.$tr('licenseInfoHeader')"
+        :text="requestFormStrings.$tr('licenseInfoHeader')"
         :iconAfter="showAboutLicense ? 'chevronUp' : 'chevronDown'"
         @click="toggleAboutLicenseDisplay"
       />
@@ -51,7 +51,7 @@
         <ActionLink
           :href="getLicenseUrl(licenseItem)"
           target="_blank"
-          :text="reqeuestFormStrings.$tr('learnMoreButton')"
+          :text="requestFormStrings.$tr('learnMoreButton')"
         />
       </p>
     </div>
@@ -136,7 +136,7 @@
     },
     data() {
       return {
-        reqeuestFormStrings: crossComponentTranslator(RequestForm),
+        requestFormStrings: crossComponentTranslator(RequestForm),
         showAboutLicense: false,
       };
     },
@@ -240,10 +240,6 @@
 <style lang="scss" scoped>
 
   .with-trailing-input-icon {
-    /deep/ .v-input__append-inner {
-      margin-right: 32px;
-    }
-
     /deep/ .v-input__append-outer {
       position: absolute;
       right: 4px;
