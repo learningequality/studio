@@ -20,7 +20,7 @@
             {{ getText(item) }}
           </VChip>
         </template>
-        <template #item="{ item, tile }">
+        <template #item="{ item }">
           <Checkbox v-model="selections" :value="item.value">
             <span :class="{ notranslate }" :style="getEllipsisStyle()" dir="auto">
               {{ getText(item) }}
