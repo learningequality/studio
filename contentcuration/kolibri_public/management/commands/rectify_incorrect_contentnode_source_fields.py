@@ -1,3 +1,4 @@
+import datetime
 import logging
 
 from django.core.management.base import BaseCommand
@@ -7,6 +8,7 @@ from django.db.models import OuterRef
 from django.db.models import Q
 from django.db.models import Value
 from django.db.models.functions import Coalesce
+from django.utils import timezone
 from django_cte import With
 
 from contentcuration.models import Channel
@@ -17,6 +19,11 @@ logger = logging.getLogger(__file__)
 
 class Command(BaseCommand):
     def handle(self, *args, **options):
+        # Filter Date : July 9, 2023
+        # Link https://github.com/learningequality/studio/pull/4189
+        # The PR date for the frontend change is July 10, 2023
+        # we would set the filter day one day back just to be sure
+        filter_date = datetime.datetime(2023, 7, 9, tzinfo=timezone.utc)
         main_trees_cte = With(
             (
                 Channel.objects.filter(
@@ -61,12 +68,16 @@ class Command(BaseCommand):
                 coalesced_license_id=Coalesce("license_id", -1),
             )
         )
-
+        # We filter out according to last_modified date before this PR
+        # https://github.com/learningequality/studio/pull/4189
+        # As we want to lossen up the public=True Filter and open the
+        # migration for all the nodes even if they are not published
         diff = (
             nodes.with_cte(main_trees_cte).filter(
                 source_node_id__isnull=False,
                 original_source_node_id__isnull=False,
-                published=True,
+                modified__lt=filter_date
+                # published=True,
             )
         ).annotate(
             coalesced_provider=Coalesce("provider", Value("")),
@@ -122,8 +133,6 @@ class Command(BaseCommand):
                     base_node[0].aggregator = original_source_node[0].aggregator
                 if base_node[0].license != original_source_node[0].license:
                     base_node[0].license = original_source_node[0].license
-
                 base_node[0].save()
-
             else:
                 continue
