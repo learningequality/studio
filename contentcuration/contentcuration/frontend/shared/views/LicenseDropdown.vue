@@ -247,7 +247,8 @@
     }
 
     /deep/ .v-input__control > .v-input__slot {
-      background: #e9e9e9 !important;
+      min-width: 400px;
+      background: #f5f5f5 !important;
 
       &::before {
         border-color: rgba(0, 0, 0, 0.12) !important;
