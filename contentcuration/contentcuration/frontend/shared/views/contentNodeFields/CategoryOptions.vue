@@ -24,6 +24,10 @@
           :attach="attach"
           @click:clear="$nextTick(() => removeAll())"
         >
+          <!-- Display helper text if categories are mixed -->
+          <p v-if="hasMixedCategories" data-test="additional-categories-description">
+            {{ $tr('addAdditionalCategoriesDescription') }}
+          </p>
           <template #selection="data">
             <VTooltip bottom lazy>
               <template #activator="{ on, attrs }">
@@ -183,6 +187,22 @@
           option.text.toLowerCase().includes(searchQuery)
         );
       },
+      hasMixedCategories() {
+        // Fetch the selected categories for the given nodeIds
+        const selectedNodes = this.nodeIds.map(nodeId => {
+          // Find the category ID in the selected values
+          const categoryForNode = Object.entries(this.selected).find(([nodes]) =>
+            nodes.includes(nodeId)
+          );
+          return categoryForNode ? categoryForNode[0] : null; // Return the categoryId or null
+        });
+
+        const uniqueCategories = new Set(selectedNodes);
+        console.log('Selected Nodes:', selectedNodes); // Log selected nodes
+        console.log('Unique Categories:', uniqueCategories); // Log unique categories
+
+        return uniqueCategories.size > 1;
+      },
     },
     methods: {
       treeItemStyle(item) {
@@ -290,6 +310,8 @@
     },
     $trs: {
       noCategoryFoundText: 'Category not found',
+      addAdditionalCategoriesDescription:
+        'You selected resources that have different categories. The categories you choose below will be added to all selected resources. This will not remove existing categories.',
     },
   };
 

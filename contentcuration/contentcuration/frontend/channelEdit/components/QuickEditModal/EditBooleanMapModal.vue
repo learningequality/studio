@@ -1,3 +1,4 @@
+<!-- eslint-disable kolibri/vue-no-undefined-string-uses -->
 <template>
 
   <KModal
@@ -12,19 +13,16 @@
     <p v-if="resourcesSelectedText.length > 0" data-test="resources-selected-message">
       {{ resourcesSelectedText }}
     </p>
-
-    <!-- Display helper text if categories are mixed -->
-    <p v-if="hasMixedCategories" data-test="additional-categories-description">
-      {{ $tr('addAdditionalCategoriesDescription') }}
+    <p v-if="hasMixedCategories" data-test="mixed-categories-message">
+      {{ hasMixedCategoriesMessage }}
     </p>
-
     <template v-if="isDescendantsUpdatable && isTopicSelected">
       <KCheckbox
         :checked="updateDescendants"
         data-test="update-descendants-checkbox"
         :label="$tr('updateDescendantCheckbox')"
         @change="(value) => { updateDescendants = value }"
-        />
+      />
       <Divider />
     </template>
     <slot
@@ -51,6 +49,7 @@
   import { mapGetters, mapActions } from 'vuex';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import { getInvalidText } from 'shared/utils/validation';
+  import commonStrings from 'shared/translator';
 
   export default {
     name: 'EditBooleanMapModal',
@@ -110,10 +109,16 @@
         return Object.values(this.selectedValues).some(value => value.length > 0);
       },
       hasMixedCategories() {
-      const selectedNodes = this.nodes.filter(node => this.selectedValues[node.id]);
-      const categories = selectedNodes.map(node => node.categories || []);
-      return selectedNodes.length > 0 && new Set(categories.flat()).size > 1;
-     },
+        const categories = this.nodes.map(node =>
+          Object.keys(node[this.field] || {}).filter(key => node[this.field][key])
+        );
+        const uniqueCategories = [...new Set(categories.flat())];
+        return uniqueCategories.length > 1;
+      },
+      hasMixedCategoriesMessage() {
+        // eslint-disable-next-line kolibri/vue-no-undefined-string-uses
+        return commonStrings.$tr('addAdditionalCatgoriesDescription');
+      },
     },
     watch: {
       selectedValues() {
@@ -181,8 +186,6 @@
       cancelAction: 'Cancel',
       updateDescendantCheckbox:
         'Apply to all resources, folders, and subfolders contained within the selected folders.',
-      addAdditionalCategoriesDescription:
-        'You selected resources that have different categories. The categories you choose below will be added to all selected resources. This will not remove existing categories.',
     },
   };
 
