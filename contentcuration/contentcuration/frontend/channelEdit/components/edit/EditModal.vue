@@ -122,6 +122,9 @@
           </VFlex>
         </VLayout>
       </BottomBar>
+      <AboutLicensesModal
+        v-if="isAboutLicensesModalOpen"
+      />
       <InheritAncestorMetadataModal
         :parent="(createMode && detailNodeIds.length) ? parent : null"
         @inherit="inheritMetadata"
@@ -192,6 +195,7 @@
   import { fileSizeMixin, routerMixin } from 'shared/mixins';
   import FileStorage from 'shared/views/files/FileStorage';
   import MessageDialog from 'shared/views/MessageDialog';
+  import AboutLicensesModal from 'shared/views/AboutLicensesModal';
   import ResizableNavigationDrawer from 'shared/views/ResizableNavigationDrawer';
   import Uploader from 'shared/views/files/Uploader';
   import LoadingText from 'shared/views/LoadingText';
@@ -222,6 +226,7 @@
       SavingIndicator,
       ToolBar,
       BottomBar,
+      AboutLicensesModal,
     },
     mixins: [fileSizeMixin, routerMixin],
     props: {
@@ -255,6 +260,7 @@
       };
     },
     computed: {
+      ...mapGetters(['isAboutLicensesModalOpen']),
       ...mapGetters('contentNode', ['getContentNode', 'getContentNodeIsValid']),
       ...mapGetters('assessmentItem', ['getAssessmentItems']),
       ...mapGetters('currentChannel', ['currentChannel', 'canEdit']),

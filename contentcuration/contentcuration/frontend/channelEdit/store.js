@@ -31,6 +31,8 @@ export const STORE_CONFIG = {
        * to override the current `viewMode`.
        */
       viewModeOverrides: [],
+
+      aboutLicensesModalOpen: false,
     };
   },
   actions,
