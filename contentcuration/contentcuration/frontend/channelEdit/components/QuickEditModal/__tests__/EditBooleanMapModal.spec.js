@@ -16,7 +16,6 @@ let generalActions;
 const CheckboxValue = {
   UNCHECKED: 'UNCHECKED',
   CHECKED: 'CHECKED',
-  INDETERMINATE: 'INDETERMINATE',
 };
 
 const { translateMetadataString } = metadataTranslationMixin.methods;
@@ -31,11 +30,9 @@ const getOptionsValues = wrapper => {
   const categories = {};
   const checkboxes = wrapper.findAll('[data-test="option-checkbox"]');
   checkboxes.wrappers.forEach(checkbox => {
-    const { label, checked, indeterminate } = checkbox.vm.$props || {};
+    const { label, checked } = checkbox.vm.$props || {};
     let value;
-    if (indeterminate) {
-      value = CheckboxValue.INDETERMINATE;
-    } else if (checked) {
+    if (checked) {
       value = CheckboxValue.CHECKED;
     } else {
       value = CheckboxValue.UNCHECKED;
@@ -181,26 +178,6 @@ describe('EditBooleanMapModal', () => {
         } = optionsValues;
         expect(dailyLifeValue).toBe(CheckboxValue.CHECKED);
         expect(foundationsValue).toBe(CheckboxValue.CHECKED);
-      });
-
-      test('checkbox option should be indeterminate if not all nodes have the same options set', () => {
-        nodes['node1'].categories = {
-          [Categories.DAILY_LIFE]: true,
-          [Categories.FOUNDATIONS]: true,
-        };
-        nodes['node2'].categories = {
-          [Categories.DAILY_LIFE]: true,
-        };
-
-        const wrapper = makeWrapper({ nodeIds: ['node1', 'node2'] });
-
-        const optionsValues = getOptionsValues(wrapper);
-        const {
-          [Categories.DAILY_LIFE]: dailyLifeValue,
-          [Categories.FOUNDATIONS]: foundationsValue,
-        } = optionsValues;
-        expect(dailyLifeValue).toBe(CheckboxValue.CHECKED);
-        expect(foundationsValue).toBe(CheckboxValue.INDETERMINATE);
       });
     });
   });

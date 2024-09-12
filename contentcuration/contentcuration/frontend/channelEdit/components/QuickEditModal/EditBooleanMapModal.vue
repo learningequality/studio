@@ -162,13 +162,15 @@
       },
       async handleSave() {
         await Promise.all(
-          this.nodes.map(node => {
+          this.nodes.map(async node => {
             const fieldValue = {};
             const currentNode = this.getContentNode(node.id);
+
             Object.entries(this.selectedValues).forEach(([key, value]) => {
-              const existingValue = currentNode[this.field][key] || false;
+              const existingValue = currentNode[this.field]?.[key] || false;
               fieldValue[key] = existingValue || value.includes(node.id);
             });
+
             if (this.updateDescendants && node.kind === ContentKindsNames.TOPIC) {
               return this.updateContentNodeDescendants({
                 id: node.id,
