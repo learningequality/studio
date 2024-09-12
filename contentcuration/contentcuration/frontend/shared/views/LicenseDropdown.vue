@@ -23,38 +23,19 @@
           :class="{ 'with-trailing-input-icon': box }"
           :attach="attach"
           @focus="$emit('focus')"
-        />
+        >
+          <template #append-outer>
+            <KIconButton
+              class="info-icon"
+              data-test="info-icon"
+              icon="help"
+              :color="$themeTokens.primary"
+              @click="setShowAboutLicenses(true)"
+            />
+          </template>
+        </VSelect>
       </template>
     </DropdownWrapper>
-    <p>
-      <KButton
-        class="info-link"
-        appearance="basic-link"
-        :text="requestFormStrings.$tr('licenseInfoHeader')"
-        :iconAfter="showAboutLicense ? 'chevronUp' : 'chevronDown'"
-        @click="toggleAboutLicenseDisplay"
-      />
-    </p>
-    <div 
-      v-for="(licenseItem, index) in licences" 
-      v-show="showAboutLicense" 
-      :key="index" 
-      class="mb-4 mt-3"
-    >
-      <h2 class="font-weight-bold mb-1 subheading">
-        {{ licenseItem.name }}
-      </h2>
-      <p class="body-1 grey--text mb-1">
-        {{ licenseItem.description }}
-      </p>
-      <p v-if="licenseItem.license_url">
-        <ActionLink
-          :href="getLicenseUrl(licenseItem)"
-          target="_blank"
-          :text="requestFormStrings.$tr('learnMoreButton')"
-        />
-      </p>
-    </div>
     <VTextarea
       v-if="isCustom"
       ref="description"
@@ -78,7 +59,7 @@
 
 <script>
 
-  import RequestForm from '../../settings/pages/Storage/RequestForm.vue';
+  import { mapMutations } from 'vuex';
   import {
     getLicenseValidators,
     getLicenseDescriptionValidators,
@@ -89,7 +70,6 @@
   import { LicensesList } from 'shared/leUtils/Licenses';
   import { constantsTranslationMixin } from 'shared/mixins';
   import DropdownWrapper from 'shared/views/form/DropdownWrapper';
-  import { crossComponentTranslator } from 'shared/i18n';
 
   const MIXED_VALUE = 'mixed';
 
@@ -133,12 +113,6 @@
         type: Boolean,
         default: false,
       },
-    },
-    data() {
-      return {
-        requestFormStrings: crossComponentTranslator(RequestForm),
-        showAboutLicense: false,
-      };
     },
     computed: {
       license: {
@@ -204,28 +178,16 @@
           ? getLicenseDescriptionValidators().map(translateValidator)
           : [];
       },
-      licences() {
-        return LicensesList.filter(license => license.id).map(license => ({
-          ...license,
-          name: this.translateConstant(license.license_name),
-          description: this.translateConstant(license.license_name + '_description'),
-        }));
-      },
     },
     methods: {
+      ...mapMutations({
+        setShowAboutLicenses: 'SET_SHOW_ABOUT_LICENSES',
+      }),
       translate(item) {
         if (item.id === MIXED_VALUE) {
           return this.$tr('mixed');
         }
         return (item.id && item.id !== '' && this.translateConstant(item.license_name)) || '';
-      },
-      toggleAboutLicenseDisplay() {
-        this.showAboutLicense = !this.showAboutLicense;
-      },
-      getLicenseUrl(license) {
-        const isCC = license.license_url.includes('creativecommons.org');
-        const language = window.languageCode || 'en';
-        return isCC ? `${license.license_url}deed.${language}` : license.license_url;
       },
     },
     $trs: {
@@ -240,6 +202,10 @@
 <style lang="scss" scoped>
 
   .with-trailing-input-icon {
+    /deep/ .v-input__append-inner {
+      margin-right: 32px;
+    }
+
     /deep/ .v-input__append-outer {
       position: absolute;
       right: 4px;
@@ -247,8 +213,7 @@
     }
 
     /deep/ .v-input__control > .v-input__slot {
-      min-width: 400px;
-      background: #f5f5f5 !important;
+      background: #e9e9e9 !important;
 
       &::before {
         border-color: rgba(0, 0, 0, 0.12) !important;

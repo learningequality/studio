@@ -9,6 +9,7 @@ let nodes;
 let store;
 let contentNodeActions;
 let generalActions;
+let generalGetters;
 
 const MIXED_VALUE = 'Mixed';
 
@@ -63,8 +64,12 @@ describe('EditSourceModal', () => {
     generalActions = {
       showSnackbarSimple: jest.fn(),
     };
+    generalGetters = {
+      isAboutLicensesModalOpen: () => false,
+    };
     store = new Vuex.Store({
       actions: generalActions,
+      getters: generalGetters,
       modules: {
         contentNode: {
           namespaced: true,
