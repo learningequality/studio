@@ -1,4 +1,4 @@
-<!-- eslint-disable kolibri/vue-no-undefined-string-uses -->
+
 <template>
 
   <KModal
@@ -98,7 +98,7 @@
       };
     },
     computed: {
-      ...mapGetters('contentNode', ['getContentNodes']),
+      ...mapGetters('contentNode', ['getContentNodes', 'getContentNode']),
       nodes() {
         return this.getContentNodes(this.nodeIds);
       },
@@ -109,11 +109,15 @@
         return Object.values(this.selectedValues).some(value => value.length > 0);
       },
       hasMixedCategories() {
-        const categories = this.nodes.map(node =>
-          Object.keys(node[this.field] || {}).filter(key => node[this.field][key])
-        );
-        const uniqueCategories = [...new Set(categories.flat())];
-        return uniqueCategories.length > 1;
+        const allSelectedCategories = new Set(Object.keys(this.selectedValues));
+        for (const categoryId of allSelectedCategories) {
+          const nodesWithThisCategory = this.selectedValues[categoryId].length;
+
+          if (nodesWithThisCategory < this.nodes.length) {
+            return true;
+          }
+        }
+        return false;
       },
       hasMixedCategoriesMessage() {
         // eslint-disable-next-line kolibri/vue-no-undefined-string-uses
@@ -160,10 +164,10 @@
         await Promise.all(
           this.nodes.map(node => {
             const fieldValue = {};
+            const currentNode = this.getContentNode(node.id);
             Object.entries(this.selectedValues).forEach(([key, value]) => {
-              if (value.includes(node.id)) {
-                fieldValue[key] = true;
-              }
+              const existingValue = currentNode[this.field][key] || false;
+              fieldValue[key] = existingValue || value.includes(node.id);
             });
             if (this.updateDescendants && node.kind === ContentKindsNames.TOPIC) {
               return this.updateContentNodeDescendants({
