@@ -32,6 +32,7 @@
                       <Checkbox
                         ref="checkbox"
                         class="mt-0 pt-0"
+                        :class="{ selectedIndeterminate: !selected && indeterminate }"
                         :inputValue="selected"
                         :indeterminate="indeterminate"
                         @input="goNextSelectionState"
@@ -301,6 +302,10 @@
   /deep/ .text-truncate {
     /* fix clipping of dangling characters */
     line-height: 1.3 !important;
+  }
+
+  /deep/ .selectedIndeterminate svg {
+    fill: gray !important;
   }
 
 </style>
