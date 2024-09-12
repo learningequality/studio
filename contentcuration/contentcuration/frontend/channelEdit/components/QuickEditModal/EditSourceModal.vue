@@ -2,7 +2,6 @@
 
   <div>
     <KModal
-      v-if="!isAboutLicensesModalOpen"
       :title="$tr('editAttribution')"
       :submitText="$tr('saveAction')"
       :cancelText="$tr('cancelAction')"
@@ -170,7 +169,6 @@
       /* eslint-enable  kolibri/vue-no-unused-properties */
     },
     computed: {
-      ...mapGetters(['isAboutLicensesModalOpen']),
       ...mapGetters('contentNode', ['getContentNodes']),
       ...mapFormGettersSetters(sourceKeys),
       nodes() {
