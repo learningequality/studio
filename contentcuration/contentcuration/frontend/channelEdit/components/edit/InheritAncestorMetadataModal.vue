@@ -10,10 +10,10 @@
     @cancel="closed = true"
   >
     <div>
-      <p v-if="parentHasInheritableMetadata">
-        {{ $tr('inheritMetadataDescription') }}
-      </p>
       <div>
+        <p v-if="parentHasNonLanguageMetadata">
+          {{ $tr('inheritMetadataDescription') }}
+        </p>
         <KCheckbox
           v-if="!!inheritableMetadataItems.categories"
           key="categories"
@@ -140,6 +140,11 @@
       },
       fieldsToInherit() {
         return Object.keys(this.inheritableMetadataItems).filter(field => this.checks[field]);
+      },
+      parentHasNonLanguageMetadata() {
+        return (
+          !isEmpty(this.categories) || !isEmpty(this.grade_levels) || !isEmpty(this.learner_needs)
+        );
       },
       parentHasInheritableMetadata() {
         return !isEmpty(this.inheritableMetadataItems);
