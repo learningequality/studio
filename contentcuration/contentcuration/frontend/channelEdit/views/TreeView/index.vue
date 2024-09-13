@@ -89,7 +89,7 @@
         <div class="mt-5 pl-3">
           <LoadingText v-if="loading" />
           <StudioTree
-            v-else
+            v-else-if="rootId"
             :treeId="rootId"
             :nodeId="rootId"
             :selectedNodeId="nodeId"
