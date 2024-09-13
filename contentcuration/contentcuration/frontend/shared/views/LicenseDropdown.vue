@@ -225,10 +225,16 @@
         this.showAboutLicense = !this.showAboutLicense;
       },
       getLicenseUrl(license) {
-        const url = new URL(license.license_url);
-        const isCC = allowedHosts.includes(url.hostname);
+        const { license_url } = license;
         const language = window.languageCode || 'en';
-        return isCC ? `${license.license_url}deed.${language}` : license.license_url;
+        try {
+          const url = new URL(license_url);
+          return allowedHosts.includes(url.hostname)
+            ? `${license_url}deed.${language}`
+            : license_url;
+        } catch {
+          return license_url;
+        }
       },
     },
     $trs: {
