@@ -31,9 +31,6 @@
       :inputHandler="(value) => { selectedValues = value }"
     ></slot>
 
-    <!-- <span v-if="error" class="red--text">
-      {{ error }}
-    </span> -->
   </KModal>
 
 </template>
