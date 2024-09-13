@@ -465,6 +465,12 @@
         return DropEffect.COPY;
       },
     },
+    watch: {
+      rootId: {
+        handler: 'reloadChannel',
+        immediate: true,
+      },
+    },
     methods: {
       ...mapActions('channel', ['deleteChannel']),
       handleDelete() {
@@ -490,6 +496,13 @@
       },
       trackClickEvent(eventLabel) {
         this.$analytics.trackClick('channel_editor_toolbar', eventLabel);
+      },
+      reloadChannel(id) {
+        if (!id) {
+          this.$store.dispatch('currentChannel/loadChannel').catch(error => {
+            throw new Error(error);
+          });
+        }
       },
     },
     $trs: {
