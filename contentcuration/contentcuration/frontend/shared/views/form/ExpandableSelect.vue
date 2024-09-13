@@ -50,6 +50,7 @@
           :key="option.value"
           :label="option.text"
           :checked="isSelected(option.value)"
+          :indeterminate="isIndeterminate(option.value)"
           data-test="option-checkbox"
           @change="value => setOption(option.value, value)"
         />
@@ -186,6 +187,12 @@
           return false;
         }
         return this.valueModel[value].length === this.availableItems.length;
+      },
+      isIndeterminate(value) {
+        if (!this.valueModel[value]) {
+          return false;
+        }
+        return this.valueModel[value].length < this.availableItems.length;
       },
       setOption(optionId, value) {
         if (value) {

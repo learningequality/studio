@@ -5,7 +5,7 @@
       <template #default="{ attach, menuProps }">
         <VAutocomplete
           :value="autocompleteValues"
-          :items="categoriesList"
+          :items="autocompleteOptions"
           :searchInput.sync="categoryText"
           :label="translateMetadataString('category')"
           box
@@ -81,6 +81,7 @@
         :label="option.text"
         :style="treeItemStyle(option)"
         :checked="isSelected(option.value)"
+        :indeterminate="isCheckboxIndeterminate(option.value)"
         @change="onChange(option.value)"
       />
       <p
@@ -100,6 +101,8 @@
   import { getSortedCategories } from 'shared/utils/helpers';
   import DropdownWrapper from 'shared/views/form/DropdownWrapper';
   import { constantsTranslationMixin, metadataTranslationMixin } from 'shared/mixins';
+
+  const MIXED = 'mixed';
 
   export default {
     name: 'CategoryOptions',
@@ -152,10 +155,28 @@
           this.$emit('input', value);
         },
       },
+      autocompleteOptions() {
+        const options = [...this.categoriesList];
+        if (this.expanded) {
+          // Just boolean maps can have indeterminate values
+          options.push({
+            value: MIXED,
+            text: this.$tr('mixedLabel'),
+            undeletable: true,
+          });
+        }
+        return options;
+      },
       autocompleteValues() {
         const selectedValues = Object.entries(this.selected)
           .filter(entry => entry[1].length === this.nodeIds.length)
           .map(([key]) => key);
+        if (
+          this.expanded &&
+          Object.values(this.selected).some(value => value.length < this.nodeIds.length)
+        ) {
+          selectedValues.push(MIXED);
+        }
         return selectedValues;
       },
       nested() {
@@ -195,6 +216,9 @@
         this.selected = {};
       },
       tooltipText(optionId) {
+        if (optionId === MIXED) {
+          return this.$tr('mixedLabel');
+        }
         const option = this.categoriesList.find(option => option.value === optionId);
         if (!option) {
           return '';
@@ -258,6 +282,15 @@
         });
         return nodeIds.size === this.nodeIds.length;
       },
+      isCheckboxIndeterminate(optionId) {
+        if (this.selected[optionId] && this.selected[optionId].length < this.nodeIds.length) {
+          return true;
+        }
+        return (
+          Object.keys(this.selected).some(selectedValue => selectedValue.startsWith(optionId)) &&
+          !this.isSelected(optionId)
+        );
+      },
       onChange(optionId) {
         if (this.isSelected(optionId)) {
           this.remove(optionId);
@@ -268,6 +301,7 @@
     },
     $trs: {
       noCategoryFoundText: 'Category not found',
+      mixedLabel: 'Mixed',
     },
   };
 

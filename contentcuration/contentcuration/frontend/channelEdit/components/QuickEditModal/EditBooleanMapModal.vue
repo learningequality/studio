@@ -1,10 +1,8 @@
-
 <template>
 
   <KModal
     :title="title"
     :submitText="$tr('saveAction')"
-    :submitDisabled="!canSave"
     :cancelText="$tr('cancelAction')"
     data-test="edit-booleanMap-modal"
     @submit="handleSave"
@@ -12,9 +10,6 @@
   >
     <p v-if="resourcesSelectedText.length > 0" data-test="resources-selected-message">
       {{ resourcesSelectedText }}
-    </p>
-    <p v-if="hasMixedCategories" data-test="mixed-categories-message">
-      {{ hasMixedCategoriesMessage }}
     </p>
     <template v-if="isDescendantsUpdatable && isTopicSelected">
       <KCheckbox
@@ -31,6 +26,9 @@
       :inputHandler="(value) => { selectedValues = value }"
     ></slot>
 
+    <span v-if="error" class="red--text">
+      {{ error }}
+    </span>
   </KModal>
 
 </template>
@@ -47,7 +45,6 @@
   import { mapGetters, mapActions } from 'vuex';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import { getInvalidText } from 'shared/utils/validation';
-  import commonStrings from 'shared/translator';
 
   export default {
     name: 'EditBooleanMapModal',
@@ -97,30 +94,12 @@
       };
     },
     computed: {
-      ...mapGetters('contentNode', ['getContentNodes', 'getContentNode']),
+      ...mapGetters('contentNode', ['getContentNodes']),
       nodes() {
         return this.getContentNodes(this.nodeIds);
       },
       isTopicSelected() {
         return this.nodes.some(node => node.kind === ContentKindsNames.TOPIC);
-      },
-      canSave() {
-        return Object.values(this.selectedValues).some(value => value.length > 0);
-      },
-      hasMixedCategories() {
-        const allSelectedCategories = new Set(Object.keys(this.selectedValues));
-        for (const categoryId of allSelectedCategories) {
-          const nodesWithThisCategory = this.selectedValues[categoryId].length;
-
-          if (nodesWithThisCategory < this.nodes.length) {
-            return true;
-          }
-        }
-        return false;
-      },
-      hasMixedCategoriesMessage() {
-        // eslint-disable-next-line kolibri/vue-no-undefined-string-uses
-        return commonStrings.$tr('addAdditionalCatgoriesDescription');
       },
     },
     watch: {
@@ -168,16 +147,19 @@
         }
       },
       async handleSave() {
+        this.validate();
+        if (this.error) {
+          return;
+        }
+
         await Promise.all(
-          this.nodes.map(async node => {
+          this.nodes.map(node => {
             const fieldValue = {};
-            const currentNode = this.getContentNode(node.id);
-
             Object.entries(this.selectedValues).forEach(([key, value]) => {
-              const existingValue = currentNode[this.field]?.[key] || false;
-              fieldValue[key] = existingValue || value.includes(node.id);
+              if (value.includes(node.id)) {
+                fieldValue[key] = true;
+              }
             });
-
             if (this.updateDescendants && node.kind === ContentKindsNames.TOPIC) {
               return this.updateContentNodeDescendants({
                 id: node.id,
