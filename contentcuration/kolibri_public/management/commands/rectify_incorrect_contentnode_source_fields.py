@@ -27,34 +27,21 @@ class Command(BaseCommand):
         main_trees_cte = With(
             (
                 Channel.objects.filter(
-                    deleted=False, last_published__isnull=False, main_tree__isnull=False
+                     main_tree__isnull=False
                 )
                 .annotate(channel_id=F("id"))
-                .values("channel_id", tree_id=F("main_tree__tree_id"))
+                .values("channel_id", "deleted", tree_id=F("main_tree__tree_id"))
             ),
             name="main_trees",
         )
 
-        source_original_node_cte = With(
-            (
-                Channel.objects.filter(main_tree__isnull=False)
-                .annotate(channel_id=F("id"))
-                .values("channel_id", tree_id=F("main_tree__tree_id"))
-            ),
-            name="source_original_nodes",
-        )
-
         nodes = main_trees_cte.join(
-            ContentNode.objects.filter(published=True),
+            ContentNode.objects.all(),
             tree_id=main_trees_cte.col.tree_id,
-        ).annotate(channel_id=main_trees_cte.col.channel_id)
-
-        parent_nodes = source_original_node_cte.join(
-            ContentNode.objects.all(), tree_id=source_original_node_cte.col.tree_id
-        ).annotate(channel_id=source_original_node_cte.col.channel_id)
+        ).annotate(channel_id=main_trees_cte.col.channel_id, deletd=main_trees_cte.col.deleted)
 
         original_source_nodes = (
-            parent_nodes.with_cte(source_original_node_cte)
+            nodes.with_cte(main_trees_cte)
             .filter(
                 node_id=OuterRef("original_source_node_id"),
             )
@@ -74,6 +61,7 @@ class Command(BaseCommand):
         # migration for all the nodes even if they are not published
         diff = (
             nodes.with_cte(main_trees_cte).filter(
+                deleted=False,  # we dont want the channel to be deleted or else we are fixing ghost nodes
                 source_node_id__isnull=False,
                 original_source_node_id__isnull=False,
                 modified__lt=filter_date
@@ -122,6 +110,10 @@ class Command(BaseCommand):
                 tree_id=tree_id, node_id=original_source_node_id
             )
 
+            base_channel = Channel.objects.get(pk=item['channel_id'])
+
+            to_be_republished = not (base_channel.main_tree.get_family().filter(changed=True).exists())
+
             if original_source_channel_id is not None and original_source_node.exists():
                 # original source node exists and its source fields dont match
                 # update the base node
@@ -134,5 +126,9 @@ class Command(BaseCommand):
                 if base_node[0].license != original_source_node[0].license:
                     base_node[0].license = original_source_node[0].license
                 base_node[0].save()
+
+                if to_be_republished and base_channel.public:
+                    # we would repbulsih the channel
+                    pass
             else:
                 continue
