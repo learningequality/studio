@@ -193,8 +193,8 @@
 
   .pagination-container {
     display: flex;
-    justify-content: flex-start;
-    margin: 4px;
+    justify-content: space-evenly;
+    margin: 32px;
   }
 
 </style>
