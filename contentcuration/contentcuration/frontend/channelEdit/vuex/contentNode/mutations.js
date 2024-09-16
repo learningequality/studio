@@ -138,3 +138,7 @@ export function SAVE_NEXT_STEPS(state, { mappings = [] } = {}) {
     ADD_PREVIOUS_STEP(state, mapping);
   }
 }
+
+export function SET_CONTENTNODES_COUNT(state, { id, assessment_item_count, resource_count }) {
+  Vue.set(state.contentNodesCountMap, id, { resource_count, assessment_item_count });
+}

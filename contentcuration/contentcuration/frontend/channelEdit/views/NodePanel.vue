@@ -111,10 +111,12 @@
       this.loadChildren({ parent: this.parentId }).then(childrenResponse => {
         this.loading = false;
         this.more = childrenResponse.more || null;
+        const children = childrenResponse?.results || [];
+        this.setContentNodesCount(children);
       });
     },
     methods: {
-      ...mapActions('contentNode', ['loadChildren', 'loadContentNodes']),
+      ...mapActions('contentNode', ['loadChildren', 'loadContentNodes', 'setContentNodesCount']),
       goToNodeDetail(nodeId) {
         if (
           this.$route.params.nodeId === this.parentId &&

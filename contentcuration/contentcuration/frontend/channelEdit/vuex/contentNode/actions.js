@@ -610,3 +610,10 @@ export async function checkSavingProgress(
 export function setQuickEditModal(context, open) {
   context.commit('SET_QUICK_EDIT_MODAL', open);
 }
+
+export function setContentNodesCount(context, nodes) {
+  for (const node of nodes) {
+    const { id, assessment_item_count, resource_count } = node;
+    context.commit('SET_CONTENTNODES_COUNT', { id, resource_count, assessment_item_count });
+  }
+}
