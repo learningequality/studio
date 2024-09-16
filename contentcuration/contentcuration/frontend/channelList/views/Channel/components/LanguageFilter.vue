@@ -36,6 +36,7 @@
         v-model="languages"
         :value="item.id"
         class="mb-0 mt-1 scroll-margin"
+        :labelDir="null"
       >
         <VTooltip bottom lazy>
           <template #activator="{ on }">
