@@ -6,7 +6,6 @@ from django.urls import reverse
 from le_utils.constants import content_kinds
 from le_utils.constants import file_formats
 from le_utils.constants import format_presets
-from mock import MagicMock
 
 from contentcuration import models
 from contentcuration.tests import testdata
@@ -15,6 +14,7 @@ from contentcuration.tests.viewsets.base import generate_create_event
 from contentcuration.tests.viewsets.base import generate_delete_event
 from contentcuration.tests.viewsets.base import generate_update_event
 from contentcuration.tests.viewsets.base import SyncTestMixin
+from contentcuration.viewsets.sync.constants import CONTENTNODE
 from contentcuration.viewsets.sync.constants import FILE
 
 
@@ -129,13 +129,16 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
 
         self.assertEqual(complete_except_no_file.complete, False)
 
-        models.Change.create_change = MagicMock()
-
         self.sync_changes(
             [generate_update_event(file.id, FILE, {"contentnode": complete_except_no_file.id}, channel_id=self.channel.id)],
         )
 
-        self.assertTrue(models.Change.create_change.called)
+        # We should see two Changes, one of them should be for the CONTENTNODE table
+        self.assertEqual(models.Change.objects.count(), 2)
+        self.assertEqual(
+            models.Change.objects.filter(table=CONTENTNODE).count(),
+            1
+        )
 
         complete_except_no_file.refresh_from_db()
 
