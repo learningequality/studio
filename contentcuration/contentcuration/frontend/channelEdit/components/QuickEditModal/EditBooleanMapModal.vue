@@ -1,8 +1,10 @@
+
 <template>
 
   <KModal
     :title="title"
     :submitText="$tr('saveAction')"
+    :submitDisabled="!canSave"
     :cancelText="$tr('cancelAction')"
     data-test="edit-booleanMap-modal"
     @submit="handleSave"
@@ -10,6 +12,9 @@
   >
     <p v-if="resourcesSelectedText.length > 0" data-test="resources-selected-message">
       {{ resourcesSelectedText }}
+    </p>
+    <p v-if="hasMixedCategories" data-test="mixed-categories-message">
+      {{ hasMixedCategoriesMessage }}
     </p>
     <template v-if="isDescendantsUpdatable && isTopicSelected">
       <KCheckbox
@@ -26,9 +31,6 @@
       :inputHandler="(value) => { selectedValues = value }"
     ></slot>
 
-    <span v-if="error" class="red--text">
-      {{ error }}
-    </span>
   </KModal>
 
 </template>
@@ -41,10 +43,10 @@
    * This component is a modal responsible for reusing the logic of saving
    * the edition of a boolean map field for multiple nodes.
    */
-  import isEqual from 'lodash/isEqual';
   import { mapGetters, mapActions } from 'vuex';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import { getInvalidText } from 'shared/utils/validation';
+  import commonStrings from 'shared/translator';
 
   export default {
     name: 'EditBooleanMapModal',
@@ -90,22 +92,41 @@
          * Where nodeIds is the id of the nodes that have the option selected
          */
         selectedValues: {},
-        changed: false,
       };
     },
     computed: {
-      ...mapGetters('contentNode', ['getContentNodes']),
+      ...mapGetters('contentNode', ['getContentNodes', 'getContentNode']),
       nodes() {
         return this.getContentNodes(this.nodeIds);
       },
       isTopicSelected() {
         return this.nodes.some(node => node.kind === ContentKindsNames.TOPIC);
       },
+      canSave() {
+        if (this.hasMixedCategories) {
+          return Object.values(this.selectedValues).some(value => value.length > 0);
+        }
+        return !this.error;
+      },
+      hasMixedCategories() {
+        const allSelectedCategories = new Set(Object.keys(this.selectedValues));
+        for (const categoryId of allSelectedCategories) {
+          const nodesWithThisCategory = this.selectedValues[categoryId].length;
+
+          if (nodesWithThisCategory < this.nodes.length) {
+            return true;
+          }
+        }
+        return false;
+      },
+      hasMixedCategoriesMessage() {
+        // eslint-disable-next-line kolibri/vue-no-undefined-string-uses
+        return commonStrings.$tr('addAdditionalCatgoriesDescription');
+      },
     },
     watch: {
-      selectedValues(newValue, oldValue) {
+      selectedValues() {
         this.validate();
-        this.changed = !isEqual(newValue, oldValue);
       },
     },
     created() {
@@ -121,18 +142,11 @@
       });
 
       this.selectedValues = optionsNodes;
-      // reset
-      this.$nextTick(() => {
-        this.changed = false;
-      });
     },
     methods: {
       ...mapActions('contentNode', ['updateContentNode', 'updateContentNodeDescendants']),
-      close(changed = false) {
-        this.$emit('close', {
-          changed: this.error ? false : changed,
-          updateDescendants: this.updateDescendants,
-        });
+      close() {
+        this.$emit('close');
       },
       validate() {
         if (this.validators && this.validators.length) {
@@ -147,19 +161,16 @@
         }
       },
       async handleSave() {
-        this.validate();
-        if (this.error) {
-          return;
-        }
-
         await Promise.all(
-          this.nodes.map(node => {
+          this.nodes.map(async node => {
             const fieldValue = {};
+            const currentNode = this.getContentNode(node.id);
+
             Object.entries(this.selectedValues).forEach(([key, value]) => {
-              if (value.includes(node.id)) {
-                fieldValue[key] = true;
-              }
+              const existingValue = currentNode[this.field]?.[key] || false;
+              fieldValue[key] = existingValue || value.includes(node.id);
             });
+
             if (this.updateDescendants && node.kind === ContentKindsNames.TOPIC) {
               return this.updateContentNodeDescendants({
                 id: node.id,
@@ -173,7 +184,7 @@
           })
         );
         this.$store.dispatch('showSnackbarSimple', this.confirmationMessage || '');
-        this.close(this.changed);
+        this.close();
       },
     },
     $trs: {
