@@ -108,25 +108,15 @@
         }
         return !this.error;
       },
-      hasMixedCategories() {
-        const allSelectedCategories = new Set(Object.keys(this.selectedValues));
-        for (const categoryId of allSelectedCategories) {
-          const nodesWithThisCategory = this.selectedValues[categoryId].length;
-
-          if (nodesWithThisCategory < this.nodes.length) {
-            return true;
-          }
-        }
-        return false;
-      },
       hasMixedCategoriesMessage() {
         // eslint-disable-next-line kolibri/vue-no-undefined-string-uses
         return commonStrings.$tr('addAdditionalCatgoriesDescription');
       },
     },
     watch: {
-      selectedValues() {
+      selectedValues(newValue, oldValue) {
         this.validate();
+        this.changed = !isEqual(newValue, oldValue);
       },
     },
     created() {
@@ -142,12 +132,23 @@
       });
 
       this.selectedValues = optionsNodes;
+        // reset
+        this.$nextTick(() => {
+        this.changed = false;
+      });
+      this.selectedValues = optionsNodes;
+      this.hasMixedCategories = Object.values(this.selectedValues).some(
+        (value) => value.length < this.nodes.length
+      );
     },
     methods: {
       ...mapActions('contentNode', ['updateContentNode', 'updateContentNodeDescendants']),
-      close() {
-        this.$emit('close');
-      },
+      close(changed = false) {
+          this.$emit('close', {
+            changed: this.error ? false : changed,
+            updateDescendants: this.updateDescendants,
+          });
+        },
       validate() {
         if (this.validators && this.validators.length) {
           this.error = getInvalidText(
@@ -165,18 +166,15 @@
           this.nodes.map(async node => {
             const fieldValue = {};
             const currentNode = this.getContentNode(node.id);
-
-            Object.entries(this.selectedValues).forEach(([key, value]) => {
-              const existingValue = currentNode[this.field]?.[key] || false;
-              fieldValue[key] = existingValue || value.includes(node.id);
-            });
-
-            if (this.updateDescendants && node.kind === ContentKindsNames.TOPIC) {
-              return this.updateContentNodeDescendants({
-                id: node.id,
-                [this.field]: fieldValue,
-              });
+            if (this.hasMixedCategories) {
+              Object.assign(fieldValue, currentNode[this.field] || {});
             }
+
+            Object.entries(this.selectedValues)
+              .filter(([key, value]) => value.length === this.nodeIds.length)
+              .forEach(([key]) => {
+                fieldValue[key] = true;
+              });
             return this.updateContentNode({
               id: node.id,
               [this.field]: fieldValue,
