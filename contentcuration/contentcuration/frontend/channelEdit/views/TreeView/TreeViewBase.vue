@@ -467,12 +467,19 @@
     },
     watch: {
       rootId: {
-        handler: 'reloadChannel',
+        handler(id) {
+          if (!id) {
+            this.loadChannel().catch(() => {
+              this.$store.dispatch('showSnackbarSimple', 'Failed to load channel');
+            });
+          }
+        },
         immediate: true,
       },
     },
     methods: {
       ...mapActions('channel', ['deleteChannel']),
+      ...mapActions('currentChannel', ['loadChannel']),
       handleDelete() {
         this.deleteChannel(this.currentChannel.id).then(() => {
           localStorage.snackbar = this.$tr('channelDeletedSnackbar');
@@ -496,13 +503,6 @@
       },
       trackClickEvent(eventLabel) {
         this.$analytics.trackClick('channel_editor_toolbar', eventLabel);
-      },
-      reloadChannel(id) {
-        if (!id) {
-          this.$store.dispatch('currentChannel/loadChannel').catch(error => {
-            throw new Error(error);
-          });
-        }
       },
     },
     $trs: {
