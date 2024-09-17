@@ -144,7 +144,7 @@
       });
     },
     methods: {
-      ...mapActions('contentNode', ['updateContentNode']),
+      ...mapActions('contentNode', ['updateContentNode', 'updateContentNodeDescendants']),
       close(changed = false) {
         this.$emit('close', {
           changed: this.error ? false : changed,
@@ -168,15 +168,22 @@
           this.nodes.map(async node => {
             const fieldValue = {};
             const currentNode = this.getContentNode(node.id);
+            // If we have mixed categories remain the old ones, and
+            // just add new categories if there are any
             if (this.hasMixedCategories) {
               Object.assign(fieldValue, currentNode[this.field] || {});
             }
-
             Object.entries(this.selectedValues)
               .filter(([value]) => value.length === this.nodeIds.length)
               .forEach(([key]) => {
                 fieldValue[key] = true;
               });
+            if (this.updateDescendants && node.kind === ContentKindsNames.TOPIC) {
+              return this.updateContentNodeDescendants({
+                id: node.id,
+                [this.field]: fieldValue,
+              });
+            }
             return this.updateContentNode({
               id: node.id,
               [this.field]: fieldValue,
