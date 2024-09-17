@@ -26,7 +26,10 @@
         />
       </template>
     </DropdownWrapper>
-    <p>
+    <p v-if="helpText" class="help">
+      {{ helpText }}
+    </p>
+    <p style="position: relative; top: -15px">
       <KButton
         class="info-link"
         appearance="basic-link"
@@ -36,7 +39,7 @@
       />
     </p>
     <div 
-      v-for="(licenseItem, index) in licences" 
+      v-for="(licenseItem, index) in licencesList" 
       v-show="showAboutLicense" 
       :key="index" 
       class="mb-4 mt-3"
@@ -135,6 +138,10 @@
         type: Boolean,
         default: false,
       },
+      helpText: {
+        type: String,
+        default: '',
+      },
     },
     data() {
       return {
@@ -206,7 +213,7 @@
           ? getLicenseDescriptionValidators().map(translateValidator)
           : [];
       },
-      licences() {
+      licencesList() {
         return LicensesList.filter(license => license.id).map(license => ({
           ...license,
           name: this.translateConstant(license.license_name),
@@ -275,6 +282,15 @@
         border-color: rgba(0, 0, 0, 0.3) !important;
       }
     }
+  }
+
+  .help {
+    position: relative;
+    top: -25px;
+    left: 10px;
+    margin-bottom: 0;
+    font-size: 12px;
+    color: var(--v-text-lighten4);
   }
 
 </style>
