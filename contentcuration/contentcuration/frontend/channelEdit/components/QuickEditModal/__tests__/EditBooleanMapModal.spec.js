@@ -32,7 +32,7 @@ const getOptionsValues = wrapper => {
   checkboxes.wrappers.forEach(checkbox => {
     const { label, checked } = checkbox.vm.$props || {};
     let value;
-     if (checked) {
+    if (checked) {
       value = CheckboxValue.CHECKED;
     } else {
       value = CheckboxValue.UNCHECKED;

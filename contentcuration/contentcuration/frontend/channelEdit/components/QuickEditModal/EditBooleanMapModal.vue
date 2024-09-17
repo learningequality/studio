@@ -46,7 +46,7 @@
   import isEqual from 'lodash/isEqual';
   import { mapGetters, mapActions } from 'vuex';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
-  import { getInvalidText  } from 'shared/utils/validation';
+  import { getInvalidText } from 'shared/utils/validation';
   import commonStrings from 'shared/translator';
 
   export default {
@@ -93,6 +93,7 @@
          * Where nodeIds is the id of the nodes that have the option selected
          */
         selectedValues: {},
+        changed: false,
         hasMixedCategories: false,
       };
     },
@@ -134,17 +135,16 @@
       });
 
       this.selectedValues = optionsNodes;
+      this.hasMixedCategories = Object.values(this.selectedValues).some(
+        value => value.length < this.nodes.length
+      );
       // reset
       this.$nextTick(() => {
         this.changed = false;
       });
-      this.selectedValues = optionsNodes;
-      this.hasMixedCategories = Object.values(this.selectedValues).some(
-        value => value.length < this.nodes.length
-      );
     },
     methods: {
-      ...mapActions('contentNode', ['updateContentNode', 'updateContentNodeDescendants']),
+      ...mapActions('contentNode', ['updateContentNode']),
       close(changed = false) {
         this.$emit('close', {
           changed: this.error ? false : changed,
@@ -173,7 +173,7 @@
             }
 
             Object.entries(this.selectedValues)
-              .filter(([key, value]) => value.length === this.nodeIds.length)
+              .filter(([value]) => value.length === this.nodeIds.length)
               .forEach(([key]) => {
                 fieldValue[key] = true;
               });
