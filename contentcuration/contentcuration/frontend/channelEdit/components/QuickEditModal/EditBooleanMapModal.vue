@@ -191,7 +191,7 @@
           })
         );
         this.$store.dispatch('showSnackbarSimple', this.confirmationMessage || '');
-        this.close();
+        this.close(this.changed);
       },
     },
     $trs: {
