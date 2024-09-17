@@ -101,7 +101,6 @@
   import DropdownWrapper from 'shared/views/form/DropdownWrapper';
   import { constantsTranslationMixin, metadataTranslationMixin } from 'shared/mixins';
 
-
   export default {
     name: 'CategoryOptions',
     components: { DropdownWrapper },
@@ -269,7 +268,6 @@
     },
     $trs: {
       noCategoryFoundText: 'Category not found',
-  
     },
   };
 

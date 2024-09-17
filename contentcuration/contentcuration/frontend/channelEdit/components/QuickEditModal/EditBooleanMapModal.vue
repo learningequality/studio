@@ -43,9 +43,10 @@
    * This component is a modal responsible for reusing the logic of saving
    * the edition of a boolean map field for multiple nodes.
    */
+  import isEqual from 'lodash/isEqual';
   import { mapGetters, mapActions } from 'vuex';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
-  import { getInvalidText } from 'shared/utils/validation';
+  import { getInvalidText  } from 'shared/utils/validation';
   import commonStrings from 'shared/translator';
 
   export default {
@@ -92,6 +93,7 @@
          * Where nodeIds is the id of the nodes that have the option selected
          */
         selectedValues: {},
+        hasMixedCategories: false,
       };
     },
     computed: {
@@ -132,23 +134,23 @@
       });
 
       this.selectedValues = optionsNodes;
-        // reset
-        this.$nextTick(() => {
+      // reset
+      this.$nextTick(() => {
         this.changed = false;
       });
       this.selectedValues = optionsNodes;
       this.hasMixedCategories = Object.values(this.selectedValues).some(
-        (value) => value.length < this.nodes.length
+        value => value.length < this.nodes.length
       );
     },
     methods: {
       ...mapActions('contentNode', ['updateContentNode', 'updateContentNodeDescendants']),
       close(changed = false) {
-          this.$emit('close', {
-            changed: this.error ? false : changed,
-            updateDescendants: this.updateDescendants,
-          });
-        },
+        this.$emit('close', {
+          changed: this.error ? false : changed,
+          updateDescendants: this.updateDescendants,
+        });
+      },
       validate() {
         if (this.validators && this.validators.length) {
           this.error = getInvalidText(
