@@ -93,8 +93,8 @@
        */
       labelDir: {
         type: String,
-        default: "auto"
-      }
+        default: 'auto',
+      },
     },
     computed: {
       isChecked: {
