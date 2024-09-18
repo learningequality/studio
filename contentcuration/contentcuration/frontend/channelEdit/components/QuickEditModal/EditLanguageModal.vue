@@ -42,6 +42,7 @@
         v-model="selectedLanguage"
         :buttonValue="language.id"
         :label="languageText(language)"
+        :labelDir="null"
       />
       <p
         v-if="!languageOptions.length"

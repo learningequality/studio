@@ -8,6 +8,7 @@
     :disabled="disabled"
     :description="description"
     :checked="isChecked"
+    :labelDir="labelDir"
     @change="handleChange"
   >
     <slot></slot>
@@ -85,6 +86,14 @@
       inputValue: {
         type: [Array, Boolean, Number, String, Object],
         default: false,
+      },
+      /**
+       * RTL dir of the text label
+       * Options: 'auto', 'ltr', 'rtl', null.
+       */
+      labelDir: {
+        type: String,
+        default: 'auto',
       },
     },
     computed: {
