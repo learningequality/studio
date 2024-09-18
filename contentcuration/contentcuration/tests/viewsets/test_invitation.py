@@ -286,10 +286,11 @@ class CRUDTestCase(StudioAPITestCase):
         response = self.client.post(reverse("invitation-accept", kwargs={"pk": invitation.id}))
         self.assertEqual(response.status_code, 200, response.content)
         try:
-            models.Invitation.objects.get(id=invitation.id)
+            invitation = models.Invitation.objects.get(id=invitation.id)
         except models.Invitation.DoesNotExist:
             self.fail("Invitation was deleted")
 
+        self.assertTrue(invitation.accepted)
         self.assertTrue(self.channel.editors.filter(pk=self.invited_user.id).exists())
         self.assertTrue(
             models.Invitation.objects.filter(
