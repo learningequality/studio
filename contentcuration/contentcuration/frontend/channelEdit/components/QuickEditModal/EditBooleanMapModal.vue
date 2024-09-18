@@ -107,7 +107,9 @@
       },
       canSave() {
         if (this.hasMixedCategories) {
-          return Object.values(this.selectedValues).some(value => value.length === this.nodes.length);
+          return Object.values(this.selectedValues).some(
+            value => value.length === this.nodes.length
+          );
         }
         return !this.error;
       },
