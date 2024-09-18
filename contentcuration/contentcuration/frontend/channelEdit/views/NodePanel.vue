@@ -47,7 +47,7 @@
     </VList>
     <div class="pagination-container">
       <KButton v-if="displayShowMoreButton" :disabled="moreLoading" @click="loadMore">
-        {{ toggleTextStrings.$tr('more') }}
+        {{ $tr('showMore') }}
       </KButton>
     </div>
   </div>
@@ -62,8 +62,6 @@
   import { RouteNames } from '../constants';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import LoadingText from 'shared/views/LoadingText';
-  import ToggleText from 'shared/views/ToggleText';
-  import { crossComponentTranslator } from 'shared/i18n';
 
   export default {
     name: 'NodePanel',
@@ -88,7 +86,6 @@
         loading: false,
         more: null,
         moreLoading: false,
-        toggleTextStrings: crossComponentTranslator(ToggleText),
       };
     },
     computed: {
@@ -199,7 +196,6 @@
       emptyTopicText: 'Nothing in this folder yet',
       emptyChannelText: 'Click "ADD" to start building your channel',
       emptyChannelSubText: 'Create, upload, or import resources from other channels',
-      /* eslint-disable kolibri/vue-no-unused-translations */
       showMore: 'Show more',
     },
   };
