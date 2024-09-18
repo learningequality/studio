@@ -33,7 +33,7 @@
               </span>
               <ActionLink
                 class="mx-2"
-                :disabled="searchIsNotEmpty || currentSearchSaved"
+                :disabled="currentSearchSaved"
                 :text="currentSearchSaved ? $tr('searchSavedSnackbar') : $tr('saveSearchAction')"
                 @click="handleClickSaveSearch"
               />

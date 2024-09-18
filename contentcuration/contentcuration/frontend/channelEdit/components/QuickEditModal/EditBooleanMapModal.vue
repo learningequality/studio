@@ -1,8 +1,10 @@
+
 <template>
 
   <KModal
     :title="title"
     :submitText="$tr('saveAction')"
+    :submitDisabled="!canSave"
     :cancelText="$tr('cancelAction')"
     data-test="edit-booleanMap-modal"
     @submit="handleSave"
@@ -10,6 +12,9 @@
   >
     <p v-if="resourcesSelectedText.length > 0" data-test="resources-selected-message">
       {{ resourcesSelectedText }}
+    </p>
+    <p v-if="hasMixedCategories" data-test="mixed-categories-message">
+      {{ hasMixedCategoriesMessage }}
     </p>
     <template v-if="isDescendantsUpdatable && isTopicSelected">
       <KCheckbox
@@ -26,9 +31,6 @@
       :inputHandler="(value) => { selectedValues = value }"
     ></slot>
 
-    <span v-if="error" class="red--text">
-      {{ error }}
-    </span>
   </KModal>
 
 </template>
@@ -45,6 +47,7 @@
   import { mapGetters, mapActions } from 'vuex';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import { getInvalidText } from 'shared/utils/validation';
+  import commonStrings from 'shared/translator';
 
   export default {
     name: 'EditBooleanMapModal',
@@ -91,15 +94,26 @@
          */
         selectedValues: {},
         changed: false,
+        hasMixedCategories: false,
       };
     },
     computed: {
-      ...mapGetters('contentNode', ['getContentNodes']),
+      ...mapGetters('contentNode', ['getContentNodes', 'getContentNode']),
       nodes() {
         return this.getContentNodes(this.nodeIds);
       },
       isTopicSelected() {
         return this.nodes.some(node => node.kind === ContentKindsNames.TOPIC);
+      },
+      canSave() {
+        if (this.hasMixedCategories) {
+          return Object.values(this.selectedValues).some(value => value.length > 0);
+        }
+        return !this.error;
+      },
+      hasMixedCategoriesMessage() {
+        // eslint-disable-next-line kolibri/vue-no-undefined-string-uses
+        return commonStrings.$tr('addAdditionalCatgoriesDescription');
       },
     },
     watch: {
@@ -121,6 +135,9 @@
       });
 
       this.selectedValues = optionsNodes;
+      this.hasMixedCategories = Object.values(this.selectedValues).some(
+        value => value.length < this.nodes.length
+      );
       // reset
       this.$nextTick(() => {
         this.changed = false;
@@ -147,19 +164,20 @@
         }
       },
       async handleSave() {
-        this.validate();
-        if (this.error) {
-          return;
-        }
-
         await Promise.all(
-          this.nodes.map(node => {
+          this.nodes.map(async node => {
             const fieldValue = {};
-            Object.entries(this.selectedValues).forEach(([key, value]) => {
-              if (value.includes(node.id)) {
+            const currentNode = this.getContentNode(node.id);
+            // If we have mixed categories remain the old ones, and
+            // just add new categories if there are any
+            if (this.hasMixedCategories) {
+              Object.assign(fieldValue, currentNode[this.field] || {});
+            }
+            Object.entries(this.selectedValues)
+              .filter(([value]) => value.length === this.nodeIds.length)
+              .forEach(([key]) => {
                 fieldValue[key] = true;
-              }
-            });
+              });
             if (this.updateDescendants && node.kind === ContentKindsNames.TOPIC) {
               return this.updateContentNodeDescendants({
                 id: node.id,
