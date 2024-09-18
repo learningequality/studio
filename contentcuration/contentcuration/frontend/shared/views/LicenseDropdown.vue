@@ -284,6 +284,7 @@
     }
   }
 
+  // Positions help text beneath the license dropdown
   .help {
     position: relative;
     top: -25px;
