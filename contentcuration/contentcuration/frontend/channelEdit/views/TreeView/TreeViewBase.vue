@@ -465,8 +465,21 @@
         return DropEffect.COPY;
       },
     },
+    watch: {
+      rootId: {
+        handler(id) {
+          if (!id) {
+            this.loadChannel().catch(() => {
+              this.$store.dispatch('showSnackbarSimple', 'Failed to load channel');
+            });
+          }
+        },
+        immediate: true,
+      },
+    },
     methods: {
       ...mapActions('channel', ['deleteChannel']),
+      ...mapActions('currentChannel', ['loadChannel']),
       handleDelete() {
         this.deleteChannel(this.currentChannel.id).then(() => {
           localStorage.snackbar = this.$tr('channelDeletedSnackbar');
