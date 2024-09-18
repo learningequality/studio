@@ -281,11 +281,11 @@
         switch (this.node.kind) {
           case ContentKindsNames.TOPIC:
             return this.$tr('resources', {
-              value: count.resource_count || 0,
+              value: count?.resource_count || 0,
             });
           case ContentKindsNames.EXERCISE:
             return this.$tr('questions', {
-              value: count.assessment_item_count || 0,
+              value: count?.assessment_item_count || 0,
             });
         }
 

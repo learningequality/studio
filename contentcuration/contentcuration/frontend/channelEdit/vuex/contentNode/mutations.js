@@ -139,6 +139,22 @@ export function SAVE_NEXT_STEPS(state, { mappings = [] } = {}) {
   }
 }
 
+/**
+ * Saves the content node count to vuex state.
+ * @param state - The vuex state
+ * @param id - The content node id
+ * @param assessment_item_count - The count of assessment items
+ * @param resource_count - The count of resources
+ */
 export function SET_CONTENTNODES_COUNT(state, { id, assessment_item_count, resource_count }) {
   Vue.set(state.contentNodesCountMap, id, { resource_count, assessment_item_count });
+}
+
+/**
+ * Clears all content node data (nodes and associated counts) from the vuex state.
+ * @param state - The vuex state
+ */
+export function CLEAR_CONTENTNODES(state) {
+  state.contentNodesMap = {};
+  state.contentNodesCountMap = {};
 }

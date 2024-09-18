@@ -617,3 +617,10 @@ export function setContentNodesCount(context, nodes) {
     context.commit('SET_CONTENTNODES_COUNT', { id, resource_count, assessment_item_count });
   }
 }
+
+export function clearContentNodes(context) {
+  return new Promise(resolve => {
+    context.commit('CLEAR_CONTENTNODES');
+    resolve(true);
+  });
+}

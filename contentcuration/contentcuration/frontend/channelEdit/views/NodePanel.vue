@@ -111,15 +111,24 @@
     },
     created() {
       this.loading = true;
-      this.loadChildren({ parent: this.parentId }).then(childrenResponse => {
-        this.loading = false;
-        this.more = childrenResponse.more || null;
-        const children = childrenResponse?.results || [];
-        this.setContentNodesCount(children);
+      this.clearContentNodes().then(success => {
+        if (success) {
+          this.loadChildren({ parent: this.parentId }).then(childrenResponse => {
+            this.loading = false;
+            this.more = childrenResponse.more || null;
+            const children = childrenResponse?.results || [];
+            this.setContentNodesCount(children);
+          });
+        }
       });
     },
     methods: {
-      ...mapActions('contentNode', ['loadChildren', 'loadContentNodes', 'setContentNodesCount']),
+      ...mapActions('contentNode', [
+        'loadChildren',
+        'loadContentNodes',
+        'setContentNodesCount',
+        'clearContentNodes',
+      ]),
       goToNodeDetail(nodeId) {
         if (
           this.$route.params.nodeId === this.parentId &&
