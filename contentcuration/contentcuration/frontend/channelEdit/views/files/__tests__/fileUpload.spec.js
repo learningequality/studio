@@ -71,9 +71,9 @@ describe('fileUpload', () => {
   });
   describe('computed', () => {
     it('should map the files to the correct presets', () => {
-      expect(wrapper.vm.primaryFileMapping[0].file.id).toBe('file-3');
-      expect(wrapper.vm.primaryFileMapping[1].file.id).toBe('file-1');
-      expect(wrapper.vm.primaryFileMapping).toHaveLength(2);
+      expect(wrapper.vm.primaryFileMapping[1].file.id).toBe('file-3');
+      expect(wrapper.vm.primaryFileMapping[2].file.id).toBe('file-1');
+      expect(wrapper.vm.primaryFileMapping).toHaveLength(3);
     });
     it('should disallow file removal if there is only one primary file', () => {
       const testFiles2 = [
@@ -95,7 +95,7 @@ describe('fileUpload', () => {
   describe('methods', () => {
     let uploadItem;
     beforeEach(() => {
-      uploadItem = wrapper.findAll(FileUploadItem).at(1);
+      uploadItem = wrapper.findAll(FileUploadItem).at(2);
     });
     it('should automatically select the first file on load', () => {
       expect(wrapper.vm.selected).toBe('file-3');

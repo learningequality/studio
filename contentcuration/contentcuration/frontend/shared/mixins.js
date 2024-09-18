@@ -117,6 +117,7 @@ export const constantStrings = createTranslator('ConstantStrings', {
   mp3: 'MP3 audio',
   pdf: 'PDF document',
   epub: 'EPub document',
+  bloompub: 'BloomPub document',
   jpg: 'JPG image',
   jpeg: 'JPEG image',
   png: 'PNG image',
