@@ -2,9 +2,11 @@ import Vue from 'vue';
 import isEmpty from 'lodash/isEmpty';
 import { NEW_OBJECT } from 'shared/constants';
 import { mergeMapItem } from 'shared/vuex/utils';
+import { cleanBooleanMaps } from 'shared/utils/helpers';
 import { applyMods } from 'shared/data/applyRemoteChanges';
 
 export function ADD_CONTENTNODE(state, contentNode) {
+  cleanBooleanMaps(contentNode);
   state.contentNodesMap = mergeMapItem(state.contentNodesMap, contentNode);
 }
 
@@ -18,7 +20,9 @@ export function UPDATE_CONTENTNODE_FROM_INDEXEDDB(state, { id, ...updates }) {
   if (id && state.contentNodesMap[id]) {
     // Need to do object spread to return a new object for setting in the map
     // otherwise nested changes will not trigger reactive updates
-    Vue.set(state.contentNodesMap, id, { ...applyMods(state.contentNodesMap[id], updates) });
+    const contentNode = { ...applyMods(state.contentNodesMap[id], updates) };
+    cleanBooleanMaps(contentNode);
+    Vue.set(state.contentNodesMap, id, contentNode);
   }
 }
 
@@ -72,6 +76,22 @@ export function TOGGLE_EXPANSION(state, id) {
 
 export function SET_MOVE_NODES(state, ids) {
   state.moveNodes = ids;
+}
+
+export function ADD_INHERITING_NODE(state, node) {
+  state.inheritingNodes = (state.inheritingNodes || []).concat(node);
+}
+
+export function CLEAR_INHERITING_NODES(state, ids) {
+  if (!state.inheritingNodes) {
+    return;
+  }
+  const nodes = state.inheritingNodes.filter(n => !ids.includes(n.id));
+  state.inheritingNodes = nodes.length ? nodes : null;
+}
+
+export function SET_QUICK_EDIT_MODAL(state, quickEditModalOpen) {
+  state.quickEditModalOpen = quickEditModalOpen;
 }
 
 /**

@@ -51,7 +51,6 @@ from search.utils import get_fts_annotated_contentnode_qs
 
 from contentcuration import models as ccmodels
 from contentcuration.decorators import delay_user_storage_calculation
-from contentcuration.statistics import record_publish_stats
 from contentcuration.utils.cache import delete_public_channel_cache_keys
 from contentcuration.utils.files import create_thumbnail_from_base64
 from contentcuration.utils.files import get_thumbnail_encoding
@@ -144,6 +143,7 @@ def create_content_database(channel, force, user_id, force_exercises, progress_t
             user_id=user_id,
             force_exercises=force_exercises,
             progress_tracker=progress_tracker,
+            inherit_metadata=bool(channel.ricecooker_version),
         )
         tree_mapper.map_nodes()
         kolibri_channel = map_channel_to_kolibri_channel(channel)
@@ -200,6 +200,7 @@ class TreeMapper:
         user_id=None,
         force_exercises=False,
         progress_tracker=None,
+        inherit_metadata=False,
     ):
         if not root_node.is_publishable():
             raise ChannelIncompleteError("Attempted to publish a channel with an incomplete root node or no resources")
@@ -214,6 +215,7 @@ class TreeMapper:
         self.channel_name = channel_name
         self.user_id = user_id
         self.force_exercises = force_exercises
+        self.inherit_metadata = inherit_metadata
 
     def _node_completed(self):
         if self.progress_tracker:
@@ -221,6 +223,26 @@ class TreeMapper:
 
     def map_nodes(self):
         self.recurse_nodes(self.root_node, {})
+
+    def _gather_inherited_metadata(self, node, inherited_fields):
+        metadata = {}
+
+        for field in inheritable_map_fields:
+            metadata[field] = {}
+            inherited_keys = (inherited_fields.get(field) or {}).keys() if self.inherit_metadata else []
+            own_keys = (getattr(node, field) or {}).keys()
+            # Get a list of all keys in reverse order of length so we can remove any less specific values
+            all_keys = sorted(set(inherited_keys).union(set(own_keys)), key=len, reverse=True)
+            for key in all_keys:
+                if not any(k != key and k.startswith(key) for k in all_keys):
+                    metadata[field][key] = True
+
+        for field in inheritable_simple_value_fields:
+            if self.inherit_metadata and field in inherited_fields:
+                metadata[field] = inherited_fields[field]
+            if getattr(node, field):
+                metadata[field] = getattr(node, field)
+        return metadata
 
     def recurse_nodes(self, node, inherited_fields):  # noqa C901
         logging.debug("Mapping node with id {id}".format(id=node.pk))
@@ -239,23 +261,7 @@ class TreeMapper:
                     logging.warning("Unable to parse exercise {id} mastery model: {error}".format(id=node.pk, error=str(e)))
                     return
 
-            metadata = {}
-
-            for field in inheritable_map_fields:
-                metadata[field] = {}
-                inherited_keys = (inherited_fields.get(field) or {}).keys()
-                own_keys = (getattr(node, field) or {}).keys()
-                # Get a list of all keys in reverse order of length so we can remove any less specific values
-                all_keys = sorted(set(inherited_keys).union(set(own_keys)), key=len, reverse=True)
-                for key in all_keys:
-                    if not any(k != key and k.startswith(key) for k in all_keys):
-                        metadata[field][key] = True
-
-            for field in inheritable_simple_value_fields:
-                if field in inherited_fields:
-                    metadata[field] = inherited_fields[field]
-                if getattr(node, field):
-                    metadata[field] = getattr(node, field)
+            metadata = self._gather_inherited_metadata(node, inherited_fields)
 
             kolibrinode = create_bare_contentnode(node, self.default_language, self.channel_id, self.channel_name, metadata)
 
@@ -950,8 +956,6 @@ def publish_channel(
 
         # use SQLite backup API to put DB into archives folder.
         # Then we can use the empty db name to have SQLite use a temporary DB (https://www.sqlite.org/inmemorydb.html)
-
-        record_publish_stats(channel)
 
         if progress_tracker:
             progress_tracker.track(100)

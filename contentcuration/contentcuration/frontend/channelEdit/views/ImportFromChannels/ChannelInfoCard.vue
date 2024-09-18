@@ -1,6 +1,6 @@
 <template>
 
-  <VCard :to="channelRoute">
+  <VCard hover :to="channelRoute">
     <VCardTitle>
       <VLayout row wrap>
         <VFlex lg2 md4 sm5 xs12 class="px-3">
@@ -11,9 +11,9 @@
               :encoding="channel.thumbnail_encoding"
               style="width: 100%;"
             />
-            <Icon v-else size="80px" class="channel-icon">
+            <VIconWrapper v-else size="80px" class="channel-icon">
               apps
-            </Icon>
+            </VIconWrapper>
           </VLayout>
         </VFlex>
 
@@ -113,11 +113,6 @@
 
   .v-card {
     cursor: pointer;
-
-    &:hover {
-      /* stylelint-disable-next-line custom-property-pattern */
-      background-color: var(--v-greyBackground-base);
-    }
   }
 
 </style>

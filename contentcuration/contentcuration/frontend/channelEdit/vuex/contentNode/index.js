@@ -15,6 +15,18 @@ export default {
       contentNodesMap: {},
       expandedNodes,
 
+      /**
+       * Object to store information about the current quick edit modal opened.
+       * Making this part of the vuex store as the quick edit modal can be opened
+       * from multiple places and deep in the tree.
+       *
+       * This object contains the following properties:
+       * - nodeIds: the ids of the nodes to be edited
+       * - modal: The name of the quick edit modal being
+       *          opened (from the "QuickEditModals" object in constants.js)
+       */
+      quickEditModalOpen: null,
+
       /*
         Making this part of the vuex store as it seems like the cleanest solution for
         managing moving nodes. Alternative solutions are:
@@ -23,6 +35,13 @@ export default {
       */
       moveNodes: [],
 
+      /*
+        Adding this to the vuex store to only need to manage ancestor inheritance
+        in the edit modal, and in the topic view. This state is only used for topic view handling,
+        so that node moving, and copying both trigger in the inheritance logic,
+        via the multiple means that these can all be triggered.
+      */
+      inheritingNodes: null,
       /**
        * Here we denormalize our prerequisite data in order to
        * allow simple forwards/backwards lookups in our graph

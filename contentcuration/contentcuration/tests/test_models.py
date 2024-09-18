@@ -23,9 +23,12 @@ from contentcuration.models import Embeddings
 from contentcuration.models import EmbeddingsContentNode
 from contentcuration.models import File
 from contentcuration.models import FILE_DURATION_CONSTRAINT
+from contentcuration.models import FlagFeedbackEvent
 from contentcuration.models import generate_object_storage_name
 from contentcuration.models import Invitation
 from contentcuration.models import object_storage_name
+from contentcuration.models import RecommendationsEvent
+from contentcuration.models import RecommendationsInteractionEvent
 from contentcuration.models import User
 from contentcuration.models import UserHistory
 from contentcuration.tests import testdata
@@ -163,7 +166,7 @@ class ChannelTestCase(PermissionQuerysetTestCase):
     def test_filter_view_queryset__public_channel__deleted(self):
         channel = self.public_channel
         channel.deleted = True
-        channel.save()
+        channel.save(actor_id=self.admin_user.id)
 
         queryset = Channel.filter_view_queryset(self.base_queryset, user=self.forbidden_user)
         self.assertQuerysetDoesNotContain(queryset, pk=channel.id)
@@ -814,7 +817,7 @@ class UserTestCase(StudioTestCase):
         user_b = self._create_user("b@tester.com")
 
         # Create a sole editor non-public channel.
-        sole_editor_channel = Channel.objects.create(name="sole-editor")
+        sole_editor_channel = Channel.objects.create(name="sole-editor", actor_id=user_a.id)
         sole_editor_channel.editors.add(user_a)
 
         # Create sole-editor channel nodes.
@@ -942,18 +945,20 @@ class ChannelHistoryTestCase(StudioTestCase):
         self.channel = testdata.channel()
 
     def test_mark_channel_created(self):
-        self.assertEqual(0, self.channel.history.filter(action=channel_history.CREATION).count())
-        self.channel.mark_created(self.admin_user)
-        self.assertEqual(1, self.channel.history.filter(actor=self.admin_user, action=channel_history.CREATION).count())
+        self.assertEqual(1, self.channel.history.filter(action=channel_history.CREATION).count())
 
     def test_mark_channel_deleted(self):
         self.assertEqual(0, self.channel.deletion_history.count())
-        self.channel.mark_deleted(self.admin_user)
+        self.channel.deleted = True
+        self.channel.save(actor_id=self.admin_user.id)
         self.assertEqual(1, self.channel.deletion_history.filter(actor=self.admin_user).count())
 
     def test_mark_channel_recovered(self):
         self.assertEqual(0, self.channel.history.filter(actor=self.admin_user, action=channel_history.RECOVERY).count())
-        self.channel.mark_recovered(self.admin_user)
+        self.channel.deleted = True
+        self.channel.save(actor_id=self.admin_user.id)
+        self.channel.deleted = False
+        self.channel.save(actor_id=self.admin_user.id)
         self.assertEqual(1, self.channel.history.filter(actor=self.admin_user, action=channel_history.RECOVERY).count())
 
     def test_prune(self):
@@ -964,6 +969,7 @@ class ChannelHistoryTestCase(StudioTestCase):
             testdata.channel()
         ]
         last_history_ids = []
+        ChannelHistory.objects.all().delete()
 
         self.assertEqual(0, ChannelHistory.objects.count())
 
@@ -1030,3 +1036,92 @@ class EmbeddingsTestCase(StudioTestCase):
         # Get the nearest neighbor of [2, 3] which is [2, 2].
         closest_embedding = list(Embeddings.objects.order_by(L2Distance('embedding', [2, 3]))[1:2])[0]
         self.assertTrue(np.array_equal(closest_embedding.embedding, np.array([2, 2])))
+
+
+class FeedbackModelTests(StudioTestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        super(FeedbackModelTests, cls).setUpClass()
+
+    def setUp(self):
+        super(FeedbackModelTests, self).setUp()
+        self.user = testdata.user()
+
+    def _create_base_feedback_data(self, context, contentnode_id, content_id):
+        base_feedback_data = {
+            'context': context,
+            'contentnode_id': contentnode_id,
+            'content_id': content_id,
+        }
+        return base_feedback_data
+
+    def _create_recommendation_event(self):
+        channel = testdata.channel()
+        node_where_import_was_initiated = testdata.node({"kind_id": content_kinds.TOPIC, "title": "recomendations provided here"})
+        base_feedback_data = self._create_base_feedback_data(
+            {'model_version': 1, 'breadcrums': "#Title#->Random"},
+            node_where_import_was_initiated.id,
+            node_where_import_was_initiated.content_id
+        )
+        recommendations_event = RecommendationsEvent.objects.create(
+            user=self.user,
+            target_channel_id=channel.id,
+            time_hidden=timezone.now(),
+            content=[{'content_id': str(uuid.uuid4()), 'node_id': str(uuid.uuid4()), 'channel_id': str(uuid.uuid4()), 'score': 4}],
+            **base_feedback_data
+        )
+
+        return recommendations_event
+
+    def test_create_flag_feedback_event(self):
+        channel = testdata.channel("testchannel")
+        flagged_node = testdata.node({"kind_id": content_kinds.TOPIC, "title": "SuS ContentNode"})
+        base_feedback_data = self._create_base_feedback_data(
+            {'spam': 'Spam or misleading'},
+            flagged_node.id,
+            flagged_node.content_id
+        )
+        flag_feedback_event = FlagFeedbackEvent.objects.create(
+            user=self.user,
+            target_channel_id=channel.id,
+            **base_feedback_data
+        )
+        self.assertEqual(flag_feedback_event.user, self.user)
+        self.assertEqual(flag_feedback_event.context['spam'], 'Spam or misleading')
+
+    def test_create_recommendations_interaction_event(self):
+        # This represents a node that was recommended by the model and was interacted by user!
+        recommended_node = testdata.node({"kind_id": content_kinds.TOPIC, "title": "This node was recommended by the model"})
+        base_feedback_data = self._create_base_feedback_data(
+            {"comment": "explicit reason given by user why he rejected this node!"},
+            recommended_node.id,
+            recommended_node.content_id
+            )
+        fk = self._create_recommendation_event().id
+        rec_interaction_event = RecommendationsInteractionEvent.objects.create(
+            feedback_type='rejected',
+            feedback_reason='some predefined reasons like (not related)',
+            recommendation_event_id=fk,
+            **base_feedback_data
+        )
+        self.assertEqual(rec_interaction_event.feedback_type, 'rejected')
+        self.assertEqual(rec_interaction_event.feedback_reason, 'some predefined reasons like (not related)')
+
+    def test_create_recommendations_event(self):
+        channel = testdata.channel()
+        node_where_import_was_initiated = testdata.node({"kind_id": content_kinds.TOPIC, "title": "recomendations provided here"})
+        base_feedback_data = self._create_base_feedback_data(
+            {'model_version': 1, 'breadcrums': "#Title#->Random"},
+            node_where_import_was_initiated.id,
+            node_where_import_was_initiated.content_id
+        )
+        recommendations_event = RecommendationsEvent.objects.create(
+            user=self.user,
+            target_channel_id=channel.id,
+            time_hidden=timezone.now(),
+            content=[{'content_id': str(uuid.uuid4()), 'node_id': str(uuid.uuid4()), 'channel_id': str(uuid.uuid4()), 'score': 4}],
+            **base_feedback_data
+        )
+        self.assertEqual(len(recommendations_event.content), 1)
+        self.assertEqual(recommendations_event.content[0]['score'], 4)

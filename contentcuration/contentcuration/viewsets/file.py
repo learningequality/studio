@@ -9,6 +9,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from contentcuration.models import AssessmentItem
+from contentcuration.models import Change
 from contentcuration.models import ContentNode
 from contentcuration.models import File
 from contentcuration.models import generate_object_storage_name
@@ -20,11 +21,13 @@ from contentcuration.utils.user import calculate_user_storage
 from contentcuration.viewsets.base import BulkDeleteMixin
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
-from contentcuration.viewsets.base import BulkUpdateMixin
 from contentcuration.viewsets.base import ReadOnlyValuesViewset
 from contentcuration.viewsets.base import RequiredFilterSet
+from contentcuration.viewsets.base import UpdateModelMixin
 from contentcuration.viewsets.common import UserFilteredPrimaryKeyRelatedField
 from contentcuration.viewsets.common import UUIDInFilter
+from contentcuration.viewsets.sync.constants import CONTENTNODE
+from contentcuration.viewsets.sync.utils import generate_update_event
 
 
 class FileFilter(RequiredFilterSet):
@@ -53,6 +56,7 @@ class FileSerializer(BulkModelSerializer):
     )
 
     def update(self, instance, validated_data):
+        update_node = None
         if "contentnode" in validated_data:
             # if we're updating the file's related node, we'll trigger a reset for the
             # old channel's cache modified date
@@ -61,8 +65,26 @@ class FileSerializer(BulkModelSerializer):
                 ResourceSizeCache.reset_modified_for_file(instance)
 
         results = super(FileSerializer, self).update(instance, validated_data)
+        results.on_update()  # Make sure contentnode.content_id is unique
+
+        if results.contentnode:
+            results.contentnode.refresh_from_db()
+            if not len(results.contentnode.mark_complete()):
+                results.contentnode.save()
+                Change.create_change(
+                    generate_update_event(
+                        results.contentnode.id,
+                        CONTENTNODE,
+                        {"complete": True},
+                        channel_id=results.contentnode.get_channel_id(),
+                    ),
+                    created_by_id=instance.uploaded_by_id,
+                    applied=True,
+                )
+
         if instance.uploaded_by_id:
             calculate_user_storage(instance.uploaded_by_id)
+
         return results
 
     class Meta:
@@ -73,17 +95,17 @@ class FileSerializer(BulkModelSerializer):
             "contentnode",
             "assessment_item",
             "preset",
-            "duration"
+            "duration",
         )
         list_serializer_class = BulkListSerializer
 
 
 def retrieve_storage_url(item):
-    """ Get the file_on_disk url """
+    """Get the file_on_disk url"""
     return generate_storage_url("{}.{}".format(item["checksum"], item["file_format"]))
 
 
-class FileViewSet(BulkDeleteMixin, BulkUpdateMixin, ReadOnlyValuesViewset):
+class FileViewSet(BulkDeleteMixin, UpdateModelMixin, ReadOnlyValuesViewset):
     queryset = File.objects.all()
     serializer_class = FileSerializer
     permission_classes = [IsAuthenticated]
@@ -101,7 +123,7 @@ class FileViewSet(BulkDeleteMixin, BulkUpdateMixin, ReadOnlyValuesViewset):
         "language_id",
         "original_filename",
         "uploaded_by",
-        "duration"
+        "duration",
     )
 
     field_map = {
@@ -122,7 +144,9 @@ class FileViewSet(BulkDeleteMixin, BulkUpdateMixin, ReadOnlyValuesViewset):
             # Find all root nodes for files, and reset the cache modified date.
             root_nodes = ContentNode.objects.filter(
                 parent__isnull=True,
-                tree_id__in=files_qs.values_list('contentnode__tree_id', flat=True).distinct(),
+                tree_id__in=files_qs.values_list(
+                    "contentnode__tree_id", flat=True
+                ).distinct(),
             )
             for root_node in root_nodes:
                 ResourceSizeCache(root_node).reset_modified(None)
@@ -155,16 +179,23 @@ class FileViewSet(BulkDeleteMixin, BulkUpdateMixin, ReadOnlyValuesViewset):
                 return HttpResponseBadRequest(reason="File duration must be a number")
             duration = math.floor(duration)
             if duration <= 0:
-                return HttpResponseBadRequest(reason="File duration is equal to or less than 0")
+                return HttpResponseBadRequest(
+                    reason="File duration is equal to or less than 0"
+                )
 
         try:
             request.user.check_space(float(size), checksum)
         except PermissionDenied:
-            return HttpResponseBadRequest(reason="Not enough space. Check your storage under Settings page.", status=412)
+            return HttpResponseBadRequest(
+                reason="Not enough space. Check your storage under Settings page.",
+                status=412,
+            )
 
         might_skip = File.objects.filter(checksum=checksum).exists()
 
-        filepath = generate_object_storage_name(checksum, filename, default_ext=file_format)
+        filepath = generate_object_storage_name(
+            checksum, filename, default_ext=file_format
+        )
         checksum_base64 = codecs.encode(
             codecs.decode(checksum, "hex"), "base64"
         ).decode()

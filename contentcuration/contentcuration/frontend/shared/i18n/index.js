@@ -7,14 +7,17 @@ const languageDirections = {
   LTR: 'ltr',
   RTL: 'rtl',
 };
+
 const defaultLanguage = {
   id: 'en',
   lang_name: 'English',
   lang_direction: languageDirections.LTR,
 };
+
 const languageValidator = language => {
   return ['id', 'lang_name', 'lang_direction'].reduce((valid, key) => valid && language[key], true);
 };
+
 const getContentLangDir = language => {
   return (language || {}).lang_direction || languageDirections.LTR;
 };

@@ -3,9 +3,8 @@
   <FullscreenModal v-model="dialog">
     <template #close>
       <VBtn flat exact style="font-size: 14pt; text-transform: none;" @click="dialog = false">
-        <Icon class="mr-2">
-          arrow_back
-        </Icon>
+        <Icon class="mr-2" :color="$themeTokens.textInverted" icon="back" />
+
         Channel list
       </VBtn>
     </template>

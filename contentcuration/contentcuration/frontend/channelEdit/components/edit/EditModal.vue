@@ -22,7 +22,7 @@
             <!-- Toolbar + extension -->
             <VToolbar
               dark
-              color="primary"
+              color="appBarDark"
               fixed
               flat
               :clipped-left="!$isRTL"
@@ -30,7 +30,7 @@
               app
             >
               <VBtn data-test="close" icon dark @click="handleClose()">
-                <Icon>clear</Icon>
+                <Icon icon="clear" :color="$themeTokens.textInverted" />
               </VBtn>
               <VToolbarTitle>{{ modalTitle }}</VToolbarTitle>
               <VSpacer />
@@ -59,7 +59,7 @@
                   v-if="addTopicsMode || uploadMode"
                   :flat="!listElevated"
                   class="add-wrapper"
-                  color="white"
+                  :color="$themeTokens.textInverted"
                 >
                   <VBtn v-if="addTopicsMode" color="greyBackground" @click="createTopic">
                     {{ $tr('addTopic') }}
@@ -82,9 +82,7 @@
             <VContent>
               <VLayout v-if="loadError" align-center justify-center fill-height class="py-5">
                 <VFlex class="text-xs-center">
-                  <Icon color="red">
-                    error
-                  </Icon>
+                  <Icon icon="error" />
                   <p>{{ $tr('loadErrorText') }}</p>
                 </VFlex>
               </VLayout>
@@ -104,6 +102,7 @@
             </VContent>
           </template>
         </Uploader>
+
       </VCard>
       <BottomBar v-if="!loading && !loadError && !showFileUploadDefault">
         <VLayout row align-center fill-height class="px-2">
@@ -123,6 +122,10 @@
           </VFlex>
         </VLayout>
       </BottomBar>
+      <InheritAncestorMetadataModal
+        :parent="(createMode && detailNodeIds.length) ? parent : null"
+        @inherit="inheritMetadata"
+      />
     </VDialog>
 
     <!-- Dialog for catching unsaved changes -->
@@ -132,7 +135,7 @@
       :text="$tr('invalidNodesFoundText')"
     >
       <template #buttons="{ close }">
-        <VBtn flat data-test="saveanyways" color="primary" @click="closeModal">
+        <VBtn flat data-test="saveanyways" color="primary" @click="closeModal(true)">
           {{ $tr('saveAnywaysButton') }}
         </VBtn>
         <VBtn color="primary" @click="close">
@@ -184,6 +187,7 @@
   import SavingIndicator from './SavingIndicator';
   import EditView from './EditView';
   import EditList from './EditList';
+  import InheritAncestorMetadataModal from './InheritAncestorMetadataModal';
   import { ContentKindLearningActivityDefaults } from 'shared/leUtils/ContentKinds';
   import { fileSizeMixin, routerMixin } from 'shared/mixins';
   import FileStorage from 'shared/views/files/FileStorage';
@@ -208,6 +212,7 @@
       EditView,
       ResizableNavigationDrawer,
       Uploader,
+      InheritAncestorMetadataModal,
       FileStorage,
       FileUploadDefault,
       LoadingText,
@@ -246,6 +251,7 @@
         promptFailed: false,
         listElevated: false,
         storagePoll: null,
+        openTime: null,
       };
     },
     computed: {
@@ -266,11 +272,12 @@
       uploadMode() {
         return this.$route.name === RouteNames.UPLOAD_FILES;
       },
-      /* eslint-disable kolibri/vue-no-unused-properties */
       createExerciseMode() {
         return this.$route.name === RouteNames.ADD_EXERCISE;
       },
-      /* eslint-enable */
+      createMode() {
+        return this.addTopicsMode || this.uploadMode || this.createExerciseMode;
+      },
       editMode() {
         return this.$route.name === RouteNames.CONTENTNODE_DETAILS;
       },
@@ -299,9 +306,11 @@
         }
         return this.$tr('editingDetailsHeader');
       },
+      parent() {
+        return this.$route.params.nodeId && this.getContentNode(this.$route.params.nodeId);
+      },
       parentTitle() {
-        const node = this.$route.params.nodeId && this.getContentNode(this.$route.params.nodeId);
-        return node ? node.title : '';
+        return this.parent ? this.parent.title : '';
       },
       invalidNodes() {
         return this.nodeIds.filter(id => !this.getContentNodeIsValid(id));
@@ -383,6 +392,14 @@
       this.hideHTMLScroll(true);
       this.selected = this.targetNodeId ? [this.targetNodeId] : this.nodeIds;
       this.storagePoll = setInterval(this.fetchUserStorage, CHECK_STORAGE_INTERVAL);
+      this.openTime = new Date().getTime();
+
+      if (!this.uploadMode) {
+        this.$analytics.trackAction('legacy_edit', 'Open', {
+          eventLabel: this.$route.name,
+          numEditNodes: this.nodeIds.length,
+        });
+      }
     },
     methods: {
       ...mapActions(['fetchUserStorage']),
@@ -396,7 +413,15 @@
       ...mapActions('file', ['loadFiles', 'updateFile']),
       ...mapActions('assessmentItem', ['loadAssessmentItems', 'updateAssessmentItems']),
       ...mapMutations('contentNode', { enableValidation: 'ENABLE_VALIDATION_ON_NODES' }),
-      closeModal() {
+      closeModal(changed = false) {
+        if (!this.uploadMode) {
+          const eventAction = changed ? 'Save' : 'Close';
+          this.$analytics.trackAction('legacy_edit', eventAction, {
+            eventLabel: this.$route.name,
+            secondsOpen: Math.ceil((new Date().getTime() - this.openTime) / 1000),
+          });
+        }
+
         this.promptUploading = false;
         this.promptInvalid = false;
         this.promptFailed = false;
@@ -435,7 +460,7 @@
           // before the validation pop up is executed
           if (this.$refs.editView) {
             this.$nextTick(() => {
-              this.$refs.editView.immediateSaveAll().then(() => {
+              this.$refs.editView.immediateSaveAll().then(changed => {
                 // Catch uploads in progress and invalid nodes
                 if (this.invalidNodes.length) {
                   this.selected = [this.invalidNodes[0]];
@@ -443,7 +468,7 @@
                 } else if (this.contentNodesAreUploading(this.nodeIds)) {
                   this.promptUploading = true;
                 } else {
-                  this.closeModal();
+                  this.closeModal(changed);
                 }
               });
             });
@@ -520,6 +545,11 @@
         this.$analytics.trackAction('file_uploader', 'Add files', {
           eventLabel: 'Upload file',
         });
+      },
+      inheritMetadata(metadata) {
+        for (const nodeId of this.nodeIds) {
+          this.updateContentNode({ id: nodeId, ...metadata, mergeMapFields: true });
+        }
       },
     },
     $trs: {

@@ -39,11 +39,9 @@
               <Icon
                 v-if="!currentChannel.language"
                 color="red"
-                small
+                icon="error"
                 class="edit-channel-error"
-              >
-                error
-              </Icon>
+              />
             </template>
             <KIconButton
               v-if="canEdit"
@@ -131,7 +129,7 @@
               icon
               v-on="on"
             >
-              <Icon>more_horiz</Icon>
+              <Icon icon="optionsHorizontal" style="font-size: 25px;" />
             </VBtn>
           </template>
           <VList>
@@ -155,12 +153,11 @@
                   <Icon
                     v-if="!currentChannel.language"
                     class="mx-1"
-                    small
                     color="red"
+                    icon="error"
                     style="vertical-align: baseline;"
-                  >
-                    error
-                  </Icon>
+                  />
+
                 </VListTileTitle>
               </VListTile>
             </template>
@@ -205,7 +202,7 @@
         <slot name="extension"></slot>
       </template>
     </ToolBar>
-    <MainNavigationDrawer v-model="drawer" />
+    <MainNavigationDrawer v-model="drawer" color="white" />
     <slot></slot>
 
     <PublishModal
@@ -224,6 +221,7 @@
       :channel="currentChannel"
       @syncing="syncInProgress"
     />
+    <QuickEditModal />
     <MessageDialog
       v-model="showDeleteModal"
       :header="$tr('deleteTitle')"
@@ -269,7 +267,7 @@
               fab
               class="clipboard-fab"
             >
-              <Icon>content_paste</Icon>
+              <Icon icon="clipboard" style="font-size: 25px;" />
             </VBtn>
           </template>
         </DraggableRegion>
@@ -312,6 +310,7 @@
   import SyncResourcesModal from '../sync/SyncResourcesModal';
   import ProgressModal from '../progress/ProgressModal';
   import PublishModal from '../../components/publish/PublishModal';
+  import QuickEditModal from '../../components/QuickEditModal';
   import SavingIndicator from '../../components/edit/SavingIndicator';
   import { DraggableRegions, DraggableUniverses, RouteNames } from '../../constants';
   import MainNavigationDrawer from 'shared/views/MainNavigationDrawer';
@@ -342,6 +341,7 @@
       DraggablePlaceholder,
       MessageDialog,
       SavingIndicator,
+      QuickEditModal,
     },
     mixins: [titleMixin],
     props: {
@@ -465,8 +465,21 @@
         return DropEffect.COPY;
       },
     },
+    watch: {
+      rootId: {
+        handler(id) {
+          if (!id) {
+            this.loadChannel().catch(() => {
+              this.$store.dispatch('showSnackbarSimple', 'Failed to load channel');
+            });
+          }
+        },
+        immediate: true,
+      },
+    },
     methods: {
       ...mapActions('channel', ['deleteChannel']),
+      ...mapActions('currentChannel', ['loadChannel']),
       handleDelete() {
         this.deleteChannel(this.currentChannel.id).then(() => {
           localStorage.snackbar = this.$tr('channelDeletedSnackbar');

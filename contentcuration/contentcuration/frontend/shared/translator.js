@@ -2,6 +2,7 @@ import { createTranslator } from 'shared/i18n';
 
 const MESSAGES = {
   fieldRequired: 'This field is required',
+  fieldHasError: 'This field has an error',
   titleRequired: 'Title is required',
   licenseRequired: 'License is required',
   copyrightHolderRequired: 'Copyright holder is required',
@@ -24,6 +25,9 @@ const MESSAGES = {
   longActivityLteOneTwenty: 'Value must be equal or less than 120',
   activityDurationTooLongWarning:
     'This value is very high. Please make sure this is how long learners should work on the resource for, in order to complete it.',
+  changesSaved: 'Changes saved',
+  addAdditionalCatgoriesDescription:
+    'You selected resources that have different categories. The categories you choose below will be added to all selected resources. This will not remove existing categories.',
 };
 
 export default createTranslator('sharedVue', MESSAGES);

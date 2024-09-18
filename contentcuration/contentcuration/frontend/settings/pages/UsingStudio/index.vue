@@ -29,8 +29,9 @@
     </p>
     <p>
       <KExternalLink
+        class="kexternal-redirect"
         href="https://kolibri-studio.readthedocs.io/en/latest/index.html"
-        target="_blank"
+        openInNewTab
         :text="$tr('userDocsLink')"
         rel="noopener noreferrer"
       />
@@ -50,9 +51,10 @@
         <li>{{ $tr('bestPractice5') }}</li>
         <li>
           <KExternalLink
+            class="kexternal-redirect"
             href="https://ricecooker.readthedocs.io/en/latest/video_compression.html"
             :text="$tr('bestPractice6')"
-            target="_blank"
+            openInNewTab
             rel="noopener noreferrer"
           />
         </li>
@@ -64,16 +66,18 @@
     <!-- Issues -->
     <h2>{{ $tr('notableIssues') }}</h2>
     <KExternalLink
+      class="kexternal-redirect"
       href="https://github.com/learningequality/studio/issues/3992"
       :text="$tr('issueLink1')"
-      target="_blank"
+      openInNewTab
       rel="noopener noreferrer"
     />
     <p>{{ $tr('issue1') }}</p>
     <KExternalLink
+      class="kexternal-redirect"
       href="https://github.com/learningequality/studio/issues"
       :text="$tr('issuesPageLink')"
-      target="_blank"
+      openInNewTab
       rel="noopener noreferrer"
     />
   </div>
@@ -83,21 +87,19 @@
 
 <script>
 
-  import { mapActions } from 'vuex';
   import { policies } from 'shared/constants';
 
   export default {
     name: 'UsingStudio',
     methods: {
-      ...mapActions('policies', ['openPolicy']),
       showTermsOfService() {
-        this.openPolicy(policies.TERMS_OF_SERVICE);
+        this.$router.push({ query: { showPolicy: policies.TERMS_OF_SERVICE } });
       },
       showPrivacyPolicy() {
-        this.openPolicy(policies.PRIVACY);
+        this.$router.push({ query: { showPolicy: policies.PRIVACY } });
       },
       showCommunityStandards() {
-        this.openPolicy(policies.COMMUNITY_STANDARDS);
+        this.$router.push({ query: { showPolicy: policies.COMMUNITY_STANDARDS } });
       },
     },
     $trs: {
@@ -140,5 +142,8 @@
 <style scoped>
   h2 {
     margin-top: 32px;
+  }
+  .kexternal-redirect{
+    margin-left: -8px;
   }
 </style>

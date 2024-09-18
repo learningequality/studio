@@ -1,4 +1,13 @@
 "Identifier","Source String","Context","Translation"
+"AboutLicensesModal.close","Close","
+-- CONTEXT --
+","Fermer"
+"AboutLicensesModal.learnMoreButton","Learn More","
+-- CONTEXT --
+","En savoir plus"
+"AboutLicensesModal.licenseInfoHeader","About licenses","
+-- CONTEXT --
+","À propos des licences"
 "AccessibilityOptions.altText","Visual elements in the resource have descriptions that can be accessed by screen readers for the benefit of blind learners","
 -- CONTEXT --
 ","Les éléments visuels de la ressource comportent des descriptions accessibles par des lecteurs d'écran à l'intention des apprenants aveugles"
@@ -59,9 +68,9 @@
 "Account.fullNameLabel","Full name","
 -- CONTEXT --
 ","Nom complet"
-"Account.handleChannelsBeforeAccount","You must delete these channels manually or invite others to edit them before you can delete your account.","
+"Account.handleChannelsBeforeAccount","You cannot delete accounts that have channels. You must delete these channels manually before you can delete your account.","
 -- CONTEXT --
-","Avant de pouvoir supprimer votre compte, vous devez supprimer ces chaînes manuellement ou inviter d'autres personnes à les modifier."
+","Vous ne pouvez pas supprimer les comptes comportant des chaînes. Il faut supprimer ces chaînes manuellement avant de pouvoir supprimer votre compte."
 "Account.passwordLabel","Password","
 -- CONTEXT --
 ","Mot de passe"
@@ -497,31 +506,12 @@
 "CatalogFilterBar.assessments","Assessments","
 -- CONTEXT --
 ","Évaluations"
-"CatalogFilterBar.channelCount","{count, plural,
- =1 {# channel}
- other {# channels}}","
--- CONTEXT --
-","{count, plural, one {}
- =1 {# chaîne}
- other {# chaînes}}"
 "CatalogFilterBar.clearAll","Clear all","
 -- CONTEXT --
 ","Supprimer tout"
-"CatalogFilterBar.close","Close","
--- CONTEXT --
-","Fermer"
 "CatalogFilterBar.coachContent","Coach content","
 -- CONTEXT --
 ","Contenu pour les éducateurs"
-"CatalogFilterBar.copyTitle","Copy collection token","
--- CONTEXT --
-","Copier le jeton du recueil"
-"CatalogFilterBar.copyToken","Copy collection token","
--- CONTEXT --
-","Copier le jeton du recueil"
-"CatalogFilterBar.copyTokenInstructions","Paste this token into Kolibri to import the channels contained in this collection","
--- CONTEXT --
-","Collez ce jeton dans Kolibri pour y importer les chaînes présentes dans ce recueil"
 "CatalogFilterBar.keywords","""{text}""","
 -- CONTEXT --
 ","""{text}"""
@@ -599,6 +589,9 @@
 "CatalogList.selectChannels","Download a summary of selected channels","
 -- CONTEXT --
 ","Télécharger un résumé des chaînes sélectionnées"
+"CategoryOptions.mixedLabel","Mixed","
+-- CONTEXT --
+","Mixed"
 "CategoryOptions.noCategoryFoundText","Category not found","
 -- CONTEXT --
 ","Catégorie introuvable"
@@ -620,6 +613,9 @@
 "ChangePasswordForm.passwordChangeFailed","Failed to save new password","
 -- CONTEXT --
 ","Échec de l'enregistrement du nouveau mot de passe"
+"ChangePasswordForm.passwordValidationMessage","Password should be at least 8 characters long","
+-- CONTEXT --
+","Le mot de passe doit comporter au moins 8 caractères"
 "ChangePasswordForm.paswordChangeSuccess","Password updated","
 -- CONTEXT --
 ","Mot de passe mis à jour"
@@ -1866,6 +1862,10 @@ Category type. See https://en.wikipedia.org/wiki/Writing","Écriture"
 "ConstantStrings.webm","WEBM video","
 -- CONTEXT --
 ","Vidéo WEBM"
+"ConstantStrings.zim","ZIM","ConstantStrings.zim
+
+-- CONTEXT --
+Refers to ZIM file format: https://en.wikipedia.org/wiki/ZIM_(file_format)","ZIM"
 "ConstantStrings.zip","HTML5 zip","
 -- CONTEXT --
 ","Zip HTML5"
@@ -1938,6 +1938,9 @@ Category type. See https://en.wikipedia.org/wiki/Writing","Écriture"
 "ContentNodeEditListItem.creatingCopies","Copying...","
 -- CONTEXT --
 ","Copie en cours..."
+"ContentNodeEditListItem.editTooltip","Edit title and description","
+-- CONTEXT --
+","Modifier le titre et la description"
 "ContentNodeEditListItem.optionsTooltip","Options","
 -- CONTEXT --
 ","Options"
@@ -2013,12 +2016,39 @@ Category type. See https://en.wikipedia.org/wiki/Writing","Écriture"
 "ContentNodeOptions.creatingCopies","Copying...","
 -- CONTEXT --
 ","Copie en cours..."
-"ContentNodeOptions.editDetails","Edit details","
+"ContentNodeOptions.editAllDetails","Edit details","
 -- CONTEXT --
 ","Modifier les détails"
-"ContentNodeOptions.editTopicDetails","Edit folder details","
+"ContentNodeOptions.editAudience","Edit audience","
 -- CONTEXT --
-","Modifier les détails du dossier"
+","Modifier le public"
+"ContentNodeOptions.editCategories","Edit categories","
+-- CONTEXT --
+","Modifier les catégories"
+"ContentNodeOptions.editCompletion","Edit completion","
+-- CONTEXT --
+","Modifier l'achèvement"
+"ContentNodeOptions.editLanguage","Edit language","
+-- CONTEXT --
+","Modifier la langue"
+"ContentNodeOptions.editLearningActivities","Edit learning activities","
+-- CONTEXT --
+","Modifier les activités d'apprentissage"
+"ContentNodeOptions.editLevels","Edit levels","
+-- CONTEXT --
+","Modifier les niveaux"
+"ContentNodeOptions.editSource","Edit source","
+-- CONTEXT --
+","Modifier la source"
+"ContentNodeOptions.editTags","Edit tags","
+-- CONTEXT --
+","Modifier les tags"
+"ContentNodeOptions.editTitleDescription","Edit title and description","
+-- CONTEXT --
+","Modifier le titre et la description"
+"ContentNodeOptions.editWhatIsNeeded","Edit requirements","
+-- CONTEXT --
+","Modifier les exigences"
 "ContentNodeOptions.goToOriginalLocation","Go to original location","
 -- CONTEXT --
 ","Aller à l'emplacement original"
@@ -2181,9 +2211,6 @@ Category type. See https://en.wikipedia.org/wiki/Writing","Écriture"
 "Create.errorsMessage","Please fix the errors below","
 -- CONTEXT --
 ","Veuillez corriger les erreurs ci-dessous"
-"Create.fieldRequiredMessage","Field is required","
--- CONTEXT --
-","Ce champ est obligatoire"
 "Create.findingUsageOption","Finding and adding additional content sources","
 -- CONTEXT --
 ","Rechercher et ajouter des sources de contenu supplémentaires"
@@ -2235,6 +2262,9 @@ Category type. See https://en.wikipedia.org/wiki/Writing","Écriture"
 "Create.passwordMatchMessage","Passwords don't match","
 -- CONTEXT --
 ","Les mots de passe ne sont pas identiques"
+"Create.passwordValidationMessage","Password should be at least 8 characters long","
+-- CONTEXT --
+","Le mot de passe doit comporter au moins 8 caractères"
 "Create.personalDemoSourceOption","Personal demo","
 -- CONTEXT --
 ","Démo personnelle"
@@ -2316,18 +2346,39 @@ Category type. See https://en.wikipedia.org/wiki/Writing","Écriture"
 "CurrentTopicView.creatingCopies","Copying...","
 -- CONTEXT --
 ","Copie en cours..."
-"CurrentTopicView.deleteSelectedButton","Delete","
+"CurrentTopicView.deleteSelectedButton","Remove","
 -- CONTEXT --
 ","Supprimer"
 "CurrentTopicView.duplicateSelectedButton","Make a copy","
 -- CONTEXT --
 ","Faire une copie"
+"CurrentTopicView.editAudienceButton","Edit audience","
+-- CONTEXT --
+","Modifier le public"
 "CurrentTopicView.editButton","Edit","
 -- CONTEXT --
 ","Modifier"
-"CurrentTopicView.editSelectedButton","Edit","
+"CurrentTopicView.editCategoriesButton","Edit categories","
 -- CONTEXT --
-","Modifier"
+","Modifier les catégories"
+"CurrentTopicView.editLanguageButton","Edit language","
+-- CONTEXT --
+","Modifier la langue"
+"CurrentTopicView.editLearningActivitiesButton","Edit learning activities","
+-- CONTEXT --
+","Modifier les activités d'apprentissage"
+"CurrentTopicView.editLevelsButton","Edit levels","
+-- CONTEXT --
+","Modifier les niveaux"
+"CurrentTopicView.editSelectedButton","Edit details","
+-- CONTEXT --
+","Modifier les détails"
+"CurrentTopicView.editSourceButton","Edit source","
+-- CONTEXT --
+","Modifier la source"
+"CurrentTopicView.editWhatIsNeededButton","Edit requirements","
+-- CONTEXT --
+","Modifier les exigences"
 "CurrentTopicView.importFromChannels","Import from channels","
 -- CONTEXT --
 ","Importer à partir d'autres chaînes"
@@ -2343,17 +2394,9 @@ Category type. See https://en.wikipedia.org/wiki/Writing","Écriture"
 "CurrentTopicView.selectAllLabel","Select all","
 -- CONTEXT --
 ","Tout sélectionner"
-"CurrentTopicView.selectionCount","{topicCount, plural,
- =1 {# folder}
- other {# folders}}, {resourceCount, plural,
- =1 {# resource}
- other {# resources}}","
+"CurrentTopicView.sortAlphabetically","Sort alphabetically","
 -- CONTEXT --
-","{topicCount, plural,
- =1 {# dossier}
- other {#dossiers}}, {resourceCount, plural,
- =1 {# ressource}
- other {# ressources}}"
+","Trier par ordre alphabétique"
 "CurrentTopicView.undo","Undo","
 -- CONTEXT --
 ","Annuler"
@@ -2609,6 +2652,81 @@ Heading for the section in the resource editing window","Achèvement"
 "DiffTable.typeVideos","Videos","
 -- CONTEXT --
 ","Vidéos"
+"EditAudienceModal.cancelAction","Cancel","
+-- CONTEXT --
+","Annuler"
+"EditAudienceModal.editAudienceTitle","Edit audience","
+-- CONTEXT --
+","Modifier le public"
+"EditAudienceModal.forBeginnersCheckbox","For beginners","
+-- CONTEXT --
+","Pour les débutants"
+"EditAudienceModal.multipleAudience","The selected resources are visible to different audiences. Choosing an option below will change the visibility of all selected resources.","
+-- CONTEXT --
+","Les ressources sélectionnées sont visibles par différents publics. Le choix d'une option ci-dessous modifiera la visibilité de toutes les ressources sélectionnées."
+"EditAudienceModal.saveAction","Save","
+-- CONTEXT --
+","Enregistrer"
+"EditAudienceModal.visibleTo","Visible to:","
+-- CONTEXT --
+","Visible par :"
+"EditAudienceModal.visibleToAnyone","Resources are visible to anyone","
+-- CONTEXT --
+","Tout le monde peut voir les ressources"
+"EditAudienceModal.visibleToCoaches","Resources are visible only to coaches (teachers, facilitators, administrators)","
+-- CONTEXT --
+","Seuls les éducateurs (enseignants, facilitateurs, administrateurs) peuvent voir les ressources"
+"EditBooleanMapModal.cancelAction","Cancel","
+-- CONTEXT --
+","Annuler"
+"EditBooleanMapModal.saveAction","Save","
+-- CONTEXT --
+","Enregistrer"
+"EditBooleanMapModal.updateDescendantCheckbox","Apply to all resources, folders, and subfolders contained within the selected folders.","
+-- CONTEXT --
+","Appliquer à toutes les ressources, à tous les dossiers y compris les sous-dossiers présents dans les dossiers sélectionnés."
+"EditCategoriesModal.editCategories","Edit categories","
+-- CONTEXT --
+","Modifier les catégories"
+"EditCompletionModal.cancelAction","Cancel","
+-- CONTEXT --
+","Annuler"
+"EditCompletionModal.editCompletion","Edit completion","
+-- CONTEXT --
+","Modifier l'achèvement"
+"EditCompletionModal.saveAction","Save","
+-- CONTEXT --
+","Enregistrer"
+"EditLanguageModal.cancelAction","Cancel","
+-- CONTEXT --
+","Annuler"
+"EditLanguageModal.differentLanguages","You selected resources in different languages. The language you choose below will be applied to all selected resources.","
+-- CONTEXT --
+","Vous avez sélectionné des ressources dans différentes langues. La langue que vous choisissez ci-dessous s'appliquera à toutes les ressources sélectionnées."
+"EditLanguageModal.editLanguage","Edit language","
+-- CONTEXT --
+","Modifier la langue"
+"EditLanguageModal.emptyLanguagesSearch","No language matches the search","
+-- CONTEXT --
+","Aucune langue ne correspond à la recherche"
+"EditLanguageModal.languageItemText","{language} ({code})","
+-- CONTEXT --
+","{language} ({code})"
+"EditLanguageModal.saveAction","Save","
+-- CONTEXT --
+","Enregistrer"
+"EditLanguageModal.searchAction","Search","
+-- CONTEXT --
+","Rechercher"
+"EditLanguageModal.updateDescendantsCheckbox","Apply the chosen language to all resources, folders, and subfolders contained within the selected folders.","
+-- CONTEXT --
+","Appliquer la langue choisie à toutes les ressources, à tous les dossiers y compris les sous-dossiers présents dans les dossiers sélectionnés."
+"EditLearningActivitiesModal.editLearningActivitiesTitle","Edit learning activities","
+-- CONTEXT --
+","Modifier les activités d'apprentissage"
+"EditLevelsModal.editLevelsTitle","Edit levels","
+-- CONTEXT --
+","Modifier les niveaux"
 "EditList.selectAllLabel","Select all","
 -- CONTEXT --
 ","Tout sélectionner"
@@ -2686,24 +2804,69 @@ Heading for the section in the resource editing window","Achèvement"
 "EditModal.uploadInProgressText","Uploads that are in progress will be lost if you exit","
 -- CONTEXT --
 ","Les téléversements en cours seront perdus si vous quittez maintenant"
-"EditSearchModal.cancelAction","Cancel","
+"EditResourcesNeededModal.editResourcesNeededTitle","Edit requirements","
+-- CONTEXT --
+","Modifier les exigences"
+"EditSourceModal.aggregatorLabel","Aggregator","
+-- CONTEXT --
+","Agrégateur"
+"EditSourceModal.aggregatorToolTip","Website or org hosting the content collection but not necessarily the creator or copyright holder","
+-- CONTEXT --
+","Site web ou organisation hébergeant la collection de contenus, mais pas forcément le créateur ou le propriétaire des droits d'auteur"
+"EditSourceModal.authorLabel","Author","
+-- CONTEXT --
+","Auteur"
+"EditSourceModal.authorToolTip","Person or organization who created this content","
+-- CONTEXT --
+","Personne ou organisation créatrice de ce contenu"
+"EditSourceModal.cancelAction","Cancel","
 -- CONTEXT --
 ","Annuler"
-"EditSearchModal.changesSavedSnackbar","Changes saved","
+"EditSourceModal.cannotEditPublic","Not editable for resources from public channels","
 -- CONTEXT --
-","Modifications enregistrées"
-"EditSearchModal.editSavedSearchTitle","Edit search title","
+","Non modifiable pour les ressources provenant de chaînes publiques"
+"EditSourceModal.copyrightHolderLabel","Copyright holder","
 -- CONTEXT --
-","Modifier le titre de la recherche"
-"EditSearchModal.fieldRequired","Field is required","
+","Propriétaire des droits d'auteur"
+"EditSourceModal.editAttribution","Edit source","
 -- CONTEXT --
-","Ce champ est obligatoire"
-"EditSearchModal.saveChangesAction","Save","
+","Modifier la source"
+"EditSourceModal.editOnlyLocal","Edits will be reflected only for local resources","
+-- CONTEXT --
+","Les modifications ne s'afficheront que pour les ressources locales"
+"EditSourceModal.mixed","Mixed","
+-- CONTEXT --
+","Mixte"
+"EditSourceModal.providerLabel","Provider","
+-- CONTEXT --
+","Fournisseur"
+"EditSourceModal.providerToolTip","Organization that commissioned or is distributing the content","
+-- CONTEXT --
+","Organisation ayant commandé le contenu ou le distribuant"
+"EditSourceModal.saveAction","Save","
 -- CONTEXT --
 ","Enregistrer"
-"EditSearchModal.searchTitleLabel","Search title","
+"EditTitleDescriptionModal.cancelAction","Cancel","
 -- CONTEXT --
-","Titre de la recherche"
+","Annuler"
+"EditTitleDescriptionModal.descriptionLabel","Description","
+-- CONTEXT --
+","Description"
+"EditTitleDescriptionModal.editTitleDescription","Edit title and description","
+-- CONTEXT --
+","Modifier le titre et la description"
+"EditTitleDescriptionModal.saveAction","Save","
+-- CONTEXT --
+","Enregistrer"
+"EditTitleDescriptionModal.titleLabel","Title","
+-- CONTEXT --
+","Titre"
+"EditView.completionLabel","Completion","
+-- CONTEXT --
+","Achèvement"
+"EditView.copyrightHolderLabel","Copyright holder","
+-- CONTEXT --
+","Propriétaire des droits d'auteur"
 "EditView.details","Details","
 -- CONTEXT --
 ","Détails"
@@ -2724,6 +2887,12 @@ Heading for the section in the resource editing window","Achèvement"
 "EditView.invalidFieldsToolTip","Some required information is missing","
 -- CONTEXT --
 ","Il manque certaines informations obligatoires"
+"EditView.learningActivityLabel","Learning activity","
+-- CONTEXT --
+","Activité d'apprentissage"
+"EditView.licenseLabel","License","
+-- CONTEXT --
+","Licence"
 "EditView.noItemsToEditText","Please select resources or folders to edit","
 -- CONTEXT --
 ","Veuillez sélectionner les ressources ou les dossiers à modifier"
@@ -2736,12 +2905,12 @@ Heading for the section in the resource editing window","Achèvement"
 "EditView.related","Related","
 -- CONTEXT --
 ","Compléments"
+"EditView.titleLabel","Title","
+-- CONTEXT --
+","Titre"
 "EmailField.emailLabel","Email","
 -- CONTEXT --
 ","E-mail"
-"EmailField.emailRequiredMessage","Field is required","
--- CONTEXT --
-","Ce champ est obligatoire"
 "EmailField.validEmailMessage","Please enter a valid email","
 -- CONTEXT --
 ","Veuillez entrer une adresse e-mail valide"
@@ -2949,6 +3118,39 @@ Heading for the section in the resource editing window","Achèvement"
 "InfoModal.close","Close","
 -- CONTEXT --
 ","Fermer"
+"InheritAncestorMetadataModal.applyResourceDetailsTitle","Apply details from the folder '{folder}'","
+-- CONTEXT --
+","Appliquer les détails du dossier ""{folder}"""
+"InheritAncestorMetadataModal.cancelAction","Cancel","
+-- CONTEXT --
+","Annuler"
+"InheritAncestorMetadataModal.categories","Categories: {categories}","
+-- CONTEXT --
+","Catégories : {categories}"
+"InheritAncestorMetadataModal.continueAction","Continue","
+-- CONTEXT --
+","Continuer"
+"InheritAncestorMetadataModal.doNotShowAgainDescription","All future additions to this folder will have the selected details by default","
+-- CONTEXT --
+","Tous les futurs ajouts à ce dossier comporteront par défaut les détails sélectionnés"
+"InheritAncestorMetadataModal.doNotShowThisAgain","Don't ask me about this folder again","
+-- CONTEXT --
+","Ne me demandez plus rien sur ce dossier"
+"InheritAncestorMetadataModal.inheritMetadataDescription","Select details to add:","
+-- CONTEXT --
+","Sélectionner les détails à ajouter :"
+"InheritAncestorMetadataModal.language","Language: {language}","
+-- CONTEXT --
+","Langue : {language}"
+"InheritAncestorMetadataModal.learnerNeeds","Requirements: {learnerNeeds}","
+-- CONTEXT --
+","Exigences : {learnerNeeds}"
+"InheritAncestorMetadataModal.levels","Levels: {levels}","
+-- CONTEXT --
+","Niveaux : {levels}"
+"InheritAncestorMetadataModal.updateLanguage","Update language:","
+-- CONTEXT --
+","Mettre à jour la langue :"
 "LanguageDropdown.labelText","Language","
 -- CONTEXT --
 ","Langue"
@@ -2979,18 +3181,15 @@ Heading for the section in the resource editing window","Achèvement"
 "LanguageSwitcherModal.confirmAction","Confirm","
 -- CONTEXT --
 ","Confirmer"
-"LicenseDropdown.learnMoreButton","Learn More","
--- CONTEXT --
-","En savoir plus"
 "LicenseDropdown.licenseDescriptionLabel","License description","
 -- CONTEXT --
 ","Description de la licence"
-"LicenseDropdown.licenseInfoHeader","About licenses","
--- CONTEXT --
-","À propos des licences"
 "LicenseDropdown.licenseLabel","License","
 -- CONTEXT --
 ","Licence"
+"LicenseDropdown.mixed","Mixed","
+-- CONTEXT --
+","Mixte"
 "Main.TOSLink","Terms of service","
 -- CONTEXT --
 ","Conditions d'utilisation"
@@ -3174,9 +3373,6 @@ Heading for the section in the resource editing window","Achèvement"
 "PageNotFoundError.pageNotFoundHeader","Page not found","
 -- CONTEXT --
 ","Page introuvable"
-"PasswordField.fieldRequiredMessage","Field is required","
--- CONTEXT --
-","Ce champ est obligatoire"
 "PasswordField.passwordLabel","Password","
 -- CONTEXT --
 ","Mot de passe"
@@ -3252,6 +3448,15 @@ Heading for the section in the resource editing window","Achèvement"
 "PublishModal.incompleteWarning","Incomplete resources will not be published and made available for download in Kolibri.","
 -- CONTEXT --
 ","Les ressources incomplètes ne seront pas publiées et mises à disposition pour le téléchargement dans Kolibri."
+"PublishModal.languageDescriptionTooltip","The default language for a channel and its resources","
+-- CONTEXT --
+","La langue par défaut d'une chaîne et de ses ressources"
+"PublishModal.languageLabel","Language","
+-- CONTEXT --
+","Langue"
+"PublishModal.languageRequiredMessage","Please select a language for this channel","
+-- CONTEXT --
+","Veuillez sélectionner une langue pour cette chaîne"
 "PublishModal.nextButton","Continue","
 -- CONTEXT --
 ","Continuer"
@@ -3303,9 +3508,10 @@ Heading for the section in the resource editing window","Achèvement"
 "RelatedResourcesTab.removedPreviousStepSnackbar","Removed previous step","
 -- CONTEXT --
 ","Étape antérieure supprimée"
-"RelatedResourcesTab.resourcePreviewDialogHelpText","Related resources in Kolibri display as recommendations alongside the resource that a learner is currently engaging with","
+"RelatedResourcesTab.resourcePreviewDialogHelpText","Related resources are labeled as helpful additions for learners engaging with the current resource.","RelatedResourcesTab.resourcePreviewDialogHelpText
+
 -- CONTEXT --
-","Les ressources connexes dans Kolibri s'affichent sous forme de recommandations à côté de la ressource en cours d'utilisation par les apprenants"
+Explainer section for the related resources when editing details.","Les ressources connexes sont étiquetées comme des compléments utiles pour les apprenants qui se servent de la ressource actuelle."
 "RelatedResourcesTab.resourcePreviewDialogTitle","Related resources","
 -- CONTEXT --
 ","Ressources connexes"
@@ -3513,6 +3719,9 @@ Heading for the section in the resource editing window","Achèvement"
 "ResetPassword.passwordMatchMessage","Passwords don't match","
 -- CONTEXT --
 ","Les mots de passe ne sont pas identiques"
+"ResetPassword.passwordValidationMessage","Password should be at least 8 characters long","
+-- CONTEXT --
+","Le mot de passe doit comporter au moins 8 caractères"
 "ResetPassword.resetPasswordFailed","Failed to reset password. Please try again.","
 -- CONTEXT --
 ","Échec de la réinitialisation du mot de passe. Veuillez réessayer."
@@ -3676,9 +3885,6 @@ Error message notification when a specific metadata is missing.","Les critères 
 "SavedSearchesModal.deleteSearchTitle","Delete saved search","
 -- CONTEXT --
 ","Supprimer la recherche enregistrée"
-"SavedSearchesModal.editAction","Edit","
--- CONTEXT --
-","Modifier"
 "SavedSearchesModal.filterCount","{count, number} {count, plural, one {filter} other {filters}}","
 -- CONTEXT --
 ","{count, number} {count, plural, one {filtre} other {filtres}}"
@@ -3754,6 +3960,9 @@ Error message notification when a specific metadata is missing.","Les critères 
 "SearchOrBrowseWindow.copyFailed","Failed to copy to clipboard","
 -- CONTEXT --
 ","Échec de la copie dans le presse-papier"
+"SearchOrBrowseWindow.savedSearchesLabel","View saved searches","
+-- CONTEXT --
+","Voir les recherches enregistrées"
 "SearchOrBrowseWindow.searchAction","Search","
 -- CONTEXT --
 ","Rechercher"
@@ -3769,9 +3978,6 @@ Error message notification when a specific metadata is missing.","Les critères 
 "SearchResultsList.saveSearchAction","Save search","
 -- CONTEXT --
 ","Enregistrer la recherche"
-"SearchResultsList.savedSearchesLabel","View saved searches","
--- CONTEXT --
-","Voir les recherches enregistrées"
 "SearchResultsList.searchResultsCount","{count, number} {count, plural, one {result} other {results}} for '{searchTerm}'","
 -- CONTEXT --
 ","{count, number} {count, plural, one {résultat} other {résultats}} pour '{searchTerm}'"
@@ -4330,17 +4536,6 @@ Error message notification when a specific metadata is missing.","Les critères 
 "TrashModal.selectAllHeader","Select all","
 -- CONTEXT --
 ","Tout sélectionner"
-"TrashModal.selectedCountText","{topicCount, plural,
- =1 {# folder}
- other {# folders}}, {resourceCount, plural,
- =1 {# resource}
- other {# resources}}","
--- CONTEXT --
-","{topicCount, plural,
- =1 {# dossier}
- other {# dossiers}}, {resourceCount, plural,
- =1 {# ressource}
- other {# ressources}}"
 "TrashModal.trashEmptySubtext","Resources removed from this channel will appear here","
 -- CONTEXT --
 ","Les ressources supprimées de cette chaîne apparaîtront ici"
@@ -4359,6 +4554,9 @@ Error message notification when a specific metadata is missing.","Les critères 
 "TreeView.openCurrentLocationButton","Expand to current folder location","
 -- CONTEXT --
 ","Étendre vers l'emplacement du dossier actuel"
+"TreeView.showMore","Show more","
+-- CONTEXT --
+","Afficher plus"
 "TreeView.showSidebar","Show sidebar","
 -- CONTEXT --
 ","Afficher la barre latérale"
@@ -4570,6 +4768,9 @@ A description of an issue that has been reported by users - the recommendation i
 "channelEditVue.questionTypeTrueFalse","True/False","
 -- CONTEXT --
 ","Vrai/Faux"
+"channelEditVue.selectionCount","{topicCount, plural, =0 {} one {# folder, } other {# folders, }}{resourceCount, plural, one {# resource} other {# resources}}","
+-- CONTEXT --
+","{topicCount, plural, =0 {} one {# dossier, } other {# dossiers, }}{resourceCount, plural, one {# ressource} other {# ressources}}"
 "channelEditVue.true","True","
 -- CONTEXT --
 ","Vrai"
@@ -4589,6 +4790,12 @@ A description of an issue that has been reported by users - the recommendation i
 "sharedVue.activityDurationTooLongWarning","This value is very high. Please make sure this is how long learners should work on the resource for, in order to complete it.","
 -- CONTEXT --
 ","Cette valeur est très élevée. Veuillez vous assurer qu'il s'agit bien du temps que les apprenants doivent passer sur la ressource afin de la terminer."
+"sharedVue.addAdditionalCatgoriesDescription","You selected resources that have different categories. The categories you choose below will be added to all selected resources. This will not remove existing categories.","
+-- CONTEXT --
+","Vous avez sélectionné des ressources ayant des catégories différentes. Les catégories que vous choisissez ci-dessous seront ajoutées à toutes les ressources sélectionnées. Cette opération ne supprimera pas les catégories qui existent déjà."
+"sharedVue.changesSaved","Changes saved","
+-- CONTEXT --
+","Modifications enregistrées"
 "sharedVue.confirmLogout","Changes you made may not be saved. Are you sure you want to leave this page?","
 -- CONTEXT --
 ","Les modifications que vous avez apportées peuvent ne pas être enregistrées. Êtes-vous sûr(e) de vouloir quitter cette page ?"
@@ -4598,6 +4805,9 @@ A description of an issue that has been reported by users - the recommendation i
 "sharedVue.durationRequired","Duration is required","
 -- CONTEXT --
 ","La durée est obligatoire"
+"sharedVue.fieldHasError","This field has an error","
+-- CONTEXT --
+","Ce champ comporte une erreur"
 "sharedVue.fieldRequired","This field is required","
 -- CONTEXT --
 ","Ce champ est requis"

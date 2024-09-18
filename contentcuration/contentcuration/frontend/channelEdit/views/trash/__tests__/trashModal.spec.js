@@ -98,7 +98,7 @@ describe('trashModal', () => {
       expect(wrapper.vm.selected).toEqual(['test1']);
     });
     it('checking select all checkbox should check all items', () => {
-      wrapper.find('[data-test="selectall"]').vm.$emit('change', true);
+      wrapper.find('[data-test="selectall"]').vm.$emit('input', true);
       expect(wrapper.vm.selected).toEqual(testChildren.map(c => c.id));
     });
   });

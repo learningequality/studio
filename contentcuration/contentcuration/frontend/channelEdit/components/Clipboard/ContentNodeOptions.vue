@@ -9,7 +9,13 @@
     </VListTile>
     <VListTile v-if="allowMove" @click.stop="calculateMoveNodes">
       <VListTileTitle>{{ $tr('moveTo') }}</VListTileTitle>
-      <MoveModal v-if="moveModalOpen" ref="moveModal" v-model="moveModalOpen" @target="moveNodes" />
+      <MoveModal 
+        v-if="moveModalOpen" 
+        ref="moveModal" 
+        v-model="moveModalOpen" 
+        :clipboardTopicResourceCount="topicAndResourceCount"
+        @target="moveNodes" 
+      />
     </VListTile>
     <VListTile @click="removeNode()">
       <VListTileTitle>{{ $tr('remove') }}</VListTileTitle>
@@ -20,7 +26,7 @@
 
 <script>
 
-  import { mapActions, mapGetters } from 'vuex';
+  import { mapActions, mapGetters, mapState } from 'vuex';
   import { RouteNames } from '../../constants';
   import MoveModal from '../move/MoveModal';
   import clipboardMixin from './mixins';
@@ -40,6 +46,7 @@
       };
     },
     computed: {
+      ...mapState('clipboard', ['clipboardNodesMap']),
       ...mapGetters('clipboard', ['getMoveTrees', 'isLegacyNode']),
       isLegacy() {
         return this.isLegacyNode(this.nodeId);
@@ -59,6 +66,19 @@
           },
         });
         return `${channelURI}${sourceNode.href}`;
+      },
+      topicAndResourceCount() {
+        let topicCount = 0;
+        let resourceCount = 0;
+        if (this.contentNode.kind === 'topic') {
+          topicCount = 1;
+          resourceCount = Object.values(this.clipboardNodesMap).filter(
+            node => node.parent === this.nodeId
+          ).length;
+        } else {
+          resourceCount = 1;
+        }
+        return { topicCount: topicCount, resourceCount: resourceCount };
       },
     },
     methods: {

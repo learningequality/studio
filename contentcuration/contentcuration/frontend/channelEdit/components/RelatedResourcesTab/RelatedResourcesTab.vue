@@ -32,13 +32,8 @@
       :cancelText="$tr('dialogCloseBtnLabel')"
       @cancel="showResourcePreview = false"
     >
-      <img src="./related-resources-preview.png" class="resource-preview">
+      <img src="./relatedresources.png" class="resource-preview">
       <VLayout mt-3>
-        <VFlex>
-          <Icon color="primary" class="mx-1">
-            $vuetify.icons.light_bulb
-          </Icon>
-        </VFlex>
         <VFlex class="mx-2">
           <p>{{ $tr('resourcePreviewDialogHelpText') }}</p>
         </VFlex>
@@ -213,7 +208,7 @@
       showPreviewBtnLabel: 'Show me',
       resourcePreviewDialogTitle: 'Related resources',
       resourcePreviewDialogHelpText:
-        'Related resources in Kolibri display as recommendations alongside the resource that a learner is currently engaging with',
+        'Related resources are labeled as helpful additions for learners engaging with the current resource.',
       dialogCloseBtnLabel: 'Close',
       previousStepsTitle: 'Previous steps',
       previousStepsExplanation:

@@ -82,9 +82,7 @@
                     class="mx-1"
                     @click.stop="previewNodeId = node.id"
                   >
-                    <Icon color="primary">
-                      info
-                    </Icon>
+                    <Icon icon="info" style="font-size:20px" :color="$themeTokens.primary" />
                   </VBtn>
                   <VBtn
                     v-if="node.kind === 'topic'"
@@ -92,7 +90,7 @@
                     class="mx-1 rtl-flip"
                     @click.stop="targetNodeId = node.id"
                   >
-                    <Icon>keyboard_arrow_right</Icon>
+                    <Icon icon="chevronRight" />
                   </VBtn>
                 </div>
               </VListTileAction>
@@ -137,7 +135,7 @@
 </template>
 <script>
 
-  import { mapGetters, mapActions } from 'vuex';
+  import { mapGetters, mapActions, mapMutations } from 'vuex';
   import ResourceDrawer from '../ResourceDrawer';
   import { RouteNames } from '../../constants';
   import NewTopicModal from './NewTopicModal';
@@ -175,6 +173,10 @@
         type: Boolean,
         default: false,
       },
+      clipboardTopicResourceCount: {
+        type: Object,
+        default: () => ({}),
+      },
     },
     data() {
       return {
@@ -202,7 +204,10 @@
         },
       },
       moveHeader() {
-        return this.$tr('moveItems', this.getTopicAndResourceCounts(this.moveNodeIds));
+        const resourceCounts = Object.keys(this.clipboardTopicResourceCount).length
+          ? this.clipboardTopicResourceCount
+          : this.getTopicAndResourceCounts(this.moveNodeIds);
+        return this.$tr('moveItems', resourceCounts);
       },
       moveHereButtonDisabled() {
         if (this.moveNodesInProgress) {
@@ -243,6 +248,7 @@
     },
     methods: {
       ...mapActions('contentNode', ['createContentNode', 'loadChildren']),
+      ...mapMutations('contentNode', ['ADD_INHERITING_NODE']),
       isDisabled(node) {
         return this.moveNodeIds.includes(node.id);
       },
@@ -295,6 +301,9 @@
           actionText: this.$tr('goToLocationButton'),
           actionCallback: this.goToLocation,
         });
+        for (const nodeId of this.moveNodeIds) {
+          this.ADD_INHERITING_NODE(this.getContentNode(nodeId));
+        }
         this.moveNodesInProgress = false;
       },
     },

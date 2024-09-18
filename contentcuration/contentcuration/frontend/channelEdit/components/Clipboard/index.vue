@@ -35,10 +35,10 @@
                     <Checkbox
                       ref="checkbox"
                       class="ma-0 pa-0"
-                      :value="selected"
+                      :inputValue="selected"
                       :label="selectionState ? '' : $tr('selectAll')"
                       :indeterminate="indeterminate"
-                      @click.stop.prevent="goNextSelectionState"
+                      @input="goNextSelectionState"
                     />
                   </VListTileAction>
                 </VSlideXTransition>
@@ -50,7 +50,11 @@
                         class="back-to-clipboard"
                         @click.prevent="resetPreviewNode"
                       >
-                        <span class="link-icon"><Icon color="primary" small>arrow_back</Icon></span>
+                        <span class="link-icon"><Icon
+                          icon="back"
+                          :color="$themeTokens.primary"
+                        />
+                        </span>
                         <span class="link-text">{{ $tr('backToClipboard') }}</span>
                       </KButton>
                     </div>
@@ -67,6 +71,8 @@
                         v-if="allowMove && moveModalOpen"
                         ref="moveModal"
                         v-model="moveModalOpen"
+                        :moveNodeIds="selectedNodeIds"
+                        :clipboardTopicResourceCount="topicAndResourceCount"
                         @target="moveNodes"
                       />
                       <IconButton
@@ -195,7 +201,8 @@
     },
     computed: {
       ...mapGetters(['clipboardRootId']),
-      ...mapState('clipboard', ['initializing']),
+      ...mapState('clipboard', ['initializing', 'clipboardNodesMap']),
+      ...mapState('contentNode', ['contentNodesMap']),
       ...mapGetters('clipboard', [
         'channels',
         'selectedNodeIds',
@@ -238,6 +245,29 @@
         return this.activeDraggableId !== DraggableRegions.CLIPBOARD
           ? DropEffect.COPY
           : DropEffect.NONE;
+      },
+      topicAndResourceCount() {
+        let topicCount = 0;
+        let resourceCount = 0;
+        const contentNodesValues = Object.values(this.contentNodesMap);
+        this.selectedNodeIds.forEach(id => {
+          const node = this.clipboardNodesMap[id];
+          let kind = node.kind;
+          // Check contentNodesMap for node kind if missing in clipboardNodesMap
+          if (!kind && node.source_node_id) {
+            const contentNode = contentNodesValues.find(n => n.node_id === node.source_node_id);
+            kind = contentNode.kind;
+          }
+
+          if (kind === 'topic') {
+            topicCount++;
+          } else if (kind) {
+            resourceCount++;
+          } else {
+            console.error('`kind` missing from content.');
+          }
+        });
+        return { topicCount: topicCount, resourceCount: resourceCount };
       },
     },
     watch: {

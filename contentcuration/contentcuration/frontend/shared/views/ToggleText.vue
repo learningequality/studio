@@ -10,9 +10,9 @@
       </VSlideYTransition>
       <a v-if="overflowText" class="caption toggler" @click.stop.prevent="toggle">
         <span>{{ togglerText }}</span>
-        <Icon small>
-          {{ expanded ? 'expand_less' : 'expand_more' }}
-        </Icon>
+        <Icon
+          :icon="expanded ? 'chevronUp' : 'chevronDown' "
+        />
       </a>
     </p>
   </div>

@@ -63,15 +63,15 @@
                         :style="{ transform: toggleTransform }"
                         @click.stop="toggle"
                       >
-                        <Icon>keyboard_arrow_right</Icon>
+                        <Icon icon="chevronRight" />
                       </VBtn>
                     </VFlex>
                     <VFlex shrink class="px-1">
                       <VTooltip :disabled="!hasTitle(node)" bottom open-delay="500" lazy>
                         <template #activator="{ on }">
-                          <Icon v-on="on">
+                          <VIconWrapper v-on="on">
                             {{ node.resource_count ? "folder" : "folder_open" }}
-                          </Icon>
+                          </VIconWrapper>
                         </template>
                         <span>{{ getTitle(node) }}</span>
                       </VTooltip>
@@ -118,11 +118,13 @@
                         v-if="loading"
                         class="mx-3"
                         indeterminate
+                        color="loading"
                         size="15"
                         width="2"
                       />
                       <Menu
                         v-else
+                        v-model="showMenu"
                         data-test="editMenu"
                       >
                         <template #activator="{ on }">
@@ -133,7 +135,7 @@
                             @click.stop
                           />
                         </template>
-                        <ContentNodeOptions :nodeId="nodeId" />
+                        <ContentNodeOptions v-if="showMenu" :nodeId="nodeId" />
                       </Menu>
                     </VFlex>
                     <ContentNodeContextMenu
@@ -257,6 +259,7 @@
         draggableSize: 5,
         draggableExpanded: false,
         debouncedLoad: null,
+        showMenu: false,
       };
     },
     computed: {

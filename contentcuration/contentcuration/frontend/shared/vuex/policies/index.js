@@ -62,9 +62,6 @@ export const getters = {
       return getters.nonAcceptedPolicies.includes(policy);
     };
   },
-  selectedPolicy(state) {
-    return state.selectedPolicy;
-  },
   /**
    * @returns There can be more unaccepted policies.
    * This getter returns the first of them when sorted
@@ -85,9 +82,6 @@ export const getters = {
 };
 
 export const mutations = {
-  SET_SELECTED_POLICY(state, policy) {
-    state.selectedPolicy = policy;
-  },
   SET_POLICIES(state, policies) {
     for (const policy in policies) {
       Vue.set(state.policies, policy, policies[policy]);
@@ -98,14 +92,6 @@ export const mutations = {
 export const actions = {
   setPolicies(context, policies) {
     context.commit('SET_POLICIES', policies);
-  },
-  openPolicy(context, policy) {
-    context.commit('SET_SELECTED_POLICY', policy);
-  },
-  closePolicy(context, policy) {
-    if (context.state.selectedPolicy === policy) {
-      context.commit('SET_SELECTED_POLICY', null);
-    }
   },
   /**
    * Accept a policy
@@ -118,11 +104,7 @@ export const actions = {
   acceptPolicy(context, policyAcceptedData) {
     return client
       .post(window.Urls.policy_update(), { policy: JSON.stringify(policyAcceptedData) })
-      .then(() => {
-        return context
-          .dispatch('setPolicies', policyAcceptedData)
-          .then(() => context.dispatch('closePolicy'));
-      });
+      .then(() => context.dispatch('setPolicies', policyAcceptedData));
   },
 };
 
@@ -131,7 +113,6 @@ export default {
   state() {
     return {
       policies: {},
-      selectedPolicy: null,
     };
   },
   getters,

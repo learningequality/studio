@@ -39,13 +39,12 @@
 
     <p>
 
-      <span>{{ $tr('requestMoreSpaceMessage') }}</span>
+      <span>{{ $tr('requestMoreSpaceMessage') + " " }}</span>
 
       <KExternalLink
-        style="display: inline;"
         :text="$tr('learnMoreAboutImportingContentFromChannels')"
         href="https://kolibri-studio.readthedocs.io/en/latest/add_content.html#import-content-from-other-channels"
-        target="_blank"
+        openInNewTab
       />
 
     </p>

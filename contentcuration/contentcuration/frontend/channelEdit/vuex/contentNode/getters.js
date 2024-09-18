@@ -3,6 +3,7 @@ import sortBy from 'lodash/sortBy';
 import uniq from 'lodash/uniq';
 import uniqBy from 'lodash/uniqBy';
 
+import messages from '../../translator';
 import { parseNode } from './utils';
 import { getNodeDetailsErrors, getNodeFilesErrors } from 'shared/utils/validation';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
@@ -101,6 +102,13 @@ export function getTopicAndResourceCounts(state, getters) {
       },
       { topicCount: 0, resourceCount: 0 }
     );
+  };
+}
+
+export function getSelectedTopicAndResourceCountText(state, getters) {
+  return function(contentNodeIds) {
+    const { topicCount, resourceCount } = getters.getTopicAndResourceCounts(contentNodeIds);
+    return messages.$tr('selectionCount', { topicCount, resourceCount });
   };
 }
 
@@ -349,5 +357,11 @@ export function tags(state) {
 export function nodeExpanded(state) {
   return function(id) {
     return Boolean(state.expandedNodes[id]);
+  };
+}
+
+export function getQuickEditModalOpen(state) {
+  return function() {
+    return state.quickEditModalOpen;
   };
 }

@@ -16,9 +16,7 @@
                 v-on="on"
                 @click="accept"
               >
-                <Icon color="green">
-                  check
-                </Icon>
+                <Icon icon="done" />
               </VBtn>
             </template>
             <span>{{ $tr('accept') }}</span>
@@ -33,9 +31,7 @@
                 v-on="on"
                 @click="dialog = true"
               >
-                <Icon color="red">
-                  clear
-                </Icon>
+                <Icon color="red" icon="clear" />
               </VBtn>
             </template>
             <span>{{ $tr('decline') }}</span>

@@ -41,9 +41,15 @@
           @infoClick="goToNodeDetail(child.id)"
           @topicChevronClick="goToTopic(child.id)"
           @dblclick.native="onNodeDoubleClick(child)"
+          @editTitleDescription="$emit('editTitleDescription', child.id)"
         />
       </template>
     </VList>
+    <div class="pagination-container">
+      <KButton v-if="more" :disabled="moreLoading" @click="loadMore">
+        {{ $tr('showMore') }}
+      </KButton>
+    </div>
   </div>
 
 </template>
@@ -78,6 +84,8 @@
     data() {
       return {
         loading: false,
+        more: null,
+        moreLoading: false,
       };
     },
     computed: {
@@ -100,12 +108,13 @@
     },
     created() {
       this.loading = true;
-      this.loadChildren({ parent: this.parentId }).then(() => {
+      this.loadChildren({ parent: this.parentId }).then(childrenResponse => {
         this.loading = false;
+        this.more = childrenResponse.more || null;
       });
     },
     methods: {
-      ...mapActions('contentNode', ['loadChildren']),
+      ...mapActions('contentNode', ['loadChildren', 'loadContentNodes']),
       goToNodeDetail(nodeId) {
         if (
           this.$route.params.nodeId === this.parentId &&
@@ -149,12 +158,22 @@
           }
         }
       },
+      loadMore() {
+        if (this.more && !this.moreLoading) {
+          this.moreLoading = true;
+          this.loadContentNodes(this.more).then(response => {
+            this.more = response.more || null;
+            this.moreLoading = false;
+          });
+        }
+      },
     },
     $trs: {
       emptyViewOnlyChannelText: 'Nothing in this channel yet',
       emptyTopicText: 'Nothing in this folder yet',
       emptyChannelText: 'Click "ADD" to start building your channel',
       emptyChannelSubText: 'Create, upload, or import resources from other channels',
+      showMore: 'Show more',
     },
   };
 
@@ -170,6 +189,12 @@
     padding-bottom: 88px;
     /* stylelint-disable-next-line custom-property-pattern */
     background-color: var(--v-backgroundColor-base);
+  }
+
+  .pagination-container {
+    display: flex;
+    justify-content: flex-start;
+    margin: 4px;
   }
 
 </style>

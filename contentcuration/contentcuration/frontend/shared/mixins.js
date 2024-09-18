@@ -1,3 +1,4 @@
+import camelCase from 'lodash/camelCase';
 import isEqual from 'lodash/isEqual';
 import transform from 'lodash/transform';
 import uniq from 'lodash/uniq';
@@ -132,6 +133,7 @@ export const constantStrings = createTranslator('ConstantStrings', {
   h5p: 'H5P App',
   html5: 'HTML5 App',
   slideshow: 'Slideshow',
+  zim: 'ZIM',
   coach: 'Coaches',
   learner: 'Anyone',
   high_res_video: 'High resolution',
@@ -703,8 +705,16 @@ export const metadataStrings = createTranslator('CommonMetadataStrings', {
 export const metadataTranslationMixin = {
   methods: {
     translateMetadataString(key) {
+      const camelKey = camelCase(key);
       if (nonconformingKeys[key]) {
-        return metadataStrings.$tr(nonconformingKeys[key]);
+        key = nonconformingKeys[key];
+      } else if (nonconformingKeys[camelKey]) {
+        key = nonconformingKeys[camelKey];
+      } else if (
+        !metadataStrings.defaultMessages[key] &&
+        metadataStrings.defaultMessages[camelKey]
+      ) {
+        key = camelKey;
       }
       return metadataStrings.$tr(key);
     },
@@ -732,6 +742,8 @@ const nonconformingKeys = {
   foundations: 'basicSkills',
   OTHER_SUPPLIES: 'needsMaterials',
   SPECIAL_SOFTWARE: 'softwareTools',
+  PROFESSIONAL: 'specializedProfessionalTraining',
+  WORK_SKILLS: 'allLevelsWorkSkills',
 };
 
 /**

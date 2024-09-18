@@ -9,7 +9,7 @@
         data-test="staging-tree-banner"
       >
         <VLayout align-center justify-start>
-          <Icon>build</Icon>
+          <VIconWrapper>build</VIconWrapper>
           <span class="pl-1">
             <KRouterLink
               :to="stagingTreeLink"
@@ -89,7 +89,7 @@
         <div class="mt-5 pl-3">
           <LoadingText v-if="loading" />
           <StudioTree
-            v-else
+            v-else-if="rootId"
             :treeId="rootId"
             :nodeId="rootId"
             :selectedNodeId="nodeId"
@@ -285,25 +285,21 @@
       },
     },
     created() {
-      let childrenPromise;
-      // If viewing the root-level node, don't request anything, since the NodePanel.created
-      // hook will make a redundant request
-      if (this.nodeId === this.rootId) {
-        childrenPromise = Promise.resolve();
-      } else {
-        childrenPromise = this.loadContentNodes({ parent: this.rootId });
-      }
-      Promise.all([childrenPromise, this.loadAncestors({ id: this.nodeId })]).then(() => {
-        this.loading = false;
-        this.jumpToLocation();
-      });
+      const childrenPromise = this.loadChildren({ parent: this.rootId });
+      Promise.all([childrenPromise, this.loadAncestors({ id: this.nodeId })]).then(
+        ([childrenResponse]) => {
+          this.loading = false;
+          this.more = childrenResponse.more || null;
+          this.jumpToLocation();
+        }
+      );
     },
     methods: {
       ...mapMutations('contentNode', {
         collapseAll: 'COLLAPSE_ALL_EXPANDED',
         setExpanded: 'SET_EXPANSION',
       }),
-      ...mapActions('contentNode', ['loadAncestors', 'loadContentNodes']),
+      ...mapActions('contentNode', ['loadAncestors', 'loadChildren']),
       verifyContentNodeId(id) {
         this.nodeNotFound = false;
         return this.$store.dispatch('contentNode/headContentNode', id).catch(() => {

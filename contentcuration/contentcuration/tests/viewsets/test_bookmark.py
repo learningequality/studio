@@ -179,13 +179,7 @@ class CRUDTestCase(StudioAPITestCase):
         response = self.client.post(
             reverse("bookmark-list"), bookmark, format="json",
         )
-        self.assertEqual(response.status_code, 201, response.content)
-        try:
-            models.Channel.bookmarked_by.through.objects.get(
-                user=self.user
-            )
-        except models.Channel.bookmarked_by.through.DoesNotExist:
-            self.fail("Bookmark was not created")
+        self.assertEqual(response.status_code, 405, response.content)
 
     def test_delete_bookmark(self):
         bookmark = models.Channel.bookmarked_by.through.objects.create(
@@ -196,9 +190,4 @@ class CRUDTestCase(StudioAPITestCase):
         response = self.client.delete(
             reverse("bookmark-detail", kwargs={"pk": bookmark.id})
         )
-        self.assertEqual(response.status_code, 204, response.content)
-        try:
-            models.Channel.bookmarked_by.through.objects.get(id=bookmark.id)
-            self.fail("Bookmark was not deleted")
-        except models.Channel.bookmarked_by.through.DoesNotExist:
-            pass
+        self.assertEqual(response.status_code, 405, response.content)

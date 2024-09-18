@@ -8,11 +8,11 @@
       style="z-index: 1000;"
       :right="$isRTL"
     >
-      <VToolbar color="primary" dark>
+      <VToolbar :color="color">
         <VBtn flat icon :tabindex="handleclickTab" @click="drawer = false">
           <KIconButton
             icon="clear"
-            color="white"
+            color="black"
           />
         </VBtn>
         <VToolbarTitle class="notranslate">
@@ -23,7 +23,7 @@
         <VListTile :href="channelsLink" :tabindex="handleclickTab">
           <VListTileAction>
             <KIconButton
-              disabled="true"
+              :disabled="true"
               icon="home"
             />
           </VListTileAction>
@@ -34,7 +34,7 @@
         <VListTile v-if="user.is_admin" :href="administrationLink" :tabindex="handleclickTab">
           <VListTileAction>
             <KIconButton
-              disabled="true"
+              :disabled="true"
               icon="people"
             />
           </VListTileAction>
@@ -46,7 +46,7 @@
         <VListTile :href="settingsLink" :tabindex="handleclickTab" @click="trackClick('Settings')">
           <VListTileAction>
             <KIconButton
-              disabled="true"
+              :disabled="true"
               icon="settings"
             />
           </VListTileAction>
@@ -57,7 +57,7 @@
         <VListTile @click="openLanguageModal">
           <VListTileAction>
             <KIconButton
-              disabled="true"
+              :disabled="true"
               icon="language"
             />
           </VListTileAction>
@@ -73,7 +73,7 @@
         >
           <VListTileAction>
             <KIconButton
-              disabled="true"
+              :disabled="true"
               icon="openNewTab"
             />
           </VListTileAction>
@@ -84,7 +84,7 @@
         <VListTile @click="logout">
           <VListTileAction>
             <KIconButton
-              disabled="true"
+              :disabled="true"
               icon="logout"
             />
           </VListTileAction>
@@ -94,7 +94,11 @@
         </VListTile>
       </VList>
       <VContainer>
-        <KolibriLogo :height="75" />
+        <KLogo
+          altText="Kolibri logo"
+          :showBackground="true"
+          :size="88"
+        />
         <ActionLink
           :text="$tr('copyright', { year: new Date().getFullYear() })"
           href="https://learningequality.org/"
@@ -127,19 +131,21 @@
 <script>
 
   import { mapActions, mapState } from 'vuex';
-  import KolibriLogo from './KolibriLogo';
   import LanguageSwitcherModal from 'shared/languageSwitcher/LanguageSwitcherModal';
 
   export default {
     name: 'MainNavigationDrawer',
     components: {
-      KolibriLogo,
       LanguageSwitcherModal,
     },
     props: {
       value: {
         type: Boolean,
         default: false,
+      },
+      color: {
+        type: String,
+        default: 'appBar',
       },
     },
     data() {

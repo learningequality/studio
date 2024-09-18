@@ -1,6 +1,6 @@
 <template>
 
-  <VCard @click="handleClick">
+  <VCard hover @click="handleClick">
     <VCardTitle>
       <VLayout row wrap>
         <VFlex class="pt-2 px-4 thumbnail-column">
@@ -32,13 +32,10 @@
                 <template #activator="{ on }">
                   <div class="my-1" style="display: inline-block;" v-on="on">
                     <Icon
-                      color="roleVisibilityCoach"
-                      small
+                      icon="coachContent"
                       style="vertical-align: text-top;"
                       class="mx-1"
-                    >
-                      local_library
-                    </Icon>
+                    />
                     <template v-if="isTopic">
                       {{ $formatNumber(node.coach_count) }}
                     </template>
@@ -229,11 +226,6 @@
 
   .v-card {
     cursor: pointer;
-
-    &:hover {
-      /* stylelint-disable-next-line custom-property-pattern */
-      background-color: var(--v-greyBackground-base);
-    }
   }
 
   h3 {

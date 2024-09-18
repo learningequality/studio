@@ -31,5 +31,23 @@ describe('currentChannel store', () => {
         spy.mockRestore();
       });
     });
+    it('channelLanguageExistsInResources action should call `language_exists` endpoint', () => {
+      const spy = jest
+        .spyOn(Channel, 'languageExistsInResources')
+        .mockImplementation(() => Promise.resolve());
+      return store.dispatch('currentChannel/channelLanguageExistsInResources').then(() => {
+        expect(spy.mock.calls[0][0]).toBe(store.state.currentChannel.currentChannelId);
+        spy.mockRestore();
+      });
+    });
+    it('getLanguagesInChannelResources action should call `languages` endpoint', () => {
+      const spy = jest
+        .spyOn(Channel, 'languagesInResources')
+        .mockImplementation(() => Promise.resolve());
+      return store.dispatch('currentChannel/getLanguagesInChannelResources').then(() => {
+        expect(spy.mock.calls[0][0]).toBe(store.state.currentChannel.currentChannelId);
+        spy.mockRestore();
+      });
+    });
   });
 });

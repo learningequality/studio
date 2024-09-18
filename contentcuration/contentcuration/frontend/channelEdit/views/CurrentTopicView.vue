@@ -11,7 +11,7 @@
             <VFlex class="font-weight-bold text-truncate" shrink :class="getTitleClass(item)">
               {{ getTitle(item) }}
             </VFlex>
-            <Menu v-if="item.displayNodeOptions">
+            <Menu v-if="item.displayNodeOptions" v-model="breadcrumbsMenu">
               <template #activator="{ on }">
                 <IconButton
                   icon="dropdown"
@@ -19,7 +19,7 @@
                   v-on="on"
                 />
               </template>
-              <ContentNodeOptions v-if="node" :nodeId="topicId" />
+              <ContentNodeOptions v-if="node && breadcrumbsMenu" :nodeId="topicId" />
             </Menu>
           </VLayout>
           <span v-else class="grey--text" :class="getTitleClass(item)">
@@ -27,6 +27,30 @@
           </span>
         </template>
       </Breadcrumbs>
+      <Menu
+        v-if="!loadingAncestors"
+        class="pa-1"
+      >
+        <template #activator="{ on }">
+          <IconButton
+            icon="list"
+            :text="$tr('viewModeTooltip')"
+            v-on="on"
+          />
+        </template>
+        <VList>
+          <VListTile
+            v-for="mode in viewModes"
+            :key="mode"
+            @click="setViewMode(mode), trackViewMode(mode)"
+          >
+            <VListTileAction style="min-width: 32px;">
+              <Icon v-if="mode === viewMode" icon="check" />
+            </VListTileAction>
+            <VListTileTitle>{{ $tr(mode) }}</VListTileTitle>
+          </VListTile>
+        </VList>
+      </Menu>
     </VToolbar>
 
     <!-- Topic actions -->
@@ -36,53 +60,46 @@
           v-if="node && node.total_count"
           v-model="selectAll"
           :indeterminate="selected.length > 0 && !selectAll"
-          :label="selected.length ? '' : $tr('selectAllLabel')"
+          :label="selected.length ? selectionText : $tr('selectAllLabel')"
+          style="font-size: 16px;"
         />
       </div>
-      <VSlideXTransition>
-        <div v-if="selected.length">
-          <KIconButton
-            v-if="canEdit"
-            icon="edit"
-            :text="$tr('editSelectedButton')"
-            data-test="edit-selected-btn"
-            @click="editNodes(selected)"
-          />
-          <KIconButton
-            icon="clipboard"
-            :text="$tr('copySelectedButton')"
-            data-test="copy-selected-to-clipboard-btn"
-            @click="copyToClipboard(selected)"
-          />
-          <KIconButton
-            v-if="canEdit"
-            icon="move"
-            :text="$tr('moveSelectedButton')"
-            data-test="move-selected-btn"
-            @click="openMoveModal"
-          />
-          <KIconButton
-            v-if="canEdit"
-            icon="copy"
-            :text="$tr('duplicateSelectedButton')"
-            data-test="duplicate-selected-btn"
-            @click="duplicateNodes(selected)"
-          />
-          <KIconButton
-            v-if="canEdit"
-            icon="sort"
-            :text="$tr('SortAlphabetically')"
-            @click="sortNodes(selected)"
-          />
-          <KIconButton
-            v-if="canEdit"
-            icon="remove"
-            :text="$tr('deleteSelectedButton')"
-            data-test="delete-selected-btn"
-            @click="removeNodes(selected)"
-          />
-        </div>
-      </VSlideXTransition>
+      <div v-if="selected.length" class="command-palette-wrapper">
+        <KListWithOverflow
+          :items="commandPaletteOptions"
+          :appearanceOverrides="{ justifyContent: 'flex-end' }"
+        >
+          <template #item="{ item }">
+            <KIconButton
+              :icon="item.icon"
+              :tooltip="item.label"
+              :disabled="item.disabled"
+              :data-test="item.dataTest"
+              @click="item.onClick()"
+            />
+          </template>
+          <template #more="{ overflowItems }">
+            <KIconButton
+              tooltip="More"
+              icon="optionsVertical"
+              appearance="flat-button"
+              :primary="false"
+            >
+              <template #menu>
+                <KDropdownMenu
+                  :options="overflowItems"
+                  @select="(option) => option.onClick()"
+                />
+              </template>
+            </KIconButton>
+          </template>
+          <template #divider>
+            <div class="divider-wrapper">
+              <div :style="dividerStyle"></div>
+            </div>
+          </template>
+        </KListWithOverflow>
+      </div>
 
       <MoveModal
         ref="moveModal"
@@ -90,47 +107,13 @@
         :moveNodeIds="selected"
         @target="moveNodes"
       />
-
-      <VSpacer />
-
-      <VFadeTransition>
-        <div v-show="selected.length" v-if="$vuetify.breakpoint.mdAndUp" class="px-1">
-          {{ selectionText }}
-        </div>
-      </VFadeTransition>
-
+      <VSpacer v-if="!selected.length" />
       <VToolbarItems v-if="!loadingAncestors">
-        <Menu class="pa-1">
-          <template #activator="{ on }">
-            <IconButton
-              icon="list"
-              :text="$tr('viewModeTooltip')"
-              v-on="on"
-            />
-          </template>
-          <VList>
-            <VListTile
-              v-for="mode in viewModes"
-              :key="mode"
-              @click="setViewMode(mode), trackViewMode(mode)"
-            >
-              <VListTileAction style="min-width: 32px;">
-                <Icon v-if="mode === viewMode">
-                  check
-                </Icon>
-              </VListTileAction>
-              <VListTileTitle>{{ $tr(mode) }}</VListTileTitle>
-            </VListTile>
-          </VList>
-        </Menu>
-
         <Menu v-if="canEdit">
           <template #activator="{ on }">
             <VBtn color="primary" class="ml-2" style="height: 32px;" v-on="on">
               {{ $tr('addButton') }}
-              <Icon small>
-                arrow_drop_down
-              </Icon>
+              <Icon icon="dropdown" :color="$themeTokens.textInverted" />
             </VBtn>
           </template>
           <VList>
@@ -181,6 +164,7 @@
             @select="selected = [...selected, $event]"
             @deselect="selected = selected.filter(id => id !== $event)"
             @scroll="scroll"
+            @editTitleDescription="showTitleDescriptionModal"
           />
         </DraggableRegion>
       </VFadeTransition>
@@ -201,7 +185,7 @@
             :text="$tr('editButton')"
             @click="editNodes([detailNodeId])"
           />
-          <Menu>
+          <Menu v-model="resourceDrawerMenu">
             <template #activator="{ on }">
               <IconButton
                 size="small"
@@ -211,6 +195,7 @@
               />
             </template>
             <ContentNodeOptions
+              v-if="resourceDrawerMenu"
               :nodeId="detailNodeId"
               hideDetailsLink
               hideEditLink
@@ -228,19 +213,29 @@
         </template>
       </ResourceDrawer>
     </VLayout>
-
+    <InheritAncestorMetadataModal
+      :parent="inheritanceParent"
+      @inherit="inheritMetadata"
+    />
   </VContainer>
 
 </template>
 
 <script>
 
-  import { mapActions, mapGetters, mapState } from 'vuex';
+  import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
   import get from 'lodash/get';
+  import InheritAncestorMetadataModal from '../components/edit/InheritAncestorMetadataModal';
   import MoveModal from '../components/move/MoveModal';
   import ContentNodeOptions from '../components/ContentNodeOptions';
   import ResourceDrawer from '../components/ResourceDrawer';
-  import { RouteNames, viewModes, DraggableRegions, DraggableUniverses } from '../constants';
+  import {
+    RouteNames,
+    viewModes,
+    DraggableRegions,
+    DraggableUniverses,
+    QuickEditModals,
+  } from '../constants';
   import NodePanel from './NodePanel';
   import IconButton from 'shared/views/IconButton';
   import ToolBar from 'shared/views/ToolBar';
@@ -269,6 +264,7 @@
       Checkbox,
       MoveModal,
       DraggableRegion,
+      InheritAncestorMetadataModal,
     },
     mixins: [titleMixin, routerMixin],
     props: {
@@ -287,6 +283,8 @@
         loadingAncestors: false,
         elevated: false,
         moveModalOpen: false,
+        breadcrumbsMenu: false,
+        resourceDrawerMenu: false,
       };
     },
     computed: {
@@ -305,10 +303,11 @@
         'getContentNode',
         'getContentNodes',
         'getContentNodeAncestors',
-        'getTopicAndResourceCounts',
+        'getSelectedTopicAndResourceCountText',
         'getContentNodeChildren',
         'isNodeInCopyingState',
       ]),
+      ...mapState('contentNode', ['inheritingNodes']),
       ...mapGetters('clipboard', ['getCopyTrees']),
       ...mapGetters('draggable', ['activeDraggableRegionId']),
       selected: {
@@ -338,11 +337,138 @@
           }
         },
       },
+      commandPaletteOptions() {
+        const groupedOptions = [
+          [
+            {
+              label: this.$tr('editSelectedButton'),
+              icon: 'edit',
+              onClick: () => this.editNodes(this.selected),
+              condition: this.canEdit,
+              dataTest: 'edit-selected-btn',
+            },
+            {
+              label: this.$tr('moveSelectedButton'),
+              icon: 'move',
+              onClick: () => this.openMoveModal(),
+              condition: this.canEdit,
+              dataTest: 'move-selected-btn',
+            },
+            {
+              label: this.$tr('copySelectedButton'),
+              icon: 'clipboard',
+              onClick: () => this.copyToClipboard(this.selected),
+              condition: true,
+              dataTest: 'copy-selected-to-clipboard-btn',
+            },
+            {
+              label: this.$tr('duplicateSelectedButton'),
+              icon: 'copy',
+              onClick: () => this.duplicateNodes(this.selected),
+              condition: this.canEdit,
+              dataTest: 'duplicate-selected-btn',
+            },
+            {
+              label: this.$tr('sortAlphabetically'),
+              icon: 'sort',
+              onClick: () => this.sortNodes(this.selected),
+              condition: this.canEdit,
+              dataTest: 'sort-selected-btn',
+            },
+            {
+              label: this.$tr('deleteSelectedButton'),
+              icon: 'remove',
+              onClick: () => this.removeNodes(this.selected),
+              condition: this.canEdit,
+              dataTest: 'delete-selected-btn',
+            },
+          ],
+          [
+            {
+              label: this.$tr('editLanguageButton'),
+              icon: 'language',
+              onClick: this.quickEditModalFactory(QuickEditModals.LANGUAGE),
+              condition: this.canEdit,
+              dataTest: 'change-langugage-btn',
+            },
+          ],
+          [
+            {
+              label: this.$tr('editCategoriesButton'),
+              icon: 'categories',
+              onClick: this.quickEditModalFactory(QuickEditModals.CATEGORIES),
+              condition: this.canEdit,
+              dataTest: 'change-categories-btn',
+            },
+            {
+              label: this.$tr('editLevelsButton'),
+              icon: 'levels',
+              onClick: this.quickEditModalFactory(QuickEditModals.LEVELS),
+              condition: this.canEdit,
+              dataTest: 'change-levels-btn',
+            },
+            {
+              label: this.$tr('editLearningActivitiesButton'),
+              icon: 'activities',
+              onClick: this.quickEditModalFactory(QuickEditModals.LEARNING_ACTIVITIES),
+              condition: this.canEdit && this.isResourceSelected,
+              disabled: this.isTopicSelected,
+              dataTest: 'change-learning-activities-btn',
+            },
+          ],
+          [
+            {
+              label: this.$tr('editSourceButton'),
+              icon: 'attribution',
+              onClick: this.quickEditModalFactory(QuickEditModals.SOURCE),
+              condition: this.canEdit && this.isResourceSelected,
+              disabled: this.isTopicSelected,
+              dataTest: 'change-learning-activities-btn',
+            },
+            {
+              label: this.$tr('editAudienceButton'),
+              icon: 'audience',
+              onClick: this.quickEditModalFactory(QuickEditModals.AUDIENCE),
+              condition: this.canEdit && this.isResourceSelected,
+              disabled: this.isTopicSelected,
+              dataTest: 'change-audience-btn',
+            },
+            {
+              label: this.$tr('editWhatIsNeededButton'),
+              icon: 'lesson',
+              onClick: this.quickEditModalFactory(QuickEditModals.WHAT_IS_NEEDED),
+              condition: this.canEdit,
+              dataTest: 'change-resources-neded-btn',
+            },
+          ],
+        ];
+
+        const filteredOptions = groupedOptions
+          .filter(group => group.some(option => option.condition))
+          .map(group => group.filter(option => option.condition));
+
+        // Flatten the array with a divider between each group
+        return filteredOptions.reduce((acc, group, index) => {
+          if (index > 0) {
+            acc.push({ type: 'divider' });
+          }
+          return acc.concat(group);
+        }, []);
+      },
       height() {
         return this.hasStagingTree ? 'calc(100vh - 224px)' : 'calc(100vh - 160px)';
       },
       node() {
         return this.getContentNode(this.topicId);
+      },
+      selectedNodes() {
+        return this.getContentNodes(this.selected);
+      },
+      isTopicSelected() {
+        return this.selectedNodes.some(node => node.kind === ContentKindsNames.TOPIC);
+      },
+      isResourceSelected() {
+        return this.selectedNodes.some(node => node.kind !== ContentKindsNames.TOPIC);
       },
       ancestors() {
         return this.getContentNodeAncestors(this.topicId, true).map(ancestor => {
@@ -372,7 +498,7 @@
         };
       },
       selectionText() {
-        return this.$tr('selectionCount', this.getTopicAndResourceCounts(this.selected));
+        return this.getSelectedTopicAndResourceCountText(this.selected);
       },
       draggableId() {
         return DraggableRegions.TOPIC_VIEW;
@@ -388,6 +514,28 @@
         return this.activeDraggableRegionId === DraggableRegions.CLIPBOARD
           ? DropEffect.COPY
           : DropEffect.MOVE;
+      },
+      dividerStyle() {
+        return {
+          height: '100%',
+          backgroundColor: this.$themeTokens.fineLine,
+          width: '1px',
+        };
+      },
+      currentInheritingNodes() {
+        if (!this.inheritingNodes) {
+          return [];
+        }
+        // Handle inheritance modals one parent at a time.
+        const firstNode = this.inheritingNodes[0];
+        return this.inheritingNodes.filter(n => n.parent === firstNode.parent);
+      },
+      inheritanceParent() {
+        const firstNode = this.currentInheritingNodes[0];
+        if (!firstNode) {
+          return;
+        }
+        return this.getContentNode(firstNode.parent);
       },
     },
     watch: {
@@ -436,7 +584,10 @@
         'moveContentNodes',
         'copyContentNode',
         'waitForCopyingStatus',
+        'setQuickEditModal',
+        'updateContentNode',
       ]),
+      ...mapMutations('contentNode', ['ADD_INHERITING_NODE', 'CLEAR_INHERITING_NODES']),
       ...mapActions('clipboard', ['copyAll']),
       clearSelections() {
         this.selected = [];
@@ -523,6 +674,16 @@
             detailNodeIds: ids.join(','),
           },
         });
+      },
+      quickEditModalFactory(modal) {
+        return () => {
+          this.setQuickEditModal({
+            modal,
+            nodeIds: this.selected,
+          });
+          const trackActionLabel = modal.replace(/_/g, ' ').toLowerCase();
+          this.trackClickEvent(`Edit ${trackActionLabel}`);
+        };
       },
       treeLink(params) {
         return {
@@ -624,6 +785,14 @@
           return this.moveContentNodes({
             ...payload,
             id__in: data.sources.map(s => s.metadata.id),
+          }).then(ids => {
+            if (this.topicId !== payload.target) {
+              // If we are not moving within the same parent
+              // trigger the node inheritance behaviour.
+              for (const id of ids) {
+                this.ADD_INHERITING_NODE(this.getContentNode(id));
+              }
+            }
           });
         }
       },
@@ -748,27 +917,44 @@
       trackViewMode(mode) {
         this.$analytics.trackAction('general', mode);
       },
+      showTitleDescriptionModal(nodeId) {
+        this.editTitleDescriptionModal = {
+          nodeId,
+        };
+      },
+      inheritMetadata(metadata) {
+        const nodeIds = this.currentInheritingNodes.map(n => n.id);
+        for (const nodeId of nodeIds) {
+          this.updateContentNode({ id: nodeId, ...metadata, mergeMapFields: true });
+        }
+        this.CLEAR_INHERITING_NODES(nodeIds);
+      },
     },
     $trs: {
       addTopic: 'New folder',
-      SortAlphabetically: 'Sort alphabetically',
+      sortAlphabetically: 'Sort alphabetically',
       addExercise: 'New exercise',
       uploadFiles: 'Upload files',
       importFromChannels: 'Import from channels',
       addButton: 'Add',
       editButton: 'Edit',
+      editSourceButton: 'Edit source',
+      editLevelsButton: 'Edit levels',
+      editLanguageButton: 'Edit language',
+      editAudienceButton: 'Edit audience',
+      editCategoriesButton: 'Edit categories',
+      editWhatIsNeededButton: 'Edit requirements',
+      editLearningActivitiesButton: 'Edit learning activities',
       optionsButton: 'Options',
       copyToClipboardButton: 'Copy to clipboard',
       [viewModes.DEFAULT]: 'Default view',
       [viewModes.COMFORTABLE]: 'Comfortable view',
       [viewModes.COMPACT]: 'Compact view',
-      editSelectedButton: 'Edit',
+      editSelectedButton: 'Edit details',
       copySelectedButton: 'Copy to clipboard',
       moveSelectedButton: 'Move',
       duplicateSelectedButton: 'Make a copy',
-      deleteSelectedButton: 'Delete',
-      selectionCount:
-        '{topicCount, plural,\n =1 {# folder}\n other {# folders}}, {resourceCount, plural,\n =1 {# resource}\n other {# resources}}',
+      deleteSelectedButton: 'Remove',
       undo: 'Undo',
       creatingCopies: 'Copying...',
       copiedItems: 'Copy operation complete',
@@ -794,4 +980,18 @@
   .fade-transition-leave-active {
     transition-duration: 0.1s
   }
+
+  .divider-wrapper {
+    padding: 8px 12px;
+    align-self: stretch;
+  }
+  .command-palette-wrapper {
+    min-width: 0;
+    flex-grow: 1;
+    padding-right: 4px;
+  }
+  .no-shrink {
+    flex-shrink: 0;
+  }
+
 </style>

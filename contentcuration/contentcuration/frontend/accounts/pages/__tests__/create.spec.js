@@ -17,8 +17,8 @@ const defaultData = {
   first_name: 'Test',
   last_name: 'User',
   email: 'test@test.com',
-  password1: 'pass',
-  password2: 'pass',
+  password1: 'tester123',
+  password2: 'tester123',
   uses: ['tagging'],
   storage: '',
   other_use: '',
@@ -126,6 +126,11 @@ describe('create', () => {
         expect(register).not.toHaveBeenCalled();
       });
     });
+    it('should fail if password1 is too short', () => {
+      const wrapper = makeWrapper({ password1: '123' });
+      wrapper.vm.submit();
+      expect(register).not.toHaveBeenCalled();
+    });
     it('should fail if password1 and password2 do not match', () => {
       const wrapper = makeWrapper({ password1: 'some other password' });
       wrapper.vm.submit();
@@ -155,7 +160,7 @@ describe('create', () => {
     it('should say account with email already exists if register returns a 403', async () => {
       wrapper.setMethods({ register: makeFailedPromise(403) });
       await wrapper.vm.submit();
-      expect(wrapper.vm.emailErrors).toHaveLength(1);
+      expect(wrapper.vm.errors.email).toHaveLength(1);
     });
     it('should say account has not been activated if register returns 405', async () => {
       wrapper.setMethods({ register: makeFailedPromise(405) });

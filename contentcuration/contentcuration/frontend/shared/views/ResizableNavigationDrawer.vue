@@ -39,7 +39,7 @@
       },
       defaultWidth: {
         type: Number,
-        default: 150,
+        default: 400,
       },
       maxWidth: {
         type: Number,

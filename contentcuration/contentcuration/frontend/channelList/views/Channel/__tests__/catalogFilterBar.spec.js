@@ -35,16 +35,6 @@ describe('catalogFilterBar', () => {
     wrapper = makeWrapper();
   });
 
-  describe('public collections', () => {
-    it('should list collections if no filters are selected', () => {
-      expect(wrapper.find('[data-test="collection"]').exists()).toBe(true);
-    });
-    it('should filter by collection if one on click', () => {
-      wrapper.find('[data-test="collection"]').trigger('click');
-      expect(wrapper.vm.collection).toBe(collection.id);
-    });
-  });
-
   describe('removing filters', () => {
     beforeEach(() => {
       Object.entries(query).forEach(([key, val]) => {
@@ -72,15 +62,6 @@ describe('catalogFilterBar', () => {
 
       // Make sure other queries weren't affected
       expect(wrapper.vm.$route.query.collection).toBeTruthy();
-      expect(wrapper.vm.$route.query.languages).toBeTruthy();
-      expect(wrapper.vm.$route.query.keywords).toBeTruthy();
-    });
-    it('removing collection filter should remove it from the query', () => {
-      wrapper.vm.resetCollection();
-      expect(wrapper.vm.$route.query.collection).toBeUndefined();
-
-      // Make sure other queries weren't affected
-      expect(wrapper.vm.$route.query.coach).toBeTruthy();
       expect(wrapper.vm.$route.query.languages).toBeTruthy();
       expect(wrapper.vm.$route.query.keywords).toBeTruthy();
     });
