@@ -296,7 +296,7 @@
         'All future additions to this folder will have the selected details by default',
       language: 'Language: {language}',
       categories: 'Categories: {categories}',
-      learnerNeeds: 'Learner needs: {learnerNeeds}',
+      learnerNeeds: 'Requirements: {learnerNeeds}',
       levels: 'Levels: {levels}',
     },
   };

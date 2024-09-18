@@ -45,7 +45,7 @@
         </template>
 
         <template #actions-end>
-          <VListTileAction class="action-icon px-1" @click.stop>
+          <VListTileAction v-if="canEdit" class="action-icon px-1" @click.stop>
             <transition name="fade">
               <IconButton
                 icon="rename"
