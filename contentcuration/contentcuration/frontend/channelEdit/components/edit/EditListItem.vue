@@ -70,7 +70,7 @@
 
 <script>
 
-  import { mapActions, mapGetters } from 'vuex';
+  import { mapGetters } from 'vuex';
   import { RouteNames } from '../../constants';
   import { fileSizeMixin, fileStatusMixin } from 'shared/mixins';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
@@ -165,11 +165,8 @@
       },
     },
     methods: {
-      ...mapActions('contentNode', ['deleteContentNode']),
       removeNode() {
-        this.deleteContentNode(this.nodeId).then(() => {
-          this.$emit('removed', this.nodeId);
-        });
+        this.$emit('removed', this.nodeId);
       },
     },
     $trs: {

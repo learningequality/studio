@@ -72,7 +72,8 @@
                   <EditList
                     v-model="selected"
                     :nodeIds="nodeIds"
-                    @input="enableValidation(nodeIds);"
+                    :parentId="nodeIds[0]"
+                    @input="enableValidation(nodeIds)"
                   />
                 </div>
               </FileDropzone>
@@ -195,13 +196,14 @@
   import ResizableNavigationDrawer from 'shared/views/ResizableNavigationDrawer';
   import Uploader from 'shared/views/files/Uploader';
   import LoadingText from 'shared/views/LoadingText';
-  import FormatPresets from 'shared/leUtils/FormatPresets';
+  import FormatPresets, { FormatPresetsList } from 'shared/leUtils/FormatPresets';
   import OfflineText from 'shared/views/OfflineText';
   import ToolBar from 'shared/views/ToolBar';
   import BottomBar from 'shared/views/BottomBar';
   import FileDropzone from 'shared/views/files/FileDropzone';
   import { isNodeComplete } from 'shared/utils/validation';
-  import { DELAYED_VALIDATION } from 'shared/constants';
+  import { DELAYED_VALIDATION, fileErrors } from 'shared/constants';
+  import { File } from 'shared/data/resources';
 
   const CHECK_STORAGE_INTERVAL = 10000;
 
@@ -479,7 +481,7 @@
       },
 
       /* Creation actions */
-      createNode(kind, payload = {}) {
+      createNode(kind, payload = {}, parent = this.$route.params.nodeId) {
         this.enableValidation(this.nodeIds);
         // Default learning activity on upload
         if (
@@ -492,7 +494,7 @@
         }
         return this.createContentNode({
           kind,
-          parent: this.$route.params.nodeId,
+          parent: parent,
           channel_id: this.currentChannel.id,
           ...payload,
         }).then(newNodeId => {
@@ -524,18 +526,67 @@
               .slice(0, -1)
               .join('.');
           }
-          this.createNode(
-            FormatPresets.has(file.preset) && FormatPresets.get(file.preset).kind_id,
-            { title, ...file.metadata }
-          ).then(newNodeId => {
-            if (index === 0) {
-              this.selected = [newNodeId];
-            }
-            this.updateFile({
-              ...file,
-              contentnode: newNodeId,
+          if (file.metadata.folders === undefined) {
+            this.createNode(
+              FormatPresets.has(file.preset) && FormatPresets.get(file.preset).kind_id,
+              { title, ...file.metadata }
+            ).then(newNodeId => {
+              if (index === 0) {
+                this.selected = [newNodeId];
+              }
+              this.updateFile({
+                ...file,
+                contentnode: newNodeId,
+              });
             });
-          });
+          } else if (file.metadata.folders) {
+            this.createNode('topic', file.metadata).then(newNodeId => {
+              file.metadata.folders.forEach(folder => {
+                this.createNode('topic', folder, newNodeId).then(topicNodeId => {
+                  folder.files.forEach(folderFile => {
+                    const extra_fields = {};
+                    extra_fields['options'] = { entry: folderFile.resourceHref };
+                    extra_fields['title'] = folderFile.title;
+                    let file_kind = null;
+                    FormatPresetsList.forEach(p => {
+                      if (p.id === file.metadata.preset) {
+                        file_kind = p.kind_id;
+                      }
+                    });
+
+                    this.createNode(file_kind, extra_fields, topicNodeId).then(resourceNodeId => {
+                      return File.uploadUrl({
+                        checksum: file.checksum,
+                        size: file.file_size,
+                        name: file.original_filename,
+                        file_format: file.file_format,
+                        preset: file.metadata.preset,
+                      }).then(data => {
+                        const fileObject = {
+                          ...data.file,
+                          loaded: 0,
+                          total: file.size,
+                        };
+                        if (!this.selected.length) {
+                          this.selected = [resourceNodeId];
+                        }
+                        this.updateFile({
+                          ...fileObject,
+                          contentnode: resourceNodeId,
+                        }).catch(error => {
+                          let errorType = fileErrors.UPLOAD_FAILED;
+                          if (error.response && error.response.status === 412) {
+                            errorType = fileErrors.NO_STORAGE;
+                          }
+                          return Promise.reject(errorType);
+                        });
+                      });
+                    });
+                  });
+                });
+              });
+            });
+          }
         });
       },
       updateTitleForPage() {
