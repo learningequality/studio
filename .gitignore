@@ -128,7 +128,7 @@ webpack-stats\.json
 storybook-static/
 
 # i18n
-/contentcuration/locale/CSV_FILES/*
+/contentcuration/locale/**/LC_MESSAGES/*.csv
 
 # pyenv
 .python-version
