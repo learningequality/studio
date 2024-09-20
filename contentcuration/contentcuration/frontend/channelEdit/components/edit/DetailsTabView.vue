@@ -271,7 +271,7 @@
               </template>
             </VCombobox>
             <p v-if="disableSourceEdits" class="help">
-              {{  helpTextString.$tr('cannotEditPublic') }}
+              {{ helpTextString.$tr('cannotEditPublic') }}
             </p>
 
             <!-- Provider -->
@@ -324,9 +324,9 @@
               :disabled="disableSourceEdits"
               :placeholder="getPlaceholder('license')"
               :descriptionPlaceholder="getPlaceholder('license_description')"
+              :helpText="disableSourceEdits ? helpTextString.$tr('cannotEditPublic') : ''"
               @focus="trackClick('License')"
               @descriptionFocus="trackClick('License description')"
-              :helpText="disableSourceEdits ? helpTextString.$tr('cannotEditPublic') : ''"
             />
 
             <!-- Copyright Holder -->
@@ -349,7 +349,7 @@
               @focus="trackClick('Copyright holder')"
             />
             <p v-if="disableSourceEdits" class="help">
-              {{  helpTextString.$tr('cannotEditPublic') }}
+              {{ helpTextString.$tr('cannotEditPublic') }}
             </p>
           </VFlex>
         </template>
@@ -391,6 +391,7 @@
   import FileUpload from '../../views/files/FileUpload';
   import SubtitlesList from '../../views/files/supplementaryLists/SubtitlesList';
   import { isImportedContent, isDisableSourceEdits, importedChannelLink } from '../../utils';
+  import EditSourceModal from '../QuickEditModal/EditSourceModal.vue';
   import AccessibilityOptions from './AccessibilityOptions.vue';
   import LevelsOptions from 'shared/views/contentNodeFields/LevelsOptions';
   import CategoryOptions from 'shared/views/contentNodeFields/CategoryOptions';
@@ -417,7 +418,6 @@
   } from 'shared/constants';
   import { constantsTranslationMixin, metadataTranslationMixin } from 'shared/mixins';
   import { crossComponentTranslator } from 'shared/i18n';
-  import EditSourceModal from '../QuickEditModal/EditSourceModal.vue';
 
   function getValueFromResults(results) {
     if (results.length === 0) {
@@ -1001,7 +1001,7 @@
     }
   }
 
-  // Positions help text underneath 
+  // Positions help text underneath
   p.help {
     position: relative;
     top: -20px;
@@ -1010,4 +1010,5 @@
     font-size: 12px;
     color: var(--v-text-lighten4);
   }
+
 </style>
