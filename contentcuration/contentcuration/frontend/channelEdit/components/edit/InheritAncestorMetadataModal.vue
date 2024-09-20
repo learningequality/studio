@@ -178,6 +178,9 @@
           this.resetData();
         }
       },
+      active(newValue) {
+        this.$emit('updateActive', newValue);
+      },
     },
     created() {
       this.resetData();
@@ -282,6 +285,12 @@
           this.storePreferences();
         }
         this.closed = true;
+      },
+      /**
+       * @public
+       */
+      resetClosed() {
+        this.closed = false;
       },
     },
     $trs: {

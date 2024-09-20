@@ -70,7 +70,7 @@
                 </ToolBar>
                 <div ref="list">
                   <EditList
-                    v-model="selected"
+                    v-model="currentSelectedNodes"
                     :nodeIds="nodeIds"
                     @input="enableValidation(nodeIds);"
                   />
@@ -96,7 +96,7 @@
               <EditView
                 v-else
                 ref="editView"
-                :nodeIds="selected"
+                :nodeIds="currentSelectedNodes"
                 :tab="tab"
               />
             </VContent>
@@ -123,8 +123,10 @@
         </VLayout>
       </BottomBar>
       <InheritAncestorMetadataModal
+        ref="inheritModal"
         :parent="(createMode && detailNodeIds.length) ? parent : null"
         @inherit="inheritMetadata"
+        @updateActive="active => isInheritModalOpen = active"
       />
     </VDialog>
 
@@ -252,6 +254,8 @@
         listElevated: false,
         storagePoll: null,
         openTime: null,
+        isInheritModalOpen: false,
+        newNodeIds: [],
       };
     },
     computed: {
@@ -314,6 +318,17 @@
       },
       invalidNodes() {
         return this.nodeIds.filter(id => !this.getContentNodeIsValid(id));
+      },
+      currentSelectedNodes: {
+        get() {
+          if (this.isInheritModalOpen && this.newNodeIds.length) {
+            return this.newNodeIds;
+          }
+          return this.selected;
+        },
+        set(value) {
+          this.selected = value;
+        },
       },
     },
     beforeRouteEnter(to, from, next) {
@@ -513,21 +528,22 @@
           this.selected = [newNodeId];
         });
       },
-      createNodesFromUploads(fileUploads) {
-        fileUploads.forEach((file, index) => {
-          let title;
-          if (file.metadata.title) {
-            title = file.metadata.title;
-          } else {
-            title = file.original_filename
-              .split('.')
-              .slice(0, -1)
-              .join('.');
-          }
-          this.createNode(
-            FormatPresets.has(file.preset) && FormatPresets.get(file.preset).kind_id,
-            { title, ...file.metadata }
-          ).then(newNodeId => {
+      async createNodesFromUploads(fileUploads) {
+        this.newNodeIds = await Promise.all(
+          fileUploads.map(async (file, index) => {
+            let title;
+            if (file.metadata.title) {
+              title = file.metadata.title;
+            } else {
+              title = file.original_filename
+                .split('.')
+                .slice(0, -1)
+                .join('.');
+            }
+            const newNodeId = await this.createNode(
+              FormatPresets.has(file.preset) && FormatPresets.get(file.preset).kind_id,
+              { title, ...file.metadata }
+            );
             if (index === 0) {
               this.selected = [newNodeId];
             }
@@ -535,8 +551,10 @@
               ...file,
               contentnode: newNodeId,
             });
-          });
-        });
+            return newNodeId;
+          })
+        );
+        this.$refs.inheritModal?.resetClosed();
       },
       updateTitleForPage() {
         this.updateTabTitle(this.$store.getters.appendChannelName(this.modalTitle));
@@ -547,7 +565,7 @@
         });
       },
       inheritMetadata(metadata) {
-        for (const nodeId of this.nodeIds) {
+        for (const nodeId of this.currentSelectedNodes) {
           this.updateContentNode({ id: nodeId, ...metadata, mergeMapFields: true });
         }
       },
