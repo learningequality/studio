@@ -1,7 +1,7 @@
+# DELETE THIS FILE AFTER RUNNING THE MIGRATIONSSS
 import datetime
-import logging
+import uuid
 
-from django.core.management.base import BaseCommand
 from django.db.models import Exists
 from django.db.models import F
 from django.db.models import OuterRef
@@ -10,20 +10,42 @@ from django.db.models import Value
 from django.db.models.functions import Coalesce
 from django.utils import timezone
 from django_cte import With
+from le_utils.constants import content_kinds
 
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
+from contentcuration.models import License
+from contentcuration.tests import testdata
+from contentcuration.tests.base import StudioAPITestCase
 from contentcuration.utils.publish import publish_channel
 
-logger = logging.getLogger(__file__)
 
+class TestRectifyMigrationCommand(StudioAPITestCase):
 
-class Command(BaseCommand):
-    def handle(self, *args, **options):
-        # Filter Date : July 9, 2023
-        # Link https://github.com/learningequality/studio/pull/4189
-        # The PR date for the frontend change is July 10, 2023
-        # we would set the filter day one day back just to be sure
+    @classmethod
+    def setUpClass(cls):
+        super(TestRectifyMigrationCommand, cls).setUpClass()
+
+    def tearDown(self):
+        super(TestRectifyMigrationCommand, self).tearDown()
+
+    def setUp(self):
+        super(TestRectifyMigrationCommand, self).setUp()
+        self.original_channel = testdata.channel()
+        self.license_original = License.objects.all()[0]
+        self.original_contentnode = ContentNode.objects.create(
+            id=uuid.uuid4().hex,
+            title="Original Node",
+            parent=self.original_channel.main_tree,
+            license=self.license_original,
+            original_channel_id=None,
+            source_channel_id=None,
+        )
+        self.user = testdata.user()
+        self.original_channel.editors.add(self.user)
+        self.client.force_authenticate(user=self.user)
+
+    def run_migrations(self):
         filter_date = datetime.datetime(2023, 7, 9, tzinfo=timezone.utc)
         main_trees_cte = With(
             (
@@ -85,7 +107,6 @@ class Command(BaseCommand):
                 )
             )
         ).filter(original_source_node_f_changed=True)
-
         final_nodes = diff_combined.values(
             "id",
             "channel_id",
@@ -100,7 +121,6 @@ class Command(BaseCommand):
 
         for item in final_nodes:
             base_node = ContentNode.objects.get(pk=item["id"])
-
             original_source_channel_id = item["original_channel_id"]
             original_source_node_id = item["original_source_node_id"]
             tree_id = (
@@ -115,7 +135,9 @@ class Command(BaseCommand):
             base_channel = Channel.objects.get(pk=item['channel_id'])
 
             to_be_republished = not (base_channel.main_tree.get_family().filter(changed=True).exists())
-
+            print("onga bonga 2")
+            print(base_channel.main_tree.get_family().filter(changed=True))
+            print(to_be_republished)
             if original_source_channel_id is not None and original_source_node.exists():
                 # original source node exists and its source fields dont match
                 # update the base node
@@ -127,10 +149,38 @@ class Command(BaseCommand):
                     base_node.aggregator = original_source_node[0].aggregator
                 if base_node.license != original_source_node[0].license:
                     base_node.license = original_source_node[0].license
+
                 base_node.save()
 
                 if to_be_republished and base_channel.published:
                     # we would repbulish the channel
-                    publish_channel("some_id", base_channel.id)
+                    print("publishingg the channel!!")
+                    publish_channel(self.user.id, base_channel.id)
             else:
                 continue
+
+    def test_two_node_case(self):
+        base_channel = testdata.channel()
+        license_changed = License.objects.all()[1]
+        base_node = ContentNode.objects.create(
+            id=uuid.uuid4().hex,
+            title="base contentnode",
+            parent=base_channel.main_tree,
+            kind_id=content_kinds.VIDEO,
+            license=license_changed,
+            original_channel_id=self.original_channel.id,
+            source_channel_id=self.original_channel.id,
+            source_node_id=self.original_contentnode.node_id,
+            original_source_node_id=self.original_contentnode.node_id,
+        )
+
+        ContentNode.objects.filter(pk=base_node.pk).update(
+        modified=datetime.datetime(2023, 7, 5, tzinfo=timezone.utc)
+        )
+        # print("onga bongaa")
+        # print(base_node.changed)
+        base_node.changed = False
+        self.run_migrations()
+        base_node.refresh_from_db()
+        self.assertEqual(base_node.license, self.original_contentnode.license)
+        self.assertEqual(base_channel.published, True)
