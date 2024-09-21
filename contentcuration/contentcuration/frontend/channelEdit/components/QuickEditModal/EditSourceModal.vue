@@ -62,11 +62,9 @@
             box
             :required="isEditable"
             :disabled="!isEditable"
+            :helpText="helpText"
           />
         </div>
-        <p v-if="helpText" class="help" style="margin-bottom: 8px">
-          {{ helpText }}
-        </p>
       </div>
       <div class="form-item">
         <div class="input-container">
