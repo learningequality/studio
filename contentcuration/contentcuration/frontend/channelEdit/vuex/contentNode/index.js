@@ -75,6 +75,17 @@ export default {
        * }
        */
       previousStepsMap: {},
+
+      /**
+       * A map of node ids to their respective resource or assessment item nodes counts.
+       *
+       * For example,
+       * {
+       *   '<content_node_id_1>': { 'resourceCount': 2  }
+       *   '<content_node_id_2>': { 'assessmentItemCount': 1  }
+       * }
+       */
+      contentNodesCountMap: {},
     };
   },
   getters,

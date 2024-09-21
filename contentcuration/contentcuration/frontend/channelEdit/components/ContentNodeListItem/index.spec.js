@@ -36,6 +36,11 @@ function mountComponent(opts = {}) {
           namespaced: true,
           getters: {
             isNodeInCopyingState: () => jest.fn(),
+            getContentNodesCount: () =>
+              jest.fn().mockReturnValue({
+                resource_count: TOPIC_NODE.resource_count,
+                assessment_item_count: EXERCISE_NODE.assessment_item_count,
+              }),
           },
         },
       },

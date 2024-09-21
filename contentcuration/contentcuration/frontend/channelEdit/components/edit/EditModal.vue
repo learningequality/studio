@@ -447,7 +447,10 @@
         this.hideHTMLScroll(false);
         this.$router.push({
           name: RouteNames.TREE_VIEW,
-          params: { nodeId: this.$route.params.nodeId },
+          params: {
+            nodeId: this.$route.params.nodeId,
+            addedCount: this.nodeIds.length,
+          },
         });
       },
       hideHTMLScroll(hidden) {
