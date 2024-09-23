@@ -140,12 +140,21 @@ class InvitationViewSet(ValuesViewset):
     @action(detail=True, methods=["post"])
     def accept(self, request, pk=None):
         invitation = self.get_object()
-        invitation.accept()
-        invitation.accepted = True
+        changes = request.data
+
+        accepted = changes.get("accepted", False)
+        if accepted:
+            invitation.accept()
+            invitation.accepted = accepted
+
+        declined = changes.get("declined", False)
+        if declined:
+            invitation.declined = declined
+
         invitation.save()
         Change.create_change(
             generate_update_event(
-                invitation.id, INVITATION, {"accepted": True}, channel_id=invitation.channel_id
+                invitation.id, INVITATION, changes, channel_id=invitation.channel_id
             ), applied=True, created_by_id=request.user.id
         )
         return Response({"status": "success"})

@@ -1930,8 +1930,7 @@ export const Invitation = new Resource({
   urlName: 'invitation',
   indexFields: ['channel'],
 
-  accept(id) {
-    const changes = { accepted: true };
+  accept(id, changes) {
     return client.post(window.Urls.invitationAccept(id), changes).then(() => {
       return this.transaction({ mode: 'rw' }, () => {
         return this.table.update(id, changes);
