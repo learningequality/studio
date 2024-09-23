@@ -283,7 +283,10 @@ class CRUDTestCase(StudioAPITestCase):
         invitation = models.Invitation.objects.create(**self.invitation_db_metadata)
 
         self.client.force_authenticate(user=self.invited_user)
-        response = self.client.post(reverse("invitation-accept", kwargs={"pk": invitation.id}))
+        response = self.client.post(
+            reverse("invitation-accept", kwargs={"pk": invitation.id}),
+            {"accepted": True},
+        )
         self.assertEqual(response.status_code, 200, response.content)
         try:
             invitation = models.Invitation.objects.get(id=invitation.id)
