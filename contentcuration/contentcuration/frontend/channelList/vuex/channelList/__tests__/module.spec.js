@@ -93,11 +93,10 @@ describe('invitation actions', () => {
       store.commit('channelList/SET_INVITATION_LIST', [{ id, ...invitation }]);
     });
     it('should call client.delete', () => {
-      const updateSpy = jest.spyOn(Invitation, 'accept');
+      const updateSpy = jest.spyOn(Invitation, 'decline');
       return store.dispatch('channelList/declineInvitation', id).then(() => {
         expect(updateSpy).toHaveBeenCalled();
         expect(updateSpy.mock.calls[0][0]).toBe(id);
-        expect(updateSpy.mock.calls[0][1]).toEqual({ declined: true });
         updateSpy.mockRestore();
       });
     });

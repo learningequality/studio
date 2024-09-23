@@ -56,7 +56,7 @@ export function loadInvitationList(context) {
 
 export function acceptInvitation(context, invitationId) {
   const invitation = context.getters.getInvitation(invitationId);
-  return Invitation.accept(invitationId, { accepted: true })
+  return Invitation.accept(invitationId)
     .then(() => {
       return context
         .dispatch('channel/loadChannel', invitation.channel, { root: true })
@@ -76,7 +76,7 @@ export function acceptInvitation(context, invitationId) {
 }
 
 export function declineInvitation(context, invitationId) {
-  return Invitation.accept(invitationId, { declined: true }).then(() => {
+  return Invitation.decline(invitationId).then(() => {
     return context.commit('REMOVE_INVITATION', invitationId);
   });
 }
