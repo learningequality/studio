@@ -104,9 +104,9 @@
         // as to be inherited or not by a previous interaction with the modal.
         return Boolean(
           this.parent &&
-            this.parent?.extra_fields?.inherit_metadata &&
+            this.parent?.extra_fields?.inherited_metadata &&
             Object.keys(this.inheritableMetadataItems).every(
-              field => !isUndefined(this.parent.extra_fields.inherit_metadata[field])
+              field => !isUndefined(this.parent.extra_fields.inherited_metadata[field])
             )
         );
       },
@@ -203,10 +203,10 @@
           ContentNode.getAncestors(this.parent.id).then(ancestors => {
             for (const field of inheritableFields) {
               if (
-                this.parent.extra_fields.inherit_metadata &&
-                this.parent.extra_fields.inherit_metadata[field]
+                this.parent.extra_fields.inherited_metadata &&
+                this.parent.extra_fields.inherited_metadata[field]
               ) {
-                this.checks[field] = this.parent.extra_fields.inherit_metadata[field];
+                this.checks[field] = this.parent.extra_fields.inherited_metadata[field];
               }
             }
             this.categories = ancestors.reduce((acc, ancestor) => {
@@ -258,19 +258,19 @@
           // but just in case, return
           return;
         }
-        const inherit_metadata = {
-          ...(this.parent?.extra_fields.inherit_metadata || {}),
+        const inherited_metadata = {
+          ...(this.parent?.extra_fields.inherited_metadata || {}),
         };
         for (const field of inheritableFields) {
           if (this.inheritableMetadataItems[field]) {
             // Only store preferences for fields that have been shown to the user as inheritable
-            inherit_metadata[field] = this.checks[field];
+            inherited_metadata[field] = this.checks[field];
           }
         }
         this.updateContentNode({
           id: this.parent.id,
           extra_fields: {
-            inherit_metadata,
+            inherited_metadata,
           },
         });
       },

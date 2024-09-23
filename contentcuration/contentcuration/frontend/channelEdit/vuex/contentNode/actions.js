@@ -322,8 +322,8 @@ function generateContentNodeData({
     if (extra_fields.suggested_duration_type) {
       contentNodeData.extra_fields.suggested_duration_type = extra_fields.suggested_duration_type;
     }
-    if (extra_fields.inherit_metadata) {
-      contentNodeData.extra_fields.inherit_metadata = extra_fields.inherit_metadata;
+    if (extra_fields.inherited_metadata) {
+      contentNodeData.extra_fields.inherited_metadata = { ...extra_fields.inherited_metadata };
     }
   }
   if (prerequisite !== NOVALUE) {
@@ -369,11 +369,11 @@ export function updateContentNode(context, { id, mergeMapFields, ...payload } = 
       };
     }
 
-    if (contentNodeData.extra_fields.inherit_metadata) {
-      // Don't set inherit_metadata on non-topic nodes
+    if (contentNodeData.extra_fields.inherited_metadata) {
+      // Don't set inherited_metadata on non-topic nodes
       // as they cannot have children to bequeath metadata to
       if (node.kind !== ContentKindsNames.TOPIC) {
-        delete contentNodeData.extra_fields.inherit_metadata;
+        delete contentNodeData.extra_fields.inherited_metadata;
       }
     }
 
