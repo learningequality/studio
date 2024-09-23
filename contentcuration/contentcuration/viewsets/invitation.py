@@ -137,13 +137,6 @@ class InvitationViewSet(ValuesViewset):
         instance = serializer.save()
         instance.save()
 
-    def create_invitation_change(self, invitation, changes, user_id):
-        Change.create_change(
-            generate_update_event(
-                invitation.id, INVITATION, changes, channel_id=invitation.channel_id
-            ), applied=True, created_by_id=user_id
-        )
-
     @action(detail=True, methods=["post"])
     def accept(self, request, pk=None):
         invitation = self.get_object()
