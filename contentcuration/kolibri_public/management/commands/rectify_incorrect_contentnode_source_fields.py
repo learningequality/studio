@@ -128,8 +128,7 @@ class Command(BaseCommand):
                 if base_node.license != original_source_node[0].license:
                     base_node.license = original_source_node[0].license
                 base_node.save()
-
-                if to_be_republished and base_channel.published:
+                if to_be_republished and base_channel.public:
                     # we would repbulish the channel
                     publish_channel("some_id", base_channel.id)
             else:

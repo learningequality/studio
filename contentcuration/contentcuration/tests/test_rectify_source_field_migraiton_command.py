@@ -40,6 +40,7 @@ class TestRectifyMigrationCommand(StudioAPITestCase):
             license=self.license_original,
             original_channel_id=None,
             source_channel_id=None,
+            author="old author hehehe"
         )
         self.user = testdata.user()
         self.original_channel.editors.add(self.user)
@@ -97,6 +98,8 @@ class TestRectifyMigrationCommand(StudioAPITestCase):
             coalesced_license_id=Coalesce("license_id", -1),
         )
 
+        print(diff)
+
         diff_combined = diff.annotate(
             original_source_node_f_changed=Exists(
                 original_source_nodes.filter(
@@ -133,11 +136,8 @@ class TestRectifyMigrationCommand(StudioAPITestCase):
             )
 
             base_channel = Channel.objects.get(pk=item['channel_id'])
-
             to_be_republished = not (base_channel.main_tree.get_family().filter(changed=True).exists())
-            print("onga bonga 2")
-            print(base_channel.main_tree.get_family().filter(changed=True))
-            print(to_be_republished)
+            print("value of to be repblushied", to_be_republished)
             if original_source_channel_id is not None and original_source_node.exists():
                 # original source node exists and its source fields dont match
                 # update the base node
@@ -151,8 +151,7 @@ class TestRectifyMigrationCommand(StudioAPITestCase):
                     base_node.license = original_source_node[0].license
 
                 base_node.save()
-
-                if to_be_republished and base_channel.published:
+                if to_be_republished and base_channel.public:
                     # we would repbulish the channel
                     print("publishingg the channel!!")
                     publish_channel(self.user.id, base_channel.id)
@@ -161,6 +160,8 @@ class TestRectifyMigrationCommand(StudioAPITestCase):
 
     def test_two_node_case(self):
         base_channel = testdata.channel()
+        base_channel.public = True
+        base_channel.save()
         license_changed = License.objects.all()[1]
         base_node = ContentNode.objects.create(
             id=uuid.uuid4().hex,
@@ -172,15 +173,23 @@ class TestRectifyMigrationCommand(StudioAPITestCase):
             source_channel_id=self.original_channel.id,
             source_node_id=self.original_contentnode.node_id,
             original_source_node_id=self.original_contentnode.node_id,
+            author="new herhe"
         )
+        # publish_channel(self.user.id, Channel.objects.get(pk=base_channel.pk).id)
+        for node in Channel.objects.get(pk=base_channel.pk).main_tree.get_family().filter(changed=True):
+            node.changed = False
+            node.save()
 
         ContentNode.objects.filter(pk=base_node.pk).update(
         modified=datetime.datetime(2023, 7, 5, tzinfo=timezone.utc)
         )
-        # print("onga bongaa")
-        # print(base_node.changed)
-        base_node.changed = False
+
+        # base_channel.refresh_from_db()
+        # print(base_channel.main_tree.get_family().filter(changed=True))
+
         self.run_migrations()
-        base_node.refresh_from_db()
-        self.assertEqual(base_node.license, self.original_contentnode.license)
-        self.assertEqual(base_channel.published, True)
+        updated_base_node = ContentNode.objects.get(pk=base_node.pk)
+        self.assertEqual(updated_base_node.license, self.original_contentnode.license)
+        self.assertEqual(updated_base_node.author, self.original_contentnode.author)
+        self.assertEqual(Channel.objects.get(pk=base_channel.id).main_tree.get_family().filter(changed=True).exists(), False)
+        # assert(3==2)
