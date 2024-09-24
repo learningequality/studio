@@ -235,7 +235,11 @@
         'loadAncestors',
       ]),
       moveNodes(target) {
-        return this.moveContentNodes({ id__in: this.selected, parent: target }).then(() => {
+        return this.moveContentNodes({
+          id__in: this.selected,
+          parent: target,
+          inherit: false,
+        }).then(() => {
           this.reset();
           this.$refs.moveModal && this.$refs.moveModal.moveComplete();
         });

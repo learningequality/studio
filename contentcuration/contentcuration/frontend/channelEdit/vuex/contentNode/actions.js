@@ -322,8 +322,8 @@ function generateContentNodeData({
     if (extra_fields.suggested_duration_type) {
       contentNodeData.extra_fields.suggested_duration_type = extra_fields.suggested_duration_type;
     }
-    if (extra_fields.inherit_metadata) {
-      contentNodeData.extra_fields.inherit_metadata = extra_fields.inherit_metadata;
+    if (extra_fields.inherited_metadata) {
+      contentNodeData.extra_fields.inherited_metadata = { ...extra_fields.inherited_metadata };
     }
   }
   if (prerequisite !== NOVALUE) {
@@ -369,11 +369,11 @@ export function updateContentNode(context, { id, mergeMapFields, ...payload } = 
       };
     }
 
-    if (contentNodeData.extra_fields.inherit_metadata) {
-      // Don't set inherit_metadata on non-topic nodes
+    if (contentNodeData.extra_fields.inherited_metadata) {
+      // Don't set inherited_metadata on non-topic nodes
       // as they cannot have children to bequeath metadata to
       if (node.kind !== ContentKindsNames.TOPIC) {
-        delete contentNodeData.extra_fields.inherit_metadata;
+        delete contentNodeData.extra_fields.inherited_metadata;
       }
     }
 
@@ -561,7 +561,7 @@ export function copyContentNodes(
 const PARENT_POSITIONS = [RELATIVE_TREE_POSITIONS.FIRST_CHILD, RELATIVE_TREE_POSITIONS.LAST_CHILD];
 export function moveContentNodes(
   context,
-  { id__in, parent, target = null, position = RELATIVE_TREE_POSITIONS.LAST_CHILD }
+  { id__in, parent, target = null, position = RELATIVE_TREE_POSITIONS.LAST_CHILD, inherit = true }
 ) {
   // Make sure use of parent vs target matches position param
   if (parent && !(PARENT_POSITIONS.indexOf(position) >= 0)) {
@@ -576,6 +576,9 @@ export function moveContentNodes(
     id__in.map(id => {
       return ContentNode.move(id, target, position).then(node => {
         context.commit('ADD_CONTENTNODE', node);
+        if (inherit) {
+          context.commit('ADD_INHERITING_NODE', node);
+        }
         return id;
       });
     })
