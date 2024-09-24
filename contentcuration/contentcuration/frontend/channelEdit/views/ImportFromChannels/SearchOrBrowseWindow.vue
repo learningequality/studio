@@ -95,7 +95,7 @@
           <h3 class="pb-2 pt-0 px-2">
             {{ resourcesMightBeRelevantTitle$({ topic: 'Basic Addition' }) }}
           </h3>
-          <div class="my-2 px-2">
+          <div class="my-3 px-2">
             <ActionLink
               :text="aboutRecommendationsText$()"
               @click="handleAboutRecommendations"
@@ -103,14 +103,16 @@
           </div>
 
           <div class="ml-1">
-            <RecommendedResourceCard
-              v-for="recommendation in recommendations"
-              :key="recommendation.id"
-              :to="{}"
-              :title="recommendation.title"
-              :description="recommendation.description"
-              :headingLevel="2"
-            />
+            <KCardGrid layout="1-1-1">
+              <RecommendedResourceCard
+                v-for="recommendation in recommendations"
+                :key="recommendation.id"
+                :to="{}"
+                :title="recommendation.title"
+                :description="recommendation.description"
+                :headingLevel="2"
+              />
+            </KCardGrid>
           </div>
         </KGridItem>
       </KGrid>

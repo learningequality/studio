@@ -1,7 +1,6 @@
 <template>
 
   <KCard
-    class="recommended-resource-card"
     :to="to"
     :title="title"
     layout="horizontal"
@@ -10,8 +9,10 @@
     thumbnailDisplay="small"
     thumbnailAlign="right"
     :thumbnailSrc="thumbnailSrc"
-    :style="{ margin: '16px 0 16px 0' }"
   >
+    <template #select>
+      <KCheckbox />
+    </template>
     <template #aboveTitle>
       <span>
         <KIcon icon="practiceSolid" />
@@ -72,8 +73,6 @@
   .align-right-style{
       display: flex;
       justify-content: flex-end;
-  }
-  .recommended-resource-card {
-    width: 100%;
+      padding-top: 8px;
   }
 </style>
