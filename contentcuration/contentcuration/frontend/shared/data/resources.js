@@ -1932,7 +1932,14 @@ export const Invitation = new Resource({
 
   accept(id) {
     const changes = { accepted: true };
-    return client.post(window.Urls.invitationAccept(id), changes).then(() => {
+    return this._handleInvitation(id, window.Urls.invitationAccept(id), changes);
+  },
+  decline(id) {
+    const changes = { declined: true };
+    return this._handleInvitation(id, window.Urls.invitationDecline(id), changes);
+  },
+  _handleInvitation(id, url, changes) {
+    return client.post(url).then(() => {
       return this.transaction({ mode: 'rw' }, () => {
         return this.table.update(id, changes);
       });
