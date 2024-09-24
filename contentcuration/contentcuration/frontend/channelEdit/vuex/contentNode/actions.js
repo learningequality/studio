@@ -561,7 +561,7 @@ export function copyContentNodes(
 const PARENT_POSITIONS = [RELATIVE_TREE_POSITIONS.FIRST_CHILD, RELATIVE_TREE_POSITIONS.LAST_CHILD];
 export function moveContentNodes(
   context,
-  { id__in, parent, target = null, position = RELATIVE_TREE_POSITIONS.LAST_CHILD }
+  { id__in, parent, target = null, position = RELATIVE_TREE_POSITIONS.LAST_CHILD, inherit = true }
 ) {
   // Make sure use of parent vs target matches position param
   if (parent && !(PARENT_POSITIONS.indexOf(position) >= 0)) {
@@ -576,6 +576,9 @@ export function moveContentNodes(
     id__in.map(id => {
       return ContentNode.move(id, target, position).then(node => {
         context.commit('ADD_CONTENTNODE', node);
+        if (inherit) {
+          context.commit('ADD_INHERITING_NODE', node);
+        }
         return id;
       });
     })
