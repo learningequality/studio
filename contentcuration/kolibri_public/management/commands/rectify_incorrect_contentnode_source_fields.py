@@ -19,11 +19,31 @@ logger = logging.getLogger(__file__)
 
 
 class Command(BaseCommand):
+
+    def add_arguments(self, parser):
+
+        parser.add_argument(
+            '--is_test',
+            action='store_true',
+            help="Indicate if the command is running in a test environment.",
+        )
+
+        parser.add_argument(
+            '--user_id',
+            type=int,
+            help="User ID for the operation",
+            required=True
+        )
+
     def handle(self, *args, **options):
         # Filter Date : July 9, 2023
         # Link https://github.com/learningequality/studio/pull/4189
         # The PR date for the frontend change is July 10, 2023
         # we would set the filter day one day back just to be sure
+
+        is_test = options['is_test']
+        user_id = options['user_id']
+
         filter_date = datetime.datetime(2023, 7, 9, tzinfo=timezone.utc)
         main_trees_cte = With(
             (
@@ -66,7 +86,6 @@ class Command(BaseCommand):
                 source_node_id__isnull=False,
                 original_source_node_id__isnull=False,
                 modified__lt=filter_date
-                # published=True,
             )
         ).annotate(
             coalesced_provider=Coalesce("provider", Value("")),
@@ -74,7 +93,6 @@ class Command(BaseCommand):
             coalesced_aggregator=Coalesce("aggregator", Value("")),
             coalesced_license_id=Coalesce("license_id", -1),
         )
-
         diff_combined = diff.annotate(
             original_source_node_f_changed=Exists(
                 original_source_nodes.filter(
@@ -128,8 +146,12 @@ class Command(BaseCommand):
                 if base_node.license != original_source_node[0].license:
                     base_node.license = original_source_node[0].license
                 base_node.save()
-                if to_be_republished and base_channel.public:
+                if to_be_republished and base_channel.last_published is not None:
                     # we would repbulish the channel
-                    publish_channel("some_id", base_channel.id)
+                    # Adding for testing
+                    if is_test:
+                        publish_channel(user_id, base_channel.id)
+                    else:
+                        publish_channel("SOME ID", base_channel.id, base_channel.id)
             else:
                 continue
