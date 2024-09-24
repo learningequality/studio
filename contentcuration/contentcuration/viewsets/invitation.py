@@ -143,7 +143,6 @@ class InvitationViewSet(ValuesViewset):
         invitation.accept()
         invitation.accepted = True
         invitation.save()
-
         Change.create_change(
             generate_update_event(
                 invitation.id, INVITATION, {"accepted": True}, channel_id=invitation.channel_id
@@ -156,7 +155,6 @@ class InvitationViewSet(ValuesViewset):
         invitation = self.get_object()
         invitation.declined = True
         invitation.save()
-
         Change.create_change(
             generate_update_event(
                 invitation.id, INVITATION, {"declined": True}, channel_id=invitation.channel_id
