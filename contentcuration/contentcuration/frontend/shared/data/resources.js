@@ -1939,7 +1939,7 @@ export const Invitation = new Resource({
     return this._handleInvitation(id, window.Urls.invitationDecline(id), changes);
   },
   _handleInvitation(id, url, changes) {
-    return client.post(url, changes).then(() => {
+    return client.post(url).then(() => {
       return this.transaction({ mode: 'rw' }, () => {
         return this.table.update(id, changes);
       });
