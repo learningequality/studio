@@ -116,6 +116,8 @@ class Command(BaseCommand):
             "original_source_node_f_changed",
         ).order_by()
 
+        channel_ids_to_republish = set()
+
         for item in final_nodes:
             base_node = ContentNode.objects.get(pk=item["id"])
 
@@ -146,12 +148,14 @@ class Command(BaseCommand):
                 if base_node.license != original_source_node[0].license:
                     base_node.license = original_source_node[0].license
                 base_node.save()
+
                 if to_be_republished and base_channel.last_published is not None:
-                    # we would repbulish the channel
-                    # Adding for testing
-                    if is_test:
-                        publish_channel(user_id, base_channel.id)
-                    else:
-                        publish_channel("SOME ID", base_channel.id, base_channel.id)
+                    channel_ids_to_republish.add(base_channel.id)
+
+        # we would repbulish the channel
+        # Adding for testing
+        for channel_id in channel_ids_to_republish:
+            if is_test:
+                publish_channel(user_id, channel_id)
             else:
-                continue
+                publish_channel("SOME ID", channel_id, channel_id)
