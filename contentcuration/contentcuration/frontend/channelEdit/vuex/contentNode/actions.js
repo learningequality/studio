@@ -11,7 +11,7 @@ import {
 } from 'shared/data/constants';
 import { ContentNode } from 'shared/data/resources';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
-import { findLicense } from 'shared/utils/helpers';
+import { findLicense, getMergedMapFields } from 'shared/utils/helpers';
 import { RolesNames } from 'shared/leUtils/Roles';
 import { isNodeComplete } from 'shared/utils/validation';
 import * as publicApi from 'shared/data/public';
@@ -337,54 +337,6 @@ function generateContentNodeData({
   }
 
   return contentNodeData;
-}
-
-const mapFields = [
-  'accessibility_labels',
-  'grade_levels',
-  'learner_needs',
-  'categories',
-  'learning_activities',
-  'resource_types',
-  'tags',
-];
-
-function getMergedMapFields(node, contentNodeData) {
-  const mergedMapFields = {};
-  for (const mapField of mapFields) {
-    if (contentNodeData[mapField]) {
-      if (mapField === 'categories') {
-        // Reduce categories to the minimal set
-        const existingCategories = Object.keys(node.categories || {});
-        const newCategories = Object.keys(contentNodeData.categories);
-        const newMap = {};
-        for (const category of existingCategories) {
-          // If any of the new categories are more specific than the existing category,
-          // omit this.
-          if (!newCategories.some(newCategory => newCategory.startsWith(category))) {
-            newMap[category] = true;
-          }
-        }
-        for (const category of newCategories) {
-          if (
-            !existingCategories.some(
-              existingCategory =>
-                existingCategory.startsWith(category) && category !== existingCategory
-            )
-          ) {
-            newMap[category] = true;
-          }
-        }
-        mergedMapFields[mapField] = newMap;
-      } else {
-        mergedMapFields[mapField] = {
-          ...node[mapField],
-          ...contentNodeData[mapField],
-        };
-      }
-    }
-  }
-  return mergedMapFields;
 }
 
 export function updateContentNode(context, { id, mergeMapFields, ...payload } = {}) {
