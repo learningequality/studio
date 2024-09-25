@@ -7,7 +7,7 @@
     :submitText="$tr('continueAction')"
     :cancelText="$tr('cancelAction')"
     @submit="handleContinue"
-    @cancel="closed = true"
+    @cancel="handleCancel"
   >
     <div>
       <div>
@@ -290,6 +290,10 @@
           this.storePreferences();
         }
         this.closed = true;
+      },
+      handleCancel() {
+        this.closed = true;
+        this.$emit({});
       },
       /**
        * @public
