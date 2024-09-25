@@ -1899,6 +1899,9 @@ export const ContentNode = new TreeResource({
    */
   async getLoadedDescendants(id) {
     const [node] = await this.table.where({ id }).toArray();
+    if (!node) {
+      return [];
+    }
     const children = await this.table.where({ parent: id }).toArray();
     if (!children.length) {
       return [node];

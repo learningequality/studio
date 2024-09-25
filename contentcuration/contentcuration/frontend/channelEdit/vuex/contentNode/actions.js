@@ -430,6 +430,7 @@ export function updateContentNodeDescendants(context, { id, ...payload } = {}) {
 
   const contentNodesData = contentNodes.map(contentNode => ({
     id: contentNode.id,
+    ...contentNodeData,
     ...getMergedMapFields(contentNode, contentNodeData),
   }));
 
