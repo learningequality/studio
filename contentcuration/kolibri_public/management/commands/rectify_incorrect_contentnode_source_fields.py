@@ -13,6 +13,7 @@ from django_cte import With
 
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
+from contentcuration.models import User
 from contentcuration.utils.publish import publish_channel
 
 logger = logging.getLogger(__file__)
@@ -43,6 +44,9 @@ class Command(BaseCommand):
 
         is_test = options['is_test']
         user_id = options['user_id']
+
+        if not is_test:
+            user_id = User.objects.filter(email='channeladmin@learningequality.org').values('pk')
 
         filter_date = datetime.datetime(2023, 7, 9, tzinfo=timezone.utc)
         main_trees_cte = With(
@@ -155,7 +159,4 @@ class Command(BaseCommand):
         # we would repbulish the channel
         # Adding for testing
         for channel_id in channel_ids_to_republish:
-            if is_test:
-                publish_channel(user_id, channel_id)
-            else:
-                publish_channel("SOME ID", channel_id, channel_id)
+            publish_channel(user_id, channel_id)
