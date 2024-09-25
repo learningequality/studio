@@ -204,7 +204,7 @@
             for (const field of inheritableFields) {
               if (
                 this.parent.extra_fields.inherited_metadata &&
-                this.parent.extra_fields.inherited_metadata[field]
+                !isUndefined(this.parent.extra_fields.inherited_metadata[field])
               ) {
                 this.checks[field] = this.parent.extra_fields.inherited_metadata[field];
               }
