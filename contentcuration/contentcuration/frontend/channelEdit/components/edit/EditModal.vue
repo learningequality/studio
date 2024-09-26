@@ -64,7 +64,12 @@
                   <VBtn v-if="addTopicsMode" color="greyBackground" @click="createTopic">
                     {{ $tr('addTopic') }}
                   </VBtn>
-                  <VBtn v-else-if="uploadMode" color="greyBackground" @click="openFileDialog">
+                  <VBtn
+                    v-else-if="uploadMode"
+                    :disabled="creatingNodes"
+                    color="greyBackground"
+                    @click="openFileDialog"
+                  >
                     {{ $tr('uploadButton') }}
                   </VBtn>
                 </ToolBar>
@@ -256,6 +261,7 @@
         openTime: null,
         isInheritModalOpen: false,
         newNodeIds: [],
+        creatingNodes: false,
       };
     },
     computed: {
@@ -532,6 +538,7 @@
         });
       },
       async createNodesFromUploads(fileUploads) {
+        this.creatingNodes = true;
         this.newNodeIds = await Promise.all(
           fileUploads.map(async (file, index) => {
             let title;
@@ -557,6 +564,7 @@
             return newNodeId;
           })
         );
+        this.creatingNodes = false;
         this.$refs.inheritModal?.resetClosed();
       },
       updateTitleForPage() {
@@ -568,8 +576,21 @@
         });
       },
       inheritMetadata(metadata) {
-        for (const nodeId of this.currentSelectedNodes) {
-          this.updateContentNode({ id: nodeId, ...metadata, mergeMapFields: true });
+        const setMetadata = () => {
+          for (const nodeId of this.newNodeIds) {
+            this.updateContentNode({ id: nodeId, ...metadata, mergeMapFields: true });
+          }
+          this.newNodeIds = [];
+        };
+        if (!this.creatingNodes) {
+          setMetadata();
+        } else {
+          const unwatch = this.$watch('creatingNodes', creatingNodes => {
+            if (!creatingNodes) {
+              unwatch();
+              setMetadata();
+            }
+          });
         }
       },
     },

@@ -7,7 +7,7 @@
     :submitText="$tr('continueAction')"
     :cancelText="$tr('cancelAction')"
     @submit="handleContinue"
-    @cancel="closed = true"
+    @cancel="handleCancel"
   >
     <div>
       <div>
@@ -201,10 +201,14 @@
           }
           this.checks = checks;
           ContentNode.getAncestors(this.parent.id).then(ancestors => {
+            if (!this.parent) {
+              // If the parent has been removed before the data is fetched, return
+              return;
+            }
             for (const field of inheritableFields) {
               if (
-                this.parent.extra_fields.inherited_metadata &&
-                this.parent.extra_fields.inherited_metadata[field]
+                this.parent.extra_fields?.inherited_metadata &&
+                !isUndefined(this.parent.extra_fields.inherited_metadata[field])
               ) {
                 this.checks[field] = this.parent.extra_fields.inherited_metadata[field];
               }
@@ -290,6 +294,10 @@
           this.storePreferences();
         }
         this.closed = true;
+      },
+      handleCancel() {
+        this.closed = true;
+        this.$emit('inherit', {});
       },
       /**
        * @public
