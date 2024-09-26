@@ -46,7 +46,7 @@ class Command(BaseCommand):
         user_id = options['user_id']
 
         if not is_test:
-            user_id = User.objects.filter(email='channeladmin@learningequality.org').values('pk')
+            user_id = User.objects.get(email='channeladmin@learningequality.org').pk
 
         filter_date = datetime.datetime(2023, 7, 9, tzinfo=timezone.utc)
         main_trees_cte = With(
@@ -157,6 +157,5 @@ class Command(BaseCommand):
                     channel_ids_to_republish.add(base_channel.id)
 
         # we would repbulish the channel
-        # Adding for testing
         for channel_id in channel_ids_to_republish:
             publish_channel(user_id, channel_id)
