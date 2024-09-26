@@ -621,9 +621,9 @@ export function setContentNodesCount(context, nodes) {
   }
 }
 
-export function clearContentNodes(context) {
+export function removeContentNodes(context, { parentId }) {
   return new Promise(resolve => {
-    context.commit('CLEAR_CONTENTNODES');
+    context.commit('REMOVE_CONTENTNODES_BY_PARENT', parentId);
     resolve(true);
   });
 }
