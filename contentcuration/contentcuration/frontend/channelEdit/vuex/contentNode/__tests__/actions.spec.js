@@ -111,7 +111,7 @@ describe('contentNode actions', () => {
     });
   });
   describe('updateContentNode action for an existing contentNode', () => {
-    it('should call ContentNode.update', () => {
+    it('should call ContentNode.update without complete if completeCheck is false', () => {
       store.commit('contentNode/ADD_CONTENTNODE', {
         id,
         title: 'test',
@@ -124,6 +124,32 @@ describe('contentNode actions', () => {
           description: 'very',
           language: 'no',
           learning_activities: { test: true },
+        })
+        .then(() => {
+          expect(updateSpy).toHaveBeenCalledWith(id, {
+            title: 'notatest',
+            description: 'very',
+            language: 'no',
+            changed: true,
+            learning_activities: { test: true },
+          });
+          updateSpy.mockRestore();
+        });
+    });
+    it('should call ContentNode.update with complete false if completeCheck is true', () => {
+      store.commit('contentNode/ADD_CONTENTNODE', {
+        id,
+        title: 'test',
+      });
+      const updateSpy = jest.spyOn(ContentNode, 'update');
+      return store
+        .dispatch('contentNode/updateContentNode', {
+          id,
+          title: 'notatest',
+          description: 'very',
+          language: 'no',
+          learning_activities: { test: true },
+          checkComplete: true,
         })
         .then(() => {
           expect(updateSpy).toHaveBeenCalledWith(id, {

@@ -428,23 +428,21 @@ export function updateContentNode(
     }
   }
 
-  const newNode = {
-    ...node,
-    ...contentNodeData,
-  };
-  let complete = true;
   if (checkComplete) {
-    complete = isNodeComplete({
+    const newNode = {
+      ...node,
+      ...contentNodeData,
+    };
+    const complete = isNodeComplete({
       nodeDetails: newNode,
       assessmentItems: context.rootGetters['assessmentItem/getAssessmentItems'](id),
       files: context.rootGetters['file/getContentNodeFiles'](id),
     });
+    contentNodeData = {
+      ...contentNodeData,
+      complete,
+    };
   }
-
-  contentNodeData = {
-    ...contentNodeData,
-    complete,
-  };
 
   context.commit('ADD_CONTENTNODE', { id, ...contentNodeData });
   return ContentNode.update(id, contentNodeData);
