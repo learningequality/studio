@@ -258,6 +258,7 @@
       retryFailedCopy: withChangeTracker(function(changeTracker) {
         this.updateContentNode({
           id: this.nodeId,
+          checkComplete: true,
           [COPYING_STATUS]: COPYING_STATUS_VALUES.COPYING,
         });
 

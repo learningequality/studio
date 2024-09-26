@@ -786,10 +786,12 @@
       saveFromDiffTracker(id) {
         if (this.diffTracker[id]) {
           this.changed = true;
-          return this.updateContentNode({ id, ...this.diffTracker[id] }).then(() => {
-            delete this.diffTracker[id];
-            return this.changed;
-          });
+          return this.updateContentNode({ id, checkComplete: true, ...this.diffTracker[id] }).then(
+            () => {
+              delete this.diffTracker[id];
+              return this.changed;
+            }
+          );
         }
         return Promise.resolve(this.changed);
       },

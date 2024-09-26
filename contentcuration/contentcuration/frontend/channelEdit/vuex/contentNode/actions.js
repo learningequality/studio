@@ -1,5 +1,6 @@
 import flatMap from 'lodash/flatMap';
 import uniq from 'lodash/uniq';
+import isEmpty from 'lodash/isEmpty';
 import { NEW_OBJECT, NOVALUE, DescendantsUpdatableFields } from 'shared/constants';
 import client from 'shared/client';
 import {
@@ -349,9 +350,15 @@ const mapFields = [
   'tags',
 ];
 
-export function updateContentNode(context, { id, mergeMapFields, ...payload } = {}) {
+export function updateContentNode(
+  context,
+  { id, mergeMapFields, checkComplete = false, ...payload } = {}
+) {
   if (!id) {
     throw ReferenceError('id must be defined to update a contentNode');
+  }
+  if (isEmpty(payload)) {
+    return Promise.resolve();
   }
   let contentNodeData = generateContentNodeData(payload);
 
@@ -425,11 +432,15 @@ export function updateContentNode(context, { id, mergeMapFields, ...payload } = 
     ...node,
     ...contentNodeData,
   };
-  const complete = isNodeComplete({
-    nodeDetails: newNode,
-    assessmentItems: context.rootGetters['assessmentItem/getAssessmentItems'](id),
-    files: context.rootGetters['file/getContentNodeFiles'](id),
-  });
+  let complete = true;
+  if (checkComplete) {
+    complete = isNodeComplete({
+      nodeDetails: newNode,
+      assessmentItems: context.rootGetters['assessmentItem/getAssessmentItems'](id),
+      files: context.rootGetters['file/getContentNodeFiles'](id),
+    });
+  }
+
   contentNodeData = {
     ...contentNodeData,
     complete,
