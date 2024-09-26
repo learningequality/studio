@@ -118,7 +118,7 @@
     },
     created() {
       this.loading = true;
-      this.clearContentNodes().then(success => {
+      this.removeContentNodes({ parent: this.parentId }).then(success => {
         if (success) {
           this.loadChildren({ parent: this.parentId }).then(childrenResponse => {
             this.loading = false;
@@ -134,7 +134,7 @@
         'loadChildren',
         'loadContentNodes',
         'setContentNodesCount',
-        'clearContentNodes',
+        'removeContentNodes',
       ]),
       goToNodeDetail(nodeId) {
         if (

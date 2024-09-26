@@ -548,9 +548,13 @@
           this.elevated = false; // list starts at top, so don't elevate toolbar
           // NOTE: this may be redundant with the same call in TreeView.created
           // for initial page load
-          this.loadAncestors({ id: this.topicId }).then(() => {
-            this.updateTitleForPage();
-            this.loadingAncestors = false;
+          this.removeContentNodes({ parentId: this.topicId }).then(success => {
+            if (success) {
+              this.loadAncestors({ id: this.topicId }).then(() => {
+                this.updateTitleForPage();
+                this.loadingAncestors = false;
+              });
+            }
           });
         },
         immediate: true,
@@ -587,6 +591,7 @@
         'waitForCopyingStatus',
         'setQuickEditModal',
         'updateContentNode',
+        'removeContentNodes',
       ]),
       ...mapMutations('contentNode', ['CLEAR_INHERITING_NODES']),
       ...mapActions('clipboard', ['copyAll']),
