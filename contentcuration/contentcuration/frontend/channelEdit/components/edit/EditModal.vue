@@ -534,15 +534,22 @@
           return newNodeId;
         });
       },
+      resetInheritMetadataModal() {
+        this.$refs.inheritModal?.checkInheritance();
+      },
       createTopic() {
         this.createNode('topic', {
           title: '',
         }).then(newNodeId => {
           this.selected = [newNodeId];
+          this.$nextTick(() => {
+            this.resetInheritMetadataModal();
+          });
         });
       },
       async createNodesFromUploads(fileUploads) {
         this.creatingNodes = true;
+        const parentPropDefinedForInheritModal = Boolean(this.$refs.inheritModal?.parent);
         this.newNodeIds = await Promise.all(
           fileUploads.map(async (file, index) => {
             let title;
@@ -569,7 +576,11 @@
           })
         );
         this.creatingNodes = false;
-        this.$refs.inheritModal?.resetClosed();
+        if (parentPropDefinedForInheritModal) {
+          // Only call this if the parent prop was previously defined, otherwise,
+          // rely on the parent prop watcher to trigger the inherit event.
+          this.resetInheritMetadataModal();
+        }
       },
       updateTitleForPage() {
         this.updateTabTitle(this.$store.getters.appendChannelName(this.modalTitle));
@@ -580,8 +591,13 @@
         });
       },
       inheritMetadata(metadata) {
+        if (!this.createMode) {
+          // This shouldn't happen, but prevent this just in case.
+          return;
+        }
         const setMetadata = () => {
-          for (const nodeId of this.newNodeIds) {
+          const nodeIds = this.uploadMode ? this.newNodeIds : this.selected;
+          for (const nodeId of nodeIds) {
             this.updateContentNode({
               id: nodeId,
               ...metadata,
