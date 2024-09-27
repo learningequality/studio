@@ -12,7 +12,7 @@ import {
 } from 'shared/data/constants';
 import { ContentNode } from 'shared/data/resources';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
-import { findLicense } from 'shared/utils/helpers';
+import { findLicense, getMergedMapFields } from 'shared/utils/helpers';
 import { RolesNames } from 'shared/leUtils/Roles';
 import { isNodeComplete } from 'shared/utils/validation';
 import * as publicApi from 'shared/data/public';
@@ -340,16 +340,6 @@ function generateContentNodeData({
   return contentNodeData;
 }
 
-const mapFields = [
-  'accessibility_labels',
-  'grade_levels',
-  'learner_needs',
-  'categories',
-  'learning_activities',
-  'resource_types',
-  'tags',
-];
-
 export function updateContentNode(
   context,
   { id, mergeMapFields, checkComplete = false, ...payload } = {}
@@ -394,38 +384,10 @@ export function updateContentNode(
   }
 
   if (mergeMapFields) {
-    for (const mapField of mapFields) {
-      if (contentNodeData[mapField]) {
-        if (mapField === 'categories') {
-          // Reduce categories to the minimal set
-          const existingCategories = Object.keys(node.categories || {});
-          const newCategories = Object.keys(contentNodeData.categories);
-          const newMap = {};
-          for (const category of existingCategories) {
-            // If any of the new categories are more specific than the existing category,
-            // omit this.
-            if (!newCategories.some(newCategory => newCategory.startsWith(category))) {
-              newMap[category] = true;
-            }
-          }
-          for (const category of newCategories) {
-            if (
-              !existingCategories.some(
-                existingCategory =>
-                  existingCategory.startsWith(category) && category !== existingCategory
-              )
-            ) {
-              newMap[category] = true;
-            }
-          }
-        } else {
-          contentNodeData[mapField] = {
-            ...node[mapField],
-            ...contentNodeData[mapField],
-          };
-        }
-      }
-    }
+    contentNodeData = {
+      ...contentNodeData,
+      ...getMergedMapFields(node, contentNodeData),
+    };
   }
 
   if (checkComplete) {
@@ -472,11 +434,12 @@ export function updateContentNodeDescendants(context, { id, ...payload } = {}) {
   const contentNodeData = generateContentNodeData(payload);
 
   const descendants = context.getters.getContentNodeDescendants(id);
-  const contentNodeIds = [id, ...descendants.map(node => node.id)];
+  const contentNodes = [node, ...descendants];
 
-  const contentNodesData = contentNodeIds.map(contentNodeId => ({
-    id: contentNodeId,
+  const contentNodesData = contentNodes.map(contentNode => ({
+    id: contentNode.id,
     ...contentNodeData,
+    ...getMergedMapFields(contentNode, contentNodeData),
   }));
 
   context.commit('ADD_CONTENTNODES', contentNodesData);
