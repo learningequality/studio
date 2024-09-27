@@ -1,5 +1,6 @@
 import flatMap from 'lodash/flatMap';
 import uniq from 'lodash/uniq';
+import isEmpty from 'lodash/isEmpty';
 import { NEW_OBJECT, NOVALUE, DescendantsUpdatableFields } from 'shared/constants';
 import client from 'shared/client';
 import {
@@ -322,8 +323,8 @@ function generateContentNodeData({
     if (extra_fields.suggested_duration_type) {
       contentNodeData.extra_fields.suggested_duration_type = extra_fields.suggested_duration_type;
     }
-    if (extra_fields.inherit_metadata) {
-      contentNodeData.extra_fields.inherit_metadata = extra_fields.inherit_metadata;
+    if (extra_fields.inherited_metadata) {
+      contentNodeData.extra_fields.inherited_metadata = { ...extra_fields.inherited_metadata };
     }
   }
   if (prerequisite !== NOVALUE) {
@@ -339,9 +340,15 @@ function generateContentNodeData({
   return contentNodeData;
 }
 
-export function updateContentNode(context, { id, mergeMapFields, ...payload } = {}) {
+export function updateContentNode(
+  context,
+  { id, mergeMapFields, checkComplete = false, ...payload } = {}
+) {
   if (!id) {
     throw ReferenceError('id must be defined to update a contentNode');
+  }
+  if (isEmpty(payload)) {
+    return Promise.resolve();
   }
   let contentNodeData = generateContentNodeData(payload);
 
@@ -359,11 +366,11 @@ export function updateContentNode(context, { id, mergeMapFields, ...payload } = 
       };
     }
 
-    if (contentNodeData.extra_fields.inherit_metadata) {
-      // Don't set inherit_metadata on non-topic nodes
+    if (contentNodeData.extra_fields.inherited_metadata) {
+      // Don't set inherited_metadata on non-topic nodes
       // as they cannot have children to bequeath metadata to
       if (node.kind !== ContentKindsNames.TOPIC) {
-        delete contentNodeData.extra_fields.inherit_metadata;
+        delete contentNodeData.extra_fields.inherited_metadata;
       }
     }
 
@@ -383,19 +390,21 @@ export function updateContentNode(context, { id, mergeMapFields, ...payload } = 
     };
   }
 
-  const newNode = {
-    ...node,
-    ...contentNodeData,
-  };
-  const complete = isNodeComplete({
-    nodeDetails: newNode,
-    assessmentItems: context.rootGetters['assessmentItem/getAssessmentItems'](id),
-    files: context.rootGetters['file/getContentNodeFiles'](id),
-  });
-  contentNodeData = {
-    ...contentNodeData,
-    complete,
-  };
+  if (checkComplete) {
+    const newNode = {
+      ...node,
+      ...contentNodeData,
+    };
+    const complete = isNodeComplete({
+      nodeDetails: newNode,
+      assessmentItems: context.rootGetters['assessmentItem/getAssessmentItems'](id),
+      files: context.rootGetters['file/getContentNodeFiles'](id),
+    });
+    contentNodeData = {
+      ...contentNodeData,
+      complete,
+    };
+  }
 
   context.commit('ADD_CONTENTNODE', { id, ...contentNodeData });
   return ContentNode.update(id, contentNodeData);
@@ -502,6 +511,7 @@ export function copyContentNode(
   return ContentNode.copy(id, target, position, excluded_descendants, sourceNode).then(node => {
     context.commit('ADD_CONTENTNODE', node);
     context.commit('ADD_INHERITING_NODE', node);
+    setContentNodesCount(context, [node]);
     return node;
   });
 }
@@ -524,7 +534,7 @@ export function copyContentNodes(
 const PARENT_POSITIONS = [RELATIVE_TREE_POSITIONS.FIRST_CHILD, RELATIVE_TREE_POSITIONS.LAST_CHILD];
 export function moveContentNodes(
   context,
-  { id__in, parent, target = null, position = RELATIVE_TREE_POSITIONS.LAST_CHILD }
+  { id__in, parent, target = null, position = RELATIVE_TREE_POSITIONS.LAST_CHILD, inherit = true }
 ) {
   // Make sure use of parent vs target matches position param
   if (parent && !(PARENT_POSITIONS.indexOf(position) >= 0)) {
@@ -539,6 +549,9 @@ export function moveContentNodes(
     id__in.map(id => {
       return ContentNode.move(id, target, position).then(node => {
         context.commit('ADD_CONTENTNODE', node);
+        if (inherit) {
+          context.commit('ADD_INHERITING_NODE', node);
+        }
         return id;
       });
     })
@@ -581,9 +594,9 @@ export function setContentNodesCount(context, nodes) {
   }
 }
 
-export function clearContentNodes(context) {
+export function removeContentNodes(context, { parentId }) {
   return new Promise(resolve => {
-    context.commit('CLEAR_CONTENTNODES');
+    context.commit('REMOVE_CONTENTNODES_BY_PARENT', parentId);
     resolve(true);
   });
 }

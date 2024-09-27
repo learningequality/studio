@@ -282,9 +282,11 @@
         });
       },
       moveNode(target) {
-        return this.moveContentNodes({ id__in: [this.nodeId], parent: target }).then(
-          this.$refs.moveModal.moveComplete
-        );
+        return this.moveContentNodes({
+          id__in: [this.nodeId],
+          parent: target,
+          inherit: this.node.parent !== target,
+        }).then(this.$refs.moveModal.moveComplete);
       },
       getRemoveNodeRedirect() {
         // Returns a callback to do appropriate post-removal navigation
@@ -322,7 +324,7 @@
       removeNode: withChangeTracker(function(id__in, changeTracker) {
         this.trackAction('Delete');
         const redirect = this.getRemoveNodeRedirect();
-        return this.moveContentNodes({ id__in, parent: this.trashId }).then(() => {
+        return this.moveContentNodes({ id__in, parent: this.trashId, inherit: false }).then(() => {
           redirect();
           this.showSnackbar({
             text: this.$tr('removedItems'),

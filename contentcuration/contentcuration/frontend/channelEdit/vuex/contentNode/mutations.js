@@ -151,10 +151,15 @@ export function SET_CONTENTNODES_COUNT(state, { id, assessment_item_count, resou
 }
 
 /**
- * Clears all content node data (nodes and associated counts) from the vuex state.
+ * Removes content nodes from the contentNodesMap by parent id.
  * @param state - The vuex state
+ * @param parentId - The parent content node id
  */
-export function CLEAR_CONTENTNODES(state) {
-  state.contentNodesMap = {};
+export function REMOVE_CONTENTNODES_BY_PARENT(state, parentId) {
+  for (const key in state.contentNodesMap) {
+    if (state.contentNodesMap[key].parent === parentId) {
+      Vue.delete(state.contentNodesMap, key);
+    }
+  }
   state.contentNodesCountMap = {};
 }
