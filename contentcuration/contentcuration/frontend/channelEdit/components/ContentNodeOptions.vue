@@ -375,7 +375,6 @@
               actionText: this.$tr('undo'),
               actionCallback: () => changeTracker.revert(),
             }).then(() => changeTracker.cleanUp());
-            this.setContentNodesCount([copiedContentNode]);
           })
           .catch(() => {
             this.clearSnackbar();
