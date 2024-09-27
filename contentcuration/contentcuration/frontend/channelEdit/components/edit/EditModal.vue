@@ -129,7 +129,7 @@
       </BottomBar>
       <InheritAncestorMetadataModal
         ref="inheritModal"
-        :parent="createMode ? parent : null"
+        :parent="(createMode && detailNodeIds.length) ? parent : null"
         @inherit="inheritMetadata"
         @updateActive="active => isInheritModalOpen = active"
       />
@@ -549,6 +549,7 @@
       },
       async createNodesFromUploads(fileUploads) {
         this.creatingNodes = true;
+        const parentPropDefinedForInheritModal = Boolean(this.$refs.inheritModal?.parent);
         this.newNodeIds = await Promise.all(
           fileUploads.map(async (file, index) => {
             let title;
@@ -575,7 +576,11 @@
           })
         );
         this.creatingNodes = false;
-        this.resetInheritMetadataModal();
+        if (parentPropDefinedForInheritModal) {
+          // Only call this if the parent prop was previously defined, otherwise,
+          // rely on the parent prop watcher to trigger the inherit event.
+          this.resetInheritMetadataModal();
+        }
       },
       updateTitleForPage() {
         this.updateTabTitle(this.$store.getters.appendChannelName(this.modalTitle));
