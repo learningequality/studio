@@ -129,7 +129,7 @@
       </BottomBar>
       <InheritAncestorMetadataModal
         ref="inheritModal"
-        :parent="(createMode && detailNodeIds.length) ? parent : null"
+        :parent="createMode ? parent : null"
         @inherit="inheritMetadata"
         @updateActive="active => isInheritModalOpen = active"
       />
