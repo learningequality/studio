@@ -399,7 +399,11 @@
 
                 if (completeCheck !== node.complete) {
                   validationPromises.push(
-                    vm.updateContentNode({ id: nodeId, complete: completeCheck })
+                    vm.updateContentNode({
+                      id: nodeId,
+                      complete: completeCheck,
+                      checkComplete: true,
+                    })
                   );
                 }
               });
@@ -578,7 +582,12 @@
       inheritMetadata(metadata) {
         const setMetadata = () => {
           for (const nodeId of this.newNodeIds) {
-            this.updateContentNode({ id: nodeId, ...metadata, mergeMapFields: true });
+            this.updateContentNode({
+              id: nodeId,
+              ...metadata,
+              mergeMapFields: true,
+              checkComplete: true,
+            });
           }
           this.newNodeIds = [];
         };
