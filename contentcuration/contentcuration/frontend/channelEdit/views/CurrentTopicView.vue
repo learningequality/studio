@@ -931,12 +931,6 @@
           this.updateContentNode({ id: nodeId, ...metadata, mergeMapFields: true });
         }
         this.CLEAR_INHERITING_NODES(nodeIds);
-        this.$nextTick(() => {
-          // Once the inheritance is complete, reset the modal closed state.
-          if (!this.inheritingNodes || this.inheritingNodes.length === 0) {
-            this.$refs.inheritModal?.resetClosed();
-          }
-        });
       },
     },
     $trs: {

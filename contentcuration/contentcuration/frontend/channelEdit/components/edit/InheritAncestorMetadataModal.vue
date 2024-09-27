@@ -111,12 +111,7 @@
         );
       },
       active() {
-        return (
-          this.parent !== null &&
-          !this.allFieldsDesignatedByParent &&
-          !this.closed &&
-          this.parentHasInheritableMetadata
-        );
+        return this.parent !== null && !this.closed;
       },
       inheritableMetadataItems() {
         const returnValue = {};
@@ -304,12 +299,6 @@
       handleCancel() {
         this.closed = true;
         this.$emit('inherit', {});
-      },
-      /**
-       * @public
-       */
-      resetClosed() {
-        this.closed = false;
       },
     },
     $trs: {
