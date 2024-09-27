@@ -548,6 +548,7 @@ export function copyContentNode(
   return ContentNode.copy(id, target, position, excluded_descendants, sourceNode).then(node => {
     context.commit('ADD_CONTENTNODE', node);
     context.commit('ADD_INHERITING_NODE', node);
+    setContentNodesCount(context, [node]);
     return node;
   });
 }

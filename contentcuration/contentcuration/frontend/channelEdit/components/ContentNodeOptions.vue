@@ -240,7 +240,6 @@
         'copyContentNode',
         'waitForCopyingStatus',
         'setQuickEditModal',
-        'setContentNodesCount',
       ]),
       ...mapActions('clipboard', ['copy']),
       async focusFirstOption() {
@@ -363,7 +362,6 @@
           target: this.nodeId,
           position: RELATIVE_TREE_POSITIONS.RIGHT,
         });
-        this.setContentNodesCount([copiedContentNode]);
 
         this.waitForCopyingStatus({
           contentNodeId: copiedContentNode.id,
