@@ -192,6 +192,19 @@
     },
     methods: {
       ...mapActions('contentNode', ['updateContentNode']),
+      /**
+       * @public
+       */
+      checkInheritance() {
+        if (this.allFieldsDesignatedByParent || !this.parentHasInheritableMetadata) {
+          // If all fields have been designated by the parent, or there is nothing to inherit,
+          // automatically continue
+          this.handleContinue();
+        } else {
+          // Wait for the data to be updated before showing the dialog
+          this.closed = false;
+        }
+      },
       resetData() {
         if (this.parent) {
           this.dontShowAgain = false;
@@ -242,14 +255,7 @@
               };
             }, {});
             this.$nextTick(() => {
-              if (this.allFieldsDesignatedByParent || !this.parentHasInheritableMetadata) {
-                // If all fields have been designated by the parent, or there is nothing to inherit,
-                // automatically continue
-                this.handleContinue();
-              } else {
-                // Wait for the data to be updated before showing the dialog
-                this.closed = false;
-              }
+              this.checkInheritance();
             });
           });
         }
