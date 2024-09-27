@@ -381,7 +381,6 @@ export function updateContentNode(context, { id, mergeMapFields, ...payload } = 
       ...contentNodeData,
       ...getMergedMapFields(node, contentNodeData),
     };
-    console.log('contentNodeData', contentNodeData);
   }
 
   const newNode = {
