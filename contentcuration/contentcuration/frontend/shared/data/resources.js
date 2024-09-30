@@ -1774,9 +1774,14 @@ export const ContentNode = new TreeResource({
    * @param {Function} updateCallback
    * @return {Promise<void>}
    */
-  updateAncestors({ id, includeSelf = false, ignoreChanges = false }, updateCallback) {
-    return this.transaction({ mode: 'rw' }, async () => {
-      const ancestors = await this.getAncestors(id);
+  async updateAncestors({ id, includeSelf = false, ignoreChanges = false }, updateCallback) {
+    // getAncestors invokes a non-Dexie API, so it must be called outside the transaction.
+    // Invoking it within a transaction can lead to transaction-related issues, including premature
+    // commit errors, which are a common problem when mixing non-Dexie API calls with transactions.
+    // See: https://dexie.org/docs/DexieErrors/Dexie.PrematureCommitError
+    const ancestors = await this.getAncestors(id);
+
+    return await this.transaction({ mode: 'rw' }, async () => {
       for (const ancestor of ancestors) {
         if (ancestor.id === id && !includeSelf) {
           continue;

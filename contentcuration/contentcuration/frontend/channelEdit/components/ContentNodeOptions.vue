@@ -124,7 +124,7 @@
             },
             {
               label: this.$tr('makeACopy'),
-              onClick: this.duplicateNode,
+              onClick: () => this.duplicateNode(this.nodeId),
               condition: this.canEdit,
             },
             {
@@ -347,7 +347,7 @@
           }
         );
       }),
-      duplicateNode: withChangeTracker(async function(changeTracker) {
+      duplicateNode: withChangeTracker(async function(nodeId, changeTracker) {
         this.trackAction('Copy');
         this.showSnackbar({
           duration: null,
@@ -358,8 +358,8 @@
           // actionCallback: () => changeTracker.revert(),
         });
         const copiedContentNode = await this.copyContentNode({
-          id: this.nodeId,
-          target: this.nodeId,
+          id: nodeId,
+          target: nodeId,
           position: RELATIVE_TREE_POSITIONS.RIGHT,
         });
 
