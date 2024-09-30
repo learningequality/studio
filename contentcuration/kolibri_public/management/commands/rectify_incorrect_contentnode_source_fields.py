@@ -33,7 +33,6 @@ class Command(BaseCommand):
             '--user_id',
             type=int,
             help="User ID for the operation",
-            required=True
         )
 
     def handle(self, *args, **options):
