@@ -10,13 +10,5 @@ import os
 
 from django.core.wsgi import get_wsgi_application
 
-# Attach newrelic APM
-try:
-    import newrelic.agent
-    newrelic.agent.disable_browser_autorum()
-    newrelic.agent.initialize()
-except ImportError:
-    pass
-
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "contentcuration.settings")
 application = get_wsgi_application()

@@ -8,9 +8,11 @@
     @submit="submitPassword"
     @cancel="dialog = false"
   >
-    <VForm ref="form">
+    <!-- inline style here avoids scrollbar on validations -->
+    <VForm ref="form" style="height: 196px">
       <PasswordField
         v-model="password"
+        :additionalRules="passwordValidationRules"
         :label="$tr('newPasswordLabel')"
       />
       <PasswordField
@@ -52,6 +54,9 @@
           this.$emit('input', value);
         },
       },
+      passwordValidationRules() {
+        return [value => (value.length >= 8 ? true : this.$tr('passwordValidationMessage'))];
+      },
       passwordConfirmRules() {
         return [value => (this.password === value ? true : this.$tr('formInvalidText'))];
       },
@@ -86,6 +91,7 @@
       newPasswordLabel: 'New password',
       confirmNewPasswordLabel: 'Confirm new password',
       formInvalidText: "Passwords don't match",
+      passwordValidationMessage: 'Password should be at least 8 characters long',
       cancelAction: 'Cancel',
       saveChangesAction: 'Save changes',
       paswordChangeSuccess: 'Password updated',

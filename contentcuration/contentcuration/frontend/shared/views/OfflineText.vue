@@ -4,9 +4,7 @@
     <VTooltip v-if="indicator" bottom z-index="300" lazy>
       <template #activator="{ on }">
         <div class="px-4" v-on="on">
-          <Icon class="mx-2">
-            cloud_off
-          </Icon>
+          <Icon class="mx-2" icon="disconnected" />
           <span class="font-weight-bold">
             {{ $tr('offlineIndicatorText') }}
           </span>
@@ -25,15 +23,11 @@
       :style="`margin-top: ${offset}px;`"
       v-bind="$attrs"
     >
-      <Icon class="mx-3">
-        cloud_off
-      </Icon>
+      <Icon class="mx-3" icon="disconnected" />
       <span>{{ offlineText || $tr('offlineText') }}</span>
     </ToolBar>
     <div v-else>
-      <Icon class="mx-3">
-        cloud_off
-      </Icon>
+      <Icon class="mx-3" icon="disconnected" />
       <span>{{ offlineText || $tr('offlineText') }}</span>
     </div>
   </VFadeTransition>

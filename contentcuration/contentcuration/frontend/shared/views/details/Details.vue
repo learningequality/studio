@@ -272,7 +272,7 @@
               class="notranslate primary--text"
             >
               <span>{{ channel.name }}</span>
-              <Icon small class="mx-1 rtl-flip" color="primary">open_in_new</Icon>
+              <Icon class="mx-1 rtl-flip" icon="openNewTab" />
             </a>
           </VLayout>
         </template>

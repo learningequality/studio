@@ -85,17 +85,21 @@ describe('publishModal', () => {
     });
   });
   describe('on publish step', () => {
+    const updateChannel = jest.fn();
     const publishChannel = jest.fn();
+
     beforeEach(() => {
       wrapper.setData({ step: steps.PUBLISH });
       wrapper.setMethods({
-        publishChannel: () => {
+        updateChannel: () => {
           return new Promise(resolve => {
+            updateChannel();
             publishChannel();
             resolve();
           });
         },
       });
+      updateChannel.mockReset();
       publishChannel.mockReset();
     });
     it('publish button should trigger form validation', () => {
@@ -110,20 +114,26 @@ describe('publishModal', () => {
         "Please describe what's new in this version before publishing"
       );
     });
-    it('publishing should be blocked if no description is given', () => {
+    it('publishing should be blocked if no description & language are given', () => {
       wrapper
         .find('[data-test="confirm-publish-modal"]')
         .find('form')
         .trigger('submit');
+      expect(updateChannel).not.toHaveBeenCalled();
       expect(publishChannel).not.toHaveBeenCalled();
     });
-    it('publish button should call publishChannel if description is given', () => {
+    it('publish button should call updateChannel if description and language are given', () => {
       const description = 'Version notes';
-      wrapper.setData({ publishDescription: description });
+      const language = {
+        value: 'en',
+        label: 'English',
+      };
+      wrapper.setData({ publishDescription: description, language });
       wrapper
         .find('[data-test="confirm-publish-modal"]')
         .find('form')
         .trigger('submit');
+      expect(updateChannel).toHaveBeenCalled();
       expect(publishChannel).toHaveBeenCalled();
     });
     it('cancel button on publish step should also close modal', () => {

@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kolibri-studio\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-05-10 21:55+0000\n"
-"PO-Revision-Date: 2023-05-24 17:17\n"
+"POT-Creation-Date: 2024-08-30 18:12+0000\n"
+"PO-Revision-Date: 2024-09-20 20:08\n"
 "Last-Translator: \n"
 "Language-Team: French\n"
 "Language: fr_FR\n"
@@ -18,7 +18,7 @@ msgstr ""
 "X-Crowdin-File-ID: 4322\n"
 
 #: contentcuration/catalog_settings.py:4 contentcuration/sandbox_settings.py:8
-#: contentcuration/settings.py:290
+#: contentcuration/settings.py:289
 msgid "Arabic"
 msgstr "Arabe"
 
@@ -30,27 +30,35 @@ msgstr "Le site est actuellement en mode lecture seule. Veuillez réessayer plus
 msgid "Not enough space. Check your storage under Settings page."
 msgstr "Espace insuffisant. Vérifiez votre espace de stockage disponible sur la page Paramètres."
 
-#: contentcuration/models.py:308 contentcuration/models.py:315
+#: contentcuration/models.py:312 contentcuration/models.py:319
 msgid "Out of storage! Request more space under Settings > Storage."
 msgstr "Espace de stockage insuffisant ! Demandez plus d'espace dans Paramètres > Stockage."
 
-#: contentcuration/models.py:1730
+#: contentcuration/models.py:1767
 msgid " (Original)"
 msgstr " (Original)"
 
-#: contentcuration/settings.py:288
+#: contentcuration/models.py:2657
+msgid "Created DateTime"
+msgstr ""
+
+#: contentcuration/models.py:2658
+msgid "Datetime field when the custom_metadata for task was created in UTC"
+msgstr ""
+
+#: contentcuration/settings.py:287
 msgid "English"
 msgstr "Anglais"
 
-#: contentcuration/settings.py:289
+#: contentcuration/settings.py:288
 msgid "Spanish"
 msgstr "Espagnol"
 
-#: contentcuration/settings.py:291
+#: contentcuration/settings.py:290
 msgid "French"
 msgstr "Français"
 
-#: contentcuration/settings.py:292
+#: contentcuration/settings.py:291
 msgid "Portuguese"
 msgstr "Portugais"
 
@@ -159,7 +167,7 @@ msgstr "Merci d'utiliser Kolibri Studio !"
 #: contentcuration/templates/registration/password_reset_email.html:111
 #: contentcuration/templates/registration/password_reset_email.txt:16
 #: contentcuration/templates/registration/registration_needed_email.txt:14
-#: contentcuration/templates/registration/welcome_new_user_email.html:172
+#: contentcuration/templates/registration/welcome_new_user_email.html:176
 #: contentcuration/templates/settings/account_deleted_user_email.txt:12
 #: contentcuration/templates/settings/issue_report_email.txt:26
 #: contentcuration/templates/settings/storage_request_email.txt:48
@@ -389,11 +397,11 @@ msgstr "Vous avez demandé à réinitialiser votre mot de passe pour %(site_name
 msgid "Please create an account by following the link below:"
 msgstr "Veuillez créer un compte en suivant le lien ci-dessous :"
 
-#: contentcuration/templates/registration/welcome_new_user_email.html:78
+#: contentcuration/templates/registration/welcome_new_user_email.html:82
 msgid "Welcome to Kolibri Studio!"
 msgstr "Bienvenue dans Kolibri Studio !"
 
-#: contentcuration/templates/registration/welcome_new_user_email.html:82
+#: contentcuration/templates/registration/welcome_new_user_email.html:86
 #, python-format
 msgid "\n"
 "      We're delighted to introduce you to <a href=\"%(domain)s\">Kolibri Studio</a>, our curricular tool to add,\n"
@@ -403,11 +411,11 @@ msgstr "\n"
 "      Nous sommes ravis de vous présenter <a href=\"%(domain)s\">Kolibri Studio</a>, notre outil pédagogique pour ajouter,\n"
 "      organiser et gérer vos propres ressources ou celles de la bibliothèque de contenu Kolibri.    "
 
-#: contentcuration/templates/registration/welcome_new_user_email.html:87
+#: contentcuration/templates/registration/welcome_new_user_email.html:91
 msgid "View the Kolibri Content Library"
 msgstr "Voir la bibliothèque de contenu Kolibri"
 
-#: contentcuration/templates/registration/welcome_new_user_email.html:93
+#: contentcuration/templates/registration/welcome_new_user_email.html:97
 msgid "\n"
 "      Using Kolibri Studio, you can explore pre-organized collections of open educational resources (OER), and bundle,\n"
 "      tag, differentiate, re-order, and distribute them into custom channels.\n"
@@ -417,7 +425,7 @@ msgstr "\n"
 "      les étiqueter, les différencier, les réordonner et les distribuer dans des chaînes personnalisées.\n"
 "    "
 
-#: contentcuration/templates/registration/welcome_new_user_email.html:99
+#: contentcuration/templates/registration/welcome_new_user_email.html:103
 msgid "\n"
 "      Using an admin account, you can then publish and import these custom channels--either your own or those shared\n"
 "      with you -- into Kolibri with a unique \"token\" generated for each channel.\n"
@@ -426,7 +434,7 @@ msgstr "\n"
 "      Grâce à un compte administrateur, vous pouvez alors publier et importer ces chaînes personnalisées - les vôtres ou celles qui sont partagées \n"
 "      avec vous - dans Kolibri, avec un \"jeton\" unique généré pour chaque chaîne.    "
 
-#: contentcuration/templates/registration/welcome_new_user_email.html:107
+#: contentcuration/templates/registration/welcome_new_user_email.html:111
 msgid "\n"
 "      Browse through the list of resources below* to learn more about Kolibri Studio and to begin creating your own\n"
 "      custom channels:\n"
@@ -436,15 +444,15 @@ msgstr "\n"
 "      propres chaînes personnalisées :\n"
 "    "
 
-#: contentcuration/templates/registration/welcome_new_user_email.html:115
+#: contentcuration/templates/registration/welcome_new_user_email.html:119
 msgid "Kolibri Studio User Guide"
 msgstr "Guide de l'utilisateur de Kolibri Studio"
 
-#: contentcuration/templates/registration/welcome_new_user_email.html:120
+#: contentcuration/templates/registration/welcome_new_user_email.html:124
 msgid "Content integration guide:"
 msgstr "Guide d'intégration de contenu :"
 
-#: contentcuration/templates/registration/welcome_new_user_email.html:122
+#: contentcuration/templates/registration/welcome_new_user_email.html:126
 msgid "\n"
 "          Information on licensing, compatible formats, technical integration and more.\n"
 "        "
@@ -452,7 +460,7 @@ msgstr "\n"
 "          Informations sur les licences, les formats compatibles, l'intégration technique et autres.\n"
 "        "
 
-#: contentcuration/templates/registration/welcome_new_user_email.html:125
+#: contentcuration/templates/registration/welcome_new_user_email.html:129
 msgid "\n"
 "          <em>Note that if you are adding a small number of resources, technical integration is not necessary.</em>\n"
 "        "
@@ -460,35 +468,35 @@ msgstr "\n"
 "          <em>Notez que si vous ajoutez un petit nombre de ressources, l'intégration technique ne sera pas nécessaire.</em>\n"
 "        "
 
-#: contentcuration/templates/registration/welcome_new_user_email.html:130
+#: contentcuration/templates/registration/welcome_new_user_email.html:134
 msgid "Step by step tutorials:"
 msgstr "Tutoriels étape par étape :"
 
-#: contentcuration/templates/registration/welcome_new_user_email.html:133
+#: contentcuration/templates/registration/welcome_new_user_email.html:137
 msgid "Video format:"
 msgstr "Format vidéo :"
 
-#: contentcuration/templates/registration/welcome_new_user_email.html:135
+#: contentcuration/templates/registration/welcome_new_user_email.html:139
 msgid "Using Kolibri Studio: Your Content Workspace for Kolibri"
 msgstr "Utilisation de Kolibri Studio : Votre espace de travail dans Kolibri"
 
-#: contentcuration/templates/registration/welcome_new_user_email.html:137
+#: contentcuration/templates/registration/welcome_new_user_email.html:141
 msgid "(*also available in French and Arabic)"
 msgstr "(*également disponible en français et en arabe)"
 
-#: contentcuration/templates/registration/welcome_new_user_email.html:140
+#: contentcuration/templates/registration/welcome_new_user_email.html:144
 msgid "Slide gif format:"
 msgstr "Diapositive au format gif :"
 
-#: contentcuration/templates/registration/welcome_new_user_email.html:144
+#: contentcuration/templates/registration/welcome_new_user_email.html:148
 msgid "Step by step Studio tutorial"
 msgstr "Tutoriel Studio étape par étape"
 
-#: contentcuration/templates/registration/welcome_new_user_email.html:151
+#: contentcuration/templates/registration/welcome_new_user_email.html:155
 msgid "Video compression instructions:"
 msgstr "Instructions sur la compression vidéo :"
 
-#: contentcuration/templates/registration/welcome_new_user_email.html:153
+#: contentcuration/templates/registration/welcome_new_user_email.html:157
 msgid "\n"
 "          For optimal results, videos should be compressed in order to achieve small file sizes. Compression ensures\n"
 "          that the videos are well suited for offline distribution and playback on all Kolibri devices.\n"
@@ -498,23 +506,23 @@ msgstr "\n"
 "          permet à ce que les vidéos soient bien adaptées à la distribution hors ligne et à la lecture sur tous les appareils Kolibri.\n"
 "        "
 
-#: contentcuration/templates/registration/welcome_new_user_email.html:158
+#: contentcuration/templates/registration/welcome_new_user_email.html:162
 msgid "View the guide to video compression"
 msgstr "Voir le guide sur la compression vidéo"
 
-#: contentcuration/templates/registration/welcome_new_user_email.html:165
+#: contentcuration/templates/registration/welcome_new_user_email.html:169
 msgid "If you need support with Kolibri Studio, please reach out to us on our Community Forum."
 msgstr "Si vous avez besoin d'aide à propos de Kolibri Studio, n'hésitez pas à nous contacter sur notre forum communautaire."
 
-#: contentcuration/templates/registration/welcome_new_user_email.html:167
+#: contentcuration/templates/registration/welcome_new_user_email.html:171
 msgid "Access the Community Forum"
 msgstr "Accéder au forum communautaire"
 
-#: contentcuration/templates/registration/welcome_new_user_email.html:171
+#: contentcuration/templates/registration/welcome_new_user_email.html:175
 msgid "Thank You!"
 msgstr "Merci !"
 
-#: contentcuration/templates/registration/welcome_new_user_email.html:178
+#: contentcuration/templates/registration/welcome_new_user_email.html:182
 msgid "*resources are presented in English"
 msgstr "*Les ressources sont présentées en anglais"
 
@@ -709,7 +717,7 @@ msgstr "Nous rencontrons des problèmes avec un service tiers. Toute opération 
 msgid "We are encountering issues with our data center. This means you may encounter networking problems while using Studio. We appreciate your patience while these issues are being resolved. To check the status of this service, please visit <a target='_blank' href='https://status.cloud.google.com/'>here</a>"
 msgstr "Nous rencontrons des problèmes avec notre centre de données. Vous pourriez par conséquent rencontrer des problèmes de réseau lors de l'utilisation de Studio. Nous vous remercions de votre patience pendant la résolution de ces problèmes. Pour vérifier l'état de ce service, veuillez visiter <a target='_blank' href='https://status.cloud.google.com/'>ici</a>"
 
-#: contentcuration/utils/publish.py:96
+#: contentcuration/utils/publish.py:101
 msgid "Kolibri Studio Channel Published"
 msgstr "Chaîne Kolibri Studio publiée"
 
@@ -725,10 +733,10 @@ msgstr "Compte Kolibri Studio supprimé"
 msgid "Resource"
 msgstr "Ressource"
 
-#: kolibri_public/views_v1.py:63 kolibri_public/views_v1.py:74
+#: kolibri_public/views_v1.py:65 kolibri_public/views_v1.py:76
 msgid "Api endpoint {} is not available"
 msgstr "Le point de terminaison {} de l'API n'est pas disponible"
 
-#: kolibri_public/views_v1.py:76
+#: kolibri_public/views_v1.py:78
 msgid "No channel matching {} found"
 msgstr "Aucune chaîne correspondant à {} trouvée"

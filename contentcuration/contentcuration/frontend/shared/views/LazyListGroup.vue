@@ -6,13 +6,13 @@
       @click="open = !open"
     >
       <div v-if="prependIcon" class="icon-container">
-        <Icon>{{ prependIcon }}</Icon>
+        <VIconWrapper>{{ prependIcon }}</VIconWrapper>
       </div>
       <div class="header-content" :class="{ 'has-icon': appendIcon || prependIcon }">
         <slot name="header"></slot>
       </div>
       <div v-if="appendIcon" class="icon-container">
-        <Icon>{{ appendIcon }}</Icon>
+        <VIconWrapper>{{ appendIcon }}</VIconWrapper>
       </div>
     </header>
     <VExpandTransition>

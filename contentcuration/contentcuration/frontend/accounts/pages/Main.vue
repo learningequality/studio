@@ -153,12 +153,11 @@
     },
     methods: {
       ...mapActions(['login']),
-      ...mapActions('policies', ['openPolicy']),
       showTermsOfService() {
-        this.openPolicy(policies.TERMS_OF_SERVICE);
+        this.$router.push({ query: { showPolicy: policies.TERMS_OF_SERVICE } });
       },
       showPrivacyPolicy() {
-        this.openPolicy(policies.PRIVACY);
+        this.$router.push({ query: { showPolicy: policies.PRIVACY } });
       },
       submit() {
         if (this.$refs.form.validate()) {

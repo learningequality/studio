@@ -64,51 +64,49 @@
               {{ $tr('unpublishedText') }}
             </VCardText>
           </VFlex>
-          <VTooltip bottom lazy>
-            <template #activator="{ on }">
-              <Icon
-                v-if="allowEdit && hasUnpublishedChanges"
-                color="greenSuccess"
-                :size="12"
-                v-on="on"
-              >
-                lens
-              </Icon>
-            </template>
-            <span>
-              {{ $tr(
-                'lastUpdated',
-                {
-                  'updated': $formatRelative(
-                    channel.modified,
-                    { now: new Date() }
-                  )
-                })
-              }}
-            </span>
-          </VTooltip>
+          <KTooltip
+            reference="lastUpdatedTime"
+            placement="bottom"
+            :refs="$refs"
+          >
+            {{ $tr(
+              'lastUpdated',
+              {
+                'updated': $formatRelative(
+                  channel.modified,
+                  { now: new Date() }
+                )
+              })
+            }}
+          </KTooltip>
+          <Icon
+            v-if="allowEdit && hasUnpublishedChanges"
+            ref="lastUpdatedTime"
+            icon="unpublishedResource"
+          />
+
           <VSpacer />
           <VFlex shrink>
-            <router-link
+            <KRouterLink
               v-if="!libraryMode"
               :to="channelDetailsLink"
             >
 
-              <IconButton
+              <KIconButton
                 :color="$themeTokens.primary"
                 data-test="details-button"
                 class="mr-1"
                 icon="info"
-                :text="$tr('details')"
+                :tooltip="$tr('details')"
               />
 
-            </router-link>
+            </KRouterLink>
 
-            <IconButton
+            <KIconButton
               v-if="!allowEdit && channel.published"
               class="mr-1"
               icon="copy"
-              :text="$tr('copyToken')"
+              :tooltip="$tr('copyToken')"
               data-test="token-button"
               @click.stop.prevent="tokenDialog = true"
             />
@@ -127,7 +125,9 @@
                   v-on="on"
                   @click.stop.prevent
                 >
-                  <Icon>more_vert</Icon>
+                  <Icon
+                    icon="optionsVertical"
+                  />
                 </VBtn>
               </template>
               <VList>
@@ -137,9 +137,12 @@
                   data-test="edit-channel"
                   @click.stop
                 >
-                  <VListTileAction>
-                    <Icon>edit</Icon>
-                  </VListTileAction>
+                  <VListTileAvatar>
+                    <KIconButton
+                      :disabled="true"
+                      icon="edit"
+                    />
+                  </VListTileAvatar>
                   <VListTileTitle>{{ $tr('editChannel') }}</VListTileTitle>
                 </VListTile>
                 <VListTile
@@ -147,9 +150,12 @@
                   data-test="token-listitem"
                   @click.stop="tokenDialog = true"
                 >
-                  <VListTileAction>
-                    <Icon>content_copy</Icon>
-                  </VListTileAction>
+                  <VListTileAvatar>
+                    <KIconButton
+                      :disabled="true"
+                      icon="copy"
+                    />
+                  </VListTileAvatar>
                   <VListTileTitle>{{ $tr('copyToken') }}</VListTileTitle>
                 </VListTile>
                 <VListTile
@@ -158,11 +164,9 @@
                   target="_blank"
                   @click.stop
                 >
-                  <VListTileAction>
-                    <Icon class="rtl-flip">
-                      launch
-                    </Icon>
-                  </VListTileAction>
+                  <VListTileAvatar>
+                    <Icon icon="openNewTab" />
+                  </VListTileAvatar>
                   <VListTileTitle>{{ $tr('goToWebsite') }}</VListTileTitle>
                 </VListTile>
                 <VListTile
@@ -170,11 +174,9 @@
                   :href="channel.demo_server_url"
                   target="_blank"
                 >
-                  <VListTileAction>
-                    <Icon class="rtl-flip">
-                      launch
-                    </Icon>
-                  </VListTileAction>
+                  <VListTileAvatar>
+                    <Icon icon="openNewTab" />
+                  </VListTileAvatar>
                   <VListTileTitle>{{ $tr('viewContent') }}</VListTileTitle>
                 </VListTile>
                 <VListTile
@@ -182,9 +184,12 @@
                   data-test="delete-channel"
                   @click.stop="deleteDialog = true"
                 >
-                  <VListTileAction>
-                    <Icon>delete</Icon>
-                  </VListTileAction>
+                  <VListTileAvatar>
+                    <KIconButton
+                      :disabled="true"
+                      icon="trash"
+                    />
+                  </VListTileAvatar>
                   <VListTileTitle>{{ $tr('deleteChannel') }}</VListTileTitle>
                 </VListTile>
               </VList>
@@ -225,7 +230,6 @@
   import ChannelTokenModal from 'shared/views/channel/ChannelTokenModal';
   import Thumbnail from 'shared/views/files/Thumbnail';
   import Languages from 'shared/leUtils/Languages';
-  import IconButton from 'shared/views/IconButton';
 
   export default {
     name: 'ChannelItem',
@@ -233,7 +237,6 @@
       ChannelStar,
       ChannelTokenModal,
       Thumbnail,
-      IconButton,
     },
     props: {
       channelId: {

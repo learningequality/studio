@@ -13,6 +13,7 @@
     <VLayout
       v-if="detailed && !isPerseus"
       mt-3
+      class="item-answers-preview"
       data-test="item-answers-preview"
     >
       <VFlex>
@@ -48,13 +49,11 @@
               :key="idx"
               v-model="correctAnswersIndices"
               :value="idx"
-              readonly
+              disabled
             >
-              <template #label>
-                <div class="px-2">
-                  <MarkdownViewer :markdown="answer.answer" />
-                </div>
-              </template>
+              <div class="px-2">
+                <MarkdownViewer :markdown="answer.answer" />
+              </div>
             </Checkbox>
           </template>
 
@@ -80,7 +79,7 @@
               data-test="hintsToggle"
               @click="areHintsOpen = !areHintsOpen"
             >
-              <Icon class="icon" small>chevron_right</Icon>
+              <Icon icon="chevronRight" />
               <span>{{ hintsToggleLabel }}</span>
             </span>
 
@@ -267,6 +266,10 @@
 
   .hint-number {
     padding: 11px;
+  }
+
+  .item-answers-preview /deep/ .checkbox-icon {
+    top: 8px;
   }
 
 </style>

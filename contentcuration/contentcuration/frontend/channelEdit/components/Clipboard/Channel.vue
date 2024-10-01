@@ -12,9 +12,10 @@
           <Checkbox
             ref="checkbox"
             class="ma-0 pa-0"
-            :value="selected"
+            :class="{ selectedIndeterminate: !selected && indeterminate }"
+            :inputValue="selected"
             :indeterminate="indeterminate"
-            @click.stop.prevent="goNextSelectionState"
+            @input="goNextSelectionState"
           />
         </VListTileAction>
         <div class="mr-2">
@@ -138,6 +139,10 @@
   .text-truncate {
     /* fix clipping of dangling characters */
     line-height: 1.3 !important;
+  }
+
+  /deep/ .selectedIndeterminate svg {
+    fill: gray !important;
   }
 
 </style>

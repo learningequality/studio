@@ -7,6 +7,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.cache import cache
 from django.core.exceptions import PermissionDenied
 from django.db.models import Count
+from django.db.models import Exists
 from django.db.models import IntegerField
 from django.db.models import OuterRef
 from django.db.models import Subquery
@@ -28,6 +29,7 @@ from django.utils.translation import get_language
 from django.utils.translation import LANGUAGE_SESSION_KEY
 from django.views.decorators.http import require_POST
 from django.views.i18n import LANGUAGE_QUERY_PARAMETER
+from django_celery_results.models import TaskResult
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.authentication import TokenAuthentication
@@ -47,10 +49,10 @@ from contentcuration.models import Channel
 from contentcuration.models import ChannelHistory
 from contentcuration.models import ChannelSet
 from contentcuration.models import ContentKind
+from contentcuration.models import CustomTaskMetadata
 from contentcuration.models import DEFAULT_USER_PREFERENCES
 from contentcuration.models import Language
 from contentcuration.models import License
-from contentcuration.models import TaskResult
 from contentcuration.serializers import SimplifiedChannelProbeCheckSerializer
 from contentcuration.utils.messages import get_messages
 from contentcuration.viewsets.channelset import PublicChannelSetSerializer
@@ -128,10 +130,9 @@ def get_prober_channel(request):
 
     channel = Channel.objects.filter(editors=request.user).first()
     if not channel:
-        channel = Channel.objects.create(name="Prober channel", editors=[request.user])
+        channel = Channel.objects.create(actor_id=request.user.id, name="Prober channel", editors=[request.user])
 
     return Response(SimplifiedChannelProbeCheckSerializer(channel).data)
-
 
 @api_view(["GET"])
 @authentication_classes((TokenAuthentication, SessionAuthentication))
@@ -139,10 +140,10 @@ def get_prober_channel(request):
 def publishing_status(request):
     if not request.user.is_admin:
         return HttpResponseForbidden()
-
+    associated_custom_task_metadata_ids = CustomTaskMetadata.objects.filter(channel_id=Cast(OuterRef(OuterRef("channel_id")), UUIDField())).values_list("task_id",flat=True)
     associated_tasks = TaskResult.objects.filter(
         task_name="export-channel",
-        channel_id=Cast(OuterRef("channel_id"), UUIDField()),
+        task_id__in=Subquery(associated_custom_task_metadata_ids),
     )
     channel_publish_status = (
         ChannelHistory.objects

@@ -41,7 +41,7 @@
                 v-on="on"
                 @click="onRemoveClick(item.id)"
               >
-                <Icon>clear</Icon>
+                <Icon icon="clear" />
               </VBtn>
             </template>
             <span>{{ removeBtnLabel }}</span>

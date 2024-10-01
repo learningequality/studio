@@ -23,10 +23,10 @@
               <VLayout v-if="props.header.selectAll" row align-center>
                 <VFlex shrink>
                   <Checkbox
-                    :value="Boolean(selected.length)"
+                    :inputValue="selected.length === items.length"
                     :indeterminate="!!selected.length && selected.length !== items.length"
                     data-test="selectall"
-                    @change="toggleSelectAll"
+                    @input="toggleSelectAll"
                   />
                 </VFlex>
                 <VFlex>
@@ -78,7 +78,7 @@
     </VContent>
     <template #bottom>
       <span v-if="selected.length" class="mr-4 subheading">
-        {{ $tr('selectedCountText', counts) }}
+        {{ getSelectedTopicAndResourceCountText(selected) }}
       </span>
       <VSpacer />
       <VBtn
@@ -167,7 +167,11 @@
     },
     computed: {
       ...mapGetters('currentChannel', ['currentChannel', 'trashId', 'rootId']),
-      ...mapGetters('contentNode', ['getContentNodeChildren', 'getTopicAndResourceCounts']),
+      ...mapGetters('contentNode', [
+        'getContentNodeChildren',
+        'getTopicAndResourceCounts',
+        'getSelectedTopicAndResourceCountText',
+      ]),
       headers() {
         return [
           {
@@ -231,7 +235,11 @@
         'loadAncestors',
       ]),
       moveNodes(target) {
-        return this.moveContentNodes({ id__in: this.selected, parent: target }).then(() => {
+        return this.moveContentNodes({
+          id__in: this.selected,
+          parent: target,
+          inherit: false,
+        }).then(() => {
           this.reset();
           this.$refs.moveModal && this.$refs.moveModal.moveComplete();
         });
@@ -261,8 +269,6 @@
       trashEmptySubtext: 'Resources removed from this channel will appear here',
       selectAllHeader: 'Select all',
       deletedHeader: 'Removed',
-      selectedCountText:
-        '{topicCount, plural,\n =1 {# folder}\n other {# folders}}, {resourceCount, plural,\n =1 {# resource}\n other {# resources}}',
       deleteButton: 'Delete',
       restoreButton: 'Restore',
       deleteConfirmationHeader:

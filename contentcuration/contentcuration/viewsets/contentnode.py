@@ -16,6 +16,7 @@ from django.db.models.functions import Coalesce
 from django.http import Http404
 from django.utils.timezone import now
 from django_cte import CTEQuerySet
+from django_filters.rest_framework import BooleanFilter
 from django_filters.rest_framework import CharFilter
 from django_filters.rest_framework import UUIDFilter
 from le_utils.constants import completion_criteria
@@ -28,6 +29,8 @@ from le_utils.constants.labels import needs
 from le_utils.constants.labels import resource_type
 from le_utils.constants.labels import subjects
 from rest_framework.decorators import action
+from rest_framework.pagination import Cursor
+from rest_framework.pagination import replace_query_param
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.serializers import BooleanField
@@ -54,6 +57,8 @@ from contentcuration.models import UUIDField
 from contentcuration.tasks import calculate_resource_size_task
 from contentcuration.utils.nodes import calculate_resource_size
 from contentcuration.utils.nodes import migrate_extra_fields
+from contentcuration.utils.nodes import validate_and_conform_to_schema_threshold_none
+from contentcuration.utils.pagination import ValuesViewsetCursorPagination
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import BulkUpdateMixin
@@ -86,6 +91,7 @@ class ContentNodeFilter(RequiredFilterSet):
     ancestors_of = UUIDFilter(method="filter_ancestors_of")
     parent__in = UUIDInFilter(field_name="parent")
     _node_id_channel_id___in = CharFilter(method="filter__node_id_channel_id")
+    complete = BooleanFilter(field_name="complete")
 
     class Meta:
         model = ContentNode
@@ -276,16 +282,28 @@ class CompletionCriteriaSerializer(JSONFieldDictSerializer):
     model = CharField()
     learner_managed = BooleanField(required=False, allow_null=True)
 
+    def update(self, instance, validated_data):
+        validated_data = validate_and_conform_to_schema_threshold_none(validated_data)
+        return super(CompletionCriteriaSerializer, self).update(instance, validated_data)
+
 
 class ExtraFieldsOptionsSerializer(JSONFieldDictSerializer):
     modality = ChoiceField(choices=(("QUIZ", "Quiz"),), allow_null=True, required=False)
     completion_criteria = CompletionCriteriaSerializer(required=False)
 
 
+class InheritedMetadataSerializer(JSONFieldDictSerializer):
+    categories = BooleanField(required=False)
+    language = BooleanField(required=False)
+    grade_levels = BooleanField(required=False)
+    learner_needs = BooleanField(required=False)
+
+
 class ExtraFieldsSerializer(JSONFieldDictSerializer):
     randomize = BooleanField()
     options = ExtraFieldsOptionsSerializer(required=False)
     suggested_duration_type = ChoiceField(choices=[completion_criteria.TIME, completion_criteria.APPROX_TIME], allow_null=True, required=False)
+    inherited_metadata = InheritedMetadataSerializer(required=False)
 
     def update(self, instance, validated_data):
         instance = migrate_extra_fields(instance)
@@ -410,6 +428,24 @@ class ContentNodeSerializer(BulkModelSerializer):
         except DjangoValidationError as e:
             raise ValidationError(e)
 
+    def _ensure_complete(self, instance):
+        """
+        If an instance is marked as complete, ensure that it is actually complete.
+        If it is not, update the value, save, and issue a change event.
+        """
+        if instance.complete:
+            instance.mark_complete()
+            if not instance.complete:
+                instance.save()
+                user_id = None
+                if "request" in self.context:
+                    user_id = self.context["request"].user.id
+                Change.create_change(
+                    generate_update_event(
+                        instance.id, CONTENTNODE, {"complete": False}, channel_id=instance.get_channel_id()
+                    ), created_by_id=user_id, applied=True
+                )
+
     def create(self, validated_data):
         tags = None
         if "tags" in validated_data:
@@ -421,6 +457,8 @@ class ContentNodeSerializer(BulkModelSerializer):
 
         if tags:
             set_tags({instance.id: tags})
+
+        self._ensure_complete(instance)
 
         return instance
 
@@ -437,7 +475,10 @@ class ContentNodeSerializer(BulkModelSerializer):
 
         self._check_completion_criteria(validated_data.get("kind", instance.kind_id), validated_data.get("complete", instance.complete), validated_data)
 
-        return super(ContentNodeSerializer, self).update(instance, validated_data)
+        instance = super(ContentNodeSerializer, self).update(instance, validated_data)
+
+        self._ensure_complete(instance)
+        return instance
 
 
 def retrieve_thumbail_src(item):
@@ -626,12 +667,56 @@ def dict_if_none(obj, field_name=None):
     return obj[field_name] if field_name in obj and obj[field_name] else {}
 
 
+class ContentNodePagination(ValuesViewsetCursorPagination):
+    """
+    A simplified cursor pagination class for ContentNodeViewSet.
+    Instead of using an opaque cursor, it uses the lft value for filtering.
+    As such, if this pagination scheme is used without applying a filter
+    that will guarantee membership to a specific MPTT tree, such as parent
+    or tree_id, the pagination scheme will not be predictable.
+    """
+    cursor_query_param = "lft__gt"
+    ordering = "lft"
+    page_size_query_param = "max_results"
+    max_page_size = 100
+
+    def decode_cursor(self, request):
+        """
+        Given a request with a cursor, return a `Cursor` instance.
+        """
+        # Determine if we have a cursor, and if so then decode it.
+        value = request.query_params.get(self.cursor_query_param)
+        if value is None:
+            return None
+
+        return Cursor(offset=0, reverse=False, position=value)
+
+    def encode_cursor(self, cursor):
+        """
+        Given a Cursor instance, return an url with query parameter.
+        """
+        return replace_query_param(self.base_url, self.cursor_query_param, str(cursor.position))
+
+    def get_more(self):
+        position, offset = self._get_more_position_offset()
+        if position is None and offset is None:
+            return None
+        params = self.request.query_params.copy()
+        params.update({
+            self.cursor_query_param: position,
+        })
+        return params
+
+
 # Apply mixin first to override ValuesViewset
 class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
     queryset = ContentNode.objects.all()
     serializer_class = ContentNodeSerializer
     permission_classes = [IsAuthenticated]
     filterset_class = ContentNodeFilter
+    pagination_class = ContentNodePagination
+    # This must exactly match the ordering on the pagination class defined above.
+    ordering = ["lft"]
     values = (
         "id",
         "content_id",
@@ -967,6 +1052,8 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
                 ),
                 applied=True,
                 created_by_id=self.request.user.id,
+                # This is not a publishable change, as it is just updating ephemeral status updates.
+                unpublishable=True,
             )
 
     def perform_create(self, serializer, change=None):
@@ -984,3 +1071,30 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
                 created_by_id=change["created_by_id"],
                 applied=True
             )
+
+    def update_descendants(self, pk, mods):
+        """ Update a node and all of its descendants with the given mods """
+        root = ContentNode.objects.get(id=pk)
+
+        if root.kind_id != content_kinds.TOPIC:
+            raise ValidationError("Only topics can have descendants to update")
+
+        descendantsIds = root.get_descendants(include_self=True).values_list("id", flat=True)
+
+        changes = [{"key": descendantId, "mods": mods} for descendantId in descendantsIds]
+
+        # Bulk update
+        return self.update_from_changes(changes)
+
+    def update_descendants_from_changes(self, changes):
+        errors = []
+        for change in changes:
+            try:
+                change_errors = self.update_descendants(change["key"], change["mods"])
+                errors += change_errors
+            except Exception as e:
+                log_sync_exception(e, user=self.request.user, change=change)
+                change["errors"] = [str(e)]
+                errors.append(change)
+        print("errorsv", errors)
+        return errors

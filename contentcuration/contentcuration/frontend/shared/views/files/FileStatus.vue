@@ -3,20 +3,20 @@
   <div>
     <VTooltip v-if="hasErrors" top lazy>
       <template #activator="{ on }">
-        <Icon color="red" :large="large" v-on="on">
+        <VIconWrapper color="red" :large="large" v-on="on">
           error
-        </Icon>
+        </VIconWrapper>
       </template>
       <span>{{ statusMessage(id) }}</span>
     </VTooltip>
-    <Icon
+    <VIconWrapper
       v-else-if="progress >= 1"
       :large="large"
       color="greenSuccess"
       data-test="done"
     >
       check_circle
-    </Icon>
+    </VIconWrapper>
     <VProgressCircular
       v-else
       :size="large ? 60 : 20"

@@ -11,6 +11,7 @@ from django.conf import settings
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
 from django.urls import reverse_lazy
+from django_celery_results.models import TaskResult
 from le_utils.constants import content_kinds
 from le_utils.constants import file_formats
 from le_utils.constants import format_presets
@@ -19,7 +20,6 @@ from contentcuration import models as cc
 from contentcuration.constants import user_history
 from contentcuration.models import ContentNode
 from contentcuration.models import File
-from contentcuration.models import TaskResult
 from contentcuration.models import UserHistory
 from contentcuration.tests.base import BaseAPITestCase
 from contentcuration.tests.base import StudioTestCase
@@ -384,10 +384,9 @@ class CleanUpFeatureFlagsTestCase(StudioTestCase):
 class CleanupTaskTestCase(StudioTestCase):
 
     def setUp(self):
-        user = self.admin_user
-        self.pruned_task = TaskResult.objects.create(task_id=uuid.uuid4().hex, status=states.SUCCESS, task_name="pruned_task", user_id=user.id)
-        self.failed_task = TaskResult.objects.create(task_id=uuid.uuid4().hex, status=states.FAILURE, task_name="failed_task", user_id=user.id)
-        self.recent_task = TaskResult.objects.create(task_id=uuid.uuid4().hex, status=states.SUCCESS, task_name="recent_task", user_id=user.id)
+        self.pruned_task = TaskResult.objects.create(task_id=uuid.uuid4().hex, status=states.SUCCESS, task_name="pruned_task")
+        self.failed_task = TaskResult.objects.create(task_id=uuid.uuid4().hex, status=states.FAILURE, task_name="failed_task")
+        self.recent_task = TaskResult.objects.create(task_id=uuid.uuid4().hex, status=states.SUCCESS, task_name="recent_task")
 
         # `date_done` uses `auto_now`, so manually set it
         done = datetime.now() - timedelta(days=8)

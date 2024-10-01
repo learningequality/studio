@@ -13,11 +13,8 @@
       class="red--text"
     >
       <Icon
-        small
-        color="red"
-      >
-        error
-      </Icon>
+        icon="error"
+      />
       {{ $tr('syncError') }}
     </div>
     <div
@@ -25,11 +22,8 @@
       class="red--text"
     >
       <Icon
-        small
-        color="red"
-      >
-        error
-      </Icon>
+        icon="error"
+      />
       {{ $tr('defaultErrorText') }}
     </div>
     <div

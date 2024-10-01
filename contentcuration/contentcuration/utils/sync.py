@@ -4,7 +4,6 @@ import copy
 import logging
 
 from django.db.models import Q
-from django_bulk_update.helper import bulk_update
 from le_utils.constants import content_kinds
 from le_utils.constants import format_presets
 
@@ -234,7 +233,7 @@ def sync_node_assessment_items(node, original):  # noqa C901
         node.changed = True
 
     if ai_to_update:
-        bulk_update(ai_to_update, update_fields=assessment_item_fields)
+        AssessmentItem.objects.bulk_update(ai_to_update, list(assessment_item_fields))
         node.changed = True
 
     if files_to_delete:

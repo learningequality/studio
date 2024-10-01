@@ -3,12 +3,11 @@ import Mutex from 'mutex-js';
 import findIndex from 'lodash/findIndex';
 import flatMap from 'lodash/flatMap';
 import isArray from 'lodash/isArray';
-import isNumber from 'lodash/isNumber';
 import isString from 'lodash/isString';
 import matches from 'lodash/matches';
 import overEvery from 'lodash/overEvery';
-import pick from 'lodash/pick';
 import sortBy from 'lodash/sortBy';
+import compact from 'lodash/compact';
 import uniq from 'lodash/uniq';
 import uniqBy from 'lodash/uniqBy';
 
@@ -16,6 +15,7 @@ import { v4 as uuidv4 } from 'uuid';
 import {
   CHANGE_TYPES,
   CHANGES_TABLE,
+  PAGINATION_TABLE,
   RELATIVE_TREE_POSITIONS,
   TABLE_NAMES,
   COPYING_STATUS,
@@ -40,11 +40,14 @@ import {
   PublishedChange,
   SyncedChange,
   DeployedChange,
+  UpdatedDescendantsChange,
 } from './changes';
 import urls from 'shared/urls';
 import { currentLanguage } from 'shared/i18n';
 import client, { paramsSerializer } from 'shared/client';
 import { DELAYED_VALIDATION, fileErrors, NEW_OBJECT } from 'shared/constants';
+import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
+import { getMergedMapFields } from 'shared/utils/helpers';
 
 // Number of seconds after which data is considered stale.
 const REFRESH_INTERVAL = 5;
@@ -58,6 +61,7 @@ const QUERY_SUFFIXES = {
 };
 
 const ORDER_FIELD = 'ordering';
+const PAGINATION_FIELD = 'max_results';
 
 const VALID_SUFFIXES = new Set(Object.values(QUERY_SUFFIXES));
 
@@ -65,60 +69,6 @@ const SUFFIX_SEPERATOR = '__';
 const validPositions = new Set(Object.values(RELATIVE_TREE_POSITIONS));
 
 const EMPTY_ARRAY = Symbol('EMPTY_ARRAY');
-
-class Paginator {
-  constructor(params) {
-    // Get parameters for page number based pagination
-    Object.assign(this, pick(params, 'page', 'page_size'));
-    // At a minimum, this pagination style requires a page_size
-    // parameter, so we check to see if that exists.
-    if (this.page_size) {
-      this.pageNumberType = true;
-      this.page = this.page || 1;
-    }
-    // Get parameters for limit offset pagination
-    Object.assign(this, pick(params, 'limit', 'offset'));
-    // At a minimum, this pagination style requires a limit
-    // parameter, so we check to see if that exists.
-    if (this.limit) {
-      this.limitOffsetType = true;
-      this.offset = this.offset || 0;
-    }
-    if (this.pageNumberType && this.limitOffsetType) {
-      console.warn(
-        'Specified both page number type pagination and limit offset may get unexpected results'
-      );
-    }
-  }
-  paginate(collection) {
-    let offset;
-    let limit;
-    if (this.pageNumberType) {
-      offset = (this.page - 1) * this.page_size;
-      limit = this.page_size;
-    }
-    if (this.limitOffsetType) {
-      offset = this.offset;
-      limit = this.limit;
-    }
-    if (isNumber(offset) && isNumber(limit)) {
-      const countPromise = collection.count();
-      const resultPromise = collection
-        .offset(offset)
-        .limit(limit)
-        .toArray();
-      return Promise.all([countPromise, resultPromise]).then(([count, results]) => {
-        const out = { count, results };
-        if (this.pageNumberType) {
-          out.total_pages = Math.ceil(count / this.page_size);
-          out.page = this.page;
-        }
-        return out;
-      });
-    }
-    return collection.toArray();
-  }
-}
 
 let vuexStore;
 
@@ -268,6 +218,82 @@ class IndexedDBResource {
     });
   }
 
+  /**
+   * Search the "updated descendants" changes of the current resource and its
+   * parents to find any changes that should be applied to the current resource.
+   * And it transforms these "updated descendants" changes into "updated" changes
+   * to the current resource.
+   * @returns
+   */
+  async getInheritedChanges(itemData = []) {
+    if (this.tableName !== TABLE_NAMES.CONTENTNODE || !itemData.length) {
+      return Promise.resolve([]);
+    }
+
+    const updatedDescendantsChanges = await db[CHANGES_TABLE].where('type')
+      .equals(CHANGE_TYPES.UPDATED_DESCENDANTS)
+      .toArray();
+    if (!updatedDescendantsChanges.length) {
+      return Promise.resolve([]);
+    }
+
+    const inheritedChanges = [];
+    const parentIds = [...new Set(itemData.map(item => item.parent).filter(Boolean))];
+    const ancestorsPromises = parentIds.map(parentId => this.getAncestors(parentId));
+    const parentsAncestors = await Promise.all(ancestorsPromises);
+
+    parentsAncestors.forEach(ancestors => {
+      const parent = ancestors[ancestors.length - 1];
+      const ancestorsIds = ancestors.map(ancestor => ancestor.id);
+      const parentChanges = updatedDescendantsChanges.filter(change =>
+        ancestorsIds.includes(change.key)
+      );
+      if (!parentChanges.length) {
+        return;
+      }
+
+      itemData
+        .filter(item => item.parent === parent.id)
+        .forEach(item => {
+          inheritedChanges.push(
+            ...parentChanges.map(change => ({
+              ...change,
+              mods: {
+                ...change.mods,
+                ...getMergedMapFields(item, change.mods),
+              },
+              key: item.id,
+              type: CHANGE_TYPES.UPDATED,
+            }))
+          );
+        });
+    });
+
+    return inheritedChanges;
+  }
+
+  mergeDescendantsChanges(changes, inheritedChanges, itemData) {
+    if (inheritedChanges.length) {
+      changes.push(...inheritedChanges);
+      changes = sortBy(changes, 'rev');
+    }
+    changes
+      .filter(change => change.type === CHANGE_TYPES.UPDATED_DESCENDANTS)
+      .forEach(change => {
+        change.type = CHANGE_TYPES.UPDATED;
+        const item = itemData.find(i => i.id === change.key);
+        if (!item) {
+          return;
+        }
+        change.mods = {
+          ...change.mods,
+          ...getMergedMapFields(item, change.mods),
+        };
+      });
+
+    return changes;
+  }
+
   setData(itemData) {
     const now = Date.now();
     // Directly write to the table, rather than using the add/update methods
@@ -277,83 +303,88 @@ class IndexedDBResource {
       const changesPromise = db[CHANGES_TABLE].where('[table+key]')
         .anyOf(itemData.map(datum => [this.tableName, this.getIdValue(datum)]))
         .sortBy('rev');
+      const inheritedChangesPromise = this.getInheritedChanges(itemData);
       const currentPromise = this.table
         .where(this.idField)
         .anyOf(itemData.map(datum => this.getIdValue(datum)))
         .toArray();
 
-      return Promise.all([changesPromise, currentPromise]).then(([changes, currents]) => {
-        changes = mergeAllChanges(changes, true);
-        const collectedChanges = collectChanges(changes)[this.tableName] || {};
-        for (const changeType of Object.keys(collectedChanges)) {
-          const map = {};
-          for (const change of collectedChanges[changeType]) {
-            map[change.key] = change;
+      return Promise.all([changesPromise, inheritedChangesPromise, currentPromise]).then(
+        ([changes, inheritedChanges, currents]) => {
+          changes = this.mergeDescendantsChanges(changes, inheritedChanges, itemData);
+          changes = mergeAllChanges(changes, true);
+          const collectedChanges = collectChanges(changes)[this.tableName] || {};
+          for (const changeType of Object.keys(collectedChanges)) {
+            const map = {};
+            for (const change of collectedChanges[changeType]) {
+              map[change.key] = change;
+            }
+            collectedChanges[changeType] = map;
           }
-          collectedChanges[changeType] = map;
-        }
-        const currentMap = {};
-        for (const currentObj of currents) {
-          currentMap[this.getIdValue(currentObj)] = currentObj;
-        }
-        const data = itemData
-          .map(datum => {
-            const id = this.getIdValue(datum);
-            datum[LAST_FETCHED] = now;
-            // Persist TASK_ID and COPYING_STATUS attributes when directly fetching from the server
-            if (currentMap[id] && currentMap[id][TASK_ID]) {
-              datum[TASK_ID] = currentMap[id][TASK_ID];
-            }
-            if (currentMap[id] && currentMap[id][COPYING_STATUS]) {
-              datum[COPYING_STATUS] = currentMap[id][COPYING_STATUS];
-            }
-            // If we have an updated change, apply the modifications here
-            if (
-              collectedChanges[CHANGE_TYPES.UPDATED] &&
-              collectedChanges[CHANGE_TYPES.UPDATED][id]
-            ) {
-              applyMods(datum, collectedChanges[CHANGE_TYPES.UPDATED][id].mods);
-            }
-            return datum;
-            // If we have a deleted change, just filter out this object so we don't reput it
-          })
-          .filter(
-            datum =>
-              !collectedChanges[CHANGE_TYPES.DELETED] ||
-              !collectedChanges[CHANGE_TYPES.DELETED][this.getIdValue(datum)]
-          );
-        return this.table.bulkPut(data).then(() => {
-          // Move changes need to be reapplied on top of fetched data in case anything
-          // has happened on the backend.
-          return applyChanges(Object.values(collectedChanges[CHANGE_TYPES.MOVED] || {})).then(
-            results => {
-              if (!results || !results.length) {
-                return data;
+          const currentMap = {};
+          for (const currentObj of currents) {
+            currentMap[this.getIdValue(currentObj)] = currentObj;
+          }
+          const data = itemData
+            .map(datum => {
+              const id = this.getIdValue(datum);
+              datum[LAST_FETCHED] = now;
+              // Persist TASK_ID and COPYING_STATUS attributes when directly
+              // fetching from the server
+              if (currentMap[id] && currentMap[id][TASK_ID]) {
+                datum[TASK_ID] = currentMap[id][TASK_ID];
               }
-              const resultsMap = {};
-              for (const result of results) {
-                const id = this.getIdValue(result);
-                resultsMap[id] = result;
+              if (currentMap[id] && currentMap[id][COPYING_STATUS]) {
+                datum[COPYING_STATUS] = currentMap[id][COPYING_STATUS];
               }
-              return data
-                .map(datum => {
-                  const id = this.getIdValue(datum);
-                  if (resultsMap[id]) {
-                    applyMods(datum, resultsMap[id]);
-                  }
-                  return datum;
-                  // Concatenate any unsynced created objects onto
-                  // the end of the returned objects
-                })
-                .concat(Object.values(collectedChanges[CHANGE_TYPES.CREATED]).map(c => c.obj));
-            }
-          );
-        });
-      });
+              // If we have an updated change, apply the modifications here
+              if (
+                collectedChanges[CHANGE_TYPES.UPDATED] &&
+                collectedChanges[CHANGE_TYPES.UPDATED][id]
+              ) {
+                applyMods(datum, collectedChanges[CHANGE_TYPES.UPDATED][id].mods);
+              }
+              return datum;
+              // If we have a deleted change, just filter out this object so we don't reput it
+            })
+            .filter(
+              datum =>
+                !collectedChanges[CHANGE_TYPES.DELETED] ||
+                !collectedChanges[CHANGE_TYPES.DELETED][this.getIdValue(datum)]
+            );
+          return this.table.bulkPut(data).then(() => {
+            // Move changes need to be reapplied on top of fetched data in case anything
+            // has happened on the backend.
+            return applyChanges(Object.values(collectedChanges[CHANGE_TYPES.MOVED] || {})).then(
+              results => {
+                if (!results || !results.length) {
+                  return data;
+                }
+                const resultsMap = {};
+                for (const result of results) {
+                  const id = this.getIdValue(result);
+                  resultsMap[id] = result;
+                }
+                return data
+                  .map(datum => {
+                    const id = this.getIdValue(datum);
+                    if (resultsMap[id]) {
+                      applyMods(datum, resultsMap[id]);
+                    }
+                    return datum;
+                    // Concatenate any unsynced created objects onto
+                    // the end of the returned objects
+                  })
+                  .concat(Object.values(collectedChanges[CHANGE_TYPES.CREATED]).map(c => c.obj));
+              }
+            );
+          });
+        }
+      );
     });
   }
 
-  where(params = {}) {
+  async where(params = {}) {
     const table = db[this.tableName];
     // Indexed parameters
     const whereParams = {};
@@ -367,9 +398,17 @@ class IndexedDBResource {
     let sortBy;
     let reverse;
 
-    // Setup paginator.
-    const paginator = new Paginator(params);
+    // Check for pagination
+    const maxResults = Number(params[PAGINATION_FIELD]);
+    const paginationActive = !isNaN(maxResults);
+    if (paginationActive && !params[ORDER_FIELD]) {
+      params[ORDER_FIELD] = this.defaultOrdering;
+    }
     for (const key of Object.keys(params)) {
+      if (key === PAGINATION_FIELD) {
+        // Don't filter by parameters that are used for pagination
+        continue;
+      }
       // Partition our parameters
       const [rootParam, suffix] = key.split(SUFFIX_SEPERATOR);
       if (suffix && VALID_SUFFIXES.has(suffix) && suffix !== QUERY_SUFFIXES.IN) {
@@ -391,8 +430,7 @@ class IndexedDBResource {
         } else {
           sortBy = ordering;
         }
-      } else if (!paginator[key]) {
-        // Don't filter by parameters that are used for pagination
+      } else {
         filterParams[rootParam] = params[key];
       }
     }
@@ -446,8 +484,11 @@ class IndexedDBResource {
         sortBy = null;
       }
     } else {
-      if (sortBy && this.indexFields.has(sortBy) && !reverse) {
+      if (sortBy && this.indexFields.has(sortBy)) {
         collection = table.orderBy(sortBy);
+        if (reverse) {
+          collection = collection.reverse();
+        }
         sortBy = null;
       } else {
         collection = table.toCollection();
@@ -499,13 +540,40 @@ class IndexedDBResource {
     if (filterFn) {
       collection = collection.filter(filterFn);
     }
+    if (paginationActive) {
+      let results;
+      if (sortBy) {
+        // If we still have a sortBy value here, then we have not sorted using orderBy
+        // so we need to sort here.
+        if (reverse) {
+          collection = collection.reverse();
+        }
+        results = (await collection.sortBy(sortBy)).slice(0, maxResults + 1);
+      } else {
+        results = await collection.limit(maxResults + 1).toArray();
+      }
+      const hasMore = results.length > maxResults;
+      return {
+        results: results.slice(0, maxResults),
+        more: hasMore
+          ? {
+              ...params,
+              lft__gt: results[maxResults - 1].lft,
+            }
+          : null,
+      };
+    }
     if (sortBy) {
       if (reverse) {
         collection = collection.reverse();
       }
       collection = collection.sortBy(sortBy);
     }
-    return paginator.paginate(collection);
+    return collection.toArray();
+  }
+
+  whereLiveQuery(params = {}) {
+    return Dexie.liveQuery(() => this.where(params));
   }
 
   get(id) {
@@ -700,6 +768,19 @@ class Resource extends mix(APIResource, IndexedDBResource) {
     this._requests = {};
   }
 
+  savePagination(queryString, more) {
+    return this.transaction({ mode: 'rw' }, PAGINATION_TABLE, () => {
+      // Always save the pagination even if null, so we know we have fetched it
+      return db[PAGINATION_TABLE].put({ table: this.tableName, queryString, more });
+    });
+  }
+
+  loadPagination(queryString) {
+    return db[PAGINATION_TABLE].get([this.tableName, queryString]).then(pagination => {
+      return pagination ? pagination.more : null;
+    });
+  }
+
   fetchCollection(params) {
     const now = Date.now();
     const queryString = paramsSerializer(params);
@@ -715,16 +796,21 @@ class Resource extends mix(APIResource, IndexedDBResource) {
     const promise = client.get(this.collectionUrl(), { params }).then(response => {
       let itemData;
       let pageData;
+      let more;
       if (Array.isArray(response.data)) {
         itemData = response.data;
       } else if (response.data && response.data.results) {
         pageData = response.data;
         itemData = pageData.results;
+        more = pageData.more;
       } else {
         console.error(`Unexpected response from ${this.urlName}`, response);
         itemData = [];
       }
-      return this.setData(itemData).then(data => {
+      const paginationPromise = pageData
+        ? this.savePagination(queryString, more)
+        : Promise.resolve();
+      return Promise.all([this.setData(itemData), paginationPromise]).then(([data]) => {
         // setData also applies any outstanding local change events to the data
         // so we return the data returned from setData to make sure the most up to date
         // representation is returned from the fetch.
@@ -744,6 +830,50 @@ class Resource extends mix(APIResource, IndexedDBResource) {
     return promise;
   }
 
+  conditionalFetch(objs, params, doRefresh) {
+    if (objs === EMPTY_ARRAY) {
+      return [];
+    }
+    // if there are no objects, and it's also not an empty paginated response (objs.results),
+    // or we mean to refresh
+    if ((!objs.length && !objs.results?.length) || doRefresh) {
+      let refresh = Promise.resolve(true);
+      // ContentNode tree operations are the troublemakers causing the logic below
+      if (this.tableName === TABLE_NAMES.CONTENTNODE) {
+        // Only fetch new updates if we don't have pending changes to ContentNode that
+        // affect local tree structure
+        refresh = db[CHANGES_TABLE].where('table')
+          .equals(TABLE_NAMES.CONTENTNODE)
+          .filter(c => {
+            if (!TREE_CHANGE_TYPES.includes(c.type)) {
+              return false;
+            }
+            let parent = c.parent;
+            if (c.type === CHANGE_TYPES.CREATED) {
+              parent = c.obj.parent;
+            }
+            return (
+              params.parent === parent ||
+              params.parent === c.key ||
+              (params.id__in || []).includes(c.key)
+            );
+          })
+          .count()
+          .then(pendingCount => pendingCount === 0);
+      }
+
+      const fetch = refresh.then(shouldFetch => {
+        const emptyResults = isArray(objs) ? [] : { results: [] };
+        return shouldFetch ? this.fetchCollection(params) : emptyResults;
+      });
+      // Be sure to return the fetch promise to relay fetched objects in this condition
+      if (!objs.length && !objs.results?.length) {
+        return fetch;
+      }
+    }
+    return objs;
+  }
+
   /**
    * @param {Object} params
    * @param {Boolean} [doRefresh=true] -- Whether or not to refresh async from server
@@ -757,48 +887,37 @@ class Resource extends mix(APIResource, IndexedDBResource) {
       console.groupEnd();
       /* eslint-enable */
     }
-    return super.where(params).then(objs => {
-      if (objs === EMPTY_ARRAY) {
-        return [];
-      }
-      // if there are no objects, and it's also not an empty paginated response (objs.count),
-      // or we mean to refresh
-      if ((!objs.length && !objs.count) || doRefresh) {
-        let refresh = Promise.resolve(true);
-        // ContentNode tree operations are the troublemakers causing the logic below
-        if (this.tableName === TABLE_NAMES.CONTENTNODE) {
-          // Only fetch new updates if we don't have pending changes to ContentNode that
-          // affect local tree structure
-          refresh = db[CHANGES_TABLE].where('table')
-            .equals(TABLE_NAMES.CONTENTNODE)
-            .filter(c => {
-              if (!TREE_CHANGE_TYPES.includes(c.type)) {
-                return false;
-              }
-              let parent = c.parent;
-              if (c.type === CHANGE_TYPES.CREATED) {
-                parent = c.obj.parent;
-              }
-              return (
-                params.parent === parent ||
-                params.parent === c.key ||
-                (params.id__in || []).includes(c.key)
-              );
-            })
-            .count()
-            .then(pendingCount => pendingCount === 0);
-        }
-
-        const fetch = refresh.then(shouldFetch => {
-          return shouldFetch ? this.fetchCollection(params) : [];
-        });
-        // Be sure to return the fetch promise to relay fetched objects in this condition
-        if (!objs.length && !objs.count) {
-          return fetch;
-        }
+    const paginationLoadPromise = params[PAGINATION_FIELD]
+      ? this.loadPagination(paramsSerializer(params))
+      : Promise.resolve(null);
+    return Promise.all([super.where(params), paginationLoadPromise]).then(([objs, more]) => {
+      objs = this.conditionalFetch(objs, params, doRefresh);
+      if (!isArray(objs) && !objs.more && more) {
+        objs.more = more;
       }
       return objs;
     });
+  }
+
+  whereLiveQuery(params = {}, doRefresh = true) {
+    if (process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test') {
+      /* eslint-disable no-console */
+      console.groupCollapsed(`Getting liveQuery for ${this.tableName} table with params: `, params);
+      console.trace();
+      console.groupEnd();
+      /* eslint-enable */
+    }
+    const observable = Dexie.liveQuery(() => super.where(params));
+    let fetched = false;
+    observable.subscribe({
+      next: objs => {
+        if (!fetched) {
+          fetched = true;
+          this.conditionalFetch(objs, params, doRefresh);
+        }
+      },
+    });
+    return observable;
   }
 
   headModel(id) {
@@ -818,33 +937,6 @@ class Resource extends mix(APIResource, IndexedDBResource) {
   fetchModel(id) {
     return client.get(this.modelUrl(id)).then(response => {
       return this.setData([response.data]).then(data => data[0]);
-    });
-  }
-
-  createModel(data) {
-    return client.post(this.collectionUrl(), data).then(response => {
-      const now = Date.now();
-      const data = response.data;
-      data[LAST_FETCHED] = now;
-      // Directly write to the table, rather than using the add method
-      // to avoid creating change events that we would sync back to the server.
-      return this.transaction({ mode: 'rw' }, () => {
-        return this.table.put(data).then(() => {
-          return data;
-        });
-      });
-    });
-  }
-
-  deleteModel(id) {
-    return client.delete(this.modelUrl(id)).then(() => {
-      // Directly write to the table, rather than using the delete method
-      // to avoid creating change events that we would sync back to the server.
-      return this.transaction({ mode: 'rw' }, () => {
-        return this.table.delete(id).then(() => {
-          return true;
-        });
-      });
     });
   }
 
@@ -874,6 +966,27 @@ class Resource extends mix(APIResource, IndexedDBResource) {
       }
 
       return obj;
+    });
+  }
+}
+
+/**
+ * Resource that allows directly creating through the API,
+ * rather than through IndexedDB. API must explicitly support this.
+ */
+class CreateModelResource extends Resource {
+  createModel(data) {
+    return client.post(this.collectionUrl(), data).then(response => {
+      const now = Date.now();
+      const data = response.data;
+      data[LAST_FETCHED] = now;
+      // Directly write to the table, rather than using the add method
+      // to avoid creating change events that we would sync back to the server.
+      return this.transaction({ mode: 'rw' }, () => {
+        return this.table.put(data).then(() => {
+          return data;
+        });
+      });
     });
   }
 }
@@ -1018,7 +1131,7 @@ export const Bookmark = new Resource({
   getUserId: getUserIdFromStore,
 });
 
-export const Channel = new Resource({
+export const Channel = new CreateModelResource({
   tableName: TABLE_NAMES.CHANNEL,
   urlName: 'channel',
   indexFields: ['name', 'language'],
@@ -1172,6 +1285,44 @@ export const Channel = new Resource({
     // For channels, the appropriate channel_id for a change is just the key
     return obj.id;
   },
+  async languageExistsInResources(id) {
+    let langExists = await this.transaction(
+      { mode: 'r' },
+      TABLE_NAMES.CHANNEL,
+      TABLE_NAMES.CONTENTNODE,
+      () => {
+        return Channel.table.get(id).then(async channel => {
+          return (
+            (await ContentNode.table
+              .where({
+                channel_id: id,
+                language: channel.language,
+              })
+              .count()) > 0
+          );
+        });
+      }
+    );
+    if (!langExists) {
+      langExists = await client
+        .get(this.getUrlFunction('language_exists')(id))
+        .then(response => response.data.exists);
+    }
+    return langExists;
+  },
+  async languagesInResources(id) {
+    const localLanguages = await this.transaction({ mode: 'r' }, TABLE_NAMES.CONTENTNODE, () => {
+      return ContentNode.table
+        .where({ channel_id: id })
+        .filter(node => node.language !== null)
+        .toArray()
+        .then(nodes => nodes.map(node => node.language));
+    });
+    const remoteLanguages = await client
+      .get(this.getUrlFunction('languages')(id))
+      .then(response => response.data.languages);
+    return uniq(compact(localLanguages.concat(remoteLanguages)));
+  },
 });
 
 function getChannelFromChannelScope() {
@@ -1207,6 +1358,7 @@ export const ContentNode = new TreeResource({
     '[root_id+parent]',
     '[node_id+channel_id]',
   ],
+  defaultOrdering: 'lft',
 
   addPrerequisite(target_node, prerequisite) {
     if (target_node === prerequisite) {
@@ -1363,6 +1515,12 @@ export const ContentNode = new TreeResource({
         return Promise.all([getNode, this.where({ parent: parent.id }, false)]).then(
           ([node, siblings]) => {
             let lft = 1;
+            // if isCreate is true and target === id, it means it is inserting a node after the
+            // same node (duplicating it), so we will need this node among the siblings to get
+            // the right sort order
+            if (!isCreate || target !== id) {
+              siblings = siblings.filter(s => s.id !== id);
+            }
             if (siblings.length) {
               // If we're creating, we don't need to worry about passing the ID
               lft = this.getNewSortOrder(isCreate ? null : id, target, position, siblings);
@@ -1616,9 +1774,14 @@ export const ContentNode = new TreeResource({
    * @param {Function} updateCallback
    * @return {Promise<void>}
    */
-  updateAncestors({ id, includeSelf = false, ignoreChanges = false }, updateCallback) {
-    return this.transaction({ mode: 'rw' }, async () => {
-      const ancestors = await this.getAncestors(id);
+  async updateAncestors({ id, includeSelf = false, ignoreChanges = false }, updateCallback) {
+    // getAncestors invokes a non-Dexie API, so it must be called outside the transaction.
+    // Invoking it within a transaction can lead to transaction-related issues, including premature
+    // commit errors, which are a common problem when mixing non-Dexie API calls with transactions.
+    // See: https://dexie.org/docs/DexieErrors/Dexie.PrematureCommitError
+    const ancestors = await this.getAncestors(id);
+
+    return await this.transaction({ mode: 'rw' }, async () => {
       for (const ancestor of ancestors) {
         if (ancestor.id === id && !includeSelf) {
           continue;
@@ -1717,9 +1880,76 @@ export const ContentNode = new TreeResource({
       });
     });
   },
+  async _updateDescendantsChange(id, changes) {
+    const oldObj = await this.table.get(id);
+    if (!oldObj) {
+      return Promise.resolve();
+    }
+
+    const change = new UpdatedDescendantsChange({
+      key: id,
+      table: this.tableName,
+      oldObj,
+      changes,
+      source: CLIENTID,
+    });
+    return this._saveAndQueueChange(change);
+  },
+  /**
+   * Load descendants of a content node that are already in IndexedDB.
+   * It also returns the node itself.
+   * @param {string} id
+   * @returns {Promise<string[]>}
+   *
+   */
+  async getLoadedDescendants(id) {
+    const [node] = await this.table.where({ id }).toArray();
+    if (!node) {
+      return [];
+    }
+    const children = await this.table.where({ parent: id }).toArray();
+    if (!children.length) {
+      return [node];
+    }
+    const descendants = await Promise.all(
+      children.map(child => {
+        if (child.kind === ContentKindsNames.TOPIC) {
+          return this.getLoadedDescendants(child.id);
+        }
+        return child;
+      })
+    );
+    return [node].concat(flatMap(descendants, d => d));
+  },
+  async applyChangesToLoadedDescendants(id, changes) {
+    const descendants = await this.getLoadedDescendants(id);
+    return Promise.all(
+      descendants.map(descendant => {
+        return this.table.update(descendant.id, {
+          ...changes,
+          ...getMergedMapFields(descendant, changes),
+        });
+      })
+    );
+  },
+  /**
+   * Update a node and all its descendants that are already loaded in IndexedDB
+   * @param {*} id parent node to update
+   * @param {*} changes actual changes to made
+   * @returns {Promise<any>}
+   */
+  updateDescendants(id, changes) {
+    return this.transaction({ mode: 'rw' }, CHANGES_TABLE, async () => {
+      changes = this._cleanNew(changes);
+
+      await this.applyChangesToLoadedDescendants(id, changes);
+
+      return this._updateDescendantsChange(id, changes);
+    });
+  },
 });
 
-export const ChannelSet = new Resource({
+export const ChannelSet = new CreateModelResource({
   tableName: TABLE_NAMES.CHANNELSET,
   urlName: 'channelset',
   getUserId: getUserIdFromStore,
@@ -1732,7 +1962,14 @@ export const Invitation = new Resource({
 
   accept(id) {
     const changes = { accepted: true };
-    return client.patch(window.Urls.invitationDetail(id), changes).then(() => {
+    return this._handleInvitation(id, window.Urls.invitationAccept(id), changes);
+  },
+  decline(id) {
+    const changes = { declined: true };
+    return this._handleInvitation(id, window.Urls.invitationDecline(id), changes);
+  },
+  _handleInvitation(id, url, changes) {
+    return client.post(url).then(() => {
       return this.transaction({ mode: 'rw' }, () => {
         return this.table.update(id, changes);
       });
@@ -1749,6 +1986,10 @@ export const Invitation = new Resource({
 export const SavedSearch = new Resource({
   tableName: TABLE_NAMES.SAVEDSEARCH,
   urlName: 'savedsearch',
+
+  getUserId(obj) {
+    return obj.saved_by;
+  },
 });
 
 export const User = new Resource({
@@ -1757,7 +1998,7 @@ export const User = new Resource({
   uuid: false,
 
   updateAsAdmin(id, changes) {
-    return client.patch(window.Urls.adminUsersDetail(id), changes).then(() => {
+    return client.post(window.Urls.adminUsersAccept(id)).then(() => {
       return this.transaction({ mode: 'rw' }, () => {
         return this.table.update(id, changes);
       });

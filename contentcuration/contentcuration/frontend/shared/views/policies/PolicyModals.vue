@@ -4,21 +4,21 @@
     <TermsOfServiceModal
       v-if="showTermsOfService"
       :needsAcceptance="isPolicyUnaccepted(policies.TERMS_OF_SERVICE)"
-      @accept="acceptPolicy(getPolicyAcceptedData(policies.TERMS_OF_SERVICE))"
-      @close="closePolicy(policies.TERMS_OF_SERVICE)"
-      @open="policy => openPolicy(policy)"
+      @accept="handleAcceptPolicy"
+      @open="openPolicy"
+      @close="closePolicy"
     />
     <PrivacyPolicyModal
       v-if="showPrivacyPolicy"
       :needsAcceptance="isPolicyUnaccepted(policies.PRIVACY)"
-      @accept="acceptPolicy(getPolicyAcceptedData(policies.PRIVACY))"
-      @close="closePolicy(policies.PRIVACY)"
-      @open="policy => openPolicy(policy)"
+      @accept="handleAcceptPolicy"
+      @open="openPolicy"
+      @close="closePolicy"
     />
     <CommunityStandardsModal
       v-if="showCommunityStandards"
       :needsAcceptance="false"
-      @close="closePolicy(policies.COMMUNITY_STANDARDS)"
+      @close="closePolicy"
     />
   </div>
 
@@ -26,6 +26,7 @@
 
 <script>
 
+  import get from 'lodash/get';
   import { mapActions, mapGetters } from 'vuex';
   import PrivacyPolicyModal from './PrivacyPolicyModal';
   import TermsOfServiceModal from './TermsOfServiceModal';
@@ -40,13 +41,10 @@
       TermsOfServiceModal,
     },
     data() {
-      return {
-        policies,
-      };
+      return { policies };
     },
     computed: {
       ...mapGetters('policies', [
-        'selectedPolicy',
         'getPolicyAcceptedData',
         'isPolicyUnaccepted',
         'firstUnacceptedPolicy',
@@ -66,9 +64,24 @@
       showCommunityStandards() {
         return this.selectedPolicy === policies.COMMUNITY_STANDARDS;
       },
+      selectedPolicy() {
+        // Effectively results in watching the route query
+        return get(this, '$route.query.showPolicy', this.firstUnacceptedPolicy);
+      },
     },
     methods: {
-      ...mapActions('policies', ['acceptPolicy', 'openPolicy', 'closePolicy']),
+      ...mapActions('policies', ['acceptPolicy']),
+      openPolicy(policy) {
+        const toRoute = this.$route;
+        toRoute.query.showPolicy = policy;
+        this.$router.push(toRoute);
+      },
+      closePolicy() {
+        this.$router.push({ query: {} });
+      },
+      handleAcceptPolicy(policy) {
+        this.acceptPolicy(this.getPolicyAcceptedData(policy)).then(this.closePolicy);
+      },
     },
   };
 

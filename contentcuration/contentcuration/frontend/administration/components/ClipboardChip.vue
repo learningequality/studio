@@ -14,9 +14,9 @@
       data-test="copy"
       @click="copyToClipboard"
     >
-      <Icon small>
-        content_copy
-      </Icon>
+      <Icon
+        icon="copy"
+      />
     </VBtn>
   </div>
 

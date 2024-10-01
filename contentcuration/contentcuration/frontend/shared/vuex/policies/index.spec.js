@@ -138,9 +138,8 @@ describe('policies store', () => {
         const policyAcceptedData = { privacy_policy_2020_12_10: '12/05/2021 09:56' };
         await actions.acceptPolicy({ getters, dispatch }, policyAcceptedData);
 
-        expect(dispatch.mock.calls.length).toBe(2);
+        expect(dispatch.mock.calls.length).toBe(1);
         expect(dispatch.mock.calls[0]).toEqual(['setPolicies', policyAcceptedData]);
-        expect(dispatch.mock.calls[1]).toEqual(['closePolicy']);
       });
     });
   });

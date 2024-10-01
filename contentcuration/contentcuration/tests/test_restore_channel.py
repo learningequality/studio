@@ -93,7 +93,7 @@ class ChannelRestoreUtilityFunctionTestCase(StudioTestCase):
             self.version,
             self.last_updated,
         )
-        self.channel, _ = create_channel(self.cursor_mock, self.id)
+        self.channel, _ = create_channel(self.cursor_mock, self.id, self.admin_user)
 
     def test_restore_channel_id(self):
         self.assertEqual(self.channel.id, self.id)

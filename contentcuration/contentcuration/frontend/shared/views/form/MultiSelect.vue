@@ -14,19 +14,23 @@
         :attach="attach"
         v-bind="$attrs"
         @click.stop.prevent
+        @blur="resetScroll"
       >
         <template #selection="{ item }">
           <VChip :class="{ notranslate }">
             {{ getText(item) }}
           </VChip>
         </template>
-        <template #item="{ item, tile }">
-          <Checkbox v-bind="tile.props" class="ma-0">
-            <template #label>
-              <span :class="{ notranslate }" :style="getEllipsisStyle()" dir="auto">
-                {{ getText(item) }}
-              </span>
-            </template>
+        <template #item="{ item }">
+          <Checkbox
+            :ref="'checkbox-' + item.value"
+            v-model="selections"
+            :value="item.value"
+            class="scroll-margin"
+          >
+            <span :class="{ notranslate }" :style="getEllipsisStyle()" dir="auto">
+              {{ getText(item) }}
+            </span>
           </Checkbox>
         </template>
       </VSelect>
@@ -109,6 +113,17 @@
         }
         return item.text || item;
       },
+      resetScroll() {
+        const [{ value: firstItemValue } = {}] = this.items || [];
+        if (!firstItemValue) {
+          return;
+        }
+        const firstItem = this.$refs[`checkbox-${firstItemValue}`];
+        if (!firstItem) {
+          return;
+        }
+        firstItem.$el.scrollIntoView();
+      },
     },
     $trs: {
       noItemsFound: 'No items found',
@@ -134,6 +149,11 @@
     max-width: 100%;
     overflow: hidden;
     white-space: nowrap;
+  }
+
+  .scroll-margin {
+    /* Fixes scroll position on reset scroll */
+    scroll-margin: 16px;
   }
 
 </style>
