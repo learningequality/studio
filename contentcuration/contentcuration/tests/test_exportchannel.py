@@ -1,13 +1,17 @@
 from __future__ import absolute_import
 
+import json
 import os
 import random
 import string
 import tempfile
+import uuid
 
 import pytest
+from celery import states
 from django.core.management import call_command
 from django.db import connections
+from django_celery_results.models import TaskResult
 from kolibri_content import models as kolibri_models
 from kolibri_content.router import cleanup_content_database_connection
 from kolibri_content.router import get_active_content_database
@@ -29,6 +33,8 @@ from .testdata import node as create_node
 from .testdata import slideshow
 from .testdata import thumbnail_bytes
 from contentcuration import models as cc
+from contentcuration.models import CustomTaskMetadata
+from contentcuration.utils.celery.tasks import generate_task_signature
 from contentcuration.utils.publish import ChannelIncompleteError
 from contentcuration.utils.publish import convert_channel_thumbnail
 from contentcuration.utils.publish import create_content_database
@@ -37,6 +43,7 @@ from contentcuration.utils.publish import fill_published_fields
 from contentcuration.utils.publish import map_prerequisites
 from contentcuration.utils.publish import MIN_SCHEMA_VERSION
 from contentcuration.utils.publish import set_channel_icon_encoding
+from contentcuration.viewsets.base import create_change_tracker
 
 pytestmark = pytest.mark.django_db
 
@@ -61,6 +68,10 @@ class ExportChannelTestCase(StudioTestCase):
     def setUp(self):
         super(ExportChannelTestCase, self).setUp()
         self.content_channel = channel()
+
+        # Make a ricecooker channel to test inheritance behaviour
+        self.content_channel.ricecooker_version = "0.7.1"
+        self.content_channel.save()
 
         # Add some incomplete nodes to ensure they don't get published.
         new_node = create_node({'kind_id': 'topic', 'title': 'Incomplete topic', 'children': []})
@@ -486,20 +497,21 @@ class ChannelExportUtilityFunctionTestCase(StudioTestCase):
         clear_tasks()
 
     def test_convert_channel_thumbnail_empty_thumbnail(self):
-        channel = cc.Channel.objects.create()
+        channel = cc.Channel.objects.create(actor_id=self.admin_user.id)
         self.assertEqual("", convert_channel_thumbnail(channel))
 
     def test_convert_channel_thumbnail_static_thumbnail(self):
-        channel = cc.Channel.objects.create(thumbnail="/static/kolibri_flapping_bird.png")
+        channel = cc.Channel.objects.create(thumbnail="/static/kolibri_flapping_bird.png", actor_id=self.admin_user.id)
         self.assertEqual("", convert_channel_thumbnail(channel))
 
     def test_convert_channel_thumbnail_encoding_valid(self):
-        channel = cc.Channel.objects.create(thumbnail="/content/kolibri_flapping_bird.png", thumbnail_encoding={"base64": "flappy_bird"})
+        channel = cc.Channel.objects.create(
+            thumbnail="/content/kolibri_flapping_bird.png", thumbnail_encoding={"base64": "flappy_bird"}, actor_id=self.admin_user.id)
         self.assertEqual("flappy_bird", convert_channel_thumbnail(channel))
 
     def test_convert_channel_thumbnail_encoding_invalid(self):
         with patch("contentcuration.utils.publish.get_thumbnail_encoding", return_value="this is a test"):
-            channel = cc.Channel.objects.create(thumbnail="/content/kolibri_flapping_bird.png", thumbnail_encoding={})
+            channel = cc.Channel.objects.create(thumbnail="/content/kolibri_flapping_bird.png", thumbnail_encoding={}, actor_id=self.admin_user.id)
             self.assertEqual("this is a test", convert_channel_thumbnail(channel))
 
     def test_create_slideshow_manifest(self):
@@ -536,7 +548,7 @@ class ChannelExportPrerequisiteTestCase(StudioTestCase):
             os.remove(self.output_db)
 
     def test_nonexistent_prerequisites(self):
-        channel = cc.Channel.objects.create()
+        channel = cc.Channel.objects.create(actor_id=self.admin_user.id)
         node1 = cc.ContentNode.objects.create(kind_id="exercise", parent_id=channel.main_tree.pk, complete=True)
         exercise = cc.ContentNode.objects.create(kind_id="exercise", complete=True)
 
@@ -547,9 +559,46 @@ class ChannelExportPrerequisiteTestCase(StudioTestCase):
 class ChannelExportPublishedData(StudioTestCase):
     def test_fill_published_fields(self):
         version_notes = description()
-        channel = cc.Channel.objects.create()
+        channel = cc.Channel.objects.create(actor_id=self.admin_user.id)
         channel.last_published
         fill_published_fields(channel, version_notes)
         self.assertTrue(channel.published_data)
         self.assertIsNotNone(channel.published_data.get(0))
         self.assertEqual(channel.published_data[0]['version_notes'], version_notes)
+
+
+class PublishFailCleansUpTaskObjects(StudioTestCase):
+    def setUp(self):
+        super(PublishFailCleansUpTaskObjects, self).setUpBase()
+
+    def test_failed_task_objects_cleaned_up_when_publishing(self):
+        channel_id = self.channel.id
+        task_name = 'export-channel'
+        task_id = uuid.uuid4().hex
+        pk = 'ab684452f2ad4ba6a1426d6410139f60'
+        table = 'channel'
+        task_kwargs = json.dumps({'pk': pk, 'table': table})
+        signature = generate_task_signature(task_name, task_kwargs=task_kwargs, channel_id=channel_id)
+
+        TaskResult.objects.create(
+            task_id=task_id,
+            status=states.FAILURE,
+            task_name=task_name,
+        )
+
+        CustomTaskMetadata.objects.create(
+            task_id=task_id,
+            channel_id=channel_id,
+            user=self.user,
+            signature=signature
+        )
+
+        assert TaskResult.objects.filter(task_id=task_id).exists()
+        assert CustomTaskMetadata.objects.filter(task_id=task_id).exists()
+
+        with create_change_tracker(pk, table, channel_id, self.user, task_name):
+            assert not TaskResult.objects.filter(task_id=task_id).exists()
+            assert not CustomTaskMetadata.objects.filter(task_id=task_id).exists()
+            new_task_result = TaskResult.objects.filter(task_name=task_name, status=states.STARTED).first()
+            new_custom_task_metadata = CustomTaskMetadata.objects.get(channel_id=channel_id, user=self.user, signature=signature)
+            assert new_custom_task_metadata.task_id == new_task_result.task_id

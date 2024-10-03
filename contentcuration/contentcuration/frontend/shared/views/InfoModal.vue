@@ -2,12 +2,11 @@
 
   <div :style="{ display: 'inline' }">
     <Icon
-      color="primary"
+      icon="help"
+      :color="$themeTokens.primary"
       data-test="info-icon"
       @click="displayDialog = !displayDialog"
-    >
-      help
-    </Icon>
+    />
     <KModal
       v-if="displayDialog"
       data-test="info-dialog"

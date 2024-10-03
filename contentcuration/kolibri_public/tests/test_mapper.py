@@ -14,6 +14,7 @@ from kolibri_public.utils.mapper import ChannelMapper
 from le_utils.constants import content_kinds
 
 from contentcuration.models import Channel
+from contentcuration.tests.testdata import user
 
 
 class ChannelMapperTest(TestCase):
@@ -35,6 +36,7 @@ class ChannelMapperTest(TestCase):
         super(ChannelMapperTest, cls).setUpClass()
         call_command("loadconstants")
         _, cls.tempdb = tempfile.mkstemp(suffix=".sqlite3")
+        admin_user = user()
 
         with using_content_database(cls.tempdb):
             call_command("migrate", "content", database=get_active_content_database(), no_input=True)
@@ -45,7 +47,7 @@ class ChannelMapperTest(TestCase):
             builder.insert_into_default_db()
             cls.source_root = kolibri_content_models.ContentNode.objects.get(id=builder.root_node["id"])
             cls.channel = kolibri_content_models.ChannelMetadata.objects.get(id=builder.channel["id"])
-            contentcuration_channel = Channel.objects.create(id=cls.channel.id, name=cls.channel.name, public=True)
+            contentcuration_channel = Channel.objects.create(actor_id=admin_user.id, id=cls.channel.id, name=cls.channel.name, public=True)
             contentcuration_channel.main_tree.published = True
             contentcuration_channel.main_tree.save()
             cls.mapper = ChannelMapper(cls.channel)

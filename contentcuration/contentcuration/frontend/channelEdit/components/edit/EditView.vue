@@ -13,17 +13,13 @@
         <ToolBar v-if="showTabs" :flat="!tabsElevated" class="tabs" color="white">
           <Tabs v-model="currentTab" slider-color="primary" height="64px">
             <!-- Details tab -->
-            <VTab
-              ref="detailstab"
-              :href="`#${tabs.DETAILS}`"
-              @click="trackTab('Details')"
-            >
+            <VTab ref="detailstab" :href="`#${tabs.DETAILS}`" @click="trackTab('Details')">
               {{ $tr(tabs.DETAILS) }}
               <VTooltip v-if="!areDetailsValid || !areFilesValid" top lazy>
                 <template #activator="{ on }">
-                  <Icon color="red" dark small class="ml-2" v-on="on">
+                  <VIconWrapper color="red" dark small class="ml-2" v-on="on">
                     error
-                  </Icon>
+                  </VIconWrapper>
                 </template>
                 <span>{{ $tr('invalidFieldsToolTip') }}</span>
               </VTooltip>
@@ -39,9 +35,9 @@
               {{ $tr(tabs.QUESTIONS) }}
               <VTooltip v-if="!areAssessmentItemsValid" top lazy>
                 <template #activator="{ on }">
-                  <Icon color="red" dark v-on="on">
+                  <VIconWrapper color="red" dark v-on="on">
                     error
-                  </Icon>
+                  </VIconWrapper>
                 </template>
                 <span>{{ $tr('invalidFieldsToolTip') }}</span>
               </VTooltip>
@@ -72,21 +68,22 @@
               </VAlert>
               <VAlert v-else-if="!areDetailsValid" :value="true" type="error" outline icon="error">
                 {{ $tr('errorBannerText') }}
+                <ul>
+                  <li
+                    v-for="(error, index) in errorsList"
+                    :key="index"
+                    @click="handleErrorClick(error)"
+                  >
+                    <a class="error-ref"> {{ $tr(error) }} </a>
+                  </li>
+                </ul>
               </VAlert>
-              <DetailsTabView
-                :key="nodeIds.join('-')"
-                ref="detailsTab"
-                :nodeIds="nodeIds"
-              />
+              <DetailsTabView :key="nodeIds.join('-')" ref="detailsTab" :nodeIds="nodeIds" />
             </VTabItem>
             <VTabItem :key="tabs.QUESTIONS" ref="questionwindow" :value="tabs.QUESTIONS" lazy>
               <AssessmentTab :nodeId="nodeIds[0]" />
             </VTabItem>
-            <VTabItem
-              :key="tabs.RELATED"
-              :value="tabs.RELATED"
-              lazy
-            >
+            <VTabItem :key="tabs.RELATED" :value="tabs.RELATED" lazy>
               <RelatedResourcesTab :nodeId="nodeIds[0]" />
             </VTabItem>
           </VTabsItems>
@@ -109,6 +106,14 @@
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import ToolBar from 'shared/views/ToolBar';
   import Tabs from 'shared/views/Tabs';
+
+  const EditFields = {
+    TITLE: 'titleLabel',
+    LICENSE: 'licenseLabel',
+    COPYRIGHT_HOLDER: 'copyrightHolderLabel',
+    COMPLETION: 'completionLabel',
+    LEARNING_ACTIVITY: 'learningActivityLabel',
+  };
 
   export default {
     name: 'EditView',
@@ -133,6 +138,7 @@
       return {
         currentTab: null,
         tabsElevated: false,
+        errorsList: [],
       };
     },
     computed: {
@@ -141,6 +147,7 @@
         'getContentNodeDetailsAreValid',
         'getContentNodeFilesAreValid',
         'getImmediateRelatedResourcesCount',
+        'getNodeDetailsErrorsList',
       ]),
       ...mapGetters('assessmentItem', ['getAssessmentItemsAreValid', 'getAssessmentItemsCount']),
       firstNode() {
@@ -182,6 +189,7 @@
         return this.$tr('editingMultipleCount', totals);
       },
       areDetailsValid() {
+        this.setErrors(this.nodeIds[0]);
         return !this.oneSelected || this.getContentNodeDetailsAreValid(this.nodeIds[0]);
       },
       areAssessmentItemsValid() {
@@ -243,6 +251,57 @@
       trackTab(name) {
         this.$analytics.trackClick('channel_editor_modal', name);
       },
+      handleErrorClick(error) {
+        const errorRefs = {
+          [EditFields.TITLE]: 'title',
+          [EditFields.LICENSE]: 'license',
+          [EditFields.COPYRIGHT_HOLDER]: 'copyright_holder',
+          [EditFields.COMPLETION]: 'randomize',
+          [EditFields.LEARNING_ACTIVITY]: 'learning_activities',
+        };
+
+        const errorRef = errorRefs[error];
+        const targetElement = this.$refs.detailsTab.$refs[errorRef];
+
+        if (!targetElement) {
+          console.error(`Target element ref not found for error: ${error}`);
+          return;
+        }
+
+        const nativeElement = targetElement.$el;
+        const containerElement = this.$refs.editview;
+        const position = nativeElement.getBoundingClientRect();
+        const offsetY = position.top - nativeElement.clientHeight - 50; //  additional padding of 50 to adjust position.
+        containerElement.scrollTo({ top: offsetY, behavior: 'smooth' });
+      },
+      setErrors(nodeId) {
+        const errorsTagList = this.getNodeDetailsErrorsList(nodeId);
+        // fetch unique errors
+        // set that to errorsList
+        const errorRefs = {
+          TITLE_REQUIRED: EditFields.TITLE,
+          LICENSE_REQUIRED: EditFields.LICENSE,
+          COPYRIGHT_HOLDER_REQUIRED: EditFields.COPYRIGHT_HOLDER,
+          MASTERY_MODEL_REQUIRED: EditFields.COMPLETION,
+          MASTERY_MODEL_M_REQUIRED: EditFields.COMPLETION,
+          MASTERY_MODEL_M_WHOLE_NUMBER: EditFields.COMPLETION,
+          MASTERY_MODEL_M_GT_ZERO: EditFields.COMPLETION,
+          MASTERY_MODEL_M_LTE_N: EditFields.COMPLETION,
+          MASTERY_MODEL_N_REQUIRED: EditFields.COMPLETION,
+          MASTERY_MODEL_N_WHOLE_NUMBER: EditFields.COMPLETION,
+          MASTERY_MODEL_N_GT_ZERO: EditFields.COMPLETION,
+          LEARNING_ACTIVITY_REQUIRED: EditFields.LEARNING_ACTIVITY,
+        };
+
+        const uniqueErrorsSet = new Set();
+        for (const error of errorsTagList) {
+          if (errorRefs[error]) {
+            uniqueErrorsSet.add(errorRefs[error]);
+          }
+        }
+        const arr = [...uniqueErrorsSet];
+        this.errorsList = arr;
+      },
       /*
        * @public
        */
@@ -266,6 +325,11 @@
       errorBannerText: 'Please provide the required information',
       editingMultipleCount:
         'Editing details for {topicCount, plural,\n =1 {# folder}\n other {# folders}}, {resourceCount, plural,\n =1 {# resource}\n other {# resources}}',
+      titleLabel: 'Title',
+      licenseLabel: 'License',
+      copyrightHolderLabel: 'Copyright holder',
+      completionLabel: 'Completion',
+      learningActivityLabel: 'Learning activity',
     },
   };
 
@@ -313,6 +377,11 @@
     min-width: 100%;
     max-height: inherit;
     overflow: auto;
+  }
+
+  .error-ref {
+    color: inherit;
+    text-decoration: underline;
   }
 
 </style>

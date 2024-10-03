@@ -92,7 +92,8 @@
         get() {
           return this.value;
         },
-        set(value) {
+        set(val) {
+          const value = val || null; // Ensure null is returned if no value is selected
           this.$emit('input', value);
         },
       },
@@ -106,7 +107,8 @@
     },
     methods: {
       languageText(item) {
-        return this.$tr('languageItemText', { language: item.native_name, code: item.id });
+        const firstNativeName = item.native_name.split(',')[0].trim();
+        return this.$tr('languageItemText', { language: firstNativeName, code: item.id });
       },
     },
     $trs: {

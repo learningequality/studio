@@ -262,7 +262,7 @@
             <VFlex class="source-thumbnail">
               <Thumbnail :src="channel.thumbnail" />
             </VFlex>
-            <VFlex v-if="libraryMode" class="font-weight-bold notranslate px-4 subheading">
+            <VFlex v-if="printing" class="font-weight-bold notranslate px-4 subheading">
               {{ channel.name }}
             </VFlex>
             <a
@@ -272,7 +272,7 @@
               class="notranslate primary--text"
             >
               <span>{{ channel.name }}</span>
-              <Icon small class="mx-1 rtl-flip" color="primary">open_in_new</Icon>
+              <Icon class="mx-1 rtl-flip" icon="openNewTab" />
             </a>
           </VLayout>
         </template>
@@ -418,9 +418,6 @@
           });
         }
         return '';
-      },
-      libraryMode() {
-        return window.libraryMode;
       },
       sizeText() {
         const size = this._details.resource_size;

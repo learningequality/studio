@@ -20,9 +20,7 @@
           v-on="on"
           @click.stop
         >
-          <Icon small>
-            more_horiz
-          </Icon>
+          <Icon icon="optionsHorizontal" />
         </VBtn>
       </template>
       <VList>

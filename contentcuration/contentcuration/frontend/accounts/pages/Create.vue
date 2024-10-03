@@ -31,31 +31,40 @@
           v-model="form.first_name"
           maxlength="100"
           counter
-          :label="$tr('firstNameLabel')"
           autofocus
+          :label="$tr('firstNameLabel')"
+          :error-messages="errors.first_name"
+          @input="resetErrors('first_name')"
         />
         <TextField
           v-model="form.last_name"
           maxlength="100"
           counter
           :label="$tr('lastNameLabel')"
+          :error-messages="errors.last_name"
+          @input="resetErrors('last_name')"
         />
         <EmailField
           v-model="form.email"
           maxlength="100"
           counter
           :disabled="Boolean($route.query.email)"
-          :error-messages="emailErrors"
-          @input="emailErrors = []"
+          :error-messages="errors.email"
+          @input="resetErrors('email')"
         />
         <PasswordField
           v-model="form.password1"
+          :additionalRules="passwordValidationRules"
           :label="$tr('passwordLabel')"
+          :error-messages="errors.password1"
+          @input="resetErrors('password1')"
         />
         <PasswordField
           v-model="form.password2"
           :additionalRules="passwordConfirmRules"
           :label="$tr('confirmPasswordLabel')"
+          :error-messages="errors.password2"
+          @input="resetErrors('password2')"
         />
 
         <!-- Usage -->
@@ -135,11 +144,17 @@
         <Checkbox
           v-model="acceptedAgreement"
           :label="$tr('agreement')"
-          required
-          :rules="tosAndPolicyRules"
-          :hide-details="false"
           class="my-1 policy-checkbox"
         />
+        <!-- Error message for Agreements -->
+        <VSlideYTransition>
+          <div v-if="!acceptedAgreement" class="error--text policy-error theme--light v-messages">
+            <div class="v-messages__message">
+              {{ $tr("ToSRequiredMessage") }}
+            </div>
+          </div>
+        </VSlideYTransition>
+
         <div class="span-spacing">
           <span>
             <ActionLink
@@ -194,6 +209,7 @@
   import Checkbox from 'shared/views/form/Checkbox';
   import { policies } from 'shared/constants';
   import DropdownWrapper from 'shared/views/form/DropdownWrapper';
+  import commonStrings from 'shared/translator';
 
   export default {
     name: 'Create',
@@ -213,7 +229,6 @@
       return {
         valid: true,
         registrationFailed: false,
-        emailErrors: [],
         form: {
           first_name: '',
           last_name: '',
@@ -231,6 +246,13 @@
           accepted_policy: false,
           accepted_tos: false,
         },
+        errors: {
+          first_name: [],
+          last_name: [],
+          email: [],
+          password1: [],
+          password2: [],
+        },
       };
     },
     computed: {
@@ -241,8 +263,8 @@
       passwordConfirmRules() {
         return [value => (this.form.password1 === value ? true : this.$tr('passwordMatchMessage'))];
       },
-      tosAndPolicyRules() {
-        return [value => (value ? true : this.$tr('ToSRequiredMessage'))];
+      passwordValidationRules() {
+        return [value => (value.length >= 8 ? true : this.$tr('passwordValidationMessage'))];
       },
       acceptedAgreement: {
         get() {
@@ -291,10 +313,12 @@
         ];
       },
       usageRules() {
-        return [() => (this.form.uses.length ? true : this.$tr('fieldRequiredMessage'))];
+        /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
+        return [() => (this.form.uses.length ? true : commonStrings.$tr('fieldRequired'))];
       },
       locationRules() {
-        return [() => (this.form.locations.length ? true : this.$tr('fieldRequiredMessage'))];
+        /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
+        return [() => (this.form.locations.length ? true : commonStrings.$tr('fieldRequired'))];
       },
       sources() {
         return sources;
@@ -356,7 +380,8 @@
         ];
       },
       sourceRules() {
-        return [() => (this.form.source.length ? true : this.$tr('fieldRequiredMessage'))];
+        /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
+        return [() => (this.form.source.length ? true : commonStrings.$tr('fieldRequired'))];
       },
       clean() {
         return data => {
@@ -410,12 +435,11 @@
     },
     methods: {
       ...mapActions('account', ['register']),
-      ...mapActions('policies', ['openPolicy']),
       showTermsOfService() {
-        this.openPolicy(policies.TERMS_OF_SERVICE);
+        this.$router.push({ query: { showPolicy: policies.TERMS_OF_SERVICE } });
       },
       showPrivacyPolicy() {
-        this.openPolicy(policies.PRIVACY);
+        this.$router.push({ query: { showPolicy: policies.PRIVACY } });
       },
       showStorageField(id) {
         return id === uses.STORING && this.form.uses.includes(id);
@@ -424,7 +448,9 @@
         return id === uses.OTHER && this.form.uses.includes(id);
       },
       submit() {
-        if (this.$refs.form.validate()) {
+        // We need to check the "acceptedAgreement" here explicitly because it is not a
+        // Vuetify form field and does not trigger the form validation.
+        if (this.$refs.form.validate() && this.acceptedAgreement) {
           const cleanedData = this.clean(this.form);
           return this.register(cleanedData)
             .then(() => {
@@ -433,8 +459,27 @@
             .catch(error => {
               if (error.message === 'Network Error') {
                 this.$refs.top.scrollIntoView({ behavior: 'smooth' });
+              } else if (error.response.status === 400) {
+                for (const field of error.response.data) {
+                  if (!Object.prototype.hasOwnProperty.call(this.errors, field)) {
+                    continue;
+                  }
+                  let message = '';
+                  switch (field) {
+                    case 'password1':
+                      message = this.$tr('passwordValidationMessage');
+                      break;
+                    default:
+                      /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
+                      message = commonStrings.$tr('fieldHasError');
+                      break;
+                  }
+                  this.errors[field] = [message];
+                }
+                this.registrationFailed = true;
+                this.valid = false;
               } else if (error.response.status === 403) {
-                this.emailErrors = [this.$tr('emailExistsMessage')];
+                this.errors.email = [this.$tr('emailExistsMessage')];
               } else if (error.response.status === 405) {
                 this.$router.push({ name: 'AccountNotActivated' });
               } else {
@@ -447,12 +492,14 @@
         }
         return Promise.resolve();
       },
+      resetErrors(field) {
+        this.errors[field] = [];
+      },
     },
 
     $trs: {
       backToLoginButton: 'Sign in',
       createAnAccountTitle: 'Create an account',
-      fieldRequiredMessage: 'Field is required',
       errorsMessage: 'Please fix the errors below',
       registrationFailed: 'There was an error registering your account. Please try again',
       registrationFailedOffline:
@@ -465,6 +512,7 @@
       passwordLabel: 'Password',
       confirmPasswordLabel: 'Confirm password',
       passwordMatchMessage: "Passwords don't match",
+      passwordValidationMessage: 'Password should be at least 8 characters long',
 
       // Usage question
       usageLabel: 'How do you plan on using Kolibri Studio (check all that apply)',
@@ -528,8 +576,9 @@
     }
   }
 
-  .policy-checkbox /deep/ .v-messages {
+  .policy-error {
     min-height: 0;
+    margin-bottom: 4px;
     margin-left: 40px;
   }
 

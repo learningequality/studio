@@ -21,17 +21,20 @@
           hover
           class="list-card-hover px-3"
         >
-          <Checkbox
-            v-model="selectedChannels"
-            color="primary"
-            data-test="checkbox"
-            :value="channel.id"
-            class="channel ma-0"
-          >
-            <template #label>
-              <ChannelItem :channelId="channel.id" />
-            </template>
-          </Checkbox>
+          <VLayout align-center row>
+            <Checkbox
+              v-model="selectedChannels"
+              color="primary"
+              :data-test="`checkbox-${channel.id}`"
+              :value="channel.id"
+              class="channel ma-0"
+            />
+            <ChannelItem
+              :channelId="channel.id"
+              :data-test="`channel-item-${channel.id}`"
+              @click="handleSelectChannel"
+            />
+          </VLayout>
         </VCard>
       </template>
     </template>
@@ -114,6 +117,11 @@
     },
     methods: {
       ...mapActions('channel', ['loadChannelList']),
+      handleSelectChannel(channelId) {
+        this.selectedChannels = this.selectedChannels.includes(channelId)
+          ? this.selectedChannels.filter(id => id !== channelId)
+          : [...this.selectedChannels, channelId];
+      },
     },
     $trs: {
       searchText: 'Search for a channel',
@@ -130,11 +138,8 @@
     margin: 0;
   }
 
-  .channel {
-    /deep/ label,
-    /deep/ .v-input__control {
-      width: 100% !important;
-    }
+  .channel /deep/ .k-checkbox {
+    vertical-align: middle;
   }
 
   .list-card-hover {

@@ -11,9 +11,9 @@
               :encoding="channel.thumbnail_encoding"
               style="width: 100%;"
             />
-            <Icon v-else size="80px" class="channel-icon">
+            <VIconWrapper v-else size="80px" class="channel-icon">
               apps
-            </Icon>
+            </VIconWrapper>
           </VLayout>
         </VFlex>
 

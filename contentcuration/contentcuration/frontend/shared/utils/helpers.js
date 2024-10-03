@@ -3,7 +3,10 @@ import debounce from 'lodash/debounce';
 import memoize from 'lodash/memoize';
 import merge from 'lodash/merge';
 
+import { Categories, CategoriesLookup } from 'shared/constants';
 import { LicensesList } from 'shared/leUtils/Licenses';
+import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
+import FormatPresetsMap, { FormatPresetsNames } from 'shared/leUtils/FormatPresets';
 
 function safeParseInt(str) {
   const parsed = parseInt(str);
@@ -423,4 +426,200 @@ export function memoizeDebounce(func, wait = 0, options = {}) {
   return function() {
     mem.apply(this, arguments).apply(this, arguments);
   };
+}
+
+/**
+ * Remove falsy properties in contentNode boolean maps.
+ * This is necessary as in many places we rely on Object.keys() to
+ * get the values of a field, but if the value is false, it should not
+ * be considered a valid value.
+ */
+export function cleanBooleanMaps(contentNode) {
+  const booleanMapFields = [
+    'grade_levels',
+    'learner_needs',
+    'accessibility_labels',
+    'learning_activities',
+    'categories',
+  ];
+  booleanMapFields.forEach(field => {
+    if (contentNode[field]) {
+      Object.keys(contentNode[field]).forEach(key => {
+        if (!contentNode[field][key]) {
+          delete contentNode[field][key];
+        }
+      });
+    }
+  });
+}
+
+/**
+ * Copied implementation from Kolibri to have the same categories order.
+ * From: https://github.com/learningequality/kolibri/blob/c372cd05ddd105a7688db9e3698dc21b842ac3e5/kolibri/plugins/learn/assets/src/composables/useSearch.js#L77
+ */
+function getCategoriesTree() {
+  const libraryCategories = {};
+
+  const availablePaths = {};
+
+  (Object.values(Categories) || []).map(key => {
+    const paths = key.split('.');
+    let path = '';
+    for (const path_segment of paths) {
+      path = path === '' ? path_segment : path + '.' + path_segment;
+      availablePaths[path] = true;
+    }
+  });
+  // Create a nested object representing the hierarchy of categories
+  for (const value of Object.values(Categories)
+    // Sort by the length of the key path to deal with
+    // shorter key paths first.
+    .sort((a, b) => a.length - b.length)) {
+    // Split the value into the paths so we can build the object
+    // down the path to create the nested representation
+    const ids = value.split('.');
+    // Start with an empty path
+    let path = '';
+    // Start with the global object
+    let nested = libraryCategories;
+    for (const fragment of ids) {
+      // Add the fragment to create the path we examine
+      path += fragment;
+      // Check to see if this path is one of the paths
+      // that is available on this device
+      if (availablePaths[path]) {
+        // Lookup the human readable key for this path
+        const nestedKey = CategoriesLookup[path];
+        // Check if we have already represented this in the object
+        if (!nested[nestedKey]) {
+          // If not, add an object representing this category
+          nested[nestedKey] = {
+            // The value is the whole path to this point, so the value
+            // of the key.
+            value: path,
+            // Nested is an object that contains any subsidiary categories
+            nested: {},
+          };
+        }
+        // For the next stage of the loop the relevant object to edit is
+        // the nested object under this key.
+        nested = nested[nestedKey].nested;
+        // Add '.' to path so when we next append to the path,
+        // it is properly '.' separated.
+        path += '.';
+      } else {
+        break;
+      }
+    }
+  }
+  return libraryCategories;
+}
+
+export function getSortedCategories() {
+  const categoriesTree = getCategoriesTree();
+  const categoriesSorted = {};
+  const sortCategories = function(categories) {
+    Object.entries(categories).forEach(([name, category]) => {
+      categoriesSorted[category.value] = name;
+      sortCategories(category.nested);
+    });
+  };
+  sortCategories(categoriesTree);
+  return categoriesSorted;
+}
+
+export function isAudioVideoFile(file) {
+  if (!file || !file.file_format) {
+    return false;
+  }
+
+  const videoAllowedFormats = FormatPresetsMap.get(FormatPresetsNames.HIGH_RES_VIDEO)
+    .allowed_formats;
+  const audioAllowedFormats = FormatPresetsMap.get(FormatPresetsNames.AUDIO).allowed_formats;
+  return (
+    videoAllowedFormats.includes(file.file_format) || audioAllowedFormats.includes(file.file_format)
+  );
+}
+
+export function getFileDuration(nodeFiles, kind) {
+  if (
+    !nodeFiles ||
+    !nodeFiles.length ||
+    ![ContentKindsNames.AUDIO, ContentKindsNames.VIDEO].includes(kind)
+  ) {
+    return null;
+  }
+
+  // filter for the correct file types,
+  // to exclude files such as subtitle or cc
+  const audioVideoFiles = nodeFiles.filter(file => isAudioVideoFile(file));
+  // return the last item in the array
+  const file = audioVideoFiles[audioVideoFiles.length - 1];
+  if (!file || !file.duration) {
+    return null;
+  }
+  return file.duration;
+}
+
+export function hasMultipleFieldValues(array, field) {
+  let value;
+  for (const item of array) {
+    if (!item[field]) {
+      continue;
+    }
+    if (value === undefined) {
+      value = item[field];
+    } else if (value !== item[field]) {
+      return true;
+    }
+  }
+  return false;
+}
+
+export const mapFields = [
+  'accessibility_labels',
+  'grade_levels',
+  'learner_needs',
+  'categories',
+  'learning_activities',
+  'resource_types',
+  'tags',
+];
+
+export function getMergedMapFields(node, contentNodeData) {
+  const mergedMapFields = {};
+  for (const mapField of mapFields) {
+    if (contentNodeData[mapField]) {
+      if (mapField === 'categories') {
+        // Reduce categories to the minimal set
+        const existingCategories = Object.keys(node.categories || {});
+        const newCategories = Object.keys(contentNodeData.categories);
+        const newMap = {};
+        for (const category of existingCategories) {
+          // If any of the new categories are more specific than the existing category,
+          // omit this.
+          if (!newCategories.some(newCategory => newCategory.startsWith(category))) {
+            newMap[category] = true;
+          }
+        }
+        for (const category of newCategories) {
+          if (
+            !existingCategories.some(
+              existingCategory =>
+                existingCategory.startsWith(category) && category !== existingCategory
+            )
+          ) {
+            newMap[category] = true;
+          }
+        }
+        mergedMapFields[mapField] = newMap;
+      } else {
+        mergedMapFields[mapField] = {
+          ...node[mapField],
+          ...contentNodeData[mapField],
+        };
+      }
+    }
+  }
+  return mergedMapFields;
 }

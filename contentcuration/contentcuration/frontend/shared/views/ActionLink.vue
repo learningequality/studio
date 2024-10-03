@@ -4,6 +4,7 @@
     :style="{ color: $vuetify.theme.primary }"
     :target="target"
     :class="{ truncate }"
+    :disabled="disabled"
     v-bind="$attrs"
     flat
     exact
@@ -18,9 +19,13 @@
       >
         {{ text }}
       </span>
-      <Icon v-if="target === '_blank'" small class="mx-1 rtl-flip">
-        open_in_new
-      </Icon>
+      <Icon
+        v-if="target === '_blank'"
+        icon="openNewTab"
+        :color="$themeTokens.primary"
+        class="mx-1 rtl-flip"
+      />
+
     </slot>
   </VBtn>
 
@@ -44,6 +49,10 @@
         default: false,
       },
       notranslate: {
+        type: Boolean,
+        default: false,
+      },
+      disabled: {
         type: Boolean,
         default: false,
       },

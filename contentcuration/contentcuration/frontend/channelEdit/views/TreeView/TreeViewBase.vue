@@ -20,17 +20,17 @@
         v-if="$vuetify.breakpoint.smAndUp"
         class="ml-4"
       >
-        <router-link
+        <KRouterLink
           :to="viewChannelDetailsLink"
           @click="trackClickEvent('Summary')"
         >
-          <IconButton
+          <KIconButton
             class="toolbar-icon-btn"
+            :tooltip="$tr('channelDetails')"
             icon="info"
-            :text="$tr('channelDetails')"
           />
-        </router-link>
-        <router-link
+        </KRouterLink>
+        <KRouterLink
           :to="editChannelLink"
           @click="trackClickEvent('Edit channel')"
         >
@@ -39,20 +39,18 @@
               <Icon
                 v-if="!currentChannel.language"
                 color="red"
-                small
+                icon="error"
                 class="edit-channel-error"
-              >
-                error
-              </Icon>
+              />
             </template>
-            <IconButton
+            <KIconButton
               v-if="canEdit"
               class="toolbar-icon-btn"
               icon="edit"
-              :text="$tr('editChannel')"
+              :tooltip="$tr('editChannel')"
             />
           </VBadge>
-        </router-link>
+        </KRouterLink>
       </VToolbarItems>
       <VSpacer />
       <SavingIndicator v-if="!offline" />
@@ -73,9 +71,10 @@
               v-on="on"
             >
               {{ $formatNumber(errorsInChannel) }}
-              <Icon :color="$themePalette.yellow.v_1100">
-                warning
-              </Icon>
+              <KIcon
+                icon="warningIncomplete"
+              />
+
             </div>
           </template>
           <span>{{ $tr('incompleteDescendantsText', { count: errorsInChannel }) }}</span>
@@ -130,7 +129,7 @@
               icon
               v-on="on"
             >
-              <Icon>more_horiz</Icon>
+              <Icon icon="optionsHorizontal" style="font-size: 25px;" />
             </VBtn>
           </template>
           <VList>
@@ -154,12 +153,11 @@
                   <Icon
                     v-if="!currentChannel.language"
                     class="mx-1"
-                    small
                     color="red"
+                    icon="error"
                     style="vertical-align: baseline;"
-                  >
-                    error
-                  </Icon>
+                  />
+
                 </VListTileTitle>
               </VListTile>
             </template>
@@ -223,6 +221,7 @@
       :channel="currentChannel"
       @syncing="syncInProgress"
     />
+    <QuickEditModal />
     <MessageDialog
       v-model="showDeleteModal"
       :header="$tr('deleteTitle')"
@@ -268,7 +267,7 @@
               fab
               class="clipboard-fab"
             >
-              <Icon>content_paste</Icon>
+              <Icon icon="clipboard" style="font-size: 25px;" />
             </VBtn>
           </template>
         </DraggableRegion>
@@ -311,10 +310,10 @@
   import SyncResourcesModal from '../sync/SyncResourcesModal';
   import ProgressModal from '../progress/ProgressModal';
   import PublishModal from '../../components/publish/PublishModal';
+  import QuickEditModal from '../../components/QuickEditModal';
   import SavingIndicator from '../../components/edit/SavingIndicator';
   import { DraggableRegions, DraggableUniverses, RouteNames } from '../../constants';
   import MainNavigationDrawer from 'shared/views/MainNavigationDrawer';
-  import IconButton from 'shared/views/IconButton';
   import ToolBar from 'shared/views/ToolBar';
   import ChannelTokenModal from 'shared/views/channel/ChannelTokenModal';
   import OfflineText from 'shared/views/OfflineText';
@@ -330,7 +329,6 @@
     name: 'TreeViewBase',
     components: {
       DraggableRegion,
-      IconButton,
       MainNavigationDrawer,
       ToolBar,
       PublishModal,
@@ -343,6 +341,7 @@
       DraggablePlaceholder,
       MessageDialog,
       SavingIndicator,
+      QuickEditModal,
     },
     mixins: [titleMixin],
     props: {
@@ -466,8 +465,21 @@
         return DropEffect.COPY;
       },
     },
+    watch: {
+      rootId: {
+        handler(id) {
+          if (!id) {
+            this.loadChannel().catch(() => {
+              this.$store.dispatch('showSnackbarSimple', 'Failed to load channel');
+            });
+          }
+        },
+        immediate: true,
+      },
+    },
     methods: {
       ...mapActions('channel', ['deleteChannel']),
+      ...mapActions('currentChannel', ['loadChannel']),
       handleDelete() {
         this.deleteChannel(this.currentChannel.id).then(() => {
           localStorage.snackbar = this.$tr('channelDeletedSnackbar');

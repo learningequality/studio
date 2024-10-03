@@ -3,10 +3,10 @@ from importlib import import_module
 
 import mock
 from celery import states
+from django_celery_results.models import TaskResult
 from search.models import ContentNodeFullTextSearch
 
 from contentcuration.models import ContentNode
-from contentcuration.models import TaskResult
 
 
 def clear_tasks(except_task_id=None):

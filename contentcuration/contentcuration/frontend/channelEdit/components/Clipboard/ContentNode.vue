@@ -32,9 +32,10 @@
                       <Checkbox
                         ref="checkbox"
                         class="mt-0 pt-0"
+                        :class="{ selectedIndeterminate: !selected && indeterminate }"
                         :inputValue="selected"
                         :indeterminate="indeterminate"
-                        @click.stop.prevent="goNextSelectionState"
+                        @input="goNextSelectionState"
                       />
                     </VListTileAction>
                     <div
@@ -55,14 +56,14 @@
                       </VListTileContent>
                       <VListTileAction style="min-width: unset;" class="pl-3 pr-1">
                         <div class="badge caption font-weight-bold">
-                          {{ contentNode.resource_count }}
+                          {{ contentNodeResourceCount }}
                         </div>
                       </VListTileAction>
                       <!-- Custom placement of dropdown indicator -->
                       <VListTileAction
                         class="action-col px-1 v-list__group__header__append-icon"
                       >
-                        <Icon>arrow_drop_down</Icon>
+                        <Icon icon="dropdown" />
                       </VListTileAction>
                       <VSpacer />
                     </template>
@@ -85,7 +86,7 @@
                             v-on="on"
                             @click.stop
                           >
-                            <Icon>more_horiz</Icon>
+                            <Icon icon="optionsHorizontal" />
                           </VBtn>
                         </template>
 
@@ -117,7 +118,7 @@
 </template>
 <script>
 
-  import { mapActions, mapGetters } from 'vuex';
+  import { mapActions, mapGetters, mapState } from 'vuex';
   import clipboardMixin, { parentMixin } from './mixins';
   import ContentNodeOptions from './ContentNodeOptions';
   import Checkbox from 'shared/views/form/Checkbox';
@@ -150,6 +151,7 @@
       };
     },
     computed: {
+      ...mapState('clipboard', ['clipboardNodesMap']),
       ...mapGetters('clipboard', ['isPreloading', 'isLoaded']),
       thumbnailAttrs() {
         if (this.contentNode) {
@@ -180,6 +182,10 @@
         // See CurrentTopicView.handleDragDrop
         const contentNode = this.contentNode || {};
         return { ...contentNode, clipboardNodeId: this.nodeId };
+      },
+      contentNodeResourceCount() {
+        return Object.values(this.clipboardNodesMap).filter(node => node.parent === this.nodeId)
+          .length;
       },
     },
     watch: {
@@ -296,6 +302,10 @@
   /deep/ .text-truncate {
     /* fix clipping of dangling characters */
     line-height: 1.3 !important;
+  }
+
+  /deep/ .selectedIndeterminate svg {
+    fill: gray !important;
   }
 
 </style>

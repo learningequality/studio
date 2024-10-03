@@ -65,6 +65,7 @@
                 ref="learning_activities"
                 v-model="contentLearningActivities"
                 :disabled="anyIsTopic"
+                :nodeIds="nodeIds"
                 @focus="trackClick('Learning activities')"
               />
               <!-- Level -->
@@ -72,6 +73,7 @@
                 v-if="oneSelected"
                 ref="contentLevel"
                 v-model="contentLevel"
+                :nodeIds="nodeIds"
                 @focus="trackClick('Levels dropdown')"
               />
               <!-- What you will need -->
@@ -79,6 +81,7 @@
                 v-if="oneSelected"
                 ref="resourcesNeeded"
                 v-model="resourcesNeeded"
+                :nodeIds="nodeIds"
                 @focus="trackClick('What you will need')"
               />
               <!-- Tags -->
@@ -111,7 +114,12 @@
             </VFlex>
           </VLayout>
           <!-- Category -->
-          <CategoryOptions v-if="oneSelected" ref="categories" v-model="categories" />
+          <CategoryOptions
+            v-if="oneSelected"
+            ref="categories"
+            v-model="categories"
+            :nodeIds="nodeIds"
+          />
         </VFlex>
       </VLayout>
 
@@ -127,6 +135,7 @@
             v-model="randomizeOrder"
             :label="$tr('randomizeQuestionLabel')"
             :indeterminate="!isUnique(randomizeOrder)"
+            style="font-size: 16px;"
           />
         </VFlex>
       </VLayout>
@@ -141,7 +150,7 @@
             v-model="completionAndDuration"
             :kind="firstNode.kind"
             :fileDuration="fileDuration"
-            :required="!anyIsDocument || !allSameKind"
+            :required="!anyIsDocument"
           />
         </VFlex>
       </VLayout>
@@ -261,6 +270,9 @@
                 <HelpTooltip :text="$tr('authorToolTip')" top :small="false" />
               </template>
             </VCombobox>
+            <p v-if="disableSourceEdits" class="help">
+              {{ helpTextString.$tr('cannotEditPublic') }}
+            </p>
 
             <!-- Provider -->
             <VCombobox
@@ -312,6 +324,7 @@
               :disabled="disableSourceEdits"
               :placeholder="getPlaceholder('license')"
               :descriptionPlaceholder="getPlaceholder('license_description')"
+              :helpText="disableSourceEdits ? helpTextString.$tr('cannotEditPublic') : ''"
               @focus="trackClick('License')"
               @descriptionFocus="trackClick('License description')"
             />
@@ -335,6 +348,9 @@
               @input="copyright_holder = $event"
               @focus="trackClick('Copyright holder')"
             />
+            <p v-if="disableSourceEdits" class="help">
+              {{ helpTextString.$tr('cannotEditPublic') }}
+            </p>
           </VFlex>
         </template>
       </VLayout>
@@ -374,20 +390,20 @@
   import ContentNodeThumbnail from '../../views/files/thumbnails/ContentNodeThumbnail';
   import FileUpload from '../../views/files/FileUpload';
   import SubtitlesList from '../../views/files/supplementaryLists/SubtitlesList';
-  import { isImportedContent, importedChannelLink } from '../../utils';
+  import { isImportedContent, isDisableSourceEdits, importedChannelLink } from '../../utils';
+  import EditSourceModal from '../QuickEditModal/EditSourceModal.vue';
   import AccessibilityOptions from './AccessibilityOptions.vue';
-  import LevelsOptions from './LevelsOptions.vue';
-  import ResourcesNeededOptions from './ResourcesNeededOptions.vue';
-  import LearningActivityOptions from './LearningActivityOptions.vue';
-  import CategoryOptions from './CategoryOptions.vue';
-  import CompletionOptions from './CompletionOptions.vue';
-  import FormatPresetsMap, { FormatPresetsNames } from 'shared/leUtils/FormatPresets';
+  import LevelsOptions from 'shared/views/contentNodeFields/LevelsOptions';
+  import CategoryOptions from 'shared/views/contentNodeFields/CategoryOptions';
+  import CompletionOptions from 'shared/views/contentNodeFields/CompletionOptions';
+  import LearningActivityOptions from 'shared/views/contentNodeFields/LearningActivityOptions';
+  import ResourcesNeededOptions from 'shared/views/contentNodeFields/ResourcesNeededOptions';
   import {
     getTitleValidators,
     getCopyrightHolderValidators,
     translateValidator,
   } from 'shared/utils/validation';
-  import { findLicense, memoizeDebounce } from 'shared/utils/helpers';
+  import { findLicense, memoizeDebounce, getFileDuration } from 'shared/utils/helpers';
   import LanguageDropdown from 'shared/views/LanguageDropdown';
   import HelpTooltip from 'shared/views/HelpTooltip';
   import LicenseDropdown from 'shared/views/LicenseDropdown';
@@ -401,6 +417,7 @@
     nonUniqueValue,
   } from 'shared/constants';
   import { constantsTranslationMixin, metadataTranslationMixin } from 'shared/mixins';
+  import { crossComponentTranslator } from 'shared/i18n';
 
   function getValueFromResults(results) {
     if (results.length === 0) {
@@ -435,14 +452,10 @@
   }
 
   /**
-   * This function is used to generate getter/setters for new metadata fields that are boolean maps:
-   * - `grade_levels` (sometimes referred to as `content_levels`)
-   * - `learner_needs` (resources needed)
+   * This function is used to generate getter/setters having its value as
+   * an array for metadata fields that are boolean maps:
    * - `accessibility_labels` (accessibility options)
-   * - `learning_activities` (learning activities)
-   * - `categories` (categories)
    */
-
   function generateNestedNodesGetterSetter(key) {
     return {
       get() {
@@ -470,6 +483,42 @@
         const newMap = {};
         for (const label of value) {
           newMap[label] = true;
+        }
+        this.update({ [key]: newMap });
+      },
+    };
+  }
+
+  /**
+   * This function is used to generate getter/setters having its value as
+   * an object for metadata fields that are boolean maps:
+   * - `grade_levels` (sometimes referred to as `content_levels`)
+   * - `learner_needs` (resources needed)
+   * - `learning_activities` (learning activities)
+   * - `categories` (categories)
+   */
+  function generateNestedNodesGetterSetterObject(key) {
+    return {
+      get() {
+        const value = {};
+        for (const node of this.nodes) {
+          const diffTrackerNode = this.diffTracker[node.id] || {};
+          const currentValue = diffTrackerNode[key] || node[key] || {};
+          Object.entries(currentValue).forEach(([option, optionValue]) => {
+            if (optionValue) {
+              value[option] = value[option] || [];
+              value[option].push(node.id);
+            }
+          });
+        }
+        return value;
+      },
+      set(value) {
+        const newMap = {};
+        for (const option in value) {
+          if (value[option].length === this.nodes.length) {
+            newMap[option] = true;
+          }
         }
         this.update({ [key]: newMap });
       },
@@ -506,6 +555,8 @@
         tagText: null,
         valid: true,
         diffTracker: {},
+        changed: false,
+        helpTextString: crossComponentTranslator(EditSourceModal),
       };
     },
     computed: {
@@ -585,24 +636,28 @@
       role: generateGetterSetter('role_visibility'),
       language: generateGetterSetter('language'),
       accessibility: generateNestedNodesGetterSetter('accessibility_labels'),
-      contentLevel: generateNestedNodesGetterSetter('grade_levels'),
-      resourcesNeeded: generateNestedNodesGetterSetter('learner_needs'),
+      contentLevel: generateNestedNodesGetterSetterObject('grade_levels'),
+      resourcesNeeded: generateNestedNodesGetterSetterObject('learner_needs'),
       forBeginners: {
         get() {
-          return this.resourcesNeeded.includes(ResourcesNeededTypes.FOR_BEGINNERS);
+          const value = this.resourcesNeeded[ResourcesNeededTypes.FOR_BEGINNERS];
+          return value && value.length === this.nodes.length;
         },
         set(value) {
           if (value) {
-            this.resourcesNeeded = [...this.resourcesNeeded, ResourcesNeededTypes.FOR_BEGINNERS];
+            this.resourcesNeeded = {
+              ...this.resourcesNeeded,
+              [ResourcesNeededTypes.FOR_BEGINNERS]: this.nodeIds,
+            };
           } else {
-            this.resourcesNeeded = this.resourcesNeeded.filter(
-              r => r !== ResourcesNeededTypes.FOR_BEGINNERS
-            );
+            const newMap = { ...this.resourcesNeeded };
+            delete newMap[ResourcesNeededTypes.FOR_BEGINNERS];
+            this.resourcesNeeded = newMap;
           }
         },
       },
-      contentLearningActivities: generateNestedNodesGetterSetter('learning_activities'),
-      categories: generateNestedNodesGetterSetter('categories'),
+      contentLearningActivities: generateNestedNodesGetterSetterObject('learning_activities'),
+      categories: generateNestedNodesGetterSetterObject('categories'),
       license() {
         return this.getValueFromNodes('license');
       },
@@ -659,7 +714,7 @@
         return this.nodes.some(node => node.freeze_authoring_data);
       },
       disableSourceEdits() {
-        return this.disableAuthEdits || this.isImported;
+        return this.nodes.some(isDisableSourceEdits);
       },
       detectedImportText() {
         const count = this.nodes.filter(node => node.freeze_authoring_data).length;
@@ -693,20 +748,7 @@
         return (this.firstNode && this.getContentNodeFiles(this.firstNode.id)) || [];
       },
       fileDuration() {
-        if (
-          this.firstNode.kind === ContentKindsNames.AUDIO ||
-          this.firstNode.kind === ContentKindsNames.VIDEO
-        ) {
-          // filter for the correct file types,
-          // to exclude files such as subtitle or cc
-          const audioVideoFiles = this.nodeFiles.filter(file => this.allowedFileType(file));
-          // return the last item in the array
-          const file = audioVideoFiles[audioVideoFiles.length - 1];
-          if (file) {
-            return file.duration;
-          }
-        }
-        return null;
+        return getFileDuration(this.nodeFiles, this.firstNode.kind);
       },
       videoSelected() {
         return this.oneSelected && this.firstNode.kind === ContentKindsNames.VIDEO;
@@ -743,17 +785,23 @@
       ),
       saveFromDiffTracker(id) {
         if (this.diffTracker[id]) {
-          return this.updateContentNode({ id, ...this.diffTracker[id] }).then(() => {
-            delete this.diffTracker[id];
-          });
+          this.changed = true;
+          return this.updateContentNode({ id, checkComplete: true, ...this.diffTracker[id] }).then(
+            () => {
+              delete this.diffTracker[id];
+              return this.changed;
+            }
+          );
         }
-        return Promise.resolve();
+        return Promise.resolve(this.changed);
       },
       /*
        * @public
        */
       immediateSaveAll() {
-        return Promise.all(Object.keys(this.diffTracker).map(this.saveFromDiffTracker));
+        return Promise.all(Object.keys(this.diffTracker).map(this.saveFromDiffTracker)).then(
+          results => this.changed || results.some(Boolean)
+        );
       },
       update(payload) {
         this.nodeIds.forEach(id => {
@@ -787,17 +835,6 @@
       },
       isUnique(value) {
         return value !== nonUniqueValue;
-      },
-      allowedFileType(file) {
-        let allowedFileTypes = [];
-        // add the relevant format presets for audio and video
-        // high res and low res are currently the same, so only one is included
-        allowedFileTypes.push(
-          FormatPresetsMap.get(FormatPresetsNames.HIGH_RES_VIDEO).allowed_formats
-        );
-        allowedFileTypes.push(FormatPresetsMap.get(FormatPresetsNames.AUDIO).allowed_formats);
-        allowedFileTypes = allowedFileTypes.flat();
-        return allowedFileTypes.includes(file.file_format);
       },
       getValueFromNodes(key) {
         const results = uniq(
@@ -964,6 +1001,16 @@
         }
       }
     }
+  }
+
+  // Positions help text underneath
+  p.help {
+    position: relative;
+    top: -20px;
+    left: 10px;
+    margin-bottom: 14px;
+    font-size: 12px;
+    color: var(--v-text-lighten4);
   }
 
 </style>

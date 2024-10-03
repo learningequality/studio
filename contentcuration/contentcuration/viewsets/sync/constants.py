@@ -7,6 +7,7 @@ COPIED = 5
 PUBLISHED = 6
 SYNCED = 7
 DEPLOYED = 8
+UPDATED_DESCENDANTS = 9
 
 
 ALL_CHANGES = set([
@@ -18,6 +19,7 @@ ALL_CHANGES = set([
     PUBLISHED,
     SYNCED,
     DEPLOYED,
+    UPDATED_DESCENDANTS,
 ])
 
 # Client-side table constants
@@ -53,6 +55,18 @@ ALL_TABLES = set(
         VIEWER_M2M,
     ]
 )
+
+# Some edits have implications for channels,
+# but do not affect whether a channel is publishable or not
+# only edits to these tables are considered publishable changes
+# although individual changes can still be marked as unpublishable.
+PUBLISHABLE_CHANGE_TABLES = set([
+    CHANNEL,
+    CONTENTNODE,
+    CONTENTNODE_PREREQUISITE,
+    ASSESSMENTITEM,
+    FILE,
+])
 
 
 # Enum for copying states

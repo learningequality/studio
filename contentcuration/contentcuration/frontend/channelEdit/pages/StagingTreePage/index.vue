@@ -11,9 +11,9 @@
       <VToolbarSideIcon @click="drawer = true" />
       <VToolbarTitle>
         {{ $tr('deploy') }} <span class="notranslate">{{ currentChannel.name }}</span>
-        <router-link :to="rootTreeRoute" class="body-1 pl-2" data-test="root-tree-link">
+        <KRouterLink :to="rootTreeRoute" class="body-1 pl-2" data-test="root-tree-link">
           {{ $tr('backToViewing') }}
-        </router-link>
+        </KRouterLink>
       </VToolbarTitle>
 
       <VSpacer />
@@ -51,16 +51,16 @@
         }"
       >
         <VLayout row class="px-3">
-          <IconButton
+          <KIconButton
             icon="collapseAll"
-            :text="$tr('collapseAllButton')"
+            :tooltip="$tr('collapseAllButton')"
             @click="collapseAll"
           />
           <VSpacer />
-          <IconButton
+          <KIconButton
             :disabled="!ancestors || !ancestors.length"
             icon="myLocation"
-            :text="$tr('openCurrentLocationButton')"
+            :tooltip="$tr('openCurrentLocationButton')"
             @click="jumpToLocation"
           />
         </VLayout>
@@ -98,7 +98,13 @@
         </ToolBar>
 
         <VLayout class="main-content">
-          <VFlex v-if="!children.length" class="pa-4 subheading text-xs-center">
+          <VFlex v-if="isLoadingchild" class="pa-4 subheading text-xs-center">
+            <KCircularLoader />
+          </VFlex>
+          <VFlex
+            v-else-if="!children.length && !isLoadingchild"
+            class="pa-4 subheading text-xs-center"
+          >
             {{ $tr('emptyTopicText') }}
           </VFlex>
           <div v-else class="main-list" @scroll="scroll">
@@ -291,6 +297,7 @@
     },
     data() {
       return {
+        isLoadingchild: false,
         isLoading: true,
         displaySummaryDetailsDialog: false,
         displayDeployDialog: false,
@@ -387,8 +394,14 @@
     watch: {
       nodeId(newNodeId) {
         this.elevated = false;
-        this.loadAncestors({ id: newNodeId });
-        this.loadChildren({ parent: newNodeId, root_id: this.stagingId });
+        this.isLoadingchild = true;
+
+        Promise.all([
+          this.loadAncestors({ id: newNodeId }),
+          this.loadChildren({ parent: newNodeId, root_id: this.stagingId }),
+        ]).then(() => {
+          this.isLoadingchild = false;
+        });
       },
       detailNodeId(newDetailNodeId) {
         if (!newDetailNodeId) {

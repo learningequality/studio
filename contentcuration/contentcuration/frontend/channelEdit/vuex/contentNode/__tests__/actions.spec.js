@@ -4,6 +4,7 @@ import assessmentItem from '../../assessmentItem/index';
 import file from 'shared/vuex/file';
 import { ContentNode } from 'shared/data/resources';
 import storeFactory from 'shared/vuex/baseStore';
+import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 import { mockChannelScope, resetMockChannelScope } from 'shared/utils/testing';
 
 jest.mock('../../currentChannel/index');
@@ -35,6 +36,9 @@ describe('contentNode actions', () => {
       jest
         .spyOn(ContentNode, 'fetchModel')
         .mockImplementation(() => Promise.resolve(contentNodeDatum));
+      jest
+        .spyOn(ContentNode, 'getAncestors')
+        .mockImplementation(() => Promise.resolve([contentNodeDatum]));
       return ContentNode._add({ title: 'notatest', parent: newId, lft: 2 }).then(() => {
         store = storeFactory({
           modules: {
@@ -110,7 +114,7 @@ describe('contentNode actions', () => {
     });
   });
   describe('updateContentNode action for an existing contentNode', () => {
-    it('should call ContentNode.update', () => {
+    it('should call ContentNode.update without complete if completeCheck is false', () => {
       store.commit('contentNode/ADD_CONTENTNODE', {
         id,
         title: 'test',
@@ -130,11 +134,116 @@ describe('contentNode actions', () => {
             description: 'very',
             language: 'no',
             changed: true,
+            learning_activities: { test: true },
+          });
+          updateSpy.mockRestore();
+        });
+    });
+    it('should call ContentNode.update with complete false if completeCheck is true', () => {
+      store.commit('contentNode/ADD_CONTENTNODE', {
+        id,
+        title: 'test',
+      });
+      const updateSpy = jest.spyOn(ContentNode, 'update');
+      return store
+        .dispatch('contentNode/updateContentNode', {
+          id,
+          title: 'notatest',
+          description: 'very',
+          language: 'no',
+          learning_activities: { test: true },
+          checkComplete: true,
+        })
+        .then(() => {
+          expect(updateSpy).toHaveBeenCalledWith(id, {
+            title: 'notatest',
+            description: 'very',
+            language: 'no',
+            changed: true,
             complete: false,
             learning_activities: { test: true },
           });
           updateSpy.mockRestore();
         });
+    });
+  });
+  describe('updateContentNodeDescendants', () => {
+    const nodeIdToUpdate = '0000-1111-2222-3333';
+    const topicContentNode = '0000-0000-1111-2222';
+    const nonTopicContentNode = '0000-0000-1111-1111';
+    beforeEach(async () => {
+      store.commit('contentNode/ADD_CONTENTNODES', [
+        {
+          id: nodeIdToUpdate,
+          title: 'test',
+          language: 'en',
+          kind: ContentKindsNames.TOPIC,
+        },
+        {
+          id: topicContentNode,
+          title: 'test nonTopic',
+          kind: ContentKindsNames.TOPIC,
+          parent: nodeIdToUpdate,
+        },
+        {
+          id: nonTopicContentNode,
+          title: 'test nonTopic',
+          kind: ContentKindsNames.VIDEO,
+          parent: topicContentNode,
+        },
+      ]);
+    });
+    afterEach(() => {
+      store.commit('contentNode/REMOVE_CONTENTNODE', nodeIdToUpdate);
+      store.commit('contentNode/REMOVE_CONTENTNODE', topicContentNode);
+      store.commit('contentNode/REMOVE_CONTENTNODE', nonTopicContentNode);
+    });
+    it('should throw an error if we try to update the descendants of a non-Topic node', () => {
+      expect(() => {
+        store.dispatch('contentNode/updateContentNodeDescendants', {
+          id: nonTopicContentNode,
+          language: 'es',
+        });
+      }).toThrow();
+    });
+    it('should throw an error if we try to update the title of all descendants', () => {
+      expect(() => {
+        store.dispatch('contentNode/updateContentNodeDescendants', {
+          id: nodeIdToUpdate,
+          title: 'notatest',
+        });
+      }).toThrow();
+    });
+    it('should call mutate the language of the descendants content nodes', async () => {
+      const newLang = 'es';
+      await store.dispatch('contentNode/updateContentNodeDescendants', {
+        id: nodeIdToUpdate,
+        language: newLang,
+      });
+
+      const updatedContentNode = store.getters['contentNode/getContentNode'](nodeIdToUpdate);
+      expect(updatedContentNode.language).toEqual(newLang);
+
+      const descendants = [topicContentNode, nonTopicContentNode];
+      descendants.forEach(descendant => {
+        const updatedDescendant = store.getters['contentNode/getContentNode'](descendant);
+        expect(updatedDescendant.language).toEqual(newLang);
+      });
+    });
+    it('should call "ContentNode.updateDescendants" with the language update', async () => {
+      const updateDescendantsSpy = jest.spyOn(ContentNode, 'updateDescendants');
+      const newLang = 'es';
+      await store.dispatch('contentNode/updateContentNodeDescendants', {
+        id: nodeIdToUpdate,
+        language: newLang,
+      });
+
+      expect(updateDescendantsSpy).toHaveBeenCalledWith(
+        nodeIdToUpdate,
+        expect.objectContaining({
+          language: newLang,
+        })
+      );
     });
   });
   describe('addTags action', () => {

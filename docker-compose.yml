@@ -30,6 +30,17 @@ x-studio-worker:
     environment: *studio-environment
 
 services:
+  studio-nginx:
+    platform: linux/amd64
+    build:
+      context: .
+      dockerfile: k8s/images/nginx/Dockerfile
+    ports:
+      - "8081:8080"
+    depends_on:
+      - studio-app
+    environment: *studio-environment
+
   studio-app:
     <<: *studio-worker
     entrypoint: python docker/entrypoint.py
@@ -53,7 +64,10 @@ services:
       - .docker/minio:/data
 
   postgres:
-    image: postgres:12
+    image: ghcr.io/learningequality/postgres
+    build:
+      context: ./docker
+      dockerfile: Dockerfile.postgres.dev
     environment:
       PGDATA: /var/lib/postgresql/data/pgdata
       POSTGRES_USER: learningequality

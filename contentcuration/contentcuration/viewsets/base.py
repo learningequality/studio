@@ -9,7 +9,7 @@ from django.db.models import Q
 from django.db.utils import IntegrityError
 from django.http import Http404
 from django.http.request import HttpRequest
-from django_bulk_update.helper import bulk_update
+from django_celery_results.models import TaskResult
 from django_filters.constants import EMPTY_VALUES
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import FilterSet
@@ -29,7 +29,8 @@ from rest_framework.utils import model_meta
 from rest_framework.viewsets import GenericViewSet
 
 from contentcuration.models import Change
-from contentcuration.models import TaskResult
+from contentcuration.models import CustomTaskMetadata
+from contentcuration.utils.celery.tasks import generate_task_signature
 from contentcuration.utils.celery.tasks import ProgressTracker
 from contentcuration.viewsets.common import MissingRequiredParamsException
 from contentcuration.viewsets.sync.constants import TASK_ID
@@ -155,11 +156,10 @@ class BulkModelSerializer(SimpleReprMixin, ModelSerializer):
                 raise ValueError("Many to many fields must be explicitly handled", attr)
             setattr(instance, attr, value)
 
-        if hasattr(instance, "on_update") and callable(instance.on_update):
-            instance.on_update()
-
         if not getattr(self, "parent"):
             instance.save()
+        elif hasattr(instance, "on_update") and callable(instance.on_update):
+            instance.on_update()
 
         return instance
 
@@ -190,11 +190,10 @@ class BulkModelSerializer(SimpleReprMixin, ModelSerializer):
 
         instance = ModelClass(**validated_data)
 
-        if hasattr(instance, "on_create") and callable(instance.on_create):
-            instance.on_create()
-
         if not getattr(self, "parent", False):
             instance.save()
+        elif hasattr(instance, "on_create") and callable(instance.on_create):
+            instance.on_create()
 
         return instance
 
@@ -321,7 +320,8 @@ class BulkListSerializer(SimpleReprMixin, ListSerializer):
             self.missing_keys = set(all_validated_data_by_id.keys())\
                 .difference(updated_keys)
 
-        bulk_update(updated_objects, update_fields=properties_to_update)
+        if len(properties_to_update) > 0:
+            self.child.Meta.model.objects.bulk_update(updated_objects, list(properties_to_update))
 
         return updated_objects
 
@@ -705,6 +705,8 @@ class CreateModelMixin(object):
 
         return errors
 
+
+class RESTCreateModelMixin(CreateModelMixin):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -726,11 +728,6 @@ class DestroyModelMixin(object):
     def _map_delete_change(self, change):
         return change["key"]
 
-    def destroy(self, request, *args, **kwargs):
-        instance = self.get_edit_object()
-        self.perform_destroy(instance)
-        return Response(status=HTTP_204_NO_CONTENT)
-
     def perform_destroy(self, instance):
         instance.delete()
 
@@ -751,6 +748,13 @@ class DestroyModelMixin(object):
                 change["errors"] = [str(e)]
                 errors.append(change)
         return errors
+
+
+class RESTDestroyModelMixin(DestroyModelMixin):
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_edit_object()
+        self.perform_destroy(instance)
+        return Response(status=HTTP_204_NO_CONTENT)
 
 
 class UpdateModelMixin(object):
@@ -790,6 +794,8 @@ class UpdateModelMixin(object):
                 errors.append(change)
         return errors
 
+
+class RESTUpdateModelMixin(UpdateModelMixin):
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop("partial", False)
         instance = self.get_edit_object()
@@ -929,27 +935,40 @@ class BulkDeleteMixin(DestroyModelMixin):
 
 @contextmanager
 def create_change_tracker(pk, table, channel_id, user, task_name):
+    task_kwargs = json.dumps({'pk': pk, 'table': table})
+
     # Clean up any previous tasks specific to this in case there were failures.
-    meta = json.dumps(dict(pk=pk, table=table))
-    TaskResult.objects.filter(channel_id=channel_id, task_name=task_name, meta=meta).delete()
+    signature = generate_task_signature(task_name, task_kwargs=task_kwargs, channel_id=channel_id)
+
+    custom_task_metadata_qs = CustomTaskMetadata.objects.filter(channel_id=channel_id, signature=signature)
+    if custom_task_metadata_qs.exists():
+        task_result_qs = TaskResult.objects.filter(task_id=custom_task_metadata_qs[0].task_id, task_name=task_name)
+        if task_result_qs.exists():
+            task_result_qs[0].delete()
+        custom_task_metadata_qs[0].delete()
 
     task_id = uuid.uuid4().hex
+
     task_object = TaskResult.objects.create(
         task_id=task_id,
         status=states.STARTED,
-        channel_id=channel_id,
         task_name=task_name,
+    )
+    custom_task_metadata_object = CustomTaskMetadata.objects.create(
+        task_id=task_id,
+        channel_id=channel_id,
         user=user,
-        meta=meta
+        signature=signature
     )
 
     def update_progress(progress=None):
         if progress:
-            task_object.progress = progress
-            task_object.save()
+            custom_task_metadata_object.progress = progress
+            custom_task_metadata_object.save()
 
     Change.create_change(
-        generate_update_event(pk, table, {TASK_ID: task_object.task_id}, channel_id=channel_id), applied=True
+        # These changes are purely for ephemeral progress updating, and do not constitute a publishable change.
+        generate_update_event(pk, table, {TASK_ID: task_object.task_id}, channel_id=channel_id), applied=True, unpublishable=True
     )
 
     tracker = ProgressTracker(task_id, update_progress)
@@ -964,7 +983,9 @@ def create_change_tracker(pk, table, channel_id, user, task_name):
     finally:
         if task_object.status == states.STARTED:
             # No error reported, cleanup.
+            # Mark as unpublishable, as this is a continuation of the progress updating, and not a publishable change.
             Change.create_change(
-                generate_update_event(pk, table, {TASK_ID: None}, channel_id=channel_id), applied=True
+                generate_update_event(pk, table, {TASK_ID: None}, channel_id=channel_id), applied=True, unpublishable=True
             )
             task_object.delete()
+            custom_task_metadata_object.delete()

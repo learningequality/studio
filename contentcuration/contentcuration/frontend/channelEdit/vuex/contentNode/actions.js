@@ -1,6 +1,7 @@
 import flatMap from 'lodash/flatMap';
 import uniq from 'lodash/uniq';
-import { NEW_OBJECT, NOVALUE } from 'shared/constants';
+import isEmpty from 'lodash/isEmpty';
+import { NEW_OBJECT, NOVALUE, DescendantsUpdatableFields } from 'shared/constants';
 import client from 'shared/client';
 import {
   RELATIVE_TREE_POSITIONS,
@@ -11,7 +12,7 @@ import {
 } from 'shared/data/constants';
 import { ContentNode } from 'shared/data/resources';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
-import { findLicense } from 'shared/utils/helpers';
+import { findLicense, getMergedMapFields } from 'shared/utils/helpers';
 import { RolesNames } from 'shared/leUtils/Roles';
 import { isNodeComplete } from 'shared/utils/validation';
 import * as publicApi from 'shared/data/public';
@@ -19,9 +20,10 @@ import * as publicApi from 'shared/data/public';
 import db from 'shared/data/db';
 
 export function loadContentNodes(context, params = {}) {
-  return ContentNode.where(params).then(contentNodes => {
+  return ContentNode.where(params).then(response => {
+    const contentNodes = response.results ? response.results : response;
     context.commit('ADD_CONTENTNODES', contentNodes);
-    return contentNodes;
+    return response;
   });
 }
 
@@ -69,10 +71,13 @@ export function loadContentNodeByNodeId(context, nodeId) {
     });
 }
 
-export function loadChildren(context, { parent, published = null }) {
-  const params = { parent };
+export function loadChildren(context, { parent, published = null, complete = null }) {
+  const params = { parent, max_results: 25 };
   if (published !== null) {
     params.published = published;
+  }
+  if (complete !== null) {
+    params.complete = complete;
   }
   return loadContentNodes(context, params);
 }
@@ -318,6 +323,9 @@ function generateContentNodeData({
     if (extra_fields.suggested_duration_type) {
       contentNodeData.extra_fields.suggested_duration_type = extra_fields.suggested_duration_type;
     }
+    if (extra_fields.inherited_metadata) {
+      contentNodeData.extra_fields.inherited_metadata = { ...extra_fields.inherited_metadata };
+    }
   }
   if (prerequisite !== NOVALUE) {
     contentNodeData.prerequisite = prerequisite;
@@ -332,9 +340,15 @@ function generateContentNodeData({
   return contentNodeData;
 }
 
-export function updateContentNode(context, { id, ...payload } = {}) {
+export function updateContentNode(
+  context,
+  { id, mergeMapFields, checkComplete = false, ...payload } = {}
+) {
   if (!id) {
     throw ReferenceError('id must be defined to update a contentNode');
+  }
+  if (isEmpty(payload)) {
+    return Promise.resolve();
   }
   let contentNodeData = generateContentNodeData(payload);
 
@@ -352,6 +366,14 @@ export function updateContentNode(context, { id, ...payload } = {}) {
       };
     }
 
+    if (contentNodeData.extra_fields.inherited_metadata) {
+      // Don't set inherited_metadata on non-topic nodes
+      // as they cannot have children to bequeath metadata to
+      if (node.kind !== ContentKindsNames.TOPIC) {
+        delete contentNodeData.extra_fields.inherited_metadata;
+      }
+    }
+
     contentNodeData = {
       ...contentNodeData,
       extra_fields: {
@@ -361,22 +383,67 @@ export function updateContentNode(context, { id, ...payload } = {}) {
     };
   }
 
-  const newNode = {
-    ...node,
-    ...contentNodeData,
-  };
-  const complete = isNodeComplete({
-    nodeDetails: newNode,
-    assessmentItems: context.rootGetters['assessmentItem/getAssessmentItems'](id),
-    files: context.rootGetters['file/getContentNodeFiles'](id),
-  });
-  contentNodeData = {
-    ...contentNodeData,
-    complete,
-  };
+  if (mergeMapFields) {
+    contentNodeData = {
+      ...contentNodeData,
+      ...getMergedMapFields(node, contentNodeData),
+    };
+  }
+
+  if (checkComplete) {
+    const newNode = {
+      ...node,
+      ...contentNodeData,
+    };
+    const complete = isNodeComplete({
+      nodeDetails: newNode,
+      assessmentItems: context.rootGetters['assessmentItem/getAssessmentItems'](id),
+      files: context.rootGetters['file/getContentNodeFiles'](id),
+    });
+    contentNodeData = {
+      ...contentNodeData,
+      complete,
+    };
+  }
 
   context.commit('ADD_CONTENTNODE', { id, ...contentNodeData });
   return ContentNode.update(id, contentNodeData);
+}
+
+/**
+ * Update a content node and all its descendants with the given payload.
+ * @param {*} context
+ * @param {string} param.id Id of the parent content to edit. It must be a topic.
+ */
+export function updateContentNodeDescendants(context, { id, ...payload } = {}) {
+  if (!id) {
+    throw ReferenceError('id must be defined to update a contentNode and its descendants');
+  }
+
+  const node = context.getters.getContentNode(id);
+  if (!node || node.kind !== ContentKindsNames.TOPIC) {
+    throw TypeError('Only topics can have descendants');
+  }
+
+  for (const field in payload) {
+    if (!DescendantsUpdatableFields.includes(field)) {
+      throw TypeError(`Cannot update field ${field} on all descendants`);
+    }
+  }
+
+  const contentNodeData = generateContentNodeData(payload);
+
+  const descendants = context.getters.getContentNodeDescendants(id);
+  const contentNodes = [node, ...descendants];
+
+  const contentNodesData = contentNodes.map(contentNode => ({
+    id: contentNode.id,
+    ...contentNodeData,
+    ...getMergedMapFields(contentNode, contentNodeData),
+  }));
+
+  context.commit('ADD_CONTENTNODES', contentNodesData);
+  return ContentNode.updateDescendants(id, contentNodeData);
 }
 
 export function addTags(context, { ids, tags }) {
@@ -443,6 +510,8 @@ export function copyContentNode(
   // with a `source_id` of the source node then create the content node copies
   return ContentNode.copy(id, target, position, excluded_descendants, sourceNode).then(node => {
     context.commit('ADD_CONTENTNODE', node);
+    context.commit('ADD_INHERITING_NODE', node);
+    setContentNodesCount(context, [node]);
     return node;
   });
 }
@@ -465,7 +534,7 @@ export function copyContentNodes(
 const PARENT_POSITIONS = [RELATIVE_TREE_POSITIONS.FIRST_CHILD, RELATIVE_TREE_POSITIONS.LAST_CHILD];
 export function moveContentNodes(
   context,
-  { id__in, parent, target = null, position = RELATIVE_TREE_POSITIONS.LAST_CHILD }
+  { id__in, parent, target = null, position = RELATIVE_TREE_POSITIONS.LAST_CHILD, inherit = true }
 ) {
   // Make sure use of parent vs target matches position param
   if (parent && !(PARENT_POSITIONS.indexOf(position) >= 0)) {
@@ -480,6 +549,9 @@ export function moveContentNodes(
     id__in.map(id => {
       return ContentNode.move(id, target, position).then(node => {
         context.commit('ADD_CONTENTNODE', node);
+        if (inherit) {
+          context.commit('ADD_INHERITING_NODE', node);
+        }
         return id;
       });
     })
@@ -509,4 +581,22 @@ export async function checkSavingProgress(
     .filter(c => !c.synced && idsToCheck[c.table] && idsToCheck[c.table].includes(c.key))
     .first();
   return Boolean(query);
+}
+
+export function setQuickEditModal(context, open) {
+  context.commit('SET_QUICK_EDIT_MODAL', open);
+}
+
+export function setContentNodesCount(context, nodes) {
+  for (const node of nodes) {
+    const { id, assessment_item_count, resource_count } = node;
+    context.commit('SET_CONTENTNODES_COUNT', { id, resource_count, assessment_item_count });
+  }
+}
+
+export function removeContentNodes(context, { parentId }) {
+  return new Promise(resolve => {
+    context.commit('REMOVE_CONTENTNODES_BY_PARENT', parentId);
+    resolve(true);
+  });
 }

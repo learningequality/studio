@@ -9,8 +9,8 @@ import KThemePlugin from 'kolibri-design-system/lib/KThemePlugin';
 import 'shared/i18n/setup';
 // Polyfill indexeddb
 import 'fake-indexeddb/auto';
-// Ponyfill webstreams
-import {ReadableStream, WritableStream, TransformStream, CountQueuingStrategy} from 'web-streams-polyfill/ponyfill/es2018';
+// Polyfill webstreams
+import {ReadableStream, WritableStream, TransformStream, CountQueuingStrategy} from 'web-streams-polyfill';
 import jquery from 'jquery';
 
 window.jQuery = window.$ = jquery;

@@ -263,11 +263,7 @@ class CRUDTestCase(StudioAPITestCase):
         response = self.client.post(
             reverse("clipboard-list"), clipboard, format="json",
         )
-        self.assertEqual(response.status_code, 201, response.content)
-        try:
-            models.ContentNode.objects.get(id=clipboard["id"])
-        except models.ContentNode.DoesNotExist:
-            self.fail("ContentNode was not created")
+        self.assertEqual(response.status_code, 405, response.content)
 
     def test_delete_clipboard(self):
         clipboard = models.ContentNode.objects.create(**self.clipboard_db_metadata)
@@ -276,9 +272,4 @@ class CRUDTestCase(StudioAPITestCase):
         response = self.client.delete(
             reverse("clipboard-detail", kwargs={"pk": clipboard.id})
         )
-        self.assertEqual(response.status_code, 204, response.content)
-        try:
-            models.ContentNode.objects.get(id=clipboard.id)
-            self.fail("ContentNode was not deleted")
-        except models.ContentNode.DoesNotExist:
-            pass
+        self.assertEqual(response.status_code, 405, response.content)

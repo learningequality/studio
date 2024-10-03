@@ -14,7 +14,6 @@ module.exports = {
       __dirname,
       './globalMocks/fileMock.js'
     ),
-    'broadcast-channel$': path.resolve(__dirname, './globalMocks/broadcastChannelMock.js'),
     '\\.worker.min.js': path.resolve(__dirname, './globalMocks/fileMock.js'),
     'shared/client': path.resolve(__dirname, './globalMocks/client.js'),
     'shared/urls': path.resolve(__dirname, './globalMocks/urls.js'),

@@ -140,7 +140,7 @@ export class ChangeTracker {
     // We'll go through each change one by one and revert each.
     //
     // R. Tibbles: I think this could be done in two queries (TODO)
-    return promiseChunk(this._changes.reverse(), 1, ([change]) => {
+    return promiseChunk(this._changes.reverse(), 1, async ([change]) => {
       const resource = INDEXEDDB_RESOURCES[change.table];
       if (!resource) {
         if (process.env.NODE_ENV !== 'production') {
@@ -150,6 +150,16 @@ export class ChangeTracker {
         }
         return Promise.resolve();
       }
+
+      // Query siblings before starting the transaction
+      // to avoid any potential API call inside the transaction
+      let siblings;
+      if (change.type === CHANGE_TYPES.MOVED && change.oldObj) {
+        const { parent } = change.oldObj;
+        siblings = await resource.where({ parent }, false);
+        siblings = siblings.filter(sibling => sibling.id !== change.key);
+      }
+
       return resource.transaction({}, CHANGES_TABLE, () => {
         // If we had created something, we'll delete it
         // Special MOVED case here comes from the operation of COPY then MOVE for duplicating
@@ -170,17 +180,15 @@ export class ChangeTracker {
           const { parent, lft } = change.oldObj;
 
           // Collect the affected node's siblings prior to the change
-          return resource.where({ parent }, false).then(siblings => {
-            // Search the siblings ordered by `lft` to find the first a sibling
-            // where we should move the node, positioned before that sibling
-            const relativeSibling = sortBy(siblings, 'lft').find(sibling => sibling.lft >= lft);
-            if (relativeSibling) {
-              return resource.move(change.key, relativeSibling.id, RELATIVE_TREE_POSITIONS.LEFT);
-            }
+          // Search the siblings ordered by `lft` to find the first a sibling
+          // where we should move the node, positioned before that sibling
+          const relativeSibling = sortBy(siblings, 'lft').find(sibling => sibling.lft >= lft);
+          if (relativeSibling) {
+            return resource.move(change.key, relativeSibling.id, RELATIVE_TREE_POSITIONS.LEFT);
+          }
 
-            // this handles if there were no siblings OR if the deleted node was at the end
-            return resource.move(change.key, parent, RELATIVE_TREE_POSITIONS.LAST_CHILD);
-          });
+          // this handles if there were no siblings OR if the deleted node was at the end
+          return resource.move(change.key, parent, RELATIVE_TREE_POSITIONS.LAST_CHILD);
         } else {
           if (process.env.NODE_ENV !== 'production') {
             /* eslint-disable no-console */
@@ -456,5 +464,36 @@ export class DeployedChange extends Change {
       );
     }
     this.setChannelAndUserId({ id: this.key });
+  }
+}
+
+/**
+ * Change that represents an update to a content node and its descendants
+ * It can be used just with the content node table.
+ */
+export class UpdatedDescendantsChange extends Change {
+  constructor({ oldObj, changes, ...fields }) {
+    fields.type = CHANGE_TYPES.UPDATED_DESCENDANTS;
+    super(fields);
+    if (this.table !== TABLE_NAMES.CONTENTNODE) {
+      throw TypeError(
+        `${this.changeType} is only supported by ${TABLE_NAMES.CONTENTNODE} table but ${this.table} was passed instead`
+      );
+    }
+    this.validateObj(changes, 'changes');
+    changes = omitIgnoredSubFields(changes);
+    this.mods = changes;
+    this.setChannelAndUserId(oldObj);
+  }
+
+  get changed() {
+    return !isEmpty(this.mods);
+  }
+
+  saveChange() {
+    if (!this.changed) {
+      return Promise.resolve(null);
+    }
+    return super.saveChange();
   }
 }

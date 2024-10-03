@@ -1,6 +1,6 @@
 <template>
 
-  <VLayout v-if="channel" align-center wrap class="pa-2">
+  <VLayout v-if="channel" align-center wrap class="pa-2" @click="handleClick">
     <VFlex class="pa-2" xs12 sm4 md3 lg2>
       <Thumbnail :src="channel.thumbnail_url" />
     </VFlex>
@@ -45,6 +45,11 @@
       ...mapGetters('channel', ['getChannel']),
       channel() {
         return this.getChannel(this.channelId);
+      },
+    },
+    methods: {
+      handleClick() {
+        this.$emit('click', this.channelId);
       },
     },
     $trs: {

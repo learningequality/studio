@@ -3,6 +3,7 @@ import sortBy from 'lodash/sortBy';
 import uniq from 'lodash/uniq';
 import uniqBy from 'lodash/uniqBy';
 
+import messages from '../../translator';
 import { parseNode } from './utils';
 import { getNodeDetailsErrors, getNodeFilesErrors } from 'shared/utils/validation';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
@@ -104,6 +105,13 @@ export function getTopicAndResourceCounts(state, getters) {
   };
 }
 
+export function getSelectedTopicAndResourceCountText(state, getters) {
+  return function(contentNodeIds) {
+    const { topicCount, resourceCount } = getters.getTopicAndResourceCounts(contentNodeIds);
+    return messages.$tr('selectionCount', { topicCount, resourceCount });
+  };
+}
+
 export function getContentNodeChildren(state, getters) {
   return function(contentNodeId) {
     return sorted(
@@ -152,6 +160,13 @@ export function getContentNodeDetailsAreValid(state) {
   return function(contentNodeId) {
     const contentNode = state.contentNodesMap[contentNodeId];
     return contentNode && (contentNode[NEW_OBJECT] || !getNodeDetailsErrors(contentNode).length);
+  };
+}
+
+export function getNodeDetailsErrorsList(state) {
+  return function(contentNodeId) {
+    const contentNode = state.contentNodesMap[contentNodeId];
+    return getNodeDetailsErrors(contentNode);
   };
 }
 
@@ -342,5 +357,17 @@ export function tags(state) {
 export function nodeExpanded(state) {
   return function(id) {
     return Boolean(state.expandedNodes[id]);
+  };
+}
+
+export function getQuickEditModalOpen(state) {
+  return function() {
+    return state.quickEditModalOpen;
+  };
+}
+
+export function getContentNodesCount(state) {
+  return function(nodeId) {
+    return state.contentNodesCountMap[nodeId];
   };
 }

@@ -10,9 +10,10 @@
     </template>
     <template v-if="step === 2" #close>
       <VBtn icon class="rtl-flip" @click="step--">
-        <Icon>
-          arrow_back
-        </Icon>
+        <Icon
+          icon="back"
+          :color="$themeTokens.textInverted"
+        />
       </VBtn>
     </template>
     <VWindow v-model="step">
@@ -192,6 +193,7 @@
         changed: false,
         showUnsavedDialog: false,
         diffTracker: {},
+        saving: false,
       };
     },
     computed: {
@@ -316,6 +318,10 @@
         this.title = this.isNew ? this.$tr('creatingChannelSet') : this.channelSet.name;
       },
       save() {
+        if (this.saving) {
+          return;
+        }
+        this.saving = true;
         this.showUnsavedDialog = false;
         if (this.$refs.channelsetform.validate()) {
           let promise;
@@ -326,7 +332,13 @@
               return this.updateChannelSet({ id: this.channelSetId, ...this.diffTracker });
             });
           }
-          promise.then(this.close);
+          promise
+            .then(() => {
+              this.close();
+            })
+            .finally(() => {
+              this.saving = false;
+            });
         }
       },
       cancelChanges() {

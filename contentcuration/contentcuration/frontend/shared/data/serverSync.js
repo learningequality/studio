@@ -43,6 +43,7 @@ const ChangeTypeMapFields = {
     'assessment_items',
   ]),
   [CHANGE_TYPES.DEPLOYED]: commonFields,
+  [CHANGE_TYPES.UPDATED_DESCENDANTS]: commonFields.concat(['mods']),
 };
 
 /**

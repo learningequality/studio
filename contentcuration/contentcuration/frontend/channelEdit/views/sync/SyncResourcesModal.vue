@@ -22,7 +22,6 @@
           <VListTileAction>
             <Checkbox
               v-model="syncFiles"
-              color="primary"
             />
           </VListTileAction>
           <VListTileContent @click="syncFiles = !syncFiles">
@@ -33,9 +32,8 @@
 
         <VListTile @click.stop>
           <VListTileAction>
-            <VCheckbox
+            <Checkbox
               v-model="syncResourceDetails"
-              color="primary"
             />
           </VListTileAction>
           <VListTileContent @click="syncResourceDetails = !syncResourceDetails">
@@ -46,9 +44,8 @@
 
         <VListTile @click.stop>
           <VListTileAction>
-            <VCheckbox
+            <Checkbox
               v-model="syncTitlesAndDescriptions"
-              color="primary"
             />
           </VListTileAction>
           <VListTileContent @click="syncTitlesAndDescriptions = !syncTitlesAndDescriptions">
@@ -59,9 +56,8 @@
 
         <VListTile @click.stop>
           <VListTileAction>
-            <VCheckbox
+            <Checkbox
               v-model="syncExercises"
-              color="primary"
             />
           </VListTileAction>
           <VListTileContent @click="syncExercises = !syncExercises">

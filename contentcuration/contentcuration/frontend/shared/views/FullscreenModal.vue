@@ -10,7 +10,7 @@
     transition="dialog-bottom-transition"
     v-bind="$attrs"
   >
-    <VCard style="overflow-y: auto;">
+    <VCard style="overflow-y: auto">
       <VToolbar
         :color="color"
         :dark="dark"
@@ -22,7 +22,7 @@
         <VToolbarItems>
           <slot name="close">
             <VBtn flat icon exact data-test="close" @click="$emit('input', false)">
-              <Icon>clear</Icon>
+              <Icon icon="clear" :color="$themeTokens.textInverted" />
             </VBtn>
           </slot>
         </VToolbarItems>
@@ -34,11 +34,7 @@
         <VSpacer />
         <slot name="action"></slot>
         <template v-if="$slots.tabs" #extension>
-          <Tabs
-            :color="color"
-            slider-color="white"
-            align-with-title
-          >
+          <Tabs :color="color" slider-color="white" align-with-title>
             <slot name="tabs"></slot>
           </Tabs>
         </template>
@@ -47,9 +43,9 @@
       <VContainer :style="`margin-top: ${contentOffset}px;`" fluid class="pa-0">
         <slot></slot>
       </VContainer>
-      <BottomToolBar v-if="$slots.bottom" color="white" flat clipped-left clipped-right>
+      <BottomBar v-if="$slots.bottom">
         <slot name="bottom"></slot>
-      </BottomToolBar>
+      </BottomBar>
     </VCard>
   </VDialog>
 
@@ -59,14 +55,14 @@
 
   import { mapState } from 'vuex';
   import OfflineText from './OfflineText';
-  import BottomToolBar from './BottomToolBar';
+  import BottomBar from './BottomBar';
   import Tabs from './Tabs';
 
   export default {
     name: 'FullscreenModal',
     components: {
       OfflineText,
-      BottomToolBar,
+      BottomBar,
       Tabs,
     },
     props: {
@@ -104,8 +100,13 @@
         this.hideHTMLScroll(!!val);
       },
     },
-    mounted() {
+    activated() {
       this.hideHTMLScroll(true);
+    },
+    deactivated() {
+      this.hideHTMLScroll(false); // Ensure scroll is restored when the component is destroyed
+    },
+    mounted() {
       this.$refs.dialog.initDetach();
     },
     methods: {
@@ -118,7 +119,6 @@
   };
 
 </script>
-
 
 <style lang="less" scoped>
 

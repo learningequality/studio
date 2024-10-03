@@ -15,9 +15,15 @@
             v-on="on"
             @click="clickItem(action)"
           >
-            <Icon v-if="config[action] && config[action].icon" :color="iconColor(action)">
-              {{ config[action].icon }}
-            </Icon>
+            <Icon
+              v-if="config[action] && config[action].icon"
+              :icon="
+                config[action].icon
+              "
+              style="font-size: 20px;"
+              :color="iconColor(action)"
+            />
+
           </VBtn>
         </template>
         <span>{{ config[action].label }}</span>
@@ -34,9 +40,11 @@
             icon
             v-on="on"
           >
-            <Icon color="grey darken-1">
-              more_vert
-            </Icon>
+            <Icon
+              icon="optionsVertical"
+              :color="$themePalette.grey.v_800"
+            />
+
           </VBtn>
         </template>
 
@@ -164,11 +172,11 @@
             label: this.$tr('toolbarLabelEdit'),
           },
           [AssessmentItemToolbarActions.MOVE_ITEM_UP]: {
-            icon: 'keyboard_arrow_up',
+            icon: 'chevronUp',
             label: this.$tr('toolbarLabelMoveUp'),
           },
           [AssessmentItemToolbarActions.MOVE_ITEM_DOWN]: {
-            icon: 'keyboard_arrow_down',
+            icon: 'chevronDown',
             label: this.$tr('toolbarLabelMoveDown'),
           },
           [AssessmentItemToolbarActions.DELETE_ITEM]: {
@@ -257,27 +265,27 @@
         switch (action) {
           case AssessmentItemToolbarActions.EDIT_ITEM:
             if (this.canEdit) {
-              return 'grey darken-1';
+              return this.$themePalette.grey.v_800;
             } else {
-              return 'grey lighten-2';
+              return this.$themeTokens.textDisabled;
             }
 
           case AssessmentItemToolbarActions.MOVE_ITEM_UP:
             if (this.canMoveUp) {
-              return 'grey darken-1';
+              return this.$themePalette.grey.v_800;
             } else {
-              return 'grey lighten-2';
+              return this.$themeTokens.textDisabled;
             }
 
           case AssessmentItemToolbarActions.MOVE_ITEM_DOWN:
             if (this.canMoveDown) {
-              return 'grey darken-1';
+              return this.$themePalette.grey.v_800;
             } else {
-              return 'grey lighten-2';
+              return this.$themeTokens.textDisabled;
             }
 
           default:
-            return 'grey darken-1';
+            return this.$themePalette.grey.v_800;
         }
       },
       clickItem(action) {

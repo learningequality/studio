@@ -60,12 +60,9 @@
                       </VFlex>
                       <VFlex v-if="!isTopic && isCoach" class="px-1">
                         <Icon
-                          color="roleVisibilityCoach"
-                          small
+                          icon="coachContent"
                           style="vertical-align: middle;"
-                        >
-                          local_library
-                        </Icon>
+                        />
                       </VFlex>
                       <VFlex>
                         <ContentNodeValidator
@@ -103,13 +100,10 @@
                         <template #activator="{ on }">
                           <div style="display: inline-block;" v-on="on">
                             <Icon
-                              color="roleVisibilityCoach"
-                              small
+                              icon="coachContent"
                               class="mx-1"
                               style="vertical-align: sub;"
-                            >
-                              local_library
-                            </Icon>
+                            />
                             <span v-if="isTopic">
                               {{ $formatNumber(node.coach_count) }}
                             </span>
@@ -153,12 +147,12 @@
                 </VListTileContent>
                 <template v-if="!copying">
                   <VListTileAction class="actions-end-col">
-                    <IconButton
+                    <KIconButton
                       v-if="isTopic"
                       :aria-hidden="hover"
                       data-test="btn-chevron"
                       icon="chevronRight"
-                      :text="$tr('openTopic')"
+                      :tooltip="$tr('openTopic')"
                       size="small"
                       @click="$emit('topicChevronClick')"
                     />
@@ -209,7 +203,6 @@
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import { RolesNames } from 'shared/leUtils/Roles';
   import ImageOnlyThumbnail from 'shared/views/files/ImageOnlyThumbnail';
-  import IconButton from 'shared/views/IconButton';
   import ToggleText from 'shared/views/ToggleText';
   import ContextMenuCloak from 'shared/views/ContextMenuCloak';
   import DraggableHandle from 'shared/views/draggable/DraggableHandle';
@@ -223,7 +216,6 @@
       DraggableHandle,
       ContextMenuCloak,
       ImageOnlyThumbnail,
-      IconButton,
       ContentNodeValidator,
       ContentNodeChangedIcon,
       ToggleText,
@@ -266,7 +258,11 @@
       };
     },
     computed: {
-      ...mapGetters('contentNode', ['isNodeInCopyingState', 'hasNodeCopyingErrored']),
+      ...mapGetters('contentNode', [
+        'isNodeInCopyingState',
+        'hasNodeCopyingErrored',
+        'getContentNodesCount',
+      ]),
       isCompact() {
         return this.compact || !this.$vuetify.breakpoint.mdAndUp;
       },
@@ -281,14 +277,15 @@
         return { title, kind, src, encoding };
       },
       subtitle() {
+        const count = this.getContentNodesCount(this.node.id);
         switch (this.node.kind) {
           case ContentKindsNames.TOPIC:
             return this.$tr('resources', {
-              value: this.node.resource_count || 0,
+              value: count?.resource_count || 0,
             });
           case ContentKindsNames.EXERCISE:
             return this.$tr('questions', {
-              value: this.node.assessment_item_count || 0,
+              value: count?.assessment_item_count || 0,
             });
         }
 

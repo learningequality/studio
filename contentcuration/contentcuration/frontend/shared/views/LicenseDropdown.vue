@@ -6,6 +6,7 @@
         <VSelect
           ref="license"
           v-model="license"
+          box
           :items="licenses"
           :label="$tr('licenseLabel')"
           color="primary"
@@ -16,32 +17,47 @@
           :readonly="readonly"
           :rules="licenseRules"
           :placeholder="placeholder"
-          :menu-props="menuProps"
+          :hide-selected="isMixedLicense"
+          :menu-props="{ ...menuProps, maxHeight: 250 }"
           class="ma-0"
-          box
+          :class="{ 'with-trailing-input-icon': box }"
           :attach="attach"
           @focus="$emit('focus')"
-        >
-          <template #append-outer>
-            <InfoModal :header="$tr('licenseInfoHeader')" :items="licenses">
-              <template #header="{ item }">
-                {{ translate(item) }}
-              </template>
-              <template #description="{ item }">
-                {{ translateDescription(item) }}
-                <p v-if="item.license_url" class="mt-1">
-                  <ActionLink
-                    :href="getLicenseUrl(item)"
-                    target="_blank"
-                    :text="$tr('learnMoreButton')"
-                  />
-                </p>
-              </template>
-            </InfoModal>
-          </template>
-        </VSelect>
+        />
       </template>
     </DropdownWrapper>
+    <p v-if="helpText" class="help">
+      {{ helpText }}
+    </p>
+    <p style="position: relative; top: -15px">
+      <KButton
+        class="info-link"
+        appearance="basic-link"
+        :text="requestFormStrings.$tr('licenseInfoHeader')"
+        :iconAfter="showAboutLicense ? 'chevronUp' : 'chevronDown'"
+        @click="toggleAboutLicenseDisplay"
+      />
+    </p>
+    <div 
+      v-for="(licenseItem, index) in licencesList" 
+      v-show="showAboutLicense" 
+      :key="index" 
+      class="mb-4 mt-3"
+    >
+      <h2 class="font-weight-bold mb-1 subheading">
+        {{ licenseItem.name }}
+      </h2>
+      <p class="body-1 grey--text mb-1">
+        {{ licenseItem.description }}
+      </p>
+      <p v-if="licenseItem.license_url">
+        <ActionLink
+          :href="getLicenseUrl(licenseItem)"
+          target="_blank"
+          :text="requestFormStrings.$tr('learnMoreButton')"
+        />
+      </p>
+    </div>
     <VTextarea
       v-if="isCustom"
       ref="description"
@@ -65,22 +81,27 @@
 
 <script>
 
-  import InfoModal from './InfoModal.vue';
+  import RequestForm from '../../settings/pages/Storage/RequestForm.vue';
   import {
     getLicenseValidators,
     getLicenseDescriptionValidators,
     translateValidator,
   } from 'shared/utils/validation';
+  import { nonUniqueValue } from 'shared/constants';
+  import { findLicense } from 'shared/utils/helpers';
   import { LicensesList } from 'shared/leUtils/Licenses';
   import { constantsTranslationMixin } from 'shared/mixins';
-  import { findLicense } from 'shared/utils/helpers';
   import DropdownWrapper from 'shared/views/form/DropdownWrapper';
+  import { crossComponentTranslator } from 'shared/i18n';
+
+  const MIXED_VALUE = 'mixed';
+
+  const allowedHosts = ['creativecommons.org'];
 
   export default {
     name: 'LicenseDropdown',
     components: {
       DropdownWrapper,
-      InfoModal,
     },
     filters: {},
     mixins: [constantsTranslationMixin],
@@ -113,10 +134,27 @@
         type: String,
         default: '',
       },
+      box: {
+        type: Boolean,
+        default: false,
+      },
+      helpText: {
+        type: String,
+        default: '',
+      },
+    },
+    data() {
+      return {
+        requestFormStrings: crossComponentTranslator(RequestForm),
+        showAboutLicense: false,
+      };
     },
     computed: {
       license: {
         get() {
+          if (this.isMixedLicense) {
+            return MIXED_VALUE;
+          }
           return this.value && findLicense(this.value.license).id;
         },
         set(value) {
@@ -128,6 +166,9 @@
       },
       description: {
         get() {
+          if (this.isMixedDescription) {
+            return this.$tr('mixed');
+          }
           return this.value && this.value.license_description;
         },
         set(value) {
@@ -137,14 +178,32 @@
           });
         },
       },
+      isMixedLicense() {
+        return this.value && this.value.license === nonUniqueValue;
+      },
+      isMixedDescription() {
+        return this.value && this.value.license_description === nonUniqueValue;
+      },
       selectedLicense() {
+        if (this.isMixedLicense) {
+          return null;
+        }
         return this.value && findLicense(this.value.license);
       },
       isCustom() {
         return this.selectedLicense && this.selectedLicense.is_custom;
       },
       licenses() {
-        return LicensesList;
+        if (!this.isMixedLicense) {
+          return LicensesList;
+        }
+        return [
+          ...LicensesList,
+          {
+            id: MIXED_VALUE,
+            license_name: this.$tr('mixed'),
+          },
+        ];
       },
       licenseRules() {
         return this.required ? getLicenseValidators().map(translateValidator) : [];
@@ -154,35 +213,85 @@
           ? getLicenseDescriptionValidators().map(translateValidator)
           : [];
       },
+      licencesList() {
+        return LicensesList.filter(license => license.id).map(license => ({
+          ...license,
+          name: this.translateConstant(license.license_name),
+          description: this.translateConstant(license.license_name + '_description'),
+        }));
+      },
     },
     methods: {
       translate(item) {
+        if (item.id === MIXED_VALUE) {
+          return this.$tr('mixed');
+        }
         return (item.id && item.id !== '' && this.translateConstant(item.license_name)) || '';
       },
-      translateDescription(item) {
-        return (
-          (item.id &&
-            item.id !== '' &&
-            this.translateConstant(item.license_name + '_description')) ||
-          ''
-        );
+      toggleAboutLicenseDisplay() {
+        this.showAboutLicense = !this.showAboutLicense;
       },
-      getLicenseUrl(item) {
-        const isCC = item.license_url.includes('creativecommons.org');
+      getLicenseUrl(license) {
+        const { license_url } = license;
         const language = window.languageCode || 'en';
-        return isCC ? `${item.license_url}deed.${language}` : item.license_url;
+        try {
+          const url = new URL(license_url);
+          return allowedHosts.includes(url.hostname)
+            ? `${license_url}deed.${language}`
+            : license_url;
+        } catch {
+          return license_url;
+        }
       },
     },
     $trs: {
+      mixed: 'Mixed',
       licenseLabel: 'License',
       licenseDescriptionLabel: 'License description',
-      learnMoreButton: 'Learn More',
-      licenseInfoHeader: 'About licenses',
     },
   };
 
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
+
+  .with-trailing-input-icon {
+    /deep/ .v-input__append-outer {
+      position: absolute;
+      right: 4px;
+      margin-top: 8px !important;
+    }
+
+    /deep/ .v-input__control > .v-input__slot {
+      min-width: 400px;
+      background: #f5f5f5 !important;
+
+      &::before {
+        border-color: rgba(0, 0, 0, 0.12) !important;
+      }
+    }
+
+    &.v-input--has-state {
+      /deep/ .v-input__control > .v-input__slot::before {
+        border-color: currentcolor !important;
+      }
+    }
+
+    &:hover {
+      /deep/ .v-input__control > .v-input__slot::before {
+        border-color: rgba(0, 0, 0, 0.3) !important;
+      }
+    }
+  }
+
+  // Positions help text beneath the license dropdown
+  .help {
+    position: relative;
+    top: -25px;
+    left: 10px;
+    margin-bottom: 0;
+    font-size: 12px;
+    color: var(--v-text-lighten4);
+  }
 
 </style>

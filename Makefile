@@ -38,7 +38,7 @@ migrate:
 # 4) Remove the management command from this `deploy-migrate` recipe
 # 5) Repeat!
 deploy-migrate:
-	echo "Nothing to do here!"
+	python contentcuration/manage.py rectify_incorrect_contentnode_source_fields
 
 contentnodegc:
 	python contentcuration/manage.py garbage_collect
@@ -136,7 +136,9 @@ dummyusers:
 hascaptions:
 	python contentcuration/manage.py set_orm_based_has_captions
 
-export COMPOSE_PROJECT_NAME=studio_$(shell git rev-parse --abbrev-ref HEAD)
+BRANCH_NAME := $(shell git rev-parse --abbrev-ref HEAD | sed 's/[^a-zA-Z0-9_-]/-/g')
+
+export COMPOSE_PROJECT_NAME=studio_$(BRANCH_NAME)
 
 purge-postgres: .docker/pgpass
 	-PGPASSFILE=.docker/pgpass dropdb -U learningequality "kolibri-studio" --port 5432 -h localhost
