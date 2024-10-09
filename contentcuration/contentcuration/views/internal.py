@@ -519,7 +519,9 @@ def create_channel(channel_data, user):
     if files:
         map_files_to_node(user, channel.chef_tree, files)
     channel.chef_tree.save()
-    channel.save()
+    # If the channel was previously deleted, this save will undelete it
+    # so will require the actor_id to be set
+    channel.save(actor_id=user.id)
 
     # Delete chef tree if it already exists
     if old_chef_tree and old_chef_tree != channel.staging_tree:
