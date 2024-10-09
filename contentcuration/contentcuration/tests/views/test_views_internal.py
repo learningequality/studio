@@ -777,6 +777,23 @@ class CreateChannelTestCase(StudioTestCase):
         except Channel.DoesNotExist:
             self.fail("Channel was not created")
 
+    def test_updates_already_created_channel(self):
+        """
+        Test that it creates a channel with the given id
+        """
+        deleted_channel = channel()
+        deleted_channel.deleted = True
+        deleted_channel.save(actor_id=self.user.id)
+        self.channel_data.update({"name": "Updated name", "id": deleted_channel.id})
+        self.admin_client().post(
+            reverse_lazy("api_create_channel"), data={"channel_data": self.channel_data}, format="json"
+        )
+        try:
+            c = Channel.objects.get(id=self.channel_data["id"])
+            self.assertEqual(c.name, "Updated name")
+        except Channel.DoesNotExist:
+            self.fail("Channel was not created")
+
     def test_creates_cheftree(self):
         """
         Test that it creates a channel with the given id
