@@ -265,7 +265,7 @@ werkzeug==3.0.3
     #   locust
 wheel==0.38.1
     # via pip-tools
-whitenoise==5.2.0
+whitenoise==6.7.0
     # via -r requirements-dev.in
 zipp==3.19.1
     # via importlib-metadata
