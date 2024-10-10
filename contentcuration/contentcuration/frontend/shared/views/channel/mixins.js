@@ -31,6 +31,7 @@ const exportStrings = createTranslator('ChannelExportStrings', {
   yes: 'Yes',
   no: 'No',
   downloadFilename: '{year}_{month}_Kolibri_Content_Library',
+  containsContentFrom: 'Contains content from',
 });
 
 const exportExtensionMap = {
@@ -99,6 +100,7 @@ export const channelExportMixin = {
         this.exportStrings.$tr('aggregators'),
         this.exportStrings.$tr('licenses'),
         this.exportStrings.$tr('copyrightHolders'),
+        this.exportStrings.$tr('containsContentFrom'),
       ];
       const csv = Papa.unparse({
         fields: headers,
@@ -125,6 +127,7 @@ export const channelExportMixin = {
           channel.aggregators,
           channel.licenses,
           channel.copyright_holders,
+          channel.containsContentFrom,
         ]),
       });
       const blob = new Blob([csv], {
