@@ -105,7 +105,7 @@
             // Vuetify generates this based on theme colors, but oddly it doesn't make it
             // available in the theme tokens
             // TODO: Replace with KDS lighten/darken utilities
-            backgroundColor: 'var(--v-error-darken1)',
+            backgroundColor: $darken1($themePalette.red.v_1100),
           },
         }"
         @click="showDeleteConfirmation = true"
