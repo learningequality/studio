@@ -1,5 +1,6 @@
 from __future__ import division
 
+import hashlib
 import itertools
 import json
 import logging as logmodule
@@ -12,6 +13,7 @@ import uuid
 import zipfile
 from builtins import str
 from copy import deepcopy
+from io import BytesIO
 from itertools import chain
 
 from django.conf import settings
@@ -44,6 +46,7 @@ from le_utils.constants import format_presets
 from le_utils.constants import roles
 from past.builtins import basestring
 from past.utils import old_div
+from PIL import Image
 from search.models import ChannelFullTextSearch
 from search.models import ContentNodeFullTextSearch
 from search.utils import get_fts_annotated_channel_qs
@@ -685,6 +688,23 @@ def process_formulas(content):
     return content
 
 
+def resize_image(image_content, width, height):
+    try:
+        with Image.open(BytesIO(image_content)) as img:
+            original_format = img.format
+            img = img.resize((int(width), int(height)), Image.LANCZOS)
+            buffered = BytesIO()
+            img.save(buffered, format=original_format)
+            return buffered.getvalue()
+    except Exception as e:
+        logging.warning(f"Error resizing image: {str(e)}")
+        return None, None
+
+
+def get_resized_image_checksum(image_content):
+    return hashlib.md5(image_content).hexdigest()
+
+
 def process_image_strings(content, zf, channel_id):
     image_list = []
     content = content.replace(exercises.CONTENT_STORAGE_PLACEHOLDER, PERSEUS_IMG_DIR)
@@ -708,18 +728,40 @@ def process_image_strings(content, zf, channel_id):
                     logging.warning("NOTE: the following error would have been swallowed silently in production")
                     raise
 
-            image_name = "images/{}.{}".format(checksum, ext[1:])
-            if image_name not in zf.namelist():
-                with storage.open(ccmodels.generate_object_storage_name(checksum, filename), 'rb') as imgfile:
-                    write_to_zipfile(image_name, imgfile.read(), zf)
+            original_image_name = "images/{}.{}".format(checksum, ext[1:])
+            with storage.open(ccmodels.generate_object_storage_name(checksum, filename), 'rb') as imgfile:
+                original_content = imgfile.read()
 
-            # Add resizing data
-            if img_match.group(2) and img_match.group(3):
-                image_data = {'name': img_match.group(1)}
-                image_data.update({'width': float(img_match.group(2))})
-                image_data.update({'height': float(img_match.group(3))})
-                image_list.append(image_data)
-            content = content.replace(match.group(1), img_match.group(1))
+                if img_match.group(2) and img_match.group(3):
+                    width, height = float(img_match.group(2)), float(img_match.group(3))
+                    resized_content = resize_image(original_content, width, height)
+
+                    if resized_content:
+                        resized_checksum = get_resized_image_checksum(resized_content)
+                        new_image_name = "images/{}.{}".format(resized_checksum, ext[1:])
+
+                        if new_image_name not in zf.namelist():
+                            write_to_zipfile(new_image_name, resized_content, zf)
+
+                        original_img_ref = match.group(1)
+                        new_img_ref = original_img_ref.replace(filename, f"{resized_checksum}{ext}")
+                        new_img_match = re.search(r'(.+/images/[^\s]+)(?:\s=([0-9\.]+)x([0-9\.]+))*', new_img_ref)
+
+                        # Add resizing data
+                        image_data = {'name': new_img_match.group(1)}
+                        image_data.update({'width': width})
+                        image_data.update({'height': height})
+                        image_list.append(image_data)
+                        content = content.replace(original_img_ref, new_img_match.group(1))
+                    else:
+                        logging.warning(f"Failed to resize image {filename}. Using original image.")
+                        if original_image_name not in zf.namelist():
+                            write_to_zipfile(original_image_name, original_content, zf)
+                        content = content.replace(match.group(1), img_match.group(1))
+                else:
+                    if original_image_name not in zf.namelist():
+                        write_to_zipfile(original_image_name, original_content, zf)
+                    content = content.replace(match.group(1), img_match.group(1))
 
     return content, image_list
 
