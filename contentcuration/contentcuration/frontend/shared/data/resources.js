@@ -1998,7 +1998,7 @@ export const User = new Resource({
   uuid: false,
 
   updateAsAdmin(id, changes) {
-    return client.post(window.Urls.adminUsersAccept(id)).then(() => {
+    return client.patch(window.Urls.adminUsersDetail(id), changes).then(() => {
       return this.transaction({ mode: 'rw' }, () => {
         return this.table.update(id, changes);
       });
