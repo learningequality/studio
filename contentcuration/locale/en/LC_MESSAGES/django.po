@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-05-10 21:55+0000\n"
+"POT-Creation-Date: 2024-09-20 20:04+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -19,7 +19,7 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #: contentcuration/catalog_settings.py:4 contentcuration/sandbox_settings.py:8
-#: contentcuration/settings.py:290
+#: contentcuration/settings.py:289
 msgid "Arabic"
 msgstr ""
 
@@ -31,27 +31,35 @@ msgstr ""
 msgid "Not enough space. Check your storage under Settings page."
 msgstr ""
 
-#: contentcuration/models.py:308 contentcuration/models.py:315
+#: contentcuration/models.py:312 contentcuration/models.py:319
 msgid "Out of storage! Request more space under Settings > Storage."
 msgstr ""
 
-#: contentcuration/models.py:1730
+#: contentcuration/models.py:1767
 msgid " (Original)"
 msgstr ""
 
-#: contentcuration/settings.py:288
+#: contentcuration/models.py:2657
+msgid "Created DateTime"
+msgstr ""
+
+#: contentcuration/models.py:2658
+msgid "Datetime field when the custom_metadata for task was created in UTC"
+msgstr ""
+
+#: contentcuration/settings.py:287
 msgid "English"
 msgstr ""
 
-#: contentcuration/settings.py:289
+#: contentcuration/settings.py:288
 msgid "Spanish"
 msgstr ""
 
-#: contentcuration/settings.py:291
+#: contentcuration/settings.py:290
 msgid "French"
 msgstr ""
 
-#: contentcuration/settings.py:292
+#: contentcuration/settings.py:291
 msgid "Portuguese"
 msgstr ""
 
@@ -166,7 +174,7 @@ msgstr ""
 #: contentcuration/templates/registration/password_reset_email.html:111
 #: contentcuration/templates/registration/password_reset_email.txt:16
 #: contentcuration/templates/registration/registration_needed_email.txt:14
-#: contentcuration/templates/registration/welcome_new_user_email.html:172
+#: contentcuration/templates/registration/welcome_new_user_email.html:176
 #: contentcuration/templates/settings/account_deleted_user_email.txt:12
 #: contentcuration/templates/settings/issue_report_email.txt:26
 #: contentcuration/templates/settings/storage_request_email.txt:48
@@ -411,11 +419,11 @@ msgstr ""
 msgid "Please create an account by following the link below:"
 msgstr ""
 
-#: contentcuration/templates/registration/welcome_new_user_email.html:78
+#: contentcuration/templates/registration/welcome_new_user_email.html:82
 msgid "Welcome to Kolibri Studio!"
 msgstr ""
 
-#: contentcuration/templates/registration/welcome_new_user_email.html:82
+#: contentcuration/templates/registration/welcome_new_user_email.html:86
 #, python-format
 msgid ""
 "\n"
@@ -426,11 +434,11 @@ msgid ""
 "    "
 msgstr ""
 
-#: contentcuration/templates/registration/welcome_new_user_email.html:87
+#: contentcuration/templates/registration/welcome_new_user_email.html:91
 msgid "View the Kolibri Content Library"
 msgstr ""
 
-#: contentcuration/templates/registration/welcome_new_user_email.html:93
+#: contentcuration/templates/registration/welcome_new_user_email.html:97
 msgid ""
 "\n"
 "      Using Kolibri Studio, you can explore pre-organized collections of "
@@ -440,7 +448,7 @@ msgid ""
 "    "
 msgstr ""
 
-#: contentcuration/templates/registration/welcome_new_user_email.html:99
+#: contentcuration/templates/registration/welcome_new_user_email.html:103
 msgid ""
 "\n"
 "      Using an admin account, you can then publish and import these custom "
@@ -450,7 +458,7 @@ msgid ""
 "    "
 msgstr ""
 
-#: contentcuration/templates/registration/welcome_new_user_email.html:107
+#: contentcuration/templates/registration/welcome_new_user_email.html:111
 msgid ""
 "\n"
 "      Browse through the list of resources below* to learn more about "
@@ -459,15 +467,15 @@ msgid ""
 "    "
 msgstr ""
 
-#: contentcuration/templates/registration/welcome_new_user_email.html:115
+#: contentcuration/templates/registration/welcome_new_user_email.html:119
 msgid "Kolibri Studio User Guide"
 msgstr ""
 
-#: contentcuration/templates/registration/welcome_new_user_email.html:120
+#: contentcuration/templates/registration/welcome_new_user_email.html:124
 msgid "Content integration guide:"
 msgstr ""
 
-#: contentcuration/templates/registration/welcome_new_user_email.html:122
+#: contentcuration/templates/registration/welcome_new_user_email.html:126
 msgid ""
 "\n"
 "          Information on licensing, compatible formats, technical "
@@ -475,7 +483,7 @@ msgid ""
 "        "
 msgstr ""
 
-#: contentcuration/templates/registration/welcome_new_user_email.html:125
+#: contentcuration/templates/registration/welcome_new_user_email.html:129
 msgid ""
 "\n"
 "          <em>Note that if you are adding a small number of resources, "
@@ -483,35 +491,35 @@ msgid ""
 "        "
 msgstr ""
 
-#: contentcuration/templates/registration/welcome_new_user_email.html:130
+#: contentcuration/templates/registration/welcome_new_user_email.html:134
 msgid "Step by step tutorials:"
 msgstr ""
 
-#: contentcuration/templates/registration/welcome_new_user_email.html:133
+#: contentcuration/templates/registration/welcome_new_user_email.html:137
 msgid "Video format:"
 msgstr ""
 
-#: contentcuration/templates/registration/welcome_new_user_email.html:135
+#: contentcuration/templates/registration/welcome_new_user_email.html:139
 msgid "Using Kolibri Studio: Your Content Workspace for Kolibri"
 msgstr ""
 
-#: contentcuration/templates/registration/welcome_new_user_email.html:137
+#: contentcuration/templates/registration/welcome_new_user_email.html:141
 msgid "(*also available in French and Arabic)"
 msgstr ""
 
-#: contentcuration/templates/registration/welcome_new_user_email.html:140
+#: contentcuration/templates/registration/welcome_new_user_email.html:144
 msgid "Slide gif format:"
 msgstr ""
 
-#: contentcuration/templates/registration/welcome_new_user_email.html:144
+#: contentcuration/templates/registration/welcome_new_user_email.html:148
 msgid "Step by step Studio tutorial"
 msgstr ""
 
-#: contentcuration/templates/registration/welcome_new_user_email.html:151
+#: contentcuration/templates/registration/welcome_new_user_email.html:155
 msgid "Video compression instructions:"
 msgstr ""
 
-#: contentcuration/templates/registration/welcome_new_user_email.html:153
+#: contentcuration/templates/registration/welcome_new_user_email.html:157
 msgid ""
 "\n"
 "          For optimal results, videos should be compressed in order to "
@@ -521,25 +529,25 @@ msgid ""
 "        "
 msgstr ""
 
-#: contentcuration/templates/registration/welcome_new_user_email.html:158
+#: contentcuration/templates/registration/welcome_new_user_email.html:162
 msgid "View the guide to video compression"
 msgstr ""
 
-#: contentcuration/templates/registration/welcome_new_user_email.html:165
+#: contentcuration/templates/registration/welcome_new_user_email.html:169
 msgid ""
 "If you need support with Kolibri Studio, please reach out to us on our "
 "Community Forum."
 msgstr ""
 
-#: contentcuration/templates/registration/welcome_new_user_email.html:167
+#: contentcuration/templates/registration/welcome_new_user_email.html:171
 msgid "Access the Community Forum"
 msgstr ""
 
-#: contentcuration/templates/registration/welcome_new_user_email.html:171
+#: contentcuration/templates/registration/welcome_new_user_email.html:175
 msgid "Thank You!"
 msgstr ""
 
-#: contentcuration/templates/registration/welcome_new_user_email.html:178
+#: contentcuration/templates/registration/welcome_new_user_email.html:182
 msgid "*resources are presented in English"
 msgstr ""
 
@@ -811,7 +819,7 @@ msgid ""
 "com/'>here</a>"
 msgstr ""
 
-#: contentcuration/utils/publish.py:96
+#: contentcuration/utils/publish.py:101
 msgid "Kolibri Studio Channel Published"
 msgstr ""
 
@@ -827,10 +835,10 @@ msgstr ""
 msgid "Resource"
 msgstr ""
 
-#: kolibri_public/views_v1.py:63 kolibri_public/views_v1.py:74
+#: kolibri_public/views_v1.py:65 kolibri_public/views_v1.py:76
 msgid "Api endpoint {} is not available"
 msgstr ""
 
-#: kolibri_public/views_v1.py:76
+#: kolibri_public/views_v1.py:78
 msgid "No channel matching {} found"
 msgstr ""

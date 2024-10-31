@@ -76,7 +76,7 @@ export function acceptInvitation(context, invitationId) {
 }
 
 export function declineInvitation(context, invitationId) {
-  return Invitation.update(invitationId, { declined: true }).then(() => {
+  return Invitation.decline(invitationId).then(() => {
     return context.commit('REMOVE_INVITATION', invitationId);
   });
 }

@@ -92,6 +92,12 @@ module.exports = (env = {}) => {
     module: {
       rules: [
         {
+          test: /\.m?js/,
+          resolve: {
+            fullySpecified: false
+          }
+        },
+        {
           test: /\.styl(us)?$/,
           use: baseCssLoaders.concat('stylus-loader'),
         },

@@ -138,3 +138,28 @@ export function SAVE_NEXT_STEPS(state, { mappings = [] } = {}) {
     ADD_PREVIOUS_STEP(state, mapping);
   }
 }
+
+/**
+ * Saves the content node count to vuex state.
+ * @param state - The vuex state
+ * @param id - The content node id
+ * @param assessment_item_count - The count of assessment items
+ * @param resource_count - The count of resources
+ */
+export function SET_CONTENTNODES_COUNT(state, { id, assessment_item_count, resource_count }) {
+  Vue.set(state.contentNodesCountMap, id, { resource_count, assessment_item_count });
+}
+
+/**
+ * Removes content nodes from the contentNodesMap by parent id.
+ * @param state - The vuex state
+ * @param parentId - The parent content node id
+ */
+export function REMOVE_CONTENTNODES_BY_PARENT(state, parentId) {
+  for (const key in state.contentNodesMap) {
+    if (state.contentNodesMap[key].parent === parentId) {
+      Vue.delete(state.contentNodesMap, key);
+    }
+  }
+  state.contentNodesCountMap = {};
+}

@@ -141,7 +141,7 @@ describe('EditSourceModal', () => {
 
       const wrapper = makeWrapper(['node1', 'node2']);
 
-      expect(wrapper.find('.help').text()).toContain('Cannot edit');
+      expect(wrapper.find('.help').text()).toContain(EditSourceModal.$trs.cannotEditPublic);
     });
 
     test('should disable inputs when node has freeze_authoring_data set to true', () => {
@@ -162,7 +162,7 @@ describe('EditSourceModal', () => {
 
       const wrapper = makeWrapper(['node1']);
 
-      expect(wrapper.find('.help').text()).toContain('Cannot edit');
+      expect(wrapper.find('.help').text()).toContain(EditSourceModal.$trs.cannotEditPublic);
     });
 
     test('should not disable inputs when not all nodes are imported', () => {

@@ -228,12 +228,7 @@ class ReturnedChanges extends ChangeDispatcher {
     }
 
     return transaction(change, TABLE_NAMES.CONTENTNODE, async () => {
-      const ids = await resource.getLoadedDescendantsIds(change.key);
-      return db
-        .table(TABLE_NAMES.CONTENTNODE)
-        .where(':id')
-        .anyOf(ids)
-        .modify(obj => applyMods(obj, change.mods));
+      return resource.applyChangesToLoadedDescendants(change.key, change.mods);
     });
   }
 }
