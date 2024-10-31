@@ -159,6 +159,8 @@ le-utils==0.2.7
     # via -r requirements.in
 numpy==1.26.0
     # via pgvector
+oauth2client==4.1.3
+    # via -r requirements.in
 packaging==24.0
     # via
     #   -r requirements.in
