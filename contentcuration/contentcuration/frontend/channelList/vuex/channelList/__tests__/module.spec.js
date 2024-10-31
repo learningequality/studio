@@ -53,52 +53,50 @@ describe('invitation actions', () => {
       });
     });
   });
-  // TODO: Figure out why client isn't getting mocked then uncomment this
-  // describe('acceptInvitation action', () => {
-  //   const channel = { id: channel_id, name: 'test', deleted: false, edit: true };
-  //   beforeEach(() => {
-  //     store.commit('channelList/SET_INVITATION_LIST', [{ id, ...invitation }]);
-  //     return Channel.add(channel);
-  //   });
-  //   afterEach(() => {
-  //     return Channel.table.toCollection().delete();
-  //   });
-  //   it('should call accept', () => {
-  //     const updateSpy = jest.spyOn(Invitation, 'accept');
-  //     return store.dispatch('channelList/acceptInvitation', id).then(() => {
-  //       expect(updateSpy).toHaveBeenCalled();
-  //       expect(updateSpy.mock.calls[0][0]).toBe(id);
-  //       updateSpy.mockRestore();
-  //     });
-  //   });
-  //   it('should load and set the invited channel', () => {
-  //     return store.dispatch('channelList/acceptInvitation', id).then(() => {
-  //       expect(store.getters['channel/getChannel'](channel_id).id).toBeTruthy();
-  //     });
-  //   });
-  //   it('should  remove the invitation from the list', () => {
-  //     return store.dispatch('channelList/acceptInvitation', id).then(() => {
-  //       expect(store.getters['channelList/getInvitation'](id)).toBeFalsy();
-  //     });
-  //   });
-  //   it('should set the correct permission on the accepted invite', () => {
-  //     return store.dispatch('channelList/acceptInvitation', id).then(() => {
-  //       expect(store.getters['channel/getChannel'](channel_id).view).toBe(true);
-  //       expect(store.getters['channel/getChannel'](channel_id).edit).toBe(false);
-  //     });
-  //   });
-  // });
+  describe('acceptInvitation action', () => {
+    const channel = { id: channel_id, name: 'test', deleted: false, edit: true };
+    beforeEach(() => {
+      store.commit('channelList/SET_INVITATION_LIST', [{ id, ...invitation }]);
+      return Channel.add(channel);
+    });
+    afterEach(() => {
+      return Channel.table.toCollection().delete();
+    });
+    it('should call accept', () => {
+      const acceptSpy = jest.spyOn(Invitation, 'accept');
+      return store.dispatch('channelList/acceptInvitation', id).then(() => {
+        expect(acceptSpy).toHaveBeenCalled();
+        expect(acceptSpy.mock.calls[0][0]).toBe(id);
+        acceptSpy.mockRestore();
+      });
+    });
+    it('should load and set the invited channel', () => {
+      return store.dispatch('channelList/acceptInvitation', id).then(() => {
+        expect(store.getters['channel/getChannel'](channel_id).id).toBeTruthy();
+      });
+    });
+    it('should  remove the invitation from the list', () => {
+      return store.dispatch('channelList/acceptInvitation', id).then(() => {
+        expect(store.getters['channelList/getInvitation'](id)).toBeFalsy();
+      });
+    });
+    it('should set the correct permission on the accepted invite', () => {
+      return store.dispatch('channelList/acceptInvitation', id).then(() => {
+        expect(store.getters['channel/getChannel'](channel_id).view).toBe(true);
+        expect(store.getters['channel/getChannel'](channel_id).edit).toBe(false);
+      });
+    });
+  });
   describe('declineInvitation action', () => {
     beforeEach(() => {
       store.commit('channelList/SET_INVITATION_LIST', [{ id, ...invitation }]);
     });
     it('should call client.delete', () => {
-      const updateSpy = jest.spyOn(Invitation, 'update');
+      const declineSpy = jest.spyOn(Invitation, 'decline');
       return store.dispatch('channelList/declineInvitation', id).then(() => {
-        expect(updateSpy).toHaveBeenCalled();
-        expect(updateSpy.mock.calls[0][0]).toBe(id);
-        expect(updateSpy.mock.calls[0][1]).toEqual({ declined: true });
-        updateSpy.mockRestore();
+        expect(declineSpy).toHaveBeenCalled();
+        expect(declineSpy.mock.calls[0][0]).toBe(id);
+        declineSpy.mockRestore();
       });
     });
     it('should not load and set the invited channel', () => {

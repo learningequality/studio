@@ -62,11 +62,9 @@
             box
             :required="isEditable"
             :disabled="!isEditable"
+            :helpText="helpText"
           />
         </div>
-        <p v-if="helpText" class="help" style="margin-bottom: 8px">
-          {{ helpText }}
-        </p>
       </div>
       <div class="form-item">
         <div class="input-container">
@@ -293,7 +291,7 @@
       aggregatorToolTip:
         'Website or org hosting the content collection but not necessarily the creator or copyright holder',
       copyrightHolderLabel: 'Copyright holder',
-      cannotEditPublic: 'Cannot edit for public channel resources',
+      cannotEditPublic: 'Not editable for resources from public channels',
       editOnlyLocal: 'Edits will be reflected only for local resources',
       mixed: 'Mixed',
       saveAction: 'Save',

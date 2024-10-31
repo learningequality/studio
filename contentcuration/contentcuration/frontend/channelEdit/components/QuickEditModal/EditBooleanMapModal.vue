@@ -107,7 +107,9 @@
       },
       canSave() {
         if (this.hasMixedCategories) {
-          return Object.values(this.selectedValues).some(value => value.length > 0);
+          return Object.values(this.selectedValues).some(
+            value => value.length === this.nodes.length
+          );
         }
         return !this.error;
       },
@@ -174,7 +176,7 @@
               Object.assign(fieldValue, currentNode[this.field] || {});
             }
             Object.entries(this.selectedValues)
-              .filter(([value]) => value.length === this.nodeIds.length)
+              .filter(entry => entry[1].length === this.nodeIds.length)
               .forEach(([key]) => {
                 fieldValue[key] = true;
               });
