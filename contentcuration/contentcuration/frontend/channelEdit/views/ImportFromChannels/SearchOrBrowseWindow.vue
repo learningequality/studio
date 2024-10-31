@@ -108,9 +108,9 @@
                 v-for="recommendation in recommendations"
                 :key="recommendation.id"
                 :to="{}"
-                :title="recommendation.title"
-                :description="recommendation.description"
-                :headingLevel="2"
+                :node="recommendation"
+                :selected.sync="selected"
+                @change_selected="handleChangeSelected"
               />
             </KCardGrid>
           </div>
@@ -151,7 +151,6 @@
   import ImportFromChannelsModal from './ImportFromChannelsModal';
   import { withChangeTracker } from 'shared/data/changes';
   import { searchRecommendationsStrings } from 'shared/strings/searchRecommendationsStrings';
-  import client from 'shared/client';
 
   export default {
     name: 'SearchOrBrowseWindow',
@@ -244,10 +243,16 @@
     },
     mounted() {
       this.searchTerm = this.$route.params.searchTerm || '';
-      this.loadSamplePublicContentNode();
+
+      this.loadRecommendations().then(recommendations => {
+        this.loadRecommendedNodes(recommendations).then(nodes => {
+          this.recommendations = [...this.recommendations, ...nodes.filter(Boolean)];
+        });
+      });
     },
     methods: {
       ...mapActions('clipboard', ['copy']),
+      ...mapActions('contentNode', ['loadPublicContentNode']),
       ...mapMutations('importFromChannels', {
         selectNodes: 'SELECT_NODES',
         deselectNodes: 'DESELECT_NODES',
@@ -311,14 +316,36 @@
       closeAboutRecommendations() {
         this.showAboutRecommendations = false;
       },
-      loadSamplePublicContentNode() {
-        client
-          .get(
-            'https://studio.learningequality.org/api/public/v2/contentnode/cd99a903a0a24483ac933402bb452f54/'
-          )
-          .then(response => {
-            this.recommendations = Array(4).fill(response.data);
-          });
+      async loadRecommendedNodes(recommendations) {
+        return await Promise.all(
+          recommendations.map(async recommendation => {
+            // This call is cached, so we don't need to worry about multiple calls.
+            return await this.loadPublicContentNode({
+              id: recommendation.id,
+              nodeId: recommendation.node_id,
+              rootId: recommendation.main_tree_id,
+              parent: recommendation.parent_id,
+            }).catch(() => null);
+          })
+        ).then(nodes => nodes.filter(Boolean));
+      },
+      loadRecommendations() {
+        // This is a placeholder for the actual recommendation logic that interacts with
+        // the recommender models based on current context. For now, we just load some random nodes.
+        return Promise.resolve([
+          {
+            id: 'b1c252c8faf64500bbb44fcb2162cced',
+            node_id: '3bd78ad83c064b0c8585e603d7ca4c06',
+            main_tree_id: 'e98098ce958840f98db61bae6e4781fe',
+            parent_id: '86ea7baa33f44c5da49c638934f7081d',
+          },
+          {
+            id: '74af5a51ceb4435f9ea973603c17359e',
+            node_id: 'ab01552b7a5f40cc96121c99a5d99a4f',
+            main_tree_id: 'e98098ce958840f98db61bae6e4781fe',
+            parent_id: '86ea7baa33f44c5da49c638934f7081d',
+          },
+        ]);
       },
     },
     $trs: {

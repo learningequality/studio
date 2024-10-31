@@ -2,27 +2,36 @@
 
   <KCard
     :to="to"
-    :title="title"
+    :title="node.title"
     layout="horizontal"
-    :headingLevel="headingLevel"
+    :headingLevel="2"
     thumbnailScaleType="contain"
     thumbnailDisplay="small"
     thumbnailAlign="right"
-    :thumbnailSrc="thumbnailSrc"
+    :thumbnailSrc="node.thumbnail"
   >
     <template #select>
-      <KCheckbox />
+      <Checkbox
+        :key="`checkbox-${node.id}`"
+        :inputValue="isSelected(node)"
+        @input="toggleSelected(node)"
+      />
     </template>
     <template #aboveTitle>
       <span>
-        <KIcon icon="practiceSolid" />
-        <span>Practice</span>
+        <ContentNodeLearningActivityIcon
+          :learningActivities="{ 'wA01urpi': true }"
+          showEachActivityIcon
+          includeText
+          small
+          class="inline"
+        />
       </span>
     </template>
     <template #belowTitle>
       <div>
         <KTextTruncator
-          :text="description"
+          :text="node.description"
           :maxLines="2"
         />
       </div>
@@ -40,28 +49,40 @@
 
 <script>
 
+  import find from 'lodash/find';
+  import Checkbox from 'shared/views/form/Checkbox';
+  import ContentNodeLearningActivityIcon from 'shared/views/ContentNodeLearningActivityIcon';
+
   export default {
     name: 'RecommendedResourceCard',
+    components: {
+      Checkbox,
+      ContentNodeLearningActivityIcon,
+    },
     props: {
       to: {
         type: Object,
         required: true,
       },
-      title: {
-        type: String,
-        default: null,
-      },
-      description: {
-        type: String,
-        default: null,
-      },
-      headingLevel: {
-        type: Number,
+      node: {
+        type: Object,
         required: true,
       },
-      thumbnailSrc: {
-        type: String,
-        default: null,
+      selected: {
+        type: Array,
+        required: true,
+      },
+    },
+    computed: {
+      isSelected() {
+        return function(node) {
+          return Boolean(find(this.selected, { id: node.id }));
+        };
+      },
+    },
+    methods: {
+      toggleSelected(node) {
+        this.$emit('change_selected', { nodes: [node], isSelected: !this.isSelected(node) });
       },
     },
   };
