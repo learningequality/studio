@@ -214,6 +214,7 @@
       </ResourceDrawer>
     </VLayout>
     <InheritAncestorMetadataModal
+      ref="inheritModal"
       :parent="inheritanceParent"
       @inherit="inheritMetadata"
     />
@@ -547,9 +548,13 @@
           this.elevated = false; // list starts at top, so don't elevate toolbar
           // NOTE: this may be redundant with the same call in TreeView.created
           // for initial page load
-          this.loadAncestors({ id: this.topicId }).then(() => {
-            this.updateTitleForPage();
-            this.loadingAncestors = false;
+          this.removeContentNodes({ parentId: this.topicId }).then(success => {
+            if (success) {
+              this.loadAncestors({ id: this.topicId }).then(() => {
+                this.updateTitleForPage();
+                this.loadingAncestors = false;
+              });
+            }
           });
         },
         immediate: true,
@@ -586,8 +591,9 @@
         'waitForCopyingStatus',
         'setQuickEditModal',
         'updateContentNode',
+        'removeContentNodes',
       ]),
-      ...mapMutations('contentNode', ['ADD_INHERITING_NODE', 'CLEAR_INHERITING_NODES']),
+      ...mapMutations('contentNode', ['CLEAR_INHERITING_NODES']),
       ...mapActions('clipboard', ['copyAll']),
       clearSelections() {
         this.selected = [];
@@ -613,6 +619,7 @@
           id__in: nodeIdsToMove,
           target: targetNode,
           position: targetPosition,
+          inherit: false,
         });
       },
 
@@ -785,14 +792,7 @@
           return this.moveContentNodes({
             ...payload,
             id__in: data.sources.map(s => s.metadata.id),
-          }).then(ids => {
-            if (this.topicId !== payload.target) {
-              // If we are not moving within the same parent
-              // trigger the node inheritance behaviour.
-              for (const id of ids) {
-                this.ADD_INHERITING_NODE(this.getContentNode(id));
-              }
-            }
+            inherit: !data.sources.some(s => s.metadata.parent === payload.target),
           });
         }
       },
@@ -807,10 +807,13 @@
           : RELATIVE_TREE_POSITIONS.RIGHT;
       },
       moveNodes(target) {
-        return this.moveContentNodes({ id__in: this.selected, parent: target }).then(() => {
-          this.clearSelections();
-          this.$refs.moveModal.moveComplete();
-        });
+        // Always inherit here, as the move modal doesn't allow moving to the same parent.
+        return this.moveContentNodes({ id__in: this.selected, parent: target, inherit: true }).then(
+          () => {
+            this.clearSelections();
+            this.$refs.moveModal.moveComplete();
+          }
+        );
       },
       removeNodes: withChangeTracker(function(id__in, changeTracker) {
         this.trackClickEvent('Delete');
@@ -819,7 +822,7 @@
         if (id__in.includes(this.$route.params.detailNodeId)) {
           nextRoute = { params: { detailNodeId: null } };
         }
-        return this.moveContentNodes({ id__in, parent: this.trashId }).then(() => {
+        return this.moveContentNodes({ id__in, parent: this.trashId, inherit: false }).then(() => {
           this.clearSelections();
           if (nextRoute) {
             this.$router.replace(nextRoute);

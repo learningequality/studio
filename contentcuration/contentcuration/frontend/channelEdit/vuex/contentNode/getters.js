@@ -365,3 +365,9 @@ export function getQuickEditModalOpen(state) {
     return state.quickEditModalOpen;
   };
 }
+
+export function getContentNodesCount(state) {
+  return function(nodeId) {
+    return state.contentNodesCountMap[nodeId];
+  };
+}

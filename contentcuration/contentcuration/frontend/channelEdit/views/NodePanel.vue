@@ -46,7 +46,7 @@
       </template>
     </VList>
     <div class="pagination-container">
-      <KButton v-if="more" :disabled="moreLoading" @click="loadMore">
+      <KButton v-if="displayShowMoreButton" :disabled="moreLoading" @click="loadMore">
         {{ $tr('showMore') }}
       </KButton>
     </div>
@@ -105,16 +105,37 @@
       isRoot() {
         return this.rootId === this.parentId;
       },
+      addedCount() {
+        return this.$route.params.addedCount;
+      },
+      displayShowMoreButton() {
+        // Handle inconsistency with this.more that causes double click on "Show more" to load
+        // more nodes when new nodes(exercises, folders or file uploads) are added to the channel.
+        // If the addedCount is equal to the children length, force hide the "Show more" button.
+        const moreAdditions = this.addedCount !== this.children.length ? this.more : null;
+        return this.addedCount ? moreAdditions : this.more;
+      },
     },
     created() {
       this.loading = true;
-      this.loadChildren({ parent: this.parentId }).then(childrenResponse => {
-        this.loading = false;
-        this.more = childrenResponse.more || null;
+      this.removeContentNodes({ parent: this.parentId }).then(success => {
+        if (success) {
+          this.loadChildren({ parent: this.parentId }).then(childrenResponse => {
+            this.loading = false;
+            this.more = childrenResponse.more || null;
+            const children = childrenResponse?.results || [];
+            this.setContentNodesCount(children);
+          });
+        }
       });
     },
     methods: {
-      ...mapActions('contentNode', ['loadChildren', 'loadContentNodes']),
+      ...mapActions('contentNode', [
+        'loadChildren',
+        'loadContentNodes',
+        'setContentNodesCount',
+        'removeContentNodes',
+      ]),
       goToNodeDetail(nodeId) {
         if (
           this.$route.params.nodeId === this.parentId &&
@@ -164,6 +185,8 @@
           this.loadContentNodes(this.more).then(response => {
             this.more = response.more || null;
             this.moreLoading = false;
+            const children = response?.results || [];
+            this.setContentNodesCount(children);
           });
         }
       },
@@ -193,8 +216,8 @@
 
   .pagination-container {
     display: flex;
-    justify-content: flex-start;
-    margin: 4px;
+    justify-content: space-evenly;
+    margin: 32px;
   }
 
 </style>

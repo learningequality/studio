@@ -64,13 +64,18 @@
                   <VBtn v-if="addTopicsMode" color="greyBackground" @click="createTopic">
                     {{ $tr('addTopic') }}
                   </VBtn>
-                  <VBtn v-else-if="uploadMode" color="greyBackground" @click="openFileDialog">
+                  <VBtn
+                    v-else-if="uploadMode"
+                    :disabled="creatingNodes"
+                    color="greyBackground"
+                    @click="openFileDialog"
+                  >
                     {{ $tr('uploadButton') }}
                   </VBtn>
                 </ToolBar>
                 <div ref="list">
                   <EditList
-                    v-model="selected"
+                    v-model="currentSelectedNodes"
                     :nodeIds="nodeIds"
                     @input="enableValidation(nodeIds);"
                   />
@@ -96,7 +101,7 @@
               <EditView
                 v-else
                 ref="editView"
-                :nodeIds="selected"
+                :nodeIds="currentSelectedNodes"
                 :tab="tab"
               />
             </VContent>
@@ -123,8 +128,10 @@
         </VLayout>
       </BottomBar>
       <InheritAncestorMetadataModal
+        ref="inheritModal"
         :parent="(createMode && detailNodeIds.length) ? parent : null"
         @inherit="inheritMetadata"
+        @updateActive="active => isInheritModalOpen = active"
       />
     </VDialog>
 
@@ -252,6 +259,9 @@
         listElevated: false,
         storagePoll: null,
         openTime: null,
+        isInheritModalOpen: false,
+        newNodeIds: [],
+        creatingNodes: false,
       };
     },
     computed: {
@@ -314,6 +324,17 @@
       },
       invalidNodes() {
         return this.nodeIds.filter(id => !this.getContentNodeIsValid(id));
+      },
+      currentSelectedNodes: {
+        get() {
+          if (this.isInheritModalOpen && this.newNodeIds.length) {
+            return this.newNodeIds;
+          }
+          return this.selected;
+        },
+        set(value) {
+          this.selected = value;
+        },
       },
     },
     beforeRouteEnter(to, from, next) {
@@ -378,7 +399,11 @@
 
                 if (completeCheck !== node.complete) {
                   validationPromises.push(
-                    vm.updateContentNode({ id: nodeId, complete: completeCheck })
+                    vm.updateContentNode({
+                      id: nodeId,
+                      complete: completeCheck,
+                      checkComplete: true,
+                    })
                   );
                 }
               });
@@ -432,7 +457,10 @@
         this.hideHTMLScroll(false);
         this.$router.push({
           name: RouteNames.TREE_VIEW,
-          params: { nodeId: this.$route.params.nodeId },
+          params: {
+            nodeId: this.$route.params.nodeId,
+            addedCount: this.nodeIds.length,
+          },
         });
       },
       hideHTMLScroll(hidden) {
@@ -506,28 +534,37 @@
           return newNodeId;
         });
       },
+      resetInheritMetadataModal() {
+        this.$refs.inheritModal?.checkInheritance();
+      },
       createTopic() {
         this.createNode('topic', {
           title: '',
         }).then(newNodeId => {
           this.selected = [newNodeId];
+          this.$nextTick(() => {
+            this.resetInheritMetadataModal();
+          });
         });
       },
-      createNodesFromUploads(fileUploads) {
-        fileUploads.forEach((file, index) => {
-          let title;
-          if (file.metadata.title) {
-            title = file.metadata.title;
-          } else {
-            title = file.original_filename
-              .split('.')
-              .slice(0, -1)
-              .join('.');
-          }
-          this.createNode(
-            FormatPresets.has(file.preset) && FormatPresets.get(file.preset).kind_id,
-            { title, ...file.metadata }
-          ).then(newNodeId => {
+      async createNodesFromUploads(fileUploads) {
+        this.creatingNodes = true;
+        const parentPropDefinedForInheritModal = Boolean(this.$refs.inheritModal?.parent);
+        this.newNodeIds = await Promise.all(
+          fileUploads.map(async (file, index) => {
+            let title;
+            if (file.metadata.title) {
+              title = file.metadata.title;
+            } else {
+              title = file.original_filename
+                .split('.')
+                .slice(0, -1)
+                .join('.');
+            }
+            const newNodeId = await this.createNode(
+              FormatPresets.has(file.preset) && FormatPresets.get(file.preset).kind_id,
+              { title, ...file.metadata }
+            );
             if (index === 0) {
               this.selected = [newNodeId];
             }
@@ -535,8 +572,15 @@
               ...file,
               contentnode: newNodeId,
             });
-          });
-        });
+            return newNodeId;
+          })
+        );
+        this.creatingNodes = false;
+        if (parentPropDefinedForInheritModal) {
+          // Only call this if the parent prop was previously defined, otherwise,
+          // rely on the parent prop watcher to trigger the inherit event.
+          this.resetInheritMetadataModal();
+        }
       },
       updateTitleForPage() {
         this.updateTabTitle(this.$store.getters.appendChannelName(this.modalTitle));
@@ -547,8 +591,31 @@
         });
       },
       inheritMetadata(metadata) {
-        for (const nodeId of this.nodeIds) {
-          this.updateContentNode({ id: nodeId, ...metadata, mergeMapFields: true });
+        if (!this.createMode) {
+          // This shouldn't happen, but prevent this just in case.
+          return;
+        }
+        const setMetadata = () => {
+          const nodeIds = this.uploadMode ? this.newNodeIds : this.selected;
+          for (const nodeId of nodeIds) {
+            this.updateContentNode({
+              id: nodeId,
+              ...metadata,
+              mergeMapFields: true,
+              checkComplete: true,
+            });
+          }
+          this.newNodeIds = [];
+        };
+        if (!this.creatingNodes) {
+          setMetadata();
+        } else {
+          const unwatch = this.$watch('creatingNodes', creatingNodes => {
+            if (!creatingNodes) {
+              unwatch();
+              setMetadata();
+            }
+          });
         }
       },
     },
