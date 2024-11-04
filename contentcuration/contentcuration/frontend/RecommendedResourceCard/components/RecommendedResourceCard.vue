@@ -3,24 +3,25 @@
   <KCard
     :to="to"
     :title="node.title"
-    layout="horizontal"
     :headingLevel="2"
     thumbnailScaleType="contain"
     thumbnailDisplay="small"
     thumbnailAlign="right"
-    :thumbnailSrc="node.thumbnail"
+    :thumbnailSrc="node.thumbnail_src"
   >
     <template #select>
       <Checkbox
         :key="`checkbox-${node.id}`"
         :inputValue="isSelected(node)"
         @input="toggleSelected(node)"
-      />
+      >
+        <span class="visually-hidden">Select '{{ node.title }}'</span>
+      </Checkbox>
     </template>
     <template #aboveTitle>
       <span>
         <ContentNodeLearningActivityIcon
-          :learningActivities="{ 'wA01urpi': true }"
+          :learningActivities="node.learning_activities"
           showEachActivityIcon
           includeText
           small
@@ -31,16 +32,18 @@
     <template #belowTitle>
       <div>
         <KTextTruncator
-          :text="node.description"
+          :text="node.original_channel_name"
           :maxLines="2"
         />
       </div>
     </template>
     <template #footer>
-      <div class="align-right-style">
-        <KIconButton icon="openNewTab" class="card-icon-size" />
-        <KIconButton icon="thumbDown" class="card-icon-size" />
-      </div>
+      <KFixedGrid :numCols="1">
+        <KFixedGridItem alignment="right">
+          <KIconButton icon="openNewTab" />
+          <KIconButton icon="thumbDown" />
+        </KFixedGridItem>
+      </KFixedGrid>
     </template>
   </KCard>
 
@@ -91,9 +94,20 @@
 
 
 <style>
-  .align-right-style{
-      display: flex;
-      justify-content: flex-end;
-      padding-top: 8px;
+  .visually-hidden{
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    border: 0;
+    padding: 0;
+
+    white-space: nowrap;
+    clip-path: inset(100%);
+    clip: rect(0 0 0 0);
+    overflow: hidden;
+
+    outline: 0;
+    outline-offset: 0;
   }
 </style>

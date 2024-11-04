@@ -149,6 +149,7 @@
   import SearchResultsList from './SearchResultsList';
   import SavedSearchesModal from './SavedSearchesModal';
   import ImportFromChannelsModal from './ImportFromChannelsModal';
+  import contentNodes from './sampleData';
   import { withChangeTracker } from 'shared/data/changes';
   import { searchRecommendationsStrings } from 'shared/strings/searchRecommendationsStrings';
 
@@ -183,7 +184,6 @@
         resourcesMightBeRelevantTitle$,
         aboutRecommendationsDescription$,
         aboutRecommendationsFeedbackDescription$,
-
         layoutFitsTwoColumns,
       };
     },
@@ -325,27 +325,27 @@
               nodeId: recommendation.node_id,
               rootId: recommendation.main_tree_id,
               parent: recommendation.parent_id,
-            }).catch(() => null);
+            }).catch(() => {
+              // This is a temporary workaround to return static data from our public API. We should
+              // remove this once the recommendations API is ready and return null instead.
+              return contentNodes.find(node => node.node_id === recommendation.node_id);
+            });
           })
         ).then(nodes => nodes.filter(Boolean));
       },
       loadRecommendations() {
         // This is a placeholder for the actual recommendation logic that interacts with
         // the recommender models based on current context. For now, we just load some random nodes.
-        return Promise.resolve([
-          {
-            id: 'b1c252c8faf64500bbb44fcb2162cced',
-            node_id: '3bd78ad83c064b0c8585e603d7ca4c06',
-            main_tree_id: 'e98098ce958840f98db61bae6e4781fe',
-            parent_id: '86ea7baa33f44c5da49c638934f7081d',
-          },
-          {
-            id: '74af5a51ceb4435f9ea973603c17359e',
-            node_id: 'ab01552b7a5f40cc96121c99a5d99a4f',
-            main_tree_id: 'e98098ce958840f98db61bae6e4781fe',
-            parent_id: '86ea7baa33f44c5da49c638934f7081d',
-          },
-        ]);
+        return Promise.resolve(
+          contentNodes.map(recommendation => {
+            return {
+              id: recommendation.id,
+              node_id: recommendation.node_id,
+              main_tree_id: recommendation.root_id,
+              parent_id: recommendation.parent,
+            };
+          })
+        );
       },
     },
     $trs: {
