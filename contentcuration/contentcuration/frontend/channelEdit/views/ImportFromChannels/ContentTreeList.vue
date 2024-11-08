@@ -43,6 +43,11 @@
           />
         </VFlex>
       </VLayout>
+      <div class="show-more-button-container">
+        <KButton v-if="more" :disabled="moreLoading" @click="loadMore">
+          {{ showMoreLabel }}
+        </KButton>
+      </div>
     </div>
   </VContainer>
 
@@ -55,6 +60,7 @@
   import intersectionBy from 'lodash/intersectionBy';
   import { mapActions, mapGetters } from 'vuex';
   import find from 'lodash/find';
+  import NodePanel from '../NodePanel';
   import { RouteNames } from '../../constants';
   import BrowsingCard from './BrowsingCard';
   import Breadcrumbs from 'shared/views/Breadcrumbs';
@@ -62,6 +68,9 @@
   import LoadingText from 'shared/views/LoadingText';
   import { constantsTranslationMixin } from 'shared/mixins';
   import { ChannelListTypes } from 'shared/constants';
+  import { crossComponentTranslator } from 'shared/i18n';
+
+  const showMoreTranslator = crossComponentTranslator(NodePanel);
 
   export default {
     name: 'ContentTreeList',
@@ -85,6 +94,8 @@
     data() {
       return {
         loading: false,
+        more: null,
+        moreLoading: false,
       };
     },
     computed: {
@@ -142,39 +153,44 @@
           ...ancestorsLinks,
         ];
       },
+      showMoreLabel() {
+        // eslint-disable-next-line kolibri/vue-no-undefined-string-uses
+        return showMoreTranslator.$tr('showMore');
+      },
     },
     watch: {
-      topicId(parent) {
+      topicId(newTopicId, oldTopicId) {
+        if (newTopicId !== oldTopicId && newTopicId) {
+          this.loadData();
+        }
+      },
+    },
+    created() {
+      this.loadData();
+    },
+    methods: {
+      ...mapActions('contentNode', ['loadChildren', 'loadAncestors', 'loadContentNodes']),
+      loadData() {
         this.loading = true;
-        return this.loadChildren({
-          parent,
+        const params = {
           complete: true,
-        }).then(() => {
+        };
+        const channelListType = this.$route.query.channel_list || ChannelListTypes.PUBLIC;
+        if (channelListType === ChannelListTypes.PUBLIC) {
+          // TODO: load from public API instead
+          // TODO: challenging because of node_id->id and root_id->channel_id
+          params.published = true;
+        }
+
+        return Promise.all([
+          this.loadChildren({ parent: this.topicId, ...params }).then(childrenResponse => {
+            this.more = childrenResponse.more || null;
+          }),
+          this.loadAncestors({ id: this.topicId }),
+        ]).then(() => {
           this.loading = false;
         });
       },
-    },
-    mounted() {
-      this.loading = true;
-      const params = {
-        complete: true,
-      };
-      const channelListType = this.$route.query.channel_list || ChannelListTypes.PUBLIC;
-      if (channelListType === ChannelListTypes.PUBLIC) {
-        // TODO: load from public API instead
-        // TODO: challenging because of node_id->id and root_id->channel_id
-        params.published = true;
-      }
-
-      return Promise.all([
-        this.loadChildren({ parent: this.topicId, ...params }),
-        this.loadAncestors({ id: this.topicId }),
-      ]).then(() => {
-        this.loading = false;
-      });
-    },
-    methods: {
-      ...mapActions('contentNode', ['loadChildren', 'loadAncestors']),
       // @public
       scrollToNode(nodeId) {
         const ref = this.$refs[nodeId];
@@ -186,6 +202,15 @@
       },
       toggleSelected(node) {
         this.$emit('change_selected', { nodes: [node], isSelected: !this.isSelected(node) });
+      },
+      loadMore() {
+        if (this.more && !this.moreLoading) {
+          this.moreLoading = true;
+          this.loadContentNodes(this.more).then(response => {
+            this.more = response.more || null;
+            this.moreLoading = false;
+          });
+        }
       },
     },
     $trs: {
