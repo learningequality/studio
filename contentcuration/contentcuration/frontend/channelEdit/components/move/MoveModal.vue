@@ -98,6 +98,11 @@
             <VDivider v-if="index < children.length - 1" :key="`move-divider-${node.id}`" />
           </template>
         </VList>
+        <div class="show-more-button-container">
+          <KButton v-if="more" :disabled="moreLoading" @click="loadMore">
+            {{ showMoreLabel }}
+          </KButton>
+        </div>
       </VFlex>
       <ResourceDrawer
         :nodeId="previewNodeId"
@@ -146,6 +151,13 @@
   import Thumbnail from 'shared/views/files/Thumbnail';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import { titleMixin } from 'shared/mixins';
+  import { createTranslator } from 'shared/i18n';
+
+  // Can't use cross component translator to get the NodePanel translations
+  // here, because the NodePanel component imports this component.
+  const showMoreTranslator = createTranslator('NodePanel', {
+    showMore: 'Show more',
+  });
 
   export default {
     name: 'MoveModal',
@@ -182,6 +194,8 @@
       return {
         showNewTopicModal: false,
         loading: false,
+        more: null,
+        moreLoading: false,
         moveNodesInProgress: false,
         targetNodeId: null,
         previewNodeId: null,
@@ -234,6 +248,10 @@
       crumbs() {
         return this.getContentNodeAncestors(this.targetNodeId, true) || [];
       },
+      showMoreLabel() {
+        // eslint-disable-next-line kolibri/vue-no-undefined-string-uses
+        return showMoreTranslator.$tr('showMore');
+      },
     },
     watch: {
       targetNodeId() {
@@ -247,7 +265,7 @@
       this.targetNodeId = this.currentLocationId || this.rootId;
     },
     methods: {
-      ...mapActions('contentNode', ['createContentNode', 'loadChildren']),
+      ...mapActions('contentNode', ['createContentNode', 'loadChildren', 'loadContentNodes']),
       isDisabled(node) {
         return this.moveNodeIds.includes(node.id);
       },
@@ -272,8 +290,9 @@
           return this.loadChildren({
             parent: this.targetNodeId,
             root_id: this.rootId,
-          }).then(() => {
+          }).then(childrenResponse => {
             this.loading = false;
+            this.more = childrenResponse.more || null;
           });
         }
         return Promise.resolve();
@@ -301,6 +320,15 @@
           actionCallback: this.goToLocation,
         });
         this.moveNodesInProgress = false;
+      },
+      loadMore() {
+        if (this.more && !this.moreLoading) {
+          this.moreLoading = true;
+          this.loadContentNodes(this.more).then(response => {
+            this.more = response.more || null;
+            this.moreLoading = false;
+          });
+        }
       },
     },
     $trs: {
@@ -348,6 +376,13 @@
         display: block;
       }
     }
+  }
+
+  .show-more-button-container {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    margin-bottom: 10px;
   }
 
 </style>
