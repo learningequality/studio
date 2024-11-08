@@ -22,6 +22,7 @@ from django.core.files.storage import FileSystemStorage
 from django.core.mail import send_mail
 from django.core.validators import MaxValueValidator
 from django.core.validators import MinValueValidator
+from django.db import connection
 from django.db import IntegrityError
 from django.db import models
 from django.db.models import Count
@@ -261,9 +262,21 @@ class User(AbstractBaseUser, PermissionsMixin):
             editable_channels_user_query, field="id")).filter(num_editors=1, public=False)
 
         # Point sole editor non-public channels' contentnodes to orphan tree to let
-        # our garbage collection delete the nodes and underlying files.
-        ContentNode._annotate_channel_id(ContentNode.objects).filter(channel_id__in=list(
-            non_public_channels_sole_editor.values_list("id", flat=True))).update(parent_id=settings.ORPHANAGE_ROOT_ID)
+        # our garbage collection delete the nodes and underlying file.
+        channel_tree_id_map = dict(
+            ContentNode.objects.values_list('id', 'main_tree__tree_id')
+        )
+
+        logging.debug("Queries after creating channel tree ID map: %s", connection.queries)
+
+        tree_ids_to_update = [
+            tree_id for id, tree_id in channel_tree_id_map.items()
+            if id in non_public_channels_sole_editor.values_list("id", flat=True)
+        ]
+
+        ContentNode.objects.filter(tree_id__in=tree_ids_to_update).update(parent_id=settings.ORPHANAGE_ROOT_ID)
+
+        logging.debug("Queries after updating content nodes parent ID: %s", connection.queries)
 
         # Hard delete non-public channels associated with this user (if user is the only editor).
         non_public_channels_sole_editor.delete()
