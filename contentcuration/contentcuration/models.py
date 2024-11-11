@@ -269,12 +269,9 @@ class User(AbstractBaseUser, PermissionsMixin):
 
         logging.debug("Queries after creating channel tree ID map: %s", connection.queries)
 
-        tree_ids_to_update = [
-            tree_id for id, tree_id in channel_tree_id_map.items()
-            if id in non_public_channels_sole_editor.values_list("id", flat=True)
-        ]
-
-        ContentNode.objects.filter(tree_id__in=tree_ids_to_update).update(parent_id=settings.ORPHANAGE_ROOT_ID)
+        for id, tree_id in channel_tree_id_map.items():
+            if id in non_public_channels_sole_editor.values_list("id", flat=True):
+                ContentNode.objects.filter(tree_id=tree_id).update(parent_id=settings.ORPHANAGE_ROOT_ID)
 
         logging.debug("Queries after updating content nodes parent ID: %s", connection.queries)
 
