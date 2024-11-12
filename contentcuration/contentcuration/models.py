@@ -1570,12 +1570,15 @@ class ContentNode(MPTTModel, models.Model):
             .values("id")
         )
 
+        # Get resources
+        resources = descendants.exclude(kind=content_kinds.TOPIC).order_by()
+
         if channel_id:
             channel = Channel.objects.filter(id=channel_id)[0]
         else:
             channel = self.get_channel()
 
-        if not descendants.exists():
+        if not resources.exists():
             data = {
                 "last_update": pytz.utc.localize(datetime.now()).strftime(
                     settings.DATE_TIME_FORMAT
@@ -1604,8 +1607,6 @@ class ContentNode(MPTTModel, models.Model):
             cache.set("details_{}".format(self.node_id), json.dumps(data), None)
             return data
 
-        # Get resources
-        resources = descendants.exclude(kind=content_kinds.TOPIC).order_by()
         nodes = With(
             File.objects.filter(contentnode_id__in=Subquery(resources.values("id")))
             .values("checksum", "file_size")
@@ -1816,10 +1817,10 @@ class ContentNode(MPTTModel, models.Model):
             "sample_pathway": pathway,
             "sample_nodes": sample_nodes,
             # source model fields for the below default to an empty string, but can also be null
-            "authors": list(filter(bool, node["authors"])),
-            "aggregators": list(filter(bool, node["aggregators"])),
-            "providers": list(filter(bool, node["providers"])),
-            "copyright_holders": list(filter(bool, node["copyright_holders"])),
+            "authors": list(filter(bool, node["authors"] or [])),
+            "aggregators": list(filter(bool, node["aggregators"] or [])),
+            "providers": list(filter(bool, node["providers"] or [])),
+            "copyright_holders": list(filter(bool, node["copyright_holders"] or [])),
             "levels": node.get("levels") or [],
             "categories": node.get("all_categories") or [],
         }
