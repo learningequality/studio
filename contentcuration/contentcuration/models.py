@@ -263,15 +263,10 @@ class User(AbstractBaseUser, PermissionsMixin):
 
         # Point sole editor non-public channels' contentnodes to orphan tree to let
         # our garbage collection delete the nodes and underlying file.
-        channel_tree_id_map = dict(
-            Channel.objects.values_list('id', 'main_tree__tree_id')
-        )
+        tree_ids_to_update = non_public_channels_sole_editor.values_list('main_tree__tree_id', flat=True)
 
-        logging.debug("Queries after creating channel tree ID map: %s", connection.queries)
-
-        for id, tree_id in channel_tree_id_map.items():
-            if id in non_public_channels_sole_editor.values_list("id", flat=True):
-                ContentNode.objects.filter(tree_id=tree_id).update(parent_id=settings.ORPHANAGE_ROOT_ID)
+        for tree_id in tree_ids_to_update:
+            ContentNode.objects.filter(tree_id=tree_id).update(parent_id=settings.ORPHANAGE_ROOT_ID)
 
         logging.debug("Queries after updating content nodes parent ID: %s", connection.queries)
 
