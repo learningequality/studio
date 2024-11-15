@@ -1556,7 +1556,7 @@ class ContentNode(MPTTModel, models.Model):
             return root.get_descendants().filter(title=title)
         return cls.objects.filter(title=title)
 
-    def get_details(self, channel_id=None):
+    def get_details(self, channel=None):
         """
         Returns information about the node and its children, including total size, languages, files, etc.
 
@@ -1578,9 +1578,7 @@ class ContentNode(MPTTModel, models.Model):
         # Get resources
         resources = descendants.exclude(kind=content_kinds.TOPIC).order_by()
 
-        if channel_id:
-            channel = Channel.objects.filter(id=channel_id)[0]
-        else:
+        if not channel:
             channel = self.get_channel()
 
         if not resources.exists():
