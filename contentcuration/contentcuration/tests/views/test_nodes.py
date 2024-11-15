@@ -15,8 +15,6 @@ from contentcuration.tests.base import BaseAPITestCase
 
 
 class NodesViewsTestCase(BaseAPITestCase):
-    persist_bucket = True
-
     def tearDown(self):
         super().tearDown()
         cache.clear()
@@ -42,8 +40,6 @@ class NodesViewsTestCase(BaseAPITestCase):
 
 
 class DetailsTestCase(BaseAPITestCase):
-    persist_bucket = True
-
     def setUp(self):
         super().setUp()
         self.default_details = {
