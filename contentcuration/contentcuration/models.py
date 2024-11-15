@@ -46,6 +46,7 @@ from django.db.models.sql import Query
 from django.dispatch import receiver
 from django.utils import timezone
 from django.utils.translation import gettext as _
+from django_cte import CTEManager
 from django_cte import With
 from le_utils import proquint
 from le_utils.constants import content_kinds
@@ -1059,6 +1060,18 @@ class Channel(models.Model):
         self.history.create(actor_id=to_pk(user), action=channel_history.PUBLICATION)
         self.main_tree.publishing = True
         self.main_tree.save()
+
+    def get_server_rev(self):
+        changes_cte = With(
+            Change.objects.filter(channel=self).values("server_rev", "applied"),
+        )
+        return (
+            changes_cte.queryset()
+            .with_cte(changes_cte)
+            .filter(applied=True)
+            .values_list("server_rev", flat=True)
+            .order_by("-server_rev").first()
+        ) or 0
 
     @property
     def deletion_history(self):
@@ -2572,6 +2585,8 @@ class Change(models.Model):
     # and also that if we are ever interacting with it in Python code, both null and False values
     # will be falsy.
     unpublishable = models.BooleanField(null=True, blank=True, default=False)
+
+    objects = CTEManager()
 
     @classmethod
     def _create_from_change(
