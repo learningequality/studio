@@ -191,7 +191,6 @@
       fetch() {
         this.loading = true;
         this.loadFailed = false;
-        this.checkPageToLoad();
         this.fetchResultsDebounced();
         this.loadSavedSearches();
       },
@@ -225,20 +224,6 @@
       },
       toggleSelected(node) {
         this.$emit('change_selected', { nodes: [node], isSelected: !this.isSelected(node) });
-      },
-      checkPageToLoad() {
-        if (this.prevSearchTerm !== this.currentSearchTerm) {
-          this.prevSearchTerm = this.currentSearchTerm;
-          if (this.$route.query.page !== "1") { 
-            this.$router.push({
-              ...this.$route,
-              query: {
-                ...this.$route.query,
-                page: 1,
-              },
-            });
-          }
-        }
       },
     },
     $trs: {
