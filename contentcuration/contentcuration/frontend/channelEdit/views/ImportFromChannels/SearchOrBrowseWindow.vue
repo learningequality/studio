@@ -178,6 +178,7 @@
               ...this.$route.query,
               ...(this.isBrowsing ? { languages: this.languageFromChannelList } : {}),
               last: this.$route.query.last || this.$route.path,
+              page: 1
             },
           });
           this.languageFromChannelList = null;
