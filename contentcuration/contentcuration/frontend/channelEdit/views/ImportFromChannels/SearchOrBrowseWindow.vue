@@ -105,14 +105,39 @@
           <div class="ml-1">
             <KCardGrid layout="1-1-1">
               <RecommendedResourceCard
-                v-for="recommendation in recommendations"
+                v-for="recommendation in displayedRecommendations"
                 :key="recommendation.id"
-                :to="{}"
                 :node="recommendation"
                 :selected.sync="selected"
                 @change_selected="handleChangeSelected"
+                @preview="preview($event)"
               />
             </KCardGrid>
+          </div>
+          <div v-if="recommendationsLoading" class="recommendations-loader">
+            <KCircularLoader :shouldShow="recommendationsLoading" />
+          </div>
+          <div v-else-if="!recommendationsLoading">
+            <p v-if="loadMoreRecommendationsText.description" class="pb-0 pt-4 px-2">
+              {{ loadMoreRecommendationsText.description }}
+            </p>
+            <div v-if="loadMoreRecommendationsText.link" class="my-3 px-2">
+              <ActionLink
+                :text="loadMoreRecommendationsText.link"
+                @click="handleViewMoreRecommendations"
+              />
+            </div>
+          </div>
+          <div v-else-if="recommendationsLoadingError">
+            <p class="pb-0 pt-4 px-2">
+              {{ tryAgainLink$() }}
+            </p>
+            <div class="my-3 px-2">
+              <ActionLink
+                :text="problemShowingResourcesMessage$()"
+                @click="handleViewMoreRecommendations"
+              />
+            </div>
           </div>
         </KGridItem>
       </KGrid>
@@ -149,8 +174,9 @@
   import SearchResultsList from './SearchResultsList';
   import SavedSearchesModal from './SavedSearchesModal';
   import ImportFromChannelsModal from './ImportFromChannelsModal';
-  import contentNodes from './sampleData';
+  import { thumbnail } from './sampleData';
   import { withChangeTracker } from 'shared/data/changes';
+  import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import { searchRecommendationsStrings } from 'shared/strings/searchRecommendationsStrings';
 
   export default {
@@ -168,8 +194,15 @@
 
       const {
         closeAction$,
+        tryAgainLink$,
+        viewMoreLink$,
+        noDirectMatchesMessage$,
+        showOtherResourcesLink$,
         aboutRecommendationsText$,
+        showOtherResourcesMessage$,
+        showOtherRecommendationsLink$,
         resourcesMightBeRelevantTitle$,
+        problemShowingResourcesMessage$,
         aboutRecommendationsDescription$,
         aboutRecommendationsFeedbackDescription$,
       } = searchRecommendationsStrings;
@@ -180,8 +213,15 @@
 
       return {
         closeAction$,
+        tryAgainLink$,
+        viewMoreLink$,
+        noDirectMatchesMessage$,
+        showOtherResourcesLink$,
         aboutRecommendationsText$,
+        showOtherResourcesMessage$,
+        showOtherRecommendationsLink$,
         resourcesMightBeRelevantTitle$,
+        problemShowingResourcesMessage$,
         aboutRecommendationsDescription$,
         aboutRecommendationsFeedbackDescription$,
         layoutFitsTwoColumns,
@@ -196,11 +236,19 @@
         showSavedSearches: false,
         showAboutRecommendations: false,
         recommendations: [],
+        otherRecommendations: [],
+        displayedRecommendations: [],
+        recommendationsLoading: false,
+        recommendationsLoadingError: false,
+        recommendationsPageSize: 2,
+        recommendationsCurrentIndex: 0,
+        recommendationsBelowThreshold: false,
       };
     },
     computed: {
       ...mapGetters('importFromChannels', ['savedSearchesExist']),
       ...mapState('importFromChannels', ['selected']),
+      ...mapState('currentChannel', ['currentChannelId']),
       isBrowsing() {
         return this.$route.name === RouteNames.IMPORT_FROM_CHANNELS_BROWSE;
       },
@@ -221,6 +269,41 @@
           (this.searchTerm || '').trim().length > 0 &&
           this.searchTerm.trim() !== this.$route.params.searchTerm
         );
+      },
+      loadMoreRecommendationsText() {
+        let link = null;
+        let description = null;
+
+        if (this.showNoDirectMatches) {
+          link = this.showOtherRecommendationsLink$();
+          description = this.noDirectMatchesMessage$();
+        } else if (this.showViewMoreRecommendations) {
+          link = this.viewMoreLink$();
+          description = null;
+        } else if (!this.recommendationsBelowThreshold || this.showShowOtherResources2) {
+          link = this.showOtherResourcesLink$();
+          description = this.showOtherResourcesMessage$();
+        }
+
+        return {
+          link,
+          description,
+        };
+      },
+      showNoDirectMatches() {
+        return this.recommendations.length === 0 && !this.recommendationsBelowThreshold;
+      },
+      showViewMoreRecommendations() {
+        return this.recommendationsCurrentIndex < this.recommendations.length;
+      },
+      showShowOtherResources() {
+        const currentIndex = this.recommendationsCurrentIndex;
+        const totalCount = this.recommendations.length + this.otherRecommendations.length;
+        return currentIndex >= totalCount;
+      },
+      showShowOtherResources2() {
+        const currentIndex = this.recommendationsCurrentIndex;
+        return this.otherRecommendations.length > currentIndex - this.recommendations.length;
       },
     },
     beforeRouteEnter(to, from, next) {
@@ -243,16 +326,12 @@
     },
     mounted() {
       this.searchTerm = this.$route.params.searchTerm || '';
-
-      this.loadRecommendations().then(recommendations => {
-        this.loadRecommendedNodes(recommendations).then(nodes => {
-          this.recommendations = [...this.recommendations, ...nodes.filter(Boolean)];
-        });
-      });
+      this.loadRecommendations();
     },
     methods: {
       ...mapActions('clipboard', ['copy']),
       ...mapActions('contentNode', ['loadPublicContentNode']),
+      ...mapActions('importFromChannels', ['fetchResourceSearchResults']),
       ...mapMutations('importFromChannels', {
         selectNodes: 'SELECT_NODES',
         deselectNodes: 'DESELECT_NODES',
@@ -316,7 +395,93 @@
       closeAboutRecommendations() {
         this.showAboutRecommendations = false;
       },
-      async loadRecommendedNodes(recommendations) {
+      handleViewMoreRecommendations() {
+        const pageSize = this.recommendationsPageSize;
+        const currentIndex = this.recommendationsCurrentIndex;
+        if (this.showNoDirectMatches) {
+          this.loadRecommendations(true);
+        } else if (this.showViewMoreRecommendations) {
+          const nextIndex = currentIndex + pageSize;
+          this.displayedRecommendations = this.recommendations.slice(0, nextIndex);
+          this.recommendationsCurrentIndex = nextIndex;
+        } else if (!this.recommendationsBelowThreshold || this.showShowOtherResources) {
+          this.loadRecommendations(true);
+        } else {
+          const tempIndex = currentIndex + pageSize;
+          const totalCount = this.recommendations.length + this.otherRecommendations.length;
+          const nextIndex = tempIndex <= totalCount ? tempIndex : totalCount;
+          this.displayedRecommendations = this.recommendations.concat(
+            this.otherRecommendations.slice(0, nextIndex - this.recommendations.length)
+          );
+          this.recommendationsCurrentIndex = nextIndex;
+        }
+      },
+      async loadRecommendations(belowThreshold = false) {
+        this.recommendationsLoading = true;
+        this.recommendationsLoadingError = false;
+        try {
+          return this.fetchRecommendations(belowThreshold).then(async recommendations => {
+            return await this.fetchRecommendedNodes(recommendations).then(nodes => {
+              const recommendations = nodes.filter(Boolean);
+              const pageSize = this.recommendationsPageSize;
+
+              if (!belowThreshold) {
+                this.recommendations = recommendations;
+                this.displayedRecommendations = this.recommendations.slice(0, pageSize);
+                this.recommendationsCurrentIndex = pageSize;
+              } else if (recommendations.length) {
+                this.otherRecommendations.push(...recommendations);
+                this.displayedRecommendations = this.recommendations.concat(
+                  this.otherRecommendations.slice(
+                    0,
+                    this.recommendationsCurrentIndex + pageSize - this.recommendations.length
+                  )
+                );
+                this.recommendationsCurrentIndex += pageSize;
+              }
+              this.recommendationsBelowThreshold = belowThreshold;
+              this.recommendationsLoading = false;
+
+              return {
+                belowThreshold,
+                recommendations,
+              };
+            });
+          });
+        } catch (error) {
+          this.recommendationsLoading = false;
+          this.recommendationsLoadingError = true;
+
+          return {
+            error,
+            belowThreshold,
+            recommendations: [],
+          };
+        }
+      },
+      // eslint-disable-next-line no-unused-vars
+      async fetchRecommendations(belowThreshold) {
+        // This is a placeholder for the actual recommendation logic that interacts with
+        // the recommender models based on current context. For now, we just load all the
+        // first 25 public nodes for visual testing purposes.
+        return this.fetchResourceSearchResults({
+          page_size: 25,
+          exclude_channel: this.currentChannelId,
+        }).then(response => {
+          const resources = response.results.filter(resource => {
+            return resource.kind !== ContentKindsNames.TOPIC;
+          });
+          return resources.map(resource => {
+            return {
+              id: resource.id,
+              node_id: resource.node_id,
+              main_tree_id: resource.root_id,
+              parent_id: resource.parent,
+            };
+          });
+        });
+      },
+      async fetchRecommendedNodes(recommendations) {
         return await Promise.all(
           recommendations.map(async recommendation => {
             // This call is cached, so we don't need to worry about multiple calls.
@@ -325,27 +490,19 @@
               nodeId: recommendation.node_id,
               rootId: recommendation.main_tree_id,
               parent: recommendation.parent_id,
-            }).catch(() => {
-              // This is a temporary workaround to return static data from our public API. We should
-              // remove this once the recommendations API is ready and return null instead.
-              return contentNodes.find(node => node.node_id === recommendation.node_id);
+            }).then(node => {
+              // This is temporary and for visual testing purposes only.
+              // We need to get the channel name and thumbnail from the API.
+              return (
+                {
+                  ...node,
+                  original_channel_name: 'Sample Channel',
+                  thumbnail_src: thumbnail[0],
+                } || null
+              );
             });
           })
         ).then(nodes => nodes.filter(Boolean));
-      },
-      loadRecommendations() {
-        // This is a placeholder for the actual recommendation logic that interacts with
-        // the recommender models based on current context. For now, we just load some random nodes.
-        return Promise.resolve(
-          contentNodes.map(recommendation => {
-            return {
-              id: recommendation.id,
-              node_id: recommendation.node_id,
-              main_tree_id: recommendation.root_id,
-              parent_id: recommendation.parent,
-            };
-          })
-        );
       },
     },
     $trs: {
@@ -385,6 +542,10 @@
 
   .over-app-bar {
     z-index: 3;
+  }
+
+  .recommendations-loader {
+    margin-top: 24px;
   }
 
 </style>

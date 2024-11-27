@@ -1,13 +1,13 @@
 <template>
 
   <KCard
-    :to="to"
     :title="node.title"
     :headingLevel="2"
     thumbnailScaleType="contain"
     thumbnailDisplay="small"
     thumbnailAlign="right"
     :thumbnailSrc="node.thumbnail_src"
+    @click="onClick"
   >
     <template #select>
       <Checkbox
@@ -19,15 +19,12 @@
       </Checkbox>
     </template>
     <template #aboveTitle>
-      <span>
-        <ContentNodeLearningActivityIcon
-          :learningActivities="node.learning_activities"
-          showEachActivityIcon
-          includeText
-          small
-          class="inline"
-        />
-      </span>
+      <ContentNodeLearningActivityIcon
+        :learningActivities="learningActivities"
+        showEachActivityIcon
+        includeText
+        small
+      />
     </template>
     <template #belowTitle>
       <div>
@@ -38,7 +35,7 @@
       </div>
     </template>
     <template #footer>
-      <KFixedGrid :numCols="1">
+      <KFixedGrid :numCols="2">
         <KFixedGridItem alignment="right">
           <KIconButton icon="openNewTab" />
           <KIconButton icon="thumbDown" />
@@ -53,6 +50,8 @@
 <script>
 
   import find from 'lodash/find';
+  import LearningActivities from 'kolibri-constants/labels/LearningActivities';
+  import { ContentKindLearningActivityDefaults } from 'shared/leUtils/ContentKinds';
   import Checkbox from 'shared/views/form/Checkbox';
   import ContentNodeLearningActivityIcon from 'shared/views/ContentNodeLearningActivityIcon';
 
@@ -63,10 +62,6 @@
       ContentNodeLearningActivityIcon,
     },
     props: {
-      to: {
-        type: Object,
-        required: true,
-      },
       node: {
         type: Object,
         required: true,
@@ -77,6 +72,11 @@
       },
     },
     computed: {
+      learningActivities() {
+        return {
+          [ContentKindLearningActivityDefaults[this.node.kind] || LearningActivities.EXPLORE]: true,
+        };
+      },
       isSelected() {
         return function(node) {
           return Boolean(find(this.selected, { id: node.id }));
@@ -86,6 +86,9 @@
     methods: {
       toggleSelected(node) {
         this.$emit('change_selected', { nodes: [node], isSelected: !this.isSelected(node) });
+      },
+      onClick() {
+        this.$emit('preview', this.node);
       },
     },
   };
