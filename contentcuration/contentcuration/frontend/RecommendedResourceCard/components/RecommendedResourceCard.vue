@@ -4,7 +4,7 @@
     class="recommended-resource-card"
     :to="to"
     :title="title"
-    layout="horizontal"
+    orientation="horizontal"
     :headingLevel="headingLevel"
     thumbnailScaleType="contain"
     thumbnailDisplay="small"
