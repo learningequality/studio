@@ -201,7 +201,7 @@
         ];
       },
       items() {
-        return sortBy(this.getContentNodeChildren(this.trashId), 'modified').reverse();
+        return sortBy(this.getContentNodeChildren(this.trashId), 'modified');
       },
       backLink() {
         return {
