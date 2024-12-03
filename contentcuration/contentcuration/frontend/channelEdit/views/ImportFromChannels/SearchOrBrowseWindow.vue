@@ -240,7 +240,7 @@
         displayedRecommendations: [],
         recommendationsLoading: false,
         recommendationsLoadingError: false,
-        recommendationsPageSize: 2,
+        recommendationsPageSize: 1,
         recommendationsCurrentIndex: 0,
         recommendationsBelowThreshold: false,
         showNoDirectMatches: false,
@@ -304,6 +304,11 @@
           (this.showNoDirectMatches || this.showShowOtherResources) &&
           !this.otherRecommendationsLoaded
         );
+      },
+      moreRecommendationsAvailable() {
+        const displayCount = this.displayedRecommendations.length;
+        const totalCount = this.recommendations.length + this.otherRecommendations.length;
+        return displayCount < totalCount;
       },
     },
     beforeRouteEnter(to, from, next) {
@@ -403,20 +408,20 @@
           if (this.showViewMoreRecommendations) {
             this.displayedRecommendations = this.recommendations.slice(0, nextIndex);
             this.recommendationsCurrentIndex = nextIndex;
-            this.showViewMoreRecommendations = nextIndex < this.recommendations.length;
+            this.showViewMoreRecommendations = this.moreRecommendationsAvailable;
           } else if (this.shouldLoadOtherRecommendations) {
             this.loadRecommendations(true);
           } else {
             this.displayedRecommendations = [
               ...this.recommendations,
-              ...this.otherRecommendations.slice(0, nextIndex),
+              ...this.otherRecommendations.slice(0, nextIndex - this.recommendations.length),
             ];
             this.recommendationsCurrentIndex = nextIndex;
             if (this.showNoDirectMatches) {
-              this.showNoDirectMatches = this.displayedRecommendations.length < nextIndex;
+              this.showNoDirectMatches = this.moreRecommendationsAvailable;
             }
             if (this.showShowOtherResources) {
-              this.showShowOtherResources = this.displayedRecommendations.length < nextIndex;
+              this.showShowOtherResources = this.moreRecommendationsAvailable;
             }
           }
         } else {
