@@ -466,22 +466,11 @@
               }
               this.recommendationsBelowThreshold = belowThreshold;
               this.recommendationsLoading = false;
-
-              return {
-                belowThreshold,
-                recommendations,
-              };
             });
           });
         } catch (error) {
           this.recommendationsLoading = false;
           this.recommendationsLoadingError = true;
-
-          return {
-            error,
-            belowThreshold,
-            recommendations: [],
-          };
         }
       },
       // eslint-disable-next-line no-unused-vars
