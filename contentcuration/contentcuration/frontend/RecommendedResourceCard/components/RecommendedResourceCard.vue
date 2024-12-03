@@ -15,7 +15,7 @@
         :inputValue="isSelected(node)"
         @input="toggleSelected(node)"
       >
-        <span class="visually-hidden">Select '{{ node.title }}'</span>
+        <span class="visuallyhidden">Select '{{ node.title }}'</span>
       </Checkbox>
     </template>
     <template #aboveTitle>
@@ -97,20 +97,14 @@
 
 
 <style>
-  .visually-hidden{
+  .visuallyhidden {
     position: absolute;
     width: 1px;
     height: 1px;
-    margin: -1px;
-    border: 0;
     padding: 0;
-
-    white-space: nowrap;
-    clip-path: inset(100%);
-    clip: rect(0 0 0 0);
+    margin: -1px;
     overflow: hidden;
-
-    outline: 0;
-    outline-offset: 0;
+    clip: rect(0 0 0 0);
+    border: 0;
   }
 </style>

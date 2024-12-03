@@ -130,11 +130,11 @@
           </div>
           <div v-else-if="recommendationsLoadingError">
             <p class="pb-0 pt-4 px-2">
-              {{ tryAgainLink$() }}
+              {{ loadMoreRecommendationsText.description }}
             </p>
             <div class="my-3 px-2">
               <ActionLink
-                :text="problemShowingResourcesMessage$()"
+                :text="loadMoreRecommendationsText.link"
                 @click="handleViewMoreRecommendations"
               />
             </div>
@@ -243,6 +243,10 @@
         recommendationsPageSize: 2,
         recommendationsCurrentIndex: 0,
         recommendationsBelowThreshold: false,
+        showNoDirectMatches: false,
+        showShowOtherResources: false,
+        showViewMoreRecommendations: false,
+        otherRecommendationsLoaded: false,
       };
     },
     computed: {
@@ -274,15 +278,20 @@
         let link = null;
         let description = null;
 
-        if (this.showNoDirectMatches) {
-          link = this.showOtherRecommendationsLink$();
-          description = this.noDirectMatchesMessage$();
-        } else if (this.showViewMoreRecommendations) {
-          link = this.viewMoreLink$();
-          description = null;
-        } else if (!this.recommendationsBelowThreshold || this.showShowOtherResources2) {
-          link = this.showOtherResourcesLink$();
-          description = this.showOtherResourcesMessage$();
+        if (!this.recommendationsLoadingError) {
+          if (this.showNoDirectMatches) {
+            link = this.showOtherRecommendationsLink$();
+            description = this.noDirectMatchesMessage$();
+          } else if (this.showViewMoreRecommendations) {
+            link = this.viewMoreLink$();
+            description = null;
+          } else if (this.showShowOtherResources) {
+            link = this.showOtherResourcesLink$();
+            description = this.showOtherResourcesMessage$();
+          }
+        } else {
+          link = this.tryAgainLink$();
+          description = this.problemShowingResourcesMessage$();
         }
 
         return {
@@ -290,20 +299,11 @@
           description,
         };
       },
-      showNoDirectMatches() {
-        return this.recommendations.length === 0 && !this.recommendationsBelowThreshold;
-      },
-      showViewMoreRecommendations() {
-        return this.recommendationsCurrentIndex < this.recommendations.length;
-      },
-      showShowOtherResources() {
-        const currentIndex = this.recommendationsCurrentIndex;
-        const totalCount = this.recommendations.length + this.otherRecommendations.length;
-        return currentIndex >= totalCount;
-      },
-      showShowOtherResources2() {
-        const currentIndex = this.recommendationsCurrentIndex;
-        return this.otherRecommendations.length > currentIndex - this.recommendations.length;
+      shouldLoadOtherRecommendations() {
+        return (
+          (this.showNoDirectMatches || this.showShowOtherResources) &&
+          !this.otherRecommendationsLoaded
+        );
       },
     },
     beforeRouteEnter(to, from, next) {
@@ -396,24 +396,31 @@
         this.showAboutRecommendations = false;
       },
       handleViewMoreRecommendations() {
-        const pageSize = this.recommendationsPageSize;
-        const currentIndex = this.recommendationsCurrentIndex;
-        if (this.showNoDirectMatches) {
-          this.loadRecommendations(true);
-        } else if (this.showViewMoreRecommendations) {
+        if (!this.recommendationsLoadingError) {
+          const pageSize = this.recommendationsPageSize;
+          const currentIndex = this.recommendationsCurrentIndex;
           const nextIndex = currentIndex + pageSize;
-          this.displayedRecommendations = this.recommendations.slice(0, nextIndex);
-          this.recommendationsCurrentIndex = nextIndex;
-        } else if (!this.recommendationsBelowThreshold || this.showShowOtherResources) {
-          this.loadRecommendations(true);
+          if (this.showViewMoreRecommendations) {
+            this.displayedRecommendations = this.recommendations.slice(0, nextIndex);
+            this.recommendationsCurrentIndex = nextIndex;
+            this.showViewMoreRecommendations = nextIndex < this.recommendations.length;
+          } else if (this.shouldLoadOtherRecommendations) {
+            this.loadRecommendations(true);
+          } else {
+            this.displayedRecommendations = [
+              ...this.recommendations,
+              ...this.otherRecommendations.slice(0, nextIndex),
+            ];
+            this.recommendationsCurrentIndex = nextIndex;
+            if (this.showNoDirectMatches) {
+              this.showNoDirectMatches = this.displayedRecommendations.length < nextIndex;
+            }
+            if (this.showShowOtherResources) {
+              this.showShowOtherResources = this.displayedRecommendations.length < nextIndex;
+            }
+          }
         } else {
-          const tempIndex = currentIndex + pageSize;
-          const totalCount = this.recommendations.length + this.otherRecommendations.length;
-          const nextIndex = tempIndex <= totalCount ? tempIndex : totalCount;
-          this.displayedRecommendations = this.recommendations.concat(
-            this.otherRecommendations.slice(0, nextIndex - this.recommendations.length)
-          );
-          this.recommendationsCurrentIndex = nextIndex;
+          this.loadRecommendations(this.recommendationsBelowThreshold);
         }
       },
       async loadRecommendations(belowThreshold = false) {
@@ -424,20 +431,33 @@
             return await this.fetchRecommendedNodes(recommendations).then(nodes => {
               const recommendations = nodes.filter(Boolean);
               const pageSize = this.recommendationsPageSize;
+              const currentIndex = this.recommendationsCurrentIndex;
 
-              if (!belowThreshold) {
+              if (belowThreshold) {
+                this.otherRecommendations = recommendations;
+                this.displayedRecommendations = [
+                  ...this.recommendations,
+                  ...this.otherRecommendations.slice(0, pageSize),
+                ];
+                this.recommendationsCurrentIndex = currentIndex + pageSize;
+
+                const isEmpty = this.otherRecommendations.length === 0;
+                if (this.showNoDirectMatches) {
+                  this.showNoDirectMatches = !isEmpty;
+                }
+                if (this.showShowOtherResources) {
+                  this.showShowOtherResources = !isEmpty;
+                }
+                this.otherRecommendationsLoaded = true;
+              } else {
                 this.recommendations = recommendations;
                 this.displayedRecommendations = this.recommendations.slice(0, pageSize);
                 this.recommendationsCurrentIndex = pageSize;
-              } else if (recommendations.length) {
-                this.otherRecommendations.push(...recommendations);
-                this.displayedRecommendations = this.recommendations.concat(
-                  this.otherRecommendations.slice(
-                    0,
-                    this.recommendationsCurrentIndex + pageSize - this.recommendations.length
-                  )
-                );
-                this.recommendationsCurrentIndex += pageSize;
+
+                const count = this.recommendations.length;
+                this.showNoDirectMatches = count === 0;
+                this.showShowOtherResources = count > pageSize;
+                this.showViewMoreRecommendations = currentIndex < count;
               }
               this.recommendationsBelowThreshold = belowThreshold;
               this.recommendationsLoading = false;
