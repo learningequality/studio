@@ -38,7 +38,7 @@ migrate:
 # 4) Remove the management command from this `deploy-migrate` recipe
 # 5) Repeat!
 deploy-migrate:
-	python contentcuration/manage.py rectify_incorrect_contentnode_source_fields
+	echo "Nothing to do here!"
 
 contentnodegc:
 	python contentcuration/manage.py garbage_collect

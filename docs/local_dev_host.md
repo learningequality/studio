@@ -112,12 +112,7 @@ export LDFLAGS="-L/opt/homebrew/opt/openssl/lib"
 ```
 
 ## Install frontend dependencies
-Ready the version of node.js supported by Studio, and install yarn.
-```bash
-volta install node@16
-volta install yarn
-```
-Then you can install frontend dependencies
+The project requires `Node 16.X` as the runtime and `Yarn >= 1.22.22` as the package manager. We make use of [`Volta`](https://docs.volta.sh/guide/getting-started) to manage the same automatically. Please make sure you have volta installed and your shell configured to use volta. You can then install all the dependencies by running:
 ```bash
 yarn install
 ```
