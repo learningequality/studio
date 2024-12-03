@@ -354,7 +354,7 @@
               {{ $tr('resources') }}
             </div>
             <DetailsRow
-              v-if="isImported && importedChannelLink"
+              v-if="showImportedChannelLink"
               :label="$tr('originalChannel')"
             >
               <ActionLink
@@ -362,7 +362,7 @@
                 :href="importedChannelLink"
                 truncate
                 notranslate
-                target="_blank"
+                @click="onClickImportedFrom()"
               />
             </DetailsRow>
             <DetailsRow :label="$tr('totalResources')">
@@ -395,7 +395,7 @@
               {{ $tr('source') }}
             </div>
             <DetailsRow
-              v-if="isImported && importedChannelLink"
+              v-if="showImportedChannelLink"
               :label="$tr('originalChannel')"
             >
               <ActionLink
@@ -403,7 +403,7 @@
                 :href="importedChannelLink"
                 truncate
                 notranslate
-                target="_blank"
+                @click="onClickImportedFrom()"
               />
             </DetailsRow>
             <DetailsRow
@@ -661,6 +661,9 @@
       importedChannelName() {
         return this.node.original_channel_name;
       },
+      showImportedChannelLink() {
+        return this.isImported && this.importedChannelLink;
+      },
       sortedTags() {
         return orderBy(this.node.tags, ['count'], ['desc']);
       },
@@ -766,7 +769,7 @@
       this.tab = this.isExercise ? 'questions' : 'details';
     },
     methods: {
-      ...mapActions('contentNode', ['loadRelatedResources']),
+      ...mapActions('contentNode', ['loadContentNodes', 'loadRelatedResources']),
       ...mapActions('file', ['loadFiles']),
       ...mapActions('assessmentItem', ['loadNodeAssessmentItems']),
       getText(field) {
@@ -849,6 +852,23 @@
           }
         }
       },
+      onClickImportedFrom() {
+        if (this.showImportedChannelLink) {
+          const originalNodeId = this.node.original_source_node_id;
+          const originalChannelId = this.node.original_channel_id;
+          this.loadContentNodes({
+            '[node_id+channel_id]__in': [[originalNodeId, originalChannelId]],
+          }).then(nodes => {
+            if (nodes.length > 0) {
+              window.open(this.importedChannelLink, '_blank');
+            } else {
+              this.$store.dispatch('showSnackbar', {
+                text: this.$tr('sourceContentDoesntExist'),
+              });
+            }
+          });
+        }
+      },
     },
     $trs: {
       questions: 'Questions',
@@ -892,6 +912,8 @@
       noQuestionsError: 'Exercise is empty',
       incompleteQuestionError:
         '{count, plural, one {# incomplete question} other {# incomplete questions}}',
+      sourceContentDoesntExist:
+        'Source content no longer exists. Please contact your administrator.',
     },
   };
 
