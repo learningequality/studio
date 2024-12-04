@@ -493,6 +493,14 @@
         return this.categories.join(', ');
       },
     },
+    mounted() {
+      if (!this.isChannel) {
+        // Track node details view when not a channel-- is this happening?
+        this.$analytics.trackAction('node_details', 'View', {
+          id: this._details.id,
+        });
+      }
+    },
     methods: {
       channelUrl(channel) {
         return window.Urls.channel(channel.id);
