@@ -21,7 +21,7 @@
 
         <!-- Main panel >= 800px -->
         <KGridItem
-          :layout12="{ span: layoutFitsTwoColumns ? 8 : 12 }"
+          :layout12="{ span: isAIFeatureEnabled ? layoutFitsTwoColumns ? 8 : 12 : 12 }"
           :layout8="{ span: 8 }"
           :layout4="{ span: 4 }"
         >
@@ -88,6 +88,7 @@
 
         <!-- Recommended resources panel >= 400px -->
         <KGridItem
+          v-if="isAIFeatureEnabled"
           :layout12="{ span: layoutFitsTwoColumns ? 4 : 12 }"
           :layout8="{ span: 8 }"
           :layout4="{ span: 4 }"
@@ -251,6 +252,7 @@
     },
     computed: {
       ...mapGetters('importFromChannels', ['savedSearchesExist']),
+      ...mapGetters(['isAIFeatureEnabled']),
       ...mapState('importFromChannels', ['selected']),
       ...mapState('currentChannel', ['currentChannelId']),
       isBrowsing() {
@@ -429,48 +431,50 @@
         }
       },
       async loadRecommendations(belowThreshold = false) {
-        this.recommendationsLoading = true;
-        this.recommendationsLoadingError = false;
-        try {
-          return this.fetchRecommendations(belowThreshold).then(async recommendations => {
-            return await this.fetchRecommendedNodes(recommendations).then(nodes => {
-              const recommendations = nodes.filter(Boolean);
-              const pageSize = this.recommendationsPageSize;
-              const currentIndex = this.recommendationsCurrentIndex;
+        if (this.isAIFeatureEnabled) {
+          this.recommendationsLoading = true;
+          this.recommendationsLoadingError = false;
+          try {
+            return this.fetchRecommendations(belowThreshold).then(async recommendations => {
+              return await this.fetchRecommendedNodes(recommendations).then(nodes => {
+                const recommendations = nodes.filter(Boolean);
+                const pageSize = this.recommendationsPageSize;
+                const currentIndex = this.recommendationsCurrentIndex;
 
-              if (belowThreshold) {
-                this.otherRecommendations = recommendations;
-                this.displayedRecommendations = [
-                  ...this.recommendations,
-                  ...this.otherRecommendations.slice(0, pageSize),
-                ];
-                this.recommendationsCurrentIndex = currentIndex + pageSize;
+                if (belowThreshold) {
+                  this.otherRecommendations = recommendations;
+                  this.displayedRecommendations = [
+                    ...this.recommendations,
+                    ...this.otherRecommendations.slice(0, pageSize),
+                  ];
+                  this.recommendationsCurrentIndex = currentIndex + pageSize;
 
-                const isEmpty = this.otherRecommendations.length === 0;
-                if (this.showNoDirectMatches) {
-                  this.showNoDirectMatches = !isEmpty;
+                  const isEmpty = this.otherRecommendations.length === 0;
+                  if (this.showNoDirectMatches) {
+                    this.showNoDirectMatches = !isEmpty;
+                  }
+                  if (this.showShowOtherResources) {
+                    this.showShowOtherResources = !isEmpty;
+                  }
+                  this.otherRecommendationsLoaded = true;
+                } else {
+                  this.recommendations = recommendations;
+                  this.displayedRecommendations = this.recommendations.slice(0, pageSize);
+                  this.recommendationsCurrentIndex = pageSize;
+
+                  const count = this.recommendations.length;
+                  this.showNoDirectMatches = count === 0;
+                  this.showShowOtherResources = count > pageSize;
+                  this.showViewMoreRecommendations = currentIndex < count;
                 }
-                if (this.showShowOtherResources) {
-                  this.showShowOtherResources = !isEmpty;
-                }
-                this.otherRecommendationsLoaded = true;
-              } else {
-                this.recommendations = recommendations;
-                this.displayedRecommendations = this.recommendations.slice(0, pageSize);
-                this.recommendationsCurrentIndex = pageSize;
-
-                const count = this.recommendations.length;
-                this.showNoDirectMatches = count === 0;
-                this.showShowOtherResources = count > pageSize;
-                this.showViewMoreRecommendations = currentIndex < count;
-              }
-              this.recommendationsBelowThreshold = belowThreshold;
-              this.recommendationsLoading = false;
+                this.recommendationsBelowThreshold = belowThreshold;
+                this.recommendationsLoading = false;
+              });
             });
-          });
-        } catch (error) {
-          this.recommendationsLoading = false;
-          this.recommendationsLoadingError = true;
+          } catch (error) {
+            this.recommendationsLoading = false;
+            this.recommendationsLoadingError = true;
+          }
         }
       },
       // eslint-disable-next-line no-unused-vars
