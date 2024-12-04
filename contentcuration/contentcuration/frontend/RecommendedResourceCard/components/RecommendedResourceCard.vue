@@ -18,6 +18,13 @@
         <span class="visuallyhidden">Select '{{ node.title }}'</span>
       </Checkbox>
     </template>
+    <template #title="{ titleText }">
+      <KTextTruncator
+        :text="titleText"
+        :maxLines="2"
+        class="custom-title"
+      />
+    </template>
     <template #aboveTitle>
       <ContentNodeLearningActivityIcon
         :learningActivities="learningActivities"
@@ -106,5 +113,9 @@
     overflow: hidden;
     clip: rect(0 0 0 0);
     border: 0;
+  }
+  .custom-title {
+    font-weight: bold;
+    line-height: 1.5; /* Temporary fix for the title text truncation */
   }
 </style>

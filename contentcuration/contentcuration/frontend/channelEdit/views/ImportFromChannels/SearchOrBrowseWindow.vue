@@ -3,7 +3,7 @@
   <ImportFromChannelsModal>
     <template #default="{ preview }">
 
-      <KGrid style="width: 1200px;">
+      <KGrid :class="$computedClass(browseWindowStyle)">
 
         <!-- Back to browse button -->
         <KGridItem
@@ -21,7 +21,7 @@
 
         <!-- Main panel >= 800px -->
         <KGridItem
-          :layout12="{ span: isAIFeatureEnabled ? layoutFitsTwoColumns ? 8 : 12 : 12 }"
+          :layout12="{ span: isAIFeatureEnabled && layoutFitsTwoColumns ? 8 : 12 }"
           :layout8="{ span: 8 }"
           :layout4="{ span: 4 }"
         >
@@ -312,6 +312,11 @@
         const totalCount = this.recommendations.length + this.otherRecommendations.length;
         return displayCount < totalCount;
       },
+      browseWindowStyle() {
+        return {
+          width: this.isAIFeatureEnabled ? '1200px' : '800px',
+        };
+      },
     },
     beforeRouteEnter(to, from, next) {
       next(vm => {
@@ -564,6 +569,14 @@
 
   .recommendations-loader {
     margin-top: 24px;
+  }
+
+  .ai-browse-window {
+    width: 1200px;
+  }
+
+  .non-ai-browse-window {
+    width: 1000px;
   }
 
 </style>
