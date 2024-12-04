@@ -45,21 +45,6 @@ jobs:
         npm rebuild node-sass
     - name: Run tests
       run: yarn run lint-frontend:format
-    - name: Check for modified files
-      if: github.event.pull_request && github.event.pull_request.head.repo.full_name == github.repository
-      id: git-check
-      run: echo ::set-output name=modified::$(git diff-index --name-only HEAD)
-    - uses: tibdex/github-app-token@v2
-      if: github.event.pull_request && github.event.pull_request.head.repo.full_name == github.repository && steps.git-check.outputs.modified != ''
-      id: generate-token
-      with:
-        app_id: ${{ secrets.CODE_FIX_APP_ID }}
-        private_key: ${{ secrets.CODE_FIX_APP_PRIVATE_KEY }}
-    - name: Push changes
-      if: github.event.pull_request && github.event.pull_request.head.repo.full_name == github.repository && steps.git-check.outputs.modified != ''
-      run: |
-        git config --global user.name 'Learning Equality'
-        git config --global user.email 'dev@learningequality.org'
-        git remote set-url origin https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/${{ github.repository }}
-        git commit -am "Frontend linting of ${{ steps.git-check.outputs.modified }}"
-        git push
+    - name: Run pre-commit-ci-lite
+      uses: pre-commit-ci/lite-action@v1.1.0
+      if: always()
