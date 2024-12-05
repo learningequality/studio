@@ -18,13 +18,6 @@
         <span class="visuallyhidden">Select '{{ node.title }}'</span>
       </Checkbox>
     </template>
-    <template #title="{ titleText }">
-      <KTextTruncator
-        :text="titleText"
-        :maxLines="2"
-        class="custom-title"
-      />
-    </template>
     <template #aboveTitle>
       <ContentNodeLearningActivityIcon
         :learningActivities="learningActivities"
@@ -36,7 +29,7 @@
     <template #belowTitle>
       <div>
         <KTextTruncator
-          :text="node.original_channel_name"
+          :text="channelName"
           :maxLines="2"
         />
       </div>
@@ -79,6 +72,9 @@
       },
     },
     computed: {
+      channelName() {
+        return this.node.channel?.name || '';
+      },
       learningActivities() {
         return {
           [ContentKindLearningActivityDefaults[this.node.kind] || LearningActivities.EXPLORE]: true,
@@ -113,9 +109,5 @@
     overflow: hidden;
     clip: rect(0 0 0 0);
     border: 0;
-  }
-  .custom-title {
-    font-weight: bold;
-    line-height: 1.5; /* Temporary fix for the title text truncation */
   }
 </style>

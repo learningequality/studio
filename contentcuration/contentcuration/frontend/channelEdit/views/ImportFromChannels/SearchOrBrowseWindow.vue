@@ -341,6 +341,7 @@
       this.loadRecommendations();
     },
     methods: {
+      ...mapActions('channel', ['loadChannel']),
       ...mapActions('clipboard', ['copy']),
       ...mapActions('contentNode', ['loadPublicContentNode']),
       ...mapActions('importFromChannels', ['fetchResourceSearchResults']),
@@ -484,9 +485,9 @@
       },
       // eslint-disable-next-line no-unused-vars
       async fetchRecommendations(belowThreshold) {
-        // This is a placeholder for the actual recommendation logic that interacts with
-        // the recommender models based on current context. For now, we just load all the
-        // first 25 public nodes for visual testing purposes.
+        // This is a placeholder for the api call that interacts with
+        // the recommender models based on current context. For now, we just
+        // load all local public nodes for visual testing purposes.
         return this.fetchResourceSearchResults({
           page_size: 25,
           exclude_channel: this.currentChannelId,
@@ -507,23 +508,24 @@
       async fetchRecommendedNodes(recommendations) {
         return await Promise.all(
           recommendations.map(async recommendation => {
-            // This call is cached, so we don't need to worry about multiple calls.
-            return await this.loadPublicContentNode({
-              id: recommendation.id,
-              nodeId: recommendation.node_id,
-              rootId: recommendation.main_tree_id,
-              parent: recommendation.parent_id,
-            }).then(node => {
-              // This is temporary and for visual testing purposes only.
-              // We need to get the channel name and thumbnail from the API.
-              return (
-                {
-                  ...node,
-                  original_channel_name: 'Sample Channel',
-                  thumbnail_src: thumbnail[0],
-                } || null
-              );
-            });
+            try {
+              // loadPublicContentNode is cached, so multiple calls shouldn't be an issue.
+              const node = await this.loadPublicContentNode({
+                id: recommendation.id,
+                nodeId: recommendation.node_id,
+                rootId: recommendation.main_tree_id,
+                parent: recommendation.parent_id,
+              });
+              const channel = await this.loadChannel(node.channel_id);
+
+              return {
+                ...node,
+                thumbnail_src: thumbnail[0], //Temporal. For visual testing of KCard thumbnail only.
+                channel,
+              };
+            } catch {
+              return null;
+            }
           })
         ).then(nodes => nodes.filter(Boolean));
       },
