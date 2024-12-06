@@ -5,6 +5,7 @@ x-studio-environment:
     MPLBACKEND: ps
     SHELL: /bin/bash
     AWS_S3_ENDPOINT_URL: http://minio:9000
+    AWS_BUCKET_NAME: content
     DATA_DB_HOST: postgres
     DJANGO_SETTINGS_MODULE: contentcuration.dev_settings
     RUN_MODE: docker-compose
@@ -53,15 +54,17 @@ services:
     <<: *studio-worker
     command: make prodceleryworkers
 
+  # this service is for development emulation only
   minio:
-    image: minio/minio:RELEASE.2020-06-22T03-12-50Z
-    entrypoint: minio server /data
+    image: 'bitnami/minio:2024.5.28'
     environment:
-      MINIO_ACCESS_KEY: development
-      MINIO_SECRET_KEY: development
-      MINIO_API_CORS_ALLOW_ORIGIN: 'http://localhost:8080,http://127.0.0.1:8080'
+      - "MINIO_DEFAULT_BUCKETS=content:public"
+      - MINIO_ROOT_USER=development
+      - MINIO_ROOT_PASSWORD=development
+    ports:
+      - "9000:9000"
     volumes:
-      - .docker/minio:/data
+      - minio:/bitnami/minio/data
 
   postgres:
     image: ghcr.io/learningequality/postgres
@@ -93,5 +96,5 @@ services:
 
 
 volumes:
-  minio_data:
+  minio:
   pgdata:

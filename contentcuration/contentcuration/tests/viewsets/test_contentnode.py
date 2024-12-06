@@ -22,7 +22,6 @@ from le_utils.constants.labels.subjects import SUBJECTSLIST
 
 from contentcuration import models
 from contentcuration.tests import testdata
-from contentcuration.tests.base import BucketTestMixin
 from contentcuration.tests.base import StudioAPITestCase
 from contentcuration.tests.viewsets.base import generate_copy_event
 from contentcuration.tests.viewsets.base import generate_create_event
@@ -68,12 +67,10 @@ def rebuild_tree(tree_id):
     models.ContentNode.objects.partial_rebuild(tree_id)
 
 
-@pytest.mark.skipif(True, reason="Concurrent processes overload Travis VM")
-class ConcurrencyTestCase(TransactionTestCase, BucketTestMixin):
+@pytest.mark.skipif(True, reason="Concurrent processes overload CI")
+class ConcurrencyTestCase(TransactionTestCase):
     def setUp(self):
         super(ConcurrencyTestCase, self).setUp()
-        if not self.persist_bucket:
-            self.create_bucket()
         call_command("loadconstants")
         self.channel = testdata.channel()
         self.user = testdata.user()
@@ -85,8 +82,6 @@ class ConcurrencyTestCase(TransactionTestCase, BucketTestMixin):
     def tearDown(self):
         call_command("flush", interactive=False)
         super(ConcurrencyTestCase, self).tearDown()
-        if not self.persist_bucket:
-            self.delete_bucket()
 
     def test_create_contentnodes_concurrently(self):
         results = call_concurrently(

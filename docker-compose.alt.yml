@@ -7,10 +7,6 @@ version: '3.4'
 #   docker-compose -f docker-compose.yml -f docker-compose.alt.yml up minio postgres redis
 
 services:
-  minio:
-    ports:
-      - "9000:9000"
-
   postgres:
     ports:
       - "5432:5432"

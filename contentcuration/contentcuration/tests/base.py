@@ -18,47 +18,9 @@ from rest_framework.test import force_authenticate
 
 from . import testdata
 from contentcuration.models import User
-from contentcuration.utils import minio_utils
 
 
-class BucketTestClassMixin(object):
-    @classmethod
-    def create_bucket(cls):
-        minio_utils.ensure_storage_bucket_public(will_sleep=False)
-
-    @classmethod
-    def delete_bucket(cls):
-        minio_utils.ensure_bucket_deleted()
-
-
-class BucketTestMixin:
-    """
-    Handles bucket setup and tear down for test classes. If you want your entire TestCase to share the same bucket,
-    call create_bucket in setUpClass and then set persist_bucket to True, then make sure you call self.delete_bucket()
-    in tearDownClass.
-    """
-
-    persist_bucket = False
-
-    @classmethod
-    def create_bucket(cls):
-        minio_utils.ensure_storage_bucket_public(will_sleep=False)
-
-    @classmethod
-    def delete_bucket(cls):
-        minio_utils.ensure_bucket_deleted()
-
-    def setUp(self):
-        raise Exception("Called?")
-        if not self.persist_bucket:
-            self.create_bucket()
-
-    def tearDown(self):
-        if not self.persist_bucket:
-            self.delete_bucket()
-
-
-class StudioTestCase(TestCase, BucketTestMixin):
+class StudioTestCase(TestCase):
     @classmethod
     def setUpClass(cls):
         super(StudioTestCase, cls).setUpClass()
@@ -67,21 +29,11 @@ class StudioTestCase(TestCase, BucketTestMixin):
             "big_shot", "bigshot@reallybigcompany.com", "password"
         )
 
-    def setUp(self):
-        if not self.persist_bucket:
-            self.create_bucket()
-
     def setUpBase(self):
-        if not self.persist_bucket:
-            self.create_bucket()
         self.channel = testdata.channel()
         self.user = testdata.user()
         self.channel.editors.add(self.user)
         self.channel.main_tree.refresh_from_db()
-
-    def tearDown(self):
-        if not self.persist_bucket:
-            self.delete_bucket()
 
     def admin_client(self):
         client = APIClient()
@@ -115,19 +67,11 @@ class StudioTestCase(TestCase, BucketTestMixin):
         )
 
 
-class StudioAPITestCase(APITestCase, BucketTestMixin):
+class StudioAPITestCase(APITestCase):
     @classmethod
     def setUpClass(cls):
         super(StudioAPITestCase, cls).setUpClass()
         call_command("loadconstants")
-
-    def setUp(self):
-        if not self.persist_bucket:
-            self.create_bucket()
-
-    def tearDown(self):
-        if not self.persist_bucket:
-            self.delete_bucket()
 
     def sign_in(self, user=None):
         if not user:
