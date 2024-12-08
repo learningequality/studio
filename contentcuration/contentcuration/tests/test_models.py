@@ -15,6 +15,7 @@ from le_utils.constants import format_presets
 from contentcuration.constants import channel_history
 from contentcuration.constants import user_history
 from contentcuration.models import AssessmentItem
+from contentcuration.models import Change
 from contentcuration.models import Channel
 from contentcuration.models import ChannelHistory
 from contentcuration.models import ChannelSet
@@ -32,6 +33,7 @@ from contentcuration.models import User
 from contentcuration.models import UserHistory
 from contentcuration.tests import testdata
 from contentcuration.tests.base import StudioTestCase
+from contentcuration.viewsets.sync.constants import DELETED
 
 
 @pytest.fixture
@@ -250,6 +252,29 @@ class ChannelTestCase(PermissionQuerysetTestCase):
 
         queryset = Channel.filter_edit_queryset(self.base_queryset, user=self.anonymous_user)
         self.assertQuerysetDoesNotContain(queryset, pk=channel.id)
+
+    def test_get_server_rev(self):
+        channel = testdata.channel()
+
+        def create_change(server_rev, applied):
+            return Change(
+                channel=channel,
+                server_rev=server_rev,
+                user=self.admin_user,
+                created_by=self.admin_user,
+                change_type=DELETED,
+                table=Channel.__name__,
+                applied=applied,
+                kwargs={},
+            )
+
+        Change.objects.bulk_create([
+            create_change(1, True),
+            create_change(2, True),
+            create_change(3, False),
+        ])
+
+        self.assertEqual(channel.get_server_rev(), 2)
 
 
 class ContentNodeTestCase(PermissionQuerysetTestCase):

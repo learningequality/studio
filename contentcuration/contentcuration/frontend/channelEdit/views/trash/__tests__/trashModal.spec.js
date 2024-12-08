@@ -55,7 +55,7 @@ function makeWrapper(items) {
     methods: {
       loadContentNodes: jest.fn(),
       loadAncestors: jest.fn(),
-      loadChildren: jest.fn(() => Promise.resolve()),
+      loadChildren: jest.fn(() => Promise.resolve({ more: null, results: [] })),
     },
     stubs: {
       ResourceDrawer: true,
