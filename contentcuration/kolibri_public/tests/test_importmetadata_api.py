@@ -85,6 +85,17 @@ class ImportMetadataTestCase(APITestCase):
     def test_import_metadata_tags(self):
         self._assert_data(public.ContentTag, content.ContentTag, self.tags)
 
+    def test_import_metadata_invalid_uuid(self):
+        invalid_uuid = "8f0a5b9d89795"
+
+        response = self.client.get(
+            reverse("publicimportmetadata-detail", kwargs={"pk": invalid_uuid})
+        )
+
+        self.assertEqual(response.status_code, 400)
+
+        self.assertEqual(response.data["error"], "Invalid UUID format.")
+
     def test_schema_version_too_low(self):
         response = self.client.get(
             reverse("publicimportmetadata-detail", kwargs={"pk": self.node.id})

@@ -1,22 +1,17 @@
 import json
-from builtins import str
 from urllib.parse import urlsplit
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.cache import cache
-from django.core.exceptions import PermissionDenied
 from django.db.models import Count
-from django.db.models import Exists
 from django.db.models import IntegerField
 from django.db.models import OuterRef
 from django.db.models import Subquery
 from django.db.models import UUIDField
 from django.db.models.functions import Cast
 from django.http import HttpResponse
-from django.http import HttpResponseBadRequest
 from django.http import HttpResponseForbidden
-from django.http import HttpResponseNotFound
 from django.shortcuts import redirect
 from django.shortcuts import render
 from django.urls import is_valid_path
@@ -30,6 +25,7 @@ from django.utils.translation import LANGUAGE_SESSION_KEY
 from django.views.decorators.http import require_POST
 from django.views.i18n import LANGUAGE_QUERY_PARAMETER
 from django_celery_results.models import TaskResult
+from django_cte import With
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.authentication import TokenAuthentication
@@ -41,13 +37,11 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from .json_dump import json_for_parse_from_data
-from .json_dump import json_for_parse_from_serializer
 from contentcuration.constants import channel_history
 from contentcuration.decorators import browser_is_supported
 from contentcuration.models import Change
 from contentcuration.models import Channel
 from contentcuration.models import ChannelHistory
-from contentcuration.models import ChannelSet
 from contentcuration.models import ContentKind
 from contentcuration.models import CustomTaskMetadata
 from contentcuration.models import DEFAULT_USER_PREFERENCES
@@ -55,7 +49,6 @@ from contentcuration.models import Language
 from contentcuration.models import License
 from contentcuration.serializers import SimplifiedChannelProbeCheckSerializer
 from contentcuration.utils.messages import get_messages
-from contentcuration.viewsets.channelset import PublicChannelSetSerializer
 
 PUBLIC_CHANNELS_CACHE_DURATION = 30  # seconds
 PUBLIC_CHANNELS_CACHE_KEYS = {
@@ -317,7 +310,7 @@ def channel(request, channel_id):
         if channel.deleted:
             channel_error = 'CHANNEL_EDIT_ERROR_CHANNEL_DELETED'
         else:
-            channel_rev = Change.objects.filter(applied=True, channel=channel).values_list("server_rev", flat=True).order_by("-server_rev").first() or 0
+            channel_rev = channel.get_server_rev()
 
     return render(
         request,

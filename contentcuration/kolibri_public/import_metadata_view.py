@@ -14,6 +14,7 @@ from kolibri_content.constants.schema_versions import CONTENT_SCHEMA_VERSION  # 
 from kolibri_content.constants.schema_versions import MIN_CONTENT_SCHEMA_VERSION  # Use kolibri_content
 from kolibri_public import models  # Use kolibri_public models
 from kolibri_public.views import metadata_cache
+from rest_framework import status
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -68,6 +69,14 @@ class ImportMetadataViewset(GenericViewSet):
         :param pk: id parent node
         :return: an object with keys for each content metadata table and a schema_version key
         """
+
+        try:
+            UUID(pk)
+        except ValueError:
+            return Response(
+                {"error": "Invalid UUID format."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         content_schema = request.query_params.get(
             "schema_version", self.default_content_schema

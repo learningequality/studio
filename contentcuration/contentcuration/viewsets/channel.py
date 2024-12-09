@@ -1,5 +1,4 @@
 import logging
-import uuid
 from functools import reduce
 from operator import or_
 from typing import Dict
@@ -9,13 +8,10 @@ from typing import Union
 from django.conf import settings
 from django.db import IntegrityError
 from django.db.models import Exists
-from django.db.models import F
 from django.db.models import OuterRef
 from django.db.models import Q
 from django.db.models import Subquery
-from django.db.models import UUIDField
 from django.db.models import Value
-from django.db.models.functions import Cast
 from django.db.models.functions import Coalesce
 from django.http import HttpResponse
 from django.http import HttpResponseNotFound
@@ -25,7 +21,6 @@ from django.views.decorators.cache import cache_page
 from django_cte import With
 from django_filters.rest_framework import BooleanFilter
 from django_filters.rest_framework import CharFilter
-from kolibri_public.models import ContentNode as PublicContentNode
 from le_utils.constants import content_kinds
 from le_utils.constants import roles
 from rest_framework import serializers
@@ -744,20 +739,39 @@ class ChannelViewSet(ValuesViewset):
         if not channel_id:
             return []
 
+        # determine the tree_id for the channel or from the root node (main_tree_id)
+        tree_id = None
+        if main_tree_id:
+            tree_id = (
+                ContentNode.objects.filter(id=main_tree_id)
+                .values_list("tree_id", flat=True)
+                .first()
+            )
+        elif not main_tree_id:
+            try:
+                tree_id = (
+                    Channel.objects.filter(pk=channel_id)
+                    .values_list("main_tree__tree_id", flat=True)
+                    .first()
+                )
+            except Exception as e:
+                logging.error(str(e))
+                return []
+
         try:
-            ids_to_exclude = [main_tree_id] if main_tree_id else []
-            node_ids_subquery = PublicContentNode.objects.filter(
-                channel_id=uuid.UUID(channel_id),
-            ).values_list("id", flat=True)
-            lang_ids = ContentNode.objects.filter(
+            # performance: use a CTE to select just the tree's nodes, without default MPTT ordering,
+            # then filter against the CTE to get the distinct language IDs
+            cte = With(
+                ContentNode.objects.filter(tree_id=tree_id)
+                .values("id", "language_id")
+                .order_by()
+            )
+            qs = cte.queryset().with_cte(cte).filter(
                 language_id__isnull=False
-            ).annotate(
-                cast_node_id=Cast(F('node_id'), output_field=UUIDField())
-            ).filter(
-                cast_node_id__in=Subquery(node_ids_subquery)
-            ).exclude(
-                id__in=ids_to_exclude
-            ).values_list('language_id', flat=True).distinct()
+            )
+            if main_tree_id:
+                qs = qs.exclude(id=main_tree_id)
+            lang_ids = qs.values_list('language_id', flat=True).distinct()
             unique_lang_ids = list(set(lang_ids))
         except Exception as e:
             logging.error(str(e))

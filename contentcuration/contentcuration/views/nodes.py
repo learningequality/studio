@@ -8,6 +8,7 @@ from django.http import Http404
 from django.http import HttpResponse
 from django.http import HttpResponseNotFound
 from django.shortcuts import get_object_or_404
+from django_cte import With
 from rest_framework import status
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.authentication import TokenAuthentication
@@ -36,7 +37,7 @@ def get_channel_details(request, channel_id):
     channel = get_object_or_404(Channel.filter_view_queryset(Channel.objects.all(), request.user), id=channel_id)
     if not channel.main_tree:
         raise Http404
-    data = get_node_details_cached(request.user, channel.main_tree, channel_id=channel_id)
+    data = get_node_details_cached(request.user, channel.main_tree, channel)
     return HttpResponse(json.dumps(data))
 
 
@@ -47,29 +48,41 @@ def get_node_details(request, node_id):
     channel = node.get_channel()
     if channel and not channel.public:
         return HttpResponseNotFound("No topic found for {}".format(node_id))
-    data = get_node_details_cached(request.user, node)
+    data = get_node_details_cached(request.user, node, channel)
     return HttpResponse(json.dumps(data))
 
 
-def get_node_details_cached(user, node, channel_id=None):
+def get_node_details_cached(user, node, channel):
     cached_data = cache.get("details_{}".format(node.node_id))
-    if cached_data:
-        descendants = (
-            node.get_descendants()
-            .prefetch_related("children", "files", "tags")
-            .select_related("license", "language")
-        )
-        channel = node.get_channel()
 
+    if cached_data:
         # If channel is a sushi chef channel, use date created for faster query
         # Otherwise, find the last time anything was updated in the channel
-        last_update = (
-            channel.main_tree.created
-            if channel and channel.ricecooker_version
-            else descendants.filter(changed=True)
-            .aggregate(latest_update=Max("modified"))
-            .get("latest_update")
-        )
+        if channel and channel.ricecooker_version:
+            last_update = channel.main_tree.created
+        else:
+            # The query should never span across multiple trees, so we can filter by tree_id first.
+            # Since the tree_id is indexed, this should be a fast query, and perfect candidate
+            # for the CTE select query.
+            cte = With(
+                ContentNode.objects.filter(tree_id=node.tree_id)
+                .values("id", "modified", "changed", "tree_id", "parent_id", "lft", "rght")
+                .order_by()
+            )
+            last_update_qs = cte.queryset().with_cte(cte).filter(changed=True)
+
+            # If the node is not the root node, the intent is to calculate node details for the
+            # descendants of this node
+            if node.parent_id is not None:
+                # See MPTTModel.get_descendants for details on the lft/rght query
+                last_update_qs = last_update_qs.filter(
+                    lft__gte=node.lft + 1, rght__lte=node.rght - 1
+                )
+            else:
+                # Maintain that query should not 'include_self'
+                last_update_qs = last_update_qs.filter(parent_id__isnull=False)
+
+            last_update = last_update_qs.aggregate(latest_update=Max("modified")).get("latest_update")
 
         if last_update:
             last_cache_update = datetime.strptime(
@@ -80,7 +93,7 @@ def get_node_details_cached(user, node, channel_id=None):
                 getnodedetails_task.enqueue(user, node_id=node.pk)
         return json.loads(cached_data)
 
-    return node.get_details(channel_id=channel_id)
+    return node.get_details(channel=channel)
 
 
 @api_view(["GET"])
