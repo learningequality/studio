@@ -2,7 +2,7 @@
 
   <KCard
     :title="node.title"
-    :headingLevel="2"
+    :headingLevel="1"
     thumbnailScaleType="contain"
     thumbnailDisplay="small"
     thumbnailAlign="right"
@@ -15,7 +15,7 @@
         :inputValue="isSelected(node)"
         @input="toggleSelected(node)"
       >
-        <span class="visuallyhidden">Select '{{ node.title }}'</span>
+        <span class="visuallyhidden">{{ $tr('selectCard', { title: node.title }) }}</span>
       </Checkbox>
     </template>
     <template #aboveTitle>
@@ -93,6 +93,9 @@
       onClick() {
         this.$emit('preview', this.node);
       },
+    },
+    $trs: {
+      selectCard: 'Select { title }',
     },
   };
 

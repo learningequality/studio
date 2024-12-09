@@ -72,7 +72,7 @@
             ref="contentTreeList"
             :topicNode="topicNode"
             :selected.sync="selected"
-            :topicId="$route.params.nodeId"
+            :topicId="topicId"
             @preview="preview($event)"
             @change_selected="handleChangeSelected"
             @copy_to_clipboard="handleCopyToClipboard"
@@ -94,7 +94,7 @@
           :layout4="{ span: 4 }"
         >
           <h3 class="pb-2 pt-0 px-2">
-            {{ resourcesMightBeRelevantTitle$({ topic: 'Basic Addition' }) }}
+            {{ recommendationsSectionTitle }}
           </h3>
           <div class="my-3 px-2">
             <ActionLink
@@ -205,6 +205,7 @@
         resourcesMightBeRelevantTitle$,
         problemShowingResourcesMessage$,
         aboutRecommendationsDescription$,
+        resourcesInChannelMightBeRelevantTitle$,
         aboutRecommendationsFeedbackDescription$,
       } = searchRecommendationsStrings;
 
@@ -224,6 +225,7 @@
         resourcesMightBeRelevantTitle$,
         problemShowingResourcesMessage$,
         aboutRecommendationsDescription$,
+        resourcesInChannelMightBeRelevantTitle$,
         aboutRecommendationsFeedbackDescription$,
         layoutFitsTwoColumns,
       };
@@ -235,6 +237,7 @@
         copyNode: null,
         languageFromChannelList: null,
         showSavedSearches: false,
+        importDestination: '',
         showAboutRecommendations: false,
         recommendations: [],
         otherRecommendations: [],
@@ -253,6 +256,7 @@
     computed: {
       ...mapGetters('importFromChannels', ['savedSearchesExist']),
       ...mapGetters(['isAIFeatureEnabled']),
+      ...mapGetters('contentNode', ['getContentNodeAncestors']),
       ...mapState('importFromChannels', ['selected']),
       ...mapState('currentChannel', ['currentChannelId']),
       isBrowsing() {
@@ -317,6 +321,24 @@
           width: this.isAIFeatureEnabled ? '1200px' : '800px',
         };
       },
+      firstAncestor() {
+        const ancestors = this.getContentNodeAncestors(this.topicId, true);
+        return ancestors?.[0] ?? null;
+      },
+      topicId() {
+        return this.$route.params.nodeId;
+      },
+      recommendationsSectionTitle() {
+        if (this.firstAncestor) {
+          return this.resourcesInChannelMightBeRelevantTitle$({
+            channelName: this.firstAncestor?.title,
+            topic: this.importDestination,
+          });
+        }
+        return this.resourcesMightBeRelevantTitle$({
+          topic: this.importDestination,
+        });
+      },
     },
     beforeRouteEnter(to, from, next) {
       next(vm => {
@@ -339,11 +361,14 @@
     mounted() {
       this.searchTerm = this.$route.params.searchTerm || '';
       this.loadRecommendations();
+      this.loadContentNode(this.$route.params.destNodeId).then(node => {
+        this.importDestination = node?.title || '';
+      });
     },
     methods: {
       ...mapActions('channel', ['loadChannel']),
       ...mapActions('clipboard', ['copy']),
-      ...mapActions('contentNode', ['loadPublicContentNode']),
+      ...mapActions('contentNode', ['loadContentNode', 'loadPublicContentNode']),
       ...mapActions('importFromChannels', ['fetchResourceSearchResults']),
       ...mapMutations('importFromChannels', {
         selectNodes: 'SELECT_NODES',
