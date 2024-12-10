@@ -237,7 +237,7 @@
         copyNode: null,
         languageFromChannelList: null,
         showSavedSearches: false,
-        importDestination: '',
+        importDestinationAncestors: [],
         showAboutRecommendations: false,
         recommendations: [],
         otherRecommendations: [],
@@ -339,6 +339,9 @@
           topic: this.importDestination,
         });
       },
+      importDestination() {
+        return this.importDestinationAncestors.slice(-1)[0]?.title || '';
+      },
     },
     beforeRouteEnter(to, from, next) {
       next(vm => {
@@ -360,15 +363,15 @@
     },
     mounted() {
       this.searchTerm = this.$route.params.searchTerm || '';
-      this.loadRecommendations();
-      this.loadContentNode(this.$route.params.destNodeId).then(node => {
-        this.importDestination = node?.title || '';
+      this.loadAncestors({ id: this.$route.params.destNodeId }).then(ancestors => {
+        this.importDestinationAncestors = ancestors;
+        this.loadRecommendations();
       });
     },
     methods: {
       ...mapActions('channel', ['loadChannel']),
       ...mapActions('clipboard', ['copy']),
-      ...mapActions('contentNode', ['loadContentNode', 'loadPublicContentNode']),
+      ...mapActions('contentNode', ['loadAncestors', 'loadPublicContentNode']),
       ...mapActions('importFromChannels', ['fetchResourceSearchResults']),
       ...mapMutations('importFromChannels', {
         selectNodes: 'SELECT_NODES',

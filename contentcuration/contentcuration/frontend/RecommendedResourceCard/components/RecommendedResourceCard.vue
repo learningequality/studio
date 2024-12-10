@@ -2,7 +2,7 @@
 
   <KCard
     :title="node.title"
-    :headingLevel="1"
+    :headingLevel="2"
     thumbnailScaleType="contain"
     thumbnailDisplay="small"
     thumbnailAlign="right"
