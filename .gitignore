@@ -27,8 +27,8 @@ var/
 .vscode/
 
 # IntelliJ IDE, except project config
-.idea/*
-!.idea/studio.iml
+.idea/
+/*.iml
 # ignore future updates to run configuration
 .run/devserver.run.xml
 
