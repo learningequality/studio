@@ -5,4 +5,4 @@ DEBUG = True
 
 ROOT_URLCONF = "contentcuration.dev_urls"
 
-INSTALLED_APPS += ("drf_yasg", "automation")
+INSTALLED_APPS += ("drf_yasg",)
