@@ -5,7 +5,7 @@ djangorestframework==3.15.1
 psycopg2-binary==2.9.5
 django-js-reverse==0.9.1
 django-registration==3.4
-le-utils==0.2.5
+le-utils==0.2.7
 gunicorn==23.0.0
 django-postmark==0.1.6
 jsonfield==3.1.0
