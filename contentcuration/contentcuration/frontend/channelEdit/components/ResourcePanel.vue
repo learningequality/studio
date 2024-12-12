@@ -359,7 +359,6 @@
             >
               <ActionLink
                 :text="importedChannelName"
-                :href="importedChannelLink"
                 truncate
                 notranslate
                 @click="onClickImportedFrom()"
@@ -400,7 +399,6 @@
             >
               <ActionLink
                 :text="importedChannelName"
-                :href="importedChannelLink"
                 truncate
                 notranslate
                 @click="onClickImportedFrom()"
