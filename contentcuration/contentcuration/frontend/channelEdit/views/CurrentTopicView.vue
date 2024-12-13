@@ -533,6 +533,7 @@
       },
       inheritanceParent() {
         const firstNode = this.currentInheritingNodes[0];
+
         if (!firstNode) {
           return;
         }
@@ -726,6 +727,7 @@
       handleDragDrop(drop) {
         const { data } = drop;
         const { identity, section, relative } = data.target;
+        const targetMetadata = identity.metadata || {};
         const isTargetTree =
           drop.target && drop.target.region && drop.target.region.id === DraggableRegions.TREE;
 
@@ -742,7 +744,7 @@
           position = this.relativePosition(relative > DraggableFlags.NONE ? relative : section);
         } else {
           // Safety check
-          const { kind } = identity.metadata || {};
+          const { kind } = targetMetadata;
           if (kind && kind !== ContentKindsNames.TOPIC) {
             return Promise.reject('Cannot set child of non-topic');
           }
@@ -756,7 +758,7 @@
         const sources = drop.sources || [];
         const sourceRegion = sources.length > 0 ? sources[0].region : null;
         const payload = {
-          target: identity.metadata.id,
+          target: targetMetadata.id,
           position,
         };
 
@@ -765,7 +767,7 @@
           // `excluded_descendants` by accessing the copy trees through the clipboard node ID
           if (sourceRegion && sourceRegion.id === DraggableRegions.CLIPBOARD) {
             return Promise.all(
-              data.sources.map(source => {
+              sources.map(source => {
                 // Using `getCopyTrees` we can access the `excluded_descendants` for the node, such
                 // that we make sure to skip copying nodes that aren't intended to be copied
                 const trees = this.getCopyTrees(source.metadata.clipboardNodeId, true);
@@ -789,10 +791,27 @@
             );
           }
 
+          // We want to avoid launching the inherit modal when the move operation is a prepend or
+          // append move, and target is the current parent. When the move operation is relative to
+          // the target, that is left or right, we want only launch the modal if the parent is
+          // changing
+          let inherit = false;
+          if (
+            position === RELATIVE_TREE_POSITIONS.FIRST_CHILD ||
+            position === RELATIVE_TREE_POSITIONS.LAST_CHILD
+          ) {
+            inherit = !sources.some(s => s.metadata.parent === targetMetadata.id);
+          } else if (
+            position === RELATIVE_TREE_POSITIONS.LEFT ||
+            position === RELATIVE_TREE_POSITIONS.RIGHT
+          ) {
+            inherit = !sources.some(s => s.metadata.parent === targetMetadata.parent);
+          }
+
           return this.moveContentNodes({
             ...payload,
-            id__in: data.sources.map(s => s.metadata.id),
-            inherit: !data.sources.some(s => s.metadata.parent === payload.target),
+            id__in: sources.map(s => s.metadata.id),
+            inherit,
           });
         }
       },

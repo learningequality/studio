@@ -141,6 +141,7 @@ export const constantStrings = createTranslator('ConstantStrings', {
   low_res_video: 'Low resolution',
   video_subtitle: 'Captions',
   html5_zip: 'HTML5 zip',
+  imscp_zip: 'IMSCP zip',
   video_thumbnail: 'Thumbnail',
   audio_thumbnail: 'Thumbnail',
   document_thumbnail: 'Thumbnail',
