@@ -102,7 +102,7 @@
           backgroundColor: $themeTokens.error,
           color: $themeTokens.textInverted,
           ':hover': {
-            backgroundColor: $darken1($themePalette.red.v_1100),
+            backgroundColor: $darken1($themeTokens.error),
           },
         }"
         @click="showDeleteConfirmation = true"
