@@ -102,9 +102,6 @@
           backgroundColor: $themeTokens.error,
           color: $themeTokens.textInverted,
           ':hover': {
-            // Vuetify generates this based on theme colors, but oddly it doesn't make it
-            // available in the theme tokens
-            // TODO: Replace with KDS lighten/darken utilities
             backgroundColor: $darken1($themePalette.red.v_1100),
           },
         }"
