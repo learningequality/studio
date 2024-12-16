@@ -7,7 +7,7 @@
     :nodeIds="nodeIds"
     :confirmationMessage="changesSaved"
     :resourcesSelectedText="resourcesSelectedText"
-    @close="() => $emit('close')"
+    v-on="$listeners"
   >
     <template #input="{ value, inputHandler }">
       <CategoryOptions
@@ -52,7 +52,7 @@
       },
     },
     $trs: {
-      editCategories: 'Edit Categories',
+      editCategories: 'Edit categories',
     },
   };
 

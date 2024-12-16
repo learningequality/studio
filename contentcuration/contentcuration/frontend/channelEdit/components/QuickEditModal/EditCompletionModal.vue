@@ -23,6 +23,7 @@
 
 <script>
 
+  import isEqual from 'lodash/isEqual';
   import { mapGetters, mapActions } from 'vuex';
   import { getFileDuration } from 'shared/utils/helpers';
   import CompletionOptions from 'shared/views/contentNodeFields/CompletionOptions';
@@ -42,6 +43,8 @@
     data() {
       return {
         completionObject: {},
+        hasError: false,
+        changed: false,
       };
     },
     computed: {
@@ -61,10 +64,12 @@
           return this.completionObject;
         },
         set({ completion_criteria, ...value }) {
-          this.completionObject = {
+          const newValue = {
             ...value,
             ...(completion_criteria || {}),
           };
+          this.changed = this.changed || !isEqual(this.completionObject, newValue);
+          this.completionObject = newValue;
         },
       },
     },
@@ -90,7 +95,8 @@
     methods: {
       ...mapActions('contentNode', ['updateContentNode']),
       validate() {
-        return this.$refs.completionOptions.validate();
+        this.hasError = this.$refs.completionOptions.validate();
+        return this.hasError;
       },
       handleSave() {
         const error = this.validate();
@@ -123,14 +129,16 @@
         this.updateContentNode({ id: this.nodeId, ...payload });
         /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
         this.$store.dispatch('showSnackbarSimple', commonStrings.$tr('changesSaved'));
-        this.close();
+        this.close(this.changed);
       },
-      close() {
-        this.$emit('close');
+      close(changed = false) {
+        this.$emit('close', {
+          changed: this.hasError ? false : changed,
+        });
       },
     },
     $trs: {
-      editCompletion: 'Edit Completion',
+      editCompletion: 'Edit completion',
       saveAction: 'Save',
       cancelAction: 'Cancel',
     },

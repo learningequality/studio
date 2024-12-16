@@ -258,7 +258,11 @@
       };
     },
     computed: {
-      ...mapGetters('contentNode', ['isNodeInCopyingState', 'hasNodeCopyingErrored']),
+      ...mapGetters('contentNode', [
+        'isNodeInCopyingState',
+        'hasNodeCopyingErrored',
+        'getContentNodesCount',
+      ]),
       isCompact() {
         return this.compact || !this.$vuetify.breakpoint.mdAndUp;
       },
@@ -273,14 +277,15 @@
         return { title, kind, src, encoding };
       },
       subtitle() {
+        const count = this.getContentNodesCount(this.node.id);
         switch (this.node.kind) {
           case ContentKindsNames.TOPIC:
             return this.$tr('resources', {
-              value: this.node.resource_count || 0,
+              value: count?.resource_count || 0,
             });
           case ContentKindsNames.EXERCISE:
             return this.$tr('questions', {
-              value: this.node.assessment_item_count || 0,
+              value: count?.assessment_item_count || 0,
             });
         }
 

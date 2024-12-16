@@ -270,6 +270,9 @@
                 <HelpTooltip :text="$tr('authorToolTip')" top :small="false" />
               </template>
             </VCombobox>
+            <p v-if="disableSourceEdits" class="help">
+              {{ helpTextString.$tr('cannotEditPublic') }}
+            </p>
 
             <!-- Provider -->
             <VCombobox
@@ -321,6 +324,7 @@
               :disabled="disableSourceEdits"
               :placeholder="getPlaceholder('license')"
               :descriptionPlaceholder="getPlaceholder('license_description')"
+              :helpText="disableSourceEdits ? helpTextString.$tr('cannotEditPublic') : ''"
               @focus="trackClick('License')"
               @descriptionFocus="trackClick('License description')"
             />
@@ -344,6 +348,9 @@
               @input="copyright_holder = $event"
               @focus="trackClick('Copyright holder')"
             />
+            <p v-if="disableSourceEdits" class="help">
+              {{ helpTextString.$tr('cannotEditPublic') }}
+            </p>
           </VFlex>
         </template>
       </VLayout>
@@ -384,6 +391,7 @@
   import FileUpload from '../../views/files/FileUpload';
   import SubtitlesList from '../../views/files/supplementaryLists/SubtitlesList';
   import { isImportedContent, isDisableSourceEdits, importedChannelLink } from '../../utils';
+  import EditSourceModal from '../QuickEditModal/EditSourceModal.vue';
   import AccessibilityOptions from './AccessibilityOptions.vue';
   import LevelsOptions from 'shared/views/contentNodeFields/LevelsOptions';
   import CategoryOptions from 'shared/views/contentNodeFields/CategoryOptions';
@@ -409,6 +417,7 @@
     nonUniqueValue,
   } from 'shared/constants';
   import { constantsTranslationMixin, metadataTranslationMixin } from 'shared/mixins';
+  import { crossComponentTranslator } from 'shared/i18n';
 
   function getValueFromResults(results) {
     if (results.length === 0) {
@@ -546,6 +555,8 @@
         tagText: null,
         valid: true,
         diffTracker: {},
+        changed: false,
+        helpTextString: crossComponentTranslator(EditSourceModal),
       };
     },
     computed: {
@@ -774,17 +785,23 @@
       ),
       saveFromDiffTracker(id) {
         if (this.diffTracker[id]) {
-          return this.updateContentNode({ id, ...this.diffTracker[id] }).then(() => {
-            delete this.diffTracker[id];
-          });
+          this.changed = true;
+          return this.updateContentNode({ id, checkComplete: true, ...this.diffTracker[id] }).then(
+            () => {
+              delete this.diffTracker[id];
+              return this.changed;
+            }
+          );
         }
-        return Promise.resolve();
+        return Promise.resolve(this.changed);
       },
       /*
        * @public
        */
       immediateSaveAll() {
-        return Promise.all(Object.keys(this.diffTracker).map(this.saveFromDiffTracker));
+        return Promise.all(Object.keys(this.diffTracker).map(this.saveFromDiffTracker)).then(
+          results => this.changed || results.some(Boolean)
+        );
       },
       update(payload) {
         this.nodeIds.forEach(id => {
@@ -984,6 +1001,16 @@
         }
       }
     }
+  }
+
+  // Positions help text underneath
+  p.help {
+    position: relative;
+    top: -20px;
+    left: 10px;
+    margin-bottom: 14px;
+    font-size: 12px;
+    color: var(--v-text-lighten4);
   }
 
 </style>

@@ -23,19 +23,41 @@
           :class="{ 'with-trailing-input-icon': box }"
           :attach="attach"
           @focus="$emit('focus')"
-        >
-          <template #append-outer>
-            <KIconButton
-              class="info-icon"
-              data-test="info-icon"
-              icon="help"
-              :color="$themeTokens.primary"
-              @click="setShowAboutLicenses(true)"
-            />
-          </template>
-        </VSelect>
+        />
       </template>
     </DropdownWrapper>
+    <p v-if="helpText" class="help">
+      {{ helpText }}
+    </p>
+    <p style="position: relative; top: -15px">
+      <KButton
+        class="info-link"
+        appearance="basic-link"
+        :text="requestFormStrings.$tr('licenseInfoHeader')"
+        :iconAfter="showAboutLicense ? 'chevronUp' : 'chevronDown'"
+        @click="toggleAboutLicenseDisplay"
+      />
+    </p>
+    <div 
+      v-for="(licenseItem, index) in licencesList" 
+      v-show="showAboutLicense" 
+      :key="index" 
+      class="mb-4 mt-3"
+    >
+      <h2 class="font-weight-bold mb-1 subheading">
+        {{ licenseItem.name }}
+      </h2>
+      <p class="body-1 grey--text mb-1">
+        {{ licenseItem.description }}
+      </p>
+      <p v-if="licenseItem.license_url">
+        <ActionLink
+          :href="getLicenseUrl(licenseItem)"
+          target="_blank"
+          :text="requestFormStrings.$tr('learnMoreButton')"
+        />
+      </p>
+    </div>
     <VTextarea
       v-if="isCustom"
       ref="description"
@@ -59,7 +81,7 @@
 
 <script>
 
-  import { mapMutations } from 'vuex';
+  import RequestForm from '../../settings/pages/Storage/RequestForm.vue';
   import {
     getLicenseValidators,
     getLicenseDescriptionValidators,
@@ -70,8 +92,11 @@
   import { LicensesList } from 'shared/leUtils/Licenses';
   import { constantsTranslationMixin } from 'shared/mixins';
   import DropdownWrapper from 'shared/views/form/DropdownWrapper';
+  import { crossComponentTranslator } from 'shared/i18n';
 
   const MIXED_VALUE = 'mixed';
+
+  const allowedHosts = ['creativecommons.org'];
 
   export default {
     name: 'LicenseDropdown',
@@ -113,6 +138,16 @@
         type: Boolean,
         default: false,
       },
+      helpText: {
+        type: String,
+        default: '',
+      },
+    },
+    data() {
+      return {
+        requestFormStrings: crossComponentTranslator(RequestForm),
+        showAboutLicense: false,
+      };
     },
     computed: {
       license: {
@@ -178,16 +213,35 @@
           ? getLicenseDescriptionValidators().map(translateValidator)
           : [];
       },
+      licencesList() {
+        return LicensesList.filter(license => license.id).map(license => ({
+          ...license,
+          name: this.translateConstant(license.license_name),
+          description: this.translateConstant(license.license_name + '_description'),
+        }));
+      },
     },
     methods: {
-      ...mapMutations({
-        setShowAboutLicenses: 'SET_SHOW_ABOUT_LICENSES',
-      }),
       translate(item) {
         if (item.id === MIXED_VALUE) {
           return this.$tr('mixed');
         }
         return (item.id && item.id !== '' && this.translateConstant(item.license_name)) || '';
+      },
+      toggleAboutLicenseDisplay() {
+        this.showAboutLicense = !this.showAboutLicense;
+      },
+      getLicenseUrl(license) {
+        const { license_url } = license;
+        const language = window.languageCode || 'en';
+        try {
+          const url = new URL(license_url);
+          return allowedHosts.includes(url.hostname)
+            ? `${license_url}deed.${language}`
+            : license_url;
+        } catch {
+          return license_url;
+        }
       },
     },
     $trs: {
@@ -202,10 +256,6 @@
 <style lang="scss" scoped>
 
   .with-trailing-input-icon {
-    /deep/ .v-input__append-inner {
-      margin-right: 32px;
-    }
-
     /deep/ .v-input__append-outer {
       position: absolute;
       right: 4px;
@@ -213,7 +263,8 @@
     }
 
     /deep/ .v-input__control > .v-input__slot {
-      background: #e9e9e9 !important;
+      min-width: 400px;
+      background: #f5f5f5 !important;
 
       &::before {
         border-color: rgba(0, 0, 0, 0.12) !important;
@@ -231,6 +282,16 @@
         border-color: rgba(0, 0, 0, 0.3) !important;
       }
     }
+  }
+
+  // Positions help text beneath the license dropdown
+  .help {
+    position: relative;
+    top: -25px;
+    left: 10px;
+    margin-bottom: 0;
+    font-size: 12px;
+    color: var(--v-text-lighten4);
   }
 
 </style>

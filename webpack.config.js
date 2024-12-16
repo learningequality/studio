@@ -25,7 +25,7 @@ const bundleOutputDir = path.resolve(staticFilesDir, 'studio');
 module.exports = (env = {}) => {
   const dev = env.dev;
   const hot = env.hot;
-  const base = baseConfig({ mode: dev ? 'development' : 'production', hot, cache: dev });
+  const base = baseConfig({ mode: dev ? 'development' : 'production', hot, cache: dev, transpile: !dev });
 
   if (String(base.module.rules[1].test) !== String(/\.css$/)) {
     throw Error('Check base webpack configuration for update of location of css loader');
@@ -91,6 +91,12 @@ module.exports = (env = {}) => {
     },
     module: {
       rules: [
+        {
+          test: /\.m?js/,
+          resolve: {
+            fullySpecified: false
+          }
+        },
         {
           test: /\.styl(us)?$/,
           use: baseCssLoaders.concat('stylus-loader'),

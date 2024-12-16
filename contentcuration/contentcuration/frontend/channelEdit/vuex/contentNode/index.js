@@ -35,6 +35,13 @@ export default {
       */
       moveNodes: [],
 
+      /*
+        Adding this to the vuex store to only need to manage ancestor inheritance
+        in the edit modal, and in the topic view. This state is only used for topic view handling,
+        so that node moving, and copying both trigger in the inheritance logic,
+        via the multiple means that these can all be triggered.
+      */
+      inheritingNodes: null,
       /**
        * Here we denormalize our prerequisite data in order to
        * allow simple forwards/backwards lookups in our graph
@@ -68,6 +75,17 @@ export default {
        * }
        */
       previousStepsMap: {},
+
+      /**
+       * A map of node ids to their respective resource or assessment item nodes counts.
+       *
+       * For example,
+       * {
+       *   '<content_node_id_1>': { 'resourceCount': 2  }
+       *   '<content_node_id_2>': { 'assessmentItemCount': 1  }
+       * }
+       */
+      contentNodesCountMap: {},
     };
   },
   getters,

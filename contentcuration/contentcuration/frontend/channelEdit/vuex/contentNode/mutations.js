@@ -78,6 +78,18 @@ export function SET_MOVE_NODES(state, ids) {
   state.moveNodes = ids;
 }
 
+export function ADD_INHERITING_NODE(state, node) {
+  state.inheritingNodes = (state.inheritingNodes || []).concat(node);
+}
+
+export function CLEAR_INHERITING_NODES(state, ids) {
+  if (!state.inheritingNodes) {
+    return;
+  }
+  const nodes = state.inheritingNodes.filter(n => !ids.includes(n.id));
+  state.inheritingNodes = nodes.length ? nodes : null;
+}
+
 export function SET_QUICK_EDIT_MODAL(state, quickEditModalOpen) {
   state.quickEditModalOpen = quickEditModalOpen;
 }
@@ -125,4 +137,29 @@ export function SAVE_NEXT_STEPS(state, { mappings = [] } = {}) {
   for (const mapping of mappings) {
     ADD_PREVIOUS_STEP(state, mapping);
   }
+}
+
+/**
+ * Saves the content node count to vuex state.
+ * @param state - The vuex state
+ * @param id - The content node id
+ * @param assessment_item_count - The count of assessment items
+ * @param resource_count - The count of resources
+ */
+export function SET_CONTENTNODES_COUNT(state, { id, assessment_item_count, resource_count }) {
+  Vue.set(state.contentNodesCountMap, id, { resource_count, assessment_item_count });
+}
+
+/**
+ * Removes content nodes from the contentNodesMap by parent id.
+ * @param state - The vuex state
+ * @param parentId - The parent content node id
+ */
+export function REMOVE_CONTENTNODES_BY_PARENT(state, parentId) {
+  for (const key in state.contentNodesMap) {
+    if (state.contentNodesMap[key].parent === parentId) {
+      Vue.delete(state.contentNodesMap, key);
+    }
+  }
+  state.contentNodesCountMap = {};
 }

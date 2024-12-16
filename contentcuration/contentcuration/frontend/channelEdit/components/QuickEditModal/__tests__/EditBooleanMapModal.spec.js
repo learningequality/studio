@@ -16,7 +16,6 @@ let generalActions;
 const CheckboxValue = {
   UNCHECKED: 'UNCHECKED',
   CHECKED: 'CHECKED',
-  INDETERMINATE: 'INDETERMINATE',
 };
 
 const { translateMetadataString } = metadataTranslationMixin.methods;
@@ -31,11 +30,9 @@ const getOptionsValues = wrapper => {
   const categories = {};
   const checkboxes = wrapper.findAll('[data-test="option-checkbox"]');
   checkboxes.wrappers.forEach(checkbox => {
-    const { label, checked, indeterminate } = checkbox.vm.$props || {};
+    const { label, checked } = checkbox.vm.$props || {};
     let value;
-    if (indeterminate) {
-      value = CheckboxValue.INDETERMINATE;
-    } else if (checked) {
+    if (checked) {
       value = CheckboxValue.CHECKED;
     } else {
       value = CheckboxValue.UNCHECKED;
@@ -65,7 +62,7 @@ const makeWrapper = ({ nodeIds, field = 'categories', ...restOptions }) => {
     propsData: {
       nodeIds,
       options,
-      title: 'Edit Categories',
+      title: 'Edit categories',
       field,
       autocompleteLabel: 'Select option',
       confirmationMessage: 'edited',
@@ -80,6 +77,11 @@ const makeWrapper = ({ nodeIds, field = 'categories', ...restOptions }) => {
             expanded: true,
             hideLabel: true,
             nodeIds,
+          },
+          on: {
+            input(value) {
+              props.inputHandler(value);
+            },
           },
         });
       },
@@ -110,6 +112,7 @@ describe('EditBooleanMapModal', () => {
           actions: contentNodeActions,
           getters: {
             getContentNodes: () => ids => ids.map(id => nodes[id]),
+            getContentNode: () => id => nodes[id],
           },
         },
       },
@@ -182,26 +185,6 @@ describe('EditBooleanMapModal', () => {
         expect(dailyLifeValue).toBe(CheckboxValue.CHECKED);
         expect(foundationsValue).toBe(CheckboxValue.CHECKED);
       });
-
-      test('checkbox option should be indeterminate if not all nodes have the same options set', () => {
-        nodes['node1'].categories = {
-          [Categories.DAILY_LIFE]: true,
-          [Categories.FOUNDATIONS]: true,
-        };
-        nodes['node2'].categories = {
-          [Categories.DAILY_LIFE]: true,
-        };
-
-        const wrapper = makeWrapper({ nodeIds: ['node1', 'node2'] });
-
-        const optionsValues = getOptionsValues(wrapper);
-        const {
-          [Categories.DAILY_LIFE]: dailyLifeValue,
-          [Categories.FOUNDATIONS]: foundationsValue,
-        } = optionsValues;
-        expect(dailyLifeValue).toBe(CheckboxValue.CHECKED);
-        expect(foundationsValue).toBe(CheckboxValue.INDETERMINATE);
-      });
     });
   });
 
@@ -222,7 +205,7 @@ describe('EditBooleanMapModal', () => {
   });
 
   describe('Submit', () => {
-    test('should call updateContentNode with the right options on success submit - categories', () => {
+    test('should call updateContentNode with the selected options on an empty boolean map when success submit', async () => {
       const wrapper = makeWrapper({ nodeIds: ['node1', 'node2'] });
 
       const schoolCheckbox = findOptionCheckbox(wrapper, Categories.SCHOOL);
@@ -230,58 +213,43 @@ describe('EditBooleanMapModal', () => {
       const sociologyCheckbox = findOptionCheckbox(wrapper, Categories.SOCIOLOGY);
       sociologyCheckbox.element.click();
 
-      const animationFrameId = requestAnimationFrame(() => {
-        wrapper.find('[data-test="edit-booleanMap-modal"]').vm.$emit('submit');
-        expect(contentNodeActions.updateContentNode).toHaveBeenCalledWith(expect.anything(), {
-          id: 'node1',
-          categories: {
-            [Categories.SCHOOL]: true,
-            [Categories.SOCIOLOGY]: true,
-          },
-        });
-        expect(contentNodeActions.updateContentNode).toHaveBeenCalledWith(expect.anything(), {
-          id: 'node2',
-          categories: {
-            [Categories.SCHOOL]: true,
-            [Categories.SOCIOLOGY]: true,
-          },
-        });
-        cancelAnimationFrame(animationFrameId);
+      await wrapper.vm.handleSave();
+      expect(contentNodeActions.updateContentNode).toHaveBeenCalledWith(expect.anything(), {
+        id: 'node1',
+        categories: {
+          [Categories.SCHOOL]: true,
+          [Categories.SOCIOLOGY]: true,
+        },
+      });
+      expect(contentNodeActions.updateContentNode).toHaveBeenCalledWith(expect.anything(), {
+        id: 'node2',
+        categories: {
+          [Categories.SCHOOL]: true,
+          [Categories.SOCIOLOGY]: true,
+        },
       });
     });
 
-    test('should emit close event on success submit', () => {
+    test('should emit close event on success submit', async () => {
       const wrapper = makeWrapper({ nodeIds: ['node1'] });
 
-      wrapper.find('[data-test="edit-booleanMap-modal"]').vm.$emit('submit');
-
-      const animationFrameId = requestAnimationFrame(() => {
-        expect(wrapper.emitted('close')).toBeTruthy();
-        cancelAnimationFrame(animationFrameId);
-      });
+      await wrapper.vm.handleSave();
+      expect(wrapper.emitted('close')).toBeTruthy();
     });
 
-    test('should show a confirmation snackbar on success submit', () => {
+    test('should show a confirmation snackbar on success submit', async () => {
       const wrapper = makeWrapper({ nodeIds: ['node1'] });
 
-      wrapper.find('[data-test="edit-booleanMap-modal"]').vm.$emit('submit');
-
-      const animationFrameId = requestAnimationFrame(() => {
-        expect(generalActions.showSnackbarSimple).toHaveBeenCalled();
-        cancelAnimationFrame(animationFrameId);
-      });
+      await wrapper.vm.handleSave();
+      expect(generalActions.showSnackbarSimple).toHaveBeenCalled();
     });
   });
 
   test('should emit close event on cancel', () => {
     const wrapper = makeWrapper({ nodeIds: ['node1'] });
 
-    wrapper.find('[data-test="edit-booleanMap-modal"]').vm.$emit('cancel');
-
-    const animationFrameId = requestAnimationFrame(() => {
-      expect(wrapper.emitted('close')).toBeTruthy();
-      cancelAnimationFrame(animationFrameId);
-    });
+    wrapper.vm.close();
+    expect(wrapper.emitted('close')).toBeTruthy();
   });
 
   describe('topic nodes present', () => {
@@ -307,39 +275,262 @@ describe('EditBooleanMapModal', () => {
       expect(wrapper.find('[data-test="update-descendants-checkbox"]').exists()).toBeFalsy();
     });
 
-    test('should call updateContentNode on success submit if the user does not check the update descendants checkbox', () => {
+    test('should call updateContentNode on success submit if the user does not check the update descendants checkbox', async () => {
       nodes['node1'].kind = ContentKindsNames.TOPIC;
 
       const wrapper = makeWrapper({ nodeIds: ['node1'], isDescendantsUpdatable: true });
+      await wrapper.vm.handleSave();
 
-      wrapper.find('[data-test="edit-booleanMap-modal"]').vm.$emit('submit');
-
-      const animationFrameId = requestAnimationFrame(() => {
-        expect(contentNodeActions.updateContentNode).toHaveBeenCalledWith(expect.anything(), {
-          id: 'node1',
-          categories: {},
-        });
-        cancelAnimationFrame(animationFrameId);
+      expect(contentNodeActions.updateContentNode).toHaveBeenCalledWith(expect.anything(), {
+        id: 'node1',
+        categories: {},
       });
     });
 
-    test('should call updateContentNodeDescendants on success submit if the user checks the descendants checkbox', () => {
+    test('should call updateContentNodeDescendants on success submit if the user checks the descendants checkbox', async () => {
       nodes['node1'].kind = ContentKindsNames.TOPIC;
 
       const wrapper = makeWrapper({ nodeIds: ['node1'], isDescendantsUpdatable: true });
+      wrapper.find('[data-test="update-descendants-checkbox"]').element.click();
+      await wrapper.vm.handleSave();
 
-      wrapper.find('[data-test="update-descendants-checkbox"] input').setChecked(true);
-      wrapper.find('[data-test="edit-booleanMap-modal"]').vm.$emit('submit');
+      expect(contentNodeActions.updateContentNodeDescendants).toHaveBeenCalledWith(
+        expect.anything(),
+        {
+          id: 'node1',
+          categories: {},
+        }
+      );
+    });
+  });
 
-      const animationFrameId = requestAnimationFrame(() => {
-        expect(contentNodeActions.updateContentNodeDescendants).toHaveBeenCalledWith(
-          expect.anything(),
-          {
-            id: 'node1',
-            categories: {},
-          }
-        );
-        cancelAnimationFrame(animationFrameId);
+  describe('mixed options that are not selected across all nodes', () => {
+    describe('render mixed options message', () => {
+      test('should not render mixed options message if there are not mixed options across selected nodes', () => {
+        const wrapper = makeWrapper({ nodeIds: ['node1', 'node2'] });
+
+        expect(wrapper.find('[data-test="mixed-categories-message"]').exists()).toBeFalsy();
+      });
+
+      test('should not render mixed options message if there are not mixed options across selected nodes - 2', () => {
+        nodes['node1'].categories = {
+          [Categories.DAILY_LIFE]: true,
+          [Categories.FOUNDATIONS]: true,
+        };
+        nodes['node2'].categories = {
+          [Categories.DAILY_LIFE]: true,
+          [Categories.FOUNDATIONS]: true,
+        };
+        const wrapper = makeWrapper({ nodeIds: ['node1', 'node2'] });
+
+        expect(wrapper.find('[data-test="mixed-categories-message"]').exists()).toBeFalsy();
+      });
+
+      test('should render mixed options message if there are mixed options across selected nodes', () => {
+        nodes['node1'].categories = {
+          [Categories.DAILY_LIFE]: true,
+        };
+        nodes['node2'].categories = {};
+        const wrapper = makeWrapper({ nodeIds: ['node1', 'node2'] });
+
+        expect(wrapper.find('[data-test="mixed-categories-message"]').exists()).toBeTruthy();
+      });
+
+      test('should render mixed options message if there are mixed options across selected nodes - 2', () => {
+        nodes['node1'].categories = {
+          [Categories.DAILY_LIFE]: true,
+        };
+        nodes['node2'].categories = {
+          [Categories.DAILY_LIFE]: true,
+          [Categories.FOUNDATIONS]: true,
+        };
+        const wrapper = makeWrapper({ nodeIds: ['node1', 'node2'] });
+
+        expect(wrapper.find('[data-test="mixed-categories-message"]').exists()).toBeTruthy();
+      });
+    });
+    describe('on submit', () => {
+      test('should add new selected options on submit even if there are not common selected options', () => {
+        nodes['node1'].categories = {
+          [Categories.DAILY_LIFE]: true,
+        };
+        nodes['node2'].categories = {
+          [Categories.FOUNDATIONS]: true,
+        };
+        const wrapper = makeWrapper({ nodeIds: ['node1', 'node2'] });
+
+        const schoolCheckbox = findOptionCheckbox(wrapper, Categories.SCHOOL);
+        schoolCheckbox.element.click();
+
+        wrapper.vm.handleSave();
+
+        expect(contentNodeActions.updateContentNode).toHaveBeenCalledWith(expect.anything(), {
+          id: 'node1',
+          categories: {
+            // already daily_life category selected plus new school category selected
+            [Categories.SCHOOL]: true,
+            [Categories.DAILY_LIFE]: true,
+          },
+        });
+        expect(contentNodeActions.updateContentNode).toHaveBeenCalledWith(expect.anything(), {
+          id: 'node2',
+          categories: {
+            // already foundations category selected plus new school category selected
+            [Categories.SCHOOL]: true,
+            [Categories.FOUNDATIONS]: true,
+          },
+        });
+      });
+
+      test('should add new selected options on submit even if there are common selected options', () => {
+        nodes['node1'].categories = {
+          [Categories.DAILY_LIFE]: true,
+          [Categories.FOUNDATIONS]: true,
+        };
+        nodes['node2'].categories = {
+          [Categories.FOUNDATIONS]: true,
+        };
+        const wrapper = makeWrapper({ nodeIds: ['node1', 'node2'] });
+
+        const schoolCheckbox = findOptionCheckbox(wrapper, Categories.SCHOOL);
+        schoolCheckbox.element.click();
+
+        wrapper.vm.handleSave();
+
+        expect(contentNodeActions.updateContentNode).toHaveBeenCalledWith(expect.anything(), {
+          id: 'node1',
+          categories: {
+            // already daily_life and foundation category selected plus new school category selected
+            [Categories.SCHOOL]: true,
+            [Categories.DAILY_LIFE]: true,
+            [Categories.FOUNDATIONS]: true,
+          },
+        });
+        expect(contentNodeActions.updateContentNode).toHaveBeenCalledWith(expect.anything(), {
+          id: 'node2',
+          categories: {
+            // already foundations category selected plus new school category selected
+            [Categories.SCHOOL]: true,
+            [Categories.FOUNDATIONS]: true,
+          },
+        });
+      });
+
+      test('should not remove common selected options even if they are unchecked', () => {
+        nodes['node1'].categories = {
+          [Categories.DAILY_LIFE]: true,
+          [Categories.FOUNDATIONS]: true,
+        };
+        nodes['node2'].categories = {
+          [Categories.DAILY_LIFE]: true,
+        };
+        const wrapper = makeWrapper({ nodeIds: ['node1', 'node2'] });
+
+        const dailyLifeCheckbox = findOptionCheckbox(wrapper, Categories.DAILY_LIFE);
+        dailyLifeCheckbox.element.click(); // uncheck daily lifye
+
+        const schoolCheckbox = findOptionCheckbox(wrapper, Categories.SCHOOL);
+        schoolCheckbox.element.click(); // check school
+
+        wrapper.vm.handleSave();
+
+        expect(contentNodeActions.updateContentNode).toHaveBeenCalledWith(expect.anything(), {
+          id: 'node1',
+          categories: {
+            // already daily_life and foundation category selected plus new school category selected
+            [Categories.DAILY_LIFE]: true,
+            [Categories.FOUNDATIONS]: true,
+            [Categories.SCHOOL]: true,
+          },
+        });
+        expect(contentNodeActions.updateContentNode).toHaveBeenCalledWith(expect.anything(), {
+          id: 'node2',
+          categories: {
+            // already daily life category selected plus new school category selected
+            [Categories.DAILY_LIFE]: true,
+            [Categories.SCHOOL]: true,
+          },
+        });
+      });
+
+      test('should not remove common selected options even if they are unchecked and no new options are checked', () => {
+        nodes['node1'].categories = {
+          [Categories.DAILY_LIFE]: true,
+          [Categories.FOUNDATIONS]: true,
+          [Categories.SCHOOL]: true,
+        };
+        nodes['node2'].categories = {
+          [Categories.DAILY_LIFE]: true,
+          [Categories.FOUNDATIONS]: true,
+        };
+        const wrapper = makeWrapper({ nodeIds: ['node1', 'node2'] });
+
+        const dailyLifeCheckbox = findOptionCheckbox(wrapper, Categories.DAILY_LIFE);
+        dailyLifeCheckbox.element.click(); // uncheck daily lifye
+
+        wrapper.vm.handleSave();
+
+        expect(contentNodeActions.updateContentNode).toHaveBeenCalledWith(expect.anything(), {
+          id: 'node1',
+          categories: {
+            // already selected options
+            [Categories.DAILY_LIFE]: true,
+            [Categories.FOUNDATIONS]: true,
+            [Categories.SCHOOL]: true,
+          },
+        });
+        expect(contentNodeActions.updateContentNode).toHaveBeenCalledWith(expect.anything(), {
+          id: 'node2',
+          categories: {
+            // already selected options
+            [Categories.DAILY_LIFE]: true,
+            [Categories.FOUNDATIONS]: true,
+          },
+        });
+      });
+    });
+    describe('can save method', () => {
+      test('should not can save if there are mixed categories and no options selected', () => {
+        nodes['node1'].categories = {
+          [Categories.DAILY_LIFE]: true,
+        };
+        nodes['node2'].categories = {
+          [Categories.FOUNDATIONS]: true,
+        };
+
+        const wrapper = makeWrapper({ nodeIds: ['node1', 'node2'] });
+
+        expect(wrapper.vm.canSave).toBeFalsy();
+      });
+
+      test('should can save if there are mixed categories but new options are selected', () => {
+        nodes['node1'].categories = {
+          [Categories.DAILY_LIFE]: true,
+        };
+        nodes['node2'].categories = {
+          [Categories.FOUNDATIONS]: true,
+        };
+
+        const wrapper = makeWrapper({ nodeIds: ['node1', 'node2'] });
+
+        const schoolCheckbox = findOptionCheckbox(wrapper, Categories.SCHOOL);
+        schoolCheckbox.element.click();
+
+        expect(wrapper.vm.canSave).toBeTruthy();
+      });
+
+      test('should can save if there are mixed categories but at least one common option across all nodes', () => {
+        nodes['node1'].categories = {
+          [Categories.DAILY_LIFE]: true,
+          [Categories.FOUNDATIONS]: true,
+        };
+        nodes['node2'].categories = {
+          [Categories.DAILY_LIFE]: true,
+        };
+
+        const wrapper = makeWrapper({ nodeIds: ['node1', 'node2'] });
+
+        expect(wrapper.vm.canSave).toBeTruthy();
       });
     });
   });

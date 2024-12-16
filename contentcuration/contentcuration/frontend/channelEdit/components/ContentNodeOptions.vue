@@ -124,7 +124,7 @@
             },
             {
               label: this.$tr('makeACopy'),
-              onClick: this.duplicateNode,
+              onClick: () => this.duplicateNode(this.nodeId),
               condition: this.canEdit,
             },
             {
@@ -282,9 +282,11 @@
         });
       },
       moveNode(target) {
-        return this.moveContentNodes({ id__in: [this.nodeId], parent: target }).then(
-          this.$refs.moveModal.moveComplete
-        );
+        return this.moveContentNodes({
+          id__in: [this.nodeId],
+          parent: target,
+          inherit: this.node.parent !== target,
+        }).then(this.$refs.moveModal.moveComplete);
       },
       getRemoveNodeRedirect() {
         // Returns a callback to do appropriate post-removal navigation
@@ -322,7 +324,7 @@
       removeNode: withChangeTracker(function(id__in, changeTracker) {
         this.trackAction('Delete');
         const redirect = this.getRemoveNodeRedirect();
-        return this.moveContentNodes({ id__in, parent: this.trashId }).then(() => {
+        return this.moveContentNodes({ id__in, parent: this.trashId, inherit: false }).then(() => {
           redirect();
           this.showSnackbar({
             text: this.$tr('removedItems'),
@@ -345,7 +347,7 @@
           }
         );
       }),
-      duplicateNode: withChangeTracker(async function(changeTracker) {
+      duplicateNode: withChangeTracker(async function(nodeId, changeTracker) {
         this.trackAction('Copy');
         this.showSnackbar({
           duration: null,
@@ -356,8 +358,8 @@
           // actionCallback: () => changeTracker.revert(),
         });
         const copiedContentNode = await this.copyContentNode({
-          id: this.nodeId,
-          target: this.nodeId,
+          id: nodeId,
+          target: nodeId,
           position: RELATIVE_TREE_POSITIONS.RIGHT,
         });
 
@@ -387,7 +389,7 @@
     $trs: {
       newSubtopic: 'New folder',
       editTitleDescription: 'Edit title and description',
-      editAllDetails: 'Edit all details',
+      editAllDetails: 'Edit details',
       editTags: 'Edit tags',
       editLanguage: 'Edit language',
       editCategories: 'Edit categories',
@@ -396,7 +398,7 @@
       editSource: 'Edit source',
       editAudience: 'Edit audience',
       editCompletion: 'Edit completion',
-      editWhatIsNeeded: "Edit 'what is needed'",
+      editWhatIsNeeded: 'Edit requirements',
       viewDetails: 'View details',
       move: 'Move',
       makeACopy: 'Make a copy',

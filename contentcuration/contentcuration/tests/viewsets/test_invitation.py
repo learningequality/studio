@@ -286,10 +286,11 @@ class CRUDTestCase(StudioAPITestCase):
         response = self.client.post(reverse("invitation-accept", kwargs={"pk": invitation.id}))
         self.assertEqual(response.status_code, 200, response.content)
         try:
-            models.Invitation.objects.get(id=invitation.id)
+            invitation = models.Invitation.objects.get(id=invitation.id)
         except models.Invitation.DoesNotExist:
             self.fail("Invitation was deleted")
 
+        self.assertTrue(invitation.accepted)
         self.assertTrue(self.channel.editors.filter(pk=self.invited_user.id).exists())
         self.assertTrue(
             models.Invitation.objects.filter(
@@ -318,3 +319,23 @@ class CRUDTestCase(StudioAPITestCase):
             reverse("invitation-detail", kwargs={"pk": invitation.id})
         )
         self.assertEqual(response.status_code, 405, response.content)
+
+    def test_update_invitation_decline(self):
+        invitation = models.Invitation.objects.create(**self.invitation_db_metadata)
+
+        self.client.force_authenticate(user=self.invited_user)
+        response = self.client.post(reverse("invitation-decline", kwargs={"pk": invitation.id}))
+        self.assertEqual(response.status_code, 200, response.content)
+        try:
+            invitation = models.Invitation.objects.get(id=invitation.id)
+        except models.Invitation.DoesNotExist:
+            self.fail("Invitation was deleted")
+
+        self.assertTrue(invitation.declined)
+        self.assertFalse(self.channel.editors.filter(pk=self.invited_user.id).exists())
+        self.assertTrue(
+            models.Invitation.objects.filter(
+                email=self.invited_user.email, channel=self.channel
+            ).exists()
+        )
+        self.assertTrue(models.Change.objects.filter(channel=self.channel).exists())

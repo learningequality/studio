@@ -9,7 +9,6 @@
             @click="handleBackToBrowse"
           />
         </div>
-
         <!-- Search bar -->
         <VLayout row wrap class="mt-4 px-2">
           <VFlex style="max-width: 700px">
@@ -22,6 +21,7 @@
                 box
                 clearable
                 hideDetails
+                @click:clear="handleBackToBrowse"
               >
                 <template #prepend-inner>
                   <Icon icon="search" />
@@ -42,6 +42,15 @@
             </VForm>
           </VFlex>
         </VLayout>
+
+        <div class="my-2 px-2">
+          <ActionLink
+            class="mb-3"
+            :text="$tr('savedSearchesLabel')"
+            :disabled="!savedSearchesExist"
+            @click="showSavedSearches = true"
+          />
+        </div>
 
         <!-- Search or Topics Browsing -->
         <ChannelList
@@ -66,6 +75,7 @@
           @copy_to_clipboard="handleCopyToClipboard"
         />
       </VSheet>
+      <SavedSearchesModal v-model="showSavedSearches" />
     </template>
   </ImportFromChannelsModal>
 
@@ -74,11 +84,12 @@
 
 <script>
 
-  import { mapActions, mapMutations, mapState } from 'vuex';
+  import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
   import { RouteNames } from '../../constants';
   import ChannelList from './ChannelList';
   import ContentTreeList from './ContentTreeList';
   import SearchResultsList from './SearchResultsList';
+  import SavedSearchesModal from './SavedSearchesModal';
   import ImportFromChannelsModal from './ImportFromChannelsModal';
   import { withChangeTracker } from 'shared/data/changes';
 
@@ -89,6 +100,7 @@
       ContentTreeList,
       SearchResultsList,
       ChannelList,
+      SavedSearchesModal,
     },
     data() {
       return {
@@ -96,9 +108,11 @@
         topicNode: null,
         copyNode: null,
         languageFromChannelList: null,
+        showSavedSearches: false,
       };
     },
     computed: {
+      ...mapGetters('importFromChannels', ['savedSearchesExist']),
       ...mapState('importFromChannels', ['selected']),
       isBrowsing() {
         return this.$route.name === RouteNames.IMPORT_FROM_CHANNELS_BROWSE;
@@ -122,15 +136,23 @@
         );
       },
     },
+    beforeRouteEnter(to, from, next) {
+      next(vm => {
+        vm.searchTerm = to.params.searchTerm || '';
+        vm.showSavedSearches = false;
+      });
+    },
+    beforeRouteUpdate(to, from, next) {
+      this.searchTerm = to.params.searchTerm || '';
+      this.showSavedSearches = false;
+      next();
+    },
     beforeRouteLeave(to, from, next) {
       // Clear selections if going back to TreeView
       if (to.name === RouteNames.TREE_VIEW) {
         this.$store.commit('importFromChannels/CLEAR_NODES');
       }
       next();
-    },
-    mounted() {
-      this.searchTerm = this.$route.params.searchTerm || '';
     },
     methods: {
       ...mapActions('clipboard', ['copy']),
@@ -196,6 +218,7 @@
       backToBrowseAction: 'Back to browse',
       searchLabel: 'Search for resources…',
       searchAction: 'Search',
+      savedSearchesLabel: 'View saved searches',
 
       // Copy strings
       // undo: 'Undo',

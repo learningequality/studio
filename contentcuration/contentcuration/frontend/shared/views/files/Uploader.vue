@@ -14,7 +14,7 @@
       ref="fileUpload"
       style="display: none;"
       type="file"
-      :accept="acceptedMimetypes"
+      :accept="acceptedFileTypes"
       :multiple="allowMultiple"
       data-test="upload-dialog"
       @change="handleFiles($event.target.files)"
@@ -129,8 +129,12 @@
             : !fp.supplementary && (!this.displayOnly || fp.display)
         );
       },
-      acceptedMimetypes() {
-        return flatMap(this.acceptedFiles, f => f.associated_mimetypes).join(',');
+      acceptedFileTypes() {
+        return uniq(
+          flatMap(this.acceptedFiles, f => f.associated_mimetypes).concat(
+            this.acceptedExtensions.map(ext => `.${ext}`)
+          )
+        ).join(',');
       },
       acceptedExtensions() {
         return uniq(flatMap(this.acceptedFiles, f => f.allowed_formats));

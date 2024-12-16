@@ -27,8 +27,8 @@ var/
 .vscode/
 
 # IntelliJ IDE, except project config
-.idea/*
-!.idea/studio.iml
+.idea/
+/*.iml
 # ignore future updates to run configuration
 .run/devserver.run.xml
 
@@ -128,7 +128,7 @@ webpack-stats\.json
 storybook-static/
 
 # i18n
-/contentcuration/locale/CSV_FILES/*
+/contentcuration/locale/**/LC_MESSAGES/*.csv
 
 # pyenv
 .python-version

@@ -15,6 +15,7 @@
     :search-input.sync="languageInput"
     v-bind="$attrs"
     @change="languageInput = ''"
+    @blur="resetScroll"
   >
     <template #selection="{ item }">
       <VTooltip bottom lazy>
@@ -29,7 +30,14 @@
       </VTooltip>
     </template>
     <template #item="{ item }">
-      <Checkbox :key="item.id" :input-value="value" :value="item.id" class="mb-0 mt-1">
+      <Checkbox
+        :key="item.id"
+        :ref="'checkbox-' + item.id"
+        v-model="languages"
+        :value="item.id"
+        class="mb-0 mt-1 scroll-margin"
+        :labelDir="null"
+      >
         <VTooltip bottom lazy>
           <template #activator="{ on }">
             <div class="text-truncate" style="width: 250px;" v-on="on">
@@ -95,6 +103,17 @@
       languageSearchValue(item) {
         return item.name + (item.related_names || []).join('') + item.id;
       },
+      resetScroll() {
+        const [{ id: firstLangId } = {}] = publicLanguages;
+        if (!firstLangId) {
+          return;
+        }
+        const firstItem = this.$refs[`checkbox-${firstLangId}`];
+        if (!firstItem) {
+          return;
+        }
+        firstItem.$el.scrollIntoView();
+      },
     },
     $trs: {
       languageLabel: 'Languages',
@@ -116,6 +135,11 @@
   /deep/ .v-chip__content,
   .text-truncate {
     max-width: 100%;
+  }
+
+  .scroll-margin {
+    /* Fixes scroll position on reset scroll */
+    scroll-margin: 16px;
   }
 
 </style>

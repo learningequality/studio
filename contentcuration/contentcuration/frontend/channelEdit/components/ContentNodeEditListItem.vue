@@ -30,7 +30,7 @@
           <VListTileAction class="handle-col" :aria-hidden="!hover" @click.stop>
             <transition name="fade">
               <VBtn :disabled="copying" flat icon>
-                <Icon :color="$themePalette.grey.v_600" icon="dragVertical" />
+                <Icon :color="$themePalette.grey.v_700" icon="dragVertical" />
               </VBtn>
             </transition>
           </VListTileAction>
@@ -45,7 +45,7 @@
         </template>
 
         <template #actions-end>
-          <VListTileAction class="action-icon px-1" @click.stop>
+          <VListTileAction v-if="canEdit" class="action-icon px-1" @click.stop>
             <transition name="fade">
               <IconButton
                 icon="rename"
@@ -258,6 +258,7 @@
       retryFailedCopy: withChangeTracker(function(changeTracker) {
         this.updateContentNode({
           id: this.nodeId,
+          checkComplete: true,
           [COPYING_STATUS]: COPYING_STATUS_VALUES.COPYING,
         });
 
@@ -299,7 +300,7 @@
       creatingCopies: 'Copying...',
       copiedSnackbar: 'Copy operation complete',
       undo: 'Undo',
-      editTooltip: 'Edit Title & Description',
+      editTooltip: 'Edit title and description',
     },
   };
 

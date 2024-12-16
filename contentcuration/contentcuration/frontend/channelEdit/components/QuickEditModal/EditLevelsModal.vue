@@ -7,7 +7,7 @@
     :nodeIds="nodeIds"
     :confirmationMessage="changesSaved"
     :resourcesSelectedText="resourcesSelectedText"
-    @close="() => $emit('close')"
+    v-on="$listeners"
   >
     <template #input="{ value, inputHandler }">
       <LevelsOptions
@@ -52,7 +52,7 @@
       },
     },
     $trs: {
-      editLevelsTitle: 'Edit Levels',
+      editLevelsTitle: 'Edit levels',
     },
   };
 

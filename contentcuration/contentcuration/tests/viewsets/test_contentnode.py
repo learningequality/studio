@@ -28,8 +28,8 @@ from contentcuration.tests.viewsets.base import generate_copy_event
 from contentcuration.tests.viewsets.base import generate_create_event
 from contentcuration.tests.viewsets.base import generate_delete_event
 from contentcuration.tests.viewsets.base import generate_publish_channel_event
-from contentcuration.tests.viewsets.base import generate_update_event
 from contentcuration.tests.viewsets.base import generate_update_descendants_event
+from contentcuration.tests.viewsets.base import generate_update_event
 from contentcuration.tests.viewsets.base import SyncTestMixin
 from contentcuration.utils.db_tools import TreeBuilder
 from contentcuration.viewsets.channel import _unpublished_changes_query
@@ -580,11 +580,9 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         root_node = testdata.tree(parent=self.channel.main_tree)
 
         descendants = root_node.get_descendants(include_self=True)
-        # Fix undefined extra_fields
-        descendants.exclude(kind_id=content_kinds.TOPIC).update(extra_fields={})
 
         new_language = "es"
-        
+
         response = self.sync_changes(
             [generate_update_descendants_event(root_node.id, {"language": new_language}, channel_id=self.channel.id)],
         )
@@ -595,12 +593,12 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
             language = models.ContentNode.objects.get(id=descendant.id).language
             language = str(language)
             self.assertEqual(language, new_language)
-    
+
     def test_cannot_update_descendants_when_updating_non_topic_node(self):
         root_node = testdata.tree()
         video_node = root_node.get_descendants().filter(kind_id=content_kinds.VIDEO).first()
         new_language = "pt"
-        
+
         response = self.sync_changes(
             [generate_update_descendants_event(video_node.id, {"language": new_language}, channel_id=self.channel.id)],
         )
@@ -609,7 +607,7 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         self.assertNotEqual(
             models.ContentNode.objects.get(id=video_node.id).language, new_language
         )
-    
+
     def test_update_contentnode_exercise_mastery_model(self):
         metadata = self.contentnode_db_metadata
         metadata["kind_id"] = content_kinds.EXERCISE
@@ -1058,6 +1056,17 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         self.assertEqual(response.status_code, 200, response.content)
         self.assertEqual(
             models.ContentNode.objects.get(id=contentnode.id).suggested_duration, new_suggested_duration
+        )
+
+    def test_update_contentnode_extra_fields_inherited_metadata(self):
+        contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
+
+        response = self.sync_changes(
+            [generate_update_event(contentnode.id, CONTENTNODE, {"extra_fields.inherited_metadata.categories": True}, channel_id=self.channel.id)],
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertTrue(
+            models.ContentNode.objects.get(id=contentnode.id).extra_fields["inherited_metadata"]["categories"]
         )
 
     def test_update_contentnode_tags_dont_duplicate(self):

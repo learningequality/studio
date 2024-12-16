@@ -66,6 +66,11 @@
               </tr>
             </template>
           </VDataTable>
+          <div class="show-more-button-container">
+            <KButton v-if="more" :disabled="moreLoading" @click="loadMore">
+              {{ showMoreLabel }}
+            </KButton>
+          </div>
         </VCard>
       </VContainer>
       <ResourceDrawer
@@ -127,6 +132,7 @@
 
   import { mapActions, mapGetters } from 'vuex';
   import sortBy from 'lodash/sortBy';
+  import NodePanel from '../NodePanel';
   import MoveModal from '../../components/move/MoveModal';
   import ResourceDrawer from '../../components/ResourceDrawer';
   import { RouteNames } from '../../constants';
@@ -136,6 +142,9 @@
   import LoadingText from 'shared/views/LoadingText';
   import FullscreenModal from 'shared/views/FullscreenModal';
   import { titleMixin, routerMixin } from 'shared/mixins';
+  import { crossComponentTranslator } from 'shared/i18n';
+
+  const showMoreTranslator = crossComponentTranslator(NodePanel);
 
   export default {
     name: 'TrashModal',
@@ -159,6 +168,8 @@
       return {
         dialog: true,
         loading: false,
+        more: null,
+        moreLoading: false,
         previewNodeId: null,
         selected: [],
         showConfirmationDialog: false,
@@ -190,7 +201,7 @@
         ];
       },
       items() {
-        return sortBy(this.getContentNodeChildren(this.trashId), 'modified').reverse();
+        return sortBy(this.getContentNodeChildren(this.trashId), 'modified');
       },
       backLink() {
         return {
@@ -201,6 +212,10 @@
       counts() {
         return this.getTopicAndResourceCounts(this.selected);
       },
+      showMoreLabel() {
+        // eslint-disable-next-line kolibri/vue-no-undefined-string-uses
+        return showMoreTranslator.$tr('showMore');
+      },
     },
     watch: {
       dialog(newValue) {
@@ -210,21 +225,12 @@
       },
     },
     created() {
-      Promise.all([
-        this.loadContentNodes({ parent__in: [this.rootId] }),
+      this.loadContentNodes({ parent__in: [this.rootId] }),
         this.loadAncestors({ id: this.nodeId }),
-      ]);
+        this.loadNodes();
     },
     mounted() {
-      this.loading = true;
-      if (!this.trashId) {
-        this.loading = false;
-        return;
-      }
       this.updateTabTitle(this.$store.getters.appendChannelName(this.$tr('trashModalTitle')));
-      this.loadChildren({ parent: this.trashId }).then(() => {
-        this.loading = false;
-      });
     },
     methods: {
       ...mapActions('contentNode', [
@@ -234,10 +240,27 @@
         'loadContentNodes',
         'loadAncestors',
       ]),
+      loadNodes() {
+        this.loading = true;
+        if (!this.trashId) {
+          this.loading = false;
+          return;
+        }
+        this.loadChildren({ parent: this.trashId }).then(childrenResponse => {
+          this.loading = false;
+          this.more = childrenResponse.more || null;
+        });
+      },
       moveNodes(target) {
-        return this.moveContentNodes({ id__in: this.selected, parent: target }).then(() => {
+        return this.moveContentNodes({
+          id__in: this.selected,
+          parent: target,
+          inherit: false,
+        }).then(() => {
           this.reset();
           this.$refs.moveModal && this.$refs.moveModal.moveComplete();
+          // Reload after this to ensure that anything over the pagination fold is loaded now
+          this.loadNodes();
         });
       },
       reset() {
@@ -250,6 +273,8 @@
           this.showConfirmationDialog = false;
           this.reset();
           this.$store.dispatch('showSnackbar', { text });
+          // Reload after this to ensure that anything over the pagination fold is loaded now
+          this.loadNodes();
         });
       },
       toggleSelectAll(selectAll) {
@@ -257,6 +282,15 @@
       },
       getItemBackground(id) {
         return this.previewNodeId === id ? this.$vuetify.theme.greyBackground : 'transparent';
+      },
+      loadMore() {
+        if (this.more && !this.moreLoading) {
+          this.moreLoading = true;
+          this.loadContentNodes(this.more).then(response => {
+            this.more = response.more || null;
+            this.moreLoading = false;
+          });
+        }
       },
     },
     $trs: {
@@ -278,5 +312,11 @@
 
 </script>
 <style lang="less" scoped>
+
+  .show-more-button-container {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+  }
 
 </style>

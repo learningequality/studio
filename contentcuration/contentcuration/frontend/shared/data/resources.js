@@ -47,6 +47,7 @@ import { currentLanguage } from 'shared/i18n';
 import client, { paramsSerializer } from 'shared/client';
 import { DELAYED_VALIDATION, fileErrors, NEW_OBJECT } from 'shared/constants';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
+import { getMergedMapFields } from 'shared/utils/helpers';
 
 // Number of seconds after which data is considered stale.
 const REFRESH_INTERVAL = 5;
@@ -257,6 +258,10 @@ class IndexedDBResource {
           inheritedChanges.push(
             ...parentChanges.map(change => ({
               ...change,
+              mods: {
+                ...change.mods,
+                ...getMergedMapFields(item, change.mods),
+              },
               key: item.id,
               type: CHANGE_TYPES.UPDATED,
             }))
@@ -267,14 +272,24 @@ class IndexedDBResource {
     return inheritedChanges;
   }
 
-  mergeDescendantsChanges(changes, inheritedChanges) {
+  mergeDescendantsChanges(changes, inheritedChanges, itemData) {
     if (inheritedChanges.length) {
       changes.push(...inheritedChanges);
       changes = sortBy(changes, 'rev');
     }
     changes
       .filter(change => change.type === CHANGE_TYPES.UPDATED_DESCENDANTS)
-      .forEach(change => (change.type = CHANGE_TYPES.UPDATED));
+      .forEach(change => {
+        change.type = CHANGE_TYPES.UPDATED;
+        const item = itemData.find(i => i.id === change.key);
+        if (!item) {
+          return;
+        }
+        change.mods = {
+          ...change.mods,
+          ...getMergedMapFields(item, change.mods),
+        };
+      });
 
     return changes;
   }
@@ -296,7 +311,7 @@ class IndexedDBResource {
 
       return Promise.all([changesPromise, inheritedChangesPromise, currentPromise]).then(
         ([changes, inheritedChanges, currents]) => {
-          changes = this.mergeDescendantsChanges(changes, inheritedChanges);
+          changes = this.mergeDescendantsChanges(changes, inheritedChanges, itemData);
           changes = mergeAllChanges(changes, true);
           const collectedChanges = collectChanges(changes)[this.tableName] || {};
           for (const changeType of Object.keys(collectedChanges)) {
@@ -754,12 +769,10 @@ class Resource extends mix(APIResource, IndexedDBResource) {
   }
 
   savePagination(queryString, more) {
-    if (more) {
-      return this.transaction({ mode: 'rw' }, PAGINATION_TABLE, () => {
-        return db[PAGINATION_TABLE].put({ table: this.tableName, queryString, more });
-      });
-    }
-    return Promise.resolve();
+    return this.transaction({ mode: 'rw' }, PAGINATION_TABLE, () => {
+      // Always save the pagination even if null, so we know we have fetched it
+      return db[PAGINATION_TABLE].put({ table: this.tableName, queryString, more });
+    });
   }
 
   loadPagination(queryString) {
@@ -1761,9 +1774,14 @@ export const ContentNode = new TreeResource({
    * @param {Function} updateCallback
    * @return {Promise<void>}
    */
-  updateAncestors({ id, includeSelf = false, ignoreChanges = false }, updateCallback) {
-    return this.transaction({ mode: 'rw' }, async () => {
-      const ancestors = await this.getAncestors(id);
+  async updateAncestors({ id, includeSelf = false, ignoreChanges = false }, updateCallback) {
+    // getAncestors invokes a non-Dexie API, so it must be called outside the transaction.
+    // Invoking it within a transaction can lead to transaction-related issues, including premature
+    // commit errors, which are a common problem when mixing non-Dexie API calls with transactions.
+    // See: https://dexie.org/docs/DexieErrors/Dexie.PrematureCommitError
+    const ancestors = await this.getAncestors(id);
+
+    return await this.transaction({ mode: 'rw' }, async () => {
       for (const ancestor of ancestors) {
         if (ancestor.id === id && !includeSelf) {
           continue;
@@ -1884,20 +1902,35 @@ export const ContentNode = new TreeResource({
    * @returns {Promise<string[]>}
    *
    */
-  async getLoadedDescendantsIds(id) {
+  async getLoadedDescendants(id) {
+    const [node] = await this.table.where({ id }).toArray();
+    if (!node) {
+      return [];
+    }
     const children = await this.table.where({ parent: id }).toArray();
     if (!children.length) {
-      return [id];
+      return [node];
     }
     const descendants = await Promise.all(
       children.map(child => {
         if (child.kind === ContentKindsNames.TOPIC) {
-          return this.getLoadedDescendantsIds(child.id);
+          return this.getLoadedDescendants(child.id);
         }
-        return child.id;
+        return child;
       })
     );
-    return [id].concat(flatMap(descendants, d => d));
+    return [node].concat(flatMap(descendants, d => d));
+  },
+  async applyChangesToLoadedDescendants(id, changes) {
+    const descendants = await this.getLoadedDescendants(id);
+    return Promise.all(
+      descendants.map(descendant => {
+        return this.table.update(descendant.id, {
+          ...changes,
+          ...getMergedMapFields(descendant, changes),
+        });
+      })
+    );
   },
   /**
    * Update a node and all its descendants that are already loaded in IndexedDB
@@ -1909,12 +1942,7 @@ export const ContentNode = new TreeResource({
     return this.transaction({ mode: 'rw' }, CHANGES_TABLE, async () => {
       changes = this._cleanNew(changes);
 
-      // Update node descendants that are already loaded
-      const ids = await this.getLoadedDescendantsIds(id);
-      await this.table
-        .where('id')
-        .anyOf(...ids)
-        .modify(changes);
+      await this.applyChangesToLoadedDescendants(id, changes);
 
       return this._updateDescendantsChange(id, changes);
     });
@@ -1934,7 +1962,14 @@ export const Invitation = new Resource({
 
   accept(id) {
     const changes = { accepted: true };
-    return client.post(window.Urls.invitationAccept(id), changes).then(() => {
+    return this._handleInvitation(id, window.Urls.invitationAccept(id), changes);
+  },
+  decline(id) {
+    const changes = { declined: true };
+    return this._handleInvitation(id, window.Urls.invitationDecline(id), changes);
+  },
+  _handleInvitation(id, url, changes) {
+    return client.post(url).then(() => {
       return this.transaction({ mode: 'rw' }, () => {
         return this.table.update(id, changes);
       });
@@ -1963,7 +1998,7 @@ export const User = new Resource({
   uuid: false,
 
   updateAsAdmin(id, changes) {
-    return client.post(window.Urls.adminUsersAccept(id)).then(() => {
+    return client.patch(window.Urls.adminUsersDetail(id), changes).then(() => {
       return this.transaction({ mode: 'rw' }, () => {
         return this.table.update(id, changes);
       });

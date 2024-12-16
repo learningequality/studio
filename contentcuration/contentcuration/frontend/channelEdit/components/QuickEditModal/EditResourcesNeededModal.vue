@@ -7,7 +7,7 @@
     :nodeIds="nodeIds"
     :confirmationMessage="changesSaved"
     :resourcesSelectedText="resourcesSelectedText"
-    @close="() => $emit('close')"
+    v-on="$listeners"
   >
     <template #input="{ value, inputHandler }">
       <ResourcesNeededOptions
@@ -52,7 +52,7 @@
       },
     },
     $trs: {
-      editResourcesNeededTitle: 'What will you need?',
+      editResourcesNeededTitle: 'Edit requirements',
     },
   };
 

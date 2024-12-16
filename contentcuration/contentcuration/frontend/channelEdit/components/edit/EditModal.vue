@@ -64,13 +64,18 @@
                   <VBtn v-if="addTopicsMode" color="greyBackground" @click="createTopic">
                     {{ $tr('addTopic') }}
                   </VBtn>
-                  <VBtn v-else-if="uploadMode" color="greyBackground" @click="openFileDialog">
+                  <VBtn
+                    v-else-if="uploadMode"
+                    :disabled="creatingNodes"
+                    color="greyBackground"
+                    @click="openFileDialog"
+                  >
                     {{ $tr('uploadButton') }}
                   </VBtn>
                 </ToolBar>
                 <div ref="list">
                   <EditList
-                    v-model="selected"
+                    v-model="currentSelectedNodes"
                     :nodeIds="nodeIds"
                     @input="enableValidation(nodeIds);"
                   />
@@ -96,12 +101,13 @@
               <EditView
                 v-else
                 ref="editView"
-                :nodeIds="selected"
+                :nodeIds="currentSelectedNodes"
                 :tab="tab"
               />
             </VContent>
           </template>
         </Uploader>
+
       </VCard>
       <BottomBar v-if="!loading && !loadError && !showFileUploadDefault">
         <VLayout row align-center fill-height class="px-2">
@@ -121,8 +127,11 @@
           </VFlex>
         </VLayout>
       </BottomBar>
-      <AboutLicensesModal
-        v-if="isAboutLicensesModalOpen"
+      <InheritAncestorMetadataModal
+        ref="inheritModal"
+        :parent="(createMode && detailNodeIds.length) ? parent : null"
+        @inherit="inheritMetadata"
+        @updateActive="active => isInheritModalOpen = active"
       />
     </VDialog>
 
@@ -133,7 +142,7 @@
       :text="$tr('invalidNodesFoundText')"
     >
       <template #buttons="{ close }">
-        <VBtn flat data-test="saveanyways" color="primary" @click="closeModal">
+        <VBtn flat data-test="saveanyways" color="primary" @click="closeModal(true)">
           {{ $tr('saveAnywaysButton') }}
         </VBtn>
         <VBtn color="primary" @click="close">
@@ -185,11 +194,11 @@
   import SavingIndicator from './SavingIndicator';
   import EditView from './EditView';
   import EditList from './EditList';
+  import InheritAncestorMetadataModal from './InheritAncestorMetadataModal';
   import { ContentKindLearningActivityDefaults } from 'shared/leUtils/ContentKinds';
   import { fileSizeMixin, routerMixin } from 'shared/mixins';
   import FileStorage from 'shared/views/files/FileStorage';
   import MessageDialog from 'shared/views/MessageDialog';
-  import AboutLicensesModal from 'shared/views/AboutLicensesModal';
   import ResizableNavigationDrawer from 'shared/views/ResizableNavigationDrawer';
   import Uploader from 'shared/views/files/Uploader';
   import LoadingText from 'shared/views/LoadingText';
@@ -210,6 +219,7 @@
       EditView,
       ResizableNavigationDrawer,
       Uploader,
+      InheritAncestorMetadataModal,
       FileStorage,
       FileUploadDefault,
       LoadingText,
@@ -219,7 +229,6 @@
       SavingIndicator,
       ToolBar,
       BottomBar,
-      AboutLicensesModal,
     },
     mixins: [fileSizeMixin, routerMixin],
     props: {
@@ -249,10 +258,13 @@
         promptFailed: false,
         listElevated: false,
         storagePoll: null,
+        openTime: null,
+        isInheritModalOpen: false,
+        newNodeIds: [],
+        creatingNodes: false,
       };
     },
     computed: {
-      ...mapGetters(['isAboutLicensesModalOpen']),
       ...mapGetters('contentNode', ['getContentNode', 'getContentNodeIsValid']),
       ...mapGetters('assessmentItem', ['getAssessmentItems']),
       ...mapGetters('currentChannel', ['currentChannel', 'canEdit']),
@@ -270,11 +282,12 @@
       uploadMode() {
         return this.$route.name === RouteNames.UPLOAD_FILES;
       },
-      /* eslint-disable kolibri/vue-no-unused-properties */
       createExerciseMode() {
         return this.$route.name === RouteNames.ADD_EXERCISE;
       },
-      /* eslint-enable */
+      createMode() {
+        return this.addTopicsMode || this.uploadMode || this.createExerciseMode;
+      },
       editMode() {
         return this.$route.name === RouteNames.CONTENTNODE_DETAILS;
       },
@@ -303,12 +316,25 @@
         }
         return this.$tr('editingDetailsHeader');
       },
+      parent() {
+        return this.$route.params.nodeId && this.getContentNode(this.$route.params.nodeId);
+      },
       parentTitle() {
-        const node = this.$route.params.nodeId && this.getContentNode(this.$route.params.nodeId);
-        return node ? node.title : '';
+        return this.parent ? this.parent.title : '';
       },
       invalidNodes() {
         return this.nodeIds.filter(id => !this.getContentNodeIsValid(id));
+      },
+      currentSelectedNodes: {
+        get() {
+          if (this.isInheritModalOpen && this.newNodeIds.length) {
+            return this.newNodeIds;
+          }
+          return this.selected;
+        },
+        set(value) {
+          this.selected = value;
+        },
       },
     },
     beforeRouteEnter(to, from, next) {
@@ -373,7 +399,11 @@
 
                 if (completeCheck !== node.complete) {
                   validationPromises.push(
-                    vm.updateContentNode({ id: nodeId, complete: completeCheck })
+                    vm.updateContentNode({
+                      id: nodeId,
+                      complete: completeCheck,
+                      checkComplete: true,
+                    })
                   );
                 }
               });
@@ -387,6 +417,14 @@
       this.hideHTMLScroll(true);
       this.selected = this.targetNodeId ? [this.targetNodeId] : this.nodeIds;
       this.storagePoll = setInterval(this.fetchUserStorage, CHECK_STORAGE_INTERVAL);
+      this.openTime = new Date().getTime();
+
+      if (!this.uploadMode) {
+        this.$analytics.trackAction('legacy_edit', 'Open', {
+          eventLabel: this.$route.name,
+          numEditNodes: this.nodeIds.length,
+        });
+      }
     },
     methods: {
       ...mapActions(['fetchUserStorage']),
@@ -400,7 +438,15 @@
       ...mapActions('file', ['loadFiles', 'updateFile']),
       ...mapActions('assessmentItem', ['loadAssessmentItems', 'updateAssessmentItems']),
       ...mapMutations('contentNode', { enableValidation: 'ENABLE_VALIDATION_ON_NODES' }),
-      closeModal() {
+      closeModal(changed = false) {
+        if (!this.uploadMode) {
+          const eventAction = changed ? 'Save' : 'Close';
+          this.$analytics.trackAction('legacy_edit', eventAction, {
+            eventLabel: this.$route.name,
+            secondsOpen: Math.ceil((new Date().getTime() - this.openTime) / 1000),
+          });
+        }
+
         this.promptUploading = false;
         this.promptInvalid = false;
         this.promptFailed = false;
@@ -411,7 +457,10 @@
         this.hideHTMLScroll(false);
         this.$router.push({
           name: RouteNames.TREE_VIEW,
-          params: { nodeId: this.$route.params.nodeId },
+          params: {
+            nodeId: this.$route.params.nodeId,
+            addedCount: this.nodeIds.length,
+          },
         });
       },
       hideHTMLScroll(hidden) {
@@ -439,7 +488,7 @@
           // before the validation pop up is executed
           if (this.$refs.editView) {
             this.$nextTick(() => {
-              this.$refs.editView.immediateSaveAll().then(() => {
+              this.$refs.editView.immediateSaveAll().then(changed => {
                 // Catch uploads in progress and invalid nodes
                 if (this.invalidNodes.length) {
                   this.selected = [this.invalidNodes[0]];
@@ -447,7 +496,7 @@
                 } else if (this.contentNodesAreUploading(this.nodeIds)) {
                   this.promptUploading = true;
                 } else {
-                  this.closeModal();
+                  this.closeModal(changed);
                 }
               });
             });
@@ -485,28 +534,37 @@
           return newNodeId;
         });
       },
+      resetInheritMetadataModal() {
+        this.$refs.inheritModal?.checkInheritance();
+      },
       createTopic() {
         this.createNode('topic', {
           title: '',
         }).then(newNodeId => {
           this.selected = [newNodeId];
+          this.$nextTick(() => {
+            this.resetInheritMetadataModal();
+          });
         });
       },
-      createNodesFromUploads(fileUploads) {
-        fileUploads.forEach((file, index) => {
-          let title;
-          if (file.metadata.title) {
-            title = file.metadata.title;
-          } else {
-            title = file.original_filename
-              .split('.')
-              .slice(0, -1)
-              .join('.');
-          }
-          this.createNode(
-            FormatPresets.has(file.preset) && FormatPresets.get(file.preset).kind_id,
-            { title, ...file.metadata }
-          ).then(newNodeId => {
+      async createNodesFromUploads(fileUploads) {
+        this.creatingNodes = true;
+        const parentPropDefinedForInheritModal = Boolean(this.$refs.inheritModal?.parent);
+        this.newNodeIds = await Promise.all(
+          fileUploads.map(async (file, index) => {
+            let title;
+            if (file.metadata.title) {
+              title = file.metadata.title;
+            } else {
+              title = file.original_filename
+                .split('.')
+                .slice(0, -1)
+                .join('.');
+            }
+            const newNodeId = await this.createNode(
+              FormatPresets.has(file.preset) && FormatPresets.get(file.preset).kind_id,
+              { title, ...file.metadata }
+            );
             if (index === 0) {
               this.selected = [newNodeId];
             }
@@ -514,8 +572,15 @@
               ...file,
               contentnode: newNodeId,
             });
-          });
-        });
+            return newNodeId;
+          })
+        );
+        this.creatingNodes = false;
+        if (parentPropDefinedForInheritModal) {
+          // Only call this if the parent prop was previously defined, otherwise,
+          // rely on the parent prop watcher to trigger the inherit event.
+          this.resetInheritMetadataModal();
+        }
       },
       updateTitleForPage() {
         this.updateTabTitle(this.$store.getters.appendChannelName(this.modalTitle));
@@ -524,6 +589,34 @@
         this.$analytics.trackAction('file_uploader', 'Add files', {
           eventLabel: 'Upload file',
         });
+      },
+      inheritMetadata(metadata) {
+        if (!this.createMode) {
+          // This shouldn't happen, but prevent this just in case.
+          return;
+        }
+        const setMetadata = () => {
+          const nodeIds = this.uploadMode ? this.newNodeIds : this.selected;
+          for (const nodeId of nodeIds) {
+            this.updateContentNode({
+              id: nodeId,
+              ...metadata,
+              mergeMapFields: true,
+              checkComplete: true,
+            });
+          }
+          this.newNodeIds = [];
+        };
+        if (!this.creatingNodes) {
+          setMetadata();
+        } else {
+          const unwatch = this.$watch('creatingNodes', creatingNodes => {
+            if (!creatingNodes) {
+              unwatch();
+              setMetadata();
+            }
+          });
+        }
       },
     },
     $trs: {

@@ -2,7 +2,7 @@ import partition from 'lodash/partition';
 import { ImportSearchPageSize } from '../../constants';
 import client from 'shared/client';
 import urls from 'shared/urls';
-import { NOVALUE, ChannelListTypes } from 'shared/constants';
+import { ChannelListTypes } from 'shared/constants';
 
 import { Channel, SavedSearch } from 'shared/data/resources';
 
@@ -103,18 +103,6 @@ export function createSearch({ commit, rootState }, params) {
     });
     return id;
   });
-}
-
-export function updateSearch({ commit }, { id, name = NOVALUE } = {}) {
-  const searchData = {};
-  if (!id) {
-    throw ReferenceError('id must be defined to update a saved search');
-  }
-  if (name !== NOVALUE) {
-    searchData.name = name;
-  }
-  commit('UPDATE_SAVEDSEARCH', { id, ...searchData });
-  return SavedSearch.update(id, searchData);
 }
 
 export function deleteSearch({ commit }, searchId) {

@@ -69,6 +69,10 @@ class ExportChannelTestCase(StudioTestCase):
         super(ExportChannelTestCase, self).setUp()
         self.content_channel = channel()
 
+        # Make a ricecooker channel to test inheritance behaviour
+        self.content_channel.ricecooker_version = "0.7.1"
+        self.content_channel.save()
+
         # Add some incomplete nodes to ensure they don't get published.
         new_node = create_node({'kind_id': 'topic', 'title': 'Incomplete topic', 'children': []})
         new_node.complete = False

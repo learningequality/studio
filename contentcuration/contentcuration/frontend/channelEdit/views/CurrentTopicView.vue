@@ -165,11 +165,7 @@
             @deselect="selected = selected.filter(id => id !== $event)"
             @scroll="scroll"
             @editTitleDescription="showTitleDescriptionModal"
-          >
-            <template #pagination>
-              <slot name="pagination"></slot>
-            </template>
-          </NodePanel>
+          />
         </DraggableRegion>
       </VFadeTransition>
       <ResourceDrawer
@@ -217,14 +213,20 @@
         </template>
       </ResourceDrawer>
     </VLayout>
+    <InheritAncestorMetadataModal
+      ref="inheritModal"
+      :parent="inheritanceParent"
+      @inherit="inheritMetadata"
+    />
   </VContainer>
 
 </template>
 
 <script>
 
-  import { mapActions, mapGetters, mapState } from 'vuex';
+  import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
   import get from 'lodash/get';
+  import InheritAncestorMetadataModal from '../components/edit/InheritAncestorMetadataModal';
   import MoveModal from '../components/move/MoveModal';
   import ContentNodeOptions from '../components/ContentNodeOptions';
   import ResourceDrawer from '../components/ResourceDrawer';
@@ -263,6 +265,7 @@
       Checkbox,
       MoveModal,
       DraggableRegion,
+      InheritAncestorMetadataModal,
     },
     mixins: [titleMixin, routerMixin],
     props: {
@@ -305,6 +308,7 @@
         'getContentNodeChildren',
         'isNodeInCopyingState',
       ]),
+      ...mapState('contentNode', ['inheritingNodes']),
       ...mapGetters('clipboard', ['getCopyTrees']),
       ...mapGetters('draggable', ['activeDraggableRegionId']),
       selected: {
@@ -519,6 +523,22 @@
           width: '1px',
         };
       },
+      currentInheritingNodes() {
+        if (!this.inheritingNodes) {
+          return [];
+        }
+        // Handle inheritance modals one parent at a time.
+        const firstNode = this.inheritingNodes[0];
+        return this.inheritingNodes.filter(n => n.parent === firstNode.parent);
+      },
+      inheritanceParent() {
+        const firstNode = this.currentInheritingNodes[0];
+
+        if (!firstNode) {
+          return;
+        }
+        return this.getContentNode(firstNode.parent);
+      },
     },
     watch: {
       topicId: {
@@ -529,9 +549,13 @@
           this.elevated = false; // list starts at top, so don't elevate toolbar
           // NOTE: this may be redundant with the same call in TreeView.created
           // for initial page load
-          this.loadAncestors({ id: this.topicId }).then(() => {
-            this.updateTitleForPage();
-            this.loadingAncestors = false;
+          this.removeContentNodes({ parentId: this.topicId }).then(success => {
+            if (success) {
+              this.loadAncestors({ id: this.topicId }).then(() => {
+                this.updateTitleForPage();
+                this.loadingAncestors = false;
+              });
+            }
           });
         },
         immediate: true,
@@ -567,7 +591,10 @@
         'copyContentNode',
         'waitForCopyingStatus',
         'setQuickEditModal',
+        'updateContentNode',
+        'removeContentNodes',
       ]),
+      ...mapMutations('contentNode', ['CLEAR_INHERITING_NODES']),
       ...mapActions('clipboard', ['copyAll']),
       clearSelections() {
         this.selected = [];
@@ -593,6 +620,7 @@
           id__in: nodeIdsToMove,
           target: targetNode,
           position: targetPosition,
+          inherit: false,
         });
       },
 
@@ -699,6 +727,7 @@
       handleDragDrop(drop) {
         const { data } = drop;
         const { identity, section, relative } = data.target;
+        const targetMetadata = identity.metadata || {};
         const isTargetTree =
           drop.target && drop.target.region && drop.target.region.id === DraggableRegions.TREE;
 
@@ -715,7 +744,7 @@
           position = this.relativePosition(relative > DraggableFlags.NONE ? relative : section);
         } else {
           // Safety check
-          const { kind } = identity.metadata || {};
+          const { kind } = targetMetadata;
           if (kind && kind !== ContentKindsNames.TOPIC) {
             return Promise.reject('Cannot set child of non-topic');
           }
@@ -729,7 +758,7 @@
         const sources = drop.sources || [];
         const sourceRegion = sources.length > 0 ? sources[0].region : null;
         const payload = {
-          target: identity.metadata.id,
+          target: targetMetadata.id,
           position,
         };
 
@@ -738,7 +767,7 @@
           // `excluded_descendants` by accessing the copy trees through the clipboard node ID
           if (sourceRegion && sourceRegion.id === DraggableRegions.CLIPBOARD) {
             return Promise.all(
-              data.sources.map(source => {
+              sources.map(source => {
                 // Using `getCopyTrees` we can access the `excluded_descendants` for the node, such
                 // that we make sure to skip copying nodes that aren't intended to be copied
                 const trees = this.getCopyTrees(source.metadata.clipboardNodeId, true);
@@ -762,9 +791,27 @@
             );
           }
 
+          // We want to avoid launching the inherit modal when the move operation is a prepend or
+          // append move, and target is the current parent. When the move operation is relative to
+          // the target, that is left or right, we want only launch the modal if the parent is
+          // changing
+          let inherit = false;
+          if (
+            position === RELATIVE_TREE_POSITIONS.FIRST_CHILD ||
+            position === RELATIVE_TREE_POSITIONS.LAST_CHILD
+          ) {
+            inherit = !sources.some(s => s.metadata.parent === targetMetadata.id);
+          } else if (
+            position === RELATIVE_TREE_POSITIONS.LEFT ||
+            position === RELATIVE_TREE_POSITIONS.RIGHT
+          ) {
+            inherit = !sources.some(s => s.metadata.parent === targetMetadata.parent);
+          }
+
           return this.moveContentNodes({
             ...payload,
-            id__in: data.sources.map(s => s.metadata.id),
+            id__in: sources.map(s => s.metadata.id),
+            inherit,
           });
         }
       },
@@ -779,10 +826,13 @@
           : RELATIVE_TREE_POSITIONS.RIGHT;
       },
       moveNodes(target) {
-        return this.moveContentNodes({ id__in: this.selected, parent: target }).then(() => {
-          this.clearSelections();
-          this.$refs.moveModal.moveComplete();
-        });
+        // Always inherit here, as the move modal doesn't allow moving to the same parent.
+        return this.moveContentNodes({ id__in: this.selected, parent: target, inherit: true }).then(
+          () => {
+            this.clearSelections();
+            this.$refs.moveModal.moveComplete();
+          }
+        );
       },
       removeNodes: withChangeTracker(function(id__in, changeTracker) {
         this.trackClickEvent('Delete');
@@ -791,7 +841,7 @@
         if (id__in.includes(this.$route.params.detailNodeId)) {
           nextRoute = { params: { detailNodeId: null } };
         }
-        return this.moveContentNodes({ id__in, parent: this.trashId }).then(() => {
+        return this.moveContentNodes({ id__in, parent: this.trashId, inherit: false }).then(() => {
           this.clearSelections();
           if (nextRoute) {
             this.$router.replace(nextRoute);
@@ -894,6 +944,13 @@
           nodeId,
         };
       },
+      inheritMetadata(metadata) {
+        const nodeIds = this.currentInheritingNodes.map(n => n.id);
+        for (const nodeId of nodeIds) {
+          this.updateContentNode({ id: nodeId, ...metadata, mergeMapFields: true });
+        }
+        this.CLEAR_INHERITING_NODES(nodeIds);
+      },
     },
     $trs: {
       addTopic: 'New folder',
@@ -903,23 +960,23 @@
       importFromChannels: 'Import from channels',
       addButton: 'Add',
       editButton: 'Edit',
-      editSourceButton: 'Edit Source',
-      editLevelsButton: 'Edit Levels',
-      editLanguageButton: 'Edit Language',
-      editAudienceButton: 'Edit Audience',
-      editCategoriesButton: 'Edit Categories',
-      editWhatIsNeededButton: "Edit 'What is needed'",
-      editLearningActivitiesButton: 'Edit Learning Activity',
+      editSourceButton: 'Edit source',
+      editLevelsButton: 'Edit levels',
+      editLanguageButton: 'Edit language',
+      editAudienceButton: 'Edit audience',
+      editCategoriesButton: 'Edit categories',
+      editWhatIsNeededButton: 'Edit requirements',
+      editLearningActivitiesButton: 'Edit learning activities',
       optionsButton: 'Options',
       copyToClipboardButton: 'Copy to clipboard',
       [viewModes.DEFAULT]: 'Default view',
       [viewModes.COMFORTABLE]: 'Comfortable view',
       [viewModes.COMPACT]: 'Compact view',
-      editSelectedButton: 'Edit',
+      editSelectedButton: 'Edit details',
       copySelectedButton: 'Copy to clipboard',
       moveSelectedButton: 'Move',
       duplicateSelectedButton: 'Make a copy',
-      deleteSelectedButton: 'Delete',
+      deleteSelectedButton: 'Remove',
       undo: 'Undo',
       creatingCopies: 'Copying...',
       copiedItems: 'Copy operation complete',

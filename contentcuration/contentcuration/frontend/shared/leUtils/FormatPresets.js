@@ -45,7 +45,23 @@ const FormatPresetsMap = new Map([
       order: 2,
       kind_id: 'audio',
       allowed_formats: ['png', 'jpg', 'jpeg'],
-      associated_mimetypes: ['image/jpeg', 'image/png'],
+      associated_mimetypes: ['image/png', 'image/jpeg'],
+    },
+  ],
+  [
+    'bloompub',
+    {
+      id: 'bloompub',
+      readable_name: 'Bloom Document',
+      multi_language: false,
+      supplementary: false,
+      thumbnail: false,
+      subtitle: false,
+      display: true,
+      order: 1,
+      kind_id: 'document',
+      allowed_formats: ['bloompub', 'bloomd'],
+      associated_mimetypes: ['application/bloompub+zip'],
     },
   ],
   [
@@ -61,7 +77,7 @@ const FormatPresetsMap = new Map([
       order: 0,
       kind_id: null,
       allowed_formats: ['png', 'jpg', 'jpeg'],
-      associated_mimetypes: ['image/jpeg', 'image/png'],
+      associated_mimetypes: ['image/png', 'image/jpeg'],
     },
   ],
   [
@@ -93,7 +109,7 @@ const FormatPresetsMap = new Map([
       order: 3,
       kind_id: 'document',
       allowed_formats: ['png', 'jpg', 'jpeg'],
-      associated_mimetypes: ['image/jpeg', 'image/png'],
+      associated_mimetypes: ['image/png', 'image/jpeg'],
     },
   ],
   [
@@ -141,7 +157,7 @@ const FormatPresetsMap = new Map([
       order: 4,
       kind_id: 'exercise',
       allowed_formats: ['svg', 'json', 'graphie'],
-      associated_mimetypes: ['image/svg', '.graphie', 'application/json'],
+      associated_mimetypes: ['application/json', 'image/svg', '.graphie'],
     },
   ],
   [
@@ -157,7 +173,7 @@ const FormatPresetsMap = new Map([
       order: 3,
       kind_id: 'exercise',
       allowed_formats: ['png', 'jpg', 'jpeg', 'gif', 'svg'],
-      associated_mimetypes: ['image/svg', 'image/gif', 'image/jpeg', 'image/png'],
+      associated_mimetypes: ['image/png', 'image/jpeg', 'image/svg', 'image/gif'],
     },
   ],
   [
@@ -173,7 +189,7 @@ const FormatPresetsMap = new Map([
       order: 2,
       kind_id: 'exercise',
       allowed_formats: ['png', 'jpg', 'jpeg'],
-      associated_mimetypes: ['image/jpeg', 'image/png'],
+      associated_mimetypes: ['image/png', 'image/jpeg'],
     },
   ],
   [
@@ -205,7 +221,7 @@ const FormatPresetsMap = new Map([
       order: 2,
       kind_id: 'h5p',
       allowed_formats: ['png', 'jpg', 'jpeg'],
-      associated_mimetypes: ['image/jpeg', 'image/png'],
+      associated_mimetypes: ['image/png', 'image/jpeg'],
     },
   ],
   [
@@ -253,7 +269,7 @@ const FormatPresetsMap = new Map([
       order: 2,
       kind_id: 'html5',
       allowed_formats: ['png', 'jpg', 'jpeg'],
-      associated_mimetypes: ['image/jpeg', 'image/png'],
+      associated_mimetypes: ['image/png', 'image/jpeg'],
     },
   ],
   [
@@ -261,6 +277,22 @@ const FormatPresetsMap = new Map([
     {
       id: 'html5_zip',
       readable_name: 'HTML5 Zip',
+      multi_language: false,
+      supplementary: false,
+      thumbnail: false,
+      subtitle: false,
+      display: true,
+      order: 1,
+      kind_id: 'html5',
+      allowed_formats: ['zip'],
+      associated_mimetypes: ['.zip'],
+    },
+  ],
+  [
+    'imscp_zip',
+    {
+      id: 'imscp_zip',
+      readable_name: 'IMSCP Zip',
       multi_language: false,
       supplementary: false,
       thumbnail: false,
@@ -317,7 +349,7 @@ const FormatPresetsMap = new Map([
       order: 2,
       kind_id: 'exercise',
       allowed_formats: ['png', 'jpg', 'jpeg'],
-      associated_mimetypes: ['image/jpeg', 'image/png'],
+      associated_mimetypes: ['image/png', 'image/jpeg'],
     },
   ],
   [
@@ -333,7 +365,7 @@ const FormatPresetsMap = new Map([
       order: 3,
       kind_id: 'slideshow',
       allowed_formats: ['png', 'jpg', 'jpeg'],
-      associated_mimetypes: ['image/jpeg', 'image/png'],
+      associated_mimetypes: ['image/png', 'image/jpeg'],
     },
   ],
   [
@@ -365,7 +397,7 @@ const FormatPresetsMap = new Map([
       order: 2,
       kind_id: 'slideshow',
       allowed_formats: ['png', 'jpg', 'jpeg'],
-      associated_mimetypes: ['image/jpeg', 'image/png'],
+      associated_mimetypes: ['image/png', 'image/jpeg'],
     },
   ],
   [
@@ -381,7 +413,7 @@ const FormatPresetsMap = new Map([
       order: 1,
       kind_id: 'topic',
       allowed_formats: ['png', 'jpg', 'jpeg'],
-      associated_mimetypes: ['image/jpeg', 'image/png'],
+      associated_mimetypes: ['image/png', 'image/jpeg'],
     },
   ],
   [
@@ -429,7 +461,7 @@ const FormatPresetsMap = new Map([
       order: 3,
       kind_id: 'video',
       allowed_formats: ['png', 'jpg', 'jpeg'],
-      associated_mimetypes: ['image/jpeg', 'image/png'],
+      associated_mimetypes: ['image/png', 'image/jpeg'],
     },
   ],
   [
@@ -461,7 +493,7 @@ const FormatPresetsMap = new Map([
       order: 2,
       kind_id: 'zim',
       allowed_formats: ['png', 'jpg', 'jpeg'],
-      associated_mimetypes: ['image/jpeg', 'image/png'],
+      associated_mimetypes: ['image/png', 'image/jpeg'],
     },
   ],
 ]);
@@ -474,6 +506,7 @@ export const FormatPresetsNames = {
   AUDIO: 'audio',
   AUDIO_DEPENDENCY: 'audio_dependency',
   AUDIO_THUMBNAIL: 'audio_thumbnail',
+  BLOOMPUB: 'bloompub',
   CHANNEL_THUMBNAIL: 'channel_thumbnail',
   DOCUMENT: 'document',
   DOCUMENT_THUMBNAIL: 'document_thumbnail',
@@ -488,6 +521,7 @@ export const FormatPresetsNames = {
   HTML5_DEPENDENCY: 'html5_dependency',
   HTML5_THUMBNAIL: 'html5_thumbnail',
   HTML5_ZIP: 'html5_zip',
+  IMSCP_ZIP: 'imscp_zip',
   LOW_RES_VIDEO: 'low_res_video',
   QTI: 'qti',
   QTI_THUMBNAIL: 'qti_thumbnail',

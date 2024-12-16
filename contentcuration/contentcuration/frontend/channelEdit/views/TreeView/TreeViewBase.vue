@@ -222,9 +222,6 @@
       @syncing="syncInProgress"
     />
     <QuickEditModal />
-    <AboutLicensesModal
-      v-if="isAboutLicensesModalOpen"
-    />
     <MessageDialog
       v-model="showDeleteModal"
       :header="$tr('deleteTitle')"
@@ -321,7 +318,6 @@
   import ChannelTokenModal from 'shared/views/channel/ChannelTokenModal';
   import OfflineText from 'shared/views/OfflineText';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
-  import AboutLicensesModal from 'shared/views/AboutLicensesModal';
   import MessageDialog from 'shared/views/MessageDialog';
   import { RouteNames as ChannelRouteNames } from 'frontend/channelList/constants';
   import { titleMixin } from 'shared/mixins';
@@ -346,7 +342,6 @@
       MessageDialog,
       SavingIndicator,
       QuickEditModal,
-      AboutLicensesModal,
     },
     mixins: [titleMixin],
     props: {
@@ -370,7 +365,6 @@
       ...mapState({
         offline: state => !state.connection.online,
       }),
-      ...mapGetters(['isAboutLicensesModalOpen']),
       ...mapGetters('contentNode', ['getContentNode']),
       ...mapGetters('currentChannel', ['currentChannel', 'canEdit', 'canManage', 'rootId']),
       rootNode() {
@@ -396,7 +390,7 @@
           this.currentChannel.publishing ||
           !this.isChanged ||
           !this.currentChannel.language ||
-          (this.rootNode && !this.rootNode.total_count)
+          (this.rootNode && !this.rootNode.resource_count)
         );
       },
       publishButtonTooltip() {
@@ -471,8 +465,21 @@
         return DropEffect.COPY;
       },
     },
+    watch: {
+      rootId: {
+        handler(id) {
+          if (!id) {
+            this.loadChannel().catch(() => {
+              this.$store.dispatch('showSnackbarSimple', 'Failed to load channel');
+            });
+          }
+        },
+        immediate: true,
+      },
+    },
     methods: {
       ...mapActions('channel', ['deleteChannel']),
+      ...mapActions('currentChannel', ['loadChannel']),
       handleDelete() {
         this.deleteChannel(this.currentChannel.id).then(() => {
           localStorage.snackbar = this.$tr('channelDeletedSnackbar');

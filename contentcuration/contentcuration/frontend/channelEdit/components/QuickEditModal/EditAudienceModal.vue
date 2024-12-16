@@ -125,10 +125,20 @@
     },
     methods: {
       ...mapActions('contentNode', ['updateContentNode']),
-      close() {
-        this.$emit('close');
+      close(changed = false) {
+        this.$emit('close', {
+          changed,
+        });
       },
       async handleSave() {
+        const changed = this.nodes.some(node => {
+          return (
+            node.role_visibility !== this.selectedRol ||
+            (node.learner_needs &&
+              node.learner_needs[ResourcesNeededTypes.FOR_BEGINNERS] !== this.forBeginners)
+          );
+        });
+
         await Promise.all(
           this.nodes.map(node => {
             const learnerNeeds = {
@@ -144,11 +154,11 @@
         );
         /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
         this.$store.dispatch('showSnackbarSimple', commonStrings.$tr('changesSaved'));
-        this.close();
+        this.close(changed);
       },
     },
     $trs: {
-      editAudienceTitle: 'Edit Audience',
+      editAudienceTitle: 'Edit audience',
       saveAction: 'Save',
       cancelAction: 'Cancel',
       forBeginnersCheckbox: 'For beginners',
@@ -157,7 +167,7 @@
       visibleToCoaches:
         'Resources are visible only to coaches (teachers, facilitators, administrators)',
       multipleAudience:
-        'The selected resources have a mixed audience visbility. Choosing from the options below will apply the changes to all the selected resources',
+        'The selected resources are visible to different audiences. Choosing an option below will change the visibility of all selected resources.',
     },
   };
 

@@ -45,7 +45,11 @@
         />
       </template>
     </VList>
-    <slot name="pagination"></slot>
+    <div class="pagination-container">
+      <KButton v-if="displayShowMoreButton" :disabled="moreLoading" @click="loadMore">
+        {{ $tr('showMore') }}
+      </KButton>
+    </div>
   </div>
 
 </template>
@@ -80,6 +84,8 @@
     data() {
       return {
         loading: false,
+        more: null,
+        moreLoading: false,
       };
     },
     computed: {
@@ -99,15 +105,37 @@
       isRoot() {
         return this.rootId === this.parentId;
       },
+      addedCount() {
+        return this.$route.params.addedCount;
+      },
+      displayShowMoreButton() {
+        // Handle inconsistency with this.more that causes double click on "Show more" to load
+        // more nodes when new nodes(exercises, folders or file uploads) are added to the channel.
+        // If the addedCount is equal to the children length, force hide the "Show more" button.
+        const moreAdditions = this.addedCount !== this.children.length ? this.more : null;
+        return this.addedCount ? moreAdditions : this.more;
+      },
     },
     created() {
       this.loading = true;
-      this.loadChildren({ parent: this.parentId }).then(() => {
-        this.loading = false;
+      this.removeContentNodes({ parent: this.parentId }).then(success => {
+        if (success) {
+          this.loadChildren({ parent: this.parentId }).then(childrenResponse => {
+            this.loading = false;
+            this.more = childrenResponse.more || null;
+            const children = childrenResponse?.results || [];
+            this.setContentNodesCount(children);
+          });
+        }
       });
     },
     methods: {
-      ...mapActions('contentNode', ['loadChildren']),
+      ...mapActions('contentNode', [
+        'loadChildren',
+        'loadContentNodes',
+        'setContentNodesCount',
+        'removeContentNodes',
+      ]),
       goToNodeDetail(nodeId) {
         if (
           this.$route.params.nodeId === this.parentId &&
@@ -151,12 +179,24 @@
           }
         }
       },
+      loadMore() {
+        if (this.more && !this.moreLoading) {
+          this.moreLoading = true;
+          this.loadContentNodes(this.more).then(response => {
+            this.more = response.more || null;
+            this.moreLoading = false;
+            const children = response?.results || [];
+            this.setContentNodesCount(children);
+          });
+        }
+      },
     },
     $trs: {
       emptyViewOnlyChannelText: 'Nothing in this channel yet',
       emptyTopicText: 'Nothing in this folder yet',
       emptyChannelText: 'Click "ADD" to start building your channel',
       emptyChannelSubText: 'Create, upload, or import resources from other channels',
+      showMore: 'Show more',
     },
   };
 
@@ -172,6 +212,12 @@
     padding-bottom: 88px;
     /* stylelint-disable-next-line custom-property-pattern */
     background-color: var(--v-backgroundColor-base);
+  }
+
+  .pagination-container {
+    display: flex;
+    justify-content: space-evenly;
+    margin: 32px;
   }
 
 </style>

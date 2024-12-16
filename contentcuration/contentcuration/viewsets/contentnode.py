@@ -57,8 +57,8 @@ from contentcuration.models import UUIDField
 from contentcuration.tasks import calculate_resource_size_task
 from contentcuration.utils.nodes import calculate_resource_size
 from contentcuration.utils.nodes import migrate_extra_fields
-from contentcuration.utils.pagination import ValuesViewsetCursorPagination
 from contentcuration.utils.nodes import validate_and_conform_to_schema_threshold_none
+from contentcuration.utils.pagination import ValuesViewsetCursorPagination
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import BulkUpdateMixin
@@ -292,10 +292,18 @@ class ExtraFieldsOptionsSerializer(JSONFieldDictSerializer):
     completion_criteria = CompletionCriteriaSerializer(required=False)
 
 
+class InheritedMetadataSerializer(JSONFieldDictSerializer):
+    categories = BooleanField(required=False)
+    language = BooleanField(required=False)
+    grade_levels = BooleanField(required=False)
+    learner_needs = BooleanField(required=False)
+
+
 class ExtraFieldsSerializer(JSONFieldDictSerializer):
     randomize = BooleanField()
     options = ExtraFieldsOptionsSerializer(required=False)
     suggested_duration_type = ChoiceField(choices=[completion_criteria.TIME, completion_criteria.APPROX_TIME], allow_null=True, required=False)
+    inherited_metadata = InheritedMetadataSerializer(required=False)
 
     def update(self, instance, validated_data):
         instance = migrate_extra_fields(instance)
@@ -1073,9 +1081,10 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
 
         descendantsIds = root.get_descendants(include_self=True).values_list("id", flat=True)
 
-        changes = [{ "key": descendantId, "mods": mods } for descendantId in descendantsIds]
+        changes = [{"key": descendantId, "mods": mods} for descendantId in descendantsIds]
 
-        return self.update_from_changes(changes) # Bulk update
+        # Bulk update
+        return self.update_from_changes(changes)
 
     def update_descendants_from_changes(self, changes):
         errors = []

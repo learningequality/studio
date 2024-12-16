@@ -1,15 +1,13 @@
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.serializers import PrimaryKeyRelatedField
+from rest_framework.serializers import UUIDField
 from search.models import SavedSearch
 
-from contentcuration.models import User
-from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import ValuesViewset
 
 
 class SavedSearchSerializer(BulkModelSerializer):
-    saved_by = PrimaryKeyRelatedField(queryset=User.objects.all())
+    id = UUIDField(format="hex")
 
     def create(self, validated_data):
         if "request" in self.context:
@@ -23,13 +21,8 @@ class SavedSearchSerializer(BulkModelSerializer):
         fields = (
             "id",
             "name",
-            "created",
-            "modified",
             "params",
-            "saved_by",
         )
-        read_only_fields = ("id",)
-        list_serializer_class = BulkListSerializer
 
 
 class SavedSearchViewSet(ValuesViewset):
@@ -44,6 +37,10 @@ class SavedSearchViewSet(ValuesViewset):
         "params",
         "saved_by",
     )
+
+    field_map = {
+        "id": lambda x: x["id"].hex,
+    }
 
     def get_queryset(self):
         user_id = not self.request.user.is_anonymous and self.request.user.id

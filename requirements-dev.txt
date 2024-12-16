@@ -84,7 +84,7 @@ flask==2.0.3
     #   locust
 flask-basicauth==0.2.0
     # via locust
-flask-cors==4.0.1
+flask-cors==5.0.0
     # via locust
 fonttools==4.43.0
     # via -r requirements-dev.in
@@ -259,7 +259,7 @@ virtualenv==20.14.1
     # via pre-commit
 watchdog==2.1.8
     # via pytest-watch
-werkzeug==3.0.3
+werkzeug==3.0.6
     # via
     #   flask
     #   locust

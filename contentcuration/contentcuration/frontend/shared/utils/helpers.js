@@ -575,3 +575,51 @@ export function hasMultipleFieldValues(array, field) {
   }
   return false;
 }
+
+export const mapFields = [
+  'accessibility_labels',
+  'grade_levels',
+  'learner_needs',
+  'categories',
+  'learning_activities',
+  'resource_types',
+  'tags',
+];
+
+export function getMergedMapFields(node, contentNodeData) {
+  const mergedMapFields = {};
+  for (const mapField of mapFields) {
+    if (contentNodeData[mapField]) {
+      if (mapField === 'categories') {
+        // Reduce categories to the minimal set
+        const existingCategories = Object.keys(node.categories || {});
+        const newCategories = Object.keys(contentNodeData.categories);
+        const newMap = {};
+        for (const category of existingCategories) {
+          // If any of the new categories are more specific than the existing category,
+          // omit this.
+          if (!newCategories.some(newCategory => newCategory.startsWith(category))) {
+            newMap[category] = true;
+          }
+        }
+        for (const category of newCategories) {
+          if (
+            !existingCategories.some(
+              existingCategory =>
+                existingCategory.startsWith(category) && category !== existingCategory
+            )
+          ) {
+            newMap[category] = true;
+          }
+        }
+        mergedMapFields[mapField] = newMap;
+      } else {
+        mergedMapFields[mapField] = {
+          ...node[mapField],
+          ...contentNodeData[mapField],
+        };
+      }
+    }
+  }
+  return mergedMapFields;
+}

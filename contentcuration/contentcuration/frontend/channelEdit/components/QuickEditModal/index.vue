@@ -86,10 +86,16 @@
       EditTitleDescriptionModal,
       EditLearningActivitiesModal,
     },
+    data() {
+      return {
+        lastOpenTime: null,
+      };
+    },
     computed: {
       ...mapGetters('contentNode', [
         'getQuickEditModalOpen',
         'getSelectedTopicAndResourceCountText',
+        'getTopicAndResourceCounts',
       ]),
       openedModal() {
         const quickEditModal = this.getQuickEditModalOpen();
@@ -146,9 +152,33 @@
         return this.openedModal === QuickEditModals.COMPLETION;
       },
     },
+    watch: {
+      openedModal(newValue, oldValue) {
+        if (Boolean(newValue) && !oldValue) {
+          this.lastOpenTime = new Date().getTime();
+          this.$analytics.trackAction('quick_edit', 'Open', {
+            eventLabel: newValue,
+            numEditNodes: this.nodeIds.length,
+          });
+        }
+      },
+    },
     methods: {
       ...mapActions('contentNode', ['setQuickEditModal']),
-      close() {
+      close({ changed = false, updateDescendants = false } = {}) {
+        const eventAction = changed ? 'Save' : 'Close';
+        let numEditNodes = this.nodeIds.length;
+        if (updateDescendants) {
+          const { topicCount, resourceCount } = this.getTopicAndResourceCounts(this.nodeIds);
+          numEditNodes = topicCount + resourceCount;
+        }
+        this.$analytics.trackAction('quick_edit', eventAction, {
+          eventLabel: this.openedModal,
+          quickUpdateDescendants: updateDescendants,
+          numEditNodes,
+          secondsOpen: Math.ceil((new Date().getTime() - this.lastOpenTime) / 1000),
+        });
+
         this.setQuickEditModal(null);
       },
     },

@@ -1,14 +1,16 @@
 <template>
 
   <KCard
-    title="sample title"
-    :headingLevel="2"
-    :to="sampleRoute"
-    layout="horizontal"
-    thumbnailScaleType="cover"
+    class="recommended-resource-card"
+    :to="to"
+    :title="title"
+    orientation="horizontal"
+    :headingLevel="headingLevel"
+    thumbnailScaleType="contain"
     thumbnailDisplay="small"
-    :titleLines="3"
-    thumbnailSrc="https://domf5oio6qrcr.cloudfront.net/medialibrary/11525/0a5ae820-7051-4495-bcca-61bf02897472.jpg"
+    thumbnailAlign="right"
+    :thumbnailSrc="thumbnailSrc"
+    :style="{ margin: '16px 0 16px 0' }"
   >
     <template #aboveTitle>
       <div>
@@ -37,36 +39,41 @@
   </KCard>
 
 </template>
-<script>
 
-  import KCard from './../../channelList/views/KCard/index.vue';
+
+<script>
 
   export default {
     name: 'RecommendedResourceCard',
-    components: {
-      KCard,
-    },
-    computed: {
-      sampleRoute() {
-        return {
-          path: '/starred',
-        };
+    props: {
+      to: {
+        type: Object,
+        required: true,
+      },
+      title: {
+        type: String,
+        default: null,
+      },
+      headingLevel: {
+        type: Number,
+        required: true,
+      },
+      thumbnailSrc: {
+        type: String,
+        default: null,
       },
     },
   };
 
 </script>
-<style>
-.bellow-title-style {
-  font-weight: 1000;
-}
-.align-right-style{
-    display: flex;
-    justify-content: flex-end;
-}
-.card-icon-size{
-    font-size: 20px;
-    margin-left:1em;
-}
 
+
+<style>
+  .align-right-style{
+      display: flex;
+      justify-content: flex-end;
+  }
+  .recommended-resource-card {
+    max-width:400px
+  }
 </style>
