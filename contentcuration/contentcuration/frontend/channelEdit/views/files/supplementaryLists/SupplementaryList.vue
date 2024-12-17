@@ -149,7 +149,7 @@
 
   .languageTile:hover {
     /* stylelint-disable-next-line custom-property-pattern */
-    background-color: var(--v-greyBackground-base);
+    background-color:rgba(0, 0, 0, 0.04);
   }
 
   /deep/ .languageTile > .v-list__tile {
