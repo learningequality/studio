@@ -18,7 +18,13 @@
       @upload="$emit('upload')"
     >
       <template #default="{ openFileDialog }">
-        <VListTile inactive class="languageTile py-2">
+        <VListTile 
+          inactive 
+          class="languageTile py-2"
+          :class="$computedClass({
+            ':hover': { backgroundColor: $themePalette.grey.v_100 }
+          })"
+        >
           <VListTileContent v-if="!addingFile">
             <ActionLink
               data-test="add-file"
@@ -146,11 +152,6 @@
 
 </script>
 <style lang="less" scoped>
-
-  .languageTile:hover {
-    /* stylelint-disable-next-line custom-property-pattern */
-    background-color: var(--v-greyBackground-base);
-  }
 
   /deep/ .languageTile > .v-list__tile {
     height: 56px;
