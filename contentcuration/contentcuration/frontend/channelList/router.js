@@ -42,6 +42,12 @@ const router = new VueRouter({
       props: true,
     },
     {
+      name: RouteNames.NEW_CHANNEL,
+      path: '/new',
+      component: ChannelModal,
+      props: true,
+    },
+    {
       name: RouteNames.CHANNEL_SETS,
       path: '/collections',
       component: ChannelSetList,

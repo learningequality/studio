@@ -82,10 +82,12 @@ export function commitChannel(
     thumbnail_url = NOVALUE,
   } = {}
 ) {
-  if (context.state.channelsMap[id]) {
+  // Update existing channel
+  if (id && context.state.channelsMap[id]) {
     if (!id) {
-      throw ReferenceError('id must be defined to update a channel');
+      throw new ReferenceError('id must be defined to update a channel');
     }
+
     const channelData = { id };
     if (name !== NOVALUE) {
       channelData.name = name;
@@ -118,12 +120,55 @@ export function commitChannel(
         channelData.content_defaults = contentDefaults;
       }
     }
+
+   
+
     return Channel.createModel(channelData).then(() => {
       context.commit('UPDATE_CHANNEL', { id, ...channelData });
       context.commit('SET_CHANNEL_NOT_NEW', id);
     });
+  } else {
+    // Create a new channel
+    const newChannelData = {};
+
+    if (name !== NOVALUE) {
+      newChannelData.name = name;
+    }
+    if (description !== NOVALUE) {
+      newChannelData.description = description;
+    }
+    if (language !== NOVALUE) {
+      newChannelData.language = language;
+    }
+    if (thumbnail !== NOVALUE) {
+      newChannelData.thumbnail = thumbnail;
+    }
+    if (thumbnail_url !== NOVALUE) {
+      newChannelData.thumbnail_url = thumbnail_url;
+    }
+    if (contentDefaults !== NOVALUE) {
+      newChannelData.content_defaults = contentDefaults;
+    }
+
+    // Log the data before sending it to create a new channel
+    console.log('Creating new channel with data:', newChannelData);
+
+    return Channel.createModel(newChannelData).then(response => {
+      console.log('API Response:', response);
+    
+      const createdChannel = response.data || response; // Adjust based on API structure
+      if (!createdChannel || !createdChannel.id) {
+        throw new Error('Created channel data is invalid. Missing id.');
+      }
+    
+      context.commit('ADD_CHANNEL', createdChannel);
+      return createdChannel;
+    });
+    
+    
   }
 }
+
 
 export function updateChannel(
   context,
