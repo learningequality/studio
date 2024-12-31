@@ -1,5 +1,4 @@
 <template>
-
   <VContainer v-resize="handleWindowResize" fluid class="ma-0 main pa-0 panel">
     <!-- Breadcrumbs -->
     <VToolbar dense color="transparent" flat>
@@ -168,8 +167,10 @@
           />
         </DraggableRegion>
       </VFadeTransition>
+
+      <!-- Update: Add fallback for undefined currentChannel -->
       <ResourceDrawer
-        v-if="currentChannel"
+        v-if="currentChannel && currentChannel.id"  <!-- Check if currentChannel and its id are available -->
         ref="resourcepanel"
         :nodeId="detailNodeId"
         :channelId="currentChannel.id"
@@ -219,11 +220,9 @@
       @inherit="inheritMetadata"
     />
   </VContainer>
-
 </template>
 
 <script>
-
   import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
   import get from 'lodash/get';
   import InheritAncestorMetadataModal from '../components/edit/InheritAncestorMetadataModal';
