@@ -6,14 +6,33 @@ import LanguagesMap from 'shared/leUtils/Languages';
 
 const BLOB_SLICE = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice;
 const CHUNK_SIZE = 2097152;
-const MEDIA_PRESETS = [
+const EXTRACTABLE_PRESETS = [
   FormatPresetsNames.AUDIO,
   FormatPresetsNames.HIGH_RES_VIDEO,
   FormatPresetsNames.LOW_RES_VIDEO,
   FormatPresetsNames.H5P,
 ];
-const VIDEO_PRESETS = [FormatPresetsNames.HIGH_RES_VIDEO, FormatPresetsNames.LOW_RES_VIDEO];
-const H5P_PRESETS = [FormatPresetsNames.H5P];
+export const VIDEO_PRESETS = [FormatPresetsNames.HIGH_RES_VIDEO, FormatPresetsNames.LOW_RES_VIDEO];
+const THUMBNAIL_PRESETS = [
+  FormatPresetsNames.AUDIO_THUMBNAIL,
+  FormatPresetsNames.CHANNEL_THUMBNAIL,
+  FormatPresetsNames.DOCUMENT_THUMBNAIL,
+  FormatPresetsNames.EXERCISE_IMAGE,
+  FormatPresetsNames.EXERCISE_THUMBNAIL,
+  FormatPresetsNames.H5P_THUMBNAIL,
+  FormatPresetsNames.HTML5_THUMBNAIL,
+  FormatPresetsNames.QTI_THUMBNAIL,
+  FormatPresetsNames.SLIDESHOW_IMAGE,
+  FormatPresetsNames.SLIDESHOW_THUMBNAIL,
+  FormatPresetsNames.TOPIC_THUMBNAIL,
+  FormatPresetsNames.VIDEO_THUMBNAIL,
+  FormatPresetsNames.ZIM_THUMBNAIL,
+];
+
+export const IMAGE_PRESETS = THUMBNAIL_PRESETS.concat([
+  FormatPresetsNames.EXERCISE_IMAGE,
+  FormatPresetsNames.SLIDESHOW_IMAGE,
+]);
 
 export function getHash(file) {
   return new Promise((resolve, reject) => {
@@ -44,7 +63,7 @@ export function getHash(file) {
   });
 }
 
-const extensionPresetMap = FormatPresetsList.reduce((map, value) => {
+export const extensionPresetMap = FormatPresetsList.reduce((map, value) => {
   if (value.display) {
     value.allowed_formats.forEach(format => {
       if (!map[format]) {
@@ -122,6 +141,17 @@ export async function getH5PMetadata(fileInput) {
     });
 }
 
+export function inferPreset(file, presetHint) {
+  if (presetHint) {
+    return presetHint;
+  }
+  const fileFormat = file.name
+    .split('.')
+    .pop()
+    .toLowerCase();
+  return extensionPresetMap?.[fileFormat]?.[0];
+}
+
 /**
  * @param {{name: String, preset: String}} file
  * @param {String|null} preset
@@ -129,35 +159,22 @@ export async function getH5PMetadata(fileInput) {
  */
 export function extractMetadata(file, preset = null) {
   const metadata = {
-    preset: file.preset || preset,
+    preset: inferPreset(file, preset),
   };
 
-  if (!metadata.preset) {
-    const fileFormat = file.name
-      .split('.')
-      .pop()
-      .toLowerCase();
-    // Default to whatever the first preset is
-    metadata.preset = extensionPresetMap[fileFormat][0];
-  }
-
-  // End here if not audio or video
-  if (!MEDIA_PRESETS.includes(metadata.preset)) {
+  // End here if we cannot infer further metadata from the file type
+  if (!EXTRACTABLE_PRESETS.includes(metadata.preset)) {
     return Promise.resolve(metadata);
   }
 
-  const isH5P = H5P_PRESETS.includes(metadata.preset);
-
-  // Extract additional media metadata
-  const isVideo = VIDEO_PRESETS.includes(metadata.preset);
-
   return new Promise(resolve => {
-    if (isH5P) {
+    if (FormatPresetsNames.H5P === metadata.preset) {
       getH5PMetadata(file).then(data => {
         Object.assign(metadata, data);
       });
       resolve(metadata);
     } else {
+      const isVideo = VIDEO_PRESETS.includes(metadata.preset);
       const mediaElement = document.createElement(isVideo ? 'video' : 'audio');
       // Add a listener to read the metadata once it has loaded.
       mediaElement.addEventListener('loadedmetadata', () => {
