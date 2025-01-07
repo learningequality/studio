@@ -1,9 +1,11 @@
+import JSZip from 'jszip';
 import { IMAGE_PRESETS, VIDEO_PRESETS } from '../utils';
 import {
   validateFile,
   VALID,
   INVALID_UNREADABLE_FILE,
   INVALID_UNSUPPORTED_FORMAT,
+  INVALID_HTML5_ZIP,
 } from '../validation';
 import FormatPresets from 'shared/leUtils/FormatPresets';
 
@@ -149,6 +151,70 @@ describe('validateFile', () => {
       };
 
       const file = createMockFile('test.png', 'image/png');
+      const result = await validateFile(file);
+      expect(result).toBe(INVALID_UNREADABLE_FILE);
+    });
+  });
+
+  describe('HTML5 zip validation', () => {
+    let mockZip;
+
+    beforeEach(() => {
+      mockZip = new JSZip();
+    });
+
+    it('should validate zip with root index.html', async () => {
+      mockZip.file('index.html', '<html></html>');
+      mockZip.file('assets/style.css', 'body {}');
+      const zipContent = await mockZip.generateAsync({ type: 'blob' });
+      const file = new File([zipContent], 'test.zip', { type: 'application/zip' });
+
+      const result = await validateFile(file);
+      expect(result).toBe(VALID);
+    });
+
+    it('should validate zip with nested index.html in common root', async () => {
+      mockZip.file('dist/index.html', '<html></html>');
+      mockZip.file('dist/assets/style.css', 'body {}');
+      const zipContent = await mockZip.generateAsync({ type: 'blob' });
+      const file = new File([zipContent], 'test.zip', { type: 'application/zip' });
+
+      const result = await validateFile(file);
+      expect(result).toBe(VALID);
+    });
+
+    it('should validate zip with alternative HTML file when no index.html exists', async () => {
+      mockZip.file('main.html', '<html></html>');
+      mockZip.file('assets/style.css', 'body {}');
+      const zipContent = await mockZip.generateAsync({ type: 'blob' });
+      const file = new File([zipContent], 'test.zip', { type: 'application/zip' });
+
+      const result = await validateFile(file);
+      expect(result).toBe(VALID);
+    });
+
+    it('should validate zip with deeply nested alternative HTML file', async () => {
+      mockZip.file('project/dist/src/main.html', '<html></html>');
+      mockZip.file('project/dist/assets/style.css', 'body {}');
+      const zipContent = await mockZip.generateAsync({ type: 'blob' });
+      const file = new File([zipContent], 'test.zip', { type: 'application/zip' });
+
+      const result = await validateFile(file);
+      expect(result).toBe(VALID);
+    });
+
+    it('should reject zip without any HTML files', async () => {
+      mockZip.file('styles.css', 'body {}');
+      mockZip.file('script.js', "console.log('test');");
+      const zipContent = await mockZip.generateAsync({ type: 'blob' });
+      const file = new File([zipContent], 'test.zip', { type: 'application/zip' });
+
+      const result = await validateFile(file);
+      expect(result).toBe(INVALID_HTML5_ZIP);
+    });
+
+    it('should reject corrupted zip files', async () => {
+      const file = new File(['not a zip file'], 'test.zip', { type: 'application/zip' });
       const result = await validateFile(file);
       expect(result).toBe(INVALID_UNREADABLE_FILE);
     });

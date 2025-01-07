@@ -1,13 +1,29 @@
 import { VIDEO_PRESETS, IMAGE_PRESETS, inferPreset } from './utils';
 import { FormatPresetsNames } from 'shared/leUtils/FormatPresets';
+import { findFirstHtml } from 'shared/utils/zipFile';
 
 // Validation result codes
 export const VALID = 0;
 export const INVALID_UNREADABLE_FILE = 1;
 export const INVALID_UNSUPPORTED_FORMAT = 2;
+export const INVALID_HTML5_ZIP = 3;
 
 const videoPresetsSet = new Set(VIDEO_PRESETS);
 const imagePresetsSet = new Set(IMAGE_PRESETS);
+
+/**
+ * Validates an HTML5 zip file by checking for index.html
+ * @param {File} file - The zip file to validate
+ * @returns {Promise<number>} - Resolves to validation result code
+ */
+async function validateHTML5Zip(file) {
+  try {
+    const entryPoint = await findFirstHtml(file);
+    return entryPoint ? VALID : INVALID_HTML5_ZIP;
+  } catch (e) {
+    return INVALID_UNREADABLE_FILE;
+  }
+}
 
 /**
  * Validates an image file using an Image object
@@ -63,6 +79,10 @@ export async function validateFile(file) {
   const preset = inferPreset(file);
   if (!preset) {
     return INVALID_UNSUPPORTED_FORMAT;
+  }
+
+  if (preset === FormatPresetsNames.HTML5_ZIP) {
+    return await validateHTML5Zip(file);
   }
 
   // Create object URL for validation if needed

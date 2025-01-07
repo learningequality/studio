@@ -1,3 +1,4 @@
+import JSZip from 'jszip';
 import pako from 'pako';
 import crc32 from 'crc-32';
 
@@ -171,7 +172,7 @@ function calculateCrc32(data) {
  *   // Do something with the zipBuffer
  * });
  */
-async function createPredictableZip(files) {
+export async function createPredictableZip(files) {
   const sortedPaths = Object.keys(files).sort();
   const entries = [];
   let offset = 0;
@@ -240,4 +241,93 @@ async function createPredictableZip(files) {
   ]);
 }
 
-export { createPredictableZip };
+/**
+ * Finds the common root directory in a zip structure
+ * @param {Object} files - JSZip files object
+ * @returns {string} - Common root path or empty string if none
+ */
+export function findCommonRoot(files) {
+  const paths = Object.entries(files)
+    // Get only non-directory file paths
+    .filter(([, file]) => !file.dir)
+    // Extract directory paths from file paths
+    .map(([path]) => path.split('/').slice(0, -1));
+
+  if (paths.length === 0) {
+    return '';
+  }
+
+  // If only one file, return its directory path
+  if (paths.length === 1) {
+    return paths[0].join('/');
+  }
+
+  const firstPath = paths[0];
+  const commonParts = [];
+  let index = 0;
+
+  // Keep checking parts until we run out or find a mismatch
+  while (index < firstPath.length) {
+    const part = firstPath[index];
+
+    // Check if this part matches in all other paths
+    for (const path of paths.slice(1)) {
+      if (index >= path.length || path[index] !== part) {
+        return commonParts.join('/');
+      }
+    }
+
+    commonParts.push(part);
+    index++;
+  }
+  return commonParts.join('/');
+}
+
+/**
+ * Finds the first HTML file in a zip file, prioritizing index.html
+ * @param {File} file - The zip file to analyze
+ * @returns {Promise<string|null>} - Path to the HTML file or null if none found
+ */
+export async function findFirstHtml(file) {
+  const zip = new JSZip();
+
+  const zipContent = await zip.loadAsync(file);
+  const files = zipContent.files;
+  const htmlFiles = Object.keys(files).filter(path => path.toLowerCase().endsWith('.html'));
+
+  if (htmlFiles.length === 0) {
+    return null;
+  }
+
+  // Find common root path
+  const commonRoot = findCommonRoot(files);
+  const rootPrefix = commonRoot ? commonRoot + '/' : '';
+
+  // Remove common root from paths for comparison
+  const normalizedPaths = htmlFiles.map(path => ({
+    original: path,
+    normalized: commonRoot ? path.slice(rootPrefix.length) : path,
+  }));
+
+  // First priority: index.html at root level after removing common path
+  const rootIndex = normalizedPaths.find(p => p.normalized === 'index.html');
+  if (rootIndex) {
+    return rootIndex.original;
+  }
+
+  // Second priority: any index.html
+  const indexFile = normalizedPaths.find(p => p.normalized.split('/').pop() === 'index.html');
+  if (indexFile) {
+    return indexFile.original;
+  }
+
+  // Last resort: first HTML file at the shallowest level
+  return normalizedPaths.sort((a, b) => {
+    const depthA = a.normalized.split('/').length;
+    const depthB = b.normalized.split('/').length;
+    if (depthA !== depthB) {
+      return depthA - depthB;
+    }
+    return a.normalized.length - b.normalized.length;
+  })[0].original;
+}

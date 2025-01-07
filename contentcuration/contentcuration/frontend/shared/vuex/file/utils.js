@@ -3,6 +3,7 @@ import JSZip from 'jszip';
 import { FormatPresetsList, FormatPresetsNames } from 'shared/leUtils/FormatPresets';
 import { LicensesList } from 'shared/leUtils/Licenses';
 import LanguagesMap from 'shared/leUtils/Languages';
+import { findFirstHtml } from 'shared/utils/zipFile';
 
 const BLOB_SLICE = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice;
 const CHUNK_SIZE = 2097152;
@@ -11,6 +12,7 @@ const EXTRACTABLE_PRESETS = [
   FormatPresetsNames.HIGH_RES_VIDEO,
   FormatPresetsNames.LOW_RES_VIDEO,
   FormatPresetsNames.H5P,
+  FormatPresetsNames.HTML5_ZIP,
 ];
 export const VIDEO_PRESETS = [FormatPresetsNames.HIGH_RES_VIDEO, FormatPresetsNames.LOW_RES_VIDEO];
 const THUMBNAIL_PRESETS = [
@@ -173,6 +175,15 @@ export function extractMetadata(file, preset = null) {
         Object.assign(metadata, data);
       });
       resolve(metadata);
+    } else if (FormatPresetsNames.HTML5_ZIP === metadata.preset) {
+      findFirstHtml(file).then(htmlFile => {
+        if (htmlFile) {
+          metadata.extra_fields = metadata.extra_fields || {};
+          metadata.extra_fields.options = metadata.extra_fields.options || {};
+          metadata.extra_fields.options.entry = htmlFile;
+        }
+        resolve(metadata);
+      });
     } else {
       const isVideo = VIDEO_PRESETS.includes(metadata.preset);
       const mediaElement = document.createElement(isVideo ? 'video' : 'audio');

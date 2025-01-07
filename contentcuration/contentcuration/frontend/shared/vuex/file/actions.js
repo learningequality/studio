@@ -1,3 +1,4 @@
+import { cleanFile } from './clean';
 import { getHash, extractMetadata, storageUrl } from './utils';
 import { File } from 'shared/data/resources';
 import client from 'shared/client';
@@ -167,11 +168,12 @@ export function uploadFileToStorage(
 /**
  * @return {Promise<{uploadPromise: Promise, fileObject: Object}>}
  */
-export function uploadFile(context, { file, preset = null } = {}) {
+export async function uploadFile(context, { file, preset = null } = {}) {
   const file_format = file.name
     .split('.')
     .pop()
     .toLowerCase();
+  file = await cleanFile(file, preset);
   const hashPromise = getHash(file).catch(() => Promise.reject(fileErrors.CHECKSUM_HASH_FAILED));
   let checksum,
     metadata = {};
