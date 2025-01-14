@@ -1,6 +1,6 @@
 import isMatch from 'lodash/isMatch';
-import { DraggableFlags } from './constants';
 import { DraggableTypes } from 'shared/mixins/draggable/constants';
+import { DraggableFlags } from './constants';
 
 /**
  * Helper with getters to grab different draggable ancestor types based

@@ -1,8 +1,8 @@
 import Vue from 'vue';
 import Vuetify from 'vuetify';
 import { shallowMount, mount } from '@vue/test-utils';
-import LevelsOptions from '../LevelsOptions.vue';
 import { ContentLevels } from 'shared/constants';
+import LevelsOptions from '../LevelsOptions.vue';
 
 Vue.use(Vuetify);
 

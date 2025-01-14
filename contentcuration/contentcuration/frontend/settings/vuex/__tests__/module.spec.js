@@ -1,6 +1,6 @@
-import settings from '../index';
 import storeFactory from 'shared/vuex/baseStore';
 import client from 'shared/client';
+import settings from '../index';
 
 jest.mock('shared/client');
 jest.mock('shared/vuex/connectionPlugin');

@@ -1,9 +1,9 @@
 import { shallowMount, mount } from '@vue/test-utils';
 
+import { AssessmentItemTypes, ValidationErrors } from 'shared/constants';
 import { factory } from '../../store';
 import { assessmentItemKey } from '../../utils';
 import AssessmentItemEditor from './AssessmentItemEditor';
-import { AssessmentItemTypes, ValidationErrors } from 'shared/constants';
 
 const store = factory();
 

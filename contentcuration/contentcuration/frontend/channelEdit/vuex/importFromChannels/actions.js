@@ -1,10 +1,10 @@
 import partition from 'lodash/partition';
-import { ImportSearchPageSize } from '../../constants';
 import client from 'shared/client';
 import urls from 'shared/urls';
 import { ChannelListTypes } from 'shared/constants';
 
 import { Channel, SavedSearch } from 'shared/data/resources';
+import { ImportSearchPageSize } from '../../constants';
 
 export async function fetchResourceSearchResults(context, params) {
   params = { ...params };

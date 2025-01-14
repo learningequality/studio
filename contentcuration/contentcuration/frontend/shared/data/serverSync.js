@@ -4,6 +4,8 @@ import get from 'lodash/get';
 import pick from 'lodash/pick';
 import orderBy from 'lodash/orderBy';
 import uniq from 'lodash/uniq';
+import client from 'shared/client';
+import urls from 'shared/urls';
 import logging from '../logging';
 import { changeStream } from './applyRemoteChanges';
 import { acquireLock } from './locks';
@@ -11,8 +13,6 @@ import { changeRevs } from './registry';
 import { CHANGE_TYPES, CHANGES_TABLE, MAX_REV_KEY, LOCK_NAMES } from './constants';
 import db, { channelScope } from './db';
 import { Channel, Session, Task } from './resources';
-import client from 'shared/client';
-import urls from 'shared/urls';
 
 // When this many seconds pass without a syncable
 // change being registered, sync changes!

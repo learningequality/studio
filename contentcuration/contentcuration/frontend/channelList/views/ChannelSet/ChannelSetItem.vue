@@ -68,9 +68,9 @@
 <script>
 
   import { mapActions, mapGetters } from 'vuex';
-  import { RouteNames } from '../../constants';
   import MessageDialog from 'shared/views/MessageDialog';
   import CopyToken from 'shared/views/CopyToken';
+  import { RouteNames } from '../../constants';
 
   export default {
     name: 'ChannelSetItem',

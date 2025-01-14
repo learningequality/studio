@@ -517,11 +517,6 @@
   import sortBy from 'lodash/sortBy';
   import { mapActions, mapGetters } from 'vuex';
   import camelCase from 'lodash/camelCase';
-  import { isImportedContent, importedChannelLink, getCompletionCriteriaLabels } from '../utils';
-  import FilePreview from '../views/files/FilePreview';
-  import { ContentLevels, Categories, AccessibilityCategories } from '../../shared/constants';
-  import AssessmentItemPreview from './AssessmentItemPreview/AssessmentItemPreview';
-  import ContentNodeValidator from './ContentNodeValidator';
 
   import {
     getAssessmentItemErrors,
@@ -547,6 +542,11 @@
     metadataTranslationMixin,
   } from 'shared/mixins';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
+  import { ContentLevels, Categories, AccessibilityCategories } from '../../shared/constants';
+  import FilePreview from '../views/files/FilePreview';
+  import { isImportedContent, importedChannelLink, getCompletionCriteriaLabels } from '../utils';
+  import ContentNodeValidator from './ContentNodeValidator';
+  import AssessmentItemPreview from './AssessmentItemPreview/AssessmentItemPreview';
 
   export default {
     name: 'ResourcePanel',

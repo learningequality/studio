@@ -1,9 +1,9 @@
-import { UpdatedDescendantsChange } from '../changes';
 import db from 'shared/data/db';
 import { CHANGE_TYPES, TABLE_NAMES } from 'shared/data/constants';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 import { ContentNode } from 'shared/data/resources';
 import { mockChannelScope, resetMockChannelScope } from 'shared/utils/testing';
+import { UpdatedDescendantsChange } from '../changes';
 
 const CLIENTID = 'test-client-id';
 

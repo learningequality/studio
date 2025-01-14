@@ -25,9 +25,9 @@
 
 <script>
 
-  import EditBooleanMapModal from './EditBooleanMapModal';
   import ResourcesNeededOptions from 'shared/views/contentNodeFields/ResourcesNeededOptions';
   import commonStrings from 'shared/translator';
+  import EditBooleanMapModal from './EditBooleanMapModal';
 
   export default {
     name: 'EditResourcesNeededModal',

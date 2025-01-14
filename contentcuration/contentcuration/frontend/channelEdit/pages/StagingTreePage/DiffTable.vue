@@ -65,9 +65,9 @@
 
 <script>
 
-  import Diff from './Diff';
   import LoadingText from 'shared/views/LoadingText';
   import { fileSizeMixin } from 'shared/mixins';
+  import Diff from './Diff';
 
   export default {
     name: 'DiffTable',

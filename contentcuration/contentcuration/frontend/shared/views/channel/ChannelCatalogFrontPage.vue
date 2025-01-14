@@ -62,9 +62,9 @@
 
   import flatMap from 'lodash/flatMap';
   import uniq from 'lodash/uniq';
-  import DetailsRow from '../details/DetailsRow';
   import { constantsTranslationMixin } from 'shared/mixins';
   import ExpandableList from 'shared/views/ExpandableList';
+  import DetailsRow from '../details/DetailsRow';
 
   export default {
     name: 'ChannelCatalogFrontPage',

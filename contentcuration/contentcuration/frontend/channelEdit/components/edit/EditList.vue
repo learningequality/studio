@@ -23,8 +23,8 @@
 
 <script>
 
-  import EditListItem from './EditListItem';
   import Checkbox from 'shared/views/form/Checkbox';
+  import EditListItem from './EditListItem';
 
   export default {
     name: 'EditList',

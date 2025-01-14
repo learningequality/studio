@@ -120,9 +120,9 @@
 <script>
 
   import { mapActions, mapGetters } from 'vuex';
+  import { channelExportMixin } from 'shared/views/channel/mixins';
   import ConfirmationDialog from '../../components/ConfirmationDialog';
   import { RouteNames } from '../../constants';
-  import { channelExportMixin } from 'shared/views/channel/mixins';
 
   export default {
     name: 'ChannelActionsDropdown',

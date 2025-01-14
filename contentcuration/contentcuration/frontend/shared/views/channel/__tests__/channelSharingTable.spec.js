@@ -1,7 +1,7 @@
 import { mount } from '@vue/test-utils';
-import ChannelSharingTable from './../ChannelSharingTable';
 import storeFactory from 'shared/vuex/baseStore';
 import { SharingPermissions } from 'shared/constants';
+import ChannelSharingTable from './../ChannelSharingTable';
 
 const store = storeFactory();
 const currentUser = { id: 'testId' };

@@ -60,15 +60,15 @@
   import intersectionBy from 'lodash/intersectionBy';
   import { mapActions, mapGetters } from 'vuex';
   import find from 'lodash/find';
-  import NodePanel from '../NodePanel';
-  import { RouteNames } from '../../constants';
-  import BrowsingCard from './BrowsingCard';
   import Breadcrumbs from 'shared/views/Breadcrumbs';
   import Checkbox from 'shared/views/form/Checkbox';
   import LoadingText from 'shared/views/LoadingText';
   import { constantsTranslationMixin } from 'shared/mixins';
   import { ChannelListTypes } from 'shared/constants';
   import { crossComponentTranslator } from 'shared/i18n';
+  import { RouteNames } from '../../constants';
+  import NodePanel from '../NodePanel';
+  import BrowsingCard from './BrowsingCard';
 
   const showMoreTranslator = crossComponentTranslator(NodePanel);
 

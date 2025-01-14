@@ -1,8 +1,8 @@
 import { mount } from '@vue/test-utils';
-import ContentNodeListItem from './index';
 import { createStore } from 'shared/vuex/draggablePlugin/test/setup';
 
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
+import ContentNodeListItem from './index';
 
 const DOCUMENT_NODE = {
   id: 'document-id',

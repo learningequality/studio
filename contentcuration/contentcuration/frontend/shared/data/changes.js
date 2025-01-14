@@ -5,8 +5,6 @@ import isPlainObject from 'lodash/isPlainObject';
 import isUndefined from 'lodash/isUndefined';
 import omit from 'lodash/omit';
 import sortBy from 'lodash/sortBy';
-import logging from '../logging';
-import { resourceCounts } from './applyRemoteChanges';
 import db, { CLIENTID } from 'shared/data/db';
 import { promiseChunk } from 'shared/utils/helpers';
 import {
@@ -22,6 +20,8 @@ import {
   TASK_ID,
 } from 'shared/data/constants';
 import { INDEXEDDB_RESOURCES } from 'shared/data/registry';
+import logging from '../logging';
+import { resourceCounts } from './applyRemoteChanges';
 
 /**
  * Wraps the callback with a new ChangeTracker that can be used to revert

@@ -1,5 +1,5 @@
-import account from './vuex';
 import storeFactory from 'shared/vuex/baseStore';
+import account from './vuex';
 
 export function factory() {
   return storeFactory({

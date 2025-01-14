@@ -22,9 +22,9 @@
 <script>
 
   import { mapActions } from 'vuex';
-  import MessageLayout from '../../components/MessageLayout';
   import EmailField from 'shared/views/form/EmailField';
   import Banner from 'shared/views/Banner';
+  import MessageLayout from '../../components/MessageLayout';
 
   export default {
     name: 'ForgotPassword',

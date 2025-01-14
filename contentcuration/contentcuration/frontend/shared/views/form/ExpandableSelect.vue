@@ -68,8 +68,8 @@
 
 <script>
 
-  import DropdownWrapper from './DropdownWrapper';
   import { getInvalidText } from 'shared/utils/validation';
+  import DropdownWrapper from './DropdownWrapper';
 
   export default {
     name: 'ExpandableSelect',

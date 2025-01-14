@@ -314,8 +314,6 @@
   import defaultsDeep from 'lodash/defaultsDeep';
   import camelCase from 'lodash/camelCase';
   import orderBy from 'lodash/orderBy';
-  import { SCALE_TEXT, SCALE, CHANNEL_SIZE_DIVISOR } from './constants';
-  import DetailsRow from './DetailsRow';
   import { CategoriesLookup, LevelsLookup } from 'shared/constants';
   import {
     fileSizeMixin,
@@ -329,6 +327,8 @@
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
   import Thumbnail from 'shared/views/files/Thumbnail';
   import CopyToken from 'shared/views/CopyToken';
+  import DetailsRow from './DetailsRow';
+  import { SCALE_TEXT, SCALE, CHANNEL_SIZE_DIVISOR } from './constants';
 
   const DEFAULT_DETAILS = {
     name: '',

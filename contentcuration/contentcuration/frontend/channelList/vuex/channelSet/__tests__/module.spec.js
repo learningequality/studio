@@ -1,6 +1,6 @@
-import channelSet from '../index';
 import { ChannelSet, injectVuexStore } from 'shared/data/resources';
 import storeFactory from 'shared/vuex/baseStore';
+import channelSet from '../index';
 
 jest.mock('shared/vuex/connectionPlugin');
 const userId = 1;

@@ -1,11 +1,11 @@
 import Vuex from 'vuex';
 import { mount } from '@vue/test-utils';
 import camelCase from 'lodash/camelCase';
-import EditBooleanMapModal from '../EditBooleanMapModal';
 import { metadataTranslationMixin } from 'shared/mixins';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 import { Categories } from 'shared/constants';
 import CategoryOptions from 'shared/views/contentNodeFields/CategoryOptions';
+import EditBooleanMapModal from '../EditBooleanMapModal';
 
 let nodes;
 

@@ -119,8 +119,6 @@
 <script>
 
   import { mapActions, mapGetters, mapState } from 'vuex';
-  import clipboardMixin, { parentMixin } from './mixins';
-  import ContentNodeOptions from './ContentNodeOptions';
   import Checkbox from 'shared/views/form/Checkbox';
   import Thumbnail from 'shared/views/files/Thumbnail';
   import ContextMenu from 'shared/views/ContextMenu';
@@ -130,6 +128,8 @@
   import DraggableHandle from 'shared/views/draggable/DraggableHandle';
   import LazyListGroup from 'shared/views/LazyListGroup';
   import { EffectAllowed } from 'shared/mixins/draggable/constants';
+  import ContentNodeOptions from './ContentNodeOptions';
+  import clipboardMixin, { parentMixin } from './mixins';
 
   export default {
     name: 'ContentNode',

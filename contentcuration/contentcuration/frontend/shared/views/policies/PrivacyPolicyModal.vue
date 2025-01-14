@@ -309,8 +309,8 @@
 </template>
 <script>
 
-  import PoliciesModal from './PoliciesModal';
   import { policies } from 'shared/constants';
+  import PoliciesModal from './PoliciesModal';
 
   // We don't translate the following strings on purpose currently
   const $untranslateds = {

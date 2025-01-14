@@ -138,10 +138,6 @@
 <script>
 
   import { mapActions, mapGetters, mapMutations } from 'vuex';
-  import CurrentTopicView from '../CurrentTopicView';
-  import StudioTree from '../../components/StudioTree/StudioTree';
-  import { RouteNames, DraggableRegions, DraggableUniverses } from '../../constants';
-  import TreeViewBase from './TreeViewBase';
   import Banner from 'shared/views/Banner';
   import IconButton from 'shared/views/IconButton';
   import PageNotFoundError from 'shared/views/errors/PageNotFoundError';
@@ -152,6 +148,10 @@
   import { DraggableIdentityHelper } from 'shared/vuex/draggablePlugin/module/utils';
   import { DraggableFlags } from 'shared/vuex/draggablePlugin/module/constants';
   import { DropEffect } from 'shared/mixins/draggable/constants';
+  import { RouteNames, DraggableRegions, DraggableUniverses } from '../../constants';
+  import StudioTree from '../../components/StudioTree/StudioTree';
+  import CurrentTopicView from '../CurrentTopicView';
+  import TreeViewBase from './TreeViewBase';
 
   const DEFAULT_HIERARCHY_MAXWIDTH = 500;
   const NODEPANEL_MINWIDTH = 350;

@@ -73,10 +73,10 @@
 
   import sortBy from 'lodash/sortBy';
   import { mapActions, mapGetters } from 'vuex';
-  import FilePreview from './FilePreview';
-  import FileUploadItem from './FileUploadItem';
   import { FormatPresetsList } from 'shared/leUtils/FormatPresets';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
+  import FilePreview from './FilePreview';
+  import FileUploadItem from './FileUploadItem';
 
   export default {
     name: 'FileUpload',

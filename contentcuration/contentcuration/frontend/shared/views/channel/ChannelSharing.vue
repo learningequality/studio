@@ -64,10 +64,10 @@
 <script>
 
   import { mapGetters, mapActions } from 'vuex';
-  import ChannelSharingTable from './ChannelSharingTable';
   import LoadingText from 'shared/views/LoadingText';
   import { SharingPermissions } from 'shared/constants';
   import DropdownWrapper from 'shared/views/form/DropdownWrapper';
+  import ChannelSharingTable from './ChannelSharingTable';
 
   export default {
     name: 'ChannelSharing',

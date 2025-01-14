@@ -141,13 +141,13 @@
 <script>
 
   import { mapGetters } from 'vuex';
-  import IconButton from '../IconButton';
   import Uploader from 'shared/views/files/Uploader';
   import FileStatus from 'shared/views/files/FileStatus';
   import FileStatusText from 'shared/views/files/FileStatusText';
   import Thumbnail from 'shared/views/files/Thumbnail';
   import FileDropzone from 'shared/views/files/FileDropzone';
   import { ASPECT_RATIO, THUMBNAIL_WIDTH } from 'shared/constants';
+  import IconButton from '../IconButton';
 
   const DEFAULT_THUMBNAIL = {
     thumbnail: null,

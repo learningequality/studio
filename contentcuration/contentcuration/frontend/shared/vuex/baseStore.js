@@ -1,5 +1,7 @@
 import Vue from 'vue';
 import Vuex, { Store } from 'vuex';
+import IndexedDBPlugin, { Listener, commitListener } from 'shared/vuex/indexedDBPlugin';
+import db from 'shared/data/db';
 import session from './session';
 import ConnectionPlugin from './connectionPlugin';
 import snackbar from './snackbar';
@@ -10,8 +12,6 @@ import file from './file';
 import policies from './policies';
 import SyncProgressPlugin from './syncProgressPlugin';
 import PoliciesPlugin from './policies/plugin';
-import IndexedDBPlugin, { Listener, commitListener } from 'shared/vuex/indexedDBPlugin';
-import db from 'shared/data/db';
 
 Vue.use(Vuex);
 

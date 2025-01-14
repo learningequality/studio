@@ -66,8 +66,8 @@
 
 <script>
 
-  import ActionLink from './ActionLink';
   import { printingMixin } from 'shared/mixins';
+  import ActionLink from './ActionLink';
 
   export default {
     name: 'ExpandableList',

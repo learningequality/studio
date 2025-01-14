@@ -189,12 +189,6 @@
 <script>
 
   import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
-  import FileUploadDefault from '../../views/files/FileUploadDefault';
-  import { RouteNames, TabNames } from '../../constants';
-  import SavingIndicator from './SavingIndicator';
-  import EditView from './EditView';
-  import EditList from './EditList';
-  import InheritAncestorMetadataModal from './InheritAncestorMetadataModal';
   import { ContentKindLearningActivityDefaults } from 'shared/leUtils/ContentKinds';
   import { fileSizeMixin, routerMixin } from 'shared/mixins';
   import FileStorage from 'shared/views/files/FileStorage';
@@ -209,6 +203,12 @@
   import FileDropzone from 'shared/views/files/FileDropzone';
   import { isNodeComplete } from 'shared/utils/validation';
   import { DELAYED_VALIDATION } from 'shared/constants';
+  import { RouteNames, TabNames } from '../../constants';
+  import FileUploadDefault from '../../views/files/FileUploadDefault';
+  import InheritAncestorMetadataModal from './InheritAncestorMetadataModal';
+  import EditList from './EditList';
+  import EditView from './EditView';
+  import SavingIndicator from './SavingIndicator';
 
   const CHECK_STORAGE_INTERVAL = 10000;
 

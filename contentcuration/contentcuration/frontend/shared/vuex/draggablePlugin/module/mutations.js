@@ -1,6 +1,6 @@
 import Vue from 'vue';
-import { DraggableFlags } from './constants';
 import { DraggableIdentityHelper } from 'shared/vuex/draggablePlugin/module/utils';
+import { DraggableFlags } from './constants';
 
 export function SET_DRAG_START_TIME(state, time) {
   state.dragStartTime = time;

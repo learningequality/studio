@@ -1,7 +1,7 @@
 import { mount } from '@vue/test-utils';
-import ChannelSharing from './../ChannelSharing';
 import storeFactory from 'shared/vuex/baseStore';
 import { SharingPermissions } from 'shared/constants';
+import ChannelSharing from './../ChannelSharing';
 
 const store = storeFactory();
 const channelId = '11111111111111111111111111111111';

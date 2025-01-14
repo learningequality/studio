@@ -1,8 +1,8 @@
 import { mapActions, mapGetters } from 'vuex';
+import { animationThrottle, extendSlot } from 'shared/utils/helpers';
 import baseMixin from './base';
 import { objectValuesValidator } from './utils';
 import { DraggableTypes, EffectAllowed } from './constants';
-import { animationThrottle, extendSlot } from 'shared/utils/helpers';
 
 export default {
   mixins: [baseMixin],

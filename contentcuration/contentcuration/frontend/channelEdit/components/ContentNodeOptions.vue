@@ -44,10 +44,10 @@
 <script>
 
   import { mapActions, mapGetters } from 'vuex';
-  import { RouteNames, TabNames, QuickEditModals } from '../constants';
-  import MoveModal from './move/MoveModal';
   import { withChangeTracker } from 'shared/data/changes';
   import { RELATIVE_TREE_POSITIONS } from 'shared/data/constants';
+  import { RouteNames, TabNames, QuickEditModals } from '../constants';
+  import MoveModal from './move/MoveModal';
 
   export default {
     name: 'ContentNodeOptions',

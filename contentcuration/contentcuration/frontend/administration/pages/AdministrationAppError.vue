@@ -26,12 +26,12 @@
 
 <script>
 
-  import { RouteNames } from '../constants';
   import PermissionsError from 'shared/views/errors/PermissionsError';
   import ChannelNotFoundError from 'shared/views/errors/ChannelNotFoundError';
   import PageNotFoundError from 'shared/views/errors/PageNotFoundError';
   import GenericError from 'shared/views/errors/GenericError';
   import { ErrorTypes } from 'shared/constants';
+  import { RouteNames } from '../constants';
 
   export default {
     name: 'AdministrationAppError',

@@ -1,5 +1,7 @@
 import each from 'jest-each';
 import CompletionCriteriaModels from 'kolibri-constants/CompletionCriteria';
+import { MasteryModelsNames } from 'shared/leUtils/MasteryModels';
+import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 import { AssessmentItemTypes, ValidationErrors } from '../constants';
 import {
   translateValidator,
@@ -20,8 +22,6 @@ import {
   getAssessmentItemErrors,
   getNodeLearningActivityErrors,
 } from './validation';
-import { MasteryModelsNames } from 'shared/leUtils/MasteryModels';
-import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
 function generateMasteryExtraFields(mastery) {
   return {

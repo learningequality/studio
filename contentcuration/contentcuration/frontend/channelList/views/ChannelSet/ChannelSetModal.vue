@@ -155,9 +155,6 @@
   import Vue from 'vue';
   import { mapGetters, mapActions } from 'vuex';
   import difference from 'lodash/difference';
-  import { RouteNames } from '../../constants';
-  import ChannelItem from './ChannelItem';
-  import ChannelSelectionList from './ChannelSelectionList';
   import { NEW_OBJECT, ChannelListTypes, ErrorTypes } from 'shared/constants';
   import { constantsTranslationMixin, routerMixin } from 'shared/mixins';
   import CopyToken from 'shared/views/CopyToken';
@@ -165,6 +162,9 @@
   import FullscreenModal from 'shared/views/FullscreenModal';
   import Tabs from 'shared/views/Tabs';
   import LoadingText from 'shared/views/LoadingText';
+  import { RouteNames } from '../../constants';
+  import ChannelSelectionList from './ChannelSelectionList';
+  import ChannelItem from './ChannelItem';
 
   export default {
     name: 'ChannelSetModal',

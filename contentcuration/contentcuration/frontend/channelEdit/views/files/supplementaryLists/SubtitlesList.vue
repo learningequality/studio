@@ -20,9 +20,9 @@
 <script>
 
   import uniq from 'lodash/uniq';
-  import SupplementaryList from './SupplementaryList';
   import FormatPresets from 'shared/leUtils/FormatPresets';
   import HelpTooltip from 'shared/views/HelpTooltip';
+  import SupplementaryList from './SupplementaryList';
 
   export default {
     name: 'SubtitlesList',

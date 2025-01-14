@@ -69,10 +69,10 @@
 
   import sortBy from 'lodash/sortBy';
   import { mapGetters, mapActions } from 'vuex';
-  import { RouteNames } from '../../constants';
-  import ChannelSetItem from './ChannelSetItem.vue';
   import MessageDialog from 'shared/views/MessageDialog';
   import LoadingText from 'shared/views/LoadingText';
+  import { RouteNames } from '../../constants';
+  import ChannelSetItem from './ChannelSetItem.vue';
 
   export default {
     name: 'ChannelSetList',

@@ -1,8 +1,8 @@
 import { mount } from '@vue/test-utils';
 import Vuex from 'vuex';
-import EditLanguageModal from '../EditLanguageModal';
 import { LanguagesList } from 'shared/leUtils/Languages';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
+import EditLanguageModal from '../EditLanguageModal';
 
 const nodes = [
   { id: 'test-en-res', language: 'en' },

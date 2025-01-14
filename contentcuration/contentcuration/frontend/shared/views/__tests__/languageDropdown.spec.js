@@ -1,9 +1,9 @@
 import Vue from 'vue';
 import Vuetify from 'vuetify';
 import { mount } from '@vue/test-utils';
+import { LanguagesList } from 'shared/leUtils/Languages';
 import LanguageDropdown from '../LanguageDropdown.vue';
 import TestForm from './TestForm.vue';
-import { LanguagesList } from 'shared/leUtils/Languages';
 
 Vue.use(Vuetify);
 

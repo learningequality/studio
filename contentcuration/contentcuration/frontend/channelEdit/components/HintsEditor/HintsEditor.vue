@@ -85,12 +85,12 @@
 
 <script>
 
-  import AssessmentItemToolbar from '../AssessmentItemToolbar';
-  import { AssessmentItemToolbarActions } from '../../constants';
   import { swapElements } from 'shared/utils/helpers';
 
   import MarkdownEditor from 'shared/views/MarkdownEditor/MarkdownEditor/MarkdownEditor';
   import MarkdownViewer from 'shared/views/MarkdownEditor/MarkdownViewer/MarkdownViewer';
+  import { AssessmentItemToolbarActions } from '../../constants';
+  import AssessmentItemToolbar from '../AssessmentItemToolbar';
 
   const updateHintsOrder = hints => {
     return hints.map((hint, idx) => {

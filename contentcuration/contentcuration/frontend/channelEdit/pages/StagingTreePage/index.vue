@@ -248,12 +248,6 @@
 
   import { mapGetters, mapMutations, mapActions } from 'vuex';
 
-  import ResourceDrawer from '../../components/ResourceDrawer';
-  import StudioTree from '../../components/StudioTree/StudioTree';
-  import ContentNodeListItem from '../../components/ContentNodeListItem';
-  import { RouteNames, viewModes } from '../../constants';
-  import DiffTable from './DiffTable';
-  import Diff from './Diff';
   import { fileSizeMixin, titleMixin, routerMixin } from 'shared/mixins';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import BottomBar from 'shared/views/BottomBar';
@@ -265,6 +259,12 @@
   import MainNavigationDrawer from 'shared/views/MainNavigationDrawer';
   import OfflineText from 'shared/views/OfflineText';
   import { Channel } from 'shared/data/resources';
+  import { RouteNames, viewModes } from '../../constants';
+  import ContentNodeListItem from '../../components/ContentNodeListItem';
+  import StudioTree from '../../components/StudioTree/StudioTree';
+  import ResourceDrawer from '../../components/ResourceDrawer';
+  import Diff from './Diff';
+  import DiffTable from './DiffTable';
 
   export default {
     name: 'StagingTreePage',

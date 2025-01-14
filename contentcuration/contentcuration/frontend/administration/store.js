@@ -1,6 +1,6 @@
+import storeFactory from 'shared/vuex/baseStore';
 import channelAdmin from './vuex/channelAdmin';
 import userAdmin from './vuex/userAdmin';
-import storeFactory from 'shared/vuex/baseStore';
 
 export function factory() {
   return storeFactory({

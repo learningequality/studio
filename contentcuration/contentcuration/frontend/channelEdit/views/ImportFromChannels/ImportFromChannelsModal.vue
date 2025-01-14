@@ -75,11 +75,11 @@
 
   import { mapActions, mapMutations, mapState, mapGetters } from 'vuex';
   import sumBy from 'lodash/sumBy';
-  import { RouteNames } from '../../constants';
-  import ResourceDrawer from '../../components/ResourceDrawer';
   import { routerMixin } from 'shared/mixins';
   import FullscreenModal from 'shared/views/FullscreenModal';
   import { withChangeTracker } from 'shared/data/changes';
+  import ResourceDrawer from '../../components/ResourceDrawer';
+  import { RouteNames } from '../../constants';
 
   const IMPORT_ROUTES = [
     RouteNames.IMPORT_FROM_CHANNELS,

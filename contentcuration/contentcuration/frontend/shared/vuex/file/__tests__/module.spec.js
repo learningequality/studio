@@ -1,9 +1,9 @@
 import JSZip from 'jszip';
-import { getH5PMetadata } from '../utils';
 import storeFactory from 'shared/vuex/baseStore';
 import { File, injectVuexStore } from 'shared/data/resources';
 import client from 'shared/client';
 import { mockChannelScope, resetMockChannelScope } from 'shared/utils/testing';
+import { getH5PMetadata } from '../utils';
 
 jest.mock('shared/vuex/connectionPlugin');
 

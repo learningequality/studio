@@ -3,12 +3,12 @@ import Vuex from 'vuex';
 import VueRouter from 'vue-router';
 import cloneDeep from 'lodash/cloneDeep';
 
-import { STORE_CONFIG } from '../store';
-import router from '../router';
-import CurrentTopicView from '../views/CurrentTopicView';
 import { resetJestGlobal } from 'shared/utils/testing';
 import storeFactory from 'shared/vuex/baseStore';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
+import { STORE_CONFIG } from '../store';
+import router from '../router';
+import CurrentTopicView from '../views/CurrentTopicView';
 
 const CHANNEL = {
   id: 'id-channel',

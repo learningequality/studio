@@ -1,8 +1,8 @@
 import { mount } from '@vue/test-utils';
 import Vuex from 'vuex';
-import EditAudienceModal from '../EditAudienceModal';
 import { ResourcesNeededTypes } from 'shared/constants';
 import { RolesNames } from 'shared/leUtils/Roles';
+import EditAudienceModal from '../EditAudienceModal';
 
 let nodes;
 

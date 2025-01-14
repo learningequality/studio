@@ -39,12 +39,12 @@
 <script>
 
   import { mapActions, mapState } from 'vuex';
-  import { RouteNames } from '../constants';
   import GlobalSnackbar from 'shared/views/GlobalSnackbar';
   import AppBar from 'shared/views/AppBar';
   import { routerMixin } from 'shared/mixins';
   import OfflineText from 'shared/views/OfflineText';
   import PolicyModals from 'shared/views/policies/PolicyModals';
+  import { RouteNames } from '../constants';
 
   export default {
     name: 'SettingsIndex',

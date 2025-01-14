@@ -1,8 +1,8 @@
 import Vue from 'vue';
 import Vuetify from 'vuetify';
 import { shallowMount, mount } from '@vue/test-utils';
-import CompletionOptions from '../CompletionOptions';
 import { CompletionCriteriaModels } from 'shared/constants';
+import CompletionOptions from '../CompletionOptions';
 
 Vue.use(Vuetify);
 

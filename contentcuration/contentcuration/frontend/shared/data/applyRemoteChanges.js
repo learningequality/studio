@@ -1,11 +1,11 @@
 import Dexie from 'dexie';
 import sortBy from 'lodash/sortBy';
+import { RolesNames } from 'shared/leUtils/Roles';
+import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 import logging from '../logging';
 import { CHANGE_TYPES, TABLE_NAMES } from './constants';
 import db from './db';
 import { INDEXEDDB_RESOURCES } from './registry';
-import { RolesNames } from 'shared/leUtils/Roles';
-import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
 const {
   CREATED,

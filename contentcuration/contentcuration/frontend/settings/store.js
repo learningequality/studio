@@ -1,5 +1,5 @@
-import settings from './vuex';
 import storeFactory from 'shared/vuex/baseStore';
+import settings from './vuex';
 
 export function factory() {
   return storeFactory({

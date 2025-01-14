@@ -28,11 +28,11 @@
 
 <script>
 
-  import { RouteNames } from '../constants';
-  import AdministrationAppError from './AdministrationAppError';
   import AppBar from 'shared/views/AppBar';
   import GlobalSnackbar from 'shared/views/GlobalSnackbar';
   import { ErrorTypes } from 'shared/constants';
+  import { RouteNames } from '../constants';
+  import AdministrationAppError from './AdministrationAppError';
 
   export default {
     name: 'AdministrationIndex',

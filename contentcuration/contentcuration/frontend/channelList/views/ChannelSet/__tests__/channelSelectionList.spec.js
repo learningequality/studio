@@ -1,7 +1,7 @@
 import { mount } from '@vue/test-utils';
 import Vuex from 'vuex';
-import ChannelSelectionList from '../ChannelSelectionList';
 import { ChannelListTypes } from 'shared/constants';
+import ChannelSelectionList from '../ChannelSelectionList';
 
 const searchWord = 'search test';
 const editChannel = {

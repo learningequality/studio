@@ -1,4 +1,6 @@
 import each from 'jest-each';
+import { MasteryModelsNames } from 'shared/leUtils/MasteryModels';
+import { AssessmentItemTypes, CompletionCriteriaModels } from 'shared/constants';
 import {
   floatOrIntRegex,
   getCorrectAnswersIndices,
@@ -12,8 +14,6 @@ import {
 } from '../utils';
 import router from '../router';
 import { RouteNames } from '../constants';
-import { MasteryModelsNames } from 'shared/leUtils/MasteryModels';
-import { AssessmentItemTypes, CompletionCriteriaModels } from 'shared/constants';
 
 describe('channelEdit utils', () => {
   describe('imported content', () => {

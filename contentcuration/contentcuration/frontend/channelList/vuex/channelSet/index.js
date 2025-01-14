@@ -1,7 +1,7 @@
+import { TABLE_NAMES, CHANGE_TYPES } from 'shared/data';
 import * as mutations from './mutations';
 import * as actions from './actions';
 import * as getters from './getters';
-import { TABLE_NAMES, CHANGE_TYPES } from 'shared/data';
 
 export default {
   namespaced: true,

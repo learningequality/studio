@@ -25,8 +25,8 @@
 <script>
 
   import { mapGetters } from 'vuex';
-  import { searchMixin } from './mixins';
   import { constantsTranslationMixin } from 'shared/mixins';
+  import { searchMixin } from './mixins';
 
   /**
    * Returns the expected format for filters
