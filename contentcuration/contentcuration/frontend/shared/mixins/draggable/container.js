@@ -334,15 +334,17 @@ export default {
   mounted() {
     // Debounce the leave emitter since it can get fired multiple times, and there are some browser
     // inconsistencies that make relying on the drag events difficult. This helps
-    this.throttledUpdateHoverDraggable = animationThrottle(args => this.updateHoverDraggable(args));
-    this.debouncedResetHoverDraggable = debounce(args => {
+    this.throttledUpdateHoverDraggable = animationThrottle((args) =>
+      this.updateHoverDraggable(args)
+    );
+    this.debouncedResetHoverDraggable = debounce((args) => {
       this.resetHoverDraggable(args);
       this.effectAllowed = null;
     }, 500);
   },
   render() {
     // Add event key modifier if we're supposed to use capturing
-    const eventKey = eventName => {
+    const eventKey = (eventName) => {
       return this.useCapture ? `!${eventName}` : eventName;
     };
 

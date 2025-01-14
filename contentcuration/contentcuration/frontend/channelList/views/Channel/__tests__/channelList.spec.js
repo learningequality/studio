@@ -41,7 +41,7 @@ function makeWrapper({ propsData = {}, getters = GETTERS, actions = ACTIONS } = 
   });
 }
 
-const getNewChannelButton = wrapper => {
+const getNewChannelButton = (wrapper) => {
   return wrapper.find('[data-test="add-channel"]');
 };
 

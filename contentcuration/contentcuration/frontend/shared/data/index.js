@@ -26,14 +26,14 @@ export function setupSchema() {
     // in somewhat duplicative behaviour instead.
     [CHANGES_TABLE]: 'rev++,[table+key],server_rev,type',
     [PAGINATION_TABLE]: '[table+queryString]',
-    ...mapValues(INDEXEDDB_RESOURCES, value => value.schema),
+    ...mapValues(INDEXEDDB_RESOURCES, (value) => value.schema),
   });
 }
 
 export function resetDB() {
   const tableNames = Object.values(TABLE_NAMES);
   return db.transaction('rw', ...tableNames, () => {
-    return Promise.all(tableNames.map(table => db[table].clear()));
+    return Promise.all(tableNames.map((table) => db[table].clear()));
   });
 }
 

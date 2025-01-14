@@ -200,7 +200,7 @@ describe('contentNode mutations', () => {
       });
       await Vue.nextTick();
       const spy = jest.fn();
-      store.watch(state => {
+      store.watch((state) => {
         const node = state.contentNode.contentNodesMap.test;
         const value =
           node &&

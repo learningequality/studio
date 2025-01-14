@@ -3,7 +3,7 @@ import { ChannelSet } from 'shared/data/resources';
 
 /* CHANNEL SET ACTIONS */
 export function loadChannelSetList(context) {
-  return ChannelSet.where({ edit: true }).then(channelSets => {
+  return ChannelSet.where({ edit: true }).then((channelSets) => {
     context.commit('SET_CHANNELSET_LIST', channelSets);
     return channelSets;
   });
@@ -11,7 +11,7 @@ export function loadChannelSetList(context) {
 
 export function loadChannelSet(context, id) {
   return ChannelSet.get(id)
-    .then(channelSet => {
+    .then((channelSet) => {
       context.commit('ADD_CHANNELSET', channelSet);
       return channelSet;
     })
@@ -55,7 +55,7 @@ export function commitChannelSet(
   for (const channel of channels) {
     channelSetData.channels[channel] = true;
   }
-  return ChannelSet.createModel(channelSetData).then(data => {
+  return ChannelSet.createModel(channelSetData).then((data) => {
     context.commit('SET_CHANNELSET_NOT_NEW', id);
     context.commit('UPDATE_CHANNELSET', data);
   });

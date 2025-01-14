@@ -34,7 +34,7 @@ const router = new VueRouter({
       name: RouteNames.TREE_ROOT_VIEW,
       path: '/',
       beforeEnter: (to, from, next) => {
-        return store.dispatch('currentChannel/loadChannel').then(channel => {
+        return store.dispatch('currentChannel/loadChannel').then((channel) => {
           if (channel) {
             const nodeId = channel.root_id;
             return next({
@@ -71,7 +71,7 @@ const router = new VueRouter({
       name: RouteNames.STAGING_TREE_VIEW_REDIRECT,
       path: '/staging',
       beforeEnter: (to, from, next) => {
-        return store.dispatch('currentChannel/loadChannel').then(channel => {
+        return store.dispatch('currentChannel/loadChannel').then((channel) => {
           return next({
             name: RouteNames.STAGING_TREE_VIEW,
             params: {
@@ -101,7 +101,7 @@ const router = new VueRouter({
         ];
 
         return Promise.all(promises)
-          .catch(error => {
+          .catch((error) => {
             throw new Error(error);
           })
           .then(() => next());
@@ -120,7 +120,7 @@ const router = new VueRouter({
         ];
 
         return Promise.all(promises)
-          .catch(error => {
+          .catch((error) => {
             throw new Error(error);
           })
           .then(() => next());
@@ -134,7 +134,7 @@ const router = new VueRouter({
       beforeEnter: (to, from, next) => {
         return store
           .dispatch('currentChannel/loadChannel')
-          .catch(error => {
+          .catch((error) => {
             throw new Error(error);
           })
           .then(() => next());
@@ -148,7 +148,7 @@ const router = new VueRouter({
       beforeEnter: (to, from, next) => {
         return store
           .dispatch('currentChannel/loadChannel')
-          .catch(error => {
+          .catch((error) => {
             throw new Error(error);
           })
           .then(() => next());
@@ -162,7 +162,7 @@ const router = new VueRouter({
       beforeEnter: (to, from, next) => {
         return store
           .dispatch('currentChannel/loadChannel')
-          .catch(error => {
+          .catch((error) => {
             throw new Error(error);
           })
           .then(() => next());
@@ -176,7 +176,7 @@ const router = new VueRouter({
       beforeEnter: (to, from, next) => {
         return store
           .dispatch('currentChannel/loadChannel')
-          .catch(error => {
+          .catch((error) => {
             throw new Error(error);
           })
           .then(() => next());
@@ -190,7 +190,7 @@ const router = new VueRouter({
       beforeEnter: (to, from, next) => {
         return store
           .dispatch('currentChannel/loadChannel')
-          .catch(error => {
+          .catch((error) => {
             throw new Error(error);
           })
           .then(() => next());
@@ -204,7 +204,7 @@ const router = new VueRouter({
       beforeEnter: (to, from, next) => {
         return store
           .dispatch('currentChannel/loadChannel')
-          .catch(error => {
+          .catch((error) => {
             throw new Error(error);
           })
           .then(() => next());
@@ -218,7 +218,7 @@ const router = new VueRouter({
       beforeEnter: (to, from, next) => {
         return store
           .dispatch('currentChannel/loadChannel')
-          .catch(error => {
+          .catch((error) => {
             throw new Error(error);
           })
           .then(() => next());
@@ -230,7 +230,7 @@ const router = new VueRouter({
       beforeEnter: (to, from, next) => {
         return store
           .dispatch('contentNode/loadContentNodeByNodeId', to.params.originalSourceNodeId)
-          .then(node => {
+          .then((node) => {
             next({
               name: RouteNames.TREE_VIEW,
               params: {
@@ -249,7 +249,7 @@ const router = new VueRouter({
       beforeEnter: (to, from, next) => {
         return store
           .dispatch('currentChannel/loadChannel')
-          .catch(error => {
+          .catch((error) => {
             throw new Error(error);
           })
           .then(() => next());

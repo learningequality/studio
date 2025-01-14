@@ -5,7 +5,7 @@ import { User } from 'shared/data/resources';
 export function loadUser(context, id) {
   return client
     .get(window.Urls.admin_users_detail(id))
-    .then(response => {
+    .then((response) => {
       response.data.id = response.data.id.toString();
       context.commit('ADD_USERS', [response.data]);
       return response.data;
@@ -16,15 +16,15 @@ export function loadUser(context, id) {
 }
 
 export function loadUserDetails(context, id) {
-  return client.get(window.Urls.admin_users_metadata(id)).then(response => {
+  return client.get(window.Urls.admin_users_metadata(id)).then((response) => {
     return response.data;
   });
 }
 
 export function loadUsers({ commit }, params) {
   params.page_size = params.page_size || 100;
-  return client.get(window.Urls.admin_users_list(), { params }).then(response => {
-    response.data.results = map(response.data.results, u => {
+  return client.get(window.Urls.admin_users_list(), { params }).then((response) => {
+    response.data.results = map(response.data.results, (u) => {
       return { ...u, id: u.id.toString() };
     });
     commit('ADD_USERS', response.data.results);
@@ -33,7 +33,7 @@ export function loadUsers({ commit }, params) {
 }
 
 export function updateUser(context, { id, ...data }) {
-  return User.updateAsAdmin(id, data).then(response => {
+  return User.updateAsAdmin(id, data).then((response) => {
     context.commit('UPDATE_USER', { id, ...data });
     return response.data;
   });

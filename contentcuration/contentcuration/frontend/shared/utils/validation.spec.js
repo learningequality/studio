@@ -514,9 +514,9 @@ describe('channelEdit utils', () => {
 
     each(
       Object.values(ContentKindsNames).filter(
-        kind => ![ContentKindsNames.TOPIC, ContentKindsNames.EXERCISE].includes(kind)
+        (kind) => ![ContentKindsNames.TOPIC, ContentKindsNames.EXERCISE].includes(kind)
       )
-    ).describe('for nodes other than topic or exercise', kind => {
+    ).describe('for nodes other than topic or exercise', (kind) => {
       let nodeDetails, files;
       beforeEach(() => {
         nodeDetails = {

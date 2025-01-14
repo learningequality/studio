@@ -35,7 +35,7 @@ function _convertMetadataLabel(key, obj) {
  * @param obj
  * @return {number}
  */
-const total_count = obj =>
+const total_count = (obj) =>
   obj['kind'] === ContentKindsNames.TOPIC ? (obj['rght'] - obj['lft'] - 1) / 2 : 1;
 
 const CONTENT_NODE_FIELD_MAP = {
@@ -62,7 +62,7 @@ const CONTENT_NODE_FIELD_MAP = {
   categories: _convertMetadataLabel.bind({}, 'categories'),
   resource_types: _convertMetadataLabel.bind({}, 'resource_types'),
   tags: _convertMetadataLabel.bind({}, 'tags'),
-  extra_fields: obj => {
+  extra_fields: (obj) => {
     const options = obj['options'];
     let randomize = true;
 
@@ -86,15 +86,15 @@ const CONTENT_NODE_FIELD_MAP = {
       randomize,
     };
   },
-  role_visibility: obj => (obj['coach_content'] ? RolesNames.COACH : RolesNames.LEARNER),
-  license: obj => findLicense(obj['license_name']),
+  role_visibility: (obj) => (obj['coach_content'] ? RolesNames.COACH : RolesNames.LEARNER),
+  license: (obj) => findLicense(obj['license_name']),
   license_description: 'license_description',
   copyright_holder: 'license_owner',
   coach_count: 'num_coach_contents',
 
   total_count,
-  language: obj => obj['lang']['id'],
-  thumbnail_src: obj =>
+  language: (obj) => obj['lang']['id'],
+  thumbnail_src: (obj) =>
     obj['thumbnail'] ? new URL(obj['thumbnail'], window.location.origin).toString() : null,
   thumbnail_encoding: () => '{}',
 
@@ -144,7 +144,7 @@ export function convertContentNodeResponse(id, root_id, parent, publicNode) {
  * @return {Promise<PublicChannelMetadata>}
  */
 export function getChannel(channelId) {
-  return client.get(urls.publicchannel_detail(channelId)).then(response => response.data);
+  return client.get(urls.publicchannel_detail(channelId)).then((response) => response.data);
 }
 
 /**
@@ -153,7 +153,7 @@ export function getChannel(channelId) {
  * @return {Promise<PublicContentNode>}
  */
 export function getContentNode(nodeId) {
-  return client.get(urls.publiccontentnode_detail(nodeId)).then(response => response.data);
+  return client.get(urls.publiccontentnode_detail(nodeId)).then((response) => response.data);
 }
 
 /**

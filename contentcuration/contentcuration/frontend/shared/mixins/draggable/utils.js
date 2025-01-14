@@ -31,8 +31,8 @@ export class DropEventHelper {
   get sources() {
     const { target } = this;
     return this.data.sources
-      .filter(source => !target.is(source))
-      .map(source => new DraggableIdentityHelper(source));
+      .filter((source) => !target.is(source))
+      .map((source) => new DraggableIdentityHelper(source));
   }
 
   isValid() {

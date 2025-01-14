@@ -18,7 +18,7 @@ describe('requestNewActivationLink', () => {
     wrapper = makeWrapper();
     wrapper.setMethods({
       sendActivationLink: () => {
-        return new Promise(resolve => {
+        return new Promise((resolve) => {
           sendActivationLink();
           resolve();
         });

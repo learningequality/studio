@@ -14,11 +14,11 @@ const defaultLanguage = {
   lang_direction: languageDirections.LTR,
 };
 
-const languageValidator = language => {
+const languageValidator = (language) => {
   return ['id', 'lang_name', 'lang_direction'].reduce((valid, key) => valid && language[key], true);
 };
 
-const getContentLangDir = language => {
+const getContentLangDir = (language) => {
   return (language || {}).lang_direction || languageDirections.LTR;
 };
 
@@ -210,7 +210,7 @@ function _setUpVueIntl() {
   if (window.ALL_MESSAGES) {
     Vue.registerMessages(currentLanguage, window.ALL_MESSAGES);
   }
-  importVueIntlLocaleData().forEach(localeData => VueIntl.addLocaleData(localeData));
+  importVueIntlLocaleData().forEach((localeData) => VueIntl.addLocaleData(localeData));
 
   _i18nReady = true;
 }
@@ -253,10 +253,10 @@ export function i18nSetup(skipPolyfill = false) {
       resolve();
     } else {
       Promise.all([
-        new Promise(res => {
+        new Promise((res) => {
           require.ensure(
             ['intl'],
-            require => {
+            (require) => {
               res(() => require('intl'));
             },
             'intl'
@@ -271,7 +271,7 @@ export function i18nSetup(skipPolyfill = false) {
           _setUpVueIntl();
           resolve();
         },
-        error => {
+        (error) => {
           // eslint-disable-next-line no-console
           console.error('An error occurred trying to setup Internationalization', error);
           reject();
@@ -296,13 +296,13 @@ export function i18nSetup(skipPolyfill = false) {
  *  currently selected language object first, if one exists.
  */
 export function sortLanguages(availableLanguages, currentLanguageId) {
-  const currentLanguageElem = availableLanguages.find(language => {
+  const currentLanguageElem = availableLanguages.find((language) => {
     return language.id == currentLanguageId;
   });
 
   const sortedLanguages = availableLanguages
     .sort(compareLanguages)
-    .filter(language => language.id != currentLanguageId);
+    .filter((language) => language.id != currentLanguageId);
 
   if (currentLanguageElem) {
     sortedLanguages.unshift(currentLanguageElem);

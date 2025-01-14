@@ -20,7 +20,7 @@
  *
  */
 
-export default html => {
+export default (html) => {
   if (!html || !html.includes('markdown-formula-field')) {
     return html;
   }

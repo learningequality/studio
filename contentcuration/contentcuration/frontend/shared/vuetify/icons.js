@@ -24,7 +24,7 @@ export const CONTENT_KIND_ICONS = {
 };
 
 export function getContentKindIcon(kind, isEmpty = false) {
-  const icon = (isEmpty ? [kind + EMPTY] : []).concat([kind]).find(k => k in CONTENT_KIND_ICONS);
+  const icon = (isEmpty ? [kind + EMPTY] : []).concat([kind]).find((k) => k in CONTENT_KIND_ICONS);
   return icon ? CONTENT_KIND_ICONS[icon] : 'error_outline';
 }
 

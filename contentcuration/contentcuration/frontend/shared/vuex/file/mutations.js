@@ -27,7 +27,7 @@ export function ADD_FILE(state, file) {
 }
 
 export function ADD_FILES(state, files = []) {
-  files.forEach(file => {
+  files.forEach((file) => {
     ADD_FILE(state, file);
   });
 }

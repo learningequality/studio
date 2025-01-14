@@ -18,7 +18,7 @@ export function ADD_CHANNEL(state, channel) {
 }
 
 export function ADD_CHANNELS(state, channels = []) {
-  channels.forEach(channel => {
+  channels.forEach((channel) => {
     ADD_CHANNEL(state, channel);
   });
 }

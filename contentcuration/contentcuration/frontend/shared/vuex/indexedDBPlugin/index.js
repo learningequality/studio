@@ -69,7 +69,7 @@ export class Listener {
       return;
     }
 
-    events.addListener(eventName, obj => {
+    events.addListener(eventName, (obj) => {
       this.callback(store, obj);
     });
   }
@@ -82,7 +82,7 @@ export class Listener {
  * @return {Listener}
  */
 export function commitListener(mutationName) {
-  return new Listener(function(store, obj) {
+  return new Listener(function (store, obj) {
     store.commit(this.prefix(mutationName), obj);
   });
 }
@@ -94,7 +94,7 @@ export function commitListener(mutationName) {
  * @return {Listener}
  */
 export function dispatchListener(actionName) {
-  return new Listener(function(store, obj) {
+  return new Listener(function (store, obj) {
     store.dispatch(this.prefix(actionName), obj);
   });
 }
@@ -109,8 +109,8 @@ export default function IndexedDBPlugin(db, listeners = []) {
   const events = new EventEmitter();
   events.setMaxListeners(1000);
 
-  db.on('changes', function(changes) {
-    changes.forEach(function(change) {
+  db.on('changes', function (changes) {
+    changes.forEach(function (change) {
       let obj = change.obj || {};
       if (change.type === CHANGE_TYPES.UPDATED) {
         obj = change.mods;
@@ -128,7 +128,7 @@ export default function IndexedDBPlugin(db, listeners = []) {
     });
   });
 
-  return function(store) {
-    listeners.forEach(listener => listener.register(events, store));
+  return function (store) {
+    listeners.forEach((listener) => listener.register(events, store));
   };
 }

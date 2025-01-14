@@ -26,8 +26,8 @@ export function SAVE_CURRENT_CHANNEL_STAGING_DIFF(state, payload) {
   ];
 
   const stagingDiff = {};
-  fields.forEach(fieldName => {
-    const field = payload.find(item => item.field === fieldName);
+  fields.forEach((fieldName) => {
+    const field = payload.find((item) => item.field === fieldName);
 
     const live = field.original;
     const staged = field.changed;

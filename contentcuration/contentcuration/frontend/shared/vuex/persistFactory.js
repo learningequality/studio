@@ -57,7 +57,7 @@ class PersistStorage {
   addListener(callback) {
     Object.entries(this.mutations).forEach(([mutation, storageKey]) => {
       // Attach listener to storage events and trigger callback when value changed
-      const listener = e => {
+      const listener = (e) => {
         if (!isEqual(e.oldValue, e.newValue)) {
           callback(mutation, e.newValue);
         }
@@ -104,7 +104,7 @@ function prepareMutations(ns, mutations, prefixMutations) {
 export default function persistFactory(ns, mutations, prefixMutations = true) {
   const storage = PersistStorage.namespace(ns, prepareMutations(ns, mutations, prefixMutations));
 
-  return function(store) {
+  return function (store) {
     store.subscribe(({ type, payload }) => {
       // Only triggered when the mutation is one we've been told to persist
       if (storage.shouldPersist(type, payload)) {
@@ -128,13 +128,13 @@ export default function persistFactory(ns, mutations, prefixMutations = true) {
 export function persistAllFactory(ns, mutations, prefixMutations = true) {
   const storage = PersistStorage.namespace(ns, prepareMutations(ns, mutations, prefixMutations));
 
-  return function(store) {
+  return function (store) {
     store.subscribe(({ type, payload }) => {
       // Only triggered when the mutation is one we've been told to persist
       if (storage.shouldPersist(type, payload)) {
         // Ensure payload not already in array
         const storageValue = storage.get(type) || [];
-        if (!storageValue.find(value => isEqual(value, payload))) {
+        if (!storageValue.find((value) => isEqual(value, payload))) {
           storageValue.push(payload);
           storage.set(type, storageValue);
         }
@@ -142,7 +142,7 @@ export function persistAllFactory(ns, mutations, prefixMutations = true) {
     });
     storage.addListener((mutation, value) => {
       if (isArray(value)) {
-        value.forEach(val => store.commit(mutation, val));
+        value.forEach((val) => store.commit(mutation, val));
       }
     });
   };

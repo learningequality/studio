@@ -46,7 +46,7 @@ function makeWrapper(props = {}) {
 }
 
 window.Urls = {
-  channel: id => {
+  channel: (id) => {
     return id;
   },
 };
@@ -108,7 +108,7 @@ describe.skip('detailsTabView', () => {
           'aggregator',
           'copyright_holder',
         ];
-        keys.forEach(key => {
+        keys.forEach((key) => {
           expect(wrapper.vm.changes[key].varied).toBe(true);
         });
       });

@@ -27,7 +27,7 @@ describe('contentNode actions', () => {
   };
   beforeEach(async () => {
     await mockChannelScope('test-123');
-    return ContentNode._add(contentNodeDatum).then(newId => {
+    return ContentNode._add(contentNodeDatum).then((newId) => {
       id = newId;
       contentNodeDatum.id = newId;
       jest
@@ -115,7 +115,7 @@ describe('contentNode actions', () => {
           parent: id,
           kind: 'topic',
         })
-        .then(newId => {
+        .then((newId) => {
           expect(store.getters['contentNode/getContentNode'](newId)).not.toBeUndefined();
         });
     });
@@ -232,7 +232,7 @@ describe('contentNode actions', () => {
       expect(updatedContentNode.language).toEqual(newLang);
 
       const descendants = [topicContentNode, nonTopicContentNode];
-      descendants.forEach(descendant => {
+      descendants.forEach((descendant) => {
         const updatedDescendant = store.getters['contentNode/getContentNode'](descendant);
         expect(updatedDescendant.language).toEqual(newLang);
       });

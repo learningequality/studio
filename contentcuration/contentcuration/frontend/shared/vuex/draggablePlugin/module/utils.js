@@ -72,7 +72,7 @@ export class DraggableIdentityHelper {
    */
   findClosestAncestor(matcher) {
     const { id, type } = this._identity;
-    return this.ancestorsOrdered.find(a => isMatch(a, matcher) && !isMatch(a, { id, type }));
+    return this.ancestorsOrdered.find((a) => isMatch(a, matcher) && !isMatch(a, { id, type }));
   }
 }
 

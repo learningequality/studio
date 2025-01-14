@@ -30,7 +30,7 @@ describe('channel actions', () => {
     });
     injectVuexStore(store);
     store.state.session.currentUser.id = userId;
-    return Channel.add(channelDatum).then(newId => {
+    return Channel.add(channelDatum).then((newId) => {
       id = newId;
       channelDatum.id = id;
     });
@@ -102,7 +102,7 @@ describe('channel actions', () => {
   });
   describe('createChannel action for a new channel', () => {
     it('should add a new channel with an id', () => {
-      return store.dispatch('channel/createChannel').then(id => {
+      return store.dispatch('channel/createChannel').then((id) => {
         expect(store.getters['channel/getChannel'](id)).not.toBeUndefined();
       });
     });
@@ -277,7 +277,7 @@ describe('Channel sharing vuex', () => {
     });
     injectVuexStore(store);
     store.state.session.currentUser.id = userId;
-    return Channel.add(channelDatum).then(newId => {
+    return Channel.add(channelDatum).then((newId) => {
       channelId = newId;
       const user = {
         ...testUser,

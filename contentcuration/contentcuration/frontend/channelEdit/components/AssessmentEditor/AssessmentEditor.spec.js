@@ -69,67 +69,61 @@ const ITEMS_VALIDATION = [
   [ValidationErrors.QUESTION_REQUIRED],
 ];
 
-const checkShowAnswers = wrapper => {
-  wrapper
-    .find('[data-test="showAnswersCheckbox"]')
-    .find('input')
-    .element.click();
+const checkShowAnswers = (wrapper) => {
+  wrapper.find('[data-test="showAnswersCheckbox"]').find('input').element.click();
 };
 
-const getItems = wrapper => {
+const getItems = (wrapper) => {
   return wrapper.findAll('[data-test="item"]');
 };
 
-const isItemOpen = assessmentItemWrapper => {
+const isItemOpen = (assessmentItemWrapper) => {
   return assessmentItemWrapper.contains('[data-test="editor"]');
 };
 
-const isAnswersPreviewVisible = assessmentItemWrapper => {
+const isAnswersPreviewVisible = (assessmentItemWrapper) => {
   return assessmentItemWrapper.contains('[data-test="item-answers-preview"]');
 };
 
-const clickNewQuestionBtn = wrapper => {
-  wrapper
-    .find('[data-test="newQuestionBtn"]')
-    .find('button')
-    .trigger('click');
+const clickNewQuestionBtn = (wrapper) => {
+  wrapper.find('[data-test="newQuestionBtn"]').find('button').trigger('click');
 };
 
-const clickClose = assessmentItemWrapper => {
+const clickClose = (assessmentItemWrapper) => {
   assessmentItemWrapper.find('[data-test="closeBtn"]').trigger('click');
 };
 
-const clickEdit = assessmentItemWrapper => {
+const clickEdit = (assessmentItemWrapper) => {
   assessmentItemWrapper
     .find(`[data-test="toolbarIcon-${AssessmentItemToolbarActions.EDIT_ITEM}"]`)
     .trigger('click');
 };
 
-const clickDelete = assessmentItemWrapper => {
+const clickDelete = (assessmentItemWrapper) => {
   assessmentItemWrapper
     .find(`[data-test="toolbarMenuItem-${AssessmentItemToolbarActions.DELETE_ITEM}"]`)
     .trigger('click');
 };
 
-const clickAddQuestionAbove = assessmentItemWrapper => {
+const clickAddQuestionAbove = (assessmentItemWrapper) => {
   assessmentItemWrapper
     .find(`[data-test="toolbarMenuItem-${AssessmentItemToolbarActions.ADD_ITEM_ABOVE}"]`)
     .trigger('click');
 };
 
-const clickAddQuestionBelow = assessmentItemWrapper => {
+const clickAddQuestionBelow = (assessmentItemWrapper) => {
   assessmentItemWrapper
     .find(`[data-test="toolbarMenuItem-${AssessmentItemToolbarActions.ADD_ITEM_BELOW}"]`)
     .trigger('click');
 };
 
-const clickMoveUp = assessmentItemWrapper => {
+const clickMoveUp = (assessmentItemWrapper) => {
   assessmentItemWrapper
     .find(`[data-test="toolbarIcon-${AssessmentItemToolbarActions.MOVE_ITEM_UP}"]`)
     .trigger('click');
 };
 
-const clickMoveDown = assessmentItemWrapper => {
+const clickMoveDown = (assessmentItemWrapper) => {
   assessmentItemWrapper
     .find(`[data-test="toolbarIcon-${AssessmentItemToolbarActions.MOVE_ITEM_DOWN}"]`)
     .trigger('click');

@@ -5,7 +5,7 @@ import FormatPresetsMap from 'shared/leUtils/FormatPresets';
 import { getHash, extractMetadata, storageUrl } from './utils';
 
 export function loadFiles(context, params = {}) {
-  return File.where(params).then(files => {
+  return File.where(params).then((files) => {
     context.commit('ADD_FILES', files);
     return files;
   });
@@ -13,7 +13,7 @@ export function loadFiles(context, params = {}) {
 
 export function loadFile(context, id) {
   return File.get(id)
-    .then(file => {
+    .then((file) => {
       context.commit('ADD_FILE', file);
       return file;
     })
@@ -141,7 +141,7 @@ export function uploadFileToStorage(
             'Content-Type': contentType,
             'Content-MD5': hexToBase64(checksum),
           },
-          onUploadProgress: progressEvent => {
+          onUploadProgress: (progressEvent) => {
             context.commit('ADD_FILE', {
               id,
               // Always assign loaded to a maximum of 1 less than the total
@@ -168,10 +168,7 @@ export function uploadFileToStorage(
  * @return {Promise<{uploadPromise: Promise, fileObject: Object}>}
  */
 export function uploadFile(context, { file, preset = null } = {}) {
-  const file_format = file.name
-    .split('.')
-    .pop()
-    .toLowerCase();
+  const file_format = file.name.split('.').pop().toLowerCase();
   const hashPromise = getHash(file).catch(() => Promise.reject(fileErrors.CHECKSUM_HASH_FAILED));
   let checksum,
     metadata = {};
@@ -189,7 +186,7 @@ export function uploadFile(context, { file, preset = null } = {}) {
         name: file.name,
         file_format,
         ...metadata,
-      }).catch(error => {
+      }).catch((error) => {
         let errorType = fileErrors.UPLOAD_FAILED;
         if (error.response && error.response.status === 412) {
           errorType = fileErrors.NO_STORAGE;
@@ -197,7 +194,7 @@ export function uploadFile(context, { file, preset = null } = {}) {
         return Promise.reject(errorType);
       }); // End get upload url
     })
-    .then(data => {
+    .then((data) => {
       data.file.metadata = metadata;
       const fileObject = {
         ...data.file,
@@ -244,7 +241,7 @@ export function uploadFile(context, { file, preset = null } = {}) {
       // End upload file
       return { fileObject, uploadPromise };
     })
-    .catch(error => {
+    .catch((error) => {
       // If error isn't one of defined error constants, raise it
       if (!Object.values(fileErrors).includes(error)) {
         throw error;
@@ -268,10 +265,10 @@ export function getAudioData(context, url) {
   return new Promise((resolve, reject) => {
     client
       .get(url, { responseType: 'arraybuffer' })
-      .then(response => {
+      .then((response) => {
         const audioContext = new AudioContext();
         audioContext
-          .decodeAudioData(response.data, buffer => {
+          .decodeAudioData(response.data, (buffer) => {
             resolve(buffer.getChannelData(0));
           })
           .catch(reject);

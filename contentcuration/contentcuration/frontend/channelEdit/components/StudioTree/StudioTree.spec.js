@@ -296,10 +296,10 @@ describe('StudioTree', () => {
       };
 
       getters = {
-        getContentNode: jest.fn().mockImplementation(() => nodeId => {
+        getContentNode: jest.fn().mockImplementation(() => (nodeId) => {
           return contentNodes[nodeId];
         }),
-        getContentNodeChildren: jest.fn().mockImplementation(() => nodeId => {
+        getContentNodeChildren: jest.fn().mockImplementation(() => (nodeId) => {
           return contentNodesChildren[nodeId];
         }),
       };
@@ -333,7 +333,7 @@ describe('StudioTree', () => {
         propsData: { nodeId: 'root-topic', root: true },
         getters: {
           ...getters,
-          nodeExpanded: jest.fn().mockImplementation(() => nodeId => nodeId === 'subtopic-1'),
+          nodeExpanded: jest.fn().mockImplementation(() => (nodeId) => nodeId === 'subtopic-1'),
         },
       });
       await nextTickWaitFor(wrapper, () => Boolean(getItems(wrapper).length));

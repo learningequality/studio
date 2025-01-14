@@ -8,7 +8,7 @@ function emitScreenshot() {
 }
 
 function takeScreenshot() {
-  html2canvas(document.body).then(canvas => {
+  html2canvas(document.body).then((canvas) => {
     const capture = canvas.toDataURL();
     if (screenShot !== capture && takes < 10) {
       screenShot = capture;

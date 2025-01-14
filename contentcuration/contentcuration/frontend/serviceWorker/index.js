@@ -14,7 +14,7 @@ import { precacheAndRoute } from 'workbox-precaching';
 
 precacheAndRoute(self.__WB_MANIFEST);
 
-addEventListener('message', event => {
+addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
     // eslint-disable-next-line no-undef
     skipWaiting();

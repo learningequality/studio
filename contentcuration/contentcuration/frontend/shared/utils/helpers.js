@@ -78,8 +78,8 @@ export function promiseChunk(things, chunkSize, callback) {
   }
 
   return chunk(things, chunkSize).reduce((promise, thingChunk) => {
-    return promise.then(results =>
-      callback(thingChunk).then(chunkResults => results.concat(chunkResults))
+    return promise.then((results) =>
+      callback(thingChunk).then((chunkResults) => results.concat(chunkResults))
     );
   }, Promise.resolve([]));
 }
@@ -170,7 +170,7 @@ export async function generatePdf(
   doc = null,
   { save = false, scale = null, filename } = {}
 ) {
-  return require.ensure(['jspdf', 'html2canvas'], require => {
+  return require.ensure(['jspdf', 'html2canvas'], (require) => {
     const format = 'letter';
     const jsPDF = require('jspdf');
     const html2canvas = require('html2canvas');
@@ -211,7 +211,7 @@ export async function generatePdf(
 
       if (node.attributes['capture-as-image']) {
         promises.push(
-          html2canvas(node).then(canvas => {
+          html2canvas(node).then((canvas) => {
             doc.addImage(
               canvas.toDataURL(),
               'PNG',
@@ -224,7 +224,7 @@ export async function generatePdf(
         );
       } else if (isNonUnicode) {
         promises.push(
-          html2canvas(node).then(canvas => {
+          html2canvas(node).then((canvas) => {
             doc.addImage(
               canvas.toDataURL(),
               'PNG',
@@ -242,7 +242,7 @@ export async function generatePdf(
         const extension = filename.split('.').slice(-1)[0];
         if (extension.toLowerCase() === 'svg') {
           promises.push(
-            new Promise(resolve => {
+            new Promise((resolve) => {
               const canvas = document.createElement('canvas');
               canvas.width = width;
               canvas.height = height;
@@ -250,7 +250,7 @@ export async function generatePdf(
               context.fillStyle = style.getPropertyValue('background-color');
               context.fillRect(0, 0, canvas.width, canvas.height);
               const img = new Image();
-              img.onload = function() {
+              img.onload = function () {
                 context.drawImage(img, 0, 0, width, height);
                 doc.addImage(
                   canvas.toDataURL(),
@@ -296,7 +296,7 @@ export async function generatePdf(
  */
 export function findLicense(key, defaultValue = {}) {
   const license = LicensesList.find(
-    license => license.license_name === key || license.id === parseInt(key, 10)
+    (license) => license.license_name === key || license.id === parseInt(key, 10)
   );
 
   return license || defaultValue;
@@ -312,7 +312,7 @@ export function animationThrottle(callback) {
   let animationFrameId = null;
   let lastCallback = () => {};
 
-  const throttled = function(...args) {
+  const throttled = function (...args) {
     lastCallback = () => {
       callback(...args);
       animationFrameId = null;
@@ -328,7 +328,7 @@ export function animationThrottle(callback) {
   /**
    * Cancels any pending frame request and immediately executes the function with the last args
    */
-  throttled.flush = function() {
+  throttled.flush = function () {
     throttled.cancel();
     lastCallback();
   };
@@ -336,7 +336,7 @@ export function animationThrottle(callback) {
   /**
    * Cancels any pending frame request
    */
-  throttled.cancel = function() {
+  throttled.cancel = function () {
     if (animationFrameId) {
       cancelAnimationFrame(animationFrameId);
       animationFrameId = null;
@@ -379,7 +379,7 @@ export function extendSlot(slotName, vNodeData = {}, scopeProps = {}) {
   }
 
   // Filters out text nodes, and anything falsy
-  slotElements = slotElements.filter(c => c && (c.tag || c.data.tag));
+  slotElements = slotElements.filter((c) => c && (c.tag || c.data.tag));
 
   if (!slotElements.length) {
     return null;
@@ -402,7 +402,7 @@ export function extendSlot(slotName, vNodeData = {}, scopeProps = {}) {
   // Must be an update! This forces classes and styles to update,
   // which do not update otherwise
   if (element.data[EXTENDED_SLOT] && element.context) {
-    element.context.$nextTick(function() {
+    element.context.$nextTick(function () {
       this.$forceUpdate();
     });
   }
@@ -420,10 +420,10 @@ export function extendSlot(slotName, vNodeData = {}, scopeProps = {}) {
  * from https://github.com/lodash/lodash/issues/2403#issuecomment-290760787
  */
 export function memoizeDebounce(func, wait = 0, options = {}) {
-  const mem = memoize(function() {
+  const mem = memoize(function () {
     return debounce(func, wait, options);
   }, options.resolver);
-  return function() {
+  return function () {
     mem.apply(this, arguments).apply(this, arguments);
   };
 }
@@ -442,9 +442,9 @@ export function cleanBooleanMaps(contentNode) {
     'learning_activities',
     'categories',
   ];
-  booleanMapFields.forEach(field => {
+  booleanMapFields.forEach((field) => {
     if (contentNode[field]) {
-      Object.keys(contentNode[field]).forEach(key => {
+      Object.keys(contentNode[field]).forEach((key) => {
         if (!contentNode[field][key]) {
           delete contentNode[field][key];
         }
@@ -462,7 +462,7 @@ function getCategoriesTree() {
 
   const availablePaths = {};
 
-  (Object.values(Categories) || []).map(key => {
+  (Object.values(Categories) || []).map((key) => {
     const paths = key.split('.');
     let path = '';
     for (const path_segment of paths) {
@@ -518,7 +518,7 @@ function getCategoriesTree() {
 export function getSortedCategories() {
   const categoriesTree = getCategoriesTree();
   const categoriesSorted = {};
-  const sortCategories = function(categories) {
+  const sortCategories = function (categories) {
     Object.entries(categories).forEach(([name, category]) => {
       categoriesSorted[category.value] = name;
       sortCategories(category.nested);
@@ -533,8 +533,9 @@ export function isAudioVideoFile(file) {
     return false;
   }
 
-  const videoAllowedFormats = FormatPresetsMap.get(FormatPresetsNames.HIGH_RES_VIDEO)
-    .allowed_formats;
+  const videoAllowedFormats = FormatPresetsMap.get(
+    FormatPresetsNames.HIGH_RES_VIDEO
+  ).allowed_formats;
   const audioAllowedFormats = FormatPresetsMap.get(FormatPresetsNames.AUDIO).allowed_formats;
   return (
     videoAllowedFormats.includes(file.file_format) || audioAllowedFormats.includes(file.file_format)
@@ -552,7 +553,7 @@ export function getFileDuration(nodeFiles, kind) {
 
   // filter for the correct file types,
   // to exclude files such as subtitle or cc
-  const audioVideoFiles = nodeFiles.filter(file => isAudioVideoFile(file));
+  const audioVideoFiles = nodeFiles.filter((file) => isAudioVideoFile(file));
   // return the last item in the array
   const file = audioVideoFiles[audioVideoFiles.length - 1];
   if (!file || !file.duration) {
@@ -598,14 +599,14 @@ export function getMergedMapFields(node, contentNodeData) {
         for (const category of existingCategories) {
           // If any of the new categories are more specific than the existing category,
           // omit this.
-          if (!newCategories.some(newCategory => newCategory.startsWith(category))) {
+          if (!newCategories.some((newCategory) => newCategory.startsWith(category))) {
             newMap[category] = true;
           }
         }
         for (const category of newCategories) {
           if (
             !existingCategories.some(
-              existingCategory =>
+              (existingCategory) =>
                 existingCategory.startsWith(category) && category !== existingCategory
             )
           ) {

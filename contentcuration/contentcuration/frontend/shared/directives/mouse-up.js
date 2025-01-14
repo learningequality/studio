@@ -1,7 +1,7 @@
 const listeners = new Map();
 export default {
   inserted: (el, binding, vnode) => {
-    listeners.set(vnode, event => {
+    listeners.set(vnode, (event) => {
       binding.value(event);
     });
     document.body.addEventListener('mouseup', listeners.get(vnode), true);

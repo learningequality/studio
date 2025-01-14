@@ -468,7 +468,7 @@ describe('channelEdit utils', () => {
         '10e5', // Exponentiation
         '-15.3e5', // Combo
         '-12345.67890e98', // Combo 2
-      ].forEach(v => expect(floatOrIntRegex.test(v)).toBe(true));
+      ].forEach((v) => expect(floatOrIntRegex.test(v)).toBe(true));
     });
 
     it('tests false for invalid values', () => {
@@ -477,7 +477,7 @@ describe('channelEdit utils', () => {
         'one.point.five', // Text
         '10 5 0 100', // Spaces
         '1.2.3.4', // IP
-      ].forEach(v => expect(floatOrIntRegex.test(v)).toBe(false));
+      ].forEach((v) => expect(floatOrIntRegex.test(v)).toBe(false));
     });
   });
 

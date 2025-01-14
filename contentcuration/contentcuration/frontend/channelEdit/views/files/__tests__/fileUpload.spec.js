@@ -33,7 +33,7 @@ const testFiles = [
 ];
 
 function makeWrapper(files) {
-  files.forEach(f => {
+  files.forEach((f) => {
     f.checksum = 'checksum';
     f.url = 'path';
     f.file_format = 'mp3';

@@ -17,7 +17,7 @@ describe('invitation actions', () => {
   let store;
   let id;
   beforeEach(() => {
-    return Invitation.add(invitation).then(newId => {
+    return Invitation.add(invitation).then((newId) => {
       id = newId;
       store = storeFactory({
         modules: {
@@ -117,8 +117,8 @@ describe('searchCatalog action', () => {
   const searchCatalog = jest.fn();
   beforeEach(() => {
     searchCatalog.mockReset();
-    Channel.searchCatalog = data => {
-      return new Promise(resolve => {
+    Channel.searchCatalog = (data) => {
+      return new Promise((resolve) => {
         searchCatalog(data);
         resolve({ results: [] });
       });

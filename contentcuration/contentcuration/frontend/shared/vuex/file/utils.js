@@ -21,7 +21,7 @@ export function getHash(file) {
     const spark = new SparkMD5.ArrayBuffer();
     let currentChunk = 0;
     const chunks = Math.ceil(file.size / CHUNK_SIZE);
-    fileReader.onload = function(e) {
+    fileReader.onload = function (e) {
       spark.append(e.target.result);
       currentChunk++;
 
@@ -46,7 +46,7 @@ export function getHash(file) {
 
 const extensionPresetMap = FormatPresetsList.reduce((map, value) => {
   if (value.display) {
-    value.allowed_formats.forEach(format => {
+    value.allowed_formats.forEach((format) => {
       if (!map[format]) {
         map[format] = [];
       }
@@ -78,7 +78,7 @@ export async function getH5PMetadata(fileInput) {
   const metadata = {};
   return zip
     .loadAsync(fileInput)
-    .then(function(zip) {
+    .then(function (zip) {
       const h5pJson = zip.file('h5p.json');
       if (h5pJson) {
         return h5pJson.async('text');
@@ -86,7 +86,7 @@ export async function getH5PMetadata(fileInput) {
         throw new Error('h5p.json not found in the H5P file.');
       }
     })
-    .then(function(h5pContent) {
+    .then(function (h5pContent) {
       const data = JSON.parse(h5pContent);
       if (Object.prototype.hasOwnProperty.call(data, 'title')) {
         metadata.title = data['title'];
@@ -109,7 +109,7 @@ export async function getH5PMetadata(fileInput) {
         }
       }
       if (Object.prototype.hasOwnProperty.call(data, 'license')) {
-        const license = LicensesList.find(license => license.license_name === data['license']);
+        const license = LicensesList.find((license) => license.license_name === data['license']);
         if (license) {
           metadata.license = license.id;
         } else if (data['license'] == 'CC0 1.0') {
@@ -133,10 +133,7 @@ export function extractMetadata(file, preset = null) {
   };
 
   if (!metadata.preset) {
-    const fileFormat = file.name
-      .split('.')
-      .pop()
-      .toLowerCase();
+    const fileFormat = file.name.split('.').pop().toLowerCase();
     // Default to whatever the first preset is
     metadata.preset = extensionPresetMap[fileFormat][0];
   }
@@ -151,9 +148,9 @@ export function extractMetadata(file, preset = null) {
   // Extract additional media metadata
   const isVideo = VIDEO_PRESETS.includes(metadata.preset);
 
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     if (isH5P) {
-      getH5PMetadata(file).then(data => {
+      getH5PMetadata(file).then((data) => {
         Object.assign(metadata, data);
       });
       resolve(metadata);

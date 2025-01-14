@@ -15,13 +15,13 @@ export async function fetchResourceSearchResults(context, params) {
   const response = await client.get(urls.search_list(), { params });
 
   // Split nodes into public and private so we can call the separate apis
-  const [publicNodes, privateNodes] = partition(response.data.results, node => node.public);
+  const [publicNodes, privateNodes] = partition(response.data.results, (node) => node.public);
 
   const privatePromise = privateNodes.length
     ? context.dispatch(
         'contentNode/loadContentNodes',
         {
-          id__in: privateNodes.map(node => node.id),
+          id__in: privateNodes.map((node) => node.id),
         },
         { root: true }
       )
@@ -33,7 +33,7 @@ export async function fetchResourceSearchResults(context, params) {
     Promise.all(
       // The public API is cached, so we can hopefully call it multiple times without
       // worrying too much about performance
-      publicNodes.map(node => {
+      publicNodes.map((node) => {
         return context
           .dispatch(
             'contentNode/loadPublicContentNode',
@@ -47,15 +47,15 @@ export async function fetchResourceSearchResults(context, params) {
           )
           .catch(() => null);
       })
-    ).then(nodes => nodes.filter(Boolean)),
+    ).then((nodes) => nodes.filter(Boolean)),
   ]);
 
   // In case we failed to obtain data for all nodes, filter out the ones we didn't get
   const results = response.data.results
-    .map(node => {
+    .map((node) => {
       return (
-        privateNodesLoaded.find(n => n.id === node.id) ||
-        publicNodesLoaded.find(n => n.id === node.id)
+        privateNodesLoaded.find((n) => n.id === node.id) ||
+        publicNodesLoaded.find((n) => n.id === node.id)
       );
     })
     .filter(Boolean);
@@ -75,7 +75,7 @@ export async function fetchResourceSearchResults(context, params) {
 export function loadChannels(context, params) {
   // Used for search channel filter dropdown
   params.page_size = 25;
-  return Channel.fetchCollection({ deleted: false, ...params }).then(channelPage => {
+  return Channel.fetchCollection({ deleted: false, ...params }).then((channelPage) => {
     return channelPage;
   });
 }
@@ -83,7 +83,7 @@ export function loadChannels(context, params) {
 /* SAVED SEARCH ACTIONS */
 
 export function loadSavedSearches({ commit }) {
-  return SavedSearch.where().then(searches => {
+  return SavedSearch.where().then((searches) => {
     commit('SET_SAVEDSEARCHES', searches);
     return searches;
   });
@@ -96,7 +96,7 @@ export function createSearch({ commit, rootState }, params) {
     saved_by: rootState.session.currentUser.id,
     created: new Date(),
   };
-  return SavedSearch.add(data).then(id => {
+  return SavedSearch.add(data).then((id) => {
     commit('UPDATE_SAVEDSEARCH', {
       id,
       ...data,

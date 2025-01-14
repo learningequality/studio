@@ -53,8 +53,8 @@ function makeWrapper(formData) {
     },
   });
   wrapper.setMethods({
-    register: data => {
-      return new Promise(resolve => {
+    register: (data) => {
+      return new Promise((resolve) => {
         register(data);
         resolve();
       });
@@ -124,7 +124,7 @@ describe('create', () => {
         accepted_tos: false,
       };
 
-      Object.keys(form).forEach(field => {
+      Object.keys(form).forEach((field) => {
         const wrapper = makeWrapper({ [field]: form[field] });
         wrapper.vm.submit();
         expect(register).not.toHaveBeenCalled();
@@ -141,14 +141,14 @@ describe('create', () => {
       expect(register).not.toHaveBeenCalled();
     });
     it('should fail if uses field is set to fields that require more input that is not provided', () => {
-      [uses.STORING, uses.OTHER].forEach(use => {
+      [uses.STORING, uses.OTHER].forEach((use) => {
         const wrapper = makeWrapper({ uses: [use] });
         wrapper.vm.submit();
         expect(register).not.toHaveBeenCalled();
       });
     });
     it('should fail if source field is set to an option that requires more input that is not provided', () => {
-      [sources.ORGANIZATION, sources.CONFERENCE, sources.OTHER].forEach(source => {
+      [sources.ORGANIZATION, sources.CONFERENCE, sources.OTHER].forEach((source) => {
         const wrapper = makeWrapper({ source });
         wrapper.vm.submit();
         expect(register).not.toHaveBeenCalled();

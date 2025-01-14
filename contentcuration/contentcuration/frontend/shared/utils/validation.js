@@ -90,7 +90,7 @@ export function isNodeComplete({ nodeDetails, assessmentItems, files }) {
       return false;
     }
 
-    const isInvalid = assessmentItem => {
+    const isInvalid = (assessmentItem) => {
       const sanitizedAssessmentItem = sanitizeAssessmentItem(assessmentItem, true);
       return getAssessmentItemErrors(sanitizedAssessmentItem).length;
     };
@@ -148,15 +148,12 @@ function _getErrorMsg(error) {
     [ValidationErrors.DURATION_REQUIRED]: translator.$tr('fieldRequired'),
     [ValidationErrors.COMPLETION_REQUIRED]: translator.$tr('fieldRequired'),
     [ValidationErrors.ACTIVITY_DURATION_REQUIRED]: translator.$tr('fieldRequired'),
-    [ValidationErrors.ACTIVITY_DURATION_MIN_FOR_SHORT_ACTIVITY]: translator.$tr(
-      'activityDurationGteOne'
-    ),
-    [ValidationErrors.ACTIVITY_DURATION_MAX_FOR_SHORT_ACTIVITY]: translator.$tr(
-      'shortActivityLteThirty'
-    ),
-    [ValidationErrors.ACTIVITY_DURATION_MIN_FOR_LONG_ACTIVITY]: translator.$tr(
-      'longActivityGtThirty'
-    ),
+    [ValidationErrors.ACTIVITY_DURATION_MIN_FOR_SHORT_ACTIVITY]:
+      translator.$tr('activityDurationGteOne'),
+    [ValidationErrors.ACTIVITY_DURATION_MAX_FOR_SHORT_ACTIVITY]:
+      translator.$tr('shortActivityLteThirty'),
+    [ValidationErrors.ACTIVITY_DURATION_MIN_FOR_LONG_ACTIVITY]:
+      translator.$tr('longActivityGtThirty'),
     [ValidationErrors.ACTIVITY_DURATION_MAX_FOR_LONG_ACTIVITY]: translator.$tr(
       'longActivityLteOneTwenty'
     ),
@@ -169,7 +166,7 @@ function _getErrorMsg(error) {
 
 // Helpers
 export function translateValidator(validator) {
-  return value => (validator(value) === true ? true : _getErrorMsg(validator(value)));
+  return (value) => (validator(value) === true ? true : _getErrorMsg(validator(value)));
 }
 
 // Validators
@@ -177,75 +174,77 @@ export function translateValidator(validator) {
 // a function that returns `true` or an error code)
 // Designed to be compatible with Vuetify's inputs rules
 export function getTitleValidators() {
-  return [value => Boolean(value && value.trim()) || ValidationErrors.TITLE_REQUIRED];
+  return [(value) => Boolean(value && value.trim()) || ValidationErrors.TITLE_REQUIRED];
 }
 
 export function getLicenseValidators() {
-  return [value => Boolean(value) || ValidationErrors.LICENSE_REQUIRED];
+  return [(value) => Boolean(value) || ValidationErrors.LICENSE_REQUIRED];
 }
 
 export function getCopyrightHolderValidators() {
-  return [value => Boolean(value && value.trim()) || ValidationErrors.COPYRIGHT_HOLDER_REQUIRED];
+  return [(value) => Boolean(value && value.trim()) || ValidationErrors.COPYRIGHT_HOLDER_REQUIRED];
 }
 
 export function getLearningActivityValidators() {
-  return [value => Boolean(value.length) || ValidationErrors.LEARNING_ACTIVITY_REQUIRED];
+  return [(value) => Boolean(value.length) || ValidationErrors.LEARNING_ACTIVITY_REQUIRED];
 }
 
 export function getCompletionValidators() {
-  return [value => Boolean(value) || ValidationErrors.COMPLETION_REQUIRED];
+  return [(value) => Boolean(value) || ValidationErrors.COMPLETION_REQUIRED];
 }
 
 export function getDurationValidators() {
-  return [value => Boolean(value.length) || ValidationErrors.DURATION_REQUIRED];
+  return [(value) => Boolean(value.length) || ValidationErrors.DURATION_REQUIRED];
 }
 
 export function getLicenseDescriptionValidators() {
-  return [value => Boolean(value && value.trim()) || ValidationErrors.LICENSE_DESCRIPTION_REQUIRED];
+  return [
+    (value) => Boolean(value && value.trim()) || ValidationErrors.LICENSE_DESCRIPTION_REQUIRED,
+  ];
 }
 
 export function getMasteryModelValidators() {
-  return [value => Boolean(value) || ValidationErrors.MASTERY_MODEL_REQUIRED];
+  return [(value) => Boolean(value) || ValidationErrors.MASTERY_MODEL_REQUIRED];
 }
 
 export function getMasteryModelMValidators(nValue) {
   return [
-    value => Boolean(value) || ValidationErrors.MASTERY_MODEL_M_REQUIRED,
-    value => Number.isInteger(Number(value)) || ValidationErrors.MASTERY_MODEL_M_WHOLE_NUMBER,
-    value => value > 0 || ValidationErrors.MASTERY_MODEL_M_GT_ZERO,
-    value => value <= nValue || ValidationErrors.MASTERY_MODEL_M_LTE_N,
+    (value) => Boolean(value) || ValidationErrors.MASTERY_MODEL_M_REQUIRED,
+    (value) => Number.isInteger(Number(value)) || ValidationErrors.MASTERY_MODEL_M_WHOLE_NUMBER,
+    (value) => value > 0 || ValidationErrors.MASTERY_MODEL_M_GT_ZERO,
+    (value) => value <= nValue || ValidationErrors.MASTERY_MODEL_M_LTE_N,
   ];
 }
 
 export function getMasteryModelNValidators() {
   return [
-    value => Boolean(value) || ValidationErrors.MASTERY_MODEL_N_REQUIRED,
-    value => Number.isInteger(Number(value)) || ValidationErrors.MASTERY_MODEL_N_WHOLE_NUMBER,
-    value => value > 0 || ValidationErrors.MASTERY_MODEL_N_GT_ZERO,
+    (value) => Boolean(value) || ValidationErrors.MASTERY_MODEL_N_REQUIRED,
+    (value) => Number.isInteger(Number(value)) || ValidationErrors.MASTERY_MODEL_N_WHOLE_NUMBER,
+    (value) => value > 0 || ValidationErrors.MASTERY_MODEL_N_GT_ZERO,
   ];
 }
 
 export function getShortActivityDurationValidators() {
   return [
-    v => v !== '' || ValidationErrors.ACTIVITY_DURATION_REQUIRED,
-    v => v >= 5 || ValidationErrors.ACTIVITY_DURATION_MIN_FOR_SHORT_ACTIVITY,
-    v => v <= 30 || ValidationErrors.ACTIVITY_DURATION_MAX_FOR_SHORT_ACTIVITY,
+    (v) => v !== '' || ValidationErrors.ACTIVITY_DURATION_REQUIRED,
+    (v) => v >= 5 || ValidationErrors.ACTIVITY_DURATION_MIN_FOR_SHORT_ACTIVITY,
+    (v) => v <= 30 || ValidationErrors.ACTIVITY_DURATION_MAX_FOR_SHORT_ACTIVITY,
   ];
 }
 
 export function getLongActivityDurationValidators() {
   return [
-    v => v !== '' || ValidationErrors.ACTIVITY_DURATION_REQUIRED,
-    v => v > 40 || ValidationErrors.ACTIVITY_DURATION_MIN_FOR_LONG_ACTIVITY,
-    v => v <= 120 || ValidationErrors.ACTIVITY_DURATION_MAX_FOR_LONG_ACTIVITY,
+    (v) => v !== '' || ValidationErrors.ACTIVITY_DURATION_REQUIRED,
+    (v) => v > 40 || ValidationErrors.ACTIVITY_DURATION_MIN_FOR_LONG_ACTIVITY,
+    (v) => v <= 120 || ValidationErrors.ACTIVITY_DURATION_MAX_FOR_LONG_ACTIVITY,
   ];
 }
 
 export function getActivityDurationValidators() {
   return [
-    v => v !== '' || ValidationErrors.ACTIVITY_DURATION_REQUIRED,
-    v => v >= 1 || ValidationErrors.ACTIVITY_DURATION_MIN_REQUIREMENT,
-    v => v <= 1200 || ValidationErrors.ACTIVITY_DURATION_TOO_LONG,
+    (v) => v !== '' || ValidationErrors.ACTIVITY_DURATION_REQUIRED,
+    (v) => v >= 1 || ValidationErrors.ACTIVITY_DURATION_MIN_REQUIREMENT,
+    (v) => v <= 1200 || ValidationErrors.ACTIVITY_DURATION_TOO_LONG,
   ];
 }
 
@@ -259,8 +258,8 @@ export function getActivityDurationValidators() {
 export function getInvalidText(validators, value) {
   return (
     validators
-      .map(validator => translateValidator(validator)(value))
-      .find(validation => validation !== true) || ''
+      .map((validator) => translateValidator(validator)(value))
+      .find((validation) => validation !== true) || ''
   );
 }
 
@@ -268,15 +267,15 @@ export function getInvalidText(validators, value) {
 // These functions return an array of error codes
 export function getNodeTitleErrors(node) {
   return getTitleValidators()
-    .map(validator => validator(node.title))
-    .filter(value => value !== true);
+    .map((validator) => validator(node.title))
+    .filter((value) => value !== true);
 }
 
 export function getNodeLicenseErrors(node) {
   const license = _getLicense(node);
   return getLicenseValidators()
-    .map(validator => validator(license))
-    .filter(value => value !== true);
+    .map((validator) => validator(license))
+    .filter((value) => value !== true);
 }
 
 export function getNodeCopyrightHolderErrors(node) {
@@ -285,15 +284,15 @@ export function getNodeCopyrightHolderErrors(node) {
     return [];
   }
   return getCopyrightHolderValidators()
-    .map(validator => validator(node.copyright_holder))
-    .filter(value => value !== true);
+    .map((validator) => validator(node.copyright_holder))
+    .filter((value) => value !== true);
 }
 
 export function getNodeLearningActivityErrors(node) {
   const learningActivity = _getLearningActivity(node);
   return getLearningActivityValidators()
-    .map(validator => validator(learningActivity))
-    .filter(value => value !== true);
+    .map((validator) => validator(learningActivity))
+    .filter((value) => value !== true);
 }
 
 export function getCompletionDurationErrors(node) {
@@ -305,8 +304,8 @@ export function getCompletionDurationErrors(node) {
       return [];
     } else {
       return getDurationValidators()
-        .map(validator => validator(node))
-        .filter(value => value !== true);
+        .map((validator) => validator(node))
+        .filter((value) => value !== true);
     }
   }
   return [];
@@ -318,15 +317,15 @@ export function getNodeLicenseDescriptionErrors(node) {
     return [];
   }
   return getLicenseDescriptionValidators()
-    .map(validator => validator(node.license_description))
-    .filter(value => value !== true);
+    .map((validator) => validator(node.license_description))
+    .filter((value) => value !== true);
 }
 
 export function getNodeMasteryModelErrors(node) {
   const mastery = _getMasteryModel(node);
   return getMasteryModelValidators()
-    .map(validator => validator(mastery && mastery.mastery_model))
-    .filter(value => value !== true);
+    .map((validator) => validator(mastery && mastery.mastery_model))
+    .filter((value) => value !== true);
 }
 
 export function getNodeMasteryModelMErrors(node) {
@@ -335,8 +334,8 @@ export function getNodeMasteryModelMErrors(node) {
     return [];
   }
   return getMasteryModelMValidators(mastery.n)
-    .map(validator => validator(mastery.m))
-    .filter(value => value !== true);
+    .map((validator) => validator(mastery.m))
+    .filter((value) => value !== true);
 }
 
 export function getNodeMasteryModelNErrors(node) {
@@ -345,8 +344,8 @@ export function getNodeMasteryModelNErrors(node) {
     return [];
   }
   return getMasteryModelNValidators()
-    .map(validator => validator(mastery.n))
-    .filter(value => value !== true);
+    .map((validator) => validator(mastery.n))
+    .filter((value) => value !== true);
 }
 
 /**
@@ -421,8 +420,8 @@ export function getNodeDetailsErrors(node) {
 export function getNodeFilesErrors(files) {
   let errors = [];
   if (files && files.length > 0) {
-    errors = files.filter(f => f.error).map(f => f.error);
-    const validPrimaryFiles = files.filter(f => !f.error && !f.preset.supplementary);
+    errors = files.filter((f) => f.error).map((f) => f.error);
+    const validPrimaryFiles = files.filter((f) => !f.error && !f.preset.supplementary);
     if (!validPrimaryFiles.length) {
       errors.push(ValidationErrors.NO_VALID_PRIMARY_FILES);
     }
@@ -443,7 +442,7 @@ export function sanitizeAssessmentItemAnswers(answers, removeEmpty = false) {
     return [];
   }
 
-  let sanitizedAnswers = answers.map(answer => {
+  let sanitizedAnswers = answers.map((answer) => {
     let answerText = answer.answer;
     if (typeof answerText !== 'number') {
       answerText = answerText ? answerText.trim() : '';
@@ -456,7 +455,7 @@ export function sanitizeAssessmentItemAnswers(answers, removeEmpty = false) {
   });
 
   if (removeEmpty) {
-    sanitizedAnswers = sanitizedAnswers.filter(answer => answer.answer.length > 0);
+    sanitizedAnswers = sanitizedAnswers.filter((answer) => answer.answer.length > 0);
   }
 
   sanitizedAnswers = sanitizedAnswers.map((answer, answerIdx) => {
@@ -482,7 +481,7 @@ export function sanitizeAssessmentItemHints(hints, removeEmpty = false) {
     return [];
   }
 
-  let sanitizedHints = hints.map(hint => {
+  let sanitizedHints = hints.map((hint) => {
     const hintText = hint.hint ? hint.hint.trim() : '';
 
     return {
@@ -492,7 +491,7 @@ export function sanitizeAssessmentItemHints(hints, removeEmpty = false) {
   });
 
   if (removeEmpty) {
-    sanitizedHints = sanitizedHints.filter(hint => hint.hint.length > 0);
+    sanitizedHints = sanitizedHints.filter((hint) => hint.hint.length > 0);
   }
 
   sanitizedHints = sanitizedHints.map((hint, hintIdx) => {
@@ -546,12 +545,12 @@ export function getAssessmentItemErrors(assessmentItem) {
   const hasOneCorrectAnswer =
     assessmentItem.answers &&
     assessmentItem.answers.filter(
-      answer => answer.answer && String(answer.answer).trim() && answer.correct === true
+      (answer) => answer.answer && String(answer.answer).trim() && answer.correct === true
     ).length === 1;
   const hasAtLeatOneCorrectAnswer =
     assessmentItem.answers &&
     assessmentItem.answers.filter(
-      answer => answer.answer && String(answer.answer).trim() && answer.correct === true
+      (answer) => answer.answer && String(answer.answer).trim() && answer.correct === true
     ).length > 0;
 
   if (!assessmentItem.question || !assessmentItem.question.trim()) {

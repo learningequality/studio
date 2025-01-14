@@ -24,12 +24,12 @@ import store2 from 'store2';
 
 const { _ } = store2;
 
-_.on = function(key, fn) {
+_.on = function (key, fn) {
   if (!fn) {
     fn = key;
     key = '';
   } // no key === all keys
-  const listener = e => {
+  const listener = (e) => {
     const k = this._out(e.key); // undefined if key is not in the namespace
     if (
       k &&
@@ -45,7 +45,7 @@ _.on = function(key, fn) {
   return this;
 };
 
-_.off = function(key, fn) {
+_.off = function (key, fn) {
   if (!fn) {
     fn = key;
     key = '';
@@ -54,7 +54,7 @@ _.off = function(key, fn) {
   return this;
 };
 
-_.once = function(key, fn) {
+_.once = function (key, fn) {
   if (!fn) {
     fn = key;
     key = '';
@@ -69,7 +69,7 @@ _.once = function(key, fn) {
   );
 };
 
-_.event = function(k, e) {
+_.event = function (k, e) {
   const event = {
     key: k,
     namespace: this.namespace(),
@@ -91,7 +91,7 @@ _.event = function(k, e) {
 };
 
 // _ policy is to not throw errors on old browsers
-const isOld = !window.addEventListener ? function() {} : null;
+const isOld = !window.addEventListener ? function () {} : null;
 _.fn('on', isOld || _.on);
 _.fn('off', isOld || _.off);
 _.fn('once', isOld || _.once);

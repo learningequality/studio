@@ -70,7 +70,7 @@ function handleDisallowed(response) {
     });
 
     // Collect all disallowed
-    const disallowedRevs = disallowed.map(d => Number(d.rev));
+    const disallowedRevs = disallowed.map((d) => Number(d.rev));
     // Set the return error data onto the changes - this will update the change
     // both with any errors and the results of any merging that happened prior
     // to the sync operation being called
@@ -92,7 +92,7 @@ function handleAllowed(response) {
     }
     return db[CHANGES_TABLE].where('rev')
       .anyOf(Object.keys(revMap).map(Number))
-      .modify(c => {
+      .modify((c) => {
         c.server_rev = revMap[c.rev];
         c.synced = true;
       });
@@ -134,7 +134,7 @@ function handleErrors(response) {
     // to the sync operation being called
     return db[CHANGES_TABLE].where('server_rev')
       .anyOf(Object.keys(errorMap).map(Number))
-      .modify(obj => {
+      .modify((obj) => {
         for (const key in errorMap[obj.server_rev]) {
           if (!noModifyKeys[key] || typeof obj[key] === 'undefined') {
             obj[key] = errorMap[obj.server_rev][key];
@@ -151,7 +151,7 @@ function handleSuccesses(response) {
   const successes = get(response, ['data', 'successes'], []);
   if (successes.length) {
     return db[CHANGES_TABLE].where('server_rev')
-      .anyOf(successes.map(c => c.server_rev))
+      .anyOf(successes.map((c) => c.server_rev))
       .delete();
   }
   return Promise.resolve();
@@ -165,19 +165,19 @@ function handleMaxRevs(response, userId) {
     'server_rev',
     'desc'
   );
-  const channelIds = uniq(allChanges.map(c => c.channel_id)).filter(Boolean);
+  const channelIds = uniq(allChanges.map((c) => c.channel_id)).filter(Boolean);
   const maxRevs = {};
   const promises = [];
   for (const channelId of channelIds) {
-    const channelChanges = allChanges.filter(c => c.channel_id === channelId);
+    const channelChanges = allChanges.filter((c) => c.channel_id === channelId);
     maxRevs[`${MAX_REV_KEY}.${channelId}`] = channelChanges[0].server_rev;
     const lastChannelEditIndex = findLastIndex(
       channelChanges,
-      c => !c.errors && !c.user_id && c.created_by_id && c.type !== CHANGE_TYPES.PUBLISHED
+      (c) => !c.errors && !c.user_id && c.created_by_id && c.type !== CHANGE_TYPES.PUBLISHED
     );
     const lastPublishIndex = findLastIndex(
       channelChanges,
-      c => !c.errors && !c.user_id && c.created_by_id && c.type === CHANGE_TYPES.PUBLISHED
+      (c) => !c.errors && !c.user_id && c.created_by_id && c.type === CHANGE_TYPES.PUBLISHED
     );
     if (lastChannelEditIndex > lastPublishIndex) {
       promises.push(
@@ -187,7 +187,7 @@ function handleMaxRevs(response, userId) {
       );
     }
   }
-  const lastUserChange = allChanges.find(c => c.user_id === userId);
+  const lastUserChange = allChanges.find((c) => c.user_id === userId);
   if (lastUserChange) {
     maxRevs.user_rev = lastUserChange.server_rev;
   }
@@ -240,21 +240,21 @@ function syncChanges(syncAllChanges) {
       }
 
       const unAppliedChanges = await db[CHANGES_TABLE].orderBy('server_rev')
-        .filter(c => c.synced && !c.errors && !c.disallowed)
+        .filter((c) => c.synced && !c.errors && !c.disallowed)
         .toArray();
 
       const requestPayload = {
         changes: [],
         channel_revs,
         user_rev: user.user_rev || 0,
-        unapplied_revs: unAppliedChanges.map(c => c.server_rev).filter(Boolean),
+        unapplied_revs: unAppliedChanges.map((c) => c.server_rev).filter(Boolean),
       };
 
       // Snapshot which revs we are syncing, so that we can
       // removes them from the changeRevs array after the sync
       const revsToSync = [];
       if (syncAllChanges) {
-        const unsyncedRevs = await db[CHANGES_TABLE].filter(c => !c.synced).primaryKeys();
+        const unsyncedRevs = await db[CHANGES_TABLE].filter((c) => !c.synced).primaryKeys();
         revsToSync.push(...unsyncedRevs);
       } else {
         revsToSync.push(...changeRevs);
@@ -262,7 +262,7 @@ function syncChanges(syncAllChanges) {
       if (revsToSync.length) {
         const syncableChanges = db[CHANGES_TABLE].where('rev')
           .anyOf(revsToSync)
-          .filter(c => !c.synced);
+          .filter((c) => !c.synced);
         const changesToSync = await syncableChanges.toArray();
         // By the time we get here, our changesToSync Array should
         // have every change we want to sync to the server, so we
@@ -338,7 +338,7 @@ function doSyncChanges(syncAll = false) {
         resolve();
       }
     })
-    .catch(err => {
+    .catch((err) => {
       // If there is an error call reject for all previously returned promises.
       for (const { reject } of deferredStack) {
         reject(err);

@@ -12,7 +12,7 @@ export default {
   },
   actions: {
     initState(store) {
-      return Task.where().then(tasks => {
+      return Task.where().then((tasks) => {
         for (const task of tasks) {
           store.commit('ADD_ASYNC_TASK', task);
         }
@@ -21,14 +21,14 @@ export default {
   },
   getters: {
     getAsyncTask(state) {
-      return function(taskId) {
+      return function (taskId) {
         return state.asyncTasksMap[taskId];
       };
     },
     getPublishTaskForChannel(state) {
-      return function(channelId) {
+      return function (channelId) {
         return Object.values(state.asyncTasksMap).find(
-          t =>
+          (t) =>
             t.task_name === 'export-channel' &&
             t.channel_id &&
             t.channel_id.replace('-', '') === channelId

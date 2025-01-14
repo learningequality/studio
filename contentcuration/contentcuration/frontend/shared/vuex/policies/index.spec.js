@@ -103,8 +103,9 @@ describe('policies store', () => {
         const hour = ('0' + (now.getUTCHours() + 1)).slice(-2);
         const minute = ('0' + (now.getUTCMinutes() + 1)).slice(-2);
 
-        const expectedKey = `${testKey}_${date.getUTCFullYear()}_${date.getUTCMonth() +
-          1}_${date.getUTCDate()}`;
+        const expectedKey = `${testKey}_${date.getUTCFullYear()}_${
+          date.getUTCMonth() + 1
+        }_${date.getUTCDate()}`;
         const expectedValue = `${day}/${month}/${year} ${hour}:${minute}`;
 
         expect(getters.getPolicyAcceptedData()(policies.PRIVACY)).toEqual({

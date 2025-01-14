@@ -32,7 +32,7 @@ function makeWrapper(selected) {
         return selected || [testNodeId];
       },
       getContentNode() {
-        return id => {
+        return (id) => {
           return testNodeMap[id] || testNode;
         };
       },
@@ -72,10 +72,7 @@ describe('moveModal', () => {
   });
   describe('topic tree navigation', () => {
     it('clicking a topic should navigate to that topic', () => {
-      wrapper
-        .findAll('[data-test="listitem"]')
-        .at(1)
-        .trigger('click');
+      wrapper.findAll('[data-test="listitem"]').at(1).trigger('click');
       expect(wrapper.vm.targetNodeId).toBe(testChildTopic.id);
     });
     it('clicking a non-topic should not do anything', () => {

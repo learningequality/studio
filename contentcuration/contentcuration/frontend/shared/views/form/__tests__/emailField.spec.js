@@ -6,7 +6,7 @@ function makeWrapper() {
 }
 
 function runValidation(wrapper, value) {
-  return wrapper.vm.emailRules.every(rule => rule(value) === true);
+  return wrapper.vm.emailRules.every((rule) => rule(value) === true);
 }
 
 describe('emailField', () => {

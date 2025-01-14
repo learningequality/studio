@@ -132,9 +132,8 @@ export function setDraggableDropped(context, identity) {
 
   // We can add grouped handles to this sources array
   const sources = [source].map(cloneDeep);
-  const { hoverDraggableSection, hoverDraggableTarget } = context.rootState.draggable[
-    `${identity.type}s`
-  ];
+  const { hoverDraggableSection, hoverDraggableTarget } =
+    context.rootState.draggable[`${identity.type}s`];
   const target = {
     identity: cloneDeep(identity),
     section: hoverDraggableSection,
@@ -144,7 +143,7 @@ export function setDraggableDropped(context, identity) {
   // Map all ancestors to this identity's key so we can easily clean this up
   const dropData = {};
   if (identity.ancestors) {
-    identity.ancestors.forEach(ancestor => {
+    identity.ancestors.forEach((ancestor) => {
       const { key } = new DraggableIdentityHelper(ancestor);
       dropData[key] = destination.key;
     });

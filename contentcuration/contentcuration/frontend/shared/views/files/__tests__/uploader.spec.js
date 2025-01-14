@@ -58,7 +58,7 @@ describe('uploader', () => {
     });
     it('no presetID should allow any primary formats', () => {
       wrapper = makeWrapper();
-      expect(wrapper.vm.acceptedFiles.filter(f => f.id === 'document')).toHaveLength(1);
+      expect(wrapper.vm.acceptedFiles.filter((f) => f.id === 'document')).toHaveLength(1);
     });
   });
   describe('methods', () => {

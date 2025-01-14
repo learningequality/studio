@@ -2,22 +2,16 @@ import { shallowMount, mount } from '@vue/test-utils';
 
 import RelatedResourcesList from './RelatedResourcesList';
 
-const getResources = wrapper => {
+const getResources = (wrapper) => {
   return wrapper.findAll("[data-test='resource']");
 };
 
 const clickResourceLink = (wrapper, resourceIdx) => {
-  getResources(wrapper)
-    .at(resourceIdx)
-    .find("[data-test='resourceLink']")
-    .trigger('click');
+  getResources(wrapper).at(resourceIdx).find("[data-test='resourceLink']").trigger('click');
 };
 
 const clickResourceRemoveBtn = (wrapper, resourceIdx) => {
-  getResources(wrapper)
-    .at(resourceIdx)
-    .find("[data-test='resourceRemoveBtn']")
-    .trigger('click');
+  getResources(wrapper).at(resourceIdx).find("[data-test='resourceRemoveBtn']").trigger('click');
 };
 
 describe('RelatedResourcesList', () => {

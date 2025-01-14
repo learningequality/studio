@@ -28,7 +28,7 @@ describe('TreeResource methods', () => {
   });
 
   describe('treeLock method', () => {
-    const wait = time => new Promise(resolve => setTimeout(resolve, time));
+    const wait = (time) => new Promise((resolve) => setTimeout(resolve, time));
     it('should lock such that calls are kept in order', async () => {
       const results = [];
       const lockOne = resource.treeLock(123, () => {
@@ -209,7 +209,7 @@ describe('ContentNode methods', () => {
       parent = { id: uuid4(), title: 'Test node parent' };
       node = { id: uuid4(), parent: parent.id, title: 'Test node' };
       nodes = [node, parent];
-      get = mockMethod('get', id => {
+      get = mockMethod('get', (id) => {
         return Promise.resolve(find(nodes, ['id', id]));
       });
     });
@@ -916,7 +916,7 @@ describe('ContentNodePrerequisite methods', () => {
   });
   describe('getRequisites method', () => {
     it('should return all associated requisites', () => {
-      return ContentNode.getRequisites('id-integrals').then(entries => {
+      return ContentNode.getRequisites('id-integrals').then((entries) => {
         expect(sortBy(entries, 'target_node')).toEqual(sortBy(mappings, 'target_node'));
         expect(spy).toHaveBeenCalled();
       });
@@ -924,7 +924,7 @@ describe('ContentNodePrerequisite methods', () => {
     it('should return all associated requisites, even when there is a cyclic dependency', () => {
       const cyclic = { target_node: 'id-chemistry', prerequisite: 'id-lab' };
       return ContentNodePrerequisite.table.add(cyclic).then(() => {
-        return ContentNode.getRequisites('id-integrals').then(entries => {
+        return ContentNode.getRequisites('id-integrals').then((entries) => {
           expect(sortBy(entries, 'target_node')).toEqual(
             sortBy(mappings.concat([cyclic]), 'target_node')
           );
@@ -933,7 +933,7 @@ describe('ContentNodePrerequisite methods', () => {
     });
     it('should return all associated requisites from the backend', () => {
       return ContentNodePrerequisite.table.clear().then(() => {
-        return ContentNode.getRequisites('id-integrals').then(entries => {
+        return ContentNode.getRequisites('id-integrals').then((entries) => {
           expect(sortBy(entries, 'target_node')).toEqual(sortBy(mappings, 'target_node'));
           expect(spy).toHaveBeenCalled();
         });

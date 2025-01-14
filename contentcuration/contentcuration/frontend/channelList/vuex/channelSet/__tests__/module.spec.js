@@ -21,7 +21,7 @@ describe('channelSet actions', () => {
     });
     store.state.session.currentUser.id = userId;
     injectVuexStore(store);
-    return ChannelSet.add(channelSetDatum).then(newId => {
+    return ChannelSet.add(channelSetDatum).then((newId) => {
       id = newId;
     });
   });
@@ -45,7 +45,7 @@ describe('channelSet actions', () => {
   });
   describe('createChannelSet action for a new channelSet', () => {
     it('should add a new channelSet with an id', () => {
-      return store.dispatch('channelSet/createChannelSet').then(id => {
+      return store.dispatch('channelSet/createChannelSet').then((id) => {
         expect(store.getters['channelSet/getChannelSet'](id)).not.toBeUndefined();
       });
     });

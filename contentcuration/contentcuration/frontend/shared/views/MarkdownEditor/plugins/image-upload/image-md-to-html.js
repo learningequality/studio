@@ -15,5 +15,5 @@ import { IMAGE_REGEX, imageMdToImageFieldHTML } from './index';
 // convert markdown images to image editor field custom elements
 
 export default (markdown, editing) => {
-  return markdown.replace(IMAGE_REGEX, imageMd => imageMdToImageFieldHTML(imageMd, editing));
+  return markdown.replace(IMAGE_REGEX, (imageMd) => imageMdToImageFieldHTML(imageMd, editing));
 };

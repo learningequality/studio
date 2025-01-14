@@ -17,7 +17,7 @@
  *
  */
 
-export default html => {
+export default (html) => {
   const domParser = new DOMParser();
   const doc = domParser.parseFromString(html, 'text/html');
   const mdImages = doc.querySelectorAll('span[is="markdown-image-field"]');

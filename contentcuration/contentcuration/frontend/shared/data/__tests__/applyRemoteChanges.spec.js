@@ -5,7 +5,7 @@ import { ChangeDispatcher, ChangeStream, resourceCounts } from '../applyRemoteCh
 import { CHANGE_TYPES } from '../constants';
 
 function tick() {
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     setTimeout(resolve, 0);
   });
 }

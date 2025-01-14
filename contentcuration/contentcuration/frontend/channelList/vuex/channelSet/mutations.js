@@ -5,7 +5,7 @@ import { applyMods } from 'shared/data/applyRemoteChanges';
 /* CHANNEL SET MUTATIONS */
 export function SET_CHANNELSET_LIST(state, channelSets) {
   const channelSetsMap = {};
-  channelSets.forEach(channelSet => {
+  channelSets.forEach((channelSet) => {
     channelSetsMap[channelSet.id] = channelSet;
   });
   state.channelSetsMap = channelSetsMap;

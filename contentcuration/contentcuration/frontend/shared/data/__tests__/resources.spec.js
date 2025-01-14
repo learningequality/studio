@@ -38,7 +38,7 @@ describe('Resources', () => {
     await db[TABLE_NAMES.CHANGES_TABLE].clear();
     await mockChannelScope(channel_id);
 
-    await Promise.all(contentNodes.map(node => db[TABLE_NAMES.CONTENTNODE].add(node)));
+    await Promise.all(contentNodes.map((node) => db[TABLE_NAMES.CONTENTNODE].add(node)));
   });
 
   afterEach(async () => {
@@ -102,7 +102,7 @@ describe('Resources', () => {
         const revs = await Promise.all([saveChange({ lang: 'en' }), saveChange({ lang: 'es' })]);
         const inheritedChanges = await ContentNode.getInheritedChanges([contentNodes[1]]);
         expect(inheritedChanges.length).toEqual(revs.length);
-        expect(inheritedChanges.map(change => change.rev)).toEqual(revs);
+        expect(inheritedChanges.map((change) => change.rev)).toEqual(revs);
       });
 
       it('should return the inherited changes for multiple descendants', async () => {
@@ -127,7 +127,7 @@ describe('Resources', () => {
         ]);
         const inheritedChanges = await ContentNode.getInheritedChanges([contentNodes[2]]);
         expect(inheritedChanges.length).toEqual(revs.length);
-        expect(inheritedChanges.map(change => change.rev)).toEqual(revs);
+        expect(inheritedChanges.map((change) => change.rev)).toEqual(revs);
       });
     });
 

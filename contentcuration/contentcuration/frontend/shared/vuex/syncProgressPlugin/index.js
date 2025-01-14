@@ -3,13 +3,13 @@ import db from 'shared/data/db';
 import { CHANGES_TABLE } from 'shared/data/constants';
 import syncProgressModule from './syncProgressModule';
 
-const SyncProgressPlugin = store => {
+const SyncProgressPlugin = (store) => {
   store.registerModule('syncProgress', syncProgressModule);
 
   store.listenForIndexedDBChanges = () => {
     const observable = liveQuery(() => {
       return db[CHANGES_TABLE].toCollection()
-        .filter(c => !c.synced)
+        .filter((c) => !c.synced)
         .first(Boolean);
     });
 

@@ -7,7 +7,7 @@ export function paramsSerializer(params) {
   // Do custom querystring stingifying to comma separate array params
   return qs.stringify(params, {
     arrayFormat: 'comma',
-    encoder: function(str, defaultEncoder, charset, type) {
+    encoder: function (str, defaultEncoder, charset, type) {
       if (type === 'key') {
         // Handle params for queries to joint indexes
         // of the form [index1+index2]
@@ -39,8 +39,8 @@ window.addEventListener('offline', () => {
 });
 
 client.interceptors.response.use(
-  response => response,
-  error => {
+  (response) => response,
+  (error) => {
     const url = error.config.url;
     let message = error.message;
     let status = 0;
@@ -65,7 +65,7 @@ client.interceptors.response.use(
       console.warn('AJAX Request Error: ' + message); // eslint-disable-line no-console
       console.warn('Error data: ', error); // eslint-disable-line no-console
     } else if (error.code !== 'ECONNABORTED') {
-      Sentry.withScope(function(scope) {
+      Sentry.withScope(function (scope) {
         scope.addAttachment({
           filename: 'error.json',
           // strip csrf token from headers

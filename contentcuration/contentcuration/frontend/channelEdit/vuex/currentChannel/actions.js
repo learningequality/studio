@@ -7,7 +7,7 @@ export function loadChannel(context, { staging = false } = {}) {
     .dispatch('channel/loadChannel', context.state.currentChannelId, {
       root: true,
     })
-    .then(channel => {
+    .then((channel) => {
       if (channel) {
         Vue.$analytics.trackCurrentChannel(channel, staging);
       }
@@ -22,10 +22,10 @@ export function loadChannelSize(context, rootId) {
 export function loadCurrentChannelStagingDiff(context) {
   return client
     .get(window.Urls.getNodeDiff(context.getters.stagingId, context.getters.rootId))
-    .then(response => {
+    .then((response) => {
       context.commit('SAVE_CURRENT_CHANNEL_STAGING_DIFF', response.data.stats);
     })
-    .catch(error => {
+    .catch((error) => {
       // Diff is being generated, so try again in 5 seconds
       if (error.response && error.response.status === 302) {
         context.commit('SAVE_CURRENT_CHANNEL_STAGING_DIFF', {

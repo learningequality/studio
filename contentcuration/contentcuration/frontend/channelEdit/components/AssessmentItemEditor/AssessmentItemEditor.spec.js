@@ -29,7 +29,7 @@ const ITEM = {
   ],
 };
 
-const openQuestion = wrapper => {
+const openQuestion = (wrapper) => {
   wrapper.find('[data-test="questionText"]').trigger('click');
 };
 

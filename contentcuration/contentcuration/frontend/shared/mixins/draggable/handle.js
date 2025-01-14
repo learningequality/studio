@@ -114,7 +114,7 @@ export default {
     extendSlot,
   },
   created() {
-    this.throttledUpdateDraggableDirection = animationThrottle(args => {
+    this.throttledUpdateDraggableDirection = animationThrottle((args) => {
       this.updateDraggableDirection(args);
       this.$emit('draggableDrag', args);
     });

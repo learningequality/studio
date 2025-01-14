@@ -38,20 +38,20 @@ export default {
       // used https://github.com/Aupajo/backoff-calculator to tune this
       const maximumPollingDelay = 30 * 60; // 30 minutes
       const initialPollingDelay = 1; // 1 second
-      const delaySeconds = i => Math.min(i ** 2 + initialPollingDelay, maximumPollingDelay);
+      const delaySeconds = (i) => Math.min(i ** 2 + initialPollingDelay, maximumPollingDelay);
 
       const stealth = window.Urls.stealth();
       const pollingClient = axios.create();
 
       let attempt = 0;
-      pollingClient.interceptors.request.use(request => {
+      pollingClient.interceptors.request.use((request) => {
         attempt++;
         return request;
       });
 
       pollingClient.interceptors.response.use(
         () => dispatch('handleReconnection'),
-        error => {
+        (error) => {
           if (state.polling) {
             setTimeout(() => pollingClient.get(stealth), 1000 * delaySeconds(attempt));
           }

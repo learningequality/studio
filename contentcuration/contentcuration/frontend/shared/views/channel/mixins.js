@@ -102,7 +102,7 @@ export const channelExportMixin = {
       ];
       const csv = Papa.unparse({
         fields: headers,
-        data: channelList.map(channel => [
+        data: channelList.map((channel) => [
           channel.id,
           channel.name,
           channel.description,
@@ -113,13 +113,13 @@ export const channelExportMixin = {
           this.$formatNumber(channel.resource_count),
           this.formatFileSize(channel.resource_size),
           sortBy(channel.kind_count, 'kind_id').map(
-            kind => `${this.translateConstant(kind.kind_id)} (${this.$formatNumber(kind.count)})`
+            (kind) => `${this.translateConstant(kind.kind_id)} (${this.$formatNumber(kind.count)})`
           ),
           channel.languages,
           channel.accessible_languages,
           this.exportStrings.$tr(channel.includes.coach_content ? 'yes' : 'no'),
           this.exportStrings.$tr(channel.includes.exercises ? 'yes' : 'no'),
-          sortBy(channel.tags, 'count').map(t => t.tag_name),
+          sortBy(channel.tags, 'count').map((t) => t.tag_name),
           channel.authors,
           channel.providers,
           channel.aggregators,

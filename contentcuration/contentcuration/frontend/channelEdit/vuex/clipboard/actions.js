@@ -26,9 +26,9 @@ export function initialize(context) {
 
   return context
     .dispatch('loadClipboardNodes', { parent: clipboardRootId })
-    .then(nodes =>
+    .then((nodes) =>
       context.dispatch('loadChannels', {
-        id__in: nodes.map(node => node.source_channel_id),
+        id__in: nodes.map((node) => node.source_channel_id),
       })
     )
     .then(() => {
@@ -46,12 +46,12 @@ export function loadChannels(context, { id__in }) {
   // Ensure that if have selected all, that when new channel gets added,
   // its selection state is in-sync
   const allSelected = context.getters.currentSelectionState(context.rootGetters['clipboardRootId']);
-  return promiseChunk(id__in, 50, id__in => {
+  return promiseChunk(id__in, 50, (id__in) => {
     // Load up the source channels
     return context.dispatch('channel/loadChannelList', { id__in }, { root: true });
-  }).then(channels => {
+  }).then((channels) => {
     // Add the channel to the selected state, it acts like a node
-    channels.forEach(channel => {
+    channels.forEach((channel) => {
       if (!(channel.id in context.state.selected)) {
         context.commit('UPDATE_SELECTION_STATE', {
           id: channel.id,
@@ -71,23 +71,22 @@ export function loadClipboardNodes(context, { parent }) {
   // a. Legacy clipboard nodes actually live in the clipboard tree, which this handles
   // b. Only the ancestor (child of root) of a new clipboard node lives in the clipboard tree
   if (parent === clipboardRootId || context.getters.isLegacyNode(parent)) {
-    return Clipboard.where({ parent }).then(clipboardNodes => {
+    return Clipboard.where({ parent }).then((clipboardNodes) => {
       if (!clipboardNodes.length) {
         return [];
       }
 
       const [legacyNodes, nodes] = partition(clipboardNodes, isLegacyNode);
-      const nodeIdChannelIdPairs = uniqBy(
-        nodes,
-        c => c.source_node_id + c.source_channel_id
-      ).map(c => [c.source_node_id, c.source_channel_id]);
-      const legacyNodeIds = legacyNodes.map(n => n.id);
+      const nodeIdChannelIdPairs = uniqBy(nodes, (c) => c.source_node_id + c.source_channel_id).map(
+        (c) => [c.source_node_id, c.source_channel_id]
+      );
+      const legacyNodeIds = legacyNodes.map((n) => n.id);
 
       return Promise.all([
         // To avoid error code 414 URI Too Long errors, we chunk the pairs
         // Given URI limit is 2000 chars:
         // base URL at 100 chars + each pair at 70 chars = max 27 pairs
-        ...chunk(nodeIdChannelIdPairs, 25).map(chunkPairs =>
+        ...chunk(nodeIdChannelIdPairs, 25).map((chunkPairs) =>
           context.dispatch(
             'contentNode/loadContentNodes',
             { '[node_id+channel_id]__in': chunkPairs },
@@ -95,7 +94,7 @@ export function loadClipboardNodes(context, { parent }) {
           )
         ),
         // Chunk legacy nodes, double the size since not pairs
-        ...chunk(legacyNodeIds, 50).map(legacyChunk =>
+        ...chunk(legacyNodeIds, 50).map((legacyChunk) =>
           context.dispatch('contentNode/loadContentNodes', { id__in: legacyChunk }, { root })
         ),
       ]).then(() => {
@@ -120,11 +119,11 @@ export function loadClipboardNodes(context, { parent }) {
   if (contentNode && contentNode.resource_count > 0) {
     return context
       .dispatch('contentNode/loadContentNodes', { parent: contentNode.id }, { root: true })
-      .then(nodes => {
+      .then((nodes) => {
         // Ensure we don't add excluded nodes to our Vuex map
         nodes = nodes
-          .filter(node => !isExcludedNode(ancestor, node))
-          .map(node => ({
+          .filter((node) => !isExcludedNode(ancestor, node))
+          .map((node) => ({
             // For new version clipboard nodes, we don't need `node.id` for anything
             // so we can change it, and the clipboard should not be manipulating the
             // source node anyway, normally requiring its ID. So we create a virtual
@@ -155,7 +154,7 @@ export function loadClipboardNodes(context, { parent }) {
 
 export function addClipboardNodes(context, { nodes, parent }) {
   const isRootInsert = parent === context.rootGetters['clipboardRootId'];
-  nodes.forEach(node => {
+  nodes.forEach((node) => {
     // Add selection state
     if (!(node.id in context.state.selected)) {
       // This is referencing what the "parent" is in the clipboard UI for determining
@@ -226,7 +225,7 @@ export function preloadClipboardNodes(context, { parent }) {
   preloadPromise = preloadPromise.then(() => {
     return context
       .dispatch('doPreloadClipboardNodes', { parent })
-      .then(() => new Promise(resolve => defer(resolve)));
+      .then(() => new Promise((resolve) => defer(resolve)));
   });
   return preloadPromise;
 }
@@ -269,42 +268,45 @@ const colorChoiceOrder = [
 export function loadChannelColors(context) {
   // Reducing the channels, going one by one processing colors, and collection an array
   // of all of them
-  return context.getters.channels.reduce((promise, channel) => {
-    const src = channel.thumbnail_encoding['base64']
-      ? channel.thumbnail_encoding['base64']
-      : channel.thumbnail_url;
+  return context.getters.channels.reduce(
+    (promise, channel) => {
+      const src = channel.thumbnail_encoding['base64']
+        ? channel.thumbnail_encoding['base64']
+        : channel.thumbnail_url;
 
-    // If we already have the color, just no src, then we'll just skip
-    if (context.getters.getChannelColor(channel.id) || !src) {
-      return promise;
-    }
+      // If we already have the color, just no src, then we'll just skip
+      if (context.getters.getChannelColor(channel.id) || !src) {
+        return promise;
+      }
 
-    const image = new Image();
-    image.src = src;
+      const image = new Image();
+      image.src = src;
 
-    //
-    return promise.then(allColors => {
-      return Vibrant.from(image)
-        .getPalette()
-        .then(palette => {
-          let color = null;
+      //
+      return promise.then((allColors) => {
+        return Vibrant.from(image)
+          .getPalette()
+          .then((palette) => {
+            let color = null;
 
-          if (palette) {
-            const colors = colorChoiceOrder.map(name => palette[name].getHex());
-            // Find the first color that we don't already have
-            color = colors.find(color => !allColors.includes(color)) || color;
-            allColors.push(color);
-          }
+            if (palette) {
+              const colors = colorChoiceOrder.map((name) => palette[name].getHex());
+              // Find the first color that we don't already have
+              color = colors.find((color) => !allColors.includes(color)) || color;
+              allColors.push(color);
+            }
 
-          // Add it now so the user can see it
-          context.commit('ADD_CHANNEL_COLOR', { id: channel.id, color });
-          return allColors;
-        })
-        .catch(() => {
-          return allColors;
-        });
-    });
-  }, Promise.resolve(Object.values(context.state.channelColors)));
+            // Add it now so the user can see it
+            context.commit('ADD_CHANNEL_COLOR', { id: channel.id, color });
+            return allColors;
+          })
+          .catch(() => {
+            return allColors;
+          });
+      });
+    },
+    Promise.resolve(Object.values(context.state.channelColors))
+  );
 }
 
 export function doCopy(context, { node_id, channel_id, extra_fields = {} }) {
@@ -323,7 +325,7 @@ export function doCopy(context, { node_id, channel_id, extra_fields = {} }) {
  * @return {Promise<void>}
  */
 export function copy(context, { node_id, channel_id, extra_fields = {} }) {
-  return context.dispatch('doCopy', { node_id, channel_id, extra_fields }).then(node => {
+  return context.dispatch('doCopy', { node_id, channel_id, extra_fields }).then((node) => {
     return context.dispatch('loadChannels', { id__in: [channel_id] }).then(() =>
       context.dispatch('addClipboardNodes', {
         nodes: [node],
@@ -338,20 +340,20 @@ export function copy(context, { node_id, channel_id, extra_fields = {} }) {
  * to consolidate any uniquefying.
  */
 export function copyAll(context, { nodes }) {
-  const sources = uniqBy(nodes, c => c.node_id + c.channel_id)
-    .map(n => ({ node_id: n.node_id, channel_id: n.channel_id }))
-    .filter(n => n.node_id && n.channel_id);
+  const sources = uniqBy(nodes, (c) => c.node_id + c.channel_id)
+    .map((n) => ({ node_id: n.node_id, channel_id: n.channel_id }))
+    .filter((n) => n.node_id && n.channel_id);
 
   // Pick new channel IDs
   const channelIds = sources
-    .map(n => n.channel_id)
-    .filter(channelId => {
+    .map((n) => n.channel_id)
+    .filter((channelId) => {
       return !context.getters.channelIds.includes(channelId);
     });
 
-  return promiseChunk(sources, 20, sourcesChunk => {
-    return Promise.all(sourcesChunk.map(source => context.dispatch('doCopy', source)));
-  }).then(nodes => {
+  return promiseChunk(sources, 20, (sourcesChunk) => {
+    return Promise.all(sourcesChunk.map((source) => context.dispatch('doCopy', source)));
+  }).then((nodes) => {
     return context.dispatch('loadChannels', { id__in: channelIds }).then(() =>
       context.dispatch('addClipboardNodes', {
         nodes,
@@ -440,7 +442,7 @@ export function deleteClipboardNode(context, { id }) {
 
 export function deleteClipboardNodes(context, ids) {
   return Promise.all(
-    ids.map(id => {
+    ids.map((id) => {
       // Going through list of ids to delete, we make sure to detect if the parent or top-level
       // ancestor is also included in the array to avoid unnecessary delete calls
       const clipboardNode = context.state.clipboardNodesMap[id];
@@ -460,7 +462,7 @@ export function deleteClipboardNodes(context, ids) {
 
 export function deleteLegacyNodes(context, ids) {
   return Clipboard.deleteLegacyNodes(ids).then(() => {
-    ids.forEach(id => context.commit('REMOVE_CLIPBOARD_NODE', { id }));
+    ids.forEach((id) => context.commit('REMOVE_CLIPBOARD_NODE', { id }));
   });
 }
 
@@ -470,7 +472,7 @@ export function moveClipboardNodes(context, { legacyTrees, newTrees, target }) {
     promises.push(
       context.dispatch(
         'contentNode/moveContentNodes',
-        { id__in: legacyTrees.map(tree => tree.id), parent: target },
+        { id__in: legacyTrees.map((tree) => tree.id), parent: target },
         { root: true }
       )
     );
@@ -496,7 +498,7 @@ export function moveClipboardNodes(context, { legacyTrees, newTrees, target }) {
       deletionPromises.push(
         context.dispatch(
           'deleteClipboardNodes',
-          newTrees.map(copyNode => copyNode.clipboardNodeId)
+          newTrees.map((copyNode) => copyNode.clipboardNodeId)
         )
       );
     }
@@ -504,7 +506,7 @@ export function moveClipboardNodes(context, { legacyTrees, newTrees, target }) {
       deletionPromises.push(
         context.dispatch(
           'deleteLegacyNodes',
-          legacyTrees.map(tree => tree.id)
+          legacyTrees.map((tree) => tree.id)
         )
       );
     }

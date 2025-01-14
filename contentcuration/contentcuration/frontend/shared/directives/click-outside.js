@@ -1,7 +1,7 @@
 const listeners = new Map();
 export default {
   inserted: (el, binding, vnode) => {
-    listeners.set(vnode, event => {
+    listeners.set(vnode, (event) => {
       if (el !== event.target && !el.contains(event.target)) {
         binding.value(event);
       }

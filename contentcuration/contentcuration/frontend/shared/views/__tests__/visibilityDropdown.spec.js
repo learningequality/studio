@@ -25,11 +25,11 @@ describe('visibilityDropdown', () => {
   });
 
   describe('on load', () => {
-    it.each(RolesArray)('all visibility options should be an option to select', async role => {
+    it.each(RolesArray)('all visibility options should be an option to select', async (role) => {
       await wrapper.find('.v-input__slot').trigger('click');
       expect(wrapper.find('.v-list').text()).toContain(constantStrings.$tr(role));
     });
-    it.each(RolesArray)('should render according to visibility prop %s', visibility => {
+    it.each(RolesArray)('should render according to visibility prop %s', (visibility) => {
       wrapper.setProps({ value: visibility });
       expect(wrapper.vm.$refs.visibility.value).toEqual(visibility);
     });
@@ -41,19 +41,11 @@ describe('visibilityDropdown', () => {
       expect(wrapper.find({ ref: 'visibility' }).classes()).toContain('v-input--is-readonly');
     });
     it('setting required should make fields required', () => {
-      expect(
-        wrapper
-          .find({ ref: 'visibility' })
-          .find('input')
-          .attributes('required')
-      ).toBeFalsy();
+      expect(wrapper.find({ ref: 'visibility' }).find('input').attributes('required')).toBeFalsy();
       wrapper.setProps({ required: true });
-      expect(
-        wrapper
-          .find({ ref: 'visibility' })
-          .find('input')
-          .attributes('required')
-      ).toEqual('required');
+      expect(wrapper.find({ ref: 'visibility' }).find('input').attributes('required')).toEqual(
+        'required'
+      );
     });
     it('validation should flag empty required fields', () => {
       formWrapper.vm.validate();
@@ -63,19 +55,11 @@ describe('visibilityDropdown', () => {
       expect(wrapper.find('.error--text').exists()).toBe(true);
     });
     it('setting disabled should make fields required', () => {
-      expect(
-        wrapper
-          .find({ ref: 'visibility' })
-          .find('input')
-          .attributes('disabled')
-      ).toBeFalsy();
+      expect(wrapper.find({ ref: 'visibility' }).find('input').attributes('disabled')).toBeFalsy();
       wrapper.setProps({ disabled: true });
-      expect(
-        wrapper
-          .find({ ref: 'visibility' })
-          .find('input')
-          .attributes('disabled')
-      ).toEqual('disabled');
+      expect(wrapper.find({ ref: 'visibility' }).find('input').attributes('disabled')).toEqual(
+        'disabled'
+      );
     });
   });
   describe('emitted events', () => {

@@ -13,16 +13,16 @@ function makeWrapper(contentDefaults) {
 }
 
 function assertFieldValues(keys, fields, contentDefaults, prop = 'value') {
-  keys.forEach(key => {
-    const field = fields.filter(f => f.contains(`[data-name="${camelCase(key)}"]`)).at(0);
+  keys.forEach((key) => {
+    const field = fields.filter((f) => f.contains(`[data-name="${camelCase(key)}"]`)).at(0);
     expect(field.props(prop)).toEqual(contentDefaults[key]);
   });
 }
 
 function updateFieldValues(keys, fields, contentDefaults) {
-  keys.forEach(key => {
+  keys.forEach((key) => {
     const selector = `[data-name="${camelCase(key)}"]`;
-    const field = fields.filter(f => f.contains(selector)).at(0);
+    const field = fields.filter((f) => f.contains(selector)).at(0);
     const input = field.find(`.v-input ${selector}`);
 
     if (input.exists()) {
