@@ -1,7 +1,7 @@
 import { mount } from '@vue/test-utils';
+import storeFactory from 'shared/vuex/baseStore';
 import Uploader from '../Uploader';
 import FileDropzone from '../FileDropzone';
-import storeFactory from 'shared/vuex/baseStore';
 
 function makeWrapper(propsData = {}) {
   return mount(Uploader, {

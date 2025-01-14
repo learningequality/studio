@@ -1,9 +1,9 @@
+import { DraggableTypes } from 'shared/mixins/draggable/constants';
 import * as getters from './getters';
 import * as mutations from './mutations';
 import * as actions from './actions';
 import submodule from './submodule';
 import { DraggableFlags } from './constants';
-import { DraggableTypes } from 'shared/mixins/draggable/constants';
 
 export default {
   namespaced: true,

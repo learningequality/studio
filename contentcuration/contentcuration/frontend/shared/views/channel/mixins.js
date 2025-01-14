@@ -3,9 +3,9 @@ import { mapActions } from 'vuex';
 import { saveAs } from 'file-saver';
 import Papa from 'papaparse';
 import sortBy from 'lodash/sortBy';
-import ChannelCatalogPrint from './ChannelCatalogPrint';
 import { createTranslator } from 'shared/i18n';
 import { fileSizeMixin, constantsTranslationMixin } from 'shared/mixins';
+import ChannelCatalogPrint from './ChannelCatalogPrint';
 
 const PrintClass = Vue.extend(ChannelCatalogPrint);
 

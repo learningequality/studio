@@ -44,9 +44,9 @@
 <script>
 
   import camelCase from 'lodash/camelCase';
-  import { LearningActivities } from '../constants';
   import { getLearningActivityIcon } from 'shared/vuetify/icons';
   import { metadataTranslationMixin } from 'shared/mixins';
+  import { LearningActivities } from '../constants';
 
   export default {
     name: 'ContentNodeLearningActivityIcon',

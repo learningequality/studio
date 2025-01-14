@@ -1,5 +1,3 @@
-import translator from './translator';
-import { RouteNames } from './constants';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 import { MasteryModelsNames } from 'shared/leUtils/MasteryModels';
 import { metadataStrings, constantStrings } from 'shared/mixins';
@@ -11,6 +9,8 @@ import {
   defaultCompletionCriteriaModels,
   defaultCompletionCriteriaThresholds,
 } from 'shared/constants';
+import { RouteNames } from './constants';
+import translator from './translator';
 
 /**
  * Get correct answer index/indices out of an array of answer objects.

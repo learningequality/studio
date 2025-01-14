@@ -49,10 +49,10 @@
 
   import { mapGetters, mapActions } from 'vuex';
   import orderBy from 'lodash/orderBy';
-  import { RouteNames } from '../../constants';
-  import ChannelItem from './ChannelItem';
   import LoadingText from 'shared/views/LoadingText';
   import { ChannelListTypes } from 'shared/constants';
+  import { RouteNames } from '../../constants';
+  import ChannelItem from './ChannelItem';
 
   function listTypeValidator(value) {
     // The value must match one of the ListTypes

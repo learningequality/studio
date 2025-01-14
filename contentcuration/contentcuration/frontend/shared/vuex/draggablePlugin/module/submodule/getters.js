@@ -1,5 +1,5 @@
-import { bitMaskToObject, DraggableIdentityHelper } from '../utils';
 import { DraggableFlags } from 'shared/vuex/draggablePlugin/module/constants';
+import { bitMaskToObject, DraggableIdentityHelper } from '../utils';
 
 /**
  * @return {String|null}

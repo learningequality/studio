@@ -1,6 +1,6 @@
-import { actions, getters } from './index';
 import { policies, policyDates } from 'shared/constants';
 import client from 'shared/client';
+import { actions, getters } from './index';
 
 jest.mock('shared/client');
 

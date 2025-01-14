@@ -108,12 +108,12 @@
 <script>
 
   import defaultTo from 'lodash/defaultTo';
-  import { constantsTranslationMixin } from '../../../shared/mixins';
-  import Checkbox from './Checkbox';
   import { LicensesList } from 'shared/leUtils/Licenses';
   import { ContentDefaults, ContentDefaultsDefaults } from 'shared/constants';
   import { findLicense } from 'shared/utils/helpers';
   import DropdownWrapper from 'shared/views/form/DropdownWrapper';
+  import { constantsTranslationMixin } from '../../../shared/mixins';
+  import Checkbox from './Checkbox';
 
   function normalizeContentDefaults(contentDefaults) {
     return Object.entries(ContentDefaultsDefaults).reduce((normalized, [key, defaultValue]) => {

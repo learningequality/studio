@@ -1,7 +1,7 @@
 import { mount } from '@vue/test-utils';
+import Uploader from 'shared/views/files/Uploader';
 import FileUploadItem from '../FileUploadItem';
 import { factory } from '../../../store';
-import Uploader from 'shared/views/files/Uploader';
 
 const testFile = { id: 'test' };
 function makeWrapper(props = {}, file = {}) {

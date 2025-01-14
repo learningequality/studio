@@ -1,9 +1,9 @@
 import { mount, createLocalVue } from '@vue/test-utils';
 import Vuex from 'vuex';
 
-import StudioTree from './StudioTree';
 import { createStore } from 'shared/vuex/draggablePlugin/test/setup';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
+import StudioTree from './StudioTree';
 
 const localVue = createLocalVue();
 localVue.use(Vuex);

@@ -3,12 +3,12 @@ import sortBy from 'lodash/sortBy';
 import uniq from 'lodash/uniq';
 import uniqBy from 'lodash/uniqBy';
 
-import messages from '../../translator';
-import { parseNode } from './utils';
 import { getNodeDetailsErrors, getNodeFilesErrors } from 'shared/utils/validation';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 import { NEW_OBJECT } from 'shared/constants';
 import { COPYING_STATUS, COPYING_STATUS_VALUES } from 'shared/data/constants';
+import messages from '../../translator';
+import { parseNode } from './utils';
 
 function sorted(nodes) {
   return sortBy(nodes, ['lft']);

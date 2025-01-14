@@ -89,20 +89,20 @@
 <script>
 
   import { mapActions, mapGetters, mapState } from 'vuex';
-  import {
-    RouteNames,
-    ChannelInvitationMapping,
-    ListTypeToRouteMapping,
-    RouteToListTypeMapping,
-  } from '../constants';
-  import ChannelListAppError from './ChannelListAppError';
-  import ChannelInvitation from './Channel/ChannelInvitation';
   import { ChannelListTypes } from 'shared/constants';
   import { constantsTranslationMixin, routerMixin } from 'shared/mixins';
   import GlobalSnackbar from 'shared/views/GlobalSnackbar';
   import AppBar from 'shared/views/AppBar';
   import OfflineText from 'shared/views/OfflineText';
   import PolicyModals from 'shared/views/policies/PolicyModals';
+  import {
+    RouteNames,
+    ChannelInvitationMapping,
+    ListTypeToRouteMapping,
+    RouteToListTypeMapping,
+  } from '../constants';
+  import ChannelInvitation from './Channel/ChannelInvitation';
+  import ChannelListAppError from './ChannelListAppError';
 
   const CATALOG_PAGES = [
     RouteNames.CATALOG_ITEMS,

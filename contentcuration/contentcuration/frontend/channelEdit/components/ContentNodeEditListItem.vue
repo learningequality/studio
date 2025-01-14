@@ -109,9 +109,6 @@
 
   import { mapGetters, mapActions } from 'vuex';
 
-  import ContentNodeListItem from './ContentNodeListItem';
-  import ContentNodeOptions from './ContentNodeOptions';
-  import ContentNodeContextMenu from './ContentNodeContextMenu';
   import Checkbox from 'shared/views/form/Checkbox';
   import IconButton from 'shared/views/IconButton';
   import DraggableItem from 'shared/views/draggable/DraggableItem';
@@ -120,6 +117,9 @@
   import { QuickEditModals, DraggableRegions } from 'frontend/channelEdit/constants';
   import { withChangeTracker } from 'shared/data/changes';
   import { COPYING_STATUS, COPYING_STATUS_VALUES } from 'shared/data/constants';
+  import ContentNodeContextMenu from './ContentNodeContextMenu';
+  import ContentNodeOptions from './ContentNodeOptions';
+  import ContentNodeListItem from './ContentNodeListItem';
 
   export default {
     name: 'ContentNodeEditListItem',

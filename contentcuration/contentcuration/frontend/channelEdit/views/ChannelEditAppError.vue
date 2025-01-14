@@ -33,12 +33,12 @@
 
 <script>
 
-  import { ChannelEditPageErrors } from '../constants';
   import MainNavigationDrawer from 'shared/views/MainNavigationDrawer';
   import ToolBar from 'shared/views/ToolBar';
   import ChannelNotFoundError from 'shared/views/errors/ChannelNotFoundError';
   import ChannelDeletedError from 'shared/views/errors/ChannelDeletedError';
   import GenericError from 'shared/views/errors/GenericError';
+  import { ChannelEditPageErrors } from '../constants';
 
   // NOTE: 404 Error Page for the topic level is contained inside of TreeViewBase
   export default {

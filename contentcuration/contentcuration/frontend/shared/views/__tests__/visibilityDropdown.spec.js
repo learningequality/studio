@@ -1,8 +1,8 @@
 import { mount } from '@vue/test-utils';
-import VisibilityDropdown from '../VisibilityDropdown.vue';
-import TestForm from './TestForm.vue';
 import Roles from 'shared/leUtils/Roles';
 import { constantStrings } from 'shared/mixins';
+import VisibilityDropdown from '../VisibilityDropdown.vue';
+import TestForm from './TestForm.vue';
 
 document.body.setAttribute('data-app', true); // Vuetify prints a warning without this
 

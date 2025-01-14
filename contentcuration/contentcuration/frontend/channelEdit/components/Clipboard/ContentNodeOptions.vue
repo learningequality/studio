@@ -27,10 +27,10 @@
 <script>
 
   import { mapActions, mapGetters, mapState } from 'vuex';
+  import { withChangeTracker } from 'shared/data/changes';
   import { RouteNames } from '../../constants';
   import MoveModal from '../move/MoveModal';
   import clipboardMixin from './mixins';
-  import { withChangeTracker } from 'shared/data/changes';
 
   export default {
     name: 'ContentNodeOptions',

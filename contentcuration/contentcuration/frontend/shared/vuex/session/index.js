@@ -1,5 +1,4 @@
 import debounce from 'lodash/debounce';
-import client from '../../client';
 import Languages from 'shared/leUtils/Languages';
 import { TABLE_NAMES, CHANGE_TYPES, resetDB } from 'shared/data';
 import { Session, User } from 'shared/data/resources';
@@ -7,6 +6,7 @@ import { forceServerSync } from 'shared/data/serverSync';
 import translator from 'shared/translator';
 import { applyMods } from 'shared/data/applyRemoteChanges';
 import { FeatureFlagKeys } from 'shared/constants';
+import client from '../../client';
 
 function langCode(language) {
   // Turns a Django language name (en-gb) into an ISO language code (en-GB)

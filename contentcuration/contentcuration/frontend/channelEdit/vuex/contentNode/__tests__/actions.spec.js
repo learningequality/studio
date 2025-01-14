@@ -1,11 +1,11 @@
-import contentNode from '../index';
-import currentChannel from '../../currentChannel/index';
-import assessmentItem from '../../assessmentItem/index';
 import file from 'shared/vuex/file';
 import { ContentNode } from 'shared/data/resources';
 import storeFactory from 'shared/vuex/baseStore';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 import { mockChannelScope, resetMockChannelScope } from 'shared/utils/testing';
+import assessmentItem from '../../assessmentItem/index';
+import currentChannel from '../../currentChannel/index';
+import contentNode from '../index';
 
 jest.mock('../../currentChannel/index');
 

@@ -44,11 +44,11 @@
 <script>
 
   import { mapActions, mapGetters } from 'vuex';
-  import { channelExportMixin } from './mixins';
   import Details from 'shared/views/details/Details';
   import { routerMixin } from 'shared/mixins';
   import LoadingText from 'shared/views/LoadingText';
   import FullscreenModal from 'shared/views/FullscreenModal';
+  import { channelExportMixin } from './mixins';
 
   export default {
     name: 'ChannelDetailsModal',

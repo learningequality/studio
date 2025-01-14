@@ -105,9 +105,6 @@
 <script>
 
   import get from 'lodash/get';
-  import ActivityDuration from './ActivityDuration';
-  import MasteryCriteriaGoal from './MasteryCriteriaGoal';
-  import MasteryCriteriaMofNFields from './MasteryCriteriaMofNFields';
   import {
     nonUniqueValue,
     ContentModalities,
@@ -129,6 +126,9 @@
   } from 'shared/utils/validation';
   import { metadataStrings, metadataTranslationMixin } from 'shared/mixins';
   import ExpandableSelect from 'shared/views/form/ExpandableSelect';
+  import MasteryCriteriaMofNFields from './MasteryCriteriaMofNFields';
+  import MasteryCriteriaGoal from './MasteryCriteriaGoal';
+  import ActivityDuration from './ActivityDuration';
 
   const DEFAULT_SHORT_ACTIVITY = 600;
   const DEFAULT_LONG_ACTIVITY = 3000;

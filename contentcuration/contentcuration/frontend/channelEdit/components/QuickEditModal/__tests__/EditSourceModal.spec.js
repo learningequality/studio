@@ -1,8 +1,8 @@
 import { mount } from '@vue/test-utils';
 import Vuex from 'vuex';
-import EditSourceModal from '../EditSourceModal';
 import { LicensesList } from 'shared/leUtils/Licenses';
 import { constantsTranslationMixin } from 'shared/mixins';
+import EditSourceModal from '../EditSourceModal';
 
 let nodes;
 

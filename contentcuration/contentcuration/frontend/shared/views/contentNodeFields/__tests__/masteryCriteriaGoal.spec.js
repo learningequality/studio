@@ -1,8 +1,8 @@
 import { mount } from '@vue/test-utils';
-import MasteryCriteriaGoal from '../CompletionOptions/MasteryCriteriaGoal';
 import TestForm from 'shared/views/__tests__/TestForm';
 import { constantStrings } from 'shared/mixins';
 import MasteryModels from 'shared/leUtils/MasteryModels';
+import MasteryCriteriaGoal from '../CompletionOptions/MasteryCriteriaGoal';
 
 document.body.setAttribute('data-app', true); // Vuetify prints a warning without this
 

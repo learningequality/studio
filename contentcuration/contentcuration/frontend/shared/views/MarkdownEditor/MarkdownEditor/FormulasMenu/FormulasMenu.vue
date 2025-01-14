@@ -71,9 +71,9 @@
 
 <script>
 
+  import { createTranslator } from 'shared/i18n';
   import Formula from '../../../Formula';
   import SYMBOLS from './symbols.json';
-  import { createTranslator } from 'shared/i18n';
 
   const ANCHOR_ARROW_SIDE_LEFT = 'left';
   const ANCHOR_ARROW_SIDE_RIGHT = 'right';

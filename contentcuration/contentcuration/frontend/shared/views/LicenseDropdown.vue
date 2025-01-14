@@ -81,7 +81,6 @@
 
 <script>
 
-  import RequestForm from '../../settings/pages/Storage/RequestForm.vue';
   import {
     getLicenseValidators,
     getLicenseDescriptionValidators,
@@ -93,6 +92,7 @@
   import { constantsTranslationMixin } from 'shared/mixins';
   import DropdownWrapper from 'shared/views/form/DropdownWrapper';
   import { crossComponentTranslator } from 'shared/i18n';
+  import RequestForm from '../../settings/pages/Storage/RequestForm.vue';
 
   const MIXED_VALUE = 'mixed';
 

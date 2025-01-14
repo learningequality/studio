@@ -1,7 +1,7 @@
 import { liveQuery } from 'dexie';
-import syncProgressModule from './syncProgressModule';
 import db from 'shared/data/db';
 import { CHANGES_TABLE } from 'shared/data/constants';
+import syncProgressModule from './syncProgressModule';
 
 const SyncProgressPlugin = store => {
   store.registerModule('syncProgress', syncProgressModule);

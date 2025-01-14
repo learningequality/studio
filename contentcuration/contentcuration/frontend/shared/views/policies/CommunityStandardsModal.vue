@@ -40,8 +40,8 @@
 </template>
 <script>
 
-  import PoliciesModal from './PoliciesModal';
   import { policies } from 'shared/constants';
+  import PoliciesModal from './PoliciesModal';
 
   export default {
     name: 'CommunityStandardsModal',

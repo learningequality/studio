@@ -197,7 +197,6 @@
 <script>
 
   import { mapActions, mapGetters, mapState } from 'vuex';
-  import { uses, sources } from '../constants';
   import TextField from 'shared/views/form/TextField';
   import EmailField from 'shared/views/form/EmailField';
   import PasswordField from 'shared/views/form/PasswordField';
@@ -210,6 +209,7 @@
   import { policies } from 'shared/constants';
   import DropdownWrapper from 'shared/views/form/DropdownWrapper';
   import commonStrings from 'shared/translator';
+  import { uses, sources } from '../constants';
 
   export default {
     name: 'Create',

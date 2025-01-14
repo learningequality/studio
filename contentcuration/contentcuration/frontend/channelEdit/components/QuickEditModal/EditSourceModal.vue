@@ -95,12 +95,12 @@
 <script>
 
   import { mapActions, mapGetters } from 'vuex';
-  import { isDisableSourceEdits } from '../../utils';
   import { nonUniqueValue } from 'shared/constants';
   import HelpTooltip from 'shared/views/HelpTooltip';
   import LicenseDropdown from 'shared/views/LicenseDropdown';
   import { getCopyrightHolderValidators, getInvalidText } from 'shared/utils/validation';
   import commonStrings from 'shared/translator';
+  import { isDisableSourceEdits } from '../../utils';
 
   function generateGetterSetter(key) {
     return {

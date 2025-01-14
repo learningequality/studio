@@ -1,12 +1,12 @@
 import Vue from 'vue';
 import vuetifyIcons from 'vuetify/lib/components/Vuetify/mixins/icons';
 import camelCase from 'lodash/camelCase';
+import VIconWrapper from 'shared/views/VIconWrapper';
+import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 import CollapseAllIcon from '../views/icons/CollapseAllIcon';
 import IndicatorIcon from '../views/icons/IndicatorIcon';
 import LightBulbIcon from '../views/icons/LightBulbIcon';
 import ViewOnlyIcon from '../views/icons/ViewOnlyIcon';
-import VIconWrapper from 'shared/views/VIconWrapper';
-import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
 Vue.component(VIconWrapper.name, VIconWrapper);
 

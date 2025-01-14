@@ -387,12 +387,6 @@
   import uniq from 'lodash/uniq';
   import uniqWith from 'lodash/uniqWith';
   import { mapGetters, mapActions } from 'vuex';
-  import ContentNodeThumbnail from '../../views/files/thumbnails/ContentNodeThumbnail';
-  import FileUpload from '../../views/files/FileUpload';
-  import SubtitlesList from '../../views/files/supplementaryLists/SubtitlesList';
-  import { isImportedContent, isDisableSourceEdits, importedChannelLink } from '../../utils';
-  import EditSourceModal from '../QuickEditModal/EditSourceModal.vue';
-  import AccessibilityOptions from './AccessibilityOptions.vue';
   import LevelsOptions from 'shared/views/contentNodeFields/LevelsOptions';
   import CategoryOptions from 'shared/views/contentNodeFields/CategoryOptions';
   import CompletionOptions from 'shared/views/contentNodeFields/CompletionOptions';
@@ -418,6 +412,12 @@
   } from 'shared/constants';
   import { constantsTranslationMixin, metadataTranslationMixin } from 'shared/mixins';
   import { crossComponentTranslator } from 'shared/i18n';
+  import EditSourceModal from '../QuickEditModal/EditSourceModal.vue';
+  import { isImportedContent, isDisableSourceEdits, importedChannelLink } from '../../utils';
+  import SubtitlesList from '../../views/files/supplementaryLists/SubtitlesList';
+  import FileUpload from '../../views/files/FileUpload';
+  import ContentNodeThumbnail from '../../views/files/thumbnails/ContentNodeThumbnail';
+  import AccessibilityOptions from './AccessibilityOptions.vue';
 
   function getValueFromResults(results) {
     if (results.length === 0) {

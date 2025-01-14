@@ -141,9 +141,6 @@
 <script>
 
   import { mapGetters, mapActions } from 'vuex';
-  import ResourceDrawer from '../ResourceDrawer';
-  import { RouteNames } from '../../constants';
-  import NewTopicModal from './NewTopicModal';
   import Breadcrumbs from 'shared/views/Breadcrumbs';
   import LoadingText from 'shared/views/LoadingText';
   import ToolBar from 'shared/views/ToolBar';
@@ -152,6 +149,9 @@
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import { titleMixin } from 'shared/mixins';
   import { createTranslator } from 'shared/i18n';
+  import { RouteNames } from '../../constants';
+  import ResourceDrawer from '../ResourceDrawer';
+  import NewTopicModal from './NewTopicModal';
 
   // Can't use cross component translator to get the NodePanel translations
   // here, because the NodePanel component imports this component.

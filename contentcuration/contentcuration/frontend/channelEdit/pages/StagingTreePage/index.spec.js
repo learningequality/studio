@@ -3,11 +3,11 @@ import Vuex from 'vuex';
 import VueRouter from 'vue-router';
 import cloneDeep from 'lodash/cloneDeep';
 
-import { RouteNames } from '../../constants';
-import StagingTreePage from './index';
 import { createStore } from 'shared/vuex/draggablePlugin/test/setup';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 import { Channel } from 'shared/data/resources';
+import { RouteNames } from '../../constants';
+import StagingTreePage from './index';
 
 const localVue = createLocalVue();
 localVue.use(Vuex);

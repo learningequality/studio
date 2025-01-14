@@ -141,12 +141,6 @@
 <script>
 
   import { mapGetters, mapActions, mapState } from 'vuex';
-  import ResourcePanel from '../ResourcePanel';
-  import MoveModal from '../move/MoveModal';
-  import { SelectionFlags } from '../../vuex/clipboard/constants';
-  import { DraggableRegions, DraggableUniverses } from '../../constants';
-  import clipboardMixin from './mixins';
-  import Channel from './Channel';
   import ResizableNavigationDrawer from 'shared/views/ResizableNavigationDrawer';
   import Checkbox from 'shared/views/form/Checkbox';
   import IconButton from 'shared/views/IconButton';
@@ -157,6 +151,12 @@
   import DraggableRegion from 'shared/views/draggable/DraggableRegion';
   import { DraggableIdentityHelper } from 'shared/vuex/draggablePlugin/module/utils';
   import { DropEffect } from 'shared/mixins/draggable/constants';
+  import { DraggableRegions, DraggableUniverses } from '../../constants';
+  import { SelectionFlags } from '../../vuex/clipboard/constants';
+  import MoveModal from '../move/MoveModal';
+  import ResourcePanel from '../ResourcePanel';
+  import Channel from './Channel';
+  import clipboardMixin from './mixins';
 
   export default {
     name: 'Clipboard',

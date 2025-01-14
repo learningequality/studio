@@ -1,6 +1,6 @@
-import userAdmin from '../index';
 import storeFactory from 'shared/vuex/baseStore';
 import client from 'shared/client';
+import userAdmin from '../index';
 
 jest.mock('shared/client');
 jest.mock('shared/vuex/connectionPlugin');

@@ -12,6 +12,12 @@ import uniq from 'lodash/uniq';
 import uniqBy from 'lodash/uniqBy';
 
 import { v4 as uuidv4 } from 'uuid';
+import urls from 'shared/urls';
+import { currentLanguage } from 'shared/i18n';
+import client, { paramsSerializer } from 'shared/client';
+import { DELAYED_VALIDATION, fileErrors, NEW_OBJECT } from 'shared/constants';
+import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
+import { getMergedMapFields } from 'shared/utils/helpers';
 import {
   CHANGE_TYPES,
   CHANGES_TABLE,
@@ -42,12 +48,6 @@ import {
   DeployedChange,
   UpdatedDescendantsChange,
 } from './changes';
-import urls from 'shared/urls';
-import { currentLanguage } from 'shared/i18n';
-import client, { paramsSerializer } from 'shared/client';
-import { DELAYED_VALIDATION, fileErrors, NEW_OBJECT } from 'shared/constants';
-import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
-import { getMergedMapFields } from 'shared/utils/helpers';
 
 // Number of seconds after which data is considered stale.
 const REFRESH_INTERVAL = 5;

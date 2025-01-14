@@ -1,6 +1,6 @@
-import currentChannel from '../index';
 import storeFactory from 'shared/vuex/baseStore';
 import { Channel, ContentNode } from 'shared/data/resources';
+import currentChannel from '../index';
 
 jest.mock('shared/client');
 jest.mock('shared/vuex/connectionPlugin');

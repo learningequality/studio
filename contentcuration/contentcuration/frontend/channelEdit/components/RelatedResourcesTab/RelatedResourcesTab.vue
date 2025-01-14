@@ -118,10 +118,10 @@
 
   import { mapGetters, mapActions } from 'vuex';
 
+  import ContentNodeIcon from 'shared/views/ContentNodeIcon';
   import { RouteNames } from '../../constants';
 
   import RelatedResourcesList from '../RelatedResourcesList/RelatedResourcesList';
-  import ContentNodeIcon from 'shared/views/ContentNodeIcon';
 
   export default {
     name: 'RelatedResourcesTab',

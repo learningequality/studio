@@ -58,10 +58,10 @@
 
   import { mapActions, mapGetters } from 'vuex';
 
-  import ContentNodeEditListItem from '../components/ContentNodeEditListItem';
-  import { RouteNames } from '../constants';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import LoadingText from 'shared/views/LoadingText';
+  import ContentNodeEditListItem from '../components/ContentNodeEditListItem';
+  import { RouteNames } from '../constants';
 
   export default {
     name: 'NodePanel',

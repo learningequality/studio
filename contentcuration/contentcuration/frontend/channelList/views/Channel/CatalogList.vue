@@ -109,9 +109,6 @@
   import isEqual from 'lodash/isEqual';
   import sortBy from 'lodash/sortBy';
   import union from 'lodash/union';
-  import { RouteNames } from '../../constants';
-  import CatalogFilters from './CatalogFilters';
-  import ChannelItem from './ChannelItem';
   import LoadingText from 'shared/views/LoadingText';
   import Pagination from 'shared/views/Pagination';
   import BottomBar from 'shared/views/BottomBar';
@@ -120,6 +117,9 @@
   import OfflineText from 'shared/views/OfflineText';
   import { constantsTranslationMixin } from 'shared/mixins';
   import { channelExportMixin } from 'shared/views/channel/mixins';
+  import { RouteNames } from '../../constants';
+  import ChannelItem from './ChannelItem';
+  import CatalogFilters from './CatalogFilters';
 
   export default {
     name: 'CatalogList',

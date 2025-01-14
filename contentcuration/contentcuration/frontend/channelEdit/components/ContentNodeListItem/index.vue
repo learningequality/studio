@@ -196,9 +196,6 @@
 
   import { mapGetters } from 'vuex';
   import camelCase from 'lodash/camelCase';
-  import ContentNodeCopyTaskProgress from '../../views/progress/ContentNodeCopyTaskProgress';
-  import ContentNodeChangedIcon from '../ContentNodeChangedIcon';
-  import ContentNodeValidator from '../ContentNodeValidator';
   import { ContentLevels, Categories, NEW_OBJECT } from 'shared/constants';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import { RolesNames } from 'shared/leUtils/Roles';
@@ -209,6 +206,9 @@
   import { titleMixin, metadataTranslationMixin } from 'shared/mixins';
   import { EffectAllowed } from 'shared/mixins/draggable/constants';
   import ContentNodeLearningActivityIcon from 'shared/views/ContentNodeLearningActivityIcon';
+  import ContentNodeValidator from '../ContentNodeValidator';
+  import ContentNodeChangedIcon from '../ContentNodeChangedIcon';
+  import ContentNodeCopyTaskProgress from '../../views/progress/ContentNodeCopyTaskProgress';
 
   export default {
     name: 'ContentNodeListItem',

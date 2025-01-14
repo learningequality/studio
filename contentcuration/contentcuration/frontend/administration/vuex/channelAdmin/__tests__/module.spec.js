@@ -1,7 +1,7 @@
-import channelAdmin from '../index';
 import channel from 'shared/vuex/channel';
 import storeFactory from 'shared/vuex/baseStore';
 import client from 'shared/client';
+import channelAdmin from '../index';
 
 jest.mock('shared/client');
 jest.mock('shared/vuex/connectionPlugin');

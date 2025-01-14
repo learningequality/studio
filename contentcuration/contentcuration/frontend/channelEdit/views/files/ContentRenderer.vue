@@ -67,8 +67,8 @@
   import uniqBy from 'lodash/uniqBy';
   import sortBy from 'lodash/sortBy';
   import { mapGetters } from 'vuex';
-  import EpubRenderer from './EpubRenderer';
   import FileStatus from 'shared/views/files/FileStatus';
+  import EpubRenderer from './EpubRenderer';
 
   export default {
     name: 'ContentRenderer',

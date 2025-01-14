@@ -1,8 +1,8 @@
 import Vue from 'vue';
 import Vuetify from 'vuetify';
 import { shallowMount, mount } from '@vue/test-utils';
-import LearningActivityOptions from '../LearningActivityOptions.vue';
 import { LearningActivities } from 'shared/constants';
+import LearningActivityOptions from '../LearningActivityOptions.vue';
 
 Vue.use(Vuetify);
 

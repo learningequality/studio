@@ -1,6 +1,6 @@
 import Vue from 'vue';
-import { ContentNode, Channel } from '../../../shared/data/resources';
 import client from 'shared/client';
+import { ContentNode, Channel } from '../../../shared/data/resources';
 
 export function loadChannel(context, { staging = false } = {}) {
   return context

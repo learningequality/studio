@@ -1,7 +1,7 @@
 import flatMap from 'lodash/flatMap';
-import { storageUrl } from './utils';
 import FormatPresets from 'shared/leUtils/FormatPresets';
 import Languages from 'shared/leUtils/Languages';
+import { storageUrl } from './utils';
 
 export function getFileUpload(state) {
   return function(id) {

@@ -66,11 +66,11 @@
 <script>
 
   import { mapGetters } from 'vuex';
-  import RequestForm from './RequestForm';
   import { fileSizeMixin, constantsTranslationMixin } from 'shared/mixins';
   import { ContentKindsList, ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import theme from 'shared/vuetify/theme';
   import LoadingText from 'shared/views/LoadingText';
+  import RequestForm from './RequestForm';
 
   export default {
     name: 'Storage',

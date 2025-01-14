@@ -1,8 +1,8 @@
 import { mount, createLocalVue } from '@vue/test-utils';
 import Vuex, { Store } from 'vuex';
 import VueRouter from 'vue-router';
-import ChannelList from '../ChannelList.vue';
 import { ChannelListTypes } from 'shared/constants';
+import ChannelList from '../ChannelList.vue';
 
 const localVue = createLocalVue();
 localVue.use(Vuex);

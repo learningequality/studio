@@ -1,7 +1,7 @@
 import { mount } from '@vue/test-utils';
+import { ONE_TB } from 'shared/constants';
 import UserStorage from '../UserStorage';
 import { factory } from '../../../store';
-import { ONE_TB } from 'shared/constants';
 
 const store = factory();
 

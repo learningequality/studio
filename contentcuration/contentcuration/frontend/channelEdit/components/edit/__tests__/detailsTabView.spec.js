@@ -4,6 +4,8 @@ import pick from 'lodash/pick';
 import Vue from 'vue';
 import Vuetify from 'vuetify';
 import { mount } from '@vue/test-utils';
+import { LicensesList } from 'shared/leUtils/Licenses';
+import { NEW_OBJECT } from 'shared/constants';
 import DetailsTabView from '../DetailsTabView.vue';
 import {
   localStore,
@@ -12,8 +14,6 @@ import {
   DEFAULT_EXERCISE,
   DEFAULT_EXERCISE2,
 } from './data.js';
-import { LicensesList } from 'shared/leUtils/Licenses';
-import { NEW_OBJECT } from 'shared/constants';
 
 Vue.use(Vuetify);
 

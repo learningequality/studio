@@ -1,8 +1,8 @@
-import { getHash, extractMetadata, storageUrl } from './utils';
 import { File } from 'shared/data/resources';
 import client from 'shared/client';
 import { fileErrors, NOVALUE } from 'shared/constants';
 import FormatPresetsMap from 'shared/leUtils/FormatPresets';
+import { getHash, extractMetadata, storageUrl } from './utils';
 
 export function loadFiles(context, params = {}) {
   return File.where(params).then(files => {

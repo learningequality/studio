@@ -1,7 +1,7 @@
 import Vue from 'vue';
-import channelList from '../index';
 import { Channel, Invitation } from 'shared/data/resources';
 import storeFactory from 'shared/vuex/baseStore';
+import channelList from '../index';
 
 jest.mock('shared/vuex/connectionPlugin');
 

@@ -1,7 +1,7 @@
 import { mount } from '@vue/test-utils';
 
-import PoliciesModal from '../PoliciesModal.vue';
 import { policies, policyDates } from 'shared/constants';
+import PoliciesModal from '../PoliciesModal.vue';
 
 describe('PoliciesModal', () => {
   it('smoke test', () => {

@@ -1,5 +1,4 @@
 import pick from 'lodash/pick';
-import channel from '../index';
 import {
   Bookmark,
   Channel,
@@ -13,6 +12,7 @@ import {
 import { SharingPermissions } from 'shared/constants';
 import storeFactory from 'shared/vuex/baseStore';
 import client from 'shared/client';
+import channel from '../index';
 
 jest.mock('shared/vuex/connectionPlugin');
 

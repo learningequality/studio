@@ -1,11 +1,11 @@
 import get from 'lodash/get';
 import CompletionCriteriaModels from 'kolibri-constants/CompletionCriteria';
-import translator from '../translator';
-import { AssessmentItemTypes, ValidationErrors, ContentModalities } from '../constants';
 import Licenses from 'shared/leUtils/Licenses';
 import { MasteryModelsNames } from 'shared/leUtils/MasteryModels';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 import { validate as validateCompletionCriteria } from 'shared/leUtils/CompletionCriteria';
+import { AssessmentItemTypes, ValidationErrors, ContentModalities } from '../constants';
+import translator from '../translator';
 
 /**
  * Topic and resource

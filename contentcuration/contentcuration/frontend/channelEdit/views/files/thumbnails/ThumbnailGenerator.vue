@@ -19,10 +19,10 @@
   import map from 'lodash/map';
   import max from 'lodash/max';
   import epubJS from 'epubjs';
-  import PDFJSWorker from '!!file-loader!pdfjs-dist/build/pdf.worker.min.js';
   import client from 'shared/client';
   import Alert from 'shared/views/Alert';
   import { ASPECT_RATIO, THUMBNAIL_WIDTH } from 'shared/constants';
+  import PDFJSWorker from '!!file-loader!pdfjs-dist/build/pdf.worker.min.js';
   // Based off of solution here: https://github.com/mozilla/pdf.js/issues/7612#issuecomment-576807171
   const pdfJSLib = require('pdfjs-dist');
 

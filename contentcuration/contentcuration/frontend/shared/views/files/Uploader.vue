@@ -61,12 +61,12 @@
   import flatMap from 'lodash/flatMap';
   import isFunction from 'lodash/isFunction';
 
-  import FileStorage from './FileStorage';
-  import FileDropzone from './FileDropzone';
   import { MAX_FILE_SIZE } from 'shared/constants';
   import { fileSizeMixin } from 'shared/mixins';
   import Alert from 'shared/views/Alert';
   import { FormatPresetsList } from 'shared/leUtils/FormatPresets';
+  import FileDropzone from './FileDropzone';
+  import FileStorage from './FileStorage';
 
   export default {
     name: 'Uploader',

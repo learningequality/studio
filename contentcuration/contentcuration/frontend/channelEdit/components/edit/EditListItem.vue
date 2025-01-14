@@ -71,10 +71,10 @@
 <script>
 
   import { mapActions, mapGetters } from 'vuex';
-  import { RouteNames } from '../../constants';
   import { fileSizeMixin, fileStatusMixin } from 'shared/mixins';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
   import Checkbox from 'shared/views/form/Checkbox';
+  import { RouteNames } from '../../constants';
 
   export default {
     name: 'EditListItem',

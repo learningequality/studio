@@ -1,9 +1,9 @@
 import Vue from 'vue';
 import Vuetify from 'vuetify';
 import { mount } from '@vue/test-utils';
+import { LicensesList } from 'shared/leUtils/Licenses';
 import LicenseDropdown from '../LicenseDropdown.vue';
 import TestForm from './TestForm.vue';
-import { LicensesList } from 'shared/leUtils/Licenses';
 
 Vue.use(Vuetify);
 

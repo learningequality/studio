@@ -26,8 +26,8 @@
 <script>
 
   import flatten from 'lodash/flatten'; // Tests fail with native Array.flat() method
-  import { catalogFilterMixin } from './mixins';
   import { constantsTranslationMixin } from 'shared/mixins';
+  import { catalogFilterMixin } from './mixins';
 
   /**
    * Returns the expected format for filters

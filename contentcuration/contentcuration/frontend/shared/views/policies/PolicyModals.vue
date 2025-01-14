@@ -28,10 +28,10 @@
 
   import get from 'lodash/get';
   import { mapActions, mapGetters } from 'vuex';
+  import { policies } from 'shared/constants';
   import PrivacyPolicyModal from './PrivacyPolicyModal';
   import TermsOfServiceModal from './TermsOfServiceModal';
   import CommunityStandardsModal from './CommunityStandardsModal';
-  import { policies } from 'shared/constants';
 
   export default {
     name: 'PolicyModals',

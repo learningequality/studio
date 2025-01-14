@@ -26,10 +26,10 @@
 
 <script>
 
-  import EditBooleanMapModal from './EditBooleanMapModal';
   import { getLearningActivityValidators } from 'shared/utils/validation';
   import LearningActivityOptions from 'shared/views/contentNodeFields/LearningActivityOptions';
   import commonStrings from 'shared/translator';
+  import EditBooleanMapModal from './EditBooleanMapModal';
 
   export default {
     name: 'EditLearningActivitiesModal',

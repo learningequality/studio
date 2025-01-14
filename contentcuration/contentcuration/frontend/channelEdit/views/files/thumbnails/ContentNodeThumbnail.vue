@@ -186,8 +186,6 @@
 <script>
 
   import { mapActions, mapGetters } from 'vuex';
-  import ThumbnailGenerator from './ThumbnailGenerator';
-  import ThumbnailCard from './ThumbnailCard';
   import { fileSizeMixin, fileStatusMixin } from 'shared/mixins';
   import { FormatPresetsList } from 'shared/leUtils/FormatPresets';
   import Uploader from 'shared/views/files/Uploader';
@@ -197,6 +195,8 @@
   import IconButton from 'shared/views/IconButton';
   import Thumbnail from 'shared/views/files/Thumbnail';
   import { ASPECT_RATIO, THUMBNAIL_WIDTH } from 'shared/constants';
+  import ThumbnailCard from './ThumbnailCard';
+  import ThumbnailGenerator from './ThumbnailGenerator';
 
   export default {
     name: 'ContentNodeThumbnail',

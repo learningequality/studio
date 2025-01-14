@@ -1,7 +1,7 @@
 import { mount } from '@vue/test-utils';
+import IconButton from 'shared/views/IconButton';
 import ContentNodeThumbnail from '../thumbnails/ContentNodeThumbnail';
 import { factory } from '../../../store';
-import IconButton from 'shared/views/IconButton';
 
 const testThumbnail = {
   id: 'test-image',

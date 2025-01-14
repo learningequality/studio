@@ -1,8 +1,8 @@
 import { mount } from '@vue/test-utils';
+import Uploader from 'shared/views/files/Uploader';
 import SupplementaryList from '../supplementaryLists/SupplementaryList';
 import SupplementaryItem from '../supplementaryLists/SupplementaryItem';
 import { factory } from '../../../store';
-import Uploader from 'shared/views/files/Uploader';
 
 const testNodeId = 'testnode';
 const testFile = {

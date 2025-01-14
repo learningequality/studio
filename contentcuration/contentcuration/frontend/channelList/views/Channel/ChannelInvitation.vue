@@ -62,8 +62,8 @@
 <script>
 
   import { mapActions, mapGetters } from 'vuex';
-  import { InvitationShareModes } from '../../constants';
   import MessageDialog from 'shared/views/MessageDialog';
+  import { InvitationShareModes } from '../../constants';
 
   export default {
     name: 'ChannelInvitation',

@@ -19,8 +19,8 @@
 
 <script>
 
-  import AppError from './AppError';
   import { routerMixin } from 'shared/mixins';
+  import AppError from './AppError';
 
   export default {
     name: 'PageNotFoundError',

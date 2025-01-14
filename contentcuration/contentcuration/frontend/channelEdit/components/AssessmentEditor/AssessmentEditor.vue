@@ -131,14 +131,14 @@
 
 <script>
 
+  import Checkbox from 'shared/views/form/Checkbox';
+  import { AssessmentItemTypes, DELAYED_VALIDATION } from 'shared/constants';
   import { AssessmentItemToolbarActions } from '../../constants';
   import { assessmentItemKey } from '../../utils';
 
   import AssessmentItemToolbar from '../AssessmentItemToolbar';
   import AssessmentItemEditor from '../AssessmentItemEditor/AssessmentItemEditor';
   import AssessmentItemPreview from '../AssessmentItemPreview/AssessmentItemPreview';
-  import Checkbox from 'shared/views/form/Checkbox';
-  import { AssessmentItemTypes, DELAYED_VALIDATION } from 'shared/constants';
 
   function areItemsEqual(item1, item2) {
     if (!item1 || !item2) {

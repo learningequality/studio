@@ -99,13 +99,13 @@
   import reduce from 'lodash/reduce';
   import { mapGetters } from 'vuex';
 
+  import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
+  import ToolBar from 'shared/views/ToolBar';
+  import Tabs from 'shared/views/Tabs';
   import { TabNames } from '../../constants';
   import AssessmentTab from '../../components/AssessmentTab/AssessmentTab';
   import RelatedResourcesTab from '../../components/RelatedResourcesTab/RelatedResourcesTab';
   import DetailsTabView from './DetailsTabView';
-  import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
-  import ToolBar from 'shared/views/ToolBar';
-  import Tabs from 'shared/views/Tabs';
 
   const EditFields = {
     TITLE: 'titleLabel',

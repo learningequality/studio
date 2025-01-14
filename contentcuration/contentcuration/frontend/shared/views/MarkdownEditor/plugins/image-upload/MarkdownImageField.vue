@@ -54,11 +54,11 @@
 
 <script>
 
+  import MouseMove from 'shared/directives/mouse-move';
+  import MouseUp from 'shared/directives/mouse-up';
   import { CLASS_IMG_FIELD } from '../../constants';
   import register from '../registerCustomMarkdownField.js';
   import { imageMdToParams, paramsToImageMd } from './index';
-  import MouseMove from 'shared/directives/mouse-move';
-  import MouseUp from 'shared/directives/mouse-up';
 
   import '../../mathquill/mathquill.js';
 

@@ -1,7 +1,7 @@
 import { shallowMount, mount } from '@vue/test-utils';
 
-import AssessmentItemPreview from './AssessmentItemPreview';
 import { AssessmentItemTypes } from 'shared/constants';
+import AssessmentItemPreview from './AssessmentItemPreview';
 
 describe('AssessmentItemPreview', () => {
   let wrapper;

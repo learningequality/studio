@@ -3,6 +3,9 @@ import isEqual from 'lodash/isEqual';
 import transform from 'lodash/transform';
 import uniq from 'lodash/uniq';
 import { mapGetters } from 'vuex';
+import { createTranslator, updateTabTitle } from 'shared/i18n';
+import Languages from 'shared/leUtils/Languages';
+import Licenses from 'shared/leUtils/Licenses';
 import {
   ChannelListTypes,
   fileErrors,
@@ -13,9 +16,6 @@ import {
   ONE_TB,
   filterTypes,
 } from './constants';
-import { createTranslator, updateTabTitle } from 'shared/i18n';
-import Languages from 'shared/leUtils/Languages';
-import Licenses from 'shared/leUtils/Licenses';
 
 const sizeStrings = createTranslator('BytesForHumansStrings', {
   fileSizeInBytes: '{n, number, integer} B',

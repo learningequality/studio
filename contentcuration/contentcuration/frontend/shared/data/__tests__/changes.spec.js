@@ -1,17 +1,5 @@
 import pick from 'lodash/pick';
 import {
-  Change,
-  CreatedChange,
-  UpdatedChange,
-  DeletedChange,
-  MovedChange,
-  CopiedChange,
-  PublishedChange,
-  SyncedChange,
-  DeployedChange,
-  UpdatedDescendantsChange,
-} from '../changes';
-import {
   CHANGES_TABLE,
   CHANGE_TYPES,
   TABLE_NAMES,
@@ -23,6 +11,18 @@ import {
 } from 'shared/data/constants';
 import db from 'shared/data/db';
 import { mockChannelScope, resetMockChannelScope } from 'shared/utils/testing';
+import {
+  Change,
+  CreatedChange,
+  UpdatedChange,
+  DeletedChange,
+  MovedChange,
+  CopiedChange,
+  PublishedChange,
+  SyncedChange,
+  DeployedChange,
+  UpdatedDescendantsChange,
+} from '../changes';
 
 const CLIENTID = 'test-client-id';
 
