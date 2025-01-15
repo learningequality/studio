@@ -1,4 +1,5 @@
 <template>
+
   <VContainer v-resize="handleWindowResize" fluid class="ma-0 main pa-0 panel">
     <!-- Breadcrumbs -->
     <VToolbar dense color="transparent" flat>
@@ -170,7 +171,18 @@
 
       <!-- Update: Add fallback for undefined currentChannel -->
       <ResourceDrawer
-        v-if="currentChannel && currentChannel.id"  <!-- Check if currentChannel and its id are available -->
+        v-if="currentChannel && currentChannel.id"
+        id
+      
+
+<!--
+        Check
+        if
+        currentChannel
+        and
+        its
+are available --
+      >
         ref="resourcepanel"
         :nodeId="detailNodeId"
         :channelId="currentChannel.id"
@@ -178,7 +190,7 @@
         @close="closePanel"
         @resize="handleResourceDrawerResize"
         @scroll="scroll"
-      >
+        >
         <template v-if="canEdit" #actions>
           <IconButton
             size="small"
