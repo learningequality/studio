@@ -63,12 +63,12 @@ describe('fileUploadItem', () => {
   });
 
   describe('props', () => {
-    it('should show the remove icon only if allowFileRemove', () => {
+    it('should show the remove menu option only if allowFileRemove', () => {
       const noRemoveWrapper = makeWrapper();
-      expect(noRemoveWrapper.find('[data-test="remove"]').exists()).toBe(false);
+      expect(noRemoveWrapper.find('[data-test="remove-file"]').exists()).toBe(false);
 
       const allowRemoveWrapper = makeWrapper({ allowFileRemove: true });
-      expect(allowRemoveWrapper.find('[data-test="remove"]').exists()).toBe(true);
+      expect(allowRemoveWrapper.find('[data-test="remove-file"]').exists()).toBe(true);
     });
   });
   describe('methods', () => {
@@ -104,9 +104,9 @@ describe('fileUploadItem', () => {
       wrapper.find('[data-test="list-item"]').trigger('click');
       expect(wrapper.emitted('selected')).toBeUndefined();
     });
-    it('clicking remove icon should emit a remove event', () => {
+    it('clicking remove menu option should emit a remove event', () => {
       wrapper.setProps({ allowFileRemove: true });
-      wrapper.find('[data-test="remove"]').vm.$emit('click');
+      wrapper.find('[data-test="remove-file"]').trigger('click');
       expect(wrapper.emitted('remove')[0][0].id).toBe('test');
     });
   });

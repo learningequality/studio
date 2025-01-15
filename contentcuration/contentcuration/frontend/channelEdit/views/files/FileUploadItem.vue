@@ -25,13 +25,13 @@
           <VListTileContent>
             <VListTileSubTitle>{{ translateConstant(preset.id) }}</VListTileSubTitle>
             <VListTileTitle>
-              <ActionLink
+              <span
                 v-if="fileDisplay"
                 class="notranslate"
-                :text="formattedFileDisplay"
                 data-test="file-link"
-                @click="openFileDialog"
-              />
+              >
+                {{ formattedFileDisplay }}
+              </span>
               <ActionLink
                 v-else
                 data-test="upload-link"
@@ -53,15 +53,28 @@
           </VListTileContent>
           <VSpacer />
           <VListTileAction v-if="fileDisplay">
-            <div v-if="allowFileRemove" class="remove-icon">
-              <IconButton
-                icon="clear"
-                color="grey"
-                :text="$tr('removeFileButton')"
-                data-test="remove"
-                @click="$emit('remove', file)"
-              />
-            </div>
+            <Menu>
+              <template #activator="{ on }">
+                <IconButton
+                  size="small"
+                  icon="optionsHorizontal"
+                  :text="$tr('optionsButton')"
+                  v-on="on"
+                />
+              </template>
+              <VList
+                class="preview-files-options"
+              >
+                <VListTile
+                  v-for="(option, index) in previewFilesOptions"
+                  :key="index"
+                  :data-test="option.dataTest"
+                  @click="option.onClick(openFileDialog)"
+                >
+                  <VListTileTitle>{{ option.label }}</VListTileTitle>
+                </VListTile>
+              </VList>
+            </Menu>
           </VListTileAction>
         </VListTile>
       </FileDropzone>
@@ -150,6 +163,36 @@
         }
         return null;
       },
+      previewFilesOptions() {
+        const options = [
+          {
+            label: this.$tr('replaceFileMenuOptionLabel'),
+            onClick: replaceFile => {
+              replaceFile();
+            },
+            condition: this.fileDisplay,
+            dataTest: 'replace-file',
+          },
+          {
+            label: this.$tr('downloadMenuOptionLabel'),
+            onClick: () => {
+              this.downloadFile();
+            },
+            condition: this.fileDisplay,
+            dataTest: 'download-file',
+          },
+          {
+            label: this.$tr('removeMenuOptionLabel'),
+            onClick: () => {
+              this.removeFile();
+            },
+            condition: this.fileDisplay && this.allowFileRemove,
+            dataTest: 'remove-file',
+          },
+        ];
+
+        return options.filter(option => option.condition);
+      },
     },
     watch: {
       'file.id': {
@@ -167,11 +210,21 @@
       uploadingHandler(fileUpload) {
         this.fileUploadId = fileUpload.id;
       },
+      downloadFile() {
+        window.open(this.fileDisplay.url, '_blank');
+      },
+      removeFile() {
+        this.$emit('remove', this.file);
+      },
     },
     $trs: {
       uploadButton: 'Select file',
-      removeFileButton: 'Remove',
+      optionsButton: 'Options',
+      replaceFileMenuOptionLabel: 'Replace file',
+      downloadMenuOptionLabel: 'Download',
+      removeMenuOptionLabel: 'Remove',
       /* eslint-disable kolibri/vue-no-unused-translations */
+      removeFileButton: 'Remove',
       retryUpload: 'Retry upload',
       uploadFailed: 'Upload failed',
       unknownFile: 'Unknown filename',
@@ -212,6 +265,14 @@
 
     .v-list__tile__sub-title {
       white-space: unset;
+    }
+  }
+
+  .preview-files-options {
+    /deep/ .v-list__tile {
+      height: max-content !important;
+      min-height: 48px;
+      padding: 5px 16px;
     }
   }
 
