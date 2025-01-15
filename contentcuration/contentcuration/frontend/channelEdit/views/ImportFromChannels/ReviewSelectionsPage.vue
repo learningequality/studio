@@ -16,10 +16,11 @@
               <VFlex md5 sm12>
                 <VListTileContent>
                   <VListTileTitle>
-                    <ActionLink
+                    <KTextTruncator
                       class="subheading"
                       :class="getTitleClass(node)"
                       :text="getTitle(node)"
+                      :maxLines="1"
                       @click="preview(node)"
                     />
                   </VListTileTitle>
