@@ -4,7 +4,7 @@ import { factory } from '../../../store';
 import Uploader from 'shared/views/files/Uploader';
 
 const testFile = { id: 'test' };
-function makeWrapper(props = {}, file = {}) {
+function makeWrapper(props = {}, file = {}, computed = {}) {
   const store = factory();
   return mount(FileUploadItem, {
     store,
@@ -24,6 +24,7 @@ function makeWrapper(props = {}, file = {}) {
       },
       ...props,
     },
+    computed,
   });
 }
 
@@ -34,14 +35,14 @@ describe('fileUploadItem', () => {
         original_filename: 'file',
       };
       const wrapper = makeWrapper({}, file);
-      expect(wrapper.find('[data-test="file-link"]').text()).toBe('Unknown filename');
+      expect(wrapper.find('[data-test="file-name"]').text()).toBe('Unknown filename');
     });
     it("'Unknown filename' should be displayed if original_filename is ''", () => {
       const file = {
         original_filename: '',
       };
       const wrapper = makeWrapper({}, file);
-      expect(wrapper.find('[data-test="file-link"]').text()).toBe('Unknown filename');
+      expect(wrapper.find('[data-test="file-name"]').text()).toBe('Unknown filename');
     });
     it("original_filename should be displayed if its value is not 'file'", () => {
       const file = {
@@ -49,7 +50,7 @@ describe('fileUploadItem', () => {
         original_filename: 'SomeFileName',
       };
       const wrapper = makeWrapper({}, file);
-      expect(wrapper.find('[data-test="file-link"]').text()).toBe('SomeFileName');
+      expect(wrapper.find('[data-test="file-name"]').text()).toBe('SomeFileName');
     });
     it('should show a status error if the file has an error', () => {
       const wrapper = makeWrapper({}, { error: true });
@@ -69,6 +70,37 @@ describe('fileUploadItem', () => {
 
       const allowRemoveWrapper = makeWrapper({ allowFileRemove: true });
       expect(allowRemoveWrapper.find('[data-test="remove-file"]').exists()).toBe(true);
+    });
+  });
+  describe('computed', () => {
+    it('should show all menu options only if fileDisplay', () => {
+      let wrapper = makeWrapper(
+        {},
+        {},
+        {
+          fileDisplay() {
+            return false;
+          },
+        }
+      );
+      expect(wrapper.find('[data-test="replace-file"]').exists()).toBe(false);
+      expect(wrapper.find('[data-test="remove-file"]').exists()).toBe(false);
+      expect(wrapper.find('[data-test="download-file"]').exists()).toBe(false);
+
+      wrapper = makeWrapper(
+        {
+          allowFileRemove: true,
+        },
+        {},
+        {
+          fileDisplay() {
+            return true;
+          },
+        }
+      );
+      expect(wrapper.find('[data-test="replace-file"]').exists()).toBe(true);
+      expect(wrapper.find('[data-test="remove-file"]').exists()).toBe(true);
+      expect(wrapper.find('[data-test="download-file"]').exists()).toBe(true);
     });
   });
   describe('methods', () => {
@@ -108,6 +140,19 @@ describe('fileUploadItem', () => {
       wrapper.setProps({ allowFileRemove: true });
       wrapper.find('[data-test="remove-file"]').trigger('click');
       expect(wrapper.emitted('remove')[0][0].id).toBe('test');
+    });
+    it('clicking replace menu option should emit a selected event', () => {
+      wrapper.find('[data-test="replace-file"]').trigger('click');
+      expect(wrapper.emitted('selected')).not.toBeUndefined();
+    });
+    it('clicking download menu option should call open file', () => {
+      window.open = jest.fn();
+
+      wrapper = makeWrapper({
+        file: { id: 1, url: 'path/to/file.pdf' },
+      });
+      wrapper.find('[data-test="download-file"]').trigger('click');
+      expect(window.open).toHaveBeenCalledWith('path/to/file.pdf', '_blank');
     });
   });
 });

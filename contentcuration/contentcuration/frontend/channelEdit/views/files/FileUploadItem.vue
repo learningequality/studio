@@ -28,7 +28,7 @@
               <span
                 v-if="fileDisplay"
                 class="notranslate"
-                data-test="file-link"
+                data-test="file-name"
               >
                 {{ formattedFileDisplay }}
               </span>
