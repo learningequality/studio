@@ -36,8 +36,9 @@
       </VLayout>
     </VCard>
     <iframe
-      v-else-if="isHTML"
-      :src="htmlPath"
+      v-else-if="isHTML || isH5P"
+      ref="iframe"
+      :src="rooturl"
       sandbox="allow-scripts"
       @load="loading = false"
     ></iframe>
@@ -67,6 +68,9 @@
   import uniqBy from 'lodash/uniqBy';
   import sortBy from 'lodash/sortBy';
   import { mapGetters } from 'vuex';
+  // eslint-disable-next-line
+  import Hashi from 'hashi';
+  import urls from './hashi/urls';
   import EpubRenderer from './EpubRenderer';
   import FileStatus from 'shared/views/files/FileStatus';
 
@@ -102,6 +106,9 @@
       file() {
         return this.getContentNodeFileById(this.nodeId, this.fileId);
       },
+      rooturl() {
+        return urls.hashi();
+      },
       supplementaryFiles() {
         const files = this.nodeId ? this.getContentNodeFiles(this.nodeId) : [];
         return files.filter(f => f.preset.supplementary);
@@ -122,14 +129,14 @@
       isHTML() {
         return this.file.file_format === 'zip';
       },
+      isH5P() {
+        return this.defaultFile.extension === 'h5p';
+      },
       isPDF() {
         return this.file.file_format === 'pdf';
       },
       isEpub() {
         return this.file.file_format === 'epub';
-      },
-      htmlPath() {
-        return `/zipcontent/${this.file.checksum}.${this.file.file_format}`;
       },
       src() {
         return this.file && this.file.url;
@@ -139,6 +146,47 @@
       fileId(newFileId) {
         this.loading = Boolean(newFileId);
       },
+    },
+    mounted() {
+      const now = Date.now();
+      this.hashi = new Hashi({ iframe: this.$refs.iframe, now });
+      this.hashi.onStateUpdate(data => {
+        this.$emit('updateContentState', data);
+      });
+      this.hashi.on('navigateTo', message => {
+        this.$emit('navigateTo', message);
+      });
+      this.hashi.on(this.hashi.events.RESIZE, scrollHeight => {
+        this.iframeHeight = scrollHeight;
+      });
+      this.hashi.on(this.hashi.events.LOADING, loading => {
+        this.loading = loading;
+      });
+      this.hashi.on(this.hashi.events.ERROR, err => {
+        this.loading = false;
+        this.$emit('error', err);
+      });
+      let storageUrl = this.defaultFile.storage_url;
+      if (!this.isH5P) {
+        // In the case that this is being routed via a remote URL
+        // ensure we preserve that for the zip endpoint.
+        const query = this.defaultFile.storage_url.split('?')[1];
+        storageUrl = urls.zipContentUrl(
+          this.defaultFile.checksum,
+          this.defaultFile.extension,
+          this.entry
+        );
+        if (query) {
+          storageUrl += '?' + query;
+        }
+      }
+
+      this.hashi.initialize(
+        (this.extraFields && this.extraFields.contentState) || {},
+        this.userData || {},
+        storageUrl,
+        this.defaultFile.checksum
+      );
     },
     $trs: {
       noFileText: 'Select a file to preview',
