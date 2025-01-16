@@ -1,7 +1,7 @@
 import { mount } from '@vue/test-utils';
-import ChannelSharingTable from './../ChannelSharingTable';
 import storeFactory from 'shared/vuex/baseStore';
 import { SharingPermissions } from 'shared/constants';
+import ChannelSharingTable from './../ChannelSharingTable';
 
 const store = storeFactory();
 const currentUser = { id: 'testId' };
@@ -70,7 +70,7 @@ describe('channelSharingTable', () => {
     it('resendInvitation should call sendInvitation', () => {
       const sendInvitation = jest.fn();
       wrapper.setMethods({
-        sendInvitation: data => {
+        sendInvitation: (data) => {
           sendInvitation(data);
           return Promise.resolve();
         },
@@ -86,7 +86,7 @@ describe('channelSharingTable', () => {
       wrapper.setData({ selected: invite });
       const deleteInvitation = jest.fn();
       wrapper.setMethods({
-        deleteInvitation: data => {
+        deleteInvitation: (data) => {
           deleteInvitation(data);
           return Promise.resolve();
         },
@@ -103,7 +103,7 @@ describe('channelSharingTable', () => {
       wrapper.setProps({ mode: SharingPermissions.VIEW_ONLY });
       const makeEditor = jest.fn();
       wrapper.setMethods({
-        makeEditor: data => {
+        makeEditor: (data) => {
           makeEditor(data);
           return Promise.resolve();
         },
@@ -116,7 +116,7 @@ describe('channelSharingTable', () => {
       wrapper.setProps({ mode: SharingPermissions.VIEW_ONLY });
       const removeViewer = jest.fn();
       wrapper.setMethods({
-        removeViewer: data => {
+        removeViewer: (data) => {
           removeViewer(data);
           return Promise.resolve();
         },

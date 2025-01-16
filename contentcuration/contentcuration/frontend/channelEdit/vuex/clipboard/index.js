@@ -1,9 +1,9 @@
-import * as getters from './getters';
-import * as actions from './actions';
-import * as mutations from './mutations';
 import { persistAllFactory } from 'shared/vuex/persistFactory';
 import { TABLE_NAMES, CHANGE_TYPES } from 'shared/data';
 import { commitListener, dispatchListener } from 'shared/vuex/indexedDBPlugin';
+import * as getters from './getters';
+import * as actions from './actions';
+import * as mutations from './mutations';
 
 export default {
   namespaced: true,

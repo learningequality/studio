@@ -31,9 +31,9 @@
 <script>
 
   import { mapActions } from 'vuex';
-  import MessageLayout from '../../components/MessageLayout';
   import PasswordField from 'shared/views/form/PasswordField';
   import Banner from 'shared/views/Banner';
+  import MessageLayout from '../../components/MessageLayout';
 
   export default {
     name: 'ResetPassword',

@@ -1,8 +1,8 @@
 import Vue from 'vue';
 import { mount } from '@vue/test-utils';
 import VueRouter from 'vue-router';
-import ChannelModal from './../ChannelModal';
 import storeFactory from 'shared/vuex/baseStore';
+import ChannelModal from './../ChannelModal';
 
 Vue.use(VueRouter);
 

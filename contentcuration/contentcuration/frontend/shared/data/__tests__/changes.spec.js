@@ -1,17 +1,5 @@
 import pick from 'lodash/pick';
 import {
-  Change,
-  CreatedChange,
-  UpdatedChange,
-  DeletedChange,
-  MovedChange,
-  CopiedChange,
-  PublishedChange,
-  SyncedChange,
-  DeployedChange,
-  UpdatedDescendantsChange,
-} from '../changes';
-import {
   CHANGES_TABLE,
   CHANGE_TYPES,
   TABLE_NAMES,
@@ -23,6 +11,18 @@ import {
 } from 'shared/data/constants';
 import db from 'shared/data/db';
 import { mockChannelScope, resetMockChannelScope } from 'shared/utils/testing';
+import {
+  Change,
+  CreatedChange,
+  UpdatedChange,
+  DeletedChange,
+  MovedChange,
+  CopiedChange,
+  PublishedChange,
+  SyncedChange,
+  DeployedChange,
+  UpdatedDescendantsChange,
+} from '../changes';
 
 const CLIENTID = 'test-client-id';
 
@@ -281,7 +281,11 @@ describe('Change Types', () => {
   });
 
   it('should persist only the specified fields in the DeployedChange', async () => {
-    const change = new DeployedChange({ key: '1', table: TABLE_NAMES.CHANNEL, source: CLIENTID });
+    const change = new DeployedChange({
+      key: '1',
+      table: TABLE_NAMES.CHANNEL,
+      source: CLIENTID,
+    });
     const rev = await change.saveChange();
     const persistedChange = await db[CHANGES_TABLE].get(rev);
     expect(persistedChange).toEqual({
@@ -317,7 +321,11 @@ describe('Change Types Unhappy Paths', () => {
   it('should throw error when Change is instantiated without key', () => {
     expect(
       () =>
-        new Change({ table: TABLE_NAMES.CONTENTNODE, source: CLIENTID, type: CHANGE_TYPES.CREATED })
+        new Change({
+          table: TABLE_NAMES.CONTENTNODE,
+          source: CLIENTID,
+          type: CHANGE_TYPES.CREATED,
+        })
     ).toThrow(new TypeError('key is required for a Change but it was undefined'));
   });
   it('should throw error when Change is instantiated with a null key', () => {
@@ -334,7 +342,12 @@ describe('Change Types Unhappy Paths', () => {
 
   it('should throw error when Change is instantiated without a source', () => {
     expect(
-      () => new Change({ key: '1', table: TABLE_NAMES.CONTENTNODE, type: CHANGE_TYPES.CREATED })
+      () =>
+        new Change({
+          key: '1',
+          table: TABLE_NAMES.CONTENTNODE,
+          type: CHANGE_TYPES.CREATED,
+        })
     ).toThrow(new ReferenceError('source should be a string, but undefined was passed instead'));
   });
 
@@ -352,7 +365,13 @@ describe('Change Types Unhappy Paths', () => {
 
   it('should throw error when Change is instantiated with invalid table', () => {
     expect(
-      () => new Change({ key: '1', table: 'test', source: CLIENTID, type: CHANGE_TYPES.CREATED })
+      () =>
+        new Change({
+          key: '1',
+          table: 'test',
+          source: CLIENTID,
+          type: CHANGE_TYPES.CREATED,
+        })
     ).toThrow(new ReferenceError('test is not a valid table value'));
   });
 
@@ -372,7 +391,12 @@ describe('Change Types Unhappy Paths', () => {
 
   it('should throw error when CreatedChange is instantiated without obj', () => {
     expect(
-      () => new CreatedChange({ key: '1', table: TABLE_NAMES.CONTENTNODE, source: CLIENTID })
+      () =>
+        new CreatedChange({
+          key: '1',
+          table: TABLE_NAMES.CONTENTNODE,
+          source: CLIENTID,
+        })
     ).toThrow(new TypeError('obj should be an object, but undefined was passed instead'));
   });
 
@@ -391,7 +415,12 @@ describe('Change Types Unhappy Paths', () => {
   // UpdatedChange
   it('should throw error when UpdatedChange is instantiated without changes', () => {
     expect(
-      () => new UpdatedChange({ key: '1', table: TABLE_NAMES.CONTENTNODE, source: CLIENTID })
+      () =>
+        new UpdatedChange({
+          key: '1',
+          table: TABLE_NAMES.CONTENTNODE,
+          source: CLIENTID,
+        })
     ).toThrow(new TypeError('changes should be an object, but undefined was passed instead'));
   });
 
@@ -487,7 +516,12 @@ describe('Change Types Unhappy Paths', () => {
   // CopiedChange
   it('should throw error when CopiedChange is instantiated without from_key', () => {
     expect(
-      () => new CopiedChange({ key: '1', table: TABLE_NAMES.CONTENTNODE, source: CLIENTID })
+      () =>
+        new CopiedChange({
+          key: '1',
+          table: TABLE_NAMES.CONTENTNODE,
+          source: CLIENTID,
+        })
     ).toThrow(new TypeError('from_key is required for a CopiedChange but it was undefined'));
   });
 
@@ -571,7 +605,12 @@ describe('Change Types Unhappy Paths', () => {
   // PublishedChange
   it('should throw error when PublishedChange is instantiated without version_notes', () => {
     expect(
-      () => new PublishedChange({ key: '1', table: TABLE_NAMES.CHANNEL, source: CLIENTID })
+      () =>
+        new PublishedChange({
+          key: '1',
+          table: TABLE_NAMES.CHANNEL,
+          source: CLIENTID,
+        })
     ).toThrow(
       new TypeError('version_notes is required for a PublishedChange but it was undefined')
     );
@@ -592,7 +631,12 @@ describe('Change Types Unhappy Paths', () => {
   // SyncedChange
   it('should throw error when SyncedChange is instantiated without titles_and_descriptions', () => {
     expect(
-      () => new SyncedChange({ key: '1', table: TABLE_NAMES.CHANNEL, source: CLIENTID })
+      () =>
+        new SyncedChange({
+          key: '1',
+          table: TABLE_NAMES.CHANNEL,
+          source: CLIENTID,
+        })
     ).toThrow(
       new TypeError('titles_and_descriptions should be a boolean, but undefined was passed instead')
     );

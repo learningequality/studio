@@ -306,13 +306,6 @@
 <script>
 
   import { mapActions, mapGetters, mapState } from 'vuex';
-  import Clipboard from '../../components/Clipboard';
-  import SyncResourcesModal from '../sync/SyncResourcesModal';
-  import ProgressModal from '../progress/ProgressModal';
-  import PublishModal from '../../components/publish/PublishModal';
-  import QuickEditModal from '../../components/QuickEditModal';
-  import SavingIndicator from '../../components/edit/SavingIndicator';
-  import { DraggableRegions, DraggableUniverses, RouteNames } from '../../constants';
   import MainNavigationDrawer from 'shared/views/MainNavigationDrawer';
   import ToolBar from 'shared/views/ToolBar';
   import ChannelTokenModal from 'shared/views/channel/ChannelTokenModal';
@@ -324,6 +317,13 @@
   import DraggableRegion from 'shared/views/draggable/DraggableRegion';
   import { DropEffect } from 'shared/mixins/draggable/constants';
   import DraggablePlaceholder from 'shared/views/draggable/DraggablePlaceholder';
+  import { DraggableRegions, DraggableUniverses, RouteNames } from '../../constants';
+  import SavingIndicator from '../../components/edit/SavingIndicator';
+  import QuickEditModal from '../../components/QuickEditModal';
+  import PublishModal from '../../components/publish/PublishModal';
+  import ProgressModal from '../progress/ProgressModal';
+  import SyncResourcesModal from '../sync/SyncResourcesModal';
+  import Clipboard from '../../components/Clipboard';
 
   export default {
     name: 'TreeViewBase',

@@ -9,19 +9,19 @@ You can also check [official addons](https://storybook.js.org/addons/).
 **Run development server**
 
 ```bash
-yarn run storybook
+pnpm run storybook
 ```
 
 With detailed webpack information (useful when debugging loaders, addons and similar):
 
 ```bash
-yarn run storybook:debug
+pnpm run storybook:debug
 ```
 
 **Bundle**
 
 ```bash
-yarn run storybook:build
+pnpm run storybook:build
 ```
 
 The output is saved to *storybook-static/*.

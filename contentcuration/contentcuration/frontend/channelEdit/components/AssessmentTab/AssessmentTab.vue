@@ -52,8 +52,8 @@
 
   import { mapGetters, mapActions } from 'vuex';
 
-  import AssessmentEditor from '../AssessmentEditor/AssessmentEditor';
   import MessageDialog from 'shared/views/MessageDialog';
+  import AssessmentEditor from '../AssessmentEditor/AssessmentEditor';
 
   export default {
     name: 'AssessmentTab',

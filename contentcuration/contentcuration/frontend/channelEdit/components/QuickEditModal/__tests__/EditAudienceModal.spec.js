@@ -1,8 +1,8 @@
 import { mount } from '@vue/test-utils';
 import Vuex from 'vuex';
-import EditAudienceModal from '../EditAudienceModal';
 import { ResourcesNeededTypes } from 'shared/constants';
 import { RolesNames } from 'shared/leUtils/Roles';
+import EditAudienceModal from '../EditAudienceModal';
 
 let nodes;
 
@@ -10,10 +10,10 @@ let store;
 let contentNodeActions;
 let generalActions;
 
-const getRolesValues = wrapper => {
+const getRolesValues = (wrapper) => {
   const roles = {};
   const radioBtns = wrapper.findAll('[data-test="rol-radio-button"]');
-  radioBtns.wrappers.forEach(checkbox => {
+  radioBtns.wrappers.forEach((checkbox) => {
     const { value, currentValue } = checkbox.vm.$props || {};
     roles[value] = currentValue === value;
   });
@@ -25,15 +25,15 @@ const selectRole = (wrapper, rol) => {
   radioBtn.setChecked(true);
 };
 
-const isForBeginnersChecked = wrapper => {
+const isForBeginnersChecked = (wrapper) => {
   return wrapper.find('[data-test="for-beginners-checkbox"] input').element.checked;
 };
 
-const checkForBeginners = wrapper => {
+const checkForBeginners = (wrapper) => {
   wrapper.find('[data-test="for-beginners-checkbox"] input').setChecked(true);
 };
 
-const makeWrapper = nodeIds => {
+const makeWrapper = (nodeIds) => {
   return mount(EditAudienceModal, {
     store,
     propsData: {
@@ -62,7 +62,7 @@ describe('EditAudienceModal', () => {
           namespaced: true,
           actions: contentNodeActions,
           getters: {
-            getContentNodes: () => ids => ids.map(id => nodes[id]),
+            getContentNodes: () => (ids) => ids.map((id) => nodes[id]),
           },
         },
       },
@@ -79,7 +79,7 @@ describe('EditAudienceModal', () => {
       const wrapper = makeWrapper(['node1']);
 
       const rolesValues = getRolesValues(wrapper);
-      Object.values(rolesValues).forEach(value => {
+      Object.values(rolesValues).forEach((value) => {
         expect(value).toBeFalsy();
       });
     });
@@ -90,7 +90,7 @@ describe('EditAudienceModal', () => {
       const wrapper = makeWrapper(['node1', 'node2']);
 
       const rolesValues = getRolesValues(wrapper);
-      Object.values(rolesValues).forEach(value => {
+      Object.values(rolesValues).forEach((value) => {
         expect(value).toBeFalsy();
       });
     });
@@ -102,7 +102,7 @@ describe('EditAudienceModal', () => {
       const wrapper = makeWrapper(['node1', 'node2']);
 
       const rolesValues = getRolesValues(wrapper);
-      Object.values(rolesValues).forEach(value => {
+      Object.values(rolesValues).forEach((value) => {
         expect(value).toBeFalsy();
       });
     });

@@ -13,8 +13,8 @@ describe('resetPassword', () => {
   beforeEach(() => {
     wrapper = makeWrapper();
     wrapper.setMethods({
-      setPassword: data => {
-        return new Promise(resolve => {
+      setPassword: (data) => {
+        return new Promise((resolve) => {
           setPassword(data);
           resolve();
         });

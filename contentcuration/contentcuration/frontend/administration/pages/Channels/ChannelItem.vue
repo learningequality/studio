@@ -173,11 +173,11 @@
 <script>
 
   import { mapGetters, mapActions } from 'vuex';
+  import { fileSizeMixin } from 'shared/mixins';
+  import Checkbox from 'shared/views/form/Checkbox';
   import ClipboardChip from '../../components/ClipboardChip';
   import { RouteNames } from '../../constants';
   import ChannelActionsDropdown from './ChannelActionsDropdown';
-  import { fileSizeMixin } from 'shared/mixins';
-  import Checkbox from 'shared/views/form/Checkbox';
 
   export default {
     name: 'ChannelItem',

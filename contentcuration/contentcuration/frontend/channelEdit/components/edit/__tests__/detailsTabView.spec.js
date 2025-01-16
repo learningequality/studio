@@ -1,7 +1,11 @@
 import find from 'lodash/find';
+import findIndex from 'lodash/findIndex';
+import pick from 'lodash/pick';
 import Vue from 'vue';
 import Vuetify from 'vuetify';
 import { mount } from '@vue/test-utils';
+import { LicensesList } from 'shared/leUtils/Licenses';
+import { NEW_OBJECT } from 'shared/constants';
 import DetailsTabView from '../DetailsTabView.vue';
 import {
   localStore,
@@ -10,8 +14,6 @@ import {
   DEFAULT_EXERCISE,
   DEFAULT_EXERCISE2,
 } from './data.js';
-import { LicensesList } from 'shared/leUtils/Licenses';
-import { NEW_OBJECT } from 'shared/constants';
 
 Vue.use(Vuetify);
 
@@ -44,17 +46,17 @@ function makeWrapper(props = {}) {
 }
 
 window.Urls = {
-  channel: id => {
+  channel: (id) => {
     return id;
   },
 };
 
 describe.skip('detailsTabView', () => {
   let wrapper;
-  const topicIndex = _.findIndex(testNodes, { id: DEFAULT_TOPIC.id });
-  const videoIndex = _.findIndex(testNodes, { id: DEFAULT_VIDEO.id });
-  const exerciseIndex = _.findIndex(testNodes, { id: DEFAULT_EXERCISE.id });
-  const exercise2Index = _.findIndex(testNodes, { id: DEFAULT_EXERCISE2.id });
+  const topicIndex = findIndex(testNodes, { id: DEFAULT_TOPIC.id });
+  const videoIndex = findIndex(testNodes, { id: DEFAULT_VIDEO.id });
+  const exerciseIndex = findIndex(testNodes, { id: DEFAULT_EXERCISE.id });
+  const exercise2Index = findIndex(testNodes, { id: DEFAULT_EXERCISE2.id });
   beforeEach(() => {
     localStore.commit('edit_modal/SET_NODE', exerciseIndex);
     wrapper = makeWrapper();
@@ -77,8 +79,8 @@ describe.skip('detailsTabView', () => {
         'randomizeOrder',
         'copyrightHolder',
       ];
-      expect(_.pick(wrapper.vm, keys)).toEqual({
-        ..._.pick(DEFAULT_EXERCISE, keys),
+      expect(pick(wrapper.vm, keys)).toEqual({
+        ...pick(DEFAULT_EXERCISE, keys),
         license: {
           license: DEFAULT_EXERCISE.license,
           description: DEFAULT_EXERCISE.license_description,
@@ -106,7 +108,7 @@ describe.skip('detailsTabView', () => {
           'aggregator',
           'copyright_holder',
         ];
-        keys.forEach(key => {
+        keys.forEach((key) => {
           expect(wrapper.vm.changes[key].varied).toBe(true);
         });
       });
@@ -117,7 +119,9 @@ describe.skip('detailsTabView', () => {
       });
       it('certain fields should be visible for video nodes', () => {
         localStore.commit('edit_modal/SET_NODE', videoIndex);
-        localStore.commit('edit_modal/UPDATE_NODE', { license: specialPermissions.id });
+        localStore.commit('edit_modal/UPDATE_NODE', {
+          license: specialPermissions.id,
+        });
         expect(wrapper.vm.allResources).toBe(true);
       });
       it('certain fields should be visible for topics', () => {

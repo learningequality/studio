@@ -103,14 +103,14 @@
 <script>
 
   import { mapGetters, mapActions } from 'vuex';
-  import { RouteNames, rowsPerPageItems } from '../../constants';
-  import { tableMixin, generateFilterMixin } from '../../mixins';
-  import EmailUsersDialog from './EmailUsersDialog';
-  import UserItem from './UserItem';
   import { routerMixin } from 'shared/mixins';
   import IconButton from 'shared/views/IconButton';
   import Checkbox from 'shared/views/form/Checkbox';
   import CountryField from 'shared/views/form/CountryField';
+  import { RouteNames, rowsPerPageItems } from '../../constants';
+  import { tableMixin, generateFilterMixin } from '../../mixins';
+  import EmailUsersDialog from './EmailUsersDialog';
+  import UserItem from './UserItem';
 
   const userFilters = {
     all: { label: 'All', params: {} },

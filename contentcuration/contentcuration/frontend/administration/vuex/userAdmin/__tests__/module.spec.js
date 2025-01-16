@@ -1,6 +1,6 @@
-import userAdmin from '../index';
 import storeFactory from 'shared/vuex/baseStore';
 import client from 'shared/client';
+import userAdmin from '../index';
 
 jest.mock('shared/client');
 jest.mock('shared/vuex/connectionPlugin');
@@ -86,7 +86,10 @@ describe('user admin actions', () => {
     });
     it('REMOVE_USER should remove user from pageData and usersMap', () => {
       store.commit('userAdmin/ADD_USERS', testList);
-      store.commit('userAdmin/SET_PAGE_DATA', { results: [testUser, testUser2], count: 1 });
+      store.commit('userAdmin/SET_PAGE_DATA', {
+        results: [testUser, testUser2],
+        count: 1,
+      });
       store.commit('userAdmin/REMOVE_USER', testUser.id);
 
       expect(store.state.userAdmin.usersMap).toEqual({ LIST: testUser2 });

@@ -1,3 +1,6 @@
+import DraggablePlugin from 'shared/vuex/draggablePlugin';
+import persistFactory from 'shared/vuex/persistFactory';
+import storeFactory from 'shared/vuex/baseStore';
 import template from './vuex/template';
 import assessmentItem from './vuex/assessmentItem';
 import clipboard from './vuex/clipboard';
@@ -8,9 +11,6 @@ import task from './vuex/task';
 import * as actions from './actions';
 import * as getters from './getters';
 import * as mutations from './mutations';
-import DraggablePlugin from 'shared/vuex/draggablePlugin';
-import persistFactory from 'shared/vuex/persistFactory';
-import storeFactory from 'shared/vuex/baseStore';
 
 export const STORE_CONFIG = {
   state() {

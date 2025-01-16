@@ -12,9 +12,9 @@
 <script>
 
   import { mapActions } from 'vuex';
+  import { routerMixin, titleMixin } from 'shared/mixins';
   import { RouteNames, TabNames } from '../constants';
   import AddRelatedResourcesModal from '../components/AddRelatedResourcesModal';
-  import { routerMixin, titleMixin } from 'shared/mixins';
 
   export default {
     name: 'AddPreviousStepsPage',

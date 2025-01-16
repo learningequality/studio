@@ -1,21 +1,16 @@
-/**
- * @jest-environment jest-environment-jsdom-sixteen
- */
-// Jsdom@^16 is required to test toast UI, as it relies on the Range API.
-
 import { clearNodeFormat, generateCustomConverter } from '../MarkdownEditor/utils';
 
-const htmlStringToFragment = htmlString => {
+const htmlStringToFragment = (htmlString) => {
   const template = document.createElement('template');
   template.innerHTML = htmlString;
 
   return template.content;
 };
 
-const fragmentToHtmlString = fragment => {
+const fragmentToHtmlString = (fragment) => {
   let htmlString = '';
 
-  fragment.childNodes.forEach(childNode => {
+  fragment.childNodes.forEach((childNode) => {
     if (childNode.nodeType === childNode.TEXT_NODE) {
       htmlString += childNode.textContent;
     } else {

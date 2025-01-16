@@ -1,10 +1,10 @@
 import Vuex, { Store } from 'vuex';
 import VueRouter from 'vue-router';
 import { mount, createLocalVue } from '@vue/test-utils';
+import { policies } from 'shared/constants';
 import router from '../../../accounts/router';
 
 import UsingStudio from '../UsingStudio/index';
-import { policies } from 'shared/constants';
 
 const localVue = createLocalVue();
 localVue.use(Vuex);

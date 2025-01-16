@@ -1,19 +1,19 @@
 import client from '../../client';
 import connectionModule from './connectionModule';
 
-const ConnectionPlugin = store => {
+const ConnectionPlugin = (store) => {
   store.registerModule('connection', connectionModule);
 
   // register an axios interceptor that uses the connection module
   client.interceptors.response.handlers.reverse();
   client.interceptors.response.use(
-    request => {
+    (request) => {
       if (!store.state.online) {
         store.dispatch('handleReconnection');
       }
       return request;
     },
-    error => {
+    (error) => {
       if (isNetworkError(error)) {
         store.dispatch('handleDisconnection');
       }

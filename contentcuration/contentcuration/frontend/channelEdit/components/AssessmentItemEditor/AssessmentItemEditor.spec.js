@@ -1,9 +1,9 @@
 import { shallowMount, mount } from '@vue/test-utils';
 
+import { AssessmentItemTypes, ValidationErrors } from 'shared/constants';
 import { factory } from '../../store';
 import { assessmentItemKey } from '../../utils';
 import AssessmentItemEditor from './AssessmentItemEditor';
-import { AssessmentItemTypes, ValidationErrors } from 'shared/constants';
 
 const store = factory();
 
@@ -29,7 +29,7 @@ const ITEM = {
   ],
 };
 
-const openQuestion = wrapper => {
+const openQuestion = (wrapper) => {
   wrapper.find('[data-test="questionText"]').trigger('click');
 };
 
@@ -103,7 +103,11 @@ describe('AssessmentItemEditor', () => {
           ...ITEM,
           type: AssessmentItemTypes.MULTIPLE_SELECTION,
           answers: [
-            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+            {
+              answer: 'Mayonnaise (I mean you can, but...)',
+              correct: true,
+              order: 1,
+            },
             { answer: 'Peanut butter', correct: true, order: 2 },
           ],
         };
@@ -125,7 +129,11 @@ describe('AssessmentItemEditor', () => {
         expect(listeners.update).toHaveBeenCalledWith({
           ...assessmentItemKey(ITEM),
           answers: [
-            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+            {
+              answer: 'Mayonnaise (I mean you can, but...)',
+              correct: true,
+              order: 1,
+            },
             { answer: 'Peanut butter', correct: false, order: 2 },
           ],
           type: AssessmentItemTypes.SINGLE_SELECTION,
@@ -139,7 +147,11 @@ describe('AssessmentItemEditor', () => {
           ...ITEM,
           type: AssessmentItemTypes.SINGLE_SELECTION,
           answers: [
-            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+            {
+              answer: 'Mayonnaise (I mean you can, but...)',
+              correct: true,
+              order: 1,
+            },
             { answer: 'Peanut butter', correct: false, order: 2 },
           ],
         };
@@ -161,7 +173,11 @@ describe('AssessmentItemEditor', () => {
         expect(listeners.update).toHaveBeenCalledWith({
           ...assessmentItemKey(ITEM),
           answers: [
-            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+            {
+              answer: 'Mayonnaise (I mean you can, but...)',
+              correct: true,
+              order: 1,
+            },
             { answer: 'Peanut butter', correct: false, order: 2 },
           ],
           type: AssessmentItemTypes.MULTIPLE_SELECTION,
@@ -175,7 +191,11 @@ describe('AssessmentItemEditor', () => {
           ...ITEM,
           type: AssessmentItemTypes.SINGLE_SELECTION,
           answers: [
-            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+            {
+              answer: 'Mayonnaise (I mean you can, but...)',
+              correct: true,
+              order: 1,
+            },
             { answer: 'Peanut butter', correct: false, order: 2 },
           ],
         };
@@ -252,7 +272,11 @@ describe('AssessmentItemEditor', () => {
         ...ITEM,
         type: AssessmentItemTypes.SINGLE_SELECTION,
         answers: [
-          { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+          {
+            answer: 'Mayonnaise (I mean you can, but...)',
+            correct: true,
+            order: 1,
+          },
           { answer: 'Peanut butter', correct: false, order: 2 },
         ],
       };
@@ -268,7 +292,11 @@ describe('AssessmentItemEditor', () => {
       });
 
       const newAnswers = [
-        { answer: 'Mayonnaise (I mean you can, but...)', correct: false, order: 1 },
+        {
+          answer: 'Mayonnaise (I mean you can, but...)',
+          correct: false,
+          order: 1,
+        },
         { answer: 'Peanut butter', correct: false, order: 2 },
       ];
 
@@ -279,7 +307,11 @@ describe('AssessmentItemEditor', () => {
       expect(listeners.update).toHaveBeenCalledWith({
         ...assessmentItemKey(ITEM),
         answers: [
-          { answer: 'Mayonnaise (I mean you can, but...)', correct: false, order: 1 },
+          {
+            answer: 'Mayonnaise (I mean you can, but...)',
+            correct: false,
+            order: 1,
+          },
           { answer: 'Peanut butter', correct: false, order: 2 },
         ],
       });

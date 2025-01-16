@@ -68,12 +68,12 @@ function DraggablePlugin(store) {
 
   let clientX, clientY;
   let addedDragOverListener = false;
-  const dragOverEventListener = function(e) {
+  const dragOverEventListener = function (e) {
     clientX = e.clientX;
     clientY = e.clientY;
   };
 
-  const cancelEventListener = function(e) {
+  const cancelEventListener = function (e) {
     if ('code' in e) {
       if (e.code !== 'Escape') {
         return;
@@ -88,7 +88,7 @@ function DraggablePlugin(store) {
   // TODO: Accessibility - Add more keyboard handling here for initiating dragging,
   // and moving via arrow keys
 
-  store.subscribeAction(action => {
+  store.subscribeAction((action) => {
     // Hook into handle events to provide specific draggable direction globally
     if (action.type === 'draggable/handles/setActiveDraggable') {
       // Sets all draggable types as active, as applicable

@@ -16,9 +16,12 @@ class Analytics {
     this.lastLength = 0;
 
     // add interval to trigger resets every 5 minutes
-    this.resetInterval = setInterval(() => {
-      this.reset();
-    }, 5 * 60 * 1000);
+    this.resetInterval = setInterval(
+      () => {
+        this.reset();
+      },
+      5 * 60 * 1000
+    );
   }
 
   /**
@@ -28,12 +31,14 @@ class Analytics {
     // If the dataLayer hasn't changed since our last reset, skip
     if (this.dataLayer.length === this.lastLength) {
       if (process.env.NODE_ENV !== 'production') {
+        // eslint-disable-next-line no-console
         console.info('Skipping Analytics.reset()');
       }
       return;
     }
 
     if (process.env.NODE_ENV !== 'production') {
+      // eslint-disable-next-line no-console
       console.info('Analytics.reset()');
     }
 
@@ -44,7 +49,7 @@ class Analytics {
 
     // This can't use an arrow function, it will be called with a different
     // context to access `this.reset()`
-    const dataLayerReset = function() {
+    const dataLayerReset = function () {
       // See https://developers.google.com/tag-platform/devguides/datalayer#reset
       this.reset();
 
@@ -127,7 +132,7 @@ class Analytics {
    */
   trackCurrentChannel(channel, staging = false) {
     // We only want to track once, since a page reload is required to open a new channel
-    const hasCurrentChannel = this.dataLayer.find(data => Boolean(data['currentChannel']));
+    const hasCurrentChannel = this.dataLayer.find((data) => Boolean(data['currentChannel']));
     if (hasCurrentChannel) {
       return;
     }

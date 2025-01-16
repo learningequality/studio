@@ -11,7 +11,7 @@ function setIdentity(state, name, obj = null) {
     obj = DraggableIdentity;
   }
 
-  Object.keys(obj).forEach(key => {
+  Object.keys(obj).forEach((key) => {
     Vue.set(state[name], key, obj[key]);
   });
 }

@@ -21,10 +21,8 @@ export const editableFields = [
 const specialPermissions = find(LicensesList, { is_custom: true });
 export function generateNode(props = {}) {
   const data = {};
-  editableFields.forEach(f => {
-    data[f] = Math.random()
-      .toString(36)
-      .substring(7);
+  editableFields.forEach((f) => {
+    data[f] = Math.random().toString(36).substring(7);
   });
 
   const extra_fields = {
@@ -33,9 +31,7 @@ export function generateNode(props = {}) {
   };
 
   return {
-    id: Math.random()
-      .toString(36)
-      .substring(7),
+    id: Math.random().toString(36).substring(7),
     kind: 'topic',
     prerequisite: [],
     is_prerequisite_of: [],

@@ -1,7 +1,7 @@
 import { mount } from '@vue/test-utils';
-import FileStatusText from '../FileStatusText.vue';
 import storeFactory from 'shared/vuex/baseStore';
 import { fileErrors } from 'shared/constants';
+import FileStatusText from '../FileStatusText.vue';
 
 const preset = {
   id: 'document',

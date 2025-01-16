@@ -25,8 +25,8 @@ export function loadNodeAssessmentItems(context, nodeId) {
 }
 
 export function loadAssessmentItems(context, params = {}) {
-  return AssessmentItem.where(params).then(assessmentItems => {
-    assessmentItems.forEach(assessmentItem => {
+  return AssessmentItem.where(params).then((assessmentItems) => {
+    assessmentItems.forEach((assessmentItem) => {
       context.commit('UPDATE_ASSESSMENTITEM', assessmentItem);
     });
     return assessmentItems;
@@ -65,7 +65,7 @@ export function updateAssessmentItems(context, assessmentItems) {
   // commiting update to store on purpose to allow for immediate
   // updates (needed when typing text to answers or hints editor
   // fast for example)
-  assessmentItems.forEach(assessmentItem => {
+  assessmentItems.forEach((assessmentItem) => {
     context.commit('UPDATE_ASSESSMENTITEM', assessmentItem);
   });
 
@@ -74,7 +74,7 @@ export function updateAssessmentItems(context, assessmentItems) {
     [TABLE_NAMES.CONTENTNODE, TABLE_NAMES.ASSESSMENTITEM, TABLE_NAMES.CHANGES_TABLE],
     () => {
       return Promise.all(
-        assessmentItems.map(assessmentItem => {
+        assessmentItems.map((assessmentItem) => {
           // API accepts answers and hints as strings
           const stringifiedAssessmentItem = {
             ...assessmentItem,

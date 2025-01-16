@@ -38,7 +38,7 @@ function makeWrapper(channel = {}, node = {}) {
     },
     methods: {
       loadChannelSize() {
-        return new Promise(resolve => {
+        return new Promise((resolve) => {
           loadChannelSize();
           resolve();
         });
@@ -70,17 +70,11 @@ describe('publishModal', () => {
       wrapper.setData({ step: steps.VALIDATION, loading: false });
     });
     it('next button should go to the next step if enabled', () => {
-      wrapper
-        .find('[data-test="incomplete-modal"]')
-        .find('form')
-        .trigger('submit');
+      wrapper.find('[data-test="incomplete-modal"]').find('form').trigger('submit');
       expect(wrapper.vm.step).toBe(steps.PUBLISH);
     });
     it('cancel button should close modal', () => {
-      wrapper
-        .find('[data-test="incomplete-modal"]')
-        .find('button[name="cancel"]')
-        .trigger('click');
+      wrapper.find('[data-test="incomplete-modal"]').find('button[name="cancel"]').trigger('click');
       expect(wrapper.emitted('input')[0][0]).toBe(false);
     });
   });
@@ -92,7 +86,7 @@ describe('publishModal', () => {
       wrapper.setData({ step: steps.PUBLISH });
       wrapper.setMethods({
         updateChannel: () => {
-          return new Promise(resolve => {
+          return new Promise((resolve) => {
             updateChannel();
             publishChannel();
             resolve();
@@ -106,19 +100,13 @@ describe('publishModal', () => {
       expect(wrapper.text()).not.toContain(
         "Please describe what's new in this version before publishing"
       );
-      wrapper
-        .find('[data-test="confirm-publish-modal"]')
-        .find('form')
-        .trigger('submit');
+      wrapper.find('[data-test="confirm-publish-modal"]').find('form').trigger('submit');
       expect(wrapper.text()).toContain(
         "Please describe what's new in this version before publishing"
       );
     });
     it('publishing should be blocked if no description & language are given', () => {
-      wrapper
-        .find('[data-test="confirm-publish-modal"]')
-        .find('form')
-        .trigger('submit');
+      wrapper.find('[data-test="confirm-publish-modal"]').find('form').trigger('submit');
       expect(updateChannel).not.toHaveBeenCalled();
       expect(publishChannel).not.toHaveBeenCalled();
     });
@@ -129,10 +117,7 @@ describe('publishModal', () => {
         label: 'English',
       };
       wrapper.setData({ publishDescription: description, language });
-      wrapper
-        .find('[data-test="confirm-publish-modal"]')
-        .find('form')
-        .trigger('submit');
+      wrapper.find('[data-test="confirm-publish-modal"]').find('form').trigger('submit');
       expect(updateChannel).toHaveBeenCalled();
       expect(publishChannel).toHaveBeenCalled();
     });

@@ -118,7 +118,6 @@
 <script>
 
   import { mapActions, mapState } from 'vuex';
-  import { searchMixin } from './mixins';
   import { constantsTranslationMixin } from 'shared/mixins';
   import { ContentKindsList } from 'shared/leUtils/ContentKinds';
   import { LicensesList } from 'shared/leUtils/Licenses';
@@ -127,6 +126,7 @@
   import Checkbox from 'shared/views/form/Checkbox';
   import LanguageDropdown from 'shared/views/LanguageDropdown';
   import DropdownWrapper from 'shared/views/form/DropdownWrapper';
+  import { searchMixin } from './mixins';
 
   const excludedKinds = new Set(['topic', 'exercise', 'h5p', 'zim']);
   const includedKinds = ContentKindsList.filter(kind => !excludedKinds.has(kind));

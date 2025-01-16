@@ -1,8 +1,8 @@
 import { mount } from '@vue/test-utils';
 import Vuex from 'vuex';
-import EditSourceModal from '../EditSourceModal';
 import { LicensesList } from 'shared/leUtils/Licenses';
 import { constantsTranslationMixin } from 'shared/mixins';
+import EditSourceModal from '../EditSourceModal';
 
 let nodes;
 
@@ -12,7 +12,7 @@ let generalActions;
 
 const MIXED_VALUE = 'Mixed';
 
-const getLicenseId = translatedLicense => {
+const getLicenseId = (translatedLicense) => {
   if (translatedLicense === MIXED_VALUE) {
     return MIXED_VALUE;
   }
@@ -24,7 +24,7 @@ const getLicenseId = translatedLicense => {
   return translatedLicenses[translatedLicense];
 };
 
-const getSourceValues = wrapper => {
+const getSourceValues = (wrapper) => {
   return {
     author: wrapper.find('[data-test="author-input"] input').element.value,
     provider: wrapper.find('[data-test="provider-input"] input').element.value,
@@ -35,7 +35,7 @@ const getSourceValues = wrapper => {
   };
 };
 
-const makeWrapper = nodeIds => {
+const makeWrapper = (nodeIds) => {
   return mount(EditSourceModal, {
     store,
     propsData: {
@@ -70,7 +70,7 @@ describe('EditSourceModal', () => {
           namespaced: true,
           actions: contentNodeActions,
           getters: {
-            getContentNodes: () => ids => ids.map(id => nodes[id]),
+            getContentNodes: () => (ids) => ids.map((id) => nodes[id]),
           },
         },
       },

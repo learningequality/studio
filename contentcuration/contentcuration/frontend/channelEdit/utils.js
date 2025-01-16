@@ -1,5 +1,3 @@
-import translator from './translator';
-import { RouteNames } from './constants';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 import { MasteryModelsNames } from 'shared/leUtils/MasteryModels';
 import { metadataStrings, constantStrings } from 'shared/mixins';
@@ -11,6 +9,8 @@ import {
   defaultCompletionCriteriaModels,
   defaultCompletionCriteriaThresholds,
 } from 'shared/constants';
+import { RouteNames } from './constants';
+import translator from './translator';
 
 /**
  * Get correct answer index/indices out of an array of answer objects.
@@ -29,7 +29,7 @@ export function getCorrectAnswersIndices(questionType, answers) {
     questionType === AssessmentItemTypes.SINGLE_SELECTION ||
     questionType === AssessmentItemTypes.TRUE_FALSE
   ) {
-    const idx = answers.findIndex(answer => answer.correct);
+    const idx = answers.findIndex((answer) => answer.correct);
     return idx === -1 ? null : idx;
   }
 
@@ -37,7 +37,7 @@ export function getCorrectAnswersIndices(questionType, answers) {
     .map((answer, idx) => {
       return answer.correct ? idx : undefined;
     })
-    .filter(idx => idx !== undefined);
+    .filter((idx) => idx !== undefined);
 }
 
 /**
@@ -117,12 +117,12 @@ export function updateAnswersToQuestionType(questionType, answers) {
       return NEW_TRUE_FALSE_ANSWERS;
 
     case AssessmentItemTypes.SINGLE_SELECTION: {
-      let firstCorrectAnswerIdx = answers.findIndex(answer => answer.correct === true);
+      let firstCorrectAnswerIdx = answers.findIndex((answer) => answer.correct === true);
       if (firstCorrectAnswerIdx === -1) {
         firstCorrectAnswerIdx = 0;
       }
 
-      const newAnswers = answersCopy.map(answer => {
+      const newAnswers = answersCopy.map((answer) => {
         answer.correct = false;
         return answer;
       });
@@ -267,13 +267,8 @@ export function getCompletionCriteriaLabels(node = {}, files = []) {
   if (!node && !files) {
     return;
   }
-  const {
-    completionModel,
-    completionThreshold,
-    masteryModel,
-    modality,
-    suggestedDuration,
-  } = getCompletionDataFromNode(node);
+  const { completionModel, completionThreshold, masteryModel, modality, suggestedDuration } =
+    getCompletionDataFromNode(node);
 
   const labels = {
     completion: '-',

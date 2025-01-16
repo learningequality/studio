@@ -3,11 +3,11 @@ import Vuex from 'vuex';
 import VueRouter from 'vue-router';
 import cloneDeep from 'lodash/cloneDeep';
 
-import { RouteNames } from '../../constants';
-import StagingTreePage from './index';
 import { createStore } from 'shared/vuex/draggablePlugin/test/setup';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 import { Channel } from 'shared/data/resources';
+import { RouteNames } from '../../constants';
+import StagingTreePage from './index';
 
 const localVue = createLocalVue();
 localVue.use(Vuex);
@@ -114,57 +114,57 @@ const initWrapper = ({ getters = GETTERS, actions = ACTIONS, mutations = MUTATIO
   });
 };
 
-const removeMultipleSpaces = str => str.replace(/\s{2,}/g, ' ');
+const removeMultipleSpaces = (str) => str.replace(/\s{2,}/g, ' ');
 
-const getContentNodeListItems = wrapper => {
+const getContentNodeListItems = (wrapper) => {
   return wrapper.findAll('[data-test="node-list-item"]');
 };
 
-const containsChevronRightBtn = wrapper => {
+const containsChevronRightBtn = (wrapper) => {
   return wrapper.contains('[data-test="btn-chevron"]');
 };
 
-const getChevronRightBtn = wrapper => {
+const getChevronRightBtn = (wrapper) => {
   return wrapper.find('[data-test="btn-chevron"]');
 };
 
-const getInfoBtn = wrapper => {
+const getInfoBtn = (wrapper) => {
   return wrapper.find('[data-test="btn-info"]');
 };
 
-const containsResourceDetailDrawer = wrapper => {
+const containsResourceDetailDrawer = (wrapper) => {
   return wrapper.contains('[data-test="resource-detail-drawer"]');
 };
 
-const getBottomBarStatsResourcesCount = wrapper => {
+const getBottomBarStatsResourcesCount = (wrapper) => {
   return wrapper.find('[data-test="bottom-bar-stats-resources-count"]');
 };
 
-const getBottomBarStatsFileSize = wrapper => {
+const getBottomBarStatsFileSize = (wrapper) => {
   return wrapper.find('[data-test="bottom-bar-stats-file-size"]');
 };
 
-const getSummaryDetailsDialog = wrapper => {
+const getSummaryDetailsDialog = (wrapper) => {
   return wrapper.find('[data-test="summary-details-dialog"]');
 };
 
-const getDisplaySummaryDetailsDialogBtn = wrapper => {
+const getDisplaySummaryDetailsDialogBtn = (wrapper) => {
   return wrapper.find('[data-test="display-summary-details-dialog-btn"]');
 };
 
-const getDeployDialog = wrapper => {
+const getDeployDialog = (wrapper) => {
   return wrapper.find('[data-test="deploy-dialog"]');
 };
 
-const getDisplayDeployDialogBtn = wrapper => {
+const getDisplayDeployDialogBtn = (wrapper) => {
   return wrapper.find('[data-test="display-deploy-dialog-btn"]');
 };
 
-const getDeployDialogLiveResources = wrapper => {
+const getDeployDialogLiveResources = (wrapper) => {
   return wrapper.find('[data-test="deploy-dialog-live-resources"]');
 };
 
-const getDeployDialogStagedResources = wrapper => {
+const getDeployDialogStagedResources = (wrapper) => {
   return wrapper.find('[data-test="deploy-dialog-staged-resources"]');
 };
 
@@ -214,8 +214,16 @@ describe('StagingTreePage', () => {
       getters.contentNode.getContentNodeChildren = () => () => {
         return [
           { id: 'id-topic', title: 'Topic', kind: ContentKindsNames.TOPIC },
-          { id: 'id-document', title: 'Document', kind: ContentKindsNames.DOCUMENT },
-          { id: 'id-exercise', title: 'Exercise', kind: ContentKindsNames.EXERCISE },
+          {
+            id: 'id-document',
+            title: 'Document',
+            kind: ContentKindsNames.DOCUMENT,
+          },
+          {
+            id: 'id-exercise',
+            title: 'Exercise',
+            kind: ContentKindsNames.EXERCISE,
+          },
         ];
       };
 
@@ -223,7 +231,7 @@ describe('StagingTreePage', () => {
       actions.currentChannel.deployCurrentChannel = mockDeployCurrentChannel;
 
       Channel.waitForDeploying = () => {
-        return new Promise(resolve => {
+        return new Promise((resolve) => {
           return resolve(ROOT_ID);
         });
       };

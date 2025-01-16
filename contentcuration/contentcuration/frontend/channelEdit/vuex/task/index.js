@@ -12,7 +12,7 @@ export default {
   },
   actions: {
     initState(store) {
-      return Task.where().then(tasks => {
+      return Task.where().then((tasks) => {
         for (const task of tasks) {
           store.commit('ADD_ASYNC_TASK', task);
         }
@@ -21,14 +21,14 @@ export default {
   },
   getters: {
     getAsyncTask(state) {
-      return function(taskId) {
+      return function (taskId) {
         return state.asyncTasksMap[taskId];
       };
     },
     getPublishTaskForChannel(state) {
-      return function(channelId) {
+      return function (channelId) {
         return Object.values(state.asyncTasksMap).find(
-          t =>
+          (t) =>
             t.task_name === 'export-channel' &&
             t.channel_id &&
             t.channel_id.replace('-', '') === channelId
@@ -42,7 +42,9 @@ export default {
     },
     UPDATE_ASYNC_TASK_FROM_INDEXEDDB(state, { task_id, ...mods }) {
       if (task_id && state.asyncTasksMap[task_id]) {
-        Vue.set(state.asyncTasksMap, task_id, { ...applyMods(state.asyncTasksMap[task_id], mods) });
+        Vue.set(state.asyncTasksMap, task_id, {
+          ...applyMods(state.asyncTasksMap[task_id], mods),
+        });
       }
     },
     REMOVE_ASYNC_TASK(state, asyncTask) {

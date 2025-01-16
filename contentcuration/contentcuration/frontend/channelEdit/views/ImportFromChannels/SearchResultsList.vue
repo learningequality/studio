@@ -87,15 +87,15 @@
   import debounce from 'lodash/debounce';
   import find from 'lodash/find';
   import pickBy from 'lodash/pickBy';
-  import { ImportSearchPageSize } from '../../constants';
-  import BrowsingCard from './BrowsingCard';
-  import SearchFilters from './SearchFilters';
-  import SearchFilterBar from './SearchFilterBar';
   import logging from 'shared/logging';
   import Pagination from 'shared/views/Pagination';
   import Checkbox from 'shared/views/form/Checkbox';
   import LoadingText from 'shared/views/LoadingText';
   import { constantsTranslationMixin } from 'shared/mixins';
+  import { ImportSearchPageSize } from '../../constants';
+  import SearchFilterBar from './SearchFilterBar';
+  import SearchFilters from './SearchFilters';
+  import BrowsingCard from './BrowsingCard';
 
   export default {
     name: 'SearchResultsList',

@@ -2,12 +2,12 @@ import { mount, createLocalVue } from '@vue/test-utils';
 import Vuex from 'vuex';
 import VueRouter from 'vue-router';
 import cloneDeep from 'lodash/cloneDeep';
-import router from '../../../../accounts/router';
 
-import PolicyModals from '../PolicyModals.vue';
 import storeFactory from 'shared/vuex/baseStore';
 import { policies } from 'shared/constants';
 import POLICIES_MODULE_CONFIG from 'shared/vuex/policies';
+import PolicyModals from '../PolicyModals.vue';
+import router from '../../../../accounts/router';
 
 const localVue = createLocalVue();
 localVue.use(Vuex);

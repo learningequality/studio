@@ -1,9 +1,9 @@
 import { mount } from '@vue/test-utils';
+import Uploader from 'shared/views/files/Uploader';
 import { modes } from '../../../constants';
 import EditModal from '../EditModal';
 import EditList from '../EditList';
 import { localStore, mockFunctions, generateNode, DEFAULT_TOPIC, DEFAULT_TOPIC2 } from './data';
-import Uploader from 'shared/views/files/Uploader';
 
 const testNodes = [DEFAULT_TOPIC, DEFAULT_TOPIC2];
 
@@ -146,7 +146,9 @@ describe.skip('editModal', () => {
       expect(mockFunctions.saveNodes).toHaveBeenCalled();
     });
     it('should catch uploads in progress', () => {
-      localStore.commit('edit_modal/UPDATE_NODE', { files: [{ progress: 0.5, uploading: true }] });
+      localStore.commit('edit_modal/UPDATE_NODE', {
+        files: [{ progress: 0.5, uploading: true }],
+      });
       wrapper.find('[data-test="close"]').trigger('click');
       expect(mockFunctions.saveNodes).not.toHaveBeenCalled();
       expect(wrapper.find({ ref: 'uploadsprompt' }).isVisible()).toBe(true);

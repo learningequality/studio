@@ -91,15 +91,12 @@ describe('trashModal', () => {
       expect(wrapper.vm.previewNodeId).toBe(testChildren[0].id);
     });
     it('checking item in list should add the item ID to the selected array', () => {
-      wrapper
-        .find('[data-test="checkbox"]')
-        .find('input[type="checkbox"]')
-        .element.click();
+      wrapper.find('[data-test="checkbox"]').find('input[type="checkbox"]').element.click();
       expect(wrapper.vm.selected).toEqual(['test1']);
     });
     it('checking select all checkbox should check all items', () => {
       wrapper.find('[data-test="selectall"]').vm.$emit('input', true);
-      expect(wrapper.vm.selected).toEqual(testChildren.map(c => c.id));
+      expect(wrapper.vm.selected).toEqual(testChildren.map((c) => c.id));
     });
   });
   describe('on close', () => {
@@ -113,7 +110,7 @@ describe('trashModal', () => {
       expect(wrapper.find('[data-test="delete"]').vm.disabled).toBe(true);
     });
     it('clicking DELETE button should open delete confirmation dialog', () => {
-      wrapper.setData({ selected: testChildren.map(c => c.id) });
+      wrapper.setData({ selected: testChildren.map((c) => c.id) });
       wrapper.find('[data-test="delete"]').trigger('click');
       expect(wrapper.vm.showConfirmationDialog).toBe(true);
     });
@@ -123,7 +120,7 @@ describe('trashModal', () => {
       expect(wrapper.vm.showConfirmationDialog).toBe(false);
     });
     it('clicking DELETE PERMANENTLY on delete confirmation dialog should trigger deletion', () => {
-      const selected = testChildren.map(c => c.id);
+      const selected = testChildren.map((c) => c.id);
       const deleteContentNodes = jest.fn().mockReturnValue(Promise.resolve());
       wrapper.setMethods({ deleteContentNodes });
       wrapper.setData({ selected });
@@ -137,7 +134,7 @@ describe('trashModal', () => {
       expect(wrapper.find('[data-test="restore"]').vm.disabled).toBe(true);
     });
     it('RESTORE should set moveModalOpen to true', () => {
-      const selected = testChildren.map(c => c.id);
+      const selected = testChildren.map((c) => c.id);
       wrapper.setData({ selected });
       wrapper.find('[data-test="restore"]').trigger('click');
       expect(wrapper.vm.moveModalOpen).toBe(true);

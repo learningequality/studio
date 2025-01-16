@@ -5,8 +5,6 @@ import isPlainObject from 'lodash/isPlainObject';
 import isUndefined from 'lodash/isUndefined';
 import omit from 'lodash/omit';
 import sortBy from 'lodash/sortBy';
-import logging from '../logging';
-import { resourceCounts } from './applyRemoteChanges';
 import db, { CLIENTID } from 'shared/data/db';
 import { promiseChunk } from 'shared/utils/helpers';
 import {
@@ -22,6 +20,8 @@ import {
   TASK_ID,
 } from 'shared/data/constants';
 import { INDEXEDDB_RESOURCES } from 'shared/data/registry';
+import logging from '../logging';
+import { resourceCounts } from './applyRemoteChanges';
 
 /**
  * Wraps the callback with a new ChangeTracker that can be used to revert
@@ -31,14 +31,14 @@ import { INDEXEDDB_RESOURCES } from 'shared/data/registry';
  * @return {function(...args): Promise<mixed>}
  */
 export function withChangeTracker(callback) {
-  return function(...args) {
+  return function (...args) {
     const tracker = new ChangeTracker();
 
     return tracker
       .start()
       .then(() => callback.call(this, ...args, tracker))
-      .then(results => tracker.stop().then(() => results))
-      .catch(e => {
+      .then((results) => tracker.stop().then(() => results))
+      .catch((e) => {
         tracker.cleanUp();
         if (e instanceof Dexie.AbortError && tracker.reverted) {
           // In this case it seems we reverted before it was completed, so it was aborted
@@ -99,7 +99,7 @@ export class ChangeTracker {
 
     this._changes = await changes
       // Filter out changes that were not made by this client/browser tab
-      .filter(change => change.source === CLIENTID)
+      .filter((change) => change.source === CLIENTID)
       .sortBy('rev');
   }
 
@@ -157,7 +157,7 @@ export class ChangeTracker {
       if (change.type === CHANGE_TYPES.MOVED && change.oldObj) {
         const { parent } = change.oldObj;
         siblings = await resource.where({ parent }, false);
-        siblings = siblings.filter(sibling => sibling.id !== change.key);
+        siblings = siblings.filter((sibling) => sibling.id !== change.key);
       }
 
       return resource.transaction({}, CHANGES_TABLE, () => {
@@ -182,7 +182,7 @@ export class ChangeTracker {
           // Collect the affected node's siblings prior to the change
           // Search the siblings ordered by `lft` to find the first a sibling
           // where we should move the node, positioned before that sibling
-          const relativeSibling = sortBy(siblings, 'lft').find(sibling => sibling.lft >= lft);
+          const relativeSibling = sortBy(siblings, 'lft').find((sibling) => sibling.lft >= lft);
           if (relativeSibling) {
             return resource.move(change.key, relativeSibling.id, RELATIVE_TREE_POSITIONS.LEFT);
           }
@@ -276,7 +276,7 @@ export class Change {
     }
   }
 
-  setAndValidateObj(value, name, mapper = obj => obj) {
+  setAndValidateObj(value, name, mapper = (obj) => obj) {
     this.validateObj(value, name);
     this[name] = mapper(value);
   }
@@ -290,7 +290,7 @@ export class Change {
     this[name] = value;
   }
 
-  setAndValidateObjOrNull(value, name, mapper = obj => obj) {
+  setAndValidateObjOrNull(value, name, mapper = (obj) => obj) {
     if (!isPlainObject(value) && !isNull(value)) {
       const error = new TypeError(
         `${name} should be an object or null, but ${value} was passed instead`

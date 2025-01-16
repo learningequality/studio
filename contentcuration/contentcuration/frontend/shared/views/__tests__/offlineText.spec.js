@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils';
-import OfflineText from '../OfflineText';
 import storeFactory from 'shared/vuex/baseStore';
+import OfflineText from '../OfflineText';
 
 const store = storeFactory();
 function makeWrapper() {

@@ -6,7 +6,7 @@ const leftwardSpaceRegex = /\s$/;
 
 const leftwardDoubleSpaceRegex = /\s\s$/;
 
-const hasLeftwardSpace = el => {
+const hasLeftwardSpace = (el) => {
   return (
     // Has a previous sibling
     el.previousSibling &&
@@ -30,7 +30,7 @@ const rightwardSpaceRegex = /^\s/;
 
 const rightwardDoubleSpaceRegex = /^\s\s/;
 
-const hasRightwardSpace = el => {
+const hasRightwardSpace = (el) => {
   return (
     // Has a next sibling
     el.nextSibling &&
@@ -50,8 +50,8 @@ const hasRightwardSpace = el => {
   );
 };
 
-export default VueComponent => {
-  const dashed = camel => camel.replace(/([a-zA-Z])(?=[A-Z])/g, '$1-').toLowerCase();
+export default (VueComponent) => {
+  const dashed = (camel) => camel.replace(/([a-zA-Z])(?=[A-Z])/g, '$1-').toLowerCase();
   const name = dashed(VueComponent.name);
   Vue.use(vueCustomElement);
   Vue.customElement(name, VueComponent, {
@@ -69,10 +69,10 @@ export default VueComponent => {
       this.classList.add(id);
 
       // pass innerHTML of host element as the `markdown` property
-      this.observer = new MutationObserver(mutations => {
-        mutations.forEach(mutation => {
-          const checkIfElementNode = x => x.nodeType === document.ELEMENT_NODE;
-          const checkIfTextNode = x => x.nodeType === document.TEXT_NODE;
+      this.observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          const checkIfElementNode = (x) => x.nodeType === document.ELEMENT_NODE;
+          const checkIfTextNode = (x) => x.nodeType === document.TEXT_NODE;
           const elementNodesAdded = [...mutation.addedNodes].filter(checkIfElementNode);
           const textNodesRemoved = [...mutation.removedNodes].filter(checkIfTextNode);
 
@@ -80,7 +80,7 @@ export default VueComponent => {
           // This is necessary so that style modifiers don't wrap markdown in <b> or <i> tags.
           if (elementNodesAdded.length > 0) {
             // if we detect that unwanted DOM elements have been added, revert them immediately
-            this.innerHTML = textNodesRemoved.map(n => n.nodeValue).join();
+            this.innerHTML = textNodesRemoved.map((n) => n.nodeValue).join();
           } else {
             // otherwise, pass the innerHTML to inner Vue component as `markdown` prop
             this.markdown = this.innerHTML;

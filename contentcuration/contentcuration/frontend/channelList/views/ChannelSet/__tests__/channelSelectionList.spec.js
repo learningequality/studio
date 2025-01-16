@@ -1,7 +1,7 @@
 import { mount } from '@vue/test-utils';
 import Vuex from 'vuex';
-import ChannelSelectionList from '../ChannelSelectionList';
 import { ChannelListTypes } from 'shared/constants';
+import ChannelSelectionList from '../ChannelSelectionList';
 
 const searchWord = 'search test';
 const editChannel = {
@@ -72,9 +72,9 @@ describe('channelSelectionList', () => {
   });
   it('should show the correct channels based on listType', () => {
     wrapper.setData({ loading: false });
-    expect(wrapper.vm.listChannels.find(c => c.id === editChannel.id)).toBeTruthy();
-    expect(wrapper.vm.listChannels.find(c => c.id === editChannel2.id)).toBeTruthy();
-    expect(wrapper.vm.listChannels.find(c => c.id === publicChannel.id)).toBeFalsy();
+    expect(wrapper.vm.listChannels.find((c) => c.id === editChannel.id)).toBeTruthy();
+    expect(wrapper.vm.listChannels.find((c) => c.id === editChannel2.id)).toBeTruthy();
+    expect(wrapper.vm.listChannels.find((c) => c.id === publicChannel.id)).toBeFalsy();
   });
   it('should select channels when the channel has been checked', () => {
     wrapper.setData({ loading: false });
@@ -92,8 +92,8 @@ describe('channelSelectionList', () => {
   });
   it('should filter channels based on the search text', () => {
     wrapper.setData({ loading: false, search: searchWord });
-    expect(wrapper.vm.listChannels.find(c => c.id === editChannel.id)).toBeTruthy();
-    expect(wrapper.vm.listChannels.find(c => c.id === editChannel2.id)).toBeFalsy();
+    expect(wrapper.vm.listChannels.find((c) => c.id === editChannel.id)).toBeTruthy();
+    expect(wrapper.vm.listChannels.find((c) => c.id === editChannel2.id)).toBeFalsy();
   });
   it('should select channels when the channel card has been clicked', () => {
     wrapper.setData({ loading: false });

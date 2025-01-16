@@ -25,9 +25,9 @@
 
 <script>
 
-  import EditBooleanMapModal from './EditBooleanMapModal';
   import LevelsOptions from 'shared/views/contentNodeFields/LevelsOptions';
   import commonStrings from 'shared/translator';
+  import EditBooleanMapModal from './EditBooleanMapModal';
 
   export default {
     name: 'EditLevelsModal',

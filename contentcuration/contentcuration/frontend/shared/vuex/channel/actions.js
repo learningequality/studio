@@ -16,13 +16,13 @@ export async function loadChannelList(context, payload = {}) {
   if (payload.listType) {
     const bookmarks = await loadBookmarks(context);
     if (payload.listType === 'bookmark') {
-      payload.id__in = bookmarks.map(b => b.channel);
+      payload.id__in = bookmarks.map((b) => b.channel);
     } else {
       payload[payload.listType] = true;
     }
     delete payload.listType;
   }
-  return Channel.where(payload).then(channels => {
+  return Channel.where(payload).then((channels) => {
     context.commit('ADD_CHANNELS', channels);
     return channels;
   });
@@ -37,7 +37,7 @@ export function loadChannel(context, id) {
   }
 
   return promise
-    .then(channel => {
+    .then((channel) => {
       context.commit('ADD_CHANNEL', channel);
       return channel;
     })
@@ -215,7 +215,7 @@ export function deleteChannel(context, channelId) {
 }
 
 export function loadChannelDetails(context, channelId) {
-  return client.get(window.Urls.get_channel_details(channelId)).then(response => {
+  return client.get(window.Urls.get_channel_details(channelId)).then((response) => {
     return response.data;
   });
 }
@@ -227,10 +227,10 @@ export function getChannelListDetails(context, { excluded = [], ...query }) {
   query.page_size = Number.MAX_SAFE_INTEGER;
   query.page = 1;
 
-  return Channel.searchCatalog(query).then(page => {
-    const results = page.results.filter(channel => !excluded.includes(channel.id));
-    const promises = results.map(channel => loadChannelDetails(context, channel.id));
-    return Promise.all(promises).then(responses => {
+  return Channel.searchCatalog(query).then((page) => {
+    const results = page.results.filter((channel) => !excluded.includes(channel.id));
+    const promises = results.map((channel) => loadChannelDetails(context, channel.id));
+    return Promise.all(promises).then((responses) => {
       return responses.map((data, index) => {
         return {
           ...results[index],
@@ -248,11 +248,11 @@ export function loadChannelUsers(context, channelId) {
   return Promise.all([
     ChannelUser.where({ channel: channelId }),
     Invitation.where({ channel: channelId }),
-  ]).then(results => {
+  ]).then((results) => {
     context.commit('SET_USERS_TO_CHANNEL', { channelId, users: results[0] });
     context.commit(
       'ADD_INVITATIONS',
-      results[1].filter(i => !i.accepted && !i.declined && !i.revoked)
+      results[1].filter((i) => !i.accepted && !i.declined && !i.revoked)
     );
   });
 }
@@ -279,8 +279,14 @@ export function deleteInvitation(context, invitationId) {
 export function makeEditor(context, { channelId, userId }) {
   return ChannelUser.makeEditor(channelId, userId)
     .then(() => {
-      context.commit('REMOVE_VIEWER_FROM_CHANNEL', { channel: channelId, user: userId });
-      context.commit('ADD_EDITOR_TO_CHANNEL', { channel: channelId, user: userId });
+      context.commit('REMOVE_VIEWER_FROM_CHANNEL', {
+        channel: channelId,
+        user: userId,
+      });
+      context.commit('ADD_EDITOR_TO_CHANNEL', {
+        channel: channelId,
+        user: userId,
+      });
     })
     .catch(() => {});
 }
@@ -288,7 +294,10 @@ export function makeEditor(context, { channelId, userId }) {
 export function removeViewer(context, { channelId, userId }) {
   return ChannelUser.removeViewer(channelId, userId)
     .then(() => {
-      context.commit('REMOVE_VIEWER_FROM_CHANNEL', { channel: channelId, user: userId });
+      context.commit('REMOVE_VIEWER_FROM_CHANNEL', {
+        channel: channelId,
+        user: userId,
+      });
     })
     .catch(() => {});
 }

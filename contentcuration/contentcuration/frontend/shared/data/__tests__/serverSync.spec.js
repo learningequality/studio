@@ -1,10 +1,10 @@
-import { queueChange, debouncedSyncChanges } from '../serverSync';
-import { CreatedChange } from '../changes';
-import db from '../db';
 import { Session, Task } from 'shared/data/resources';
 import client from 'shared/client';
 import { CHANGES_TABLE, CURRENT_USER, TABLE_NAMES } from 'shared/data/constants';
 import { mockChannelScope, resetMockChannelScope } from 'shared/utils/testing';
+import db from '../db';
+import { CreatedChange } from '../changes';
+import { queueChange, debouncedSyncChanges } from '../serverSync';
 
 async function makeChange(key, server_rev) {
   const rev = await new CreatedChange({

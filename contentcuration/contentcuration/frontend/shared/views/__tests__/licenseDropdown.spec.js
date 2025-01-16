@@ -1,9 +1,9 @@
 import Vue from 'vue';
 import Vuetify from 'vuetify';
 import { mount } from '@vue/test-utils';
+import { LicensesList } from 'shared/leUtils/Licenses';
 import LicenseDropdown from '../LicenseDropdown.vue';
 import TestForm from './TestForm.vue';
-import { LicensesList } from 'shared/leUtils/Licenses';
 
 Vue.use(Vuetify);
 
@@ -18,7 +18,7 @@ function makeWrapper() {
 }
 
 describe('licenseDropdown', () => {
-  const specialPermissions = LicensesList.find(l => l.is_custom);
+  const specialPermissions = LicensesList.find((l) => l.is_custom);
   let wrapper;
   let formWrapper;
   beforeEach(() => {
@@ -27,13 +27,13 @@ describe('licenseDropdown', () => {
   });
 
   describe('on load', () => {
-    it.each(LicensesList)('%s license option should be an option to select', async license => {
+    it.each(LicensesList)('%s license option should be an option to select', async (license) => {
       await wrapper.find('.v-input__slot').trigger('click');
       expect(wrapper.find('.v-list').text()).toContain(license.license_name);
     });
     it.each(LicensesList)(
       'should render license when value is set to a license id $id',
-      license => {
+      (license) => {
         wrapper.setProps({ value: { license: license.id } });
         expect(wrapper.vm.$refs.license.value).toEqual(license.id);
         expect(wrapper.find('.v-textarea').exists()).toBe(license.is_custom);
@@ -41,7 +41,7 @@ describe('licenseDropdown', () => {
     );
     it.each(LicensesList)(
       'should render license when value is set to a license name $name',
-      license => {
+      (license) => {
         wrapper.setProps({ value: { license: license.license_name } });
         expect(wrapper.vm.$refs.license.value).toEqual(license.id);
         expect(wrapper.find('.v-textarea').exists()).toBe(license.is_custom);
@@ -49,14 +49,20 @@ describe('licenseDropdown', () => {
     );
     it('should display licenseDescription prop', () => {
       wrapper.setProps({
-        value: { license: specialPermissions.id, license_description: 'test description' },
+        value: {
+          license: specialPermissions.id,
+          license_description: 'test description',
+        },
       });
       expect(wrapper.vm.$refs.description.value).toContain('test description');
     });
   });
   describe('props', () => {
     it('setting readonly should prevent any edits', () => {
-      wrapper.setProps({ readonly: true, value: { license: specialPermissions.id } });
+      wrapper.setProps({
+        readonly: true,
+        value: { license: specialPermissions.id },
+      });
       expect(wrapper.find('input[readonly]').exists()).toBe(true);
       expect(wrapper.find('textarea[readonly]').exists()).toBe(true);
     });
@@ -69,7 +75,10 @@ describe('licenseDropdown', () => {
       expect(wrapper.find('textarea:required').exists()).toBe(true);
     });
     it('setting disabled should make fields disabled', () => {
-      wrapper.setProps({ disabled: true, value: { license: specialPermissions.id } });
+      wrapper.setProps({
+        disabled: true,
+        value: { license: specialPermissions.id },
+      });
       expect(wrapper.find('input:disabled').exists()).toBe(true);
       expect(wrapper.find('textarea:disabled').exists()).toBe(true);
     });
@@ -93,65 +102,32 @@ describe('licenseDropdown', () => {
   });
   describe('validation', () => {
     it('license is required by default', () => {
-      expect(
-        wrapper
-          .find('.license-dropdown')
-          .find('.error--text')
-          .exists()
-      ).toBe(false);
+      expect(wrapper.find('.license-dropdown').find('.error--text').exists()).toBe(false);
       formWrapper.vm.validate();
-      expect(
-        wrapper
-          .find('.license-dropdown')
-          .find('.error--text')
-          .exists()
-      ).toBe(true);
+      expect(wrapper.find('.license-dropdown').find('.error--text').exists()).toBe(true);
       wrapper.setProps({ value: { license: specialPermissions.id } });
       formWrapper.vm.validate();
-      expect(
-        wrapper
-          .find('.license-dropdown')
-          .find('.error--text')
-          .exists()
-      ).toBe(false);
+      expect(wrapper.find('.license-dropdown').find('.error--text').exists()).toBe(false);
     });
     it('license should not error out when not required', () => {
       wrapper.setProps({ required: false });
       formWrapper.vm.validate();
-      expect(
-        wrapper
-          .find('.license-dropdown')
-          .find('.error--text')
-          .exists()
-      ).toBe(false);
+      expect(wrapper.find('.license-dropdown').find('.error--text').exists()).toBe(false);
     });
     it('license description is required when license is custom', () => {
       wrapper.setProps({ value: { license: specialPermissions.id } });
       formWrapper.vm.validate();
-      expect(
-        wrapper
-          .find('.v-textarea')
-          .find('.error--text')
-          .exists()
-      ).toBe(true);
-      wrapper.setProps({ value: { license: specialPermissions.id, license_description: 'test' } });
+      expect(wrapper.find('.v-textarea').find('.error--text').exists()).toBe(true);
+      wrapper.setProps({
+        value: { license: specialPermissions.id, license_description: 'test' },
+      });
       formWrapper.vm.validate();
-      expect(
-        wrapper
-          .find('.v-textarea')
-          .find('.error--text')
-          .exists()
-      ).toBe(false);
+      expect(wrapper.find('.v-textarea').find('.error--text').exists()).toBe(false);
       wrapper.setProps({
         value: { license: specialPermissions.id, license_description: null },
       });
       formWrapper.vm.validate();
-      expect(
-        wrapper
-          .find('.v-textarea')
-          .find('.error--text')
-          .exists()
-      ).toBe(true);
+      expect(wrapper.find('.v-textarea').find('.error--text').exists()).toBe(true);
     });
   });
 });

@@ -91,11 +91,11 @@
 
   import capitalize from 'lodash/capitalize';
   import { mapGetters } from 'vuex';
+  import { fileSizeMixin } from 'shared/mixins';
+  import Checkbox from 'shared/views/form/Checkbox';
   import { RouteNames } from '../../constants';
   import UserActionsDropdown from './UserActionsDropdown';
   import UserStorage from './UserStorage';
-  import { fileSizeMixin } from 'shared/mixins';
-  import Checkbox from 'shared/views/form/Checkbox';
 
   export default {
     name: 'UserItem',

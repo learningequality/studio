@@ -17,14 +17,14 @@ export const clearNodeFormat = ({ node, ignore = [] }) => {
   let clonedNode = node.cloneNode(true);
 
   if (clonedNode.hasChildNodes()) {
-    clonedNode.querySelectorAll('*').forEach(childNode => {
+    clonedNode.querySelectorAll('*').forEach((childNode) => {
       childNode.parentNode.replaceChild(clearNodeFormat({ node: childNode, ignore }), childNode);
     });
   }
 
   if (
     clonedNode.nodeType === clonedNode.ELEMENT_NODE &&
-    !ignore.some(selector => clonedNode.matches(selector))
+    !ignore.some((selector) => clonedNode.matches(selector))
   ) {
     const textNode = document.createTextNode(clonedNode.innerHTML);
 
@@ -82,7 +82,7 @@ export const getExtensionMenuPosition = ({ editorEl, targetX, targetY }) => {
   };
 };
 
-export const generateCustomConverter = el => {
+export const generateCustomConverter = (el) => {
   // This is currently the only way of inheriting and adjusting
   // default TUI's convertor methods
   // see https://github.com/nhn/tui.editor/issues/615

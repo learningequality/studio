@@ -1,9 +1,9 @@
 import { mount, createLocalVue } from '@vue/test-utils';
 import Vuex from 'vuex';
 
-import StudioTree from './StudioTree';
 import { createStore } from 'shared/vuex/draggablePlugin/test/setup';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
+import StudioTree from './StudioTree';
 
 const localVue = createLocalVue();
 localVue.use(Vuex);
@@ -296,10 +296,10 @@ describe('StudioTree', () => {
       };
 
       getters = {
-        getContentNode: jest.fn().mockImplementation(() => nodeId => {
+        getContentNode: jest.fn().mockImplementation(() => (nodeId) => {
           return contentNodes[nodeId];
         }),
-        getContentNodeChildren: jest.fn().mockImplementation(() => nodeId => {
+        getContentNodeChildren: jest.fn().mockImplementation(() => (nodeId) => {
           return contentNodesChildren[nodeId];
         }),
       };
@@ -333,7 +333,7 @@ describe('StudioTree', () => {
         propsData: { nodeId: 'root-topic', root: true },
         getters: {
           ...getters,
-          nodeExpanded: jest.fn().mockImplementation(() => nodeId => nodeId === 'subtopic-1'),
+          nodeExpanded: jest.fn().mockImplementation(() => (nodeId) => nodeId === 'subtopic-1'),
         },
       });
       await nextTickWaitFor(wrapper, () => Boolean(getItems(wrapper).length));
@@ -403,7 +403,11 @@ describe('StudioTree', () => {
     it('emits a click event when a subtopic of a root topic is clicked', async () => {
       const mockOnNodeClick = jest.fn();
       const wrapper = initWrapper({
-        propsData: { nodeId: 'root-topic', root: true, onNodeClick: mockOnNodeClick },
+        propsData: {
+          nodeId: 'root-topic',
+          root: true,
+          onNodeClick: mockOnNodeClick,
+        },
         getters,
       });
       await nextTickWaitFor(wrapper, () => Boolean(getItems(wrapper).length));

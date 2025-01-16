@@ -25,9 +25,9 @@
 
 <script>
 
-  import EditBooleanMapModal from './EditBooleanMapModal.vue';
   import CategoryOptions from 'shared/views/contentNodeFields/CategoryOptions';
   import commonStrings from 'shared/translator';
+  import EditBooleanMapModal from './EditBooleanMapModal.vue';
 
   export default {
     name: 'EditCategoriesModal',

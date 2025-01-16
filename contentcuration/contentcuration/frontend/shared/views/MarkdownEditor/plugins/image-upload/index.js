@@ -1,12 +1,12 @@
 import './image-upload.css';
+import { storageUrl } from 'shared/vuex/file/utils';
 import { IMAGE_PLACEHOLDER } from '../../constants';
 import imageUploadExtension from './image-upload.js';
-import { storageUrl } from 'shared/vuex/file/utils';
 
 export const IMAGE_REGEX = /!\[([^\]]*)]\(([^/]+\/([^\s]+))(?:\s=([0-9.]+)x([0-9.]+))*\)/g;
 export const SINGLE_IMAGE_REGEX = /!\[([^\]]*)]\(([^/]+\/([^\s]+))(?:\s=([0-9.]+)x([0-9.]+))*\)/;
 
-export const imageMdToParams = imageMd => {
+export const imageMdToParams = (imageMd) => {
   const match = imageMd.match(SINGLE_IMAGE_REGEX);
   if (!match) {
     return {};
@@ -34,6 +34,6 @@ export const imageMdToImageFieldHTML = (imageMd, editing) => {
   const editAttr = editing ? ' editing="true"' : '';
   return `<span is='markdown-image-field'${editAttr}>${imageMd}</span>`;
 };
-export const paramsToImageFieldHTML = params => imageMdToImageFieldHTML(paramsToImageMd(params));
+export const paramsToImageFieldHTML = (params) => imageMdToImageFieldHTML(paramsToImageMd(params));
 
 export default imageUploadExtension;

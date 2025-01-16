@@ -1,22 +1,14 @@
 import Dexie from 'dexie';
 import sortBy from 'lodash/sortBy';
+import { RolesNames } from 'shared/leUtils/Roles';
+import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 import logging from '../logging';
 import { CHANGE_TYPES, TABLE_NAMES } from './constants';
 import db from './db';
 import { INDEXEDDB_RESOURCES } from './registry';
-import { RolesNames } from 'shared/leUtils/Roles';
-import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
-const {
-  CREATED,
-  DELETED,
-  UPDATED,
-  MOVED,
-  PUBLISHED,
-  SYNCED,
-  DEPLOYED,
-  UPDATED_DESCENDANTS,
-} = CHANGE_TYPES;
+const { CREATED, DELETED, UPDATED, MOVED, PUBLISHED, SYNCED, DEPLOYED, UPDATED_DESCENDANTS } =
+  CHANGE_TYPES;
 
 export function applyMods(obj, mods) {
   for (const keyPath in mods) {
@@ -31,7 +23,7 @@ export function applyMods(obj, mods) {
 
 export function collectChanges(changes) {
   const collectedChanges = {};
-  changes.forEach(change => {
+  changes.forEach((change) => {
     if (!Object.prototype.hasOwnProperty.call(collectedChanges, change.table)) {
       collectedChanges[change.table] = {
         [CREATED]: [],
@@ -125,7 +117,7 @@ class ReturnedChanges extends ChangeDispatcher {
         .table(change.table)
         .where(':id')
         .equals(change.key)
-        .modify(obj => applyMods(obj, change.mods));
+        .modify((obj) => applyMods(obj, change.mods));
     });
   }
 
@@ -150,7 +142,7 @@ class ReturnedChanges extends ChangeDispatcher {
     }
 
     const { key, target, position } = change;
-    return resource.resolveTreeInsert({ id: key, target, position, isCreate: false }, data => {
+    return resource.resolveTreeInsert({ id: key, target, position, isCreate: false }, (data) => {
       return transaction(change, () => {
         return resource.tableMove(data);
       });
@@ -170,13 +162,19 @@ class ReturnedChanges extends ChangeDispatcher {
     const { key, target, position, from_key } = change;
     // 1. Fetch `from_key` node from indexed DB, if not there then
     // only fetches from server.
-    return resource.get(from_key, false).then(sourceNode => {
+    return resource.get(from_key, false).then((sourceNode) => {
       // 2. Pass the node we get from above to `resolveTreeInsert` as sourceNode.
       // because its actually the "source" node.
       return resource.resolveTreeInsert(
         // copying takes the ID of the node to copy, so we use `from_key`.
-        { id: from_key, target, position, isCreate: true, sourceNode: sourceNode },
-        data => {
+        {
+          id: from_key,
+          target,
+          position,
+          isCreate: true,
+          sourceNode: sourceNode,
+        },
+        (data) => {
           return transaction(change, () => {
             // Update the ID on the payload to match the received change, since isCreate=true
             // would generate new IDs
@@ -202,7 +200,7 @@ class ReturnedChanges extends ChangeDispatcher {
       return db
         .table(TABLE_NAMES.CONTENTNODE)
         .where({ channel_id: change.channel_id })
-        .and(node => {
+        .and((node) => {
           const unpublishedNodeIds = db[TABLE_NAMES.CHANGES_TABLE]
             .where({ table: TABLE_NAMES.CONTENTNODE, key: node.id })
             .limit(1)
@@ -317,7 +315,7 @@ class ResourceCounts extends ChangeDispatcher {
       return;
     }
 
-    await this.resource.updateAncestors({ id: change.key, ignoreChanges: true }, ancestor => {
+    await this.resource.updateAncestors({ id: change.key, ignoreChanges: true }, (ancestor) => {
       return {
         coach_count:
           ancestor.coach_count + (change.mods.role_visibility === RolesNames.COACH ? 1 : -1),
@@ -390,7 +388,7 @@ export class ChangeStream {
    */
   init() {
     this._stream = new WritableStream({
-      write: change => this.doWrite(change),
+      write: (change) => this.doWrite(change),
     });
     this._writer = this._stream.getWriter();
   }

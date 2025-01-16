@@ -1,7 +1,7 @@
 import { mount } from '@vue/test-utils';
+import { ONE_TB } from 'shared/constants';
 import UserStorage from '../UserStorage';
 import { factory } from '../../../store';
-import { ONE_TB } from 'shared/constants';
 
 const store = factory();
 
@@ -66,7 +66,10 @@ describe('userStorage', () => {
     wrapper.setData({ space: 100, unit: 'ONE_TB' });
     await wrapper.vm.$nextTick();
     return wrapper.vm.submit().then(() => {
-      expect(updateUser).toHaveBeenCalledWith({ id: userId, disk_space: 100 * ONE_TB });
+      expect(updateUser).toHaveBeenCalledWith({
+        id: userId,
+        disk_space: 100 * ONE_TB,
+      });
     });
   });
 });

@@ -1,7 +1,7 @@
-import channelAdmin from '../index';
 import channel from 'shared/vuex/channel';
 import storeFactory from 'shared/vuex/baseStore';
 import client from 'shared/client';
+import channelAdmin from '../index';
 
 jest.mock('shared/client');
 jest.mock('shared/vuex/connectionPlugin');
@@ -60,7 +60,10 @@ describe('channel admin actions', () => {
       });
     });
     it('REMOVE_CHANNEL should remove channel from pageData', () => {
-      store.commit('channelAdmin/SET_PAGE_DATA', { results: testList, count: 1 });
+      store.commit('channelAdmin/SET_PAGE_DATA', {
+        results: testList,
+        count: 1,
+      });
       store.commit('channelAdmin/REMOVE_CHANNEL', testChannel.id);
 
       expect(store.state.channelAdmin.pageData.results).toEqual([testChannel2.id]);

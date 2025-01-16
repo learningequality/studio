@@ -26,7 +26,7 @@ describe('ContentNodeIcon', () => {
     { value: 'html5', icon: 'widgets' },
     { value: 'zim', icon: 'widgets' },
   ];
-  it.each(testIcons)('should display the correct icon $value', kind => {
+  it.each(testIcons)('should display the correct icon $value', (kind) => {
     const wrapper = makeWrapper(kind.value);
     expect(wrapper.find('.v-icon').text()).toContain(kind.icon);
   });

@@ -19,8 +19,8 @@ function makeWrapper() {
     },
   });
   wrapper.setMethods({
-    login: data => {
-      return new Promise(resolve => {
+    login: (data) => {
+      return new Promise((resolve) => {
         login(data);
         resolve();
       });

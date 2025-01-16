@@ -1,5 +1,5 @@
-import { UPDATE_ASSESSMENTITEM, DELETE_ASSESSMENTITEM } from '../mutations';
 import { AssessmentItemTypes } from 'shared/constants';
+import { UPDATE_ASSESSMENTITEM, DELETE_ASSESSMENTITEM } from '../mutations';
 
 describe('assessmentItem mutations', () => {
   let state;

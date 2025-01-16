@@ -184,11 +184,6 @@
   import { mapState, mapActions, mapGetters, mapMutations } from 'vuex';
   import debounce from 'lodash/debounce';
 
-  import ContentNodeOptions from '../ContentNodeOptions';
-  import ContentNodeChangedIcon from '../ContentNodeChangedIcon';
-  import ContentNodeValidator from '../ContentNodeValidator';
-  import ContentNodeContextMenu from '../ContentNodeContextMenu';
-  import ContentNodeCopyTaskProgress from '../../views/progress/ContentNodeCopyTaskProgress';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import ContextMenuCloak from 'shared/views/ContextMenuCloak';
   import LoadingText from 'shared/views/LoadingText';
@@ -199,6 +194,11 @@
   import { titleMixin } from 'shared/mixins';
   import { DropEffect, EffectAllowed } from 'shared/mixins/draggable/constants';
   import { objectValuesValidator } from 'shared/mixins/draggable/utils';
+  import ContentNodeCopyTaskProgress from '../../views/progress/ContentNodeCopyTaskProgress';
+  import ContentNodeContextMenu from '../ContentNodeContextMenu';
+  import ContentNodeValidator from '../ContentNodeValidator';
+  import ContentNodeChangedIcon from '../ContentNodeChangedIcon';
+  import ContentNodeOptions from '../ContentNodeOptions';
 
   export default {
     name: 'StudioTree',

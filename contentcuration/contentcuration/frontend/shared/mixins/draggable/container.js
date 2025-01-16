@@ -1,7 +1,5 @@
 import { mapActions, mapGetters } from 'vuex';
 import debounce from 'lodash/debounce';
-import { DropEventHelper, objectValuesValidator } from './utils';
-import baseMixin from './base';
 import { DraggableFlags } from 'shared/vuex/draggablePlugin/module/constants';
 import { animationThrottle, extendSlot } from 'shared/utils/helpers';
 import {
@@ -10,6 +8,8 @@ import {
   DropEffect,
   DragEffect,
 } from 'shared/mixins/draggable/constants';
+import baseMixin from './base';
+import { DropEventHelper, objectValuesValidator } from './utils';
 
 export default {
   mixins: [baseMixin],
@@ -334,15 +334,17 @@ export default {
   mounted() {
     // Debounce the leave emitter since it can get fired multiple times, and there are some browser
     // inconsistencies that make relying on the drag events difficult. This helps
-    this.throttledUpdateHoverDraggable = animationThrottle(args => this.updateHoverDraggable(args));
-    this.debouncedResetHoverDraggable = debounce(args => {
+    this.throttledUpdateHoverDraggable = animationThrottle((args) =>
+      this.updateHoverDraggable(args)
+    );
+    this.debouncedResetHoverDraggable = debounce((args) => {
       this.resetHoverDraggable(args);
       this.effectAllowed = null;
     }, 500);
   },
   render() {
     // Add event key modifier if we're supposed to use capturing
-    const eventKey = eventName => {
+    const eventKey = (eventName) => {
       return this.useCapture ? `!${eventName}` : eventName;
     };
 

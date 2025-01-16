@@ -1,9 +1,9 @@
 import Vue from 'vue';
 import Vuetify from 'vuetify';
 import { mount } from '@vue/test-utils';
+import { LanguagesList } from 'shared/leUtils/Languages';
 import LanguageDropdown from '../LanguageDropdown.vue';
 import TestForm from './TestForm.vue';
-import { LanguagesList } from 'shared/leUtils/Languages';
 
 Vue.use(Vuetify);
 
@@ -26,7 +26,7 @@ describe('languageDropdown', () => {
     formWrapper = makeWrapper();
     wrapper = formWrapper.find(LanguageDropdown);
   });
-  it.each(testLanguages)('updating language $id should emit input event', language => {
+  it.each(testLanguages)('updating language $id should emit input event', (language) => {
     expect(wrapper.emitted('input')).toBeFalsy();
     // It looks like v-autocomplete doesn't trigger correctly, so call
     // method directly until resolved

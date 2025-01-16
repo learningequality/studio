@@ -1,4 +1,6 @@
 import each from 'jest-each';
+import { MasteryModelsNames } from 'shared/leUtils/MasteryModels';
+import { AssessmentItemTypes, CompletionCriteriaModels } from 'shared/constants';
 import {
   floatOrIntRegex,
   getCorrectAnswersIndices,
@@ -12,8 +14,6 @@ import {
 } from '../utils';
 import router from '../router';
 import { RouteNames } from '../constants';
-import { MasteryModelsNames } from 'shared/leUtils/MasteryModels';
-import { AssessmentItemTypes, CompletionCriteriaModels } from 'shared/constants';
 
 describe('channelEdit utils', () => {
   describe('imported content', () => {
@@ -206,7 +206,11 @@ describe('channelEdit utils', () => {
     describe('for originally single selection answers', () => {
       beforeEach(() => {
         answers = [
-          { answer: 'Mayonnaise (I mean you can, but...)', correct: false, order: 1 },
+          {
+            answer: 'Mayonnaise (I mean you can, but...)',
+            correct: false,
+            order: 1,
+          },
           { answer: 'Peanut butter', correct: true, order: 2 },
           { answer: 'Jelly', correct: false, order: 3 },
         ];
@@ -361,7 +365,11 @@ describe('channelEdit utils', () => {
         describe('if there are some correct answers', () => {
           beforeEach(() => {
             answers = [
-              { answer: 'Mayonnaise (I mean you can, but...)', correct: false, order: 1 },
+              {
+                answer: 'Mayonnaise (I mean you can, but...)',
+                correct: false,
+                order: 1,
+              },
               { answer: 'Peanut butter', correct: true, order: 2 },
               { answer: 'Jelly', correct: true, order: 3 },
             ];
@@ -371,7 +379,11 @@ describe('channelEdit utils', () => {
             expect(
               updateAnswersToQuestionType(AssessmentItemTypes.SINGLE_SELECTION, answers)
             ).toEqual([
-              { answer: 'Mayonnaise (I mean you can, but...)', correct: false, order: 1 },
+              {
+                answer: 'Mayonnaise (I mean you can, but...)',
+                correct: false,
+                order: 1,
+              },
               { answer: 'Peanut butter', correct: true, order: 2 },
               { answer: 'Jelly', correct: false, order: 3 },
             ]);
@@ -381,7 +393,11 @@ describe('channelEdit utils', () => {
         describe('if there is no correct answer', () => {
           beforeEach(() => {
             answers = [
-              { answer: 'Mayonnaise (I mean you can, but...)', correct: false, order: 1 },
+              {
+                answer: 'Mayonnaise (I mean you can, but...)',
+                correct: false,
+                order: 1,
+              },
               { answer: 'Peanut butter', correct: false, order: 2 },
               { answer: 'Jelly', correct: false, order: 3 },
             ];
@@ -391,7 +407,11 @@ describe('channelEdit utils', () => {
             expect(
               updateAnswersToQuestionType(AssessmentItemTypes.SINGLE_SELECTION, answers)
             ).toEqual([
-              { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+              {
+                answer: 'Mayonnaise (I mean you can, but...)',
+                correct: true,
+                order: 1,
+              },
               { answer: 'Peanut butter', correct: false, order: 2 },
               { answer: 'Jelly', correct: false, order: 3 },
             ]);
@@ -418,7 +438,11 @@ describe('channelEdit utils', () => {
       describe('conversion to true/false', () => {
         beforeEach(() => {
           answers = [
-            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+            {
+              answer: 'Mayonnaise (I mean you can, but...)',
+              correct: true,
+              order: 1,
+            },
             { answer: 'Peanut butter', correct: false, order: 2 },
             { answer: 'Jelly', correct: true, order: 3 },
           ];
@@ -444,7 +468,7 @@ describe('channelEdit utils', () => {
         '10e5', // Exponentiation
         '-15.3e5', // Combo
         '-12345.67890e98', // Combo 2
-      ].forEach(v => expect(floatOrIntRegex.test(v)).toBe(true));
+      ].forEach((v) => expect(floatOrIntRegex.test(v)).toBe(true));
     });
 
     it('tests false for invalid values', () => {
@@ -453,7 +477,7 @@ describe('channelEdit utils', () => {
         'one.point.five', // Text
         '10 5 0 100', // Spaces
         '1.2.3.4', // IP
-      ].forEach(v => expect(floatOrIntRegex.test(v)).toBe(false));
+      ].forEach((v) => expect(floatOrIntRegex.test(v)).toBe(false));
     });
   });
 

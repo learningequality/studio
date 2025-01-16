@@ -1,6 +1,6 @@
 import isMatch from 'lodash/isMatch';
-import { DraggableFlags } from './constants';
 import { DraggableTypes } from 'shared/mixins/draggable/constants';
+import { DraggableFlags } from './constants';
 
 /**
  * Helper with getters to grab different draggable ancestor types based
@@ -72,7 +72,7 @@ export class DraggableIdentityHelper {
    */
   findClosestAncestor(matcher) {
     const { id, type } = this._identity;
-    return this.ancestorsOrdered.find(a => isMatch(a, matcher) && !isMatch(a, { id, type }));
+    return this.ancestorsOrdered.find((a) => isMatch(a, matcher) && !isMatch(a, { id, type }));
   }
 }
 

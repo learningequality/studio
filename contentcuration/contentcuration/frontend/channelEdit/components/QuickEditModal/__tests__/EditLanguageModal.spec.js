@@ -1,8 +1,8 @@
 import { mount } from '@vue/test-utils';
 import Vuex from 'vuex';
-import EditLanguageModal from '../EditLanguageModal';
 import { LanguagesList } from 'shared/leUtils/Languages';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
+import EditLanguageModal from '../EditLanguageModal';
 
 const nodes = [
   { id: 'test-en-res', language: 'en' },
@@ -15,7 +15,7 @@ let store;
 let contentNodeActions;
 let generalActions;
 
-const makeWrapper = nodeIds => {
+const makeWrapper = (nodeIds) => {
   return mount(EditLanguageModal, {
     store,
     propsData: {
@@ -41,7 +41,7 @@ describe('EditLanguageModal', () => {
           namespaced: true,
           actions: contentNodeActions,
           getters: {
-            getContentNodes: () => ids => nodes.filter(node => ids.includes(node.id)),
+            getContentNodes: () => (ids) => nodes.filter((node) => ids.includes(node.id)),
           },
         },
       },
@@ -58,7 +58,7 @@ describe('EditLanguageModal', () => {
       const wrapper = makeWrapper(['test-nolang-res']);
 
       const checkboxes = wrapper.findAll('input[type="radio"]');
-      checkboxes.wrappers.forEach(checkbox => {
+      checkboxes.wrappers.forEach((checkbox) => {
         expect(checkbox.element.checked).toBeFalsy();
       });
     });
@@ -67,7 +67,7 @@ describe('EditLanguageModal', () => {
       const wrapper = makeWrapper(['test-en-res', 'test-nolang-res']);
 
       const checkboxes = wrapper.findAll('input[type="radio"]');
-      checkboxes.wrappers.forEach(checkbox => {
+      checkboxes.wrappers.forEach((checkbox) => {
         expect(checkbox.element.checked).toBeFalsy();
       });
     });
@@ -76,7 +76,7 @@ describe('EditLanguageModal', () => {
       const wrapper = makeWrapper(['test-en-res', 'test-es-res']);
 
       const checkboxes = wrapper.findAll('input[type="radio"]');
-      checkboxes.wrappers.forEach(checkbox => {
+      checkboxes.wrappers.forEach((checkbox) => {
         expect(checkbox.element.checked).toBeFalsy();
       });
     });
@@ -112,8 +112,8 @@ describe('EditLanguageModal', () => {
 
     const optionsList = wrapper.find('[data-test="language-options-list"]');
     const options = optionsList.findAll('input[type="radio"]');
-    options.wrappers.forEach(option => {
-      const language = LanguagesList.find(lang => lang.id === option.element.value);
+    options.wrappers.forEach((option) => {
+      const language = LanguagesList.find((lang) => lang.id === option.element.value);
       expect(
         language.id.toLowerCase().includes('es') ||
           language.native_name.toLowerCase().includes('es') ||
@@ -138,7 +138,7 @@ describe('EditLanguageModal', () => {
     const wrapper = makeWrapper(['test-en-res', 'test-es-res']);
 
     const buttons = wrapper.findAll('button').wrappers;
-    const submitButton = buttons.find(button => button.text() === 'Save');
+    const submitButton = buttons.find((button) => button.text() === 'Save');
 
     expect(submitButton.element.disabled).toBeTruthy();
   });
@@ -147,7 +147,7 @@ describe('EditLanguageModal', () => {
     const wrapper = makeWrapper(['test-en-res', 'test-es-res']);
 
     const buttons = wrapper.findAll('button').wrappers;
-    const submitButton = buttons.find(button => button.text() === 'Save');
+    const submitButton = buttons.find((button) => button.text() === 'Save');
 
     wrapper.find('input[value="en"]').setChecked(true);
 

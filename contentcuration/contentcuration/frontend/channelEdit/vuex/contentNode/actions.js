@@ -20,7 +20,7 @@ import * as publicApi from 'shared/data/public';
 import db from 'shared/data/db';
 
 export function loadContentNodes(context, params = {}) {
-  return ContentNode.where(params).then(response => {
+  return ContentNode.where(params).then((response) => {
     const contentNodes = response.results ? response.results : response;
     context.commit('ADD_CONTENTNODES', contentNodes);
     return response;
@@ -34,7 +34,7 @@ export function headContentNode(context, id) {
 
 export function loadContentNode(context, id) {
   return ContentNode.get(id)
-    .then(contentNode => {
+    .then((contentNode) => {
       context.commit('ADD_CONTENTNODE', contentNode);
       return contentNode;
     })
@@ -60,9 +60,11 @@ export async function loadPublicContentNode(context, { id, nodeId, rootId, paren
 
 export function loadContentNodeByNodeId(context, nodeId) {
   const channelId = context.rootState.currentChannel.currentChannelId;
-  return loadContentNodes(context, { '[node_id+channel_id]__in': [[nodeId, channelId]] })
-    .then(contentNodes => contentNodes[0])
-    .then(contentNode => {
+  return loadContentNodes(context, {
+    '[node_id+channel_id]__in': [[nodeId, channelId]],
+  })
+    .then((contentNodes) => contentNodes[0])
+    .then((contentNode) => {
       context.commit('ADD_CONTENTNODE', contentNode);
       return contentNode;
     })
@@ -83,7 +85,7 @@ export function loadChildren(context, { parent, published = null, complete = nul
 }
 
 export function loadAncestors(context, { id }) {
-  return ContentNode.getAncestors(id).then(contentNodes => {
+  return ContentNode.getAncestors(id).then((contentNodes) => {
     context.commit('ADD_CONTENTNODES', contentNodes);
     return contentNodes;
   });
@@ -100,15 +102,15 @@ export function loadRelatedResources(context, nodeId) {
   if (!nodeId) {
     throw ReferenceError('node id must be defined to load its related resources');
   }
-  return ContentNode.getRequisites(nodeId).then(data => {
+  return ContentNode.getRequisites(nodeId).then((data) => {
     const mappings = data;
     context.commit('SAVE_NEXT_STEPS', {
       mappings,
     });
-    const nodeIds = uniq(flatMap(data, d => [d.target_node, d.prerequisite]));
+    const nodeIds = uniq(flatMap(data, (d) => [d.target_node, d.prerequisite]));
     if (nodeIds.length) {
-      return context.dispatch('loadContentNodes', { id__in: nodeIds }).then(nodes => {
-        const parents = uniq(nodes.map(n => n.parent)).filter(Boolean);
+      return context.dispatch('loadContentNodes', { id__in: nodeIds }).then((nodes) => {
+        const parents = uniq(nodes.map((n) => n.parent)).filter(Boolean);
         if (parents.length) {
           return context.dispatch('loadContentNodes', { id__in: parents }).then(() => {
             return data;
@@ -129,7 +131,10 @@ export function loadRelatedResources(context, nodeId) {
  *                                from target's content node previous steps.
  */
 export function removePreviousStepFromNode(context, { targetId, previousStepId }) {
-  context.commit('REMOVE_PREVIOUS_STEP', { target_node: targetId, prerequisite: previousStepId });
+  context.commit('REMOVE_PREVIOUS_STEP', {
+    target_node: targetId,
+    prerequisite: previousStepId,
+  });
   return ContentNode.removePrerequisite(targetId, previousStepId);
 }
 
@@ -155,7 +160,10 @@ export function removeNextStepFromNode(context, { targetId, nextStepId }) {
  *                                to target's content node previous steps.
  */
 export function addPreviousStepToNode(context, { targetId, previousStepId }) {
-  context.commit('ADD_PREVIOUS_STEP', { target_node: targetId, prerequisite: previousStepId });
+  context.commit('ADD_PREVIOUS_STEP', {
+    target_node: targetId,
+    prerequisite: previousStepId,
+  });
   return ContentNode.addPrerequisite(targetId, previousStepId);
 }
 
@@ -190,7 +198,9 @@ export function createContentNode(context, { parent, kind, ...payload }) {
     // content_defaults for historical reason has stored the license as a string constant,
     // but the serializers and frontend now use the license ID. So make sure that we pass
     // a license ID when we create the content node.
-    contentDefaults.license = findLicense(contentDefaults.license, { id: null }).id;
+    contentDefaults.license = findLicense(contentDefaults.license, {
+      id: null,
+    }).id;
   }
   const contentNodeData = {
     title: '',
@@ -222,7 +232,7 @@ export function createContentNode(context, { parent, kind, ...payload }) {
     assessmentItems: [],
     files: [],
   });
-  return ContentNode.add(contentNodeData).then(id => {
+  return ContentNode.add(contentNodeData).then((id) => {
     context.commit('ADD_CONTENTNODE', {
       id,
       ...contentNodeData,
@@ -436,7 +446,7 @@ export function updateContentNodeDescendants(context, { id, ...payload } = {}) {
   const descendants = context.getters.getContentNodeDescendants(id);
   const contentNodes = [node, ...descendants];
 
-  const contentNodesData = contentNodes.map(contentNode => ({
+  const contentNodesData = contentNodes.map((contentNode) => ({
     id: contentNode.id,
     ...contentNodeData,
     ...getMergedMapFields(contentNode, contentNodeData),
@@ -448,7 +458,7 @@ export function updateContentNodeDescendants(context, { id, ...payload } = {}) {
 
 export function addTags(context, { ids, tags }) {
   return Promise.all(
-    ids.map(id => {
+    ids.map((id) => {
       const updates = {};
       for (const tag of tags) {
         context.commit('ADD_TAG', { id, tag });
@@ -461,7 +471,7 @@ export function addTags(context, { ids, tags }) {
 
 export function removeTags(context, { ids, tags }) {
   return Promise.all(
-    ids.map(id => {
+    ids.map((id) => {
       const updates = {};
       for (const tag of tags) {
         context.commit('REMOVE_TAG', { id, tag });
@@ -480,14 +490,14 @@ export function deleteContentNode(context, contentNodeId) {
 
 export function deleteContentNodes(context, contentNodeIds) {
   return Promise.all(
-    contentNodeIds.map(id => {
+    contentNodeIds.map((id) => {
       return deleteContentNode(context, id);
     })
   );
 }
 
 export function waitForCopyingStatus(context, { contentNodeId, startingRev }) {
-  return ContentNode.waitForCopying(contentNodeId, startingRev).catch(e => {
+  return ContentNode.waitForCopying(contentNodeId, startingRev).catch((e) => {
     context.dispatch('updateContentNode', {
       id: contentNodeId,
       [COPYING_STATUS]: COPYING_STATUS_VALUES.FAILED,
@@ -508,7 +518,7 @@ export function copyContentNode(
 ) {
   // First, this will parse the tree and create the copy the local tree nodes,
   // with a `source_id` of the source node then create the content node copies
-  return ContentNode.copy(id, target, position, excluded_descendants, sourceNode).then(node => {
+  return ContentNode.copy(id, target, position, excluded_descendants, sourceNode).then((node) => {
     context.commit('ADD_CONTENTNODE', node);
     context.commit('ADD_INHERITING_NODE', node);
     setContentNodesCount(context, [node]);
@@ -521,12 +531,17 @@ export function copyContentNodes(
   { id__in, target, position = RELATIVE_TREE_POSITIONS.LAST_CHILD, sourceNodes = null }
 ) {
   return Promise.all(
-    id__in.map(id => {
+    id__in.map((id) => {
       let sourceNode = null;
       if (sourceNodes) {
-        sourceNode = sourceNodes.find(n => n.id === id);
+        sourceNode = sourceNodes.find((n) => n.id === id);
       }
-      return context.dispatch('copyContentNode', { id, target, position, sourceNode });
+      return context.dispatch('copyContentNode', {
+        id,
+        target,
+        position,
+        sourceNode,
+      });
     })
   );
 }
@@ -546,8 +561,8 @@ export function moveContentNodes(
   }
 
   return Promise.all(
-    id__in.map(id => {
-      return ContentNode.move(id, target, position).then(node => {
+    id__in.map((id) => {
+      return ContentNode.move(id, target, position).then((node) => {
         context.commit('ADD_CONTENTNODE', node);
         if (inherit) {
           context.commit('ADD_INHERITING_NODE', node);
@@ -559,7 +574,7 @@ export function moveContentNodes(
 }
 
 export function loadNodeDetails(context, nodeId) {
-  return client.get(window.Urls.get_node_details(nodeId)).then(response => {
+  return client.get(window.Urls.get_node_details(nodeId)).then((response) => {
     return response.data;
   });
 }
@@ -578,7 +593,7 @@ export async function checkSavingProgress(
     [TABLE_NAMES.ASSESSMENTITEM]: assessmentIds,
   };
   const query = await db[CHANGES_TABLE].toCollection()
-    .filter(c => !c.synced && idsToCheck[c.table] && idsToCheck[c.table].includes(c.key))
+    .filter((c) => !c.synced && idsToCheck[c.table] && idsToCheck[c.table].includes(c.key))
     .first();
   return Boolean(query);
 }
@@ -595,7 +610,7 @@ export function setContentNodesCount(context, nodes) {
 }
 
 export function removeContentNodes(context, { parentId }) {
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     context.commit('REMOVE_CONTENTNODES_BY_PARENT', parentId);
     resolve(true);
   });

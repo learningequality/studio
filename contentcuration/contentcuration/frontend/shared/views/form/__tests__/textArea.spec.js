@@ -6,7 +6,7 @@ function makeWrapper() {
 }
 
 function runValidation(wrapper, value) {
-  return wrapper.vm.rules.every(rule => rule(value) === true);
+  return wrapper.vm.rules.every((rule) => rule(value) === true);
 }
 
 describe('textArea', () => {

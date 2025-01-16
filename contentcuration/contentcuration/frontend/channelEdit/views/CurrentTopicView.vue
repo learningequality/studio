@@ -226,18 +226,6 @@
 
   import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
   import get from 'lodash/get';
-  import InheritAncestorMetadataModal from '../components/edit/InheritAncestorMetadataModal';
-  import MoveModal from '../components/move/MoveModal';
-  import ContentNodeOptions from '../components/ContentNodeOptions';
-  import ResourceDrawer from '../components/ResourceDrawer';
-  import {
-    RouteNames,
-    viewModes,
-    DraggableRegions,
-    DraggableUniverses,
-    QuickEditModals,
-  } from '../constants';
-  import NodePanel from './NodePanel';
   import IconButton from 'shared/views/IconButton';
   import ToolBar from 'shared/views/ToolBar';
   import Breadcrumbs from 'shared/views/Breadcrumbs';
@@ -252,6 +240,18 @@
   import { DraggableTypes, DropEffect } from 'shared/mixins/draggable/constants';
   import { DraggableFlags } from 'shared/vuex/draggablePlugin/module/constants';
   import DraggableRegion from 'shared/views/draggable/DraggableRegion';
+  import {
+    RouteNames,
+    viewModes,
+    DraggableRegions,
+    DraggableUniverses,
+    QuickEditModals,
+  } from '../constants';
+  import ResourceDrawer from '../components/ResourceDrawer';
+  import ContentNodeOptions from '../components/ContentNodeOptions';
+  import MoveModal from '../components/move/MoveModal';
+  import InheritAncestorMetadataModal from '../components/edit/InheritAncestorMetadataModal';
+  import NodePanel from './NodePanel';
 
   export default {
     name: 'CurrentTopicView',

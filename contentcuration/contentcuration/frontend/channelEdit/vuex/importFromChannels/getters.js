@@ -12,5 +12,5 @@ export function savedSearches(state) {
 }
 
 export function getSavedSearch(state) {
-  return params => savedSearches(state).find(search => isEqual(search.params, params));
+  return (params) => savedSearches(state).find((search) => isEqual(search.params, params));
 }

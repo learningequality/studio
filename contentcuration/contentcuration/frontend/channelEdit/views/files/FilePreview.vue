@@ -44,8 +44,8 @@
   import fromPairs from 'lodash/fromPairs';
   import flatMap from 'lodash/flatMap';
   import { mapGetters } from 'vuex';
-  import ContentRenderer from './ContentRenderer';
   import { FormatPresetsList } from 'shared/leUtils/FormatPresets';
+  import ContentRenderer from './ContentRenderer';
 
   const availablePreviewFormats = fromPairs(
     flatMap(

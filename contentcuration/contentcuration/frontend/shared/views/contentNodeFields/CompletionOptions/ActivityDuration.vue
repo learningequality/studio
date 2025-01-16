@@ -240,8 +240,8 @@
     width: 100%;
     max-width: 300px;
     height: 2px;
-    outline: none;
     appearance: none;
+    outline: none;
   }
 
   input[type='range']::-webkit-slider-thumb {

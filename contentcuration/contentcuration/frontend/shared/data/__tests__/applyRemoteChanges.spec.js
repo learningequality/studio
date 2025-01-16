@@ -1,11 +1,11 @@
-import { CHANGE_TYPES } from '../constants';
-import { ChangeDispatcher, ChangeStream, resourceCounts } from '../applyRemoteChanges';
 import Deferred from 'shared/utils/deferred';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 import { RolesNames } from 'shared/leUtils/Roles';
+import { ChangeDispatcher, ChangeStream, resourceCounts } from '../applyRemoteChanges';
+import { CHANGE_TYPES } from '../constants';
 
 function tick() {
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     setTimeout(resolve, 0);
   });
 }

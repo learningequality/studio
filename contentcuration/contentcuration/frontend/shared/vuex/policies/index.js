@@ -14,7 +14,7 @@ export const getters = {
    * where key is a policy + its version, and value is the current UTC datetime
    */
   getPolicyAcceptedData() {
-    return policyName => {
+    return (policyName) => {
       // Get current date string
       const date = new Date();
       // this data is what we send to the server,
@@ -40,13 +40,8 @@ export const getters = {
    */
   nonAcceptedPolicies(state) {
     return policyKeys
-      .filter(key => !state.policies[key])
-      .map(key =>
-        key
-          .split('_')
-          .slice(0, -3)
-          .join('_')
-      );
+      .filter((key) => !state.policies[key])
+      .map((key) => key.split('_').slice(0, -3).join('_'));
   },
   /**
    * @returns `true` if a policy hasn't been
@@ -54,7 +49,7 @@ export const getters = {
    * Always returns `false` for logged out users.
    */
   isPolicyUnaccepted(state, getters, rootState, rootGetters) {
-    return function(policy) {
+    return function (policy) {
       if (!rootGetters.loggedIn) {
         return false;
       }
@@ -77,7 +72,7 @@ export const getters = {
     if (!unacceptedPolicies.length) {
       return null;
     }
-    return ACCEPT_ORDER.find(policy => unacceptedPolicies.includes(policy));
+    return ACCEPT_ORDER.find((policy) => unacceptedPolicies.includes(policy));
   },
 };
 
@@ -103,7 +98,9 @@ export const actions = {
    */
   acceptPolicy(context, policyAcceptedData) {
     return client
-      .post(window.Urls.policy_update(), { policy: JSON.stringify(policyAcceptedData) })
+      .post(window.Urls.policy_update(), {
+        policy: JSON.stringify(policyAcceptedData),
+      })
       .then(() => context.dispatch('setPolicies', policyAcceptedData));
   },
 };

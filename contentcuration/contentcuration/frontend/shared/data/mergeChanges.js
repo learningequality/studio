@@ -32,13 +32,13 @@ function combineCreateAndUpdate(oldChange, newChange) {
 }
 
 function combineUpdateAndUpdate(oldChange, newChange) {
-  Object.keys(newChange.mods).forEach(keyPath => {
+  Object.keys(newChange.mods).forEach((keyPath) => {
     // If oldChange was changing a parent path of this keyPath
     // we must update the parent path rather than adding this keyPath
     let hadParentPath = false;
     Object.keys(oldChange.mods)
-      .filter(parentPath => keyPath.indexOf(parentPath + '.') === 0)
-      .forEach(parentPath => {
+      .filter((parentPath) => keyPath.indexOf(parentPath + '.') === 0)
+      .forEach((parentPath) => {
         Dexie.setByKeyPath(
           oldChange.mods[parentPath],
           keyPath.substr(parentPath.length + 1),
@@ -54,8 +54,8 @@ function combineUpdateAndUpdate(oldChange, newChange) {
     // we must make sure that those sub-paths are removed since
     // we must mimic what would happen if applying the two changes after each other:
     Object.keys(oldChange.mods)
-      .filter(subPath => subPath.indexOf(keyPath + '.') === 0)
-      .forEach(subPath => {
+      .filter((subPath) => subPath.indexOf(keyPath + '.') === 0)
+      .forEach((subPath) => {
         delete oldChange.mods[subPath];
       });
   });
@@ -123,16 +123,18 @@ export default function mergeAllChanges(changes, flatten = false, changesToSync 
   if (!changesToSync) {
     // Initialize a changesToSync object if one has not been passed in.
     // Create an empty object with blank entries for every RESOURCE table.
-    changesToSync = Object.fromEntries(Object.keys(INDEXEDDB_RESOURCES).map(key => [key, {}]));
+    changesToSync = Object.fromEntries(Object.keys(INDEXEDDB_RESOURCES).map((key) => [key, {}]));
     changesToSync['unmergeableChanges'] = {};
   }
   let lastRev;
   for (const change of changes) {
     // Ensure changes are merged in order
     if (!('rev' in change) || typeof change.rev === 'undefined') {
+      // eslint-disable-next-line no-console
       console.error('This change has no `rev`:', change);
       throw new Error('Cannot determine the correct order for a change with no `rev`.');
     } else if (lastRev && change.rev < lastRev) {
+      // eslint-disable-next-line no-console
       console.error("These changes aren't ordered by `rev`:", changes);
       throw new Error('Cannot merge changes unless they are ordered by `rev`.');
     }
@@ -169,7 +171,7 @@ export default function mergeAllChanges(changes, flatten = false, changesToSync 
     }
   }
   if (flatten) {
-    return flatMap(changesToSync, obj => Object.values(obj));
+    return flatMap(changesToSync, (obj) => Object.values(obj));
   }
   return changesToSync;
 }

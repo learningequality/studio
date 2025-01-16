@@ -1,6 +1,6 @@
 import 'regenerator-runtime/runtime';
 import { liveQuery } from 'dexie';
-import * as Sentry from '@sentry/vue';
+import { init as SentryInit, globalHandlersIntegration } from '@sentry/vue';
 import Vue from 'vue';
 import VueRouter from 'vue-router';
 import Vuetify, {
@@ -107,7 +107,6 @@ import {
 } from 'vuetify/lib/directives';
 import VueIntl from 'vue-intl';
 import Croppa from 'vue-croppa';
-import VueCompositionApi from '@vue/composition-api';
 import { Workbox, messageSW } from 'workbox-window';
 import KThemePlugin from 'kolibri-design-system/lib/KThemePlugin';
 import trackInputModality from 'kolibri-design-system/lib/styles/trackInputModality';
@@ -132,7 +131,7 @@ import { Session, injectVuexStore } from 'shared/data/resources';
 if (process.env.NODE_ENV !== 'production') {
   Vue.config.devtools = true;
 } else if (window.sentryActive) {
-  Sentry.init({
+  SentryInit({
     Vue,
     dsn: window.sentryDSN,
     environment: window.sentryEnvironment,
@@ -144,9 +143,12 @@ if (process.env.NODE_ENV !== 'production') {
     // get another error report with more useful data anyway, so ignore these for now.
     // They are most commonly triggered by a 500 response from an API endpoint call.
     integrations: [
-      new Sentry.Integrations.GlobalHandlers({ onerror: true, onunhandledrejection: false }),
+      globalHandlersIntegration({
+        onerror: true,
+        onunhandledrejection: false,
+      }),
     ],
-    beforeSend: function(event) {
+    beforeSend: function (event) {
       // Ignore errors when CloudFlare-AlwaysOnline is in the user agent as these are errors serving
       // the offline version and I don't think we can fix or reproduce these easily.
       // Fix taken from here: https://github.com/getsentry/sentry-javascript/issues/617#issuecomment-227562203
@@ -162,7 +164,6 @@ if (process.env.NODE_ENV !== 'production') {
 Vue.use(Croppa);
 Vue.use(VueIntl);
 Vue.use(VueRouter);
-Vue.use(VueCompositionApi);
 Vue.use(Vuetify, {
   components: {
     // Explicitly register used Vuetify components globally
@@ -273,7 +274,7 @@ function initiateServiceWorker() {
     const wb = new Workbox(window.Urls.service_worker());
     let registration;
 
-    const showSkipWaitingPrompt = event => {
+    const showSkipWaitingPrompt = (event) => {
       // `event.wasWaitingBeforeRegister` will be false if this is
       // the first time the updated service worker is waiting.
       // When `event.wasWaitingBeforeRegister` is true, a previously
@@ -305,7 +306,7 @@ function initiateServiceWorker() {
     wb.addEventListener('waiting', showSkipWaitingPrompt);
     wb.addEventListener('externalwaiting', showSkipWaitingPrompt);
 
-    return wb.register().then(r => (registration = r));
+    return wb.register().then((r) => (registration = r));
   } else {
     return Promise.resolve();
   }
@@ -366,7 +367,7 @@ export default async function startApp({ store, router, index }) {
     Object.assign(config, Base);
   }
 
-  window.addEventListener('beforeunload', e => {
+  window.addEventListener('beforeunload', (e) => {
     if (e.currentTarget.location.origin !== window.location.origin) {
       return;
     }
@@ -389,7 +390,7 @@ export default async function startApp({ store, router, index }) {
   rootVue = new Vue(config);
 
   // Return a cleanup function
-  return function() {
+  return function () {
     if (subscription) {
       subscription.unsubscribe();
     }

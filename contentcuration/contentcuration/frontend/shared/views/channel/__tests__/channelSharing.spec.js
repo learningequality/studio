@@ -1,7 +1,7 @@
 import { mount } from '@vue/test-utils';
-import ChannelSharing from './../ChannelSharing';
 import storeFactory from 'shared/vuex/baseStore';
 import { SharingPermissions } from 'shared/constants';
+import ChannelSharing from './../ChannelSharing';
 
 const store = storeFactory();
 const channelId = '11111111111111111111111111111111';
@@ -87,7 +87,7 @@ describe('channelSharing', () => {
     '1234567890123456789012345678901234567890123456789012345678901234+x@example.com',
     'i_like_underscore@but_its_not_allowed_in_this_part.example.com',
     'QA[icon]CHOCOLATE[icon]@test.com',
-  ])('should not call sendInvitation if email is invalid: %s', email => {
+  ])('should not call sendInvitation if email is invalid: %s', (email) => {
     wrapper.setData({ email, loading: false });
     wrapper.vm.submitEmail();
     expect(sendInvitation).not.toHaveBeenCalled();
@@ -133,7 +133,7 @@ describe('channelSharing', () => {
     'mailhost!username@example.org',
     'user%example.com@example.org',
     'user-@example.org',
-  ])('should call sendInvitation if email is valid: %s', email => {
+  ])('should call sendInvitation if email is valid: %s', (email) => {
     wrapper.setData({ email });
     wrapper.vm.submitEmail();
     expect(sendInvitation).toHaveBeenCalledWith({
@@ -143,7 +143,10 @@ describe('channelSharing', () => {
     });
   });
   it('should call sendInvitation with correct share permission', () => {
-    wrapper.setData({ email: 'test@test.com', shareMode: SharingPermissions.VIEW_ONLY });
+    wrapper.setData({
+      email: 'test@test.com',
+      shareMode: SharingPermissions.VIEW_ONLY,
+    });
     wrapper.vm.submitEmail();
     expect(sendInvitation).toHaveBeenCalledWith({
       email: 'test@test.com',

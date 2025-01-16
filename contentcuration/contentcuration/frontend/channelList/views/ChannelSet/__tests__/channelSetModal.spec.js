@@ -4,13 +4,13 @@ import VueRouter from 'vue-router';
 import cloneDeep from 'lodash/cloneDeep';
 import flushPromises from 'flush-promises';
 
+import channel from 'shared/vuex/channel';
+import storeFactory from 'shared/vuex/baseStore';
+import { NEW_OBJECT } from 'shared/constants';
 import { RouteNames } from '../../../constants';
 import router from '../../../router';
 import channelSet from '../../../vuex/channelSet';
 import ChannelSetModal from '../ChannelSetModal';
-import channel from 'shared/vuex/channel';
-import storeFactory from 'shared/vuex/baseStore';
-import { NEW_OBJECT } from 'shared/constants';
 
 const localVue = createLocalVue();
 localVue.use(Vuex);
@@ -82,27 +82,27 @@ const makeWrapper = ({ store, channelSetId }) => {
   return wrapper;
 };
 
-const getCollectionNameInput = wrapper => {
+const getCollectionNameInput = (wrapper) => {
   return wrapper.find('[data-test="input-name"]');
 };
 
-const getUnsavedDialog = wrapper => {
+const getUnsavedDialog = (wrapper) => {
   return wrapper.find('[data-test="dialog-unsaved"]');
 };
 
-const getCloseButton = wrapper => {
+const getCloseButton = (wrapper) => {
   return wrapper.find('[data-test="close"]');
 };
 
-const getSaveButton = wrapper => {
+const getSaveButton = (wrapper) => {
   return wrapper.find('[data-test="button-save"]');
 };
 
-const getSelectChannelsButton = wrapper => {
+const getSelectChannelsButton = (wrapper) => {
   return wrapper.find('[data-test="button-select"]');
 };
 
-const getFinishButton = wrapper => {
+const getFinishButton = (wrapper) => {
   return wrapper.find('[data-test="button-finish"]');
 };
 
@@ -206,21 +206,11 @@ describe('ChannelSetModal', () => {
 
       expect(channelItems.at(0).html()).toContain('Channel 1');
       expect(channelItems.at(0).html()).toContain('First channel description');
-      expect(
-        channelItems
-          .at(0)
-          .find('button')
-          .text()
-      ).toBe('Remove');
+      expect(channelItems.at(0).find('button').text()).toBe('Remove');
 
       expect(channelItems.at(1).html()).toContain('Channel 2');
       expect(channelItems.at(1).html()).toContain('Second channel description');
-      expect(
-        channelItems
-          .at(1)
-          .find('button')
-          .text()
-      ).toBe('Remove');
+      expect(channelItems.at(1).find('button').text()).toBe('Remove');
     });
 
     it('clicking select channels button should navigate to channels selection view', async () => {

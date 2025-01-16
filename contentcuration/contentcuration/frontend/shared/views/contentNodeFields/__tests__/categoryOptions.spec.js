@@ -40,7 +40,7 @@ describe('CategoryOptions', () => {
     it(`dropdown has 'levels' key necessary to display the nested structure of categories`, () => {
       const wrapper = makeWrapper();
       const dropdown = wrapper.vm.categoriesList;
-      const everyCategoryHasLevelsKey = dropdown.every(item => 'level' in item);
+      const everyCategoryHasLevelsKey = dropdown.every((item) => 'level' in item);
 
       expect(everyCategoryHasLevelsKey).toBeTruthy();
     });

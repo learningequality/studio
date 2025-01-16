@@ -118,15 +118,15 @@
 
   import { mapGetters } from 'vuex';
   import debounce from 'lodash/debounce';
-  import { RouteNames } from '../../constants';
-  import CatalogFilterBar from './CatalogFilterBar';
-  import { catalogFilterMixin } from './mixins';
-  import LanguageFilter from './components/LanguageFilter';
   import MultiSelect from 'shared/views/form/MultiSelect';
   import { constantsTranslationMixin } from 'shared/mixins';
   import Checkbox from 'shared/views/form/Checkbox';
   import HelpTooltip from 'shared/views/HelpTooltip';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
+  import { RouteNames } from '../../constants';
+  import LanguageFilter from './components/LanguageFilter';
+  import { catalogFilterMixin } from './mixins';
+  import CatalogFilterBar from './CatalogFilterBar';
 
   const excludedKinds = new Set([ContentKindsNames.TOPIC, ContentKindsNames.H5P]);
 

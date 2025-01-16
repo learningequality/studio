@@ -1,4 +1,8 @@
 import VueRouter from 'vue-router';
+import ChannelDetailsModal from 'shared/views/channel/ChannelDetailsModal';
+import ChannelModal from 'shared/views/channel/ChannelModal';
+import Sandbox from 'shared/views/Sandbox';
+import { RouteNames as ChannelRouteNames } from 'frontend/channelList/constants';
 import { RouteNames } from './constants';
 import TreeView from './views/TreeView';
 import StagingTreePage from './pages/StagingTreePage';
@@ -9,10 +13,6 @@ import TrashModal from './views/trash/TrashModal';
 import SearchOrBrowseWindow from './views/ImportFromChannels/SearchOrBrowseWindow';
 import ReviewSelectionsPage from './views/ImportFromChannels/ReviewSelectionsPage';
 import EditModal from './components/edit/EditModal';
-import ChannelDetailsModal from 'shared/views/channel/ChannelDetailsModal';
-import ChannelModal from 'shared/views/channel/ChannelModal';
-import Sandbox from 'shared/views/Sandbox';
-import { RouteNames as ChannelRouteNames } from 'frontend/channelList/constants';
 
 const router = new VueRouter({
   routes: [
@@ -34,7 +34,7 @@ const router = new VueRouter({
       name: RouteNames.TREE_ROOT_VIEW,
       path: '/',
       beforeEnter: (to, from, next) => {
-        return store.dispatch('currentChannel/loadChannel').then(channel => {
+        return store.dispatch('currentChannel/loadChannel').then((channel) => {
           if (channel) {
             const nodeId = channel.root_id;
             return next({
@@ -71,7 +71,7 @@ const router = new VueRouter({
       name: RouteNames.STAGING_TREE_VIEW_REDIRECT,
       path: '/staging',
       beforeEnter: (to, from, next) => {
-        return store.dispatch('currentChannel/loadChannel').then(channel => {
+        return store.dispatch('currentChannel/loadChannel').then((channel) => {
           return next({
             name: RouteNames.STAGING_TREE_VIEW,
             params: {
@@ -101,7 +101,7 @@ const router = new VueRouter({
         ];
 
         return Promise.all(promises)
-          .catch(error => {
+          .catch((error) => {
             throw new Error(error);
           })
           .then(() => next());
@@ -120,7 +120,7 @@ const router = new VueRouter({
         ];
 
         return Promise.all(promises)
-          .catch(error => {
+          .catch((error) => {
             throw new Error(error);
           })
           .then(() => next());
@@ -134,7 +134,7 @@ const router = new VueRouter({
       beforeEnter: (to, from, next) => {
         return store
           .dispatch('currentChannel/loadChannel')
-          .catch(error => {
+          .catch((error) => {
             throw new Error(error);
           })
           .then(() => next());
@@ -148,7 +148,7 @@ const router = new VueRouter({
       beforeEnter: (to, from, next) => {
         return store
           .dispatch('currentChannel/loadChannel')
-          .catch(error => {
+          .catch((error) => {
             throw new Error(error);
           })
           .then(() => next());
@@ -162,7 +162,7 @@ const router = new VueRouter({
       beforeEnter: (to, from, next) => {
         return store
           .dispatch('currentChannel/loadChannel')
-          .catch(error => {
+          .catch((error) => {
             throw new Error(error);
           })
           .then(() => next());
@@ -176,7 +176,7 @@ const router = new VueRouter({
       beforeEnter: (to, from, next) => {
         return store
           .dispatch('currentChannel/loadChannel')
-          .catch(error => {
+          .catch((error) => {
             throw new Error(error);
           })
           .then(() => next());
@@ -190,7 +190,7 @@ const router = new VueRouter({
       beforeEnter: (to, from, next) => {
         return store
           .dispatch('currentChannel/loadChannel')
-          .catch(error => {
+          .catch((error) => {
             throw new Error(error);
           })
           .then(() => next());
@@ -204,7 +204,7 @@ const router = new VueRouter({
       beforeEnter: (to, from, next) => {
         return store
           .dispatch('currentChannel/loadChannel')
-          .catch(error => {
+          .catch((error) => {
             throw new Error(error);
           })
           .then(() => next());
@@ -218,7 +218,7 @@ const router = new VueRouter({
       beforeEnter: (to, from, next) => {
         return store
           .dispatch('currentChannel/loadChannel')
-          .catch(error => {
+          .catch((error) => {
             throw new Error(error);
           })
           .then(() => next());
@@ -230,7 +230,7 @@ const router = new VueRouter({
       beforeEnter: (to, from, next) => {
         return store
           .dispatch('contentNode/loadContentNodeByNodeId', to.params.originalSourceNodeId)
-          .then(node => {
+          .then((node) => {
             next({
               name: RouteNames.TREE_VIEW,
               params: {
@@ -249,7 +249,7 @@ const router = new VueRouter({
       beforeEnter: (to, from, next) => {
         return store
           .dispatch('currentChannel/loadChannel')
-          .catch(error => {
+          .catch((error) => {
             throw new Error(error);
           })
           .then(() => next());

@@ -100,14 +100,14 @@
 <script>
 
   import { mapGetters, mapActions } from 'vuex';
-  import { RouteNames, rowsPerPageItems } from '../../constants';
-  import { tableMixin, generateFilterMixin } from '../../mixins';
-  import ChannelItem from './ChannelItem';
   import { channelExportMixin } from 'shared/views/channel/mixins';
   import { routerMixin } from 'shared/mixins';
   import Checkbox from 'shared/views/form/Checkbox';
   import IconButton from 'shared/views/IconButton';
   import LanguageDropdown from 'shared/views/LanguageDropdown';
+  import { tableMixin, generateFilterMixin } from '../../mixins';
+  import { RouteNames, rowsPerPageItems } from '../../constants';
+  import ChannelItem from './ChannelItem';
 
   const channelFilters = {
     live: { label: 'Live', params: { deleted: false } },

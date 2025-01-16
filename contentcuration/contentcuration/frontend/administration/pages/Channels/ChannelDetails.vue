@@ -53,14 +53,14 @@
 <script>
 
   import { mapActions, mapGetters } from 'vuex';
-  import { RouteNames } from '../../constants';
-  import ChannelActionsDropdown from './ChannelActionsDropdown';
   import ChannelSharing from 'shared/views/channel/ChannelSharing';
   import Details from 'shared/views/details/Details';
   import { routerMixin } from 'shared/mixins';
   import LoadingText from 'shared/views/LoadingText';
   import FullscreenModal from 'shared/views/FullscreenModal';
   import Banner from 'shared/views/Banner';
+  import { RouteNames } from '../../constants';
+  import ChannelActionsDropdown from './ChannelActionsDropdown';
 
   export default {
     name: 'ChannelDetails',

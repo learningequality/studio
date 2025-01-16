@@ -12,6 +12,12 @@ import uniq from 'lodash/uniq';
 import uniqBy from 'lodash/uniqBy';
 
 import { v4 as uuidv4 } from 'uuid';
+import urls from 'shared/urls';
+import { currentLanguage } from 'shared/i18n';
+import client, { paramsSerializer } from 'shared/client';
+import { DELAYED_VALIDATION, fileErrors, NEW_OBJECT } from 'shared/constants';
+import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
+import { getMergedMapFields } from 'shared/utils/helpers';
 import {
   CHANGE_TYPES,
   CHANGES_TABLE,
@@ -42,12 +48,6 @@ import {
   DeployedChange,
   UpdatedDescendantsChange,
 } from './changes';
-import urls from 'shared/urls';
-import { currentLanguage } from 'shared/i18n';
-import client, { paramsSerializer } from 'shared/client';
-import { DELAYED_VALIDATION, fileErrors, NEW_OBJECT } from 'shared/constants';
-import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
-import { getMergedMapFields } from 'shared/utils/helpers';
 
 // Number of seconds after which data is considered stale.
 const REFRESH_INTERVAL = 5;
@@ -122,7 +122,7 @@ function copyProperties(target, source) {
 
 function objectsAreStale(objs) {
   const now = Date.now();
-  return objs.some(obj => {
+  return objs.some((obj) => {
     const refresh = obj[LAST_FETCHED] + REFRESH_INTERVAL * 1000;
     return refresh < now;
   });
@@ -199,7 +199,7 @@ class IndexedDBResource {
     if (typeof this.idField === 'string') {
       return datum[this.idField];
     }
-    return this.idField.map(f => datum[f]);
+    return this.idField.map((f) => datum[f]);
   }
 
   /*
@@ -238,14 +238,14 @@ class IndexedDBResource {
     }
 
     const inheritedChanges = [];
-    const parentIds = [...new Set(itemData.map(item => item.parent).filter(Boolean))];
-    const ancestorsPromises = parentIds.map(parentId => this.getAncestors(parentId));
+    const parentIds = [...new Set(itemData.map((item) => item.parent).filter(Boolean))];
+    const ancestorsPromises = parentIds.map((parentId) => this.getAncestors(parentId));
     const parentsAncestors = await Promise.all(ancestorsPromises);
 
-    parentsAncestors.forEach(ancestors => {
+    parentsAncestors.forEach((ancestors) => {
       const parent = ancestors[ancestors.length - 1];
-      const ancestorsIds = ancestors.map(ancestor => ancestor.id);
-      const parentChanges = updatedDescendantsChanges.filter(change =>
+      const ancestorsIds = ancestors.map((ancestor) => ancestor.id);
+      const parentChanges = updatedDescendantsChanges.filter((change) =>
         ancestorsIds.includes(change.key)
       );
       if (!parentChanges.length) {
@@ -253,10 +253,10 @@ class IndexedDBResource {
       }
 
       itemData
-        .filter(item => item.parent === parent.id)
-        .forEach(item => {
+        .filter((item) => item.parent === parent.id)
+        .forEach((item) => {
           inheritedChanges.push(
-            ...parentChanges.map(change => ({
+            ...parentChanges.map((change) => ({
               ...change,
               mods: {
                 ...change.mods,
@@ -278,10 +278,10 @@ class IndexedDBResource {
       changes = sortBy(changes, 'rev');
     }
     changes
-      .filter(change => change.type === CHANGE_TYPES.UPDATED_DESCENDANTS)
-      .forEach(change => {
+      .filter((change) => change.type === CHANGE_TYPES.UPDATED_DESCENDANTS)
+      .forEach((change) => {
         change.type = CHANGE_TYPES.UPDATED;
-        const item = itemData.find(i => i.id === change.key);
+        const item = itemData.find((i) => i.id === change.key);
         if (!item) {
           return;
         }
@@ -301,12 +301,12 @@ class IndexedDBResource {
     return this.transaction({ mode: 'rw' }, this.tableName, CHANGES_TABLE, () => {
       // Get any relevant changes that would be overwritten by this bulkPut
       const changesPromise = db[CHANGES_TABLE].where('[table+key]')
-        .anyOf(itemData.map(datum => [this.tableName, this.getIdValue(datum)]))
+        .anyOf(itemData.map((datum) => [this.tableName, this.getIdValue(datum)]))
         .sortBy('rev');
       const inheritedChangesPromise = this.getInheritedChanges(itemData);
       const currentPromise = this.table
         .where(this.idField)
-        .anyOf(itemData.map(datum => this.getIdValue(datum)))
+        .anyOf(itemData.map((datum) => this.getIdValue(datum)))
         .toArray();
 
       return Promise.all([changesPromise, inheritedChangesPromise, currentPromise]).then(
@@ -326,7 +326,7 @@ class IndexedDBResource {
             currentMap[this.getIdValue(currentObj)] = currentObj;
           }
           const data = itemData
-            .map(datum => {
+            .map((datum) => {
               const id = this.getIdValue(datum);
               datum[LAST_FETCHED] = now;
               // Persist TASK_ID and COPYING_STATUS attributes when directly
@@ -348,7 +348,7 @@ class IndexedDBResource {
               // If we have a deleted change, just filter out this object so we don't reput it
             })
             .filter(
-              datum =>
+              (datum) =>
                 !collectedChanges[CHANGE_TYPES.DELETED] ||
                 !collectedChanges[CHANGE_TYPES.DELETED][this.getIdValue(datum)]
             );
@@ -356,7 +356,7 @@ class IndexedDBResource {
             // Move changes need to be reapplied on top of fetched data in case anything
             // has happened on the backend.
             return applyChanges(Object.values(collectedChanges[CHANGE_TYPES.MOVED] || {})).then(
-              results => {
+              (results) => {
                 if (!results || !results.length) {
                   return data;
                 }
@@ -366,7 +366,7 @@ class IndexedDBResource {
                   resultsMap[id] = result;
                 }
                 return data
-                  .map(datum => {
+                  .map((datum) => {
                     const id = this.getIdValue(datum);
                     if (resultsMap[id]) {
                       applyMods(datum, resultsMap[id]);
@@ -375,7 +375,7 @@ class IndexedDBResource {
                     // Concatenate any unsynced created objects onto
                     // the end of the returned objects
                   })
-                  .concat(Object.values(collectedChanges[CHANGE_TYPES.CREATED]).map(c => c.obj));
+                  .concat(Object.values(collectedChanges[CHANGE_TYPES.CREATED]).map((c) => c.obj));
               }
             );
           });
@@ -508,21 +508,21 @@ class IndexedDBResource {
           ...flatMap(
             Object.keys(suffixedParams),
             // First we iterate over the specific parameters we are filtering over
-            key => {
+            (key) => {
               // Then we iterate over the suffixes that we are filtering over
-              return Object.keys(suffixedParams[key]).map(suffix => {
+              return Object.keys(suffixedParams[key]).map((suffix) => {
                 // For each suffix, we have a specific value
                 const value = suffixedParams[key][suffix];
                 // Now return a filter function depending on the specific
                 // suffix that we have passed.
                 if (suffix === QUERY_SUFFIXES.LT) {
-                  return item => item[key] < value;
+                  return (item) => item[key] < value;
                 } else if (suffix === QUERY_SUFFIXES.LTE) {
-                  return item => item[key] <= value;
+                  return (item) => item[key] <= value;
                 } else if (suffix === QUERY_SUFFIXES.GT) {
-                  return item => item[key] > value;
+                  return (item) => item[key] > value;
                 } else if (suffix === QUERY_SUFFIXES.GTE) {
-                  return item => item[key] >= value;
+                  return (item) => item[key] >= value;
                 }
                 // Because of how we are initially generating these
                 // we should never get to here and returning undefined
@@ -534,7 +534,7 @@ class IndexedDBResource {
           // If there were not, it will be undefined and filtered by the final filter
           // In addition, in the unlikely case that the suffix was not recognized,
           // this will filter out those cases too.
-        ].filter(f => f)
+        ].filter((f) => f)
       );
     }
     if (filterFn) {
@@ -596,7 +596,7 @@ class IndexedDBResource {
   }
 
   _saveAndQueueChange(change) {
-    return change.saveChange().then(rev => {
+    return change.saveChange().then((rev) => {
       if (rev !== null) {
         changeRevs.push(rev);
       }
@@ -639,7 +639,7 @@ class IndexedDBResource {
    * @return {Promise<mixed[]>}
    */
   _resolveQuery(query) {
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       if (query instanceof Collection) {
         resolve(query.toArray());
       } else if (query instanceof Dexie.Promise || query instanceof Promise || isArray(query)) {
@@ -691,7 +691,7 @@ class IndexedDBResource {
   add(obj) {
     return this.transaction({ mode: 'rw' }, CHANGES_TABLE, () => {
       obj = this._prepareAdd(obj);
-      return this.table.add(obj).then(id => {
+      return this.table.add(obj).then((id) => {
         return this._createChange(id, obj).then(() => id);
       });
     });
@@ -715,7 +715,7 @@ class IndexedDBResource {
     if (!this.syncable) {
       return Promise.resolve();
     }
-    return this.table.get(id).then(oldObj => {
+    return this.table.get(id).then((oldObj) => {
       if (!oldObj) {
         return Promise.resolve();
       }
@@ -776,7 +776,7 @@ class Resource extends mix(APIResource, IndexedDBResource) {
   }
 
   loadPagination(queryString) {
-    return db[PAGINATION_TABLE].get([this.tableName, queryString]).then(pagination => {
+    return db[PAGINATION_TABLE].get([this.tableName, queryString]).then((pagination) => {
       return pagination ? pagination.more : null;
     });
   }
@@ -793,7 +793,7 @@ class Resource extends mix(APIResource, IndexedDBResource) {
     ) {
       return cachedRequest.promise;
     }
-    const promise = client.get(this.collectionUrl(), { params }).then(response => {
+    const promise = client.get(this.collectionUrl(), { params }).then((response) => {
       let itemData;
       let pageData;
       let more;
@@ -804,6 +804,7 @@ class Resource extends mix(APIResource, IndexedDBResource) {
         itemData = pageData.results;
         more = pageData.more;
       } else {
+        // eslint-disable-next-line no-console
         console.error(`Unexpected response from ${this.urlName}`, response);
         itemData = [];
       }
@@ -844,7 +845,7 @@ class Resource extends mix(APIResource, IndexedDBResource) {
         // affect local tree structure
         refresh = db[CHANGES_TABLE].where('table')
           .equals(TABLE_NAMES.CONTENTNODE)
-          .filter(c => {
+          .filter((c) => {
             if (!TREE_CHANGE_TYPES.includes(c.type)) {
               return false;
             }
@@ -859,10 +860,10 @@ class Resource extends mix(APIResource, IndexedDBResource) {
             );
           })
           .count()
-          .then(pendingCount => pendingCount === 0);
+          .then((pendingCount) => pendingCount === 0);
       }
 
-      const fetch = refresh.then(shouldFetch => {
+      const fetch = refresh.then((shouldFetch) => {
         const emptyResults = isArray(objs) ? [] : { results: [] };
         return shouldFetch ? this.fetchCollection(params) : emptyResults;
       });
@@ -910,7 +911,7 @@ class Resource extends mix(APIResource, IndexedDBResource) {
     const observable = Dexie.liveQuery(() => super.where(params));
     let fetched = false;
     observable.subscribe({
-      next: objs => {
+      next: (objs) => {
         if (!fetched) {
           fetched = true;
           this.conditionalFetch(objs, params, doRefresh);
@@ -925,9 +926,9 @@ class Resource extends mix(APIResource, IndexedDBResource) {
     // the server has applied the change yet, we skip making the HEAD request for it
     return db[CHANGES_TABLE].where('[table+key]')
       .equals([this.tableName, id])
-      .filter(c => CREATION_CHANGE_TYPES.includes(c.type))
+      .filter((c) => CREATION_CHANGE_TYPES.includes(c.type))
       .count()
-      .then(pendingCount => {
+      .then((pendingCount) => {
         if (pendingCount === 0) {
           return client.head(this.modelUrl(id));
         }
@@ -935,8 +936,8 @@ class Resource extends mix(APIResource, IndexedDBResource) {
   }
 
   fetchModel(id) {
-    return client.get(this.modelUrl(id)).then(response => {
-      return this.setData([response.data]).then(data => data[0]);
+    return client.get(this.modelUrl(id)).then((response) => {
+      return this.setData([response.data]).then((data) => data[0]);
     });
   }
 
@@ -957,7 +958,7 @@ class Resource extends mix(APIResource, IndexedDBResource) {
       console.groupEnd();
       /* eslint-enable */
     }
-    return this.table.get(id).then(obj => {
+    return this.table.get(id).then((obj) => {
       if (!obj || doRefresh) {
         const request = this.fetchModel(id);
         if (!obj) {
@@ -976,7 +977,7 @@ class Resource extends mix(APIResource, IndexedDBResource) {
  */
 class CreateModelResource extends Resource {
   createModel(data) {
-    return client.post(this.collectionUrl(), data).then(response => {
+    return client.post(this.collectionUrl(), data).then((response) => {
       const now = Date.now();
       const data = response.data;
       data[LAST_FETCHED] = now;
@@ -1140,14 +1141,14 @@ export const Channel = new CreateModelResource({
     params.public = true;
     // Because this is a heavily cached endpoint, we can just directly request
     // it and rely on browser caching to prevent excessive requests to the server.
-    return client.get(urls.catalog_list(), { params }).then(response => {
+    return client.get(urls.catalog_list(), { params }).then((response) => {
       return response.data;
     });
   },
   getCatalogChannel(id) {
     // Because this is a heavily cached endpoint, we can just directly request
     // it and rely on browser caching to prevent excessive requests to the server.
-    return client.get(urls.catalog_detail(id)).then(response => {
+    return client.get(urls.catalog_detail(id)).then((response) => {
       return response.data;
     });
   },
@@ -1162,7 +1163,7 @@ export const Channel = new CreateModelResource({
    */
   update(id, { content_defaults = {}, ...changes }) {
     return this.transaction({ mode: 'rw' }, CHANGES_TABLE, () => {
-      return this.table.get(id).then(channel => {
+      return this.table.get(id).then((channel) => {
         if (Object.keys(content_defaults).length) {
           const mergedContentDefaults = {};
           Object.assign(mergedContentDefaults, channel.content_defaults || {}, content_defaults);
@@ -1227,7 +1228,7 @@ export const Channel = new CreateModelResource({
       return this.table
         .where('id')
         .equals(id)
-        .filter(channel => !channel['staging_root_id'] || channel['staging_root_id'] === null)
+        .filter((channel) => !channel['staging_root_id'] || channel['staging_root_id'] === null)
         .toArray();
     });
 
@@ -1291,7 +1292,7 @@ export const Channel = new CreateModelResource({
       TABLE_NAMES.CHANNEL,
       TABLE_NAMES.CONTENTNODE,
       () => {
-        return Channel.table.get(id).then(async channel => {
+        return Channel.table.get(id).then(async (channel) => {
           return (
             (await ContentNode.table
               .where({
@@ -1306,7 +1307,7 @@ export const Channel = new CreateModelResource({
     if (!langExists) {
       langExists = await client
         .get(this.getUrlFunction('language_exists')(id))
-        .then(response => response.data.exists);
+        .then((response) => response.data.exists);
     }
     return langExists;
   },
@@ -1314,13 +1315,13 @@ export const Channel = new CreateModelResource({
     const localLanguages = await this.transaction({ mode: 'r' }, TABLE_NAMES.CONTENTNODE, () => {
       return ContentNode.table
         .where({ channel_id: id })
-        .filter(node => node.language !== null)
+        .filter((node) => node.language !== null)
         .toArray()
-        .then(nodes => nodes.map(node => node.language));
+        .then((nodes) => nodes.map((node) => node.language));
     });
     const remoteLanguages = await client
       .get(this.getUrlFunction('languages')(id))
-      .then(response => response.data.languages);
+      .then((response) => response.data.languages);
     return uniq(compact(localLanguages.concat(remoteLanguages)));
   },
 });
@@ -1365,7 +1366,7 @@ export const ContentNode = new TreeResource({
       return Promise.reject('No self referential prerequisites');
     }
     // First check we have no local record of the inverse
-    return ContentNodePrerequisite.get([prerequisite, target_node]).then(entry => {
+    return ContentNodePrerequisite.get([prerequisite, target_node]).then((entry) => {
       if (entry) {
         return Promise.reject('No cyclic prerequisites');
       }
@@ -1395,12 +1396,12 @@ export const ContentNode = new TreeResource({
     } else {
       visited = new Set(Array.from(visited).concat(ids));
     }
-    return this.queryRequisites(ids).then(entries => {
-      const entryIds = uniq(flatMap(entries, e => [e.target_node, e.prerequisite])).filter(
-        id => !visited.has(id)
+    return this.queryRequisites(ids).then((entries) => {
+      const entryIds = uniq(flatMap(entries, (e) => [e.target_node, e.prerequisite])).filter(
+        (id) => !visited.has(id)
       );
       if (entryIds.length) {
-        return this.recurseRequisites(entryIds, visited).then(nextEntries => {
+        return this.recurseRequisites(entryIds, visited).then((nextEntries) => {
           return entries.concat(nextEntries);
         });
       }
@@ -1418,16 +1419,16 @@ export const ContentNode = new TreeResource({
     }
 
     const fetchPromise = this.fetchRequisites(id);
-    return this.recurseRequisites([id]).then(entries => {
+    return this.recurseRequisites([id]).then((entries) => {
       if (entries.length) {
-        return uniqBy(entries, e => e.target_node + e.prerequisite);
+        return uniqBy(entries, (e) => e.target_node + e.prerequisite);
       }
       return fetchPromise;
     });
   },
 
   fetchRequisites(id) {
-    return client.get(this.getUrlFunction('requisites')(id)).then(response => {
+    return client.get(this.getUrlFunction('requisites')(id)).then((response) => {
       return ContentNodePrerequisite.setData(response.data).then(() => {
         return response.data;
       });
@@ -1439,7 +1440,7 @@ export const ContentNode = new TreeResource({
    * @returns {{ size: Number, stale: Boolean, changes: [{key: string}]}}
    */
   getResourceSize(id) {
-    return client.get(this.getUrlFunction('size')(id)).then(response => response.data);
+    return client.get(this.getUrlFunction('size')(id)).then((response) => response.data);
   },
 
   /**
@@ -1455,7 +1456,7 @@ export const ContentNode = new TreeResource({
     }
 
     return this.get(target, false)
-      .then(node => {
+      .then((node) => {
         if (
           position === RELATIVE_TREE_POSITIONS.FIRST_CHILD ||
           position === RELATIVE_TREE_POSITIONS.LAST_CHILD
@@ -1466,7 +1467,7 @@ export const ContentNode = new TreeResource({
         target = node.parent;
         return node ? this.get(target, false) : null;
       })
-      .then(node => {
+      .then((node) => {
         if (!node) {
           throw new RangeError(`Target ${target} does not exist`);
         }
@@ -1496,7 +1497,7 @@ export const ContentNode = new TreeResource({
   resolveTreeInsert({ id, target, position, isCreate, sourceNode = null }, callback) {
     // First, resolve parent so we can determine the sort order, but also to determine
     // the tree so we can temporarily lock it while we determine those values locally
-    return this.resolveParent(target, position).then(parent => {
+    return this.resolveParent(target, position).then((parent) => {
       if (id === parent.id) {
         throw new RangeError(`Cannot set node as child of itself`);
       }
@@ -1519,7 +1520,7 @@ export const ContentNode = new TreeResource({
             // same node (duplicating it), so we will need this node among the siblings to get
             // the right sort order
             if (!isCreate || target !== id) {
-              siblings = siblings.filter(s => s.id !== id);
+              siblings = siblings.filter((s) => s.id !== id);
             }
             if (siblings.length) {
               // If we're creating, we don't need to worry about passing the ID
@@ -1588,10 +1589,10 @@ export const ContentNode = new TreeResource({
         position: RELATIVE_TREE_POSITIONS.LAST_CHILD,
         isCreate: true,
       },
-      data => {
+      (data) => {
         return this.transaction({ mode: 'rw' }, CHANGES_TABLE, () => {
           const obj = { ...prepared, ...data.payload };
-          return this.table.add(obj).then(id => {
+          return this.table.add(obj).then((id) => {
             return this._createChange(id, obj).then(() => id);
           });
         });
@@ -1600,7 +1601,7 @@ export const ContentNode = new TreeResource({
   },
 
   move(id, target, position = RELATIVE_TREE_POSITIONS.FIRST_CHILD) {
-    return this.resolveTreeInsert({ id, target, position, isCreate: false }, data => {
+    return this.resolveTreeInsert({ id, target, position, isCreate: false }, (data) => {
       return this.transaction({ mode: 'rw' }, CHANGES_TABLE, async () => {
         const payload = await this.tableMove(data);
         const change = new MovedChange(data.changeData);
@@ -1653,7 +1654,7 @@ export const ContentNode = new TreeResource({
       /* eslint-enable */
     }
 
-    return this.resolveTreeInsert({ id, target, position, isCreate: true, sourceNode }, data => {
+    return this.resolveTreeInsert({ id, target, position, isCreate: true, sourceNode }, (data) => {
       data.changeData.excluded_descendants = excluded_descendants;
       data.changeData.mods = {};
 
@@ -1676,7 +1677,7 @@ export const ContentNode = new TreeResource({
     // Get the latest change for contentnode `id` that has an error and is of copy type.
     const change = db[CHANGES_TABLE].orderBy('rev')
       .filter(
-        change =>
+        (change) =>
           change.key === id &&
           change.table === this.tableName &&
           (change.errors || change.errors === '') &&
@@ -1685,11 +1686,11 @@ export const ContentNode = new TreeResource({
       .last();
 
     // Figure out the new target and position.
-    return this.table.get(id).then(failedCopyNode => {
+    return this.table.get(id).then((failedCopyNode) => {
       const target = this.table
         .orderBy('lft')
         .filter(
-          node =>
+          (node) =>
             node.id !== id &&
             node.parent === failedCopyNode.parent &&
             node.lft <= failedCopyNode.lft &&
@@ -1748,10 +1749,10 @@ export const ContentNode = new TreeResource({
    * @return {Promise<[{}]>}
    */
   getAncestors(id) {
-    return this.table.get(id).then(node => {
+    return this.table.get(id).then((node) => {
       if (node) {
         if (node.parent) {
-          return this.getAncestors(node.parent).then(nodes => {
+          return this.getAncestors(node.parent).then((nodes) => {
             nodes.push(node);
 
             return nodes;
@@ -1805,10 +1806,10 @@ export const ContentNode = new TreeResource({
    */
   getByNodeIdChannelId(nodeId, channelId) {
     const values = [nodeId, channelId];
-    return this.table.get({ '[node_id+channel_id]': values }).then(node => {
+    return this.table.get({ '[node_id+channel_id]': values }).then((node) => {
       if (!node) {
         return this.fetchCollection({ '[node_id+channel_id]__in': [values] }).then(
-          nodes => nodes[0]
+          (nodes) => nodes[0]
         );
       }
       return node;
@@ -1831,7 +1832,7 @@ export const ContentNode = new TreeResource({
       copy_success_flag = await this.table
         .where('id')
         .equals(id)
-        .filter(node => node[COPYING_STATUS] === COPYING_STATUS_VALUES.SUCCESS)
+        .filter((node) => node[COPYING_STATUS] === COPYING_STATUS_VALUES.SUCCESS)
         .count();
 
       if (copy_success_flag === 1) {
@@ -1843,7 +1844,7 @@ export const ContentNode = new TreeResource({
 
       change_error_flag = await db[CHANGES_TABLE].where('[table+key]')
         .equals([this.tableName, id])
-        .filter(change => {
+        .filter((change) => {
           if (
             (change['errors'] || change['errors'] === '') &&
             change['type'] === CHANGE_TYPES.COPIED
@@ -1912,19 +1913,19 @@ export const ContentNode = new TreeResource({
       return [node];
     }
     const descendants = await Promise.all(
-      children.map(child => {
+      children.map((child) => {
         if (child.kind === ContentKindsNames.TOPIC) {
           return this.getLoadedDescendants(child.id);
         }
         return child;
       })
     );
-    return [node].concat(flatMap(descendants, d => d));
+    return [node].concat(flatMap(descendants, (d) => d));
   },
   async applyChangesToLoadedDescendants(id, changes) {
     const descendants = await this.getLoadedDescendants(id);
     return Promise.all(
-      descendants.map(descendant => {
+      descendants.map((descendant) => {
         return this.table.update(descendant.id, {
           ...changes,
           ...getMergedMapFields(descendant, changes),
@@ -2055,7 +2056,7 @@ export const ChannelUser = new APIResource({
     return ViewerM2M.delete([user, channel]);
   },
   fetchCollection(params) {
-    return client.get(this.collectionUrl(), { params }).then(response => {
+    return client.get(this.collectionUrl(), { params }).then((response) => {
       const now = Date.now();
       const itemData = response.data;
       const userData = [];
@@ -2110,15 +2111,15 @@ export const ChannelUser = new APIResource({
           // Do a synchronous refresh instead of background refresh here.
           return this.fetchCollection(params);
         }
-        const editorSet = new Set(editors.map(editor => editor.user));
-        const viewerSet = new Set(viewers.map(viewer => viewer.user));
+        const editorSet = new Set(editors.map((editor) => editor.user));
+        const viewerSet = new Set(viewers.map((viewer) => viewer.user));
         // Directly query indexeddb here, to avoid triggering
         // an additional request if the user data is stale but the M2M table data is not.
         return User.table
           .where('id')
           .anyOf(...editorSet.values(), ...viewerSet.values())
-          .toArray(users => {
-            return users.map(user => {
+          .toArray((users) => {
+            return users.map((user) => {
               const can_edit = editorSet.has(user.id);
               const can_view = viewerSet.has(user.id);
               return {
@@ -2155,7 +2156,7 @@ export const AssessmentItem = new Resource({
   modifyAssessmentItemCount(nodeId, increment) {
     // Update assessment item count
     return this.transaction({ mode: 'rw' }, TABLE_NAMES.CONTENTNODE, () => {
-      return ContentNode.table.get(nodeId).then(node => {
+      return ContentNode.table.get(nodeId).then((node) => {
         if (node) {
           return ContentNode.table.update(node.id, {
             assessment_item_count: Math.max((node.assessment_item_count || 0) + increment, 0),
@@ -2169,7 +2170,7 @@ export const AssessmentItem = new Resource({
   _delete: Resource.prototype.delete,
   delete(id) {
     const nodeId = id[0];
-    return this._delete(id).then(data => {
+    return this._delete(id).then((data) => {
       return this.modifyAssessmentItemCount(nodeId, -1).then(() => {
         return data;
       });
@@ -2178,7 +2179,7 @@ export const AssessmentItem = new Resource({
   // Retain super's add method
   _add: Resource.prototype.add,
   add(obj) {
-    return this._add(obj).then(id => {
+    return this._add(obj).then((id) => {
       return this.modifyAssessmentItemCount(obj.contentnode, 1).then(() => {
         return id;
       });
@@ -2202,7 +2203,7 @@ export const File = new Resource({
         preset,
         duration,
       })
-      .then(response => {
+      .then((response) => {
         if (!response) {
           return Promise.reject(fileErrors.UPLOAD_FAILED);
         }
@@ -2260,7 +2261,7 @@ export const Clipboard = new TreeResource({
       };
 
       return this.transaction({ mode: 'rw' }, CHANGES_TABLE, () => {
-        return this.table.add(data).then(id => {
+        return this.table.add(data).then((id) => {
           return this._createChange(id, data).then(() => data);
         });
       });
@@ -2280,7 +2281,7 @@ export const Task = new IndexedDBResource({
     return this.transaction({ mode: 'rw' }, () => {
       return this.table
         .where(this.idField)
-        .noneOf(tasks.map(t => t[this.idField]))
+        .noneOf(tasks.map((t) => t[this.idField]))
         .delete()
         .then(() => {
           return this.table.bulkPut(tasks);

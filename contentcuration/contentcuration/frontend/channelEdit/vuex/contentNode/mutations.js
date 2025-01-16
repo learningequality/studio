@@ -37,7 +37,7 @@ export function SET_CONTENTNODE_NOT_NEW(state, contentNodeId) {
 }
 
 export function ENABLE_VALIDATION_ON_NODES(state, ids) {
-  ids.forEach(id => {
+  ids.forEach((id) => {
     SET_CONTENTNODE_NOT_NEW(state, id);
   });
 }
@@ -86,7 +86,7 @@ export function CLEAR_INHERITING_NODES(state, ids) {
   if (!state.inheritingNodes) {
     return;
   }
-  const nodes = state.inheritingNodes.filter(n => !ids.includes(n.id));
+  const nodes = state.inheritingNodes.filter((n) => !ids.includes(n.id));
   state.inheritingNodes = nodes.length ? nodes : null;
 }
 

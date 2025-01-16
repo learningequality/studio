@@ -18,7 +18,7 @@ describe('forgotPassword', () => {
     wrapper = makeWrapper();
     wrapper.setMethods({
       sendPasswordResetLink: () => {
-        return new Promise(resolve => {
+        return new Promise((resolve) => {
           sendPasswordResetLink();
           resolve();
         });

@@ -3,6 +3,9 @@ import isEqual from 'lodash/isEqual';
 import transform from 'lodash/transform';
 import uniq from 'lodash/uniq';
 import { mapGetters } from 'vuex';
+import { createTranslator, updateTabTitle } from 'shared/i18n';
+import Languages from 'shared/leUtils/Languages';
+import Licenses from 'shared/leUtils/Licenses';
 import {
   ChannelListTypes,
   fileErrors,
@@ -13,9 +16,6 @@ import {
   ONE_TB,
   filterTypes,
 } from './constants';
-import { createTranslator, updateTabTitle } from 'shared/i18n';
-import Languages from 'shared/leUtils/Languages';
-import Licenses from 'shared/leUtils/Licenses';
 
 const sizeStrings = createTranslator('BytesForHumansStrings', {
   fileSizeInBytes: '{n, number, integer} B',
@@ -35,7 +35,7 @@ const stringMap = {
 
 export default function bytesForHumans(bytes) {
   bytes = bytes || 0;
-  const unit = [ONE_TB, ONE_GB, ONE_MB, ONE_KB].find(x => bytes >= x) || ONE_B;
+  const unit = [ONE_TB, ONE_GB, ONE_MB, ONE_KB].find((x) => bytes >= x) || ONE_B;
   return sizeStrings.$tr(stringMap[unit], { n: Math.round(bytes / unit) });
 }
 
@@ -761,17 +761,19 @@ export const routerMixin = {
   },
 };
 
-export const contentNodeStrings = createTranslator('ContentNodeStrings', { untitled: 'Untitled' });
+export const contentNodeStrings = createTranslator('ContentNodeStrings', {
+  untitled: 'Untitled',
+});
 export const titleMixin = {
   computed: {
     hasTitle() {
-      return node => node && node.title && node.title.trim();
+      return (node) => node && node.title && node.title.trim();
     },
     getTitle() {
-      return node => (this.hasTitle(node) ? node.title : contentNodeStrings.$tr('untitled'));
+      return (node) => (this.hasTitle(node) ? node.title : contentNodeStrings.$tr('untitled'));
     },
     getTitleClass() {
-      return node => (this.hasTitle(node) ? 'notranslate' : '');
+      return (node) => (this.hasTitle(node) ? 'notranslate' : '');
     },
   },
 };
@@ -816,7 +818,7 @@ export function generateSearchMixin(filterMap) {
         {}
       ),
       filterKeys() {
-        return Object.keys(filterMap).filter(k => this.$route.query[k]);
+        return Object.keys(filterMap).filter((k) => this.$route.query[k]);
       },
     },
     methods: {
@@ -846,7 +848,7 @@ export function generateSearchMixin(filterMap) {
                 page: 1, // Make sure we're on page 1 for every new query
               },
             })
-            .catch(error => {
+            .catch((error) => {
               if (error && error.name != 'NavigationDuplicated') {
                 throw error;
               }
@@ -925,7 +927,7 @@ export function generateFormMixin(formFields) {
       // Create getters/setters for all items
       ...transform(
         cleanedMap,
-        function(result, value, key) {
+        function (result, value, key) {
           result[key] = {
             get() {
               return this.form[key] || (value.multiSelect ? [] : '');

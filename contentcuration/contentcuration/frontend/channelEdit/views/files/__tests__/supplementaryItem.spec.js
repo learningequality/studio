@@ -1,13 +1,13 @@
 import { mount } from '@vue/test-utils';
+import Uploader from 'shared/views/files/Uploader';
 import SupplementaryItem from '../supplementaryLists/SupplementaryItem';
 import { factory } from '../../../store';
-import Uploader from 'shared/views/files/Uploader';
 
 function makeWrapper(props = {}) {
   const store = factory();
   return mount(SupplementaryItem, {
     store,
-    attachToDocument: true,
+    attachTo: 'body',
     propsData: {
       fileId: 'test',
       presetID: 'video_subtitle',

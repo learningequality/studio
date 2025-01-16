@@ -1,5 +1,5 @@
-import vuexSessionModule from './index.js';
 import { FeatureFlagKeys } from 'shared/constants';
+import vuexSessionModule from './index.js';
 
 describe('session module feature flag related getters', () => {
   let state;

@@ -8,7 +8,9 @@ export function searchCatalog(context, params) {
   params.published = true;
   let promise;
   if (context.rootGetters.loggedIn) {
-    const bookmarkPromise = context.dispatch('channel/loadBookmarks', null, { root: true });
+    const bookmarkPromise = context.dispatch('channel/loadBookmarks', null, {
+      root: true,
+    });
     promise = Promise.all([Channel.fetchCollection(params), bookmarkPromise]);
   } else {
     promise = Promise.all([Channel.searchCatalog(params), Promise.resolve()]);
@@ -27,11 +29,11 @@ export function searchCatalog(context, params) {
 
     const category = Object.keys(search)
       .sort()
-      .map(key => `${key}=${search[key]}`)
+      .map((key) => `${key}=${search[key]}`)
       .join('&');
     const trackingData = {
       total: pageData.count,
-      matched: pageData.results.map(c => `${c.id} ${c.name}`),
+      matched: pageData.results.map((c) => `${c.id} ${c.name}`),
     };
     Vue.$analytics.trackEvent('Catalog search', {
       eventAction: category,
@@ -45,10 +47,10 @@ export function searchCatalog(context, params) {
 export function loadInvitationList(context) {
   return Invitation.where({
     invited: context.rootGetters.currentUserId,
-  }).then(invitations => {
+  }).then((invitations) => {
     context.commit(
       'SET_INVITATION_LIST',
-      invitations.filter(i => !i.accepted && !i.declined && !i.revoked)
+      invitations.filter((i) => !i.accepted && !i.declined && !i.revoked)
     );
     return invitations;
   });
@@ -60,11 +62,11 @@ export function acceptInvitation(context, invitationId) {
     .then(() => {
       return context
         .dispatch('channel/loadChannel', invitation.channel, { root: true })
-        .then(channel => {
+        .then((channel) => {
           const data = { ...channel, bookmark: false, added: true };
 
           // Make sure correct access is given
-          Object.values(SharingPermissions).forEach(permission => {
+          Object.values(SharingPermissions).forEach((permission) => {
             data[permission] = false;
           });
           data[invitation.share_mode] = true;

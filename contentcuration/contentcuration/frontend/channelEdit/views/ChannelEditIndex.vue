@@ -12,9 +12,9 @@
 <script>
 
   import { mapActions } from 'vuex';
-  import ChannelEditAppError from './ChannelEditAppError';
   import PolicyModals from 'shared/views/policies/PolicyModals';
   import GlobalSnackbar from 'shared/views/GlobalSnackbar';
+  import ChannelEditAppError from './ChannelEditAppError';
 
   export default {
     name: 'ChannelEditIndex',

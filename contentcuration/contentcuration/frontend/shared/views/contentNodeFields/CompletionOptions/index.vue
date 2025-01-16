@@ -105,9 +105,6 @@
 <script>
 
   import get from 'lodash/get';
-  import ActivityDuration from './ActivityDuration';
-  import MasteryCriteriaGoal from './MasteryCriteriaGoal';
-  import MasteryCriteriaMofNFields from './MasteryCriteriaMofNFields';
   import {
     nonUniqueValue,
     ContentModalities,
@@ -129,6 +126,9 @@
   } from 'shared/utils/validation';
   import { metadataStrings, metadataTranslationMixin } from 'shared/mixins';
   import ExpandableSelect from 'shared/views/form/ExpandableSelect';
+  import MasteryCriteriaMofNFields from './MasteryCriteriaMofNFields';
+  import MasteryCriteriaGoal from './MasteryCriteriaGoal';
+  import ActivityDuration from './ActivityDuration';
 
   const DEFAULT_SHORT_ACTIVITY = 600;
   const DEFAULT_LONG_ACTIVITY = 3000;
@@ -204,9 +204,7 @@
         return !this.showDuration && this.expanded && this.audioVideoResource;
       },
       showReferenceHint() {
-        /*
-            The reference hint should be shown only when "Reference" is selected
-          */
+        // The reference hint should be shown only when "Reference" is selected
         return this.model === CompletionCriteriaModels.REFERENCE;
       },
       completionDropdown: {

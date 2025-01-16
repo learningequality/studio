@@ -66,4 +66,4 @@ if __name__ == "__main__":
         c.save()
 
     # start the server in prod mode
-    subprocess.call(["yarn", "run", "devserver"])
+    subprocess.call(["pnpm", "run", "devserver"])

@@ -10,7 +10,7 @@ function _getBooleanVal(value) {
 }
 
 export function generateFilterMixin(filterMap) {
-  const paramKeys = Object.values(filterMap).flatMap(f => Object.keys(f.params));
+  const paramKeys = Object.values(filterMap).flatMap((f) => Object.keys(f.params));
   return {
     data() {
       return {
@@ -37,8 +37,8 @@ export function generateFilterMixin(filterMap) {
         get() {
           // Return filter where all param conditions are met
           const filterKeys = intersection(Object.keys(this.$route.query), paramKeys);
-          const key = findKey(filterMap, value => {
-            return filterKeys.every(field => {
+          const key = findKey(filterMap, (value) => {
+            return filterKeys.every((field) => {
               return value.params[field] === _getBooleanVal(this.$route.query[field]);
             });
           });
@@ -90,13 +90,13 @@ export function generateFilterMixin(filterMap) {
           },
           {}
         );
-        this.$router.push({ query }).catch(error => {
+        this.$router.push({ query }).catch((error) => {
           if (error && error.name != 'NavigationDuplicated') {
             throw error;
           }
         });
       },
-      clearSearch: function() {
+      clearSearch: function () {
         this.keywords = '';
       },
       updateKeywords() {
@@ -148,7 +148,7 @@ export const tableMixin = {
             ...this.$route,
             query: newQuery,
           })
-          .catch(error => {
+          .catch((error) => {
             if (error && error.name != 'NavigationDuplicated') {
               throw error;
             }

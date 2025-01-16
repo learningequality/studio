@@ -52,13 +52,13 @@
 <script>
 
   import { mapActions, mapState } from 'vuex';
-  import ChannelInfoCard from './ChannelInfoCard';
   import { ChannelListTypes } from 'shared/constants';
   import LanguageDropdown from 'shared/views/LanguageDropdown';
   import Pagination from 'shared/views/Pagination';
   import LoadingText from 'shared/views/LoadingText';
   import { constantsTranslationMixin } from 'shared/mixins';
   import DropdownWrapper from 'shared/views/form/DropdownWrapper';
+  import ChannelInfoCard from './ChannelInfoCard';
 
   export default {
     name: 'ChannelList',

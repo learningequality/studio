@@ -109,8 +109,6 @@
 
   import Vue from 'vue';
   import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
-  import ChannelThumbnail from './ChannelThumbnail';
-  import ChannelSharing from './ChannelSharing';
   import { NEW_OBJECT, ErrorTypes } from 'shared/constants';
   import MessageDialog from 'shared/views/MessageDialog';
   import LanguageDropdown from 'shared/views/LanguageDropdown';
@@ -120,6 +118,8 @@
   import Banner from 'shared/views/Banner';
   import Tabs from 'shared/views/Tabs';
   import ToolBar from 'shared/views/ToolBar';
+  import ChannelSharing from './ChannelSharing';
+  import ChannelThumbnail from './ChannelThumbnail';
 
   export default {
     name: 'ChannelModal',

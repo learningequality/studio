@@ -1,11 +1,11 @@
-import contentNode from '../index';
-import currentChannel from '../../currentChannel/index';
-import assessmentItem from '../../assessmentItem/index';
 import file from 'shared/vuex/file';
 import { ContentNode } from 'shared/data/resources';
 import storeFactory from 'shared/vuex/baseStore';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 import { mockChannelScope, resetMockChannelScope } from 'shared/utils/testing';
+import assessmentItem from '../../assessmentItem/index';
+import currentChannel from '../../currentChannel/index';
+import contentNode from '../index';
 
 jest.mock('../../currentChannel/index');
 
@@ -27,7 +27,7 @@ describe('contentNode actions', () => {
   };
   beforeEach(async () => {
     await mockChannelScope('test-123');
-    return ContentNode._add(contentNodeDatum).then(newId => {
+    return ContentNode._add(contentNodeDatum).then((newId) => {
       id = newId;
       contentNodeDatum.id = newId;
       jest
@@ -39,7 +39,11 @@ describe('contentNode actions', () => {
       jest
         .spyOn(ContentNode, 'getAncestors')
         .mockImplementation(() => Promise.resolve([contentNodeDatum]));
-      return ContentNode._add({ title: 'notatest', parent: newId, lft: 2 }).then(() => {
+      return ContentNode._add({
+        title: 'notatest',
+        parent: newId,
+        lft: 2,
+      }).then(() => {
         store = storeFactory({
           modules: {
             assessmentItem,
@@ -107,8 +111,11 @@ describe('contentNode actions', () => {
   describe('createContentNode action for a new contentNode', () => {
     it('should add a new contentNode with an id', () => {
       return store
-        .dispatch('contentNode/createContentNode', { parent: id, kind: 'topic' })
-        .then(newId => {
+        .dispatch('contentNode/createContentNode', {
+          parent: id,
+          kind: 'topic',
+        })
+        .then((newId) => {
           expect(store.getters['contentNode/getContentNode'](newId)).not.toBeUndefined();
         });
     });
@@ -225,7 +232,7 @@ describe('contentNode actions', () => {
       expect(updatedContentNode.language).toEqual(newLang);
 
       const descendants = [topicContentNode, nonTopicContentNode];
-      descendants.forEach(descendant => {
+      descendants.forEach((descendant) => {
         const updatedDescendant = store.getters['contentNode/getContentNode'](descendant);
         expect(updatedDescendant.language).toEqual(newLang);
       });

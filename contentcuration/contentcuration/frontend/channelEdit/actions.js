@@ -10,7 +10,7 @@ export function addViewModeOverride(context, { id, viewMode }) {
 
 export function removeViewModeOverride(context, { id }) {
   const overrides = context.state.viewModeOverrides.slice();
-  const index = overrides.reverse().findIndex(override => override.id === id);
+  const index = overrides.reverse().findIndex((override) => override.id === id);
 
   if (index === -1) {
     return;

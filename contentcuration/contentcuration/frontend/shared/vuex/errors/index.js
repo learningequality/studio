@@ -9,7 +9,7 @@ function normalizeAxiosError(error) {
   const { config, status } = error.response;
 
   if (status === 404) {
-    const channelUrlMatch = channelResourceUrls.find(url => config.url.includes(url));
+    const channelUrlMatch = channelResourceUrls.find((url) => config.url.includes(url));
     if (channelUrlMatch) {
       errorType = ErrorTypes.CHANNEL_NOT_FOUND;
     } else {

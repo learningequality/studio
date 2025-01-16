@@ -1,11 +1,11 @@
 import { mount } from '@vue/test-utils';
 import cloneDeep from 'lodash/cloneDeep';
 
-import ProgressModal from '../ProgressModal';
-import { STORE_CONFIG } from '../../../store';
 import storeFactory from 'shared/vuex/baseStore';
 import { resetJestGlobal } from 'shared/utils/testing';
 import { TASK_ID } from 'shared/data/constants';
+import { STORE_CONFIG } from '../../../store';
+import ProgressModal from '../ProgressModal';
 
 const CHANNEL_ID = 'test';
 

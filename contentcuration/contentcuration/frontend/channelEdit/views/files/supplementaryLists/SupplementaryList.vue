@@ -70,9 +70,9 @@
   import { mapActions, mapGetters } from 'vuex';
   import sortBy from 'lodash/sortBy';
   import uniqBy from 'lodash/uniqBy';
-  import SupplementaryItem from './SupplementaryItem';
   import LanguageDropdown from 'shared/views/LanguageDropdown';
   import Uploader from 'shared/views/files/Uploader';
+  import SupplementaryItem from './SupplementaryItem';
 
   export default {
     name: 'SupplementaryList',

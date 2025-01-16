@@ -1,8 +1,8 @@
 import { mount } from '@vue/test-utils';
-import MasteryCriteriaGoal from '../CompletionOptions/MasteryCriteriaGoal';
 import TestForm from 'shared/views/__tests__/TestForm';
 import { constantStrings } from 'shared/mixins';
 import MasteryModels from 'shared/leUtils/MasteryModels';
+import MasteryCriteriaGoal from '../CompletionOptions/MasteryCriteriaGoal';
 
 document.body.setAttribute('data-app', true); // Vuetify prints a warning without this
 
@@ -28,7 +28,7 @@ describe('masteryCriteriaGoal', () => {
   });
 
   describe('on load', () => {
-    MasteryModels.forEach(model => {
+    MasteryModels.forEach((model) => {
       it(`${model} mastery option should be an option to select`, () => {
         expect(wrapper.find('.v-list').text()).toContain(constantStrings.$tr(model));
       });
@@ -78,20 +78,10 @@ describe('masteryCriteriaGoal', () => {
     it('should flag empty required mastery models', () => {
       wrapper.setProps({ value: null });
       formWrapper.vm.validate();
-      expect(
-        wrapper
-          .find({ ref: 'masteryModel' })
-          .find('.error--text')
-          .exists()
-      ).toBe(true);
+      expect(wrapper.find({ ref: 'masteryModel' }).find('.error--text').exists()).toBe(true);
       wrapper.setProps({ required: false });
       formWrapper.vm.validate();
-      expect(
-        wrapper
-          .find({ ref: 'masteryModel' })
-          .find('.error--text')
-          .exists()
-      ).toBe(false);
+      expect(wrapper.find({ ref: 'masteryModel' }).find('.error--text').exists()).toBe(false);
     });
   });
 });

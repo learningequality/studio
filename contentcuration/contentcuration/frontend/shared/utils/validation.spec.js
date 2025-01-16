@@ -1,5 +1,7 @@
 import each from 'jest-each';
 import CompletionCriteriaModels from 'kolibri-constants/CompletionCriteria';
+import { MasteryModelsNames } from 'shared/leUtils/MasteryModels';
+import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 import { AssessmentItemTypes, ValidationErrors } from '../constants';
 import {
   translateValidator,
@@ -20,8 +22,6 @@ import {
   getAssessmentItemErrors,
   getNodeLearningActivityErrors,
 } from './validation';
-import { MasteryModelsNames } from 'shared/leUtils/MasteryModels';
-import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
 function generateMasteryExtraFields(mastery) {
   return {
@@ -212,7 +212,9 @@ describe('channelEdit utils', () => {
 
     it('returns no errors when a mastery model specified', () => {
       const node = {
-        extra_fields: generateMasteryExtraFields({ mastery_model: MasteryModelsNames.DO_ALL }),
+        extra_fields: generateMasteryExtraFields({
+          mastery_model: MasteryModelsNames.DO_ALL,
+        }),
       };
       expect(getNodeMasteryModelErrors(node)).toEqual([]);
     });
@@ -221,7 +223,12 @@ describe('channelEdit utils', () => {
   describe('getNodeMasteryModelMErrors', () => {
     it(`returns no errors for empty m value
       when no mastery model is specified`, () => {
-      const node = { extra_fields: generateMasteryExtraFields({ mastery_model: null, m: null }) };
+      const node = {
+        extra_fields: generateMasteryExtraFields({
+          mastery_model: null,
+          m: null,
+        }),
+      };
       expect(getNodeMasteryModelMErrors(node)).toEqual([]);
     });
 
@@ -240,7 +247,9 @@ describe('channelEdit utils', () => {
       let node;
       beforeEach(() => {
         node = {
-          extra_fields: generateMasteryExtraFields({ mastery_model: MasteryModelsNames.M_OF_N }),
+          extra_fields: generateMasteryExtraFields({
+            mastery_model: MasteryModelsNames.M_OF_N,
+          }),
         };
       });
 
@@ -293,7 +302,12 @@ describe('channelEdit utils', () => {
   describe('getNodeMasteryModelNErrors', () => {
     it(`returns no errors for empty n value
       when no mastery model is specified`, () => {
-      const node = { extra_fields: generateMasteryExtraFields({ mastery_model: null, n: null }) };
+      const node = {
+        extra_fields: generateMasteryExtraFields({
+          mastery_model: null,
+          n: null,
+        }),
+      };
       expect(getNodeMasteryModelNErrors(node)).toEqual([]);
     });
 
@@ -312,7 +326,9 @@ describe('channelEdit utils', () => {
       let node;
       beforeEach(() => {
         node = {
-          extra_fields: generateMasteryExtraFields({ mastery_model: MasteryModelsNames.M_OF_N }),
+          extra_fields: generateMasteryExtraFields({
+            mastery_model: MasteryModelsNames.M_OF_N,
+          }),
         };
       });
 
@@ -408,7 +424,11 @@ describe('channelEdit utils', () => {
             question: 'Question',
             type: AssessmentItemTypes.SINGLE_SELECTION,
             answers: [
-              { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+              {
+                answer: 'Mayonnaise (I mean you can, but...)',
+                correct: true,
+                order: 1,
+              },
               { answer: 'Peanut butter', correct: false, order: 2 },
             ],
           },
@@ -494,9 +514,9 @@ describe('channelEdit utils', () => {
 
     each(
       Object.values(ContentKindsNames).filter(
-        kind => ![ContentKindsNames.TOPIC, ContentKindsNames.EXERCISE].includes(kind)
+        (kind) => ![ContentKindsNames.TOPIC, ContentKindsNames.EXERCISE].includes(kind)
       )
-    ).describe('for nodes other than topic or exercise', kind => {
+    ).describe('for nodes other than topic or exercise', (kind) => {
       let nodeDetails, files;
       beforeEach(() => {
         nodeDetails = {

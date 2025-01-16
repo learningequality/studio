@@ -50,10 +50,10 @@
 <script>
 
   import { mapMutations, mapState } from 'vuex';
-  import ImportFromChannelsModal from './ImportFromChannelsModal';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import { titleMixin, routerMixin } from 'shared/mixins';
+  import ImportFromChannelsModal from './ImportFromChannelsModal';
 
   export default {
     name: 'ReviewSelectionsPage',

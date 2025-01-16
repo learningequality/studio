@@ -109,9 +109,6 @@
   import isEqual from 'lodash/isEqual';
   import sortBy from 'lodash/sortBy';
   import union from 'lodash/union';
-  import { RouteNames } from '../../constants';
-  import CatalogFilters from './CatalogFilters';
-  import ChannelItem from './ChannelItem';
   import LoadingText from 'shared/views/LoadingText';
   import Pagination from 'shared/views/Pagination';
   import BottomBar from 'shared/views/BottomBar';
@@ -120,6 +117,9 @@
   import OfflineText from 'shared/views/OfflineText';
   import { constantsTranslationMixin } from 'shared/mixins';
   import { channelExportMixin } from 'shared/views/channel/mixins';
+  import { RouteNames } from '../../constants';
+  import ChannelItem from './ChannelItem';
+  import CatalogFilters from './CatalogFilters';
 
   export default {
     name: 'CatalogList',
@@ -140,18 +140,18 @@
         loadError: false,
         selecting: false,
 
-        /*
-            jayoshih: router guard makes it difficult to track
-              differences between previous query params and new
-              query params, so just track it manually
-          */
+        /**
+         * jayoshih: router guard makes it difficult to track
+         * differences between previous query params and new
+         * query params, so just track it manually
+         */
         previousQuery: this.$route.query,
 
-        /*
-            jayoshih: using excluded logic here instead of selected
-              to account for selections across pages (some channels
-              not in current page)
-          */
+        /**
+         * jayoshih: using excluded logic here instead of selected
+         * to account for selections across pages (some channels
+         * not in current page)
+         */
         excluded: [],
       };
     },

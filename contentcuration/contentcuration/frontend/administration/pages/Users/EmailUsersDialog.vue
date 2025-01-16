@@ -118,8 +118,8 @@
 <script>
 
   import { mapActions, mapGetters } from 'vuex';
-  import ConfirmationDialog from '../../components/ConfirmationDialog';
   import ExpandableList from 'shared/views/ExpandableList';
+  import ConfirmationDialog from '../../components/ConfirmationDialog';
 
   export default {
     name: 'EmailUsersDialog',

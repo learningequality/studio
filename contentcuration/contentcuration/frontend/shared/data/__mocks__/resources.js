@@ -1,6 +1,6 @@
 import * as resources from '../resources';
 
-Object.values(resources).forEach(resource => {
+Object.values(resources).forEach((resource) => {
   if (resource.fetchCollection) {
     resource.fetchCollection = () => Promise.resolve([]);
   }

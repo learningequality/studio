@@ -23,7 +23,7 @@ export default {
       if (state.options.hideCallback) {
         state.options.hideCallback();
       }
-      return new Promise(hideCallback => {
+      return new Promise((hideCallback) => {
         commit('CORE_CREATE_SNACKBAR', {
           text,
           duration,
@@ -37,7 +37,7 @@ export default {
       if (state.options.hideCallback) {
         state.options.hideCallback();
       }
-      return new Promise(hideCallback => {
+      return new Promise((hideCallback) => {
         commit('CORE_CREATE_SNACKBAR', { text, hideCallback });
       });
     },

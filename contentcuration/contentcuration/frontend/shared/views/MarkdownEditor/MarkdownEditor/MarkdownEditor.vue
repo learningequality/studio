@@ -60,6 +60,7 @@
 
   import Editor from '@toast-ui/editor';
 
+  import ClickOutside from 'shared/directives/click-outside';
   import imageUpload, { paramsToImageFieldHTML } from '../plugins/image-upload';
   import formulas from '../plugins/formulas';
   import minimize from '../plugins/minimize';
@@ -72,7 +73,6 @@
   import { clearNodeFormat, generateCustomConverter, getExtensionMenuPosition } from './utils';
   import FormulasMenu from './FormulasMenu/FormulasMenu';
   import ImagesMenu from './ImagesMenu/ImagesMenu';
-  import ClickOutside from 'shared/directives/click-outside';
 
   registerMarkdownFormulaField();
   registerMarkdownImageField();

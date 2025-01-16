@@ -3,19 +3,19 @@ import sortBy from 'lodash/sortBy';
 import uniq from 'lodash/uniq';
 import uniqBy from 'lodash/uniqBy';
 
-import messages from '../../translator';
-import { parseNode } from './utils';
 import { getNodeDetailsErrors, getNodeFilesErrors } from 'shared/utils/validation';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 import { NEW_OBJECT } from 'shared/constants';
 import { COPYING_STATUS, COPYING_STATUS_VALUES } from 'shared/data/constants';
+import messages from '../../translator';
+import { parseNode } from './utils';
 
 function sorted(nodes) {
   return sortBy(nodes, ['lft']);
 }
 
 export function getContentNode(state, getters) {
-  return function(contentNodeId) {
+  return function (contentNodeId) {
     const node = state.contentNodesMap[contentNodeId];
     if (node) {
       const children =
@@ -28,7 +28,7 @@ export function getContentNode(state, getters) {
 }
 
 export function getContentNodeDescendants(state, getters) {
-  return function(contentNodeId) {
+  return function (contentNodeId) {
     // First find the immediate children of the target tree node
     return getters.getContentNodeChildren(contentNodeId).reduce((descendants, contentNode) => {
       // Then recursively call ourselves again for each child, so for this structure:
@@ -45,7 +45,7 @@ export function getContentNodeDescendants(state, getters) {
 }
 
 export function hasChildren(state, getters) {
-  return function(id) {
+  return function (id) {
     return getters.getContentNode(id).total_count > 0;
   };
 }
@@ -56,7 +56,7 @@ export function hasChildren(state, getters) {
  * to keep interactivity disabled. Hence, the FAILED condition is also there.
  */
 export function isNodeInCopyingState(state, getters) {
-  return function(contentNodeId) {
+  return function (contentNodeId) {
     const contentNode = getters.getContentNode(contentNodeId);
     return (
       contentNode[COPYING_STATUS] === COPYING_STATUS_VALUES.COPYING ||
@@ -69,26 +69,26 @@ export function isNodeInCopyingState(state, getters) {
  * Whether the contentnode's copying has errored or not?
  */
 export function hasNodeCopyingErrored(state, getters) {
-  return function(contentNodeId) {
+  return function (contentNodeId) {
     const contentNode = getters.getContentNode(contentNodeId);
     return contentNode[COPYING_STATUS] === COPYING_STATUS_VALUES.FAILED;
   };
 }
 
 export function countContentNodeDescendants(state, getters) {
-  return function(contentNodeId) {
+  return function (contentNodeId) {
     return getters.getContentNodeDescendants(contentNodeId).length;
   };
 }
 
 export function getContentNodes(state, getters) {
-  return function(contentNodeIds) {
-    return sorted(contentNodeIds.map(id => getters.getContentNode(id)).filter(node => node));
+  return function (contentNodeIds) {
+    return sorted(contentNodeIds.map((id) => getters.getContentNode(id)).filter((node) => node));
   };
 }
 
 export function getTopicAndResourceCounts(state, getters) {
-  return function(contentNodeIds) {
+  return function (contentNodeIds) {
     return getters.getContentNodes(contentNodeIds).reduce(
       (totals, node) => {
         const isTopic = node.kind === ContentKindsNames.TOPIC;
@@ -106,25 +106,25 @@ export function getTopicAndResourceCounts(state, getters) {
 }
 
 export function getSelectedTopicAndResourceCountText(state, getters) {
-  return function(contentNodeIds) {
+  return function (contentNodeIds) {
     const { topicCount, resourceCount } = getters.getTopicAndResourceCounts(contentNodeIds);
     return messages.$tr('selectionCount', { topicCount, resourceCount });
   };
 }
 
 export function getContentNodeChildren(state, getters) {
-  return function(contentNodeId) {
+  return function (contentNodeId) {
     return sorted(
       Object.values(state.contentNodesMap)
-        .filter(contentNode => contentNode.parent === contentNodeId)
-        .map(node => getters.getContentNode(node.id))
+        .filter((contentNode) => contentNode.parent === contentNodeId)
+        .map((node) => getters.getContentNode(node.id))
         .filter(Boolean)
     );
   };
 }
 
 export function getContentNodeAncestors(state, getters) {
-  return function(id, includeSelf = false) {
+  return function (id, includeSelf = false) {
     const node = getters.getContentNode(id);
 
     if (!node || !node.parent) {
@@ -137,7 +137,7 @@ export function getContentNodeAncestors(state, getters) {
 }
 
 export function getContentNodeIsValid(state, getters, rootState, rootGetters) {
-  return function(contentNodeId) {
+  return function (contentNodeId) {
     const contentNode = state.contentNodesMap[contentNodeId];
     return (
       contentNode &&
@@ -157,21 +157,21 @@ export function getContentNodeIsValid(state, getters, rootState, rootGetters) {
 }
 
 export function getContentNodeDetailsAreValid(state) {
-  return function(contentNodeId) {
+  return function (contentNodeId) {
     const contentNode = state.contentNodesMap[contentNodeId];
     return contentNode && (contentNode[NEW_OBJECT] || !getNodeDetailsErrors(contentNode).length);
   };
 }
 
 export function getNodeDetailsErrorsList(state) {
-  return function(contentNodeId) {
+  return function (contentNodeId) {
     const contentNode = state.contentNodesMap[contentNodeId];
     return getNodeDetailsErrors(contentNode);
   };
 }
 
 export function getContentNodeFilesAreValid(state, getters, rootState, rootGetters) {
-  return function(contentNodeId) {
+  return function (contentNodeId) {
     const contentNode = state.contentNodesMap[contentNodeId];
     if (
       contentNode.kind === ContentKindsNames.TOPIC ||
@@ -225,13 +225,13 @@ function getStepDetail(state, getters, contentNodeId) {
 
 /* eslint-disable no-unused-vars */
 function getImmediatePreviousStepsIds(state) {
-  return function(contentNodeId) {
+  return function (contentNodeId) {
     return Object.keys(state.previousStepsMap[contentNodeId] || {});
   };
 }
 
 function getImmediateNextStepsIds(state) {
-  return function(contentNodeId) {
+  return function (contentNodeId) {
     return Object.keys(state.nextStepsMap[contentNodeId] || {});
   };
 }
@@ -242,8 +242,8 @@ function getImmediateNextStepsIds(state) {
  * { id, title, kind, parentTitle }
  */
 export function getImmediatePreviousStepsList(state, getters) {
-  return function(contentNodeId) {
-    return getImmediatePreviousStepsIds(state)(contentNodeId).map(stepId =>
+  return function (contentNodeId) {
+    return getImmediatePreviousStepsIds(state)(contentNodeId).map((stepId) =>
       getStepDetail(state, getters, stepId)
     );
   };
@@ -255,8 +255,8 @@ export function getImmediatePreviousStepsList(state, getters) {
  * { id, title, kind, parentTitle }
  */
 export function getImmediateNextStepsList(state, getters) {
-  return function(contentNodeId) {
-    return getImmediateNextStepsIds(state)(contentNodeId).map(stepId =>
+  return function (contentNodeId) {
+    return getImmediateNextStepsIds(state)(contentNodeId).map((stepId) =>
       getStepDetail(state, getters, stepId)
     );
   };
@@ -267,7 +267,7 @@ export function getImmediateNextStepsList(state, getters) {
  * of a node.
  */
 export function getImmediateRelatedResourcesCount(state) {
-  return function(contentNodeId) {
+  return function (contentNodeId) {
     const previousStepsCount = getImmediatePreviousStepsIds(state)(contentNodeId).length;
     const nextStepsCount = getImmediateNextStepsIds(state)(contentNodeId).length;
 
@@ -310,7 +310,7 @@ function findNodeInMap(map, rootNodeId, nodeId) {
  * Does a node belongs to next steps of a root node?
  */
 export function isNextStep(state) {
-  return function({ rootNodeId, nodeId }) {
+  return function ({ rootNodeId, nodeId }) {
     return findNodeInMap(state.nextStepsMap, rootNodeId, nodeId);
   };
 }
@@ -319,15 +319,15 @@ export function isNextStep(state) {
  * Does a node belongs to previous steps of a root node?
  */
 export function isPreviousStep(state) {
-  return function({ rootNodeId, nodeId }) {
+  return function ({ rootNodeId, nodeId }) {
     return findNodeInMap(state.previousStepsMap, rootNodeId, nodeId);
   };
 }
 
 function uniqListByKey(state, key) {
   return uniqBy(Object.values(state.contentNodesMap), key)
-    .map(node => node[key])
-    .filter(node => node);
+    .map((node) => node[key])
+    .filter((node) => node);
 }
 
 export function authors(state) {
@@ -348,26 +348,26 @@ export function copyrightHolders(state) {
 
 export function tags(state) {
   return uniq(
-    flatMap(Object.values(state.contentNodesMap), node => Object.keys(node['tags'] || {})).filter(
-      t => t
+    flatMap(Object.values(state.contentNodesMap), (node) => Object.keys(node['tags'] || {})).filter(
+      (t) => t
     )
   ).sort();
 }
 
 export function nodeExpanded(state) {
-  return function(id) {
+  return function (id) {
     return Boolean(state.expandedNodes[id]);
   };
 }
 
 export function getQuickEditModalOpen(state) {
-  return function() {
+  return function () {
     return state.quickEditModalOpen;
   };
 }
 
 export function getContentNodesCount(state) {
-  return function(nodeId) {
+  return function (nodeId) {
     return state.contentNodesCountMap[nodeId];
   };
 }

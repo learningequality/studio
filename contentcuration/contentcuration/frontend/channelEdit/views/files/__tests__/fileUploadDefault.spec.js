@@ -1,7 +1,7 @@
 import { mount } from '@vue/test-utils';
-import FileUploadDefault from '../FileUploadDefault';
 import FileDropzone from 'shared/views/files/FileDropzone';
 import storeFactory from 'shared/vuex/baseStore';
+import FileUploadDefault from '../FileUploadDefault';
 
 function makeWrapper() {
   return mount(FileUploadDefault, {

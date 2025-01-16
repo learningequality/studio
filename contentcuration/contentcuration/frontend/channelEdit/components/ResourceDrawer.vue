@@ -38,8 +38,8 @@
 </template>
 <script>
 
-  import ResourcePanel from './ResourcePanel';
   import ResizableNavigationDrawer from 'shared/views/ResizableNavigationDrawer';
+  import ResourcePanel from './ResourcePanel';
 
   export default {
     name: 'ResourceDrawer',

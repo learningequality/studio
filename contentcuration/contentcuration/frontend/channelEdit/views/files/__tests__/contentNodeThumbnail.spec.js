@@ -1,7 +1,7 @@
 import { mount } from '@vue/test-utils';
+import IconButton from 'shared/views/IconButton';
 import ContentNodeThumbnail from '../thumbnails/ContentNodeThumbnail';
 import { factory } from '../../../store';
-import IconButton from 'shared/views/IconButton';
 
 const testThumbnail = {
   id: 'test-image',
@@ -103,7 +103,10 @@ describe('thumbnail', () => {
       expect(wrapper.find('[data-test="progress"]').exists()).toBe(true);
     });
     it('hasError should be true if file upload fails', () => {
-      wrapper.vm.$store.commit('file/ADD_FILE', { id: fileUploadId, error: 'ERROR' });
+      wrapper.vm.$store.commit('file/ADD_FILE', {
+        id: fileUploadId,
+        error: 'ERROR',
+      });
       expect(wrapper.vm.hasError).toBe(true);
     });
     it('cancelling upload should revert to the original state', () => {
@@ -144,7 +147,9 @@ describe('thumbnail', () => {
         },
       });
       wrapper.find('[data-test="save"]').trigger('click');
-      expect(wrapper.emitted('encoded')[0][0]).toEqual({ base64: 'new encoding' });
+      expect(wrapper.emitted('encoded')[0][0]).toEqual({
+        base64: 'new encoding',
+      });
       expect(wrapper.vm.cropping).toBe(false);
     });
     it('cancel should keep the original image by default', () => {
@@ -187,10 +192,7 @@ describe('thumbnail', () => {
   describe('remove workflow', () => {
     it('clicking remove button should emit an input event with a null value', () => {
       wrapper.setProps({ value: testThumbnail });
-      wrapper
-        .find('[data-test="remove"]')
-        .find(IconButton)
-        .vm.$emit('click');
+      wrapper.find('[data-test="remove"]').find(IconButton).vm.$emit('click');
       expect(wrapper.emitted('input')[0][0]).toBe(null);
     });
   });

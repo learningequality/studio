@@ -17,7 +17,7 @@ export function SET_PAGE(
   state.page.page_number = page_number;
   state.page.count = count;
   state.page.total_pages = total_pages;
-  state.page.results = map(results, r => r.id);
+  state.page.results = map(results, (r) => r.id);
 }
 
 export function ADD_CHANNEL_DETAILS(state, { id, details }) {
@@ -30,7 +30,7 @@ export function ADD_CHANNEL_DETAILS(state, { id, details }) {
 /* INVITATION MUTATIONS */
 export function SET_INVITATION_LIST(state, invitations) {
   const invitationsMap = {};
-  invitations.forEach(invitation => {
+  invitations.forEach((invitation) => {
     // If accepted or declined keys are defined, use their
     // value, otherwise set them explicitly to `false`.
     let { accepted, declined, revoked } = invitation;

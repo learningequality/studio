@@ -1,6 +1,6 @@
-import { actions, getters } from './index';
 import { policies, policyDates } from 'shared/constants';
 import client from 'shared/client';
+import { actions, getters } from './index';
 
 jest.mock('shared/client');
 
@@ -103,8 +103,9 @@ describe('policies store', () => {
         const hour = ('0' + (now.getUTCHours() + 1)).slice(-2);
         const minute = ('0' + (now.getUTCMinutes() + 1)).slice(-2);
 
-        const expectedKey = `${testKey}_${date.getUTCFullYear()}_${date.getUTCMonth() +
-          1}_${date.getUTCDate()}`;
+        const expectedKey = `${testKey}_${date.getUTCFullYear()}_${
+          date.getUTCMonth() + 1
+        }_${date.getUTCDate()}`;
         const expectedValue = `${day}/${month}/${year} ${hour}:${minute}`;
 
         expect(getters.getPolicyAcceptedData()(policies.PRIVACY)).toEqual({
@@ -124,7 +125,9 @@ describe('policies store', () => {
       });
 
       it('should call policy_update endpoint', async () => {
-        const policyAcceptedData = { privacy_policy_2020_12_10: '12/05/2021 09:56' };
+        const policyAcceptedData = {
+          privacy_policy_2020_12_10: '12/05/2021 09:56',
+        };
         await actions.acceptPolicy({ getters, dispatch }, policyAcceptedData);
 
         expect(client.post.mock.calls.length).toBe(1);
@@ -135,7 +138,9 @@ describe('policies store', () => {
       });
 
       it('should call setPolicies with the new data and closePolicy', async () => {
-        const policyAcceptedData = { privacy_policy_2020_12_10: '12/05/2021 09:56' };
+        const policyAcceptedData = {
+          privacy_policy_2020_12_10: '12/05/2021 09:56',
+        };
         await actions.acceptPolicy({ getters, dispatch }, policyAcceptedData);
 
         expect(dispatch.mock.calls.length).toBe(1);

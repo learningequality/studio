@@ -4,7 +4,7 @@
  * @param store
  */
 export default function PoliciesPlugin(store) {
-  store.subscribeAction(action => {
+  store.subscribeAction((action) => {
     // An update to the policies, update `window.user` with new data
     if (action.type === 'policies/setPolicies') {
       window.user = window.user || {};

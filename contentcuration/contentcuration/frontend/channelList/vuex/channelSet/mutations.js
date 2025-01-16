@@ -5,7 +5,7 @@ import { applyMods } from 'shared/data/applyRemoteChanges';
 /* CHANNEL SET MUTATIONS */
 export function SET_CHANNELSET_LIST(state, channelSets) {
   const channelSetsMap = {};
-  channelSets.forEach(channelSet => {
+  channelSets.forEach((channelSet) => {
     channelSetsMap[channelSet.id] = channelSet;
   });
   state.channelSetsMap = channelSetsMap;
@@ -34,7 +34,9 @@ export function UPDATE_CHANNELSET(state, { id, ...payload }) {
 
 export function UPDATE_CHANNELSET_FROM_INDEXEDDB(state, { id, ...mods }) {
   if (id && state.channelSetsMap[id]) {
-    Vue.set(state.channelSetsMap, id, { ...applyMods(state.channelSetsMap[id], mods) });
+    Vue.set(state.channelSetsMap, id, {
+      ...applyMods(state.channelSetsMap[id], mods),
+    });
   }
 }
 

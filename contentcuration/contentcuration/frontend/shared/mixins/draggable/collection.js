@@ -1,6 +1,6 @@
 import { mapActions, mapGetters, mapState } from 'vuex';
-import containerMixin from './container';
 import { DraggableTypes } from 'shared/mixins/draggable/constants';
+import containerMixin from './container';
 
 export default {
   mixins: [containerMixin],

@@ -88,11 +88,16 @@
       /**
        * Strings for the help tooltips
        */
-      altText: `Visual elements in the resource have descriptions that can be accessed by screen readers for the benefit of blind learners`,
-      audioDescription: `The resource contains a second narration audio track that provides additional information for the benefit of blind users and those with low vision`,
-      highContrast: `The resource text and visual elements are displayed with high contrast for the benefit of users with low vision`,
-      signLanguage: `Synchronized sign language intepretation is available for audio and video content`,
-      taggedPdf: `The document contains PDF tags that can be accessed by screen readers for the benefit of blind learners`,
+      altText:
+        'Visual elements in the resource have descriptions that can be accessed by screen readers for the benefit of blind learners',
+      audioDescription:
+        'The resource contains a second narration audio track that provides additional information for the benefit of blind users and those with low vision',
+      highContrast:
+        'The resource text and visual elements are displayed with high contrast for the benefit of users with low vision',
+      signLanguage:
+        'Synchronized sign language interpretation is available for audio and video content',
+      taggedPdf:
+        'The document contains PDF tags that can be accessed by screen readers for the benefit of blind learners',
       /* eslint-enable kolibri/vue-no-unused-translations */
     },
   };

@@ -1,10 +1,10 @@
 import VueRouter from 'vue-router';
 
-import startApp from '../app';
 import { CURRENT_USER } from 'shared/data/constants';
 import { Session } from 'shared/data/resources';
 import { resetDB } from 'shared/data';
 import storeFactory from 'shared/vuex/baseStore';
+import startApp from '../app';
 
 jest.mock('shared/data');
 

@@ -1,8 +1,8 @@
 // Helper functions and Utils for creating an API request to
 // Feedback mechanism endpoints
 import { v4 as uuidv4 } from 'uuid';
-import client from './client';
 import urls from 'shared/urls';
+import client from './client';
 
 export const FeedbackTypeOptions = {
   imported: 'imported',
