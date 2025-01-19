@@ -122,7 +122,7 @@
             name: RouteNames.NEW_CHANNEL,
             query: { last: this.$route.name },
           });
-          });
+        });
       },
       loadData(listType) {
         this.loading = true;
