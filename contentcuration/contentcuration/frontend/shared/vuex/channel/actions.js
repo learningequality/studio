@@ -121,8 +121,6 @@ export function commitChannel(
       }
     }
 
-   
-
     return Channel.createModel(channelData).then(() => {
       context.commit('UPDATE_CHANNEL', { id, ...channelData });
       context.commit('SET_CHANNEL_NOT_NEW', id);
@@ -155,20 +153,17 @@ export function commitChannel(
 
     return Channel.createModel(newChannelData).then(response => {
       console.log('API Response:', response);
-    
+
       const createdChannel = response.data || response; // Adjust based on API structure
       if (!createdChannel || !createdChannel.id) {
         throw new Error('Created channel data is invalid. Missing id.');
       }
-    
+
       context.commit('ADD_CHANNEL', createdChannel);
       return createdChannel;
     });
-    
-    
   }
 }
-
 
 export function updateChannel(
   context,
