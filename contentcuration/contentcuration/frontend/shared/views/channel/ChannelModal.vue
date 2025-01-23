@@ -109,7 +109,6 @@
 
   import Vue from 'vue';
   import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
-  //import { RouteNames } from '../../../channelList/constants';
   import ChannelThumbnail from './ChannelThumbnail';
   import ChannelSharing from './ChannelSharing';
   import { ErrorTypes} from 'shared/constants';
