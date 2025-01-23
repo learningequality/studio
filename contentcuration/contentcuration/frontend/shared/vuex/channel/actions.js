@@ -129,7 +129,7 @@ export function commitChannel(
 
   const channelData = buildChannelData();
 
-  if ( context.state.channelsMap[id]) {
+  if (context.state.channelsMap[id]) {
     if (!id) {
       throw new ReferenceError('id must be defined to update a channel');
     }
@@ -139,7 +139,7 @@ export function commitChannel(
     });
   } else {
     return Channel.createModel(channelData).then(response => {
-      const createdChannel = response;;
+      const createdChannel = response;
       if (!createdChannel || !createdChannel.id) {
         throw new Error('Created channel data is invalid. Missing id.');
       }
@@ -149,7 +149,6 @@ export function commitChannel(
     });
   }
 }
-
 
 export function updateChannel(
   context,
