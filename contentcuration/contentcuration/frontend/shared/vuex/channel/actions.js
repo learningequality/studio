@@ -82,13 +82,13 @@ export function commitChannel(
     thumbnail_url = NOVALUE,
   } = {}
 ) {
-  // Update existing channel
-  if (id && context.state.channelsMap[id]) {
-    if (!id) {
-      throw new ReferenceError('id must be defined to update a channel');
+  const buildChannelData = () => {
+    const channelData = {};
+
+    if (id) {
+      channelData.id = id;
     }
 
-    const channelData = { id };
     if (name !== NOVALUE) {
       channelData.name = name;
     }
@@ -113,48 +113,33 @@ export function commitChannel(
       channelData.thumbnail_url = thumbnail_url;
     }
     if (contentDefaults !== NOVALUE) {
-      const originalData = context.state.channelsMap[id].content_defaults;
-      // Pick out only content defaults that have been changed.
-      contentDefaults = pickBy(contentDefaults, (value, key) => value !== originalData[key]);
-      if (Object.keys(contentDefaults).length) {
+      if (id) {
+        const originalData = context.state.channelsMap[id].content_defaults;
+        contentDefaults = pickBy(contentDefaults, (value, key) => value !== originalData[key]);
+        if (Object.keys(contentDefaults).length) {
+          channelData.content_defaults = contentDefaults;
+        }
+      } else {
         channelData.content_defaults = contentDefaults;
       }
     }
 
+    return channelData;
+  };
+
+  const channelData = buildChannelData();
+
+  if ( context.state.channelsMap[id]) {
+    if (!id) {
+      throw new ReferenceError('id must be defined to update a channel');
+    }
     return Channel.createModel(channelData).then(() => {
       context.commit('UPDATE_CHANNEL', { id, ...channelData });
       context.commit('SET_CHANNEL_NOT_NEW', id);
     });
   } else {
-    // Create a new channel
-    const newChannelData = {};
-
-    if (name !== NOVALUE) {
-      newChannelData.name = name;
-    }
-    if (description !== NOVALUE) {
-      newChannelData.description = description;
-    }
-    if (language !== NOVALUE) {
-      newChannelData.language = language;
-    }
-    if (thumbnail !== NOVALUE) {
-      newChannelData.thumbnail = thumbnail;
-    }
-    if (thumbnail_url !== NOVALUE) {
-      newChannelData.thumbnail_url = thumbnail_url;
-    }
-    if (contentDefaults !== NOVALUE) {
-      newChannelData.content_defaults = contentDefaults;
-    }
-
-    // Log the data before sending it to create a new channel
-    console.log('Creating new channel with data:', newChannelData);
-
-    return Channel.createModel(newChannelData).then(response => {
-      console.log('API Response:', response);
-
-      const createdChannel = response.data || response; // Adjust based on API structure
+    return Channel.createModel(channelData).then(response => {
+      const createdChannel = response;;
       if (!createdChannel || !createdChannel.id) {
         throw new Error('Created channel data is invalid. Missing id.');
       }
@@ -164,6 +149,7 @@ export function commitChannel(
     });
   }
 }
+
 
 export function updateChannel(
   context,

@@ -109,9 +109,10 @@
 
   import Vue from 'vue';
   import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
+  //import { RouteNames } from '../../../channelList/constants';
   import ChannelThumbnail from './ChannelThumbnail';
   import ChannelSharing from './ChannelSharing';
-  import { ErrorTypes } from 'shared/constants';
+  import { ErrorTypes} from 'shared/constants';
   import MessageDialog from 'shared/views/MessageDialog';
   import LanguageDropdown from 'shared/views/LanguageDropdown';
   import ContentDefaults from 'shared/views/form/ContentDefaults';
@@ -120,6 +121,7 @@
   import Banner from 'shared/views/Banner';
   import Tabs from 'shared/views/Tabs';
   import ToolBar from 'shared/views/ToolBar';
+ 
 
   export default {
     name: 'ChannelModal',
@@ -269,37 +271,25 @@
     // will never be rendered.
     beforeMount() {
       const channelId = this.$route.params.channelId;
-
-      // If there's no channelId (i.e., it's a new channel), skip verifications
       if (!channelId) {
-        //this.isNew = true;
-        this.header = 'New Channel'; // Default header for a new channel
-        return; // Skip channel verification
+        return;
       }
-
-      // Existing channel, verify it
       return this.verifyChannel(channelId)
         .then(() => {
-          this.header = this.channel.name;
+          this.header = this.channel.name; // Get channel name when user enters modal
           this.updateTitleForPage();
           if (!this.isNew) {
             this.$refs.detailsform.validate();
           }
         })
-        .catch(() => {
-          // Handle errors if needed
-        });
+        .catch(() => {});
     },
     mounted() {
       if (this.isNew) {
-        // For a new channel, set a default header
-        this.header = 'New Channel';
+        this.header = this.$tr('creatingHeader');
       } else {
-        // For existing channels, use the channel's name
         this.header = this.channel.name;
       }
-
-      // Update the page title regardless of whether it's new or existing
       this.updateTitleForPage();
     },
 
@@ -313,32 +303,24 @@
           this.changed = false;
 
           const commitOrUpdateChannel = this.isNew
-            ? this.commitChannel({ ...this.diffTracker }) // For new channel creation
-            : this.updateChannel({ id: this.channelId, ...this.diffTracker }); // For existing channel update
+            ? this.commitChannel({ ...this.diffTracker }) 
+            : this.updateChannel({ id: this.channelId, ...this.diffTracker }); 
 
           return commitOrUpdateChannel
             .then(channel => {
               if (this.isNew) {
                 const newChannelId = channel.id;
-                window.location = window.Urls.channel(newChannelId);
-                this.$store.dispatch('showSnackbarSimple', this.$tr('channelCreated'));
+               
+                window.location.replace(window.Urls.channel(newChannelId));
+
               } else {
                 this.$store.dispatch('showSnackbarSimple', this.$tr('changesSaved'));
                 this.header = this.channel.name;
               }
-            })
-            .catch(error => {
-              console.error(
-                this.isNew ? 'Error creating channel:' : 'Error updating channel:',
-                error
-              );
-              this.$store.dispatch('errors/handleGenericError', { error });
-            })
-            .finally(() => {
               this.isDisable = false;
-            });
+            })
+            
         } else if (this.$refs.detailsform.$el.scrollIntoView) {
-          // Scroll to the form if validation fails
           this.$refs.detailsform.$el.scrollIntoView({ behavior: 'smooth' });
           this.isDisable = false;
         }
@@ -448,7 +430,6 @@
       unsavedChangesText: 'You will lose any unsaved changes. Are you sure you want to exit?',
       keepEditingButton: 'Keep editing',
       closeButton: 'Exit without saving',
-      channelCreated: 'Channel successfully created',
     },
   };
 
