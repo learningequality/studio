@@ -64,6 +64,7 @@
 
 <script>
 
+  import get from 'lodash/get';
   import uniqBy from 'lodash/uniqBy';
   import sortBy from 'lodash/sortBy';
   import { mapGetters } from 'vuex';
@@ -99,6 +100,10 @@
     },
     computed: {
       ...mapGetters('file', ['getContentNodeFileById', 'getContentNodeFiles']),
+      ...mapGetters('contentNode', ['getContentNode']),
+      contentNode() {
+        return this.getContentNode(this.nodeId);
+      },
       file() {
         return this.getContentNodeFileById(this.nodeId, this.fileId);
       },
@@ -129,7 +134,8 @@
         return this.file.file_format === 'epub';
       },
       htmlPath() {
-        return `/zipcontent/${this.file.checksum}.${this.file.file_format}`;
+        const entry = get(this.contentNode, ['extra_fields', 'options', 'entry'], 'index.html');
+        return `/zipcontent/${this.file.checksum}.${this.file.file_format}/${entry}`;
       },
       src() {
         return this.file && this.file.url;
