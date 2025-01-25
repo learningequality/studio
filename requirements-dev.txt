@@ -173,14 +173,11 @@ pytest==7.4.4
     #   -r requirements-dev.in
     #   pytest-django
     #   pytest-logging
-    #   pytest-pythonpath
     #   pytest-timeout
     #   pytest-watch
 pytest-django==4.9.0
     # via -r requirements-dev.in
 pytest-logging==2015.11.4
-    # via -r requirements-dev.in
-pytest-pythonpath==0.7.3
     # via -r requirements-dev.in
 pytest-timeout==1.4.2
     # via -r requirements-dev.in
