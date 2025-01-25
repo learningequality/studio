@@ -205,7 +205,7 @@ pyyaml==6.0
     #   pre-commit
 pyzmq==23.1.0
     # via locust
-requests==2.32.2
+requests==2.32.3
     # via
     #   -c requirements.txt
     #   coreapi
