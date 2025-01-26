@@ -1,0 +1,68 @@
+@import '../../mathquill/mathquill.css';
+
+.uploading {
+  cursor: progress;
+}
+
+.formulas-menu,
+.images-menu {
+  z-index: 2;
+}
+
+.wrapper {
+  border: 4px solid transparent;
+
+  &.highlight {
+    border-color: var(--v-primary-base);
+  }
+}
+
+.mq-math-mode {
+  padding: 4px 4px 2px 0;
+  margin: 4px;
+  font-family: Symbola;
+  color: #333333;
+  cursor: pointer;
+}
+
+.editing .mq-math-mode {
+  background-color: #f9f2f4;
+  border-radius: 4px;
+  box-shadow: 
+    0 2px 1px -1px rgba(0, 0, 0, 0.2), 
+    0 1px 1px 0 rgba(0, 0, 0, 0.14),
+    0 1px 3px 0 rgba(0, 0, 0, 0.12);
+}
+
+// TODO (when updating to new frontend files structure)
+// find better location for following styles that
+// are supposed to be common to all editable fields
+.mq-editable-field {
+  border: 0;
+
+  .mq-to,
+  .mq-from,
+  .mq-sup,
+  .mq-sup-inner,
+  .mq-sub,
+  .mq-numerator,
+  .mq-denominator {
+    padding-right: 1px;
+    padding-left: 1px;
+    border: 1px solid gray;
+  }
+
+  .mq-int .mq-sup {
+    border: 0;
+  }
+}
+
+.math-field * {
+  line-height: 1 !important;
+  white-space: nowrap !important;
+}
+
+:host {
+  margin-right: -0.2em !important;
+  margin-left: -0.2em !important;
+}

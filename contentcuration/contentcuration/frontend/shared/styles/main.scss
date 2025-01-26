@@ -1,0 +1,100 @@
+@import '~material-icons/iconfont/material-icons.css';
+
+@font-face {
+  font-family: 'Noto Sans';
+  src: url('../fonts/NotoSans-Regular.ttf') format('truetype');
+}
+
+html {
+  overflow-y: auto !important;
+
+  .title,
+  .headline,
+  .display,
+  .display-1,
+  .subheading,
+  .v-toolbar__title,
+  .v-chip__content {
+    font-family: 'Noto Sans' !important;
+  }
+
+  .v-btn--flat,
+  .v-tabs__item {
+    font-weight: bold;
+    cursor: pointer;
+  }
+
+  .text-truncate {
+    line-height: unset !important;
+  }
+}
+
+body {
+  font-family: 'Noto Sans', Verdana, sans-serif;
+  letter-spacing: 0.03em;
+  // stylelint-disable-next-line custom-property-pattern
+  background-color: var(--v-backgroundColor-base);
+
+  * {
+    font-family: 'Noto Sans';
+  }
+
+  .v-card {
+    outline-color: #8dc5b6;
+  }
+
+  .v-tooltip__content {
+    max-width: 200px;
+    text-align: center;
+  }
+
+  .button:focus-visible,
+  .v-btn:focus-visible {
+    outline: 2px solid var(--v-secondary-base) !important;
+  }
+}
+
+// RTL-related rules
+
+/*! rtl:begin:ignore */
+[dir='rtl'] {
+  .v-label {
+    transform-origin: top right;
+  }
+
+  .grid-item div {
+    text-align: right;
+  }
+
+  .rtl-flip {
+    transform: scaleX(-1);
+  }
+
+  .v-speed-dial--left {
+    right: auto;
+    left: 16px;
+  }
+
+  .v-input {
+    text-align: right;
+  }
+}
+/*! rtl:end:ignore */
+
+// Overriding default Vuetify theme
+.theme--light {
+  .v-sheet,
+  .v-card,
+  .v-list__tile,
+  &.application {
+    color: var(--v-text-base);
+  }
+
+  // Removes a weird default Vuetify style
+  // applying background color to links
+  // Due to name collisions with tokens
+  .text,
+  .link {
+    background-color: transparent !important;
+  }
+}

@@ -1,0 +1,80 @@
+@import '~vuetify/dist/vuetify.min.css';
+// stylelint-disable scss/at-import-partial-extension
+
+$resizer-size: 16px;
+
+img {
+  max-width: 100%;
+  height: auto;
+  /* stylelint-disable-next-line custom-property-pattern */
+  border: 1px solid var(--v-greyBorder-base);
+  object-fit: cover;
+}
+
+.dragging {
+  img {
+    pointer-events: none;
+    user-select: none;
+  }
+}
+
+.resizing {
+  user-select: none;
+
+  * {
+    user-select: none;
+  }
+
+  img {
+    border: 2px solid var(--v-grey-darken4);
+  }
+}
+
+.resizer {
+  position: absolute;
+  right: calc(-#{$resizer-size} / 2);
+  bottom: 2px;
+  width: $resizer-size;
+  height: $resizer-size;
+  cursor: se-resize;
+  user-select: none;
+  background-color: white;
+  border: 2px solid var(--v-grey-darken4);
+  border-radius: $resizer-size;
+}
+
+.edit-options {
+  top: 4px;
+  right: 4px;
+  user-select: none;
+  /* stylelint-disable-next-line custom-property-pattern */
+  background-color: var(--v-backgroundColor--base);
+  opacity: 0;
+
+  // TUI will automatically move cursor inside button,
+  // so don't allow clicking on elements inside the button
+  ::v-deep * {
+    pointer-events: none;
+  }
+
+  ::v-deep .v-btn__content {
+    height: min-content;
+  }
+
+  i {
+    font-style: normal;
+  }
+}
+
+.image-field {
+  position: relative;
+  display: inline-block;
+  width: max-content;
+  max-width: 95%;
+  vertical-align: middle;
+
+  &:hover:not(.resizing) .edit-options,
+  .edit-options:focus {
+    opacity: 1;
+  }
+}
