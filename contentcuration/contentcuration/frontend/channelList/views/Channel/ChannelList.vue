@@ -114,15 +114,13 @@
       this.loadData(this.listType);
     },
     methods: {
-      ...mapActions('channel', ['loadChannelList', 'createChannel']),
+      ...mapActions('channel', ['loadChannelList']),
       newChannel() {
         this.$analytics.trackClick('channel_list', 'Create channel');
-        this.createChannel().then(() => {
           this.$router.push({
             name: RouteNames.NEW_CHANNEL,
             query: { last: this.$route.name },
           });
-        });
       },
       loadData(listType) {
         this.loading = true;
