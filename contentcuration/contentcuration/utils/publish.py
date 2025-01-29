@@ -489,10 +489,11 @@ def create_perseus_exercise(ccnode, kolibrinode, exercise_data, user_id=None):
     logging.debug("Creating Perseus Exercise for Node {}".format(ccnode.title))
     filename = "{0}.{ext}".format(ccnode.title, ext=file_formats.PERSEUS)
     temppath = None
+    resized_images_map = {}
     try:
         with tempfile.NamedTemporaryFile(suffix="zip", delete=False) as tempf:
             temppath = tempf.name
-            create_perseus_zip(ccnode, exercise_data, tempf)
+            create_perseus_zip(ccnode, exercise_data, tempf, resized_images_map)
             file_size = tempf.tell()
             tempf.flush()
 
@@ -569,7 +570,7 @@ def process_assessment_metadata(ccnode, kolibrinode):
     return exercise_data
 
 
-def create_perseus_zip(ccnode, exercise_data, write_to_path):
+def create_perseus_zip(ccnode, exercise_data, write_to_path, resized_images_map):
     with zipfile.ZipFile(write_to_path, "w") as zf:
         try:
             exercise_context = {
@@ -598,7 +599,7 @@ def create_perseus_zip(ccnode, exercise_data, write_to_path):
                                 content = content.split(exercises.GRAPHIE_DELIMITER.encode('ascii'))
                                 write_to_zipfile(svg_name, content[0], zf)
                                 write_to_zipfile(json_name, content[1], zf)
-                    write_assessment_item(question, zf, channel_id)
+                    write_assessment_item(question, zf, channel_id, resized_images_map)
                 except Exception as e:
                     logging.error("Error while publishing channel `{}`: {}".format(channel_id, str(e)))
                     logging.error(traceback.format_exc())
@@ -623,7 +624,7 @@ def write_to_zipfile(filename, content, zf):
     zf.writestr(info, content)
 
 
-def write_assessment_item(assessment_item, zf, channel_id):  # noqa C901
+def write_assessment_item(assessment_item, zf, channel_id, resized_images_map):  # noqa C901
     if assessment_item.type == exercises.MULTIPLE_SELECTION:
         template = 'perseus/multiple_selection.json'
     elif assessment_item.type == exercises.SINGLE_SELECTION or assessment_item.type == 'true_false':
@@ -636,7 +637,7 @@ def write_assessment_item(assessment_item, zf, channel_id):  # noqa C901
         raise TypeError("Unrecognized question type on item {}".format(assessment_item.assessment_id))
 
     question = process_formulas(assessment_item.question)
-    question, question_images = process_image_strings(question, zf, channel_id)
+    question, question_images = process_image_strings(question, zf, channel_id, resized_images_map)
 
     answer_data = json.loads(assessment_item.answers)
     for answer in answer_data:
@@ -646,14 +647,14 @@ def write_assessment_item(assessment_item, zf, channel_id):  # noqa C901
             answer['answer'] = answer['answer'].replace(exercises.CONTENT_STORAGE_PLACEHOLDER, PERSEUS_IMG_DIR)
             answer['answer'] = process_formulas(answer['answer'])
             # In case perseus doesn't support =wxh syntax, use below code
-            answer['answer'], answer_images = process_image_strings(answer['answer'], zf, channel_id)
+            answer['answer'], answer_images = process_image_strings(answer['answer'], zf, channel_id, resized_images_map)
             answer.update({'images': answer_images})
 
     answer_data = [a for a in answer_data if a['answer'] or a['answer'] == 0]  # Filter out empty answers, but not 0
     hint_data = json.loads(assessment_item.hints)
     for hint in hint_data:
         hint['hint'] = process_formulas(hint['hint'])
-        hint['hint'], hint_images = process_image_strings(hint['hint'], zf, channel_id)
+        hint['hint'], hint_images = process_image_strings(hint['hint'], zf, channel_id, resized_images_map)
         hint.update({'images': hint_images})
 
     answers_sorted = answer_data
@@ -705,7 +706,7 @@ def get_resized_image_checksum(image_content):
     return hashlib.md5(image_content).hexdigest()
 
 
-def process_image_strings(content, zf, channel_id):
+def process_image_strings(content, zf, channel_id, resized_images_map):
     image_list = []
     content = content.replace(exercises.CONTENT_STORAGE_PLACEHOLDER, PERSEUS_IMG_DIR)
     for match in re.finditer(r'!\[(?:[^\]]*)]\(([^\)]+)\)', content):
@@ -729,40 +730,60 @@ def process_image_strings(content, zf, channel_id):
                     raise
 
             original_image_name = "images/{}.{}".format(checksum, ext[1:])
-            with storage.open(ccmodels.generate_object_storage_name(checksum, filename), 'rb') as imgfile:
-                original_content = imgfile.read()
+            original_img_ref = match.group(1)
+            if img_match.group(2) and img_match.group(3):
+                width, height = float(img_match.group(2)), float(img_match.group(3))
+                resized_key = (original_image_name, width, height)
 
-                if img_match.group(2) and img_match.group(3):
-                    width, height = float(img_match.group(2)), float(img_match.group(3))
-                    resized_content = resize_image(original_content, width, height)
-
-                    if resized_content:
-                        resized_checksum = get_resized_image_checksum(resized_content)
-                        new_image_name = "images/{}.{}".format(resized_checksum, ext[1:])
-
-                        if new_image_name not in zf.namelist():
-                            write_to_zipfile(new_image_name, resized_content, zf)
-
-                        original_img_ref = match.group(1)
-                        new_img_ref = original_img_ref.replace(filename, f"{resized_checksum}{ext}")
-                        new_img_match = re.search(r'(.+/images/[^\s]+)(?:\s=([0-9\.]+)x([0-9\.]+))*', new_img_ref)
-
-                        # Add resizing data
-                        image_data = {'name': new_img_match.group(1)}
-                        image_data.update({'width': width})
-                        image_data.update({'height': height})
-                        image_list.append(image_data)
-                        content = content.replace(original_img_ref, new_img_match.group(1))
-                    else:
-                        logging.warning(f"Failed to resize image {filename}. Using original image.")
-                        if original_image_name not in zf.namelist():
-                            write_to_zipfile(original_image_name, original_content, zf)
-                        content = content.replace(match.group(1), img_match.group(1))
+                # Check if this resized version already exists
+                new_img_ref = None
+                if resized_key in resized_images_map:
+                    new_img_ref = resized_images_map[resized_key]
                 else:
-                    if original_image_name not in zf.namelist():
-                        write_to_zipfile(original_image_name, original_content, zf)
-                    content = content.replace(match.group(1), img_match.group(1))
+                    # Check for similar resized images with the same original name
+                    similar_image = None
+                    for key, resized_image in resized_images_map.items():
+                        if (
+                            key[0] == original_image_name
+                            and abs(key[1] - width) / width < 0.01
+                            and abs(key[2] - height) / height < 0.01
+                        ):
+                            similar_image = resized_image
+                            break
 
+                    if similar_image:
+                        new_img_ref = similar_image
+                    else:
+                        with storage.open(ccmodels.generate_object_storage_name(checksum, filename), 'rb') as imgfile:
+                            original_content = imgfile.read()
+
+                        resized_content = resize_image(original_content, width, height)
+
+                        if resized_content:
+                            resized_checksum = get_resized_image_checksum(resized_content)
+                            new_image_name = "images/{}.{}".format(resized_checksum, ext[1:])
+
+                            if new_image_name not in zf.namelist():
+                                write_to_zipfile(new_image_name, resized_content, zf)
+                            new_img_ref = original_img_ref.replace(filename, f"{resized_checksum}{ext}")
+                            resized_images_map[resized_key] = new_img_ref
+                        else:
+                            logging.warning(f"Failed to resize image {filename}. Using original image.")
+                            new_img_ref = img_match.group(1)
+
+                new_img_match = re.search(r'(.+/images/[^\s]+)(?:\s=([0-9\.]+)x([0-9\.]+))*', new_img_ref)
+                image_data = {'name': new_img_match.group(1)}
+                image_data.update({'width': width})
+                image_data.update({'height': height})
+                image_list.append(image_data)
+                content = content.replace(original_img_ref, new_img_match.group(1))
+
+            else:
+                if original_image_name not in zf.namelist():
+                    with storage.open(ccmodels.generate_object_storage_name(checksum, filename), 'rb') as imgfile:
+                        original_content = imgfile.read()
+                    write_to_zipfile(original_image_name, original_content, zf)
+                content = content.replace(match.group(1), img_match.group(1))
     return content, image_list
 
 
