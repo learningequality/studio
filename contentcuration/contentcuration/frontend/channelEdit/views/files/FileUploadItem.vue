@@ -11,17 +11,9 @@
         <VListTile
           data-test="list-item"
           v-bind="$attrs"
+          tabindex="0"
           @click.stop="file ? $emit('selected') : openFileDialog()"
         >
-          <VListTileAction>
-            <VRadio
-              v-if="file"
-              :key="file.id"
-              :value="file.id"
-              color="primary"
-              data-test="radio"
-            />
-          </VListTileAction>
           <VListTileContent>
             <VListTileSubTitle>{{ translateConstant(preset.id) }}</VListTileSubTitle>
             <VListTileTitle>
@@ -53,28 +45,20 @@
           </VListTileContent>
           <VSpacer />
           <VListTileAction v-if="fileDisplay">
-            <Menu>
-              <template #activator="{ on }">
-                <IconButton
-                  size="small"
-                  icon="optionsHorizontal"
-                  :text="$tr('optionsButton')"
-                  v-on="on"
+            <KIconButton
+              size="small"
+              icon="optionsHorizontal"
+              appearance="flat-button"
+              data-test="show-file-options"
+            >
+              <template #menu>
+                <KDropdownMenu
+                  :options="previewFilesOptions"
+                  data-test="file-options"
+                  @select="(option) => option.onClick(openFileDialog)"
                 />
               </template>
-              <VList
-                class="preview-files-options"
-              >
-                <VListTile
-                  v-for="(option, index) in previewFilesOptions"
-                  :key="index"
-                  :data-test="option.dataTest"
-                  @click="option.onClick(openFileDialog)"
-                >
-                  <VListTileTitle>{{ option.label }}</VListTileTitle>
-                </VListTile>
-              </VList>
-            </Menu>
+            </KIconButton>
           </VListTileAction>
         </VListTile>
       </FileDropzone>
@@ -88,7 +72,6 @@
   import { mapGetters } from 'vuex';
   import FileStatusText from 'shared/views/files/FileStatusText';
   import Uploader from 'shared/views/files/Uploader';
-  import IconButton from 'shared/views/IconButton';
   import { constantsTranslationMixin, fileSizeMixin, fileStatusMixin } from 'shared/mixins';
   import FileDropzone from 'shared/views/files/FileDropzone';
 
@@ -98,7 +81,6 @@
       Uploader,
       FileDropzone,
       FileStatusText,
-      IconButton,
     },
     mixins: [constantsTranslationMixin, fileSizeMixin, fileStatusMixin],
     props: {
@@ -167,27 +149,27 @@
         const options = [
           {
             label: this.$tr('replaceFileMenuOptionLabel'),
+            value: 'REPLACE_FILE',
             onClick: replaceFile => {
               replaceFile();
             },
             condition: this.fileDisplay,
-            dataTest: 'replace-file',
           },
           {
             label: this.$tr('downloadMenuOptionLabel'),
+            value: 'DOWNLOAD_FILE',
             onClick: () => {
               this.downloadFile();
             },
             condition: this.fileDisplay,
-            dataTest: 'download-file',
           },
           {
             label: this.$tr('removeMenuOptionLabel'),
+            value: 'REMOVE_FILE',
             onClick: () => {
               this.removeFile();
             },
             condition: this.fileDisplay && this.allowFileRemove,
-            dataTest: 'remove-file',
           },
         ];
 
@@ -219,7 +201,6 @@
     },
     $trs: {
       uploadButton: 'Select file',
-      optionsButton: 'Options',
       replaceFileMenuOptionLabel: 'Replace file',
       downloadMenuOptionLabel: 'Download',
       removeMenuOptionLabel: 'Remove',
@@ -251,12 +232,9 @@
     min-height: 64px;
     padding: 5px 16px;
 
-    .remove-icon {
-      display: none;
-    }
-
-    &:hover .remove-icon {
-      display: block;
+    &:focus {
+      background-color: var(--v-grey-lighten5);
+      outline-color: var(--v-primary-base);
     }
 
     .v-list__tile__title {
@@ -265,14 +243,6 @@
 
     .v-list__tile__sub-title {
       white-space: unset;
-    }
-  }
-
-  .preview-files-options {
-    /deep/ .v-list__tile {
-      height: max-content !important;
-      min-height: 48px;
-      padding: 5px 16px;
     }
   }
 

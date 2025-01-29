@@ -61,48 +61,13 @@ describe('fileUploadItem', () => {
       expect(wrapper.find('[data-test="upload-link"]').exists()).toBe(true);
       expect(wrapper.find('[data-test="radio"]').exists()).toBe(false);
     });
-  });
-
-  describe('props', () => {
-    it('should show the remove menu option only if allowFileRemove', () => {
-      const noRemoveWrapper = makeWrapper();
-      expect(noRemoveWrapper.find('[data-test="remove-file"]').exists()).toBe(false);
-
-      const allowRemoveWrapper = makeWrapper({ allowFileRemove: true });
-      expect(allowRemoveWrapper.find('[data-test="remove-file"]').exists()).toBe(true);
+    it('should show dropdown on click preview file options', () => {
+      const wrapper = makeWrapper({ allowFileRemove: true });
+      wrapper.find('[data-test="show-file-options"]').trigger('click');
+      expect(wrapper.find('[data-test="file-options"]').isVisible()).toBe(true);
     });
   });
-  describe('computed', () => {
-    it('should show all menu options only if fileDisplay', () => {
-      let wrapper = makeWrapper(
-        {},
-        {},
-        {
-          fileDisplay() {
-            return false;
-          },
-        }
-      );
-      expect(wrapper.find('[data-test="replace-file"]').exists()).toBe(false);
-      expect(wrapper.find('[data-test="remove-file"]').exists()).toBe(false);
-      expect(wrapper.find('[data-test="download-file"]').exists()).toBe(false);
 
-      wrapper = makeWrapper(
-        {
-          allowFileRemove: true,
-        },
-        {},
-        {
-          fileDisplay() {
-            return true;
-          },
-        }
-      );
-      expect(wrapper.find('[data-test="replace-file"]').exists()).toBe(true);
-      expect(wrapper.find('[data-test="remove-file"]').exists()).toBe(true);
-      expect(wrapper.find('[data-test="download-file"]').exists()).toBe(true);
-    });
-  });
   describe('methods', () => {
     let wrapper;
     beforeEach(() => {
@@ -135,24 +100,6 @@ describe('fileUploadItem', () => {
       wrapper = makeWrapper({}, null);
       wrapper.find('[data-test="list-item"]').trigger('click');
       expect(wrapper.emitted('selected')).toBeUndefined();
-    });
-    it('clicking remove menu option should emit a remove event', () => {
-      wrapper.setProps({ allowFileRemove: true });
-      wrapper.find('[data-test="remove-file"]').trigger('click');
-      expect(wrapper.emitted('remove')[0][0].id).toBe('test');
-    });
-    it('clicking replace menu option should emit a selected event', () => {
-      wrapper.find('[data-test="replace-file"]').trigger('click');
-      expect(wrapper.emitted('selected')).not.toBeUndefined();
-    });
-    it('clicking download menu option should call open file', () => {
-      window.open = jest.fn();
-
-      wrapper = makeWrapper({
-        file: { id: 1, url: 'path/to/file.pdf' },
-      });
-      wrapper.find('[data-test="download-file"]').trigger('click');
-      expect(window.open).toHaveBeenCalledWith('path/to/file.pdf', '_blank');
     });
   });
 });

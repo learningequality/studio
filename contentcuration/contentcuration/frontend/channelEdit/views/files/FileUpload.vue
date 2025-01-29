@@ -14,10 +14,32 @@
       </VCardText>
     </VCard>
     <VLayout v-else row wrap>
-      <VFlex sm12 md6 lg5 xl4>
+      <VFlex sm12 md12 lg12 xl12>
         <p>
           <ContentNodeIcon :kind="node.kind" includeText />
         </p>
+      </VFlex>
+      <VFlex sm12 md6 lg7 xl7 class="pr-4">
+        <h3>
+          {{ $tr('filesHeader') }}
+        </h3>
+        <VList threeLine>
+          <FileUploadItem
+            v-for="item in primaryFileMapping"
+            :key="item.preset.id"
+            :file="item.file"
+            :preset="item.preset"
+            :allowFileRemove="allowFileRemove"
+            :uploadCompleteHandler="handleUploadComplete"
+            @selected="selected = item.file.id"
+            @remove="handleRemoveFile"
+          />
+        </VList>
+      </VFlex>
+      <VFlex sm12 md6 lg5 xl5>
+        <h3 v-if="selectedFilename" class="mb-3">
+          {{ selectedFilename }}
+        </h3>
         <div class="preview-wrapper">
           <VCard v-if="!primaryFileCount" flat class="mb-2 message-card">
             <VLayout align-center justify-center fill-height>
@@ -38,31 +60,6 @@
             @click="$emit('previewClick')"
           />
         </div>
-      </VFlex>
-      <VFlex sm12 md6 lg7 xl8>
-        <VContainer fluid>
-          <VLayout alignStart>
-            <VRadioGroup
-              v-model="selected"
-              hide-details
-              :label="$tr('filesHeader')"
-              class="subheading"
-            >
-              <VList threeLine>
-                <FileUploadItem
-                  v-for="item in primaryFileMapping"
-                  :key="item.preset.id"
-                  :file="item.file"
-                  :preset="item.preset"
-                  :allowFileRemove="allowFileRemove"
-                  :uploadCompleteHandler="handleUploadComplete"
-                  @selected="selected = item.file.id"
-                  @remove="handleRemoveFile"
-                />
-              </VList>
-            </VRadioGroup>
-          </VLayout>
-        </VContainer>
       </VFlex>
     </VLayout>
   </div>
@@ -134,6 +131,10 @@
           'order'
         );
       },
+      selectedFilename() {
+        const file = this.files.find(f => f.id === this.selected);
+        return file ? file.original_filename : '';
+      },
     },
     watch: {
       'files.length'(newCount, oldCount) {
@@ -171,7 +172,7 @@
       },
     },
     $trs: {
-      filesHeader: 'Preview files',
+      filesHeader: 'Files',
       fileError: 'Unsupported file type',
       noFileText: 'Missing files',
     },
