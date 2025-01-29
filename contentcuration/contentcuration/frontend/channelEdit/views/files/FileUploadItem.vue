@@ -16,7 +16,7 @@
         >
           <VListTileContent>
             <VListTileSubTitle>{{ translateConstant(preset.id) }}</VListTileSubTitle>
-            <VListTileTitle>
+            <VListTileTitle class="file-display">
               <span
                 v-if="fileDisplay"
                 class="notranslate"
@@ -217,16 +217,6 @@
 
 <style lang="scss" scoped>
 
-  .layout .section-header {
-    padding: 0 15px;
-    font-weight: bold;
-    color: var(--v-darken-3);
-  }
-
-  button {
-    margin: 0;
-  }
-
   ::v-deep .v-list__tile {
     height: max-content !important;
     min-height: 64px;
@@ -238,12 +228,17 @@
     }
 
     .v-list__tile__title {
-      height: max-content;
+      height: 30px;
     }
 
     .v-list__tile__sub-title {
+      margin-left: 1px;
       white-space: unset;
     }
+  }
+
+  .file-display {
+    margin-left: 1px;
   }
 
 </style>
