@@ -156,10 +156,8 @@ pycodestyle==2.3.1
     # via flake8
 pyflakes==1.5.0
     # via flake8
-pyinstrument==3.4.2
+pyinstrument==5.0.1
     # via -r requirements-dev.in
-pyinstrument-cext==0.2.4
-    # via pyinstrument
 pympler==1.0.1
     # via -r requirements-dev.in
 pypandoc==1.8.1
