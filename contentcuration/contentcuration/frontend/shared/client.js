@@ -40,8 +40,8 @@ window.addEventListener('offline', () => {
 
 // Track page state
 let isNavigating = false;
-let isReloading = false;
-let pendingRequests = new Set();
+const isReloading = false;
+const pendingRequests = new Set();
 
 // Create an AbortController for managing pending requests
 const abortController = new AbortController();
@@ -81,19 +81,19 @@ client.interceptors.response.use(
     }
 
     // Ignore specific types of errors
-    if (                                                  
-      isNavigating || 
+    if (
+      isNavigating ||
       isReloading ||
       axios.isCancel(error) ||
       error.code === 'ERR_CANCELED' ||
       error.code === 'ECONNABORTED' ||
-      (error.response && [302, 403, 404, 405, 412].includes(error.response.status)) // added 302 
-    ) { 
+      (error.response && [302, 403, 404, 405, 412].includes(error.response.status)) // added 302
+    ) {
       return Promise.reject(error);
     }
     const url = error.config?.url || 'unknown';
     let message = error.message;
-    let status = error.response?.status || 0;
+    const status = error.response?.status || 0;
 
     // Suppress contentnode query errors
     if (url.includes('contentnode')) {
@@ -126,7 +126,7 @@ client.interceptors.response.use(
               online: navigator.onLine,
               isNavigating,
               isReloading,
-              pendingRequestCount: pendingRequests.size
+              pendingRequestCount: pendingRequests.size,
             },
           },
         });
