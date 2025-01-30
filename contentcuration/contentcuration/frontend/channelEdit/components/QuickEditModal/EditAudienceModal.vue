@@ -31,7 +31,7 @@
           v-model="selectedRol"
           data-test="rol-radio-button"
           :label="rol.label"
-          :value="rol.value"
+          :buttonValue="rol.value"
           :description="rol.description"
         />
       </KRadioButtonGroup>
