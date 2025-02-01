@@ -382,45 +382,61 @@
         }
       },
       confirmCancel() {
-        if (this.isNew) {
-          return this.deleteChannelSet(this.channelSet).then(this.close);
-        }
-        this.close();
-      },
-      close() {
-        this.changed = false;
-        this.showUnsavedDialog = false;
-        this.diffTracker = {};
-        this.$router.push({ name: RouteNames.CHANNEL_SETS });
-      },
-      
-      verifyChannelSet(channelSetId) {
-        return new Promise((resolve, reject) => {
-          // Check if we already have the channel locally
-          if (this.getChannelSet(channelSetId)) {
-            this.setup();
-            resolve();
-            return;
-          }
+  if (this.isNew) {
+    if (this.channelSet && this.channelSet.id) {
+      return this.deleteChannelSet(this.channelSet).then(this.close);
+    } else {
+      this.close();
+    }
+  } else {
+    this.close();
+  }
+},
 
-          // If not, try to load the channel
-          this.loadChannelSet(channelSetId).then(channelset => {
-            // Did our fetch return any channels, then we have a channel!
-            if (channelset) {
-              this.setup();
-              resolve();
-              return;
-            }
-            // If not, reject!
+     
+        close() {
+  this.changed = false;
+  this.showUnsavedDialog = false;
+  this.diffTracker = {};
+  this.$router.push({ name: RouteNames.CHANNEL_SETS });
+},
 
-            this.$store.dispatch('errors/handleGenericError', {
-              errorType: ErrorTypes.PAGE_NOT_FOUND,
-              errorText: this.$tr('collectionErrorText'),
-            });
-            reject();
-          });
-        });
-      },
+   
+verifyChannelSet(channelSetId) {
+ 
+  if (!channelSetId || channelSetId === 'new') {
+   
+    return Promise.resolve();
+  }
+
+  
+  if (this.getChannelSet(channelSetId)) {
+    this.setup();
+    return Promise.resolve();
+  }
+
+  
+  return this.loadChannelSet(channelSetId).then(channelSet => {
+    if (channelSet) {
+      this.setup();
+      return;
+    }
+
+    
+    this.$router.replace({ name: 'NEW_CHANNEL_SET_DETAILS' });
+
+    this.$store.dispatch('errors/handleGenericError', {
+      errorType: ErrorTypes.PAGE_NOT_FOUND,
+      errorText: this.$tr('collectionErrorText'),
+    });
+  }).catch(error => {
+    console.error("Error loading collection:", error);
+    this.$router.replace({ name: 'NEW_CHANNEL_SET_DETAILS' });
+  });
+}
+
+
+
 },
 
    
