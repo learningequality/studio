@@ -44,10 +44,9 @@ export function commitChannelSet(
   const channelSetData = {};
 
   if (!id) {
-    
     channelSetData.isNew = true;
   } else {
-    channelSetData.id = id;  
+    channelSetData.id = id;
   }
 
   if (name !== NOVALUE) {
@@ -61,25 +60,23 @@ export function commitChannelSet(
     channelSetData.channels[channel] = true;
   }
 
-  
-  return ChannelSet.createModel(channelSetData).then(data => {
-   
-    if (!data || !data.id) {
-      console.error('Error: The created channel set does not have an ID', data);
-      throw new Error('The created channel set does not have an ID');
-    }
+  return ChannelSet.createModel(channelSetData)
+    .then(data => {
+      if (!data || !data.id) {
+        console.error('Error: The created channel set does not have an ID', data);
+        throw new Error('The created channel set does not have an ID');
+      }
 
-    context.commit('SET_CHANNELSET_NOT_NEW', data.id); 
-    context.commit('UPDATE_CHANNELSET', data);
+      context.commit('SET_CHANNELSET_NOT_NEW', data.id);
+      context.commit('UPDATE_CHANNELSET', data);
 
-    return data; 
-  }).catch(error => {
-    console.error('Error creating channel set:', error);
-    throw error;  
-  });
+      return data;
+    })
+    .catch(error => {
+      console.error('Error creating channel set:', error);
+      throw error;
+    });
 }
-
-
 
 export function updateChannelSet(context, { id, name = NOVALUE, description = NOVALUE } = {}) {
   const channelSetData = {};

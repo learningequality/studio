@@ -107,11 +107,11 @@
       });
     },
     methods: {
-      ...mapActions('channelSet', ['loadChannelSetList',]),
+      ...mapActions('channelSet', ['loadChannelSetList']),
       newChannelSet() {
-          this.$router.push({
-            name: RouteNames.NEW_CHANNEL_SET_DETAILS,
-          });
+        this.$router.push({
+          name: RouteNames.NEW_CHANNEL_SET_DETAILS,
+        });
       },
     },
     $trs: {

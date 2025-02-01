@@ -197,12 +197,11 @@
         showUnsavedDialog: false,
         diffTracker: {},
         saving: false,
-         
       };
     },
     computed: {
       ...mapGetters('channelSet', ['getChannelSet']),
-      isNew() {  
+      isNew() {
         return !this.channelSetId || this.$route.path === '/new';
       },
       nameRules() {
@@ -250,10 +249,9 @@
     },
     beforeMount() {
       if (this.channelSetId) {
-    return this.verifyChannelSet(this.channelSetId);
-  }
-  else this.setup();
-},
+        return this.verifyChannelSet(this.channelSetId);
+      } else this.setup();
+    },
     mounted() {
       this.updateTitleForPage();
     },
@@ -304,7 +302,7 @@
       removeChannel(channelId) {
         this.channels = this.channels.filter(c => c !== channelId);
       },
-     
+
       loadChannels() {
         if (this.channelSet.channels && this.channelSet.channels.length) {
           this.loadingChannels = true;
@@ -327,52 +325,53 @@
         this.title = this.isNew ? this.$tr('creatingChannelSet') : this.channelSet.name;
       },
       save() {
-  if (this.saving) {
-    return;
-  }
-  this.saving = true;
-  this.showUnsavedDialog = false;
-
-  if (this.$refs.channelsetform.validate()) {
-    let promise;
-
-    if (this.isNew) {
-      const channelSetData = { ...this.diffTracker };
-      promise = this.commitChannelSet(channelSetData).then(newCollection => {
-        
-        if (!newCollection || !newCollection.id) {
-          console.error("Error: New collection was not created properly.", newCollection);
-          this.saving = false;
+        if (this.saving) {
           return;
         }
+        this.saving = true;
+        this.showUnsavedDialog = false;
 
-        const newCollectionId = newCollection.id;
+        if (this.$refs.channelsetform.validate()) {
+          let promise;
 
-       
-        this.$router.replace({ name: 'CHANNEL_SET_DETAILS', params: { channelSetId: newCollectionId } });
+          if (this.isNew) {
+            const channelSetData = { ...this.diffTracker };
+            promise = this.commitChannelSet(channelSetData)
+              .then(newCollection => {
+                if (!newCollection || !newCollection.id) {
+                  console.error('Error: New collection was not created properly.', newCollection);
+                  this.saving = false;
+                  return;
+                }
 
-        return newCollection;
-      }).catch(error => {
-        console.error("Error while creating collection:", error);
-        this.saving = false;
-      });
-    } else {
-      promise = this.saveChannels().then(() => {
-        return this.updateChannelSet({ id: this.channelSetId, ...this.diffTracker });
-      });
-    }
+                const newCollectionId = newCollection.id;
 
-    promise
-      .then(() => {
-        this.close();
-      })
-      .finally(() => {
-        this.saving = false;
-      });
-  }
-},
+                this.$router.replace({
+                  name: 'CHANNEL_SET_DETAILS',
+                  params: { channelSetId: newCollectionId },
+                });
 
+                return newCollection;
+              })
+              .catch(error => {
+                console.error('Error while creating collection:', error);
+                this.saving = false;
+              });
+          } else {
+            promise = this.saveChannels().then(() => {
+              return this.updateChannelSet({ id: this.channelSetId, ...this.diffTracker });
+            });
+          }
 
+          promise
+            .then(() => {
+              this.close();
+            })
+            .finally(() => {
+              this.saving = false;
+            });
+        }
+      },
 
       cancelChanges() {
         if (this.changed) {
@@ -382,64 +381,55 @@
         }
       },
       confirmCancel() {
-  if (this.isNew) {
-    if (this.channelSet && this.channelSet.id) {
-      return this.deleteChannelSet(this.channelSet).then(this.close);
-    } else {
-      this.close();
-    }
-  } else {
-    this.close();
-  }
-},
+        if (this.isNew) {
+          if (this.channelSet && this.channelSet.id) {
+            return this.deleteChannelSet(this.channelSet).then(this.close);
+          } else {
+            this.close();
+          }
+        } else {
+          this.close();
+        }
+      },
 
-     
-        close() {
-  this.changed = false;
-  this.showUnsavedDialog = false;
-  this.diffTracker = {};
-  this.$router.push({ name: RouteNames.CHANNEL_SETS });
-},
+      close() {
+        this.changed = false;
+        this.showUnsavedDialog = false;
+        this.diffTracker = {};
+        this.$router.push({ name: RouteNames.CHANNEL_SETS });
+      },
 
-   
-verifyChannelSet(channelSetId) {
- 
-  if (!channelSetId || channelSetId === 'new') {
-   
-    return Promise.resolve();
-  }
+      verifyChannelSet(channelSetId) {
+        if (!channelSetId || channelSetId === 'new') {
+          return Promise.resolve();
+        }
 
-  
-  if (this.getChannelSet(channelSetId)) {
-    this.setup();
-    return Promise.resolve();
-  }
+        if (this.getChannelSet(channelSetId)) {
+          this.setup();
+          return Promise.resolve();
+        }
 
-  
-  return this.loadChannelSet(channelSetId).then(channelSet => {
-    if (channelSet) {
-      this.setup();
-      return;
-    }
+        return this.loadChannelSet(channelSetId)
+          .then(channelSet => {
+            if (channelSet) {
+              this.setup();
+              return;
+            }
 
-    
-    this.$router.replace({ name: 'NEW_CHANNEL_SET_DETAILS' });
+            this.$router.replace({ name: 'NEW_CHANNEL_SET_DETAILS' });
 
-    this.$store.dispatch('errors/handleGenericError', {
-      errorType: ErrorTypes.PAGE_NOT_FOUND,
-      errorText: this.$tr('collectionErrorText'),
-    });
-  }).catch(error => {
-    console.error("Error loading collection:", error);
-    this.$router.replace({ name: 'NEW_CHANNEL_SET_DETAILS' });
-  });
-}
+            this.$store.dispatch('errors/handleGenericError', {
+              errorType: ErrorTypes.PAGE_NOT_FOUND,
+              errorText: this.$tr('collectionErrorText'),
+            });
+          })
+          .catch(error => {
+            console.error('Error loading collection:', error);
+            this.$router.replace({ name: 'NEW_CHANNEL_SET_DETAILS' });
+          });
+      },
+    },
 
-
-
-},
-
-   
     $trs: {
       creatingChannelSet: 'New collection',
       collectionErrorText: 'This collection does not exist',
