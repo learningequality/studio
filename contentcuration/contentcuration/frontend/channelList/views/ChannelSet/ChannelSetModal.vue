@@ -97,7 +97,10 @@
                     :key="listType.id"
                     lazy
                   >
-                    <ChannelSelectionList v-model="channels" :listType="listType" />
+                    <ChannelSelectionList 
+                      v-model="channels" 
+                      :listType="listType"  
+                    />
                   </VTabItem>
                 </Tabs>
               </VContainer>
@@ -158,7 +161,7 @@
   import { RouteNames } from '../../constants';
   import ChannelItem from './ChannelItem';
   import ChannelSelectionList from './ChannelSelectionList';
-  import { NEW_OBJECT, ChannelListTypes, ErrorTypes } from 'shared/constants';
+  import { ChannelListTypes, ErrorTypes } from 'shared/constants';
   import { constantsTranslationMixin, routerMixin } from 'shared/mixins';
   import CopyToken from 'shared/views/CopyToken';
   import MessageDialog from 'shared/views/MessageDialog';
@@ -181,7 +184,7 @@
     props: {
       channelSetId: {
         type: String,
-        required: true,
+        default: '',
       },
     },
     data() {
@@ -194,12 +197,13 @@
         showUnsavedDialog: false,
         diffTracker: {},
         saving: false,
+         
       };
     },
     computed: {
       ...mapGetters('channelSet', ['getChannelSet']),
-      isNew() {
-        return Boolean(this.channelSet[NEW_OBJECT]);
+      isNew() {  
+        return !this.channelSetId || this.$route.path === '/new';
       },
       nameRules() {
         return [name => (name && name.trim().length ? true : this.$tr('titleRequiredText'))];
@@ -245,8 +249,11 @@
       },
     },
     beforeMount() {
-      return this.verifyChannelSet(this.channelSetId);
-    },
+      if (this.channelSetId) {
+    return this.verifyChannelSet(this.channelSetId);
+  }
+  else this.setup();
+},
     mounted() {
       this.updateTitleForPage();
     },
@@ -297,6 +304,7 @@
       removeChannel(channelId) {
         this.channels = this.channels.filter(c => c !== channelId);
       },
+     
       loadChannels() {
         if (this.channelSet.channels && this.channelSet.channels.length) {
           this.loadingChannels = true;
@@ -307,6 +315,7 @@
           this.loadingChannels = false;
         }
       },
+
       setChannelSet(data) {
         for (const key in data) {
           Vue.set(this.diffTracker, key, data[key]);
@@ -318,29 +327,53 @@
         this.title = this.isNew ? this.$tr('creatingChannelSet') : this.channelSet.name;
       },
       save() {
-        if (this.saving) {
+  if (this.saving) {
+    return;
+  }
+  this.saving = true;
+  this.showUnsavedDialog = false;
+
+  if (this.$refs.channelsetform.validate()) {
+    let promise;
+
+    if (this.isNew) {
+      const channelSetData = { ...this.diffTracker };
+      promise = this.commitChannelSet(channelSetData).then(newCollection => {
+        
+        if (!newCollection || !newCollection.id) {
+          console.error("Error: New collection was not created properly.", newCollection);
+          this.saving = false;
           return;
         }
-        this.saving = true;
-        this.showUnsavedDialog = false;
-        if (this.$refs.channelsetform.validate()) {
-          let promise;
-          if (this.isNew) {
-            promise = this.commitChannelSet({ id: this.channelSetId, ...this.diffTracker });
-          } else {
-            promise = this.saveChannels().then(() => {
-              return this.updateChannelSet({ id: this.channelSetId, ...this.diffTracker });
-            });
-          }
-          promise
-            .then(() => {
-              this.close();
-            })
-            .finally(() => {
-              this.saving = false;
-            });
-        }
-      },
+
+        const newCollectionId = newCollection.id;
+
+       
+        this.$router.replace({ name: 'CHANNEL_SET_DETAILS', params: { channelSetId: newCollectionId } });
+
+        return newCollection;
+      }).catch(error => {
+        console.error("Error while creating collection:", error);
+        this.saving = false;
+      });
+    } else {
+      promise = this.saveChannels().then(() => {
+        return this.updateChannelSet({ id: this.channelSetId, ...this.diffTracker });
+      });
+    }
+
+    promise
+      .then(() => {
+        this.close();
+      })
+      .finally(() => {
+        this.saving = false;
+      });
+  }
+},
+
+
+
       cancelChanges() {
         if (this.changed) {
           this.showUnsavedDialog = true;
@@ -360,6 +393,7 @@
         this.diffTracker = {};
         this.$router.push({ name: RouteNames.CHANNEL_SETS });
       },
+      
       verifyChannelSet(channelSetId) {
         return new Promise((resolve, reject) => {
           // Check if we already have the channel locally
@@ -387,7 +421,9 @@
           });
         });
       },
-    },
+},
+
+   
     $trs: {
       creatingChannelSet: 'New collection',
       collectionErrorText: 'This collection does not exist',

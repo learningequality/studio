@@ -107,14 +107,11 @@
       });
     },
     methods: {
-      ...mapActions('channelSet', ['loadChannelSetList', 'createChannelSet']),
+      ...mapActions('channelSet', ['loadChannelSetList',]),
       newChannelSet() {
-        this.createChannelSet().then(id => {
           this.$router.push({
-            name: RouteNames.CHANNEL_SET_DETAILS,
-            params: { channelSetId: id },
+            name: RouteNames.NEW_CHANNEL_SET_DETAILS,
           });
-        });
       },
     },
     $trs: {
