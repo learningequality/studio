@@ -562,15 +562,13 @@
 </script>
 
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .v-text-field {
     margin-top: 8px !important;
   }
 
-  .policy-checkbox /deep/ .v-input__slot {
-    margin-bottom: 4px !important;
-
+  .policy-checkbox {
     label {
       color: var(--v-grey-darken1) !important;
     }
@@ -593,11 +591,11 @@
   .span-spacing {
     display: flex;
     margin-left: 40px;
-  }
 
-  .span-spacing span {
-    margin-left: 2px;
-    font-size: 16px;
+    .span{
+      margin-left: 2px;
+      font-size: 16px;
+    }
   }
 
   .span-spacing-email {

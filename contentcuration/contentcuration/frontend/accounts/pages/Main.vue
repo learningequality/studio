@@ -206,20 +206,24 @@
 </script>
 
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .main {
     overflow: auto;
-    /* stylelint-disable-next-line custom-property-pattern */
+    // stylelint-disable-next-line custom-property-pattern
     background-color: var(--v-backgroundColor-base);
   }
 
-  .links span:not(:last-child)::after {
-    margin: 0 8px 0 12px;
-    font-size: 14pt;
-    color: var(--v-grey-base);
-    vertical-align: middle;
-    content: '•';
+  .links {
+    span {
+      &:not(:last-child)::after {
+        margin: 0 8px 0 12px;
+        font-size: 14pt;
+        color: var(--v-grey-base);
+        vertical-align: middle;
+        content: '•';
+      }
+    }
   }
 
   .w-100 {
