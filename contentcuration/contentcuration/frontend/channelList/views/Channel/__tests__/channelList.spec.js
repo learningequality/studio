@@ -91,7 +91,5 @@ describe('ChannelList', () => {
       }
       expect(wrapper.vm.$route.name).toBe(RouteNames.NEW_CHANNEL);
     });
-    
-    
   });
 });
