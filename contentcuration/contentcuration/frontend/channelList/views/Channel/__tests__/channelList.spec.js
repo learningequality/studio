@@ -2,6 +2,7 @@ import { mount, createLocalVue } from '@vue/test-utils';
 import Vuex, { Store } from 'vuex';
 import VueRouter from 'vue-router';
 import ChannelList from '../ChannelList.vue';
+import { RouteNames } from '../../../constants';
 import { ChannelListTypes } from 'shared/constants';
 
 const localVue = createLocalVue();
@@ -79,9 +80,18 @@ describe('ChannelList', () => {
       expect(getNewChannelButton(wrapper).exists()).toBe(true);
     });
 
-    it('should create a new channel when new channel button is clicked', () => {
-      getNewChannelButton(wrapper).trigger('click');
-      expect(createChannelMock).toHaveBeenCalled();
+    it('should open the new channel modal when the new channel button is clicked', async () => {
+      try {
+        getNewChannelButton(wrapper).trigger('click');
+        await wrapper.vm.$nextTick();
+      } catch (err) {
+        if (err.name !== 'NavigationDuplicated') {
+          throw err;
+        }
+      }
+      expect(wrapper.vm.$route.name).toBe(RouteNames.NEW_CHANNEL);
     });
+    
+    
   });
 });
