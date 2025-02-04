@@ -21,7 +21,7 @@ sudo apt-get install -y python-tk \
     ffmpeg libmagickwand-dev redis-server wkhtmltopdf
 
 # Install minio
-wget https://dl.minio.io/server/minio/release/linux-amd64/archive/minio.RELEASE.2020-06-01T17-28-03Z -O bin/minio
+wget https://dl.minio.io/server/minio/release/linux-amd64/minio -O ~/minio
 sudo chmod +x bin/minio
 ```
 
