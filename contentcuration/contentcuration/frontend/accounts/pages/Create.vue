@@ -592,7 +592,7 @@
     display: flex;
     margin-left: 40px;
 
-    .span{
+    .span {
       margin-left: 2px;
       font-size: 16px;
     }
