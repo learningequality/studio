@@ -2,6 +2,7 @@ import omit from 'lodash/omit';
 import axios from 'axios';
 import qs from 'qs';
 import * as Sentry from '@sentry/vue';
+import {isCancel} from 'axios'
 
 export function paramsSerializer(params) {
   // Do custom querystring stingifying to comma separate array params
@@ -39,8 +40,7 @@ window.addEventListener('offline', () => {
 });
 
 // Track page state
-let isNavigating = false;
-const isReloading = false;
+const isNavigating = false;
 const pendingRequests = new Set();
 
 // Create an AbortController for managing pending requests
@@ -48,12 +48,18 @@ const abortController = new AbortController();
 
 window.addEventListener('navigate', () => {
   isNavigating = true;
-  // Abort pending requests
-  abortController.abort();
-  // Reset the flag after navigation is likely complete
-  setTimeout(() => {
+
+  // Create a new abort controller for each navigation
+  const newAbortController = new AbortController();
+  abortController.signal = newAbortController.signal;
+
+  // Listen for the abort event to reset the navigation flag
+  newAbortController.signal.addEventListener('abort', () => {
     isNavigating = false;
-  }, 100);
+  });
+
+  // Abort pending requests when navigation begins
+  abortController.abort();
 });
 
 window.addEventListener('beforeunload', () => {
@@ -81,13 +87,12 @@ client.interceptors.response.use(
     }
 
     // Ignore specific types of errors
-    if (
+    if (                           
       isNavigating ||
-      isReloading ||
-      axios.isCancel(error) ||
+      isCancel(error) ||
       error.code === 'ERR_CANCELED' ||
       error.code === 'ECONNABORTED' ||
-      (error.response && [302, 403, 404, 405, 412].includes(error.response.status)) // added 302
+      (error.response && [302, 403, 404, 405, 412].includes(error.response.status)) // added 302 
     ) {
       return Promise.reject(error);
     }
@@ -125,7 +130,6 @@ client.interceptors.response.use(
               lastOffline: lastOffline ? `${Date.now() - lastOffline}ms ago` : 'never',
               online: navigator.onLine,
               isNavigating,
-              isReloading,
               pendingRequestCount: pendingRequests.size,
             },
           },
@@ -136,10 +140,6 @@ client.interceptors.response.use(
   }
 );
 
-// Clean up function for when component unmounts
-export function cleanupRequests() {
-  abortController.abort();
-  pendingRequests.clear();
-}
+
 
 export default client;
