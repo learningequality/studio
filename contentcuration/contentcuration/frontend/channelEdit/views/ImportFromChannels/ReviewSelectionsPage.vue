@@ -22,7 +22,7 @@
                       :text="getTitle(node)"
                       @click="preview(node)"
                     >
-                      
+                    
                       <KTextTruncator
                         :text="getTitle(node)"
                         :maxLines="1"
@@ -112,6 +112,5 @@
   /deep/ .v-list__tile {
     height: auto;
   }
- 
 
 </style>
