@@ -16,13 +16,18 @@
               <VFlex md5 sm12>
                 <VListTileContent>
                   <VListTileTitle>
-                    <KTextTruncator
+                    <ActionLink
                       class="subheading"
                       :class="getTitleClass(node)"
                       :text="getTitle(node)"
-                      :maxLines="1"
                       @click="preview(node)"
-                    />
+                    >
+                      
+                      <KTextTruncator
+                        :text="getTitle(node)"
+                        :maxLines="1"
+                      />
+                    </ActionLink>
                   </VListTileTitle>
                   <VListTileSubTitle v-if="node.kind === 'topic'">
                     {{ $tr('resourcesInTopic', { count: numberOfResources(node) }) }}
@@ -107,5 +112,6 @@
   /deep/ .v-list__tile {
     height: auto;
   }
+ 
 
 </style>
