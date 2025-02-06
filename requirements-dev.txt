@@ -22,7 +22,6 @@ certifi==2020.12.5
     # via
     #   -c requirements.txt
     #   geventhttpclient
-    #   minio
     #   requests
 cfgv==3.3.1
     # via pre-commit
@@ -124,8 +123,6 @@ markupsafe==2.1.2
     #   werkzeug
 mccabe==0.6.1
     # via flake8
-minio==7.1.1
-    # via -r requirements-dev.in
 mixer==6.1.3
     # via -r requirements-dev.in
 mock==4.0.3
@@ -253,7 +250,6 @@ uritemplate==3.0.1
 urllib3==1.26.18
     # via
     #   -c requirements.txt
-    #   minio
     #   requests
 virtualenv==20.14.1
     # via pre-commit
