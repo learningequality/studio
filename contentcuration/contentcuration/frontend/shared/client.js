@@ -1,8 +1,7 @@
 import omit from 'lodash/omit';
-import axios from 'axios';
+import axios, { isCancel } from 'axios';
 import qs from 'qs';
 import * as Sentry from '@sentry/vue';
-import {isCancel} from 'axios'
 
 export function paramsSerializer(params) {
   // Do custom querystring stingifying to comma separate array params
@@ -87,12 +86,12 @@ client.interceptors.response.use(
     }
 
     // Ignore specific types of errors
-    if (                           
+    if (
       isNavigating ||
       isCancel(error) ||
       error.code === 'ERR_CANCELED' ||
       error.code === 'ECONNABORTED' ||
-      (error.response && [302, 403, 404, 405, 412].includes(error.response.status)) // added 302 
+      (error.response && [302, 403, 404, 405, 412].includes(error.response.status)) // added 302
     ) {
       return Promise.reject(error);
     }
@@ -139,7 +138,5 @@ client.interceptors.response.use(
     return Promise.reject(error);
   }
 );
-
-
 
 export default client;
