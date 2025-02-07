@@ -109,7 +109,6 @@
                 v-for="recommendation in displayedRecommendations"
                 :key="recommendation.id"
                 :node="recommendation"
-                :selected.sync="selected"
                 @change_selected="handleChangeSelected"
                 @preview="preview($event)"
               />

@@ -51,6 +51,7 @@
 
   import find from 'lodash/find';
   import LearningActivities from 'kolibri-constants/labels/LearningActivities';
+  import { mapState } from 'vuex';
   import { ContentKindLearningActivityDefaults } from 'shared/leUtils/ContentKinds';
   import Checkbox from 'shared/views/form/Checkbox';
   import ContentNodeLearningActivityIcon from 'shared/views/ContentNodeLearningActivityIcon';
@@ -66,12 +67,9 @@
         type: Object,
         required: true,
       },
-      selected: {
-        type: Array,
-        required: true,
-      },
     },
     computed: {
+      ...mapState('importFromChannels', ['selected']),
       channelName() {
         //Todo: We'll most likely not have null channel names, so remove check after integration
         return this.node.channel?.name || '';
