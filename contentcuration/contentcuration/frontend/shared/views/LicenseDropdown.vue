@@ -38,10 +38,10 @@
         @click="toggleAboutLicenseDisplay"
       />
     </p>
-    <div 
-      v-for="(licenseItem, index) in licencesList" 
-      v-show="showAboutLicense" 
-      :key="index" 
+    <div
+      v-for="(licenseItem, index) in licencesList"
+      v-show="showAboutLicense"
+      :key="index"
       class="mb-4 mt-3"
     >
       <h2 class="font-weight-bold mb-1 subheading">

@@ -9,12 +9,12 @@
     </VListTile>
     <VListTile v-if="allowMove" @click.stop="calculateMoveNodes">
       <VListTileTitle>{{ $tr('moveTo') }}</VListTileTitle>
-      <MoveModal 
-        v-if="moveModalOpen" 
-        ref="moveModal" 
-        v-model="moveModalOpen" 
+      <MoveModal
+        v-if="moveModalOpen"
+        ref="moveModal"
+        v-model="moveModalOpen"
         :clipboardTopicResourceCount="topicAndResourceCount"
-        @target="moveNodes" 
+        @target="moveNodes"
       />
     </VListTile>
     <VListTile @click="removeNode()">

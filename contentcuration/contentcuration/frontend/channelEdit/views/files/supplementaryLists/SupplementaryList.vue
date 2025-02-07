@@ -18,8 +18,8 @@
       @upload="$emit('upload')"
     >
       <template #default="{ openFileDialog }">
-        <VListTile 
-          inactive 
+        <VListTile
+          inactive
           class="languageTile py-2"
           :class="$computedClass({
             ':hover': { backgroundColor: $themePalette.grey.v_100 }

@@ -17,7 +17,7 @@ class StorageSettingsViewTestCase(StudioAPITestCase):
         self.view.request.user = testdata.user(email="tester@tester.com")
 
     def test_storage_request(self):
-        
+
         with mock.patch("contentcuration.views.settings.send_mail") as send_mail:
 
             data = dict(
@@ -37,7 +37,7 @@ class StorageSettingsViewTestCase(StudioAPITestCase):
                 time_constraint="time_constraint",
                 message="message"
             )
-            self.form = StorageRequestForm(data=data)     
+            self.form = StorageRequestForm(data=data)
 
             self.assertTrue(self.form.is_valid())
             self.view.form_valid(self.form)
