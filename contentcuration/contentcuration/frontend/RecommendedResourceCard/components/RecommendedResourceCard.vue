@@ -73,6 +73,7 @@
     },
     computed: {
       channelName() {
+        //Todo: We'll most likely not have null channel names, so remove check after integration
         return this.node.channel?.name || '';
       },
       learningActivities() {
