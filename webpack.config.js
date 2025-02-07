@@ -80,10 +80,11 @@ module.exports = (env = {}) => {
       filename: dev ? '[name].js' : '[name]-[fullhash].js',
       chunkFilename: '[name]-[id]-[fullhash].js',
       path: bundleOutputDir,
-      publicPath: dev ? 'http://127.0.0.1:4000/dist/' : '/static/studio/',
+      publicPath: dev ? 'http://172.28.128.96:4000/dist/' : '/static/studio/',
       pathinfo: !dev,
     },
     devServer: {
+      host: '0.0.0.0',
       port: 4000,
       headers: {
         'Access-Control-Allow-Origin': '*',
