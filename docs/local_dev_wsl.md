@@ -1,4 +1,4 @@
-# Kolibri Studio Local Setu**p Guide** Using WSL
+# Kolibri Studio Local Setup Guide Using WSL
 
 This guide will walk you through setting up Kolibri Studio for local development using Windows Subsystem for Linux (WSL). We will cover everything from installing WSL and a Linux distribution to configuring your environment and running the necessary commands.
 
