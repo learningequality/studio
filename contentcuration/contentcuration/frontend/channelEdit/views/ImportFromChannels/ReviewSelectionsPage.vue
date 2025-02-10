@@ -21,7 +21,13 @@
                       :class="getTitleClass(node)"
                       :text="getTitle(node)"
                       @click="preview(node)"
-                    />
+                    >
+                    
+                      <KTextTruncator
+                        :text="getTitle(node)"
+                        :maxLines="1"
+                      />
+                    </ActionLink>
                   </VListTileTitle>
                   <VListTileSubTitle v-if="node.kind === 'topic'">
                     {{ $tr('resourcesInTopic', { count: numberOfResources(node) }) }}
