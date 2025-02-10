@@ -76,7 +76,7 @@
     "kolibri-constants": "^0.2.0",
     "kolibri-design-system": "^5.0.0-rc10",
     "lodash": "^4.17.21",
-    "material-icons": "0.3.1",
+    "material-icons": "1.13.13",
     "mutex-js": "^1.1.5",
     "node-vibrant": "^3.1.6",
     "pako": "^2.1.0",
