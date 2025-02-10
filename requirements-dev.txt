@@ -126,7 +126,7 @@ minio==7.1.1
     # via -r requirements-dev.in
 mixer==6.1.3
     # via -r requirements-dev.in
-mock==4.0.3
+mock==5.1.0
     # via
     #   -r requirements-dev.in
     #   django-concurrent-test-helper
