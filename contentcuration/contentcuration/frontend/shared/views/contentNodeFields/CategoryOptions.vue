@@ -272,7 +272,7 @@
   };
 
 </script>
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .parentOption:not(:first-child) {
     border-top: 1px solid rgba(0, 0, 0, 0.12);

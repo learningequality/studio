@@ -535,7 +535,7 @@
 </script>
 
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .v-speed-dial {
     position: absolute;

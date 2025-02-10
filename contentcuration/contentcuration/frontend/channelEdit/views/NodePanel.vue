@@ -202,7 +202,7 @@
 
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .node-list {
     width: 100%;

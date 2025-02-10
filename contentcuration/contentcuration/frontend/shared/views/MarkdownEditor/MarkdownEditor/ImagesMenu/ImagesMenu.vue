@@ -235,56 +235,57 @@
 
 <style lang="less" scoped>
 
-  .images-menu {
-    position: relative;
-    z-index: 1;
-    max-width: 500px;
-    // to make positioning from a parent element easier - this
-    // makes sure that the tip of the anchor will be considered
-    // as top right/left corner
-    margin-top: 16px;
-    margin-right: -30px;
-    margin-left: -30px;
-  }
+.images-menu {
+  position: relative;
+  z-index: 1;
+  max-width: 500px;
+  // to make positioning from a parent element easier - this
+  // makes sure that the tip of the anchor will be considered
+  // as top right/left corner
+  margin-top: 16px;
+  margin-right: -30px;
+  margin-left: -30px;
+}
 
-  .anchor-arrow {
+.anchor-arrow {
+  position: absolute;
+  top: -40px;
+  left: 10px;
+  z-index: 3;
+  width: 40px;
+  height: 40px;
+  overflow: hidden;
+
+  &::after {
     position: absolute;
-    top: -40px;
-    left: 10px;
-    z-index: 3;
-    width: 40px;
-    height: 40px;
-    overflow: hidden;
-
-    &::after {
-      position: absolute;
-      top: 28px;
-      right: 0;
-      left: 6px;
-      width: 25px;
-      height: 25px;
-      content: '';
-      background: #ffffff;
-      box-shadow: -1px -1px 10px -2px rgba(0, 0, 0, 0.3);
-      transform: rotate(45deg);
-    }
-
-    &.anchor-arrow-right {
-      right: 10px;
-      left: initial;
-    }
+    top: 28px;
+    right: 0;
+    left: 6px;
+    width: 25px;
+    height: 25px;
+    content: '';
+    background: #ffffff;
+    box-shadow: -1px -1px 10px -2px rgba(0, 0, 0, 0.3);
+    transform: rotate(45deg);
   }
 
-  .v-card__text {
-    position: relative;
+  &.anchor-arrow-right {
+    right: 10px;
+    left: initial;
   }
+}
 
-  .upload-area {
-    border: 1px solid var(--v-grey-lighten4) !important;
-  }
+.v-card__text {
+  position: relative;
+}
 
-  .image-preview {
-    max-width: 100%;
-  }
+.upload-area {
+  border: 1px solid var(--v-grey-lighten4) !important;
+}
+
+.image-preview {
+  max-width: 100%;
+}
+
 
 </style>

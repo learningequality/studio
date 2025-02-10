@@ -55,8 +55,7 @@
 
 </script>
 
-
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   div {
     white-space: nowrap;
@@ -68,9 +67,11 @@
     text-overflow: ellipsis;
   }
 
-  .VBtn:hover::before,
-  .VBtn:focus::before {
-    background-color: transparent;
+  .VBtn {
+    &:hover::before,
+    &:focus::before {
+      background-color: transparent;
+    }
   }
 
 </style>

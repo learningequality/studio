@@ -60,7 +60,7 @@
 </script>
 
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .card-header {
     font-size: 18px;

@@ -321,7 +321,7 @@
 </script>
 
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .divider {
     margin: 16px 0;
