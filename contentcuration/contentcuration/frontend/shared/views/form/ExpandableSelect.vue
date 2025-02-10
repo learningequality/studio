@@ -36,13 +36,15 @@
     </h5>
     <div>
       <template v-if="!multiple">
-        <KRadioButton
-          v-for="option in options"
-          :key="option.value"
-          v-model="valueModel"
-          :buttonValue="option.value"
-          :label="option.text"
-        />
+        <KRadioButtonGroup>
+          <KRadioButton
+            v-for="option in options"
+            :key="option.value"
+            v-model="valueModel"
+            :buttonValue="option.value"
+            :label="option.text"
+          />
+        </KRadioButtonGroup>
       </template>
       <template v-else>
         <KCheckbox

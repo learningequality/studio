@@ -24,15 +24,17 @@
     <div
       data-test="roles-options-list"
     >
-      <KRadioButton
-        v-for="rol in rolesOptions"
-        :key="rol.value"
-        v-model="selectedRol"
-        data-test="rol-radio-button"
-        :label="rol.label"
-        :value="rol.value"
-        :description="rol.description"
-      />
+      <KRadioButtonGroup>
+        <KRadioButton
+          v-for="rol in rolesOptions"
+          :key="rol.value"
+          v-model="selectedRol"
+          data-test="rol-radio-button"
+          :label="rol.label"
+          :buttonValue="rol.value"
+          :description="rol.description"
+        />
+      </KRadioButtonGroup>
     </div>
     <Divider />
 

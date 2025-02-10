@@ -14,8 +14,8 @@ const getRolesValues = wrapper => {
   const roles = {};
   const radioBtns = wrapper.findAll('[data-test="rol-radio-button"]');
   radioBtns.wrappers.forEach(checkbox => {
-    const { value, currentValue } = checkbox.vm.$props || {};
-    roles[value] = currentValue === value;
+    const { buttonValue, currentValue } = checkbox.vm.$props || {};
+    roles[buttonValue] = currentValue === buttonValue;
   });
   return roles;
 };
