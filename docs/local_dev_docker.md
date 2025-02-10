@@ -2,6 +2,8 @@
 
 The following guide utilizes docker and docker-compose to run select services required for Studio to function. It's our recommended setup. However, if you would rather install these services on your host, please follow the [host-setup guide](./local_dev_host.md).
 
+**Note:** If you are developing on Windows, it is recommended to use WSL (Windows Subsystem for Linux). Please follow the [WSL setup guide](./local_dev_wsl.md) for detailed instructions.
+
 ## Prerequisites
 Please install these prerequisites, or alternatives for setting up your local development environment:
 - [volta](https://docs.volta.sh/guide/getting-started) or a different node.js manager
