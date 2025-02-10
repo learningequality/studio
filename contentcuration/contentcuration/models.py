@@ -2125,7 +2125,7 @@ ASSESSMENT_ID_INDEX_NAME = "assessment_id_idx"
 
 
 class AssessmentItem(models.Model):
-    type = models.CharField(max_length=50, default="multiplechoice")
+    type = models.CharField(max_length=50, choices=exercises.question_choices, default=exercises.MULTIPLE_SELECTION)
     question = models.TextField(blank=True)
     hints = models.TextField(default="[]")
     answers = models.TextField(default="[]")
