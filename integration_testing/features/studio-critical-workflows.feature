@@ -186,6 +186,24 @@ Feature: Studio critical workflows
 			And click on the updated resource
 		Then I can see that it's updated with any changes made to the original resource file
 
+	Scenario: Quick edit the fields of multiple resources
+		Given I am signed in to Studio
+			And I am at the channel editor page
+			And there are available resources of different types
+		When I select at least two resources
+			And I click the *Edit language* icon
+		Then I see the *Edit language* modal
+		When I select a new language
+			And I click the *Save* button
+		Then I am back at the page with the resources
+			And I see a message: *Changes saved*
+		When I click on any of the other available editing icons such as *Edit categories* or *Edit levels*
+		Then I also see a modal with options
+		When I select one or several options
+			And I click the *Save* button
+		Then I am back at the page with the resources
+			And I see a message: *Changes saved*
+
 	Scenario: Delete a channel
 		Given I am signed in to Studio
 			And I have permissions to edit
@@ -196,3 +214,48 @@ Feature: Studio critical workflows
 			And I click the *Delete channel* button
 		Then I see a message that the channel is deleted
 			And the deleted channel is no longer displayed at *My Channels* page
+
+	Feature: View and edit account information
+		Given I am signed in to Studio
+		When I go to the *Settings > Account* page
+		Then I can see the following sections with account information: *Basic information*, *API token*, *Export account data*, *Delete account*
+		When I click on the *Change password* hyperlink
+			And I make changes to my password
+			And I press *Save changes* button in the modal
+		Then I see a snackbar appears to confirm my password was updated
+			And the modal is dismissed
+		When I click the *Edit* hyperlink near my username
+			And I make changes to my full name
+			And I click *Save changes* button in the modal
+		Then I see a snackbar appears to confirm changes are saved
+			And the modal is dismissed
+		When I go to *Settings > Account>Storage*
+		Then I can see the percentage of storage used
+			And I can see the size of each resource types
+			And I can see the *Request more space* section
+
+	Scenario: Create a collection by selecting channels
+		Given I am signed in to Studio
+			And I am on the *Collections* tab
+		When I type a collection name in the *Collection name* field
+			And I click the *New collection* button
+			And I click the *Select channels* button
+		Then I see the *Select channels* page
+			And I am on the *Content library* tab # alternatively I can select the *My channels* or *View-only* tab
+		When I select one or several channels
+			And I click the *Finish* button
+		Then I see the the *New collection* screen with the selected channels
+			When I click the *Create* button
+		Then I see the *Collections* tab
+			And I see the newly created collection
+			And I see the number of channels in that collection
+
+	Scenario: Explore the content library
+		Given I am signed in to Studio
+		When I go to the *Content library*
+		Then I see a page with the available public channels
+			And I can filter the search results by keyword, language, license, format, starred status, resources for coaches, captions or subtitles
+			And I can view or download the channel summary
+		When I click on a channel card
+		Then I can see all of the channel's resources in *View-only* format
+
