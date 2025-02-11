@@ -233,7 +233,7 @@
 
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
 .images-menu {
   position: relative;
@@ -286,6 +286,5 @@
 .image-preview {
   max-width: 100%;
 }
-
 
 </style>
