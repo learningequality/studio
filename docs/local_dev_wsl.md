@@ -257,59 +257,6 @@ Either of the above commands will take a few minutes to build the frontend. When
 * Username: `a@a.com`
 * Password: `a`
 
-### Special Note
-
-If you encounter an issue where the localhost URL is accessible but the page shows only the Studio header with a blank page, you can fix it by updating the `webpack.config.js` file. This issue has been discussed in the [GitHub discussion](https://github.com/learningequality/studio/discussions/4871).
-
-#### Steps to Fix the Blank Page Issue
-
-1. **Open `webpack.config.js`**:
-
-   ```sh
-   nano ~/studio/webpack.config.js
-   ```
-2. **Update the `devServer` Section**: Add the following line to the `devServer` section to bind to all network interfaces:
-
-   ```js
-   devServer: {
-     host: '0.0.0.0',
-     // other configurations...
-   }
-   ```
-3. **Update the `publicPath` in Development Mode**: Change the `publicPath` in development mode from `http://127.0.0.1:4000/dist/` to your WSL IP address. For example:
-
-   ```js
-   publicPath: 'http://172.28.128.96:4000/dist/',
-   ```
-
-   You can find your WSL IP address by running:
-
-   ```sh
-   hostname -I
-   ```
-4. **Save and Exit the File**: Save the changes and exit the file (Ctrl + X, then Y, then Enter).
-5. **Restart the Development Server**:
-
-   ```sh
-   yarn run devserver:hot  # with Vue hot module reloading
-   # or
-   yarn run devserver  # without hot module reloading
-   ```
-
-### Keep `webpack.config.js` Out of Git Tracking
-
-Since this change is specific to WSL and may not be needed for other environments, you should keep the `webpack.config.js` file out of Git tracking. Run the following commands to untrack the file:
-
-```sh
-git update-index --assume-unchanged path/to/your/webpack.config.js
-```
-
-To revert this change and track the file again, you can use:
-
-```sh
-git update-index --no-assume-unchanged path/to/your/webpack.config.js
-```
-
 ## Contributing to the Codebase with Visual Studio Code and WSL
 
 Once you have completed the setup of Kolibri Studio in your WSL environment using the terminal, you can use Visual Studio Code (VS Code) to open the project and start contributing to the codebase. Here’s how you can do it:
