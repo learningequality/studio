@@ -67,9 +67,9 @@
 
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
-  .subheading /deep/ .v-icon {
+  .subheading ::v-deep .v-icon {
     margin-left: 4px;
     vertical-align: text-top;
   }

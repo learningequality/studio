@@ -853,7 +853,7 @@
 
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   @import '../mathquill/mathquill.css';
 
@@ -882,7 +882,7 @@
   // TODO (when updating to new frontend files structure)
   // find better location for following styles that
   // are supposed to be common to all editable fields
-  /deep/ .mq-editable-field {
+  ::v-deep .mq-editable-field {
     border: 0;
 
     .mq-to,

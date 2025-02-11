@@ -197,8 +197,8 @@
 <style>
 /*
   Warning: custom elements don't currently have a way of using SFC styles.
-  Instead, add your style changes to `./style.less`
+  Instead, add your style changes to `./style.scss`
 
-  Additionally, all child component styles must be included in `./style.less`
+  Additionally, all child component styles must be included in `./style.scss`
 */
 </style>

@@ -166,7 +166,7 @@
 </script>
 
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .v-select .v-input__slot {
     height: 56px;

@@ -549,9 +549,9 @@
 </script>
 
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
-  .printing /deep/ * {
+  .printing ::v-deep * {
     font-family: 'Noto Sans', helvetica !important;
 
     &.material-icons {
@@ -591,7 +591,7 @@
     max-width: 350px;
     font-size: 12pt;
 
-    /deep/ tr {
+    ::v-deep tr {
       border-top: 0 !important;
 
       &:hover {
