@@ -36,14 +36,16 @@
       class="languages-options"
       data-test="language-options-list"
     >
-      <KRadioButton
-        v-for="language in languageOptions"
-        :key="language.id"
-        v-model="selectedLanguage"
-        :buttonValue="language.id"
-        :label="languageText(language)"
-        :labelDir="null"
-      />
+      <KRadioButtonGroup>
+        <KRadioButton
+          v-for="language in languageOptions"
+          :key="language.id"
+          v-model="selectedLanguage"
+          :buttonValue="language.id"
+          :label="languageText(language)"
+          :labelDir="null"
+        />
+      </KRadioButtonGroup>
       <p
         v-if="!languageOptions.length"
         :style="{ color: $themeTokens.annotation }"
