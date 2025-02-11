@@ -11,12 +11,12 @@ module.exports = {
     'at-rule-no-unknown': null, // we're using LESS
     'scss/at-rule-no-unknown': null, // we're using LESS
     'csstree/validator': null, // this triggers issues with unknown at rules too.
-    'selector-pseudo-class-no-unknown': [ 
+    'selector-pseudo-element-no-unknown': [ 
      true,
      {
          // In Vue 2.6 and later, `::v-deep` is used for deep selectors.  
          // This rule allows `::v-deep` to prevent linting errors.
-         ignorePseudoClasses: ['v-deep'],
+         ignorePseudoElements: ['v-deep'],
      }
     ]
   },

@@ -120,5 +120,5 @@
     width: $icon-width;
     padding: 0 $icon-padding;
   }
-  
+
 </style>
