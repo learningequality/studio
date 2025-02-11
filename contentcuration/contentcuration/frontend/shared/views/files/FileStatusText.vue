@@ -73,9 +73,9 @@
 
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
-  /deep/ canvas {
+  ::v-deep canvas {
     border: 2px solid var(--v-grey-darken2);
   }
 

@@ -63,7 +63,7 @@
 
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .v-alert {
     border: 0;

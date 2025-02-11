@@ -223,7 +223,7 @@
   };
 
 </script>
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .defaultUpload {
     margin: 0.8em;

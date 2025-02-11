@@ -181,7 +181,7 @@
 
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .layout .section-header {
     padding: 0 15px;
@@ -193,7 +193,7 @@
     margin: 0;
   }
 
-  /deep/ .v-list__tile {
+  ::v-deep .v-list__tile {
     height: max-content !important;
     min-height: 64px;
     padding: 5px 16px;

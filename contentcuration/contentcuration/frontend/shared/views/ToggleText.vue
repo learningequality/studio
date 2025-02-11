@@ -93,7 +93,7 @@
 </script>
 
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .text {
     margin: 0;

@@ -215,13 +215,13 @@
 </script>
 
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .v-input--checkbox {
     margin: 0;
   }
 
-  /deep/ .v-messages {
+  ::v-deep .v-messages {
     display: none;
   }
 
@@ -238,7 +238,7 @@
     overflow: auto;
   }
 
-  /deep/ .v-label * {
+  ::v-deep .v-label * {
     vertical-align: bottom;
   }
 

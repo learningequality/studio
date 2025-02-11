@@ -922,12 +922,12 @@
 
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
-  @space-between-sections: 64px;
+  $space-between-sections: 64px;
 
-  /deep/ a,
-  /deep/ a:hover {
+  ::v-deep a,
+  ::v-deep a:hover {
     color: inherit;
     text-decoration: none;
   }
@@ -935,7 +935,7 @@
   .details-edit-view {
     padding: 10px;
 
-    /deep/ .subheading {
+    ::v-deep .subheading {
       margin-bottom: 8px;
       font-weight: bold;
     }
@@ -945,7 +945,7 @@
     }
 
     .auth-section {
-      /deep/ .v-autocomplete .v-input__append-inner {
+      ::v-deep .v-autocomplete .v-input__append-inner {
         visibility: hidden;
       }
     }
@@ -954,29 +954,29 @@
       max-width: 960px;
 
       .tagbox {
-        /deep/ .v-select__selections {
+        ::v-deep .v-select__selections {
           min-height: 0 !important;
         }
 
-        /deep/ .v-chip__content {
+        ::v-deep .v-chip__content {
           color: black; // Read-only tag box grays out tags
         }
 
-        /deep/ .v-input__append-inner {
+        ::v-deep .v-input__append-inner {
           display: none;
         }
       }
 
-      /deep/ .v-input--is-readonly {
-        /deep/ label {
+      ::v-deep .v-input--is-readonly {
+        ::v-deep label {
           color: var(--v-grey-darken2) !important;
         }
 
-        /deep/ .v-input__append-inner {
+        ::v-deep .v-input__append-inner {
           display: none;
         }
 
-        /deep/ .v-input__slot {
+        ::v-deep .v-input__slot {
           &::before {
             border-style: dotted;
           }
@@ -990,12 +990,12 @@
       .basicInfoColumn {
         display: flex;
 
-        /deep/ .v-input {
+        ::v-deep .v-input {
           // Stretches the "Description" text area to fill the column vertically
           align-items: stretch;
         }
 
-        /deep/ .v-input__control {
+        ::v-deep .v-input__control {
           // Makes sure that the character count does not get pushed to second column
           flex-wrap: nowrap;
         }

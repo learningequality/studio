@@ -66,7 +66,7 @@
 
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .formula {
     font-family: Symbola;

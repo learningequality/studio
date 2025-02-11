@@ -115,14 +115,14 @@
 
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   /* Truncate text if the last item is too long */
   .breadcrumb:last-child {
     max-width: calc(100% - 86px);
   }
 
-  /deep/ .v-breadcrumbs__item {
+  ::v-deep .v-breadcrumbs__item {
     overflow: hidden;
     text-overflow: ellipsis;
   }

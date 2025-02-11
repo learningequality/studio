@@ -18,7 +18,7 @@
   };
 
 </script>
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .bottom-bar {
     position: fixed;

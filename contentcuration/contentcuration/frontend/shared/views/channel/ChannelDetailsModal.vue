@@ -170,7 +170,7 @@
 </script>
 
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .v-toolbar__title {
     font-weight: bold;

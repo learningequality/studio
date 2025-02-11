@@ -267,7 +267,7 @@
 </script>
 
 
-<style lang="less">
+<style lang="scss">
 
   html {
     overflow-y: auto !important;

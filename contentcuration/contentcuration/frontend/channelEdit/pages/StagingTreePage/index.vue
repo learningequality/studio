@@ -571,7 +571,7 @@
 
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .main-content {
     height: calc(100vh - 176px);

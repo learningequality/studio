@@ -179,7 +179,7 @@
 
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .v-list__tile__action {
     min-width: 30px;
@@ -194,7 +194,7 @@
     display: none;
   }
 
-  /deep/ .v-list__tile {
+  ::v-deep .v-list__tile {
     height: max-content !important;
     min-height: 64px;
 

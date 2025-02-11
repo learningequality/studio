@@ -98,7 +98,7 @@
 
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .v-divider {
     margin-top: 0;

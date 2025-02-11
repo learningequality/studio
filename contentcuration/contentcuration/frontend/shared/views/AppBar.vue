@@ -212,7 +212,7 @@
 
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .v-toolbar {
     z-index: 5;
@@ -222,7 +222,7 @@
     border-radius: 8px;
   }
 
-  /deep/ .v-tabs__div {
+  ::v-deep .v-tabs__div {
     min-width: 160px;
   }
 

@@ -154,9 +154,9 @@
 
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
-  @max-height: calc(100vh - 96px);
+  $max-height: calc(100vh - 96px);
 
   .v-card,
   video,
@@ -174,11 +174,11 @@
   iframe,
   .epub {
     min-height: 200px;
-    max-height: @max-height;
+    max-height: $max-height;
   }
 
   video {
-    max-height: @max-height;
+    max-height: $max-height;
   }
 
   .message-card,
@@ -193,14 +193,14 @@
   }
 
   .fullscreen {
-    min-height: @max-height;
+    min-height: $max-height;
 
     .v-card,
     audio,
     embed,
     iframe,
     .epub {
-      min-height: @max-height;
+      min-height: $max-height;
     }
   }
 

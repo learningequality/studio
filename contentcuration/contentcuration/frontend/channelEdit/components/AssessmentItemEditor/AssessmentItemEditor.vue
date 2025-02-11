@@ -420,7 +420,7 @@
 
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .question-text {
     transition: 0.7s;

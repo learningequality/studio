@@ -120,13 +120,13 @@
 
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
-  /deep/ .v-tabs__div {
+  ::v-deep .v-tabs__div {
     min-width: 160px;
   }
 
-  /deep/ .v-tabs__container {
+  ::v-deep .v-tabs__container {
     padding: 0;
   }
 

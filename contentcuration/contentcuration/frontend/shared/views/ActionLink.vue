@@ -60,7 +60,7 @@
   };
 
 </script>
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .v-btn {
     min-width: min-content;

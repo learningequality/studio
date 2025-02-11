@@ -96,14 +96,14 @@
 </script>
 
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .over-app-bar {
     z-index: 3;
   }
 
   // Because the tiles don't re-adjust in responsive mode
-  /deep/ .v-list__tile {
+  ::v-deep .v-list__tile {
     height: auto;
   }
 

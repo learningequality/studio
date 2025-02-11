@@ -231,13 +231,13 @@
 </script>
 
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .v-form {
     max-width: 900px;
   }
 
-  .searchtext /deep/ .v-input__append-outer {
+  .searchtext ::v-deep .v-input__append-outer {
     height: 57px;
     margin: 0;
     margin-top: 0 !important;

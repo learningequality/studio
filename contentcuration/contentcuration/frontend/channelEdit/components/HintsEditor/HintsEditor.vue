@@ -295,7 +295,7 @@
 
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .card-border-light {
     /* stylelint-disable-next-line custom-property-pattern */

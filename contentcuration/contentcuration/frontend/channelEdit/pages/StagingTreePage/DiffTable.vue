@@ -147,10 +147,10 @@
 
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
-  /deep/ th,
-  td {
+  ::v-deep th,
+  ::v-deep td {
     padding: 0 12px !important;
   }
 
