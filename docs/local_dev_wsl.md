@@ -53,41 +53,7 @@ git clone https://github.com/$USERNAME/studio.git
 Replace `$USERNAME` with your GitHub username.
 
 ## Install Prerequisites
-
-### Install Volta
-
-Follow the instructions on the [Volta installation page](https://docs.volta.sh/guide/getting-started) to install Volta. Here are the commands to install Volta:
-
-```sh
-curl https://get.volta.sh | bash
-```
-
-Add Volta to your shell configuration by adding the following line to your `~/.bashrc` file:
-
-```sh
-echo 'export PATH="$HOME/.volta/bin:$PATH"' >> ~/.bashrc
-source ~/.bashrc
-```
-
-### Install pyenv and pyenv-virtualenv
-
-Follow the instructions on the [pyenv installation page](https://github.com/pyenv/pyenv#installation) to install pyenv and pyenv-virtualenv. Here are the commands to install pyenv:
-
-```sh
-curl https://pyenv.run | bash
-```
-
-Add pyenv to your shell configuration by adding the following lines to your `~/.bashrc` file:
-
-```sh
-echo -e '\n# Pyenv' >> ~/.bashrc
-echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bashrc
-echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bashrc
-echo 'eval "$(pyenv init --path)"' >> ~/.bashrc
-echo 'eval "$(pyenv init -)"' >> ~/.bashrc
-echo 'eval "$(pyenv virtualenv-init -)"' >> ~/.bashrc
-source ~/.bashrc
-```
+For detailed instructions on installing and configuring Volta, pyenv, and pyenv-virtualenv, please see the [Prerequisites](./local_dev_host.md#prerequisites) section in our Local Development with host guide.
 
 ## Install System Dependencies and Services
 
@@ -178,38 +144,7 @@ source ~/.bashrc
 ```
 
 ## Set Up Python Virtual Environment
-To determine what version of Python studio needs, you can check the `runtime.txt` file:
-```bash
-$ cat runtime.txt
-# This is the required version of Python to run Studio currently.
-# This is determined by the default Python 3 version that is installed
-# inside Ubuntu Bionic, which is used to build images for Studio.
-# We encode it here so that it can be picked up by Github's dependabot
-# to manage automated package upgrades.
-python-3.10.13
-```
-### Install the Required Python Version
-
-```sh
-pyenv install 3.10.13
-pyenv virtualenv 3.10.13 studio-py3.10
-pyenv activate studio-py3.10
-```
-
-### Install Python Dependencies
-
-Navigate to your studio directory and install the Python dependencies:
-
-```sh
-cd ~/studio
-pip install -r requirements.txt -r requirements-dev.txt
-```
-
-To deactivate the virtual environment:
-
-```sh
-pyenv deactivate
-```
+For complete instructions on installing Python 3.10.13, creating and activating the virtual environment, and installing Studio’s Python dependencies, please refer to the [Build Your Python Virtual Environment](./local_dev_host.md#build-your-python-virtual-environment) section in our Local Development with host guide.
 
 ### Note about psycopg2
 
@@ -217,37 +152,7 @@ The packages `postgresql-12`, `postgresql-contrib`, and `postgresql-server-dev-a
 
 ## Install Frontend Dependencies
 
-The project requires Node 16.X as the runtime and Yarn >= 1.22.22 as the package manager. We use [Volta](https://docs.volta.sh/guide/getting-started) to manage these automatically. Ensure you have Volta installed and your shell configured to use Volta. You can then install all the dependencies by running:
-
-```sh
-yarn install
-```
-
-## Run the Services
-
-Having installed all the necessary services, initialized your Python virtual environment, and installed Yarn, you're now ready to start the services. Open a separate terminal/terminal-tab and run:
-
-```sh
-yarn run services
-```
-
-## Initialize Studio
-
-With the services running, in a separate terminal/terminal-tab, initialize the database for Studio development purposes:
-
-```sh
-yarn run devsetup
-```
-
-## Run the Development Server
-
-With the services running and the database initialized, start the development server:
-
-```sh
-yarn run devserver:hot  # with Vue hot module reloading
-# or
-yarn run devserver  # without hot module reloading
-```
+For guidance on installing Node 16.X, Yarn, and all required frontend dependencies, running the services, initializing Studio, and running the development server , please refer to the [Install Frontend Dependencies](./local_dev_host.md#install-frontend-dependencies) section in our Local Development with host guide.
 
 ## Access Kolibri Studio
 

@@ -5,37 +5,11 @@ The following guide utilizes docker and docker-compose to run select services re
 **Note:** If you are developing on Windows, it is recommended to use WSL (Windows Subsystem for Linux). Please follow the [WSL setup guide](./local_dev_wsl.md) for detailed instructions.
 
 ## Prerequisites
-Please install these prerequisites, or alternatives for setting up your local development environment:
-- [volta](https://docs.volta.sh/guide/getting-started) or a different node.js manager
-- [pyenv](https://kolibri-dev.readthedocs.io/en/develop/howtos/installing_pyenv.html) and [pyenv-virtualenv](https://github.com/pyenv/pyenv-virtualenv#installation)
-- [docker](https://docs.docker.com/install/) and [docker-compose](https://docs.docker.com/compose/install/)
-
+For detailed instructions on installing and configuring Volta, pyenv, and pyenv-virtualenv, please see the [Prerequisites](./local_dev_host.md#prerequisites) section in our Local Development with host guide.
 
 ## Build your python virtual environment
-To determine the preferred version of Python, you can check the `runtime.txt` file:
-```bash
-$ cat runtime.txt
-# This is the required version of Python to run Studio currently.
-# This is determined by the default Python 3 version that is installed
-# inside Ubuntu Bionic, which is used to build images for Studio.
-# We encode it here so that it can be picked up by Github's dependabot
-# to manage automated package upgrades.
-python-3.10.13
-```
-Use `pyenv` to install the version of Python listed in that file, and to also set up a virtual environment:
-```bash
-pyenv install 3.10.13
-pyenv virtualenv 3.10.13 studio-py3.10
-pyenv activate studio-py3.10
-```
-Now you may install Studio's Python dependencies:
-```bash
-pip install -r requirements.txt -r requirements-dev.txt
-```
-To deactivate the virtual environment, when you're finished developing on Studio for the time being:
-```bash
-pyenv deactivate
-```
+For complete instructions on installing Python 3.10.13, creating and activating the virtual environment, and installing Studio’s Python dependencies, please refer to the [Build Your Python Virtual Environment](./local_dev_host.md#build-your-python-virtual-environment) section in our Local Development with host guide.
+
 
 ### A note about dependencies on Apple Silicon M1+
 If you run into an error with `pip install` related to the `grcpio` package, it is because it currently [does not support M1 with the version for `grcpio` Studio uses](https://github.com/grpc/grpc/issues/25082). In order to fix it, you will need to add the following environmental variables before running `pip install`:

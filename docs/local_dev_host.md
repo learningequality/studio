@@ -74,7 +74,6 @@ Press <kbd>Ctrl</kbd>+<kbd>D</kbd> to exit the `psql` client. Finally
 exit  # leave the postgres account
 ```
 
-
 ## Build your python virtual environment
 To determine what version of Python studio needs, you can check the `runtime.txt` file:
 ```bash
