@@ -31,9 +31,9 @@
           python36
           python36Packages.venvShellHook
           python36Packages.wheel
-          postgresql96 # for building psycopg2
+          postgresql16 # for building psycopg2
         ];
-        runTimePkgs = with npkgs; [ minio postgresql96 redis ];
+        runTimePkgs = with npkgs; [ minio postgresql16 redis ];
         cloudPkgs = with npkgs; [
           google-cloud-sdk
           kubectl
