@@ -412,9 +412,9 @@
 
 </script>
 
-<style scoped lang="less">
+<style scoped lang="scss">
 
-  .v-badge /deep/ .v-badge__badge {
+  .v-badge ::v-deep .v-badge__badge {
     top: -5px;
     left: 10px;
   }
@@ -453,7 +453,7 @@
   }
 
   // size causes rows to shift
-  /deep/ .v-btn {
+  ::v-deep .v-btn {
     width: 24px;
     height: 24px;
     margin: 0;

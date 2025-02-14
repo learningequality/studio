@@ -229,7 +229,7 @@
 </script>
 
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .import-search-filters {
     z-index: 0;

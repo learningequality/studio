@@ -402,18 +402,18 @@
 </script>
 
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
-  /deep/ .v-toolbar__extension {
+  ::v-deep .v-toolbar__extension {
     padding: 0;
   }
 
-  .tree-drawer /deep/ .drawer-contents {
+  .tree-drawer ::v-deep .drawer-contents {
     display: flex;
     flex-direction: column;
   }
 
-  .hierarchy-toggle /deep/ .v-icon {
+  .hierarchy-toggle ::v-deep .v-icon {
     transform: scaleX(-1);
 
     [dir='rtl'] & {
@@ -425,7 +425,7 @@
     transition: padding-left 0s !important;
   }
 
-  .hierarchy-toolbar /deep/ .v-toolbar__content {
+  .hierarchy-toolbar ::v-deep .v-toolbar__content {
     padding: 0 20px;
   }
 

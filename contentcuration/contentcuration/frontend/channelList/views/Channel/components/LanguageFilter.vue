@@ -123,16 +123,15 @@
 
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   // Need to set otherwise chips will exceed width of selection box
-
-  /deep/ .v-select__selections {
+  ::v-deep .v-select__selections {
     width: calc(100% - 48px);
   }
 
   .v-chip,
-  /deep/ .v-chip__content,
+  ::v-deep .v-chip__content,
   .text-truncate {
     max-width: 100%;
   }

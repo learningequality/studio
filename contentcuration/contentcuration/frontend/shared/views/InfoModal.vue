@@ -56,9 +56,9 @@
 
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
-  /deep/ p {
+  ::v-deep p {
     font-size: 12pt;
     line-height: normal;
     color: var(--v-grey-darken3);

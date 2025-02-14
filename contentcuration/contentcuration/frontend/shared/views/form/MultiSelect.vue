@@ -132,19 +132,19 @@
 
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .v-select {
     max-width: 500px;
   }
 
-  /deep/ .v-select__selections {
+  ::v-deep .v-select__selections {
     width: calc(100% - 48px);
     min-height: 0 !important;
   }
 
   .v-chip,
-  /deep/ .v-chip__content,
+  ::v-deep .v-chip__content,
   .text-truncate {
     max-width: 100%;
     overflow: hidden;

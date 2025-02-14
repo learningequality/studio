@@ -179,7 +179,7 @@
 
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .preview-wrapper {
     padding-right: 15px;
@@ -200,11 +200,11 @@
   .v-input--radio-group {
     width: 100%;
 
-    /deep/ .v-input__control {
+    ::v-deep .v-input__control {
       width: 100%;
     }
 
-    /deep/ label {
+    ::v-deep label {
       color: var(--v-text-base);
     }
 

@@ -168,7 +168,7 @@
 
 </script>
 
-<style scoped lang="less">
+<style scoped lang="scss">
 
   .metadata {
     color: var(--v-grey-darken2);

@@ -102,7 +102,7 @@
 
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .chip {
     display: inline-block;

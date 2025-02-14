@@ -63,7 +63,7 @@
 </script>
 
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .form-section {
     font-size: 14px;

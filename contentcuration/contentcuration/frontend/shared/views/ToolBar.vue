@@ -28,9 +28,9 @@
 
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
-  /deep/ .v-toolbar__content {
+  ::v-deep .v-toolbar__content {
     border-bottom: 1px solid transparent;
 
     .elevation-0 & {

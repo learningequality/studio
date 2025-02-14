@@ -375,10 +375,10 @@
 </script>
 
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
-  @thumbnail-width: 16%;
-  @compact-thumbnail-width: ~'20px + 0.5%';
+  $thumbnail-width: 16%;
+  $compact-thumbnail-width: calc(20px + 0.5%);
 
   .content-list-item {
     background: #ffffff;
@@ -427,7 +427,7 @@
     }
   }
 
-  /deep/ .v-list__tile {
+  ::v-deep .v-list__tile {
     display: flex;
     flex: 1 1 auto;
     flex-wrap: nowrap;
@@ -463,25 +463,23 @@
 
   .thumbnail-col {
     flex-shrink: 0;
-    width: @thumbnail-width;
+    width: $thumbnail-width;
     min-width: 70px;
     max-width: 160px;
 
     .compact & {
-      // stylelint-disable
-      width: calc(@compact-thumbnail-width);
-      // stylelint-enable
+      width: $compact-thumbnail-width;
       min-width: 20px;
     }
   }
 
   .description-col {
     flex-shrink: 1 !important;
-    width: calc(100% - @thumbnail-width - 206px);
+    width: calc(100% - #{$thumbnail-width} - 206px);
     word-break: break-word;
 
     .compact & {
-      width: calc(100% - @compact-thumbnail-width - 206px);
+      width: calc(100% - #{$compact-thumbnail-width} - 206px);
     }
   }
 

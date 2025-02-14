@@ -60,7 +60,7 @@
 
 
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .back-text {
     display: inline-block;

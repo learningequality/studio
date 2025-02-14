@@ -151,9 +151,9 @@
   };
 
 </script>
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
-  /deep/ .languageTile > .v-list__tile {
+  ::v-deep .languageTile > .v-list__tile {
     height: 56px;
   }
 
