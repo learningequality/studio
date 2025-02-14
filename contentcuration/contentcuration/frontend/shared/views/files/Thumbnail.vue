@@ -52,26 +52,22 @@
       :aria-label="kindTitle"
       class="thumbnail-image"
     >
-      <text
-        :x="-1"
-        :y="y"
-        fill="#ffffff"
-        class="material-icons notranslate v-icon"
-      >{{ icon }}</text>
+    <KIcon icon="infoOutline" 
+        :x="+10"
+        :y="y+20"
+        :style="{ fill: '#ffffff' }"  />
     </svg>
     <svg
       v-else
-      viewBox="0 0 24 24"
+      viewBox="0 0 40 40"
       :aria-label="kindTitle"
       class="nothumbnail-image"
       :class="$isRTL ? 'rtl-image' : 'ltr-image'"
     >
-      <text
-        :x="-1"
-        :y="y - 3"
-        :fill="$vuetify.theme.greyBorder"
-        class="material-icons notranslate v-icon"
-      >image</text>
+    <KIcon icon="image" 
+        :x="-3"
+        :y="y - 14"
+        :style="{ fill: '#999999' }"  />
     </svg>
 
   </figure>
