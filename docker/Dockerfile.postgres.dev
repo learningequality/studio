@@ -1,5 +1,5 @@
 # Installs pgvector to postgres base image.
-ARG PG_MAJOR=12
+ARG PG_MAJOR=16
 FROM postgres:$PG_MAJOR
 
 LABEL org.opencontainers.image.source=https://github.com/learningequality/studio
