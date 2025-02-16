@@ -1116,10 +1116,16 @@ export const Session = new IndexedDBResource({
   async getSession() {
     return this.get(CURRENT_USER);
   },
-  setSession(currentUser) {
-    return this.table.put({ CURRENT_USER, ...currentUser });
+  async setSession(currentUser) {
+    return this.transaction({ mode: 'rw' }, CHANGES_TABLE, async () => {
+      const current = await this.getSession();
+      if (current) {
+        return this.updateSession(currentUser);
+      }
+      return this.table.put({ CURRENT_USER, ...currentUser });
+    });
   },
-  updateSession(currentUser) {
+  async updateSession(currentUser) {
     return this.update(CURRENT_USER, currentUser);
   },
 });

@@ -1,5 +1,7 @@
 name: Update community pull requests spreadsheet
-on: [pull_request_target, issue_comment]
+on:
+  pull_request_target:
+    types: [assigned,unassigned,opened,closed,reopened]
 
 jobs:
   call-update-spreadsheet:

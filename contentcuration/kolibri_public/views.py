@@ -397,6 +397,7 @@ class BaseContentNodeMixin(object):
         "grade_levels",
         "resource_types",
         "accessibility_labels",
+        "learner_needs",
         "categories",
         "duration",
         "ancestors",
@@ -408,6 +409,7 @@ class BaseContentNodeMixin(object):
         "resource_types": lambda x: _split_text_field(x["resource_types"]),
         "accessibility_labels": lambda x: _split_text_field(x["accessibility_labels"]),
         "categories": lambda x: _split_text_field(x["categories"]),
+        "learner_needs": lambda x: _split_text_field(x["learner_needs"]),
     }
 
     def get_queryset(self):

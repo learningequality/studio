@@ -25,6 +25,7 @@ export const RouteNames = {
   CATALOG_ITEMS: 'CATALOG_ITEMS',
   CATALOG_DETAILS: 'CATALOG_DETAILS',
   CATALOG_FAQ: 'CATALOG_FAQ',
+  NEW_CHANNEL: 'NEW_CHANNEL',
 };
 
 export const ListTypeToRouteMapping = {
