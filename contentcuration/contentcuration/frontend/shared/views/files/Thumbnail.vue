@@ -52,10 +52,12 @@
       :aria-label="kindTitle"
       class="thumbnail-image"
     >
-    <KIcon icon="infoOutline" 
+      <KIcon
+        icon="infoOutline" 
         :x="+10"
-        :y="y+20"
-        :style="{ fill: '#ffffff' }"  />
+        :y="y + 20"
+        :style="{ fill: '#ffffff' }"
+      />
     </svg>
     <svg
       v-else
@@ -64,10 +66,12 @@
       class="nothumbnail-image"
       :class="$isRTL ? 'rtl-image' : 'ltr-image'"
     >
-    <KIcon icon="image" 
+      <KIcon
+        icon="image" 
         :x="-3"
         :y="y - 14"
-        :style="{ fill: '#999999' }"  />
+        :style="{ fill: '#999999' }"
+      />
     </svg>
 
   </figure>

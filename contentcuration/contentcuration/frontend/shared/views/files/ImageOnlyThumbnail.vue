@@ -31,10 +31,12 @@
       class="nothumbnail-image"
       :class="$isRTL ? 'rtl-image' : 'ltr-image'"
     >
-    <KIcon icon="image" 
+      <KIcon
+        icon="image" 
         :x="-1"
         :y="y - 14"
-        :style="{ fill: '#999999' }"  />
+        :style="{ fill: '#999999' }"
+      />
     </svg>
 
   </figure>
