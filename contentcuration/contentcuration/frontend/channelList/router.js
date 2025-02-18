@@ -17,7 +17,7 @@ const router = new VueRouter({
       component: ChannelList,
       props: { listType: ChannelListTypes.EDITABLE },
     },
-    
+
     {
       name: RouteNames.CHANNEL_SETS,
       path: '/collections',
@@ -65,9 +65,7 @@ const router = new VueRouter({
       component: ChannelModal,
       props: true,
     },
-   
-    
-   
+
     {
       name: RouteNames.CATALOG_ITEMS,
       path: '/public',
