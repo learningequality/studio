@@ -202,7 +202,7 @@
     computed: {
       ...mapGetters('channelSet', ['getChannelSet']),
       isNew() {
-        return !this.channelSetId || this.$route.path === '/new';
+        return !this.channelSetId || this.$route.path === '/collections/new';
       },
       nameRules() {
         return [name => (name && name.trim().length ? true : this.$tr('titleRequiredText'))];

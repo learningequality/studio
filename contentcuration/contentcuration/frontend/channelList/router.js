@@ -17,6 +17,24 @@ const router = new VueRouter({
       component: ChannelList,
       props: { listType: ChannelListTypes.EDITABLE },
     },
+    
+    {
+      name: RouteNames.CHANNEL_SETS,
+      path: '/collections',
+      component: ChannelSetList,
+    },
+    {
+      name: RouteNames.NEW_CHANNEL_SET_DETAILS,
+      path: '/collections/new',
+      component: ChannelSetModal,
+      props: true,
+    },
+    {
+      name: RouteNames.CHANNEL_SET_DETAILS,
+      path: '/collections/:channelSetId',
+      component: ChannelSetModal,
+      props: true,
+    },
     {
       name: RouteNames.CHANNELS_STARRED,
       path: '/starred',
@@ -47,23 +65,9 @@ const router = new VueRouter({
       component: ChannelModal,
       props: true,
     },
-    {
-      name: RouteNames.CHANNEL_SETS,
-      path: '/collections',
-      component: ChannelSetList,
-    },
-    {
-      name: RouteNames.CHANNEL_SET_DETAILS,
-      path: '/collections/:channelSetId',
-      component: ChannelSetModal,
-      props: true,
-    },
-    {
-      name: RouteNames.NEW_CHANNEL_SET_DETAILS,
-      path: '/collections/new',
-      component: ChannelSetModal,
-      props: true,
-    },
+   
+    
+   
     {
       name: RouteNames.CATALOG_ITEMS,
       path: '/public',
