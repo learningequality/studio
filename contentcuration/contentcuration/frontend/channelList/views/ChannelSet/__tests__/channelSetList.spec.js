@@ -24,10 +24,17 @@ describe('channelSetList', () => {
   const createChannelSetStub = jest.fn().mockImplementation(() => Promise.resolve(id));
   beforeEach(() => {
     wrapper = makeWrapper(createChannelSetStub);
+      wrapper.setData({ loading: false });
+   
   });
-  it('should create a new channel set when new set button is clicked', () => {
-    wrapper.setData({ loading: false });
-    wrapper.find('[data-test="add-channelset"]').trigger('click');
-    expect(createChannelSetStub).toHaveBeenCalled();
-  });
+  it('should open a new channel set modal when new set button is clicked', async () => {
+      const push = jest.fn();
+      wrapper.vm.$router.push = push;
+      await wrapper.find('[data-test="add-channelset"]').trigger('click');
+      expect(push).toHaveBeenCalledWith({
+        name: RouteNames.NEW_CHANNEL_SET_DETAILS,
+      });
+    });
+    
+  
 });
