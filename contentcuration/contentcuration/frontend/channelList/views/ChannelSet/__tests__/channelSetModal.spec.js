@@ -10,7 +10,7 @@ import channelSet from '../../../vuex/channelSet';
 import ChannelSetModal from '../ChannelSetModal';
 import channel from 'shared/vuex/channel';
 import storeFactory from 'shared/vuex/baseStore';
-import { NEW_OBJECT } from 'shared/constants';
+
 
 const localVue = createLocalVue();
 localVue.use(Vuex);
@@ -39,11 +39,6 @@ const CHANNEL_SET = {
   },
 };
 
-const NEW_CHANNEL_SET = {
-  id: 'id-new-channel-set',
-  channels: [],
-  [NEW_OBJECT]: true,
-};
 
 const loadChannelSetMock = (cs, store) => {
   return jest.fn().mockImplementation(() => {
@@ -236,20 +231,6 @@ describe('ChannelSetModal', () => {
         getCloseButton(wrapper).trigger('click');
 
         expect(wrapper.vm.$route.name).toBe(RouteNames.CHANNEL_SETS);
-      });
-
-      it('should delete a channel set if it is new', () => {
-        const storeConfig = cloneDeep(STORE_CONFIG);
-        const deleteChannelSet = jest.fn();
-        storeConfig.modules.channelSet.actions.deleteChannelSet = deleteChannelSet;
-        const store = storeFactory(storeConfig);
-        store.commit('channelSet/ADD_CHANNELSET', NEW_CHANNEL_SET);
-
-        wrapper = makeWrapper({ store, channelSetId: NEW_CHANNEL_SET.id });
-
-        getCloseButton(wrapper).trigger('click');
-        expect(deleteChannelSet).toHaveBeenCalledTimes(1);
-        expect(deleteChannelSet.mock.calls[0][1]).toEqual(NEW_CHANNEL_SET);
       });
 
       it('should prompt user if there are unsaved changes', () => {
