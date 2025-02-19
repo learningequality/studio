@@ -249,9 +249,9 @@
     },
     beforeMount() {
       if (this.channelSetId) {
-         return this.verifyChannelSet(this.channelSetId);
+        return this.verifyChannelSet(this.channelSetId);
       } else {
-         this.setup();
+        this.setup();
       }
     },
     mounted() {
