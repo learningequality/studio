@@ -11,7 +11,6 @@ import ChannelSetModal from '../ChannelSetModal';
 import channel from 'shared/vuex/channel';
 import storeFactory from 'shared/vuex/baseStore';
 
-
 const localVue = createLocalVue();
 localVue.use(Vuex);
 localVue.use(VueRouter);
@@ -38,7 +37,6 @@ const CHANNEL_SET = {
     [CHANNEL_2.id]: true,
   },
 };
-
 
 const loadChannelSetMock = (cs, store) => {
   return jest.fn().mockImplementation(() => {
