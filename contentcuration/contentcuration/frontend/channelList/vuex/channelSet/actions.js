@@ -63,8 +63,7 @@ export function commitChannelSet(
   return ChannelSet.createModel(channelSetData)
     .then(data => {
       if (!data || !data.id) {
-        console.error('Error: The created channel set does not have an ID', data);
-        throw new Error('The created channel set does not have an ID');
+        throw ReferenceError('id must be defined to commit a channel');
       }
 
       context.commit('SET_CHANNELSET_NOT_NEW', data.id);
@@ -73,7 +72,6 @@ export function commitChannelSet(
       return data;
     })
     .catch(error => {
-      console.error('Error creating channel set:', error);
       throw error;
     });
 }

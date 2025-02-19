@@ -249,8 +249,10 @@
     },
     beforeMount() {
       if (this.channelSetId) {
-        return this.verifyChannelSet(this.channelSetId);
-      } else this.setup();
+         return this.verifyChannelSet(this.channelSetId);
+      } else {
+         this.setup();
+      }
     },
     mounted() {
       this.updateTitleForPage();
@@ -339,7 +341,6 @@
             promise = this.commitChannelSet(channelSetData)
               .then(newCollection => {
                 if (!newCollection || !newCollection.id) {
-                  console.error('Error: New collection was not created properly.', newCollection);
                   this.saving = false;
                   return;
                 }
@@ -416,7 +417,7 @@
               return;
             }
 
-            this.$router.replace({ name: 'NEW_CHANNEL_SET_DETAILS' });
+            this.$router.replace({ name: 'NEW_CHANNEL_SET' });
 
             this.$store.dispatch('errors/handleGenericError', {
               errorType: ErrorTypes.PAGE_NOT_FOUND,
@@ -425,7 +426,7 @@
           })
           .catch(error => {
             console.error('Error loading collection:', error);
-            this.$router.replace({ name: 'NEW_CHANNEL_SET_DETAILS' });
+            this.$router.replace({ name: 'NEW_CHANNEL_SET' });
           });
       },
     },

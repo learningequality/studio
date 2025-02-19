@@ -110,7 +110,7 @@
       ...mapActions('channelSet', ['loadChannelSetList']),
       newChannelSet() {
         this.$router.push({
-          name: RouteNames.NEW_CHANNEL_SET_DETAILS,
+          name: RouteNames.NEW_CHANNEL_SET,
         });
       },
     },
