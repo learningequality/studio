@@ -72,12 +72,19 @@ module.exports = (env = {}) => {
   });
 
   if (dev) {
+    // Suppress the "InjectManifest has been called multiple times" warning by reaching into
+    // the private properties of the plugin and making sure it never ends up in the state
+    // where it makes that warning.
+    // https://github.com/GoogleChrome/workbox/blob/v6/packages/workbox-webpack-plugin/src/inject-manifest.ts#L260-L282
+    // Solution taken from here:
+    // https://github.com/GoogleChrome/workbox/issues/1790#issuecomment-1241356293
     Object.defineProperty(workboxPlugin, "alreadyCalled", {
       get() {
         return false
       },
       set() {
-        // do nothing
+        // do nothing; the internals try to set it to true, which then results in a warning
+        // on the next run of webpack.
       },
     })
   }
@@ -85,12 +92,15 @@ module.exports = (env = {}) => {
   return merge(base, {
     context: srcDir,
     entry: {
+      // Use arrays for every entry to allow for hot reloading.
       channel_edit: ['./channelEdit/index.js'],
       channel_list: ['./channelList/index.js'],
       settings: ['./settings/index.js'],
       accounts: ['./accounts/index.js'],
       administration: ['./administration/index.js'],
+      // A simple code sandbox to play with components in
       pdfJSWorker: ['pdfjs-dist/build/pdf.worker.entry.js'],
+      // Utility for taking screenshots inside an iframe sandbox
       htmlScreenshot: ['./shared/utils/htmlScreenshot.js'],
     },
     output: {
@@ -127,8 +137,10 @@ module.exports = (env = {}) => {
     },
     resolve: {
       alias: {
+        // explicit alias definitions (rather than modules) for speed
         shared: path.resolve(srcDir, 'shared'),
         frontend: srcDir,
+        // needed to reference Vuetify styles in the shadow DOM
         vuetify: path.resolve('node_modules', 'vuetify'),
         static: staticFilesDir,
       },
@@ -150,10 +162,17 @@ module.exports = (env = {}) => {
         minify: false,
       }),
       new CircularDependencyPlugin({
+        // exclude detection of files based on a RegExp
         exclude: /a\.js|node_modules/,
+        // include specific files based on a RegExp
         include: /frontend/,
+        // add errors to webpack instead of warnings
         failOnError: false,
+        // allow import cycles that include an asyncronous import,
+        // e.g. via import(/* webpackMode: "weak" */ './file.js')
         allowAsyncCycles: false,
+        // set the current working directory for displaying module paths
+        
         cwd: process.cwd(),
       }),
       workboxPlugin,
