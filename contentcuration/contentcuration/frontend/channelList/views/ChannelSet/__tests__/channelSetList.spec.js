@@ -31,7 +31,7 @@ describe('channelSetList', () => {
     wrapper.vm.$router.push = push;
     await wrapper.find('[data-test="add-channelset"]').trigger('click');
     expect(push).toHaveBeenCalledWith({
-      name: RouteNames.NEW_CHANNEL_SET_DETAILS,
+      name: RouteNames.NEW_CHANNEL_SET,
     });
   });
 });
