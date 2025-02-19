@@ -35,7 +35,7 @@ brew link --force imagemagick@6
 
 ### Windows
 
-**Note:** Windows is no longer supported due to incompatibilities with some required packages.If you are developing on Windows, it is recommended to use WSL (Windows Subsystem for Linux). Please follow the [WSL setup guide](./local_dev_wsl.md) for detailed instructions.
+**Note:** Windows is no longer supported due to incompatibilities with some required packages. If you are developing on Windows, it is recommended to use WSL (Windows Subsystem for Linux). Please follow the [WSL setup guide](./local_dev_wsl.md) for detailed instructions.
 
 ## Set up the database
 
