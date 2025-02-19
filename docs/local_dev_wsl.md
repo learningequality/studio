@@ -112,37 +112,6 @@ Exit the PostgreSQL client:
 exit
 ```
 
-## Configure .bashrc
-
-Add the following configurations to your `~/.bashrc` file to ensure that pyenv and other tools are correctly set up:
-
-```sh
-nano ~/.bashrc
-```
-
-Add the following lines:
-
-```sh
-# Volta
-export PATH="$HOME/.volta/bin:$PATH"
-
-# Pyenv
-export PYENV_ROOT="$HOME/.pyenv"
-export PATH="$PYENV_ROOT/bin:$PATH"
-eval "$(pyenv init --path)"
-eval "$(pyenv init -)"
-eval "$(pyenv virtualenv-init -)"
-
-# PostgreSQL
-export PATH="/usr/lib/postgresql/12/bin:$PATH"
-```
-
-Save and exit the file (Ctrl + X, then Y, then Enter). Reload the `.bashrc` file:
-
-```sh
-source ~/.bashrc
-```
-
 ## Set Up Python Virtual Environment
 For complete instructions on installing Python 3.10.13, creating and activating the virtual environment, and installing Studio’s Python dependencies, please refer to the [Build Your Python Virtual Environment](./local_dev_host.md#build-your-python-virtual-environment) section in our Local Development with host guide.
 
