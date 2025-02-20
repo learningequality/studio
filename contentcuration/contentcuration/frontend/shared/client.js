@@ -39,7 +39,7 @@ window.addEventListener('offline', () => {
 });
 
 // Track page state
-const isNavigating = false;
+let isNavigating = false;
 const pendingRequests = new Set();
 
 // Create an AbortController for managing pending requests
