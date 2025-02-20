@@ -53,11 +53,11 @@ img {
 
   // TUI will automatically move cursor inside button,
   // so don't allow clicking on elements inside the button
-  * {
+  ::v-deep * {
     pointer-events: none;
   }
 
-  .v-btn__content {
+  ::v-deep .v-btn__content {
     height: min-content;
   }
 

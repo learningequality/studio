@@ -250,7 +250,7 @@
 
 <style lang="scss" scoped>
 
-  ::v-deep(.v-chip__close) {
+  ::v-deep .v-chip__close {
     padding-top: 4px;
   }
 

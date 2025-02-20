@@ -568,7 +568,9 @@
     margin-top: 8px !important;
   }
 
-  .policy-checkbox {
+  .policy-checkbox ::v-deep .v-input__slot {
+    margin-bottom: 4px !important;
+
     label {
       color: var(--v-grey-darken1) !important;
     }
@@ -592,7 +594,7 @@
     display: flex;
     margin-left: 40px;
 
-    .span {
+    span {
       margin-left: 2px;
       font-size: 16px;
     }

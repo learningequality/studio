@@ -111,7 +111,7 @@
 
 <style lang="scss">
 
-  /* rtl:begin:ignore */
+  /*! rtl:begin:ignore */
   [dir='rtl'] {
     .v-tabs__icon--prev {
       right: auto;
@@ -119,6 +119,6 @@
     }
   }
 
-  /* rtl:end:ignore */
+  /*! rtl:end:ignore */
 
 </style>

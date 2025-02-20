@@ -924,8 +924,6 @@
 
 <style lang="scss" scoped>
 
-  $space-between-sections: 64px;
-
   ::v-deep a,
   ::v-deep a:hover {
     color: inherit;

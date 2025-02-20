@@ -204,7 +204,7 @@
     transition: background 0.2s ease;
 
     &:hover,
-    .dragging& {
+    &.dragging {
       background: var(--v-secondary-base) !important;
     }
   }

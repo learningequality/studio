@@ -210,7 +210,7 @@
 
   .main {
     overflow: auto;
-    // stylelint-disable-next-line custom-property-pattern
+    /* stylelint-disable-next-line custom-property-pattern */
     background-color: var(--v-backgroundColor-base);
   }
 

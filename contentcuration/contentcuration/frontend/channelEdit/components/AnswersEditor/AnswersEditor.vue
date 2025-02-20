@@ -475,8 +475,8 @@
   }
 
   /* Remove the underline on text fields that are not focused */
-  ::v-deep(.no-border.v-text-field > .v-input__control > .v-input__slot::before),
-  ::v-deep(.no-border.v-text-field > .v-input__control > .v-input__slot::after) {
+  ::v-deep .no-border.v-text-field > .v-input__control > .v-input__slot::before,
+  ::v-deep .no-border.v-text-field > .v-input__control > .v-input__slot::after {
     border-style: none;
   }
 

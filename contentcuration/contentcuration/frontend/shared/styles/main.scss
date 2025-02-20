@@ -32,7 +32,7 @@ html {
 body {
   font-family: 'Noto Sans', Verdana, sans-serif;
   letter-spacing: 0.03em;
-  // stylelint-disable-next-line custom-property-pattern
+  /* stylelint-disable-next-line custom-property-pattern */
   background-color: var(--v-backgroundColor-base);
 
   * {
@@ -54,7 +54,7 @@ body {
   }
 }
 
-// RTL-related rules
+/* RTL-related rules */
 
 /*! rtl:begin:ignore */
 [dir='rtl'] {

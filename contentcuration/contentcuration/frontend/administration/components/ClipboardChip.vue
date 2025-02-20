@@ -67,11 +67,4 @@
     text-overflow: ellipsis;
   }
 
-  .VBtn {
-    &:hover::before,
-    &:focus::before {
-      background-color: transparent;
-    }
-  }
-
 </style>
