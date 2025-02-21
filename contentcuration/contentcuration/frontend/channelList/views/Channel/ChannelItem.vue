@@ -343,13 +343,21 @@
       }
     },
     methods: {
-      ...mapActions('channel', ['deleteChannel']),
+      ...mapActions('channel', ['deleteChannel', 'removeViewer']),
       ...mapMutations('channel', { updateChannel: 'UPDATE_CHANNEL' }),
       handleDelete() {
-        this.deleteChannel(this.channelId).then(() => {
-          this.deleteDialog = false;
-          this.$store.dispatch('showSnackbarSimple', this.$tr('channelDeletedSnackbar'));
-        });
+        if (!this.canEdit) {
+          const currentUserId = this.$store.state.session.currentUser.id;
+          this.removeViewer({ channelId: this.channelId, userId: currentUserId }).then(() => {
+            this.deleteDialog = false;
+            this.$store.dispatch('showSnackbarSimple', this.$tr('channelDeletedSnackbar'));
+          });
+        } else {
+          this.deleteChannel(this.channelId).then(() => {
+            this.deleteDialog = false;
+            this.$store.dispatch('showSnackbarSimple', this.$tr('channelDeletedSnackbar'));
+          });
+        }
       },
       goToChannelRoute() {
         this.linkToChannelTree
