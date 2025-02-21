@@ -202,7 +202,7 @@
     computed: {
       ...mapGetters('channelSet', ['getChannelSet']),
       isNew() {
-        return !this.channelSetId || this.$route.path === '/collections/new';
+        return  this.$route.path === '/collections/new';
       },
       nameRules() {
         return [name => (name && name.trim().length ? true : this.$tr('titleRequiredText'))];
@@ -354,8 +354,7 @@
 
                 return newCollection;
               })
-              .catch(error => {
-                console.error('Error while creating collection:', error);
+              .catch(()=> {
                 this.saving = false;
               });
           } else {
@@ -401,33 +400,29 @@
       },
 
       verifyChannelSet(channelSetId) {
-        if (!channelSetId || channelSetId === 'new') {
-          return Promise.resolve();
-        }
-
-        if (this.getChannelSet(channelSetId)) {
-          this.setup();
-          return Promise.resolve();
-        }
-
-        return this.loadChannelSet(channelSetId)
-          .then(channelSet => {
-            if (channelSet) {
+        return new Promise((resolve, reject) => {
+          // Check if we already have the channel locally
+          if (this.getChannelSet(channelSetId)) {
+            this.setup();
+            resolve();
+            return;
+          }
+          // If not, try to load the channel
+          this.loadChannelSet(channelSetId).then(channelset => {
+            // Did our fetch return any channels, then we have a channel!
+            if (channelset) {
               this.setup();
+              resolve();
               return;
             }
-
-            this.$router.replace({ name: 'NEW_CHANNEL_SET' });
-
+            // If not, reject!
             this.$store.dispatch('errors/handleGenericError', {
               errorType: ErrorTypes.PAGE_NOT_FOUND,
               errorText: this.$tr('collectionErrorText'),
             });
-          })
-          .catch(error => {
-            console.error('Error loading collection:', error);
-            this.$router.replace({ name: 'NEW_CHANNEL_SET' });
+            reject();
           });
+        });
       },
     },
 
