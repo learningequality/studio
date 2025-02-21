@@ -19,6 +19,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import BasePermission
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework import status
 
 from contentcuration.constants import feature_flags
 from contentcuration.models import boolean_val
@@ -266,7 +267,30 @@ class ChannelUserViewSet(ReadOnlyValuesViewset):
 
     def delete_from_changes(self, changes):
         return self._handle_relationship_changes(changes)
+    @action(detail=True, methods=['delete'])
+    def remove_self(self, request, pk=None):
+        """
+        Allows a user to remove themselves from a channel as a viewer.
+        """
+        user = self.get_object()
+        channel_id = request.query_params.get('channel_id', None)
 
+        if not channel_id:
+            return Response({'detail': 'channel_id is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+        channel = Channel.objects.get(id=channel_id)
+        if not channel:
+            return Response({'detail': 'Channel not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        if request.user != user and not request.user.can_edit(channel_id):
+            return Response({'detail': 'You do not have permission to remove this user.'}, status=status.HTTP_403_FORBIDDEN)
+
+        if channel.viewers.filter(id=user.id).exists():
+            channel.viewers.remove(user)
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        else:
+            return Response({'detail': 'User is not a viewer on this channel.'}, status=status.HTTP_400_BAD_REQUEST)
 
 class AdminUserFilter(FilterSet):
     keywords = CharFilter(method="filter_keywords")
