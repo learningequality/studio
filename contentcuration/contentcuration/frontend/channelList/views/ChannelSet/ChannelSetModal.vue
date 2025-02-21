@@ -202,7 +202,7 @@
     computed: {
       ...mapGetters('channelSet', ['getChannelSet']),
       isNew() {
-        return  this.$route.path === '/collections/new';
+        return this.$route.path === '/collections/new';
       },
       nameRules() {
         return [name => (name && name.trim().length ? true : this.$tr('titleRequiredText'))];
@@ -354,7 +354,7 @@
 
                 return newCollection;
               })
-              .catch(()=> {
+              .catch(() => {
                 this.saving = false;
               });
           } else {
