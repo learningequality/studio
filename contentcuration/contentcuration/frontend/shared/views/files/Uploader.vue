@@ -256,7 +256,7 @@
 
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .storage-alert {
     font-size: 12pt;

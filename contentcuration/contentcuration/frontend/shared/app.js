@@ -118,7 +118,7 @@ import { theme, icons } from 'shared/vuetify';
 import { i18nSetup } from 'shared/i18n';
 
 import './styles/vuetify.scss';
-import 'shared/styles/main.less';
+import 'shared/styles/main.scss';
 import Base from 'shared/Base.vue';
 import urls from 'shared/urls';
 import ActionLink from 'shared/views/ActionLink';

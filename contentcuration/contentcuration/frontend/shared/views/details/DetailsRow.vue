@@ -59,7 +59,7 @@
 </script>
 
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .flex {
     word-break: break-word;

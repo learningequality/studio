@@ -118,7 +118,7 @@
 </script>
 
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .container {
     min-width: 50%;

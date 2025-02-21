@@ -110,9 +110,9 @@
 </script>
 
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
-  /deep/ .v-select__selections {
+  ::v-deep .v-select__selections {
     width: calc(100% - 48px); // Account for clear icon
     min-height: 0 !important;
   }

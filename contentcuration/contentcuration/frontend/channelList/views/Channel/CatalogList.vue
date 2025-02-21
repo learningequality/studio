@@ -271,7 +271,7 @@
   };
 
 </script>
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .list-wrapper {
     max-width: 1080px;

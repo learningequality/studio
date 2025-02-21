@@ -17,7 +17,7 @@
 </script>
 
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .page-container {
     padding: 32px;

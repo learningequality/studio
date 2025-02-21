@@ -101,10 +101,6 @@ module.exports = (env = {}) => {
           test: /\.styl(us)?$/,
           use: baseCssLoaders.concat('stylus-loader'),
         },
-        {
-          test: /\.less?$/,
-          use: baseCssLoaders.concat('less-loader'),
-        },
       ],
     },
     resolve: {
@@ -116,7 +112,7 @@ module.exports = (env = {}) => {
         vuetify: path.resolve('node_modules', 'vuetify'),
         static: staticFilesDir,
       },
-      extensions: ['.js', '.vue', '.css', '.less'],
+      extensions: ['.js', '.vue', '.css'],
       modules: [rootNodeModules],
     },
     resolveLoader: {

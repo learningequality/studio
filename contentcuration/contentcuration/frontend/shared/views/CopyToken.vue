@@ -76,13 +76,13 @@
 
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
-  .v-text-field /deep/ input[type='text'] {
+  .v-text-field ::v-deep input[type='text'] {
     color: var(--v-grey-darken1) !important;
   }
 
-  .v-text-field /deep/ .v-input__slot::before {
+  .v-text-field ::v-deep .v-input__slot::before {
     border-style: dotted !important;
   }
 

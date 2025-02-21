@@ -431,7 +431,7 @@
 </script>
 
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .channel-info {
     border: 0;

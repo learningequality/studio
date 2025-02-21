@@ -140,13 +140,13 @@
 </script>
 
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .list-items {
     margin: 0 auto;
   }
 
-  /deep/ .v-datatable {
+  ::v-deep .v-datatable {
     background-color: transparent !important;
   }
 
