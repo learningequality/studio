@@ -48,7 +48,8 @@ const abortController = new AbortController();
 window.addEventListener('navigate', () => {
   isNavigating = true;
 
-  // Create a new abort controller for each navigation
+  // Create a fresh AbortController to ensure proper cancellation of requests 
+  // for each navigation and prevent interference from previous aborts.
   const newAbortController = new AbortController();
   abortController.signal = newAbortController.signal;
 
