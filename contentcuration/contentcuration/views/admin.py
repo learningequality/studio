@@ -3,7 +3,9 @@ import json
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
+from django.shortcuts import redirect
 from django.shortcuts import render
+from django.shortcuts import get_object_or_404
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.authentication import TokenAuthentication
@@ -17,6 +19,7 @@ from contentcuration.decorators import is_admin
 from contentcuration.tasks import sendcustomemails_task
 from contentcuration.utils.messages import get_messages
 from contentcuration.views.base import current_user_for_context
+from contentcuration.models import SecretToken, Channel
 
 
 @is_admin
@@ -30,6 +33,21 @@ def send_custom_email(request):
 
     return Response({"success": True})
 
+@is_admin
+@api_view(['GET'])
+def support_token_redirect(request, token):
+    try:
+        support_token = SecretToken.objects.get(token=token)
+        channel = get_object_or_404(Channel, support_token=support_token)
+
+        # Redirect to the channel edit page
+        return redirect("channels") 
+    
+    except SecretToken.DoesNotExist:
+        return Response({"error": "Invalid token"}, status=404)
+    
+    except Channel.DoesNotExist:
+        return Response({"error": "Channel not found for token"}, status=404)
 
 @login_required
 @browser_is_supported

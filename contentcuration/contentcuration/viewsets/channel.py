@@ -777,7 +777,48 @@ class ChannelViewSet(ValuesViewset):
             logging.error(str(e))
             unique_lang_ids = []
         return unique_lang_ids
+    
+    @action(detail=True, methods=["get"], url_path="support_token", url_name="get-support-token")
+    def get_support_token(self, request, pk=None):
+        """
+        Retrieve the existing support token for this channel, or null if none exists.
+        """
+        channel = self.get_edit_queryset().get(pk=pk)
+        token_value = None
+        if channel.support_token:
+            token_value = channel.support_token.token
+        
+        return Response({"support_token": token_value}, status=status.HTTP_200_OK)
+    
+    @action(detail=True, methods=["post"], url_path="support_token", url_name="create-support-token")
+    def create_support_token(self, request, pk=None):
+        """
+        Create a new support token for this channel.
+        """
+        channel = self.get_edit_queryset().get(pk=pk)
+        
+        if channel.support_token is not None:
+            return Response(
+                {"error": "Support token already exists for this channel."},
+                status=status.HTTP_409_CONFLICT
+            )
+        
+        channel.support_token = proquint.generate()
+        channel.save(update_fields=["support_token"])
 
+        Change.create_change(
+                    generate_update_event(
+                        channel.id,
+                        CHANNEL,
+                        {"support_token": secret_token.token},
+                        channel_id=channel.id,
+                    ),
+                    applied=True,
+                    created_by_id=request.user.id
+                )
+        
+        data = self.serialize_object(pk=channel.pk)
+        return Response(data, status=status.HTTP_201_CREATED)
 
 @method_decorator(
     cache_page(
