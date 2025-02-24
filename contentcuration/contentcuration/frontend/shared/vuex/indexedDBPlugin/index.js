@@ -64,6 +64,7 @@ export class Listener {
     const eventName = this.getEventName();
 
     if (!eventName) {
+      // eslint-disable-next-line no-console
       console.warn('Cannot register unbound listener: ' + this.callback.toString());
       return;
     }

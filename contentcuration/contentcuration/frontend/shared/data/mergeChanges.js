@@ -130,9 +130,11 @@ export default function mergeAllChanges(changes, flatten = false, changesToSync 
   for (const change of changes) {
     // Ensure changes are merged in order
     if (!('rev' in change) || typeof change.rev === 'undefined') {
+      // eslint-disable-next-line no-console
       console.error('This change has no `rev`:', change);
       throw new Error('Cannot determine the correct order for a change with no `rev`.');
     } else if (lastRev && change.rev < lastRev) {
+      // eslint-disable-next-line no-console
       console.error("These changes aren't ordered by `rev`:", changes);
       throw new Error('Cannot merge changes unless they are ordered by `rev`.');
     }

@@ -2,11 +2,10 @@
 
   import { VTabs } from 'vuetify/lib/components/VTabs';
 
-  /*
-    RTL support on v-tabs is broken on overflow, so pull in
-    fixes from this PR https://github.com/vuetifyjs/vuetify/pull/6812
-  */
-
+  /**
+   * RTL support on v-tabs is broken on overflow, so pull in
+   * fixes from this PR https://github.com/vuetifyjs/vuetify/pull/6812
+   */
   export default {
     name: 'Tabs',
     extends: VTabs,

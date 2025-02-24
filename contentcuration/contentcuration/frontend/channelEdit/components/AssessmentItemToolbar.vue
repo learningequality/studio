@@ -93,31 +93,31 @@
   export default {
     name: 'AssessmentItemToolbar',
     props: {
-      /*
-        An array of AssessmentItemToolbarActions
-        [
-          AssessmentItemToolbarActions.ADD_ITEM_ABOVE,
-          AssessmentItemToolbarActions.DELETE_ITEM
-        ]
-
-        If you need collapse control, you an add a configuration
-        object to an item:
-
-        [
-          [ AssessmentItemToolbarActions.ADD_ITEM_BELOW, { collapse: true }],
-          AssessmentItemToolbarActions.DELETE_ITEM,
-          [ AssessmentItemToolbarActions.DELETE_ITEM, { collapse: false }]
-        ]
-        (last two items are equivalent)
-
-        `collapse` - if `true`, the action icon will be moved to menu items
-                     in collapsed mode, otherwise it'll stay in icons section
-                     of a toolbar
-
-        Note:
-          ADD_ITEM_ABOVE and ADD_ITEM_BELOW action icons are currently
-          not supported. These actions can be rendered only within menu.
-      */
+      /**
+       * An array of AssessmentItemToolbarActions
+       * [
+       *   AssessmentItemToolbarActions.ADD_ITEM_ABOVE,
+       *   AssessmentItemToolbarActions.DELETE_ITEM
+       * ]
+       *
+       * If you need collapse control, you an add a configuration
+       * object to an item:
+       *
+       * [
+       *   [ AssessmentItemToolbarActions.ADD_ITEM_BELOW, { collapse: true }],
+       *   AssessmentItemToolbarActions.DELETE_ITEM,
+       *   [ AssessmentItemToolbarActions.DELETE_ITEM, { collapse: false }]
+       * ]
+       * (last two items are equivalent)
+       *
+       * `collapse` - if `true`, the action icon will be moved to menu items
+       *              in collapsed mode, otherwise it'll stay in icons section
+       *              of a toolbar
+       *
+       * Note:
+       *   ADD_ITEM_ABOVE and ADD_ITEM_BELOW action icons are currently
+       *   not supported. These actions can be rendered only within menu.
+       */
       iconActionsConfig: {
         type: Array,
         default: () => [],
@@ -126,15 +126,15 @@
         type: Boolean,
         default: false,
       },
-      /*
-        Action items to be rendered in menu if menu displayed.
-        Example:
-        [
-          AssessmentItemToolbarActions.ADD_ITEM_ABOVE,
-          AssessmentItemToolbarActions.ADD_ITEM_BELOW,
-          AssessmentItemToolbarActions.DELETE_ITEM
-        ]
-      */
+      /**
+       * Action items to be rendered in menu if menu displayed.
+       * Example:
+       * [
+       *   AssessmentItemToolbarActions.ADD_ITEM_ABOVE,
+       *   AssessmentItemToolbarActions.ADD_ITEM_BELOW,
+       *   AssessmentItemToolbarActions.DELETE_ITEM
+       * ]
+       */
       menuActionsConfig: {
         type: Array,
         default: () => [],

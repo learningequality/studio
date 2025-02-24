@@ -818,6 +818,7 @@ class Resource extends mix(APIResource, IndexedDBResource) {
         itemData = pageData.results;
         more = pageData.more;
       } else {
+        // eslint-disable-next-line no-console
         console.error(`Unexpected response from ${this.urlName}`, response);
         itemData = [];
       }

@@ -140,18 +140,18 @@
         loadError: false,
         selecting: false,
 
-        /*
-            jayoshih: router guard makes it difficult to track
-              differences between previous query params and new
-              query params, so just track it manually
-          */
+        /**
+         * jayoshih: router guard makes it difficult to track
+         * differences between previous query params and new
+         * query params, so just track it manually
+         */
         previousQuery: this.$route.query,
 
-        /*
-            jayoshih: using excluded logic here instead of selected
-              to account for selections across pages (some channels
-              not in current page)
-          */
+        /**
+         * jayoshih: using excluded logic here instead of selected
+         * to account for selections across pages (some channels
+         * not in current page)
+         */
         excluded: [],
       };
     },

@@ -99,7 +99,7 @@ describe('for an exercise node', () => {
   it('renders assessment items count in a subtitle', () => {
     expect(wrapper.contains('[data-test="subtitle"]')).toBe(true);
     expect(wrapper.find('[data-test="subtitle"]').html()).toContain(
-      EXERCISE_NODE.assessment_item_count
+      String(EXERCISE_NODE.assessment_item_count)
     );
   });
 });
@@ -116,7 +116,9 @@ describe('for a topic node', () => {
   });
   it('renders resource count in a subtitle for a topic node', () => {
     expect(wrapper.contains('[data-test="subtitle"]')).toBe(true);
-    expect(wrapper.find('[data-test="subtitle"]').html()).toContain(TOPIC_NODE.resource_count);
+    expect(wrapper.find('[data-test="subtitle"]').html()).toContain(
+      String(TOPIC_NODE.resource_count)
+    );
   });
 
   it('renders a chevron button', () => {

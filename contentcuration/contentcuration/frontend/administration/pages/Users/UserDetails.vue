@@ -220,7 +220,7 @@
           return this.userId && this.$route.params.userId === this.userId;
         },
         set(value) {
-          if (!value) {
+          if (!value && this.$route.name === RouteNames.USER) {
             this.$router.push(this.backLink);
           }
         },
@@ -249,19 +249,19 @@
         return capitalize(this.$formatRelative(this.user.last_login, { now: new Date() }));
       },
       policies() {
-        /*
-          Get list of policies and whether the user has signed them
-
-          Returns dict:
-            {
-              key: <str>, policy name (e.g. terms_of_service)
-              name: <str>, readable policy name (e.g. Terms of service)
-              latest: <date>, date of latest policy version available
-              signed: <date>, date user signed the policy last
-              lastSigned: <date>, date of policy version user signed last
-              isUpToDate: <boolean>, whether the user has signed the latest policy
-            }
-        */
+        /**
+         * Get list of policies and whether the user has signed them
+         *
+         * Returns dict:
+         *   {
+         *     key: <str>, policy name (e.g. terms_of_service)
+         *     name: <str>, readable policy name (e.g. Terms of service)
+         *     latest: <date>, date of latest policy version available
+         *     signed: <date>, date user signed the policy last
+         *     lastSigned: <date>, date of policy version user signed last
+         *     isUpToDate: <boolean>, whether the user has signed the latest policy
+         *   }
+         * */
         return requiredPolicies.map(policyName => {
           // Get most recent policy information
           const latest = policyDates[policyName];

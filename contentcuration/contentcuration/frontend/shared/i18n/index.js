@@ -34,6 +34,7 @@ export function $trWrapper(nameSpace, defaultMessages, formatter, messageId, arg
   }
   if (args) {
     if (!Array.isArray(args) && typeof args !== 'object') {
+      // eslint-disable-next-line no-console
       console.error(`The $tr functions take either an array of positional
                       arguments or an object of named options.`);
     }
@@ -274,7 +275,7 @@ export function i18nSetup(skipPolyfill = false) {
           resolve();
         },
         error => {
-          console.error(error);
+          // eslint-disable-next-line no-console
           console.error('An error occurred trying to setup Internationalization', error);
           reject();
         }
