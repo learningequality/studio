@@ -96,6 +96,9 @@
     <div class="mb-1 mt-3">
       <label>{{ $tr('willYouMakeYourChannelPublicLabel') }}</label>
     </div>
+    <div class="breadcrumb-container">
+  <div class="breadcrumb-content">
+    <div class="multiselect-wrapper">
     <MultiSelect
       v-model="publicChannels"
       :label="$tr('selectAllThatApplyPlaceholder')"
@@ -105,6 +108,9 @@
       notranslate
       :box="false"
     />
+    </div>
+    </div>
+    </div>
 
     <!-- How are you using your content -->
     <h3>{{ $tr('howAreYouUsingYourContentLabel') }}</h3>
@@ -474,5 +480,41 @@
   h3 {
     margin-top: 32px;
     margin-bottom: 8px;
+  }
+
+  /* Existing new styles */
+  .breadcrumb-container {
+    direction: rtl;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .breadcrumb-content {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .select-all-box {
+    flex-shrink: 0;
+    margin-right: 1rem;
+  }
+
+  /* Add these additional styles */
+  .multiselect-wrapper {
+    max-width: 100%;
+    position: relative;
+  }
+
+  .multiselect-wrapper :deep(.multiselect) {
+    direction: rtl;
+    text-align: right;
+  }
+
+  .multiselect-wrapper :deep(.multiselect-content-wrapper) {
+    direction: rtl;
   }
 </style>
