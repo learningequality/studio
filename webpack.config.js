@@ -2,6 +2,8 @@
 
 const path = require('path');
 const process = require('process');
+const fs = require('fs');
+const { execSync } = require('child_process');
 const baseConfig = require('kolibri-tools/lib/webpack.config.base');
 const { merge } = require('webpack-merge');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
@@ -14,6 +16,27 @@ const WebpackRTLPlugin = require('kolibri-tools/lib/webpackRtlPlugin');
 const { InjectManifest } = require('workbox-webpack-plugin');
 
 const webpack = require('webpack');
+
+// Function to detect if running in WSL
+function isWSL() {
+  try {
+    const version = fs.readFileSync('/proc/version', 'utf8');
+    return version.toLowerCase().includes('microsoft');
+  } catch (err) {
+    return false;
+  }
+}
+
+// Function to get WSL IP address
+function getWSLIP() {
+  try {
+    const ip = execSync('hostname -I').toString().trim().split(' ')[0];
+    return ip;
+  } catch (err) {
+    console.warn('Failed to get WSL IP address:', err);
+    return '127.0.0.1';
+  }
+}
 
 const djangoProjectDir = path.resolve('contentcuration');
 const staticFilesDir = path.resolve(djangoProjectDir, 'contentcuration', 'static');
@@ -32,17 +55,21 @@ module.exports = (env = {}) => {
   }
 
   const rootDir = __dirname;
-
   const rootNodeModules = path.join(rootDir, 'node_modules');
-
   const baseCssLoaders = base.module.rules[1].use;
+
+  // Determine the appropriate dev server host and public path based on environment
+  const isWSLEnvironment = isWSL();
+  const devServerHost = isWSLEnvironment ? '0.0.0.0' : '127.0.0.1';
+  const devPublicPath = isWSLEnvironment ? 
+    `http://${getWSLIP()}:4000/dist/` : 
+    'http://127.0.0.1:4000/dist/';
 
   const workboxPlugin = new InjectManifest({
     swSrc: path.resolve(srcDir, 'serviceWorker/index.js'),
     swDest: 'serviceWorker.js',
     exclude: dev ? [/./] : [/\.map$/, /^manifest.*\.js$/]
   });
-
 
   if (dev) {
     // Suppress the "InjectManifest has been called multiple times" warning by reaching into
@@ -80,11 +107,12 @@ module.exports = (env = {}) => {
       filename: dev ? '[name].js' : '[name]-[fullhash].js',
       chunkFilename: '[name]-[id]-[fullhash].js',
       path: bundleOutputDir,
-      publicPath: dev ? 'http://127.0.0.1:4000/dist/' : '/static/studio/',
+      publicPath: dev ? devPublicPath : '/static/studio/',
       pathinfo: !dev,
     },
     devServer: {
       port: 4000,
+      host: devServerHost,
       headers: {
         'Access-Control-Allow-Origin': '*',
       },
@@ -140,6 +168,7 @@ module.exports = (env = {}) => {
         // e.g. via import(/* webpackMode: "weak" */ './file.js')
         allowAsyncCycles: false,
         // set the current working directory for displaying module paths
+        
         cwd: process.cwd(),
       }),
       workboxPlugin,
