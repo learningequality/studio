@@ -1,8 +1,3 @@
-/**
- * @jest-environment jest-environment-jsdom-sixteen
- */
-// Jsdom@^16 is required to test toast UI, as it relies on the Range API.
-
 import { clearNodeFormat, generateCustomConverter } from '../MarkdownEditor/utils';
 
 const htmlStringToFragment = htmlString => {
@@ -63,6 +58,31 @@ describe('clearNodeFormat', () => {
 });
 
 describe('markdown conversion', () => {
+  let documentCreateRange;
+
+  beforeAll(() => {
+    documentCreateRange = document.createRange;
+    document.createRange = () => {
+      const range = new Range();
+
+      range.getBoundingClientRect = jest.fn();
+
+      range.getClientRects = () => {
+        return {
+          item: () => null,
+          length: 0,
+          [Symbol.iterator]: jest.fn()
+        };
+      };
+
+      return range;
+    };
+  });
+
+  afterAll(() => {
+    document.createRange = documentCreateRange;
+  });
+
   it('converts image tags to markdown without escaping them', () => {
     const el = document.createElement('div');
     const CustomConvertor = generateCustomConverter(el);

@@ -264,6 +264,7 @@
         const targetElement = this.$refs.detailsTab.$refs[errorRef];
 
         if (!targetElement) {
+          // eslint-disable-next-line no-console
           console.error(`Target element ref not found for error: ${error}`);
           return;
         }

@@ -28,12 +28,14 @@ class Analytics {
     // If the dataLayer hasn't changed since our last reset, skip
     if (this.dataLayer.length === this.lastLength) {
       if (process.env.NODE_ENV !== 'production') {
+        // eslint-disable-next-line no-console
         console.info('Skipping Analytics.reset()');
       }
       return;
     }
 
     if (process.env.NODE_ENV !== 'production') {
+      // eslint-disable-next-line no-console
       console.info('Analytics.reset()');
     }
 

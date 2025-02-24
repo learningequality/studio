@@ -30,13 +30,13 @@
         default: '',
       },
 
-      /*
-        Arbitrarily split at this index
-
-        jayoshih: unfortunately, using css ends up throwing off the styling
-          of the parent elements too easily. Instead, we'll split it arbitrarily
-          and handle the truncating more manually
-      */
+      /**
+       * Arbitrarily split at this index
+       *
+       * jayoshih: unfortunately, using css ends up throwing off the styling
+       * of the parent elements too easily. Instead, we'll split it arbitrarily
+       * and handle the truncating more manually
+       */
       splitAt: {
         type: Number,
         default: 120,
