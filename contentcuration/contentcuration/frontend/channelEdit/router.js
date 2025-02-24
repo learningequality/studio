@@ -11,25 +11,10 @@ import ReviewSelectionsPage from './views/ImportFromChannels/ReviewSelectionsPag
 import EditModal from './components/edit/EditModal';
 import ChannelDetailsModal from 'shared/views/channel/ChannelDetailsModal';
 import ChannelModal from 'shared/views/channel/ChannelModal';
-import Sandbox from 'shared/views/Sandbox';
 import { RouteNames as ChannelRouteNames } from 'frontend/channelList/constants';
 
 const router = new VueRouter({
   routes: [
-    {
-      name: RouteNames.SANDBOX,
-      path: '/sandbox/:nodeId',
-      props: true,
-      component: Sandbox,
-      beforeEnter: (to, from, next) => {
-        const channelPromise = store.dispatch('currentChannel/loadChannel');
-        const nodePromise = store.dispatch('contentNode/loadContentNode', to.params.nodeId);
-        // api call to get ancestors if nodeId is a child descendant???
-        return Promise.all([channelPromise, nodePromise])
-          .then(() => next())
-          .catch(() => {});
-      },
-    },
     {
       name: RouteNames.TREE_ROOT_VIEW,
       path: '/',
