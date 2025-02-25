@@ -4,10 +4,7 @@
     <Breadcrumbs :items="breadcrumbsItems">
       <template #item="{ item }">
         <span
-          :class="[
-            breadcrumbsItemClasses(item),
-            getTitleClass(item)
-          ]"
+          :class="[breadcrumbsItemClasses(item), getTitleClass(item)]"
           @click="onBreadcrumbsItemClick(item)"
         >
           {{ getTitle(item) }}
@@ -26,7 +23,10 @@
         ></slot>
       </template>
     </VList>
-    <VLayout v-else class="pa-4">
+    <VLayout
+      v-else
+      class="pa-4"
+    >
       <p class="grey--text subheading">
         {{ $tr('noResourcesDefaultText') }}
       </p>
@@ -34,6 +34,7 @@
   </div>
 
 </template>
+
 
 <script>
 
@@ -119,7 +120,7 @@
           promises.push(
             this.loadChildren({
               parent: nodeId,
-            })
+            }),
           );
         }
         Promise.all(promises).then(() => (this.loading = false));
@@ -143,6 +144,7 @@
   };
 
 </script>
+
 
 <style lang="scss" scoped>
 

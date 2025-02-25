@@ -8,12 +8,25 @@
       </p>
       <VList>
         <template v-for="(node, index) in selected">
-          <VListTile :key="index" class="height-auto py-2">
-            <VLayout row align-center wrap>
-              <VFlex shrink class="mr-2 px-2">
+          <VListTile
+            :key="index"
+            class="height-auto py-2"
+          >
+            <VLayout
+              row
+              align-center
+              wrap
+            >
+              <VFlex
+                shrink
+                class="mr-2 px-2"
+              >
                 <ContentNodeIcon :kind="node.kind" />
               </VFlex>
-              <VFlex md5 sm12>
+              <VFlex
+                md5
+                sm12
+              >
                 <VListTileContent>
                   <VListTileTitle>
                     <ActionLink
@@ -28,11 +41,21 @@
                   </VListTileSubTitle>
                 </VListTileContent>
               </VFlex>
-              <VFlex md4 sm12 class="notranslate">
+              <VFlex
+                md4
+                sm12
+                class="notranslate"
+              >
                 {{ node.original_channel_name }}
               </VFlex>
-              <VFlex grow class="text-sm-right">
-                <VBtn flat @click="handleClickRemove(node)">
+              <VFlex
+                grow
+                class="text-sm-right"
+              >
+                <VBtn
+                  flat
+                  @click="handleClickRemove(node)"
+                >
                   {{ $tr('removeAction') }}
                 </VBtn>
               </VFlex>
@@ -81,7 +104,7 @@
       },
       updateTitleForPage() {
         this.updateTabTitle(
-          this.$store.getters.appendChannelName(this.$tr('reviewSelectionHeader'))
+          this.$store.getters.appendChannelName(this.$tr('reviewSelectionHeader')),
         );
       },
     },

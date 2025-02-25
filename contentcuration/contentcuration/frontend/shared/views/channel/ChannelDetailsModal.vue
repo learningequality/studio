@@ -8,29 +8,43 @@
     <template #header>
       <span class="notranslate">{{ channel ? channel.name : '' }}</span>
     </template>
-    <LoadingText v-if="loading" absolute />
+    <LoadingText
+      v-if="loading"
+      absolute
+    />
     <VCardText v-else-if="channel">
       <VLayout class="mb-3">
         <VSpacer v-if="$vuetify.breakpoint.smAndUp" />
-        <Menu>
+        <BaseMenu>
           <template #activator="{ on }">
-            <VBtn color="primary" dark :block="$vuetify.breakpoint.xsOnly" v-on="on">
+            <VBtn
+              color="primary"
+              dark
+              :block="$vuetify.breakpoint.xsOnly"
+              v-on="on"
+            >
               {{ $tr('downloadButton') }}
               &nbsp;
-              <Icon icon="dropdown" :color="$themeTokens.textInverted" />
+              <Icon
+                icon="dropdown"
+                :color="$themeTokens.textInverted"
+              />
             </VBtn>
           </template>
           <VList>
             <VListTile @click="generatePDF">
               <VListTileTitle>{{ $tr('downloadPDF') }}</VListTileTitle>
             </VListTile>
-            <VListTile data-test="dl-csv" @click="generateCSV">
+            <VListTile
+              data-test="dl-csv"
+              @click="generateCSV"
+            >
               <VListTileTitle>{{ $tr('downloadCSV') }}</VListTileTitle>
             </VListTile>
           </VList>
-        </Menu>
+        </BaseMenu>
       </VLayout>
-      <Details
+      <DetailsPanel
         v-if="channel && details"
         class="channel-details-wrapper"
         :details="channelWithDetails"
@@ -41,11 +55,12 @@
 
 </template>
 
+
 <script>
 
   import { mapActions, mapGetters } from 'vuex';
   import { channelExportMixin } from './mixins';
-  import Details from 'shared/views/details/Details';
+  import DetailsPanel from 'shared/views/details/DetailsPanel.vue';
   import { routerMixin } from 'shared/mixins';
   import LoadingText from 'shared/views/LoadingText';
   import FullscreenModal from 'shared/views/FullscreenModal';
@@ -53,7 +68,7 @@
   export default {
     name: 'ChannelDetailsModal',
     components: {
-      Details,
+      DetailsPanel,
       LoadingText,
       FullscreenModal,
     },

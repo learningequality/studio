@@ -1,5 +1,5 @@
 import { mount } from '@vue/test-utils';
-import Vuex from 'vuex';
+import { Store } from 'vuex';
 import EditSourceModal from '../EditSourceModal';
 import { LicensesList } from 'shared/leUtils/Licenses';
 import { constantsTranslationMixin } from 'shared/mixins';
@@ -63,7 +63,7 @@ describe('EditSourceModal', () => {
     generalActions = {
       showSnackbarSimple: jest.fn(),
     };
-    store = new Vuex.Store({
+    store = new Store({
       actions: generalActions,
       modules: {
         contentNode: {
@@ -131,7 +131,7 @@ describe('EditSourceModal', () => {
       expect(wrapper.find('[data-test="provider-input"] input').element.disabled).toBe(true);
       expect(wrapper.find('[data-test="aggregator-input"] input').element.disabled).toBe(true);
       expect(wrapper.find('[data-test="copyright-holder-input"] input').element.disabled).toBe(
-        true
+        true,
       );
     });
 
@@ -153,7 +153,7 @@ describe('EditSourceModal', () => {
       expect(wrapper.find('[data-test="provider-input"] input').element.disabled).toBe(true);
       expect(wrapper.find('[data-test="aggregator-input"] input').element.disabled).toBe(true);
       expect(wrapper.find('[data-test="copyright-holder-input"] input').element.disabled).toBe(
-        true
+        true,
       );
     });
 
@@ -174,7 +174,7 @@ describe('EditSourceModal', () => {
       expect(wrapper.find('[data-test="provider-input"] input').element.disabled).toBe(false);
       expect(wrapper.find('[data-test="aggregator-input"] input').element.disabled).toBe(false);
       expect(wrapper.find('[data-test="copyright-holder-input"] input').element.disabled).toBe(
-        false
+        false,
       );
     });
 
@@ -184,7 +184,7 @@ describe('EditSourceModal', () => {
       const wrapper = makeWrapper(['node1', 'node2']);
 
       expect(wrapper.find('.help').text()).toContain(
-        'Edits will be reflected only for local resources'
+        'Edits will be reflected only for local resources',
       );
     });
   });
@@ -218,7 +218,7 @@ describe('EditSourceModal', () => {
         expect.objectContaining({
           id: 'node1',
           author: newAuthor,
-        })
+        }),
       );
     });
 
@@ -232,13 +232,13 @@ describe('EditSourceModal', () => {
         expect.anything(),
         expect.objectContaining({
           id: 'node2',
-        })
+        }),
       );
       expect(contentNodeActions.updateContentNode).not.toHaveBeenCalledWith(
         expect.anything(),
         expect.objectContaining({
           id: 'node1',
-        })
+        }),
       );
     });
 
@@ -258,7 +258,7 @@ describe('EditSourceModal', () => {
       const animationFrameId = requestAnimationFrame(() => {
         expect(generalActions.showSnackbarSimple).toHaveBeenCalledWith(
           expect.anything(),
-          'Edited attribution for 2 resources'
+          'Edited attribution for 2 resources',
         );
         cancelAnimationFrame(animationFrameId);
       });
@@ -272,7 +272,7 @@ describe('EditSourceModal', () => {
       const animationFrameId = requestAnimationFrame(() => {
         expect(generalActions.showSnackbarSimple).toHaveBeenCalledWith(
           expect.anything(),
-          'Edited attribution for 1 resource'
+          'Edited attribution for 1 resource',
         );
         cancelAnimationFrame(animationFrameId);
       });

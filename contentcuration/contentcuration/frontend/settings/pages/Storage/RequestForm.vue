@@ -1,7 +1,9 @@
 <template>
 
-  <form ref="form" @submit.prevent="submit">
-
+  <form
+    ref="form"
+    @submit.prevent="submit"
+  >
     <Banner
       :value="Boolean(errorCount())"
       error
@@ -63,13 +65,19 @@
     <!-- Who can use content -->
     <h3>
       {{ $tr('whoCanUseContentLabel') }}
-      <InfoModal :header="$tr('licenseInfoHeader')" :items="licenseOptions">
+      <InfoModal
+        :header="$tr('licenseInfoHeader')"
+        :items="licenseOptions"
+      >
         <template #header="{ item }">
           {{ translateConstant(item.license_name) }}
         </template>
         <template #description="{ item }">
           {{ translateConstant(`${item.license_name}_description`) }}
-          <p v-if="item.license_url" class="mt-1">
+          <p
+            v-if="item.license_url"
+            class="mt-1"
+          >
             <ActionLink
               :href="getLicenseUrl(item)"
               target="_blank"
@@ -80,7 +88,10 @@
       </InfoModal>
     </h3>
     <div class="mt-2">
-      <div v-if="errors.license" style="color: red">
+      <div
+        v-if="errors.license"
+        style="color: red"
+      >
         {{ $tr('fieldRequiredText') }}
       </div>
       <label>{{ $tr('licensingQuestionLabel') }}</label>
@@ -120,7 +131,11 @@
     <div class="mb-1 mt-3">
       <label>{{ $tr('targetRegionsLabel') }}</label>
     </div>
-    <CountryField v-model="location" :box="false" :menu-props="{ zIndex: 1, offsetY: true }" />
+    <CountryField
+      v-model="location"
+      :box="false"
+      :menu-props="{ zIndex: 1, offsetY: true }"
+    />
     <KTextbox
       v-model="import_count"
       :invalid="errors.import_count"
@@ -133,7 +148,10 @@
 
     <h3>{{ $tr('usageLabel') }}</h3>
     <div class="mt-2">
-      <div v-if="errors.org_or_personal" style="color: red">
+      <div
+        v-if="errors.org_or_personal"
+        style="color: red"
+      >
         {{ $tr('fieldRequiredText') }}
       </div>
       <label>{{ $tr('organizationalAffiliationLabel') }}</label>
@@ -158,12 +176,15 @@
       label=" "
       :placeholder="$tr('organizationNamePlaceholder')"
       :floatingLabel="false"
-      style="margin-left: 36px;"
+      style="margin-left: 36px"
       :disabled="!orgSelected"
     />
 
     <div class="mb-1 mt-3">
-      <div v-if="errors.organization_type" style="color: red">
+      <div
+        v-if="errors.organization_type"
+        style="color: red"
+      >
         {{ $tr('fieldRequiredText') }}
       </div>
       <label :style="{ color: orgSelected ? 'black' : 'gray' }">
@@ -191,7 +212,7 @@
       :label="' '"
       :placeholder="$tr('organizationNamePlaceholder')"
       :floatingLabel="false"
-      style="margin-left: 36px;"
+      style="margin-left: 36px"
       :disabled="!orgSelected || !orgTypeOtherSelected"
     />
 
@@ -225,9 +246,12 @@
     />
 
     <div class="my-5">
-      <KButton primary :text="$tr('sendRequestAction')" @click="submit" />
+      <KButton
+        primary
+        :text="$tr('sendRequestAction')"
+        @click="submit"
+      />
     </div>
-
   </form>
 
 </template>
@@ -359,7 +383,7 @@
       channelName(channel) {
         return `${channel.name} (${channel.id})`;
       },
-      // eslint-disable-next-line kolibri/vue-no-unused-methods
+      // eslint-disable-next-line kolibri/vue-no-unused-methods, vue/no-unused-properties
       onValidationFailed() {
         // Scroll to error banner
         if (this.$refs.form.scrollIntoView) {
@@ -367,7 +391,7 @@
         }
       },
 
-      // eslint-disable-next-line kolibri/vue-no-unused-methods
+      // eslint-disable-next-line kolibri/vue-no-unused-methods, vue/no-unused-properties
       onSubmit(formData) {
         // Convert list-based fields to comma-separated string
         // Can use commas as storage email needs to be in English
@@ -477,8 +501,10 @@
 
 
 <style scoped>
+
   h3 {
     margin-top: 32px;
     margin-bottom: 8px;
   }
+
 </style>

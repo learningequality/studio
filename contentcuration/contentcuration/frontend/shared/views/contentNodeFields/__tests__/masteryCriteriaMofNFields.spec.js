@@ -91,86 +91,36 @@ describe('masteryCriteriaMofNFields', () => {
   describe('validation', () => {
     it('should flag empty n and m values', () => {
       formWrapper.vm.validate();
-      expect(
-        wrapper
-          .find({ ref: 'mValue' })
-          .find('.error--text')
-          .exists()
-      ).toBe(true);
-      expect(
-        wrapper
-          .find({ ref: 'nValue' })
-          .find('.error--text')
-          .exists()
-      ).toBe(true);
+      expect(wrapper.find({ ref: 'mValue' }).find('.error--text').exists()).toBe(true);
+      expect(wrapper.find({ ref: 'nValue' }).find('.error--text').exists()).toBe(true);
       wrapper.setProps({ mRequired: false, nRequired: false });
       formWrapper.vm.validate();
-      expect(
-        wrapper
-          .find({ ref: 'mValue' })
-          .find('.error--text')
-          .exists()
-      ).toBe(false);
-      expect(
-        wrapper
-          .find({ ref: 'nValue' })
-          .find('.error--text')
-          .exists()
-      ).toBe(false);
+      expect(wrapper.find({ ref: 'mValue' }).find('.error--text').exists()).toBe(false);
+      expect(wrapper.find({ ref: 'nValue' }).find('.error--text').exists()).toBe(false);
     });
     it('should flag if m is not a whole number', () => {
       wrapper.setProps({ value: { mastery_model: 'm_of_n', m: 0.1231, n: 10 } });
       formWrapper.vm.validate();
-      expect(
-        wrapper
-          .find({ ref: 'mValue' })
-          .find('.error--text')
-          .exists()
-      ).toBe(true);
+      expect(wrapper.find({ ref: 'mValue' }).find('.error--text').exists()).toBe(true);
       wrapper.setProps({ value: { mastery_model: 'm_of_n', m: 1, n: 10 } });
       formWrapper.vm.validate();
-      expect(
-        wrapper
-          .find({ ref: 'mValue' })
-          .find('.error--text')
-          .exists()
-      ).toBe(false);
+      expect(wrapper.find({ ref: 'mValue' }).find('.error--text').exists()).toBe(false);
     });
     it('should flag if m < 1', () => {
       wrapper.setProps({ value: { mastery_model: 'm_of_n', m: 0, n: 10 } });
       formWrapper.vm.validate();
-      expect(
-        wrapper
-          .find({ ref: 'mValue' })
-          .find('.error--text')
-          .exists()
-      ).toBe(true);
+      expect(wrapper.find({ ref: 'mValue' }).find('.error--text').exists()).toBe(true);
       wrapper.setProps({ value: { mastery_model: 'm_of_n', m: 1, n: 10 } });
       formWrapper.vm.validate();
-      expect(
-        wrapper
-          .find({ ref: 'mValue' })
-          .find('.error--text')
-          .exists()
-      ).toBe(false);
+      expect(wrapper.find({ ref: 'mValue' }).find('.error--text').exists()).toBe(false);
     });
     it('should flag if m > n', () => {
       wrapper.setProps({ value: { mastery_model: 'm_of_n', m: 2, n: 1 } });
       formWrapper.vm.validate();
-      expect(
-        wrapper
-          .find({ ref: 'mValue' })
-          .find('.error--text')
-          .exists()
-      ).toBe(true);
+      expect(wrapper.find({ ref: 'mValue' }).find('.error--text').exists()).toBe(true);
       wrapper.setProps({ value: { mastery_model: 'm_of_n', m: 2, n: 2 } });
       formWrapper.vm.validate();
-      expect(
-        wrapper
-          .find({ ref: 'mValue' })
-          .find('.error--text')
-          .exists()
-      ).toBe(false);
+      expect(wrapper.find({ ref: 'mValue' }).find('.error--text').exists()).toBe(false);
     });
   });
 });

@@ -1,6 +1,10 @@
 <template>
 
-  <VToolbar v-bind="$attrs" :flat="flat" :color="color">
+  <VToolbar
+    v-bind="$attrs"
+    :flat="flat"
+    :color="color"
+  >
     <slot></slot>
     <template #extension>
       <slot name="extension"></slot>
@@ -27,6 +31,7 @@
   };
 
 </script>
+
 
 <style lang="scss" scoped>
 

@@ -1,14 +1,23 @@
 <template>
 
-  <TreeViewBase :loading="loading" @dropToClipboard="handleDropToClipboard">
-    <template v-if="hasStagingTree && canManage" #extension>
+  <TreeViewBase
+    :loading="loading"
+    @dropToClipboard="handleDropToClipboard"
+  >
+    <template
+      v-if="hasStagingTree && canManage"
+      #extension
+    >
       <Banner
         :value="true"
         border
-        style="width: 100%;"
+        style="width: 100%"
         data-test="staging-tree-banner"
       >
-        <VLayout align-center justify-start>
+        <VLayout
+          align-center
+          justify-start
+        >
           <VIconWrapper>build</VIconWrapper>
           <span class="pl-1">
             <KRouterLink
@@ -54,15 +63,15 @@
         >
           <template #default="{ isDropAllowed }">
             <VToolbar
-              :color="isDropAllowed
-                ? $vuetify.theme.draggableDropZone
-                : $vuetify.theme.backgroundColor"
+              :color="
+                isDropAllowed ? $vuetify.theme.draggableDropZone : $vuetify.theme.backgroundColor
+              "
               class="hierarchy-toolbar py-1 tree-prepend"
               absolute
               dense
               clipped-left
               :flat="!listElevated"
-              style="width: calc(100% - 1px);"
+              style="width: calc(100% - 1px)"
             >
               <IconButton
                 icon="collapseAll"
@@ -111,7 +120,10 @@
     </DraggableRegion>
     <VContent class="main-content">
       <!-- Render this so we can detect if we need to hide the hierarchy panel on page load -->
-      <PageNotFoundError v-if="nodeNotFound" :backHomeLink="pageNotFoundBackHomeLink" />
+      <PageNotFoundError
+        v-if="nodeNotFound"
+        :backHomeLink="pageNotFoundBackHomeLink"
+      />
       <CurrentTopicView
         v-else
         ref="topicview"
@@ -120,7 +132,10 @@
         @onPanelResize="handlePanelResize"
       >
         <template #action>
-          <div v-if="hasTopics && !drawer.permanent" class="hierarchy-toggle">
+          <div
+            v-if="hasTopics && !drawer.permanent"
+            class="hierarchy-toggle"
+          >
             <IconButton
               icon="sidebar"
               :text="$tr('showSidebar')"
@@ -291,7 +306,7 @@
           this.loading = false;
           this.more = childrenResponse.more || null;
           this.jumpToLocation();
-        }
+        },
       );
     },
     methods: {
@@ -339,7 +354,7 @@
             // so hide the overlay while the drawer is closing
             this.$nextTick(() => {
               this.drawer.hideOverlay = false;
-            }, 200);
+            });
           }
           this.drawer.maxWidth = DEFAULT_HIERARCHY_MAXWIDTH;
         } else {

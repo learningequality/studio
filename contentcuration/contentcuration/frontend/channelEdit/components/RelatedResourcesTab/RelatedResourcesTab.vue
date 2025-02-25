@@ -32,7 +32,10 @@
       :cancelText="$tr('dialogCloseBtnLabel')"
       @cancel="showResourcePreview = false"
     >
-      <img src="./relatedresources.png" class="resource-preview">
+      <img
+        src="./relatedresources.png"
+        class="resource-preview"
+      >
       <VLayout mt-3>
         <VFlex class="mx-2">
           <p>{{ $tr('resourcePreviewDialogHelpText') }}</p>
@@ -40,7 +43,10 @@
       </VLayout>
     </KModal>
 
-    <VLayout justify-start wrap>
+    <VLayout
+      justify-start
+      wrap
+    >
       <VFlex
         xs12
         md5
@@ -113,6 +119,7 @@
   </div>
 
 </template>
+
 
 <script>
 
@@ -230,6 +237,7 @@
   };
 
 </script>
+
 
 <style lang="scss" scoped>
 

@@ -216,7 +216,7 @@ describe('Resources', () => {
         jest.spyOn(client, 'delete').mockRejectedValue(new Error('error deleting'));
         await ViewerM2M.add({ user: testUserId, channel: testChannelId });
         await expect(ChannelUser.removeViewer(testChannelId, testUserId)).rejects.toThrow(
-          'error deleting'
+          'error deleting',
         );
       });
     });

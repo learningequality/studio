@@ -8,17 +8,11 @@ jest.mock('shared/views/MarkdownEditor/MarkdownEditor/MarkdownEditor.vue');
 jest.mock('shared/views/MarkdownEditor/MarkdownViewer/MarkdownViewer.vue');
 
 const clickNewHintBtn = wrapper => {
-  wrapper
-    .find('[data-test=newHintBtn]')
-    .find('button')
-    .trigger('click');
+  wrapper.find('[data-test=newHintBtn]').find('button').trigger('click');
 };
 
 const clickHint = (wrapper, hintIdx) => {
-  wrapper
-    .findAll('[data-test=hint]')
-    .at(hintIdx)
-    .trigger('click');
+  wrapper.findAll('[data-test=hint]').at(hintIdx).trigger('click');
 };
 
 const clickMoveHintUp = (wrapper, hintIdx) => {

@@ -25,6 +25,7 @@
 
 </template>
 
+
 <script>
 
   import DropdownWrapper from 'shared/views/form/DropdownWrapper';

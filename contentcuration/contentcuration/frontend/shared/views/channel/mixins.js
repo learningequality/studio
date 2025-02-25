@@ -115,7 +115,7 @@ export const channelExportMixin = {
           this.$formatNumber(channel.resource_count),
           this.formatFileSize(channel.resource_size),
           sortBy(channel.kind_count, 'kind_id').map(
-            kind => `${this.translateConstant(kind.kind_id)} (${this.$formatNumber(kind.count)})`
+            kind => `${this.translateConstant(kind.kind_id)} (${this.$formatNumber(kind.count)})`,
           ),
           channel.languages,
           channel.accessible_languages,

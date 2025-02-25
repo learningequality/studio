@@ -1,9 +1,5 @@
-import Vue from 'vue';
-import Vuetify from 'vuetify';
 import { mount } from '@vue/test-utils';
 import ResourcesNeededOptions from '../ResourcesNeededOptions.vue';
-
-Vue.use(Vuetify);
 
 function makeWrapper({ value = {}, nodeIds = ['node1'] } = {}) {
   return mount(ResourcesNeededOptions, {

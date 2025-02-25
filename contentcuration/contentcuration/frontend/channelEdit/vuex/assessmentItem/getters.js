@@ -4,7 +4,7 @@ import { getAssessmentItemErrors } from 'shared/utils/validation';
  * Get assessment items of a node.
  */
 export function getAssessmentItems(state) {
-  return function(contentNodeId) {
+  return function (contentNodeId) {
     if (!state.assessmentItemsMap[contentNodeId]) {
       return [];
     }
@@ -18,7 +18,7 @@ export function getAssessmentItems(state) {
  * Get total number of assessment items of a node.
  */
 export function getAssessmentItemsCount(state) {
-  return function(contentNodeId) {
+  return function (contentNodeId) {
     return getAssessmentItems(state)(contentNodeId).length;
   };
 }
@@ -28,7 +28,7 @@ export function getAssessmentItemsCount(state) {
  * Consider new assessment items as valid if `ignoreDelayed` is true.
  */
 export function getAssessmentItemsErrors(state, getters, rootState, rootGetters) {
-  return function({ contentNodeId, ignoreDelayed = false }) {
+  return function ({ contentNodeId, ignoreDelayed = false }) {
     const assessmentItemsErrors = {};
 
     const contentNode = rootGetters['contentNode/getContentNode'](contentNodeId);
@@ -48,7 +48,7 @@ export function getAssessmentItemsErrors(state, getters, rootState, rootGetters)
       } else {
         assessmentItemsErrors[assessmentItemId] = getAssessmentItemErrors(
           assessmentItem,
-          freeResponseInvalid
+          freeResponseInvalid,
         );
       }
     });
@@ -61,13 +61,13 @@ export function getAssessmentItemsErrors(state, getters, rootState, rootGetters)
  * Consider new assessment items as valid if `ignoreDelayed` is true.
  */
 export function getInvalidAssessmentItemsCount(state, getters, rootState, rootGetters) {
-  return function({ contentNodeId, ignoreDelayed = false }) {
+  return function ({ contentNodeId, ignoreDelayed = false }) {
     let count = 0;
     const assessmentItemsErrors = getAssessmentItemsErrors(
       state,
       getters,
       rootState,
-      rootGetters
+      rootGetters,
     )({
       contentNodeId,
       ignoreDelayed,
@@ -88,13 +88,13 @@ export function getInvalidAssessmentItemsCount(state, getters, rootState, rootGe
  * Consider new assessment items as valid if `ignoreDelayed` is true.
  */
 export function getAssessmentItemsAreValid(state, getters, rootState, rootGetters) {
-  return function({ contentNodeId, ignoreDelayed = false }) {
+  return function ({ contentNodeId, ignoreDelayed = false }) {
     return (
       getInvalidAssessmentItemsCount(
         state,
         getters,
         rootState,
-        rootGetters
+        rootGetters,
       )({ contentNodeId, ignoreDelayed }) === 0
     );
   };

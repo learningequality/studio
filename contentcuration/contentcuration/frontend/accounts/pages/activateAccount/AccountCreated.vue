@@ -1,10 +1,12 @@
 <template>
 
-  <MessageLayout
-    :header="$tr('accountCreatedTitle')"
-  >
+  <MessageLayout :header="$tr('accountCreatedTitle')">
     <template #back>
-      <VBtn color="primary" :to="{ name: 'Main' }" large>
+      <VBtn
+        color="primary"
+        :to="{ name: 'Main' }"
+        large
+      >
         {{ $tr('backToLogin') }}
       </VBtn>
     </template>

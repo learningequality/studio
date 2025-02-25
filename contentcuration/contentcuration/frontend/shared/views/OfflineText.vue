@@ -1,10 +1,24 @@
 <template>
 
-  <VFadeTransition v-if="offline && !libraryMode" data-test="text">
-    <VTooltip v-if="indicator" bottom z-index="300" lazy>
+  <VFadeTransition
+    v-if="offline && !libraryMode"
+    data-test="text"
+  >
+    <VTooltip
+      v-if="indicator"
+      bottom
+      z-index="300"
+      lazy
+    >
       <template #activator="{ on }">
-        <div class="px-4" v-on="on">
-          <Icon class="mx-2" icon="disconnected" />
+        <div
+          class="px-4"
+          v-on="on"
+        >
+          <Icon
+            class="mx-2"
+            icon="disconnected"
+          />
           <span class="font-weight-bold">
             {{ $tr('offlineIndicatorText') }}
           </span>
@@ -23,16 +37,23 @@
       :style="`margin-top: ${offset}px;`"
       v-bind="$attrs"
     >
-      <Icon class="mx-3" icon="disconnected" />
+      <Icon
+        class="mx-3"
+        icon="disconnected"
+      />
       <span>{{ offlineText || $tr('offlineText') }}</span>
     </ToolBar>
     <div v-else>
-      <Icon class="mx-3" icon="disconnected" />
+      <Icon
+        class="mx-3"
+        icon="disconnected"
+      />
       <span>{{ offlineText || $tr('offlineText') }}</span>
     </div>
   </VFadeTransition>
 
 </template>
+
 
 <script>
 
@@ -78,8 +99,12 @@
   };
 
 </script>
+
+
 <style scoped>
+
   span {
     vertical-align: bottom;
   }
+
 </style>

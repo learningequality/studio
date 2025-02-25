@@ -70,7 +70,7 @@ describe('extendSlot', () => {
             click: this.eventTestEmitter,
           },
         },
-        { val: this.val }
+        { val: this.val },
       );
     },
   });
@@ -182,7 +182,7 @@ describe('extendSlot', () => {
             </template>
           </extender>
         `,
-        { components: { other } }
+        { components: { other } },
       );
 
       it('should render correctly initially', async () => {
@@ -264,7 +264,7 @@ describe('extendSlot', () => {
             </other>
           </extender>
         `,
-        { components: { other } }
+        { components: { other } },
       );
 
       it('should render correctly initially', async () => {

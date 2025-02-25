@@ -1,9 +1,17 @@
 <template>
 
   <div>
-    <VTooltip v-if="hasErrors" top lazy>
+    <VTooltip
+      v-if="hasErrors"
+      top
+      lazy
+    >
       <template #activator="{ on }">
-        <VIconWrapper color="red" :large="large" v-on="on">
+        <VIconWrapper
+          color="red"
+          :large="large"
+          v-on="on"
+        >
           error
         </VIconWrapper>
       </template>
@@ -29,6 +37,7 @@
   </div>
 
 </template>
+
 
 <script>
 
@@ -61,6 +70,7 @@
   };
 
 </script>
+
 
 <style lang="scss" scoped>
 

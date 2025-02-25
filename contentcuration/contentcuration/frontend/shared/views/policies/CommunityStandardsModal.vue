@@ -38,6 +38,8 @@
   </PoliciesModal>
 
 </template>
+
+
 <script>
 
   import PoliciesModal from './PoliciesModal';

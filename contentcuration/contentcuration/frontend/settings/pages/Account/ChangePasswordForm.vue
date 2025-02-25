@@ -9,7 +9,10 @@
     @cancel="dialog = false"
   >
     <!-- inline style here avoids scrollbar on validations -->
-    <VForm ref="form" style="height: 196px">
+    <VForm
+      ref="form"
+      style="height: 196px"
+    >
       <PasswordField
         v-model="password"
         :additionalRules="passwordValidationRules"
@@ -24,6 +27,7 @@
   </KModal>
 
 </template>
+
 
 <script>
 
@@ -101,6 +105,5 @@
 
 </script>
 
-<style>
 
-</style>
+<style></style>

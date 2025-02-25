@@ -1,9 +1,5 @@
-import Vue from 'vue';
-import Vuetify from 'vuetify';
 import { shallowMount } from '@vue/test-utils';
 import CategoryOptions from '../CategoryOptions.vue';
-
-Vue.use(Vuetify);
 
 function makeWrapper({ value = {}, nodeIds = ['node1'] } = {}) {
   return shallowMount(CategoryOptions, {

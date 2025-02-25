@@ -1,11 +1,11 @@
 import { mount } from '@vue/test-utils';
 import router from '../../router';
-import Main from '../Main';
+import AccountsMain from '../AccountsMain.vue';
 
 const login = jest.fn();
 
 function makeWrapper() {
-  const wrapper = mount(Main, {
+  const wrapper = mount(AccountsMain, {
     router,
     stubs: ['GlobalSnackbar', 'PolicyModals'],
     mocks: {

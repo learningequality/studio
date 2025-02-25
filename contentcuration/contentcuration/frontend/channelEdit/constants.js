@@ -1,7 +1,6 @@
 import { AssessmentItemTypes } from 'shared/constants';
 
 export const RouteNames = {
-  SANDBOX: 'SANDBOX',
   TREE_ROOT_VIEW: 'TREE_ROOT_VIEW',
   TREE_VIEW: 'TREE_VIEW',
   STAGING_TREE_VIEW: 'STAGING_TREE_VIEW',

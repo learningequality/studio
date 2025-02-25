@@ -1,5 +1,5 @@
 import { mount } from '@vue/test-utils';
-import Vuex from 'vuex';
+import { Store } from 'vuex';
 import EditTitleDescriptionModal from '../EditTitleDescriptionModal.vue';
 
 const nodeId = 'test-id';
@@ -22,7 +22,7 @@ describe('EditTitleDescriptionModal', () => {
     generalActions = {
       showSnackbarSimple: jest.fn(),
     };
-    store = new Vuex.Store({
+    store = new Store({
       actions: generalActions,
       modules: {
         contentNode: {
@@ -154,7 +154,7 @@ describe('EditTitleDescriptionModal', () => {
     const animationFrameId = requestAnimationFrame(() => {
       expect(generalActions.showSnackbarSimple).toHaveBeenCalledWith(
         expect.anything(),
-        'Edited title and description'
+        'Edited title and description',
       );
       cancelAnimationFrame(animationFrameId);
     });

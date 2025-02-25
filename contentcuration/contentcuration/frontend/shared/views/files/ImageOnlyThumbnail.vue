@@ -2,9 +2,9 @@
 
   <figure
     :class="{
-      'thumbnail': !compact,
+      thumbnail: !compact,
       'icon-only': compact,
-      'nothumbnail': !showThumbnail && !compact,
+      nothumbnail: !showThumbnail && !compact,
     }"
     :style="{ 'max-width': maxWidth }"
   >
@@ -22,7 +22,11 @@
         v-if="learningActivities && !isTopic"
         :learningActivities="learningActivities"
       />
-      <KIcon v-else-if="isTopic" :icon="kind" :aria-label="translateConstant(kind)" />
+      <KIcon
+        v-else-if="isTopic"
+        :icon="kind"
+        :aria-label="translateConstant(kind)"
+      />
     </div>
     <svg
       v-else
@@ -38,10 +42,10 @@
         :style="{ fill: '#999999' }"
       />
     </svg>
-
   </figure>
 
 </template>
+
 
 <script>
 
@@ -122,6 +126,7 @@
   };
 
 </script>
+
 
 <style lang="scss" scoped>
 

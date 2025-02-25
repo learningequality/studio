@@ -342,7 +342,7 @@ function generateContentNodeData({
 
 export function updateContentNode(
   context,
-  { id, mergeMapFields, checkComplete = false, ...payload } = {}
+  { id, mergeMapFields, checkComplete = false, ...payload } = {},
 ) {
   if (!id) {
     throw ReferenceError('id must be defined to update a contentNode');
@@ -455,7 +455,7 @@ export function addTags(context, { ids, tags }) {
         updates[`tags.${tag}`] = true;
       }
       return ContentNode.update(id, updates);
-    })
+    }),
   );
 }
 
@@ -468,7 +468,7 @@ export function removeTags(context, { ids, tags }) {
         updates[`tags.${tag}`] = undefined;
       }
       return ContentNode.update(id, updates);
-    })
+    }),
   );
 }
 
@@ -482,7 +482,7 @@ export function deleteContentNodes(context, contentNodeIds) {
   return Promise.all(
     contentNodeIds.map(id => {
       return deleteContentNode(context, id);
-    })
+    }),
   );
 }
 
@@ -504,7 +504,7 @@ export function copyContentNode(
     position = RELATIVE_TREE_POSITIONS.LAST_CHILD,
     excluded_descendants = null,
     sourceNode = null,
-  } = {}
+  } = {},
 ) {
   // First, this will parse the tree and create the copy the local tree nodes,
   // with a `source_id` of the source node then create the content node copies
@@ -518,7 +518,7 @@ export function copyContentNode(
 
 export function copyContentNodes(
   context,
-  { id__in, target, position = RELATIVE_TREE_POSITIONS.LAST_CHILD, sourceNodes = null }
+  { id__in, target, position = RELATIVE_TREE_POSITIONS.LAST_CHILD, sourceNodes = null },
 ) {
   return Promise.all(
     id__in.map(id => {
@@ -527,14 +527,14 @@ export function copyContentNodes(
         sourceNode = sourceNodes.find(n => n.id === id);
       }
       return context.dispatch('copyContentNode', { id, target, position, sourceNode });
-    })
+    }),
   );
 }
 
 const PARENT_POSITIONS = [RELATIVE_TREE_POSITIONS.FIRST_CHILD, RELATIVE_TREE_POSITIONS.LAST_CHILD];
 export function moveContentNodes(
   context,
-  { id__in, parent, target = null, position = RELATIVE_TREE_POSITIONS.LAST_CHILD, inherit = true }
+  { id__in, parent, target = null, position = RELATIVE_TREE_POSITIONS.LAST_CHILD, inherit = true },
 ) {
   // Make sure use of parent vs target matches position param
   if (parent && !(PARENT_POSITIONS.indexOf(position) >= 0)) {
@@ -554,7 +554,7 @@ export function moveContentNodes(
         }
         return id;
       });
-    })
+    }),
   );
 }
 
@@ -567,7 +567,7 @@ export function loadNodeDetails(context, nodeId) {
 // Actions to check indexeddb saving status
 export async function checkSavingProgress(
   context,
-  { contentNodeIds = [], fileIds = [], assessmentIds = [] }
+  { contentNodeIds = [], fileIds = [], assessmentIds = [] },
 ) {
   if (!contentNodeIds.length && !fileIds.length && !assessmentIds.length) {
     return false;

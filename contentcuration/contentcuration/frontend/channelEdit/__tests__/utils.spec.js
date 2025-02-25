@@ -60,7 +60,7 @@ describe('channelEdit utils', () => {
           getCorrectAnswersIndices(questionKind, [
             { answer: 'Answer 1', correct: false },
             { answer: 'Answer 2', correct: false },
-          ])
+          ]),
         ).toBeNull();
       });
 
@@ -69,7 +69,7 @@ describe('channelEdit utils', () => {
           getCorrectAnswersIndices(questionKind, [
             { answer: 'Answer 1', correct: false },
             { answer: 'Answer 2', correct: true },
-          ])
+          ]),
         ).toBe(1);
       });
     });
@@ -84,7 +84,7 @@ describe('channelEdit utils', () => {
           getCorrectAnswersIndices(questionKind, [
             { answer: 'True', correct: false },
             { answer: 'False', correct: false },
-          ])
+          ]),
         ).toBeNull();
       });
 
@@ -93,7 +93,7 @@ describe('channelEdit utils', () => {
           getCorrectAnswersIndices(questionKind, [
             { answer: 'True', correct: false },
             { answer: 'False', correct: true },
-          ])
+          ]),
         ).toBe(1);
       });
     });
@@ -109,7 +109,7 @@ describe('channelEdit utils', () => {
             { answer: 'Answer 1', correct: false },
             { answer: 'Answer 2', correct: false },
             { answer: 'Answer 3', correct: false },
-          ])
+          ]),
         ).toEqual([]);
       });
 
@@ -119,7 +119,7 @@ describe('channelEdit utils', () => {
             { answer: 'Answer 1', correct: true },
             { answer: 'Answer 2', correct: false },
             { answer: 'Answer 3', correct: true },
-          ])
+          ]),
         ).toEqual([0, 2]);
       });
     });
@@ -135,7 +135,7 @@ describe('channelEdit utils', () => {
             { answer: 'Answer 1', correct: false },
             { answer: 'Answer 2', correct: false },
             { answer: 'Answer 3', correct: false },
-          ])
+          ]),
         ).toEqual([]);
       });
 
@@ -145,7 +145,7 @@ describe('channelEdit utils', () => {
             { answer: 'Answer 1', correct: true },
             { answer: 'Answer 2', correct: true },
             { answer: 'Answer 3', correct: true },
-          ])
+          ]),
         ).toEqual([0, 1, 2]);
       });
     });
@@ -161,8 +161,8 @@ describe('channelEdit utils', () => {
               { answer: 'Answer 2', correct: false },
               { answer: 'Answer 3', correct: true },
             ],
-            1
-          )
+            1,
+          ),
         ).toEqual([
           { answer: 'Answer 1', correct: false },
           { answer: 'Answer 2', correct: true },
@@ -180,8 +180,8 @@ describe('channelEdit utils', () => {
               { answer: 'Answer 2', correct: false },
               { answer: 'Answer 3', correct: true },
             ],
-            [1, 2]
-          )
+            [1, 2],
+          ),
         ).toEqual([
           { answer: 'Answer 1', correct: false },
           { answer: 'Answer 2', correct: true },
@@ -215,7 +215,7 @@ describe('channelEdit utils', () => {
       describe('conversion to single selection', () => {
         it('returns the same answers', () => {
           expect(
-            updateAnswersToQuestionType(AssessmentItemTypes.SINGLE_SELECTION, answers)
+            updateAnswersToQuestionType(AssessmentItemTypes.SINGLE_SELECTION, answers),
           ).toEqual(answers);
         });
       });
@@ -223,7 +223,7 @@ describe('channelEdit utils', () => {
       describe('conversion to multiple selection', () => {
         it('returns the same answers', () => {
           expect(
-            updateAnswersToQuestionType(AssessmentItemTypes.MULTIPLE_SELECTION, answers)
+            updateAnswersToQuestionType(AssessmentItemTypes.MULTIPLE_SELECTION, answers),
           ).toEqual(answers);
         });
       });
@@ -271,7 +271,7 @@ describe('channelEdit utils', () => {
       describe('conversion to input question', () => {
         it('returns the same answers', () => {
           expect(updateAnswersToQuestionType(AssessmentItemTypes.INPUT_QUESTION, answers)).toEqual(
-            answers
+            answers,
           );
         });
       });
@@ -279,7 +279,7 @@ describe('channelEdit utils', () => {
       describe('conversion to multiple selection', () => {
         it('returns the same answers', () => {
           expect(
-            updateAnswersToQuestionType(AssessmentItemTypes.MULTIPLE_SELECTION, answers)
+            updateAnswersToQuestionType(AssessmentItemTypes.MULTIPLE_SELECTION, answers),
           ).toEqual(answers);
         });
       });
@@ -287,7 +287,7 @@ describe('channelEdit utils', () => {
       describe('conversion to single selection', () => {
         it('keeps only first answer as correct', () => {
           expect(
-            updateAnswersToQuestionType(AssessmentItemTypes.SINGLE_SELECTION, answers)
+            updateAnswersToQuestionType(AssessmentItemTypes.SINGLE_SELECTION, answers),
           ).toEqual([
             { answer: '8', correct: true, order: 1 },
             { answer: '8.0', correct: false, order: 2 },
@@ -318,7 +318,7 @@ describe('channelEdit utils', () => {
       describe('conversion to true/false question', () => {
         it('returns the same answers', () => {
           expect(
-            updateAnswersToQuestionType(AssessmentItemTypes.SINGLE_SELECTION, answers)
+            updateAnswersToQuestionType(AssessmentItemTypes.SINGLE_SELECTION, answers),
           ).toEqual(answers);
         });
       });
@@ -326,7 +326,7 @@ describe('channelEdit utils', () => {
       describe('conversion to multiple selection', () => {
         it('returns the same answers', () => {
           expect(
-            updateAnswersToQuestionType(AssessmentItemTypes.MULTIPLE_SELECTION, answers)
+            updateAnswersToQuestionType(AssessmentItemTypes.MULTIPLE_SELECTION, answers),
           ).toEqual(answers);
         });
       });
@@ -334,7 +334,7 @@ describe('channelEdit utils', () => {
       describe('conversion to single selection', () => {
         it('returns the same answers', () => {
           expect(
-            updateAnswersToQuestionType(AssessmentItemTypes.SINGLE_SELECTION, answers)
+            updateAnswersToQuestionType(AssessmentItemTypes.SINGLE_SELECTION, answers),
           ).toEqual(answers);
         });
       });
@@ -342,7 +342,7 @@ describe('channelEdit utils', () => {
       describe('conversion to input question', () => {
         it('remove all answers', () => {
           expect(updateAnswersToQuestionType(AssessmentItemTypes.INPUT_QUESTION, answers)).toEqual(
-            []
+            [],
           );
         });
       });
@@ -352,7 +352,7 @@ describe('channelEdit utils', () => {
       describe('conversion to multiple selection', () => {
         it('returns the same answers', () => {
           expect(
-            updateAnswersToQuestionType(AssessmentItemTypes.SINGLE_SELECTION, answers)
+            updateAnswersToQuestionType(AssessmentItemTypes.SINGLE_SELECTION, answers),
           ).toEqual(answers);
         });
       });
@@ -369,7 +369,7 @@ describe('channelEdit utils', () => {
 
           it('keeps only first correct answer', () => {
             expect(
-              updateAnswersToQuestionType(AssessmentItemTypes.SINGLE_SELECTION, answers)
+              updateAnswersToQuestionType(AssessmentItemTypes.SINGLE_SELECTION, answers),
             ).toEqual([
               { answer: 'Mayonnaise (I mean you can, but...)', correct: false, order: 1 },
               { answer: 'Peanut butter', correct: true, order: 2 },
@@ -389,7 +389,7 @@ describe('channelEdit utils', () => {
 
           it('makes a first answer correct', () => {
             expect(
-              updateAnswersToQuestionType(AssessmentItemTypes.SINGLE_SELECTION, answers)
+              updateAnswersToQuestionType(AssessmentItemTypes.SINGLE_SELECTION, answers),
             ).toEqual([
               { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
               { answer: 'Peanut butter', correct: false, order: 2 },
@@ -487,8 +487,8 @@ describe('channelEdit utils', () => {
                 },
                 kind: 'audio',
               },
-              [{ duration: 100 }]
-            )
+              [{ duration: 100 }],
+            ),
           ).toEqual({
             completion: 'When time spent is equal to duration',
             duration: '01:40',
@@ -503,8 +503,8 @@ describe('channelEdit utils', () => {
                 },
                 kind: 'video',
               },
-              [{ duration: 100 }]
-            )
+              [{ duration: 100 }],
+            ),
           ).toEqual({
             completion: 'When time spent is equal to duration',
             duration: '01:40',
@@ -521,8 +521,8 @@ describe('channelEdit utils', () => {
                 },
                 kind: 'document',
               },
-              []
-            )
+              [],
+            ),
           ).toEqual({
             completion: 'Viewed in its entirety',
             duration: '-',
@@ -539,8 +539,8 @@ describe('channelEdit utils', () => {
                 },
                 kind: 'exercise',
               },
-              []
-            ).completionModel
+              [],
+            ).completionModel,
           ).toEqual('mastery');
         });
       });
@@ -557,7 +557,7 @@ describe('channelEdit utils', () => {
                 },
               },
             },
-          })
+          }),
         ).toEqual({
           completion: 'Reference material',
           duration: '-',
@@ -577,7 +577,7 @@ describe('channelEdit utils', () => {
               },
             },
             suggested_duration: 3820,
-          })
+          }),
         ).toEqual({
           completion: 'When time spent is equal to duration',
           duration: '01:03:40',
@@ -597,7 +597,7 @@ describe('channelEdit utils', () => {
               },
             },
             suggested_duration: 1859,
-          }).completion
+          }).completion,
         ).toBe('When time spent is equal to duration');
       });
 
@@ -612,7 +612,7 @@ describe('channelEdit utils', () => {
               },
             },
             suggested_duration: 1860,
-          }).duration
+          }).duration,
         ).toBe('Short activity');
       });
 
@@ -627,7 +627,7 @@ describe('channelEdit utils', () => {
               },
             },
             suggested_duration: 1861,
-          }).duration
+          }).duration,
         ).toBe('Long activity');
       });
     });
@@ -644,7 +644,7 @@ describe('channelEdit utils', () => {
                 },
               },
             },
-          })
+          }),
         ).toEqual({
           completion: 'Viewed in its entirety',
           duration: '-',
@@ -663,7 +663,7 @@ describe('channelEdit utils', () => {
                 },
               },
             },
-          })
+          }),
         ).toEqual({
           completion: 'Determined by the resource',
           duration: '-',
@@ -687,7 +687,7 @@ describe('channelEdit utils', () => {
                 },
               },
             },
-          })
+          }),
         ).toEqual({
           completion: 'Goal: 4 out of 5',
           duration: '-',
@@ -707,7 +707,7 @@ describe('channelEdit utils', () => {
                 },
               },
             },
-          })
+          }),
         ).toEqual({
           completion: 'Goal: 100% correct',
           duration: '-',
@@ -734,12 +734,12 @@ describe('channelEdit utils', () => {
                   },
                 },
               },
-            })
+            }),
           ).toEqual({
             completion: `Goal: ${num} in a row`,
             duration: '-',
           });
-        }
+        },
       );
     });
   });

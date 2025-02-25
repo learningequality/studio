@@ -1,25 +1,47 @@
 <template>
 
-  <div style="width: 100%;">
+  <div style="width: 100%">
     <VCard
       v-if="!primaryFileCount"
       data-test="error"
       flat
     >
       <VCardText>
-        <VLayout align-center justify-center fill-height>
+        <VLayout
+          align-center
+          justify-center
+          fill-height
+        >
           <Icon icon="error" />
           &nbsp; {{ $tr('fileError') }}
         </VLayout>
       </VCardText>
     </VCard>
-    <VLayout v-else row wrap>
-      <VFlex sm12 md12 lg12 xl12>
+    <VLayout
+      v-else
+      row
+      wrap
+    >
+      <VFlex
+        sm12
+        md12
+        lg12
+        xl12
+      >
         <p>
-          <ContentNodeIcon :kind="node.kind" includeText />
+          <ContentNodeIcon
+            :kind="node.kind"
+            includeText
+          />
         </p>
       </VFlex>
-      <VFlex sm12 md6 lg7 xl7 class="pr-4">
+      <VFlex
+        sm12
+        md6
+        lg7
+        xl7
+        class="pr-4"
+      >
         <h3>
           {{ $tr('filesHeader') }}
         </h3>
@@ -36,16 +58,38 @@
           />
         </VList>
       </VFlex>
-      <VFlex sm12 md6 lg5 xl5>
-        <h3 v-if="selectedFilename" class="mb-3">
+      <VFlex
+        sm12
+        md6
+        lg5
+        xl5
+      >
+        <h3
+          v-if="selectedFilename"
+          class="mb-3"
+        >
           {{ selectedFilename }}
         </h3>
         <div class="preview-wrapper">
-          <VCard v-if="!primaryFileCount" flat class="mb-2 message-card">
-            <VLayout align-center justify-center fill-height>
-              <VTooltip bottom lazy>
+          <VCard
+            v-if="!primaryFileCount"
+            flat
+            class="mb-2 message-card"
+          >
+            <VLayout
+              align-center
+              justify-center
+              fill-height
+            >
+              <VTooltip
+                bottom
+                lazy
+              >
                 <template #activator="{ on }">
-                  <VIconWrapper color="red" v-on="on">
+                  <VIconWrapper
+                    color="red"
+                    v-on="on"
+                  >
                     error
                   </VIconWrapper>
                 </template>
@@ -72,11 +116,12 @@
       @submit="handleRemoveFile"
       @cancel="showRemoveFileWarning = false"
     >
-      <p>{{ $tr("removeFileDescription", { fileTypes: allowedFileTypes }) }}</p>
+      <p>{{ $tr('removeFileDescription', { fileTypes: allowedFileTypes }) }}</p>
     </KModal>
   </div>
 
 </template>
+
 
 <script>
 
@@ -118,7 +163,7 @@
       presets() {
         // Explicitly exclude any 'dependency' presets for now
         return FormatPresetsList.filter(
-          p => p.kind_id === this.node.kind && !p.id.includes('dependency')
+          p => p.kind_id === this.node.kind && !p.id.includes('dependency'),
         );
       },
       fileCount() {
@@ -141,7 +186,7 @@
               return null;
             })
             .filter(item => item !== null),
-          'order'
+          'order',
         );
       },
       selectedFilename() {
@@ -206,6 +251,7 @@
   };
 
 </script>
+
 
 <style lang="scss" scoped>
 

@@ -1,23 +1,44 @@
 <template>
 
   <VContainer fluid>
-    <VLayout wrap align-center justify-center class="file-upload-wrapper">
+    <VLayout
+      wrap
+      align-center
+      justify-center
+      class="file-upload-wrapper"
+    >
       <VSpacer />
-      <VFlex xs12 md6>
+      <VFlex
+        xs12
+        md6
+      >
         <FileStorage showProgress />
       </VFlex>
       <VFlex xs12>
-        <VCard flat style="border: 1px solid lightgrey; height: 100%;">
-          <FileDropzone :fill="true" @dropped="handleFiles">
-            <VLayout align-center fill-height>
+        <VCard
+          flat
+          style="height: 100%; border: 1px solid lightgrey"
+        >
+          <FileDropzone
+            :fill="true"
+            @dropped="handleFiles"
+          >
+            <VLayout
+              align-center
+              fill-height
+            >
               <VCardText class="align-center text-center text-xs-center">
                 <p class="grey--text subheading">
-                  {{ $tr('uploadToText', { title: uploadToTitle } ) }}
+                  {{ $tr('uploadToText', { title: uploadToTitle }) }}
                 </p>
                 <p class="mb-4 title">
                   {{ $tr('dropHereText') }}
                 </p>
-                <VBtn color="primary" data-test="upload" @click="openFileDialog">
+                <VBtn
+                  color="primary"
+                  data-test="upload"
+                  @click="openFileDialog"
+                >
                   {{ $tr('chooseFilesButton') }}
                 </VBtn>
                 <p class="grey--text mt-2 small text-center">
@@ -33,6 +54,7 @@
 
 </template>
 
+
 <script>
 
   import uniq from 'lodash/uniq';
@@ -42,7 +64,7 @@
   import { titleMixin } from 'shared/mixins';
 
   const acceptedFiles = uniq(
-    FormatPresetsList.filter(p => !p.supplementary && p.display).flatMap(p => p.allowed_formats)
+    FormatPresetsList.filter(p => !p.supplementary && p.display).flatMap(p => p.allowed_formats),
   );
 
   export default {
@@ -86,6 +108,7 @@
   };
 
 </script>
+
 
 <style lang="scss" scoped>
 

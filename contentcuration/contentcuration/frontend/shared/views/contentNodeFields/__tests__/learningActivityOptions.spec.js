@@ -1,10 +1,6 @@
-import Vue from 'vue';
-import Vuetify from 'vuetify';
 import { shallowMount, mount } from '@vue/test-utils';
 import LearningActivityOptions from '../LearningActivityOptions.vue';
 import { LearningActivities } from 'shared/constants';
-
-Vue.use(Vuetify);
 
 function makeWrapper({ value = {}, nodeIds = ['node1'] } = {}) {
   return mount(LearningActivityOptions, {
@@ -56,7 +52,7 @@ describe('LearningActivityOptions', () => {
       const dropdown = wrapper.find({ name: 'v-select' });
       dropdown.vm.$emit('input', learningActivity);
 
-      return Vue.nextTick().then(() => {
+      return dropdown.vm.$nextTick().then(() => {
         const emittedLevels = wrapper.emitted('input').pop()[0];
         expect(emittedLevels).toEqual({
           activity_1: ['node1'],

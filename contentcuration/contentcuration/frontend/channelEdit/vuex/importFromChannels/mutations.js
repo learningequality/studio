@@ -1,4 +1,4 @@
-import Vue from 'vue';
+import Vue, { set } from 'vue';
 import { applyMods } from 'shared/data/applyRemoteChanges';
 
 // Saved search mutations
@@ -9,7 +9,7 @@ export function SET_SAVEDSEARCHES(state, searches) {
 }
 
 export function UPDATE_SAVEDSEARCH(state, search) {
-  Vue.set(state.savedSearches, search.id, {
+  set(state.savedSearches, search.id, {
     ...(state.savedSearches[search.id] || {}),
     ...search,
   });
@@ -17,7 +17,7 @@ export function UPDATE_SAVEDSEARCH(state, search) {
 
 export function UPDATE_SAVEDSEARCH_FROM_INDEXEDDB(state, { id, ...updates }) {
   if (id && state.savedSearches[id]) {
-    Vue.set(state.savedSearches, id, { ...applyMods(state.savedSearches[id], updates) });
+    set(state.savedSearches, id, { ...applyMods(state.savedSearches[id], updates) });
   }
 }
 

@@ -28,6 +28,7 @@
 
 </template>
 
+
 <script>
 
   import {
@@ -47,7 +48,7 @@
       value: {
         type: String,
         required: false,
-        validator: function(value) {
+        validator: function (value) {
           return !value || MasteryModels.has(value);
         },
         default: '',

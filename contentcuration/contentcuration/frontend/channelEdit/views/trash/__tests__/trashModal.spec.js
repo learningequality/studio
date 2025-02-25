@@ -91,10 +91,7 @@ describe('trashModal', () => {
       expect(wrapper.vm.previewNodeId).toBe(testChildren[0].id);
     });
     it('checking item in list should add the item ID to the selected array', () => {
-      wrapper
-        .find('[data-test="checkbox"]')
-        .find('input[type="checkbox"]')
-        .element.click();
+      wrapper.find('[data-test="checkbox"]').find('input[type="checkbox"]').element.click();
       expect(wrapper.vm.selected).toEqual(['test1']);
     });
     it('checking select all checkbox should check all items', () => {

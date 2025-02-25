@@ -1,7 +1,10 @@
 <template>
 
   <div>
-    <KButtonGroup style="margin-top: 8px;" class="dots">
+    <KButtonGroup
+      style="margin-top: 8px"
+      class="dots"
+    >
       <KIconButton
         icon="language"
         aria-hidden="true"
@@ -11,7 +14,7 @@
       />
       <span
         class="selected"
-        :style="{ 'margin': '0' }"
+        :style="{ margin: '0' }"
         :title="selectedLanguage.english_name"
       >
         {{ selectedLanguage.lang_name }}
@@ -23,7 +26,7 @@
         :title="language.english_name"
         class="lang"
         appearance="basic-link"
-        :style="{ 'margin': '0 2px' }"
+        :style="{ margin: '0 2px' }"
         @click="switchLanguage(language.id)"
       />
       <KButton

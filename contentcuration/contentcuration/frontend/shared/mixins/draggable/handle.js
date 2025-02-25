@@ -139,7 +139,7 @@ export default {
           dragend: this.emitDraggableDragEnd,
         },
       },
-      { isDragging, draggable }
+      { isDragging, draggable },
     );
   },
 };

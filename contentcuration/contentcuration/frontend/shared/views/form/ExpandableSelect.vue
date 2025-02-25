@@ -63,10 +63,10 @@
     >
       {{ hint }}
     </p>
-
   </div>
 
 </template>
+
 
 <script>
 
@@ -156,7 +156,7 @@
         get() {
           if (this.multiple) {
             return Object.keys(this.valueModel).filter(
-              key => this.valueModel[key].length === this.availableItems.length
+              key => this.valueModel[key].length === this.availableItems.length,
             );
           }
           return this.valueModel;
@@ -206,9 +206,12 @@
 
 </script>
 
+
 <style scoped>
+
   .disabled {
     pointer-events: none;
     opacity: 0.5;
   }
+
 </style>

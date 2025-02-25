@@ -23,6 +23,7 @@
 
 </template>
 
+
 <script>
 
   import flatten from 'lodash/flatten'; // Tests fail with native Array.flat() method
@@ -50,24 +51,26 @@
           createFilter(
             this.keywords,
             this.$tr('keywords', { text: this.keywords }),
-            this.resetKeywords
+            this.resetKeywords,
           ),
 
           // Languages
           this.languages.map(language =>
             createFilter(language, this.translateLanguage(language), () =>
-              this.removeLanguage(language)
-            )
+              this.removeLanguage(language),
+            ),
           ),
 
           // Licenses
           this.licenses.map(license =>
-            createFilter(license, this.translateLicense(license), () => this.removeLicense(license))
+            createFilter(license, this.translateLicense(license), () =>
+              this.removeLicense(license),
+            ),
           ),
 
           // Kinds
           this.kinds.map(kind =>
-            createFilter(kind, this.translateConstant(kind), () => this.removeKind(kind))
+            createFilter(kind, this.translateConstant(kind), () => this.removeKind(kind)),
           ),
 
           // Includes
@@ -115,6 +118,8 @@
   };
 
 </script>
+
+
 <style lang="scss" scoped>
 
   h3,

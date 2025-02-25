@@ -1,9 +1,16 @@
 <template>
 
-  <Uploader ref="uploader" :presetID="imagePreset">
+  <Uploader
+    ref="uploader"
+    :presetID="imagePreset"
+  >
     <template #default="{ handleFiles }">
       <VLayout>
-        <DropdownWrapper component="VFlex" xs7 lg5>
+        <DropdownWrapper
+          component="VFlex"
+          xs7
+          lg5
+        >
           <template #default="{ attach, menuProps }">
             <VSelect
               :key="kindSelectKey"
@@ -50,7 +57,10 @@
                 data-test="questionText"
                 @click="openQuestion"
               >
-                <VLayout align-start justify-space-between>
+                <VLayout
+                  align-start
+                  justify-space-between
+                >
                   <MarkdownViewer :markdown="question" />
 
                   <Icon
@@ -58,7 +68,6 @@
                     icon="edit"
                     class="mr-2"
                   />
-
                 </VLayout>
               </div>
             </keep-alive>
@@ -66,7 +75,10 @@
         </VFlex>
       </VLayout>
 
-      <VLayout v-if="kind !== AssessmentItemTypes.FREE_RESPONSE" mt-4>
+      <VLayout
+        v-if="kind !== AssessmentItemTypes.FREE_RESPONSE"
+        mt-4
+      >
         <VFlex>
           <ErrorList
             :errors="answersErrorMessages"
@@ -102,6 +114,7 @@
   </Uploader>
 
 </template>
+
 
 <script>
 
@@ -465,6 +478,7 @@
   };
 
 </script>
+
 
 <style lang="scss" scoped>
 

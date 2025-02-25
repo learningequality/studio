@@ -145,7 +145,12 @@ describe('assessmentItem getters', () => {
   describe('getAssessmentItemsErrors', () => {
     it('returns validation codes corresponding to invalid assessment items of a content node', () => {
       expect(
-        getAssessmentItemsErrors(state, {}, {}, rootGetters)({ contentNodeId: 'content-node-id-2' })
+        getAssessmentItemsErrors(
+          state,
+          {},
+          {},
+          rootGetters,
+        )({ contentNodeId: 'content-node-id-2' }),
       ).toEqual({
         'assessment-id-2': [
           ValidationErrors.QUESTION_REQUIRED,
@@ -161,8 +166,8 @@ describe('assessmentItem getters', () => {
           state,
           {},
           {},
-          rootGetters
-        )({ contentNodeId: 'content-node-id-2', ignoreDelayed: true })
+          rootGetters,
+        )({ contentNodeId: 'content-node-id-2', ignoreDelayed: true }),
       ).toEqual({
         'assessment-id-2': [
           ValidationErrors.QUESTION_REQUIRED,
@@ -180,8 +185,8 @@ describe('assessmentItem getters', () => {
           state,
           {},
           {},
-          rootGetters
-        )({ contentNodeId: 'content-node-id-2' })
+          rootGetters,
+        )({ contentNodeId: 'content-node-id-2' }),
       ).toBe(2);
     });
 
@@ -191,11 +196,11 @@ describe('assessmentItem getters', () => {
           state,
           {},
           {},
-          rootGetters
+          rootGetters,
         )({
           contentNodeId: 'content-node-id-2',
           ignoreDelayed: true,
-        })
+        }),
       ).toBe(1);
     });
   });
@@ -207,8 +212,8 @@ describe('assessmentItem getters', () => {
           state,
           {},
           {},
-          rootGetters
-        )({ contentNodeId: 'content-node-id-1' })
+          rootGetters,
+        )({ contentNodeId: 'content-node-id-1' }),
       ).toBe(true);
     });
 
@@ -218,8 +223,8 @@ describe('assessmentItem getters', () => {
           state,
           {},
           {},
-          rootGetters
-        )({ contentNodeId: 'content-node-id-2' })
+          rootGetters,
+        )({ contentNodeId: 'content-node-id-2' }),
       ).toBe(false);
     });
 
@@ -229,11 +234,11 @@ describe('assessmentItem getters', () => {
           state,
           {},
           {},
-          rootGetters
+          rootGetters,
         )({
           contentNodeId: 'content-node-id-4',
           ignoreDelayed: true,
-        })
+        }),
       ).toBe(true);
     });
   });

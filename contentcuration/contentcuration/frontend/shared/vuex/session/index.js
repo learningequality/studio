@@ -91,7 +91,7 @@ export default {
        * @param {string} flag - shared.constants.FeatureFlagKeys.*
        * @return {Boolean}
        */
-      return function(flag) {
+      return function (flag) {
         return getters.isAdmin || Boolean(getters.featureFlags[flag]);
       };
     },
@@ -138,7 +138,7 @@ export default {
     updateFullName(context, { first_name, last_name }) {
       context.commit('UPDATE_SESSION', { first_name, last_name });
     },
-    fetchUserStorage: debounce(function(context) {
+    fetchUserStorage: debounce(function (context) {
       return client.get(window.Urls.user_get_storage_used()).then(({ data }) => {
         return User.updateDiskSpaceUsed(context.getters.currentUserId, data).then(() => {
           context.commit('UPDATE_SESSION', { disk_space_used: data });

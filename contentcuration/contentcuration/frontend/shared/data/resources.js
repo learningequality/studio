@@ -1,4 +1,5 @@
-import Dexie from 'dexie';
+// eslint-disable-next-line import/no-named-as-default
+import Dexie, { liveQuery } from 'dexie';
 import Mutex from 'mutex-js';
 import findIndex from 'lodash/findIndex';
 import flatMap from 'lodash/flatMap';
@@ -84,7 +85,7 @@ function getUserIdFromStore() {
     ```
   Attempted to get the user_id from the store to set on a change object,
   but the store has not been injected into the resources.js module using injectVuexStore function
-  ```
+  ```,
   );
 }
 
@@ -103,7 +104,7 @@ export function formatUUID4(uuid) {
   }
   return `${cleanId.slice(0, 8)}-${cleanId.slice(8, 12)}-${cleanId.slice(12, 16)}-${cleanId.slice(
     16,
-    20
+    20,
   )}-${cleanId.slice(20)}`;
 }
 
@@ -198,7 +199,7 @@ class IndexedDBResource {
     if (process.env.NODE_ENV !== 'production' && !db[this.tableName]) {
       /* eslint-disable no-console */
       console.error(
-        `Tried to access table ${this.tableName} but it does not exist. Either requires a migration or clearing indexedDB`
+        `Tried to access table ${this.tableName} but it does not exist. Either requires a migration or clearing indexedDB`,
       );
       /* eslint-enable */
     }
@@ -260,7 +261,7 @@ class IndexedDBResource {
       const parent = ancestors[ancestors.length - 1];
       const ancestorsIds = ancestors.map(ancestor => ancestor.id);
       const parentChanges = updatedDescendantsChanges.filter(change =>
-        ancestorsIds.includes(change.key)
+        ancestorsIds.includes(change.key),
       );
       if (!parentChanges.length) {
         return;
@@ -278,7 +279,7 @@ class IndexedDBResource {
               },
               key: item.id,
               type: CHANGE_TYPES.UPDATED,
-            }))
+            })),
           );
         });
     });
@@ -364,7 +365,7 @@ class IndexedDBResource {
             .filter(
               datum =>
                 !collectedChanges[CHANGE_TYPES.DELETED] ||
-                !collectedChanges[CHANGE_TYPES.DELETED][this.getIdValue(datum)]
+                !collectedChanges[CHANGE_TYPES.DELETED][this.getIdValue(datum)],
             );
           return this.table.bulkPut(data).then(() => {
             // Move changes need to be reapplied on top of fetched data in case anything
@@ -390,10 +391,10 @@ class IndexedDBResource {
                     // the end of the returned objects
                   })
                   .concat(Object.values(collectedChanges[CHANGE_TYPES.CREATED]).map(c => c.obj));
-              }
+              },
             );
           });
-        }
+        },
       );
     });
   }
@@ -467,8 +468,8 @@ class IndexedDBResource {
             /* eslint-disable no-console */
             console.warn(
               `Tried to query ${Object.keys(whereParams).join(
-                ', '
-              )} alongside array parameters which is not currently supported`
+                ', ',
+              )} alongside array parameters which is not currently supported`,
             );
             /* eslint-enable */
           }
@@ -483,8 +484,8 @@ class IndexedDBResource {
           /* eslint-disable no-console */
           console.warn(
             `Tried to query multiple __in params ${Object.keys(arrayParams).join(
-              ', '
-            )} which is not currently supported`
+              ', ',
+            )} which is not currently supported`,
           );
           /* eslint-enable */
         }
@@ -541,14 +542,14 @@ class IndexedDBResource {
                 // Because of how we are initially generating these
                 // we should never get to here and returning undefined
               });
-            }
+            },
           ),
           // If there are filter Params, this will be defined
           filterFn,
           // If there were not, it will be undefined and filtered by the final filter
           // In addition, in the unlikely case that the suffix was not recognized,
           // this will filter out those cases too.
-        ].filter(f => f)
+        ].filter(f => f),
       );
     }
     if (filterFn) {
@@ -587,7 +588,7 @@ class IndexedDBResource {
   }
 
   whereLiveQuery(params = {}) {
-    return Dexie.liveQuery(() => this.where(params));
+    return liveQuery(() => this.where(params));
   }
 
   get(id) {
@@ -922,7 +923,7 @@ class Resource extends mix(APIResource, IndexedDBResource) {
       console.groupEnd();
       /* eslint-enable */
     }
-    const observable = Dexie.liveQuery(() => super.where(params));
+    const observable = liveQuery(() => super.where(params));
     let fetched = false;
     observable.subscribe({
       next: objs => {
@@ -1244,7 +1245,7 @@ export const Channel = new CreateModelResource({
   },
 
   waitForDeploying(id) {
-    const observable = Dexie.liveQuery(() => {
+    const observable = liveQuery(() => {
       return this.table
         .where('id')
         .equals(id)
@@ -1275,7 +1276,7 @@ export const Channel = new CreateModelResource({
       resource_details = false,
       files = false,
       assessment_items = false,
-    } = {}
+    } = {},
   ) {
     const change = new SyncedChange({
       key: id,
@@ -1322,7 +1323,7 @@ export const Channel = new CreateModelResource({
               .count()) > 0
           );
         });
-      }
+      },
     );
     if (!langExists) {
       langExists = await client
@@ -1352,7 +1353,7 @@ function getChannelFromChannelScope() {
     return channel_id;
   }
   throw ReferenceError(
-    'Attempted to get the channel_id from the channelScope object, but it has not been set.'
+    'Attempted to get the channel_id from the channelScope object, but it has not been set.',
   );
 }
 
@@ -1418,7 +1419,7 @@ export const ContentNode = new TreeResource({
     }
     return this.queryRequisites(ids).then(entries => {
       const entryIds = uniq(flatMap(entries, e => [e.target_node, e.prerequisite])).filter(
-        id => !visited.has(id)
+        id => !visited.has(id),
       );
       if (entryIds.length) {
         return this.recurseRequisites(entryIds, visited).then(nextEntries => {
@@ -1586,7 +1587,7 @@ export const ContentNode = new TreeResource({
               payload,
               changeData,
             });
-          }
+          },
         );
       });
     });
@@ -1616,7 +1617,7 @@ export const ContentNode = new TreeResource({
             return this._createChange(id, obj).then(() => id);
           });
         });
-      }
+      },
     );
   },
 
@@ -1664,7 +1665,7 @@ export const ContentNode = new TreeResource({
     target,
     position = RELATIVE_TREE_POSITIONS.LAST_CHILD,
     excluded_descendants = null,
-    sourceNode = null
+    sourceNode = null,
   ) {
     if (process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test') {
       /* eslint-disable no-console */
@@ -1701,7 +1702,7 @@ export const ContentNode = new TreeResource({
           change.key === id &&
           change.table === this.tableName &&
           (change.errors || change.errors === '') &&
-          change.type === CHANGE_TYPES.COPIED
+          change.type === CHANGE_TYPES.COPIED,
       )
       .last();
 
@@ -1715,7 +1716,7 @@ export const ContentNode = new TreeResource({
             node.parent === failedCopyNode.parent &&
             node.lft <= failedCopyNode.lft &&
             node[COPYING_STATUS] !== COPYING_STATUS_VALUES.FAILED &&
-            node[COPYING_STATUS] !== COPYING_STATUS_VALUES.COPYING
+            node[COPYING_STATUS] !== COPYING_STATUS_VALUES.COPYING,
         )
         .last();
 
@@ -1829,7 +1830,7 @@ export const ContentNode = new TreeResource({
     return this.table.get({ '[node_id+channel_id]': values }).then(node => {
       if (!node) {
         return this.fetchCollection({ '[node_id+channel_id]__in': [values] }).then(
-          nodes => nodes[0]
+          nodes => nodes[0],
         );
       }
       return node;
@@ -1845,7 +1846,7 @@ export const ContentNode = new TreeResource({
    * @returns {Promise<void>}
    */
   waitForCopying(id, startingRev) {
-    const observable = Dexie.liveQuery(async () => {
+    const observable = liveQuery(async () => {
       let copy_success_flag = 0;
       let change_error_flag = 0;
 
@@ -1938,7 +1939,7 @@ export const ContentNode = new TreeResource({
           return this.getLoadedDescendants(child.id);
         }
         return child;
-      })
+      }),
     );
     return [node].concat(flatMap(descendants, d => d));
   },
@@ -1950,7 +1951,7 @@ export const ContentNode = new TreeResource({
           ...changes,
           ...getMergedMapFields(descendant, changes),
         });
-      })
+      }),
     );
   },
   /**
@@ -2156,7 +2157,7 @@ export const ChannelUser = new APIResource({
               };
             });
           });
-      }
+      },
     );
   },
 });
@@ -2272,7 +2273,7 @@ export const Clipboard = new TreeResource({
         null,
         clipboardRootId,
         RELATIVE_TREE_POSITIONS.LAST_CHILD,
-        siblings
+        siblings,
       );
 
       // Next, we'll add the new node immediately

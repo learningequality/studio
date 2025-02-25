@@ -128,7 +128,7 @@ describe('RelatedResourcesTab', () => {
       const wrapper = initWrapper({ getters });
 
       expect(wrapper.find('[data-test="previousSteps"]').html()).not.toContain(
-        'Limit the number of previous steps'
+        'Limit the number of previous steps',
       );
     });
   });
@@ -149,7 +149,7 @@ describe('RelatedResourcesTab', () => {
       const wrapper = initWrapper({ getters });
 
       expect(wrapper.find('[data-test="previousSteps"]').html()).toContain(
-        'Limit the number of previous steps'
+        'Limit the number of previous steps',
       );
     });
   });
@@ -168,7 +168,7 @@ describe('RelatedResourcesTab', () => {
       const wrapper = initWrapper({ getters });
 
       expect(wrapper.find('[data-test="nextSteps"]').html()).not.toContain(
-        'Limit the number of next steps'
+        'Limit the number of next steps',
       );
     });
   });
@@ -189,7 +189,7 @@ describe('RelatedResourcesTab', () => {
       const wrapper = initWrapper({ getters });
 
       expect(wrapper.find('[data-test="nextSteps"]').html()).toContain(
-        'Limit the number of next steps'
+        'Limit the number of next steps',
       );
     });
   });

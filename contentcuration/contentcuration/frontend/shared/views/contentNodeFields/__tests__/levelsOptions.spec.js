@@ -1,10 +1,6 @@
-import Vue from 'vue';
-import Vuetify from 'vuetify';
 import { shallowMount, mount } from '@vue/test-utils';
 import LevelsOptions from '../LevelsOptions.vue';
 import { ContentLevels } from 'shared/constants';
-
-Vue.use(Vuetify);
 
 function makeWrapper({ value = {}, nodeIds = ['node1'] } = {}) {
   return mount(LevelsOptions, {
@@ -59,7 +55,7 @@ describe('LevelsOptions', () => {
       const dropdown = wrapper.find({ name: 'v-select' });
       dropdown.vm.$emit('input', ['abc', 'gefo']);
 
-      return Vue.nextTick().then(() => {
+      return dropdown.vm.$nextTick().then(() => {
         const emittedLevels = wrapper.emitted('input').pop()[0];
         expect(emittedLevels).toEqual({
           abc: ['node1'],

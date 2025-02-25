@@ -13,7 +13,7 @@ export function isComfortableViewMode(state) {
 // Convenience function to format strings like "Page Name - Channel Name"
 // for tab titles
 export function appendChannelName(state, getters) {
-  return function(string) {
+  return function (string) {
     // Fallback if current channel isn't available yet
     const channel = getters['currentChannel/currentChannel'];
 

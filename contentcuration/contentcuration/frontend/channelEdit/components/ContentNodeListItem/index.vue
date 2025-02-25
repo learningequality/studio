@@ -10,7 +10,7 @@
                 v-if="node"
                 class="content-list-item pa-0"
                 :class="{
-                  'compact': isCompact,
+                  compact: isCompact,
                   hover: hover && !copying,
                   active: (active || hover) && !copying,
                   disabled: copying,
@@ -19,7 +19,11 @@
                 data-test="content-item"
                 @click="handleTileClick"
               >
-                <slot name="actions-start" :hover="hover" class="actions-start-col"></slot>
+                <slot
+                  name="actions-start"
+                  :hover="hover"
+                  class="actions-start-col"
+                ></slot>
                 <div
                   class="mx-2 thumbnail-col"
                   :class="{
@@ -45,23 +49,26 @@
                 >
                   <VListTileTitle data-test="title">
                     <VLayout row>
-                      <VFlex shrink class="text-truncate">
+                      <VFlex
+                        shrink
+                        class="text-truncate"
+                      >
                         <h3
                           v-if="hasTitle(node) || !canEdit || copying || isNew"
                           class="notranslate text-truncate"
-                          :class="[
-                            isCompact ? 'font-weight-regular' : '',
-                            getTitleClass(node),
-                          ]"
+                          :class="[isCompact ? 'font-weight-regular' : '', getTitleClass(node)]"
                           dir="auto"
                         >
                           {{ getTitle(node) }}
                         </h3>
                       </VFlex>
-                      <VFlex v-if="!isTopic && isCoach" class="px-1">
+                      <VFlex
+                        v-if="!isTopic && isCoach"
+                        class="px-1"
+                      >
                         <Icon
                           icon="coachContent"
-                          style="vertical-align: middle;"
+                          style="vertical-align: middle"
                         />
                       </VFlex>
                       <VFlex>
@@ -87,7 +94,10 @@
                     data-test="subtitle"
                     class="metadata"
                   >
-                    <span v-if="subtitle" class="text">{{ subtitle }}</span>
+                    <span
+                      v-if="subtitle"
+                      class="text"
+                    >{{ subtitle }}</span>
                     <span
                       v-if="node.categories ? Object.keys(node.categories).length > 0 : null"
                       class="text"
@@ -96,13 +106,19 @@
                     </span>
                     <span v-if="isTopic && node.coach_count">
                       <!-- for each learning activity -->
-                      <VTooltip bottom lazy>
+                      <VTooltip
+                        bottom
+                        lazy
+                      >
                         <template #activator="{ on }">
-                          <div style="display: inline-block;" v-on="on">
+                          <div
+                            style="display: inline-block"
+                            v-on="on"
+                          >
                             <Icon
                               icon="coachContent"
                               class="mx-1"
-                              style="vertical-align: sub;"
+                              style="vertical-align: sub"
                             />
                             <span v-if="isTopic">
                               {{ $formatNumber(node.coach_count) }}
@@ -110,16 +126,16 @@
                           </div>
                         </template>
                         <span>
-                          {{ isTopic ?
-                            $tr('hasCoachTooltip', { value: node.coach_count })
-                            : $tr('coachTooltip')
+                          {{
+                            isTopic
+                              ? $tr('hasCoachTooltip', { value: node.coach_count })
+                              : $tr('coachTooltip')
                           }}
                         </span>
                       </VTooltip>
                     </span>
                   </VListTileSubTitle>
                   <span v-if="!isCompact">
-
                     <ContentNodeLearningActivityIcon
                       v-if="!isTopic"
                       :learningActivities="node.learning_activities"
@@ -143,7 +159,10 @@
                 </VListTileContent>
 
                 <VListTileContent class="actions-end-col updated">
-                  <ContentNodeChangedIcon v-if="canEdit && !copying" :node="node" />
+                  <ContentNodeChangedIcon
+                    v-if="canEdit && !copying"
+                    :node="node"
+                  />
                 </VListTileContent>
                 <template v-if="!copying">
                   <VListTileAction class="actions-end-col">
@@ -157,14 +176,17 @@
                       @click="$emit('topicChevronClick')"
                     />
                   </VListTileAction>
-                  <slot name="actions-end" :hover="hover"></slot>
+                  <slot
+                    name="actions-end"
+                    :hover="hover"
+                  ></slot>
                 </template>
                 <template v-else>
                   <div class="copying">
                     <p class="caption pr-3">
                       <span
                         class="grey--text"
-                        :style="{ 'cursor': hasCopyingErrored ? 'default' : 'progress' }"
+                        :style="{ cursor: hasCopyingErrored ? 'default' : 'progress' }"
                       >
                         {{ copyingMessage }}
                       </span>
@@ -178,12 +200,13 @@
                   </div>
                   <div class="disabled-overlay"></div>
                 </template>
-                <slot name="context-menu" v-bind="contextMenuProps"></slot>
+                <slot
+                  name="context-menu"
+                  v-bind="contextMenuProps"
+                ></slot>
               </VListTile>
-
             </template>
           </DraggableHandle>
-
         </template>
       </ContextMenuCloak>
     </template>

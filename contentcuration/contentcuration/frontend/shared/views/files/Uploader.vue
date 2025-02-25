@@ -1,7 +1,10 @@
 <template>
 
   <div>
-    <slot :openFileDialog="openFileDialog" :handleFiles="handleFiles">
+    <slot
+      :openFileDialog="openFileDialog"
+      :handleFiles="handleFiles"
+    >
       <FileDropzone
         v-if="allowDrop"
         :disabled="readonly"
@@ -12,7 +15,7 @@
     <input
       v-if="!readonly"
       ref="fileUpload"
-      style="display: none;"
+      style="display: none"
       type="file"
       :accept="acceptedFileTypes"
       :multiple="allowMultiple"
@@ -27,9 +30,12 @@
     <Alert
       v-model="showTooLargeFilesAlert"
       :header="$tr('tooLargeFilesHeader')"
-      :text="$tr('maxFileSizeText', {
-        count: tooLargeFiles.length, size: formatFileSize(maxFileSize)
-      })"
+      :text="
+        $tr('maxFileSizeText', {
+          count: tooLargeFiles.length,
+          size: formatFileSize(maxFileSize),
+        })
+      "
     />
     <Alert
       v-model="showStorageExceededAlert"
@@ -51,6 +57,7 @@
   </div>
 
 </template>
+
 
 <script>
 
@@ -127,14 +134,14 @@
         return FormatPresetsList.filter(fp =>
           this.presetID
             ? this.presetID === fp.id
-            : !fp.supplementary && (!this.displayOnly || fp.display)
+            : !fp.supplementary && (!this.displayOnly || fp.display),
         );
       },
       acceptedFileTypes() {
         return uniq(
           flatMap(this.acceptedFiles, f => f.associated_mimetypes).concat(
-            this.acceptedExtensions.map(ext => `.${ext}`)
-          )
+            this.acceptedExtensions.map(ext => `.${ext}`),
+          ),
         ).join(',');
       },
       acceptedExtensions() {
@@ -174,7 +181,7 @@
           ([validation, f]) =>
             f &&
             this.acceptedExtensions.includes(last(f.name.split('.')).toLowerCase()) &&
-            validation === 0
+            validation === 0,
         );
         files = partitionedFiles[0].map(([, f]) => f);
         this.unsupportedFiles = partitionedFiles[1].map(([, f]) => f);
@@ -233,7 +240,9 @@
           // Make sure preset is getting set on files in case
           // need to distinguish between presets with same extension
           // (e.g. high res vs. low res videos)
-          [...files].map(file => this.uploadFile({ file, preset: this.presetID }).catch(() => null))
+          [...files].map(file =>
+            this.uploadFile({ file, preset: this.presetID }).catch(() => null),
+          ),
         ).then(fileUploads => {
           // Filter out any null values here
           return fileUploads.filter(Boolean);
@@ -255,6 +264,7 @@
   };
 
 </script>
+
 
 <style lang="scss" scoped>
 

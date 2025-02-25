@@ -39,7 +39,7 @@ export function createChannelSet(context) {
 
 export function commitChannelSet(
   context,
-  { id, name = NOVALUE, description = NOVALUE, channels = [] } = {}
+  { id, name = NOVALUE, description = NOVALUE, channels = [] } = {},
 ) {
   const channelSetData = {};
 

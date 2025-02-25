@@ -199,21 +199,11 @@ describe('ChannelSetModal', () => {
 
       expect(channelItems.at(0).html()).toContain('Channel 1');
       expect(channelItems.at(0).html()).toContain('First channel description');
-      expect(
-        channelItems
-          .at(0)
-          .find('button')
-          .text()
-      ).toBe('Remove');
+      expect(channelItems.at(0).find('button').text()).toBe('Remove');
 
       expect(channelItems.at(1).html()).toContain('Channel 2');
       expect(channelItems.at(1).html()).toContain('Second channel description');
-      expect(
-        channelItems
-          .at(1)
-          .find('button')
-          .text()
-      ).toBe('Remove');
+      expect(channelItems.at(1).find('button').text()).toBe('Remove');
     });
 
     it('clicking select channels button should navigate to channels selection view', async () => {

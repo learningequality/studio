@@ -16,6 +16,7 @@
 
 </template>
 
+
 <script>
 
   import KCheckbox from 'kolibri-design-system/lib/KCheckbox';

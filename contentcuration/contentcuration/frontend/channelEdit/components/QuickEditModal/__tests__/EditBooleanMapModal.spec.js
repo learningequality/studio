@@ -1,4 +1,4 @@
-import Vuex from 'vuex';
+import { Store } from 'vuex';
 import { mount } from '@vue/test-utils';
 import camelCase from 'lodash/camelCase';
 import EditBooleanMapModal from '../EditBooleanMapModal';
@@ -70,7 +70,7 @@ const makeWrapper = ({ nodeIds, field = 'categories', ...restOptions }) => {
       ...restOptions,
     },
     scopedSlots: {
-      input: function(props) {
+      input: function (props) {
         return this.$createElement(CategoryOptions, {
           props: {
             ...props,
@@ -104,7 +104,7 @@ describe('EditBooleanMapModal', () => {
     generalActions = {
       showSnackbarSimple: jest.fn(),
     };
-    store = new Vuex.Store({
+    store = new Store({
       actions: generalActions,
       modules: {
         contentNode: {
@@ -131,7 +131,7 @@ describe('EditBooleanMapModal', () => {
 
         const optionsValues = getOptionsValues(wrapper);
         expect(
-          Object.values(optionsValues).every(value => value === CheckboxValue.UNCHECKED)
+          Object.values(optionsValues).every(value => value === CheckboxValue.UNCHECKED),
         ).toBeTruthy();
       });
 
@@ -140,7 +140,7 @@ describe('EditBooleanMapModal', () => {
 
         const optionsValues = getOptionsValues(wrapper);
         expect(
-          Object.values(optionsValues).every(value => value === CheckboxValue.UNCHECKED)
+          Object.values(optionsValues).every(value => value === CheckboxValue.UNCHECKED),
         ).toBeTruthy();
       });
 
@@ -159,7 +159,7 @@ describe('EditBooleanMapModal', () => {
           ...otheroptionsValues
         } = optionsValues;
         expect(
-          Object.values(otheroptionsValues).every(value => value === CheckboxValue.UNCHECKED)
+          Object.values(otheroptionsValues).every(value => value === CheckboxValue.UNCHECKED),
         ).toBeTruthy();
         expect(dailyLifeValue).toBe(CheckboxValue.CHECKED);
         expect(foundationsValue).toBe(CheckboxValue.CHECKED);
@@ -299,7 +299,7 @@ describe('EditBooleanMapModal', () => {
         {
           id: 'node1',
           categories: {},
-        }
+        },
       );
     });
   });

@@ -11,31 +11,47 @@
       :to="linkToChannelTree ? null : channelDetailsLink"
       @click="goToChannelRoute"
     >
-      <VLayout row wrap>
-        <VFlex :class="{ xs12: fullWidth, sm12: !fullWidth, sm3: fullWidth }" md3 class="pa-3">
+      <VLayout
+        row
+        wrap
+      >
+        <VFlex
+          :class="{ xs12: fullWidth, sm12: !fullWidth, sm3: fullWidth }"
+          md3
+          class="pa-3"
+        >
           <Thumbnail
             :src="channel.thumbnail_url"
             :encoding="channel.thumbnail_encoding"
           />
         </VFlex>
-        <VFlex :class="{ xs12: fullWidth, sm12: !fullWidth, sm9: fullWidth }" md9>
+        <VFlex
+          :class="{ xs12: fullWidth, sm12: !fullWidth, sm9: fullWidth }"
+          md9
+        >
           <VCardTitle>
             <VFlex xs12>
-              <h3 class="card-header font-weight-bold notranslate" dir="auto">
+              <h3
+                class="card-header font-weight-bold notranslate"
+                dir="auto"
+              >
                 {{ channel.name }}
               </h3>
             </VFlex>
             <VFlex xs12>
               <VLayout class="grey--text metadata-section">
                 <span class="metadata-field">
-                  {{ $tr('resourceCount', { 'count': channel.count || 0 }) }}
+                  {{ $tr('resourceCount', { count: channel.count || 0 }) }}
                 </span>
                 <span class="metadata-field">
                   {{ language }}
                 </span>
               </VLayout>
             </VFlex>
-            <VFlex xs12 class="notranslate">
+            <VFlex
+              xs12
+              class="notranslate"
+            >
               <p dir="auto">
                 {{ channel.description }}
               </p>
@@ -44,23 +60,29 @@
         </VFlex>
       </VLayout>
       <VCardActions>
-        <VLayout align-center row wrap>
+        <VLayout
+          align-center
+          row
+          wrap
+        >
           <VFlex shrink>
             <!-- Some channels were published before the last_published field was added -->
-            <VCardText v-if="channel.published" class="grey--text py-0">
+            <VCardText
+              v-if="channel.published"
+              class="grey--text py-0"
+            >
               <span v-if="channel.last_published">
-                {{ $tr(
-                  'lastPublished',
-                  {
-                    'last_published': $formatRelative(
-                      channel.last_published,
-                      { now: new Date() }
-                    )
+                {{
+                  $tr('lastPublished', {
+                    last_published: $formatRelative(channel.last_published, { now: new Date() }),
                   })
                 }}
               </span>
             </VCardText>
-            <VCardText v-else class="grey--text py-0">
+            <VCardText
+              v-else
+              class="grey--text py-0"
+            >
               {{ $tr('unpublishedText') }}
             </VCardText>
           </VFlex>
@@ -69,13 +91,9 @@
             placement="bottom"
             :refs="$refs"
           >
-            {{ $tr(
-              'lastUpdated',
-              {
-                'updated': $formatRelative(
-                  channel.modified,
-                  { now: new Date() }
-                )
+            {{
+              $tr('lastUpdated', {
+                updated: $formatRelative(channel.modified, { now: new Date() }),
               })
             }}
           </KTooltip>
@@ -91,7 +109,6 @@
               v-if="!libraryMode"
               :to="channelDetailsLink"
             >
-
               <KIconButton
                 :color="$themeTokens.primary"
                 data-test="details-button"
@@ -99,7 +116,6 @@
                 icon="info"
                 :tooltip="$tr('details')"
               />
-
             </KRouterLink>
 
             <KIconButton
@@ -116,7 +132,7 @@
               :bookmark="channel.bookmark"
               class="mr-1"
             />
-            <Menu v-if="showOptions">
+            <BaseMenu v-if="showOptions">
               <template #activator="{ on }">
                 <VBtn
                   icon
@@ -125,9 +141,7 @@
                   v-on="on"
                   @click.stop.prevent
                 >
-                  <Icon
-                    icon="optionsVertical"
-                  />
+                  <Icon icon="optionsVertical" />
                 </VBtn>
               </template>
               <VList>
@@ -195,11 +209,10 @@
                   </VListTileTitle>
                 </VListTile>
               </VList>
-            </Menu>
+            </BaseMenu>
           </VFlex>
         </VLayout>
       </VCardActions>
-
     </VCard>
     <!-- Delete dialog -->
     <KModal
@@ -223,6 +236,7 @@
   </div>
 
 </template>
+
 
 <script>
 
@@ -398,6 +412,7 @@
   };
 
 </script>
+
 
 <style lang="scss" scoped>
 

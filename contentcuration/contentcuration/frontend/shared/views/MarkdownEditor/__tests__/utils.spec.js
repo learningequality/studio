@@ -24,7 +24,7 @@ const fragmentToHtmlString = fragment => {
 describe('clearNodeFormat', () => {
   it('clears all tags by default', () => {
     const fragment = htmlStringToFragment(
-      '<i>Wh</i>at <b>co<i>lo</i>r is </b>th<i>e <b>sky</b></i>'
+      '<i>Wh</i>at <b>co<i>lo</i>r is </b>th<i>e <b>sky</b></i>',
     );
 
     const clearedFragment = clearNodeFormat({ node: fragment });
@@ -34,7 +34,7 @@ describe('clearNodeFormat', () => {
 
   it('does not clear format that should be ignored - tag selector', () => {
     const fragment = htmlStringToFragment(
-      '<i>Wh</i>at <b>co<i>lo</i>r is </b>th<i>e <b>sky</b></i>'
+      '<i>Wh</i>at <b>co<i>lo</i>r is </b>th<i>e <b>sky</b></i>',
     );
     const ignore = ['b'];
 
@@ -45,14 +45,14 @@ describe('clearNodeFormat', () => {
 
   it('does not clear format that should be ignored - class selector', () => {
     const fragment = htmlStringToFragment(
-      '<i>Wh</i>at <b>co<i class="keep">lo</i>r is </b>th<i class="keep">e <b>sky</b></i>'
+      '<i>Wh</i>at <b>co<i class="keep">lo</i>r is </b>th<i class="keep">e <b>sky</b></i>',
     );
     const ignore = ['.keep'];
 
     const clearedFragment = clearNodeFormat({ node: fragment, ignore });
 
     expect(fragmentToHtmlString(clearedFragment)).toBe(
-      'What co<i class="keep">lo</i>r is th<i class="keep">e sky</i>'
+      'What co<i class="keep">lo</i>r is th<i class="keep">e sky</i>',
     );
   });
 });
@@ -71,7 +71,7 @@ describe('markdown conversion', () => {
         return {
           item: () => null,
           length: 0,
-          [Symbol.iterator]: jest.fn()
+          [Symbol.iterator]: jest.fn(),
         };
       };
 
@@ -91,7 +91,7 @@ describe('markdown conversion', () => {
       '<span is="markdown-image-field" vce-ready="" contenteditable="false" class="markdown-field-753aa86a-8159-403b-8b1c-d2b8f9504408 markdown-field-34843d46-79b8-40b4-866c-b83dc8916a47" editing="true" markdown="![](${☣ CONTENTSTORAGE}/bc1c5a86e1e46f20a6b4ee2c1bb6d6ff.png =485.453125x394)">![](${☣ CONTENTSTORAGE}/bc1c5a86e1e46f20a6b4ee2c1bb6d6ff.png =485.453125x394)</span>';
 
     expect(converter.toMarkdown(html)).toBe(
-      '![](${☣ CONTENTSTORAGE}/bc1c5a86e1e46f20a6b4ee2c1bb6d6ff.png =485.453125x394)'
+      '![](${☣ CONTENTSTORAGE}/bc1c5a86e1e46f20a6b4ee2c1bb6d6ff.png =485.453125x394)',
     );
   });
 });

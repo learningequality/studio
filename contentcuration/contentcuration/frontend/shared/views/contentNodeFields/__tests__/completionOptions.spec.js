@@ -1,17 +1,15 @@
 import Vue from 'vue';
-import Vuetify from 'vuetify';
 import { shallowMount, mount } from '@vue/test-utils';
-import Vuex from 'vuex';
+import Vuex, { Store } from 'vuex';
 import CompletionOptions from '../CompletionOptions';
 import { CompletionCriteriaModels } from 'shared/constants';
 
-Vue.use(Vuetify);
 Vue.use(Vuex);
-let store;
 
 describe('CompletionOptions', () => {
+  let store;
   beforeEach(() => {
-    store = new Vuex.Store({
+    store = new Store({
       getters: {
         hasFeatureEnabled: () => () => true,
       },
@@ -653,7 +651,7 @@ describe('CompletionOptions', () => {
           wrapper.find({ ref: 'completion' }).vm.$emit('input', 'determinedByResource');
           await wrapper.vm.$nextTick();
           expect(wrapper.emitted('input')[0][0].completion_criteria.model).toEqual(
-            CompletionCriteriaModels.DETERMINED_BY_RESOURCE
+            CompletionCriteriaModels.DETERMINED_BY_RESOURCE,
           );
         });
       });
@@ -678,7 +676,7 @@ describe('CompletionOptions', () => {
         });
 
         expect(wrapper.vm.handleMinutesInputFromActivityDuration(3060, `shortActivity`)).toBe(
-          shortActivityDefaultValue
+          shortActivityDefaultValue,
         );
       });
       it(`displays default 'Long activity' value when input < the min allowed for 'Long activity'`, () => {
@@ -696,7 +694,7 @@ describe('CompletionOptions', () => {
         });
 
         expect(wrapper.vm.handleMinutesInputFromActivityDuration(50, `longActivity`)).toBe(
-          longActivityDefaultValue
+          longActivityDefaultValue,
         );
       });
     });

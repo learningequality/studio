@@ -10,7 +10,7 @@
     :hideDetails="true"
     single-line
     box
-    style="padding: 0;"
+    style="padding: 0"
     class="notranslate"
     :loading="loading"
     @click:append.stop="copyToken"
@@ -18,6 +18,7 @@
   />
 
 </template>
+
 
 <script>
 
@@ -75,6 +76,7 @@
   };
 
 </script>
+
 
 <style lang="scss" scoped>
 

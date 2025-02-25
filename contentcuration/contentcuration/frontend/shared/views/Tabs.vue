@@ -10,7 +10,7 @@
     name: 'Tabs',
     extends: VTabs,
     props: {
-      /* eslint-disable kolibri/vue-no-unused-properties */
+      /* eslint-disable vue/no-unused-properties */
       color: {
         type: String,
         default: 'transparent',
@@ -23,9 +23,10 @@
         type: String,
         default: 'primary',
       },
-      /* eslint-enable kolibri/vue-no-unused-properties */
+      /* eslint-enable vue/no-unused-properties */
     },
     methods: {
+      /* eslint-disable vue/no-unused-properties */
       /* eslint-disable kolibri/vue-no-unused-methods */
       checkPrevIcon() {
         if (this.$vuetify.rtl)
@@ -66,7 +67,7 @@
           if (this.$vuetify.rtl) {
             return Math.max(
               this.scrollOffset - clientWidth,
-              (this.$refs.container.clientWidth - clientWidth) * -1
+              (this.$refs.container.clientWidth - clientWidth) * -1,
             );
           }
           return Math.max(this.scrollOffset - clientWidth, 0);
@@ -76,7 +77,7 @@
           }
           return Math.min(
             this.scrollOffset + clientWidth,
-            this.$refs.container.clientWidth - clientWidth
+            this.$refs.container.clientWidth - clientWidth,
           );
         }
       },
@@ -102,11 +103,13 @@
           }
         }
       },
+      /* eslint-enable vue/no-unused-properties */
       /* eslint-enable kolibri/vue-no-unused-methods */
     },
   };
 
 </script>
+
 
 <style lang="scss">
 

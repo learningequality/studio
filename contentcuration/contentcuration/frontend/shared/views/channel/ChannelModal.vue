@@ -5,14 +5,32 @@
     :header="isNew ? $tr('creatingHeader') : header"
     @input="onDialogInput"
   >
-    <ToolBar v-if="!isNew" class="tabs" color="white">
-      <Tabs v-model="currentTab" slider-color="primary" height="64px">
+    <ToolBar
+      v-if="!isNew"
+      class="tabs"
+      color="white"
+    >
+      <Tabs
+        v-model="currentTab"
+        slider-color="primary"
+        height="64px"
+      >
         <!-- Details tab -->
-        <VTab href="#edit" class="px-3" data-test="details-tab" @click="currentTab = 'edit'">
+        <VTab
+          href="#edit"
+          class="px-3"
+          data-test="details-tab"
+          @click="currentTab = 'edit'"
+        >
           {{ $tr('editTab') }}
         </VTab>
         <!-- Share tab -->
-        <VTab href="#share" class="px-3" data-test="share-tab" @click="currentTab = 'share'">
+        <VTab
+          href="#share"
+          class="px-3"
+          data-test="share-tab"
+          @click="currentTab = 'share'"
+        >
           {{ $tr('shareTab') }}
         </VTab>
       </Tabs>
@@ -21,20 +39,30 @@
       v-if="loading"
       indeterminate
       color="loading"
-      style="margin: 0;"
+      style="margin: 0"
       height="5"
     />
     <VCardText>
       <VTabsItems v-model="currentTab">
-        <VTabItem value="edit" data-test="edit-content">
-          <Banner fluid :value="isRicecooker" color="secondary lighten-1">
+        <VTabItem
+          value="edit"
+          data-test="edit-content"
+        >
+          <Banner
+            fluid
+            :value="isRicecooker"
+            color="secondary lighten-1"
+          >
             {{ $tr('APIText') }}
           </Banner>
-          <VContainer class="mx-0" :class="{ ricecooker: isRicecooker }">
+          <VContainer
+            class="mx-0"
+            :class="{ ricecooker: isRicecooker }"
+          >
             <VForm
               ref="detailsform"
               class="mb-5"
-              style="max-width: 960px;"
+              style="max-width: 960px"
               @submit.prevent="saveChannel"
             >
               <ChannelThumbnail v-model="thumbnail" />
@@ -68,19 +96,31 @@
                 />
               </fieldset>
 
-              <ContentDefaults
-                v-model="contentDefaults"
-              />
+              <ContentDefaults v-model="contentDefaults" />
 
-              <VBtn class="mt-5" color="primary" type="submit" :disabled="isDisable">
-                {{ isNew ? $tr('createButton') : $tr('saveChangesButton' ) }}
+              <VBtn
+                class="mt-5"
+                color="primary"
+                type="submit"
+                :disabled="isDisable"
+              >
+                {{ isNew ? $tr('createButton') : $tr('saveChangesButton') }}
               </VBtn>
             </VForm>
           </VContainer>
         </VTabItem>
-        <VTabItem value="share" data-test="share-content">
-          <VCard flat class="pa-5">
-            <ChannelSharing v-if="!isNew" :channelId="channelId" />
+        <VTabItem
+          value="share"
+          data-test="share-content"
+        >
+          <VCard
+            flat
+            class="pa-5"
+          >
+            <ChannelSharing
+              v-if="!isNew"
+              :channelId="channelId"
+            />
           </VCard>
         </VTabItem>
       </VTabsItems>
@@ -92,10 +132,16 @@
       :text="$tr('unsavedChangesText')"
     >
       <template #buttons="{ close }">
-        <VBtn flat @click="confirmCancel">
+        <VBtn
+          flat
+          @click="confirmCancel"
+        >
           {{ $tr('closeButton') }}
         </VBtn>
-        <VBtn color="primary" @click="close">
+        <VBtn
+          color="primary"
+          @click="close"
+        >
           {{ $tr('keepEditingButton') }}
         </VBtn>
       </template>
@@ -107,7 +153,7 @@
 
 <script>
 
-  import Vue from 'vue';
+  import { set } from 'vue';
   import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
   import ChannelThumbnail from './ChannelThumbnail';
   import ChannelSharing from './ChannelSharing';
@@ -339,7 +385,7 @@
       },
       setChannel(data) {
         for (const key in data) {
-          Vue.set(this.diffTracker, key, data[key]);
+          set(this.diffTracker, key, data[key]);
         }
         this.changed = true;
       },

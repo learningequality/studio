@@ -33,7 +33,10 @@
         </VListTileContent>
 
         <VListTileAction>
-          <VTooltip bottom lazy>
+          <VTooltip
+            bottom
+            lazy
+          >
             <template #activator="{ on }">
               <VBtn
                 icon
@@ -54,6 +57,7 @@
   </VList>
 
 </template>
+
 
 <script>
 

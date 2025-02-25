@@ -146,10 +146,9 @@ export async function sendRequest(feedbackObject) {
   try {
     const url = feedbackObject.getUrl();
     const response = await client.post(url, feedbackObject.getDataObject());
-    console.log('API response:', response.data);
     return response.data;
   } catch (error) {
-    console.error('Error:', error);
-    throw error;
+    // eslint-disable-next-line no-console
+    console.error('Error sending feedback request:', error);
   }
 }

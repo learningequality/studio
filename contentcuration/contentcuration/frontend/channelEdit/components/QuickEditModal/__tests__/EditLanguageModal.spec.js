@@ -1,5 +1,5 @@
 import { mount } from '@vue/test-utils';
-import Vuex from 'vuex';
+import { Store } from 'vuex';
 import EditLanguageModal from '../EditLanguageModal';
 import { LanguagesList } from 'shared/leUtils/Languages';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
@@ -34,7 +34,7 @@ describe('EditLanguageModal', () => {
     generalActions = {
       showSnackbarSimple: jest.fn(),
     };
-    store = new Vuex.Store({
+    store = new Store({
       actions: generalActions,
       modules: {
         contentNode: {
@@ -117,7 +117,7 @@ describe('EditLanguageModal', () => {
       expect(
         language.id.toLowerCase().includes('es') ||
           language.native_name.toLowerCase().includes('es') ||
-          language.readable_name.toLowerCase().includes('es')
+          language.readable_name.toLowerCase().includes('es'),
       ).toBeTruthy();
     });
   });
@@ -249,7 +249,7 @@ describe('EditLanguageModal', () => {
           {
             id: 'test-en-topic',
             language: 'es',
-          }
+          },
         );
         cancelAnimationFrame(animationFrameId);
       });

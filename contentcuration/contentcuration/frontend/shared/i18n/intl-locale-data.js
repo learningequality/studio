@@ -8,47 +8,47 @@
  *
  * vue-intl and intl npm packages must both be installed for this module to function.
  */
-module.exports = function(locale) {
+module.exports = function (locale) {
   switch (locale) {
     case 'ar':
-      return new Promise(function(resolve) {
-        require.ensure(['intl/locale-data/jsonp/ar.js'], function(require) {
+      return new Promise(function (resolve) {
+        require.ensure(['intl/locale-data/jsonp/ar.js'], function (require) {
           resolve(() => require('intl/locale-data/jsonp/ar.js'));
         });
       });
     case 'en':
-      return new Promise(function(resolve) {
-        require.ensure(['intl/locale-data/jsonp/en.js'], function(require) {
+      return new Promise(function (resolve) {
+        require.ensure(['intl/locale-data/jsonp/en.js'], function (require) {
           resolve(() => require('intl/locale-data/jsonp/en.js'));
         });
       });
     case 'es-es':
-      return new Promise(function(resolve) {
-        require.ensure(['intl/locale-data/jsonp/es-ES.js'], function(require) {
+      return new Promise(function (resolve) {
+        require.ensure(['intl/locale-data/jsonp/es-ES.js'], function (require) {
           resolve(() => require('intl/locale-data/jsonp/es-ES.js'));
         });
       });
     case 'fr-fr':
-      return new Promise(function(resolve) {
-        require.ensure(['intl/locale-data/jsonp/fr-FR.js'], function(require) {
+      return new Promise(function (resolve) {
+        require.ensure(['intl/locale-data/jsonp/fr-FR.js'], function (require) {
           resolve(() => require('intl/locale-data/jsonp/fr-FR.js'));
         });
       });
     case 'hi-in':
-      return new Promise(function(resolve) {
-        require.ensure(['intl/locale-data/jsonp/hi-IN.js'], function(require) {
+      return new Promise(function (resolve) {
+        require.ensure(['intl/locale-data/jsonp/hi-IN.js'], function (require) {
           resolve(() => require('intl/locale-data/jsonp/hi-IN.js'));
         });
       });
     case 'pt-br':
-      return new Promise(function(resolve) {
-        require.ensure(['intl/locale-data/jsonp/pt-BR.js'], function(require) {
+      return new Promise(function (resolve) {
+        require.ensure(['intl/locale-data/jsonp/pt-BR.js'], function (require) {
           resolve(() => require('intl/locale-data/jsonp/pt-BR.js'));
         });
       });
     default:
-      return new Promise(function(resolve) {
-        require.ensure(['intl/locale-data/jsonp/en.js'], function(require) {
+      return new Promise(function (resolve) {
+        require.ensure(['intl/locale-data/jsonp/en.js'], function (require) {
           resolve(() => require('intl/locale-data/jsonp/en.js'));
         });
       });
