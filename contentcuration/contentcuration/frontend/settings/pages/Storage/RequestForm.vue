@@ -481,40 +481,35 @@
     margin-top: 32px;
     margin-bottom: 8px;
   }
+  
+.breadcrumb-container {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
 
-  /* Existing new styles */
-  .breadcrumb-container {
-    direction: rtl;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 1rem;
-  }
+.breadcrumb-content {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: calc(100% - 120px); /* Allow space for the select all box */
+}
 
-  .breadcrumb-content {
-    flex: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
+.select-all-box {
+  flex-shrink: 0;
+  margin-right: 1rem;
+  min-width: 100px; /* Ensure minimum width for the checkbox */
+}
 
-  .select-all-box {
-    flex-shrink: 0;
-    margin-right: 1rem;
-  }
+.multiselect-wrapper {
+  max-width: 100%;
+  position: relative;
+}
 
-  /* Add these additional styles */
-  .multiselect-wrapper {
-    max-width: 100%;
-    position: relative;
-  }
-
-  .multiselect-wrapper :deep(.multiselect) {
-    direction: rtl;
-    text-align: right;
-  }
-
-  .multiselect-wrapper :deep(.multiselect-content-wrapper) {
-    direction: rtl;
-  }
-</style>
+.multiselect-wrapper :deep(.multiselect) {
+  text-align: left;
+}
+  
+  </style>
