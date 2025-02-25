@@ -28,7 +28,6 @@
         </KGridItem>
       </KRadioButtonGroup>
     </KGrid>
-
   </KModal>
 
 </template>

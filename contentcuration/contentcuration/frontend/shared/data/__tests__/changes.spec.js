@@ -317,7 +317,11 @@ describe('Change Types Unhappy Paths', () => {
   it('should throw error when Change is instantiated without key', () => {
     expect(
       () =>
-        new Change({ table: TABLE_NAMES.CONTENTNODE, source: CLIENTID, type: CHANGE_TYPES.CREATED })
+        new Change({
+          table: TABLE_NAMES.CONTENTNODE,
+          source: CLIENTID,
+          type: CHANGE_TYPES.CREATED,
+        }),
     ).toThrow(new TypeError('key is required for a Change but it was undefined'));
   });
   it('should throw error when Change is instantiated with a null key', () => {
@@ -328,13 +332,13 @@ describe('Change Types Unhappy Paths', () => {
           table: TABLE_NAMES.CONTENTNODE,
           source: CLIENTID,
           type: CHANGE_TYPES.CREATED,
-        })
+        }),
     ).toThrow(new TypeError('key is required for a Change but it was null'));
   });
 
   it('should throw error when Change is instantiated without a source', () => {
     expect(
-      () => new Change({ key: '1', table: TABLE_NAMES.CONTENTNODE, type: CHANGE_TYPES.CREATED })
+      () => new Change({ key: '1', table: TABLE_NAMES.CONTENTNODE, type: CHANGE_TYPES.CREATED }),
     ).toThrow(new ReferenceError('source should be a string, but undefined was passed instead'));
   });
 
@@ -346,13 +350,13 @@ describe('Change Types Unhappy Paths', () => {
           source: 123,
           table: TABLE_NAMES.CONTENTNODE,
           type: CHANGE_TYPES.CREATED,
-        })
+        }),
     ).toThrow(new ReferenceError('source should be a string, but 123 was passed instead'));
   });
 
   it('should throw error when Change is instantiated with invalid table', () => {
     expect(
-      () => new Change({ key: '1', table: 'test', source: CLIENTID, type: CHANGE_TYPES.CREATED })
+      () => new Change({ key: '1', table: 'test', source: CLIENTID, type: CHANGE_TYPES.CREATED }),
     ).toThrow(new ReferenceError('test is not a valid table value'));
   });
 
@@ -364,7 +368,7 @@ describe('Change Types Unhappy Paths', () => {
           table: TABLE_NAMES.SESSION,
           source: CLIENTID,
           type: CHANGE_TYPES.CREATED,
-        })
+        }),
     ).toThrow(new TypeError('session is not a syncable table'));
   });
 
@@ -372,7 +376,7 @@ describe('Change Types Unhappy Paths', () => {
 
   it('should throw error when CreatedChange is instantiated without obj', () => {
     expect(
-      () => new CreatedChange({ key: '1', table: TABLE_NAMES.CONTENTNODE, source: CLIENTID })
+      () => new CreatedChange({ key: '1', table: TABLE_NAMES.CONTENTNODE, source: CLIENTID }),
     ).toThrow(new TypeError('obj should be an object, but undefined was passed instead'));
   });
 
@@ -384,14 +388,14 @@ describe('Change Types Unhappy Paths', () => {
           table: TABLE_NAMES.CONTENTNODE,
           obj: 'invalid',
           source: CLIENTID,
-        })
+        }),
     ).toThrow(new TypeError('obj should be an object, but invalid was passed instead'));
   });
 
   // UpdatedChange
   it('should throw error when UpdatedChange is instantiated without changes', () => {
     expect(
-      () => new UpdatedChange({ key: '1', table: TABLE_NAMES.CONTENTNODE, source: CLIENTID })
+      () => new UpdatedChange({ key: '1', table: TABLE_NAMES.CONTENTNODE, source: CLIENTID }),
     ).toThrow(new TypeError('changes should be an object, but undefined was passed instead'));
   });
 
@@ -403,7 +407,7 @@ describe('Change Types Unhappy Paths', () => {
           table: TABLE_NAMES.CONTENTNODE,
           changes: 'invalid',
           source: CLIENTID,
-        })
+        }),
     ).toThrow(new TypeError('changes should be an object, but invalid was passed instead'));
   });
 
@@ -415,7 +419,7 @@ describe('Change Types Unhappy Paths', () => {
           table: TABLE_NAMES.CONTENTNODE,
           changes: {},
           source: CLIENTID,
-        })
+        }),
     ).toThrow(new TypeError('oldObj should be an object, but undefined was passed instead'));
   });
 
@@ -428,14 +432,14 @@ describe('Change Types Unhappy Paths', () => {
           changes: {},
           oldObj: 'invalid',
           source: CLIENTID,
-        })
+        }),
     ).toThrow(new TypeError('oldObj should be an object, but invalid was passed instead'));
   });
 
   // DeletedChange
   it('should throw error when DeletedChange is instantiated with invalid table', () => {
     expect(() => new DeletedChange({ key: '1', table: 'test', source: CLIENTID })).toThrow(
-      new ReferenceError('test is not a valid table value')
+      new ReferenceError('test is not a valid table value'),
     );
   });
 
@@ -450,7 +454,7 @@ describe('Change Types Unhappy Paths', () => {
           position: RELATIVE_TREE_POSITIONS.LAST_CHILD,
           source: CLIENTID,
           oldObj,
-        })
+        }),
     ).toThrow(new TypeError('target is required for a MovedChange but it was undefined'));
   });
 
@@ -465,7 +469,7 @@ describe('Change Types Unhappy Paths', () => {
           position: 'invalid',
           source: CLIENTID,
           oldObj,
-        })
+        }),
     ).toThrow(new ReferenceError('invalid is not a valid position value'));
   });
 
@@ -480,14 +484,14 @@ describe('Change Types Unhappy Paths', () => {
           position: RELATIVE_TREE_POSITIONS.LAST_CHILD,
           source: CLIENTID,
           oldObj,
-        })
+        }),
     ).toThrow(new ReferenceError('parent is required for a MovedChange but it was undefined'));
   });
 
   // CopiedChange
   it('should throw error when CopiedChange is instantiated without from_key', () => {
     expect(
-      () => new CopiedChange({ key: '1', table: TABLE_NAMES.CONTENTNODE, source: CLIENTID })
+      () => new CopiedChange({ key: '1', table: TABLE_NAMES.CONTENTNODE, source: CLIENTID }),
     ).toThrow(new TypeError('from_key is required for a CopiedChange but it was undefined'));
   });
 
@@ -500,7 +504,7 @@ describe('Change Types Unhappy Paths', () => {
           from_key: '2',
           mods: 'invalid',
           source: CLIENTID,
-        })
+        }),
     ).toThrow(new TypeError('mods should be an object, but invalid was passed instead'));
   });
 
@@ -513,7 +517,7 @@ describe('Change Types Unhappy Paths', () => {
           from_key: '2',
           mods: { a: 1 },
           source: CLIENTID,
-        })
+        }),
     ).toThrow(new TypeError('target is required for a CopiedChange but it was undefined'));
   });
 
@@ -528,7 +532,7 @@ describe('Change Types Unhappy Paths', () => {
           target: '3',
           position: 'invalid',
           source: CLIENTID,
-        })
+        }),
     ).toThrow(new ReferenceError('invalid is not a valid position value'));
   });
 
@@ -544,11 +548,11 @@ describe('Change Types Unhappy Paths', () => {
           position: RELATIVE_TREE_POSITIONS.LAST_CHILD,
           excluded_descendants: 'invalid',
           source: CLIENTID,
-        })
+        }),
     ).toThrow(
       new TypeError(
-        'excluded_descendants should be an object or null, but invalid was passed instead'
-      )
+        'excluded_descendants should be an object or null, but invalid was passed instead',
+      ),
     );
   });
 
@@ -564,16 +568,16 @@ describe('Change Types Unhappy Paths', () => {
           position: RELATIVE_TREE_POSITIONS.LAST_CHILD,
           excluded_descendants: null,
           source: CLIENTID,
-        })
+        }),
     ).toThrow(new TypeError('parent is required for a CopiedChange but it was undefined'));
   });
 
   // PublishedChange
   it('should throw error when PublishedChange is instantiated without version_notes', () => {
     expect(
-      () => new PublishedChange({ key: '1', table: TABLE_NAMES.CHANNEL, source: CLIENTID })
+      () => new PublishedChange({ key: '1', table: TABLE_NAMES.CHANNEL, source: CLIENTID }),
     ).toThrow(
-      new TypeError('version_notes is required for a PublishedChange but it was undefined')
+      new TypeError('version_notes is required for a PublishedChange but it was undefined'),
     );
   });
 
@@ -585,16 +589,18 @@ describe('Change Types Unhappy Paths', () => {
           table: TABLE_NAMES.CHANNEL,
           version_notes: 'Some notes',
           source: CLIENTID,
-        })
+        }),
     ).toThrow(new TypeError('language is required for a PublishedChange but it was undefined'));
   });
 
   // SyncedChange
   it('should throw error when SyncedChange is instantiated without titles_and_descriptions', () => {
     expect(
-      () => new SyncedChange({ key: '1', table: TABLE_NAMES.CHANNEL, source: CLIENTID })
+      () => new SyncedChange({ key: '1', table: TABLE_NAMES.CHANNEL, source: CLIENTID }),
     ).toThrow(
-      new TypeError('titles_and_descriptions should be a boolean, but undefined was passed instead')
+      new TypeError(
+        'titles_and_descriptions should be a boolean, but undefined was passed instead',
+      ),
     );
   });
 
@@ -606,9 +612,9 @@ describe('Change Types Unhappy Paths', () => {
           table: TABLE_NAMES.CHANNEL,
           titles_and_descriptions: 'invalid',
           source: CLIENTID,
-        })
+        }),
     ).toThrow(
-      new TypeError('titles_and_descriptions should be a boolean, but invalid was passed instead')
+      new TypeError('titles_and_descriptions should be a boolean, but invalid was passed instead'),
     );
   });
 
@@ -621,9 +627,9 @@ describe('Change Types Unhappy Paths', () => {
           titles_and_descriptions: true,
           resource_details: 'invalid',
           source: CLIENTID,
-        })
+        }),
     ).toThrow(
-      new TypeError('resource_details should be a boolean, but invalid was passed instead')
+      new TypeError('resource_details should be a boolean, but invalid was passed instead'),
     );
   });
 
@@ -637,7 +643,7 @@ describe('Change Types Unhappy Paths', () => {
           resource_details: false,
           files: 'invalid',
           source: CLIENTID,
-        })
+        }),
     ).toThrow(new TypeError('files should be a boolean, but invalid was passed instead'));
   });
 
@@ -652,22 +658,22 @@ describe('Change Types Unhappy Paths', () => {
           files: true,
           assessment_items: 'invalid',
           source: CLIENTID,
-        })
+        }),
     ).toThrow(
-      new TypeError('assessment_items should be a boolean, but invalid was passed instead')
+      new TypeError('assessment_items should be a boolean, but invalid was passed instead'),
     );
   });
 
   // DeployedChange
   it('should throw error when DeployedChange is instantiated without key', () => {
     expect(() => new DeployedChange({ table: TABLE_NAMES.CHANNEL, source: CLIENTID })).toThrow(
-      new TypeError('key is required for a DeployedChange but it was undefined')
+      new TypeError('key is required for a DeployedChange but it was undefined'),
     );
   });
 
   it('should throw error when DeployedChange is instantiated with invalid table', () => {
     expect(() => new DeployedChange({ key: '1', table: 'test', source: CLIENTID })).toThrow(
-      new ReferenceError('test is not a valid table value')
+      new ReferenceError('test is not a valid table value'),
     );
   });
 
@@ -675,7 +681,11 @@ describe('Change Types Unhappy Paths', () => {
   it('should throw error when UpdatedDescendantsChange is instantiated without changes', () => {
     expect(
       () =>
-        new UpdatedDescendantsChange({ key: '1', table: TABLE_NAMES.CONTENTNODE, source: CLIENTID })
+        new UpdatedDescendantsChange({
+          key: '1',
+          table: TABLE_NAMES.CONTENTNODE,
+          source: CLIENTID,
+        }),
     ).toThrow(new TypeError('changes should be an object, but undefined was passed instead'));
   });
 
@@ -687,7 +697,7 @@ describe('Change Types Unhappy Paths', () => {
           table: TABLE_NAMES.CHANNEL,
           changes: {},
           source: CLIENTID,
-        })
+        }),
     ).toThrow();
   });
 });

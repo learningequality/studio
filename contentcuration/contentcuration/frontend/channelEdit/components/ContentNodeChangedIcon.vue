@@ -1,7 +1,9 @@
 <template>
 
-  <span v-if="message" class="mx-2">
-
+  <span
+    v-if="message"
+    class="mx-2"
+  >
     <Icon
       ref="contentNode"
       :icon="showFilled ? 'unpublishedResource' : 'unpublishedChange'"
@@ -13,11 +15,12 @@
       :refs="$refs"
     >
       {{ message }}
-
     </KTooltip>
   </span>
 
 </template>
+
+
 <script>
 
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
@@ -84,9 +87,12 @@
 
 </script>
 
+
 <style scoped>
+
   .v-icon {
     vertical-align: bottom;
     cursor: default;
   }
+
 </style>

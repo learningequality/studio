@@ -1,12 +1,8 @@
 <template>
 
-  <div
-    style="max-height: 80vh"
-  >
+  <div style="max-height: 80vh">
     <VList ref="optionsList">
-      <template
-        v-for="(group, groupIndex) in groupedOptions"
-      >
+      <template v-for="(group, groupIndex) in groupedOptions">
         <VListTile
           v-for="(option, index) in group"
           :key="groupIndex + '-' + index"
@@ -40,6 +36,7 @@
   </div>
 
 </template>
+
 
 <script>
 
@@ -321,7 +318,7 @@
           this.trackAction(`Edit ${trackActionLabel}`);
         };
       },
-      removeNode: withChangeTracker(function(id__in, changeTracker) {
+      removeNode: withChangeTracker(function (id__in, changeTracker) {
         this.trackAction('Delete');
         const redirect = this.getRemoveNodeRedirect();
         return this.moveContentNodes({ id__in, parent: this.trashId, inherit: false }).then(() => {
@@ -333,7 +330,7 @@
           }).then(() => changeTracker.cleanUp());
         });
       }),
-      copyToClipboard: withChangeTracker(function(changeTracker) {
+      copyToClipboard: withChangeTracker(function (changeTracker) {
         this.trackAction('Copy to clipboard');
 
         return this.copy({ node_id: this.node.node_id, channel_id: this.node.channel_id }).then(
@@ -344,10 +341,10 @@
               // actionText: this.$tr('undo'),
               // actionCallback: () => changeTracker.revert(),
             }).then(() => changeTracker.cleanUp());
-          }
+          },
         );
       }),
-      duplicateNode: withChangeTracker(async function(nodeId, changeTracker) {
+      duplicateNode: withChangeTracker(async function (nodeId, changeTracker) {
         this.trackAction('Copy');
         this.showSnackbar({
           duration: null,
@@ -414,8 +411,11 @@
 
 </script>
 
+
 <style scoped>
+
   .divider {
-    margin: 8px 0!important;
+    margin: 8px 0 !important;
   }
+
 </style>

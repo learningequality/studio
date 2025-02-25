@@ -6,7 +6,10 @@
       :key="`${action}-${idx}`"
       class="toolbar-item"
     >
-      <VTooltip top lazy>
+      <VTooltip
+        top
+        lazy
+      >
         <template #activator="{ on }">
           <VBtn
             icon
@@ -17,13 +20,10 @@
           >
             <Icon
               v-if="config[action] && config[action].icon"
-              :icon="
-                config[action].icon
-              "
-              style="font-size: 20px;"
+              :icon="config[action].icon"
+              style="font-size: 20px"
               :color="iconColor(action)"
             />
-
           </VBtn>
         </template>
         <span>{{ config[action].label }}</span>
@@ -34,7 +34,7 @@
       v-if="displayMenu"
       class="toolbar-item"
     >
-      <Menu bottom>
+      <BaseMenu bottom>
         <template #activator="{ on }">
           <VBtn
             icon
@@ -44,7 +44,6 @@
               icon="optionsVertical"
               :color="$themePalette.grey.v_800"
             />
-
           </VBtn>
         </template>
 
@@ -59,11 +58,12 @@
             <VListTileTitle>{{ config[action].label }}</VListTileTitle>
           </VListTile>
         </VList>
-      </Menu>
+      </BaseMenu>
     </VFlex>
   </VLayout>
 
 </template>
+
 
 <script>
 
@@ -225,19 +225,19 @@
 
           if (!this.canEdit) {
             collapsedIconActions = collapsedIconActions.filter(
-              action => action !== AssessmentItemToolbarActions.EDIT_ITEM
+              action => action !== AssessmentItemToolbarActions.EDIT_ITEM,
             );
           }
 
           if (!this.canMoveUp) {
             collapsedIconActions = collapsedIconActions.filter(
-              action => action !== AssessmentItemToolbarActions.MOVE_ITEM_UP
+              action => action !== AssessmentItemToolbarActions.MOVE_ITEM_UP,
             );
           }
 
           if (!this.canMoveDown) {
             collapsedIconActions = collapsedIconActions.filter(
-              action => action !== AssessmentItemToolbarActions.MOVE_ITEM_DOWN
+              action => action !== AssessmentItemToolbarActions.MOVE_ITEM_DOWN,
             );
           }
         }
@@ -315,6 +315,7 @@
   };
 
 </script>
+
 
 <style lang="scss" scoped>
 

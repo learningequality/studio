@@ -18,9 +18,15 @@
     @blur="resetScroll"
   >
     <template #selection="{ item }">
-      <VTooltip bottom lazy>
+      <VTooltip
+        bottom
+        lazy
+      >
         <template #activator="{ on }">
-          <VChip class="ma-1" v-on="on">
+          <VChip
+            class="ma-1"
+            v-on="on"
+          >
             <div class="text-truncate">
               {{ item.name }}
             </div>
@@ -38,9 +44,16 @@
         class="mb-0 mt-1 scroll-margin"
         :labelDir="null"
       >
-        <VTooltip bottom lazy>
+        <VTooltip
+          bottom
+          lazy
+        >
           <template #activator="{ on }">
-            <div class="text-truncate" style="width: 250px;" v-on="on">
+            <div
+              class="text-truncate"
+              style="width: 250px"
+              v-on="on"
+            >
               {{ item.name }}
             </div>
           </template>
@@ -122,6 +135,7 @@
   };
 
 </script>
+
 
 <style lang="scss" scoped>
 

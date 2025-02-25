@@ -1,14 +1,25 @@
 <template>
 
   <VCard>
-    <VLayout row wrap align-center justify-center style="max-height: 0px;">
-      <div v-if="isMounted" class="text-xs-center" style="position: absolute;">
+    <VLayout
+      row
+      wrap
+      align-center
+      justify-center
+      style="max-height: 0"
+    >
+      <div
+        v-if="isMounted"
+        class="text-xs-center"
+        style="position: absolute"
+      >
         <slot></slot>
       </div>
     </VLayout>
   </VCard>
 
 </template>
+
 
 <script>
 
@@ -31,14 +42,17 @@
 
 </script>
 
+
 <style scoped>
 
   .v-card {
     padding: 28% 0;
-    box-shadow: none;
+
+    /* stylelint-disable-next-line custom-property-pattern */
+    border-color: var(--v-greyBorder-base) !important;
     border-style: solid;
     border-width: 1px;
-    border-color: var(--v-greyBorder-base) !important;
+    box-shadow: none;
   }
 
 </style>

@@ -4,14 +4,30 @@
     <template v-if="items.length">
       <div v-if="inline">
         <template v-if="!printing">
-          <ul class="inline-list" :class="{ delimit }">
-            <li v-for="item in items.slice(0, maxItems)" :key="getKey(item)">
-              <slot name="item" :item="item">
+          <ul
+            class="inline-list"
+            :class="{ delimit }"
+          >
+            <li
+              v-for="item in items.slice(0, maxItems)"
+              :key="getKey(item)"
+            >
+              <slot
+                name="item"
+                :item="item"
+              >
                 {{ item }}
               </slot>
             </li>
-            <li v-for="item in items.slice(maxItems)" v-show="isExpanded" :key="getKey(item)">
-              <slot name="item" :item="item">
+            <li
+              v-for="item in items.slice(maxItems)"
+              v-show="isExpanded"
+              :key="getKey(item)"
+            >
+              <slot
+                name="item"
+                :item="item"
+              >
                 {{ item }}
               </slot>
             </li>
@@ -29,20 +45,35 @@
       </div>
       <div v-else>
         <template v-if="!printing">
-          <div v-for="item in items.slice(0, maxItems)" :key="getKey(item)">
-            <slot name="item" :item="item">
+          <div
+            v-for="item in items.slice(0, maxItems)"
+            :key="getKey(item)"
+          >
+            <slot
+              name="item"
+              :item="item"
+            >
               {{ item }}
             </slot>
           </div>
-          <VExpansionPanel v-if="items.length > maxItems" :value="isExpanded ? 0 : null">
+          <VExpansionPanel
+            v-if="items.length > maxItems"
+            :value="isExpanded ? 0 : null"
+          >
             <VExpansionPanelContent>
               <template #header>
                 <span @click="toggle">
                   {{ toggleText }}
                 </span>
               </template>
-              <div v-for="item in items.slice(maxItems)" :key="getKey(item)">
-                <slot name="item" :item="item">
+              <div
+                v-for="item in items.slice(maxItems)"
+                :key="getKey(item)"
+              >
+                <slot
+                  name="item"
+                  :item="item"
+                >
                   {{ item }}
                 </slot>
               </div>
@@ -50,12 +81,14 @@
           </VExpansionPanel>
         </template>
         <template v-else>
-          <p v-for="item in items" :key="getKey(item)">
+          <p
+            v-for="item in items"
+            :key="getKey(item)"
+          >
             {{ item }}
           </p>
         </template>
       </div>
-
     </template>
     <div v-else-if="noItemsText">
       <em>{{ noItemsText }}</em>
@@ -63,6 +96,7 @@
   </div>
 
 </template>
+
 
 <script>
 
@@ -137,6 +171,7 @@
   };
 
 </script>
+
 
 <style lang="scss" scoped>
 

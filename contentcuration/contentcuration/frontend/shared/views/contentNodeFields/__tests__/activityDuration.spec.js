@@ -1,9 +1,5 @@
-import Vue from 'vue';
-import Vuetify from 'vuetify';
 import { shallowMount, mount } from '@vue/test-utils';
 import ActivityDuration from '../CompletionOptions/ActivityDuration';
-
-Vue.use(Vuetify);
 
 describe('ActivityDuration', () => {
   it('smoke test', () => {
@@ -36,7 +32,7 @@ describe('ActivityDuration', () => {
         const wrapper = mount(ActivityDuration);
         wrapper.vm.minutes = 40;
 
-        return Vue.nextTick().then(() => {
+        return wrapper.vm.$nextTick().then(() => {
           const emittedTime = wrapper.emitted('input').pop()[0];
           expect(emittedTime).toEqual(seconds);
         });

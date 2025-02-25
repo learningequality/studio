@@ -12,15 +12,34 @@
         :size="120"
       />
     </div>
-    <h2 ref="top" class="mb-4 primary--text text-xs-center">
+    <h2
+      ref="top"
+      class="mb-4 primary--text text-xs-center"
+    >
       {{ $tr('createAnAccountTitle') }}
     </h2>
-    <VLayout justify-center class="px-3">
-      <VForm ref="form" v-model="valid" lazy-validation @submit.prevent="submit">
-        <Banner :value="!valid" error class="mb-4">
+    <VLayout
+      justify-center
+      class="px-3"
+    >
+      <VForm
+        ref="form"
+        v-model="valid"
+        lazy-validation
+        @submit.prevent="submit"
+      >
+        <Banner
+          :value="!valid"
+          error
+          class="mb-4"
+        >
           {{ registrationFailed ? $tr('registrationFailed') : $tr('errorsMessage') }}
         </Banner>
-        <Banner :value="offline" error class="mb-4">
+        <Banner
+          :value="offline"
+          error
+          class="mb-4"
+        >
           {{ $tr('registrationFailedOffline') }}
         </Banner>
         <!-- Basic information -->
@@ -68,11 +87,16 @@
         />
 
         <!-- Usage -->
-        <VInput required :rules="usageRules" class="mt-2" />
-        <h1 class="font-weight-bold mb-2 subheading">
-          {{ $tr('usageLabel') }}*
-        </h1>
-        <div v-for="option in usageOptions" :key="option.id">
+        <VInput
+          required
+          :rules="usageRules"
+          class="mt-2"
+        />
+        <h1 class="font-weight-bold mb-2 subheading">{{ $tr('usageLabel') }}*</h1>
+        <div
+          v-for="option in usageOptions"
+          :key="option.id"
+        >
           <Checkbox
             v-model="form.uses"
             :label="option.label"
@@ -95,19 +119,25 @@
           </VSlideYTransition>
         </div>
 
-
         <!-- Location -->
-        <VInput required :rules="locationRules" class="mt-4" />
-        <h1 class="font-weight-bold my-2 subheading">
-          {{ $tr('locationLabel') }}*
-        </h1>
-        <CountryField v-model="form.locations" clearable />
+        <VInput
+          required
+          :rules="locationRules"
+          class="mt-4"
+        />
+        <h1 class="font-weight-bold my-2 subheading">{{ $tr('locationLabel') }}*</h1>
+        <CountryField
+          v-model="form.locations"
+          clearable
+        />
 
         <!-- Source -->
-        <VInput required :rules="sourceRules" class="mt-2" />
-        <h1 class="font-weight-bold my-2 subheading">
-          {{ $tr('sourceLabel') }}*
-        </h1>
+        <VInput
+          required
+          :rules="sourceRules"
+          class="mt-2"
+        />
+        <h1 class="font-weight-bold my-2 subheading">{{ $tr('sourceLabel') }}*</h1>
         <DropdownWrapper>
           <template #default="{ attach, menuProps }">
             <VSelect
@@ -148,9 +178,12 @@
         />
         <!-- Error message for Agreements -->
         <VSlideYTransition>
-          <div v-if="!acceptedAgreement" class="error--text policy-error theme--light v-messages">
+          <div
+            v-if="!acceptedAgreement"
+            class="error--text policy-error theme--light v-messages"
+          >
             <div class="v-messages__message">
-              {{ $tr("ToSRequiredMessage") }}
+              {{ $tr('ToSRequiredMessage') }}
             </div>
           </div>
         </VSlideYTransition>
@@ -161,7 +194,6 @@
               :text="$tr('viewPrivacyPolicyLink')"
               @click="showPrivacyPolicy"
             />
-
           </span>
           <span> | </span>
           <span>
@@ -186,7 +218,6 @@
           type="submit"
         />
       </VForm>
-
     </VLayout>
     <PolicyModals />
   </ImmersiveModalLayout>

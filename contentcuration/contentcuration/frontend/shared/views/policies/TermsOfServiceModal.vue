@@ -83,7 +83,10 @@
       </ol>
 
       <!-- Definitions -->
-      <div id="definitions" class="section">
+      <div
+        id="definitions"
+        class="section"
+      >
         <h2>{{ $tr('definitionsHeader') }}</h2>
         <p>{{ $tr('definitionsP1') }}</p>
         <p>{{ $tr('definitionsP2') }}</p>
@@ -92,7 +95,10 @@
       </div>
 
       <!-- Account Terms -->
-      <div id="account-terms" class="section">
+      <div
+        id="account-terms"
+        class="section"
+      >
         <h2>{{ $tr('accountTermsHeader') }}</h2>
         <p>{{ $tr('accountTermsP1') }}</p>
         <p>{{ $tr('accountTermsP2') }}</p>
@@ -100,7 +106,10 @@
       </div>
 
       <!-- Acceptable Use Restrictions -->
-      <div id="acceptable-use" class="section">
+      <div
+        id="acceptable-use"
+        class="section"
+      >
         <h2>{{ $tr('acceptableUseHeader') }}</h2>
         <p>{{ $tr('acceptableUseP1') }}</p>
         <ul>
@@ -119,7 +128,10 @@
       </div>
 
       <!-- User-Generated Content -->
-      <div id="user-content" class="section">
+      <div
+        id="user-content"
+        class="section"
+      >
         <h2>{{ $tr('userContentHeader') }}</h2>
         <p>{{ $tr('userContentP1') }}</p>
         <ul>
@@ -145,7 +157,10 @@
       </div>
 
       <!-- Licensing and Copyright -->
-      <div id="licensing" class="section">
+      <div
+        id="licensing"
+        class="section"
+      >
         <h2>{{ $tr('licensingHeader') }}</h2>
         <p>{{ $tr('licensingP1') }}</p>
         <ul>
@@ -161,7 +176,10 @@
       </div>
 
       <!-- DMCA Policy -->
-      <div id="dmca" class="section">
+      <div
+        id="dmca"
+        class="section"
+      >
         <h2>{{ $tr('dmcaHeader') }}</h2>
         <p>{{ $tr('dmcaP1') }}</p>
         <p>
@@ -174,13 +192,19 @@
       </div>
 
       <!-- Intellectual Property Notice -->
-      <div id="intellectual-property" class="section">
+      <div
+        id="intellectual-property"
+        class="section"
+      >
         <h2>{{ $tr('intellectualPropertyHeader') }}</h2>
         <p>{{ $tr('intellectualPropertyP1') }}</p>
       </div>
 
       <!-- Community Standards -->
-      <div id="community-standards" class="section">
+      <div
+        id="community-standards"
+        class="section"
+      >
         <h2>{{ $tr('communityStandardsHeader') }}</h2>
         <p>{{ $tr('communityStandardsP1') }}</p>
         <p>
@@ -192,7 +216,10 @@
       </div>
 
       <!-- Your Privacy -->
-      <div id="privacy" class="section">
+      <div
+        id="privacy"
+        class="section"
+      >
         <h2>{{ $tr('yourPrivacyHeader') }}</h2>
         <p>{{ $tr('yourPrivacyP1') }}</p>
         <p>
@@ -204,26 +231,35 @@
       </div>
 
       <!-- Cancellation or Termination -->
-      <div id="cancellation" class="section">
+      <div
+        id="cancellation"
+        class="section"
+      >
         <h2>{{ $tr('cancellationHeader') }}</h2>
-        <p> {{ $tr('cancellationP1') }}</p>
-        <p> {{ $tr('cancellationP2') }}</p>
+        <p>{{ $tr('cancellationP1') }}</p>
+        <p>{{ $tr('cancellationP2') }}</p>
         <ul>
           <li>{{ $tr('cancellationItem1') }}</li>
           <li>{{ $tr('cancellationItem2') }}</li>
         </ul>
-        <p> {{ $tr('cancellationP3') }}</p>
-        <p> {{ $tr('cancellationP4') }}</p>
+        <p>{{ $tr('cancellationP3') }}</p>
+        <p>{{ $tr('cancellationP4') }}</p>
       </div>
 
       <!-- Communications with Learning Equality -->
-      <div id="communications" class="section">
+      <div
+        id="communications"
+        class="section"
+      >
         <h2>{{ $tr('communicationsHeader') }}</h2>
-        <p> {{ $tr('communicationsP1') }}</p>
+        <p>{{ $tr('communicationsP1') }}</p>
       </div>
 
       <!-- Disclaimer of Warranties -->
-      <div id="warranties" class="section">
+      <div
+        id="warranties"
+        class="section"
+      >
         <h2>{{ $tr('warrantyHeader') }}</h2>
         <p class="text-uppercase">
           {{ $tr('warrantyHeaderP1') }}
@@ -231,25 +267,37 @@
       </div>
 
       <!-- Changes to these Terms of Service -->
-      <div id="changes" class="section">
+      <div
+        id="changes"
+        class="section"
+      >
         <h2>{{ $tr('changesToToSHeader') }}</h2>
-        <p> {{ $tr('changesToToSP1') }}</p>
+        <p>{{ $tr('changesToToSP1') }}</p>
       </div>
 
       <!-- Jurisdiction and Applicable Law -->
-      <div id="jurisdiction" class="section">
+      <div
+        id="jurisdiction"
+        class="section"
+      >
         <h2>{{ $tr('jurisdictionHeader') }}</h2>
-        <p> {{ $tr('jurisdictionP1') }}</p>
+        <p>{{ $tr('jurisdictionP1') }}</p>
       </div>
 
       <!-- Arbitration Agreement -->
-      <div id="arbitration" class="section">
+      <div
+        id="arbitration"
+        class="section"
+      >
         <h2>{{ $tr('arbitrationHeader') }}</h2>
-        <p> {{ $tr('arbitrationP1') }}</p>
+        <p>{{ $tr('arbitrationP1') }}</p>
       </div>
 
       <!-- Limitation of Liability -->
-      <div id="liability" class="section">
+      <div
+        id="liability"
+        class="section"
+      >
         <h2>{{ $tr('liabilityHeader') }}</h2>
         <p class="text-uppercase">
           {{ $tr('liabilityP1') }}
@@ -257,7 +305,10 @@
       </div>
 
       <!-- Third Party Content and Third Party Applications -->
-      <div id="third-party" class="section">
+      <div
+        id="third-party"
+        class="section"
+      >
         <h2>{{ $tr('thirdPartyHeader') }}</h2>
         <p class="text-uppercase">
           {{ $tr('thirdPartyP1') }}
@@ -265,28 +316,39 @@
       </div>
 
       <!-- Third Party Rights -->
-      <div id="third-party-rights" class="section">
+      <div
+        id="third-party-rights"
+        class="section"
+      >
         <h2>{{ $tr('thirdPartyRightsHeader') }}</h2>
-        <p> {{ $tr('thirdPartyRightsP1') }}</p>
+        <p>{{ $tr('thirdPartyRightsP1') }}</p>
       </div>
 
       <!-- Indemnification -->
-      <div id="indemnification" class="section">
+      <div
+        id="indemnification"
+        class="section"
+      >
         <h2>{{ $tr('indemnificationHeader') }}</h2>
-        <p> {{ $tr('indemnificationP1') }}</p>
+        <p>{{ $tr('indemnificationP1') }}</p>
       </div>
 
       <!-- Miscellaneous -->
-      <div id="miscellaneous" class="section">
+      <div
+        id="miscellaneous"
+        class="section"
+      >
         <h2>{{ $tr('miscellaneousHeader') }}</h2>
-        <p> {{ $tr('miscellaneousP1') }}</p>
-        <p> {{ $tr('miscellaneousP2') }}</p>
-        <p> {{ $tr('miscellaneousP3') }}</p>
+        <p>{{ $tr('miscellaneousP1') }}</p>
+        <p>{{ $tr('miscellaneousP2') }}</p>
+        <p>{{ $tr('miscellaneousP3') }}</p>
       </div>
     </div>
   </PoliciesModal>
 
 </template>
+
+
 <script>
 
   import PoliciesModal from './PoliciesModal';
@@ -515,31 +577,37 @@
 
 </script>
 
+
 <style scoped>
+
   .emphasis {
-    text-transform: uppercase;
     font-weight: bold;
+    text-transform: uppercase;
   }
 
   .tos-wrapper {
     counter-reset: section;
   }
+
   .section {
     margin-bottom: 24px;
   }
+
   h2::before {
+    content: counter(section) '. ';
     counter-increment: section;
-    content: counter(section) ". ";
   }
 
   ul {
     margin-bottom: 16px;
   }
+
   li {
-    margin: 0px 24px;
+    margin: 0 24px;
   }
 
   .toc li {
     margin-bottom: 8px;
   }
+
 </style>

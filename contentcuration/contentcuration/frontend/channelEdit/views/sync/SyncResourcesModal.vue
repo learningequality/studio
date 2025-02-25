@@ -20,9 +20,7 @@
 
         <VListTile @click.stop>
           <VListTileAction>
-            <Checkbox
-              v-model="syncFiles"
-            />
+            <Checkbox v-model="syncFiles" />
           </VListTileAction>
           <VListTileContent @click="syncFiles = !syncFiles">
             <VListTileTitle>{{ $tr('syncFilesTitle') }}</VListTileTitle>
@@ -32,9 +30,7 @@
 
         <VListTile @click.stop>
           <VListTileAction>
-            <Checkbox
-              v-model="syncResourceDetails"
-            />
+            <Checkbox v-model="syncResourceDetails" />
           </VListTileAction>
           <VListTileContent @click="syncResourceDetails = !syncResourceDetails">
             <VListTileTitle>{{ $tr('syncResourceDetailsTitle') }}</VListTileTitle>
@@ -44,9 +40,7 @@
 
         <VListTile @click.stop>
           <VListTileAction>
-            <Checkbox
-              v-model="syncTitlesAndDescriptions"
-            />
+            <Checkbox v-model="syncTitlesAndDescriptions" />
           </VListTileAction>
           <VListTileContent @click="syncTitlesAndDescriptions = !syncTitlesAndDescriptions">
             <VListTileTitle>{{ $tr('syncTitlesAndDescriptionsTitle') }}</VListTileTitle>
@@ -56,9 +50,7 @@
 
         <VListTile @click.stop>
           <VListTileAction>
-            <Checkbox
-              v-model="syncExercises"
-            />
+            <Checkbox v-model="syncExercises" />
           </VListTileAction>
           <VListTileContent @click="syncExercises = !syncExercises">
             <VListTileTitle>{{ $tr('syncExercisesTitle') }}</VListTileTitle>
@@ -121,6 +113,7 @@
   </div>
 
 </template>
+
 
 <script>
 

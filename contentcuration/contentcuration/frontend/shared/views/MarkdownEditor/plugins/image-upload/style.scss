@@ -6,9 +6,9 @@ $resizer-size: 16px;
 img {
   max-width: 100%;
   height: auto;
+  object-fit: cover;
   /* stylelint-disable-next-line custom-property-pattern */
   border: 1px solid var(--v-greyBorder-base);
-  object-fit: cover;
 }
 
 .dragging {

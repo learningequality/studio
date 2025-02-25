@@ -1,7 +1,12 @@
 <template>
 
   <!-- Show progress bar if progress is tracked -->
-  <VLayout v-if="progressPercent !== null && !isDone" row align-center class="mt-3">
+  <VLayout
+    v-if="progressPercent !== null && !isDone"
+    row
+    align-center
+    class="mt-3"
+  >
     <VProgressLinear
       :value="progressPercent"
       class="ma-0"
@@ -9,7 +14,10 @@
       data-test="progress"
       :color="progressBarColor"
     />
-    <VFlex class="pl-3 text-xs-right" shrink>
+    <VFlex
+      class="pl-3 text-xs-right"
+      shrink
+    >
       {{ $tr('progressText', { percent: Math.round(progressPercent) || '0' }) }}
     </VFlex>
   </VLayout>

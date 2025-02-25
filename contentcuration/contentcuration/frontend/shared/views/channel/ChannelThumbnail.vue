@@ -10,16 +10,31 @@
       <template #default="{ openFileDialog, handleFiles }">
         <!-- Thumbnail area -->
         <div class="image-wrapper my-1">
-          <div v-if="uploading || hasError" style="border: 4px solid transparent;">
+          <div
+            v-if="uploading || hasError"
+            style="border: 4px solid transparent"
+          >
             <VCard
               ref="thumbnail"
               class="thumbnail"
               data-test="loading"
             >
-              <VLayout wrap align-center justify-center style="max-height: 0px;">
-                <div class="text-xs-center" style="position: absolute;">
+              <VLayout
+                wrap
+                align-center
+                justify-center
+                style="max-height: 0"
+              >
+                <div
+                  class="text-xs-center"
+                  style="position: absolute"
+                >
                   <p>
-                    <FileStatus :fileId="uploadingId" large data-test="progress" />
+                    <FileStatus
+                      :fileId="uploadingId"
+                      large
+                      data-test="progress"
+                    />
                   </p>
                   <ActionLink
                     v-if="!hasError"
@@ -63,7 +78,12 @@
         </div>
 
         <!-- Toolbar -->
-        <VLayout v-if="!readonly && (!uploading || hasError)" align-center row data-test="toolbar">
+        <VLayout
+          v-if="!readonly && (!uploading || hasError)"
+          align-center
+          row
+          data-test="toolbar"
+        >
           <!-- Upload failed-->
           <template v-if="hasError">
             <span class="body-1 red--text">
@@ -106,7 +126,11 @@
               :text="$tr('cancel')"
               @click="cancelPendingFile"
             />
-            <ActionLink :text="$tr('save')" data-test="save" @click="save" />
+            <ActionLink
+              :text="$tr('save')"
+              data-test="save"
+              @click="save"
+            />
           </template>
 
           <!-- Default options -->
@@ -137,6 +161,7 @@
   </div>
 
 </template>
+
 
 <script>
 
@@ -322,6 +347,7 @@
   };
 
 </script>
+
 
 <style lang="scss" scoped>
 

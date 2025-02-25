@@ -242,7 +242,7 @@ describe('contentNode actions', () => {
         nodeIdToUpdate,
         expect.objectContaining({
           language: newLang,
-        })
+        }),
       );
     });
   });

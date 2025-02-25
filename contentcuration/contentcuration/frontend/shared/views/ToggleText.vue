@@ -1,18 +1,27 @@
 <template>
 
   <div>
-    <p class="text" :class="{ notranslate }" :dir="dir">
+    <p
+      class="text"
+      :class="{ notranslate }"
+      :dir="dir"
+    >
       {{ initialText }}
       <VSlideYTransition>
-        <span v-show="expanded" data-test="overflow">
+        <span
+          v-show="expanded"
+          data-test="overflow"
+        >
           {{ overflowText }}
         </span>
       </VSlideYTransition>
-      <a v-if="overflowText" class="caption toggler" @click.stop.prevent="toggle">
+      <a
+        v-if="overflowText"
+        class="caption toggler"
+        @click.stop.prevent="toggle"
+      >
         <span>{{ togglerText }}</span>
-        <Icon
-          :icon="expanded ? 'chevronUp' : 'chevronDown' "
-        />
+        <Icon :icon="expanded ? 'chevronUp' : 'chevronDown'" />
       </a>
     </p>
   </div>

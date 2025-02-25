@@ -1,4 +1,4 @@
-import Vue from 'vue';
+import Vue, { set } from 'vue';
 import { mergeMapItem } from 'shared/vuex/utils';
 import { applyMods } from 'shared/data/applyRemoteChanges';
 
@@ -34,14 +34,14 @@ export function UPDATE_ASSESSMENTITEM(state, assessmentItem) {
     assessmentItem.hints = hints;
   }
 
-  Vue.set(
+  set(
     state.assessmentItemsMap,
     assessmentItem.contentnode,
     mergeMapItem(
       state.assessmentItemsMap[assessmentItem.contentnode] || {},
       assessmentItem,
-      'assessment_id'
-    )
+      'assessment_id',
+    ),
   );
 }
 
@@ -52,7 +52,7 @@ export function UPDATE_ASSESSMENTITEM_FROM_INDEXEDDB(state, { id, ...mods }) {
     state.assessmentItemsMap[contentnode] &&
     state.assessmentItemsMap[contentnode][assessment_id]
   ) {
-    Vue.set(state.assessmentItemsMap[contentnode], assessment_id, {
+    set(state.assessmentItemsMap[contentnode], assessment_id, {
       ...applyMods(state.assessmentItemsMap[contentnode][assessment_id], mods),
     });
   }

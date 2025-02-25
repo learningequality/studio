@@ -1,10 +1,14 @@
 <template>
 
   <span :class="colorClass">
-    <slot :sign="sign" :value="Math.abs(value)"></slot>
+    <slot
+      :sign="sign"
+      :value="Math.abs(value)"
+    ></slot>
   </span>
 
 </template>
+
 
 <script>
 

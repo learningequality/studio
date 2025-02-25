@@ -147,7 +147,10 @@ describe('assessmentItem getters', () => {
 
     it("doesn't include invalid nodes errors that are new if `ignoreDelayed` set to true", () => {
       expect(
-        getAssessmentItemsErrors(state)({ contentNodeId: 'content-node-id-2', ignoreDelayed: true })
+        getAssessmentItemsErrors(state)({
+          contentNodeId: 'content-node-id-2',
+          ignoreDelayed: true,
+        }),
       ).toEqual({
         'assessment-id-2': [
           ValidationErrors.QUESTION_REQUIRED,
@@ -168,7 +171,7 @@ describe('assessmentItem getters', () => {
         getInvalidAssessmentItemsCount(state)({
           contentNodeId: 'content-node-id-2',
           ignoreDelayed: true,
-        })
+        }),
       ).toBe(1);
     });
   });
@@ -187,7 +190,7 @@ describe('assessmentItem getters', () => {
         getAssessmentItemsAreValid(state)({
           contentNodeId: 'content-node-id-4',
           ignoreDelayed: true,
-        })
+        }),
       ).toBe(true);
     });
   });

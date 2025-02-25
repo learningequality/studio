@@ -19,8 +19,7 @@
     },
     $trs: {
       header: 'Activation link sent',
-      text:
-        'Thank you for creating an account! To complete the process, please check your email for the activation link we sent you.',
+      text: 'Thank you for creating an account! To complete the process, please check your email for the activation link we sent you.',
     },
   };
 

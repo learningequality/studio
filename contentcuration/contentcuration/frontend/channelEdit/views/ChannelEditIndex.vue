@@ -1,13 +1,17 @@
 <template>
 
   <VApp>
-    <ChannelEditAppError v-if="fullPageError" :error="fullPageError" />
+    <ChannelEditAppError
+      v-if="fullPageError"
+      :error="fullPageError"
+    />
     <router-view v-else />
     <PolicyModals />
     <GlobalSnackbar />
   </VApp>
 
 </template>
+
 
 <script>
 

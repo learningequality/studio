@@ -1,8 +1,14 @@
 <template>
 
-  <VCard hover @click="handleClick">
+  <VCard
+    hover
+    @click="handleClick"
+  >
     <VCardTitle>
-      <VLayout row wrap>
+      <VLayout
+        row
+        wrap
+      >
         <VFlex class="pt-2 px-4 thumbnail-column">
           <Thumbnail
             :src="node.thumbnail_src"
@@ -28,12 +34,19 @@
               {{ languageName }}
             </span>
             <span v-if="node.coach_count || isCoach">
-              <VTooltip bottom lazy>
+              <VTooltip
+                bottom
+                lazy
+              >
                 <template #activator="{ on }">
-                  <div class="my-1" style="display: inline-block;" v-on="on">
+                  <div
+                    class="my-1"
+                    style="display: inline-block"
+                    v-on="on"
+                  >
                     <Icon
                       icon="coachContent"
-                      style="vertical-align: text-top;"
+                      style="vertical-align: text-top"
                       class="mx-1"
                     />
                     <template v-if="isTopic">
@@ -42,9 +55,7 @@
                   </div>
                 </template>
                 <span>
-                  {{ isTopic ?
-                    $tr('hasCoachTooltip', { value: node.coach_count }) : $tr('coach')
-                  }}
+                  {{ isTopic ? $tr('hasCoachTooltip', { value: node.coach_count }) : $tr('coach') }}
                 </span>
               </VTooltip>
             </span>
@@ -60,7 +71,7 @@
           <div v-if="tagsString">
             {{ $tr('tagsList', { tags: tagsString }) }}
           </div>
-        </VFLex>
+        </VFlex>
       </VLayout>
     </VCardTitle>
 

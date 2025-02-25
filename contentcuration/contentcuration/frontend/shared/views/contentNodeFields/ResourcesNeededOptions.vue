@@ -13,6 +13,7 @@
 
 </template>
 
+
 <script>
 
   import ExpandableSelect from 'shared/views/form/ExpandableSelect';
@@ -81,6 +82,6 @@
   };
 
 </script>
-<style lang="scss">
 
-</style>
+
+<style lang="scss"></style>

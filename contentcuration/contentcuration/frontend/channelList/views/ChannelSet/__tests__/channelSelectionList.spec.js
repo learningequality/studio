@@ -1,5 +1,5 @@
 import { mount } from '@vue/test-utils';
-import Vuex from 'vuex';
+import { Store } from 'vuex';
 import ChannelSelectionList from '../ChannelSelectionList';
 import { ChannelListTypes } from 'shared/constants';
 
@@ -35,7 +35,7 @@ const actions = {
   loadChannelList: jest.fn(() => Promise.resolve()),
 };
 
-const store = new Vuex.Store({
+const store = new Store({
   modules: {
     channel: {
       namespaced: true,

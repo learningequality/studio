@@ -1,4 +1,4 @@
-import Vue from 'vue';
+import Vue, { set } from 'vue';
 import pick from 'lodash/pick';
 import { ContentDefaults, NEW_OBJECT } from 'shared/constants';
 import { mergeMapItem } from 'shared/vuex/utils';
@@ -10,10 +10,10 @@ export function ADD_CHANNEL(state, channel) {
   if (!channel.id) {
     throw ReferenceError('id must be defined to update a channel');
   }
-  Vue.set(
+  set(
     state.channelsMap,
     channel.id,
-    Object.assign({}, state.channelsMap[channel.id] || {}, channel)
+    Object.assign({}, state.channelsMap[channel.id] || {}, channel),
   );
 }
 
@@ -39,14 +39,14 @@ export function UPDATE_CHANNEL(state, { id, content_defaults = {}, ...payload } 
   }
   const channel = state.channelsMap[id];
   if (channel) {
-    Vue.set(state.channelsMap, id, {
+    set(state.channelsMap, id, {
       ...channel,
       ...payload,
       // Assign all acceptable content defaults into the channel defaults
       content_defaults: Object.assign(
         {},
         channel.content_defaults || {},
-        pick(content_defaults, Object.keys(ContentDefaults))
+        pick(content_defaults, Object.keys(ContentDefaults)),
       ),
     });
   }
@@ -54,12 +54,12 @@ export function UPDATE_CHANNEL(state, { id, content_defaults = {}, ...payload } 
 
 export function UPDATE_CHANNEL_FROM_INDEXEDDB(state, { id, ...mods }) {
   if (id && state.channelsMap[id]) {
-    Vue.set(state.channelsMap, id, { ...applyMods(state.channelsMap[id], mods) });
+    set(state.channelsMap, id, { ...applyMods(state.channelsMap[id], mods) });
   }
 }
 
 export function SET_BOOKMARK(state, { channel }) {
-  Vue.set(state.bookmarksMap, channel, true);
+  set(state.bookmarksMap, channel, true);
 }
 
 export function DELETE_BOOKMARK(state, { channel }) {
@@ -86,7 +86,7 @@ export function SET_USERS_TO_CHANNEL(state, { channelId, users = [] } = {}) {
     const canView = user.can_view;
     delete user.can_edit;
     delete user.can_view;
-    Vue.set(state.channelUsersMap, user.id, user);
+    set(state.channelUsersMap, user.id, user);
     if (canEdit) {
       ADD_EDITOR_TO_CHANNEL(state, { channel: channelId, user: user.id });
     } else if (canView) {
@@ -97,9 +97,9 @@ export function SET_USERS_TO_CHANNEL(state, { channelId, users = [] } = {}) {
 
 export function ADD_VIEWER_TO_CHANNEL(state, { channel, user } = {}) {
   if (!state.channelViewersMap[channel]) {
-    Vue.set(state.channelViewersMap, channel, {});
+    set(state.channelViewersMap, channel, {});
   }
-  Vue.set(state.channelViewersMap[channel], user, true);
+  set(state.channelViewersMap[channel], user, true);
 }
 
 export function REMOVE_VIEWER_FROM_CHANNEL(state, { channel, user } = {}) {
@@ -110,9 +110,9 @@ export function REMOVE_VIEWER_FROM_CHANNEL(state, { channel, user } = {}) {
 
 export function ADD_EDITOR_TO_CHANNEL(state, { channel, user } = {}) {
   if (!state.channelEditorsMap[channel]) {
-    Vue.set(state.channelEditorsMap, channel, {});
+    set(state.channelEditorsMap, channel, {});
   }
-  Vue.set(state.channelEditorsMap[channel], user, true);
+  set(state.channelEditorsMap[channel], user, true);
 }
 
 export function REMOVE_EDITOR_FROM_CHANNEL(state, { channel, user } = {}) {

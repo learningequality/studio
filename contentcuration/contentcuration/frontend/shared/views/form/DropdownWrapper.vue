@@ -1,10 +1,20 @@
 <template>
 
-  <component :is="component" :id="id" style="position: relative" v-bind="$attrs">
-    <slot name="default" :attach="`#${id}`" :menuProps="menuProps"></slot>
+  <component
+    :is="component"
+    :id="id"
+    style="position: relative"
+    v-bind="$attrs"
+  >
+    <slot
+      name="default"
+      :attach="`#${id}`"
+      :menuProps="menuProps"
+    ></slot>
   </component>
 
 </template>
+
 
 <script>
 
@@ -21,9 +31,7 @@
       id: {
         type: String,
         default() {
-          return `DropdownWrapper_${uuidv4()
-            .split('-')
-            .pop()}`;
+          return `DropdownWrapper_${uuidv4().split('-').pop()}`;
         },
       },
       component: {
@@ -96,16 +104,18 @@
   };
 
 </script>
+
+
 <style>
 
-/* According to the documentation, Vuetify supposedly supports a `right` prop to position the menu
+  /* According to the documentation, Vuetify supposedly supports a `right` prop to position the menu
    on the right side, but there isn't any code that actually does this. So when using an RTL
    language, this class will be applied and these will get flipped, because our intention is
    left:auto and right:0
  */
-.forceRTLMenu {
-  left: 0 !important;
-  right: auto !important;
-}
+  .forceRTLMenu {
+    right: auto !important;
+    left: 0 !important;
+  }
 
 </style>

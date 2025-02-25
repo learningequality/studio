@@ -7,7 +7,7 @@ const formulasExtension = (editor, options) => {
 
   editor.eventManager.addEventType(EVENT_FORMULAS_TOOLBAR_BTN_CLICK);
   editor.eventManager.listen(EVENT_FORMULAS_TOOLBAR_BTN_CLICK, () =>
-    options.onFormulasToolbarBtnClick()
+    options.onFormulasToolbarBtnClick(),
   );
 
   editor

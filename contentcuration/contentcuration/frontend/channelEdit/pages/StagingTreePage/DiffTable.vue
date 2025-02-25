@@ -34,34 +34,44 @@
 
       <!-- Net changes column -->
       <td>
-        <template v-if="props.item.key === 'ricecooker_version'">
-          -
-        </template>
+        <template v-if="props.item.key === 'ricecooker_version'"> - </template>
         <template v-else>
-          <Diff :value="props.item.diff" class="font-weight-bold">
+          <Diff
+            :value="props.item.diff"
+            class="font-weight-bold"
+          >
             <template #default="{ sign, value }">
               <span v-if="props.item.key === 'file_size_in_bytes'">
                 {{ sign }}{{ value ? formatFileSize(value) : '-' }}
               </span>
-              <span v-else>
-                {{ sign }}{{ value ? value : '-' }}
-              </span>
+              <span v-else> {{ sign }}{{ value ? value : '-' }} </span>
             </template>
           </Diff>
         </template>
       </td>
     </template>
   </VDataTable>
-  <VLayout v-else justify-center column>
-    <Icon icon="error" class="mb-2" />
+  <VLayout
+    v-else
+    justify-center
+    column
+  >
+    <Icon
+      icon="error"
+      class="mb-2"
+    />
 
     <!-- TODO: wrap string -->
     <div class="text-xs-center">
-      <ActionLink text="Retry" @click="$emit('reload')" />
+      <ActionLink
+        text="Retry"
+        @click="$emit('reload')"
+      />
     </div>
   </VLayout>
 
 </template>
+
 
 <script>
 
@@ -146,6 +156,7 @@
   };
 
 </script>
+
 
 <style lang="scss" scoped>
 

@@ -139,7 +139,7 @@ class Translator {
       this.defaultMessages,
       Vue.prototype.$formatMessage,
       messageId,
-      args
+      args,
     );
   }
   // For convenience, also proxy all Vue intl translation methods on this object
@@ -259,7 +259,7 @@ export function i18nSetup(skipPolyfill = false) {
             require => {
               res(() => require('intl'));
             },
-            'intl'
+            'intl',
           );
         }),
         importIntlLocale(currentLanguage),
@@ -275,7 +275,7 @@ export function i18nSetup(skipPolyfill = false) {
           // eslint-disable-next-line no-console
           console.error('An error occurred trying to setup Internationalization', error);
           reject();
-        }
+        },
       );
     }
   });

@@ -24,6 +24,7 @@
 
 </template>
 
+
 <script>
 
   import get from 'lodash/get';

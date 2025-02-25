@@ -15,7 +15,10 @@
       @resize="v => $emit('resize', v)"
       @scroll="$emit('scroll', $event)"
     >
-      <div class="pa-4" style="margin-bottom: 64px;">
+      <div
+        class="pa-4"
+        style="margin-bottom: 64px"
+      >
         <ResourcePanel
           :nodeId="nodeId"
           :channelId="channelId"
@@ -36,6 +39,8 @@
   </VExpandXTransition>
 
 </template>
+
+
 <script>
 
   import ResourcePanel from './ResourcePanel';
@@ -81,6 +86,6 @@
   };
 
 </script>
-<style lang="scss" scoped>
 
-</style>
+
+<style lang="scss" scoped></style>

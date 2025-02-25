@@ -7,7 +7,7 @@ import IndexedDBPlugin, {
 } from 'shared/vuex/indexedDBPlugin/index';
 import { CHANGE_TYPES } from 'shared/data';
 
-describe('Listener', function() {
+describe('Listener', function () {
   let callback;
   let listener;
 
@@ -69,7 +69,7 @@ describe('Listener', function() {
   describe('.bind(tableName, changeType, namespacePrefix)', bindTest.bind({}, 'testNamespace'));
 });
 
-describe('commitListener', function() {
+describe('commitListener', function () {
   let commit;
   let store;
   let obj;
@@ -102,7 +102,7 @@ describe('commitListener', function() {
   });
 });
 
-describe('dispatchListener', function() {
+describe('dispatchListener', function () {
   let dispatch;
   let store;
   let obj;
@@ -135,7 +135,7 @@ describe('dispatchListener', function() {
   });
 });
 
-describe('IndexedDBPlugin', function() {
+describe('IndexedDBPlugin', function () {
   let source;
   let db;
   let store;

@@ -3,10 +3,10 @@
   import { VMenu } from 'vuetify/lib/components/VMenu';
 
   export default {
-    name: 'Menu',
+    name: 'BaseMenu',
     extends: VMenu,
     props: {
-      /* eslint-disable kolibri/vue-no-unused-properties */
+      /* eslint-disable vue/no-unused-properties */
       left: {
         type: Boolean,
         default() {
@@ -27,12 +27,11 @@
         type: Boolean,
         default: true,
       },
-      /* eslint-enable kolibri/vue-no-unused-properties */
+      /* eslint-enable vue/no-unused-properties */
     },
   };
 
 </script>
 
-<style lang="scss" scoped>
 
-</style>
+<style lang="scss" scoped></style>

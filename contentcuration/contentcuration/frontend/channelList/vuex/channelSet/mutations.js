@@ -1,4 +1,4 @@
-import Vue from 'vue';
+import Vue, { set } from 'vue';
 import { NEW_OBJECT } from 'shared/constants';
 import { applyMods } from 'shared/data/applyRemoteChanges';
 
@@ -34,12 +34,12 @@ export function UPDATE_CHANNELSET(state, { id, ...payload }) {
 
 export function UPDATE_CHANNELSET_FROM_INDEXEDDB(state, { id, ...mods }) {
   if (id && state.channelSetsMap[id]) {
-    Vue.set(state.channelSetsMap, id, { ...applyMods(state.channelSetsMap[id], mods) });
+    set(state.channelSetsMap, id, { ...applyMods(state.channelSetsMap[id], mods) });
   }
 }
 
 export function ADD_CHANNEL_TO_CHANNELSET(state, { channelSetId, channelId }) {
-  Vue.set(state.channelSetsMap[channelSetId].channels, channelId, true);
+  set(state.channelSetsMap[channelSetId].channels, channelId, true);
 }
 
 export function REMOVE_CHANNEL_FROM_CHANNELSET(state, { channelSetId, channelId }) {

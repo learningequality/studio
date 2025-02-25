@@ -37,7 +37,7 @@ describe('licenseDropdown', () => {
         wrapper.setProps({ value: { license: license.id } });
         expect(wrapper.vm.$refs.license.value).toEqual(license.id);
         expect(wrapper.find('.v-textarea').exists()).toBe(license.is_custom);
-      }
+      },
     );
     it.each(LicensesList)(
       'should render license when value is set to a license name $name',
@@ -45,7 +45,7 @@ describe('licenseDropdown', () => {
         wrapper.setProps({ value: { license: license.license_name } });
         expect(wrapper.vm.$refs.license.value).toEqual(license.id);
         expect(wrapper.find('.v-textarea').exists()).toBe(license.is_custom);
-      }
+      },
     );
     it('should display licenseDescription prop', () => {
       wrapper.setProps({
@@ -87,71 +87,36 @@ describe('licenseDropdown', () => {
       wrapper.find('textarea').setValue('test license description');
       expect(wrapper.emitted('input')).toBeTruthy();
       expect(wrapper.emitted('input')[0][0].license_description).toEqual(
-        'test license description'
+        'test license description',
       );
     });
   });
   describe('validation', () => {
     it('license is required by default', () => {
-      expect(
-        wrapper
-          .find('.license-dropdown')
-          .find('.error--text')
-          .exists()
-      ).toBe(false);
+      expect(wrapper.find('.license-dropdown').find('.error--text').exists()).toBe(false);
       formWrapper.vm.validate();
-      expect(
-        wrapper
-          .find('.license-dropdown')
-          .find('.error--text')
-          .exists()
-      ).toBe(true);
+      expect(wrapper.find('.license-dropdown').find('.error--text').exists()).toBe(true);
       wrapper.setProps({ value: { license: specialPermissions.id } });
       formWrapper.vm.validate();
-      expect(
-        wrapper
-          .find('.license-dropdown')
-          .find('.error--text')
-          .exists()
-      ).toBe(false);
+      expect(wrapper.find('.license-dropdown').find('.error--text').exists()).toBe(false);
     });
     it('license should not error out when not required', () => {
       wrapper.setProps({ required: false });
       formWrapper.vm.validate();
-      expect(
-        wrapper
-          .find('.license-dropdown')
-          .find('.error--text')
-          .exists()
-      ).toBe(false);
+      expect(wrapper.find('.license-dropdown').find('.error--text').exists()).toBe(false);
     });
     it('license description is required when license is custom', () => {
       wrapper.setProps({ value: { license: specialPermissions.id } });
       formWrapper.vm.validate();
-      expect(
-        wrapper
-          .find('.v-textarea')
-          .find('.error--text')
-          .exists()
-      ).toBe(true);
+      expect(wrapper.find('.v-textarea').find('.error--text').exists()).toBe(true);
       wrapper.setProps({ value: { license: specialPermissions.id, license_description: 'test' } });
       formWrapper.vm.validate();
-      expect(
-        wrapper
-          .find('.v-textarea')
-          .find('.error--text')
-          .exists()
-      ).toBe(false);
+      expect(wrapper.find('.v-textarea').find('.error--text').exists()).toBe(false);
       wrapper.setProps({
         value: { license: specialPermissions.id, license_description: null },
       });
       formWrapper.vm.validate();
-      expect(
-        wrapper
-          .find('.v-textarea')
-          .find('.error--text')
-          .exists()
-      ).toBe(true);
+      expect(wrapper.find('.v-textarea').find('.error--text').exists()).toBe(true);
     });
   });
 });

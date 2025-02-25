@@ -79,7 +79,7 @@ export function promiseChunk(things, chunkSize, callback) {
 
   return chunk(things, chunkSize).reduce((promise, thingChunk) => {
     return promise.then(results =>
-      callback(thingChunk).then(chunkResults => results.concat(chunkResults))
+      callback(thingChunk).then(chunkResults => results.concat(chunkResults)),
     );
   }, Promise.resolve([]));
 }
@@ -168,7 +168,7 @@ export function fitToScale(boundingRect, scale = 1) {
 export async function generatePdf(
   htmlRef,
   doc = null,
-  { save = false, scale = null, filename } = {}
+  { save = false, scale = null, filename } = {},
 ) {
   return require.ensure(['jspdf', 'html2canvas'], require => {
     const format = 'letter';
@@ -218,9 +218,9 @@ export async function generatePdf(
               scale * (x - width / 2),
               scale * y,
               scale * width,
-              scale * height
+              scale * height,
             );
-          })
+          }),
         );
       } else if (isNonUnicode) {
         promises.push(
@@ -231,9 +231,9 @@ export async function generatePdf(
               scale * (x - 8), // Account for padding
               scale * y,
               scale * width,
-              scale * height
+              scale * height,
             );
-          })
+          }),
         );
       } else if (isText) {
         insertText(doc, fontList, node, x, y, width, scale);
@@ -250,7 +250,7 @@ export async function generatePdf(
               context.fillStyle = style.getPropertyValue('background-color');
               context.fillRect(0, 0, canvas.width, canvas.height);
               const img = new Image();
-              img.onload = function() {
+              img.onload = function () {
                 context.drawImage(img, 0, 0, width, height);
                 doc.addImage(
                   canvas.toDataURL(),
@@ -258,13 +258,13 @@ export async function generatePdf(
                   scale * x,
                   scale * y,
                   scale * width,
-                  scale * height
+                  scale * height,
                 );
                 resolve();
               };
               img.setAttribute('crossorigin', 'anonymous');
               img.src = node.src;
-            })
+            }),
           );
         } else {
           const [containedWidth, containedHeight] = getContainedSize(node);
@@ -274,7 +274,7 @@ export async function generatePdf(
             scale * x,
             scale * y,
             scale * (containedWidth || width),
-            scale * (containedHeight || height)
+            scale * (containedHeight || height),
           );
         }
       }
@@ -296,7 +296,7 @@ export async function generatePdf(
  */
 export function findLicense(key, defaultValue = {}) {
   const license = LicensesList.find(
-    license => license.license_name === key || license.id === parseInt(key, 10)
+    license => license.license_name === key || license.id === parseInt(key, 10),
   );
 
   return license || defaultValue;
@@ -312,7 +312,7 @@ export function animationThrottle(callback) {
   let animationFrameId = null;
   let lastCallback = () => {};
 
-  const throttled = function(...args) {
+  const throttled = function (...args) {
     lastCallback = () => {
       callback(...args);
       animationFrameId = null;
@@ -328,7 +328,7 @@ export function animationThrottle(callback) {
   /**
    * Cancels any pending frame request and immediately executes the function with the last args
    */
-  throttled.flush = function() {
+  throttled.flush = function () {
     throttled.cancel();
     lastCallback();
   };
@@ -336,7 +336,7 @@ export function animationThrottle(callback) {
   /**
    * Cancels any pending frame request
    */
-  throttled.cancel = function() {
+  throttled.cancel = function () {
     if (animationFrameId) {
       cancelAnimationFrame(animationFrameId);
       animationFrameId = null;
@@ -402,7 +402,7 @@ export function extendSlot(slotName, vNodeData = {}, scopeProps = {}) {
   // Must be an update! This forces classes and styles to update,
   // which do not update otherwise
   if (element.data[EXTENDED_SLOT] && element.context) {
-    element.context.$nextTick(function() {
+    element.context.$nextTick(function () {
       this.$forceUpdate();
     });
   }
@@ -420,10 +420,10 @@ export function extendSlot(slotName, vNodeData = {}, scopeProps = {}) {
  * from https://github.com/lodash/lodash/issues/2403#issuecomment-290760787
  */
 export function memoizeDebounce(func, wait = 0, options = {}) {
-  const mem = memoize(function() {
+  const mem = memoize(function () {
     return debounce(func, wait, options);
   }, options.resolver);
-  return function() {
+  return function () {
     mem.apply(this, arguments).apply(this, arguments);
   };
 }
@@ -518,7 +518,7 @@ function getCategoriesTree() {
 export function getSortedCategories() {
   const categoriesTree = getCategoriesTree();
   const categoriesSorted = {};
-  const sortCategories = function(categories) {
+  const sortCategories = function (categories) {
     Object.entries(categories).forEach(([name, category]) => {
       categoriesSorted[category.value] = name;
       sortCategories(category.nested);
@@ -533,8 +533,9 @@ export function isAudioVideoFile(file) {
     return false;
   }
 
-  const videoAllowedFormats = FormatPresetsMap.get(FormatPresetsNames.HIGH_RES_VIDEO)
-    .allowed_formats;
+  const videoAllowedFormats = FormatPresetsMap.get(
+    FormatPresetsNames.HIGH_RES_VIDEO,
+  ).allowed_formats;
   const audioAllowedFormats = FormatPresetsMap.get(FormatPresetsNames.AUDIO).allowed_formats;
   return (
     videoAllowedFormats.includes(file.file_format) || audioAllowedFormats.includes(file.file_format)
@@ -606,7 +607,7 @@ export function getMergedMapFields(node, contentNodeData) {
           if (
             !existingCategories.some(
               existingCategory =>
-                existingCategory.startsWith(category) && category !== existingCategory
+                existingCategory.startsWith(category) && category !== existingCategory,
             )
           ) {
             newMap[category] = true;

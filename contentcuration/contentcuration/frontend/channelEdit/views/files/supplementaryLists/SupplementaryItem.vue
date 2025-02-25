@@ -11,7 +11,10 @@
       <VListTile @click="!readonly && !fileDisplay.uploading && openFileDialog()">
         <VListTileContent>
           <VListTileTitle>
-            <span v-if="readonly || fileDisplay.uploading" class="notranslate">
+            <span
+              v-if="readonly || fileDisplay.uploading"
+              class="notranslate"
+            >
               {{ fileDisplay.original_filename }}
             </span>
             <ActionLink
@@ -30,14 +33,24 @@
             />
           </VListTileTitle>
           <VListTileSubTitle v-if="fileDisplay.language">
-            {{ $tr('languageText', {
-              language: fileDisplay.language.native_name, code: fileDisplay.language.id }) }}
+            {{
+              $tr('languageText', {
+                language: fileDisplay.language.native_name,
+                code: fileDisplay.language.id,
+              })
+            }}
           </VListTileSubTitle>
         </VListTileContent>
         <VListTileContent>
           <VListTileTitle class="grey--text text-xs-right">
-            <span v-if="fileDisplay.uploading" data-test="uploading">
-              <FileStatusText :fileId="fileDisplay.id" @open="openFileDialog" />
+            <span
+              v-if="fileDisplay.uploading"
+              data-test="uploading"
+            >
+              <FileStatusText
+                :fileId="fileDisplay.id"
+                @open="openFileDialog"
+              />
             </span>
             <span v-else-if="!fileDisplay.error">
               {{ formatFileSize(fileDisplay.file_size) }}
@@ -45,7 +58,12 @@
           </VListTileTitle>
         </VListTileContent>
         <VListTileAction v-if="!readonly">
-          <VBtn icon flat data-test="remove" @click.stop="$emit('remove', file.id)">
+          <VBtn
+            icon
+            flat
+            data-test="remove"
+            @click.stop="$emit('remove', file.id)"
+          >
             <Icon icon="clear" />
           </VBtn>
         </VListTileAction>
@@ -54,6 +72,7 @@
   </Uploader>
 
 </template>
+
 
 <script>
 
@@ -133,6 +152,7 @@
   };
 
 </script>
+
 
 <style lang="scss" scoped>
 

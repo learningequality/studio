@@ -70,10 +70,7 @@ const ITEMS_VALIDATION = [
 ];
 
 const checkShowAnswers = wrapper => {
-  wrapper
-    .find('[data-test="showAnswersCheckbox"]')
-    .find('input')
-    .element.click();
+  wrapper.find('[data-test="showAnswersCheckbox"]').find('input').element.click();
 };
 
 const getItems = wrapper => {
@@ -89,10 +86,7 @@ const isAnswersPreviewVisible = assessmentItemWrapper => {
 };
 
 const clickNewQuestionBtn = wrapper => {
-  wrapper
-    .find('[data-test="newQuestionBtn"]')
-    .find('button')
-    .trigger('click');
+  wrapper.find('[data-test="newQuestionBtn"]').find('button').trigger('click');
 };
 
 const clickClose = assessmentItemWrapper => {

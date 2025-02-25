@@ -1,4 +1,4 @@
-import Vue from 'vue';
+import { nextTick } from 'vue';
 import { SAVE_NEXT_STEPS, REMOVE_PREVIOUS_STEP, ADD_PREVIOUS_STEP } from '../mutations';
 import { factory } from '../../../store';
 
@@ -192,7 +192,7 @@ describe('contentNode mutations', () => {
     it('should ensure that nested object properties are reactively set', async () => {
       const store = factory();
       store.commit('contentNode/ADD_CONTENTNODE', { id: 'test', extra_fields: null });
-      await Vue.nextTick();
+      await nextTick();
       const spy = jest.fn();
       store.watch(state => {
         const node = state.contentNode.contentNodesMap.test;
@@ -208,33 +208,33 @@ describe('contentNode mutations', () => {
         id: 'test',
         'extra_fields.options.modality': 'QUIZ',
       });
-      await Vue.nextTick();
+      await nextTick();
       expect(store.state.contentNode.contentNodesMap.test.extra_fields.options.modality).toEqual(
-        'QUIZ'
+        'QUIZ',
       );
       store.commit('contentNode/UPDATE_CONTENTNODE_FROM_INDEXEDDB', {
         id: 'test',
         'extra_fields.options.modality': null,
         'extra_fields.options.completion_criteria.model': 'time',
       });
-      await Vue.nextTick();
+      await nextTick();
       expect(
-        store.state.contentNode.contentNodesMap.test.extra_fields.options.modality
+        store.state.contentNode.contentNodesMap.test.extra_fields.options.modality,
       ).toBeUndefined();
       expect(
-        store.state.contentNode.contentNodesMap.test.extra_fields.options.completion_criteria.model
+        store.state.contentNode.contentNodesMap.test.extra_fields.options.completion_criteria.model,
       ).toEqual('time');
       store.commit('contentNode/UPDATE_CONTENTNODE_FROM_INDEXEDDB', {
         id: 'test',
         'extra_fields.options.completion_criteria.threshold': 5,
       });
-      await Vue.nextTick();
+      await nextTick();
       expect(
-        store.state.contentNode.contentNodesMap.test.extra_fields.options.completion_criteria.model
+        store.state.contentNode.contentNodesMap.test.extra_fields.options.completion_criteria.model,
       ).toEqual('time');
       expect(
         store.state.contentNode.contentNodesMap.test.extra_fields.options.completion_criteria
-          .threshold
+          .threshold,
       ).toEqual(5);
       // The watch function is invoked when initially set, so this is invoked 4 times, not 3.
       expect(spy).toHaveBeenCalledTimes(4);

@@ -23,7 +23,7 @@ export async function fetchResourceSearchResults(context, params) {
         {
           id__in: privateNodes.map(node => node.id),
         },
-        { root: true }
+        { root: true },
       )
     : Promise.resolve([]);
 
@@ -43,10 +43,10 @@ export async function fetchResourceSearchResults(context, params) {
               rootId: node.root_id,
               parent: node.parent,
             },
-            { root: true }
+            { root: true },
           )
           .catch(() => null);
-      })
+      }),
     ).then(nodes => nodes.filter(Boolean)),
   ]);
 

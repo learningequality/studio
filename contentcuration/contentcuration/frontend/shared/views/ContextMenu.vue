@@ -6,20 +6,26 @@
     </div>
     <div
       v-else
-      style="width: 100%;"
+      style="width: 100%"
       data-test="contextMenu"
       @contextmenu.prevent="showMenu"
     >
       <slot></slot>
-      <Menu v-model="show" :position-x="x" :position-y="y" absolute>
+      <BaseMenu
+        v-model="show"
+        :position-x="x"
+        :position-y="y"
+        absolute
+      >
         <VCard>
           <slot name="menu"></slot>
         </VCard>
-      </Menu>
+      </BaseMenu>
     </div>
   </div>
 
 </template>
+
 
 <script>
 
@@ -67,6 +73,5 @@
 
 </script>
 
-<style scoped>
 
-</style>
+<style scoped></style>

@@ -76,28 +76,28 @@
         class="mt-2"
         data-name="autoDeriveVideoThumbnail"
         :label="$tr('videos')"
-        style="font-size: 16px;"
+        style="font-size: 16px"
       />
       <Checkbox
         v-model="autoDeriveAudioThumbnail"
         class="mt-2"
         data-name="autoDeriveAudioThumbnail"
         :label="translateConstant('audio')"
-        style="font-size: 16px;"
+        style="font-size: 16px"
       />
       <Checkbox
         v-model="autoDeriveHtml5Thumbnail"
         class="mt-2"
         data-name="autoDeriveHtml5Thumbnail"
         :label="$tr('html5')"
-        style="font-size: 16px;"
+        style="font-size: 16px"
       />
       <Checkbox
         v-model="autoDeriveDocumentThumbnail"
         class="mt-2"
         data-name="autoDeriveDocumentThumbnail"
         :label="$tr('documents')"
-        style="font-size: 16px;"
+        style="font-size: 16px"
       />
     </fieldset>
   </div>

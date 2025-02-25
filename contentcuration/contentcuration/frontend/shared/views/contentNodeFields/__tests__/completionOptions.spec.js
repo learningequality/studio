@@ -1,10 +1,6 @@
-import Vue from 'vue';
-import Vuetify from 'vuetify';
 import { shallowMount, mount } from '@vue/test-utils';
 import CompletionOptions from '../CompletionOptions';
 import { CompletionCriteriaModels } from 'shared/constants';
-
-Vue.use(Vuetify);
 
 describe('CompletionOptions', () => {
   it('smoke test', () => {
@@ -638,7 +634,7 @@ describe('CompletionOptions', () => {
           wrapper.find({ ref: 'completion' }).vm.$emit('input', 'determinedByResource');
           await wrapper.vm.$nextTick();
           expect(wrapper.emitted('input')[0][0].completion_criteria.model).toEqual(
-            CompletionCriteriaModels.DETERMINED_BY_RESOURCE
+            CompletionCriteriaModels.DETERMINED_BY_RESOURCE,
           );
         });
       });
@@ -663,7 +659,7 @@ describe('CompletionOptions', () => {
         });
 
         expect(wrapper.vm.handleMinutesInputFromActivityDuration(3060, `shortActivity`)).toBe(
-          shortActivityDefaultValue
+          shortActivityDefaultValue,
         );
       });
       it(`displays default 'Long activity' value when input < the min allowed for 'Long activity'`, () => {
@@ -681,7 +677,7 @@ describe('CompletionOptions', () => {
         });
 
         expect(wrapper.vm.handleMinutesInputFromActivityDuration(50, `longActivity`)).toBe(
-          longActivityDefaultValue
+          longActivityDefaultValue,
         );
       });
     });

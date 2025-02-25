@@ -29,6 +29,6 @@ export default function theme() {
       greenHighlightBackground: brand.secondary.v_100,
       roleVisibilityCoach: palette.lightblue.v_600,
     },
-    tokens
+    tokens,
   );
 }

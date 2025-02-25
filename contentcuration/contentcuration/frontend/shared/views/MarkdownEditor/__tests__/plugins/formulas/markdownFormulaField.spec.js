@@ -30,6 +30,6 @@ describe('MarkdownFormulaField custom element', () => {
 
   it('sets `contenteditable=false` on its host element', async () => {
     await window.customElements.whenDefined('markdown-formula-field');
-    expect(formulaEl.getAttribute('contenteditable')).toBe('false');
+    expect(formulaEl).toHaveAttribute('contenteditable', 'false');
   });
 });

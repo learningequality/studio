@@ -6,6 +6,7 @@ import Vuetify from 'vuetify';
 import VueRouter from 'vue-router';
 import Vuex from 'vuex';
 import KThemePlugin from 'kolibri-design-system/lib/KThemePlugin';
+import '@testing-library/jest-dom';
 import 'shared/i18n/setup';
 // Polyfill structured clone for indexeddb with JSDOM
 import "core-js/stable/structured-clone";

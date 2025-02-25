@@ -1,5 +1,5 @@
 import JSZip from 'jszip';
-import pako from 'pako';
+import { deflateRaw } from 'pako';
 import crc32 from 'crc-32';
 
 // Helper to write uint32 to a Uint8Array at specified offset
@@ -23,7 +23,7 @@ function createCentralDirectoryEntry(
   compressedSize, // Size of compressed data
   uncompressedSize, // Original file size
   headerOffset, // Offset of local header from start of zip
-  crc32 // CRC32 of uncompressed data
+  crc32, // CRC32 of uncompressed data
 ) {
   // Convert filename to bytes
   const filenameBytes = new Uint8Array(filename.split('').map(c => c.charCodeAt(0)));
@@ -82,7 +82,7 @@ function createLocalFileHeader(
   compressedSize, // Size of compressed data
   uncompressedSize, // Original file size
   crc32, // CRC32 of uncompressed data
-  extraFieldLength = 0 // Length of optional extra field
+  extraFieldLength = 0, // Length of optional extra field
 ) {
   // Convert filename to bytes
   const filenameBytes = new Uint8Array(filename.split('').map(c => c.charCodeAt(0)));
@@ -128,7 +128,7 @@ function createLocalFileHeader(
 function createEndOfCentralDirectory(
   entryCount, // Number of entries in central directory
   centralDirSize, // Size of central directory in bytes
-  centralDirOffset // Offset of start of central directory from start of archive
+  centralDirOffset, // Offset of start of central directory from start of archive
 ) {
   // End of central directory is always 22 bytes
   const eocdr = new Uint8Array(22);
@@ -186,11 +186,11 @@ export async function createPredictableZip(files) {
       typeof content === 'string'
         ? new Uint8Array([...content].map(c => c.charCodeAt(0)))
         : content instanceof Uint8Array
-        ? content
-        : new Uint8Array(content);
+          ? content
+          : new Uint8Array(content);
 
     // Use raw deflate without zlib headers
-    const compressed = pako.deflateRaw(rawData, {
+    const compressed = deflateRaw(rawData, {
       level: 6,
       windowBits: -15,
       memLevel: 8,
@@ -204,7 +204,7 @@ export async function createPredictableZip(files) {
       filenameCleaned,
       compressed.length,
       rawData.length,
-      checksum
+      checksum,
     );
 
     const entry = {
@@ -224,7 +224,7 @@ export async function createPredictableZip(files) {
       entry.compressedSize,
       entry.uncompressedSize,
       entry.offset,
-      entry.crc32
+      entry.crc32,
     );
     centralDir.push(dirEntry);
     centralDirSize += dirEntry.length;

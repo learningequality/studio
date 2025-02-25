@@ -67,14 +67,11 @@
           <template #activator="{ on }">
             <div
               class="amber--text title"
-              style="width: max-content;"
+              style="width: max-content"
               v-on="on"
             >
               {{ $formatNumber(errorsInChannel) }}
-              <KIcon
-                icon="warningIncomplete"
-              />
-
+              <KIcon icon="warningIncomplete" />
             </div>
           </template>
           <span>{{ $tr('incompleteDescendantsText', { count: errorsInChannel }) }}</span>
@@ -96,7 +93,7 @@
           <template #activator="{ on }">
             <!-- Need to wrap in div to enable tooltip when button is disabled -->
             <div
-              style="height: 100%;"
+              style="height: 100%"
               v-on="on"
             >
               <VBtn
@@ -105,7 +102,7 @@
                 class="ma-0"
                 :class="{ disabled: disablePublish }"
                 :disabled="disablePublish"
-                style="height: inherit;"
+                style="height: inherit"
                 @click.stop="publishChannel"
               >
                 {{ $tr('publishButton') }}
@@ -122,14 +119,17 @@
         </span>
       </template>
       <VToolbarItems>
-        <Menu v-if="showChannelMenu">
+        <BaseMenu v-if="showChannelMenu">
           <template #activator="{ on }">
             <VBtn
               flat
               icon
               v-on="on"
             >
-              <Icon icon="optionsHorizontal" style="font-size: 25px;" />
+              <Icon
+                icon="optionsHorizontal"
+                style="font-size: 25px"
+              />
             </VBtn>
           </template>
           <VList>
@@ -155,15 +155,14 @@
                     class="mx-1"
                     color="red"
                     icon="error"
-                    style="vertical-align: baseline;"
+                    style="vertical-align: baseline"
                   />
-
                 </VListTileTitle>
               </VListTile>
             </template>
             <VListTile
               v-if="isPublished"
-              @click="showTokenModal = true;"
+              @click="showTokenModal = true"
             >
               <VListTileTitle>{{ $tr('getToken') }}</VListTileTitle>
             </VListTile>
@@ -196,13 +195,16 @@
               </VListTileTitle>
             </VListTile>
           </VList>
-        </Menu>
+        </BaseMenu>
       </VToolbarItems>
       <template #extension>
         <slot name="extension"></slot>
       </template>
     </ToolBar>
-    <MainNavigationDrawer v-model="drawer" color="white" />
+    <MainNavigationDrawer
+      v-model="drawer"
+      color="white"
+    />
     <slot></slot>
 
     <PublishModal
@@ -267,7 +269,10 @@
               fab
               class="clipboard-fab"
             >
-              <Icon icon="clipboard" style="font-size: 25px;" />
+              <Icon
+                icon="clipboard"
+                style="font-size: 25px"
+              />
             </VBtn>
           </template>
         </DraggableRegion>
@@ -297,7 +302,6 @@
         </VLayout>
       </template>
     </DraggablePlaceholder>
-
   </VContainer>
 
 </template>

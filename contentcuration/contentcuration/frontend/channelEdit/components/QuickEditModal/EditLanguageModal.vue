@@ -9,10 +9,16 @@
     @submit="handleSave"
     @cancel="close"
   >
-    <p v-if="resourcesSelectedText.length > 0" data-test="resources-selected-message">
+    <p
+      v-if="resourcesSelectedText.length > 0"
+      data-test="resources-selected-message"
+    >
       {{ resourcesSelectedText }}
     </p>
-    <p v-if="isMultipleNodeLanguages" data-test="different-languages-message">
+    <p
+      v-if="isMultipleNodeLanguages"
+      data-test="different-languages-message"
+    >
       {{ $tr('differentLanguages') }}
     </p>
     <KTextbox
@@ -27,7 +33,11 @@
         :checked="updateDescendants"
         data-test="update-descendants-checkbox"
         :label="$tr('updateDescendantsCheckbox')"
-        @change="(value) => { updateDescendants = value }"
+        @change="
+          value => {
+            updateDescendants = value;
+          }
+        "
       />
       <Divider />
     </template>
@@ -101,7 +111,7 @@
         }
         const criteria = ['id', 'native_name', 'readable_name'];
         return LanguagesList.filter(lang =>
-          criteria.some(key => lang[key] && lang[key].toLowerCase().includes(searchQuery))
+          criteria.some(key => lang[key] && lang[key].toLowerCase().includes(searchQuery)),
         );
       },
     },
@@ -125,7 +135,7 @@
       if (this.selectedLanguage) {
         // Search for the selected KRadioButton and scroll to it
         const selectedInput = this.$refs.languages.querySelector(
-          `input[value="${this.selectedLanguage}"]`
+          `input[value="${this.selectedLanguage}"]`,
         );
         const selectedRadio = selectedInput && selectedInput.parentElement;
         if (selectedRadio && selectedRadio.scrollIntoView) {
@@ -164,7 +174,7 @@
               id: node.id,
               language: this.selectedLanguage,
             });
-          })
+          }),
         );
         /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
         this.$store.dispatch('showSnackbarSimple', commonStrings.$tr('changesSaved'));
@@ -187,9 +197,12 @@
 
 </script>
 
+
 <style scoped>
+
   .languages-options {
     height: 250px;
     overflow-y: auto;
   }
+
 </style>

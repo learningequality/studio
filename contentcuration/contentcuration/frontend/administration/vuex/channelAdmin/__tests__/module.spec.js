@@ -73,7 +73,7 @@ describe('channel admin actions', () => {
         client.get.mockReturnValue(
           Promise.resolve({
             data: { results: [] },
-          })
+          }),
         );
       });
       it('should call client.get with admin_channels_list', () => {

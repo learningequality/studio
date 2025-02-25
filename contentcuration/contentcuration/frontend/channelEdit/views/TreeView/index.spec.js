@@ -123,18 +123,14 @@ describe('TreeView', () => {
     });
 
     it('renders modification time in ready for review banner', () => {
-      expect(
-        getStagingTreeBanner(wrapper)
-          .find('time')
-          .attributes('datetime')
-      ).toBe('2020-07-13T14:35:55Z');
+      expect(getStagingTreeBanner(wrapper).find('time').attributes('datetime')).toBe(
+        '2020-07-13T14:35:55Z',
+      );
     });
 
     it('renders a link to a channel staging tree page in ready for review banner', () => {
       expect(
-        getStagingTreeBanner(wrapper)
-          .find('[data-test="staging-tree-link"]')
-          .attributes('href')
+        getStagingTreeBanner(wrapper).find('[data-test="staging-tree-link"]').attributes('href'),
       ).toBe('#/staging/staging-tree-id');
     });
   });

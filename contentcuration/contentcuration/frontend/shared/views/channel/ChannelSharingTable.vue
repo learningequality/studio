@@ -16,33 +16,51 @@
       </template>
       <template #items="{ item }">
         <tr :class="item.pending ? 'grey--text' : 'black--text'">
-          <td class="pl-1 subheading text-truncate" style="width: 350px; max-width: 350px;">
+          <td
+            class="pl-1 subheading text-truncate"
+            style="width: 350px; max-width: 350px"
+          >
             {{ getUserText(item) }}
           </td>
           <td class="subheading">
             {{ item.email }}
           </td>
           <td>
-            <em v-if="item.pending" class="black--text font-weight-bold">
+            <em
+              v-if="item.pending"
+              class="black--text font-weight-bold"
+            >
               {{ $tr('invitePendingText') }}
             </em>
           </td>
           <td class="text-xs-right">
-            <Menu v-if="item.id !== user.id && (item.pending || viewOnly)">
+            <BaseMenu v-if="item.id !== user.id && (item.pending || viewOnly)">
               <template #activator="{ on }">
-                <VBtn flat v-on="on">
+                <VBtn
+                  flat
+                  v-on="on"
+                >
                   {{ $tr('optionsDropdown') }}
-                  <Icon class="ml-1" icon="dropdown" />
+                  <Icon
+                    class="ml-1"
+                    icon="dropdown"
+                  />
                 </VBtn>
               </template>
               <VList>
                 <template v-if="item.pending">
-                  <VListTile data-test="resend" @click="resendInvitation(item.email)">
+                  <VListTile
+                    data-test="resend"
+                    @click="resendInvitation(item.email)"
+                  >
                     <VListTileTitle>{{ $tr('resendInvitation') }}</VListTileTitle>
                   </VListTile>
                   <VListTile
                     data-test="delete"
-                    @click="selected = item; showDeleteInvitation = true"
+                    @click="
+                      selected = item;
+                      showDeleteInvitation = true;
+                    "
                   >
                     <VListTileTitle>{{ $tr('deleteInvitation') }}</VListTileTitle>
                   </VListTile>
@@ -50,19 +68,25 @@
                 <template v-else>
                   <VListTile
                     data-test="makeeditor"
-                    @click="selected = item; showMakeEditor = true"
+                    @click="
+                      selected = item;
+                      showMakeEditor = true;
+                    "
                   >
                     <VListTileTitle>{{ $tr('makeEditor') }}</VListTileTitle>
                   </VListTile>
                   <VListTile
                     data-test="removeviewer"
-                    @click="selected = item; showRemoveViewer = true"
+                    @click="
+                      selected = item;
+                      showRemoveViewer = true;
+                    "
                   >
                     <VListTileTitle>{{ $tr('removeViewer') }}</VListTileTitle>
                   </VListTile>
                 </template>
               </VList>
-            </Menu>
+            </BaseMenu>
           </td>
         </tr>
       </template>
@@ -72,11 +96,15 @@
     <MessageDialog
       v-model="showRemoveViewer"
       :header="$tr('removeViewerHeader')"
-      :text="$tr('removeViewerText',
-                 { first_name: selected.first_name, last_name: selected.last_name })"
+      :text="
+        $tr('removeViewerText', { first_name: selected.first_name, last_name: selected.last_name })
+      "
     >
       <template #buttons="{ close }">
-        <VBtn flat @click="close">
+        <VBtn
+          flat
+          @click="close"
+        >
           {{ $tr('cancelButton') }}
         </VBtn>
         <VBtn
@@ -96,7 +124,10 @@
       :text="$tr('deleteInvitationText', { email: selected.email })"
     >
       <template #buttons="{ close }">
-        <VBtn flat @click="close">
+        <VBtn
+          flat
+          @click="close"
+        >
           {{ $tr('cancelButton') }}
         </VBtn>
         <VBtn
@@ -113,11 +144,15 @@
     <MessageDialog
       v-model="showMakeEditor"
       :header="$tr('makeEditorHeader')"
-      :text="$tr('makeEditorText',
-                 { first_name: selected.first_name, last_name: selected.last_name })"
+      :text="
+        $tr('makeEditorText', { first_name: selected.first_name, last_name: selected.last_name })
+      "
     >
       <template #buttons="{ close }">
-        <VBtn flat @click="close">
+        <VBtn
+          flat
+          @click="close"
+        >
           {{ $tr('cancelButton') }}
         </VBtn>
         <VBtn
@@ -129,7 +164,6 @@
         </VBtn>
       </template>
     </MessageDialog>
-
   </div>
 
 </template>
@@ -192,7 +226,7 @@
         // the user itself.
         const channelUserEmails = this.users.map(u => u.email);
         return this.users.concat(
-          this.invitations.filter(i => !channelUserEmails.includes(i.email))
+          this.invitations.filter(i => !channelUserEmails.includes(i.email)),
         );
       },
       header() {

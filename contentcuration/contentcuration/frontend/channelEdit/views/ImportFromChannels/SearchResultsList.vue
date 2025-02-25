@@ -5,10 +5,7 @@
     <SearchFilterBar />
     <VLayout row>
       <VFlex shrink>
-
-        <SearchFilters
-          :searchResults="nodes"
-        />
+        <SearchFilters :searchResults="nodes" />
       </VFlex>
 
       <!-- Main area with cards -->
@@ -21,14 +18,23 @@
             {{ $tr('failedToLoad') }}
           </p>
         </VContainer>
-        <VContainer v-else class="mx-0 px-1">
+        <VContainer
+          v-else
+          class="mx-0 px-1"
+        >
           <LoadingText v-if="loading" />
-          <VLayout v-else row align-center>
+          <VLayout
+            v-else
+            row
+            align-center
+          >
             <VFlex grow>
               <span class="font-weight-bold subheading">
-                {{ $tr('searchResultsCount', {
-                  count: totalCount,
-                  searchTerm: currentSearchTerm })
+                {{
+                  $tr('searchResultsCount', {
+                    count: totalCount,
+                    searchTerm: currentSearchTerm,
+                  })
                 }}
               </span>
               <ActionLink
@@ -38,7 +44,10 @@
                 @click="handleClickSaveSearch"
               />
             </VFlex>
-            <VFlex v-if="searchIsNotEmpty" style="max-width: 100px;">
+            <VFlex
+              v-if="searchIsNotEmpty"
+              style="max-width: 100px"
+            >
               <span>
                 <VSelect
                   v-model="pageSize"
@@ -51,8 +60,17 @@
             </VFlex>
           </VLayout>
           <div>
-            <VLayout v-for="node in nodes" :key="node.id" row align-center class="py-2">
-              <VFlex class="px-1" shrink>
+            <VLayout
+              v-for="node in nodes"
+              :key="node.id"
+              row
+              align-center
+              class="py-2"
+            >
+              <VFlex
+                class="px-1"
+                shrink
+              >
                 <Checkbox
                   :key="`checkbox-${node.id}`"
                   :inputValue="isSelected(node)"
@@ -60,7 +78,11 @@
                   @input="toggleSelected(node)"
                 />
               </VFlex>
-              <VFlex shrink grow style="width: 100%;">
+              <VFlex
+                shrink
+                grow
+                style="width: 100%"
+              >
                 <BrowsingCard
                   :node="node"
                   :inSearch="true"
@@ -70,7 +92,10 @@
                 />
               </VFlex>
             </VLayout>
-            <div v-if="pageCount > 1" class="mt-4 text-xs-center">
+            <div
+              v-if="pageCount > 1"
+              class="mt-4 text-xs-center"
+            >
               <Pagination :totalPages="pageCount" />
             </div>
           </div>
@@ -80,6 +105,7 @@
   </div>
 
 </template>
+
 
 <script>
 
@@ -150,7 +176,7 @@
         },
       },
       isSelected() {
-        return function(node) {
+        return function (node) {
           return Boolean(find(this.selected, { id: node.id }));
         };
       },
@@ -195,7 +221,7 @@
         this.loadSavedSearches();
       },
       fetchResultsDebounced: debounce(
-        function() {
+        function () {
           this.fetchResourceSearchResults({
             ...this.$route.query,
             page_size: this.pageSize,
@@ -215,7 +241,7 @@
             });
         },
         1000,
-        { trailing: true }
+        { trailing: true },
       ),
       handleClickSaveSearch() {
         this.createSearch(this.savedSearchParams).then(() => {

@@ -12,18 +12,14 @@
       v-else-if="syncError"
       class="red--text"
     >
-      <Icon
-        icon="error"
-      />
+      <Icon icon="error" />
       {{ $tr('syncError') }}
     </div>
     <div
       v-else-if="currentPublishTaskError"
       class="red--text"
     >
-      <Icon
-        icon="error"
-      />
+      <Icon icon="error" />
       {{ $tr('defaultErrorText') }}
     </div>
     <div
@@ -37,14 +33,16 @@
       v-else
       class="grey--text"
     >
-      {{ lastPublished ?
-        $tr('lastPublished', { last_published: $formatRelative(lastPublished, now) }) :
-        $tr('unpublishedText')
+      {{
+        lastPublished
+          ? $tr('lastPublished', { last_published: $formatRelative(lastPublished, now) })
+          : $tr('unpublishedText')
       }}
     </div>
   </div>
 
 </template>
+
 
 <script>
 
@@ -85,7 +83,7 @@
         const publishTask = this.getPublishTaskForChannel(this.currentChannel.id);
         return Boolean(
           (publishTask && get(publishTask, ['traceback'], null)) ||
-            get(publishTask, 'status') === 'FAILURE'
+            get(publishTask, 'status') === 'FAILURE',
         );
       },
       syncError() {

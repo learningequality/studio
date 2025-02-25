@@ -80,7 +80,7 @@ export function commitChannel(
     thumbnail = NOVALUE,
     thumbnail_encoding = NOVALUE,
     thumbnail_url = NOVALUE,
-  } = {}
+  } = {},
 ) {
   const buildChannelData = () => {
     const channelData = {};
@@ -166,7 +166,7 @@ export function updateChannel(
     thumbnail = NOVALUE,
     thumbnail_encoding = NOVALUE,
     thumbnail_url = NOVALUE,
-  } = {}
+  } = {},
 ) {
   if (context.state.channelsMap[id]) {
     const channelData = {};
@@ -277,7 +277,7 @@ export function loadChannelUsers(context, channelId) {
     context.commit('SET_USERS_TO_CHANNEL', { channelId, users: results[0] });
     context.commit(
       'ADD_INVITATIONS',
-      results[1].filter(i => !i.accepted && !i.declined && !i.revoked)
+      results[1].filter(i => !i.accepted && !i.declined && !i.revoked),
     );
   });
 }

@@ -9,8 +9,16 @@
       lazy-validation
       @submit.prevent="requestActivationLink"
     >
-      <Banner :text="$tr('activationRequestFailed')" :value="error" error class="mb-4" />
-      <EmailField v-model="email" autofocus />
+      <Banner
+        :text="$tr('activationRequestFailed')"
+        :value="error"
+        error
+        class="mb-4"
+      />
+      <EmailField
+        v-model="email"
+        autofocus
+      />
       <KButton
         primary
         class="w-100"
@@ -67,6 +75,7 @@
   };
 
 </script>
+
 
 <style lang="scss" scoped>
 

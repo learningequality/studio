@@ -20,9 +20,12 @@
           class="clipboard elevation-4"
           :style="{ backgroundColor }"
           v-bind="$attrs"
-          style="z-index: 5;"
+          style="z-index: 5"
         >
-          <VLayout class="container ma-0 pa-0" column>
+          <VLayout
+            class="container ma-0 pa-0"
+            column
+          >
             <ToolBar
               class="header ma-0 pa-0 pl-1"
               color="white"
@@ -99,8 +102,15 @@
                 </VListTileAction>
               </VListTile>
             </ToolBar>
-            <LoadingText v-if="initializing" absolute />
-            <VContainer v-else-if="!channels.length" fluid class="px-5 text-xs-center">
+            <LoadingText
+              v-if="initializing"
+              absolute
+            />
+            <VContainer
+              v-else-if="!channels.length"
+              fluid
+              class="px-5 text-xs-center"
+            >
               <h1 class="font-weight-bold mt-5 title">
                 {{ $tr('emptyDefaultTitle') }}
               </h1>
@@ -117,7 +127,10 @@
             >
               <VList focusable>
                 <template v-for="channel in channels">
-                  <Channel :key="channel.id" :nodeId="channel.id" />
+                  <Channel
+                    :key="channel.id"
+                    :nodeId="channel.id"
+                  />
                 </template>
               </VList>
             </VLayout>
@@ -129,7 +142,10 @@
               @scroll="handleScroll"
             />
             <VFadeTransition>
-              <div v-show="isDropAllowed" class="dragging-overlay"></div>
+              <div
+                v-show="isDropAllowed"
+                class="dragging-overlay"
+              ></div>
             </VFadeTransition>
           </VLayout>
         </ResizableNavigationDrawer>
@@ -138,6 +154,8 @@
   </VExpandXTransition>
 
 </template>
+
+
 <script>
 
   import { mapGetters, mapActions, mapState } from 'vuex';
@@ -183,7 +201,7 @@
         default: false,
       },
       // For the underlying mixin
-      // eslint-disable-next-line kolibri/vue-no-unused-properties
+      // eslint-disable-next-line vue/no-unused-properties
       nodeId: {
         type: String,
         default() {
@@ -219,7 +237,7 @@
         return Boolean(this.selectionState & SelectionFlags.ALL_DESCENDANTS);
       },
       // Overrides mixin, since entire clipboard tree cannot be selected
-      // eslint-disable-next-line kolibri/vue-no-unused-properties
+      // eslint-disable-next-line vue/no-unused-properties
       nextSelectionState() {
         const current = this.selectionState;
 
@@ -263,8 +281,6 @@
             topicCount++;
           } else if (kind) {
             resourceCount++;
-          } else {
-            console.error('`kind` missing from content.');
           }
         });
         return { topicCount: topicCount, resourceCount: resourceCount };
@@ -333,7 +349,7 @@
           this.copyToClipboard(sourceIds);
         }
       },
-      copyToClipboard: withChangeTracker(function(ids, changeTracker) {
+      copyToClipboard: withChangeTracker(function (ids, changeTracker) {
         const nodes = this.getRealContentNodes(ids);
         return this.copyAll({ nodes }).then(() => {
           this.showSnackbar({
@@ -363,7 +379,7 @@
           target,
         }).then(this.$refs.moveModal.moveComplete);
       },
-      duplicateNodes: withChangeTracker(function(changeTracker) {
+      duplicateNodes: withChangeTracker(function (changeTracker) {
         this.$analytics.trackClick('clipboard', 'Copy');
         const trees = this.getCopyTrees(this.clipboardRootId);
 
@@ -383,7 +399,7 @@
           }).then(() => changeTracker.cleanUp());
         });
       }),
-      removeNodes: withChangeTracker(function(changeTracker) {
+      removeNodes: withChangeTracker(function (changeTracker) {
         this.$analytics.trackClick('clipboard', 'Delete');
         const selectionIds = this.selectedNodeIds;
 
@@ -419,6 +435,8 @@
   };
 
 </script>
+
+
 <style lang="scss" scoped>
 
   .clipboard {

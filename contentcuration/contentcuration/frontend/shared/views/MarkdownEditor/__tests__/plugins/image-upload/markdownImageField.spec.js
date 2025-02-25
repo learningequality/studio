@@ -1,4 +1,4 @@
-import Vue from 'vue';
+import { nextTick } from 'vue';
 import { registerMarkdownImageField } from 'shared/views/MarkdownEditor/plugins/image-upload/MarkdownImageField';
 
 // we need to mock the component's style import for the element to successfully register in jsdom
@@ -19,9 +19,9 @@ describe('MarkdownImageField custom element', () => {
   test('renders some image markdown as an `img` element', async () => {
     await window.customElements.whenDefined('markdown-image-field');
     const innerImgEl = imageEl.shadowRoot.querySelector('img');
-    expect(innerImgEl.getAttribute('src')).toBe('/content/storage/c/h/checksum.jpg');
+    expect(innerImgEl).toHaveAttribute('src', '/content/storage/c/h/checksum.jpg');
 
-    expect(innerImgEl.getAttribute('width')).toBe('100');
+    expect(innerImgEl).toHaveAttribute('width', '100');
   });
 
   it('can update its markdown upon resizing', async () => {
@@ -33,8 +33,8 @@ describe('MarkdownImageField custom element', () => {
     const expectedMd = '![](${☣ CONTENTSTORAGE}/checksum.jpg =5000000x1)';
     imageVueComponent.exportParamsToMarkdown();
 
-    await Vue.nextTick();
-    await Vue.nextTick(); // wait another tick for prop to update
+    await nextTick();
+    await nextTick(); // wait another tick for prop to update
 
     expect(imageEl.innerHTML).toBe(expectedMd);
     expect(imageVueComponent.markdown).toBe(expectedMd);

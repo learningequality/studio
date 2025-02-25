@@ -1,29 +1,59 @@
 <template>
 
-  <div style="width: 100%;">
+  <div style="width: 100%">
     <VCard
       v-if="!primaryFileMapping.length"
       data-test="error"
       flat
     >
       <VCardText>
-        <VLayout align-center justify-center fill-height>
+        <VLayout
+          align-center
+          justify-center
+          fill-height
+        >
           <Icon icon="error" />
           &nbsp; {{ $tr('fileError') }}
         </VLayout>
       </VCardText>
     </VCard>
-    <VLayout v-else row wrap>
-      <VFlex sm12 md6 lg5 xl4>
+    <VLayout
+      v-else
+      row
+      wrap
+    >
+      <VFlex
+        sm12
+        md6
+        lg5
+        xl4
+      >
         <p>
-          <ContentNodeIcon :kind="node.kind" includeText />
+          <ContentNodeIcon
+            :kind="node.kind"
+            includeText
+          />
         </p>
         <div class="preview-wrapper">
-          <VCard v-if="!primaryFileCount" flat class="mb-2 message-card">
-            <VLayout align-center justify-center fill-height>
-              <VTooltip bottom lazy>
+          <VCard
+            v-if="!primaryFileCount"
+            flat
+            class="mb-2 message-card"
+          >
+            <VLayout
+              align-center
+              justify-center
+              fill-height
+            >
+              <VTooltip
+                bottom
+                lazy
+              >
                 <template #activator="{ on }">
-                  <VIconWrapper color="red" v-on="on">
+                  <VIconWrapper
+                    color="red"
+                    v-on="on"
+                  >
                     error
                   </VIconWrapper>
                 </template>
@@ -39,7 +69,12 @@
           />
         </div>
       </VFlex>
-      <VFlex sm12 md6 lg7 xl8>
+      <VFlex
+        sm12
+        md6
+        lg7
+        xl8
+      >
         <VContainer fluid>
           <VLayout alignStart>
             <VRadioGroup
@@ -68,6 +103,7 @@
   </div>
 
 </template>
+
 
 <script>
 
@@ -108,7 +144,7 @@
       presets() {
         // Explicitly exclude any 'dependency' presets for now
         return FormatPresetsList.filter(
-          p => p.kind_id === this.node.kind && !p.id.includes('dependency')
+          p => p.kind_id === this.node.kind && !p.id.includes('dependency'),
         );
       },
       fileCount() {
@@ -131,7 +167,7 @@
                 file: this.files.find(file => file.preset.id === preset.id),
               };
             }),
-          'order'
+          'order',
         );
       },
     },
@@ -178,6 +214,7 @@
   };
 
 </script>
+
 
 <style lang="scss" scoped>
 

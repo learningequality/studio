@@ -118,7 +118,7 @@ describe('Merge all changes', () => {
     });
     it('should refuse to merge out of order changes', () => {
       const disorderedChanges = updateChanges();
-      disorderedChanges[0].rev = 5e1000;
+      disorderedChanges[0].rev = 5e100;
       expect(() => mergeAllChanges(disorderedChanges, true)).toThrow(Error);
     });
   });

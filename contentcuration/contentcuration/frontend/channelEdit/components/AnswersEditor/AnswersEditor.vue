@@ -52,7 +52,6 @@
                 />
               </VFlex>
 
-
               <VFlex xs7>
                 <keep-alive :max="5">
                   <!-- Input question shows a text field with type of `number` -->
@@ -64,7 +63,12 @@
                       type="number"
                       :rules="[numericRule]"
                     />
-                    <VTextField v-else :value="answer.answer" class="no-border" type="number" />
+                    <VTextField
+                      v-else
+                      :value="answer.answer"
+                      class="no-border"
+                      type="number"
+                    />
                   </div>
 
                   <div v-else>
@@ -118,6 +122,7 @@
   </div>
 
 </template>
+
 
 <script>
 
@@ -279,7 +284,7 @@
           if (
             !this.shouldHaveOneCorrectAnswer &&
             JSON.stringify([...newIndices].sort()) ===
-              JSON.stringify([...this.correctAnswersIndices].sort())
+            JSON.stringify([...this.correctAnswersIndices].sort())
           ) {
             return;
           }
@@ -424,6 +429,7 @@
   };
 
 </script>
+
 
 <style lang="scss" scoped>
 

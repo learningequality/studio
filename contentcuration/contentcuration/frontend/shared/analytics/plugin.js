@@ -16,9 +16,12 @@ class Analytics {
     this.lastLength = 0;
 
     // add interval to trigger resets every 5 minutes
-    this.resetInterval = setInterval(() => {
-      this.reset();
-    }, 5 * 60 * 1000);
+    this.resetInterval = setInterval(
+      () => {
+        this.reset();
+      },
+      5 * 60 * 1000,
+    );
   }
 
   /**
@@ -46,7 +49,7 @@ class Analytics {
 
     // This can't use an arrow function, it will be called with a different
     // context to access `this.reset()`
-    const dataLayerReset = function() {
+    const dataLayerReset = function () {
       // See https://developers.google.com/tag-platform/devguides/datalayer#reset
       this.reset();
 
@@ -174,7 +177,7 @@ export default function AnalyticsPlugin(Vue, options = {}) {
   Vue.$analytics = analytics;
   Vue.mixin({
     computed: {
-      // eslint-disable-next-line kolibri/vue-no-unused-properties
+      // eslint-disable-next-line vue/no-unused-properties
       $analytics: () => analytics,
     },
   });

@@ -8,7 +8,10 @@
       {{ $tr('channelNotFoundDetails') }}
     </template>
     <template #actions>
-      <VBtn v-bind="backHomeLink" color="primary">
+      <VBtn
+        v-bind="backHomeLink"
+        color="primary"
+      >
         {{ $tr('backToHomeAction') }}
       </VBtn>
     </template>

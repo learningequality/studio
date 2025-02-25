@@ -6,10 +6,19 @@
     :text="text"
   >
     <template #buttons="{ close }">
-      <VBtn flat data-test="close" @click="close">
+      <VBtn
+        flat
+        data-test="close"
+        @click="close"
+      >
         {{ cancelButtonText }}
       </VBtn>
-      <VBtn color="primary" dark data-test="confirm" @click="$emit('confirm')">
+      <VBtn
+        color="primary"
+        dark
+        data-test="confirm"
+        @click="$emit('confirm')"
+      >
         {{ confirmButtonText }}
       </VBtn>
     </template>
@@ -62,5 +71,4 @@
 </script>
 
 
-<style lang="scss" scoped>
-</style>
+<style lang="scss" scoped></style>
