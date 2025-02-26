@@ -129,8 +129,6 @@ client.interceptors.response.use(
             Network: {
               lastOffline: lastOffline ? `${Date.now() - lastOffline}ms ago` : 'never',
               online: navigator.onLine,
-              isNavigating,
-              pendingRequestCount: pendingRequests.size,
             },
           },
         });
