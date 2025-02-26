@@ -82,7 +82,7 @@ class TestRectifyMigrationCommand(StudioAPITestCase):
         return source_node, source_channel
 
     def run_migrations(self):
-        call_command('rectify_incorrect_contentnode_source_fields', user_id=self.user.id, is_test=True)
+        call_command('rectify_incorrect_contentnode_source_fields')
 
     def test_two_node_case(self):
         base_node, base_channel = self.create_base_channel_and_contentnode(self.original_contentnode, self.original_channel)
@@ -104,7 +104,7 @@ class TestRectifyMigrationCommand(StudioAPITestCase):
         self.run_migrations()
         updated_base_node = ContentNode.objects.get(pk=base_node.pk)
         self.assertEqual(updated_base_node.license_description, self.original_contentnode.license_description)
-        self.assertEqual(Channel.objects.get(pk=base_channel.id).main_tree.get_family().filter(changed=True).exists(), False)
+        self.assertEqual(Channel.objects.get(pk=base_channel.id).main_tree.get_family().filter(changed=True).exists(), True)
 
     def test_three_node_case_implicit(self):
         source_node, source_channel = self.create_source_channel_and_contentnode()
@@ -136,7 +136,7 @@ class TestRectifyMigrationCommand(StudioAPITestCase):
         updated_source_node = ContentNode.objects.get(pk=source_node.pk)
         self.assertEqual(updated_base_node.license_description, self.original_contentnode.license_description)
         self.assertEqual(updated_source_node.license_description, self.original_contentnode.license_description)
-        self.assertEqual(Channel.objects.get(pk=base_channel.id).main_tree.get_family().filter(changed=True).exists(), False)
+        self.assertEqual(Channel.objects.get(pk=base_channel.id).main_tree.get_family().filter(changed=True).exists(), True)
 
     def test_three_node_case_explicit(self):
         source_node, source_channel = self.create_source_channel_and_contentnode()
@@ -164,4 +164,4 @@ class TestRectifyMigrationCommand(StudioAPITestCase):
         updated_source_node = ContentNode.objects.get(pk=source_node.pk)
         self.assertEqual(updated_base_node.license_description, self.original_contentnode.license_description)
         self.assertEqual(updated_source_node.license_description, self.original_contentnode.license_description)
-        self.assertEqual(Channel.objects.get(pk=base_channel.id).main_tree.get_family().filter(changed=True).exists(), False)
+        self.assertEqual(Channel.objects.get(pk=base_channel.id).main_tree.get_family().filter(changed=True).exists(), True)

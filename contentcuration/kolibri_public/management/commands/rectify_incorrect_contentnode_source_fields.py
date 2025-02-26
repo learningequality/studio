@@ -10,35 +10,13 @@ from django_cte import With
 
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
-from contentcuration.models import User
-from contentcuration.utils.publish import publish_channel
 
 logger = logging.getLogger(__file__)
 
 
 class Command(BaseCommand):
 
-    def add_arguments(self, parser):
-
-        parser.add_argument(
-            '--is_test',
-            action='store_true',
-            help="Indicate if the command is running in a test environment.",
-        )
-
-        parser.add_argument(
-            '--user_id',
-            type=int,
-            help="User ID for the operation",
-        )
-
     def handle(self, *args, **options):
-
-        is_test = options['is_test']
-        user_id = options['user_id']
-
-        if not is_test:
-            user_id = User.objects.get(email='channeladmin@learningequality.org').pk
 
         main_trees_cte = With(
             (
@@ -92,8 +70,6 @@ class Command(BaseCommand):
             "original_source_node_id",
         ).order_by()
 
-        channel_ids_to_republish = set()
-
         for item in final_nodes:
             base_node = ContentNode.objects.get(pk=item["id"])
 
@@ -108,20 +84,9 @@ class Command(BaseCommand):
                 tree_id=tree_id, node_id=original_source_node_id
             )
 
-            base_channel = Channel.objects.get(pk=item['channel_id'])
-
-            to_be_republished = not (base_channel.main_tree.get_family().filter(changed=True).exists())
-
             if original_source_channel_id is not None and original_source_node.exists():
                 # original source node exists and its license_description doesn't match
                 # update the base node
                 if base_node.license_description != original_source_node[0].license_description:
                     base_node.license_description = original_source_node[0].license_description
                 base_node.save()
-
-                if to_be_republished and base_channel.last_published is not None:
-                    channel_ids_to_republish.add(base_channel.id)
-
-        # we would republish the channel
-        for channel_id in channel_ids_to_republish:
-            publish_channel(user_id, channel_id)
