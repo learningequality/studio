@@ -316,7 +316,7 @@
 
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .toolbar-item {
     max-width: 50px;

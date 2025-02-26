@@ -236,12 +236,12 @@
 
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .list-item-disabled {
     opacity: 0.5;
 
-    /deep/ .v-list__tile--link:hover {
+    ::v-deep .v-list__tile--link:hover {
       color: inherit;
       background-color: transparent;
     }

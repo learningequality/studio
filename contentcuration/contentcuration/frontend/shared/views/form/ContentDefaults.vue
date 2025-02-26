@@ -244,7 +244,7 @@
 </script>
 
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .content-defaults {
     border: 0;

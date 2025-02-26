@@ -1,7 +1,6 @@
 import mimetypes
 import os
 from datetime import timedelta
-from urllib.parse import urlparse
 
 from django.conf import settings
 from django.core.files.storage import default_storage
@@ -18,15 +17,6 @@ mimetypes.init([os.path.join(os.path.dirname(__file__), "mime.types")])
 
 class UnknownStorageBackendError(Exception):
     pass
-
-
-def is_gcs_backend():
-    """
-    Determines if storage is GCS backend, which if not we can assume it is minio
-    :return: A bool
-    """
-    host = urlparse(settings.AWS_S3_ENDPOINT_URL).netloc
-    return "storage.googleapis.com" in host
 
 
 def determine_content_type(filename):

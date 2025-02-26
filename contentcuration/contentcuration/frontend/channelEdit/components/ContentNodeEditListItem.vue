@@ -307,7 +307,7 @@
 </script>
 
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .content-node-edit-item {
     position: relative;
@@ -370,7 +370,7 @@
     cursor: grab;
   }
 
-  /deep/ .v-input--selection-controls__input {
+  ::v-deep .v-input--selection-controls__input {
     margin-right: 0;
   }
 

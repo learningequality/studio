@@ -223,7 +223,7 @@
 
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .hints-toggle {
     cursor: pointer;
@@ -247,7 +247,7 @@
     /*! rtl:end:ignore */
   }
 
-  /deep/ .v-input--selection-controls {
+  ::v-deep .v-input--selection-controls {
     margin-top: 0;
 
     .accent--text {
@@ -259,7 +259,7 @@
     }
   }
 
-  /deep/ img {
+  ::v-deep img {
     max-width: 100%;
     height: auto;
   }
@@ -268,7 +268,7 @@
     padding: 11px;
   }
 
-  .item-answers-preview /deep/ .checkbox-icon {
+  .item-answers-preview ::v-deep .checkbox-icon {
     top: 8px;
   }
 

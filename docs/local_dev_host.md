@@ -2,6 +2,8 @@
 
 This guide will walk through setting up Kolibri Studio for local development, where you'll run Studio's Python apps and all of Studio's services on your host machine, without the need for docker.
 
+**Note:** If you are developing on Windows, it is recommended to use WSL (Windows Subsystem for Linux). Please follow the [WSL setup guide](./local_dev_wsl.md) for detailed instructions.
+
 ## Prerequisites
 - [volta](https://docs.volta.sh/guide/getting-started)
 - [pyenv](https://kolibri-dev.readthedocs.io/en/develop/howtos/installing_pyenv.html) and [pyenv-virtualenv](https://github.com/pyenv/pyenv-virtualenv#installation)
@@ -21,7 +23,7 @@ sudo apt-get install -y python-tk \
     ffmpeg libmagickwand-dev redis-server wkhtmltopdf
 
 # Install minio
-wget https://dl.minio.io/server/minio/release/linux-amd64/archive/minio.RELEASE.2020-06-01T17-28-03Z -O bin/minio
+wget https://dl.minio.io/server/minio/release/linux-amd64/minio -O bin/minio
 sudo chmod +x bin/minio
 ```
 
@@ -71,7 +73,6 @@ Press <kbd>Ctrl</kbd>+<kbd>D</kbd> to exit the `psql` client. Finally
 ```bash
 exit  # leave the postgres account
 ```
-
 
 ## Build your python virtual environment
 To determine what version of Python studio needs, you can check the `runtime.txt` file:

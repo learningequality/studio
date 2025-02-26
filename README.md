@@ -41,3 +41,9 @@ As soon as you open a pull request, it may take us a week or two to review it as
 ---
 
 *Thank you for your interest in contributing! Learning Equality was founded by volunteers dedicated to helping make educational materials more accessible to those in need, and every contribution makes a difference.*
+
+
+## Licensing
+Kolibri Studio is licensed under the MIT license. See [LICENSE](./LICENSE) for more details.
+
+Other tools and libraries used in Kolibri Studio are licensed under their respective licenses, and some are only used during development and are not intended for distribution or use in production environments.

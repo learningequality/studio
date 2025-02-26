@@ -87,9 +87,9 @@
 
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
-  /deep/ .v-card {
+  ::v-deep .v-card {
     position: relative;
     min-height: 50vh;
     margin-top: 20px;

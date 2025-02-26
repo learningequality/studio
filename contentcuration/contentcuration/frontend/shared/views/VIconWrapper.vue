@@ -34,7 +34,7 @@
 
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   // A workaround for this issue:
   // https://github.com/vuetifyjs/vuetify/issues/3462

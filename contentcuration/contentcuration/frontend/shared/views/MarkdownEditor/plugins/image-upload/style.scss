@@ -1,9 +1,7 @@
 @import '~vuetify/dist/vuetify.min.css';
 // stylelint-disable scss/at-import-partial-extension
-@import '~shared/styles/main.less';
-// stylelint-enable
 
-@resizer-size: 16px;
+$resizer-size: 16px;
 
 img {
   max-width: 100%;
@@ -34,15 +32,15 @@ img {
 
 .resizer {
   position: absolute;
-  right: -@resizer-size / 2;
+  right: calc(-#{$resizer-size} / 2);
   bottom: 2px;
-  width: @resizer-size;
-  height: @resizer-size;
+  width: $resizer-size;
+  height: $resizer-size;
   cursor: se-resize;
   user-select: none;
   background-color: white;
   border: 2px solid var(--v-grey-darken4);
-  border-radius: @resizer-size;
+  border-radius: $resizer-size;
 }
 
 .edit-options {
@@ -55,11 +53,11 @@ img {
 
   // TUI will automatically move cursor inside button,
   // so don't allow clicking on elements inside the button
-  /deep/ * {
+  ::v-deep * {
     pointer-events: none;
   }
 
-  /deep/ .v-btn__content {
+  ::v-deep .v-btn__content {
     height: min-content;
   }
 

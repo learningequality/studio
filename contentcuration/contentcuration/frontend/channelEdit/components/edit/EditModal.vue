@@ -643,9 +643,9 @@
 
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
-  /deep/ .v-toolbar__extension {
+  ::v-deep .v-toolbar__extension {
     padding: 0;
 
     .v-toolbar__content {
@@ -661,7 +661,7 @@
     margin-left: 0;
   }
 
-  /deep/ .v-content__wrap {
+  ::v-deep .v-content__wrap {
     max-height: calc(100vh - 128px);
     overflow-y: auto;
   }
