@@ -244,7 +244,7 @@
   };
 
 </script>
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .content-item,
   .v-list__tile {
@@ -271,11 +271,11 @@
   }
 
   .content-item:hover,
-  /deep/ .content-item > .v-list__tile:hover {
+  ::v-deep .content-item > .v-list__tile:hover {
     background: #eeeeee;
   }
 
-  /deep/ .action-col,
+  ::v-deep .action-col,
   .thumbnail-col {
     flex-shrink: 0;
     min-width: 24px;
@@ -290,22 +290,28 @@
     }
   }
 
-  /deep/ .v-list__tile {
+  ::v-deep .v-list__tile {
     padding-left: 11px;
     cursor: pointer;
   }
 
-  /deep/ .v-list__tile__title {
+  ::v-deep .v-list__tile__title {
     height: auto;
   }
 
-  /deep/ .text-truncate {
+  ::v-deep .text-truncate {
     /* fix clipping of dangling characters */
     line-height: 1.3 !important;
   }
 
-  /deep/ .selectedIndeterminate svg {
+  ::v-deep .selectedIndeterminate svg {
     fill: gray !important;
   }
 
 </style>
+
+
+
+
+
+

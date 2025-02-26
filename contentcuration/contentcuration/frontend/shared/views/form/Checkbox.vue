@@ -1,23 +1,22 @@
 <template>
-
-  <KCheckbox
-    :value="value"
-    :label="label"
-    :showLabel="showLabel"
-    :indeterminate="indeterminate"
-    :disabled="disabled"
-    :description="description"
-    :checked="isChecked"
-    :labelDir="labelDir"
-    @change="handleChange"
-  >
-    <slot></slot>
-  </KCheckbox>
-
+  <div class="checkbox-container">
+    <KCheckbox
+      :value="value"
+      :label="label"
+      :showLabel="showLabel"
+      :indeterminate="indeterminate"
+      :disabled="disabled"
+      :description="description"
+      :checked="isChecked"
+      :labelDir="labelDir"
+      @change="handleChange"
+    >
+      <slot></slot>
+    </KCheckbox>
+  </div>
 </template>
 
 <script>
-
   import KCheckbox from 'kolibri-design-system/lib/KCheckbox';
 
   export default {
@@ -145,15 +144,54 @@
       },
     },
   };
-
 </script>
 
-
 <style lang="less" scoped>
+  /* Wrapper for better alignment control */
+  .checkbox-container {
+    display: flex;
+    align-items: center;
+  }
 
+  /* Base styling for labels */
   /deep/ label.theme--light {
     padding: 0 8px;
     color: var(--v-text);
+    display: flex;
+    align-items: center;
   }
 
+  /* Main checkbox styling with slight downward shift */
+  /deep/ .checkbox-icon {
+    width: 28px !important;
+    height: 28px !important;
+    flex-shrink: 0;
+    position: relative !important;
+    top: 1.7px !important; /* Added downward shift */
+  }
+
+  /* Ensure consistent text alignment */
+  /deep/ .checkbox-label {
+    display: flex;
+    align-items: center;
+  }
+
+  /* For nested items in different contexts */
+  .content-item /deep/ .checkbox-label,
+  /deep/ .content-item .checkbox-label {
+    display: flex;
+    align-items: center;
+  }
+
+  /* Consistent spacing */
+  /deep/ input[type="checkbox"] {
+    margin-right: 8px;
+  }
+
+  /* Fix for specific hardcoded selector if needed */
+  /deep/ [data-v-4219cdf2] {
+    width: 28px !important;
+    height: 28px !important;
+    top: 1.7px !important; /* Added downward shift */
+  }
 </style>
