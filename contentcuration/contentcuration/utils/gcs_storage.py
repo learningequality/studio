@@ -212,10 +212,10 @@ class GoogleCloudStorage(Storage):
 class CompositeGCS(Storage):
     def __init__(self):
         self.backends = []
+        self.backends.append(GoogleCloudStorage(_create_default_client(), settings.AWS_S3_BUCKET_NAME))
         # Only add the studio-content bucket (the production bucket) if we're not in production
         if settings.SITE_ID != settings.PRODUCTION_SITE_ID:
             self.backends.append(GoogleCloudStorage(Client.create_anonymous_client(), "studio-content"))
-        self.backends.append(GoogleCloudStorage(_create_default_client(), settings.AWS_S3_BUCKET_NAME))
 
     def _get_writeable_backend(self):
         """
