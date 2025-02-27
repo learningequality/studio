@@ -1,4 +1,4 @@
-name: Test Community Contribution Label
+name: Community Contribution Label
 
 on:
   issues:
