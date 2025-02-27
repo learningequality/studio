@@ -292,8 +292,9 @@ LANGUAGES = (
     # ('en-PT', gettext('English - Pirate')),
 )
 
+PRODUCTION_SITE_ID = 1
 SITE_BY_ID = {
-    'master': 1,
+    'master': PRODUCTION_SITE_ID,
     'unstable': 3,
     'hotfixes': 4,
 }
