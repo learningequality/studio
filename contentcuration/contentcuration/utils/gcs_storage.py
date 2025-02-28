@@ -29,6 +29,9 @@ class GoogleCloudStorage(Storage):
         self.client = client
         self.bucket = self.client.get_bucket(bucket_name)
 
+    def get_client(self):
+        return self.client
+
     @property
     def writeable(self):
         """
@@ -234,6 +237,9 @@ class CompositeGCS(Storage):
             if backend.exists(name):
                 return backend
         raise FileNotFoundError("{} not found".format(name))
+
+    def get_client(self):
+        return self._get_writeable_backend().get_client()
 
     def open(self, name, mode='rb'):
         return self._get_readable_backend(name).open(name, mode)
