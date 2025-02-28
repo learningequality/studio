@@ -63,7 +63,7 @@ def get_presigned_upload_url(
 
     mimetype = determine_content_type(filepath)
     if isinstance(storage, (GoogleCloudStorage, CompositeGCS)):
-        client = client or storage.client
+        client = client or storage.get_client()
         bucket = settings.AWS_S3_BUCKET_NAME
         upload_url = _get_gcs_presigned_put_url(client, bucket, filepath, md5sum_b64, lifetime_sec, mimetype=mimetype)
     elif isinstance(storage, S3Storage):
