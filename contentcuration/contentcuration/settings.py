@@ -83,7 +83,6 @@ INSTALLED_APPS = (
     'django_s3_storage',
     'webpack_loader',
     'django_filters',
-    'mathfilters',
     'django.contrib.postgres',
     'django_celery_results',
     'kolibri_public',

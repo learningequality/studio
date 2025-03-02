@@ -74,8 +74,6 @@ django-js-asset==1.2.2
     # via django-mptt
 django-js-reverse==0.9.1
     # via -r requirements.in
-django-mathfilters==1.0.0
-    # via -r requirements.in
 django-model-utils==4.5.1
     # via -r requirements.in
 django-mptt==0.14.0
