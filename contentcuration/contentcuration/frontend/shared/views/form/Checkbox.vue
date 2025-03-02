@@ -1,5 +1,5 @@
 <template>
-  <div class="checkbox-container">
+  <div class="checkbox-container" :data-test="'checkbox-' + value" @click="simulateClick">
     <KCheckbox
       :value="value"
       :label="label"
@@ -142,6 +142,12 @@
       updateInputValue(newValue) {
         this.$emit('input', newValue);
       },
+      // Added to simulate a click on the checkbox when the outer container is clicked.
+      simulateClick(e) {
+        e.stopPropagation();
+        // Toggle the checked state and emit the input event accordingly.
+        this.handleChange(!this.isChecked, e);
+      },
     },
   };
 </script>
@@ -195,6 +201,7 @@
     top: 1.7px !important; /* Added downward shift */
   }
 </style>
+
 
 
 
