@@ -143,10 +143,9 @@
         this.$emit('input', newValue);
       },
       // Added to simulate a click on the checkbox when the outer container is clicked.
-      simulateClick(e) {
-        e.stopPropagation();
-        // Toggle the checked state and emit the input event accordingly.
-        this.handleChange(!this.isChecked, e);
+      simulateClick() {
+        // Provide a dummy event object with a stopPropagation method
+        this.handleChange(!this.isChecked, { stopPropagation() {} });
       },
     },
   };
@@ -201,6 +200,7 @@
     top: 1.7px !important; /* Added downward shift */
   }
 </style>
+
 
 
 
