@@ -32,6 +32,9 @@ from rest_framework.response import Response
 from rest_framework.serializers import CharField
 from rest_framework.serializers import FloatField
 from rest_framework.serializers import IntegerField
+from rest_framework.status import HTTP_200_OK
+from rest_framework.status import HTTP_409_CONFLICT
+from rest_framework.status import HTTP_404_NOT_FOUND
 from rest_framework.status import HTTP_201_CREATED
 from rest_framework.status import HTTP_204_NO_CONTENT
 from search.models import ChannelFullTextSearch
@@ -778,47 +781,41 @@ class ChannelViewSet(ValuesViewset):
             unique_lang_ids = []
         return unique_lang_ids
     
-    @action(detail=True, methods=["get"], url_path="support_token", url_name="get-support-token")
-    def get_support_token(self, request, pk=None):
+    @action(detail=True, methods=["get", "post"], url_path="support_token", url_name="support-token")
+    def support_token(self, request, pk=None) -> Union[JsonResponse, HttpResponse, Response]:
         """
-        Retrieve the existing support token for this channel, or null if none exists.
+        Handles both:
+        - GET: Retrieve the existing support token for this channel.
+        - POST: Create a new support token for this channel.
         """
-        channel = self.get_edit_queryset().get(pk=pk)
-        token_value = None
-        if channel.support_token:
-            token_value = channel.support_token.token
-        
-        return Response({"support_token": token_value}, status=status.HTTP_200_OK)
-    
-    @action(detail=True, methods=["post"], url_path="support_token", url_name="create-support-token")
-    def create_support_token(self, request, pk=None):
-        """
-        Create a new support token for this channel.
-        """
-        channel = self.get_edit_queryset().get(pk=pk)
-        
-        if channel.support_token is not None:
-            return Response(
-                {"error": "Support token already exists for this channel."},
-                status=status.HTTP_409_CONFLICT
-            )
-        
-        channel.support_token = proquint.generate()
-        channel.save(update_fields=["support_token"])
+        if not self._channel_exists(pk):
+            return HttpResponseNotFound("No channel matching: {}".format(pk))
 
-        Change.create_change(
-                    generate_update_event(
-                        channel.id,
-                        CHANNEL,
-                        {"support_token": secret_token.token},
-                        channel_id=channel.id,
-                    ),
-                    applied=True,
-                    created_by_id=request.user.id
+        channel = self.get_edit_queryset().get(pk=pk)
+
+        # Handle GET: Retrieve the support token
+        if request.method == "GET":
+            token_value = None
+            if channel.support_token:
+                token_value = channel.support_token.token
+            return JsonResponse({"support_token": token_value})
+
+        # Handle POST: Create a new support token
+        if request.method == "POST":
+            if channel.support_token is not None:
+                return Response(
+                    {"error": "Support token already exists for this channel."},
+                    status=HTTP_409_CONFLICT
                 )
-        
-        data = self.serialize_object(pk=channel.pk)
-        return Response(data, status=status.HTTP_201_CREATED)
+
+            token_str = SecretToken.generate_new_token()
+            support_token = SecretToken.objects.create(token=token_str)
+
+            channel.support_token = support_token
+            channel.save(update_fields=["support_token"])
+
+            data = self.serialize_object(pk=channel.pk)
+            return Response(data, status=HTTP_201_CREATED)
 
 @method_decorator(
     cache_page(
