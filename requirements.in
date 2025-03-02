@@ -26,7 +26,6 @@ backoff
 django-model-utils==4.5.1
 django-redis
 django-prometheus
-future
 sentry-sdk
 html5lib==1.1
 pillow==10.3.0

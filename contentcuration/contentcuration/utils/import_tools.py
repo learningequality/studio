@@ -1,8 +1,4 @@
 # -*- coding: utf-8 -*-
-from future import standard_library
-standard_library.install_aliases()
-from builtins import str
-from past.builtins import basestring
 import datetime
 import json
 import logging
@@ -167,7 +163,7 @@ def write_to_thumbnail_file(raw_thumbnail):
             raw_thumbnail (str): base64 encoded thumbnail
         Returns: thumbnail filename
     """
-    if raw_thumbnail and isinstance(raw_thumbnail, basestring) and raw_thumbnail != "" and 'static' not in raw_thumbnail:
+    if raw_thumbnail and isinstance(raw_thumbnail, str) and raw_thumbnail != "" and 'static' not in raw_thumbnail:
         with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tempf:
             try:
                 tempf.close()
@@ -210,7 +206,7 @@ def create_nodes(cursor, target_id, parent, indent=1, download_url=None):
         assessment_query = "SELECT mastery_model, randomize FROM {table} WHERE contentnode_id='{node}'".format(table=ASSESSMENTMETADATA_TABLE, node=id)
         result = cursor.execute(assessment_query).fetchone()
         extra_fields = result[0] if result else {}
-        if isinstance(extra_fields, basestring):
+        if isinstance(extra_fields, str):
             extra_fields = json.loads(extra_fields)
         if result:
             extra_fields.update({"randomize": result[1]})

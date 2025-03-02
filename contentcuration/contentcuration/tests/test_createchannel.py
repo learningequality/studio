@@ -1,8 +1,4 @@
-from __future__ import absolute_import
-
 import json
-from builtins import range
-from builtins import str
 
 import requests
 from django.urls import reverse_lazy

@@ -1,4 +1,3 @@
-from builtins import str
 from importlib import import_module
 
 import mock

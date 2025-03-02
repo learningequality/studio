@@ -1,7 +1,3 @@
-from __future__ import absolute_import
-
-import types
-
 from .base import StudioTestCase
 from contentcuration.models import FormatPreset
 

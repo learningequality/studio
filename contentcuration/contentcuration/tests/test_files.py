@@ -1,23 +1,15 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import
-
 import json
-from builtins import str
 
 import pytest
 from django.core.files.storage import default_storage
-from django.core.files.uploadedfile import SimpleUploadedFile
-from django.urls import reverse_lazy
 from le_utils.constants import content_kinds
-from le_utils.constants import format_presets
 from mock import patch
-from past.builtins import basestring
 
 from .base import BaseAPITestCase
 from .base import StudioTestCase
 from .testdata import base64encoding
 from .testdata import generated_base64encoding
-from .testdata import srt_subtitle
 from contentcuration.api import write_raw_content_to_storage
 from contentcuration.models import ContentNode
 from contentcuration.models import delete_empty_file_reference
@@ -69,7 +61,7 @@ class FileThumbnailTestCase(BaseAPITestCase):
             }
         ]
         map_files_to_node(self.user, node, file_data)
-        self.assertTrue(isinstance(node.thumbnail_encoding, basestring))
+        self.assertTrue(isinstance(node.thumbnail_encoding, str))
         thumbnail_data = json.loads(node.thumbnail_encoding)
         self.assertEqual(thumbnail_data["base64"], generated_base64encoding())
 
