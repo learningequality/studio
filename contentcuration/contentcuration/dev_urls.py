@@ -75,9 +75,3 @@ urlpatterns = urlpatterns + [
     re_path(r"^api-auth/", include("rest_framework.urls", namespace="rest_framework")),
     re_path(r"^content/(?P<storage_path>.+)$", file_server),
 ]
-
-if getattr(settings, "DEBUG_PANEL_ACTIVE", False):
-
-    import debug_toolbar
-
-    urlpatterns = [re_path(r"^__debug__/", include(debug_toolbar.urls))] + urlpatterns
