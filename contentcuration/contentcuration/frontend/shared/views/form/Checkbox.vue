@@ -1,4 +1,5 @@
 <template>
+
   <div class="checkbox-container" :data-test="'checkbox-' + value" @click="simulateClick">
     <KCheckbox
       :value="value"
@@ -14,9 +15,11 @@
       <slot></slot>
     </KCheckbox>
   </div>
+
 </template>
 
 <script>
+
   import KCheckbox from 'kolibri-design-system/lib/KCheckbox';
 
   export default {
@@ -149,9 +152,11 @@
       },
     },
   };
+
 </script>
 
 <style lang="scss" scoped>
+
   /* Wrapper for better alignment control */
   .checkbox-container {
     display: flex;
@@ -160,19 +165,19 @@
 
   /* Base styling for labels */
   ::v-deep label.theme--light {
-    padding: 0 8px;
-    color: var(--v-text);
     display: flex;
     align-items: center;
+    padding: 0 8px;
+    color: var(--v-text);
   }
 
   /* Main checkbox styling with slight downward shift */
   ::v-deep .checkbox-icon {
-    width: 28px !important;
-    height: 28px !important;
-    flex-shrink: 0;
     position: relative !important;
     top: 1.7px !important; /* Added downward shift */
+    flex-shrink: 0;
+    width: 28px !important;
+    height: 28px !important;
   }
 
   /* Ensure consistent text alignment */
@@ -189,16 +194,17 @@
   }
 
   /* Consistent spacing */
-  ::v-deep input[type="checkbox"] {
+  ::v-deep input[type='checkbox'] {
     margin-right: 8px;
   }
 
   /* Fix for specific hardcoded selector if needed */
   ::v-deep [data-v-4219cdf2] {
+    top: 1.7px !important; /* Added downward shift */
     width: 28px !important;
     height: 28px !important;
-    top: 1.7px !important; /* Added downward shift */
   }
+
 </style>
 
 
