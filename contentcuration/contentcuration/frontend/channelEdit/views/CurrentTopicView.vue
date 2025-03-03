@@ -327,6 +327,20 @@
           }
           return false;
         },
+        ancestors() {
+  if (!this.currentChannel) {
+    return [];
+  }
+  
+  return this.getContentNodeAncestors(this.topicId, true).map(ancestor => {
+    return {
+      id: ancestor.id,
+      to: this.treeLink({ nodeId: ancestor.id }),
+      title: ancestor.parent ? ancestor.title : this.currentChannel.name,
+      displayNodeOptions: this.rootId !== ancestor.id,
+    };
+  });
+},
         set(value) {
           if (value) {
             this.selected = this.children
