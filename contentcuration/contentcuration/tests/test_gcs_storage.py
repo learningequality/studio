@@ -1,6 +1,4 @@
 #!/usr/bin/env python
-from future import standard_library
-standard_library.install_aliases()
 from io import BytesIO
 
 import pytest

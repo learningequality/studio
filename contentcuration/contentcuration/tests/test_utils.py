@@ -1,8 +1,3 @@
-from __future__ import absolute_import
-
-from future import standard_library
-standard_library.install_aliases()
-from builtins import str
 from io import BytesIO
 
 from django.conf import settings

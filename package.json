@@ -25,8 +25,6 @@
     "test-jest:debug": "node --inspect node_modules/.bin/jest --runInBand --watch",
     "minio": "MINIO_API_CORS_ALLOW_ORIGIN='http://localhost:8080,http://127.0.0.1:8080' MINIO_ACCESS_KEY=development MINIO_SECRET_KEY=development minio server ~/.minio_data/ || true",
     "runserver": "cd contentcuration && python manage.py runserver --settings=contentcuration.dev_settings 0.0.0.0:8080",
-    "runserver:debug-panel": "cd contentcuration && python manage.py runserver --settings=contentcuration.debug_panel_settings 0.0.0.0:8080",
-    "runserver:prod-profiling": "cd contentcuration && DJANGO_SETTINGS_MODULE=contentcuration.profile_settings gunicorn -b 0.0.0.0:8080 --workers=3 --threads=2 contentcuration.wsgi",
     "devserver": "npm-run-all --parallel build:dev runserver",
     "devserver:hot": "npm-run-all --parallel build:dev:hot runserver",
     "devserver-hot": "yarn run devserver:hot",

@@ -1,8 +1,3 @@
-from future import standard_library
-
-standard_library.install_aliases()
-
-
 """
 Latest ricecooker version
 Any version >= VERSION_OK will get a message that

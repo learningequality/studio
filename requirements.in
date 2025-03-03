@@ -20,14 +20,12 @@ django-s3-storage==0.15.0
 requests>=2.20.0
 google-cloud-core
 django-db-readonly==0.7.0
-django-mathfilters
 google-cloud-kms==2.10.0
 google-crc32c==1.1.2
 backoff
 django-model-utils==4.5.1
 django-redis
 django-prometheus
-future
 sentry-sdk
 html5lib==1.1
 pillow==10.3.0

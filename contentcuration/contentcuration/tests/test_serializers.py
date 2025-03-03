@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 from django.db.models.query import QuerySet
 from le_utils.constants import content_kinds
 from mock import Mock

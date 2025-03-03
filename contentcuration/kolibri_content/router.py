@@ -11,7 +11,6 @@ Thanks to https://github.com/ambitioninc/django-dynamic-db-router for inspiratio
 """
 import os
 import threading
-from builtins import object
 from functools import wraps
 
 from django.apps import apps

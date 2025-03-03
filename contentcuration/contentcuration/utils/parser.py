@@ -17,13 +17,10 @@ SIGN: -{0,1}
 EXPONENT: [DECIMAL | INTEGER]e+{0,1}[INTEGER]
 
 """
-from __future__ import division
-
 import json
 import re
 
 from django.utils.translation import get_language
-from past.utils import old_div
 
 LANGUAGE = get_language() or ""
 
@@ -52,7 +49,7 @@ VALID_NUMBER = re.compile("({decimal}|{mixed_number}|{fraction}|{integer})".form
                                                                                    fraction=FRACTION.pattern,
                                                                                    integer=INTEGER.pattern))
 PERCENTAGE = re.compile("({num})%".format(num=VALID_NUMBER.pattern))
-EXPONENT = re.compile("((?:{decimal}|{integer})e\+?{integer})".format(decimal=DECIMAL.pattern, integer=INTEGER.pattern))
+EXPONENT = re.compile("((?:{decimal}|{integer})e\\+?{integer})".format(decimal=DECIMAL.pattern, integer=INTEGER.pattern))
 
 
 def extract_value(text):
@@ -78,20 +75,20 @@ def parse_decimal(text):
 
 def parse_fraction(text):
     match = FRACTION.search(text)
-    return match and old_div(parse_integer(match.group(2)), parse_integer(match.group(3)))
+    return match and float(parse_integer(match.group(2))) / float(parse_integer(match.group(3)))
 
 
 def parse_mixed_number(text):
     match = MIXED_NUMBER.search(text)
-    if(match):
+    if match:
         number = parse_integer(match.group(1))
-        return (abs(number) + parse_fraction(match.group(3))) * (old_div(number, abs(number)))
+        return (abs(number) + parse_fraction(match.group(3))) * (float(number) / float(abs(number)))
     return None
 
 
 def parse_percentage(text):
     match = PERCENTAGE.search(text)
-    return match and old_div(extract_value(match.group(1)), 100)
+    return match and extract_value(match.group(1)) / float(100)
 
 
 def parse_exponent(text):
