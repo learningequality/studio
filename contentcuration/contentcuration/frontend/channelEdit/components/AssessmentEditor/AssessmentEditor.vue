@@ -7,10 +7,13 @@
         :label="$tr('showAnswers')"
         class="mb-4"
         data-test="showAnswersCheckbox"
-        style="font-size: 16px;"
+        style="font-size: 16px"
       />
 
-      <transition-group name="list-complete" tag="div">
+      <transition-group
+        name="list-complete"
+        tag="div"
+      >
         <VCard
           v-for="(item, idx) in sortedItems"
           ref="questionCardRef"
@@ -23,7 +26,10 @@
         >
           <VCardText>
             <VLayout align-start>
-              <VFlex xs1 mt-2>
+              <VFlex
+                xs1
+                mt-2
+              >
                 {{ idx + 1 }}
               </VFlex>
 
@@ -53,7 +59,10 @@
 
               <VSpacer />
 
-              <VLayout align-center class="toolbar">
+              <VLayout
+                align-center
+                class="toolbar"
+              >
                 <VFlex
                   v-if="!isItemActive(item) && !isItemValid(item)"
                   mr-2
@@ -65,20 +74,18 @@
                     </span>
                   </template>
                   <template v-else>
-                    <Icon ref="incompleteError" icon="error" />
+                    <Icon
+                      ref="incompleteError"
+                      icon="error"
+                    />
                     <KTooltip
                       reference="incompleteError"
                       placement="bottom"
                       :refs="$refs"
                     >
                       {{ $tr('incompleteItemIndicatorLabel') }}
-
                     </KTooltip>
-
-
                   </template>
-
-
                 </VFlex>
 
                 <VFlex>
@@ -98,7 +105,10 @@
               </VLayout>
             </VLayout>
 
-            <VLayout v-if="isItemActive(item)" justify-end>
+            <VLayout
+              v-if="isItemActive(item)"
+              justify-end
+            >
               <VBtn
                 color="greyBackground"
                 class="close-item-btn mr-0"
@@ -128,6 +138,7 @@
   </VContainer>
 
 </template>
+
 
 <script>
 
@@ -452,6 +463,7 @@
   };
 
 </script>
+
 
 <style lang="scss" scoped>
 

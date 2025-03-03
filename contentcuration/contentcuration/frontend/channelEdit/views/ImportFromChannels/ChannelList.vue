@@ -2,7 +2,10 @@
 
   <VContainer class="mx-0 px-0">
     <!-- Filters -->
-    <VLayout row wrap>
+    <VLayout
+      row
+      wrap
+    >
       <DropdownWrapper
         component="VFlex"
         sm6
@@ -23,7 +26,13 @@
           />
         </template>
       </DropdownWrapper>
-      <VFlex sm6 md5 lg4 xl3 class="pr-5">
+      <VFlex
+        sm6
+        md5
+        lg4
+        xl3
+        class="pr-5"
+      >
         <LanguageDropdown v-model="languageFilter" />
       </VFlex>
     </VLayout>
@@ -40,7 +49,10 @@
         :channel="channel"
         class="mb-3"
       />
-      <VLayout justify-center class="mt-4">
+      <VLayout
+        justify-center
+        class="mt-4"
+      >
         <Pagination :totalPages="pageCount" />
       </VLayout>
     </div>

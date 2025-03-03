@@ -45,7 +45,7 @@ export class Listener {
     changeType = Number(changeType);
     if (!Object.values(CHANGE_TYPES).includes(changeType)) {
       throw RangeError(
-        `Change must be ${CHANGE_TYPES.CREATED}, ${CHANGE_TYPES.UPDATED}, or ${CHANGE_TYPES.DELETED}`
+        `Change must be ${CHANGE_TYPES.CREATED}, ${CHANGE_TYPES.UPDATED}, or ${CHANGE_TYPES.DELETED}`,
       );
     }
 
@@ -64,6 +64,7 @@ export class Listener {
     const eventName = this.getEventName();
 
     if (!eventName) {
+      // eslint-disable-next-line no-console
       console.warn('Cannot register unbound listener: ' + this.callback.toString());
       return;
     }
@@ -81,7 +82,7 @@ export class Listener {
  * @return {Listener}
  */
 export function commitListener(mutationName) {
-  return new Listener(function(store, obj) {
+  return new Listener(function (store, obj) {
     store.commit(this.prefix(mutationName), obj);
   });
 }
@@ -93,7 +94,7 @@ export function commitListener(mutationName) {
  * @return {Listener}
  */
 export function dispatchListener(actionName) {
-  return new Listener(function(store, obj) {
+  return new Listener(function (store, obj) {
     store.dispatch(this.prefix(actionName), obj);
   });
 }
@@ -108,8 +109,8 @@ export default function IndexedDBPlugin(db, listeners = []) {
   const events = new EventEmitter();
   events.setMaxListeners(1000);
 
-  db.on('changes', function(changes) {
-    changes.forEach(function(change) {
+  db.on('changes', function (changes) {
+    changes.forEach(function (change) {
       let obj = change.obj || {};
       if (change.type === CHANGE_TYPES.UPDATED) {
         obj = change.mods;
@@ -127,7 +128,7 @@ export default function IndexedDBPlugin(db, listeners = []) {
     });
   });
 
-  return function(store) {
+  return function (store) {
     listeners.forEach(listener => listener.register(events, store));
   };
 }

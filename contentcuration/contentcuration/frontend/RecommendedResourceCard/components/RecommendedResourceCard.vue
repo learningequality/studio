@@ -14,26 +14,29 @@
   >
     <template #aboveTitle>
       <div>
-        <KIcon
-          icon="practiceSolid"
-        />
+        <KIcon icon="practiceSolid" />
         <span>Practice</span>
       </div>
     </template>
-    <template #title>
-    </template>
+    <template #title> </template>
     <template #belowTitle>
       <div class="bellow-title-style">
         <p>
-          below title slot section for the KCard component:
-          below title slot section for the KCard component
+          below title slot section for the KCard component: below title slot section for the KCard
+          component
         </p>
       </div>
     </template>
     <template #footer>
       <div class="align-right-style">
-        <KIconButton icon="openNewTab" class="card-icon-size" />
-        <KIconButton icon="thumbDown" class="card-icon-size" />
+        <KIconButton
+          icon="openNewTab"
+          class="card-icon-size"
+        />
+        <KIconButton
+          icon="thumbDown"
+          class="card-icon-size"
+        />
       </div>
     </template>
   </KCard>
@@ -69,11 +72,14 @@
 
 
 <style>
-  .align-right-style{
-      display: flex;
-      justify-content: flex-end;
+
+  .align-right-style {
+    display: flex;
+    justify-content: flex-end;
   }
+
   .recommended-resource-card {
-    max-width:400px
+    max-width: 400px;
   }
+
 </style>

@@ -24,7 +24,7 @@ describe('validateFile', () => {
     originalCreateElement = global.document.createElement;
 
     // Mock createElement for media elements
-    global.document.createElement = function(tagName) {
+    global.document.createElement = function (tagName) {
       if (['audio', 'video', 'img'].includes(tagName)) {
         return {
           set src(url) {
@@ -81,7 +81,7 @@ describe('validateFile', () => {
     });
 
     it('should handle audio load errors', async () => {
-      global.document.createElement = function(tagName) {
+      global.document.createElement = function (tagName) {
         if (tagName === 'audio') {
           return createFailingElement('audio');
         }
@@ -111,7 +111,7 @@ describe('validateFile', () => {
     });
 
     it('should handle video load errors', async () => {
-      global.document.createElement = function(tagName) {
+      global.document.createElement = function (tagName) {
         if (tagName === 'video') {
           return createFailingElement('video');
         }
@@ -143,7 +143,7 @@ describe('validateFile', () => {
     });
 
     it('should handle image load errors', async () => {
-      global.document.createElement = function(tagName) {
+      global.document.createElement = function (tagName) {
         if (tagName === 'img') {
           return createFailingElement('img');
         }
@@ -231,7 +231,7 @@ describe('validateFile', () => {
     });
 
     it('should clean up object URLs after failed validation', async () => {
-      global.document.createElement = function(tagName) {
+      global.document.createElement = function (tagName) {
         if (tagName === 'audio') {
           return createFailingElement('audio');
         }

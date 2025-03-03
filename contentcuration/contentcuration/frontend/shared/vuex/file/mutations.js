@@ -1,18 +1,18 @@
-import Vue from 'vue';
+import Vue, { set } from 'vue';
 import { mergeMapItem } from 'shared/vuex/utils';
 import { applyMods } from 'shared/data/applyRemoteChanges';
 
 function updateFileMaps(state, file) {
   if (file.assessment_item) {
     if (!state.assessmentItemFilesMap[file.assessment_item]) {
-      Vue.set(state.assessmentItemFilesMap, file.assessment_item, {});
+      set(state.assessmentItemFilesMap, file.assessment_item, {});
     }
-    Vue.set(state.assessmentItemFilesMap[file.assessment_item], file.id, file);
+    set(state.assessmentItemFilesMap[file.assessment_item], file.id, file);
   } else if (file.contentnode) {
     if (!state.contentNodeFilesMap[file.contentnode]) {
-      Vue.set(state.contentNodeFilesMap, file.contentnode, {});
+      set(state.contentNodeFilesMap, file.contentnode, {});
     }
-    Vue.set(state.contentNodeFilesMap[file.contentnode], file.id, file);
+    set(state.contentNodeFilesMap[file.contentnode], file.id, file);
   }
 }
 
@@ -34,7 +34,7 @@ export function ADD_FILES(state, files = []) {
 
 export function UPDATE_FILE_FROM_INDEXEDDB(state, { id, ...mods }) {
   if (id && state.fileUploadsMap[id]) {
-    Vue.set(state.fileUploadsMap, id, { ...applyMods(state.fileUploadsMap[id], mods) });
+    set(state.fileUploadsMap, id, { ...applyMods(state.fileUploadsMap[id], mods) });
     updateFileMaps(state, state.fileUploadsMap[id]);
   }
 }

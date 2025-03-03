@@ -8,7 +8,7 @@
 <script>
 
   export default {
-    name: 'Base',
+    name: 'RouterEntrypoint',
   };
 
 </script>

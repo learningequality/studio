@@ -128,7 +128,7 @@ describe('requestForm', () => {
       it('should set uploading_for to organization name if org is selected', () => {
         wrapper.vm.submit();
         expect(requestStorage.mock.calls[0][0].uploading_for).toBe(
-          `${wrapper.vm.organization} (organization)`
+          `${wrapper.vm.organization} (organization)`,
         );
       });
       it('should set uploading_for to Not affiliated if org_or_personal is not Organization', () => {
@@ -141,7 +141,7 @@ describe('requestForm', () => {
         wrapper.vm.organization_other = 'Test organization type';
         wrapper.vm.submit();
         expect(requestStorage.mock.calls[0][0].organization_type).toBe(
-          wrapper.vm.organization_other
+          wrapper.vm.organization_other,
         );
       });
       it('should set organization type to Not applicable if organization is not selected', () => {

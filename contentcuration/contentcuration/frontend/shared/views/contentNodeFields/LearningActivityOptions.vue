@@ -14,6 +14,7 @@
 
 </template>
 
+
 <script>
 
   import camelCase from 'lodash/camelCase';
@@ -82,6 +83,6 @@
   };
 
 </script>
-<style lang="scss" scoped>
 
-</style>
+
+<style lang="scss" scoped></style>

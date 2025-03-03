@@ -13,7 +13,7 @@ function updateNodeComplete(nodeId, context) {
   return context.dispatch(
     'contentNode/updateContentNode',
     { id: nodeId, complete },
-    { root: true }
+    { root: true },
   );
 }
 
@@ -53,7 +53,7 @@ export function addAssessmentItem(context, assessmentItem) {
         });
         return updateNodeComplete(contentnode, context);
       });
-    }
+    },
   );
 }
 export function updateAssessmentItem(context, assessmentItem) {
@@ -87,13 +87,13 @@ export function updateAssessmentItems(context, assessmentItems) {
           }
           return AssessmentItem.update(
             [assessmentItem.contentnode, assessmentItem.assessment_id],
-            stringifiedAssessmentItem
+            stringifiedAssessmentItem,
           ).then(() => {
             updateNodeComplete(assessmentItem.contentnode, context);
           });
-        })
+        }),
       );
-    }
+    },
   );
 }
 
@@ -107,8 +107,8 @@ export function deleteAssessmentItem(context, assessmentItem) {
           context.commit('DELETE_ASSESSMENTITEM', assessmentItem);
           const contentnode = assessmentItem.contentnode;
           return updateNodeComplete(contentnode, context);
-        }
+        },
       );
-    }
+    },
   );
 }

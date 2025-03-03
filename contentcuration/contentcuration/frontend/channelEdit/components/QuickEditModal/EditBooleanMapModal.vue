@@ -1,4 +1,3 @@
-
 <template>
 
   <KModal
@@ -10,10 +9,16 @@
     @submit="handleSave"
     @cancel="close"
   >
-    <p v-if="resourcesSelectedText.length > 0" data-test="resources-selected-message">
+    <p
+      v-if="resourcesSelectedText.length > 0"
+      data-test="resources-selected-message"
+    >
       {{ resourcesSelectedText }}
     </p>
-    <p v-if="hasMixedCategories" data-test="mixed-categories-message">
+    <p
+      v-if="hasMixedCategories"
+      data-test="mixed-categories-message"
+    >
       {{ hasMixedCategoriesMessage }}
     </p>
     <template v-if="isDescendantsUpdatable && isTopicSelected">
@@ -21,16 +26,23 @@
         :checked="updateDescendants"
         data-test="update-descendants-checkbox"
         :label="$tr('updateDescendantCheckbox')"
-        @change="(value) => { updateDescendants = value }"
+        @change="
+          value => {
+            updateDescendants = value;
+          }
+        "
       />
       <Divider />
     </template>
     <slot
       name="input"
       :value="selectedValues"
-      :inputHandler="(value) => { selectedValues = value }"
+      :inputHandler="
+        value => {
+          selectedValues = value;
+        }
+      "
     ></slot>
-
   </KModal>
 
 </template>
@@ -108,7 +120,7 @@
       canSave() {
         if (this.hasMixedCategories) {
           return Object.values(this.selectedValues).some(
-            value => value.length === this.nodes.length
+            value => value.length === this.nodes.length,
           );
         }
         return !this.error;
@@ -138,7 +150,7 @@
 
       this.selectedValues = optionsNodes;
       this.hasMixedCategories = Object.values(this.selectedValues).some(
-        value => value.length < this.nodes.length
+        value => value.length < this.nodes.length,
       );
       // reset
       this.$nextTick(() => {
@@ -158,8 +170,8 @@
           this.error = getInvalidText(
             this.validators,
             Object.keys(this.selectedValues).filter(
-              key => this.selectedValues[key].length === this.nodes.length
-            )
+              key => this.selectedValues[key].length === this.nodes.length,
+            ),
           );
         } else {
           this.error = '';
@@ -190,7 +202,7 @@
               id: node.id,
               [this.field]: fieldValue,
             });
-          })
+          }),
         );
         this.$store.dispatch('showSnackbarSimple', this.confirmationMessage || '');
         this.close(this.changed);
@@ -206,5 +218,5 @@
 
 </script>
 
-<style scoped>
-</style>
+
+<style scoped></style>

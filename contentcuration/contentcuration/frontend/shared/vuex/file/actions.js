@@ -118,14 +118,14 @@ function hexToBase64(str) {
         .replace(/\r|\n/g, '')
         .replace(/([\da-fA-F]{2}) ?/g, '0x$1 ')
         .replace(/ +$/, '')
-        .split(' ')
-    )
+        .split(' '),
+    ),
   );
 }
 
 export function uploadFileToStorage(
   context,
-  { id, file_format, mightSkip, checksum, file, url, contentType }
+  { id, file_format, mightSkip, checksum, file, url, contentType },
 ) {
   return (mightSkip ? client.head(storageUrl(checksum, file_format)) : Promise.reject())
     .then(() => {
@@ -169,10 +169,7 @@ export function uploadFileToStorage(
  * @return {Promise<{uploadPromise: Promise, fileObject: Object}>}
  */
 export async function uploadFile(context, { file, preset = null } = {}) {
-  const file_format = file.name
-    .split('.')
-    .pop()
-    .toLowerCase();
+  const file_format = file.name.split('.').pop().toLowerCase();
   file = await cleanFile(file, preset);
   const hashPromise = getHash(file).catch(() => Promise.reject(fileErrors.CHECKSUM_HASH_FAILED));
   let checksum,

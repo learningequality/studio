@@ -18,7 +18,7 @@ export function acquireLock({ name, exclusive = false }, asyncFunction) {
       {
         mode: exclusive ? 'exclusive' : 'shared',
       },
-      asyncFunction
+      asyncFunction,
     );
   } else {
     // Track if clients aren't supporting the Web Locks API

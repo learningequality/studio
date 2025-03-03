@@ -67,7 +67,7 @@
       rules() {
         /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
         return [v => (!this.required || v ? true : commonStrings.$tr('fieldRequired'))].concat(
-          this.additionalRules
+          this.additionalRules,
         );
       },
     },
@@ -79,6 +79,4 @@
 </script>
 
 
-<style lang="scss" scoped>
-
-</style>
+<style lang="scss" scoped></style>

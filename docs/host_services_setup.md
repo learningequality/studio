@@ -87,9 +87,9 @@ export LDFLAGS="-L/opt/homebrew/opt/openssl/lib"
 ```
 
 ## Install frontend dependencies
-For guidance on installing Node 16.X, Yarn, and all required frontend dependencies, running the services, initializing Studio, and running the development server , please refer to the [Install Frontend Dependencies](./local_dev_host.md#install-frontend-dependencies) section in our Local Development with host guide.
+For guidance on installing Node 18.X, pnpm, and all required frontend dependencies, running the services, initializing Studio, and running the development server , please refer to the [Install Frontend Dependencies](./local_dev_host.md#install-frontend-dependencies) section in our Local Development with host guide.
 
-Either of the above commands will take a few minutes to build the frontend. When it's done, you can sign in with the account created by the `yarn run devsetup` command:
+Either of the above commands will take a few minutes to build the frontend. When it's done, you can sign in with the account created by the `pnpm run devsetup` command:
 - url: `http://localhost:8080/accounts/login/`
 - username: `a@a.com`
 - password: `a`

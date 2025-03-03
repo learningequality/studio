@@ -42,15 +42,17 @@
       confirmButtonText="Delete"
       @confirm="softDeleteHandler"
     />
-    <Menu>
+    <BaseMenu>
       <template #activator="{ on }">
-        <VBtn v-bind="$attrs" v-on="on">
+        <VBtn
+          v-bind="$attrs"
+          v-on="on"
+        >
           actions
           <Icon
             icon="dropdown"
             class="ml-1"
           />
-
         </VBtn>
       </template>
       <VList>
@@ -110,8 +112,7 @@
           </VListTile>
         </template>
       </VList>
-    </Menu>
-
+    </BaseMenu>
   </div>
 
 </template>
@@ -225,5 +226,4 @@
 </script>
 
 
-<style lang="scss" scoped>
-</style>
+<style lang="scss" scoped></style>

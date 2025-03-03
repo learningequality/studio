@@ -64,7 +64,7 @@ describe('TreeResource methods', () => {
 
     it('should return 1 when no siblings', () => {
       expect(
-        resource.getNewSortOrder(null, 'abc123', RELATIVE_TREE_POSITIONS.LAST_CHILD, [])
+        resource.getNewSortOrder(null, 'abc123', RELATIVE_TREE_POSITIONS.LAST_CHILD, []),
       ).toEqual(1);
     });
 
@@ -74,8 +74,8 @@ describe('TreeResource methods', () => {
           siblings[0].id,
           'abc123',
           RELATIVE_TREE_POSITIONS.FIRST_CHILD,
-          shuffle(siblings)
-        )
+          shuffle(siblings),
+        ),
       ).toEqual(null);
     });
 
@@ -85,8 +85,8 @@ describe('TreeResource methods', () => {
           siblings[0].id,
           'abc123',
           RELATIVE_TREE_POSITIONS.FIRST_CHILD,
-          siblings
-        )
+          siblings,
+        ),
       ).toEqual(null);
     });
 
@@ -96,8 +96,8 @@ describe('TreeResource methods', () => {
           siblings[2].id,
           'abc123',
           RELATIVE_TREE_POSITIONS.LAST_CHILD,
-          siblings
-        )
+          siblings,
+        ),
       ).toEqual(null);
     });
 
@@ -107,16 +107,16 @@ describe('TreeResource methods', () => {
           siblings[0].id,
           siblings[1].id,
           RELATIVE_TREE_POSITIONS.LEFT,
-          siblings
-        )
+          siblings,
+        ),
       ).toEqual(null);
       expect(
         resource.getNewSortOrder(
           siblings[1].id,
           siblings[2].id,
           RELATIVE_TREE_POSITIONS.LEFT,
-          siblings
-        )
+          siblings,
+        ),
       ).toEqual(null);
     });
 
@@ -126,51 +126,51 @@ describe('TreeResource methods', () => {
           siblings[2].id,
           siblings[1].id,
           RELATIVE_TREE_POSITIONS.RIGHT,
-          siblings
-        )
+          siblings,
+        ),
       ).toEqual(null);
       expect(
         resource.getNewSortOrder(
           siblings[1].id,
           siblings[0].id,
           RELATIVE_TREE_POSITIONS.RIGHT,
-          siblings
-        )
+          siblings,
+        ),
       ).toEqual(null);
     });
 
     it('should return smallest sort order', () => {
       expect(
-        resource.getNewSortOrder(uuid4(), 'abc123', RELATIVE_TREE_POSITIONS.FIRST_CHILD, siblings)
+        resource.getNewSortOrder(uuid4(), 'abc123', RELATIVE_TREE_POSITIONS.FIRST_CHILD, siblings),
       ).toEqual(1 / 2);
     });
 
     it('should return largest sort order', () => {
       expect(
-        resource.getNewSortOrder(uuid4(), 'abc123', RELATIVE_TREE_POSITIONS.LAST_CHILD, siblings)
+        resource.getNewSortOrder(uuid4(), 'abc123', RELATIVE_TREE_POSITIONS.LAST_CHILD, siblings),
       ).toEqual(4);
     });
 
     it('should return sort order in between target and left sibling', () => {
       expect(
-        resource.getNewSortOrder(uuid4(), siblings[1].id, RELATIVE_TREE_POSITIONS.LEFT, siblings)
+        resource.getNewSortOrder(uuid4(), siblings[1].id, RELATIVE_TREE_POSITIONS.LEFT, siblings),
       ).toEqual(3 / 2);
       expect(
-        resource.getNewSortOrder(uuid4(), siblings[2].id, RELATIVE_TREE_POSITIONS.LEFT, siblings)
+        resource.getNewSortOrder(uuid4(), siblings[2].id, RELATIVE_TREE_POSITIONS.LEFT, siblings),
       ).toEqual(5 / 2);
 
       const unsorted = [siblings[1], siblings[2], siblings[0]];
       expect(
-        resource.getNewSortOrder(uuid4(), siblings[0].id, RELATIVE_TREE_POSITIONS.LEFT, unsorted)
+        resource.getNewSortOrder(uuid4(), siblings[0].id, RELATIVE_TREE_POSITIONS.LEFT, unsorted),
       ).toEqual(1 / 2);
     });
 
     it('should return sort order in between target and right sibling', () => {
       expect(
-        resource.getNewSortOrder(uuid4(), siblings[1].id, RELATIVE_TREE_POSITIONS.RIGHT, siblings)
+        resource.getNewSortOrder(uuid4(), siblings[1].id, RELATIVE_TREE_POSITIONS.RIGHT, siblings),
       ).toEqual(5 / 2);
       expect(
-        resource.getNewSortOrder(uuid4(), siblings[0].id, RELATIVE_TREE_POSITIONS.RIGHT, siblings)
+        resource.getNewSortOrder(uuid4(), siblings[0].id, RELATIVE_TREE_POSITIONS.RIGHT, siblings),
       ).toEqual(3 / 2);
     });
   });
@@ -216,27 +216,27 @@ describe('ContentNode methods', () => {
 
     it('should reject invalid positions', () => {
       return expect(ContentNode.resolveParent('abc123', 'not-a-valid-position')).rejects.toThrow(
-        `"not-a-valid-position" is an invalid position`
+        `"not-a-valid-position" is an invalid position`,
       );
     });
 
     it('should return target node when first child', async () => {
       await expect(
-        ContentNode.resolveParent(node.id, RELATIVE_TREE_POSITIONS.FIRST_CHILD)
+        ContentNode.resolveParent(node.id, RELATIVE_TREE_POSITIONS.FIRST_CHILD),
       ).resolves.toBe(node);
       expect(get).toHaveBeenCalledWith(node.id, false);
     });
 
     it('should return target node when last child', async () => {
       await expect(
-        ContentNode.resolveParent(node.id, RELATIVE_TREE_POSITIONS.LAST_CHILD)
+        ContentNode.resolveParent(node.id, RELATIVE_TREE_POSITIONS.LAST_CHILD),
       ).resolves.toBe(node);
       expect(get).toHaveBeenCalledWith(node.id, false);
     });
 
     it("should return target node's parent when inserting after", async () => {
       await expect(ContentNode.resolveParent(node.id, RELATIVE_TREE_POSITIONS.RIGHT)).resolves.toBe(
-        parent
+        parent,
       );
       expect(get).toHaveBeenNthCalledWith(1, node.id, false);
       expect(get).toHaveBeenNthCalledWith(2, parent.id, false);
@@ -244,7 +244,7 @@ describe('ContentNode methods', () => {
 
     it("should return target node's parent when inserting before", async () => {
       await expect(ContentNode.resolveParent(node.id, RELATIVE_TREE_POSITIONS.LEFT)).resolves.toBe(
-        parent
+        parent,
       );
       expect(get).toHaveBeenNthCalledWith(1, node.id, false);
       expect(get).toHaveBeenNthCalledWith(2, parent.id, false);
@@ -253,7 +253,7 @@ describe('ContentNode methods', () => {
     it("should reject when the target can't be found", async () => {
       nodes = [];
       await expect(
-        ContentNode.resolveParent(node.id, RELATIVE_TREE_POSITIONS.FIRST_CHILD)
+        ContentNode.resolveParent(node.id, RELATIVE_TREE_POSITIONS.FIRST_CHILD),
       ).rejects.toThrow(`Target ${node.id} does not exist`);
       expect(get).toHaveBeenNthCalledWith(1, node.id, false);
     });
@@ -261,7 +261,7 @@ describe('ContentNode methods', () => {
     it("should reject when the target's parent can't be found", async () => {
       nodes = [node];
       await expect(
-        ContentNode.resolveParent(node.id, RELATIVE_TREE_POSITIONS.LEFT)
+        ContentNode.resolveParent(node.id, RELATIVE_TREE_POSITIONS.LEFT),
       ).rejects.toThrow(`Target ${parent.id} does not exist`);
       expect(get).toHaveBeenNthCalledWith(1, node.id, false);
       expect(get).toHaveBeenNthCalledWith(2, parent.id, false);
@@ -301,8 +301,8 @@ describe('ContentNode methods', () => {
       await expect(
         ContentNode.resolveTreeInsert(
           { id: 'abc123', target: 'target', position: 'position', isCreate: false },
-          jest.fn()
-        )
+          jest.fn(),
+        ),
       ).rejects.toThrow('Cannot set node as child of itself');
       expect(resolveParent).toHaveBeenCalledWith('target', 'position');
     });
@@ -313,8 +313,8 @@ describe('ContentNode methods', () => {
         await expect(
           ContentNode.resolveTreeInsert(
             { id: 'abc123', target: 'target', position: 'position', isCreate: false },
-            cb
-          )
+            cb,
+          ),
         ).resolves.toEqual('results');
         expect(resolveParent).toHaveBeenCalledWith('target', 'position');
         expect(treeLock).toHaveBeenCalledWith(parent.root_id, expect.any(Function));
@@ -349,8 +349,8 @@ describe('ContentNode methods', () => {
         await expect(
           ContentNode.resolveTreeInsert(
             { id: 'abc123', target: 'target', position: 'position', isCreate: false },
-            cb
-          )
+            cb,
+          ),
         ).resolves.toEqual('results');
         expect(resolveParent).toHaveBeenCalledWith('target', 'position');
         expect(treeLock).toHaveBeenCalledWith(parent.root_id, expect.any(Function));
@@ -389,8 +389,8 @@ describe('ContentNode methods', () => {
         await expect(
           ContentNode.resolveTreeInsert(
             { id: 'abc123', target: 'target', position: 'position', isCreate: false },
-            cb
-          )
+            cb,
+          ),
         ).resolves.toEqual('results');
         expect(resolveParent).toHaveBeenCalledWith('target', 'position');
         expect(treeLock).toHaveBeenCalledWith(parent.root_id, expect.any(Function));
@@ -428,8 +428,8 @@ describe('ContentNode methods', () => {
         await expect(
           ContentNode.resolveTreeInsert(
             { id: 'abc123', target: 'target', position: 'position', isCreate: false },
-            cb
-          )
+            cb,
+          ),
         ).rejects.toThrow('New lft value evaluated to null');
         expect(resolveParent).toHaveBeenCalledWith('target', 'position');
         expect(treeLock).toHaveBeenCalledWith(parent.root_id, expect.any(Function));
@@ -446,8 +446,8 @@ describe('ContentNode methods', () => {
         await expect(
           ContentNode.resolveTreeInsert(
             { id: 'abc123', target: 'target', position: 'position', isCreate: true },
-            cb
-          )
+            cb,
+          ),
         ).resolves.toEqual('results');
         expect(resolveParent).toHaveBeenCalledWith('target', 'position');
         expect(treeLock).toHaveBeenCalledWith(parent.root_id, expect.any(Function));
@@ -486,8 +486,8 @@ describe('ContentNode methods', () => {
         await expect(
           ContentNode.resolveTreeInsert(
             { id: 'abc123', target: 'target', position: 'position', isCreate: true },
-            cb
-          )
+            cb,
+          ),
         ).resolves.toEqual('results');
         expect(resolveParent).toHaveBeenCalledWith('target', 'position');
         expect(treeLock).toHaveBeenCalledWith(parent.root_id, expect.any(Function));
@@ -526,8 +526,8 @@ describe('ContentNode methods', () => {
         await expect(
           ContentNode.resolveTreeInsert(
             { id: 'abc123', target: 'target', position: 'position', isCreate: true },
-            cb
-          )
+            cb,
+          ),
         ).rejects.toThrow('New lft value evaluated to null');
         expect(resolveParent).toHaveBeenCalledWith('target', 'position');
         expect(treeLock).toHaveBeenCalledWith(parent.root_id, expect.any(Function));
@@ -585,7 +585,7 @@ describe('ContentNode methods', () => {
       updated = false;
       const newPayload = { ...payload, root_id: parent.root_id };
       await expect(ContentNode.tableMove({ node, parent, payload, change })).resolves.toMatchObject(
-        newPayload
+        newPayload,
       );
       expect(table.update).toHaveBeenCalledWith(node.id, payload);
       expect(table.put).toHaveBeenCalledWith(newPayload);
@@ -594,7 +594,7 @@ describe('ContentNode methods', () => {
 
     it('should mark the old parent as changed', async () => {
       await expect(ContentNode.tableMove({ node, parent, payload, change })).resolves.toMatchObject(
-        payload
+        payload,
       );
       expect(table.update).toHaveBeenCalledWith(node.id, payload);
       expect(table.put).not.toBeCalled();
@@ -605,7 +605,7 @@ describe('ContentNode methods', () => {
     it.skip('should add a change record', async () => {
       await expect(ContentNode.tableMove({ node, parent, payload, change })).resolves.toBe(payload);
       await expect(
-        db[CHANGES_TABLE].get({ '[table+key]': [ContentNode.tableName, node.id] })
+        db[CHANGES_TABLE].get({ '[table+key]': [ContentNode.tableName, node.id] }),
       ).resolves.toMatchObject(change);
     });
   });
@@ -671,7 +671,7 @@ describe('ContentNode methods', () => {
         [TASK_ID]: null,
       };
       await expect(ContentNode.tableCopy({ node, parent, payload })).resolves.toMatchObject(
-        expectedPayload
+        expectedPayload,
       );
       expect(table.put).toHaveBeenCalledWith(expectedPayload);
       // TODO: Fails
@@ -706,7 +706,7 @@ describe('ContentNode methods', () => {
     it('should use the [node_id+channel_id] IndexedDB index', async () => {
       const { node_id, channel_id } = node;
       await expect(ContentNode.getByNodeIdChannelId(node_id, channel_id)).resolves.toMatchObject(
-        node
+        node,
       );
       expect(table.get).toHaveBeenCalledWith({ '[node_id+channel_id]': [node_id, channel_id] });
       expect(fetchCollection).not.toBeCalled();
@@ -716,7 +716,7 @@ describe('ContentNode methods', () => {
       const { node_id, channel_id } = node;
       node = null;
       await expect(ContentNode.getByNodeIdChannelId(node_id, channel_id)).resolves.toMatchObject(
-        collection[0]
+        collection[0],
       );
       expect(table.get).toHaveBeenCalledWith({ '[node_id+channel_id]': [node_id, channel_id] });
       expect(fetchCollection).toHaveBeenCalledWith({
@@ -829,7 +829,7 @@ describe('Clipboard methods', () => {
     it('should handle when source node is missing', async () => {
       node = null;
       await expect(Clipboard.copy(node_id, channel_id, clipboardRootId)).rejects.toThrow(
-        'Cannot load source node'
+        'Cannot load source node',
       );
     });
   });
@@ -868,7 +868,7 @@ describe('ContentNodePrerequisite methods', () => {
       return ContentNodePrerequisite.table.add(cyclic).then(() => {
         return ContentNode.getRequisites('id-integrals').then(entries => {
           expect(sortBy(entries, 'target_node')).toEqual(
-            sortBy(mappings.concat([cyclic]), 'target_node')
+            sortBy(mappings.concat([cyclic]), 'target_node'),
           );
         });
       });

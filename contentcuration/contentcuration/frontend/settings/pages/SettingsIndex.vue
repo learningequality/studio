@@ -17,14 +17,20 @@
         </VTab>
       </template>
     </AppBar>
-    <OfflineText toolbar :offset="112" />
+    <OfflineText
+      toolbar
+      :offset="112"
+    />
     <VContent>
       <VContainer
         fluid
         class="pa-0"
-        style="height: calc(100vh - 112px);overflow: auto;overflow-x: hidden;"
+        style="height: calc(100vh - 112px); overflow: auto; overflow-x: hidden"
       >
-        <VContainer class="ml-0 pl-5" :class="offline ? 'pt-5' : 'pt-2'">
+        <VContainer
+          class="ml-0 pl-5"
+          :class="offline ? 'pt-5' : 'pt-2'"
+        >
           <router-view />
         </VContainer>
       </VContainer>

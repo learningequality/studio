@@ -45,7 +45,7 @@ services:
   studio-app:
     <<: *studio-worker
     entrypoint: python docker/entrypoint.py
-    command: yarn run devserver
+    command: pnpm run devserver
     ports:
       - "8080:8080"
       - "4000:4000"

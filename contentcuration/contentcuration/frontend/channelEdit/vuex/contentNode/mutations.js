@@ -1,4 +1,4 @@
-import Vue from 'vue';
+import Vue, { set } from 'vue';
 import isEmpty from 'lodash/isEmpty';
 import { NEW_OBJECT } from 'shared/constants';
 import { mergeMapItem } from 'shared/vuex/utils';
@@ -22,7 +22,7 @@ export function UPDATE_CONTENTNODE_FROM_INDEXEDDB(state, { id, ...updates }) {
     // otherwise nested changes will not trigger reactive updates
     const contentNode = { ...applyMods(state.contentNodesMap[id], updates) };
     cleanBooleanMaps(contentNode);
-    Vue.set(state.contentNodesMap, id, contentNode);
+    set(state.contentNodesMap, id, contentNode);
   }
 }
 
@@ -43,7 +43,7 @@ export function ENABLE_VALIDATION_ON_NODES(state, ids) {
 }
 
 export function ADD_TAG(state, { id, tag }) {
-  Vue.set(state.contentNodesMap[id].tags, tag, true);
+  set(state.contentNodesMap[id].tags, tag, true);
 }
 
 export function REMOVE_TAG(state, { id, tag }) {
@@ -51,7 +51,7 @@ export function REMOVE_TAG(state, { id, tag }) {
 }
 
 export function SET_FILES(state, { id, files }) {
-  Vue.set(state.contentNodesMap[id], 'files', files);
+  set(state.contentNodesMap[id], 'files', files);
 }
 
 export function COLLAPSE_ALL_EXPANDED(state) {
@@ -62,7 +62,7 @@ export function SET_EXPANSION(state, { id, expanded }) {
   if (!expanded) {
     Vue.delete(state.expandedNodes, id);
   } else {
-    Vue.set(state.expandedNodes, id, true);
+    set(state.expandedNodes, id, true);
   }
   // TODO: test performance before adding this in to avoid loading a lot of data at once
   // if (window.sessionStorage) {
@@ -113,13 +113,13 @@ export function REMOVE_PREVIOUS_STEP(state, { target_node, prerequisite }) {
  */
 export function ADD_PREVIOUS_STEP(state, { target_node, prerequisite }) {
   if (!state.nextStepsMap[prerequisite]) {
-    Vue.set(state.nextStepsMap, prerequisite, {});
+    set(state.nextStepsMap, prerequisite, {});
   }
-  Vue.set(state.nextStepsMap[prerequisite], target_node, true);
+  set(state.nextStepsMap[prerequisite], target_node, true);
   if (!state.previousStepsMap[target_node]) {
-    Vue.set(state.previousStepsMap, target_node, {});
+    set(state.previousStepsMap, target_node, {});
   }
-  Vue.set(state.previousStepsMap[target_node], prerequisite, true);
+  set(state.previousStepsMap[target_node], prerequisite, true);
 }
 
 /**
@@ -147,7 +147,7 @@ export function SAVE_NEXT_STEPS(state, { mappings = [] } = {}) {
  * @param resource_count - The count of resources
  */
 export function SET_CONTENTNODES_COUNT(state, { id, assessment_item_count, resource_count }) {
-  Vue.set(state.contentNodesCountMap, id, { resource_count, assessment_item_count });
+  set(state.contentNodesCountMap, id, { resource_count, assessment_item_count });
 }
 
 /**

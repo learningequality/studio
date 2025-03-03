@@ -187,10 +187,7 @@ describe('thumbnail', () => {
   describe('remove workflow', () => {
     it('clicking remove button should emit an input event with a null value', () => {
       wrapper.setProps({ value: testThumbnail });
-      wrapper
-        .find('[data-test="remove"]')
-        .find(IconButton)
-        .vm.$emit('click');
+      wrapper.find('[data-test="remove"]').find(IconButton).vm.$emit('click');
       expect(wrapper.emitted('input')[0][0]).toBe(null);
     });
   });

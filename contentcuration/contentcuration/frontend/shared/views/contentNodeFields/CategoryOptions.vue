@@ -25,7 +25,10 @@
           @click:clear="$nextTick(() => removeAll())"
         >
           <template #selection="data">
-            <VTooltip bottom lazy>
+            <VTooltip
+              bottom
+              lazy
+            >
               <template #activator="{ on, attrs }">
                 <VChip
                   v-bind="attrs"
@@ -73,7 +76,10 @@
       </template>
     </DropdownWrapper>
 
-    <div v-if="expanded" class="checkbox-list-wrapper">
+    <div
+      v-if="expanded"
+      class="checkbox-list-wrapper"
+    >
       <KCheckbox
         v-for="option in filteredCategories"
         :key="option.value"
@@ -93,6 +99,7 @@
   </div>
 
 </template>
+
 
 <script>
 
@@ -167,7 +174,7 @@
           return this.categoriesList;
         }
         return this.categoriesList.filter(option =>
-          option.text.toLowerCase().includes(searchQuery)
+          option.text.toLowerCase().includes(searchQuery),
         );
       },
     },
@@ -204,7 +211,7 @@
         const level = option.level;
         for (let i = level - 1; i >= 0; i--) {
           const parentOption = this.categoriesList.find(
-            option => currentOption.startsWith(option.value) && option.level === i
+            option => currentOption.startsWith(option.value) && option.level === i,
           );
           if (parentOption) {
             text = `${parentOption.text} - ${text}`;
@@ -272,6 +279,8 @@
   };
 
 </script>
+
+
 <style lang="scss" scoped>
 
   .parentOption:not(:first-child) {

@@ -1,6 +1,9 @@
 <template>
 
-  <MessageDialog v-model="dialog" :header="$tr('createTopic')">
+  <MessageDialog
+    v-model="dialog"
+    :header="$tr('createTopic')"
+  >
     <VForm
       ref="form"
       lazy-validation
@@ -17,20 +20,25 @@
       />
     </VForm>
     <template #buttons="{ close }">
-      <VBtn flat data-test="close" @click="close">
-        {{ $tr("cancel") }}
+      <VBtn
+        flat
+        data-test="close"
+        @click="close"
+      >
+        {{ $tr('cancel') }}
       </VBtn>
       <VBtn
         color="primary"
         data-test="create"
         @click="create"
       >
-        {{ $tr("create") }}
+        {{ $tr('create') }}
       </VBtn>
     </template>
   </MessageDialog>
 
 </template>
+
 
 <script>
 
@@ -83,5 +91,5 @@
 
 </script>
 
-<style lang="scss" scoped>
-</style>
+
+<style lang="scss" scoped></style>

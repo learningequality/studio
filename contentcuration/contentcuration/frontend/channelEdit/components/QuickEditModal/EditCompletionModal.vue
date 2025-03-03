@@ -21,6 +21,7 @@
 
 </template>
 
+
 <script>
 
   import isEqual from 'lodash/isEqual';
@@ -146,5 +147,5 @@
 
 </script>
 
-<style scoped>
-</style>
+
+<style scoped></style>

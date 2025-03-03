@@ -9,7 +9,7 @@ export default class Deferred extends Promise {
     let self_resolve, self_reject;
     executor = executor || (() => {});
 
-    super(function(resolve, reject) {
+    super(function (resolve, reject) {
       self_resolve = resolve;
       self_reject = reject;
       executor(resolve, reject);

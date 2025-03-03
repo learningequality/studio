@@ -13,7 +13,7 @@ export default {
         .catch(() => {
           // Be sure Sentry will pick up this error because if it happens we want to know ASAP
           throw new ReferenceError(
-            `Attempted to change language code to ${code}, and then redirect to ${window.location.href} but failed.`
+            `Attempted to change language code to ${code}, and then redirect to ${window.location.href} but failed.`,
           );
         });
     },

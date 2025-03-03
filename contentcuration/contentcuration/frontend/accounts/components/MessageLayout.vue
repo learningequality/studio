@@ -1,15 +1,19 @@
 <template>
 
-  <VApp style="overflow: auto;height: 100vh;">
-    <VLayout justify-center fill-height class="mt-5 pt-5">
-      <VFlex style="max-width: 900px;">
+  <VApp style="height: 100vh; overflow: auto">
+    <VLayout
+      justify-center
+      fill-height
+      class="mt-5 pt-5"
+    >
+      <VFlex style="max-width: 900px">
         <h1 class="font-weight-bold headline text-xs-center">
           {{ header }}
         </h1>
         <p class="mb-5 mt-1 subheading text-xs-center">
           {{ text }}
         </p>
-        <div style="max-width: 400px; margin: 0 auto; text-align: center;">
+        <div style="max-width: 400px; margin: 0 auto; text-align: center">
           <slot></slot>
           <p class="mt-4">
             <slot name="back">
@@ -25,6 +29,7 @@
   </VApp>
 
 </template>
+
 
 <script>
 

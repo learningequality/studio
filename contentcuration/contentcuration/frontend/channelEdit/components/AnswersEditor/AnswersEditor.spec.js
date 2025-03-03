@@ -8,10 +8,7 @@ jest.mock('shared/views/MarkdownEditor/MarkdownEditor/MarkdownEditor.vue');
 jest.mock('shared/views/MarkdownEditor/MarkdownViewer/MarkdownViewer.vue');
 
 const clickNewAnswerBtn = wrapper => {
-  wrapper
-    .find('[data-test="newAnswerBtn"]')
-    .find('button')
-    .trigger('click');
+  wrapper.find('[data-test="newAnswerBtn"]').find('button').trigger('click');
 };
 
 const rendersNewAnswerBtn = wrapper => {
@@ -19,10 +16,7 @@ const rendersNewAnswerBtn = wrapper => {
 };
 
 const clickAnswer = (wrapper, answerIdx) => {
-  wrapper
-    .findAll('[data-test="answer"]')
-    .at(answerIdx)
-    .trigger('click');
+  wrapper.findAll('[data-test="answer"]').at(answerIdx).trigger('click');
 };
 
 const clickMoveAnswerUp = (wrapper, answerIdx) => {
@@ -348,10 +342,7 @@ describe('AnswersEditor', () => {
         },
       });
 
-      wrapper
-        .findAll('[data-test=answerRadio]')
-        .at(1)
-        .setChecked();
+      wrapper.findAll('[data-test=answerRadio]').at(1).setChecked();
     });
 
     it('emits update event with a payload containing updated answers', () => {

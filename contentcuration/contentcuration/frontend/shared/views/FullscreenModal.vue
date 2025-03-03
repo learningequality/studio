@@ -21,8 +21,17 @@
       >
         <VToolbarItems>
           <slot name="close">
-            <VBtn flat icon exact data-test="close" @click="$emit('input', false)">
-              <Icon icon="clear" :color="$themeTokens.textInverted" />
+            <VBtn
+              flat
+              icon
+              exact
+              data-test="close"
+              @click="$emit('input', false)"
+            >
+              <Icon
+                icon="clear"
+                :color="$themeTokens.textInverted"
+              />
             </VBtn>
           </slot>
         </VToolbarItems>
@@ -33,14 +42,28 @@
         </VToolbarTitle>
         <VSpacer />
         <slot name="action"></slot>
-        <template v-if="$slots.tabs" #extension>
-          <Tabs :color="color" slider-color="white" align-with-title>
+        <template
+          v-if="$slots.tabs"
+          #extension
+        >
+          <Tabs
+            :color="color"
+            slider-color="white"
+            align-with-title
+          >
             <slot name="tabs"></slot>
           </Tabs>
         </template>
       </VToolbar>
-      <OfflineText toolbar :offset="topToolbarHeight" />
-      <VContainer :style="`margin-top: ${contentOffset}px;`" fluid class="pa-0">
+      <OfflineText
+        toolbar
+        :offset="topToolbarHeight"
+      />
+      <VContainer
+        :style="`margin-top: ${contentOffset}px;`"
+        fluid
+        class="pa-0"
+      >
         <slot></slot>
       </VContainer>
       <BottomBar v-if="$slots.bottom">
@@ -50,6 +73,7 @@
   </VDialog>
 
 </template>
+
 
 <script>
 
@@ -119,6 +143,7 @@
   };
 
 </script>
+
 
 <style lang="scss" scoped>
 

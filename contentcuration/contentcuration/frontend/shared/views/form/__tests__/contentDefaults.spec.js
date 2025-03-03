@@ -1,5 +1,4 @@
 import { mount } from '@vue/test-utils';
-import Vue from 'vue';
 import camelCase from 'lodash/camelCase';
 import * as constants from '../../../constants';
 import ContentDefaults from '../ContentDefaults.vue';
@@ -43,7 +42,7 @@ function assertFormValues(wrapper, contentDefaults) {
   assertFieldValues(
     ['author', 'provider', 'aggregator', 'copyright_holder'],
     textFields,
-    contentDefaults
+    contentDefaults,
   );
 
   const selects = wrapper.findAll({ name: 'v-select' });
@@ -69,7 +68,7 @@ function assertFormValues(wrapper, contentDefaults) {
     ],
     checkboxes,
     contentDefaults,
-    'inputValue'
+    'inputValue',
   );
 }
 
@@ -78,7 +77,7 @@ function updateFormValues(wrapper, contentDefaults) {
   updateFieldValues(
     ['author', 'provider', 'aggregator', 'copyright_holder'],
     textFields,
-    contentDefaults
+    contentDefaults,
   );
 
   const selects = wrapper.findAll({ name: 'v-select' });
@@ -100,7 +99,7 @@ function updateFormValues(wrapper, contentDefaults) {
     ],
     checkboxes,
     contentDefaults,
-    'inputValue'
+    'inputValue',
   );
 }
 
@@ -181,7 +180,7 @@ describe('contentDefaults', () => {
       const wrapper = makeWrapper({});
       updateFormValues(wrapper, setValues);
 
-      return Vue.nextTick().then(() => {
+      return wrapper.vm.$nextTick().then(() => {
         const contentDefaults = wrapper.emitted('change').pop()[0];
         expect(contentDefaults).toEqual(setValues);
       });

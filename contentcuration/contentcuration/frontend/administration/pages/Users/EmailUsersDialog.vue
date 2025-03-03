@@ -1,14 +1,28 @@
 <template>
 
-  <VDialog v-model="show" width="600" max-width="100vw" persistent>
+  <VDialog
+    v-model="show"
+    width="600"
+    max-width="100vw"
+    persistent
+  >
     <VCard class="px-2 py-3">
-      <VCardTitle class="font-weight-bold pb-0 title">
-        Send email
-      </VCardTitle>
-      <VForm ref="form" lazy-validation @submit.prevent="emailHandler">
+      <VCardTitle class="font-weight-bold pb-0 title"> Send email </VCardTitle>
+      <VForm
+        ref="form"
+        lazy-validation
+        @submit.prevent="emailHandler"
+      >
         <VCardText class="pb-4 pt-3">
-          <VLayout align-top row class="mb-2">
-            <VFlex shrink class="pa-2">
+          <VLayout
+            align-top
+            row
+            class="mb-2"
+          >
+            <VFlex
+              shrink
+              class="pa-2"
+            >
               From:
             </VFlex>
             <VFlex>
@@ -17,8 +31,14 @@
               </VChip>
             </VFlex>
           </VLayout>
-          <VLayout align-top row>
-            <VFlex shrink class="pa-2">
+          <VLayout
+            align-top
+            row
+          >
+            <VFlex
+              shrink
+              class="pa-2"
+            >
               To:
             </VFlex>
             <VFlex>
@@ -30,7 +50,10 @@
                 :delimit="false"
               >
                 <template #item="{ item }">
-                  <VTooltip bottom lazy>
+                  <VTooltip
+                    bottom
+                    lazy
+                  >
                     <template #activator="{ on }">
                       <VChip
                         small
@@ -39,7 +62,7 @@
                         v-on="on"
                         @input="remove(item.id)"
                       >
-                        <div style="max-width: 72px;">
+                        <div style="max-width: 72px">
                           <div class="text-truncate">
                             {{ item.name }}
                           </div>
@@ -50,7 +73,10 @@
                   </VTooltip>
                 </template>
               </ExpandableList>
-              <VChip v-else small>
+              <VChip
+                v-else
+                small
+              >
                 {{ searchString }}
               </VChip>
             </VFlex>
@@ -63,9 +89,7 @@
             required
             :rules="requiredRules"
           />
-          <div class="caption grey--text">
-            Add placeholder to message
-          </div>
+          <div class="caption grey--text">Add placeholder to message</div>
           <div class="mb-1">
             <VBtn
               v-for="placeholder in placeholders"
@@ -74,7 +98,7 @@
               round
               depressed
               color="grey lighten-4"
-              style="text-transform: none;"
+              style="text-transform: none"
               @click="addPlaceholder(placeholder.placeholder)"
             >
               {{ placeholder.label }}
@@ -92,10 +116,18 @@
         </VCardText>
         <VCardActions data-test="buttons">
           <VSpacer />
-          <VBtn data-test="cancel" flat @click="cancel">
+          <VBtn
+            data-test="cancel"
+            flat
+            @click="cancel"
+          >
             Cancel
           </VBtn>
-          <VBtn data-test="send" color="primary" type="submit">
+          <VBtn
+            data-test="send"
+            color="primary"
+            type="submit"
+          >
             Send email
           </VBtn>
         </VCardActions>

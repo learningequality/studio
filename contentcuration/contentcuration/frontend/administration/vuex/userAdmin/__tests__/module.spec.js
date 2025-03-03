@@ -111,7 +111,7 @@ describe('user admin actions', () => {
         client.get.mockReturnValue(
           Promise.resolve({
             data: { results: [] },
-          })
+          }),
         );
       });
       it('should call client.get with admin_users_list', () => {

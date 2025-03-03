@@ -7,7 +7,10 @@
     :style="{ 'border-left-color': channelColor }"
   >
     <template #header>
-      <VListTile class="channel-tile py-2" inactive>
+      <VListTile
+        class="channel-tile py-2"
+        inactive
+      >
         <VListTileAction class="select-col">
           <Checkbox
             ref="checkbox"
@@ -43,10 +46,11 @@
       :nodeId="child.id"
       :level="level + 1"
     />
-
   </LazyListGroup>
 
 </template>
+
+
 <script>
 
   import { mapGetters } from 'vuex';
@@ -95,7 +99,7 @@
         return Boolean(this.selectionState & SelectionFlags.ALL_DESCENDANTS);
       },
       // Overrides mixin, since channel itself cannot be solely selected
-      // eslint-disable-next-line kolibri/vue-no-unused-properties
+      // eslint-disable-next-line vue/no-unused-properties
       nextSelectionState() {
         const current = this.selectionState;
 
@@ -108,6 +112,8 @@
   };
 
 </script>
+
+
 <style lang="scss" scoped>
 
   .channel-item {
@@ -146,4 +152,3 @@
   }
 
 </style>
-

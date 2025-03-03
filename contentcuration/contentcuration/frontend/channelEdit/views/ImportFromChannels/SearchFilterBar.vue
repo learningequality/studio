@@ -1,6 +1,9 @@
 <template>
 
-  <VContainer class="pt-3 px-2" fluid>
+  <VContainer
+    class="pt-3 px-2"
+    fluid
+  >
     <VChip
       v-for="(filter, index) in currentFilters"
       :key="`search-filter-${index}`"
@@ -22,19 +25,20 @@
 
 </template>
 
+
 <script>
 
   import { mapGetters } from 'vuex';
   import { searchMixin } from './mixins';
   import { constantsTranslationMixin } from 'shared/mixins';
 
-  /*
-    Returns the expected format for filters
-    {
-      text: string to display for filter
-      onclose: action to do if filter is removed
-    }
-  */
+  /**
+   * Returns the expected format for filters
+   * {
+   *   text: string to display for filter
+   *   onclose: action to do if filter is removed
+   * }
+   */
   function createFilter(value, text, onclose, className) {
     return value ? { text, onclose, className } : false;
   }
@@ -53,28 +57,28 @@
 
           // Kinds
           ...this.kinds.map(kind =>
-            createFilter(kind, this.translateConstant(kind), () => this.removeKind(kind))
+            createFilter(kind, this.translateConstant(kind), () => this.removeKind(kind)),
           ),
 
           // Languages
           ...this.languages.map(language =>
             createFilter(language, this.translateLanguage(language), () =>
-              this.removeLanguage(language)
-            )
+              this.removeLanguage(language),
+            ),
           ),
 
           // Licenses
           ...this.licenses.map(license =>
             createFilter(license, this.translateLicense(Number(license)), () =>
-              this.removeLicense(license)
-            )
+              this.removeLicense(license),
+            ),
           ),
 
           // Created after
           createFilter(
             this.created_after,
             this.$tr('createdAfter', { date: this.created_after }),
-            this.resetCreatedAfter
+            this.resetCreatedAfter,
           ),
 
           // Channels
@@ -83,8 +87,8 @@
               channelId,
               this.getChannelName(channelId),
               () => this.removeChannel(channelId),
-              'notranslate'
-            )
+              'notranslate',
+            ),
           ),
         ].filter(Boolean);
       },

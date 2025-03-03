@@ -51,7 +51,7 @@ export function generateFilterMixin(filterMap) {
               result[key] = this.$route.query[key];
               return result;
             },
-            {}
+            {},
           );
 
           // Set the router with the params from the filterMap and current route
@@ -88,7 +88,7 @@ export function generateFilterMixin(filterMap) {
               result[key] = value;
             }
           },
-          {}
+          {},
         );
         this.$router.push({ query }).catch(error => {
           if (error && error.name != 'NavigationDuplicated') {
@@ -96,7 +96,7 @@ export function generateFilterMixin(filterMap) {
           }
         });
       },
-      clearSearch: function() {
+      clearSearch: function () {
         this.keywords = '';
       },
       updateKeywords() {
@@ -140,7 +140,7 @@ export const tableMixin = {
           },
           (value, key) => {
             return value !== null && key !== 'rowsPerPage' && key !== 'totalItems';
-          }
+          },
         );
 
         this.$router

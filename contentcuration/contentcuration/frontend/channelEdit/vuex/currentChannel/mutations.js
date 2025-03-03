@@ -1,4 +1,4 @@
-import Vue from 'vue';
+import { set } from 'vue';
 
 export function SAVE_CURRENT_CHANNEL_STAGING_DIFF(state, payload) {
   if (payload._status) {
@@ -38,5 +38,5 @@ export function SAVE_CURRENT_CHANNEL_STAGING_DIFF(state, payload) {
 }
 
 export function SET_SELECTED_NODE_IDS(state, payload) {
-  Vue.set(state, 'selectedNodeIds', Array.from(new Set(payload)));
+  set(state, 'selectedNodeIds', Array.from(new Set(payload)));
 }

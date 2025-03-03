@@ -21,8 +21,8 @@ const details = {
   viewonly_channels: [],
 };
 
-function makeWrapper(userProps = {}) {
-  router.replace({ name: RouteNames.USER, params: { userId } }).catch(() => {});
+async function makeWrapper(userProps = {}) {
+  await router.replace({ name: RouteNames.USER, params: { userId } }).catch(() => {});
   return mount(UserDetails, {
     router,
     store,
@@ -47,8 +47,8 @@ function makeWrapper(userProps = {}) {
 
 describe('userDetails', () => {
   let wrapper;
-  beforeEach(() => {
-    wrapper = makeWrapper();
+  beforeEach(async () => {
+    wrapper = await makeWrapper();
     wrapper.setData({ details });
   });
   it('clicking close should close the modal', () => {

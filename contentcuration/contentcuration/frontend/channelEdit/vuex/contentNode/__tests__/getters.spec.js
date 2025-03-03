@@ -317,7 +317,7 @@ describe('contentNode getters', () => {
           isNextStep(state)({
             rootNodeId: 'id-reading',
             nodeId: 'id-astromomy',
-          })
+          }),
         ).toBe(false);
       });
     });
@@ -328,7 +328,7 @@ describe('contentNode getters', () => {
           isNextStep(state)({
             rootNodeId: 'id-reading',
             nodeId: 'id-astronomy',
-          })
+          }),
         ).toBe(true);
       });
     });
@@ -339,7 +339,7 @@ describe('contentNode getters', () => {
           isNextStep(state)({
             rootNodeId: 'id-counting',
             nodeId: 'id-history',
-          })
+          }),
         ).toBe(false);
       });
     });
@@ -448,7 +448,7 @@ describe('contentNode getters', () => {
         'returns false for a vertex that is neither immediate nor distant successor',
         (rootNodeId, nodeId) => {
           expect(isNextStep(state)({ rootNodeId, nodeId })).toBe(false);
-        }
+        },
       );
 
       each([
@@ -464,7 +464,7 @@ describe('contentNode getters', () => {
         'returns false when checking if a root note is a successor node',
         (rootNodeId, nodeId) => {
           expect(isNextStep(state)({ rootNodeId, nodeId })).toBe(false);
-        }
+        },
       );
     });
     describe('for cyclic graphs', () => {
@@ -574,7 +574,7 @@ describe('contentNode getters', () => {
         'returns false for a vertex that is neither immediate nor distant successor',
         (rootNodeId, nodeId) => {
           expect(isNextStep(state)({ rootNodeId, nodeId })).toBe(false);
-        }
+        },
       );
 
       each([
@@ -590,7 +590,7 @@ describe('contentNode getters', () => {
         'returns false when checking if a root node is a successor node',
         (rootNodeId, nodeId) => {
           expect(isNextStep(state)({ rootNodeId, nodeId })).toBe(false);
-        }
+        },
       );
     });
   });
@@ -629,7 +629,7 @@ describe('contentNode getters', () => {
           isPreviousStep(state)({
             rootNodeId: 'id-reading',
             nodeId: 'id-astromomy',
-          })
+          }),
         ).toBe(false);
       });
     });
@@ -640,7 +640,7 @@ describe('contentNode getters', () => {
           isPreviousStep(state)({
             rootNodeId: 'id-philosophy',
             nodeId: 'id-reading',
-          })
+          }),
         ).toBe(true);
       });
     });
@@ -651,7 +651,7 @@ describe('contentNode getters', () => {
           isPreviousStep(state)({
             rootNodeId: 'id-reading',
             nodeId: 'id-philosophy',
-          })
+          }),
         ).toBe(false);
       });
     });

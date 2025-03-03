@@ -7,13 +7,22 @@
       :cancelText="$tr('closeButtonLabel')"
       @cancel="dialog = false"
     >
-      <KCircularLoader v-if="loading" :size="40" />
-      <p v-else-if="savedSearches.length === 0" class="grey--text pa-2">
+      <KCircularLoader
+        v-if="loading"
+        :size="40"
+      />
+      <p
+        v-else-if="savedSearches.length === 0"
+        class="grey--text pa-2"
+      >
         {{ $tr('noSavedSearches') }}
       </p>
       <VList v-else>
         <template v-for="(search, index) in savedSearches">
-          <VListTile :key="index" class="py-2">
+          <VListTile
+            :key="index"
+            class="py-2"
+          >
             <VListTileContent>
               <VListTileTitle>
                 <ActionLink
@@ -42,7 +51,10 @@
               />
             </VListTileAction>
           </VListTile>
-          <VDivider v-if="index < savedSearches.length - 1" :key="index + 'divider'" />
+          <VDivider
+            v-if="index < savedSearches.length - 1"
+            :key="index + 'divider'"
+          />
         </template>
       </VList>
     </KModal>
@@ -53,10 +65,16 @@
       :text="$tr('deleteConfirmation')"
     >
       <template #buttons>
-        <VBtn flat @click="handleCancel">
+        <VBtn
+          flat
+          @click="handleCancel"
+        >
           {{ $tr('cancelAction') }}
         </VBtn>
-        <VBtn color="primary" @click="handleDeleteConfirm">
+        <VBtn
+          color="primary"
+          @click="handleDeleteConfirm"
+        >
           {{ $tr('deleteAction') }}
         </VBtn>
       </template>
@@ -167,6 +185,7 @@
   };
 
 </script>
+
 
 <style scoped lang="scss">
 

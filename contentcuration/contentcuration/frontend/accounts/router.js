@@ -1,5 +1,5 @@
 import VueRouter from 'vue-router';
-import Main from './pages/Main';
+import AccountsMain from './pages/AccountsMain.vue';
 import Create from './pages/Create';
 
 import ActivationSent from './pages/activateAccount/ActivationSent';
@@ -17,17 +17,17 @@ import ResetLinkExpired from './pages/resetPassword/ResetLinkExpired';
 
 import AccountDeleted from './pages/accountDeleted/AccountDeleted';
 
-function pageRoute(path, component) {
+function pageRoute(path, component, name = null) {
   return {
     path,
-    name: component.name,
+    name: name || component.name,
     component: component,
   };
 }
 
 const router = new VueRouter({
   routes: [
-    pageRoute('/', Main),
+    pageRoute('/', AccountsMain, 'Main'),
 
     // Registration routes
     pageRoute('/create', Create),

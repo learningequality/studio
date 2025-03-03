@@ -42,7 +42,7 @@ export function getHash(file) {
     const spark = new SparkMD5.ArrayBuffer();
     let currentChunk = 0;
     const chunks = Math.ceil(file.size / CHUNK_SIZE);
-    fileReader.onload = function(e) {
+    fileReader.onload = function (e) {
       spark.append(e.target.result);
       currentChunk++;
 
@@ -99,7 +99,7 @@ export async function getH5PMetadata(fileInput) {
   const metadata = {};
   return zip
     .loadAsync(fileInput)
-    .then(function(zip) {
+    .then(function (zip) {
       const h5pJson = zip.file('h5p.json');
       if (h5pJson) {
         return h5pJson.async('text');
@@ -107,7 +107,7 @@ export async function getH5PMetadata(fileInput) {
         throw new Error('h5p.json not found in the H5P file.');
       }
     })
-    .then(function(h5pContent) {
+    .then(function (h5pContent) {
       const data = JSON.parse(h5pContent);
       if (Object.prototype.hasOwnProperty.call(data, 'title')) {
         metadata.title = data['title'];
@@ -147,10 +147,7 @@ export function inferPreset(file, presetHint) {
   if (presetHint) {
     return presetHint;
   }
-  const fileFormat = file.name
-    .split('.')
-    .pop()
-    .toLowerCase();
+  const fileFormat = file.name.split('.').pop().toLowerCase();
   return extensionPresetMap?.[fileFormat]?.[0];
 }
 

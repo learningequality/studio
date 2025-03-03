@@ -39,7 +39,10 @@
                 @click="openFileDialog"
               />
             </VListTileTitle>
-            <VListTileSubTitle v-if="erroredFile || uploading" data-test="status">
+            <VListTileSubTitle
+              v-if="erroredFile || uploading"
+              data-test="status"
+            >
               <FileStatusText
                 :fileId="erroredFile ? erroredFile.id : fileDisplay.id"
                 :readonly="Boolean(fileUploadId)"
@@ -49,11 +52,13 @@
             <VListTileSubTitle v-else-if="fileDisplay">
               {{ formatFileSize(fileDisplay.file_size) }}
             </VListTileSubTitle>
-
           </VListTileContent>
           <VSpacer />
           <VListTileAction v-if="fileDisplay">
-            <div v-if="allowFileRemove" class="remove-icon">
+            <div
+              v-if="allowFileRemove"
+              class="remove-icon"
+            >
               <IconButton
                 icon="clear"
                 color="grey"
@@ -69,6 +74,7 @@
   </Uploader>
 
 </template>
+
 
 <script>
 
@@ -180,6 +186,7 @@
   };
 
 </script>
+
 
 <style lang="scss" scoped>
 

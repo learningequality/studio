@@ -3,7 +3,12 @@
   <div>
     <CatalogFilters />
     <VSlideYTransition>
-      <ToolBar v-show="offline" dense clipped-left absolute>
+      <ToolBar
+        v-show="offline"
+        dense
+        clipped-left
+        absolute
+      >
         <OfflineText />
       </ToolBar>
     </VSlideYTransition>
@@ -13,11 +18,19 @@
       :style="`margin-top: ${offline ? 48 : 0}`"
     >
       <LoadingText v-if="loading" />
-      <VLayout v-else grid wrap class="list-wrapper py-4">
+      <VLayout
+        v-else
+        grid
+        wrap
+        class="list-wrapper py-4"
+      >
         <!-- Results bar -->
-        <VFlex xs12 class="mb-2">
+        <VFlex
+          xs12
+          class="mb-2"
+        >
           <h1 class="mb-2 ml-1 title">
-            {{ $tr("resultsText", { count: page.count }) }}
+            {{ $tr('resultsText', { count: page.count }) }}
           </h1>
           <ActionLink
             v-if="page.count && !selecting"
@@ -35,7 +48,11 @@
           />
         </VFlex>
         <VFlex xs12>
-          <VLayout v-for="item in channels" :key="item.id" align-center>
+          <VLayout
+            v-for="item in channels"
+            :key="item.id"
+            align-center
+          >
             <Checkbox
               v-show="selecting"
               v-model="selected"
@@ -50,9 +67,15 @@
             />
           </VLayout>
         </VFlex>
-        <VFlex xs12 style="padding-bottom: 72px">
+        <VFlex
+          xs12
+          style="padding-bottom: 72px"
+        >
           <VLayout justify-center>
-            <Pagination :pageNumber="page.page_number" :totalPages="page.total_pages" />
+            <Pagination
+              :pageNumber="page.page_number"
+              :totalPages="page.total_pages"
+            />
           </VLayout>
         </VFlex>
       </VLayout>
@@ -61,37 +84,59 @@
         data-test="toolbar"
         :appearanceOverrides="{ height: $vuetify.breakpoint.xsOnly ? '72px' : '56px' }"
       >
-        <VLayout row wrap align-center>
-          <VFlex xs12 sm4 class="pb-1">
-            {{ $tr("channelSelectionCount", { count: selectedCount }) }}
+        <VLayout
+          row
+          wrap
+          align-center
+        >
+          <VFlex
+            xs12
+            sm4
+            class="pb-1"
+          >
+            {{ $tr('channelSelectionCount', { count: selectedCount }) }}
           </VFlex>
-          <VFlex xs12 sm8>
+          <VFlex
+            xs12
+            sm8
+          >
             <VLayout row>
               <VSpacer />
-              <VBtn flat data-test="cancel" class="ma-0" @click="setSelection(false)">
-                {{ $tr("cancelButton") }}
+              <VBtn
+                flat
+                data-test="cancel"
+                class="ma-0"
+                @click="setSelection(false)"
+              >
+                {{ $tr('cancelButton') }}
               </VBtn>
-              <Menu top>
+              <BaseMenu top>
                 <template #activator="{ on }">
-                  <VBtn color="primary" class="ma-0 mx-2" v-on="on">
+                  <VBtn
+                    color="primary"
+                    class="ma-0 mx-2"
+                    v-on="on"
+                  >
                     {{ $tr('downloadButton') }}
                     <Icon
                       class="ml-1"
                       icon="dropup"
                       :color="$themeTokens.textInverted"
                     />
-
                   </VBtn>
                 </template>
                 <VList>
                   <VListTile @click="downloadPDF">
-                    <VListTileTitle>{{ $tr("downloadPDF") }}</VListTileTitle>
+                    <VListTileTitle>{{ $tr('downloadPDF') }}</VListTileTitle>
                   </VListTile>
-                  <VListTile data-test="download-csv" @click="downloadCSV">
-                    <VListTileTitle>{{ $tr("downloadCSV") }}</VListTileTitle>
+                  <VListTile
+                    data-test="download-csv"
+                    @click="downloadCSV"
+                  >
+                    <VListTileTitle>{{ $tr('downloadCSV') }}</VListTileTitle>
                   </VListTile>
                 </VList>
-              </Menu>
+              </BaseMenu>
             </VLayout>
           </VFlex>
         </VLayout>
@@ -100,6 +145,7 @@
   </div>
 
 </template>
+
 
 <script>
 
@@ -140,18 +186,18 @@
         loadError: false,
         selecting: false,
 
-        /*
-            jayoshih: router guard makes it difficult to track
-              differences between previous query params and new
-              query params, so just track it manually
-          */
+        /**
+         * jayoshih: router guard makes it difficult to track
+         * differences between previous query params and new
+         * query params, so just track it manually
+         */
         previousQuery: this.$route.query,
 
-        /*
-            jayoshih: using excluded logic here instead of selected
-              to account for selections across pages (some channels
-              not in current page)
-          */
+        /**
+         * jayoshih: using excluded logic here instead of selected
+         * to account for selections across pages (some channels
+         * not in current page)
+         */
         excluded: [],
       };
     },
@@ -176,7 +222,7 @@
         set(selected) {
           this.excluded = union(
             this.excluded.filter(id => !selected.includes(id)), // Remove selected items
-            difference(this.page.results, selected) // Add non-selected items
+            difference(this.page.results, selected), // Add non-selected items
           );
         },
       },
@@ -271,6 +317,8 @@
   };
 
 </script>
+
+
 <style lang="scss" scoped>
 
   .list-wrapper {

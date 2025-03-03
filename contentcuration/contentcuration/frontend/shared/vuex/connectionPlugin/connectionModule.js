@@ -56,7 +56,7 @@ export default {
             setTimeout(() => pollingClient.get(stealth), 1000 * delaySeconds(attempt));
           }
           return Promise.reject(error);
-        }
+        },
       );
 
       pollingClient.get(stealth);

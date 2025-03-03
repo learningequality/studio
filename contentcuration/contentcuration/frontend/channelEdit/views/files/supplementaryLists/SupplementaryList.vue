@@ -18,12 +18,14 @@
       @upload="$emit('upload')"
     >
       <template #default="{ openFileDialog }">
-        <VListTile 
-          inactive 
+        <VListTile
+          inactive
           class="languageTile py-2"
-          :class="$computedClass({
-            ':hover': { backgroundColor: $themePalette.grey.v_100 }
-          })"
+          :class="
+            $computedClass({
+              ':hover': { backgroundColor: $themePalette.grey.v_100 },
+            })
+          "
         >
           <VListTileContent v-if="!addingFile">
             <ActionLink
@@ -32,7 +34,10 @@
               @click="addingFile = true"
             />
           </VListTileContent>
-          <VListTileContent v-else class="captionLanguageDropdown">
+          <VListTileContent
+            v-else
+            class="captionLanguageDropdown"
+          >
             <LanguageDropdown
               id="captionLanguage"
               v-model="selectedLanguage"
@@ -46,7 +51,7 @@
             <VListTileTitle>
               <ActionLink
                 data-test="upload-file"
-                style="margin-left: 16px;"
+                style="margin-left: 16px"
                 :text="$tr('selectFileText')"
                 @click="openFileDialog"
               />
@@ -54,7 +59,10 @@
           </VListTileContent>
           <VSpacer />
           <VListTileAction v-if="addingFile">
-            <VBtn icon @click="reset">
+            <VBtn
+              icon
+              @click="reset"
+            >
               <Icon icon="clear" />
             </VBtn>
           </VListTileAction>
@@ -64,6 +72,7 @@
   </VList>
 
 </template>
+
 
 <script>
 
@@ -111,9 +120,9 @@
         return uniqBy(
           sortBy(
             this.getContentNodeFiles(this.nodeId).filter(f => f.preset.id === this.presetID),
-            f => f.language.native_name
+            f => f.language.native_name,
           ),
-          f => f.language.id
+          f => f.language.id,
         );
       },
       currentLanguages() {
@@ -151,6 +160,8 @@
   };
 
 </script>
+
+
 <style lang="scss" scoped>
 
   ::v-deep .languageTile > .v-list__tile {

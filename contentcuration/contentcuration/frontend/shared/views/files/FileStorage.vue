@@ -2,23 +2,30 @@
 
   <div>
     <span v-if="(!storageIsFull && !showWarning) || showProgress">
-      {{ $tr('storageUsed', {
-        used: formatFileSize(usedSpace),
-        total: formatFileSize(totalSpace) }) }}
+      {{
+        $tr('storageUsed', {
+          used: formatFileSize(usedSpace),
+          total: formatFileSize(totalSpace),
+        })
+      }}
     </span>
-
 
     <VProgressLinear
       v-if="showProgress"
       :color="progressBarColor"
       :value="storagePercent"
     />
-    <span v-if="storageIsFull" class="red--text">
+    <span
+      v-if="storageIsFull"
+      class="red--text"
+    >
       <span v-if="showProgress">{{ $tr('storageFull') }}</span>
       <span v-else>
-        {{ $tr('storageFullWithSize', {
-          used: formatFileSize(usedSpace),
-          total: formatFileSize(totalSpace) })
+        {{
+          $tr('storageFullWithSize', {
+            used: formatFileSize(usedSpace),
+            total: formatFileSize(totalSpace),
+          })
         }}
       </span>
     </span>
@@ -26,9 +33,11 @@
       <Icon icon="warningIncomplete" />
       <span v-if="showProgress">{{ $tr('storageLow') }}</span>
       <span v-else>
-        {{ $tr('storageLowWithSize', {
-          used: formatFileSize(usedSpace),
-          total: formatFileSize(totalSpace) })
+        {{
+          $tr('storageLowWithSize', {
+            used: formatFileSize(usedSpace),
+            total: formatFileSize(totalSpace),
+          })
         }}
       </span>
     </span>
@@ -42,6 +51,7 @@
   </div>
 
 </template>
+
 
 <script>
 
@@ -101,6 +111,7 @@
   };
 
 </script>
+
 
 <style lang="scss" scoped>
 

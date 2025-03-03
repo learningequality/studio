@@ -7,27 +7,34 @@
         :encoding="isChannel ? _details.thumbnail_encoding : null"
       />
     </div>
-    <br>
-    <h1 class="notranslate" dir="auto">
+    <br >
+    <h1
+      class="notranslate"
+      dir="auto"
+    >
       {{ isChannel ? _details.name : _details.title }}
     </h1>
-    <p class="notranslate" dir="auto">
+    <p
+      class="notranslate"
+      dir="auto"
+    >
       {{ _details.description }}
     </p>
-    <br>
+    <br >
 
     <template v-if="isChannel">
-      <DetailsRow v-if="_details.published && _details.primary_token" :label="$tr('tokenHeading')">
+      <DetailsRow
+        v-if="_details.published && _details.primary_token"
+        :label="$tr('tokenHeading')"
+      >
         <template #default>
           <CopyToken
             v-if="!printing"
             :token="_details.primary_token"
-            style="max-width:max-content;"
+            style="max-width: max-content"
           />
           <span v-else>
-            {{
-              _details.primary_token.slice(0, 5) + '-' + _details.primary_token.slice(5)
-            }}
+            {{ _details.primary_token.slice(0, 5) + '-' + _details.primary_token.slice(5) }}
           </span>
         </template>
       </DetailsRow>
@@ -70,7 +77,10 @@
             class="kind-table"
           >
             <template #items="{ item }">
-              <td style="width: 24px;" class="pr-2 py-0">
+              <td
+                style="width: 24px"
+                class="pr-2 py-0"
+              >
                 <ContentNodeIcon :kind="item.kind_id" />
               </td>
               <td class="kind-name pa-0">
@@ -120,18 +130,30 @@
         </template>
       </DetailsRow>
       <DetailsRow :label="$tr('containsHeading')">
-        <template v-if="!printing" #default>
-          <VChip v-if="_details.includes.coach_content" class="tag">
+        <template
+          v-if="!printing"
+          #default
+        >
+          <VChip
+            v-if="_details.includes.coach_content"
+            class="tag"
+          >
             {{ $tr('coachHeading') }}
           </VChip>
-          <VChip v-if="_details.includes.exercises" class="tag">
+          <VChip
+            v-if="_details.includes.exercises"
+            class="tag"
+          >
             {{ $tr('assessmentsIncludedText') }}
           </VChip>
           <div v-if="!_details.includes.exercises && !_details.includes.coach_content">
             {{ defaultText }}
           </div>
         </template>
-        <template v-else #default>
+        <template
+          v-else
+          #default
+        >
           <span>{{ includesPrintable }}</span>
         </template>
       </DetailsRow>
@@ -222,9 +244,17 @@
       <DetailsRow :label="$tr('licensesLabel')">
         <template #default>
           <template v-if="!printing">
-            <VTooltip v-for="license in _details.licenses" :key="license" top lazy>
+            <VTooltip
+              v-for="license in _details.licenses"
+              :key="license"
+              top
+              lazy
+            >
               <template #activator="{ on }">
-                <VChip class="tag" v-on="on">
+                <VChip
+                  class="tag"
+                  v-on="on"
+                >
                   {{ translateConstant(license) }}
                 </VChip>
               </template>
@@ -262,7 +292,10 @@
             <VFlex class="source-thumbnail">
               <Thumbnail :src="channel.thumbnail" />
             </VFlex>
-            <VFlex v-if="printing" class="font-weight-bold notranslate px-4 subheading">
+            <VFlex
+              v-if="printing"
+              class="font-weight-bold notranslate px-4 subheading"
+            >
               {{ channel.name }}
             </VFlex>
             <a
@@ -272,7 +305,10 @@
               class="notranslate primary--text"
             >
               <span>{{ channel.name }}</span>
-              <Icon class="mx-1 rtl-flip" icon="openNewTab" />
+              <Icon
+                class="mx-1 rtl-flip"
+                icon="openNewTab"
+              />
             </a>
           </VLayout>
         </template>
@@ -285,7 +321,11 @@
       >
         {{ isChannel ? $tr('sampleFromChannelHeading') : $tr('sampleFromTopicHeading') }}
       </label>
-      <VLayout row :wrap="!printing" class="my-4 pt-1 sample-nodes">
+      <VLayout
+        row
+        :wrap="!printing"
+        class="my-4 pt-1 sample-nodes"
+      >
         <VFlex
           v-for="node in _details.sample_nodes"
           :key="node.node_id"
@@ -293,8 +333,14 @@
           :xs3="printing"
           sm3
         >
-          <VCard height="100%" flat>
-            <Thumbnail :src="node.thumbnail" :kind="node.kind" />
+          <VCard
+            height="100%"
+            flat
+          >
+            <Thumbnail
+              :src="node.thumbnail"
+              :kind="node.kind"
+            />
             <VCardText :class="getTitleClass(node)">
               <p dir="auto">
                 {{ getTitle(node) }}
@@ -307,6 +353,7 @@
   </div>
 
 </template>
+
 
 <script>
 
@@ -364,7 +411,7 @@
   };
 
   export default {
-    name: 'Details',
+    name: 'DetailsPanel',
     components: {
       LoadingText,
       ContentNodeIcon,
@@ -423,7 +470,7 @@
         const size = this._details.resource_size;
         const sizeIndex = Math.max(
           1,
-          Math.min(Math.ceil(Math.log(size / CHANNEL_SIZE_DIVISOR) / Math.log(2)), 10)
+          Math.min(Math.ceil(Math.log(size / CHANNEL_SIZE_DIVISOR) / Math.log(2)), 10),
         );
         return this.$tr('sizeText', {
           text: this.$tr(SCALE[sizeIndex]),

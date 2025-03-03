@@ -10,7 +10,7 @@ export function SET_PAGE(
     count = null,
     total_pages = null,
     results = [],
-  } = {}
+  } = {},
 ) {
   state.page.next = next;
   state.page.previous = previous;

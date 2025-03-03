@@ -1,7 +1,7 @@
 <template>
 
   <div
-    style="position: relative;"
+    style="position: relative"
     class="wrapper"
     :class="{ highlight, uploading: Boolean(uploadingChecksum) }"
     @dragenter="highlight = true"
@@ -21,7 +21,7 @@
       class="formulas-menu"
       :anchorArrowSide="formulasMenu.anchorArrowSide"
       :mathQuill="mathQuill"
-      style="position:absolute"
+      style="position: absolute"
       :style="formulasMenu.style"
       @insert="onFormulasMenuInsert"
       @cancel="onFormulasMenuCancel"
@@ -32,7 +32,7 @@
       v-click-outside="onClick"
       class="images-menu"
       :anchorArrowSide="imagesMenu.anchorArrowSide"
-      style="position:absolute"
+      style="position: absolute"
       :style="imagesMenu.style"
       :src="imagesMenu.src"
       :alt="imagesMenu.alt"
@@ -45,6 +45,7 @@
   </div>
 
 </template>
+
 
 <script>
 
@@ -434,7 +435,7 @@
         const getCharacterAtRelativeOffset = (selection, relativeOffset) => {
           const { element, offset } = squire.getSelectionInfoByOffset(
             selection.startContainer,
-            selection.startOffset + relativeOffset
+            selection.startOffset + relativeOffset,
           );
           return element.nodeType === document.TEXT_NODE && element.textContent[offset];
         };
@@ -852,6 +853,7 @@
   };
 
 </script>
+
 
 <style lang="scss" scoped>
 

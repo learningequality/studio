@@ -5,7 +5,7 @@
     :class="{
       [kind]: compact,
       'icon-only': compact,
-      'nothumbnail': !showThumbnail && !compact,
+      nothumbnail: !showThumbnail && !compact,
     }"
     :style="{ 'max-width': maxWidth }"
   >
@@ -17,7 +17,10 @@
       class="caption"
       :class="kind"
     >
-      <VFlex shrink class="px-1">
+      <VFlex
+        shrink
+        class="px-1"
+      >
         <VIconWrapper
           v-if="!compact"
           dark
@@ -39,8 +42,14 @@
     >
 
     <!-- If printing the default icon, need to set as printable icon -->
-    <div v-else-if="printing" class="printable-icon">
-      <VIconWrapper :color="$vuetify.theme[kind]" capture-as-image>
+    <div
+      v-else-if="printing"
+      class="printable-icon"
+    >
+      <VIconWrapper
+        :color="$vuetify.theme[kind]"
+        capture-as-image
+      >
         {{ icon }}
       </VIconWrapper>
     </div>
@@ -57,7 +66,9 @@
         :y="y"
         fill="#ffffff"
         class="material-icons notranslate v-icon"
-      >{{ icon }}</text>
+      >
+        {{ icon }}
+      </text>
     </svg>
     <svg
       v-else
@@ -71,12 +82,14 @@
         :y="y - 3"
         :fill="$vuetify.theme.greyBorder"
         class="material-icons notranslate v-icon"
-      >image</text>
+      >
+        image
+      </text>
     </svg>
-
   </figure>
 
 </template>
+
 
 <script>
 
@@ -162,6 +175,7 @@
   };
 
 </script>
+
 
 <style lang="scss" scoped>
 

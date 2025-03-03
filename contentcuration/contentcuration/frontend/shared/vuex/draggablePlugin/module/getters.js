@@ -21,7 +21,7 @@ export function isHoverDraggableAncestor(state, getters, rootState, rootGetters)
    * @param {Object} identity
    * @return {Boolean}
    */
-  return function(identity) {
+  return function (identity) {
     const { type } = getters.deepestHoverDraggable || {};
     return type ? rootGetters[`draggable/${type}s/isHoverDraggableAncestor`](identity) : false;
   };
@@ -57,7 +57,7 @@ export function activeDraggableSize(state, getters, rootState) {
 }
 
 export function isGroupedDraggableHandle(state) {
-  return function(identity) {
+  return function (identity) {
     if (identity.type === DraggableTypes.HANDLE) {
       const { key } = new DraggableIdentityHelper(identity);
       return key in state.groupedDraggableHandles;
@@ -81,7 +81,7 @@ export function getDraggableDropData(state) {
    *    relative: Number
    *  }}|undefined}
    */
-  return function(identity) {
+  return function (identity) {
     // Ancestors will map to the string of the actual data, instead of duplicating,
     // as prepared in code below
     const destination = new DraggableIdentityHelper(identity);

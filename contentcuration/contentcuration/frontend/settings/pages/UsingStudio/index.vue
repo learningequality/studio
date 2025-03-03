@@ -43,13 +43,21 @@
 
     <!-- Best practices -->
     <h2>{{ $tr('bestPractices') }}</h2>
-    <p>
-      <ul class="px-4">
-        <li>{{ $tr('bestPractice1') }}</li>
-        <li>{{ $tr('bestPractice2') }}</li>
-        <li>{{ $tr('bestPractice3') }}</li>
-        <li>{{ $tr('bestPractice5') }}</li>
-        <li>
+    <ul class="px-4">
+      <li>
+        <p>{{ $tr('bestPractice1') }}</p>
+      </li>
+      <li>
+        <p>{{ $tr('bestPractice2') }}</p>
+      </li>
+      <li>
+        <p>{{ $tr('bestPractice3') }}</p>
+      </li>
+      <li>
+        <p>{{ $tr('bestPractice5') }}</p>
+      </li>
+      <li>
+        <p>
           <KExternalLink
             class="kexternal-redirect"
             href="https://ricecooker.readthedocs.io/en/latest/video_compression.html"
@@ -57,11 +65,15 @@
             openInNewTab
             rel="noopener noreferrer"
           />
-        </li>
-        <li>{{ $tr('bestPractice7') }}</li>
-        <li>{{ $tr('bestPractice9') }}</li>
-      </ul>
-    </p>
+        </p>
+      </li>
+      <li>
+        <p>{{ $tr('bestPractice7') }}</p>
+      </li>
+      <li>
+        <p>{{ $tr('bestPractice9') }}</p>
+      </li>
+    </ul>
 
     <!-- Issues -->
     <h2>{{ $tr('notableIssues') }}</h2>
@@ -139,11 +151,15 @@
 
 </script>
 
+
 <style scoped>
+
   h2 {
     margin-top: 32px;
   }
-  .kexternal-redirect{
+
+  .kexternal-redirect {
     margin-left: -8px;
   }
+
 </style>

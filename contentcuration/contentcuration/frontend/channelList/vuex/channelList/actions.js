@@ -48,7 +48,7 @@ export function loadInvitationList(context) {
   }).then(invitations => {
     context.commit(
       'SET_INVITATION_LIST',
-      invitations.filter(i => !i.accepted && !i.declined && !i.revoked)
+      invitations.filter(i => !i.accepted && !i.declined && !i.revoked),
     );
     return invitations;
   });

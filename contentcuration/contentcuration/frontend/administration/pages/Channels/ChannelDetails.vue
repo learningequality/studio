@@ -2,23 +2,47 @@
 
   <FullscreenModal v-model="dialog">
     <template #close>
-      <VBtn flat exact style="font-size: 14pt; text-transform: none;" @click="dialog = false">
-        <Icon class="mr-2" :color="$themeTokens.textInverted" icon="back" />
+      <VBtn
+        flat
+        exact
+        style="font-size: 14pt; text-transform: none"
+        @click="dialog = false"
+      >
+        <Icon
+          class="mr-2"
+          :color="$themeTokens.textInverted"
+          icon="back"
+        />
 
         Channel list
       </VBtn>
     </template>
     <template #tabs>
-      <VTab class="px-3" data-test="info-tab" @click="tab = 'info'">
+      <VTab
+        class="px-3"
+        data-test="info-tab"
+        @click="tab = 'info'"
+      >
         Channel info
       </VTab>
-      <VTab class="px-3" data-test="share-tab" @click="tab = 'share'">
+      <VTab
+        class="px-3"
+        data-test="share-tab"
+        @click="tab = 'share'"
+      >
         Sharing
       </VTab>
     </template>
-    <LoadingText v-if="loading" absolute />
+    <LoadingText
+      v-if="loading"
+      absolute
+    />
     <VCardText v-else>
-      <Banner error :value="isDeleted" class="mb-4">
+      <Banner
+        error
+        :value="isDeleted"
+        class="mb-4"
+      >
         This channel has been deleted
       </Banner>
       <VTabsItems v-model="tab">
@@ -31,8 +55,11 @@
               @deleted="dialog = false"
             />
           </VLayout>
-          <VCard flat class="px-5">
-            <Details
+          <VCard
+            flat
+            class="px-5"
+          >
+            <DetailsPanel
               v-if="channel && details"
               :details="channelWithDetails"
               :loading="loading"
@@ -40,7 +67,10 @@
           </VCard>
         </VTabItem>
         <VTabItem value="share">
-          <VCard flat class="pa-5">
+          <VCard
+            flat
+            class="pa-5"
+          >
             <ChannelSharing :channelId="channelId" />
           </VCard>
         </VTabItem>
@@ -50,13 +80,14 @@
 
 </template>
 
+
 <script>
 
   import { mapActions, mapGetters } from 'vuex';
   import { RouteNames } from '../../constants';
   import ChannelActionsDropdown from './ChannelActionsDropdown';
   import ChannelSharing from 'shared/views/channel/ChannelSharing';
-  import Details from 'shared/views/details/Details';
+  import DetailsPanel from 'shared/views/details/DetailsPanel';
   import { routerMixin } from 'shared/mixins';
   import LoadingText from 'shared/views/LoadingText';
   import FullscreenModal from 'shared/views/FullscreenModal';
@@ -65,7 +96,7 @@
   export default {
     name: 'ChannelDetails',
     components: {
-      Details,
+      DetailsPanel,
       LoadingText,
       FullscreenModal,
       ChannelSharing,

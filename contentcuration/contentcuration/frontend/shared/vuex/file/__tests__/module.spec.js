@@ -148,9 +148,9 @@ describe('file store', () => {
     describe('H5P content file extract metadata', () => {
       it('getH5PMetadata should check for h5p.json file', () => {
         const zip = new JSZip();
-        return zip.generateAsync({ type: 'blob' }).then(async function(h5pBlob) {
+        return zip.generateAsync({ type: 'blob' }).then(async function (h5pBlob) {
           await expect(getH5PMetadata(h5pBlob)).rejects.toThrow(
-            'h5p.json not found in the H5P file.'
+            'h5p.json not found in the H5P file.',
           );
         });
       });
@@ -158,7 +158,7 @@ describe('file store', () => {
         const manifestFile = get_metadata_file({ title: 'Test file' });
         const zip = new JSZip();
         zip.file('h5p.json', manifestFile);
-        await zip.generateAsync({ type: 'blob' }).then(async function(h5pBlob) {
+        await zip.generateAsync({ type: 'blob' }).then(async function (h5pBlob) {
           await expect(getH5PMetadata(h5pBlob)).resolves.toEqual({
             title: 'Test file',
           });
@@ -168,7 +168,7 @@ describe('file store', () => {
         const manifestFile = get_metadata_file({ title: 'Test file', language: 'und' });
         const zip = new JSZip();
         zip.file('h5p.json', manifestFile);
-        await zip.generateAsync({ type: 'blob' }).then(async function(h5pBlob) {
+        await zip.generateAsync({ type: 'blob' }).then(async function (h5pBlob) {
           await expect(getH5PMetadata(h5pBlob)).resolves.toEqual({
             title: 'Test file',
           });
@@ -186,7 +186,7 @@ describe('file store', () => {
         const manifestFile = get_metadata_file({ title: 'Test file', license: licenseName });
         const zip = new JSZip();
         zip.file('h5p.json', manifestFile);
-        await zip.generateAsync({ type: 'blob' }).then(async function(h5pBlob) {
+        await zip.generateAsync({ type: 'blob' }).then(async function (h5pBlob) {
           await expect(getH5PMetadata(h5pBlob)).resolves.toEqual({
             title: 'Test file',
             license: licenseId,
@@ -202,7 +202,7 @@ describe('file store', () => {
         const manifestFile = get_metadata_file({ title: 'Test file', authors: [authorObj] });
         const zip = new JSZip();
         zip.file('h5p.json', manifestFile);
-        await zip.generateAsync({ type: 'blob' }).then(async function(h5pBlob) {
+        await zip.generateAsync({ type: 'blob' }).then(async function (h5pBlob) {
           await expect(getH5PMetadata(h5pBlob)).resolves.toEqual({
             title: 'Test file',
             [field]: authorObj.name,
@@ -216,7 +216,7 @@ describe('file store', () => {
         });
         const zip = new JSZip();
         zip.file('h5p.json', manifestFile);
-        await zip.generateAsync({ type: 'blob' }).then(async function(h5pBlob) {
+        await zip.generateAsync({ type: 'blob' }).then(async function (h5pBlob) {
           await expect(getH5PMetadata(h5pBlob)).resolves.toEqual({
             title: 'Test file',
           });
@@ -229,7 +229,7 @@ describe('file store', () => {
         });
         const zip = new JSZip();
         zip.file('h5p.json', manifestFile);
-        await zip.generateAsync({ type: 'blob' }).then(async function(h5pBlob) {
+        await zip.generateAsync({ type: 'blob' }).then(async function (h5pBlob) {
           await expect(getH5PMetadata(h5pBlob)).resolves.toEqual({
             title: 'Test file',
             language: 'en',

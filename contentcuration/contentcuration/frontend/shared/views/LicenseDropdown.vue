@@ -1,7 +1,12 @@
 <template>
 
   <div>
-    <DropdownWrapper component="VLayout" class="license-dropdown" row align-center>
+    <DropdownWrapper
+      component="VLayout"
+      class="license-dropdown"
+      row
+      align-center
+    >
       <template #default="{ attach, menuProps }">
         <VSelect
           ref="license"
@@ -26,7 +31,10 @@
         />
       </template>
     </DropdownWrapper>
-    <p v-if="helpText" class="help">
+    <p
+      v-if="helpText"
+      class="help"
+    >
       {{ helpText }}
     </p>
     <p style="position: relative; top: -15px">
@@ -38,10 +46,10 @@
         @click="toggleAboutLicenseDisplay"
       />
     </p>
-    <div 
-      v-for="(licenseItem, index) in licencesList" 
-      v-show="showAboutLicense" 
-      :key="index" 
+    <div
+      v-for="(licenseItem, index) in licencesList"
+      v-show="showAboutLicense"
+      :key="index"
       class="mb-4 mt-3"
     >
       <h2 class="font-weight-bold mb-1 subheading">
@@ -78,6 +86,7 @@
   </div>
 
 </template>
+
 
 <script>
 
@@ -252,6 +261,7 @@
   };
 
 </script>
+
 
 <style lang="scss" scoped>
 

@@ -1,7 +1,10 @@
 <template>
 
   <div>
-    <VChip label class="ml-0">
+    <VChip
+      label
+      class="ml-0"
+    >
       <div class="label">
         {{ value }}
       </div>
@@ -14,9 +17,7 @@
       data-test="copy"
       @click="copyToClipboard"
     >
-      <Icon
-        icon="copy"
-      />
+      <Icon icon="copy" />
     </VBtn>
   </div>
 
@@ -54,6 +55,7 @@
   };
 
 </script>
+
 
 <style lang="scss" scoped>
 

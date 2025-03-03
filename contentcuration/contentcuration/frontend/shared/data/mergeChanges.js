@@ -18,6 +18,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+// eslint-disable-next-line import/no-named-as-default
 import Dexie from 'dexie';
 import flatMap from 'lodash/flatMap';
 import { CHANGE_TYPES } from './constants';
@@ -42,7 +43,7 @@ function combineUpdateAndUpdate(oldChange, newChange) {
         Dexie.setByKeyPath(
           oldChange.mods[parentPath],
           keyPath.substr(parentPath.length + 1),
-          newChange.mods[keyPath]
+          newChange.mods[keyPath],
         );
         hadParentPath = true;
       });
@@ -130,9 +131,11 @@ export default function mergeAllChanges(changes, flatten = false, changesToSync 
   for (const change of changes) {
     // Ensure changes are merged in order
     if (!('rev' in change) || typeof change.rev === 'undefined') {
+      // eslint-disable-next-line no-console
       console.error('This change has no `rev`:', change);
       throw new Error('Cannot determine the correct order for a change with no `rev`.');
     } else if (lastRev && change.rev < lastRev) {
+      // eslint-disable-next-line no-console
       console.error("These changes aren't ordered by `rev`:", changes);
       throw new Error('Cannot merge changes unless they are ordered by `rev`.');
     }

@@ -3,16 +3,26 @@
   <ImportFromChannelsModal>
     <template #default="{ preview }">
       <VSheet>
-        <div v-if="!isBrowsing" class="my-2 px-2">
+        <div
+          v-if="!isBrowsing"
+          class="my-2 px-2"
+        >
           <ActionLink
             :text="$tr('backToBrowseAction')"
             @click="handleBackToBrowse"
           />
         </div>
         <!-- Search bar -->
-        <VLayout row wrap class="mt-4 px-2">
+        <VLayout
+          row
+          wrap
+          class="mt-4 px-2"
+        >
           <VFlex style="max-width: 700px">
-            <VForm ref="search" @submit.prevent="handleSearchTerm">
+            <VForm
+              ref="search"
+              @submit.prevent="handleSearchTerm"
+            >
               <VTextField
                 v-model="searchTerm"
                 class="searchtext"
@@ -197,7 +207,7 @@
         this.copyNode = node;
         return this.copyToClipboard();
       },
-      copyToClipboard: withChangeTracker(function(changeTracker) {
+      copyToClipboard: withChangeTracker(function (changeTracker) {
         return this.copy({ node_id: this.copyNode.node_id, channel_id: this.copyNode.channel_id })
           .then(() => {
             this.$store
