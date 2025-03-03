@@ -30,7 +30,8 @@ If you are looking for help setting up custom content channels, uploading and or
 **👥 How to connect**
 
 - We encourage you to visit [GitHub Discussions](https://github.com/learningequality/studio/discussions) to connect with the Learning Equality team as well as with other contributors.
-- If you'd like to contribute on a regular basis, we are happy to invite you to our open-source community Slack channel. Get in touch with us at info@learningequality.org to receive an invitation.
+- To get access to the GSOC 2025 Slack channel, send us an e-mail at gsoc@learningequality.org.
+- If you'd like to contribute on a regular basis, we are happy to invite you to our open-source community Slack channel. Get in touch with us at contributors@learningequality.org to receive an invitation.
 
 ---
 
