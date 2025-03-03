@@ -16,7 +16,7 @@ Studio requires some background services to be running:
 ```bash
 # Install packages
 sudo apt-get install -y python-tk \
-    postgresql-server-dev-all postgresql-contrib postgresql-client postgresql-12 \
+    postgresql-server-dev-all postgresql-contrib postgresql-client postgresql-16 \
     ffmpeg libmagickwand-dev redis-server wkhtmltopdf
 
 # Install minio
@@ -26,10 +26,10 @@ sudo chmod +x bin/minio
 
 ### Mac OS
 ```bash
-brew install postgresql@12 redis ffmpeg imagemagick@6 gs
+brew install postgresql@16 redis ffmpeg imagemagick@6 gs
 # note, this version of minio may not be compatible with Studio
 brew install minio/stable/minio
-brew link --force postgresql@12
+brew link --force postgresql@16
 brew link --force imagemagick@6
 ```
 
@@ -43,7 +43,7 @@ Make sure postgres is running:
 
 ```bash
 service postgresql start
-# alternatively: pg_ctl -D /usr/local/var/postgresql@12 start
+# alternatively: pg_ctl -D /usr/local/var/postgresql@16 start
 ```
 
 Start the client with:
@@ -75,7 +75,7 @@ exit  # leave the postgres account
 For complete instructions on installing Python 3.10.13, creating and activating the virtual environment, and installing Studio’s Python dependencies, please refer to the [Build Your Python Virtual Environment](./local_dev_host.md#build-your-python-virtual-environment) section in our Local Development with host guide.
 
 ### A note about `psycopg2`
-The packages `postgresql-12`, `postgresql-contrib`, and `postgresql-server-dev-all` are required to build `psycopg2` python driver.
+The packages `postgresql-16`, `postgresql-contrib`, and `postgresql-server-dev-all` are required to build `psycopg2` python driver.
 
 ### A note about dependencies on Apple Silicon M1+
 If you run into an error with `pip install` related to the `grcpio` package, it is because it currently [does not support M1 with the version for `grcpio` Studio uses](https://github.com/grpc/grpc/issues/25082). In order to fix it, you will need to add the following environmental variables before running `pip install`:
