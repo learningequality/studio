@@ -28,6 +28,12 @@
         return !this.disabled && this.currentContextMenu === this._uid;
       },
     },
+    mounted() {
+      document.addEventListener('click', this.hideMenu);
+    },
+    beforeDestroy() {
+      document.removeEventListener('click', this.hideMenu);
+    },
     methods: {
       ...mapMutations('contextMenu', { setMenu: 'SET_CONTEXT_MENU' }),
       showMenu(e) {
@@ -44,12 +50,7 @@
       },
       extendSlot,
     },
-    mounted() {
-      document.addEventListener('click', this.hideMenu);
-    },
-    beforeDestroy() {
-      document.removeEventListener('click', this.hideMenu);
-    },
+
     render() {
       if (this.disabled) {
         return this.extendSlot('default');
