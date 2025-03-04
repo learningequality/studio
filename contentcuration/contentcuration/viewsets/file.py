@@ -45,7 +45,7 @@ class FileUploadURLSerializer(serializers.Serializer):
     Required:
       - size: a float value
       - checksum: a 32-digit hex string
-      - filename: a string (note: mapped from request.data['name'])
+      - name: a string (note: mapped from request.data['name'])
       - file_format: a valid file format choice from file_formats.choices
       - preset: a valid preset choice from format_presets.choices
     Optional:
@@ -53,7 +53,7 @@ class FileUploadURLSerializer(serializers.Serializer):
     """
     size = serializers.FloatField(required=True)
     checksum = serializers.RegexField(regex=r'^[0-9a-f]{32}$', required=True)
-    filename = serializers.CharField(required=True)
+    name = serializers.CharField(required=True)
     file_format = serializers.ChoiceField(choices=file_formats.choices, required=True)
     preset = serializers.ChoiceField(choices=format_presets.choices, required=True)
     duration = StrictFloatField(required=False)
@@ -204,7 +204,7 @@ class FileViewSet(BulkDeleteMixin, UpdateModelMixin, ReadOnlyValuesViewset):
         validated_data = serializer.validated_data
         size = validated_data["size"]
         checksum = validated_data["checksum"]
-        filename = validated_data["filename"]
+        name = validated_data["name"]
         file_format = validated_data["file_format"]
         preset = validated_data["preset"]
         duration = validated_data.get("duration")
@@ -220,7 +220,7 @@ class FileViewSet(BulkDeleteMixin, UpdateModelMixin, ReadOnlyValuesViewset):
         might_skip = File.objects.filter(checksum=checksum).exists()
 
         filepath = generate_object_storage_name(
-            checksum, filename, default_ext=file_format
+            checksum, name, default_ext=file_format
         )
         checksum_base64 = codecs.encode(
             codecs.decode(checksum, "hex"), "base64"
@@ -232,7 +232,7 @@ class FileViewSet(BulkDeleteMixin, UpdateModelMixin, ReadOnlyValuesViewset):
         file = File(
             file_size=size,
             checksum=checksum,
-            original_filename=filename,
+            original_filename=name,
             file_on_disk=filepath,
             file_format_id=file_format,
             preset_id=preset,

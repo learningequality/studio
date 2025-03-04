@@ -417,7 +417,7 @@ class ContentIDTestCase(SyncTestMixin, StudioAPITestCase):
         return {
             "size": 2500,
             "checksum": uuid.uuid4().hex,
-            "filename": "le_studio_file",
+            "name": "le_studio_file",
             "file_format": file_formats.MP3,
             "preset": format_presets.AUDIO,
         }
