@@ -4,6 +4,8 @@ import math
 from django.core.exceptions import PermissionDenied
 from django.http import HttpResponseBadRequest
 from le_utils.constants import file_formats
+from le_utils.constants import format_presets
+from rest_framework import serializers
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -28,6 +30,41 @@ from contentcuration.viewsets.common import UserFilteredPrimaryKeyRelatedField
 from contentcuration.viewsets.common import UUIDInFilter
 from contentcuration.viewsets.sync.constants import CONTENTNODE
 from contentcuration.viewsets.sync.utils import generate_update_event
+
+
+class StrictFloatField(serializers.FloatField):
+    def to_internal_value(self, data):
+        # If data is a string, reject it even if it represents a number.
+        if isinstance(data, str):
+            raise serializers.ValidationError("A valid number is required.")
+        return super().to_internal_value(data)
+
+
+# New Serializer for validating upload_url inputs
+class FileUploadURLSerializer(serializers.Serializer):
+    """
+    Serializer to validate inputs for the upload_url endpoint.
+    Required:
+      - size: a float value
+      - checksum: a 32-digit hex string
+      - name: a string (note: mapped from request.data['name'])
+      - file_format: a valid file format choice from file_formats.choices
+      - preset: a valid preset choice from format_presets.choices
+    Optional:
+      - duration: a number that will be floored to an integer and must be > 0
+    """
+    size = serializers.FloatField(required=True)
+    checksum = serializers.RegexField(regex=r'^[0-9a-f]{32}$', required=True)
+    name = serializers.CharField(required=True)
+    file_format = serializers.ChoiceField(choices=file_formats.choices, required=True)
+    preset = serializers.ChoiceField(choices=format_presets.choices, required=True)
+    duration = StrictFloatField(required=False)
+
+    def validate_duration(self, value):
+        floored = math.floor(value)
+        if floored <= 0:
+            raise serializers.ValidationError("File duration is equal to or less than 0")
+        return floored
 
 
 class FileFilter(RequiredFilterSet):
@@ -162,26 +199,17 @@ class FileViewSet(BulkDeleteMixin, UpdateModelMixin, ReadOnlyValuesViewset):
 
     @action(detail=False, methods=["post"])
     def upload_url(self, request):
-        try:
-            size = request.data["size"]
-            checksum = request.data["checksum"]
-            filename = request.data["name"]
-            file_format = request.data["file_format"]
-            preset = request.data["preset"]
-        except KeyError:
-            return HttpResponseBadRequest(
-                reason="Must specify: size, checksum, name, file_format, and preset"
-            )
+        # Validate input using the new serializer
+        serializer = FileUploadURLSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
 
-        duration = request.data.get("duration")
-        if duration is not None:
-            if not isinstance(duration, (int, float)):
-                return HttpResponseBadRequest(reason="File duration must be a number")
-            duration = math.floor(duration)
-            if duration <= 0:
-                return HttpResponseBadRequest(
-                    reason="File duration is equal to or less than 0"
-                )
+        validated_data = serializer.validated_data
+        size = validated_data["size"]
+        checksum = validated_data["checksum"]
+        filename = validated_data["name"]
+        file_format = validated_data["file_format"]
+        preset = validated_data["preset"]
+        duration = validated_data.get("duration")
 
         try:
             request.user.check_space(float(size), checksum)
@@ -202,9 +230,6 @@ class FileViewSet(BulkDeleteMixin, UpdateModelMixin, ReadOnlyValuesViewset):
         retval = get_presigned_upload_url(
             filepath, checksum_base64, 600, content_length=size
         )
-
-        if file_format not in dict(file_formats.choices):
-            return HttpResponseBadRequest("Invalid file_format!")
 
         file = File(
             file_size=size,
