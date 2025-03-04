@@ -349,7 +349,7 @@ class UploadFileURLTestCase(StudioAPITestCase):
         }
 
     def test_required_keys(self):
-        del self.file["filename"]  # Changed key to "filename"
+        del self.file["filename"]  
     
         self.client.force_authenticate(user=self.user)
         response = self.client.post(
@@ -374,7 +374,7 @@ class UploadFileURLTestCase(StudioAPITestCase):
         file = {
             "size": 1000,
             "checksum": uuid.uuid4().hex,
-            "filename": "le_studio",  # Changed key to "filename"
+            "filename": "le_studio",  
             "file_format": "ppx",
             "preset": format_presets.AUDIO,
             "duration": 10.123
@@ -444,7 +444,7 @@ class ContentIDTestCase(SyncTestMixin, StudioAPITestCase):
         return {
             "size": 2500,
             "checksum": uuid.uuid4().hex,
-            "filename": "le_studio_file",  # Changed key to "filename"
+            "filename": "le_studio_file",  
             "file_format": file_formats.MP3,
             "preset": format_presets.AUDIO,
         }

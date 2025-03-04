@@ -52,7 +52,7 @@ class FileUploadURLSerializer(serializers.Serializer):
       - duration: a number that will be floored to an integer and must be > 0
     """
     size = serializers.FloatField(required=True)
-    checksum = serializers.RegexField(regex=r'^[0-9a-fA-F]{32}$', required=True)
+    checksum = serializers.RegexField(regex=r'^[0-9a-f]{32}$', required=True)
     filename = serializers.CharField(required=True)
     file_format = serializers.ChoiceField(choices=file_formats.choices, required=True)
     preset = serializers.ChoiceField(choices=format_presets.choices, required=True)
@@ -199,9 +199,8 @@ class FileViewSet(BulkDeleteMixin, UpdateModelMixin, ReadOnlyValuesViewset):
     def upload_url(self, request):
         # Validate input using the new serializer
         serializer = FileUploadURLSerializer(data=request.data)
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=400)
-
+        serializer.is_valid(raise_exception=True)
+        
         validated_data = serializer.validated_data
         size = validated_data["size"]
         checksum = validated_data["checksum"]
