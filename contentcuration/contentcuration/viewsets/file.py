@@ -5,10 +5,10 @@ from django.core.exceptions import PermissionDenied
 from django.http import HttpResponseBadRequest
 from le_utils.constants import file_formats
 from le_utils.constants import format_presets
+from rest_framework import serializers
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework import serializers
 
 from contentcuration.models import AssessmentItem
 from contentcuration.models import Change
@@ -31,12 +31,14 @@ from contentcuration.viewsets.common import UUIDInFilter
 from contentcuration.viewsets.sync.constants import CONTENTNODE
 from contentcuration.viewsets.sync.utils import generate_update_event
 
+
 class StrictFloatField(serializers.FloatField):
     def to_internal_value(self, data):
         # If data is a string, reject it even if it represents a number.
         if isinstance(data, str):
             raise serializers.ValidationError("A valid number is required.")
         return super().to_internal_value(data)
+
 
 # New Serializer for validating upload_url inputs
 class FileUploadURLSerializer(serializers.Serializer):
@@ -200,11 +202,11 @@ class FileViewSet(BulkDeleteMixin, UpdateModelMixin, ReadOnlyValuesViewset):
         # Validate input using the new serializer
         serializer = FileUploadURLSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        
+
         validated_data = serializer.validated_data
         size = validated_data["size"]
         checksum = validated_data["checksum"]
-        name = validated_data["name"]
+        filename = validated_data["name"]
         file_format = validated_data["file_format"]
         preset = validated_data["preset"]
         duration = validated_data.get("duration")
@@ -220,7 +222,7 @@ class FileViewSet(BulkDeleteMixin, UpdateModelMixin, ReadOnlyValuesViewset):
         might_skip = File.objects.filter(checksum=checksum).exists()
 
         filepath = generate_object_storage_name(
-            checksum, name, default_ext=file_format
+            checksum, filename, default_ext=file_format
         )
         checksum_base64 = codecs.encode(
             codecs.decode(checksum, "hex"), "base64"
@@ -232,7 +234,7 @@ class FileViewSet(BulkDeleteMixin, UpdateModelMixin, ReadOnlyValuesViewset):
         file = File(
             file_size=size,
             checksum=checksum,
-            original_filename=name,
+            original_filename=filename,
             file_on_disk=filepath,
             file_format_id=file_format,
             preset_id=preset,

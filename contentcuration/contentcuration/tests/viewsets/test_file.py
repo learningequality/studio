@@ -342,22 +342,19 @@ class UploadFileURLTestCase(StudioAPITestCase):
         self.file = {
             "size": 1000,
             "checksum": uuid.uuid4().hex,
-            "name": "le_studio",      
+            "name": "le_studio",
             "file_format": file_formats.MP3,
             "preset": format_presets.AUDIO,
             "duration": 10.123
         }
 
     def test_required_keys(self):
-        del self.file["name"]  
-    
+        del self.file["name"]
         self.client.force_authenticate(user=self.user)
         response = self.client.post(
             reverse("file-upload-url"), self.file, format="json",
         )
-    
         self.assertEqual(response.status_code, 400)
-
 
     def test_duration_invalid(self):
         self.file["duration"] = '1.23'
@@ -374,7 +371,7 @@ class UploadFileURLTestCase(StudioAPITestCase):
         file = {
             "size": 1000,
             "checksum": uuid.uuid4().hex,
-            "name": "le_studio",  
+            "name": "le_studio",
             "file_format": "ppx",
             "preset": format_presets.AUDIO,
             "duration": 10.123
@@ -382,7 +379,6 @@ class UploadFileURLTestCase(StudioAPITestCase):
         response = self.client.post(
             reverse("file-upload-url"), file, format="json",
         )
-    
         self.assertEqual(response.status_code, 400)
 
     def test_invalid_preset_upload(self):
@@ -397,7 +393,6 @@ class UploadFileURLTestCase(StudioAPITestCase):
         }
         response = self.client.post(reverse("file-upload-url"), file, format="json")
         self.assertEqual(response.status_code, 400)
-    
 
     def test_insufficient_storage(self):
         self.file["size"] = 100000000000000
@@ -444,11 +439,10 @@ class ContentIDTestCase(SyncTestMixin, StudioAPITestCase):
         return {
             "size": 2500,
             "checksum": uuid.uuid4().hex,
-            "name": "le_studio_file",  
+            "name": "le_studio_file",
             "file_format": file_formats.MP3,
             "preset": format_presets.AUDIO,
         }
-    
 
     def _upload_file_to_contentnode(self, file_metadata=None, contentnode_id=None):
         """
