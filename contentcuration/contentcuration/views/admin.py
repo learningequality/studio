@@ -40,10 +40,6 @@ def send_custom_email(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated, IsAdminUser])
 def support_token_redirect(request, token):
-
-    if not request.user.is_admin:
-            return Response({"Error": "Forbidden"}, status=403)
-
     try:
         # Inline regex for validating Proquint tokens
         token_regex = re.compile(
