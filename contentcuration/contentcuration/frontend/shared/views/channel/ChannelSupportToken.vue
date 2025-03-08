@@ -7,11 +7,11 @@
     <p class="mt-2">
       {{ $tr('supportTokenDescription') }}
     </p>
-    
+  
     <div v-if="loading" class="my-4">
       <VProgressLinear indeterminate color="primary" />
     </div>
-    
+  
     <div v-else-if="supportToken" class="my-4">
       <VTextField
         v-model="supportToken"
@@ -29,7 +29,7 @@
         {{ $tr('tokenCopied') }}
       </p>
     </div>
-    
+  
     <div v-else class="my-4 sm:w-[450px] w-full">
       <KButton
         class="support-token-button"
