@@ -122,11 +122,11 @@
       <!-- Navigation bar -->
     {% if INCIDENT %}
       <div id="emergency-banner" class="text-center main-banner {% if INCIDENT.readonly %}error-banner{% else %}warning-banner{% endif %}">
-        <i class="material-icons">error</i> {{INCIDENT.message | safe}}
+       {{INCIDENT.message | safe}}
       </div>
     {% elif DEPRECATED %}
       <div class="text-center main-banner warning-banner" id="redirect-banner">
-        <i class="material-icons">error</i> {% blocktrans %}Contentworkshop.learningequality.org has been deprecated. Please go to <a href="https://studio.learningequality.org">studio.learningequality.org</a> for the latest version of Studio{% endblocktrans %}
+        {% blocktrans %}Contentworkshop.learningequality.org has been deprecated. Please go to <a href="https://studio.learningequality.org">studio.learningequality.org</a> for the latest version of Studio{% endblocktrans %}
       </div>
     {% endif %}
     {% endblock nav %}

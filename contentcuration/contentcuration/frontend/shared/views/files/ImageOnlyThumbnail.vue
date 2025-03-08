@@ -26,19 +26,17 @@
     </div>
     <svg
       v-else
-      viewBox="0 0 24 24"
+      viewBox="0 0 40 40"
       :aria-label="title"
       class="nothumbnail-image"
       :class="$isRTL ? 'rtl-image' : 'ltr-image'"
     >
-      <text
+      <KIcon
+        icon="image" 
         :x="-1"
-        :y="y - 3"
-        :fill="$vuetify.theme.greyBorder"
-        class="material-icons notranslate v-icon"
-      >
-        image
-      </text>
+        :y="y - 14"
+        :style="{ fill: '#999999' }"
+      />
     </svg>
 
   </figure>

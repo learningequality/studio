@@ -553,10 +553,6 @@
 
   .printing ::v-deep * {
     font-family: 'Noto Sans', helvetica !important;
-
-    &.material-icons {
-      font-family: 'Material Icons' !important;
-    }
   }
 
   .v-toolbar__title {
