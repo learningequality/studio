@@ -2058,7 +2058,14 @@ export const ChannelUser = new APIResource({
     });
   },
   removeViewer(channel, user) {
-    return ViewerM2M.delete([user, channel]);
+    const modelUrl = urls.channeluser_remove_self(user);
+    const params = { channel_id: channel };
+    return ViewerM2M.delete([user, channel])
+      .then(() => client.delete(modelUrl, { params }))
+      .then(() => Channel.table.delete(channel))
+      .catch(err => {
+        throw err;
+      });
   },
   fetchCollection(params) {
     return client.get(this.collectionUrl(), { params }).then(response => {
