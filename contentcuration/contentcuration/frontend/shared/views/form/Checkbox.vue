@@ -1,18 +1,20 @@
 <template>
 
-  <KCheckbox
-    :value="value"
-    :label="label"
-    :showLabel="showLabel"
-    :indeterminate="indeterminate"
-    :disabled="disabled"
-    :description="description"
-    :checked="isChecked"
-    :labelDir="labelDir"
-    @change="handleChange"
-  >
-    <slot></slot>
-  </KCheckbox>
+  <div class="checkbox-container" :data-test="'checkbox-' + value" @click="simulateClick">
+    <KCheckbox
+      :value="value"
+      :label="label"
+      :showLabel="showLabel"
+      :indeterminate="indeterminate"
+      :disabled="disabled"
+      :description="description"
+      :checked="isChecked"
+      :labelDir="labelDir"
+      @change="handleChange"
+    >
+      <slot></slot>
+    </KCheckbox>
+  </div>
 
 </template>
 
@@ -143,17 +145,69 @@
       updateInputValue(newValue) {
         this.$emit('input', newValue);
       },
+      // Added to simulate a click on the checkbox when the outer container is clicked.
+      simulateClick() {
+        // Provide a dummy event object with a stopPropagation method
+        this.handleChange(!this.isChecked, { stopPropagation() {} });
+      },
     },
   };
 
 </script>
 
-
 <style lang="scss" scoped>
 
+  /* Wrapper for better alignment control */
+  .checkbox-container {
+    display: flex;
+    align-items: center;
+  }
+
+  /* Base styling for labels */
   ::v-deep label.theme--light {
+    display: flex;
+    align-items: center;
     padding: 0 8px;
     color: var(--v-text);
   }
 
+  /* Main checkbox styling with slight downward shift */
+  ::v-deep .checkbox-icon {
+    position: relative !important;
+    top: 1.7px !important; /* Added downward shift */
+    flex-shrink: 0;
+    width: 28px !important;
+    height: 28px !important;
+  }
+
+  /* Ensure consistent text alignment */
+  ::v-deep .checkbox-label {
+    display: flex;
+    align-items: center;
+  }
+
+  /* For nested items in different contexts */
+  .content-item ::v-deep .checkbox-label,
+  ::v-deep .content-item .checkbox-label {
+    display: flex;
+    align-items: center;
+  }
+
+  /* Consistent spacing */
+  ::v-deep input[type='checkbox'] {
+    margin-right: 8px;
+  }
+
+  /* Fix for specific hardcoded selector if needed */
+  ::v-deep [data-v-4219cdf2] {
+    top: 1.7px !important; /* Added downward shift */
+    width: 28px !important;
+    height: 28px !important;
+  }
+
 </style>
+
+
+
+
+
