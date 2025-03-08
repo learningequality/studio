@@ -67,7 +67,7 @@ iniconfig==1.1.1
     # via pytest
 itypes==1.2.0
     # via coreapi
-jinja2==3.1.5
+jinja2==3.1.6
     # via coreschema
 markupsafe==2.1.2
     # via jinja2
