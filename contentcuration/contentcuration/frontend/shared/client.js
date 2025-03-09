@@ -1,5 +1,5 @@
 import omit from 'lodash/omit';
-import axios from 'axios';
+import axios, { isCancel } from 'axios';
 import qs from 'qs';
 import * as Sentry from '@sentry/vue';
 
@@ -38,24 +38,71 @@ window.addEventListener('offline', () => {
   lastOffline = Date.now();
 });
 
+// Track page state
+let isNavigating = false;
+const pendingRequests = new Set();
+
+// Create an AbortController for managing pending requests
+const abortController = new AbortController();
+
+window.addEventListener('navigate', () => {
+  isNavigating = true;
+
+  // Create a fresh AbortController to ensure proper cancellation of requests 
+  // for each navigation and prevent interference from previous aborts.
+  const newAbortController = new AbortController();
+  abortController.signal = newAbortController.signal;
+
+  // Listen for the abort event to reset the navigation flag
+  newAbortController.signal.addEventListener('abort', () => {
+    isNavigating = false;
+  });
+
+  // Abort pending requests when navigation begins
+  abortController.abort();
+});
+
+window.addEventListener('beforeunload', () => {
+  abortController.abort();
+});
+
+// Add request interceptor to track pending requests
+client.interceptors.request.use(config => {
+  // Add signal to the request config
+  config.signal = abortController.signal;
+  pendingRequests.add(config);
+  return config;
+});
+
 client.interceptors.response.use(
-  response => response,
+  response => {
+    // Remove from pending requests on success
+    pendingRequests.delete(response.config);
+    return response;
+  },
   error => {
-    const url = error.config.url;
+    // Remove from pending requests on error
+    if (error.config) {
+      pendingRequests.delete(error.config);
+    }
+
+    // Ignore specific types of errors
+    if (
+      isNavigating ||
+      isCancel(error) ||
+      error.code === 'ERR_CANCELED' ||
+      error.code === 'ECONNABORTED' ||
+      (error.response && [302, 403, 404, 405, 412].includes(error.response.status)) // added 302
+    ) {
+      return Promise.reject(error);
+    }
+    const url = error.config?.url || 'unknown';
     let message = error.message;
-    let status = 0;
-    if (error.response) {
-      status = error.response.status;
-      message = error.response.statusText;
-      // Don't send a Sentry report for permissions errors
-      // Many 404s are in fact also unauthorized requests so
-      // we should silence those on the front end and try
-      // to catch legitimate request issues in the backend.
-      //
-      // Allow 412 too as that's specific to out of storage checks
-      if (status === 403 || status === 404 || status === 405 || status === 412) {
-        return Promise.reject(error);
-      }
+    const status = error.response?.status || 0;
+
+    // Suppress contentnode query errors
+    if (url.includes('contentnode')) {
+      return Promise.reject(error);
     }
 
     message = message ? `${message}: [${status}] ${url}` : `Network Error: [${status}] ${url}`;
