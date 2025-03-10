@@ -389,10 +389,6 @@
         }
       },
       updateAnswerText(newAnswerText, answerIdx) {
-        if (newAnswerText === this.answers[answerIdx].answer) {
-          return;
-        }
-
         const updatedAnswers = [...this.answers];
         updatedAnswers[answerIdx].answer = newAnswerText;
 
