@@ -11,7 +11,7 @@
         <VListTileAction class="select-col">
           <Checkbox
             ref="checkbox"
-            class="ma-0 pa-0"
+            class="ma-0 pt-1"
             :class="{ selectedIndeterminate: !selected && indeterminate }"
             :inputValue="selected"
             :indeterminate="indeterminate"
