@@ -8,7 +8,7 @@ amqp==5.1.1
     # via kombu
 asgiref==3.3.4
     # via django
-async-timeout==4.0.2
+async-timeout==5.0.1
     # via redis
 attrs==23.1.0
     # via jsonschema
@@ -198,7 +198,7 @@ pytz==2022.1
     #   django
     #   django-postmark
     #   google-api-core
-redis==4.5.4
+redis==5.2.1
     # via
     #   -r requirements.in
     #   django-redis
