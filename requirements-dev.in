@@ -8,4 +8,4 @@ pytest-timeout
 pre-commit==1.15.1
 nodeenv
 pip-tools==7.4.1
-drf-yasg==1.21.5
+drf-yasg==1.21.10
