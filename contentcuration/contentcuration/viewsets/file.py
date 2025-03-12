@@ -58,13 +58,21 @@ class FileUploadURLSerializer(serializers.Serializer):
     name = serializers.CharField(required=True)
     file_format = serializers.ChoiceField(choices=file_formats.choices, required=True)
     preset = serializers.ChoiceField(choices=format_presets.choices, required=True)
-    duration = StrictFloatField(required=False)
+    duration = StrictFloatField(required=False, allow_null=True)
 
     def validate_duration(self, value):
+        if value is None:
+            return None
         floored = math.floor(value)
         if floored <= 0:
             raise serializers.ValidationError("File duration is equal to or less than 0")
         return floored
+
+    def validate(self, attrs):
+        if attrs["file_format"] in {file_formats.MP4, file_formats.WEBM, file_formats.MP3}:
+            if "duration" not in attrs or attrs["duration"] is None:
+                raise serializers.ValidationError("Duration is required for audio/video files")
+        return attrs
 
 
 class FileFilter(RequiredFilterSet):

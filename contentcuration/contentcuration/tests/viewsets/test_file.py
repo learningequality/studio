@@ -364,6 +364,50 @@ class UploadFileURLTestCase(StudioAPITestCase):
 
         self.assertEqual(response.status_code, 400)
 
+    def test_duration_missing(self):
+        del self.file["duration"]
+        self.file["file_format"] = file_formats.EPUB
+
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(
+            reverse("file-upload-url"), self.file, format="json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_duration_missing_but_required(self):
+        del self.file["duration"]
+        self.file["file_format"] = file_formats.MP4
+
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(
+            reverse("file-upload-url"), self.file, format="json",
+        )
+
+        self.assertEqual(response.status_code, 400)
+
+    def test_duration_null(self):
+        self.file["duration"] = None
+        self.file["file_format"] = file_formats.EPUB
+
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(
+            reverse("file-upload-url"), self.file, format="json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_duration_null_but_required(self):
+        self.file["duration"] = None
+        self.file["file_format"] = file_formats.MP4
+
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(
+            reverse("file-upload-url"), self.file, format="json",
+        )
+
+        self.assertEqual(response.status_code, 400)
+
     def test_invalid_file_format_upload(self):
         self.client.force_authenticate(user=self.user)
         file = {
@@ -440,6 +484,7 @@ class ContentIDTestCase(SyncTestMixin, StudioAPITestCase):
             "name": "le_studio_file",
             "file_format": file_formats.MP3,
             "preset": format_presets.AUDIO,
+            "duration": 17,
         }
 
     def _upload_file_to_contentnode(self, file_metadata=None, contentnode_id=None):
@@ -541,7 +586,9 @@ class ContentIDTestCase(SyncTestMixin, StudioAPITestCase):
         thumbnail_file_meta_1 = self._get_file_metadata()
         thumbnail_file_meta_2 = self._get_file_metadata()
         thumbnail_file_meta_1.update({"preset": format_presets.AUDIO_THUMBNAIL, "file_format": file_formats.JPEG, })
+        del thumbnail_file_meta_1["duration"]
         thumbnail_file_meta_2.update({"preset": format_presets.AUDIO_THUMBNAIL, "file_format": file_formats.JPEG, })
+        del thumbnail_file_meta_2["duration"]
 
         # Upload thumbnail to original contentnode and copied contentnode.
         # content_id should remain same for both these nodes.
