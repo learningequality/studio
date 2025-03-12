@@ -81,7 +81,7 @@ nodeenv==1.9.1
     # via
     #   -r requirements-dev.in
     #   pre-commit
-packaging==24.0
+packaging==24.2
     # via
     #   -c requirements.txt
     #   build
