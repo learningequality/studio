@@ -1,9 +1,11 @@
 import { UpdatedDescendantsChange } from '../changes';
+import { ViewerM2M, ChannelUser, Channel, ContentNode } from '../resources';
 import db from 'shared/data/db';
 import { CHANGE_TYPES, TABLE_NAMES } from 'shared/data/constants';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
-import { ContentNode } from 'shared/data/resources';
 import { mockChannelScope, resetMockChannelScope } from 'shared/utils/testing';
+import client from 'shared/client';
+import urls from 'shared/urls';
 
 const CLIENTID = 'test-client-id';
 
@@ -168,6 +170,54 @@ describe('Resources', () => {
         expect(change).toBeDefined();
         expect(change.key).toEqual(parentId);
         expect(change.mods).toEqual(changes);
+      });
+    });
+    describe('ChannelUser resource', () => {
+      const testChannelId = 'test-channel-id';
+      const testUserId = 'test-user-id';
+
+      beforeEach(async () => {
+        await db[TABLE_NAMES.VIEWER_M2M].clear();
+        await db[TABLE_NAMES.CHANNEL].clear();
+        jest.spyOn(client, 'delete').mockResolvedValue({});
+        jest.spyOn(Channel.table, 'delete').mockResolvedValue(true);
+        jest.spyOn(urls, 'channeluser_remove_self').mockReturnValue(`fake_url_for_${testUserId}`);
+      });
+
+      afterEach(() => {
+        client.delete.mockRestore();
+        Channel.table.delete.mockRestore();
+        urls.channeluser_remove_self.mockRestore();
+      });
+
+      it('should remove the user from the ViewerM2M table when removeViewer is called', async () => {
+        await ViewerM2M.add({ user: testUserId, channel: testChannelId });
+        let viewer = await ViewerM2M.get([testUserId, testChannelId]);
+        expect(viewer).toBeTruthy();
+
+        await ChannelUser.removeViewer(testChannelId, testUserId);
+
+        viewer = await ViewerM2M.get([testUserId, testChannelId]);
+        expect(viewer).toBeUndefined();
+        expect(client.delete).toHaveBeenCalledWith(urls.channeluser_remove_self(testUserId), {
+          params: { channel_id: testChannelId },
+        });
+      });
+
+      it('should call Channel.table.delete(channel) when removeViewer is called', async () => {
+        await ViewerM2M.add({ user: testUserId, channel: testChannelId });
+        const viewer = await ViewerM2M.get([testUserId, testChannelId]);
+        expect(viewer).toBeTruthy();
+        await ChannelUser.removeViewer(testChannelId, testUserId);
+        expect(Channel.table.delete).toHaveBeenCalledWith(testChannelId);
+      });
+
+      it('should handle error from client.delete when removeViewer is called', async () => {
+        jest.spyOn(client, 'delete').mockRejectedValue(new Error('error deleting'));
+        await ViewerM2M.add({ user: testUserId, channel: testChannelId });
+        await expect(ChannelUser.removeViewer(testChannelId, testUserId)).rejects.toThrow(
+          'error deleting'
+        );
       });
     });
   });
