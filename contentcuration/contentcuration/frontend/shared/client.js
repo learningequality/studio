@@ -38,25 +38,16 @@ window.addEventListener('offline', () => {
   lastOffline = Date.now();
 });
 
-// Track page state
-let isNavigating = false;
 const pendingRequests = new Set();
 
 // Create an AbortController for managing pending requests
 const abortController = new AbortController();
 
 window.addEventListener('navigate', () => {
-  isNavigating = true;
-
   // Create a fresh AbortController to ensure proper cancellation of requests 
   // for each navigation and prevent interference from previous aborts.
   const newAbortController = new AbortController();
   abortController.signal = newAbortController.signal;
-
-  // Listen for the abort event to reset the navigation flag
-  newAbortController.signal.addEventListener('abort', () => {
-    isNavigating = false;
-  });
 
   // Abort pending requests when navigation begins
   abortController.abort();
@@ -88,10 +79,7 @@ client.interceptors.response.use(
 
     // Ignore specific types of errors
     if (
-      isNavigating ||
       isCancel(error) ||
-      error.code === 'ERR_CANCELED' ||
-      error.code === 'ECONNABORTED' ||
       (error.response && [302, 403, 404, 405, 412].includes(error.response.status)) // added 302
     ) {
       return Promise.reject(error);
