@@ -136,7 +136,7 @@
           this.presets
             .map(preset => {
               const file = this.files.find(file => file.preset.id === preset.id);
-              if (!preset.supplementary) {
+              if (!preset.supplementary && file) {
                 return { preset, order: preset.order, file };
               }
               return null;
