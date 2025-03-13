@@ -104,13 +104,24 @@ describe('fileUpload', () => {
       uploadItem.vm.$emit('selected');
       expect(wrapper.vm.selected).toBe('file-1');
     });
-    it('emitted remove event should trigger delete file', () => {
+    it('emitted remove event should trigger removal dialog', () => {
       const deleteFile = jest.fn();
-      wrapper.setData({ selected: 'file-1' });
+      wrapper.setData({
+        selected: 'file-1',
+        showRemoveFileWarning: false,
+        isRemoveFileApproved: false,
+      });
       wrapper.setMethods({ deleteFile });
       uploadItem.vm.$emit('remove', testFiles[0]);
-      expect(deleteFile).toHaveBeenCalled();
-      expect(deleteFile.mock.calls[0][0]).toBe(testFiles[0]);
+
+      expect(wrapper.vm.showRemoveFileWarning).toBe(true);
+      expect(wrapper.vm.isRemoveFileApproved).toBe(false);
+
+      const modal = wrapper.find('[data-test="remove-file-warning"]');
+      expect(modal.exists()).toBe(true);
+      expect(modal.isVisible()).toBe(true);
+
+      expect(deleteFile).not.toHaveBeenCalled();
     });
     it('calling uploadCompleteHandler should trigger update file', () => {
       const updateFile = jest.fn(() => Promise.resolve());
