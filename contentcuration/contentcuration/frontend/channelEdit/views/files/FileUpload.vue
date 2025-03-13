@@ -2,7 +2,7 @@
 
   <div style="width: 100%;">
     <VCard
-      v-if="!primaryFileMapping.length"
+      v-if="!primaryFileCount"
       data-test="error"
       flat
     >
@@ -62,6 +62,18 @@
         </div>
       </VFlex>
     </VLayout>
+
+    <KModal
+      v-if="showRemoveFileWarning"
+      data-test="remove-file-warning"
+      :title="$tr('removeFile')"
+      :submitText="$tr('yesButton')"
+      :cancelText="$tr('cancelButton')"
+      @submit="handleRemoveFileApproval"
+      @cancel="showRemoveFileWarning = false"
+    >
+      <p>{{ $tr("removeFileDescription", { fileTypes: allowedFileTypes }) }}</p>
+    </KModal>
   </div>
 
 </template>
@@ -91,6 +103,8 @@
     data() {
       return {
         selected: null,
+        showRemoveFileWarning: false,
+        isRemoveFileApproved: false,
       };
     },
     computed: {
@@ -115,25 +129,31 @@
         return this.fileCount > 1;
       },
       primaryFileCount() {
-        return this.files.filter(file => !file.preset.supplementary).length;
+        return this.primaryFileMapping.length;
       },
       primaryFileMapping() {
         return sortBy(
           this.presets
-            .filter(p => !p.supplementary)
             .map(preset => {
-              return {
-                preset,
-                order: preset.order,
-                file: this.files.find(file => file.preset.id === preset.id),
-              };
-            }),
+              const file = this.files.find(file => file.preset.id === preset.id);
+              if (!preset.supplementary) {
+                return { preset, order: preset.order, file };
+              }
+              return null;
+            })
+            .filter(item => item !== null),
           'order'
         );
       },
       selectedFilename() {
         const file = this.files.find(f => f.id === this.selected);
         return file ? file.original_filename : '';
+      },
+      allowedFileTypes() {
+        return this.presets
+          .filter(p => !p.supplementary && Array.isArray(p.allowed_formats))
+          .map(p => p.allowed_formats.join(', '))
+          .join(', ');
       },
     },
     watch: {
@@ -165,9 +185,25 @@
         });
       },
       handleRemoveFile(file) {
-        this.deleteFile(file);
-        if (file.id === this.selected) {
-          this.selectFirstFile();
+        if (this.primaryFileCount > 1 && !this.isRemoveFileApproved) {
+          this.showRemoveFileWarning = true;
+        } else {
+          this.deleteFile(file);
+          if (file.id === this.selected) {
+            this.selectFirstFile();
+          }
+          this.showRemoveFileWarning = false;
+          this.isRemoveFileApproved = false;
+        }
+      },
+      handleRemoveFileApproval() {
+        this.isRemoveFileApproved = true;
+        const selectedFile = this.files.find(f => f.id === this.selected);
+        if (selectedFile) {
+          this.handleRemoveFile(selectedFile);
+        } else {
+          this.showRemoveFileWarning = false;
+          this.isRemoveFileApproved = false;
         }
       },
     },
@@ -175,6 +211,11 @@
       filesHeader: 'Files',
       fileError: 'Unsupported file type',
       noFileText: 'Missing files',
+      removeFile: 'Remove file',
+      removeFileDescription:
+        'Once this file is removed, this resource will only be able to include a single file from the formats: { fileTypes }. Are you sure you want to continue?',
+      yesButton: 'Yes',
+      cancelButton: 'Cancel',
     },
   };
 
