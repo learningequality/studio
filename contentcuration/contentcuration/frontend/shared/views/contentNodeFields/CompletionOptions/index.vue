@@ -256,6 +256,9 @@
           } else if (value === CompletionDropdownMap.goal) {
             update.modality = null;
             update.model = CompletionCriteriaModels.MASTERY;
+          } else if (value === CompletionDropdownMap.survey){
+            update.modality = ContentModalities.QUIZ;
+            update.threshold = { mastery_model: MasteryModelsNames.DO_ALL };
           }
           this.handleInput(update);
         },

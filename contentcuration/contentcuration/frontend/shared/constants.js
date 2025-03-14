@@ -223,6 +223,7 @@ export const CompletionDropdownMap = {
   goal: 'goal',
   practiceQuiz: 'practiceQuiz',
   reference: 'reference',
+  survey: 'survey',
 };
 
 export const DurationDropdownMap = {
@@ -284,7 +285,11 @@ export const CompletionOptionsDropdownMap = {
     CompletionDropdownMap.completeDuration,
     CompletionDropdownMap.reference,
   ],
-  [ContentKindsNames.EXERCISE]: [CompletionDropdownMap.goal, CompletionDropdownMap.practiceQuiz],
+  [ContentKindsNames.EXERCISE]: [
+    CompletionDropdownMap.goal,
+    CompletionDropdownMap.practiceQuiz,
+    CompletionDropdownMap.survey
+  ],
   [ContentKindsNames.HTML5]: [
     CompletionDropdownMap.completeDuration,
     CompletionDropdownMap.determinedByResource,
