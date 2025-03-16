@@ -1,5 +1,3 @@
-from __future__ import division
-
 import hashlib
 import itertools
 import json
@@ -11,7 +9,6 @@ import time
 import traceback
 import uuid
 import zipfile
-from builtins import str
 from copy import deepcopy
 from io import BytesIO
 from itertools import chain
@@ -44,8 +41,6 @@ from le_utils.constants import exercises
 from le_utils.constants import file_formats
 from le_utils.constants import format_presets
 from le_utils.constants import roles
-from past.builtins import basestring
-from past.utils import old_div
 from PIL import Image
 from search.models import ChannelFullTextSearch
 from search.models import ContentNodeFullTextSearch
@@ -211,7 +206,7 @@ class TreeMapper:
         self.root_node = root_node
         task_percent_total = 80.0
         total_nodes = root_node.get_descendant_count() + 1  # make sure we include root_node
-        self.percent_per_node = old_div(task_percent_total, total_nodes)
+        self.percent_per_node = task_percent_total / float(total_nodes)
         self.progress_tracker = progress_tracker
         self.default_language = default_language
         self.channel_id = channel_id
@@ -515,7 +510,7 @@ def create_perseus_exercise(ccnode, kolibrinode, exercise_data, user_id=None):
 
 def parse_assessment_metadata(ccnode):
     extra_fields = ccnode.extra_fields
-    if isinstance(extra_fields, basestring):
+    if isinstance(extra_fields, str):
         extra_fields = json.loads(extra_fields)
     extra_fields = migrate_extra_fields(extra_fields) or {}
     randomize = extra_fields.get('randomize') if extra_fields.get('randomize') is not None else True

@@ -419,14 +419,14 @@
   };
 
 </script>
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .clipboard {
     position: absolute;
   }
 
   .container,
-  /deep/ .drawer-contents {
+  ::v-deep .drawer-contents {
     max-height: 100vh;
   }
 
@@ -454,7 +454,7 @@
     vertical-align: text-bottom;
   }
 
-  /deep/ .header .v-list__tile {
+  ::v-deep .header .v-list__tile {
     border-left: 5px solid transparent;
   }
 
@@ -474,15 +474,15 @@
     background-color: #f9f9f9;
   }
 
-  /deep/ .v-toolbar__content {
+  ::v-deep .v-toolbar__content {
     padding: 0;
   }
 
-  /deep/ .v-list__group--active::before {
+  ::v-deep .v-list__group--active::before {
     background: none !important;
   }
 
-  /deep/ .channel-item:last-child::after {
+  ::v-deep .channel-item:last-child::after {
     background: rgba(0, 0, 0, 0.12) !important;
   }
 
@@ -494,7 +494,7 @@
     left: 0;
     background-color: rgba(153, 97, 137, 0.2);
     /* stylelint-disable-next-line custom-property-pattern */
-    border: 5px solidvar(--v-draggabledropoverlay-base);
+    border: 5px solid var(--v-draggabledropoverlay-base);
   }
 
 </style>

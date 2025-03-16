@@ -1,11 +1,9 @@
-from future import standard_library
-standard_library.install_aliases()
 import base64
 import copy
-from io import BytesIO
 import os
 import re
 import tempfile
+from io import BytesIO
 from multiprocessing.dummy import Pool
 
 import requests

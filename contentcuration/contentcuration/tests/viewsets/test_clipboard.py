@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 import uuid
 
 from django.core.management import call_command
@@ -17,16 +15,6 @@ from contentcuration.viewsets.sync.constants import CLIPBOARD
 
 
 class SyncTestCase(SyncTestMixin, StudioAPITestCase):
-    @classmethod
-    def setUpClass(cls):
-        cls.create_bucket()
-        super(SyncTestCase, cls).setUpClass()
-
-    @classmethod
-    def tearDownClass(cls):
-        super(SyncTestCase, cls).tearDownClass()
-        cls.create_bucket()
-
     @classmethod
     def setUpTestData(cls):
         call_command("loadconstants")
@@ -214,16 +202,6 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
 
 
 class CRUDTestCase(StudioAPITestCase):
-    @classmethod
-    def setUpClass(cls):
-        cls.create_bucket()
-        super(CRUDTestCase, cls).setUpClass()
-
-    @classmethod
-    def tearDownClass(cls):
-        super(CRUDTestCase, cls).tearDownClass()
-        cls.create_bucket()
-
     @classmethod
     def setUpTestData(cls):
         call_command("loadconstants")

@@ -262,7 +262,7 @@
             <VFlex class="source-thumbnail">
               <Thumbnail :src="channel.thumbnail" />
             </VFlex>
-            <VFlex v-if="libraryMode" class="font-weight-bold notranslate px-4 subheading">
+            <VFlex v-if="printing" class="font-weight-bold notranslate px-4 subheading">
               {{ channel.name }}
             </VFlex>
             <a
@@ -419,9 +419,6 @@
         }
         return '';
       },
-      libraryMode() {
-        return window.libraryMode;
-      },
       sizeText() {
         const size = this._details.resource_size;
         const sizeIndex = Math.max(
@@ -496,6 +493,14 @@
         return this.categories.join(', ');
       },
     },
+    mounted() {
+      if (!this.isChannel) {
+        // Track node details view when not a channel-- is this happening?
+        this.$analytics.trackAction('node_details', 'View', {
+          id: this._details.id,
+        });
+      }
+    },
     methods: {
       channelUrl(channel) {
         return window.Urls.channel(channel.id);
@@ -544,9 +549,9 @@
 </script>
 
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
-  .printing /deep/ * {
+  .printing ::v-deep * {
     font-family: 'Noto Sans', helvetica !important;
 
     &.material-icons {
@@ -586,7 +591,7 @@
     max-width: 350px;
     font-size: 12pt;
 
-    /deep/ tr {
+    ::v-deep tr {
       border-top: 0 !important;
 
       &:hover {

@@ -86,9 +86,9 @@
 
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
-  /deep/ label {
+  ::v-deep label {
     margin: 0;
     font-weight: normal;
   }

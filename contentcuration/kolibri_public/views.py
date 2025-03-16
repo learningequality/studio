@@ -10,6 +10,7 @@ import logging
 import re
 from collections import OrderedDict
 from functools import reduce
+from uuid import UUID
 
 from django.core.exceptions import ValidationError
 from django.db.models import Exists
@@ -35,6 +36,7 @@ from kolibri_public import models
 from kolibri_public.search import get_available_metadata_labels
 from kolibri_public.stopwords import stopwords_set
 from le_utils.constants import content_kinds
+from rest_framework import status
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
@@ -44,7 +46,6 @@ from contentcuration.models import generate_storage_url
 from contentcuration.utils.pagination import ValuesViewsetCursorPagination
 from contentcuration.viewsets.base import BaseValuesViewset
 from contentcuration.viewsets.base import ReadOnlyValuesViewset
-
 
 logger = logging.getLogger(__name__)
 
@@ -396,6 +397,7 @@ class BaseContentNodeMixin(object):
         "grade_levels",
         "resource_types",
         "accessibility_labels",
+        "learner_needs",
         "categories",
         "duration",
         "ancestors",
@@ -407,6 +409,7 @@ class BaseContentNodeMixin(object):
         "resource_types": lambda x: _split_text_field(x["resource_types"]),
         "accessibility_labels": lambda x: _split_text_field(x["accessibility_labels"]),
         "categories": lambda x: _split_text_field(x["categories"]),
+        "learner_needs": lambda x: _split_text_field(x["learner_needs"]),
     }
 
     def get_queryset(self):
@@ -697,8 +700,15 @@ class ContentNodeTreeViewset(
         :return: an object representing the parent with a pagination object as "children"
         """
 
-        queryset = self.get_tree_queryset(request, pk)
+        try:
+            UUID(pk)
+        except ValueError:
+            return Response(
+                {"error": "Invalid UUID format."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
+        queryset = self.get_tree_queryset(request, pk)
         # We explicitly order by lft here, so that the nodes are in tree traversal order, so we can iterate over them and build
         # out our nested representation, being sure that any ancestors have already been processed.
         nodes = self.serialize(queryset.order_by("lft"))

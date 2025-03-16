@@ -138,16 +138,18 @@
       </div>
       <label>{{ $tr('organizationalAffiliationLabel') }}</label>
     </div>
-    <KRadioButton
-      v-for="affiliation in affiliationOptions"
-      :key="affiliation.value"
-      v-model="org_or_personal"
-      :buttonValue="affiliation.value"
-      :invalid="errors.org_or_personal"
-      :showInvalidText="errors.org_or_personal"
-      :invalidText="$tr('fieldRequiredText')"
-      :label="affiliation.text"
-    />
+    <KRadioButtonGroup>
+      <KRadioButton
+        v-for="affiliation in affiliationOptions"
+        :key="affiliation.value"
+        v-model="org_or_personal"
+        :buttonValue="affiliation.value"
+        :invalid="errors.org_or_personal"
+        :showInvalidText="errors.org_or_personal"
+        :invalidText="$tr('fieldRequiredText')"
+        :label="affiliation.text"
+      />
+    </KRadioButtonGroup>
     <KTextbox
       v-model="organization"
       :invalid="errors.organization"
@@ -168,17 +170,19 @@
         {{ $tr('typeOfOrganizationLabel') }}
       </label>
     </div>
-    <KRadioButton
-      v-for="orgType in organizationTypeOptions"
-      :key="orgType.value"
-      v-model="organization_type"
-      :buttonValue="orgType.value"
-      :invalid="errors.organization_type"
-      :showInvalidText="errors.organization_type"
-      :invalidText="$tr('fieldRequiredText')"
-      :label="orgType.text"
-      :disabled="!orgSelected"
-    />
+    <KRadioButtonGroup>
+      <KRadioButton
+        v-for="orgType in organizationTypeOptions"
+        :key="orgType.value"
+        v-model="organization_type"
+        :buttonValue="orgType.value"
+        :invalid="errors.organization_type"
+        :showInvalidText="errors.organization_type"
+        :invalidText="$tr('fieldRequiredText')"
+        :label="orgType.text"
+        :disabled="!orgSelected"
+      />
+    </KRadioButtonGroup>
     <KTextbox
       v-model="organization_other"
       :invalid="errors.organization_other"
@@ -195,13 +199,15 @@
     <div class="mb-1">
       <label>{{ $tr('timelineLabel') }}</label>
     </div>
-    <KRadioButton
-      v-for="constraint in timeConstraintOptions"
-      :key="constraint.value"
-      v-model="time_constraint"
-      :buttonValue="constraint.value"
-      :label="constraint.text"
-    />
+    <KRadioButtonGroup>
+      <KRadioButton
+        v-for="constraint in timeConstraintOptions"
+        :key="constraint.value"
+        v-model="time_constraint"
+        :buttonValue="constraint.value"
+        :label="constraint.text"
+      />
+    </KRadioButtonGroup>
 
     <!-- Use case -->
     <div class="mb-1 mt-4">

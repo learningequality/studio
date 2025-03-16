@@ -22,6 +22,9 @@ from contentcuration.viewsets.sync.constants import CHANNEL
 from contentcuration.viewsets.sync.constants import CREATED
 
 
+CHANGE_RETURN_LIMIT = 200
+
+
 class SyncView(APIView):
     authentication_classes = (SessionAuthentication,)
     permission_classes = (IsAuthenticated,)
@@ -104,7 +107,7 @@ class SyncView(APIView):
                 "table",
                 "change_type",
                 "kwargs"
-            ).order_by("server_rev")
+            ).order_by("server_rev")[:CHANGE_RETURN_LIMIT]
         )
 
         if not changes_to_return:

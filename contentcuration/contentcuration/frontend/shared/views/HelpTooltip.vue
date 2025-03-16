@@ -39,9 +39,9 @@
 
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
-  /deep/.k-tooltip {
+  ::v-deep .k-tooltip {
     width: 100%;
   }
 

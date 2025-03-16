@@ -32,7 +32,7 @@ jobs:
       # Label used to access the service container
       postgres:
         # Docker Hub image
-        image: postgres:12
+        image: postgres:16
         # Provide the password for postgres
         env:
           POSTGRES_USER: learningequality
@@ -65,11 +65,10 @@ jobs:
     - name: Set up minio
       run: |
         docker run -d -p 9000:9000 --name minio \
-                    -e "MINIO_ACCESS_KEY=development" \
-                    -e "MINIO_SECRET_KEY=development" \
-                    -v /tmp/minio_data:/data \
-                    -v /tmp/minio_config:/root/.minio \
-                    minio/minio server /data
+                    -e "MINIO_ROOT_USER=development" \
+                    -e "MINIO_ROOT_PASSWORD=development" \
+                    -e "MINIO_DEFAULT_BUCKETS=content:public" \
+                    bitnami/minio:2024.5.28
     - name: Set up Python 3.10
       uses: actions/setup-python@v5
       with:

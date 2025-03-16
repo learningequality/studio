@@ -1,7 +1,5 @@
 # flake8: noqa
 # ignore the entire file in general, since we do a lot of overrides here which break pep8 compat
-from __future__ import absolute_import
-
 from . import settings as base_settings
 from .settings import *  # noqa
 from contentcuration.utils.secretmanagement import get_secret

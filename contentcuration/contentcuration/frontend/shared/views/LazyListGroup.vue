@@ -78,11 +78,11 @@
 
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
-  @icon-padding: 16px;
-  @icon-width: 25px;
-  @header-width: calc(2 * @icon-padding + @icon-width);
+  $icon-padding: 16px;
+  $icon-width: 25px;
+  $header-width: calc(2 * $icon-padding + $icon-width);
 
   .list-group {
     box-sizing: border-box;
@@ -108,9 +108,7 @@
   }
 
   .header-content.has-icon {
-    // stylelint-disable
-    width: calc(100% ~'-' @header-width);
-    // stylelint-enable
+    width: calc(100% - $header-width);
   }
 
   .list-group.open > .list-group-header .v-icon {
@@ -119,8 +117,8 @@
 
   .icon-container {
     box-sizing: border-box;
-    width: @icon-width;
-    padding: 0 @icon-padding;
+    width: $icon-width;
+    padding: 0 $icon-padding;
   }
 
 </style>

@@ -138,12 +138,12 @@
 
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .v-expansion-panel {
     box-shadow: none;
 
-    /deep/ .v-expansion-panel__header {
+    ::v-deep .v-expansion-panel__header {
       padding: 0;
     }
   }

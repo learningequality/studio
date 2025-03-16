@@ -231,7 +231,7 @@
 
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .title {
     display: inline-flex;

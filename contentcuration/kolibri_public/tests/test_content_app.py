@@ -137,6 +137,9 @@ class ContentNodeAPIBase(object):
                 "learning_activities": expected.learning_activities.split(",")
                 if expected.learning_activities
                 else [],
+                "learner_needs": expected.learner_needs.split(",")
+                if expected.learner_needs
+                else [],
                 "grade_levels": expected.grade_levels.split(",")
                 if expected.grade_levels
                 else [],
@@ -235,6 +238,17 @@ class ContentNodeAPIBase(object):
                     )
                 )
         return recursion_depth if not recursion_depths else max(recursion_depths)
+
+    def test_contentnode_tree_invalid_uuid(self):
+        invalid_uuid = "8f0a5b9d89795"
+
+        response = self._get(
+            reverse("publiccontentnode_tree-detail", kwargs={"pk": invalid_uuid})
+        )
+
+        self.assertEqual(response.status_code, 400)
+
+        self.assertEqual(response.data["error"], "Invalid UUID format.")
 
     def test_contentnode_tree(self):
         response = self._get(

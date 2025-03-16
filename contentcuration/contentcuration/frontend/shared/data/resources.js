@@ -1116,10 +1116,16 @@ export const Session = new IndexedDBResource({
   async getSession() {
     return this.get(CURRENT_USER);
   },
-  setSession(currentUser) {
-    return this.table.put({ CURRENT_USER, ...currentUser });
+  async setSession(currentUser) {
+    return this.transaction({ mode: 'rw' }, CHANGES_TABLE, async () => {
+      const current = await this.getSession();
+      if (current) {
+        return this.updateSession(currentUser);
+      }
+      return this.table.put({ CURRENT_USER, ...currentUser });
+    });
   },
-  updateSession(currentUser) {
+  async updateSession(currentUser) {
     return this.update(CURRENT_USER, currentUser);
   },
 });
@@ -1774,9 +1780,14 @@ export const ContentNode = new TreeResource({
    * @param {Function} updateCallback
    * @return {Promise<void>}
    */
-  updateAncestors({ id, includeSelf = false, ignoreChanges = false }, updateCallback) {
-    return this.transaction({ mode: 'rw' }, async () => {
-      const ancestors = await this.getAncestors(id);
+  async updateAncestors({ id, includeSelf = false, ignoreChanges = false }, updateCallback) {
+    // getAncestors invokes a non-Dexie API, so it must be called outside the transaction.
+    // Invoking it within a transaction can lead to transaction-related issues, including premature
+    // commit errors, which are a common problem when mixing non-Dexie API calls with transactions.
+    // See: https://dexie.org/docs/DexieErrors/Dexie.PrematureCommitError
+    const ancestors = await this.getAncestors(id);
+
+    return await this.transaction({ mode: 'rw' }, async () => {
       for (const ancestor of ancestors) {
         if (ancestor.id === id && !includeSelf) {
           continue;
@@ -1993,7 +2004,7 @@ export const User = new Resource({
   uuid: false,
 
   updateAsAdmin(id, changes) {
-    return client.post(window.Urls.adminUsersAccept(id)).then(() => {
+    return client.patch(window.Urls.adminUsersDetail(id), changes).then(() => {
       return this.transaction({ mode: 'rw' }, () => {
         return this.table.update(id, changes);
       });

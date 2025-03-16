@@ -21,10 +21,10 @@
             </VBtn>
           </template>
           <VList>
-            <VListTile @click="generatePdf">
+            <VListTile @click="generatePDF">
               <VListTileTitle>{{ $tr('downloadPDF') }}</VListTileTitle>
             </VListTile>
-            <VListTile data-test="dl-csv" @click="generateChannelsCSV([channelWithDetails])">
+            <VListTile data-test="dl-csv" @click="generateCSV">
               <VListTileTitle>{{ $tr('downloadCSV') }}</VListTileTitle>
             </VListTile>
           </VList>
@@ -114,13 +114,25 @@
     },
     mounted() {
       this.load();
+      this.$analytics.trackAction('channel_details', 'View', {
+        id: this.channelId,
+      });
     },
     methods: {
       ...mapActions('channel', ['loadChannel', 'loadChannelDetails']),
-      async generatePdf() {
+      async generatePDF() {
+        this.$analytics.trackEvent('channel_details', 'Download PDF', {
+          id: this.channelId,
+        });
         this.loading = true;
         await this.generateChannelsPDF([this.channelWithDetails]);
         this.loading = false;
+      },
+      generateCSV() {
+        this.$analytics.trackEvent('channel_details', 'Download CSV', {
+          id: this.channelId,
+        });
+        this.generateChannelsCSV([this.channelWithDetails]);
       },
       load() {
         this.loading = true;
@@ -158,7 +170,7 @@
 </script>
 
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .v-toolbar__title {
     font-weight: bold;

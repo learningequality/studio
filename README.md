@@ -30,7 +30,8 @@ If you are looking for help setting up custom content channels, uploading and or
 **👥 How to connect**
 
 - We encourage you to visit [GitHub Discussions](https://github.com/learningequality/studio/discussions) to connect with the Learning Equality team as well as with other contributors.
-- If you'd like to contribute on a regular basis, we are happy to invite you to our open-source community Slack channel. Get in touch with us at info@learningequality.org to receive an invitation.
+- To get access to the GSOC 2025 Slack channel, send us an e-mail at gsoc@learningequality.org.
+- If you'd like to contribute on a regular basis, we are happy to invite you to our open-source community Slack channel. Get in touch with us at contributors@learningequality.org to receive an invitation.
 
 ---
 
@@ -41,3 +42,9 @@ As soon as you open a pull request, it may take us a week or two to review it as
 ---
 
 *Thank you for your interest in contributing! Learning Equality was founded by volunteers dedicated to helping make educational materials more accessible to those in need, and every contribution makes a difference.*
+
+
+## Licensing
+Kolibri Studio is licensed under the MIT license. See [LICENSE](./LICENSE) for more details.
+
+Other tools and libraries used in Kolibri Studio are licensed under their respective licenses, and some are only used during development and are not intended for distribution or use in production environments.

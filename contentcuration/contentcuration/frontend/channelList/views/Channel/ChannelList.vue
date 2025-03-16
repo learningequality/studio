@@ -114,15 +114,12 @@
       this.loadData(this.listType);
     },
     methods: {
-      ...mapActions('channel', ['loadChannelList', 'createChannel']),
+      ...mapActions('channel', ['loadChannelList']),
       newChannel() {
         this.$analytics.trackClick('channel_list', 'Create channel');
-        this.createChannel().then(id => {
-          this.$router.push({
-            name: RouteNames.CHANNEL_EDIT,
-            params: { channelId: id, tab: 'edit' },
-            query: { last: this.$route.name },
-          });
+        this.$router.push({
+          name: RouteNames.NEW_CHANNEL,
+          query: { last: this.$route.name },
         });
       },
       loadData(listType) {
@@ -142,7 +139,7 @@
 </script>
 
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .add-channel-button {
     margin: 0;

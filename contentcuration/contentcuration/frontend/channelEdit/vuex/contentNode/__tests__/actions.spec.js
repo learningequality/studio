@@ -36,6 +36,9 @@ describe('contentNode actions', () => {
       jest
         .spyOn(ContentNode, 'fetchModel')
         .mockImplementation(() => Promise.resolve(contentNodeDatum));
+      jest
+        .spyOn(ContentNode, 'getAncestors')
+        .mockImplementation(() => Promise.resolve([contentNodeDatum]));
       return ContentNode._add({ title: 'notatest', parent: newId, lft: 2 }).then(() => {
         store = storeFactory({
           modules: {

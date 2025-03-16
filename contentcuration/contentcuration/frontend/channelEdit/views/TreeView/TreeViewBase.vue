@@ -390,7 +390,7 @@
           this.currentChannel.publishing ||
           !this.isChanged ||
           !this.currentChannel.language ||
-          (this.rootNode && !this.rootNode.total_count)
+          (this.rootNode && !this.rootNode.resource_count)
         );
       },
       publishButtonTooltip() {
@@ -535,7 +535,7 @@
 </script>
 
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .v-speed-dial {
     position: absolute;

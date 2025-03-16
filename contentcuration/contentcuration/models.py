@@ -22,6 +22,7 @@ from django.core.files.storage import FileSystemStorage
 from django.core.mail import send_mail
 from django.core.validators import MaxValueValidator
 from django.core.validators import MinValueValidator
+from django.db import connection
 from django.db import IntegrityError
 from django.db import models
 from django.db.models import Count
@@ -45,6 +46,7 @@ from django.db.models.sql import Query
 from django.dispatch import receiver
 from django.utils import timezone
 from django.utils.translation import gettext as _
+from django_cte import CTEManager
 from django_cte import With
 from le_utils import proquint
 from le_utils.constants import content_kinds
@@ -261,9 +263,13 @@ class User(AbstractBaseUser, PermissionsMixin):
             editable_channels_user_query, field="id")).filter(num_editors=1, public=False)
 
         # Point sole editor non-public channels' contentnodes to orphan tree to let
-        # our garbage collection delete the nodes and underlying files.
-        ContentNode._annotate_channel_id(ContentNode.objects).filter(channel_id__in=list(
-            non_public_channels_sole_editor.values_list("id", flat=True))).update(parent_id=settings.ORPHANAGE_ROOT_ID)
+        # our garbage collection delete the nodes and underlying file.
+        tree_ids_to_update = non_public_channels_sole_editor.values_list('main_tree__tree_id', flat=True)
+
+        for tree_id in tree_ids_to_update:
+            ContentNode.objects.filter(tree_id=tree_id).update(parent_id=settings.ORPHANAGE_ROOT_ID)
+
+        logging.debug("Queries after updating content nodes parent ID: %s", connection.queries)
 
         # Hard delete non-public channels associated with this user (if user is the only editor).
         non_public_channels_sole_editor.delete()
@@ -1055,6 +1061,18 @@ class Channel(models.Model):
         self.main_tree.publishing = True
         self.main_tree.save()
 
+    def get_server_rev(self):
+        changes_cte = With(
+            Change.objects.filter(channel=self).values("server_rev", "applied"),
+        )
+        return (
+            changes_cte.queryset()
+            .with_cte(changes_cte)
+            .filter(applied=True)
+            .values_list("server_rev", flat=True)
+            .order_by("-server_rev").first()
+        ) or 0
+
     @property
     def deletion_history(self):
         return self.history.filter(action=channel_history.DELETION)
@@ -1551,7 +1569,7 @@ class ContentNode(MPTTModel, models.Model):
             return root.get_descendants().filter(title=title)
         return cls.objects.filter(title=title)
 
-    def get_details(self, channel_id=None):
+    def get_details(self, channel=None):
         """
         Returns information about the node and its children, including total size, languages, files, etc.
 
@@ -1570,12 +1588,13 @@ class ContentNode(MPTTModel, models.Model):
             .values("id")
         )
 
-        if channel_id:
-            channel = Channel.objects.filter(id=channel_id)[0]
-        else:
+        # Get resources
+        resources = descendants.exclude(kind=content_kinds.TOPIC).order_by()
+
+        if not channel:
             channel = self.get_channel()
 
-        if not descendants.exists():
+        if not resources.exists():
             data = {
                 "last_update": pytz.utc.localize(datetime.now()).strftime(
                     settings.DATE_TIME_FORMAT
@@ -1604,8 +1623,6 @@ class ContentNode(MPTTModel, models.Model):
             cache.set("details_{}".format(self.node_id), json.dumps(data), None)
             return data
 
-        # Get resources
-        resources = descendants.exclude(kind=content_kinds.TOPIC).order_by()
         nodes = With(
             File.objects.filter(contentnode_id__in=Subquery(resources.values("id")))
             .values("checksum", "file_size")
@@ -1816,10 +1833,10 @@ class ContentNode(MPTTModel, models.Model):
             "sample_pathway": pathway,
             "sample_nodes": sample_nodes,
             # source model fields for the below default to an empty string, but can also be null
-            "authors": list(filter(bool, node["authors"])),
-            "aggregators": list(filter(bool, node["aggregators"])),
-            "providers": list(filter(bool, node["providers"])),
-            "copyright_holders": list(filter(bool, node["copyright_holders"])),
+            "authors": list(filter(bool, node["authors"] or [])),
+            "aggregators": list(filter(bool, node["aggregators"] or [])),
+            "providers": list(filter(bool, node["providers"] or [])),
+            "copyright_holders": list(filter(bool, node["copyright_holders"] or [])),
             "levels": node.get("levels") or [],
             "categories": node.get("all_categories") or [],
         }
@@ -2108,7 +2125,7 @@ ASSESSMENT_ID_INDEX_NAME = "assessment_id_idx"
 
 
 class AssessmentItem(models.Model):
-    type = models.CharField(max_length=50, default="multiplechoice")
+    type = models.CharField(max_length=50, choices=exercises.question_choices, default=exercises.MULTIPLE_SELECTION)
     question = models.TextField(blank=True)
     hints = models.TextField(default="[]")
     answers = models.TextField(default="[]")
@@ -2566,6 +2583,8 @@ class Change(models.Model):
     # and also that if we are ever interacting with it in Python code, both null and False values
     # will be falsy.
     unpublishable = models.BooleanField(null=True, blank=True, default=False)
+
+    objects = CTEManager()
 
     @classmethod
     def _create_from_change(
