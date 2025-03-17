@@ -119,6 +119,7 @@
     completionCriteriaToDropdownMap,
     defaultCompletionCriteriaModels,
     defaultCompletionCriteriaThresholds,
+    FeatureFlagKeys,
   } from 'shared/constants';
   import { MasteryModelsNames } from 'shared/leUtils/MasteryModels';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
@@ -191,6 +192,9 @@
         }
         return false;
       },
+      allowSurvey() {
+        return this.$store.getters.hasFeatureEnabled(FeatureFlagKeys.survey);
+      },
       audioVideoResource() {
         return this.kind === ContentKindsNames.AUDIO || this.kind === ContentKindsNames.VIDEO;
       },
@@ -256,7 +260,7 @@
           } else if (value === CompletionDropdownMap.goal) {
             update.modality = null;
             update.model = CompletionCriteriaModels.MASTERY;
-          } else if (value === CompletionDropdownMap.survey){
+          } else if (value === CompletionDropdownMap.survey) {
             update.modality = ContentModalities.QUIZ;
             update.threshold = { mastery_model: MasteryModelsNames.DO_ALL };
           }
@@ -361,10 +365,12 @@
       },
       showCorrectCompletionOptions() {
         if (this.kind) {
-          return CompletionOptionsDropdownMap[this.kind].map(model => ({
-            text: this.translateMetadataString(model),
-            value: CompletionDropdownMap[model],
-          }));
+          return CompletionOptionsDropdownMap[this.kind]
+            .map(model => ({
+              text: this.translateMetadataString(model),
+              value: CompletionDropdownMap[model],
+            }))
+            .filter(option => !(option.value === 'survey' && !this.allowSurvey));
         }
         return [];
       },
