@@ -288,7 +288,7 @@ export const CompletionOptionsDropdownMap = {
   [ContentKindsNames.EXERCISE]: [
     CompletionDropdownMap.goal,
     CompletionDropdownMap.practiceQuiz,
-    CompletionDropdownMap.survey
+    CompletionDropdownMap.survey,
   ],
   [ContentKindsNames.HTML5]: [
     CompletionDropdownMap.completeDuration,
