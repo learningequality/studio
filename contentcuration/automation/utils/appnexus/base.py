@@ -1,52 +1,83 @@
-from abc import ABC
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 
 
-class BackendRequest(object):
-    """ Class that should be inherited by specific backend for its requests"""
+class BackendRequest:
+    """Class that should be inherited by specific backend for its requests."""
     pass
 
 
-class BackendResponse(object):
-    """ Class that should be inherited by specific backend for its responses"""
+class BackendResponse:
+    """Class that should be inherited by specific backend for its responses."""
     pass
 
 
 class Backend(ABC):
-    """ An abstract base class for backend interfaces that also implements the singleton pattern """
+    """An abstract base class for backend interfaces that also implements the singleton pattern."""
     _instance = None
 
-    def __new__(class_, *args, **kwargs):
-        if not isinstance(class_._instance, class_):
-            class_._instance = object.__new__(class_, *args, **kwargs)
-        return class_._instance
+    def __new__(cls, *args, **kwargs):
+        if not isinstance(cls._instance, cls):
+            cls._instance = super().__new__(cls)
+        return cls._instance
 
     @abstractmethod
     def connect(self) -> None:
-        """ Establishes a connection to the backend service. """
+        """Establishes a connection to the backend service."""
         pass
 
     @abstractmethod
-    def make_request(self, request) -> BackendResponse:
-        """ Make a request based on "request" """
+    def make_request(self, request: BackendRequest) -> BackendResponse:
+        """Processes a request and returns a response."""
         pass
 
     @classmethod
     def get_instance(cls) -> 'Backend':
-        """ Returns existing instance, if not then create one. """
-        return cls._instance if cls._instance else cls._create_instance()
+        """Returns the existing instance, or creates one if it does not exist."""
+        if cls._instance is None:
+            cls._instance = cls._create_instance()
+        return cls._instance
+
+    @classmethod
+    @abstractmethod
+    def _create_instance(cls) -> 'Backend':
+        """Creates an instance of the backend."""
+        pass
+
+
+class ConcreteBackend(Backend):
+    """A concrete implementation of the Backend abstract class."""
+
+    def connect(self) -> None:
+        """Establishes a connection (mock implementation)."""
+        print("Connected to ConcreteBackend.")
+
+    def make_request(self, request: BackendRequest) -> BackendResponse:
+        """Handles the request and returns a response (mock implementation)."""
+        print(f"Processing request: {request}")
+        return BackendResponse()
 
     @classmethod
     def _create_instance(cls) -> 'Backend':
-        """ Returns the instance after creating it. """
-        raise NotImplementedError("Subclasses should implement the creation of instance")
+        """Creates an instance of the concrete backend."""
+        if cls._instance is None:
+            cls._instance = cls()
+        return cls._instance
 
 
 class BackendFactory(ABC):
+    """Abstract factory for creating Backend instances."""
+
     @abstractmethod
     def create_backend(self) -> Backend:
-        """ Create a Backend instance from the given backend. """
+        """Creates and returns a Backend instance."""
         pass
+
+
+class ConcreteBackendFactory(BackendFactory):
+    """A factory class to create instances of ConcreteBackend."""
+
+    def create_backend(self) -> Backend:
+        return ConcreteBackend.get_instance()
 
 
 class Adapter:
@@ -59,3 +90,14 @@ class Adapter:
 
     def __init__(self, backend: Backend) -> None:
         self.backend = backend
+
+
+# Running the implementation
+if __name__ == "__main__":
+    factory = ConcreteBackendFactory()
+    backend = factory.create_backend()
+
+    adapter = Adapter(backend)
+    backend.connect()
+    response = backend.make_request(BackendRequest())
+    print(f"Response received: {response}")
