@@ -154,14 +154,14 @@ class RecommendationsAdapter(Adapter):
         """
 
         try:
-            nodes = self._extract_data(response)
-            valid_nodes = self._validate_nodes(nodes)
+            recommended_nodes = self._flatten_response(response)
+            valid_nodes = self._validate_nodes(recommended_nodes)
             request_hash = self._generate_request_hash(request)
             override_threshold = self._extract_override_threshold(request)
             new_cache = [
                 RecommendationsCache(
                     request_hash=request_hash,
-                    contentnode_id=node['contentnode_id'],
+                    contentnode_id=node['node_id'],
                     rank=node['rank'],
                     override_threshold=override_threshold,
                 ) for node in valid_nodes
@@ -182,12 +182,12 @@ class RecommendationsAdapter(Adapter):
         """
         return request.params.get('override_threshold', False) if request.params else False
 
-    def get_recommendations(self, topic: Dict[str, Any],
+    def get_recommendations(self, topics: List[Dict[str, Any]],
                             override_threshold=False) -> RecommendationsResponse:
         """
-        Get recommendations for the given topic.
+        Get recommendations for the given topic(s).
 
-        :param topic: A dictionary containing the topic for which to get recommendations. See
+        :param topics: A list of topics for which to get recommendations. See
         https://github.com/learningequality/le-utils/blob/main/spec/schema-embed_topics_request.json
         :param override_threshold: A boolean flag to override the recommendation threshold.
         :return: The recommendations for the given topic. :rtype: RecommendationsResponse
@@ -195,8 +195,9 @@ class RecommendationsAdapter(Adapter):
 
         recommendations = []
         request = EmbedTopicsRequest(
+            path='/recommend',
             params={'override_threshold': override_threshold},
-            json=topic,
+            json=topics,
         )
 
         cached_response = self.response_exists(request)
@@ -207,9 +208,9 @@ class RecommendationsAdapter(Adapter):
             if not response.error:
                 self.cache_embeddings_request(request, response)
 
-        nodes = self._extract_data(response)
-        if len(nodes) > 0:
-            node_ids = self._extract_node_ids(nodes)
+        recommended_nodes = self._flatten_response(response)
+        if len(recommended_nodes) > 0:
+            node_ids = self._extract_node_ids(recommended_nodes)
             cast_node_ids = [uuid.UUID(node_id) for node_id in node_ids]
 
             channel_cte = With(
@@ -242,26 +243,53 @@ class RecommendationsAdapter(Adapter):
 
         return RecommendationsResponse(results=recommendations)
 
-    def _extract_data(self, response: BackendResponse) -> List[Dict[str, Any]]:
+    def _flatten_response(self, response: BackendResponse) -> List[Dict[str, Any]]:
         """
-        Extracts the data from the given response.
+        Flattens the recommendations response.
 
-        The response is of the form:
+        The response parameter is of the form:
 
         {
-            "data": [
-                {
-                    "contentnode_id": "<some node id>",
-                    "rank": 0.7
-                }
+          "response": {
+            "topics": [
+              {
+                "id": "8d478f3605fd4476adface9be9cf6db3",
+                "recommendations": [
+                  {
+                    "id": "7747554350bb5e088ee69e28a4ba769d",
+                    "channel_id": "1d8f6d84618153c18c695d85074952a7",
+                    "title": "One-Step Equations and Inverse Operations (Flexbook)",
+                    "description": "",
+                    "similarity": 0.7308432729798824,
+                    "rank": 1
+                  }
+                ]
+              }
             ]
+          }
         }
 
-        :param response: A response from which to extract the data.
-        :return: The extracted data.
+        :param response: The recommendations response to be flattened.
+        :return: The flattened list of recommendations by topic.
         :rtype: List[Dict[str, Any]]
         """
-        return response.data if response.data else []
+        flattened_response = []
+        if hasattr(response, 'data') and isinstance(response.data, dict):
+            response_data = response.data.get('response')
+            if isinstance(response_data, dict):
+                topics = response_data.get('topics', [])
+                for topic in topics:
+                    topic_id = topic.get('id')
+                    recommendations = topic.get('recommendations', [])
+                    for recommendation in recommendations:
+                        flattened_response.append({
+                            'topic_id': topic_id,
+                            'node_id': recommendation.get('id'),
+                            'channel_id': recommendation.get('channel_id'),
+                            'similarity': recommendation.get('similarity'),
+                            'rank': recommendation.get('rank'),
+                        })
+        return flattened_response
 
     def _validate_nodes(self, nodes: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """
@@ -274,7 +302,7 @@ class RecommendationsAdapter(Adapter):
         node_ids = self._extract_node_ids(nodes)
         existing_node_ids = set(
             PublicContentNode.objects.filter(id__in=node_ids).values_list('id', flat=True))
-        return [node for node in nodes if node['contentnode_id'] in existing_node_ids]
+        return [node for node in nodes if node.get('node_id') in existing_node_ids]
 
     def _extract_node_ids(self, nodes: List[Dict[str, Any]]) -> List[str]:
         """
@@ -284,7 +312,7 @@ class RecommendationsAdapter(Adapter):
         :return: A list of node IDs.
         :rtype: List[str]
         """
-        return [node['contentnode_id'] for node in nodes]
+        return [node.get('node_id') for node in nodes]
 
     def _cast_to_uuid(self, field):
         """

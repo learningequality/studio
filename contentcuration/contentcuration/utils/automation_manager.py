@@ -27,14 +27,14 @@ class AutomationManager:
         """
         return self.adapter.embed_content(channel_id, nodes)
 
-    def load_recommendations(self, topic: Dict[str, Any], override_threshold=False):
+    def load_recommendations(self, topics: List[Dict[str, Any]], override_threshold=False):
         """
         Loads recommendations for the given topic.
 
-        :param topic: A dictionary containing the topic for which to get recommendations.
+        :param topics: A list of topics for which to get recommendations.
         :param override_threshold: A boolean flag to override the recommendation threshold.
 
         :return: A list of recommendations for the given topic.
         """
-        self.adapter.get_recommendations(topic=topic, override_threshold=override_threshold)
+        self.adapter.get_recommendations(topics=topics, override_threshold=override_threshold)
         return []

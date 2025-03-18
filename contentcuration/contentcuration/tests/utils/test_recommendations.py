@@ -31,7 +31,7 @@ class RecommendationsAdapterTestCase(StudioTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.adapter = RecommendationsAdapter(MagicMock())
-        cls.topic = {
+        cls.topics = [{
             'id': 'topic_id',
             'title': 'topic_title',
             'description': 'topic_description',
@@ -43,7 +43,7 @@ class RecommendationsAdapterTestCase(StudioTestCase):
                     'description': 'ancestor_description',
                 }
             ]
-        }
+        }]
         cls.channel_id = 'test_channel_id'
         cls.resources = [MagicMock(spec=ContentNode)]
 
@@ -52,14 +52,26 @@ class RecommendationsAdapterTestCase(StudioTestCase):
             url='http://test.com',
             path='/test/path',
             params={'override_threshold': False},
-            json=cls.topic
+            json=cls.topics
         )
-        cls.api_response = BackendResponse(data=[
-            {'contentnode_id': '1234567890abcdef1234567890abcdef', 'rank': 0.9},
-            {'contentnode_id': 'abcdef1234567890abcdef1234567890', 'rank': 0.8},
-            {'contentnode_id': '00000000000000000000000000000003', 'rank': 0.8},
-            {'contentnode_id': '00000000000000000000000000000005', 'rank': 0.8},
-        ])
+        cls.api_response = BackendResponse(data={
+            'response': {
+                'topics': [
+                    {'id': '1234567890abcdef1234567890abcdef', 'recommendations': [
+                        {'id': '1234567890abcdef1234567890abcdef', 'rank': 0.9}
+                    ]},
+                    {'id': 'abcdef1234567890abcdef1234567890', 'recommendations': [
+                        {'id': 'abcdef1234567890abcdef1234567890', 'rank': 0.8}
+                    ]},
+                    {'id': '00000000000000000000000000000003', 'recommendations': [
+                        {'id': '00000000000000000000000000000003', 'rank': 0.8}
+                    ]},
+                    {'id': '00000000000000000000000000000005', 'recommendations': [
+                        {'id': '00000000000000000000000000000005', 'rank': 0.8}
+                    ]},
+                ]
+            }
+        })
 
         cls.public_content_node_1 = PublicContentNode.objects.create(
             id=uuid.UUID('1234567890abcdef1234567890abcdef'),
@@ -148,7 +160,7 @@ class RecommendationsAdapterTestCase(StudioTestCase):
             url='http://test.com',
             path='/test/path',
             params={'override_threshold': True},
-            json={'topic': 'new_test_topic'}
+            json=[{'id': 'topic_id', 'title': 'topic_title', 'description': 'topic_description'}]
         )
         response = self.adapter.response_exists(new_request)
         self.assertIsNone(response)
@@ -156,36 +168,49 @@ class RecommendationsAdapterTestCase(StudioTestCase):
     def cache_request_test_helper(self, request_json, response_data, expected_count):
         new_request = copy.deepcopy(self.request)
         new_request.json = request_json
-        response_copy = copy.deepcopy(self.api_response)
-        response_copy.data = response_data
 
-        result = self.adapter.cache_embeddings_request(new_request, response_copy)
+        result = self.adapter.cache_embeddings_request(new_request, response_data)
         self.assertTrue(result)
 
         cached_items = RecommendationsCache.objects.filter(
             request_hash=self.adapter._generate_request_hash(new_request)
         )
-        print(list(cached_items.values('request_hash', 'contentnode', 'rank', 'override_threshold')))
         self.assertEqual(cached_items.count(), expected_count)
 
     def test_cache_embeddings_request_success(self):
-        self.cache_request_test_helper({'topic': 'new_test_topic_1'}, self.api_response.data, 2)
+        self.cache_request_test_helper([
+            {'id': 'topic_id', 'title': 'topic_title', 'description': 'topic_description'}
+        ], self.api_response, 2)
 
     def test_cache_embeddings_request_empty_data(self):
-        self.cache_request_test_helper({'topic': 'new_test_topic_2'}, [], 0)
+        self.cache_request_test_helper([
+            {'id': 'topic_id', 'title': 'topic_title', 'description': 'topic_description'}
+        ], {}, 0)
 
     def test_cache_embeddings_request_ignore_duplicates(self):
-        duplicate_data = [
-            {'contentnode_id': '1234567890abcdef1234567890abcdef', 'rank': 0.9},
-            {'contentnode_id': '1234567890abcdef1234567890abcdef', 'rank': 0.9}
-        ]
-        self.cache_request_test_helper({'topic': 'new_test_topic_3'}, duplicate_data, 1)
+        duplicate_data = BackendResponse(data={
+            'response': {
+                'topics': [
+                    {'id': '1234567890abcdef1234567890abcdef', 'recommendations': [
+                        {'id': '1234567890abcdef1234567890abcdef', 'rank': 0.9}
+                    ]},
+                    {'id': '1234567890abcdef1234567890abcdef', 'recommendations': [
+                        {'id': '1234567890abcdef1234567890abcdef', 'rank': 0.9}
+                    ]}
+                ]
+            }
+        })
+        self.cache_request_test_helper([
+            {'id': 'topic_id', 'title': 'topic_title', 'description': 'topic_description'}
+        ], duplicate_data, 1)
 
     def test_cache_embeddings_request_invalid_data(self):
-        invalid_data = [
-            {'contentnode_id': '1234567890abcdef1234567890abcdee', 'rank': 0.6}
-        ]
-        self.cache_request_test_helper({'topic': 'new_test_topic_4'}, invalid_data, 0)
+        invalid_data = BackendResponse(data={
+            'response': [
+                {'node_id': '1234567890abcdef1234567890abcdee', 'rank': 0.6}
+            ]
+        })
+        self.cache_request_test_helper([{'topic': 'new_test_topic_4'}], invalid_data, 0)
 
     @patch('contentcuration.utils.recommendations.RecommendationsAdapter.cache_embeddings_request')
     @patch('contentcuration.utils.recommendations.RecommendationsAdapter.generate_embeddings')
@@ -214,9 +239,10 @@ class RecommendationsAdapterTestCase(StudioTestCase):
         mock_response = MagicMock(spec=EmbeddingsResponse)
         mock_response.data = copy.deepcopy(self.api_response.data)
         mock_response.error = None
+        mock_response.get = lambda key, default=None: getattr(mock_response, key, default)
         mock_generate_embeddings.return_value = mock_response
 
-        response = self.adapter.get_recommendations(self.topic)
+        response = self.adapter.get_recommendations(self.topics)
         results = list(response.results)
         expected_node_ids = [public_node_1.id.hex, public_node_2.id.hex]
         actual_node_ids = [result["node_id"] for result in results]
@@ -227,22 +253,22 @@ class RecommendationsAdapterTestCase(StudioTestCase):
         self.assertListEqual(expected_node_ids, actual_node_ids)
         self.assertEqual(len(results), 2)
 
-    @patch('contentcuration.utils.recommendations.RecommendationsAdapter._extract_data')
+    @patch('contentcuration.utils.recommendations.RecommendationsAdapter._flatten_response')
     @patch('contentcuration.utils.recommendations.RecommendationsAdapter.response_exists')
     @patch('contentcuration.utils.recommendations.EmbedTopicsRequest')
     def test_get_recommendations_failure(self, mock_embed_topics_request, mock_response_exists,
-                                         mock_extract_data):
+                                         mock_flatten_response):
         mock_request_instance = MagicMock(spec=EmbedTopicsRequest)
         mock_embed_topics_request.return_value = mock_request_instance
 
         self.assert_backend_call(mock_response_exists, None, False, None,
-                                 self.adapter.get_recommendations, self.topic)
+                                 self.adapter.get_recommendations, self.topics)
 
-    @patch('contentcuration.utils.recommendations.RecommendationsAdapter._extract_data')
+    @patch('contentcuration.utils.recommendations.RecommendationsAdapter._flatten_response')
     @patch('contentcuration.utils.recommendations.RecommendationsAdapter.response_exists')
     @patch('contentcuration.utils.recommendations.EmbedContentRequest')
     def test_embed_content_success(self, mock_embed_topics_request, mock_response_exists,
-                                   mock_extract_data):
+                                   mock_flatten_response):
         mock_response = MagicMock(spec=EmbeddingsResponse)
         mock_response.error = None
         response = self.assert_backend_call(mock_response_exists, None, True, mock_response,

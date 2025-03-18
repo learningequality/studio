@@ -5,7 +5,7 @@ from abc import abstractmethod
 
 import requests
 from requests.adapters import HTTPAdapter
-from requests.packages.urllib3.util.retry import Retry
+from urllib3 import Retry
 
 from . import errors
 
@@ -170,8 +170,7 @@ class Backend(ABC):
         """ Make a request to the backend service. """
         try:
             response = self._make_request(request)
-            response_body = dict(data=response.json())
-            return BackendResponse(**response_body)
+            return BackendResponse(data=response.json())
         except ValueError as e:
             logging.exception(e)
             raise errors.InvalidResponse("Invalid response from backend")
