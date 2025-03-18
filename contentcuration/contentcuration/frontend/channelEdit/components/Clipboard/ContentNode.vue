@@ -28,7 +28,7 @@
                     :style="{ 'padding-left': indentPadding }"
                     inactive
                   >
-                  <VListTileAction class="action-col">
+                    <VListTileAction class="action-col">
                       <Checkbox
                         ref="checkbox"
                         class="mt-0 pt-3"
