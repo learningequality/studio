@@ -28,10 +28,10 @@
                     :style="{ 'padding-left': indentPadding }"
                     inactive
                   >
-                    <VListTileAction class="action-col">
+                  <VListTileAction class="action-col">
                       <Checkbox
                         ref="checkbox"
-                        class="mt-0.9 pt-2"
+                        class="mt-0 pt-3"
                         :class="{ selectedIndeterminate: !selected && indeterminate }"
                         :inputValue="selected"
                         :indeterminate="indeterminate"
