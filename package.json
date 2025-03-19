@@ -52,7 +52,7 @@
   },
   "homepage": "https://github.com/learningequality/studio#readme",
   "dependencies": {
-    "@sentry/vue": "^7.112.2",
+    "@sentry/vue": "^9.6.0",
     "@toast-ui/editor": "^2.3.1",
     "@vue/composition-api": "^1.7.2",
     "ajv": "^8.12.0",
