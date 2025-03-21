@@ -29,12 +29,15 @@ class AutomationManager:
 
     def load_recommendations(self, topics: List[Dict[str, Any]], override_threshold=False):
         """
-        Loads recommendations for the given topic.
+        Loads recommendations for the given topic(s).
 
         :param topics: A list of topics for which to get recommendations.
         :param override_threshold: A boolean flag to override the recommendation threshold.
 
-        :return: A list of recommendations for the given topic.
+        :return: A dictionary containing a list of recommendations for the given topic(s).
         """
-        self.adapter.get_recommendations(topics=topics, override_threshold=override_threshold)
-        return []
+        recommendations = []
+        response = self.adapter.get_recommendations(topics=topics, override_threshold=override_threshold)
+        if hasattr(response, "results") and isinstance(response.results, list):
+            recommendations = response.results
+        return recommendations

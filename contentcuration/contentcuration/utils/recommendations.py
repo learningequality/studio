@@ -14,6 +14,7 @@ from automation.utils.appnexus.base import Backend
 from automation.utils.appnexus.base import BackendFactory
 from automation.utils.appnexus.base import BackendRequest
 from automation.utils.appnexus.base import BackendResponse
+from django.conf import settings
 from django.db.models import Exists
 from django.db.models import F
 from django.db.models import OuterRef
@@ -72,8 +73,10 @@ class EmbeddingsResponse(RecommendationsBackendResponse):
 
 class RecommendationsBackendFactory(BackendFactory):
     def create_backend(self) -> Backend:
-        # Return backend based on some setting.
-        return super().create_backend()
+        backend = Recommendations()
+        backend.base_url = settings.CURRICULUM_AUTOMATION_URL
+        backend.connect_endpoint = "/connect"
+        return backend
 
 
 class RecommendationsAdapter(Adapter):
@@ -195,6 +198,7 @@ class RecommendationsAdapter(Adapter):
 
         recommendations = []
         request = EmbedTopicsRequest(
+            method='POST',
             path='/recommend',
             params={'override_threshold': override_threshold},
             json=topics,
