@@ -202,6 +202,7 @@ export const FeatureFlagKeys = Object.keys(FeatureFlagsSchema.properties).reduce
 
 export const ContentModalities = {
   QUIZ: 'QUIZ',
+  SURVEY: 'SURVEY',
 };
 
 export const AccessibilityCategoriesMap = {

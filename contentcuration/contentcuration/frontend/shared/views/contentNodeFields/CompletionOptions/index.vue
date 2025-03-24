@@ -187,8 +187,14 @@
       },
       showMasteryCriteriaGoalDropdown() {
         if (this.kind === ContentKindsNames.EXERCISE) {
-          //this ensures that anytime the completion dropdown is practice quiz
-          return this.value.modality !== ContentModalities.QUIZ;
+          //this ensures that anytime the completion dropdown is practice quiz or
+          // survey we dont show the mastery criteria goal dropdown
+          let showDropDown = true;
+          if (this.value.modality === ContentModalities.QUIZ ||
+          this.value.modality === ContentModalities.SURVEY) {
+            showDropDown = false;
+          }
+          return showDropDown;
         }
         return false;
       },
@@ -223,6 +229,13 @@
             this.model === CompletionCriteriaModels.MASTERY
           ) {
             return CompletionDropdownMap.practiceQuiz;
+          }
+          if (
+            this.value.modality === ContentModalities.SURVEY &&
+            this.model === CompletionCriteriaModels.MASTERY
+          )
+          {
+            return CompletionDropdownMap.survey;
           }
           return completionCriteriaToDropdownMap[this.model];
         },
@@ -261,7 +274,7 @@
             update.modality = null;
             update.model = CompletionCriteriaModels.MASTERY;
           } else if (value === CompletionDropdownMap.survey) {
-            update.modality = ContentModalities.QUIZ;
+            update.modality = ContentModalities.survey;
             update.threshold = { mastery_model: MasteryModelsNames.DO_ALL };
           }
           this.handleInput(update);
@@ -285,6 +298,9 @@
           return false;
         }
         if (this.value.modality === ContentModalities.QUIZ) {
+          return false;
+        }
+        if (this.value.modality === ContentModalities.SURVEY) {
           return false;
         }
         return get(this, 'threshold.mastery_model') === MasteryModelsNames.M_OF_N;
