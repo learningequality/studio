@@ -190,8 +190,10 @@
           //this ensures that anytime the completion dropdown is practice quiz or
           // survey we dont show the mastery criteria goal dropdown
           let showDropDown = true;
-          if (this.value.modality === ContentModalities.QUIZ ||
-          this.value.modality === ContentModalities.SURVEY) {
+          if (
+            this.value.modality === ContentModalities.QUIZ ||
+            this.value.modality === ContentModalities.SURVEY
+          ) {
             showDropDown = false;
           }
           return showDropDown;
@@ -233,8 +235,7 @@
           if (
             this.value.modality === ContentModalities.SURVEY &&
             this.model === CompletionCriteriaModels.MASTERY
-          )
-          {
+          ) {
             return CompletionDropdownMap.survey;
           }
           return completionCriteriaToDropdownMap[this.model];
