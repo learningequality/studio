@@ -288,7 +288,7 @@ class CompletionCriteriaSerializer(JSONFieldDictSerializer):
 
 
 class ExtraFieldsOptionsSerializer(JSONFieldDictSerializer):
-    modality = ChoiceField(choices=(("QUIZ", "Quiz"),), allow_null=True, required=False)
+    modality = ChoiceField(choices=(("QUIZ", "Quiz"),("SURVEY","Survey")), allow_null=True, required=False)
     completion_criteria = CompletionCriteriaSerializer(required=False)
 
 
