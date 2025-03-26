@@ -11,7 +11,9 @@ asgiref==3.3.4
 async-timeout==5.0.1
     # via redis
 attrs==23.1.0
-    # via jsonschema
+    # via
+    #   jsonschema
+    #   referencing
 backoff==2.2.1
     # via -r requirements.in
 billiard==4.2.1
@@ -146,8 +148,10 @@ jmespath==0.10.0
     #   botocore
 jsonfield==3.1.0
     # via -r requirements.in
-jsonschema==4.17.3
+jsonschema==4.23.0
     # via -r requirements.in
+jsonschema-specifications==2024.10.1
+    # via jsonschema
 kombu==5.4.2
     # via celery
 le-utils==0.2.9
@@ -185,8 +189,6 @@ pyasn1-modules==0.2.8
     # via google-auth
 pyparsing==2.4.7
     # via httplib2
-pyrsistent==0.17.3
-    # via jsonschema
 python-dateutil==2.9.0
     # via
     #   -r requirements.in
@@ -203,11 +205,19 @@ redis==5.2.1
     # via
     #   -r requirements.in
     #   django-redis
+referencing==0.36.2
+    # via
+    #   jsonschema
+    #   jsonschema-specifications
 requests==2.32.3
     # via
     #   -r requirements.in
     #   google-api-core
     #   google-cloud-storage
+rpds-py==0.24.0
+    # via
+    #   jsonschema
+    #   referencing
 rsa==4.7.2
     # via google-auth
 s3transfer==0.4.2
@@ -225,6 +235,8 @@ six==1.16.0
     #   python-dateutil
 sqlparse==0.4.1
     # via django
+typing-extensions==4.13.0
+    # via referencing
 tzdata==2024.2
     # via
     #   celery
