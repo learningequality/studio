@@ -309,7 +309,7 @@
   }
 
   .action-col {
-    padding-top: 16px; 
+    padding-top: 16px;
   }
 
 </style>
