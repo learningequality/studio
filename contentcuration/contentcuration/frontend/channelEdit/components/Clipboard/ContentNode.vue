@@ -31,7 +31,7 @@
                     <VListTileAction class="action-col">
                       <Checkbox
                         ref="checkbox"
-                        class="mt-0 pt-3"
+                        class="mt-0 pt-0"
                         :class="{ selectedIndeterminate: !selected && indeterminate }"
                         :inputValue="selected"
                         :indeterminate="indeterminate"
@@ -306,6 +306,10 @@
 
   ::v-deep .selectedIndeterminate svg {
     fill: gray !important;
+  }
+
+  .action-col {
+    padding-top: 16px; 
   }
 
 </style>
