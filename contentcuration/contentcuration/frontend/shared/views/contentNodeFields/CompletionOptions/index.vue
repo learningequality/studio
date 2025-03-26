@@ -105,6 +105,7 @@
 <script>
 
   import get from 'lodash/get';
+  import { mapGetters } from 'vuex/dist/vuex.common.js';
   import ActivityDuration from './ActivityDuration';
   import MasteryCriteriaGoal from './MasteryCriteriaGoal';
   import MasteryCriteriaMofNFields from './MasteryCriteriaMofNFields';
@@ -173,6 +174,7 @@
       },
     },
     computed: {
+      ...mapGetters(['hasFeatureEnabled']),
       notUnique() {
         return this.value === nonUniqueValue;
       },
@@ -199,9 +201,6 @@
           return showDropDown;
         }
         return false;
-      },
-      allowSurvey() {
-        return this.$store.getters.hasFeatureEnabled(FeatureFlagKeys.survey);
       },
       audioVideoResource() {
         return this.kind === ContentKindsNames.AUDIO || this.kind === ContentKindsNames.VIDEO;
@@ -242,7 +241,6 @@
         },
         set(value) {
           const update = {};
-
           if (value === CompletionDropdownMap.reference) {
             update.model = CompletionCriteriaModels.REFERENCE;
             update.durationType = null;
@@ -275,7 +273,7 @@
             update.modality = null;
             update.model = CompletionCriteriaModels.MASTERY;
           } else if (value === CompletionDropdownMap.survey) {
-            update.modality = ContentModalities.survey;
+            update.modality = ContentModalities.SURVEY;
             update.threshold = { mastery_model: MasteryModelsNames.DO_ALL };
           }
           this.handleInput(update);
@@ -381,13 +379,14 @@
         },
       },
       showCorrectCompletionOptions() {
+
         if (this.kind) {
           return CompletionOptionsDropdownMap[this.kind]
             .map(model => ({
               text: this.translateMetadataString(model),
               value: CompletionDropdownMap[model],
             }))
-            .filter(option => !(option.value === 'survey' && !this.allowSurvey));
+            .filter(option => !(option.value === 'survey' && !this.hasFeatureEnabled(FeatureFlagKeys.survey)));
         }
         return [];
       },
