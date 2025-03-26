@@ -379,14 +379,16 @@
         },
       },
       showCorrectCompletionOptions() {
-
         if (this.kind) {
           return CompletionOptionsDropdownMap[this.kind]
             .map(model => ({
               text: this.translateMetadataString(model),
               value: CompletionDropdownMap[model],
             }))
-            .filter(option => !(option.value === 'survey' && !this.hasFeatureEnabled(FeatureFlagKeys.survey)));
+            .filter(
+              option =>
+                !(option.value === 'survey' && !this.hasFeatureEnabled(FeatureFlagKeys.survey))
+            );
         }
         return [];
       },

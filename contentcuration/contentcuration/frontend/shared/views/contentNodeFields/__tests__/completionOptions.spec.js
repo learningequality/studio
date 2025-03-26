@@ -12,20 +12,18 @@ let store;
 describe('CompletionOptions', () => {
   beforeEach(() => {
     store = new Vuex.Store({
-        getters: {
-            hasFeatureEnabled: () => () => true
-        },
+      getters: {
+        hasFeatureEnabled: () => () => true,
+      },
     });
   });
   it('smoke test', () => {
-    const wrapper = shallowMount(CompletionOptions,  {store,});
+    const wrapper = shallowMount(CompletionOptions, { store });
     expect(wrapper.isVueInstance()).toBe(true);
   });
   describe(`completion dropdown`, () => {
     it(`renders the completion dropdown`, () => {
-      const wrapper = mount(CompletionOptions,
-        {store,}
-      );
+      const wrapper = mount(CompletionOptions, { store });
       const dropdown = wrapper.find({ ref: 'completion' });
       expect(dropdown.exists()).toBe(true);
     });
