@@ -74,7 +74,7 @@ class EmbeddingsResponse(RecommendationsBackendResponse):
 class RecommendationsBackendFactory(BackendFactory):
     def create_backend(self) -> Backend:
         backend = Recommendations()
-        backend.base_url = settings.CURRICULUM_AUTOMATION_URL
+        backend.base_url = settings.CURRICULUM_AUTOMATION_API_URL
         backend.connect_endpoint = "/connect"
         return backend
 
@@ -114,9 +114,9 @@ class RecommendationsAdapter(Adapter):
             data = list(RecommendationsCache.objects
                         .filter(request_hash=request_hash, override_threshold=override_threshold)
                         .order_by('override_threshold', 'rank')
-                        .values('contentnode_id', 'rank'))
+                        .values('topic_id', 'rank', 'channel_id', node_id=F('contentnode_id')))
             if len(data) > 0:
-                return EmbeddingsResponse(data=data)
+                return EmbeddingsResponse(data=self._unflatten_response(data))
             else:
                 return None
         except Exception as e:
@@ -164,7 +164,9 @@ class RecommendationsAdapter(Adapter):
             new_cache = [
                 RecommendationsCache(
                     request_hash=request_hash,
+                    topic_id=node['topic_id'],
                     contentnode_id=node['node_id'],
+                    channel_id=node['channel_id'],
                     rank=node['rank'],
                     override_threshold=override_threshold,
                 ) for node in valid_nodes
@@ -185,12 +187,12 @@ class RecommendationsAdapter(Adapter):
         """
         return request.params.get('override_threshold', False) if request.params else False
 
-    def get_recommendations(self, topics: List[Dict[str, Any]],
+    def get_recommendations(self, request_data: Dict[str, Any],
                             override_threshold=False) -> RecommendationsResponse:
         """
         Get recommendations for the given topic(s).
 
-        :param topics: A list of topics for which to get recommendations. See
+        :param request_data: Topic information necessary for recommendations retrieval. See
         https://github.com/learningequality/le-utils/blob/main/spec/schema-embed_topics_request.json
         :param override_threshold: A boolean flag to override the recommendation threshold.
         :return: The recommendations for the given topic. :rtype: RecommendationsResponse
@@ -201,7 +203,7 @@ class RecommendationsAdapter(Adapter):
             method='POST',
             path='/recommend',
             params={'override_threshold': override_threshold},
-            json=topics,
+            json=request_data,
         )
 
         cached_response = self.response_exists(request)
@@ -209,14 +211,19 @@ class RecommendationsAdapter(Adapter):
             response = cached_response
         else:
             response = self.generate_embeddings(request=request)
-            if not response.error:
+            if not getattr(response, 'error', None):
                 self.cache_embeddings_request(request, response)
+            else:
+                exception = getattr(response, 'error')
+                if isinstance(exception, Exception):
+                    raise exception
+                else:
+                    raise Exception(f"Error generating recommendations: {exception}")
 
         recommended_nodes = self._flatten_response(response)
         if len(recommended_nodes) > 0:
             node_ids = self._extract_node_ids(recommended_nodes)
             cast_node_ids = [uuid.UUID(node_id) for node_id in node_ids]
-
             channel_cte = With(
                 Channel.objects.annotate(
                     channel_id=self._cast_to_uuid(F('id'))
@@ -245,33 +252,42 @@ class RecommendationsAdapter(Adapter):
                 'parent_id',
             )
 
-        return RecommendationsResponse(results=recommendations)
+            # Add the corresponding channel_id to the recommendations
+            node_to_channel = {node['node_id']: node['channel_id'] for node in recommended_nodes}
+            for recommendation in recommendations:
+                recommendation['channel_id'] = node_to_channel.get(recommendation['node_id'])
+
+        return RecommendationsResponse(results=list(recommendations))
 
     def _flatten_response(self, response: BackendResponse) -> List[Dict[str, Any]]:
         """
-        Flattens the recommendations response.
+        Flattens the nested structure of recommendations.
 
-        The response parameter is of the form:
-
+        The input format is of the form below. Some fields are marked optional as they are returned
+        by the API but are not required to make recommendations:
         {
-          "response": {
             "topics": [
-              {
-                "id": "8d478f3605fd4476adface9be9cf6db3",
-                "recommendations": [
-                  {
-                    "id": "7747554350bb5e088ee69e28a4ba769d",
-                    "channel_id": "1d8f6d84618153c18c695d85074952a7",
-                    "title": "One-Step Equations and Inverse Operations (Flexbook)",
-                    "description": "",
-                    "similarity": 0.7308432729798824,
-                    "rank": 1
-                  }
-                ]
-              }
+                {
+                    "id": <topic_id>,
+                    "recommendations": [
+                        {
+                            "id": <node_id>,
+                            "channel_id": <channel_id>,
+                            "title": "", (Optional)
+                            "description": "", (Optional)
+                            "similarity": <similarity>, (Optional)
+                            "rank": <rank>
+                        }
+                    ]
+                }
             ]
-          }
         }
+
+        The output format is a flat list of dictionaries with keys:
+        - topic_id
+        - node_id
+        - channel_id
+        - rank
 
         :param response: The recommendations response to be flattened.
         :return: The flattened list of recommendations by topic.
@@ -279,21 +295,75 @@ class RecommendationsAdapter(Adapter):
         """
         flattened_response = []
         if hasattr(response, 'data') and isinstance(response.data, dict):
-            response_data = response.data.get('response')
-            if isinstance(response_data, dict):
-                topics = response_data.get('topics', [])
-                for topic in topics:
-                    topic_id = topic.get('id')
-                    recommendations = topic.get('recommendations', [])
-                    for recommendation in recommendations:
-                        flattened_response.append({
-                            'topic_id': topic_id,
-                            'node_id': recommendation.get('id'),
-                            'channel_id': recommendation.get('channel_id'),
-                            'similarity': recommendation.get('similarity'),
-                            'rank': recommendation.get('rank'),
-                        })
+            topics = response.data.get('topics', [])
+            for topic in topics:
+                topic_id = topic.get('id')
+                recommendations = topic.get('recommendations', [])
+                for recommendation in recommendations:
+                    flattened_response.append({
+                        'topic_id': topic_id,
+                        'node_id': recommendation.get('id'),
+                        'channel_id': recommendation.get('channel_id'),
+                        'rank': recommendation.get('rank'),
+                    })
+
         return flattened_response
+
+    def _unflatten_response(self, flattened_data: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """
+        Transforms a flat list of recommendations back into the nested structure.
+
+        Input format is a list of dictionaries with keys:
+        - topic_id
+        - node_id
+        - channel_id
+        - rank
+
+        Output format matches the original API response. Some fields are marked optional as they
+        are not required to make recommendations so are omitted in the final response:
+        {
+          "topics": [
+            {
+              "id": <topic_id>,
+              "recommendations": [
+                {
+                  "id": <node_id>,
+                  "channel_id": <channel_id>,
+                  "title": "", (Optional)
+                  "description": "", (Optional)
+                  "similarity": <similarity>, (Optional)
+                  "rank": <rank>
+                }
+              ]
+            }
+          ]
+        }
+
+        :param flattened_data: The flat list of recommendations.
+        :return: The nested structure of topics with their recommendations.
+        :rtype: Dict[str, Any]
+        """
+        topics_dict = {}
+
+        for item in flattened_data:
+            topic_id = item.get('topic_id')
+
+            if topic_id not in topics_dict:
+                topics_dict[topic_id] = {
+                    "id": topic_id.hex if isinstance(topic_id, uuid.UUID) else topic_id,
+                    "recommendations": []
+                }
+
+            node_id = item.get('node_id')
+            channel_id = item.get('channel_id')
+            topics_dict[topic_id]["recommendations"].append({
+                "id": node_id.hex if isinstance(node_id, uuid.UUID) else node_id,
+                "channel_id": channel_id.hex if isinstance(channel_id, uuid.UUID) else channel_id,
+                "rank": item.get('rank')
+            })
+        return {
+            "topics": list(topics_dict.values())
+        }
 
     def _validate_nodes(self, nodes: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """

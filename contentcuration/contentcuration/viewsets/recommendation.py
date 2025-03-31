@@ -37,11 +37,17 @@ class RecommendationViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
 
         topics = serializer.validated_data['topics']
+        metadata = serializer.validated_data.get('metadata', None)
         override_threshold = serializer.validated_data['override_threshold']
 
         try:
             manager = AutomationManager()
-            recommendations = manager.load_recommendations(topics, override_threshold)
+
+            request_data = {'topics': topics}
+            if metadata is not None:
+                request_data['metadata'] = metadata
+
+            recommendations = manager.load_recommendations(request_data, override_threshold)
             return JsonResponse(data=recommendations, safe=False)
         except (ValueError, TypeError) as e:
             return JsonResponse({"error": str(e)}, status=HTTPStatus.BAD_REQUEST)

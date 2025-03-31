@@ -93,6 +93,20 @@ export function uuid4() {
   return uuidv4().replace(/-/g, '');
 }
 
+export function formatUUID4(uuid) {
+  if (!uuid || typeof uuid !== 'string') {
+    return uuid;
+  }
+  const cleanId = uuid.replace(/-/g, '');
+  if (cleanId.length !== 32) {
+    return uuid;
+  }
+  return `${cleanId.slice(0, 8)}-${cleanId.slice(8, 12)}-${cleanId.slice(12, 16)}-${cleanId.slice(
+    16,
+    20
+  )}-${cleanId.slice(20)}`;
+}
+
 /*
  * Code to allow multiple inheritance in JS
  * modified from https://hacks.mozilla.org/2015/08/es6-in-depth-subclassing/
@@ -2285,6 +2299,15 @@ export const Task = new IndexedDBResource({
         .then(() => {
           return this.table.bulkPut(tasks);
         });
+    });
+  },
+});
+
+export const Recommendation = new APIResource({
+  urlName: 'recommendations',
+  fetchCollection(params) {
+    return client.post(this.collectionUrl(), params).then(response => {
+      return response.data || [];
     });
   },
 });

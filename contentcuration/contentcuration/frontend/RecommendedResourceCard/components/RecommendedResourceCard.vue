@@ -71,10 +71,12 @@
     computed: {
       ...mapState('importFromChannels', ['selected']),
       channelName() {
-        //Todo: We'll most likely not have null channel names, so remove check after integration
-        return this.node.channel?.name || '';
+        return this.node.channel.name;
       },
       learningActivities() {
+        if (this.node.learning_activities && Object.keys(this.node.learning_activities).length) {
+          return this.node.learning_activities;
+        }
         return {
           [ContentKindLearningActivityDefaults[this.node.kind] || LearningActivities.EXPLORE]: true,
         };

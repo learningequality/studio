@@ -174,9 +174,8 @@
   import SearchResultsList from './SearchResultsList';
   import SavedSearchesModal from './SavedSearchesModal';
   import ImportFromChannelsModal from './ImportFromChannelsModal';
-  import { thumbnail } from './sampleData';
   import { withChangeTracker } from 'shared/data/changes';
-  import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
+  import { formatUUID4 } from 'shared/data/resources';
   import { searchRecommendationsStrings } from 'shared/strings/searchRecommendationsStrings';
 
   export default {
@@ -204,7 +203,6 @@
         resourcesMightBeRelevantTitle$,
         problemShowingResourcesMessage$,
         aboutRecommendationsDescription$,
-        resourcesInChannelMightBeRelevantTitle$,
         aboutRecommendationsFeedbackDescription$,
       } = searchRecommendationsStrings;
 
@@ -224,7 +222,6 @@
         resourcesMightBeRelevantTitle$,
         problemShowingResourcesMessage$,
         aboutRecommendationsDescription$,
-        resourcesInChannelMightBeRelevantTitle$,
         aboutRecommendationsFeedbackDescription$,
         layoutFitsTwoColumns,
       };
@@ -243,7 +240,7 @@
         displayedRecommendations: [],
         recommendationsLoading: false,
         recommendationsLoadingError: false,
-        recommendationsPageSize: 1,
+        recommendationsPageSize: 10,
         recommendationsCurrentIndex: 0,
         recommendationsBelowThreshold: false,
         showNoDirectMatches: false,
@@ -255,9 +252,7 @@
     computed: {
       ...mapGetters('importFromChannels', ['savedSearchesExist']),
       ...mapGetters(['isAIFeatureEnabled']),
-      ...mapGetters('contentNode', ['getContentNodeAncestors']),
       ...mapState('importFromChannels', ['selected']),
-      ...mapState('currentChannel', ['currentChannelId']),
       isBrowsing() {
         return this.$route.name === RouteNames.IMPORT_FROM_CHANNELS_BROWSE;
       },
@@ -317,29 +312,60 @@
       },
       browseWindowStyle() {
         return {
-          width: this.isAIFeatureEnabled ? '1200px' : '800px',
+          maxWidth: this.isAIFeatureEnabled ? '1200px' : '800px',
         };
       },
-      firstAncestor() {
-        const ancestors = this.getContentNodeAncestors(this.topicId, true);
-        return ancestors?.[0] ?? null;
-      },
       topicId() {
-        return this.$route.params.nodeId;
+        return this.importDestinationFolder?.id;
       },
       recommendationsSectionTitle() {
-        if (this.firstAncestor) {
-          return this.resourcesInChannelMightBeRelevantTitle$({
-            channelName: this.firstAncestor?.title,
-            topic: this.importDestination,
-          });
-        }
         return this.resourcesMightBeRelevantTitle$({
-          topic: this.importDestination,
+          topic: this.importDestinationTitle,
         });
       },
-      importDestination() {
-        return this.importDestinationAncestors.slice(-1)[0]?.title || '';
+      topicAncestors() {
+        const ancestors = this.importDestinationAncestors.slice(0, -1);
+        return ancestors.map((ancestor, index) => {
+          return {
+            id: formatUUID4(ancestor.id),
+            title: ancestor.title,
+            description: ancestor.description,
+            language: this.recommendationsLanguage,
+            level: index,
+          };
+        });
+      },
+      embedTopicRequest() {
+        return {
+          topics: [
+            {
+              id: formatUUID4(this.importDestinationFolder.id),
+              title: this.importDestinationFolder.title,
+              description: this.importDestinationFolder.description,
+              language: this.recommendationsLanguage,
+              ancestors: this.topicAncestors,
+            },
+          ],
+          metadata: {
+            channel_id: formatUUID4(this.importDestinationFolder.channel_id),
+          },
+        };
+      },
+      importDestinationFolder() {
+        return this.importDestinationAncestors.slice(-1)[0];
+      },
+      importDestinationTitle() {
+        return this.importDestinationFolder?.title || '';
+      },
+      recommendationsLanguage() {
+        // Find the closest non-(null/empty) language in the ancestral tree
+        for (let i = this.importDestinationAncestors.length - 1; i >= 0; i--) {
+          const ancestor = this.importDestinationAncestors[i];
+          if (ancestor.language) {
+            return ancestor.language;
+          }
+        }
+        return '';
       },
     },
     beforeRouteEnter(to, from, next) {
@@ -364,14 +390,14 @@
       this.searchTerm = this.$route.params.searchTerm || '';
       this.loadAncestors({ id: this.$route.params.destNodeId }).then(ancestors => {
         this.importDestinationAncestors = ancestors;
-        this.loadRecommendations();
+        this.loadRecommendations(this.recommendationsBelowThreshold);
       });
     },
     methods: {
       ...mapActions('channel', ['loadChannel']),
       ...mapActions('clipboard', ['copy']),
       ...mapActions('contentNode', ['loadAncestors', 'loadPublicContentNode']),
-      ...mapActions('importFromChannels', ['fetchResourceSearchResults']),
+      ...mapActions('importFromChannels', ['fetchRecommendations']),
       ...mapMutations('importFromChannels', {
         selectNodes: 'SELECT_NODES',
         deselectNodes: 'DESELECT_NODES',
@@ -444,117 +470,88 @@
             this.displayedRecommendations = this.recommendations.slice(0, nextIndex);
             this.recommendationsCurrentIndex = nextIndex;
             this.showViewMoreRecommendations = this.moreRecommendationsAvailable;
+            this.showShowOtherResources = !this.showViewMoreRecommendations;
           } else if (this.shouldLoadOtherRecommendations) {
             this.loadRecommendations(true);
           } else {
-            this.displayedRecommendations = [
-              ...this.recommendations,
-              ...this.otherRecommendations.slice(0, nextIndex - this.recommendations.length),
-            ];
+            const limit = nextIndex - this.recommendations.length;
+            this.updateDisplayedRecommendations(limit);
             this.recommendationsCurrentIndex = nextIndex;
-            if (this.showNoDirectMatches) {
-              this.showNoDirectMatches = this.moreRecommendationsAvailable;
-            }
-            if (this.showShowOtherResources) {
-              this.showShowOtherResources = this.moreRecommendationsAvailable;
-            }
+
+            const moreAvailable = this.moreRecommendationsAvailable;
+            this.showNoDirectMatches = this.showNoDirectMatches && moreAvailable;
+            this.showShowOtherResources = this.showShowOtherResources && moreAvailable;
           }
         } else {
           this.loadRecommendations(this.recommendationsBelowThreshold);
         }
       },
-      async loadRecommendations(belowThreshold = false) {
+      async loadRecommendations(belowThreshold) {
         if (this.isAIFeatureEnabled) {
           this.recommendationsLoading = true;
           this.recommendationsLoadingError = false;
           try {
-            return this.fetchRecommendations(belowThreshold).then(async recommendations => {
-              return await this.fetchRecommendedNodes(recommendations).then(nodes => {
-                const recommendations = nodes.filter(Boolean);
-                const pageSize = this.recommendationsPageSize;
-                const currentIndex = this.recommendationsCurrentIndex;
+            const data = {
+              ...this.embedTopicRequest,
+              override_threshold: belowThreshold,
+            };
+            const recommendations = await this.fetchRecommendations(data);
+            const recommendedNodes = await this.fetchRecommendedNodes(recommendations);
+            const pageSize = this.recommendationsPageSize;
+            const currentIndex = this.recommendationsCurrentIndex;
 
-                if (belowThreshold) {
-                  this.otherRecommendations = recommendations;
-                  this.displayedRecommendations = [
-                    ...this.recommendations,
-                    ...this.otherRecommendations.slice(0, pageSize),
-                  ];
-                  this.recommendationsCurrentIndex = currentIndex + pageSize;
+            if (belowThreshold) {
+              const nodeIds = new Set(this.recommendations.map(node => node.id));
+              this.otherRecommendations = recommendedNodes.filter(node => !nodeIds.has(node.id));
+              this.updateDisplayedRecommendations(pageSize);
+              this.recommendationsCurrentIndex = currentIndex + pageSize;
 
-                  const isEmpty = this.otherRecommendations.length === 0;
-                  if (this.showNoDirectMatches) {
-                    this.showNoDirectMatches = !isEmpty;
-                  }
-                  if (this.showShowOtherResources) {
-                    this.showShowOtherResources = !isEmpty;
-                  }
-                  this.otherRecommendationsLoaded = true;
-                } else {
-                  this.recommendations = recommendations;
-                  this.displayedRecommendations = this.recommendations.slice(0, pageSize);
-                  this.recommendationsCurrentIndex = pageSize;
+              const moreAvailable = this.moreRecommendationsAvailable;
+              this.showNoDirectMatches = this.showNoDirectMatches && moreAvailable;
+              this.showShowOtherResources = this.showShowOtherResources && moreAvailable;
+              this.otherRecommendationsLoaded = true;
+            } else {
+              this.recommendations = recommendedNodes;
+              this.displayedRecommendations = this.recommendations.slice(0, pageSize);
+              this.recommendationsCurrentIndex = pageSize;
 
-                  const count = this.recommendations.length;
-                  this.showNoDirectMatches = count === 0;
-                  this.showShowOtherResources = count > pageSize;
-                  this.showViewMoreRecommendations = currentIndex < count;
-                }
-                this.recommendationsBelowThreshold = belowThreshold;
-                this.recommendationsLoading = false;
-              });
-            });
+              const count = this.recommendations.length;
+              this.showNoDirectMatches = count === 0;
+              this.showViewMoreRecommendations = this.moreRecommendationsAvailable;
+              this.showShowOtherResources = !this.showViewMoreRecommendations;
+            }
+            this.recommendationsBelowThreshold = belowThreshold;
+            this.recommendationsLoading = false;
           } catch (error) {
             this.recommendationsLoading = false;
             this.recommendationsLoadingError = true;
           }
         }
       },
-      // eslint-disable-next-line no-unused-vars
-      async fetchRecommendations(belowThreshold) {
-        // This is a placeholder for the api call that interacts with
-        // the recommender models based on current context. For now, we just
-        // load all local public nodes for visual testing purposes.
-        return this.fetchResourceSearchResults({
-          page_size: 25,
-          exclude_channel: this.currentChannelId,
-        }).then(response => {
-          const resources = response.results.filter(resource => {
-            return resource.kind !== ContentKindsNames.TOPIC;
-          });
-          return resources.map(resource => {
-            return {
-              id: resource.id,
-              node_id: resource.node_id,
-              main_tree_id: resource.root_id,
-              parent_id: resource.parent,
-            };
-          });
-        });
-      },
       async fetchRecommendedNodes(recommendations) {
         return await Promise.all(
           recommendations.map(async recommendation => {
-            try {
-              // loadPublicContentNode is cached, so multiple calls shouldn't be an issue.
-              const node = await this.loadPublicContentNode({
-                id: recommendation.id,
-                nodeId: recommendation.node_id,
-                rootId: recommendation.main_tree_id,
-                parent: recommendation.parent_id,
-              });
-              const channel = await this.loadChannel(node.channel_id);
+            // loadPublicContentNode is cached, so multiple calls shouldn't be an issue.
+            const node = await this.loadPublicContentNode({
+              id: recommendation.id,
+              nodeId: recommendation.node_id,
+              rootId: recommendation.main_tree_id,
+              parent: recommendation.parent_id,
+            });
+            const channel = await this.loadChannel(node.channel_id);
 
-              return {
-                ...node,
-                thumbnail_src: thumbnail[0], //Temporal. For visual testing of KCard thumbnail only.
-                channel,
-              };
-            } catch {
-              return null;
-            }
+            return {
+              ...node,
+              channel,
+            };
           })
-        ).then(nodes => nodes.filter(Boolean));
+        );
+      },
+      updateDisplayedRecommendations(limit) {
+        this.displayedRecommendations = [
+          ...this.recommendations,
+          ...this.otherRecommendations.slice(0, limit),
+        ];
       },
     },
     $trs: {

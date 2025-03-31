@@ -77,7 +77,7 @@ class Backend(ABC):
 
     def __init__(
         self,
-        url_prefix="",
+        url_prefix="stable",
     ):
         self.url_prefix = url_prefix
         if not self.session:
@@ -160,8 +160,9 @@ class Backend(ABC):
     def connect(self, **kwargs):
         """ Establishes a connection to the backend service. """
         try:
-            request = BackendRequest(method="GET", path=self.connect_endpoint, **kwargs)
-            self._make_request(request)
+            # TODO: Uncomment the lines below after the connect endpoint is implemented
+            # request = BackendRequest(method="GET", path=self.connect_endpoint, **kwargs)
+            # self._make_request(request)
             return True
         except Exception:
             return False
@@ -169,8 +170,9 @@ class Backend(ABC):
     def make_request(self, request):
         """ Make a request to the backend service. """
         try:
-            response = self._make_request(request)
-            return BackendResponse(data=response.json())
+            api_response = self._make_request(request)
+            response_data = api_response.json()
+            return BackendResponse(data=response_data)
         except ValueError as e:
             logging.exception(e)
             raise errors.InvalidResponse("Invalid response from backend")
