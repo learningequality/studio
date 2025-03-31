@@ -7,12 +7,9 @@ import uuid
 
 import pytest
 from celery import states
-from django.conf import settings
 from django.core.management import call_command
 from django.db import connections
 from django_celery_results.models import TaskResult
-from django.core.files.storage import FileSystemStorage
-from django.test.utils import override_settings
 from kolibri_content import models as kolibri_models
 from kolibri_content.router import cleanup_content_database_connection
 from kolibri_content.router import get_active_content_database
