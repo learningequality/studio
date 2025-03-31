@@ -21,4 +21,4 @@ INTERNAL_IPS = (
 AWS_AUTO_CREATE_BUCKET = True
 
 # Use local instance for curriculum automation for development
-CURRICULUM_AUTOMATION_URL = "http://localhost:8000"
+CURRICULUM_AUTOMATION_API_URL = "http://localhost:8000"
