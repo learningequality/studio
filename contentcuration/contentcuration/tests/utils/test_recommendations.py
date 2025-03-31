@@ -9,6 +9,7 @@ from kolibri_public.models import ContentNode as PublicContentNode
 from mock import MagicMock
 from mock import patch
 
+from contentcuration.models import Channel
 from contentcuration.models import ContentNode
 from contentcuration.tests import testdata
 from contentcuration.tests.base import StudioTestCase
@@ -29,21 +30,43 @@ class RecommendationsTestCase(TestCase):
 class RecommendationsAdapterTestCase(StudioTestCase):
 
     @classmethod
+    def setUpClass(cls):
+        super(RecommendationsAdapterTestCase, cls).setUpClass()
+
+        cls.channel_1 = Channel.objects.create(
+            id=uuid.UUID('1234567890abcdef1234567890abcdef').hex,
+            name='Channel 1',
+            actor_id=cls.admin_user.id
+        )
+        cls.channel_2 = Channel.objects.create(
+            id=uuid.UUID('abcdef1234567890abcdef1234567890').hex,
+            name='Channel 2',
+            actor_id=cls.admin_user.id
+        )
+
+    @classmethod
     def setUpTestData(cls):
         cls.adapter = RecommendationsAdapter(MagicMock())
-        cls.topics = [{
-            'id': 'topic_id',
-            'title': 'topic_title',
-            'description': 'topic_description',
-            'language': 'en',
-            'ancestors': [
+        cls.request_data = {
+            'topics': [
                 {
-                    'id': 'ancestor_id',
-                    'title': 'ancestor_title',
-                    'description': 'ancestor_description',
+                    'id': 'topic_id',
+                    'title': 'topic_title',
+                    'description': 'topic_description',
+                    'language': 'en',
+                    'ancestors': [
+                        {
+                            'id': 'ancestor_id',
+                            'title': 'ancestor_title',
+                            'description': 'ancestor_description',
+                        }
+                    ]
                 }
-            ]
-        }]
+            ],
+            'metadata': {
+                'channel_id': '00000000000000000000000000000010'
+            }
+        }
         cls.channel_id = 'test_channel_id'
         cls.resources = [MagicMock(spec=ContentNode)]
 
@@ -52,45 +75,38 @@ class RecommendationsAdapterTestCase(StudioTestCase):
             url='http://test.com',
             path='/test/path',
             params={'override_threshold': False},
-            json=cls.topics
+            json=cls.request_data
         )
         cls.api_response = BackendResponse(data={
-            'response': {
-                'topics': [
-                    {'id': '1234567890abcdef1234567890abcdef', 'recommendations': [
-                        {'id': '1234567890abcdef1234567890abcdef', 'rank': 0.9}
-                    ]},
-                    {'id': 'abcdef1234567890abcdef1234567890', 'recommendations': [
-                        {'id': 'abcdef1234567890abcdef1234567890', 'rank': 0.8}
-                    ]},
-                    {'id': '00000000000000000000000000000003', 'recommendations': [
-                        {'id': '00000000000000000000000000000003', 'rank': 0.8}
-                    ]},
-                    {'id': '00000000000000000000000000000005', 'recommendations': [
-                        {'id': '00000000000000000000000000000005', 'rank': 0.8}
-                    ]},
-                ]
-            }
+            'topics': [
+                {'id': 'abcdef1234567890abcdef1234567890', 'recommendations': [
+                    {
+                        'id': 'abcdef1234567890abcdef1234567890',
+                        'channel_id': 'abcdef1234567890abcdef1234567890',
+                        'rank': 8
+                    }
+                ]},
+                {'id': '1234567890abcdef1234567890abcdef', 'recommendations': [
+                    {
+                        'id': '1234567890abcdef1234567890abcdef',
+                        'channel_id': '1234567890abcdef1234567890abcdef',
+                        'rank': 9
+                    }
+                ]}
+            ]
         })
 
-        cls.public_content_node_1 = PublicContentNode.objects.create(
-            id=uuid.UUID('1234567890abcdef1234567890abcdef'),
+        PublicContentNode.objects.create(
+            id=uuid.UUID('1234567890abcdef1234567890abcdef').hex,
             title='Public Content Node 1',
-            content_id=uuid.uuid4(),
-            channel_id=uuid.UUID('ddec09d74e834241a580c480ee37879c'),
+            content_id=uuid.uuid4().hex,
+            channel_id=uuid.UUID('ddec09d74e834241a580c480ee37879c').hex,
         )
-        cls.public_content_node_2 = PublicContentNode.objects.create(
-            id=uuid.UUID('abcdef1234567890abcdef1234567890'),
+        PublicContentNode.objects.create(
+            id=uuid.UUID('abcdef1234567890abcdef1234567890').hex,
             title='Public Content Node 2',
-            content_id=uuid.uuid4(),
-            channel_id=uuid.UUID('84fcaec1e0514b62899d7f436384c401'),
-        )
-
-        cls.cache = RecommendationsCache.objects.create(
-            request_hash=cls.adapter._generate_request_hash(cls.request),
-            contentnode=cls.public_content_node_1,
-            rank=1.0,
-            override_threshold=False
+            content_id=uuid.uuid4().hex,
+            channel_id=uuid.UUID('84fcaec1e0514b62899d7f436384c401').hex,
         )
 
     def assert_backend_call(self, mock_response_exists, response_exists_value, connect_value,
@@ -145,14 +161,13 @@ class RecommendationsAdapterTestCase(StudioTestCase):
         self.assertIsNotNone(response.error)
 
     def test_response_exists(self):
-        response = self.adapter.response_exists(self.request)
-        public_content_node_id = str(self.public_content_node_1.id).replace('-', '')
+        cached = self.adapter.cache_embeddings_request(self.request, self.api_response)
+        self.assertTrue(cached)
 
+        response = self.adapter.response_exists(self.request)
         self.assertIsNotNone(response)
         self.assertIsInstance(response, EmbeddingsResponse)
-        self.assertEqual(len(response.data), 1)
-        self.assertEqual(response.data[0]['contentnode_id'], public_content_node_id)
-        self.assertEqual(response.data[0]['rank'], 1.0)
+        self.assertDictEqual(response.data, self.api_response.data)
 
     def test_response_does_not_exist(self):
         new_request = EmbedTopicsRequest(
@@ -178,31 +193,49 @@ class RecommendationsAdapterTestCase(StudioTestCase):
         self.assertEqual(cached_items.count(), expected_count)
 
     def test_cache_embeddings_request_success(self):
-        self.cache_request_test_helper([
-            {'id': 'topic_id', 'title': 'topic_title', 'description': 'topic_description'}
-        ], self.api_response, 2)
+        request_json = {
+            'topics': [
+                {'id': 'topic_id', 'title': 'topic_title', 'description': 'topic_description'}
+            ],
+            'metadata': {}
+        }
+        self.cache_request_test_helper(request_json, self.api_response, 2)
 
     def test_cache_embeddings_request_empty_data(self):
-        self.cache_request_test_helper([
-            {'id': 'topic_id', 'title': 'topic_title', 'description': 'topic_description'}
-        ], {}, 0)
+        request_json = {
+            'topics': [
+                {'id': 'topic_id', 'title': 'topic_title', 'description': 'topic_description'}
+            ],
+            'metadata': {}
+        }
+        self.cache_request_test_helper(request_json, {}, 0)
 
     def test_cache_embeddings_request_ignore_duplicates(self):
+        request_json = {
+            'topics': [
+                {'id': 'topic_id', 'title': 'topic_title', 'description': 'topic_description'}
+            ],
+            'metadata': {}
+        }
         duplicate_data = BackendResponse(data={
-            'response': {
-                'topics': [
-                    {'id': '1234567890abcdef1234567890abcdef', 'recommendations': [
-                        {'id': '1234567890abcdef1234567890abcdef', 'rank': 0.9}
-                    ]},
-                    {'id': '1234567890abcdef1234567890abcdef', 'recommendations': [
-                        {'id': '1234567890abcdef1234567890abcdef', 'rank': 0.9}
-                    ]}
-                ]
-            }
+            'topics': [
+                {'id': '1234567890abcdef1234567890abcdef', 'recommendations': [
+                    {
+                        'id': '1234567890abcdef1234567890abcdef',
+                        'channel_id': '1234567890abcdef1234567890abcdef',
+                        'rank': 1
+                    }
+                ]},
+                {'id': '1234567890abcdef1234567890abcdef', 'recommendations': [
+                    {
+                        'id': '1234567890abcdef1234567890abcdef',
+                        'channel_id': '1234567890abcdef1234567890abcdef',
+                        'rank': 2
+                    }
+                ]}
+            ]
         })
-        self.cache_request_test_helper([
-            {'id': 'topic_id', 'title': 'topic_title', 'description': 'topic_description'}
-        ], duplicate_data, 1)
+        self.cache_request_test_helper(request_json, duplicate_data, 1)
 
     def test_cache_embeddings_request_invalid_data(self):
         invalid_data = BackendResponse(data={
@@ -223,28 +256,47 @@ class RecommendationsAdapterTestCase(StudioTestCase):
         channel.save()
 
         public_node_1 = PublicContentNode.objects.create(
-            id=uuid.UUID('00000000000000000000000000000003'),
+            id=uuid.UUID('00000000000000000000000000000003').hex,
             title='Video 1',
-            content_id=uuid.uuid4(),
-            channel_id=uuid.UUID(channel.id),
+            content_id=uuid.uuid4().hex,
+            channel_id=uuid.UUID(channel.id).hex,
         )
         public_node_2 = PublicContentNode.objects.create(
-            id=uuid.UUID('00000000000000000000000000000005'),
+            id=uuid.UUID('00000000000000000000000000000005').hex,
             title='Exercise 1',
-            content_id=uuid.uuid4(),
-            channel_id=uuid.UUID(channel.id),
+            content_id=uuid.uuid4().hex,
+            channel_id=uuid.UUID(channel.id).hex,
         )
+
+        response_data = {
+            'topics': [
+                {'id': '00000000000000000000000000000003', 'recommendations': [
+                    {
+                        'id': '00000000000000000000000000000003',
+                        'channel_id': '00000000000000000000000000000003',
+                        'rank': 10
+                    }
+                ]},
+                {'id': '00000000000000000000000000000005', 'recommendations': [
+                    {
+                        'id': '00000000000000000000000000000005',
+                        'channel_id': '00000000000000000000000000000005',
+                        'rank': 11
+                    }
+                ]}
+            ]
+        }
 
         mock_response_exists.return_value = None
         mock_response = MagicMock(spec=EmbeddingsResponse)
-        mock_response.data = copy.deepcopy(self.api_response.data)
+        mock_response.data = response_data
         mock_response.error = None
         mock_response.get = lambda key, default=None: getattr(mock_response, key, default)
         mock_generate_embeddings.return_value = mock_response
 
-        response = self.adapter.get_recommendations(self.topics)
+        response = self.adapter.get_recommendations(self.request_data)
         results = list(response.results)
-        expected_node_ids = [public_node_1.id.hex, public_node_2.id.hex]
+        expected_node_ids = [public_node_1.id, public_node_2.id]
         actual_node_ids = [result["node_id"] for result in results]
 
         mock_response_exists.assert_called_once()
@@ -262,7 +314,7 @@ class RecommendationsAdapterTestCase(StudioTestCase):
         mock_embed_topics_request.return_value = mock_request_instance
 
         self.assert_backend_call(mock_response_exists, None, False, None,
-                                 self.adapter.get_recommendations, self.topics)
+                                 self.adapter.get_recommendations, self.request_data)
 
     @patch('contentcuration.utils.recommendations.RecommendationsAdapter._flatten_response')
     @patch('contentcuration.utils.recommendations.RecommendationsAdapter.response_exists')
