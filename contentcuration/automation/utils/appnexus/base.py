@@ -160,10 +160,11 @@ class Backend(ABC):
     def connect(self, **kwargs):
         """ Establishes a connection to the backend service. """
         try:
-            # TODO: Uncomment the lines below after the connect endpoint is implemented
-            # request = BackendRequest(method="GET", path=self.connect_endpoint, **kwargs)
-            # self._make_request(request)
-            return True
+            request = BackendRequest(method="GET", path=self.connect_endpoint, **kwargs)
+            api_response = self._make_request(request)
+            response_data = api_response.json()
+            status = response_data.get("status", None)
+            return status == "OK"
         except Exception:
             return False
 
