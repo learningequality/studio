@@ -163,7 +163,7 @@ packaging==24.2
     #   google-cloud-error-reporting
     #   google-cloud-kms
     #   gunicorn
-pillow==11.1.0
+pillow==11.2.0
     # via -r requirements.in
 prometheus-client==0.10.1
     # via django-prometheus
