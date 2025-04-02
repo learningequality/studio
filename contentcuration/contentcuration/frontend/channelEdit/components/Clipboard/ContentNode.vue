@@ -308,4 +308,8 @@
     fill: gray !important;
   }
 
+  .action-col {
+    padding-top: 16px;
+  }
+
 </style>
