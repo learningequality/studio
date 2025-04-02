@@ -962,6 +962,28 @@ class UserTestCase(StudioTestCase):
         user_hard_delete_history = UserHistory.objects.filter(user_id=user.id, action=user_history.RELATED_DATA_HARD_DELETION).first()
         self.assertIsNotNone(user_hard_delete_history)
 
+    def test_get_server_rev(self):
+        user = testdata.user()
+
+        def create_change(server_rev, applied):
+            return Change(
+                user=user,
+                server_rev=server_rev,
+                created_by=user,
+                change_type=DELETED,
+                table=User.__name__,
+                applied=applied,
+                kwargs={},
+            )
+
+        Change.objects.bulk_create([
+            create_change(1, True),
+            create_change(2, True),
+            create_change(3, False),
+        ])
+
+        self.assertEqual(user.get_server_rev(), 2)
+
 
 class ChannelHistoryTestCase(StudioTestCase):
     def setUp(self):
