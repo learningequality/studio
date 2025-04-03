@@ -824,22 +824,16 @@ def mark_all_nodes_as_published(tree):
 def save_export_database(channel_id, version, use_staging_tree=False):
     logging.debug("Saving export database")
     current_export_db_location = get_active_content_database()
-    # Only create "-next.sqlite3" if staging_tree is used
-    if use_staging_tree:
-        target_paths = [
-            os.path.join(
-                settings.DB_ROOT, "{}-{}.sqlite3".format(channel_id, version)
-            )
-        ]
-    else:
-        target_paths = [
-            os.path.join(
-                settings.DB_ROOT, "{id}.sqlite3".format(id=channel_id)
-            ),
-            os.path.join(
-                settings.DB_ROOT, "{}-{}.sqlite3".format(channel_id, version)
-            ),
-        ]
+    target_paths = [
+        os.path.join(
+            settings.DB_ROOT, "{}-{}.sqlite3".format(channel_id, version)
+        )
+    ]
+    # Only create non-version path if not using the staging tree
+    if not use_staging_tree:
+        target_paths.append(
+            os.path.join(settings.DB_ROOT, "{id}.sqlite3".format(id=channel_id)
+        ))
 
     for target_export_db_location in target_paths:
         with open(current_export_db_location, 'rb') as currentf:
@@ -961,8 +955,7 @@ def publish_channel(
         if not use_staging_tree:
             increment_channel_version(channel)
             sync_contentnode_and_channel_tsvectors(channel_id=channel.id)
-        mark_all_nodes_as_published(base_tree)
-        if not use_staging_tree:
+            mark_all_nodes_as_published(base_tree)
             fill_published_fields(channel, version_notes)
 
         # Attributes not getting set for some reason, so just save it here
