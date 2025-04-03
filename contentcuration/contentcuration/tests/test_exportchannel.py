@@ -25,7 +25,7 @@ from mock import patch
 
 from .base import StudioTestCase
 from .helpers import clear_tasks
-from .testdata import channel
+from .testdata import channel, tree
 from .testdata import create_studio_file
 from .testdata import node as create_node
 from .testdata import slideshow
@@ -40,6 +40,8 @@ from contentcuration.utils.publish import create_slideshow_manifest
 from contentcuration.utils.publish import fill_published_fields
 from contentcuration.utils.publish import map_prerequisites
 from contentcuration.utils.publish import MIN_SCHEMA_VERSION
+from contentcuration.utils.publish import NoneContentNodeTreeError
+from contentcuration.utils.publish import publish_channel
 from contentcuration.utils.publish import set_channel_icon_encoding
 from contentcuration.viewsets.base import create_change_tracker
 
@@ -600,3 +602,125 @@ class PublishFailCleansUpTaskObjects(StudioTestCase):
             new_task_result = TaskResult.objects.filter(task_name=task_name, status=states.STARTED).first()
             new_custom_task_metadata = CustomTaskMetadata.objects.get(channel_id=channel_id, user=self.user, signature=signature)
             assert new_custom_task_metadata.task_id == new_task_result.task_id
+
+class PublishStagingTreeTestCase(StudioTestCase):
+    @classmethod
+    def setUpClass(cls):
+        super(PublishStagingTreeTestCase, cls).setUpClass()
+        cls.patch_copy_db = patch('contentcuration.utils.publish.save_export_database')
+        cls.mock_save_export = cls.patch_copy_db.start()
+
+    @classmethod
+    def tearDownClass(cls):
+        super(PublishStagingTreeTestCase, cls).tearDownClass()
+        cls.patch_copy_db.stop()
+
+    def setUp(self):
+        super(PublishStagingTreeTestCase, self).setUp()
+
+        self.channel_version = 3
+        self.incomplete_video_in_staging = 'Incomplete video in staging tree'
+        self.complete_video_in_staging = 'Complete video in staging tree'
+        self.incomplete_video_in_main = 'Incomplete video in main tree'
+        self.complete_video_in_main = 'Complete video in main tree'
+
+        self.content_channel = channel()
+        self.content_channel.staging_tree = tree()
+        self.content_channel.version = self.channel_version
+        self.content_channel.save()
+
+        # Incomplete node should be excluded.
+        new_node = create_node({'kind_id': 'video', 'title': self.incomplete_video_in_staging, 'children': []})
+        new_node.complete = False
+        new_node.parent = self.content_channel.staging_tree
+        new_node.published = False
+        new_node.save()
+
+        # Complete node should be included.
+        new_video = create_node({'kind_id': 'video', 'title': self.complete_video_in_staging, 'children': []})
+        new_video.complete = True
+        new_video.parent = self.content_channel.staging_tree
+        new_node.published = False
+        new_video.save()
+
+        # Incomplete node in main_tree.
+        new_node = create_node({'kind_id': 'video', 'title': self.incomplete_video_in_main, 'children': []})
+        new_node.complete = False
+        new_node.parent = self.content_channel.main_tree
+        new_node.published = False
+        new_node.save()
+
+        # Complete node in main_tree.
+        new_node = create_node({'kind_id': 'video', 'title': self.complete_video_in_main, 'children': []})
+        new_node.complete = True
+        new_node.parent = self.content_channel.main_tree
+        new_node.published = False
+        new_node.save()
+
+    def run_publish_channel(self):
+        publish_channel(
+            self.admin_user.id,
+            self.content_channel.id,
+            version_notes="",
+            force=False,
+            force_exercises=False,
+            send_email=False,
+            progress_tracker=None,
+            language="fr",
+            use_staging_tree=True
+        )
+
+    def test_none_staging_tree(self):
+        self.content_channel.staging_tree = None
+        self.content_channel.save()
+        with self.assertRaises(NoneContentNodeTreeError):
+            self.run_publish_channel()
+
+    def test_staging_tree_published(self):
+        self.assertFalse(self.content_channel.staging_tree.published)
+        self.run_publish_channel()
+        self.content_channel.refresh_from_db()
+        self.assertTrue(self.content_channel.staging_tree.published)
+
+    def test_next_version_exported(self):
+        self.run_publish_channel()
+        self.mock_save_export.assert_called_with(
+            self.content_channel.id,
+            "next",
+            True,
+        )
+
+    def test_main_tree_not_impacted(self):
+        self.assertFalse(self.content_channel.main_tree.published)
+        self.run_publish_channel()
+        self.content_channel.refresh_from_db()
+        self.assertFalse(self.content_channel.main_tree.published)
+
+    def test_channel_version_not_incremented(self):
+        self.assertEqual(self.content_channel.version, self.channel_version)
+        self.run_publish_channel()
+        self.content_channel.refresh_from_db()
+        self.assertEqual(self.content_channel.version, self.channel_version)
+
+    def test_staging_tree_used_for_publish(self):
+        set_channel_icon_encoding(self.content_channel)
+        self.tempdb = create_content_database(
+            self.content_channel,
+            True,
+            self.admin_user.id,
+            True,
+            progress_tracker=None,
+            use_staging_tree=True,
+        )
+        set_active_content_database(self.tempdb)
+
+        nodes = kolibri_models.ContentNode.objects.all()
+        self.assertEqual(nodes.filter(title=self.incomplete_video_in_staging).count(), 0)
+        self.assertEqual(nodes.filter(title=self.complete_video_in_staging).count(), 1)
+        self.assertEqual(nodes.filter(title=self.incomplete_video_in_main).count(), 0)
+        self.assertEqual(nodes.filter(title=self.complete_video_in_main).count(), 0)
+
+        cleanup_content_database_connection(self.tempdb)
+        set_active_content_database(None)
+        if os.path.exists(self.tempdb):
+            os.remove(self.tempdb)
