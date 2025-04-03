@@ -73,7 +73,7 @@ django-filter==23.5
     # via -r requirements.in
 django-js-asset==1.2.2
     # via django-mptt
-django-js-reverse==0.9.1
+django-js-reverse==0.10.2
     # via -r requirements.in
 django-model-utils==5.0.0
     # via -r requirements.in
@@ -159,6 +159,7 @@ le-utils==0.2.9
 packaging==24.2
     # via
     #   -r requirements.in
+    #   django-js-reverse
     #   google-api-core
     #   google-cloud-error-reporting
     #   google-cloud-kms
