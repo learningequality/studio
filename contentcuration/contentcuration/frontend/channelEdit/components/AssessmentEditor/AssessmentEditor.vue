@@ -355,6 +355,9 @@
           if (questionCards?.length >= 1) {
             const lastQuestionCard = questionCards[questionCards.length - 1].$el;
             const editorDiv = document.getElementById('editViewId');
+            if (!editorDiv) {
+              return;
+            }
             editorDiv.scrollTo({
               top: lastQuestionCard.offsetTop,
               behavior: 'smooth',

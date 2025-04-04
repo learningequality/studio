@@ -29,20 +29,20 @@ const ITEM = {
   ],
 };
 
-const openQuestion = wrapper => {
-  wrapper.find('[data-test="questionText"]').trigger('click');
+const openQuestion = async wrapper => {
+  await wrapper.findComponent('[data-test="questionText"]').trigger('click');
 };
 
-const updateQuestion = (wrapper, newQuestionText) => {
+const updateQuestion = async (wrapper, newQuestionText) => {
   // only one editor is rendered at a time => "wrapper.find"
-  wrapper.find({ name: 'MarkdownEditor' }).vm.$emit('update', newQuestionText);
+  wrapper.findComponent({ name: 'MarkdownEditor' }).vm.$emit('update', newQuestionText);
+  await wrapper.vm.$nextTick();
 };
 
-const selectKind = (wrapper, kind) => {
-  const input = wrapper.find('[data-test="kindSelect"]');
-  input.element.value = kind;
-
-  input.trigger('input', kind);
+const selectKind = async (wrapper, kind) => {
+  const input = wrapper.findComponent('[data-test="kindSelect"]');
+  await input.setValue(kind);
+  await input.trigger('input', kind);
 };
 
 describe('AssessmentItemEditor', () => {
@@ -51,7 +51,7 @@ describe('AssessmentItemEditor', () => {
   it('smoke test', () => {
     const wrapper = shallowMount(AssessmentItemEditor);
 
-    expect(wrapper.isVueInstance()).toBe(true);
+    expect(wrapper.exists()).toBe(true);
   });
 
   it('renders question, answers and hints', () => {
@@ -73,7 +73,7 @@ describe('AssessmentItemEditor', () => {
   });
 
   describe('on question text update', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       wrapper = mount(AssessmentItemEditor, {
         store,
         propsData: {
@@ -84,8 +84,8 @@ describe('AssessmentItemEditor', () => {
 
       jest.clearAllMocks();
 
-      openQuestion(wrapper);
-      updateQuestion(wrapper, 'My new question');
+      await openQuestion(wrapper);
+      await updateQuestion(wrapper, 'My new question');
     });
 
     it('emits update event with item containing updated question text', () => {
@@ -98,7 +98,7 @@ describe('AssessmentItemEditor', () => {
 
   describe('on item type update', () => {
     describe('when changing to single selection', () => {
-      beforeEach(() => {
+      beforeEach(async () => {
         const item = {
           ...ITEM,
           type: AssessmentItemTypes.MULTIPLE_SELECTION,
@@ -118,7 +118,7 @@ describe('AssessmentItemEditor', () => {
           listeners,
         });
 
-        selectKind(wrapper, AssessmentItemTypes.SINGLE_SELECTION);
+        await selectKind(wrapper, AssessmentItemTypes.SINGLE_SELECTION);
       });
 
       it('emits update event with item containing updated answers and type', () => {
@@ -134,7 +134,7 @@ describe('AssessmentItemEditor', () => {
     });
 
     describe('when changing to multiple selection', () => {
-      beforeEach(() => {
+      beforeEach(async () => {
         const item = {
           ...ITEM,
           type: AssessmentItemTypes.SINGLE_SELECTION,
@@ -154,7 +154,7 @@ describe('AssessmentItemEditor', () => {
           listeners,
         });
 
-        selectKind(wrapper, AssessmentItemTypes.MULTIPLE_SELECTION);
+        await selectKind(wrapper, AssessmentItemTypes.MULTIPLE_SELECTION);
       });
 
       it('emits update event with item containing same answers and type', () => {
@@ -170,7 +170,7 @@ describe('AssessmentItemEditor', () => {
     });
 
     describe('when changing to true/false', () => {
-      beforeEach(() => {
+      beforeEach(async () => {
         const item = {
           ...ITEM,
           type: AssessmentItemTypes.SINGLE_SELECTION,
@@ -190,7 +190,7 @@ describe('AssessmentItemEditor', () => {
           listeners,
         });
 
-        selectKind(wrapper, AssessmentItemTypes.TRUE_FALSE);
+        await selectKind(wrapper, AssessmentItemTypes.TRUE_FALSE);
       });
 
       it('emits update event with item containing updated answers and type', () => {
@@ -206,7 +206,7 @@ describe('AssessmentItemEditor', () => {
     });
 
     describe('when changing to input question', () => {
-      beforeEach(() => {
+      beforeEach(async () => {
         const item = {
           ...ITEM,
           type: AssessmentItemTypes.SINGLE_SELECTION,
@@ -228,7 +228,7 @@ describe('AssessmentItemEditor', () => {
           listeners,
         });
 
-        selectKind(wrapper, AssessmentItemTypes.INPUT_QUESTION);
+        await selectKind(wrapper, AssessmentItemTypes.INPUT_QUESTION);
       });
 
       it('emits update event with item containing updated answers and type', () => {
@@ -247,7 +247,7 @@ describe('AssessmentItemEditor', () => {
   });
 
   describe('on answers update', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       const item = {
         ...ITEM,
         type: AssessmentItemTypes.SINGLE_SELECTION,
@@ -272,7 +272,8 @@ describe('AssessmentItemEditor', () => {
         { answer: 'Peanut butter', correct: false, order: 2 },
       ];
 
-      wrapper.find({ name: 'AnswersEditor' }).vm.$emit('update', newAnswers);
+      wrapper.findComponent({ name: 'AnswersEditor' }).vm.$emit('update', newAnswers);
+      await wrapper.vm.$nextTick();
     });
 
     it('emits update event with an item containing updated answers', () => {
@@ -287,7 +288,7 @@ describe('AssessmentItemEditor', () => {
   });
 
   describe('on hints update', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       jest.clearAllMocks();
       const item = {
         ...ITEM,
@@ -307,7 +308,8 @@ describe('AssessmentItemEditor', () => {
         { hint: 'Hint 2', order: 2 },
       ];
 
-      wrapper.find({ name: 'HintsEditor' }).vm.$emit('update', newHints);
+      wrapper.findComponent({ name: 'HintsEditor' }).vm.$emit('update', newHints);
+      await wrapper.vm.$nextTick();
     });
 
     it('emits update event with item containing updated hints', () => {
@@ -340,8 +342,12 @@ describe('AssessmentItemEditor', () => {
     });
 
     it('renders all errors messages', () => {
-      expect(wrapper.find('[data-test=questionErrors]').html()).toContain('Question is required');
-      expect(wrapper.find('[data-test=answersErrors]').html()).toContain('Choose a correct answer');
+      expect(wrapper.findComponent('[data-test=questionErrors]').html()).toContain(
+        'Question is required',
+      );
+      expect(wrapper.findComponent('[data-test=answersErrors]').html()).toContain(
+        'Choose a correct answer',
+      );
     });
   });
 });

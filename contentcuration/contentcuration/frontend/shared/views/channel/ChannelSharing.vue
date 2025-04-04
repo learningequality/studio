@@ -144,25 +144,25 @@
         }
         return !this.error;
       },
-      submitEmail() {
+      async submitEmail() {
         this.error = null;
         if (this.validate()) {
           this.sharing = true;
-          this.sendInvitation({
-            email: this.email,
-            shareMode: this.shareMode,
-            channelId: this.channelId,
-          })
-            .then(() => {
-              this.sharing = false;
-              this.$store.dispatch('showSnackbar', { text: this.$tr('invitationSentMessage') });
-              this.email = '';
-              this.$refs.form.resetValidation();
-            })
-            .catch(() => {
-              this.sharing = false;
-              this.error = this.$tr('invitationFailedError');
+          try {
+            await this.sendInvitation({
+              email: this.email,
+              shareMode: this.shareMode,
+              channelId: this.channelId,
             });
+
+            this.sharing = false;
+            this.$store.dispatch('showSnackbar', { text: this.$tr('invitationSentMessage') });
+            this.email = '';
+            this.$refs.form.resetValidation();
+          } catch (e) {
+            this.sharing = false;
+            this.error = this.$tr('invitationFailedError');
+          }
         }
       },
     },

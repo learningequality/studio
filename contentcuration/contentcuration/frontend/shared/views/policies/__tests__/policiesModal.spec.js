@@ -5,15 +5,20 @@ import { policies, policyDates } from 'shared/constants';
 
 describe('PoliciesModal', () => {
   it('smoke test', () => {
-    const wrapper = mount(PoliciesModal);
+    const wrapper = mount(PoliciesModal, {
+      propsData: {
+        policy: policies.TERMS_OF_SERVICE,
+      },
+    });
 
-    expect(wrapper.isVueInstance()).toBe(true);
+    expect(wrapper.exists()).toBe(true);
   });
 
   it('renders a policy title', () => {
     const wrapper = mount(PoliciesModal, {
       propsData: {
         title: 'Updated Terms Of Service',
+        policy: policies.TERMS_OF_SERVICE,
       },
     });
 
@@ -38,6 +43,7 @@ describe('PoliciesModal', () => {
       wrapper = mount(PoliciesModal, {
         propsData: {
           needsAcceptance: false,
+          policy: policies.TERMS_OF_SERVICE,
         },
       });
     });
@@ -70,6 +76,7 @@ describe('PoliciesModal', () => {
       wrapper = mount(PoliciesModal, {
         propsData: {
           needsAcceptance: true,
+          policy: policies.TERMS_OF_SERVICE,
         },
       });
     });

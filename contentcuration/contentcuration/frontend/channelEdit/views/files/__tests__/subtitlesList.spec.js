@@ -3,7 +3,7 @@ import SubtitlesList from '../supplementaryLists/SubtitlesList.vue';
 
 function makeWrapper() {
   return mount(SubtitlesList, {
-    attachToDocument: true,
+    attachTo: document.body,
     propsData: {
       nodeId: 'test',
     },

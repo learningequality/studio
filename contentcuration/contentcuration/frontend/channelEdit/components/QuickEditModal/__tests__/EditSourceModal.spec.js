@@ -79,7 +79,7 @@ describe('EditSourceModal', () => {
 
   test('smoke test', () => {
     const wrapper = makeWrapper(['node1']);
-    expect(wrapper.isVueInstance()).toBe(true);
+    expect(wrapper.exists()).toBe(true);
   });
 
   describe('Selected source on first render', () => {

@@ -41,7 +41,7 @@ function makeWrapper(files) {
 
   return mount(FileUpload, {
     store,
-    attachToDocument: true,
+    attachTo: document.body,
     propsData: {
       nodeId: 'testnode',
     },
@@ -51,11 +51,6 @@ function makeWrapper(files) {
       },
       files() {
         return files;
-      },
-    },
-    methods: {
-      updateFile() {
-        return Promise.resolve();
       },
     },
     stubs: {
@@ -95,7 +90,7 @@ describe('fileUpload', () => {
   describe('methods', () => {
     let uploadItem;
     beforeEach(() => {
-      uploadItem = wrapper.findAll(FileUploadItem).at(0);
+      uploadItem = wrapper.findAllComponents(FileUploadItem).at(0);
     });
     it('should automatically select the first file on load', () => {
       expect(wrapper.vm.selected).toBe('file-3');
@@ -104,14 +99,14 @@ describe('fileUpload', () => {
       uploadItem.vm.$emit('selected');
       expect(wrapper.vm.selected).toBe('file-3');
     });
-    it('emitted remove event should trigger removal dialog', () => {
+    it('emitted remove event should trigger removal dialog', async () => {
       const deleteFile = jest.fn();
-      wrapper.setData({
+      await wrapper.setData({
         selected: 'file-1',
         showRemoveFileWarning: false,
       });
-      wrapper.setMethods({ deleteFile });
       uploadItem.vm.$emit('remove', testFiles[0]);
+      await wrapper.vm.$nextTick();
 
       expect(wrapper.vm.showRemoveFileWarning).toBe(true);
 
@@ -121,9 +116,9 @@ describe('fileUpload', () => {
 
       expect(deleteFile).not.toHaveBeenCalled();
     });
-    it('calling uploadCompleteHandler should trigger update file', () => {
-      const updateFile = jest.fn(() => Promise.resolve());
-      wrapper.setMethods({ updateFile });
+    it('calling uploadCompleteHandler should trigger update file', async () => {
+      const updateFile = jest.spyOn(wrapper.vm, 'updateFile');
+      updateFile.mockImplementation(() => Promise.resolve());
       uploadItem.vm.uploadCompleteHandler(testFiles[1]);
       expect(updateFile).toHaveBeenCalled();
       expect(updateFile.mock.calls[0][0]).toEqual({

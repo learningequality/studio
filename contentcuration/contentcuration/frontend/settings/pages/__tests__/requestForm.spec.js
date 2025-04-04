@@ -41,8 +41,8 @@ describe('requestForm', () => {
         ...minimumForm,
       },
     });
-    requestStorage = jest.fn().mockReturnValue(Promise.resolve());
-    wrapper.setMethods({ requestStorage });
+    requestStorage = jest.spyOn(wrapper.vm, 'requestStorage');
+    requestStorage.mockImplementation(() => Promise.resolve());
   });
 
   describe('toggleLicense', () => {

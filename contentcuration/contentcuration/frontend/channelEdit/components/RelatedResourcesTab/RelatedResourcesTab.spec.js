@@ -1,12 +1,12 @@
 import { mount, createLocalVue } from '@vue/test-utils';
-import Vuex, { Store } from 'vuex';
+import Vuex from 'vuex';
 import VueRouter from 'vue-router';
-
+import { STORE_CONFIG } from '../../store';
 import RelatedResourcesTab from './RelatedResourcesTab';
+import storeFactory from 'shared/vuex/baseStore';
 
 const localVue = createLocalVue();
 localVue.use(Vuex);
-
 localVue.use(VueRouter);
 
 const NODE_ID = 'id-reading';
@@ -24,9 +24,12 @@ const ACTIONS = {
 
 const initWrapper = ({ getters = GETTERS, actions = ACTIONS } = {}) => {
   const router = new VueRouter();
-  const store = new Store({
+  const store = storeFactory({
+    ...STORE_CONFIG,
     modules: {
+      ...STORE_CONFIG.modules,
       contentNode: {
+        ...STORE_CONFIG.modules.contentNode,
         namespaced: true,
         getters,
         actions,

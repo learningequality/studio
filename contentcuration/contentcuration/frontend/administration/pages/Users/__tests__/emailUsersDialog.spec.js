@@ -37,56 +37,66 @@ function makeWrapper() {
 
 describe('emailUsersDialog', () => {
   let wrapper;
-  beforeEach(() => {
+
+  beforeEach(async () => {
     wrapper = makeWrapper();
-    wrapper.setProps({ value: true }); // Allow watch event to trigger
+    await wrapper.setProps({ value: true }); // Allow watch event to trigger
   });
+
   it('selected should get set to userIds on dialog open', () => {
     expect(wrapper.vm.selected).toEqual([userId, userId2]);
   });
+
   describe('on close', () => {
     it('should emit input event with false value', () => {
       wrapper.vm.show = false;
       expect(wrapper.emitted('input')[0][0]).toBe(false);
     });
-    it('should show warning if subject is not blank', () => {
-      wrapper.setData({ subject: 'subject' });
-      wrapper.find('[data-test="cancel"]').trigger('click');
+
+    it('should show warning if subject is not blank', async () => {
+      await wrapper.setData({ subject: 'subject' });
+      await wrapper.findComponent('[data-test="cancel"]').trigger('click');
       expect(wrapper.vm.showWarning).toBe(true);
     });
-    it('should show warning if message is not blank', () => {
-      wrapper.setData({ message: 'message' });
-      wrapper.find('[data-test="cancel"]').trigger('click');
+
+    it('should show warning if message is not blank', async () => {
+      await wrapper.setData({ message: 'message' });
+      await wrapper.findComponent('[data-test="cancel"]').trigger('click');
       expect(wrapper.vm.showWarning).toBe(true);
     });
-    it('confirming close should reset fields and close dialog', () => {
-      wrapper.setData({ subject: 'subject', message: 'message' });
-      wrapper.find('[data-test="confirm"]').vm.$emit('confirm');
+
+    it('confirming close should reset fields and close dialog', async () => {
+      await wrapper.setData({ subject: 'subject', message: 'message' });
+      wrapper.findComponent('[data-test="confirm"]').vm.$emit('confirm');
       expect(wrapper.vm.subject).toBe('');
       expect(wrapper.vm.message).toBe('');
       expect(wrapper.emitted('input')[0][0]).toBe(false);
     });
   });
+
   describe('on submit', () => {
-    const sendEmail = jest.fn().mockReturnValue(Promise.resolve());
+    let sendEmail;
+
     beforeEach(() => {
-      sendEmail.mockClear();
-      wrapper.setMethods({ sendEmail });
+      sendEmail = jest.spyOn(wrapper.vm, 'sendEmail').mockReturnValue(Promise.resolve());
     });
-    it('should not send if subject is empty', () => {
-      wrapper.setData({ message: 'message' });
-      wrapper.find('[data-test="send"]').trigger('click');
+
+    it('should not send if subject is empty', async () => {
+      await wrapper.setData({ message: 'message' });
+      await wrapper.findComponent('[data-test="send"]').trigger('click');
       expect(sendEmail).not.toHaveBeenCalled();
     });
-    it('should not send if message is empty', () => {
-      wrapper.setData({ subject: 'subject' });
-      wrapper.find('[data-test="send"]').trigger('click');
+
+    it('should not send if message is empty', async () => {
+      await wrapper.setData({ subject: 'subject' });
+      await wrapper.findComponent('[data-test="send"]').trigger('click');
       expect(sendEmail).not.toHaveBeenCalled();
     });
-    it('should call sendEmail if form is valid', () => {
+
+    it('should call sendEmail if form is valid', async () => {
       const emailData = { subject: 'subject', message: 'message' };
-      wrapper.setData(emailData);
-      wrapper.find('[data-test="send"]').trigger('click');
+      await wrapper.setData(emailData);
+      await wrapper.findComponent('[data-test="send"]').trigger('click');
       expect(sendEmail).toHaveBeenCalledWith({
         ...emailData,
         query: {
@@ -95,14 +105,16 @@ describe('emailUsersDialog', () => {
       });
     });
   });
-  it('clicking placeholder should add it to the message', () => {
+
+  it('clicking placeholder should add it to the message', async () => {
     const message = 'Testing';
-    wrapper.setData({ message });
+    await wrapper.setData({ message });
     wrapper.vm.addPlaceholder('{test}');
     expect(wrapper.vm.message).toBe(`${message} {test}`);
   });
+
   it('clicking remove on user should remove user from recipients', () => {
-    wrapper.find('[data-test="remove"]').vm.$emit('input', userId);
+    wrapper.findComponent('[data-test="remove"]').vm.$emit('input', userId);
     expect(wrapper.vm.selected).toEqual([userId2]);
   });
 });

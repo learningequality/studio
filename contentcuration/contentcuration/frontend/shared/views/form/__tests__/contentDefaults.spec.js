@@ -12,32 +12,32 @@ function makeWrapper(contentDefaults) {
 }
 
 function assertFieldValues(keys, fields, contentDefaults, prop = 'value') {
-  keys.forEach(key => {
-    const field = fields.filter(f => f.contains(`[data-name="${camelCase(key)}"]`)).at(0);
+  for (const key of keys) {
+    const field = fields.filter(f => f.find(`[data-name="${camelCase(key)}"]`).exists()).at(0);
     expect(field.props(prop)).toEqual(contentDefaults[key]);
-  });
+  }
 }
 
-function updateFieldValues(keys, fields, contentDefaults) {
-  keys.forEach(key => {
+async function updateFieldValues(keys, fields, contentDefaults) {
+  for (const key of keys) {
     const selector = `[data-name="${camelCase(key)}"]`;
-    const field = fields.filter(f => f.contains(selector)).at(0);
+    const field = fields.filter(f => f.find(selector).exists()).at(0);
     const input = field.find(`.v-input ${selector}`);
 
     if (input.exists()) {
       // The element is a Vuetify input
-      input.setValue(contentDefaults[key]);
+      await input.setValue(contentDefaults[key]);
     } else {
       // The element is a KDS checkbox
       if (field.props('inputValue') !== contentDefaults[key]) {
         field.find('input').element.click();
       }
     }
-  });
+  }
 }
 
 function assertFormValues(wrapper, contentDefaults) {
-  const textFields = wrapper.findAll({ name: 'v-text-field' });
+  const textFields = wrapper.findAllComponents({ name: 'v-text-field' });
   expect(textFields.length).toEqual(4);
   assertFieldValues(
     ['author', 'provider', 'aggregator', 'copyright_holder'],
@@ -45,11 +45,11 @@ function assertFormValues(wrapper, contentDefaults) {
     contentDefaults,
   );
 
-  const selects = wrapper.findAll({ name: 'v-select' });
+  const selects = wrapper.findAllComponents({ name: 'v-select' });
   expect(selects.length).toEqual(1);
   assertFieldValues(['license'], selects, contentDefaults);
 
-  const textAreas = wrapper.findAll({ name: 'v-textarea' });
+  const textAreas = wrapper.findAllComponents({ name: 'v-textarea' });
   if (contentDefaults.license !== 'Special Permissions') {
     expect(textAreas.length).toEqual(0);
   } else {
@@ -57,7 +57,7 @@ function assertFormValues(wrapper, contentDefaults) {
     assertFieldValues(['license_description'], textAreas, contentDefaults);
   }
 
-  const checkboxes = wrapper.findAll({ name: 'Checkbox' });
+  const checkboxes = wrapper.findAllComponents({ name: 'Checkbox' });
   expect(checkboxes.length).toEqual(4);
   assertFieldValues(
     [
@@ -72,25 +72,25 @@ function assertFormValues(wrapper, contentDefaults) {
   );
 }
 
-function updateFormValues(wrapper, contentDefaults) {
-  const textFields = wrapper.findAll({ name: 'v-text-field' });
-  updateFieldValues(
+async function updateFormValues(wrapper, contentDefaults) {
+  const textFields = wrapper.findAllComponents({ name: 'v-text-field' });
+  await updateFieldValues(
     ['author', 'provider', 'aggregator', 'copyright_holder'],
     textFields,
     contentDefaults,
   );
 
-  const selects = wrapper.findAll({ name: 'v-select' });
-  updateFieldValues(['license'], selects, contentDefaults);
+  const selects = wrapper.findAllComponents({ name: 'v-select' });
+  await updateFieldValues(['license'], selects, contentDefaults);
 
-  const textAreas = wrapper.findAll({ name: 'v-textarea' });
+  const textAreas = wrapper.findAllComponents({ name: 'v-textarea' });
   if (contentDefaults.license === 'Special Permissions') {
-    updateFieldValues(['license_description'], textAreas, contentDefaults);
+    await updateFieldValues(['license_description'], textAreas, contentDefaults);
   }
 
-  const checkboxes = wrapper.findAll({ name: 'Checkbox' });
+  const checkboxes = wrapper.findAllComponents({ name: 'Checkbox' });
   expect(checkboxes.length).toEqual(4);
-  updateFieldValues(
+  await updateFieldValues(
     [
       'auto_derive_audio_thumbnail',
       'auto_derive_document_thumbnail',
@@ -136,7 +136,7 @@ describe('contentDefaults', () => {
   });
 
   describe('updating state', () => {
-    it('should update fields with new content defaults received from a parent', () => {
+    it('should update fields with new content defaults received from a parent', async () => {
       const contentDefaults = {
         author: 'Buster McTester',
         provider: 'USA',
@@ -152,7 +152,7 @@ describe('contentDefaults', () => {
       const wrapper = makeWrapper(contentDefaults);
       assertFormValues(wrapper, contentDefaults);
 
-      wrapper.setProps({
+      await wrapper.setProps({
         contentDefaults: {
           ...contentDefaults,
           author: 'Gabhowla Gabrielleclaw',
@@ -164,7 +164,7 @@ describe('contentDefaults', () => {
       });
     });
 
-    it('should update a parent with new content defaults', () => {
+    it('should update a parent with new content defaults', async () => {
       const setValues = {
         author: 'Buster McTester',
         provider: 'USA',
@@ -178,12 +178,10 @@ describe('contentDefaults', () => {
         auto_derive_video_thumbnail: false,
       };
       const wrapper = makeWrapper({});
-      updateFormValues(wrapper, setValues);
+      await updateFormValues(wrapper, setValues);
 
-      return wrapper.vm.$nextTick().then(() => {
-        const contentDefaults = wrapper.emitted('change').pop()[0];
-        expect(contentDefaults).toEqual(setValues);
-      });
+      const contentDefaults = wrapper.emitted('change').pop()[0];
+      expect(contentDefaults).toEqual(setValues);
     });
   });
 });

@@ -41,7 +41,7 @@ describe('RelatedResourcesList', () => {
   it('smoke test', () => {
     const wrapper = shallowMount(RelatedResourcesList);
 
-    expect(wrapper.isVueInstance()).toBe(true);
+    expect(wrapper.exists()).toBe(true);
   });
 
   it('renders all items', () => {

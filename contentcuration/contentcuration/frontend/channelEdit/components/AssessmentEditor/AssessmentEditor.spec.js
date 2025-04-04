@@ -69,63 +69,63 @@ const ITEMS_VALIDATION = [
   [ValidationErrors.QUESTION_REQUIRED],
 ];
 
-const checkShowAnswers = wrapper => {
-  wrapper.find('[data-test="showAnswersCheckbox"]').find('input').element.click();
+const checkShowAnswers = async wrapper => {
+  await wrapper.findComponent('[data-test="showAnswersCheckbox"]').trigger('click');
 };
 
 const getItems = wrapper => {
-  return wrapper.findAll('[data-test="item"]');
+  return wrapper.findAllComponents('[data-test="item"]');
 };
 
 const isItemOpen = assessmentItemWrapper => {
-  return assessmentItemWrapper.contains('[data-test="editor"]');
+  return assessmentItemWrapper.findComponent('[data-test="editor"]').exists();
 };
 
 const isAnswersPreviewVisible = assessmentItemWrapper => {
-  return assessmentItemWrapper.contains('[data-test="item-answers-preview"]');
+  return assessmentItemWrapper.findComponent('[data-test="item-answers-preview"]').exists();
 };
 
-const clickNewQuestionBtn = wrapper => {
-  wrapper.find('[data-test="newQuestionBtn"]').find('button').trigger('click');
+const clickNewQuestionBtn = async wrapper => {
+  await wrapper.findComponent('[data-test="newQuestionBtn"]').trigger('click');
 };
 
-const clickClose = assessmentItemWrapper => {
-  assessmentItemWrapper.find('[data-test="closeBtn"]').trigger('click');
+const clickClose = async assessmentItemWrapper => {
+  await assessmentItemWrapper.findComponent('[data-test="closeBtn"]').trigger('click');
 };
 
-const clickEdit = assessmentItemWrapper => {
-  assessmentItemWrapper
-    .find(`[data-test="toolbarIcon-${AssessmentItemToolbarActions.EDIT_ITEM}"]`)
+const clickEdit = async assessmentItemWrapper => {
+  await assessmentItemWrapper
+    .findComponent(`[data-test="toolbarIcon-${AssessmentItemToolbarActions.EDIT_ITEM}"]`)
     .trigger('click');
 };
 
-const clickDelete = assessmentItemWrapper => {
-  assessmentItemWrapper
-    .find(`[data-test="toolbarMenuItem-${AssessmentItemToolbarActions.DELETE_ITEM}"]`)
+const clickDelete = async assessmentItemWrapper => {
+  await assessmentItemWrapper
+    .findComponent(`[data-test="toolbarMenuItem-${AssessmentItemToolbarActions.DELETE_ITEM}"]`)
     .trigger('click');
 };
 
-const clickAddQuestionAbove = assessmentItemWrapper => {
-  assessmentItemWrapper
-    .find(`[data-test="toolbarMenuItem-${AssessmentItemToolbarActions.ADD_ITEM_ABOVE}"]`)
+const clickAddQuestionAbove = async assessmentItemWrapper => {
+  await assessmentItemWrapper
+    .findComponent(`[data-test="toolbarMenuItem-${AssessmentItemToolbarActions.ADD_ITEM_ABOVE}"]`)
     .trigger('click');
 };
 
-const clickAddQuestionBelow = assessmentItemWrapper => {
-  assessmentItemWrapper
-    .find(`[data-test="toolbarMenuItem-${AssessmentItemToolbarActions.ADD_ITEM_BELOW}"]`)
+const clickAddQuestionBelow = async assessmentItemWrapper => {
+  await assessmentItemWrapper
+    .findComponent(`[data-test="toolbarMenuItem-${AssessmentItemToolbarActions.ADD_ITEM_BELOW}"]`)
     .trigger('click');
 };
 
-const clickMoveUp = assessmentItemWrapper => {
-  assessmentItemWrapper
-    .find(`[data-test="toolbarIcon-${AssessmentItemToolbarActions.MOVE_ITEM_UP}"]`)
+const clickMoveUp = async assessmentItemWrapper => {
+  await assessmentItemWrapper
+    .findComponent(`[data-test="toolbarIcon-${AssessmentItemToolbarActions.MOVE_ITEM_UP}"]`)
     .trigger('click');
 };
 
-const clickMoveDown = assessmentItemWrapper => {
-  assessmentItemWrapper
-    .find(`[data-test="toolbarIcon-${AssessmentItemToolbarActions.MOVE_ITEM_DOWN}"]`)
+const clickMoveDown = async assessmentItemWrapper => {
+  await assessmentItemWrapper
+    .findComponent(`[data-test="toolbarIcon-${AssessmentItemToolbarActions.MOVE_ITEM_DOWN}"]`)
     .trigger('click');
 };
 
@@ -155,7 +155,7 @@ describe('AssessmentEditor', () => {
   it('smoke test', () => {
     const wrapper = shallowMount(AssessmentEditor);
 
-    expect(wrapper.isVueInstance()).toBe(true);
+    expect(wrapper.exists()).toBe(true);
   });
 
   describe('for an exercise with no questions', () => {
@@ -175,7 +175,7 @@ describe('AssessmentEditor', () => {
     });
 
     it("doesn't render 'Show answers' checkbox", () => {
-      expect(wrapper.contains('[data-test="showAnswersCheckbox"]')).toBe(false);
+      expect(wrapper.findComponent('[data-test="showAnswersCheckbox"]').exists()).toBe(false);
     });
   });
 
@@ -200,7 +200,7 @@ describe('AssessmentEditor', () => {
   });
 
   it("renders 'Show answers' checkbox", () => {
-    expect(wrapper.contains('[data-test="showAnswersCheckbox"]')).toBe(true);
+    expect(wrapper.findComponent('[data-test="showAnswersCheckbox"]').exists()).toBe(true);
   });
 
   it("doesn't render answers preview by default", () => {
@@ -212,8 +212,8 @@ describe('AssessmentEditor', () => {
     expect(isAnswersPreviewVisible(items.at(3))).toBe(false);
   });
 
-  it('renders answers preview on show answers click', () => {
-    checkShowAnswers(wrapper);
+  it('renders answers preview on show answers click', async () => {
+    await checkShowAnswers(wrapper);
 
     const items = getItems(wrapper);
 
@@ -223,9 +223,9 @@ describe('AssessmentEditor', () => {
     expect(isAnswersPreviewVisible(items.at(3))).toBe(true);
   });
 
-  it('opens an item on item click', () => {
+  it('opens an item on item click', async () => {
     const items = getItems(wrapper);
-    items.at(1).trigger('click');
+    await items.at(1).trigger('click');
 
     expect(isItemOpen(items.at(0))).toBe(false);
     expect(isItemOpen(items.at(1))).toBe(true);
@@ -233,9 +233,9 @@ describe('AssessmentEditor', () => {
     expect(isItemOpen(items.at(3))).toBe(false);
   });
 
-  it('opens an item on toolbar edit icon click', () => {
+  it('opens an item on toolbar edit icon click', async () => {
     const items = getItems(wrapper);
-    clickEdit(items.at(1));
+    await clickEdit(items.at(1));
 
     expect(isItemOpen(items.at(0))).toBe(false);
     expect(isItemOpen(items.at(1))).toBe(true);
@@ -243,22 +243,22 @@ describe('AssessmentEditor', () => {
     expect(isItemOpen(items.at(3))).toBe(false);
   });
 
-  it('closes an item on close button click', () => {
+  it('closes an item on close button click', async () => {
     // open an item at first
     const items = getItems(wrapper);
-    items.at(1).trigger('click');
+    await items.at(1).trigger('click');
     expect(isItemOpen(items.at(1))).toBe(true);
 
     // now close it
-    clickClose(items.at(1));
+    await clickClose(items.at(1));
     expect(isItemOpen(items.at(1))).toBe(false);
   });
 
   describe('on "Delete" click', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       jest.clearAllMocks();
       const items = getItems(wrapper);
-      clickDelete(items.at(1));
+      await clickDelete(items.at(1));
     });
 
     it('emits delete item event with a correct key', () => {
@@ -286,10 +286,10 @@ describe('AssessmentEditor', () => {
   });
 
   describe('on "Add question above" click', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       jest.clearAllMocks();
       const items = getItems(wrapper);
-      clickAddQuestionAbove(items.at(1));
+      await clickAddQuestionAbove(items.at(1));
     });
 
     it('emits add item event with a new item with a correct order', () => {
@@ -328,10 +328,10 @@ describe('AssessmentEditor', () => {
   });
 
   describe('on "Add question below" click', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       jest.clearAllMocks();
       const items = getItems(wrapper);
-      clickAddQuestionBelow(items.at(1));
+      await clickAddQuestionBelow(items.at(1));
     });
 
     it('emits add item event with a new item with a correct order', () => {
@@ -371,10 +371,10 @@ describe('AssessmentEditor', () => {
   });
 
   describe('on "Move up" click', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       jest.clearAllMocks();
       const items = getItems(wrapper);
-      clickMoveUp(items.at(1));
+      await clickMoveUp(items.at(1));
     });
 
     it('emits update item events with updated order of affected items', () => {
@@ -393,10 +393,10 @@ describe('AssessmentEditor', () => {
   });
 
   describe('on "Move down" click', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       jest.clearAllMocks();
       const items = getItems(wrapper);
-      clickMoveDown(items.at(1));
+      await clickMoveDown(items.at(1));
     });
 
     it('emits update item events with updated order of affected items', () => {
@@ -415,8 +415,8 @@ describe('AssessmentEditor', () => {
   });
 
   describe('on "Add new question" click', () => {
-    beforeEach(() => {
-      clickNewQuestionBtn(wrapper);
+    beforeEach(async () => {
+      await clickNewQuestionBtn(wrapper);
     });
 
     it('emits add item event with a new item with a correct order', () => {

@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils';
-import { Store } from 'vuex';
 import EditTitleDescriptionModal from '../EditTitleDescriptionModal.vue';
+import storeFactory from 'shared/vuex/baseStore';
 
 const nodeId = 'test-id';
 
@@ -10,181 +10,112 @@ const node = {
   description: 'test-description',
 };
 
-let store;
-let contentNodeActions;
-let generalActions;
-
 describe('EditTitleDescriptionModal', () => {
+  let wrapper;
+  let modal;
+  let titleInput;
+  let descriptionInput;
+  let updateContentNode;
+  let storeDispatch;
+
   beforeEach(() => {
-    contentNodeActions = {
-      updateContentNode: jest.fn(),
-    };
-    generalActions = {
-      showSnackbarSimple: jest.fn(),
-    };
-    store = new Store({
-      actions: generalActions,
-      modules: {
-        contentNode: {
-          namespaced: true,
-          actions: contentNodeActions,
-          getters: {
-            getContentNode: () => () => node,
+    wrapper = mount(EditTitleDescriptionModal, {
+      store: storeFactory({
+        modules: {
+          contentNode: {
+            namespaced: true,
+            actions: {
+              updateContentNode: jest.fn(),
+            },
+            getters: {
+              getContentNode: () => () => node,
+            },
           },
         },
-      },
-    });
-  });
-
-  test('smoke test', () => {
-    const wrapper = mount(EditTitleDescriptionModal, {
-      store,
-      propsData: {
-        nodeId,
-      },
-    });
-    expect(wrapper.isVueInstance()).toBe(true);
-  });
-
-  test('should display the correct title and description on first render', () => {
-    const wrapper = mount(EditTitleDescriptionModal, {
-      store,
+      }),
       propsData: {
         nodeId,
       },
     });
 
-    expect(wrapper.find('[data-test="title-input"]').vm.$props.value).toBe(node.title);
-    expect(wrapper.find('[data-test="description-input"]').vm.$props.value).toBe(node.description);
+    updateContentNode = jest.spyOn(wrapper.vm, 'updateContentNode').mockImplementation(() => {});
+    storeDispatch = jest.spyOn(wrapper.vm.$store, 'dispatch');
+    modal = wrapper.findComponent('[data-test="edit-title-description-modal"]');
+    titleInput = wrapper.findComponent('[data-test="title-input"]');
+    descriptionInput = wrapper.findComponent('[data-test="description-input"]');
   });
 
-  test('should call updateContentNode on success submit', () => {
-    const wrapper = mount(EditTitleDescriptionModal, {
-      store,
-      propsData: {
-        nodeId,
-      },
-    });
-
-    wrapper.find('[data-test="edit-title-description-modal"]').vm.$emit('submit');
-    expect(contentNodeActions.updateContentNode).toHaveBeenCalled();
+  it('smoke test', () => {
+    expect(wrapper.exists()).toBe(true);
   });
 
-  test('should call updateContentNode with the correct parameters on success submit', () => {
-    const wrapper = mount(EditTitleDescriptionModal, {
-      store,
-      propsData: {
-        nodeId,
-      },
-    });
+  it('should display the correct title and description on first render', () => {
+    expect(titleInput.props('value')).toBe(node.title);
+    expect(descriptionInput.props('value')).toBe(node.description);
+  });
 
+  it('should call updateContentNode on success submit', () => {
+    modal.vm.$emit('submit');
+    expect(updateContentNode).toHaveBeenCalled();
+  });
+
+  it('should call updateContentNode with the correct parameters on success submit', () => {
     const newTitle = 'new-title';
     const newDescription = 'new-description';
-    wrapper.find('[data-test="title-input"]').vm.$emit('input', 'new-title');
-    wrapper.find('[data-test="description-input"]').vm.$emit('input', 'new-description');
+    titleInput.vm.$emit('input', newTitle);
+    descriptionInput.vm.$emit('input', newDescription);
 
-    wrapper.find('[data-test="edit-title-description-modal"]').vm.$emit('submit');
+    modal.vm.$emit('submit');
 
-    expect(contentNodeActions.updateContentNode).toHaveBeenCalledWith(expect.anything(), {
+    expect(updateContentNode).toHaveBeenCalledWith({
       id: nodeId,
       title: newTitle,
       description: newDescription,
     });
   });
 
-  test('should let update even if description is empty', () => {
-    const wrapper = mount(EditTitleDescriptionModal, {
-      store,
-      propsData: {
-        nodeId,
-      },
-    });
-
+  it('should let update even if description is empty', () => {
     const newTitle = 'new-title';
-    wrapper.find('[data-test="title-input"]').vm.$emit('input', 'new-title');
-    wrapper.find('[data-test="description-input"]').vm.$emit('input', '');
+    titleInput.vm.$emit('input', newTitle);
+    descriptionInput.vm.$emit('input', '');
 
-    wrapper.find('[data-test="edit-title-description-modal"]').vm.$emit('submit');
+    modal.vm.$emit('submit');
 
-    expect(contentNodeActions.updateContentNode).toHaveBeenCalledWith(expect.anything(), {
+    expect(updateContentNode).toHaveBeenCalledWith({
       id: nodeId,
       title: newTitle,
       description: '',
     });
   });
 
-  test('should validate title on blur', () => {
-    const wrapper = mount(EditTitleDescriptionModal, {
-      store,
-      propsData: {
-        nodeId,
-      },
-    });
+  it('should validate title on blur', async () => {
+    titleInput.vm.$emit('input', '');
+    titleInput.vm.$emit('blur');
 
-    wrapper.find('[data-test="title-input"]').vm.$emit('input', '');
-    wrapper.find('[data-test="title-input"]').vm.$emit('blur');
-
-    expect(wrapper.find('[data-test="title-input"]').vm.$props.invalidText).toBeTruthy();
+    await wrapper.vm.$nextTick();
+    expect(titleInput.props('invalidText')).toBeTruthy();
   });
 
-  test('should validate title on submit', () => {
-    const wrapper = mount(EditTitleDescriptionModal, {
-      store,
-      propsData: {
-        nodeId,
-      },
-    });
+  it('should validate title on submit', async () => {
+    titleInput.vm.$emit('input', '');
+    modal.vm.$emit('submit');
 
-    wrapper.find('[data-test="title-input"]').vm.$emit('input', '');
-    wrapper.find('[data-test="edit-title-description-modal"]').vm.$emit('submit');
-
-    expect(wrapper.find('[data-test="title-input"]').vm.$props.invalidText).toBeTruthy();
+    await wrapper.vm.$nextTick();
+    expect(titleInput.props('invalidText')).toBeTruthy();
   });
 
-  test("should show 'Edited title and description' on a snackbar on success submit", () => {
-    const wrapper = mount(EditTitleDescriptionModal, {
-      store,
-      propsData: {
-        nodeId,
-      },
-    });
-
-    wrapper.find('[data-test="edit-title-description-modal"]').vm.$emit('submit');
-
-    const animationFrameId = requestAnimationFrame(() => {
-      expect(generalActions.showSnackbarSimple).toHaveBeenCalledWith(
-        expect.anything(),
-        'Edited title and description',
-      );
-      cancelAnimationFrame(animationFrameId);
-    });
+  it("should show 'Changes saved' on a snackbar on success submit", async () => {
+    await wrapper.vm.handleSave();
+    expect(storeDispatch).toHaveBeenCalledWith('showSnackbarSimple', 'Changes saved');
   });
 
-  test("should emit 'close' event on success submit", () => {
-    const wrapper = mount(EditTitleDescriptionModal, {
-      store,
-      propsData: {
-        nodeId,
-      },
-    });
-
-    wrapper.find('[data-test="edit-title-description-modal"]').vm.$emit('submit');
-
-    const animationFrameId = requestAnimationFrame(() => {
-      expect(wrapper.emitted().close).toBeTruthy();
-      cancelAnimationFrame(animationFrameId);
-    });
+  it("should emit 'close' event on success submit", async () => {
+    await wrapper.vm.handleSave();
+    expect(wrapper.emitted().close).toBeTruthy();
   });
 
-  test('should emit close event on cancel', () => {
-    const wrapper = mount(EditTitleDescriptionModal, {
-      store,
-      propsData: {
-        nodeId,
-      },
-    });
-
-    wrapper.find('[data-test="edit-title-description-modal"]').vm.$emit('cancel');
+  it('should emit close event on cancel', () => {
+    modal.vm.$emit('cancel');
     expect(wrapper.emitted().close).toBeTruthy();
   });
 });

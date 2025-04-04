@@ -79,7 +79,7 @@
       ...mapActions('settings', ['updateUserPassword']),
       submitPassword() {
         if (this.$refs.form.validate()) {
-          this.updateUserPassword(this.password)
+          return this.updateUserPassword(this.password)
             .then(() => {
               this.dialog = false;
               this.showSnackbar({ text: this.$tr('paswordChangeSuccess') });

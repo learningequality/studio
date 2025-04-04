@@ -28,7 +28,7 @@ function makeWrapper() {
   localStore.commit('edit_modal/SET_NODES', ContentNodes);
   return mount(EditList, {
     store: localStore,
-    attachToDocument: true,
+    attachTo: document.body,
     stubs: {
       EditListItem: true,
     },

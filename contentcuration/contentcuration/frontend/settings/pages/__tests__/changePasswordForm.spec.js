@@ -2,11 +2,9 @@ import { mount } from '@vue/test-utils';
 import ChangePasswordForm from '../Account/ChangePasswordForm';
 import { factory } from '../../store';
 
-const store = factory();
-
 function makeWrapper() {
   return mount(ChangePasswordForm, {
-    store,
+    store: factory(),
     sync: false,
     propsData: {
       value: true,
@@ -16,27 +14,28 @@ function makeWrapper() {
 
 describe('changePasswordForm', () => {
   let wrapper;
+
   beforeEach(() => {
     wrapper = makeWrapper();
   });
 
-  it('validation should fail if passwords do not match', () => {
-    wrapper.setData({ password: 'test' });
+  it('validation should fail if passwords do not match', async () => {
+    await wrapper.setData({ password: 'test' });
     expect(typeof wrapper.vm.passwordConfirmRules[0]('data')).toBe('string');
   });
-  it('failed validation should not call updateUserPassword', () => {
-    const updateUserPassword = jest.fn().mockReturnValue(Promise.resolve());
-    wrapper.setMethods({ updateUserPassword });
-    wrapper.vm.submitPassword();
+
+  it('failed validation should not call updateUserPassword', async () => {
+    const updateUserPassword = jest.spyOn(wrapper.vm, 'updateUserPassword');
+    updateUserPassword.mockImplementation(() => Promise.resolve());
+    await wrapper.vm.submitPassword();
     expect(updateUserPassword).not.toHaveBeenCalled();
   });
-  it('clicking submit should call updateUserPassword', () => {
-    const updateUserPassword = jest.fn().mockReturnValue(Promise.resolve());
-    wrapper.setMethods({ updateUserPassword });
-    wrapper.setData({ password: 'test', confirmation: 'test' });
-    wrapper.vm.$nextTick(() => {
-      wrapper.vm.submitPassword();
-      expect(updateUserPassword).toHaveBeenCalled();
-    });
+
+  it('clicking submit should call updateUserPassword', async () => {
+    const updateUserPassword = jest.spyOn(wrapper.vm, 'updateUserPassword');
+    updateUserPassword.mockImplementation(() => Promise.resolve());
+    await wrapper.setData({ password: 'tester123', confirmation: 'tester123' });
+    await wrapper.vm.submitPassword();
+    expect(updateUserPassword).toHaveBeenCalled();
   });
 });

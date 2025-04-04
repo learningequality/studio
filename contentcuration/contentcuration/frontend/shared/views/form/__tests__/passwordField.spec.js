@@ -18,10 +18,11 @@ describe('passwordField', () => {
     expect(runValidation(wrapper, '')).toBe(false);
     expect(runValidation(wrapper, 'pass')).toBe(true);
   });
-  it('should validate additionalRules', () => {
+  it('should validate additionalRules', async () => {
     wrapper.setProps({
       additionalRules: () => false,
     });
+    await wrapper.vm.$nextTick();
     expect(runValidation(wrapper, 'pass')).toBe(false);
   });
 });

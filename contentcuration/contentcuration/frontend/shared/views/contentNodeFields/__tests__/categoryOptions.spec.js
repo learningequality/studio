@@ -13,8 +13,9 @@ function makeWrapper({ value = {}, nodeIds = ['node1'] } = {}) {
 describe('CategoryOptions', () => {
   it('smoke test', () => {
     const wrapper = makeWrapper();
-    expect(wrapper.isVueInstance()).toBe(true);
+    expect(wrapper.exists()).toBe(true);
   });
+
   it('emits expected data', () => {
     const wrapper = makeWrapper();
     const value = 'string';

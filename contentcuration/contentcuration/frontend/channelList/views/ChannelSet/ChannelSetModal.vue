@@ -27,11 +27,11 @@
       </VBtn>
     </template>
     <VWindow v-model="step">
-      <VWindowItem
-        :value="1"
-        data-test="collection-channels-view"
-      >
-        <VContainer class="mx-0 pt-5">
+      <VWindowItem :value="1">
+        <VContainer
+          class="mx-0 pt-5"
+          data-test="collection-channels-view"
+        >
           <VLayout row>
             <VFlex
               md12
@@ -111,11 +111,11 @@
       <VWindowItem
         :value="2"
         lazy
-        data-test="channels-selection-view"
       >
         <VContainer
           fill-height
           class="mx-0 pt-5"
+          data-test="channels-selection-view"
         >
           <VLayout row>
             <VFlex
@@ -195,7 +195,7 @@
         v-else
         color="primary"
         data-test="button-finish"
-        @click="step--"
+        @click="finish"
       >
         {{ $tr('finish') }}
       </VBtn>
@@ -442,6 +442,9 @@
         } else {
           this.close();
         }
+      },
+      finish() {
+        this.step = Math.max(this.step - 1, 1);
       },
 
       close() {

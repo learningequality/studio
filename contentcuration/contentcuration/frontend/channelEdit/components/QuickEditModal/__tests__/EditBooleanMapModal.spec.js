@@ -28,9 +28,9 @@ Object.entries(Categories).forEach(([key, value]) => {
 
 const getOptionsValues = wrapper => {
   const categories = {};
-  const checkboxes = wrapper.findAll('[data-test="option-checkbox"]');
+  const checkboxes = wrapper.findAllComponents('[data-test="option-checkbox"]');
   checkboxes.wrappers.forEach(checkbox => {
-    const { label, checked } = checkbox.vm.$props || {};
+    const { label, checked } = checkbox.props();
     let value;
     if (checked) {
       value = CheckboxValue.CHECKED;
@@ -43,9 +43,9 @@ const getOptionsValues = wrapper => {
 };
 
 const findOptionCheckbox = (wrapper, category) => {
-  const checkboxes = wrapper.findAll('[data-test="option-checkbox"]');
+  const checkboxes = wrapper.findAllComponents('[data-test="option-checkbox"]');
   return checkboxes.wrappers.find(checkbox => {
-    const { label } = checkbox.vm.$props || {};
+    const label = checkbox.props('label');
     return categoriesLookup[label] === category;
   });
 };
@@ -121,7 +121,7 @@ describe('EditBooleanMapModal', () => {
 
   test('smoke test', () => {
     const wrapper = makeWrapper({ nodeIds: ['node1'] });
-    expect(wrapper.isVueInstance()).toBe(true);
+    expect(wrapper.exists()).toBe(true);
   });
 
   describe('Selected options on first render', () => {
@@ -209,9 +209,9 @@ describe('EditBooleanMapModal', () => {
       const wrapper = makeWrapper({ nodeIds: ['node1', 'node2'] });
 
       const schoolCheckbox = findOptionCheckbox(wrapper, Categories.SCHOOL);
-      schoolCheckbox.element.click();
+      await schoolCheckbox.trigger('click');
       const sociologyCheckbox = findOptionCheckbox(wrapper, Categories.SOCIOLOGY);
-      sociologyCheckbox.element.click();
+      await sociologyCheckbox.trigger('click');
 
       await wrapper.vm.handleSave();
       expect(contentNodeActions.updateContentNode).toHaveBeenCalledWith(expect.anything(), {

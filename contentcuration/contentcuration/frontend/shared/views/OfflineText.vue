@@ -1,14 +1,12 @@
 <template>
 
-  <VFadeTransition
-    v-if="offline && !libraryMode"
-    data-test="text"
-  >
+  <VFadeTransition v-if="offline && !libraryMode">
     <VTooltip
       v-if="indicator"
       bottom
       z-index="300"
       lazy
+      data-test="indicator"
     >
       <template #activator="{ on }">
         <div
@@ -36,6 +34,7 @@
       clipped-right
       :style="`margin-top: ${offset}px;`"
       v-bind="$attrs"
+      data-test="toolbar"
     >
       <Icon
         class="mx-3"
@@ -43,7 +42,10 @@
       />
       <span>{{ offlineText || $tr('offlineText') }}</span>
     </ToolBar>
-    <div v-else>
+    <div
+      v-else
+      data-test="fallback"
+    >
       <Icon
         class="mx-3"
         icon="disconnected"

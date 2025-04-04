@@ -71,7 +71,7 @@ describe('EditAudienceModal', () => {
 
   test('smoke test', () => {
     const wrapper = makeWrapper(['node1']);
-    expect(wrapper.isVueInstance()).toBe(true);
+    expect(wrapper.exists()).toBe(true);
   });
 
   describe('Selected audience on first render', () => {

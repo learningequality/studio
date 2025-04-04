@@ -1,10 +1,10 @@
 <template>
 
   <KModal
+    ref="modal"
     :title="$tr('editLanguage')"
     :submitText="$tr('saveAction')"
     :cancelText="$tr('cancelAction')"
-    data-test="edit-language-modal"
     :submitDisabled="!selectedLanguage"
     @submit="handleSave"
     @cancel="close"
@@ -50,6 +50,7 @@
         <KRadioButton
           v-for="language in languageOptions"
           :key="language.id"
+          :ref="`radioLanguage_${language.id}`"
           v-model="selectedLanguage"
           :buttonValue="language.id"
           :label="languageText(language)"
@@ -177,8 +178,11 @@
           }),
         );
         /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
-        this.$store.dispatch('showSnackbarSimple', commonStrings.$tr('changesSaved'));
+        await this.showSnackbarSimple(commonStrings.$tr('changesSaved'));
         this.close(this.changed);
+      },
+      showSnackbarSimple(message) {
+        return this.$store.dispatch('showSnackbarSimple', message);
       },
     },
     $trs: {

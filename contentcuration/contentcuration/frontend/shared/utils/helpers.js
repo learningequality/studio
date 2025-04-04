@@ -293,6 +293,7 @@ export async function generatePdf(
  * Given an ID or string constant identifier, return the license info
 
  * @param {Number | String} key A license identifier
+ * @param {Object} [defaultValue] A default value to return if the license is not found
  */
 export function findLicense(key, defaultValue = {}) {
   const license = LicensesList.find(

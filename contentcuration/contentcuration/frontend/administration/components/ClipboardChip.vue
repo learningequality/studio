@@ -11,10 +11,10 @@
     </VChip>
     <VBtn
       v-if="clipboardAvailable"
+      ref="copyButton"
       icon
       small
       right
-      data-test="copy"
       @click="copyToClipboard"
     >
       <Icon icon="copy" />

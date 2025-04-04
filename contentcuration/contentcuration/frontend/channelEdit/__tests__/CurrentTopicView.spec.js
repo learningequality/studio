@@ -57,27 +57,28 @@ const makeWrapper = ({ store, topicId = TOPIC.id }) => {
 };
 
 function hasEditSelectedBtn(wrapper) {
-  return wrapper.contains('[data-test="edit-selected-btn"]');
+  return wrapper.findComponent('[data-test="edit-selected-btn"]').exists();
 }
 
 function hasCopySelectedToClipboardBtn(wrapper) {
-  return wrapper.contains('[data-test="copy-selected-to-clipboard-btn"]');
+  return wrapper.findComponent('[data-test="copy-selected-to-clipboard-btn"]').exists();
 }
 
 function hasMoveSelectedBtn(wrapper) {
-  return wrapper.contains('[data-test="move-selected-btn"]');
+  return wrapper.findComponent('[data-test="move-selected-btn"]').exists();
 }
 
 function hasDuplicateSelectedBtn(wrapper) {
-  return wrapper.contains('[data-test="duplicate-selected-btn"]');
+  return wrapper.findComponent('[data-test="duplicate-selected-btn"]').exists();
 }
 
 function hasDeleteSelectedBtn(wrapper) {
-  return wrapper.contains('[data-test="delete-selected-btn"]');
+  return wrapper.findComponent('[data-test="delete-selected-btn"]').exists();
 }
 
-function selectNode(wrapper) {
-  wrapper.vm.selected = [NODE_1.id];
+async function selectNode(wrapper) {
+  wrapper.vm.$store.commit('currentChannel/SET_SELECTED_NODE_IDS', [NODE_1.id]);
+  await wrapper.vm.$nextTick();
 }
 
 describe('CurrentTopicView', () => {
@@ -91,7 +92,7 @@ describe('CurrentTopicView', () => {
     const store = storeFactory(STORE_CONFIG);
     wrapper = makeWrapper({ store });
 
-    expect(wrapper.isVueInstance()).toBe(true);
+    expect(wrapper.exists()).toBe(true);
   });
 
   describe('for a topic with nodes', () => {
@@ -125,8 +126,8 @@ describe('CurrentTopicView', () => {
     });
 
     describe("when a user can't edit a channel", () => {
-      it('should display only copy to clipboard button when some nodes are selected', () => {
-        selectNode(wrapper);
+      it('should display only copy to clipboard button when some nodes are selected', async () => {
+        await selectNode(wrapper);
 
         expect(hasCopySelectedToClipboardBtn(wrapper)).toBe(true);
         expect(hasEditSelectedBtn(wrapper)).toBe(false);
@@ -141,8 +142,8 @@ describe('CurrentTopicView', () => {
         store.commit('channel/ADD_CHANNEL', { ...CHANNEL, edit: true });
       });
 
-      it('should display all nodes operations buttons when some nodes are selected', () => {
-        selectNode(wrapper);
+      it('should display all nodes operations buttons when some nodes are selected', async () => {
+        await selectNode(wrapper);
 
         expect(hasCopySelectedToClipboardBtn(wrapper)).toBe(true);
         expect(hasEditSelectedBtn(wrapper)).toBe(true);

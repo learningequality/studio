@@ -8,7 +8,7 @@ function makeWrapper(options) {
 describe('appIcon', () => {
   it('should have the `notranslate` CSS class', () => {
     const wrapper = makeWrapper({});
-    const icon = wrapper.find({ name: 'v-icon' });
+    const icon = wrapper.findComponent({ name: 'v-icon' });
     expect(icon.classes('notranslate')).toEqual(true);
   });
 
@@ -18,7 +18,7 @@ describe('appIcon', () => {
         children: ['circle'],
       },
     });
-    const icon = wrapper.find({ name: 'v-icon' });
+    const icon = wrapper.findComponent({ name: 'v-icon' });
     expect(icon.text()).toEqual('circle');
   });
 
@@ -30,7 +30,7 @@ describe('appIcon', () => {
         },
       },
     });
-    const icon = wrapper.find({ name: 'v-icon' });
+    const icon = wrapper.findComponent({ name: 'v-icon' });
     expect(icon.text()).toEqual('circle');
   });
 });

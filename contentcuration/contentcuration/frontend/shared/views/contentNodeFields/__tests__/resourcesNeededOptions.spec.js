@@ -11,20 +11,20 @@ function makeWrapper({ value = {}, nodeIds = ['node1'] } = {}) {
 }
 
 describe('ResourcesNeededOptions', () => {
-  it('smoke test', () => {
+  it('smoke test', async () => {
     const wrapper = makeWrapper();
-
-    expect(wrapper.isVueInstance()).toBe(true);
+    await wrapper.vm.$nextTick();
+    expect(wrapper.exists()).toBe(true);
   });
 
   describe('updating state', () => {
-    it('should update resources field with new values received from a parent', () => {
+    it('should update resources field with new values received from a parent', async () => {
       const value = {
         person: ['node1'],
         book: ['node1'],
       };
       const wrapper = makeWrapper({ value, nodeIds: ['node1'] });
-      const dropdown = wrapper.find({ name: 'v-select' });
+      const dropdown = wrapper.findComponent({ name: 'v-select' });
 
       expect(dropdown.props('value')).toEqual(['person', 'book']);
 
@@ -33,6 +33,7 @@ describe('ResourcesNeededOptions', () => {
           train: ['node1'],
         },
       });
+      await wrapper.vm.$nextTick();
       expect(dropdown.props('value')).toEqual(['train']);
     });
 
@@ -41,7 +42,7 @@ describe('ResourcesNeededOptions', () => {
         person: ['node1'],
       };
       const wrapper = makeWrapper({ value: resourcesNeeded, nodeIds: ['node1'] });
-      const dropdown = wrapper.find({ name: 'v-select' });
+      const dropdown = wrapper.findComponent({ name: 'v-select' });
       dropdown.vm.$emit('input', ['person', 'book']);
 
       await wrapper.vm.$nextTick();

@@ -2,11 +2,8 @@ import { mount } from '@vue/test-utils';
 import VueRouter from 'vue-router';
 import ForgotPassword from '../resetPassword/ForgotPassword';
 
-const sendPasswordResetLink = jest.fn();
-
 function makeWrapper() {
-  return mount({
-    ...ForgotPassword,
+  return mount(ForgotPassword, {
     // Need to add a router instance as a child component relies on route linking
     router: new VueRouter(),
   });
@@ -14,25 +11,23 @@ function makeWrapper() {
 
 describe('forgotPassword', () => {
   let wrapper;
+  let sendPasswordResetLink;
+
   beforeEach(() => {
     wrapper = makeWrapper();
-    wrapper.setMethods({
-      sendPasswordResetLink: () => {
-        return new Promise(resolve => {
-          sendPasswordResetLink();
-          resolve();
-        });
-      },
-    });
-    sendPasswordResetLink.mockReset();
+    sendPasswordResetLink = jest.spyOn(wrapper.vm, 'sendPasswordResetLink');
+    sendPasswordResetLink.mockImplementation(() => Promise.resolve());
   });
-  it('should not call sendPasswordResetLink on submit if email is invalid', () => {
-    wrapper.find({ ref: 'form' }).trigger('submit');
+  it('should not call sendPasswordResetLink on submit if email is invalid', async () => {
+    wrapper.findComponent({ ref: 'form' }).trigger('submit');
+    await wrapper.vm.$nextTick();
     expect(sendPasswordResetLink).not.toHaveBeenCalled();
   });
-  it('should call sendPasswordResetLink on submit if email is valid', () => {
+  it('should call sendPasswordResetLink on submit if email is valid', async () => {
     wrapper.setData({ email: 'test@test.com' });
-    wrapper.find({ ref: 'form' }).trigger('submit');
+    await wrapper.vm.$nextTick();
+    wrapper.findComponent({ ref: 'form' }).trigger('submit');
+    await wrapper.vm.$nextTick();
     expect(sendPasswordResetLink).toHaveBeenCalled();
   });
 });

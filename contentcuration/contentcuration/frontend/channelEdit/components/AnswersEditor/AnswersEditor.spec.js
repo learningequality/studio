@@ -7,35 +7,35 @@ import { AssessmentItemTypes } from 'shared/constants';
 jest.mock('shared/views/MarkdownEditor/MarkdownEditor/MarkdownEditor.vue');
 jest.mock('shared/views/MarkdownEditor/MarkdownViewer/MarkdownViewer.vue');
 
-const clickNewAnswerBtn = wrapper => {
-  wrapper.find('[data-test="newAnswerBtn"]').find('button').trigger('click');
+const clickNewAnswerBtn = async wrapper => {
+  await wrapper.findComponent('[data-test="newAnswerBtn"]').trigger('click');
 };
 
 const rendersNewAnswerBtn = wrapper => {
-  return wrapper.contains('[data-test="newAnswerBtn"]');
+  return wrapper.findComponent('[data-test="newAnswerBtn"]').exists();
 };
 
-const clickAnswer = (wrapper, answerIdx) => {
-  wrapper.findAll('[data-test="answer"]').at(answerIdx).trigger('click');
+const clickAnswer = async (wrapper, answerIdx) => {
+  await wrapper.findAllComponents('[data-test="answer"]').at(answerIdx).trigger('click');
 };
 
-const clickMoveAnswerUp = (wrapper, answerIdx) => {
-  wrapper
-    .findAll(`[data-test="toolbarIcon-${AssessmentItemToolbarActions.MOVE_ITEM_UP}"]`)
+const clickMoveAnswerUp = async (wrapper, answerIdx) => {
+  await wrapper
+    .findAllComponents(`[data-test="toolbarIcon-${AssessmentItemToolbarActions.MOVE_ITEM_UP}"]`)
     .at(answerIdx)
     .trigger('click');
 };
 
-const clickMoveAnswerDown = (wrapper, answerIdx) => {
-  wrapper
-    .findAll(`[data-test="toolbarIcon-${AssessmentItemToolbarActions.MOVE_ITEM_DOWN}"]`)
+const clickMoveAnswerDown = async (wrapper, answerIdx) => {
+  await wrapper
+    .findAllComponents(`[data-test="toolbarIcon-${AssessmentItemToolbarActions.MOVE_ITEM_DOWN}"]`)
     .at(answerIdx)
     .trigger('click');
 };
 
-const clickDeleteAnswer = (wrapper, answerIdx) => {
-  wrapper
-    .findAll(`[data-test="toolbarIcon-${AssessmentItemToolbarActions.DELETE_ITEM}"]`)
+const clickDeleteAnswer = async (wrapper, answerIdx) => {
+  await wrapper
+    .findAllComponents(`[data-test="toolbarIcon-${AssessmentItemToolbarActions.DELETE_ITEM}"]`)
     .at(answerIdx)
     .trigger('click');
 };
@@ -46,7 +46,7 @@ describe('AnswersEditor', () => {
   it('smoke test', () => {
     const wrapper = shallowMount(AnswersEditor);
 
-    expect(wrapper.isVueInstance()).toBe(true);
+    expect(wrapper.exists()).toBe(true);
   });
 
   it('renders a placeholder when there are no answers', () => {
@@ -93,8 +93,8 @@ describe('AnswersEditor', () => {
     });
 
     describe('on new answer button click', () => {
-      beforeEach(() => {
-        clickNewAnswerBtn(wrapper);
+      beforeEach(async () => {
+        await clickNewAnswerBtn(wrapper);
       });
 
       it('emits update event with a payload containing all answers + new answer which is wrong by default', () => {
@@ -145,8 +145,8 @@ describe('AnswersEditor', () => {
     });
 
     describe('on new answer button click', () => {
-      beforeEach(() => {
-        clickNewAnswerBtn(wrapper);
+      beforeEach(async () => {
+        await clickNewAnswerBtn(wrapper);
       });
 
       it('emits update event with a payload containing all answers + new answer which is wrong by default', () => {
@@ -230,8 +230,8 @@ describe('AnswersEditor', () => {
     });
 
     describe('on new answer button click', () => {
-      beforeEach(() => {
-        clickNewAnswerBtn(wrapper);
+      beforeEach(async () => {
+        await clickNewAnswerBtn(wrapper);
       });
 
       it('emits update event with a payload containing all answers + new answer which is correct', () => {
@@ -247,7 +247,7 @@ describe('AnswersEditor', () => {
   });
 
   describe('on an answer click', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       wrapper = mount(AnswersEditor, {
         propsData: {
           questionKind: AssessmentItemTypes.SINGLE_SELECTION,
@@ -258,7 +258,7 @@ describe('AnswersEditor', () => {
         },
       });
 
-      clickAnswer(wrapper, 1);
+      await clickAnswer(wrapper, 1);
     });
 
     it('emits open event with a correct answer idx', () => {
@@ -269,7 +269,7 @@ describe('AnswersEditor', () => {
   });
 
   describe('on new answer button click', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       wrapper = mount(AnswersEditor, {
         propsData: {
           questionKind: AssessmentItemTypes.SINGLE_SELECTION,
@@ -281,7 +281,7 @@ describe('AnswersEditor', () => {
         },
       });
 
-      clickNewAnswerBtn(wrapper);
+      await clickNewAnswerBtn(wrapper);
     });
 
     it('emits update event with a payload containing all answers and one new empty answer', () => {
@@ -303,7 +303,7 @@ describe('AnswersEditor', () => {
   });
 
   describe('on answer text update', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       wrapper = mount(AnswersEditor, {
         propsData: {
           questionKind: AssessmentItemTypes.SINGLE_SELECTION,
@@ -316,7 +316,8 @@ describe('AnswersEditor', () => {
       });
 
       // only one editor is rendered at a time => "wrapper.find"
-      wrapper.find({ name: 'MarkdownEditor' }).vm.$emit('update', 'European butter');
+      wrapper.findComponent({ name: 'MarkdownEditor' }).vm.$emit('update', 'European butter');
+      await wrapper.vm.$nextTick();
     });
 
     it('emits update event with a payload containing updated answers', () => {
@@ -330,7 +331,7 @@ describe('AnswersEditor', () => {
   });
 
   describe('on correct answer change', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       wrapper = mount(AnswersEditor, {
         propsData: {
           questionKind: AssessmentItemTypes.SINGLE_SELECTION,
@@ -342,7 +343,8 @@ describe('AnswersEditor', () => {
         },
       });
 
-      wrapper.findAll('[data-test=answerRadio]').at(1).setChecked();
+      await wrapper.vm.$nextTick();
+      await wrapper.findAll('input[type="radio"]').at(1).setChecked();
     });
 
     it('emits update event with a payload containing updated answers', () => {
@@ -368,8 +370,8 @@ describe('AnswersEditor', () => {
       });
     });
 
-    it('emits update event with a payload containing updated and properly ordered answers', () => {
-      clickMoveAnswerUp(wrapper, 1);
+    it('emits update event with a payload containing updated and properly ordered answers', async () => {
+      await clickMoveAnswerUp(wrapper, 1);
 
       expect(wrapper.emitted().update).toBeTruthy();
       expect(wrapper.emitted().update.length).toBe(1);
@@ -380,14 +382,14 @@ describe('AnswersEditor', () => {
     });
 
     describe('if moved answer was open', () => {
-      beforeEach(() => {
-        wrapper.setProps({
+      beforeEach(async () => {
+        await wrapper.setProps({
           openAnswerIdx: 1,
         });
       });
 
-      it('emits open event with updated answer index', () => {
-        clickMoveAnswerUp(wrapper, 1);
+      it('emits open event with updated answer index', async () => {
+        await clickMoveAnswerUp(wrapper, 1);
 
         expect(wrapper.emitted().open).toBeTruthy();
         expect(wrapper.emitted().open.length).toBe(1);
@@ -396,12 +398,12 @@ describe('AnswersEditor', () => {
     });
 
     describe('if an answer above a moved answer was open', () => {
-      beforeEach(() => {
-        wrapper.setProps({
+      beforeEach(async () => {
+        await wrapper.setProps({
           openAnswerIdx: 0,
         });
 
-        clickMoveAnswerUp(wrapper, 1);
+        await clickMoveAnswerUp(wrapper, 1);
       });
 
       it('emits open event with updated, originally open, answer index', () => {
@@ -425,8 +427,8 @@ describe('AnswersEditor', () => {
       });
     });
 
-    it('emits update event with a payload containing updated and properly ordered answers', () => {
-      clickMoveAnswerDown(wrapper, 0);
+    it('emits update event with a payload containing updated and properly ordered answers', async () => {
+      await clickMoveAnswerDown(wrapper, 0);
 
       expect(wrapper.emitted().update).toBeTruthy();
       expect(wrapper.emitted().update.length).toBe(1);
@@ -437,14 +439,14 @@ describe('AnswersEditor', () => {
     });
 
     describe('if moved answer was open', () => {
-      beforeEach(() => {
-        wrapper.setProps({
+      beforeEach(async () => {
+        await wrapper.setProps({
           openAnswerIdx: 0,
         });
       });
 
-      it('emits open event with updated answer index', () => {
-        clickMoveAnswerDown(wrapper, 0);
+      it('emits open event with updated answer index', async () => {
+        await clickMoveAnswerDown(wrapper, 0);
 
         expect(wrapper.emitted().open).toBeTruthy();
         expect(wrapper.emitted().open.length).toBe(1);
@@ -453,12 +455,12 @@ describe('AnswersEditor', () => {
     });
 
     describe('if an answer below a moved answer was open', () => {
-      beforeEach(() => {
-        wrapper.setProps({
+      beforeEach(async () => {
+        await wrapper.setProps({
           openAnswerIdx: 1,
         });
 
-        clickMoveAnswerDown(wrapper, 0);
+        await clickMoveAnswerDown(wrapper, 0);
       });
 
       it('emits open event with updated, originally open, answer index', () => {
@@ -482,8 +484,8 @@ describe('AnswersEditor', () => {
       });
     });
 
-    it('emits update event with a payload containing updated and properly ordered answers', () => {
-      clickDeleteAnswer(wrapper, 0);
+    it('emits update event with a payload containing updated and properly ordered answers', async () => {
+      await clickDeleteAnswer(wrapper, 0);
 
       expect(wrapper.emitted().update).toBeTruthy();
       expect(wrapper.emitted().update.length).toBe(1);
@@ -493,14 +495,14 @@ describe('AnswersEditor', () => {
     });
 
     describe('if deleted answer was open', () => {
-      beforeEach(() => {
-        wrapper.setProps({
+      beforeEach(async () => {
+        await wrapper.setProps({
           openAnswerIdx: 0,
         });
       });
 
-      it('emits close event', () => {
-        clickDeleteAnswer(wrapper, 0);
+      it('emits close event', async () => {
+        await clickDeleteAnswer(wrapper, 0);
 
         expect(wrapper.emitted().close).toBeTruthy();
         expect(wrapper.emitted().close.length).toBe(1);
@@ -508,12 +510,12 @@ describe('AnswersEditor', () => {
     });
 
     describe('if an answer below a deleted answer was open', () => {
-      beforeEach(() => {
-        wrapper.setProps({
+      beforeEach(async () => {
+        await wrapper.setProps({
           openAnswerIdx: 1,
         });
 
-        clickDeleteAnswer(wrapper, 0);
+        await clickDeleteAnswer(wrapper, 0);
       });
 
       it('emits open event with updated, originally open, answer index', () => {

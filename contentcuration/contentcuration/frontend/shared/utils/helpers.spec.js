@@ -75,27 +75,36 @@ describe('extendSlot', () => {
     },
   });
 
+  let root = null;
+  const eventTest = jest.fn();
+
   function withLayout(template, overrides = {}) {
     const component = Vue.component('TestRoot', {
+      methods: {
+        ...(overrides.methods || {}),
+        /**
+         * @public
+         */
+        eventTest(...args) {
+          eventTest(...args);
+        },
+      },
       template,
       ...overrides,
     });
 
-    let root = null;
-    let eventTest = null;
-
     beforeEach(async () => {
-      eventTest = jest.fn();
-      root = mount(component, { methods: { eventTest } });
+      root = mount(component);
       await root.vm.$nextTick();
     });
+
     afterEach(() => {
       if (root) {
         root.destroy();
       }
 
       root = null;
-      eventTest = null;
+      eventTest.mockClear();
     });
 
     return {
@@ -107,7 +116,7 @@ describe('extendSlot', () => {
         return this.get(extenderComponent);
       },
       get(selector) {
-        const els = root.findAll(selector);
+        const els = root.findAllComponents(selector);
         expect(els.length).toBeLessThanOrEqual(1);
         return els.length ? els.at(0) : null;
       },
@@ -134,7 +143,7 @@ describe('extendSlot', () => {
       it('should render correctly initially', async () => {
         const el = layout.get('.scoped-el');
         expect(el).not.toBeNull();
-        expect(el.contains('span')).toBe(true);
+        expect(el.find('span').exists()).toBe(true);
       });
 
       it('should pass scoped parameters and update', async () => {
@@ -164,7 +173,7 @@ describe('extendSlot', () => {
         const el = layout.get('.scoped-el');
         await el.trigger('click');
         await layout.$nextTick();
-        expect(layout.events.eventTest).toHaveBeenCalledTimes(1);
+        expect(eventTest).toHaveBeenCalledTimes(1);
       });
     });
 
@@ -188,7 +197,7 @@ describe('extendSlot', () => {
       it('should render correctly initially', async () => {
         const el = layout.get('.scoped-el');
         expect(el).not.toBeNull();
-        expect(el.contains('span')).toBe(true);
+        expect(el.find('span').exists()).toBe(true);
       });
 
       it('should allow extending CSS classes', async () => {
@@ -209,7 +218,7 @@ describe('extendSlot', () => {
         const el = layout.get('.scoped-el');
         await el.trigger('click');
         await layout.$nextTick();
-        expect(layout.events.eventTest).toHaveBeenCalledTimes(1);
+        expect(eventTest).toHaveBeenCalledTimes(1);
       });
     });
   });
@@ -227,7 +236,7 @@ describe('extendSlot', () => {
       it('should render correctly initially', async () => {
         const el = layout.get('.unscoped-el');
         expect(el).not.toBeNull();
-        expect(el.contains('span')).toBe(true);
+        expect(el.find('span').exists()).toBe(true);
       });
 
       it('should allow extending CSS classes', async () => {
@@ -248,7 +257,7 @@ describe('extendSlot', () => {
         const el = layout.get('.unscoped-el');
         await el.trigger('click');
         await layout.$nextTick();
-        expect(layout.events.eventTest).toHaveBeenCalledTimes(1);
+        expect(eventTest).toHaveBeenCalledTimes(1);
       });
     });
 
@@ -270,7 +279,7 @@ describe('extendSlot', () => {
       it('should render correctly initially', async () => {
         const el = layout.get('.unscoped-el');
         expect(el).not.toBeNull();
-        expect(el.contains('span')).toBe(true);
+        expect(el.find('span').exists()).toBe(true);
       });
 
       it('should allow extending CSS classes', async () => {
@@ -291,7 +300,7 @@ describe('extendSlot', () => {
         const el = layout.get('.unscoped-el');
         await el.trigger('click');
         await layout.$nextTick();
-        expect(layout.events.eventTest).toHaveBeenCalledTimes(1);
+        expect(eventTest).toHaveBeenCalledTimes(1);
       });
     });
   });

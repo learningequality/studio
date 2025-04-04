@@ -33,7 +33,7 @@ function makeWrapper(props = {}) {
     // See: https://github.com/vuejs/vue-test-utils/issues/1130
     sync: false,
     store: localStore,
-    attachToDocument: true,
+    attachTo: document.body,
     propsData: {
       viewOnly: false,
       ...props,

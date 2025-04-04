@@ -45,7 +45,7 @@ function makeWrapper(props = {}, progress) {
   });
   return mount(ContentNodeThumbnail, {
     store,
-    attachToDocument: true,
+    attachTo: document.body,
     propsData: props,
     computed: {
       node() {
@@ -71,69 +71,85 @@ function makeWrapper(props = {}, progress) {
 
 describe('thumbnail', () => {
   let wrapper;
+
   beforeEach(() => {
     wrapper = makeWrapper();
   });
+
   describe('on render', () => {
-    it('thumbnail should be shown if provided', () => {
-      wrapper.setProps({ value: testThumbnail });
-      expect(wrapper.find('[data-test="thumbnail-image"]').exists()).toBe(true);
-      expect(wrapper.find('[data-test="thumbnail-image"]').vm.src).toBe(testThumbnail.url);
+    it('thumbnail should be shown if provided', async () => {
+      await wrapper.setProps({ value: testThumbnail });
+      expect(wrapper.findComponent('[data-test="thumbnail-image"]').exists()).toBe(true);
+      expect(wrapper.findComponent('[data-test="thumbnail-image"]').vm.src).toBe(testThumbnail.url);
     });
-    it('encoding should be shown over thumbnail if provided', () => {
+
+    it('encoding should be shown over thumbnail if provided', async () => {
       const encoding = { base64: 'encoding' };
-      wrapper.setProps({ value: testThumbnail, encoding });
-      expect(wrapper.find('[data-test="thumbnail-image"]').vm.thumbnailSrc).toBe(encoding.base64);
+      await wrapper.setProps({ value: testThumbnail, encoding });
+      expect(wrapper.findComponent('[data-test="thumbnail-image"]').vm.thumbnailSrc).toBe(
+        encoding.base64,
+      );
     });
+
     it('card should be shown if no thumbnail is provided', () => {
-      expect(wrapper.find('[data-test="default-image"]').exists()).toBe(true);
+      expect(wrapper.findComponent('[data-test="default-image"]').exists()).toBe(true);
     });
-    it('should exit any editing modes when node is changed', () => {
-      wrapper.setData({ cropping: true });
-      wrapper.setProps({ nodeId: 'new-ndoe' });
+
+    it('should exit any editing modes when node is changed', async () => {
+      await wrapper.setData({ cropping: true });
+      await wrapper.setProps({ nodeId: 'new-ndoe' });
       expect(wrapper.vm.cropping).toBe(false);
     });
   });
+
   describe('upload workflow', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       wrapper = makeWrapper({ value: testThumbnail }, 0.5);
-      wrapper.setData({ fileUploadId });
+      await wrapper.setData({ fileUploadId });
     });
+
     it('progress should be shown during upload', () => {
-      expect(wrapper.find('[data-test="progress"]').exists()).toBe(true);
+      expect(wrapper.findComponent('[data-test="progress"]').exists()).toBe(true);
     });
+
     it('hasError should be true if file upload fails', () => {
       wrapper.vm.$store.commit('file/ADD_FILE', { id: fileUploadId, error: 'ERROR' });
       expect(wrapper.vm.hasError).toBe(true);
     });
-    it('cancelling upload should revert to the original state', () => {
-      wrapper.setData({ removeOnCancel: true });
+
+    it('cancelling upload should revert to the original state', async () => {
+      await wrapper.setData({ removeOnCancel: true });
       wrapper.vm.deleteFile = jest.fn();
-      wrapper.find('[data-test="cancel-upload"]').trigger('click');
+      await wrapper.findComponent('[data-test="cancel-upload"]').trigger('click');
       expect(wrapper.vm.deleteFile).toHaveBeenCalled();
     });
-    it('should set cropping equal true when uploadCompleteHandler is run', () => {
+
+    it('should set cropping equal true when uploadCompleteHandler is run', async () => {
       wrapper.vm.handleUploadComplete({ id: fileUploadId });
-      return wrapper.vm.$nextTick().then(() => {
-        expect(wrapper.vm.cropping).toBe(true);
-      });
+      await wrapper.vm.$nextTick();
+      expect(wrapper.vm.cropping).toBe(true);
     });
   });
+
   describe('cropping workflow', () => {
     const testEncoding = { base64: 'encoding' };
-    beforeEach(() => {
-      wrapper.setProps({ value: testThumbnail, encoding: testEncoding });
-      wrapper.setData({ cropping: true });
+
+    beforeEach(async () => {
+      await wrapper.setProps({ value: testThumbnail, encoding: testEncoding });
+      await wrapper.setData({ cropping: true });
     });
+
     it('cropping image should use original thumbnail file, not encoding', () => {
       expect(wrapper.vm.thumbnailSrc).toBe(testThumbnail.url);
     });
+
     it('cropping tools should be available when cropping is true', () => {
-      expect(wrapper.find('[data-test="zoomin"]').exists()).toBe(true);
-      expect(wrapper.find('[data-test="zoomout"]').exists()).toBe(true);
+      expect(wrapper.findComponent('[data-test="zoomin"]').exists()).toBe(true);
+      expect(wrapper.findComponent('[data-test="zoomout"]').exists()).toBe(true);
     });
-    it('save should emit an encoded event', () => {
-      wrapper.setData({
+
+    it('save should emit an encoded event', async () => {
+      await wrapper.setData({
         Cropper: {
           getMetadata() {
             return {};
@@ -143,51 +159,63 @@ describe('thumbnail', () => {
           },
         },
       });
-      wrapper.find('[data-test="save"]').trigger('click');
+      await wrapper.findComponent('[data-test="save"]').trigger('click');
       expect(wrapper.emitted('encoded')[0][0]).toEqual({ base64: 'new encoding' });
       expect(wrapper.vm.cropping).toBe(false);
     });
-    it('cancel should keep the original image by default', () => {
-      wrapper.find('[data-test="cancel"]').trigger('click');
+
+    it('cancel should keep the original image by default', async () => {
+      await wrapper.findComponent('[data-test="cancel"]').trigger('click');
       expect(wrapper.vm.cropping).toBe(false);
       expect(wrapper.emitted('input')).toBeUndefined();
     });
-    it('cancel should revert to the previous image if removeOnCancel is true', () => {
-      wrapper.setData({ removeOnCancel: true });
-      wrapper.find('[data-test="cancel"]').trigger('click');
+
+    it('cancel should revert to the previous image if removeOnCancel is true', async () => {
+      await wrapper.setData({ removeOnCancel: true });
+      await wrapper.findComponent('[data-test="cancel"]').trigger('click');
       expect(wrapper.vm.cropping).toBe(false);
     });
   });
+
   describe('generation workflow', () => {
-    beforeEach(() => {
-      wrapper.setProps({ nodeId: 'test' });
+    beforeEach(async () => {
+      await wrapper.setProps({ nodeId: 'test' });
     });
-    it('progress should be shown during generation', () => {
-      wrapper.setData({ generating: true });
-      return wrapper.vm.$nextTick().then(() => {
-        expect(wrapper.find('[data-test="generating"]').exists()).toBe(true);
-      });
+
+    it('progress should be shown during generation', async () => {
+      await wrapper.setData({ generating: true });
+      await wrapper.vm.$nextTick();
+      expect(wrapper.findComponent('[data-test="generating"]').exists()).toBe(true);
     });
-    it('primary file path should return the first non-supplementary file', () => {
-      wrapper.setProps({ nodeId: 'test' });
+
+    it('primary file path should return the first non-supplementary file', async () => {
+      await wrapper.setProps({ nodeId: 'test' });
       expect(wrapper.vm.primaryFilePath).toBe(testDocument.url);
     });
-    it('cancelling upload should revert to the original state', () => {
+
+    it('cancelling upload should revert to the original state', async () => {
       wrapper.vm.startGenerating();
-      return wrapper.vm.$nextTick().then(() => {
-        wrapper.find('[data-test="cancel-upload"]').trigger('click');
-        expect(wrapper.vm.generating).toBe(false);
-      });
+      await wrapper.vm.$nextTick();
+      await wrapper.vm.$nextTick();
+      await wrapper.findComponent('[data-test="cancel-upload"]').trigger('click');
+      await wrapper.vm.$nextTick();
+      expect(wrapper.vm.generating).toBe(false);
     });
-    it('clicking generate button should set generating to true', () => {
-      wrapper.find({ ref: 'generator' }).vm.$emit('generating');
+
+    it('clicking generate button should set generating to true', async () => {
+      wrapper.findComponent({ ref: 'generator' }).vm.$emit('generating');
+      await wrapper.vm.$nextTick();
       expect(wrapper.vm.generating).toBe(true);
     });
   });
+
   describe('remove workflow', () => {
-    it('clicking remove button should emit an input event with a null value', () => {
-      wrapper.setProps({ value: testThumbnail });
-      wrapper.find('[data-test="remove"]').find(IconButton).vm.$emit('click');
+    it('clicking remove button should emit an input event with a null value', async () => {
+      await wrapper.setProps({ value: testThumbnail });
+      await wrapper
+        .findComponent('[data-test="remove"]')
+        .findComponent(IconButton)
+        .trigger('click');
       expect(wrapper.emitted('input')[0][0]).toBe(null);
     });
   });

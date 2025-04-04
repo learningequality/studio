@@ -16,13 +16,13 @@ describe('CompletionOptions', () => {
     });
   });
   it('smoke test', () => {
-    const wrapper = shallowMount(CompletionOptions, { store });
-    expect(wrapper.isVueInstance()).toBe(true);
+    const wrapper = shallowMount(CompletionOptions);
+    expect(wrapper.exists()).toBe(true);
   });
   describe(`completion dropdown`, () => {
     it(`renders the completion dropdown`, () => {
-      const wrapper = mount(CompletionOptions, { store });
-      const dropdown = wrapper.find({ ref: 'completion' });
+      const wrapper = mount(CompletionOptions);
+      const dropdown = wrapper.findComponent({ ref: 'completion' });
       expect(dropdown.exists()).toBe(true);
     });
     describe(`initial, default states`, () => {
@@ -185,7 +185,7 @@ describe('CompletionOptions', () => {
               value: { model: null },
             },
           });
-          wrapper.find({ ref: 'completion' }).vm.$emit('input', 'allContent');
+          wrapper.findComponent({ ref: 'completion' }).vm.$emit('input', 'allContent');
           await wrapper.vm.$nextTick();
 
           expect(wrapper.emitted('input')).toBeTruthy();
@@ -210,7 +210,7 @@ describe('CompletionOptions', () => {
               value: { model: 'mastery', threshold: { m: 3, n: 5 }, modality: 'QUIZ' },
             },
           });
-          wrapper.find({ ref: 'completion' }).vm.$emit('input', 'practiceQuiz');
+          wrapper.findComponent({ ref: 'completion' }).vm.$emit('input', 'practiceQuiz');
           await wrapper.vm.$nextTick();
           expect(wrapper.vm.showMasteryCriteriaGoalDropdown).toBe(false);
           expect(wrapper.vm.showMofN).toBe(false);
@@ -226,7 +226,7 @@ describe('CompletionOptions', () => {
           value: { suggested_duration: null },
         },
       });
-      const dropdown = wrapper.find({ ref: 'duration' });
+      const dropdown = wrapper.findComponent({ ref: 'duration' });
       expect(dropdown.exists()).toBe(true);
     });
     describe(`default states`, () => {
@@ -237,7 +237,7 @@ describe('CompletionOptions', () => {
             value: { suggested_duration: null },
           },
         });
-        const dropdown = wrapper.find({ ref: 'duration' });
+        const dropdown = wrapper.findComponent({ ref: 'duration' });
         expect(dropdown.exists()).toBe(true);
         expect(wrapper.vm.durationDropdown).toBe('exactTime');
       });
@@ -249,7 +249,7 @@ describe('CompletionOptions', () => {
             value: { suggested_duration: null },
           },
         });
-        const dropdown = wrapper.find({ ref: 'duration' });
+        const dropdown = wrapper.findComponent({ ref: 'duration' });
         expect(dropdown.exists()).toBe(false);
       });
       it(`duration dropdown is hidden by default for exercises`, () => {
@@ -260,7 +260,7 @@ describe('CompletionOptions', () => {
             value: { model: 'mastery', threshold: { m: 3, n: 5 }, suggested_duration: null },
           },
         });
-        const dropdown = wrapper.find({ ref: 'duration' });
+        const dropdown = wrapper.findComponent({ ref: 'duration' });
         expect(dropdown.exists()).toBe(false);
       });
       it(`'Reference' is disabled for exercises`, async () => {
@@ -271,7 +271,7 @@ describe('CompletionOptions', () => {
             value: { model: 'mastery', threshold: { m: 3, n: 5 } },
           },
         });
-        wrapper.find({ ref: 'completion' }).vm.$emit('input', 'completeDuration');
+        wrapper.findComponent({ ref: 'completion' }).vm.$emit('input', 'completeDuration');
         await wrapper.vm.$nextTick();
 
         const clickableDurationDropdown = wrapper.vm.selectableDurationOptions;
@@ -287,7 +287,7 @@ describe('CompletionOptions', () => {
             },
           },
         });
-        const dropdown = wrapper.find({ ref: 'duration' });
+        const dropdown = wrapper.findComponent({ ref: 'duration' });
         expect(dropdown.exists()).toBe(false);
       });
     });
@@ -299,7 +299,7 @@ describe('CompletionOptions', () => {
             value: { model: null },
           },
         });
-        wrapper.find({ ref: 'duration' }).vm.$emit('input', 'shortActivity');
+        wrapper.findComponent({ ref: 'duration' }).vm.$emit('input', 'shortActivity');
         await wrapper.vm.$nextTick();
 
         expect(wrapper.emitted('input')).toBeTruthy();
@@ -313,9 +313,9 @@ describe('CompletionOptions', () => {
             value: { model: null },
           },
         });
-        wrapper.find({ ref: 'duration' }).vm.$emit('input', 'shortActivity');
+        wrapper.findComponent({ ref: 'duration' }).vm.$emit('input', 'shortActivity');
         await wrapper.vm.$nextTick();
-        expect(wrapper.find({ ref: 'activity_duration' }).exists()).toBe(true);
+        expect(wrapper.findComponent({ ref: 'activity_duration' }).exists()).toBe(true);
       });
       it(`minutes input is displayed when 'Long activity' is selected`, async () => {
         const wrapper = mount(CompletionOptions, {
@@ -324,9 +324,9 @@ describe('CompletionOptions', () => {
             value: { model: null },
           },
         });
-        wrapper.find({ ref: 'duration' }).vm.$emit('input', 'longActivity');
+        wrapper.findComponent({ ref: 'duration' }).vm.$emit('input', 'longActivity');
         await wrapper.vm.$nextTick();
-        expect(wrapper.find({ ref: 'activity_duration' }).exists()).toBe(true);
+        expect(wrapper.findComponent({ ref: 'activity_duration' }).exists()).toBe(true);
       });
     });
     describe(`document`, () => {
@@ -339,9 +339,9 @@ describe('CompletionOptions', () => {
               value: { model: 'pages' },
             },
           });
-          wrapper.find({ ref: 'duration' }).vm.$emit('input', 'shortActivity');
+          wrapper.findComponent({ ref: 'duration' }).vm.$emit('input', 'shortActivity');
           await wrapper.vm.$nextTick();
-          expect(wrapper.find({ ref: 'activity_duration' }).exists()).toBe(true);
+          expect(wrapper.findComponent({ ref: 'activity_duration' }).exists()).toBe(true);
         });
         it(`minutes input is displayed when 'Long activity' is selected`, async () => {
           const wrapper = mount(CompletionOptions, {
@@ -350,9 +350,9 @@ describe('CompletionOptions', () => {
               value: { model: 'pages' },
             },
           });
-          wrapper.find({ ref: 'duration' }).vm.$emit('input', 'longActivity');
+          wrapper.findComponent({ ref: 'duration' }).vm.$emit('input', 'longActivity');
           await wrapper.vm.$nextTick();
-          expect(wrapper.find({ ref: 'activity_duration' }).exists()).toBe(true);
+          expect(wrapper.findComponent({ ref: 'activity_duration' }).exists()).toBe(true);
         });
         it(`minutes input is displayed when 'Exact time' is selected`, async () => {
           const wrapper = mount(CompletionOptions, {
@@ -361,9 +361,9 @@ describe('CompletionOptions', () => {
               value: { model: 'pages' },
             },
           });
-          wrapper.find({ ref: 'duration' }).vm.$emit('input', 'exactTime');
+          wrapper.findComponent({ ref: 'duration' }).vm.$emit('input', 'exactTime');
           await wrapper.vm.$nextTick();
-          expect(wrapper.find({ ref: 'activity_duration' }).exists()).toBe(true);
+          expect(wrapper.findComponent({ ref: 'activity_duration' }).exists()).toBe(true);
         });
         it(`minutes input is hidden and reference hint is displayed when 'Reference' is selected`, () => {
           const wrapper = mount(CompletionOptions, {
@@ -372,7 +372,7 @@ describe('CompletionOptions', () => {
               value: { model: 'reference' },
             },
           });
-          expect(wrapper.find({ ref: 'activity_duration' }).exists()).toBe(false);
+          expect(wrapper.findComponent({ ref: 'activity_duration' }).exists()).toBe(false);
           expect(wrapper.vm.showReferenceHint).toBe(true);
         });
       });
@@ -384,9 +384,9 @@ describe('CompletionOptions', () => {
               value: { model: 'approx_time' },
             },
           });
-          wrapper.find({ ref: 'duration' }).vm.$emit('input', 'shortActivity');
+          wrapper.findComponent({ ref: 'duration' }).vm.$emit('input', 'shortActivity');
           await wrapper.vm.$nextTick();
-          expect(wrapper.find({ ref: 'activity_duration' }).exists()).toBe(true);
+          expect(wrapper.findComponent({ ref: 'activity_duration' }).exists()).toBe(true);
         });
         it(`minutes input is displayed when 'Long activity' is selected`, async () => {
           const wrapper = mount(CompletionOptions, {
@@ -395,9 +395,9 @@ describe('CompletionOptions', () => {
               value: { model: 'approx_time' },
             },
           });
-          wrapper.find({ ref: 'duration' }).vm.$emit('input', 'longActivity');
+          wrapper.findComponent({ ref: 'duration' }).vm.$emit('input', 'longActivity');
           await wrapper.vm.$nextTick();
-          expect(wrapper.find({ ref: 'activity_duration' }).exists()).toBe(true);
+          expect(wrapper.findComponent({ ref: 'activity_duration' }).exists()).toBe(true);
         });
         it(`minutes input is displayed when 'Exact time' is selected`, async () => {
           const wrapper = mount(CompletionOptions, {
@@ -406,9 +406,9 @@ describe('CompletionOptions', () => {
               value: { model: 'time' },
             },
           });
-          wrapper.find({ ref: 'duration' }).vm.$emit('input', 'exactTime');
+          wrapper.findComponent({ ref: 'duration' }).vm.$emit('input', 'exactTime');
           await wrapper.vm.$nextTick();
-          expect(wrapper.find({ ref: 'activity_duration' }).exists()).toBe(true);
+          expect(wrapper.findComponent({ ref: 'activity_duration' }).exists()).toBe(true);
         });
       });
       // Skip these tests until we reenable descriptive duration setting.
@@ -426,11 +426,11 @@ describe('CompletionOptions', () => {
             },
           });
           expect(wrapper.vm.durationDropdown).toBe('shortActivity');
-          wrapper.find({ ref: 'completion' }).vm.$emit('input', 'allContent');
+          wrapper.findComponent({ ref: 'completion' }).vm.$emit('input', 'allContent');
           await wrapper.vm.$nextTick();
 
           expect(wrapper.vm.durationDropdown).toBe('shortActivity');
-          expect(wrapper.find({ ref: 'activity_duration' }).exists()).toBe(true);
+          expect(wrapper.findComponent({ ref: 'activity_duration' }).exists()).toBe(true);
           expect(wrapper.vm.durationValue).toBe(1200);
         });
         it(`Duration dropdown and minutes input stay the same when switching betweeen 'Long activity' in ACV and CD`, async () => {
@@ -445,11 +445,11 @@ describe('CompletionOptions', () => {
             },
           });
           expect(wrapper.vm.durationDropdown).toBe('longActivity');
-          wrapper.find({ ref: 'completion' }).vm.$emit('input', 'allContent');
+          wrapper.findComponent({ ref: 'completion' }).vm.$emit('input', 'allContent');
           await wrapper.vm.$nextTick();
 
           expect(wrapper.vm.durationDropdown).toBe('longActivity');
-          expect(wrapper.find({ ref: 'activity_duration' }).exists()).toBe(true);
+          expect(wrapper.findComponent({ ref: 'activity_duration' }).exists()).toBe(true);
           expect(wrapper.vm.durationValue).toBe(6000);
         });
         it(`Duration dropdown and minutes input stay the same when switching betweeen 'Exact time' in ACV and CD`, async () => {
@@ -465,11 +465,11 @@ describe('CompletionOptions', () => {
             },
           });
           expect(wrapper.vm.durationDropdown).toBe('exactTime');
-          wrapper.find({ ref: 'completion' }).vm.$emit('input', 'completeDuration');
+          wrapper.findComponent({ ref: 'completion' }).vm.$emit('input', 'completeDuration');
           await wrapper.vm.$nextTick();
 
           expect(wrapper.vm.durationDropdown).toBe('exactTime');
-          expect(wrapper.find({ ref: 'activity_duration' }).exists()).toBe(true);
+          expect(wrapper.findComponent({ ref: 'activity_duration' }).exists()).toBe(true);
           expect(wrapper.vm.durationValue).toBe(1234);
         });
       });
@@ -484,9 +484,9 @@ describe('CompletionOptions', () => {
               value: { model: 'mastery', threshold: { m: 3, n: 5 } },
             },
           });
-          wrapper.find({ ref: 'duration' }).vm.$emit('input', 'shortActivity');
+          wrapper.findComponent({ ref: 'duration' }).vm.$emit('input', 'shortActivity');
           await wrapper.vm.$nextTick();
-          expect(wrapper.find({ ref: 'activity_duration' }).exists()).toBe(true);
+          expect(wrapper.findComponent({ ref: 'activity_duration' }).exists()).toBe(true);
         });
         it(`minutes input is displayed when 'Long activity' is selected`, async () => {
           const wrapper = mount(CompletionOptions, {
@@ -495,9 +495,9 @@ describe('CompletionOptions', () => {
               value: { model: 'mastery', threshold: { m: 3, n: 5 } },
             },
           });
-          wrapper.find({ ref: 'duration' }).vm.$emit('input', 'longActivity');
+          wrapper.findComponent({ ref: 'duration' }).vm.$emit('input', 'longActivity');
           await wrapper.vm.$nextTick();
-          expect(wrapper.find({ ref: 'activity_duration' }).exists()).toBe(true);
+          expect(wrapper.findComponent({ ref: 'activity_duration' }).exists()).toBe(true);
         });
         it(`minutes input is displayed when 'Exact time' is selected`, async () => {
           const wrapper = mount(CompletionOptions, {
@@ -506,9 +506,9 @@ describe('CompletionOptions', () => {
               value: { model: 'mastery', threshold: { m: 3, n: 5 } },
             },
           });
-          wrapper.find({ ref: 'duration' }).vm.$emit('input', 'exactTime');
+          wrapper.findComponent({ ref: 'duration' }).vm.$emit('input', 'exactTime');
           await wrapper.vm.$nextTick();
-          expect(wrapper.find({ ref: 'activity_duration' }).exists()).toBe(true);
+          expect(wrapper.findComponent({ ref: 'activity_duration' }).exists()).toBe(true);
         });
       });
       describe(`when completion dropdown is 'Practice quiz'`, () => {
@@ -519,9 +519,9 @@ describe('CompletionOptions', () => {
               value: { model: 'mastery', threshold: { m: 3, n: 5 }, modality: 'QUIZ' },
             },
           });
-          wrapper.find({ ref: 'duration' }).vm.$emit('input', 'shortActivity');
+          wrapper.findComponent({ ref: 'duration' }).vm.$emit('input', 'shortActivity');
           await wrapper.vm.$nextTick();
-          expect(wrapper.find({ ref: 'activity_duration' }).exists()).toBe(true);
+          expect(wrapper.findComponent({ ref: 'activity_duration' }).exists()).toBe(true);
         });
         it(`minutes input is displayed when 'Long activity' is selected`, async () => {
           const wrapper = mount(CompletionOptions, {
@@ -530,9 +530,9 @@ describe('CompletionOptions', () => {
               value: { model: 'mastery', threshold: { m: 3, n: 5 }, modality: 'QUIZ' },
             },
           });
-          wrapper.find({ ref: 'duration' }).vm.$emit('input', 'longActivity');
+          wrapper.findComponent({ ref: 'duration' }).vm.$emit('input', 'longActivity');
           await wrapper.vm.$nextTick();
-          expect(wrapper.find({ ref: 'activity_duration' }).exists()).toBe(true);
+          expect(wrapper.findComponent({ ref: 'activity_duration' }).exists()).toBe(true);
         });
         it(`minutes input is displayed when 'Exact time' is selected`, async () => {
           const wrapper = mount(CompletionOptions, {
@@ -541,9 +541,9 @@ describe('CompletionOptions', () => {
               value: { model: 'mastery', threshold: { m: 3, n: 5 }, modality: 'QUIZ' },
             },
           });
-          wrapper.find({ ref: 'duration' }).vm.$emit('input', 'exactTime');
+          wrapper.findComponent({ ref: 'duration' }).vm.$emit('input', 'exactTime');
           await wrapper.vm.$nextTick();
-          expect(wrapper.find({ ref: 'activity_duration' }).exists()).toBe(true);
+          expect(wrapper.findComponent({ ref: 'activity_duration' }).exists()).toBe(true);
         });
       });
       describe(`switching between 'Practice until goal is met (PUGIM)' and 'Practice quiz (PQ)'`, () => {
@@ -561,11 +561,11 @@ describe('CompletionOptions', () => {
             },
           });
           expect(wrapper.vm.durationDropdown).toBe('shortActivity');
-          wrapper.find({ ref: 'completion' }).vm.$emit('input', 'goal');
+          wrapper.findComponent({ ref: 'completion' }).vm.$emit('input', 'goal');
           await wrapper.vm.$nextTick();
 
           expect(wrapper.vm.durationDropdown).toBe('shortActivity');
-          expect(wrapper.find({ ref: 'activity_duration' }).exists()).toBe(true);
+          expect(wrapper.findComponent({ ref: 'activity_duration' }).exists()).toBe(true);
           expect(wrapper.vm.durationValue).toBe(1200);
         });
         it(`Duration dropdown and minutes input stay the same when switching betweeen 'Long activity' in PUGIM and PQ`, async () => {
@@ -582,11 +582,11 @@ describe('CompletionOptions', () => {
             },
           });
           expect(wrapper.vm.durationDropdown).toBe('longActivity');
-          wrapper.find({ ref: 'completion' }).vm.$emit('input', 'goal');
+          wrapper.findComponent({ ref: 'completion' }).vm.$emit('input', 'goal');
           await wrapper.vm.$nextTick();
 
           expect(wrapper.vm.durationDropdown).toBe('longActivity');
-          expect(wrapper.find({ ref: 'activity_duration' }).exists()).toBe(true);
+          expect(wrapper.findComponent({ ref: 'activity_duration' }).exists()).toBe(true);
           expect(wrapper.vm.durationValue).toBe(6000);
         });
         it(`Duration dropdown and minutes input stay the same when switching betweeen 'Exact time' in PUGIM and PQ`, async () => {
@@ -603,11 +603,11 @@ describe('CompletionOptions', () => {
             },
           });
           expect(wrapper.vm.durationDropdown).toBe('exactTime');
-          wrapper.find({ ref: 'completion' }).vm.$emit('input', 'completeDuration');
+          wrapper.findComponent({ ref: 'completion' }).vm.$emit('input', 'completeDuration');
           await wrapper.vm.$nextTick();
 
           expect(wrapper.vm.durationDropdown).toBe('exactTime');
-          expect(wrapper.find({ ref: 'activity_duration' }).exists()).toBe(true);
+          expect(wrapper.findComponent({ ref: 'activity_duration' }).exists()).toBe(true);
           expect(wrapper.vm.durationValue).toBe(1234);
         });
       });
@@ -624,8 +624,8 @@ describe('CompletionOptions', () => {
               },
             },
           });
-          expect(wrapper.find({ ref: 'activity_duration' }).exists()).toBe(false);
-          expect(wrapper.find({ ref: 'duration' }).exists()).toBe(false);
+          expect(wrapper.findComponent({ ref: 'activity_duration' }).exists()).toBe(false);
+          expect(wrapper.findComponent({ ref: 'duration' }).exists()).toBe(false);
         });
         it(`minutes input is hidden and reference hint is displayed when 'Reference' is selected`, () => {
           const wrapper = mount(CompletionOptions, {
@@ -634,7 +634,7 @@ describe('CompletionOptions', () => {
               value: { suggested_duration: null, model: 'reference' },
             },
           });
-          expect(wrapper.find({ ref: 'activity_duration' }).exists()).toBe(false);
+          expect(wrapper.findComponent({ ref: 'activity_duration' }).exists()).toBe(false);
           expect(wrapper.vm.showReferenceHint).toBe(true);
         });
       });
@@ -648,7 +648,7 @@ describe('CompletionOptions', () => {
               value: { suggested_duration: null, model: null },
             },
           });
-          wrapper.find({ ref: 'completion' }).vm.$emit('input', 'determinedByResource');
+          wrapper.findComponent({ ref: 'completion' }).vm.$emit('input', 'determinedByResource');
           await wrapper.vm.$nextTick();
           expect(wrapper.emitted('input')[0][0].completion_criteria.model).toEqual(
             CompletionCriteriaModels.DETERMINED_BY_RESOURCE,
@@ -711,7 +711,7 @@ describe('CompletionOptions', () => {
             },
           },
         });
-        wrapper.find({ ref: 'duration' }).vm.$emit('input', 'exactTime');
+        wrapper.findComponent({ ref: 'duration' }).vm.$emit('input', 'exactTime');
         await wrapper.vm.$nextTick();
         expect(wrapper.vm.durationValue).toBe(6000);
       });
@@ -727,7 +727,7 @@ describe('CompletionOptions', () => {
             },
           },
         });
-        wrapper.find({ ref: 'duration' }).vm.$emit('input', 'exactTime');
+        wrapper.findComponent({ ref: 'duration' }).vm.$emit('input', 'exactTime');
         await wrapper.vm.$nextTick();
 
         expect(wrapper.vm.durationValue).toBe(200);
