@@ -689,6 +689,11 @@ class ContentNodePagination(ValuesViewsetCursorPagination):
         if value is None:
             return None
 
+        try:
+            value = int(value)
+        except ValueError as e:
+            raise ValidationError("lft must be an integer but {} was given: {}".format(value,e))
+
         return Cursor(offset=0, reverse=False, position=value)
 
     def encode_cursor(self, cursor):
