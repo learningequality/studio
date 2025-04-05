@@ -669,44 +669,55 @@ def dict_if_none(obj, field_name=None):
 
 class ContentNodePagination(ValuesViewsetCursorPagination):
     """
-    A simplified cursor pagination class for ContentNodeViewSet.
-    Instead of using an opaque cursor, it uses the lft value for filtering.
-    As such, if this pagination scheme is used without applying a filter
-    that will guarantee membership to a specific MPTT tree, such as parent
-    or tree_id, the pagination scheme will not be predictable.
+    A simplified cursor pagination class
+    Instead of using a fixed 'lft' cursor, it dynamically sets the pagination field and operator
+    based on the incoming `ordering` query parameter.
     """
-    cursor_query_param = "lft__gt"
-    ordering = "lft"
     page_size_query_param = "max_results"
     max_page_size = 100
 
+    def get_pagination_params(self):
+        # Default ordering is "lft" if not provided.
+        ordering_param = self.request.query_params.get("ordering", "lft")
+        # Remove the leading '-' if present to get the field name.
+        pagination_field = ordering_param.lstrip("-")
+        # Determine operator: if ordering starts with '-', use __lt; otherwise __gt.
+        operator = "__lt" if ordering_param.startswith("-") else "__gt"
+        return pagination_field, operator
+
     def decode_cursor(self, request):
         """
-        Given a request with a cursor, return a `Cursor` instance.
+        Given a request with a cursor parameter, return a `Cursor` instance.
+        The cursor parameter name is dynamically built from the pagination field and operator.
         """
-        # Determine if we have a cursor, and if so then decode it.
-        value = request.query_params.get(self.cursor_query_param)
+        pagination_field, operator = self.get_pagination_params()
+        cursor_param = f"{pagination_field}{operator}"
+        value = request.query_params.get(cursor_param)
         if value is None:
             return None
-
         return Cursor(offset=0, reverse=False, position=value)
 
     def encode_cursor(self, cursor):
         """
-        Given a Cursor instance, return an url with query parameter.
+        Given a Cursor instance, return a URL with the dynamic pagination cursor query parameter.
         """
-        return replace_query_param(self.base_url, self.cursor_query_param, str(cursor.position))
+        pagination_field, operator = self.get_pagination_params()
+        cursor_param = f"{pagination_field}{operator}"
+        return replace_query_param(self.base_url, cursor_param, str(cursor.position))
 
     def get_more(self):
+        """
+        Construct a "more" URL (or query parameters) that includes the pagination cursor
+        built from the dynamic field and operator.
+        """
+        pagination_field, operator = self.get_pagination_params()
+        cursor_param = f"{pagination_field}{operator}"
         position, offset = self._get_more_position_offset()
         if position is None and offset is None:
             return None
         params = self.request.query_params.copy()
-        params.update({
-            self.cursor_query_param: position,
-        })
+        params.update({cursor_param: position})
         return params
-
 
 # Apply mixin first to override ValuesViewset
 class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
