@@ -63,6 +63,7 @@
                       class="answer-number"
                       type="number"
                       :rules="[numericRule]"
+                      @change="updateAnswerText($event, answerIdx)"
                     />
                     <VTextField v-else :value="answer.answer" class="no-border" type="number" />
                   </div>
@@ -388,10 +389,6 @@
         }
       },
       updateAnswerText(newAnswerText, answerIdx) {
-        if (newAnswerText === this.answers[answerIdx].answer) {
-          return;
-        }
-
         const updatedAnswers = [...this.answers];
         updatedAnswers[answerIdx].answer = newAnswerText;
 

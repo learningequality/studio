@@ -68,6 +68,7 @@ def sync_node(
         if sync_resource_details:
             fields = [
                 "license_id",
+                "license_description",
                 "copyright_holder",
                 "author",
                 "extra_fields",

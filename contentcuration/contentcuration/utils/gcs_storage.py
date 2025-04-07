@@ -18,16 +18,27 @@ CONTENT_DATABASES_MAX_AGE = 5  # seconds
 MAX_RETRY_TIME = 60  # seconds
 
 
+def _create_default_client(service_account_credentials_path=settings.GCS_STORAGE_SERVICE_ACCOUNT_KEY_PATH):
+    if service_account_credentials_path:
+        return Client.from_service_account_json(service_account_credentials_path)
+    return Client()
+
+
 class GoogleCloudStorage(Storage):
-    def __init__(self, client=None):
+    def __init__(self, client, bucket_name):
+        self.client = client
+        self.bucket = self.client.get_bucket(bucket_name)
 
-        self.client = client if client else self._create_default_client()
-        self.bucket = self.client.get_bucket(settings.AWS_S3_BUCKET_NAME)
+    def get_client(self):
+        return self.client
 
-    def _create_default_client(self, service_account_credentials_path=settings.GCS_STORAGE_SERVICE_ACCOUNT_KEY_PATH):
-        if service_account_credentials_path:
-            return Client.from_service_account_json(service_account_credentials_path)
-        return Client()
+    @property
+    def writeable(self):
+        """
+        See `Client.create_anonymous_client()`
+        :return: True if the client has a project set, False otherwise.
+        """
+        return self.client.project is not None
 
     def open(self, name, mode="rb", blob_object=None):
         """
@@ -79,7 +90,7 @@ class GoogleCloudStorage(Storage):
         :return: True if the resource with the name exists, or False otherwise.
         """
         blob = self.bucket.get_blob(name)
-        return blob
+        return blob is not None
 
     def size(self, name):
         blob = self.bucket.get_blob(name)
@@ -199,3 +210,68 @@ class GoogleCloudStorage(Storage):
             byt = fobj.read(1)
             fobj.seek(current_location)
         return len(byt) == 0
+
+
+class CompositeGCS(Storage):
+    def __init__(self):
+        self.backends = []
+        self.backends.append(GoogleCloudStorage(_create_default_client(), settings.AWS_S3_BUCKET_NAME))
+        # Only add the studio-content bucket (the production bucket) if we're not in production
+        if settings.SITE_ID != settings.PRODUCTION_SITE_ID:
+            self.backends.append(GoogleCloudStorage(Client.create_anonymous_client(), "studio-content"))
+
+    def _get_writeable_backend(self):
+        """
+        :rtype: GoogleCloudStorage
+        """
+        for backend in self.backends:
+            if backend.writeable:
+                return backend
+        raise AssertionError("No writeable backend found")
+
+    def _get_readable_backend(self, name):
+        """
+        :rtype: GoogleCloudStorage
+        """
+        for backend in self.backends:
+            if backend.exists(name):
+                return backend
+        raise FileNotFoundError("{} not found".format(name))
+
+    def get_client(self):
+        return self._get_writeable_backend().get_client()
+
+    def open(self, name, mode='rb'):
+        return self._get_readable_backend(name).open(name, mode)
+
+    def save(self, name, content, max_length=None):
+        return self._get_writeable_backend().save(name, content, max_length=max_length)
+
+    def delete(self, name):
+        self._get_writeable_backend().delete(name)
+
+    def exists(self, name):
+        try:
+            self._get_readable_backend(name)
+            return True
+        except FileNotFoundError:
+            return False
+
+    def listdir(self, path):
+        # This method was not implemented on GoogleCloudStorage to begin with
+        raise NotImplementedError("listdir is not implemented for CompositeGCS")
+
+    def size(self, name):
+        return self._get_readable_backend(name).size(name)
+
+    def url(self, name):
+        return self._get_readable_backend(name).url(name)
+
+    def get_accessed_time(self, name):
+        return self._get_readable_backend(name).get_accessed_time(name)
+
+    def get_created_time(self, name):
+        return self._get_readable_backend(name).get_created_time(name)
+
+    def get_modified_time(self, name):
+        return self._get_readable_backend(name).get_modified_time(name)

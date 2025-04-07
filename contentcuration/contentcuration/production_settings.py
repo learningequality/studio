@@ -10,7 +10,7 @@ from contentcuration.utils.secretmanagement import get_secret
 
 MEDIA_ROOT = base_settings.STORAGE_ROOT
 
-DEFAULT_FILE_STORAGE = 'contentcuration.utils.gcs_storage.GoogleCloudStorage'
+DEFAULT_FILE_STORAGE = 'contentcuration.utils.gcs_storage.CompositeGCS'
 SESSION_ENGINE = "django.contrib.sessions.backends.db"
 
 # email settings
