@@ -5,7 +5,7 @@
   "description": "Frontend build tools and development utilities for Kolibri Studio",
   "scripts": {
     "lint:py": "flake8 --exit-zero",
-    "lint-frontend": "kolibri-tools lint --pattern 'contentcuration/contentcuration/frontend/**/*.{js,vue,scss,less,css}' --ignore '**/dist/**,**/node_modules/**,**/static/**'",
+    "lint-frontend": "kolibri-tools lint --pattern 'contentcuration/contentcuration/frontend/**/*.{js,vue,scss,css}' --ignore '**/dist/**,**/node_modules/**,**/static/**'",
     "lint-frontend:format": "yarn run lint-frontend --write",
     "lint-frontend:watch": "yarn run lint-frontend --monitor",
     "lint-frontend:watch:format": "yarn run lint-frontend --monitor --write",
@@ -25,8 +25,6 @@
     "test-jest:debug": "node --inspect node_modules/.bin/jest --runInBand --watch",
     "minio": "MINIO_API_CORS_ALLOW_ORIGIN='http://localhost:8080,http://127.0.0.1:8080' MINIO_ACCESS_KEY=development MINIO_SECRET_KEY=development minio server ~/.minio_data/ || true",
     "runserver": "cd contentcuration && python manage.py runserver --settings=contentcuration.dev_settings 0.0.0.0:8080",
-    "runserver:debug-panel": "cd contentcuration && python manage.py runserver --settings=contentcuration.debug_panel_settings 0.0.0.0:8080",
-    "runserver:prod-profiling": "cd contentcuration && DJANGO_SETTINGS_MODULE=contentcuration.profile_settings gunicorn -b 0.0.0.0:8080 --workers=3 --threads=2 contentcuration.wsgi",
     "devserver": "npm-run-all --parallel build:dev runserver",
     "devserver:hot": "npm-run-all --parallel build:dev:hot runserver",
     "devserver-hot": "yarn run devserver:hot",
@@ -58,10 +56,11 @@
     "@toast-ui/editor": "^2.3.1",
     "@vue/composition-api": "^1.7.2",
     "ajv": "^8.12.0",
-    "axios": "^1.7.2",
+    "axios": "^1.8.2",
     "broadcast-channel": "^5.1.0",
     "codemirror": "5.58.2",
     "core-js": "^3.37.0",
+    "crc-32": "^1.2.2",
     "dexie": "^3.2.6",
     "dexie-observable": "3.0.0-beta.11",
     "epubjs": "^0.3.89",
@@ -73,18 +72,19 @@
     "jspdf": "https://github.com/parallax/jsPDF.git#b7a1d8239c596292ce86dafa77f05987bcfa2e6e",
     "jszip": "^3.10.1",
     "kolibri-constants": "^0.2.0",
-    "kolibri-design-system": "^4.5.1",
+    "kolibri-design-system": "^5.0.0-rc10",
     "lodash": "^4.17.21",
     "material-icons": "0.3.1",
     "mutex-js": "^1.1.5",
     "node-vibrant": "^3.1.6",
+    "pako": "^2.1.0",
     "papaparse": "^5.4.1",
     "pdfjs-dist": "^2.16.105",
     "qs": "^6.11.2",
     "regenerator-runtime": "^0.13.5",
     "showdown": "^2.1.0",
     "spark-md5": "^3.0.0",
-    "store2": "^2.14.3",
+    "store2": "^2.14.4",
     "string-strip-html": "8.3.0",
     "uuid": "^9.0.1",
     "vue": "^2.6.12",
@@ -113,8 +113,6 @@
     "jest-environment-jsdom-sixteen": "^1.0.3",
     "jest-serializer-vue": "^3.1.0",
     "kolibri-tools": "0.16.0-dev.3",
-    "less": "^3.0.1",
-    "less-loader": "^11.1.3",
     "npm-run-all": "^4.1.3",
     "stylus": "^0.63.0",
     "stylus-loader": "^7.1.3",
@@ -130,5 +128,9 @@
   "browserslist": [
     "> 1%",
     "Firefox ESR"
-  ]
+  ],
+  "volta": {
+    "node": "16.20.2",
+    "yarn": "1.22.22"
+  }
 }

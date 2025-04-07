@@ -13,6 +13,11 @@
       "type": "boolean",
       "title":"Test AI feature",
       "description": "Allow user access to AI features"
+    },
+    "survey":{
+      "type": "boolean",
+      "title":"Test Survey feature",
+      "description": "Allow user access to Survey"
     }
   },
   "examples": [

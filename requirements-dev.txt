@@ -8,134 +8,52 @@ asgiref==3.3.4
     # via
     #   -c requirements.txt
     #   django
-aspy-yaml==1.3.0
-    # via pre-commit
-attrs==23.1.0
-    # via
-    #   -c requirements.txt
-    #   pytest
-brotli==1.0.9
-    # via geventhttpclient
 build==1.2.1
     # via pip-tools
-certifi==2020.12.5
-    # via
-    #   -c requirements.txt
-    #   geventhttpclient
-    #   requests
 cfgv==3.3.1
     # via pre-commit
-charset-normalizer==3.3.2
-    # via
-    #   -c requirements.txt
-    #   requests
 click==8.1.3
     # via
     #   -c requirements.txt
-    #   flask
     #   pip-tools
-colorama==0.4.4
-    # via pytest-watch
-configargparse==1.5.3
-    # via locust
-coreapi==2.3.3
-    # via drf-yasg
-coreschema==0.0.4
-    # via
-    #   coreapi
-    #   drf-yasg
-customizable-django-profiler @ git+https://github.com/someshchaturvedi/customizable-django-profiler.git
-    # via -r requirements-dev.in
-distlib==0.3.1
+distlib==0.3.9
     # via virtualenv
 django==3.2.24
     # via
     #   -c requirements.txt
-    #   django-debug-toolbar
     #   djangorestframework
     #   drf-yasg
 django-concurrent-test-helper==0.7.0
     # via -r requirements-dev.in
-django-debug-panel==0.8.3
-    # via -r requirements-dev.in
-django-debug-toolbar==3.5.0
-    # via
-    #   -r requirements-dev.in
-    #   django-debug-panel
 djangorestframework==3.15.1
     # via
     #   -c requirements.txt
     #   drf-yasg
-docopt==0.6.2
-    # via pytest-watch
-drf-yasg==1.21.5
+drf-yasg==1.21.10
     # via -r requirements-dev.in
-faker==0.9.1
+exceptiongroup==1.2.2
+    # via pytest
+faker==12.0.1
     # via mixer
-filelock==3.4.1
+filelock==3.16.1
     # via virtualenv
-flake8==3.4.1
-    # via -r requirements-dev.in
-flask==2.0.3
-    # via
-    #   flask-basicauth
-    #   flask-cors
-    #   locust
-flask-basicauth==0.2.0
-    # via locust
-flask-cors==4.0.1
-    # via locust
-fonttools==4.43.0
-    # via -r requirements-dev.in
-gevent==23.9.1
-    # via
-    #   geventhttpclient
-    #   locust
-geventhttpclient==2.0.9
-    # via locust
-greenlet==2.0.2
-    # via gevent
 identify==2.4.4
-    # via pre-commit
-idna==2.10
-    # via
-    #   -c requirements.txt
-    #   requests
-importlib-metadata==1.7.0
     # via pre-commit
 inflection==0.5.1
     # via drf-yasg
 iniconfig==1.1.1
     # via pytest
-itsdangerous==2.0.1
-    # via flask
-itypes==1.2.0
-    # via coreapi
-jinja2==3.1.4
-    # via
-    #   coreschema
-    #   flask
-locust==2.15.1
+mixer==7.2.2
     # via -r requirements-dev.in
-markupsafe==2.1.2
-    # via
-    #   jinja2
-    #   werkzeug
-mccabe==0.6.1
-    # via flake8
-mixer==6.1.3
-    # via -r requirements-dev.in
-mock==4.0.3
+mock==5.2.0
     # via
     #   -r requirements-dev.in
     #   django-concurrent-test-helper
-msgpack==1.0.4
-    # via locust
-nodeenv==1.8.0
+nodeenv==1.9.1
     # via
     #   -r requirements-dev.in
     #   pre-commit
-packaging==24.0
+packaging==24.2
     # via
     #   -c requirements.txt
     #   build
@@ -143,51 +61,26 @@ packaging==24.0
     #   pytest
 pip-tools==7.4.1
     # via -r requirements-dev.in
-platformdirs==2.4.0
+platformdirs==4.3.6
     # via virtualenv
-pluggy==0.13.1
+pluggy==1.5.0
     # via pytest
-pre-commit==1.15.1
-    # via -r requirements-dev.in
-psutil==5.8.0
-    # via locust
-py==1.10.0
-    # via pytest
-pycodestyle==2.3.1
-    # via flake8
-pyflakes==1.5.0
-    # via flake8
-pyinstrument==3.4.2
-    # via -r requirements-dev.in
-pyinstrument-cext==0.2.4
-    # via pyinstrument
-pympler==1.0.1
-    # via -r requirements-dev.in
-pypandoc==1.8.1
+pre-commit==4.2.0
     # via -r requirements-dev.in
 pyproject-hooks==1.1.0
     # via
     #   build
     #   pip-tools
-pytest==6.2.4
+pytest==8.3.5
     # via
     #   -r requirements-dev.in
     #   pytest-django
-    #   pytest-logging
-    #   pytest-pythonpath
     #   pytest-timeout
-    #   pytest-watch
-pytest-django==4.3.0
+pytest-django==4.11.0
     # via -r requirements-dev.in
-pytest-logging==2015.11.4
+pytest-timeout==2.3.1
     # via -r requirements-dev.in
-pytest-pythonpath==0.7.3
-    # via -r requirements-dev.in
-pytest-timeout==1.4.2
-    # via -r requirements-dev.in
-pytest-watch==4.2.0
-    # via -r requirements-dev.in
-python-dateutil==2.8.2
+python-dateutil==2.9.0
     # via
     #   -c requirements.txt
     #   faker
@@ -198,77 +91,30 @@ pytz==2022.1
     #   drf-yasg
 pyyaml==6.0
     # via
-    #   aspy-yaml
+    #   drf-yasg
     #   pre-commit
-pyzmq==23.1.0
-    # via locust
-requests==2.32.2
-    # via
-    #   -c requirements.txt
-    #   coreapi
-    #   locust
-roundrobin==0.0.2
-    # via locust
-ruamel-yaml==0.17.21
-    # via drf-yasg
-ruamel-yaml-clib==0.2.6
-    # via ruamel-yaml
 six==1.16.0
     # via
     #   -c requirements.txt
     #   django-concurrent-test-helper
-    #   faker
-    #   geventhttpclient
-    #   pre-commit
     #   python-dateutil
-    #   virtualenv
 sqlparse==0.4.1
     # via
     #   -c requirements.txt
     #   django
-    #   django-debug-toolbar
-tabulate==0.9.0
-    # via -r requirements-dev.in
 tblib==1.7.0
     # via django-concurrent-test-helper
-text-unidecode==1.2
-    # via faker
-toml==0.10.2
-    # via
-    #   pre-commit
-    #   pytest
 tomli==1.2.3
     # via
     #   build
     #   pip-tools
-typing-extensions==4.5.0
-    # via locust
+    #   pytest
 uritemplate==3.0.1
-    # via
-    #   coreapi
-    #   drf-yasg
-urllib3==1.26.18
-    # via
-    #   -c requirements.txt
-    #   requests
-virtualenv==20.14.1
+    # via drf-yasg
+virtualenv==20.26.6
     # via pre-commit
-watchdog==2.1.8
-    # via pytest-watch
-werkzeug==3.0.3
-    # via
-    #   flask
-    #   locust
 wheel==0.38.1
     # via pip-tools
-whitenoise==5.2.0
-    # via -r requirements-dev.in
-zipp==3.19.1
-    # via importlib-metadata
-zope-event==4.5.0
-    # via gevent
-zope-interface==5.4.0
-    # via gevent
 
 # The following packages are considered to be unsafe in a requirements file:
 # pip

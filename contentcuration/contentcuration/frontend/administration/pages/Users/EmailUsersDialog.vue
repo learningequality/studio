@@ -248,9 +248,9 @@
 </script>
 
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
-  /deep/ .v-chip__close {
+  ::v-deep .v-chip__close {
     padding-top: 4px;
   }
 

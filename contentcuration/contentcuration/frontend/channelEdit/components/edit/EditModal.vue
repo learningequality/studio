@@ -552,15 +552,10 @@
         const parentPropDefinedForInheritModal = Boolean(this.$refs.inheritModal?.parent);
         this.newNodeIds = await Promise.all(
           fileUploads.map(async (file, index) => {
-            let title;
-            if (file.metadata.title) {
-              title = file.metadata.title;
-            } else {
-              title = file.original_filename
-                .split('.')
-                .slice(0, -1)
-                .join('.');
-            }
+            const title = file.original_filename
+              .split('.')
+              .slice(0, -1)
+              .join('.');
             const newNodeId = await this.createNode(
               FormatPresets.has(file.preset) && FormatPresets.get(file.preset).kind_id,
               { title, ...file.metadata }
@@ -648,9 +643,9 @@
 
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
-  /deep/ .v-toolbar__extension {
+  ::v-deep .v-toolbar__extension {
     padding: 0;
 
     .v-toolbar__content {
@@ -666,7 +661,7 @@
     margin-left: 0;
   }
 
-  /deep/ .v-content__wrap {
+  ::v-deep .v-content__wrap {
     max-height: calc(100vh - 128px);
     overflow-y: auto;
   }

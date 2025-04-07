@@ -1,6 +1,5 @@
 import json
 import logging
-from builtins import str
 from collections import namedtuple
 
 from distutils.version import LooseVersion
@@ -22,7 +21,6 @@ from le_utils.constants.labels.levels import LEVELSLIST
 from le_utils.constants.labels.needs import NEEDSLIST
 from le_utils.constants.labels.resource_type import RESOURCETYPELIST
 from le_utils.constants.labels.subjects import SUBJECTSLIST
-from past.builtins import basestring
 from rest_framework import status
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.authentication import TokenAuthentication
@@ -481,7 +479,7 @@ def create_channel(channel_data, user):
         raise SuspiciousOperation("User is not authorized to edit this channel")
 
     extra_fields = channel_data.get('extra_fields') or {}
-    if isinstance(extra_fields, basestring):
+    if isinstance(extra_fields, str):
         extra_fields = json.loads(extra_fields)
     extra_fields.update({'ricecooker_version': channel.ricecooker_version})
 
@@ -726,7 +724,7 @@ def create_node(node_data, parent_node, sort_order):  # noqa: C901
             raise ObjectDoesNotExist("Invalid license found")
 
     extra_fields = node_data["extra_fields"] or {}
-    if isinstance(extra_fields, basestring):
+    if isinstance(extra_fields, str):
         extra_fields = json.loads(extra_fields)
 
     # validate completion criteria

@@ -13,7 +13,7 @@
 
   // vue-custom-element can't use SFC styles, so we load our styles directly,
   // to be passed in when we register this component as a custom element
-  import css from '!css-loader!less-loader!./style.less';
+  import css from '!css-loader!sass-loader!./style.scss';
 
   const MarkdownFormulaField = {
     name: 'MarkdownFormulaField',
@@ -58,8 +58,8 @@
 <style>
 /*
   Warning: custom elements don't currently have a way of using SFC styles.
-  Instead, add your style changes to `./style.less`
+  Instead, add your style changes to `./style.scss`
 
-  Additionally, all child component styles must be included in `./style.less`
+  Additionally, all child component styles must be included in `./style.scss`
 */
 </style>

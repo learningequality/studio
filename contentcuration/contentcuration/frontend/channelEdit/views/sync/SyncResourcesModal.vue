@@ -249,14 +249,14 @@
 </script>
 
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   // counteract the effect of the VCardText that is wrapping the VList component
-  .v-card /deep/ .v-card__text {
+  .v-card ::v-deep .v-card__text {
     padding: 0;
   }
 
-  /deep/ .v-list__tile {
+  ::v-deep .v-list__tile {
     align-items: flex-start;
     height: unset;
     padding: 8px 0;

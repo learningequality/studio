@@ -1,11 +1,7 @@
-from __future__ import division
-
 import json
 import logging
 import os
 import time
-from builtins import next
-from builtins import str
 from io import BytesIO
 
 from django.conf import settings

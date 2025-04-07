@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 import uuid
 
 from django.urls import reverse
@@ -50,8 +48,8 @@ class SyncTestCase(StudioTestCase):
 
         # Put all nodes into a clean state so we can track when syncing
         # causes changes in the tree.
-        mark_all_nodes_as_published(self.channel)
-        mark_all_nodes_as_published(self.derivative_channel)
+        mark_all_nodes_as_published(self.channel.main_tree)
+        mark_all_nodes_as_published(self.derivative_channel.main_tree)
 
     def _add_temp_file_to_content_node(self, node):
         new_file = create_temp_file("mybytes")
@@ -458,6 +456,7 @@ class ContentIDTestCase(SyncTestMixin, StudioAPITestCase):
             "name": "le_studio_file",
             "file_format": file_formats.MP3,
             "preset": format_presets.AUDIO,
+            "duration": 17,
         }
 
     def _upload_file_to_contentnode(self, file_metadata=None, contentnode_id=None):

@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 import uuid
 
 from django.urls import reverse
@@ -350,6 +348,14 @@ class UploadFileURLTestCase(StudioAPITestCase):
 
     def test_required_keys(self):
         del self.file["name"]
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(
+            reverse("file-upload-url"), self.file, format="json",
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_duration_invalid(self):
+        self.file["duration"] = '1.23'
 
         self.client.force_authenticate(user=self.user)
         response = self.client.post(
@@ -358,8 +364,42 @@ class UploadFileURLTestCase(StudioAPITestCase):
 
         self.assertEqual(response.status_code, 400)
 
-    def test_duration_invalid(self):
-        self.file["duration"] = '1.23'
+    def test_duration_missing(self):
+        del self.file["duration"]
+        self.file["file_format"] = file_formats.EPUB
+
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(
+            reverse("file-upload-url"), self.file, format="json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_duration_missing_but_required(self):
+        del self.file["duration"]
+        self.file["file_format"] = file_formats.MP4
+
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(
+            reverse("file-upload-url"), self.file, format="json",
+        )
+
+        self.assertEqual(response.status_code, 400)
+
+    def test_duration_null(self):
+        self.file["duration"] = None
+        self.file["file_format"] = file_formats.EPUB
+
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(
+            reverse("file-upload-url"), self.file, format="json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_duration_null_but_required(self):
+        self.file["duration"] = None
+        self.file["file_format"] = file_formats.MP4
 
         self.client.force_authenticate(user=self.user)
         response = self.client.post(
@@ -381,7 +421,19 @@ class UploadFileURLTestCase(StudioAPITestCase):
         response = self.client.post(
             reverse("file-upload-url"), file, format="json",
         )
+        self.assertEqual(response.status_code, 400)
 
+    def test_invalid_preset_upload(self):
+        self.client.force_authenticate(user=self.user)
+        file = {
+            "size": 1000,
+            "checksum": uuid.uuid4().hex,
+            "name": "le_studio",
+            "file_format": file_formats.MP3,
+            "preset": "invalid_preset",  # Deliberately invalid
+            "duration": 10.123
+        }
+        response = self.client.post(reverse("file-upload-url"), file, format="json")
         self.assertEqual(response.status_code, 400)
 
     def test_insufficient_storage(self):
@@ -432,6 +484,7 @@ class ContentIDTestCase(SyncTestMixin, StudioAPITestCase):
             "name": "le_studio_file",
             "file_format": file_formats.MP3,
             "preset": format_presets.AUDIO,
+            "duration": 17,
         }
 
     def _upload_file_to_contentnode(self, file_metadata=None, contentnode_id=None):
@@ -533,7 +586,9 @@ class ContentIDTestCase(SyncTestMixin, StudioAPITestCase):
         thumbnail_file_meta_1 = self._get_file_metadata()
         thumbnail_file_meta_2 = self._get_file_metadata()
         thumbnail_file_meta_1.update({"preset": format_presets.AUDIO_THUMBNAIL, "file_format": file_formats.JPEG, })
+        del thumbnail_file_meta_1["duration"]
         thumbnail_file_meta_2.update({"preset": format_presets.AUDIO_THUMBNAIL, "file_format": file_formats.JPEG, })
+        del thumbnail_file_meta_2["duration"]
 
         # Upload thumbnail to original contentnode and copied contentnode.
         # content_id should remain same for both these nodes.

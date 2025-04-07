@@ -30,7 +30,7 @@
           <VListTileAction class="handle-col" :aria-hidden="!hover" @click.stop>
             <transition name="fade">
               <VBtn :disabled="copying" flat icon>
-                <Icon :color="$themePalette.grey.v_600" icon="dragVertical" />
+                <Icon :color="$themePalette.grey.v_700" icon="dragVertical" />
               </VBtn>
             </transition>
           </VListTileAction>
@@ -307,7 +307,7 @@
 </script>
 
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .content-node-edit-item {
     position: relative;
@@ -370,7 +370,7 @@
     cursor: grab;
   }
 
-  /deep/ .v-input--selection-controls__input {
+  ::v-deep .v-input--selection-controls__input {
     margin-right: 0;
   }
 

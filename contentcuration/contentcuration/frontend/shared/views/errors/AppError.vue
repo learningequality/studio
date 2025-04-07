@@ -30,7 +30,7 @@
 </script>
 
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .details {
     max-width: 675px;

@@ -61,6 +61,7 @@
   import flatMap from 'lodash/flatMap';
   import isFunction from 'lodash/isFunction';
 
+  import { validateFile } from '../../vuex/file/validation';
   import FileStorage from './FileStorage';
   import FileDropzone from './FileDropzone';
   import { MAX_FILE_SIZE } from 'shared/constants';
@@ -161,14 +162,22 @@
           this.$refs.fileUpload.click();
         }
       },
-      validateFiles(files) {
+      async validateFiles(files) {
+        const validatedFiles = [];
+        for (const file of files) {
+          const validation = await validateFile(file);
+          validatedFiles.push([validation, file]);
+        }
         // Get unsupported file types
         let partitionedFiles = partition(
-          files,
-          f => f && this.acceptedExtensions.includes(last(f.name.split('.')).toLowerCase())
+          validatedFiles,
+          ([validation, f]) =>
+            f &&
+            this.acceptedExtensions.includes(last(f.name.split('.')).toLowerCase()) &&
+            validation === 0
         );
-        files = partitionedFiles[0];
-        this.unsupportedFiles = partitionedFiles[1];
+        files = partitionedFiles[0].map(([, f]) => f);
+        this.unsupportedFiles = partitionedFiles[1].map(([, f]) => f);
 
         // Get files that exceed the max file size
         partitionedFiles = partition(files, f => f.size < MAX_FILE_SIZE);
@@ -181,12 +190,12 @@
         }, 0);
         return files;
       },
-      handleFiles(files) {
+      async handleFiles(files) {
         this.$emit('upload');
 
         if (!this.readonly) {
           files = this.allowMultiple ? files : [files[0]];
-          files = this.validateFiles(files);
+          files = await this.validateFiles(files);
 
           // Show errors if relevant
           if (this.totalUploadSize > this.availableSpace) {
@@ -247,7 +256,7 @@
 
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .storage-alert {
     font-size: 12pt;

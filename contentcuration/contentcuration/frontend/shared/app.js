@@ -47,7 +47,6 @@ import Vuetify, {
   VFooter,
   VForm,
   VHover,
-  VIcon,
   VImg,
   VInput,
   VLayout,
@@ -58,7 +57,6 @@ import Vuetify, {
   VListTileSubTitle,
   VListTileTitle,
   VListTileAvatar,
-  VMenu,
   VNavigationDrawer,
   VPagination,
   VProgressCircular,
@@ -118,7 +116,7 @@ import { theme, icons } from 'shared/vuetify';
 import { i18nSetup } from 'shared/i18n';
 
 import './styles/vuetify.scss';
-import 'shared/styles/main.less';
+import 'shared/styles/main.scss';
 import Base from 'shared/Base.vue';
 import urls from 'shared/urls';
 import ActionLink from 'shared/views/ActionLink';
@@ -197,7 +195,6 @@ Vue.use(Vuetify, {
     VFooter,
     VForm,
     VHover,
-    VIcon,
     VImg,
     VInput,
     VLayout,
@@ -208,7 +205,6 @@ Vue.use(Vuetify, {
     VListTileSubTitle,
     VListTileTitle,
     VListTileAvatar,
-    VMenu,
     VNavigationDrawer,
     VPagination,
     VProgressCircular,

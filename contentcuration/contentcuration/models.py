@@ -415,6 +415,18 @@ class User(AbstractBaseUser, PermissionsMixin):
         if changed:
             self.save()
 
+    def get_server_rev(self):
+        changes_cte = With(
+            Change.objects.filter(user=self).values("server_rev", "applied"),
+        )
+        return (
+            changes_cte.queryset()
+            .with_cte(changes_cte)
+            .filter(applied=True)
+            .values_list("server_rev", flat=True)
+            .order_by("-server_rev").first()
+        ) or 0
+
     class Meta:
         verbose_name = "User"
         verbose_name_plural = "Users"
@@ -2125,7 +2137,7 @@ ASSESSMENT_ID_INDEX_NAME = "assessment_id_idx"
 
 
 class AssessmentItem(models.Model):
-    type = models.CharField(max_length=50, default="multiplechoice")
+    type = models.CharField(max_length=50, choices=exercises.question_choices, default=exercises.MULTIPLE_SELECTION)
     question = models.TextField(blank=True)
     hints = models.TextField(default="[]")
     answers = models.TextField(default="[]")

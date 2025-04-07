@@ -96,7 +96,7 @@
 </script>
 
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .error-detail-modal {
     text-align: left;

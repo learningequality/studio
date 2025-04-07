@@ -6,8 +6,6 @@ for custom field definitions. These have been placed in kolibri_content.fields.
 In addition, any foreign key fields have on_delete definitions added for Django 3 compatibility.
 https://github.com/learningequality/kolibri/blob/0f6bb6781a4453cd9fdc836d52b65dd69e395b20/kolibri/core/content/base_models.py#L68
 """
-from __future__ import print_function
-
 from django.db import models
 from kolibri_content.fields import DateTimeTzField
 from kolibri_content.fields import JSONField

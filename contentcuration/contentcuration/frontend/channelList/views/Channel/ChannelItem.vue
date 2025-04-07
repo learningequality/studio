@@ -383,7 +383,7 @@
 
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .v-card {
     width: 100%;
@@ -413,7 +413,7 @@
     }
   }
 
-  /deep/ .thumbnail {
+  ::v-deep .thumbnail {
     width: 100%;
   }
 

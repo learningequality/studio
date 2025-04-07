@@ -52,26 +52,26 @@
       :aria-label="kindTitle"
       class="thumbnail-image"
     >
-      <text
-        :x="-1"
-        :y="y"
-        fill="#ffffff"
-        class="material-icons notranslate v-icon"
-      >{{ icon }}</text>
+      <KIcon
+        icon="infoOutline" 
+        :x="+10"
+        :y="y + 20"
+        :style="{ fill: '#ffffff' }"
+      />
     </svg>
     <svg
       v-else
-      viewBox="0 0 24 24"
+      viewBox="0 0 40 40"
       :aria-label="kindTitle"
       class="nothumbnail-image"
       :class="$isRTL ? 'rtl-image' : 'ltr-image'"
     >
-      <text
-        :x="-1"
-        :y="y - 3"
-        :fill="$vuetify.theme.greyBorder"
-        class="material-icons notranslate v-icon"
-      >image</text>
+      <KIcon
+        icon="image" 
+        :x="-3"
+        :y="y - 14"
+        :style="{ fill: '#999999' }"
+      />
     </svg>
 
   </figure>
@@ -163,14 +163,14 @@
 
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
-  @caption-height: 25px;
+  $caption-height: 25px;
 
   .thumbnail {
     position: relative;
     /* stylelint-disable-next-line  */
-    padding-bottom: 100% * 9 / 16;
+    padding-bottom: calc(100% * 9 / 16);
 
     &.icon-only {
       padding-top: 0;
@@ -193,7 +193,7 @@
 
   .caption {
     width: 100%;
-    height: @caption-height;
+    height: $caption-height;
     padding: 0 5px;
     line-height: 11px;
   }
@@ -212,18 +212,18 @@
     overflow: hidden; // Don't show alt text outside of img boundaries
 
     .caption + & {
-      height: calc(100% - @caption-height);
+      height: calc(100% - $caption-height);
     }
   }
 
-  @svg-scale: 1.25;
-  @svg-width: 100% * 9 / 16 / @svg-scale;
-  @svg-top: (100% * 9 / 16 / 2) - (@svg-width / 2);
+  $svg-scale: 1.25;
+  $svg-width: calc(100% * 9 / 16 / $svg-scale);
+  $svg-top: calc((100% * 9 / 16 / 2) - ($svg-width / 2));
 
   svg.thumbnail-image {
     top: 0;
-    left: 50% - (@svg-width / 4);
-    width: @svg-width / 4;
+    left: calc(50% - ($svg-width / 4));
+    width: calc($svg-width / 4);
     margin: 0 auto;
     overflow: visible;
 
@@ -246,7 +246,7 @@
 
   svg.nothumbnail-image {
     top: 0;
-    width: @svg-width;
+    width: $svg-width;
     margin: 0 auto;
     overflow: visible;
 
@@ -259,7 +259,7 @@
     }
 
     .caption + & {
-      top: calc((@caption-height / 2) + @svg-top);
+      top: calc(($caption-height / 2) + $svg-top);
     }
 
     .icon-only & {
