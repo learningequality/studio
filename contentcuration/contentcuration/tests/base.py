@@ -120,6 +120,9 @@ class StudioAPITestCase(APITestCase, BucketTestMixin):
     def setUpClass(cls):
         super(StudioAPITestCase, cls).setUpClass()
         call_command("loadconstants")
+        cls.admin_user = User.objects.create_superuser(
+            "big_shot", "bigshot@reallybigcompany.com", "password"
+        )
 
     def setUp(self):
         if not self.persist_bucket:
