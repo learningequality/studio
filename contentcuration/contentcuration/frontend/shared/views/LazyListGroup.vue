@@ -82,7 +82,7 @@
 
   $icon-padding: 16px;
   $icon-width: 25px;
-  $header-width: calc(2 * $icon-padding + $icon-width);
+  $header-width: calc(2 * #{$icon-padding} + #{$icon-width});
 
   .list-group {
     box-sizing: border-box;
@@ -108,7 +108,7 @@
   }
 
   .header-content.has-icon {
-    width: calc(100% - $header-width);
+    width: calc(100% - #{$header-width});
   }
 
   .list-group.open > .list-group-header .v-icon {

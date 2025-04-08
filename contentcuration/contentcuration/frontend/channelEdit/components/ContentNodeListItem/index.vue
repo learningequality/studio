@@ -475,11 +475,11 @@
 
   .description-col {
     flex-shrink: 1 !important;
-    width: calc(100% - $thumbnail-width - 206px);
+    width: calc(100% - #{$thumbnail-width} - 206px);
     word-break: break-word;
 
     .compact & {
-      width: calc(100% - $compact-thumbnail-width - 206px);
+      width: calc(100% - #{$compact-thumbnail-width} - 206px);
     }
   }
 
