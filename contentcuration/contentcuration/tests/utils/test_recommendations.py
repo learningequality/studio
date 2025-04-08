@@ -34,12 +34,12 @@ class RecommendationsAdapterTestCase(StudioTestCase):
         super(RecommendationsAdapterTestCase, cls).setUpClass()
 
         cls.channel_1 = Channel.objects.create(
-            id=uuid.UUID('1234567890abcdef1234567890abcdef').hex,
+            id='1234567890abcdef1234567890abcdef',
             name='Channel 1',
             actor_id=cls.admin_user.id
         )
         cls.channel_2 = Channel.objects.create(
-            id=uuid.UUID('abcdef1234567890abcdef1234567890').hex,
+            id='abcdef1234567890abcdef1234567890',
             name='Channel 2',
             actor_id=cls.admin_user.id
         )
@@ -97,16 +97,16 @@ class RecommendationsAdapterTestCase(StudioTestCase):
         })
 
         PublicContentNode.objects.create(
-            id=uuid.UUID('1234567890abcdef1234567890abcdef').hex,
+            id='1234567890abcdef1234567890abcdef',
             title='Public Content Node 1',
             content_id=uuid.uuid4().hex,
-            channel_id=uuid.UUID('ddec09d74e834241a580c480ee37879c').hex,
+            channel_id='ddec09d74e834241a580c480ee37879c',
         )
         PublicContentNode.objects.create(
-            id=uuid.UUID('abcdef1234567890abcdef1234567890').hex,
+            id='abcdef1234567890abcdef1234567890',
             title='Public Content Node 2',
             content_id=uuid.uuid4().hex,
-            channel_id=uuid.UUID('84fcaec1e0514b62899d7f436384c401').hex,
+            channel_id='84fcaec1e0514b62899d7f436384c401',
         )
 
     def assert_backend_call(self, mock_response_exists, response_exists_value, connect_value,
@@ -256,16 +256,16 @@ class RecommendationsAdapterTestCase(StudioTestCase):
         channel.save()
 
         public_node_1 = PublicContentNode.objects.create(
-            id=uuid.UUID('00000000000000000000000000000003').hex,
+            id='00000000000000000000000000000003',
             title='Video 1',
             content_id=uuid.uuid4().hex,
-            channel_id=uuid.UUID(channel.id).hex,
+            channel_id=channel.id,
         )
         public_node_2 = PublicContentNode.objects.create(
-            id=uuid.UUID('00000000000000000000000000000005').hex,
+            id='00000000000000000000000000000005',
             title='Exercise 1',
             content_id=uuid.uuid4().hex,
-            channel_id=uuid.UUID(channel.id).hex,
+            channel_id=channel.id,
         )
 
         response_data = {

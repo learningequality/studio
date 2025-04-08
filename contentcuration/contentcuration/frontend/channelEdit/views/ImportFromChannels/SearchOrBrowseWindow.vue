@@ -250,6 +250,7 @@
       };
     },
     computed: {
+      ...mapGetters('currentChannel', ['currentChannel']),
       ...mapGetters('importFromChannels', ['savedSearchesExist']),
       ...mapGetters(['isAIFeatureEnabled']),
       ...mapState('importFromChannels', ['selected']),
@@ -365,7 +366,7 @@
             return ancestor.language;
           }
         }
-        return '';
+        return this.currentChannel?.language || '';
       },
     },
     beforeRouteEnter(to, from, next) {
@@ -595,14 +596,6 @@
 
   .recommendations-loader {
     margin-top: 24px;
-  }
-
-  .ai-browse-window {
-    width: 1200px;
-  }
-
-  .non-ai-browse-window {
-    width: 1000px;
   }
 
 </style>

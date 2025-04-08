@@ -4,50 +4,33 @@ import jsonschema
 from django.http import HttpResponseServerError
 from django.http import JsonResponse
 from le_utils.validators import embed_topics_request
-from rest_framework import serializers
-from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.views import APIView
 
 from contentcuration.utils.automation_manager import AutomationManager
+from contentcuration.viewsets.user import IsAIFeatureEnabledForUser
 
 
-class RecommendationSerializer(serializers.Serializer):
-    topics = serializers.ListField(required=True)
-    metadata = serializers.JSONField(required=False)
-    override_threshold = serializers.BooleanField(default=False)
+class RecommendationView(APIView):
 
-    def validate(self, data):
+    permission_classes = [
+        IsAuthenticated,
+        IsAIFeatureEnabledForUser,
+    ]
+    manager = AutomationManager()
+
+    def post(self, request):
         try:
-            validation_data = {'topics': data['topics']}
-            if 'metadata' in data:
-                validation_data['metadata'] = data['metadata']
+            request_data = request.data
+            # Remove and store override_threshold as it isn't defined in the schema
+            override_threshold = request_data.pop('override_threshold', False)
 
-            embed_topics_request.validate(validation_data)
-            return data
+            embed_topics_request.validate(request_data)
         except jsonschema.ValidationError as e:
-            raise serializers.ValidationError(str(e))
-
-
-class RecommendationViewSet(viewsets.ModelViewSet):
-    serializer_class = RecommendationSerializer
-    permission_classes = [IsAuthenticated]
-
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        topics = serializer.validated_data['topics']
-        metadata = serializer.validated_data.get('metadata', None)
-        override_threshold = serializer.validated_data['override_threshold']
+            return JsonResponse({"error": f"Required fields missing: {str(e)}"}, status=HTTPStatus.BAD_REQUEST)
 
         try:
-            manager = AutomationManager()
-
-            request_data = {'topics': topics}
-            if metadata is not None:
-                request_data['metadata'] = metadata
-
-            recommendations = manager.load_recommendations(request_data, override_threshold)
+            recommendations = self.manager.load_recommendations(request_data, override_threshold)
             return JsonResponse(data=recommendations, safe=False)
         except (ValueError, TypeError) as e:
             return JsonResponse({"error": str(e)}, status=HTTPStatus.BAD_REQUEST)

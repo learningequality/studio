@@ -96,6 +96,9 @@ class RecommendationsAdapter(Adapter):
             response = self.backend.make_request(request)
         except Exception as e:
             logging.exception(e)
+            if isinstance(e, errors.ConnectionError):
+                # Force connect check in next generate embeddings call
+                self.backend._connected = False
             response = EmbeddingsResponse(error=e)
 
         return response
@@ -428,6 +431,9 @@ class RecommendationsAdapter(Adapter):
                 self.backend.make_request(request)
             except Exception as e:
                 logging.exception(e)
+                if isinstance(e, errors.ConnectionError):
+                    # Force connect check in next embed content call
+                    self.backend._connected = False
 
         return True
 
@@ -515,9 +521,14 @@ class RecommendationsAdapter(Adapter):
 
 
 class Recommendations(Backend):
+    def __init__(self):
+        super().__init__()
+        self._connected = False
 
     def connect(self) -> bool:
-        return super().connect()
+        if not self._connected:
+            self._connected = super().connect()
+        return self._connected
 
     def make_request(self, request) -> Union[EmbeddingsResponse, RecommendationsResponse]:
         return super().make_request(request)

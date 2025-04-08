@@ -2306,7 +2306,7 @@ export const Task = new IndexedDBResource({
 export const Recommendation = new APIResource({
   urlName: 'recommendations',
   fetchCollection(params) {
-    return client.post(this.collectionUrl(), params).then(response => {
+    return client.post(window.Urls.recommendations(), params).then(response => {
       return response.data || [];
     });
   },
