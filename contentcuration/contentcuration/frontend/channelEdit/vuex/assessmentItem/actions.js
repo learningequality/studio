@@ -9,7 +9,6 @@ function updateNodeComplete(nodeId, context, maxTries = 10, delayMs = 100) {
   function tryUpdate() {
     const node = context.rootGetters['contentNode/getContentNode'](nodeId);
     if (node) {
-      console.log('number of tries: ', tries);
       const complete = isNodeComplete({
         nodeDetails: node,
         assessmentItems: context.getters.getAssessmentItems(nodeId),
