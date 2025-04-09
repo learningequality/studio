@@ -71,7 +71,7 @@
     computed: {
       ...mapState('importFromChannels', ['selected']),
       channelName() {
-        return this.node.channel.name;
+        return this.node.title;
       },
       learningActivities() {
         if (this.node.learning_activities && Object.keys(this.node.learning_activities).length) {

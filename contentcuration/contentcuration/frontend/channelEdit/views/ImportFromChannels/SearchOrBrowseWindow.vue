@@ -395,7 +395,6 @@
       });
     },
     methods: {
-      ...mapActions('channel', ['loadChannel']),
       ...mapActions('clipboard', ['copy']),
       ...mapActions('contentNode', ['loadAncestors', 'loadPublicContentNode']),
       ...mapActions('importFromChannels', ['fetchRecommendations']),
@@ -533,18 +532,12 @@
         return await Promise.all(
           recommendations.map(async recommendation => {
             // loadPublicContentNode is cached, so multiple calls shouldn't be an issue.
-            const node = await this.loadPublicContentNode({
+            return await this.loadPublicContentNode({
               id: recommendation.id,
               nodeId: recommendation.node_id,
               rootId: recommendation.main_tree_id,
               parent: recommendation.parent_id,
             });
-            const channel = await this.loadChannel(node.channel_id);
-
-            return {
-              ...node,
-              channel,
-            };
           })
         );
       },
