@@ -6,10 +6,10 @@
       <DropdownWrapper
         component="VFlex"
         sm6
-        md5
-        lg4
-        xl3
-        class="pr-4"
+        md6
+        lg6
+        xl6
+        class="pr-3"
       >
         <template #default="{ attach, menuProps }">
           <VSelect
@@ -23,7 +23,7 @@
           />
         </template>
       </DropdownWrapper>
-      <VFlex sm6 md5 lg4 xl3 class="pr-5">
+      <VFlex sm6 md6 lg6 xl6>
         <LanguageDropdown v-model="languageFilter" />
       </VFlex>
     </VLayout>

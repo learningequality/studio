@@ -27,14 +27,18 @@ class AutomationManager:
         """
         return self.adapter.embed_content(channel_id, nodes)
 
-    def load_recommendations(self, topic: Dict[str, Any], override_threshold=False):
+    def load_recommendations(self, request_data: Dict[str, Any], override_threshold=False):
         """
-        Loads recommendations for the given topic.
+        Loads recommendations for the given topic(s).
 
-        :param topic: A dictionary containing the topic for which to get recommendations.
+        :param request_data: Topic information necessary for recommendations retrieval. See
+        https://github.com/learningequality/le-utils/blob/main/spec/schema-embed_topics_request.json
         :param override_threshold: A boolean flag to override the recommendation threshold.
 
-        :return: A list of recommendations for the given topic.
+        :return: A dictionary containing a list of recommendations for the given topic(s).
         """
-        self.adapter.get_recommendations(topic=topic, override_threshold=override_threshold)
-        return []
+        recommendations = []
+        response = self.adapter.get_recommendations(request_data, override_threshold)
+        if hasattr(response, "results") and isinstance(response.results, list):
+            recommendations = response.results
+        return recommendations

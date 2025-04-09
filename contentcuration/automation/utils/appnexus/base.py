@@ -5,7 +5,7 @@ from abc import abstractmethod
 
 import requests
 from requests.adapters import HTTPAdapter
-from requests.packages.urllib3.util.retry import Retry
+from urllib3 import Retry
 
 from . import errors
 
@@ -77,7 +77,7 @@ class Backend(ABC):
 
     def __init__(
         self,
-        url_prefix="",
+        url_prefix="stable",
     ):
         self.url_prefix = url_prefix
         if not self.session:
@@ -161,17 +161,19 @@ class Backend(ABC):
         """ Establishes a connection to the backend service. """
         try:
             request = BackendRequest(method="GET", path=self.connect_endpoint, **kwargs)
-            self._make_request(request)
-            return True
+            api_response = self._make_request(request)
+            response_data = api_response.json()
+            status = response_data.get("status", None)
+            return status == "OK"
         except Exception:
             return False
 
     def make_request(self, request):
         """ Make a request to the backend service. """
         try:
-            response = self._make_request(request)
-            response_body = dict(data=response.json())
-            return BackendResponse(**response_body)
+            api_response = self._make_request(request)
+            response_data = api_response.json()
+            return BackendResponse(data=response_data)
         except ValueError as e:
             logging.exception(e)
             raise errors.InvalidResponse("Invalid response from backend")

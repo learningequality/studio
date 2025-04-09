@@ -277,7 +277,10 @@
 <style lang="less" scoped>
 
   .modal-container.fluid {
-    max-width: 1200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    max-width: 100%;
   }
 
 </style>
