@@ -26,7 +26,7 @@ botocore==1.20.75
     #   s3transfer
 cachetools==4.2.2
     # via google-auth
-celery==5.4.0
+celery==5.5.1
     # via
     #   -r requirements.in
     #   django-celery-results
@@ -152,7 +152,7 @@ jsonschema==4.23.0
     # via -r requirements.in
 jsonschema-specifications==2024.10.1
     # via jsonschema
-kombu==5.4.2
+kombu==5.5.2
     # via celery
 le-utils==0.2.9
     # via -r requirements.in
@@ -238,10 +238,8 @@ sqlparse==0.4.1
     # via django
 typing-extensions==4.13.0
     # via referencing
-tzdata==2024.2
-    # via
-    #   celery
-    #   kombu
+tzdata==2025.2
+    # via kombu
 urllib3==1.26.18
     # via
     #   botocore
