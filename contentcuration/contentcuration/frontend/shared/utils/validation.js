@@ -110,7 +110,7 @@ function _isPracticeQuiz(node) {
 }
 
 function _isFreeResponse(node) {
-  return get(node, 'extra_fields.options.modality') === ContentModalities.FREE_RESPONSE;
+  return get(node, 'extra_fields.options.modality') === ContentModalities.SURVEY;
 }
 
 function _getLicense(node) {
