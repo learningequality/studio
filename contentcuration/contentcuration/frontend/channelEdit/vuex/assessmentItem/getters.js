@@ -29,7 +29,7 @@ export function getAssessmentItemsCount(state) {
  * Consider new assessment items as valid if `ignoreDelayed` is true.
  */
 export function getAssessmentItemsErrors(state) {
-  return function({ contentNodeId, ignoreDelayed = false }) {
+  return function({ contentNodeId, ignoreDelayed = false, modality = null }) {
     const assessmentItemsErrors = {};
     if (!state.assessmentItemsMap || !state.assessmentItemsMap[contentNodeId]) {
       return assessmentItemsErrors;
@@ -39,7 +39,7 @@ export function getAssessmentItemsErrors(state) {
       if (ignoreDelayed && assessmentItem[DELAYED_VALIDATION]) {
         assessmentItemsErrors[assessmentItemId] = [];
       } else {
-        assessmentItemsErrors[assessmentItemId] = getAssessmentItemErrors(assessmentItem);
+        assessmentItemsErrors[assessmentItemId] = getAssessmentItemErrors(assessmentItem, modality);
       }
     });
     return assessmentItemsErrors;
@@ -51,9 +51,11 @@ export function getAssessmentItemsErrors(state) {
  * Consider new assessment items as valid if `ignoreDelayed` is true.
  */
 export function getInvalidAssessmentItemsCount(state) {
-  return function({ contentNodeId, ignoreDelayed = false }) {
+  return function({ contentNodeId, ignoreDelayed = false, modality = null }) {
     let count = 0;
-    const assessmentItemsErrors = getAssessmentItemsErrors(state)({ contentNodeId, ignoreDelayed });
+    const assessmentItemsErrors = getAssessmentItemsErrors(state)({
+      contentNodeId, ignoreDelayed, modality
+    });
 
     for (const assessmentItemId in assessmentItemsErrors) {
       if (assessmentItemsErrors[assessmentItemId].length) {
@@ -70,7 +72,7 @@ export function getInvalidAssessmentItemsCount(state) {
  * Consider new assessment items as valid if `ignoreDelayed` is true.
  */
 export function getAssessmentItemsAreValid(state) {
-  return function({ contentNodeId, ignoreDelayed = false }) {
-    return getInvalidAssessmentItemsCount(state)({ contentNodeId, ignoreDelayed }) === 0;
+  return function({ contentNodeId, ignoreDelayed = false, modality = null }) {
+    return getInvalidAssessmentItemsCount(state)({ contentNodeId, ignoreDelayed, modality }) === 0;
   };
 }

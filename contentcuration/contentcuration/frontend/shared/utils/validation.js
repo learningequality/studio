@@ -538,7 +538,7 @@ export function sanitizeAssessmentItem(assessmentItem, removeEmpty = false) {
  * @param {Object} assessmentItem An assessment item.
  * @returns {Array} An array of error codes.
  */
-export function getAssessmentItemErrors(assessmentItem) {
+export function getAssessmentItemErrors(assessmentItem, modality = null) {
   const errors = [];
 
   // Don't validate perseus questions
@@ -559,6 +559,11 @@ export function getAssessmentItemErrors(assessmentItem) {
 
   if (!assessmentItem.question || !assessmentItem.question.trim()) {
     errors.push(ValidationErrors.QUESTION_REQUIRED);
+  }
+
+  if(modality !== ContentModalities.SURVEY &&
+    assessmentItem.type == AssessmentItemTypes.FREE_RESPONSE){
+    errors.push(ValidationErrors.INVALID_COMPLETION_TYPE_FOR_FREE_RESPONSE_QUESTION);
   }
 
   switch (assessmentItem.type) {

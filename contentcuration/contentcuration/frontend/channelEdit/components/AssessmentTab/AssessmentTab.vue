@@ -54,7 +54,6 @@
   import { mapGetters, mapActions } from 'vuex';
 
   import AssessmentEditor from '../AssessmentEditor/AssessmentEditor';
-  import { ContentModalities, ValidationErrors } from '../../../shared/constants';
   import MessageDialog from 'shared/views/MessageDialog';
 
   export default {
@@ -97,50 +96,29 @@
       assessmentItems() {
         return this.getAssessmentItems(this.nodeId);
       },
-      invalidFreeResponseQuestionPresent() {
-        return (
-          this.modality !== ContentModalities.SURVEY &&
-          this.getAssessmentItems(this.nodeId).some(item => item.type === 'free_response')
-        );
-      },
       areAssessmentItemsValid() {
-        if (this.invalidFreeResponseQuestionPresent) {
-          return false;
-        }
-        return this.getAssessmentItemsAreValid({ contentNodeId: this.nodeId, ignoreDelayed: true });
+        return this.getAssessmentItemsAreValid(
+          {
+            contentNodeId: this.nodeId, ignoreDelayed: true, modality: this.modality
+          });
       },
       assessmentItemsErrors() {
         const errorMap = this.getAssessmentItemsErrors({
           contentNodeId: this.nodeId,
           ignoreDelayed: true,
+          modality: this.modality,
         });
-        if (this.modality !== ContentModalities.SURVEY) {
-          const items = this.getAssessmentItems(this.nodeId);
-          items.forEach(item => {
-            if (item.type === 'free_response') {
-              errorMap[item.assessment_id] = [
-                ValidationErrors.INVALID_COMPLETION_TYPE_FOR_FREE_RESPONSE_QUESTION,
-              ];
-            }
-          });
-        }
         return errorMap;
       },
       invalidItemsErrorMessage() {
-        let invalidItemsCount = this.getInvalidAssessmentItemsCount({
+        const invalidItemsCount = this.getInvalidAssessmentItemsCount({
           contentNodeId: this.nodeId,
           ignoreDelayed: true,
+          modality: this.modality,
         });
-        if (this.invalidFreeResponseQuestionPresent) {
-          const invalidFreeResponseQuestionCount = this.getAssessmentItems(this.nodeId).filter(
-            item => item.type === 'free_response'
-          ).length;
-          invalidItemsCount = invalidItemsCount + invalidFreeResponseQuestionCount;
-        }
         if (!invalidItemsCount) {
           return '';
         }
-
         return this.$tr('incompleteItemsCountMessage', { invalidItemsCount });
       },
     },

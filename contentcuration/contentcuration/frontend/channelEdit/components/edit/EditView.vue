@@ -107,7 +107,6 @@
   import { TabNames } from '../../constants';
   import AssessmentTab from '../../components/AssessmentTab/AssessmentTab';
   import RelatedResourcesTab from '../../components/RelatedResourcesTab/RelatedResourcesTab';
-  import { ContentModalities, ValidationErrors } from '../../../shared/constants';
   import DetailsTabView from './DetailsTabView';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import ToolBar from 'shared/views/ToolBar';
@@ -156,11 +155,7 @@
         'getImmediateRelatedResourcesCount',
         'getNodeDetailsErrorsList',
       ]),
-      ...mapGetters('assessmentItem', [
-        'getAssessmentItemsAreValid',
-        'getAssessmentItemsCount',
-        'getAssessmentItems',
-      ]),
+      ...mapGetters('assessmentItem', ['getAssessmentItemsAreValid', 'getAssessmentItemsCount', 'getAssessmentItems']),
       firstNode() {
         return this.nodes.length ? this.nodes[0] : null;
       },
@@ -262,25 +257,8 @@
       trackTab(name) {
         this.$analytics.trackClick('channel_editor_modal', name);
       },
-      validateFreeResponseQuestionSwitch(modality) {
-        if (modality !== ContentModalities.SURVEY) {
-          const freeResponseQuestions = this.getAssessmentItems(this.nodeIds[0]).filter(
-            item => item.type === 'free_response'
-          );
-          freeResponseQuestions.forEach(question => {
-            this.$store.dispatch('assessmentItem/updateAssessmentItem', {
-              ...question,
-              errors: [
-                ...(question.errors || []),
-                ValidationErrors.INVALID_COMPLETION_TYPE_FOR_FREE_RESPONSE_QUESTION,
-              ],
-            });
-          });
-        }
-      },
       handleModalityUpdate(modality) {
         this.modality = modality;
-        this.validateFreeResponseQuestionSwitch(modality);
       },
       handleErrorClick(error) {
         const errorRefs = {
