@@ -78,10 +78,15 @@
                   </li>
                 </ul>
               </VAlert>
-              <DetailsTabView :key="nodeIds.join('-')" ref="detailsTab" :nodeIds="nodeIds" />
+              <DetailsTabView
+                :key="nodeIds.join('-')"
+                ref="detailsTab"
+                :nodeIds="nodeIds"
+                @modalityUpdate="handleModalityUpdate"
+              />
             </VTabItem>
             <VTabItem :key="tabs.QUESTIONS" ref="questionwindow" :value="tabs.QUESTIONS" lazy>
-              <AssessmentTab :nodeId="nodeIds[0]" />
+              <AssessmentTab :nodeId="nodeIds[0]" :modality="modality" />
             </VTabItem>
             <VTabItem :key="tabs.RELATED" :value="tabs.RELATED" lazy>
               <RelatedResourcesTab :nodeId="nodeIds[0]" />
@@ -102,6 +107,7 @@
   import { TabNames } from '../../constants';
   import AssessmentTab from '../../components/AssessmentTab/AssessmentTab';
   import RelatedResourcesTab from '../../components/RelatedResourcesTab/RelatedResourcesTab';
+  import { ContentModalities, ValidationErrors } from '../../../shared/constants';
   import DetailsTabView from './DetailsTabView';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import ToolBar from 'shared/views/ToolBar';
@@ -139,6 +145,7 @@
         currentTab: null,
         tabsElevated: false,
         errorsList: [],
+        modality: null,
       };
     },
     computed: {
@@ -149,7 +156,7 @@
         'getImmediateRelatedResourcesCount',
         'getNodeDetailsErrorsList',
       ]),
-      ...mapGetters('assessmentItem', ['getAssessmentItemsAreValid', 'getAssessmentItemsCount']),
+      ...mapGetters('assessmentItem', ['getAssessmentItemsAreValid', 'getAssessmentItemsCount', 'getAssessmentItems']),
       firstNode() {
         return this.nodes.length ? this.nodes[0] : null;
       },
@@ -250,6 +257,24 @@
       },
       trackTab(name) {
         this.$analytics.trackClick('channel_editor_modal', name);
+      },
+      validateFreeResponseQuestionSwitch(modality) {
+        if (modality !== ContentModalities.SURVEY) {
+          const freeResponseQuestions = this.getAssessmentItems(this.nodeIds[0]).filter(
+            (item) => item.type === 'free_response'
+          );
+          freeResponseQuestions.forEach(question => {
+            this.$store.dispatch('assessmentItem/updateAssessmentItem', {
+              ...question,
+              errors: [...(question.errors || []),
+              ValidationErrors.INVALID_COMPLETION_TYPE_FOR_FREE_RESPONSE_QUESTION],
+            })
+          })
+        }
+      },
+      handleModalityUpdate(modality) {
+        this.modality = modality;
+        this.validateFreeResponseQuestionSwitch(modality);
       },
       handleErrorClick(error) {
         const errorRefs = {

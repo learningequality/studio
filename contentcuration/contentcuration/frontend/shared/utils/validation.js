@@ -109,6 +109,10 @@ function _isPracticeQuiz(node) {
   return get(node, 'extra_fields.options.modality') === ContentModalities.QUIZ;
 }
 
+function _isFreeResponse(node) {
+  return get(node, 'extra_fields.options.modality') === ContentModalities.FREE_RESPONSE;
+}
+
 function _getLicense(node) {
   return node.license && Licenses.get(node.license.id || node.license);
 }
@@ -390,7 +394,8 @@ export function getNodeDetailsErrors(node) {
   // mastery is required on exercises but not on practice quizzes
   // Practice quiz requirements are set in the background, and separate validations
   // run to check this based on the completion_criteria in LE utils
-  if (node.kind === ContentKindsNames.EXERCISE && !_isPracticeQuiz(node)) {
+  if (node.kind === ContentKindsNames.EXERCISE && !_isPracticeQuiz(node)
+    && !_isFreeResponse(node)) {
     const masteryModelErrors = getNodeMasteryModelErrors(node);
     const masteryModelMErrors = getNodeMasteryModelMErrors(node);
     const masteryModelNErrors = getNodeMasteryModelNErrors(node);

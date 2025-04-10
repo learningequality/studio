@@ -45,6 +45,7 @@
                   :item="item"
                   :errors="itemErrors(item)"
                   :openDialog="openDialog"
+                  :modality="modality"
                   data-test="editor"
                   @update="onItemUpdate"
                   @close="closeActiveItem"
@@ -190,6 +191,11 @@
         type: Function,
         default: () => {},
       },
+      modality: {
+        type: String,
+        default: '',
+        required: false,
+      },
     },
     data() {
       return {
@@ -207,7 +213,6 @@
         if (!this.items) {
           return [];
         }
-
         return [...this.items].sort((item1, item2) => (item1.order > item2.order ? 1 : -1));
       },
       firstItem() {
