@@ -97,10 +97,11 @@
         return this.getAssessmentItems(this.nodeId);
       },
       areAssessmentItemsValid() {
-        return this.getAssessmentItemsAreValid(
-          {
-            contentNodeId: this.nodeId, ignoreDelayed: true, modality: this.modality
-          });
+        return this.getAssessmentItemsAreValid({
+          contentNodeId: this.nodeId,
+          ignoreDelayed: true,
+          modality: this.modality,
+        });
       },
       assessmentItemsErrors() {
         const errorMap = this.getAssessmentItemsErrors({

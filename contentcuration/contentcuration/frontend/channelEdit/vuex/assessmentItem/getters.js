@@ -54,7 +54,9 @@ export function getInvalidAssessmentItemsCount(state) {
   return function({ contentNodeId, ignoreDelayed = false, modality = null }) {
     let count = 0;
     const assessmentItemsErrors = getAssessmentItemsErrors(state)({
-      contentNodeId, ignoreDelayed, modality
+      contentNodeId,
+      ignoreDelayed,
+      modality,
     });
 
     for (const assessmentItemId in assessmentItemsErrors) {

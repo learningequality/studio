@@ -561,8 +561,10 @@ export function getAssessmentItemErrors(assessmentItem, modality = null) {
     errors.push(ValidationErrors.QUESTION_REQUIRED);
   }
 
-  if(modality !== ContentModalities.SURVEY &&
-    assessmentItem.type == AssessmentItemTypes.FREE_RESPONSE){
+  if (
+    modality !== ContentModalities.SURVEY &&
+    assessmentItem.type == AssessmentItemTypes.FREE_RESPONSE
+  ) {
     errors.push(ValidationErrors.INVALID_COMPLETION_TYPE_FOR_FREE_RESPONSE_QUESTION);
   }
 
