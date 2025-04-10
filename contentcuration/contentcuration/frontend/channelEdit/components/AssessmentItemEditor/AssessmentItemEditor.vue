@@ -112,7 +112,12 @@
   import translator from '../../translator';
   import { updateAnswersToQuestionType, assessmentItemKey } from '../../utils';
   import { AssessmentItemTypeLabels } from '../../constants';
-  import { ContentModalities, AssessmentItemTypes, ValidationErrors, FeatureFlagKeys } from 'shared/constants';
+  import {
+    ContentModalities,
+    AssessmentItemTypes,
+    ValidationErrors,
+    FeatureFlagKeys,
+  } from 'shared/constants';
   import ErrorList from 'shared/views/ErrorList/ErrorList';
   import Uploader from 'shared/views/files/Uploader';
   import MarkdownEditor from 'shared/views/MarkdownEditor/MarkdownEditor/MarkdownEditor';
@@ -232,8 +237,10 @@
           },
         ];
 
-        if (this.hasFeatureEnabled(FeatureFlagKeys.survey)
-        && this.modality === ContentModalities.SURVEY) {
+        if (
+          this.hasFeatureEnabled(FeatureFlagKeys.survey) &&
+          this.modality === ContentModalities.SURVEY
+        ) {
           items.push({
             value: AssessmentItemTypes.FREE_RESPONSE,
             text: translator.$tr(AssessmentItemTypeLabels[AssessmentItemTypes.FREE_RESPONSE]),
@@ -261,12 +268,10 @@
 
         if (this.errors && this.errors.includes(ValidationErrors.QUESTION_REQUIRED)) {
           errorMessages.push(translator.$tr(`errorQuestionRequired`));
-        }
-        else if(
+        } else if (
           this.errors &&
           this.errors.includes(ValidationErrors.INVALID_COMPLETION_TYPE_FOR_FREE_RESPONSE_QUESTION)
-        )
-        {
+        ) {
           errorMessages.push(translator.$tr(`errorInvalidQuestionType`));
         }
         return errorMessages;

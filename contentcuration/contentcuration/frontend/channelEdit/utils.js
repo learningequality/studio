@@ -94,7 +94,7 @@ export function updateAnswersToQuestionType(questionType, answers) {
   }
 
   if (questionType === AssessmentItemTypes.FREE_RESPONSE) {
-     return [];
+    return [];
   }
 
   const answersCopy = JSON.parse(JSON.stringify(answers));

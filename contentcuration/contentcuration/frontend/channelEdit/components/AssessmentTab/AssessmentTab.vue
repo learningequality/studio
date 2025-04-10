@@ -98,27 +98,32 @@
         return this.getAssessmentItems(this.nodeId);
       },
       invalidFreeResponseQuestionPresent() {
-        return this.modality!== ContentModalities.SURVEY && this.getAssessmentItems(this.nodeId).some(item => item.type === 'free_response');
+        return (
+          this.modality !== ContentModalities.SURVEY &&
+          this.getAssessmentItems(this.nodeId).some(item => item.type === 'free_response')
+        );
       },
       areAssessmentItemsValid() {
-        if(this.invalidFreeResponseQuestionPresent){
+        if (this.invalidFreeResponseQuestionPresent) {
           return false;
         }
         return this.getAssessmentItemsAreValid({ contentNodeId: this.nodeId, ignoreDelayed: true });
       },
       assessmentItemsErrors() {
-        const errorMap = this.getAssessmentItemsErrors(
-          { contentNodeId: this.nodeId, ignoreDelayed: true }
-        );
-        if (this.modality !== ContentModalities.SURVEY) {
-            const items = this.getAssessmentItems(this.nodeId);
-            items.forEach(item => {
-              if (item.type === 'free_response') {
-                errorMap[item.assessment_id] =
-                [ValidationErrors.INVALID_COMPLETION_TYPE_FOR_FREE_RESPONSE_QUESTION];
-              }
+        const errorMap = this.getAssessmentItemsErrors({
+          contentNodeId: this.nodeId,
+          ignoreDelayed: true,
         });
-      }
+        if (this.modality !== ContentModalities.SURVEY) {
+          const items = this.getAssessmentItems(this.nodeId);
+          items.forEach(item => {
+            if (item.type === 'free_response') {
+              errorMap[item.assessment_id] = [
+                ValidationErrors.INVALID_COMPLETION_TYPE_FOR_FREE_RESPONSE_QUESTION,
+              ];
+            }
+          });
+        }
         return errorMap;
       },
       invalidItemsErrorMessage() {
@@ -127,7 +132,9 @@
           ignoreDelayed: true,
         });
         if (this.invalidFreeResponseQuestionPresent) {
-          const invalidFreeResponseQuestionCount = this.getAssessmentItems(this.nodeId).filter(item => item.type === 'free_response').length;
+          const invalidFreeResponseQuestionCount = this.getAssessmentItems(this.nodeId).filter(
+            item => item.type === 'free_response'
+          ).length;
           invalidItemsCount = invalidItemsCount + invalidFreeResponseQuestionCount;
         }
         if (!invalidItemsCount) {

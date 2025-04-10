@@ -156,7 +156,11 @@
         'getImmediateRelatedResourcesCount',
         'getNodeDetailsErrorsList',
       ]),
-      ...mapGetters('assessmentItem', ['getAssessmentItemsAreValid', 'getAssessmentItemsCount', 'getAssessmentItems']),
+      ...mapGetters('assessmentItem', [
+        'getAssessmentItemsAreValid',
+        'getAssessmentItemsCount',
+        'getAssessmentItems',
+      ]),
       firstNode() {
         return this.nodes.length ? this.nodes[0] : null;
       },
@@ -261,15 +265,17 @@
       validateFreeResponseQuestionSwitch(modality) {
         if (modality !== ContentModalities.SURVEY) {
           const freeResponseQuestions = this.getAssessmentItems(this.nodeIds[0]).filter(
-            (item) => item.type === 'free_response'
+            item => item.type === 'free_response'
           );
           freeResponseQuestions.forEach(question => {
             this.$store.dispatch('assessmentItem/updateAssessmentItem', {
               ...question,
-              errors: [...(question.errors || []),
-              ValidationErrors.INVALID_COMPLETION_TYPE_FOR_FREE_RESPONSE_QUESTION],
-            })
-          })
+              errors: [
+                ...(question.errors || []),
+                ValidationErrors.INVALID_COMPLETION_TYPE_FOR_FREE_RESPONSE_QUESTION,
+              ],
+            });
+          });
         }
       },
       handleModalityUpdate(modality) {

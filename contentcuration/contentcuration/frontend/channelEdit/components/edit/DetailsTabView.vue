@@ -695,7 +695,7 @@
             'suggested_duration_type'
           );
           const suggested_duration = this.getValueFromNodes('suggested_duration');
-          if(modality !== null){
+          if (modality !== null) {
             this.$emit('modalityUpdate', modality);
           }
           return {
@@ -710,7 +710,7 @@
           this.updateExtraFields({ options });
           this.updateExtraFields({ suggested_duration_type });
           this.update({ suggested_duration });
-          if(modality !== null){
+          if (modality !== null) {
             this.$emit('modalityUpdate', modality);
           }
         },
