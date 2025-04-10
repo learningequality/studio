@@ -72,9 +72,6 @@
 
 <style lang="scss">
 
-  $first-col-width: 75px;
-  $first-col-expanded-width: 350px;
-
   @mixin freeze {
     position: sticky;
     z-index: 3;
