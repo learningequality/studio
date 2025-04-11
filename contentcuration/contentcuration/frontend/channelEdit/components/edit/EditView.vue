@@ -155,11 +155,7 @@
         'getImmediateRelatedResourcesCount',
         'getNodeDetailsErrorsList',
       ]),
-      ...mapGetters('assessmentItem', [
-        'getAssessmentItemsAreValid',
-        'getAssessmentItemsCount',
-        'getAssessmentItems',
-      ]),
+      ...mapGetters('assessmentItem', ['getAssessmentItemsAreValid', 'getAssessmentItemsCount']),
       firstNode() {
         return this.nodes.length ? this.nodes[0] : null;
       },
