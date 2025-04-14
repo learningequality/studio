@@ -69,7 +69,7 @@
 
 <script>
 
-  import { mapGetters } from 'vuex';
+  import { mapActions, mapGetters } from 'vuex';
   import FileStatusText from 'shared/views/files/FileStatusText';
   import Uploader from 'shared/views/files/Uploader';
   import { constantsTranslationMixin, fileSizeMixin, fileStatusMixin } from 'shared/mixins';
@@ -159,7 +159,7 @@
             label: this.$tr('downloadMenuOptionLabel'),
             value: 'DOWNLOAD_FILE',
             onClick: () => {
-              this.downloadFile();
+              this.initiateFileDownload();
             },
             condition: this.fileDisplay,
           },
@@ -184,6 +184,8 @@
       },
     },
     methods: {
+      ...mapActions('file', ['downloadFile']),
+      ...mapActions(['showSnackbar']),
       completeUpload(fileUpload) {
         if (fileUpload.id === this.fileUploadId) {
           this.uploadCompleteHandler(fileUpload);
@@ -192,8 +194,17 @@
       uploadingHandler(fileUpload) {
         this.fileUploadId = fileUpload.id;
       },
-      downloadFile() {
-        window.open(this.fileDisplay.url, '_blank');
+      initiateFileDownload() {
+        try {
+          this.downloadFile({
+            url: this.fileDisplay.url,
+            fileName: this.formattedFileDisplay,
+          });
+        } catch (e) {
+          this.showSnackbar({
+            text: this.$tr('downloadFailed'),
+          });
+        }
       },
       removeFile() {
         this.$emit('remove', this.file);
@@ -204,6 +215,7 @@
       replaceFileMenuOptionLabel: 'Replace file',
       downloadMenuOptionLabel: 'Download',
       removeMenuOptionLabel: 'Remove',
+      downloadFailed: 'Failed to download file',
       /* eslint-disable kolibri/vue-no-unused-translations */
       removeFileButton: 'Remove',
       retryUpload: 'Retry upload',
