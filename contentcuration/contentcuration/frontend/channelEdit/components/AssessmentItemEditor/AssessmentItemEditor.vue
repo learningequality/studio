@@ -152,6 +152,10 @@
        *    ...
        * }
        */
+      nodeId: {
+        type: String,
+        required: true,
+      },
       item: {
         type: Object,
         default: null,
@@ -182,11 +186,6 @@
         type: Function,
         default: null,
       },
-      modality: {
-        type: String,
-        default: '',
-        required: false,
-      },
     },
     data() {
       return {
@@ -200,6 +199,7 @@
     computed: {
       ...mapGetters('file', ['getFileUpload']),
       ...mapGetters(['hasFeatureEnabled']),
+      ...mapGetters('contentNode', ['getContentNode']),
       question() {
         if (!this.item || !this.item.question) {
           return '';
@@ -209,6 +209,9 @@
       },
       imagePreset() {
         return FormatPresetsNames.EXERCISE_IMAGE;
+      },
+      modality() {
+        return this.getContentNode(this.nodeId)?.extra_fields?.options?.modality;
       },
       kind() {
         if (!this.item || !this.item.type) {

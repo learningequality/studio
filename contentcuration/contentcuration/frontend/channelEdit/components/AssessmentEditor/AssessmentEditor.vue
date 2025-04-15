@@ -45,7 +45,7 @@
                   :item="item"
                   :errors="itemErrors(item)"
                   :openDialog="openDialog"
-                  :modality="modality"
+                  :nodeId="nodeId"
                   data-test="editor"
                   @update="onItemUpdate"
                   @close="closeActiveItem"
@@ -190,11 +190,6 @@
       openDialog: {
         type: Function,
         default: () => {},
-      },
-      modality: {
-        type: String,
-        default: '',
-        required: false,
       },
     },
     data() {

@@ -17,7 +17,6 @@
       :items="assessmentItems"
       :itemsErrors="assessmentItemsErrors"
       :openDialog="openDialog"
-      :modality="modality"
       @addItem="onAddAssessmentItem"
       @updateItem="onUpdateAssessmentItem"
       @updateItems="onUpdateAssessmentItems"
@@ -67,11 +66,6 @@
         type: String,
         required: true,
       },
-      modality: {
-        type: String,
-        default: '',
-        required: false,
-      },
     },
     data() {
       return {
@@ -100,14 +94,12 @@
         return this.getAssessmentItemsAreValid({
           contentNodeId: this.nodeId,
           ignoreDelayed: true,
-          modality: this.modality,
         });
       },
       assessmentItemsErrors() {
         const errorMap = this.getAssessmentItemsErrors({
           contentNodeId: this.nodeId,
           ignoreDelayed: true,
-          modality: this.modality,
         });
         return errorMap;
       },
@@ -115,7 +107,6 @@
         const invalidItemsCount = this.getInvalidAssessmentItemsCount({
           contentNodeId: this.nodeId,
           ignoreDelayed: true,
-          modality: this.modality,
         });
         if (!invalidItemsCount) {
           return '';

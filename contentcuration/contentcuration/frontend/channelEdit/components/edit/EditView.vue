@@ -82,11 +82,10 @@
                 :key="nodeIds.join('-')"
                 ref="detailsTab"
                 :nodeIds="nodeIds"
-                @modalityUpdate="handleModalityUpdate"
               />
             </VTabItem>
             <VTabItem :key="tabs.QUESTIONS" ref="questionwindow" :value="tabs.QUESTIONS" lazy>
-              <AssessmentTab :nodeId="nodeIds[0]" :modality="modality" />
+              <AssessmentTab :nodeId="nodeIds[0]" />
             </VTabItem>
             <VTabItem :key="tabs.RELATED" :value="tabs.RELATED" lazy>
               <RelatedResourcesTab :nodeId="nodeIds[0]" />
@@ -144,7 +143,6 @@
         currentTab: null,
         tabsElevated: false,
         errorsList: [],
-        modality: null,
       };
     },
     computed: {
@@ -256,9 +254,6 @@
       },
       trackTab(name) {
         this.$analytics.trackClick('channel_editor_modal', name);
-      },
-      handleModalityUpdate(modality) {
-        this.modality = modality;
       },
       handleErrorClick(error) {
         const errorRefs = {
