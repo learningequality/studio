@@ -42,9 +42,13 @@ export function commitChannelSet(
   { id, name = NOVALUE, description = NOVALUE, channels = [] } = {}
 ) {
   const channelSetData = {};
+
   if (!id) {
-    throw ReferenceError('id must be defined to commit a channel');
+    channelSetData.isNew = true;
+  } else {
+    channelSetData.id = id;
   }
+
   if (name !== NOVALUE) {
     channelSetData.name = name;
   }
@@ -55,10 +59,21 @@ export function commitChannelSet(
   for (const channel of channels) {
     channelSetData.channels[channel] = true;
   }
-  return ChannelSet.createModel(channelSetData).then(data => {
-    context.commit('SET_CHANNELSET_NOT_NEW', id);
-    context.commit('UPDATE_CHANNELSET', data);
-  });
+
+  return ChannelSet.createModel(channelSetData)
+    .then(data => {
+      if (!data || !data.id) {
+        throw ReferenceError('id must be defined to commit a channel');
+      }
+
+      context.commit('SET_CHANNELSET_NOT_NEW', data.id);
+      context.commit('UPDATE_CHANNELSET', data);
+
+      return data;
+    })
+    .catch(error => {
+      throw error;
+    });
 }
 
 export function updateChannelSet(context, { id, name = NOVALUE, description = NOVALUE } = {}) {

@@ -3,7 +3,6 @@ import io
 import os
 import re
 import sys
-from builtins import next
 
 from django.conf import settings
 from django.contrib.sites.models import Site

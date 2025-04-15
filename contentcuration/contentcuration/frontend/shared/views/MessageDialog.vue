@@ -59,13 +59,13 @@
 
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   p {
     font-size: 12pt;
   }
 
-  /deep/ .v-btn {
+  ::v-deep .v-btn {
     font-weight: bold;
   }
 

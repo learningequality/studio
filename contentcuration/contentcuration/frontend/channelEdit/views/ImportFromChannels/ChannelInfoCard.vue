@@ -85,7 +85,7 @@
 </script>
 
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .show-more-btn {
     margin-left: -7px;

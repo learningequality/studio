@@ -347,14 +347,14 @@
 
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
-  /deep/ .v-toolbar__extension {
+  ::v-deep .v-toolbar__extension {
     padding: 0;
   }
 
   .content-card {
-    /deep/ .v-list__tile {
+    ::v-deep .v-list__tile {
       height: unset;
     }
 

@@ -139,7 +139,7 @@
 </script>
 
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   h2 {
     margin-top: 32px;
@@ -149,13 +149,13 @@
     padding: 16px 0;
   }
 
-  /deep/.ui-progress-linear {
+  ::v-deep .ui-progress-linear {
     max-width: 75%;
     height: 8px !important;
     margin: 8px 0;
     background: #e9e9e9;
 
-    /deep/.is-determinate {
+    ::v-deep .is-determinate {
       height: 8px !important;
     }
   }

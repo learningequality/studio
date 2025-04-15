@@ -134,7 +134,7 @@
 
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .v-icon {
     font-size: 14pt;

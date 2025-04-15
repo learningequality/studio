@@ -11,7 +11,7 @@
         <VListTileAction class="select-col">
           <Checkbox
             ref="checkbox"
-            class="ma-0 pa-0"
+            class="ma-0 pt-1"
             :class="{ selectedIndeterminate: !selected && indeterminate }"
             :inputValue="selected"
             :indeterminate="indeterminate"
@@ -108,7 +108,7 @@
   };
 
 </script>
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .channel-item {
     background: #ffffff;
@@ -119,12 +119,12 @@
   .channel-tile,
   .v-list__tile__title,
   .v-list__tile__title > h4,
-  /deep/ .channel-tile > .v-list__tile {
+  ::v-deep .channel-tile > .v-list__tile {
     width: 100%;
     max-width: 100%;
   }
 
-  /deep/ .channel-tile > .v-list__tile {
+  ::v-deep .channel-tile > .v-list__tile {
     padding-right: 0;
   }
 
@@ -137,12 +137,13 @@
   }
 
   .text-truncate {
-    /* fix clipping of dangling characters */
+    // Fix clipping of dangling characters
     line-height: 1.3 !important;
   }
 
-  /deep/ .selectedIndeterminate svg {
+  ::v-deep .selectedIndeterminate svg {
     fill: gray !important;
   }
 
 </style>
+

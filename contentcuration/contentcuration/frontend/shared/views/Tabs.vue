@@ -109,7 +109,7 @@
 
 </script>
 
-<style lang="less">
+<style lang="scss">
 
   /*! rtl:begin:ignore */
   [dir='rtl'] {

@@ -223,4 +223,11 @@
 </script>
 
 
-<style scoped></style>
+<style scoped>
+.show-more-button-container {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin-bottom: 10px;
+}
+</style>

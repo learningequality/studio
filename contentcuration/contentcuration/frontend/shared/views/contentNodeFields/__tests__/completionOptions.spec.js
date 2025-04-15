@@ -1,19 +1,29 @@
 import Vue from 'vue';
 import Vuetify from 'vuetify';
 import { shallowMount, mount } from '@vue/test-utils';
+import Vuex from 'vuex';
 import CompletionOptions from '../CompletionOptions';
 import { CompletionCriteriaModels } from 'shared/constants';
 
 Vue.use(Vuetify);
+Vue.use(Vuex);
+let store;
 
 describe('CompletionOptions', () => {
+  beforeEach(() => {
+    store = new Vuex.Store({
+      getters: {
+        hasFeatureEnabled: () => () => true,
+      },
+    });
+  });
   it('smoke test', () => {
-    const wrapper = shallowMount(CompletionOptions);
+    const wrapper = shallowMount(CompletionOptions, { store });
     expect(wrapper.isVueInstance()).toBe(true);
   });
   describe(`completion dropdown`, () => {
     it(`renders the completion dropdown`, () => {
-      const wrapper = mount(CompletionOptions);
+      const wrapper = mount(CompletionOptions, { store });
       const dropdown = wrapper.find({ ref: 'completion' });
       expect(dropdown.exists()).toBe(true);
     });
@@ -147,6 +157,7 @@ describe('CompletionOptions', () => {
       describe(`exercise`, () => {
         it(`'When goal is met' should be displayed by default`, () => {
           const wrapper = mount(CompletionOptions, {
+            store,
             propsData: {
               kind: 'exercise',
               value: { model: null, threshold: { m: null, n: null } },
@@ -195,6 +206,7 @@ describe('CompletionOptions', () => {
       describe(`exercise`, () => {
         it(`Goal and MofN components should not be displayed when 'Practice Quiz' is selected`, async () => {
           const wrapper = mount(CompletionOptions, {
+            store,
             propsData: {
               kind: 'exercise',
               value: { model: 'mastery', threshold: { m: 3, n: 5 }, modality: 'QUIZ' },
@@ -233,6 +245,7 @@ describe('CompletionOptions', () => {
       });
       it(`duration dropdown is hidden by default for documents`, () => {
         const wrapper = mount(CompletionOptions, {
+          store,
           propsData: {
             kind: 'document',
             value: { suggested_duration: null },
@@ -243,6 +256,7 @@ describe('CompletionOptions', () => {
       });
       it(`duration dropdown is hidden by default for exercises`, () => {
         const wrapper = mount(CompletionOptions, {
+          store,
           propsData: {
             kind: 'exercise',
             value: { model: 'mastery', threshold: { m: 3, n: 5 }, suggested_duration: null },
@@ -253,6 +267,7 @@ describe('CompletionOptions', () => {
       });
       it(`'Reference' is disabled for exercises`, async () => {
         const wrapper = mount(CompletionOptions, {
+          store,
           propsData: {
             kind: 'exercise',
             value: { model: 'mastery', threshold: { m: 3, n: 5 } },

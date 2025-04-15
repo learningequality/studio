@@ -69,7 +69,7 @@
 
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .w-100 {
     width: 100%;

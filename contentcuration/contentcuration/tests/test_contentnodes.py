@@ -1,13 +1,7 @@
-from __future__ import absolute_import
-from __future__ import division
-
 import random
 import string
 import time
 import uuid
-from builtins import range
-from builtins import str
-from builtins import zip
 
 import pytest
 from django.db import IntegrityError
@@ -18,7 +12,6 @@ from le_utils.constants import exercises
 from le_utils.constants import format_presets
 from mixer.backend.django import mixer
 from mock import patch
-from past.utils import old_div
 
 from . import testdata
 from .base import StudioTestCase
@@ -44,7 +37,7 @@ def _create_nodes(num_nodes, title, parent=None, levels=2):
     for i in range(num_nodes):
         new_node = ContentNode.objects.create(title=title, parent=parent, kind=topic)
         # create a couple levels for testing purposes
-        if i > 0 and levels > 1 and i % (old_div(num_nodes, levels)) == 0:
+        if i > 0 and levels > 1 and i % (num_nodes // levels) == 0:
             parent = new_node
 
 
