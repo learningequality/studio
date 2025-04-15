@@ -4,13 +4,11 @@ import sys
 
 from django.core.management import call_command
 from django.core.management.base import BaseCommand
-from django.db import connection
 from django.db import Error as DBError
 from le_utils.constants import content_kinds
 from le_utils.constants import file_formats
 from le_utils.constants import format_presets
 from le_utils.constants import licenses
-from pgvector.django import VectorExtension
 
 from contentcuration.models import ContentNode
 from contentcuration.models import ContentTag
@@ -41,14 +39,6 @@ TAGS = ["Tag 1", "Tag 2", "Tag 3"]
 SORT_ORDER = 0
 
 
-def enable_pgvector_extension(connection):
-    """
-    Enables pgvector extension in postgres.
-    """
-    with connection.cursor() as cursor:
-        cursor.execute("CREATE EXTENSION IF NOT EXISTS %s;" % VectorExtension().name)
-
-
 class Command(BaseCommand):
 
     def add_arguments(self, parser):
@@ -69,9 +59,6 @@ class Command(BaseCommand):
             call_command("createcachetable")
         except DBError as e:
             logging.error('Error creating cache table: {}'.format(str(e)))
-
-        # Enable pgvector extension.
-        enable_pgvector_extension(connection)
 
         # Run migrations
         call_command('migrate')

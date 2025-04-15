@@ -20,8 +20,6 @@ from contentcuration.models import ChannelHistory
 from contentcuration.models import ChannelSet
 from contentcuration.models import ContentNode
 from contentcuration.models import CONTENTNODE_TREE_ID_CACHE_KEY
-from contentcuration.models import Embeddings
-from contentcuration.models import EmbeddingsContentNode
 from contentcuration.models import File
 from contentcuration.models import FILE_DURATION_CONSTRAINT
 from contentcuration.models import FlagFeedbackEvent
@@ -1036,53 +1034,6 @@ class ChannelHistoryTestCase(StudioTestCase):
         ChannelHistory.prune()
         self.assertEqual(2, ChannelHistory.objects.count())
         self.assertEqual(2, ChannelHistory.objects.filter(id__in=last_history_ids).count())
-
-
-class EmbeddingsTestCase(StudioTestCase):
-    persist_bucket = True
-
-    @classmethod
-    def setUpClass(cls):
-        super(EmbeddingsTestCase, cls).setUpClass()
-        cls.create_bucket()
-        node_1 = testdata.node({
-            "kind_id": "video",
-            "title": "first"
-        })
-        node_2 = testdata.node({
-            "kind_id": "video",
-            "title": "second"
-        })
-        node_3 = testdata.node({
-            "kind_id": "video",
-            "title": "third"
-        })
-
-        embedded_node_1 = EmbeddingsContentNode.objects.create(cid=node_1.content_id, contentnode=node_1)
-        embedded_node_2 = EmbeddingsContentNode.objects.create(cid=node_2.content_id, contentnode=node_2)
-        embedded_node_3 = EmbeddingsContentNode.objects.create(cid=node_3.content_id, contentnode=node_3)
-
-        # Two closely placed vectors i.e. they are similar.
-        Embeddings.objects.create(model="studio-embedder-v1.0", embedded_node=embedded_node_1, embedding=[2, 3])
-        Embeddings.objects.create(model="studio-embedder-v1.0", embedded_node=embedded_node_2, embedding=[2, 2])
-        # A vector placed at far distance i.e. not similar to above vectors.
-        Embeddings.objects.create(model="studio-embedder-v1.0", embedded_node=embedded_node_3, embedding=[4, 1])
-
-    @classmethod
-    def tearDownClass(cls):
-        super(EmbeddingsTestCase, cls).tearDownClass()
-        cls.delete_bucket()
-
-    def test_can_create_embeddings(self):
-        embeddings_count = Embeddings.objects.count()
-        self.assertEqual(embeddings_count, 3)
-
-    def test_get_nearest_neighbors(self):
-        from pgvector.django import L2Distance
-        import numpy as np
-        # Get the nearest neighbor of [2, 3] which is [2, 2].
-        closest_embedding = list(Embeddings.objects.order_by(L2Distance('embedding', [2, 3]))[1:2])[0]
-        self.assertTrue(np.array_equal(closest_embedding.embedding, np.array([2, 2])))
 
 
 class FeedbackModelTests(StudioTestCase):
