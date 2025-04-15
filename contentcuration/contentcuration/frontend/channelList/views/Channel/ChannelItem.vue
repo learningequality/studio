@@ -190,7 +190,9 @@
                       icon="trash"
                     />
                   </VListTileAvatar>
-                  <VListTileTitle>{{ $tr('deleteChannel') }}</VListTileTitle>
+                  <VListTileTitle>
+                    {{ canEdit ? $tr('deleteChannel') : $tr('removeChannel') }}
+                  </VListTileTitle>
                 </VListTile>
               </VList>
             </Menu>
@@ -202,14 +204,14 @@
     <!-- Delete dialog -->
     <KModal
       v-if="deleteDialog"
-      :title="$tr('deleteTitle')"
-      :submitText="$tr('deleteChannel')"
+      :title="canEdit ? $tr('deleteTitle') : $tr('removeTitle')"
+      :submitText="canEdit ? $tr('deleteChannel') : $tr('removeBtn')"
       :cancelText="$tr('cancel')"
       data-test="delete-modal"
       @submit="handleDelete"
       @cancel="deleteDialog = false"
     >
-      {{ $tr('deletePrompt') }}
+      {{ canEdit ? $tr('deletePrompt') : $tr('removePrompt') }}
     </KModal>
     <!-- Copy dialog -->
     <ChannelTokenModal
@@ -350,7 +352,7 @@
           const currentUserId = this.$store.state.session.currentUser.id;
           this.removeViewer({ channelId: this.channelId, userId: currentUserId }).then(() => {
             this.deleteDialog = false;
-            this.$store.dispatch('showSnackbarSimple', this.$tr('channelDeletedSnackbar'));
+            this.$store.dispatch('showSnackbarSimple', this.$tr('channelRemovedSnackbar'));
           });
         } else {
           this.deleteChannel(this.channelId).then(() => {
@@ -382,8 +384,14 @@
       copyToken: 'Copy channel token',
       deleteChannel: 'Delete channel',
       deleteTitle: 'Delete this channel',
+      removeChannel: 'Remove from channel list',
+      removeBtn: 'Remove',
+      removeTitle: 'Remove from channel list',
       deletePrompt: 'This channel will be permanently deleted. This cannot be undone.',
+      removePrompt:
+        'You have view-only access to this channel. Confirm that you want to remove it from your list of channels.',
       channelDeletedSnackbar: 'Channel deleted',
+      channelRemovedSnackbar: 'Channel removed',
       channelLanguageNotSetIndicator: 'No language set',
       cancel: 'Cancel',
     },
