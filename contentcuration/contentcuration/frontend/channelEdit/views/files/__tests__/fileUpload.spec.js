@@ -109,13 +109,11 @@ describe('fileUpload', () => {
       wrapper.setData({
         selected: 'file-1',
         showRemoveFileWarning: false,
-        isRemoveFileApproved: false,
       });
       wrapper.setMethods({ deleteFile });
       uploadItem.vm.$emit('remove', testFiles[0]);
 
       expect(wrapper.vm.showRemoveFileWarning).toBe(true);
-      expect(wrapper.vm.isRemoveFileApproved).toBe(false);
 
       const modal = wrapper.find('[data-test="remove-file-warning"]');
       expect(modal.exists()).toBe(true);
