@@ -3,6 +3,9 @@ import { isNodeComplete } from 'shared/utils/validation';
 import db from 'shared/data/db';
 import { TABLE_NAMES } from 'shared/data/constants';
 
+// We implement a retry mechanism to ensure that we wait for retrival of contentnode
+// when all the nodes for the
+// currently displayed topic in the tree view are reloaded
 function updateNodeComplete(nodeId, context, maxTries = 10, delayMs = 100) {
   let tries = 0;
 
