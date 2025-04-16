@@ -32,7 +32,7 @@
             :allowFileRemove="allowFileRemove"
             :uploadCompleteHandler="handleUploadComplete"
             @selected="selected = item.file.id"
-            @remove="handleRemoveFile"
+            @remove="showRemoveFileWarning = primaryFileCount > 1"
           />
         </VList>
       </VFlex>
@@ -69,7 +69,7 @@
       :title="$tr('removeFile')"
       :submitText="$tr('yesButton')"
       :cancelText="$tr('cancelButton')"
-      @submit="handleRemoveFileApproval"
+      @submit="handleRemoveFile"
       @cancel="showRemoveFileWarning = false"
     >
       <p>{{ $tr("removeFileDescription", { fileTypes: allowedFileTypes }) }}</p>
@@ -104,7 +104,6 @@
       return {
         selected: null,
         showRemoveFileWarning: false,
-        isRemoveFileApproved: false,
       };
     },
     computed: {
@@ -184,27 +183,14 @@
           eventLabel: 'Related file',
         });
       },
-      handleRemoveFile(file) {
-        if (this.primaryFileCount > 1 && !this.isRemoveFileApproved) {
-          this.showRemoveFileWarning = true;
-        } else {
-          this.deleteFile(file);
-          if (file.id === this.selected) {
-            this.selectFirstFile();
-          }
-          this.showRemoveFileWarning = false;
-          this.isRemoveFileApproved = false;
-        }
-      },
-      handleRemoveFileApproval() {
-        this.isRemoveFileApproved = true;
+      handleRemoveFile() {
         const selectedFile = this.files.find(f => f.id === this.selected);
         if (selectedFile) {
-          this.handleRemoveFile(selectedFile);
-        } else {
-          this.showRemoveFileWarning = false;
-          this.isRemoveFileApproved = false;
+          this.deleteFile(selectedFile).then(() => {
+            this.selectFirstFile();
+          });
         }
+        this.showRemoveFileWarning = false;
       },
     },
     $trs: {
