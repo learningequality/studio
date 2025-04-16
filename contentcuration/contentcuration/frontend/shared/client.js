@@ -44,7 +44,7 @@ const pendingRequests = new Set();
 const abortController = new AbortController();
 
 window.addEventListener('navigate', () => {
-  // Create a fresh AbortController to ensure proper cancellation of requests 
+  // Create a fresh AbortController to ensure proper cancellation of requests
   // for each navigation and prevent interference from previous aborts.
   const newAbortController = new AbortController();
   abortController.signal = newAbortController.signal;
