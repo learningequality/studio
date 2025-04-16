@@ -1,6 +1,5 @@
+import { AssessmentItemTypes, ContentModalities, DELAYED_VALIDATION } from 'shared/constants';
 import { getAssessmentItemErrors } from 'shared/utils/validation';
-import { DELAYED_VALIDATION } from 'shared/constants';
-
 /**
  * Get assessment items of a node.
  */
@@ -33,18 +32,23 @@ export function getAssessmentItemsErrors(state, getters, rootState, rootGetters)
     const assessmentItemsErrors = {};
 
     const contentNode = rootGetters['contentNode/getContentNode'](contentNodeId);
+    const modality = contentNode?.extra_fields?.options?.modality;
 
     if (!state.assessmentItemsMap || !state.assessmentItemsMap[contentNodeId]) {
       return assessmentItemsErrors;
     }
     Object.keys(state.assessmentItemsMap[contentNodeId]).forEach(assessmentItemId => {
       const assessmentItem = state.assessmentItemsMap[contentNodeId][assessmentItemId];
+      const freeResponseInvalid =
+        modality !== ContentModalities.SURVEY &&
+        assessmentItem.type === AssessmentItemTypes.FREE_RESPONSE;
+
       if (ignoreDelayed && assessmentItem[DELAYED_VALIDATION]) {
         assessmentItemsErrors[assessmentItemId] = [];
       } else {
         assessmentItemsErrors[assessmentItemId] = getAssessmentItemErrors(
           assessmentItem,
-          contentNode
+          freeResponseInvalid
         );
       }
     });
