@@ -288,7 +288,7 @@ class CompletionCriteriaSerializer(JSONFieldDictSerializer):
 
 
 class ExtraFieldsOptionsSerializer(JSONFieldDictSerializer):
-    modality = ChoiceField(choices=(("QUIZ", "Quiz"),("SURVEY","Survey")), allow_null=True, required=False)
+    modality = ChoiceField(choices=(("QUIZ", "Quiz"), ("SURVEY", "Survey")), allow_null=True, required=False)
     completion_criteria = CompletionCriteriaSerializer(required=False)
 
 
@@ -688,6 +688,11 @@ class ContentNodePagination(ValuesViewsetCursorPagination):
         value = request.query_params.get(self.cursor_query_param)
         if value is None:
             return None
+
+        try:
+            value = int(value)
+        except ValueError:
+            raise ValidationError("lft must be an integer but an invalid value was given.")
 
         return Cursor(offset=0, reverse=False, position=value)
 
