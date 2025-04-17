@@ -17,14 +17,26 @@ from contentcuration.tests.viewsets.base import generate_create_event
 from contentcuration.tests.viewsets.base import generate_delete_event
 from contentcuration.tests.viewsets.base import generate_deploy_channel_event
 from contentcuration.tests.viewsets.base import generate_publish_channel_event
+from contentcuration.tests.viewsets.base import generate_publish_staging_tree_event
 from contentcuration.tests.viewsets.base import generate_sync_channel_event
 from contentcuration.tests.viewsets.base import generate_update_event
 from contentcuration.tests.viewsets.base import SyncTestMixin
 from contentcuration.viewsets.channel import _unpublished_changes_query
 from contentcuration.viewsets.sync.constants import CHANNEL
+from mock import patch
 
 
 class SyncTestCase(SyncTestMixin, StudioAPITestCase):
+    @classmethod
+    def setUpClass(cls):
+        super(SyncTestCase, cls).setUpClass()
+        cls.patch_copy_db = patch('contentcuration.utils.publish.save_export_database')
+        cls.mock_save_export = cls.patch_copy_db.start()
+
+    @classmethod
+    def tearDownClass(cls):
+        super(SyncTestCase, cls).tearDownClass()
+        cls.patch_copy_db.stop()
 
     @property
     def channel_metadata(self):
@@ -390,6 +402,61 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         )
 
         self.assertEqual(_unpublished_changes_query(channel).count(), 0)
+
+    def test_publish_staging_tree(self):
+        channel = testdata.channel()
+        user = testdata.user()
+        channel.editors.add(user)
+        self.client.force_authenticate(
+            user
+        )  # This will skip all authentication checks
+
+        channel.staging_tree = testdata.tree()
+        node = testdata.node({
+            'kind_id': 'video', 'title': 'title', 'children': []})
+        node.complete = True
+        node.parent = channel.staging_tree
+        node.save()
+        channel.staging_tree.save()
+        channel.save()
+        self.assertEqual(channel.staging_tree.published, False)
+
+        response = self.sync_changes(
+                    [
+                        generate_publish_staging_tree_event(channel.id)
+                    ]
+                )
+
+        self.assertEqual(response.status_code, 200)
+        modified_channel = models.Channel.objects.get(id=channel.id)
+        self.assertEqual(modified_channel.staging_tree.published, True)
+
+    def test_publish_staging_tree_incomplete(self):
+        channel = testdata.channel()
+        user = testdata.user()
+        channel.editors.add(user)
+        self.client.force_authenticate(
+            user
+        )  # This will skip all authentication checks
+
+        channel.staging_tree = cc.ContentNode(
+            kind_id=content_kinds.TOPIC, title="test", node_id="aaa"
+        )
+        channel.staging_tree.save()
+        channel.save()
+        self.assertEqual(channel.staging_tree.published, False)
+
+        response = self.sync_changes(
+                    [
+                        generate_publish_staging_tree_event(channel.id)
+                    ]
+                )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(
+            "Channel is not ready to be published" in response.json()["errors"][0]["errors"][0])
+        modified_channel = models.Channel.objects.get(id=channel.id)
+        self.assertEqual(modified_channel.staging_tree.published, False)
 
 
 class CRUDTestCase(StudioAPITestCase):
