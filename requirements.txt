@@ -155,7 +155,7 @@ jsonschema==4.17.3
     # via -r requirements.in
 kombu==5.2.4
     # via celery
-le-utils==0.2.7
+le-utils==0.2.10
     # via -r requirements.in
 packaging==24.0
     # via
