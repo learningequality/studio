@@ -192,7 +192,7 @@
 </script>
 
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .v-autocomplete {
     display: inline-block;
@@ -228,7 +228,7 @@
     }
   }
 
-  /deep/ a {
+  ::v-deep a {
     text-decoration: none !important;
 
     &:hover {
@@ -236,7 +236,7 @@
     }
   }
 
-  /deep/ .v-list__tile {
+  ::v-deep .v-list__tile {
     width: 100%;
   }
 

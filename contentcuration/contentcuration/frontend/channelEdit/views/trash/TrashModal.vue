@@ -311,7 +311,7 @@
   };
 
 </script>
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .show-more-button-container {
     display: flex;

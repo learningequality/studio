@@ -12,7 +12,6 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('kolibri_public', '0005_alter_localfile_extension'),
-        ('contentcuration', '0151_embeddings_embeddingscontentnode'),
     ]
 
     operations = [

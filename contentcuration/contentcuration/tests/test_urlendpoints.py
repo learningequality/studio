@@ -1,7 +1,4 @@
-from __future__ import absolute_import
-
 import importlib
-from builtins import str
 
 from django.conf import settings
 from django.urls import reverse

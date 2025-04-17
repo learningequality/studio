@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 import json
 
 import pytest
@@ -39,7 +37,7 @@ class ChannelTestCase(BaseAPITestCase):
     def test_readonly_fields(self):
         original_version = self.channel.version
         url = reverse_lazy("channel-list") + "/" + self.channel.pk
-        response = self.put(
+        self.put(
             url,
             {
                 "version": original_version + 1,

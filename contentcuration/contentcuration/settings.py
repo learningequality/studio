@@ -15,7 +15,6 @@ import os
 import re
 import sys
 from datetime import timedelta
-from tempfile import gettempdir
 
 from django.utils.timezone import now
 
@@ -84,7 +83,6 @@ INSTALLED_APPS = (
     'django_s3_storage',
     'webpack_loader',
     'django_filters',
-    'mathfilters',
     'django.contrib.postgres',
     'django_celery_results',
     'kolibri_public',
@@ -137,22 +135,6 @@ MIDDLEWARE = (
     'contentcuration.middleware.db_readonly.DatabaseReadOnlyMiddleware',
     # 'django.middleware.cache.FetchFromCacheMiddleware',
 )
-
-if os.getenv("PROFILE_STUDIO_FULL"):
-    MIDDLEWARE = MIDDLEWARE + ("pyinstrument.middleware.ProfilerMiddleware",)
-    PYINSTRUMENT_PROFILE_DIR = os.getenv("PROFILE_DIR") or "{}/profile".format(
-        gettempdir()
-    )
-elif os.getenv("PROFILE_STUDIO_FILTER"):
-    MIDDLEWARE = MIDDLEWARE + ("customizable_django_profiler.cProfileMiddleware",)
-    PROFILER = {
-        "activate": True,
-        "output": ["dump", "console"],
-        "count": "10",
-        "file_location": os.getenv("PROFILE_DIR")
-        or "{}/profile/studio".format(gettempdir()),
-        "trigger": "query_param:{}".format(os.getenv("PROFILE_STUDIO_FILTER")),
-    }
 
 if os.getenv("GCLOUD_ERROR_REPORTING"):
     MIDDLEWARE = (
@@ -293,8 +275,9 @@ LANGUAGES = (
     # ('en-PT', gettext('English - Pirate')),
 )
 
+PRODUCTION_SITE_ID = 1
 SITE_BY_ID = {
-    'master': 1,
+    'master': PRODUCTION_SITE_ID,
     'unstable': 3,
     'hotfixes': 4,
 }

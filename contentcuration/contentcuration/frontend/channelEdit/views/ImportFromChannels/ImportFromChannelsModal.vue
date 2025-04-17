@@ -274,7 +274,7 @@
 </script>
 
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .modal-container.fluid {
     display: flex;

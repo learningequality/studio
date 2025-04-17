@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 import uuid
 
 from django.urls import reverse
@@ -19,6 +17,7 @@ from contentcuration.models import AssessmentItem
 from contentcuration.models import Channel
 from contentcuration.models import ContentTag
 from contentcuration.models import File
+from contentcuration.models import License
 from contentcuration.tests import testdata
 from contentcuration.tests.base import StudioAPITestCase
 from contentcuration.tests.viewsets.base import generate_create_event
@@ -49,8 +48,8 @@ class SyncTestCase(StudioTestCase):
 
         # Put all nodes into a clean state so we can track when syncing
         # causes changes in the tree.
-        mark_all_nodes_as_published(self.channel)
-        mark_all_nodes_as_published(self.derivative_channel)
+        mark_all_nodes_as_published(self.channel.main_tree)
+        mark_all_nodes_as_published(self.derivative_channel.main_tree)
 
     def _add_temp_file_to_content_node(self, node):
         new_file = create_temp_file("mybytes")
@@ -346,6 +345,43 @@ class SyncTestCase(StudioTestCase):
         for key, value in labels.items():
             self.assertEqual(getattr(target_child, key), value)
 
+    def test_sync_license_description(self):
+        """
+        Test that the license description field is synced correctly
+        Added as a regression test, as this was previously omitted.
+        """
+        self.assertFalse(self.channel.has_changes())
+        self.assertFalse(self.derivative_channel.has_changes())
+
+        contentnode = (
+            self.channel.main_tree.get_descendants()
+            .exclude(kind_id=content_kinds.TOPIC)
+            .first()
+        )
+
+        special_permissions_license = License.objects.get(license_name="Special Permissions")
+
+        contentnode.license = special_permissions_license
+        contentnode.license_description = "You cannot use this content on a Thursday"
+        contentnode.copyright_holder = "Thursday's child has far to go"
+        contentnode.save()
+
+        sync_channel(
+            self.derivative_channel,
+            sync_titles_and_descriptions=False,
+            sync_resource_details=True,
+            sync_files=False,
+            sync_assessment_items=False,
+        )
+
+        target_child = self.derivative_channel.main_tree.get_descendants().get(
+            source_node_id=contentnode.node_id
+        )
+
+        self.assertEqual(target_child.license, special_permissions_license)
+        self.assertEqual(target_child.license_description, "You cannot use this content on a Thursday")
+        self.assertEqual(target_child.copyright_holder, "Thursday's child has far to go")
+
     def test_sync_channel_other_metadata_labels(self):
         """
         Test that calling sync channel will also bring in other metadata label updates.
@@ -420,6 +456,7 @@ class ContentIDTestCase(SyncTestMixin, StudioAPITestCase):
             "name": "le_studio_file",
             "file_format": file_formats.MP3,
             "preset": format_presets.AUDIO,
+            "duration": 17,
         }
 
     def _upload_file_to_contentnode(self, file_metadata=None, contentnode_id=None):

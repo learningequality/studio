@@ -64,6 +64,7 @@
 
 <script>
 
+  import get from 'lodash/get';
   import uniqBy from 'lodash/uniqBy';
   import sortBy from 'lodash/sortBy';
   import { mapGetters } from 'vuex';
@@ -99,6 +100,10 @@
     },
     computed: {
       ...mapGetters('file', ['getContentNodeFileById', 'getContentNodeFiles']),
+      ...mapGetters('contentNode', ['getContentNode']),
+      contentNode() {
+        return this.getContentNode(this.nodeId);
+      },
       file() {
         return this.getContentNodeFileById(this.nodeId, this.fileId);
       },
@@ -129,7 +134,8 @@
         return this.file.file_format === 'epub';
       },
       htmlPath() {
-        return `/zipcontent/${this.file.checksum}.${this.file.file_format}`;
+        const entry = get(this.contentNode, ['extra_fields', 'options', 'entry'], 'index.html');
+        return `/zipcontent/${this.file.checksum}.${this.file.file_format}/${entry}`;
       },
       src() {
         return this.file && this.file.url;
@@ -148,9 +154,9 @@
 
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
-  @max-height: calc(100vh - 96px);
+  $max-height: calc(100vh - 96px);
 
   .v-card,
   video,
@@ -168,11 +174,11 @@
   iframe,
   .epub {
     min-height: 200px;
-    max-height: @max-height;
+    max-height: $max-height;
   }
 
   video {
-    max-height: @max-height;
+    max-height: $max-height;
   }
 
   .message-card,
@@ -187,14 +193,14 @@
   }
 
   .fullscreen {
-    min-height: @max-height;
+    min-height: $max-height;
 
     .v-card,
     audio,
     embed,
     iframe,
     .epub {
-      min-height: @max-height;
+      min-height: $max-height;
     }
   }
 

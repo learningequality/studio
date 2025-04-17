@@ -1,11 +1,6 @@
-from __future__ import absolute_import
-from __future__ import print_function
-
 import functools
 import json
 import os
-from builtins import str
-from builtins import zip
 
 from django.urls import reverse_lazy
 

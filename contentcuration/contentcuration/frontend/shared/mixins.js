@@ -261,6 +261,11 @@ export const metadataStrings = createTranslator('CommonMetadataStrings', {
     context:
       'One of the completion criteria types specific to exercises. An exercise with this criteria represents a quiz.',
   },
+  survey: {
+    message: 'Survey',
+    context:
+      'One of the completion criteria types specific to exercises. An exercise with this criteria represents a survey.',
+  },
 
   // Learning Activities
   all: {

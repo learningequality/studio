@@ -1,5 +1,3 @@
-from __future__ import division
-
 import itertools
 import json
 import logging as logmodule
@@ -10,7 +8,6 @@ import time
 import traceback
 import uuid
 import zipfile
-from builtins import str
 from copy import deepcopy
 from itertools import chain
 
@@ -42,8 +39,6 @@ from le_utils.constants import exercises
 from le_utils.constants import file_formats
 from le_utils.constants import format_presets
 from le_utils.constants import roles
-from past.builtins import basestring
-from past.utils import old_div
 from search.models import ChannelFullTextSearch
 from search.models import ContentNodeFullTextSearch
 from search.utils import get_fts_annotated_channel_qs
@@ -74,6 +69,10 @@ class NoNodesChangedError(Exception):
 
 
 class ChannelIncompleteError(Exception):
+    pass
+
+
+class NoneContentNodeTreeError(Exception):
     pass
 
 
@@ -116,17 +115,17 @@ def send_emails(channel, user_id, version_notes=''):
             user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL, html_message=message)
 
 
-def create_content_database(channel, force, user_id, force_exercises, progress_tracker=None):
+def create_content_database(channel, force, user_id, force_exercises, progress_tracker=None, use_staging_tree=False):
     """
     :type progress_tracker: contentcuration.utils.celery.ProgressTracker|None
     """
     # increment the channel version
-    if not force:
+    if not use_staging_tree and not force:
         raise_if_nodes_are_all_unchanged(channel)
     fh, tempdb = tempfile.mkstemp(suffix=".sqlite3")
 
     with using_content_database(tempdb):
-        if not channel.main_tree.publishing:
+        if not use_staging_tree and not channel.main_tree.publishing:
             channel.mark_publishing(user_id)
 
         call_command("migrate",
@@ -135,8 +134,9 @@ def create_content_database(channel, force, user_id, force_exercises, progress_t
                      no_input=True)
         if progress_tracker:
             progress_tracker.track(10)
+        base_tree = channel.staging_tree if use_staging_tree else channel.main_tree
         tree_mapper = TreeMapper(
-            channel.main_tree,
+            base_tree,
             channel.language,
             channel.id,
             channel.name,
@@ -146,14 +146,16 @@ def create_content_database(channel, force, user_id, force_exercises, progress_t
             inherit_metadata=bool(channel.ricecooker_version),
         )
         tree_mapper.map_nodes()
-        kolibri_channel = map_channel_to_kolibri_channel(channel)
+        kolibri_channel = map_channel_to_kolibri_channel(channel, use_staging_tree)
         # It should be at this percent already, but just in case.
         if progress_tracker:
             progress_tracker.track(90)
-        map_prerequisites(channel.main_tree)
+        map_prerequisites(base_tree)
+         # Need to save as version being published, not current version
+        version = "next" if use_staging_tree else channel.version + 1
         save_export_database(
-            channel.pk, channel.version + 1
-        )  # Need to save as version being published, not current version
+            channel.pk, version, use_staging_tree,
+        )
         if channel.public:
             mapper = ChannelMapper(kolibri_channel)
             mapper.run()
@@ -208,7 +210,7 @@ class TreeMapper:
         self.root_node = root_node
         task_percent_total = 80.0
         total_nodes = root_node.get_descendant_count() + 1  # make sure we include root_node
-        self.percent_per_node = old_div(task_percent_total, total_nodes)
+        self.percent_per_node = task_percent_total / float(total_nodes)
         self.progress_tracker = progress_tracker
         self.default_language = default_language
         self.channel_id = channel_id
@@ -511,7 +513,7 @@ def create_perseus_exercise(ccnode, kolibrinode, exercise_data, user_id=None):
 
 def parse_assessment_metadata(ccnode):
     extra_fields = ccnode.extra_fields
-    if isinstance(extra_fields, basestring):
+    if isinstance(extra_fields, str):
         extra_fields = json.loads(extra_fields)
     extra_fields = migrate_extra_fields(extra_fields) or {}
     randomize = extra_fields.get('randomize') if extra_fields.get('randomize') is not None else True
@@ -737,8 +739,9 @@ def map_prerequisites(root_node):
             logging.error('Unable to find source node for prerequisite relationship {}'.format(str(e)))
 
 
-def map_channel_to_kolibri_channel(channel):
+def map_channel_to_kolibri_channel(channel, use_staging_tree=False):
     logging.debug("Generating the channel metadata.")
+    base_tree = channel.staging_tree if use_staging_tree else channel.main_tree
     kolibri_channel = kolibrimodels.ChannelMetadata.objects.create(
         id=channel.id,
         name=channel.name,
@@ -746,8 +749,8 @@ def map_channel_to_kolibri_channel(channel):
         tagline=channel.tagline,
         version=channel.version + 1,  # Need to save as version being published, not current version
         thumbnail=channel.icon_encoding,
-        root_pk=channel.main_tree.node_id,
-        root_id=channel.main_tree.node_id,
+        root_pk=base_tree.node_id,
+        root_id=base_tree.node_id,
         min_schema_version=MIN_SCHEMA_VERSION,  # Need to modify Kolibri so we can import this without importing models
     )
     logging.info("Generated the channel metadata.")
@@ -810,25 +813,27 @@ def raise_if_nodes_are_all_unchanged(channel):
     logging.info("Some nodes are changed.")
 
 
-def mark_all_nodes_as_published(channel):
+def mark_all_nodes_as_published(tree):
     logging.debug("Marking all nodes as published.")
 
-    channel.main_tree.get_family().update(changed=False, published=True)
+    tree.get_family().update(changed=False, published=True)
 
     logging.info("Marked all nodes as published.")
 
 
-def save_export_database(channel_id, version):
+def save_export_database(channel_id, version, use_staging_tree=False):
     logging.debug("Saving export database")
     current_export_db_location = get_active_content_database()
     target_paths = [
         os.path.join(
-            settings.DB_ROOT, "{id}.sqlite3".format(id=channel_id)
-        ),
-        os.path.join(
             settings.DB_ROOT, "{}-{}.sqlite3".format(channel_id, version)
-        ),
+        )
     ]
+    # Only create non-version path if not using the staging tree
+    if not use_staging_tree:
+        target_paths.append(
+            os.path.join(settings.DB_ROOT, "{id}.sqlite3".format(id=channel_id)
+        ))
 
     for target_export_db_location in target_paths:
         with open(current_export_db_location, 'rb') as currentf:
@@ -924,30 +929,43 @@ def publish_channel(
     send_email=False,
     progress_tracker=None,
     language=settings.LANGUAGE_CODE,
+    use_staging_tree=False,
 ):
     """
     :type progress_tracker: contentcuration.utils.celery.ProgressTracker|None
     """
     channel = ccmodels.Channel.objects.get(pk=channel_id)
+    base_tree = channel.staging_tree if use_staging_tree else channel.main_tree
+    if base_tree is None:
+        tree_name = "staging_tree" if use_staging_tree else "main_tree"
+        raise NoneContentNodeTreeError(f"{tree_name} is None!")
     kolibri_temp_db = None
     start = time.time()
     try:
         set_channel_icon_encoding(channel)
-        kolibri_temp_db = create_content_database(channel, force, user_id, force_exercises, progress_tracker=progress_tracker)
-        increment_channel_version(channel)
+        kolibri_temp_db = create_content_database(
+            channel,
+            force,
+            user_id,
+            force_exercises,
+            progress_tracker=progress_tracker,
+            use_staging_tree=use_staging_tree,
+        )
         add_tokens_to_channel(channel)
-        sync_contentnode_and_channel_tsvectors(channel_id=channel.id)
-        mark_all_nodes_as_published(channel)
-        fill_published_fields(channel, version_notes)
+        if not use_staging_tree:
+            increment_channel_version(channel)
+            sync_contentnode_and_channel_tsvectors(channel_id=channel.id)
+            mark_all_nodes_as_published(base_tree)
+            fill_published_fields(channel, version_notes)
 
         # Attributes not getting set for some reason, so just save it here
-        channel.main_tree.publishing = False
-        channel.main_tree.changed = False
-        channel.main_tree.published = True
-        channel.main_tree.save()
+        base_tree.publishing = False
+        base_tree.changed = False
+        base_tree.published = True
+        base_tree.save()
 
         # Delete public channel cache.
-        if channel.public:
+        if not use_staging_tree and channel.public:
             delete_public_channel_cache_keys()
 
         if send_email:
@@ -965,8 +983,8 @@ def publish_channel(
     finally:
         if kolibri_temp_db and os.path.exists(kolibri_temp_db):
             os.remove(kolibri_temp_db)
-        channel.main_tree.publishing = False
-        channel.main_tree.save()
+        base_tree.publishing = False
+        base_tree.save()
 
     elapsed = time.time() - start
 

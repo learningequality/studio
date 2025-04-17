@@ -25,9 +25,9 @@
 
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
-  /deep/ .v-list__tile {
+  ::v-deep .v-list__tile {
     padding-left: 0;
   }
 

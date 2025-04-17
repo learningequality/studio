@@ -1,6 +1,4 @@
 import logging as logmodule
-from builtins import object
-from builtins import str
 
 from django.conf import settings
 from django.contrib.sites.models import Site

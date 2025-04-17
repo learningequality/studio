@@ -453,7 +453,7 @@
 
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .item {
     position: relative;
