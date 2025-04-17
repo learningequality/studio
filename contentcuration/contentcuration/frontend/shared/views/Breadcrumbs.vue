@@ -114,7 +114,7 @@
         this.$nextTick(() => {
           if (this.$refs.breadcrumb) {
             for (var i = this.$refs.breadcrumb.length - 1; i >= 0; --i) {
-              totalWidth += this.$refs.breadcrumb[i].$el.offsetWidth + 40;
+              totalWidth += this.$refs.breadcrumb[i].$el.offsetWidth + 68;
 
               // Bounds exceeded, go back to previous index
               if (totalWidth >= maxWidth - 48) {
