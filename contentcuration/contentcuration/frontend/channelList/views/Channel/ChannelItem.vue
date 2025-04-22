@@ -110,6 +110,7 @@
               :to="channelDetailsLink"
             >
               <KIconButton
+                v-if="loggedIn"
                 :color="$themeTokens.primary"
                 data-test="details-button"
                 class="mr-1"
@@ -125,6 +126,14 @@
               :tooltip="$tr('copyToken')"
               data-test="token-button"
               @click.stop.prevent="tokenDialog = true"
+            />
+            <KIconButton
+              v-if="!loggedIn && channel.published"
+              class="mr-1"
+              icon="openNewTab"
+              :tooltip="$tr('viewOnKolibri')"
+              data-test="view-on-kolibri"
+              @click.stop.prevent="viewOnKolibri"
             />
             <ChannelStar
               v-if="loggedIn"
@@ -329,10 +338,11 @@
       },
       showOptions() {
         return (
-          this.allowEdit ||
-          this.channel.source_url ||
-          this.channel.demo_server_url ||
-          (this.channel.published && this.allowEdit)
+          this.loggedIn &&
+          (this.allowEdit ||
+            this.channel.source_url ||
+            this.channel.demo_server_url ||
+            (this.channel.published && this.allowEdit))
         );
       },
       linkToChannelTree() {
@@ -385,6 +395,11 @@
           eventLabel: this.channel.primary_token,
         });
       },
+      viewOnKolibri() {
+        if (this.channel.demo_server_url) {
+          window.open(this.channel.demo_server_url, '_blank');
+        }
+      },
     },
     $trs: {
       resourceCount: '{count, plural,\n =1 {# resource}\n other {# resources}}',
@@ -408,6 +423,7 @@
       channelRemovedSnackbar: 'Channel removed',
       channelLanguageNotSetIndicator: 'No language set',
       cancel: 'Cancel',
+      viewOnKolibri: 'View on Kolibri',
     },
   };
 
