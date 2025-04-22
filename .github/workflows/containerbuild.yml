@@ -6,7 +6,6 @@ on:
     - unstable
     - hotfixes
     - master
-    - search-recommendations
     tags:
     - 'v*'
   pull_request:

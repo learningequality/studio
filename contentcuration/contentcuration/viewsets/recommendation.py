@@ -1,3 +1,4 @@
+import logging
 from http import HTTPStatus
 
 import jsonschema
@@ -9,6 +10,8 @@ from rest_framework.views import APIView
 
 from contentcuration.utils.automation_manager import AutomationManager
 from contentcuration.viewsets.user import IsAIFeatureEnabledForUser
+
+logger = logging.getLogger(__name__)
 
 
 class RecommendationView(APIView):
@@ -27,15 +30,20 @@ class RecommendationView(APIView):
 
             embed_topics_request.validate(request_data)
         except jsonschema.ValidationError as e:
-            return JsonResponse({"error": f"Required fields missing: {str(e)}"}, status=HTTPStatus.BAD_REQUEST)
+            logger.error("Schema validation error: %s", str(e))
+            return JsonResponse({"error": "Invalid request data. Please check the required fields."}, status=HTTPStatus.BAD_REQUEST)
 
         try:
             recommendations = self.manager.load_recommendations(request_data, override_threshold)
             return JsonResponse(data=recommendations, safe=False)
         except (ValueError, TypeError) as e:
-            return JsonResponse({"error": str(e)}, status=HTTPStatus.BAD_REQUEST)
+            logger.error("Validation error occurred: %s", str(e), exc_info=True)
+            return JsonResponse({"error": "Invalid input provided."},
+                                status=HTTPStatus.BAD_REQUEST)
         except ConnectionError as e:
-            return JsonResponse({"error": f"Recommendation service unavailable: {str(e)}"},
+            logger.error("Connection error occurred: %s", str(e), exc_info=True)
+            return JsonResponse({"error": "Recommendation service unavailable"},
                                 status=HTTPStatus.SERVICE_UNAVAILABLE)
         except Exception as e:
-            return HttpResponseServerError(f"Unable to load recommendations: {str(e)}")
+            logger.error("Unexpected error occurred: %s", str(e), exc_info=True)
+            return HttpResponseServerError("Unable to load recommendations")
