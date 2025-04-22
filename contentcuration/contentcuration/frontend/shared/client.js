@@ -63,12 +63,10 @@ client.interceptors.request.use(config => {
 
 client.interceptors.response.use(
   response => {
-    // Remove from pending requests on success
     pendingRequests.delete(response.config);
     return response;
   },
   error => {
-    // Remove from pending requests on error
     if (error.config) {
       pendingRequests.delete(error.config);
     }
