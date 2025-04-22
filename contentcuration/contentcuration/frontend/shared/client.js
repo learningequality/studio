@@ -40,7 +40,6 @@ window.addEventListener('offline', () => {
 
 const pendingRequests = new Set();
 
-// Create an AbortController for managing pending requests
 const abortController = new AbortController();
 
 window.addEventListener('navigate', () => {
@@ -49,7 +48,6 @@ window.addEventListener('navigate', () => {
   const newAbortController = new AbortController();
   abortController.signal = newAbortController.signal;
 
-  // Abort pending requests when navigation begins
   abortController.abort();
 });
 
@@ -57,9 +55,7 @@ window.addEventListener('beforeunload', () => {
   abortController.abort();
 });
 
-// Add request interceptor to track pending requests
 client.interceptors.request.use(config => {
-  // Add signal to the request config
   config.signal = abortController.signal;
   pendingRequests.add(config);
   return config;
@@ -77,10 +73,9 @@ client.interceptors.response.use(
       pendingRequests.delete(error.config);
     }
 
-    // Ignore specific types of errors
     if (
       isCancel(error) ||
-      (error.response && [302, 403, 404, 405, 412].includes(error.response.status)) // added 302
+      (error.response && [302, 403, 404, 405, 412].includes(error.response.status))
     ) {
       return Promise.reject(error);
     }
