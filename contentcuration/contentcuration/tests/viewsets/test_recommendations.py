@@ -67,26 +67,28 @@ class CRUDTestCase(StudioAPITestCase):
     def test_recommend_invalid_data_empty_data(self):
         self.client.force_authenticate(user=self.admin_user)
 
+        error_message = "Invalid request data. Please check the required fields."
         invalid_data = {}
         response = self.client.post(reverse("recommendations"), data=invalid_data,
                                     format="json")
         self.assertEqual(response.status_code, 400)
-        self.assertIn("topics", response.json()['error'])
+        self.assertIn(error_message, response.json()['error'])
 
     def test_recommend_invalid_data_wrong_topic_data(self):
         self.client.force_authenticate(user=self.admin_user)
 
+        error_message = "Invalid request data. Please check the required fields."
         invalid_data = {'topics': [{'ramdon_field': "random_value"}]}
         response = self.client.post(reverse("recommendations"), data=invalid_data,
                                     format="json")
         self.assertEqual(response.status_code, 400)
-        self.assertIn("ramdon_field", response.json()['error'])
+        self.assertEqual(error_message, response.json()['error'])
 
     @patch("contentcuration.utils.automation_manager.AutomationManager.load_recommendations")
     def test_recommendation_invalid_data_formats(self, mock_load_recommendations):
         self.client.force_authenticate(user=self.admin_user)
 
-        error_message = "Invalid topic format"
+        error_message = "Invalid input provided."
         mock_load_recommendations.side_effect = ValueError(error_message)
 
         response = self.client.post(reverse("recommendations"), data=self.topics,
@@ -100,27 +102,25 @@ class CRUDTestCase(StudioAPITestCase):
     def test_recommendation_service_unavailable(self, mock_load_recommendations):
         self.client.force_authenticate(user=self.admin_user)
 
-        error_message = "Connection error"
+        error_message = "Recommendation service unavailable"
         mock_load_recommendations.side_effect = ConnectionError(error_message)
 
         response = self.client.post(reverse("recommendations"), data=self.topics,
                                     format="json")
 
         self.assertEqual(response.status_code, 503)
-        self.assertEqual(response.json(),
-                         {"error": f"Recommendation service unavailable: {error_message}"})
+        self.assertEqual(response.json(), {"error": error_message})
         mock_load_recommendations.assert_called_once()
 
     @patch("contentcuration.utils.automation_manager.AutomationManager.load_recommendations")
     def test_recommendation_generic_error(self, mock_load_recommendations):
         self.client.force_authenticate(user=self.admin_user)
 
-        error_message = "Unexpected internal error"
+        error_message = "Unable to load recommendations"
         mock_load_recommendations.side_effect = RuntimeError(error_message)
         response = self.client.post(reverse("recommendations"), data=self.topics,
                                     format="json")
 
         self.assertEqual(response.status_code, 500)
-        self.assertEqual(response.content.decode(),
-                         f"Unable to load recommendations: {error_message}")
+        self.assertEqual(response.content.decode(), error_message)
         mock_load_recommendations.assert_called_once()
