@@ -81,11 +81,6 @@ client.interceptors.response.use(
     let message = error.message;
     const status = error.response?.status || 0;
 
-    // Suppress contentnode query errors
-    if (url.includes('contentnode')) {
-      return Promise.reject(error);
-    }
-
     message = message ? `${message}: [${status}] ${url}` : `Network Error: [${status}] ${url}`;
 
     if (process.env.NODE_ENV !== 'production') {
