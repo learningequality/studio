@@ -675,4 +675,8 @@
     margin-top: -4px !important;
   }
 
+  ::v-deep .v-dialog__content {
+    z-index: 5 !important;
+  }
+
 </style>
