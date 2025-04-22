@@ -76,11 +76,37 @@ describe('channelItem', () => {
     wrapper.find('[data-test="token-listitem"]').trigger('click');
     expect(wrapper.vm.tokenDialog).toBe(true);
   });
-  it('clicking delete button in dialog should delete the channel', () => {
+  it('when user can edit, clicking delete button in dialog should call deleteChannel', async () => {
+    const deleteChannelSpy = jest.fn().mockResolvedValue();
+    const removeViewerSpy = jest.fn().mockResolvedValue();
+    wrapper = makeWrapper(true, deleteStub);
+    wrapper.setMethods({
+      deleteChannel: deleteChannelSpy,
+      removeViewer: removeViewerSpy,
+    });
+
     wrapper.setData({ deleteDialog: true });
     wrapper.find('[data-test="delete-modal"]').trigger('submit');
-    wrapper.vm.$nextTick(() => {
-      expect(deleteStub).toHaveBeenCalled();
+    await wrapper.vm.$nextTick(() => {
+      expect(deleteChannelSpy).toHaveBeenCalledWith(channelId);
+      expect(removeViewerSpy).not.toHaveBeenCalled();
+    });
+  });
+
+  it('when user cannot edit, clicking delete button in dialog should call removeViewer', async () => {
+    const deleteChannelSpy = jest.fn().mockResolvedValue();
+    const removeViewerSpy = jest.fn().mockResolvedValue();
+    wrapper = makeWrapper(false, deleteStub);
+    wrapper.setMethods({
+      deleteChannel: deleteChannelSpy,
+      removeViewer: removeViewerSpy,
+    });
+
+    wrapper.setData({ deleteDialog: true });
+    wrapper.find('[data-test="delete-modal"]').trigger('submit');
+    await wrapper.vm.$nextTick(() => {
+      expect(removeViewerSpy).toHaveBeenCalledWith({ channelId, userId: 0 });
+      expect(deleteChannelSpy).not.toHaveBeenCalled();
     });
   });
 
