@@ -37,7 +37,11 @@
     <template #footer>
       <KFixedGrid :numCols="2">
         <KFixedGridItem alignment="right">
-          <KIconButton icon="openNewTab" />
+          <KIconButton
+            icon="openNewTab"
+            :tooltip="$tr('goToLocationTooltip')"
+            @click.stop="goToLocation"
+          />
           <KIconButton icon="thumbDown" />
         </KFixedGridItem>
       </KFixedGrid>
@@ -52,7 +56,10 @@
   import find from 'lodash/find';
   import LearningActivities from 'kolibri-constants/labels/LearningActivities';
   import { mapState } from 'vuex';
-  import { ContentKindLearningActivityDefaults } from 'shared/leUtils/ContentKinds';
+  import {
+    ContentKindLearningActivityDefaults,
+    ContentKindsNames,
+  } from 'shared/leUtils/ContentKinds';
   import Checkbox from 'shared/views/form/Checkbox';
   import ContentNodeLearningActivityIcon from 'shared/views/ContentNodeLearningActivityIcon';
 
@@ -86,6 +93,16 @@
           return Boolean(find(this.selected, { id: node.id }));
         };
       },
+      goToLocationUrl() {
+        const baseUrl = window.Urls.channel(this.node.channel_id);
+        if (this.isTopic) {
+          return `${baseUrl}#/${this.node.id}`;
+        }
+        return `${baseUrl}#/${this.node.parent}/${this.node.id}`;
+      },
+      isTopic() {
+        return this.node.kind === ContentKindsNames.TOPIC;
+      },
     },
     methods: {
       toggleSelected(node) {
@@ -94,9 +111,13 @@
       onClick() {
         this.$emit('preview', this.node);
       },
+      goToLocation() {
+        window.open(this.goToLocationUrl, '_blank');
+      },
     },
     $trs: {
       selectCard: 'Select { title }',
+      goToLocationTooltip: 'Go to location',
     },
   };
 
