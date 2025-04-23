@@ -156,7 +156,7 @@ kombu==5.5.2
     # via celery
 le-utils==0.2.10
     # via -r requirements.in
-packaging==24.2
+packaging==25.0
     # via
     #   -r requirements.in
     #   django-js-reverse
