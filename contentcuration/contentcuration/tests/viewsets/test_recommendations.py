@@ -1,3 +1,4 @@
+from automation.utils.appnexus import errors
 from django.urls import reverse
 from mock import patch
 
@@ -89,7 +90,7 @@ class CRUDTestCase(StudioAPITestCase):
         self.client.force_authenticate(user=self.admin_user)
 
         error_message = "Invalid input provided."
-        mock_load_recommendations.side_effect = ValueError(error_message)
+        mock_load_recommendations.side_effect = errors.InvalidRequest(error_message)
 
         response = self.client.post(reverse("recommendations"), data=self.topics,
                                     format="json")
@@ -103,7 +104,7 @@ class CRUDTestCase(StudioAPITestCase):
         self.client.force_authenticate(user=self.admin_user)
 
         error_message = "Recommendation service unavailable"
-        mock_load_recommendations.side_effect = ConnectionError(error_message)
+        mock_load_recommendations.side_effect = errors.ConnectionError(error_message)
 
         response = self.client.post(reverse("recommendations"), data=self.topics,
                                     format="json")
@@ -117,7 +118,7 @@ class CRUDTestCase(StudioAPITestCase):
         self.client.force_authenticate(user=self.admin_user)
 
         error_message = "Unable to load recommendations"
-        mock_load_recommendations.side_effect = RuntimeError(error_message)
+        mock_load_recommendations.side_effect = errors.HttpError(error_message)
         response = self.client.post(reverse("recommendations"), data=self.topics,
                                     format="json")
 

@@ -2,6 +2,7 @@ import logging
 from http import HTTPStatus
 
 import jsonschema
+from automation.utils.appnexus import errors
 from django.http import HttpResponseServerError
 from django.http import JsonResponse
 from le_utils.validators import embed_topics_request
@@ -36,14 +37,14 @@ class RecommendationView(APIView):
         try:
             recommendations = self.manager.load_recommendations(request_data, override_threshold)
             return JsonResponse(data=recommendations, safe=False)
-        except (ValueError, TypeError) as e:
-            logger.error("Validation error occurred: %s", str(e), exc_info=True)
+        except errors.InvalidRequest:
             return JsonResponse({"error": "Invalid input provided."},
                                 status=HTTPStatus.BAD_REQUEST)
-        except ConnectionError as e:
-            logger.error("Connection error occurred: %s", str(e), exc_info=True)
+        except errors.ConnectionError:
             return JsonResponse({"error": "Recommendation service unavailable"},
                                 status=HTTPStatus.SERVICE_UNAVAILABLE)
-        except Exception as e:
-            logger.error("Unexpected error occurred: %s", str(e), exc_info=True)
+        except errors.TimeoutError:
+            return JsonResponse({"error": "Connection to recommendation service timed out"},
+                                status=HTTPStatus.REQUEST_TIMEOUT)
+        except errors.HttpError:
             return HttpResponseServerError("Unable to load recommendations")
