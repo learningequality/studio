@@ -78,7 +78,9 @@
     computed: {
       ...mapState('importFromChannels', ['selected']),
       channelName() {
-        return this.node.title;
+        const ancestors = this.node.ancestors || [];
+        const channel = ancestors.find(ancestor => ancestor.id === this.node.channel_id);
+        return channel ? channel.title : this.node.title;
       },
       learningActivities() {
         if (this.node.learning_activities && Object.keys(this.node.learning_activities).length) {

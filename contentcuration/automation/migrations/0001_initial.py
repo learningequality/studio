@@ -20,7 +20,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
                 ('request_hash', models.CharField(max_length=32, null=True)),
-                ('topic_id', models.UUIDField(blank=True, null=True)),
+                ('topic_id', models.UUIDField()),
                 ('rank', models.IntegerField(default=0, null=True)),
                 ('override_threshold', models.BooleanField(default=False)),
                 ('timestamp', models.DateTimeField(auto_now_add=True)),

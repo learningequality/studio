@@ -13,7 +13,7 @@ CONTENTNODE_INDEX_NAME = "contentnode_idx"
 class RecommendationsCache(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     request_hash = models.CharField(max_length=32, null=True)
-    topic_id = models.UUIDField(null=True, blank=True)
+    topic_id = models.UUIDField()
     contentnode = models.ForeignKey(
         ContentNode,
         null=True,
