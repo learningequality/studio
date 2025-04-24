@@ -11,6 +11,9 @@ from django.db.models import Q
 from django.db.models import Value
 from django.db.models.functions import Cast
 from django.db.models.functions import Concat
+from django.http import HttpResponseBadRequest
+from django.http.response import HttpResponseForbidden
+from django.http.response import HttpResponseNotFound
 from django_filters.rest_framework import BooleanFilter
 from django_filters.rest_framework import CharFilter
 from django_filters.rest_framework import FilterSet
@@ -19,6 +22,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import BasePermission
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.status import HTTP_204_NO_CONTENT
 
 from contentcuration.constants import feature_flags
 from contentcuration.models import boolean_val
@@ -266,6 +270,30 @@ class ChannelUserViewSet(ReadOnlyValuesViewset):
 
     def delete_from_changes(self, changes):
         return self._handle_relationship_changes(changes)
+
+    @action(detail=True, methods=['delete'])
+    def remove_self(self, request, pk=None):
+        """
+        Allows a user to remove themselves from a channel as a viewer.
+        """
+        user = self.get_object()
+        channel_id = request.query_params.get('channel_id', None)
+
+        if not channel_id:
+            return HttpResponseBadRequest('Channel ID is required.')
+
+        channel = Channel.objects.get(id=channel_id)
+        if not channel:
+            return HttpResponseNotFound("Channel not found {}".format(channel_id))
+
+        if request.user != user and not request.user.can_edit(channel_id):
+            return HttpResponseForbidden("You do not have permission to remove this user {}".format(user.id))
+
+        if channel.viewers.filter(id=user.id).exists():
+            channel.viewers.remove(user)
+            return Response(status=HTTP_204_NO_CONTENT)
+        else:
+            return HttpResponseBadRequest('User is not a viewer of this channel.')
 
 
 class AdminUserFilter(FilterSet):

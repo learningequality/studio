@@ -281,3 +281,13 @@ export function getAudioData(context, url) {
       .catch(reject);
   });
 }
+
+export function downloadFile(context, { url, fileName }) {
+  const anchor = document.createElement('a');
+  anchor.download = fileName;
+  anchor.href = url;
+  anchor.style.display = 'none';
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+}

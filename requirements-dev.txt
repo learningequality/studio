@@ -53,7 +53,7 @@ nodeenv==1.9.1
     # via
     #   -r requirements-dev.in
     #   pre-commit
-packaging==24.2
+packaging==25.0
     # via
     #   -c requirements.txt
     #   build

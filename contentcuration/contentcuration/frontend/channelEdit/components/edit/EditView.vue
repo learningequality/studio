@@ -78,7 +78,11 @@
                   </li>
                 </ul>
               </VAlert>
-              <DetailsTabView :key="nodeIds.join('-')" ref="detailsTab" :nodeIds="nodeIds" />
+              <DetailsTabView
+                :key="nodeIds.join('-')"
+                ref="detailsTab"
+                :nodeIds="nodeIds"
+              />
             </VTabItem>
             <VTabItem :key="tabs.QUESTIONS" ref="questionwindow" :value="tabs.QUESTIONS" lazy>
               <AssessmentTab :nodeId="nodeIds[0]" />

@@ -2,7 +2,7 @@
 
   <div style="width: 100%;">
     <VCard
-      v-if="!primaryFileMapping.length"
+      v-if="!primaryFileCount"
       data-test="error"
       flat
     >
@@ -14,10 +14,32 @@
       </VCardText>
     </VCard>
     <VLayout v-else row wrap>
-      <VFlex sm12 md6 lg5 xl4>
+      <VFlex sm12 md12 lg12 xl12>
         <p>
           <ContentNodeIcon :kind="node.kind" includeText />
         </p>
+      </VFlex>
+      <VFlex sm12 md6 lg7 xl7 class="pr-4">
+        <h3>
+          {{ $tr('filesHeader') }}
+        </h3>
+        <VList threeLine>
+          <FileUploadItem
+            v-for="item in primaryFileMapping"
+            :key="item.preset.id"
+            :file="item.file"
+            :preset="item.preset"
+            :allowFileRemove="allowFileRemove"
+            :uploadCompleteHandler="handleUploadComplete"
+            @selected="selected = item.file.id"
+            @remove="showRemoveFileWarning = primaryFileCount > 1"
+          />
+        </VList>
+      </VFlex>
+      <VFlex sm12 md6 lg5 xl5>
+        <h3 v-if="selectedFilename" class="mb-3">
+          {{ selectedFilename }}
+        </h3>
         <div class="preview-wrapper">
           <VCard v-if="!primaryFileCount" flat class="mb-2 message-card">
             <VLayout align-center justify-center fill-height>
@@ -39,32 +61,19 @@
           />
         </div>
       </VFlex>
-      <VFlex sm12 md6 lg7 xl8>
-        <VContainer fluid>
-          <VLayout alignStart>
-            <VRadioGroup
-              v-model="selected"
-              hide-details
-              :label="$tr('filesHeader')"
-              class="subheading"
-            >
-              <VList threeLine>
-                <FileUploadItem
-                  v-for="item in primaryFileMapping"
-                  :key="item.preset.id"
-                  :file="item.file"
-                  :preset="item.preset"
-                  :allowFileRemove="allowFileRemove"
-                  :uploadCompleteHandler="handleUploadComplete"
-                  @selected="selected = item.file.id"
-                  @remove="handleRemoveFile"
-                />
-              </VList>
-            </VRadioGroup>
-          </VLayout>
-        </VContainer>
-      </VFlex>
     </VLayout>
+
+    <KModal
+      v-if="showRemoveFileWarning"
+      data-test="remove-file-warning"
+      :title="$tr('removeFile')"
+      :submitText="$tr('yesButton')"
+      :cancelText="$tr('cancelButton')"
+      @submit="handleRemoveFile"
+      @cancel="showRemoveFileWarning = false"
+    >
+      <p>{{ $tr("removeFileDescription", { fileTypes: allowedFileTypes }) }}</p>
+    </KModal>
   </div>
 
 </template>
@@ -94,6 +103,7 @@
     data() {
       return {
         selected: null,
+        showRemoveFileWarning: false,
       };
     },
     computed: {
@@ -118,21 +128,31 @@
         return this.fileCount > 1;
       },
       primaryFileCount() {
-        return this.files.filter(file => !file.preset.supplementary).length;
+        return this.primaryFileMapping.length;
       },
       primaryFileMapping() {
         return sortBy(
           this.presets
-            .filter(p => !p.supplementary)
             .map(preset => {
-              return {
-                preset,
-                order: preset.order,
-                file: this.files.find(file => file.preset.id === preset.id),
-              };
-            }),
+              const file = this.files.find(file => file.preset.id === preset.id);
+              if (!preset.supplementary && file) {
+                return { preset, order: preset.order, file };
+              }
+              return null;
+            })
+            .filter(item => item !== null),
           'order'
         );
+      },
+      selectedFilename() {
+        const file = this.files.find(f => f.id === this.selected);
+        return file ? file.original_filename : '';
+      },
+      allowedFileTypes() {
+        return this.presets
+          .filter(p => !p.supplementary && Array.isArray(p.allowed_formats))
+          .map(p => p.allowed_formats.join(', '))
+          .join(', ');
       },
     },
     watch: {
@@ -163,17 +183,25 @@
           eventLabel: 'Related file',
         });
       },
-      handleRemoveFile(file) {
-        this.deleteFile(file);
-        if (file.id === this.selected) {
-          this.selectFirstFile();
+      handleRemoveFile() {
+        const selectedFile = this.files.find(f => f.id === this.selected);
+        if (selectedFile) {
+          this.deleteFile(selectedFile).then(() => {
+            this.selectFirstFile();
+          });
         }
+        this.showRemoveFileWarning = false;
       },
     },
     $trs: {
-      filesHeader: 'Preview files',
+      filesHeader: 'Files',
       fileError: 'Unsupported file type',
       noFileText: 'Missing files',
+      removeFile: 'Remove file',
+      removeFileDescription:
+        'Once this file is removed, this resource will only be able to include a single file from the formats: { fileTypes }. Are you sure you want to continue?',
+      yesButton: 'Yes',
+      cancelButton: 'Cancel',
     },
   };
 

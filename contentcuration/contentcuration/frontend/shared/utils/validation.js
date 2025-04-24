@@ -109,6 +109,10 @@ function _isPracticeQuiz(node) {
   return get(node, 'extra_fields.options.modality') === ContentModalities.QUIZ;
 }
 
+function _isSurvey(node) {
+  return get(node, 'extra_fields.options.modality') === ContentModalities.SURVEY;
+}
+
 function _getLicense(node) {
   return node.license && Licenses.get(node.license.id || node.license);
 }
@@ -390,7 +394,7 @@ export function getNodeDetailsErrors(node) {
   // mastery is required on exercises but not on practice quizzes
   // Practice quiz requirements are set in the background, and separate validations
   // run to check this based on the completion_criteria in LE utils
-  if (node.kind === ContentKindsNames.EXERCISE && !_isPracticeQuiz(node)) {
+  if (node.kind === ContentKindsNames.EXERCISE && !_isPracticeQuiz(node) && !_isSurvey(node)) {
     const masteryModelErrors = getNodeMasteryModelErrors(node);
     const masteryModelMErrors = getNodeMasteryModelMErrors(node);
     const masteryModelNErrors = getNodeMasteryModelNErrors(node);
@@ -530,7 +534,7 @@ export function sanitizeAssessmentItem(assessmentItem, removeEmpty = false) {
  * @param {Object} assessmentItem An assessment item.
  * @returns {Array} An array of error codes.
  */
-export function getAssessmentItemErrors(assessmentItem) {
+export function getAssessmentItemErrors(assessmentItem, freeResponseInvalid = false) {
   const errors = [];
 
   // Don't validate perseus questions
@@ -551,6 +555,9 @@ export function getAssessmentItemErrors(assessmentItem) {
 
   if (!assessmentItem.question || !assessmentItem.question.trim()) {
     errors.push(ValidationErrors.QUESTION_REQUIRED);
+  }
+  if (freeResponseInvalid) {
+    errors.push(ValidationErrors.INVALID_COMPLETION_TYPE_FOR_FREE_RESPONSE_QUESTION);
   }
 
   switch (assessmentItem.type) {

@@ -45,6 +45,7 @@
                   :item="item"
                   :errors="itemErrors(item)"
                   :openDialog="openDialog"
+                  :nodeId="nodeId"
                   data-test="editor"
                   @update="onItemUpdate"
                   @close="closeActiveItem"
@@ -207,7 +208,6 @@
         if (!this.items) {
           return [];
         }
-
         return [...this.items].sort((item1, item2) => (item1.order > item2.order ? 1 : -1));
       },
       firstItem() {

@@ -67,7 +67,7 @@
     height: unset;
     min-height: min-content;
     padding: 0;
-    margin: 0;
+    margin: 0 0 0 1px;
     font-weight: normal;
     text-transform: none;
   }

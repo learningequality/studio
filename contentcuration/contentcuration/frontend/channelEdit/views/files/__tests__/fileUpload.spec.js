@@ -71,9 +71,9 @@ describe('fileUpload', () => {
   });
   describe('computed', () => {
     it('should map the files to the correct presets', () => {
-      expect(wrapper.vm.primaryFileMapping[1].file.id).toBe('file-3');
-      expect(wrapper.vm.primaryFileMapping[2].file.id).toBe('file-1');
-      expect(wrapper.vm.primaryFileMapping).toHaveLength(3);
+      expect(wrapper.vm.primaryFileMapping[0].file.id).toBe('file-3');
+      expect(wrapper.vm.primaryFileMapping[1].file.id).toBe('file-1');
+      expect(wrapper.vm.primaryFileMapping).toHaveLength(2);
     });
     it('should disallow file removal if there is only one primary file', () => {
       const testFiles2 = [
@@ -95,22 +95,31 @@ describe('fileUpload', () => {
   describe('methods', () => {
     let uploadItem;
     beforeEach(() => {
-      uploadItem = wrapper.findAll(FileUploadItem).at(2);
+      uploadItem = wrapper.findAll(FileUploadItem).at(0);
     });
     it('should automatically select the first file on load', () => {
       expect(wrapper.vm.selected).toBe('file-3');
     });
     it('selectPreview should select the preview when items are selected in the list', () => {
       uploadItem.vm.$emit('selected');
-      expect(wrapper.vm.selected).toBe('file-1');
+      expect(wrapper.vm.selected).toBe('file-3');
     });
-    it('emitted remove event should trigger delete file', () => {
+    it('emitted remove event should trigger removal dialog', () => {
       const deleteFile = jest.fn();
-      wrapper.setData({ selected: 'file-1' });
+      wrapper.setData({
+        selected: 'file-1',
+        showRemoveFileWarning: false,
+      });
       wrapper.setMethods({ deleteFile });
       uploadItem.vm.$emit('remove', testFiles[0]);
-      expect(deleteFile).toHaveBeenCalled();
-      expect(deleteFile.mock.calls[0][0]).toBe(testFiles[0]);
+
+      expect(wrapper.vm.showRemoveFileWarning).toBe(true);
+
+      const modal = wrapper.find('[data-test="remove-file-warning"]');
+      expect(modal.exists()).toBe(true);
+      expect(modal.isVisible()).toBe(true);
+
+      expect(deleteFile).not.toHaveBeenCalled();
     });
     it('calling uploadCompleteHandler should trigger update file', () => {
       const updateFile = jest.fn(() => Promise.resolve());

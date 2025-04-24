@@ -3,18 +3,33 @@ import { isNodeComplete } from 'shared/utils/validation';
 import db from 'shared/data/db';
 import { TABLE_NAMES } from 'shared/data/constants';
 
-function updateNodeComplete(nodeId, context) {
-  const node = context.rootGetters['contentNode/getContentNode'](nodeId);
-  const complete = isNodeComplete({
-    nodeDetails: node,
-    assessmentItems: context.getters.getAssessmentItems(nodeId),
-    files: context.rootGetters['file/getContentNodeFiles'](nodeId),
-  });
-  return context.dispatch(
-    'contentNode/updateContentNode',
-    { id: nodeId, complete },
-    { root: true }
-  );
+// We implement a retry mechanism to ensure that we wait for retrival of contentnode
+// when all the nodes for the
+// currently displayed topic in the tree view are reloaded
+function updateNodeComplete(nodeId, context, maxTries = 10, delayMs = 100) {
+  let tries = 0;
+
+  function tryUpdate() {
+    const node = context.rootGetters['contentNode/getContentNode'](nodeId);
+    if (node) {
+      const complete = isNodeComplete({
+        nodeDetails: node,
+        assessmentItems: context.getters.getAssessmentItems(nodeId),
+        files: context.rootGetters['file/getContentNodeFiles'](nodeId),
+      });
+      return context.dispatch(
+        'contentNode/updateContentNode',
+        { id: nodeId, complete },
+        { root: true }
+      );
+    } else if (tries < maxTries) {
+      tries++;
+      setTimeout(tryUpdate, delayMs);
+    } else {
+      console.error(`updateNodeComplete: Node ${nodeId} not found in Vuex after ${maxTries} tries`);
+    }
+  }
+  tryUpdate();
 }
 
 /**
