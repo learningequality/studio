@@ -17,7 +17,7 @@ from contentcuration.tests.viewsets.base import generate_create_event
 from contentcuration.tests.viewsets.base import generate_delete_event
 from contentcuration.tests.viewsets.base import generate_deploy_channel_event
 from contentcuration.tests.viewsets.base import generate_publish_channel_event
-from contentcuration.tests.viewsets.base import generate_publish_staging_tree_event
+from contentcuration.tests.viewsets.base import generate_publish_next_event
 from contentcuration.tests.viewsets.base import generate_sync_channel_event
 from contentcuration.tests.viewsets.base import generate_update_event
 from contentcuration.tests.viewsets.base import SyncTestMixin
@@ -403,7 +403,7 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
 
         self.assertEqual(_unpublished_changes_query(channel).count(), 0)
 
-    def test_publish_staging_tree(self):
+    def test_publish_next(self):
         channel = testdata.channel()
         user = testdata.user()
         channel.editors.add(user)
@@ -423,7 +423,7 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
 
         response = self.sync_changes(
                     [
-                        generate_publish_staging_tree_event(channel.id)
+                        generate_publish_next_event(channel.id)
                     ]
                 )
 
@@ -431,7 +431,7 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         modified_channel = models.Channel.objects.get(id=channel.id)
         self.assertEqual(modified_channel.staging_tree.published, True)
 
-    def test_publish_staging_tree_incomplete(self):
+    def test_publish_next_with_incomplete_staging_tree(self):
         channel = testdata.channel()
         user = testdata.user()
         channel.editors.add(user)
@@ -448,7 +448,7 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
 
         response = self.sync_changes(
                     [
-                        generate_publish_staging_tree_event(channel.id)
+                        generate_publish_next_event(channel.id)
                     ]
                 )
 

@@ -14,7 +14,7 @@ from contentcuration.viewsets.sync.constants import MOVED
 from contentcuration.viewsets.sync.constants import PUBLISHED
 from contentcuration.viewsets.sync.constants import UPDATED
 from contentcuration.viewsets.sync.constants import UPDATED_DESCENDANTS
-from contentcuration.viewsets.sync.constants import STAGING_TREE_PUBLISHED
+from contentcuration.viewsets.sync.constants import PUBLISHED_NEXT
 
 
 def validate_table(table):
@@ -89,8 +89,8 @@ def generate_update_descendants_event(key, mods, channel_id=None, user_id=None):
     event["mods"] = mods
     return event
 
-def generate_publish_staging_tree_event(key, version_notes="", language=None):
-    event = _generate_event(key, CHANNEL, STAGING_TREE_PUBLISHED, key, None)
+def generate_publish_next_event(key, version_notes="", language=None):
+    event = _generate_event(key, CHANNEL, PUBLISHED_NEXT, key, None)
     event["version_notes"] = version_notes
     event["language"] = language
     return event

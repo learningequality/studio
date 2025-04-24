@@ -560,18 +560,18 @@ class ChannelViewSet(ValuesViewset):
                 ], applied=True, unpublishable=True)
                 raise
 
-    def publish_staging_tree_from_changes(self, changes):
+    def publish_next_from_changes(self, changes):
         errors = []
         for publish in changes:
             try:
-                self.publish_staging_tree(publish["key"])
+                self.publish_next(publish["key"])
             except Exception as e:
                 log_sync_exception(e, user=self.request.user, change=publish)
                 publish["errors"] = [str(e)]
                 errors.append(publish)
         return errors
 
-    def publish_staging_tree(self, pk):
+    def publish_next(self, pk):
         logging.debug("Entering the publish staging channel endpoint")
 
         channel = self.get_edit_queryset().get(pk=pk)
