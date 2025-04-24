@@ -690,7 +690,7 @@ class ContentNodePagination(ValuesViewsetCursorPagination):
             return None
 
         try:
-            value = int(value)
+            value = int(float(value))
         except ValueError:
             raise ValidationError("lft must be an integer but an invalid value was given.")
 
