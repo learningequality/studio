@@ -15,6 +15,7 @@ from contentcuration.viewsets.sync.utils import generate_deploy_event as base_ge
 from contentcuration.viewsets.sync.utils import generate_publish_event as base_generate_publish_event
 from contentcuration.viewsets.sync.utils import generate_update_event as base_generate_update_event
 from contentcuration.viewsets.sync.utils import generate_update_descendants_event as base_generate_update_descendants_event
+from contentcuration.viewsets.sync.utils import generate_publish_next_event as base_generate_publish_next_event
 
 
 def generate_copy_event(*args, **kwargs):
@@ -63,6 +64,11 @@ def generate_update_descendants_event(*args, **kwargs):
 
 def generate_publish_channel_event(channel_id):
     event = base_generate_publish_event(channel_id)
+    event["rev"] = random.randint(1, 10000000)
+    return event
+
+def generate_publish_next_event(channel_id):
+    event = base_generate_publish_next_event(channel_id)
     event["rev"] = random.randint(1, 10000000)
     return event
 

@@ -14,6 +14,7 @@ from contentcuration.viewsets.sync.constants import MOVED
 from contentcuration.viewsets.sync.constants import PUBLISHED
 from contentcuration.viewsets.sync.constants import UPDATED
 from contentcuration.viewsets.sync.constants import UPDATED_DESCENDANTS
+from contentcuration.viewsets.sync.constants import PUBLISHED_NEXT
 
 
 def validate_table(table):
@@ -86,6 +87,12 @@ def generate_deploy_event(key, user_id):
 def generate_update_descendants_event(key, mods, channel_id=None, user_id=None):
     event = _generate_event(key, CONTENTNODE, UPDATED_DESCENDANTS, channel_id, user_id)
     event["mods"] = mods
+    return event
+
+def generate_publish_next_event(key, version_notes="", language=None):
+    event = _generate_event(key, CHANNEL, PUBLISHED_NEXT, key, None)
+    event["version_notes"] = version_notes
+    event["language"] = language
     return event
 
 def log_sync_exception(e, user=None, change=None, changes=None):

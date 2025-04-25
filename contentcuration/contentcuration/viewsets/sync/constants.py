@@ -8,6 +8,7 @@ PUBLISHED = 6
 SYNCED = 7
 DEPLOYED = 8
 UPDATED_DESCENDANTS = 9
+PUBLISHED_NEXT = 10
 
 
 ALL_CHANGES = set([
@@ -20,6 +21,7 @@ ALL_CHANGES = set([
     SYNCED,
     DEPLOYED,
     UPDATED_DESCENDANTS,
+    PUBLISHED_NEXT,
 ])
 
 # Client-side table constants

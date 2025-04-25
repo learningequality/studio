@@ -560,6 +560,55 @@ class ChannelViewSet(ValuesViewset):
                 ], applied=True, unpublishable=True)
                 raise
 
+    def publish_next_from_changes(self, changes):
+        errors = []
+        for publish in changes:
+            try:
+                self.publish_next(publish["key"])
+            except Exception as e:
+                log_sync_exception(e, user=self.request.user, change=publish)
+                publish["errors"] = [str(e)]
+                errors.append(publish)
+        return errors
+
+    def publish_next(self, pk):
+        logging.debug("Entering the publish staging channel endpoint")
+
+        channel = self.get_edit_queryset().get(pk=pk)
+
+        if channel.deleted:
+            raise ValidationError("Cannot publish a deleted channel")
+        elif channel.staging_tree.publishing:
+            raise ValidationError("Channel staging tree is already publishing")
+
+        channel.staging_tree.publishing = True
+        channel.staging_tree.save()
+
+        with create_change_tracker(pk, CHANNEL, channel.id, self.request.user,
+                                   "export-channel-staging-tree") as progress_tracker:
+            try:
+                channel = publish_channel(
+                    self.request.user.pk,
+                    channel.id,
+                    progress_tracker=progress_tracker,
+                    use_staging_tree=True,
+                )
+                Change.create_changes([
+                    generate_update_event(
+                        channel.id, CHANNEL, {
+                            "primary_token": channel.get_human_token().token,
+                        }, channel_id=channel.id
+                    ),
+                ], applied=True)
+            except ChannelIncompleteError:
+                channel.staging_tree.publishing = False
+                channel.staging_tree.save()
+                raise ValidationError("Channel is not ready to be published")
+            except Exception:
+                channel.staging_tree.publishing = False
+                channel.staging_tree.save()
+                raise
+
     def sync_from_changes(self, changes):
         errors = []
         for sync in changes:
