@@ -93,7 +93,7 @@ class ApiAddNodesToTreeTestCase(StudioTestCase):
                     "source_url": fileobj.source_url,
                 }
             ],
-            "kind": "document",
+            "kind": "video",
             "license": "CC BY",
             "license_description": None,
             "copyright_holder": random_data.copyright_holder,
@@ -296,6 +296,25 @@ class ApiAddNodesToTreeTestCase(StudioTestCase):
         self.assertEqual(response.status_code, 200, response.content)
         node = ContentNode.objects.get(title=invalid_file_data_node["title"])
         self.assertEqual(node.files.count(), 1)
+
+    def test_mismatched_kind_and_preset(self):
+        mismatched_kind_and_preset_node = self._make_node_data()
+        mismatched_kind_and_preset_node["title"] = "invalid file data title"
+        mismatched_kind_and_preset_node["kind"] = "document"
+        test_data = {
+            "root_id": self.root_node.id,
+            "content_data": [
+                mismatched_kind_and_preset_node,
+            ],
+        }
+
+        response = self.admin_client().post(
+            reverse_lazy("api_add_nodes_to_tree"), data=test_data, format="json"
+        )
+
+        self.assertEqual(response.status_code, 200, response.content)
+        node = ContentNode.objects.get(title=mismatched_kind_and_preset_node["title"])
+        self.assertFalse(node.complete)
 
 
 class ApiAddExerciseNodesToTreeTestCase(StudioTestCase):

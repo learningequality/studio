@@ -686,6 +686,7 @@ def convert_data_to_nodes(user, content_data, parent_node):  # noqa: C901
                     # Wait until after files have been set on the node to check for node completeness
                     # as some node kinds are counted as incomplete if they lack a default file.
                     completion_errors = new_node.mark_complete()
+                    new_node.save()
 
                     if completion_errors or file_errors:
                         try:

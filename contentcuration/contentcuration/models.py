@@ -1891,6 +1891,8 @@ class ContentNode(MPTTModel, models.Model):
                 errors.append("Missing required copyright holder")
             if self.kind_id != content_kinds.EXERCISE and not self.files.filter(preset__supplementary=False).exists():
                 errors.append("Missing default file")
+            if self.files.exclude(preset__kind_id=self.kind_id).exists():
+                errors.append("Node has files that do not match its kind")
             if self.kind_id == content_kinds.EXERCISE:
                 # Check to see if the exercise has at least one assessment item that has:
                 if not self.assessment_items.filter(
