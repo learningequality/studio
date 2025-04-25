@@ -276,6 +276,27 @@ class ApiAddNodesToTreeTestCase(StudioTestCase):
 
         self.assertEqual(response.status_code, 400, response.content)
 
+    def test_invalid_file_data_excluded(self):
+        invalid_file_data_node = self._make_node_data()
+        invalid_file_data_node["title"] = "invalid file data title"
+        bad_file = invalid_file_data_node["files"][0].copy()
+        bad_file["preset"] = format_presets.DOCUMENT_THUMBNAIL
+        invalid_file_data_node["files"] += [bad_file]
+        test_data = {
+            "root_id": self.root_node.id,
+            "content_data": [
+                invalid_file_data_node,
+            ],
+        }
+
+        response = self.admin_client().post(
+            reverse_lazy("api_add_nodes_to_tree"), data=test_data, format="json"
+        )
+
+        self.assertEqual(response.status_code, 200, response.content)
+        node = ContentNode.objects.get(title=invalid_file_data_node["title"])
+        self.assertEqual(node.files.count(), 1)
+
 
 class ApiAddExerciseNodesToTreeTestCase(StudioTestCase):
     """

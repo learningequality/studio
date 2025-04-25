@@ -651,7 +651,7 @@ def convert_data_to_nodes(user, content_data, parent_node):  # noqa: C901
                     if "source_channel_id" in node_data:
                         new_node = handle_remote_node(user, node_data, parent_node)
 
-                        map_files_to_node(user, new_node, node_data.get("files", []))
+                        file_errors = map_files_to_node(user, new_node, node_data.get("files", []))
 
                         add_tags(new_node, node_data)
 
@@ -660,7 +660,7 @@ def convert_data_to_nodes(user, content_data, parent_node):  # noqa: C901
                         new_node = create_node(node_data, parent_node, sort_order)
 
                         # Create files associated with node
-                        map_files_to_node(user, new_node, node_data["files"])
+                        file_errors = map_files_to_node(user, new_node, node_data["files"])
 
                         # Create questions associated exercise nodes
                         create_exercises(user, new_node, node_data["questions"])
@@ -687,10 +687,10 @@ def convert_data_to_nodes(user, content_data, parent_node):  # noqa: C901
                     # as some node kinds are counted as incomplete if they lack a default file.
                     completion_errors = new_node.mark_complete()
 
-                    if completion_errors:
+                    if completion_errors or file_errors:
                         try:
                             # we need to raise it to get Python to fill out the stack trace.
-                            raise IncompleteNodeError(new_node, completion_errors)
+                            raise IncompleteNodeError(new_node, completion_errors + file_errors)
                         except IncompleteNodeError as e:
                             report_exception(e)
 

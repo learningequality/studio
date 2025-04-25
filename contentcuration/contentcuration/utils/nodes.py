@@ -6,7 +6,6 @@ from io import BytesIO
 
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
-from django.core.exceptions import ValidationError
 from django.core.files.storage import default_storage
 from django.db.models import Count
 from django.db.models import Sum
@@ -43,6 +42,8 @@ def map_files_to_node(user, node, data):  # noqa: C901
     # filter out file that are empty
     valid_data = filter_out_nones(data)
 
+    errors = []
+
     for file_data in valid_data:
         filename = file_data["filename"]
         checksum, ext1 = os.path.splitext(filename)
@@ -50,6 +51,11 @@ def map_files_to_node(user, node, data):  # noqa: C901
 
         # Determine a preset if none is given
         kind_preset = FormatPreset.get_preset(file_data["preset"]) or FormatPreset.guess_format_preset(filename)
+        try:
+            kind_preset.allowed_formats.get(extension=ext)
+        except ObjectDoesNotExist:
+            errors.append(f"provided or inferred preset {kind_preset.id} does not allow files with extension {ext}")
+            continue
 
         file_path = generate_object_storage_name(checksum, filename)
         storage = default_storage
@@ -64,7 +70,8 @@ def map_files_to_node(user, node, data):  # noqa: C901
         except ObjectDoesNotExist:
             invalid_lang = file_data.get('language')
             logging.warning("file_data with language {} does not exist.".format(invalid_lang))
-            return ValidationError("file_data given was invalid; expected string, got {}".format(invalid_lang))
+            errors.append("file_data given was invalid; expected string, got {}".format(invalid_lang))
+            continue
 
         resource_obj = File(
             checksum=checksum,
@@ -95,6 +102,7 @@ def map_files_to_node(user, node, data):  # noqa: C901
                 'zoom': 0
             })
             node.save()
+    return errors
 
 
 def map_files_to_assessment_item(user, assessment_item, data):
@@ -145,10 +153,6 @@ def map_files_to_slideshow_slide_item(user, node, slides, files):
         checksum, ext = filename.split(".")
 
         matching_slide = next((slide for slide in slides if slide.metadata["checksum"] == checksum), None)
-
-        if not matching_slide:
-            # TODO(Jacob) Determine proper error type... raise it.
-            print("NO MATCH")
 
         file_path = generate_object_storage_name(checksum, filename)
         storage = default_storage
