@@ -316,6 +316,35 @@ class ApiAddNodesToTreeTestCase(StudioTestCase):
         node = ContentNode.objects.get(title=mismatched_kind_and_preset_node["title"])
         self.assertFalse(node.complete)
 
+    def test_invalid_file_duration_data_excluded(self):
+        invalid_file_data_node = self._make_node_data()
+        invalid_file_data_node["title"] = "invalid file data title"
+        image_file = create_studio_file("", preset=format_presets.VIDEO_THUMBNAIL, ext="jpg")["db_file"]
+        bad_file = {
+            "size": image_file.file_size,
+            "preset": format_presets.VIDEO_THUMBNAIL,
+            "filename": image_file.filename(),
+            "original_filename": image_file.original_filename,
+            "language": image_file.language,
+            "source_url": image_file.source_url,
+            "duration": 10,
+        }
+        invalid_file_data_node["files"] += [bad_file]
+        test_data = {
+            "root_id": self.root_node.id,
+            "content_data": [
+                invalid_file_data_node,
+            ],
+        }
+
+        response = self.admin_client().post(
+            reverse_lazy("api_add_nodes_to_tree"), data=test_data, format="json"
+        )
+
+        self.assertEqual(response.status_code, 200, response.content)
+        node = ContentNode.objects.get(title=invalid_file_data_node["title"])
+        self.assertEqual(node.files.count(), 1)
+
 
 class ApiAddExerciseNodesToTreeTestCase(StudioTestCase):
     """

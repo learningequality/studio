@@ -20,6 +20,7 @@ from contentcuration.models import File
 from contentcuration.models import FormatPreset
 from contentcuration.models import generate_object_storage_name
 from contentcuration.models import Language
+from contentcuration.models import MEDIA_PRESETS
 from contentcuration.models import User
 from contentcuration.utils.cache import ResourceSizeCache
 from contentcuration.utils.files import get_thumbnail_encoding
@@ -71,6 +72,10 @@ def map_files_to_node(user, node, data):  # noqa: C901
             invalid_lang = file_data.get('language')
             logging.warning("file_data with language {} does not exist.".format(invalid_lang))
             errors.append("file_data given was invalid; expected string, got {}".format(invalid_lang))
+            continue
+
+        if file_data.get("duration") and kind_preset.id not in MEDIA_PRESETS:
+            errors.append("duration was included for a file with a non-media preset")
             continue
 
         resource_obj = File(
