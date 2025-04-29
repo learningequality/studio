@@ -44,6 +44,7 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('--email', dest="email", default="a@a.com")
         parser.add_argument('--password', dest="password", default="a")
+        parser.add_argument('--clean-data-state', action='store_true', default=False, help='Sets database in clean state.')
 
     def handle(self, *args, **options):
         # Validate email
@@ -73,67 +74,68 @@ class Command(BaseCommand):
         user2 = create_user("user@b.com", "b", "User", "B")
         user3 = create_user("user@c.com", "c", "User", "C")
 
-        # Create channels
+        # Only create additional data when clean-data-state is False (i.e. default behaviour).
+        if options["clean_data_state"] is False:
+            # Create channels
+            channel1 = create_channel("Published Channel", DESCRIPTION, editors=[admin], bookmarkers=[user1, user2], public=True)
+            channel2 = create_channel("Ricecooker Channel", DESCRIPTION, editors=[admin, user1], bookmarkers=[user2], viewers=[user3])
+            channel3 = create_channel("Empty Channel", editors=[user3], viewers=[user2])
+            channel4 = create_channel("Imported Channel", editors=[admin])
 
-        channel1 = create_channel("Published Channel", DESCRIPTION, editors=[admin], bookmarkers=[user1, user2], public=True)
-        channel2 = create_channel("Ricecooker Channel", DESCRIPTION, editors=[admin, user1], bookmarkers=[user2], viewers=[user3])
-        channel3 = create_channel("Empty Channel", editors=[user3], viewers=[user2])
-        channel4 = create_channel("Imported Channel", editors=[admin])
+            # Invite admin to channel 3
+            try:
+                invitation, _new = Invitation.objects.get_or_create(
+                    invited=admin,
+                    sender=user3,
+                    channel=channel3,
+                    email=admin.email,
+                )
+                invitation.share_mode = "edit"
+                invitation.save()
+            except MultipleObjectsReturned:
+                # we don't care, just continue
+                pass
 
-        # Invite admin to channel 3
-        try:
-            invitation, _new = Invitation.objects.get_or_create(
-                invited=admin,
-                sender=user3,
-                channel=channel3,
-                email=admin.email,
-            )
-            invitation.share_mode = "edit"
-            invitation.save()
-        except MultipleObjectsReturned:
-            # we don't care, just continue
-            pass
+            # Create pool of tags
+            tags = []
+            for t in TAGS:
+                tag, _new = ContentTag.objects.get_or_create(tag_name=t, channel=channel1)
 
-        # Create pool of tags
-        tags = []
-        for t in TAGS:
-            tag, _new = ContentTag.objects.get_or_create(tag_name=t, channel=channel1)
+            # Generate file objects
+            document_file = create_file("Sample Document", format_presets.DOCUMENT, file_formats.PDF, user=admin)
+            video_file = create_file("Sample Video", format_presets.VIDEO_HIGH_RES, file_formats.MP4, user=admin)
+            subtitle_file = create_file("Sample Subtitle", format_presets.VIDEO_SUBTITLE, file_formats.VTT, user=admin)
+            audio_file = create_file("Sample Audio", format_presets.AUDIO, file_formats.MP3, user=admin)
+            html5_file = create_file("Sample HTML", format_presets.HTML5_ZIP, file_formats.HTML5, user=admin)
 
-        # Generate file objects
-        document_file = create_file("Sample Document", format_presets.DOCUMENT, file_formats.PDF, user=admin)
-        video_file = create_file("Sample Video", format_presets.VIDEO_HIGH_RES, file_formats.MP4, user=admin)
-        subtitle_file = create_file("Sample Subtitle", format_presets.VIDEO_SUBTITLE, file_formats.VTT, user=admin)
-        audio_file = create_file("Sample Audio", format_presets.AUDIO, file_formats.MP3, user=admin)
-        html5_file = create_file("Sample HTML", format_presets.HTML5_ZIP, file_formats.HTML5, user=admin)
+            # Populate channel 1 with content
+            generate_tree(channel1.main_tree, document_file, video_file, subtitle_file, audio_file, html5_file, user=admin, tags=tags)
 
-        # Populate channel 1 with content
-        generate_tree(channel1.main_tree, document_file, video_file, subtitle_file, audio_file, html5_file, user=admin, tags=tags)
+            # Populate channel 2 with staged content
+            channel2.ricecooker_version = "0.0.0"
+            channel2.save()
+            generate_tree(channel2.staging_tree, document_file, video_file, subtitle_file, audio_file, html5_file, user=admin, tags=tags)
 
-        # Populate channel 2 with staged content
-        channel2.ricecooker_version = "0.0.0"
-        channel2.save()
-        generate_tree(channel2.staging_tree, document_file, video_file, subtitle_file, audio_file, html5_file, user=admin, tags=tags)
+            # Import content from channel 1 into channel 4
+            channel1.main_tree.children.first().copy_to(channel4.main_tree)
 
-        # Import content from channel 1 into channel 4
-        channel1.main_tree.children.first().copy_to(channel4.main_tree)
+            # Get validation to be reflected in nodes properly
+            ContentNode.objects.all().update(complete=True)
+            call_command('mark_incomplete')
 
-        # Get validation to be reflected in nodes properly
-        ContentNode.objects.all().update(complete=True)
-        call_command('mark_incomplete')
+            # Mark this node as incomplete even though it is complete
+            # for testing purposes
+            node = ContentNode.objects.get(tree_id=channel1.main_tree.tree_id, title="Sample Audio")
+            node.complete = False
+            node.save()
 
-        # Mark this node as incomplete even though it is complete
-        # for testing purposes
-        node = ContentNode.objects.get(tree_id=channel1.main_tree.tree_id, title="Sample Audio")
-        node.complete = False
-        node.save()
+            # Publish
+            publish_channel(admin.id, channel1.pk)
 
-        # Publish
-        publish_channel(admin.id, channel1.pk)
-
-        # Add nodes to clipboard in legacy way
-        legacy_clipboard_nodes = channel1.main_tree.get_children()
-        for legacy_node in legacy_clipboard_nodes:
-            legacy_node.copy_to(target=user1.clipboard_tree)
+            # Add nodes to clipboard in legacy way
+            legacy_clipboard_nodes = channel1.main_tree.get_children()
+            for legacy_node in legacy_clipboard_nodes:
+                legacy_node.copy_to(target=user1.clipboard_tree)
 
         print("\n\n\nSETUP DONE: Log in as admin to view data (email: {}, password: {})\n\n\n".format(email, password))
 

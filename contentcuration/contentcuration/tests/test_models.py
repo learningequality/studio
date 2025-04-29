@@ -1,5 +1,4 @@
 import uuid
-from uuid import uuid4
 
 import mock
 import pytest
@@ -1067,7 +1066,7 @@ class FeedbackModelTests(StudioTestCase):
             user=self.user,
             target_channel_id=channel.id,
             time_hidden=timezone.now(),
-            content=[{'content_id': str(uuid4()), 'node_id': str(uuid4()), 'channel_id': str(uuid4()), 'score': 4}],
+            content=[{'content_id': str(uuid.uuid4()), 'node_id': str(uuid.uuid4()), 'channel_id': str(uuid.uuid4()), 'score': 4}],
             **base_feedback_data
         )
 
@@ -1119,7 +1118,7 @@ class FeedbackModelTests(StudioTestCase):
             user=self.user,
             target_channel_id=channel.id,
             time_hidden=timezone.now(),
-            content=[{'content_id': str(uuid4()), 'node_id': str(uuid4()), 'channel_id': str(uuid4()), 'score': 4}],
+            content=[{'content_id': str(uuid.uuid4()), 'node_id': str(uuid.uuid4()), 'channel_id': str(uuid.uuid4()), 'score': 4}],
             **base_feedback_data
         )
         self.assertEqual(len(recommendations_event.content), 1)

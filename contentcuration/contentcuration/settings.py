@@ -86,6 +86,7 @@ INSTALLED_APPS = (
     'django.contrib.postgres',
     'django_celery_results',
     'kolibri_public',
+    'automation',
 )
 
 SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"
@@ -425,3 +426,6 @@ if SENTRY_DSN and SENTRY_RELEASE and SENTRY_ENVIRONMENT:
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 LANGUAGE_COOKIE_AGE = 3600 * 24 * 14
+
+# Curriculum Automation Settings
+CURRICULUM_AUTOMATION_API_URL = os.getenv("CURRICULUM_AUTOMATION_API_URL")

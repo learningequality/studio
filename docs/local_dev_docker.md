@@ -63,7 +63,7 @@ make dcservicesdown
 ```
 
 ## Initializing Studio
-With the services running, in a separate terminal/terminal-tab, we can now initialize the database for Studio development purposes. The command below will initialize the database tables, import constants, and a user account for development:
+With the services running, in a separate terminal/terminal-tab, we can now initialize the database for Studio development purposes. The command below will initialize the database tables, import constants, enable required postgres extensions and a studio user account for development:
 ```bash
 yarn run devsetup
 ```

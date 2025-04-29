@@ -82,7 +82,6 @@ from contentcuration.viewsets.sync.constants import ALL_TABLES
 from contentcuration.viewsets.sync.constants import PUBLISHABLE_CHANGE_TABLES
 from contentcuration.viewsets.sync.constants import PUBLISHED
 
-
 EDIT_ACCESS = "edit"
 VIEW_ACCESS = "view"
 

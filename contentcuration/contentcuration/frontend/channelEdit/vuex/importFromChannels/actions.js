@@ -4,7 +4,7 @@ import client from 'shared/client';
 import urls from 'shared/urls';
 import { ChannelListTypes } from 'shared/constants';
 
-import { Channel, SavedSearch } from 'shared/data/resources';
+import { Channel, Recommendation, SavedSearch } from 'shared/data/resources';
 
 export async function fetchResourceSearchResults(context, params) {
   params = { ...params };
@@ -110,4 +110,8 @@ export function deleteSearch({ commit }, searchId) {
     commit('REMOVE_SAVEDSEARCH', searchId);
     return searchId;
   });
+}
+
+export function fetchRecommendations(context, params) {
+  return Recommendation.fetchCollection(params);
 }

@@ -718,8 +718,8 @@ export const metadataTranslationMixin = {
       } else if (nonconformingKeys[camelKey]) {
         key = nonconformingKeys[camelKey];
       } else if (
-        !metadataStrings.defaultMessages[key] &&
-        metadataStrings.defaultMessages[camelKey]
+        !metadataStrings._defaultMessages[key] &&
+        metadataStrings._defaultMessages[camelKey]
       ) {
         key = camelKey;
       }

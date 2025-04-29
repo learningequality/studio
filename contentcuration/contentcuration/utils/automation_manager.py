@@ -1,52 +1,44 @@
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Union
+
+from kolibri_public.models import ContentNode as PublicContentNode
+
+from contentcuration.models import ContentNode as ContentNode
 from contentcuration.utils.recommendations import RecommendationsAdapter
 from contentcuration.utils.recommendations import RecommendationsBackendFactory
 
 
 class AutomationManager:
     def __init__(self):
-        self.recommendations_backend_factory = RecommendationsBackendFactory()
-        self.recommendations_backend_instance = self.recommendations_backend_factory.create_backend()
-        self.recommendations_backend_adapter = RecommendationsAdapter(self.recommendations_backend_instance)
+        self.factory = RecommendationsBackendFactory()
+        self.instance = self.factory.create_backend()
+        self.adapter = RecommendationsAdapter(self.instance)
 
-    def generate_embedding(self, text):
+    def generate_embeddings(self, channel_id: str, nodes: List[Union[ContentNode, PublicContentNode]]):
         """
-        Generate an embedding vector for the given text.
-        Args:
-            text (str): The text for which to generate an embedding.
-        Returns:
-            Vector: The generated embedding vector.
-        """
-        embedding_vector = self.recommendations_backend_adapter.generate_embedding(text=text)
-        return embedding_vector
+        Generates embeddings for the given list of nodes. This process is async.
 
-    def embedding_exists(self, embedding):
-        """
-        Check if the given embedding vector exists.
-        Args:
-            embedding (Vector): The embedding vector to check.
-        Returns:
-            bool: True if the embedding exists, False otherwise.
-        """
-        return self.recommendations_backend_adapter.embedding_exists(embedding=embedding)
+        :param channel_id: The channel id to which the nodes belong.
+        :param nodes: The list of nodes for which to generate embeddings.
 
-    def load_recommendations(self, embedding):
+        :return: A boolean indicating that the process has started.
         """
-        Load recommendations based on the given embedding vector.
-        Args:
-            embedding (Vector): The embedding vector to use for recommendations.
-        Returns:
-            list: A list of recommended items.
-        """
-        # Need to extract the recommendation list from the ResponseObject and change the return statement
-        self.recommendations_backend_adapter.get_recommendations(embedding=embedding)
-        return []
+        return self.adapter.embed_content(channel_id, nodes)
 
-    def cache_embeddings(self, embeddings):
+    def load_recommendations(self, request_data: Dict[str, Any], override_threshold=False):
         """
-        Cache a list of embedding vectors.
-        Args:
-            embeddings (list): A list of embedding vectors to cache.
-        Returns:
-            bool: True if caching was successful, False otherwise.
+        Loads recommendations for the given topic(s).
+
+        :param request_data: Topic information necessary for recommendations retrieval. See
+        https://github.com/learningequality/le-utils/blob/main/spec/schema-embed_topics_request.json
+        :param override_threshold: A boolean flag to override the recommendation threshold.
+
+        :return: A dictionary containing a list of recommendations for the given topic(s).
         """
-        return self.recommendations_backend_adapter.cache_embeddings(embeddings)
+        recommendations = []
+        response = self.adapter.get_recommendations(request_data, override_threshold)
+        if hasattr(response, "results") and isinstance(response.results, list):
+            recommendations = response.results
+        return recommendations
