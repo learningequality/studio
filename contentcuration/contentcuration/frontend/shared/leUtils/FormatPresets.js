@@ -45,7 +45,7 @@ const FormatPresetsMap = new Map([
       order: 2,
       kind_id: 'audio',
       allowed_formats: ['png', 'jpg', 'jpeg'],
-      associated_mimetypes: ['image/png', 'image/jpeg'],
+      associated_mimetypes: ['image/jpeg', 'image/png'],
     },
   ],
   [
@@ -58,7 +58,7 @@ const FormatPresetsMap = new Map([
       thumbnail: false,
       subtitle: false,
       display: true,
-      order: 1,
+      order: 3,
       kind_id: 'document',
       allowed_formats: ['bloompub', 'bloomd'],
       associated_mimetypes: ['application/bloompub+zip'],
@@ -77,7 +77,7 @@ const FormatPresetsMap = new Map([
       order: 0,
       kind_id: null,
       allowed_formats: ['png', 'jpg', 'jpeg'],
-      associated_mimetypes: ['image/png', 'image/jpeg'],
+      associated_mimetypes: ['image/jpeg', 'image/png'],
     },
   ],
   [
@@ -106,10 +106,10 @@ const FormatPresetsMap = new Map([
       thumbnail: true,
       subtitle: false,
       display: true,
-      order: 3,
+      order: 4,
       kind_id: 'document',
       allowed_formats: ['png', 'jpg', 'jpeg'],
-      associated_mimetypes: ['image/png', 'image/jpeg'],
+      associated_mimetypes: ['image/jpeg', 'image/png'],
     },
   ],
   [
@@ -173,7 +173,7 @@ const FormatPresetsMap = new Map([
       order: 3,
       kind_id: 'exercise',
       allowed_formats: ['png', 'jpg', 'jpeg', 'gif', 'svg'],
-      associated_mimetypes: ['image/png', 'image/jpeg', 'image/svg', 'image/gif'],
+      associated_mimetypes: ['image/jpeg', 'image/gif', 'image/png', 'image/svg'],
     },
   ],
   [
@@ -189,7 +189,7 @@ const FormatPresetsMap = new Map([
       order: 2,
       kind_id: 'exercise',
       allowed_formats: ['png', 'jpg', 'jpeg'],
-      associated_mimetypes: ['image/png', 'image/jpeg'],
+      associated_mimetypes: ['image/jpeg', 'image/png'],
     },
   ],
   [
@@ -221,7 +221,7 @@ const FormatPresetsMap = new Map([
       order: 2,
       kind_id: 'h5p',
       allowed_formats: ['png', 'jpg', 'jpeg'],
-      associated_mimetypes: ['image/png', 'image/jpeg'],
+      associated_mimetypes: ['image/jpeg', 'image/png'],
     },
   ],
   [
@@ -237,7 +237,7 @@ const FormatPresetsMap = new Map([
       order: 1,
       kind_id: 'video',
       allowed_formats: ['mp4', 'webm'],
-      associated_mimetypes: ['video/webm', 'video/mp4'],
+      associated_mimetypes: ['video/mp4', 'video/webm'],
     },
   ],
   [
@@ -269,7 +269,7 @@ const FormatPresetsMap = new Map([
       order: 2,
       kind_id: 'html5',
       allowed_formats: ['png', 'jpg', 'jpeg'],
-      associated_mimetypes: ['image/png', 'image/jpeg'],
+      associated_mimetypes: ['image/jpeg', 'image/png'],
     },
   ],
   [
@@ -305,6 +305,22 @@ const FormatPresetsMap = new Map([
     },
   ],
   [
+    'kpub',
+    {
+      id: 'kpub',
+      readable_name: 'Kolibri HTML5 Article',
+      multi_language: false,
+      supplementary: false,
+      thumbnail: false,
+      subtitle: false,
+      display: true,
+      order: 1,
+      kind_id: 'document',
+      allowed_formats: ['kpub'],
+      associated_mimetypes: ['application/kpub+zip'],
+    },
+  ],
+  [
     'low_res_video',
     {
       id: 'low_res_video',
@@ -317,7 +333,7 @@ const FormatPresetsMap = new Map([
       order: 2,
       kind_id: 'video',
       allowed_formats: ['mp4', 'webm'],
-      associated_mimetypes: ['video/webm', 'video/mp4'],
+      associated_mimetypes: ['video/mp4', 'video/webm'],
     },
   ],
   [
@@ -349,7 +365,7 @@ const FormatPresetsMap = new Map([
       order: 2,
       kind_id: 'exercise',
       allowed_formats: ['png', 'jpg', 'jpeg'],
-      associated_mimetypes: ['image/png', 'image/jpeg'],
+      associated_mimetypes: ['image/jpeg', 'image/png'],
     },
   ],
   [
@@ -365,7 +381,7 @@ const FormatPresetsMap = new Map([
       order: 3,
       kind_id: 'slideshow',
       allowed_formats: ['png', 'jpg', 'jpeg'],
-      associated_mimetypes: ['image/png', 'image/jpeg'],
+      associated_mimetypes: ['image/jpeg', 'image/png'],
     },
   ],
   [
@@ -397,7 +413,7 @@ const FormatPresetsMap = new Map([
       order: 2,
       kind_id: 'slideshow',
       allowed_formats: ['png', 'jpg', 'jpeg'],
-      associated_mimetypes: ['image/png', 'image/jpeg'],
+      associated_mimetypes: ['image/jpeg', 'image/png'],
     },
   ],
   [
@@ -413,7 +429,7 @@ const FormatPresetsMap = new Map([
       order: 1,
       kind_id: 'topic',
       allowed_formats: ['png', 'jpg', 'jpeg'],
-      associated_mimetypes: ['image/png', 'image/jpeg'],
+      associated_mimetypes: ['image/jpeg', 'image/png'],
     },
   ],
   [
@@ -429,7 +445,7 @@ const FormatPresetsMap = new Map([
       order: 3,
       kind_id: 'video',
       allowed_formats: ['mp4', 'webm'],
-      associated_mimetypes: ['video/webm', 'video/mp4'],
+      associated_mimetypes: ['video/mp4', 'video/webm'],
     },
   ],
   [
@@ -461,7 +477,7 @@ const FormatPresetsMap = new Map([
       order: 3,
       kind_id: 'video',
       allowed_formats: ['png', 'jpg', 'jpeg'],
-      associated_mimetypes: ['image/png', 'image/jpeg'],
+      associated_mimetypes: ['image/jpeg', 'image/png'],
     },
   ],
   [
@@ -493,7 +509,7 @@ const FormatPresetsMap = new Map([
       order: 2,
       kind_id: 'zim',
       allowed_formats: ['png', 'jpg', 'jpeg'],
-      associated_mimetypes: ['image/png', 'image/jpeg'],
+      associated_mimetypes: ['image/jpeg', 'image/png'],
     },
   ],
 ]);
@@ -522,6 +538,7 @@ export const FormatPresetsNames = {
   HTML5_THUMBNAIL: 'html5_thumbnail',
   HTML5_ZIP: 'html5_zip',
   IMSCP_ZIP: 'imscp_zip',
+  KPUB: 'kpub',
   LOW_RES_VIDEO: 'low_res_video',
   QTI: 'qti',
   QTI_THUMBNAIL: 'qti_thumbnail',

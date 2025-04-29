@@ -71,9 +71,13 @@ describe('fileUpload', () => {
   });
   describe('computed', () => {
     it('should map the files to the correct presets', () => {
-      expect(wrapper.vm.primaryFileMapping[1].file.id).toBe('file-3');
-      expect(wrapper.vm.primaryFileMapping[2].file.id).toBe('file-1');
-      expect(wrapper.vm.primaryFileMapping).toHaveLength(3);
+      expect(wrapper.vm.primaryFileMapping.find(m => m.preset.id === 'epub').file.id).toBe(
+        'file-3'
+      );
+      expect(wrapper.vm.primaryFileMapping.find(m => m.preset.id === 'document').file.id).toBe(
+        'file-1'
+      );
+      expect(wrapper.vm.primaryFileMapping).toHaveLength(4);
     });
     it('should disallow file removal if there is only one primary file', () => {
       const testFiles2 = [
