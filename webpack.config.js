@@ -16,8 +16,6 @@ const WebpackRTLPlugin = require('kolibri-tools/lib/webpackRtlPlugin');
 
 const { InjectManifest } = require('workbox-webpack-plugin');
 
-const webpack = require('webpack');
-
 // Function to detect if running in WSL
 function isWSL() {
   try {
@@ -42,7 +40,6 @@ function getWSLIP() {
 const djangoProjectDir = path.resolve('contentcuration');
 const staticFilesDir = path.resolve(djangoProjectDir, 'contentcuration', 'static');
 const srcDir = path.resolve(djangoProjectDir, 'contentcuration', 'frontend');
-const dummyModule = path.resolve(srcDir, 'shared', 'styles', 'modulePlaceholder.js')
 
 const bundleOutputDir = path.resolve(staticFilesDir, 'studio');
 
@@ -177,16 +174,7 @@ module.exports = (env = {}) => {
         cwd: process.cwd(),
       }),
       workboxPlugin,
-    ].concat(
-      hot
-        ? []
-        : [
-          new webpack.NormalModuleReplacementPlugin(
-            /vuetify\/src\/stylus\//,
-            dummyModule
-          )
-        ]
-    ),
+    ],
     stats: 'normal',
   });
 };
