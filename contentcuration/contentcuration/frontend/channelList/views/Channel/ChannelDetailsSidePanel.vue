@@ -37,6 +37,8 @@
         v-if="channel && details"
         :details="channelWithDetails"
         :loading="loading"
+        @generate-pdf="generatePDF"
+        @generate-csv="generateCSV"
       />
     </div>
   </ResizableNavigationDrawer>
@@ -50,6 +52,7 @@
   import DetailsPanel from 'shared/views/details/DetailsPanel';
   import { routerMixin } from 'shared/mixins';
   import ResizableNavigationDrawer from 'shared/views/ResizableNavigationDrawer';
+  import { channelExportMixin } from 'shared/views/channel/mixins';
 
   export default {
     name: 'ChannelDetailsSidePanel',
@@ -57,7 +60,7 @@
       ResizableNavigationDrawer,
       DetailsPanel,
     },
-    mixins: [routerMixin],
+    mixins: [routerMixin, channelExportMixin],
     props: {
       channelId: {
         type: String,
@@ -115,6 +118,22 @@
               this.$store.dispatch('showSnackbarSimple', 'Error loading channel details');
             }
           });
+      },
+      async generatePDF() {
+        try {
+          this.$analytics.trackEvent('channel_details', 'Download PDF', {
+            id: this.channelId,
+          });
+          await this.generateChannelsPDF([this.channelWithDetails]);
+        } catch (error) {
+          this.$store.dispatch('showSnackbarSimple', 'Error generating PDF');
+        }
+      },
+      async generateCSV() {
+        this.$analytics.trackEvent('channel_details', 'Download CSV', {
+          id: this.channelId,
+        });
+        await this.generateChannelsCSV([this.channelWithDetails]);
       },
     },
     $trs: {
