@@ -47,6 +47,7 @@
               :channelId="item.id"
               :detailsRouteName="detailsRouteName"
               style="flex-grow: 1; width: 100%"
+              @show-channel-details="handleShowChannelDetails"
             />
           </VLayout>
         </VFlex>
@@ -97,6 +98,12 @@
         </VLayout>
       </BottomBar>
     </VContainer>
+    <ChannelDetailsSidePanel
+      v-if="showSidePanel"
+      v-model="showSidePanel"
+      :channelId="selectedChannelId"
+      @close="handleCloseSidePanel"
+    />
   </div>
 
 </template>
@@ -110,6 +117,7 @@
   import sortBy from 'lodash/sortBy';
   import union from 'lodash/union';
   import { RouteNames } from '../../constants';
+  import ChannelDetailsSidePanel from '../../../administration/pages/Channels/ChannelDetailsSidePanel';
   import CatalogFilters from './CatalogFilters';
   import ChannelItem from './ChannelItem';
   import LoadingText from 'shared/views/LoadingText';
@@ -132,6 +140,7 @@
       Checkbox,
       ToolBar,
       OfflineText,
+      ChannelDetailsSidePanel,
     },
     mixins: [channelExportMixin, constantsTranslationMixin],
     data() {
@@ -139,7 +148,8 @@
         loading: true,
         loadError: false,
         selecting: false,
-
+        showSidePanel: false,
+        selectedChannelId: null,
         /*
             jayoshih: router guard makes it difficult to track
               differences between previous query params and new
@@ -254,6 +264,14 @@
         };
         this.setSelection(false);
         return this.downloadChannelsPDF(params);
+      },
+      handleShowChannelDetails(channelId) {
+        this.showSidePanel = true;
+        this.selectedChannelId = channelId;
+      },
+      handleCloseSidePanel() {
+        this.showSidePanel = false;
+        this.selectedChannelId = null;
       },
     },
     $trs: {
