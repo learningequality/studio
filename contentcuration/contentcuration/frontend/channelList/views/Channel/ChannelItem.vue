@@ -8,8 +8,8 @@
       data-test="channel-card"
       tabindex="0"
       :href="linkToChannelTree ? channelHref : null"
-      :to="linkToChannelTree ? null : channelDetailsLink"
-      @click="goToChannelRoute"
+      :to="linkToChannelTree ? null : null"
+      @click="handleChannelClick"
     >
       <VLayout
         row
@@ -385,10 +385,18 @@
           });
         }
       },
-      goToChannelRoute() {
-        this.linkToChannelTree
-          ? (window.location.href = this.channelHref)
-          : this.$router.push(this.channelDetailsLink).catch(() => {});
+      handleChannelClick() {
+        if (this.linkToChannelTree) {
+          window.location.href = this.channelHref;
+          return;
+        }
+
+        if (!this.loggedIn) {
+          this.$emit('show-channel-details', this.channelId);
+          return;
+        }
+
+        this.$router.push(this.channelDetailsLink).catch(() => {});
       },
       trackTokenCopy() {
         this.$analytics.trackAction('channel_list', 'Copy token', {

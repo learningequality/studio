@@ -1,25 +1,31 @@
 <template>
 
   <div :class="{ printing }">
-    <div style="max-width: 300px">
-      <Thumbnail
-        :src="isChannel ? _details.thumbnail_url : _details.thumbnail_src"
-        :encoding="isChannel ? _details.thumbnail_encoding : null"
-      />
-    </div>
-    <br >
-    <h1
-      class="notranslate"
-      dir="auto"
+    <VLayout
+      row
+      class="details-layout"
     >
-      {{ isChannel ? _details.name : _details.title }}
-    </h1>
-    <p
-      class="notranslate"
-      dir="auto"
-    >
-      {{ _details.description }}
-    </p>
+      <VFlex
+        xs7
+        class="details-content"
+      >
+        <p
+          class="notranslate"
+          dir="auto"
+        >
+          {{ _details.description }}
+        </p>
+      </VFlex>
+      <VFlex
+        xs5
+        class="pa-3"
+      >
+        <Thumbnail
+          :src="isChannel ? _details.thumbnail_url : _details.thumbnail_src"
+          :encoding="isChannel ? _details.thumbnail_encoding : null"
+        />
+      </VFlex>
+    </VLayout>
     <br >
 
     <template v-if="isChannel">
@@ -604,6 +610,14 @@
     &.material-icons {
       font-family: 'Material Icons' !important;
     }
+  }
+
+  .details-layout {
+    align-items: center;
+  }
+
+  .details-content {
+    padding-right: 16px;
   }
 
   .v-toolbar__title {
