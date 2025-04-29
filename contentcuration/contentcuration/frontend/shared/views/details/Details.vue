@@ -16,6 +16,37 @@
     </VLayout>
     <br>
 
+    <!-- Action Buttons -->
+    <VLayout v-if="isChannel" row class="mb-4">
+      <VBtn
+        color="primary"
+        class="mr-2"
+        @click="viewInKolibri"
+      >
+        {{ $tr('viewInKolibri') }}
+      </VBtn>
+      <Menu>
+        <template #activator="{ on }">
+          <VBtn color="primary" v-on="on">
+            {{ $tr('downloadButton') }}
+            <Icon
+              class="ml-1"
+              icon="dropdown"
+              :color="$themeTokens.textInverted"
+            />
+          </VBtn>
+        </template>
+        <VList>
+          <VListTile @click="$emit('generate-pdf')">
+            <VListTileTitle>{{ $tr('downloadPDF') }}</VListTileTitle>
+          </VListTile>
+          <VListTile data-test="dl-csv" @click="$emit('generate-csv')">
+            <VListTileTitle>{{ $tr('downloadCSV') }}</VListTileTitle>
+          </VListTile>
+        </VList>
+      </Menu>
+    </VLayout>
+
     <template v-if="isChannel">
       <DetailsRow v-if="_details.published && _details.primary_token" :label="$tr('tokenHeading')">
         <template #default>
@@ -381,10 +412,6 @@
       metadataTranslationMixin,
     ],
     props: {
-      // Object matching that returned by the channel details and
-      // node details API endpoints, see backend for details of the
-      // object structure and keys. get_details method on ContentNode
-      // model as a starting point.`
       details: {
         type: Object,
         required: true,
@@ -505,6 +532,11 @@
       channelUrl(channel) {
         return window.Urls.channel(channel.id);
       },
+      viewInKolibri() {
+        if (this._details.demo_server_url) {
+          window.open(this._details.demo_server_url, '_blank');
+        }
+      },
     },
     $trs: {
       /* eslint-disable kolibri/vue-no-unused-translations */
@@ -543,6 +575,10 @@
       currentVersionHeading: 'Published version',
       primaryLanguageHeading: 'Primary language',
       unpublishedText: 'Unpublished',
+      viewInKolibri: 'View in Kolibri',
+      downloadButton: 'Download channel summary',
+      downloadPDF: 'Download PDF',
+      downloadCSV: 'Download CSV',
     },
   };
 
