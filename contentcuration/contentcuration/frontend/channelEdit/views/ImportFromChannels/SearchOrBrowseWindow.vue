@@ -2,16 +2,17 @@
 
   <ImportFromChannelsModal>
     <template #default="{ preview }">
-
       <KGrid :class="$computedClass(browseWindowStyle)">
-
         <!-- Back to browse button -->
         <KGridItem
           :layout12="{ span: 12 }"
           :layout8="{ span: 8 }"
           :layout4="{ span: 4 }"
         >
-          <div v-if="!isBrowsing" class="my-2">
+          <div
+            v-if="!isBrowsing"
+            class="my-2"
+          >
             <ActionLink
               :text="$tr('backToBrowseAction')"
               @click="handleBackToBrowse"
@@ -26,7 +27,10 @@
           :layout4="{ span: 4 }"
         >
           <!-- Search bar -->
-          <VForm ref="search" @submit.prevent="handleSearchTerm">
+          <VForm
+            ref="search"
+            @submit.prevent="handleSearchTerm"
+          >
             <VTextField
               v-model="searchTerm"
               class="searchtext"
@@ -54,7 +58,10 @@
             </VTextField>
           </VForm>
 
-          <div v-if="!isBrowsing" class="my-2 px-2">
+          <div
+            v-if="!isBrowsing"
+            class="my-2 px-2"
+          >
             <ActionLink
               class="mb-3"
               :text="$tr('savedSearchesLabel')"
@@ -114,14 +121,23 @@
               />
             </KCardGrid>
           </div>
-          <div v-if="recommendationsLoading" class="recommendations-loader">
+          <div
+            v-if="recommendationsLoading"
+            class="recommendations-loader"
+          >
             <KCircularLoader :shouldShow="recommendationsLoading" />
           </div>
           <div v-else-if="!recommendationsLoading">
-            <p v-if="loadMoreRecommendationsText.description" class="pb-0 pt-4 px-2">
+            <p
+              v-if="loadMoreRecommendationsText.description"
+              class="pb-0 pt-4 px-2"
+            >
               {{ loadMoreRecommendationsText.description }}
             </p>
-            <div v-if="loadMoreRecommendationsText.link" class="my-3 px-2">
+            <div
+              v-if="loadMoreRecommendationsText.link"
+              class="my-3 px-2"
+            >
               <ActionLink
                 :text="loadMoreRecommendationsText.link"
                 @click="handleViewMoreRecommendations"
@@ -165,7 +181,7 @@
 <script>
 
   import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
-  import { computed } from '@vue/composition-api';
+  import { computed } from 'vue';
   import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
   import { RouteNames } from '../../constants';
   import RecommendedResourceCard from '../../../RecommendedResourceCard/components/RecommendedResourceCard';
@@ -206,7 +222,7 @@
         aboutRecommendationsFeedbackDescription$,
       } = searchRecommendationsStrings;
 
-      const layoutFitsTwoColumns = computed(function() {
+      const layoutFitsTwoColumns = computed(function () {
         return windowWidth.value >= 960;
       });
 
@@ -439,7 +455,7 @@
         this.copyNode = node;
         return this.copyToClipboard();
       },
-      copyToClipboard: withChangeTracker(function(changeTracker) {
+      copyToClipboard: withChangeTracker(function (changeTracker) {
         return this.copy({ node_id: this.copyNode.node_id, channel_id: this.copyNode.channel_id })
           .then(() => {
             this.$store
@@ -539,7 +555,7 @@
               rootId: recommendation.main_tree_id,
               parent: recommendation.parent_id,
             });
-          })
+          }),
         );
       },
       updateDisplayedRecommendations(limit) {

@@ -1,7 +1,11 @@
 <template>
 
   <VFlex>
-    <VLayout v-if="showMofN" class="mofn-options" row>
+    <VLayout
+      v-if="showMofN"
+      class="mofn-options"
+      row
+    >
       <VFlex xs6>
         <VTextField
           ref="mValue"
@@ -20,7 +24,11 @@
           @focus="$emit('mFocus')"
         />
       </VFlex>
-      <VFlex xs1 justifyCenter class="out-of">
+      <VFlex
+        xs1
+        justifyCenter
+        class="out-of"
+      >
         /
       </VFlex>
       <VFlex xs6>
@@ -46,6 +54,7 @@
 
 </template>
 
+
 <script>
 
   import {
@@ -64,7 +73,7 @@
       value: {
         type: Object,
         required: false,
-        validator: function(value) {
+        validator: function (value) {
           return (
             !value ||
             !value.mastery_model ||

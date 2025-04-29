@@ -1,10 +1,9 @@
 <template>
 
-  <hr
-    :style="dividerStyle"
-  >
+  <hr :style="dividerStyle" >
 
 </template>
+
 
 <script>
 

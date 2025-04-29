@@ -1,7 +1,15 @@
 <template>
 
-  <VLayout align-center fill-height row style="background-color: white;">
-    <VFlex shrink class="px-2">
+  <VLayout
+    align-center
+    fill-height
+    row
+    style="background-color: white"
+  >
+    <VFlex
+      shrink
+      class="px-2"
+    >
       <IconButton
         icon="chevronLeft"
         text=""
@@ -10,8 +18,14 @@
         @click="rendition.prev()"
       />
     </VFlex>
-    <div ref="epub" :style="{ height: '100%', width }"></div>
-    <VFlex shrink class="px-2">
+    <div
+      ref="epub"
+      :style="{ height: '100%', width }"
+    ></div>
+    <VFlex
+      shrink
+      class="px-2"
+    >
       <IconButton
         icon="chevronRight"
         text=""
@@ -23,6 +37,7 @@
   </VLayout>
 
 </template>
+
 
 <script>
 
@@ -64,7 +79,7 @@
         displayed.then(() => {
           this.$emit('load');
         });
-      }, 1000); // There seems to be some lag for loading, so add delay to be safe
+      }); // There seems to be some lag for loading, so add delay to be safe
     },
   };
 

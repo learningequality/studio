@@ -7,15 +7,21 @@
     class="px-1 py-0"
     @click.stop="selected = [nodeId]"
   >
-    <VListTileAction style="min-width:min-content;" @click.stop>
+    <VListTileAction
+      style="min-width: min-content"
+      @click.stop
+    >
       <Checkbox
         v-model="selected"
         :value="nodeId"
       />
     </VListTileAction>
 
-    <VListTileAction style="min-width:min-content;">
-      <ContentNodeIcon :kind="node.kind" :showColor="false" />
+    <VListTileAction style="min-width: min-content">
+      <ContentNodeIcon
+        :kind="node.kind"
+        :showColor="false"
+      />
     </VListTileAction>
     <VListTileContent class="px-2 py-0">
       <VListTileTitle class="notranslate">
@@ -29,12 +35,22 @@
     <VListTileAction class="mr-1 status-indicator">
       <div>
         <div v-if="!uploadingFiles.length">
-          <Icon v-if="!nodeIsValid" icon="error" class="error-icon" />
-
+          <Icon
+            v-if="!nodeIsValid"
+            icon="error"
+            class="error-icon"
+          />
         </div>
-        <VTooltip v-else-if="erroredFiles.length" top lazy>
+        <VTooltip
+          v-else-if="erroredFiles.length"
+          top
+          lazy
+        >
           <template #activator="{ on }">
-            <VIconWrapper color="red" v-on="on">
+            <VIconWrapper
+              color="red"
+              v-on="on"
+            >
               error
             </VIconWrapper>
           </template>
@@ -59,14 +75,19 @@
       </div>
     </VListTileAction>
     <VListTileAction v-if="canRemove">
-      <VBtn icon flat class="remove-item" @click.stop="removeNode">
+      <VBtn
+        icon
+        flat
+        class="remove-item"
+        @click.stop="removeNode"
+      >
         <Icon icon="clear" />
       </VBtn>
     </VListTileAction>
-
   </VListTile>
 
 </template>
+
 
 <script>
 
@@ -178,6 +199,7 @@
   };
 
 </script>
+
 
 <style lang="scss" scoped>
 

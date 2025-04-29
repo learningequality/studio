@@ -10,7 +10,7 @@
         <!-- Sign in -->
         <VCard
           class="pa-4"
-          style="width: 300px;margin: 0 auto;"
+          style="width: 300px; margin: 0 auto"
         >
           <div class="k-logo-container">
             <KLogo
@@ -125,7 +125,7 @@
   import LanguageSwitcherList from 'shared/languageSwitcher/LanguageSwitcherList';
 
   export default {
-    name: 'Main',
+    name: 'AccountsMain',
     components: {
       Banner,
       EmailField,

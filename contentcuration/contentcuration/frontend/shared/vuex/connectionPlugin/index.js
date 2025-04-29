@@ -18,7 +18,7 @@ const ConnectionPlugin = store => {
         store.dispatch('handleDisconnection');
       }
       return Promise.reject(error);
-    }
+    },
   );
   client.interceptors.response.handlers.reverse();
 

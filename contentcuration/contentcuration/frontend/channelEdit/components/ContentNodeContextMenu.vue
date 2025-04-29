@@ -1,14 +1,23 @@
 <template>
 
-  <Menu v-model="value" :position-x="positionX" :position-y="positionY" absolute>
+  <BaseMenu
+    v-model="value"
+    :position-x="positionX"
+    :position-y="positionY"
+    absolute
+  >
     <VCard>
       <slot v-if="value">
-        <ContentNodeOptions :nodeId="nodeId" :hideDetailsLink="hideDetailsLink" />
+        <ContentNodeOptions
+          :nodeId="nodeId"
+          :hideDetailsLink="hideDetailsLink"
+        />
       </slot>
     </VCard>
-  </Menu>
+  </BaseMenu>
 
 </template>
+
 
 <script>
 
@@ -55,6 +64,5 @@
 
 </script>
 
-<style scoped>
 
-</style>
+<style scoped></style>

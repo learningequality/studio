@@ -20,7 +20,7 @@ function makeWrapper(fileId) {
   store.state.file.fileUploadsMap[fileId] = fileUploads[fileId];
   return mount(FileStatus, {
     store,
-    attachToDocument: true,
+    attachTo: document.body,
     propsData: {
       fileId,
     },
@@ -35,12 +35,14 @@ describe('fileStatus', () => {
     wrapper = makeWrapper('file-1');
     expect(wrapper.vm.hasErrors).toBe(false);
   });
+
   it('should indicate if the file is uploading', () => {
     const wrapper = makeWrapper('file-2');
-    expect(wrapper.find('[data-test="progress"]').exists()).toBe(true);
+    expect(wrapper.findComponent('[data-test="progress"]').exists()).toBe(true);
   });
+
   it('should indicate if the file finished uploading', () => {
     const wrapper = makeWrapper('file-1');
-    expect(wrapper.find('[data-test="done"]').exists()).toBe(true);
+    expect(wrapper.findComponent('[data-test="done"]').exists()).toBe(true);
   });
 });

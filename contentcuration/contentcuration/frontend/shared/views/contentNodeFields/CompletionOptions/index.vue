@@ -7,14 +7,12 @@
       :disabled="notUnique"
       :indeterminate="notUnique"
       :label="$tr('learnersCanMarkComplete')"
-      style="padding-bottom: 16px; font-size: 16px;"
-      @change="(value) => (learnerManaged = value)"
+      style="padding-bottom: 16px; font-size: 16px"
+      @change="value => (learnerManaged = value)"
     />
     <Divider v-if="expanded" />
     <!-- Layout when practice quizzes are enabled -->
-    <VLayout
-      :column="expanded"
-    >
+    <VLayout :column="expanded">
       <!-- "Completion" dropdown menu  -->
       <ExpandableSelect
         ref="completion"
@@ -56,7 +54,10 @@
       />
     </VLayout>
 
-    <VLayout row wrap>
+    <VLayout
+      row
+      wrap
+    >
       <!-- "Duration" dropdown menu  -->
       <ExpandableSelect
         v-if="showDuration || showDisabledDuration"
@@ -95,12 +96,13 @@
         :xs6="!expanded"
         :md6="!expanded"
       >
-        {{ $tr("referenceHint") }}
+        {{ $tr('referenceHint') }}
       </VFlex>
     </VLayout>
   </div>
 
 </template>
+
 
 <script>
 
@@ -215,9 +217,7 @@
         return !this.showDuration && this.expanded && this.audioVideoResource;
       },
       showReferenceHint() {
-        /*
-            The reference hint should be shown only when "Reference" is selected
-          */
+        // The reference hint should be shown only when "Reference" is selected
         return this.model === CompletionCriteriaModels.REFERENCE;
       },
       completionDropdown: {
@@ -366,7 +366,7 @@
             update.durationType = CompletionCriteriaModels.APPROX_TIME;
             update.duration = this.handleMinutesInputFromActivityDuration(
               this.durationValue || 0,
-              dropdownValue
+              dropdownValue,
             );
           } else {
             update.durationType = null;
@@ -387,7 +387,7 @@
             }))
             .filter(
               option =>
-                !(option.value === 'survey' && !this.hasFeatureEnabled(FeatureFlagKeys.survey))
+                !(option.value === 'survey' && !this.hasFeatureEnabled(FeatureFlagKeys.survey)),
             );
         }
         return [];
@@ -482,7 +482,7 @@
         if (duration) {
           data.suggested_duration = this.handleMinutesInputFromActivityDuration(
             duration,
-            this.durationType
+            this.durationType,
           );
         } else if (typeof duration !== 'undefined') {
           delete data.suggested_duration;

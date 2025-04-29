@@ -1,5 +1,5 @@
 import { mount } from '@vue/test-utils';
-import Vuex from 'vuex';
+import { Store } from 'vuex';
 import ChannelSelectionList from '../ChannelSelectionList';
 import { ChannelListTypes } from 'shared/constants';
 
@@ -35,7 +35,7 @@ const actions = {
   loadChannelList: jest.fn(() => Promise.resolve()),
 };
 
-const store = new Vuex.Store({
+const store = new Store({
   modules: {
     channel: {
       namespaced: true,
@@ -46,8 +46,10 @@ const store = new Vuex.Store({
 });
 
 function makeWrapper() {
-  return mount(ChannelSelectionList, {
-    sync: false,
+  const loadChannelList = jest.spyOn(ChannelSelectionList.methods, 'loadChannelList');
+  loadChannelList.mockImplementation(() => Promise.resolve());
+
+  const wrapper = mount(ChannelSelectionList, {
     propsData: {
       listType: ChannelListTypes.EDITABLE,
     },
@@ -56,54 +58,62 @@ function makeWrapper() {
         return [editChannel, editChannel2, publicChannel];
       },
     },
-    methods: {
-      loadChannelList() {
-        return Promise.resolve();
-      },
-    },
     store,
   });
+
+  return [wrapper, { loadChannelList }];
 }
 
 describe('channelSelectionList', () => {
-  let wrapper;
+  let wrapper, mocks;
+
   beforeEach(() => {
-    wrapper = makeWrapper();
+    [wrapper, mocks] = makeWrapper();
   });
-  it('should show the correct channels based on listType', () => {
-    wrapper.setData({ loading: false });
+
+  afterEach(() => {
+    mocks.loadChannelList.mockRestore();
+  });
+
+  it('should show the correct channels based on listType', async () => {
+    await wrapper.setData({ loading: false });
     expect(wrapper.vm.listChannels.find(c => c.id === editChannel.id)).toBeTruthy();
     expect(wrapper.vm.listChannels.find(c => c.id === editChannel2.id)).toBeTruthy();
     expect(wrapper.vm.listChannels.find(c => c.id === publicChannel.id)).toBeFalsy();
   });
-  it('should select channels when the channel has been checked', () => {
-    wrapper.setData({ loading: false });
-    wrapper.find(`[data-test="checkbox-${editChannel.id}"]`).element.click();
+
+  it('should select channels when the channel has been checked', async () => {
+    await wrapper.setData({ loading: false });
+    await wrapper.findComponent(`[data-test="checkbox-${editChannel.id}"]`).trigger('click');
 
     expect(wrapper.emitted('input')[0][0]).toEqual([editChannel.id]);
   });
-  it('should deselect channels when the channel has been unchecked', () => {
-    wrapper.setData({ loading: false });
-    wrapper.find(`[data-test="checkbox-${editChannel.id}"]`).element.click(); // Check the channel
-    wrapper.find(`[data-test="checkbox-${editChannel.id}"]`).element.click(); // Uncheck the channel
+
+  it('should deselect channels when the channel has been unchecked', async () => {
+    await wrapper.setData({ loading: false });
+    await wrapper.findComponent(`[data-test="checkbox-${editChannel.id}"]`).trigger('click'); // Check the channel
+    await wrapper.findComponent(`[data-test="checkbox-${editChannel.id}"]`).trigger('click'); // Uncheck the channel
 
     expect(wrapper.emitted('input')[0].length).toEqual(1); // Only one event should be emitted (corresponding to the initial check)
     expect(wrapper.emitted('input')[0][0]).toEqual([editChannel.id]); // The initial check event should be emitted
   });
-  it('should filter channels based on the search text', () => {
-    wrapper.setData({ loading: false, search: searchWord });
+
+  it('should filter channels based on the search text', async () => {
+    await wrapper.setData({ loading: false, search: searchWord });
     expect(wrapper.vm.listChannels.find(c => c.id === editChannel.id)).toBeTruthy();
     expect(wrapper.vm.listChannels.find(c => c.id === editChannel2.id)).toBeFalsy();
   });
-  it('should select channels when the channel card has been clicked', () => {
-    wrapper.setData({ loading: false });
-    wrapper.find(`[data-test="channel-item-${editChannel.id}"]`).trigger('click');
+
+  it('should select channels when the channel card has been clicked', async () => {
+    await wrapper.setData({ loading: false });
+    await wrapper.findComponent(`[data-test="channel-item-${editChannel.id}"]`).trigger('click');
     expect(wrapper.emitted('input')[0][0]).toEqual([editChannel.id]);
   });
-  it('should deselect channels when the channel card has been clicked', () => {
-    wrapper.setData({ loading: false });
-    wrapper.find(`[data-test="channel-item-${editChannel.id}"]`).element.click(); // Check the channel
-    wrapper.find(`[data-test="channel-item-${editChannel.id}"]`).element.click(); // Uncheck the channel
+
+  it('should deselect channels when the channel card has been clicked', async () => {
+    await wrapper.setData({ loading: false });
+    await wrapper.findComponent(`[data-test="channel-item-${editChannel.id}"]`).trigger('click'); // Check the channel
+    await wrapper.findComponent(`[data-test="channel-item-${editChannel.id}"]`).trigger('click'); // Uncheck the channel
 
     expect(wrapper.emitted('input')[0].length).toEqual(1); // Only one event should be emitted (corresponding to the initial check)
     expect(wrapper.emitted('input')[0][0]).toEqual([editChannel.id]); // The initial check event should be emitted

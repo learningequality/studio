@@ -31,7 +31,10 @@
                 @click="openFileDialog"
               />
             </VListTileTitle>
-            <VListTileSubTitle v-if="erroredFile || uploading" data-test="status">
+            <VListTileSubTitle
+              v-if="erroredFile || uploading"
+              data-test="status"
+            >
               <FileStatusText
                 :fileId="erroredFile ? erroredFile.id : fileDisplay.id"
                 :readonly="Boolean(fileUploadId)"
@@ -41,7 +44,6 @@
             <VListTileSubTitle v-else-if="fileDisplay">
               {{ formatFileSize(fileDisplay.file_size) }}
             </VListTileSubTitle>
-
           </VListTileContent>
           <VSpacer />
           <VListTileAction v-if="fileDisplay">
@@ -55,7 +57,7 @@
                 <KDropdownMenu
                   :options="previewFilesOptions"
                   data-test="file-options"
-                  @select="(option) => option.onClick(openFileDialog)"
+                  @select="option => option.onClick(openFileDialog)"
                 />
               </template>
             </KIconButton>
@@ -66,6 +68,7 @@
   </Uploader>
 
 </template>
+
 
 <script>
 
@@ -226,6 +229,7 @@
   };
 
 </script>
+
 
 <style lang="scss" scoped>
 

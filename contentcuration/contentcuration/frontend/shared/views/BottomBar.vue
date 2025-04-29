@@ -1,10 +1,15 @@
 <template>
 
-  <div class="bottom-bar pa-2" :style="appearanceOverrides">
+  <div
+    class="bottom-bar pa-2"
+    :style="appearanceOverrides"
+  >
     <slot></slot>
   </div>
 
 </template>
+
+
 <script>
 
   export default {
@@ -18,6 +23,8 @@
   };
 
 </script>
+
+
 <style lang="scss" scoped>
 
   .bottom-bar {

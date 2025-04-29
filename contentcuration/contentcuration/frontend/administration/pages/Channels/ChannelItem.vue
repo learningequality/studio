@@ -1,27 +1,48 @@
 <template>
 
   <tr :class="channel.deleted ? 'red--text' : 'black--text'">
-    <td v-if="$vuetify.breakpoint.smAndDown" class="pt-2">
+    <td
+      v-if="$vuetify.breakpoint.smAndDown"
+      class="pt-2"
+    >
       <Checkbox v-model="selected" />
     </td>
     <td>
-      <VLayout align-center justify-start fill-height>
-        <VFlex v-if="$vuetify.breakpoint.mdAndUp" shrink class="pb-3 pt-3">
+      <VLayout
+        align-center
+        justify-start
+        fill-height
+      >
+        <VFlex
+          v-if="$vuetify.breakpoint.mdAndUp"
+          shrink
+          class="pb-3 pt-3"
+        >
           <Checkbox v-model="selected" />
         </VFlex>
         <VFlex shrink>
-          <VTooltip v-if="channel.public && !channel.deleted" bottom z-index="200" lazy>
+          <VTooltip
+            v-if="channel.public && !channel.deleted"
+            bottom
+            z-index="200"
+            lazy
+          >
             <template #activator="{ on }">
-              <span class="px-1 py-2" v-on="on">
-                <Icon
-                  icon="unpublishedResource"
-                />
+              <span
+                class="px-1 py-2"
+                v-on="on"
+              >
+                <Icon icon="unpublishedResource" />
               </span>
             </template>
             <span>This channel is public</span>
           </VTooltip>
         </VFlex>
-        <VFlex class="text-truncate" grow style="max-width: 200px;">
+        <VFlex
+          class="text-truncate"
+          grow
+          style="max-width: 200px"
+        >
           <ActionLink
             :to="channelModalLink"
             :text="channel.name || '---'"
@@ -29,7 +50,10 @@
           />
         </VFlex>
         <VSpacer />
-        <VFlex v-if="!channel.deleted" shrink>
+        <VFlex
+          v-if="!channel.deleted"
+          shrink
+        >
           <VBtn
             icon
             flat
@@ -38,9 +62,7 @@
             target="_blank"
             class="ma-0"
           >
-            <Icon
-              icon="openNewTab"
-            />
+            <Icon icon="openNewTab" />
           </VBtn>
         </VFlex>
       </VLayout>
@@ -52,7 +74,10 @@
         :value="token"
         successMessage="Token copied to clipboard"
       />
-      <span v-else class="grey--text">
+      <span
+        v-else
+        class="grey--text"
+      >
         Unpublished
       </span>
     </td>
@@ -73,25 +98,25 @@
         :to="searchChannelEditorsLink"
         target="_blank"
       >
-        <Icon
-          icon="openNewTab"
-        />
+        <Icon icon="openNewTab" />
       </VBtn>
     </td>
     <td class="text-xs-right">
       {{ channel.viewers_count }}
     </td>
     <td>
-      {{ $formatDate(channel.created, {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-      }) }}
+      {{
+        $formatDate(channel.created, {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        })
+      }}
     </td>
     <td>
       {{ $formatRelative(channel.modified, { now: new Date() }) }}
     </td>
-    <td style="min-width: 150px;">
+    <td style="min-width: 150px">
       <VEditDialog
         v-if="!channel.deleted"
         :return-value.sync="channel.demo_server_url"
@@ -105,13 +130,18 @@
           :href="channel.demo_server_url"
           target="_blank"
           class="pa-0 text-truncate"
-          style="max-width: 100px;min-width: unset;"
+          style="min-width: unset; max-width: 100px"
         />
-        <span v-else class="grey--text">Not set</span>
-        <VBtn small icon flat>
-          <Icon
-            icon="edit"
-          />
+        <span
+          v-else
+          class="grey--text"
+        >Not set</span>
+        <VBtn
+          small
+          icon
+          flat
+        >
+          <Icon icon="edit" />
         </VBtn>
         <template #input>
           <VTextField
@@ -127,7 +157,7 @@
       </VEditDialog>
       <span v-else>Deleted</span>
     </td>
-    <td style="min-width: 150px;">
+    <td style="min-width: 150px">
       <VEditDialog
         v-if="!channel.deleted"
         :return-value.sync="channel.source_url"
@@ -141,13 +171,18 @@
           :href="channel.source_url"
           target="_blank"
           class="pa-0 text-truncate"
-          style="max-width: 100px;min-width: unset;"
+          style="min-width: unset; max-width: 100px"
         />
-        <span v-else class="grey--text">Not set</span>
-        <VBtn small icon flat>
-          <Icon
-            icon="edit"
-          />
+        <span
+          v-else
+          class="grey--text"
+        >Not set</span>
+        <VBtn
+          small
+          icon
+          flat
+        >
+          <Icon icon="edit" />
         </VBtn>
         <template #input>
           <VTextField
@@ -163,7 +198,10 @@
       <span v-else>Deleted</span>
     </td>
     <td class="text-xs-center">
-      <ChannelActionsDropdown :channelId="channelId" flat />
+      <ChannelActionsDropdown
+        :channelId="channelId"
+        flat
+      />
     </td>
   </tr>
 
@@ -208,7 +246,7 @@
             'input',
             value
               ? this.value.concat([this.channelId])
-              : this.value.filter(id => id !== this.channelId)
+              : this.value.filter(id => id !== this.channelId),
           );
         },
       },
@@ -260,8 +298,11 @@
 
 </script>
 
+
 <style scoped>
+
   /deep/ .action-link .v-btn__content {
     justify-content: start;
   }
+
 </style>

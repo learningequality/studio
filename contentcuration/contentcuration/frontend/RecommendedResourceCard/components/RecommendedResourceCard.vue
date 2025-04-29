@@ -91,7 +91,7 @@
         };
       },
       isSelected() {
-        return function(node) {
+        return function (node) {
           return Boolean(find(this.selected, { id: node.id }));
         };
       },
@@ -127,6 +127,7 @@
 
 
 <style>
+
   .visuallyhidden {
     position: absolute;
     width: 1px;
@@ -137,4 +138,5 @@
     clip: rect(0 0 0 0);
     border: 0;
   }
+
 </style>

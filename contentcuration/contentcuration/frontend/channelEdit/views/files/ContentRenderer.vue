@@ -1,14 +1,37 @@
 <template>
 
-  <VLayout :key="fileId" :class="{ fullscreen, renderer: loading }">
-    <VCard v-if="!file" flat class="message-card">
-      <VLayout align-center justify-center fill-height>
+  <VLayout
+    :key="fileId"
+    :class="{ fullscreen, renderer: loading }"
+  >
+    <VCard
+      v-if="!file"
+      flat
+      class="message-card"
+    >
+      <VLayout
+        align-center
+        justify-center
+        fill-height
+      >
         {{ $tr('noFileText') }}
       </VLayout>
     </VCard>
-    <VCard v-else-if="file.uploading || file.error" flat class="message-card">
-      <VLayout align-center justify-center fill-height data-test="progress">
-        <FileStatus :fileId="file.id" large />
+    <VCard
+      v-else-if="file.uploading || file.error"
+      flat
+      class="message-card"
+    >
+      <VLayout
+        align-center
+        justify-center
+        fill-height
+        data-test="progress"
+      >
+        <FileStatus
+          :fileId="file.id"
+          large
+        />
       </VLayout>
     </VCard>
     <VFlex v-else-if="isVideo">
@@ -19,7 +42,10 @@
         crossOrigin
         @loadeddata="loading = false"
       >
-        <source :src="src" :type="file.mimetype">
+        <source
+          :src="src"
+          :type="file.mimetype"
+        >
         <track
           v-for="subtitle in subtitles"
           :key="subtitle.id"
@@ -30,9 +56,21 @@
         >
       </video>
     </VFlex>
-    <VCard v-else-if="isAudio" flat>
-      <VLayout align-center justify-center fill-height>
-        <audio controls :src="src" :type="file.mimetype" @loadeddata="loading = false"></audio>
+    <VCard
+      v-else-if="isAudio"
+      flat
+    >
+      <VLayout
+        align-center
+        justify-center
+        fill-height
+      >
+        <audio
+          controls
+          :src="src"
+          :type="file.mimetype"
+          @loadeddata="loading = false"
+        ></audio>
       </VLayout>
     </VCard>
     <iframe
@@ -41,16 +79,43 @@
       sandbox="allow-scripts"
       @load="loading = false"
     ></iframe>
-    <embed v-else-if="isPDF" :src="src" :type="file.mimetype" @load="loading = false">
-    <div v-else-if="isEpub" class="epub">
-      <EpubRenderer :src="src" @load="loading = false" />
+    <embed
+      v-else-if="isPDF"
+      :src="src"
+      :type="file.mimetype"
+      @load="loading = false"
+    >
+    <div
+      v-else-if="isEpub"
+      class="epub"
+    >
+      <EpubRenderer
+        :src="src"
+        @load="loading = false"
+      />
     </div>
 
-    <VCard v-else class="message-card" flat>
-      <VLayout align-center justify-center fill-height data-test="not-supported">
-        <VTooltip bottom lazy>
+    <VCard
+      v-else
+      class="message-card"
+      flat
+    >
+      <VLayout
+        align-center
+        justify-center
+        fill-height
+        data-test="not-supported"
+      >
+        <VTooltip
+          bottom
+          lazy
+        >
           <template #activator="{ on }">
-            <VIconWrapper color="grey lighten-2" large v-on="on">
+            <VIconWrapper
+              color="grey lighten-2"
+              large
+              v-on="on"
+            >
               visibility_off
             </VIconWrapper>
           </template>
@@ -61,6 +126,7 @@
   </VLayout>
 
 </template>
+
 
 <script>
 
@@ -115,7 +181,7 @@
         const files = this.supplementaryFiles.filter(f => f.preset.subtitle);
         return sortBy(
           uniqBy(files, f => f.language.id),
-          f => f.language.id
+          f => f.language.id,
         );
       },
       isVideo() {
@@ -153,6 +219,7 @@
   };
 
 </script>
+
 
 <style lang="scss" scoped>
 

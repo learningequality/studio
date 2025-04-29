@@ -56,17 +56,18 @@ describe('account tab', () => {
     wrapper.find('[data-test="name-form"]').trigger('click');
     expect(wrapper.vm.showFullNameForm).toBe(true);
   });
+
   it('clicking password link should show password change form', () => {
     wrapper.find('[data-test="password-form"]').trigger('click');
     expect(wrapper.vm.showPasswordForm).toBe(true);
   });
-  it('clicking export data button should call exportData', () => {
-    const exportData = jest.fn().mockReturnValue(Promise.resolve());
-    wrapper.setMethods({ exportData });
-    wrapper.find('[data-test="export-link"]').trigger('click');
+
+  it('clicking export data button should call exportData', async () => {
+    const exportData = jest.spyOn(wrapper.vm, 'exportData');
+    exportData.mockImplementation(() => Promise.resolve());
+    await wrapper.find('[data-test="export-link"]').trigger('click');
     expect(exportData).toHaveBeenCalled();
-    wrapper.vm.$nextTick(() => {
-      expect(wrapper.vm.showExportDataNotice).toBe(true);
-    });
+    await wrapper.vm.$nextTick();
+    expect(wrapper.vm.showExportDataNotice).toBe(true);
   });
 });

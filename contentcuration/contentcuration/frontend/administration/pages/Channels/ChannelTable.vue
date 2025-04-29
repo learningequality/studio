@@ -4,8 +4,16 @@
     <h1 class="font-weight-bold px-4 py-2 title">
       {{ `${$formatNumber(count)} ${count === 1 ? 'channel' : 'channels'}` }}
     </h1>
-    <VLayout rowwrap class="mb-2">
-      <VFlex xs12 sm4 xl3 class="px-3">
+    <VLayout
+      rowwrap
+      class="mb-2"
+    >
+      <VFlex
+        xs12
+        sm4
+        xl3
+        class="px-3"
+      >
         <VSelect
           v-model="filter"
           :items="filters"
@@ -16,14 +24,24 @@
           :menu-props="{ offsetY: true }"
         />
       </VFlex>
-      <VFlex xs12 sm4 xl3 class="px-3">
+      <VFlex
+        xs12
+        sm4
+        xl3
+        class="px-3"
+      >
         <LanguageDropdown
           v-model="language"
           item-id="id"
           item-text="readable_name"
         />
       </VFlex>
-      <VFlex xs12 sm4 xl3 class="px-3">
+      <VFlex
+        xs12
+        sm4
+        xl3
+        class="px-3"
+      >
         <VTextField
           v-model="keywordInput"
           label="Search for a channel..."
@@ -58,7 +76,10 @@
         />
       </template>
       <template #headerCell="{ header }">
-        <div style="display: inline-block; width: min-content;" @click.stop>
+        <div
+          style="display: inline-block; width: min-content"
+          @click.stop
+        >
           <Checkbox
             v-if="header.class === 'first'"
             v-model="selectAll"
@@ -89,7 +110,10 @@
         </span>
       </template>
       <template #items="{ item }">
-        <ChannelItem v-model="selected" :channelId="item" />
+        <ChannelItem
+          v-model="selected"
+          :channelId="item"
+        />
       </template>
     </VDataTable>
   </div>
@@ -210,7 +234,11 @@
     },
     methods: {
       ...mapActions('channelAdmin', ['loadChannels', 'getAdminChannelListDetails']),
-      /* @public - used in generated filterMixin */
+      /**
+       * @public
+       * @param params
+       * @return {*}
+       */
       fetch(params) {
         return this.loadChannels(params);
       },

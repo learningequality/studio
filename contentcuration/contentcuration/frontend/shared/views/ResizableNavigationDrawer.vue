@@ -12,15 +12,19 @@
       'drawer-right': isRight,
       'drawer-left': !isRight,
       dragging,
-      draggable: !temporary
+      draggable: !temporary,
     }"
   >
-    <div class="drawer-contents" @scroll="e => $emit('scroll', e)">
+    <div
+      class="drawer-contents"
+      @scroll="e => $emit('scroll', e)"
+    >
       <slot></slot>
     </div>
   </VNavigationDrawer>
 
 </template>
+
 
 <script>
 
@@ -108,7 +112,10 @@
       });
     },
     methods: {
-      // @public
+      /**
+       * @public
+       * @return {number}
+       */
       getWidth() {
         return this.width;
       },
@@ -120,7 +127,7 @@
         const offset = this.isRight ? window.innerWidth - clientX : clientX;
         this.width = localStorage[this.localStorageName] = Math.min(
           Math.max(this.minWidth, offset),
-          this.maxWidth
+          this.maxWidth,
         );
         this.$emit('resize', this.width);
       },
@@ -171,6 +178,7 @@
   };
 
 </script>
+
 
 <style lang="scss" scoped>
 

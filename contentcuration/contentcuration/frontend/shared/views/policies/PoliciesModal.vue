@@ -25,7 +25,7 @@
             <KButton
               :text="$tr('continueButton')"
               :primary="true"
-              :style="{ 'display': 'block', 'margin-left': 'auto' }"
+              :style="{ display: 'block', 'margin-left': 'auto' }"
               :disabled="!policyAccepted"
               data-test="continue-button"
               @click="onPolicyAccept"
@@ -44,6 +44,7 @@
   </KModal>
 
 </template>
+
 
 <script>
 

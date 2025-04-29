@@ -1,16 +1,38 @@
 <template>
 
-  <FullscreenModal v-if="user" v-model="dialog">
+  <FullscreenModal
+    v-if="user"
+    v-model="dialog"
+  >
     <template #close>
-      <VBtn flat exact style="font-size: 14pt; text-transform: none;" @click="dialog = false">
-        <Icon class="mr-2" icon="back" :color="$themeTokens.textInverted" />
+      <VBtn
+        flat
+        exact
+        style="font-size: 14pt; text-transform: none"
+        @click="dialog = false"
+      >
+        <Icon
+          class="mr-2"
+          icon="back"
+          :color="$themeTokens.textInverted"
+        />
         User list
       </VBtn>
     </template>
-    <LoadingText v-if="loading" absolute />
+    <LoadingText
+      v-if="loading"
+      absolute
+    />
     <VCardText v-else-if="details">
-      <VCard flat class="px-5">
-        <Banner error :value="!user.is_active" class="mb-4">
+      <VCard
+        flat
+        class="px-5"
+      >
+        <Banner
+          error
+          :value="!user.is_active"
+          class="mb-4"
+        >
           This user has been deactivated
         </Banner>
         <VLayout>
@@ -25,11 +47,15 @@
         <h1>{{ userFullName }}</h1>
 
         <!-- Basic information -->
-        <h2 class="mb-2 mt-4">
-          Basic information
-        </h2>
-        <DetailsRow label="Privileges" :text="user.is_admin ? 'Admin' : 'Default'" />
-        <DetailsRow label="Email" :text="user.email" />
+        <h2 class="mb-2 mt-4">Basic information</h2>
+        <DetailsRow
+          label="Privileges"
+          :text="user.is_admin ? 'Admin' : 'Default'"
+        />
+        <DetailsRow
+          label="Email"
+          :text="user.email"
+        />
         <DetailsRow
           label="Where do you plan to use Kolibri?"
           :text="details.locations ? details.locations.join(', ') : 'N/A'"
@@ -44,11 +70,13 @@
         />
         <DetailsRow
           label="Signed up on"
-          :text="$formatDate(user.date_joined, {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-          })"
+          :text="
+            $formatDate(user.date_joined, {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+            })
+          "
         />
         <DetailsRow
           label="Last active"
@@ -56,25 +84,22 @@
         />
 
         <!-- Disk space -->
-        <h2 class="mb-2 mt-5">
-          Disk space
-        </h2>
+        <h2 class="mb-2 mt-5">Disk space</h2>
         <h3>{{ storageUsed.toFixed() }}% storage used</h3>
-        <div style="max-width: 600px;">
+        <div style="max-width: 600px">
           <VProgressLinear
             :value="storageUsed"
             color="greenSuccess"
           />
         </div>
-        <p>
-          {{ formatFileSize(details.used_space) }} of {{ formatFileSize(user.disk_space) }}
-        </p>
-        <UserStorage :value="user.disk_space" :userId="userId" />
+        <p>{{ formatFileSize(details.used_space) }} of {{ formatFileSize(user.disk_space) }}</p>
+        <UserStorage
+          :value="user.disk_space"
+          :userId="userId"
+        />
 
         <!-- Feature flags -->
-        <h2 class="mb-2 mt-5">
-          Feature flags
-        </h2>
+        <h2 class="mb-2 mt-5">Feature flags</h2>
         <VDataTable
           :headers="featureFlagHeaders"
           :items="featureFlags"
@@ -98,9 +123,7 @@
         </VDataTable>
 
         <!-- Policies -->
-        <h2 class="mb-2 mt-5">
-          Policies accepted
-        </h2>
+        <h2 class="mb-2 mt-5">Policies accepted</h2>
         <VDataTable
           :headers="policyHeaders"
           :items="policies"
@@ -115,20 +138,25 @@
                 {{ item.lastSigned ? $formatDate(item.lastSigned) : 'Not signed' }}
               </td>
               <td :class="{ 'red--text': !item.isUpToDate }">
-                {{ item.signed ? $formatDate(item.signed ) : 'Not signed' }}
+                {{ item.signed ? $formatDate(item.signed) : 'Not signed' }}
               </td>
             </tr>
           </template>
         </VDataTable>
 
         <!-- Channels -->
-        <h2 class="mb-2 mt-5">
-          Editing {{ details.edit_channels.length | pluralChannels }}
-        </h2>
-        <p v-if="!details.edit_channels.length" class="grey--text">
+        <h2 class="mb-2 mt-5">Editing {{ details.edit_channels.length | pluralChannels }}</h2>
+        <p
+          v-if="!details.edit_channels.length"
+          class="grey--text"
+        >
           No channels found
         </p>
-        <div v-for="channel in details.edit_channels" :key="channel.id" class="mb-2">
+        <div
+          v-for="channel in details.edit_channels"
+          :key="channel.id"
+          class="mb-2"
+        >
           <ActionLink
             :text="channel.name"
             :href="channelUrl(channel)"
@@ -136,13 +164,18 @@
           />
         </div>
 
-        <h2 class="mb-2 mt-5">
-          Viewing {{ details.viewonly_channels.length | pluralChannels }}
-        </h2>
-        <p v-if="!details.viewonly_channels.length" class="grey--text">
+        <h2 class="mb-2 mt-5">Viewing {{ details.viewonly_channels.length | pluralChannels }}</h2>
+        <p
+          v-if="!details.viewonly_channels.length"
+          class="grey--text"
+        >
           No channels found
         </p>
-        <div v-for="channel in details.viewonly_channels" :key="channel.id" class="mb-2">
+        <div
+          v-for="channel in details.viewonly_channels"
+          :key="channel.id"
+          class="mb-2"
+        >
           <ActionLink
             :text="channel.name"
             :href="channelUrl(channel)"
@@ -220,7 +253,7 @@
           return this.userId && this.$route.params.userId === this.userId;
         },
         set(value) {
-          if (!value) {
+          if (!value && this.$route.name === RouteNames.USER) {
             this.$router.push(this.backLink);
           }
         },
@@ -249,19 +282,19 @@
         return capitalize(this.$formatRelative(this.user.last_login, { now: new Date() }));
       },
       policies() {
-        /*
-          Get list of policies and whether the user has signed them
-
-          Returns dict:
-            {
-              key: <str>, policy name (e.g. terms_of_service)
-              name: <str>, readable policy name (e.g. Terms of service)
-              latest: <date>, date of latest policy version available
-              signed: <date>, date user signed the policy last
-              lastSigned: <date>, date of policy version user signed last
-              isUpToDate: <boolean>, whether the user has signed the latest policy
-            }
-        */
+        /**
+         * Get list of policies and whether the user has signed them
+         *
+         * Returns dict:
+         *   {
+         *     key: <str>, policy name (e.g. terms_of_service)
+         *     name: <str>, readable policy name (e.g. Terms of service)
+         *     latest: <date>, date of latest policy version available
+         *     signed: <date>, date user signed the policy last
+         *     lastSigned: <date>, date of policy version user signed last
+         *     isUpToDate: <boolean>, whether the user has signed the latest policy
+         *   }
+         * */
         return requiredPolicies.map(policyName => {
           // Get most recent policy information
           const latest = policyDates[policyName];
@@ -274,12 +307,7 @@
             .reverse()[0];
           const lastSigned =
             lastSignedPolicyVersion &&
-            new Date(
-              lastSignedPolicyVersion
-                .split('_')
-                .slice(-3)
-                .join('-')
-            );
+            new Date(lastSignedPolicyVersion.split('_').slice(-3).join('-'));
 
           // Get when the user signed the policy last (if available)
           let signed;
@@ -323,11 +351,11 @@
         ];
       },
       featureFlagValue() {
-        return function(key) {
+        return function (key) {
           return this.loading
             ? false
             : (this.details && this.details.feature_flags && this.details.feature_flags[key]) ||
-                false;
+              false;
         };
       },
     },
@@ -390,7 +418,7 @@
         }).then(() => {
           this.$store.dispatch(
             'showSnackbarSimple',
-            value ? 'Feature enabled' : 'Feature disabled'
+            value ? 'Feature enabled' : 'Feature disabled',
           );
         });
       },

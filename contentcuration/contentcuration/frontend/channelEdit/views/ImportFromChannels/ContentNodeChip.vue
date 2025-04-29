@@ -8,7 +8,10 @@
     small
     disabled
   >
-    <VIconWrapper :color="textColor" class="mr-2">
+    <VIconWrapper
+      :color="textColor"
+      class="mr-2"
+    >
       {{ icon }}
     </VIconWrapper>
     <span>{{ translateConstant(kind) }}</span>

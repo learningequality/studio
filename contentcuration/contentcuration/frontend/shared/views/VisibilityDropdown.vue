@@ -1,6 +1,11 @@
 <template>
 
-  <DropdownWrapper component="VLayout" grid wrap align-center>
+  <DropdownWrapper
+    component="VLayout"
+    grid
+    wrap
+    align-center
+  >
     <template #default="{ attach, menuProps }">
       <VSelect
         ref="visibility"
@@ -19,12 +24,18 @@
         @focus="$emit('focus')"
       >
         <template #append-outer>
-          <InfoModal :header="$tr('visibilityHeader')" :items="roles">
+          <InfoModal
+            :header="$tr('visibilityHeader')"
+            :items="roles"
+          >
             <p>{{ $tr('visibilityDescription') }}</p>
             <template #header="{ item }">
               <span>
                 {{ item.text }}
-                <Icon v-if="roleIcon(item.value)" :icon="roleIcon(item.value)" />
+                <Icon
+                  v-if="roleIcon(item.value)"
+                  :icon="roleIcon(item.value)"
+                />
               </span>
             </template>
             <template #description="{ item }">
@@ -33,11 +44,19 @@
           </InfoModal>
         </template>
         <template #selection="{ item }">
-          <Icon v-if="roleIcon(item.value)" :icon="roleIcon(item.value)" class="pr-2" />
+          <Icon
+            v-if="roleIcon(item.value)"
+            :icon="roleIcon(item.value)"
+            class="pr-2"
+          />
           {{ item.text }}
         </template>
         <template #item="{ item }">
-          <Icon v-if="roleIcon(item.value)" :icon="roleIcon(item.value)" class="pr-2" />
+          <Icon
+            v-if="roleIcon(item.value)"
+            :icon="roleIcon(item.value)"
+            class="pr-2"
+          />
           {{ item.text }}
         </template>
       </VSelect>
@@ -45,6 +64,7 @@
   </DropdownWrapper>
 
 </template>
+
 
 <script>
 
@@ -66,7 +86,7 @@
       value: {
         type: [String, Object],
         default: 'learner',
-        validator: function(value) {
+        validator: function (value) {
           return !value || !value.toString() || Roles.has(value);
         },
       },

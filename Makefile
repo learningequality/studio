@@ -66,7 +66,7 @@ reconcile:
 ###############################################################
 i18n-extract-frontend:
 	# generate frontend messages
-	yarn makemessages
+	pnpm makemessages
 
 i18n-extract-backend:
 	# generate backend messages
@@ -75,7 +75,7 @@ i18n-extract-backend:
 i18n-extract: i18n-extract-frontend i18n-extract-backend
 
 i18n-transfer-context:
-	yarn transfercontext
+	pnpm transfercontext
 
 i18n-django-compilemessages:
 	# Change working directory to contentcuration/ such that compilemessages
@@ -94,9 +94,9 @@ i18n-pretranslate-approve-all:
 i18n-download-translations:
 	python node_modules/kolibri-tools/lib/i18n/crowdin.py rebuild-translations ${branch}
 	python node_modules/kolibri-tools/lib/i18n/crowdin.py download-translations ${branch}
-	yarn exec kolibri-tools i18n-code-gen -- --output-dir ./contentcuration/contentcuration/frontend/shared/i18n
+	pnpm exec kolibri-tools i18n-code-gen -- --output-dir ./contentcuration/contentcuration/frontend/shared/i18n
 	$(MAKE) i18n-django-compilemessages
-	yarn exec kolibri-tools i18n-create-message-files -- --namespace contentcuration --searchPath ./contentcuration/contentcuration/frontend
+	pnpm exec kolibri-tools i18n-create-message-files -- --namespace contentcuration --searchPath ./contentcuration/contentcuration/frontend
 
 i18n-download: i18n-download-translations
 

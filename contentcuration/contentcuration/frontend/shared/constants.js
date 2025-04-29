@@ -200,7 +200,7 @@ export const FeatureFlagKeys = Object.keys(FeatureFlagsSchema.properties).reduce
     featureFlags[featureFlag] = featureFlag;
     return featureFlags;
   },
-  {}
+  {},
 );
 
 export const ContentModalities = {

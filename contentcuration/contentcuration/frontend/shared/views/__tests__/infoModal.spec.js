@@ -14,18 +14,21 @@ describe('InfoModal', () => {
     wrapper = makeWrapper();
   });
 
-  it('clicking the info button should open the dialog', () => {
-    expect(wrapper.contains('[data-test="info-dialog"]')).toBe(false);
+  it('clicking the info button should open the dialog', async () => {
+    expect(wrapper.findComponent('[data-test="info-dialog"]').exists()).toBe(false);
 
-    wrapper.find('[data-test="info-icon"]').trigger('click');
-    expect(wrapper.find('[data-test="info-dialog"]').isVisible()).toBe(true);
+    wrapper.findComponent('[data-test="info-icon"]').trigger('click');
+    await wrapper.vm.$nextTick();
+    expect(wrapper.findComponent('[data-test="info-dialog"]').isVisible()).toBe(true);
   });
 
-  it('clicking the close button should close the dialog', () => {
-    wrapper.find('[data-test="info-icon"]').trigger('click');
-    expect(wrapper.find('[data-test="info-dialog"]').isVisible()).toBe(true);
+  it('clicking the close button should close the dialog', async () => {
+    wrapper.findComponent('[data-test="info-icon"]').trigger('click');
+    await wrapper.vm.$nextTick();
+    expect(wrapper.findComponent('[data-test="info-dialog"]').isVisible()).toBe(true);
 
-    wrapper.find('[data-test="info-dialog"]').vm.$emit('cancel');
-    expect(wrapper.contains('[data-test="info-dialog"]')).toBe(false);
+    wrapper.findComponent('[data-test="info-dialog"]').vm.$emit('cancel');
+    await wrapper.vm.$nextTick();
+    expect(wrapper.findComponent('[data-test="info-dialog"]').exists()).toBe(false);
   });
 });

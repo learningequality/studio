@@ -11,7 +11,11 @@
       <VToolbarSideIcon @click="drawer = true" />
       <VToolbarTitle>
         {{ $tr('deploy') }} <span class="notranslate">{{ currentChannel.name }}</span>
-        <KRouterLink :to="rootTreeRoute" class="body-1 pl-2" data-test="root-tree-link">
+        <KRouterLink
+          :to="rootTreeRoute"
+          class="body-1 pl-2"
+          data-test="root-tree-link"
+        >
           {{ $tr('backToViewing') }}
         </KRouterLink>
       </VToolbarTitle>
@@ -23,7 +27,11 @@
     <MainNavigationDrawer v-model="drawer" />
     <LoadingText v-if="isLoading || isDeploying" />
     <VContent v-else-if="isEmpty">
-      <VLayout justify-center fill-height class="pt-5">
+      <VLayout
+        justify-center
+        fill-height
+        class="pt-5"
+      >
         <VFlex class="text-xs-center">
           <h1 class="font-weight-bold headline mb-2">
             {{ $tr('emptyChannelText') }}
@@ -50,7 +58,10 @@
           zIndex: 5,
         }"
       >
-        <VLayout row class="px-3">
+        <VLayout
+          row
+          class="px-3"
+        >
           <KIconButton
             icon="collapseAll"
             :tooltip="$tr('collapseAllButton')"
@@ -81,9 +92,12 @@
           dense
           color="transparent"
           :flat="!elevated"
-          style="z-index: 4;"
+          style="z-index: 4"
         >
-          <Breadcrumbs :items="breadcrumbsItems" class="pa-0">
+          <Breadcrumbs
+            :items="breadcrumbsItems"
+            class="pa-0"
+          >
             <template #item="{ item, isLast }">
               <span
                 :class="[
@@ -98,7 +112,10 @@
         </ToolBar>
 
         <VLayout class="main-content">
-          <VFlex v-if="isLoadingchild" class="pa-4 subheading text-xs-center">
+          <VFlex
+            v-if="isLoadingchild"
+            class="pa-4 subheading text-xs-center"
+          >
             <KCircularLoader />
           </VFlex>
           <VFlex
@@ -107,7 +124,11 @@
           >
             {{ $tr('emptyTopicText') }}
           </VFlex>
-          <div v-else class="main-list" @scroll="scroll">
+          <div
+            v-else
+            class="main-list"
+            @scroll="scroll"
+          >
             <VList
               shrink
               class="pa-0"
@@ -124,9 +145,12 @@
                   @dblclick.native="onNodeClick(child)"
                 >
                   <template #actions-start>
-                    <VListTileAction style="width: 24px;" />
+                    <VListTileAction style="width: 24px" />
                   </template>
-                  <template v-if="isTopic(child)" #actions-end>
+                  <template
+                    v-if="isTopic(child)"
+                    #actions-end
+                  >
                     <VListTileAction>
                       <IconButton
                         :color="$themeTokens.primary"
@@ -153,21 +177,39 @@
       </VContent>
 
       <BottomBar app>
-        <VLayout align-center justify-space-between row fill-height wrap>
+        <VLayout
+          align-center
+          justify-space-between
+          row
+          fill-height
+          wrap
+        >
           <VFlex>
-            <span class="pl-2" data-test="bottom-bar-stats-resources-count">
+            <span
+              class="pl-2"
+              data-test="bottom-bar-stats-resources-count"
+            >
               {{ $tr('totalResources') }}:
               <span class="font-weight-bold">{{ resourcesCountStaged }}</span>
-              <Diff :value="resourcesCountDiff" class="font-weight-bold">
+              <Diff
+                :value="resourcesCountDiff"
+                class="font-weight-bold"
+              >
                 <template #default="{ sign, value }">
                   ({{ sign }}{{ value ? value : '-' }})
                 </template>
               </Diff>
             </span>
-            <span class="pl-2" data-test="bottom-bar-stats-file-size">
+            <span
+              class="pl-2"
+              data-test="bottom-bar-stats-file-size"
+            >
               {{ $tr('totalSize') }}:
               <span class="font-weight-bold">{{ formatFileSize(fileSizeStaged) }}</span>
-              <Diff :value="fileSizeDiff" class="font-weight-bold">
+              <Diff
+                :value="fileSizeDiff"
+                class="font-weight-bold"
+              >
                 <template #default="{ sign, value }">
                   ({{ sign }}{{ value ? formatFileSize(value) : '-' }})
                 </template>
@@ -191,7 +233,7 @@
             >
               {{ $tr('deployChannel') }}
             </VBtn>
-          </VFLex>
+          </VFlex>
         </VLayout>
       </BottomBar>
 
@@ -202,7 +244,10 @@
         :cancelText="$tr('closeSummaryDetailsDialogBtn')"
         @cancel="displaySummaryDetailsDialog = false"
       >
-        <DiffTable :stagingDiff="stagingDiff" @reload="reloadCurrentChannelStagingDiff" />
+        <DiffTable
+          :stagingDiff="stagingDiff"
+          @reload="reloadCurrentChannelStagingDiff"
+        />
       </KModal>
 
       <KModal
@@ -219,7 +264,10 @@
         <p>{{ $tr('deployDialogDescription') }}</p>
 
         <VLayout data-test="deploy-dialog-live-resources">
-          <VFlex xs4 class="font-weight-bold">
+          <VFlex
+            xs4
+            class="font-weight-bold"
+          >
             {{ $tr('liveResources') }}:
           </VFlex>
           <VFlex>
@@ -229,7 +277,10 @@
         </VLayout>
 
         <VLayout data-test="deploy-dialog-staged-resources">
-          <VFlex xs4 class="font-weight-bold">
+          <VFlex
+            xs4
+            class="font-weight-bold"
+          >
             {{ $tr('stagedResources') }}:
           </VFlex>
           <VFlex>
@@ -570,6 +621,7 @@
   };
 
 </script>
+
 
 <style lang="scss" scoped>
 

@@ -1,17 +1,29 @@
 <template>
 
-  <section class="list-group" :class="{ open }">
+  <section
+    class="list-group"
+    :class="{ open }"
+  >
     <header
       class="list-group-header"
       @click="open = !open"
     >
-      <div v-if="prependIcon" class="icon-container">
+      <div
+        v-if="prependIcon"
+        class="icon-container"
+      >
         <VIconWrapper>{{ prependIcon }}</VIconWrapper>
       </div>
-      <div class="header-content" :class="{ 'has-icon': appendIcon || prependIcon }">
+      <div
+        class="header-content"
+        :class="{ 'has-icon': appendIcon || prependIcon }"
+      >
         <slot name="header"></slot>
       </div>
-      <div v-if="appendIcon" class="icon-container">
+      <div
+        v-if="appendIcon"
+        class="icon-container"
+      >
         <VIconWrapper>{{ appendIcon }}</VIconWrapper>
       </div>
     </header>
@@ -27,6 +39,7 @@
   </section>
 
 </template>
+
 
 <script>
 
@@ -77,6 +90,7 @@
   };
 
 </script>
+
 
 <style lang="scss" scoped>
 

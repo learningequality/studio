@@ -1,6 +1,6 @@
 import 'regenerator-runtime/runtime';
 import { liveQuery } from 'dexie';
-import * as Sentry from '@sentry/vue';
+import { init as SentryInit, globalHandlersIntegration } from '@sentry/vue';
 import Vue from 'vue';
 import VueRouter from 'vue-router';
 import Vuetify, {
@@ -105,7 +105,6 @@ import {
 } from 'vuetify/lib/directives';
 import VueIntl from 'vue-intl';
 import Croppa from 'vue-croppa';
-import VueCompositionApi from '@vue/composition-api';
 import { Workbox, messageSW } from 'workbox-window';
 import KThemePlugin from 'kolibri-design-system/lib/KThemePlugin';
 import trackInputModality from 'kolibri-design-system/lib/styles/trackInputModality';
@@ -117,11 +116,11 @@ import { i18nSetup } from 'shared/i18n';
 
 import './styles/vuetify.scss';
 import 'shared/styles/main.scss';
-import Base from 'shared/Base.vue';
+import RouterEntrypoint from 'shared/RouterEntrypoint.vue';
 import urls from 'shared/urls';
 import ActionLink from 'shared/views/ActionLink';
 import Icon from 'shared/views/Icon';
-import Menu from 'shared/views/Menu';
+import BaseMenu from 'shared/views/BaseMenu.vue';
 import Divider from 'shared/views/Divider';
 import { initializeDB, resetDB } from 'shared/data';
 import { Session, injectVuexStore } from 'shared/data/resources';
@@ -130,7 +129,7 @@ import { Session, injectVuexStore } from 'shared/data/resources';
 if (process.env.NODE_ENV !== 'production') {
   Vue.config.devtools = true;
 } else if (window.sentryActive) {
-  Sentry.init({
+  SentryInit({
     Vue,
     dsn: window.sentryDSN,
     environment: window.sentryEnvironment,
@@ -141,10 +140,8 @@ if (process.env.NODE_ENV !== 'production') {
     // onunhandledrejection reports just give us a dump of the Promise.reject object, and we often
     // get another error report with more useful data anyway, so ignore these for now.
     // They are most commonly triggered by a 500 response from an API endpoint call.
-    integrations: [
-      new Sentry.Integrations.GlobalHandlers({ onerror: true, onunhandledrejection: false }),
-    ],
-    beforeSend: function(event) {
+    integrations: [globalHandlersIntegration({ onerror: true, onunhandledrejection: false })],
+    beforeSend: function (event) {
       // Ignore errors when CloudFlare-AlwaysOnline is in the user agent as these are errors serving
       // the offline version and I don't think we can fix or reproduce these easily.
       // Fix taken from here: https://github.com/getsentry/sentry-javascript/issues/617#issuecomment-227562203
@@ -160,7 +157,6 @@ if (process.env.NODE_ENV !== 'production') {
 Vue.use(Croppa);
 Vue.use(VueIntl);
 Vue.use(VueRouter);
-Vue.use(VueCompositionApi);
 Vue.use(Vuetify, {
   components: {
     // Explicitly register used Vuetify components globally
@@ -258,7 +254,7 @@ Vue.use(AnalyticsPlugin, { dataLayer: window.dataLayer });
 
 // Register global components
 Vue.component('ActionLink', ActionLink);
-Vue.component('Menu', Menu);
+Vue.component('BaseMenu', BaseMenu);
 Vue.component('Divider', Divider);
 Vue.component('Icon', Icon);
 
@@ -359,7 +355,7 @@ export default async function startApp({ store, router, index }) {
   if (index) {
     Object.assign(config, index);
   } else {
-    Object.assign(config, Base);
+    Object.assign(config, RouterEntrypoint);
   }
 
   window.addEventListener('beforeunload', e => {
@@ -385,7 +381,7 @@ export default async function startApp({ store, router, index }) {
   rootVue = new Vue(config);
 
   // Return a cleanup function
-  return function() {
+  return function () {
     if (subscription) {
       subscription.unsubscribe();
     }

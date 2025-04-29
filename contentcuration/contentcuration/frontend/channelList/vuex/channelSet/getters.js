@@ -3,7 +3,7 @@ export function channelSets(state) {
 }
 
 export function getChannelSet(state) {
-  return function(channelSetId) {
+  return function (channelSetId) {
     const channelSet = state.channelSetsMap[channelSetId];
     if (channelSet) {
       return {
@@ -16,7 +16,7 @@ export function getChannelSet(state) {
 }
 
 export function getChannelSetIsValid(state) {
-  return function(channelSetId) {
+  return function (channelSetId) {
     const set = state.channelSetsMap[channelSetId];
     return set && set.name && set.name.length > 0;
   };

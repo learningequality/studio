@@ -54,6 +54,7 @@ export function isNodeComplete({ nodeDetails, assessmentItems, files }) {
 
   if (getNodeDetailsErrors(nodeDetails).length) {
     if (process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test') {
+      // eslint-disable-next-line no-console
       console.info('Node is incomplete', getNodeDetailsErrors(nodeDetails));
     }
     return false;
@@ -64,6 +65,7 @@ export function isNodeComplete({ nodeDetails, assessmentItems, files }) {
   ) {
     if (getNodeFilesErrors(files).length) {
       if (process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test') {
+        // eslint-disable-next-line no-console
         console.info("Node's files are incomplete", getNodeFilesErrors(files));
       }
       return false;
@@ -73,6 +75,7 @@ export function isNodeComplete({ nodeDetails, assessmentItems, files }) {
     const completionCriteria = get(nodeDetails, 'extra_fields.options.completion_criteria');
     if (completionCriteria && !validateCompletionCriteria(completionCriteria, nodeDetails.kind)) {
       if (process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test') {
+        // eslint-disable-next-line no-console
         console.info("Node's completion criteria is invalid", validateCompletionCriteria.errors);
       }
       return false;
@@ -81,6 +84,7 @@ export function isNodeComplete({ nodeDetails, assessmentItems, files }) {
   if (nodeDetails.kind === ContentKindsNames.EXERCISE) {
     if (!assessmentItems.length) {
       if (process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test') {
+        // eslint-disable-next-line no-console
         console.info('Exercise node is missing assessment items');
       }
       return false;
@@ -92,9 +96,10 @@ export function isNodeComplete({ nodeDetails, assessmentItems, files }) {
     };
     if (assessmentItems.some(isInvalid)) {
       if (process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test') {
+        // eslint-disable-next-line no-console
         console.info(
           "Exercise node's assessment items are invalid",
-          assessmentItems.some(isInvalid)
+          assessmentItems.some(isInvalid),
         );
       }
       return false;
@@ -147,17 +152,14 @@ function _getErrorMsg(error) {
     [ValidationErrors.DURATION_REQUIRED]: translator.$tr('fieldRequired'),
     [ValidationErrors.COMPLETION_REQUIRED]: translator.$tr('fieldRequired'),
     [ValidationErrors.ACTIVITY_DURATION_REQUIRED]: translator.$tr('fieldRequired'),
-    [ValidationErrors.ACTIVITY_DURATION_MIN_FOR_SHORT_ACTIVITY]: translator.$tr(
-      'activityDurationGteOne'
-    ),
-    [ValidationErrors.ACTIVITY_DURATION_MAX_FOR_SHORT_ACTIVITY]: translator.$tr(
-      'shortActivityLteThirty'
-    ),
-    [ValidationErrors.ACTIVITY_DURATION_MIN_FOR_LONG_ACTIVITY]: translator.$tr(
-      'longActivityGtThirty'
-    ),
+    [ValidationErrors.ACTIVITY_DURATION_MIN_FOR_SHORT_ACTIVITY]:
+      translator.$tr('activityDurationGteOne'),
+    [ValidationErrors.ACTIVITY_DURATION_MAX_FOR_SHORT_ACTIVITY]:
+      translator.$tr('shortActivityLteThirty'),
+    [ValidationErrors.ACTIVITY_DURATION_MIN_FOR_LONG_ACTIVITY]:
+      translator.$tr('longActivityGtThirty'),
     [ValidationErrors.ACTIVITY_DURATION_MAX_FOR_LONG_ACTIVITY]: translator.$tr(
-      'longActivityLteOneTwenty'
+      'longActivityLteOneTwenty',
     ),
     [ValidationErrors.ACTIVITY_DURATION_MIN_REQUIREMENT]: translator.$tr('activityDurationGteOne'),
     [ValidationErrors.ACTIVITY_DURATION_TOO_LONG]: translator.$tr('activityDurationTooLongWarning'),
@@ -545,12 +547,12 @@ export function getAssessmentItemErrors(assessmentItem, freeResponseInvalid = fa
   const hasOneCorrectAnswer =
     assessmentItem.answers &&
     assessmentItem.answers.filter(
-      answer => answer.answer && String(answer.answer).trim() && answer.correct === true
+      answer => answer.answer && String(answer.answer).trim() && answer.correct === true,
     ).length === 1;
   const hasAtLeatOneCorrectAnswer =
     assessmentItem.answers &&
     assessmentItem.answers.filter(
-      answer => answer.answer && String(answer.answer).trim() && answer.correct === true
+      answer => answer.answer && String(answer.answer).trim() && answer.correct === true,
     ).length > 0;
 
   if (!assessmentItem.question || !assessmentItem.question.trim()) {

@@ -35,7 +35,10 @@
           :label="learnerNeedsLabels"
           @change="checks['learner_needs'] = !checks['learner_needs']"
         />
-        <p v-if="!!inheritableMetadataItems.language" class="language-description">
+        <p
+          v-if="!!inheritableMetadataItems.language"
+          class="language-description"
+        >
           {{ $tr('updateLanguage') }}
         </p>
         <KCheckbox
@@ -45,7 +48,6 @@
           :checked="checks['language']"
           @change="checks['language'] = !checks['language']"
         />
-
       </div>
       <div class="divider"></div>
       <KCheckbox
@@ -60,6 +62,7 @@
   </KModal>
 
 </template>
+
 
 <script>
 
@@ -106,8 +109,8 @@
           this.parent &&
             this.parent?.extra_fields?.inherited_metadata &&
             Object.keys(this.inheritableMetadataItems).every(
-              field => !isUndefined(this.parent.extra_fields.inherited_metadata[field])
-            )
+              field => !isUndefined(this.parent.extra_fields.inherited_metadata[field]),
+            ),
         );
       },
       active() {

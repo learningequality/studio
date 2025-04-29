@@ -6,26 +6,21 @@ import ChannelSetList from '../ChannelSetList.vue';
 
 const store = factory();
 
-const id = '00000000000000000000000000000000';
-
-function makeWrapper(createChannelSetStub) {
+function makeWrapper() {
   router.push({
     name: RouteNames.CHANNEL_SETS,
   });
-  const wrapper = mount(ChannelSetList, { store, router });
-  wrapper.setMethods({
-    createChannelSet: createChannelSetStub,
-  });
-  return wrapper;
+  return mount(ChannelSetList, { store, router });
 }
 
 describe('channelSetList', () => {
   let wrapper;
-  const createChannelSetStub = jest.fn().mockImplementation(() => Promise.resolve(id));
-  beforeEach(() => {
-    wrapper = makeWrapper(createChannelSetStub);
-    wrapper.setData({ loading: false });
+
+  beforeEach(async () => {
+    wrapper = makeWrapper();
+    await wrapper.setData({ loading: false });
   });
+
   it('should open a new channel set modal when new set button is clicked', async () => {
     const push = jest.fn();
     wrapper.vm.$router.push = push;

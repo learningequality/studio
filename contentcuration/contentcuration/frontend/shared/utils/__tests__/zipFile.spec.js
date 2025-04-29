@@ -23,17 +23,7 @@ const TEST_CASES = {
       // Equivalent of Python:
       // b"PNG\x89\x50\x4E\x47\x0D\x0A\x1A\x0A"
       'image.png': new Uint8Array([
-        0x50,
-        0x4e,
-        0x47,
-        0x89,
-        0x50,
-        0x4e,
-        0x47,
-        0x0d,
-        0x0a,
-        0x1a,
-        0x0a,
+        0x50, 0x4e, 0x47, 0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
       ]),
       'data.bin': new Uint8Array([0xff, 0xd8, 0xff, 0xe0]),
       'text.txt': 'Mixed content',
@@ -43,17 +33,7 @@ const TEST_CASES = {
   nested_binary: {
     files: {
       'folder/image.png': new Uint8Array([
-        0x50,
-        0x4e,
-        0x47,
-        0x89,
-        0x50,
-        0x4e,
-        0x47,
-        0x0d,
-        0x0a,
-        0x1a,
-        0x0a,
+        0x50, 0x4e, 0x47, 0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
       ]),
       'test.txt': 'Hello World',
     },
@@ -68,9 +48,7 @@ const TEST_CASES = {
 };
 
 function getMD5(data) {
-  return createHash('md5')
-    .update(Buffer.from(data))
-    .digest('hex');
+  return createHash('md5').update(Buffer.from(data)).digest('hex');
 }
 
 describe('createPredictableZip', () => {

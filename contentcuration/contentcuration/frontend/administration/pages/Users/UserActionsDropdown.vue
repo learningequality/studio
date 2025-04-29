@@ -12,8 +12,10 @@
     <ConfirmationDialog
       v-model="deactivateDialog"
       title="Deactivate user"
-      :text="`Deactivating ${user.name}'s account will block them from ` +
-        `accessing their account. Are you sure you want to continue?`"
+      :text="
+        `Deactivating ${user.name}'s account will block them from ` +
+          `accessing their account. Are you sure you want to continue?`
+      "
       confirmButtonText="Deactivate"
       data-test="confirm-deactivate"
       @confirm="deactivateHandler"
@@ -36,15 +38,21 @@
       v-model="emailDialog"
       :query="{ ids: [userId] }"
     />
-    <Menu>
+    <BaseMenu>
       <template #activator="{ on }">
-        <VBtn v-bind="$attrs" v-on="on">
+        <VBtn
+          v-bind="$attrs"
+          v-on="on"
+        >
           Actions
           <Icon icon="dropdown" />
         </VBtn>
       </template>
       <VList>
-        <VListTile data-test="email" @click="emailDialog = true">
+        <VListTile
+          data-test="email"
+          @click="emailDialog = true"
+        >
           <VListTileTitle>Email</VListTileTitle>
         </VListTile>
         <template v-if="user.is_active">
@@ -73,7 +81,10 @@
           </VListTile>
         </template>
         <template v-else>
-          <VListTile data-test="activate" @click="activateHandler">
+          <VListTile
+            data-test="activate"
+            @click="activateHandler"
+          >
             <VListTileTitle>Activate</VListTileTitle>
           </VListTile>
 
@@ -86,7 +97,7 @@
           </VListTile>
         </template>
       </VList>
-    </Menu>
+    </BaseMenu>
   </div>
 
 </template>
@@ -168,5 +179,4 @@
 </script>
 
 
-<style lang="scss" scoped>
-</style>
+<style lang="scss" scoped></style>

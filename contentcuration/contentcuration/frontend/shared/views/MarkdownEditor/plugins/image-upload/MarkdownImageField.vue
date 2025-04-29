@@ -6,7 +6,10 @@
     v-mouse-move="resizeMouseMove"
     :class="[imgClass, draggingResizer ? 'dragging' : '', resizing ? 'resizing' : '']"
   >
-    <Menu z-index="203" class="ignore-md">
+    <BaseMenu
+      z-index="203"
+      class="ignore-md"
+    >
       <template #activator="{ on }">
         <VBtn
           v-show="!resizing && editing"
@@ -15,7 +18,7 @@
           small
           round
           absolute
-          style="min-width: 30px;"
+          style="min-width: 30px"
           class="edit-options ignore-md ma-1 pa-0"
           v-on="on"
           @click.stop
@@ -34,7 +37,7 @@
           <VListTileTitle>{{ $tr('removeImageOption') }}</VListTileTitle>
         </VListTile>
       </VList>
-    </Menu>
+    </BaseMenu>
     <img
       ref="image"
       :src="image.src"
@@ -51,6 +54,7 @@
   </div>
 
 </template>
+
 
 <script>
 
@@ -130,7 +134,7 @@
             },
             bubbles: true,
             cancelable: true,
-          })
+          }),
         );
       },
       handleRemove() {
@@ -138,7 +142,7 @@
           new CustomEvent('remove', {
             bubbles: true,
             cancelable: true,
-          })
+          }),
         );
       },
       handleResize() {
@@ -194,11 +198,14 @@
 
 </script>
 
+
 <style>
-/*
+
+  /*
   Warning: custom elements don't currently have a way of using SFC styles.
   Instead, add your style changes to `./style.scss`
 
   Additionally, all child component styles must be included in `./style.scss`
 */
+
 </style>

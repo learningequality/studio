@@ -21,9 +21,10 @@ export LDFLAGS="-L/opt/homebrew/opt/openssl/lib"
 ```
 
 ## Install frontend dependencies
-The project requires `Node 16.X` as the runtime and `Yarn >= 1.22.22` as the package manager. We make use of [`Volta`](https://docs.volta.sh/guide/getting-started) to manage the same automatically. Please make sure you have volta installed and your shell configured to use volta. You can then install all the dependencies by running:
+The project requires `Node 18.X` as the runtime and `pnpm` as the package manager. We make use of [`Volta`](https://docs.volta.sh/guide/getting-started) to manage the same automatically. Please make sure you have volta installed and your shell configured to use volta. You can then install all the dependencies by running:
 ```bash
-yarn install
+corepack use pnpm # or `volta install pnpm`
+pnpm install
 ```
 
 ## Install and run services
@@ -65,18 +66,18 @@ make dcservicesdown
 ## Initializing Studio
 With the services running, in a separate terminal/terminal-tab, we can now initialize the database for Studio development purposes. The command below will initialize the database tables, import constants, enable required postgres extensions and a studio user account for development:
 ```bash
-yarn run devsetup
+pnpm run devsetup
 ```
 
 ## Running the development server
 With the services running, in a separate terminal/terminal-tab, and the database initialized, we can start the dev server:
 ```bash
-yarn run devserver:hot  # with Vue hot module reloading
+pnpm run devserver:hot  # with Vue hot module reloading
 # or
-yarn run devserver  # without hot module reloading
+pnpm run devserver  # without hot module reloading
 ```
 
-Either of the above commands will take a few moments to build the frontend. When it finishes, you can sign in with the account created by the `yarn run devsetup` command:
+Either of the above commands will take a few moments to build the frontend. When it finishes, you can sign in with the account created by the `pnpm run devsetup` command:
 - url: `http://localhost:8080/accounts/login/`
 - username: `a@a.com`
 - password: `a`

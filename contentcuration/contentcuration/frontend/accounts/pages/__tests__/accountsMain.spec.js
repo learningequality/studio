@@ -1,11 +1,9 @@
 import { mount } from '@vue/test-utils';
 import router from '../../router';
-import Main from '../Main';
+import AccountsMain from '../AccountsMain.vue';
 
-const login = jest.fn();
-
-function makeWrapper() {
-  const wrapper = mount(Main, {
+async function makeWrapper() {
+  const wrapper = mount(AccountsMain, {
     router,
     stubs: ['GlobalSnackbar', 'PolicyModals'],
     mocks: {
@@ -18,19 +16,14 @@ function makeWrapper() {
       },
     },
   });
-  wrapper.setMethods({
-    login: data => {
-      return new Promise(resolve => {
-        login(data);
-        resolve();
-      });
-    },
-  });
-  wrapper.setData({
+  await wrapper.setData({
     username: 'test@test.com',
     password: 'pass',
   });
-  return wrapper;
+
+  const login = jest.spyOn(wrapper.vm, 'login');
+  login.mockImplementation(() => Promise.resolve());
+  return [wrapper, login];
 }
 
 function makeFailedPromise(statusCode) {
@@ -46,54 +39,62 @@ function makeFailedPromise(statusCode) {
 }
 
 describe('main', () => {
-  let wrapper, loginToProceed;
+  let wrapper, login, loginToProceed;
+
   beforeEach(async () => {
-    wrapper = makeWrapper();
-    login.mockReset();
+    [wrapper, login] = await makeWrapper();
     await wrapper.vm.$nextTick();
-    loginToProceed = wrapper.findAll('[data-test="loginToProceed"]').at(0);
+    loginToProceed = wrapper.findAllComponents('[data-test="loginToProceed"]').at(0);
   });
+
   afterEach(() => {
     if (wrapper) {
       wrapper.destroy();
     }
   });
-  it('should trigger submit method when form is submitted', () => {
+
+  it('should trigger submit method when form is submitted', async () => {
     expect(loginToProceed.isVisible()).toBe(false);
-    const submit = jest.fn();
-    wrapper.setMethods({ submit });
-    wrapper.find({ ref: 'form' }).trigger('submit');
+    const submit = jest.spyOn(wrapper.vm, 'submit');
+    submit.mockImplementation(() => {});
+    await wrapper.findComponent({ ref: 'form' }).trigger('submit');
     expect(submit).toHaveBeenCalled();
   });
+
   it('should call login with username and password provided', () => {
     expect(loginToProceed.isVisible()).toBe(false);
     wrapper.vm.submit();
     expect(login).toHaveBeenCalled();
   });
-  it('should fail if username is not provided', () => {
+
+  it('should fail if username is not provided', async () => {
     expect(loginToProceed.isVisible()).toBe(false);
-    wrapper.setData({ username: ' ' });
+    await wrapper.setData({ username: ' ' });
     wrapper.vm.submit();
     expect(login).not.toHaveBeenCalled();
   });
-  it('should fail if password is not provided', () => {
+
+  it('should fail if password is not provided', async () => {
     expect(loginToProceed.isVisible()).toBe(false);
-    wrapper.setData({ password: '' });
+    await wrapper.setData({ password: '' });
     wrapper.vm.submit();
     expect(login).not.toHaveBeenCalled();
   });
+
   it('should set loginFailed if login fails', async () => {
     expect(loginToProceed.isVisible()).toBe(false);
-    wrapper.setMethods({ login: makeFailedPromise() });
+    jest.spyOn(wrapper.vm, 'login').mockImplementation(makeFailedPromise());
     await wrapper.vm.submit();
     expect(wrapper.vm.loginFailed).toBe(true);
   });
+
   it('should say account has not been activated if login returns 405', async () => {
     expect(loginToProceed.isVisible()).toBe(false);
-    wrapper.setMethods({ login: makeFailedPromise() });
+    jest.spyOn(wrapper.vm, 'login').mockImplementation(makeFailedPromise());
     await wrapper.vm.submit();
     expect(wrapper.vm.loginFailed).toBe(true);
   });
+
   it('should navigate to next url if next query param is set', async () => {
     const testUrl = '/testnext/';
     const location = new URL(`http://studio.time/?next=${testUrl}`);
@@ -103,7 +104,7 @@ describe('main', () => {
     window.location.assign = jest.fn();
 
     wrapper.destroy();
-    wrapper = makeWrapper();
+    [wrapper, login] = await makeWrapper();
     await wrapper.vm.$nextTick();
     loginToProceed = wrapper.findAll('[data-test="loginToProceed"]').at(0);
     expect(loginToProceed.isVisible()).toBe(true);

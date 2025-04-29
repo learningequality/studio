@@ -12,7 +12,7 @@ describe('imageHtmlToMd', () => {
 
     expect(imageHtmlToMd(input)).toBe(
       `First image: ![](\${☣ CONTENTSTORAGE}/checksum.ext =100x200)
-      Second image: ![Second image](\${☣ CONTENTSTORAGE}/94ffaf.png)`
+      Second image: ![Second image](\${☣ CONTENTSTORAGE}/94ffaf.png)`,
     );
   });
 });

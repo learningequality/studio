@@ -27,12 +27,13 @@
       return createElement(
         VIcon,
         data,
-        data.props && data.props.iconName ? [data.props.iconName] : children
+        data.props && data.props.iconName ? [data.props.iconName] : children,
       );
     },
   };
 
 </script>
+
 
 <style lang="scss" scoped>
 

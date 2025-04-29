@@ -2,34 +2,50 @@
 
   <div>
     <h2>{{ $tr('storagePercentageUsed', { qty: storageUsagePercentage.toString() }) }}</h2>
-    <KLinearLoader :progress="storageUsagePercentage" type="determinate" class="loader" />
+    <KLinearLoader
+      :progress="storageUsagePercentage"
+      type="determinate"
+      class="loader"
+    />
     <div>
       {{
-        $tr('spaceUsedOfMax',
-            { qty: formatFileSize(usedSpace), max: formatFileSize(totalSpace) }
-        )
+        $tr('spaceUsedOfMax', { qty: formatFileSize(usedSpace), max: formatFileSize(totalSpace) })
       }}
     </div>
 
-    <KFixedGrid v-if="storageUseByKind !== null" numCols="8" gutter="10">
-
+    <KFixedGrid
+      v-if="storageUseByKind !== null"
+      numCols="8"
+      gutter="10"
+    >
       <!-- ContentKindsList returns lowercased strings for each kind -->
       <template v-for="kind in contentKinds">
-
-        <KFixedGridItem :key="`${kind}1`" span="3" class="row">
-          <span class="mr-2 pa-2" :style="{ backgroundColor: theme[kind] }">
-            <KIcon :icon="kindIcon(kind)" :color="$themeTokens.textInverted" />
+        <KFixedGridItem
+          :key="`${kind}1`"
+          span="3"
+          class="row"
+        >
+          <span
+            class="mr-2 pa-2"
+            :style="{ backgroundColor: theme[kind] }"
+          >
+            <KIcon
+              :icon="kindIcon(kind)"
+              :color="$themeTokens.textInverted"
+            />
           </span>
 
           <span>{{ translateConstant(kind) }}</span>
         </KFixedGridItem>
 
-        <KFixedGridItem :key="`${kind}2`" span="5" class="row">
+        <KFixedGridItem
+          :key="`${kind}2`"
+          span="5"
+          class="row"
+        >
           <span>{{ formatFileSize(storageUseByKind[kind]) }}</span>
         </KFixedGridItem>
-
       </template>
-
     </KFixedGrid>
     <LoadingText v-else />
 
@@ -38,15 +54,13 @@
     </h2>
 
     <p>
-
-      <span>{{ $tr('requestMoreSpaceMessage') + " " }}</span>
+      <span>{{ $tr('requestMoreSpaceMessage') + ' ' }}</span>
 
       <KExternalLink
         :text="$tr('learnMoreAboutImportingContentFromChannels')"
         href="https://kolibri-studio.readthedocs.io/en/latest/add_content.html#import-content-from-other-channels"
         openInNewTab
       />
-
     </p>
 
     <KButton
@@ -56,7 +70,10 @@
       @click="toggleRequestForm"
     />
     <VSlideYTransition>
-      <RequestForm v-show="showRequestForm" @submitted="showRequestForm = false" />
+      <RequestForm
+        v-show="showRequestForm"
+        @submitted="showRequestForm = false"
+      />
     </VSlideYTransition>
   </div>
 

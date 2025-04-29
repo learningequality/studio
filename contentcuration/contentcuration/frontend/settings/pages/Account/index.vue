@@ -6,17 +6,32 @@
     </h2>
 
     <!-- User Information -->
-    <KFixedGrid numCols="8" gutter="40">
-      <KFixedGridItem span="2" class="row">
+    <KFixedGrid
+      numCols="8"
+      gutter="40"
+    >
+      <KFixedGridItem
+        span="2"
+        class="row"
+      >
         <b>{{ $tr('usernameLabel') }}</b>
       </KFixedGridItem>
-      <KFixedGridItem span="6" class="row">
+      <KFixedGridItem
+        span="6"
+        class="row"
+      >
         {{ user.email }}
       </KFixedGridItem>
-      <KFixedGridItem span="2" class="row">
+      <KFixedGridItem
+        span="2"
+        class="row"
+      >
         <b>{{ $tr('fullNameLabel') }}</b>
       </KFixedGridItem>
-      <KFixedGridItem span="6" class="row">
+      <KFixedGridItem
+        span="6"
+        class="row"
+      >
         <span>
           {{ fullName }}
           <KButton
@@ -28,10 +43,16 @@
           />
         </span>
       </KFixedGridItem>
-      <KFixedGridItem span="2" class="row">
+      <KFixedGridItem
+        span="2"
+        class="row"
+      >
         <b>{{ $tr('passwordLabel') }}</b>
       </KFixedGridItem>
-      <KFixedGridItem span="6" class="row">
+      <KFixedGridItem
+        span="6"
+        class="row"
+      >
         <KButton
           data-test="password-form"
           appearance="basic-link"
@@ -82,7 +103,10 @@
     </p>
     <div v-else-if="channelsAsSoleEditor.length > 0">
       <p>{{ $tr('handleChannelsBeforeAccount') }}</p>
-      <p v-for="channel in channelsAsSoleEditor" :key="channel.id">
+      <p
+        v-for="channel in channelsAsSoleEditor"
+        :key="channel.id"
+      >
         <KExternalLink
           appearance="basic-link"
           :text="channel.name"
@@ -216,18 +240,20 @@
 
 </script>
 
+
 <style scoped>
 
-.heading {
-  margin-top: 32px;
-}
+  .heading {
+    margin-top: 32px;
+  }
 
-.copy-token {
-  width: 600px;
-  max-width: 75%;
-}
+  .copy-token {
+    width: 600px;
+    max-width: 75%;
+  }
 
-.row {
-  padding: 8px 0;
-}
+  .row {
+    padding: 8px 0;
+  }
+
 </style>

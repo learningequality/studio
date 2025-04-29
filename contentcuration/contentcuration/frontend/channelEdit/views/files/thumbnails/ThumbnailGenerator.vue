@@ -11,6 +11,7 @@
 
 </template>
 
+
 <script>
 
   import { mapActions } from 'vuex';
@@ -194,7 +195,7 @@
         const chunks = chunk(atob(encoding.split(',')[1]), 512);
         const byteArrays = map(
           chunks,
-          chunk => new Uint8Array(map(chunk.join('').toString(), s => s.charCodeAt(0)))
+          chunk => new Uint8Array(map(chunk.join('').toString(), s => s.charCodeAt(0))),
         );
         const filename = `${this.$tr('generatedDefaultFilename')}.png`;
         const file = new File(byteArrays, filename, { type: 'image/png' });
@@ -229,7 +230,7 @@
           this.handleError('Unrecognized content!');
         }
       },
-      /*
+      /**
        * @public
        */
       cancel() {

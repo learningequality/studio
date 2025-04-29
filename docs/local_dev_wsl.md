@@ -121,11 +121,11 @@ The packages `postgresql-12`, `postgresql-contrib`, and `postgresql-server-dev-a
 
 ## Install Frontend Dependencies
 
-For guidance on installing Node 16.X, Yarn, and all required frontend dependencies, running the services, initializing Studio, and running the development server , please refer to the [Install Frontend Dependencies](./local_dev_host.md#install-frontend-dependencies) section in our Local Development with host guide.
+For guidance on installing Node 18.X, pnpm, and all required frontend dependencies, running the services, initializing Studio, and running the development server , please refer to the [Install Frontend Dependencies](./local_dev_host.md#install-frontend-dependencies) section in our Local Development with host guide.
 
 ## Access Kolibri Studio
 
-Either of the above commands will take a few minutes to build the frontend. When it's done, you can sign in with the account created by the `yarn run devsetup` command:
+Either of the above commands will take a few minutes to build the frontend. When it's done, you can sign in with the account created by the `pnpm run devsetup` command:
 
 * URL: <http://localhost:8080/accounts/login/>
 * Username: `a@a.com`
@@ -176,17 +176,17 @@ Now that you have your project open in VS Code, you can run the same commands yo
 3. **Run the Services**:
 
    ```sh
-   yarn run services
+   pnpm run services
    ```
 4. **Initialize the Studio**:
 
    ```sh
-   yarn run devsetup
+   pnpm run devsetup
    ```
 5. **Start the Development Server**:
 
    ```sh
-   yarn run devserver:hot
+   pnpm run devserver:hot
    ```
 
 By following these steps, you can set up a productive development environment in VS Code with WSL and start contributing to the Kolibri Studio codebase.

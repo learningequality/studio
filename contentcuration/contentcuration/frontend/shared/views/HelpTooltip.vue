@@ -4,7 +4,7 @@
     <Icon
       ref="tooltip"
       :color="$themeTokens.primary"
-      style="font-size:20px;"
+      style="font-size: 20px"
       :icon="icon"
     />
 
@@ -19,6 +19,7 @@
   </div>
 
 </template>
+
 
 <script>
 
@@ -38,6 +39,7 @@
   };
 
 </script>
+
 
 <style lang="scss" scoped>
 

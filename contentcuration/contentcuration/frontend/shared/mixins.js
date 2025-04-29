@@ -818,7 +818,7 @@ export function generateSearchMixin(filterMap) {
             },
           };
         },
-        {}
+        {},
       ),
       filterKeys() {
         return Object.keys(filterMap).filter(k => this.$route.query[k]);
@@ -895,7 +895,7 @@ function _cleanMap(formFields) {
         result[key].validator = (v, _) => Boolean(v);
       }
     },
-    {}
+    {},
   );
 }
 
@@ -918,7 +918,7 @@ export function generateFormMixin(formFields) {
           (result, value, key) => {
             result[key] = value.multiSelect ? [] : '';
           },
-          {}
+          {},
         ),
       };
     },
@@ -930,7 +930,7 @@ export function generateFormMixin(formFields) {
       // Create getters/setters for all items
       ...transform(
         cleanedMap,
-        function(result, value, key) {
+        function (result, value, key) {
           result[key] = {
             get() {
               return this.form[key] || (value.multiSelect ? [] : '');
@@ -945,7 +945,7 @@ export function generateFormMixin(formFields) {
             },
           };
         },
-        {}
+        {},
       ),
     },
     methods: {
@@ -973,7 +973,7 @@ export function generateFormMixin(formFields) {
               result[key] = (result[key] || '').trim();
             }
           },
-          {}
+          {},
         );
       },
       validate(formData) {
@@ -984,7 +984,7 @@ export function generateFormMixin(formFields) {
               result[key] = true;
             }
           },
-          {}
+          {},
         );
         return !Object.keys(this.errors).length;
       },

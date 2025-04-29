@@ -1,16 +1,25 @@
 <template>
 
-  <VContainer fluid class="pa-0 pb-5">
-    <LoadingText v-if="loading" class="pt-4" />
+  <VContainer
+    fluid
+    class="pa-0 pb-5"
+  >
+    <LoadingText
+      v-if="loading"
+      class="pt-4"
+    />
     <template v-else>
       <VTextField
         v-model="search"
-        style="max-width: 350px;"
+        style="max-width: 350px"
         class="mt-4"
         box
         :label="$tr('searchText')"
       />
-      <p v-if="!listChannels.length" class="grey--text mb-0 mt-4">
+      <p
+        v-if="!listChannels.length"
+        class="grey--text mb-0 mt-4"
+      >
         {{ $tr('noChannelsFound') }}
       </p>
       <template v-else>
@@ -21,7 +30,10 @@
           hover
           class="list-card-hover px-3"
         >
-          <VLayout align-center row>
+          <VLayout
+            align-center
+            row
+          >
             <Checkbox
               v-model="selectedChannels"
               color="primary"
@@ -100,9 +112,9 @@
               channel[this.listType] &&
               channel.published &&
               (channel.name.toLowerCase().includes(this.search.toLowerCase()) ||
-                channel.description.toLowerCase().includes(this.search.toLowerCase()))
+                channel.description.toLowerCase().includes(this.search.toLowerCase())),
           ),
-          'name'
+          'name',
         );
       },
     },

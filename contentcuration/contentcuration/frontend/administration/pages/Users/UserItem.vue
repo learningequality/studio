@@ -1,25 +1,48 @@
 <template>
 
   <tr :class="user.is_active ? '' : 'red--text'">
-    <td v-if="$vuetify.breakpoint.smAndDown" class="pt-2">
+    <td
+      v-if="$vuetify.breakpoint.smAndDown"
+      class="pt-2"
+    >
       <Checkbox v-model="selected" />
     </td>
     <td>
-      <VLayout align-center justify-start fill-height>
-        <VFlex v-if="$vuetify.breakpoint.mdAndUp" shrink class="pb-3 pt-3">
+      <VLayout
+        align-center
+        justify-start
+        fill-height
+      >
+        <VFlex
+          v-if="$vuetify.breakpoint.mdAndUp"
+          shrink
+          class="pb-3 pt-3"
+        >
           <Checkbox v-model="selected" />
         </VFlex>
         <VFlex shrink>
-          <VTooltip v-if="user.is_admin" bottom z-index="200" lazy>
+          <VTooltip
+            v-if="user.is_admin"
+            bottom
+            z-index="200"
+            lazy
+          >
             <template #activator="{ on }">
-              <span class="px-1 py-2" v-on="on">
+              <span
+                class="px-1 py-2"
+                v-on="on"
+              >
                 <VIconWrapper color="light-green accent-4">$vuetify.icons.indicator</VIconWrapper>
               </span>
             </template>
             <span>Administrator</span>
           </VTooltip>
         </VFlex>
-        <VFlex class="py-2 text-truncate" grow style="max-width: 200px;">
+        <VFlex
+          class="py-2 text-truncate"
+          grow
+          style="max-width: 200px"
+        >
           <ActionLink
             :to="userModalLink"
             :text="user.name.trim() || '---'"
@@ -29,19 +52,21 @@
       </VLayout>
     </td>
     <td>{{ user.email }}</td>
-    <td style="min-width: 175px;">
+    <td style="min-width: 175px">
       <!-- Using VMenu instead of VEditDialog to have more control over actions -->
-      <Menu
+      <BaseMenu
         v-if="user.is_active"
         v-model="showStorage"
         :close-on-content-click="false"
       >
         <template #activator="{ on }">
           {{ formatFileSize(user.disk_space) }}
-          <VBtn icon small v-on="on">
-            <Icon
-              icon="edit"
-            />
+          <VBtn
+            icon
+            small
+            v-on="on"
+          >
+            <Icon icon="edit" />
           </VBtn>
         </template>
         <VCard>
@@ -54,33 +79,41 @@
             />
           </VCardText>
         </VCard>
-      </Menu>
+      </BaseMenu>
       <span v-else>Inactive</span>
     </td>
     <td>
       {{ user.edit_count }}
-      <VBtn icon small :to="searchUserChannelsLink" target="_blank">
+      <VBtn
+        icon
+        small
+        :to="searchUserChannelsLink"
+        target="_blank"
+      >
         <Icon icon="openNewTab" />
       </VBtn>
     </td>
     <td>{{ user.view_count }}</td>
     <td>
-      {{ $formatDate(user.date_joined, {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-      }) }}
+      {{
+        $formatDate(user.date_joined, {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        })
+      }}
     </td>
     <td>
       <span v-if="user.last_login">
         {{ $formatRelative(user.last_login, { now: new Date() }) | capitalize }}
       </span>
-      <span v-else>
-        N/A
-      </span>
+      <span v-else> N/A </span>
     </td>
     <td class="text-xs-center">
-      <UserActionsDropdown :userId="userId" flat />
+      <UserActionsDropdown
+        :userId="userId"
+        flat
+      />
     </td>
   </tr>
 
@@ -132,7 +165,7 @@
         set(value) {
           this.$emit(
             'input',
-            value ? this.value.concat([this.userId]) : this.value.filter(id => id !== this.userId)
+            value ? this.value.concat([this.userId]) : this.value.filter(id => id !== this.userId),
           );
         },
       },

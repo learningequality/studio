@@ -1,3 +1,4 @@
+// eslint-disable-next-line import/no-named-as-default
 import Dexie from 'dexie';
 import sortBy from 'lodash/sortBy';
 import logging from '../logging';
@@ -7,16 +8,8 @@ import { INDEXEDDB_RESOURCES } from './registry';
 import { RolesNames } from 'shared/leUtils/Roles';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
-const {
-  CREATED,
-  DELETED,
-  UPDATED,
-  MOVED,
-  PUBLISHED,
-  SYNCED,
-  DEPLOYED,
-  UPDATED_DESCENDANTS,
-} = CHANGE_TYPES;
+const { CREATED, DELETED, UPDATED, MOVED, PUBLISHED, SYNCED, DEPLOYED, UPDATED_DESCENDANTS } =
+  CHANGE_TYPES;
 
 export function applyMods(obj, mods) {
   for (const keyPath in mods) {
@@ -183,7 +176,7 @@ class ReturnedChanges extends ChangeDispatcher {
             data.payload.id = key;
             return resource.tableCopy(data);
           });
-        }
+        },
       );
     });
   }
@@ -303,7 +296,7 @@ class ResourceCounts extends ChangeDispatcher {
   async applyCreate(change) {
     await this.resource.updateAncestors(
       { id: change.key, ignoreChanges: true },
-      this._applyDiff.bind(this, change.obj, 1)
+      this._applyDiff.bind(this, change.obj, 1),
     );
   }
 
@@ -332,7 +325,7 @@ class ResourceCounts extends ChangeDispatcher {
   async applyDelete(change) {
     await this.resource.updateAncestors(
       { id: change.key, ignoreChanges: true },
-      this._applyDiff.bind(this, change.oldObj, -1)
+      this._applyDiff.bind(this, change.oldObj, -1),
     );
   }
 
@@ -349,11 +342,11 @@ class ResourceCounts extends ChangeDispatcher {
     const node = await this.table.get(change.key);
     await this.resource.updateAncestors(
       { id: change.oldObj.parent, includeSelf: true, ignoreChanges: true },
-      this._applyDiff.bind(this, node, -1)
+      this._applyDiff.bind(this, node, -1),
     );
     await this.resource.updateAncestors(
       { id: change.parent, includeSelf: true, ignoreChanges: true },
-      this._applyDiff.bind(this, node, 1)
+      this._applyDiff.bind(this, node, 1),
     );
   }
 
@@ -365,7 +358,7 @@ class ResourceCounts extends ChangeDispatcher {
     const node = await this.table.get(change.key);
     await this.resource.updateAncestors(
       { id: change.key, ignoreChanges: true },
-      this._applyDiff.bind(this, node, 1)
+      this._applyDiff.bind(this, node, 1),
     );
   }
 }

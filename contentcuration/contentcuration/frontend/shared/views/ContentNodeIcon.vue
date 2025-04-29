@@ -12,13 +12,26 @@
       :style="{ width: fillWidth ? '100%' : 'unset' }"
       capture-as-image
     >
-      <VIconWrapper small :color="fontColor" v-bind="$attrs">
+      <VIconWrapper
+        small
+        :color="fontColor"
+        v-bind="$attrs"
+      >
         {{ icon }}
       </VIconWrapper>
-      <span v-if="includeText" class="ml-2">{{ text }}</span>
+      <span
+        v-if="includeText"
+        class="ml-2"
+      >{{ text }}</span>
     </VChip>
-    <span v-else capture-as-image>
-      <VIconWrapper :color="fontColor" v-bind="$attrs">
+    <span
+      v-else
+      capture-as-image
+    >
+      <VIconWrapper
+        :color="fontColor"
+        v-bind="$attrs"
+      >
         {{ icon }}
       </VIconWrapper>
       <span v-if="includeText">{{ text }}</span>
@@ -26,6 +39,7 @@
   </span>
 
 </template>
+
 
 <script>
 
@@ -106,6 +120,7 @@
   };
 
 </script>
+
 
 <style lang="scss" scoped>
 

@@ -1,5 +1,5 @@
 import { mount } from '@vue/test-utils';
-import Vuex from 'vuex';
+import { Store } from 'vuex';
 import EditAudienceModal from '../EditAudienceModal';
 import { ResourcesNeededTypes } from 'shared/constants';
 import { RolesNames } from 'shared/leUtils/Roles';
@@ -55,7 +55,7 @@ describe('EditAudienceModal', () => {
     generalActions = {
       showSnackbarSimple: jest.fn(),
     };
-    store = new Vuex.Store({
+    store = new Store({
       actions: generalActions,
       modules: {
         contentNode: {
@@ -71,7 +71,7 @@ describe('EditAudienceModal', () => {
 
   test('smoke test', () => {
     const wrapper = makeWrapper(['node1']);
-    expect(wrapper.isVueInstance()).toBe(true);
+    expect(wrapper.exists()).toBe(true);
   });
 
   describe('Selected audience on first render', () => {

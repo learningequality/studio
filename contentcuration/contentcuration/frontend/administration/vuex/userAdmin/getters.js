@@ -7,13 +7,13 @@ export function users(state) {
 }
 
 export function getUser(state) {
-  return function(userId) {
+  return function (userId) {
     return state.usersMap[userId];
   };
 }
 
 export function getUsers(state) {
-  return function(userIds) {
+  return function (userIds) {
     return userIds.map(id => getUser(state)(id));
   };
 }

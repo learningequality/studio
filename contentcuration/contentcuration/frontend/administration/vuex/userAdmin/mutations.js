@@ -1,5 +1,5 @@
 import map from 'lodash/map';
-import Vue from 'vue';
+import Vue, { set } from 'vue';
 
 export function SET_PAGE_DATA(
   state,
@@ -10,7 +10,7 @@ export function SET_PAGE_DATA(
     count = null,
     total_pages = null,
     results = [],
-  } = {}
+  } = {},
 ) {
   state.pageData.next = next;
   state.pageData.previous = previous;
@@ -30,7 +30,7 @@ export function ADD_USERS(state, users = []) {
 }
 
 export function UPDATE_USER(state, { id, ...data }) {
-  Vue.set(state.usersMap, id, Object.assign({}, state.usersMap[id] || {}, { id, ...data }));
+  set(state.usersMap, id, Object.assign({}, state.usersMap[id] || {}, { id, ...data }));
 }
 
 export function REMOVE_USER(state, id) {

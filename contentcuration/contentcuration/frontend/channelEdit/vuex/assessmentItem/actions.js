@@ -20,12 +20,13 @@ function updateNodeComplete(nodeId, context, maxTries = 10, delayMs = 100) {
       return context.dispatch(
         'contentNode/updateContentNode',
         { id: nodeId, complete },
-        { root: true }
+        { root: true },
       );
     } else if (tries < maxTries) {
       tries++;
       setTimeout(tryUpdate, delayMs);
     } else {
+      // eslint-disable-next-line no-console
       console.error(`updateNodeComplete: Node ${nodeId} not found in Vuex after ${maxTries} tries`);
     }
   }
@@ -68,7 +69,7 @@ export function addAssessmentItem(context, assessmentItem) {
         });
         return updateNodeComplete(contentnode, context);
       });
-    }
+    },
   );
 }
 export function updateAssessmentItem(context, assessmentItem) {
@@ -102,13 +103,13 @@ export function updateAssessmentItems(context, assessmentItems) {
           }
           return AssessmentItem.update(
             [assessmentItem.contentnode, assessmentItem.assessment_id],
-            stringifiedAssessmentItem
+            stringifiedAssessmentItem,
           ).then(() => {
             updateNodeComplete(assessmentItem.contentnode, context);
           });
-        })
+        }),
       );
-    }
+    },
   );
 }
 
@@ -122,8 +123,8 @@ export function deleteAssessmentItem(context, assessmentItem) {
           context.commit('DELETE_ASSESSMENTITEM', assessmentItem);
           const contentnode = assessmentItem.contentnode;
           return updateNodeComplete(contentnode, context);
-        }
+        },
       );
-    }
+    },
   );
 }

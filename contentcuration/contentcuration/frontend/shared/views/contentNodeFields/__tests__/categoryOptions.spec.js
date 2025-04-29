@@ -1,9 +1,5 @@
-import Vue from 'vue';
-import Vuetify from 'vuetify';
 import { shallowMount } from '@vue/test-utils';
 import CategoryOptions from '../CategoryOptions.vue';
-
-Vue.use(Vuetify);
 
 function makeWrapper({ value = {}, nodeIds = ['node1'] } = {}) {
   return shallowMount(CategoryOptions, {
@@ -17,8 +13,9 @@ function makeWrapper({ value = {}, nodeIds = ['node1'] } = {}) {
 describe('CategoryOptions', () => {
   it('smoke test', () => {
     const wrapper = makeWrapper();
-    expect(wrapper.isVueInstance()).toBe(true);
+    expect(wrapper.exists()).toBe(true);
   });
+
   it('emits expected data', () => {
     const wrapper = makeWrapper();
     const value = 'string';
