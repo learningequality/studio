@@ -6,23 +6,23 @@ Feature: Studio critical workflows
     	And I am at Studio's sign-in page
 
   Scenario: Create an account and sign in with the created account
-			When I click the *Create an account* button
-			Then I see the *Create an account* form
-				And I see the *Basic information* section containing the following fields: First name, Last name, Email, Password and Confirm password
-				And I see the *How do you plan on using Kolibri Studio (check all that apply)*, *Where do you plan to use Kolibri Studio? (check all that apply)*, *How did you hear about us?* and *I have read and agree to terms of service and the privacy policy* sections
-				And I see the *View Privacy Policy* and *View Terms of Service* links
-			When I input all the required fields
-				And I click the *Finish* button
-			Then I see the *Activation link sent* page
-				And I see *Thank you for creating an account! To complete the process, please check your email for the activation link we sent you.*
-			When I open the received email and click the activation link
-			Then I see the *Account successfully created* page
-			When I click the *Continue to sign-in page* button
-			Then I am at the sign-in page
-			When I fill in my email and password
-				And I click the *Sign in* button
-			Then I am able to sign in successfully
-				And I am at *My channels* page
+		When I click the *Create an account* button
+		Then I see the *Create an account* form
+			And I see the *Basic information* section containing the following fields: First name, Last name, Email, Password and Confirm password
+			And I see the *How do you plan on using Kolibri Studio (check all that apply)*, *Where do you plan to use Kolibri Studio? (check all that apply)*, *How did you hear about us?* and *I have read and agree to terms of service and the privacy policy* sections
+			And I see the *View Privacy Policy* and *View Terms of Service* links
+		When I input all the required fields
+			And I click the *Finish* button
+		Then I see the *Activation link sent* page
+			And I see *Thank you for creating an account! To complete the process, please check your email for the activation link we sent you.*
+		When I open the received email and click the activation link
+		Then I see the *Account successfully created* page
+		When I click the *Continue to sign-in page* button
+		Then I am at the sign-in page
+		When I fill in my email and password
+			And I click the *Sign in* button
+		Then I am able to sign in successfully
+			And I am at *My channels* page
 
 	Scenario: Reset my password
 		Given I've requested and received an email with a link to reset my password
@@ -38,7 +38,7 @@ Feature: Studio critical workflows
 			And I am on Studio sign-in page
 		When I click the *Explore without an account* link
 		Then I see the *Content Library* page with available public channels
-			And I can filter the search results
+			And I can filter the search results by keyword, language, license, format, resources for coach, available captions and subtitles
 			And I can view or download the channel summary
 
 	Scenario: Change the language when you are not signed-in
@@ -57,21 +57,38 @@ Feature: Studio critical workflows
 			And I click the *Confirm* button
 		Then the interface language changes to the selected language
 
+	Scenario: Open and close the sidebar menu
+    When I click the hamburger menu button in the upper left screen corner
+    Then I see the sidebar menu
+    	And I can see the following options: *Channels*, *Settings*, *Change language*, *Help and support*, *Sign out*, the LE logo,  *© 2025 Learning Equality", *Give feedback*
+	    And I can click any of the options inside
+    When I click the *X* button, or anywhere on the browser screen
+    Then I don't see the sidebar menu anymore
+
+  Scenario: Open and close the user menu
+    When I click the user menu button in the upper right screen corner
+    Then I see the user menu
+    	And I can see the following options: *Settings*, *Change language*, *Help and support*, *Sign out*
+	    And I can click any of the options inside
+    When I click the user menu button again, or anywhere on the browser screen
+    Then I don't see the user menu anymore
+
 	Scenario: Create a new channel
 		Given I am signed in to Studio
 			And I am at *My Channels* tab
 		When I click the *New channel* button
 		Then I see the *New channel* page
 		When I enter a channel name
-			And I enter channel description
 			And I select a language
-			And I upload an image file as a channel thumbnail
+			And I enter channel description (optional)
+			And I fill in the default copyright fields (optional)
+			And I upload an image file as a channel thumbnail (optional)
 			And I click the *Create* button
-		Then I see the newly created channel at *My Channels* page
+		Then I am at the channel editor view
 
 	Scenario: Edit channel details
 		Given I am signed in to Studio
-			And I am on the channel editor view
+			And I am at the channel editor view
 		When I click the pencil icon next to the channel name
 		Then I see a modal window with the channel details
 			And I see the details for the channel - channel name, language, channel description etc.
@@ -82,23 +99,23 @@ Feature: Studio critical workflows
 
 	Scenario: Create a new folder
 		Given I am signed in to Studio
-			And I am on the channel editor page
-		When I click the *Add* button in the top right corner
+			And I am at the channel editor page
+		When I click the *Add* button at the top right corner
 			And I click the *New folder* option
 		Then I see the *New folder* modal
 		When I fill in the required field *Title*
-			And I fill in any of the other fields such as *Description*, *Tags* and *Language*
-			And I add a thumbnail image
+			And I fill in any of the other optional fields
+			And I add a thumbnail image (optional)
 			And I click the *Finish* button
 		Then I am on the channel editor page
 			And I can see the newly created folder
 
-	Scenario: Upload files
+	Scenario: Upload all supported files
 		When I click the *Add* button
 			And I select the *Upload files* option
 		Then I see the *Upload files* modal
 			And I see the *Total storage used* indicator at the top
-			And I can see which are the supported file types: mp3, bloompub, bloomd, pdf, epub, h5p, mp4, webm, zip
+			And I can see which are the supported file types: mp3, bloompub, bloomd, pdf, epub, h5p, mp4, webm, zip, kpub
 		When I click the *Select files* button
 		Then I see a file explorer window
 			And I can select one or several supported files for upload
@@ -144,12 +161,10 @@ Feature: Studio critical workflows
 		Given I am signed in to Studio
 			And I am at the channel editor page
 			And I have write access to the channel
-			And the channel has had modifications
+			And the channel contains unpublished resources or edits
 		When I click the *Publish* button at the top right corner
 		Then the *Publish modal* appears
-			And I see steps for resolving errors and describing new changes
-		When I click *Publish*
-		Then I see the *Describe what's new in this channel version* modal
+			And I see the *Describe what's new in this channel version* field and the *Language* drop-down
 		When I fill in the required fields
 			And I click *Publish*
 		Then I see the *Publishing channel* progress indicator at the top right
@@ -159,7 +174,7 @@ Feature: Studio critical workflows
 
 	Scenario: Invite collaborators with *Can edit* permissions
 		Given I am signed in to Studio
-			And I am on the channel editor page
+			And I am at the channel editor page
 		When I click the *...* (options) button in the topbar
 			And select the *Share channel* option
 		Then I am at the *Sharing* tab for the channel
@@ -171,7 +186,7 @@ Feature: Studio critical workflows
 
 	Scenario: Sync resources
 		Given I am signed in to Studio
-			And I am on the channel editor page for <channel_a>
+			And I am at the channel editor page for <channel_a>
 			And there is a resource in the <channel_a> that has been imported from <channel_b>
 		  And there is new version of the resource file in the <channel_b>
 		When I click on the *···* button in the top-right corner
@@ -182,7 +197,7 @@ Feature: Studio critical workflows
 		Then I see the *Confirm sync* modal
 		When I click *Sync*
 		Then the modal closes
-		When I refresh the page
+		When I after a period of time I refresh the page
 			And click on the updated resource
 		Then I can see that it's updated with any changes made to the original resource file
 
@@ -191,7 +206,8 @@ Feature: Studio critical workflows
 			And I am at the channel editor page
 			And there are available resources of different types
 		When I select at least two resources
-			And I click the *Edit language* icon
+		Then I see a toolbar with the available editing options
+		When I click the *Edit language* icon
 		Then I see the *Edit language* modal
 		When I select a new language
 			And I click the *Save* button
@@ -203,6 +219,56 @@ Feature: Studio critical workflows
 			And I click the *Save* button
 		Then I am back at the page with the resources
 			And I see a message: *Changes saved*
+
+	Scenario: Remove folders and resources by using the toolbar
+		Given I am signed in to Studio
+			And I am at the channel editor page
+			And there are available resources of different types
+		When I check a folder's checkbox
+		Then I see the toolbar options for the selected folder
+		When I click the *Remove* button
+		Then I can see the *Sent to trash* snackbar notification
+			And I see the *Undo* button
+			And I no longer see the folder
+		When I check the checkbox of a resource
+		Then I see the toolbar options for the resource
+		When I click the *Remove* button
+		Then I can see the *Sent to trash* snackbar notification
+			And I see the *Undo* button
+			And I no longer see the resource
+
+	Scenario: Copy multiple resources
+		Given I am signed in to Studio
+			And I am at the channel editor page
+			And there are available resources of different types
+		When I select multiple items via checkboxes
+		Then I see that the select bar has changed to an actions bar
+		When I click the *Make a copy* button in the actions bar
+		Then I see a snackbar appears with a *Copying...* message
+		When the copy creation process is finished
+		Then the snackbar disappears
+			And a snackbar *Copy operation complete* appears
+			And I see that copies are created
+
+	Scenario: Move resources into a new destination
+		When I click on a checkbox(s) and make a resource selection
+			And I click the move button
+		Then I am navigated to a screen that allows me to navigate and choose a destination to move the resource
+		When I navigate to an appropriate destination
+			And click the *Move here* button
+		Then I am redirected to the channel editor
+			And I see a snackbar confirmation that my resources are moved
+			And the resources are no longer in my original directory
+
+	Scenario: Apply details from folder after adding a resource
+		Given I have created a folder with multiple metadata details such as categories, levels, requirements, language
+		When I attempt to import, copy or move a resource into that folder
+		Then I see the *Apply details from the folder <folder name>* modal
+			And I see that all of the checkboxes for the available metadata are selected
+		When I click the *Continue* button
+		Then I see that the selected metadata is filled in
+		When I click the *Finish* button
+		Then I see that the resource is added in the folder
 
 	Scenario: Delete a channel
 		Given I am signed in to Studio
@@ -234,6 +300,12 @@ Feature: Studio critical workflows
 			And I can see the size of each resource types
 			And I can see the *Request more space* section
 
+	Scenario: Submit more space request
+		When I fill in all the space request text fields
+			And I click the *Send request* submit button
+		Then I see all the text fields clear
+			And a snackbar appears to confirm the submission
+
 	Scenario: Create a collection by selecting channels
 		Given I am signed in to Studio
 			And I am on the *Collections* tab
@@ -258,4 +330,3 @@ Feature: Studio critical workflows
 			And I can view or download the channel summary
 		When I click on a channel card
 		Then I can see all of the channel's resources in *View-only* format
-
