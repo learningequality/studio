@@ -28,3 +28,11 @@ repos:
           entry: pnpm run lint-frontend:format
           language: system
           files: \.(js|vue|scss|css)$
+# Always keep black as the final hook so it reformats any other reformatting.
+-   repo: https://github.com/python/black
+    rev: 20.8b1
+    hooks:
+      -   id: black
+          additional_dependencies: [
+            'click==8.0.4'
+          ]
