@@ -471,11 +471,13 @@ def create_channel(channel_data, user):
     # Set up initial channel
     channel, isNew = Channel.objects.get_or_create(id=channel_data["id"], actor_id=user.id)
 
-    # Add user as editor if channel is new or channel has no editors
-    # Otherwise, check if user is an editor
-    if isNew or channel.editors.count() == 0:
+    # Add user as editor if channel is new
+    if isNew:
         channel.editors.add(user)
-    elif user not in channel.editors.all():
+    try:
+        # Check if user is an editor
+        channel = Channel.get_editable(user, channel.id)
+    except Channel.DoesNotExist:
         raise SuspiciousOperation("User is not authorized to edit this channel")
 
     extra_fields = channel_data.get('extra_fields') or {}
