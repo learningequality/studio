@@ -32,6 +32,7 @@ from rest_framework.response import Response
 from rest_framework.serializers import CharField
 from rest_framework.serializers import FloatField
 from rest_framework.serializers import IntegerField
+from rest_framework.status import HTTP_409_CONFLICT
 from rest_framework.status import HTTP_201_CREATED
 from rest_framework.status import HTTP_204_NO_CONTENT
 from search.models import ChannelFullTextSearch
@@ -826,7 +827,42 @@ class ChannelViewSet(ValuesViewset):
             logging.error(str(e))
             unique_lang_ids = []
         return unique_lang_ids
+    
+    @action(detail=True, methods=["get", "post"], url_path="support_token", url_name="support-token")
+    def support_token(self, request, pk=None) -> Union[JsonResponse, HttpResponse, Response]:
+        """
+        Handles both:
+        - GET: Retrieve the existing support token for this channel.
+        - POST: Create a new support token for this channel.
+        """
+        if not self._channel_exists(pk):
+            return HttpResponseNotFound("No channel matching: {}".format(pk))
 
+        channel = self.get_edit_queryset().get(pk=pk)
+
+        # Handle GET: Retrieve the support token
+        if request.method == "GET":
+            token_value = None
+            if channel.support_token:
+                token_value = channel.support_token.token
+            return JsonResponse({"support_token": token_value})
+
+        # Handle POST: Create a new support token
+        if request.method == "POST":
+            if channel.support_token is not None:
+                return Response(
+                    {"error": "Support token already exists for this channel."},
+                    status=HTTP_409_CONFLICT
+                )
+
+            token_str = SecretToken.generate_new_token()
+            support_token = SecretToken.objects.create(token=token_str)
+
+            channel.support_token = support_token
+            channel.save(update_fields=["support_token"])
+
+            data = self.serialize_object(pk=channel.pk)
+            return Response(data, status=HTTP_201_CREATED)
 
 @method_decorator(
     cache_page(
