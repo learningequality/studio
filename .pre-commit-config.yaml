@@ -1,38 +1,91 @@
 repos:
--   repo: https://github.com/pre-commit/pre-commit-hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
     hooks:
-    -   id: trailing-whitespace
-    -   id: check-added-large-files
+      - id: trailing-whitespace
+      - id: check-added-large-files
         exclude: '^.+?\.ttf$'
-    -   id: debug-statements
-    -   id: end-of-file-fixer
+      - id: debug-statements
+      - id: end-of-file-fixer
         exclude: '^.+?\.json.+?\.yml$'
--   repo: https://github.com/PyCQA/flake8
+  - repo: https://github.com/PyCQA/flake8
     rev: 7.1.2
     hooks:
-    -   id: flake8
+      - id: flake8
         additional_dependencies: [
           'flake8-print==5.0.0'
         ]
--   repo: https://github.com/asottile/reorder_python_imports
+  - repo: https://github.com/asottile/reorder_python_imports
     rev: v3.14.0
     hooks:
-    -   id: reorder-python-imports
+      - id: reorder-python-imports
         language_version: python3
--   repo: local
+  - repo: local
     hooks:
-      -   id: frontend-lint
-          name: Linting of JS, Vue, SCSS and CSS files
-          description: This hook handles all frontend linting for Kolibri Studio
-          entry: pnpm run lint-frontend:format
-          language: system
-          files: \.(js|vue|scss|css)$
-# Always keep black as the final hook so it reformats any other reformatting.
--   repo: https://github.com/python/black
+      - id: frontend-lint
+        name: Linting of JS, Vue, SCSS and CSS files
+        description: This hook handles all frontend linting for Kolibri Studio
+        entry: pnpm run lint-frontend:format
+        language: system
+        files: \.(js|vue|scss|css)$
+  - repo: local
+    hooks:
+      - id: no-auto-migrations
+        name: no auto-named migrations
+        entry: We do not allow _auto_ in migration names. Please give the migration a telling name.
+        language: fail
+        files: .*/migrations/.*_auto_.*\.py$
+        exclude: (?x)^(
+          contentcuration/kolibri_content/migrations/0014_auto_20210603_1536.py|
+          contentcuration/kolibri_content/migrations/0023_auto_20250417_1516.py|
+          contentcuration/kolibri_content/migrations/0007_auto_20200613_0050.py|
+          contentcuration/kolibri_content/migrations/0004_auto_20180910_2342.py|
+          contentcuration/kolibri_content/migrations/0002_auto_20180327_1414.py|
+          contentcuration/kolibri_content/migrations/0022_auto_20240915_1414.py|
+          contentcuration/kolibri_content/migrations/0011_auto_20210504_1744.py|
+          contentcuration/kolibri_content/migrations/0010_auto_20210202_0604.py|
+          contentcuration/kolibri_content/migrations/0018_auto_20220224_2031.py|
+          contentcuration/kolibri_content/migrations/0019_auto_20230207_0116.py|
+          contentcuration/kolibri_content/migrations/0005_auto_20190424_1709.py|
+          contentcuration/kolibri_content/migrations/0006_auto_20191028_2325.py|
+          contentcuration/kolibri_content/migrations/0015_auto_20210707_1606.py|
+          contentcuration/kolibri_content/migrations/0013_auto_20210519_1759.py|
+          contentcuration/kolibri_content/migrations/0012_auto_20210511_1605.py|
+          contentcuration/kolibri_content/migrations/0021_auto_20240612_1847.py|
+          contentcuration/search/migrations/0002_auto_20201215_2110.py|
+          contentcuration/contentcuration/migrations/0001_squashed_0094_auto_20180910_2342.py|
+          contentcuration/contentcuration/migrations/0002_auto_20181220_1734.py|
+          contentcuration/contentcuration/migrations/0102_auto_20190904_1627.py|
+          contentcuration/contentcuration/migrations/0110_auto_20200511_2245.py|
+          contentcuration/contentcuration/migrations/0104_auto_20191028_2325.py|
+          contentcuration/contentcuration/migrations/0111_auto_20200513_2252.py|
+          contentcuration/contentcuration/migrations/0130_auto_20210706_2005.py|
+          contentcuration/contentcuration/migrations/0098_auto_20190424_1709.py|
+          contentcuration/contentcuration/migrations/0128_auto_20210511_1605.py|
+          contentcuration/contentcuration/migrations/0112_auto_20200613_0050.py|
+          contentcuration/contentcuration/migrations/0127_auto_20210504_1744.py|
+          contentcuration/contentcuration/migrations/0106_auto_20191113_0217.py|
+          contentcuration/contentcuration/migrations/0103_auto_20190905_0408.py|
+          contentcuration/contentcuration/migrations/0121_auto_20210305_2028.py|
+          contentcuration/contentcuration/migrations/0133_auto_20220124_2149.py|
+          contentcuration/contentcuration/migrations/0132_auto_20210708_0011.py|
+          contentcuration/contentcuration/migrations/0120_auto_20210128_1646.py|
+          contentcuration/contentcuration/migrations/0131_auto_20210707_2326.py|
+          contentcuration/contentcuration/migrations/0126_auto_20210219_2314.py|
+          contentcuration/contentcuration/migrations/0107_auto_20191115_2344.py|
+          contentcuration/contentcuration/migrations/0151_auto_20250417_1516.py|
+          contentcuration/contentcuration/migrations/0099_auto_20190715_2201.py|
+          contentcuration/contentcuration/migrations/0123_auto_20210407_0057.py|
+          contentcuration/contentcuration/migrations/0129_auto_20210519_2213.py|
+          contentcuration/contentcuration/migrations/0109_auto_20191202_1759.py|
+          contentcuration/kolibri_public/migrations/0004_auto_20240612_1847.py|
+          contentcuration/kolibri_public/migrations/0006_auto_20250417_1516.py|
+          )$
+  # Always keep black as the final hook so it reformats any other reformatting.
+  - repo: https://github.com/python/black
     rev: 20.8b1
     hooks:
-      -   id: black
-          additional_dependencies: [
-            'click==8.0.4'
-          ]
+      - id: black
+        additional_dependencies: [
+          'click==8.0.4'
+        ]
