@@ -17,12 +17,17 @@
     <br>
 
     <!-- Action Buttons -->
-    <VLayout v-if="isChannel" row class="mb-4">
+    <VLayout v-if="isChannel" row class="mb-4" style="margin-left: -8px;">
       <VBtn
         color="primary"
         class="mr-2"
         @click="viewInKolibri"
       >
+        <Icon
+          class="mr-2"
+          icon="openNewTab"
+          :color="$themeTokens.textInverted"
+        />
         {{ $tr('viewInKolibri') }}
       </VBtn>
       <Menu>
