@@ -110,30 +110,23 @@
               :to="channelDetailsLink"
             >
               <KIconButton
-                v-if="loggedIn"
+                v-if="detailsIcon"
                 :color="$themeTokens.primary"
-                data-test="details-button"
+                :data-test="detailsIcon.dataTest"
                 class="mr-1"
-                icon="info"
-                :tooltip="$tr('details')"
+                :icon="detailsIcon.icon"
+                :tooltip="detailsIcon.tooltip"
               />
             </KRouterLink>
 
             <KIconButton
-              v-if="!allowEdit && channel.published"
+              v-for="config in filteredIcons"
+              :key="config.key"
               class="mr-1"
-              icon="copy"
-              :tooltip="$tr('copyToken')"
-              data-test="token-button"
-              @click.stop.prevent="tokenDialog = true"
-            />
-            <KIconButton
-              v-if="!loggedIn && channel.published"
-              class="mr-1"
-              icon="openNewTab"
-              :tooltip="$tr('viewOnKolibri')"
-              data-test="view-on-kolibri"
-              @click.stop.prevent="viewOnKolibri"
+              :icon="config.icon"
+              :tooltip="config.tooltip"
+              :data-test="config.dataTest"
+              @click.stop.prevent="config.clickHandler"
             />
             <ChannelStar
               v-if="loggedIn"
@@ -141,7 +134,8 @@
               :bookmark="channel.bookmark"
               class="mr-1"
             />
-            <BaseMenu v-if="showOptions">
+
+            <BaseMenu v-if="iconConfigs.find(config => config.key === 'kebab-menu').show">
               <template #activator="{ on }">
                 <VBtn
                   icon
@@ -280,6 +274,10 @@
         type: Boolean,
         default: false,
       },
+      isInChannelList: {
+        type: Boolean,
+        default: false,
+      },
     },
     data() {
       return {
@@ -336,15 +334,6 @@
       libraryMode() {
         return window.libraryMode;
       },
-      showOptions() {
-        return (
-          this.loggedIn &&
-          (this.allowEdit ||
-            this.channel.source_url ||
-            this.channel.demo_server_url ||
-            (this.channel.published && this.allowEdit))
-        );
-      },
       linkToChannelTree() {
         return this.loggedIn && !this.libraryMode;
       },
@@ -357,6 +346,69 @@
       },
       hasUnpublishedChanges() {
         return !this.channel.last_published || this.channel.modified > this.channel.last_published;
+      },
+      filteredIcons() {
+        return this.iconConfigs
+          .filter(c => ['copy', 'open-tab-link'].includes(c.key))
+          .filter(c => c.show);
+      },
+      detailsIcon() {
+        return this.iconConfigs.find(c => c.key === 'details' && c.show);
+      },
+      iconConfigs() {
+        return [
+          {
+            key: 'copy',
+            show: !this.allowEdit && this.channel.published,
+            icon: 'copy',
+            tooltip: this.$tr('copyToken'),
+            dataTest: 'token-button',
+            clickHandler: () => {
+              this.tokenDialog = true;
+            },
+          },
+          // show open tab link when
+          // only one of source or demo server url is present
+          // we do not show this icon if we are in channel list
+          {
+            key: 'open-tab-link',
+            show:
+              !this.isInChannelList &&
+              ((this.loggedIn && !this.channel.demo_server_url && this.channel.source_url) ||
+                (this.loggedIn && !this.channel.source_url && this.channel.demo_server_url) ||
+                (!this.loggedIn &&
+                  this.channel.published &&
+                  // this check ensures that we show link to both in kebab menu
+                  !(this.channel.source_url && this.channel.demo_server_url))),
+            icon: 'openNewTab',
+            tooltip: this.channel.demo_server_url
+              ? this.$tr('viewOnKolibri')
+              : this.$tr('goToWebsite'),
+            dataTest: 'view-on-kolibri',
+            clickHandler: () => {
+              this.viewOnKolibri();
+            },
+          },
+          {
+            key: 'details',
+            show: !this.libraryMode && this.loggedIn,
+            icon: 'info',
+            tooltip: this.$tr('details'),
+            dataTest: 'details-button',
+            to: this.channelDetailsLink,
+          },
+          // show kebab menu when
+          // we are listing channels
+          // or when both source and demo server urls are present and user is logged in
+          {
+            key: 'kebab-menu',
+            show:
+              this.isInChannelList ||
+              (this.loggedIn && this.channel.source_url && this.channel.demo_server_url),
+            icon: 'optionsVertical',
+            dataTest: 'menu',
+          },
+        ];
       },
     },
     mounted() {
