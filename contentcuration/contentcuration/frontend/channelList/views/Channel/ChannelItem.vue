@@ -7,6 +7,8 @@
       :class="{ added }"
       data-test="channel-card"
       tabindex="0"
+      :href="isInChannelList && linkToChannelTree ? channelHref : null"
+      :to="isInChannelList ? (linkToChannelTree ? null : channelDetailsLink) : null"
       @click="handleChannelClick"
     >
       <VLayout
@@ -398,6 +400,16 @@
           },
         ];
       },
+      linkToChannelTree() {
+        return this.loggedIn && !this.libraryMode;
+      },
+      channelHref() {
+        if (this.linkToChannelTree) {
+          return window.Urls.channel(this.channelId);
+        } else {
+          return false;
+        }
+      },
     },
     mounted() {
       if (this.channel.added) {
@@ -426,7 +438,9 @@
         }
       },
       handleChannelClick() {
-        this.$emit('show-channel-details', this.channelId);
+        if (!this.isInChannelList) {
+          this.$emit('show-channel-details', this.channelId);
+        }
       },
       trackTokenCopy() {
         this.$analytics.trackAction('channel_list', 'Copy token', {
