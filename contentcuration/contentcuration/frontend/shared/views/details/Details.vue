@@ -19,6 +19,7 @@
     <!-- Action Buttons -->
     <VLayout v-if="isChannel" row class="mb-4" style="margin-left: -8px;">
       <VBtn
+        v-if="!loggedIn"
         color="primary"
         class="mr-2"
         @click="viewInKolibri"
@@ -30,10 +31,18 @@
         />
         {{ $tr('viewInKolibri') }}
       </VBtn>
+      <VBtn
+        v-else
+        color="primary"
+        class="mr-2"
+        :href="channelHref"
+      >
+        {{ $tr('goToChannel') }}
+      </VBtn>
       <Menu>
         <template #activator="{ on }">
           <VBtn color="primary" v-on="on">
-            {{ $tr('downloadButton') }}
+            {{ loggedIn ? $tr('options') : $tr('downloadButton') }}
             <Icon
               class="ml-1"
               icon="dropdown"
@@ -42,6 +51,21 @@
           </VBtn>
         </template>
         <VList>
+          <template v-if="loggedIn">
+            <VListTile
+              v-if="_details.source_url"
+              :href="_details.source_url"
+              target="_blank"
+            >
+              <VListTileTitle>{{ $tr('goToWebsite') }}</VListTileTitle>
+            </VListTile>
+            <VListTile
+              v-if="_details.demo_server_url"
+              @click="viewInKolibri"
+            >
+              <VListTileTitle>{{ $tr('viewInKolibri') }}</VListTileTitle>
+            </VListTile>
+          </template>
           <VListTile @click="$emit('generate-pdf')">
             <VListTileTitle>{{ $tr('downloadPDF') }}</VListTileTitle>
           </VListTile>
@@ -346,6 +370,7 @@
 
 <script>
 
+  import { mapGetters } from 'vuex';
   import cloneDeep from 'lodash/cloneDeep';
   import defaultsDeep from 'lodash/defaultsDeep';
   import camelCase from 'lodash/camelCase';
@@ -431,6 +456,13 @@
       },
     },
     computed: {
+      ...mapGetters(['loggedIn']),
+      channelHref() {
+        if (this.loggedIn && !window.libraryMode) {
+          return window.Urls.channel(this._details.id);
+        }
+        return null;
+      },
       _details() {
         const details = cloneDeep(this.details);
         defaultsDeep(details, DEFAULT_DETAILS);
@@ -581,6 +613,9 @@
       primaryLanguageHeading: 'Primary language',
       unpublishedText: 'Unpublished',
       viewInKolibri: 'View in Kolibri',
+      goToChannel: 'Go to Channel',
+      goToWebsite: 'Go to source website',
+      options: 'Options',
       downloadButton: 'Download channel summary',
       downloadPDF: 'Download PDF',
       downloadCSV: 'Download CSV',
