@@ -53,7 +53,6 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        logger.info("\n\n********** STARTING CHANNEL RESTORATION **********")
         manager = ImportManager(
             options["source_url"],
             options["source_id"],

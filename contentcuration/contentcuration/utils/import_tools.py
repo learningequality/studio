@@ -11,6 +11,7 @@ from functools import cached_property
 from io import BytesIO
 
 import requests
+import tqdm
 from django.core.files.storage import default_storage
 from django.core.management import call_command
 from django.db import transaction
@@ -180,7 +181,7 @@ class ImportManager(object):
         self.client = ImportClient(source_url, api_token=token)
         self.conn = None
         self.cursor = None
-        self.schema_version = None
+        self.progress = None
 
     @cached_property
     def editor_user(self):
@@ -193,10 +194,10 @@ class ImportManager(object):
 
     def run(self):
         """
-        Run the import process.
+        Run the import restoration process.
         """
+        self.logger.info("********** STARTING CHANNEL RESTORATION **********")
         # Set up variables for the import process
-        self.logger.info("\n\n********** STARTING CHANNEL IMPORT **********")
         start = datetime.datetime.now()
 
         if not self.token:
@@ -242,10 +243,38 @@ class ImportManager(object):
                 complete=True,
             )
 
+            self.logger.info("Creating nodes...")
+            total_nodes = self.cursor.execute(
+                f"SELECT COUNT(*) FROM {NODE_TABLE}"
+            ).fetchone()[0]
+            node_progress = tqdm.tqdm(
+                total=total_nodes, desc="Restoring nodes", unit="node"
+            )
+
             # Create nodes mapping to channel
-            self.logger.info("   Creating nodes...")
             with transaction.atomic():
-                self._create_nodes(root)
+                self._create_nodes(root, node_progress)
+                node_progress.close()
+                self.logger.info("Creating assessment items...")
+                exercise_nodes = models.ContentNode.objects.filter(
+                    kind_id=content_kinds.EXERCISE, tree_id=root.tree_id
+                )
+                exercise_progress = tqdm.tqdm(
+                    total=exercise_nodes.count(),
+                    desc="Restoring assessments",
+                    unit="node",
+                )
+                chunk = []
+                for node in exercise_nodes.iterator(chunk_size=10):
+                    chunk.append(node)
+                    if len(chunk) >= 10:
+                        self._create_assessment_items(chunk)
+                        exercise_progress.update(len(chunk))
+                        chunk = []
+                if chunk:
+                    self._create_assessment_items(chunk)
+                    exercise_progress.update(len(chunk))
+                exercise_progress.close()
                 # TODO: Handle prerequisites
 
             # Delete the previous tree if it exists
@@ -271,9 +300,9 @@ class ImportManager(object):
 
         # Print stats
         self.logger.info(
-            f"\n\nChannel has been imported (time: {datetime.datetime.now() - start})\n"
+            f"Channel has been imported (time: {datetime.datetime.now() - start})"
         )
-        self.logger.info("\n\n********** IMPORT COMPLETE **********\n\n")
+        self.logger.info("********** IMPORT COMPLETE **********")
 
     def _create_channel(self):
         """
@@ -314,15 +343,15 @@ class ImportManager(object):
         channel.version = version
         channel.public = self.public
         channel.save()
-        self.logger.info(f"\tCreated channel {self.target_id} with name {name}")
+        self.logger.info(f"Created channel {self.target_id} with name {name}")
         return channel, root_pk
 
-    def _create_nodes(self, parent, indent=1):
+    def _create_nodes(self, parent, progress):
         """
         Create node(s) for a channel with target id
 
         :param parent: node's parent
-        :param indent: How far to indent print statements
+        :param progress: progress bar for node creation
         """
         sql_command = f"""
             SELECT
@@ -359,12 +388,6 @@ class ImportManager(object):
             duration,
             options,
         ) in query:
-            self.logger.info(
-                "{indent} {id} ({title} - {kind})...".format(
-                    indent="   |" * indent, id=id, title=title, kind=kind
-                )
-            )
-
             # Determine role
             role = roles.LEARNER
             if coach_content:
@@ -440,16 +463,16 @@ class ImportManager(object):
 
             # Handle foreign key references (children, files, tags)
             if kind == content_kinds.TOPIC:
-                self._create_nodes(node, indent=indent + 1)
-            elif kind == content_kinds.EXERCISE:
-                self._create_assessment_items(node, indent=indent + 1)
-            self._create_files(node, indent=indent + 1)
-            self._create_tags(node, indent=indent + 1)
+                self._create_nodes(node, progress)
+            self._create_files(node)
+            self._create_tags(node)
 
-            errors = node.mark_complete()
-            if errors:
-                self.logger.warning(f"Node {node.node_id} has errors: {errors}")
+            if kind != content_kinds.EXERCISE:
+                errors = node.mark_complete()
+                if errors:
+                    self.logger.warning(f"Node {node.node_id} has errors: {errors}")
             node.save()
+            progress.update(1)
 
     def _retrieve_license(self, license_id):
         """
@@ -474,12 +497,11 @@ class ImportManager(object):
         ).fetchone()
         return models.License.objects.get(license_name=name), description
 
-    def _create_files(self, contentnode, indent=0):
+    def _create_files(self, contentnode):
         """
         Create and possibly download node files
 
         :param contentnode: node file references
-        :param indent: How far to indent print statements
         """
         # Parse database for files referencing content node and make file models
         sql_command = f"""
@@ -499,11 +521,6 @@ class ImportManager(object):
             is_thumbnail,
         ) in query:
             filename = "{}.{}".format(checksum, extension)
-            self.logger.info(
-                "{indent} * FILE {filename}...".format(
-                    indent="   |" * indent, filename=filename
-                )
-            )
 
             try:
                 self._download_file(
@@ -595,104 +612,128 @@ class ImportManager(object):
         # set_by_file_on_disk: skip unless the file has been downloaded
         file_obj.save(set_by_file_on_disk=file_exists)
 
-    def _create_tags(self, contentnode, indent=0):
+    def _create_tags(self, contentnode):
         """
         Create tags associated with node
 
         :param contentnode: node tags reference
-        :param indent: How far to indent print statements
         """
         # Parse database for files referencing content node and make file models
         sql_command = f"""
-            SELECT ct.id, ct.tag_name
+            SELECT ct.tag_name
             FROM {NODE_TAG_TABLE} cnt
             JOIN {TAG_TABLE} ct ON cnt.contenttag_id = ct.id
             WHERE cnt.contentnode_id = ?;
         """
         query = self.cursor.execute(sql_command, (contentnode.node_id,)).fetchall()
 
-        # Build up list of tags
-        tag_list = []
-        for id, tag_name in query:
-            self.logger.info(
-                "{indent} ** TAG {tag}...".format(indent="   |" * indent, tag=tag_name)
-            )
-            # Save values to new or existing tag object
-            tag_obj, is_new = models.ContentTag.objects.get_or_create(
-                pk=id,
-                tag_name=tag_name,
-                channel_id=self.target_id,
-            )
-            tag_list.append(tag_obj)
+        models.ContentTag.objects.bulk_create(
+            [
+                models.ContentTag(
+                    tag_name=tag_name,
+                    channel_id=self.target_id,
+                )
+                for tag_name in query
+            ],
+            ignore_conflicts=True,
+        )
 
         # Save tags to node
-        contentnode.tags.set(tag_list)
+        contentnode.tags.set(
+            models.ContentTag.objects.filter(
+                tag_name__in=query, channel_id=self.target_id
+            )
+        )
         contentnode.save()
 
-    def _create_assessment_items(self, contentnode, indent=0):
+    def _create_assessment_items(self, nodes):
         """
-        Generate assessment items based on perseus zip
+        Generate assessment items based on API data
 
-        :param contentnode: node assessment items reference
-        :param indent: How far to indent print statements
+        :param nodes: nodes to lookup assessment items
         """
+        # Note: there are several different IDs being used within this method
+        node_ids = [node.node_id for node in nodes]
+
         if not self.token:
             self.logger.warning(
-                f"Skipping assessment items for node {contentnode.node_id}"
+                f"Skipping assessment items for node(s) {','. join(node_ids)}"
             )
             return
 
-        # first obtain the content node's Studio ID with the node ID
-        node_response = self.client.get_with_token(
-            f"/api/contentnode?_node_id_channel_id___in={contentnode.node_id},{self.source_id}"
+        # first obtain the remote nodes' IDs with the node ID and channel ID
+        node_channel_ids = f",{self.source_id},".join(node_ids)
+        nodes_response = self.client.get_with_token(
+            f"/api/contentnode?_node_id_channel_id___in={node_channel_ids},{self.source_id}"
         )
-        if node_response.status_code != 200:
+        if nodes_response.status_code != 200:
             self.logger.warning(
-                f"Failed to obtain assessment items for node {contentnode.node_id}"
+                f"Failed to obtain assessment items for node(s) {','. join(node_ids)}"
             )
             return
 
-        node_data = node_response.json()
-        contentnode_id = node_data[0]["id"] if node_data else None
-        if not contentnode_id:
-            self.logger.warning(f"No content node found for node {contentnode.node_id}")
+        nodes_data = nodes_response.json()
+        remote_node_pks = [n["id"] for n in nodes_data] if nodes_data else None
+
+        if not remote_node_pks:
+            self.logger.warning(
+                f"No content node found for node(s) {','. join(node_ids)}"
+            )
             return
 
         # Get the content node's assessment items
         assessment_response = self.client.get_with_token(
-            f"/api/assessmentitem?contentnode__in={contentnode_id}"
+            f"/api/assessmentitem?contentnode__in={','.join(remote_node_pks)}"
         )
         if assessment_response.status_code != 200:
             self.logger.warning(
-                f"Failed to obtain assessment items for node {contentnode.node_id}"
+                f"Failed to obtain assessment items for node(s) {','. join(node_ids)}"
             )
             return
 
         assessment_items = assessment_response.json()
         if not assessment_items:
             self.logger.warning(
-                f"No assessment items found for node {contentnode.node_id}"
+                f"No assessment items found for node(s) {','. join(node_ids)}"
             )
             return
 
-        # Create the assessment items
-        for item in assessment_items:
-            self.logger.info(
-                "{indent} ** ASSESSMENT ITEM {assessment_id}...".format(
-                    indent="   |" * indent, assessment_id=item["assessment_id"]
+        remote_node_pk_map = (
+            {n["node_id"]: n["id"] for n in nodes_data} if nodes_data else {}
+        )
+
+        for local_node in nodes:
+            remote_contentnode_id = remote_node_pk_map.get(local_node.node_id)
+            reduced_assessment_items = [
+                item
+                for item in assessment_items
+                if item["contentnode"] == remote_contentnode_id
+            ]
+
+            if not reduced_assessment_items:
+                self.logger.warning(
+                    f"No assessment items found for node {local_node.node_id}"
                 )
-            )
-            assessment_item = models.AssessmentItem.objects.create(
-                assessment_id=item["assessment_id"],
-                type=item["type"],
-                order=item["order"],
-                question=item["question"],
-                answers=item["answers"],
-                hints=item["hints"],
-                randomize=item.get("randomize", False),
-            )
-            contentnode.assessment_items.add(assessment_item)
-        contentnode.save()
+                continue
+
+            for item in reduced_assessment_items:
+                assessment_item = models.AssessmentItem.objects.create(
+                    assessment_id=item["assessment_id"],
+                    type=item["type"],
+                    order=item["order"],
+                    question=item["question"],
+                    answers=item["answers"],
+                    hints=item["hints"],
+                    raw_data=item["raw_data"],
+                    source_url=item["source_url"],
+                    randomize=item.get("randomize", False),
+                )
+                self._process_assessment_images(assessment_item)
+                local_node.assessment_items.add(assessment_item)
+            errors = local_node.mark_complete()
+            if errors:
+                self.logger.warning(f"Node {local_node.node_id} has errors: {errors}")
+            local_node.save()
 
     def _process_assessment_images(self, assessment_item):
         """
