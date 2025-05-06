@@ -85,12 +85,13 @@ def duplicate_file(
     return file_copy
 
 
-def get_thumbnail_encoding(filename, dimension=THUMBNAIL_WIDTH):
+def get_thumbnail_encoding(filename, dimension=THUMBNAIL_WIDTH, input_buffer=None):
     """
     Generates a base64 encoding for a thumbnail
     Args:
         filename (str): thumbnail to generate encoding from (must be in storage already)
         dimension (int, optional): desired width of thumbnail. Defaults to 400.
+        input_buffer (BytesIO, optional): buffer to read from. Defaults to None.
     Returns base64 encoding of resized thumbnail
     """
 
@@ -103,23 +104,23 @@ def get_thumbnail_encoding(filename, dimension=THUMBNAIL_WIDTH):
     # make sure the aspect ratio between width and height is 16:9
     thumbnail_size = [dimension, round(dimension / 1.77)]
     try:
-        if not filename.startswith(settings.STATIC_ROOT):
-            filename = generate_object_storage_name(checksum, filename)
-            inbuffer = default_storage.open(filename, "rb")
+        if not input_buffer:
+            if not filename.startswith(settings.STATIC_ROOT):
+                filename = generate_object_storage_name(checksum, filename)
+                input_buffer = default_storage.open(filename, "rb")
+            else:
+                # Normalize the path and ensure it is indeed within STATIC_ROOT
+                normalized_path = os.path.normpath(filename)
+                static_root = os.path.abspath(settings.STATIC_ROOT)
+                abs_path = os.path.abspath(normalized_path)
+                if not abs_path.startswith(static_root + os.sep):
+                    raise ValueError("Attempted access to file outside of STATIC_ROOT")
+                input_buffer = open(filename, "rb")
 
-        else:
-            # Normalize the path and ensure it is indeed within STATIC_ROOT
-            normalized_path = os.path.normpath(filename)
-            static_root = os.path.abspath(settings.STATIC_ROOT)
-            abs_path = os.path.abspath(normalized_path)
-            if not abs_path.startswith(static_root + os.sep):
-                raise ValueError("Attempted access to file outside of STATIC_ROOT")
-            inbuffer = open(abs_path, "rb")
-
-        if not inbuffer:
+        if not input_buffer:
             raise AssertionError
 
-        with Image.open(inbuffer) as image:
+        with Image.open(input_buffer) as image:
             image_format = image.format
 
             # Note: Image.thumbnail ensures that the image will fit in the
@@ -136,7 +137,7 @@ def get_thumbnail_encoding(filename, dimension=THUMBNAIL_WIDTH):
     finally:
         # Try to close the inbuffer if it has been created
         try:
-            inbuffer.close()
+            input_buffer.close()
         except UnboundLocalError:
             pass
         outbuffer.close()
