@@ -10,14 +10,12 @@ from django.test import TestCase
 from django_s3_storage.storage import S3Storage
 from mock import MagicMock
 
-from .base import StudioTestCase
+from ..base import StudioTestCase
 from contentcuration.models import generate_object_storage_name
-from contentcuration.utils.storage_common import _get_gcs_presigned_put_url
-from contentcuration.utils.storage_common import determine_content_type
-from contentcuration.utils.storage_common import get_presigned_upload_url
-from contentcuration.utils.storage_common import UnknownStorageBackendError
-
-# The modules we'll test
+from contentcuration.utils.storage.common import _get_gcs_presigned_put_url
+from contentcuration.utils.storage.common import determine_content_type
+from contentcuration.utils.storage.common import get_presigned_upload_url
+from contentcuration.utils.storage.common import UnknownStorageBackendError
 
 
 class MimeTypesTestCase(TestCase):

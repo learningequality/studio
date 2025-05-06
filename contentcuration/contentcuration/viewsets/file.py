@@ -18,7 +18,7 @@ from contentcuration.models import generate_object_storage_name
 from contentcuration.models import generate_storage_url
 from contentcuration.utils.cache import ResourceSizeCache
 from contentcuration.utils.sentry import report_exception
-from contentcuration.utils.storage_common import get_presigned_upload_url
+from contentcuration.utils.storage.common import get_presigned_upload_url
 from contentcuration.utils.user import calculate_user_storage
 from contentcuration.viewsets.base import BulkDeleteMixin
 from contentcuration.viewsets.base import BulkListSerializer
