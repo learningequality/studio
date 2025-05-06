@@ -2,12 +2,11 @@
 
 ## Local development guides
 
-- [Local development instructions: With Docker (recommended)](./local_dev_docker.md)
-- [Local development instructions: Run everything on your host machine](./local_dev_host.md)
+- [Local development instructions](./local_dev.md)
 - [Local development tools](./dev_tools.md)
 - [Running tests](./running_tests.md)
 - [Adding or updating dependencies](./dependencies.md)
-- [Preparing a pull request](../pull_requests.md)
+- [Preparing a pull request](./pull_requests.md)
 
 ## Additional development tools
 

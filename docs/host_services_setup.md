@@ -1,16 +1,10 @@
-# Local development instructions: run everything on your host machine
+# Supplemental instructions for host services
 
-This guide will walk through setting up Kolibri Studio for local development, where you'll run Studio's Python apps and all of Studio's services on your host machine, without the need for docker.
+This guide is a supplement to Kolibri Studio's [local development instructions](./local_dev.md) and provides additional notes and instructions for setting up Kolibri Studio's services manually.
 
 ## Prerequisites
-For detailed instructions on installing and configuring Volta, pyenv, and pyenv-virtualenv, please see the [Prerequisites](./local_dev_host.md#prerequisites) section in our Local Development with host guide.
 
 ## Install system dependencies and services
-Studio requires some background services to be running:
-
-* Minio - a local S3 storage emulation
-* PostgreSQL - a relational database
-* Redis - a fast key/value store useful for caching
 
 ### Ubuntu or Debian
 ```bash
@@ -39,14 +33,7 @@ brew link --force imagemagick@6
 
 ## Set up the database
 
-Make sure postgres is running:
-
-```bash
-service postgresql start
-# alternatively: pg_ctl -D /usr/local/var/postgresql@16 start
-```
-
-Start the client with:
+Once you've started postgres, access the postgres client with:
 
 ```bash
 sudo su postgres  # switch to the postgres account
@@ -70,26 +57,3 @@ Press <kbd>Ctrl</kbd>+<kbd>D</kbd> to exit the `psql` client. Finally
 ```bash
 exit  # leave the postgres account
 ```
-
-## Build your python virtual environment
-For complete instructions on installing Python 3.10.13, creating and activating the virtual environment, and installing Studio’s Python dependencies, please refer to the [Build Your Python Virtual Environment](./local_dev_host.md#build-your-python-virtual-environment) section in our Local Development with host guide.
-
-### A note about `psycopg2`
-The packages `postgresql-16`, `postgresql-contrib`, and `postgresql-server-dev-all` are required to build `psycopg2` python driver.
-
-### A note about dependencies on Apple Silicon M1+
-If you run into an error with `pip install` related to the `grcpio` package, it is because it currently [does not support M1 with the version for `grcpio` Studio uses](https://github.com/grpc/grpc/issues/25082). In order to fix it, you will need to add the following environmental variables before running `pip install`:
-```bash
-export GRPC_PYTHON_BUILD_SYSTEM_OPENSSL=1
-export GRPC_PYTHON_BUILD_SYSTEM_ZLIB=1
-export CFLAGS="-I/opt/homebrew/opt/openssl/include"
-export LDFLAGS="-L/opt/homebrew/opt/openssl/lib"
-```
-
-## Install frontend dependencies
-For guidance on installing Node 18.X, pnpm, and all required frontend dependencies, running the services, initializing Studio, and running the development server , please refer to the [Install Frontend Dependencies](./local_dev_host.md#install-frontend-dependencies) section in our Local Development with host guide.
-
-Either of the above commands will take a few minutes to build the frontend. When it's done, you can sign in with the account created by the `pnpm run devsetup` command:
-- url: `http://localhost:8080/accounts/login/`
-- username: `a@a.com`
-- password: `a`

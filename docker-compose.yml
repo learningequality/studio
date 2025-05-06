@@ -1,5 +1,3 @@
-version: '3.4'
-
 x-studio-environment:
   &studio-environment
     MPLBACKEND: ps
@@ -14,7 +12,8 @@ x-studio-environment:
     CELERY_BROKER_ENDPOINT: redis
     CELERY_RESULT_BACKEND_ENDPOINT: redis
     CELERY_REDIS_PASSWORD: ""
-    PROBER_STUDIO_BASE_URL: http://studio-app:8080/{path}
+    PROBER_STUDIO_BASE_URL: http://studio-app:8081/{path}
+    WEBPACK_DEV_HOST: 0.0.0.0
 
 x-studio-worker:
   &studio-worker
@@ -36,10 +35,7 @@ services:
     build:
       context: .
       dockerfile: k8s/images/nginx/Dockerfile
-    ports:
-      - "8081:8080"
-    depends_on:
-      - studio-app
+    network_mode: host
     environment: *studio-environment
 
   studio-app:
@@ -47,7 +43,7 @@ services:
     entrypoint: python docker/entrypoint.py
     command: pnpm run devserver
     ports:
-      - "8080:8080"
+      - "8081:8081"
       - "4000:4000"
 
   celery-worker:
@@ -71,6 +67,8 @@ services:
     build:
       context: ./docker
       dockerfile: Dockerfile.postgres.dev
+    ports:
+      - "5432:5432"
     environment:
       PGDATA: /var/lib/postgresql/data/pgdata
       POSTGRES_USER: learningequality
@@ -82,6 +80,8 @@ services:
 
   redis:
     image: redis:6.0.9
+    ports:
+      - "6379:6379"
 
   cloudprober:
     <<: *studio-worker
