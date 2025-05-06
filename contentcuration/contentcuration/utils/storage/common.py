@@ -7,6 +7,7 @@ from django.core.files.storage import default_storage
 from django_s3_storage.storage import S3Storage
 
 from .base import CompositeStorage
+from .base import Storage
 from .gcs import CompositeGCS
 from .gcs import GoogleCloudStorage
 
@@ -63,13 +64,14 @@ def get_presigned_upload_url(
     # both storage types are having difficulties enforcing it.
 
     mimetype = determine_content_type(filepath)
-    if isinstance(storage, (GoogleCloudStorage, CompositeGCS)):
+    bucket = settings.AWS_S3_BUCKET_NAME
+
+    if isinstance(storage, Storage):
         client = client or storage.get_client()
-        bucket = settings.AWS_S3_BUCKET_NAME
+
+    if isinstance(storage, (GoogleCloudStorage, CompositeGCS)):
         upload_url = _get_gcs_presigned_put_url(client, bucket, filepath, md5sum_b64, lifetime_sec, mimetype=mimetype)
     elif isinstance(storage, (S3Storage, CompositeStorage)):
-        bucket = settings.AWS_S3_BUCKET_NAME
-        client = client or storage.s3_connection
         upload_url = _get_s3_presigned_put_url(client, bucket, filepath, md5sum_b64, lifetime_sec)
     else:
         raise UnknownStorageBackendError(

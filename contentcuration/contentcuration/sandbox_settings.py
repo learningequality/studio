@@ -3,7 +3,7 @@ from .not_production_settings import *  # noqa
 
 DEBUG = True
 
-DEFAULT_FILE_STORAGE = "contentcuration.utils.gcs_storage.CompositeGCS"
+DEFAULT_FILE_STORAGE = "contentcuration.utils.storage.gcs.CompositeGCS"
 
 LANGUAGES += (("ar", gettext("Arabic")),)  # noqa
 

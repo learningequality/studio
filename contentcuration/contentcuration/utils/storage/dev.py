@@ -7,7 +7,11 @@ from contentcuration.utils.storage.gcs import GoogleCloudStorage
 
 
 class Storage(S3Storage, BaseStorage):
-    pass
+    def get_client(self):
+        """
+        :rtype: object
+        """
+        return self.s3_connection
 
 
 class CompositeStorage(BaseCompositeStorage):
