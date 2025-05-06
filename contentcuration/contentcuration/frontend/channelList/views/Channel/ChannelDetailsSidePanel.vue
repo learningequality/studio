@@ -6,10 +6,8 @@
     :value="value"
     :permanent="true"
     :temporary="false"
-    clipped
-    app
     v-bind="$attrs"
-    style="position: fixed; z-index: 10"
+    style=" position: fixed; top: 0; right: 0;z-index: 10; height: 100vh"
     @input="$emit('input', $event)"
     @resize="$emit('resize', $event)"
   >

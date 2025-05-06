@@ -143,6 +143,16 @@
         </VLayout>
       </BottomBar>
     </VContainer>
+    <transition
+      name="backdrop"
+      appear
+    >
+      <div
+        v-if="showSidePanel"
+        class="backdrop"
+        @click="handleCloseSidePanel"
+      ></div>
+    </transition>
     <ChannelDetailsSidePanel
       v-if="showSidePanel"
       v-model="showSidePanel"
@@ -337,6 +347,43 @@
   .list-wrapper {
     max-width: 1080px;
     margin: 0 auto;
+  }
+
+  .backdrop {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 9;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    background-attachment: fixed;
+  }
+
+  .backdrop-enter {
+    opacity: 0;
+  }
+
+  .backdrop-enter-to {
+    opacity: 1;
+  }
+
+  .backdrop-enter-active {
+    transition: opacity 0.2s ease-in-out;
+  }
+
+  .backdrop-leave {
+    opacity: 1;
+  }
+
+  .backdrop-leave-to {
+    opacity: 0;
+  }
+
+  .backdrop-leave-active {
+    transition: opacity 0.2s ease-in-out;
   }
 
 </style>
