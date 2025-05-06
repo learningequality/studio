@@ -6,10 +6,12 @@ from io import BytesIO
 import backoff
 from django.conf import settings
 from django.core.files import File
-from django.core.files.storage import Storage
 from google.cloud.exceptions import InternalServerError
 from google.cloud.storage import Client
 from google.cloud.storage.blob import Blob
+
+from contentcuration.utils.storage.base import CompositeStorage
+from contentcuration.utils.storage.base import Storage
 
 OLD_STUDIO_STORAGE_PREFIX = "/contentworkshop_content/"
 
@@ -120,7 +122,7 @@ class GoogleCloudStorage(Storage):
 
         # determine the current file's mimetype based on the name
         # import determine_content_type lazily in here, so we don't get into an infinite loop with circular dependencies
-        from contentcuration.utils.storage_common import determine_content_type
+        from contentcuration.utils.storage.common import determine_content_type
         content_type = determine_content_type(name)
 
         # force the current file to be at file location 0, to
@@ -212,66 +214,10 @@ class GoogleCloudStorage(Storage):
         return len(byt) == 0
 
 
-class CompositeGCS(Storage):
+class CompositeGCS(CompositeStorage):
     def __init__(self):
-        self.backends = []
+        super(CompositeGCS, self).__init__()
         self.backends.append(GoogleCloudStorage(_create_default_client(), settings.AWS_S3_BUCKET_NAME))
         # Only add the studio-content bucket (the production bucket) if we're not in production
         if settings.SITE_ID != settings.PRODUCTION_SITE_ID:
             self.backends.append(GoogleCloudStorage(Client.create_anonymous_client(), "studio-content"))
-
-    def _get_writeable_backend(self):
-        """
-        :rtype: GoogleCloudStorage
-        """
-        for backend in self.backends:
-            if backend.writeable:
-                return backend
-        raise AssertionError("No writeable backend found")
-
-    def _get_readable_backend(self, name):
-        """
-        :rtype: GoogleCloudStorage
-        """
-        for backend in self.backends:
-            if backend.exists(name):
-                return backend
-        raise FileNotFoundError("{} not found".format(name))
-
-    def get_client(self):
-        return self._get_writeable_backend().get_client()
-
-    def open(self, name, mode='rb'):
-        return self._get_readable_backend(name).open(name, mode)
-
-    def save(self, name, content, max_length=None):
-        return self._get_writeable_backend().save(name, content, max_length=max_length)
-
-    def delete(self, name):
-        self._get_writeable_backend().delete(name)
-
-    def exists(self, name):
-        try:
-            self._get_readable_backend(name)
-            return True
-        except FileNotFoundError:
-            return False
-
-    def listdir(self, path):
-        # This method was not implemented on GoogleCloudStorage to begin with
-        raise NotImplementedError("listdir is not implemented for CompositeGCS")
-
-    def size(self, name):
-        return self._get_readable_backend(name).size(name)
-
-    def url(self, name):
-        return self._get_readable_backend(name).url(name)
-
-    def get_accessed_time(self, name):
-        return self._get_readable_backend(name).get_accessed_time(name)
-
-    def get_created_time(self, name):
-        return self._get_readable_backend(name).get_created_time(name)
-
-    def get_modified_time(self, name):
-        return self._get_readable_backend(name).get_modified_time(name)

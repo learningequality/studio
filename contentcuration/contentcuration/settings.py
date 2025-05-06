@@ -361,7 +361,7 @@ TWO_WEEKS_AGO = now() - timedelta(days=14)
 ORPHAN_DATE_CLEAN_UP_THRESHOLD = TWO_WEEKS_AGO
 
 # CLOUD STORAGE SETTINGS
-DEFAULT_FILE_STORAGE = 'django_s3_storage.storage.S3Storage'
+DEFAULT_FILE_STORAGE = 'contentcuration.utils.storage.dev.CompositeStorage'
 AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID') or 'development'
 AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY') or 'development'
 AWS_S3_BUCKET_NAME = os.getenv('AWS_BUCKET_NAME') or 'content'

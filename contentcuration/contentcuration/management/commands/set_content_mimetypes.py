@@ -14,7 +14,7 @@ import os
 from django.core.files.storage import default_storage
 from django.core.management.base import BaseCommand
 
-from contentcuration.utils.storage_common import determine_content_type
+from contentcuration.utils.storage.common import determine_content_type
 
 
 class Command(BaseCommand):
