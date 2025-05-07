@@ -276,9 +276,9 @@ class ImportManager(object):
                     unit="node",
                 )
                 chunk = []
-                for node in exercise_nodes.iterator(chunk_size=10):
+                for node in exercise_nodes.iterator(chunk_size=20):
                     chunk.append(node)
-                    if len(chunk) >= 10:
+                    if len(chunk) >= 20:
                         self._create_assessment_items(chunk)
                         exercise_progress.update(len(chunk))
                         chunk = []
@@ -404,43 +404,10 @@ class ImportManager(object):
             if coach_content:
                 role = roles.COACH
 
-            # Determine extra_fields
-            extra_fields = {}
-            if kind == content_kinds.EXERCISE:
-                randomize_sql = f"""
-                    SELECT randomize
-                    FROM {ASSESSMENTMETADATA_TABLE}
-                    WHERE contentnode_id = ?
-                """
-                randomize = self.cursor.execute(randomize_sql, (id,)).fetchone()
-                extra_fields["options"] = json.loads(options) if options else {}
-                extra_fields["randomize"] = bool(randomize[0]) if randomize else False
-                completion_criteria_ = extra_fields["options"].get(
-                    "completion_criteria"
-                )
-                if (
-                    completion_criteria_
-                    and completion_criteria_.get("model") == completion_criteria.MASTERY
-                ):
-                    mastery_model = completion_criteria_.get("threshold", {}).get(
-                        "mastery_model"
-                    )
-                    if mastery_model == mastery_criteria.DO_ALL:
-                        completion_criteria_["threshold"] = {
-                            "mastery_model": mastery_model,
-                        }
-                if (
-                    completion_criteria_
-                    and "learner_managed" not in completion_criteria_
-                ):
-                    completion_criteria_["learner_managed"] = False
-
             # Determine license
             license_result = self._retrieve_license(license_id)
             license_description = license_result[1] if license_result else ""
             license_result = license_result[0] if license_result else None
-
-            # TODO: Determine thumbnail encoding
 
             # Create the new node model
             node = models.ContentNode.objects.create(
@@ -457,7 +424,7 @@ class ImportManager(object):
                 license_description=license_description,
                 language_id=lang_id,
                 role_visibility=role,
-                extra_fields=extra_fields,
+                extra_fields=self._prepare_node_extra_fields(id, kind, options),
                 kind_id=kind,
                 parent=parent,
                 original_channel_id=self.target_id,
@@ -478,12 +445,72 @@ class ImportManager(object):
             self._create_files(node)
             self._create_tags(node)
 
+            # assessments are handled after all nodes are created, which also ensures nodes
+            # are marked complete
             if kind != content_kinds.EXERCISE:
                 errors = node.mark_complete()
                 if errors:
                     self.logger.warning(f"Node {node.node_id} has errors: {errors}")
             node.save()
             progress.update(1)
+
+    def _prepare_node_extra_fields(self, node_id, kind, options):
+        """
+        Prepare extra fields for the node based on the kind and options. For exercises, it
+        retrieves the additional info from the assessment metadata.
+
+        :param node_id: the node ID
+        :param kind: the content kind
+        :param options: the options JSON string
+        :return: a dictionary of extra fields
+        """
+        extra_fields = {
+            "options": json.loads(options) if options else {},
+        }
+        completion_criteria_ = extra_fields["options"].get("completion_criteria", {})
+
+        # don't fill anything in if there is no completion_criteria, otherwise validation will fail
+        if completion_criteria_ and "learner_managed" not in completion_criteria_:
+            completion_criteria_.update(learner_managed=False)
+
+        if kind == content_kinds.EXERCISE:
+            randomize_sql = f"""
+                SELECT randomize, mastery_model
+                FROM {ASSESSMENTMETADATA_TABLE}
+                WHERE contentnode_id = ?
+            """
+            randomize, mastery_criteria_ = self.cursor.execute(
+                randomize_sql, (node_id,)
+            ).fetchone()
+            extra_fields["randomize"] = bool(randomize) if randomize else False
+            if mastery_criteria_:
+                mastery_criteria_ = json.loads(mastery_criteria_)
+                mastery_criteria_.update(mastery_model=mastery_criteria_.pop("type"))
+                completion_criteria_.update(
+                    {
+                        "model": completion_criteria.MASTERY,
+                        "threshold": mastery_criteria_,
+                    }
+                )
+
+        if completion_criteria_.get("model") == completion_criteria.MASTERY:
+            mastery_model = completion_criteria_.get("threshold", {}).get(
+                "mastery_model"
+            )
+            if mastery_model in [
+                mastery_criteria.DO_ALL,
+                mastery_criteria.NUM_CORRECT_IN_A_ROW_2,
+                mastery_criteria.NUM_CORRECT_IN_A_ROW_3,
+                mastery_criteria.NUM_CORRECT_IN_A_ROW_5,
+                mastery_criteria.NUM_CORRECT_IN_A_ROW_10,
+            ]:
+                # remove m,n values
+                completion_criteria_["threshold"] = {
+                    "mastery_model": mastery_model,
+                }
+
+        extra_fields["options"].update(completion_criteria=completion_criteria_)
+        return extra_fields
 
     def _retrieve_license(self, license_id):
         """
@@ -543,7 +570,7 @@ class ImportManager(object):
                     is_thumbnail=is_thumbnail,
                 )
             except IOError as e:
-                self.logger.warning("\b FAILED (check logs for more details)")
+                self.logger.warning(f"FAILED to download '{filename}': {str(e)}")
                 if e.errno:
                     sys.stderr.write(
                         f"Restoration Process Error: Failed to save file object {filename}: {os.strerror(e.errno)}"
