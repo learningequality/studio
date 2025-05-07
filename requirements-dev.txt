@@ -109,6 +109,8 @@ tomli==1.2.3
     #   build
     #   pip-tools
     #   pytest
+tqdm==4.67.1
+    # via -r requirements-dev.in
 uritemplate==3.0.1
     # via drf-yasg
 virtualenv==20.26.6

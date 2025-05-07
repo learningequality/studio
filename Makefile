@@ -1,9 +1,13 @@
-# standalone install method
-DOCKER_COMPOSE = docker-compose
+SHELL := /bin/bash
 
-# support new plugin installation for docker-compose
-ifeq (, $(shell which docker-compose))
+# new plugin installation method for docker compose
 DOCKER_COMPOSE = docker compose
+
+WEBPACK_CMD = $(if $(filter $(WEBPACK_MODE),hot),pnpm run build:dev:hot, pnpm run build:dev)
+
+# support fallback to old docker-compose
+ifeq (, $(shell $DOCKER_COMPOSE version 2>/dev/null))
+	DOCKER_COMPOSE = docker-compose
 endif
 
 ###############################################################
@@ -133,9 +137,6 @@ dummyusers:
 	cd contentcuration/ && python manage.py loaddata contentcuration/fixtures/admin_user.json
 	cd contentcuration/ && python manage.py loaddata contentcuration/fixtures/admin_user_token.json
 
-hascaptions:
-	python contentcuration/manage.py set_orm_based_has_captions
-
 BRANCH_NAME := $(shell git rev-parse --abbrev-ref HEAD | sed 's/[^a-zA-Z0-9_-]/-/g')
 
 export COMPOSE_PROJECT_NAME=studio_$(BRANCH_NAME)
@@ -149,8 +150,30 @@ destroy-and-recreate-database: purge-postgres setup
 devceleryworkers:
 	$(MAKE) -e DJANGO_SETTINGS_MODULE=contentcuration.dev_settings prodceleryworkers
 
-run-services:
+devrun-django:
+	python contentcuration/manage.py runserver --settings=contentcuration.dev_settings 0.0.0.0:8081
+
+devrun-server:
+	set -ex; \
+	function _on_interrupt() { $(DOCKER_COMPOSE) stop studio-nginx; }; \
+	trap _on_interrupt SIGINT SIGTERM SIGKILL ERR; \
+	$(DOCKER_COMPOSE) up -d studio-nginx; \
+	$(MAKE) -j 2 devrun-django devrun-webpack
+
+devrun-server-hot:
+	$(MAKE) -e devrun-server WEBPACK_MODE=hot
+
+devrun-services:
 	$(MAKE) -j 2 dcservicesup devceleryworkers
+
+devrun-setup:
+	python contentcuration/manage.py setup --settings=contentcuration.dev_settings
+
+devrun-shell:
+	python contentcuration/manage.py shell --settings=contentcuration.dev_settings
+
+devrun-webpack:
+	$(WEBPACK_CMD)
 
 .docker/minio:
 	mkdir -p $@
@@ -172,7 +195,7 @@ dcbuild:
 
 dcup: .docker/minio .docker/postgres
 	# run all services except for cloudprober
-	$(DOCKER_COMPOSE) up studio-app celery-worker
+	$(DOCKER_COMPOSE) up studio-nginx studio-app
 
 dcup-cloudprober: .docker/minio .docker/postgres
 	# run all services including cloudprober
@@ -200,8 +223,8 @@ dctest: .docker/minio .docker/postgres
 
 dcservicesup: .docker/minio .docker/postgres
 	# launch all studio's dependent services using docker-compose
-	$(DOCKER_COMPOSE) -f docker-compose.yml -f docker-compose.alt.yml up minio postgres redis
+	$(DOCKER_COMPOSE) up minio postgres redis
 
 dcservicesdown:
 	# stop services that were started using dcservicesup
-	$(DOCKER_COMPOSE) -f docker-compose.yml -f docker-compose.alt.yml down
+	$(DOCKER_COMPOSE) down
