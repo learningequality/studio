@@ -1,5 +1,6 @@
 import logging
 import tempfile
+from datetime import timedelta
 from gzip import GzipFile
 from io import BytesIO
 
@@ -20,7 +21,9 @@ CONTENT_DATABASES_MAX_AGE = 5  # seconds
 MAX_RETRY_TIME = 60  # seconds
 
 
-def _create_default_client(service_account_credentials_path=settings.GCS_STORAGE_SERVICE_ACCOUNT_KEY_PATH):
+def _create_default_client(
+    service_account_credentials_path=settings.GCS_STORAGE_SERVICE_ACCOUNT_KEY_PATH,
+):
     if service_account_credentials_path:
         return Client.from_service_account_json(service_account_credentials_path)
     return Client()
@@ -123,6 +126,7 @@ class GoogleCloudStorage(Storage):
         # determine the current file's mimetype based on the name
         # import determine_content_type lazily in here, so we don't get into an infinite loop with circular dependencies
         from contentcuration.utils.storage.common import determine_content_type
+
         content_type = determine_content_type(name)
 
         # force the current file to be at file location 0, to
@@ -134,7 +138,8 @@ class GoogleCloudStorage(Storage):
             return name
 
         blob.upload_from_file(
-            fobj, content_type=content_type,
+            fobj,
+            content_type=content_type,
         )
 
         # Close StringIO object and discard memory buffer if created
@@ -213,11 +218,46 @@ class GoogleCloudStorage(Storage):
             fobj.seek(current_location)
         return len(byt) == 0
 
+    def get_presigned_put_url(
+        self, filepath, md5sum, lifetime_sec, mimetype="application/octet-stream"
+    ):
+        """
+        Creates a pre-signed URL for GCS.
+
+        :param filepath: A string representing the destination file path inside the bucket
+        :param md5sum: A MD5 checksum of the file to be uploaded
+        :param lifetime_sec: The lifetime of the URL in seconds
+        :param mimetype: The content type of the file to be uploaded
+        :return: A pre-signed URL for uploading the file
+        """
+        blob_obj = self.bucket.blob(filepath)
+
+        # ensure the md5sum doesn't have any whitespace, including newlines.
+        # We should do the same whitespace stripping as well on any client that actually
+        # uses the returned presigned url.
+        md5sum_stripped = md5sum.strip()
+
+        # convert the lifetime to a timedelta, so gcloud library will interpret the lifetime
+        # as the seconds from right now. If we use an absolute integer, it's the number of seconds
+        # from unix time
+        lifetime_timedelta = timedelta(seconds=lifetime_sec)
+
+        return blob_obj.generate_signed_url(
+            method="PUT",
+            content_md5=md5sum_stripped,
+            content_type=mimetype,
+            expiration=lifetime_timedelta,
+        )
+
 
 class CompositeGCS(CompositeStorage):
     def __init__(self):
         super(CompositeGCS, self).__init__()
-        self.backends.append(GoogleCloudStorage(_create_default_client(), settings.AWS_S3_BUCKET_NAME))
+        self.backends.append(
+            GoogleCloudStorage(_create_default_client(), settings.AWS_S3_BUCKET_NAME)
+        )
         # Only add the studio-content bucket (the production bucket) if we're not in production
         if settings.SITE_ID != settings.PRODUCTION_SITE_ID:
-            self.backends.append(GoogleCloudStorage(Client.create_anonymous_client(), "studio-content"))
+            self.backends.append(
+                GoogleCloudStorage(Client.create_anonymous_client(), "studio-content")
+            )

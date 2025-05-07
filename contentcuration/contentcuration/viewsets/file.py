@@ -236,7 +236,7 @@ class FileViewSet(BulkDeleteMixin, UpdateModelMixin, ReadOnlyValuesViewset):
             codecs.decode(checksum, "hex"), "base64"
         ).decode()
         retval = get_presigned_upload_url(
-            filepath, checksum_base64, 600, content_length=size
+            filepath, checksum_base64, 600
         )
 
         file = File(
