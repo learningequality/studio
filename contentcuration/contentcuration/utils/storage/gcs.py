@@ -1,5 +1,6 @@
 import logging
 import tempfile
+from datetime import timedelta
 from gzip import GzipFile
 from io import BytesIO
 
@@ -216,6 +217,37 @@ class GoogleCloudStorage(Storage):
             byt = fobj.read(1)
             fobj.seek(current_location)
         return len(byt) == 0
+
+    def get_presigned_put_url(
+        self, filepath, md5sum, lifetime_sec, mimetype="application/octet-stream"
+    ):
+        """
+        Creates a pre-signed URL for GCS.
+
+        :param filepath: A string representing the destination file path inside the bucket
+        :param md5sum: A MD5 checksum of the file to be uploaded
+        :param lifetime_sec: The lifetime of the URL in seconds
+        :param mimetype: The content type of the file to be uploaded
+        :return: A pre-signed URL for uploading the file
+        """
+        blob_obj = self.bucket.blob(filepath)
+
+        # ensure the md5sum doesn't have any whitespace, including newlines.
+        # We should do the same whitespace stripping as well on any client that actually
+        # uses the returned presigned url.
+        md5sum_stripped = md5sum.strip()
+
+        # convert the lifetime to a timedelta, so gcloud library will interpret the lifetime
+        # as the seconds from right now. If we use an absolute integer, it's the number of seconds
+        # from unix time
+        lifetime_timedelta = timedelta(seconds=lifetime_sec)
+
+        return blob_obj.generate_signed_url(
+            method="PUT",
+            content_md5=md5sum_stripped,
+            content_type=mimetype,
+            expiration=lifetime_timedelta,
+        )
 
 
 class CompositeGCS(CompositeStorage):

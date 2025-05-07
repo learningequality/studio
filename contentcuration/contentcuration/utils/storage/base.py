@@ -14,6 +14,20 @@ class Storage(BaseStorage):
         """
         return None
 
+    def get_presigned_put_url(
+        self, filepath, md5sum, lifetime_sec, mimetype="application/octet-stream"
+    ):
+        """
+        Creates a pre-signed URL for uploading files.
+
+        :param filepath: A string representing the destination file path inside the bucket
+        :param md5sum: A MD5 checksum of the file to be uploaded
+        :param lifetime_sec: The lifetime of the URL in seconds
+        :param mimetype: The content type of the file to be uploaded
+        :return: A pre-signed URL for uploading the file
+        """
+        raise NotImplementedError("Subclasses must implement this method")
+
 
 class CompositeStorage(Storage):
     def __init__(self):
@@ -74,3 +88,10 @@ class CompositeStorage(Storage):
 
     def get_modified_time(self, name):
         return self._get_readable_backend(name).get_modified_time(name)
+
+    def get_presigned_put_url(
+        self, filepath, md5sum, lifetime_sec, mimetype="application/octet-stream"
+    ):
+        return self._get_writeable_backend().get_presigned_put_url(
+            filepath, md5sum, lifetime_sec, mimetype=mimetype
+        )
