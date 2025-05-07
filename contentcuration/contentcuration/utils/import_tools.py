@@ -32,6 +32,7 @@ from contentcuration.utils.files import get_thumbnail_encoding
 from contentcuration.utils.files import write_base64_to_file
 from contentcuration.utils.garbage_collect import get_deleted_chefs_root
 from contentcuration.utils.publish import publish_channel
+from contentcuration.utils.storage.base import CompositeStorage
 from contentcuration.viewsets.assessmentitem import exercise_image_filename_regex
 
 CHANNEL_TABLE = "content_channelmetadata"
@@ -59,6 +60,11 @@ class ImportClient(requests.Session):
         super(ImportClient, self).__init__()
         self.base_url = base_url
         self.api_token = api_token
+        self.headers.update(
+            {
+                "User-Agent": f"restore_channel/kolibri-studio/dev python-requests/{requests.__version__}",
+            }
+        )
 
     def __getattr__(self, name):
         if name.endswith("_with_token"):
@@ -179,6 +185,11 @@ class ImportManager(object):
         self.download_content = download_content
         self.logger = logger or logging.getLogger(__name__)
         self.client = ImportClient(source_url, api_token=token)
+        self.storage = (
+            default_storage._get_writeable_backend()
+            if isinstance(default_storage, CompositeStorage)
+            else default_storage
+        )
         self.conn = None
         self.cursor = None
         self.progress = None
@@ -568,8 +579,8 @@ class ImportManager(object):
         file_exists = False
 
         # If the file already exists, get the size from the storage
-        if default_storage.exists(filepath):
-            file_size = file_size or default_storage.size(filepath)
+        if self.storage.exists(filepath):
+            file_size = file_size or self.storage.size(filepath)
             file_exists = True
         # if it needs downloading and if we were instructed to do so
         elif self.download_content or (is_thumbnail and contentnode):
