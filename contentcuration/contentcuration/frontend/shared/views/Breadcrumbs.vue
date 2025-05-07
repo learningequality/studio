@@ -108,13 +108,13 @@
     },
     methods: {
       handleOverflow() {
-        const maxWidth = this.$refs.breadcrumbs.$el.offsetWidth;
         let totalWidth = 0;
         this.breadcrumbStartingIndex = 0;
         this.$nextTick(() => {
-          if (this.$refs.breadcrumb) {
+          if (this.$refs.breadcrumb && this.$refs.breadcrumb) {
+            const maxWidth = this.$refs.breadcrumbs.$el.offsetWidth;
             for (var i = this.$refs.breadcrumb.length - 1; i >= 0; --i) {
-              totalWidth += this.$refs.breadcrumb[i].$el.offsetWidth + 68;
+              totalWidth += this.$refs.breadcrumb[i].$el.offsetWidth + 60;
 
               // Bounds exceeded, go back to previous index
               if (totalWidth >= maxWidth - 48) {
