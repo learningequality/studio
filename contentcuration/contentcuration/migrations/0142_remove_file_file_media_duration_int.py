@@ -5,12 +5,12 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('contentcuration', '0141_add_task_signature'),
+        ("contentcuration", "0141_add_task_signature"),
     ]
 
     operations = [
         migrations.RemoveConstraint(
-            model_name='file',
-            name='file_media_duration_int',
+            model_name="file",
+            name="file_media_duration_int",
         ),
     ]

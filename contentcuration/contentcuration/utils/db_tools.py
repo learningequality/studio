@@ -43,7 +43,7 @@ def create_user(email, password, first_name, last_name, admin=False):
         user.set_password(password)
         user.first_name = first_name
         user.last_name = last_name
-        print(
+        print(  # noqa: T201
             "User created (email: {}, password: {}, admin: {})".format(
                 email, password, admin
             )
@@ -67,7 +67,9 @@ def create_channel(
     domain = uuid.uuid5(uuid.NAMESPACE_DNS, name)
     node_id = uuid.uuid5(domain, name)
 
-    channel, _new = Channel.objects.get_or_create(actor_id=editors[0].id, pk=node_id.hex)
+    channel, _new = Channel.objects.get_or_create(
+        actor_id=editors[0].id, pk=node_id.hex
+    )
 
     channel.name = name
     channel.description = description
@@ -158,7 +160,9 @@ question_4 = (
 all_questions = (question_1, question_2, question_3, question_4)
 
 
-def create_exercise(title, parent, license_id, description="", user=None, empty=False, complete=True):
+def create_exercise(
+    title, parent, license_id, description="", user=None, empty=False, complete=True
+):
     mastery_model = {
         "mastery_model": exercises.M_OF_N,
         "randomize": False,
@@ -177,7 +181,7 @@ def create_exercise(title, parent, license_id, description="", user=None, empty=
         license_description=LICENSE_DESCRIPTION,
         extra_fields=mastery_model,
         sort_order=get_sort_order(),
-        complete=complete
+        complete=complete,
     )
     exercise.save()
 
@@ -212,7 +216,15 @@ def create_question(node, question, question_type, answers):
 
 
 def create_contentnode(
-    title, parent, file, kind_id, license_id, description="", user=None, tags=None, complete=True
+    title,
+    parent,
+    file,
+    kind_id,
+    license_id,
+    description="",
+    user=None,
+    tags=None,
+    complete=True,
 ):
     copyright_holder = "Someone Somewhere"
     if user:
@@ -318,7 +330,8 @@ class TreeBuilder(object):
             ContentNode.objects.build_tree_nodes(self._root_node), batch_size=BATCH_SIZE
         )
         AssessmentItem.objects.bulk_create(
-            self.assessment_items, batch_size=BATCH_SIZE,
+            self.assessment_items,
+            batch_size=BATCH_SIZE,
         )
         File.objects.bulk_create(self.files, batch_size=BATCH_SIZE)
         if self.tags:
@@ -347,14 +360,23 @@ class TreeBuilder(object):
         return children
 
     def generate_topic(self, parent_id=None):
-        data = self.contentnode_data(kind=content_kinds.TOPIC, parent_id=parent_id,)
+        data = self.contentnode_data(
+            kind=content_kinds.TOPIC,
+            parent_id=parent_id,
+        )
         self.generate_file(
-            data["id"], "Topic Thumbnail", format_presets.TOPIC_THUMBNAIL, "png",
+            data["id"],
+            "Topic Thumbnail",
+            format_presets.TOPIC_THUMBNAIL,
+            "png",
         )
         return data
 
     def generate_document(self, parent_id):
-        data = self.contentnode_data(kind=content_kinds.DOCUMENT, parent_id=parent_id,)
+        data = self.contentnode_data(
+            kind=content_kinds.DOCUMENT,
+            parent_id=parent_id,
+        )
         self.generate_file(
             data["id"], "Sample Document", format_presets.DOCUMENT, file_formats.PDF
         )
@@ -367,9 +389,15 @@ class TreeBuilder(object):
         return data
 
     def generate_video(self, parent_id):
-        data = self.contentnode_data(kind=content_kinds.VIDEO, parent_id=parent_id,)
+        data = self.contentnode_data(
+            kind=content_kinds.VIDEO,
+            parent_id=parent_id,
+        )
         self.generate_file(
-            data["id"], "Sample Video", format_presets.VIDEO_HIGH_RES, file_formats.MP4,
+            data["id"],
+            "Sample Video",
+            format_presets.VIDEO_HIGH_RES,
+            file_formats.MP4,
         )
         self.generate_file(
             data["id"],
@@ -386,7 +414,10 @@ class TreeBuilder(object):
         return data
 
     def generate_audio(self, parent_id):
-        data = self.contentnode_data(kind=content_kinds.AUDIO, parent_id=parent_id,)
+        data = self.contentnode_data(
+            kind=content_kinds.AUDIO,
+            parent_id=parent_id,
+        )
         self.generate_file(
             data["id"], "Sample Audio", format_presets.AUDIO, file_formats.MP3
         )
@@ -399,7 +430,10 @@ class TreeBuilder(object):
         return data
 
     def generate_html5(self, parent_id):
-        data = self.contentnode_data(kind=content_kinds.HTML5, parent_id=parent_id,)
+        data = self.contentnode_data(
+            kind=content_kinds.HTML5,
+            parent_id=parent_id,
+        )
         self.generate_file(
             data["id"], "Sample HTML", format_presets.HTML5_ZIP, file_formats.HTML5
         )
@@ -465,7 +499,11 @@ class TreeBuilder(object):
         return node
 
     def generate_file(
-        self, contentnode_id, display_name, preset_id, extension,
+        self,
+        contentnode_id,
+        display_name,
+        preset_id,
+        extension,
     ):
         if extension not in self.temporary_files:
             with tempfile.NamedTemporaryFile(
@@ -501,7 +539,9 @@ class TreeBuilder(object):
         )
         self.files.append(file)
 
-    def contentnode_data(self, parent_id=None, kind=None, extra_fields=None, complete=True):
+    def contentnode_data(
+        self, parent_id=None, kind=None, extra_fields=None, complete=True
+    ):
         return {
             "extra_fields": extra_fields or {},
             "content_id": uuid4_hex(),
@@ -521,11 +561,24 @@ class TreeBuilder(object):
             "parent_id": parent_id,
             "kind_id": kind,
             "complete": complete,
-            "resource_types": {c: True for c in choices(RESOURCETYPELIST, k=random.randint(1, 2))},
-            "learning_activities": {c: True for c in choices(LEARNINGACTIVITIESLIST, k=random.randint(1, 3))},
-            "accessibility_labels": {c: True for c in choices(ACCESSIBILITYCATEGORIESLIST, k=random.randint(1, 3))},
-            "grade_levels": {c: True for c in choices(LEVELSLIST, k=random.randint(1, 2))},
-            "categories": {c: True for c in choices(SUBJECTSLIST, k=random.randint(1, 10))},
-            "learner_needs": {c: True for c in choices(NEEDSLIST, k=random.randint(1, 5))},
+            "resource_types": {
+                c: True for c in choices(RESOURCETYPELIST, k=random.randint(1, 2))
+            },
+            "learning_activities": {
+                c: True for c in choices(LEARNINGACTIVITIESLIST, k=random.randint(1, 3))
+            },
+            "accessibility_labels": {
+                c: True
+                for c in choices(ACCESSIBILITYCATEGORIESLIST, k=random.randint(1, 3))
+            },
+            "grade_levels": {
+                c: True for c in choices(LEVELSLIST, k=random.randint(1, 2))
+            },
+            "categories": {
+                c: True for c in choices(SUBJECTSLIST, k=random.randint(1, 10))
+            },
+            "learner_needs": {
+                c: True for c in choices(NEEDSLIST, k=random.randint(1, 5))
+            },
             "suggested_duration": random.randint(5, 5000),
         }

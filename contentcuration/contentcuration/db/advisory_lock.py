@@ -8,8 +8,8 @@ logging = logger.getLogger(__name__)
 
 # signed limits are 2**32 or 2**64, so one less power of 2
 # to become unsigned limits (half above 0, half below 0)
-INT_32BIT = 2**31
-INT_64BIT = 2**63
+INT_32BIT = 2 ** 31
+INT_64BIT = 2 ** 63
 
 
 class AdvisoryLockBusy(RuntimeError):
@@ -64,7 +64,7 @@ def execute_lock(key1, key2=None, unlock=False, session=False, shared=False, wai
         xact_="" if session else "xact_",
         lock="unlock" if unlock else "lock",
         _shared="_shared" if shared else "",
-        keys=", ".join(["%s" for i in range(0, 2 if key2 is not None else 1)])
+        keys=", ".join(["%s" for i in range(0, 2 if key2 is not None else 1)]),
     )
 
     log_query = f"'{query}' with params {keys}"

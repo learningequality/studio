@@ -10,58 +10,120 @@ from django.db import models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('contentcuration', '0147_alter_formatpreset_id'),
+        ("contentcuration", "0147_alter_formatpreset_id"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='RecommendationsInteractionEvent',
+            name="RecommendationsInteractionEvent",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('context', models.JSONField()),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('contentnode_id', models.UUIDField()),
-                ('content_id', models.UUIDField()),
-                ('feedback_type', models.CharField(choices=[('IMPORTED', 'Imported'), ('REJECTED', 'Rejected'), ('PREVIEWED', 'Previewed'), ('SHOWMORE', 'Show More'), ('IGNORED', 'Ignored'), ('FLAGGED', 'Flagged')], max_length=50)),
-                ('feedback_reason', models.TextField(max_length=1500)),
-                ('recommendation_event_id', models.UUIDField()),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("context", models.JSONField()),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("contentnode_id", models.UUIDField()),
+                ("content_id", models.UUIDField()),
+                (
+                    "feedback_type",
+                    models.CharField(
+                        choices=[
+                            ("IMPORTED", "Imported"),
+                            ("REJECTED", "Rejected"),
+                            ("PREVIEWED", "Previewed"),
+                            ("SHOWMORE", "Show More"),
+                            ("IGNORED", "Ignored"),
+                            ("FLAGGED", "Flagged"),
+                        ],
+                        max_length=50,
+                    ),
+                ),
+                ("feedback_reason", models.TextField(max_length=1500)),
+                ("recommendation_event_id", models.UUIDField()),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
         ),
         migrations.CreateModel(
-            name='RecommendationsEvent',
+            name="RecommendationsEvent",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('context', models.JSONField()),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('contentnode_id', models.UUIDField()),
-                ('content_id', models.UUIDField()),
-                ('target_channel_id', models.UUIDField()),
-                ('time_hidden', models.DateTimeField()),
-                ('content', models.JSONField(default=list)),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("context", models.JSONField()),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("contentnode_id", models.UUIDField()),
+                ("content_id", models.UUIDField()),
+                ("target_channel_id", models.UUIDField()),
+                ("time_hidden", models.DateTimeField()),
+                ("content", models.JSONField(default=list)),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
         ),
         migrations.CreateModel(
-            name='FlagFeedbackEvent',
+            name="FlagFeedbackEvent",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('context', models.JSONField()),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('contentnode_id', models.UUIDField()),
-                ('content_id', models.UUIDField()),
-                ('target_channel_id', models.UUIDField()),
-                ('feedback_type', models.CharField(choices=[('IMPORTED', 'Imported'), ('REJECTED', 'Rejected'), ('PREVIEWED', 'Previewed'), ('SHOWMORE', 'Show More'), ('IGNORED', 'Ignored'), ('FLAGGED', 'Flagged')], max_length=50)),
-                ('feedback_reason', models.TextField(max_length=1500)),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("context", models.JSONField()),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("contentnode_id", models.UUIDField()),
+                ("content_id", models.UUIDField()),
+                ("target_channel_id", models.UUIDField()),
+                (
+                    "feedback_type",
+                    models.CharField(
+                        choices=[
+                            ("IMPORTED", "Imported"),
+                            ("REJECTED", "Rejected"),
+                            ("PREVIEWED", "Previewed"),
+                            ("SHOWMORE", "Show More"),
+                            ("IGNORED", "Ignored"),
+                            ("FLAGGED", "Flagged"),
+                        ],
+                        max_length=50,
+                    ),
+                ),
+                ("feedback_reason", models.TextField(max_length=1500)),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
         ),
     ]

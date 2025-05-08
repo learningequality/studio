@@ -29,12 +29,14 @@ from contentcuration.utils.nodes import get_diff
 @api_view(["GET"])
 @permission_classes((AllowAny,))
 def get_channel_details(request, channel_id):
-    """ Generates data for channel contents. Used for look-inside previews
-        Keyword arguments:
-            channel_id (str): id of channel to get details from
+    """Generates data for channel contents. Used for look-inside previews
+    Keyword arguments:
+        channel_id (str): id of channel to get details from
     """
     # Get nodes and channel
-    channel = get_object_or_404(Channel.filter_view_queryset(Channel.objects.all(), request.user), id=channel_id)
+    channel = get_object_or_404(
+        Channel.filter_view_queryset(Channel.objects.all(), request.user), id=channel_id
+    )
     if not channel.main_tree:
         raise Http404
     data = get_node_details_cached(request.user, channel.main_tree, channel)
@@ -66,7 +68,9 @@ def get_node_details_cached(user, node, channel):
             # for the CTE select query.
             cte = With(
                 ContentNode.objects.filter(tree_id=node.tree_id)
-                .values("id", "modified", "changed", "tree_id", "parent_id", "lft", "rght")
+                .values(
+                    "id", "modified", "changed", "tree_id", "parent_id", "lft", "rght"
+                )
                 .order_by()
             )
             last_update_qs = cte.queryset().with_cte(cte).filter(changed=True)
@@ -82,13 +86,18 @@ def get_node_details_cached(user, node, channel):
                 # Maintain that query should not 'include_self'
                 last_update_qs = last_update_qs.filter(parent_id__isnull=False)
 
-            last_update = last_update_qs.aggregate(latest_update=Max("modified")).get("latest_update")
+            last_update = last_update_qs.aggregate(latest_update=Max("modified")).get(
+                "latest_update"
+            )
 
         if last_update:
             last_cache_update = datetime.strptime(
                 json.loads(cached_data)["last_update"], settings.DATE_TIME_FORMAT
             )
-            if not user.is_anonymous and last_update.replace(tzinfo=None) > last_cache_update:
+            if (
+                not user.is_anonymous
+                and last_update.replace(tzinfo=None) > last_cache_update
+            ):
                 # update the stats async, then return the cached value
                 getnodedetails_task.enqueue(user, node_id=node.pk)
         return json.loads(cached_data)
@@ -102,7 +111,9 @@ def get_node_details_cached(user, node, channel):
 def get_node_diff(request, updated_id, original_id):
     try:
         # Get queryset to test permissions
-        nodes = ContentNode.filter_view_queryset(ContentNode.objects.all(), request.user)
+        nodes = ContentNode.filter_view_queryset(
+            ContentNode.objects.all(), request.user
+        )
         updated = nodes.get(pk=updated_id)
         original = nodes.get(pk=original_id)
 
@@ -111,14 +122,16 @@ def get_node_diff(request, updated_id, original_id):
         if data:
             return Response(data)
 
-        signature = generatenodediff_task.generate_signature(dict(updated_id=updated_id, original_id=original_id))
+        signature = generatenodediff_task.generate_signature(
+            dict(updated_id=updated_id, original_id=original_id)
+        )
         # See if there's already a staging task in progress
         if generatenodediff_task.find_incomplete_ids(signature).exists():
-            return Response('Diff is being generated', status=status.HTTP_302_FOUND)
+            return Response("Diff is being generated", status=status.HTTP_302_FOUND)
     except ContentNode.DoesNotExist:
         pass
 
-    return Response('Diff is not available', status=status.HTTP_404_NOT_FOUND)
+    return Response("Diff is not available", status=status.HTTP_404_NOT_FOUND)
 
 
 @api_view(["POST"])
@@ -127,13 +140,17 @@ def get_node_diff(request, updated_id, original_id):
 def generate_node_diff(request, updated_id, original_id):
     try:
         # Get queryset to test permissions
-        nodes = ContentNode.filter_view_queryset(ContentNode.objects.all(), request.user).values("id")
+        nodes = ContentNode.filter_view_queryset(
+            ContentNode.objects.all(), request.user
+        ).values("id")
         nodes.get(pk=updated_id)
         nodes.get(pk=original_id)
 
     except ContentNode.DoesNotExist:
-        return Response('Diff is not available', status=status.HTTP_403_FORBIDDEN)
+        return Response("Diff is not available", status=status.HTTP_403_FORBIDDEN)
 
     # See if there's already a staging task in progress
-    generatenodediff_task.fetch_or_enqueue(request.user, updated_id=updated_id, original_id=original_id)
-    return Response('Diff is being generated')
+    generatenodediff_task.fetch_or_enqueue(
+        request.user, updated_id=updated_id, original_id=original_id
+    )
+    return Response("Diff is being generated")

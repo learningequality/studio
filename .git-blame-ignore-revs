@@ -3,3 +3,6 @@
 
 # Linting updates and fixes
 a52e08e5c2031cecb97a03fbed49997756ebe01b
+
+# Flake8 linting and Black formatting updates and cleanup
+24d263676df25cf9d4e609fbdf99c340f55dde2f

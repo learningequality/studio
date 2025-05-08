@@ -7,22 +7,23 @@ from django.db.models import TextField
 
 from contentcuration.models import ContentNode
 
+
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('contentcuration', '0100_calculate_included_languages'),
+        ("contentcuration", "0100_calculate_included_languages"),
     ]
 
     operations = [
-
         migrations.RunSQL(
             # converts the extra_fields column from text to jsonb
-            "ALTER TABLE %s ALTER COLUMN extra_fields TYPE jsonb USING extra_fields::json;" % ContentNode._meta.db_table,
+            "ALTER TABLE %s ALTER COLUMN extra_fields TYPE jsonb USING extra_fields::json;"
+            % ContentNode._meta.db_table,
             # keeps the Django model in sync with the database
             state_operations=[
                 migrations.AlterField(
-                    'contentnode',
-                    'extra_fields',
+                    "contentnode",
+                    "extra_fields",
                     django.contrib.postgres.fields.jsonb.JSONField(),
                 ),
             ],
@@ -32,12 +33,13 @@ class Migration(migrations.Migration):
             # as otherwise pre-conversion migration tests can fail if we allow null.
             reverse_sql="""ALTER TABLE %s ALTER COLUMN extra_fields TYPE text USING extra_fields #>> '{}';
             ALTER TABLE %s ALTER COLUMN extra_fields DROP NOT NULL;
-            """ % (ContentNode._meta.db_table, ContentNode._meta.db_table),
+            """
+            % (ContentNode._meta.db_table, ContentNode._meta.db_table),
         ),
-
         # This is to update `ContentNode` entries with `extra_fields=="null"` to actual NULL values
         migrations.RunSQL(
-            "UPDATE %s SET extra_fields=NULL WHERE extra_fields = 'null'" % ContentNode._meta.db_table,
-            migrations.RunSQL.noop # don't bother to reverse this
-        )
+            "UPDATE %s SET extra_fields=NULL WHERE extra_fields = 'null'"
+            % ContentNode._meta.db_table,
+            migrations.RunSQL.noop,  # don't bother to reverse this
+        ),
     ]

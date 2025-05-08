@@ -45,7 +45,9 @@ class DisablePostDeleteSignal(object):
 
 
 def get_deleted_chefs_root():
-    deleted_chefs_node, _new = ContentNode.objects.get_or_create(pk=settings.DELETED_CHEFS_ROOT_ID, kind_id=content_kinds.TOPIC)
+    deleted_chefs_node, _new = ContentNode.objects.get_or_create(
+        pk=settings.DELETED_CHEFS_ROOT_ID, kind_id=content_kinds.TOPIC
+    )
     return deleted_chefs_node
 
 
@@ -59,7 +61,11 @@ def _clean_up_files(contentnode_ids):
     files_on_storage = files.values_list("file_on_disk", flat=True)
 
     for disk_file_path in files_on_storage:
-        is_other_node_pointing = Exists(File.objects.filter(file_on_disk=disk_file_path).exclude(contentnode__in=contentnode_ids))
+        is_other_node_pointing = Exists(
+            File.objects.filter(file_on_disk=disk_file_path).exclude(
+                contentnode__in=contentnode_ids
+            )
+        )
         if not is_other_node_pointing:
             default_storage.delete(disk_file_path)
 
@@ -80,11 +86,17 @@ def clean_up_soft_deleted_users():
           used by any other channel.
         - all user invitations.
     """
-    account_deletion_buffer_delta = now() - datetime.timedelta(days=settings.ACCOUNT_DELETION_BUFFER)
-    user_latest_deletion_time_subquery = Subquery(UserHistory.objects.filter(user_id=OuterRef(
-        "id"), action=user_history.DELETION).values("performed_at").order_by("-performed_at")[:1])
-    users_to_delete = User.objects.annotate(latest_deletion_time=user_latest_deletion_time_subquery).filter(
-        deleted=True, latest_deletion_time__lt=account_deletion_buffer_delta)
+    account_deletion_buffer_delta = now() - datetime.timedelta(
+        days=settings.ACCOUNT_DELETION_BUFFER
+    )
+    user_latest_deletion_time_subquery = Subquery(
+        UserHistory.objects.filter(user_id=OuterRef("id"), action=user_history.DELETION)
+        .values("performed_at")
+        .order_by("-performed_at")[:1]
+    )
+    users_to_delete = User.objects.annotate(
+        latest_deletion_time=user_latest_deletion_time_subquery
+    ).filter(deleted=True, latest_deletion_time__lt=account_deletion_buffer_delta)
 
     for user in users_to_delete:
         user.hard_delete_user_related_data()
@@ -148,15 +160,17 @@ def clean_up_feature_flags():
     """
     current_flag_keys = feature_flags.SCHEMA.get("properties", {}).keys()
     existing_flag_keys = (
-        User.objects
-        .annotate(key=JSONObjectKeys("feature_flags"))
+        User.objects.annotate(key=JSONObjectKeys("feature_flags"))
         .values_list("key", flat=True)
         .distinct()
     )
 
-    for remove_flag in (set(existing_flag_keys) - set(current_flag_keys)):
-        User.objects.filter(feature_flags__has_key=remove_flag) \
-            .update(feature_flags=CombinedExpression(F("feature_flags"), "-", Value(remove_flag)))
+    for remove_flag in set(existing_flag_keys) - set(current_flag_keys):
+        User.objects.filter(feature_flags__has_key=remove_flag).update(
+            feature_flags=CombinedExpression(
+                F("feature_flags"), "-", Value(remove_flag)
+            )
+        )
 
 
 def clean_up_tasks():
@@ -166,8 +180,12 @@ def clean_up_tasks():
     with DisablePostDeleteSignal():
         date_cutoff = now() - datetime.timedelta(days=7)
 
-        tasks_to_delete = TaskResult.objects.filter(date_done__lt=date_cutoff, status__in=states.READY_STATES)
-        CustomTaskMetadata.objects.filter(task_id__in=tasks_to_delete.values_list("task_id", flat=True)).delete()
+        tasks_to_delete = TaskResult.objects.filter(
+            date_done__lt=date_cutoff, status__in=states.READY_STATES
+        )
+        CustomTaskMetadata.objects.filter(
+            task_id__in=tasks_to_delete.values_list("task_id", flat=True)
+        ).delete()
         count, _ = tasks_to_delete.delete()
     logging.info("Deleted {} completed task(s) from the task table".format(count))
 
@@ -185,10 +203,15 @@ def clean_up_stale_files(last_modified=None):
 
     with DisablePostDeleteSignal():
         files_to_clean_up = File.objects.filter(
-            contentnode__isnull=True, assessment_item__isnull=True, slideshow_slide__isnull=True, modified__lt=last_modified
+            contentnode__isnull=True,
+            assessment_item__isnull=True,
+            slideshow_slide__isnull=True,
+            modified__lt=last_modified,
         )
 
-        files_to_clean_up_slice = files_to_clean_up.values_list("id", flat=True)[0:CHUNKSIZE]
+        files_to_clean_up_slice = files_to_clean_up.values_list("id", flat=True)[
+            0:CHUNKSIZE
+        ]
 
         count = 0
 
@@ -197,6 +220,12 @@ def clean_up_stale_files(last_modified=None):
 
             this_count = len(files_to_clean_up_slice)
             count += this_count
-            files_to_clean_up_slice = files_to_clean_up.values_list("id", flat=True)[0:CHUNKSIZE]
+            files_to_clean_up_slice = files_to_clean_up.values_list("id", flat=True)[
+                0:CHUNKSIZE
+            ]
 
-    logging.info("Files with a modified date older than {} were deleted. Deleted {} file(s).".format(last_modified, count))
+    logging.info(
+        "Files with a modified date older than {} were deleted. Deleted {} file(s).".format(
+            last_modified, count
+        )
+    )

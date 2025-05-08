@@ -7,23 +7,31 @@ from django.db import migrations
 
 
 def forwards(apps, schema_editor):
-    Channel = apps.get_model('contentcuration', 'channel')
+    Channel = apps.get_model("contentcuration", "channel")
     for channel in Channel.objects.all():
-        channel.thumbnail_encoding_json = ast.literal_eval(channel.thumbnail_encoding) if channel.thumbnail_encoding else {}
+        channel.thumbnail_encoding_json = (
+            ast.literal_eval(channel.thumbnail_encoding)
+            if channel.thumbnail_encoding
+            else {}
+        )
         channel.save()
 
 
 def backwards(apps, schema_editor):
-    Channel = apps.get_model('contentcuration', 'channel')
+    Channel = apps.get_model("contentcuration", "channel")
     for channel in Channel.objects.all():
-        channel.thumbnail_encoding = json.dumps(channel.thumbnail_encoding_json) if channel.thumbnail_encoding_json else None
+        channel.thumbnail_encoding = (
+            json.dumps(channel.thumbnail_encoding_json)
+            if channel.thumbnail_encoding_json
+            else None
+        )
         channel.save()
 
 
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('contentcuration', '0002_auto_20181220_1734'),
+        ("contentcuration", "0002_auto_20181220_1734"),
     ]
 
     operations = [

@@ -10,7 +10,9 @@ from django.db import connections
 from django.urls import reverse_lazy
 from le_utils.constants import content_kinds
 from le_utils.constants import format_presets
-from le_utils.constants.labels.accessibility_categories import ACCESSIBILITYCATEGORIESLIST
+from le_utils.constants.labels.accessibility_categories import (
+    ACCESSIBILITYCATEGORIESLIST,
+)
 from le_utils.constants.labels.learning_activities import LEARNINGACTIVITIESLIST
 from le_utils.constants.labels.levels import LEVELSLIST
 from le_utils.constants.labels.needs import NEEDSLIST
@@ -196,9 +198,7 @@ class ApiAddNodesToTreeTestCase(StudioTestCase):
     def test_metadata_properly_created(self):
         node = ContentNode.objects.get(title="valid_metadata_labels")
         for label, values in METADATA.items():
-            self.assertEqual(getattr(node, label), {
-                values[0]: True
-            })
+            self.assertEqual(getattr(node, label), {values[0]: True})
 
     @skipIf(True, "Disable until we mark nodes as incomplete rather than just warn")
     def test_invalid_nodes_are_not_complete(self):
@@ -244,7 +244,7 @@ class ApiAddNodesToTreeTestCase(StudioTestCase):
         )
         # should succeed
         self.assertEqual(response.status_code, 200, response.content)
-        resource_node_id = next(iter(response.json().get('root_ids').values()))
+        resource_node_id = next(iter(response.json().get("root_ids").values()))
 
         invalid_child = self._make_node_data()
         test_data = {
@@ -462,7 +462,9 @@ class ApiAddExerciseNodesToTreeTestCase(StudioTestCase):
         """
         Check that we return 400 if passed in duplicate assessment items.
         """
-        self.sample_data["content_data"][0]["questions"][1]["assessment_id"] = self.sample_data["content_data"][0]["questions"][0]["assessment_id"]
+        self.sample_data["content_data"][0]["questions"][1][
+            "assessment_id"
+        ] = self.sample_data["content_data"][0]["questions"][0]["assessment_id"]
         response = self._make_request()
         # check that we returned 400 with that POST request
         assert response.status_code == 400, "Got a non-400 request error: {}".format(
@@ -743,7 +745,7 @@ class CreateChannelTestCase(StudioTestCase):
             "license": None,
             "source_domain": "unique domain",
             "source_id": "unique domain root",
-            "ricecooker_version": '0.6.46',
+            "ricecooker_version": "0.6.46",
             "extra_fields": None,
             "files": None,
         }
@@ -751,7 +753,9 @@ class CreateChannelTestCase(StudioTestCase):
     def test_401_no_permission(self):
         client = APIClient()
         response = client.post(
-            reverse_lazy("api_create_channel"), data={"channel_data": self.channel_data}, format="json"
+            reverse_lazy("api_create_channel"),
+            data={"channel_data": self.channel_data},
+            format="json",
         )
         self.assertEqual(response.status_code, 401)
 
@@ -761,16 +765,22 @@ class CreateChannelTestCase(StudioTestCase):
         """
         # check that we returned 200 with that POST request
         resp = self.admin_client().post(
-            reverse_lazy("api_create_channel"), data={"channel_data": self.channel_data}, format="json"
+            reverse_lazy("api_create_channel"),
+            data={"channel_data": self.channel_data},
+            format="json",
         )
-        self.assertEqual(resp.status_code, 200, "Got a request error: {}".format(resp.content))
+        self.assertEqual(
+            resp.status_code, 200, "Got a request error: {}".format(resp.content)
+        )
 
     def test_creates_channel(self):
         """
         Test that it creates a channel with the given id
         """
         self.admin_client().post(
-            reverse_lazy("api_create_channel"), data={"channel_data": self.channel_data}, format="json"
+            reverse_lazy("api_create_channel"),
+            data={"channel_data": self.channel_data},
+            format="json",
         )
         try:
             Channel.objects.get(id=self.channel_data["id"])
@@ -786,7 +796,9 @@ class CreateChannelTestCase(StudioTestCase):
         deleted_channel.save(actor_id=self.user.id)
         self.channel_data.update({"name": "Updated name", "id": deleted_channel.id})
         self.admin_client().post(
-            reverse_lazy("api_create_channel"), data={"channel_data": self.channel_data}, format="json"
+            reverse_lazy("api_create_channel"),
+            data={"channel_data": self.channel_data},
+            format="json",
         )
         try:
             c = Channel.objects.get(id=self.channel_data["id"])
@@ -799,7 +811,9 @@ class CreateChannelTestCase(StudioTestCase):
         Test that it creates a channel with the given id
         """
         self.admin_client().post(
-            reverse_lazy("api_create_channel"), data={"channel_data": self.channel_data}, format="json"
+            reverse_lazy("api_create_channel"),
+            data={"channel_data": self.channel_data},
+            format="json",
         )
         try:
             c = Channel.objects.get(id=self.channel_data["id"])
@@ -813,18 +827,22 @@ class CreateChannelTestCase(StudioTestCase):
         Check that the file we passed is now associated
         with the chef_tree we just created.
         """
-        dummy_file = create_studio_file(b"aaaaaaaaaaaaaaa", preset=format_presets.HTML5_ZIP, ext="zip")
+        dummy_file = create_studio_file(
+            b"aaaaaaaaaaaaaaa", preset=format_presets.HTML5_ZIP, ext="zip"
+        )
         test_file = {
-            'size': len(dummy_file["data"]),
-            'preset': format_presets.HTML5_ZIP,
-            'filename': dummy_file["name"],
-            'original_filename': 'test_file',
-            'language': "as",
-            'source_url': "https://justatest.com/test_file.zip",
+            "size": len(dummy_file["data"]),
+            "preset": format_presets.HTML5_ZIP,
+            "filename": dummy_file["name"],
+            "original_filename": "test_file",
+            "language": "as",
+            "source_url": "https://justatest.com/test_file.zip",
         }
         self.channel_data.update({"files": [test_file]})
         self.admin_client().post(
-            reverse_lazy("api_create_channel"), data={"channel_data": self.channel_data}, format="json"
+            reverse_lazy("api_create_channel"),
+            data={"channel_data": self.channel_data},
+            format="json",
         )
 
         try:
@@ -838,9 +856,13 @@ class CreateChannelTestCase(StudioTestCase):
         """
         Check that extra_fields information is put on the chef_tree root node
         """
-        self.channel_data.update({"extra_fields": json.dumps({"modality": "CUSTOM_NAVIGATION"})})
+        self.channel_data.update(
+            {"extra_fields": json.dumps({"modality": "CUSTOM_NAVIGATION"})}
+        )
         self.admin_client().post(
-            reverse_lazy("api_create_channel"), data={"channel_data": self.channel_data}, format="json"
+            reverse_lazy("api_create_channel"),
+            data={"channel_data": self.channel_data},
+            format="json",
         )
 
         try:
@@ -895,13 +917,19 @@ class ApiAddRemoteNodesToTreeTestCase(StudioTestCase):
     def setUp(self):
         super(ApiAddRemoteNodesToTreeTestCase, self).setUp()
         self.source_channel = channel()
-        self.source_video = self.source_channel.main_tree.get_descendants().filter(kind_id=content_kinds.VIDEO).first()
+        self.source_video = (
+            self.source_channel.main_tree.get_descendants()
+            .filter(kind_id=content_kinds.VIDEO)
+            .first()
+        )
 
         # first setup a test channel...
         self.channel = channel()
         self.root_node = self.channel.main_tree
 
-        temp_file_dict = create_studio_file(thumbnail_bytes, preset=format_presets.VIDEO_THUMBNAIL, ext='jpg')
+        temp_file_dict = create_studio_file(
+            thumbnail_bytes, preset=format_presets.VIDEO_THUMBNAIL, ext="jpg"
+        )
 
         # File used for every node
         self.fileobj = temp_file_dict["db_file"]
@@ -983,9 +1011,7 @@ class ApiAddRemoteNodesToTreeTestCase(StudioTestCase):
 
         node = ContentNode.objects.get(title="valid_metadata_labels")
         for label, values in METADATA.items():
-            self.assertEqual(getattr(node, label), {
-                values[0]: True
-            })
+            self.assertEqual(getattr(node, label), {values[0]: True})
 
     def test_metadata_properly_screened_viewer(self):
         self.root_node.get_descendants().delete()
@@ -1012,7 +1038,10 @@ class ApiAddRemoteNodesToTreeTestCase(StudioTestCase):
             if key not in METADATA:
                 if hasattr(node, key):
                     # These will be matching even though we don't overwrite them.
-                    if key in ALLOWED_OVERRIDES or key in {"source_channel_id", "source_node_id"}:
+                    if key in ALLOWED_OVERRIDES or key in {
+                        "source_channel_id",
+                        "source_node_id",
+                    }:
                         self.assertEqual(getattr(node, key), value, key)
                     else:
                         self.assertNotEqual(getattr(node, key), value, key)
@@ -1028,7 +1057,10 @@ class ApiAddRemoteNodesToTreeTestCase(StudioTestCase):
             if key not in METADATA:
                 if hasattr(node, key):
                     # These will be matching even though we don't overwrite them.
-                    if key in EDIT_ALLOWED_OVERRIDES or key in {"source_channel_id", "source_node_id"}:
+                    if key in EDIT_ALLOWED_OVERRIDES or key in {
+                        "source_channel_id",
+                        "source_node_id",
+                    }:
                         self.assertEqual(getattr(node, key), value, key)
                     else:
                         self.assertNotEqual(getattr(node, key), value, key)

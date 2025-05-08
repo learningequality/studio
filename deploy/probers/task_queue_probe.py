@@ -12,9 +12,13 @@ class TaskQueueProbe(BaseProbe):
         r.raise_for_status()
         results = r.json()
 
-        task_count = results.get('queued_task_count', 0)
+        task_count = results.get("queued_task_count", 0)
         if task_count >= self.threshold:
-            raise Exception("Task queue length is over threshold! {} > {}".format(task_count, self.threshold))
+            raise Exception(
+                "Task queue length is over threshold! {} > {}".format(
+                    task_count, self.threshold
+                )
+            )
 
 
 if __name__ == "__main__":

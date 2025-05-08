@@ -7,13 +7,13 @@ from django.db import models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('content', '0002_auto_20180327_1414'),
+        ("content", "0002_auto_20180327_1414"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='contentnode',
-            name='coach_content',
+            model_name="contentnode",
+            name="coach_content",
             field=models.BooleanField(db_index=True, default=False),
         ),
     ]

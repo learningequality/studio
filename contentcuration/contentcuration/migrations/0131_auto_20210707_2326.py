@@ -6,11 +6,11 @@ from django.db import models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('contentcuration', '0130_auto_20210706_2005'),
+        ("contentcuration", "0130_auto_20210706_2005"),
     ]
 
     operations = [
         migrations.DeleteModel(
-            name='ChannelResourceSize',
+            name="ChannelResourceSize",
         ),
     ]

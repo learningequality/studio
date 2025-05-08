@@ -8,7 +8,7 @@ from django_cte import With as CTEWith
 from mptt.querysets import TreeQuerySet
 
 
-RIGHT_JOIN = 'RIGHT JOIN'
+RIGHT_JOIN = "RIGHT JOIN"
 
 
 class CustomTreeQuerySet(TreeQuerySet, CTEQuerySet):
@@ -19,11 +19,12 @@ class With(CTEWith):
     """
     Custom CTE class which allows more join types than just INNER and LOUTER (LEFT)
     """
+
     def join(self, model_or_queryset, *filter_q, **filter_kw):
         """
         Slight hack to allow more join types
         """
-        join_type = filter_kw.get('_join_type', INNER)
+        join_type = filter_kw.get("_join_type", INNER)
         queryset = super(With, self).join(model_or_queryset, *filter_q, **filter_kw)
 
         # the underlying Django code forces the join type into INNER or a LEFT OUTER join
@@ -40,6 +41,7 @@ class WithValues(With):
 
     @see https://www.postgresql.org/docs/9.6/queries-values.html
     """
+
     def __init__(self, fields, values_list, name="cte"):
         super(WithValues, self).__init__(None, name=name)
         self.query = WithValuesQuery(self)
@@ -59,7 +61,9 @@ class WithValues(With):
 
 
 class WithValuesSQLCompiler(SQLCompiler):
-    TEMPLATE = "SELECT * FROM (VALUES {values_statement}) AS {cte_name}({fields_statement})"
+    TEMPLATE = (
+        "SELECT * FROM (VALUES {values_statement}) AS {cte_name}({fields_statement})"
+    )
 
     def as_sql(self, with_limits=True, with_col_aliases=False):
         """
@@ -71,12 +75,16 @@ class WithValuesSQLCompiler(SQLCompiler):
         :return: A tuple of SQL and parameters
         """
         value_parameters = ", ".join(["%s"] * len(self.cte.fields))
-        values_statement = ", ".join(["({})".format(value_parameters)] * len(self.cte.values_list))
-        fields_statement = ", ".join([self.connection.ops.quote_name(field) for field in list(self.cte.fields)])
+        values_statement = ", ".join(
+            ["({})".format(value_parameters)] * len(self.cte.values_list)
+        )
+        fields_statement = ", ".join(
+            [self.connection.ops.quote_name(field) for field in list(self.cte.fields)]
+        )
         sql = self.TEMPLATE.format(
             values_statement=values_statement,
             cte_name="_{}".format(self.cte.name),
-            fields_statement=fields_statement
+            fields_statement=fields_statement,
         )
         return sql, list(sum(self.cte.values_list, ()))
 
@@ -95,6 +103,7 @@ class WithValuesQuery(Query):
     Note: this does inherit from Query, which we're not passing a Model instance so not all Query
     functionality is intended to work
     """
+
     def __init__(self, cte):
         super(WithValuesQuery, self).__init__(None)
         self.cte = cte

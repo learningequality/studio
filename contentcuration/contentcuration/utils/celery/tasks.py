@@ -23,6 +23,7 @@ class ProgressTracker:
     """
     Helper to track task progress
     """
+
     __slots__ = ("task_id", "send_event", "total", "progress", "last_reported_progress")
 
     def __init__(self, task_id, send_event):
@@ -71,6 +72,7 @@ def get_task_model(ref, task_id):
     :rtype: contentcuration.models.CustomTaskMetadata
     """
     from contentcuration.models import CustomTaskMetadata
+
     try:
         return CustomTaskMetadata.objects.get(task_id=task_id)
     except CustomTaskMetadata.DoesNotExist:
@@ -87,9 +89,9 @@ def generate_task_signature(task_name, task_kwargs=None, channel_id=None):
     :rtype: str
     """
     md5 = hashlib.md5()
-    md5.update(task_name.encode('utf-8'))
-    md5.update((task_kwargs or '').encode('utf-8'))
-    md5.update((channel_id or '').encode('utf-8'))
+    md5.update(task_name.encode("utf-8"))
+    md5.update((task_kwargs or "").encode("utf-8"))
+    md5.update((channel_id or "").encode("utf-8"))
     return md5.hexdigest()
 
 
@@ -104,6 +106,7 @@ class CeleryTask(Task):
             progress.increment()
     ```
     """
+
     # by default, celery does not track task starting itself
     track_started = True
     send_events = True
@@ -122,7 +125,9 @@ class CeleryTask(Task):
         """
         Report task failures to sentry as long as the exception is not one of the types for which it should `autoretry`
         """
-        if not getattr(self, "autoretry_for", None) or not isinstance(exc, self.autoretry_for):
+        if not getattr(self, "autoretry_for", None) or not isinstance(
+            exc, self.autoretry_for
+        ):
             report_exception(exc)
 
     def shadow_name(self, *args, **kwargs):
@@ -150,7 +155,7 @@ class CeleryTask(Task):
         return generate_task_signature(
             self.name,
             task_kwargs=self.backend.encode(prepared_kwargs),
-            channel_id=prepared_kwargs.get('channel_id')
+            channel_id=prepared_kwargs.get("channel_id"),
         )
 
     @contextlib.contextmanager
@@ -162,7 +167,7 @@ class CeleryTask(Task):
         """
         with transaction.atomic():
             # compute crc32 to turn signature into integer
-            key2 = zlib.crc32(signature.encode('utf-8'))
+            key2 = zlib.crc32(signature.encode("utf-8"))
             advisory_lock(TASK_LOCK, key2=key2)
             yield
 
@@ -173,8 +178,10 @@ class CeleryTask(Task):
         :rtype: django.db.models.query.QuerySet
         """
         from contentcuration.models import CustomTaskMetadata
-        return CustomTaskMetadata.objects.filter(signature=signature)\
-            .values_list("task_id", flat=True)
+
+        return CustomTaskMetadata.objects.filter(signature=signature).values_list(
+            "task_id", flat=True
+        )
 
     def find_incomplete_ids(self, signature):
         """
@@ -183,9 +190,12 @@ class CeleryTask(Task):
         :rtype: django.db.models.query.QuerySet
         """
         from django_celery_results.models import TaskResult
+
         # Get the filtered task_ids from CustomTaskMetadata model
         filtered_task_ids = self.find_ids(signature)
-        task_objects_ids = TaskResult.objects.filter(task_id__in=filtered_task_ids, status__in=states.UNREADY_STATES).values_list("task_id", flat=True)
+        task_objects_ids = TaskResult.objects.filter(
+            task_id__in=filtered_task_ids, status__in=states.UNREADY_STATES
+        ).values_list("task_id", flat=True)
         return task_objects_ids
 
     def fetch(self, task_id):
@@ -212,7 +222,7 @@ class CeleryTask(Task):
         if user is None or not isinstance(user, User):
             raise TypeError("All tasks must be assigned to a user.")
 
-        signature = kwargs.pop('signature', None)
+        signature = kwargs.pop("signature", None)
         if signature is None:
             signature = self.generate_signature(kwargs)
 
@@ -220,14 +230,13 @@ class CeleryTask(Task):
         prepared_kwargs = self._prepare_kwargs(kwargs)
         channel_id = prepared_kwargs.get("channel_id")
         custom_task_result = CustomTaskMetadata(
-            task_id=task_id,
-            user=user,
-            signature=signature,
-            channel_id=channel_id
+            task_id=task_id, user=user, signature=signature, channel_id=channel_id
         )
         custom_task_result.save()
 
-        logging.info(f"Enqueuing task:id {self.name}:{task_id} for user:channel {user.pk}:{channel_id} | {signature}")
+        logging.info(
+            f"Enqueuing task:id {self.name}:{task_id} for user:channel {user.pk}:{channel_id} | {signature}"
+        )
 
         # returns a CeleryAsyncResult
         async_result = self.apply_async(
@@ -265,9 +274,13 @@ class CeleryTask(Task):
                 async_result = self.fetch(task_ids[0])
                 # double check
                 if async_result and async_result.status not in states.READY_STATES:
-                    logging.info(f"Fetched matching task {self.name} for user {user.pk} with id {async_result.id} | {signature}")
+                    logging.info(
+                        f"Fetched matching task {self.name} for user {user.pk} with id {async_result.id} | {signature}"
+                    )
                     return async_result
-            logging.info(f"Didn't fetch matching task {self.name} for user {user.pk} | {signature}")
+            logging.info(
+                f"Didn't fetch matching task {self.name} for user {user.pk} | {signature}"
+            )
             kwargs.update(signature=signature)
             return self.enqueue(user, **kwargs)
 
@@ -279,15 +292,22 @@ class CeleryTask(Task):
         :rtype: CeleryAsyncResult
         """
         from contentcuration.models import CustomTaskMetadata
+
         request = self.request
         if request is None:
-            raise NotImplementedError("This method should only be called within the execution of a task")
+            raise NotImplementedError(
+                "This method should only be called within the execution of a task"
+            )
         task_kwargs = request.kwargs.copy()
         task_kwargs.update(kwargs)
         signature = self.generate_signature(kwargs)
         custom_task_metadata = CustomTaskMetadata.objects.get(task_id=request.id)
-        logging.info(f"Re-queuing task {self.name} for user {custom_task_metadata.user.pk} from {request.id} | {signature}")
-        return self.enqueue(custom_task_metadata.user, signature=signature, **task_kwargs)
+        logging.info(
+            f"Re-queuing task {self.name} for user {custom_task_metadata.user.pk} from {request.id} | {signature}"
+        )
+        return self.enqueue(
+            custom_task_metadata.user, signature=signature, **task_kwargs
+        )
 
     def revoke(self, exclude_task_ids=None, **kwargs):
         """
@@ -297,6 +317,7 @@ class CeleryTask(Task):
         :return: The number of tasks revoked
         """
         from django_celery_results.models import TaskResult
+
         signature = self.generate_signature(kwargs)
         task_ids = self.find_incomplete_ids(signature)
 

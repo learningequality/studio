@@ -10,15 +10,17 @@ class Migration(migrations.Migration):
     atomic = False
 
     dependencies = [
-        ('contentcuration', '0121_auto_20210305_2028'),
+        ("contentcuration", "0121_auto_20210305_2028"),
     ]
 
     operations = [
         migrations.SeparateDatabaseAndState(
             state_operations=[
                 migrations.AddIndex(
-                    model_name='file',
-                    index=models.Index(fields=['-modified'], name=FILE_MODIFIED_DESC_INDEX_NAME),
+                    model_name="file",
+                    index=models.Index(
+                        fields=["-modified"], name=FILE_MODIFIED_DESC_INDEX_NAME
+                    ),
                 ),
             ],
             database_operations=[

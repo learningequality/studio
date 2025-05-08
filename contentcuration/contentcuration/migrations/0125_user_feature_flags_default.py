@@ -7,13 +7,15 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('contentcuration', '0124_user_feature_flags'),
+        ("contentcuration", "0124_user_feature_flags"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='user',
-            name='feature_flags',
-            field=django.contrib.postgres.fields.jsonb.JSONField(default=dict, null=True),
+            model_name="user",
+            name="feature_flags",
+            field=django.contrib.postgres.fields.jsonb.JSONField(
+                default=dict, null=True
+            ),
         ),
     ]

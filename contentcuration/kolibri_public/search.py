@@ -43,14 +43,14 @@ bitmask_fieldnames = {}
 for key, labels in metadata_lookup.items():
     bitmask_lookup = {}
     i = 0
-    while labels[i: i + 64]:
+    while labels[i : i + 64]:
         bitmask_field_name = "{}_bitmask_{}".format(key, i)
         bitmask_fieldnames[bitmask_field_name] = []
         for j, label in enumerate(labels):
             info = {
                 "bitmask_field_name": bitmask_field_name,
                 "field_name": key,
-                "bits": 2**j,
+                "bits": 2 ** j,
                 "label": label,
             }
             bitmask_lookup[label] = info
@@ -64,9 +64,11 @@ def _get_available_languages(base_queryset):
     from contentcuration.models import Language
 
     langs = Language.objects.filter(
-        id__in=base_queryset.exclude(lang=None).values_list("lang_id", flat=True).distinct()
-    # Updated to use contentcuration field names
-    # Convert language objects to dicts mapped to the kolibri field names
+        id__in=base_queryset.exclude(lang=None)
+        .values_list("lang_id", flat=True)
+        .distinct()
+        # Updated to use contentcuration field names
+        # Convert language objects to dicts mapped to the kolibri field names
     ).values("id", lang_name=F("native_name"))
     return list(langs)
 

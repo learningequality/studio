@@ -12,7 +12,6 @@ from contentcuration.viewsets.sync.constants import SAVEDSEARCH
 
 
 class SavedSearchViewsetTestCase(SyncTestMixin, StudioAPITestCase):
-
     @property
     def savedsearch_metadata(self):
         return {
@@ -38,7 +37,11 @@ class SavedSearchViewsetTestCase(SyncTestMixin, StudioAPITestCase):
     def test_create_savedsearch(self):
         savedsearch = self.savedsearch_metadata
         response = self.sync_changes(
-            [generate_create_event(savedsearch["id"], SAVEDSEARCH, savedsearch, user_id=self.user.id)],
+            [
+                generate_create_event(
+                    savedsearch["id"], SAVEDSEARCH, savedsearch, user_id=self.user.id
+                )
+            ],
         )
         self.assertEqual(response.status_code, 200, response.content)
         try:
@@ -51,8 +54,12 @@ class SavedSearchViewsetTestCase(SyncTestMixin, StudioAPITestCase):
         savedsearch2 = self.savedsearch_metadata
         response = self.sync_changes(
             [
-                generate_create_event(savedsearch1["id"], SAVEDSEARCH, savedsearch1, user_id=self.user.id),
-                generate_create_event(savedsearch2["id"], SAVEDSEARCH, savedsearch2, user_id=self.user.id),
+                generate_create_event(
+                    savedsearch1["id"], SAVEDSEARCH, savedsearch1, user_id=self.user.id
+                ),
+                generate_create_event(
+                    savedsearch2["id"], SAVEDSEARCH, savedsearch2, user_id=self.user.id
+                ),
             ],
         )
         self.assertEqual(response.status_code, 200, response.content)
@@ -87,8 +94,12 @@ class SavedSearchViewsetTestCase(SyncTestMixin, StudioAPITestCase):
 
         response = self.sync_changes(
             [
-                generate_delete_event(savedsearch1.id, SAVEDSEARCH, user_id=self.user.id),
-                generate_delete_event(savedsearch2.id, SAVEDSEARCH, user_id=self.user.id),
+                generate_delete_event(
+                    savedsearch1.id, SAVEDSEARCH, user_id=self.user.id
+                ),
+                generate_delete_event(
+                    savedsearch2.id, SAVEDSEARCH, user_id=self.user.id
+                ),
             ],
         )
         self.assertEqual(response.status_code, 200, response.content)
@@ -107,7 +118,9 @@ class SavedSearchViewsetTestCase(SyncTestMixin, StudioAPITestCase):
     def test_retrieve_savedsearch(self):
         savedsearch = SavedSearch.objects.create(**self.savedsearch_db_metadata)
 
-        response = self.client.get(reverse("savedsearch-detail", kwargs={"pk": savedsearch.id}))
+        response = self.client.get(
+            reverse("savedsearch-detail", kwargs={"pk": savedsearch.id})
+        )
         self.assertEqual(response.status_code, 200, response.content)
         self.assertEqual(response.data["id"], savedsearch.id)
 

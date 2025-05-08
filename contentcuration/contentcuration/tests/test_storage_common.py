@@ -16,6 +16,7 @@ from contentcuration.utils.storage_common import _get_gcs_presigned_put_url
 from contentcuration.utils.storage_common import determine_content_type
 from contentcuration.utils.storage_common import get_presigned_upload_url
 from contentcuration.utils.storage_common import UnknownStorageBackendError
+
 # The modules we'll test
 
 
@@ -77,7 +78,11 @@ class FileSystemStoragePresignedURLTestCase(TestCase):
         """
         with pytest.raises(UnknownStorageBackendError):
             get_presigned_upload_url(
-                "nice", "err", 5, 0, storage=self.STORAGE,
+                "nice",
+                "err",
+                5,
+                0,
+                storage=self.STORAGE,
             )
 
 
@@ -187,12 +192,16 @@ class S3StoragePresignedURLUnitTestCase(StudioTestCase):
         # S3 expects a base64-encoded MD5 checksum
         md5 = hashlib.md5(file_contents)
         md5_checksum = md5.hexdigest()
-        md5_checksum_base64 = codecs.encode(codecs.decode(md5_checksum, "hex"), "base64").decode()
+        md5_checksum_base64 = codecs.encode(
+            codecs.decode(md5_checksum, "hex"), "base64"
+        ).decode()
 
         filename = "blahfile.jpg"
         filepath = generate_object_storage_name(md5_checksum, filename)
 
-        ret = get_presigned_upload_url(filepath, md5_checksum_base64, 1000, len(file_contents))
+        ret = get_presigned_upload_url(
+            filepath, md5_checksum_base64, 1000, len(file_contents)
+        )
         url = ret["uploadURL"]
         content_type = ret["mimetype"]
 
@@ -201,6 +210,6 @@ class S3StoragePresignedURLUnitTestCase(StudioTestCase):
             data=file,
             headers={
                 "Content-Type": content_type,
-            }
+            },
         )
         resp.raise_for_status()

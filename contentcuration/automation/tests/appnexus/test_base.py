@@ -13,29 +13,33 @@ from automation.utils.appnexus.errors import InvalidResponse
 
 
 def test_session_with_max_connection_age_request():
-    with patch.object(requests.Session, 'request') as mock_request:
+    with patch.object(requests.Session, "request") as mock_request:
         session = SessionWithMaxConnectionAge()
-        session.request('GET', 'https://example.com')
+        session.request("GET", "https://example.com")
         assert mock_request.call_count == 1
 
 
 def test_session_with_max_connection_age_not_closing_connections():
-    with patch.object(requests.Session, 'close') as mock_close, patch.object(requests.Session, 'request') as mock_request:
+    with patch.object(requests.Session, "close") as mock_close, patch.object(
+        requests.Session, "request"
+    ) as mock_request:
         session = SessionWithMaxConnectionAge(60)
-        session.request('GET', 'https://example.com')
+        session.request("GET", "https://example.com")
         time.sleep(0.1)
-        session.request('GET', 'https://example.com')
+        session.request("GET", "https://example.com")
 
         assert mock_close.call_count == 0
         assert mock_request.call_count == 2
 
 
 def test_session_with_max_connection_age_closing_connections():
-    with patch.object(requests.Session, 'close') as mock_close, patch.object(requests.Session, 'request') as mock_request:
+    with patch.object(requests.Session, "close") as mock_close, patch.object(
+        requests.Session, "request"
+    ) as mock_request:
         session = SessionWithMaxConnectionAge(1)
-        session.request('GET', 'https://example.com')
+        session.request("GET", "https://example.com")
         time.sleep(2)
-        session.request('GET', 'https://example.com')
+        session.request("GET", "https://example.com")
 
         assert mock_close.call_count == 1
         assert mock_request.call_count == 2

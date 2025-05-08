@@ -5,11 +5,11 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('contentcuration', '0139_django_celery_results'),
+        ("contentcuration", "0139_django_celery_results"),
     ]
 
     operations = [
         migrations.DeleteModel(
-            name='Task',
+            name="Task",
         ),
     ]

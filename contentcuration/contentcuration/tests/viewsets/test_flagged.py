@@ -10,13 +10,13 @@ class CRUDTestCase(StudioAPITestCase):
     @property
     def flag_feedback_object(self):
         return {
-            'context': {'spam': 'Spam or misleading'},
-            'contentnode_id': self.contentNode.id,
-            'content_id': self.contentNode.content_id,
-            'target_channel_id': self.channel.id,
-            'user': self.user.id,
-            'feedback_type': 'FLAGGED',
-            'feedback_reason': 'Some reason provided by the user'
+            "context": {"spam": "Spam or misleading"},
+            "contentnode_id": self.contentNode.id,
+            "content_id": self.contentNode.content_id,
+            "target_channel_id": self.channel.id,
+            "user": self.user.id,
+            "feedback_type": "FLAGGED",
+            "feedback_reason": "Some reason provided by the user",
         }
 
     def setUp(self):
@@ -34,17 +34,21 @@ class CRUDTestCase(StudioAPITestCase):
         self.client.force_authenticate(user=self.user)
         flagged_content = self.flag_feedback_object
         response = self.client.post(
-            reverse("flagged-list"), flagged_content, format="json",
+            reverse("flagged-list"),
+            flagged_content,
+            format="json",
         )
         self.assertEqual(response.status_code, 201, response.content)
 
     def test_create_flag_event_fails_for_flag_test_dev_feature_disabled(self):
         flagged_content = self.flag_feedback_object
-        self.user.feature_flags = {'test_dev_feature': False}
+        self.user.feature_flags = {"test_dev_feature": False}
         self.user.save()
         self.client.force_authenticate(user=self.user)
         response = self.client.post(
-            reverse("flagged-list"), flagged_content, format="json",
+            reverse("flagged-list"),
+            flagged_content,
+            format="json",
         )
         self.assertEqual(response.status_code, 403, response.content)
 
@@ -54,14 +58,18 @@ class CRUDTestCase(StudioAPITestCase):
         self.user.save()
         self.client.force_authenticate(user=self.user)
         response = self.client.post(
-            reverse("flagged-list"), flagged_content, format="json",
+            reverse("flagged-list"),
+            flagged_content,
+            format="json",
         )
         self.assertEqual(response.status_code, 403, response.content)
 
     def test_create_flag_event_fails_for_unauthorized_user(self):
         flagged_content = self.flag_feedback_object
         response = self.client.post(
-            reverse("flagged-list"), flagged_content, format="json",
+            reverse("flagged-list"),
+            flagged_content,
+            format="json",
         )
         self.assertEqual(response.status_code, 403, response.content)
 
@@ -76,16 +84,19 @@ class CRUDTestCase(StudioAPITestCase):
         self.client.force_authenticate(user=self.user)
         flag_feedback_object = FlagFeedbackEvent.objects.create(
             **{
-                'context': {'spam': 'Spam or misleading'},
-                'contentnode_id': self.contentNode.id,
-                'content_id': self.contentNode.content_id,
-                'target_channel_id': self.channel.id,
-                'feedback_type': 'FLAGGED',
-                'feedback_reason': 'Some reason provided by the user'
+                "context": {"spam": "Spam or misleading"},
+                "contentnode_id": self.contentNode.id,
+                "content_id": self.contentNode.content_id,
+                "target_channel_id": self.channel.id,
+                "feedback_type": "FLAGGED",
+                "feedback_reason": "Some reason provided by the user",
             },
             user=self.user,
         )
-        response = self.client.get(reverse("flagged-detail", kwargs={"pk": flag_feedback_object.id}), format="json")
+        response = self.client.get(
+            reverse("flagged-detail", kwargs={"pk": flag_feedback_object.id}),
+            format="json",
+        )
         self.assertEqual(response.status_code, 403, response.content)
 
     def test_list_fails_for_normal_user(self):
@@ -103,32 +114,38 @@ class CRUDTestCase(StudioAPITestCase):
         self.client.force_authenticate(self.user)
         flag_feedback_object = FlagFeedbackEvent.objects.create(
             **{
-                'context': {'spam': 'Spam or misleading'},
-                'contentnode_id': self.contentNode.id,
-                'content_id': self.contentNode.content_id,
-                'target_channel_id': self.channel.id,
-                'feedback_type': 'FLAGGED',
-                'feedback_reason': 'Some reason provided by the user'
+                "context": {"spam": "Spam or misleading"},
+                "contentnode_id": self.contentNode.id,
+                "content_id": self.contentNode.content_id,
+                "target_channel_id": self.channel.id,
+                "feedback_type": "FLAGGED",
+                "feedback_reason": "Some reason provided by the user",
             },
             user=self.user,
         )
-        response = self.client.delete(reverse("flagged-detail", kwargs={"pk": flag_feedback_object.id}), format="json")
+        response = self.client.delete(
+            reverse("flagged-detail", kwargs={"pk": flag_feedback_object.id}),
+            format="json",
+        )
         self.assertEqual(response.status_code, 204, response.content)
 
     def test_destroy_flagged_content_fails_for_user_with_feature_flag_disabled(self):
-        self.user.feature_flags = {'test_dev_feature': False}
+        self.user.feature_flags = {"test_dev_feature": False}
         self.user.save()
         self.client.force_authenticate(user=self.user)
         flag_feedback_object = FlagFeedbackEvent.objects.create(
             **{
-                'context': {'spam': 'Spam or misleading'},
-                'contentnode_id': self.contentNode.id,
-                'content_id': self.contentNode.content_id,
-                'target_channel_id': self.channel.id,
-                'feedback_type': 'FLAGGED',
-                'feedback_reason': 'Some reason provided by the user'
+                "context": {"spam": "Spam or misleading"},
+                "contentnode_id": self.contentNode.id,
+                "content_id": self.contentNode.content_id,
+                "target_channel_id": self.channel.id,
+                "feedback_type": "FLAGGED",
+                "feedback_reason": "Some reason provided by the user",
             },
             user=self.user,
         )
-        response = self.client.delete(reverse("flagged-detail", kwargs={"pk": flag_feedback_object.id}), format="json")
+        response = self.client.delete(
+            reverse("flagged-detail", kwargs={"pk": flag_feedback_object.id}),
+            format="json",
+        )
         self.assertEqual(response.status_code, 403, response.content)

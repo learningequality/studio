@@ -6,9 +6,10 @@ from django.conf import settings
 from django.db import migrations
 from django.db import models
 
+
 def transfer_data(apps, schema_editor):
-    CustomTaskMetadata = apps.get_model('contentcuration', 'CustomTaskMetadata')
-    TaskResult = apps.get_model('django_celery_results', 'taskresult')
+    CustomTaskMetadata = apps.get_model("contentcuration", "CustomTaskMetadata")
+    TaskResult = apps.get_model("django_celery_results", "taskresult")
 
     old_task_results = TaskResult.objects.filter(status__in=states.UNREADY_STATES)
 
@@ -21,28 +22,62 @@ def transfer_data(apps, schema_editor):
             signature=old_task_result.signature,
         )
 
+
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('contentcuration', '0144_soft_delete_user'),
+        ("contentcuration", "0144_soft_delete_user"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='CustomTaskMetadata',
+            name="CustomTaskMetadata",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('task_id', models.CharField(max_length=255, unique=True)),
-                ('channel_id', models.UUIDField(blank=True, db_index=True, null=True)),
-                ('progress', models.IntegerField(blank=True, null=True, validators=[django.core.validators.MinValueValidator(0), django.core.validators.MaxValueValidator(100)])),
-                ('signature', models.CharField(max_length=32, null=True)),
-                ('date_created', models.DateTimeField(auto_now_add=True, help_text='Datetime field when the custom_metadata for task was created in UTC', verbose_name='Created DateTime')),
-                ('user', models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='tasks', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("task_id", models.CharField(max_length=255, unique=True)),
+                ("channel_id", models.UUIDField(blank=True, db_index=True, null=True)),
+                (
+                    "progress",
+                    models.IntegerField(
+                        blank=True,
+                        null=True,
+                        validators=[
+                            django.core.validators.MinValueValidator(0),
+                            django.core.validators.MaxValueValidator(100),
+                        ],
+                    ),
+                ),
+                ("signature", models.CharField(max_length=32, null=True)),
+                (
+                    "date_created",
+                    models.DateTimeField(
+                        auto_now_add=True,
+                        help_text="Datetime field when the custom_metadata for task was created in UTC",
+                        verbose_name="Created DateTime",
+                    ),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="tasks",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
         ),
         migrations.AddIndex(
-            model_name='customtaskmetadata',
-            index=models.Index(fields=['signature'], name='task_result_signature'),
+            model_name="customtaskmetadata",
+            index=models.Index(fields=["signature"], name="task_result_signature"),
         ),
         migrations.RunPython(transfer_data),
     ]

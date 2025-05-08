@@ -15,14 +15,11 @@ logger = logging.getLogger(__file__)
 
 
 class Command(BaseCommand):
-
     def handle(self, *args, **options):
 
         main_trees_cte = With(
             (
-                Channel.objects.filter(
-                     main_tree__isnull=False
-                )
+                Channel.objects.filter(main_tree__isnull=False)
                 .annotate(channel_id=F("id"))
                 .values("channel_id", "deleted", tree_id=F("main_tree__tree_id"))
             ),
@@ -32,7 +29,9 @@ class Command(BaseCommand):
         nodes = main_trees_cte.join(
             ContentNode.objects.all(),
             tree_id=main_trees_cte.col.tree_id,
-        ).annotate(channel_id=main_trees_cte.col.channel_id, deleted=main_trees_cte.col.deleted)
+        ).annotate(
+            channel_id=main_trees_cte.col.channel_id, deleted=main_trees_cte.col.deleted
+        )
 
         original_source_nodes = (
             nodes.with_cte(main_trees_cte)
@@ -43,7 +42,9 @@ class Command(BaseCommand):
                 tree_id=OuterRef("tree_id"),
             )
             .annotate(
-                coalesced_license_description=Coalesce("license_description", Value("")),
+                coalesced_license_description=Coalesce(
+                    "license_description", Value("")
+                ),
             )
         )
         diff = (
@@ -58,7 +59,9 @@ class Command(BaseCommand):
         diff_combined = diff.annotate(
             original_source_node_f_changed=Exists(
                 original_source_nodes.exclude(
-                    coalesced_license_description=OuterRef("coalesced_license_description")
+                    coalesced_license_description=OuterRef(
+                        "coalesced_license_description"
+                    )
                 )
             )
         ).filter(original_source_node_f_changed=True)
@@ -87,6 +90,11 @@ class Command(BaseCommand):
             if original_source_channel_id is not None and original_source_node.exists():
                 # original source node exists and its license_description doesn't match
                 # update the base node
-                if base_node.license_description != original_source_node[0].license_description:
-                    base_node.license_description = original_source_node[0].license_description
+                if (
+                    base_node.license_description
+                    != original_source_node[0].license_description
+                ):
+                    base_node.license_description = original_source_node[
+                        0
+                    ].license_description
                 base_node.save()

@@ -10,7 +10,6 @@ from contentcuration.viewsets.sync.constants import VIEWER_M2M
 
 
 class SyncTestCase(SyncTestMixin, StudioAPITestCase):
-
     def setUp(self):
         super(SyncTestCase, self).setUp()
         self.channel = testdata.channel()
@@ -23,8 +22,20 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         self.client.force_authenticate(user=self.user)
         response = self.sync_changes(
             [
-                generate_create_event([editor.id, self.channel.id], EDITOR_M2M, {}, channel_id=self.channel.id, user_id=editor.id),
-                generate_create_event([viewer.id, self.channel.id], VIEWER_M2M, {}, channel_id=self.channel.id, user_id=viewer.id),
+                generate_create_event(
+                    [editor.id, self.channel.id],
+                    EDITOR_M2M,
+                    {},
+                    channel_id=self.channel.id,
+                    user_id=editor.id,
+                ),
+                generate_create_event(
+                    [viewer.id, self.channel.id],
+                    VIEWER_M2M,
+                    {},
+                    channel_id=self.channel.id,
+                    user_id=viewer.id,
+                ),
             ],
         )
         self.assertEqual(response.status_code, 200, response.content)
@@ -39,8 +50,18 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         self.client.force_authenticate(user=self.user)
         response = self.sync_changes(
             [
-                generate_delete_event([editor.id, self.channel.id], EDITOR_M2M, channel_id=self.channel.id, user_id=editor.id),
-                generate_delete_event([viewer.id, self.channel.id], VIEWER_M2M, channel_id=self.channel.id, user_id=viewer.id),
+                generate_delete_event(
+                    [editor.id, self.channel.id],
+                    EDITOR_M2M,
+                    channel_id=self.channel.id,
+                    user_id=editor.id,
+                ),
+                generate_delete_event(
+                    [viewer.id, self.channel.id],
+                    VIEWER_M2M,
+                    channel_id=self.channel.id,
+                    user_id=viewer.id,
+                ),
             ],
         )
         self.assertEqual(response.status_code, 200, response.content)
@@ -58,14 +79,19 @@ class CRUDTestCase(StudioAPITestCase):
     def test_fetch_user(self):
         self.client.force_authenticate(user=self.user)
         response = self.client.get(
-            reverse("user-detail", kwargs={"pk": self.user.id}), format="json",
+            reverse("user-detail", kwargs={"pk": self.user.id}),
+            format="json",
         )
         self.assertEqual(response.status_code, 200, response.content)
 
     def test_no_create_user(self):
         self.client.force_authenticate(user=self.user)
         user = {}
-        response = self.client.post(reverse("user-list"), user, format="json",)
+        response = self.client.post(
+            reverse("user-list"),
+            user,
+            format="json",
+        )
         self.assertEqual(response.status_code, 405, response.content)
 
     def test_admin_no_create_user(self):
@@ -73,7 +99,11 @@ class CRUDTestCase(StudioAPITestCase):
         self.user.save()
         self.client.force_authenticate(user=self.user)
         user = {}
-        response = self.client.post(reverse("admin-users-list"), user, format="json",)
+        response = self.client.post(
+            reverse("admin-users-list"),
+            user,
+            format="json",
+        )
         self.assertEqual(response.status_code, 405, response.content)
 
     def test_no_update_user(self):
@@ -127,7 +157,9 @@ class ChannelUserCRUDTestCase(StudioAPITestCase):
     def test_fetch_users(self):
         self.client.force_authenticate(user=self.user)
         response = self.client.get(
-            reverse("user-list"), data={"channel": self.channel.id}, format="json",
+            reverse("user-list"),
+            data={"channel": self.channel.id},
+            format="json",
         )
         self.assertEqual(response.status_code, 200, response.content)
 
@@ -135,7 +167,9 @@ class ChannelUserCRUDTestCase(StudioAPITestCase):
         new_channel = testdata.channel()
         self.client.force_authenticate(user=self.user)
         response = self.client.get(
-            reverse("user-list"), data={"channel": new_channel.id}, format="json",
+            reverse("user-list"),
+            data={"channel": new_channel.id},
+            format="json",
         )
         self.assertEqual(response.status_code, 200, response.content)
         self.assertEqual(response.json(), [])

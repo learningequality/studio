@@ -8,13 +8,13 @@ from django.db import models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('contentcuration', '0101_extra_fields_json_field'),
+        ("contentcuration", "0101_extra_fields_json_field"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='contentnode',
-            name='extra_fields',
+            model_name="contentnode",
+            name="extra_fields",
             field=django.contrib.postgres.fields.jsonb.JSONField(default=dict),
         ),
     ]

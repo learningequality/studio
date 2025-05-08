@@ -9,6 +9,7 @@ class WhisperRequest(BackendRequest):
     def __init__(self) -> None:
         super().__init__()
 
+
 class WhisperResponse(BackendResponse):
     def __init__(self) -> None:
         super().__init__()
@@ -16,15 +17,18 @@ class WhisperResponse(BackendResponse):
 
 class Whisper(Backend):
     def connect(self) -> None:
-        raise NotImplementedError("The 'connect' method is not implemented for the 'Whisper' backend.")
+        raise NotImplementedError(
+            "The 'connect' method is not implemented for the 'Whisper' backend."
+        )
 
     def make_request(self, request: WhisperRequest) -> WhisperResponse:
         # Implement production backend here.
         pass
 
     @classmethod
-    def _create_instance(cls) -> 'Whisper':
+    def _create_instance(cls) -> "Whisper":
         return cls()
+
 
 class LocalWhisper(Backend):
     def make_request(self, request: WhisperRequest) -> WhisperResponse:

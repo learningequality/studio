@@ -18,7 +18,9 @@ CONTENT_DATABASES_MAX_AGE = 5  # seconds
 MAX_RETRY_TIME = 60  # seconds
 
 
-def _create_default_client(service_account_credentials_path=settings.GCS_STORAGE_SERVICE_ACCOUNT_KEY_PATH):
+def _create_default_client(
+    service_account_credentials_path=settings.GCS_STORAGE_SERVICE_ACCOUNT_KEY_PATH,
+):
     if service_account_credentials_path:
         return Client.from_service_account_json(service_account_credentials_path)
     return Client()
@@ -121,6 +123,7 @@ class GoogleCloudStorage(Storage):
         # determine the current file's mimetype based on the name
         # import determine_content_type lazily in here, so we don't get into an infinite loop with circular dependencies
         from contentcuration.utils.storage_common import determine_content_type
+
         content_type = determine_content_type(name)
 
         # force the current file to be at file location 0, to
@@ -132,7 +135,8 @@ class GoogleCloudStorage(Storage):
             return name
 
         blob.upload_from_file(
-            fobj, content_type=content_type,
+            fobj,
+            content_type=content_type,
         )
 
         # Close StringIO object and discard memory buffer if created
@@ -215,10 +219,14 @@ class GoogleCloudStorage(Storage):
 class CompositeGCS(Storage):
     def __init__(self):
         self.backends = []
-        self.backends.append(GoogleCloudStorage(_create_default_client(), settings.AWS_S3_BUCKET_NAME))
+        self.backends.append(
+            GoogleCloudStorage(_create_default_client(), settings.AWS_S3_BUCKET_NAME)
+        )
         # Only add the studio-content bucket (the production bucket) if we're not in production
         if settings.SITE_ID != settings.PRODUCTION_SITE_ID:
-            self.backends.append(GoogleCloudStorage(Client.create_anonymous_client(), "studio-content"))
+            self.backends.append(
+                GoogleCloudStorage(Client.create_anonymous_client(), "studio-content")
+            )
 
     def _get_writeable_backend(self):
         """
@@ -241,7 +249,7 @@ class CompositeGCS(Storage):
     def get_client(self):
         return self._get_writeable_backend().get_client()
 
-    def open(self, name, mode='rb'):
+    def open(self, name, mode="rb"):
         return self._get_readable_backend(name).open(name, mode)
 
     def save(self, name, content, max_length=None):

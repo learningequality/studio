@@ -19,6 +19,7 @@ class Unnest(Func):
             2  | b
             ...
     """
+
     function = "UNNEST"
     arity = 1
 
@@ -31,6 +32,7 @@ class ArrayRemove(Func):
         ArrayRemove(Array(1, 2, 3, None), None)
         => Array[1, 2, 3]
     """
+
     function = "ARRAY_REMOVE"
     arity = 2
 
@@ -51,5 +53,6 @@ class JSONObjectKeys(Func):
             other_key
             ...
     """
+
     function = "JSONB_OBJECT_KEYS"
     arity = 1

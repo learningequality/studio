@@ -1,8 +1,12 @@
 import sys
-# TODO: Investigate more precise timing libraries
 import time
 
-from contentcuration.models import ContentKind, ContentNode, File
+from contentcuration.models import ContentKind
+from contentcuration.models import ContentNode
+from contentcuration.models import File
+
+# TODO: Investigate more precise timing libraries
+
 
 def print_progress(text):
     sys.stdout.write("\r" + text)
@@ -16,15 +20,21 @@ class Objective:
     """
 
     def __init__(self):
-        self.topic, topic_created = ContentKind.objects.get_or_create(kind='Topic')
-        self.root_node = ContentNode.objects.create(title='test_server_perf Root Node', kind=self.topic)
+        self.topic, topic_created = ContentKind.objects.get_or_create(kind="Topic")
+        self.root_node = ContentNode.objects.create(
+            title="test_server_perf Root Node", kind=self.topic
+        )
 
     def __del__(self):
         if self.root_node:
-            raise Exception("Test cleanup not run. Ensure you manually delete root node with id {} and all nodes and files that are connected to it.".format(self.root_node.pk))
+            raise Exception(
+                "Test cleanup not run. Ensure you manually delete root node with id {} and all nodes and files that are connected to it.".format(
+                    self.root_node.pk
+                )
+            )
 
     def cleanup(self):
-        print("Performing clean up, please wait...")
+        print("Performing clean up, please wait...")  # noqa: T201
         try:
             if self.root_node:
                 files = File.objects.filter(contentnode=self.root_node)
@@ -33,9 +43,13 @@ class Objective:
 
                 self.root_node.delete()
                 self.root_node = None
-        except Exception as e:
+        except Exception:
             if self.root_node:
-                print("Error in cleanup. Root node with id {} may still exist.".format(self.root_node.pk))
+                print(  # noqa: T201
+                    "Error in cleanup. Root node with id {} may still exist.".format(
+                        self.root_node.pk
+                    )
+                )
             raise
 
     def create_content_nodes(self, num_nodes=100):
@@ -52,11 +66,15 @@ class Objective:
 
         start = time.time()
         for i in range(num_nodes):
-            node = ContentNode.objects.create(title="test_server_perf Node {}".format(i), parent=parent, kind=self.topic)
+            node = ContentNode.objects.create(
+                title="test_server_perf Node {}".format(i),
+                parent=parent,
+                kind=self.topic,
+            )
             # try to create a multi-level tree structure to better test tree recalc operations
             if num_nodes > 20:
                 if i % (num_nodes / 10) == 0:
-                    sys.stdout.write('.')
+                    sys.stdout.write(".")
                     sys.stdout.flush()
                     parent = node
 
@@ -76,7 +94,7 @@ class Objective:
 
         start = time.time()
         for i in range(num_files):
-            file_obj = File.objects.create()
+            _ = File.objects.create()
 
         elapsed = time.time() - start
         if File.objects.count() != current_files + num_files:
@@ -100,7 +118,11 @@ class Objective:
 
         run_times = []
         for i in range(num_runs):
-            print_progress("Creating {} {} objects. Test run {} of {}".format(num_objects, object_type, i+1, num_runs))
+            print_progress(
+                "Creating {} {} objects. Test run {} of {}".format(
+                    num_objects, object_type, i + 1, num_runs
+                )
+            )
             run_times.append(creation_func(num_objects))
 
         return self._calc_stats(run_times, num_objects)
@@ -116,7 +138,11 @@ class Objective:
         run_times = []
 
         for i in range(num_runs):
-            print_progress("Creating {} {} objects with delay_mptt_updates. Test run {} of {}".format(num_objects, 'ContentNode', i+1, num_runs))
+            print_progress(
+                "Creating {} {} objects with delay_mptt_updates. Test run {} of {}".format(
+                    num_objects, "ContentNode", i + 1, num_runs
+                )
+            )
             with ContentNode.objects.delay_mptt_updates():
                 run_times.append(self.create_content_nodes(num_objects))
 
@@ -128,8 +154,10 @@ class Objective:
         num_files = num_nodes * 3
 
         stats = {}
-        stats['Node creation time'] = self.get_object_creation_stats_mptt_delay(num_nodes, num_runs=1)['min']
-        stats['File creation time'] = self.create_files(num_files)
+        stats["Node creation time"] = self.get_object_creation_stats_mptt_delay(
+            num_nodes, num_runs=1
+        )["min"]
+        stats["File creation time"] = self.create_files(num_files)
 
         return stats
 
@@ -141,8 +169,8 @@ class Objective:
         average = total_time / len(run_times)
 
         return {
-            'min': run_times[0],
-            'max': run_times[-1],
-            'average': average,
-            'per_record_average': average / num_items
+            "min": run_times[0],
+            "max": run_times[-1],
+            "average": average,
+            "per_record_average": average / num_items,
         }

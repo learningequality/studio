@@ -5,7 +5,7 @@ Feature: Modal for applying inheritable metadata
 			And I am at the channel editor page
 			And there is a folder named *Folder 1* with language, categories, level, and requirements
 			And there is a second folder named *Folder 2* with different metadata
-      
+
 	Scenario: Upload resources into a folder and see the modal
 		When I upload a resource into *Folder 1*
 		Then I see the *Apply details from the folder 'Folder 1'* modal

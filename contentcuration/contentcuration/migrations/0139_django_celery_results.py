@@ -8,31 +8,45 @@ from django.db import models
 
 class Migration(migrations.Migration):
 
-    replaces = [('django_celery_results', '0138_change'),]
+    replaces = [
+        ("django_celery_results", "0138_change"),
+    ]
 
     def __init__(self, name, app_label):
-        super(Migration, self).__init__(name, 'django_celery_results')
+        super(Migration, self).__init__(name, "django_celery_results")
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('contentcuration', '0138_change'),
-        ('django_celery_results', '0001_initial'),
+        ("contentcuration", "0138_change"),
+        ("django_celery_results", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='taskresult',
-            name='channel_id',
+            model_name="taskresult",
+            name="channel_id",
             field=models.UUIDField(blank=True, db_index=True, null=True),
         ),
         migrations.AddField(
-            model_name='taskresult',
-            name='progress',
-            field=models.IntegerField(blank=True, null=True, validators=[django.core.validators.MinValueValidator(0), django.core.validators.MaxValueValidator(100)]),
+            model_name="taskresult",
+            name="progress",
+            field=models.IntegerField(
+                blank=True,
+                null=True,
+                validators=[
+                    django.core.validators.MinValueValidator(0),
+                    django.core.validators.MaxValueValidator(100),
+                ],
+            ),
         ),
         migrations.AddField(
-            model_name='taskresult',
-            name='user',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='tasks', to=settings.AUTH_USER_MODEL),
+            model_name="taskresult",
+            name="user",
+            field=models.ForeignKey(
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="tasks",
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
     ]

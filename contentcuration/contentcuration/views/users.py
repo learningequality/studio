@@ -71,7 +71,13 @@ def send_invitation_email(request):
         }
 
         # Need to break into two steps to avoid MultipleObjectsReturned error
-        invitation = Invitation.objects.filter(channel_id=channel_id, email=user_email, revoked=False, accepted=False, declined=False).first()
+        invitation = Invitation.objects.filter(
+            channel_id=channel_id,
+            email=user_email,
+            revoked=False,
+            accepted=False,
+            declined=False,
+        ).first()
 
         if not invitation:
             invitation = Invitation.objects.create(**fields)
@@ -81,19 +87,23 @@ def send_invitation_email(request):
         invitation.sender = invitation.sender or request.user
         invitation.save()
 
-        ctx_dict = {'sender': request.user,
-                    'site': get_current_site(request),
-                    'user': recipient,
-                    'email': user_email,
-                    'first_name': recipient.first_name if recipient else user_email,
-                    'share_mode': share_mode,
-                    'channel_id': channel_id,
-                    'invitation_key': invitation.id,
-                    'channel': channel.name,
-                    'domain': "https://{}".format(Site.objects.get_current().domain),
-                    }
-        subject = render_to_string('permissions/permissions_email_subject.txt', ctx_dict)
-        message = render_to_string('permissions/permissions_email.txt', ctx_dict)
+        ctx_dict = {
+            "sender": request.user,
+            "site": get_current_site(request),
+            "user": recipient,
+            "email": user_email,
+            "first_name": recipient.first_name if recipient else user_email,
+            "share_mode": share_mode,
+            "channel_id": channel_id,
+            "invitation_key": invitation.id,
+            "channel": channel.name,
+            "domain": "https://{}".format(Site.objects.get_current().domain),
+        }
+        subject = render_to_string(
+            "permissions/permissions_email_subject.txt", ctx_dict
+        )
+        subject = "".join(subject.splitlines())
+        message = render_to_string("permissions/permissions_email.txt", ctx_dict)
         send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user_email])
     except KeyError:
         return HttpResponseBadRequest(
@@ -138,7 +148,9 @@ def login(request):
         return HttpResponseForbidden()
     # User is not activated
     if not user.is_active and user.check_password(password):
-        return HttpResponseBadRequest(status=405, reason="Account hasn't been activated")
+        return HttpResponseBadRequest(
+            status=405, reason="Account hasn't been activated"
+        )
 
     user = authenticate(username=user.email, password=password)
     if user is not None:
@@ -220,7 +232,7 @@ class UserActivationView(ActivationView):
         return User.get_for_email(username, is_active=False)
 
     def activate(self, *args, **kwargs):
-        username = self.validate_key(kwargs.get('activation_key'))
+        username = self.validate_key(kwargs.get("activation_key"))
         if not username:
             return False
 
@@ -228,7 +240,9 @@ class UserActivationView(ActivationView):
         user = User.get_for_email(username)
         if user and user.is_active:
             if username != user.email:
-                logger.warning("Attempted to activate alternate-cased username with already active user")
+                logger.warning(
+                    "Attempted to activate alternate-cased username with already active user"
+                )
                 return False
             return user
 
@@ -240,6 +254,7 @@ class UserActivationView(ActivationView):
                 "registration/custom_email_subject.txt",
                 {"subject": "New Kolibri Studio Registration"},
             )
+            subject = "".join(subject.splitlines())
             message = render_to_string(
                 "registration/registration_information_email.txt",
                 {"user": user, "information": dict(user.information)},
@@ -251,16 +266,16 @@ class UserActivationView(ActivationView):
                 [settings.REGISTRATION_INFORMATION_EMAIL],
             )
             # Send email to welcome new user
-            subject = render_to_string("registration/welcome_new_user_email_subject.txt")
+            subject = render_to_string(
+                "registration/welcome_new_user_email_subject.txt"
+            )
+            subject = "".join(subject.splitlines())
             message = render_to_string(
                 "registration/welcome_new_user_email.html",
-                {"domain": "https://{}".format(Site.objects.get_current().domain)}
+                {"domain": "https://{}".format(Site.objects.get_current().domain)},
             )
             user.email_user(
-                subject,
-                message,
-                settings.DEFAULT_FROM_EMAIL,
-                html_message=message
+                subject, message, settings.DEFAULT_FROM_EMAIL, html_message=message
             )
 
         return user
@@ -329,7 +344,7 @@ def request_activation_link(request):
         )
     data = json.loads(request.body)
     try:
-        user = User.get_for_email(data['email'])
+        user = User.get_for_email(data["email"])
         if user and not user.is_active:
             registration_view = UserRegistrationView()
             registration_view.request = request

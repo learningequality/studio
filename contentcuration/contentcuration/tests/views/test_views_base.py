@@ -36,8 +36,12 @@ class PublishingStatusEndpointTestCase(BaseAPITestCase):
             task_name="export-channel",
             status="QUEUED",
         )
-        CustomTaskMetadata(task_id=task_id, user=self.user, channel_id=self.channel.id).save()
-        CustomTaskMetadata(task_id=task_id_2, user=self.user, channel_id=channel_2.id).save()
+        CustomTaskMetadata(
+            task_id=task_id, user=self.user, channel_id=self.channel.id
+        ).save()
+        CustomTaskMetadata(
+            task_id=task_id_2, user=self.user, channel_id=channel_2.id
+        ).save()
         response = self.get(
             reverse_lazy("publishing_status"),
         )
@@ -50,6 +54,10 @@ class PublishingStatusEndpointTestCase(BaseAPITestCase):
 
         for i, item in enumerate(response.data):
             self.assertEqual(expected_channel_ids[i], item["channel_id"])
-            expected_task_id = task.task_id if item["channel_id"] == self.channel.id else task_2.task_id
+            expected_task_id = (
+                task.task_id
+                if item["channel_id"] == self.channel.id
+                else task_2.task_id
+            )
             self.assertEqual(expected_task_id, item["task_id"])
             self.assertIn("performed", item)

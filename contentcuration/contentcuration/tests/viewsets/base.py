@@ -8,14 +8,30 @@ from contentcuration.tests.helpers import clear_tasks
 from contentcuration.viewsets.sync.constants import CHANNEL
 from contentcuration.viewsets.sync.constants import SYNCED
 from contentcuration.viewsets.sync.utils import _generate_event as base_generate_event
-from contentcuration.viewsets.sync.utils import generate_copy_event as base_generate_copy_event
-from contentcuration.viewsets.sync.utils import generate_create_event as base_generate_create_event
-from contentcuration.viewsets.sync.utils import generate_delete_event as base_generate_delete_event
-from contentcuration.viewsets.sync.utils import generate_deploy_event as base_generate_deploy_event
-from contentcuration.viewsets.sync.utils import generate_publish_event as base_generate_publish_event
-from contentcuration.viewsets.sync.utils import generate_update_event as base_generate_update_event
-from contentcuration.viewsets.sync.utils import generate_update_descendants_event as base_generate_update_descendants_event
-from contentcuration.viewsets.sync.utils import generate_publish_next_event as base_generate_publish_next_event
+from contentcuration.viewsets.sync.utils import (
+    generate_copy_event as base_generate_copy_event,
+)
+from contentcuration.viewsets.sync.utils import (
+    generate_create_event as base_generate_create_event,
+)
+from contentcuration.viewsets.sync.utils import (
+    generate_delete_event as base_generate_delete_event,
+)
+from contentcuration.viewsets.sync.utils import (
+    generate_deploy_event as base_generate_deploy_event,
+)
+from contentcuration.viewsets.sync.utils import (
+    generate_publish_event as base_generate_publish_event,
+)
+from contentcuration.viewsets.sync.utils import (
+    generate_publish_next_event as base_generate_publish_next_event,
+)
+from contentcuration.viewsets.sync.utils import (
+    generate_update_descendants_event as base_generate_update_descendants_event,
+)
+from contentcuration.viewsets.sync.utils import (
+    generate_update_event as base_generate_update_event,
+)
 
 
 def generate_copy_event(*args, **kwargs):
@@ -42,8 +58,16 @@ def generate_update_event(*args, **kwargs):
     return event
 
 
-def generate_sync_channel_event(channel_id, titles_and_descriptions, resource_details, files, assessment_items):
-    event = base_generate_event(key=channel_id, table=CHANNEL, event_type=SYNCED, channel_id=channel_id, user_id=None)
+def generate_sync_channel_event(
+    channel_id, titles_and_descriptions, resource_details, files, assessment_items
+):
+    event = base_generate_event(
+        key=channel_id,
+        table=CHANNEL,
+        event_type=SYNCED,
+        channel_id=channel_id,
+        user_id=None,
+    )
     event["rev"] = random.randint(1, 10000000)
     event["titles_and_descriptions"] = titles_and_descriptions
     event["resource_details"] = resource_details
@@ -57,15 +81,18 @@ def generate_deploy_channel_event(channel_id, user_id):
     event["rev"] = random.randint(1, 10000000)
     return event
 
+
 def generate_update_descendants_event(*args, **kwargs):
     event = base_generate_update_descendants_event(*args, **kwargs)
     event["rev"] = random.randint(1, 10000000)
     return event
 
+
 def generate_publish_channel_event(channel_id):
     event = base_generate_publish_event(channel_id)
     event["rev"] = random.randint(1, 10000000)
     return event
+
 
 def generate_publish_next_event(channel_id):
     event = base_generate_publish_next_event(channel_id)
@@ -109,4 +136,6 @@ class SyncTestMixin(object):
         )
 
     def get_allowed_changes(self, response):
-        return Change.objects.filter(server_rev__in=[c['server_rev'] for c in response.json()["allowed"]])
+        return Change.objects.filter(
+            server_rev__in=[c["server_rev"] for c in response.json()["allowed"]]
+        )

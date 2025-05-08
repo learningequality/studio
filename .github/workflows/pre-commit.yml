@@ -1,4 +1,4 @@
-name: Javascript Linting
+name: Linting
 
 on:
   push:
@@ -7,6 +7,10 @@ on:
     - hotfixes
     - master
   pull_request:
+    branches:
+    - unstable
+    - hotfixes
+    - master
 
 jobs:
   pre_job:
@@ -20,27 +24,38 @@ jobs:
         uses: fkirc/skip-duplicate-actions@master
         with:
           github_token: ${{ github.token }}
-          paths: '["**.vue", "**.js", "pnpm-lock.yaml", ".github/workflows/frontendlint.yml"]'
-  test:
-    name: Frontend linting
+          paths_ignore: '["**.po", "**.json"]'
+  linting:
+    name: All file linting
     needs: pre_job
     if: ${{ needs.pre_job.outputs.should_skip != 'true' }}
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
     - name: Use pnpm
       uses: pnpm/action-setup@v4
     - name: Use Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '18.x'
-        cache: 'pnpm'
+    - name: Get pnpm store path
+      id: pnpm-store-path
+      run: echo "dir=$(pnpm store path)" >> $GITHUB_OUTPUT
+    - name: Cache Node.js modules
+      uses: actions/cache@v4
+      with:
+        path: ${{ steps.pnpm-store-path.outputs.dir }}
+        key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+        restore-keys: |
+          ${{ runner.os }}-pnpm-
     - name: Install dependencies
       run: |
         pnpm install --frozen-lockfile
         pnpm rebuild node-sass
-    - name: Run tests
-      run: pnpm run lint-frontend:format
+    - uses: pre-commit/action@v3.0.1
     - name: Run pre-commit-ci-lite
       uses: pre-commit-ci/lite-action@v1.1.0
       if: always()

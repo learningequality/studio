@@ -10,12 +10,16 @@ import contentcuration.models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('contentcuration', '0119_task_channel_id'),
+        ("contentcuration", "0119_task_channel_id"),
     ]
 
     operations = [
         migrations.AddIndex(
-            model_name='user',
-            index=contentcuration.models.UniqueActiveUserIndex(django.db.models.functions.text.Lower('email'), condition=models.Q(('is_active', True)), name='contentcura_email_d4d492_idx'),
+            model_name="user",
+            index=contentcuration.models.UniqueActiveUserIndex(
+                django.db.models.functions.text.Lower("email"),
+                condition=models.Q(("is_active", True)),
+                name="contentcura_email_d4d492_idx",
+            ),
         ),
     ]

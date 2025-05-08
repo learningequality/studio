@@ -47,7 +47,9 @@ MESSAGES = "i18n_messages"
 @browser_is_supported
 def settings(request):
     current_user = current_user_for_context(request.user)
-    channel_query = request.user.editable_channels.filter(deleted=False).annotate(editor_count=Count("editors"))
+    channel_query = request.user.editable_channels.filter(deleted=False).annotate(
+        editor_count=Count("editors")
+    )
 
     return render(
         request,
@@ -65,7 +67,9 @@ def settings(request):
 @login_required
 @api_view(["GET"])
 def export_user_data(request):
-    generateusercsv_task.enqueue(request.user, user_id=request.user.pk, language=get_language())
+    generateusercsv_task.enqueue(
+        request.user, user_id=request.user.pk, language=get_language()
+    )
     return HttpResponse({"success": True})
 
 

@@ -60,7 +60,9 @@ class ChannelBuilder(object):
         "root_node",
     )
 
-    def __init__(self, levels=3, num_children=5, models=kolibri_public_models, options=None):
+    def __init__(
+        self, levels=3, num_children=5, models=kolibri_public_models, options=None
+    ):
         self.levels = levels
         self.num_children = num_children
         self.models = models
@@ -135,7 +137,7 @@ class ChannelBuilder(object):
             for key in self.tree_keys:
                 setattr(self, key, data[key])
         except KeyError:
-            print(
+            print(  # noqa: T201
                 "No tree cache found for {} levels and {} children per level".format(
                     self.levels, self.num_children
                 )
@@ -151,7 +153,9 @@ class ChannelBuilder(object):
         self.__TREE_CACHE[self.cache_key] = copy.deepcopy(data)
 
     def generate_nodes_from_root_node(self):
-        self._django_nodes = self.models.ContentNode.objects.build_tree_nodes(self.root_node)
+        self._django_nodes = self.models.ContentNode.objects.build_tree_nodes(
+            self.root_node
+        )
 
         self.nodes = {n["id"]: n for n in map(to_dict, self._django_nodes)}
 
@@ -173,7 +177,9 @@ class ChannelBuilder(object):
         self.models.LocalFile.objects.bulk_create(
             (self.models.LocalFile(**local) for local in self.localfiles.values())
         )
-        self.models.File.objects.bulk_create((self.models.File(**f) for f in self.files.values()))
+        self.models.File.objects.bulk_create(
+            (self.models.File(**f) for f in self.files.values())
+        )
 
     def recurse_tree_until_leaf_container(self, parent):
         if not parent.get("children"):

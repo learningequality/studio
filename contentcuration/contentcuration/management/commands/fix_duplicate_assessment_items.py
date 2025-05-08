@@ -16,11 +16,16 @@ class Command(BaseCommand):
         start = time.time()
         # Go through nodes that have assessment items with the same assessment_id
         logging.info("Looking for nodes with invalid assessments...")
-        nodes = ContentNode.objects.filter(kind_id='exercise') \
+        nodes = (
+            ContentNode.objects.filter(kind_id="exercise")
             .annotate(
-                num_ids=Count('assessment_items__pk'),
-                num_assessment_ids=Count('assessment_items__assessment_id', distinct=True)
-            ).exclude(num_ids=F('num_assessment_ids'))
+                num_ids=Count("assessment_items__pk"),
+                num_assessment_ids=Count(
+                    "assessment_items__assessment_id", distinct=True
+                ),
+            )
+            .exclude(num_ids=F("num_assessment_ids"))
+        )
         total = nodes.count()
 
         logging.info("Fixing {} nodes...".format(total))
@@ -29,7 +34,9 @@ class Command(BaseCommand):
             # Go through each node's assessment items
             for item in node.assessment_items.all():
                 # Handle duplicate assessment ids
-                other_duplicate_assessment_items = node.assessment_items.filter(assessment_id=item.assessment_id).exclude(pk=item.pk)
+                other_duplicate_assessment_items = node.assessment_items.filter(
+                    assessment_id=item.assessment_id
+                ).exclude(pk=item.pk)
 
                 if other_duplicate_assessment_items.exists():
                     # Remove duplicates
@@ -37,14 +44,16 @@ class Command(BaseCommand):
                         question=item.question,
                         answers=item.answers,
                         hints=item.hints,
-                        raw_data=item.raw_data
+                        raw_data=item.raw_data,
                     ).exists():
                         item.delete()
 
                     # Get new ids for non-duplicates
                     else:
                         new_id = uuid.uuid4().hex
-                        while node.assessment_items.filter(assessment_id=new_id).exists():
+                        while node.assessment_items.filter(
+                            assessment_id=new_id
+                        ).exists():
                             new_id = uuid.uuid4().hex
                         item.assessment_id = new_id
                         item.save()

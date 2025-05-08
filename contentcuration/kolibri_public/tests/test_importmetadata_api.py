@@ -27,9 +27,7 @@ class ImportMetadataTestCase(APITestCase):
         cls.assessmentmetadata = public.AssessmentMetaData.objects.filter(
             contentnode__in=cls.all_nodes
         )
-        cls.localfiles = public.LocalFile.objects.filter(
-            files__in=cls.files
-        ).distinct()
+        cls.localfiles = public.LocalFile.objects.filter(files__in=cls.files).distinct()
         cls.languages = public.Language.objects.filter(
             Q(id__in=cls.files.values_list("lang_id", flat=True))
             | Q(id__in=cls.all_nodes.values_list("lang_id", flat=True))
@@ -54,7 +52,9 @@ class ImportMetadataTestCase(APITestCase):
             field_names.add(BaseModel._mptt_meta.left_attr)
             field_names.add(BaseModel._mptt_meta.right_attr)
             field_names.add(BaseModel._mptt_meta.level_attr)
-        for response_data, obj in zip(response.data[ContentModel._meta.db_table], queryset):
+        for response_data, obj in zip(
+            response.data[ContentModel._meta.db_table], queryset
+        ):
             # Ensure that we are not returning any empty objects
             self.assertNotEqual(response_data, {})
             for field in fields:
@@ -71,7 +71,11 @@ class ImportMetadataTestCase(APITestCase):
         self._assert_data(public.File, content.File, self.files)
 
     def test_import_metadata_assessmentmetadata(self):
-        self._assert_data(public.AssessmentMetaData, content.AssessmentMetaData, self.assessmentmetadata)
+        self._assert_data(
+            public.AssessmentMetaData,
+            content.AssessmentMetaData,
+            self.assessmentmetadata,
+        )
 
     def test_import_metadata_localfiles(self):
         self._assert_data(public.LocalFile, content.LocalFile, self.localfiles)
@@ -80,7 +84,11 @@ class ImportMetadataTestCase(APITestCase):
         self._assert_data(public.Language, content.Language, self.languages)
 
     def test_import_metadata_through_tags(self):
-        self._assert_data(public.ContentNode.tags.through, content.ContentNode.tags.through, self.through_tags)
+        self._assert_data(
+            public.ContentNode.tags.through,
+            content.ContentNode.tags.through,
+            self.through_tags,
+        )
 
     def test_import_metadata_tags(self):
         self._assert_data(public.ContentTag, content.ContentTag, self.tags)

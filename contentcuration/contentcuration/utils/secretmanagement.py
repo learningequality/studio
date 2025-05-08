@@ -50,7 +50,10 @@ def get_secret(secret_name, secret_storage=None):
     if secret_storage in [None, "", ENV_VARS]:
         return os.getenv(secret_name)
     if secret_storage == "KMS_GCS":
-        env = os.getenv("SECRET_STORAGE_ENVIRONMENT") or SECRET_STORAGE_DEFAULT_ENVIRONMENT
+        env = (
+            os.getenv("SECRET_STORAGE_ENVIRONMENT")
+            or SECRET_STORAGE_DEFAULT_ENVIRONMENT
+        )
         project_id = os.getenv("SECRET_STORAGE_GCP_PROJECT_ID")
         kms_location = (
             os.getenv("SECRET_STORAGE_GCP_KMS_LOCATION")
@@ -58,7 +61,9 @@ def get_secret(secret_name, secret_storage=None):
         )
 
         if not project_id:
-            raise KeyError("The env variable SECRET_STORAGE_GCP_PROJECT_ID was not defined!")
+            raise KeyError(
+                "The env variable SECRET_STORAGE_GCP_PROJECT_ID was not defined!"
+            )
 
         ciphertext = get_encrypted_secret(secret_name, project_id, env)
 
@@ -81,13 +86,20 @@ def decrypt_secret(ciphertext, project_id, loc, env, secret_name):
     ciphertext_crc32c = crc32c(ciphertext)
 
     response = kms_client.decrypt(
-        request={'name': key_path, 'ciphertext': ciphertext, 'ciphertext_crc32c': ciphertext_crc32c})
+        request={
+            "name": key_path,
+            "ciphertext": ciphertext,
+            "ciphertext_crc32c": ciphertext_crc32c,
+        }
+    )
 
     # Optional, but recommended: perform integrity verification on decrypt_response.
     # For more details on ensuring E2E in-transit integrity to and from Cloud KMS visit:
     # https://cloud.google.com/kms/docs/data-integrity-guidelines
     if not response.plaintext_crc32c == crc32c(response.plaintext):
-        raise Exception('The response received from the server was corrupted in-transit.')
+        raise Exception(
+            "The response received from the server was corrupted in-transit."
+        )
 
     return response.plaintext
 

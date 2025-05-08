@@ -28,7 +28,9 @@ class ValuesPage(Page):
 class ValuesViewsetPaginator(Paginator):
     def __init__(self, object_list, *args, **kwargs):
         if not isinstance(object_list, QuerySet):
-            raise TypeError("ValuesViewsetPaginator is only intended for use with Querysets")
+            raise TypeError(
+                "ValuesViewsetPaginator is only intended for use with Querysets"
+            )
         self.queryset = object_list
         object_list = object_list.values_list("pk", flat=True).distinct()
         super(ValuesViewsetPaginator, self).__init__(object_list, *args, **kwargs)
@@ -48,10 +50,7 @@ class CachedValuesViewsetPaginator(ValuesViewsetPaginator):
         """
         try:
             query_string = str(self.object_list.query).encode("utf8")
-            cache_key = (
-                "query-count:"
-                + hashlib.md5(query_string).hexdigest()
-            )
+            cache_key = "query-count:" + hashlib.md5(query_string).hexdigest()
             value = cache.get(cache_key)
             if value is None:
                 value = super(CachedValuesViewsetPaginator, self).count
@@ -113,20 +112,20 @@ class ValuesViewsetPageNumberPagination(PageNumberPagination):
 
     def get_paginated_response_schema(self, schema):
         return {
-            'type': 'object',
-            'properties': {
-                'count': {
-                    'type': 'integer',
-                    'example': 123,
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer",
+                    "example": 123,
                 },
-                'results': schema,
-                'page': {
-                    'type': 'integer',
-                    'example': 123,
+                "results": schema,
+                "page": {
+                    "type": "integer",
+                    "example": 123,
                 },
-                'total_pages': {
-                    'type': 'integer',
-                    'example': 123,
+                "total_pages": {
+                    "type": "integer",
+                    "example": 123,
                 },
             },
         }
