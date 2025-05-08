@@ -7,13 +7,13 @@ from django.db import models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('contentcuration', '0120_auto_20210128_1646'),
+        ("contentcuration", "0120_auto_20210128_1646"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='file',
-            name='modified',
-            field=models.DateTimeField(verbose_name='modified', null=True),
+            model_name="file",
+            name="modified",
+            field=models.DateTimeField(verbose_name="modified", null=True),
         ),
     ]

@@ -7,13 +7,13 @@ from django.db import models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('contentcuration', '0098_auto_20190424_1709'),
+        ("contentcuration", "0098_auto_20190424_1709"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='contenttag',
-            name='tag_name',
+            model_name="contenttag",
+            name="tag_name",
             field=models.CharField(max_length=50),
         ),
     ]

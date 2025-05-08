@@ -1,15 +1,14 @@
+from django.conf import settings as ccsettings
+from django.template.loader import render_to_string
 from mock import mock
 
-from django.template.loader import render_to_string
-from django.conf import settings as ccsettings
-
+from contentcuration.forms import StorageRequestForm
 from contentcuration.tests import testdata
 from contentcuration.tests.base import StudioAPITestCase
 from contentcuration.views.settings import StorageSettingsView
-from contentcuration.forms import StorageRequestForm
+
 
 class StorageSettingsViewTestCase(StudioAPITestCase):
-
     def setUp(self):
         super(StorageSettingsViewTestCase, self).setUp()
         self.view = StorageSettingsView()
@@ -17,7 +16,7 @@ class StorageSettingsViewTestCase(StudioAPITestCase):
         self.view.request.user = testdata.user(email="tester@tester.com")
 
     def test_storage_request(self):
-        
+
         with mock.patch("contentcuration.views.settings.send_mail") as send_mail:
 
             data = dict(
@@ -35,9 +34,9 @@ class StorageSettingsViewTestCase(StudioAPITestCase):
                 uploading_for="uploading_for",
                 organization_type="organization_type",
                 time_constraint="time_constraint",
-                message="message"
+                message="message",
             )
-            self.form = StorageRequestForm(data=data)     
+            self.form = StorageRequestForm(data=data)
 
             self.assertTrue(self.form.is_valid())
             self.view.form_valid(self.form)
@@ -47,7 +46,7 @@ class StorageSettingsViewTestCase(StudioAPITestCase):
                 {
                     "data": self.form.cleaned_data,
                     "user": self.view.request.user,
-                    "channels": ["channel1", "channel2"]
+                    "channels": ["channel1", "channel2"],
                 },
             )
 

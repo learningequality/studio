@@ -97,7 +97,9 @@ def generate_constants_map_file(
         generate_names_constants = generate_names_constants and type(constant.id) is str
         if generate_names_constants:
             # Replace "-" with "_" to ensure we get keys that don't need to be wrapped in strings
-            names_output += "  {}: '{}',\n".format(constant.id.upper().replace("-", "_"), constant.id)
+            names_output += "  {}: '{}',\n".format(
+                constant.id.upper().replace("-", "_"), constant.id
+            )
 
     output += "]);\n\n"
     output += "export default {}Map\n\n".format(constant_name)
@@ -111,7 +113,9 @@ def generate_constants_map_file(
 
     with open(os.path.join(constants_path, constant_name + ".js"), "w") as f:
         f.write(output)
-    print("{0}: {1} constants saved".format(str(constant_name), len(constant_list)))
+    print(  # noqa: T201
+        "{0}: {1} constants saved".format(str(constant_name), len(constant_list))
+    )
 
 
 def generate_constants_set_file(
@@ -137,7 +141,9 @@ def generate_constants_set_file(
         generate_names_constants = generate_names_constants and type(value) is str
         if generate_names_constants:
             # Replace "-" with "_" to ensure we get keys that don't need to be wrapped in strings
-            names_output += "  {}: {},\n".format(value.upper().replace("-", "_"), cast_value)
+            names_output += "  {}: {},\n".format(
+                value.upper().replace("-", "_"), cast_value
+            )
 
     output += "]);\n\nexport default {};\n\n".format(constant_name)
     output += "export const {}List = Array.from({});\n".format(
@@ -151,17 +157,21 @@ def generate_constants_set_file(
 
     with open(os.path.join(constants_path, constant_name + ".js"), "w") as f:
         f.write(output)
-    print("{0}: {1} constants saved".format(str(constant_name), len(constant_list)))
+    print(  # noqa: T201
+        "{0}: {1} constants saved".format(str(constant_name), len(constant_list))
+    )
 
 
 def main():
-    print("***** Generating Constants in JS *****")
+    print("***** Generating Constants in JS *****")  # noqa: T201
     try:
         os.mkdir(constants_path)
     except OSError:
         pass
     generate_constants_set_file(
-        content_kinds.KINDLIST, "ContentKinds", mapper=get_kind_value,
+        content_kinds.KINDLIST,
+        "ContentKinds",
+        mapper=get_kind_value,
     )
     generate_constants_map_file(
         licenses.LICENSELIST, "Licenses", mapper=get_license_dict
@@ -177,14 +187,19 @@ def main():
     )
 
     generate_constants_set_file(
-        [m[0] for m in sorted(
-            exercises.MASTERY_MODELS, key=lambda x: int(x[0][21:]) if 'num_correct_in_a_row_' in x[0] else 0
-        ) if m[0] != exercises.SKILL_CHECK and m[0] != exercises.QUIZ],
+        [
+            m[0]
+            for m in sorted(
+                exercises.MASTERY_MODELS,
+                key=lambda x: int(x[0][21:]) if "num_correct_in_a_row_" in x[0] else 0,
+            )
+            if m[0] != exercises.SKILL_CHECK and m[0] != exercises.QUIZ
+        ],
         "MasteryModels",
     )
     generate_constants_set_file([r[0] for r in roles.choices], "Roles")
 
-    print("************ DONE. ************")
+    print("************ DONE. ************")  # noqa: T201
 
 
 if __name__ == "__main__":

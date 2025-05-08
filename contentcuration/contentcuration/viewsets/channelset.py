@@ -21,7 +21,10 @@ from contentcuration.viewsets.sync.utils import generate_update_event
 
 class ChannelSetSerializer(BulkModelSerializer):
     channels = UserFilteredPrimaryKeyRelatedField(
-        many=True, queryset=Channel.objects.all(), edit=False, required=False,
+        many=True,
+        queryset=Channel.objects.all(),
+        edit=False,
+        required=False,
     )
 
     def create(self, validated_data):
@@ -35,7 +38,10 @@ class ChannelSetSerializer(BulkModelSerializer):
             instance.editors.add(user)
         self.changes.append(
             generate_update_event(
-                instance.id, CHANNELSET, {"secret_token": instance.secret_token.token}, user_id=user.id
+                instance.id,
+                CHANNELSET,
+                {"secret_token": instance.secret_token.token},
+                user_id=user.id,
             )
         )
         return instance
@@ -78,7 +84,11 @@ class ChannelSetViewSet(ValuesViewset, RESTCreateModelMixin):
     def get_queryset(self):
         queryset = super(ChannelSetViewSet, self).get_queryset()
         user_id = not self.request.user.is_anonymous and self.request.user.id
-        edit = Exists(User.channel_sets.through.objects.filter(user_id=user_id, channelset_id=OuterRef("id")))
+        edit = Exists(
+            User.channel_sets.through.objects.filter(
+                user_id=user_id, channelset_id=OuterRef("id")
+            )
+        )
         queryset = queryset.annotate(edit=edit).filter(edit=True)
         return queryset
 

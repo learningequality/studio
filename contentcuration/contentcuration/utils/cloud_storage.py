@@ -28,7 +28,6 @@ class CloudStorageBackendFactory(BackendFactory):
 
 
 class CloudStorage(Backend):
-
     def connect(self) -> None:
         return super().connect()
 
@@ -36,5 +35,5 @@ class CloudStorage(Backend):
         return super().make_request(request)
 
     @classmethod
-    def _create_instance(cls) -> 'CloudStorage':
+    def _create_instance(cls) -> "CloudStorage":
         return cls()

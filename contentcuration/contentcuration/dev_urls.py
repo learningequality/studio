@@ -33,7 +33,7 @@ def file_server(request, storage_path=None):
         return HttpResponseNotFound()
 
     params = urllib.parse.urlparse(default_storage.url(storage_path)).query
-    host = request.META['HTTP_HOST'].split(":")[0]
+    host = request.META["HTTP_HOST"].split(":")[0]
     port = 9000  # hardcoded to the default minio IP address
     url = "http://{host}:{port}/{bucket}/{path}?{params}".format(
         host=host,
@@ -58,7 +58,7 @@ schema_view = get_schema_view(
 
 urlpatterns = urlpatterns + [
     re_path(r"^__open-in-editor/", webpack_redirect_view),
-    path('admin/', admin.site.urls),
+    path("admin/", admin.site.urls),
     re_path(
         r"^swagger(?P<format>\.json|\.yaml)$",
         schema_view.without_ui(cache_timeout=0),

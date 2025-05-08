@@ -108,6 +108,7 @@ class JSONField(JSONFieldBase):
     implementation here to be sure:
     https://github.com/learningequality/kolibri/blob/0f6bb6781a4453cd9fdc836d52b65dd69e395b20/kolibri/core/fields.py#L102
     """
+
     def from_db_value(self, value, expression, connection):
         if isinstance(value, str):
             try:

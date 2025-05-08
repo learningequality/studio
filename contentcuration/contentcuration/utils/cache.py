@@ -118,12 +118,14 @@ def redis_retry(func):
 
     @see django_redis.client.default.DefaultClient
     """
+
     def redis_retry_func(*args, **kwargs):
         try:
             return func(*args, **kwargs)
         except _main_exceptions:
             # try one more time
             return func(*args, **kwargs)
+
     return redis_retry_func
 
 
@@ -161,7 +163,7 @@ class ResourceSizeCache:
         :rtype: redis.client.StrictRedis
         """
         redis_client = None
-        cache_client = getattr(self.cache, 'client', None)
+        cache_client = getattr(self.cache, "client", None)
         if isinstance(cache_client, DefaultClient):
             redis_client = cache_client.get_client(write=True)
         return redis_client
@@ -210,7 +212,10 @@ class ResourceSizeCache:
         return self.cache_set(self.size_key, size)
 
     def set_modified(self, modified):
-        return self.cache_set(self.modified_key, modified.isoformat() if isinstance(modified, datetime) else modified)
+        return self.cache_set(
+            self.modified_key,
+            modified.isoformat() if isinstance(modified, datetime) else modified,
+        )
 
     def reset_modified(self, modified):
         """

@@ -25,11 +25,15 @@ class ContentNodeFullTextSearch(models.Model):
     id = StudioUUIDField(primary_key=True, default=uuid.uuid4)
 
     # The contentnode that this record points to.
-    contentnode = models.OneToOneField(ContentNode, on_delete=models.CASCADE, related_name="node_fts")
+    contentnode = models.OneToOneField(
+        ContentNode, on_delete=models.CASCADE, related_name="node_fts"
+    )
 
     # The channel to which the contentnode belongs. Channel cannot be NULL because we only allow
     # searches to be made inside channels.
-    channel = models.ForeignKey(Channel, on_delete=models.CASCADE, related_name="channel_nodes_fts")
+    channel = models.ForeignKey(
+        Channel, on_delete=models.CASCADE, related_name="channel_nodes_fts"
+    )
 
     # This stores the keywords as tsvector.
     keywords_tsvector = SearchVectorField(null=True, blank=True)
@@ -38,18 +42,24 @@ class ContentNodeFullTextSearch(models.Model):
     author_tsvector = SearchVectorField(null=True, blank=True)
 
     class Meta:
-        indexes = [GinIndex(fields=["keywords_tsvector"], name="node_keywords_tsv__gin_idx"),
-                   GinIndex(fields=["author_tsvector"], name="node_author_tsv__gin_idx")]
+        indexes = [
+            GinIndex(fields=["keywords_tsvector"], name="node_keywords_tsv__gin_idx"),
+            GinIndex(fields=["author_tsvector"], name="node_author_tsv__gin_idx"),
+        ]
 
 
 class ChannelFullTextSearch(models.Model):
     id = StudioUUIDField(primary_key=True, default=uuid.uuid4)
 
     # The channel to which this record points.
-    channel = models.OneToOneField(Channel, on_delete=models.CASCADE, related_name="channel_fts")
+    channel = models.OneToOneField(
+        Channel, on_delete=models.CASCADE, related_name="channel_fts"
+    )
 
     # This stores the channel keywords as tsvector for super fast searches.
     keywords_tsvector = SearchVectorField(null=True, blank=True)
 
     class Meta:
-        indexes = [GinIndex(fields=["keywords_tsvector"], name="channel_keywords_tsv__gin_idx")]
+        indexes = [
+            GinIndex(fields=["keywords_tsvector"], name="channel_keywords_tsv__gin_idx")
+        ]

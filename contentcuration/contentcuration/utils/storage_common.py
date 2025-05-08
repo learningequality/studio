@@ -36,7 +36,12 @@ def determine_content_type(filename):
 
 
 def get_presigned_upload_url(
-    filepath, md5sum_b64, lifetime_sec, content_length, storage=default_storage, client=None
+    filepath,
+    md5sum_b64,
+    lifetime_sec,
+    content_length,
+    storage=default_storage,
+    client=None,
 ):
     """Return a presigned URL that can modify the given filepath through a PUT
     request. Performing a PUT request on the returned URL changes the object's
@@ -65,23 +70,31 @@ def get_presigned_upload_url(
     if isinstance(storage, (GoogleCloudStorage, CompositeGCS)):
         client = client or storage.get_client()
         bucket = settings.AWS_S3_BUCKET_NAME
-        upload_url = _get_gcs_presigned_put_url(client, bucket, filepath, md5sum_b64, lifetime_sec, mimetype=mimetype)
+        upload_url = _get_gcs_presigned_put_url(
+            client, bucket, filepath, md5sum_b64, lifetime_sec, mimetype=mimetype
+        )
     elif isinstance(storage, S3Storage):
         bucket = settings.AWS_S3_BUCKET_NAME
         client = client or storage.s3_connection
-        upload_url = _get_s3_presigned_put_url(client, bucket, filepath, md5sum_b64, lifetime_sec)
+        upload_url = _get_s3_presigned_put_url(
+            client, bucket, filepath, md5sum_b64, lifetime_sec
+        )
     else:
         raise UnknownStorageBackendError(
             "Please ensure your storage backend is either Google Cloud Storage or S3 Storage!"
         )
 
-    return {
-        "mimetype": mimetype,
-        "uploadURL": upload_url
-    }
+    return {"mimetype": mimetype, "uploadURL": upload_url}
 
 
-def _get_gcs_presigned_put_url(gcs_client, bucket, filepath, md5sum, lifetime_sec, mimetype="application/octet-stream"):
+def _get_gcs_presigned_put_url(
+    gcs_client,
+    bucket,
+    filepath,
+    md5sum,
+    lifetime_sec,
+    mimetype="application/octet-stream",
+):
     bucket_obj = gcs_client.get_bucket(bucket)
     blob_obj = bucket_obj.blob(filepath)
 

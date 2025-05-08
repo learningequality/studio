@@ -10,78 +10,108 @@ from django.db import models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('contentcuration', '0117_assessment_id_index'),
+        ("contentcuration", "0117_assessment_id_index"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='contentnode',
-            name='complete',
+            model_name="contentnode",
+            name="complete",
             field=models.NullBooleanField(),
         ),
         migrations.AddField(
-            model_name='invitation',
-            name='accepted',
+            model_name="invitation",
+            name="accepted",
             field=models.BooleanField(default=False),
         ),
         migrations.AddField(
-            model_name='invitation',
-            name='declined',
+            model_name="invitation",
+            name="declined",
             field=models.BooleanField(default=False),
         ),
         migrations.AddField(
-            model_name='invitation',
-            name='revoked',
+            model_name="invitation",
+            name="revoked",
             field=models.BooleanField(default=False),
         ),
         migrations.AddField(
-            model_name='user',
-            name='disk_space_used',
-            field=models.FloatField(default=0, help_text='How many bytes a user has uploaded'),
+            model_name="user",
+            name="disk_space_used",
+            field=models.FloatField(
+                default=0, help_text="How many bytes a user has uploaded"
+            ),
         ),
         migrations.AlterField(
-            model_name='channel',
-            name='preferences',
-            field=models.TextField(default='{"license": null, "language": null, "author": null, "aggregator": null, "provider": null, "copyright_holder": null, "license_description": null, "mastery_model": "num_correct_in_a_row_5", "m_value": 5, "n_value": 5, "auto_derive_video_thumbnail": true, "auto_derive_audio_thumbnail": true, "auto_derive_document_thumbnail": true, "auto_derive_html5_thumbnail": true, "auto_derive_exercise_thumbnail": true, "auto_randomize_questions": true}'),
+            model_name="channel",
+            name="preferences",
+            field=models.TextField(
+                default='{"license": null, "language": null, "author": null, "aggregator": null, "provider": null, "copyright_holder": null, "license_description": null, "mastery_model": "num_correct_in_a_row_5", "m_value": 5, "n_value": 5, "auto_derive_video_thumbnail": true, "auto_derive_audio_thumbnail": true, "auto_derive_document_thumbnail": true, "auto_derive_html5_thumbnail": true, "auto_derive_exercise_thumbnail": true, "auto_randomize_questions": true}'
+            ),
         ),
         migrations.AlterField(
-            model_name='contentnode',
-            name='created',
-            field=models.DateTimeField(default=django.utils.timezone.now, verbose_name='created'),
+            model_name="contentnode",
+            name="created",
+            field=models.DateTimeField(
+                default=django.utils.timezone.now, verbose_name="created"
+            ),
         ),
         migrations.AlterField(
-            model_name='contentnode',
-            name='title',
+            model_name="contentnode",
+            name="title",
             field=models.CharField(blank=True, max_length=200),
         ),
         migrations.AlterField(
-            model_name='contenttag',
-            name='channel',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='tags', to='contentcuration.Channel'),
+            model_name="contenttag",
+            name="channel",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="tags",
+                to="contentcuration.Channel",
+            ),
         ),
         migrations.AlterField(
-            model_name='file',
-            name='uploaded_by',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='files', to=settings.AUTH_USER_MODEL),
+            model_name="file",
+            name="uploaded_by",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="files",
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
         migrations.AlterField(
-            model_name='invitation',
-            name='channel',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='pending_editors', to='contentcuration.Channel'),
+            model_name="invitation",
+            name="channel",
+            field=models.ForeignKey(
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="pending_editors",
+                to="contentcuration.Channel",
+            ),
         ),
         migrations.AlterField(
-            model_name='invitation',
-            name='first_name',
+            model_name="invitation",
+            name="first_name",
             field=models.CharField(blank=True, max_length=100),
         ),
         migrations.AlterField(
-            model_name='invitation',
-            name='sender',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='sent_by', to=settings.AUTH_USER_MODEL),
+            model_name="invitation",
+            name="sender",
+            field=models.ForeignKey(
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="sent_by",
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
         migrations.AlterField(
-            model_name='user',
-            name='preferences',
-            field=models.TextField(default='{"license": null, "language": null, "author": null, "aggregator": null, "provider": null, "copyright_holder": null, "license_description": null, "mastery_model": "num_correct_in_a_row_5", "m_value": 5, "n_value": 5, "auto_derive_video_thumbnail": true, "auto_derive_audio_thumbnail": true, "auto_derive_document_thumbnail": true, "auto_derive_html5_thumbnail": true, "auto_derive_exercise_thumbnail": true, "auto_randomize_questions": true}'),
+            model_name="user",
+            name="preferences",
+            field=models.TextField(
+                default='{"license": null, "language": null, "author": null, "aggregator": null, "provider": null, "copyright_holder": null, "license_description": null, "mastery_model": "num_correct_in_a_row_5", "m_value": 5, "n_value": 5, "auto_derive_video_thumbnail": true, "auto_derive_audio_thumbnail": true, "auto_derive_document_thumbnail": true, "auto_derive_html5_thumbnail": true, "auto_derive_exercise_thumbnail": true, "auto_randomize_questions": true}'
+            ),
         ),
     ]

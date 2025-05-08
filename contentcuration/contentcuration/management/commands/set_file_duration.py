@@ -7,7 +7,7 @@ from django.core.management.base import BaseCommand
 from contentcuration.models import File
 from contentcuration.models import MEDIA_PRESETS
 
-logging = logmodule.getLogger('command')
+logging = logmodule.getLogger("command")
 
 
 CHUNKSIZE = 10000
@@ -31,7 +31,7 @@ def extract_duration_of_media(f_in, extension):  # noqa C901
             "panic",
             "-f",
             extension,
-            "-"
+            "-",
         ],
         stdin=f_in,
     )
@@ -52,7 +52,7 @@ def extract_duration_of_media(f_in, extension):  # noqa C901
                 "-",
             ],
             stdin=f_in,
-            stderr=subprocess.PIPE
+            stderr=subprocess.PIPE,
         )
         try:
             second_last_line = result.stderr.decode("utf-8").strip().splitlines()[-2]
@@ -76,22 +76,25 @@ def extract_duration_of_media(f_in, extension):  # noqa C901
 
 
 class Command(BaseCommand):
-
     def handle(self, *args, **options):
         start = time.time()
 
-        logging.info("Setting default duration for media presets: {}".format(MEDIA_PRESETS))
+        logging.info(
+            "Setting default duration for media presets: {}".format(MEDIA_PRESETS)
+        )
 
         excluded_files = set()
 
-        null_duration = File.objects.filter(preset_id__in=MEDIA_PRESETS, duration__isnull=True)
+        null_duration = File.objects.filter(
+            preset_id__in=MEDIA_PRESETS, duration__isnull=True
+        )
         null_duration_count = null_duration.count()
         updated_count = 0
 
         i = 0
 
         while i < null_duration_count:
-            for file in null_duration[i:i + CHUNKSIZE]:
+            for file in null_duration[i : i + CHUNKSIZE]:
                 if file.file_on_disk.name in excluded_files:
                     continue
                 file.refresh_from_db()
@@ -99,16 +102,26 @@ class Command(BaseCommand):
                     continue
                 try:
                     with file.file_on_disk.open() as f:
-                        duration = extract_duration_of_media(f, file.file_format.extension)
+                        duration = extract_duration_of_media(
+                            f, file.file_format.extension
+                        )
                     if duration:
-                        updated_count += File.objects.filter(checksum=file.checksum, preset_id__in=MEDIA_PRESETS).update(duration=duration)
+                        updated_count += File.objects.filter(
+                            checksum=file.checksum, preset_id__in=MEDIA_PRESETS
+                        ).update(duration=duration)
                 except FileNotFoundError:
                     logging.warning("File {} not found".format(file))
                     excluded_files.add(file.file_on_disk.name)
                 except (subprocess.CalledProcessError, RuntimeError):
-                    logging.warning("File {} could not be read for duration".format(file))
+                    logging.warning(
+                        "File {} could not be read for duration".format(file)
+                    )
                     excluded_files.add(file.file_on_disk.name)
 
             i += CHUNKSIZE
 
-        logging.info('Finished setting all null duration for {} files in {} seconds'.format(updated_count, time.time() - start))
+        logging.info(
+            "Finished setting all null duration for {} files in {} seconds".format(
+                updated_count, time.time() - start
+            )
+        )

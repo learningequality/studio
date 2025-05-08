@@ -7,13 +7,13 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('contentcuration', '0104_auto_20191028_2325'),
+        ("contentcuration", "0104_auto_20191028_2325"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='channel',
-            name='published_data',
+            model_name="channel",
+            name="published_data",
             field=django.contrib.postgres.fields.jsonb.JSONField(null=True),
         ),
     ]

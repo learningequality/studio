@@ -15,8 +15,11 @@ class WhenQ(Q):
     Example:
         queryset.annotate(some_thing=Case(When(condition=QExpression(BoolExpr(...)), then=...)))
     """
+
     def resolve_expression(self, *args, **kwargs):
-        return WhereNode([child.resolve_expression(*args, **kwargs) for child in self.children])
+        return WhereNode(
+            [child.resolve_expression(*args, **kwargs) for child in self.children]
+        )
 
 
 class BooleanComparison(CombinedExpression):
@@ -27,6 +30,7 @@ class BooleanComparison(CombinedExpression):
     Example:
         BooleanExpression(F('x'), '<=', Value(123))
     """
+
     output_field = BooleanField()
 
 
@@ -39,8 +43,9 @@ class IsNull(BooleanComparison):
         IsNull('my_field_name') -> my_field_name IS NULL
         IsNull('my_field_name', negate=True) -> my_field_name IS NOT NULL
     """
+
     def __init__(self, field_name, negate=False):
-        operator = 'IS NOT' if negate else 'IS'
+        operator = "IS NOT" if negate else "IS"
         super(IsNull, self).__init__(F(field_name), operator, Value(None))
 
 
@@ -55,7 +60,8 @@ class Array(Func):
             F("other_table__field")
         )
     """
+
     function = "ARRAY"
-    template = '%(function)s[%(expressions)s]'
-    arg_joiner = ', '
+    template = "%(function)s[%(expressions)s]"
+    arg_joiner = ", "
     arity = None

@@ -7,13 +7,15 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('contentcuration', '0108_mptt_tree_id_migration'),
+        ("contentcuration", "0108_mptt_tree_id_migration"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='contentnode',
-            name='extra_fields',
-            field=django.contrib.postgres.fields.jsonb.JSONField(blank=True, default=dict, null=True),
+            model_name="contentnode",
+            name="extra_fields",
+            field=django.contrib.postgres.fields.jsonb.JSONField(
+                blank=True, default=dict, null=True
+            ),
         ),
     ]

@@ -17,6 +17,7 @@ class ServiceWorkerView(TemplateView):
         content = None
         if getattr(settings, "DEBUG", False):
             import requests
+
             try:
                 request = requests.get("http://127.0.0.1:4000/dist/serviceWorker.js")
                 content = request.content.decode("utf-8")

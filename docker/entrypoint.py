@@ -22,6 +22,7 @@ CONNECT_TRIES = 5
 
 def check_postgresql_ready(postgres_checks=CONNECT_TRIES):
     import psycopg2
+
     """
     Check that postgres is ready to accept connections.
     """
@@ -48,6 +49,7 @@ def check_postgresql_ready(postgres_checks=CONNECT_TRIES):
 
 def check_minio_ready(minio_checks=CONNECT_TRIES):
     import requests
+
     """
     Check that minio is accepting requests.
     """
@@ -81,7 +83,14 @@ def setup_studio():
       - create sample user accounts: user@a.com:a, user@b.com:b, user@c.com:c
       - create sample channels
     """
-    subprocess.call(["python", "contentcuration/manage.py", "setup", "--settings=contentcuration.dev_settings"])
+    subprocess.call(
+        [
+            "python",
+            "contentcuration/manage.py",
+            "setup",
+            "--settings=contentcuration.dev_settings",
+        ]
+    )
 
 
 def run_cmd():

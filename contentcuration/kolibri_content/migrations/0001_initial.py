@@ -102,7 +102,9 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
-            options={"ordering": ("lft",),},
+            options={
+                "ordering": ("lft",),
+            },
         ),
         migrations.CreateModel(
             name="ContentTag",
@@ -184,7 +186,9 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
-            options={"ordering": ["priority"],},
+            options={
+                "ordering": ["priority"],
+            },
         ),
         migrations.CreateModel(
             name="Language",

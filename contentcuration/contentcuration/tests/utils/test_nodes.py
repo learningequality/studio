@@ -27,13 +27,15 @@ class ResourceSizeHelperTestCase(StudioTestCase):
 
     def test_get_size__root_node_simplification(self):
         self.assertEqual(10, self.helper.get_size())
-        with mock.patch.object(self.root, 'is_root_node') as is_root_node:
+        with mock.patch.object(self.root, "is_root_node") as is_root_node:
             is_root_node.return_value = False
             self.assertEqual(10, self.helper.get_size())
 
     @pytest.mark.skip
     def test_modified_since(self):
-        max_modified = self.helper.queryset.aggregate(max_modified=Max(F('modified')))['max_modified']
+        max_modified = self.helper.queryset.aggregate(max_modified=Max(F("modified")))[
+            "max_modified"
+        ]
         before_max = max_modified - datetime.timedelta(seconds=1)
         after_max = max_modified + datetime.timedelta(seconds=1)
         self.assertTrue(self.helper.modified_since(before_max.isoformat()))
@@ -49,7 +51,7 @@ class CalculateResourceSizeTestCase(SimpleTestCase):
 
     def assertCalculation(self, cache, helper, force=False):
         helper().get_size.return_value = 456
-        now_val = isoparse('2021-01-01T00:00:00')
+        now_val = isoparse("2021-01-01T00:00:00")
         with mock.patch("contentcuration.utils.nodes.timezone.now") as now:
             now.return_value = now_val
             size, stale = calculate_resource_size(self.node, force=force)
@@ -60,7 +62,7 @@ class CalculateResourceSizeTestCase(SimpleTestCase):
 
     def test_cached(self, cache, helper):
         cache().get_size.return_value = 123
-        cache().get_modified.return_value = '2021-01-01 00:00:00'
+        cache().get_modified.return_value = "2021-01-01 00:00:00"
         helper().modified_since.return_value = False
         size, stale = calculate_resource_size(self.node)
         self.assertEqual(123, size)
@@ -69,7 +71,7 @@ class CalculateResourceSizeTestCase(SimpleTestCase):
     def test_stale__too_big__no_force(self, cache, helper):
         self.node.get_descendant_count.return_value = STALE_MAX_CALCULATION_SIZE + 1
         cache().get_size.return_value = 123
-        cache().get_modified.return_value = '2021-01-01 00:00:00'
+        cache().get_modified.return_value = "2021-01-01 00:00:00"
         helper().modified_since.return_value = True
         size, stale = calculate_resource_size(self.node)
         self.assertEqual(123, size)
@@ -109,10 +111,15 @@ class CalculateResourceSizeTestCase(SimpleTestCase):
 
         helper().get_size.side_effect = db_get_size
 
-        with mock.patch("contentcuration.utils.nodes.report_exception") as report_exception, \
-                mock.patch("contentcuration.utils.nodes.SLOW_UNFORCED_CALC_THRESHOLD", 1):
+        with mock.patch(
+            "contentcuration.utils.nodes.report_exception"
+        ) as report_exception, mock.patch(
+            "contentcuration.utils.nodes.SLOW_UNFORCED_CALC_THRESHOLD", 1
+        ):
             self.assertCalculation(cache, helper)
-            self.assertIsInstance(report_exception.mock_calls[0][1][0], SlowCalculationError)
+            self.assertIsInstance(
+                report_exception.mock_calls[0][1][0], SlowCalculationError
+            )
 
 
 class CalculateResourceSizeIntegrationTestCase(StudioTestCase):

@@ -6,13 +6,13 @@ from django.db import models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('content', '0015_auto_20210707_1606'),
+        ("content", "0015_auto_20210707_1606"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='contentnode',
-            name='duration',
+            model_name="contentnode",
+            name="duration",
             field=models.IntegerField(blank=True, null=True),
         ),
     ]

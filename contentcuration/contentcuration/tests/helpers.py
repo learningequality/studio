@@ -51,4 +51,5 @@ def mock_class_instance(target):
     class MockClass(target_cls):
         def __new__(cls, *args, **kwargs):
             return mock.Mock(spec_set=cls)
+
     return MockClass()

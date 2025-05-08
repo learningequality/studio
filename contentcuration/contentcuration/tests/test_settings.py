@@ -11,7 +11,12 @@ from contentcuration.views.settings import UsernameChangeView
 
 class SettingsTestCase(BaseAPITestCase):
     def test_username_change(self):
-        data = json.dumps({"first_name": "New firstname", "last_name": "New lastname", })
+        data = json.dumps(
+            {
+                "first_name": "New firstname",
+                "last_name": "New lastname",
+            }
+        )
         request = self.create_post_request(
             reverse_lazy("update_user_full_name"),
             data=data,

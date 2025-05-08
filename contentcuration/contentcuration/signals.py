@@ -10,7 +10,7 @@ def set_jit(sender, connection, **kwargs):
     optimize its use.
     https://www.postgresql.org/docs/12/runtime-config-query.html#GUC-JIT
     """
-    if connection.vendor == 'postgresql':
+    if connection.vendor == "postgresql":
         db_features = DatabaseFeatures(connection)
         # JIT is new in v11, and for reference this returns True for v11 and following
         if db_features.is_postgresql_11:

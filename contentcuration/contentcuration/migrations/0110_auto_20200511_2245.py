@@ -7,18 +7,18 @@ from django.db import models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('contentcuration', '0109_auto_20191202_1759'),
+        ("contentcuration", "0109_auto_20191202_1759"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='channel',
-            name='demo_server_url',
+            model_name="channel",
+            name="demo_server_url",
             field=models.CharField(blank=True, max_length=200),
         ),
         migrations.AddField(
-            model_name='channel',
-            name='source_url',
+            model_name="channel",
+            name="source_url",
             field=models.CharField(blank=True, max_length=200),
         ),
     ]

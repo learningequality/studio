@@ -18,14 +18,14 @@ class RecommendationsCache(models.Model):
         ContentNode,
         null=True,
         blank=True,
-        related_name='contentnode_recommendations',
+        related_name="contentnode_recommendations",
         on_delete=models.CASCADE,
     )
     channel = models.ForeignKey(
         Channel,
         null=True,
         blank=True,
-        related_name='channel_recommendations',
+        related_name="channel_recommendations",
         on_delete=models.CASCADE,
     )
     rank = models.IntegerField(default=0, null=True)
@@ -33,8 +33,8 @@ class RecommendationsCache(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ('request_hash', 'contentnode')
+        unique_together = ("request_hash", "contentnode")
         indexes = [
-            models.Index(fields=['request_hash'], name=REQUEST_HASH_INDEX_NAME),
-            models.Index(fields=['contentnode'], name=CONTENTNODE_INDEX_NAME),
+            models.Index(fields=["request_hash"], name=REQUEST_HASH_INDEX_NAME),
+            models.Index(fields=["contentnode"], name=CONTENTNODE_INDEX_NAME),
         ]

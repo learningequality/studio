@@ -20,4 +20,6 @@ class KolibriStudioSessionMiddleware(SessionMiddleware):
     def process_response(self, request, response):
         if self._is_exempt(request):
             return response
-        return super(KolibriStudioSessionMiddleware, self).process_response(request, response)
+        return super(KolibriStudioSessionMiddleware, self).process_response(
+            request, response
+        )
