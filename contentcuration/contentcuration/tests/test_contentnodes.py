@@ -180,12 +180,26 @@ class NodeGettersTestCase(StudioTestCase):
 
         # assert format of list fields, including that they do not contain invalid data
         list_fields = [
-            "kind_count", "languages", "accessible_languages", "licenses", "tags", "original_channels",
-            "authors", "aggregators", "providers", "copyright_holders"
+            "kind_count",
+            "languages",
+            "accessible_languages",
+            "licenses",
+            "tags",
+            "original_channels",
+            "authors",
+            "aggregators",
+            "providers",
+            "copyright_holders",
         ]
         for field in list_fields:
-            self.assertIsInstance(details.get(field), list, f"Field '{field}' isn't a list")
-            self.assertEqual(len(details[field]), len([value for value in details[field] if value]), f"List field '{field}' has falsy values")
+            self.assertIsInstance(
+                details.get(field), list, f"Field '{field}' isn't a list"
+            )
+            self.assertEqual(
+                len(details[field]),
+                len([value for value in details[field] if value]),
+                f"List field '{field}' has falsy values",
+            )
 
 
 class NodeOperationsTestCase(StudioTestCase):
@@ -824,7 +838,9 @@ class SyncNodesOperationTestCase(StudioTestCase):
 
     def _create_video_node(self, title, parent, withsubs=False):
         data = dict(
-            kind_id="video", title=title, node_id="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            kind_id="video",
+            title=title,
+            node_id="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
         )
         video_node = testdata.node(data, parent=parent)
 
@@ -869,7 +885,9 @@ class SyncNodesOperationTestCase(StudioTestCase):
 
         # Setup derivative channel
         self.new_channel = Channel.objects.create(
-            name="derivative of teschannel", source_id="lkajs", actor_id=self.admin_user.id
+            name="derivative of teschannel",
+            source_id="lkajs",
+            actor_id=self.admin_user.id,
         )
         self.new_channel.save()
         self.new_channel.main_tree = self._create_empty_tree()
@@ -939,7 +957,7 @@ class NodeCompletionTestCase(StudioTestCase):
                 },
                 "model": completion_criteria.MASTERY,
             }
-        }
+        },
     }
 
     def setUp(self):
@@ -960,30 +978,52 @@ class NodeCompletionTestCase(StudioTestCase):
 
     def test_create_topic_set_complete_parent_title(self):
         channel = testdata.channel()
-        new_obj = ContentNode(title="yes", kind_id=content_kinds.TOPIC, parent=channel.main_tree)
+        new_obj = ContentNode(
+            title="yes", kind_id=content_kinds.TOPIC, parent=channel.main_tree
+        )
         new_obj.save()
         new_obj.mark_complete()
         self.assertTrue(new_obj.complete)
 
     def test_create_video_set_complete_no_license(self):
         channel = testdata.channel()
-        new_obj = ContentNode(title="yes", kind_id=content_kinds.VIDEO, parent=channel.main_tree)
+        new_obj = ContentNode(
+            title="yes", kind_id=content_kinds.VIDEO, parent=channel.main_tree
+        )
         new_obj.save()
-        File.objects.create(contentnode=new_obj, preset_id=format_presets.VIDEO_HIGH_RES, checksum=uuid.uuid4().hex)
+        File.objects.create(
+            contentnode=new_obj,
+            preset_id=format_presets.VIDEO_HIGH_RES,
+            checksum=uuid.uuid4().hex,
+        )
         new_obj.mark_complete()
         self.assertFalse(new_obj.complete)
 
     def test_create_video_set_complete_custom_license_no_description(self):
-        custom_licenses = list(License.objects.filter(is_custom=True).values_list("pk", flat=True))
+        custom_licenses = list(
+            License.objects.filter(is_custom=True).values_list("pk", flat=True)
+        )
         channel = testdata.channel()
-        new_obj = ContentNode(title="yes", kind_id=content_kinds.VIDEO, parent=channel.main_tree, license_id=custom_licenses[0], copyright_holder="Some person")
+        new_obj = ContentNode(
+            title="yes",
+            kind_id=content_kinds.VIDEO,
+            parent=channel.main_tree,
+            license_id=custom_licenses[0],
+            copyright_holder="Some person",
+        )
         new_obj.save()
-        File.objects.create(contentnode=new_obj, preset_id=format_presets.VIDEO_HIGH_RES, checksum=uuid.uuid4().hex)
+        File.objects.create(
+            contentnode=new_obj,
+            preset_id=format_presets.VIDEO_HIGH_RES,
+            checksum=uuid.uuid4().hex,
+        )
         new_obj.mark_complete()
         self.assertFalse(new_obj.complete)
 
     def test_create_video_set_complete_custom_license_with_description(self):
-        custom_licenses = list(License.objects.filter(is_custom=True).values_list("pk", flat=True))
+        custom_licenses = list(
+            License.objects.filter(is_custom=True).values_list("pk", flat=True)
+        )
         channel = testdata.channel()
         new_obj = ContentNode(
             title="yes",
@@ -991,50 +1031,109 @@ class NodeCompletionTestCase(StudioTestCase):
             parent=channel.main_tree,
             license_id=custom_licenses[0],
             license_description="don't do this!",
-            copyright_holder="Some person"
+            copyright_holder="Some person",
         )
         new_obj.save()
-        File.objects.create(contentnode=new_obj, preset_id=format_presets.VIDEO_HIGH_RES, checksum=uuid.uuid4().hex)
+        File.objects.create(
+            contentnode=new_obj,
+            preset_id=format_presets.VIDEO_HIGH_RES,
+            checksum=uuid.uuid4().hex,
+        )
         new_obj.mark_complete()
         self.assertTrue(new_obj.complete)
 
-    def test_create_video_set_complete_copyright_holder_required_no_copyright_holder(self):
-        required_holder = list(License.objects.filter(copyright_holder_required=True, is_custom=False).values_list("pk", flat=True))
+    def test_create_video_set_complete_copyright_holder_required_no_copyright_holder(
+        self,
+    ):
+        required_holder = list(
+            License.objects.filter(
+                copyright_holder_required=True, is_custom=False
+            ).values_list("pk", flat=True)
+        )
         channel = testdata.channel()
-        new_obj = ContentNode(title="yes", kind_id=content_kinds.VIDEO, parent=channel.main_tree, license_id=required_holder[0])
+        new_obj = ContentNode(
+            title="yes",
+            kind_id=content_kinds.VIDEO,
+            parent=channel.main_tree,
+            license_id=required_holder[0],
+        )
         new_obj.save()
-        File.objects.create(contentnode=new_obj, preset_id=format_presets.VIDEO_HIGH_RES, checksum=uuid.uuid4().hex)
+        File.objects.create(
+            contentnode=new_obj,
+            preset_id=format_presets.VIDEO_HIGH_RES,
+            checksum=uuid.uuid4().hex,
+        )
         new_obj.mark_complete()
         self.assertFalse(new_obj.complete)
 
     def test_create_video_set_complete_copyright_holder_required_copyright_holder(self):
-        required_holder = list(License.objects.filter(copyright_holder_required=True, is_custom=False).values_list("pk", flat=True))
+        required_holder = list(
+            License.objects.filter(
+                copyright_holder_required=True, is_custom=False
+            ).values_list("pk", flat=True)
+        )
         channel = testdata.channel()
-        new_obj = ContentNode(title="yes", kind_id=content_kinds.VIDEO, parent=channel.main_tree, license_id=required_holder[0], copyright_holder="Some person")
+        new_obj = ContentNode(
+            title="yes",
+            kind_id=content_kinds.VIDEO,
+            parent=channel.main_tree,
+            license_id=required_holder[0],
+            copyright_holder="Some person",
+        )
         new_obj.save()
-        File.objects.create(contentnode=new_obj, preset_id=format_presets.VIDEO_HIGH_RES, checksum=uuid.uuid4().hex)
+        File.objects.create(
+            contentnode=new_obj,
+            preset_id=format_presets.VIDEO_HIGH_RES,
+            checksum=uuid.uuid4().hex,
+        )
         new_obj.mark_complete()
         self.assertTrue(new_obj.complete)
 
     def test_create_video_no_files(self):
-        licenses = list(License.objects.filter(copyright_holder_required=False, is_custom=False).values_list("pk", flat=True))
+        licenses = list(
+            License.objects.filter(
+                copyright_holder_required=False, is_custom=False
+            ).values_list("pk", flat=True)
+        )
         channel = testdata.channel()
-        new_obj = ContentNode(title="yes", kind_id=content_kinds.VIDEO, parent=channel.main_tree, license_id=licenses[0])
+        new_obj = ContentNode(
+            title="yes",
+            kind_id=content_kinds.VIDEO,
+            parent=channel.main_tree,
+            license_id=licenses[0],
+        )
         new_obj.save()
         new_obj.mark_complete()
         self.assertFalse(new_obj.complete)
 
     def test_create_video_thumbnail_only(self):
-        licenses = list(License.objects.filter(copyright_holder_required=False, is_custom=False).values_list("pk", flat=True))
+        licenses = list(
+            License.objects.filter(
+                copyright_holder_required=False, is_custom=False
+            ).values_list("pk", flat=True)
+        )
         channel = testdata.channel()
-        new_obj = ContentNode(title="yes", kind_id=content_kinds.VIDEO, parent=channel.main_tree, license_id=licenses[0])
+        new_obj = ContentNode(
+            title="yes",
+            kind_id=content_kinds.VIDEO,
+            parent=channel.main_tree,
+            license_id=licenses[0],
+        )
         new_obj.save()
-        File.objects.create(contentnode=new_obj, preset_id=format_presets.VIDEO_THUMBNAIL, checksum=uuid.uuid4().hex)
+        File.objects.create(
+            contentnode=new_obj,
+            preset_id=format_presets.VIDEO_THUMBNAIL,
+            checksum=uuid.uuid4().hex,
+        )
         new_obj.mark_complete()
         self.assertFalse(new_obj.complete)
 
     def test_create_video_invalid_completion_criterion(self):
-        licenses = list(License.objects.filter(copyright_holder_required=False, is_custom=False).values_list("pk", flat=True))
+        licenses = list(
+            License.objects.filter(
+                copyright_holder_required=False, is_custom=False
+            ).values_list("pk", flat=True)
+        )
         channel = testdata.channel()
         new_obj = ContentNode(
             title="yes",
@@ -1052,121 +1151,252 @@ class NodeCompletionTestCase(StudioTestCase):
                         },
                         "model": completion_criteria.MASTERY,
                     }
-                }
+                },
             },
         )
         new_obj.save()
-        File.objects.create(contentnode=new_obj, preset_id=format_presets.VIDEO_HIGH_RES, checksum=uuid.uuid4().hex)
+        File.objects.create(
+            contentnode=new_obj,
+            preset_id=format_presets.VIDEO_HIGH_RES,
+            checksum=uuid.uuid4().hex,
+        )
         new_obj.mark_complete()
         self.assertFalse(new_obj.complete)
 
     def test_create_exercise_no_assessment_items(self):
-        licenses = list(License.objects.filter(copyright_holder_required=False, is_custom=False).values_list("pk", flat=True))
+        licenses = list(
+            License.objects.filter(
+                copyright_holder_required=False, is_custom=False
+            ).values_list("pk", flat=True)
+        )
         channel = testdata.channel()
-        new_obj = ContentNode(title="yes", kind_id=content_kinds.EXERCISE, parent=channel.main_tree, license_id=licenses[0], extra_fields=self.new_extra_fields)
+        new_obj = ContentNode(
+            title="yes",
+            kind_id=content_kinds.EXERCISE,
+            parent=channel.main_tree,
+            license_id=licenses[0],
+            extra_fields=self.new_extra_fields,
+        )
         new_obj.save()
         new_obj.mark_complete()
         self.assertFalse(new_obj.complete)
 
     def test_create_exercise_invalid_assessment_item_no_question(self):
-        licenses = list(License.objects.filter(copyright_holder_required=False, is_custom=False).values_list("pk", flat=True))
+        licenses = list(
+            License.objects.filter(
+                copyright_holder_required=False, is_custom=False
+            ).values_list("pk", flat=True)
+        )
         channel = testdata.channel()
-        new_obj = ContentNode(title="yes", kind_id=content_kinds.EXERCISE, parent=channel.main_tree, license_id=licenses[0], extra_fields=self.new_extra_fields)
+        new_obj = ContentNode(
+            title="yes",
+            kind_id=content_kinds.EXERCISE,
+            parent=channel.main_tree,
+            license_id=licenses[0],
+            extra_fields=self.new_extra_fields,
+        )
         new_obj.save()
-        AssessmentItem.objects.create(contentnode=new_obj, answers="[{\"correct\": true, \"text\": \"answer\"}]")
+        AssessmentItem.objects.create(
+            contentnode=new_obj, answers='[{"correct": true, "text": "answer"}]'
+        )
         new_obj.mark_complete()
         self.assertFalse(new_obj.complete)
 
     def test_create_exercise_invalid_assessment_item_no_answers(self):
-        licenses = list(License.objects.filter(copyright_holder_required=False, is_custom=False).values_list("pk", flat=True))
+        licenses = list(
+            License.objects.filter(
+                copyright_holder_required=False, is_custom=False
+            ).values_list("pk", flat=True)
+        )
         channel = testdata.channel()
-        new_obj = ContentNode(title="yes", kind_id=content_kinds.EXERCISE, parent=channel.main_tree, license_id=licenses[0], extra_fields=self.new_extra_fields)
+        new_obj = ContentNode(
+            title="yes",
+            kind_id=content_kinds.EXERCISE,
+            parent=channel.main_tree,
+            license_id=licenses[0],
+            extra_fields=self.new_extra_fields,
+        )
         new_obj.save()
-        AssessmentItem.objects.create(contentnode=new_obj, question="This is a question")
+        AssessmentItem.objects.create(
+            contentnode=new_obj, question="This is a question"
+        )
         new_obj.mark_complete()
         self.assertFalse(new_obj.complete)
 
     def test_create_exercise_invalid_assessment_item_no_correct_answers(self):
-        licenses = list(License.objects.filter(copyright_holder_required=False, is_custom=False).values_list("pk", flat=True))
+        licenses = list(
+            License.objects.filter(
+                copyright_holder_required=False, is_custom=False
+            ).values_list("pk", flat=True)
+        )
         channel = testdata.channel()
-        new_obj = ContentNode(title="yes", kind_id=content_kinds.EXERCISE, parent=channel.main_tree, license_id=licenses[0], extra_fields=self.new_extra_fields)
-        new_obj.save()
-        AssessmentItem.objects.create(contentnode=new_obj, question="This is a question", answers="[{\"correct\": false, \"text\": \"answer\"}]")
-        new_obj.mark_complete()
-        self.assertFalse(new_obj.complete)
-
-    def test_create_exercise_valid_assessment_item_no_correct_answers_input(self):
-        licenses = list(License.objects.filter(copyright_holder_required=False, is_custom=False).values_list("pk", flat=True))
-        channel = testdata.channel()
-        new_obj = ContentNode(title="yes", kind_id=content_kinds.EXERCISE, parent=channel.main_tree, license_id=licenses[0], extra_fields=self.new_extra_fields)
+        new_obj = ContentNode(
+            title="yes",
+            kind_id=content_kinds.EXERCISE,
+            parent=channel.main_tree,
+            license_id=licenses[0],
+            extra_fields=self.new_extra_fields,
+        )
         new_obj.save()
         AssessmentItem.objects.create(
             contentnode=new_obj,
             question="This is a question",
-            answers="[{\"correct\": false, \"text\": \"answer\"}]",
-            type=exercises.INPUT_QUESTION
+            answers='[{"correct": false, "text": "answer"}]',
+        )
+        new_obj.mark_complete()
+        self.assertFalse(new_obj.complete)
+
+    def test_create_exercise_valid_assessment_item_no_correct_answers_input(self):
+        licenses = list(
+            License.objects.filter(
+                copyright_holder_required=False, is_custom=False
+            ).values_list("pk", flat=True)
+        )
+        channel = testdata.channel()
+        new_obj = ContentNode(
+            title="yes",
+            kind_id=content_kinds.EXERCISE,
+            parent=channel.main_tree,
+            license_id=licenses[0],
+            extra_fields=self.new_extra_fields,
+        )
+        new_obj.save()
+        AssessmentItem.objects.create(
+            contentnode=new_obj,
+            question="This is a question",
+            answers='[{"correct": false, "text": "answer"}]',
+            type=exercises.INPUT_QUESTION,
         )
         new_obj.mark_complete()
         self.assertTrue(new_obj.complete)
 
     def test_create_exercise_valid_assessment_items(self):
-        licenses = list(License.objects.filter(copyright_holder_required=False, is_custom=False).values_list("pk", flat=True))
+        licenses = list(
+            License.objects.filter(
+                copyright_holder_required=False, is_custom=False
+            ).values_list("pk", flat=True)
+        )
         channel = testdata.channel()
-        new_obj = ContentNode(title="yes", kind_id=content_kinds.EXERCISE, parent=channel.main_tree, license_id=licenses[0], extra_fields=self.new_extra_fields)
+        new_obj = ContentNode(
+            title="yes",
+            kind_id=content_kinds.EXERCISE,
+            parent=channel.main_tree,
+            license_id=licenses[0],
+            extra_fields=self.new_extra_fields,
+        )
         new_obj.save()
-        AssessmentItem.objects.create(contentnode=new_obj, question="This is a question", answers="[{\"correct\": true, \"text\": \"answer\"}]")
+        AssessmentItem.objects.create(
+            contentnode=new_obj,
+            question="This is a question",
+            answers='[{"correct": true, "text": "answer"}]',
+        )
         new_obj.mark_complete()
         self.assertTrue(new_obj.complete)
 
     def test_create_exercise_valid_assessment_items_raw_data(self):
-        licenses = list(License.objects.filter(copyright_holder_required=False, is_custom=False).values_list("pk", flat=True))
+        licenses = list(
+            License.objects.filter(
+                copyright_holder_required=False, is_custom=False
+            ).values_list("pk", flat=True)
+        )
         channel = testdata.channel()
-        new_obj = ContentNode(title="yes", kind_id=content_kinds.EXERCISE, parent=channel.main_tree, license_id=licenses[0], extra_fields=self.new_extra_fields)
+        new_obj = ContentNode(
+            title="yes",
+            kind_id=content_kinds.EXERCISE,
+            parent=channel.main_tree,
+            license_id=licenses[0],
+            extra_fields=self.new_extra_fields,
+        )
         new_obj.save()
-        AssessmentItem.objects.create(contentnode=new_obj, raw_data="{\"question\": {}}")
+        AssessmentItem.objects.create(contentnode=new_obj, raw_data='{"question": {}}')
         new_obj.mark_complete()
         self.assertTrue(new_obj.complete)
 
     def test_create_exercise_no_extra_fields(self):
-        licenses = list(License.objects.filter(copyright_holder_required=False, is_custom=False).values_list("pk", flat=True))
+        licenses = list(
+            License.objects.filter(
+                copyright_holder_required=False, is_custom=False
+            ).values_list("pk", flat=True)
+        )
         channel = testdata.channel()
-        new_obj = ContentNode(title="yes", kind_id=content_kinds.EXERCISE, parent=channel.main_tree, license_id=licenses[0])
+        new_obj = ContentNode(
+            title="yes",
+            kind_id=content_kinds.EXERCISE,
+            parent=channel.main_tree,
+            license_id=licenses[0],
+        )
         new_obj.save()
-        AssessmentItem.objects.create(contentnode=new_obj, question="This is a question", answers="[{\"correct\": true, \"text\": \"answer\"}]")
+        AssessmentItem.objects.create(
+            contentnode=new_obj,
+            question="This is a question",
+            answers='[{"correct": true, "text": "answer"}]',
+        )
         new_obj.mark_complete()
         self.assertFalse(new_obj.complete)
 
     def test_create_exercise_old_extra_fields(self):
-        licenses = list(License.objects.filter(copyright_holder_required=False, is_custom=False).values_list("pk", flat=True))
+        licenses = list(
+            License.objects.filter(
+                copyright_holder_required=False, is_custom=False
+            ).values_list("pk", flat=True)
+        )
         channel = testdata.channel()
-        new_obj = ContentNode(title="yes", kind_id=content_kinds.EXERCISE, parent=channel.main_tree, license_id=licenses[0], extra_fields=self.old_extra_fields)
+        new_obj = ContentNode(
+            title="yes",
+            kind_id=content_kinds.EXERCISE,
+            parent=channel.main_tree,
+            license_id=licenses[0],
+            extra_fields=self.old_extra_fields,
+        )
         new_obj.save()
-        AssessmentItem.objects.create(contentnode=new_obj, question="This is a question", answers="[{\"correct\": true, \"text\": \"answer\"}]")
+        AssessmentItem.objects.create(
+            contentnode=new_obj,
+            question="This is a question",
+            answers='[{"correct": true, "text": "answer"}]',
+        )
         new_obj.mark_complete()
         self.assertTrue(new_obj.complete)
 
     def test_create_exercise_bad_new_extra_fields(self):
-        licenses = list(License.objects.filter(copyright_holder_required=False, is_custom=False).values_list("pk", flat=True))
+        licenses = list(
+            License.objects.filter(
+                copyright_holder_required=False, is_custom=False
+            ).values_list("pk", flat=True)
+        )
         channel = testdata.channel()
-        new_obj = ContentNode(title="yes", kind_id=content_kinds.EXERCISE, parent=channel.main_tree, license_id=licenses[0], extra_fields={
-            "randomize": False,
-            "options": {
-                "completion_criteria": {
-                    "threshold": {
-                        "mastery_model": exercises.M_OF_N,
-                        "n": 5,
-                    },
-                    "model": completion_criteria.MASTERY,
-                }
-            }
-        })
+        new_obj = ContentNode(
+            title="yes",
+            kind_id=content_kinds.EXERCISE,
+            parent=channel.main_tree,
+            license_id=licenses[0],
+            extra_fields={
+                "randomize": False,
+                "options": {
+                    "completion_criteria": {
+                        "threshold": {
+                            "mastery_model": exercises.M_OF_N,
+                            "n": 5,
+                        },
+                        "model": completion_criteria.MASTERY,
+                    }
+                },
+            },
+        )
         new_obj.save()
-        AssessmentItem.objects.create(contentnode=new_obj, question="This is a question", answers="[{\"correct\": true, \"text\": \"answer\"}]")
+        AssessmentItem.objects.create(
+            contentnode=new_obj,
+            question="This is a question",
+            answers='[{"correct": true, "text": "answer"}]',
+        )
         new_obj.mark_complete()
         self.assertFalse(new_obj.complete)
 
     def test_create_video_null_extra_fields(self):
-        licenses = list(License.objects.filter(copyright_holder_required=False, is_custom=False).values_list("pk", flat=True))
+        licenses = list(
+            License.objects.filter(
+                copyright_holder_required=False, is_custom=False
+            ).values_list("pk", flat=True)
+        )
         channel = testdata.channel()
         new_obj = ContentNode(
             title="yes",
@@ -1177,7 +1407,11 @@ class NodeCompletionTestCase(StudioTestCase):
             extra_fields=None,
         )
         new_obj.save()
-        File.objects.create(contentnode=new_obj, preset_id=format_presets.VIDEO_HIGH_RES, checksum=uuid.uuid4().hex)
+        File.objects.create(
+            contentnode=new_obj,
+            preset_id=format_presets.VIDEO_HIGH_RES,
+            checksum=uuid.uuid4().hex,
+        )
         try:
             new_obj.mark_complete()
         except AttributeError:

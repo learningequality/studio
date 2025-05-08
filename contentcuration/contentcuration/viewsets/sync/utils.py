@@ -12,9 +12,9 @@ from contentcuration.viewsets.sync.constants import DELETED
 from contentcuration.viewsets.sync.constants import DEPLOYED
 from contentcuration.viewsets.sync.constants import MOVED
 from contentcuration.viewsets.sync.constants import PUBLISHED
+from contentcuration.viewsets.sync.constants import PUBLISHED_NEXT
 from contentcuration.viewsets.sync.constants import UPDATED
 from contentcuration.viewsets.sync.constants import UPDATED_DESCENDANTS
-from contentcuration.viewsets.sync.constants import PUBLISHED_NEXT
 
 
 def validate_table(table):
@@ -60,7 +60,15 @@ def generate_move_event(key, table, target, position, channel_id=None, user_id=N
 
 
 def generate_copy_event(
-    key, table, from_key, target, position=None, mods=None, excluded_descendants=None, channel_id=None, user_id=None
+    key,
+    table,
+    from_key,
+    target,
+    position=None,
+    mods=None,
+    excluded_descendants=None,
+    channel_id=None,
+    user_id=None,
 ):
     event = _generate_event(key, table, COPIED, channel_id, user_id)
     event["from_key"] = from_key
@@ -71,9 +79,7 @@ def generate_copy_event(
     return event
 
 
-def generate_publish_event(
-    key, version_notes="", language=None
-):
+def generate_publish_event(key, version_notes="", language=None):
     event = _generate_event(key, CHANNEL, PUBLISHED, key, None)
     event["version_notes"] = version_notes
     event["language"] = language
@@ -84,16 +90,19 @@ def generate_deploy_event(key, user_id):
     event = _generate_event(key, CHANNEL, DEPLOYED, channel_id=key, user_id=user_id)
     return event
 
+
 def generate_update_descendants_event(key, mods, channel_id=None, user_id=None):
     event = _generate_event(key, CONTENTNODE, UPDATED_DESCENDANTS, channel_id, user_id)
     event["mods"] = mods
     return event
+
 
 def generate_publish_next_event(key, version_notes="", language=None):
     event = _generate_event(key, CHANNEL, PUBLISHED_NEXT, key, None)
     event["version_notes"] = version_notes
     event["language"] = language
     return event
+
 
 def log_sync_exception(e, user=None, change=None, changes=None):
     # Capture exception and report, but allow sync

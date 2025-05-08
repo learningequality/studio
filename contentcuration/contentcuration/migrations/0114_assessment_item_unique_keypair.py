@@ -4,46 +4,46 @@ from django.db import migrations
 
 import contentcuration.models
 
-TABLE_NAME = 'contentcuration_assessmentitem'
-INDEX_NAME = 'assessmentitem_unique_keypair'
-CONSTRAINT_NAME = 'assessmentitem_unique_keypair_constraint'
+TABLE_NAME = "contentcuration_assessmentitem"
+INDEX_NAME = "assessmentitem_unique_keypair"
+CONSTRAINT_NAME = "assessmentitem_unique_keypair_constraint"
+
 
 class Migration(migrations.Migration):
     atomic = False
 
     dependencies = [
-        ('contentcuration', '0113_channel_tagline'),
+        ("contentcuration", "0113_channel_tagline"),
     ]
 
     operations = [
         migrations.SeparateDatabaseAndState(
             state_operations=[
                 migrations.AlterUniqueTogether(
-                    name='assessmentitem',
-                    unique_together=set([('contentnode', 'assessment_id')]),
+                    name="assessmentitem",
+                    unique_together=set([("contentnode", "assessment_id")]),
                 ),
             ],
             database_operations=[
                 migrations.RunSQL(
-                    sql='CREATE UNIQUE INDEX CONCURRENTLY {index_name} ON {table_name} USING btree (assessment_id, contentnode_id)'.format(
+                    sql="CREATE UNIQUE INDEX CONCURRENTLY {index_name} ON {table_name} USING btree (assessment_id, contentnode_id)".format(
                         index_name=INDEX_NAME,
                         table_name=TABLE_NAME,
                     ),
-                    reverse_sql='DROP INDEX IF EXISTS {index_name}'.format(
+                    reverse_sql="DROP INDEX IF EXISTS {index_name}".format(
                         index_name=INDEX_NAME,
                     ),
                 ),
                 migrations.RunSQL(
-                    sql='ALTER TABLE {table_name} ADD CONSTRAINT {constraint_name} UNIQUE USING INDEX {index_name}'.format(
+                    sql="ALTER TABLE {table_name} ADD CONSTRAINT {constraint_name} UNIQUE USING INDEX {index_name}".format(
                         index_name=INDEX_NAME,
                         table_name=TABLE_NAME,
                         constraint_name=CONSTRAINT_NAME,
                     ),
-                    reverse_sql='ALTER TABLE {table_name} DROP CONSTRAINT {constraint_name}'.format(
-                        table_name=TABLE_NAME,
-                        constraint_name=CONSTRAINT_NAME
+                    reverse_sql="ALTER TABLE {table_name} DROP CONSTRAINT {constraint_name}".format(
+                        table_name=TABLE_NAME, constraint_name=CONSTRAINT_NAME
                     ),
-                )
-            ]
+                ),
+            ],
         )
     ]

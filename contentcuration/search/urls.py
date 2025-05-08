@@ -5,7 +5,7 @@ from search.viewsets.contentnode import SearchContentNodeViewSet
 from search.viewsets.savedsearch import SavedSearchViewSet
 
 router = routers.DefaultRouter(trailing_slash=False)
-router.register(r'search', SearchContentNodeViewSet, basename='search')
-router.register(r'saved-search', SavedSearchViewSet)
+router.register(r"search", SearchContentNodeViewSet, basename="search")
+router.register(r"saved-search", SavedSearchViewSet)
 
-urlpatterns = [url(r'^', include(router.urls))]
+urlpatterns = [url(r"^", include(router.urls))]

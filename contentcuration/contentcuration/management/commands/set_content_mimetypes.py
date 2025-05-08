@@ -18,18 +18,17 @@ from contentcuration.utils.storage_common import determine_content_type
 
 
 class Command(BaseCommand):
-
     def handle(self, *args, **kwargs):
         blobs = self._list_all_files()
 
         futures = []
         with concurrent.futures.ThreadPoolExecutor() as e:
-            print("Scheduling all metadata update jobs...")
+            print("Scheduling all metadata update jobs...")  # noqa: T201
             for blob in blobs:
                 future = e.submit(self._update_metadata, blob)
                 futures.append(future)
 
-            print("Waiting for all jobs to finish...")
+            print("Waiting for all jobs to finish...")  # noqa: T201
 
     def _determine_cache_control(self, name):
         _, ext = os.path.splitext(name)

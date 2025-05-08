@@ -58,13 +58,13 @@ class RecommendationsResponse(RecommendationsBackendResponse):
 
 
 class EmbedTopicsRequest(EmbeddingsRequest):
-    path = '/embed-topics'
-    method = 'POST'
+    path = "/embed-topics"
+    method = "POST"
 
 
 class EmbedContentRequest(EmbeddingsRequest):
-    path = '/embed-content'
-    method = 'POST'
+    path = "/embed-content"
+    method = "POST"
 
 
 class EmbeddingsResponse(RecommendationsBackendResponse):
@@ -73,7 +73,6 @@ class EmbeddingsResponse(RecommendationsBackendResponse):
 
 
 class RecommendationsBackendFactory(BackendFactory):
-
     def _ensure_url_has_scheme(self, url):
         """
         Checks whether the URL has a scheme. Default to http:// if no scheme exists.
@@ -89,13 +88,14 @@ class RecommendationsBackendFactory(BackendFactory):
 
     def create_backend(self) -> Backend:
         backend = Recommendations()
-        backend.base_url = self._ensure_url_has_scheme(settings.CURRICULUM_AUTOMATION_API_URL)
+        backend.base_url = self._ensure_url_has_scheme(
+            settings.CURRICULUM_AUTOMATION_API_URL
+        )
         backend.connect_endpoint = "/connect"
         return backend
 
 
 class RecommendationsAdapter(Adapter):
-
     def generate_embeddings(self, request: EmbeddingsRequest) -> EmbeddingsResponse:
         """
         Generates embeddings for the given request.
@@ -129,10 +129,13 @@ class RecommendationsAdapter(Adapter):
         try:
             request_hash = self._generate_request_hash(request)
             override_threshold = self._extract_override_threshold(request)
-            data = list(RecommendationsCache.objects
-                        .filter(request_hash=request_hash, override_threshold=override_threshold)
-                        .order_by('override_threshold', 'rank')
-                        .values('topic_id', 'rank', 'channel_id', node_id=F('contentnode_id')))
+            data = list(
+                RecommendationsCache.objects.filter(
+                    request_hash=request_hash, override_threshold=override_threshold
+                )
+                .order_by("override_threshold", "rank")
+                .values("topic_id", "rank", "channel_id", node_id=F("contentnode_id"))
+            )
             if len(data) > 0:
                 return EmbeddingsResponse(data=self._unflatten_response(data))
             else:
@@ -154,16 +157,21 @@ class RecommendationsAdapter(Adapter):
         """
 
         params_copy = request.params.copy() if request.params else {}
-        params_copy.pop('override_threshold', None)
+        params_copy.pop("override_threshold", None)
 
-        unique_attributes = json.dumps({
-            'params': params_copy,
-            'json': request.json,
-        }, sort_keys=True).encode('utf-8')
+        unique_attributes = json.dumps(
+            {
+                "params": params_copy,
+                "json": request.json,
+            },
+            sort_keys=True,
+        ).encode("utf-8")
 
         return hashlib.md5(unique_attributes).hexdigest()
 
-    def cache_embeddings_request(self, request: BackendRequest, response: BackendResponse) -> bool:
+    def cache_embeddings_request(
+        self, request: BackendRequest, response: BackendResponse
+    ) -> bool:
         """
         Caches the recommendations request and response. It performs a bulk insert of the
         recommendations into the RecommendationsCache table, ignoring any conflicts.
@@ -182,12 +190,13 @@ class RecommendationsAdapter(Adapter):
             new_cache = [
                 RecommendationsCache(
                     request_hash=request_hash,
-                    topic_id=node['topic_id'],
-                    contentnode_id=node['node_id'],
-                    channel_id=node['channel_id'],
-                    rank=node['rank'],
+                    topic_id=node["topic_id"],
+                    contentnode_id=node["node_id"],
+                    channel_id=node["channel_id"],
+                    rank=node["rank"],
                     override_threshold=override_threshold,
-                ) for node in valid_nodes
+                )
+                for node in valid_nodes
             ]
             RecommendationsCache.objects.bulk_create(new_cache, ignore_conflicts=True)
             return True
@@ -203,10 +212,13 @@ class RecommendationsAdapter(Adapter):
         :return: The value of the override_threshold parameter, or False if not present.
         :rtype: bool
         """
-        return request.params.get('override_threshold', False) if request.params else False
+        return (
+            request.params.get("override_threshold", False) if request.params else False
+        )
 
-    def get_recommendations(self, request_data: Dict[str, Any],
-                            override_threshold=False) -> RecommendationsResponse:
+    def get_recommendations(
+        self, request_data: Dict[str, Any], override_threshold=False
+    ) -> RecommendationsResponse:
         """
         Get recommendations for the given topic(s).
 
@@ -218,9 +230,9 @@ class RecommendationsAdapter(Adapter):
 
         recommendations = []
         request = EmbedTopicsRequest(
-            method='POST',
-            path='/recommend',
-            params={'override_threshold': override_threshold},
+            method="POST",
+            path="/recommend",
+            params={"override_threshold": override_threshold},
             json=request_data,
         )
 
@@ -229,10 +241,10 @@ class RecommendationsAdapter(Adapter):
             response = cached_response
         else:
             response = self.generate_embeddings(request=request)
-            if not getattr(response, 'error', None):
+            if not getattr(response, "error", None):
                 self.cache_embeddings_request(request, response)
             else:
-                exception = getattr(response, 'error')
+                exception = getattr(response, "error")
                 if isinstance(exception, Exception):
                     raise exception
                 else:
@@ -243,37 +255,44 @@ class RecommendationsAdapter(Adapter):
             node_ids = self._extract_node_ids(recommended_nodes)
             cast_node_ids = [uuid.UUID(node_id) for node_id in node_ids]
             channel_cte = With(
-                Channel.objects.annotate(
-                    channel_id=self._cast_to_uuid(F('id'))
-                ).filter(
+                Channel.objects.annotate(channel_id=self._cast_to_uuid(F("id")))
+                .filter(
                     Exists(
                         PublicContentNode.objects.filter(
-                            id__in=cast_node_ids,
-                            channel_id=OuterRef('channel_id')
+                            id__in=cast_node_ids, channel_id=OuterRef("channel_id")
                         )
                     )
-                ).values(
-                    'main_tree_id',
-                    tree_id=F('main_tree__tree_id'),
-                ).distinct()
+                )
+                .values(
+                    "main_tree_id",
+                    tree_id=F("main_tree__tree_id"),
+                )
+                .distinct()
             )
 
-            recommendations = channel_cte.join(
-                ContentNode.objects.filter(node_id__in=node_ids),
-                tree_id=channel_cte.col.tree_id
-            ).with_cte(channel_cte).annotate(
-                main_tree_id=channel_cte.col.main_tree_id
-            ).values(
-                'id',
-                'node_id',
-                'main_tree_id',
-                'parent_id',
+            recommendations = (
+                channel_cte.join(
+                    ContentNode.objects.filter(node_id__in=node_ids),
+                    tree_id=channel_cte.col.tree_id,
+                )
+                .with_cte(channel_cte)
+                .annotate(main_tree_id=channel_cte.col.main_tree_id)
+                .values(
+                    "id",
+                    "node_id",
+                    "main_tree_id",
+                    "parent_id",
+                )
             )
 
             # Add the corresponding channel_id to the recommendations
-            node_to_channel = {node['node_id']: node['channel_id'] for node in recommended_nodes}
+            node_to_channel = {
+                node["node_id"]: node["channel_id"] for node in recommended_nodes
+            }
             for recommendation in recommendations:
-                recommendation['channel_id'] = node_to_channel.get(recommendation['node_id'])
+                recommendation["channel_id"] = node_to_channel.get(
+                    recommendation["node_id"]
+                )
 
         return RecommendationsResponse(results=list(recommendations))
 
@@ -312,22 +331,26 @@ class RecommendationsAdapter(Adapter):
         :rtype: List[Dict[str, Any]]
         """
         flattened_response = []
-        if hasattr(response, 'data') and isinstance(response.data, dict):
-            topics = response.data.get('topics', [])
+        if hasattr(response, "data") and isinstance(response.data, dict):
+            topics = response.data.get("topics", [])
             for topic in topics:
-                topic_id = topic.get('id')
-                recommendations = topic.get('recommendations', [])
+                topic_id = topic.get("id")
+                recommendations = topic.get("recommendations", [])
                 for recommendation in recommendations:
-                    flattened_response.append({
-                        'topic_id': topic_id,
-                        'node_id': recommendation.get('id'),
-                        'channel_id': recommendation.get('channel_id'),
-                        'rank': recommendation.get('rank'),
-                    })
+                    flattened_response.append(
+                        {
+                            "topic_id": topic_id,
+                            "node_id": recommendation.get("id"),
+                            "channel_id": recommendation.get("channel_id"),
+                            "rank": recommendation.get("rank"),
+                        }
+                    )
 
         return flattened_response
 
-    def _unflatten_response(self, flattened_data: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def _unflatten_response(
+        self, flattened_data: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         """
         Transforms a flat list of recommendations back into the nested structure.
 
@@ -364,24 +387,26 @@ class RecommendationsAdapter(Adapter):
         topics_dict = {}
 
         for item in flattened_data:
-            topic_id = item.get('topic_id')
+            topic_id = item.get("topic_id")
 
             if topic_id not in topics_dict:
                 topics_dict[topic_id] = {
                     "id": topic_id.hex if isinstance(topic_id, uuid.UUID) else topic_id,
-                    "recommendations": []
+                    "recommendations": [],
                 }
 
-            node_id = item.get('node_id')
-            channel_id = item.get('channel_id')
-            topics_dict[topic_id]["recommendations"].append({
-                "id": node_id.hex if isinstance(node_id, uuid.UUID) else node_id,
-                "channel_id": channel_id.hex if isinstance(channel_id, uuid.UUID) else channel_id,
-                "rank": item.get('rank')
-            })
-        return {
-            "topics": list(topics_dict.values())
-        }
+            node_id = item.get("node_id")
+            channel_id = item.get("channel_id")
+            topics_dict[topic_id]["recommendations"].append(
+                {
+                    "id": node_id.hex if isinstance(node_id, uuid.UUID) else node_id,
+                    "channel_id": channel_id.hex
+                    if isinstance(channel_id, uuid.UUID)
+                    else channel_id,
+                    "rank": item.get("rank"),
+                }
+            )
+        return {"topics": list(topics_dict.values())}
 
     def _validate_nodes(self, nodes: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """
@@ -393,8 +418,11 @@ class RecommendationsAdapter(Adapter):
         """
         node_ids = self._extract_node_ids(nodes)
         existing_node_ids = set(
-            PublicContentNode.objects.filter(id__in=node_ids).values_list('id', flat=True))
-        return [node for node in nodes if node.get('node_id') in existing_node_ids]
+            PublicContentNode.objects.filter(id__in=node_ids).values_list(
+                "id", flat=True
+            )
+        )
+        return [node for node in nodes if node.get("node_id") in existing_node_ids]
 
     def _extract_node_ids(self, nodes: List[Dict[str, Any]]) -> List[str]:
         """
@@ -404,7 +432,7 @@ class RecommendationsAdapter(Adapter):
         :return: A list of node IDs.
         :rtype: List[str]
         """
-        return [node.get('node_id') for node in nodes]
+        return [node.get("node_id") for node in nodes]
 
     def _cast_to_uuid(self, field):
         """
@@ -415,8 +443,9 @@ class RecommendationsAdapter(Adapter):
         """
         return Cast(field, output_field=UUIDField())
 
-    def embed_content(self, channel_id: str,
-                      nodes: List[Union[ContentNode, PublicContentNode]]) -> bool:
+    def embed_content(
+        self, channel_id: str, nodes: List[Union[ContentNode, PublicContentNode]]
+    ) -> bool:
         """
         Embeds the content for the given nodes. This is an asynchronous process and could take a
         while to complete. This process is handled by our curriculum automation service.
@@ -434,13 +463,13 @@ class RecommendationsAdapter(Adapter):
 
         for i in range(0, len(nodes), 20):
             try:
-                batch = nodes[i:i + 20]
+                batch = nodes[i : i + 20]
                 content = [self.extract_content(node) for node in batch]
                 content_body = {
-                    'resources': content,
-                    'metadata': {
-                        'channel_id': channel_id,
-                    }
+                    "resources": content,
+                    "metadata": {
+                        "channel_id": channel_id,
+                    },
                 }
                 request = EmbedContentRequest(json=content_body)
                 self.backend.make_request(request)
@@ -529,9 +558,9 @@ class RecommendationsAdapter(Adapter):
         :rtype: Dict[str, Any]
         """
         return {
-            'url': file.file_on_disk,
-            'preset': file.preset_id,
-            'language': file.language.lang_code if file.language else None,
+            "url": file.file_on_disk,
+            "preset": file.preset_id,
+            "language": file.language.lang_code if file.language else None,
         }
 
 
@@ -545,9 +574,11 @@ class Recommendations(Backend):
             self._connected = super().connect()
         return self._connected
 
-    def make_request(self, request) -> Union[EmbeddingsResponse, RecommendationsResponse]:
+    def make_request(
+        self, request
+    ) -> Union[EmbeddingsResponse, RecommendationsResponse]:
         return super().make_request(request)
 
     @classmethod
-    def _create_instance(cls) -> 'Recommendations':
+    def _create_instance(cls) -> "Recommendations":
         return cls()

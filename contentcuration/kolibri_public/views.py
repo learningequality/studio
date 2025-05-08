@@ -51,7 +51,9 @@ logger = logging.getLogger(__name__)
 
 
 def get_last_modified(*args, **kwargs):
-    return models.ChannelMetadata.objects.all().aggregate(updated=Max("last_updated"))["updated"]
+    return models.ChannelMetadata.objects.all().aggregate(updated=Max("last_updated"))[
+        "updated"
+    ]
 
 
 def metadata_cache(some_func):
@@ -352,7 +354,9 @@ def map_file(file):
     file["file_size"] = file.pop("local_file__file_size")
     file["extension"] = file.pop("local_file__extension")
     # Swap in the contentcuration generate_storage_url function here
-    file["storage_url"] = generate_storage_url("{}.{}".format(file["checksum"], file["extension"]))
+    file["storage_url"] = generate_storage_url(
+        "{}.{}".format(file["checksum"], file["extension"])
+    )
     return file
 
 
@@ -454,9 +458,9 @@ class BaseContentNodeMixin(object):
             lang["id"]: lang
             # Add an annotation for lang_name to map to native_name to map from content curation model
             # to how we want to expose it for Kolibri.
-            for lang in models.Language.objects.filter(id__in=lang_ids).annotate(lang_name=F("native_name")).values(
-                "id", "lang_code", "lang_subcode", "lang_name", "lang_direction"
-            )
+            for lang in models.Language.objects.filter(id__in=lang_ids)
+            .annotate(lang_name=F("native_name"))
+            .values("id", "lang_code", "lang_subcode", "lang_name", "lang_direction")
         }
 
         for f in files:
@@ -673,9 +677,7 @@ class TreeQueryMixin(object):
 
 
 @method_decorator(metadata_cache, name="dispatch")
-class ContentNodeTreeViewset(
-    BaseContentNodeMixin, TreeQueryMixin, BaseValuesViewset
-):
+class ContentNodeTreeViewset(BaseContentNodeMixin, TreeQueryMixin, BaseValuesViewset):
     def retrieve(self, request, pk=None):
         """
         A nested, paginated representation of the children and grandchildren of a specific node
@@ -704,8 +706,7 @@ class ContentNodeTreeViewset(
             UUID(pk)
         except ValueError:
             return Response(
-                {"error": "Invalid UUID format."},
-                status=status.HTTP_400_BAD_REQUEST
+                {"error": "Invalid UUID format."}, status=status.HTTP_400_BAD_REQUEST
             )
 
         queryset = self.get_tree_queryset(request, pk)

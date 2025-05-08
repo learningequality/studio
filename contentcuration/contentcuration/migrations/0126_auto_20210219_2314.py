@@ -7,13 +7,35 @@ from django.db import models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('contentcuration', '0125_user_feature_flags_default'),
+        ("contentcuration", "0125_user_feature_flags_default"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='fileformat',
-            name='extension',
-            field=models.CharField(choices=[('mp4', 'MP4 Video'), ('webm', 'WEBM Video'), ('vtt', 'VTT Subtitle'), ('mp3', 'MP3 Audio'), ('pdf', 'PDF Document'), ('jpg', 'JPG Image'), ('jpeg', 'JPEG Image'), ('png', 'PNG Image'), ('gif', 'GIF Image'), ('json', 'JSON'), ('svg', 'SVG Image'), ('perseus', 'Perseus Exercise'), ('graphie', 'Graphie Exercise'), ('zip', 'HTML5 Zip'), ('h5p', 'H5P'), ('epub', 'ePub Document')], max_length=40, primary_key=True, serialize=False),
+            model_name="fileformat",
+            name="extension",
+            field=models.CharField(
+                choices=[
+                    ("mp4", "MP4 Video"),
+                    ("webm", "WEBM Video"),
+                    ("vtt", "VTT Subtitle"),
+                    ("mp3", "MP3 Audio"),
+                    ("pdf", "PDF Document"),
+                    ("jpg", "JPG Image"),
+                    ("jpeg", "JPEG Image"),
+                    ("png", "PNG Image"),
+                    ("gif", "GIF Image"),
+                    ("json", "JSON"),
+                    ("svg", "SVG Image"),
+                    ("perseus", "Perseus Exercise"),
+                    ("graphie", "Graphie Exercise"),
+                    ("zip", "HTML5 Zip"),
+                    ("h5p", "H5P"),
+                    ("epub", "ePub Document"),
+                ],
+                max_length=40,
+                primary_key=True,
+                serialize=False,
+            ),
         ),
     ]

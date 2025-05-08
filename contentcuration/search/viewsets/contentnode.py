@@ -50,11 +50,17 @@ class ContentNodeFilter(RequiredFilterSet):
         if value == "public":
             channel_ids = Channel.get_public_channels().values_list("id", flat=True)
         elif value == "edit" and user:
-            channel_ids = user.editable_channels.filter(deleted=False).values_list("id", flat=True)
+            channel_ids = user.editable_channels.filter(deleted=False).values_list(
+                "id", flat=True
+            )
         elif value == "bookmark" and user:
-            channel_ids = user.bookmarked_channels.filter(deleted=False).values_list("id", flat=True)
+            channel_ids = user.bookmarked_channels.filter(deleted=False).values_list(
+                "id", flat=True
+            )
         elif value == "view" and user:
-            channel_ids = user.view_only_channels.filter(deleted=False).values_list("id", flat=True)
+            channel_ids = user.view_only_channels.filter(deleted=False).values_list(
+                "id", flat=True
+            )
 
         return queryset.filter(channel_id__in=list(channel_ids))
 
@@ -119,7 +125,6 @@ class SearchContentNodeViewSet(ReadOnlyValuesViewset):
         "channel_id",
         "resource_count",
         "original_channel_name",
-
         # TODO: currently loading nodes separately
         # "thumbnail_checksum",
         # "thumbnail_extension",
@@ -138,18 +143,21 @@ class SearchContentNodeViewSet(ReadOnlyValuesViewset):
         """
         Annotates thumbnails, resources count and original channel name.
         """
-        descendant_resources_count = ExpressionWrapper(((F("contentnode__rght") - F("contentnode__lft") - Value(1)) / Value(2)), output_field=IntegerField())
+        descendant_resources_count = ExpressionWrapper(
+            ((F("contentnode__rght") - F("contentnode__lft") - Value(1)) / Value(2)),
+            output_field=IntegerField(),
+        )
 
         original_channel_name = Coalesce(
             Subquery(
-                Channel.objects.filter(pk=OuterRef("contentnode__original_channel_id")).values(
-                    "name"
-                )[:1]
+                Channel.objects.filter(
+                    pk=OuterRef("contentnode__original_channel_id")
+                ).values("name")[:1]
             ),
             Subquery(
-                Channel.objects.filter(main_tree__tree_id=OuterRef("contentnode__tree_id")).values(
-                    "name"
-                )[:1]
+                Channel.objects.filter(
+                    main_tree__tree_id=OuterRef("contentnode__tree_id")
+                ).values("name")[:1]
             ),
         )
 

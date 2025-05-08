@@ -16,7 +16,9 @@ class AutomationManager:
         self.instance = self.factory.create_backend()
         self.adapter = RecommendationsAdapter(self.instance)
 
-    def generate_embeddings(self, channel_id: str, nodes: List[Union[ContentNode, PublicContentNode]]):
+    def generate_embeddings(
+        self, channel_id: str, nodes: List[Union[ContentNode, PublicContentNode]]
+    ):
         """
         Generates embeddings for the given list of nodes. This process is async.
 
@@ -27,7 +29,9 @@ class AutomationManager:
         """
         return self.adapter.embed_content(channel_id, nodes)
 
-    def load_recommendations(self, request_data: Dict[str, Any], override_threshold=False):
+    def load_recommendations(
+        self, request_data: Dict[str, Any], override_threshold=False
+    ):
         """
         Loads recommendations for the given topic(s).
 

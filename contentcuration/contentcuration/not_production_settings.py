@@ -3,8 +3,8 @@ from .settings import *  # noqa
 ALLOWED_HOSTS = ["studio.local", "192.168.31.9", "127.0.0.1", "*"]
 
 ACCOUNT_ACTIVATION_DAYS = 7
-EMAIL_BACKEND = 'postmark.django_backend.EmailBackend'
-POSTMARK_API_KEY = 'POSTMARK_API_TEST'
+EMAIL_BACKEND = "postmark.django_backend.EmailBackend"
+POSTMARK_API_KEY = "POSTMARK_API_TEST"
 POSTMARK_TEST_MODE = True
 
 SITE_ID = 2

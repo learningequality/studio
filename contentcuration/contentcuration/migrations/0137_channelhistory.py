@@ -9,26 +9,61 @@ from django.db import models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('contentcuration', '0136_contentnode_suggested_duration'),
+        ("contentcuration", "0136_contentnode_suggested_duration"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='ChannelHistory',
+            name="ChannelHistory",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('performed', models.DateTimeField(default=django.utils.timezone.now)),
-                ('action', models.CharField(choices=[('creation', 'Creation'), ('publication', 'Publication'), ('deletion', 'Deletion'), ('recovery', 'Deletion recovery')], max_length=50)),
-                ('actor', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='channel_history', to=settings.AUTH_USER_MODEL)),
-                ('channel', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='history', to='contentcuration.channel')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("performed", models.DateTimeField(default=django.utils.timezone.now)),
+                (
+                    "action",
+                    models.CharField(
+                        choices=[
+                            ("creation", "Creation"),
+                            ("publication", "Publication"),
+                            ("deletion", "Deletion"),
+                            ("recovery", "Deletion recovery"),
+                        ],
+                        max_length=50,
+                    ),
+                ),
+                (
+                    "actor",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="channel_history",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "channel",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="history",
+                        to="contentcuration.channel",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Channel history',
-                'verbose_name_plural': 'Channel histories',
+                "verbose_name": "Channel history",
+                "verbose_name_plural": "Channel histories",
             },
         ),
         migrations.AddIndex(
-            model_name='channelhistory',
-            index=models.Index(fields=['channel_id'], name='idx_channel_history_channel_id'),
+            model_name="channelhistory",
+            index=models.Index(
+                fields=["channel_id"], name="idx_channel_history_channel_id"
+            ),
         ),
     ]

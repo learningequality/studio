@@ -83,9 +83,7 @@ def sync_node(
             sync_node_tags(node, original_node)
         if sync_files:
             sync_node_files(node, original_node)
-        if (
-            sync_assessment_items and node.kind_id == content_kinds.EXERCISE
-        ):
+        if sync_assessment_items and node.kind_id == content_kinds.EXERCISE:
             sync_node_assessment_items(node, original_node)
     return node
 
@@ -109,7 +107,8 @@ def sync_node_tags(node, original):
         tag_name__in=node.tags.values_list("tag_name", flat=True)
     ):
         new_tag = ContentTag.objects.filter(
-            tag_name=tag.tag_name, channel_id=None,
+            tag_name=tag.tag_name,
+            channel_id=None,
         ).first()
         if not new_tag:
             new_tag = ContentTag.objects.create(tag_name=tag.tag_name, channel_id=None)

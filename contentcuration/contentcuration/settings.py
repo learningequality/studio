@@ -35,29 +35,34 @@ CSV_ROOT = "csvs"
 EXPORT_ROOT = "exports"
 
 BETA_MODE = os.getenv("STUDIO_BETA_MODE")
-RUNNING_TESTS = (sys.argv[1:2] == ['test'] or os.path.basename(sys.argv[0]) == 'pytest')
+RUNNING_TESTS = sys.argv[1:2] == ["test"] or os.path.basename(sys.argv[0]) == "pytest"
 
 # hardcoding all this info for now. Potential for shared reference with webpack?
 WEBPACK_LOADER = {
-    'DEFAULT': {
+    "DEFAULT": {
         # trailing empty string to include trailing /
-        'BUNDLE_DIR_NAME': os.path.join('studio', ''),
-        'STATS_FILE': os.path.join(BASE_DIR, 'build', 'webpack-stats.json'),
+        "BUNDLE_DIR_NAME": os.path.join("studio", ""),
+        "STATS_FILE": os.path.join(BASE_DIR, "build", "webpack-stats.json"),
     }
 }
 
-PERMISSION_TEMPLATE_ROOT = os.path.join(BASE_DIR, "contentcuration", "templates", "permissions")
+PERMISSION_TEMPLATE_ROOT = os.path.join(
+    BASE_DIR, "contentcuration", "templates", "permissions"
+)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.8/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv("DJANGO_SECRET_KEY") or '_s0k@&o%m6bzg7s(0p(w6z5xbo%vy%mj+xx(w3mhs=f0ve0+h2'
+SECRET_KEY = (
+    os.getenv("DJANGO_SECRET_KEY")
+    or "_s0k@&o%m6bzg7s(0p(w6z5xbo%vy%mj+xx(w3mhs=f0ve0+h2"
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 # DEBUG = True
 
-SESSION_COOKIE_NAME = 'kolibri_studio_sessionid'
+SESSION_COOKIE_NAME = "kolibri_studio_sessionid"
 
 ALLOWED_HOSTS = ["*"]  # In production, we serve through a file socket, so this is OK.
 
@@ -65,74 +70,75 @@ ALLOWED_HOSTS = ["*"]  # In production, we serve through a file socket, so this 
 # Application definition
 
 INSTALLED_APPS = (
-    'contentcuration.apps.ContentConfig',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.admin',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.sites',
-    'django.contrib.staticfiles',
-    'rest_framework',
-    'django_js_reverse',
-    'kolibri_content',
-    'readonly',
-    'le_utils',
-    'rest_framework.authtoken',
-    'search',
-    'django_s3_storage',
-    'webpack_loader',
-    'django_filters',
-    'django.contrib.postgres',
-    'django_celery_results',
-    'kolibri_public',
-    'automation',
+    "contentcuration.apps.ContentConfig",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.admin",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.sites",
+    "django.contrib.staticfiles",
+    "rest_framework",
+    "django_js_reverse",
+    "kolibri_content",
+    "readonly",
+    "le_utils",
+    "rest_framework.authtoken",
+    "search",
+    "django_s3_storage",
+    "webpack_loader",
+    "django_filters",
+    "django.contrib.postgres",
+    "django_celery_results",
+    "kolibri_public",
+    "automation",
 )
 
 SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"
 
 REDIS_URL = "redis://:{password}@{endpoint}/".format(
     password=os.getenv("CELERY_REDIS_PASSWORD") or "",
-    endpoint=os.getenv("CELERY_BROKER_ENDPOINT") or "localhost:6379")
+    endpoint=os.getenv("CELERY_BROKER_ENDPOINT") or "localhost:6379",
+)
 
 CACHE_REDIS_DB = os.getenv("CACHE_REDIS_DB") or "1"
 
 CACHES = {
-    'default': {
-        'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': '{url}{db}'.format(url=REDIS_URL, db=CACHE_REDIS_DB),
-        'OPTIONS': {
-            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-        }
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "{url}{db}".format(url=REDIS_URL, db=CACHE_REDIS_DB),
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        },
     }
 }
 
 # READ-ONLY SETTINGS
 # Set STUDIO_INCIDENT_TYPE to a key from contentcuration.utils.incidents to activate
-INCIDENT_TYPE = os.getenv('STUDIO_INCIDENT_TYPE')
+INCIDENT_TYPE = os.getenv("STUDIO_INCIDENT_TYPE")
 INCIDENT = INCIDENTS.get(INCIDENT_TYPE)
-SITE_READ_ONLY = INCIDENT and INCIDENT['readonly']
+SITE_READ_ONLY = INCIDENT and INCIDENT["readonly"]
 
 # If Studio is in readonly mode, it will throw a DatabaseWriteError
 # Use a local cache to bypass the readonly property
 if SITE_READ_ONLY:
-    CACHES['default']['BACKEND'] = 'django.core.cache.backends.locmem.LocMemCache'
-    CACHES['default']['LOCATION'] = 'readonly_cache'
+    CACHES["default"]["BACKEND"] = "django.core.cache.backends.locmem.LocMemCache"
+    CACHES["default"]["LOCATION"] = "readonly_cache"
 
 
 MIDDLEWARE = (
     # 'django.middleware.cache.UpdateCacheMiddleware',
-    'contentcuration.middleware.session.KolibriStudioSessionMiddleware',
-    'contentcuration.middleware.locale.KolibriStudioLocaleMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.common.BrokenLinkEmailsMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.middleware.http.ConditionalGetMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'django.middleware.security.SecurityMiddleware',
-    'contentcuration.middleware.db_readonly.DatabaseReadOnlyMiddleware',
+    "contentcuration.middleware.session.KolibriStudioSessionMiddleware",
+    "contentcuration.middleware.locale.KolibriStudioLocaleMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.common.BrokenLinkEmailsMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.middleware.http.ConditionalGetMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "django.middleware.security.SecurityMiddleware",
+    "contentcuration.middleware.db_readonly.DatabaseReadOnlyMiddleware",
     # 'django.middleware.cache.FetchFromCacheMiddleware',
 )
 
@@ -142,114 +148,109 @@ if os.getenv("GCLOUD_ERROR_REPORTING"):
     ) + MIDDLEWARE
 
 SUPPORTED_BROWSERS = [
-    'Chrome',
-    'Firefox',
-    'Safari',
+    "Chrome",
+    "Firefox",
+    "Safari",
 ]
 
-HEALTH_CHECK_BROWSERS = [
-    'kube-probe',
-    'GoogleHC',
-    'Studio-Internal-Prober'
-]
+HEALTH_CHECK_BROWSERS = ["kube-probe", "GoogleHC", "Studio-Internal-Prober"]
 
 REST_FRAMEWORK = {
-    'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',
-    ),
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework.authentication.SessionAuthentication',
+    "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework.authentication.SessionAuthentication",
         # 'rest_framework.authentication.BasicAuthentication',
-        'rest_framework.authentication.TokenAuthentication',
-    )
+        "rest_framework.authentication.TokenAuthentication",
+    ),
 }
 
-ROOT_URLCONF = 'contentcuration.urls'
+ROOT_URLCONF = "contentcuration.urls"
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': ['/templates/'],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
-                'readonly.context_processors.readonly',
-                'contentcuration.context_processors.site_variables',
-                'contentcuration.context_processors.url_tag',
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": ["/templates/"],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.debug",
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
+                "readonly.context_processors.readonly",
+                "contentcuration.context_processors.site_variables",
+                "contentcuration.context_processors.url_tag",
             ],
         },
     },
 ]
 
-WSGI_APPLICATION = 'contentcuration.wsgi.application'
+WSGI_APPLICATION = "contentcuration.wsgi.application"
 
 
 # Database
 # https://docs.djangoproject.com/en/1.8/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': os.getenv("DATA_DB_NAME") or 'kolibri-studio',
+    "default": {
+        "ENGINE": "django.db.backends.postgresql_psycopg2",
+        "NAME": os.getenv("DATA_DB_NAME") or "kolibri-studio",
         # For dev purposes only
-        'USER': os.getenv('DATA_DB_USER') or 'learningequality',
-        'PASSWORD': os.getenv('DATA_DB_PASS') or 'kolibri',
-        'HOST': os.getenv('DATA_DB_HOST') or 'localhost',      # Empty for localhost through domain sockets or '127.0.0.1' for localhost through TCP.
-        'PORT': '',                      # Set to empty string for default.
+        "USER": os.getenv("DATA_DB_USER") or "learningequality",
+        "PASSWORD": os.getenv("DATA_DB_PASS") or "kolibri",
+        "HOST": os.getenv("DATA_DB_HOST")
+        or "localhost",  # Empty for localhost through domain sockets or '127.0.0.1' for localhost through TCP.
+        "PORT": "",  # Set to empty string for default.
     },
 }
 
-IS_CONTENTNODE_TABLE_PARTITIONED = os.getenv("IS_CONTENTNODE_TABLE_PARTITIONED") or False
+IS_CONTENTNODE_TABLE_PARTITIONED = (
+    os.getenv("IS_CONTENTNODE_TABLE_PARTITIONED") or False
+)
 
 DATABASE_ROUTERS = [
     "kolibri_content.router.ContentDBRouter",
 ]
 
 LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'file': {
-            'level': 'DEBUG',
-            'class': 'logging.FileHandler',
-            'filename': os.getenv('DJANGO_LOG_FILE') or 'django.log'
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "file": {
+            "level": "DEBUG",
+            "class": "logging.FileHandler",
+            "filename": os.getenv("DJANGO_LOG_FILE") or "django.log",
         },
-        'console': {
-            'class': 'logging.StreamHandler',
+        "console": {
+            "class": "logging.StreamHandler",
         },
-        'null': {
-            'class': 'logging.NullHandler'
-        }
+        "null": {"class": "logging.NullHandler"},
     },
-    'loggers': {
-        'command': {
-            'handlers': ['console'],
-            'level': 'DEBUG' if globals().get('DEBUG') else 'INFO',
-            'propagate': True,
+    "loggers": {
+        "command": {
+            "handlers": ["console"],
+            "level": "DEBUG" if globals().get("DEBUG") else "INFO",
+            "propagate": True,
         },
-        'django': {
-            'handlers': ['file', 'console'],
-            'level': 'DEBUG' if globals().get('DEBUG') else 'INFO',
-            'propagate': True,
+        "django": {
+            "handlers": ["file", "console"],
+            "level": "DEBUG" if globals().get("DEBUG") else "INFO",
+            "propagate": True,
         },
-        'django.db.backends': {
-            'handlers': ['null'],
-            'propagate': False,
-            'level': 'DEBUG'
-        }
-    }
+        "django.db.backends": {
+            "handlers": ["null"],
+            "propagate": False,
+            "level": "DEBUG",
+        },
+    },
 }
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.8/topics/i18n/
 
-LANGUAGE_CODE = 'en'
+LANGUAGE_CODE = "en"
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = "UTC"
 
 USE_I18N = True
 
@@ -257,9 +258,7 @@ USE_L10N = True
 
 USE_TZ = True
 
-LOCALE_PATHS = (
-    os.path.join(BASE_DIR, 'locale'),
-)
+LOCALE_PATHS = (os.path.join(BASE_DIR, "locale"),)
 
 
 def gettext(s):
@@ -267,40 +266,40 @@ def gettext(s):
 
 
 LANGUAGES = (
-    ('en', gettext('English')),
-    ('es-es', gettext('Spanish')),
-    ('ar', gettext('Arabic')),
-    ('fr-fr', gettext('French')),
-    ('pt-br', gettext('Portuguese')),
+    ("en", gettext("English")),
+    ("es-es", gettext("Spanish")),
+    ("ar", gettext("Arabic")),
+    ("fr-fr", gettext("French")),
+    ("pt-br", gettext("Portuguese")),
     # ('en-PT', gettext('English - Pirate')),
 )
 
 PRODUCTION_SITE_ID = 1
 SITE_BY_ID = {
-    'master': PRODUCTION_SITE_ID,
-    'unstable': 3,
-    'hotfixes': 4,
+    "master": PRODUCTION_SITE_ID,
+    "unstable": 3,
+    "hotfixes": 4,
 }
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
 
-STATIC_URL = '/static/'
+STATIC_URL = "/static/"
 
-STORAGE_URL = '/content/storage/'
+STORAGE_URL = "/content/storage/"
 
-CONTENT_DATABASE_URL = '/content/databases/'
+CONTENT_DATABASE_URL = "/content/databases/"
 
-CSV_URL = '/content/csvs/'
+CSV_URL = "/content/csvs/"
 
-LOGIN_REDIRECT_URL = '/channels/'
-LOGIN_URL = '/accounts/'
+LOGIN_REDIRECT_URL = "/channels/"
+LOGIN_URL = "/accounts/"
 
-AUTH_USER_MODEL = 'contentcuration.User'
+AUTH_USER_MODEL = "contentcuration.User"
 
 ACCOUNT_ACTIVATION_DAYS = 7
 REGISTRATION_OPEN = True
-SITE_ID = SITE_BY_ID.get(os.getenv('BRANCH_ENVIRONMENT'), 1)
+SITE_ID = SITE_BY_ID.get(os.getenv("BRANCH_ENVIRONMENT"), 1)
 
 # Used for serializing datetime objects.
 DATE_TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
@@ -309,11 +308,11 @@ POSTMARK_SSL = True
 SEND_USER_ACTIVATION_NOTIFICATION_EMAIL = bool(
     os.getenv("SEND_USER_ACTIVATION_NOTIFICATION_EMAIL")
 )
-SPACE_REQUEST_EMAIL = 'content@learningequality.org'
-REGISTRATION_INFORMATION_EMAIL = 'studio-registrations@learningequality.org'
-HELP_EMAIL = 'content@learningequality.org'
-DEFAULT_FROM_EMAIL = 'Kolibri Studio <noreply@learningequality.org>'
-POLICY_EMAIL = 'legal@learningequality.org'
+SPACE_REQUEST_EMAIL = "content@learningequality.org"
+REGISTRATION_INFORMATION_EMAIL = "studio-registrations@learningequality.org"
+HELP_EMAIL = "content@learningequality.org"
+DEFAULT_FROM_EMAIL = "Kolibri Studio <noreply@learningequality.org>"
+POLICY_EMAIL = "legal@learningequality.org"
 
 # Used to determine how many days a user
 # has to undo accidentally deleting account.
@@ -321,33 +320,30 @@ ACCOUNT_DELETION_BUFFER = 90
 
 DEFAULT_LICENSE = 1
 
-SERVER_EMAIL = 'curation-errors@learningequality.org'
-ADMINS = [('Errors', SERVER_EMAIL)]
+SERVER_EMAIL = "curation-errors@learningequality.org"
+ADMINS = [("Errors", SERVER_EMAIL)]
 
 DEFAULT_TITLE = "Kolibri Studio"
 
 IGNORABLE_404_URLS = [
-    re.compile(r'\.(php|cgi)$'),
-    re.compile(r'^/phpmyadmin/'),
-    re.compile(r'^/apple-touch-icon.*\.png$'),
-    re.compile(r'^/favicon\.ico$'),
-    re.compile(r'^/robots\.txt$'),
+    re.compile(r"\.(php|cgi)$"),
+    re.compile(r"^/phpmyadmin/"),
+    re.compile(r"^/apple-touch-icon.*\.png$"),
+    re.compile(r"^/favicon\.ico$"),
+    re.compile(r"^/robots\.txt$"),
 ]
 
 # CELERY CONFIGURATIONS
 CELERY_REDIS_DB = os.getenv("CELERY_REDIS_DB") or "0"
 CELERY = {
-    "broker_url": "{url}{db}".format(
-        url=REDIS_URL,
-        db=CELERY_REDIS_DB
-    ),
+    "broker_url": "{url}{db}".format(url=REDIS_URL, db=CELERY_REDIS_DB),
     # with a redis broker, tasks will be re-sent if not completed within the duration of this timeout
     "broker_transport_options": {"visibility_timeout": 4 * 3600},
     "redis_db": CELERY_REDIS_DB,
     "result_backend": "django-db",
     "redis_backend_health_check_interval": 600,
-    "timezone": os.getenv("CELERY_TIMEZONE") or 'Africa/Nairobi',
-    "accept_content": ['application/json'],
+    "timezone": os.getenv("CELERY_TIMEZONE") or "Africa/Nairobi",
+    "accept_content": ["application/json"],
     "task_serializer": "json",
     "result_serializer": "json",
     "result_extended": True,
@@ -361,11 +357,11 @@ TWO_WEEKS_AGO = now() - timedelta(days=14)
 ORPHAN_DATE_CLEAN_UP_THRESHOLD = TWO_WEEKS_AGO
 
 # CLOUD STORAGE SETTINGS
-DEFAULT_FILE_STORAGE = 'django_s3_storage.storage.S3Storage'
-AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID') or 'development'
-AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY') or 'development'
-AWS_S3_BUCKET_NAME = os.getenv('AWS_BUCKET_NAME') or 'content'
-AWS_S3_ENDPOINT_URL = os.getenv('AWS_S3_ENDPOINT_URL') or 'http://localhost:9000'
+DEFAULT_FILE_STORAGE = "django_s3_storage.storage.S3Storage"
+AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID") or "development"
+AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY") or "development"
+AWS_S3_BUCKET_NAME = os.getenv("AWS_BUCKET_NAME") or "content"
+AWS_S3_ENDPOINT_URL = os.getenv("AWS_S3_ENDPOINT_URL") or "http://localhost:9000"
 AWS_AUTO_CREATE_BUCKET = False
 AWS_S3_FILE_OVERWRITE = True
 AWS_S3_BUCKET_AUTH = False
@@ -374,7 +370,9 @@ AWS_S3_BUCKET_AUTH = False
 # defaults to what's inferred from the environment. See
 # https://cloud.google.com/docs/authentication/production
 # for how these credentials are inferred automatically.
-GCS_STORAGE_SERVICE_ACCOUNT_KEY_PATH = os.getenv("GOOGLE_CLOUD_STORAGE_SERVICE_ACCOUNT_CREDENTIALS")
+GCS_STORAGE_SERVICE_ACCOUNT_KEY_PATH = os.getenv(
+    "GOOGLE_CLOUD_STORAGE_SERVICE_ACCOUNT_CREDENTIALS"
+)
 
 # GOOGLE DRIVE SETTINGS
 GOOGLE_AUTH_JSON = "credentials/client_secret.json"
@@ -401,13 +399,14 @@ key = get_secret("SENTRY_DSN_KEY")
 if key:
     key = key.strip()  # strip any possible whitespace or trailing newline
 
-SENTRY_DSN = 'https://{secret}@sentry.io/1252819'.format(secret=key) if key else None
+SENTRY_DSN = "https://{secret}@sentry.io/1252819".format(secret=key) if key else None
 SENTRY_ENVIRONMENT = get_secret("BRANCH_ENVIRONMENT")
 SENTRY_RELEASE = os.environ.get("RELEASE_COMMIT_SHA")
 SENTRY_ACTIVE = False
 
 if SENTRY_DSN and SENTRY_RELEASE and SENTRY_ENVIRONMENT:
     import sentry_sdk
+
     # TODO: there are also Celery and Redis integrations, but since they are new
     # I left them as a separate task so we can spend more time on testing.
     from sentry_sdk.integrations.django import DjangoIntegration

@@ -34,10 +34,10 @@ class MetadataCTE(object):
         return self.cte
 
     def build(self):
-        raise NotImplementedError('Build method must create CTE')
+        raise NotImplementedError("Build method must create CTE")
 
     def join(self, query):
-        raise NotImplementedError('Join method must join query with CTE')
+        raise NotImplementedError("Join method must join query with CTE")
 
     @property
     def col(self):
@@ -47,17 +47,19 @@ class MetadataCTE(object):
 class LeftContentCTE(MetadataCTE):
     def join(self, query):
         cte = self.get()
-        return cte.join(query, content_id=cte.col.content_id, _join_type=LOUTER).with_cte(cte)
+        return cte.join(
+            query, content_id=cte.col.content_id, _join_type=LOUTER
+        ).with_cte(cte)
 
 
 class TreeMetadataCTE(MetadataCTE):
-    columns = ['tree_id']
+    columns = ["tree_id"]
 
     def build(self):
-        tree_ids = self.query.values('tree_id')
+        tree_ids = self.query.values("tree_id")
         return With(
             ContentNode.objects.filter(tree_id__in=tree_ids).values(*set(self.columns)),
-            name='tree_cte'
+            name="tree_cte",
         )
 
     def join(self, query):
@@ -66,13 +68,14 @@ class TreeMetadataCTE(MetadataCTE):
 
 
 class AssessmentCountCTE(LeftContentCTE):
-    columns = ['content_id']
+    columns = ["content_id"]
 
     def build(self):
-        q = self.query.filter(kind_id=content_kinds.EXERCISE, assessment_items__deleted=False)\
-            .annotate(assessment_count=Count(F('assessment_items__id'), distinct=True))
+        q = self.query.filter(
+            kind_id=content_kinds.EXERCISE, assessment_items__deleted=False
+        ).annotate(assessment_count=Count(F("assessment_items__id"), distinct=True))
 
-        return With(q.values(*set(self.columns)), name='assessment_count_cte')
+        return With(q.values(*set(self.columns)), name="assessment_count_cte")
 
 
 class FileMetadataCTE(LeftContentCTE):
@@ -83,19 +86,22 @@ class FileMetadataCTE(LeftContentCTE):
 
         columns = set(self.columns)
         files = nodes.values(
-            'content_id',
-            **{column: F('files__{}'.format(column)) for column in columns}
+            "content_id",
+            **{column: F("files__{}".format(column)) for column in columns}
         ).distinct()
         assessment_files = nodes.values(
-            'content_id',
-            **{column: F('assessment_items__files__{}'.format(column)) for column in columns}
+            "content_id",
+            **{
+                column: F("assessment_items__files__{}".format(column))
+                for column in columns
+            }
         ).distinct()
 
-        return With(files.union(assessment_files).values(*columns), name='file_cte')
+        return With(files.union(assessment_files).values(*columns), name="file_cte")
 
 
 class ResourceSizeCTE(LeftContentCTE):
-    columns = ['content_id']
+    columns = ["content_id"]
 
     def build(self):
         """
@@ -103,20 +109,24 @@ class ResourceSizeCTE(LeftContentCTE):
         file records would produce incorrect result for resource sizes due to summing.
         """
         files_cte = FileMetadataCTE(self.query)
-        files_cte.add_columns(('file_size', 'checksum'))
+        files_cte.add_columns(("file_size", "checksum"))
 
-        resource_condition = BooleanComparison(F('kind_id'), '!=', Value(content_kinds.TOPIC))
+        resource_condition = BooleanComparison(
+            F("kind_id"), "!=", Value(content_kinds.TOPIC)
+        )
 
-        q = files_cte.join(self.query).annotate(resource_size=Sum(
-            Case(
-                # aggregate file_size when selected node is not a topic
-                When(
-                    condition=WhenQ(resource_condition),
-                    then=Coalesce(files_cte.col.file_size, Value(0)),
+        q = files_cte.join(self.query).annotate(
+            resource_size=Sum(
+                Case(
+                    # aggregate file_size when selected node is not a topic
+                    When(
+                        condition=WhenQ(resource_condition),
+                        then=Coalesce(files_cte.col.file_size, Value(0)),
+                    ),
+                    default=Value(0),
                 ),
-                default=Value(0)
-            ),
-            output_field=IntegerField()
-        ))
+                output_field=IntegerField(),
+            )
+        )
 
-        return With(q.values(*set(self.columns)), name='resource_size_cte')
+        return With(q.values(*set(self.columns)), name="resource_size_cte")

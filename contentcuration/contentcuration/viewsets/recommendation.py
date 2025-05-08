@@ -27,24 +27,34 @@ class RecommendationView(APIView):
         try:
             request_data = request.data
             # Remove and store override_threshold as it isn't defined in the schema
-            override_threshold = request_data.pop('override_threshold', False)
+            override_threshold = request_data.pop("override_threshold", False)
 
             embed_topics_request.validate(request_data)
         except jsonschema.ValidationError as e:
             logger.error("Schema validation error: %s", str(e))
-            return JsonResponse({"error": "Invalid request data. Please check the required fields."}, status=HTTPStatus.BAD_REQUEST)
+            return JsonResponse(
+                {"error": "Invalid request data. Please check the required fields."},
+                status=HTTPStatus.BAD_REQUEST,
+            )
 
         try:
-            recommendations = self.manager.load_recommendations(request_data, override_threshold)
+            recommendations = self.manager.load_recommendations(
+                request_data, override_threshold
+            )
             return JsonResponse(data=recommendations, safe=False)
         except errors.InvalidRequest:
-            return JsonResponse({"error": "Invalid input provided."},
-                                status=HTTPStatus.BAD_REQUEST)
+            return JsonResponse(
+                {"error": "Invalid input provided."}, status=HTTPStatus.BAD_REQUEST
+            )
         except errors.ConnectionError:
-            return JsonResponse({"error": "Recommendation service unavailable"},
-                                status=HTTPStatus.SERVICE_UNAVAILABLE)
+            return JsonResponse(
+                {"error": "Recommendation service unavailable"},
+                status=HTTPStatus.SERVICE_UNAVAILABLE,
+            )
         except errors.TimeoutError:
-            return JsonResponse({"error": "Connection to recommendation service timed out"},
-                                status=HTTPStatus.REQUEST_TIMEOUT)
+            return JsonResponse(
+                {"error": "Connection to recommendation service timed out"},
+                status=HTTPStatus.REQUEST_TIMEOUT,
+            )
         except errors.HttpError:
             return HttpResponseServerError("Unable to load recommendations")

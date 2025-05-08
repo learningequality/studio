@@ -7,13 +7,13 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('content', '0008_channelmetadata_tagline'),
+        ("content", "0008_channelmetadata_tagline"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='contentnode',
-            name='options',
+            model_name="contentnode",
+            name="options",
             field=jsonfield.fields.JSONField(default={}),
         ),
     ]

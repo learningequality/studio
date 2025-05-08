@@ -41,16 +41,7 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '18.x'
-    - name: Get pnpm store path
-      id: pnpm-store-path
-      run: echo "dir=$(pnpm store path)" >> $GITHUB_OUTPUT
-    - name: Cache Node.js modules
-      uses: actions/cache@v4
-      with:
-        path: ${{ steps.pnpm-store-path.outputs.dir }}
-        key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
-        restore-keys: |
-          ${{ runner.os }}-pnpm-
+        cache: 'pnpm'
     - name: Install dependencies
       run: |
         pnpm install --frozen-lockfile

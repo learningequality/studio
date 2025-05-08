@@ -9,7 +9,7 @@ import contentcuration.models
 class Migration(migrations.Migration):
     atomic = False
     dependencies = [
-        ('contentcuration', '0115_index_contentnode_node_id_field'),
+        ("contentcuration", "0115_index_contentnode_node_id_field"),
     ]
 
     operations = [
@@ -33,7 +33,6 @@ class Migration(migrations.Migration):
                 ),
             ],
         ),
-
         migrations.SeparateDatabaseAndState(
             state_operations=[
                 migrations.AddIndex(
@@ -56,12 +55,14 @@ class Migration(migrations.Migration):
                 ),
             ],
         ),
-
         migrations.SeparateDatabaseAndState(
             state_operations=[
                 migrations.AddIndex(
                     model_name="file",
-                    index=models.Index(fields=['checksum', 'file_size'], name="file_checksum_file_size_idx"),
+                    index=models.Index(
+                        fields=["checksum", "file_size"],
+                        name="file_checksum_file_size_idx",
+                    ),
                 ),
             ],
             database_operations=[
@@ -77,5 +78,4 @@ class Migration(migrations.Migration):
                 ),
             ],
         ),
-
     ]

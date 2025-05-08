@@ -6,13 +6,13 @@ from django.db import models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('contentcuration', '0152_alter_assessmentitem_type'),
+        ("contentcuration", "0152_alter_assessmentitem_type"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='recommendationsevent',
-            name='time_hidden',
+            model_name="recommendationsevent",
+            name="time_hidden",
             field=models.DateTimeField(blank=True, null=True),
         ),
     ]

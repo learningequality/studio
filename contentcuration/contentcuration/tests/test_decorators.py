@@ -20,4 +20,6 @@ class DecoratorsTestCase(StudioTestCase):
             mock_task.fetch_or_enqueue.assert_not_called()
 
         do_test()
-        mock_task.fetch_or_enqueue.assert_called_once_with(self.user, user_id=self.user.id)
+        mock_task.fetch_or_enqueue.assert_called_once_with(
+            self.user, user_id=self.user.id
+        )

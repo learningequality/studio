@@ -7,13 +7,15 @@ from django.db import models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('contentcuration', '0122_file_modified_index'),
+        ("contentcuration", "0122_file_modified_index"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='file',
-            name='modified',
-            field=models.DateTimeField(auto_now=True, null=True, verbose_name='modified'),
+            model_name="file",
+            name="modified",
+            field=models.DateTimeField(
+                auto_now=True, null=True, verbose_name="modified"
+            ),
         ),
     ]

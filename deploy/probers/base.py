@@ -17,7 +17,9 @@ class BaseProbe(object):
 
     def __init__(self):
         self.session = requests.Session()
-        self.session.headers.update({"User-Agent": "Studio-Internal-Prober={}".format(self.prober_name)})
+        self.session.headers.update(
+            {"User-Agent": "Studio-Internal-Prober={}".format(self.prober_name)}
+        )
 
     def do_probe(self):
         pass
@@ -35,7 +37,7 @@ class BaseProbe(object):
         headers = {
             "referer": url,
             "X-Studio-Internal-Prober": "LOGIN-PROBER",
-            'X-CSRFToken': csrf,
+            "X-CSRFToken": csrf,
         }
 
         r = self.session.post(
@@ -57,22 +59,31 @@ class BaseProbe(object):
         url = "{base_url}/{path}".format(base_url=STUDIO_BASE_URL, path=path_stripped)
         return url
 
-    def request(self, path, action="GET", data=None, headers=None, contenttype="application/json"):
+    def request(
+        self,
+        path,
+        action="GET",
+        data=None,
+        headers=None,
+        contenttype="application/json",
+    ):
         data = data or {}
         headers = headers or {}
 
         # Make sure session is logged in
-        if not self.session.cookies.get('csrftoken'):
+        if not self.session.cookies.get("csrftoken"):
             self._login()
 
         url = self._construct_studio_url(path)
 
-        headers.update({
-            'X-CSRFToken': self.session.cookies.get('csrftoken'),
-        })
+        headers.update(
+            {
+                "X-CSRFToken": self.session.cookies.get("csrftoken"),
+            }
+        )
 
-        headers.update({'Content-Type': contenttype})
-        headers.update({'X-Studio-Internal-Prober': self.prober_name})
+        headers.update({"Content-Type": contenttype})
+        headers.update({"X-Studio-Internal-Prober": self.prober_name})
         response = self.session.request(action, url, data=data, headers=headers)
         response.raise_for_status()
 
@@ -90,9 +101,11 @@ class BaseProbe(object):
         end_time = datetime.datetime.now()
         elapsed = (end_time - start_time).total_seconds() * 1000
 
-        print("{metric_name} {latency_ms}".format(
-            metric_name=self.metric,
-            latency_ms=elapsed))
+        print(  # noqa: T201
+            "{metric_name} {latency_ms}".format(
+                metric_name=self.metric, latency_ms=elapsed
+            )
+        )
 
 
 class ProberException(Exception):

@@ -24,32 +24,62 @@ from django.utils.translation import get_language
 
 LANGUAGE = get_language() or ""
 
-SEP = r','
-POINT = r'\.'
+SEP = r","
+POINT = r"\."
 if LANGUAGE.startswith("es"):
-    SEP = r'\.'
-    POINT = r','
+    SEP = r"\."
+    POINT = r","
 
-SIGN = r'-?'
-DIGIT = r'[0-9]'
-NON_ZERO_DIGIT = r'[1-9]'
+SIGN = r"-?"
+DIGIT = r"[0-9]"
+NON_ZERO_DIGIT = r"[1-9]"
 UNFORMATTED_INT = re.compile("{digit}*".format(digit=DIGIT))
-FORMATTED_INT = re.compile("{digit}{{1,3}}(?:{sep}{digit}{{3}})+".format(digit=DIGIT, sep=SEP))
-INTEGER = re.compile("({sign}(?:{formatted}|{unformatted}))".format(sign=SIGN, formatted=FORMATTED_INT.pattern, unformatted=UNFORMATTED_INT.pattern))
-DECIMAL = re.compile("({integer}{point}{unformatted})".format(integer=INTEGER.pattern, unformatted=UNFORMATTED_INT.pattern, point=POINT))
-NON_ZERO_INT = re.compile("({sign}{non_zero}(?:{digit}{{0,2}}(?:{sep}{digit}{{3}})+|{unformatted})?)".format(sign=SIGN,
-                                                                                                             non_zero=NON_ZERO_DIGIT,
-                                                                                                             digit=DIGIT,
-                                                                                                             unformatted=UNFORMATTED_INT.pattern,
-                                                                                                             sep=SEP))
-FRACTION = re.compile("({integer}/{non_zero})".format(integer=INTEGER.pattern, non_zero=NON_ZERO_INT.pattern))
-MIXED_NUMBER = re.compile("({integer}) +({fraction})".format(integer=INTEGER.pattern, fraction=FRACTION.pattern))
-VALID_NUMBER = re.compile("({decimal}|{mixed_number}|{fraction}|{integer})".format(decimal=DECIMAL.pattern,
-                                                                                   mixed_number=MIXED_NUMBER.pattern,
-                                                                                   fraction=FRACTION.pattern,
-                                                                                   integer=INTEGER.pattern))
+FORMATTED_INT = re.compile(
+    "{digit}{{1,3}}(?:{sep}{digit}{{3}})+".format(digit=DIGIT, sep=SEP)
+)
+INTEGER = re.compile(
+    "({sign}(?:{formatted}|{unformatted}))".format(
+        sign=SIGN, formatted=FORMATTED_INT.pattern, unformatted=UNFORMATTED_INT.pattern
+    )
+)
+DECIMAL = re.compile(
+    "({integer}{point}{unformatted})".format(
+        integer=INTEGER.pattern, unformatted=UNFORMATTED_INT.pattern, point=POINT
+    )
+)
+NON_ZERO_INT = re.compile(
+    "({sign}{non_zero}(?:{digit}{{0,2}}(?:{sep}{digit}{{3}})+|{unformatted})?)".format(
+        sign=SIGN,
+        non_zero=NON_ZERO_DIGIT,
+        digit=DIGIT,
+        unformatted=UNFORMATTED_INT.pattern,
+        sep=SEP,
+    )
+)
+FRACTION = re.compile(
+    "({integer}/{non_zero})".format(
+        integer=INTEGER.pattern, non_zero=NON_ZERO_INT.pattern
+    )
+)
+MIXED_NUMBER = re.compile(
+    "({integer}) +({fraction})".format(
+        integer=INTEGER.pattern, fraction=FRACTION.pattern
+    )
+)
+VALID_NUMBER = re.compile(
+    "({decimal}|{mixed_number}|{fraction}|{integer})".format(
+        decimal=DECIMAL.pattern,
+        mixed_number=MIXED_NUMBER.pattern,
+        fraction=FRACTION.pattern,
+        integer=INTEGER.pattern,
+    )
+)
 PERCENTAGE = re.compile("({num})%".format(num=VALID_NUMBER.pattern))
-EXPONENT = re.compile("((?:{decimal}|{integer})e\\+?{integer})".format(decimal=DECIMAL.pattern, integer=INTEGER.pattern))
+EXPONENT = re.compile(
+    "((?:{decimal}|{integer})e\\+?{integer})".format(
+        decimal=DECIMAL.pattern, integer=INTEGER.pattern
+    )
+)
 
 
 def extract_value(text):
@@ -58,7 +88,14 @@ def extract_value(text):
 
 def parse_valid_number(text):
     try:
-        return parse_exponent(text) or parse_percentage(text) or parse_mixed_number(text) or parse_fraction(text) or parse_decimal(text) or parse_integer(text)
+        return (
+            parse_exponent(text)
+            or parse_percentage(text)
+            or parse_mixed_number(text)
+            or parse_fraction(text)
+            or parse_decimal(text)
+            or parse_integer(text)
+        )
     except Exception:
         return None
 
@@ -75,14 +112,18 @@ def parse_decimal(text):
 
 def parse_fraction(text):
     match = FRACTION.search(text)
-    return match and float(parse_integer(match.group(2))) / float(parse_integer(match.group(3)))
+    return match and float(parse_integer(match.group(2))) / float(
+        parse_integer(match.group(3))
+    )
 
 
 def parse_mixed_number(text):
     match = MIXED_NUMBER.search(text)
     if match:
         number = parse_integer(match.group(1))
-        return (abs(number) + parse_fraction(match.group(3))) * (float(number) / float(abs(number)))
+        return (abs(number) + parse_fraction(match.group(3))) * (
+            float(number) / float(abs(number))
+        )
     return None
 
 
@@ -102,17 +143,21 @@ def parse_exponent(text):
 
 
 def to_en(text):
-    return text.replace(SEP, '').replace(POINT, '.')
+    return text.replace(SEP, "").replace(POINT, ".")
 
 
 def load_json_string(json_string):
     """
-        Using code from https://grimhacker.com/2016/04/24/loading-dirty-json-with-python/
-        Instead of using ast.literal_eval to process malformed json, load this way
-        Arg: json_string (str) to parse
-        Returns json generated from string
+    Using code from https://grimhacker.com/2016/04/24/loading-dirty-json-with-python/
+    Instead of using ast.literal_eval to process malformed json, load this way
+    Arg: json_string (str) to parse
+    Returns json generated from string
     """
-    regex_replace = [(r"([ \{,:\[])(u)?'([^']+)'", r'\1"\3"'), (r" False([, \}\]])", r' false\1'), (r" True([, \}\]])", r' true\1')]
+    regex_replace = [
+        (r"([ \{,:\[])(u)?'([^']+)'", r'\1"\3"'),
+        (r" False([, \}\]])", r" false\1"),
+        (r" True([, \}\]])", r" true\1"),
+    ]
     for r, s in regex_replace:
         json_string = re.sub(r, s, json_string)
     clean_json = json.loads(json_string)
