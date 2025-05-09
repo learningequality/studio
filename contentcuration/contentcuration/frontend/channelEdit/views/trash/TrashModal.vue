@@ -67,7 +67,7 @@
             </template>
           </VDataTable>
           <div class="show-more-button-container">
-            <KButton v-if="hasMore" :disabled="moreLoading" @click="loadMore">
+            <KButton v-if="more" :disabled="moreLoading" @click="loadMore">
               {{ showMoreLabel }}
             </KButton>
           </div>
@@ -216,10 +216,6 @@
         // eslint-disable-next-line kolibri/vue-no-undefined-string-uses
         return showMoreTranslator.$tr('showMore');
       },
-      // "hasMore" returns true only if "more" is a nonempty plain object.
-      hasMore() {
-        return this.more && Object.keys(this.more).length > 0;
-      },
     },
     watch: {
       dialog(newValue) {
@@ -290,26 +286,13 @@
         return this.previewNodeId === id ? this.$vuetify.theme.greyBackground : 'transparent';
       },
       loadMore() {
-        // Prevent further calls if "more" is falsy or already loading.
-        if (!this.more || this.moreLoading) return;
-        this.moreLoading = true;
-        // Capture current item count and clone "more" parameters.
-        const currentItemsLength = this.items.length;
-        const currentMore = JSON.stringify(this.more);
-        // Call loadContentNodes with a deep clone of the "more" object.
-        this.loadContentNodes(JSON.parse(JSON.stringify(this.more))).then(response => {
-          // If no new "more" is returned or item count hasn't increased, clear "more"
-          if (
-            !response.more ||
-            JSON.stringify(response.more) === currentMore ||
-            this.items.length === currentItemsLength
-          ) {
-            this.more = null;
-          } else {
-            this.more = response.more;
-          }
-          this.moreLoading = false;
-        });
+        if (this.more && !this.moreLoading) {
+          this.moreLoading = true;
+          this.loadContentNodes(this.more).then(response => {
+            this.more = response.more || null;
+            this.moreLoading = false;
+          });
+        }
       },
     },
     $trs: {
