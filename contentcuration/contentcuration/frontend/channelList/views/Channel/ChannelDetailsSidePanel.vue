@@ -7,7 +7,7 @@
     :permanent="true"
     :temporary="false"
     v-bind="$attrs"
-    style=" position: fixed; top: 0; right: 0;z-index: 10; height: 100vh"
+    style="position: fixed; top: 0; right: 0; z-index: 10; height: 100vh"
     @input="$emit('input', $event)"
     @resize="$emit('resize', $event)"
   >
