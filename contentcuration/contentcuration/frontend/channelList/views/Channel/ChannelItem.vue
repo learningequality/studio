@@ -363,7 +363,7 @@
           {
             key: 'open-tab-link',
             show:
-              !this.isInChannelList &&
+              !this.isInChannelList && (this.channel.demo_server_url || this.channel.source_url) &&
               ((this.loggedIn && !this.channel.demo_server_url && this.channel.source_url) ||
                 (this.loggedIn && !this.channel.source_url && this.channel.demo_server_url) ||
                 (!this.loggedIn &&
