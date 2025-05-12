@@ -135,7 +135,7 @@
               class="mr-1"
             />
 
-            <BaseMenu v-if="iconConfigs.find(config => config.key === 'kebab-menu').show">
+            <BaseMenu v-if="iconConfigs.find(config => config.key === 'kebab-menu')?.show">
               <template #activator="{ on }">
                 <VBtn
                   icon
