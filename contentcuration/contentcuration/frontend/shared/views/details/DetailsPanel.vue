@@ -36,7 +36,7 @@
       style="margin-left: -8px"
     >
       <VBtn
-        v-if="!loggedIn"
+        v-if="!loggedIn && _details.demo_server_url"
         color="primary"
         class="mr-2"
         @click="viewInKolibri"
@@ -49,7 +49,7 @@
         {{ $tr('viewInKolibri') }}
       </VBtn>
       <VBtn
-        v-else
+        v-else-if="_details.source_url"
         color="primary"
         class="mr-2"
         :href="channelHref"
