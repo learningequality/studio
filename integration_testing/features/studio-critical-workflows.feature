@@ -52,7 +52,7 @@ Feature: Studio critical workflows
 		Given I am signed-in to Studio
 			And I click the user profile icon
 		When I click *Change language*
-		Then I see a *Change language* modal window displayed with several languages to choose from
+		Then I see a *Change language* modal window with the available languages
 		When I click on a language which is not currently selected
 			And I click the *Confirm* button
 		Then the interface language changes to the selected language
