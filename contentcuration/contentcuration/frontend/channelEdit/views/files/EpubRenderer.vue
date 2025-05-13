@@ -81,6 +81,15 @@
         });
       }); // There seems to be some lag for loading, so add delay to be safe
     },
+    beforeDestroy() {
+      if (this.book) {
+        /**
+         * Destroy the book instance to remove listeners that causes some
+         * ResizeObserver errors in the console on unmount.
+         */
+        this.book.destroy();
+      }
+    },
   };
 
 </script>
