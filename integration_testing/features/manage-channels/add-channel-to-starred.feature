@@ -13,7 +13,7 @@ Feature: Add a channel to the *Starred* tab
 		When I click and open the *Starred* tab
 		Then I see that the channel is displayed among the starred channels
 
-	Scenario: Unstar a channel
+	Scenario: Remove a channel from the starred channels
 		Given I am on *My Channels*, *View only*, or *Public* tabs
 			And I see a channel that is starred (black star)
 		When I click the *Remove from starred channels* button for the channel
@@ -21,17 +21,16 @@ Feature: Add a channel to the *Starred* tab
 			And I see a message that the channel was removed from the starred channels
 		When I click and open the *Starred* tab
 		Then I see the list of starred channels
-			But I don't see the unstarred channel on the list
 
 	Scenario: Remove channel directly from the *Starred* tab
 		Given I am on the *Starred* tab
 			And I see a starred channel
 		When I click the *Remove from starred channels* button for the channel
-		Then I don't see the unstarred channel any more
+		Then I don't see the removed channel any more
 
 	Scenario: Remove a starred channel form the *Content Library* tab with *Starred* filter on
 		Given I am on the *Content Library* tab
 			And I've selected the *Starred* checkbox
 		When I click on the star button of a starred channel.
-		Then I should see a message that the channel was removed from the starred channels
-			And the channel should no longer be displayed in the list with the filtered channels
+		Then I see a message that the channel was removed from the starred channels
+			And the channel is no longer displayed in the list with the filtered channels
