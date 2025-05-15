@@ -2708,7 +2708,7 @@ class BaseFeedback(models.Model):
     # time_shown: timestamp of when the recommendations are first shown
     created_at = models.DateTimeField(auto_now_add=True)
 
-    # for RecommendationsEvent class conntentnode_id represents:
+    # for RecommendationsEvent class contentnode_id represents:
     # target_topic_id that the ID of the topic the user
     # initiated the import from (where the imported content will go)
     #
