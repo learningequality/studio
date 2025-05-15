@@ -6,6 +6,7 @@ from typing import Any
 from typing import Dict
 from typing import List
 from typing import Union
+from urllib.parse import urlparse
 
 from automation.models import RecommendationsCache
 from automation.utils.appnexus import errors
@@ -72,9 +73,23 @@ class EmbeddingsResponse(RecommendationsBackendResponse):
 
 
 class RecommendationsBackendFactory(BackendFactory):
+
+    def _ensure_url_has_scheme(self, url):
+        """
+        Checks whether the URL has a scheme. Default to http:// if no scheme exists.
+
+        :param url: The URL to check
+        :return: A URL with a scheme
+        """
+        if url:
+            parsed_url = urlparse(url)
+            if not parsed_url.scheme:
+                url = "http://" + url
+        return url
+
     def create_backend(self) -> Backend:
         backend = Recommendations()
-        backend.base_url = settings.CURRICULUM_AUTOMATION_API_URL
+        backend.base_url = self._ensure_url_has_scheme(settings.CURRICULUM_AUTOMATION_API_URL)
         backend.connect_endpoint = "/connect"
         return backend
 

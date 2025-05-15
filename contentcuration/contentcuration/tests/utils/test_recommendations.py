@@ -17,6 +17,7 @@ from contentcuration.utils.recommendations import EmbeddingsResponse
 from contentcuration.utils.recommendations import EmbedTopicsRequest
 from contentcuration.utils.recommendations import Recommendations
 from contentcuration.utils.recommendations import RecommendationsAdapter
+from contentcuration.utils.recommendations import RecommendationsBackendFactory
 from contentcuration.utils.recommendations import RecommendationsResponse
 
 
@@ -391,3 +392,70 @@ class RecommendationsAdapterTestCase(StudioTestCase):
             "files": [],
         }
         self.extract_content_test_helper(mock_node, [], expected_result)
+
+
+class RecommendationsBackendFactoryTestCases(TestCase):
+
+    def setUp(self):
+        self.factory = RecommendationsBackendFactory()
+
+    def test_ensure_url_has_scheme_with_no_scheme(self):
+        url = "example.com"
+        result = self.factory._ensure_url_has_scheme(url)
+        self.assertEqual(result, "http://example.com")
+
+    def test_ensure_url_has_scheme_with_http(self):
+        url = "http://example.com"
+        result = self.factory._ensure_url_has_scheme(url)
+        self.assertEqual(result, url)
+
+    def test_ensure_url_has_scheme_with_https(self):
+        url = "https://example.com"
+        result = self.factory._ensure_url_has_scheme(url)
+        self.assertEqual(result, url)
+
+    def test_ensure_url_has_scheme_with_empty_url(self):
+        url = ""
+        result = self.factory._ensure_url_has_scheme(url)
+        self.assertEqual(result, url)
+
+    def test_ensure_url_has_scheme_with_none(self):
+        url = None
+        result = self.factory._ensure_url_has_scheme(url)
+        self.assertEqual(result, url)
+
+    @patch('contentcuration.utils.recommendations.settings')
+    def test_create_backend_with_url_no_scheme(self, mock_settings):
+        mock_settings.CURRICULUM_AUTOMATION_API_URL = "api.example.com"
+        backend = self.factory.create_backend()
+
+        self.assertIsInstance(backend, Recommendations)
+        self.assertEqual(backend.base_url, "http://api.example.com")
+        self.assertEqual(backend.connect_endpoint, "/connect")
+
+    @patch('contentcuration.utils.recommendations.settings')
+    def test_create_backend_with_url_with_scheme(self, mock_settings):
+        mock_settings.CURRICULUM_AUTOMATION_API_URL = "https://api.example.com"
+        backend = self.factory.create_backend()
+
+        self.assertIsInstance(backend, Recommendations)
+        self.assertEqual(backend.base_url, "https://api.example.com")
+        self.assertEqual(backend.connect_endpoint, "/connect")
+
+    @patch('contentcuration.utils.recommendations.settings')
+    def test_create_backend_with_empty_url(self, mock_settings):
+        mock_settings.CURRICULUM_AUTOMATION_API_URL = ""
+        backend = self.factory.create_backend()
+
+        self.assertIsInstance(backend, Recommendations)
+        self.assertEqual(backend.base_url, "")
+        self.assertEqual(backend.connect_endpoint, "/connect")
+
+    @patch('contentcuration.utils.recommendations.settings')
+    def test_create_backend_with_no_url(self, mock_settings):
+        mock_settings.CURRICULUM_AUTOMATION_API_URL = None
+        backend = self.factory.create_backend()
+
+        self.assertIsInstance(backend, Recommendations)
+        self.assertEqual(backend.base_url, None)
+        self.assertEqual(backend.connect_endpoint, "/connect")
