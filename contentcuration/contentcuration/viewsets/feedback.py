@@ -58,10 +58,13 @@ class RecommendationsInteractionEventSerializer(BaseFeedbackSerializer, BaseFeed
         fields = BaseFeedbackSerializer.Meta.fields + BaseFeedbackInteractionEventSerializer.Meta.fields + ['recommendation_event_id']
 
     def create(self, validated_data):
-        return RecommendationsInteractionEvent(**validated_data)
+        return RecommendationsInteractionEvent.objects.create(**validated_data)
 
     def update(self, instance, validated_data):
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
         instance.save()
+        return instance
 
 
 class RecommendationsEventSerializer(BaseFeedbackSerializer, BaseFeedbackEventSerializer):
@@ -72,52 +75,27 @@ class RecommendationsEventSerializer(BaseFeedbackSerializer, BaseFeedbackEventSe
         fields = BaseFeedbackSerializer.Meta.fields + BaseFeedbackEventSerializer.Meta.fields + ['content', 'time_hidden']
 
     def create(self, validated_data):
-        return RecommendationsEvent(**validated_data)
+        return RecommendationsEvent.objects.create(**validated_data)
 
     def update(self, instance, validated_data):
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
         instance.save()
+        return instance
 
 
-class RecommendationsInteractionEventViewSet(
-    viewsets.ViewSet,
-):
+class RecommendationsInteractionEventViewSet(viewsets.ModelViewSet):
+    # TODO: decide export procedure
     queryset = RecommendationsInteractionEvent.objects.all()
     serializer_class = RecommendationsInteractionEventSerializer
-
-    # TODO: decide export mechansim to make use of gathered data
-
-    def create(self, request):
-        pass
-
-    def update(self, request, pk=None):
-        pass
-
-    def partial_update(self, request, pk=None):
-        pass
-
-    def destroy(self, request, pk=None):
-        pass
+    http_method_names = ['post', 'put', 'patch', 'delete']
 
 
-class RecommendationsEventViewSet(
-    viewsets.ViewSet
-):
+class RecommendationsEventViewSet(viewsets.ModelViewSet):
+    # TODO: decide export procedure
     queryset = RecommendationsEvent.objects.all()
     serializer_class = RecommendationsEventSerializer
-
-    # TODO: decide export mechansim to make use of gathered data
-
-    def create(self, request):
-        pass
-
-    def update(self, request, pk=None):
-        pass
-
-    def partial_update(self, request, pk=None):
-        pass
-
-    def destroy(self, request, pk=None):
-        pass
+    http_method_names = ['post', 'put', 'patch', 'delete']
 
 
 class FlagFeedbackEventViewSet(viewsets.ModelViewSet):

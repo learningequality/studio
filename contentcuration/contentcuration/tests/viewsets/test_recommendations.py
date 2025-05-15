@@ -1,7 +1,11 @@
 from automation.utils.appnexus import errors
 from django.urls import reverse
+from le_utils.constants import content_kinds
 from mock import patch
 
+from contentcuration.models import RecommendationsEvent
+from contentcuration.models import RecommendationsInteractionEvent
+from contentcuration.tests import testdata
 from contentcuration.tests.base import StudioAPITestCase
 
 
@@ -125,3 +129,247 @@ class CRUDTestCase(StudioAPITestCase):
         self.assertEqual(response.status_code, 500)
         self.assertEqual(response.content.decode(), error_message)
         mock_load_recommendations.assert_called_once()
+
+
+class RecommendationsEventViewSetTestCase(StudioAPITestCase):
+    @property
+    def recommendations_event_object(self):
+        return {
+            'context': {'model_version': 1, 'breadcrumbs': "#Title#->Random"},
+            'contentnode_id': self.contentNode.id,
+            'content_id': self.contentNode.content_id,
+            'target_channel_id': self.channel.id,
+            'user': self.user.id,
+            'time_hidden': '2024-03-20T10:00:00Z',
+            'content': [{'content_id': str(self.contentNode.content_id), 'node_id': str(self.contentNode.id), 'channel_id': str(self.channel.id), 'score': 4}]
+        }
+
+    def setUp(self):
+        super(RecommendationsEventViewSetTestCase, self).setUp()
+        self.contentNode = testdata.node(
+            {
+                "kind_id": content_kinds.VIDEO,
+                "title": "Recommended Video content",
+            },
+        )
+        self.channel = testdata.channel()
+        self.user = testdata.user()
+        self.client.force_authenticate(user=self.user)
+
+    def test_create_recommendations_event(self):
+        recommendations_event = self.recommendations_event_object
+        response = self.client.post(
+            reverse("recommendations-list"), recommendations_event, format="json",
+        )
+        self.assertEqual(response.status_code, 201, response.content)
+
+    def test_list_fails(self):
+        response = self.client.get(reverse("recommendations-list"), format="json")
+        self.assertEqual(response.status_code, 405, response.content)
+
+    def test_retrieve_fails(self):
+        recommendations_event = RecommendationsEvent.objects.create(
+            **{
+                'context': {'model_version': 1, 'breadcrumbs': "#Title#->Random"},
+                'contentnode_id': self.contentNode.id,
+                'content_id': self.contentNode.content_id,
+                'target_channel_id': self.channel.id,
+                'time_hidden': '2024-03-20T10:00:00Z',
+                'content': [{'content_id': str(self.contentNode.content_id),
+                             'node_id': str(self.contentNode.id),
+                             'channel_id': str(self.channel.id), 'score': 4}]
+            },
+            user=self.user,
+        )
+        response = self.client.get(reverse("recommendations-detail", kwargs={"pk": recommendations_event.id}), format="json")
+        self.assertEqual(response.status_code, 405, response.content)
+
+    def test_update_recommendations_event(self):
+        recommendations_event = RecommendationsEvent.objects.create(
+            **{
+                'context': {'model_version': 1, 'breadcrumbs': "#Title#->Random"},
+                'contentnode_id': self.contentNode.id,
+                'content_id': self.contentNode.content_id,
+                'target_channel_id': self.channel.id,
+                'time_hidden': '2024-03-20T10:00:00Z',
+                'content': [{'content_id': str(self.contentNode.content_id),
+                             'node_id': str(self.contentNode.id),
+                             'channel_id': str(self.channel.id),
+                             'score': 4}]
+            },
+            user=self.user,
+        )
+        updated_data = self.recommendations_event_object
+        updated_data['context'] = {'model_version': 2, 'breadcrumbs': "#Title#->Updated"}
+        response = self.client.put(
+            reverse("recommendations-detail", kwargs={"pk": recommendations_event.id}),
+            updated_data,
+            format="json"
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+
+    def test_partial_update_recommendations_event(self):
+        recommendations_event = RecommendationsEvent.objects.create(
+            **{
+                'context': {'model_version': 1, 'breadcrumbs': "#Title#->Random"},
+                'contentnode_id': self.contentNode.id,
+                'content_id': self.contentNode.content_id,
+                'target_channel_id': self.channel.id,
+                'time_hidden': '2024-03-20T10:00:00Z',
+                'content': [{'content_id': str(self.contentNode.content_id),
+                             'node_id': str(self.contentNode.id),
+                             'channel_id': str(self.channel.id),
+                             'score': 4}]
+            },
+            user=self.user,
+        )
+        response = self.client.patch(
+            reverse("recommendations-detail", kwargs={"pk": recommendations_event.id}),
+            {'context': {'model_version': 2}},
+            format="json"
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+
+    def test_destroy_recommendations_event(self):
+        recommendations_event = RecommendationsEvent.objects.create(
+            **{
+                'context': {'model_version': 1, 'breadcrumbs': "#Title#->Random"},
+                'contentnode_id': self.contentNode.id,
+                'content_id': self.contentNode.content_id,
+                'target_channel_id': self.channel.id,
+                'time_hidden': '2024-03-20T10:00:00Z',
+                'content': [{'content_id': str(self.contentNode.content_id),
+                             'node_id': str(self.contentNode.id),
+                             'channel_id': str(self.channel.id),
+                             'score': 4}]
+            },
+            user=self.user,
+        )
+        response = self.client.delete(
+            reverse("recommendations-detail", kwargs={"pk": recommendations_event.id}),
+            format="json"
+        )
+        self.assertEqual(response.status_code, 204, response.content)
+
+
+class RecommendationsInteractionEventViewSetTestCase(StudioAPITestCase):
+    @property
+    def recommendations_interaction_object(self):
+        return {
+            'context': {'test_key': 'test_value'},
+            'contentnode_id': self.interaction_node.id,
+            'content_id': self.interaction_node.content_id,
+            'feedback_type': 'IGNORED',
+            'feedback_reason': '----',
+            'recommendation_event_id': str(self.recommendation_event.id)
+        }
+
+    def setUp(self):
+        super(RecommendationsInteractionEventViewSetTestCase, self).setUp()
+        self.channel = testdata.channel()
+        self.user = testdata.user()
+        self.client.force_authenticate(user=self.user)
+        self.interaction_node = testdata.node(
+            {
+                "kind_id": content_kinds.VIDEO,
+                "title": "Recommended Video content",
+            },
+        )
+        self.node_where_import_is_initiated = testdata.node(
+            {
+                "kind_id": content_kinds.TOPIC,
+                "title": "Node where content is imported",
+            },
+        )
+        self.recommendation_event = RecommendationsEvent.objects.create(
+            user=self.user,
+            target_channel_id=self.channel.id,
+            content_id=self.node_where_import_is_initiated.content_id,
+            contentnode_id=self.node_where_import_is_initiated.id,
+            context={'model_version': 1, 'breadcrumbs': "#Title#->Random"},
+            time_hidden='2024-03-20T10:00:00Z',
+            content=[{'content_id': str(self.interaction_node.content_id),
+                      'node_id': str(self.interaction_node.id),
+                      'channel_id': str(self.channel.id),
+                      'score': 4}]
+        )
+
+    def test_create_recommendations_interaction(self):
+        recommendations_interaction = self.recommendations_interaction_object
+        response = self.client.post(
+            reverse("recommendations-interaction-list"), recommendations_interaction, format="json",
+        )
+        self.assertEqual(response.status_code, 201, response.content)
+
+    def test_list_fails(self):
+        response = self.client.get(reverse("recommendations-interaction-list"), format="json")
+        self.assertEqual(response.status_code, 405, response.content)
+
+    def test_retrieve_fails(self):
+        recommendations_interaction = RecommendationsInteractionEvent.objects.create(
+            **{
+                'context': {'test_key': 'test_value'},
+                'contentnode_id': self.interaction_node.id,
+                'content_id': self.interaction_node.content_id,
+                'feedback_type': 'IGNORED',
+                'feedback_reason': '----',
+                'recommendation_event_id': self.recommendation_event.id
+            }
+        )
+        response = self.client.get(reverse("recommendations-interaction-detail", kwargs={"pk": recommendations_interaction.id}), format="json")
+        self.assertEqual(response.status_code, 405, response.content)
+
+    def test_update_recommendations_interaction(self):
+        recommendations_interaction = RecommendationsInteractionEvent.objects.create(
+            **{
+                'context': {'test_key': 'test_value'},
+                'contentnode_id': self.interaction_node.id,
+                'content_id': self.interaction_node.content_id,
+                'feedback_type': 'IGNORED',
+                'feedback_reason': '----',
+                'recommendation_event_id': self.recommendation_event.id
+            }
+        )
+        updated_data = self.recommendations_interaction_object
+        updated_data['feedback_type'] = 'PREVIEWED'
+        response = self.client.put(
+            reverse("recommendations-interaction-detail", kwargs={"pk": recommendations_interaction.id}),
+            updated_data,
+            format="json"
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+
+    def test_partial_update_recommendations_interaction(self):
+        recommendations_interaction = RecommendationsInteractionEvent.objects.create(
+            **{
+                'context': {'test_key': 'test_value'},
+                'contentnode_id': self.interaction_node.id,
+                'content_id': self.interaction_node.content_id,
+                'feedback_type': 'IGNORED',
+                'feedback_reason': '----',
+                'recommendation_event_id': self.recommendation_event.id
+            }
+        )
+        response = self.client.patch(
+            reverse("recommendations-interaction-detail", kwargs={"pk": recommendations_interaction.id}),
+            {'feedback_type': 'IMPORTED'},
+            format="json"
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+
+    def test_destroy_recommendations_interaction(self):
+        recommendations_interaction = RecommendationsInteractionEvent.objects.create(
+            **{
+                'context': {'test_key': 'test_value'},
+                'contentnode_id': self.interaction_node.id,
+                'content_id': self.interaction_node.content_id,
+                'feedback_type': 'IGNORED',
+                'feedback_reason': '----',
+                'recommendation_event_id': self.recommendation_event.id
+            }
+        )
+        response = self.client.delete(
+            reverse("recommendations-interaction-detail", kwargs={"pk": recommendations_interaction.id}),
+            format="json"
+        )
+        self.assertEqual(response.status_code, 204, response.content)
