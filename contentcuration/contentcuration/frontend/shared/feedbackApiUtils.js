@@ -16,6 +16,8 @@ export const FeedbackTypeOptions = {
 // This is mock currently, fixed value of URL still to be decided
 // referencing the url by name
 export const FLAG_FEEDBACK_EVENT_URL = urls[`${'flagged'}_${'list'}`];
+const RECCOMMENDATION_EVENT_URL = 'TBD';
+const RECCOMMENDATION_INTERACTION_EVENT_URL = 'TBD';
 
 /**
  * @typedef {Object} BaseFeedbackParams
@@ -130,6 +132,35 @@ export class FlagFeedbackEvent extends BaseFlagFeedback {
   constructor({ target_topic_id, ...baseFeedbackParams }) {
     super({ target_topic_id, ...baseFeedbackParams });
     this.URL = FLAG_FEEDBACK_EVENT_URL;
+  }
+}
+
+/**
+ * Initializes a new RecommendationsEvent object.
+ *
+ * @param {Object} params - Parameters for initializing the recommendations event.
+ * @param {Object[]} params.content - An array of JSON objects,
+ * each representing a recommended content item.
+ */
+export class RecommendationsEvent extends BaseFeedbackEvent {
+  constructor({ content, ...basefeedbackEventParams }) {
+    super(basefeedbackEventParams);
+    this.content = content;
+    this.URL = RECCOMMENDATION_EVENT_URL;
+  }
+}
+
+/**
+ * Initializes a new RecommendationsInteractionEvent object.
+ *
+ * @param {Object} params - Parameters for initializing the recommendations interaction event.
+ * @param {BaseFeedbackParams} feedbackInteractionEventParams - Parameters inherited from the
+ * base feedback interaction event class.
+ */
+export class RecommendationsInteractionEvent extends BaseFeedbackInteractionEvent {
+  constructor(feedbackInteractionEventParams) {
+    super(feedbackInteractionEventParams);
+    this.URL = RECCOMMENDATION_INTERACTION_EVENT_URL;
   }
 }
 
