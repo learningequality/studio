@@ -193,17 +193,19 @@ Feature: Studio critical workflows
 			And I am at the channel editor page for <channel_a>
 			And there is a resource in the <channel_a> that has been imported from <channel_b>
 		  And there is new version of the resource file in the <channel_b>
-		When I click on the *···* button in the top-right corner
+		When I click the *···* button in the top-right corner
 			And I select the *Sync resources* option
 		Then I see *Sync resources* modal window
+			And I see options to sync files, resource details, titles and description, assessment details
 		When I select any of the available checkboxes
 			And I click the *Continue* button
 		Then I see the *Confirm sync* modal
+			And I see a list with the options I've selected
 		When I click *Sync*
 		Then the modal closes
-		When I after a period of time I refresh the page
-			And click on the updated resource
-		Then I can see that it's updated with any changes made to the original resource file
+		When after a period of time I refresh the page
+			And inspect the updated resource(s)
+		Then I can see that any changes made to the original resource(s) are synced correctly
 
 	Scenario: Quick edit the fields of multiple resources
 		Given I am signed in to Studio
