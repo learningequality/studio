@@ -2,7 +2,6 @@ import hashlib
 import json
 import logging
 import os
-import urllib.parse
 import uuid
 from datetime import datetime
 
@@ -581,44 +580,9 @@ def generate_storage_url(filename, request=None, *args):
 
     path = generate_object_storage_name(os.path.splitext(filename)[0], filename)
 
-    # There are three scenarios where Studio might be run as:
-    #
-    # 1. In normal kubernetes, nginx will proxy for us. We'll know we're in kubernetes when the
-    # environment variable RUN_MODE=k8s
-    #
-    # 2. In Docker Compose and bare metal runserver, we'll be running in runserver, and minio
-    # will be exposed in port 9000 in the host's localhost network.
-
-    # Note (aron): returning the true storage URL (e.g. https://storage.googleapis.com/storage/a.mp4)
-    # isn't too important, because we have CDN in front of our servers, so it should be cached.
-    # But change the logic here in case there is a potential for bandwidth and latency improvement.
-
-    # Detect our current state first
-    run_mode = os.getenv("RUN_MODE")
-
-    # if we're running inside k8s, then just serve the normal /content/{storage,databases} URL,
-    # and let nginx handle proper proxying.
-    if run_mode == "k8s":
-        url = "/content/{path}".format(
-            path=path,
-        )
-
-    # if we're in docker-compose or in baremetal, just return the object storage URL as localhost:9000
-    elif run_mode == "docker-compose" or run_mode is None:
-        # generate the minio storage URL, so we can get the GET parameters that give everyone
-        # access even if they don't need to log in
-        params = urllib.parse.urlparse(default_storage.url(path)).query
-        host = "localhost"
-        port = 9000  # hardcoded to the default minio IP address
-        url = "http://{host}:{port}/{bucket}/{path}?{params}".format(
-            host=host,
-            port=port,
-            bucket=settings.AWS_S3_BUCKET_NAME,
-            path=path,
-            params=params,
-        )
-
-    return url
+    return "/content/{path}".format(
+        path=path,
+    )
 
 
 class FileOnDiskStorage(FileSystemStorage):
