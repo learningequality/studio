@@ -2708,13 +2708,13 @@ class BaseFeedback(models.Model):
     # time_shown: timestamp of when the recommendations are first shown
     created_at = models.DateTimeField(auto_now_add=True)
 
-    # for RecommendationsEvent class conntentnode_id represents:
+    # for RecommendationsEvent class contentnode_id represents:
     # target_topic_id that the ID of the topic the user
     # initiated the import from (where the imported content will go)
     #
     # for ReccomendationsInteractionEvent class contentnode_id represents:
     # contentNode_id of one of the item being interacted with
-    # (this must correspond to one of the items in the “content” array on the RecommendationEvent)
+    # (this must correspond to one of the items in the "content" array on the RecommendationEvent)
     #
     # for RecommendationsFlaggedEvent class contentnode_id represents:
     # contentnode_id of the content that is being flagged.
@@ -2755,6 +2755,6 @@ class RecommendationsInteractionEvent(BaseFeedback, BaseFeedbackInteractionEvent
 
 class RecommendationsEvent(BaseFeedback, BaseFeedbackEvent):
     # timestamp of when the user navigated away from the recommendation list
-    time_hidden = models.DateTimeField()
+    time_hidden = models.DateTimeField(null=True, blank=True)
     # A list of JSON blobs, representing the content items in the list of recommendations.
     content = models.JSONField(default=list)

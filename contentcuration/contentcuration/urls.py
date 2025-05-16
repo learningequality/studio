@@ -40,6 +40,8 @@ from contentcuration.viewsets.channelset import ChannelSetViewSet
 from contentcuration.viewsets.clipboard import ClipboardViewSet
 from contentcuration.viewsets.contentnode import ContentNodeViewSet
 from contentcuration.viewsets.feedback import FlagFeedbackEventViewSet
+from contentcuration.viewsets.feedback import RecommendationsEventViewSet
+from contentcuration.viewsets.feedback import RecommendationsInteractionEventViewSet
 from contentcuration.viewsets.file import FileViewSet
 from contentcuration.viewsets.invitation import InvitationViewSet
 from contentcuration.viewsets.recommendation import RecommendationView
@@ -70,6 +72,8 @@ router.register(r'assessmentitem', AssessmentItemViewSet)
 router.register(r'admin-users', AdminUserViewSet, basename='admin-users')
 router.register(r'clipboard', ClipboardViewSet, basename='clipboard')
 router.register(r'flagged', FlagFeedbackEventViewSet, basename='flagged')
+router.register(r'recommendations', RecommendationsEventViewSet, basename='recommendations')
+router.register(r'recommendationsinteraction', RecommendationsInteractionEventViewSet, basename='recommendations-interaction')
 
 urlpatterns = [
     re_path(r'^api/', include(router.urls)),
