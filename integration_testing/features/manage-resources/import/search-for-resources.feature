@@ -2,10 +2,10 @@ Feature: Search for resources
 
 	Background:
 		Given I am signed in to Studio
-			And I am on the <channel> editing page
+			And I am at the channel editing page
 		When I click the *Add* button
-			And I select the *Import from Channels* option
-		Then I see the *Import from Other Channels* modal
+			And I select the *Import from channels* option
+		Then I see the *Import from other channels* modal
 
 	Scenario: Search for resources from the *Content library*
 		When I enter a <search_term> in the search bar # *Content library* is selected by default in the *Channels* drop-down
@@ -35,8 +35,3 @@ Feature: Search for resources
 			And I select a <language> from the *Language* drop-down
 			And I click the *Search* button
 		Then I see search results only from channels in the selected <language>
-
-
-	Examples:
-	| channel | search_term | language |
-	| CK-12 | addition | English (en) |
