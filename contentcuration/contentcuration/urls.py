@@ -143,6 +143,7 @@ urlpatterns += [
 # Add admin endpoints
 urlpatterns += [
     re_path(r'^api/send_custom_email/$', admin_views.send_custom_email, name='send_custom_email'),
+    re_path(r'^api/support_token_redirect/(?P<token>[^/]+)/$', admin_views.support_token_redirect, name='support_token_redirect'),
 ]
 
 urlpatterns += [re_path(r'^jsreverse/$', django_js_reverse_views.urls_js, name='js_reverse')]

@@ -10,7 +10,7 @@ from le_utils.constants import content_kinds
 from contentcuration import models
 from contentcuration import models as cc
 from contentcuration.constants import channel_history
-from contentcuration.models import ContentNode
+from contentcuration.models import ContentNode, SecretToken
 from contentcuration.tests import testdata
 from contentcuration.tests.base import StudioAPITestCase
 from contentcuration.tests.viewsets.base import generate_create_event
@@ -771,3 +771,85 @@ class ChannelLanguageTestCase(StudioAPITestCase):
         self.client.force_authenticate(user=user)
         response = self.client.get(reverse(url_path, kwargs={"pk": channel_id}), format="json")
         return response
+
+class SupportTokenTestCase(StudioAPITestCase):
+
+    @property
+    def channel_metadata(self):
+        return {
+            "name": "Test Channel",
+            "id": uuid.uuid4().hex,
+            "description": "A test channel for support token creation.",
+        }
+
+    def setUp(self):
+        super(SupportTokenTestCase, self).setUp()
+        self.user = testdata.user()
+        self.channel = models.Channel.objects.create(actor_id=self.user.id, **self.channel_metadata)
+        self.channel.editors.add(self.user)
+        self.client.force_authenticate(user=self.user)
+        self.channel.save()
+
+    def test_create_support_token(self):
+        """
+        Ensure a support token is created successfully for a channel.
+        """
+        url = reverse("channel-support-token", kwargs={"pk": self.channel.id})
+        response = self.client.post(url, format="json")
+        self.assertEqual(response.status_code, 201, response.content)
+
+        self.channel.refresh_from_db()
+        self.assertIsNotNone(self.channel.support_token)
+
+        # Ensure token exists in SecretToken model
+        token_exists = models.SecretToken.objects.filter(token=self.channel.support_token.token).exists()
+        self.assertTrue(token_exists, "Support token was not stored in the SecretToken table.")
+
+    def test_cannot_create_duplicate_support_token(self):
+        """
+        Ensure creating a support token fails if one already exists.
+        """
+        # First request creates the token
+        url = reverse("channel-support-token", kwargs={"pk": self.channel.id})
+        response = self.client.post(url, format="json")
+        self.assertEqual(response.status_code, 201, response.content)
+
+        # Second request should fail with 409 CONFLICT
+        response = self.client.post(url, format="json")
+        self.assertEqual(response.status_code, 409, response.content)
+
+    def test_get_support_token_existing(self):
+        """
+        Ensure the API returns the support token when it exists.
+        """
+        # Create a support token
+        # token_str = SecretToken.generate_new_token()
+        support_token = SecretToken.objects.create(token = "test-support-token")
+        self.channel.support_token = support_token
+        self.channel.save()
+
+        url = reverse("channel-support-token", kwargs={"pk": self.channel.id})
+        response = self.client.get(url, format="json")
+        print(response.content)
+
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(response.json()["support_token"], "test-support-token")
+
+    def test_get_support_token_channel_not_found(self):
+        """
+        Ensure the API returns 404 when the channel does not exist.
+        """
+        url = reverse("channel-support-token", kwargs={"pk": "non-existent-id"})
+        response = self.client.get(url, format="json")
+
+        self.assertEqual(response.status_code, 404, response.content)
+
+    def test_get_support_token_none(self):
+        """
+        Ensure the API returns null when no support token exists.
+        """
+        url = reverse("channel-support-token", kwargs={"pk": self.channel.id})
+        response = self.client.get(url, format="json")
+
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertIsNone(response.json()["support_token"])

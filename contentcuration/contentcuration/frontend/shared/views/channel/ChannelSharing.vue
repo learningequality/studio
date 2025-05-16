@@ -8,6 +8,8 @@
     <LoadingText absolute />
   </VCard>
   <div v-else>
+    <ChannelSupportToken :channelId="channelId" />
+    <VDivider class="my-5" />
     <h1 class="font-weight-bold title">
       {{ $tr('inviteSubheading') }}
     </h1>
@@ -82,6 +84,7 @@
 <script>
 
   import { mapGetters, mapActions } from 'vuex';
+  import ChannelSupportToken from './ChannelSupportToken.vue';
   import ChannelSharingTable from './ChannelSharingTable';
   import LoadingText from 'shared/views/LoadingText';
   import { SharingPermissions } from 'shared/constants';
@@ -93,6 +96,7 @@
       DropdownWrapper,
       LoadingText,
       ChannelSharingTable,
+      ChannelSupportToken,
     },
     props: {
       channelId: {

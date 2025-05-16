@@ -812,6 +812,15 @@ class Channel(models.Model):
         verbose_name="secret tokens",
         blank=True,
     )
+    support_token = models.OneToOneField(
+        SecretToken,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='support_channels',
+        verbose_name="support token",
+        help_text="Token for support access",
+    )
     source_url = models.CharField(max_length=200, blank=True, null=True)
     demo_server_url = models.CharField(max_length=200, blank=True, null=True)
 
