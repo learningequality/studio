@@ -16,8 +16,8 @@ export const FeedbackTypeOptions = {
 // This is mock currently, fixed value of URL still to be decided
 // referencing the url by name
 export const FLAG_FEEDBACK_EVENT_URL = urls[`${'flagged'}_${'list'}`];
-const RECCOMMENDATION_EVENT_URL = 'TBD';
-const RECCOMMENDATION_INTERACTION_EVENT_URL = 'TBD';
+export const RECCOMMENDATION_EVENT_URL = urls['recommendations'];
+export const RECCOMMENDATION_INTERACTION_EVENT_URL = urls['recommendations-interaction'];
 
 /**
  * @typedef {Object} BaseFeedbackParams
@@ -154,12 +154,15 @@ export class RecommendationsEvent extends BaseFeedbackEvent {
  * Initializes a new RecommendationsInteractionEvent object.
  *
  * @param {Object} params - Parameters for initializing the recommendations interaction event.
+ * @param {string} params.recommendation_event_id - The ID of the recommendation event this
+ * interaction is for.
  * @param {BaseFeedbackParams} feedbackInteractionEventParams - Parameters inherited from the
  * base feedback interaction event class.
  */
 export class RecommendationsInteractionEvent extends BaseFeedbackInteractionEvent {
-  constructor(feedbackInteractionEventParams) {
+  constructor({ recommendation_event_id, ...feedbackInteractionEventParams }) {
     super(feedbackInteractionEventParams);
+    this.recommendation_event_id = recommendation_event_id;
     this.URL = RECCOMMENDATION_INTERACTION_EVENT_URL;
   }
 }
@@ -170,16 +173,33 @@ export class RecommendationsInteractionEvent extends BaseFeedbackInteractionEven
  * @function
  *
  * @param {BaseFeedback} feedbackObject - The feedback object to use for the request.
+ * @param {string} [method='post'] - The HTTP method to use (post, put, patch).
  * @throws {Error} Throws an error if the URL is not defined for the feedback object.
  * @returns {Promise<Object>} A promise that resolves to the response data from the API.
  */
-export async function sendRequest(feedbackObject) {
+export async function sendRequest(feedbackObject, method = 'post') {
   try {
     const url = feedbackObject.getUrl();
-    const response = await client.post(url, feedbackObject.getDataObject());
+    const data = feedbackObject.getDataObject();
+
+    let response;
+    switch (method.toLowerCase()) {
+      case 'post':
+        response = await client.post(url, data);
+        break;
+      case 'put':
+        response = await client.put(url, data);
+        break;
+      case 'patch':
+        response = await client.patch(url, data);
+        break;
+      default:
+        throw new Error(`Unsupported HTTP method: ${method}`);
+    }
     return response.data;
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error('Error sending feedback request:', error);
+    throw error;
   }
 }
