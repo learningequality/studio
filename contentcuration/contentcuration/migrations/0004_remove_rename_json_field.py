@@ -6,14 +6,14 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('contentcuration', '0003_copy_data'),
+        ("contentcuration", "0003_copy_data"),
     ]
 
     operations = [
-        migrations.RemoveField(model_name='channel', name='thumbnail_encoding'),
+        migrations.RemoveField(model_name="channel", name="thumbnail_encoding"),
         migrations.RenameField(
-            model_name='channel',
-            old_name='thumbnail_encoding_json',
-            new_name='thumbnail_encoding',
+            model_name="channel",
+            old_name="thumbnail_encoding_json",
+            new_name="thumbnail_encoding",
         ),
     ]

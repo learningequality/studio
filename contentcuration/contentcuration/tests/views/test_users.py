@@ -21,16 +21,18 @@ class LoginTestCase(StudioAPITestCase):
         self.request = mock.Mock()
         self.request.method = "POST"
         self.user = testdata.user(email="tester@tester.com")
-        self.request.body = json.dumps(dict(
-            username="tester@tester.com",
-            password="password",
-        ))
+        self.request.body = json.dumps(
+            dict(
+                username="tester@tester.com",
+                password="password",
+            )
+        )
 
     def test_login__not_post(self):
         self.request.method = "GET"
         redirect = login(self.request)
         self.assertIsInstance(redirect, HttpResponseRedirectBase)
-        self.assertIn("accounts", redirect['Location'])
+        self.assertIn("accounts", redirect["Location"])
 
     def test_login__not_found(self):
         self.user.email = "different@tester.com"
@@ -52,22 +54,24 @@ class LoginTestCase(StudioAPITestCase):
         redirect = login(self.request)
         djangologin.assert_called()
         self.assertIsInstance(redirect, HttpResponseRedirectBase)
-        self.assertIn("channels", redirect['Location'])
+        self.assertIn("channels", redirect["Location"])
 
     def test_login__case_sensitivity(self):
         with mock.patch("contentcuration.views.users.djangologin") as djangologin:
             self.user.email = "Tester@tester.com"
             self.user.save()
 
-            self.request.body = json.dumps(dict(
-                username="tester@Tester.com",
-                password="password",
-            ))
+            self.request.body = json.dumps(
+                dict(
+                    username="tester@Tester.com",
+                    password="password",
+                )
+            )
 
             redirect = login(self.request)
             djangologin.assert_called()
             self.assertIsInstance(redirect, HttpResponseRedirectBase)
-            self.assertIn("channels", redirect['Location'])
+            self.assertIn("channels", redirect["Location"])
 
     def test_login__case_sensitivity__multiple(self):
         with mock.patch("contentcuration.views.users.djangologin") as djangologin:
@@ -79,27 +83,31 @@ class LoginTestCase(StudioAPITestCase):
             user2.set_password("tester")
             user2.save()
 
-            self.request.body = json.dumps(dict(
-                username="tester@tester.com",
-                password="tester",
-            ))
+            self.request.body = json.dumps(
+                dict(
+                    username="tester@tester.com",
+                    password="tester",
+                )
+            )
 
             redirect = login(self.request)
             djangologin.assert_called()
             self.assertIsInstance(redirect, HttpResponseRedirectBase)
-            self.assertIn("channels", redirect['Location'])
+            self.assertIn("channels", redirect["Location"])
 
     def test_login__whitespace(self):
         with mock.patch("contentcuration.views.users.djangologin") as djangologin:
-            self.request.body = json.dumps(dict(
-                username="tester@Tester.com ",
-                password="password",
-            ))
+            self.request.body = json.dumps(
+                dict(
+                    username="tester@Tester.com ",
+                    password="password",
+                )
+            )
 
             redirect = login(self.request)
             djangologin.assert_called()
             self.assertIsInstance(redirect, HttpResponseRedirectBase)
-            self.assertIn("channels", redirect['Location'])
+            self.assertIn("channels", redirect["Location"])
 
     def test_after_delete__no_login(self):
         with mock.patch("contentcuration.views.users.djangologin") as djangologin:
@@ -161,9 +169,7 @@ class UserActivationViewTestCase(StudioAPITestCase):
         self.user = testdata.user(email="tester@tester.com")
         self.user.is_active = False
         self.user.save()
-        self.kwargs = dict(
-            activation_key="activation_key"
-        )
+        self.kwargs = dict(activation_key="activation_key")
 
     def test_activate(self):
         self.view.validate_key.return_value = self.user.email

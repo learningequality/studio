@@ -11,43 +11,59 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('kolibri_public', '0005_alter_localfile_extension'),
+        ("kolibri_public", "0005_alter_localfile_extension"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='RecommendationsCache',
+            name="RecommendationsCache",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('request_hash', models.CharField(max_length=32, null=True)),
-                ('topic_id', models.UUIDField()),
-                ('rank', models.IntegerField(default=0, null=True)),
-                ('override_threshold', models.BooleanField(default=False)),
-                ('timestamp', models.DateTimeField(auto_now_add=True)),
-                ('channel', models.ForeignKey(
-                    blank=True,
-                    null=True,
-                    on_delete=django.db.models.deletion.CASCADE,
-                    related_name='channel_recommendations',
-                    to='contentcuration.channel')),
-                ('contentnode', models.ForeignKey(
-                    blank=True,
-                    null=True,
-                    on_delete=django.db.models.deletion.CASCADE,
-                    related_name='contentnode_recommendations',
-                    to='kolibri_public.contentnode')),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("request_hash", models.CharField(max_length=32, null=True)),
+                ("topic_id", models.UUIDField()),
+                ("rank", models.IntegerField(default=0, null=True)),
+                ("override_threshold", models.BooleanField(default=False)),
+                ("timestamp", models.DateTimeField(auto_now_add=True)),
+                (
+                    "channel",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="channel_recommendations",
+                        to="contentcuration.channel",
+                    ),
+                ),
+                (
+                    "contentnode",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="contentnode_recommendations",
+                        to="kolibri_public.contentnode",
+                    ),
+                ),
             ],
         ),
         migrations.AddIndex(
-            model_name='recommendationscache',
-            index=models.Index(fields=['request_hash'], name='request_hash_idx'),
+            model_name="recommendationscache",
+            index=models.Index(fields=["request_hash"], name="request_hash_idx"),
         ),
         migrations.AddIndex(
-            model_name='recommendationscache',
-            index=models.Index(fields=['contentnode'], name='contentnode_idx'),
+            model_name="recommendationscache",
+            index=models.Index(fields=["contentnode"], name="contentnode_idx"),
         ),
         migrations.AlterUniqueTogether(
-            name='recommendationscache',
-            unique_together={('request_hash', 'contentnode')},
+            name="recommendationscache",
+            unique_together={("request_hash", "contentnode")},
         ),
     ]

@@ -92,7 +92,9 @@ class SQArrayAgg(AggregateSubquery):
 
 class SQRelatedArrayAgg(SQArrayAgg):
     # For cases where fields are in a related table, for example language__native_name
-    template = "(SELECT ARRAY_AGG(%(fieldname)s::text) FROM (%(subquery)s) AS %(field)s__sum)"
+    template = (
+        "(SELECT ARRAY_AGG(%(fieldname)s::text) FROM (%(subquery)s) AS %(field)s__sum)"
+    )
 
 
 class SQJSONBKeyArrayAgg(AggregateSubquery):
@@ -100,10 +102,9 @@ class SQJSONBKeyArrayAgg(AggregateSubquery):
     An aggregate subquery to get all the distinct keys of a JSON field that contains maps to store
     e.g. metadata labels.
     """
+
     # Include ALIAS at the end to support Postgres
-    template = (
-        "(SELECT ARRAY_AGG(f) FROM (SELECT DISTINCT jsonb_object_keys(%(field)s) AS f FROM (%(subquery)s) AS x) AS %(field)s__sum)"
-    )
+    template = "(SELECT ARRAY_AGG(f) FROM (SELECT DISTINCT jsonb_object_keys(%(field)s) AS f FROM (%(subquery)s) AS x) AS %(field)s__sum)"
     output_field = ArrayField(CharField())
 
 
@@ -159,7 +160,9 @@ class DotPathValueMixin(object):
                 # with the value of the child field.
                 # N.B. the get_value method expects a dictionary that references the field's name
                 # not just the value.
-                nested_value = fields[keys[0]].get_value({keys[0]: {keys[1]: html_value[key]}})
+                nested_value = fields[keys[0]].get_value(
+                    {keys[0]: {keys[1]: html_value[key]}}
+                )
                 if keys[0] not in value:
                     value[keys[0]] = {}
                 value[keys[0]].update(nested_value)
@@ -189,7 +192,9 @@ class JSONFieldDictSerializer(DotPathValueMixin, serializers.Serializer):
             elif hasattr(self.fields[key], "update"):
                 # If the nested field has an update method (e.g. a nested serializer),
                 # call the update value so that we can do any recursive updates
-                instance[key] = self.fields[key].update(instance.get(key, {}), validated_data[key])
+                instance[key] = self.fields[key].update(
+                    instance.get(key, {}), validated_data[key]
+                )
             else:
                 # Otherwise, just update the value
                 instance[key] = validated_data[key]

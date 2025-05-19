@@ -7,13 +7,13 @@ from django.db import models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('contentcuration', '0118_relaunch_migrations'),
+        ("contentcuration", "0118_relaunch_migrations"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='task',
-            name='channel_id',
+            model_name="task",
+            name="channel_id",
             field=models.UUIDField(blank=True, db_index=True, null=True),
         ),
     ]

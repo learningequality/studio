@@ -28,7 +28,9 @@ class PublicAPITestCase(BaseAPITestCase):
         response = self.client.get(reverse("info"))
         self.assertEqual(response.data["application"], "studio")
         self.assertEqual(response.data["device_name"], "Kolibri Studio")
-        self.assertEqual(response.data["instance_id"], "ef896e7b7bbf5a359371e6f7afd28742")
+        self.assertEqual(
+            response.data["instance_id"], "ef896e7b7bbf5a359371e6f7afd28742"
+        )
 
     def test_empty_public_channels(self):
         """

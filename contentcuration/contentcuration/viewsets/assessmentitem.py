@@ -107,18 +107,18 @@ class AssessmentItemSerializer(BulkModelSerializer):
         answers = json.loads(value)
         for answer in answers:
             if not type(answer) is dict:
-                raise ValidationError('JSON Data Invalid for answers')
-            if not all(k in answer for k in ('answer', 'correct', 'order')):
-                raise ValidationError('Incorrect field in answers')
+                raise ValidationError("JSON Data Invalid for answers")
+            if not all(k in answer for k in ("answer", "correct", "order")):
+                raise ValidationError("Incorrect field in answers")
         return value
 
     def validate_hints(self, value):
         hints = json.loads(value)
         for hint in hints:
             if not type(hint) is dict:
-                raise ValidationError('JSON Data Invalid for hints')
-            if not all(k in hint for k in ('hint', 'order')):
-                raise ValidationError('Incorrect field in hints')
+                raise ValidationError("JSON Data Invalid for hints")
+            if not all(k in hint for k in ("hint", "order")):
+                raise ValidationError("Incorrect field in hints")
         return value
 
     def set_files(self, all_objects, all_validated_data=None):  # noqa C901
@@ -131,15 +131,21 @@ class AssessmentItemSerializer(BulkModelSerializer):
             # If this is an update operation, check the validated data for which items
             # have had these fields modified.
             md_fields_modified = {
-                self.id_value_lookup(ai) for ai in all_validated_data if "question" in ai or "hints" in ai or "answers" in ai
+                self.id_value_lookup(ai)
+                for ai in all_validated_data
+                if "question" in ai or "hints" in ai or "answers" in ai
             }
         else:
             # If this is a create operation, just check if these fields are not null.
             md_fields_modified = {
-                self.id_value_lookup(ai) for ai in all_objects if ai.question or ai.hints or ai.answers
+                self.id_value_lookup(ai)
+                for ai in all_objects
+                if ai.question or ai.hints or ai.answers
             }
 
-        all_objects = [ai for ai in all_objects if self.id_value_lookup(ai) in md_fields_modified]
+        all_objects = [
+            ai for ai in all_objects if self.id_value_lookup(ai) in md_fields_modified
+        ]
 
         for file in File.objects.filter(assessment_item__in=all_objects):
             if file.assessment_item_id not in current_files_by_aitem:
@@ -192,7 +198,7 @@ class AssessmentItemSerializer(BulkModelSerializer):
                 raise ValidationError(
                     "Attempted to set files to an assessment item that do not have a file on the server"
                 )
-            File.objects.bulk_update(source_files, ['assessment_item'])
+            File.objects.bulk_update(source_files, ["assessment_item"])
 
     def create(self, validated_data):
         with transaction.atomic():

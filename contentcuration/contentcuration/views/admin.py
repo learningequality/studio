@@ -20,11 +20,13 @@ from contentcuration.views.base import current_user_for_context
 
 
 @is_admin
-@api_view(['POST'])
+@api_view(["POST"])
 def send_custom_email(request):
     data = json.loads(request.body)
     try:
-        sendcustomemails_task.enqueue(request.user, data["subject"], data["message"], data['query'])
+        sendcustomemails_task.enqueue(
+            request.user, data["subject"], data["message"], data["query"]
+        )
     except KeyError:
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
 
@@ -33,10 +35,16 @@ def send_custom_email(request):
 
 @login_required
 @browser_is_supported
-@authentication_classes((SessionAuthentication, BasicAuthentication, TokenAuthentication))
+@authentication_classes(
+    (SessionAuthentication, BasicAuthentication, TokenAuthentication)
+)
 def administration(request):
-    return render(request, 'administration.html', {
-        "current_user": current_user_for_context(request.user),
-        "default_sender": settings.DEFAULT_FROM_EMAIL,
-        "messages": json_for_parse_from_data(get_messages()),
-    })
+    return render(
+        request,
+        "administration.html",
+        {
+            "current_user": current_user_for_context(request.user),
+            "default_sender": settings.DEFAULT_FROM_EMAIL,
+            "messages": json_for_parse_from_data(get_messages()),
+        },
+    )

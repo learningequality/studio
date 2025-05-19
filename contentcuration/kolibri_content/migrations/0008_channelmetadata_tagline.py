@@ -7,13 +7,13 @@ from django.db import models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('content', '0007_auto_20200613_0050'),
+        ("content", "0007_auto_20200613_0050"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='channelmetadata',
-            name='tagline',
+            model_name="channelmetadata",
+            name="tagline",
             field=models.CharField(blank=True, max_length=150, null=True),
         ),
     ]

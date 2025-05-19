@@ -95,11 +95,14 @@ def _celery_task_worker():
     # clear the "fixups" which would mess up the connection to the DB
     app.fixups = []
     app._fixups = []
-    app.worker_main(argv=[
-        "worker",
-        "--task-events",
-        "--concurrency", "1",
-    ])
+    app.worker_main(
+        argv=[
+            "worker",
+            "--task-events",
+            "--concurrency",
+            "1",
+        ]
+    )
 
 
 def _return_celery_task_object(task_id):
@@ -114,6 +117,7 @@ class AsyncTaskTestCase(TransactionTestCase):
     This MUST use `serialized_rollback` due to DB transaction isolation interactions between the pytest framework
     and running the Celery worker in another thread
     """
+
     serialized_rollback = True
 
     @classmethod
@@ -166,7 +170,9 @@ class AsyncTaskTestCase(TransactionTestCase):
         self.assertEqual(celery_task_result.task_name, "test_task")
         self.assertEqual(async_result.status, states.SUCCESS)
         self.assertEqual(TaskResult.objects.get(task_id=async_result.id).result, "42")
-        self.assertEqual(TaskResult.objects.get(task_id=async_result.id).status, states.SUCCESS)
+        self.assertEqual(
+            TaskResult.objects.get(task_id=async_result.id).status, states.SUCCESS
+        )
 
     def test_asynctask_reports_error(self):
         """
@@ -196,7 +202,9 @@ class AsyncTaskTestCase(TransactionTestCase):
         async_result = plain_test_task.apply()
         result = self._wait_for(async_result)
         self.assertEquals(result, 42)
-        self.assertEquals(TaskResult.objects.filter(task_id=async_result.task_id).count(), 0)
+        self.assertEquals(
+            TaskResult.objects.filter(task_id=async_result.task_id).count(), 0
+        )
 
     @pytest.mark.skip(reason="This test is flaky on Github Actions")
     def test_fetch_or_enqueue_task(self):
@@ -264,4 +272,4 @@ class AsyncTaskTestCase(TransactionTestCase):
         try:
             TaskResult.objects.get(task_id=async_result.task_id, status=states.REVOKED)
         except TaskResult.DoesNotExist:
-            self.fail('Missing revoked task result')
+            self.fail("Missing revoked task result")

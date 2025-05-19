@@ -140,12 +140,19 @@ class BaseChannelFilter(RequiredFilterSet):
         search_query = get_fts_search_query(value)
         dash_replaced_search_query = get_fts_search_query(value.replace("-", ""))
 
-        channel_keywords_query = (Exists(ChannelFullTextSearch.objects.filter(
-            Q(keywords_tsvector=search_query) | Q(keywords_tsvector=dash_replaced_search_query),
-            channel_id=OuterRef("id"))))
-        contentnode_search_query = (Exists(ContentNodeFullTextSearch.objects.filter(
-            Q(keywords_tsvector=search_query) | Q(author_tsvector=search_query),
-            channel_id=OuterRef("id"))))
+        channel_keywords_query = Exists(
+            ChannelFullTextSearch.objects.filter(
+                Q(keywords_tsvector=search_query)
+                | Q(keywords_tsvector=dash_replaced_search_query),
+                channel_id=OuterRef("id"),
+            )
+        )
+        contentnode_search_query = Exists(
+            ContentNodeFullTextSearch.objects.filter(
+                Q(keywords_tsvector=search_query) | Q(author_tsvector=search_query),
+                channel_id=OuterRef("id"),
+            )
+        )
 
         return queryset.filter(Q(channel_keywords_query) | Q(contentnode_search_query))
 
@@ -242,7 +249,11 @@ class ChannelFilter(BaseChannelFilter):
 
     class Meta:
         model = Channel
-        fields = base_channel_filter_fields + ("bookmark", "edit", "view",)
+        fields = base_channel_filter_fields + (
+            "bookmark",
+            "edit",
+            "view",
+        )
 
 
 class ThumbnailEncodingFieldsSerializer(JSONFieldDictSerializer):
@@ -400,11 +411,14 @@ def _unpublished_changes_query(channel):
     channel_ref = OuterRef(channel) if isinstance(channel, OuterRef) else channel
 
     return Change.objects.filter(
-        server_rev__gt=Coalesce(Change.objects.filter(
-            channel=channel_ref,
-            change_type=PUBLISHED,
-            errored=False
-        ).values("server_rev").order_by("-server_rev")[:1], Value(0)),
+        server_rev__gt=Coalesce(
+            Change.objects.filter(
+                channel=channel_ref, change_type=PUBLISHED, errored=False
+            )
+            .values("server_rev")
+            .order_by("-server_rev")[:1],
+            Value(0),
+        ),
         channel=channel,
         # Going forwards, these changes will be marked as unpublishable,
         # but leave these filters here for now for backwards compatibility
@@ -436,8 +450,12 @@ class ChannelViewSet(ValuesViewset):
             return Response({"error": str(e)}, status=409)
         instance = serializer.instance
         Change.create_change(
-            generate_create_event(instance.id, CHANNEL, request.data, channel_id=instance.id),
-            applied=True, created_by_id=request.user.id)
+            generate_create_event(
+                instance.id, CHANNEL, request.data, channel_id=instance.id
+            ),
+            applied=True,
+            created_by_id=request.user.id,
+        )
         return Response(self.serialize_object(pk=instance.pk), status=HTTP_201_CREATED)
 
     def destroy(self, request, *args, **kwargs):
@@ -446,7 +464,9 @@ class ChannelViewSet(ValuesViewset):
         Change.create_change(
             generate_update_event(
                 instance.id, CHANNEL, {"deleted": True}, channel_id=instance.id
-            ), applied=True, created_by_id=request.user.id
+            ),
+            applied=True,
+            created_by_id=request.user.id,
         )
         return Response(status=HTTP_204_NO_CONTENT)
 
@@ -491,7 +511,8 @@ class ChannelViewSet(ValuesViewset):
         )
 
         queryset = queryset.annotate(
-            unpublished_changes=Exists(_unpublished_changes_query(OuterRef("id"))))
+            unpublished_changes=Exists(_unpublished_changes_query(OuterRef("id")))
+        )
 
         return queryset
 
@@ -501,8 +522,9 @@ class ChannelViewSet(ValuesViewset):
             # Publish change will have key, version_notes, and language.
             try:
                 self.publish(
-                    publish["key"], version_notes=publish.get("version_notes"),
-                    language=publish.get("language")
+                    publish["key"],
+                    version_notes=publish.get("version_notes"),
+                    language=publish.get("language"),
                 )
             except Exception as e:
                 log_sync_exception(e, user=self.request.user, change=publish)
@@ -522,8 +544,9 @@ class ChannelViewSet(ValuesViewset):
 
         channel.mark_publishing(self.request.user)
 
-        with create_change_tracker(pk, CHANNEL, channel.id, self.request.user,
-                                   "export-channel") as progress_tracker:
+        with create_change_tracker(
+            pk, CHANNEL, channel.id, self.request.user, "export-channel"
+        ) as progress_tracker:
             try:
                 channel = publish_channel(
                     self.request.user.pk,
@@ -531,33 +554,55 @@ class ChannelViewSet(ValuesViewset):
                     version_notes=version_notes,
                     send_email=True,
                     progress_tracker=progress_tracker,
-                    language=language
+                    language=language,
                 )
-                Change.create_changes([
-                    generate_update_event(
-                        channel.id, CHANNEL, {
-                            "published": True,
-                            "publishing": False,
-                            "primary_token": channel.get_human_token().token,
-                            "last_published": channel.last_published,
-                            "unpublished_changes": _unpublished_changes_query(channel).exists()
-                        }, channel_id=channel.id
-                    ),
-                ], applied=True, unpublishable=True)
+                Change.create_changes(
+                    [
+                        generate_update_event(
+                            channel.id,
+                            CHANNEL,
+                            {
+                                "published": True,
+                                "publishing": False,
+                                "primary_token": channel.get_human_token().token,
+                                "last_published": channel.last_published,
+                                "unpublished_changes": _unpublished_changes_query(
+                                    channel
+                                ).exists(),
+                            },
+                            channel_id=channel.id,
+                        ),
+                    ],
+                    applied=True,
+                    unpublishable=True,
+                )
             except ChannelIncompleteError:
-                Change.create_changes([
-                    generate_update_event(
-                        channel.id, CHANNEL, {"publishing": False}, channel_id=channel.id
-                    ),
-                ], applied=True, unpublishable=True)
+                Change.create_changes(
+                    [
+                        generate_update_event(
+                            channel.id,
+                            CHANNEL,
+                            {"publishing": False},
+                            channel_id=channel.id,
+                        ),
+                    ],
+                    applied=True,
+                    unpublishable=True,
+                )
                 raise ValidationError("Channel is not ready to be published")
             except Exception:
-                Change.create_changes([
-                    generate_update_event(
-                        channel.id, CHANNEL, {"publishing": False, "unpublished_changes": True},
-                        channel_id=channel.id
-                    ),
-                ], applied=True, unpublishable=True)
+                Change.create_changes(
+                    [
+                        generate_update_event(
+                            channel.id,
+                            CHANNEL,
+                            {"publishing": False, "unpublished_changes": True},
+                            channel_id=channel.id,
+                        ),
+                    ],
+                    applied=True,
+                    unpublishable=True,
+                )
                 raise
 
     def publish_next_from_changes(self, changes):
@@ -584,8 +629,9 @@ class ChannelViewSet(ValuesViewset):
         channel.staging_tree.publishing = True
         channel.staging_tree.save()
 
-        with create_change_tracker(pk, CHANNEL, channel.id, self.request.user,
-                                   "export-channel-staging-tree") as progress_tracker:
+        with create_change_tracker(
+            pk, CHANNEL, channel.id, self.request.user, "export-channel-staging-tree"
+        ) as progress_tracker:
             try:
                 channel = publish_channel(
                     self.request.user.pk,
@@ -593,13 +639,19 @@ class ChannelViewSet(ValuesViewset):
                     progress_tracker=progress_tracker,
                     use_staging_tree=True,
                 )
-                Change.create_changes([
-                    generate_update_event(
-                        channel.id, CHANNEL, {
-                            "primary_token": channel.get_human_token().token,
-                        }, channel_id=channel.id
-                    ),
-                ], applied=True)
+                Change.create_changes(
+                    [
+                        generate_update_event(
+                            channel.id,
+                            CHANNEL,
+                            {
+                                "primary_token": channel.get_human_token().token,
+                            },
+                            channel_id=channel.id,
+                        ),
+                    ],
+                    applied=True,
+                )
             except ChannelIncompleteError:
                 channel.staging_tree.publishing = False
                 channel.staging_tree.save()
@@ -619,7 +671,7 @@ class ChannelViewSet(ValuesViewset):
                     titles_and_descriptions=sync.get("titles_and_descriptions"),
                     resource_details=sync.get("resource_details"),
                     files=sync.get("files"),
-                    assessment_items=sync.get("assessment_items")
+                    assessment_items=sync.get("assessment_items"),
                 )
             except Exception as e:
                 log_sync_exception(e, user=self.request.user, change=sync)
@@ -627,8 +679,14 @@ class ChannelViewSet(ValuesViewset):
                 errors.append(sync)
         return errors
 
-    def sync(self, pk, titles_and_descriptions=False, resource_details=False, files=False,
-             assessment_items=False):
+    def sync(
+        self,
+        pk,
+        titles_and_descriptions=False,
+        resource_details=False,
+        files=False,
+        assessment_items=False,
+    ):
         logging.debug("Entering the sync channel endpoint")
 
         channel = self.get_edit_queryset().get(pk=pk)
@@ -638,19 +696,20 @@ class ChannelViewSet(ValuesViewset):
 
         if (
             not channel.main_tree.get_descendants()
-                .filter(
+            .filter(
                 Q(original_node__isnull=False)
                 | Q(
                     original_channel_id__isnull=False,
                     original_source_node_id__isnull=False,
                 )
             )
-                .exists()
+            .exists()
         ):
             raise ValidationError("Cannot sync a channel with no imported content")
 
-        with create_change_tracker(pk, CHANNEL, channel.id, self.request.user,
-                                   "sync-channel") as progress_tracker:
+        with create_change_tracker(
+            pk, CHANNEL, channel.id, self.request.user, "sync-channel"
+        ) as progress_tracker:
             sync_channel(
                 channel,
                 titles_and_descriptions,
@@ -685,7 +744,9 @@ class ChannelViewSet(ValuesViewset):
             with models.ContentNode.objects.disable_mptt_updates():
                 garbage_node = get_deleted_chefs_root()
                 channel.previous_tree.parent = garbage_node
-                channel.previous_tree.title = "Previous tree for channel {}".format(channel.pk)
+                channel.previous_tree.title = "Previous tree for channel {}".format(
+                    channel.pk
+                )
                 channel.previous_tree.save()
 
         channel.previous_tree = channel.main_tree
@@ -696,18 +757,26 @@ class ChannelViewSet(ValuesViewset):
         user.staged_files.all().delete()
         user.set_space_used()
 
-        models.Change.create_change(generate_update_event(
-            channel.id,
-            CHANNEL,
-            {
-                "root_id": channel.main_tree.id,
-                "staging_root_id": None
-            },
-            channel_id=channel.id,
-        ), applied=True, created_by_id=user.id)
+        models.Change.create_change(
+            generate_update_event(
+                channel.id,
+                CHANNEL,
+                {"root_id": channel.main_tree.id, "staging_root_id": None},
+                channel_id=channel.id,
+            ),
+            applied=True,
+            created_by_id=user.id,
+        )
 
-    @action(detail=True, methods=["get"], url_path='language_exists', url_name='language-exists')
-    def channel_language_exists(self, request, pk=None) -> Union[JsonResponse, HttpResponse]:
+    @action(
+        detail=True,
+        methods=["get"],
+        url_path="language_exists",
+        url_name="language-exists",
+    )
+    def channel_language_exists(
+        self, request, pk=None
+    ) -> Union[JsonResponse, HttpResponse]:
         """
         Verify that the language set for a channel is present in at least one of its resources.
 
@@ -725,8 +794,10 @@ class ChannelViewSet(ValuesViewset):
 
         return JsonResponse({"exists": lang_exists})
 
-    @action(detail=True, methods=["get"], url_path='languages', url_name='languages')
-    def get_languages_in_channel(self, request, pk=None) -> Union[JsonResponse, HttpResponse]:
+    @action(detail=True, methods=["get"], url_path="languages", url_name="languages")
+    def get_languages_in_channel(
+        self, request, pk=None
+    ) -> Union[JsonResponse, HttpResponse]:
         """
         Get all the languages present in a channel's resources.
 
@@ -766,8 +837,11 @@ class ChannelViewSet(ValuesViewset):
         :rtype: str
         """
         try:
-            channel_details = (Channel.objects.filter(pk=channel_id)
-                               .values("language_id", "main_tree_id").first())
+            channel_details = (
+                Channel.objects.filter(pk=channel_id)
+                .values("language_id", "main_tree_id")
+                .first()
+            )
         except Channel.DoesNotExist as e:
             logging.error(str(e))
             channel_details = None
@@ -777,7 +851,9 @@ class ChannelViewSet(ValuesViewset):
 
         return channel_details
 
-    def _get_channel_content_languages(self, channel_id, main_tree_id=None) -> List[str]:
+    def _get_channel_content_languages(
+        self, channel_id, main_tree_id=None
+    ) -> List[str]:
         """
         Get all the languages used in a channel's resources.
 
@@ -815,12 +891,10 @@ class ChannelViewSet(ValuesViewset):
                 .values("id", "language_id")
                 .order_by()
             )
-            qs = cte.queryset().with_cte(cte).filter(
-                language_id__isnull=False
-            )
+            qs = cte.queryset().with_cte(cte).filter(language_id__isnull=False)
             if main_tree_id:
                 qs = qs.exclude(id=main_tree_id)
-            lang_ids = qs.values_list('language_id', flat=True).distinct()
+            lang_ids = qs.values_list("language_id", flat=True).distinct()
             unique_lang_ids = list(set(lang_ids))
         except Exception as e:
             logging.error(str(e))
@@ -893,17 +967,18 @@ class CatalogViewSet(ReadOnlyValuesViewset):
 class AdminChannelFilter(BaseChannelFilter):
     def filter_keywords(self, queryset, name, value):
         keywords = value.split(" ")
-        editors_first_name = reduce(or_, (Q(editors__first_name__icontains=k) for k in keywords))
-        editors_last_name = reduce(or_, (Q(editors__last_name__icontains=k) for k in keywords))
+        editors_first_name = reduce(
+            or_, (Q(editors__first_name__icontains=k) for k in keywords)
+        )
+        editors_last_name = reduce(
+            or_, (Q(editors__last_name__icontains=k) for k in keywords)
+        )
         editors_email = reduce(or_, (Q(editors__email__icontains=k) for k in keywords))
-        return queryset.annotate(primary_token=primary_token_subquery, ).filter(
+        return queryset.annotate(primary_token=primary_token_subquery,).filter(
             Q(name__icontains=value)
             | Q(pk__istartswith=value)
             | Q(primary_token=value.replace("-", ""))
-            | (
-                editors_first_name
-                & editors_last_name
-            )
+            | (editors_first_name & editors_last_name)
             | editors_email
         )
 
@@ -973,8 +1048,12 @@ class AdminChannelViewSet(ChannelViewSet, RESTUpdateModelMixin, RESTDestroyModel
         self.perform_update(serializer)
 
         Change.create_change(
-            generate_update_event(instance.id, CHANNEL, request.data, channel_id=instance.id),
-            applied=True, created_by_id=request.user.id)
+            generate_update_event(
+                instance.id, CHANNEL, request.data, channel_id=instance.id
+            ),
+            applied=True,
+            created_by_id=request.user.id,
+        )
 
         return Response(self.serialize_object())
 

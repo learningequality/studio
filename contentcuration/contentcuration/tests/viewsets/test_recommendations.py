@@ -10,7 +10,6 @@ from contentcuration.tests.base import StudioAPITestCase
 
 
 class CRUDTestCase(StudioAPITestCase):
-
     @property
     def topics(self):
         return {
@@ -52,18 +51,22 @@ class CRUDTestCase(StudioAPITestCase):
                 "node_id": "00000000000000000000000000000005",
                 "main_tree_id": "2",
                 "parent_id": "00000000000000000000000000000006",
-            }
+            },
         ]
 
     def setUp(self):
         super(CRUDTestCase, self).setUp()
 
-    @patch("contentcuration.utils.automation_manager.AutomationManager.load_recommendations")
+    @patch(
+        "contentcuration.utils.automation_manager.AutomationManager.load_recommendations"
+    )
     def test_recommend_success(self, mock_load_recommendations):
         self.client.force_authenticate(user=self.admin_user)
         mock_load_recommendations.return_value = self.recommendations_list
 
-        response = self.client.post(reverse("recommendations"), data=self.topics, format="json")
+        response = self.client.post(
+            reverse("recommendations"), data=self.topics, format="json"
+        )
 
         self.assertEqual(response.status_code, 200, response.content)
         self.assertEqual(response.json(), self.recommendations_list)
@@ -73,57 +76,68 @@ class CRUDTestCase(StudioAPITestCase):
 
         error_message = "Invalid request data. Please check the required fields."
         invalid_data = {}
-        response = self.client.post(reverse("recommendations"), data=invalid_data,
-                                    format="json")
+        response = self.client.post(
+            reverse("recommendations"), data=invalid_data, format="json"
+        )
         self.assertEqual(response.status_code, 400)
-        self.assertIn(error_message, response.json()['error'])
+        self.assertIn(error_message, response.json()["error"])
 
     def test_recommend_invalid_data_wrong_topic_data(self):
         self.client.force_authenticate(user=self.admin_user)
 
         error_message = "Invalid request data. Please check the required fields."
-        invalid_data = {'topics': [{'ramdon_field': "random_value"}]}
-        response = self.client.post(reverse("recommendations"), data=invalid_data,
-                                    format="json")
+        invalid_data = {"topics": [{"ramdon_field": "random_value"}]}
+        response = self.client.post(
+            reverse("recommendations"), data=invalid_data, format="json"
+        )
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(error_message, response.json()['error'])
+        self.assertEqual(error_message, response.json()["error"])
 
-    @patch("contentcuration.utils.automation_manager.AutomationManager.load_recommendations")
+    @patch(
+        "contentcuration.utils.automation_manager.AutomationManager.load_recommendations"
+    )
     def test_recommendation_invalid_data_formats(self, mock_load_recommendations):
         self.client.force_authenticate(user=self.admin_user)
 
         error_message = "Invalid input provided."
         mock_load_recommendations.side_effect = errors.InvalidRequest(error_message)
 
-        response = self.client.post(reverse("recommendations"), data=self.topics,
-                                    format="json")
+        response = self.client.post(
+            reverse("recommendations"), data=self.topics, format="json"
+        )
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json(), {"error": error_message})
         mock_load_recommendations.assert_called_once()
 
-    @patch("contentcuration.utils.automation_manager.AutomationManager.load_recommendations")
+    @patch(
+        "contentcuration.utils.automation_manager.AutomationManager.load_recommendations"
+    )
     def test_recommendation_service_unavailable(self, mock_load_recommendations):
         self.client.force_authenticate(user=self.admin_user)
 
         error_message = "Recommendation service unavailable"
         mock_load_recommendations.side_effect = errors.ConnectionError(error_message)
 
-        response = self.client.post(reverse("recommendations"), data=self.topics,
-                                    format="json")
+        response = self.client.post(
+            reverse("recommendations"), data=self.topics, format="json"
+        )
 
         self.assertEqual(response.status_code, 503)
         self.assertEqual(response.json(), {"error": error_message})
         mock_load_recommendations.assert_called_once()
 
-    @patch("contentcuration.utils.automation_manager.AutomationManager.load_recommendations")
+    @patch(
+        "contentcuration.utils.automation_manager.AutomationManager.load_recommendations"
+    )
     def test_recommendation_generic_error(self, mock_load_recommendations):
         self.client.force_authenticate(user=self.admin_user)
 
         error_message = "Unable to load recommendations"
         mock_load_recommendations.side_effect = errors.HttpError(error_message)
-        response = self.client.post(reverse("recommendations"), data=self.topics,
-                                    format="json")
+        response = self.client.post(
+            reverse("recommendations"), data=self.topics, format="json"
+        )
 
         self.assertEqual(response.status_code, 500)
         self.assertEqual(response.content.decode(), error_message)
@@ -134,13 +148,20 @@ class RecommendationsEventViewSetTestCase(StudioAPITestCase):
     @property
     def recommendations_event_object(self):
         return {
-            'context': {'model_version': 1, 'breadcrumbs': "#Title#->Random"},
-            'contentnode_id': self.contentNode.id,
-            'content_id': self.contentNode.content_id,
-            'target_channel_id': self.channel.id,
-            'user': self.user.id,
-            'time_hidden': '2024-03-20T10:00:00Z',
-            'content': [{'content_id': str(self.contentNode.content_id), 'node_id': str(self.contentNode.id), 'channel_id': str(self.channel.id), 'score': 4}]
+            "context": {"model_version": 1, "breadcrumbs": "#Title#->Random"},
+            "contentnode_id": self.contentNode.id,
+            "content_id": self.contentNode.content_id,
+            "target_channel_id": self.channel.id,
+            "user": self.user.id,
+            "time_hidden": "2024-03-20T10:00:00Z",
+            "content": [
+                {
+                    "content_id": str(self.contentNode.content_id),
+                    "node_id": str(self.contentNode.id),
+                    "channel_id": str(self.channel.id),
+                    "score": 4,
+                }
+            ],
         }
 
     def setUp(self):
@@ -158,7 +179,9 @@ class RecommendationsEventViewSetTestCase(StudioAPITestCase):
     def test_create_recommendations_event(self):
         recommendations_event = self.recommendations_event_object
         response = self.client.post(
-            reverse("recommendations-list"), recommendations_event, format="json",
+            reverse("recommendations-list"),
+            recommendations_event,
+            format="json",
         )
         self.assertEqual(response.status_code, 201, response.content)
 
@@ -168,85 +191,100 @@ class RecommendationsEventViewSetTestCase(StudioAPITestCase):
 
     def test_retrieve_fails(self):
         recommendations_event = RecommendationsEvent.objects.create(
-            context={'model_version': 1, 'breadcrumbs': "#Title#->Random"},
+            context={"model_version": 1, "breadcrumbs": "#Title#->Random"},
             contentnode_id=self.contentNode.id,
             content_id=self.contentNode.content_id,
             target_channel_id=self.channel.id,
-            time_hidden='2024-03-20T10:00:00Z',
-            content=[{
-                'content_id': str(self.contentNode.content_id),
-                'node_id': str(self.contentNode.id),
-                'channel_id': str(self.channel.id),
-                'score': 4
-            }],
+            time_hidden="2024-03-20T10:00:00Z",
+            content=[
+                {
+                    "content_id": str(self.contentNode.content_id),
+                    "node_id": str(self.contentNode.id),
+                    "channel_id": str(self.channel.id),
+                    "score": 4,
+                }
+            ],
             user=self.user,
         )
-        response = self.client.get(reverse("recommendations-detail", kwargs={"pk": recommendations_event.id}), format="json")
+        response = self.client.get(
+            reverse("recommendations-detail", kwargs={"pk": recommendations_event.id}),
+            format="json",
+        )
         self.assertEqual(response.status_code, 405, response.content)
 
     def test_update_recommendations_event(self):
         recommendations_event = RecommendationsEvent.objects.create(
-            context={'model_version': 1, 'breadcrumbs': "#Title#->Random"},
+            context={"model_version": 1, "breadcrumbs": "#Title#->Random"},
             contentnode_id=self.contentNode.id,
             content_id=self.contentNode.content_id,
             target_channel_id=self.channel.id,
-            time_hidden='2024-03-20T10:00:00Z',
-            content=[{
-                'content_id': str(self.contentNode.content_id),
-                'node_id': str(self.contentNode.id),
-                'channel_id': str(self.channel.id),
-                'score': 4
-                }],
+            time_hidden="2024-03-20T10:00:00Z",
+            content=[
+                {
+                    "content_id": str(self.contentNode.content_id),
+                    "node_id": str(self.contentNode.id),
+                    "channel_id": str(self.channel.id),
+                    "score": 4,
+                }
+            ],
             user=self.user,
         )
         updated_data = self.recommendations_event_object
-        updated_data['context'] = {'model_version': 2, 'breadcrumbs': "#Title#->Updated"}
+        updated_data["context"] = {
+            "model_version": 2,
+            "breadcrumbs": "#Title#->Updated",
+        }
         response = self.client.put(
             reverse("recommendations-detail", kwargs={"pk": recommendations_event.id}),
             updated_data,
-            format="json"
+            format="json",
         )
         self.assertEqual(response.status_code, 200, response.content)
 
     def test_partial_update_recommendations_event(self):
         recommendations_event = RecommendationsEvent.objects.create(
-            context={'model_version': 1, 'breadcrumbs': "#Title#->Random"},
+            context={"model_version": 1, "breadcrumbs": "#Title#->Random"},
             contentnode_id=self.contentNode.id,
             content_id=self.contentNode.content_id,
             target_channel_id=self.channel.id,
-            time_hidden='2024-03-20T10:00:00Z',
-            content=[{
-                    'content_id': str(self.contentNode.content_id),
-                     'node_id': str(self.contentNode.id),
-                     'channel_id': str(self.channel.id),
-                     'score': 4
-                     }],
+            time_hidden="2024-03-20T10:00:00Z",
+            content=[
+                {
+                    "content_id": str(self.contentNode.content_id),
+                    "node_id": str(self.contentNode.id),
+                    "channel_id": str(self.channel.id),
+                    "score": 4,
+                }
+            ],
             user=self.user,
         )
         response = self.client.patch(
             reverse("recommendations-detail", kwargs={"pk": recommendations_event.id}),
-            {'context': {'model_version': 2}},
-            format="json"
+            {"context": {"model_version": 2}},
+            format="json",
         )
         self.assertEqual(response.status_code, 200, response.content)
 
     def test_destroy_recommendations_event(self):
         recommendations_event = RecommendationsEvent.objects.create(
-            context={'model_version': 1, 'breadcrumbs': "#Title#->Random"},
+            context={"model_version": 1, "breadcrumbs": "#Title#->Random"},
             contentnode_id=self.contentNode.id,
             content_id=self.contentNode.content_id,
             target_channel_id=self.channel.id,
-            time_hidden='2024-03-20T10:00:00Z',
-            content=[{
-                'content_id': str(self.contentNode.content_id),
-                'node_id': str(self.contentNode.id),
-                'channel_id': str(self.channel.id), 'score': 4
-                     }],
+            time_hidden="2024-03-20T10:00:00Z",
+            content=[
+                {
+                    "content_id": str(self.contentNode.content_id),
+                    "node_id": str(self.contentNode.id),
+                    "channel_id": str(self.channel.id),
+                    "score": 4,
+                }
+            ],
             user=self.user,
         )
         response = self.client.delete(
             reverse("recommendations-detail", kwargs={"pk": recommendations_event.id}),
-            format="json"
+            format="json",
         )
         self.assertEqual(response.status_code, 405, response.content)
 
@@ -255,12 +293,12 @@ class RecommendationsInteractionEventViewSetTestCase(StudioAPITestCase):
     @property
     def recommendations_interaction_object(self):
         return {
-            'context': {'test_key': 'test_value'},
-            'contentnode_id': self.interaction_node.id,
-            'content_id': self.interaction_node.content_id,
-            'feedback_type': 'IGNORED',
-            'feedback_reason': '----',
-            'recommendation_event_id': str(self.recommendation_event.id)
+            "context": {"test_key": "test_value"},
+            "contentnode_id": self.interaction_node.id,
+            "content_id": self.interaction_node.content_id,
+            "feedback_type": "IGNORED",
+            "feedback_reason": "----",
+            "recommendation_event_id": str(self.recommendation_event.id),
         }
 
     def setUp(self):
@@ -285,84 +323,105 @@ class RecommendationsInteractionEventViewSetTestCase(StudioAPITestCase):
             target_channel_id=self.channel.id,
             content_id=self.node_where_import_is_initiated.content_id,
             contentnode_id=self.node_where_import_is_initiated.id,
-            context={'model_version': 1, 'breadcrumbs': "#Title#->Random"},
-            time_hidden='2024-03-20T10:00:00Z',
-            content=[{
-                'content_id': str(self.interaction_node.content_id),
-                'node_id': str(self.interaction_node.id),
-                'channel_id': str(self.channel.id),
-                'score': 4
-                      }]
+            context={"model_version": 1, "breadcrumbs": "#Title#->Random"},
+            time_hidden="2024-03-20T10:00:00Z",
+            content=[
+                {
+                    "content_id": str(self.interaction_node.content_id),
+                    "node_id": str(self.interaction_node.id),
+                    "channel_id": str(self.channel.id),
+                    "score": 4,
+                }
+            ],
         )
 
     def test_create_recommendations_interaction(self):
         recommendations_interaction = self.recommendations_interaction_object
         response = self.client.post(
-            reverse("recommendations-interaction-list"), recommendations_interaction, format="json",
+            reverse("recommendations-interaction-list"),
+            recommendations_interaction,
+            format="json",
         )
         self.assertEqual(response.status_code, 201, response.content)
 
     def test_list_fails(self):
-        response = self.client.get(reverse("recommendations-interaction-list"), format="json")
+        response = self.client.get(
+            reverse("recommendations-interaction-list"), format="json"
+        )
         self.assertEqual(response.status_code, 405, response.content)
 
     def test_retrieve_fails(self):
         recommendations_interaction = RecommendationsInteractionEvent.objects.create(
-            context={'test_key': 'test_value'},
+            context={"test_key": "test_value"},
             contentnode_id=self.interaction_node.id,
             content_id=self.interaction_node.content_id,
-            feedback_type='IGNORED',
-            feedback_reason='----',
-            recommendation_event_id=self.recommendation_event.id
+            feedback_type="IGNORED",
+            feedback_reason="----",
+            recommendation_event_id=self.recommendation_event.id,
         )
-        response = self.client.get(reverse("recommendations-interaction-detail", kwargs={"pk": recommendations_interaction.id}), format="json")
+        response = self.client.get(
+            reverse(
+                "recommendations-interaction-detail",
+                kwargs={"pk": recommendations_interaction.id},
+            ),
+            format="json",
+        )
         self.assertEqual(response.status_code, 405, response.content)
 
     def test_update_recommendations_interaction(self):
         recommendations_interaction = RecommendationsInteractionEvent.objects.create(
-            context={'test_key': 'test_value'},
+            context={"test_key": "test_value"},
             contentnode_id=self.interaction_node.id,
             content_id=self.interaction_node.content_id,
-            feedback_type='IGNORED',
-            feedback_reason='----',
-            recommendation_event_id=self.recommendation_event.id
+            feedback_type="IGNORED",
+            feedback_reason="----",
+            recommendation_event_id=self.recommendation_event.id,
         )
         updated_data = self.recommendations_interaction_object
-        updated_data['feedback_type'] = 'PREVIEWED'
+        updated_data["feedback_type"] = "PREVIEWED"
         response = self.client.put(
-            reverse("recommendations-interaction-detail", kwargs={"pk": recommendations_interaction.id}),
+            reverse(
+                "recommendations-interaction-detail",
+                kwargs={"pk": recommendations_interaction.id},
+            ),
             updated_data,
-            format="json"
+            format="json",
         )
         self.assertEqual(response.status_code, 200, response.content)
 
     def test_partial_update_recommendations_interaction(self):
         recommendations_interaction = RecommendationsInteractionEvent.objects.create(
-            context={'test_key': 'test_value'},
+            context={"test_key": "test_value"},
             contentnode_id=self.interaction_node.id,
             content_id=self.interaction_node.content_id,
-            feedback_type='IGNORED',
-            feedback_reason='----',
-            recommendation_event_id=self.recommendation_event.id
+            feedback_type="IGNORED",
+            feedback_reason="----",
+            recommendation_event_id=self.recommendation_event.id,
         )
         response = self.client.patch(
-            reverse("recommendations-interaction-detail", kwargs={"pk": recommendations_interaction.id}),
-            {'feedback_type': 'IMPORTED'},
-            format="json"
+            reverse(
+                "recommendations-interaction-detail",
+                kwargs={"pk": recommendations_interaction.id},
+            ),
+            {"feedback_type": "IMPORTED"},
+            format="json",
         )
         self.assertEqual(response.status_code, 200, response.content)
 
     def test_destroy_recommendations_interaction(self):
         recommendations_interaction = RecommendationsInteractionEvent.objects.create(
-            context={'test_key': 'test_value'},
+            context={"test_key": "test_value"},
             contentnode_id=self.interaction_node.id,
             content_id=self.interaction_node.content_id,
-            feedback_type='IGNORED',
-            feedback_reason='----',
-            recommendation_event_id=self.recommendation_event.id
+            feedback_type="IGNORED",
+            feedback_reason="----",
+            recommendation_event_id=self.recommendation_event.id,
         )
         response = self.client.delete(
-            reverse("recommendations-interaction-detail", kwargs={"pk": recommendations_interaction.id}),
-            format="json"
+            reverse(
+                "recommendations-interaction-detail",
+                kwargs={"pk": recommendations_interaction.id},
+            ),
+            format="json",
         )
         self.assertEqual(response.status_code, 405, response.content)

@@ -157,7 +157,9 @@ class GetAllChannelsTestCase(StudioTestCase):
         super(GetAllChannelsTestCase, self).setUp()
 
         # create 10 channels for comparison
-        self.channels = [Channel.objects.create(actor_id=self.admin_user.id) for _ in range(10)]
+        self.channels = [
+            Channel.objects.create(actor_id=self.admin_user.id) for _ in range(10)
+        ]
 
     def test_returns_all_channels_in_the_db(self):
         """
@@ -176,7 +178,9 @@ class ChannelSetTestCase(BaseAPITestCase):
     def setUp(self):
         super(ChannelSetTestCase, self).setUp()
         self.channelset = mixer.blend(ChannelSet, editors=[self.user])
-        self.channels = [Channel.objects.create(actor_id=self.user.id) for _ in range(10)]
+        self.channels = [
+            Channel.objects.create(actor_id=self.user.id) for _ in range(10)
+        ]
         for chann in self.channels:
             chann.secret_tokens.add(self.channelset.secret_token)
             chann.editors.add(self.user)
@@ -272,7 +276,9 @@ class ChannelMetadataSaveTestCase(StudioTestCase):
 
     def setUp(self):
         super(ChannelMetadataSaveTestCase, self).setUp()
-        self.channels = [Channel.objects.create(actor_id=self.admin_user.id) for _ in range(5)]
+        self.channels = [
+            Channel.objects.create(actor_id=self.admin_user.id) for _ in range(5)
+        ]
         for c in self.channels:
             c.main_tree.changed = False
             c.main_tree.save()

@@ -41,7 +41,9 @@ class GetFileDiffTestCase(StudioTestCase):
         # Upload some pieces of content, as our test data
 
         self.existing_content = "dowereallyexist.jpg"
-        self.existing_content_path = generate_object_storage_name("dowereallyexist", self.existing_content)
+        self.existing_content_path = generate_object_storage_name(
+            "dowereallyexist", self.existing_content
+        )
         storage.save(self.existing_content_path, BytesIO(b"maybe"))
 
     def test_returns_empty_if_content_already_exists(self):
@@ -61,10 +63,7 @@ class GetFileDiffTestCase(StudioTestCase):
         Test if a list with a nonexistent file passed in to get_file_diff
         would return that file.
         """
-        files = [
-            self.existing_content,
-            "rando"
-        ]
+        files = [self.existing_content, "rando"]
         assert get_file_diff(files) == ["rando"]
 
 
@@ -75,8 +74,7 @@ class FileFormatsTestCase(StudioTestCase):
 
     def test_unsupported_files_raise_error(self):
         unsupported_file = File.objects.create(
-            file_on_disk=ContentFile(b"test"),
-            checksum='aaa'
+            file_on_disk=ContentFile(b"test"), checksum="aaa"
         )
 
         with self.assertRaises(Exception):
@@ -91,14 +89,18 @@ class FileFormatsTestCase(StudioTestCase):
 
         for ext in known_extensions:
             file_with_ext = File.objects.create(
-                file_on_disk=ContentFile(b"test"),
-                checksum="aaa"
+                file_on_disk=ContentFile(b"test"), checksum="aaa"
             )
 
             try:
-                file_with_ext.file_on_disk.save("aaa.{}".format(ext), ContentFile("aaa"))
+                file_with_ext.file_on_disk.save(
+                    "aaa.{}".format(ext), ContentFile("aaa")
+                )
             except Exception as e:
-                raise type(e)(e.message + " ... (hint: make sure that the version of le-utils you're using has its file formats synced).")
+                raise type(e)(
+                    e.message
+                    + " ... (hint: make sure that the version of le-utils you're using has its file formats synced)."
+                )
 
 
 class LEUtilsListsTestCase(TestCase):
@@ -107,38 +109,39 @@ class LEUtilsListsTestCase(TestCase):
     """
 
     def test_le_utils_has_all_consstants_lists(self):
-        assert licenses.LICENSELIST, 'licenses.LICENSELIST missing from LE-UTILS!'
-        assert content_kinds.KINDLIST, 'content_kinds.KINDLIST missing from LE-UTILS!'
-        assert languages.LANGUAGELIST, 'languages.LANGUAGELIST missing from LE-UTILS!'
-        assert file_formats.FORMATLIST, 'file_formats.FORMATLIST missing from LE-UTILS!'
-        assert format_presets.PRESETLIST, 'format_presets.PRESETLIST missing from LE-UTILS!'
+        assert licenses.LICENSELIST, "licenses.LICENSELIST missing from LE-UTILS!"
+        assert content_kinds.KINDLIST, "content_kinds.KINDLIST missing from LE-UTILS!"
+        assert languages.LANGUAGELIST, "languages.LANGUAGELIST missing from LE-UTILS!"
+        assert file_formats.FORMATLIST, "file_formats.FORMATLIST missing from LE-UTILS!"
+        assert (
+            format_presets.PRESETLIST
+        ), "format_presets.PRESETLIST missing from LE-UTILS!"
 
     def test_le_utils_has_all_choices(self):
         """Used for django model choices fields to provide validation."""
-        assert content_kinds.choices, 'content_kinds.choices missing from LE-UTILS!'
-        assert format_presets.choices, 'format_presets.choices missing from LE-UTILS!'
-        assert file_formats.choices, 'file_formats.choices missing from LE-UTILS!'
+        assert content_kinds.choices, "content_kinds.choices missing from LE-UTILS!"
+        assert format_presets.choices, "format_presets.choices missing from LE-UTILS!"
+        assert file_formats.choices, "file_formats.choices missing from LE-UTILS!"
 
 
 class LoadConstantsManagementCommandTestCase(TestCase):
     """
     Check `loadconstants` works.
     """
-    models = [
-        ContentKind,
-        FileFormat,
-        FormatPreset,
-        Language,
-        License
-    ]
+
+    models = [ContentKind, FileFormat, FormatPreset, Language, License]
 
     def test_starting_from_empty_db(self):
         for model in self.models:
             qset = model.objects.all()
-            assert len(list(qset)) == 0, 'Constants of type {} already exist.'.format(str(model))
+            assert len(list(qset)) == 0, "Constants of type {} already exist.".format(
+                str(model)
+            )
 
     def test_models_exist_after_loadconstants(self):
         call_command("loadconstants")
         for model in self.models:
             qset = model.objects.all()
-            assert len(list(qset)) > 3, 'Only {} constants of type {} created.'.format(len(list(qset)), str(model))
+            assert len(list(qset)) > 3, "Only {} constants of type {} created.".format(
+                len(list(qset)), str(model)
+            )

@@ -66,7 +66,7 @@ class IsAIFeatureEnabledForUser(BasePermission):
             if request.user.is_admin:
                 return True
             else:
-                return request.user.check_feature_flag('ai_feature')
+                return request.user.check_feature_flag("ai_feature")
         except AttributeError:
             return False
 
@@ -102,7 +102,8 @@ class UserFilter(FilterSet):
             can_edit=Cast(
                 Cast(
                     SQCount(
-                        channel_queryset.filter(editors=OuterRef("id")), field="id",
+                        channel_queryset.filter(editors=OuterRef("id")),
+                        field="id",
                     ),
                     IntegerField(),
                 ),
@@ -111,7 +112,8 @@ class UserFilter(FilterSet):
             can_view=Cast(
                 Cast(
                     SQCount(
-                        channel_queryset.filter(viewers=OuterRef("id")), field="id",
+                        channel_queryset.filter(viewers=OuterRef("id")),
+                        field="id",
                     ),
                     IntegerField(),
                 ),
@@ -182,7 +184,9 @@ class ChannelUserFilter(RequiredFilterSet):
     def filter_channel(self, queryset, name, value):
         # Check permissions
         if not self.request.user.can_edit(value):
-            return queryset.none().annotate(can_edit=boolean_val(False), can_view=boolean_val(False))
+            return queryset.none().annotate(
+                can_edit=boolean_val(False), can_view=boolean_val(False)
+            )
         user_queryset = User.objects.filter(id=OuterRef("id"))
         queryset = queryset.annotate(
             can_edit=Exists(user_queryset.filter(editable_channels=value)),
@@ -292,29 +296,31 @@ class ChannelUserViewSet(ReadOnlyValuesViewset):
     def delete_from_changes(self, changes):
         return self._handle_relationship_changes(changes)
 
-    @action(detail=True, methods=['delete'])
+    @action(detail=True, methods=["delete"])
     def remove_self(self, request, pk=None):
         """
         Allows a user to remove themselves from a channel as a viewer.
         """
         user = self.get_object()
-        channel_id = request.query_params.get('channel_id', None)
+        channel_id = request.query_params.get("channel_id", None)
 
         if not channel_id:
-            return HttpResponseBadRequest('Channel ID is required.')
+            return HttpResponseBadRequest("Channel ID is required.")
 
         channel = Channel.objects.get(id=channel_id)
         if not channel:
             return HttpResponseNotFound("Channel not found {}".format(channel_id))
 
         if request.user != user and not request.user.can_edit(channel_id):
-            return HttpResponseForbidden("You do not have permission to remove this user {}".format(user.id))
+            return HttpResponseForbidden(
+                "You do not have permission to remove this user {}".format(user.id)
+            )
 
         if channel.viewers.filter(id=user.id).exists():
             channel.viewers.remove(user)
             return Response(status=HTTP_204_NO_CONTENT)
         else:
-            return HttpResponseBadRequest('User is not a viewer of this channel.')
+            return HttpResponseBadRequest("User is not a viewer of this channel.")
 
 
 class AdminUserFilter(FilterSet):
@@ -396,7 +402,9 @@ class AdminUserSerializer(UserSerializer):
         list_serializer_class = BulkListSerializer
 
 
-class AdminUserViewSet(ReadOnlyValuesViewset, RESTUpdateModelMixin, RESTDestroyModelMixin):
+class AdminUserViewSet(
+    ReadOnlyValuesViewset, RESTUpdateModelMixin, RESTDestroyModelMixin
+):
     pagination_class = UserListPagination
     permission_classes = [IsAdminUser]
     serializer_class = AdminUserSerializer
@@ -444,12 +452,18 @@ class AdminUserViewSet(ReadOnlyValuesViewset, RESTUpdateModelMixin, RESTDestroyM
     def metadata(self, request, pk=None):
         user = self._get_object_from_queryset(self.queryset)
         information = user.information or {}
-        information.update({
-            'edit_channels': user.editable_channels.filter(deleted=False).values('id', 'name'),
-            'viewonly_channels': user.view_only_channels.filter(deleted=False).values('id', 'name'),
-            'total_space': user.disk_space,
-            'used_space': user.disk_space_used,
-            'policies': user.policies,
-            'feature_flags': user.feature_flags or {}
-        })
+        information.update(
+            {
+                "edit_channels": user.editable_channels.filter(deleted=False).values(
+                    "id", "name"
+                ),
+                "viewonly_channels": user.view_only_channels.filter(
+                    deleted=False
+                ).values("id", "name"),
+                "total_space": user.disk_space,
+                "used_space": user.disk_space_used,
+                "policies": user.policies,
+                "feature_flags": user.feature_flags or {},
+            }
+        )
         return Response(information)

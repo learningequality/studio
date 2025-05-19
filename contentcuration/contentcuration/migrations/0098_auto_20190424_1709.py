@@ -9,32 +9,99 @@ from django.db import models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('contentcuration', '0097_task'),
+        ("contentcuration", "0097_task"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='SlideshowSlide',
+            name="SlideshowSlide",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('sort_order', models.FloatField(default=1.0)),
-                ('metadata', django.contrib.postgres.fields.jsonb.JSONField(default={})),
-                ('contentnode', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='slideshow_slides', to='contentcuration.ContentNode')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("sort_order", models.FloatField(default=1.0)),
+                (
+                    "metadata",
+                    django.contrib.postgres.fields.jsonb.JSONField(default={}),
+                ),
+                (
+                    "contentnode",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="slideshow_slides",
+                        to="contentcuration.ContentNode",
+                    ),
+                ),
             ],
         ),
         migrations.AlterField(
-            model_name='contentkind',
-            name='kind',
-            field=models.CharField(choices=[('topic', 'Topic'), ('video', 'Video'), ('audio', 'Audio'), ('exercise', 'Exercise'), ('document', 'Document'), ('html5', 'HTML5 App'), ('slideshow', 'Slideshow')], max_length=200, primary_key=True, serialize=False),
+            model_name="contentkind",
+            name="kind",
+            field=models.CharField(
+                choices=[
+                    ("topic", "Topic"),
+                    ("video", "Video"),
+                    ("audio", "Audio"),
+                    ("exercise", "Exercise"),
+                    ("document", "Document"),
+                    ("html5", "HTML5 App"),
+                    ("slideshow", "Slideshow"),
+                ],
+                max_length=200,
+                primary_key=True,
+                serialize=False,
+            ),
         ),
         migrations.AlterField(
-            model_name='formatpreset',
-            name='id',
-            field=models.CharField(choices=[('high_res_video', 'High Resolution'), ('low_res_video', 'Low Resolution'), ('video_thumbnail', 'Thumbnail'), ('video_subtitle', 'Subtitle'), ('video_dependency', 'Video (dependency)'), ('audio', 'Audio'), ('audio_thumbnail', 'Thumbnail'), ('document', 'Document'), ('epub', 'ePub Document'), ('document_thumbnail', 'Thumbnail'), ('exercise', 'Exercise'), ('exercise_thumbnail', 'Thumbnail'), ('exercise_image', 'Exercise Image'), ('exercise_graphie', 'Exercise Graphie'), ('channel_thumbnail', 'Channel Thumbnail'), ('topic_thumbnail', 'Thumbnail'), ('html5_zip', 'HTML5 Zip'), ('html5_dependency', 'HTML5 Dependency (Zip format)'), ('html5_thumbnail', 'HTML5 Thumbnail'), ('slideshow_image', 'Slideshow Image'), ('slideshow_thumbnail', 'Slideshow Thumbnail'), ('slideshow_manifest', 'Slideshow Manifest')], max_length=150, primary_key=True, serialize=False),
+            model_name="formatpreset",
+            name="id",
+            field=models.CharField(
+                choices=[
+                    ("high_res_video", "High Resolution"),
+                    ("low_res_video", "Low Resolution"),
+                    ("video_thumbnail", "Thumbnail"),
+                    ("video_subtitle", "Subtitle"),
+                    ("video_dependency", "Video (dependency)"),
+                    ("audio", "Audio"),
+                    ("audio_thumbnail", "Thumbnail"),
+                    ("document", "Document"),
+                    ("epub", "ePub Document"),
+                    ("document_thumbnail", "Thumbnail"),
+                    ("exercise", "Exercise"),
+                    ("exercise_thumbnail", "Thumbnail"),
+                    ("exercise_image", "Exercise Image"),
+                    ("exercise_graphie", "Exercise Graphie"),
+                    ("channel_thumbnail", "Channel Thumbnail"),
+                    ("topic_thumbnail", "Thumbnail"),
+                    ("html5_zip", "HTML5 Zip"),
+                    ("html5_dependency", "HTML5 Dependency (Zip format)"),
+                    ("html5_thumbnail", "HTML5 Thumbnail"),
+                    ("slideshow_image", "Slideshow Image"),
+                    ("slideshow_thumbnail", "Slideshow Thumbnail"),
+                    ("slideshow_manifest", "Slideshow Manifest"),
+                ],
+                max_length=150,
+                primary_key=True,
+                serialize=False,
+            ),
         ),
         migrations.AddField(
-            model_name='file',
-            name='slideshow_slide',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='files', to='contentcuration.SlideshowSlide'),
+            model_name="file",
+            name="slideshow_slide",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="files",
+                to="contentcuration.SlideshowSlide",
+            ),
         ),
     ]

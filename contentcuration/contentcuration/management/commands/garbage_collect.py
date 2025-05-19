@@ -16,11 +16,10 @@ from contentcuration.utils.garbage_collect import clean_up_stale_files
 from contentcuration.utils.garbage_collect import clean_up_tasks
 
 
-logging = logmodule.getLogger('command')
+logging = logmodule.getLogger("command")
 
 
 class Command(BaseCommand):
-
     def handle(self, *args, **options):
         """
         Actual logic for garbage collection.
@@ -29,7 +28,9 @@ class Command(BaseCommand):
         # Clean up users that are soft deleted and are older than ACCOUNT_DELETION_BUFFER (90 days).
         # Also clean contentnodes, files and file objects on storage that are associated
         # with the orphan tree.
-        logging.info("Cleaning up soft deleted users older than ACCOUNT_DELETION_BUFFER (90 days)")
+        logging.info(
+            "Cleaning up soft deleted users older than ACCOUNT_DELETION_BUFFER (90 days)"
+        )
         clean_up_soft_deleted_users()
 
         logging.info("Cleaning up contentnodes from the orphan tree")

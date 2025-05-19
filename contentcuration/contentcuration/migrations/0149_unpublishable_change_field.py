@@ -6,20 +6,23 @@ from django.db import models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('contentcuration', '0148_flagfeedbackevent_recommendationsevent_recommendationsinteractionevent'),
+        (
+            "contentcuration",
+            "0148_flagfeedbackevent_recommendationsevent_recommendationsinteractionevent",
+        ),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='change',
-            name='unpublishable',
+            model_name="change",
+            name="unpublishable",
             field=models.BooleanField(blank=True, null=True),
         ),
         # Add default to False in a separate migration operation
         # to avoid expensive backfilling of the new column for existing rows
         migrations.AlterField(
-            model_name='change',
-            name='unpublishable',
+            model_name="change",
+            name="unpublishable",
             field=models.BooleanField(blank=True, default=False, null=True),
         ),
     ]

@@ -14,7 +14,7 @@ Feature: Quick edit fields of a single resource
 		Then I am back at the page with the resources
 			And I see a message: *Changes saved*
 			And I can see that the title and description are changed
-		
+
 	Scenario: Edit the language of a resource
 		When I click the *⋮* (Options) button for a resource #alternatively one can select a resource and click the corresponding icon in the top bar
 			And I click the *Edit language* option

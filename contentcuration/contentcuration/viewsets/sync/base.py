@@ -23,16 +23,16 @@ from contentcuration.viewsets.sync.constants import COPIED
 from contentcuration.viewsets.sync.constants import CREATED
 from contentcuration.viewsets.sync.constants import DELETED
 from contentcuration.viewsets.sync.constants import DEPLOYED
-from contentcuration.viewsets.sync.constants import UPDATED_DESCENDANTS
-from contentcuration.viewsets.sync.constants import PUBLISHED_NEXT
 from contentcuration.viewsets.sync.constants import EDITOR_M2M
 from contentcuration.viewsets.sync.constants import FILE
 from contentcuration.viewsets.sync.constants import INVITATION
 from contentcuration.viewsets.sync.constants import MOVED
 from contentcuration.viewsets.sync.constants import PUBLISHED
+from contentcuration.viewsets.sync.constants import PUBLISHED_NEXT
 from contentcuration.viewsets.sync.constants import SAVEDSEARCH
 from contentcuration.viewsets.sync.constants import SYNCED
 from contentcuration.viewsets.sync.constants import UPDATED
+from contentcuration.viewsets.sync.constants import UPDATED_DESCENDANTS
 from contentcuration.viewsets.sync.constants import USER
 from contentcuration.viewsets.sync.constants import VIEWER_M2M
 from contentcuration.viewsets.sync.utils import log_sync_exception
@@ -97,7 +97,7 @@ event_handlers = {
     SYNCED: "sync_from_changes",
     DEPLOYED: "deploy_from_changes",
     UPDATED_DESCENDANTS: "update_descendants_from_changes",
-    PUBLISHED_NEXT: "publish_next_from_changes"
+    PUBLISHED_NEXT: "publish_next_from_changes",
 }
 
 
@@ -127,7 +127,9 @@ def apply_changes(changes_queryset):
                     change.applied = True
                     changed_fields = ("applied",)
         except Exception as e:
-            log_sync_exception(e, user=change.created_by, change=change.serialize_to_change_dict())
+            log_sync_exception(
+                e, user=change.created_by, change=change.serialize_to_change_dict()
+            )
             change.errored = True
             change.kwargs["errors"] = [str(e)]
         change.save(update_fields=changed_fields)

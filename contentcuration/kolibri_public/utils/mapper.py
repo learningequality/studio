@@ -32,12 +32,14 @@ class ChannelMapper(object):
             },
             kolibri_public_models.LocalFile: {
                 "available": True,
-            }
+            },
         }
 
     def _handle_old_tree_if_exists(self):
         try:
-            old_channel = kolibri_public_models.ChannelMetadata.objects.get(id=self.channel.id)
+            old_channel = kolibri_public_models.ChannelMetadata.objects.get(
+                id=self.channel.id
+            )
             self.tree_id = old_channel.root.tree_id
             old_channel.root.get_descendants(include_self=True).delete()
         except kolibri_public_models.ChannelMetadata.DoesNotExist:
@@ -47,7 +49,9 @@ class ChannelMapper(object):
         with transaction.atomic():
             self._handle_old_tree_if_exists()
             self.mapped_root = self.map_root(self.channel.root)
-            self.mapped_channel = self._map_model(self.channel, kolibri_public_models.ChannelMetadata)
+            self.mapped_channel = self._map_model(
+                self.channel, kolibri_public_models.ChannelMetadata
+            )
             self.mapped_channel.public = self.public
             self.mapped_channel.save_base(raw=True)
             annotate_label_bitmasks(self.mapped_root.get_descendants(include_self=True))
@@ -77,7 +81,9 @@ class ChannelMapper(object):
         return node
 
     def _extend_ancestors(self, ancestors, new_ancestor):
-        return ancestors + [{"id": new_ancestor.id, "title": new_ancestor.title.replace('"', '\\"')}]
+        return ancestors + [
+            {"id": new_ancestor.id, "title": new_ancestor.title.replace('"', '\\"')}
+        ]
 
     def _recurse_to_create_tree(
         self,
@@ -91,19 +97,16 @@ class ChannelMapper(object):
             children = sorted(nodes_by_parent[source.id], key=lambda x: x.lft)
             ancestors = self._extend_ancestors(ancestors, source)
             for child in children:
-                nodes_to_create.extend(self._recurse_to_create_tree(
-                    child,
-                    nodes_by_parent,
-                    ancestors,
-                ))
+                nodes_to_create.extend(
+                    self._recurse_to_create_tree(
+                        child,
+                        nodes_by_parent,
+                        ancestors,
+                    )
+                )
         return nodes_to_create
 
-    def map_root(
-        self,
-        root,
-        batch_size=None,
-        progress_tracker=None
-    ):
+    def map_root(self, root, batch_size=None, progress_tracker=None):
         """
         :type progress_tracker: contentcuration.utils.celery.ProgressTracker|None
         """
@@ -152,41 +155,48 @@ class ChannelMapper(object):
         return [node_copy]
 
     def _copy_tags(self, node_ids):
-        initial_source_tag_mappings = kolibri_content_models.ContentNode.tags.through.objects.filter(
-            contentnode_id__in=node_ids
-        )
-
-        source_tags = (
-            kolibri_content_models.ContentTag.objects
-            .annotate(
-                tag_name_len=Length("tag_name"),
-            )
-            .filter(
-                id__in=initial_source_tag_mappings.values_list("contenttag_id", flat=True),
-                tag_name_len__lte=MAX_TAG_LENGTH,
+        initial_source_tag_mappings = (
+            kolibri_content_models.ContentNode.tags.through.objects.filter(
+                contentnode_id__in=node_ids
             )
         )
 
-        source_tag_mappings = (
-            initial_source_tag_mappings
-            .filter(
-                contenttag_id__in=source_tags.values_list("id", flat=True),
-            )
+        source_tags = kolibri_content_models.ContentTag.objects.annotate(
+            tag_name_len=Length("tag_name"),
+        ).filter(
+            id__in=initial_source_tag_mappings.values_list("contenttag_id", flat=True),
+            tag_name_len__lte=MAX_TAG_LENGTH,
+        )
+
+        source_tag_mappings = initial_source_tag_mappings.filter(
+            contenttag_id__in=source_tags.values_list("id", flat=True),
         )
 
         self._map_and_bulk_create_model(source_tags, kolibri_public_models.ContentTag)
 
-        self._map_and_bulk_create_model(source_tag_mappings, kolibri_public_models.ContentNode.tags.through)
+        self._map_and_bulk_create_model(
+            source_tag_mappings, kolibri_public_models.ContentNode.tags.through
+        )
 
     def _copy_assessment_metadata(self, node_ids):
-        node_assessmentmetadata = kolibri_content_models.AssessmentMetaData.objects.filter(contentnode_id__in=node_ids)
+        node_assessmentmetadata = (
+            kolibri_content_models.AssessmentMetaData.objects.filter(
+                contentnode_id__in=node_ids
+            )
+        )
 
-        self._map_and_bulk_create_model(node_assessmentmetadata, kolibri_public_models.AssessmentMetaData)
+        self._map_and_bulk_create_model(
+            node_assessmentmetadata, kolibri_public_models.AssessmentMetaData
+        )
 
     def _copy_files(self, node_ids):
-        node_files = kolibri_content_models.File.objects.filter(contentnode_id__in=node_ids)
+        node_files = kolibri_content_models.File.objects.filter(
+            contentnode_id__in=node_ids
+        )
 
-        local_files = kolibri_content_models.LocalFile.objects.filter(id__in=node_files.values_list("local_file_id", flat=True))
+        local_files = kolibri_content_models.LocalFile.objects.filter(
+            id__in=node_files.values_list("local_file_id", flat=True)
+        )
 
         self._map_and_bulk_create_model(local_files, kolibri_public_models.LocalFile)
 
@@ -232,12 +242,16 @@ class ChannelMapper(object):
             ancestors,
         )
 
-        mapped_nodes = kolibri_public_models.ContentNode.objects.bulk_create(nodes_to_create)
+        mapped_nodes = kolibri_public_models.ContentNode.objects.bulk_create(
+            nodes_to_create
+        )
 
         # filter to only the nodes that were created, since some source nodes could have
         # been problematic
-        self._copy_associated_objects(source_nodes.filter(
-            id__in=[mapped_node.id for mapped_node in mapped_nodes],
-        ))
+        self._copy_associated_objects(
+            source_nodes.filter(
+                id__in=[mapped_node.id for mapped_node in mapped_nodes],
+            )
+        )
 
         return mapped_nodes

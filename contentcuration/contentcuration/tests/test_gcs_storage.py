@@ -21,7 +21,9 @@ class GoogleCloudStorageSaveTestCase(TestCase):
         self.blob_class = mock.create_autospec(Blob)
         self.blob_obj = self.blob_class("blob", "blob")
         self.mock_client = mock.create_autospec(Client)
-        self.storage = GoogleCloudStorage(client=self.mock_client(), bucket_name="bucket")
+        self.storage = GoogleCloudStorage(
+            client=self.mock_client(), bucket_name="bucket"
+        )
         self.content = BytesIO(b"content")
 
     def test_calls_upload_from_file(self):
@@ -41,7 +43,9 @@ class GoogleCloudStorageSaveTestCase(TestCase):
         self.storage.save("myfile.jpg", self.content, blob_object=self.blob_obj)
 
         # Check that we pass self.content file_object to upload_from_file
-        self.blob_obj.upload_from_file.assert_called_once_with(self.content, content_type="image/jpeg")
+        self.blob_obj.upload_from_file.assert_called_once_with(
+            self.content, content_type="image/jpeg"
+        )
 
     def test_checks_does_not_upload_file_if_empty(self):
         """
@@ -71,7 +75,10 @@ class GoogleCloudStorageSaveTestCase(TestCase):
         assert "private" in self.blob_obj.cache_control
 
     @mock.patch("contentcuration.utils.gcs_storage.BytesIO")
-    @mock.patch("contentcuration.utils.gcs_storage.GoogleCloudStorage._is_file_empty", return_value=False)
+    @mock.patch(
+        "contentcuration.utils.gcs_storage.GoogleCloudStorage._is_file_empty",
+        return_value=False,
+    )
     def test_gzip_if_content_database(self, bytesio_mock, file_empty_mock):
         """
         Check that if we're uploading a gzipped content database and
@@ -92,6 +99,7 @@ class GoogleCloudStorageOpenTestCase(TestCase):
         """
         A schema for a file we're about to upload.
         """
+
         contents = str
         filename = str
 
@@ -99,7 +107,9 @@ class GoogleCloudStorageOpenTestCase(TestCase):
         self.blob_class = mock.create_autospec(Blob)
         self.blob_obj = self.blob_class("blob", "blob")
         self.mock_client = mock.create_autospec(Client)
-        self.storage = GoogleCloudStorage(client=self.mock_client(), bucket_name="bucket")
+        self.storage = GoogleCloudStorage(
+            client=self.mock_client(), bucket_name="bucket"
+        )
         self.local_file = mixer.blend(self.RandomFileSchema)
 
     def test_raises_error_if_mode_is_not_rb(self):
@@ -147,8 +157,13 @@ class CompositeGCSTestCase(TestCase):
         self.mock_anon_bucket = bucket_cls(self.mock_anon_client, "bucket")
         self.mock_anon_client.get_bucket.return_value = self.mock_anon_bucket
 
-        with mock.patch("contentcuration.utils.gcs_storage._create_default_client", return_value=self.mock_default_client), \
-             mock.patch("contentcuration.utils.gcs_storage.Client.create_anonymous_client", return_value=self.mock_anon_client):
+        with mock.patch(
+            "contentcuration.utils.gcs_storage._create_default_client",
+            return_value=self.mock_default_client,
+        ), mock.patch(
+            "contentcuration.utils.gcs_storage.Client.create_anonymous_client",
+            return_value=self.mock_anon_client,
+        ):
             self.storage = CompositeGCS()
 
     def test_get_writeable_backend(self):
@@ -207,8 +222,13 @@ class CompositeGCSTestCase(TestCase):
         mock_blob = self.blob_cls("blob", "blob")
         self.mock_default_bucket.get_blob.return_value = mock_blob
         mock_blob.public_url = "https://storage.googleapis.com/bucket/blob"
-        self.assertEqual(self.storage.url("blob"), "https://storage.googleapis.com/bucket/blob")
+        self.assertEqual(
+            self.storage.url("blob"), "https://storage.googleapis.com/bucket/blob"
+        )
 
     def test_get_created_time(self):
         self.mock_default_bucket.get_blob.return_value = self.blob_cls("blob", "blob")
-        self.assertEqual(self.storage.get_created_time("blob"), self.blob_cls.return_value.time_created)
+        self.assertEqual(
+            self.storage.get_created_time("blob"),
+            self.blob_cls.return_value.time_created,
+        )

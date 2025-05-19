@@ -12,9 +12,10 @@ from . import errors
 
 class SessionWithMaxConnectionAge(requests.Session):
     """
-        Session with a maximum connection age. If the connection is older than the specified age, it will be closed and a new one will be created.
-        The age is specified in seconds.
+    Session with a maximum connection age. If the connection is older than the specified age, it will be closed and a new one will be created.
+    The age is specified in seconds.
     """
+
     def __init__(self, age=100):
         super().__init__()
         self.age = age
@@ -32,6 +33,7 @@ class SessionWithMaxConnectionAge(requests.Session):
 
 class BackendRequest(object):
     """ Class that holds the request information for the backend """
+
     def __init__(
         self,
         method,
@@ -41,7 +43,7 @@ class BackendRequest(object):
         json=None,
         headers=None,
         timeout=(5, 100),
-        **kwargs
+        **kwargs,
     ):
         self.method = method
         self.path = path
@@ -56,6 +58,7 @@ class BackendRequest(object):
 
 class BackendResponse(object):
     """ Class that should be inherited by specific backend for its responses"""
+
     def __init__(self, **kwargs):
         for key, value in kwargs.items():
             setattr(self, key, value)
@@ -63,6 +66,7 @@ class BackendResponse(object):
 
 class Backend(ABC):
     """ An abstract base class for backend interfaces that also implements the singleton pattern """
+
     _instance = None
     session = None
     base_url = None

@@ -69,6 +69,7 @@ class DelayUserStorageCalculation(ContextDecorator):
     Decorator class that will dedupe and delay requests to enqueue storage calculation tasks for users
     until after the wrapped function has exited
     """
+
     depth = 0
     queue = []
 
@@ -85,6 +86,7 @@ class DelayUserStorageCalculation(ContextDecorator):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         from contentcuration.utils.user import calculate_user_storage
+
         self.depth -= 1
         if not self.is_active:
             user_ids = set(self.queue)

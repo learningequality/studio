@@ -6,12 +6,31 @@ from django.db import models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('contentcuration', '0142_remove_file_file_media_duration_int'),
+        ("contentcuration", "0142_remove_file_file_media_duration_int"),
     ]
 
     operations = [
         migrations.AddConstraint(
-            model_name='file',
-            constraint=models.CheckConstraint(check=models.Q(models.Q(('duration__gt', 0), ('preset__in', ['audio', 'audio_dependency', 'high_res_video', 'low_res_video', 'video_dependency'])), ('duration__isnull', True), _connector='OR'), name='file_media_duration_int'),
+            model_name="file",
+            constraint=models.CheckConstraint(
+                check=models.Q(
+                    models.Q(
+                        ("duration__gt", 0),
+                        (
+                            "preset__in",
+                            [
+                                "audio",
+                                "audio_dependency",
+                                "high_res_video",
+                                "low_res_video",
+                                "video_dependency",
+                            ],
+                        ),
+                    ),
+                    ("duration__isnull", True),
+                    _connector="OR",
+                ),
+                name="file_media_duration_int",
+            ),
         ),
     ]

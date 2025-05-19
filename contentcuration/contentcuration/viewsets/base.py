@@ -89,7 +89,7 @@ class BulkModelSerializer(SimpleReprMixin, ModelSerializer):
         id_values = (self.get_value(data, attr) for attr in id_attr)
 
         # For the combined index, use any related objects' primary key
-        combined_index = (idx.pk if hasattr(idx, 'pk') else idx for idx in id_values)
+        combined_index = (idx.pk if hasattr(idx, "pk") else idx for idx in id_values)
         return tuple(combined_index)
 
     def set_id_values(self, data, obj):
@@ -317,11 +317,14 @@ class BulkListSerializer(SimpleReprMixin, ListSerializer):
                     self.changes.extend(self.child.changes)
 
         if len(all_validated_data_by_id) != len(updated_keys):
-            self.missing_keys = set(all_validated_data_by_id.keys())\
-                .difference(updated_keys)
+            self.missing_keys = set(all_validated_data_by_id.keys()).difference(
+                updated_keys
+            )
 
         if len(properties_to_update) > 0:
-            self.child.Meta.model.objects.bulk_update(updated_objects, list(properties_to_update))
+            self.child.Meta.model.objects.bulk_update(
+                updated_objects, list(properties_to_update)
+            )
 
         return updated_objects
 
@@ -366,7 +369,6 @@ class BulkListSerializer(SimpleReprMixin, ListSerializer):
 
 
 class ValuesViewsetOrderingFilter(OrderingFilter):
-
     def get_default_valid_fields(self, queryset, view, context=None):
         """
         The original implementation of this makes the assumption that the DRF serializer for the class
@@ -397,7 +399,11 @@ class ValuesViewsetOrderingFilter(OrderingFilter):
             fk_ref = field.split("__")[0]
             # Check either if the field is a model field, a currently annotated annotation, or
             # is a foreign key lookup on an FK on this model.
-            if field in model_fields or field in queryset.query.annotations or fk_ref in model_fields:
+            if (
+                field in model_fields
+                or field in queryset.query.annotations
+                or fk_ref in model_fields
+            ):
                 # If the field is a mapped field, we store the field name as returned to the client
                 # not the actual internal field - this will later be mapped when we come to do the ordering.
                 if field in mapped_fields:
@@ -414,7 +420,10 @@ class ValuesViewsetOrderingFilter(OrderingFilter):
         """
         # We filter the mapped fields to ones that do simple string mappings here, any functional maps are excluded.
         mapped_fields = {k: v for k, v in view.field_map.items() if isinstance(v, str)}
-        valid_fields = [item[0] for item in self.get_valid_fields(queryset, view, {'request': request})]
+        valid_fields = [
+            item[0]
+            for item in self.get_valid_fields(queryset, view, {"request": request})
+        ]
         ordering = []
         for term in fields:
             if term.lstrip("-") in valid_fields:
@@ -432,7 +441,6 @@ class ValuesViewsetOrderingFilter(OrderingFilter):
 
 
 class RequiredFilterSet(FilterSet):
-
     def __init__(self, required=False, **kwargs):
         self._required = required
         super().__init__(**kwargs)
@@ -449,7 +457,9 @@ class RequiredFilterSet(FilterSet):
                         has_filtering_queries = True
                         break
             if not has_filtering_queries and self.request.method == "GET":
-                raise MissingRequiredParamsException("No valid filter parameters supplied")
+                raise MissingRequiredParamsException(
+                    "No valid filter parameters supplied"
+                )
         return super(FilterSet, self).qs
 
 
@@ -458,6 +468,7 @@ class RequiredFiltersFilterBackend(DjangoFilterBackend):
     Override the default filter backend to conditionalize initialization
     if we are using a RequiredFilterSet
     """
+
     def get_filterset(self, request, queryset, view):
         filterset_class = self.get_filterset_class(view, queryset)
         if filterset_class is None:
@@ -481,6 +492,7 @@ class BaseValuesViewset(SimpleReprMixin, GenericViewSet):
     a single database query, rather than delegating serialization to a
     DRF ModelSerializer.
     """
+
     filter_backends = (RequiredFiltersFilterBackend, ValuesViewsetOrderingFilter)
 
     # A tuple of values to get from the queryset
@@ -679,10 +691,7 @@ class ReadOnlyValuesViewset(BaseValuesViewset, RetrieveModelMixin, ListModelMixi
 
 class CreateModelMixin(object):
     def _map_create_change(self, change):
-        return dict(
-            list(change["obj"].items())
-            + self.values_from_key(change["key"])
-        )
+        return dict(list(change["obj"].items()) + self.values_from_key(change["key"]))
 
     def perform_create(self, serializer, change=None):
         serializer.save()
@@ -759,10 +768,7 @@ class RESTDestroyModelMixin(DestroyModelMixin):
 
 class UpdateModelMixin(object):
     def _map_update_change(self, change):
-        return dict(
-            list(change["mods"].items())
-            + self.values_from_key(change["key"])
-        )
+        return dict(list(change["mods"].items()) + self.values_from_key(change["key"]))
 
     def perform_update(self, serializer):
         serializer.save()
@@ -935,14 +941,20 @@ class BulkDeleteMixin(DestroyModelMixin):
 
 @contextmanager
 def create_change_tracker(pk, table, channel_id, user, task_name):
-    task_kwargs = json.dumps({'pk': pk, 'table': table})
+    task_kwargs = json.dumps({"pk": pk, "table": table})
 
     # Clean up any previous tasks specific to this in case there were failures.
-    signature = generate_task_signature(task_name, task_kwargs=task_kwargs, channel_id=channel_id)
+    signature = generate_task_signature(
+        task_name, task_kwargs=task_kwargs, channel_id=channel_id
+    )
 
-    custom_task_metadata_qs = CustomTaskMetadata.objects.filter(channel_id=channel_id, signature=signature)
+    custom_task_metadata_qs = CustomTaskMetadata.objects.filter(
+        channel_id=channel_id, signature=signature
+    )
     if custom_task_metadata_qs.exists():
-        task_result_qs = TaskResult.objects.filter(task_id=custom_task_metadata_qs[0].task_id, task_name=task_name)
+        task_result_qs = TaskResult.objects.filter(
+            task_id=custom_task_metadata_qs[0].task_id, task_name=task_name
+        )
         if task_result_qs.exists():
             task_result_qs[0].delete()
         custom_task_metadata_qs[0].delete()
@@ -955,10 +967,7 @@ def create_change_tracker(pk, table, channel_id, user, task_name):
         task_name=task_name,
     )
     custom_task_metadata_object = CustomTaskMetadata.objects.create(
-        task_id=task_id,
-        channel_id=channel_id,
-        user=user,
-        signature=signature
+        task_id=task_id, channel_id=channel_id, user=user, signature=signature
     )
 
     def update_progress(progress=None):
@@ -968,7 +977,11 @@ def create_change_tracker(pk, table, channel_id, user, task_name):
 
     Change.create_change(
         # These changes are purely for ephemeral progress updating, and do not constitute a publishable change.
-        generate_update_event(pk, table, {TASK_ID: task_object.task_id}, channel_id=channel_id), applied=True, unpublishable=True
+        generate_update_event(
+            pk, table, {TASK_ID: task_object.task_id}, channel_id=channel_id
+        ),
+        applied=True,
+        unpublishable=True,
     )
 
     tracker = ProgressTracker(task_id, update_progress)
@@ -985,7 +998,11 @@ def create_change_tracker(pk, table, channel_id, user, task_name):
             # No error reported, cleanup.
             # Mark as unpublishable, as this is a continuation of the progress updating, and not a publishable change.
             Change.create_change(
-                generate_update_event(pk, table, {TASK_ID: None}, channel_id=channel_id), applied=True, unpublishable=True
+                generate_update_event(
+                    pk, table, {TASK_ID: None}, channel_id=channel_id
+                ),
+                applied=True,
+                unpublishable=True,
             )
             task_object.delete()
             custom_task_metadata_object.delete()

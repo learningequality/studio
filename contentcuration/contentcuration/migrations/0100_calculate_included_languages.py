@@ -11,7 +11,9 @@ included_languages_deploy_date = datetime(2017, 11, 30)
 def calculate_included_languages(apps, schema_editor):
     Channel = apps.get_model("contentcuration", "Channel")
     ContentNode = apps.get_model("contentcuration", "ContentNode")
-    for channel in Channel.objects.filter(main_tree__isnull=False, last_published__lt=included_languages_deploy_date):
+    for channel in Channel.objects.filter(
+        main_tree__isnull=False, last_published__lt=included_languages_deploy_date
+    ):
         content_nodes = ContentNode.objects.filter(
             tree_id=channel.main_tree.tree_id,
             published=True,
@@ -35,7 +37,7 @@ def calculate_included_languages(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('contentcuration', '0099_auto_20190715_2201'),
+        ("contentcuration", "0099_auto_20190715_2201"),
     ]
 
     operations = [
