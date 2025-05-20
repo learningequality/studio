@@ -122,7 +122,7 @@ class RecommendationsAdapterTestCase(StudioTestCase):
         connect_value,
         make_request_value,
         method,
-        *args
+        *args,
     ):
         mock_response_exists.return_value = response_exists_value
         self.adapter.backend.connect.return_value = connect_value
@@ -518,29 +518,34 @@ class RecommendationsBackendFactoryTestCases(TestCase):
     def setUp(self):
         self.factory = RecommendationsBackendFactory()
 
-    def test_ensure_url_has_scheme_with_no_scheme(self):
-        url = "example.com"
-        result = self.factory._ensure_url_has_scheme(url)
-        self.assertEqual(result, "http://example.com")
+    def test_prepare_url_with_no_scheme(self):
+        url = "example.com:8080"
+        result = self.factory._prepare_url(url)
+        self.assertEqual(result, f"http://{url}")
 
-    def test_ensure_url_has_scheme_with_http(self):
+    def test_prepare_url_with_no_port(self):
         url = "http://example.com"
-        result = self.factory._ensure_url_has_scheme(url)
+        result = self.factory._prepare_url(url)
+        self.assertEqual(result, f"{url}:8000")
+
+    def test_prepare_url_with_http(self):
+        url = "http://example.com:8080"
+        result = self.factory._prepare_url(url)
         self.assertEqual(result, url)
 
-    def test_ensure_url_has_scheme_with_https(self):
-        url = "https://example.com"
-        result = self.factory._ensure_url_has_scheme(url)
+    def test_prepare_url_with_https(self):
+        url = "https://example.com:443"
+        result = self.factory._prepare_url(url)
         self.assertEqual(result, url)
 
-    def test_ensure_url_has_scheme_with_empty_url(self):
+    def test_prepare_url_with_empty_url(self):
         url = ""
-        result = self.factory._ensure_url_has_scheme(url)
+        result = self.factory._prepare_url(url)
         self.assertEqual(result, url)
 
-    def test_ensure_url_has_scheme_with_none(self):
+    def test_prepare_url_with_none(self):
         url = None
-        result = self.factory._ensure_url_has_scheme(url)
+        result = self.factory._prepare_url(url)
         self.assertEqual(result, url)
 
     @patch("contentcuration.utils.recommendations.settings")
@@ -549,7 +554,7 @@ class RecommendationsBackendFactoryTestCases(TestCase):
         backend = self.factory.create_backend()
 
         self.assertIsInstance(backend, Recommendations)
-        self.assertEqual(backend.base_url, "http://api.example.com")
+        self.assertEqual(backend.base_url, "http://api.example.com:8000")
         self.assertEqual(backend.connect_endpoint, "/connect")
 
     @patch("contentcuration.utils.recommendations.settings")
@@ -558,7 +563,7 @@ class RecommendationsBackendFactoryTestCases(TestCase):
         backend = self.factory.create_backend()
 
         self.assertIsInstance(backend, Recommendations)
-        self.assertEqual(backend.base_url, "https://api.example.com")
+        self.assertEqual(backend.base_url, "https://api.example.com:8000")
         self.assertEqual(backend.connect_endpoint, "/connect")
 
     @patch("contentcuration.utils.recommendations.settings")
