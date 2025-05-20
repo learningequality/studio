@@ -93,7 +93,7 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         except models.AssessmentItem.DoesNotExist:
             pass
 
-    def test_create_assessmentitem_with_file_question(self):
+    def test_create_assessmentitem_with_incorrect_file_placeholder_in_question(self):
         self.client.force_authenticate(user=self.user)
         assessmentitem = self.assessmentitem_metadata
         image_file = testdata.fileobj_exercise_image()
@@ -124,8 +124,113 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         try:
             file = ai.files.get()
             self.assertEqual(file.id, image_file.id)
+            self.fail("File was updated")
+        except models.File.DoesNotExist:
+            pass
+
+    def test_create_assessmentitem_with_file_question(self):
+        self.client.force_authenticate(user=self.user)
+        assessmentitem = self.assessmentitem_metadata
+        image_file = testdata.fileobj_exercise_image()
+        image_file.uploaded_by = self.user
+        image_file.save()
+        question = "![alt_text](${}/{}.{})".format(
+            exercises.CONTENT_STORAGE_PLACEHOLDER,
+            image_file.checksum,
+            image_file.file_format_id,
+        )
+
+        assessmentitem["question"] = question
+        response = self.sync_changes(
+            [
+                generate_create_event(
+                    [assessmentitem["contentnode"], assessmentitem["assessment_id"]],
+                    ASSESSMENTITEM,
+                    assessmentitem,
+                    channel_id=self.channel.id,
+                )
+            ],
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        try:
+            ai = models.AssessmentItem.objects.get(
+                assessment_id=assessmentitem["assessment_id"]
+            )
+        except models.AssessmentItem.DoesNotExist:
+            self.fail("AssessmentItem was not created")
+        try:
+            file = ai.files.get()
+            self.assertEqual(file.id, image_file.id)
         except models.File.DoesNotExist:
             self.fail("File was not updated")
+
+    def test_create_assessmentitem_with_file_in_question_no_file_object(self):
+        self.client.force_authenticate(user=self.user)
+        assessmentitem = self.assessmentitem_metadata
+        image_file = testdata.fileobj_exercise_image()
+        image_file.uploaded_by = self.user
+        image_file.save()
+        question = "![alt_text](${}/{}.{})".format(
+            exercises.CONTENT_STORAGE_PLACEHOLDER,
+            image_file.checksum,
+            image_file.file_format_id,
+        )
+
+        image_file.delete()
+
+        assessmentitem["question"] = question
+        response = self.sync_changes(
+            [
+                generate_create_event(
+                    [assessmentitem["contentnode"], assessmentitem["assessment_id"]],
+                    ASSESSMENTITEM,
+                    assessmentitem,
+                    channel_id=self.channel.id,
+                )
+            ],
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        try:
+            ai = models.AssessmentItem.objects.get(
+                assessment_id=assessmentitem["assessment_id"]
+            )
+        except models.AssessmentItem.DoesNotExist:
+            self.fail("AssessmentItem was not created")
+        try:
+            file = ai.files.get()
+            self.assertEqual(file.assessment_item_id, ai.id)
+        except models.File.DoesNotExist:
+            self.fail("File was not created")
+
+    def test_create_assessmentitem_with_file_in_question_no_file_uploaded(self):
+        self.client.force_authenticate(user=self.user)
+        assessmentitem = self.assessmentitem_metadata
+        question = "![alt_text](${}/{}.{})".format(
+            exercises.CONTENT_STORAGE_PLACEHOLDER,
+            "123456789012345678901234567890ab",
+            "jpg",
+        )
+
+        assessmentitem["question"] = question
+        response = self.sync_changes(
+            [
+                generate_create_event(
+                    [assessmentitem["contentnode"], assessmentitem["assessment_id"]],
+                    ASSESSMENTITEM,
+                    assessmentitem,
+                    channel_id=self.channel.id,
+                )
+            ],
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(len(response.data["errors"]), 1)
+        try:
+            models.AssessmentItem.objects.get(
+                assessment_id=assessmentitem["assessment_id"]
+            )
+            self.fail("AssessmentItem was created")
+        except models.AssessmentItem.DoesNotExist:
+            pass
 
     def test_create_assessmentitem_with_file_answers(self):
         self.client.force_authenticate(user=self.user)
@@ -134,7 +239,9 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         image_file.uploaded_by = self.user
         image_file.save()
         answer = "![alt_text](${}/{}.{})".format(
-            exercises.IMG_PLACEHOLDER, image_file.checksum, image_file.file_format_id
+            exercises.CONTENT_STORAGE_PLACEHOLDER,
+            image_file.checksum,
+            image_file.file_format_id,
         )
 
         answers = [{"answer": answer, "correct": False, "order": 1}]
@@ -171,7 +278,9 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         image_file.uploaded_by = self.user
         image_file.save()
         hint = "![alt_text](${}/{}.{})".format(
-            exercises.IMG_PLACEHOLDER, image_file.checksum, image_file.file_format_id
+            exercises.CONTENT_STORAGE_PLACEHOLDER,
+            image_file.checksum,
+            image_file.file_format_id,
         )
         hints = [
             {"hint": hint, "order": 1},
@@ -209,7 +318,9 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         assessmentitem = self.assessmentitem_metadata
         image_file = testdata.fileobj_exercise_image()
         question = "![alt_text](${}/{}.{})".format(
-            exercises.IMG_PLACEHOLDER, image_file.checksum, image_file.file_format_id
+            exercises.CONTENT_STORAGE_PLACEHOLDER,
+            image_file.checksum,
+            image_file.file_format_id,
         )
         assessmentitem["question"] = question
         response = self.sync_changes(
@@ -223,14 +334,17 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
             ],
         )
         self.assertEqual(response.status_code, 200, response.content)
-        self.assertEqual(len(response.json()["errors"]), 1)
         try:
-            models.AssessmentItem.objects.get(
+            ai = models.AssessmentItem.objects.get(
                 assessment_id=assessmentitem["assessment_id"]
             )
-            self.fail("AssessmentItem was created")
         except models.AssessmentItem.DoesNotExist:
-            pass
+            self.fail("AssessmentItem was not created")
+        try:
+            file = ai.files.get()
+            self.assertEqual(file.assessment_item_id, ai.id)
+        except models.File.DoesNotExist:
+            self.fail("File was not created")
 
         self.assertIsNone(image_file.assessment_item)
 
@@ -324,7 +438,9 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         image_file.uploaded_by = self.user
         image_file.save()
         question = "![alt_text](${}/{}.{})".format(
-            exercises.IMG_PLACEHOLDER, image_file.checksum, image_file.file_format_id
+            exercises.CONTENT_STORAGE_PLACEHOLDER,
+            image_file.checksum,
+            image_file.file_format_id,
         )
 
         self.client.force_authenticate(user=self.user)
@@ -352,7 +468,9 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         )
         image_file = testdata.fileobj_exercise_image()
         question = "![alt_text](${}/{}.{})".format(
-            exercises.IMG_PLACEHOLDER, image_file.checksum, image_file.file_format_id
+            exercises.CONTENT_STORAGE_PLACEHOLDER,
+            image_file.checksum,
+            image_file.file_format_id,
         )
 
         self.client.force_authenticate(user=self.user)
@@ -367,13 +485,13 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
             ],
         )
         self.assertEqual(response.status_code, 200, response.content)
-        self.assertEqual(len(response.json()["errors"]), 1)
         try:
             file = assessmentitem.files.get()
-            self.assertNotEqual(file.id, image_file.id)
-            self.fail("File was updated")
+            self.assertEqual(file.assessment_item_id, assessmentitem.id)
         except models.File.DoesNotExist:
-            pass
+            self.fail("File was not created")
+
+        self.assertIsNone(image_file.assessment_item)
 
     def test_update_assessmentitem_remove_file(self):
 
