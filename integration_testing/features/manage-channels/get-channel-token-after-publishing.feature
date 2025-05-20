@@ -9,9 +9,8 @@ Feature: Get channel token after publishing the channel
 		When I click on the ellipsis button in the top right corner
 			And I click on the *Get token* menu option
 		Then I see the *Copy channel token*
-			And I see the channel token e.g. hufim-lolib	
+			And I see the channel token e.g. hufim-lolib
 		When I click on the copy button
 		Then a *Token copied* snackbar message
 		When I click the *Close* button
 		Then the modal closes
-

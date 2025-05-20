@@ -34,7 +34,7 @@ Feature: Bulk edit multiple resources
 			And I see the *Audience* section with the *Language* and *Visible to* drop-downs
 			And I see the *Source* section with *Author*, *Provider*, *Aggregator*, *License* and *Copyright* holder fields
 		When I make any modifications
-			And I click the *Finish* button 
+			And I click the *Finish* button
 		Then I am back at the channel editor
 		When I select again the same exercises
 			And I click the *Edit details* icon

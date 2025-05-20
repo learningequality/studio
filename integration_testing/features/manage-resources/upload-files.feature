@@ -63,4 +63,4 @@ Feature: Upload files
 		Then I am back at the *Upload files* modal
 		When I close the modal
 		Then I am returned to the main topic tree view
-			And I can see the uploaded files are not present 
+			And I can see the uploaded files are not present
