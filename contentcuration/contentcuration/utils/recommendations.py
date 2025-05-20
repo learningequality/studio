@@ -7,6 +7,7 @@ from typing import Dict
 from typing import List
 from typing import Union
 from urllib.parse import urlparse
+from urllib.parse import urlunparse
 
 from automation.models import RecommendationsCache
 from automation.utils.appnexus import errors
@@ -73,24 +74,42 @@ class EmbeddingsResponse(RecommendationsBackendResponse):
 
 
 class RecommendationsBackendFactory(BackendFactory):
-    def _ensure_url_has_scheme(self, url):
+    def _prepare_url(self, url):
         """
-        Checks whether the URL has a scheme. Default to http:// if no scheme exists.
+        Ensures the URL has a scheme and a port defined.
+        It defaults to http:// and port 8000 otherwise
 
         :param url: The URL to check
-        :return: A URL with a scheme
+        :return: A URL with a scheme and port
         """
-        if url:
-            parsed_url = urlparse(url)
-            if not parsed_url.scheme:
-                url = "http://" + url
-        return url
+        if not url:
+            return url
+
+        # avoid parsing URL until after adding scheme, because with and without a port defined,
+        # urlparse will return an empty netloc, but flip-flop between paths and schemes
+        if not url.startswith("http"):
+            url = "http://" + url
+
+        parsed_url = urlparse(url)
+        netloc = parsed_url.netloc
+
+        if not parsed_url.port:
+            netloc = f"{netloc}:8000"
+
+        return urlunparse(
+            (
+                parsed_url.scheme,
+                netloc,
+                "",
+                "",
+                "",
+                "",
+            )
+        )
 
     def create_backend(self) -> Backend:
         backend = Recommendations()
-        backend.base_url = self._ensure_url_has_scheme(
-            settings.CURRICULUM_AUTOMATION_API_URL
-        )
+        backend.base_url = self._prepare_url(settings.CURRICULUM_AUTOMATION_API_URL)
         backend.connect_endpoint = "/connect"
         return backend
 
