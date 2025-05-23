@@ -220,8 +220,8 @@ describe('EditLanguageModal', () => {
   });
 
   describe('topic nodes present', () => {
-    it('should display the checkbox to apply change to descendants if a topic is present', () => {
-      [wrapper] = makeWrapper(['test-en-topic', 'test-en-res']);
+    test('should display a selected checkbox to apply change to descendants if a topic is present', () => {
+      const [wrapper] = makeWrapper(['test-en-topic', 'test-en-res']);
 
       expect(
         wrapper.findComponent('[data-test="update-descendants-checkbox"]').exists(),
@@ -236,30 +236,33 @@ describe('EditLanguageModal', () => {
       ).toBeFalsy();
     });
 
-    it('should call updateContentNode with the right language on success submit if the user does not check the checkbox', async () => {
-      [wrapper, mocks] = makeWrapper(['test-en-topic', 'test-en-res']);
+    test('should call updateContentNodeDescendants with the right language on success submit by default', async () => {
+      const [wrapper, mocks] = makeWrapper(['test-en-topic', 'test-en-res']);
 
       await chooseLanguage(wrapper, 'es');
       await wrapper.vm.handleSave();
-      await wrapper.vm.$nextTick();
 
-      expect(mocks.updateContentNode).toHaveBeenCalledWith({
+      expect(mocks.updateContentNodeDescendants).toHaveBeenCalledWith({
         id: 'test-en-topic',
         language: 'es',
       });
     });
 
-    it('should call updateContentNodeDescendants with the right language on success submit if the user checks the checkbox', async () => {
-      [wrapper, mocks] = makeWrapper(['test-en-topic', 'test-en-res']);
+    test('should call updateContentNode with the right language on success submit if the user unchecks check the checkbox', async () => {
+      const [wrapper, mocks] = makeWrapper(['test-en-topic', 'test-en-res']);
 
       await chooseLanguage(wrapper, 'es');
-      wrapper.findComponent('[data-test="update-descendants-checkbox"]').vm.$emit('change', true);
-      await wrapper.vm.$nextTick();
-      expect(wrapper.vm.updateDescendants).toBe(true);
-      await wrapper.vm.handleSave();
+
+      // Uncheck the descendants checkbox
+      const descendantsCheckbox = wrapper.findComponent(
+        '[data-test="update-descendants-checkbox"]',
+      );
+      descendantsCheckbox.vm.$emit('change', false);
       await wrapper.vm.$nextTick();
 
-      expect(mocks.updateContentNodeDescendants).toHaveBeenCalledWith({
+      await wrapper.vm.handleSave();
+
+      expect(mocks.updateContentNode).toHaveBeenCalledWith({
         id: 'test-en-topic',
         language: 'es',
       });
