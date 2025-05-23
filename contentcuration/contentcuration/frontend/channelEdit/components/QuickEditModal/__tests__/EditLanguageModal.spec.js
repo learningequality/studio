@@ -209,7 +209,7 @@ describe('EditLanguageModal', () => {
   });
 
   describe('topic nodes present', () => {
-    test('should display the checkbox to apply change to descendants if a topic is present', () => {
+    test('should display a selected checkbox to apply change to descendants if a topic is present', () => {
       const wrapper = makeWrapper(['test-en-topic', 'test-en-res']);
 
       expect(wrapper.find('[data-test="update-descendants-checkbox"]').exists()).toBeTruthy();
@@ -221,26 +221,10 @@ describe('EditLanguageModal', () => {
       expect(wrapper.find('[data-test="update-descendants-checkbox"]').exists()).toBeFalsy();
     });
 
-    test('should call updateContentNode with the right language on success submit if the user does not check the checkbox', () => {
+    test('should call updateContentNodeDescendants with the right language on success submit by default', () => {
       const wrapper = makeWrapper(['test-en-topic', 'test-en-res']);
 
       wrapper.find('input[value="es"]').setChecked(true);
-      wrapper.find('[data-test="edit-language-modal"]').vm.$emit('submit');
-
-      const animationFrameId = requestAnimationFrame(() => {
-        expect(contentNodeActions.updateContentNode).toHaveBeenCalledWith(expect.anything(), {
-          id: 'test-en-topic',
-          language: 'es',
-        });
-        cancelAnimationFrame(animationFrameId);
-      });
-    });
-
-    test('should call updateContentNodeDescendants with the right language on success submit if the user checks the checkbox', () => {
-      const wrapper = makeWrapper(['test-en-topic', 'test-en-res']);
-
-      wrapper.find('input[value="es"]').setChecked(true);
-      wrapper.find('[data-test="update-descendants-checkbox"] input').setChecked(true);
       wrapper.find('[data-test="edit-language-modal"]').vm.$emit('submit');
 
       const animationFrameId = requestAnimationFrame(() => {
@@ -251,6 +235,22 @@ describe('EditLanguageModal', () => {
             language: 'es',
           }
         );
+        cancelAnimationFrame(animationFrameId);
+      });
+    });
+
+    test('should call updateContentNode with the right language on success submit if the user unchecks check the checkbox', () => {
+      const wrapper = makeWrapper(['test-en-topic', 'test-en-res']);
+
+      wrapper.find('input[value="es"]').setChecked(true);
+      wrapper.find('[data-test="update-descendants-checkbox"] input').setChecked(false);
+      wrapper.find('[data-test="edit-language-modal"]').vm.$emit('submit');
+
+      const animationFrameId = requestAnimationFrame(() => {
+        expect(contentNodeActions.updateContentNode).toHaveBeenCalledWith(expect.anything(), {
+          id: 'test-en-topic',
+          language: 'es',
+        });
         cancelAnimationFrame(animationFrameId);
       });
     });
