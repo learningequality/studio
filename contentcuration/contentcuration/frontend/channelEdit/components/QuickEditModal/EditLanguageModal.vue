@@ -81,7 +81,7 @@
       return {
         selectedLanguage: '',
         searchQuery: '',
-        updateDescendants: false,
+        updateDescendants: true,
         isMultipleNodeLanguages: false,
         changed: false,
       };

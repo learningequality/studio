@@ -83,7 +83,7 @@
     },
     data() {
       return {
-        updateDescendants: false,
+        updateDescendants: true,
         error: '',
         /**
          * selectedValues is an object with the following structure:
