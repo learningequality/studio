@@ -135,7 +135,7 @@
               class="mr-1"
             />
 
-            <BaseMenu v-if="iconConfigs.find(config => config.key === 'kebab-menu')?.show">
+            <BaseMenu v-if="showKebabMenu">
               <template #activator="{ on }">
                 <VBtn
                   icon
@@ -410,6 +410,10 @@
         } else {
           return false;
         }
+      },
+      showKebabMenu() {
+        const kebabConfig = this.iconConfigs.find(config => config.key === 'kebab-menu');
+        return Boolean(kebabConfig && kebabConfig.show);
       },
     },
     mounted() {
