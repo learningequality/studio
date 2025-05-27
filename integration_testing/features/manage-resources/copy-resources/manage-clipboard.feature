@@ -31,7 +31,7 @@ Feature: Manage the clipboard
 		Given I am viewing the clipboard
 		When I right click a folder or a resource
 			And click the *Move to...* option from the menu
-		Then I see the *Move N folder(s), N resources into: <channel>* modal 
+		Then I see the *Move N folder(s), N resources into: <channel>* modal
 			And I can choose a new directory or channel to move the items to
 
 	Scenario: Move multiple resources
@@ -39,7 +39,7 @@ Feature: Manage the clipboard
 		When I select multiple items
 		Then I see that the select bar changes to an actions bar
 		When I click the *Move* button in the actions bar
-		Then I see the *Move N folder(s), N resources into: <channel>* modal 
+		Then I see the *Move N folder(s), N resources into: <channel>* modal
 			And I can choose a new directory or channel to move the items to
 
 	Scenario: Delete a resource from the clipboard via right click
