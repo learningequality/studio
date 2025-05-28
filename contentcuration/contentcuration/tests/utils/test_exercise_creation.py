@@ -16,7 +16,7 @@ from contentcuration.models import ContentNode
 from contentcuration.tests.base import StudioTestCase
 from contentcuration.tests.testdata import fileobj_exercise_graphie
 from contentcuration.tests.testdata import fileobj_exercise_image
-from contentcuration.utils.publish import create_perseus_exercise
+from contentcuration.utils.assessment.perseus import PerseusExerciseGenerator
 
 
 class TestPerseusExerciseCreation(StudioTestCase):
@@ -37,8 +37,8 @@ class TestPerseusExerciseCreation(StudioTestCase):
         # Create an exercise node
         self.exercise_node = ContentNode.objects.create(
             title="Test Exercise",
-            node_id="exercise-node-id",
-            content_id="exercise-content-id",
+            node_id="1234567890abcdef1234567890abcded",
+            content_id="fedcba0987654321fedcba0987654321",
             kind_id=content_kinds.EXERCISE,
             parent=self.channel.main_tree,
             extra_fields=json.dumps(
@@ -57,9 +57,6 @@ class TestPerseusExerciseCreation(StudioTestCase):
                 }
             ),
         )
-
-        # Create a kolibri node representation (only needs id for testing)
-        self.kolibri_node = type("KolibriNode", (), {"id": "kolibri-node-id"})
 
     def _create_assessment_item(
         self, item_type, question_text, answers, hints=None, assessment_id=None
@@ -80,6 +77,16 @@ class TestPerseusExerciseCreation(StudioTestCase):
             randomize=True,
         )
         return item
+
+    def _create_perseus_zip(self, exercise_data):
+        generator = PerseusExerciseGenerator(
+            self.exercise_node,
+            exercise_data,
+            self.channel.id,
+            "en-US",
+            user_id=self.user.id,
+        )
+        return generator.create_exercise_archive()
 
     def _validate_perseus_zip(self, exercise_file):
         """Helper to validate the structure of the Perseus zip file"""
@@ -145,9 +152,7 @@ class TestPerseusExerciseCreation(StudioTestCase):
         }
 
         # Call the function to create the Perseus exercise
-        create_perseus_exercise(
-            self.exercise_node, self.kolibri_node, exercise_data, user_id=self.user.id
-        )
+        self._create_perseus_zip(exercise_data)
 
         # Verify that a file was created for the node
         exercise_file = self.exercise_node.files.get(preset_id=format_presets.EXERCISE)
@@ -179,6 +184,101 @@ class TestPerseusExerciseCreation(StudioTestCase):
         # we are deliberately changing the archive generation algorithm for perseus files.
         self.assertEqual(exercise_file.checksum, "0ec7e964b466ebc76e81e175570e97f1")
 
+    def test_multiple_images_index_mismatch_regression(self):
+        """Regression test for index mismatch bug in process_image_strings method.
+
+        When content is modified inside the re.finditer loop, subsequent matches
+        point to invalid positions due to string length changes, resulting in
+        malformed image processing.
+        """
+        # Create three image files - use mix of resized and non-resized images
+        # to trigger different replacement lengths
+        image1 = fileobj_exercise_image(size=(100, 100), color="red")
+        image2 = fileobj_exercise_image(size=(200, 200), color="blue")
+        image3 = fileobj_exercise_image(size=(300, 300), color="green")
+
+        # Create URLs for all images
+        image1_url = exercises.CONTENT_STORAGE_FORMAT.format(image1.filename())
+        image2_url = exercises.CONTENT_STORAGE_FORMAT.format(image2.filename())
+        image3_url = exercises.CONTENT_STORAGE_FORMAT.format(image3.filename())
+
+        # Create question with multiple images - mix of resized and original
+        # This should create different length replacements
+        question_text = (
+            f"First image (resized): ![img1]({image1_url} =50x50)\n"
+            f"Second image (original): ![img2]({image2_url})\n"
+            f"Third image (resized): ![img3]({image3_url} =70x70)"
+        )
+
+        item = self._create_assessment_item(
+            exercises.SINGLE_SELECTION,
+            question_text,
+            [{"answer": "Answer", "correct": True, "order": 1}],
+        )
+
+        # Associate all images with the assessment item
+        for img in [image1, image2, image3]:
+            img.assessment_item = item
+            img.save()
+
+        exercise_data = {
+            "mastery_model": exercises.M_OF_N,
+            "randomize": True,
+            "n": 1,
+            "m": 1,
+            "all_assessment_items": [item.assessment_id],
+            "assessment_mapping": {item.assessment_id: exercises.SINGLE_SELECTION},
+        }
+
+        # Create the Perseus exercise
+        self._create_perseus_zip(exercise_data)
+        exercise_file = self.exercise_node.files.get(preset_id=format_presets.EXERCISE)
+        zip_file, _ = self._validate_perseus_zip(exercise_file)
+
+        # Get the Perseus item JSON content
+        item_json = json.loads(
+            zip_file.read(f"{item.assessment_id}.json").decode("utf-8")
+        )
+        question_content = item_json["question"]["content"]
+
+        # Extract all markdown image references using the same pattern as the code
+        markdown_pattern = r"!\[([^\]]*)\]\(([^)]+)\)"
+        matches = re.findall(markdown_pattern, question_content)
+
+        # Check that we have exactly 3 well-formed image references
+        # If the bug exists, we might get malformed content due to index mismatch
+        self.assertEqual(
+            len(matches),
+            3,
+            f"Expected 3 image references, found {len(matches)} in content: {question_content}",
+        )
+
+        # Verify each match has proper structure
+        for i, (alt_text, _) in enumerate(matches):
+            expected_alt = f"img{i+1}"
+            self.assertEqual(
+                alt_text,
+                expected_alt,
+                f"Image {i+1} alt text malformed: got '{alt_text}', expected '{expected_alt}'",
+            )
+
+        # Verify that width and height are properly included in the question images
+        question_images = item_json["question"]["images"]
+
+        self.assertEqual(
+            len(question_images),
+            2,
+            f"Expected 2 image entries with dimensions, found {len(question_images)}: {list(question_images.keys())}",
+        )
+
+        # Verify that we have images with the expected dimensions
+        for image_name, image_data in question_images.items():
+            width, height = image_data["width"], image_data["height"]
+            if width == 50 and height != 50:
+                self.fail("Should find image with 50x50 dimensions")
+            elif width == 70 and height != 70:
+                self.fail("Should find image with 70x70 dimensions")
+
     def test_exercise_with_image(self):
         image_file = fileobj_exercise_image()
 
@@ -209,9 +309,7 @@ class TestPerseusExerciseCreation(StudioTestCase):
         }
 
         # Create the Perseus exercise
-        create_perseus_exercise(
-            self.exercise_node, self.kolibri_node, exercise_data, user_id=self.user.id
-        )
+        self._create_perseus_zip(exercise_data)
 
         # Verify that a file was created
         exercise_file = self.exercise_node.files.get(preset_id=format_presets.EXERCISE)
@@ -259,9 +357,7 @@ class TestPerseusExerciseCreation(StudioTestCase):
         }
 
         # Create the Perseus exercise
-        create_perseus_exercise(
-            self.exercise_node, self.kolibri_node, exercise_data, user_id=self.user.id
-        )
+        self._create_perseus_zip(exercise_data)
 
         # Verify that a file was created
         exercise_file = self.exercise_node.files.get(preset_id=format_presets.EXERCISE)
@@ -311,9 +407,7 @@ class TestPerseusExerciseCreation(StudioTestCase):
         image_file.delete()
 
         # Create the Perseus exercise
-        create_perseus_exercise(
-            self.exercise_node, self.kolibri_node, exercise_data, user_id=self.user.id
-        )
+        self._create_perseus_zip(exercise_data)
 
         # Verify that a file was created
         exercise_file = self.exercise_node.files.get(preset_id=format_presets.EXERCISE)
@@ -392,9 +486,7 @@ class TestPerseusExerciseCreation(StudioTestCase):
         }
 
         # Create the Perseus exercise
-        create_perseus_exercise(
-            self.exercise_node, self.kolibri_node, exercise_data, user_id=self.user.id
-        )
+        self._create_perseus_zip(exercise_data)
 
         # Verify that a file was created
         exercise_file = self.exercise_node.files.get(preset_id=format_presets.EXERCISE)
@@ -431,7 +523,7 @@ class TestPerseusExerciseCreation(StudioTestCase):
     def test_formula_processing(self):
         """Test that formulas are properly processed in exercises"""
         # Create a question with LaTeX formulas
-        question_text = "Solve: $\\frac{x}{2} = 3$"
+        question_text = "Solve: $$\\frac{x}{2} = 3$$"
         item = self._create_assessment_item(
             exercises.INPUT_QUESTION,
             question_text,
@@ -449,9 +541,7 @@ class TestPerseusExerciseCreation(StudioTestCase):
         }
 
         # Create the Perseus exercise
-        create_perseus_exercise(
-            self.exercise_node, self.kolibri_node, exercise_data, user_id=self.user.id
-        )
+        self._create_perseus_zip(exercise_data)
 
         # Verify that a file was created
         exercise_file = self.exercise_node.files.get(preset_id=format_presets.EXERCISE)
@@ -463,7 +553,45 @@ class TestPerseusExerciseCreation(StudioTestCase):
         item_json = json.loads(
             zip_file.read(f"{item.assessment_id}.json").decode("utf-8")
         )
-        self.assertIn("\\frac{x}{2} = 3", item_json["question"]["content"])
+        self.assertIn("$\\frac{x}{2} = 3$", item_json["question"]["content"])
+
+    def test_multiple_formula_processing(self):
+        """Test that formulas are properly processed in exercises"""
+        # Create a question with LaTeX formulas
+        question_text = "Solve: $$\\frac{x}{2} = 3$$ or maybe $$\\frac{y}{2} = 7$$"
+        item = self._create_assessment_item(
+            exercises.INPUT_QUESTION,
+            question_text,
+            [{"answer": "6", "correct": True, "order": 1}],
+        )
+
+        # Create the exercise data
+        exercise_data = {
+            "mastery_model": exercises.M_OF_N,
+            "randomize": True,
+            "n": 1,
+            "m": 1,
+            "all_assessment_items": [item.assessment_id],
+            "assessment_mapping": {item.assessment_id: exercises.INPUT_QUESTION},
+        }
+
+        # Create the Perseus exercise
+        self._create_perseus_zip(exercise_data)
+
+        # Verify that a file was created
+        exercise_file = self.exercise_node.files.get(preset_id=format_presets.EXERCISE)
+
+        # Validate the zip file
+        zip_file, _ = self._validate_perseus_zip(exercise_file)
+
+        # Check that the formula was properly processed
+        item_json = json.loads(
+            zip_file.read(f"{item.assessment_id}.json").decode("utf-8")
+        )
+        self.assertIn(
+            "Solve: $\\frac{x}{2} = 3$ or maybe $\\frac{y}{2} = 7$",
+            item_json["question"]["content"],
+        )
 
     def test_multiple_question_types(self):
         """Test creating an exercise with multiple question types"""
@@ -526,9 +654,7 @@ class TestPerseusExerciseCreation(StudioTestCase):
         }
 
         # Create the Perseus exercise
-        create_perseus_exercise(
-            self.exercise_node, self.kolibri_node, exercise_data, user_id=self.user.id
-        )
+        self._create_perseus_zip(exercise_data)
 
         # Verify that a file was created
         exercise_file = self.exercise_node.files.get(preset_id=format_presets.EXERCISE)
@@ -661,6 +787,7 @@ class TestPerseusExerciseCreation(StudioTestCase):
 
         # Create the assessment item
         item_type = exercises.SINGLE_SELECTION
+
         item = self._create_assessment_item(item_type, question_text, answers, hints)
 
         # Associate the image with the assessment item
@@ -678,9 +805,7 @@ class TestPerseusExerciseCreation(StudioTestCase):
         }
 
         # Create the Perseus exercise
-        create_perseus_exercise(
-            self.exercise_node, self.kolibri_node, exercise_data, user_id=self.user.id
-        )
+        self._create_perseus_zip(exercise_data)
 
         # Get the exercise file
         exercise_file = self.exercise_node.files.get(preset_id=format_presets.EXERCISE)
@@ -820,9 +945,7 @@ class TestPerseusExerciseCreation(StudioTestCase):
         }
 
         # Create the Perseus exercise
-        create_perseus_exercise(
-            self.exercise_node, self.kolibri_node, exercise_data, user_id=self.user.id
-        )
+        self._create_perseus_zip(exercise_data)
 
         # Get the exercise file
         exercise_file = self.exercise_node.files.get(preset_id=format_presets.EXERCISE)
@@ -901,9 +1024,7 @@ class TestPerseusExerciseCreation(StudioTestCase):
         }
 
         # Create the Perseus exercise
-        create_perseus_exercise(
-            self.exercise_node, self.kolibri_node, exercise_data, user_id=self.user.id
-        )
+        self._create_perseus_zip(exercise_data)
 
         # Get the exercise file
         exercise_file = self.exercise_node.files.get(preset_id=format_presets.EXERCISE)
@@ -948,4 +1069,58 @@ class TestPerseusExerciseCreation(StudioTestCase):
             first_image,
             third_image,
             "Images with dimensions outside 1% threshold should use different files",
+        )
+
+    def test_image_with_zero_width(self):
+        # Create a base image file
+        base_image = fileobj_exercise_image(size=(400, 300), color="red")
+        base_image_url = exercises.CONTENT_STORAGE_FORMAT.format(base_image.filename())
+
+        # Create a question with images that have very similar dimensions
+        # The code has logic to use the same image if dimensions are within 1% of each other
+        question_text = (
+            f"First image: ![shape1]({base_image_url} =0x150)\n"
+            f"Second image: ![shape2]({base_image_url} =200x151)"
+        )
+
+        # Create the assessment item
+        item = self._create_assessment_item(
+            exercises.SINGLE_SELECTION,
+            question_text,
+            [{"answer": "Answer", "correct": True, "order": 1}],
+        )
+
+        # Associate the image with the assessment item
+        base_image.assessment_item = item
+        base_image.save()
+
+        # Create exercise data
+        exercise_data = {
+            "mastery_model": exercises.M_OF_N,
+            "randomize": True,
+            "n": 1,
+            "m": 1,
+            "all_assessment_items": [item.assessment_id],
+            "assessment_mapping": {item.assessment_id: exercises.SINGLE_SELECTION},
+        }
+
+        # Create the Perseus exercise
+        self._create_perseus_zip(exercise_data)
+
+        # Get the exercise file
+        exercise_file = self.exercise_node.files.get(preset_id=format_presets.EXERCISE)
+
+        # Validate the zip file
+        zip_file, _ = self._validate_perseus_zip(exercise_file)
+
+        # Get all image files in the zip
+        image_files = [
+            name for name in zip_file.namelist() if name.startswith("images/")
+        ]
+
+        # Verify we have exactly 1 image file
+        self.assertEqual(
+            len(image_files),
+            1,
+            f"Expected 2 resized images, found {len(image_files)}: {image_files}",
         )

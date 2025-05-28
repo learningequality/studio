@@ -400,7 +400,7 @@ class ExportChannelTestCase(StudioTestCase):
             parent_id=first_topic_node_id
         )[1:]:
             if child.kind == "topic":
-                self.assertIsNone(child.lang_id)
+                self.assertEqual(child.lang_id, self.content_channel.language_id)
                 self.assertEqual(child.children.first().lang_id, "fr")
             else:
                 self.assertEqual(child.lang_id, "fr")
