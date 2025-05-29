@@ -254,7 +254,11 @@ describe('Change Types', () => {
   });
 
   it('should persist only the specified fields in the PublishedNextChange', async () => {
-    const change = new PublishedNextChange({ key: '1', table: TABLE_NAMES.CHANNEL, source: CLIENTID });
+    const change = new PublishedNextChange({
+      key: '1',
+      table: TABLE_NAMES.CHANNEL,
+      source: CLIENTID,
+    });
     const rev = await change.saveChange();
     const persistedChange = await db[CHANGES_TABLE].get(rev);
     expect(persistedChange).toEqual({
