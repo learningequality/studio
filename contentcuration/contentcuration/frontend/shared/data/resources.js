@@ -42,6 +42,7 @@ import {
   SyncedChange,
   DeployedChange,
   UpdatedDescendantsChange,
+  PublishedNextChange,
 } from './changes';
 import urls from 'shared/urls';
 import { currentLanguage } from 'shared/i18n';
@@ -1230,6 +1231,17 @@ export const Channel = new CreateModelResource({
           }),
         ]);
       });
+    });
+  },
+
+  publishDraft(id) {
+    const change = new PublishedNextChange({
+      key: id,
+      table: this.tableName,
+      source: CLIENTID,
+    });
+    return this.transaction({ mode: 'rw' }, CHANGES_TABLE, () => {
+      return this._saveAndQueueChange(change);
     });
   },
 

@@ -438,6 +438,19 @@ export class PublishedChange extends Change {
   }
 }
 
+export class PublishedNextChange extends Change {
+  constructor(fields) {
+    fields.type = CHANGE_TYPES.PUBLISHED_NEXT;
+    super(fields);
+    if (this.table !== TABLE_NAMES.CHANNEL) {
+      throw TypeError(
+        `${this.changeType} is only supported by ${TABLE_NAMES.CHANNEL} table but ${this.table} was passed instead`,
+      );
+    }
+    this.setChannelAndUserId({ id: this.key });
+  }
+}
+
 export class SyncedChange extends Change {
   constructor({ titles_and_descriptions, resource_details, files, assessment_items, ...fields }) {
     fields.type = CHANGE_TYPES.SYNCED;

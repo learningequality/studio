@@ -7,6 +7,7 @@ import {
   MovedChange,
   CopiedChange,
   PublishedChange,
+  PublishedNextChange,
   SyncedChange,
   DeployedChange,
   UpdatedDescendantsChange,
@@ -249,6 +250,17 @@ describe('Change Types', () => {
       rev,
       channel_id: change.key,
       ...pick(change, ['type', 'key', 'table', 'version_notes', 'language', 'source']),
+    });
+  });
+
+  it('should persist only the specified fields in the PublishedNextChange', async () => {
+    const change = new PublishedNextChange({ key: '1', table: TABLE_NAMES.CHANNEL, source: CLIENTID });
+    const rev = await change.saveChange();
+    const persistedChange = await db[CHANGES_TABLE].get(rev);
+    expect(persistedChange).toEqual({
+      rev,
+      channel_id: change.key,
+      ...pick(change, ['type', 'key', 'table', 'source']),
     });
   });
 
@@ -591,6 +603,19 @@ describe('Change Types Unhappy Paths', () => {
           source: CLIENTID,
         }),
     ).toThrow(new TypeError('language is required for a PublishedChange but it was undefined'));
+  });
+
+  // PublishedNextChange
+  it('should throw error when PublishedNextChange is instantiated without key', () => {
+    expect(() => new PublishedNextChange({ table: TABLE_NAMES.CHANNEL, source: CLIENTID })).toThrow(
+      new TypeError('key is required for a PublishedNextChange but it was undefined'),
+    );
+  });
+
+  it('should throw error when PublishedNextChange is instantiated with invalid table', () => {
+    expect(() => new PublishedNextChange({ key: '1', table: 'test', source: CLIENTID })).toThrow(
+      new ReferenceError('test is not a valid table value'),
+    );
   });
 
   // SyncedChange
