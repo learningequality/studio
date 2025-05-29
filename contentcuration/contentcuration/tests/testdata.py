@@ -11,7 +11,9 @@ from tempfile import TemporaryFile
 
 import pytest
 from django.core.files.storage import default_storage
+from le_utils.constants import exercises
 from le_utils.constants import format_presets
+from PIL import Image
 
 from contentcuration import models as cc
 from contentcuration.tests.utils import mixer
@@ -385,27 +387,31 @@ invalid_file_json = [
 ]
 
 
-def fileobj_exercise_image():
+def fileobj_exercise_image(size=(100, 100), color="red"):
     """
     Create a generic exercise image file in storage and return a File model pointing to it.
     """
-    filecontents = "".join(random.sample(string.printable, 20))
+    image = Image.new("RGB", size, color=color)
+    buffer = BytesIO()
+    image.save(buffer, "JPEG")
     temp_file_dict = create_studio_file(
-        filecontents, preset=format_presets.EXERCISE_IMAGE, ext="jpg"
+        buffer.getvalue(), preset=format_presets.EXERCISE_IMAGE, ext="jpg"
     )
     return temp_file_dict["db_file"]
 
 
-def fileobj_exercise_graphie():
+def fileobj_exercise_graphie(original_filename=None):
     """
     Create an graphi exercise image file in storage and return a File model pointing to it.
     """
-    filecontents = "".join(random.sample(string.printable, 20))
+    svg_content = f"<svg><circle cx='50' cy='50' r='40' />{original_filename or ''.join(random.sample(string.printable, 20))}</svg>"
+    json_content = '{"version": {"major": 0, "minor": 0}}'
+    filecontents = svg_content + exercises.GRAPHIE_DELIMITER + json_content
     temp_file_dict = create_studio_file(
         filecontents,
         preset=format_presets.EXERCISE_GRAPHIE,
         ext="graphie",
-        original_filename="theoriginalfilename",
+        original_filename=original_filename or "theoriginalfilename",
     )
     return temp_file_dict["db_file"]
 

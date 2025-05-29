@@ -736,45 +736,6 @@ def create_perseus_zip(ccnode, exercise_data, write_to_path, resized_images_map)
                 .order_by("order")
             ):
                 try:
-                    for image in question.files.filter(
-                        preset_id=format_presets.EXERCISE_IMAGE
-                    ).order_by("checksum"):
-                        image_name = "images/{}.{}".format(
-                            image.checksum, image.file_format_id
-                        )
-                        if image_name not in zf.namelist():
-                            with storage.open(
-                                ccmodels.generate_object_storage_name(
-                                    image.checksum, str(image)
-                                ),
-                                "rb",
-                            ) as content:
-                                write_to_zipfile(image_name, content.read(), zf)
-
-                    for image in question.files.filter(
-                        preset_id=format_presets.EXERCISE_GRAPHIE
-                    ).order_by("checksum"):
-                        svg_name = "images/{0}.svg".format(image.original_filename)
-                        json_name = "images/{0}-data.json".format(
-                            image.original_filename
-                        )
-                        if (
-                            svg_name not in zf.namelist()
-                            or json_name not in zf.namelist()
-                        ):
-                            with storage.open(
-                                ccmodels.generate_object_storage_name(
-                                    image.checksum, str(image)
-                                ),
-                                "rb",
-                            ) as content:
-                                content = content.read()
-                                # in Python 3, delimiter needs to be in bytes format
-                                content = content.split(
-                                    exercises.GRAPHIE_DELIMITER.encode("ascii")
-                                )
-                                write_to_zipfile(svg_name, content[0], zf)
-                                write_to_zipfile(json_name, content[1], zf)
                     write_assessment_item(question, zf, channel_id, resized_images_map)
                 except Exception as e:
                     logging.error(
@@ -806,6 +767,41 @@ def write_to_zipfile(filename, content, zf):
     zf.writestr(info, content)
 
 
+def _write_raw_perseus_image_files_to_zip(assessment_item, zf):
+    # For raw perseus JSON questions, the files must be
+    # specified in advance.
+
+    # Files have been prefetched when the assessment item was
+    # queried, so take advantage of that.
+    files = sorted(assessment_item.files.all(), key=lambda x: x.checksum)
+    image_files = filter(lambda x: x.preset_id == format_presets.EXERCISE_IMAGE, files)
+    graphie_files = filter(
+        lambda x: x.preset_id == format_presets.EXERCISE_GRAPHIE, files
+    )
+    for image in image_files:
+        image_name = "images/{}.{}".format(image.checksum, image.file_format_id)
+        if image_name not in zf.namelist():
+            with storage.open(
+                ccmodels.generate_object_storage_name(image.checksum, str(image)),
+                "rb",
+            ) as content:
+                write_to_zipfile(image_name, content.read(), zf)
+
+    for image in graphie_files:
+        svg_name = "images/{0}.svg".format(image.original_filename)
+        json_name = "images/{0}-data.json".format(image.original_filename)
+        if svg_name not in zf.namelist() or json_name not in zf.namelist():
+            with storage.open(
+                ccmodels.generate_object_storage_name(image.checksum, str(image)),
+                "rb",
+            ) as content:
+                content = content.read()
+                # in Python 3, delimiter needs to be in bytes format
+                content = content.split(exercises.GRAPHIE_DELIMITER.encode("ascii"))
+                write_to_zipfile(svg_name, content[0], zf)
+                write_to_zipfile(json_name, content[1], zf)
+
+
 def write_assessment_item(  # noqa C901
     assessment_item, zf, channel_id, resized_images_map
 ):
@@ -820,6 +816,7 @@ def write_assessment_item(  # noqa C901
         template = "perseus/input_question.json"
     elif assessment_item.type == exercises.PERSEUS_QUESTION:
         template = "perseus/perseus_question.json"
+        _write_raw_perseus_image_files_to_zip(assessment_item, zf)
     else:
         raise TypeError(
             "Unrecognized question type on item {}".format(

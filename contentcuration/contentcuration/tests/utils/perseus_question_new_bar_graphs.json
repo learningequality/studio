@@ -1,0 +1,114 @@
+{
+  "answerArea": {
+    "calculator": false,
+    "chi2Table": false,
+    "periodicTable": false,
+    "tTable": false,
+    "zTable": false
+  },
+  "hints": [
+    {
+      "content": "The bottom bar lines up to $\\purpleD{6}$.   \n\n![](web+graphie://cdn.kastatic.org/ka-perseus-graphie/d855aefe9a722f9a794b0883ebcdb8c37b4ba0c7)\n\nWhich type of fruit has $\\purpleD{6}$ in Luigi's home?",
+      "images": {
+        "web+graphie://cdn.kastatic.org/ka-perseus-graphie/d855aefe9a722f9a794b0883ebcdb8c37b4ba0c7": {
+          "height": 330,
+          "width": 404
+        }
+      },
+      "replace": false,
+      "widgets": {}
+    },
+    {
+      "content": "Kind of fruit | Number\n:- | :-: \nOranges | $\\purpleD{6}$ \n\nLuigi has $\\purpleD{6}$ oranges.  So, the bottom bar should be labeled $\\purpleD{\\text{Oranges}}$.",
+      "images": {},
+      "replace": false,
+      "widgets": {}
+    },
+    {
+      "content": "Now let's label the other bars to match the table.",
+      "images": {},
+      "replace": false,
+      "widgets": {}
+    },
+    {
+      "content": "Here is the completed graph:\n\n![](web+graphie://cdn.kastatic.org/ka-perseus-graphie/95262ebaf42bdd1929e5d6d1e2853d3eb0a5cc74)",
+      "images": {
+        "web+graphie://cdn.kastatic.org/ka-perseus-graphie/95262ebaf42bdd1929e5d6d1e2853d3eb0a5cc74": {
+          "height": 330,
+          "width": 404
+        }
+      },
+      "replace": false,
+      "widgets": {}
+    }
+  ],
+  "itemDataVersion": {
+    "major": 0,
+    "minor": 1
+  },
+  "question": {
+    "content": "Luigi created a chart and a bar graph to show how many of each type of fruit were in his home.\n\nKind of fruit | Number \n:- | :-: \nApple | $7$ \nStrawberries | $3$ \nOranges | $6$ \nBananas| $2$ \n\n**Label each bar on the bar graph.**\n\n[[☃ label-image 1]]\n",
+    "images": {},
+    "widgets": {
+      "label-image 1": {
+        "alignment": "default",
+        "graded": true,
+        "options": {
+          "choices": [
+            "Apple",
+            "Strawberries",
+            "Oranges",
+            "Bananas"
+          ],
+          "hideChoicesFromInstructions": true,
+          "imageAlt": "",
+          "imageHeight": 330,
+          "imageUrl": "web+graphie://cdn.kastatic.org/ka-perseus-graphie/ab207c6f38c887130b68c078e6158a87aab60c45",
+          "imageWidth": 404,
+          "markers": [
+            {
+              "answers": [
+                "Strawberries"
+              ],
+              "label": "",
+              "x": 24.1,
+              "y": 17.7
+            },
+            {
+              "answers": [
+                "Bananas"
+              ],
+              "label": "",
+              "x": 24.4,
+              "y": 35.7
+            },
+            {
+              "answers": [
+                "Apple"
+              ],
+              "label": "",
+              "x": 23.8,
+              "y": 52.9
+            },
+            {
+              "answers": [
+                "Oranges"
+              ],
+              "label": "",
+              "x": 24.1,
+              "y": 70.9
+            }
+          ],
+          "multipleAnswers": false,
+          "static": false
+        },
+        "static": false,
+        "type": "label-image",
+        "version": {
+          "major": 0,
+          "minor": 0
+        }
+      }
+    }
+  }
+}
