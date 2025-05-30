@@ -42,11 +42,20 @@ describe('deleteAccountForm', () => {
     wrapper.vm.deleteUserAccount();
     expect(deleteAccount).toHaveBeenCalled();
   });
-  it('should show alert if account deletion fails', async () => {
+  it('should show KModal if account deletion fails', async () => {
     await wrapper.setData({ accountDeletionEmail: email });
     deleteAccount.mockImplementation(() => Promise.reject('error'));
-    wrapper.vm.deleteUserAccount().catch(() => {
-      expect(wrapper.vm.deletionFailed).toBe(true);
-    });
+    try {
+      await wrapper.vm.deleteUserAccount();
+    } catch (e) {
+      throw new Error(e);
+    }
+    await wrapper.vm.$nextTick();
+    const modals = wrapper.findAllComponents({ name: 'KModal' });
+    const errorModal = modals.at(1);
+    expect(errorModal.exists()).toBe(true);
+    expect(errorModal.text()).toContain(
+      'Failed to delete your account. Please contact us here: https://community.learningequality.org.',
+    );
   });
 });
