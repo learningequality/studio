@@ -5,25 +5,27 @@
     :title="$tr('changePasswordHeader')"
     :submitText="$tr('saveChangesAction')"
     :cancelText="$tr('cancelAction')"
-    @submit="submitPassword"
+    @submit="submit"
     @cancel="dialog = false"
   >
-    <!-- inline style here avoids scrollbar on validations -->
-    <VForm
-      ref="form"
-      style="height: 196px"
-    >
-      <PasswordField
+    <form ref="form">
+      <KTextbox
         v-model="password"
-        :additionalRules="passwordValidationRules"
+        type="password"
         :label="$tr('newPasswordLabel')"
+        :invalid="errors.password"
+        :invalidText="$tr('passwordValidationMessage')"
+        showInvalidText="true"
       />
-      <PasswordField
+      <KTextbox
         v-model="confirmation"
+        type="password"
         :label="$tr('confirmNewPasswordLabel')"
-        :additionalRules="passwordConfirmRules"
+        :invalid="errors.confirmation"
+        :invalidText="$tr('formInvalidText')"
+        showInvalidText="true"
       />
-    </VForm>
+    </form>
   </KModal>
 
 </template>
@@ -32,22 +34,32 @@
 <script>
 
   import { mapActions } from 'vuex';
-  import PasswordField from 'shared/views/form/PasswordField';
+  import { generateFormMixin } from 'shared/mixins';
+
+  const formMixin = generateFormMixin({
+    password: {
+      required: true,
+      // eslint-disable-next-line no-unused-vars
+      validator: (value, _vm) => {
+        return value.length >= 8;
+      },
+    },
+    confirmation: {
+      required: true,
+      validator: (value, vm) => {
+        return value === vm.password;
+      },
+    },
+  });
 
   export default {
     name: 'ChangePasswordForm',
-    components: { PasswordField },
+    mixins: [formMixin],
     props: {
       value: {
         type: Boolean,
         default: false,
       },
-    },
-    data() {
-      return {
-        password: '',
-        confirmation: '',
-      };
     },
     computed: {
       dialog: {
@@ -57,12 +69,6 @@
         set(value) {
           this.$emit('input', value);
         },
-      },
-      passwordValidationRules() {
-        return [value => (value.length >= 8 ? true : this.$tr('passwordValidationMessage'))];
-      },
-      passwordConfirmRules() {
-        return [value => (this.password === value ? true : this.$tr('formInvalidText'))];
       },
     },
     watch: {
@@ -77,17 +83,18 @@
     methods: {
       ...mapActions(['showSnackbar']),
       ...mapActions('settings', ['updateUserPassword']),
-      submitPassword() {
-        if (this.$refs.form.validate()) {
-          return this.updateUserPassword(this.password)
-            .then(() => {
-              this.dialog = false;
-              this.showSnackbar({ text: this.$tr('paswordChangeSuccess') });
-            })
-            .catch(() => {
-              this.showSnackbar({ text: this.$tr('passwordChangeFailed') });
-            });
-        }
+
+      // This is called from formMixin
+      // eslint-disable-next-line kolibri/vue-no-unused-methods, vue/no-unused-properties
+      onSubmit() {
+        return this.updateUserPassword(this.password)
+          .then(() => {
+            this.dialog = false;
+            this.showSnackbar({ text: this.$tr('paswordChangeSuccess') });
+          })
+          .catch(() => {
+            this.showSnackbar({ text: this.$tr('passwordChangeFailed') });
+          });
       },
     },
     $trs: {

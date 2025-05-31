@@ -19,15 +19,20 @@ describe('changePasswordForm', () => {
     wrapper = makeWrapper();
   });
 
-  it('validation should fail if passwords do not match', async () => {
+  it('validation should fail if the password is too short', async () => {
     await wrapper.setData({ password: 'test' });
-    expect(typeof wrapper.vm.passwordConfirmRules[0]('data')).toBe('string');
+    expect(wrapper.vm.errors.password).toBe(true);
+  });
+
+  it('validation should fail if the passwords do not match', async () => {
+    await wrapper.setData({ password: 'testtest', confirmation: 'testtest2' });
+    expect(wrapper.vm.errors.confirmation).toBe(true);
   });
 
   it('failed validation should not call updateUserPassword', async () => {
     const updateUserPassword = jest.spyOn(wrapper.vm, 'updateUserPassword');
     updateUserPassword.mockImplementation(() => Promise.resolve());
-    await wrapper.vm.submitPassword();
+    await wrapper.vm.submit();
     expect(updateUserPassword).not.toHaveBeenCalled();
   });
 
@@ -35,7 +40,7 @@ describe('changePasswordForm', () => {
     const updateUserPassword = jest.spyOn(wrapper.vm, 'updateUserPassword');
     updateUserPassword.mockImplementation(() => Promise.resolve());
     await wrapper.setData({ password: 'tester123', confirmation: 'tester123' });
-    await wrapper.vm.submitPassword();
+    await wrapper.vm.submit();
     expect(updateUserPassword).toHaveBeenCalled();
   });
 });
