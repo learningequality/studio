@@ -70,4 +70,12 @@ describe('account tab', () => {
     await wrapper.vm.$nextTick();
     expect(wrapper.vm.showExportDataNotice).toBe(true);
   });
+
+  it('close exportData popup', async () => {
+    const exportData = jest.spyOn(wrapper.vm, 'exportData');
+    exportData.mockImplementation(() => Promise.resolve());
+    await wrapper.find('[data-test="export-link"]').trigger('click');
+    await wrapper.find('.actions .button').trigger('click');
+    expect(wrapper.vm.showExportDataNotice).toBe(false);
+  });
 });

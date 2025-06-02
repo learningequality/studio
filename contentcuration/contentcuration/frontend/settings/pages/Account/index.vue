@@ -137,11 +137,15 @@
     <FullNameForm v-model="showFullNameForm" />
     <ChangePasswordForm v-model="showPasswordForm" />
     <DeleteAccountForm v-model="showDeleteConfirmation" />
-    <Alert
-      v-model="showExportDataNotice"
-      :header="$tr('exportStartedHeader')"
-      :text="$tr('exportAccountDataModalMessage')"
-    />
+
+    <KModal
+     v-if="showExportDataNotice"
+     :appendToOverlay="true"
+     :submitText="$tr('exportDataBtn')"
+     @submit="showExportDataNotice = false"
+     :title="$tr('exportStartedHeader')">
+     <template> {{ $tr('exportAccountDataModalMessage') }} </template>
+    </KModal>
   </div>
 
 </template>
@@ -204,6 +208,9 @@
       channelLink(id) {
         return window.Urls.channel(id);
       },
+      closeExportDataNotice() {
+       this.showExportDataNotice = false;
+      }
     },
     $trs: {
       basicInfoHeader: 'Basic Information',
@@ -235,6 +242,7 @@
       exportAccountDataModalMessage:
         "You'll receive an email with your data when the export is completed",
       exportFailed: 'Unable to export data. Please try again.',
+      exportDataBtn: 'OK'
     },
   };
 
