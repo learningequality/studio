@@ -235,6 +235,8 @@
         });
       },
       handleClickImport: withChangeTracker(function (changeTracker) {
+        this.$emit('submitRecommendationsFeedback');
+
         const nodeIds = this.selected.map(({ id }) => id);
         // Grab the source nodes from Vuex, since search should have loaded them into it
         const sourceNodes = nodeIds.map(id => this.getContentNode(id));

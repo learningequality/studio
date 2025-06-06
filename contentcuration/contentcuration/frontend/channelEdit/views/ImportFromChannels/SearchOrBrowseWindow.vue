@@ -1,6 +1,6 @@
 <template>
 
-  <ImportFromChannelsModal>
+  <ImportFromChannelsModal @submitRecommendationsFeedback="submitRecommendationsFeedback">
     <template #default="{ preview }">
       <KGrid :class="$computedClass(browseWindowStyle)">
         <!-- Back to browse button -->
@@ -118,6 +118,7 @@
                 :node="recommendation"
                 @change_selected="handleChangeSelected"
                 @preview="preview($event)"
+                @irrelevant="handleNotRelevantRecommendation"
               />
             </KCardGrid>
           </div>
@@ -172,6 +173,35 @@
           {{ aboutRecommendationsFeedbackDescription$() }}
         </p>
       </KModal>
+      <KModal
+        v-if="showFeedbackModal"
+        :title="giveFeedbackText$()"
+        :cancelText="cancelAction$()"
+        @submit="submitRecommendationsInteractionFeedback"
+        @cancel="closeGiveFeedbackModal"
+      >
+        <!-- implement the Feedback form -->
+        <p>{{ giveFeedbackDescription$() }}</p>
+        <KCheckbox
+          v-for="option in feedbackCheckboxOptions"
+          :key="option.value"
+          :label="option.label"
+          :checked="isFeedbackReasonSelected(option.value)"
+          class="feedback-options"
+          @change="value => handleFeedbackCheckboxChange(option.value, value)"
+        />
+
+        <KTextbox
+          v-if="isFeedbackReasonSelected('other')"
+          v-model="otherFeedback"
+          autofocus
+          :label="enterFeedbackLabel$()"
+          :textArea="true"
+          :invalid="isOtherFeedbackValid"
+          :invalidText="feedbackInputValidationMessage$()"
+          :showInvalidText="showOtherFeedbackInvalidText"
+        />
+      </KModal>
     </template>
   </ImportFromChannelsModal>
 
@@ -194,6 +224,12 @@
   import RecommendedResourceCard from 'shared/views/RecommendedResourceCard';
   import { withChangeTracker } from 'shared/data/changes';
   import { formatUUID4 } from 'shared/data/resources';
+  import {
+    RecommendationsEvent,
+    RecommendationsInteractionEvent,
+    FeedbackTypeOptions,
+    sendRequest,
+  } from 'shared/feedbackApiUtils';
   import { searchRecommendationsStrings } from 'shared/strings/searchRecommendationsStrings';
   import { compile } from 'shared/utils/jsonSchema';
 
@@ -213,17 +249,34 @@
       const { windowWidth } = useKResponsiveWindow();
 
       const {
+        otherLabel$,
         closeAction$,
+        cancelAction$,
         tryAgainLink$,
         viewMoreLink$,
+        giveFeedbackText$,
+        enterFeedbackLabel$,
+        feedbackFailedMessage$,
         noDirectMatchesMessage$,
         showOtherResourcesLink$,
+        giveFeedbackDescription$,
         aboutRecommendationsText$,
+        alreadyUsedResourceLabel$,
+        feedbackSubmittedMessage$,
+        notRelatedToSubjectLabel$,
+        resourceNotWellMadeLabel$,
+        tooBasicForLearnersLabel$,
         showOtherResourcesMessage$,
+        feedbackConfirmationMessage$,
+        tooAdvancedForLearnersLabel$,
         showOtherRecommendationsLink$,
+        notSuitableForCurriculumLabel$,
         resourcesMightBeRelevantTitle$,
+        feedbackInputValidationMessage$,
         problemShowingResourcesMessage$,
         aboutRecommendationsDescription$,
+        notSpecificLearningActivityLabel$,
+        notSuitableForCulturalBackgroundLabel$,
         aboutRecommendationsFeedbackDescription$,
       } = searchRecommendationsStrings;
 
@@ -232,17 +285,34 @@
       });
 
       return {
+        otherLabel$,
         closeAction$,
+        cancelAction$,
         tryAgainLink$,
         viewMoreLink$,
+        giveFeedbackText$,
+        enterFeedbackLabel$,
+        feedbackFailedMessage$,
         noDirectMatchesMessage$,
         showOtherResourcesLink$,
+        giveFeedbackDescription$,
         aboutRecommendationsText$,
+        alreadyUsedResourceLabel$,
+        feedbackSubmittedMessage$,
+        notRelatedToSubjectLabel$,
+        resourceNotWellMadeLabel$,
+        tooBasicForLearnersLabel$,
         showOtherResourcesMessage$,
+        feedbackConfirmationMessage$,
+        tooAdvancedForLearnersLabel$,
         showOtherRecommendationsLink$,
+        notSuitableForCurriculumLabel$,
         resourcesMightBeRelevantTitle$,
+        feedbackInputValidationMessage$,
         problemShowingResourcesMessage$,
         aboutRecommendationsDescription$,
+        notSpecificLearningActivityLabel$,
+        notSuitableForCulturalBackgroundLabel$,
         aboutRecommendationsFeedbackDescription$,
         layoutFitsTwoColumns,
       };
@@ -267,6 +337,11 @@
         showShowOtherResources: false,
         showViewMoreRecommendations: false,
         otherRecommendationsLoaded: false,
+        recommendationsEvent: null,
+        feedbackReason: [],
+        showFeedbackModal: false,
+        otherFeedback: '',
+        showOtherFeedbackInvalidText: '',
       };
     },
     computed: {
@@ -413,6 +488,59 @@
         }
         return this.currentChannel?.language || '';
       },
+      feedbackCheckboxOptions() {
+        return [
+          {
+            value: 'not_suitable_for_curriculum',
+            label: this.notSuitableForCurriculumLabel$(),
+          },
+          {
+            value: 'not_related',
+            label: this.notRelatedToSubjectLabel$(),
+          },
+          {
+            value: 'not_suitable_for_culture',
+            label: this.notSuitableForCulturalBackgroundLabel$(),
+          },
+          {
+            value: 'not_specific',
+            label: this.notSpecificLearningActivityLabel$(),
+          },
+          {
+            value: 'too_advanced',
+            label: this.tooAdvancedForLearnersLabel$(),
+          },
+          {
+            value: 'too_basic',
+            label: this.tooBasicForLearnersLabel$(),
+          },
+          {
+            value: 'not_well_made',
+            label: this.resourceNotWellMadeLabel$(),
+          },
+          {
+            value: 'already_used',
+            label: this.alreadyUsedResourceLabel$(),
+          },
+          {
+            value: 'other',
+            label: this.otherLabel$(),
+          },
+        ];
+      },
+      recommendationsFeedback() {
+        const selectedFeedback = this.feedbackCheckboxOptions
+          .filter(option => this.feedbackReason.includes(option.value))
+          .map(option => option.label)
+          .join(', ');
+        return selectedFeedback + this.otherFeedback;
+      },
+      userId() {
+        return this.$store.state.session.currentUser.id;
+      },
+      isOtherFeedbackValid() {
+        return this.isFeedbackReasonSelected('other') && Boolean(this.otherFeedback.trim());
+      },
     },
     beforeRouteEnter(to, from, next) {
       next(vm => {
@@ -437,6 +565,7 @@
       this.loadRecommendations(this.recommendationsBelowThreshold);
     },
     methods: {
+      ...mapActions(['showSnackbar']),
       ...mapActions('clipboard', ['copy']),
       ...mapActions('contentNode', ['loadPublicContentNode']),
       ...mapActions('importFromChannels', ['fetchRecommendations']),
@@ -504,6 +633,9 @@
       closeAboutRecommendations() {
         this.showAboutRecommendations = false;
       },
+      closeGiveFeedbackModal() {
+        this.showFeedbackModal = false;
+      },
       handleViewMoreRecommendations() {
         if (!this.recommendationsLoadingError) {
           const pageSize = this.recommendationsPageSize;
@@ -565,6 +697,7 @@
             }
             this.recommendationsBelowThreshold = belowThreshold;
             this.recommendationsLoading = false;
+            this.initialRecommendationsEvent(data, recommendations);
           } catch (error) {
             this.recommendationsLoading = false;
             this.recommendationsLoadingError = true;
@@ -589,6 +722,89 @@
           ...this.recommendations,
           ...this.otherRecommendations.slice(0, limit),
         ];
+      },
+      initialRecommendationsEvent(request, response) {
+        const nodeToRank = {};
+        const recommendedNodes = response || [];
+        recommendedNodes.forEach(node => {
+          nodeToRank[node.node_id] = node.rank;
+        });
+
+        const content = [...this.recommendations, ...this.otherRecommendations];
+        this.recommendationsEvent = new RecommendationsEvent({
+          context: { request },
+          contentnode_id: this.importDestinationFolder.id,
+          content_id: this.importDestinationFolder.content_id,
+          target_channel_id: this.importDestinationFolder.channel_id,
+          user_id: this.userId,
+          content: content.map(node => ({
+            content_id: node.content_id,
+            node_id: node.id,
+            channel_id: node.channel_id,
+            rank: nodeToRank[node.id],
+          })),
+        });
+      },
+      handleNotRelevantRecommendation(node) {
+        const interactionEvent = new RecommendationsInteractionEvent({
+          recommendation_event_id: this.recommendationsEvent.id,
+          contentnode_id: node.id,
+          content_id: node.content_id,
+          context: {
+            //ToDo: Add appropriate context to be sent with the interaction event
+          },
+          feedback_type: FeedbackTypeOptions.rejected,
+          feedback_reason: this.recommendationsFeedback,
+        });
+        sendRequest(interactionEvent)
+          .then(() => {
+            this.showSnackbar({
+              text: this.feedbackConfirmationMessage$(),
+              actionText: this.giveFeedbackText$(),
+              actionCallback: () => (this.showFeedbackModal = true),
+            });
+          })
+          .catch(error => {
+            this.showSnackbar({ text: this.feedbackFailedMessage$() });
+            throw error;
+          });
+      },
+      isFeedbackReasonSelected(value) {
+        return this.feedbackReason.includes(value);
+      },
+      handleFeedbackCheckboxChange(value, isChecked) {
+        if (isChecked) {
+          if (!this.feedbackReason.includes(value)) {
+            this.feedbackReason.push(value);
+          }
+        } else {
+          this.feedbackReason = this.feedbackReason.filter(item => item !== value);
+        }
+      },
+      submitRecommendationsInteractionFeedback() {
+        const interactionEvent = new RecommendationsInteractionEvent({
+          recommendation_event_id: this.recommendationsEvent.id,
+          feedback_reason: this.recommendationsFeedback,
+        });
+        if (this.validateFeedbackForm()) {
+          sendRequest(interactionEvent, 'patch')
+            .then(() => {
+              this.showSnackbar({
+                text: this.feedbackSubmittedMessage$(),
+              });
+            })
+            .catch(error => {
+              this.showSnackbar({ text: this.feedbackFailedMessage$() });
+              throw error;
+            });
+        }
+      },
+      validateFeedbackForm() {
+        this.showOtherFeedbackInvalidText = !this.isOtherFeedbackValid;
+        return !this.showOtherFeedbackInvalidText;
+      },
+      submitRecommendationsFeedback() {
+        sendRequest(this.recommendationsEvent);
       },
     },
     $trs: {
@@ -632,6 +848,10 @@
 
   .recommendations-loader {
     margin-top: 24px;
+  }
+
+  .feedback-options {
+    margin-top: 8px;
   }
 
 </style>
