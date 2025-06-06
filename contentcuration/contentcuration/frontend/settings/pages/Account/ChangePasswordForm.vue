@@ -15,7 +15,7 @@
         :label="$tr('newPasswordLabel')"
         :invalid="errors.password"
         :invalidText="$tr('passwordValidationMessage')"
-        showInvalidText="true"
+        :showInvalidText="true"
       />
       <KTextbox
         v-model="confirmation"
@@ -23,7 +23,7 @@
         :label="$tr('confirmNewPasswordLabel')"
         :invalid="errors.confirmation"
         :invalidText="$tr('formInvalidText')"
-        showInvalidText="true"
+        :showInvalidText="true"
       />
     </form>
   </KModal>
@@ -75,8 +75,7 @@
       value(value) {
         // Reset values on open
         if (value) {
-          this.password = '';
-          this.confirmation = '';
+          this.reset();
         }
       },
     },
