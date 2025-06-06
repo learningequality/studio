@@ -117,7 +117,7 @@
                 :key="recommendation.id"
                 :node="recommendation"
                 @change_selected="handleChangeSelected"
-                @preview="preview($event)"
+                @preview="node => handlePreviewRecommendation(preview, node)"
                 @irrelevant="handleNotRelevantRecommendation"
               />
             </KCardGrid>
@@ -177,7 +177,7 @@
         v-if="showFeedbackModal"
         :title="giveFeedbackText$()"
         :cancelText="cancelAction$()"
-        @submit="submitRecommendationsInteractionFeedback"
+        @submit="submitRecommendationRejectedFeedback"
         @cancel="closeGiveFeedbackModal"
       >
         <!-- implement the Feedback form -->
@@ -781,13 +781,13 @@
           this.feedbackReason = this.feedbackReason.filter(item => item !== value);
         }
       },
-      submitRecommendationsInteractionFeedback() {
-        const interactionEvent = new RecommendationsInteractionEvent({
+      submitRecommendationRejectedFeedback() {
+        const rejectedEvent = new RecommendationsInteractionEvent({
           recommendation_event_id: this.recommendationsEvent.id,
           feedback_reason: this.recommendationsFeedback,
         });
         if (this.validateFeedbackForm()) {
-          sendRequest(interactionEvent, 'patch')
+          sendRequest(rejectedEvent, 'patch')
             .then(() => {
               this.showSnackbar({
                 text: this.feedbackSubmittedMessage$(),
@@ -805,6 +805,23 @@
       },
       submitRecommendationsFeedback() {
         sendRequest(this.recommendationsEvent);
+      },
+      submitRecommendationPreviewedFeedback(node) {
+        const previewedEvent = new RecommendationsInteractionEvent({
+          recommendation_event_id: this.recommendationsEvent.id,
+          contentnode_id: node.id,
+          content_id: node.content_id,
+          context: {
+            //ToDo: Add appropriate context to be sent with the interaction event
+          },
+          feedback_type: FeedbackTypeOptions.previewed,
+          feedback_reason: '',
+        });
+        sendRequest(previewedEvent);
+      },
+      handlePreviewRecommendation(previewFunc, node) {
+        previewFunc(node);
+        this.submitRecommendationPreviewedFeedback(node);
       },
     },
     $trs: {
