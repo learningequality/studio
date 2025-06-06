@@ -63,7 +63,11 @@
     <!-- Who can use content -->
     <h3>
       {{ $tr('whoCanUseContentLabel') }}
-      <InfoModal :header="$tr('licenseInfoHeader')" :items="licenseOptions">
+      <InfoModal
+        :header="$tr('licenseInfoHeader')"
+        :items="licenseOptions"
+        :style="{ position: 'relative', top: '5px' }"
+      >
         <template #header="{ item }">
           {{ translateConstant(item.license_name) }}
         </template>
