@@ -177,7 +177,7 @@
         v-if="showFeedbackModal"
         :title="giveFeedbackText$()"
         :cancelText="cancelAction$()"
-        @submit="submitRecommendationRejectedFeedback"
+        @submit="submitRejectedRecommendationFeedback"
         @cancel="closeGiveFeedbackModal"
       >
         <!-- implement the Feedback form -->
@@ -342,6 +342,8 @@
         showFeedbackModal: false,
         otherFeedback: '',
         showOtherFeedbackInvalidText: '',
+        rejectedNodeIds: [],
+        previewedNodeIds: [],
       };
     },
     computed: {
@@ -540,6 +542,14 @@
       },
       isOtherFeedbackValid() {
         return this.isFeedbackReasonSelected('other') && Boolean(this.otherFeedback.trim());
+      },
+      ignoredRecommendations() {
+        const rejectedAndPreviewedIds = new Set([
+          ...this.rejectedNodeIds,
+          ...this.previewedNodeIds,
+        ]);
+        const allRecommendations = [...this.recommendations, ...this.otherRecommendations];
+        return allRecommendations.filter(node => !rejectedAndPreviewedIds.has(node.id));
       },
     },
     beforeRouteEnter(to, from, next) {
@@ -758,6 +768,7 @@
         });
         sendRequest(interactionEvent)
           .then(() => {
+            this.rejectedNodeIds.push(node.id);
             this.showSnackbar({
               text: this.feedbackConfirmationMessage$(),
               actionText: this.giveFeedbackText$(),
@@ -781,7 +792,7 @@
           this.feedbackReason = this.feedbackReason.filter(item => item !== value);
         }
       },
-      submitRecommendationRejectedFeedback() {
+      submitRejectedRecommendationFeedback() {
         const rejectedEvent = new RecommendationsInteractionEvent({
           recommendation_event_id: this.recommendationsEvent.id,
           feedback_reason: this.recommendationsFeedback,
@@ -804,9 +815,12 @@
         return !this.showOtherFeedbackInvalidText;
       },
       submitRecommendationsFeedback() {
+        this.submitIgnoredRecommendationsFeedback();
         sendRequest(this.recommendationsEvent);
       },
-      submitRecommendationPreviewedFeedback(node) {
+      submitPreviewedRecommendationFeedback(node) {
+        this.previewedNodeIds.push(node.id);
+
         const previewedEvent = new RecommendationsInteractionEvent({
           recommendation_event_id: this.recommendationsEvent.id,
           contentnode_id: node.id,
@@ -821,7 +835,22 @@
       },
       handlePreviewRecommendation(previewFunc, node) {
         previewFunc(node);
-        this.submitRecommendationPreviewedFeedback(node);
+        this.submitPreviewedRecommendationFeedback(node);
+      },
+      submitIgnoredRecommendationsFeedback() {
+        for (const node of this.ignoredRecommendations) {
+          const ignoredEvent = new RecommendationsInteractionEvent({
+            recommendation_event_id: this.recommendationsEvent.id,
+            contentnode_id: node.id,
+            content_id: node.content_id,
+            context: {
+              //ToDo: Add appropriate context to be sent with the interaction event
+            },
+            feedback_type: FeedbackTypeOptions.ignored,
+            feedback_reason: '',
+          });
+          sendRequest(ignoredEvent);
+        }
       },
     },
     $trs: {
