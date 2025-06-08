@@ -1,3 +1,4 @@
+import { ContentKindLearningActivityDefaults } from 'shared/leUtils/ContentKinds'
 import { computed, inject } from 'vue'
 
 export function useToolbarActions() {
@@ -41,19 +42,58 @@ export function useToolbarActions() {
     }
   }
 
+  // Copy with formatting
   const handleCopy = () => {
-    // TipTap copy logic will be added here
-    console.log('Copy action')
+    if (editor.value) {
+      const { from, to } = editor.value.state.selection;
+      const selectedContent = editor.value.state.doc.slice(from, to);
+      
+      // Get HTML
+      const html = editor.value.getHTML();
+      const text = editor.value.getText();
+      
+      // Copy both HTML and plain text
+      navigator.clipboard.write([
+        new ClipboardItem({
+          'text/html': new Blob([html], { type: 'text/html' }),
+          'text/plain': new Blob([text], { type: 'text/plain' })
+        })
+      ]);
+    }
   }
 
-  const handlePaste = () => {
-    // TipTap paste logic will be added here
-    console.log('Paste action')
+  const handlePaste = async () => {
+  if (editor.value) {
+    try {
+      // Try HTML first
+      const clipboardData = await navigator.clipboard.read();
+      const htmlType = clipboardData[0].types.find(type => type === 'text/html');
+      
+      if (htmlType) {
+        const htmlBlob = await clipboardData[0].getType('text/html');
+        const html = await htmlBlob.text();
+        editor.value.chain().focus().insertContent(html).run();
+      } else {
+        // Fall back to plain text
+        const text = await navigator.clipboard.readText();
+        editor.value.chain().focus().insertContent(text).run();
+      }
+    } catch (err) {
+      console.error('Paste failed:', err);
+    }
   }
+}
 
-  const handlePasteNoFormat = () => {
-    // TipTap paste without formatting logic will be added here
-    console.log('Paste without formatting action')
+  const handlePasteNoFormat = async () => {
+    if (editor.value) {
+      try {
+        // Read plain text from clipboard
+        const text = await navigator.clipboard.readText();
+        editor.value.chain().focus().insertContent(text).run();
+      } catch (err) {
+        console.error('Paste without format failed:', err);
+      }
+    }
   }
 
   const handleBulletList = () => {
