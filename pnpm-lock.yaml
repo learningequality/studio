@@ -11,6 +11,9 @@ importers:
       '@sentry/vue':
         specifier: ^7.112.2
         version: 7.120.3(vue@2.7.16)
+      '@tiptap/extension-underline':
+        specifier: ^2.14.0
+        version: 2.14.0(@tiptap/core@2.13.0(@tiptap/pm@2.13.0))
       '@tiptap/starter-kit':
         specifier: ^2.13.0
         version: 2.13.0
@@ -1520,6 +1523,11 @@ packages:
 
   '@tiptap/extension-text@2.13.0':
     resolution: {integrity: sha512-4VhKCxfOlBXbaRAM4/OtZnOeq+WcjJoaduo4Jrb7w1I18yqknVjOwFH3Cv+2VqIjPI8bILMWzgpxvFPKdrOllA==}
+    peerDependencies:
+      '@tiptap/core': ^2.7.0
+
+  '@tiptap/extension-underline@2.14.0':
+    resolution: {integrity: sha512-rlBasbwElFikaL5qPyp3OeoEBH2p9Dve0K6liqIWF4i9cECH2Bm53y2S0enVEe01hmgQEWmoYK+fq67rxr3XsQ==}
     peerDependencies:
       '@tiptap/core': ^2.7.0
 
@@ -9127,6 +9135,10 @@ snapshots:
       '@tiptap/core': 2.13.0(@tiptap/pm@2.13.0)
 
   '@tiptap/extension-text@2.13.0(@tiptap/core@2.13.0(@tiptap/pm@2.13.0))':
+    dependencies:
+      '@tiptap/core': 2.13.0(@tiptap/pm@2.13.0)
+
+  '@tiptap/extension-underline@2.14.0(@tiptap/core@2.13.0(@tiptap/pm@2.13.0))':
     dependencies:
       '@tiptap/core': 2.13.0(@tiptap/pm@2.13.0)
 

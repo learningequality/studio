@@ -1,35 +1,44 @@
-import { computed } from 'vue'
+import { computed, inject } from 'vue'
 
 export function useToolbarActions() {
+  // Get editor instance from provide/inject
+  const editor = inject('editor', null)
+
   // Action handlers
   const handleUndo = () => {
-    // TipTap undo logic will be added here
-    console.log('Undo action')
+    if (editor?.value) {
+      editor.value.chain().focus().undo().run()
+    }
   }
 
   const handleRedo = () => {
-    // TipTap redo logic will be added here
-    console.log('Redo action')
+    if (editor?.value) {
+      editor.value.chain().focus().redo().run()
+    }
   }
 
   const handleBold = () => {
-    // TipTap bold logic will be added here
-    console.log('Bold action')
+    if (editor?.value) {
+      editor.value.chain().focus().toggleBold().run()
+    }
   }
 
   const handleItalic = () => {
-    // TipTap italic logic will be added here
-    console.log('Italic action')
+    if (editor?.value) {
+      editor.value.chain().focus().toggleItalic().run()
+    }
   }
 
   const handleUnderline = () => {
-    // TipTap underline logic will be added here
-    console.log('Underline action')
+    if (editor?.value) {
+      editor.value.chain().focus().toggleUnderline().run()
+    }
   }
 
   const handleStrikethrough = () => {
-    // TipTap strikethrough logic will be added here
-    console.log('Strikethrough action')
+    if (editor?.value) {
+      editor.value.chain().focus().toggleStrike().run()
+    }
   }
 
   const handleCopy = () => {
@@ -87,31 +96,40 @@ export function useToolbarActions() {
     console.log('Code block action')
   }
 
+  // Helper function to check if a mark is active
+  const isMarkActive = (markName) => {
+    return editor?.value?.isActive(markName) || false
+  }
+
   // Computed arrays for toolbar actions
   const textActions = computed(() => [
     { 
       name: 'bold', 
       title: 'Bold', 
       icon: require('../../assets/icon-bold.svg'), 
-      handler: handleBold 
+      handler: handleBold,
+      isActive: isMarkActive('bold')
     },
     { 
       name: 'italic', 
       title: 'Italic', 
       icon: require('../../assets/icon-italic.svg'), 
-      handler: handleItalic 
+      handler: handleItalic,
+      isActive: isMarkActive('italic')
     },
     { 
       name: 'underline', 
       title: 'Underline', 
       icon: require('../../assets/icon-underline.svg'), 
-      handler: handleUnderline 
+      handler: handleUnderline,
+      isActive: isMarkActive('underline')
     },
     { 
       name: 'strikethrough', 
       title: 'Strikethrough', 
       icon: require('../../assets/icon-strikethrough.svg'), 
-      handler: handleStrikethrough 
+      handler: handleStrikethrough,
+      isActive: isMarkActive('strike')
     }
   ])
 

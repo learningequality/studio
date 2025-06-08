@@ -1,20 +1,33 @@
 <template>
   <div class="editor-container">
     <EditorToolbar />
-    <EditorContent />
+    <EditorContentWrapper />
   </div>
 </template>
 
 <script>
-import { defineComponent } from 'vue'
+import { defineComponent, provide } from 'vue'
 import EditorToolbar from './components/EditorToolbar.vue'
-import EditorContent from './components/EditorContent.vue'
+import EditorContentWrapper from './components/EditorContentWrapper.vue'
+import { useEditor } from './composables/useEditor'
 
 export default defineComponent({
   name: 'RichTextEditor',
   components: {
     EditorToolbar,
-    EditorContent
+    EditorContentWrapper
+  },
+  setup() {
+    const { editor, isReady } = useEditor()
+
+    // Provide editor instance to all child components
+    provide('editor', editor)
+    provide('isReady', isReady)
+
+    return {
+      editor,
+      isReady
+    }
   }
 })
 </script>

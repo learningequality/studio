@@ -81,6 +81,12 @@ export default defineComponent({
   background: #e6e6e6;
 }
 
+.format-dropdown:focus-visible {
+  outline: 2px solid #0097F2;
+  border-radius: 4px;
+  background: #e6e6e6;
+}
+
 .dropdown-icon {
   width: 12px;
   height: 12px;

@@ -30,6 +30,7 @@
         :key="action.name"
         :title="action.title"
         :icon="action.icon"
+        :is-active="action.isActive"
         @click="action.handler"
       />
     </ToolbarGroup>

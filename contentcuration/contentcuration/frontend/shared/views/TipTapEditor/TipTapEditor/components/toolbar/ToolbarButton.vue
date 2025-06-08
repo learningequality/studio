@@ -61,7 +61,18 @@ export default defineComponent({
 
 .toolbar-btn:active,
 .toolbar-btn.active {
-  background: #dee2e6;
+  background: #D9E1FD;
+}
+
+.toolbar-btn.active .toolbar-icon {
+  filter: brightness(0) saturate(100%) invert(32%) sepia(97%) saturate(2640%) hue-rotate(230deg) brightness(103%) contrast(94%);
+  opacity: 1;
+}
+
+.toolbar-btn:focus-visible {
+  outline: 2px solid #0097F2;
+  border-radius: 4px;
+  background: #e6e6e6;
 }
 
 .toolbar-icon {
