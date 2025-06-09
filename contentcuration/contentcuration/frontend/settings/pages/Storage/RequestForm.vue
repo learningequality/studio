@@ -4,14 +4,12 @@
     ref="form"
     @submit.prevent="submit"
   >
-  
     <StudioBanner
       :show="Boolean(errorCount())"
       :text="errorText()"
       error
       class="my-2"
     />
-
 
     <!-- Nature of content -->
     <h3>{{ $tr('natureOfYourContentLabel') }}</h3>

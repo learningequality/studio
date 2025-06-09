@@ -36,10 +36,7 @@ describe('StudioBanner', () => {
   });
 
   it('renders slot content over text prop', () => {
-    wrapper = makeWrapper(
-      { show: true, text: 'Fallback text' },
-      { default: 'Slot content here' }
-    );
+    wrapper = makeWrapper({ show: true, text: 'Fallback text' }, { default: 'Slot content here' });
     expect(wrapper.text()).toBe('Slot content here');
   });
 
