@@ -13,6 +13,7 @@ from drf_yasg.views import get_schema_view
 from rest_framework import permissions
 
 from .urls import urlpatterns
+from django.views.generic import TemplateView
 
 
 def webpack_redirect_view(request):
@@ -74,4 +75,8 @@ urlpatterns = urlpatterns + [
     ),
     re_path(r"^api-auth/", include("rest_framework.urls", namespace="rest_framework")),
     re_path(r"^content/(?P<storage_path>.+)$", file_server),
+]
+
+urlpatterns += [
+    re_path(r'^editor-dev(?:/.*)?$', TemplateView.as_view(template_name='contentcuration/editor_dev.html')),
 ]

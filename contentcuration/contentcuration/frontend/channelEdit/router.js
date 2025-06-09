@@ -11,10 +11,16 @@ import ReviewSelectionsPage from './views/ImportFromChannels/ReviewSelectionsPag
 import EditModal from './components/edit/EditModal';
 import ChannelDetailsModal from 'shared/views/channel/ChannelDetailsModal';
 import ChannelModal from 'shared/views/channel/ChannelModal';
+import TipTapEditor from 'shared/views/TipTapEditor/TipTapEditor/TipTapEditor.vue';
 import { RouteNames as ChannelRouteNames } from 'frontend/channelList/constants';
 
 const router = new VueRouter({
   routes: [
+    {
+      path: '/editor-dev',
+      name: 'TipTapEditorDev',
+      component: TipTapEditor,
+    },
     {
       name: RouteNames.TREE_ROOT_VIEW,
       path: '/',

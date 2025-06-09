@@ -103,6 +103,7 @@ module.exports = (env = {}) => {
       pdfJSWorker: ['pdfjs-dist/build/pdf.worker.entry.js'],
       // Utility for taking screenshots inside an iframe sandbox
       htmlScreenshot: ['./shared/utils/htmlScreenshot.js'],
+      editorDev: './editorDev/index.js',
     },
     output: {
       filename: dev ? '[name].js' : '[name]-[fullhash].js',
