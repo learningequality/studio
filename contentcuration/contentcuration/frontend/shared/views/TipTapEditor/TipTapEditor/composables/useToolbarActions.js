@@ -136,29 +136,29 @@ export function useToolbarActions() {
   }
 
   const handleFormatChange = (format) =>{
-    if (editor?.value) {
-      switch (format) {
-        case 'normal':
-        // Clear any existing formatting and set to paragraph
-        editor.value.chain().focus().clearNodes().setParagraph().run()
-        break
-      case 'h1':
-        editor.value.chain().focus().toggleHeading({ level: 1 }).run()
-        break
-      case 'h2':
-        editor.value.chain().focus().toggleHeading({ level: 2 }).run()
-        break
-      case 'h3':
-        editor.value.chain().focus().toggleHeading({ level: 3 }).run()
-        break
-      case 'small':
-        // Convert to paragraph first, then apply small mark
-        editor.value.chain().focus().setSmall().run()
-        break
-      default:
-        console.warn('Unknown format:', format)
-        break
-      }
+    if (!editor?.value) return;
+    
+    switch (format) {
+      case 'normal':
+      // Clear any existing formatting and set to paragraph
+      editor.value.chain().focus().clearNodes().setParagraph().run()
+      break
+    case 'h1':
+      editor.value.chain().focus().toggleHeading({ level: 1 }).run()
+      break
+    case 'h2':
+      editor.value.chain().focus().toggleHeading({ level: 2 }).run()
+      break
+    case 'h3':
+      editor.value.chain().focus().toggleHeading({ level: 3 }).run()
+      break
+    case 'small':
+      // Convert to paragraph first, then apply small mark
+      editor.value.chain().focus().setSmall().run()
+      break
+    default:
+      console.warn('Unknown format:', format)
+      break
     }
   }
 
@@ -167,7 +167,38 @@ export function useToolbarActions() {
     return editor?.value?.isActive(markName) || false
   }
 
-  // Computed arrays for toolbar actions
+  // Helper function to check if a button is clickable
+  const isButtonAvailable = (action) => {
+    if (!editor?.value) return false;
+
+    switch (action) {
+      case 'undo':
+        return editor.value.can().undo();
+      case 'redo':
+        return editor.value.can().redo();
+      default:
+        return true; // Default to true for other actions
+    }
+  }
+
+  // Computed arrays for toolbar actions  
+    const historyActions = computed(() => [
+    { 
+      name: 'undo', 
+      title: 'Undo', 
+      icon: require('../../assets/icon-undo.svg'),
+      handler: handleUndo,
+      isAvailable: isButtonAvailable('undo')
+    },
+    { 
+      name: 'redo', 
+      title: 'Redo', 
+      icon: require('../../assets/icon-redo.svg'),
+      handler: handleRedo,
+      isAvailable: isButtonAvailable('redo')
+    }
+  ])
+
   const textActions = computed(() => [
     { 
       name: 'bold', 
@@ -280,6 +311,7 @@ export function useToolbarActions() {
     handleFormatChange,
 
     // Action arrays
+    historyActions,
     textActions,
     listActions,
     scriptActions,

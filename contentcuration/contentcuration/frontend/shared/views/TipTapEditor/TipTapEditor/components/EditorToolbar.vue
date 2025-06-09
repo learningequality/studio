@@ -2,15 +2,13 @@
   <div class="toolbar">
     <!-- History buttons -->
     <ToolbarGroup>
-      <ToolbarButton 
-        title="Undo"
-        :icon="require('../../assets/icon-undo.svg')"
-        @click="handleUndo"
-      />
-      <ToolbarButton 
-        title="Redo"
-        :icon="require('../../assets/icon-redo.svg')"
-        @click="handleRedo"
+      <ToolbarButton
+        v-for="action in historyActions"
+        :key="action.name"
+        :title="action.title"
+        :icon="action.icon"
+        :is-available="action.isAvailable"
+        @click="action.handler"
       />
     </ToolbarGroup>
 
@@ -109,9 +107,8 @@ export default defineComponent({
   },
   setup() {
     const {
-      handleUndo,
-      handleRedo,
       handleCopy,
+      historyActions,
       textActions,
       listActions,
       scriptActions,
@@ -119,9 +116,8 @@ export default defineComponent({
     } = useToolbarActions()
 
     return {
-      handleUndo,
-      handleRedo,
       handleCopy,
+      historyActions,
       textActions,
       listActions,
       scriptActions,

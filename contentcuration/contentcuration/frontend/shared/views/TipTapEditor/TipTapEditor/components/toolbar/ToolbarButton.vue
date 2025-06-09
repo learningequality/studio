@@ -2,7 +2,7 @@
   <button 
     class="toolbar-btn" 
     :title="title"
-    :class="{ active: isActive }"
+    :class="{ active: isActive, disabled: !isAvailable }"
     @click="handleClick"
   >
     <img :src="icon" :alt="title" class="toolbar-icon">
@@ -26,12 +26,19 @@ export default defineComponent({
     isActive: {
       type: Boolean,
       default: false
+    },
+    isAvailable: {
+      type: Boolean,
+      default: true,
+      required: false
     }
   },
   emits: ['click'],
   setup(props, { emit }) {
     const handleClick = () => {
-      emit('click')
+      console.log("isAvailable:", props.isAvailable);
+      if(props.isAvailable) // Use props.isAvailable directly, no .value needed
+        emit('click')
     }
 
     return {
@@ -76,8 +83,13 @@ export default defineComponent({
 }
 
 .toolbar-icon {
-  width: 17px;
-  height: 17px;
+  width: 19px;
+  height: 19px;
   opacity: 0.7;
+}
+
+.disabled {
+  cursor: auto;
+  opacity: 0.3;
 }
 </style>
