@@ -139,12 +139,13 @@
     <DeleteAccountForm v-model="showDeleteConfirmation" />
 
     <KModal
-     v-if="showExportDataNotice"
-     :appendToOverlay="true"
-     :submitText="$tr('exportDataBtn')"
-     @submit="showExportDataNotice = false"
-     :title="$tr('exportStartedHeader')">
-     <template> {{ $tr('exportAccountDataModalMessage') }} </template>
+      v-if="showExportDataNotice"
+      :appendToOverlay="true"
+      :submitText="$tr('exportDataBtn')"
+      :title="$tr('exportStartedHeader')"
+      @submit="showExportDataNotice = false"
+    >
+      <template> {{ $tr('exportAccountDataModalMessage') }} </template>
     </KModal>
   </div>
 
@@ -209,8 +210,8 @@
         return window.Urls.channel(id);
       },
       closeExportDataNotice() {
-       this.showExportDataNotice = false;
-      }
+        this.showExportDataNotice = false;
+      },
     },
     $trs: {
       basicInfoHeader: 'Basic Information',
@@ -242,7 +243,7 @@
       exportAccountDataModalMessage:
         "You'll receive an email with your data when the export is completed",
       exportFailed: 'Unable to export data. Please try again.',
-      exportDataBtn: 'OK'
+      exportDataBtn: 'OK',
     },
   };
 
