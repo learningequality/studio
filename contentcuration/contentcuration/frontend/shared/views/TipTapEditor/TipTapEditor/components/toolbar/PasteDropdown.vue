@@ -1,29 +1,43 @@
 <template>
-  <div class="paste-button-container dropdown-container">
+  <div class="paste-button-container dropdown-container" @keydown="handleContainerKeydown">
     <button 
       class="toolbar-btn paste-main-btn" 
       @click="handlePaste" 
+      @keydown="handleMainButtonKeydown"
       title="Paste"
+      aria-label="Paste"
     >
-      <img :src="require('../../../assets/icon-paste.svg')" alt="Paste" class="toolbar-icon">
+      <img :src="require('../../../assets/icon-paste.svg')" alt="" class="toolbar-icon">
     </button>
     <button 
+      ref="dropdownButton"
       class="paste-dropdown-btn" 
       @click="toggleDropdown" 
+      @keydown="handleDropdownButtonKeydown"
       title="Paste Options"
+      :aria-expanded="isOpen"
+      :aria-haspopup="true"
+      aria-label="Paste options menu"
       :class="{ active: isOpen }"
     >
       <img :src="require('../../../assets/icon-chevron-down.svg')" alt="" class="dropdown-arrow">
     </button>
     <div 
       v-if="isOpen" 
+      ref="dropdownMenu"
       class="dropdown-menu paste-dropdown"
+      role="menu"
+      aria-label="Paste options"
     >
       <div 
-        v-for="option in pasteOptions" 
+        v-for="(option, index) in pasteOptions" 
         :key="option.name"
         class="dropdown-item"
-        @click="option.handler"
+        role="menuitem"
+        :tabindex="index === focusedIndex ? 0 : -1"
+        :ref="el => setItemRef(el, index)"
+        @click="handleOptionClick(option)"
+        @keydown="handleItemKeydown($event, index, option)"
       >
         <img :src="option.icon" :alt="option.title" class="dropdown-item-icon">
         <span>{{ option.title }}</span>
@@ -33,7 +47,7 @@
 </template>
 
 <script>
-import { defineComponent, computed } from 'vue'
+import { defineComponent, computed, ref, nextTick, watch } from 'vue'
 import { useDropdowns } from '../../composables/useDropdowns'
 import { useToolbarActions } from '../../composables/useToolbarActions'
 
@@ -46,6 +60,11 @@ export default defineComponent({
     } = useDropdowns()
 
     const { handlePaste, handlePasteNoFormat } = useToolbarActions()
+
+    const dropdownButton = ref(null)
+    const dropdownMenu = ref(null)
+    const itemRefs = ref([])
+    const focusedIndex = ref(0)
 
     const pasteOptions = computed(() => [
       { 
@@ -62,11 +81,128 @@ export default defineComponent({
       }
     ])
 
+    const setItemRef = (el, index) => {
+      if (el) {
+        itemRefs.value[index] = el
+      }
+    }
+
+    const handleMainButtonKeydown = (event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault()
+        handlePaste()
+      }
+    }
+
+    const handleDropdownButtonKeydown = async (event) => {
+      switch (event.key) {
+        case 'Enter':
+        case ' ':
+        case 'ArrowDown':
+          event.preventDefault()
+          if (!isOpen.value) {
+            toggleDropdown()
+            await nextTick()
+            focusedIndex.value = 0
+            itemRefs.value[0]?.focus()
+          }
+          break
+        case 'ArrowUp':
+          event.preventDefault()
+          if (!isOpen.value) {
+            toggleDropdown()
+            await nextTick()
+            focusedIndex.value = pasteOptions.value.length - 1
+            itemRefs.value[focusedIndex.value]?.focus()
+          }
+          break
+        case 'Escape':
+          if (isOpen.value) {
+            event.preventDefault()
+            toggleDropdown()
+          }
+          break
+      }
+    }
+
+    const handleOptionClick = (option) => {
+      option.handler()
+      toggleDropdown()
+      dropdownButton.value?.focus()
+    }
+
+    const handleItemKeydown = (event, index, option) => {
+      switch (event.key) {
+        case 'Enter':
+        case ' ':
+          event.preventDefault()
+          handleOptionClick(option)
+          break
+        case 'ArrowDown':
+          event.preventDefault()
+          focusedIndex.value = (index + 1) % pasteOptions.value.length
+          itemRefs.value[focusedIndex.value]?.focus()
+          break
+        case 'ArrowUp':
+          event.preventDefault()
+          focusedIndex.value = index === 0 ? pasteOptions.value.length - 1 : index - 1
+          itemRefs.value[focusedIndex.value]?.focus()
+          break
+        case 'Escape':
+          event.preventDefault()
+          toggleDropdown()
+          dropdownButton.value?.focus()
+          break
+        case 'Tab':
+          // Allow natural tab behavior, but close dropdown
+          toggleDropdown()
+          break
+        case 'Home':
+          event.preventDefault()
+          focusedIndex.value = 0
+          itemRefs.value[0]?.focus()
+          break
+        case 'End':
+          event.preventDefault()
+          focusedIndex.value = pasteOptions.value.length - 1
+          itemRefs.value[focusedIndex.value]?.focus()
+          break
+      }
+    }
+
+    const handleContainerKeydown = (event) => {
+      // Handle Escape at container level
+      if (event.key === 'Escape' && isOpen.value) {
+        event.stopPropagation()
+        toggleDropdown()
+        dropdownButton.value?.focus()
+      }
+    }
+
+    // Watch for dropdown opening to manage focus
+    watch(isOpen, async (newValue) => {
+      if (newValue) {
+        await nextTick()
+        // Focus first item when dropdown opens
+        focusedIndex.value = 0
+        itemRefs.value[0]?.focus()
+      }
+    })
+
     return {
       isOpen,
       pasteOptions,
+      dropdownButton,
+      dropdownMenu,
+      focusedIndex,
       toggleDropdown,
-      handlePaste
+      handlePaste,
+      setItemRef,
+      handleMainButtonKeydown,
+      handleDropdownButtonKeydown,
+      handleOptionClick,
+      handleItemKeydown,
+      handleContainerKeydown
     }
   }
 })
@@ -103,6 +239,13 @@ export default defineComponent({
 
 .toolbar-btn:active {
   background: #dee2e6;
+}
+
+.toolbar-btn:focus-visible {
+  outline: 2px solid #0097F2;
+  outline-offset: 2px;
+  border-radius: 4px;
+  background: #e6e6e6;
 }
 
 .toolbar-icon {
@@ -143,8 +286,9 @@ export default defineComponent({
   opacity: 1;
 }
 
-.paste-dropdown-btn:focus-visible, .paste-main-btn:focus-visible {
+.paste-dropdown-btn:focus-visible {
   outline: 2px solid #0097F2;
+  outline-offset: 2px;
   border-radius: 4px;
   background: #e6e6e6;
 }
@@ -186,8 +330,16 @@ export default defineComponent({
   color: #000000;
 }
 
-.dropdown-item:hover {
+.dropdown-item:hover,
+.dropdown-item:focus {
   background: #f8f9fa;
+  outline: none;
+}
+
+.dropdown-item:focus-visible {
+  background: #e6f3ff;
+  outline: 2px solid #0097F2;
+  outline-offset: -2px;
 }
 
 .dropdown-item-icon {

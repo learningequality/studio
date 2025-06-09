@@ -1,9 +1,9 @@
 import { Node, mergeAttributes } from '@tiptap/core';
 
 export const Small = Node.create({
-  name: 'small', // Consistent name for the node
+  name: 'small', 
 
-  priority: 1000, // Higher priority to override other block nodes when toggling
+  priority: 1000, 
 
   addOptions() {
     return {
@@ -11,23 +11,23 @@ export const Small = Node.create({
     };
   },
 
-  group: 'block', // Block-level node, like headings
+  group: 'block', 
 
-  content: 'inline*', // Can contain text and inline marks (bold, italic, etc.)
+  content: 'inline*', 
 
   parseHTML() {
     return [
       {
-        tag: 'small', // Parse <small> tags for this node
+        tag: 'small', 
       },
     ];
   },
 
   renderHTML({ HTMLAttributes }) {
     return [
-      'small', // Render as <small> for simplicity
+      'small', 
       mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, {
-        class: 'small-text', // Class for styling
+        class: 'small-text', 
       }),
       0,
     ];
@@ -36,7 +36,7 @@ export const Small = Node.create({
   addAttributes() {
     return {
       class: {
-        default: 'small-text', // Default class for styling
+        default: 'small-text',
       },
     };
   },
@@ -44,10 +44,10 @@ export const Small = Node.create({
   addCommands() {
     return {
       setSmall: () => ({ commands }) => {
-        return commands.setNode(this.name); // Set current block to 'small'
+        return commands.setNode(this.name); 
       },
       toggleSmall: () => ({ commands }) => {
-        return commands.toggleNode(this.name, 'paragraph'); // Toggle between 'small' and 'paragraph'
+        return commands.toggleNode(this.name, 'paragraph'); 
       },
       unsetSmall: () => ({ commands }) => {
         return commands.setNode('paragraph'); // Convert back to paragraph
@@ -57,19 +57,7 @@ export const Small = Node.create({
 
   addKeyboardShortcuts() {
     return {
-      'Mod-Shift-S': () => this.editor.commands.toggleSmall(), // Consistent with command name
+      'Mod-Shift-S': () => this.editor.commands.toggleSmall(), 
     };
   },
-
-  // Optional: Input rules (commented out to avoid errors; enable if needed)
-  /*
-  addInputRules() {
-    return [
-      textblockTypeInputRule({
-        find: /^\s*small\s+/,
-        type: this.type,
-      }),
-    ];
-  },
-  */
 });

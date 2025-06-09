@@ -43,9 +43,6 @@ export function useToolbarActions() {
   // Copy with formatting
   const handleCopy = () => {
     if (editor.value) {
-      const { from, to } = editor.value.state.selection;
-      const selectedContent = editor.value.state.doc.slice(from, to);
-      
       // Get HTML
       const html = editor.value.getHTML();
       const text = editor.value.getText();

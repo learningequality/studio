@@ -19,6 +19,7 @@ export function useEditor() {
       editorProps: {
         attributes: {
           class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-2xl focus:outline-none',
+          dir: 'auto'
         },
       },
     })

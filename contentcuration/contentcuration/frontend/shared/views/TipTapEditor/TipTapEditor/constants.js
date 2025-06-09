@@ -1,0 +1,1 @@
+export const LOAD_EDITOR_PLACEHOLDER = 'Loading editor...';

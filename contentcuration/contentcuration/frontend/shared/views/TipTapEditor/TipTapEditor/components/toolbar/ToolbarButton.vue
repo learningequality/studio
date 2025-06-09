@@ -3,7 +3,12 @@
     class="toolbar-btn" 
     :title="title"
     :class="{ active: isActive, disabled: !isAvailable }"
+    :disabled="!isAvailable"
+    :tabindex="isAvailable ? 0 : -1"
+    :aria-label="title"
+    :aria-pressed="isActive ? 'true' : 'false'"
     @click="handleClick"
+    @keydown="handleKeydown"
   >
     <img :src="icon" :alt="title" class="toolbar-icon">
   </button>
@@ -36,13 +41,22 @@ export default defineComponent({
   emits: ['click'],
   setup(props, { emit }) {
     const handleClick = () => {
-      console.log("isAvailable:", props.isAvailable);
-      if(props.isAvailable) // Use props.isAvailable directly, no .value needed
+      if(props.isAvailable) {
         emit('click')
+      }
+    }
+
+    const handleKeydown = (event) => {
+      // Handle Enter and Space keys
+      if ((event.key === 'Enter' || event.key === ' ') && props.isAvailable) {
+        event.preventDefault()
+        emit('click')
+      }
     }
 
     return {
-      handleClick
+      handleClick,
+      handleKeydown
     }
   }
 })
@@ -62,11 +76,11 @@ export default defineComponent({
   transition: background-color 0.2s ease;
 }
 
-.toolbar-btn:hover {
+.toolbar-btn:hover:not(.disabled) {
   background: #e6e6e6;
 }
 
-.toolbar-btn:active,
+.toolbar-btn:active:not(.disabled),
 .toolbar-btn.active {
   background: #D9E1FD;
 }
@@ -78,6 +92,7 @@ export default defineComponent({
 
 .toolbar-btn:focus-visible {
   outline: 2px solid #0097F2;
+  outline-offset: 2px;
   border-radius: 4px;
   background: #e6e6e6;
 }
@@ -88,8 +103,14 @@ export default defineComponent({
   opacity: 0.7;
 }
 
-.disabled {
-  cursor: auto;
+.toolbar-btn.disabled {
+  cursor: not-allowed;
   opacity: 0.3;
+}
+
+.toolbar-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.3;
+  pointer-events: none;
 }
 </style>

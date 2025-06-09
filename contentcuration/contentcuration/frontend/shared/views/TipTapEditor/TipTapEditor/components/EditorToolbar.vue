@@ -1,7 +1,7 @@
 <template>
-  <div class="toolbar">
+  <div class="toolbar" role="toolbar" aria-label="Text formatting toolbar">
     <!-- History buttons -->
-    <ToolbarGroup>
+    <div role="group" aria-label="History actions">
       <ToolbarButton
         v-for="action in historyActions"
         :key="action.name"
@@ -10,19 +10,19 @@
         :is-available="action.isAvailable"
         @click="action.handler"
       />
-    </ToolbarGroup>
+    </div>
 
     <ToolbarDivider />
 
     <!-- Format dropdown -->
-    <ToolbarGroup>
+    <div role="group" aria-label="Text formatting options">
       <FormatDropdown />
-    </ToolbarGroup>
+    </div>
 
     <ToolbarDivider />
 
     <!-- Text formatting -->
-    <ToolbarGroup>
+    <div role="group" aria-label="Text style formatting">
       <ToolbarButton 
         v-for="action in textActions" 
         :key="action.name"
@@ -31,24 +31,24 @@
         :is-active="action.isActive"
         @click="action.handler"
       />
-    </ToolbarGroup>
+    </div>
 
     <ToolbarDivider />
 
     <!-- Copy/Paste -->
-    <ToolbarGroup>
+    <div role="group" aria-label="Copy and paste actions">
       <ToolbarButton 
         title="Copy"
         :icon="require('../../assets/icon-copy.svg')"
         @click="handleCopy"
       />
       <PasteDropdown />
-    </ToolbarGroup>
+    </div>
 
     <ToolbarDivider />
 
     <!-- Lists -->
-    <ToolbarGroup>
+    <div role="group" aria-label="List formatting">
       <ToolbarButton 
         v-for="list in listActions" 
         :key="list.name"
@@ -57,12 +57,12 @@
         :is-active="list.isActive"
         @click="list.handler"
       />
-    </ToolbarGroup>
+    </div>
 
     <ToolbarDivider />
 
     <!-- Script formatting -->
-    <ToolbarGroup>
+    <div role="group" aria-label="Script formatting">
       <ToolbarButton 
         v-for="script in scriptActions" 
         :key="script.name"
@@ -70,12 +70,12 @@
         :icon="script.icon"
         @click="script.handler"
       />
-    </ToolbarGroup>
+    </div>
 
     <ToolbarDivider />
 
     <!-- Insert tools -->
-    <ToolbarGroup>
+    <div role="group" aria-label="Insert tools">
       <ToolbarButton 
         v-for="tool in insertTools" 
         :key="tool.name"
@@ -83,13 +83,12 @@
         :icon="tool.icon"
         @click="tool.handler"
       />
-    </ToolbarGroup>
+    </div>
   </div>
 </template>
 
 <script>
 import { defineComponent } from 'vue'
-import ToolbarGroup from './toolbar/ToolbarGroup.vue'
 import ToolbarButton from './toolbar/ToolbarButton.vue'
 import FormatDropdown from './toolbar/FormatDropdown.vue'
 import PasteDropdown from './toolbar/PasteDropdown.vue'
@@ -99,7 +98,6 @@ import { useToolbarActions } from '../composables/useToolbarActions'
 export default defineComponent({
   name: 'EditorToolbar',
   components: {
-    ToolbarGroup,
     ToolbarButton,
     FormatDropdown,
     PasteDropdown,
@@ -136,5 +134,11 @@ export default defineComponent({
   background: #f8f9fa;
   border-radius: 8px 8px 0 0;
   gap: 8px;
+}
+
+[role="group"] {
+  display: flex;
+  align-items: center;
+  gap: 2px;
 }
 </style>
