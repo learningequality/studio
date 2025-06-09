@@ -2,6 +2,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { Editor } from '@tiptap/vue-2'
 import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
+import { Small } from '../extensions/SmallTextExtension'
 
 export function useEditor() {
   const editor = ref(null)
@@ -11,9 +12,10 @@ export function useEditor() {
     editor.value = new Editor({
       extensions: [
         StarterKit,
-        Underline
+        Underline,
+        Small,
       ],
-      content: '<p>Start typing here...</p>',
+      content: '<p></p>',
       editorProps: {
         attributes: {
           class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-2xl focus:outline-none',

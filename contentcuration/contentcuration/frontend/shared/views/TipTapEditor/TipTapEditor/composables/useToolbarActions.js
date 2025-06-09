@@ -1,7 +1,6 @@
-import { computed, h, inject } from 'vue'
+import { computed, inject } from 'vue'
 
 export function useToolbarActions() {
-  // Get editor instance from provide/inject
   const editor = inject('editor', null)
 
   // Action handlers
@@ -136,6 +135,33 @@ export function useToolbarActions() {
     console.log('Code block action')
   }
 
+  const handleFormatChange = (format) =>{
+    if (editor?.value) {
+      switch (format) {
+        case 'normal':
+        // Clear any existing formatting and set to paragraph
+        editor.value.chain().focus().clearNodes().setParagraph().run()
+        break
+      case 'h1':
+        editor.value.chain().focus().toggleHeading({ level: 1 }).run()
+        break
+      case 'h2':
+        editor.value.chain().focus().toggleHeading({ level: 2 }).run()
+        break
+      case 'h3':
+        editor.value.chain().focus().toggleHeading({ level: 3 }).run()
+        break
+      case 'small':
+        // Convert to paragraph first, then apply small mark
+        editor.value.chain().focus().setSmall().run()
+        break
+      default:
+        console.warn('Unknown format:', format)
+        break
+      }
+    }
+  }
+
   // Helper function to check if a mark is active
   const isMarkActive = (markName) => {
     return editor?.value?.isActive(markName) || false
@@ -251,6 +277,7 @@ export function useToolbarActions() {
     handleInsertLink,
     handleMath,
     handleCodeBlock,
+    handleFormatChange,
 
     // Action arrays
     textActions,

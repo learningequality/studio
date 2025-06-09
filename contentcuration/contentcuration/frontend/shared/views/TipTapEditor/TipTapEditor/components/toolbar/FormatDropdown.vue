@@ -15,7 +15,7 @@
         v-for="format in formatOptions" 
         :key="format.value"
         class="dropdown-item" 
-        @click="selectFormat(format)"
+        @click="applyFormat(format)"
       >
         <component :is="format.tag" v-text="format.label" />
       </div>
@@ -26,6 +26,7 @@
 <script>
 import { defineComponent, computed } from 'vue'
 import { useDropdowns } from '../../composables/useDropdowns'
+import { useToolbarActions } from '../../composables/useToolbarActions'
 
 export default defineComponent({
   name: 'FormatDropdown',
@@ -37,6 +38,8 @@ export default defineComponent({
       selectFormat
     } = useDropdowns()
 
+    const { handleFormatChange } = useToolbarActions()
+
     const formatOptions = computed(() => [
       { value: 'small', label: 'small', tag: 'small' },
       { value: 'normal', label: 'Normal', tag: 'p' },
@@ -45,12 +48,17 @@ export default defineComponent({
       { value: 'h1', label: 'Header 1', tag: 'h1' }
     ])
 
+    const applyFormat = (format) => {
+      selectFormat(format)
+      handleFormatChange(format.value)
+    }
+
     return {
       selectedFormat,
       isOpen,
       formatOptions,
       toggleDropdown,
-      selectFormat
+      applyFormat
     }
   }
 })

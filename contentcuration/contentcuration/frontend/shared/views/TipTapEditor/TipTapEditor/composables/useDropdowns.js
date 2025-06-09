@@ -26,6 +26,8 @@ export function useDropdowns() {
     closeAllDropdowns()
     // TipTap formatting logic will be added here
     console.log('Format selected:', format)
+    // console.log (useToolbarActions().handleFormat(format.value))
+    
   }
 
   const handleClickOutside = (event) => {

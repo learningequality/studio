@@ -125,4 +125,9 @@ export default defineComponent({
   font-weight: 600;
   margin: 8px 0;
 }
+
+:deep(.ProseMirror small) {
+  font-size: 12px;
+  margin: 4px 0 4px;
+}
 </style>
