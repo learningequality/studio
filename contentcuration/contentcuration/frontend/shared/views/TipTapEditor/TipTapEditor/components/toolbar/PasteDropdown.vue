@@ -11,6 +11,7 @@
       class="paste-dropdown-btn" 
       @click="toggleDropdown" 
       title="Paste Options"
+      :class="{ active: isOpen }"
     >
       <img :src="require('../../../assets/icon-chevron-down.svg')" alt="" class="dropdown-arrow">
     </button>
@@ -133,14 +134,25 @@ export default defineComponent({
   background: #e6e6e6;
 }
 
-.paste-dropdown-btn:active {
-  background: #dee2e6;
+.paste-dropdown-btn.active {
+  background: #D9E1FD;
+}
+
+.paste-dropdown-btn.active .dropdown-arrow {
+  filter: brightness(0) saturate(100%) invert(32%) sepia(97%) saturate(2640%) hue-rotate(230deg) brightness(103%) contrast(94%);
+  opacity: 1;
+}
+
+.paste-dropdown-btn:focus-visible, .paste-main-btn:focus-visible {
+  outline: 2px solid #0097F2;
+  border-radius: 4px;
+  background: #e6e6e6;
 }
 
 .dropdown-arrow {
-  width: 8px;
-  height: 8px;
-  opacity: 0.5;
+  width: 12px;
+  height: 12px;
+  opacity: 0.9;
 }
 
 .dropdown-menu {

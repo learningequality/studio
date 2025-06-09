@@ -1,5 +1,4 @@
-import { ContentKindLearningActivityDefaults } from 'shared/leUtils/ContentKinds'
-import { computed, inject } from 'vue'
+import { computed, h, inject } from 'vue'
 
 export function useToolbarActions() {
   // Get editor instance from provide/inject
@@ -75,8 +74,7 @@ export function useToolbarActions() {
         editor.value.chain().focus().insertContent(html).run();
       } else {
         // Fall back to plain text
-        const text = await navigator.clipboard.readText();
-        editor.value.chain().focus().insertContent(text).run();
+        handlePasteNoFormat();
       }
     } catch (err) {
       console.error('Paste failed:', err);
@@ -97,13 +95,15 @@ export function useToolbarActions() {
   }
 
   const handleBulletList = () => {
-    // TipTap bullet list logic will be added here
-    console.log('Bullet list action')
+    if (editor?.value) {
+      editor.value.chain().focus().toggleBulletList().run()
+    }
   }
 
   const handleNumberList = () => {
-    // TipTap numbered list logic will be added here
-    console.log('Number list action')
+    if (editor?.value) {
+      editor.value.chain().focus().toggleOrderedList().run()
+    }
   }
 
   const handleSubscript = () => {
@@ -178,13 +178,15 @@ export function useToolbarActions() {
       name: 'bulletList', 
       title: 'Bullet List', 
       icon: require('../../assets/icon-bulletList.svg'), 
-      handler: handleBulletList 
+      handler: handleBulletList ,
+      isActive: isMarkActive('bulletList')
     },
     { 
       name: 'numberList', 
       title: 'Numbered List', 
       icon: require('../../assets/icon-numberList.svg'), 
-      handler: handleNumberList 
+      handler: handleNumberList, 
+      isActive: isMarkActive('orderedList')
     }
   ])
 

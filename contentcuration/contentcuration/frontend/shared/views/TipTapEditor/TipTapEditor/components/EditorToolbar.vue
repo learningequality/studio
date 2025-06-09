@@ -56,6 +56,7 @@
         :key="list.name"
         :title="list.title"
         :icon="list.icon"
+        :is-active="list.isActive"
         @click="list.handler"
       />
     </ToolbarGroup>
