@@ -71,11 +71,12 @@ describe('account tab', () => {
     expect(wrapper.vm.showExportDataNotice).toBe(true);
   });
 
-  it('close exportData popup', async () => {
+  it('export data failure', async () => {
     const exportData = jest.spyOn(wrapper.vm, 'exportData');
-    exportData.mockImplementation(() => Promise.resolve());
+    exportData.mockImplementation(() => Promise.reject('error'));
     await wrapper.find('[data-test="export-link"]').trigger('click');
-    await wrapper.find('.actions .button').trigger('click');
+    expect(exportData).toHaveBeenCalled();
     expect(wrapper.vm.showExportDataNotice).toBe(false);
+    expect(wrapper.vm.$store.dispatch).toHaveBeenCalledWith('showSnackbar', { text: wrapper.vm.$tr('exportFailed') });
   });
 });
