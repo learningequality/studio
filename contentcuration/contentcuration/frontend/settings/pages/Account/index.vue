@@ -140,12 +140,11 @@
 
     <KModal
       v-if="showExportDataNotice"
-      :appendToOverlay="true"
       :submitText="$tr('exportDataBtn')"
       :title="$tr('exportStartedHeader')"
       @submit="showExportDataNotice = false"
     >
-      <template> {{ $tr('exportAccountDataModalMessage') }} </template>
+    {{ $tr('exportAccountDataModalMessage') }}
     </KModal>
   </div>
 
@@ -208,9 +207,6 @@
       },
       channelLink(id) {
         return window.Urls.channel(id);
-      },
-      closeExportDataNotice() {
-        this.showExportDataNotice = false;
       },
     },
     $trs: {
