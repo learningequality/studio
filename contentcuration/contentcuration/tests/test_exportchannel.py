@@ -15,6 +15,7 @@ from kolibri_content.router import cleanup_content_database_connection
 from kolibri_content.router import get_active_content_database
 from kolibri_content.router import set_active_content_database
 from le_utils.constants import exercises
+from le_utils.constants import format_presets
 from le_utils.constants.labels import accessibility_categories
 from le_utils.constants.labels import learning_activities
 from le_utils.constants.labels import levels
@@ -33,6 +34,7 @@ from .testdata import thumbnail_bytes
 from .testdata import tree
 from contentcuration import models as cc
 from contentcuration.models import CustomTaskMetadata
+from contentcuration.utils.assessment.qti.archive import hex_to_qti_id
 from contentcuration.utils.celery.tasks import generate_task_signature
 from contentcuration.utils.publish import ChannelIncompleteError
 from contentcuration.utils.publish import convert_channel_thumbnail
@@ -207,6 +209,48 @@ class ExportChannelTestCase(StudioTestCase):
         for ai in current_exercise.assessment_items.all():
             ai.id = None
             ai.contentnode = legacy_exercise
+            ai.save()
+
+        # Add an exercise with free response question to test QTI generation
+        qti_extra_fields = {
+            "options": {
+                "completion_criteria": {
+                    "model": "mastery",
+                    "threshold": {
+                        "m": 1,
+                        "n": 2,
+                        "mastery_model": exercises.M_OF_N,
+                    },
+                }
+            }
+        }
+        qti_exercise = create_node(
+            {
+                "kind_id": "exercise",
+                "title": "QTI Free Response Exercise",
+                "extra_fields": qti_extra_fields,
+            }
+        )
+        qti_exercise.complete = True
+        qti_exercise.parent = current_exercise.parent
+        qti_exercise.save()
+
+        # Create a free response assessment item
+        cc.AssessmentItem.objects.create(
+            contentnode=qti_exercise,
+            assessment_id=uuid.uuid4().hex,
+            type=exercises.FREE_RESPONSE,
+            question="What is the capital of France?",
+            answers=json.dumps([{"answer": "Paris", "correct": True}]),
+            hints=json.dumps([]),
+            raw_data="{}",
+            order=4,
+            randomize=False,
+        )
+
+        for ai in current_exercise.assessment_items.all()[:2]:
+            ai.id = None
+            ai.contentnode = qti_exercise
             ai.save()
 
         first_topic = self.content_channel.main_tree.get_descendants().first()
@@ -557,6 +601,46 @@ class ExportChannelTestCase(StudioTestCase):
             current_exercise.extra_fields,
             {"mastery_model": exercises.M_OF_N, "randomize": True, "m": 1, "n": 2},
         )
+
+    def test_qti_exercise_generates_qti_archive(self):
+        """Test that exercises with free response questions generate QTI archive files."""
+        qti_exercise = cc.ContentNode.objects.get(title="QTI Free Response Exercise")
+
+        # Check that a QTI archive file was created
+        qti_files = qti_exercise.files.filter(preset_id=format_presets.QTI_ZIP)
+        self.assertEqual(
+            qti_files.count(),
+            1,
+            "QTI exercise should have exactly one QTI archive file",
+        )
+
+        qti_file = qti_files.first()
+        self.assertIsNotNone(
+            qti_file.file_on_disk, "QTI file should have file_on_disk content"
+        )
+        self.assertTrue(
+            qti_file.original_filename.endswith(".zip"),
+            "QTI file should be a zip archive",
+        )
+
+    def test_qti_archive_contains_manifest_and_assessment_ids(self):
+
+        published_qti_exercise = kolibri_models.ContentNode.objects.get(
+            title="QTI Free Response Exercise"
+        )
+        assessment_ids = (
+            published_qti_exercise.assessmentmetadata.first().assessment_item_ids
+        )
+
+        # Should have exactly one assessment ID corresponding to our free response question
+        self.assertEqual(
+            len(assessment_ids), 3, "Should have exactly three assessment IDs"
+        )
+
+        # The assessment ID should match the one from our assessment item
+        qti_exercise = cc.ContentNode.objects.get(title="QTI Free Response Exercise")
+        for i, ai in enumerate(qti_exercise.assessment_items.order_by("order")):
+            self.assertEqual(assessment_ids[i], hex_to_qti_id(ai.assessment_id))
 
 
 class EmptyChannelTestCase(StudioTestCase):
