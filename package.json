@@ -79,7 +79,7 @@
     "node-vibrant": "^3.1.6",
     "pako": "^2.1.0",
     "papaparse": "^5.4.1",
-    "pdfjs-dist": "^2.16.105",
+    "pdfjs-dist": "^5.3.31",
     "qs": "^6.11.2",
     "regenerator-runtime": "^0.13.5",
     "showdown": "^2.1.0",
