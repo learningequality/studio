@@ -9,6 +9,8 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import ValidationError
 from django.core.files.storage import default_storage
 from django.db.models import Count
+from django.db.models import Exists
+from django.db.models import OuterRef
 from django.db.models import Sum
 from django.utils import timezone
 from le_utils.constants import completion_criteria
@@ -208,6 +210,36 @@ def get_diff(updated, original):
     return None
 
 
+def _get_file_sizes(descendants_qs):
+    resource_sizes = {}
+    assesments_sizes = {}
+
+    if descendants_qs is not None:
+        descendants_exists_subquery = descendants_qs.filter(
+            id=OuterRef("contentnode_id")
+        )
+
+        resource_sizes = File.objects.filter(
+            Exists(descendants_exists_subquery)
+        ).aggregate(
+            resource_size=Sum("file_size"),
+        )
+
+        assesments_sizes = AssessmentItem.objects.filter(
+            Exists(descendants_exists_subquery)
+        ).aggregate(
+            assessment_size=Sum("files__file_size"),
+            assessment_count=Count("id", distinct=True),
+        )
+
+    file_size = (resource_sizes.get("resource_size") or 0) + (
+        assesments_sizes.get("assessment_size") or 0
+    )
+    assessment_count = assesments_sizes.get("assessment_count") or 0
+
+    return file_size, assessment_count
+
+
 def generate_diff(updated_id, original_id):
     updated = ContentNode.filter_by_pk(pk=updated_id).first()
     original = ContentNode.filter_by_pk(pk=original_id).first()
@@ -228,34 +260,9 @@ def generate_diff(updated_id, original_id):
         else {}
     )
 
-    original_file_sizes = (
-        main_descendants.aggregate(
-            resource_size=Sum("files__file_size"),
-            assessment_size=Sum("assessment_items__files__file_size"),
-            assessment_count=Count("assessment_items"),
-        )
-        if original
-        else {}
-    )
+    original_file_size, original_question_count = _get_file_sizes(main_descendants)
 
-    updated_file_sizes = (
-        updated_descendants.aggregate(
-            resource_size=Sum("files__file_size"),
-            assessment_size=Sum("assessment_items__files__file_size"),
-            assessment_count=Count("assessment_items"),
-        )
-        if updated
-        else {}
-    )
-
-    original_file_size = (original_file_sizes.get("resource_size") or 0) + (
-        original_file_sizes.get("assessment_size") or 0
-    )
-    updated_file_size = (updated_file_sizes.get("resource_size") or 0) + (
-        updated_file_sizes.get("assessment_size") or 0
-    )
-    original_question_count = original_file_sizes.get("assessment_count") or 0
-    updated_question_count = updated_file_sizes.get("assessment_count") or 0
+    updated_file_size, updated_question_count = _get_file_sizes(updated_descendants)
 
     original_resource_count = (
         original.get_descendants().exclude(kind_id="topic").count() if original else 0
