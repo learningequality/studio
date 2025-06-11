@@ -201,6 +201,24 @@ class NodeGettersTestCase(StudioTestCase):
                 f"List field '{field}' has falsy values",
             )
 
+    def test_get_details_with_null_provenance_fields(self):
+        node = ContentNode.objects.create(
+            title="Null Fields Test",
+            parent=self.channel.main_tree,
+            kind=self.topic,
+            author=None,
+            provider=None,
+            aggregator=None,
+            copyright_holder=None,
+        )
+
+        details = node.get_details()
+
+        assert details["authors"] == []
+        assert details["providers"] == []
+        assert details["aggregators"] == []
+        assert details["copyright_holders"] == []
+
 
 class NodeOperationsTestCase(StudioTestCase):
     def setUp(self):
