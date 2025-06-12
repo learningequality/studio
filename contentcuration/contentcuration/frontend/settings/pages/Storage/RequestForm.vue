@@ -78,10 +78,11 @@
             v-if="item.license_url"
             class="mt-1"
           >
-            <ActionLink
+            <KExternalLink
+              class="link-css notranslate"
               :href="getLicenseUrl(item)"
-              target="_blank"
               :text="$tr('learnMoreButton')"
+              openInNewTab
             />
           </p>
         </template>
@@ -505,6 +506,10 @@
   h3 {
     margin-top: 32px;
     margin-bottom: 8px;
+  }
+
+  .link-css ::v-deep span {
+    margin-left: 0px !important;
   }
 
 </style>
