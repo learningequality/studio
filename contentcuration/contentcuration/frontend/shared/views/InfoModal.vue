@@ -20,12 +20,12 @@
         :key="`info-${index}`"
         class="mb-4 mt-3"
       >
-        <h1 class="font-weight-bold mb-1 subheading">
+        <h2 class="font-weight-bold mb-1 subheading">
           <slot
             name="header"
             :item="item"
           ></slot>
-        </h1>
+        </h2>
         <p class="body-1 grey--text">
           <slot
             name="description"
