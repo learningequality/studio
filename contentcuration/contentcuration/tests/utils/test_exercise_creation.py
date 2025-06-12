@@ -1,3 +1,7 @@
+# flake8: noqa: E501
+# Ignore line length issues in this file
+# Black will autoformat where possible, so this is not too egregious
+# but will allow our long strings where necessary.
 import json
 import os
 import re
@@ -17,6 +21,8 @@ from contentcuration.tests.base import StudioTestCase
 from contentcuration.tests.testdata import fileobj_exercise_graphie
 from contentcuration.tests.testdata import fileobj_exercise_image
 from contentcuration.utils.assessment.perseus import PerseusExerciseGenerator
+from contentcuration.utils.assessment.qti.archive import hex_to_qti_id
+from contentcuration.utils.assessment.qti.archive import QTIExerciseGenerator
 
 
 class TestPerseusExerciseCreation(StudioTestCase):
@@ -1122,5 +1128,697 @@ class TestPerseusExerciseCreation(StudioTestCase):
         self.assertEqual(
             len(image_files),
             1,
-            f"Expected 2 resized images, found {len(image_files)}: {image_files}",
+            f"Expected 1 resized images, found {len(image_files)}: {image_files}",
+        )
+
+
+class TestQTIExerciseCreation(StudioTestCase):
+    """
+    Tests for the QTI exercise generator which handles QTI format exercise file generation.
+
+    These tests verify that the function correctly packages assessment items
+    into a valid QTI Content Package with IMS manifest and individual item XML files.
+    """
+
+    maxDiff = None
+
+    def setUp(self):
+        self.setUpBase()
+
+        # Create an exercise node
+        self.exercise_node = ContentNode.objects.create(
+            title="Test QTI Exercise",
+            node_id="1234567890abcdef1234567890abcded",
+            content_id="fedcba0987654321fedcba0987654321",
+            kind_id=content_kinds.EXERCISE,
+            parent=self.channel.main_tree,
+            extra_fields=json.dumps(
+                {
+                    "randomize": True,
+                    "options": {
+                        "completion_criteria": {
+                            "model": "mastery",
+                            "threshold": {
+                                "mastery_model": exercises.M_OF_N,
+                                "m": 3,
+                                "n": 5,
+                            },
+                        }
+                    },
+                }
+            ),
+        )
+
+    def _create_assessment_item(
+        self, item_type, question_text, answers, hints=None, assessment_id=None
+    ):
+        """Helper to create assessment items with the right structure"""
+        if hints is None:
+            hints = [{"hint": "This is a hint", "order": 1}]
+
+        item = AssessmentItem.objects.create(
+            contentnode=self.exercise_node,
+            assessment_id=assessment_id or uuid4().hex,
+            type=item_type,
+            question=question_text,
+            answers=json.dumps(answers),
+            hints=json.dumps(hints),
+            raw_data="{}",
+            order=len(self.exercise_node.assessment_items.all()) + 1,
+            randomize=True,
+        )
+        return item
+
+    def _create_qti_zip(self, exercise_data):
+        """Create QTI exercise zip using the generator"""
+        generator = QTIExerciseGenerator(
+            self.exercise_node,
+            exercise_data,
+            self.channel.id,
+            "en-US",
+            user_id=self.user.id,
+        )
+        return generator.create_exercise_archive()
+
+    def _normalize_xml(self, xml_string):
+        return "".join(x.strip() for x in xml_string.split("\n"))
+
+    def _validate_qti_zip_structure(self, exercise_file):
+        """Helper to validate basic structure of the QTI Content Package"""
+        # Use Django's storage backend to read the file
+        with storage.open(exercise_file.file_on_disk.name, "rb") as f:
+            zip_data = f.read()
+
+        zip_file = zipfile.ZipFile(BytesIO(zip_data))
+
+        # Check that the imsmanifest.xml file exists
+        assert (
+            "imsmanifest.xml" in zip_file.namelist()
+        ), "imsmanifest.xml not found in zip file"
+
+        return zip_file
+
+    def test_basic_qti_exercise_creation(self):
+        """Test the basic creation of a QTI exercise with a single question"""
+        # Create a simple multiple choice question with 32-char hex ID
+        assessment_id = "1234567890abcdef1234567890abcdef"
+        item = self._create_assessment_item(
+            exercises.SINGLE_SELECTION,
+            "What is 2+2?",
+            [
+                {"answer": "4", "correct": True, "order": 1},
+                {"answer": "3", "correct": False, "order": 2},
+                {"answer": "5", "correct": False, "order": 3},
+            ],
+            assessment_id=assessment_id,
+        )
+
+        # Create the exercise data structure
+        exercise_data = {
+            "mastery_model": exercises.M_OF_N,
+            "randomize": True,
+            "n": 5,
+            "m": 3,
+            "all_assessment_items": [item.assessment_id],
+            "assessment_mapping": {item.assessment_id: exercises.SINGLE_SELECTION},
+        }
+
+        # Call the function to create the QTI exercise
+        self._create_qti_zip(exercise_data)
+
+        # Verify that a file was created for the node
+        exercise_file = self.exercise_node.files.get(preset_id=format_presets.QTI_ZIP)
+        self.assertIsNotNone(exercise_file)
+        self.assertEqual(exercise_file.file_format_id, "zip")
+
+        # Validate the contents of the zip file
+        zip_file = self._validate_qti_zip_structure(exercise_file)
+
+        # Check that the assessment item XML file exists
+        expected_item_file = "items/KEjRWeJCrze8SNFZ4kKvN7w.xml"
+        self.assertIn(expected_item_file, zip_file.namelist())
+
+        # Get the actual QTI item XML content
+        actual_item_xml = zip_file.read(expected_item_file).decode("utf-8")
+
+        # Expected QTI item XML content
+        expected_item_xml = """<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqtiasi_v3p0 https://purl.imsglobal.org/spec/qti/v3p0/schema/xsd/imsqti_asiv3p0p1_v1p0.xsd" identifier="KEjRWeJCrze8SNFZ4kKvN7w" title="Test QTI Exercise 1" adaptive="false" time-dependent="false" language="en-US" tool-name="kolibri" tool-version="0.1">
+    <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier">
+        <qti-correct-response>
+            <qti-value>choice_0</qti-value>
+        </qti-correct-response>
+    </qti-response-declaration>
+    <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float" />
+    <qti-item-body>
+        <qti-choice-interaction response-identifier="RESPONSE" shuffle="true" max-choices="1" min-choices="0" orientation="vertical">
+            <qti-prompt>
+                <p>What is 2+2?</p>
+            </qti-prompt>
+            <qti-simple-choice identifier="choice_0" show-hide="show" fixed="false"><p>4</p></qti-simple-choice>
+            <qti-simple-choice identifier="choice_1" show-hide="show" fixed="false"><p>3</p></qti-simple-choice>
+            <qti-simple-choice identifier="choice_2" show-hide="show" fixed="false"><p>5</p></qti-simple-choice>
+        </qti-choice-interaction>
+    </qti-item-body>
+    <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct" />
+</qti-assessment-item>"""
+
+        # Compare normalized XML
+        self.assertEqual(
+            self._normalize_xml(expected_item_xml),
+            self._normalize_xml(actual_item_xml),
+        )
+
+        # Get the actual IMS manifest content
+        actual_manifest_xml = zip_file.read("imsmanifest.xml").decode("utf-8")
+
+        # Expected IMS manifest XML content
+        expected_manifest_xml = """<?xml version="1.0" encoding="UTF-8"?>
+<manifest xmlns="http://www.imsglobal.org/xsd/qti/qtiv3p0/imscp_v1p2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/qti/qtiv3p0/imscp_v1p2 https://purl.imsglobal.org/spec/qti/v3p0/schema/xsd/imsqtiv3p0_imscpv1p2_v1p0.xsd" identifier="K_ty6CYdlQyH-3LoJh2VDIQ" version="1.0">
+    <metadata>
+        <schema>QTI Package</schema>
+        <schemaversion>3.0.0</schemaversion>
+    </metadata>
+    <organizations />
+    <resources>
+        <resource identifier="KEjRWeJCrze8SNFZ4kKvN7w" type="imsqti_item_xmlv3p0" href="items/KEjRWeJCrze8SNFZ4kKvN7w.xml">
+            <file href="items/KEjRWeJCrze8SNFZ4kKvN7w.xml" />
+        </resource>
+    </resources>
+</manifest>"""
+
+        # Compare normalized XML
+        self.assertEqual(
+            self._normalize_xml(expected_manifest_xml),
+            self._normalize_xml(actual_manifest_xml),
+        )
+
+    def test_multiple_selection_question(self):
+        """Test QTI generation for multiple selection questions"""
+        assessment_id = "abcdef1234567890abcdef1234567890"
+        item = self._create_assessment_item(
+            exercises.MULTIPLE_SELECTION,
+            "Select all prime numbers:",
+            [
+                {"answer": "2", "correct": True, "order": 1},
+                {"answer": "3", "correct": True, "order": 2},
+                {"answer": "4", "correct": False, "order": 3},
+                {"answer": "5", "correct": True, "order": 4},
+            ],
+            assessment_id=assessment_id,
+        )
+
+        exercise_data = {
+            "mastery_model": exercises.M_OF_N,
+            "randomize": True,
+            "n": 1,
+            "m": 1,
+            "all_assessment_items": [item.assessment_id],
+            "assessment_mapping": {item.assessment_id: exercises.MULTIPLE_SELECTION},
+        }
+
+        self._create_qti_zip(exercise_data)
+        exercise_file = self.exercise_node.files.get(preset_id=format_presets.QTI_ZIP)
+        zip_file = self._validate_qti_zip_structure(exercise_file)
+
+        qti_id = hex_to_qti_id(assessment_id)
+
+        # Check the QTI XML for multiple selection specifics
+        expected_item_file = f"items/{qti_id}.xml"
+        actual_item_xml = zip_file.read(expected_item_file).decode("utf-8")
+
+        # Expected QTI item XML content for multiple selection
+        expected_item_xml = """<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqtiasi_v3p0 https://purl.imsglobal.org/spec/qti/v3p0/schema/xsd/imsqti_asiv3p0p1_v1p0.xsd" identifier="Kq83vEjRWeJCrze8SNFZ4kA" title="Test QTI Exercise 1" adaptive="false" time-dependent="false" language="en-US" tool-name="kolibri" tool-version="0.1">
+    <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="identifier">
+        <qti-correct-response>
+            <qti-value>choice_0</qti-value>
+            <qti-value>choice_1</qti-value>
+            <qti-value>choice_3</qti-value>
+        </qti-correct-response>
+    </qti-response-declaration>
+    <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float" />
+    <qti-item-body>
+        <qti-choice-interaction response-identifier="RESPONSE" shuffle="true" max-choices="4" min-choices="0" orientation="vertical">
+            <qti-prompt>
+                <p>Select all prime numbers:</p>
+            </qti-prompt>
+            <qti-simple-choice identifier="choice_0" show-hide="show" fixed="false"><p>2</p></qti-simple-choice>
+            <qti-simple-choice identifier="choice_1" show-hide="show" fixed="false"><p>3</p></qti-simple-choice>
+            <qti-simple-choice identifier="choice_2" show-hide="show" fixed="false"><p>4</p></qti-simple-choice>
+            <qti-simple-choice identifier="choice_3" show-hide="show" fixed="false"><p>5</p></qti-simple-choice>
+        </qti-choice-interaction>
+    </qti-item-body>
+    <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct" />
+</qti-assessment-item>"""
+
+        # Compare normalized XML
+        self.assertEqual(
+            self._normalize_xml(expected_item_xml),
+            self._normalize_xml(actual_item_xml),
+        )
+
+    def test_free_response_question(self):
+        assessment_id = "fedcba0987654321fedcba0987654321"
+        item = self._create_assessment_item(
+            exercises.FREE_RESPONSE,
+            "What is the capital of France?",
+            [{"answer": "Paris", "correct": True, "order": 1}],
+            assessment_id=assessment_id,
+        )
+
+        exercise_data = {
+            "mastery_model": exercises.M_OF_N,
+            "randomize": True,
+            "n": 1,
+            "m": 1,
+            "all_assessment_items": [item.assessment_id],
+            "assessment_mapping": {item.assessment_id: exercises.FREE_RESPONSE},
+        }
+
+        self._create_qti_zip(exercise_data)
+        exercise_file = self.exercise_node.files.get(preset_id=format_presets.QTI_ZIP)
+        zip_file = self._validate_qti_zip_structure(exercise_file)
+
+        # Check the QTI XML for text entry specifics
+        expected_item_file = "items/K_ty6CYdlQyH-3LoJh2VDIQ.xml"
+        actual_item_xml = zip_file.read(expected_item_file).decode("utf-8")
+
+        # Expected QTI item XML content for text entry
+        expected_item_xml = """<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqtiasi_v3p0 https://purl.imsglobal.org/spec/qti/v3p0/schema/xsd/imsqti_asiv3p0p1_v1p0.xsd" identifier="K_ty6CYdlQyH-3LoJh2VDIQ" title="Test QTI Exercise 1" adaptive="false" time-dependent="false" language="en-US" tool-name="kolibri" tool-version="0.1">
+    <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string">
+        <qti-correct-response>
+            <qti-value>Paris</qti-value>
+        </qti-correct-response>
+    </qti-response-declaration>
+    <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float" />
+    <qti-item-body>
+        <div>
+            <p>What is the capital of France?</p>
+            <p><qti-text-entry-interaction response-identifier="RESPONSE" expected-length="50" placeholder-text="Enter your answer here" /></p>
+        </div>
+    </qti-item-body>
+    <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct" />
+</qti-assessment-item>"""
+
+        # Compare normalized XML
+        self.assertEqual(
+            self._normalize_xml(expected_item_xml),
+            self._normalize_xml(actual_item_xml),
+        )
+
+    def test_free_response_question_with_maths(self):
+        assessment_id = "fedcba0987654321fedcba0987654321"
+        item = self._create_assessment_item(
+            exercises.FREE_RESPONSE,
+            "$$\\sum_n^sxa^n$$\n\n What does this even mean?",
+            [{"answer": "Nothing", "correct": True, "order": 1}],
+            assessment_id=assessment_id,
+        )
+
+        exercise_data = {
+            "mastery_model": exercises.M_OF_N,
+            "randomize": True,
+            "n": 1,
+            "m": 1,
+            "all_assessment_items": [item.assessment_id],
+            "assessment_mapping": {item.assessment_id: exercises.FREE_RESPONSE},
+        }
+
+        self._create_qti_zip(exercise_data)
+        exercise_file = self.exercise_node.files.get(preset_id=format_presets.QTI_ZIP)
+        zip_file = self._validate_qti_zip_structure(exercise_file)
+
+        # Check the QTI XML for text entry specifics
+        expected_item_file = "items/K_ty6CYdlQyH-3LoJh2VDIQ.xml"
+        actual_item_xml = zip_file.read(expected_item_file).decode("utf-8")
+
+        # Expected QTI item XML content for text entry
+        expected_item_xml = """<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqtiasi_v3p0 https://purl.imsglobal.org/spec/qti/v3p0/schema/xsd/imsqti_asiv3p0p1_v1p0.xsd" identifier="K_ty6CYdlQyH-3LoJh2VDIQ" title="Test QTI Exercise 1" adaptive="false" time-dependent="false" language="en-US" tool-name="kolibri" tool-version="0.1">
+    <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string">
+        <qti-correct-response>
+            <qti-value>Nothing</qti-value>
+        </qti-correct-response>
+    </qti-response-declaration>
+    <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float" />
+    <qti-item-body>
+        <div>
+            <math display="block">
+                <semantics>
+                    <mrow>
+                        <msubsup><mo>∑</mo><mi>n</mi><mi>s</mi></msubsup>
+                        <mi>x</mi>
+                        <msup><mi>a</mi><mi>n</mi></msup>
+                    </mrow>
+                    <annotation encoding="application/x-tex">\\sum_n^sxa^n</annotation>
+                </semantics>
+            </math>
+            <p>What does this even mean?</p>
+            <p><qti-text-entry-interaction response-identifier="RESPONSE" expected-length="50" placeholder-text="Enter your answer here" /></p>
+        </div>
+    </qti-item-body>
+    <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct" />
+</qti-assessment-item>"""
+
+        # Compare normalized XML
+        self.assertEqual(
+            self._normalize_xml(expected_item_xml),
+            self._normalize_xml(actual_item_xml),
+        )
+
+    def test_perseus_question_rejection(self):
+        """Test that Perseus questions are properly rejected"""
+        assessment_id = "aaaa1111bbbb2222cccc3333dddd4444"
+        # Create a mock Perseus question
+        item = AssessmentItem.objects.create(
+            contentnode=self.exercise_node,
+            assessment_id=assessment_id,
+            type=exercises.PERSEUS_QUESTION,
+            raw_data='{"question": {"content": "Perseus content"}}',
+            order=1,
+        )
+
+        exercise_data = {
+            "mastery_model": exercises.M_OF_N,
+            "randomize": True,
+            "n": 1,
+            "m": 1,
+            "all_assessment_items": [item.assessment_id],
+            "assessment_mapping": {item.assessment_id: exercises.PERSEUS_QUESTION},
+        }
+
+        # Should raise ValueError for Perseus questions
+        with self.assertRaises(ValueError) as context:
+            self._create_qti_zip(exercise_data)
+
+        self.assertIn("Perseus questions are not supported", str(context.exception))
+
+    def test_exercise_with_image(self):
+        """Test QTI exercise generation with images"""
+        assessment_id = "1111aaaa2222bbbb3333cccc4444dddd"
+        image_file = fileobj_exercise_image()
+
+        # Create a question with image
+        image_url = exercises.CONTENT_STORAGE_FORMAT.format(f"{image_file.filename()}")
+        question_text = f"Identify the shape: ![shape]({image_url})"
+        item = self._create_assessment_item(
+            exercises.SINGLE_SELECTION,
+            question_text,
+            [
+                {"answer": "Circle", "correct": True, "order": 1},
+                {"answer": "Square", "correct": False, "order": 2},
+            ],
+            assessment_id=assessment_id,
+        )
+
+        # Associate the image with the assessment item
+        image_file.assessment_item = item
+        image_file.save()
+
+        exercise_data = {
+            "mastery_model": exercises.M_OF_N,
+            "randomize": True,
+            "n": 1,
+            "m": 1,
+            "all_assessment_items": [item.assessment_id],
+            "assessment_mapping": {item.assessment_id: exercises.SINGLE_SELECTION},
+        }
+
+        self._create_qti_zip(exercise_data)
+        exercise_file = self.exercise_node.files.get(preset_id=format_presets.QTI_ZIP)
+        zip_file = self._validate_qti_zip_structure(exercise_file)
+
+        # Check that the image file was included in the zip
+        image_path = f"items/images/{image_file.filename()}"
+        self.assertIn(image_path, zip_file.namelist())
+
+        # Get the actual manifest content
+        actual_manifest_xml = zip_file.read("imsmanifest.xml").decode("utf-8")
+
+        # Expected manifest should include the image file dependency
+        expected_manifest_xml = f"""<?xml version="1.0" encoding="UTF-8"?>
+<manifest xmlns="http://www.imsglobal.org/xsd/qti/qtiv3p0/imscp_v1p2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/qti/qtiv3p0/imscp_v1p2 https://purl.imsglobal.org/spec/qti/v3p0/schema/xsd/imsqtiv3p0_imscpv1p2_v1p0.xsd" identifier="K_ty6CYdlQyH-3LoJh2VDIQ" version="1.0">
+    <metadata>
+        <schema>QTI Package</schema>
+        <schemaversion>3.0.0</schemaversion>
+    </metadata>
+    <organizations />
+    <resources>
+        <resource identifier="KERGqqiIiu7szM8zMRETd3Q" type="imsqti_item_xmlv3p0" href="items/KERGqqiIiu7szM8zMRETd3Q.xml">
+            <file href="items/KERGqqiIiu7szM8zMRETd3Q.xml" />
+            <file href="{image_path}" />
+        </resource>
+    </resources>
+</manifest>"""
+
+        # Compare normalized XML
+        self.assertEqual(
+            self._normalize_xml(expected_manifest_xml),
+            self._normalize_xml(actual_manifest_xml),
+        )
+
+        self.assertEqual(exercise_file.checksum, "51ba0d6e3c7f30239265c5294abe6ac5")
+
+    def test_question_with_mathematical_content(self):
+        """Test QTI generation for questions containing mathematical formulas converted to MathML"""
+        assessment_id = "dddddddddddddddddddddddddddddddd"
+        item = self._create_assessment_item(
+            exercises.SINGLE_SELECTION,
+            "Solve the equation $$\\frac{x}{2} = 3$$ for x. What is the value of x?",
+            [
+                {"answer": "6", "correct": True, "order": 1},
+                {"answer": "3", "correct": False, "order": 2},
+                {"answer": "1.5", "correct": False, "order": 3},
+                {"answer": "9", "correct": False, "order": 4},
+            ],
+            assessment_id=assessment_id,
+        )
+
+        exercise_data = {
+            "mastery_model": exercises.M_OF_N,
+            "randomize": True,
+            "n": 1,
+            "m": 1,
+            "all_assessment_items": [item.assessment_id],
+            "assessment_mapping": {item.assessment_id: exercises.SINGLE_SELECTION},
+        }
+
+        self._create_qti_zip(exercise_data)
+        exercise_file = self.exercise_node.files.get(preset_id=format_presets.QTI_ZIP)
+        zip_file = self._validate_qti_zip_structure(exercise_file)
+
+        qti_id = hex_to_qti_id(assessment_id)
+
+        # Check the QTI XML for mathematical content conversion to MathML
+        expected_item_file = f"items/{qti_id}.xml"
+        actual_item_xml = zip_file.read(expected_item_file).decode("utf-8")
+
+        # Expected QTI item XML content with MathML conversion
+        expected_item_xml = f"""<?xml version="1.0" encoding="UTF-8"?>
+    <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqtiasi_v3p0 https://purl.imsglobal.org/spec/qti/v3p0/schema/xsd/imsqti_asiv3p0p1_v1p0.xsd" identifier="{qti_id}" title="Test QTI Exercise 1" adaptive="false" time-dependent="false" language="en-US" tool-name="kolibri" tool-version="0.1">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier">
+            <qti-correct-response>
+                <qti-value>choice_0</qti-value>
+            </qti-correct-response>
+        </qti-response-declaration>
+        <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float" />
+        <qti-item-body>
+            <qti-choice-interaction response-identifier="RESPONSE" shuffle="true" max-choices="1" min-choices="0" orientation="vertical">
+                <qti-prompt>
+                    <p>Solve the equation <math display="inline"><semantics><mrow><mfrac><mrow><mi>x</mi></mrow><mrow><mn>2</mn></mrow></mfrac><mo>=</mo><mn>3</mn></mrow><annotation encoding="application/x-tex">\\frac{{x}}{{2}} = 3</annotation></semantics></math> for x. What is the value of x?</p>
+                </qti-prompt>
+                <qti-simple-choice identifier="choice_0" show-hide="show" fixed="false"><p>6</p></qti-simple-choice>
+                <qti-simple-choice identifier="choice_1" show-hide="show" fixed="false"><p>3</p></qti-simple-choice>
+                <qti-simple-choice identifier="choice_2" show-hide="show" fixed="false"><p>1.5</p></qti-simple-choice>
+                <qti-simple-choice identifier="choice_3" show-hide="show" fixed="false"><p>9</p></qti-simple-choice>
+            </qti-choice-interaction>
+        </qti-item-body>
+        <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct" />
+    </qti-assessment-item>"""
+
+        # Compare normalized XML
+        self.assertEqual(
+            self._normalize_xml(expected_item_xml),
+            self._normalize_xml(actual_item_xml),
+        )
+
+    def test_multiple_question_types_mixed(self):
+        """Test creating a QTI exercise with multiple supported question types"""
+        # Create different types of supported questions with 32-char hex IDs
+        assessment_id1 = "1111111111111111111111111111111a"
+        assessment_id2 = "2222222222222222222222222222222b"
+        assessment_id3 = "3333333333333333333333333333333c"
+
+        qti_id1 = hex_to_qti_id(assessment_id1)
+        qti_id2 = hex_to_qti_id(assessment_id2)
+        qti_id3 = hex_to_qti_id(assessment_id3)
+
+        item1 = self._create_assessment_item(
+            exercises.SINGLE_SELECTION,
+            "What is 2+2?",
+            [
+                {"answer": "4", "correct": True, "order": 1},
+                {"answer": "5", "correct": False, "order": 2},
+            ],
+            assessment_id=assessment_id1,
+        )
+
+        item2 = self._create_assessment_item(
+            exercises.MULTIPLE_SELECTION,
+            "Select all even numbers:",
+            [
+                {"answer": "2", "correct": True, "order": 1},
+                {"answer": "3", "correct": False, "order": 2},
+                {"answer": "4", "correct": True, "order": 3},
+                {"answer": "5", "correct": False, "order": 4},
+            ],
+            assessment_id=assessment_id2,
+        )
+
+        item3 = self._create_assessment_item(
+            exercises.INPUT_QUESTION,
+            "What is the capital of Spain?",
+            [{"answer": "Madrid", "correct": True, "order": 1}],
+            assessment_id=assessment_id3,
+        )
+
+        exercise_data = {
+            "mastery_model": exercises.M_OF_N,
+            "randomize": True,
+            "n": 3,
+            "m": 2,
+            "all_assessment_items": [
+                item1.assessment_id,
+                item2.assessment_id,
+                item3.assessment_id,
+            ],
+            "assessment_mapping": {
+                item1.assessment_id: exercises.SINGLE_SELECTION,
+                item2.assessment_id: exercises.MULTIPLE_SELECTION,
+                item3.assessment_id: exercises.INPUT_QUESTION,
+            },
+        }
+
+        self._create_qti_zip(exercise_data)
+        exercise_file = self.exercise_node.files.get(preset_id=format_presets.QTI_ZIP)
+        zip_file = self._validate_qti_zip_structure(exercise_file)
+
+        # Check that all question XML files are included
+        expected_files = [
+            f"items/{qti_id1}.xml",
+            f"items/{qti_id2}.xml",
+            f"items/{qti_id3}.xml",
+        ]
+
+        for expected_file in expected_files:
+            self.assertIn(expected_file, zip_file.namelist())
+
+        # Get the actual manifest content
+        actual_manifest_xml = zip_file.read("imsmanifest.xml").decode("utf-8")
+
+        # Expected manifest with all three resources
+        expected_manifest_xml = f"""<?xml version="1.0" encoding="UTF-8"?>
+<manifest xmlns="http://www.imsglobal.org/xsd/qti/qtiv3p0/imscp_v1p2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/qti/qtiv3p0/imscp_v1p2 https://purl.imsglobal.org/spec/qti/v3p0/schema/xsd/imsqtiv3p0_imscpv1p2_v1p0.xsd" identifier="K_ty6CYdlQyH-3LoJh2VDIQ" version="1.0">
+    <metadata>
+        <schema>QTI Package</schema>
+        <schemaversion>3.0.0</schemaversion>
+    </metadata>
+    <organizations />
+    <resources>
+        <resource identifier="{qti_id1}" type="imsqti_item_xmlv3p0" href="items/{qti_id1}.xml">
+            <file href="items/{qti_id1}.xml" />
+        </resource>
+        <resource identifier="{qti_id2}" type="imsqti_item_xmlv3p0" href="items/{qti_id2}.xml">
+            <file href="items/{qti_id2}.xml" />
+        </resource>
+        <resource identifier="{qti_id3}" type="imsqti_item_xmlv3p0" href="items/{qti_id3}.xml">
+            <file href="items/{qti_id3}.xml" />
+        </resource>
+    </resources>
+</manifest>"""
+
+        # Compare normalized XML
+        self.assertEqual(
+            self._normalize_xml(expected_manifest_xml),
+            self._normalize_xml(actual_manifest_xml),
+        )
+
+        self.assertEqual(exercise_file.checksum, "8e488543ef52f0b153553eaf9fb51419")
+
+    def test_unsupported_question_type(self):
+        """Test that unsupported question types raise appropriate errors"""
+        assessment_id = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        # Create an item with an unsupported type
+        item = AssessmentItem.objects.create(
+            contentnode=self.exercise_node,
+            assessment_id=assessment_id,
+            type="UNSUPPORTED_TYPE",
+            question="This is an unsupported question type",
+            answers="[]",
+            hints="[]",
+            raw_data="{}",
+            order=1,
+        )
+
+        exercise_data = {
+            "mastery_model": exercises.M_OF_N,
+            "randomize": True,
+            "n": 1,
+            "m": 1,
+            "all_assessment_items": [item.assessment_id],
+            "assessment_mapping": {item.assessment_id: "UNSUPPORTED_TYPE"},
+        }
+
+        with self.assertRaises(ValueError) as context:
+            self._create_qti_zip(exercise_data)
+
+        self.assertIn("Unsupported question type", str(context.exception))
+
+    def test_manifest_structure_single_item(self):
+        """Test that the IMS manifest has proper structure and metadata for a single item"""
+        assessment_id = "cccccccccccccccccccccccccccccccc"
+        item = self._create_assessment_item(
+            exercises.SINGLE_SELECTION,
+            "Test question",
+            [{"answer": "Test answer", "correct": True, "order": 1}],
+            assessment_id=assessment_id,
+        )
+
+        exercise_data = {
+            "mastery_model": exercises.M_OF_N,
+            "randomize": True,
+            "n": 1,
+            "m": 1,
+            "all_assessment_items": [item.assessment_id],
+            "assessment_mapping": {item.assessment_id: exercises.SINGLE_SELECTION},
+        }
+
+        self._create_qti_zip(exercise_data)
+        exercise_file = self.exercise_node.files.get(preset_id=format_presets.QTI_ZIP)
+        zip_file = self._validate_qti_zip_structure(exercise_file)
+
+        # Get the actual manifest content
+        actual_manifest_xml = zip_file.read("imsmanifest.xml").decode("utf-8")
+
+        # Expected exact manifest structure
+        expected_manifest_xml = """<?xml version="1.0" encoding="UTF-8"?>
+<manifest xmlns="http://www.imsglobal.org/xsd/qti/qtiv3p0/imscp_v1p2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/qti/qtiv3p0/imscp_v1p2 https://purl.imsglobal.org/spec/qti/v3p0/schema/xsd/imsqtiv3p0_imscpv1p2_v1p0.xsd" identifier="K_ty6CYdlQyH-3LoJh2VDIQ" version="1.0">
+    <metadata>
+        <schema>QTI Package</schema>
+        <schemaversion>3.0.0</schemaversion>
+    </metadata>
+    <organizations />
+    <resources>
+        <resource identifier="KzMzMzMzMzMzMzMzMzMzMzA" type="imsqti_item_xmlv3p0" href="items/KzMzMzMzMzMzMzMzMzMzMzA.xml">
+            <file href="items/KzMzMzMzMzMzMzMzMzMzMzA.xml" />
+        </resource>
+    </resources>
+</manifest>"""
+
+        # Compare normalized XML
+        self.assertEqual(
+            self._normalize_xml(expected_manifest_xml),
+            self._normalize_xml(actual_manifest_xml),
         )
