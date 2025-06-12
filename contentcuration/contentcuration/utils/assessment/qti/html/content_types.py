@@ -4,9 +4,11 @@ from typing import Union
 from contentcuration.utils.assessment.qti.base import TextType
 from contentcuration.utils.assessment.qti.html.base import FlowContentElement
 from contentcuration.utils.assessment.qti.html.base import InlineContentElement
+from contentcuration.utils.assessment.qti.interaction_types.base import BlockInteraction
 from contentcuration.utils.assessment.qti.interaction_types.base import (
     InlineInteraction,
 )
+from contentcuration.utils.assessment.qti.mathml import Math
 
 
 FlowContent = Union[FlowContentElement, TextType]
@@ -26,8 +28,17 @@ InlineGroup = Union[
     # InlineChoiceInteraction,
     # EndAttemptInteraction,
     # CustomInteraction,
-    # Math,
+    Math,
     # Include,
 ]
 
 InlineGroupList = List[Union[InlineGroup, TextType]]
+
+FlowGroup = Union[
+    FlowContentElement,
+    BlockInteraction,
+    InlineInteraction,
+    Math,
+]
+
+FlowGroupList = List[Union[FlowGroup, TextType]]

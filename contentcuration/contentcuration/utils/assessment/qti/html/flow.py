@@ -4,7 +4,7 @@ from pydantic import Field
 from pydantic import HttpUrl
 
 from contentcuration.utils.assessment.qti.html.base import BlockContentElement
-from contentcuration.utils.assessment.qti.html.content_types import FlowContentList
+from contentcuration.utils.assessment.qti.html.content_types import FlowGroupList
 
 
 class HTMLFlowContainer(BlockContentElement):
@@ -14,7 +14,7 @@ class HTMLFlowContainer(BlockContentElement):
     Corresponds to HTML "Flow Content" category.
     """
 
-    children: FlowContentList = Field(default_factory=list)
+    children: FlowGroupList = Field(default_factory=list)
 
 
 class Blockquote(HTMLFlowContainer):
