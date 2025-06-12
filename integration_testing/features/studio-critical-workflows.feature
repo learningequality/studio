@@ -1,9 +1,9 @@
-Feature: Studio critical workflows
-  This is a test suite of the main Studio workflows.
+Feature: Kolibri Studio critical workflows
+  This is a test suite of the main Kolibri Studio workflows.
 
   Background:
-    Given Studio is accessible at https://studio.learningequality.org/ or any of the test environments
-    	And I am at Studio's sign-in page
+    Given Kolibri Studio is accessible at https://studio.learningequality.org/ or any of the test environments
+    	And I am at Kolibri Studio's sign-in page
 
   Scenario: Create an account and sign in with the created account
 		When I click the *Create an account* button
@@ -35,21 +35,21 @@ Feature: Studio critical workflows
 
 	Scenario: Explore without an account
 		Given I am not signed in to Studio
-			And I am on Studio sign-in page
+			And I am at Kolibri Studio's sign-in page
 		When I click the *Explore without an account* link
-		Then I see the *Content Library* page with available public channels
+		Then I see the *Content Library* page with the available public channels
 			And I can filter the search results by keyword, language, license, format, resources for coach, available captions and subtitles
 			And I can view or download the channel summary
 
 	Scenario: Change the language when you are not signed-in
 		Given I am not signed-in to Studio
-			And I am on the Studio home page
+			And I am at Kolibri Studio's home page
 		When I click on one of the available languages
 		Then the language interface changes to the selected language
 			And the selected language is no longer clickable
 
 	Scenario: Change the language as a signed-in user
-		Given I am signed-in to Studio
+		Given I am signed-in to Kolibri Studio
 			And I click the user profile icon
 		When I click *Change language*
 		Then I see a *Change language* modal window with the available languages
@@ -111,26 +111,30 @@ Feature: Studio critical workflows
 			And I fill in any of the other optional fields
 			And I add a thumbnail image (optional)
 			And I click the *Finish* button
-		Then I am on the channel editor page
+		Then I am back at the channel editor page
 			And I can see the newly created folder
 
 	Scenario: Upload all supported files
+		Given I am signed in to Studio
+			And I am at the channel editor page
 		When I click the *Add* button
 			And I select the *Upload files* option
 		Then I see the *Upload files* modal
-			And I see the *Total storage used* indicator at the top
+			And I see the *Total storage used N MB of N MB* indicator at the top
 			And I can see which are the supported file types: mp3, bloompub, bloomd, pdf, epub, h5p, mp4, webm, zip, kpub
-		When I click the *Select files* button
+		When I click the *Select files* button #alternatively one can drag and drop supported files
 		Then I see a file explorer window
 			And I can select one or several supported files for upload
 		When I click the *Open* button
 		Then I see the *Edit files* modal
 		When I fill in all the required fields
 			And I click the *Finish* button
-		Then I am back at the main topic tree view
+		Then I am back at the channel editor page
 			And I can see the uploaded files
 
-	Scenario: Create an exercise
+	Scenario: Create a new exercise
+		Given I am signed in to Studio
+			And I am at the channel editor page
 		When I click the *Add* button
 			And I select the *New exercise* option
 		Then I see the *Details* tab of the *New exercise* modal
@@ -141,24 +145,27 @@ Feature: Studio critical workflows
 		When I click the *New question* button
 		Then I see the question editor
 		When I add one or several questions of the desired type
-		And I click the *Finish* button
-		Then I am back at the main topic tree view
+			And I add answers and hints as necessary
+			And I click the *Finish* button
+		Then I am back at the channel editor page
 			And I can see the newly added exercise
 
 	Scenario: Import content from another channel
+		Given I am signed in to Studio
+			And I am at the channel editor page
 		When I click the *Add* button
 			And I select the *Import from channels* option
 		Then I see the *Import from other channels* modal
 			And I see a list of channels that I have access to
 		When I click on a channel card
 		Then I see the available folders and resources
-		When I select some content
+		When I select some folders and resources
 			And I click the *Review* button
 		Then I see the *Review selections* table
 			And I see the number of selected resources at the bottom left
 		When I finish reviewing my selections
 			And I click the *Import* button
-		Then I am back at the main topic tree view
+		Then I am back at the channel editor page
 			And I see the *Copying* indicator for each folder or resource which is being copied
 
 	Scenario: Publish a channel
@@ -217,14 +224,14 @@ Feature: Studio critical workflows
 		Then I see the *Edit language* modal
 		When I select a new language
 			And I click the *Save* button
-		Then I am back at the page with the resources
-			And I see a message: *Changes saved*
+		Then the *Edit language* modal closes
+			And I see the *Changes saved* snackbar message
 		When I click on any of the other available editing icons such as *Edit categories* or *Edit levels*
 		Then I also see a modal with options
 		When I select one or several options
 			And I click the *Save* button
-		Then I am back at the page with the resources
-			And I see a message: *Changes saved*
+		Then the modal closes
+			And I see the *Changes saved* snackbar message
 
 	Scenario: Remove folders and resources by using the toolbar
 		Given I am signed in to Studio
@@ -233,13 +240,13 @@ Feature: Studio critical workflows
 		When I check a folder's checkbox
 		Then I see the toolbar options for the selected folder
 		When I click the *Remove* button
-		Then I can see the *Sent to trash* snackbar notification
+		Then I can see the *Sent to trash* snackbar message
 			And I see the *Undo* button
 			And I no longer see the folder
 		When I check the checkbox of a resource
 		Then I see the toolbar options for the resource
 		When I click the *Remove* button
-		Then I can see the *Sent to trash* snackbar notification
+		Then I can see the *Sent to trash* snackbar message
 			And I see the *Undo* button
 			And I no longer see the resource
 
@@ -250,31 +257,34 @@ Feature: Studio critical workflows
 		When I select multiple items via checkboxes
 		Then I see that the select bar has changed to an actions bar
 		When I click the *Make a copy* button in the actions bar
-		Then I see a snackbar appears with a *Copying...* message
-		When the copy creation process is finished
+		Then I see the *Copying...* snackbar message
+		When the copy creation process has finished
 		Then the snackbar disappears
-			And a snackbar *Copy operation complete* appears
-			And I see that copies are created
+			And I see a *Copy operation complete* snackbar message
+			And I see that the copies are created
 
 	Scenario: Move resources into a new destination
-		When I click on a checkbox(s) and make a resource selection
-			And I click the move button
+		Given I am signed in to Studio
+			And I am at the channel editor page
+			And there are available resources of different types
+		When I select multiple items via checkboxes
+		Then I see that the select bar has changed to an actions bar
+		When I click the *Move* button
 		Then I am navigated to a screen that allows me to navigate and choose a destination to move the resource
 		When I navigate to an appropriate destination
 			And click the *Move here* button
 		Then I am redirected to the channel editor
-			And I see a snackbar confirmation that my resources are moved
+			And I see a snackbar confirmation message that my resources are moved
 			And the resources are no longer in my original directory
 
-	Scenario: Apply details from folder after adding a resource
+	Scenario: Apply metadata details from a folder when adding a resource
 		Given I have created a folder with multiple metadata details such as categories, levels, requirements, language
 		When I attempt to import, copy or move a resource into that folder
 		Then I see the *Apply details from the folder <folder name>* modal
 			And I see that all of the checkboxes for the available metadata are selected
 		When I click the *Continue* button
+			And I go to view the details of a resource
 		Then I see that the selected metadata is filled in
-		When I click the *Finish* button
-		Then I see that the resource is added in the folder
 
 	Scenario: Delete a channel
 		Given I am signed in to Studio
