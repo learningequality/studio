@@ -21,6 +21,12 @@ function makeWrapper(currentUser = {}) {
       FullNameForm: true,
       ChangePasswordForm: true,
     },
+    mocks: {
+      $store: {
+        dispatch: jest.fn(),
+      },
+      $tr: (text) => text,
+    },
   });
 }
 
