@@ -5,7 +5,7 @@
       class="format-dropdown" 
       :aria-expanded="isOpen"
       :aria-haspopup="true"
-      aria-label="Text format options"
+      :aria-label="t('textFormatOptions')"
       @click="toggleDropdown"
       @keydown="handleButtonKeydown"
     >
@@ -17,7 +17,7 @@
       ref="dropdownMenu"
       class="dropdown-menu headers-dropdown"
       role="menu"
-      aria-label="Format options"
+      :aria-label="t('formatOptions')"
     >
       <div 
         v-for="(format, index) in formatOptions" 
@@ -45,26 +45,19 @@ export default defineComponent({
   name: 'FormatDropdown',
   setup() {
     const { 
+      formatOptions,
       selectedFormat, 
       showHeadersDropdown: isOpen, 
       toggleHeadersDropdown: toggleDropdown,
       selectFormat
     } = useDropdowns()
 
-    const { handleFormatChange } = useToolbarActions()
+    const { handleFormatChange, t } = useToolbarActions()
 
     const dropdownButton = ref(null)
     const dropdownMenu = ref(null)
     const itemRefs = ref([])
     const focusedIndex = ref(0)
-
-    const formatOptions = computed(() => [
-      { value: 'small', label: 'small', tag: 'small' },
-      { value: 'normal', label: 'Normal', tag: 'p' },
-      { value: 'h3', label: 'Header 3', tag: 'h3' },
-      { value: 'h2', label: 'Header 2', tag: 'h2' },
-      { value: 'h1', label: 'Header 1', tag: 'h1' }
-    ])
 
     const setItemRef = (el, index) => {
       if (el) {
@@ -181,7 +174,8 @@ export default defineComponent({
       setItemRef,
       handleButtonKeydown,
       handleItemKeydown,
-      handleContainerKeydown
+      handleContainerKeydown,
+      t
     }
   }
 })

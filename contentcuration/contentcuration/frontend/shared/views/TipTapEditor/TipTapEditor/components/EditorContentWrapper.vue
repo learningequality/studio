@@ -5,16 +5,12 @@
       :editor="editor" 
       class="tiptap-editor"
     />
-    <div v-else class="editor-placeholder">
-      {{ LOAD_EDITOR_PLACEHOLDER }}
-    </div>
   </div>
 </template>
 
 <script>
 import { defineComponent, inject } from 'vue'
 import { EditorContent } from '@tiptap/vue-2'
-import { LOAD_EDITOR_PLACEHOLDER } from '../constants'
 
 export default defineComponent({
   name: 'EditorContentWrapper',
@@ -28,7 +24,6 @@ export default defineComponent({
     return {
       editor,
       isReady,
-      LOAD_EDITOR_PLACEHOLDER
     }
   }
 })

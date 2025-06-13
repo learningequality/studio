@@ -71,4 +71,13 @@ export default defineComponent({
   font-size: 12px;
   margin: 4px 0;
 }
+
+:deep(ul),
+:deep(ol) {
+  margin: 8px 0;
+  padding-left: 20px;
+}
+:deep(li) {
+  margin: 4px 0;
+}
 </style>

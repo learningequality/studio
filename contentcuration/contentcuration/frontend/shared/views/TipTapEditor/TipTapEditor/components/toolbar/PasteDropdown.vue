@@ -4,8 +4,8 @@
       class="toolbar-btn paste-main-btn" 
       @click="handlePaste" 
       @keydown="handleMainButtonKeydown"
-      title="Paste"
-      aria-label="Paste"
+      :title="t('paste')"
+      :aria-label="t('paste')"
     >
       <img :src="require('../../../assets/icon-paste.svg')" alt="" class="toolbar-icon">
     </button>
@@ -14,10 +14,10 @@
       class="paste-dropdown-btn" 
       @click="toggleDropdown" 
       @keydown="handleDropdownButtonKeydown"
-      title="Paste Options"
+      :title="t('pasteOptions')"
       :aria-expanded="isOpen"
       :aria-haspopup="true"
-      aria-label="Paste options menu"
+      :aria-label="t('pasteOptionsMenu')"
       :class="{ active: isOpen }"
     >
       <img :src="require('../../../assets/icon-chevron-down.svg')" alt="" class="dropdown-arrow">
@@ -27,7 +27,7 @@
       ref="dropdownMenu"
       class="dropdown-menu paste-dropdown"
       role="menu"
-      aria-label="Paste options"
+      :aria-label="t('pasteOptions')"
     >
       <div 
         v-for="(option, index) in pasteOptions" 
@@ -55,31 +55,17 @@ export default defineComponent({
   name: 'PasteDropdown',
   setup() {
     const { 
+      pasteOptions,
       showPasteDropdown: isOpen, 
       togglePasteDropdown: toggleDropdown 
     } = useDropdowns()
 
-    const { handlePaste, handlePasteNoFormat } = useToolbarActions()
+    const { handlePaste, t } = useToolbarActions()
 
     const dropdownButton = ref(null)
     const dropdownMenu = ref(null)
     const itemRefs = ref([])
     const focusedIndex = ref(0)
-
-    const pasteOptions = computed(() => [
-      { 
-        name: 'paste', 
-        title: 'Paste', 
-        icon: require('../../../assets/icon-paste.svg'), 
-        handler: handlePaste 
-      },
-      { 
-        name: 'pasteNoFormat', 
-        title: 'Paste without formatting', 
-        icon: require('../../../assets/icon-pasteNoFormat.svg'), 
-        handler: handlePasteNoFormat 
-      }
-    ])
 
     const setItemRef = (el, index) => {
       if (el) {
@@ -202,7 +188,8 @@ export default defineComponent({
       handleDropdownButtonKeydown,
       handleOptionClick,
       handleItemKeydown,
-      handleContainerKeydown
+      handleContainerKeydown,
+      t
     }
   }
 })

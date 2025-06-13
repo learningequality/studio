@@ -1,10 +1,18 @@
-import { ref, onMounted, onUnmounted, inject, watch } from 'vue'
+import { ref, onMounted, onUnmounted, inject, watch, computed } from 'vue'
+import {useToolbarActions} from './useToolbarActions'
+import { getTranslator } from '../TipTapEditorStrings'
 
 export function useDropdowns() {
   const selectedFormat = ref('Normal')
   const showHeadersDropdown = ref(false)
   const showPasteDropdown = ref(false)
   const editor = inject('editor', null)
+
+  // This function retrieves the translator instance for localization
+  const t = (key, args = {}) => {
+    const translator = getTranslator();
+    return translator.$tr(key, args);
+  };
 
   // Format detection function
   const updateSelectedFormat = () => {
@@ -94,10 +102,36 @@ export function useDropdowns() {
     if (offTransaction) offTransaction()
   })
 
+  const formatOptions = computed(() => [
+  { value: 'small', label: t('formatSmall'), tag: 'small' },
+  { value: 'normal', label: t('formatNormal'), tag: 'p' },
+  { value: 'h3', label: t('formatHeader3'), tag: 'h3' },
+  { value: 'h2', label: t('formatHeader2'), tag: 'h2' },
+  { value: 'h1', label: t('formatHeader1'), tag: 'h1' }
+])
+
+
+  const pasteOptions = computed(() => [
+    { 
+      name: 'paste', 
+      title: t('paste'), 
+      icon: require('../../assets/icon-paste.svg'), 
+      handler: useToolbarActions().handlePaste 
+    },
+    { 
+      name: 'pasteNoFormat', 
+      title: t('pasteWithoutFormatting'), 
+      icon: require('../../assets/icon-pasteNoFormat.svg'), 
+      handler: useToolbarActions().handlePasteNoFormat 
+    }
+  ])
+
   return {
     selectedFormat,
-    showHeadersDropdown,
+    showHeadersDropdown,  
     showPasteDropdown,
+    formatOptions,
+    pasteOptions,
     toggleHeadersDropdown,
     togglePasteDropdown,
     closeAllDropdowns,

@@ -1,7 +1,7 @@
 <template>
-  <div class="toolbar" role="toolbar" aria-label="Text formatting toolbar">
+  <div class="toolbar" role="toolbar" :aria-label="t('textFormattingToolbar')">
     <!-- History buttons -->
-    <div role="group" aria-label="History actions">
+    <div role="group" :aria-label="t('historyActions')">
       <ToolbarButton
         v-for="action in historyActions"
         :key="action.name"
@@ -15,14 +15,14 @@
     <ToolbarDivider />
 
     <!-- Format dropdown -->
-    <div role="group" aria-label="Text formatting options">
+    <div role="group" :aria-label="t('textFormattingOptions')">
       <FormatDropdown />
     </div>
 
     <ToolbarDivider />
 
     <!-- Text formatting -->
-    <div role="group" aria-label="Text style formatting">
+    <div role="group" :aria-label="t('textStyleFormatting')">
       <ToolbarButton 
         v-for="action in textActions" 
         :key="action.name"
@@ -36,9 +36,9 @@
     <ToolbarDivider />
 
     <!-- Copy/Paste -->
-    <div role="group" aria-label="Copy and paste actions">
+    <div role="group" :aria-label="t('copyAndPasteActions')">
       <ToolbarButton 
-        title="Copy"
+        :title="t('copy')"
         :icon="require('../../assets/icon-copy.svg')"
         @click="handleCopy"
       />
@@ -48,7 +48,7 @@
     <ToolbarDivider />
 
     <!-- Lists -->
-    <div role="group" aria-label="List formatting">
+    <div role="group" :aria-label="t('listFormatting')">
       <ToolbarButton 
         v-for="list in listActions" 
         :key="list.name"
@@ -62,7 +62,7 @@
     <ToolbarDivider />
 
     <!-- Script formatting -->
-    <div role="group" aria-label="Script formatting">
+    <div role="group" :aria-label="t('scriptFormatting')">
       <ToolbarButton 
         v-for="script in scriptActions" 
         :key="script.name"
@@ -75,7 +75,7 @@
     <ToolbarDivider />
 
     <!-- Insert tools -->
-    <div role="group" aria-label="Insert tools">
+    <div role="group" :aria-label="t('insertTools')">
       <ToolbarButton 
         v-for="tool in insertTools" 
         :key="tool.name"
@@ -110,11 +110,13 @@ export default defineComponent({
       textActions,
       listActions,
       scriptActions,
-      insertTools
+      insertTools,
+      t
     } = useToolbarActions()
 
     return {
       handleCopy,
+      t,
       historyActions,
       textActions,
       listActions,

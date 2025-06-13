@@ -1,8 +1,15 @@
 import { computed, inject } from 'vue'
+import { getTranslator } from '../TipTapEditorStrings';
 
 export function useToolbarActions() {
   const editor = inject('editor', null)
 
+  // Create the translator object
+  const t = (key, args = {}) => {
+    const translator = getTranslator();
+    return translator.$tr(key, args);
+  };
+  
   // Action handlers
   const handleUndo = () => {
     if (editor?.value) {
@@ -178,18 +185,18 @@ export function useToolbarActions() {
     }
   }
 
-  // Computed arrays for toolbar actions  
-    const historyActions = computed(() => [
+  // Computed arrays for toolbar actions
+  const historyActions = computed(() => [
     { 
       name: 'undo', 
-      title: 'Undo', 
+      title: t('undo'), 
       icon: require('../../assets/icon-undo.svg'),
       handler: handleUndo,
       isAvailable: isButtonAvailable('undo')
     },
     { 
       name: 'redo', 
-      title: 'Redo', 
+      title: t('redo'), 
       icon: require('../../assets/icon-redo.svg'),
       handler: handleRedo,
       isAvailable: isButtonAvailable('redo')
@@ -199,28 +206,28 @@ export function useToolbarActions() {
   const textActions = computed(() => [
     { 
       name: 'bold', 
-      title: 'Bold', 
+      title: t('bold'), 
       icon: require('../../assets/icon-bold.svg'), 
       handler: handleBold,
       isActive: isMarkActive('bold')
     },
     { 
       name: 'italic', 
-      title: 'Italic', 
+      title: t('italic'), 
       icon: require('../../assets/icon-italic.svg'), 
       handler: handleItalic,
       isActive: isMarkActive('italic')
     },
     { 
       name: 'underline', 
-      title: 'Underline', 
+      title: t('underline'), 
       icon: require('../../assets/icon-underline.svg'), 
       handler: handleUnderline,
       isActive: isMarkActive('underline')
     },
     { 
       name: 'strikethrough', 
-      title: 'Strikethrough', 
+      title: t('strikethrough'), 
       icon: require('../../assets/icon-strikethrough.svg'), 
       handler: handleStrikethrough,
       isActive: isMarkActive('strike')
@@ -230,14 +237,14 @@ export function useToolbarActions() {
   const listActions = computed(() => [
     { 
       name: 'bulletList', 
-      title: 'Bullet List', 
+      title: t('bulletList'), 
       icon: require('../../assets/icon-bulletList.svg'), 
       handler: handleBulletList ,
       isActive: isMarkActive('bulletList')
     },
     { 
       name: 'numberList', 
-      title: 'Numbered List', 
+      title: t('numberedList'), 
       icon: require('../../assets/icon-numberList.svg'), 
       handler: handleNumberList, 
       isActive: isMarkActive('orderedList')
@@ -247,13 +254,13 @@ export function useToolbarActions() {
   const scriptActions = computed(() => [
     { 
       name: 'subscript', 
-      title: 'Subscript', 
+      title: t('subscript'), 
       icon: require('../../assets/icon-subscript.svg'), 
       handler: handleSubscript 
     },
     { 
       name: 'superscript', 
-      title: 'Superscript', 
+      title: t('superscript'), 
       icon: require('../../assets/icon-superscript.svg'), 
       handler: handleSuperscript 
     }
@@ -262,25 +269,25 @@ export function useToolbarActions() {
   const insertTools = computed(() => [
     { 
       name: 'image', 
-      title: 'Insert Image', 
+      title: t('insertImage'), 
       icon: require('../../assets/icon-insertImage.svg'), 
       handler: handleInsertImage 
     },
     { 
       name: 'link', 
-      title: 'Insert Link', 
+      title: t('insertLink'), 
       icon: require('../../assets/icon-link.svg'), 
       handler: handleInsertLink 
     },
     { 
       name: 'math', 
-      title: 'Math', 
+      title: t('mathFormula'), 
       icon: require('../../assets/icon-formula.svg'), 
       handler: handleMath 
     },
     { 
       name: 'code', 
-      title: 'Code Block', 
+      title: t('codeBlock'), 
       icon: require('../../assets/icon-codeblock.svg'), 
       handler: handleCodeBlock 
     }
@@ -312,6 +319,9 @@ export function useToolbarActions() {
     textActions,
     listActions,
     scriptActions,
-    insertTools
+    insertTools,
+
+    // translator function
+    t
   }
 }
