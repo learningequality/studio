@@ -78,5 +78,8 @@ urlpatterns = urlpatterns + [
 ]
 
 urlpatterns += [
-    re_path(r'^editor-dev(?:/.*)?$', TemplateView.as_view(template_name='contentcuration/editor_dev.html')),
+    re_path(
+        r"^editor-dev(?:/.*)?$",
+        TemplateView.as_view(template_name="contentcuration/editor_dev.html"),
+    ),
 ]
