@@ -344,6 +344,7 @@
         showOtherFeedbackInvalidText: '',
         rejectedNodeIds: [],
         previewedNodeIds: [],
+        rejectedNode: null,
       };
     },
     computed: {
@@ -531,11 +532,10 @@
         ];
       },
       recommendationsFeedback() {
-        const selectedFeedback = this.feedbackCheckboxOptions
+        return this.feedbackCheckboxOptions
           .filter(option => this.feedbackReason.includes(option.value))
           .map(option => option.label)
           .join(', ');
-        return selectedFeedback + this.otherFeedback;
       },
       userId() {
         return this.$store.state.session.currentUser.id;
@@ -756,12 +756,13 @@
         });
       },
       handleNotRelevantRecommendation(node) {
+        this.rejectedNode = node;
         const interactionEvent = new RecommendationsInteractionEvent({
           recommendation_event_id: this.recommendationsEvent.id,
           contentnode_id: node.id,
           content_id: node.content_id,
           context: {
-            //ToDo: Add appropriate context to be sent with the interaction event
+            other_feedback: this.otherFeedback,
           },
           feedback_type: FeedbackTypeOptions.rejected,
           feedback_reason: this.recommendationsFeedback,
@@ -795,6 +796,9 @@
       submitRejectedRecommendationFeedback() {
         const rejectedEvent = new RecommendationsInteractionEvent({
           recommendation_event_id: this.recommendationsEvent.id,
+          contentnode_id: this.rejectedNode.id,
+          content_id: this.rejectedNode.content_id,
+          feedback_type: FeedbackTypeOptions.rejected,
           feedback_reason: this.recommendationsFeedback,
         });
         if (this.validateFeedbackForm()) {
@@ -837,7 +841,7 @@
         previewFunc(node);
         this.submitPreviewedRecommendationFeedback(node);
       },
-      submitIgnoredRecommendationsFeedback() {
+      async submitIgnoredRecommendationsFeedback() {
         for (const node of this.ignoredRecommendations) {
           const ignoredEvent = new RecommendationsInteractionEvent({
             recommendation_event_id: this.recommendationsEvent.id,
@@ -849,7 +853,7 @@
             feedback_type: FeedbackTypeOptions.ignored,
             feedback_reason: '',
           });
-          sendRequest(ignoredEvent);
+          await sendRequest(ignoredEvent);
         }
       },
     },
