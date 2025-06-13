@@ -36,7 +36,7 @@
           {{ fullName }}
           <KButton
             class="px-2"
-            data-test="name-form"
+            data-test="edit-name-btn"
             appearance="basic-link"
             :text="$tr('editFullNameAction')"
             @click="showFullNameForm = true"
@@ -54,7 +54,7 @@
         class="row"
       >
         <KButton
-          data-test="password-form"
+          data-test="change-password-btn"
           appearance="basic-link"
           :text="$tr('changePasswordAction')"
           @click="showPasswordForm = true"
@@ -142,6 +142,7 @@
       v-if="showExportDataNotice"
       :submitText="$tr('exportDataBtn')"
       :title="$tr('exportStartedHeader')"
+      data-test="export-notice"
       @submit="showExportDataNotice = false"
     >
       {{ $tr('exportAccountDataModalMessage') }}
