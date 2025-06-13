@@ -36,7 +36,7 @@
           {{ fullName }}
           <KButton
             class="px-2"
-            data-test="name-form"
+            data-test="edit-name-btn"
             appearance="basic-link"
             :text="$tr('editFullNameAction')"
             @click="showFullNameForm = true"
@@ -54,7 +54,7 @@
         class="row"
       >
         <KButton
-          data-test="password-form"
+          data-test="change-password-btn"
           appearance="basic-link"
           :text="$tr('changePasswordAction')"
           @click="showPasswordForm = true"
@@ -137,11 +137,16 @@
     <FullNameForm v-model="showFullNameForm" />
     <ChangePasswordForm v-model="showPasswordForm" />
     <DeleteAccountForm v-model="showDeleteConfirmation" />
-    <Alert
-      v-model="showExportDataNotice"
-      :header="$tr('exportStartedHeader')"
-      :text="$tr('exportAccountDataModalMessage')"
-    />
+
+    <KModal
+      v-if="showExportDataNotice"
+      :submitText="$tr('exportDataBtn')"
+      :title="$tr('exportStartedHeader')"
+      data-test="export-notice"
+      @submit="showExportDataNotice = false"
+    >
+      {{ $tr('exportAccountDataModalMessage') }}
+    </KModal>
   </div>
 
 </template>
@@ -154,7 +159,6 @@
   import ChangePasswordForm from './ChangePasswordForm';
   import DeleteAccountForm from './DeleteAccountForm';
   import CopyToken from 'shared/views/CopyToken';
-  import Alert from 'shared/views/Alert';
 
   export default {
     name: 'Account',
@@ -162,7 +166,6 @@
       ChangePasswordForm,
       CopyToken,
       FullNameForm,
-      Alert,
       DeleteAccountForm,
     },
     data() {
@@ -235,6 +238,7 @@
       exportAccountDataModalMessage:
         "You'll receive an email with your data when the export is completed",
       exportFailed: 'Unable to export data. Please try again.',
+      exportDataBtn: 'OK',
     },
   };
 
