@@ -1,7 +1,15 @@
 <template>
-  <div class="toolbar" role="toolbar" :aria-label="t('textFormattingToolbar')">
+
+  <div
+    class="toolbar"
+    role="toolbar"
+    :aria-label="t('textFormattingToolbar')"
+  >
     <!-- History buttons -->
-    <div role="group" :aria-label="t('historyActions')">
+    <div
+      role="group"
+      :aria-label="t('historyActions')"
+    >
       <ToolbarButton
         v-for="action in historyActions"
         :key="action.name"
@@ -16,16 +24,22 @@
     <ToolbarDivider />
 
     <!-- Format dropdown -->
-    <div role="group" :aria-label="t('textFormattingOptions')">
+    <div
+      role="group"
+      :aria-label="t('textFormattingOptions')"
+    >
       <FormatDropdown />
     </div>
 
     <ToolbarDivider />
 
     <!-- Text formatting -->
-    <div role="group" :aria-label="t('textStyleFormatting')">
-      <ToolbarButton 
-        v-for="action in textActions" 
+    <div
+      role="group"
+      :aria-label="t('textStyleFormatting')"
+    >
+      <ToolbarButton
+        v-for="action in textActions"
         :key="action.name"
         :title="action.title"
         :icon="action.icon"
@@ -37,8 +51,11 @@
     <ToolbarDivider />
 
     <!-- Copy/Paste -->
-    <div role="group" :aria-label="t('copyAndPasteActions')">
-      <ToolbarButton 
+    <div
+      role="group"
+      :aria-label="t('copyAndPasteActions')"
+    >
+      <ToolbarButton
         :title="t('copy')"
         :icon="require('../../assets/icon-copy.svg')"
         @click="handleCopy"
@@ -49,9 +66,12 @@
     <ToolbarDivider />
 
     <!-- Lists -->
-    <div role="group" :aria-label="t('listFormatting')">
-      <ToolbarButton 
-        v-for="list in listActions" 
+    <div
+      role="group"
+      :aria-label="t('listFormatting')"
+    >
+      <ToolbarButton
+        v-for="list in listActions"
         :key="list.name"
         :title="list.title"
         :icon="list.icon"
@@ -65,9 +85,12 @@
     <ToolbarDivider />
 
     <!-- Script formatting -->
-    <div role="group" :aria-label="t('scriptFormatting')">
-      <ToolbarButton 
-        v-for="script in scriptActions" 
+    <div
+      role="group"
+      :aria-label="t('scriptFormatting')"
+    >
+      <ToolbarButton
+        v-for="script in scriptActions"
         :key="script.name"
         :title="script.title"
         :icon="script.icon"
@@ -78,9 +101,12 @@
     <ToolbarDivider />
 
     <!-- Insert tools -->
-    <div role="group" :aria-label="t('insertTools')">
-      <ToolbarButton 
-        v-for="tool in insertTools" 
+    <div
+      role="group"
+      :aria-label="t('insertTools')"
+    >
+      <ToolbarButton
+        v-for="tool in insertTools"
         :key="tool.name"
         :title="tool.title"
         :icon="tool.icon"
@@ -88,62 +114,69 @@
       />
     </div>
   </div>
+
 </template>
 
+
 <script>
-import { defineComponent } from 'vue'
-import ToolbarButton from './toolbar/ToolbarButton.vue'
-import FormatDropdown from './toolbar/FormatDropdown.vue'
-import PasteDropdown from './toolbar/PasteDropdown.vue'
-import ToolbarDivider from './toolbar/ToolbarDivider.vue'
-import { useToolbarActions } from '../composables/useToolbarActions'
 
-export default defineComponent({
-  name: 'EditorToolbar',
-  components: {
-    ToolbarButton,
-    FormatDropdown,
-    PasteDropdown,
-    ToolbarDivider
-  },
-  setup() {
-    const {
-      handleCopy,
-      historyActions,
-      textActions,
-      listActions,
-      scriptActions,
-      insertTools,
-      t
-    } = useToolbarActions()
+  import { defineComponent } from 'vue';
+  import { useToolbarActions } from '../composables/useToolbarActions';
+  import ToolbarButton from './toolbar/ToolbarButton.vue';
+  import FormatDropdown from './toolbar/FormatDropdown.vue';
+  import PasteDropdown from './toolbar/PasteDropdown.vue';
+  import ToolbarDivider from './toolbar/ToolbarDivider.vue';
 
-    return {
-      handleCopy,
-      t,
-      historyActions,
-      textActions,
-      listActions,
-      scriptActions,
-      insertTools
-    }
-  }
-})
+  export default defineComponent({
+    name: 'EditorToolbar',
+    components: {
+      ToolbarButton,
+      FormatDropdown,
+      PasteDropdown,
+      ToolbarDivider,
+    },
+    setup() {
+      const {
+        handleCopy,
+        historyActions,
+        textActions,
+        listActions,
+        scriptActions,
+        insertTools,
+        t,
+      } = useToolbarActions();
+
+      return {
+        handleCopy,
+        t,
+        historyActions,
+        textActions,
+        listActions,
+        scriptActions,
+        insertTools,
+      };
+    },
+  });
+
 </script>
 
-<style scoped>
-.toolbar {
-  display: flex;
-  align-items: center;
-  padding: 8px 12px;
-  border-bottom: 1px solid #e1e5e9;
-  background: #f8f9fa;
-  border-radius: 8px 8px 0 0;
-  gap: 8px;
-}
 
-[role="group"] {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-}
+<style scoped>
+
+  .toolbar {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    padding: 8px 12px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #e1e5e9;
+    border-radius: 8px 8px 0 0;
+  }
+
+  [role='group'] {
+    display: flex;
+    gap: 2px;
+    align-items: center;
+  }
+
 </style>

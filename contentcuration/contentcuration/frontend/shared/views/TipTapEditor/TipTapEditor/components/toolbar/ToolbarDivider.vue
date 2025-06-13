@@ -1,20 +1,28 @@
 <template>
-  <div class="toolbar-divider" />
+
+  <div class="toolbar-divider"></div>
+
 </template>
 
-<script>
-import { defineComponent } from 'vue'
 
-export default defineComponent({
-  name: 'ToolbarDivider'
-})
+<script>
+
+  import { defineComponent } from 'vue';
+
+  export default defineComponent({
+    name: 'ToolbarDivider',
+  });
+
 </script>
 
+
 <style scoped>
-.toolbar-divider {
-  width: 1px;
-  height: 20px;
-  background: #dee2e6;
-  margin: 0 4px;
-}
+
+  .toolbar-divider {
+    width: 1px;
+    height: 20px;
+    margin: 0 4px;
+    background: #dee2e6;
+  }
+
 </style>

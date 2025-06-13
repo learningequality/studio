@@ -1,9 +1,9 @@
 import { Node, mergeAttributes } from '@tiptap/core';
 
 export const Small = Node.create({
-  name: 'small', 
+  name: 'small',
 
-  priority: 1000, 
+  priority: 1000,
 
   addOptions() {
     return {
@@ -11,23 +11,23 @@ export const Small = Node.create({
     };
   },
 
-  group: 'block', 
+  group: 'block',
 
-  content: 'inline*', 
+  content: 'inline*',
 
   parseHTML() {
     return [
       {
-        tag: 'small', 
+        tag: 'small',
       },
     ];
   },
 
   renderHTML({ HTMLAttributes }) {
     return [
-      'small', 
+      'small',
       mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, {
-        class: 'small-text', 
+        class: 'small-text',
       }),
       0,
     ];
@@ -43,21 +43,27 @@ export const Small = Node.create({
 
   addCommands() {
     return {
-      setSmall: () => ({ commands }) => {
-        return commands.setNode(this.name); 
-      },
-      toggleSmall: () => ({ commands }) => {
-        return commands.toggleNode(this.name, 'paragraph'); 
-      },
-      unsetSmall: () => ({ commands }) => {
-        return commands.setNode('paragraph'); // Convert back to paragraph
-      },
+      setSmall:
+        () =>
+        ({ commands }) => {
+          return commands.setNode(this.name);
+        },
+      toggleSmall:
+        () =>
+        ({ commands }) => {
+          return commands.toggleNode(this.name, 'paragraph');
+        },
+      unsetSmall:
+        () =>
+        ({ commands }) => {
+          return commands.setNode('paragraph'); // Convert back to paragraph
+        },
     };
   },
 
   addKeyboardShortcuts() {
     return {
-      'Mod-Shift-S': () => this.editor.commands.toggleSmall(), 
+      'Mod-Shift-S': () => this.editor.commands.toggleSmall(),
     };
   },
 });

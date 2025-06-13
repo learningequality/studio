@@ -1,120 +1,91 @@
 <template>
+
   <div class="editor-content">
-    <editor-content 
-      v-if="isReady && editor" 
-      :editor="editor" 
+    <EditorContent
+      v-if="isReady && editor"
+      :editor="editor"
       class="tiptap-editor"
     />
   </div>
+
 </template>
 
+
 <script>
-import { defineComponent, inject } from 'vue'
-import { EditorContent } from '@tiptap/vue-2'
 
-export default defineComponent({
-  name: 'EditorContentWrapper',
-  components: {
-    EditorContent 
-  },
-  setup() {
-    const editor = inject('editor')
-    const isReady = inject('isReady')
+  import { defineComponent, inject } from 'vue';
+  import { EditorContent } from '@tiptap/vue-2';
 
-    return {
-      editor,
-      isReady,
-    }
-  }
-})
+  export default defineComponent({
+    name: 'EditorContentWrapper',
+    components: {
+      EditorContent,
+    },
+    setup() {
+      const editor = inject('editor');
+      const isReady = inject('isReady');
+
+      return {
+        editor,
+        isReady,
+      };
+    },
+  });
+
 </script>
 
+
+<!-- Scoped styles for the wrapper component itself -->
 <style scoped>
-.editor-content {
-  min-height: 200px;
-  padding: 16px; 
-  padding-inline: 16px; 
-  margin-inline: 0 auto; 
-}
 
-.editor-placeholder {
-  color: #6c757d;
-  font-size: 14px;
-}
+  .editor-content {
+    min-height: 200px;
+    padding: 16px;
+    padding-inline: 16px;
+    margin-inline: 0 auto;
+  }
 
-.tiptap-editor {
-  outline: none;
-}
+  .editor-placeholder {
+    font-size: 14px;
+    color: #6c757d;
+  }
 
-:deep(.ProseMirror) {
-  outline: none;
-  min-height: 200px;
-  padding: 0;
-  font-family: inherit;
-  font-size: 14px;
-  line-height: 1.5;
-  color: #333;
-  padding-inline: 0; 
-  margin-inline: 0; 
-}
+  .tiptap-editor {
+    outline: none;
+  }
 
-:deep(.ProseMirror p) {
-  margin: 0 0 8px 0;
-  margin-block: 8px 8px; 
-}
+</style>
 
-:deep(.ProseMirror p:last-child) {
-  margin-block-end: 0;
-}
 
-:deep(.ProseMirror strong) {
-  font-weight: 600;
-}
+<style>
 
-:deep(.ProseMirror ul) {
-  list-style-type: disc;
-  margin-inline-start: 20px; 
-  margin-block-end: 8px; 
-}
+  .ProseMirror {
+    min-height: 200px;
+    padding: 0;
+    padding-inline: 0;
+    margin-inline: 0;
+    font-family: inherit;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #333333;
+    outline: none;
+  }
 
-:deep(.ProseMirror ol) {
-  list-style-type: decimal;
-  margin-inline-start: 20px;
-  margin-block-end: 8px; 
-}
+  .ProseMirror p {
+    margin: 0 0 8px;
+    margin-block: 8px 8px;
+  }
 
-:deep(.ProseMirror li) {
-  margin-block-end: 4px;
-}
+  .ProseMirror p:last-child {
+    margin-block-end: 0;
+  }
 
-:deep(.ProseMirror h1) {
-  font-size: 32px;
-  font-weight: 600;
-  margin-block: 24px 16px;
-}
+  .prose {
+    text-align: start;
+  }
 
-:deep(.ProseMirror h2) {
-  font-size: 24px;
-  font-weight: 600;
-  margin-block: 8px 8px; 
-}
+  .prose[dir='rtl'] {
+    text-align: start;
+  }
 
-:deep(.ProseMirror h3) {
-  font-size: 18px;
-  font-weight: 600;
-  margin-block: 8px 8px; 
-}
-
-:deep(.ProseMirror small) {
-  font-size: 12px;
-  margin-block: 4px 4px;
-}
-
-:deep(.prose) {
-  text-align: start;
-}
-
-:deep(.prose[dir="rtl"]) {
-  text-align: start;
-}
 </style>
