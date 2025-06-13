@@ -246,6 +246,7 @@ export function useToolbarActions() {
       name: 'numberList', 
       title: t('numberedList'), 
       icon: require('../../assets/icon-numberList.svg'), 
+      rtlIcon: require('../../assets/icon-numberListRTL.svg'),
       handler: handleNumberList, 
       isActive: isMarkActive('orderedList')
     }

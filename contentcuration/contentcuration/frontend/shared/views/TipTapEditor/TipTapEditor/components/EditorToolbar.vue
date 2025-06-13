@@ -8,6 +8,7 @@
         :title="action.title"
         :icon="action.icon"
         :is-available="action.isAvailable"
+        :should-flip-in-rtl="true"
         @click="action.handler"
       />
     </div>
@@ -54,6 +55,8 @@
         :key="list.name"
         :title="list.title"
         :icon="list.icon"
+        :rtl-icon="list.rtlIcon"
+        :should-flip-in-rtl="list.name === 'bulletList'"
         :is-active="list.isActive"
         @click="list.handler"
       />

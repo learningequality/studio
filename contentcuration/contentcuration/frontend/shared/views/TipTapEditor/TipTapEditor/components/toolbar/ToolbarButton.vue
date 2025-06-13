@@ -10,12 +10,12 @@
     @click="handleClick"
     @keydown="handleKeydown"
   >
-    <img :src="icon" :alt="title" class="toolbar-icon">
+    <img :src="currentIcon" :alt="title" class="toolbar-icon" :class="{ 'rtl-flip': shouldFlipInRtl && isRtl }" />
   </button>
 </template>
 
 <script>
-import { defineComponent } from 'vue'
+import { defineComponent, computed } from 'vue'
 
 export default defineComponent({
   name: 'ToolbarButton',
@@ -28,6 +28,10 @@ export default defineComponent({
       type: String,
       required: true
     },
+    rtlIcon: {
+      type: String,
+      default: ''
+    },
     isActive: {
       type: Boolean,
       default: false
@@ -36,10 +40,27 @@ export default defineComponent({
       type: Boolean,
       default: true,
       required: false
+    },
+    shouldFlipInRtl: {
+      type: Boolean,
+      default: false
     }
   },
   emits: ['click'],
   setup(props, { emit }) {
+
+    const isRtl = computed(() => {
+      return document.dir === 'rtl' || document.documentElement.getAttribute('dir') === 'rtl';
+    });
+
+    // Determine which icon to use based on RTL status
+    const currentIcon = computed(() => {
+      if (isRtl.value && props.rtlIcon) {
+        return props.rtlIcon;
+      }
+      return props.icon;
+    });
+
     const handleClick = () => {
       if(props.isAvailable) {
         emit('click')
@@ -56,7 +77,9 @@ export default defineComponent({
 
     return {
       handleClick,
-      handleKeydown
+      handleKeydown,
+      isRtl,
+      currentIcon
     }
   }
 })
@@ -112,5 +135,9 @@ export default defineComponent({
   cursor: not-allowed;
   opacity: 0.3;
   pointer-events: none;
+}
+
+.toolbar-icon.rtl-flip {
+  transform: scaleX(-1); 
 }
 </style>
