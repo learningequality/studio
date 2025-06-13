@@ -66,8 +66,8 @@ importers:
         specifier: ^0.2.0
         version: 0.2.9
       kolibri-design-system:
-        specifier: 5.0.0
-        version: 5.0.0
+        specifier: 5.2.0
+        version: 5.2.0
       lodash:
         specifier: ^4.17.21
         version: 4.17.21
@@ -2327,9 +2327,6 @@ packages:
     resolution: {integrity: sha512-qiBjkpbMLO/HL68y+lh4q0/O1MZFj2RX6X/KmMa3+gJD3z+WwI1ZzDHysvqHGS3mP6mznPckpXmw1nI9cJjyRg==}
     hasBin: true
 
-  color@3.2.1:
-    resolution: {integrity: sha512-aBl7dZI9ENN6fUGC7mWpMTPNHmWUSNan9tuWN6ahh5ZLNk9baLJOnSMlrQkHcrfFgz2/RigjUVAjdx36VcemKA==}
-
   color@4.2.3:
     resolution: {integrity: sha512-1rXeuUUiGGrykh+CeBdu5Ie7OJwinCgQY0bc7GCRxy5xVHy+moaqkpL/jqQq0MtQOeYcrqEz4abc5f0KtU7W4A==}
     engines: {node: '>=12.5.0'}
@@ -4569,11 +4566,11 @@ packages:
   kolibri-constants@0.2.9:
     resolution: {integrity: sha512-frLKQPA5bSQczVEh/lnfHeQcK9i4MvGzgl+KMqvP+ixh+VJxXjlpSG+k119ajQqgq9k+nJb/IY4HbiLTjBM6oQ==}
 
-  kolibri-design-system@5.0.0:
-    resolution: {integrity: sha512-NjkUi7kzwobYZ3kFnn8hG6kJGDJ+gEtPl0BIdF+6TOKv4+3GuH55g6kPGSvDC4xzH/Kr0dR+6JDYCJoQVwmjGQ==}
-
   kolibri-design-system@5.0.1:
     resolution: {integrity: sha512-oz5gEFUj7NYZbrqr89gPjSfRFVuuilSqILA4bbWqLWwkI9ay/uVMdsh8cY2Xajhtzccjwqa1c/NxUETr5kMfHQ==}
+
+  kolibri-design-system@5.2.0:
+    resolution: {integrity: sha512-F2dI0Oo1e6ahg+n7Jid+oFAfSq1FQWIO+DrheP7FUEK9DyrvqATvrf445anJ+jICkBcKgSkQyCPCEpsQpo8Erg==}
 
   kolibri-format@1.0.1:
     resolution: {integrity: sha512-yGQpsJkBAzmRueAq6MG1UOuDl9pbhEtMWNxq9ObG5pPVkG8uhWJAS1L71GCuNAeaV1XG2IWo2565Ov4yXnudeA==}
@@ -9980,11 +9977,6 @@ snapshots:
 
   color-support@1.1.3: {}
 
-  color@3.2.1:
-    dependencies:
-      color-convert: 1.9.3
-      color-string: 1.9.1
-
   color@4.2.3:
     dependencies:
       color-convert: 2.0.1
@@ -12489,11 +12481,11 @@ snapshots:
 
   kolibri-constants@0.2.9: {}
 
-  kolibri-design-system@5.0.0:
+  kolibri-design-system@5.0.1:
     dependencies:
       aphrodite: https://codeload.github.com/learningequality/aphrodite/tar.gz/fdc8d7be8912a5cf17f74ff10f124013c52c3e32
       autosize: 3.0.21
-      color: 3.2.1
+      color: 4.2.3
       css-element-queries: 1.2.0
       date-fns: 1.30.1
       frame-throttle: 3.0.0
@@ -12508,7 +12500,7 @@ snapshots:
       vue2-teleport: 1.1.4
       xstate: 4.38.3
 
-  kolibri-design-system@5.0.1:
+  kolibri-design-system@5.2.0:
     dependencies:
       aphrodite: https://codeload.github.com/learningequality/aphrodite/tar.gz/fdc8d7be8912a5cf17f74ff10f124013c52c3e32
       autosize: 3.0.21
