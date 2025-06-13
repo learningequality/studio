@@ -509,7 +509,7 @@
   }
 
   .link-css ::v-deep span {
-    margin-left: 0px !important;
+    margin-left: 0 !important;
   }
 
 </style>
