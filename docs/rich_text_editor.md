@@ -2,7 +2,7 @@
 
 This Component replaces Studio’s text editor with a future-ready implementation, deliberately scoped to immediate needs:
 -​ Swap Toast UI while preserving Markdown storage
--​ Support for core formatting 
+-​ Support for core formatting
 -​ Support for more advanced formats (code and math blocks, image uploading)
 
 It uses TipTap which is a headless, framework-agnostic rich-text editor built on top of ProseMirror.
@@ -29,7 +29,7 @@ TipTapEditor/
 |   │   └── useToolbarActions.js
 |   ├── extensions/
 |   │   ├── SmallTextExtension.js
-|   └── TipTapEditor.vue                # Main container    
+|   └── TipTapEditor.vue                # Main container
 └── TipTapEditorStrings.js
 ```
 ## Current Key Features

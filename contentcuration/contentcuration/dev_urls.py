@@ -8,12 +8,12 @@ from django.http.response import HttpResponseRedirect
 from django.urls import include
 from django.urls import path
 from django.urls import re_path
+from django.views.generic import TemplateView
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 from rest_framework import permissions
 
 from .urls import urlpatterns
-from django.views.generic import TemplateView
 
 
 def webpack_redirect_view(request):
