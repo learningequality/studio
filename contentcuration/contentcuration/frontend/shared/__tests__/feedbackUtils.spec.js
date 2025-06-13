@@ -6,8 +6,8 @@ import {
   RecommendationsInteractionEvent,
   FeedbackTypeOptions,
   FLAG_FEEDBACK_EVENT_URL,
-  RECCOMMENDATION_EVENT_URL,
-  RECCOMMENDATION_INTERACTION_EVENT_URL,
+  RECOMMENDATION_EVENT_URL,
+  RECOMMENDATION_INTERACTION_EVENT_URL,
 } from '../feedbackApiUtils';
 import client from '../client';
 
@@ -145,7 +145,7 @@ describe('FeedBackUtility Tests', () => {
 
     it('should return the correct URL when URL is defined', () => {
       const result = recommendationsEvent.getUrl();
-      expect(result).toEqual(RECCOMMENDATION_EVENT_URL);
+      expect(result).toEqual(RECOMMENDATION_EVENT_URL);
     });
 
     describe('HTTP Methods', () => {
@@ -154,7 +154,7 @@ describe('FeedBackUtility Tests', () => {
         const result = await sendRequest(recommendationsEvent, 'post');
         expect(result).toEqual('Mocked API Response');
         expect(client.post).toHaveBeenCalledWith(
-          RECCOMMENDATION_EVENT_URL,
+          RECOMMENDATION_EVENT_URL,
           recommendationsEvent.getDataObject(),
         );
       });
@@ -164,7 +164,7 @@ describe('FeedBackUtility Tests', () => {
         const result = await sendRequest(recommendationsEvent, 'put');
         expect(result).toEqual('Mocked API Response');
         expect(client.put).toHaveBeenCalledWith(
-          RECCOMMENDATION_EVENT_URL,
+          RECOMMENDATION_EVENT_URL,
           recommendationsEvent.getDataObject(),
         );
       });
@@ -174,7 +174,7 @@ describe('FeedBackUtility Tests', () => {
         const result = await sendRequest(recommendationsEvent, 'patch');
         expect(result).toEqual('Mocked API Response');
         expect(client.patch).toHaveBeenCalledWith(
-          RECCOMMENDATION_EVENT_URL,
+          RECOMMENDATION_EVENT_URL,
           recommendationsEvent.getDataObject(),
         );
       });
@@ -185,7 +185,7 @@ describe('FeedBackUtility Tests', () => {
           'Mocked API Error',
         );
         expect(client.post).toHaveBeenCalledWith(
-          RECCOMMENDATION_EVENT_URL,
+          RECOMMENDATION_EVENT_URL,
           recommendationsEvent.getDataObject(),
         );
       });
@@ -196,7 +196,7 @@ describe('FeedBackUtility Tests', () => {
           'Mocked API Error',
         );
         expect(client.put).toHaveBeenCalledWith(
-          RECCOMMENDATION_EVENT_URL,
+          RECOMMENDATION_EVENT_URL,
           recommendationsEvent.getDataObject(),
         );
       });
@@ -207,7 +207,7 @@ describe('FeedBackUtility Tests', () => {
           'Mocked API Error',
         );
         expect(client.patch).toHaveBeenCalledWith(
-          RECCOMMENDATION_EVENT_URL,
+          RECOMMENDATION_EVENT_URL,
           recommendationsEvent.getDataObject(),
         );
       });
@@ -249,7 +249,7 @@ describe('FeedBackUtility Tests', () => {
 
     it('should return the correct URL when URL is defined', () => {
       const result = recommendationsInteractionEvent.getUrl();
-      expect(result).toEqual(RECCOMMENDATION_INTERACTION_EVENT_URL);
+      expect(result).toEqual(RECOMMENDATION_INTERACTION_EVENT_URL);
     });
 
     describe('HTTP Methods', () => {
@@ -258,7 +258,7 @@ describe('FeedBackUtility Tests', () => {
         const result = await sendRequest(recommendationsInteractionEvent, 'post');
         expect(result).toEqual('Mocked API Response');
         expect(client.post).toHaveBeenCalledWith(
-          RECCOMMENDATION_INTERACTION_EVENT_URL,
+          RECOMMENDATION_INTERACTION_EVENT_URL,
           recommendationsInteractionEvent.getDataObject(),
         );
       });
@@ -268,7 +268,7 @@ describe('FeedBackUtility Tests', () => {
         const result = await sendRequest(recommendationsInteractionEvent, 'put');
         expect(result).toEqual('Mocked API Response');
         expect(client.put).toHaveBeenCalledWith(
-          RECCOMMENDATION_INTERACTION_EVENT_URL,
+          RECOMMENDATION_INTERACTION_EVENT_URL,
           recommendationsInteractionEvent.getDataObject(),
         );
       });
@@ -278,7 +278,7 @@ describe('FeedBackUtility Tests', () => {
         const result = await sendRequest(recommendationsInteractionEvent, 'patch');
         expect(result).toEqual('Mocked API Response');
         expect(client.patch).toHaveBeenCalledWith(
-          RECCOMMENDATION_INTERACTION_EVENT_URL,
+          RECOMMENDATION_INTERACTION_EVENT_URL,
           recommendationsInteractionEvent.getDataObject(),
         );
       });
@@ -289,7 +289,7 @@ describe('FeedBackUtility Tests', () => {
           'Mocked API Error',
         );
         expect(client.post).toHaveBeenCalledWith(
-          RECCOMMENDATION_INTERACTION_EVENT_URL,
+          RECOMMENDATION_INTERACTION_EVENT_URL,
           recommendationsInteractionEvent.getDataObject(),
         );
       });
@@ -300,7 +300,7 @@ describe('FeedBackUtility Tests', () => {
           'Mocked API Error',
         );
         expect(client.put).toHaveBeenCalledWith(
-          RECCOMMENDATION_INTERACTION_EVENT_URL,
+          RECOMMENDATION_INTERACTION_EVENT_URL,
           recommendationsInteractionEvent.getDataObject(),
         );
       });
@@ -311,7 +311,7 @@ describe('FeedBackUtility Tests', () => {
           'Mocked API Error',
         );
         expect(client.patch).toHaveBeenCalledWith(
-          RECCOMMENDATION_INTERACTION_EVENT_URL,
+          RECOMMENDATION_INTERACTION_EVENT_URL,
           recommendationsInteractionEvent.getDataObject(),
         );
       });

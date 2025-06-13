@@ -16,8 +16,8 @@ export const FeedbackTypeOptions = {
 // This is mock currently, fixed value of URL still to be decided
 // referencing the url by name
 export const FLAG_FEEDBACK_EVENT_URL = urls[`${'flagged'}_${'list'}`];
-export const RECCOMMENDATION_EVENT_URL = urls['recommendations'];
-export const RECCOMMENDATION_INTERACTION_EVENT_URL = urls['recommendations-interaction'];
+export const RECOMMENDATION_EVENT_URL = urls['recommendations'];
+export const RECOMMENDATION_INTERACTION_EVENT_URL = urls['recommendations-interaction'];
 
 /**
  * @typedef {Object} BaseFeedbackParams
@@ -146,7 +146,7 @@ export class RecommendationsEvent extends BaseFeedbackEvent {
   constructor({ content, ...basefeedbackEventParams }) {
     super(basefeedbackEventParams);
     this.content = content;
-    this.URL = RECCOMMENDATION_EVENT_URL;
+    this.URL = RECOMMENDATION_EVENT_URL;
   }
 }
 
@@ -163,7 +163,7 @@ export class RecommendationsInteractionEvent extends BaseFeedbackInteractionEven
   constructor({ recommendation_event_id, ...feedbackInteractionEventParams }) {
     super(feedbackInteractionEventParams);
     this.recommendation_event_id = recommendation_event_id;
-    this.URL = RECCOMMENDATION_INTERACTION_EVENT_URL;
+    this.URL = RECOMMENDATION_INTERACTION_EVENT_URL;
   }
 }
 
