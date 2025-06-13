@@ -25,7 +25,7 @@ function makeWrapper(currentUser = {}) {
       $store: {
         dispatch: jest.fn(),
       },
-      $tr: (text) => text,
+      $tr: text => text,
     },
   });
 }
@@ -83,6 +83,8 @@ describe('account tab', () => {
     await wrapper.find('[data-test="export-link"]').trigger('click');
     expect(exportData).toHaveBeenCalled();
     expect(wrapper.vm.showExportDataNotice).toBe(false);
-    expect(wrapper.vm.$store.dispatch).toHaveBeenCalledWith('showSnackbar', { text: wrapper.vm.$tr('exportFailed') });
+    expect(wrapper.vm.$store.dispatch).toHaveBeenCalledWith('showSnackbar', {
+      text: wrapper.vm.$tr('exportFailed'),
+    });
   });
 });

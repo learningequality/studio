@@ -144,7 +144,7 @@
       :title="$tr('exportStartedHeader')"
       @submit="showExportDataNotice = false"
     >
-    {{ $tr('exportAccountDataModalMessage') }}
+      {{ $tr('exportAccountDataModalMessage') }}
     </KModal>
   </div>
 
