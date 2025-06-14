@@ -3,6 +3,7 @@ import { Editor } from '@tiptap/vue-2';
 import StarterKitExtension from '@tiptap/starter-kit';
 import UnderlineExtension from '@tiptap/extension-underline';
 import { Small } from '../extensions/SmallTextExtension';
+import { CodeBlockNoSpellcheck } from '../extensions/CodeBlockNoSpellcheck';
 
 export function useEditor() {
   const editor = ref(null);
@@ -10,7 +11,14 @@ export function useEditor() {
 
   const initializeEditor = () => {
     editor.value = new Editor({
-      extensions: [StarterKitExtension, UnderlineExtension, Small],
+      extensions: [
+        StarterKitExtension.configure({
+          codeBlock: false, // Disable default code block to use the extended version
+        }),
+        CodeBlockNoSpellcheck,
+        UnderlineExtension,
+        Small,
+      ],
       content: '<p></p>',
       editorProps: {
         attributes: {

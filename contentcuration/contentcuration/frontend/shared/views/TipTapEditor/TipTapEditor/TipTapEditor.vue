@@ -37,7 +37,7 @@
 
   .editor-container {
     width: 1000px;
-    margin: 40px auto;
+    margin: 80px auto;
     font-family:
       'Noto Sans',
       -apple-system,
@@ -94,6 +94,23 @@
 
   .editor-container li {
     margin: 4px 0;
+  }
+
+  .editor-container code {
+    display: block;
+    padding: 10px;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 14px;
+    color: #ffffff;
+    white-space: pre-wrap;
+    background: #000000;
+    border-radius: 4px;
+  }
+
+  .editor-container .ProseMirror pre,
+  .editor-container .ProseMirror code {
+    -webkit-spellcheck: false;
+    -ms-spellcheck: false;
   }
 
 </style>

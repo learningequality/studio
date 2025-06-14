@@ -110,6 +110,7 @@
         :key="tool.name"
         :title="tool.title"
         :icon="tool.icon"
+        :is-active="tool.isActive"
         @click="tool.handler"
       />
     </div>
