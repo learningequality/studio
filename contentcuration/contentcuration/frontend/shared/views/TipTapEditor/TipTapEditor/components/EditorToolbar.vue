@@ -94,6 +94,8 @@
         :key="script.name"
         :title="script.title"
         :icon="script.icon"
+        :rtl-icon="script.rtlIcon"
+        :is-active="script.isActive"
         @click="script.handler"
       />
     </div>

@@ -142,11 +142,15 @@ export function useToolbarActions() {
   };
 
   const handleSubscript = () => {
-    // TipTap subscript logic will be added here
+    if (editor?.value) {
+      editor.value.chain().focus().toggleSubscript().run();
+    }
   };
 
   const handleSuperscript = () => {
-    // TipTap superscript logic will be added here
+    if (editor?.value) {
+      editor.value.chain().focus().toggleSuperscript().run();
+    }
   };
 
   const handleInsertImage = () => {
@@ -284,13 +288,17 @@ export function useToolbarActions() {
       name: 'subscript',
       title: subscript$(),
       icon: require('../../assets/icon-subscript.svg'),
+      rtlIcon: require('../../assets/icon-subscriptRTL.svg'),
       handler: handleSubscript,
+      isActive: isMarkActive('subscript'),
     },
     {
       name: 'superscript',
       title: superscript$(),
       icon: require('../../assets/icon-superscript.svg'),
+      rtlIcon: require('../../assets/icon-superscriptRTL.svg'),
       handler: handleSuperscript,
+      isActive: isMarkActive('superscript'),
     },
   ]);
 

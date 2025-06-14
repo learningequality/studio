@@ -2,6 +2,8 @@ import { ref, onMounted, onUnmounted } from 'vue';
 import { Editor } from '@tiptap/vue-2';
 import StarterKitExtension from '@tiptap/starter-kit';
 import UnderlineExtension from '@tiptap/extension-underline';
+import { Superscript } from '@tiptap/extension-superscript';
+import { Subscript } from '@tiptap/extension-subscript';
 import { Small } from '../extensions/SmallTextExtension';
 import { CodeBlockNoSpellcheck } from '../extensions/CodeBlockNoSpellcheck';
 
@@ -18,6 +20,8 @@ export function useEditor() {
         CodeBlockNoSpellcheck,
         UnderlineExtension,
         Small,
+        Superscript,
+        Subscript,
       ],
       content: '<p></p>',
       editorProps: {

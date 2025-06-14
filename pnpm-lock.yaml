@@ -13,7 +13,16 @@ importers:
         version: 7.120.3(vue@2.7.16)
       '@tiptap/core':
         specifier: ^2.14.0
-        version: 2.22.3(@tiptap/pm@2.22.3)
+        version: 2.14.0(@tiptap/pm@2.13.0)
+      '@tiptap/extension-code-block':
+        specifier: ^2.14.0
+        version: 2.14.0(@tiptap/core@2.14.0(@tiptap/pm@2.13.0))(@tiptap/pm@2.13.0)
+      '@tiptap/extension-subscript':
+        specifier: ^2.14.0
+        version: 2.14.0(@tiptap/core@2.14.0(@tiptap/pm@2.13.0))
+      '@tiptap/extension-superscript':
+        specifier: ^2.14.0
+        version: 2.14.0(@tiptap/core@2.14.0(@tiptap/pm@2.13.0))
       '@tiptap/extension-underline':
         specifier: ^2.14.0
         version: 2.22.3(@tiptap/core@2.22.3(@tiptap/pm@2.22.3))
@@ -1516,8 +1525,18 @@ packages:
     peerDependencies:
       '@tiptap/core': ^2.7.0
 
-  '@tiptap/extension-text-style@2.22.3':
-    resolution: {integrity: sha512-M3FLOUPcO8fR+rM97mR2gQ54KFkdlAUQtEPKQpO1f312gtcVdBNxgq0WgqTnBY7thWLyqQSKiAsL6y88+JddSA==}
+  '@tiptap/extension-subscript@2.14.0':
+    resolution: {integrity: sha512-1gQucSZ6WqhKukc8YA7ZfQzBYaVY00F6G7+trD2iWSm6EpiabaUVP0vMjuonIiujTioEwe04KmZuC9ZLbEU9dQ==}
+    peerDependencies:
+      '@tiptap/core': ^2.7.0
+
+  '@tiptap/extension-superscript@2.14.0':
+    resolution: {integrity: sha512-BnsqY9TxN15KxxoX1rulL0sV0Wu3umD4Un0E90LZ5G/QRrVUeohAuOiraqRJ4GnJPVJBR2H0+7Sg5sKqYuIpnQ==}
+    peerDependencies:
+      '@tiptap/core': ^2.7.0
+
+  '@tiptap/extension-text-style@2.13.0':
+    resolution: {integrity: sha512-gUXzgBCYcY3lk5AJ9DvWolphNBw5b2TLbKyJ0ZBWDjdNL7nF87iKKcNBGAXh2bYugvSi7dlPeSv7OQELyBm8Ug==}
     peerDependencies:
       '@tiptap/core': ^2.7.0
 
@@ -9146,7 +9165,15 @@ snapshots:
     dependencies:
       '@tiptap/core': 2.22.3(@tiptap/pm@2.22.3)
 
-  '@tiptap/extension-text-style@2.22.3(@tiptap/core@2.22.3(@tiptap/pm@2.22.3))':
+  '@tiptap/extension-subscript@2.14.0(@tiptap/core@2.14.0(@tiptap/pm@2.13.0))':
+    dependencies:
+      '@tiptap/core': 2.14.0(@tiptap/pm@2.13.0)
+
+  '@tiptap/extension-superscript@2.14.0(@tiptap/core@2.14.0(@tiptap/pm@2.13.0))':
+    dependencies:
+      '@tiptap/core': 2.14.0(@tiptap/pm@2.13.0)
+
+  '@tiptap/extension-text-style@2.13.0(@tiptap/core@2.14.0(@tiptap/pm@2.13.0))':
     dependencies:
       '@tiptap/core': 2.22.3(@tiptap/pm@2.22.3)
 

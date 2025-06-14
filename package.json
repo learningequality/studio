@@ -56,6 +56,8 @@
     "@sentry/vue": "^7.112.2",
     "@tiptap/core": "^2.14.0",
     "@tiptap/extension-code-block": "^2.14.0",
+    "@tiptap/extension-subscript": "^2.14.0",
+    "@tiptap/extension-superscript": "^2.14.0",
     "@tiptap/extension-underline": "^2.14.0",
     "@tiptap/starter-kit": "^2.13.0",
     "@tiptap/vue-2": "^2.13.0",
