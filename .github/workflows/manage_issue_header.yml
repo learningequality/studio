@@ -1,0 +1,12 @@
+name: Manage issue header
+
+on:
+  issues:
+    types: [labeled, unlabeled]
+
+jobs:
+  handle-help-wanted:
+    uses: learningequality/.github/.github/workflows/manage-issue-header.yml@main
+    secrets:
+        LE_BOT_APP_ID: ${{ secrets.LE_BOT_APP_ID }}
+        LE_BOT_PRIVATE_KEY: ${{ secrets.LE_BOT_PRIVATE_KEY }}
