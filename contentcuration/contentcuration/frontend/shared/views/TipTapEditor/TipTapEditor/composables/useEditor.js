@@ -6,6 +6,7 @@ import { Superscript } from '@tiptap/extension-superscript';
 import { Subscript } from '@tiptap/extension-subscript';
 import { Small } from '../extensions/SmallTextExtension';
 import { CodeBlockNoSpellcheck } from '../extensions/CodeBlockNoSpellcheck';
+import { Image } from '../extensions/Image';
 
 export function useEditor() {
   const editor = ref(null);
@@ -22,6 +23,10 @@ export function useEditor() {
         Small,
         Superscript,
         Subscript,
+        Image.configure({
+          inline: false, // Ensure images are treated as block elements
+          allowBase64: true, // Allow base64 images for local uploads
+        }),
       ],
       content: '<p></p>',
       editorProps: {

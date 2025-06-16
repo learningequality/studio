@@ -113,7 +113,7 @@
         :title="tool.title"
         :icon="tool.icon"
         :is-active="tool.isActive"
-        @click="tool.handler"
+        @click="onToolClick(tool)"
       />
     </div>
   </div>
@@ -139,9 +139,16 @@
       PasteDropdown,
       ToolbarDivider,
     },
-    setup() {
-      const { handleCopy, historyActions, textActions, listActions, scriptActions, insertTools } =
-        useToolbarActions();
+    setup(props, { emit }) {
+      const {
+        handleCopy,
+        historyActions,
+        textActions,
+        listActions,
+        scriptActions,
+        insertTools,
+        t,
+      } = useToolbarActions();
 
       const {
         copy$,
@@ -155,8 +162,21 @@
         insertTools$,
       } = getTipTapEditorStrings();
 
+
+      const onToolClick = (tool) => {
+      // If the button is the 'image' button, emit an event to the parent
+      if (tool.name === 'image') {
+        emit('insert-image');
+      } else {
+        // For all other buttons, call their original handler
+        tool.handler();
+      }
+    };
+
       return {
         handleCopy,
+        onToolClick,
+        t,
         historyActions,
         textActions,
         listActions,

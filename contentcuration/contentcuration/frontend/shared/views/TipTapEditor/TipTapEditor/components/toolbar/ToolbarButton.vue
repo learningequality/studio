@@ -133,8 +133,8 @@
   }
 
   .toolbar-icon {
-    width: 19px;
-    height: 19px;
+    width: 21px;
+    height: 21px;
     opacity: 0.7;
   }
 
