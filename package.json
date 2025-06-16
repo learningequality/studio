@@ -101,10 +101,10 @@
     "workbox-window": "^7.3.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.26.8",
-    "@babel/plugin-syntax-import-assertions": "^7.26.0",
-    "@babel/plugin-transform-runtime": "^7.26.8",
-    "@babel/preset-env": "^7.26.8",
+    "@babel/core": "^7.27.4",
+    "@babel/plugin-syntax-import-assertions": "^7.27.1",
+    "@babel/plugin-transform-runtime": "^7.27.4",
+    "@babel/preset-env": "^7.27.2",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/user-event": "^14.6.1",
     "@testing-library/vue": "^5",
