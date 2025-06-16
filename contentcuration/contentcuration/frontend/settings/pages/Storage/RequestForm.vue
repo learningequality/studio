@@ -79,7 +79,7 @@
             class="mt-1"
           >
             <KExternalLink
-              class="link-css notranslate"
+              class="license-link"
               :href="getLicenseUrl(item)"
               :text="$tr('learnMoreButton')"
               openInNewTab
@@ -508,8 +508,9 @@
     margin-bottom: 8px;
   }
 
-  .link-css ::v-deep span {
-    margin-left: 0px !important;
+  /* fixes unintended margin caused by KDS styles */
+  .license-link ::v-deep span {
+    margin-left: 0 !important;
   }
 
 </style>
