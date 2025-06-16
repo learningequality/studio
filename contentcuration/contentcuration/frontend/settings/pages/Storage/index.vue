@@ -69,12 +69,12 @@
       data-test="toggle-link"
       @click="toggleRequestForm"
     />
-    <VSlideYTransition>
+    <KTransition kind="component-vertical-slide-out-in">
       <RequestForm
         v-show="showRequestForm"
         @submitted="showRequestForm = false"
       />
-    </VSlideYTransition>
+    </KTransition>
   </div>
 
 </template>
