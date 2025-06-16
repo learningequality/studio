@@ -177,6 +177,7 @@
         v-if="showFeedbackModal"
         :title="giveFeedbackText$()"
         :cancelText="cancelAction$()"
+        :submitText="submitAction$()"
         @submit="submitRejectedRecommendationFeedback"
         @cancel="closeGiveFeedbackModal"
       >
@@ -252,6 +253,7 @@
         otherLabel$,
         closeAction$,
         cancelAction$,
+        submitAction$,
         tryAgainLink$,
         viewMoreLink$,
         giveFeedbackText$,
@@ -288,6 +290,7 @@
         otherLabel$,
         closeAction$,
         cancelAction$,
+        submitAction$,
         tryAgainLink$,
         viewMoreLink$,
         giveFeedbackText$,
