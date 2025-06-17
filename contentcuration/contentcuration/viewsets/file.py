@@ -32,6 +32,9 @@ from contentcuration.viewsets.sync.constants import CONTENTNODE
 from contentcuration.viewsets.sync.utils import generate_update_event
 
 
+PRESET_LOOKUP = {p.id: p for p in format_presets.PRESETLIST}
+
+
 class StrictFloatField(serializers.FloatField):
     def to_internal_value(self, data):
         # If data is a string, reject it even if it represents a number.
@@ -81,6 +84,11 @@ class FileUploadURLSerializer(serializers.Serializer):
                 raise serializers.ValidationError(
                     "Duration is required for audio/video files"
                 )
+        preset_obj = PRESET_LOOKUP[attrs["preset"]]
+        if attrs["file_format"] not in preset_obj.allowed_formats:
+            raise serializers.ValidationError(
+                f"File format {attrs['file_format']} is not an allowed format for this preset {attrs['preset']}"
+            )
         return attrs
 
 
