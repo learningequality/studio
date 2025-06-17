@@ -165,7 +165,7 @@ def node(data, parent=None):  # noqa: C901
             extra_fields = data["extra_fields"]
         else:
             extra_fields = {
-                "mastery_model": data["mastery_model"],
+                "mastery_model": data.get("mastery_model", "m_of_n"),
                 "randomize": True,
                 "m": data.get("m") or 0,
                 "n": data.get("n") or 0,
