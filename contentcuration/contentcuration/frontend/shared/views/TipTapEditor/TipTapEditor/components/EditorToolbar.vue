@@ -148,7 +148,7 @@
         scriptActions,
         insertTools,
         t,
-      } = useToolbarActions();
+      } = useToolbarActions(emit);
 
       const {
         copy$,
@@ -163,15 +163,14 @@
       } = getTipTapEditorStrings();
 
 
-      const onToolClick = (tool) => {
-      // If the button is the 'image' button, emit an event to the parent
-      if (tool.name === 'image') {
-        emit('insert-image');
-      } else {
-        // For all other buttons, call their original handler
-        tool.handler();
-      }
-    };
+      const onToolClick = tool => {
+        if (tool.name === 'image') {
+          emit('insert-image');
+        } else {
+          // For all other buttons, call their original handler
+          tool.handler();
+        }
+      };
 
       return {
         handleCopy,

@@ -1,6 +1,6 @@
 import { Node, mergeAttributes } from '@tiptap/core';
 import { VueNodeViewRenderer } from '@tiptap/vue-2';
-import ImageNodeView from '../components/ImageNodeView.vue';
+import ImageNodeView from '../components/image/ImageNodeView.vue';
 
 export const Image = Node.create({
   name: 'image',
@@ -32,12 +32,14 @@ export const Image = Node.create({
 
   addCommands() {
     return {
-      setImage: (options) => ({ commands }) => {
-        return commands.insertContent({
-          type: this.name,
-          attrs: options,
-        });
-      },
+      setImage:
+        options =>
+        ({ commands }) => {
+          return commands.insertContent({
+            type: this.name,
+            attrs: options,
+          });
+        },
     };
   },
 });
