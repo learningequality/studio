@@ -184,12 +184,12 @@
   import { computed } from 'vue';
   import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
   import { RouteNames } from '../../constants';
-  import RecommendedResourceCard from '../../../RecommendedResourceCard/components/RecommendedResourceCard';
   import ChannelList from './ChannelList';
   import ContentTreeList from './ContentTreeList';
   import SearchResultsList from './SearchResultsList';
   import SavedSearchesModal from './SavedSearchesModal';
   import ImportFromChannelsModal from './ImportFromChannelsModal';
+  import RecommendedResourceCard from 'shared/views/RecommendedResourceCard';
   import { withChangeTracker } from 'shared/data/changes';
   import { formatUUID4 } from 'shared/data/resources';
   import { searchRecommendationsStrings } from 'shared/strings/searchRecommendationsStrings';
