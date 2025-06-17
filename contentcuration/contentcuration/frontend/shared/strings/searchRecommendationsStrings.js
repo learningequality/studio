@@ -164,4 +164,8 @@ export const searchRecommendationsStrings = createTranslator('SearchRecommendati
     message: 'Please enter your feedback',
     context: 'A validation message that prompts the user to enter feedback before submitting',
   },
+  noFeedbackSelectedErrorMessage: {
+    message: 'Please select at least one option in order to submit your feedback',
+    context: 'An error message that prompts the user to select at least one feedback option',
+  },
 });

@@ -183,6 +183,17 @@
       >
         <!-- implement the Feedback form -->
         <p>{{ giveFeedbackDescription$() }}</p>
+        <p
+          v-if="showFeedbackErrorMessage"
+          class="feedback-form-error"
+          :style="{ color: $themeTokens.error, backgroundColor: $themePalette.red.v_100 }"
+        >
+          <KLabeledIcon
+            icon="error"
+            :label="noFeedbackSelectedErrorMessage$()"
+            :color="$themeTokens.error"
+          />
+        </p>
         <KCheckbox
           v-for="option in feedbackCheckboxOptions"
           :key="option.value"
@@ -198,7 +209,7 @@
           autofocus
           :label="enterFeedbackLabel$()"
           :textArea="true"
-          :invalid="isOtherFeedbackValid"
+          :invalid="showOtherFeedbackInvalidText"
           :invalidText="feedbackInputValidationMessage$()"
           :showInvalidText="showOtherFeedbackInvalidText"
         />
@@ -275,6 +286,7 @@
         notSuitableForCurriculumLabel$,
         resourcesMightBeRelevantTitle$,
         feedbackInputValidationMessage$,
+        noFeedbackSelectedErrorMessage$,
         problemShowingResourcesMessage$,
         aboutRecommendationsDescription$,
         notSpecificLearningActivityLabel$,
@@ -312,6 +324,7 @@
         notSuitableForCurriculumLabel$,
         resourcesMightBeRelevantTitle$,
         feedbackInputValidationMessage$,
+        noFeedbackSelectedErrorMessage$,
         problemShowingResourcesMessage$,
         aboutRecommendationsDescription$,
         notSpecificLearningActivityLabel$,
@@ -348,6 +361,7 @@
         rejectedNodeIds: [],
         previewedNodeIds: [],
         rejectedNode: null,
+        showFeedbackErrorMessage: false,
       };
     },
     computed: {
@@ -544,7 +558,10 @@
         return this.$store.state.session.currentUser.id;
       },
       isOtherFeedbackValid() {
-        return this.isFeedbackReasonSelected('other') && Boolean(this.otherFeedback.trim());
+        return (
+          !this.isFeedbackReasonSelected('other') ||
+          (this.isFeedbackReasonSelected('other') && Boolean(this.otherFeedback.trim()))
+        );
       },
       ignoredRecommendations() {
         const rejectedAndPreviewedIds = new Set([
@@ -553,6 +570,12 @@
         ]);
         const allRecommendations = [...this.recommendations, ...this.otherRecommendations];
         return allRecommendations.filter(node => !rejectedAndPreviewedIds.has(node.id));
+      },
+      isAnyFeedbackReasonSelected() {
+        return this.feedbackReason.length > 0;
+      },
+      validateFeedbackForm() {
+        return this.isAnyFeedbackReasonSelected && this.isOtherFeedbackValid;
       },
     },
     beforeRouteEnter(to, from, next) {
@@ -795,6 +818,13 @@
         } else {
           this.feedbackReason = this.feedbackReason.filter(item => item !== value);
         }
+        this.clearOtherFeedbackText();
+      },
+      clearOtherFeedbackText() {
+        if (!this.isFeedbackReasonSelected('other')) {
+          this.otherFeedback = '';
+          this.showOtherFeedbackInvalidText = false;
+        }
       },
       submitRejectedRecommendationFeedback() {
         const rejectedEvent = new RecommendationsInteractionEvent({
@@ -804,7 +834,7 @@
           feedback_type: FeedbackTypeOptions.rejected,
           feedback_reason: this.recommendationsFeedback,
         });
-        if (this.validateFeedbackForm()) {
+        if (this.validateFeedbackForm) {
           sendRequest(rejectedEvent, 'patch')
             .then(() => {
               this.showSnackbar({
@@ -815,11 +845,11 @@
               this.showSnackbar({ text: this.feedbackFailedMessage$() });
               throw error;
             });
+          this.showFeedbackModal = false;
+        } else {
+          this.showOtherFeedbackInvalidText = !this.isOtherFeedbackValid;
         }
-      },
-      validateFeedbackForm() {
-        this.showOtherFeedbackInvalidText = !this.isOtherFeedbackValid;
-        return !this.showOtherFeedbackInvalidText;
+        this.showFeedbackErrorMessage = !this.isAnyFeedbackReasonSelected;
       },
       submitRecommendationsFeedback() {
         this.submitIgnoredRecommendationsFeedback();
@@ -905,6 +935,12 @@
 
   .feedback-options {
     margin-top: 8px;
+  }
+
+  .feedback-form-error {
+    padding: 16px;
+    margin: 16px 0;
+    border-radius: 4px;
   }
 
 </style>
