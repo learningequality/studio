@@ -175,7 +175,7 @@ proto-plus==1.18.1
     #   google-cloud-error-reporting
     #   google-cloud-kms
     #   google-cloud-logging
-protobuf==3.20.3
+protobuf==4.25.8
     # via
     #   google-api-core
     #   googleapis-common-protos
