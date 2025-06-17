@@ -2,7 +2,8 @@
 
   <div
     v-if="show"
-    class="studio-banner"
+    class="notranslate studio-banner"
+    :style="backgroundColorStyle"
     role="alert"
   >
     <slot>{{ text }}</slot>
@@ -13,8 +14,35 @@
 
 <script>
 
+  import { computed, watch } from 'vue';
+  import useKLiveRegion from 'kolibri-design-system/lib/composables/useKLiveRegion';
+
   export default {
     name: 'StudioBanner',
+    setup(props, { attrs }) {
+      const { announce } = useKLiveRegion();
+
+      watch(
+        () => props.show,
+        newVal => {
+          if (newVal) {
+            announce(props.text, {
+              politeness: props.error ? 'assertive' : 'polite',
+            });
+          }
+        },
+      );
+
+      const backgroundColorStyle = computed(() => {
+        return {
+          backgroundColor: props.error ? attrs.$themePalette?.red?.v_100 || '#ffdddd' : 'inherit',
+        };
+      });
+
+      return {
+        backgroundColorStyle,
+      };
+    },
     props: {
       show: {
         type: Boolean,
@@ -34,16 +62,10 @@
 </script>
 
 
-<style scoped>
+<style lang="scss" scoped>
 
   .studio-banner {
     padding: 12px 16px;
-    margin-bottom: 16px;
-    font-size: 14px;
-    line-height: 1.4;
-    color: #5f2120;
-    background-color: #ffd9d3; /* Similar to palette.red.v_100 from KDS */
-    border-radius: 4px;
   }
 
 </style>
