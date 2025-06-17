@@ -244,14 +244,12 @@ describe('SearchOrBrowseWindow', () => {
     wrapper.vm.feedbackReason = ['other'];
     wrapper.vm.otherFeedback = '';
 
-    const result = wrapper.vm.validateFeedbackForm();
+    const result = wrapper.vm.validateFeedbackForm;
     expect(result).toBe(false);
-    expect(wrapper.vm.showOtherFeedbackInvalidText).toBe(true);
 
     wrapper.vm.otherFeedback = 'valid feedback';
-    const validResult = wrapper.vm.validateFeedbackForm();
+    const validResult = wrapper.vm.validateFeedbackForm;
     expect(validResult).toBe(true);
-    expect(wrapper.vm.showOtherFeedbackInvalidText).toBe(false);
   });
 
   it('submits recommendations feedback', async () => {

@@ -181,7 +181,7 @@
         @submit="submitRejectedRecommendationFeedback"
         @cancel="closeGiveFeedbackModal"
       >
-        <!-- implement the Feedback form -->
+        <!-- implement the Feedback form -->x
         <p>{{ giveFeedbackDescription$() }}</p>
         <p
           v-if="showFeedbackErrorMessage"
@@ -357,7 +357,7 @@
         feedbackReason: [],
         showFeedbackModal: false,
         otherFeedback: '',
-        showOtherFeedbackInvalidText: '',
+        showOtherFeedbackInvalidText: false,
         rejectedNodeIds: [],
         previewedNodeIds: [],
         rejectedNode: null,
