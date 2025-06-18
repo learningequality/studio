@@ -22,7 +22,7 @@
 
         <!-- Main panel >= 800px -->
         <KGridItem
-          :layout12="{ span: isAIFeatureEnabled && layoutFitsTwoColumns ? 8 : 12 }"
+          :layout12="{ span: shouldShowRecommendations && layoutFitsTwoColumns ? 8 : 12 }"
           :layout8="{ span: 8 }"
           :layout4="{ span: 4 }"
         >
@@ -95,7 +95,7 @@
 
         <!-- Recommended resources panel >= 400px -->
         <KGridItem
-          v-if="isAIFeatureEnabled"
+          v-if="shouldShowRecommendations"
           :layout12="{ span: layoutFitsTwoColumns ? 4 : 12 }"
           :layout8="{ span: 8 }"
           :layout4="{ span: 4 }"
@@ -183,16 +183,21 @@
   import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
   import { computed } from 'vue';
   import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
+  import { SCHEMA } from 'kolibri-constants/EmbedTopicsRequest';
   import { RouteNames } from '../../constants';
   import ChannelList from './ChannelList';
   import ContentTreeList from './ContentTreeList';
   import SearchResultsList from './SearchResultsList';
   import SavedSearchesModal from './SavedSearchesModal';
   import ImportFromChannelsModal from './ImportFromChannelsModal';
+  import logging from 'shared/logging';
   import RecommendedResourceCard from 'shared/views/RecommendedResourceCard';
   import { withChangeTracker } from 'shared/data/changes';
   import { formatUUID4 } from 'shared/data/resources';
   import { searchRecommendationsStrings } from 'shared/strings/searchRecommendationsStrings';
+  import { compile } from 'shared/utils/jsonSchema';
+
+  const validateEmbedTopicRequest = compile(SCHEMA);
 
   export default {
     name: 'SearchOrBrowseWindow',
@@ -249,7 +254,6 @@
         copyNode: null,
         languageFromChannelList: null,
         showSavedSearches: false,
-        importDestinationAncestors: [],
         showAboutRecommendations: false,
         recommendations: [],
         otherRecommendations: [],
@@ -266,6 +270,7 @@
       };
     },
     computed: {
+      ...mapGetters('contentNode', ['getContentNodeAncestors']),
       ...mapGetters('currentChannel', ['currentChannel']),
       ...mapGetters('importFromChannels', ['savedSearchesExist']),
       ...mapGetters(['isAIFeatureEnabled']),
@@ -290,6 +295,29 @@
           (this.searchTerm || '').trim().length > 0 &&
           this.searchTerm.trim() !== this.$route.params.searchTerm
         );
+      },
+      shouldShowRecommendations() {
+        if (!this.isAIFeatureEnabled) {
+          return false;
+        }
+
+        if (!validateEmbedTopicRequest(this.embedTopicRequest)) {
+          // log to sentry-- this is unexpected, since we use the channel's language as a fallback
+          // and channels are required to have a language
+          logging.error(
+            new Error(
+              'Recommendation request is invalid: ' +
+                JSON.stringify(
+                  validateEmbedTopicRequest.errors.map(err => {
+                    return `${err.instancePath}: ${err.message}`;
+                  }),
+                ),
+            ),
+          );
+          return false;
+        }
+
+        return true;
       },
       loadMoreRecommendationsText() {
         let link = null;
@@ -329,11 +357,11 @@
       },
       browseWindowStyle() {
         return {
-          maxWidth: this.isAIFeatureEnabled ? '1200px' : '800px',
+          maxWidth: this.shouldShowRecommendations ? '1200px' : '800px',
         };
       },
       topicId() {
-        return this.importDestinationFolder?.id;
+        return this.$route.params.destNodeId;
       },
       recommendationsSectionTitle() {
         return this.resourcesMightBeRelevantTitle$({
@@ -367,6 +395,9 @@
             channel_id: formatUUID4(this.importDestinationFolder.channel_id),
           },
         };
+      },
+      importDestinationAncestors() {
+        return this.getContentNodeAncestors(this.topicId, true);
       },
       importDestinationFolder() {
         return this.importDestinationAncestors.slice(-1)[0];
@@ -405,14 +436,11 @@
     },
     mounted() {
       this.searchTerm = this.$route.params.searchTerm || '';
-      this.loadAncestors({ id: this.$route.params.destNodeId }).then(ancestors => {
-        this.importDestinationAncestors = ancestors;
-        this.loadRecommendations(this.recommendationsBelowThreshold);
-      });
+      this.loadRecommendations(this.recommendationsBelowThreshold);
     },
     methods: {
       ...mapActions('clipboard', ['copy']),
-      ...mapActions('contentNode', ['loadAncestors', 'loadPublicContentNode']),
+      ...mapActions('contentNode', ['loadPublicContentNode']),
       ...mapActions('importFromChannels', ['fetchRecommendations']),
       ...mapMutations('importFromChannels', {
         selectNodes: 'SELECT_NODES',
@@ -504,7 +532,7 @@
         }
       },
       async loadRecommendations(belowThreshold) {
-        if (this.isAIFeatureEnabled) {
+        if (this.shouldShowRecommendations) {
           this.recommendationsLoading = true;
           this.recommendationsLoadingError = false;
           try {
