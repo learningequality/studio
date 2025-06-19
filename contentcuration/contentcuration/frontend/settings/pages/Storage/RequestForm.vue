@@ -508,6 +508,10 @@
     margin-bottom: 8px;
   }
 
+  .license-link {
+    font-size: 14px;
+  }
+
   /* fixes unintended margin caused by KDS styles */
   .license-link ::v-deep span {
     margin-left: 0 !important;
