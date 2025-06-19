@@ -21,7 +21,7 @@ requests>=2.20.0
 google-cloud-core
 django-db-readonly==0.7.0
 google-cloud-kms==2.10.0
-google-crc32c==1.5.0
+google-crc32c==1.7.1
 backoff
 django-model-utils==5.0.0
 django-redis
