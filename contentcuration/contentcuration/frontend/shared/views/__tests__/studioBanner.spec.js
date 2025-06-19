@@ -2,7 +2,6 @@ import { mount } from '@vue/test-utils';
 import useKLiveRegion from 'kolibri-design-system/lib/composables/useKLiveRegion';
 import StudioBanner from '../StudioBanner.vue';
 
-
 // Mock useKLiveRegion
 jest.mock('kolibri-design-system/lib/composables/useKLiveRegion', () => ({
   __esModule: true,
