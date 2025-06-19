@@ -45,12 +45,16 @@
       v-else-if="printing"
       class="printable-icon"
     >
-      <VIconWrapper
+      <!-- <VIconWrapper
         :color="$vuetify.theme[kind]"
         capture-as-image
       >
         {{ icon }}
-      </VIconWrapper>
+      </VIconWrapper> -->
+      <KIcon
+        class="icon-thumbnail"
+        :icon="icon"
+      />
     </div>
 
     <!-- Bury icon within SVG so it's more responsive, since font-size scaling is more difficult -->
