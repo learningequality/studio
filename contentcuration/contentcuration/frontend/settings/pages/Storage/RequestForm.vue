@@ -1,5 +1,4 @@
 <template>
-
   <form
     ref="form"
     @submit.prevent="submit"
@@ -73,7 +72,9 @@
           {{ translateConstant(item.license_name) }}
         </template>
         <template #description="{ item }">
-          {{ translateConstant(`${item.license_name}_description`) }}
+          <p class="license-description">
+            {{ translateConstant(`${item.license_name}_description`) }}
+          </p>
           <p
             v-if="item.license_url"
             class="mt-1"
@@ -253,12 +254,9 @@
       />
     </div>
   </form>
-
 </template>
 
-
 <script>
-
   import sortBy from 'lodash/sortBy';
   import { mapActions, mapState } from 'vuex';
   import { generateFormMixin, constantsTranslationMixin } from 'shared/mixins';
@@ -496,15 +494,14 @@
       requestFailed: 'Unable to send request. Please try again.',
     },
   };
-
 </script>
 
-
 <style scoped>
-
   h3 {
     margin-top: 32px;
     margin-bottom: 8px;
   }
-
+  .license-description {
+    line-height: 1.25;
+  }
 </style>
