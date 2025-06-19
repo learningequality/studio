@@ -98,12 +98,6 @@
                       v-if="subtitle"
                       class="text"
                     >{{ subtitle }}</span>
-                    <span
-                      v-if="node.categories ? Object.keys(node.categories).length > 0 : null"
-                      class="text"
-                    >
-                      {{ category(node.categories) }}
-                    </span>
                     <span v-if="isTopic && node.coach_count">
                       <!-- for each learning activity -->
                       <VTooltip
@@ -153,6 +147,16 @@
                         :style="{ backgroundColor: $themeTokens.fineLine }"
                       >
                         {{ levels(key) }}
+                      </span>
+                    </span>
+                    <span v-if="node.categories">
+                      <span
+                        v-for="(key, index) in category(node.categories)"
+                        :key="index"
+                        class="small-chip"
+                        :style="{ backgroundColor: $themeTokens.fineLine }"
+                      >
+                        {{ key }}
                       </span>
                     </span>
                   </span>
@@ -356,7 +360,7 @@
         // is created here (unlike in ResourcePanel), because the values
         // are used to create one or more individual "chips" to display
         // rather than a string of text
-        return ids.map(i => this.translateMetadataString(camelCase(i))).join(', ');
+        return ids.map(i => this.translateMetadataString(camelCase(i)));
       },
       category(options) {
         const ids = Object.keys(options);
@@ -512,10 +516,6 @@
     flex: 1 1 auto;
     align-items: flex-start;
     justify-content: center;
-  }
-
-  .metadata > span:not(:last-child)::after {
-    content: ' • ';
   }
 
   .small-chip {
