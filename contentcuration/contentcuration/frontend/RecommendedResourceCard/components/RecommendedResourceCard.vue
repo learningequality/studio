@@ -29,7 +29,7 @@
     <template #belowTitle>
       <div>
         <KTextTruncator
-          :text="channelName"
+          :text="node.channel_name"
           :maxLines="2"
         />
       </div>
@@ -77,11 +77,6 @@
     },
     computed: {
       ...mapState('importFromChannels', ['selected']),
-      channelName() {
-        const ancestors = this.node.ancestors || [];
-        const channel = ancestors.find(ancestor => ancestor.id === this.node.channel_id);
-        return channel ? channel.title : this.node.title;
-      },
       learningActivities() {
         if (this.node.learning_activities && Object.keys(this.node.learning_activities).length) {
           return this.node.learning_activities;
