@@ -6,11 +6,12 @@
       [kind]: compact,
       'icon-only': compact,
       nothumbnail: !showThumbnail && !compact,
+      'with-caption': showCaption,
     }"
     :style="{ 'max-width': maxWidth }"
   >
     <VLayout
-      v-if="kind && !printing && showKind && !compact"
+      v-if="showCaption"
       tag="figcaption"
       row
       align-center
@@ -21,12 +22,10 @@
         shrink
         class="px-1"
       >
-        <VIconWrapper
-          v-if="!compact"
-          dark
-          small
-          :aria-label="kindTitle"
-          v-text="icon"
+        <KIcon
+          :icon="icon"
+          class="icon-thumbnail"
+          :style="{ fill: '#ffffff' }"
         />
       </VFlex>
       <VFlex shrink>
@@ -55,33 +54,26 @@
     </div>
 
     <!-- Bury icon within SVG so it's more responsive, since font-size scaling is more difficult -->
-    <svg
+    <div
       v-else-if="compact"
-      viewBox="0 0 24 24"
-      :aria-label="kindTitle"
-      class="thumbnail-image"
+      class="kicon-wrapper"
     >
       <KIcon
-        icon="infoOutline"
-        :x="+10"
-        :y="y + 20"
+        :icon="icon"
+        class="icon-thumbnail"
         :style="{ fill: '#ffffff' }"
       />
-    </svg>
-    <svg
+    </div>
+    <div
       v-else
-      viewBox="0 0 40 40"
-      :aria-label="kindTitle"
-      class="nothumbnail-image"
-      :class="$isRTL ? 'rtl-image' : 'ltr-image'"
+      class="kicon-wrapper"
     >
       <KIcon
         icon="image"
-        :x="-3"
-        :y="y - 14"
-        :style="{ fill: '#999999' }"
+        class="icon-thumbnail"
+        :style="{ fill: '#999999', fontSize: '3em' }"
       />
-    </svg>
+    </div>
   </figure>
 
 </template>
@@ -89,8 +81,8 @@
 
 <script>
 
+  import { getContentKindIcon } from 'shared/utils/icons';
   import { constantsTranslationMixin, printingMixin } from 'shared/mixins';
-  import { getContentKindIcon } from 'shared/vuetify/icons';
 
   export default {
     name: 'Thumbnail',
@@ -136,21 +128,14 @@
       },
     },
     computed: {
-      y() {
-        switch (this.kind) {
-          case 'exercise':
-            return 28;
-          case 'topic':
-          case 'audio':
-          default:
-            return 26;
-        }
-      },
       objectFit() {
         return this.kind ? 'cover' : 'contain';
       },
       icon() {
         return getContentKindIcon(this.kind, this.isEmpty);
+      },
+      showCaption() {
+        return this.kind && !this.printing && this.showKind && !this.compact;
       },
       thumbnailSrc() {
         return this.encoding && this.encoding.base64 ? this.encoding.base64 : this.src;
@@ -299,6 +284,25 @@
 
     .v-icon {
       font-size: 300%;
+    }
+  }
+
+  .kicon-wrapper {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+
+    .icon-thumbnail {
+      top: 0;
+    }
+  }
+
+  .thumbnail.with-caption {
+    .kicon-wrapper {
+      height: calc(100% - #{$caption-height});
     }
   }
 
