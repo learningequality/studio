@@ -73,7 +73,9 @@
           {{ translateConstant(item.license_name) }}
         </template>
         <template #description="{ item }">
-          {{ translateConstant(`${item.license_name}_description`) }}
+          <p class="license-description">
+            {{ translateConstant(`${item.license_name}_description`) }}
+          </p>
           <p
             v-if="item.license_url"
             class="mt-1"
@@ -515,6 +517,10 @@
   /* fixes unintended margin caused by KDS styles */
   .license-link ::v-deep span {
     margin-left: 0 !important;
+  }
+
+  .license-description {
+    line-height: 1.25;
   }
 
 </style>
