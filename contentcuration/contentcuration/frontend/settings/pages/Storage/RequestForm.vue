@@ -91,7 +91,7 @@
     <div class="mt-2">
       <div
         v-if="errors.license"
-        style="color: red"
+        class="text-error"
       >
         {{ $tr('fieldRequiredText') }}
       </div>
@@ -151,7 +151,7 @@
     <div class="mt-2">
       <div
         v-if="errors.org_or_personal"
-        style="color: red"
+        class="text-error"
       >
         {{ $tr('fieldRequiredText') }}
       </div>
@@ -184,11 +184,11 @@
     <div class="mb-1 mt-3">
       <div
         v-if="errors.organization_type"
-        style="color: red"
+        class="text-error"
       >
         {{ $tr('fieldRequiredText') }}
       </div>
-      <label :style="{ color: orgSelected ? 'black' : 'gray' }">
+      <label :class="{ 'text-primary': orgSelected, 'text-disabled': !orgSelected }">
         {{ $tr('typeOfOrganizationLabel') }}
       </label>
     </div>
