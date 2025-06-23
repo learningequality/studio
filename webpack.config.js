@@ -117,6 +117,13 @@ module.exports = (env = {}) => {
       headers: {
         'Access-Control-Allow-Origin': '*',
       },
+      allowedHosts: [
+        '127.0.0.1',
+        'localhost',
+      ].concat(
+        // For WSL, allow the WSL IP address
+        isWSLEnvironment ? [getWSLIP()] : []
+      ),
     },
     module: {
       rules: [
