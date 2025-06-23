@@ -5,19 +5,19 @@ import client from './client';
 import urls from 'shared/urls';
 
 export const FeedbackTypeOptions = {
-  imported: 'imported',
-  rejected: 'rejected',
-  previewed: 'previewed',
-  showmore: 'showmore',
-  ignored: 'ignored',
-  flagged: 'flagged',
+  imported: 'IMPORTED',
+  rejected: 'REJECTED',
+  previewed: 'PREVIEWED',
+  showmore: 'SHOWMORE',
+  ignored: 'IGNORED',
+  flagged: 'FLAGGED',
 };
 
 // This is mock currently, fixed value of URL still to be decided
 // referencing the url by name
-export const FLAG_FEEDBACK_EVENT_URL = urls[`${'flagged'}_${'list'}`];
-export const RECOMMENDATION_EVENT_URL = urls['recommendations'];
-export const RECOMMENDATION_INTERACTION_EVENT_URL = urls['recommendations-interaction'];
+export const FLAG_FEEDBACK_EVENT_URL = urls['flagged-list']();
+export const RECOMMENDATION_EVENT_URL = urls['recommendations']();
+export const RECOMMENDATION_INTERACTION_EVENT_URL = urls['recommendations-interaction-list']();
 
 /**
  * @typedef {Object} BaseFeedbackParams
