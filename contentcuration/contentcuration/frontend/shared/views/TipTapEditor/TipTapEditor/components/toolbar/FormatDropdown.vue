@@ -69,10 +69,7 @@
 
       const { handleFormatChange } = useToolbarActions();
 
-      const {
-        textFormatOptions$,
-        formatOptions$,
-      } = getTipTapEditorStrings();
+      const { textFormatOptions$, formatOptions$ } = getTipTapEditorStrings();
 
       const dropdownButton = ref(null);
       const dropdownMenu = ref(null);

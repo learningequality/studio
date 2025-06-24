@@ -122,11 +122,11 @@
 
   import { defineComponent } from 'vue';
   import { useToolbarActions } from '../composables/useToolbarActions';
+  import { getTipTapEditorStrings } from '../TipTapEditorStrings';
   import ToolbarButton from './toolbar/ToolbarButton.vue';
   import FormatDropdown from './toolbar/FormatDropdown.vue';
   import PasteDropdown from './toolbar/PasteDropdown.vue';
   import ToolbarDivider from './toolbar/ToolbarDivider.vue';
-  import { getTipTapEditorStrings } from '../TipTapEditorStrings';
 
   export default defineComponent({
     name: 'EditorToolbar',
@@ -137,14 +137,8 @@
       ToolbarDivider,
     },
     setup() {
-      const {
-        handleCopy,
-        historyActions,
-        textActions,
-        listActions,
-        scriptActions,
-        insertTools,
-      } = useToolbarActions();
+      const { handleCopy, historyActions, textActions, listActions, scriptActions, insertTools } =
+        useToolbarActions();
 
       const {
         copy$,

@@ -82,11 +82,7 @@
 
       const { handlePaste } = useToolbarActions();
 
-      const {
-        paste$,
-        pasteOptions$,
-        pasteOptionsMenu$,
-      } = getTipTapEditorStrings();
+      const { paste$, pasteOptions$, pasteOptionsMenu$ } = getTipTapEditorStrings();
 
       const dropdownButton = ref(null);
       const dropdownMenu = ref(null);

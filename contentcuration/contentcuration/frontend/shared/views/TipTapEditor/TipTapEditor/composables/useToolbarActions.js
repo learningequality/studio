@@ -21,10 +21,6 @@ export function useToolbarActions() {
     codeBlock$,
   } = getTipTapEditorStrings();
 
-  const t = key => {
-    return getTipTapEditorStrings().$tr(key);
-  };
-
   // Action handlers
   const handleUndo = () => {
     if (editor?.value) {
@@ -328,6 +324,5 @@ export function useToolbarActions() {
     listActions,
     scriptActions,
     insertTools,
-    
   };
 }
