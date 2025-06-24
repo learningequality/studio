@@ -782,6 +782,8 @@
       },
       handleNotRelevantRecommendation(node) {
         this.rejectedNode = node;
+        const type = FeedbackTypeOptions.rejected;
+        const reason = this.recommendationsFeedback ? this.recommendationsFeedback : type;
         const interactionEvent = new RecommendationsInteractionEvent({
           recommendation_event_id: this.recommendationsEvent.id,
           contentnode_id: node.id,
@@ -789,8 +791,8 @@
           context: {
             other_feedback: this.otherFeedback,
           },
-          feedback_type: FeedbackTypeOptions.rejected,
-          feedback_reason: this.recommendationsFeedback,
+          feedback_type: type,
+          feedback_reason: reason,
         });
         sendRequest(interactionEvent)
           .then(() => {
