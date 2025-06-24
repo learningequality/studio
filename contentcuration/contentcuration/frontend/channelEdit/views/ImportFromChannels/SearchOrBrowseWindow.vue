@@ -389,11 +389,9 @@
               description: this.importDestinationFolder.description,
               language: this.recommendationsLanguage,
               ancestors: this.topicAncestors,
+              channel_id: formatUUID4(this.importDestinationFolder.channel_id),
             },
           ],
-          metadata: {
-            channel_id: formatUUID4(this.importDestinationFolder.channel_id),
-          },
         };
       },
       importDestinationAncestors() {
