@@ -19,6 +19,7 @@ export function useToolbarActions() {
     insertLink$,
     mathFormula$,
     codeBlock$,
+    clipboardAccessFailed$,
   } = getTipTapEditorStrings();
 
   // Action handlers
@@ -82,11 +83,7 @@ export function useToolbarActions() {
           handlePasteNoFormat();
         }
       } catch (err) {
-        editor.value
-          .chain()
-          .focus()
-          .insertContent('Clipboard access failed. Try copying again.')
-          .run();
+        editor.value.chain().focus().insertContent(clipboardAccessFailed$()).run();
       }
     }
   };
@@ -98,11 +95,7 @@ export function useToolbarActions() {
         const text = await navigator.clipboard.readText();
         editor.value.chain().focus().insertContent(text).run();
       } catch (err) {
-        editor.value
-          .chain()
-          .focus()
-          .insertContent('Clipboard access failed. Try copying again.')
-          .run();
+        editor.value.chain().focus().insertContent(clipboardAccessFailed$()).run();
       }
     }
   };

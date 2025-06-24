@@ -144,6 +144,10 @@ const MESSAGES = {
     message: 'Paste options menu',
     context: 'Menu for selecting paste options',
   },
+  clipboardAccessFailed: {
+    message: 'Clipboard access failed. Try copying again.',
+    context: 'Message shown when clipboard access fails during paste operation',
+  },
 };
 
 let TipTapEditorStrings = null;
