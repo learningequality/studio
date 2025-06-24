@@ -9,7 +9,7 @@
       class="format-dropdown"
       :aria-expanded="isOpen"
       :aria-haspopup="true"
-      :aria-label="t('textFormatOptions')"
+      :aria-label="textFormatOptions$()"
       @click="toggleDropdown"
       @keydown="handleButtonKeydown"
     >
@@ -25,7 +25,7 @@
       ref="dropdownMenu"
       class="dropdown-menu headers-dropdown"
       role="menu"
-      :aria-label="t('formatOptions')"
+      :aria-label="formatOptions$()"
     >
       <div
         v-for="(format, index) in formatOptions"
@@ -54,6 +54,7 @@
   import { defineComponent, ref, nextTick, watch } from 'vue';
   import { useDropdowns } from '../../composables/useDropdowns';
   import { useToolbarActions } from '../../composables/useToolbarActions';
+  import { getTipTapEditorStrings } from '../../TipTapEditorStrings';
 
   export default defineComponent({
     name: 'FormatDropdown',
@@ -66,7 +67,12 @@
         selectFormat,
       } = useDropdowns();
 
-      const { handleFormatChange, t } = useToolbarActions();
+      const { handleFormatChange } = useToolbarActions();
+
+      const {
+        textFormatOptions$,
+        formatOptions$,
+      } = getTipTapEditorStrings();
 
       const dropdownButton = ref(null);
       const dropdownMenu = ref(null);
@@ -189,7 +195,8 @@
         handleButtonKeydown,
         handleItemKeydown,
         handleContainerKeydown,
-        t,
+        textFormatOptions$,
+        formatOptions$,
       };
     },
   });

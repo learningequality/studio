@@ -41,13 +41,8 @@
   .editor-content {
     min-height: 200px;
     padding: 16px;
-    padding-inline: 16px;
+    padding-inline: 24px;
     margin-inline: 0 auto;
-  }
-
-  .editor-placeholder {
-    font-size: 14px;
-    color: #6c757d;
   }
 
   .tiptap-editor {

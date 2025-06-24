@@ -1,5 +1,5 @@
 import { ref, onMounted, onUnmounted, inject, watch, computed } from 'vue';
-import { getTranslator } from '../TipTapEditorStrings';
+import { getTipTapEditorStrings } from '../TipTapEditorStrings';
 import { useToolbarActions } from './useToolbarActions';
 
 export function useDropdowns() {
@@ -8,11 +8,15 @@ export function useDropdowns() {
   const showPasteDropdown = ref(false);
   const editor = inject('editor', null);
 
-  // This function retrieves the translator instance for localization
-  const t = (key, args = {}) => {
-    const translator = getTranslator();
-    return translator.$tr(key, args);
-  };
+  const {
+    formatSmall$,
+    formatNormal$,
+    formatHeader1$,
+    formatHeader2$,
+    formatHeader3$,
+    paste$,
+    pasteWithoutFormatting$,
+  } = getTipTapEditorStrings();
 
   // Format detection function
   const updateSelectedFormat = () => {
@@ -20,15 +24,15 @@ export function useDropdowns() {
 
     // Check current active format at cursor position
     if (editor.value.isActive('heading', { level: 1 })) {
-      selectedFormat.value = 'Header 1';
+      selectedFormat.value = formatHeader1$();
     } else if (editor.value.isActive('heading', { level: 2 })) {
-      selectedFormat.value = 'Header 2';
+      selectedFormat.value = formatHeader2$();
     } else if (editor.value.isActive('heading', { level: 3 })) {
-      selectedFormat.value = 'Header 3';
+      selectedFormat.value = formatHeader3$();
     } else if (editor.value.isActive('small')) {
-      selectedFormat.value = 'small';
+      selectedFormat.value = formatSmall$();
     } else {
-      selectedFormat.value = 'Normal';
+      selectedFormat.value = formatNormal$();
     }
   };
 
@@ -102,23 +106,23 @@ export function useDropdowns() {
   });
 
   const formatOptions = computed(() => [
-    { value: 'small', label: t('formatSmall'), tag: 'small' },
-    { value: 'normal', label: t('formatNormal'), tag: 'p' },
-    { value: 'h3', label: t('formatHeader3'), tag: 'h3' },
-    { value: 'h2', label: t('formatHeader2'), tag: 'h2' },
-    { value: 'h1', label: t('formatHeader1'), tag: 'h1' },
+    { value: 'small', label: formatSmall$(), tag: 'small' },
+    { value: 'normal', label: formatNormal$(), tag: 'p' },
+    { value: 'h3', label: formatHeader3$(), tag: 'h3' },
+    { value: 'h2', label: formatHeader2$(), tag: 'h2' },
+    { value: 'h1', label: formatHeader1$(), tag: 'h1' },
   ]);
 
   const pasteOptions = computed(() => [
     {
       name: 'paste',
-      title: t('paste'),
+      title: paste$(),
       icon: require('../../assets/icon-paste.svg'),
       handler: useToolbarActions().handlePaste,
     },
     {
       name: 'pasteNoFormat',
-      title: t('pasteWithoutFormatting'),
+      title: pasteWithoutFormatting$(),
       icon: require('../../assets/icon-pasteNoFormat.svg'),
       handler: useToolbarActions().handlePasteNoFormat,
     },

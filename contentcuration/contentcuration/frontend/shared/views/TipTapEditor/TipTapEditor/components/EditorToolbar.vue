@@ -3,12 +3,12 @@
   <div
     class="toolbar"
     role="toolbar"
-    :aria-label="t('textFormattingToolbar')"
+    :aria-label="textFormattingToolbar$()"
   >
     <!-- History buttons -->
     <div
       role="group"
-      :aria-label="t('historyActions')"
+      :aria-label="historyActions$()"
     >
       <ToolbarButton
         v-for="action in historyActions"
@@ -26,7 +26,7 @@
     <!-- Format dropdown -->
     <div
       role="group"
-      :aria-label="t('textFormattingOptions')"
+      :aria-label="textFormattingOptions$()"
     >
       <FormatDropdown />
     </div>
@@ -36,7 +36,7 @@
     <!-- Text formatting -->
     <div
       role="group"
-      :aria-label="t('textStyleFormatting')"
+      :aria-label="textStyleFormatting$()"
     >
       <ToolbarButton
         v-for="action in textActions"
@@ -53,10 +53,10 @@
     <!-- Copy/Paste -->
     <div
       role="group"
-      :aria-label="t('copyAndPasteActions')"
+      :aria-label="copyAndPasteActions$()"
     >
       <ToolbarButton
-        :title="t('copy')"
+        :title="copy$()"
         :icon="require('../../assets/icon-copy.svg')"
         @click="handleCopy"
       />
@@ -68,7 +68,7 @@
     <!-- Lists -->
     <div
       role="group"
-      :aria-label="t('listFormatting')"
+      :aria-label="listFormatting$()"
     >
       <ToolbarButton
         v-for="list in listActions"
@@ -87,7 +87,7 @@
     <!-- Script formatting -->
     <div
       role="group"
-      :aria-label="t('scriptFormatting')"
+      :aria-label="scriptFormatting$()"
     >
       <ToolbarButton
         v-for="script in scriptActions"
@@ -103,7 +103,7 @@
     <!-- Insert tools -->
     <div
       role="group"
-      :aria-label="t('insertTools')"
+      :aria-label="insertTools$()"
     >
       <ToolbarButton
         v-for="tool in insertTools"
@@ -126,6 +126,7 @@
   import FormatDropdown from './toolbar/FormatDropdown.vue';
   import PasteDropdown from './toolbar/PasteDropdown.vue';
   import ToolbarDivider from './toolbar/ToolbarDivider.vue';
+  import { getTipTapEditorStrings } from '../TipTapEditorStrings';
 
   export default defineComponent({
     name: 'EditorToolbar',
@@ -143,17 +144,36 @@
         listActions,
         scriptActions,
         insertTools,
-        t,
       } = useToolbarActions();
+
+      const {
+        copy$,
+        textFormattingToolbar$,
+        historyActions$,
+        textFormattingOptions$,
+        textStyleFormatting$,
+        copyAndPasteActions$,
+        listFormatting$,
+        scriptFormatting$,
+        insertTools$,
+      } = getTipTapEditorStrings();
 
       return {
         handleCopy,
-        t,
         historyActions,
         textActions,
         listActions,
         scriptActions,
         insertTools,
+        copy$,
+        textFormattingToolbar$,
+        historyActions$,
+        textFormattingOptions$,
+        textStyleFormatting$,
+        copyAndPasteActions$,
+        listFormatting$,
+        scriptFormatting$,
+        insertTools$,
       };
     },
   });

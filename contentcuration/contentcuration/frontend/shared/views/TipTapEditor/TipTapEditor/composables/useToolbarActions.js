@@ -1,13 +1,28 @@
 import { computed, inject } from 'vue';
-import { getTranslator } from '../TipTapEditorStrings';
+import { getTipTapEditorStrings } from '../TipTapEditorStrings';
 
 export function useToolbarActions() {
   const editor = inject('editor', null);
 
-  // Create the translator object
-  const t = (key, args = {}) => {
-    const translator = getTranslator();
-    return translator.$tr(key, args);
+  const {
+    undo$,
+    redo$,
+    bold$,
+    italic$,
+    underline$,
+    strikethrough$,
+    bulletList$,
+    numberedList$,
+    subscript$,
+    superscript$,
+    insertImage$,
+    insertLink$,
+    mathFormula$,
+    codeBlock$,
+  } = getTipTapEditorStrings();
+
+  const t = key => {
+    return getTipTapEditorStrings().$tr(key);
   };
 
   // Action handlers
@@ -181,14 +196,14 @@ export function useToolbarActions() {
   const historyActions = computed(() => [
     {
       name: 'undo',
-      title: t('undo'),
+      title: undo$(),
       icon: require('../../assets/icon-undo.svg'),
       handler: handleUndo,
       isAvailable: isButtonAvailable('undo'),
     },
     {
       name: 'redo',
-      title: t('redo'),
+      title: redo$(),
       icon: require('../../assets/icon-redo.svg'),
       handler: handleRedo,
       isAvailable: isButtonAvailable('redo'),
@@ -198,28 +213,28 @@ export function useToolbarActions() {
   const textActions = computed(() => [
     {
       name: 'bold',
-      title: t('bold'),
+      title: bold$(),
       icon: require('../../assets/icon-bold.svg'),
       handler: handleBold,
       isActive: isMarkActive('bold'),
     },
     {
       name: 'italic',
-      title: t('italic'),
+      title: italic$(),
       icon: require('../../assets/icon-italic.svg'),
       handler: handleItalic,
       isActive: isMarkActive('italic'),
     },
     {
       name: 'underline',
-      title: t('underline'),
+      title: underline$(),
       icon: require('../../assets/icon-underline.svg'),
       handler: handleUnderline,
       isActive: isMarkActive('underline'),
     },
     {
       name: 'strikethrough',
-      title: t('strikethrough'),
+      title: strikethrough$(),
       icon: require('../../assets/icon-strikethrough.svg'),
       handler: handleStrikethrough,
       isActive: isMarkActive('strike'),
@@ -229,14 +244,14 @@ export function useToolbarActions() {
   const listActions = computed(() => [
     {
       name: 'bulletList',
-      title: t('bulletList'),
+      title: bulletList$(),
       icon: require('../../assets/icon-bulletList.svg'),
       handler: handleBulletList,
       isActive: isMarkActive('bulletList'),
     },
     {
       name: 'numberList',
-      title: t('numberedList'),
+      title: numberedList$(),
       icon: require('../../assets/icon-numberList.svg'),
       rtlIcon: require('../../assets/icon-numberListRTL.svg'),
       handler: handleNumberList,
@@ -247,13 +262,13 @@ export function useToolbarActions() {
   const scriptActions = computed(() => [
     {
       name: 'subscript',
-      title: t('subscript'),
+      title: subscript$(),
       icon: require('../../assets/icon-subscript.svg'),
       handler: handleSubscript,
     },
     {
       name: 'superscript',
-      title: t('superscript'),
+      title: superscript$(),
       icon: require('../../assets/icon-superscript.svg'),
       handler: handleSuperscript,
     },
@@ -262,25 +277,25 @@ export function useToolbarActions() {
   const insertTools = computed(() => [
     {
       name: 'image',
-      title: t('insertImage'),
+      title: insertImage$(),
       icon: require('../../assets/icon-insertImage.svg'),
       handler: handleInsertImage,
     },
     {
       name: 'link',
-      title: t('insertLink'),
+      title: insertLink$(),
       icon: require('../../assets/icon-link.svg'),
       handler: handleInsertLink,
     },
     {
       name: 'math',
-      title: t('mathFormula'),
+      title: mathFormula$(),
       icon: require('../../assets/icon-formula.svg'),
       handler: handleMath,
     },
     {
       name: 'code',
-      title: t('codeBlock'),
+      title: codeBlock$(),
       icon: require('../../assets/icon-codeblock.svg'),
       handler: handleCodeBlock,
     },
@@ -313,8 +328,6 @@ export function useToolbarActions() {
     listActions,
     scriptActions,
     insertTools,
-
-    // translator function
-    t,
+    
   };
 }

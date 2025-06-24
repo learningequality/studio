@@ -6,8 +6,8 @@
   >
     <button
       class="paste-main-btn toolbar-btn"
-      :title="t('paste')"
-      :aria-label="t('paste')"
+      :title="paste$()"
+      :aria-label="paste$()"
       @click="handlePaste"
       @keydown="handleMainButtonKeydown"
     >
@@ -20,10 +20,10 @@
     <button
       ref="dropdownButton"
       class="paste-dropdown-btn"
-      :title="t('pasteOptions')"
+      :title="pasteOptions$()"
       :aria-expanded="isOpen"
       :aria-haspopup="true"
-      :aria-label="t('pasteOptionsMenu')"
+      :aria-label="pasteOptionsMenu$()"
       :class="{ active: isOpen }"
       @click="toggleDropdown"
       @keydown="handleDropdownButtonKeydown"
@@ -39,7 +39,7 @@
       ref="dropdownMenu"
       class="dropdown-menu paste-dropdown"
       role="menu"
-      :aria-label="t('pasteOptions')"
+      :aria-label="pasteOptions$()"
     >
       <div
         v-for="(option, index) in pasteOptions"
@@ -69,6 +69,7 @@
   import { defineComponent, ref, nextTick, watch } from 'vue';
   import { useDropdowns } from '../../composables/useDropdowns';
   import { useToolbarActions } from '../../composables/useToolbarActions';
+  import { getTipTapEditorStrings } from '../../TipTapEditorStrings';
 
   export default defineComponent({
     name: 'PasteDropdown',
@@ -79,7 +80,13 @@
         togglePasteDropdown: toggleDropdown,
       } = useDropdowns();
 
-      const { handlePaste, t } = useToolbarActions();
+      const { handlePaste } = useToolbarActions();
+
+      const {
+        paste$,
+        pasteOptions$,
+        pasteOptionsMenu$,
+      } = getTipTapEditorStrings();
 
       const dropdownButton = ref(null);
       const dropdownMenu = ref(null);
@@ -208,7 +215,9 @@
         handleOptionClick,
         handleItemKeydown,
         handleContainerKeydown,
-        t,
+        paste$,
+        pasteOptions$,
+        pasteOptionsMenu$,
       };
     },
   });
