@@ -277,7 +277,6 @@
     cursor: pointer;
     background: transparent;
     border: 0;
-    border-left: 1px solid #dee2e6;
     border-radius: 0 4px 4px 0;
     transition: background-color 0.2s ease;
   }

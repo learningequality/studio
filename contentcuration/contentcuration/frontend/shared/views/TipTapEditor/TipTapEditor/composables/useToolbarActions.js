@@ -50,17 +50,8 @@ export function useToolbarActions() {
   // Copy with formatting
   const handleCopy = () => {
     if (editor.value) {
-      // Get HTML
-      const html = editor.value.getHTML();
-      const text = editor.value.getText();
-
-      // Copy both HTML and plain text
-      navigator.clipboard.write([
-        new ClipboardItem({
-          'text/html': new Blob([html], { type: 'text/html' }),
-          'text/plain': new Blob([text], { type: 'text/plain' }),
-        }),
-      ]);
+      // Just use the browser's built-in copy command
+      document.execCommand('copy');
     }
   };
 
