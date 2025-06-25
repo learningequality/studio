@@ -8,6 +8,12 @@ This Component replaces Studio’s text editor with a future-ready implementatio
 It uses TipTap which is a headless, framework-agnostic rich-text editor built on top of ProseMirror.
 [https://tiptap.dev/docs](https://tiptap.dev/docs)
 
+---
+
+Currently the editor is accessible through hidden routes:
+- `http://localhost:8080/en/channels/<channel_id>/#/editor-dev` which requires a valid channel id first
+- `http://localhost:8080/#editor-dev`
+
 ## Current Folder Structure
 
 ```
