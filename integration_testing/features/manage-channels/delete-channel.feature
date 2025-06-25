@@ -1,23 +1,25 @@
-Feature: Delete channel
+Feature: Delete a channel
 
 	Background:
 		Given I am signed in to Studio
-			And I have permissions to edit
-			And I am on *My Channels* tab
+			And I have permissions to edit a channel
+			And I am at *My channels* tab
 
-	Scenario: Delete channel
+	Scenario: Delete a channel
 		When I click the *Options* button of a channel #the three dots to the right
 		Then I see a *Delete channel* option
 		When I click the *Delete channel* option
-			And I click the *Delete channel* button
-		Then I see a message that the channel is deleted
-			And the deleted channel is no longer displayed on *My Channels* tab
+		Then I see a *Delete this channel* confirmation modal
+		When I click the *Delete channel* button
+		Then I see a *Channel deleted* snackbar message
+			And the deleted channel is no longer displayed on *My channels* tab
 
-	Scenario: Cancel deleting a channel
+	Scenario: Cancel the deletion of a channel
 		When I click the *Options* button of a channel #the three dots to the right
 		Then I see a *Delete channel* option
 		When I click the *Delete channel* option
-			And I click the *Cancel* button
+		Then I see a *Delete this channel* confirmation modal
+		When I click the *Cancel* button
 		Then the *Delete this channel* modal window is closed
 			And the channel is not deleted
 
@@ -26,8 +28,8 @@ Feature: Delete channel
 		Then I see the channel resources page
 		When I click the *Options* button to the right side of the topbar
 		Then I see a *Delete channel* option colored in red
-		When I click the *Delete channel* option
+		When I click the *Delete this channel* option
 			And I click the *Delete channel* button
-		Then I see a message that the channel is deleted
-			And I am brought back on *My channels* tab
-			And the deleted channel is no longer displayed on *My Channels* tab
+		Then I am brought back to *My channels* tab
+			And I see a *Channel deleted* snackbar message
+			And the deleted channel is no longer displayed in *My channels* list
