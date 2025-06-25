@@ -60,10 +60,39 @@ export function useToolbarActions() {
   };
 
   // Copy with formatting
-  const handleCopy = () => {
+  const handleCopy = async () => {
     if (editor.value) {
-      // Just use the browser's built-in copy command
-      document.execCommand('copy');
+      const { state } = editor.value;
+      const { from, to } = state.selection;
+
+      if (from === to) return; // No selection
+
+      // Get selected text
+      const selectedText = state.doc.textBetween(from, to, '\n');
+
+      // Use browser's native selection to get the actual selected HTML
+      const selection = window.getSelection();
+      let selectedHtml = '';
+
+      if (selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0);
+        const contents = range.cloneContents();
+        const tempDiv = document.createElement('div');
+        tempDiv.appendChild(contents);
+        selectedHtml = tempDiv.innerHTML;
+      }
+
+      try {
+        await navigator.clipboard.write([
+          new ClipboardItem({
+            'text/html': new Blob([selectedHtml], { type: 'text/html' }),
+            'text/plain': new Blob([selectedText], { type: 'text/plain' }),
+          }),
+        ]);
+      } catch (err) {
+        // Fallback to plain text
+        await navigator.clipboard.writeText(selectedText);
+      }
     }
   };
 

@@ -74,7 +74,6 @@ export function useDropdowns() {
 
   const selectFormat = format => {
     selectedFormat.value = format.label;
-    closeAllDropdowns();
   };
 
   const handleClickOutside = event => {
@@ -136,7 +135,6 @@ export function useDropdowns() {
     pasteOptions,
     toggleHeadersDropdown,
     togglePasteDropdown,
-    closeAllDropdowns,
     selectFormat,
     updateSelectedFormat,
   };

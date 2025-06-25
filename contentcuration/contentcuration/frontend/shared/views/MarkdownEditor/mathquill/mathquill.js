@@ -2794,7 +2794,7 @@ JS environment could actually contain many instances. */
           // skip matching top-level close tag and all tag pairs in between
           var nesting = 1;
           do {
-            (i += 1), (token = tokens[i]);
+            ((i += 1), (token = tokens[i]));
             pray('no missing close tags', token);
             // close tags
             if (token.slice(0, 2) === '</') {
@@ -3919,7 +3919,7 @@ case '!':
           i = 0;
         // FIXME: l.ctrlSeq === l.letter checks if first or last in an operator name
         while (l instanceof Letter && l.ctrlSeq === l.letter && i < maxLength) {
-          (str = l.letter + str), (l = l[L]), (i += 1);
+          ((str = l.letter + str), (l = l[L]), (i += 1));
         }
         // check for an autocommand, going thru substrings longest to shortest
         while (str.length) {
@@ -5039,7 +5039,7 @@ case '!':
           brack.bubble('reflow');
         }
       } else {
-        (brack = this), (side = brack.side);
+        ((brack = this), (side = brack.side));
         if (brack.replacedFragment) brack.side = 0;
         // wrapping seln, don't be one-sided
         else if (cursor[-side]) {
@@ -5279,7 +5279,7 @@ case '!':
     };
     _.parser = function () {
       var self = this;
-      (string = Parser.string), (regex = Parser.regex), (succeed = Parser.succeed);
+      ((string = Parser.string), (regex = Parser.regex), (succeed = Parser.succeed));
       return string('{')
         .then(regex(/^[a-z][a-z0-9]*/i))
         .skip(string('}'))
