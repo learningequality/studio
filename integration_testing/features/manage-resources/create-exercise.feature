@@ -2,27 +2,80 @@ Feature: Create an exercise
 
 	Background:
 		Given I am signed in to Studio
-			And I am on the channel editor page
+			And I am at the channel editor page
 
-	Scenario: Create an exercise
+	Scenario: Create an exercise with questions of type *Single choice*
 		When I click the *Add* button
 			And I select the *New exercise* option
 		Then I see the *Details* tab of the *New exercise* modal
-			And I can set the exercise title, description and tags
-			And I can select the mastery criteria
-			And I can choose if the questions are randomized
-			And I can add/change a thumbnail
-			And I can select language and visibility
-			And I can fill in the copyright information
-		When I click the *Questions* tab
-			And I click the *New question* button
-		Then I can add the question text and images in the question editor field
-			And I can select the response type
-			And I can provide answers for each question
-			And I can provide hints for each question
-			And I can randomize the answer order
-		When I click the *Related* tab
-			Then I can click *Add previous step* and or *Add next step*
-				And I can click the *Add* button to add a step
+		When I fill in the required fields (*Title*, *Completion* and *Goal*)
+			And I click the *Questions* tab
+		Then I see the *New question* button
+		When I click the *New question* button
+		Then I see the question editor
+			And I see that *Single choice* is the default *Response type*
+		When I fill in the question text in the question editor field
+			And I add an image
+			And I provide answers
+			And I select one answer as the correct answer
+			And I provide a hint
+		Then I've completed the creation of the question of type *Single choice* #repeat the same steps to add as many questions as necessary
 		When I click the *Finish* button
-		Then I am returned at the main topic tree view
+		Then I am returned to the main topic tree view
+			And I can see the newly created exercise
+
+	Scenario: Create an exercise with questions of type *Multiple choice*
+		When I click the *Add* button
+			And I select the *New exercise* option
+		Then I see the *Details* tab of the *New exercise* modal
+		When I fill in the required fields (*Title*, *Completion* and *Goal*)
+			And I click the *Questions* tab
+		Then I see the *New question* button
+		When I click the *New question* button
+		Then I see the question editor
+		When I select the *Multiple choice* option from the *Response type* drop-down
+			And I fill in the question text in the question editor field
+			And I add an image
+			And I provide answers
+			And I select at least one answer as the correct answer
+			And I provide a hint
+		Then I've completed the creation of the question of type *Multiple choice* #repeat the same steps to add as many questions as necessary
+		When I click the *Finish* button
+		Then I am returned to the main topic tree view
+			And I can see the newly created exercise
+
+	Scenario: Create an exercise with questions of type *Numeric input*
+		When I click the *Add* button
+			And I select the *New exercise* option
+		Then I see the *Details* tab of the *New exercise* modal
+		When I fill in the required fields (*Title*, *Completion* and *Goal*)
+			And I click the *Questions* tab
+		Then I see the *New question* button
+		When I click the *New question* button
+		Then I see the question editor
+		When I select the *Numeric input* option from the *Response type* drop-down
+			And I fill in the question text in the question editor field
+			And I provide answers
+			And I provide a hint
+		Then I've completed the creation of the question of type *Numeric input* #repeat the same steps to add as many questions as necessary
+		When I click the *Finish* button
+		Then I am returned to the main topic tree view
+			And I can see the newly created exercise
+
+	Scenario: Create an exercise with questions of type *True/False*
+		When I click the *Add* button
+			And I select the *New exercise* option
+		Then I see the *Details* tab of the *New exercise* modal
+		When I fill in the required fields (*Title*, *Completion* and *Goal*)
+			And I click the *Questions* tab
+		Then I see the *New question* button
+		When I click the *New question* button
+		Then I see the question editor
+		When I select the *True/False* option from the *Response type* drop-down
+			And I fill in the question text in the question editor field
+			And I select either *True* or *False* as the correct answer
+			And I provide a hint
+		Then I've completed the creation of the question of type *True/False* #repeat the same steps to add as many questions as necessary
+		When I click the *Finish* button
+		Then I am returned to the main topic tree view
+			And I can see the newly created exercise

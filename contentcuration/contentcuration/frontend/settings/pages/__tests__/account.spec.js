@@ -21,6 +21,11 @@ function makeWrapper(currentUser = {}) {
       FullNameForm: true,
       ChangePasswordForm: true,
     },
+    mocks: {
+      $store: {
+        dispatch: jest.fn(),
+      },
+    },
   });
 }
 
@@ -52,22 +57,63 @@ describe('account tab', () => {
     });
   });
 
-  it('clicking name link should show name change form', () => {
-    wrapper.find('[data-test="name-form"]').trigger('click');
-    expect(wrapper.vm.showFullNameForm).toBe(true);
+  it(`clicking 'Edit full name' link should show name change form`, () => {
+    wrapper.find('[data-test="edit-name-btn"]').trigger('click');
+    const nameForm = wrapper.findComponent({ name: 'FullNameForm' });
+    expect(nameForm.exists()).toBe(true);
+    expect(nameForm.isVisible()).toBe(true);
   });
 
-  it('clicking password link should show password change form', () => {
-    wrapper.find('[data-test="password-form"]').trigger('click');
-    expect(wrapper.vm.showPasswordForm).toBe(true);
+  it(`clicking 'Change password' button should show password change form`, () => {
+    wrapper.find('[data-test="change-password-btn"]').trigger('click');
+    const passwordForm = wrapper.findComponent({ name: 'ChangePasswordForm' });
+    expect(passwordForm.exists()).toBe(true);
+    expect(passwordForm.isVisible()).toBe(true);
   });
 
-  it('clicking export data button should call exportData', async () => {
-    const exportData = jest.spyOn(wrapper.vm, 'exportData');
-    exportData.mockImplementation(() => Promise.resolve());
-    await wrapper.find('[data-test="export-link"]').trigger('click');
-    expect(exportData).toHaveBeenCalled();
-    await wrapper.vm.$nextTick();
-    expect(wrapper.vm.showExportDataNotice).toBe(true);
+  describe('clicking export data button', () => {
+    let exportData;
+
+    beforeEach(async () => {
+      exportData = jest.spyOn(wrapper.vm, 'exportData');
+      exportData.mockImplementation(() => Promise.resolve());
+      wrapper.find('[data-test="export-link"]').trigger('click');
+      await wrapper.vm.$nextTick();
+    });
+
+    it(`should call 'exportData'`, async () => {
+      expect(exportData).toHaveBeenCalled();
+    });
+
+    it('should display export data notice', async () => {
+      const notice = wrapper.find('[data-test="export-notice"]');
+      expect(notice.exists()).toBe(true);
+      expect(notice.isVisible()).toBe(true);
+      expect(notice.text()).toContain(
+        "You'll receive an email with your data when the export is completed",
+      );
+    });
+  });
+
+  describe('on export data failure', () => {
+    let exportData;
+
+    beforeEach(async () => {
+      exportData = jest.spyOn(wrapper.vm, 'exportData');
+      exportData.mockImplementation(() => Promise.reject('error'));
+      wrapper.find('[data-test="export-link"]').trigger('click');
+      await wrapper.vm.$nextTick();
+    });
+
+    it(`shouldn't display export data notice`, async () => {
+      const notice = wrapper.find('[data-test="export-notice"]');
+      expect(notice.exists()).toBe(false);
+    });
+
+    it(`should call 'showSnackbar' with a correct message`, () => {
+      expect(wrapper.vm.$store.dispatch).toHaveBeenCalledWith('showSnackbar', {
+        text: 'Unable to export data. Please try again.',
+      });
+    });
   });
 });

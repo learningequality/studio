@@ -26,7 +26,7 @@ botocore==1.20.75
     #   s3transfer
 cachetools==4.2.2
     # via google-auth
-celery==5.5.2
+celery==5.5.3
     # via
     #   -r requirements.in
     #   django-celery-results
@@ -117,7 +117,7 @@ google-cloud-logging==2.3.1
     # via google-cloud-error-reporting
 google-cloud-storage==1.41.1
     # via -r requirements.in
-google-crc32c==1.5.0
+google-crc32c==1.7.1
     # via
     #   -r requirements.in
     #   google-resumable-media
@@ -148,7 +148,7 @@ jmespath==0.10.0
     #   botocore
 jsonfield==3.1.0
     # via -r requirements.in
-jsonschema==4.23.0
+jsonschema==4.24.0
     # via -r requirements.in
 jsonschema-specifications==2024.10.1
     # via jsonschema
@@ -190,7 +190,7 @@ pyasn1-modules==0.2.8
     # via google-auth
 pyparsing==2.4.7
     # via httplib2
-python-dateutil==2.9.0
+python-dateutil==2.9.0.post0
     # via
     #   -r requirements.in
     #   botocore
@@ -202,7 +202,7 @@ pytz==2022.1
     #   django
     #   django-postmark
     #   google-api-core
-redis==6.1.0
+redis==6.2.0
     # via
     #   -r requirements.in
     #   django-redis
@@ -210,7 +210,7 @@ referencing==0.36.2
     # via
     #   jsonschema
     #   jsonschema-specifications
-requests==2.32.3
+requests==2.32.4
     # via
     #   -r requirements.in
     #   google-api-core
@@ -223,7 +223,7 @@ rsa==4.7.2
     # via google-auth
 s3transfer==0.4.2
     # via boto3
-sentry-sdk==2.29.1
+sentry-sdk==2.30.0
     # via -r requirements.in
 six==1.16.0
     # via

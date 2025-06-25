@@ -10,6 +10,7 @@ export const CHANGE_TYPES = {
   SYNCED: 7,
   DEPLOYED: 8,
   UPDATED_DESCENDANTS: 9,
+  PUBLISHED_NEXT: 10,
 };
 /**
  * An array of change types that directly result in the creation of nodes

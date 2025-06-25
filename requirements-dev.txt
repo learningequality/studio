@@ -67,11 +67,13 @@ pluggy==1.5.0
     # via pytest
 pre-commit==4.2.0
     # via -r requirements-dev.in
+pygments==2.19.1
+    # via pytest
 pyproject-hooks==1.1.0
     # via
     #   build
     #   pip-tools
-pytest==8.3.5
+pytest==8.4.0
     # via
     #   -r requirements-dev.in
     #   pytest-django
@@ -80,7 +82,7 @@ pytest-django==4.11.1
     # via -r requirements-dev.in
 pytest-timeout==2.4.0
     # via -r requirements-dev.in
-python-dateutil==2.9.0
+python-dateutil==2.9.0.post0
     # via
     #   -c requirements.txt
     #   faker

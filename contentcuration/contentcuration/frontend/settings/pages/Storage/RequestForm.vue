@@ -78,10 +78,11 @@
             v-if="item.license_url"
             class="mt-1"
           >
-            <ActionLink
+            <KExternalLink
+              class="license-link"
               :href="getLicenseUrl(item)"
-              target="_blank"
               :text="$tr('learnMoreButton')"
+              openInNewTab
             />
           </p>
         </template>
@@ -505,6 +506,15 @@
   h3 {
     margin-top: 32px;
     margin-bottom: 8px;
+  }
+
+  .license-link {
+    font-size: 14px;
+  }
+
+  /* fixes unintended margin caused by KDS styles */
+  .license-link ::v-deep span {
+    margin-left: 0 !important;
   }
 
 </style>
