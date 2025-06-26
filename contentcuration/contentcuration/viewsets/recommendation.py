@@ -5,7 +5,7 @@ import jsonschema
 from automation.utils.appnexus import errors
 from django.http import HttpResponseServerError
 from django.http import JsonResponse
-from le_utils.validators import embed_topics_request
+from le_utils.constants import embed_topics_request
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 
@@ -13,6 +13,10 @@ from contentcuration.utils.automation_manager import AutomationManager
 from contentcuration.viewsets.user import IsAIFeatureEnabledForUser
 
 logger = logging.getLogger(__name__)
+
+
+def validate_recommendations_request(data):
+    jsonschema.validate(instance=data, schema=embed_topics_request.SCHEMA)
 
 
 class RecommendationView(APIView):
@@ -29,7 +33,7 @@ class RecommendationView(APIView):
             # Remove and store override_threshold as it isn't defined in the schema
             override_threshold = request_data.pop("override_threshold", False)
 
-            embed_topics_request.validate(request_data)
+            validate_recommendations_request(request_data)
         except jsonschema.ValidationError as e:
             logger.error("Schema validation error: %s", str(e))
             return JsonResponse(

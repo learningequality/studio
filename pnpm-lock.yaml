@@ -63,8 +63,8 @@ importers:
         specifier: ^3.10.1
         version: 3.10.1
       kolibri-constants:
-        specifier: ^0.2.0
-        version: 0.2.9
+        specifier: ^0.2.12
+        version: 0.2.12
       kolibri-design-system:
         specifier: 5.2.0
         version: 5.2.0
@@ -4582,6 +4582,9 @@ packages:
 
   known-css-properties@0.35.0:
     resolution: {integrity: sha512-a/RAk2BfKk+WFGhhOCAYqSiFLc34k8Mt/6NWRI4joER0EYUzXIcFivjjnoD3+XU1DggLn/tZc3DOAgke7l8a4A==}
+
+  kolibri-constants@0.2.12:
+    resolution: {integrity: sha512-ApVc/KLwEaDJohqKhQTdao4UdWmoyq2pQ5lk8ra+1rDpJvsFWsAOGVC4RTv4YEDlAYJzj2/QZlJQ91u5yUURSQ==}
 
   kolibri-constants@0.2.9:
     resolution: {integrity: sha512-frLKQPA5bSQczVEh/lnfHeQcK9i4MvGzgl+KMqvP+ixh+VJxXjlpSG+k119ajQqgq9k+nJb/IY4HbiLTjBM6oQ==}
@@ -12526,6 +12529,8 @@ snapshots:
   known-css-properties@0.29.0: {}
 
   known-css-properties@0.35.0: {}
+
+  kolibri-constants@0.2.12: {}
 
   kolibri-constants@0.2.9: {}
 

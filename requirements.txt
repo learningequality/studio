@@ -154,7 +154,7 @@ jsonschema-specifications==2024.10.1
     # via jsonschema
 kombu==5.5.2
     # via celery
-le-utils==0.2.10
+le-utils==0.2.12
     # via -r requirements.in
 packaging==25.0
     # via
