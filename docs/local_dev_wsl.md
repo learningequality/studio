@@ -121,7 +121,7 @@ The packages `postgresql-12`, `postgresql-contrib`, and `postgresql-server-dev-a
 
 ## Install Frontend Dependencies
 
-For guidance on installing Node 18.X, pnpm, and all required frontend dependencies, running the services, initializing Studio, and running the development server , please refer to the [Install Frontend Dependencies](./local_dev_host.md#install-frontend-dependencies) section in our Local Development with host guide.
+For guidance on installing Node 20.X, pnpm, and all required frontend dependencies, running the services, initializing Studio, and running the development server , please refer to the [Install Frontend Dependencies](./local_dev_host.md#install-frontend-dependencies) section in our Local Development with host guide.
 
 ## Access Kolibri Studio
 
