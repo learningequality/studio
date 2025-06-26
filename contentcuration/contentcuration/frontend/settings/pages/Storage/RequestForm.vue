@@ -520,7 +520,7 @@
   }
 
   .license-description {
-    line-height: 1.25;
+    line-height: 1.5;
   }
 
 </style>
