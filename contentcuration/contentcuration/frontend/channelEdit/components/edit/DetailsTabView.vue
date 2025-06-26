@@ -1005,6 +1005,12 @@
 
 <style lang="scss" scoped>
 
+  // decrese default Vuetify margin to allow for precise
+  // alignment of help and info icons
+  ::v-deep .v-input__append-outer {
+    margin-top: 6px !important;
+  }
+
   ::v-deep a,
   ::v-deep a:hover {
     color: inherit;

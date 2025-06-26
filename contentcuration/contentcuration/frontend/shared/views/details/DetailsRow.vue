@@ -21,9 +21,8 @@
         </label>
         <HelpTooltip
           v-if="definition"
+          class="help-icon"
           :text="definition"
-          bottom
-          class="mx-1"
         />
       </div>
     </VFlex>
@@ -89,8 +88,15 @@
   }
 
   .label-container {
-    display: flex;
-    align-items: center;
+    position: relative;
+    display: inline-block;
+    padding-right: 44px; // space for the help icon
+  }
+
+  .help-icon {
+    position: absolute;
+    top: -12px;
+    right: 0;
   }
 
   label {

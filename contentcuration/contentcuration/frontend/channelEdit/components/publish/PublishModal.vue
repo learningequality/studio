@@ -42,54 +42,43 @@
         {{ $tr('publishMessageLabel') }}
       </p>
 
-      <!-- Setting the height is a temporal fix for -->
-      <!-- https://github.com/learningequality/kolibri-design-system/issues/324 -->
-      <!-- Should be removed after it is fixed -->
-      <KFixedGrid
-        :numCols="12"
-        style="height: 200px"
-      >
-        <KGridItem :layout="{ span: 11 }">
-          <KTextbox
-            v-model="publishDescription"
-            :label="$tr('versionDescriptionLabel')"
-            :invalid="!isDescriptionValid"
-            :invalidText="$tr('descriptionRequiredMessage')"
-            :showInvalidText="showDescriptionInvalidText"
-            autofocus
-            textArea
-          />
-        </KGridItem>
-        <KGridItem :layout="{ span: 1 }">
-          <HelpTooltip
-            :text="$tr('descriptionDescriptionTooltip')"
-            bottom
-          />
-        </KGridItem>
+      <div class="form-field">
+        <KTextbox
+          v-model="publishDescription"
+          class="input"
+          :label="$tr('versionDescriptionLabel')"
+          :invalid="!isDescriptionValid"
+          :invalidText="$tr('descriptionRequiredMessage')"
+          :showInvalidText="showDescriptionInvalidText"
+          autofocus
+          textArea
+        />
+        <HelpTooltip
+          :text="$tr('descriptionDescriptionTooltip')"
+          class="icon"
+          maxWidth="300px"
+        />
+      </div>
 
-        <KGridItem
-          v-show="showLanguageDropdown"
-          :layout="{ span: 11 }"
-        >
-          <KSelect
-            v-model="language"
-            :label="$tr('languageLabel')"
-            :invalid="showLanguageInvalidText"
-            :invalidText="$tr('languageRequiredMessage')"
-            :options="languages"
-            @change="showLanguageInvalidText = !isLanguageValid"
-          />
-        </KGridItem>
-        <KGridItem
-          v-show="showLanguageDropdown"
-          :layout="{ span: 1 }"
-        >
-          <HelpTooltip
-            :text="$tr('languageDescriptionTooltip')"
-            bottom
-          />
-        </KGridItem>
-      </KFixedGrid>
+      <div
+        v-show="showLanguageDropdown"
+        class="form-field"
+      >
+        <KSelect
+          v-model="language"
+          class="input"
+          :label="$tr('languageLabel')"
+          :invalid="showLanguageInvalidText"
+          :invalidText="$tr('languageRequiredMessage')"
+          :options="languages"
+          @change="showLanguageInvalidText = !isLanguageValid"
+        />
+        <HelpTooltip
+          :text="$tr('languageDescriptionTooltip')"
+          class="icon"
+          maxWidth="300px"
+        />
+      </div>
     </KModal>
 
     <!-- STEP 3 of 3: Publishing progress dialog -->
@@ -276,3 +265,23 @@
   };
 
 </script>
+
+
+<style lang="scss" scoped>
+
+  .form-field {
+    display: flex;
+    align-items: flex-start;
+
+    .input {
+      flex-grow: 1;
+    }
+
+    .icon {
+      position: relative;
+      top: -12px;
+      flex-grow: 0;
+    }
+  }
+
+</style>

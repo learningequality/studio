@@ -82,17 +82,18 @@
         <div class="subheading">
           {{ $tr('includesLabel') }}
         </div>
-        <Checkbox v-model="coach">
-          <div class="label-container">
-            {{ $tr('coachLabel') }}
 
-            <HelpTooltip
-              :text="$tr('coachDescription')"
-              bottom
-              class="px-2"
-            />
-          </div>
-        </Checkbox>
+        <div :style="{ display: 'flex', alignItems: 'center' }">
+          <Checkbox
+            v-model="coach"
+            :label="$tr('coachLabel')"
+          />
+          <HelpTooltip
+            :text="$tr('coachDescription')"
+            maxWidth="250px"
+          />
+        </div>
+
         <Checkbox
           v-model="subtitles"
           :label="$tr('subtitlesLabel')"
@@ -252,15 +253,6 @@
     width: 100%;
     height: calc(100% - 100px);
     overflow: auto;
-  }
-
-  ::v-deep .v-label * {
-    vertical-align: bottom;
-  }
-
-  .label-container {
-    display: flex;
-    align-items: center;
   }
 
 </style>

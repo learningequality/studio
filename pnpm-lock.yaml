@@ -93,8 +93,8 @@ importers:
         specifier: ^0.2.12
         version: 0.2.12
       kolibri-design-system:
-        specifier: 5.2.1
-        version: 5.2.1
+        specifier: 5.2.2
+        version: 5.2.2
       lodash:
         specifier: ^4.17.21
         version: 4.17.21
@@ -4852,8 +4852,8 @@ packages:
   kolibri-design-system@5.0.1:
     resolution: {integrity: sha512-oz5gEFUj7NYZbrqr89gPjSfRFVuuilSqILA4bbWqLWwkI9ay/uVMdsh8cY2Xajhtzccjwqa1c/NxUETr5kMfHQ==}
 
-  kolibri-design-system@5.2.1:
-    resolution: {integrity: sha512-KGZmhnqTBSetkrqc71BzlvWEiH4Hi8FQjqy0pYzpxdnRjb4Xx9l5Bp6w7WnAECQm10pEfbxUcfTBXUic0ecFmQ==}
+  kolibri-design-system@5.2.2:
+    resolution: {integrity: sha512-KLi2gRiFl02SK/f5Thw1KgIQaX7sn3Wf3zCoceK0zIUsyJhC03VCmkJo3JgNCfQOSVZL7DrdFtr7wlV1YW2XaA==}
 
   kolibri-format@1.0.1:
     resolution: {integrity: sha512-yGQpsJkBAzmRueAq6MG1UOuDl9pbhEtMWNxq9ObG5pPVkG8uhWJAS1L71GCuNAeaV1XG2IWo2565Ov4yXnudeA==}
@@ -13122,7 +13122,7 @@ snapshots:
       vue2-teleport: 1.1.4
       xstate: 4.38.3
 
-  kolibri-design-system@5.2.1:
+  kolibri-design-system@5.2.2:
     dependencies:
       aphrodite: https://codeload.github.com/learningequality/aphrodite/tar.gz/fdc8d7be8912a5cf17f74ff10f124013c52c3e32
       autosize: 3.0.21

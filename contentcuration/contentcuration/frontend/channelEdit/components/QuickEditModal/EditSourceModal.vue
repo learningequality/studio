@@ -28,8 +28,7 @@
           />
           <HelpTooltip
             :text="$tr('authorToolTip')"
-            top
-            :small="false"
+            maxWidth="300px"
             class="input-tooltip"
           />
         </div>
@@ -52,8 +51,7 @@
           />
           <HelpTooltip
             :text="$tr('providerToolTip')"
-            top
-            :small="false"
+            maxWidth="300px"
             class="input-tooltip"
           />
         </div>
@@ -70,8 +68,7 @@
           />
           <HelpTooltip
             :text="$tr('aggregatorToolTip')"
-            top
-            :small="false"
+            maxWidth="300px"
             class="input-tooltip"
           />
         </div>
@@ -355,12 +352,13 @@
 
       .input-tooltip {
         position: absolute;
-        right: 12px;
-        margin: 14px 0 0 8px;
+        top: 2px;
+        right: 0;
+        margin-left: 20px;
       }
 
       /deep/ input {
-        padding-right: 40px;
+        padding-right: 44px;
       }
     }
   }
