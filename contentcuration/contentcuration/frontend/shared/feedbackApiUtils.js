@@ -13,11 +13,9 @@ export const FeedbackTypeOptions = {
   flagged: 'FLAGGED',
 };
 
-// This is mock currently, fixed value of URL still to be decided
-// referencing the url by name
-export const FLAG_FEEDBACK_EVENT_URL = urls['flagged-list']();
-export const RECOMMENDATION_EVENT_URL = urls['recommendations']();
-export const RECOMMENDATION_INTERACTION_EVENT_URL = urls['recommendations-interaction-list']();
+export const FLAG_FEEDBACK_EVENT_ENDPOINT = 'flagged';
+export const RECOMMENDATION_EVENT_ENDPOINT = 'recommendations';
+export const RECOMMENDATION_INTERACTION_EVENT_ENDPOINT = 'recommendations-interaction';
 
 /**
  * @typedef {Object} BaseFeedbackParams
@@ -37,22 +35,24 @@ class BaseFeedback {
    * @classdesc Represents a base feedback object with common properties and methods.
    * @param {BaseFeedbackParams} object
    */
-  constructor({ context = {}, contentnode_id, content_id }) {
-    this.id = uuidv4();
+  constructor({ id, context = {}, contentnode_id, content_id, method }) {
+    this.id = id || uuidv4();
     this.context = context;
     this.contentnode_id = contentnode_id;
     this.content_id = content_id;
+    this.method = method || 'post';
   }
 
   // Creates a data object according to Backends expectation,
-  // excluding functions and the "URL" property.
+  // excluding functions and the "endpoint" property.
   getDataObject() {
     const dataObject = {};
     for (const key in this) {
       if (
         Object.prototype.hasOwnProperty.call(this, key) &&
         typeof this[key] !== 'function' &&
-        key !== 'URL'
+        key !== 'endpoint' &&
+        key !== 'method'
       ) {
         dataObject[key] = this[key];
       }
@@ -60,12 +60,23 @@ class BaseFeedback {
     return dataObject;
   }
 
-  // Return URL associated with the ObjectType
+  // Return the url associated with the ObjectType
   getUrl() {
-    if (this.defaultURL === null || this.URL === undefined) {
-      throw new Error('URL is not defined for the FeedBack Object.');
+    if (!this.endpoint) {
+      throw new Error('Resource is not defined for the FeedBack Object.');
     }
-    return this.URL;
+
+    let url;
+    if (['patch', 'put'].includes(this.getMethod())) {
+      url = urls[`${this.endpoint}-detail`](this.id);
+    } else {
+      url = urls[`${this.endpoint}-list`]();
+    }
+    return url;
+  }
+
+  getMethod() {
+    return this.method.toLowerCase();
   }
 }
 
@@ -131,7 +142,7 @@ class BaseFlagFeedback extends BaseFeedbackInteractionEvent {
 export class FlagFeedbackEvent extends BaseFlagFeedback {
   constructor({ target_topic_id, ...baseFeedbackParams }) {
     super({ target_topic_id, ...baseFeedbackParams });
-    this.URL = FLAG_FEEDBACK_EVENT_URL;
+    this.endpoint = FLAG_FEEDBACK_EVENT_ENDPOINT;
   }
 }
 
@@ -143,10 +154,10 @@ export class FlagFeedbackEvent extends BaseFlagFeedback {
  * each representing a recommended content item.
  */
 export class RecommendationsEvent extends BaseFeedbackEvent {
-  constructor({ content, ...basefeedbackEventParams }) {
-    super(basefeedbackEventParams);
+  constructor({ content, ...baseFeedbackEventParams }) {
+    super(baseFeedbackEventParams);
     this.content = content;
-    this.URL = RECOMMENDATION_EVENT_URL;
+    this.endpoint = RECOMMENDATION_EVENT_ENDPOINT;
   }
 }
 
@@ -163,7 +174,7 @@ export class RecommendationsInteractionEvent extends BaseFeedbackInteractionEven
   constructor({ recommendation_event_id, ...feedbackInteractionEventParams }) {
     super(feedbackInteractionEventParams);
     this.recommendation_event_id = recommendation_event_id;
-    this.URL = RECOMMENDATION_INTERACTION_EVENT_URL;
+    this.endpoint = RECOMMENDATION_INTERACTION_EVENT_ENDPOINT;
   }
 }
 
@@ -173,17 +184,17 @@ export class RecommendationsInteractionEvent extends BaseFeedbackInteractionEven
  * @function
  *
  * @param {BaseFeedback} feedbackObject - The feedback object to use for the request.
- * @param {string} [method='post'] - The HTTP method to use (post, put, patch).
- * @throws {Error} Throws an error if the URL is not defined for the feedback object.
+ * @throws {Error} An error if an unsupported HTTP method is specified in the feedback object.
  * @returns {Promise<Object>} A promise that resolves to the response data from the API.
  */
-export async function sendRequest(feedbackObject, method = 'post') {
+export async function sendRequest(feedbackObject) {
   try {
     const url = feedbackObject.getUrl();
     const data = feedbackObject.getDataObject();
+    const method = feedbackObject.getMethod();
 
     let response;
-    switch (method.toLowerCase()) {
+    switch (method) {
       case 'post':
         response = await client.post(url, data);
         break;

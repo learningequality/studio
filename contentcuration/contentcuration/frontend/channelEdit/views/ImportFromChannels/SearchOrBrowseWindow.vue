@@ -829,6 +829,7 @@
       },
       submitRejectedRecommendationFeedback() {
         const rejectedEvent = new RecommendationsInteractionEvent({
+          method: 'patch',
           recommendation_event_id: this.recommendationsEvent.id,
           contentnode_id: this.rejectedNode.id,
           content_id: this.rejectedNode.content_id,
@@ -836,7 +837,7 @@
           feedback_reason: this.recommendationsFeedback,
         });
         if (this.validateFeedbackForm) {
-          sendRequest(rejectedEvent, 'patch')
+          sendRequest(rejectedEvent)
             .then(() => {
               this.showSnackbar({
                 text: this.feedbackSubmittedMessage$(),

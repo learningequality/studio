@@ -5,14 +5,45 @@ import {
   RecommendationsEvent,
   RecommendationsInteractionEvent,
   FeedbackTypeOptions,
-  FLAG_FEEDBACK_EVENT_URL,
-  RECOMMENDATION_EVENT_URL,
-  RECOMMENDATION_INTERACTION_EVENT_URL,
+  FLAG_FEEDBACK_EVENT_ENDPOINT,
+  RECOMMENDATION_EVENT_ENDPOINT,
+  RECOMMENDATION_INTERACTION_EVENT_ENDPOINT,
 } from '../feedbackApiUtils';
 import client from '../client';
 
 jest.mock('uuid', () => ({ v4: jest.fn(() => 'mocked-uuid') }));
 jest.mock('../client');
+
+function setupRecommendationsEvent(method) {
+  return new RecommendationsEvent({
+    context: { model_version: 1, breadcrumbs: '#Title#->Random' },
+    contentnode_id: uuidv4(),
+    content_id: uuidv4(),
+    target_channel_id: uuidv4(),
+    user_id: uuidv4(),
+    content: [
+      {
+        content_id: uuidv4(),
+        node_id: uuidv4(),
+        channel_id: uuidv4(),
+        score: 4,
+      },
+    ],
+    method: method,
+  });
+}
+
+function setupRecommendationsInteractionEvent(method) {
+  return new RecommendationsInteractionEvent({
+    context: { test_key: 'test_value' },
+    contentnode_id: uuidv4(),
+    content_id: uuidv4(),
+    feedback_type: FeedbackTypeOptions.ignored,
+    feedback_reason: '----',
+    recommendation_event_id: uuidv4(),
+    method: method,
+  });
+}
 
 describe('FeedBackUtility Tests', () => {
   let flagFeedbackEvent;
@@ -33,31 +64,8 @@ describe('FeedBackUtility Tests', () => {
       feedback_reason: 'Inappropriate Language',
     });
 
-    recommendationsEvent = new RecommendationsEvent({
-      context: { model_version: 1, breadcrumbs: '#Title#->Random' },
-      contentnode_id: uuidv4(),
-      content_id: uuidv4(),
-      target_channel_id: uuidv4(),
-      user_id: uuidv4(),
-      content: [
-        {
-          content_id: uuidv4(),
-          node_id: uuidv4(),
-          channel_id: uuidv4(),
-          score: 4,
-        },
-      ],
-    });
-
-    recommendationsInteractionEvent = new RecommendationsInteractionEvent({
-      context: { test_key: 'test_value' },
-      contentnode_id: uuidv4(),
-      content_id: uuidv4(),
-      feedback_type: FeedbackTypeOptions.ignored,
-      feedback_reason: '----',
-      recommendation_event_id: uuidv4(), //currently this is random to test but should have the actual
-      // recommendation event id of the recommendation event
-    });
+    recommendationsEvent = setupRecommendationsEvent('post');
+    recommendationsInteractionEvent = setupRecommendationsInteractionEvent('post');
 
     // Reset all client method mocks
     client.post.mockRestore();
@@ -78,19 +86,19 @@ describe('FeedBackUtility Tests', () => {
       expect(dataObject.target_topic_id).toEqual('mocked-uuid');
       expect(dataObject.feedback_type).toEqual(FeedbackTypeOptions.flagged);
       expect(dataObject.feedback_reason).toEqual('Inappropriate Language');
-      expect(dataObject.URL).toBeUndefined();
+      expect(dataObject.endpoint).toBeUndefined();
     });
 
-    it('should throw an error when URL is not defined', () => {
-      flagFeedbackEvent.URL = undefined;
+    it('should throw an error when endpoint is not defined', () => {
+      flagFeedbackEvent.endpoint = undefined;
       expect(() => flagFeedbackEvent.getUrl()).toThrowError(
-        'URL is not defined for the FeedBack Object.',
+        'Resource is not defined for the FeedBack Object.',
       );
     });
 
     it('should return the correct URL when URL is defined', () => {
       const result = flagFeedbackEvent.getUrl();
-      expect(result).toEqual(FLAG_FEEDBACK_EVENT_URL);
+      expect(result).toEqual(FLAG_FEEDBACK_EVENT_ENDPOINT);
     });
 
     it('should send a request using sendRequest function', async () => {
@@ -100,7 +108,7 @@ describe('FeedBackUtility Tests', () => {
 
       expect(result).toEqual('Mocked API Response');
       expect(client.post).toHaveBeenCalledWith(
-        FLAG_FEEDBACK_EVENT_URL,
+        flagFeedbackEvent.getUrl(),
         flagFeedbackEvent.getDataObject(),
       );
     });
@@ -109,7 +117,7 @@ describe('FeedBackUtility Tests', () => {
       client.post.mockRejectedValue(new Error('Mocked API Error'));
       await expect(sendRequest(flagFeedbackEvent)).rejects.toThrowError('Mocked API Error');
       expect(client.post).toHaveBeenCalledWith(
-        FLAG_FEEDBACK_EVENT_URL,
+        flagFeedbackEvent.getUrl(),
         flagFeedbackEvent.getDataObject(),
       );
     });
@@ -133,93 +141,95 @@ describe('FeedBackUtility Tests', () => {
         },
       ]);
       expect(dataObject.getDataObject).toBeUndefined();
-      expect(dataObject.URL).toBeUndefined();
+      expect(dataObject.endpoint).toBeUndefined();
     });
 
-    it('should throw an error when URL is not defined', () => {
-      recommendationsEvent.URL = undefined;
+    it('should throw an error when endpoint is not defined', () => {
+      recommendationsEvent.endpoint = undefined;
       expect(() => recommendationsEvent.getUrl()).toThrowError(
-        'URL is not defined for the FeedBack Object.',
+        'Resource is not defined for the FeedBack Object.',
       );
     });
 
     it('should return the correct URL when URL is defined', () => {
       const result = recommendationsEvent.getUrl();
-      expect(result).toEqual(RECOMMENDATION_EVENT_URL);
+      expect(result).toEqual(RECOMMENDATION_EVENT_ENDPOINT);
     });
 
     describe('HTTP Methods', () => {
       it('should send POST request successfully', async () => {
         client.post.mockResolvedValue(Promise.resolve({ data: 'Mocked API Response' }));
-        const result = await sendRequest(recommendationsEvent, 'post');
+        recommendationsEvent = setupRecommendationsEvent('post');
+        const result = await sendRequest(recommendationsEvent);
         expect(result).toEqual('Mocked API Response');
         expect(client.post).toHaveBeenCalledWith(
-          RECOMMENDATION_EVENT_URL,
+          recommendationsEvent.getUrl(),
           recommendationsEvent.getDataObject(),
         );
       });
 
       it('should send PUT request successfully', async () => {
         client.put.mockResolvedValue(Promise.resolve({ data: 'Mocked API Response' }));
-        const result = await sendRequest(recommendationsEvent, 'put');
+        recommendationsEvent = setupRecommendationsEvent('put');
+        const result = await sendRequest(recommendationsEvent);
         expect(result).toEqual('Mocked API Response');
         expect(client.put).toHaveBeenCalledWith(
-          RECOMMENDATION_EVENT_URL,
+          recommendationsEvent.getUrl(),
           recommendationsEvent.getDataObject(),
         );
       });
 
       it('should send PATCH request successfully', async () => {
         client.patch.mockResolvedValue(Promise.resolve({ data: 'Mocked API Response' }));
-        const result = await sendRequest(recommendationsEvent, 'patch');
+        recommendationsEvent = setupRecommendationsEvent('patch');
+        const result = await sendRequest(recommendationsEvent);
         expect(result).toEqual('Mocked API Response');
         expect(client.patch).toHaveBeenCalledWith(
-          RECOMMENDATION_EVENT_URL,
+          recommendationsEvent.getUrl(),
           recommendationsEvent.getDataObject(),
         );
       });
 
       it('should handle errors for POST request', async () => {
         client.post.mockRejectedValue(new Error('Mocked API Error'));
-        await expect(sendRequest(recommendationsEvent, 'post')).rejects.toThrowError(
-          'Mocked API Error',
-        );
+        recommendationsEvent = setupRecommendationsEvent('post');
+        await expect(sendRequest(recommendationsEvent)).rejects.toThrowError('Mocked API Error');
         expect(client.post).toHaveBeenCalledWith(
-          RECOMMENDATION_EVENT_URL,
+          recommendationsEvent.getUrl(),
           recommendationsEvent.getDataObject(),
         );
       });
 
       it('should handle errors for PUT request', async () => {
         client.put.mockRejectedValue(new Error('Mocked API Error'));
-        await expect(sendRequest(recommendationsEvent, 'put')).rejects.toThrowError(
-          'Mocked API Error',
-        );
+        recommendationsEvent = setupRecommendationsEvent('put');
+        await expect(sendRequest(recommendationsEvent)).rejects.toThrowError('Mocked API Error');
         expect(client.put).toHaveBeenCalledWith(
-          RECOMMENDATION_EVENT_URL,
+          recommendationsEvent.getUrl(),
           recommendationsEvent.getDataObject(),
         );
       });
 
       it('should handle errors for PATCH request', async () => {
         client.patch.mockRejectedValue(new Error('Mocked API Error'));
-        await expect(sendRequest(recommendationsEvent, 'patch')).rejects.toThrowError(
-          'Mocked API Error',
-        );
+        recommendationsEvent = setupRecommendationsEvent('patch');
+        await expect(sendRequest(recommendationsEvent)).rejects.toThrowError('Mocked API Error');
         expect(client.patch).toHaveBeenCalledWith(
-          RECOMMENDATION_EVENT_URL,
+          recommendationsEvent.getUrl(),
           recommendationsEvent.getDataObject(),
         );
       });
 
       it('should throw error for unsupported DELETE method', async () => {
-        await expect(sendRequest(recommendationsEvent, 'delete')).rejects.toThrowError(
+        recommendationsEvent = setupRecommendationsEvent('delete');
+        await expect(sendRequest(recommendationsEvent)).rejects.toThrowError(
           'Unsupported HTTP method: delete',
         );
       });
 
       it('should throw error for unsupported GET method', async () => {
-        await expect(sendRequest(recommendationsEvent, 'get')).rejects.toThrowError(
+        recommendationsEvent = setupRecommendationsEvent('get');
+        await expect(sendRequest(recommendationsEvent)).rejects.toThrowError(
           'Unsupported HTTP method: get',
         );
       });
@@ -237,93 +247,101 @@ describe('FeedBackUtility Tests', () => {
       expect(dataObject.feedback_reason).toEqual('----');
       expect(dataObject.recommendation_event_id).toEqual('mocked-uuid');
       expect(dataObject.getDataObject).toBeUndefined();
-      expect(dataObject.URL).toBeUndefined();
+      expect(dataObject.endpoint).toBeUndefined();
     });
 
-    it('should throw an error when URL is not defined', () => {
-      recommendationsInteractionEvent.URL = undefined;
+    it('should throw an error when endpoint is not defined', () => {
+      recommendationsInteractionEvent.endpoint = undefined;
       expect(() => recommendationsInteractionEvent.getUrl()).toThrowError(
-        'URL is not defined for the FeedBack Object.',
+        'Resource is not defined for the FeedBack Object.',
       );
     });
 
     it('should return the correct URL when URL is defined', () => {
       const result = recommendationsInteractionEvent.getUrl();
-      expect(result).toEqual(RECOMMENDATION_INTERACTION_EVENT_URL);
+      expect(result).toEqual(RECOMMENDATION_INTERACTION_EVENT_ENDPOINT);
     });
 
     describe('HTTP Methods', () => {
       it('should send POST request successfully', async () => {
         client.post.mockResolvedValue(Promise.resolve({ data: 'Mocked API Response' }));
-        const result = await sendRequest(recommendationsInteractionEvent, 'post');
+        recommendationsInteractionEvent = setupRecommendationsInteractionEvent('post');
+        const result = await sendRequest(recommendationsInteractionEvent);
         expect(result).toEqual('Mocked API Response');
         expect(client.post).toHaveBeenCalledWith(
-          RECOMMENDATION_INTERACTION_EVENT_URL,
+          recommendationsInteractionEvent.getUrl(),
           recommendationsInteractionEvent.getDataObject(),
         );
       });
 
       it('should send PUT request successfully', async () => {
         client.put.mockResolvedValue(Promise.resolve({ data: 'Mocked API Response' }));
-        const result = await sendRequest(recommendationsInteractionEvent, 'put');
+        recommendationsInteractionEvent = setupRecommendationsInteractionEvent('put');
+        const result = await sendRequest(recommendationsInteractionEvent);
         expect(result).toEqual('Mocked API Response');
         expect(client.put).toHaveBeenCalledWith(
-          RECOMMENDATION_INTERACTION_EVENT_URL,
+          recommendationsInteractionEvent.getUrl(),
           recommendationsInteractionEvent.getDataObject(),
         );
       });
 
       it('should send PATCH request successfully', async () => {
         client.patch.mockResolvedValue(Promise.resolve({ data: 'Mocked API Response' }));
-        const result = await sendRequest(recommendationsInteractionEvent, 'patch');
+        recommendationsInteractionEvent = setupRecommendationsInteractionEvent('patch');
+        const result = await sendRequest(recommendationsInteractionEvent);
         expect(result).toEqual('Mocked API Response');
         expect(client.patch).toHaveBeenCalledWith(
-          RECOMMENDATION_INTERACTION_EVENT_URL,
+          recommendationsInteractionEvent.getUrl(),
           recommendationsInteractionEvent.getDataObject(),
         );
       });
 
       it('should handle errors for POST request', async () => {
         client.post.mockRejectedValue(new Error('Mocked API Error'));
-        await expect(sendRequest(recommendationsInteractionEvent, 'post')).rejects.toThrowError(
+        recommendationsInteractionEvent = setupRecommendationsInteractionEvent('post');
+        await expect(sendRequest(recommendationsInteractionEvent)).rejects.toThrowError(
           'Mocked API Error',
         );
         expect(client.post).toHaveBeenCalledWith(
-          RECOMMENDATION_INTERACTION_EVENT_URL,
+          recommendationsInteractionEvent.getUrl(),
           recommendationsInteractionEvent.getDataObject(),
         );
       });
 
       it('should handle errors for PUT request', async () => {
         client.put.mockRejectedValue(new Error('Mocked API Error'));
-        await expect(sendRequest(recommendationsInteractionEvent, 'put')).rejects.toThrowError(
+        recommendationsInteractionEvent = setupRecommendationsInteractionEvent('put');
+        await expect(sendRequest(recommendationsInteractionEvent)).rejects.toThrowError(
           'Mocked API Error',
         );
         expect(client.put).toHaveBeenCalledWith(
-          RECOMMENDATION_INTERACTION_EVENT_URL,
+          recommendationsInteractionEvent.getUrl(),
           recommendationsInteractionEvent.getDataObject(),
         );
       });
 
       it('should handle errors for PATCH request', async () => {
         client.patch.mockRejectedValue(new Error('Mocked API Error'));
-        await expect(sendRequest(recommendationsInteractionEvent, 'patch')).rejects.toThrowError(
+        recommendationsInteractionEvent = setupRecommendationsInteractionEvent('patch');
+        await expect(sendRequest(recommendationsInteractionEvent)).rejects.toThrowError(
           'Mocked API Error',
         );
         expect(client.patch).toHaveBeenCalledWith(
-          RECOMMENDATION_INTERACTION_EVENT_URL,
+          recommendationsInteractionEvent.getUrl(),
           recommendationsInteractionEvent.getDataObject(),
         );
       });
 
       it('should throw error for unsupported DELETE method', async () => {
-        await expect(sendRequest(recommendationsInteractionEvent, 'delete')).rejects.toThrowError(
+        recommendationsInteractionEvent = setupRecommendationsInteractionEvent('delete');
+        await expect(sendRequest(recommendationsInteractionEvent)).rejects.toThrowError(
           'Unsupported HTTP method: delete',
         );
       });
 
       it('should throw error for unsupported GET method', async () => {
-        await expect(sendRequest(recommendationsInteractionEvent, 'get')).rejects.toThrowError(
+        recommendationsInteractionEvent = setupRecommendationsInteractionEvent('get');
+        await expect(sendRequest(recommendationsInteractionEvent)).rejects.toThrowError(
           'Unsupported HTTP method: get',
         );
       });
