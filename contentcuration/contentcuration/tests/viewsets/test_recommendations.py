@@ -1,3 +1,5 @@
+import uuid
+
 from automation.utils.appnexus import errors
 from django.urls import reverse
 from le_utils.constants import content_kinds
@@ -9,19 +11,20 @@ from contentcuration.tests import testdata
 from contentcuration.tests.base import StudioAPITestCase
 
 
-class CRUDTestCase(StudioAPITestCase):
+class RecommendationsCRUDTestCase(StudioAPITestCase):
     @property
     def topics(self):
         return {
             "topics": [
                 {
-                    "id": "00000000000000000000000000000001",
+                    "id": str(uuid.uuid4()),
+                    "channel_id": str(uuid.uuid4()),
                     "title": "Target topic",
                     "description": "Target description",
                     "language": "en",
                     "ancestors": [
                         {
-                            "id": "00000000000000000000000000000001",
+                            "id": str(uuid.uuid4()),
                             "title": "Parent topic",
                             "description": "Parent description",
                             "language": "en",
@@ -55,7 +58,7 @@ class CRUDTestCase(StudioAPITestCase):
         ]
 
     def setUp(self):
-        super(CRUDTestCase, self).setUp()
+        super(RecommendationsCRUDTestCase, self).setUp()
 
     @patch(
         "contentcuration.utils.automation_manager.AutomationManager.load_recommendations"
