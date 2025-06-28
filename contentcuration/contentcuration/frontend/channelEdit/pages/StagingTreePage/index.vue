@@ -646,19 +646,20 @@
         this.displayPublishDraftDialog = false;
         this.isPublishingDraft = true;
 
-        Channel.waitForPublishingDraft(this.currentChannel.id).then(() => {
-          this.isPublishingDraft = false;
-          this.showSnackbar({
-            text: this.$tr('draftPublished'),
+        Channel.waitForPublishingDraft(this.currentChannel.id)
+          .then(() => {
+            this.isPublishingDraft = false;
+            this.showSnackbar({
+              text: this.$tr('draftPublished'),
+            });
+          })
+          .catch(error => {
+            this.isPublishingDraft = false;
+            this.showSnackbar({
+              text: error.response?.data?.message || this.$tr('publishDraftError'),
+              color: 'error',
+            });
           });
-        })
-        .catch(error => {
-          this.isPublishingDraft = false;
-          this.showSnackbar({
-            text: error.response?.data?.message || this.$tr('publishDraftError'),
-            color: 'error',
-          });
-        });
 
         this.publishDraftChannel();
       },
