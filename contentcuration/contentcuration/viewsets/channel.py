@@ -367,6 +367,7 @@ base_channel_values = (
     "description",
     "main_tree__published",
     "main_tree__publishing",
+    "staging_tree__publishing",
     "thumbnail",
     "thumbnail_encoding",
     "language",
@@ -391,6 +392,7 @@ channel_field_map = {
     "thumbnail_url": get_thumbnail_url,
     "published": "main_tree__published",
     "publishing": "main_tree__publishing",
+    "staging_publishing": "staging_tree__publishing",
     "created": "main_tree__created",
     "root_id": "main_tree__id",
     "trash_root_id": "trash_tree__id",
@@ -639,26 +641,44 @@ class ChannelViewSet(ValuesViewset):
                     progress_tracker=progress_tracker,
                     use_staging_tree=True,
                 )
-                Change.create_changes(
-                    [
-                        generate_update_event(
-                            channel.id,
-                            CHANNEL,
-                            {
-                                "primary_token": channel.get_human_token().token,
-                            },
-                            channel_id=channel.id,
-                        ),
-                    ],
+                Change.create_change(
+                    generate_update_event(
+                        channel.id,
+                        CHANNEL,
+                        {
+                            "primary_token": channel.get_human_token().token,
+                            "staging_publishing": False,
+                        },
+                        channel_id=channel.id,
+                    ),
                     applied=True,
+                    created_by_id=self.request.user.id,
                 )
             except ChannelIncompleteError:
-                channel.staging_tree.publishing = False
-                channel.staging_tree.save()
+                Change.create_change(
+                    generate_update_event(
+                        channel.id,
+                        CHANNEL,
+                        {"staging_publishing": False},
+                        channel_id=channel.id,
+                    ),
+                    applied=True,
+                    unpublishable=True,
+                    created_by_id=self.request.user.id,
+                )
                 raise ValidationError("Channel is not ready to be published")
             except Exception:
-                channel.staging_tree.publishing = False
-                channel.staging_tree.save()
+                Change.create_changes(
+                    generate_update_event(
+                        channel.id,
+                        CHANNEL,
+                        {"staging_publishing": False},
+                        channel_id=channel.id,
+                    ),
+                    applied=True,
+                    unpublishable=True,
+                    created_by_id=self.request.user.id,
+                )
                 raise
 
     def sync_from_changes(self, changes):

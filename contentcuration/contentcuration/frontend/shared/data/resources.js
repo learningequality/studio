@@ -1245,6 +1245,35 @@ export const Channel = new CreateModelResource({
     });
   },
 
+  waitForPublishingDraft(id) {
+    return this.transaction({ mode: 'rw' }, () => {
+      return this.table.update(id, { staging_publishing: true });
+    }).then(() => {
+      const observable = liveQuery(() => {
+        return this.table
+          .where('id')
+          .equals(id)
+          .filter(channel => !channel['staging_publishing'])
+          .toArray();
+      });
+
+      return new Promise((resolve, reject) => {
+        const subscription = observable.subscribe({
+          next(result) {
+            if (result.length === 1) {
+              subscription.unsubscribe();
+              resolve();
+            }
+          },
+          error() {
+            subscription.unsubscribe();
+            reject();
+          },
+        });
+      });
+    });
+  },
+
   deploy(id) {
     const change = new DeployedChange({
       key: id,

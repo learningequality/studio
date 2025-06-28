@@ -25,7 +25,7 @@
       <span class="grey--darken-2 grey--text">{{ $tr('reviewMode') }}</span>
     </ToolBar>
     <MainNavigationDrawer v-model="drawer" />
-    <LoadingText v-if="isLoading || isDeploying" />
+    <LoadingText v-if="isLoading || isDeploying || isPublishingDraft" />
     <VContent v-else-if="isEmpty">
       <VLayout
         justify-center
@@ -646,20 +646,21 @@
         this.displayPublishDraftDialog = false;
         this.isPublishingDraft = true;
 
-        this.publishDraftChannel()
-          .then(() => {
-            this.isPublishingDraft = false;
-            this.showSnackbar({
-              text: this.$tr('draftPublished'),
-            });
-          })
-          .catch(error => {
-            this.isPublishingDraft = false;
-            this.showSnackbar({
-              text: error.response?.data?.message || this.$tr('publishDraftError'),
-              color: 'error',
-            });
+        Channel.waitForPublishingDraft(this.currentChannel.id).then(() => {
+          this.isPublishingDraft = false;
+          this.showSnackbar({
+            text: this.$tr('draftPublished'),
           });
+        })
+        .catch(error => {
+          this.isPublishingDraft = false;
+          this.showSnackbar({
+            text: error.response?.data?.message || this.$tr('publishDraftError'),
+            color: 'error',
+          });
+        });
+
+        this.publishDraftChannel();
       },
     },
     $trs: {
