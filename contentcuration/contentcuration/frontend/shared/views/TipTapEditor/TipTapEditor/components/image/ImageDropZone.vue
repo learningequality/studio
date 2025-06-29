@@ -19,7 +19,7 @@
 
   export default defineComponent({
     name: 'ImageDropZone',
-    emits: ['file-dropped'],
+    emits: ['file-dropped', 'multiple-files-dropped'],
     setup(props, { emit }) {
       const isDragging = ref(false);
 
@@ -33,7 +33,17 @@
 
       const onDrop = event => {
         isDragging.value = false;
-        const file = event.dataTransfer?.files[0];
+        const files = event.dataTransfer?.files;
+
+        if (!files || files.length === 0) {
+          return;
+        }
+
+        if (files.length > 1) {
+          emit('multiple-files-dropped');
+        }
+
+        const file = files[0];
         if (file) {
           emit('file-dropped', file);
         }

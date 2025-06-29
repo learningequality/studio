@@ -47,6 +47,13 @@
         v-else-if="modalState === 'preview' && previewSrc"
         class="preview-wrapper"
       >
+        <div
+          v-if="uploadWarning"
+          class="upload-warning"
+          role="alert"
+        >
+          {{ uploadWarning }}
+        </div>
         <div class="file-info">
           <span>{{ fileName }}</span>
           <button
@@ -86,7 +93,10 @@
         v-else
         id="modal-description"
       >
-        <ImageDropZone @file-dropped="handleFileChange">
+        <ImageDropZone
+          @file-dropped="handleFileChange"
+          @multiple-files-dropped="showMultiFileWarning"
+        >
           <p class="drop-zone-text">Drag and drop an image here or upload manually</p>
           <button
             class="select-file-button"
@@ -151,6 +161,8 @@
       const previewSrc = ref('');
       const altText = ref('');
       const file = ref(null);
+      const uploadWarning = ref('');
+      let warningTimer = null;
 
       const isEditMode = computed(() => props.mode === 'edit');
       const fileName = computed(() => file.value?.name || (isEditMode.value ? 'Image' : ''));
@@ -168,6 +180,14 @@
           handleFileChange(file.value);
         }
       });
+
+      const showMultiFileWarning = () => {
+        clearTimeout(warningTimer);
+        uploadWarning.value = 'Multiple files were dropped. Only the first file has been selected.';
+        warningTimer = setTimeout(() => {
+          uploadWarning.value = '';
+        }, 5000);
+      };
 
       const handleFileChange = async selectedFile => {
         if (!selectedFile) return;
@@ -223,6 +243,8 @@
         onSave,
         resetToPreview,
         handleFileChange,
+        uploadWarning,
+        showMultiFileWarning,
       };
     },
     props: {
@@ -277,6 +299,17 @@
     flex-direction: column;
     min-height: 250px;
     padding: 1.5rem;
+  }
+
+  .upload-warning {
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+    font-size: 0.875rem;
+    color: #d46b08;
+    text-align: center;
+    background-color: #fffbe6;
+    border: 1px solid #ffe58f;
+    border-radius: 4px;
   }
 
   /* Loading State */
