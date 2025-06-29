@@ -5,8 +5,8 @@ import UnderlineExtension from '@tiptap/extension-underline';
 import { Superscript } from '@tiptap/extension-superscript';
 import { Subscript } from '@tiptap/extension-subscript';
 import { Small } from '../extensions/SmallTextExtension';
-import { CodeBlockNoSpellcheck } from '../extensions/CodeBlockNoSpellcheck';
 import { Image } from '../extensions/Image';
+import { CodeBlockSyntaxHighlight } from '../extensions/CodeBlockSyntaxHighlight';
 
 export function useEditor() {
   const editor = ref(null);
@@ -18,8 +18,8 @@ export function useEditor() {
         StarterKitExtension.configure({
           codeBlock: false, // Disable default code block to use the extended version
         }),
-        CodeBlockNoSpellcheck,
         UnderlineExtension,
+        CodeBlockSyntaxHighlight,
         Small,
         Superscript,
         Subscript,

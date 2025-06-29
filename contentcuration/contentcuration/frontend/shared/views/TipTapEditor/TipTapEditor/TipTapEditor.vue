@@ -40,6 +40,7 @@
   import { useEditor } from './composables/useEditor';
   import ImageUploadModal from './components/image/ImageUploadModal.vue';
   import { useImageHandling } from './composables/useImageHandling';
+  import '../assets/styles/code-theme-dark.css';
 
   export default defineComponent({
     name: 'RichTextEditor',
@@ -191,23 +192,6 @@
 
   .editor-container li {
     margin: 4px 0;
-  }
-
-  .editor-container code {
-    display: block;
-    padding: 10px;
-    font-family: 'Courier New', Courier, monospace;
-    font-size: 14px;
-    color: #ffffff;
-    white-space: pre-wrap;
-    background: #000000;
-    border-radius: 4px;
-  }
-
-  .editor-container .ProseMirror pre,
-  .editor-container .ProseMirror code {
-    -webkit-spellcheck: false;
-    -ms-spellcheck: false;
   }
 
 </style>

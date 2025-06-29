@@ -167,7 +167,7 @@ export function useToolbarActions() {
 
   const handleCodeBlock = () => {
     if (editor?.value) {
-      editor.value.chain().focus().toggleCode().run();
+      editor.value.chain().focus().toggleCodeBlock().run();
     }
   };
 
@@ -326,7 +326,7 @@ export function useToolbarActions() {
       title: codeBlock$(),
       icon: require('../../assets/icon-codeblock.svg'),
       handler: handleCodeBlock,
-      isActive: isMarkActive('code'),
+      isActive: isMarkActive('codeBlock'),
     },
   ]);
 
