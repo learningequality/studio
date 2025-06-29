@@ -41,9 +41,9 @@
         return props.icon;
       });
 
-      const handleClick = () => {
+      const handleClick = event => {
         if (props.isAvailable) {
-          emit('click');
+          emit('click', event);
         }
       };
 
@@ -51,7 +51,7 @@
         // Handle Enter and Space keys
         if ((event.key === 'Enter' || event.key === ' ') && props.isAvailable) {
           event.preventDefault();
-          emit('click');
+          emit('click', event);
         }
       };
 

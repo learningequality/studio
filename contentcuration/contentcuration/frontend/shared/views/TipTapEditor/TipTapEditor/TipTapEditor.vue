@@ -4,13 +4,16 @@
     v-if="isReady"
     class="editor-container"
   >
-    <EditorToolbar @insert-image="openCreateModal(null)" />
+    <EditorToolbar @insert-image="target => openCreateModal(null, target)" />
 
     <div
       v-if="modalMode"
-      class="image-upload-modal-overlay"
+      class="image-upload-popover-wrapper"
+      :class="{ 'has-overlay': isModalCentered }"
+      @click.self="closeModal"
     >
       <ImageUploadModal
+        :style="popoverStyle"
         :mode="modalMode"
         :initial-data="modalInitialData"
         @close="closeModal"
@@ -53,6 +56,8 @@
       const {
         modalMode,
         modalInitialData,
+        popoverStyle,
+        isModalCentered,
         openCreateModal,
         closeModal,
         handleInsert,
@@ -60,9 +65,7 @@
         handleRemove,
       } = useImageHandling(editor);
 
-      // Allow dropping files directly onto the editor
       const handleDrop = event => {
-        // console.log('File dropped:', event);
         const file = event.dataTransfer?.files[0];
         if (file) {
           openCreateModal(file);
@@ -73,12 +76,14 @@
         isReady,
         modalMode,
         modalInitialData,
-        handleDrop,
+        popoverStyle,
         openCreateModal,
         closeModal,
         handleInsert,
         handleUpdate,
         handleRemove,
+        handleDrop,
+        isModalCentered,
       };
     },
   });
@@ -89,6 +94,7 @@
 <style scoped>
 
   .editor-container {
+    position: relative;
     width: 1000px;
     margin: 80px auto;
     font-family:
@@ -104,16 +110,23 @@
     border-radius: 8px;
   }
 
-  .image-upload-modal-overlay {
+  .image-upload-popover-wrapper {
     position: fixed;
     top: 0;
     left: 0;
     z-index: 1000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     width: 100%;
     height: 100%;
+    pointer-events: none;
+  }
+
+  .image-upload-popover-wrapper > * {
+    pointer-events: auto;
+  }
+
+  /* Overlay for edit mode to allow clicking outside to close */
+  .image-upload-popover-wrapper.has-overlay {
+    pointer-events: auto;
     background: rgba(0, 0, 0, 0.5);
   }
 

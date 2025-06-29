@@ -1,5 +1,11 @@
 const MAX_FILE_SIZE_MB = 10; // I think I need review on this value, I just picked what seemed reasonable
-const ACCEPTED_MIME_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml'];
+export const ACCEPTED_MIME_TYPES = [
+  'image/png',
+  'image/jpeg',
+  'image/jpg',
+  'image/webp',
+  'image/svg+xml',
+];
 
 /**
  * Validates a file based on type and size.

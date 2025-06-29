@@ -1,6 +1,7 @@
 <template>
 
   <div
+    ref="modalRoot"
     class="image-upload-modal"
     role="dialog"
     aria-labelledby="modal-title"
@@ -9,7 +10,7 @@
     <input
       ref="fileInput"
       type="file"
-      accept="image/*"
+      :accept="ACCEPTED_MIME_TYPES.join(',')"
       style="display: none"
       aria-hidden="true"
       @change="onFileSelect"
@@ -43,25 +44,7 @@
         </button>
       </div>
       <div
-        v-else-if="modalState === 'initial'"
-        id="modal-description"
-        class="drop-zone-wrapper"
-      >
-        <ImageDropZone @file-dropped="handleFileChange">
-          <p class="drop-zone-text">Drag and drop an image here or upload manually</p>
-          <button
-            class="select-file-button"
-            type="button"
-            aria-label="Select file to upload"
-            @click="triggerFileInput"
-          >
-            Select File
-          </button>
-          <p class="drop-zone-text">Supported file types: png, jpg, jpeg, svg</p>
-        </ImageDropZone>
-      </div>
-      <div
-        v-else-if="modalState === 'preview'"
+        v-else-if="modalState === 'preview' && previewSrc"
         class="preview-wrapper"
       >
         <div class="file-info">
@@ -98,6 +81,23 @@
             also displays when the image fails to load
           </p>
         </div>
+      </div>
+      <div
+        v-else
+        id="modal-description"
+      >
+        <ImageDropZone @file-dropped="handleFileChange">
+          <p class="drop-zone-text">Drag and drop an image here or upload manually</p>
+          <button
+            class="select-file-button"
+            type="button"
+            aria-label="Select file to upload"
+            @click="triggerFileInput"
+          >
+            Select File
+          </button>
+          <p class="drop-zone-text">Supported file types: png, jpg, jpeg, svg, webp</p>
+        </ImageDropZone>
       </div>
     </div>
     <div class="modal-footer">
@@ -136,14 +136,16 @@
 <script>
 
   import { defineComponent, ref, computed, onMounted } from 'vue';
-  import { processFile } from '../../services/imageService';
+  import { processFile, ACCEPTED_MIME_TYPES } from '../../services/imageService';
+  import { useFocusTrap } from '../../composables/useFocusTrap';
   import ImageDropZone from './ImageDropZone.vue';
 
   export default defineComponent({
     name: 'ImageUploadModal',
     components: { ImageDropZone },
     setup(props, { emit }) {
-      const modalState = ref('preview');
+      const modalRoot = ref(null);
+      const modalState = ref('initial');
       const fileInput = ref(null);
       const originalData = ref(null);
       const previewSrc = ref('');
@@ -160,8 +162,8 @@
         altText.value = props.initialData.alt || '';
         file.value = props.initialData.file || null;
 
-        if (props.mode === 'create' && !file.value) {
-          modalState.value = 'initial';
+        if (props.initialData.src) {
+          modalState.value = 'preview';
         } else if (file.value) {
           handleFileChange(file.value);
         }
@@ -203,7 +205,10 @@
       const onInsert = () => emit('insert', { src: previewSrc.value, alt: altText.value });
       const onSave = () => emit('update', { src: previewSrc.value, alt: altText.value });
 
+      useFocusTrap(modalRoot);
+
       return {
+        modalRoot,
         modalState,
         fileInput,
         previewSrc,
@@ -211,6 +216,7 @@
         fileName,
         isEditMode,
         canInsert,
+        ACCEPTED_MIME_TYPES,
         triggerFileInput,
         onFileSelect,
         onInsert,
@@ -237,6 +243,7 @@
     flex-direction: column;
     width: 400px;
     background: white;
+    border: 1px solid #e0e0e0;
     border-radius: 4px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   }
@@ -412,10 +419,6 @@
   }
 
   /* Drop Zone */
-  .drop-zone-wrapper {
-    text-align: center;
-  }
-
   .drop-zone-text {
     font-size: 12px;
   }

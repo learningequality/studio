@@ -125,7 +125,7 @@
           newWidth = currentWidth + step;
         } else if (event.key === 'ArrowLeft') {
           newWidth = currentWidth - step;
-        } else if (event.key === 'Escape') {
+        } else if (event.key === 'Escape' || event.key === 'Enter') {
           event.target.blur();
           const endPosition = props.getPos() + props.node.nodeSize;
 

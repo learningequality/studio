@@ -113,7 +113,7 @@
         :title="tool.title"
         :icon="tool.icon"
         :is-active="tool.isActive"
-        @click="onToolClick(tool)"
+        @click="onToolClick(tool, $event)"
       />
     </div>
   </div>
@@ -163,9 +163,9 @@
       } = getTipTapEditorStrings();
 
 
-      const onToolClick = tool => {
+      const onToolClick = (tool, event) => {
         if (tool.name === 'image') {
-          emit('insert-image');
+          emit('insert-image', event.currentTarget);
         } else {
           // For all other buttons, call their original handler
           tool.handler();

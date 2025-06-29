@@ -3,14 +3,43 @@ import { ref, onMounted, onUnmounted } from 'vue';
 export function useImageHandling(editor) {
   const modalMode = ref(null); // 'create' or 'edit'
   const modalInitialData = ref({});
+  const popoverStyle = ref({});
   const editingNodePos = ref(null);
+  const isModalCentered = ref(false);
 
-  const openCreateModal = (file = null) => {
+  const setPopoverPosition = targetElement => {
+    isModalCentered.value = false;
+    const rect = targetElement.getBoundingClientRect();
+    popoverStyle.value = {
+      position: 'fixed',
+      top: `${rect.bottom + 5}px`,
+      left: `${rect.right}px`,
+      transform: 'translateX(-100%)',
+    };
+  };
+
+  const setCenteredPosition = () => {
+    isModalCentered.value = true;
+    popoverStyle.value = {
+      position: 'fixed',
+      top: '50%',
+      left: '50%',
+      transform: 'translate(-50%, -50%)',
+    };
+  };
+
+  const openCreateModal = (file = null, targetElement = null) => {
+    if (targetElement) {
+      setPopoverPosition(targetElement);
+    } else {
+      setCenteredPosition();
+    }
     modalInitialData.value = { file };
     modalMode.value = 'create';
   };
 
   const openEditModal = ({ pos, attrs }) => {
+    setCenteredPosition();
     editingNodePos.value = pos;
     modalInitialData.value = { ...attrs };
     modalMode.value = 'edit';
@@ -20,15 +49,12 @@ export function useImageHandling(editor) {
     modalMode.value = null;
     modalInitialData.value = {};
     editingNodePos.value = null;
+    isModalCentered.value = false;
   };
 
   const handleInsert = async data => {
     if (!data.src || !editor?.value) return;
-
-    if (editor?.value) {
-      editor.value.chain().focus().setImage(data).run();
-    }
-
+    editor.value.chain().focus().setImage(data).run();
     closeModal();
   };
 
@@ -58,7 +84,6 @@ export function useImageHandling(editor) {
     closeModal();
   };
 
-  // Handle editor events more safely
   onMounted(() => {
     if (editor?.value) {
       editor.value.on('open-image-editor', openEditModal);
@@ -74,6 +99,8 @@ export function useImageHandling(editor) {
   return {
     modalMode,
     modalInitialData,
+    popoverStyle,
+    isModalCentered,
     openCreateModal,
     closeModal,
     handleInsert,
