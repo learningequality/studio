@@ -39,7 +39,12 @@
         }
       };
 
-      return { isDragging, onDragOver, onDragLeave, onDrop };
+      return {
+        isDragging,
+        onDragOver,
+        onDragLeave,
+        onDrop,
+      };
     },
   });
 
@@ -52,8 +57,8 @@
     padding: 2rem;
     color: #757575;
     text-align: center;
-    border: 1px dashed #bdbdbd;
-    border-radius: 4px;
+    cursor: pointer;
+    border: 1px solid #bdbdbd;
     transition:
       background-color 0.2s,
       border-color 0.2s;
@@ -62,6 +67,10 @@
   .drop-zone.is-dragging {
     background-color: #ecf0f1;
     border-color: #3498db;
+  }
+
+  .drop-zone:focus {
+    outline: 2px solid #3498db;
   }
 
 </style>

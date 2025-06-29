@@ -1,8 +1,3 @@
-<!-- What this file?
-This is a special "Node View" component. Instead of Tiptap rendering a plain <img> tag,
-it will render this entire Vue component. This gives us full control to add custom
-UI and logic, like the resize handle and remove button. -->
-
 <template>
 
   <NodeViewWrapper class="image-node-wrapper">
@@ -13,23 +8,20 @@ UI and logic, like the resize handle and remove button. -->
     >
       <img
         :src="node.attrs.src"
-        :alt="node.attrs.alt"
+        :alt="node.attrs.alt || 'Image content'"
         class="content"
       >
 
       <div
         v-if="editor.isEditable"
-        class="resize-handle"
-        @mousedown.prevent="onResizeStart"
-      ></div>
-
-      <div
-        v-if="editor.isEditable"
         class="image-actions"
         :class="{ 'is-compact': isCompact }"
+        aria-label="Image actions"
       >
         <button
           title="Edit Image"
+          aria-label="Edit image"
+          tabindex="0"
           @click="editImage"
         >
           <img
@@ -39,6 +31,8 @@ UI and logic, like the resize handle and remove button. -->
         </button>
         <button
           title="Remove Image"
+          aria-label="Remove image"
+          tabindex="0"
           @click="removeImage"
         >
           <img
@@ -47,6 +41,18 @@ UI and logic, like the resize handle and remove button. -->
           >
         </button>
       </div>
+
+      <div
+        v-if="editor.isEditable"
+        class="resize-handle"
+        tabindex="0"
+        role="slider"
+        aria-label="Resize image"
+        aria-valuemin="50"
+        :aria-valuenow="width"
+        @mousedown.prevent="onResizeStart"
+        @keydown.prevent="onResizeKeyDown"
+      ></div>
     </div>
   </NodeViewWrapper>
 
@@ -55,7 +61,7 @@ UI and logic, like the resize handle and remove button. -->
 
 <script>
 
-  import { defineComponent, ref, computed } from 'vue';
+  import { defineComponent, ref, computed, onUnmounted, watch } from 'vue';
   import { NodeViewWrapper } from '@tiptap/vue-2';
 
   export default defineComponent({
@@ -65,13 +71,31 @@ UI and logic, like the resize handle and remove button. -->
     },
     setup(props) {
       const width = ref(props.node.attrs.width);
+      const minWidth = 50;
+      const compactThreshold = 200;
+      let debounceTimer = null;
+
+      // Watch for external changes to the node's width (to work with undo/redo)
+      watch(
+        () => props.node.attrs.width,
+        newWidth => {
+          width.value = newWidth;
+        },
+      );
 
       const styleWidth = computed(() => {
         return width.value ? `${width.value}px` : 'auto';
       });
       const isCompact = computed(() => {
-        return width.value < 200;
+        return width.value < compactThreshold;
       });
+
+      const saveWidth = () => {
+        props.updateAttributes({
+          width: width.value,
+          height: null,
+        });
+      };
 
       const onResizeStart = startEvent => {
         const startX = startEvent.clientX;
@@ -79,22 +103,46 @@ UI and logic, like the resize handle and remove button. -->
 
         const onMouseMove = moveEvent => {
           const newWidth = startWidth + (moveEvent.clientX - startX);
-          width.value = Math.max(50, newWidth); // Set a minimum width of 50px
+          width.value = Math.max(minWidth, newWidth);
         };
 
         const onMouseUp = () => {
           document.removeEventListener('mousemove', onMouseMove);
           document.removeEventListener('mouseup', onMouseUp);
-
-          // Persist the final width to the Tiptap node's attributes
-          props.updateAttributes({
-            width: width.value,
-            height: null, // Let height be auto to maintain aspect ratio
-          });
+          saveWidth();
         };
 
         document.addEventListener('mousemove', onMouseMove);
         document.addEventListener('mouseup', onMouseUp);
+      };
+
+      const onResizeKeyDown = event => {
+        const step = 10; // Define the resize step
+        const currentWidth = width.value || event.target.parentElement.offsetWidth;
+        let newWidth = currentWidth;
+
+        if (event.key === 'ArrowRight') {
+          newWidth = currentWidth + step;
+        } else if (event.key === 'ArrowLeft') {
+          newWidth = currentWidth - step;
+        } else if (event.key === 'Escape') {
+          event.target.blur();
+          const endPosition = props.getPos() + props.node.nodeSize;
+
+          // Insert a new paragraph at the end and move to it
+          props.editor.chain().focus().insertContentAt(endPosition, { type: 'paragraph' }).run();
+          return;
+        } else {
+          return;
+        }
+
+        width.value = Math.max(minWidth, newWidth);
+
+        // Debounce the saveWidth call to avoid excessive updates that can clutter the undo stack
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+          saveWidth();
+        }, 500);
       };
 
       const removeImage = () => {
@@ -109,19 +157,24 @@ UI and logic, like the resize handle and remove button. -->
       };
 
       const editImage = () => {
-        // Placeholder for image editing logic
         props.editor.emit('open-image-editor', {
           pos: props.getPos(),
           attrs: { ...props.node.attrs },
         });
       };
 
+      onUnmounted(() => {
+        clearTimeout(debounceTimer);
+      });
+
       return {
+        width,
         styleWidth,
         onResizeStart,
         removeImage,
         editImage,
         isCompact,
+        onResizeKeyDown,
       };
     },
     props: {
@@ -147,8 +200,9 @@ UI and logic, like the resize handle and remove button. -->
     line-height: 0;
   }
 
-  .image-node-view.is-selected {
-    outline: 3px solid #68cef8;
+  .image-node-view.is-selected,
+  .image-node-view:focus-within {
+    outline: 3px solid #666666;
   }
 
   .content {
@@ -160,18 +214,19 @@ UI and logic, like the resize handle and remove button. -->
     position: absolute;
     right: -6px;
     bottom: -6px;
-    width: 12px;
-    height: 12px;
+    width: 24px;
+    height: 24px;
     cursor: nwse-resize;
-    background: #68cef8;
-    border: 2px solid white;
+    background: white;
+    border: 2px solid #666666;
     border-radius: 50%;
     opacity: 0;
     transition: opacity 0.2s;
   }
 
   .image-node-view:hover .resize-handle,
-  .image-node-view.is-selected .resize-handle {
+  .image-node-view.is-selected .resize-handle,
+  .resize-handle:focus {
     opacity: 1;
   }
 
@@ -183,6 +238,7 @@ UI and logic, like the resize handle and remove button. -->
     display: flex;
     gap: 10px;
     padding: 9px;
+    pointer-events: none;
     background-color: white;
     border-radius: 3px;
     opacity: 0;
@@ -197,7 +253,9 @@ UI and logic, like the resize handle and remove button. -->
   }
 
   .image-node-view:hover .image-actions,
-  .image-node-view.is-selected .image-actions {
+  .image-node-view.is-selected .image-actions,
+  .image-node-view:focus-within .image-actions {
+    pointer-events: auto;
     opacity: 1;
   }
 

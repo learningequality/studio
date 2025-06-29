@@ -60,7 +60,9 @@
         handleRemove,
       } = useImageHandling(editor);
 
+      // Allow dropping files directly onto the editor
       const handleDrop = event => {
+        // console.log('File dropped:', event);
         const file = event.dataTransfer?.files[0];
         if (file) {
           openCreateModal(file);
@@ -69,9 +71,9 @@
 
       return {
         isReady,
-        handleDrop,
         modalMode,
         modalInitialData,
+        handleDrop,
         openCreateModal,
         closeModal,
         handleInsert,

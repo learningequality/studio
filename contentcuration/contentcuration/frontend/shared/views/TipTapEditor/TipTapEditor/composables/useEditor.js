@@ -23,10 +23,7 @@ export function useEditor() {
         Small,
         Superscript,
         Subscript,
-        Image.configure({
-          inline: false, // Ensure images are treated as block elements
-          allowBase64: true, // Allow base64 images for local uploads
-        }),
+        Image,
       ],
       content: '<p></p>',
       editorProps: {

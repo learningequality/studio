@@ -23,8 +23,6 @@ export function useImageHandling(editor) {
   };
 
   const handleInsert = async data => {
-    // console.log('Inserting image with data:', data);
-    // console.log('Editor state:', editor?.value);
     if (!data.src || !editor?.value) return;
 
     if (editor?.value) {

@@ -1,17 +1,24 @@
 <template>
 
-  <div class="image-upload-modal">
+  <div
+    class="image-upload-modal"
+    role="dialog"
+    aria-labelledby="modal-title"
+    aria-describedby="modal-description"
+  >
     <input
       ref="fileInput"
       type="file"
       accept="image/*"
       style="display: none"
+      aria-hidden="true"
       @change="onFileSelect"
     >
     <div class="modal-header">
-      <h3>{{ isEditMode ? 'Edit image' : 'Upload image' }}</h3>
+      <h3 id="modal-title">{{ isEditMode ? 'Edit image' : 'Upload image' }}</h3>
       <button
         class="close-button"
+        aria-label="Close modal"
         @click="$emit('close')"
       >
         ×
@@ -21,10 +28,15 @@
       <div
         v-if="modalState === 'loading'"
         class="loading-wrapper"
+        aria-live="polite"
       >
-        <div class="spinner"></div>
+        <div
+          class="spinner"
+          aria-hidden="true"
+        ></div>
         <button
           class="cancel-button"
+          aria-label="Cancel loading"
           @click="resetToPreview"
         >
           Cancel
@@ -32,18 +44,20 @@
       </div>
       <div
         v-else-if="modalState === 'initial'"
+        id="modal-description"
         class="drop-zone-wrapper"
       >
         <ImageDropZone @file-dropped="handleFileChange">
-          <p>Drag and drop an image here or upload manually</p>
+          <p class="drop-zone-text">Drag and drop an image here or upload manually</p>
           <button
             class="select-file-button"
             type="button"
+            aria-label="Select file to upload"
             @click="triggerFileInput"
           >
             Select File
           </button>
-          <p class="supported-files">Supported file types: png, jpg, jpeg, svg</p>
+          <p class="drop-zone-text">Supported file types: png, jpg, jpeg, svg</p>
         </ImageDropZone>
       </div>
       <div
@@ -54,6 +68,7 @@
           <span>{{ fileName }}</span>
           <button
             class="select-file-link"
+            :aria-label="isEditMode ? 'Replace file' : 'Select file'"
             @click="triggerFileInput"
           >
             {{ isEditMode ? 'Replace file' : 'Select file' }}
@@ -73,9 +88,14 @@
             v-model="altText"
             type="text"
             placeholder="Describe the image..."
+            aria-describedby="alt-text-description"
           >
-          <p class="alt-text-description">
-            Alt text is necessary to enable visually impaired learners...
+          <p
+            id="alt-text-description"
+            class="alt-text-description"
+          >
+            Alt text is necessary to enable visually impaired learners to answer questions, and it
+            also displays when the image fails to load
           </p>
         </div>
       </div>
@@ -84,12 +104,14 @@
       <template v-if="isEditMode">
         <button
           class="remove-button"
+          aria-label="Remove image"
           @click="$emit('remove')"
         >
           Remove
         </button>
         <button
           class="save-button"
+          aria-label="Save changes"
           @click="onSave"
         >
           Save
@@ -99,6 +121,7 @@
         <button
           class="insert-button"
           :disabled="!canInsert"
+          aria-label="Insert image"
           @click="onInsert"
         >
           Insert
@@ -208,6 +231,7 @@
 
 <style scoped>
 
+  /* Modal Container */
   .image-upload-modal {
     display: flex;
     flex-direction: column;
@@ -217,6 +241,7 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   }
 
+  /* Modal Header */
   .modal-header {
     display: flex;
     align-items: center;
@@ -235,10 +260,11 @@
     font-size: 1.5rem;
     color: #757575;
     cursor: pointer;
-    background: 0 0;
+    background: none;
     border: 0;
   }
 
+  /* Modal Content */
   .modal-content {
     display: flex;
     flex-direction: column;
@@ -246,6 +272,7 @@
     padding: 1.5rem;
   }
 
+  /* Loading State */
   .loading-wrapper {
     display: flex;
     flex-direction: column;
@@ -262,6 +289,7 @@
     border-radius: 50%;
     animation: spin 1s linear infinite;
   }
+
   @keyframes spin {
     0% {
       transform: rotate(0);
@@ -276,10 +304,11 @@
     margin-top: 1rem;
     color: #3498db;
     cursor: pointer;
-    background: 0 0;
+    background: none;
     border: 0;
   }
 
+  /* Preview State */
   .preview-wrapper {
     font-size: 0.875rem;
   }
@@ -289,16 +318,17 @@
     align-items: center;
     justify-content: space-between;
     margin-bottom: 1rem;
-    word-break: break-all;
+    word-break: break-word;
   }
 
   .select-file-link {
     flex-shrink: 0;
     margin-left: 1rem;
-    font-weight: 700;
-    color: #3498db;
+    font-weight: 400;
+    color: #4368f5;
+    text-decoration: underline;
     cursor: pointer;
-    background: 0 0;
+    background: none;
     border: 0;
   }
 
@@ -319,6 +349,7 @@
     object-fit: contain;
   }
 
+  /* Alt Text Section */
   .alt-text-container label {
     display: block;
     margin-bottom: 0.5rem;
@@ -334,11 +365,12 @@
   }
 
   .alt-text-description {
-    margin-top: 0.5rem;
+    margin: 0.5rem 0;
     font-size: 0.75rem;
     color: #757575;
   }
 
+  /* Modal Footer */
   .modal-footer {
     display: flex;
     gap: 0.5rem;
@@ -348,18 +380,20 @@
   }
 
   .insert-button,
-  .save-button {
-    padding: 0.5rem 1.5rem;
+  .save-button,
+  .select-file-button {
+    padding: 8px 16px;
     font-weight: 700;
-    color: #ffffff;
+    color: black;
     cursor: pointer;
-    background: #00796b;
-    border: 0;
-    border-radius: 4px;
+    background: #e6e6e6;
+    border: 1px solid #e0e0e0;
+    border-radius: 2px;
   }
 
   .insert-button:disabled,
   .save-button:disabled {
+    color: #bdbdbd;
     cursor: not-allowed;
     background: #e0e0e0;
   }
@@ -367,26 +401,23 @@
   .remove-button {
     padding: 0.5rem 1rem;
     font-weight: 700;
-    color: #d32f2f;
+    color: black;
     cursor: pointer;
-    background: 0 0;
-    border: 1px solid #d32f2f;
-    border-radius: 4px;
+    background: none;
+    border: 0;
   }
 
   .select-file-button {
-    padding: 0.5rem 1rem;
     margin: 1rem 0;
-    font-weight: 700;
-    cursor: pointer;
-    background: #f5f5f5;
-    border: 1px solid #e0e0e0;
-    border-radius: 4px;
   }
 
-  .supported-files {
-    font-size: 0.75rem;
-    color: #757575;
+  /* Drop Zone */
+  .drop-zone-wrapper {
+    text-align: center;
+  }
+
+  .drop-zone-text {
+    font-size: 12px;
   }
 
 </style>

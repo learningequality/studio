@@ -7,7 +7,9 @@ export const Image = Node.create({
 
   group: 'block',
 
-  draggable: true,
+  inline: false,
+
+  allowBase64: true,
 
   addAttributes() {
     return {
