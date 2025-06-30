@@ -353,6 +353,7 @@
         showViewMoreRecommendations: false,
         otherRecommendationsLoaded: false,
         recommendationsEvent: null,
+        recommendationsInteractionEvent: null,
         feedbackReason: [],
         showFeedbackModal: false,
         otherFeedback: '',
@@ -361,6 +362,7 @@
         previewedNodeIds: [],
         rejectedNode: null,
         showFeedbackErrorMessage: false,
+        interactionEventsIdMap: {},
       };
     },
     computed: {
@@ -784,7 +786,7 @@
         this.rejectedNode = node;
         const type = FeedbackTypeOptions.rejected;
         const reason = this.recommendationsFeedback ? this.recommendationsFeedback : type;
-        const interactionEvent = new RecommendationsInteractionEvent({
+        this.recommendationsInteractionEvent = new RecommendationsInteractionEvent({
           recommendation_event_id: this.recommendationsEvent.id,
           contentnode_id: node.id,
           content_id: node.content_id,
@@ -794,8 +796,9 @@
           feedback_type: type,
           feedback_reason: reason,
         });
-        sendRequest(interactionEvent)
-          .then(() => {
+        sendRequest(this.recommendationsInteractionEvent)
+          .then(response => {
+            this.interactionEventsIdMap[this.recommendationsInteractionEvent.id] = response?.id;
             this.rejectedNodeIds.push(node.id);
             this.showSnackbar({
               text: this.feedbackConfirmationMessage$(),
@@ -830,6 +833,7 @@
       submitRejectedRecommendationFeedback() {
         const rejectedEvent = new RecommendationsInteractionEvent({
           method: 'patch',
+          id: this.interactionEventsIdMap[this.recommendationsInteractionEvent.id],
           recommendation_event_id: this.recommendationsEvent.id,
           contentnode_id: this.rejectedNode.id,
           content_id: this.rejectedNode.content_id,
