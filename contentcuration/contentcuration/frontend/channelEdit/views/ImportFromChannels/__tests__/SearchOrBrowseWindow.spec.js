@@ -5,6 +5,11 @@ import SearchOrBrowseWindow from '../SearchOrBrowseWindow';
 import { RouteNames } from '../../../constants';
 import { sendRequest } from 'shared/feedbackApiUtils';
 
+// Mock the jsonSchema compile function to always return true
+jest.mock('shared/utils/jsonSchema', () => ({
+  compile: () => () => true,
+}));
+
 // Mock dependencies
 jest.mock('shared/feedbackApiUtils', () => ({
   RecommendationsEvent: jest.fn().mockImplementation(() => ({
@@ -35,14 +40,6 @@ describe('SearchOrBrowseWindow', () => {
     actions = {
       showSnackbar: jest.fn(),
       'clipboard/copy': jest.fn().mockResolvedValue(),
-      'contentNode/loadAncestors': jest.fn().mockResolvedValue([
-        {
-          id: 'parent-id',
-          title: 'Parent',
-          description: 'Parent desc',
-          channel_id: 'channel-id',
-        },
-      ]),
       'contentNode/loadPublicContentNode': jest.fn().mockImplementation(({ id }) =>
         Promise.resolve({
           id,
@@ -81,7 +78,7 @@ describe('SearchOrBrowseWindow', () => {
       'currentChannel/currentChannel': () => ({ language: 'en' }),
       'importFromChannels/savedSearchesExist': () => true,
       isAIFeatureEnabled: () => true,
-      'contentNode/getContentNode': () => ({ id: 'node-1' }),
+      'contentNode/getContentNodeAncestors': () => () => [{ id: 'node-1' }],
     };
 
     store = new Store({
@@ -107,11 +104,10 @@ describe('SearchOrBrowseWindow', () => {
         contentNode: {
           namespaced: true,
           actions: {
-            loadAncestors: actions['contentNode/loadAncestors'],
             loadPublicContentNode: actions['contentNode/loadPublicContentNode'],
           },
           getters: {
-            getContentNode: getters['contentNode/getContentNode'],
+            getContentNodeAncestors: getters['contentNode/getContentNodeAncestors'],
           },
         },
         currentChannel: {
@@ -182,9 +178,6 @@ describe('SearchOrBrowseWindow', () => {
 
   it('initializes correctly', () => {
     expect(wrapper.vm.searchTerm).toBe('');
-    expect(actions['contentNode/loadAncestors']).toHaveBeenCalledWith(expect.anything(), {
-      id: 'dest-1',
-    });
   });
 
   it('validates search term correctly', async () => {
