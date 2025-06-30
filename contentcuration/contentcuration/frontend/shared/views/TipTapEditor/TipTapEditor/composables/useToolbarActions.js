@@ -197,12 +197,24 @@ export function useToolbarActions() {
     }
   };
 
+  const handleClearFormat = () => {
+    if (editor?.value) {
+      editor.value.chain().focus().clearNodes().unsetAllMarks().setParagraph().run();
+    }
+  };
+
   // Helper function to check if a mark is active
   const isMarkActive = markName => {
     return editor?.value?.isActive(markName) || false;
   };
 
-  // Helper function to check if a button is clickable
+  // Helper function to check if any of the main marks are active
+  const hasClearableMark = () => {
+    if (!editor?.value) return false;
+    const marks = ['bold', 'italic', 'underline', 'strike'];
+    return marks.some(mark => editor.value.isActive(mark));
+  };
+
   const isButtonAvailable = action => {
     if (!editor?.value) return false;
 
@@ -211,8 +223,10 @@ export function useToolbarActions() {
         return editor.value.can().undo();
       case 'redo':
         return editor.value.can().redo();
+      case 'removeFormat':
+        return hasClearableMark();
       default:
-        return true; // Default to true for other actions
+        return true;
     }
   };
 
@@ -350,6 +364,8 @@ export function useToolbarActions() {
     handleMath,
     handleCodeBlock,
     handleFormatChange,
+    handleClearFormat,
+    canClearFormat: computed(() => isButtonAvailable('removeFormat')),
 
     // Action arrays
     historyActions,
