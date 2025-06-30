@@ -520,6 +520,7 @@
   }
 
   .license-description {
+    margin-bottom: 8px;
     line-height: 1.5;
   }
 
