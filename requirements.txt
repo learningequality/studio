@@ -154,7 +154,7 @@ jsonschema-specifications==2024.10.1
     # via jsonschema
 kombu==5.5.2
     # via celery
-le-utils==0.2.10
+le-utils==0.2.12
     # via -r requirements.in
 packaging==25.0
     # via
@@ -223,7 +223,7 @@ rsa==4.7.2
     # via google-auth
 s3transfer==0.4.2
     # via boto3
-sentry-sdk==2.30.0
+sentry-sdk==2.31.0
     # via -r requirements.in
 six==1.16.0
     # via

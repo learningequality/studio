@@ -1,15 +1,12 @@
-Feature: Edit *Accessibility* options
-	Across all file types
-
-# Comment here
+Feature: Edit *Accessibility* options for all file types
 
 	Background:
-		Given I am signed into Studio
+		Given I am signed-in to Studio
 			And I am in an editable channel
-		When I right click <resource>
-		When I click *Edit details*
-		Then I see the edit modal for the <resource>
-			And I see the *Accessibility* section underneath the *Audience* section
+		When I right click a resource
+			And I click *Edit details*
+		Then I see the edit modal for the resource
+			And I see the *Accessibility* section under the *Audience* section
 
 	Scenario: View options for .MP4
 		Given I am viewing an .MP4 in the edit modal
@@ -70,17 +67,17 @@ Feature: Edit *Accessibility* options
 		Then I see *Visual elements in the resource have descriptions that can be accessed by screen readers for the benefit of blind learners*
 
 	Scenario: Select and deselect accessibility options
-		Given that for any <resource> there are some checkbox options in the *Accessibility* section
-		When I select a checkbox for an <option> under *Accessibility*
+		Given that for any resource there are some checkbox options in the *Accessibility* section
+		When I select a checkbox for an option under *Accessibility*
 		Then I see that the checkbox is selected
-		When I uncheck a selected <option>
+		When I uncheck a selected option
 		Then I see the checkbox is empty
 
 	Scenario: See that accessibility field is optional
-		Given the *Accessibility* field of a <resource> is empty
-		When I click *FINISH*
-		Then I see the <resource> in the topic tree
+		Given the *Accessibility* field of a resource is empty
+		When I click *Finish*
+		Then I see the resource in the topic tree
 			And I do not see an error icon
-		When I left-click on the <resource>
-		Then I see the previewer for the <resource>
+		When I left-click on the resource
+		Then I see the previewer for the resource
 			And I see that the *Accessibility* field is empty
