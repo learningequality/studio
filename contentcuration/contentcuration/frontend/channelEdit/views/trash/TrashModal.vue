@@ -277,9 +277,9 @@
       },
     },
     created() {
-      this.loadContentNodes({ parent__in: [this.rootId] }),
-      this.loadAncestors({ id: this.nodeId }),
-      this.loadNodes();
+      (this.loadContentNodes({ parent__in: [this.rootId] }),
+       this.loadAncestors({ id: this.nodeId }),
+       this.loadNodes());
     },
     mounted() {
       this.updateTabTitle(this.$store.getters.appendChannelName(this.$tr('trashModalTitle')));
