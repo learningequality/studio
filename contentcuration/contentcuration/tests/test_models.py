@@ -18,6 +18,7 @@ from contentcuration.models import Change
 from contentcuration.models import Channel
 from contentcuration.models import ChannelHistory
 from contentcuration.models import ChannelSet
+from contentcuration.models import CommunityLibrarySubmission
 from contentcuration.models import ContentNode
 from contentcuration.models import CONTENTNODE_TREE_ID_CACHE_KEY
 from contentcuration.models import File
@@ -545,6 +546,130 @@ class ContentNodeTestCase(PermissionQuerysetTestCase):
         self.assertEqual(original_node_old_content_id, original_node.content_id)
         # Assert copied node's content_id changes.
         self.assertNotEqual(copied_node_old_content_id, copied_node.content_id)
+
+
+class CommunityLibrarySubmissionTestCase(PermissionQuerysetTestCase):
+    @property
+    def base_queryset(self):
+        return CommunityLibrarySubmission.objects.all()
+
+    def test_create_submission(self):
+        # Smoke test
+        channel = testdata.channel()
+        author = testdata.user()
+        channel.editors.add(author)
+        channel.save()
+
+        country = testdata.country()
+
+        submission = CommunityLibrarySubmission.objects.create(
+            description="Test submission",
+            channel=channel,
+            channel_version=1,
+            author=author,
+            categories=["test_category"],
+            status=CommunityLibrarySubmission.Status.PENDING,
+        )
+        submission.countries.add(country)
+
+        submission.full_clean()
+        submission.save()
+
+    def test_filter_view_queryset__anonymous(self):
+        _ = testdata.community_library_submission()
+
+        queryset = CommunityLibrarySubmission.filter_view_queryset(
+            self.base_queryset, user=self.anonymous_user
+        )
+        self.assertFalse(queryset.exists())
+
+    def test_filter_view_queryset__forbidden_user(self):
+        _ = testdata.community_library_submission()
+
+        queryset = CommunityLibrarySubmission.filter_view_queryset(
+            self.base_queryset, user=self.forbidden_user
+        )
+        self.assertFalse(queryset.exists())
+
+    def test_filter_view_queryset__channel_editor(self):
+        submission_a = testdata.community_library_submission()
+        submission_b = testdata.community_library_submission()
+
+        user = testdata.user()
+        submission_a.channel.editors.add(user)
+        submission_a.save()
+
+        queryset = CommunityLibrarySubmission.filter_view_queryset(
+            self.base_queryset, user=user
+        )
+        self.assertQuerysetContains(queryset, pk=submission_a.id)
+        self.assertQuerysetDoesNotContain(queryset, pk=submission_b.id)
+
+    def test_filter_view_queryset__admin(self):
+        submission_a = testdata.community_library_submission()
+
+        queryset = CommunityLibrarySubmission.filter_view_queryset(
+            self.base_queryset, user=self.admin_user
+        )
+        self.assertQuerysetContains(queryset, pk=submission_a.id)
+
+    def test_filter_edit_queryset__anonymous(self):
+        _ = testdata.community_library_submission()
+
+        queryset = CommunityLibrarySubmission.filter_edit_queryset(
+            self.base_queryset, user=self.anonymous_user
+        )
+        self.assertFalse(queryset.exists())
+
+    def test_filter_edit_queryset__forbidden_user(self):
+        _ = testdata.community_library_submission()
+
+        queryset = CommunityLibrarySubmission.filter_edit_queryset(
+            self.base_queryset, user=self.forbidden_user
+        )
+        self.assertFalse(queryset.exists())
+
+    def test_filter_edit_queryset__channel_editor(self):
+        submission = testdata.community_library_submission()
+
+        user = testdata.user()
+        submission.channel.editors.add(user)
+        submission.save()
+
+        queryset = CommunityLibrarySubmission.filter_edit_queryset(
+            self.base_queryset, user=user
+        )
+        self.assertFalse(queryset.exists())
+
+    def test_filter_edit_queryset__author__channel_editor(self):
+        submission_a = testdata.community_library_submission()
+        submission_b = testdata.community_library_submission()
+
+        queryset = CommunityLibrarySubmission.filter_edit_queryset(
+            self.base_queryset, user=submission_a.author
+        )
+        self.assertQuerysetContains(queryset, pk=submission_a.id)
+        self.assertQuerysetDoesNotContain(queryset, pk=submission_b.id)
+
+    def test_filter_edit_queryset__author__not_channel_editor(self):
+        submission = testdata.community_library_submission()
+
+        user = testdata.user(email="new@user.com")
+        submission.author = user
+        submission.save()
+
+        queryset = CommunityLibrarySubmission.filter_edit_queryset(
+            self.base_queryset, user=user
+        )
+        self.assertFalse(queryset.exists())
+
+    def test_filter_edit_queryset__admin(self):
+        submission_a = testdata.community_library_submission()
+
+        queryset = CommunityLibrarySubmission.filter_edit_queryset(
+            self.base_queryset, user=self.admin_user
+        )
+        self.assertQuerysetContains(queryset, pk=submission_a.id)
 
 
 class AssessmentItemTestCase(PermissionQuerysetTestCase):

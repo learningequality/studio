@@ -206,6 +206,25 @@ def node(data, parent=None):  # noqa: C901
     return new_node
 
 
+def country(name="Test Country", code="TC"):
+    return mixer.blend(cc.Country, name=name, code=code)
+
+
+def community_library_submission():
+    channel_obj = channel(name=random_string())
+    user_obj = user(email=random_string())
+    channel_obj.editors.add(user_obj)
+    channel_obj.save()
+
+    return mixer.blend(
+        cc.CommunityLibrarySubmission,
+        channel=channel_obj,
+        author=user_obj,
+        status=cc.CommunityLibrarySubmission.Status.PENDING,
+        categories=list(),
+    )
+
+
 def tree(parent=None):
     # Read from json fixture
     filepath = os.path.sep.join([os.path.dirname(__file__), "fixtures", "tree.json"])
