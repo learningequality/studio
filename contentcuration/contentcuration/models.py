@@ -2532,6 +2532,85 @@ class Language(models.Model):
         return self.ietf_name()
 
 
+class Country(models.Model):
+    code = models.CharField(
+        max_length=2, primary_key=True, help_text="alpha-2 country code"
+    )
+    name = models.CharField(max_length=100, unique=True)
+
+
+class CommunityLibrarySubmission(models.Model):
+    class Status(models.TextChoices):
+        PENDING = "P", _("Pending")
+        FLAGGED = "F", _("Flagged for review")
+        APPROVED = "A", _("Approved")
+        LIVE = "L", _("Live")
+
+    description = models.TextField(max_length=400, blank=True)
+    channel = models.ForeignKey(
+        Channel,
+        related_name="community_library_submissions",
+        on_delete=models.CASCADE,
+    )
+    channel_version = models.IntegerField()
+    author = models.ForeignKey(
+        User,
+        related_name="community_library_submissions",
+        on_delete=models.CASCADE,
+    )
+    countries = models.ManyToManyField(Country)
+    categories = models.JSONField(default=list, blank=True)
+    date_created = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(
+        max_length=1, choices=Status.choices, default=Status.PENDING
+    )
+
+    def clean(self):
+        """
+        Validate that the submission author is an editor of the channel.
+        This cannot be expressed as a constraint because traversing
+        related fields is not supported in constraints. Note that this
+        method is NOT called automatically on every save.
+        """
+        super().clean()
+        if not self.channel.editors.filter(pk=self.author.pk).exists():
+            raise ValidationError(
+                _(
+                    "The submission author must be an editor of the channel the submission "
+                    "belong to"
+                ),
+                code="author_not_editor",
+            )
+
+    @classmethod
+    def filter_view_queryset(cls, queryset, user):
+        if user.is_anonymous:
+            return queryset.none()
+
+        if user.is_admin:
+            return queryset
+
+        return queryset.filter(channel__editors=user)
+
+    @classmethod
+    def filter_edit_queryset(cls, queryset, user):
+        if user.is_anonymous:
+            return queryset.none()
+
+        if user.is_admin:
+            return queryset
+
+        return queryset.filter(author=user, channel__editors=user)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["channel", "channel_version"],
+                name="unique_channel_with_channel_version",
+            ),
+        ]
+
+
 ASSESSMENT_ID_INDEX_NAME = "assessment_id_idx"
 
 
