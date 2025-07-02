@@ -286,8 +286,8 @@ importers:
         specifier: ^4.0.9
         version: 4.0.9(postcss@8.5.6)
       sass-loader:
-        specifier: 16.0.4
-        version: 16.0.4(node-sass@9.0.0)(webpack@5.99.7)
+        specifier: 16.0.5
+        version: 16.0.5(node-sass@9.0.0)(webpack@5.99.7)
       style-loader:
         specifier: ^4.0.0
         version: 4.0.0(webpack@5.99.7)
@@ -4745,9 +4745,6 @@ packages:
   known-css-properties@0.36.0:
     resolution: {integrity: sha512-A+9jP+IUmuQsNdsLdcg6Yt7voiMF/D4K83ew0OpJtpu+l34ef7LaohWV0Rc6KNvzw6ZDizkqfyB5JznZnzuKQA==}
 
-  kolibri-constants@0.2.11:
-    resolution: {integrity: sha512-dHF5g40OQbMjrNuY1CWMck2M53KACCXtXQ1Enw1oJOQgfEERP+CWqkv1NmEXO2WlxoH9TOf2MNFA5FF84kgjzw==}
-
   kolibri-constants@0.2.12:
     resolution: {integrity: sha512-ApVc/KLwEaDJohqKhQTdao4UdWmoyq2pQ5lk8ra+1rDpJvsFWsAOGVC4RTv4YEDlAYJzj2/QZlJQ91u5yUURSQ==}
 
@@ -6283,27 +6280,6 @@ packages:
     resolution: {integrity: sha512-5YCfmGBmxoIRYHnKK2AKzrAkCoQ8ozO+iumT8K4tXJXRVCPf+7s1/9KxTSW3Rbvf+7Y7b4FR3mWyLnQr3PHocA==}
     engines: {node: '>=12'}
     hasBin: true
-
-  sass-loader@16.0.4:
-    resolution: {integrity: sha512-LavLbgbBGUt3wCiYzhuLLu65+fWXaXLmq7YxivLhEqmiupCFZ5sKUAipK3do6V80YSU0jvSxNhEdT13IXNr3rg==}
-    engines: {node: '>= 18.12.0'}
-    peerDependencies:
-      '@rspack/core': 0.x || 1.x
-      node-sass: ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0 || ^9.0.0
-      sass: ^1.3.0
-      sass-embedded: '*'
-      webpack: ^5.0.0
-    peerDependenciesMeta:
-      '@rspack/core':
-        optional: true
-      node-sass:
-        optional: true
-      sass:
-        optional: true
-      sass-embedded:
-        optional: true
-      webpack:
-        optional: true
 
   sass-loader@16.0.5:
     resolution: {integrity: sha512-oL+CMBXrj6BZ/zOq4os+UECPL+bWqt6OAC6DWS8Ln8GZRcMDjlJ4JC3FBDuHJdYaFWIdKNIBYmtZtK2MaMkNIw==}
@@ -12947,8 +12923,6 @@ snapshots:
 
   known-css-properties@0.36.0: {}
 
-  kolibri-constants@0.2.11: {}
-
   kolibri-constants@0.2.12: {}
 
   kolibri-constants@0.2.9: {}
@@ -14806,13 +14780,6 @@ snapshots:
       lodash: 4.17.21
       scss-tokenizer: 0.4.3
       yargs: 17.7.2
-
-  sass-loader@16.0.4(node-sass@9.0.0)(webpack@5.99.7):
-    dependencies:
-      neo-async: 2.6.2
-    optionalDependencies:
-      node-sass: 9.0.0
-      webpack: 5.99.7(webpack-cli@6.0.1)
 
   sass-loader@16.0.5(node-sass@9.0.0)(webpack@5.99.7):
     dependencies:
