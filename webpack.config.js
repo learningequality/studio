@@ -148,6 +148,10 @@ module.exports = (env = {}) => {
         // needed to reference Vuetify styles in the shadow DOM
         vuetify: path.resolve('node_modules', 'vuetify'),
         static: staticFilesDir,
+        // Add this alias to resolve the tippy.js conflict.
+        // It redirects the old, invalid import path from kolibri-design-system
+        // to the correct file in the newer tippy.js version required by Tiptap.
+        'tippy.js/umd': require.resolve('tippy.js/dist/tippy.umd.js'),
       },
       extensions: ['.js', '.vue', '.css'],
       symlinks: true,

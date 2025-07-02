@@ -177,6 +177,8 @@
       const onToolClick = (tool, event) => {
         if (tool.name === 'image') {
           emit('insert-image', event.currentTarget);
+        } else if (tool.name === 'link') {
+          emit('insert-link');
         } else {
           // For all other buttons, call their original handler
           tool.handler();

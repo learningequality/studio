@@ -1,10 +1,31 @@
 <template>
 
-  <div
-    v-if="isReady"
-    class="editor-container"
-  >
-    <EditorToolbar @insert-image="target => openCreateModal(null, target)" />
+  <div class="editor-container">
+    <EditorToolbar
+      @insert-image="target => openCreateModal(null, target)"
+      @insert-link="linkHandler.openLinkEditor()"
+    />
+
+    <!-- This div holds the bubble menu component and is passed to the editor -->
+    <div ref="bubbleMenu">
+      <LinkBubbleMenu
+        v-if="isReady"
+        :editor="editor"
+      />
+    </div>
+
+    <!-- The Popover for creating/editing links -->
+    <div
+      v-if="linkHandler.isEditorOpen.value"
+      :style="linkHandler.editorStyle.value"
+    >
+      <LinkEditor
+        :initial-state="linkHandler.editorInitialState.value"
+        @save="linkHandler.saveLink"
+        @remove="linkHandler.removeLink"
+        @close="linkHandler.closeLinkEditor"
+      />
+    </div>
 
     <div
       v-if="modalMode"
@@ -34,13 +55,16 @@
 
 <script>
 
-  import { defineComponent, provide } from 'vue';
+  import { defineComponent, provide, onMounted, ref } from 'vue';
   import EditorToolbar from './components/EditorToolbar.vue';
   import EditorContentWrapper from './components/EditorContentWrapper.vue';
   import { useEditor } from './composables/useEditor';
   import ImageUploadModal from './components/image/ImageUploadModal.vue';
   import { useImageHandling } from './composables/useImageHandling';
   import '../assets/styles/code-theme-dark.css';
+  import { useLinkHandling } from './composables/useLinkHandling';
+  import LinkBubbleMenu from './components/link/LinkBubbleMenu.vue';
+  import LinkEditor from './components/link/LinkEditor.vue';
 
   export default defineComponent({
     name: 'RichTextEditor',
@@ -48,11 +72,20 @@
       EditorToolbar,
       EditorContentWrapper,
       ImageUploadModal,
+      LinkBubbleMenu,
+      LinkEditor,
     },
     setup() {
-      const { editor, isReady } = useEditor();
+      const { editor, isReady, initializeEditor } = useEditor();
       provide('editor', editor);
       provide('isReady', isReady);
+      const bubbleMenu = ref(null);
+
+      onMounted(() => {
+        if (bubbleMenu.value) {
+          initializeEditor(bubbleMenu.value, linkHandler.isEditorOpen);
+        }
+      });
 
       const {
         modalMode,
@@ -65,6 +98,9 @@
         handleUpdate,
         handleRemove,
       } = useImageHandling(editor);
+
+      const linkHandler = useLinkHandling(editor);
+      provide('linkHandler', linkHandler);
 
       const handleDrop = event => {
         const file = event.dataTransfer?.files[0];
@@ -85,6 +121,9 @@
         handleRemove,
         handleDrop,
         isModalCentered,
+        linkHandler,
+        editor,
+        bubbleMenu,
       };
     },
   });

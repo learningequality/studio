@@ -286,8 +286,8 @@
   }
 
   .close-button {
-    font-size: 1.5rem;
-    color: #757575;
+    font-size: 2rem;
+    color: black;
     cursor: pointer;
     background: none;
     border: 0;
@@ -431,8 +431,7 @@
     border-radius: 2px;
   }
 
-  .insert-button:disabled,
-  .save-button:disabled {
+  .insert-button:disabled {
     color: #bdbdbd;
     cursor: not-allowed;
     background: #e0e0e0;
