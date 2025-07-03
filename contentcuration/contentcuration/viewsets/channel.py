@@ -662,7 +662,7 @@ class ChannelViewSet(ValuesViewset):
                 raise
 
     def _finish_staging_publishing_on_error(self, channel):
-        Change.create_changes(
+        Change.create_change(
             generate_update_event(
                 channel.id,
                 CHANNEL,
