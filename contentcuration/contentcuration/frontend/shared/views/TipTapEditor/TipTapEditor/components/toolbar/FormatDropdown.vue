@@ -126,7 +126,6 @@
           case ' ':
             event.preventDefault();
             applyFormat(format);
-            toggleDropdown();
             break;
           case 'ArrowDown':
             event.preventDefault();

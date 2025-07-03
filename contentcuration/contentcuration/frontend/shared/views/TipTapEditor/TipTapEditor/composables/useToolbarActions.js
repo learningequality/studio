@@ -199,7 +199,7 @@ export function useToolbarActions() {
 
   const handleClearFormat = () => {
     if (editor?.value) {
-      editor.value.chain().focus().clearNodes().unsetAllMarks().setParagraph().run();
+      editor.value.chain().focus().unsetAllMarks().run();
     }
   };
 
@@ -211,8 +211,18 @@ export function useToolbarActions() {
   // Helper function to check if any of the main marks are active
   const hasClearableMark = () => {
     if (!editor?.value) return false;
-    const marks = ['bold', 'italic', 'underline', 'strike'];
-    return marks.some(mark => editor.value.isActive(mark));
+    const { from, to, empty } = editor.value.state.selection;
+    if (empty) {
+      return false;
+    }
+
+    let hasMarks = false;
+    editor.value.state.doc.nodesBetween(from, to, node => {
+      if (node.marks.length > 0) {
+        hasMarks = true;
+      }
+    });
+    return hasMarks;
   };
 
   const isButtonAvailable = action => {
