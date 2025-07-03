@@ -69,6 +69,10 @@ from contentcuration.constants import channel_history
 from contentcuration.constants import completion_criteria
 from contentcuration.constants import feedback
 from contentcuration.constants import user_history
+from contentcuration.constants.community_library_submission import (
+    COMMUNITY_LIBRARY_SUBMISSION_STATUS_CHOICES,
+)
+from contentcuration.constants.community_library_submission import STATUS_PENDING
 from contentcuration.constants.contentnode import kind_activity_map
 from contentcuration.db.models.expressions import Array
 from contentcuration.db.models.functions import ArrayRemove
@@ -2540,29 +2544,27 @@ class Country(models.Model):
 
 
 class CommunityLibrarySubmission(models.Model):
-    class Status(models.TextChoices):
-        PENDING = "P", _("Pending")
-        FLAGGED = "F", _("Flagged for review")
-        APPROVED = "A", _("Approved")
-        LIVE = "L", _("Live")
-
-    description = models.TextField(max_length=400, blank=True)
+    description = models.TextField(blank=True)
     channel = models.ForeignKey(
         Channel,
         related_name="community_library_submissions",
         on_delete=models.CASCADE,
     )
-    channel_version = models.IntegerField()
+    channel_version = models.PositiveIntegerField()
     author = models.ForeignKey(
         User,
         related_name="community_library_submissions",
         on_delete=models.CASCADE,
     )
-    countries = models.ManyToManyField(Country)
-    categories = models.JSONField(default=list, blank=True)
+    countries = models.ManyToManyField(
+        Country, related_name="community_library_submissions"
+    )
+    categories = models.JSONField(default=list, blank=True, null=True)
     date_created = models.DateTimeField(auto_now_add=True)
     status = models.CharField(
-        max_length=1, choices=Status.choices, default=Status.PENDING
+        max_length=20,
+        choices=COMMUNITY_LIBRARY_SUBMISSION_STATUS_CHOICES,
+        default=STATUS_PENDING,
     )
 
     def clean(self):

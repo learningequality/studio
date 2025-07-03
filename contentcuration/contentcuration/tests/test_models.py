@@ -13,6 +13,7 @@ from le_utils.constants import format_presets
 
 from contentcuration.constants import channel_history
 from contentcuration.constants import user_history
+from contentcuration.constants.community_library_submission import STATUS_PENDING
 from contentcuration.models import AssessmentItem
 from contentcuration.models import Change
 from contentcuration.models import Channel
@@ -568,7 +569,7 @@ class CommunityLibrarySubmissionTestCase(PermissionQuerysetTestCase):
             channel_version=1,
             author=author,
             categories=["test_category"],
-            status=CommunityLibrarySubmission.Status.PENDING,
+            status=STATUS_PENDING,
         )
         submission.countries.add(country)
 

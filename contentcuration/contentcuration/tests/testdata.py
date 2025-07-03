@@ -16,6 +16,7 @@ from le_utils.constants import format_presets
 from PIL import Image
 
 from contentcuration import models as cc
+from contentcuration.constants.community_library_submission import STATUS_PENDING
 from contentcuration.tests.utils import mixer
 
 pytestmark = pytest.mark.django_db
@@ -220,7 +221,7 @@ def community_library_submission():
         cc.CommunityLibrarySubmission,
         channel=channel_obj,
         author=user_obj,
-        status=cc.CommunityLibrarySubmission.Status.PENDING,
+        status=STATUS_PENDING,
         categories=list(),
     )
 
