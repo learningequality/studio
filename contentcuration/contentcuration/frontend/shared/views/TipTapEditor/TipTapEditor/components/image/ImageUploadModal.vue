@@ -16,10 +16,10 @@
       @change="onFileSelect"
     >
     <div class="modal-header">
-      <h3 id="modal-title">{{ isEditMode ? 'Edit image' : 'Upload image' }}</h3>
+      <h3 id="modal-title">{{ isEditMode ? editImage$() : uploadImage$() }}</h3>
       <button
         class="close-button"
-        aria-label="Close modal"
+        :aria-label="closeModal$()"
         @click="$emit('close')"
       >
         ×
@@ -37,10 +37,10 @@
         ></div>
         <button
           class="cancel-button"
-          aria-label="Cancel loading"
+          :aria-label="cancelLoading$()"
           @click="resetToPreview"
         >
-          Cancel
+          {{ cancel$() }}
         </button>
       </div>
       <div
@@ -58,34 +58,33 @@
           <span>{{ fileName }}</span>
           <button
             class="select-file-link"
-            :aria-label="isEditMode ? 'Replace file' : 'Select file'"
+            :aria-label="isEditMode ? replaceFile$() : selectFile$()"
             @click="triggerFileInput"
           >
-            {{ isEditMode ? 'Replace file' : 'Select file' }}
+            {{ isEditMode ? replaceFile$() : selectFile$() }}
           </button>
         </div>
         <div class="image-preview-container">
           <img
             :src="previewSrc"
-            alt="Image preview"
+            :alt="imagePreview$()"
             class="image-preview"
           >
         </div>
         <div class="alt-text-container">
-          <label for="alt-text-input">Alt text (Optional)</label>
+          <label for="alt-text-input">{{ altTextLabel$() }}</label>
           <input
             id="alt-text-input"
             v-model="altText"
             type="text"
-            placeholder="Describe the image..."
+            :placeholder="altTextPlaceholder$()"
             aria-describedby="alt-text-description"
           >
           <p
             id="alt-text-description"
             class="alt-text-description"
           >
-            Alt text is necessary to enable visually impaired learners to answer questions, and it
-            also displays when the image fails to load
+            {{ altTextDescription$() }}
           </p>
         </div>
       </div>
@@ -97,16 +96,16 @@
           @file-dropped="handleFileChange"
           @multiple-files-dropped="showMultiFileWarning"
         >
-          <p class="drop-zone-text">Drag and drop an image here or upload manually</p>
+          <p class="drop-zone-text">{{ imageDropZoneText$() }}</p>
           <button
             class="select-file-button"
             type="button"
-            aria-label="Select file to upload"
+            :aria-label="selectFileToUpload$()"
             @click="triggerFileInput"
           >
-            Select File
+            {{ selectFile$() }}
           </button>
-          <p class="drop-zone-text">Supported file types: png, jpg, jpeg, svg, webp</p>
+          <p class="drop-zone-text">{{ supportedFileTypes$() }}</p>
         </ImageDropZone>
       </div>
     </div>
@@ -114,27 +113,27 @@
       <template v-if="isEditMode">
         <button
           class="remove-button"
-          aria-label="Remove image"
+          :aria-label="removeImage$()"
           @click="$emit('remove')"
         >
-          Remove
+          {{ remove$() }}
         </button>
         <button
           class="save-button"
-          aria-label="Save changes"
+          :aria-label="saveChanges$()"
           @click="onSave"
         >
-          Save
+          {{ save$() }}
         </button>
       </template>
       <template v-else>
         <button
           class="insert-button"
           :disabled="!canInsert"
-          aria-label="Insert image"
+          :aria-label="insertImage$()"
           @click="onInsert"
         >
-          Insert
+          {{ insert$() }}
         </button>
       </template>
     </div>
@@ -148,12 +147,38 @@
   import { defineComponent, ref, computed, onMounted } from 'vue';
   import { processFile, ACCEPTED_MIME_TYPES } from '../../services/imageService';
   import { useFocusTrap } from '../../composables/useFocusTrap';
+  import { getTipTapEditorStrings } from '../../TipTapEditorStrings';
   import ImageDropZone from './ImageDropZone.vue';
 
   export default defineComponent({
     name: 'ImageUploadModal',
     components: { ImageDropZone },
     setup(props, { emit }) {
+      const {
+        editImage$,
+        uploadImage$,
+        closeModal$,
+        cancelLoading$,
+        cancel$,
+        replaceFile$,
+        selectFile$,
+        imagePreview$,
+        altTextLabel$,
+        altTextPlaceholder$,
+        altTextDescription$,
+        imageDropZoneText$,
+        selectFileToUpload$,
+        supportedFileTypes$,
+        removeImage$,
+        remove$,
+        saveChanges$,
+        save$,
+        insert$,
+        insertImage$,
+        defaultImageName$,
+        multipleFilesDroppedWarning$,
+      } = getTipTapEditorStrings();
+
       const modalRoot = ref(null);
       const modalState = ref('initial');
       const fileInput = ref(null);
@@ -165,7 +190,9 @@
       let warningTimer = null;
 
       const isEditMode = computed(() => props.mode === 'edit');
-      const fileName = computed(() => file.value?.name || (isEditMode.value ? 'Image' : ''));
+      const fileName = computed(
+        () => file.value?.name || (isEditMode.value ? defaultImageName$() : ''),
+      );
       const canInsert = computed(() => !!previewSrc.value);
 
       onMounted(() => {
@@ -183,7 +210,7 @@
 
       const showMultiFileWarning = () => {
         clearTimeout(warningTimer);
-        uploadWarning.value = 'Multiple files were dropped. Only the first file has been selected.';
+        uploadWarning.value = multipleFilesDroppedWarning$();
         warningTimer = setTimeout(() => {
           uploadWarning.value = '';
         }, 5000);
@@ -245,6 +272,28 @@
         handleFileChange,
         uploadWarning,
         showMultiFileWarning,
+
+        // Strings
+        editImage$,
+        uploadImage$,
+        closeModal$,
+        cancelLoading$,
+        cancel$,
+        replaceFile$,
+        selectFile$,
+        imagePreview$,
+        altTextLabel$,
+        altTextPlaceholder$,
+        altTextDescription$,
+        imageDropZoneText$,
+        selectFileToUpload$,
+        supportedFileTypes$,
+        removeImage$,
+        remove$,
+        saveChanges$,
+        save$,
+        insert$,
+        insertImage$,
       };
     },
     props: {

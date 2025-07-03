@@ -5,10 +5,10 @@
     class="link-editor-popover"
   >
     <div class="modal-header">
-      <h3>Add link</h3>
+      <h3>{{ addLink$() }}</h3>
       <button
         class="close-button"
-        title="Close"
+        :title="close$()"
         @click="$emit('close')"
       >
         ×
@@ -17,7 +17,7 @@
 
     <div class="content">
       <div class="form-group">
-        <label for="link-text">Text</label>
+        <label for="link-text">{{ text$() }}</label>
         <input
           id="link-text"
           v-model="formData.text"
@@ -25,12 +25,12 @@
         >
       </div>
       <div class="form-group">
-        <label for="link-href">Link</label>
+        <label for="link-href">{{ link$() }}</label>
         <input
           id="link-href"
           v-model="formData.href"
           type="url"
-          placeholder="Link"
+          :placeholder="link$()"
         >
       </div>
     </div>
@@ -41,7 +41,7 @@
         :disabled="!validateForm()"
         @click="onSave"
       >
-        Save
+        {{ save$() }}
       </button>
     </div>
   </div>
@@ -53,10 +53,12 @@
 
   import { defineComponent, ref, watch } from 'vue';
   import { useFocusTrap } from '../../composables/useFocusTrap';
+  import { getTipTapEditorStrings } from '../../TipTapEditorStrings';
 
   export default defineComponent({
     name: 'LinkEditor',
     setup(props, { emit }) {
+      const { addLink$, close$, text$, link$, save$ } = getTipTapEditorStrings();
       const rootEl = ref(null);
       const formData = ref({ text: '', href: '' });
 
@@ -74,13 +76,21 @@
         emit('save', formData.value);
       };
 
-      // const onRemove = () => emit('remove');
-
       const validateForm = () => {
         return formData.value.text.trim() !== '' && formData.value.href.trim() !== '';
       };
 
-      return { rootEl, formData, onSave, validateForm };
+      return {
+        rootEl,
+        formData,
+        onSave,
+        validateForm,
+        addLink$,
+        close$,
+        text$,
+        link$,
+        save$,
+      };
     },
     props: {
       initialState: { type: Object, required: true },

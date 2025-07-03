@@ -75,7 +75,7 @@
       const compactThreshold = 200;
       let debounceTimer = null;
 
-      // Watch for external changes to the node's width (to work with undo/redo)
+      // (to work with undo/redo) Watch for external changes to the node's width
       watch(
         () => props.node.attrs.width,
         newWidth => {

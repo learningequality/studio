@@ -158,8 +158,7 @@
         listActions,
         scriptActions,
         insertTools,
-        t,
-      } = useToolbarActions(emit);
+      } = useToolbarActions();
 
       const {
         copy$,
@@ -172,7 +171,6 @@
         scriptFormatting$,
         insertTools$,
       } = getTipTapEditorStrings();
-
 
       const onToolClick = (tool, event) => {
         if (tool.name === 'image') {
@@ -189,7 +187,6 @@
         handleCopy,
         handleClearFormat,
         onToolClick,
-        t,
         canClearFormat,
         historyActions,
         textActions,

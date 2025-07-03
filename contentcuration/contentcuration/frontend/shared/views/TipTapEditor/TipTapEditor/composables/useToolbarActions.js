@@ -154,11 +154,11 @@ export function useToolbarActions() {
   };
 
   const handleInsertImage = () => {
-    // TipTap insert image logic will be added here
+    // placeholder
   };
 
   const handleInsertLink = () => {
-    // TipTap insert link logic will be added here
+    // placeholder
   };
 
   const handleMath = () => {

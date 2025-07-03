@@ -5,33 +5,33 @@
       :href="href"
       target="_blank"
       rel="noopener noreferrer"
-    >Go to link</a>
+    >{{ goToLink$() }}</a>
     <div class="divider"></div>
     <button
-      title="Copy link"
+      :title="copyLink$()"
       @click="copyToClipboard(href)"
     >
       <img
         src="../../../assets/icon-copy.svg"
-        alt="Copy"
+        :alt="copy$()"
       >
     </button>
     <button
-      title="Edit link"
+      :title="editLink$()"
       @click="onEdit"
     >
       <img
         src="../../../assets/icon-edit.svg"
-        alt="Edit"
+        :alt="edit$()"
       >
     </button>
     <button
-      title="Remove link"
+      :title="removeLink$()"
       @click="onRemove"
     >
       <img
         src="../../../assets/icon-linkOff.svg"
-        alt="Remove"
+        :alt="remove$()"
       >
     </button>
   </div>
@@ -42,10 +42,13 @@
 <script>
 
   import { defineComponent, computed, inject } from 'vue';
+  import { getTipTapEditorStrings } from '../../TipTapEditorStrings';
 
   export default defineComponent({
     name: 'LinkBubbleMenu',
     setup(props) {
+      const { goToLink$, copyLink$, copy$, editLink$, edit$, removeLink$, remove$ } =
+        getTipTapEditorStrings();
       const { openLinkEditor, removeLink } = inject('linkHandler');
       const href = computed(() => props.editor.getAttributes('link').href);
 
@@ -53,7 +56,19 @@
         navigator.clipboard.writeText(link).then(() => {});
       };
 
-      return { href, onEdit: openLinkEditor, onRemove: removeLink, copyToClipboard };
+      return {
+        href,
+        onEdit: openLinkEditor,
+        onRemove: removeLink,
+        copyToClipboard,
+        goToLink$,
+        copyLink$,
+        copy$,
+        editLink$,
+        edit$,
+        removeLink$,
+        remove$,
+      };
     },
     props: {
       editor: { type: Object, required: true },

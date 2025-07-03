@@ -37,7 +37,6 @@ export function useEditor() {
             inertia: true,
           },
           shouldShow: ({ editor }) => {
-            console.log('BubbleMenu shouldShow called', isLinkEditorOpen.value, editor.isActive('link'));
             return !isLinkEditorOpen.value && editor.isActive('link');
           },
         }),
