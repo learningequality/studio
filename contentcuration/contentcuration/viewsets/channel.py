@@ -655,31 +655,24 @@ class ChannelViewSet(ValuesViewset):
                     created_by_id=self.request.user.id,
                 )
             except ChannelIncompleteError:
-                Change.create_change(
-                    generate_update_event(
-                        channel.id,
-                        CHANNEL,
-                        {"staging_publishing": False},
-                        channel_id=channel.id,
-                    ),
-                    applied=True,
-                    unpublishable=True,
-                    created_by_id=self.request.user.id,
-                )
+                self._finish_staging_publishing_on_error(channel)
                 raise ValidationError("Channel is not ready to be published")
             except Exception:
-                Change.create_changes(
-                    generate_update_event(
-                        channel.id,
-                        CHANNEL,
-                        {"staging_publishing": False},
-                        channel_id=channel.id,
-                    ),
-                    applied=True,
-                    unpublishable=True,
-                    created_by_id=self.request.user.id,
-                )
+                self._finish_staging_publishing_on_error(channel)
                 raise
+
+    def _finish_staging_publishing_on_error(self, channel):
+        Change.create_changes(
+            generate_update_event(
+                channel.id,
+                CHANNEL,
+                {"staging_publishing": False},
+                channel_id=channel.id,
+            ),
+            applied=True,
+            unpublishable=True,
+            created_by_id=self.request.user.id,
+        )
 
     def sync_from_changes(self, changes):
         errors = []

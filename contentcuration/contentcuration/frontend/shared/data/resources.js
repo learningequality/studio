@@ -1235,41 +1235,41 @@ export const Channel = new CreateModelResource({
   },
 
   publishDraft(id) {
-    const change = new PublishedNextChange({
-      key: id,
-      table: this.tableName,
-      source: CLIENTID,
-    });
-    return this.transaction({ mode: 'rw' }, CHANGES_TABLE, () => {
-      return this._saveAndQueueChange(change);
+    return this.transaction({ mode: 'rw' }, () => {
+      return this.table.update(id, { staging_publishing: true });
+    }).then(() => {
+      const change = new PublishedNextChange({
+        key: id,
+        table: this.tableName,
+        source: CLIENTID,
+      });
+      return this.transaction({ mode: 'rw' }, CHANGES_TABLE, () => {
+        return this._saveAndQueueChange(change);
+      });
     });
   },
 
   waitForPublishingDraft(id) {
-    return this.transaction({ mode: 'rw' }, () => {
-      return this.table.update(id, { staging_publishing: true });
-    }).then(() => {
-      const observable = liveQuery(() => {
-        return this.table
-          .where('id')
-          .equals(id)
-          .filter(channel => !channel['staging_publishing'])
-          .toArray();
-      });
+    const observable = liveQuery(() => {
+      return this.table
+        .where('id')
+        .equals(id)
+        .filter(channel => !channel['staging_publishing'])
+        .toArray();
+    });
 
-      return new Promise((resolve, reject) => {
-        const subscription = observable.subscribe({
-          next(result) {
-            if (result.length === 1) {
-              subscription.unsubscribe();
-              resolve();
-            }
-          },
-          error() {
+    return new Promise((resolve, reject) => {
+      const subscription = observable.subscribe({
+        next(result) {
+          if (result.length === 1) {
             subscription.unsubscribe();
-            reject();
-          },
-        });
+            resolve();
+          }
+        },
+        error() {
+          subscription.unsubscribe();
+          reject();
+        },
       });
     });
   },
